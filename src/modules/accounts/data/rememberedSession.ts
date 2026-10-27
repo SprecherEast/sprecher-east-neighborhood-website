@@ -3,11 +3,11 @@ import 'server-only'
 import configPromise from '@payload-config'
 import type { SQLiteAdapter } from '@payloadcms/db-sqlite'
 import { and, eq } from '@payloadcms/db-sqlite/drizzle'
-import { cookies } from 'next/headers'
-import { generatePayloadCookie, getPayload, jwtSign } from 'payload'
+import { getPayload, jwtSign } from 'payload'
 
 import { REMEMBER_ME_LIFETIME_MS } from '../domain/sessionLifetimes'
 import { USERS } from '../domain/usersCollection'
+import { setPayloadAuthCookie } from './authCookies'
 
 /** The claims Payload signed into a sign-in token, without the times it adds when it signs. */
 function readClaims(token: string): Record<string, unknown> & { id: number | string; sid: string } {
@@ -41,7 +41,6 @@ function readClaims(token: string): Record<string, unknown> & { id: number | str
 export async function keepSignedIn(token: string): Promise<void> {
   const { id, sid, ...claims } = readClaims(token)
   const payload = await getPayload({ config: configPromise })
-  const auth = payload.collections[USERS].config.auth
   const seconds = REMEMBER_ME_LIFETIME_MS / 1000
 
   // One UPDATE of this session's own row. Not a read and a write-back of the account's whole
@@ -63,22 +62,5 @@ export async function keepSignedIn(token: string): Promise<void> {
     secret: payload.secret,
     tokenExpiration: seconds,
   })
-  const cookie = generatePayloadCookie({
-    collectionAuthConfig: { ...auth, tokenExpiration: seconds },
-    cookiePrefix: payload.config.cookiePrefix,
-    returnCookieAsObject: true,
-    token: longToken,
-  })
-  ;(await cookies()).set(cookie.name, longToken, {
-    domain: auth.cookies.domain,
-    expires: cookie.expires ? new Date(cookie.expires) : undefined,
-    httpOnly: true,
-    path: '/',
-    // Next wants the value lower-case, as Payload's own Next.js sign-in helper passes it
-    sameSite:
-      typeof auth.cookies.sameSite === 'string'
-        ? (auth.cookies.sameSite.toLowerCase() as 'lax' | 'strict' | 'none')
-        : 'lax',
-    secure: auth.cookies.secure || false,
-  })
+  await setPayloadAuthCookie(longToken, seconds)
 }

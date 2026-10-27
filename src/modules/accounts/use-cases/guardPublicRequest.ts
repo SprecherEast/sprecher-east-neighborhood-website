@@ -18,7 +18,8 @@ export type GuardFailure = 'robot-check' | 'too-many'
  */
 export function createRequestGuard(name: string, limits: RequestLimits) {
   const connections = new SlidingWindowCounter(limits.windowMs, limits.trackedConnections)
-  const site = new SlidingWindowCounter(limits.windowMs)
+  // No site-wide limit means no site-wide counter: it would record every request for the window
+  const site = limits.siteWide === undefined ? null : new SlidingWindowCounter(limits.windowMs)
 
   return async (
     { token, ip }: PublicRequest,
@@ -36,7 +37,7 @@ export function createRequestGuard(name: string, limits: RequestLimits) {
       }
     }
 
-    if (!site.tryTake('site', limits.siteWide, now)) {
+    if (site && limits.siteWide !== undefined && !site.tryTake('site', limits.siteWide, now)) {
       console.warn(`${name} hit the site-wide hourly limit`)
       return 'too-many'
     }

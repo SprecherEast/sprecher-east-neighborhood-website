@@ -21,6 +21,7 @@ import { noPasswordSignInForAgents } from './noPasswordSignInForAgents'
 import { noResetEmailWhileUnverified } from './noResetEmailWhileUnverified'
 import { requireConfirmedEmailChange } from './requireConfirmedEmailChange'
 import { requireCurrentPassword } from './requireCurrentPassword'
+import { guestOnlyFromProviders } from './guestOnlyFromProviders'
 
 /** The reset email for a token Payload just made: its link opens the site's reset page. */
 const resetEmailFor = (token = '') =>
@@ -74,8 +75,14 @@ export const Users: CollectionConfig = {
   },
   hooks: {
     // Your own password changes only on /account, after your current one is checked (#233), and
-    // your own email only through the confirm-by-link flow (#555)
-    beforeChange: [firstAccountIsAdmin, requireCurrentPassword, requireConfirmedEmailChange],
+    // your own email only through the confirm-by-link flow (#555). An account a Google sign-in
+    // creates is always a guest (#188)
+    beforeChange: [
+      firstAccountIsAdmin,
+      requireCurrentPassword,
+      requireConfirmedEmailChange,
+      guestOnlyFromProviders,
+    ],
     // An agent's MCP API key is its only credential (#336)
     beforeLogin: [noPasswordSignInForAgents],
     // Forgot password only from the site's page (#282), then no reset email to an account whose
@@ -131,6 +138,17 @@ export const Users: CollectionConfig = {
       name: 'verificationSetsPassword',
       type: 'checkbox',
       defaultValue: false,
+      hidden: true,
+      access: serverOnlyFieldAccess,
+    },
+    // The Google account this account signs in with: the provider's subject, its
+    // stable id for the person, never the email (#188, decision 0020). Unique, so one provider
+    // account opens one account. Only the server sets it, from a checked sign-in.
+    {
+      name: 'googleSub',
+      type: 'text',
+      unique: true,
+      index: true,
       hidden: true,
       access: serverOnlyFieldAccess,
     },
