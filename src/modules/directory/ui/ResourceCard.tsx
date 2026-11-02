@@ -26,10 +26,10 @@ export function ResourceCard({ resource }: { resource: ResourceSummary }) {
         <div className="mb-3 flex items-center gap-4">
           <Media
             resource={portrait}
-            size="80px"
+            size="96px"
             className="shrink-0"
-            pictureClassName="block size-20 overflow-hidden rounded-full bg-surface"
-            imgClassName="size-full object-cover"
+            pictureClassName="block size-24 overflow-hidden rounded-2xl bg-surface"
+            imgClassName="size-full object-cover object-top"
           />
           <div className="min-w-0">
             {title}
