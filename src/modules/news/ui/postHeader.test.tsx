@@ -70,9 +70,8 @@ describe('postHeaderProps', () => {
       expect(link.getAttribute('target')).toBe('_blank')
       expect(link.getAttribute('rel')).toBe('noopener noreferrer')
       expect(link.textContent).toContain('opens in a new tab')
-      // On the photo, the link takes the photo's text color
-      expect(link.className).toContain('text-on-image')
-      expect(link.className).not.toContain('text-primary-strong')
+      // The facts sit under the photo, so the link keeps the site's link color (#571)
+      expect(link.className).not.toContain('text-on-image')
       expect(sourceFact()?.contains(link)).toBe(true)
       // The date stays next to it
       expect(screen.getByText('Date Published')).toBeDefined()

@@ -12,15 +12,15 @@ import type { PostDetail, PostSource } from '../domain/types'
 
 /**
  * Where the news came from (#483): the source's name, linking to the original in a new tab when
- * the post has a link. On a photo the link takes the photo's text color.
+ * the post has a link, in the site's link color: the facts sit on the page, not on the photo (#571).
  */
-function SourceValue({ source, onImage }: { source: PostSource; onImage: boolean }) {
+function SourceValue({ source }: { source: PostSource }) {
   if (!source.url) return source.name
 
   // The icon stays with the name's last word, so a wrapped name never leaves it on a line alone
   const split = source.name.lastIndexOf(' ') + 1
   return (
-    <Link href={source.url} external className={onImage ? 'text-on-image' : undefined}>
+    <Link href={source.url} external>
       {source.name.slice(0, split)}
       <span className="whitespace-nowrap">
         {source.name.slice(split)}
@@ -42,9 +42,7 @@ export function postHeaderProps(post: PostDetail): PageHeaderProps {
     ...(publishedAt
       ? [{ label: 'Date Published', value: <DateTime value={publishedAt} format="long" /> }]
       : []),
-    ...(source
-      ? [{ label: 'Source', value: <SourceValue source={source} onImage={Boolean(heroImage)} /> }]
-      : []),
+    ...(source ? [{ label: 'Source', value: <SourceValue source={source} /> }] : []),
   ]
   const badge = heroImage ? 'on-image' : 'category'
   const eyebrow =
