@@ -1,6 +1,8 @@
 import 'server-only'
 
 import configPromise from '@payload-config'
+import type { SQLiteAdapter } from '@payloadcms/db-sqlite'
+import { and, eq } from '@payloadcms/db-sqlite/drizzle'
 import { cookies } from 'next/headers'
 import { generatePayloadCookie, getPayload, jwtSign } from 'payload'
 
@@ -26,8 +28,8 @@ function readClaims(token: string): Record<string, unknown> & { id: number | str
  * tick "Keep me signed in" the three things that carry the length are set here, with Payload's own
  * helpers:
  *
- * - the stored session's `expiresAt`: Payload deletes sessions past it the next time the account
- *   signs in anywhere, which would end this one early;
+ * - the stored session's `expiresAt`, updated on that session's row alone: Payload deletes
+ *   sessions past it the next time the account signs in anywhere, which would end this one early;
  * - the token, signed again with the same claims (the same session id, so signing out still
  *   revokes it) and the longer expiry;
  * - the auth cookie, with the same name, scope and flags as Payload's, and the longer expiry.
@@ -42,26 +44,19 @@ export async function keepSignedIn(token: string): Promise<void> {
   const auth = payload.collections[USERS].config.auth
   const seconds = REMEMBER_ME_LIFETIME_MS / 1000
 
-  const account = await payload.findByID({
-    collection: USERS,
-    id,
-    depth: 0,
-    // Server-only: the account comes from a token Payload signed a moment ago, and its sessions
-    // are a hidden field
-    overrideAccess: true,
-    showHiddenFields: true,
-  })
-  const expiresAt = new Date(Date.now() + REMEMBER_ME_LIFETIME_MS).toISOString()
-  await payload.db.updateOne({
-    collection: USERS,
-    id,
-    data: {
-      sessions: (account.sessions ?? []).map((session) =>
-        session.id === sid ? { ...session, expiresAt } : session,
-      ),
-    },
-    returning: false,
-  })
+  // One UPDATE of this session's own row. Not a read and a write-back of the account's whole
+  // `sessions` list: that could restore a session another device's sign-out or a password
+  // change just revoked, and drop one a sign-in elsewhere just added. A session that no longer
+  // exists changes no row, and then nothing is extended.
+  const adapter = payload.db as unknown as SQLiteAdapter
+  const sessionsTable = adapter.tables[`${USERS}_sessions`]
+  if (!sessionsTable) throw new Error('The users collection stores no sessions')
+  const extended = await adapter.drizzle
+    .update(sessionsTable)
+    .set({ expiresAt: new Date(Date.now() + REMEMBER_ME_LIFETIME_MS).toISOString() })
+    .where(and(eq(sessionsTable.id, sid), eq(sessionsTable._parentID, id)))
+    .returning({ id: sessionsTable.id })
+  if (extended.length === 0) throw new Error('The sign-in session no longer exists')
 
   const { token: longToken } = await jwtSign({
     fieldsToSign: { ...claims, id, sid },

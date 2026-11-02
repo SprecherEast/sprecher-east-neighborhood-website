@@ -86,7 +86,7 @@ async function whoIs(token: string) {
   return user
 }
 
-const claim = (token: string, name: 'exp' | 'sid') =>
+const claim = (token: string, name: 'exp' | 'sid' | 'id') =>
   JSON.parse(Buffer.from(token.split('.')[1] ?? '', 'base64url').toString('utf8'))[name]
 
 describe('startSession with "Keep me signed in"', () => {
@@ -155,5 +155,68 @@ describe('startSession with "Keep me signed in"', () => {
     expect(await sessions()).toHaveLength(
       (await sessions()).filter(({ ends }) => ends > Date.now()).length,
     )
+  })
+})
+
+describe('keepSignedIn against sessions that change meanwhile', () => {
+  /** A short sign-in made straight through Payload, as the helper does before `keepSignedIn`. */
+  const shortSignIn = async () => {
+    const { token } = await payload.login({
+      collection: 'users',
+      data: { email: 'ada@example.com', password: PASSWORD },
+    })
+    return token as string
+  }
+
+  /** Ends one session the way a sign-out or a password change elsewhere does. */
+  async function revoke(accountId: number | string, sid: string) {
+    const account = await payload.findByID({
+      collection: 'users',
+      id: accountId,
+      depth: 0,
+      overrideAccess: true,
+      showHiddenFields: true,
+    })
+    await payload.db.updateOne({
+      collection: 'users',
+      id: accountId,
+      data: { sessions: (account.sessions ?? []).filter(({ id }) => id !== sid) },
+      returning: false,
+    })
+  }
+
+  it('changes only its own session: a revoked one stays revoked, every other row is left as it was', async () => {
+    const other = await shortSignIn()
+    const mine = await shortSignIn()
+    const accountId = claim(mine, 'id')
+    const bystander = await shortSignIn()
+    // Signed out on the other device between this sign-in and the extension
+    await revoke(accountId, claim(other, 'sid'))
+    const before = await sessions()
+
+    const { keepSignedIn } = await import('./rememberedSession')
+    await keepSignedIn(mine)
+
+    const after = await sessions()
+    expect(after.some(({ id }) => id === claim(other, 'sid'))).toBe(false)
+    expect(after.find(({ id }) => id === claim(bystander, 'sid'))).toEqual(
+      before.find(({ id }) => id === claim(bystander, 'sid')),
+    )
+    const longer = after.find(({ id }) => id === claim(mine, 'sid'))
+    expect(longer && longer.ends - Date.now()).toBeGreaterThan(REMEMBER_ME_LIFETIME_MS - 5_000)
+    expect(after.filter(({ id }) => id !== claim(mine, 'sid'))).toEqual(
+      before.filter(({ id }) => id !== claim(mine, 'sid')),
+    )
+  })
+
+  it('fails, and sets no cookie, when the session was ended before it could be extended', async () => {
+    const mine = await shortSignIn()
+    await revoke(claim(mine, 'id'), claim(mine, 'sid'))
+
+    const { keepSignedIn } = await import('./rememberedSession')
+    await expect(keepSignedIn(mine)).rejects.toThrow('no longer exists')
+
+    expect(edges.setCookie).not.toHaveBeenCalled()
+    expect(await sessions()).not.toContainEqual(expect.objectContaining({ id: claim(mine, 'sid') }))
   })
 })
