@@ -42,7 +42,7 @@ type CompactHeaderProps = HeaderBase & {
   children?: never
 }
 
-/** Heads a post or event page with a photo: the title and facts on the photo */
+/** Heads a post or event page with a photo: the title on a short photo band, the facts under it (#571) */
 type ImageHeaderProps = HeaderBase & {
   variant: 'image'
   /** The photo behind the title; it loads first, and its credit shows under it */
@@ -63,7 +63,7 @@ const titleVariants = cva('font-bold text-balance', {
     variant: {
       default: 'text-4xl tracking-tight text-foreground md:text-5xl',
       compact: 'text-3xl text-foreground',
-      image: 'text-3xl text-on-image md:text-5xl lg:text-6xl',
+      image: 'text-2xl text-on-image sm:text-3xl lg:text-4xl',
     },
   },
 })
@@ -71,7 +71,7 @@ const titleVariants = cva('font-bold text-balance', {
 // A text eyebrow is the coloured overline; on a photo it takes the photo's text color
 const eyebrowVariants = cva('', {
   variants: {
-    variant: { default: 'mb-3', image: 'mb-4 text-on-image' },
+    variant: { default: 'mb-3', image: 'mb-3 text-on-image' },
   },
 })
 
@@ -79,8 +79,9 @@ const eyebrowVariants = cva('', {
  * The top of a page (#430, docs/ui/component-set.md). `default` heads a list page, and a post or
  * event without a photo: eyebrow, title, description, facts, an optional way back and control,
  * left-aligned. `compact` is the small header of a form page, inside the page's own column.
- * `image` puts the title and facts on a photo behind a `scrim` fade, as posts and events with a
- * photo show it (#461).
+ * `image` puts the title on a short photo band behind a `scrim` fade and the facts in a byline row
+ * under the photo, as posts and events with a photo show it (#461, #571): the article starts on the
+ * first screen.
  */
 export function PageHeader(props: PageHeaderProps) {
   if (props.variant === 'compact') {
@@ -125,21 +126,29 @@ function ImageHeader({ image, eyebrow, title, facts, className }: ImageHeaderPro
   return (
     <header className={className}>
       <div className="relative -mt-[var(--header-height)] flex items-end">
-        <div className="relative z-10 container pt-[var(--header-height)] pb-8 text-on-image lg:grid lg:grid-cols-[1fr_48rem_1fr]">
+        <div className="relative z-10 container pt-[var(--header-height)] pb-6 text-on-image lg:grid lg:grid-cols-[1fr_48rem_1fr]">
           <div className="lg:col-span-2 lg:col-start-2">
             <Eyebrow variant="image">{eyebrow}</Eyebrow>
             <h1 className={titleVariants({ variant: 'image' })}>{title}</h1>
-            {facts && facts.length > 0 && (
-              <MetaList variant="on-image" items={facts} className="mt-6" />
-            )}
           </div>
         </div>
-        <div className="min-h-[80vh] select-none">
+        {/* A band, not a hero: about 42% of the screen, 16rem to 28rem, so the article starts on
+            the first screen. `svh` keeps a phone's address bar from making it jump (#571) */}
+        <div className="min-h-[clamp(16rem,42svh,28rem)] select-none">
           <Media fill priority imgClassName="-z-10 object-cover" resource={image} />
           <div className="pointer-events-none absolute bottom-0 left-0 h-1/2 w-full bg-linear-to-t from-scrim to-transparent" />
         </div>
       </div>
       <ImageCredit image={image} className="container mt-2 text-right" />
+      {facts && facts.length > 0 && (
+        <div className="container mt-3 lg:grid lg:grid-cols-[1fr_48rem_1fr]">
+          <MetaList
+            variant="inline"
+            items={facts}
+            className="gap-x-6 gap-y-1 text-sm lg:col-span-2 lg:col-start-2"
+          />
+        </div>
+      )}
     </header>
   )
 }
