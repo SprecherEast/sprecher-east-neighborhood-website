@@ -20,6 +20,7 @@ import type { CurrentUser } from '../domain/types'
 import { USERS } from '../domain/usersCollection'
 import { isRefusal } from './failures'
 import { toCurrentUser } from './mappers'
+import { keepSignedIn } from './rememberedSession'
 
 /** An account from the users collection, as Payload's auth returns it. */
 type SessionAccount = User & { collection: typeof USERS }
@@ -47,11 +48,17 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 /**
  * Signs in with Payload's own Next.js helper (`login` from `@payloadcms/next/auth`): it runs
  * Payload's `login` operation, so a wrong password counts towards the lockout, and sets the auth
- * cookie from the users collection's auth settings (#234: Secure in production). Throws Payload's
- * error when it refuses.
+ * cookie from the users collection's auth settings (#234: Secure in production), which last two
+ * hours. With `rememberMe` ("Keep me signed in") the session then lasts a week instead (#587).
+ * Throws Payload's error when it refuses.
  */
-export async function startSession({ email, password }: SignInValues): Promise<void> {
-  await login({ collection: USERS, config: configPromise, email, password })
+export async function startSession({ email, password, rememberMe }: SignInValues): Promise<void> {
+  const { token } = await login({ collection: USERS, config: configPromise, email, password })
+  if (!rememberMe) return
+  // Payload always returns the token here; if it ever stops, fail rather than keep a short sign-in
+  // the person asked to be long
+  if (!token) throw new Error('Payload returned no sign-in token')
+  await keepSignedIn(token)
 }
 
 /**

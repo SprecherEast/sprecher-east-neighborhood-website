@@ -36,6 +36,7 @@
 
 - `PAYLOAD_SECRET` must be a strong random string (32+ chars) for JWT signing
 - Payload handles session cookies natively via httpOnly JWT cookies
+- **Sign-in length** (#587): a sign-in lasts two hours. The sign-in form's "Keep me signed in for 7 days" box, unticked by default so a shared computer stays safe, makes the token, the stored session and the cookie last 7 days (`src/modules/accounts/data/rememberedSession.ts`). It runs only after Payload accepted the password, so the lockout and the single generic failure are unchanged, and the session keeps its id, so signing out revokes it. The owner asked for it (2026-11-02, Claude chat, quoted on #587). Change the length only in `src/modules/accounts/domain/sessionLifetimes.ts`.
 - Payload's built-in access control protects routes and data. Use the correct read access per collection type: `authenticatedOrPublished` for draft-enabled content (shows drafts to admins/editors, published to everyone else), `anyone` for public utility collections (Categories, Media, TeamMembers) that have no draft workflow.
 - Never store tokens or secrets in localStorage — use httpOnly cookies (Payload handles this)
 - Never expose user roles or permissions in client-side JavaScript beyond what's needed for UI
