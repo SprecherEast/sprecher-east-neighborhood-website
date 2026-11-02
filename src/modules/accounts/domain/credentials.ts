@@ -18,12 +18,18 @@ const MAX_TOKEN_LENGTH = 128
 /** The email field of the sign-in and forgot-password forms. */
 const email = z.string().trim().min(1, 'Enter your email address').max(MAX_EMAIL_LENGTH)
 
-/** Strict like every action schema: a field the form doesn't have is refused, not ignored. */
+/**
+ * Strict like every action schema: a field the form doesn't have is refused, not ignored.
+ * `rememberMe` is the "Keep me signed in" box (#587); a caller that leaves it out gets the short
+ * sign-in.
+ */
 export const signInSchema = z.strictObject({
   email,
   password: z.string().min(1, 'Enter your password').max(MAX_PASSWORD_LENGTH),
+  rememberMe: z.boolean().default(false),
 })
 
+export type SignInInput = z.input<typeof signInSchema>
 export type SignInValues = z.output<typeof signInSchema>
 
 /** A new password, typed twice: one rule for changing it and for resetting it. */

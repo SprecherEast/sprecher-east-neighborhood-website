@@ -42,8 +42,31 @@ describe('signIn', () => {
     })
   })
 
+  it('asks for the long sign-in only when the box is ticked, and never after a refusal (#587)', async () => {
+    // A refused password stays the same failure, and nothing reads or writes the account's session
+    edges.signInHelper.mockRejectedValueOnce(new AuthenticationError())
+    expect(await signIn({ email: 'a@example.com', password, rememberMe: true })).toEqual({
+      ok: false,
+      failure: 'wrong-credentials',
+    })
+    expect(edges.find).not.toHaveBeenCalled()
+    expect(edges.dbUpdateOne).not.toHaveBeenCalled()
+    // Unticked: the account's session is left as Payload made it
+    edges.signInHelper.mockResolvedValue({ user: resident, token: 't' })
+    expect(await signIn({ email: 'a@example.com', password, rememberMe: false })).toEqual({
+      ok: true,
+    })
+    expect(edges.dbUpdateOne).not.toHaveBeenCalled()
+  })
+
   it('refuses input that doesn’t parse like a wrong password, without asking Payload', async () => {
-    for (const input of [null, 'x', { email: '', password }, { email: 'a@example.com' }]) {
+    for (const input of [
+      null,
+      'x',
+      { email: '', password },
+      { email: 'a@example.com' },
+      { email: 'a@example.com', password, rememberMe: 'yes' },
+    ]) {
       expect(await signIn(input)).toEqual({ ok: false, failure: 'wrong-credentials' })
     }
     expect(edges.signInHelper).not.toHaveBeenCalled()
