@@ -5,6 +5,8 @@ them to the component, and hold them to [the same standards as production code](
 
 ## Hero Patterns
 
+These patterns are for the home page and landing pages. A post or event with a photo uses `PageHeader` with `variant="image"`: a short band, `min-h-[clamp(16rem,42svh,28rem)]`, not a near-full-screen hero, with the facts under the photo (#571).
+
 ### Pattern: Anchored Hero (Text Bottom-Left)
 
 Instead of centering everything in a tall void, anchor content to the bottom-left. Creates visual weight and a natural reading entry point.

@@ -108,7 +108,13 @@ describe('PageHeader', () => {
     // `priority`: next/image preloads it and never lazy-loads it
     expect(image.getAttribute('loading')).not.toBe('lazy')
     expect(container.querySelector('[class*="from-scrim"]')).not.toBeNull()
-    expect(screen.getByText('Date').closest('dl')?.className).toContain('text-on-image')
+    // The facts sit under the photo, on the page background, not on the photo (#571)
+    const list = screen.getByText('Date').closest('dl')
+    expect(list?.className).toContain('text-muted-foreground')
+    const band = container.querySelector('[class*="min-h-[clamp"]')?.parentElement
+    expect(band).toBeTruthy()
+    expect(band?.contains(list)).toBe(false)
+    expect(band?.contains(screen.getByRole('heading', { level: 1 }))).toBe(true)
     expect(screen.getByText('Parks').className).toContain('bg-scrim/60')
     expect(screen.getByText(/Jane Doe/)).toBeTruthy()
     await expectAccessible(container)
