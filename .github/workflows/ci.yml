@@ -140,7 +140,7 @@ jobs:
       - name: Knip
         run: npm run knip
 
-  # Copy-pasted code: a block of 12+ lines (or 80 tokens) repeated anywhere in the code fails the
+  # Copy-pasted code: a block of 12+ lines and 80+ tokens repeated anywhere in the code fails the
   # PR (#611, guard rail 1). Settings and ignore list in `.jscpd.json`. Not a required check yet;
   # it becomes required once it has stayed green on main for a while.
   duplication:

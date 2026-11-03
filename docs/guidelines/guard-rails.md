@@ -53,14 +53,14 @@ text, quoted on #609):
 
 ## What enforces them
 
-| Rule                  | Enforced by                                                                                                                                                              |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Theme (3)             | ESLint (`eslint.theme.config.mjs`), the theme contract test                                                                                                              |
-| Raw tags (2)          | ESLint ban on raw `a`, `button`, `input`, `select`, `textarea`, `details`, `summary` and `img` outside the kit (#465, #609, #610)                                        |
-| Architecture (4)      | ESLint boundaries (`eslint.boundaries.config.mjs`); knip reports unused code (not a required check yet)                                                                  |
-| Duplication (1)       | `Duplicate code (jscpd)` fails a repeated block of 12+ lines (#611; not a required check yet), then review for what a tool can't see: the same logic written differently |
-| Self-review (6)       | `PR Policy` requires the Self-review section, then the reviewer checks it                                                                                                |
-| Tests (5), violations | Required CI (tests, axe), then the reviewer. These two rest on the reviewer's diligence                                                                                  |
+| Rule                  | Enforced by                                                                                                                                                                             |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Theme (3)             | ESLint (`eslint.theme.config.mjs`), the theme contract test                                                                                                                             |
+| Raw tags (2)          | ESLint ban on raw `a`, `button`, `input`, `select`, `textarea`, `details`, `summary` and `img` outside the kit (#465, #609, #610)                                                       |
+| Architecture (4)      | ESLint boundaries (`eslint.boundaries.config.mjs`); knip reports unused code (not a required check yet)                                                                                 |
+| Duplication (1)       | `Duplicate code (jscpd)` fails a repeated block of 12+ lines and 80+ tokens (#611; not a required check yet), then review for what a tool can't see: the same logic written differently |
+| Self-review (6)       | `PR Policy` requires the Self-review section, then the reviewer checks it                                                                                                               |
+| Tests (5), violations | Required CI (tests, axe), then the reviewer. These two rest on the reviewer's diligence                                                                                                 |
 
 Checks catch what a machine can. The rest depends on the author doing the work and the reviewer
 looking at the diff, which is why a breach is a Blocker and cannot be waived.

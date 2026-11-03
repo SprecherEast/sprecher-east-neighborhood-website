@@ -1,6 +1,6 @@
 {
   "path": ["src", "intelligence", "ops", "scripts"],
-  "format": ["typescript", "tsx", "javascript", "jsx", "css"],
+  "format": ["typescript", "tsx", "javascript", "jsx", "css", "bash"],
   "minLines": 12,
   "minTokens": 80,
   "threshold": 0,
