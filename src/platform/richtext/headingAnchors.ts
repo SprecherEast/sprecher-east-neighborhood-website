@@ -36,7 +36,8 @@ const toId = (text: string): string =>
  */
 export function anchorsByNode(data: RichTextValue | null | undefined): Map<object, HeadingAnchor> {
   const anchors = new Map<object, HeadingAnchor>()
-  const seen = new Map<string, number>()
+  const used = new Set<string>()
+  const counts = new Map<string, number>()
 
   const walk = (node: LexicalNode) => {
     const level = node.type === 'heading' && node.tag ? ANCHOR_TAGS[node.tag as 'h2' | 'h3'] : null
@@ -44,9 +45,13 @@ export function anchorsByNode(data: RichTextValue | null | undefined): Map<objec
       const text = textOf(node).replace(/\s+/g, ' ').trim()
       if (text) {
         const base = toId(text)
-        const count = (seen.get(base) ?? 0) + 1
-        seen.set(base, count)
-        anchors.set(node, { id: count === 1 ? base : `${base}-${count}`, text, level })
+        // A repeat gets -2, -3; skip any number another heading already took ("Costs 2")
+        let id = base
+        let count = counts.get(base) ?? 1
+        while (used.has(id)) id = `${base}-${++count}`
+        counts.set(base, count)
+        used.add(id)
+        anchors.set(node, { id, text, level })
       }
     }
     node.children?.forEach(walk)

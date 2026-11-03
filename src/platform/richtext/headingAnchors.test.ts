@@ -35,6 +35,17 @@ describe('headingAnchors', () => {
     expect(headingAnchors(value).map((a) => a.id)).toEqual(ids)
   })
 
+  it('never gives two headings the same id, even when one is already called "costs-2"', () => {
+    const ids = headingAnchors(
+      doc(
+        heading('h2', text('Costs')),
+        heading('h2', text('Costs')),
+        heading('h2', text('Costs 2')),
+      ),
+    ).map((a) => a.id)
+    expect(new Set(ids).size).toBe(3)
+  })
+
   it('folds accents into their letters and drops punctuation', () => {
     const value = doc(heading('h2', text('Café "Big" Plan: 2027 & beyond')))
     expect(headingAnchors(value)[0]?.id).toBe('cafe-big-plan-2027-beyond')
