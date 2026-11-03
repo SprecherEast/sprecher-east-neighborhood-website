@@ -32,7 +32,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const { isEnabled } = await draftMode()
 
   return (
-    <html className={cn(poppins.variable)} lang="en" suppressHydrationWarning>
+    // data-scroll-behavior: Next keeps page changes instant while in-page jumps glide (#574)
+    <html
+      className={cn(poppins.variable)}
+      data-scroll-behavior="smooth"
+      lang="en"
+      suppressHydrationWarning
+    >
       <head>
         <InitTheme />
         <link href="/favicon.ico" rel="icon" sizes="32x32" />
