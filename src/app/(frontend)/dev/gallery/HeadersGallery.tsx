@@ -1,9 +1,9 @@
 import React from 'react'
 
+import { MediaBlock } from '@/platform/richtext/MediaBlock'
 import { Badge, BadgeList } from '@/platform/ui/Badge'
 import { Breadcrumbs } from '@/platform/ui/Breadcrumbs'
 import { ImageCredit } from '@/platform/ui/ImageCredit'
-import { FIGURE_GAP } from '@/platform/ui/layoutSizes'
 import { Legend } from '@/platform/ui/Legend'
 import { Media } from '@/platform/ui/Media'
 import { PageHeader } from '@/platform/ui/PageHeader'
@@ -124,13 +124,13 @@ export function HeadersGallery() {
         description="Numbered markers under an annotated image or a chart, hanging from the image like a drawer: square top tucked under it, rounded bottom, narrower than the image, no animation."
       >
         <GalleryVariant label="under an image block" className="w-full max-w-3xl">
-          {/* The image block as MediaBlock draws it inline: the shared gap, above the legend */}
-          <div className={`relative z-10 ${FIGURE_GAP}`}>
-            <Media
-              resource={SAMPLE_IMAGE}
-              imgClassName="h-auto w-full rounded-[0.8rem] border border-border"
-            />
-          </div>
+          {/* The real inline image block, so the sample can't drift from the article */}
+          <MediaBlock
+            blockType="mediaBlock"
+            media={0}
+            placement="inline"
+            staticImage={SAMPLE_PHOTO}
+          />
           <Legend label="Diagram key" items={SAMPLE_LEGEND_ITEMS} />
         </GalleryVariant>
       </GalleryEntry>
