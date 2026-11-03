@@ -21,6 +21,7 @@ export const GALLERY_COMPONENTS = [
   'ImageCredit',
   'Alert',
   'Section',
+  'ArticlePage',
   'DetailLayout',
   'OnThisPage',
   'Dialog',

@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { Alert, type AlertTone } from '@/platform/ui/Alert'
+import { ArticlePage } from '@/platform/ui/ArticlePage'
 import { Button } from '@/platform/ui/Button'
 import { Card } from '@/platform/ui/Card'
 import { DetailLayout } from '@/platform/ui/DetailLayout'
@@ -114,6 +115,40 @@ export function LayoutGallery() {
                 </Text>
               </Card>
             </DetailLayout>
+          </div>
+        </GalleryVariant>
+      </GalleryEntry>
+      <GalleryEntry
+        name="ArticlePage"
+        description="A post's or an event's page: header, breadcrumbs, text and sidebar, with its structured data."
+      >
+        <GalleryVariant label="with-sidebar" className="block">
+          <div className={`${FRAME} py-6`}>
+            <ArticlePage
+              jsonLd={{ '@context': 'https://schema.org', '@type': 'Article', headline: 'Sample' }}
+              redirects={null}
+              draft={false}
+              hasHeroImage={false}
+              header={{
+                title: 'A sample article',
+                description: 'The header, then the trail, the text and the sidebar.',
+              }}
+              breadcrumbs={[
+                { label: 'Home', href: '/' },
+                { label: 'News', href: '/posts' },
+                { label: 'A sample article' },
+              ]}
+              aside={
+                <SidebarCTA
+                  heading="Sidebar box"
+                  description="The aside: here a SidebarCTA."
+                  buttonLabel="Get involved"
+                  buttonHref="/events"
+                />
+              }
+            >
+              <Text variant="small">The article&apos;s text goes here.</Text>
+            </ArticlePage>
           </div>
         </GalleryVariant>
       </GalleryEntry>

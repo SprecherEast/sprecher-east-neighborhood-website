@@ -2,22 +2,17 @@ import type { Metadata } from 'next'
 
 import { parseLinkToken } from '@/modules/accounts'
 import { ResetPasswordForm } from '@/modules/accounts/server'
-import { NOT_INDEXED } from '@/platform/seo/notIndexed'
+import { privateAddressMetadata, type TokenLinkPageProps } from '@/platform/seo/privateAddress'
 import { PageHeader } from '@/platform/ui/PageHeader'
 import { Section } from '@/platform/ui/Section'
 
-export const metadata: Metadata = {
-  title: 'Choose a New Password',
-  description: 'Choose a new password for your Sprecher East account.',
-  // The token is in this page's address: never send it to another site, never index it
-  referrer: 'no-referrer',
-  robots: NOT_INDEXED,
-}
-
-type Props = { searchParams: Promise<{ token?: string | string[] }> }
+export const metadata: Metadata = privateAddressMetadata(
+  'Choose a New Password',
+  'Choose a new password for your Sprecher East account.',
+)
 
 /** Where a reset link lands (#269). Setting the password takes the form, not the page load. */
-export default async function ResetPasswordPage({ searchParams }: Props) {
+export default async function ResetPasswordPage({ searchParams }: TokenLinkPageProps) {
   const { token } = await searchParams
 
   return (
