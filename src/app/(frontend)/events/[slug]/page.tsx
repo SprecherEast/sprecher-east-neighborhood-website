@@ -4,13 +4,11 @@ import { draftMode } from 'next/headers'
 import { ArrowRight } from 'lucide-react'
 import React from 'react'
 
-import { Breadcrumbs } from '@/platform/ui/Breadcrumbs'
-import { JsonLd } from '@/platform/ui/JsonLd'
-import { LivePreviewListener } from '@/platform/ui/LivePreviewListener.client'
 import { PayloadRedirects } from '@/modules/site/server'
 import { articleToc } from '@/platform/richtext/articleToc'
 import { RichText } from '@/platform/richtext/RichText'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
+import { ArticlePage } from '@/platform/ui/ArticlePage'
 import { SidebarCTA } from '@/platform/ui/SidebarCTA'
 import {
   eventHeaderProps,
@@ -24,8 +22,6 @@ import {
 } from '@/modules/events/server'
 import { Alert, Button } from '@/platform/ui'
 import { generateMeta } from '@/platform/seo/generateMeta'
-import { DetailLayout } from '@/platform/ui/DetailLayout'
-import { PageHeader } from '@/platform/ui/PageHeader'
 import { cn } from '@/platform/lib/cn'
 import { Text } from '@/platform/ui/Text'
 import { READING_WIDTH } from '@/platform/ui/layoutSizes'
@@ -60,80 +56,67 @@ export default async function EventPage({ params: paramsPromise }: Args) {
   const upcomingEvents = await findUpcomingEvents({ excludeId: event.id })
   const hasHeroImage = event.image !== null
   return (
-    // Without a photo the header is plain, so it keeps clear of the site header
-    <article className={cn('pb-24', !hasHeroImage && 'pt-32')}>
-      <JsonLd data={eventJsonLd(event)} />
-      <PayloadRedirects disableNotFound url={url} />
-
-      {draft && <LivePreviewListener />}
-
-      <PageHeader {...eventHeaderProps(event)} />
-
-      <div className={cn(hasHeroImage && 'pt-8')}>
-        <div className="container">
-          <Breadcrumbs
-            items={[
-              { label: 'Home', href: '/' },
-              { label: 'Community Events', href: '/events' },
-              { label: event.title },
-            ]}
+    <ArticlePage
+      // Without a photo the header is plain, so it keeps clear of the site header
+      className={cn('pb-24', !hasHeroImage && 'pt-32')}
+      jsonLd={eventJsonLd(event)}
+      redirects={<PayloadRedirects disableNotFound url={url} />}
+      draft={draft}
+      hasHeroImage={hasHeroImage}
+      header={eventHeaderProps(event)}
+      breadcrumbs={[
+        { label: 'Home', href: '/' },
+        { label: 'Community Events', href: '/events' },
+        { label: event.title },
+      ]}
+      toc={articleToc(event.content)}
+      aside={
+        <>
+          <SidebarEvents events={upcomingEvents} title="Upcoming Events" />
+          <SidebarCTA
+            heading="Stay in the Loop"
+            description="Browse all upcoming events and find ways to connect with your neighbors."
+            buttonLabel="View All Events"
+            buttonHref="/events"
           />
+        </>
+      }
+    >
+      {event.cancelled && (
+        // Part of the page, read in its place, so not announced (#122)
+        <Alert tone="error" live={false} className="mb-8">
+          <p className="font-semibold">This event is cancelled.</p>
+        </Alert>
+      )}
+
+      <OfficialAgenda event={event} />
+
+      <EventLocation event={event} />
+
+      {/* A cancelled event takes no registrations */}
+      {event.registrationUrl && !event.cancelled && (
+        <div className="mb-8">
+          <Button href={event.registrationUrl} external iconEnd={<ArrowRight aria-hidden="true" />}>
+            Register for This Event
+          </Button>
         </div>
-        <DetailLayout
-          toc={articleToc(event.content)}
-          aside={
-            <>
-              <SidebarEvents events={upcomingEvents} title="Upcoming Events" />
-              <SidebarCTA
-                heading="Stay in the Loop"
-                description="Browse all upcoming events and find ways to connect with your neighbors."
-                buttonLabel="View All Events"
-                buttonHref="/events"
-              />
-            </>
-          }
-        >
-          {event.cancelled && (
-            // Part of the page, read in its place, so not announced (#122)
-            <Alert tone="error" live={false} className="mb-8">
-              <p className="font-semibold">This event is cancelled.</p>
-            </Alert>
-          )}
+      )}
 
-          <OfficialAgenda event={event} />
+      {event.description && !hasHeroImage && (
+        <Text variant="lead" className="mb-8">
+          {event.description}
+        </Text>
+      )}
 
-          <EventLocation event={event} />
-
-          {/* A cancelled event takes no registrations */}
-          {event.registrationUrl && !event.cancelled && (
-            <div className="mb-8">
-              <Button
-                href={event.registrationUrl}
-                external
-                iconEnd={<ArrowRight aria-hidden="true" />}
-              >
-                Register for This Event
-              </Button>
-            </div>
-          )}
-
-          {event.description && !hasHeroImage && (
-            <Text variant="lead" className="mb-8">
-              {event.description}
-            </Text>
-          )}
-
-          {event.content && (
-            <RichText
-              blocks={richTextBlocks}
-              className={READING_WIDTH}
-              data={event.content}
-              enableGutter={false}
-            />
-          )}
-        </DetailLayout>
-      </div>
-    </article>
+      {event.content && (
+        <RichText
+          blocks={richTextBlocks}
+          className={READING_WIDTH}
+          data={event.content}
+          enableGutter={false}
+        />
+      )}
+    </ArticlePage>
   )
 }
 

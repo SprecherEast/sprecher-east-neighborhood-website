@@ -4,18 +4,14 @@ import { redirect } from 'next/navigation'
 import { ACCOUNT_PATH } from '@/modules/accounts'
 import { getCurrentUser, SignUpForm } from '@/modules/accounts/server'
 import { parseEmailAddress } from '@/platform/lib'
-import { NOT_INDEXED } from '@/platform/seo/notIndexed'
+import { privateAddressMetadata } from '@/platform/seo/privateAddress'
 import { PageHeader } from '@/platform/ui/PageHeader'
 import { Section } from '@/platform/ui/Section'
 
-export const metadata: Metadata = {
-  title: 'Create an Account',
-  description: 'Create a free Sprecher East account.',
-  // The confirm page's "Yes" puts the email in this page's address: never send it to another
-  // site, never index it
-  referrer: 'no-referrer',
-  robots: NOT_INDEXED,
-}
+export const metadata: Metadata = privateAddressMetadata(
+  'Create an Account',
+  'Create a free Sprecher East account.',
+)
 
 type Props = { searchParams: Promise<{ email?: string | string[] }> }
 

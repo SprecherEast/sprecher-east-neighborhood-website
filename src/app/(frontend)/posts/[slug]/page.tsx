@@ -3,13 +3,11 @@ import type { Metadata } from 'next'
 import { draftMode } from 'next/headers'
 import React from 'react'
 
-import { Breadcrumbs } from '@/platform/ui/Breadcrumbs'
-import { JsonLd } from '@/platform/ui/JsonLd'
-import { LivePreviewListener } from '@/platform/ui/LivePreviewListener.client'
 import { ForumPrompt, getForumUrl, PayloadRedirects } from '@/modules/site/server'
 import { articleToc } from '@/platform/richtext/articleToc'
 import { RichText } from '@/platform/richtext/RichText'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
+import { ArticlePage } from '@/platform/ui/ArticlePage'
 import { SidebarCTA } from '@/platform/ui/SidebarCTA'
 import { findUpcomingEvents, SidebarEvents } from '@/modules/events/server'
 import {
@@ -21,8 +19,6 @@ import {
   SidebarPosts,
 } from '@/modules/news/server'
 import { generateMeta } from '@/platform/seo/generateMeta'
-import { DetailLayout } from '@/platform/ui/DetailLayout'
-import { PageHeader } from '@/platform/ui/PageHeader'
 import { cn } from '@/platform/lib/cn'
 import { READING_WIDTH } from '@/platform/ui/layoutSizes'
 
@@ -64,53 +60,43 @@ export default async function Post({ params: paramsPromise }: Args) {
   ])
 
   return (
-    // Without a photo the header is plain, so it keeps clear of the site header (#461)
-    <article className={cn('pb-16', post.heroImage ? 'pt-16' : 'pt-32')}>
-      <JsonLd data={postJsonLd(post)} />
-
-      {/* Allows redirects for valid pages too */}
-      <PayloadRedirects disableNotFound url={url} />
-
-      {draft && <LivePreviewListener />}
-
-      <PageHeader {...postHeaderProps(post)} />
-
-      <div className={cn(post.heroImage && 'pt-8')}>
-        <div className="container">
-          <Breadcrumbs
-            items={[
-              { label: 'Home', href: '/' },
-              { label: 'News & Updates', href: '/posts' },
-              { label: post.title },
-            ]}
+    <ArticlePage
+      // Without a photo the header is plain, so it keeps clear of the site header (#461)
+      className={cn('pb-16', post.heroImage ? 'pt-16' : 'pt-32')}
+      jsonLd={postJsonLd(post)}
+      // Allows redirects for valid pages too
+      redirects={<PayloadRedirects disableNotFound url={url} />}
+      draft={draft}
+      hasHeroImage={Boolean(post.heroImage)}
+      header={postHeaderProps(post)}
+      breadcrumbs={[
+        { label: 'Home', href: '/' },
+        { label: 'News & Updates', href: '/posts' },
+        { label: post.title },
+      ]}
+      toc={articleToc(post.content)}
+      aside={
+        <>
+          <SidebarPosts posts={post.relatedPosts} title="Related Posts" />
+          <SidebarPosts posts={recentPosts} title="You May Also Like" />
+          <SidebarEvents events={upcomingEvents} title="Upcoming Events" />
+          <SidebarCTA
+            heading="Get Involved"
+            description="Join your neighbors in building a stronger Sprecher East community."
+            buttonLabel="Learn How"
+            buttonHref="/get-involved"
           />
-        </div>
-        <DetailLayout
-          toc={articleToc(post.content)}
-          aside={
-            <>
-              <SidebarPosts posts={post.relatedPosts} title="Related Posts" />
-              <SidebarPosts posts={recentPosts} title="You May Also Like" />
-              <SidebarEvents events={upcomingEvents} title="Upcoming Events" />
-              <SidebarCTA
-                heading="Get Involved"
-                description="Join your neighbors in building a stronger Sprecher East community."
-                buttonLabel="Learn How"
-                buttonHref="/get-involved"
-              />
-            </>
-          }
-        >
-          <RichText
-            className={READING_WIDTH}
-            data={post.content}
-            blocks={richTextBlocks}
-            enableGutter={false}
-          />
-          <ForumPrompt href={forumUrl} />
-        </DetailLayout>
-      </div>
-    </article>
+        </>
+      }
+    >
+      <RichText
+        className={READING_WIDTH}
+        data={post.content}
+        blocks={richTextBlocks}
+        enableGutter={false}
+      />
+      <ForumPrompt href={forumUrl} />
+    </ArticlePage>
   )
 }
 
