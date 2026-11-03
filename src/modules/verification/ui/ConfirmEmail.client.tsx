@@ -59,14 +59,16 @@ export function ConfirmEmail({
     }
   }, [])
 
+  // Whether the link was already done with when the page opened (it never changes: later answers
+  // clear the address themselves)
+  const [openedDone] = useState(() => isLinkDone(answer))
+
   useEffect(() => {
     // A link already done with when the page opened: keep its token out of the address bar
-    if (isLinkDone(answer) && window.location.search) {
+    if (openedDone && window.location.search) {
       window.history.replaceState(null, '', window.location.pathname)
     }
-    // Only the state the page opened with; later answers clear the address themselves
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [openedDone])
 
   useEffect(() => {
     // The check finished after a press that had to wait: the reason no longer holds
