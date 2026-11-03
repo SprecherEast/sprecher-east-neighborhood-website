@@ -2,7 +2,7 @@
   "path": ["src", "intelligence", "ops", "scripts"],
   "format": ["typescript", "tsx", "javascript", "jsx", "css", "bash"],
   "minLines": 12,
-  "minTokens": 80,
+  "minTokens": 30,
   "threshold": 0,
   "reporters": ["console"],
   "gitignore": true,
@@ -14,6 +14,7 @@
     "**/endpoints/seed/**",
     "**/payload-types.ts",
     "**/importMap.js",
-    "**/dev/gallery/**"
+    "**/dev/gallery/**",
+    "src/app/\\(payload\\)/**"
   ]
 }
