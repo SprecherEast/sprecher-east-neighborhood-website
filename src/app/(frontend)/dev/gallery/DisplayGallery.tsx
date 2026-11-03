@@ -6,6 +6,7 @@ import { Button } from '@/platform/ui/Button'
 import { Card, CardBody, CardFooter, CardMedia, CardMeta, CardTitle } from '@/platform/ui/Card'
 import { CardGrid, CardGridItem } from '@/platform/ui/CardGrid'
 import { DateTime } from '@/platform/ui/DateTime'
+import { Disclosure } from '@/platform/ui/Disclosure'
 import { EmptyState } from '@/platform/ui/EmptyState'
 import { Link } from '@/platform/ui/Link'
 import { Media } from '@/platform/ui/Media'
@@ -186,6 +187,28 @@ export function DisplayGallery() {
             description="This page could not be found."
             action={<Button href="/">Go home</Button>}
           />
+        </GalleryVariant>
+      </GalleryEntry>
+      <GalleryEntry
+        name="Disclosure"
+        description="An open-and-close box: a native details with the kit's summary row and chevron."
+      >
+        <GalleryVariant label="card (an FAQ question)" className="block">
+          <div className="max-w-prose space-y-4">
+            <Disclosure variant="card" summary="Who runs this site?">
+              <Text variant="small">Neighbors, with help from AI. It is unofficial.</Text>
+            </Disclosure>
+            <Disclosure variant="card" summary="Is this one open?" defaultOpen>
+              <Text variant="small">Yes: defaultOpen starts it open.</Text>
+            </Disclosure>
+          </div>
+        </GalleryVariant>
+        <GalleryVariant label="bar (the On this page row on small screens)" className="block">
+          <div className="max-w-prose rounded-2xl border border-border">
+            <Disclosure variant="bar" summary="On this page" bodyClassName="px-4 py-3">
+              <Text variant="small">The list of sections goes here.</Text>
+            </Disclosure>
+          </div>
         </GalleryVariant>
       </GalleryEntry>
     </>

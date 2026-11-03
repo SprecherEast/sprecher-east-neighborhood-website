@@ -1,10 +1,10 @@
 'use client'
 
-import { ChevronDown } from 'lucide-react'
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
+import { Disclosure } from './Disclosure'
 import { Link } from './Link'
 
 import { currentSectionId, hasOnThisPage, readingLine, type OnThisPageSection } from './onThisPage'
@@ -107,27 +107,26 @@ export function OnThisPage({ sections, className }: OnThisPageProps) {
         className,
       )}
     >
-      <details ref={detailsRef} className="group lg:hidden">
-        <summary className="flex min-h-[var(--section-bar-height)] cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-semibold text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring md:px-8 [&::-webkit-details-marker]:hidden">
-          <span className="min-w-0 truncate">
+      <Disclosure
+        ref={detailsRef}
+        variant="bar"
+        className="lg:hidden"
+        bodyClassName="max-h-[60svh] overflow-y-auto px-2 py-2 md:px-6"
+        summary={
+          <span className="block truncate">
             On this page
             {currentText && (
               <span className="font-normal text-muted-foreground"> · {currentText}</span>
             )}
           </span>
-          <ChevronDown
-            aria-hidden="true"
-            className="size-5 shrink-0 transition-transform duration-200 group-open:rotate-180"
-          />
-        </summary>
-        <div className="max-h-[60svh] overflow-y-auto border-t border-border px-2 py-2 md:px-6">
-          <SectionList
-            sections={sections}
-            current={current}
-            onChoose={() => detailsRef.current?.removeAttribute('open')}
-          />
-        </div>
-      </details>
+        }
+      >
+        <SectionList
+          sections={sections}
+          current={current}
+          onChoose={() => detailsRef.current?.removeAttribute('open')}
+        />
+      </Disclosure>
 
       <div className="hidden lg:block">
         <p className="mb-2 px-3 text-xs font-bold tracking-widest text-primary-strong uppercase">
