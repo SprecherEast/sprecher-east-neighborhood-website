@@ -102,6 +102,11 @@
   /* How wide article text and the blocks around it run (#616). Classes: platform/ui/layoutSizes.ts */
   --reading-width: 48rem;
 
+  /* The space an image block leaves above and below it in an article, and how far a legend reaches
+     up under that image so its square top corners stay hidden (#636). Classes: layoutSizes.ts */
+  --figure-gap: 2rem;
+  --legend-overlap: 1rem;
+
   /* The least height of a short page, and of a hero band (#616) */
   --page-min-height: 60vh;
   --hero-min-height: 80vh;
