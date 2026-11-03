@@ -86,12 +86,7 @@ export function ResetPasswordForm({ token: linkToken }: { token: string | null }
     >
       {({ register, formState: { errors } }) => (
         <>
-          <NewPasswordFields
-            password={register('newPassword')}
-            confirm={register('confirmPassword')}
-            passwordError={errors.newPassword?.message}
-            confirmError={errors.confirmPassword?.message}
-          />
+          <NewPasswordFields register={register} errors={errors} />
           <div>
             <Button type="submit" loading={status === 'submitting'} fullWidth>
               {status === 'submitting' ? 'Saving' : 'Set New Password'}

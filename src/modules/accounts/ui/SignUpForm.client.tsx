@@ -107,13 +107,7 @@ export function SignUpForm({ email }: { email: string | null }) {
                 {...register('email')}
               />
             </Field>
-            <NewPasswordFields
-              label="Password"
-              password={register('newPassword')}
-              confirm={register('confirmPassword')}
-              passwordError={errors.newPassword?.message}
-              confirmError={errors.confirmPassword?.message}
-            />
+            <NewPasswordFields label="Password" register={register} errors={errors} />
             {robotCheck.enabled && <TurnstileWidget {...robotCheck.widgetProps} />}
             <div>
               <Button type="submit" loading={status === 'submitting'} fullWidth>
