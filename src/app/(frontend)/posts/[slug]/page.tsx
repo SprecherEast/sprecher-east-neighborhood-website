@@ -7,6 +7,7 @@ import { Breadcrumbs } from '@/platform/ui/Breadcrumbs'
 import { JsonLd } from '@/platform/ui/JsonLd'
 import { LivePreviewListener } from '@/platform/ui/LivePreviewListener.client'
 import { ForumPrompt, getForumUrl, PayloadRedirects } from '@/modules/site/server'
+import { headingAnchors } from '@/platform/richtext/headingAnchors'
 import { RichText } from '@/platform/richtext/RichText'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
 import { SidebarCTA } from '@/platform/ui/SidebarCTA'
@@ -21,6 +22,8 @@ import {
 } from '@/modules/news/server'
 import { generateMeta } from '@/platform/seo/generateMeta'
 import { DetailLayout } from '@/platform/ui/DetailLayout'
+import { hasOnThisPage } from '@/platform/ui/onThisPage'
+import { OnThisPage } from '@/platform/ui/OnThisPage.client'
 import { PageHeader } from '@/platform/ui/PageHeader'
 import { cn } from '@/platform/lib/cn'
 
@@ -61,6 +64,8 @@ export default async function Post({ params: paramsPromise }: Args) {
     getForumUrl(),
   ])
 
+  const sections = headingAnchors(post.content)
+
   return (
     // Without a photo the header is plain, so it keeps clear of the site header (#461)
     <article className={cn('pb-16', post.heroImage ? 'pt-16' : 'pt-32')}>
@@ -84,6 +89,7 @@ export default async function Post({ params: paramsPromise }: Args) {
           />
         </div>
         <DetailLayout
+          toc={hasOnThisPage(sections) ? <OnThisPage sections={sections} /> : undefined}
           aside={
             <>
               <SidebarPosts posts={post.relatedPosts} title="Related Posts" />

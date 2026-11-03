@@ -4,6 +4,7 @@ import { Alert, type AlertTone } from '@/platform/ui/Alert'
 import { Button } from '@/platform/ui/Button'
 import { Card } from '@/platform/ui/Card'
 import { DetailLayout } from '@/platform/ui/DetailLayout'
+import { OnThisPage } from '@/platform/ui/OnThisPage.client'
 import { Section } from '@/platform/ui/Section'
 import { SidebarCTA } from '@/platform/ui/SidebarCTA'
 import { Text } from '@/platform/ui/Text'
@@ -14,6 +15,15 @@ const TONES: AlertTone[] = ['info', 'success', 'warning', 'error']
 const SECTION_TONES = ['plain', 'surface', 'brand'] as const
 const SPACINGS = ['none', 'sm', 'md', 'lg'] as const
 const WIDTHS = ['page', 'prose', 'narrow'] as const
+
+const TOC_SECTIONS = [
+  { id: 'gallery-toc-short', text: 'The short version', level: 2 },
+  { id: 'gallery-toc-map', text: 'The map', level: 2 },
+  { id: 'gallery-toc-who', text: 'Who gains', level: 3 },
+  { id: 'gallery-toc-timeline', text: 'Timeline', level: 2 },
+  { id: 'gallery-toc-money', text: 'Money', level: 2 },
+  { id: 'gallery-toc-next', text: 'What happens next', level: 2 },
+] as const
 
 const FRAME = 'w-full overflow-hidden rounded-2xl border border-border'
 
@@ -102,6 +112,42 @@ export function LayoutGallery() {
                   A post&apos;s or an event&apos;s body goes here.
                 </Text>
               </Card>
+            </DetailLayout>
+          </div>
+        </GalleryVariant>
+      </GalleryEntry>
+      <GalleryEntry
+        name="OnThisPage"
+        description="An article's sections as a menu: a sticky rail from lg, a bar under the site header before that."
+      >
+        <GalleryVariant label="with-toc" className="block">
+          <div className="w-full rounded-2xl border border-border py-6">
+            <DetailLayout
+              toc={<OnThisPage sections={[...TOC_SECTIONS]} />}
+              aside={<p>The sidebar reads below the article.</p>}
+            >
+              {TOC_SECTIONS.map((section) => (
+                <section key={section.id} className="mb-10">
+                  {section.level === 2 ? (
+                    <h2
+                      id={section.id}
+                      className="scroll-mt-24 text-2xl font-bold max-lg:scroll-mt-36"
+                    >
+                      {section.text}
+                    </h2>
+                  ) : (
+                    <h3
+                      id={section.id}
+                      className="scroll-mt-24 text-xl font-bold max-lg:scroll-mt-36"
+                    >
+                      {section.text}
+                    </h3>
+                  )}
+                  <p className="mt-3 h-64 max-w-prose">
+                    Sample text for this section, long enough to scroll past.
+                  </p>
+                </section>
+              ))}
             </DetailLayout>
           </div>
         </GalleryVariant>
