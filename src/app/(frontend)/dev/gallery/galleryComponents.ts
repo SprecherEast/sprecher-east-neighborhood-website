@@ -14,6 +14,7 @@ export const GALLERY_COMPONENTS = [
   'MetaList',
   'DateTime',
   'EmptyState',
+  'Disclosure',
   'PageHeader',
   'Breadcrumbs',
   'Media',

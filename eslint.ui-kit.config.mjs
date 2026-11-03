@@ -1,6 +1,6 @@
 // Screens use the UI kit, never raw form elements (epic #163, #465): the kit's `Button` and
 // `Field` controls carry the labels, focus rings, sizes and states every screen needs, so a raw
-// `<button>`, `<a>` or `<input>` outside `src/platform/ui/` skips them. `react/forbid-elements` comes with
+// `<button>`, `<a>`, `<input>`, `<details>` or `<img>` outside `src/platform/ui/` skips them. `react/forbid-elements` comes with
 // eslint-config-next's React plugin, so this needs no `no-restricted-syntax` block (which, in flat
 // config, would replace the theme rules' selectors for the same files instead of adding to them).
 
@@ -26,6 +26,9 @@ export const uiKitConfig = {
           { element: 'input', message: use('Field.Input or Field.Checkbox') },
           { element: 'select', message: use('Field.Select') },
           { element: 'textarea', message: use('Field.TextArea') },
+          { element: 'details', message: use('Disclosure') },
+          { element: 'summary', message: use('Disclosure') },
+          { element: 'img', message: use('Media') },
         ],
       },
     ],

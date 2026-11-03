@@ -11,7 +11,7 @@ import { cn } from '@/platform/lib/cn'
  * a page and the `tinted` sidebar box. Every card has the same corners, and an `interactive` card,
  * one whose title is a link, has the one hover: a deeper shadow and a small lift.
  */
-const cardVariants = cva('relative min-w-0 rounded-2xl', {
+export const cardVariants = cva('relative min-w-0 rounded-2xl', {
   variants: {
     variant: {
       elevated: 'border border-border bg-card shadow-sm',
@@ -37,7 +37,7 @@ const cardVariants = cva('relative min-w-0 rounded-2xl', {
   defaultVariants: { variant: 'elevated', padding: 'md', interactive: false },
 })
 
-type CardElement = 'article' | 'div' | 'section' | 'details'
+type CardElement = 'article' | 'div' | 'section'
 
 export type CardProps = VariantProps<typeof cardVariants> &
   Omit<React.HTMLAttributes<HTMLElement>, 'className' | 'children'> & {
