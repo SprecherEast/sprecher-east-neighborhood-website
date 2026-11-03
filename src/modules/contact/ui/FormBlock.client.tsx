@@ -3,6 +3,7 @@ import type { Form as FormType } from '@payloadcms/plugin-form-builder/types'
 
 import { useRouter } from 'next/navigation'
 import React, { useMemo, useState } from 'react'
+import { cn } from '@/platform/lib/cn'
 import { RichText } from '@/platform/richtext/RichText'
 import { Button, Form, type FormStatus } from '@/platform/ui'
 import { Card } from '@/platform/ui/Card'
@@ -15,6 +16,7 @@ import { toDefaultValues, toFormSchema } from './formSchema'
 import { toSubmitErrorMessage } from './submitErrorMessage'
 import { TurnstileWidget } from '@/platform/turnstile/TurnstileWidget.client'
 import { useRobotCheck } from '@/platform/turnstile/useRobotCheck.client'
+import { READING_WIDTH_LG } from '@/platform/ui/layoutSizes'
 
 export type FormBlockType = {
   blockName?: string
@@ -91,7 +93,7 @@ export const FormBlock: React.FC<
     ) : null
 
   return (
-    <div className="container py-10 md:py-14 lg:max-w-[48rem]">
+    <div className={cn('container py-10 md:py-14', READING_WIDTH_LG)}>
       {enableIntro && introContent && !sent && (
         <RichText className="mb-8 lg:mb-12" data={introContent} enableGutter={false} />
       )}

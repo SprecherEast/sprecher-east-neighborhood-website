@@ -6,6 +6,7 @@ import { cn } from '@/platform/lib/cn'
 import type { ImageRef } from '@/platform/lib/content'
 
 import { ImageCredit } from './ImageCredit'
+import { READING_GRID, READING_WIDTH } from './layoutSizes'
 import { Link } from './Link'
 import { Media } from './Media'
 import { MetaList, type LabelledMetaItem } from './MetaList'
@@ -117,7 +118,7 @@ export function PageHeader(props: PageHeaderProps) {
           {backLink.label}
         </Link>
       )}
-      {children && <div className="mt-6 max-w-[50rem]">{children}</div>}
+      {children && <div className={cn('mt-6', READING_WIDTH)}>{children}</div>}
     </header>
   )
 }
@@ -126,7 +127,12 @@ function ImageHeader({ image, eyebrow, title, facts, className }: ImageHeaderPro
   return (
     <header className={className}>
       <div className="relative -mt-[var(--header-height)] flex items-end">
-        <div className="relative z-10 container pt-[var(--header-height)] pb-6 text-on-image lg:grid lg:grid-cols-[1fr_48rem_1fr]">
+        <div
+          className={cn(
+            'relative z-10 container pt-[var(--header-height)] pb-6 text-on-image lg:grid',
+            READING_GRID,
+          )}
+        >
           <div className="lg:col-span-2 lg:col-start-2">
             <Eyebrow variant="image">{eyebrow}</Eyebrow>
             <h1 className={titleVariants({ variant: 'image' })}>{title}</h1>
@@ -144,7 +150,7 @@ function ImageHeader({ image, eyebrow, title, facts, className }: ImageHeaderPro
       </div>
       <ImageCredit image={image} className="container mt-2 text-right" />
       {facts && facts.length > 0 && (
-        <div className="container mt-3 lg:grid lg:grid-cols-[1fr_48rem_1fr]">
+        <div className={cn('container mt-3 lg:grid', READING_GRID)}>
           <MetaList
             variant="inline"
             items={facts}

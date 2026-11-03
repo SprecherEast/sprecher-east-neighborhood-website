@@ -2,6 +2,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
+import { PAGE_MIN_HEIGHT } from './layoutSizes'
 
 /*
  * What a list or page shows when it has nothing to show (#416): a title, an optional line on what
@@ -14,7 +15,7 @@ const emptyStateVariants = cva('flex flex-col items-center text-center', {
     variant: {
       boxed: 'rounded-2xl border border-border bg-surface p-8 md:p-12',
       plain: 'py-12',
-      page: 'min-h-[60vh] justify-center py-28',
+      page: `${PAGE_MIN_HEIGHT} justify-center py-28`,
     },
   },
   defaultVariants: { variant: 'boxed' },

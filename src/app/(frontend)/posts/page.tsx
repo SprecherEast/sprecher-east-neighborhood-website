@@ -4,6 +4,7 @@ import React from 'react'
 
 import { findPostPage, PostsFeed } from '@/modules/news/server'
 import { PageHeader } from '@/platform/ui/PageHeader'
+import { PAGE_SHELL } from '@/platform/ui/layoutSizes'
 
 export const dynamic = 'force-static'
 export const revalidate = 600
@@ -13,7 +14,7 @@ export default async function Page() {
   const posts = await findPostPage(1)
 
   return (
-    <div className="pt-24 pb-24">
+    <div className={PAGE_SHELL}>
       <PageHeader eyebrow="News" title="News & Updates" />
 
       <PostsFeed initial={posts} />

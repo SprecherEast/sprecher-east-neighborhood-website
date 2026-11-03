@@ -99,6 +99,13 @@
 :root {
   --header-height: 4.5rem; /* ~72px — reduced from legacy 10.4rem to match actual sticky header (py-4 + logo + border) */
 
+  /* How wide article text and the blocks around it run (#616). Classes: platform/ui/layoutSizes.ts */
+  --reading-width: 48rem;
+
+  /* The least height of a short page, and of a hero band (#616) */
+  --page-min-height: 60vh;
+  --hero-min-height: 80vh;
+
   /* The "On this page" bar under the site header on phones and tablets (#574) */
   --section-bar-height: 3rem;
 

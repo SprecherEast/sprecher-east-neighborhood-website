@@ -8,6 +8,7 @@ import { mergeOpenGraph } from '@/platform/seo/mergeOpenGraph'
 import { EmptyState } from '@/platform/ui/EmptyState'
 import { PageHeader } from '@/platform/ui/PageHeader'
 import { Text } from '@/platform/ui/Text'
+import { PAGE_SHELL } from '@/platform/ui/layoutSizes'
 
 export const dynamic = 'force-static'
 export const revalidate = 600
@@ -17,7 +18,7 @@ export default async function FAQPage() {
   const sections = toFaqSections(entries)
 
   return (
-    <div className="pt-24 pb-24">
+    <div className={PAGE_SHELL}>
       <JsonLd data={faqJsonLd(entries)} />
       <PageHeader
         eyebrow="FAQ"

@@ -6,6 +6,7 @@ import { parseSearchQuery } from '@/modules/news'
 import { findSearchResults, PostGrid, SearchBox } from '@/modules/news/server'
 import { EmptyState } from '@/platform/ui/EmptyState'
 import { PageHeader } from '@/platform/ui/PageHeader'
+import { PAGE_SHELL } from '@/platform/ui/layoutSizes'
 
 type Args = {
   searchParams: Promise<{
@@ -19,7 +20,7 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
   const results = await findSearchResults(query)
 
   return (
-    <div className="pt-24 pb-24">
+    <div className={PAGE_SHELL}>
       <PageHeader title="Search">
         <SearchBox initialQuery={query} />
       </PageHeader>

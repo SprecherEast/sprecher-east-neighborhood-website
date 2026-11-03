@@ -3,6 +3,8 @@ import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
+import { PAGE_MIN_HEIGHT } from './layoutSizes'
+
 /*
  * A band of the page (#439, docs/ui/component-set.md): its background (`tone`), its vertical
  * padding (`spacing`), and how wide its content may run (`width`). `page` is the site's container,
@@ -23,7 +25,7 @@ const sectionVariants = cva('', {
       sm: 'py-8 md:py-10',
       md: 'py-10 md:py-14',
       lg: 'py-16',
-      center: 'flex min-h-[60vh] items-center py-16',
+      center: `flex ${PAGE_MIN_HEIGHT} items-center py-16`,
     },
   },
   defaultVariants: { tone: 'plain', spacing: 'lg' },

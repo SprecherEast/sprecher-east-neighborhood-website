@@ -2,6 +2,8 @@ import type { SerializedBlockNode } from '@payloadcms/richtext-lexical'
 import type { JSXConverterArgs } from '@payloadcms/richtext-lexical/react'
 import { describe, expect, it } from 'vitest'
 
+import { READING_WIDTH } from '@/platform/ui/layoutSizes'
+
 import type {
   BannerBlock as BannerFields,
   MediaBlock as MediaFields,
@@ -66,7 +68,7 @@ describe('richTextBlocks', () => {
     expect(element.type).toBe(MediaBlock)
     expect(element.props).toMatchObject({
       placement: 'inline',
-      captionClassName: 'mx-auto max-w-[48rem]',
+      captionClassName: `mx-auto ${READING_WIDTH}`,
       media: 4,
     })
   })

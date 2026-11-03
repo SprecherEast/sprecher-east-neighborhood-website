@@ -7,6 +7,7 @@ import { eventListTitle, eventsHref, type EventCategoryFilter } from '../domain/
 import type { EventScope } from '../domain/scope'
 import { findEventPage } from '../use-cases/findEventPage'
 import { EventsFeed } from './EventsFeed.client'
+import { PAGE_SHELL } from '@/platform/ui/layoutSizes'
 
 type EventListPageProps = {
   scope: EventScope
@@ -25,7 +26,7 @@ export async function EventListPage({ scope, page, category = null }: EventListP
   if (page > 1 && page > events.totalPages) notFound()
 
   return (
-    <div className="pt-24 pb-24">
+    <div className={PAGE_SHELL}>
       <PageHeader
         eyebrow={`Community Calendar · Page ${page}`}
         title={eventListTitle(scope, category?.title)}
