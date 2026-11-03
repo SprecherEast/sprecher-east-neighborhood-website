@@ -1,18 +1,9 @@
 import { slugField, type CollectionConfig } from 'payload'
-import {
-  BlocksFeature,
-  FixedToolbarFeature,
-  HeadingFeature,
-  HorizontalRuleFeature,
-  InlineToolbarFeature,
-  lexicalEditor,
-  OrderedListFeature,
-  UnorderedListFeature,
-} from '@payloadcms/richtext-lexical'
+import { draftVersions, previewAdmin, titleField } from '@/platform/payload/contentCollection'
+import { BODY_HEADINGS, articleEditor } from '@/platform/payload/headingsEditor'
 
 import { suggestibleContentAccess } from '@/platform/payload/draftContentAccess'
 import { EVENT_RICH_TEXT_BLOCKS } from '@/platform/richtext/blockConfigs'
-import { generatePreviewPath } from '@/platform/payload/generatePreviewPath'
 import { populatePublishedAt } from '@/platform/payload/populatePublishedAt'
 import {
   holdSuggestions,
@@ -47,23 +38,11 @@ export const Events: CollectionConfig<'events'> = {
     components: { beforeListTable: [SUGGESTIONS_FILTER] },
     defaultColumns: ['title', 'date', 'categories', '_status', 'moderationStatus', 'updatedAt'],
     // The real event page from the draft, with its card on top, as for posts (#363)
-    livePreview: {
-      url: ({ data, req }) => generatePreviewPath({ slug: data?.slug, collection: 'events', req }),
-    },
-    preview: (data, { req }) =>
-      generatePreviewPath({
-        slug: typeof data?.slug === 'string' ? data.slug : undefined,
-        collection: 'events',
-        req,
-      }),
+    ...previewAdmin('events'),
     useAsTitle: 'title',
   },
   fields: [
-    {
-      name: 'title',
-      type: 'text',
-      required: true,
-    },
+    titleField(),
     {
       type: 'tabs',
       tabs: [
@@ -160,20 +139,7 @@ export const Events: CollectionConfig<'events'> = {
             {
               name: 'content',
               type: 'richText',
-              editor: lexicalEditor({
-                features: ({ rootFeatures }) => {
-                  return [
-                    ...rootFeatures,
-                    HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4'] }),
-                    BlocksFeature({ blocks: EVENT_RICH_TEXT_BLOCKS }),
-                    FixedToolbarFeature(),
-                    InlineToolbarFeature(),
-                    HorizontalRuleFeature(),
-                    UnorderedListFeature(),
-                    OrderedListFeature(),
-                  ]
-                },
-              }),
+              editor: articleEditor(EVENT_RICH_TEXT_BLOCKS, BODY_HEADINGS),
               label: 'Full Event Description',
             },
           ],
@@ -205,11 +171,5 @@ export const Events: CollectionConfig<'events'> = {
     beforeChange: [holdSuggestions, populatePublishedAt],
     afterDelete: [revalidateDelete],
   },
-  versions: {
-    drafts: {
-      autosave: { interval: 100 },
-      schedulePublish: true,
-    },
-    maxPerDoc: 25,
-  },
+  versions: draftVersions(25),
 }

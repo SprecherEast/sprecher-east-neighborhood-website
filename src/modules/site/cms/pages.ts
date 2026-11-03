@@ -1,9 +1,9 @@
 import type { Block, CollectionConfig } from 'payload'
+import { draftVersions, previewAdmin, titleField } from '@/platform/payload/contentCollection'
 import { slugField } from 'payload'
 
 import { populatePublishedAt } from '@/platform/payload/populatePublishedAt'
 import { draftContentAccess } from '@/platform/payload/draftContentAccess'
-import { generatePreviewPath } from '@/platform/payload/generatePreviewPath'
 import { seoTab } from '@/platform/payload/seoTab'
 
 import { hero } from './hero'
@@ -29,28 +29,11 @@ export const createPagesCollection = ({
   },
   admin: {
     defaultColumns: ['title', 'slug', 'updatedAt'],
-    livePreview: {
-      url: ({ data, req }) =>
-        generatePreviewPath({
-          slug: data?.slug,
-          collection: 'pages',
-          req,
-        }),
-    },
-    preview: (data, { req }) =>
-      generatePreviewPath({
-        slug: typeof data?.slug === 'string' ? data.slug : null,
-        collection: 'pages',
-        req,
-      }),
+    ...previewAdmin('pages'),
     useAsTitle: 'title',
   },
   fields: [
-    {
-      name: 'title',
-      type: 'text',
-      required: true,
-    },
+    titleField(),
     {
       type: 'tabs',
       tabs: [
@@ -89,13 +72,5 @@ export const createPagesCollection = ({
     beforeChange: [populatePublishedAt],
     afterDelete: [revalidateDelete],
   },
-  versions: {
-    drafts: {
-      autosave: {
-        interval: 100, // We set this interval for optimal live preview
-      },
-      schedulePublish: true,
-    },
-    maxPerDoc: 50,
-  },
+  versions: draftVersions(50),
 })
