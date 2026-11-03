@@ -46,6 +46,22 @@ describe('headingAnchors', () => {
     expect(new Set(ids).size).toBe(3)
   })
 
+  it('keeps ids unique when "Costs 2" comes first', () => {
+    const ids = headingAnchors(
+      doc(
+        heading('h2', text('Costs 2')),
+        heading('h2', text('Costs')),
+        heading('h2', text('Costs')),
+      ),
+    ).map((a) => a.id)
+    expect(new Set(ids).size).toBe(3)
+  })
+
+  it('reads a line break in a heading as a space between words', () => {
+    const value = doc(heading('h2', text('Next'), { type: 'linebreak', version: 1 }, text('steps')))
+    expect(headingAnchors(value)[0]).toEqual({ id: 'next-steps', text: 'Next steps', level: 2 })
+  })
+
   it('folds accents into their letters and drops punctuation', () => {
     const value = doc(heading('h2', text('Café "Big" Plan: 2027 & beyond')))
     expect(headingAnchors(value)[0]?.id).toBe('cafe-big-plan-2027-beyond')

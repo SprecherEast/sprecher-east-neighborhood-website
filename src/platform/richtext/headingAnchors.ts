@@ -14,8 +14,13 @@ type LexicalNode = {
 
 const ANCHOR_TAGS = { h2: 2, h3: 3 } as const
 
+// A line break inside a heading separates words, so it counts as a space
 const textOf = (node: LexicalNode): string =>
-  node.type === 'text' ? (node.text ?? '') : (node.children ?? []).map(textOf).join('')
+  node.type === 'linebreak'
+    ? ' '
+    : node.type === 'text'
+      ? (node.text ?? '')
+      : (node.children ?? []).map(textOf).join('')
 
 /** `Café & the "Big" Plan` → `cafe-the-big-plan`: accents folded to their letters, not dropped */
 const toId = (text: string): string =>
