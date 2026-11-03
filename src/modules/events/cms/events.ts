@@ -9,13 +9,6 @@ import {
   OrderedListFeature,
   UnorderedListFeature,
 } from '@payloadcms/richtext-lexical'
-import {
-  MetaDescriptionField,
-  MetaImageField,
-  MetaTitleField,
-  OverviewField,
-  PreviewField,
-} from '@payloadcms/plugin-seo/fields'
 
 import { suggestibleContentAccess } from '@/platform/payload/draftContentAccess'
 import { EVENT_RICH_TEXT_BLOCKS } from '@/platform/richtext/blockConfigs'
@@ -26,6 +19,7 @@ import {
   REVIEW_QUEUE_FIELDS,
   SUGGESTIONS_FILTER,
 } from '@/platform/payload/reviewQueue'
+import { seoTab } from '@/platform/payload/seoTab'
 
 import { EVENT_LOCATION_TYPES } from '../domain/locationTypes'
 import { officialMeetingFields } from './officialMeetingFields'
@@ -184,29 +178,7 @@ export const Events: CollectionConfig<'events'> = {
             },
           ],
         },
-        {
-          name: 'meta',
-          label: 'SEO',
-          fields: [
-            OverviewField({
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-              imagePath: 'meta.image',
-            }),
-            MetaTitleField({
-              hasGenerateFn: true,
-            }),
-            MetaImageField({
-              relationTo: 'media',
-            }),
-            MetaDescriptionField({}),
-            PreviewField({
-              hasGenerateFn: true,
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-            }),
-          ],
-        },
+        seoTab(),
       ],
     },
     {

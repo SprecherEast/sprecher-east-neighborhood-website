@@ -1,16 +1,10 @@
 import type { Block, CollectionConfig } from 'payload'
 import { slugField } from 'payload'
-import {
-  MetaDescriptionField,
-  MetaImageField,
-  MetaTitleField,
-  OverviewField,
-  PreviewField,
-} from '@payloadcms/plugin-seo/fields'
 
 import { populatePublishedAt } from '@/platform/payload/populatePublishedAt'
 import { draftContentAccess } from '@/platform/payload/draftContentAccess'
 import { generatePreviewPath } from '@/platform/payload/generatePreviewPath'
+import { seoTab } from '@/platform/payload/seoTab'
 
 import { hero } from './hero'
 import { revalidateDelete, revalidatePage } from './revalidatePage'
@@ -78,33 +72,7 @@ export const createPagesCollection = ({
           ],
           label: 'Content',
         },
-        {
-          name: 'meta',
-          label: 'SEO',
-          fields: [
-            OverviewField({
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-              imagePath: 'meta.image',
-            }),
-            MetaTitleField({
-              hasGenerateFn: true,
-            }),
-            MetaImageField({
-              relationTo: 'media',
-            }),
-
-            MetaDescriptionField({}),
-            PreviewField({
-              // if the `generateUrl` function is configured
-              hasGenerateFn: true,
-
-              // field paths to match the target field for data
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-            }),
-          ],
-        },
+        seoTab(),
       ],
     },
     {

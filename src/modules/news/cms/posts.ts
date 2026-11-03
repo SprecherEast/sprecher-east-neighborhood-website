@@ -9,13 +9,6 @@ import {
   OrderedListFeature,
   UnorderedListFeature,
 } from '@payloadcms/richtext-lexical'
-import {
-  MetaDescriptionField,
-  MetaImageField,
-  MetaTitleField,
-  OverviewField,
-  PreviewField,
-} from '@payloadcms/plugin-seo/fields'
 
 import { suggestibleContentAccess } from '@/platform/payload/draftContentAccess'
 import { RICH_TEXT_BLOCKS } from '@/platform/richtext/blockConfigs'
@@ -25,6 +18,7 @@ import {
   REVIEW_QUEUE_FIELDS,
   SUGGESTIONS_FILTER,
 } from '@/platform/payload/reviewQueue'
+import { seoTab } from '@/platform/payload/seoTab'
 
 import { populateAuthors } from './populateAuthors'
 import { revalidateDelete, revalidatePost } from './revalidatePost'
@@ -134,33 +128,7 @@ export const Posts: CollectionConfig<'posts'> = {
           ],
           label: 'Meta',
         },
-        {
-          name: 'meta',
-          label: 'SEO',
-          fields: [
-            OverviewField({
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-              imagePath: 'meta.image',
-            }),
-            MetaTitleField({
-              hasGenerateFn: true,
-            }),
-            MetaImageField({
-              relationTo: 'media',
-            }),
-
-            MetaDescriptionField({}),
-            PreviewField({
-              // if the `generateUrl` function is configured
-              hasGenerateFn: true,
-
-              // field paths to match the target field for data
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-            }),
-          ],
-        },
+        seoTab(),
       ],
     },
     {
