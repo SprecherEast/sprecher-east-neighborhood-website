@@ -95,9 +95,9 @@ jobs:
             // The self-review (docs/guidelines/guard-rails.md, rule 6) says something about each item
             const selfReview = sections['self-review'] || '';
             for (const item of SELF_REVIEW_ITEMS) {
-              const line = selfReview.split('\n').find((l) => new RegExp(`^\\s*[-*]\\s*${item}\\s*:`, 'i').test(l));
+              const line = selfReview.split('\n').find((l) => new RegExp(`^\\s*[-*]\\s*\\**${item}\\**\\s*:`, 'i').test(l));
               const answer = (line || '').replace(/^[^:]*:/, '').trim();
-              if (answer.length < 10) problems.push(`Self-review: say what you checked and fixed for "${item}" (10+ characters).`);
+              if (answer.length < 10) problems.push(`Self-review: write a line "- ${item}: what you checked and fixed" (10+ characters).`);
             }
 
             if (problems.length) {

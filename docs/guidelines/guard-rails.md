@@ -30,17 +30,18 @@ text, quoted on #609):
    theme, and both light and dark checked.
 4. **Domain-driven, clean architecture.** Code lives in its module and layer
    ([`docs/architecture/`](../architecture/README.md)): rules in `domain/`, orchestration in
-   `use-cases/`, Payload only in `data/` and `cms/`, plain props from mappers into `ui/`,
+   `use-cases/`, Payload only where the architecture allows it (`data/`, `cms/`, `platform/`, `payload.config.ts`), plain props from mappers into `ui/`,
    dependencies pointing inward, no module importing another. Shared code goes to `platform/`.
 5. **Test first.** A rule, guard, mapper, hook or component behaviour starts as a failing test,
    then the code ([`write-code`](../../.agents/skills/write-code/SKILL.md) §4). A bug fix starts
    with the test that reproduces it. A new shared component comes with its test, an axe check, its
    gallery entry and its row in `docs/ui/component-set.md`.
 6. **Self-review before every PR.** Run the [`self-review`](../../.agents/skills/self-review/SKILL.md)
-   skill (`/simplify`) on the final diff, and again after any later push. Record it in the PR's
+   skill on the final diff, and again after any later push. Record it in the PR's
    **Self-review** section: for reuse, quality, efficiency, guidelines and visual design, what was
-   checked and what was fixed (write "not applicable, because …" where it truly is not). An empty
-   or token section fails `PR Policy`.
+   checked and what was fixed (write "not applicable, because …" where it truly is not). `PR Policy` fails an empty section or
+   an item with under 10 characters, but it can't judge whether the text is true: the reviewer does
+   (rule 7).
 7. **Violations are Blockers.** A reviewer treats any breach of rules 1–6 as a **Blocker**: never
    "Minor", never "accepted", never a follow-up issue. The author fixes it in the PR. The review
    checks the Self-review section against the diff, and a section that claims what the diff
@@ -56,7 +57,7 @@ text, quoted on #609):
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Theme (3)             | ESLint (`eslint.theme.config.mjs`), the theme contract test                                                                    |
 | Raw tags (2)          | ESLint ban on raw `a`, `button`, `input`, `select`, `textarea` (#465, #609). `<details>` and `<img>` are not banned yet (#610) |
-| Architecture (4)      | ESLint boundaries (`eslint.boundaries.config.mjs`), knip                                                                       |
+| Architecture (4)      | ESLint boundaries (`eslint.boundaries.config.mjs`); knip reports unused code (not a required check yet)                        |
 | Duplication (1)       | Review only for now. A required duplication check is tracked in #611, because the package needs vetting first                  |
 | Self-review (6)       | `PR Policy` requires the Self-review section, then the reviewer checks it                                                      |
 | Tests (5), violations | Required CI (tests, axe), then the reviewer. These two rest on the reviewer's diligence                                        |
