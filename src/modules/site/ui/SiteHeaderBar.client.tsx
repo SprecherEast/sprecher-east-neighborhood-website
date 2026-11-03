@@ -3,16 +3,16 @@ import NextLink from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { type ReactNode, useCallback, useEffect, useState } from 'react'
 
-import type { Header } from '@/payload-types'
-
 import { Button } from '@/platform/ui'
 import { Dialog } from '@/platform/ui/Dialog.client'
 import { Menu } from 'lucide-react'
 import { Logo } from './Logo'
+import type { HeaderNavLink } from '../domain/nav'
 import { HeaderNav } from './HeaderNav.client'
 
 interface SiteHeaderBarProps {
-  data: Header
+  /** The nav links the editors set, already resolved */
+  links: HeaderNavLink[]
   /** The account links in the desktop bar */
   accountMenu: ReactNode
   /** The account links in the mobile menu */
@@ -20,7 +20,7 @@ interface SiteHeaderBarProps {
 }
 
 export const SiteHeaderBar: React.FC<SiteHeaderBarProps> = ({
-  data,
+  links,
   accountMenu,
   mobileAccountMenu,
 }) => {
@@ -75,7 +75,7 @@ export const SiteHeaderBar: React.FC<SiteHeaderBarProps> = ({
             Contact gap and the account name), so a signed-in header still fits a phone's desktop
             mode, about 980px (#545) */}
         <div className="hidden items-center gap-1 lg:flex">
-          <HeaderNav data={data} pathname={pathname} />
+          <HeaderNav links={links} pathname={pathname} />
           {accountMenu}
           <Button
             href="/contact"
@@ -108,7 +108,7 @@ export const SiteHeaderBar: React.FC<SiteHeaderBarProps> = ({
           }
         >
           <div id="mobile-menu" className="container flex flex-col gap-2 py-4">
-            <HeaderNav data={data} pathname={pathname} mobile onNavigate={closeMobileMenu} />
+            <HeaderNav links={links} pathname={pathname} mobile onNavigate={closeMobileMenu} />
             {/* Following a link or signing out in the account links closes the menu too */}
             <div className="contents" onClick={closeOnLinkOrButton}>
               {mobileAccountMenu}

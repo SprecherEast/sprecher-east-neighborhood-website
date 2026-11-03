@@ -2,26 +2,19 @@
 
 import React from 'react'
 
-import type { Header as HeaderType } from '@/payload-types'
-
-import type { ResolvedLink } from '@/platform/lib'
-import { resolveLink } from '@/platform/payload/resolveLink'
 import { Link } from '@/platform/ui'
 import { SearchIcon } from 'lucide-react'
 
-import { isActivePath, isHeaderButtonPath } from '../domain/nav'
+import { type HeaderNavLink, isActivePath } from '../domain/nav'
 
 interface HeaderNavProps {
-  data: HeaderType
+  links: HeaderNavLink[]
   pathname: string
   mobile?: boolean
   onNavigate?: () => void
 }
 
-export const HeaderNav: React.FC<HeaderNavProps> = ({ data, pathname, mobile, onNavigate }) => {
-  const links = (data?.navItems || [])
-    .map(({ link }) => resolveLink(link))
-    .filter((link): link is ResolvedLink => link !== null && !isHeaderButtonPath(link.href))
+export const HeaderNav: React.FC<HeaderNavProps> = ({ links, pathname, mobile, onNavigate }) => {
   const size = mobile ? 'md' : 'sm'
 
   return (

@@ -1,3 +1,6 @@
+/** One link in the header's nav: where it goes, what it says, and whether it leaves the site. */
+export type HeaderNavLink = { href: string; label: string; external: boolean }
+
 /** The path of an address, without its query, fragment or trailing slashes (`/` stays `/`). */
 export function toPathname(value: string): string {
   const [pathOnly] = value.split(/[?#]/)

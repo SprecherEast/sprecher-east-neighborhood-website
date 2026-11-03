@@ -1,12 +1,20 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ArchiveBlock, ContentBlock, MediaBlock, Page, TopIssuesBlock } from '@/payload-types'
+import type {
+  ArchiveBlock,
+  ContentBlock,
+  Header,
+  MediaBlock,
+  Page,
+  TopIssuesBlock,
+} from '@/payload-types'
 
 import {
   toArchiveBlockProps,
   toCallToActionBlockProps,
   toContentBlockProps,
   toContentLayout,
+  toHeaderNavLinks,
   toPageLayout,
 } from './mappers'
 
@@ -220,5 +228,44 @@ describe('toPageLayout', () => {
     const old = [{ blockType: 'gallery' }] as unknown as Page['layout']
 
     expect(toPageLayout(old)).toEqual([])
+  })
+})
+
+describe('toHeaderNavLinks', () => {
+  const item = (label: string, url: string, newTab = false) => ({
+    link: { type: 'custom' as const, label, url, newTab },
+  })
+  const header = (...navItems: NonNullable<Header['navItems']>): Header => ({ id: 1, navItems })
+
+  it('turns the editors’ nav items into plain links, in order', () => {
+    expect(toHeaderNavLinks(header(item('Events', '/events'), item('City', 'https://x.test', true)))).toEqual([
+      { href: '/events', label: 'Events', external: false },
+      { href: 'https://x.test', label: 'City', external: true },
+    ])
+  })
+
+  it('resolves a link to a page by its address', () => {
+    const page = {
+      link: {
+        type: 'reference' as const,
+        label: 'About',
+        reference: { relationTo: 'pages' as const, value: { id: 2, slug: 'about' } as never },
+      },
+    }
+
+    expect(toHeaderNavLinks(header(page))).toEqual([
+      { href: '/about', label: 'About', external: false },
+    ])
+  })
+
+  it('leaves out a Contact link, which the header shows as its own button', () => {
+    expect(toHeaderNavLinks(header(item('Events', '/events'), item('Contact', '/contact')))).toHaveLength(1)
+  })
+
+  it('leaves out a link that goes nowhere, and copes with no nav items', () => {
+    const gone = { link: { type: 'reference' as const, label: 'Gone', reference: null } }
+
+    expect(toHeaderNavLinks(header(gone))).toEqual([])
+    expect(toHeaderNavLinks({})).toEqual([])
   })
 })

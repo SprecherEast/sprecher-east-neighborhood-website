@@ -6,6 +6,7 @@ import type {
   ContentBlock,
   EventsThisWeekBlock,
   FormBlock,
+  Header,
   MediaBlock,
   Page,
   TopIssuesBlock,
@@ -22,6 +23,7 @@ import type {
   ContentLayout,
 } from '../domain/blocks'
 import type { PageHeroProps } from '../domain/hero'
+import { type HeaderNavLink, isHeaderButtonPath } from '../domain/nav'
 
 type StoredColumn = NonNullable<ContentBlock['columns']>[number]
 type StoredSize = StoredColumn['size']
@@ -160,4 +162,16 @@ export function toPageHeroProps({
   const resolved = (links ?? []).flatMap(({ link }) => resolveLink(link) ?? [])
   if (!body && !image && resolved.length === 0) return null
   return { variant, ...(body && { body }), ...(image && { image }), links: resolved }
+}
+
+/**
+ * The header's nav as plain links (decision 0013): each stored link resolved to an address, with
+ * the ones that go nowhere and the Contact page (the header has its own button) left out.
+ */
+export function toHeaderNavLinks({ navItems }: Pick<Header, 'navItems'>): HeaderNavLink[] {
+  return (navItems ?? []).flatMap(({ link }) => {
+    const resolved = resolveLink(link)
+    if (!resolved || isHeaderButtonPath(resolved.href)) return []
+    return [{ href: resolved.href, label: resolved.label, external: resolved.external }]
+  })
 }
