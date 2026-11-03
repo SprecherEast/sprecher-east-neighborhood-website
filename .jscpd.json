@@ -1,0 +1,19 @@
+{
+  "path": ["src", "intelligence", "ops", "scripts"],
+  "format": ["typescript", "tsx", "javascript", "jsx", "css", "bash"],
+  "minLines": 12,
+  "minTokens": 80,
+  "threshold": 0,
+  "reporters": ["console"],
+  "gitignore": true,
+  "ignore": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.test.mjs",
+    "**/migrations/**",
+    "**/endpoints/seed/**",
+    "**/payload-types.ts",
+    "**/importMap.js",
+    "**/dev/gallery/**"
+  ]
+}

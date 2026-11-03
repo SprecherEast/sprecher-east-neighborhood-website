@@ -140,6 +140,27 @@ jobs:
       - name: Knip
         run: npm run knip
 
+  # Copy-pasted code: a block of 12+ lines and 80+ tokens repeated anywhere in the code fails the
+  # PR (#611, guard rail 1). Settings and ignore list in `.jscpd.json`. Not a required check yet;
+  # it becomes required once it has stayed green on main for a while.
+  duplication:
+    name: Duplicate code (jscpd)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: jscpd
+        run: npm run duplication
+
   # The account and contact flows as a resident uses them, on a phone and a desktop (#311):
   # Playwright against a production build with a fresh database, emails caught by a local SMTP
   # server and the robot check off (e2e/serve.mjs). Not a required check yet, and the deploy

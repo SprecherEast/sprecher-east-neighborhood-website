@@ -17,7 +17,8 @@
     "test:watch": "vitest",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "prepare": "husky",
-    "knip": "knip"
+    "knip": "knip",
+    "duplication": "jscpd"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",
@@ -101,6 +102,7 @@
     "eslint-plugin-unused-imports": "^4.4.1",
     "husky": "^9.1.7",
     "js-yaml": "^4.3.2",
+    "jscpd": "4.3.0",
     "jsdom": "^29.1.1",
     "knip": "^6.43.0",
     "lint-staged": "^16.3.2",
