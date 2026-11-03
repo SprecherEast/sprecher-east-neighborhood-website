@@ -6,14 +6,14 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Header } from '@/payload-types'
 import { Button, Link } from '@/platform/ui'
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/' }))
 
+import type { HeaderNavLink } from '../domain/nav'
 import { SiteHeaderBar } from './SiteHeaderBar.client'
 
-const data = { id: 1, navItems: [] } as unknown as Header
+const links: HeaderNavLink[] = []
 
 beforeEach(() => {
   // jsdom has no matchMedia; the header listens for the desktop breakpoint
@@ -28,7 +28,7 @@ afterEach(cleanup)
 const renderHeader = () =>
   render(
     <SiteHeaderBar
-      data={data}
+      links={links}
       accountMenu={<Link href="/account">Bar account</Link>}
       mobileAccountMenu={
         <>
