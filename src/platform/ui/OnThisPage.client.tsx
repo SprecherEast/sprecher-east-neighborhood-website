@@ -5,6 +5,8 @@ import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
+import { Link } from './Link'
+
 import { currentSectionId, hasOnThisPage, type OnThisPageSection } from './onThisPage'
 
 export type OnThisPageProps = {
@@ -12,8 +14,8 @@ export type OnThisPageProps = {
   className?: string
 }
 
-/** Where a heading counts as "being read": below the sticky site header and, on phones, the bar */
-const READING_LINE = 160
+/** A heading counts as "being read" this far (px) below where a jump to it lands */
+const READING_SLACK = 16
 
 /** The id of the section being read: the last heading at or above the reading line */
 function useCurrentSection(ids: string[]): string | null {
@@ -21,15 +23,22 @@ function useCurrentSection(ids: string[]): string | null {
   const key = ids.join('\n')
 
   React.useEffect(() => {
-    const ids = key.split('\n')
+    const elements = key.split('\n').flatMap((id) => {
+      const element = document.getElementById(id)
+      return element ? [element] : []
+    })
+    if (elements.length === 0) return
     let frame = 0
     const update = () => {
       frame = 0
-      const tops = ids.flatMap((id) => {
-        const element = document.getElementById(id)
-        return element ? [{ id, top: element.getBoundingClientRect().top }] : []
-      })
-      setCurrent(currentSectionId(tops, READING_LINE))
+      // The line is where a jump lands (the heading's own scroll margin, set from
+      // `--anchor-offset`), so the section a click jumps to is the one highlighted
+      const line = parseFloat(getComputedStyle(elements[0]).scrollMarginTop) + READING_SLACK
+      const tops = elements.map((element) => ({
+        id: element.id,
+        top: element.getBoundingClientRect().top,
+      }))
+      setCurrent(currentSectionId(tops, line))
     }
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update)
@@ -60,17 +69,15 @@ function SectionList({
     <ol className="space-y-1">
       {sections.map((section) => (
         <li key={section.id}>
-          <a
+          <Link
             href={`#${section.id}`}
-            aria-current={section.id === current ? 'location' : undefined}
+            variant="section"
+            current={section.id === current ? 'location' : false}
             onClick={onChoose}
-            className={cn(
-              'flex min-h-11 items-center rounded-md border-l-2 border-transparent px-3 py-2 text-sm leading-snug text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-[current=location]:border-primary-strong aria-[current=location]:font-semibold aria-[current=location]:text-primary-strong lg:min-h-9',
-              section.level === 3 && 'pl-6',
-            )}
+            className={cn(section.level === 3 && 'pl-6')}
           >
             {section.text}
-          </a>
+          </Link>
         </li>
       ))}
     </ol>
@@ -95,13 +102,13 @@ export function OnThisPage({ sections, className }: OnThisPageProps) {
       aria-label="On this page"
       className={cn(
         // Phones and tablets: a bar that sticks under the site header. From lg: a rail beside the article
-        'sticky top-[var(--header-height)] z-30 -mx-4 mb-6 border-y border-border bg-background md:-mx-8',
-        'lg:top-24 lg:mx-0 lg:mb-0 lg:max-h-[calc(100svh-7rem)] lg:overflow-y-auto lg:border-0 lg:bg-transparent',
+        'sticky top-[var(--header-height)] z-30 -mx-4 mb-6 border-y border-border bg-background md:-mx-8 noscript:static',
+        'lg:top-[var(--anchor-offset)] lg:-mx-1 lg:mb-0 lg:max-h-[calc(100svh-var(--anchor-offset)-1rem)] lg:overflow-y-auto lg:border-0 lg:bg-transparent lg:px-1',
         className,
       )}
     >
       <details ref={detailsRef} className="group lg:hidden">
-        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-semibold text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring md:px-8 [&::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-[var(--section-bar-height)] cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-semibold text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring md:px-8 [&::-webkit-details-marker]:hidden">
           <span className="min-w-0 truncate">
             On this page
             {currentText && (

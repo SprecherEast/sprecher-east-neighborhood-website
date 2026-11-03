@@ -22,3 +22,9 @@ export function currentSectionId(
   }
   return current
 }
+
+/**
+ * The class that stops a jump to a heading short of the sticky header (and the phone bar), from
+ * `--anchor-offset` in globals.css. Every heading a menu links to carries it.
+ */
+export const SECTION_SCROLL_MARGIN = 'scroll-mt-[var(--anchor-offset)]'

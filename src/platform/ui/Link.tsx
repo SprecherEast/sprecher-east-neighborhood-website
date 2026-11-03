@@ -31,6 +31,9 @@ export const linkVariants = cva(
         // it often sits on a surface panel, where plain primary is 4.33:1
         action:
           'inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary-strong underline-offset-4 hover:underline',
+        // An entry in an article's "On this page" menu; the section being read is `current="location"`
+        section:
+          'flex min-h-11 items-center rounded-md border-l-2 border-transparent px-3 py-2 text-sm leading-snug text-muted-foreground hover:bg-secondary hover:text-primary-strong aria-[current=location]:border-primary-strong aria-[current=location]:font-semibold aria-[current=location]:text-primary-strong lg:min-h-9',
       },
       // For `nav`: `sm` sits in the desktop bar, `md` is a full-width row in the mobile menu
       size: {
@@ -57,8 +60,11 @@ export type LinkProps = Omit<ComponentProps<typeof NextLink>, 'href' | 'classNam
     className?: string
     /** Opens in a new tab and tells screen readers so */
     external?: boolean
-    /** This link is the page being shown: `aria-current="page"` and the active look */
-    current?: boolean
+    /**
+     * This link is the page being shown (`true`: `aria-current="page"`) or the section being read
+     * (`'location'`), with the active look
+     */
+    current?: boolean | 'location'
     icon?: ReactNode
     iconPosition?: 'start' | 'end'
     /** Shows only the icon; the text stays for screen readers */
@@ -81,7 +87,7 @@ export function Link({
     <AppLink
       {...rest}
       {...(external && { target: '_blank', rel: 'noopener noreferrer' })}
-      aria-current={current ? 'page' : undefined}
+      aria-current={current === 'location' ? 'location' : current ? 'page' : undefined}
       className={cn(linkVariants({ variant, size }), iconOnly && 'p-2 [&_svg]:size-5', className)}
     >
       {iconPosition === 'start' && icon}

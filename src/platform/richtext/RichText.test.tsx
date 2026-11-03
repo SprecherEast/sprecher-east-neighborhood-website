@@ -3,6 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { RichTextValue } from '@/platform/lib'
+import { SECTION_SCROLL_MARGIN } from '@/platform/ui/onThisPage'
 
 import { RichText, type RichTextBlocks } from './RichText'
 
@@ -200,7 +201,7 @@ describe('RichText', () => {
     const [first, second] = screen.getAllByRole('heading', { level: 2 })
     expect(first?.id).toBe('whats-next')
     expect(second?.id).toBe('whats-next-2')
-    expect(first?.classList.contains('scroll-mt-24')).toBe(true)
+    expect(first?.classList.contains(SECTION_SCROLL_MARGIN)).toBe(true)
     expect(screen.getByRole('heading', { level: 4 }).hasAttribute('id')).toBe(false)
   })
 })

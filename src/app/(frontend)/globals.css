@@ -98,6 +98,22 @@
 /* Layout sizes the theme doesn't change */
 :root {
   --header-height: 4.5rem; /* ~72px — reduced from legacy 10.4rem to match actual sticky header (py-4 + logo + border) */
+
+  /* The "On this page" bar under the site header on phones and tablets (#574) */
+  --section-bar-height: 3rem;
+
+  /*
+   * How far a jump to a section (`#id`) stops short of the top: clear of the sticky header and, below
+   * `lg` (60rem), of the bar too. Headings, the menu's rail and its highlight all read it, so a
+   * change to the header or the bar is made here only (#608).
+   */
+  --anchor-offset: calc(var(--header-height) + 1.5rem);
+}
+
+@media (width < 60rem) {
+  :root {
+    --anchor-offset: calc(var(--header-height) + var(--section-bar-height) + 1.5rem);
+  }
 }
 
 @layer base {

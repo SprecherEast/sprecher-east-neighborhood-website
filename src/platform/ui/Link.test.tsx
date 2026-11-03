@@ -94,4 +94,15 @@ describe('Link', () => {
 
     await expectAccessible(container)
   })
+
+  it('marks the section being read with aria-current="location" (#574)', () => {
+    const { container } = render(
+      <Link href="#money" variant="section" current="location">
+        Money
+      </Link>,
+    )
+    const link = container.querySelector('a')
+    expect(link?.getAttribute('href')).toBe('#money')
+    expect(link?.getAttribute('aria-current')).toBe('location')
+  })
 })
