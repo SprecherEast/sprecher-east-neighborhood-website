@@ -114,6 +114,13 @@ html {
   opacity: initial;
 }
 
+/* Jumps to a section (#574) glide, unless the reader asked for less motion */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 /* Respect reduced-motion preferences: no hover lifts, zooms, or long transitions */
 @media (prefers-reduced-motion: reduce) {
   *,

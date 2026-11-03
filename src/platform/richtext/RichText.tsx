@@ -113,7 +113,7 @@ const withHeadingIds =
       const anchor = anchors.get(node)
       const Tag = (HEADING_TAGS.has(node.tag) ? node.tag : 'h1') as 'h1' | 'h2' | 'h3' | 'h4'
       return (
-        <Tag id={anchor?.id} className={anchor ? 'scroll-mt-24' : undefined}>
+        <Tag id={anchor?.id} className={anchor ? 'scroll-mt-24 max-lg:scroll-mt-36' : undefined}>
           {nodesToJSX({ nodes: node.children })}
         </Tag>
       )

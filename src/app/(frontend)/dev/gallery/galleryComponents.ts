@@ -21,6 +21,7 @@ export const GALLERY_COMPONENTS = [
   'Alert',
   'Section',
   'DetailLayout',
+  'OnThisPage',
   'Dialog',
   'Toast',
   'LoadMore',
