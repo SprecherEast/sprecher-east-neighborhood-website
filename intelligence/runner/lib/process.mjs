@@ -10,21 +10,10 @@ import { sendReport, submitItem } from './submit.mjs'
 const MAX_FAILURES_IN_A_ROW = 3
 
 /** Scout, the model stages and submit. Answers a stop status, or null when the run went through. */
-export async function processRun({
-  contract,
-  cms,
-  ask,
-  state,
-  http,
-  robots,
-  budgets,
-  startedAt,
-  runId,
-  log,
-  calls,
-  addError,
-  deferredSources,
-}) {
+export async function processRun(run) {
+  // What the run reads, then what it records into
+  const { contract, cms, ask, state, http, robots, budgets } = run
+  const { startedAt, runId, log, calls, addError, deferredSources } = run
   const { counts, cost } = log
   const { pipeline } = contract
   // Measured on the real clock, whatever `now` says (tests pin it)
