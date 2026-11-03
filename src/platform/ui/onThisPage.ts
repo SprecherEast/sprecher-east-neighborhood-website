@@ -22,3 +22,20 @@ export function currentSectionId(
   }
   return current
 }
+
+/**
+ * A heading counts as "being read" this far (px) below where a jump to it lands. It is the
+ * `1.5rem` of room in `--anchor-offset` (globals.css), rounded down, so the heading a click lands
+ * on is always the highlighted one.
+ */
+const READING_SLACK = 16
+
+/**
+ * The reading line, in px from the top of the window: where a jump lands (the heading's computed
+ * `scroll-margin-top`) plus a little slack. Every heading carries `SECTION_SCROLL_MARGIN`, so the
+ * first heading's margin stands for them all.
+ */
+export function readingLine(scrollMarginTop: string): number {
+  const margin = parseFloat(scrollMarginTop)
+  return (Number.isNaN(margin) ? 0 : margin) + READING_SLACK
+}

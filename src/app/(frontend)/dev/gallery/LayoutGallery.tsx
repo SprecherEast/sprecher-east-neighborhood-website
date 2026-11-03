@@ -5,6 +5,7 @@ import { Button } from '@/platform/ui/Button'
 import { Card } from '@/platform/ui/Card'
 import { DetailLayout } from '@/platform/ui/DetailLayout'
 import { OnThisPage } from '@/platform/ui/OnThisPage.client'
+import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 import { Section } from '@/platform/ui/Section'
 import { SidebarCTA } from '@/platform/ui/SidebarCTA'
 import { Text } from '@/platform/ui/Text'
@@ -129,17 +130,11 @@ export function LayoutGallery() {
               {TOC_SECTIONS.map((section) => (
                 <section key={section.id} className="mb-10">
                   {section.level === 2 ? (
-                    <h2
-                      id={section.id}
-                      className="scroll-mt-24 text-2xl font-bold max-lg:scroll-mt-36"
-                    >
+                    <h2 id={section.id} className={`${SECTION_SCROLL_MARGIN} text-2xl font-bold`}>
                       {section.text}
                     </h2>
                   ) : (
-                    <h3
-                      id={section.id}
-                      className="scroll-mt-24 text-xl font-bold max-lg:scroll-mt-36"
-                    >
+                    <h3 id={section.id} className={`${SECTION_SCROLL_MARGIN} text-xl font-bold`}>
                       {section.text}
                     </h3>
                   )}

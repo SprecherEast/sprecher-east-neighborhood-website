@@ -8,7 +8,7 @@ import { Breadcrumbs } from '@/platform/ui/Breadcrumbs'
 import { JsonLd } from '@/platform/ui/JsonLd'
 import { LivePreviewListener } from '@/platform/ui/LivePreviewListener.client'
 import { PayloadRedirects } from '@/modules/site/server'
-import { headingAnchors } from '@/platform/richtext/headingAnchors'
+import { articleToc } from '@/platform/richtext/articleToc'
 import { RichText } from '@/platform/richtext/RichText'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
 import { SidebarCTA } from '@/platform/ui/SidebarCTA'
@@ -25,8 +25,6 @@ import {
 import { Alert, Button } from '@/platform/ui'
 import { generateMeta } from '@/platform/seo/generateMeta'
 import { DetailLayout } from '@/platform/ui/DetailLayout'
-import { hasOnThisPage } from '@/platform/ui/onThisPage'
-import { OnThisPage } from '@/platform/ui/OnThisPage.client'
 import { PageHeader } from '@/platform/ui/PageHeader'
 import { cn } from '@/platform/lib/cn'
 import { Text } from '@/platform/ui/Text'
@@ -60,8 +58,6 @@ export default async function EventPage({ params: paramsPromise }: Args) {
 
   const upcomingEvents = await findUpcomingEvents({ excludeId: event.id })
   const hasHeroImage = event.image !== null
-  const sections = headingAnchors(event.content)
-
   return (
     // Without a photo the header is plain, so it keeps clear of the site header
     <article className={cn('pb-24', !hasHeroImage && 'pt-32')}>
@@ -83,7 +79,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
           />
         </div>
         <DetailLayout
-          toc={hasOnThisPage(sections) ? <OnThisPage sections={sections} /> : undefined}
+          toc={articleToc(event.content)}
           aside={
             <>
               <SidebarEvents events={upcomingEvents} title="Upcoming Events" />

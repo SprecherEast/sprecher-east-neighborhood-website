@@ -17,6 +17,7 @@ import { cn } from '@/platform/lib/cn'
 import type { RichTextValue } from '@/platform/lib'
 import { documentHref } from '@/platform/payload/documentHref'
 import { Link } from '@/platform/ui/Link'
+import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 import type {
   BannerBlock,
   DiagramKeyBlock,
@@ -113,7 +114,7 @@ const withHeadingIds =
       const anchor = anchors.get(node)
       const Tag = (HEADING_TAGS.has(node.tag) ? node.tag : 'h1') as 'h1' | 'h2' | 'h3' | 'h4'
       return (
-        <Tag id={anchor?.id} className={anchor ? 'scroll-mt-24 max-lg:scroll-mt-36' : undefined}>
+        <Tag id={anchor?.id} className={anchor ? SECTION_SCROLL_MARGIN : undefined}>
           {nodesToJSX({ nodes: node.children })}
         </Tag>
       )
