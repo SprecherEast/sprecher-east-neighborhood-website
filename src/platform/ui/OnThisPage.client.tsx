@@ -20,14 +20,17 @@ function useCurrentSection(ids: string[]): string | null {
   const key = ids.join('\n')
 
   React.useEffect(() => {
-    const elements = key.split('\n').flatMap((id) => {
-      const element = document.getElementById(id)
-      return element ? [element] : []
-    })
-    if (elements.length === 0) return
+    const ids = key.split('\n')
     let frame = 0
     const update = () => {
       frame = 0
+      // Looked up on every update: a live preview can replace a heading's element (h2 to h3)
+      // while keeping its id, and a saved element would then be detached
+      const elements = ids.flatMap((id) => {
+        const element = document.getElementById(id)
+        return element ? [element] : []
+      })
+      if (elements.length === 0) return
       // The line is where a jump lands (the heading's own scroll margin, set from
       // `--anchor-offset`), so the section a click jumps to is the one highlighted
       const line = readingLine(getComputedStyle(elements[0]).scrollMarginTop)
@@ -100,7 +103,7 @@ export function OnThisPage({ sections, className }: OnThisPageProps) {
       className={cn(
         // Phones and tablets: a bar that sticks under the site header. From lg: a rail beside the article
         'sticky top-[var(--header-height)] z-30 -mx-4 mb-6 border-y border-border bg-background md:-mx-8 noscript:static',
-        'lg:top-[var(--anchor-offset)] lg:-mx-1 lg:mb-0 lg:max-h-[calc(100svh-var(--anchor-offset)-1rem)] lg:overflow-y-auto lg:border-0 lg:bg-transparent lg:px-1',
+        'lg:top-[var(--anchor-offset)] lg:-mx-1 lg:mb-0 lg:max-h-[calc(100svh-var(--anchor-offset)-1rem)] lg:overflow-y-auto lg:border-0 lg:bg-transparent lg:px-1 lg:py-1',
         className,
       )}
     >

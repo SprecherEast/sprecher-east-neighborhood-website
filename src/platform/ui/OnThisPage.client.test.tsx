@@ -117,4 +117,33 @@ describe('OnThisPage highlight', () => {
     headings.forEach((el) => el.remove())
     vi.restoreAllMocks()
   })
+
+  it('follows a heading that a live preview replaced with another element of the same id', () => {
+    const heading = (tag: string, id: string, top: number) => {
+      const el = document.createElement(tag)
+      el.id = id
+      el.getBoundingClientRect = () => ({ top }) as DOMRect
+      document.body.append(el)
+      return el
+    }
+    heading('h2', 'short-version', -300)
+    const old = heading('h2', 'who-gains', 300)
+    heading('h2', 'money', 900)
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      callback(0)
+      return 1
+    })
+    render(<OnThisPage sections={SECTIONS} />)
+    expect(document.querySelector('nav a[aria-current="location"]')?.textContent).toBe(
+      'The short version',
+    )
+
+    old.remove()
+    heading('h3', 'who-gains', 0)
+    fireEvent.scroll(window)
+
+    expect(document.querySelector('nav a[aria-current="location"]')?.textContent).toBe('Who gains')
+    document.querySelectorAll('h2, h3').forEach((el) => el.remove())
+    vi.restoreAllMocks()
+  })
 })
