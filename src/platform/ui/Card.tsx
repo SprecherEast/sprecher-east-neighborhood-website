@@ -37,7 +37,7 @@ export const cardVariants = cva('relative min-w-0 rounded-2xl', {
   defaultVariants: { variant: 'elevated', padding: 'md', interactive: false },
 })
 
-type CardElement = 'article' | 'div' | 'section' | 'details'
+type CardElement = 'article' | 'div' | 'section'
 
 export type CardProps = VariantProps<typeof cardVariants> &
   Omit<React.HTMLAttributes<HTMLElement>, 'className' | 'children'> & {

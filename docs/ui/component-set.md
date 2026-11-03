@@ -124,9 +124,8 @@ coverage table, `Field · email` means a field holding `Field.Input type="email"
   `PageHeader · image`, and `Container` became `Section`'s `width`. Two moved into the one area
   that uses them (next point).
 - **Kept in the one place that uses them,** under the rule "add a component when a second screen
-  needs it" (#163): the loading placeholder is a style inside `SiteHeader`, and the FAQ accordion is
-  `FaqList` in `directory/ui` (native `<details>`). Either moves to `platform/ui/` when a second
-  screen needs it.
+  needs it" (#163): the loading placeholder is a style inside `SiteHeader`. The FAQ accordion moved to the
+  shared `Disclosure` once `OnThisPage` needed the same `<details>` row (#610).
 - **Build order:** `Button` and `Link` (19 and 12 elements), then `Field` and `Form`, then `Card`,
   `Media`, `PageHeader` and `EmptyState`.
 
