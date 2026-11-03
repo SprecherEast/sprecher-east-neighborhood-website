@@ -7,7 +7,13 @@ import { Media } from '@/platform/ui/Media'
 import { PageHeader } from '@/platform/ui/PageHeader'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
-import { SAMPLE_BREADCRUMBS, SAMPLE_FACTS, SAMPLE_IMAGE, SAMPLE_PHOTO } from './sampleData'
+import {
+  SAMPLE_BREADCRUMBS,
+  SAMPLE_FACTS,
+  SAMPLE_IMAGE,
+  SAMPLE_PHOTO,
+  SAMPLE_WHITE_IMAGE,
+} from './sampleData'
 
 // A frame round each header, so it reads as a sample and not as the gallery's own header
 const FRAME = 'w-full overflow-hidden rounded-2xl border border-border'
@@ -55,6 +61,25 @@ export function HeadersGallery() {
                 </BadgeList>
               }
               title="Summer picnic in the park"
+              facts={SAMPLE_FACTS}
+              className="pb-2"
+            />
+          </div>
+        </GalleryVariant>
+        <GalleryVariant
+          label="image, on a pure white photo (the worst case for readability)"
+          labelAs="p"
+        >
+          <div className={`${FRAME} [--header-height:0px]`}>
+            <PageHeader
+              variant="image"
+              image={SAMPLE_WHITE_IMAGE}
+              eyebrow={
+                <BadgeList>
+                  <Badge variant="on-image">Development</Badge>
+                </BadgeList>
+              }
+              title="A new way onto I-94 at Milwaukee Street: what it could mean for our streets"
               facts={SAMPLE_FACTS}
               className="pb-2"
             />

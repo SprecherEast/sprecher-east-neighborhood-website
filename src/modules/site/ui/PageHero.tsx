@@ -48,7 +48,7 @@ function HighHero({ body: richText, image, links }: PhotoHeroProps) {
           <div className="max-w-2xl">
             {heading && (
               <RichText
-                className="mb-0 [&_h1]:text-3xl [&_h1]:leading-tight [&_h1]:font-bold [&_h1]:tracking-tight [&_h1]:text-balance [&_h1]:text-on-image [&_h1]:[text-shadow:0_2px_4px_color-mix(in_srgb,var(--scrim)_80%,transparent),0_4px_16px_color-mix(in_srgb,var(--scrim)_50%,transparent)] sm:[&_h1]:text-4xl lg:[&_h1]:text-5xl"
+                className="mb-0 [&_h1]:text-3xl [&_h1]:leading-tight [&_h1]:font-bold [&_h1]:tracking-tight [&_h1]:text-balance [&_h1]:text-on-image [&_h1]:text-shadow-photo sm:[&_h1]:text-4xl lg:[&_h1]:text-5xl"
                 data={heading}
                 enableGutter={false}
               />

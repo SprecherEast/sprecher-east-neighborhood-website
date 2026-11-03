@@ -47,6 +47,10 @@
   --color-warning-strong: var(--warning-strong);
   --color-on-image: var(--on-image);
   --color-scrim: var(--scrim);
+  /* Text on a photo (`text-shadow-photo`): crisp edges on top of the scrim (#572) */
+  --text-shadow-photo:
+    0 2px 4px color-mix(in srgb, var(--scrim) 80%, transparent),
+    0 4px 16px color-mix(in srgb, var(--scrim) 50%, transparent);
   --color-inverse: var(--inverse);
   --color-inverse-foreground: var(--inverse-foreground);
 }
