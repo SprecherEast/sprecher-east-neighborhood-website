@@ -62,15 +62,6 @@ export function Disclosure({
   bodyClassName,
   children,
 }: DisclosureProps) {
-  const content = (
-    <>
-      <summary className={summaryVariants({ variant })}>
-        <span className="min-w-0 flex-1">{summary}</span>
-        <ChevronDown aria-hidden="true" className={chevronVariants({ variant })} />
-      </summary>
-      <div className={cn(bodyVariants({ variant }), bodyClassName)}>{children}</div>
-    </>
-  )
   return (
     <details
       ref={ref}
@@ -81,7 +72,11 @@ export function Disclosure({
         className,
       )}
     >
-      {content}
+      <summary className={summaryVariants({ variant })}>
+        <span className="min-w-0 flex-1">{summary}</span>
+        <ChevronDown aria-hidden="true" className={chevronVariants({ variant })} />
+      </summary>
+      <div className={cn(bodyVariants({ variant }), bodyClassName)}>{children}</div>
     </details>
   )
 }
