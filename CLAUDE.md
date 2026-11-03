@@ -10,6 +10,7 @@ Loaded into every session:
 @AGENTS.md
 @docs/project.md
 @docs/process/project-management.md
+@docs/guidelines/guard-rails.md
 @docs/guidelines/development.md
 @docs/guidelines/security.md
 @docs/guidelines/payload-cms.md

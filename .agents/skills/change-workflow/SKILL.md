@@ -59,7 +59,10 @@ npx prettier --check .              # fix with: npx prettier --write <files>
 npm run build                       # when code or dependencies changed
 ```
 
-Then review your own diff with [`self-review`](../self-review/SKILL.md) and fix what it finds. For
+Then review your own diff with [`self-review`](../self-review/SKILL.md) and fix what it finds.
+This is a gate, not a suggestion ([guard rails](../../../docs/guidelines/guard-rails.md), rule 6):
+don't open the PR until it has run on the final diff, and run it again after any later push. Write
+the result in the PR's **Self-review** section. For
 UI changes that includes the [`visual-design-review`](../visual-design-review/SKILL.md): every
 affected page at six widths, in light and dark themes.
 
@@ -80,7 +83,8 @@ check fails otherwise:
 - `Closes #<issue>` — links the issue and closes it on merge. Use `Part of #<issue>`
   when more PRs will follow; the last PR uses `Closes`.
 - **What changed**, **Why**, **How**, **How to test** (numbered steps someone else can
-  follow), **Risk & rollback**
+  follow), **Risk & rollback**, **Self-review** (one line each for reuse, quality, efficiency,
+  guidelines and visual)
 
 Open it as a draft (`--draft`) while work is incomplete.
 
