@@ -1,17 +1,19 @@
 import React from 'react'
 
+import { cn } from '@/platform/lib/cn'
 import { RichText } from '@/platform/richtext/RichText'
 import { Button } from '@/platform/ui'
 import { Section } from '@/platform/ui/Section'
 
 import type { CallToActionBlockProps } from '../domain/blocks'
+import { READING_WIDTH } from '@/platform/ui/layoutSizes'
 
 /** The call-to-action band (B13): its text, then its buttons; centred on phones. */
 export function CallToActionBlock({ body, links }: CallToActionBlockProps) {
   return (
     <Section tone="brand" spacing="md">
       <div className="flex flex-col items-center gap-8 text-center md:flex-row md:gap-12 md:text-left">
-        <div className="max-w-[48rem] flex-1">
+        <div className={cn(READING_WIDTH, 'flex-1')}>
           {/* White text on the band, links too: the theme's link colour is for page backgrounds */}
           {body && (
             <RichText

@@ -9,6 +9,7 @@ import { CardGrid, CardGridItem } from '@/platform/ui/CardGrid'
 import { EmptyState } from '@/platform/ui/EmptyState'
 import { PageHeader } from '@/platform/ui/PageHeader'
 import { Text } from '@/platform/ui/Text'
+import { PAGE_SHELL } from '@/platform/ui/layoutSizes'
 
 export const dynamic = 'force-static'
 export const revalidate = 600
@@ -17,7 +18,7 @@ export default async function ResourcesPage() {
   const sections = toResourceSections(await findResources())
 
   return (
-    <div className="pt-24 pb-24">
+    <div className={PAGE_SHELL}>
       <PageHeader
         eyebrow="Directory"
         title="Neighborhood Resources"

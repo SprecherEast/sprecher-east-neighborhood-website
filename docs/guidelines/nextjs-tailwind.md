@@ -59,6 +59,7 @@ Fetch data through the owning module's use cases (from its `server.ts`), whose `
 - On photos use `text-on-image` and `scrim` overlays (`from-scrim/60`); on brand bands `text-primary-foreground`; for dark chrome (admin bar, code) `bg-inverse` and `text-inverse-foreground`. Lint fails on a raw palette class (`text-white`, `bg-blue-500`) or a hex/`rgba()` colour in a class (`eslint.theme.config.mjs`, #146)
 - Dark mode uses `[data-theme='dark']` selector — tokens auto-switch, no manual dark: prefixes needed for token colors
 - Container: use the `container` class (max-width with auto margins)
+- Sizes the whole site shares (the article reading width, a short page's and a hero's least height, a list page's top and bottom space) are variables in `globals.css` with their classes in `src/platform/ui/layoutSizes.ts`: import `READING_WIDTH`, `PAGE_MIN_HEIGHT`, `HERO_MIN_HEIGHT` or `PAGE_SHELL`, never type `48rem`, `60vh` or `80vh` again (#616)
 - Font: Poppins loaded via `next/font/google` in layout, applied as `--font-poppins` CSS variable
 
 ## Design Tokens

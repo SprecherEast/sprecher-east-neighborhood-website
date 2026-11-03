@@ -28,6 +28,7 @@ import { DetailLayout } from '@/platform/ui/DetailLayout'
 import { PageHeader } from '@/platform/ui/PageHeader'
 import { cn } from '@/platform/lib/cn'
 import { Text } from '@/platform/ui/Text'
+import { READING_WIDTH } from '@/platform/ui/layoutSizes'
 
 // A scheduled publish or unpublish runs outside a request, where Next can't refresh the cache, so
 // the page also re-renders every 10 minutes (#141, decision 0011)
@@ -125,7 +126,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
           {event.content && (
             <RichText
               blocks={richTextBlocks}
-              className="max-w-[48rem]"
+              className={READING_WIDTH}
               data={event.content}
               enableGutter={false}
             />

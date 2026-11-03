@@ -12,7 +12,7 @@ These patterns are for the home page and landing pages. A post or event with a p
 Instead of centering everything in a tall void, anchor content to the bottom-left. Creates visual weight and a natural reading entry point.
 
 ```tsx
-<div className="relative -mt-[var(--header-height)] min-h-[80vh]">
+<div className="relative -mt-[var(--header-height)] min-h-[var(--hero-min-height)]">
   {/* Background image */}
   <div className="absolute inset-0">
     <Media fill imgClassName="object-cover" priority resource={media} />
@@ -22,7 +22,7 @@ Instead of centering everything in a tall void, anchor content to the bottom-lef
   <div className="absolute inset-0 bg-gradient-to-t from-scrim/70 via-scrim/30 to-transparent" />
 
   {/* Content anchored to bottom-left */}
-  <div className="relative z-10 container flex min-h-[80vh] items-end pb-16 md:pb-20">
+  <div className="relative z-10 container flex min-h-[var(--hero-min-height)] items-end pb-16 md:pb-20">
     <div className="max-w-2xl">
       <h1 className="text-4xl leading-tight font-bold tracking-tight text-on-image md:text-5xl lg:text-6xl">
         Your Neighborhood, Your Community
@@ -54,7 +54,7 @@ Instead of centering everything in a tall void, anchor content to the bottom-lef
 Place hero text on a frosted glass card that sits on top of the image. Text is always legible regardless of image content.
 
 ```tsx
-<div className="relative -mt-[var(--header-height)] min-h-[80vh]">
+<div className="relative -mt-[var(--header-height)] min-h-[var(--hero-min-height)]">
   {/* Background image — stays vivid */}
   <div className="absolute inset-0">
     <Media fill imgClassName="object-cover" priority resource={media} />
@@ -64,7 +64,7 @@ Place hero text on a frosted glass card that sits on top of the image. Text is a
   <div className="absolute inset-0 bg-scrim/20" />
 
   {/* Content in frosted glass panel */}
-  <div className="relative z-10 container flex min-h-[80vh] items-end pb-16 md:items-center md:pb-0">
+  <div className="relative z-10 container flex min-h-[var(--hero-min-height)] items-end pb-16 md:items-center md:pb-0">
     <div className="w-full max-w-xl rounded-2xl border border-on-image/20 bg-on-image/10 p-8 shadow-2xl backdrop-blur-md md:p-12">
       <h1 className="text-3xl leading-tight font-bold tracking-tight text-on-image md:text-4xl lg:text-5xl">
         Your Neighborhood, Your Community

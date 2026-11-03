@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { cn } from '@/platform/lib/cn'
 import type { ResolvedLink, RichTextValue } from '@/platform/lib'
 import { RichText } from '@/platform/richtext/RichText'
 import { splitHeadingFromBody } from '@/platform/richtext/splitHeadingFromBody'
@@ -9,6 +10,7 @@ import { Media } from '@/platform/ui/Media'
 import { Section } from '@/platform/ui/Section'
 
 import type { PageHeroProps } from '../domain/hero'
+import { HERO_MIN_HEIGHT, READING_WIDTH } from '@/platform/ui/layoutSizes'
 
 type PhotoHeroProps = Extract<PageHeroProps, { variant: 'high' | 'medium' }>
 
@@ -41,7 +43,11 @@ function HighHero({ body: richText, image, links }: PhotoHeroProps) {
       <div className="absolute inset-0 bg-gradient-to-r from-scrim/60 via-scrim/30 to-transparent" />
 
       <div
-        className="relative z-10 container flex min-h-[80vh] items-end pt-[var(--header-height)] pb-16 md:pb-20"
+        className={cn(
+          'relative z-10 container flex',
+          HERO_MIN_HEIGHT,
+          'items-end pt-[var(--header-height)] pb-16 md:pb-20',
+        )}
         data-theme="dark"
       >
         <div className="flex w-full flex-col gap-8 md:flex-row md:items-end md:justify-between">
@@ -141,7 +147,7 @@ function HeroLinks({ links }: { links: ResolvedLink[] }) {
 function LowHero({ body }: { body: RichTextValue }) {
   return (
     <Section as="div" spacing="none" className="mt-16">
-      <div className="max-w-[48rem]">
+      <div className={READING_WIDTH}>
         <RichText
           // Match the h1 used on /events and /posts (prose renders it light)
           className="[&_h1]:mb-4 [&_h1]:text-4xl [&_h1]:font-bold [&_h1]:tracking-tight [&_h1]:text-balance md:[&_h1]:text-5xl"

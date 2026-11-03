@@ -14,6 +14,7 @@ import { Timeline } from './editorial/Timeline'
 import { toTimelineProps } from './editorial/timeline'
 import { MediaBlock } from './MediaBlock'
 import type { RichTextBlocks } from './RichText'
+import { READING_WIDTH } from '@/platform/ui/layoutSizes'
 
 /**
  * Renderers for the blocks in `RICH_TEXT_BLOCKS`, for `RichText`'s `blocks` prop.
@@ -23,7 +24,7 @@ import type { RichTextBlocks } from './RichText'
 export const richTextBlocks = {
   banner: ({ node }) => <BannerBlock className="col-start-2 mb-4" {...node.fields} />,
   mediaBlock: ({ node }) => (
-    <MediaBlock {...node.fields} placement="inline" captionClassName="mx-auto max-w-[48rem]" />
+    <MediaBlock {...node.fields} placement="inline" captionClassName={`mx-auto ${READING_WIDTH}`} />
   ),
   code: ({ node }) => <CodeBlock className="col-start-2" {...node.fields} />,
   timeline: ({ node }) => <Timeline className="col-start-2" {...toTimelineProps(node.fields)} />,

@@ -3,6 +3,7 @@ import React from 'react'
 import { EventFilters, findEventFilterMenu } from '@/modules/events/server'
 import { siteTimeZoneLabel } from '@/platform/lib/timezone'
 import { PageHeader } from '@/platform/ui/PageHeader'
+import { PAGE_SHELL } from '@/platform/ui/layoutSizes'
 
 /**
  * What /events and each category's page (/events/category/<slug>) share: the header and the
@@ -13,7 +14,7 @@ export default async function EventsIndexLayout({ children }: { children: React.
   const menu = await findEventFilterMenu()
 
   return (
-    <div className="pt-24 pb-24">
+    <div className={PAGE_SHELL}>
       <PageHeader
         eyebrow="Community Calendar"
         title="Community Events"

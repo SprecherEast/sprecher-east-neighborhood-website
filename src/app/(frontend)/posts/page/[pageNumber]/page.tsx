@@ -6,6 +6,7 @@ import React from 'react'
 import { findPostPage, listPostPageNumbers, PostsFeed } from '@/modules/news/server'
 import { parsePageNumber } from '@/platform/lib'
 import { PageHeader } from '@/platform/ui/PageHeader'
+import { PAGE_SHELL } from '@/platform/ui/layoutSizes'
 
 export const revalidate = 600
 
@@ -28,7 +29,7 @@ export default async function Page({ params: paramsPromise }: Args) {
   if (page > 1 && page > posts.totalPages) notFound()
 
   return (
-    <div className="pt-24 pb-24">
+    <div className={PAGE_SHELL}>
       <PageHeader
         eyebrow={`News · Page ${page}`}
         title="News & Updates"
