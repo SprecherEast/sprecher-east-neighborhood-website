@@ -125,13 +125,7 @@ export function VerifyAccount({
         >
           {({ register, formState: { errors } }) => (
             <>
-              <NewPasswordFields
-                label="Password"
-                password={register('newPassword')}
-                confirm={register('confirmPassword')}
-                passwordError={errors.newPassword?.message}
-                confirmError={errors.confirmPassword?.message}
-              />
+              <NewPasswordFields label="Password" register={register} errors={errors} />
               <div>
                 <Button type="submit" loading={sending} fullWidth>
                   {sending ? 'Confirming' : 'Set Password and Confirm'}

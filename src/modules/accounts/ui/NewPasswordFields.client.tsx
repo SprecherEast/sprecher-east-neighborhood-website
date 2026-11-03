@@ -8,11 +8,10 @@ import { Field } from '@/platform/ui'
 import { MIN_PASSWORD_LENGTH } from '../domain/credentials'
 
 type Props = {
-  /** `register('newPassword')` and `register('confirmPassword')` from the form */
-  password: UseFormRegisterReturn
-  confirm: UseFormRegisterReturn
-  passwordError?: string
-  confirmError?: string
+  /** The form's `register`: this registers `newPassword` and `confirmPassword` itself */
+  register: (name: 'newPassword' | 'confirmPassword') => UseFormRegisterReturn
+  /** The form's `formState.errors`: it reads the message of each of the two fields */
+  errors: Partial<Record<'newPassword' | 'confirmPassword', { message?: string }>>
   /** "Password" when the account is new; "New password" (the default) when it replaces one */
   label?: string
 }
@@ -21,25 +20,23 @@ type Props = {
  * The new password and its confirmation, with the length hint, as every account form asks for
  * them: sign-up, reset, change, and choosing one on the verify page (#289).
  */
-export function NewPasswordFields({
-  password,
-  confirm,
-  passwordError,
-  confirmError,
-  label = 'New password',
-}: Props) {
+export function NewPasswordFields({ register, errors, label = 'New password' }: Props) {
   return (
     <>
       <Field
         label={label}
         required
         hint={`At least ${MIN_PASSWORD_LENGTH} characters.`}
-        error={passwordError}
+        error={errors.newPassword?.message}
       >
-        <Field.Input type="password" autoComplete="new-password" {...password} />
+        <Field.Input type="password" autoComplete="new-password" {...register('newPassword')} />
       </Field>
-      <Field label={`Confirm ${label.toLowerCase()}`} required error={confirmError}>
-        <Field.Input type="password" autoComplete="new-password" {...confirm} />
+      <Field
+        label={`Confirm ${label.toLowerCase()}`}
+        required
+        error={errors.confirmPassword?.message}
+      >
+        <Field.Input type="password" autoComplete="new-password" {...register('confirmPassword')} />
       </Field>
     </>
   )
