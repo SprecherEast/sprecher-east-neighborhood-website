@@ -2,10 +2,13 @@ import 'server-only'
 
 import { cache } from 'react'
 
-import type { EventsThisWeekBlock } from '@/payload-types'
 import { startOfToday } from '@/platform/lib/timezone'
 
-import { toEventsThisWeekProps, toWindowRowQuery } from '../data/mappers'
+import {
+  toEventsThisWeekProps,
+  toWindowRowQuery,
+  type StoredEventsThisWeekBlock,
+} from '../data/mappers'
 import { findEventsInWindow } from '../data/thisWeek'
 import {
   clampWhole,
@@ -24,7 +27,7 @@ const findRow = cache(findEventsInWindow)
  * category is gone lists nothing and is hidden.
  */
 export async function findEventsThisWeek(
-  block: Pick<EventsThisWeekBlock, 'id' | 'heading' | 'days' | 'rows'>,
+  block: StoredEventsThisWeekBlock,
   today: string = startOfToday(),
 ): Promise<EventsThisWeekProps> {
   const until = windowEnd(today, clampWhole(block.days, THIS_WEEK_LIMITS.days))

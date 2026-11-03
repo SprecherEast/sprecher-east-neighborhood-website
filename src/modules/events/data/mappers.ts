@@ -88,6 +88,12 @@ export type WindowRowQuery =
   | { source: Exclude<ThisWeekSource, 'category'>; limit: number }
   | { source: 'category'; categoryId: number; limit: number }
 
+/** The stored "this week" block as the use case reads it: its heading, days and rows (#617). */
+export type StoredEventsThisWeekBlock = Pick<
+  EventsThisWeekBlock,
+  'id' | 'heading' | 'days' | 'rows'
+>
+
 type StoredRow = EventsThisWeekBlock['rows'][number]
 
 /**
@@ -116,7 +122,7 @@ function toSeeAll({ source, category }: StoredRow) {
  * rows' order. A row with no events is left out; with none left, the strip shows its empty state.
  */
 export function toEventsThisWeekProps(
-  { id, heading, rows }: Pick<EventsThisWeekBlock, 'id' | 'heading' | 'rows'>,
+  { id, heading, rows }: Pick<StoredEventsThisWeekBlock, 'id' | 'heading' | 'rows'>,
   eventsByRow: readonly (readonly EventSummary[])[],
 ): EventsThisWeekProps {
   return {

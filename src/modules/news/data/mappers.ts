@@ -92,6 +92,12 @@ export function toPostDetail(doc: Post): PostDetail {
   }
 }
 
+/** The stored archive block as the use case reads it: how it fills, its categories, limit and picks (#617). */
+export type StoredArchiveBlock = Pick<
+  ArchiveBlock,
+  'populateBy' | 'categories' | 'limit' | 'selectedDocs'
+>
+
 /** The ids of a relationship to categories, whether each category is loaded or not. */
 export function toCategoryIds(values: ArchiveBlock['categories'] | undefined): number[] {
   return (values ?? []).map((category) => (typeof category === 'object' ? category.id : category))
