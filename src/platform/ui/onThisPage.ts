@@ -24,7 +24,18 @@ export function currentSectionId(
 }
 
 /**
- * The class that stops a jump to a heading short of the sticky header (and the phone bar), from
- * `--anchor-offset` in globals.css. Every heading a menu links to carries it.
+ * A heading counts as "being read" this far (px) below where a jump to it lands. It is the
+ * `1.5rem` of room in `--anchor-offset` (globals.css), rounded down, so the heading a click lands
+ * on is always the highlighted one.
  */
-export const SECTION_SCROLL_MARGIN = 'scroll-mt-[var(--anchor-offset)]'
+const READING_SLACK = 16
+
+/**
+ * The reading line, in px from the top of the window: where a jump lands (the heading's computed
+ * `scroll-margin-top`) plus a little slack. Every heading carries `SECTION_SCROLL_MARGIN`, so the
+ * first heading's margin stands for them all.
+ */
+export function readingLine(scrollMarginTop: string): number {
+  const margin = parseFloat(scrollMarginTop)
+  return (Number.isNaN(margin) ? 0 : margin) + READING_SLACK
+}

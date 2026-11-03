@@ -102,17 +102,20 @@
   /* The "On this page" bar under the site header on phones and tablets (#574) */
   --section-bar-height: 3rem;
 
+  /* Room a jump to an element leaves clear of the sticky header (the 1.5rem is its breathing space) */
+  --header-clearance: calc(var(--header-height) + 1.5rem);
+
   /*
    * How far a jump to a section (`#id`) stops short of the top: clear of the sticky header and, below
    * `lg` (60rem), of the bar too. Headings, the menu's rail and its highlight all read it, so a
    * change to the header or the bar is made here only (#608).
    */
-  --anchor-offset: calc(var(--header-height) + 1.5rem);
+  --anchor-offset: var(--header-clearance);
 }
 
 @media (width < 60rem) {
   :root {
-    --anchor-offset: calc(var(--header-height) + var(--section-bar-height) + 1.5rem);
+    --anchor-offset: calc(var(--header-clearance) + var(--section-bar-height));
   }
 }
 

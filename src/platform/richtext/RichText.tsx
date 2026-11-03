@@ -17,7 +17,7 @@ import { cn } from '@/platform/lib/cn'
 import type { RichTextValue } from '@/platform/lib'
 import { documentHref } from '@/platform/payload/documentHref'
 import { Link } from '@/platform/ui/Link'
-import { SECTION_SCROLL_MARGIN } from '@/platform/ui/onThisPage'
+import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 import type {
   BannerBlock,
   DiagramKeyBlock,

@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
+import { HEADER_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 import { Text } from '@/platform/ui/Text'
 
 /** One component in the gallery: its name as the heading, then its variants */
@@ -15,7 +16,10 @@ export function GalleryEntry({
 }) {
   const id = `gallery-${name.toLowerCase()}`
   return (
-    <section aria-labelledby={id} className="scroll-mt-24 border-t border-border py-10">
+    <section
+      aria-labelledby={id}
+      className={cn(HEADER_SCROLL_MARGIN, 'border-t border-border py-10')}
+    >
       <Text variant="section" id={id}>
         {name}
       </Text>

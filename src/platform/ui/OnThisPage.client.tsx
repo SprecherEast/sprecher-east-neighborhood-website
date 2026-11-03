@@ -7,15 +7,12 @@ import { cn } from '@/platform/lib/cn'
 
 import { Link } from './Link'
 
-import { currentSectionId, hasOnThisPage, type OnThisPageSection } from './onThisPage'
+import { currentSectionId, hasOnThisPage, readingLine, type OnThisPageSection } from './onThisPage'
 
 export type OnThisPageProps = {
   sections: OnThisPageSection[]
   className?: string
 }
-
-/** A heading counts as "being read" this far (px) below where a jump to it lands */
-const READING_SLACK = 16
 
 /** The id of the section being read: the last heading at or above the reading line */
 function useCurrentSection(ids: string[]): string | null {
@@ -33,7 +30,7 @@ function useCurrentSection(ids: string[]): string | null {
       frame = 0
       // The line is where a jump lands (the heading's own scroll margin, set from
       // `--anchor-offset`), so the section a click jumps to is the one highlighted
-      const line = parseFloat(getComputedStyle(elements[0]).scrollMarginTop) + READING_SLACK
+      const line = readingLine(getComputedStyle(elements[0]).scrollMarginTop)
       const tops = elements.map((element) => ({
         id: element.id,
         top: element.getBoundingClientRect().top,

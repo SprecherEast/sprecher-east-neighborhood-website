@@ -2,10 +2,12 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 
+import { cn } from '@/platform/lib/cn'
 import { Alert } from '@/platform/ui/Alert'
 import { TurnstileWidget } from '@/platform/turnstile/TurnstileWidget.client'
 import { useRobotCheck } from '@/platform/turnstile/useRobotCheck.client'
 import { Button, Field, Form, type FormStatus, Link } from '@/platform/ui'
+import { HEADER_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 
 import { signUp } from '../actions'
 import { signUpSchema, type SignUpInput, type SignUpValues } from '../domain/credentials'
@@ -34,7 +36,7 @@ export function SignUpForm({ email }: { email: string | null }) {
   useEffect(() => {
     if (status !== 'success') return
     doneRef.current?.focus()
-    // Clear of the sticky header (`scroll-mt-24` below), or the message's first line hides (#551)
+    // Clear of the sticky header (`HEADER_SCROLL_MARGIN` below), or the message's first line hides (#551)
     doneRef.current?.scrollIntoView({ block: 'start' })
   }, [status])
 
@@ -68,7 +70,11 @@ export function SignUpForm({ email }: { email: string | null }) {
 
   if (status === 'success') {
     return (
-      <div ref={doneRef} tabIndex={-1} className="scroll-mt-24 space-y-6 outline-none">
+      <div
+        ref={doneRef}
+        tabIndex={-1}
+        className={cn(HEADER_SCROLL_MARGIN, 'space-y-6 outline-none')}
+      >
         <Alert tone="success">{SIGN_UP_SENT}</Alert>
         <Link href={SIGN_IN_PATH} variant="action">
           Go to log in

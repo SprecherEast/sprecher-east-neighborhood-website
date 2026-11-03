@@ -3,7 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { RichTextValue } from '@/platform/lib'
-import { SECTION_SCROLL_MARGIN } from '@/platform/ui/onThisPage'
+import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 
 import { RichText, type RichTextBlocks } from './RichText'
 
