@@ -3,8 +3,13 @@
  * Run after first setup: npx payload run scripts/seed.ts
  */
 
-import { getPayload } from 'payload'
+import { getPayload, type RequiredDataFromCollectionSlug } from 'payload'
 import config from '../src/payload.config'
+
+// What to print for a caught error, which can be anything
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err)
+}
 
 // Convert plain text to Lexical richText JSON
 function textToLexical(text: string) {
@@ -108,8 +113,8 @@ async function seed() {
           _status: 'published',
         },
       })
-    } catch (err: any) {
-      console.warn(`    ! Skipped event "${e.title}": ${err.message}`)
+    } catch (err) {
+      console.warn(`    ! Skipped event "${e.title}": ${errorMessage(err)}`)
     }
   }
 
@@ -133,8 +138,8 @@ async function seed() {
           _status: 'published',
         },
       })
-    } catch (err: any) {
-      console.warn(`    ! Skipped post "${p.title}": ${err.message}`)
+    } catch (err) {
+      console.warn(`    ! Skipped post "${p.title}": ${errorMessage(err)}`)
     }
   }
 
@@ -147,22 +152,18 @@ async function seed() {
   for (let i = 0; i < board.length; i++) {
     const m = board[i]
     try {
-      await payload.create({
-        collection: 'team-members',
-        overrideAccess: true,
-        data: {
-          memberType: 'board-member',
-          name: m.name,
-          role: m.role,
-          bio: m.bio ?? undefined,
-          email: m.email || undefined,
-          status: 'active',
-          order: i + 1,
-        },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any)
-    } catch (err: any) {
-      console.warn(`    ! Skipped member "${m.name}": ${err.message}`)
+      const member: RequiredDataFromCollectionSlug<'team-members'> = {
+        memberType: 'board-member',
+        name: m.name,
+        role: m.role,
+        bio: m.bio ?? undefined,
+        email: m.email || undefined,
+        status: 'active',
+        order: i + 1,
+      }
+      await payload.create({ collection: 'team-members', overrideAccess: true, data: member })
+    } catch (err) {
+      console.warn(`    ! Skipped member "${m.name}": ${errorMessage(err)}`)
     }
   }
 
