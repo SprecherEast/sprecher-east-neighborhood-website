@@ -42,6 +42,23 @@ gh api "repos/{owner}/{repo}/stacks?pull_request=<number>" -H 'X-GitHub-Api-Vers
       is no quote, or the change goes beyond it, the verdict is **Waits for owner**. A PR can
       change the checks that run on itself, so read workflow changes carefully.
 
+## 2b. Check the guard rails (blockers)
+
+Read [`docs/guidelines/guard-rails.md`](../../../docs/guidelines/guard-rails.md). Check the diff
+against each of rules 1–6, and the PR's **Self-review** section against the diff:
+
+- [ ] **Reuse:** no copied logic, markup, class strings or constants; a number two files must agree
+      on has one definition. Search the repo for what the diff adds.
+- [ ] **UI kit:** no raw `<a>`, `<button>`, `<input>`, `<select>`, `<textarea>`, `<img>`, inline SVG
+      or `<details>` outside the kit; no theme literals.
+- [ ] **Architecture:** code in its module and layer; no module importing another.
+- [ ] **Tests first:** new rules, guards, mappers and components have tests; a bug fix has its
+      reproducing test.
+- [ ] **Self-review:** present, specific for each item, and true of the diff.
+
+Any breach is a **Blocker**. Never grade one as Minor, never accept it, never leave it to a
+follow-up issue. A Self-review that claims what the diff doesn't show is a Blocker too.
+
 ## 3. Check the change
 
 - **Correctness:** does it do what the issue asks? Look for edge cases, error handling,
@@ -89,7 +106,7 @@ Group findings by severity:
 
 - **Blocker:** must fix before merge (broken behavior, security issue, missing process step)
 - **Major:** should fix before merge
-- **Minor:** fine to fix in a follow-up issue
+- **Minor:** fine to fix in a follow-up issue. Never a guard-rail breach: those are Blockers
 
 List policy changes under their own **Policy changes** heading, with the owner's quote that covers
 them. They are for visibility, not findings, so they don't count against Ready to merge. List

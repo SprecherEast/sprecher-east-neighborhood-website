@@ -6,8 +6,9 @@ description: Review and clean up your own change before opening or updating a pu
 # Self-review before a PR
 
 The author's own pass over a change. It catches the easy things before the independent review
-([`pr-review`](../pr-review/SKILL.md)), and doesn't replace it. Fix every Critical and High finding
-before opening the PR.
+([`pr-review`](../pr-review/SKILL.md)), and doesn't replace it. Fix every finding that
+breaches the [guard rails](../../../docs/guidelines/guard-rails.md) and every Critical and High
+finding before opening the PR, then record the result in the PR's **Self-review** section.
 
 ## 1. Find the change
 
@@ -67,5 +68,5 @@ treatment: follow [`visual-design-review`](../visual-design-review/SKILL.md).
 
 ## 3. Fix
 
-Collect the findings and fix each one. If a finding is a false positive or not worth doing, note
-it and move on. Then say briefly what you fixed, or that the change was already clean.
+Collect the findings and fix each one. Only a false positive may be noted and left. A guard-rail breach
+is never "not worth doing": fix it. Then say briefly what you fixed, or that the change was already clean.

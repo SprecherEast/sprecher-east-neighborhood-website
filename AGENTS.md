@@ -36,6 +36,14 @@ change this file through the same workflow below.
   owner's rule, 2026-10-23, quoted on #305). This and the rule above fit together: push back
   when his request is weaker than the standard; decide routine things yourself.
 
+## Guard rails: non-negotiable
+
+Build once and reuse everywhere; the UI kit instead of raw tags; theme tokens only; domain-driven,
+clean architecture; tests first; the self-review before every PR; a breach is a Blocker. No one
+can waive these, and "keep going" or "merge without waiting" never means skipping them. The full
+rules, with the owner's words and what enforces each, are in
+[`docs/guidelines/guard-rails.md`](docs/guidelines/guard-rails.md). Read it before any change.
+
 ## The only way code reaches `main` and production
 
 Merging code changes to `main` deploys them to production automatically
@@ -58,7 +66,7 @@ Merging code changes to `main` deploys them to production automatically
    - links the issue with a closing keyword (`Closes #123`), or with `Part of #123` when an
      issue needs several PRs (the last one uses `Closes`)
    - fills in every section of `.github/pull_request_template.md`: **What changed**,
-     **Why**, **How**, **How to test**, **Risk & rollback**
+     **Why**, **How**, **How to test**, **Risk & rollback**, **Self-review**
    - **sits on a native GitHub stack when it depends on another open PR**: its base is the
      branch of the PR below, and the PRs are joined in a stack so GitHub enforces the order they
      merge in. A merge order written in a description or a message is never enough

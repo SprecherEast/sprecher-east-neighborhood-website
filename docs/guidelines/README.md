@@ -10,6 +10,7 @@ Guidelines say how things should be. Step-by-step procedures are Agent Skills in
 
 | Guideline                                           | Read it when                                                                   |
 | --------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [Guard rails](guard-rails.md)                       | Always, before any change: the non-negotiable rules and what enforces them.    |
 | [Development](development.md)                       | Always: native first, configuration over code, DRY, failing explicitly.        |
 | [Security](security.md)                             | Always: packages, input, secrets, access control, roles, the server.           |
 | [Payload CMS](payload-cms.md)                       | You touch collections, blocks, heroes, hooks, fields, migrations or seed data. |

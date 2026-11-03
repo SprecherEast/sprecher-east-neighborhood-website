@@ -42,7 +42,8 @@ jobs:
 
             const fs = require('fs');
             const policy = JSON.parse(fs.readFileSync('.github/label-policy.json', 'utf8'));
-            const REQUIRED_SECTIONS = ['What changed', 'Why', 'How', 'How to test', 'Risk & rollback'];
+            const REQUIRED_SECTIONS = ['What changed', 'Why', 'How', 'How to test', 'Risk & rollback', 'Self-review'];
+            const SELF_REVIEW_ITEMS = ['Reuse', 'Quality', 'Efficiency', 'Guidelines', 'Visual'];
             const problems = [];
             const body = (pr.body || '').replace(/<!--[\s\S]*?-->/g, '');
 
@@ -89,6 +90,14 @@ jobs:
             for (const name of REQUIRED_SECTIONS) {
               const text = (sections[name.toLowerCase()] || '').replace(/^\s*\d+\.\s*$/gm, '').trim();
               if (text.length < 10) problems.push(`Fill in the "## ${name}" section of the PR description.`);
+            }
+
+            // The self-review (docs/guidelines/guard-rails.md, rule 6) says something about each item
+            const selfReview = sections['self-review'] || '';
+            for (const item of SELF_REVIEW_ITEMS) {
+              const line = selfReview.split('\n').find((l) => new RegExp(`^\\s*[-*]\\s*\\**${item}\\**\\s*:`, 'i').test(l));
+              const answer = (line || '').replace(/^[^:]*:/, '').trim();
+              if (answer.length < 10) problems.push(`Self-review: write a line "- ${item}: what you checked and fixed" (10+ characters).`);
             }
 
             if (problems.length) {

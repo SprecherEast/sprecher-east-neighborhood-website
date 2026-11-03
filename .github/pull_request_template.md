@@ -31,9 +31,26 @@ New custom code: link the issue comment with what each step of the ladder found
 
 <!-- What could break, server/env changes needed (no secret values), and how to undo it. -->
 
+## Self-review
+
+<!-- Required (docs/guidelines/guard-rails.md, rule 6). Run the self-review skill on the final diff.
+For each, what you checked and what you fixed; "not applicable, because ..." only where it truly is.
+- Reuse: searched for existing code; nothing copied; shared things defined once
+- Quality: no raw tags the UI kit covers, no magic numbers, architecture layers respected, tests first
+- Efficiency:
+- Guidelines: theme tokens only, security, development rules
+- Visual: screenshots at the six widths, light and dark (UI changes) -->
+
+- Reuse:
+- Quality:
+- Efficiency:
+- Guidelines:
+- Visual:
+
 ## Checklist
 
 - [ ] The linked issue has a type, an area, and a priority label
 - [ ] `npx tsc --noEmit`, ESLint and Prettier pass locally
+- [ ] Self-review done and recorded above, and every finding fixed
 - [ ] Independent review requested (`.agents/skills/pr-review/SKILL.md`)
 - [ ] No secrets committed, and no code changed directly on the server
