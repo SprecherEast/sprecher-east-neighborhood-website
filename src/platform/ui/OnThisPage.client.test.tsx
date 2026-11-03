@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { DetailLayout } from './DetailLayout'
 import { OnThisPage } from './OnThisPage.client'
-import type { OnThisPageSection } from './onThisPage'
+import { currentSectionId, type OnThisPageSection } from './onThisPage'
 import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
@@ -57,5 +57,25 @@ describe('DetailLayout with a toc', () => {
     expect(aside.className).not.toContain('sticky')
     expect(aside.querySelector('nav')).toBeNull()
     expect(container.textContent).toContain('The post')
+  })
+})
+
+describe('currentSectionId', () => {
+  const tops = (...values: number[]) => values.map((top, i) => ({ id: `s${i}`, top }))
+
+  it('is the last heading at or above the reading line', () => {
+    expect(currentSectionId(tops(-400, -50, 120, 600), 160)).toBe('s2')
+  })
+
+  it('goes back to the earlier section when scrolling up', () => {
+    expect(currentSectionId(tops(-900, -300, 400, 900), 160)).toBe('s1')
+  })
+
+  it('is null before the first heading reaches the line', () => {
+    expect(currentSectionId(tops(300, 700), 160)).toBeNull()
+  })
+
+  it('counts a heading that a jump just placed at the line', () => {
+    expect(currentSectionId(tops(-700, 96), 160)).toBe('s1')
   })
 })

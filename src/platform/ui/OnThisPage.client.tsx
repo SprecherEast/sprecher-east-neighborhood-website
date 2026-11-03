@@ -5,40 +5,43 @@ import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
-import { hasOnThisPage, type OnThisPageSection } from './onThisPage'
+import { currentSectionId, hasOnThisPage, type OnThisPageSection } from './onThisPage'
 
 export type OnThisPageProps = {
   sections: OnThisPageSection[]
   className?: string
 }
 
-// The heading counts as "being read" once it passes below the sticky site header and, on phones,
-// the bar, and stays so until the next one does
-const OBSERVER_MARGIN = '-140px 0px -65% 0px'
+/** Where a heading counts as "being read": below the sticky site header and, on phones, the bar */
+const READING_LINE = 160
 
-/** The id of the section being read, found with the browser's `IntersectionObserver` */
+/** The id of the section being read: the last heading at or above the reading line */
 function useCurrentSection(ids: string[]): string | null {
   const [current, setCurrent] = React.useState<string | null>(null)
   const key = ids.join('\n')
 
   React.useEffect(() => {
-    const elements = key
-      .split('\n')
-      .map((id) => document.getElementById(id))
-      .filter((element): element is HTMLElement => element !== null)
-    if (elements.length === 0 || typeof IntersectionObserver === 'undefined') return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Of the headings that just came into the reading zone, the lowest one on the page wins
-        const entering = entries.filter((entry) => entry.isIntersecting)
-        const last = entering[entering.length - 1]
-        if (last) setCurrent(last.target.id)
-      },
-      { rootMargin: OBSERVER_MARGIN },
-    )
-    elements.forEach((element) => observer.observe(element))
-    return () => observer.disconnect()
+    const ids = key.split('\n')
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const tops = ids.flatMap((id) => {
+        const element = document.getElementById(id)
+        return element ? [{ id, top: element.getBoundingClientRect().top }] : []
+      })
+      setCurrent(currentSectionId(tops, READING_LINE))
+    }
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (frame) cancelAnimationFrame(frame)
+    }
   }, [key])
 
   return current

@@ -28,7 +28,7 @@ export function DetailLayout({ children, aside, toc, className }: DetailLayoutPr
       <aside
         className={cn(
           'mt-12 space-y-6',
-          toc ? 'lg:col-span-2 lg:max-w-[48rem]' : 'lg:sticky lg:top-24 lg:mt-0 lg:self-start',
+          toc ? 'lg:col-span-2 lg:max-w-3xl' : 'lg:sticky lg:top-24 lg:mt-0 lg:self-start',
         )}
       >
         {aside}
