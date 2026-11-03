@@ -177,4 +177,30 @@ describe('RichText', () => {
     expect(wrapper()).not.toContain('container')
     expect(wrapper()).toContain('max-w-none')
   })
+
+  it('gives every h2 and h3 a link address with room above it, and leaves other headings alone (#573)', () => {
+    const heading = (tag: string, value: string) => ({
+      type: 'heading',
+      tag,
+      version: 1,
+      direction: 'ltr',
+      format: '',
+      indent: 0,
+      children: [text(value)],
+    })
+    render(
+      <RichText
+        data={doc(
+          heading('h2', "What's next?"),
+          heading('h2', "What's next?"),
+          heading('h4', 'Deep'),
+        )}
+      />,
+    )
+    const [first, second] = screen.getAllByRole('heading', { level: 2 })
+    expect(first?.id).toBe('whats-next')
+    expect(second?.id).toBe('whats-next-2')
+    expect(first?.classList.contains('scroll-mt-24')).toBe(true)
+    expect(screen.getByRole('heading', { level: 4 }).hasAttribute('id')).toBe(false)
+  })
 })

@@ -2,6 +2,7 @@ import type {
   DefaultNodeTypes,
   SerializedAutoLinkNode,
   SerializedBlockNode,
+  SerializedHeadingNode,
   SerializedLinkNode,
 } from '@payloadcms/richtext-lexical'
 import type {
@@ -27,6 +28,7 @@ import type {
 } from '@/payload-types'
 
 import type { CodeBlockProps } from './CodeBlock'
+import { anchorsByNode } from './headingAnchors'
 
 /** A node for one of the blocks an editor can put inside rich text (`RICH_TEXT_BLOCKS`) */
 export type RichTextBlockNode = SerializedBlockNode<
@@ -95,6 +97,30 @@ const withBlocks =
 
 const NO_BLOCKS = withBlocks({})
 
+const HEADING_TAGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+
+// An h2 or h3 gets the id `headingAnchors` gives it, and room above it so a jump to it
+// (`#whats-next`) lands clear of the sticky site header (#573). Other headings stay as Payload
+// draws them.
+const withHeadingIds =
+  (
+    converters: JSXConvertersFunction<NodeTypes>,
+    anchors: ReturnType<typeof anchorsByNode>,
+  ): JSXConvertersFunction<NodeTypes> =>
+  (args) => {
+    const base = converters(args)
+    const heading: JSXConverter<SerializedHeadingNode> = ({ node, nodesToJSX }) => {
+      const anchor = anchors.get(node)
+      const Tag = (HEADING_TAGS.has(node.tag) ? node.tag : 'h1') as 'h1' | 'h2' | 'h3' | 'h4'
+      return (
+        <Tag id={anchor?.id} className={anchor ? 'scroll-mt-24' : undefined}>
+          {nodesToJSX({ nodes: node.children })}
+        </Tag>
+      )
+    }
+    return { ...base, heading }
+  }
+
 type Props = {
   data: RichTextValue
   /**
@@ -112,7 +138,10 @@ export function RichText(props: Props) {
   const { blocks, className, enableProse = true, enableGutter = true, ...rest } = props
   return (
     <ConvertRichText
-      converters={blocks ? withBlocks(blocks) : NO_BLOCKS}
+      converters={withHeadingIds(
+        blocks ? withBlocks(blocks) : NO_BLOCKS,
+        anchorsByNode(props.data),
+      )}
       className={cn(
         'payload-richtext',
         {
