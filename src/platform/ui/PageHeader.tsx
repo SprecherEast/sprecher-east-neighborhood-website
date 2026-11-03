@@ -63,7 +63,7 @@ const titleVariants = cva('font-bold text-balance', {
     variant: {
       default: 'text-4xl tracking-tight text-foreground md:text-5xl',
       compact: 'text-3xl text-foreground',
-      image: 'text-2xl text-on-image sm:text-3xl lg:text-4xl',
+      image: 'text-2xl text-on-image text-shadow-photo sm:text-3xl lg:text-4xl',
     },
   },
 })
@@ -136,7 +136,10 @@ function ImageHeader({ image, eyebrow, title, facts, className }: ImageHeaderPro
             the first screen. `svh` keeps a phone's address bar from making it jump (#571) */}
         <div className="min-h-[clamp(16rem,42svh,28rem)] select-none">
           <Media fill priority imgClassName="-z-10 object-cover" resource={image} />
-          <div className="pointer-events-none absolute bottom-0 left-0 h-1/2 w-full bg-linear-to-t from-scrim to-transparent" />
+          {/* The whole band is darkened, never lighter than 55% at the top, so a title that wraps
+              onto three lines still sits on a scrim. `ON_IMAGE_TITLE_SCRIM_ALPHA` tests that 55%
+              over a white photo (#572) */}
+          <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-scrim/80 via-scrim/65 to-scrim/55" />
         </div>
       </div>
       <ImageCredit image={image} className="container mt-2 text-right" />

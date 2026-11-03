@@ -41,8 +41,6 @@
 @source inline('lg:col-span-8');
 @source inline('lg:col-span-12');
 @source inline('border-border');
-@source inline('hero-text-shadow');
-@source inline('hero-text-shadow-sm');
 @source inline('bg-card');
 
 @theme {
@@ -94,17 +92,6 @@
     .container {
       max-width: var(--breakpoint-2xl);
     }
-  }
-}
-
-/* Hero text readability utilities — centralized so components stay clean */
-@layer utilities {
-  .hero-text-shadow {
-    filter: drop-shadow(0 2px 8px color-mix(in srgb, var(--scrim) 60%, transparent));
-  }
-
-  .hero-text-shadow-sm {
-    filter: drop-shadow(0 1px 4px color-mix(in srgb, var(--scrim) 50%, transparent));
   }
 }
 

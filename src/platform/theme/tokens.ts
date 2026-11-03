@@ -125,7 +125,15 @@ export const TINTED_PAIRS = ALERT_TONES.flatMap(([text, tint]) =>
  * `ON_IMAGE_SCRIM_ALPHA` over the brightest a photo can be, white, which `--on-image` stands for.
  */
 export const ON_IMAGE_SCRIM_ALPHA = 0.6
-export const SCRIM_PAIRS = [['on-image', 'scrim', 'on-image', ON_IMAGE_SCRIM_ALPHA]] as const
+/**
+ * The title on a post or event photo (`PageHeader · image`): the lightest part of its scrim, the top
+ * of the band (`to-scrim/55`), over a white photo. Lower it only if the pair below still passes.
+ */
+export const ON_IMAGE_TITLE_SCRIM_ALPHA = 0.55
+export const SCRIM_PAIRS = [
+  ['on-image', 'scrim', 'on-image', ON_IMAGE_SCRIM_ALPHA],
+  ['on-image', 'scrim', 'on-image', ON_IMAGE_TITLE_SCRIM_ALPHA],
+] as const
 
 /** WCAG 2.x AA minimum for normal text. */
 export const MIN_TEXT_CONTRAST = 4.5
