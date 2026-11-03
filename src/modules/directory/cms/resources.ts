@@ -6,6 +6,7 @@ import { populatePublishedAt } from '@/platform/payload/populatePublishedAt'
 
 import { RESOURCE_CATEGORIES } from '../domain/categories'
 import { checkPhotoCredit, checkResourceUrl, PORTRAIT_CATEGORY } from '../domain/resourcePortrait'
+import { orderField } from './orderField'
 import { revalidateListPage } from './revalidateListPage'
 
 const revalidate = revalidateListPage('resources')
@@ -127,15 +128,7 @@ export const Resources: CollectionConfig<'resources'> = {
         },
       ],
     },
-    {
-      name: 'order',
-      type: 'number',
-      defaultValue: 99,
-      admin: {
-        position: 'sidebar',
-        description: 'Lower numbers appear first within category',
-      },
-    },
+    orderField('Lower numbers appear first within category'),
     {
       name: 'publishedAt',
       type: 'date',

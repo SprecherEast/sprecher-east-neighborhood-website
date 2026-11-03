@@ -1,18 +1,9 @@
 import { slugField, type CollectionConfig } from 'payload'
-import {
-  BlocksFeature,
-  FixedToolbarFeature,
-  HeadingFeature,
-  HorizontalRuleFeature,
-  InlineToolbarFeature,
-  lexicalEditor,
-  OrderedListFeature,
-  UnorderedListFeature,
-} from '@payloadcms/richtext-lexical'
+import { draftVersions, previewAdmin, titleField } from '@/platform/payload/contentCollection'
+import { TITLE_HEADINGS, articleEditor } from '@/platform/payload/headingsEditor'
 
 import { suggestibleContentAccess } from '@/platform/payload/draftContentAccess'
 import { RICH_TEXT_BLOCKS } from '@/platform/richtext/blockConfigs'
-import { generatePreviewPath } from '@/platform/payload/generatePreviewPath'
 import {
   holdSuggestions,
   REVIEW_QUEUE_FIELDS,
@@ -43,28 +34,11 @@ export const Posts: CollectionConfig<'posts'> = {
   admin: {
     components: { beforeListTable: [SUGGESTIONS_FILTER] },
     defaultColumns: ['title', 'slug', '_status', 'moderationStatus', 'updatedAt'],
-    livePreview: {
-      url: ({ data, req }) =>
-        generatePreviewPath({
-          slug: data?.slug,
-          collection: 'posts',
-          req,
-        }),
-    },
-    preview: (data, { req }) =>
-      generatePreviewPath({
-        slug: typeof data?.slug === 'string' ? data.slug : undefined,
-        collection: 'posts',
-        req,
-      }),
+    ...previewAdmin('posts'),
     useAsTitle: 'title',
   },
   fields: [
-    {
-      name: 'title',
-      type: 'text',
-      required: true,
-    },
+    titleField(),
     {
       type: 'tabs',
       tabs: [
@@ -78,20 +52,7 @@ export const Posts: CollectionConfig<'posts'> = {
             {
               name: 'content',
               type: 'richText',
-              editor: lexicalEditor({
-                features: ({ rootFeatures }) => {
-                  return [
-                    ...rootFeatures,
-                    HeadingFeature({ enabledHeadingSizes: ['h1', 'h2', 'h3', 'h4'] }),
-                    BlocksFeature({ blocks: RICH_TEXT_BLOCKS }),
-                    FixedToolbarFeature(),
-                    InlineToolbarFeature(),
-                    HorizontalRuleFeature(),
-                    UnorderedListFeature(),
-                    OrderedListFeature(),
-                  ]
-                },
-              }),
+              editor: articleEditor(RICH_TEXT_BLOCKS, TITLE_HEADINGS),
               label: false,
               required: true,
             },
@@ -193,13 +154,5 @@ export const Posts: CollectionConfig<'posts'> = {
     afterRead: [populateAuthors],
     afterDelete: [revalidateDelete],
   },
-  versions: {
-    drafts: {
-      autosave: {
-        interval: 100, // We set this interval for optimal live preview
-      },
-      schedulePublish: true,
-    },
-    maxPerDoc: 50,
-  },
+  versions: draftVersions(50),
 }
