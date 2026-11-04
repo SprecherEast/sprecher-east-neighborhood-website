@@ -33,17 +33,17 @@ what they say, without telling you what to think.
 
 ## Length budget
 
-| Piece                               | Limit                                                                                                                                        |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Headline                            | Aim for 60 characters; never over 120. Says the news, not a teaser.                                                                          |
-| Lead (first sentence)               | 25 words max. Answers "what is it, and what do I do?"                                                                                        |
-| Card summary                        | 1 or 2 sentences, under 160 characters, no links.                                                                                            |
-| Site message (form, error, success) | 1 or 2 sentences, 20 words ideally, 30 max.                                                                                                  |
-| Email                               | Subject under 50 characters. Body under 120 words, one link to act.                                                                          |
-| Event                               | Fits on one screen without scrolling (a 1080p display at 100% zoom): what, when, where, who it's for, one action. Need more? Link to a post. |
-| News post                           | Fits on one screen at 1080p and 100% zoom, with its picture. Longer? Make it an explainer.                                                   |
-| Explainer                           | One idea per screen, each with its picture. The page may scroll; no single idea runs longer than a screen.                                   |
-| Sentence                            | Average 15 words; split anything over 25.                                                                                                    |
+| Piece                               | Limit                                                                                                                                                                                                                                                                                           |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Headline                            | Aim for 60 characters; never over 120. Says the news, not a teaser.                                                                                                                                                                                                                             |
+| Lead (first sentence)               | 25 words max. Answers "what is it, and what do I do?"                                                                                                                                                                                                                                           |
+| Card summary                        | 1 or 2 sentences, under 160 characters, no links.                                                                                                                                                                                                                                               |
+| Site message (form, error, success) | 1 or 2 sentences, 20 words ideally, 30 max.                                                                                                                                                                                                                                                     |
+| Email                               | Subject under 50 characters. Body under 120 words, one link to act.                                                                                                                                                                                                                             |
+| Event                               | The page shows what a neighbor needs on one screen without scrolling (1080p, 100% zoom): the body you write is short enough to sit beside the header and facts panel. If the layout leaves too little room, shorten the body or fix the layout. Need more? Link to a post or the official page. |
+| News post                           | Fits on one screen at 1080p and 100% zoom, with its picture. Longer? Make it an explainer.                                                                                                                                                                                                      |
+| Explainer                           | One idea per screen, each with its picture. The page may scroll; no single idea runs longer than a screen.                                                                                                                                                                                      |
+| Sentence                            | Average 15 words; split anything over 25.                                                                                                                                                                                                                                                       |
 
 The drafting prompt (`intelligence/prompts/draft.md`) and its schema carry a copy of the event and news rule because the pipeline doesn't load this file. Change them together. The owner chose the screen rule in place of word counts (2026-11-03, voice call with Claude, quoted on #535).
 
@@ -76,7 +76,7 @@ exclamation mark per piece at most; none in bad news, money or corrections.
 We report what was decided, by whom, when, what it costs a sample home, and how to take part. We
 never say whether a tax, budget, project or official is good or bad, and we never take a side on a
 referendum, a candidate or a budget amendment. Every number has a year, a source and, if we
-calculated it, says so. A number with one source is "estimate", never rounded into a fact.
+calculated it, says so. A number only one source reports is labeled "reported by {source}, not yet confirmed" (an exact figure from its official publisher is not an estimate). A number we or the source rounded or projected is called an estimate, and says by whom.
 
 **Tripwires.** If one of these appears in our own words, rewrite it (inside a quote, attribute it):
 
@@ -103,7 +103,7 @@ and opponents spoke at the hearing; the minutes are here." "Here's how to commen
 - **Only from the verified fact sheet.** A place, business, group, HOA, section or street goes in
   only if the neighborhood fact sheet lists it with its source (today: "Known venues" and the area
   in `intelligence/coverage.md`, and `intelligence/area.yaml`). Not from memory, maps or a guess.
-  Spell it as its owner does (Kwik Trip, not "Quick Trip"). Unsure? Leave it out and list it in
+  The one exception is an event's own "where": use the address the organizer's primary source gives, cited, as the verify step does. Spell names as their owner does (Kwik Trip, not "Quick Trip"). Unsure? Leave it out and list it in
   `$.missing`. A store as a landmark is fine; praising or advertising it isn't.
 - **Private people are never named**, pictured or described so they can be recognized: not
   neighbors, kids, volunteers or "the family on the corner". Thank people as a group, or with
@@ -148,7 +148,7 @@ Examples show the voice only. Events in them are illustrations; never copy a fac
 
 | Case           | Before                                                                                          | After                                                                                                                                               |
 | -------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Form error     | An account associated with this email address already exists.                                   | Looks like you already have an account. Sign in and we'll pick up where you left off.                                                               |
+| Form error     | An account associated with this email address already exists.                                   | Thanks. If that email can be used, we've sent the next step to it. Check your inbox (and spam).                                                     |
 | Form error     | Invalid input. Please enter a valid email address.                                              | That email doesn't look right. Check for a missing @ or a typo.                                                                                     |
 | Email          | Thank you for contacting the Association. Your inquiry has been received and will be processed. | Got it, thanks. We'll reply to {email} as soon as we can.                                                                                           |
 | Welcome        | Welcome to our website. We are dedicated to fostering a vibrant community.                      | Welcome, neighbor. Here's what's on around Sprecher East this week, and how to jump in.                                                             |
@@ -172,7 +172,7 @@ Examples show the voice only. Events in them are illustrations; never copy a fac
 Every piece passes all ten, or it waits. For money, taxes and politics, a second person re-checks.
 
 1. **Voice.** Passes the voice test below.
-2. **Facts and sources.** Every claim links a source; numbers have two sources or say "estimate".
+2. **Facts and sources.** Every claim links a source; numbers have two sources, or say "reported by {source}, not yet confirmed".
 3. **Neutral.** No tripwire in our own words; nothing takes a side on money or politics.
 4. **Reading level.** Grade 8 at most; messages and leads aim lower.
 5. **Length.** Within the budget above; the first sentence works alone.

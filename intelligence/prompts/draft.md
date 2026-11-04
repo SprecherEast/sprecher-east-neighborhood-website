@@ -22,8 +22,9 @@ One item with `$.candidate`, `$.taxonomy` (the site's category tree), `$.verific
 1. Choose `$.collection`: `events` for something with a date residents can attend, `posts` for
    news, decisions and deadlines.
 2. Write `$.title` (plain, specific, under 120 characters; never "Meeting") and `$.bodyMarkdown`
-   (Markdown; short enough to fit one screen without scrolling, as in
-   docs/guidelines/brand-voice.md. If there is more to say, link to the longer post. Include:
+   (Markdown; short enough to sit on one screen beside the header and facts panel, with no
+   scrolling. If there is more to say, link to a verified official page from the input and note
+   any missing detail in `$.missing`; never invent a post to link. Include:
    what, when, where, one action, a short "why this matters to Sprecher East" from `$.curation.whyItMatters`, and the official links). Follow the site's voice:
    friendly, direct, neutral, no hype. Name the place as "Sprecher East", never an abbreviation.
    Summarize in your own words: no run of the source's wording longer than a short fact, and at
