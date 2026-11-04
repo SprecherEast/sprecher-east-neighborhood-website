@@ -42,10 +42,11 @@ describe('the title limit', () => {
     },
   )
 
-  it('saves a title of exactly the limit', async () => {
-    const post = await createPost('x'.repeat(TITLE_MAX_LENGTH))
+  it('publishes a title of exactly the limit', async () => {
+    const post = await createPost('x'.repeat(TITLE_MAX_LENGTH), 'published')
 
     expect(post.title).toHaveLength(TITLE_MAX_LENGTH)
+    expect(post._status).toBe('published')
   })
 
   // Payload checks a field's limits when a document is published, not on every draft autosave
