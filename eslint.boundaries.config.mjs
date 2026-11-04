@@ -11,6 +11,12 @@ const PAYLOAD = [
   { dependency: { source: '@payload-config', kind: 'value' } },
 ]
 
+// Chart libraries (#639, decision 0018): only an adapter folder draws with one; everything else
+// draws through `Chart`, so a library can be swapped without touching a page.
+const CHART_LIBRARIES = [
+  { to: { module: { source: ['@visx/*', 'd3-*', 'recharts', 'echarts', '@nivo/*'] } } },
+]
+
 // Pages and routes that still query Payload themselves. Each leaves this list when its area moves
 // to a module (#131 to #136); any other file in src/app/ that does it fails lint (#137).
 const STILL_QUERYING_PAYLOAD = [
@@ -135,6 +141,15 @@ export const boundariesConfig = {
             message: `Runtime Payload only in a module's data/ or cms/ (${rule(6)})`,
           },
           { from: { file: { categories: 'still-querying-payload' } }, allow: PAYLOAD },
+          {
+            from: [
+              { element: { type: ['app', 'module'] } },
+              { element: { type: 'platform', fileInternalPath: '!ui/chart/adapters/**' } },
+            ],
+            disallow: CHART_LIBRARIES,
+            message:
+              'Chart libraries only inside src/platform/ui/chart/adapters/: draw with Chart from @/platform/ui/chart/Chart (#639)',
+          },
           {
             from: { element: { type: 'module', fileInternalPath: 'domain/**' } },
             disallow: {

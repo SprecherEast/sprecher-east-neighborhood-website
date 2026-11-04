@@ -8,6 +8,7 @@ import { PageHeader } from '@/platform/ui/PageHeader'
 import { Text } from '@/platform/ui/Text'
 
 import { ActionsGallery } from './ActionsGallery.client'
+import { ChartGallery } from './ChartGallery'
 import { DisplayGallery } from './DisplayGallery'
 import { FieldsGallery } from './FieldsGallery.client'
 import { GALLERY_COMPONENTS } from './galleryComponents'
@@ -62,6 +63,7 @@ export default function GalleryPage() {
         <HeadersGallery />
         <LayoutGallery />
         <InteractiveGallery />
+        <ChartGallery />
         <RichTextGallery />
       </div>
     </div>

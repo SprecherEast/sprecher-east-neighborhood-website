@@ -1,8 +1,6 @@
-import { Check, CircleDashed, HelpCircle } from 'lucide-react'
 import React from 'react'
 
-import { CERTAINTY_LABELS, type Certainty } from '@/platform/lib/certainty'
-import { Badge, type BadgeProps } from '@/platform/ui/Badge'
+import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { Card } from '@/platform/ui/Card'
 import { Link } from '@/platform/ui/Link'
 
@@ -38,21 +36,5 @@ export function FactCard({ fact }: { fact: KeyFact }) {
         )}
       </div>
     </Card>
-  )
-}
-
-const BADGE: Record<Certainty, { variant: BadgeProps['variant']; Icon: typeof Check }> = {
-  confirmed: { variant: 'category', Icon: Check },
-  estimate: { variant: 'caution', Icon: CircleDashed },
-  unknown: { variant: 'neutral', Icon: HelpCircle },
-}
-
-function CertaintyBadge({ certainty }: { certainty: Certainty }) {
-  const { variant, Icon } = BADGE[certainty]
-  return (
-    <Badge variant={variant}>
-      <Icon aria-hidden="true" />
-      {CERTAINTY_LABELS[certainty]}
-    </Badge>
   )
 }
