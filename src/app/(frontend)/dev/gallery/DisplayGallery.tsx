@@ -1,8 +1,10 @@
 import { ArrowRight, CircleDashed, CircleX, Clock, Landmark } from 'lucide-react'
 import React from 'react'
 
+import { CERTAINTIES } from '@/platform/lib/certainty'
 import { Badge, BadgeList } from '@/platform/ui/Badge'
 import { Button } from '@/platform/ui/Button'
+import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { Card, CardBody, CardFooter, CardMedia, CardMeta, CardTitle } from '@/platform/ui/Card'
 import { CardGrid, CardGridItem } from '@/platform/ui/CardGrid'
 import { DateTime } from '@/platform/ui/DateTime'
@@ -41,6 +43,13 @@ export function DisplayGallery() {
           <div className="rounded-2xl bg-scrim p-6">
             <Badge variant="on-image">Events</Badge>
           </div>
+        </GalleryVariant>
+        <GalleryVariant label="CertaintyBadge: confirmed, estimate, unknown (key facts, chart captions)">
+          <BadgeList>
+            {CERTAINTIES.map((certainty) => (
+              <CertaintyBadge key={certainty} certainty={certainty} />
+            ))}
+          </BadgeList>
         </GalleryVariant>
         <GalleryVariant label="status (a cancelled event, #122)">
           <Badge variant="status">

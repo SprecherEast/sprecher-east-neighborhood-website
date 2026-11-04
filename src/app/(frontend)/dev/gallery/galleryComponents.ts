@@ -30,6 +30,7 @@ export const GALLERY_COMPONENTS = [
   'Dialog',
   'Toast',
   'LoadMore',
+  'Chart',
   'RichText',
   'CodeBlock',
   'KeyFacts',
