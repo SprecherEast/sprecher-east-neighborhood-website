@@ -20,7 +20,7 @@ const markClasses = (palette: ChartPalette, slotIndex: number, hatched: boolean 
  */
 export function SquareGrid({ data, palette }: { data: Datum[]; palette: ChartPalette }) {
   return (
-    <div className="grid w-full max-w-sm chart-reveal grid-cols-10 gap-0.5 sm:gap-1">
+    <div className="grid w-full chart-reveal grid-cols-10 gap-0.5 @md:gap-1">
       {toUnitCells(data, SQUARES_PER_HUNDRED).map((key, cell) => {
         const index = data.findIndex((datum) => datum.key === key)
         return (
@@ -51,7 +51,7 @@ export function TileGrid({
   palette: ChartPalette
 }) {
   return (
-    <div className="grid chart-reveal grid-cols-3 gap-x-2 gap-y-3 sm:grid-cols-6">
+    <div className="grid chart-reveal grid-cols-3 gap-x-2 gap-y-3 @[19rem]:grid-cols-4 @md:grid-cols-6">
       {data.map((datum) => (
         <div key={datum.key} className="min-w-0">
           <span

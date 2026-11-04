@@ -26,8 +26,14 @@ export interface ChartAdapter {
   /** True when marks take the palette's colours, so `Chart` draws the colour key under them */
   readonly usesColour: boolean
   /**
+   * True for a picture a reader may want bigger (#681): `Chart` shows it as a thumbnail with an
+   * Enlarge button. False for words, which already read at any width.
+   */
+  readonly enlargeable: boolean
+  /**
    * A server component tree: no hooks, no `'use client'`, no `style` attribute and no colour
-   * literal. Every mark carries `data-chart-mark`.
+   * literal, and no `max-w-*`: it draws `w-full` and `Chart` sets how wide it runs. Every mark
+   * carries `data-chart-mark`.
    */
   render(spec: ChartSpec, context: ChartRenderContext): React.ReactNode
 }

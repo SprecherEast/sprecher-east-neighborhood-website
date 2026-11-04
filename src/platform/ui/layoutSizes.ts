@@ -39,3 +39,22 @@ export const FIGURE_GAP = 'my-[var(--figure-gap)]'
  */
 export const LEGEND_HANG = '-mt-[calc(var(--figure-gap)+var(--legend-overlap))]'
 export const LEGEND_TUCK = 'pt-[calc(var(--legend-overlap)+1rem)]'
+
+/**
+ * How wide a chart's drawing runs (#681). `Chart` gives its layout the small size in the page and
+ * the large size in the enlarged view; a drawing is `w-full` and never sets a width of its own.
+ */
+export const CHART_WIDTH = 'max-w-[var(--chart-width)]'
+export const CHART_SMALL = '[--chart-width:var(--chart-small-width)]'
+export const CHART_LARGE = '[--chart-width:var(--chart-large-width)]'
+
+/**
+ * The thumbnail (#681): from 40rem of room (a container query, so it reads the same in a Fact tab
+ * panel and in a post body) the drawing takes the first column, at the small width, and the
+ * title, takeaway, key and caption sit beside it. Narrower, everything stacks. The last row is
+ * the flexible one, so a tall drawing never stretches the text rows apart.
+ */
+export const CHART_THUMBNAIL_FIGURE =
+  '@min-[40rem]:grid @min-[40rem]:grid-cols-[var(--chart-small-width)_1fr] @min-[40rem]:grid-rows-[repeat(4,auto)_1fr] @min-[40rem]:gap-x-8 @min-[40rem]:gap-y-3'
+export const CHART_THUMBNAIL_DRAWING =
+  '@min-[40rem]:col-start-1 @min-[40rem]:row-start-1 @min-[40rem]:row-span-5'

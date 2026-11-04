@@ -1,6 +1,5 @@
 import React, { useId } from 'react'
 
-import { cn } from '@/platform/lib/cn'
 import { parseChartSpec, type ChartSpec } from '@/platform/lib/chart/spec'
 import { toChartSummary, toChartTable, toScaleNote } from '@/platform/lib/chart/table'
 import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
@@ -12,14 +11,21 @@ import { Text } from '@/platform/ui/Text'
 
 import type { ChartAdapter } from './chartAdapter'
 import { ChartDataTable } from './ChartDataTable'
+import { ChartLayout, type ChartParts } from './ChartLayout'
 import { toChartLegends } from './chartLegends'
 import { CHART_PALETTE } from './chartPalette'
 import { adapterFor } from './chartRegistry'
+import { ChartZoom } from './ChartZoom.client'
 
 export type ChartProps = {
   spec: ChartSpec
   /** Draws with this adapter instead of the registry's choice: for the gallery and the contract tests */
   adapter?: ChartAdapter
+  /**
+   * Shows a picture as a thumbnail that opens bigger (#681). On by default; the gallery and the
+   * tests turn it off. Words (the text adapter) never zoom.
+   */
+  zoom?: boolean
   className?: string
 }
 
@@ -28,9 +34,10 @@ export type ChartProps = {
  * takeaway, the drawing from whichever adapter the registry picks for the kind, the colour key,
  * a caption (what a unit means, when, where from, how sure) and, under it, the same numbers as a
  * table that starts closed. The spec is checked first, so a chart that does not add up is an
- * error and never a wrong picture.
+ * error and never a wrong picture. A picture is a thumbnail a reader can enlarge (`ChartZoom`,
+ * #681); the layout and sizes are `ChartLayout`'s.
  */
-export function Chart({ spec: input, adapter: chosen, className }: ChartProps) {
+export function Chart({ spec: input, adapter: chosen, zoom = true, className }: ChartProps) {
   const spec = parseChartSpec(input)
   const id = useId()
   const titleId = `${id}-title`
@@ -38,9 +45,9 @@ export function Chart({ spec: input, adapter: chosen, className }: ChartProps) {
   const adapter = chosen ?? adapterFor(spec.kind)
   const legends = adapter.usesColour ? toChartLegends(spec, CHART_PALETTE) : []
 
-  return (
-    <div className={cn('not-prose space-y-3', className)}>
-      <figure className="space-y-4">
+  const parts: ChartParts = {
+    head: (
+      <>
         <div className="space-y-1">
           <Text variant="subsection" as="p" id={titleId}>
             {spec.title}
@@ -52,23 +59,34 @@ export function Chart({ spec: input, adapter: chosen, className }: ChartProps) {
         <p id={descId} className="sr-only">
           {toChartSummary(spec)}
         </p>
-        {adapter.render(spec, { titleId, descId, palette: CHART_PALETTE })}
+      </>
+    ),
+    drawing: adapter.render(spec, { titleId, descId, palette: CHART_PALETTE }),
+    details: (
+      <>
         {legends.map((legend) => (
           <Legend
             key={legend.label}
             marker="swatch"
             attach="none"
+            columns="one"
             label={legend.label}
             items={legend.items}
           />
         ))}
         <ChartCaption spec={spec} />
-      </figure>
+      </>
+    ),
+    numbers: (
       <Disclosure variant="card" summary="Show the numbers">
         <ChartDataTable table={toChartTable(spec)} />
       </Disclosure>
-    </div>
-  )
+    ),
+  }
+
+  if (!adapter.enlargeable) return <ChartLayout size="full" className={className} {...parts} />
+  if (!zoom) return <ChartLayout className={className} {...parts} />
+  return <ChartZoom title={spec.title} className={className} {...parts} />
 }
 
 /** What a unit means, when the figures are from, where they came from and how sure we are */

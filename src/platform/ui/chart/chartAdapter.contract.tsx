@@ -61,6 +61,13 @@ export function describeChartAdapter(adapter: ChartAdapter, { markCount }: Contr
         expect(drawing(document)).toHaveLength(markCount(spec))
       })
 
+      it('sets no maximum width of its own: Chart sets how wide a drawing runs (#681)', () => {
+        const drawn = renderToStaticMarkup(
+          <>{adapter.render(spec, { titleId: 't', descId: 'd', palette: CHART_PALETTE })}</>,
+        )
+        expect(drawn).not.toMatch(/\bmax-w-/)
+      })
+
       it('has no style attribute and no colour literal', () => {
         expect(document.querySelectorAll('[style]')).toHaveLength(0)
         expect(markup).not.toMatch(COLOUR_LITERAL)

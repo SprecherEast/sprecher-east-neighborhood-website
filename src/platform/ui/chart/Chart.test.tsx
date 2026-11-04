@@ -15,9 +15,11 @@ describe('Chart', () => {
   it('shows the title, the takeaway, the drawing, the key and the caption, in that order', () => {
     const { container } = render(<Chart spec={FIXTURES.paysFor} />)
     const figure = screen.getByRole('figure')
-    const kids = [...figure.children].map((el) => el.tagName + (el.getAttribute('role') ?? ''))
-    // title block, hidden description, the img, the key, the figcaption (last, as HTML requires)
-    expect(kids).toEqual(['DIV', 'P', 'DIVimg', 'DIV', 'FIGCAPTION'])
+    const kids = [...figure.children].map((el) => el.tagName)
+    // title block, hidden description, the drawing (with its Enlarge button), the key, the
+    // figcaption (last, as HTML requires)
+    expect(kids).toEqual(['DIV', 'P', 'DIV', 'DIV', 'FIGCAPTION'])
+    expect(figure.children[2].querySelector('[role="img"]')).toBeTruthy()
     expect(within(figure).getByText(FIXTURES.paysFor.title)).toBeTruthy()
     expect(within(figure).getByText(FIXTURES.paysFor.summary)).toBeTruthy()
     expect(container.querySelectorAll('[data-legend-swatch]')).toHaveLength(6)
@@ -62,6 +64,29 @@ describe('Chart', () => {
     expect(container.querySelector('[role="img"]')).toBeNull()
     expect(container.querySelectorAll('[data-legend-swatch]')).toHaveLength(0)
     expect(screen.getAllByText('$171,688,393', { exact: false }).length).toBeGreaterThan(0)
+  })
+
+  it('has no Enlarge button on the text adapter, or when zoom is off (#681)', () => {
+    const { unmount } = render(<Chart spec={FIXTURES.borrowed} adapter={textAdapter} />)
+    expect(screen.queryByRole('button', { name: /Enlarge/ })).toBeNull()
+    unmount()
+
+    render(<Chart spec={FIXTURES.bars} zoom={false} />)
+    expect(screen.queryByRole('button', { name: /Enlarge/ })).toBeNull()
+    expect(screen.getByRole('img', { name: /The day-to-day budget, proposed/ })).toBeTruthy()
+  })
+
+  it('sets the drawing’s width itself: small in the page, none on the text adapter (#681)', () => {
+    const { container, unmount } = render(<Chart spec={FIXTURES.bars} />)
+    const sized = container
+      .querySelector('[role="img"]')
+      ?.closest('.max-w-\\[var\\(--chart-width\\)\\]')
+    expect(sized).toBeTruthy()
+    expect(container.innerHTML).toContain('[--chart-width:var(--chart-small-width)]')
+    unmount()
+
+    const text = render(<Chart spec={FIXTURES.borrowed} adapter={textAdapter} />)
+    expect(text.container.innerHTML).not.toContain('--chart-width')
   })
 
   it('refuses a chart that does not add up, with the reason', () => {

@@ -11,7 +11,7 @@ export function ChartGallery() {
   return (
     <GalleryEntry
       name="Chart"
-      description="The one chart. Square grids and tiles are plain HTML (the css adapter); bars and stacked bars are one SVG drawn on the server (the visx adapter); the text adapter, words and a table, is the fallback. The 2027 figures are the Mayor's proposal."
+      description="The one chart. Square grids and tiles are plain HTML (the css adapter); bars and stacked bars are one SVG drawn on the server (the visx adapter); the text adapter, words and a table, is the fallback. A picture shows as a small thumbnail (beside its title, takeaway and caption from 40rem of room) with an Enlarge button, or a click on the drawing, that opens the same chart bigger in a modal dialog; words never do. The 2027 figures are the Mayor's proposal."
     >
       <GalleryVariant
         label="units · perHundred, two groups: 2026 adopted next to 2027 proposed"

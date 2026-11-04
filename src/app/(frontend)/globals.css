@@ -107,6 +107,12 @@
   --figure-gap: 2rem;
   --legend-overlap: 1rem;
 
+  /* How wide a chart's drawing runs: the small size in the page, and about twice that in the
+     enlarged view (#681). 20rem is the drawing's own 320-unit viewBox at 1:1, so its labels are
+     drawn at their designed size. Classes: platform/ui/layoutSizes.ts */
+  --chart-small-width: 20rem;
+  --chart-large-width: 40rem;
+
   /* The least height of a short page, and of a hero band (#616) */
   --page-min-height: 60vh;
   --hero-min-height: 80vh;

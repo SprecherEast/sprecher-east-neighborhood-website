@@ -4,6 +4,11 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import {
+  CHART_LARGE,
+  CHART_SMALL,
+  CHART_THUMBNAIL_DRAWING,
+  CHART_THUMBNAIL_FIGURE,
+  CHART_WIDTH,
   FIGURE_GAP,
   HERO_MIN_HEIGHT,
   LEGEND_HANG,
@@ -28,6 +33,17 @@ describe('layout sizes', () => {
     expect(FIGURE_GAP).toBe('my-[var(--figure-gap)]')
     expect(LEGEND_HANG).toBe('-mt-[calc(var(--figure-gap)+var(--legend-overlap))]')
     expect(LEGEND_TUCK).toBe('pt-[calc(var(--legend-overlap)+1rem)]')
+    expect(CHART_WIDTH).toBe('max-w-[var(--chart-width)]')
+    expect(CHART_SMALL).toBe('[--chart-width:var(--chart-small-width)]')
+    expect(CHART_LARGE).toBe('[--chart-width:var(--chart-large-width)]')
+    // One breakpoint for the thumbnail, written once: the figure and the drawing agree on it
+    expect(CHART_THUMBNAIL_FIGURE).toContain('grid-cols-[var(--chart-small-width)_1fr]')
+    expect(CHART_THUMBNAIL_FIGURE.match(/@min-\[(\d+rem)\]/g)).toEqual(
+      Array(5).fill('@min-[40rem]'),
+    )
+    expect(CHART_THUMBNAIL_DRAWING.match(/@min-\[(\d+rem)\]/g)).toEqual(
+      Array(3).fill('@min-[40rem]'),
+    )
   })
 
   it('are defined in globals.css, once each', () => {
@@ -37,6 +53,8 @@ describe('layout sizes', () => {
       '--hero-min-height',
       '--figure-gap',
       '--legend-overlap',
+      '--chart-small-width',
+      '--chart-large-width',
     ]) {
       const definitions = globalsCss.match(new RegExp(`^\\s*${name}:`, 'gm')) ?? []
       expect(definitions, name).toHaveLength(1)

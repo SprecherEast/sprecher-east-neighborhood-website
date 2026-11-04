@@ -5,8 +5,8 @@ import type { BarModel, BarSegment } from './barModel'
 /*
  * Where everything goes in the drawing, in SVG units (#663). The svg scales with its container, so
  * these are proportions; the width is small on purpose, so the text stays legible on a phone: on a
- * 320px screen the drawing is shown at about 0.9 of its size, and `max-w-md` stops it growing past
- * 1.4 on a desktop.
+ * 320px screen the drawing is shown at about 0.9 of its size. `Chart` decides how wide it runs: 1:1
+ * as a thumbnail (`--chart-small-width`) and twice that when enlarged (#681).
  */
 export const VIEW_WIDTH = 320
 export const SEGMENT_GAP = 2
