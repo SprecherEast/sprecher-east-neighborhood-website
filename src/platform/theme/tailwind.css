@@ -55,3 +55,9 @@
   --color-inverse: var(--inverse);
   --color-inverse-foreground: var(--inverse-foreground);
 }
+
+/*
+ * `scripted:` applies only while scripting runs (#661). The kit's `Tabs` uses it to turn into tabs
+ * only then: with scripting off, every panel shows, stacked, each under its heading.
+ */
+@custom-variant scripted (@media (scripting: enabled));
