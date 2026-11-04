@@ -27,9 +27,9 @@ describe('ChartBlockConfig', () => {
     for (const array of arrays) expect('admin' in array && array.admin).toBeTruthy()
   })
 
-  it('is offered in posts and events, after the other visual blocks', () => {
+  it('is offered in posts and events', () => {
     const slugs = (blocks: Block[]) => blocks.map((b) => b.slug)
-    expect(slugs(EDITORIAL_BLOCKS).at(-1)).toBe('chart')
+    expect(slugs(EDITORIAL_BLOCKS)).toContain('chart')
     expect(slugs(RICH_TEXT_BLOCKS)).toContain('chart')
     expect(slugs(EVENT_RICH_TEXT_BLOCKS)).toContain('chart')
     expect(ChartBlockConfig.interfaceName).toBe('ChartBlock')

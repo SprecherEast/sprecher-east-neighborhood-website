@@ -177,6 +177,8 @@ System-level env vars (not in .env.local):
 
 ## Known Gotchas
 
+- **Row counts of lists in rich-text blocks** (#664): Payload's own array validator reads a number as the row count, and Admin's form state sends a list as its count (a half-built row holds only its `id`), so `entries: 2` passes `minRows: 2` and is stored as an empty list, and a native check leaves "at least 2 Rows" on screen after a row is added. The Timeline, Key facts and Fact tabs lists count their own rows (`rowsBetween` in `src/platform/richtext/editorial/rowCount.ts`): judged under `event: 'onChange'` too (Admin sends the rows or their count, so the reason shows under the field and clears when the last needed row is added; a value that can't be counted gets no opinion), and on the real save a number counts as no rows; never throws. `minRows` and `maxRows` stay on the field for the Add button
+- **`admin` key on nested lists**: an array or blocks field inside a rich-text block gets no `admin` object from Payload, and one without an `admin` key crashes Payload's `isRowCollapsed` (`initCollapsed`) when saving. Give every array and blocks field in such a block an `admin` key (`factTabsBlockConfig.test.ts` and `chartBlockConfig.test.ts` check it)
 - **npm installs**: Always use `--legacy-peer-deps` for Payload packages
 - **Payload REST route**: `REST_GET(config)` — curried, NOT `REST_GET(req, config)`
 - **Payload importMap**: Auto-generated on dev server start at `src/app/(payload)/admin/importMap.js`

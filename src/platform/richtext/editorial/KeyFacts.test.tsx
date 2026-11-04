@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { KeyFacts } from './KeyFacts'
-import { KEY_FACT_LIMITS } from './keyFactsBlockConfig'
+import { KEY_FACT_LIMITS } from './editorialLimits'
 import type { KeyFact } from './keyFacts'
 
 afterEach(cleanup)

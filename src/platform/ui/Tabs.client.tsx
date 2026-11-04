@@ -37,6 +37,7 @@ export type TabsProps = {
  * never reaches the browser as code. The `scripted` variant (`@media (scripting: enabled)`) is
  * what turns it into tabs: only then are the tab list shown and the inactive panels and their
  * headings hidden. With scripting off every panel shows, stacked, each under its heading.
+ * With three tabs the last one spans both columns of the phone's grid, so none sits alone, half wide.
  */
 export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }: TabsProps) {
   // The fade runs after the reader changes tab, not on the page's first paint
@@ -57,7 +58,7 @@ export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }
           <RadixTabs.Trigger
             key={value}
             value={value}
-            className="min-h-11 rounded-xl border border-border bg-card px-4 py-2 text-left text-foreground transition-colors duration-200 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=active]:border-primary data-[state=active]:bg-primary/10"
+            className="min-h-11 rounded-xl border border-border bg-card px-3 py-2 text-left text-foreground transition-colors duration-200 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=active]:border-primary data-[state=active]:bg-primary/10 max-sm:odd:last:col-span-2 sm:px-4"
           >
             {trigger}
           </RadixTabs.Trigger>

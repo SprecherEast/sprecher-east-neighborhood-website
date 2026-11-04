@@ -6,7 +6,7 @@ import {
   type ChartSpec,
 } from '@/platform/lib/chart/spec'
 
-import { readText, writeProp } from './chartTag'
+import { importOrRefuse, readText, refusalPrefix, writeProp } from './editorialTag'
 import { fromChartSpec, toChartSpec, type StoredChart } from './chart'
 
 /**
@@ -29,18 +29,27 @@ const PROP_NAME = /^[A-Za-z][A-Za-z0-9]*$/
 const isKind = (value: unknown): value is ChartKind =>
   (CHART_KINDS as readonly unknown[]).includes(value)
 
-/** The block as its Markdown tag, or false when the stored chart is not valid (it is left out) */
-export function chartToJsx(fields: StoredChart): string | false {
-  let spec: ChartSpec
+/** The props a valid chart writes into a tag (or into a fact tab's panel), in the order written */
+export function chartSpecTagProps(spec: ChartSpec): Record<string, unknown> {
+  const values: Record<string, unknown> = spec
+  return Object.fromEntries(
+    PROPS[spec.kind].flatMap((name) => (values[name] === undefined ? [] : [[name, values[name]]])),
+  )
+}
+
+/** The same for a stored chart, or false when it is not valid (it is left out) */
+export function chartTagProps(fields: StoredChart): Record<string, unknown> | false {
   try {
-    spec = toChartSpec(fields)
+    return chartSpecTagProps(toChartSpec(fields))
   } catch {
     return false
   }
-  const values: Record<string, unknown> = spec
-  const props = Object.fromEntries(
-    PROPS[spec.kind].flatMap((name) => (values[name] === undefined ? [] : [[name, values[name]]])),
-  )
+}
+
+/** The block as its Markdown tag, or false when the stored chart is not valid (it is left out) */
+export function chartToJsx(fields: StoredChart): string | false {
+  const props = chartTagProps(fields)
+  if (!props) return false
   return `<Chart ${Object.entries(props)
     .map(([name, value]) => writeProp(name, value))
     .join(' ')} />`
@@ -71,6 +80,20 @@ function tagIssues(props: Record<string, unknown>): ChartIssue[] {
 }
 
 /**
+ * Every reason the props (text already read) are not a valid chart: unknown props and a vertical
+ * chart first, then the chart's own rules. One definition for the `<Chart>` tag and for a chart
+ * inside a fact tab.
+ */
+export function chartTagIssues(read: Record<string, unknown>): ChartIssue[] {
+  // The drawing is horizontal, so a tag needs no orientation: the spec gets it here
+  return [...tagIssues(read), ...chartIssues({ ...read, orientation: 'horizontal' })]
+}
+
+/** The block's fields for props that passed `chartTagIssues` (text already read) */
+export const chartFromProps = (read: Record<string, unknown>): StoredChart =>
+  fromChartSpec(parseChartSpec({ ...read, orientation: 'horizontal' }))
+
+/**
  * The block's fields for a tag's props. Throws `Invalid <Chart>: …` with every reason when the
  * props are not a valid chart: payload turns the error into the agent's answer.
  */
@@ -78,39 +101,11 @@ export function chartFromJsx(props: Record<string, unknown>): StoredChart {
   const read = Object.fromEntries(
     Object.entries(props).map(([name, value]) => [name, unquote(value)]),
   )
-  // The drawing is horizontal, so a tag needs no orientation: the spec gets it here
-  const input = { ...read, orientation: 'horizontal' }
-  const issues = [...tagIssues(read), ...chartIssues(input)]
-  if (issues.length > 0) throw new Error(`Invalid <Chart>: ${describeChartIssues(issues)}`)
-  return fromChartSpec(parseChartSpec(input))
-}
-
-/**
- * Payload's Markdown converter runs inside a Lexical editor, which logs an error an import throws
- * and carries on, so the caller would never hear why a tag was refused. While `run` converts,
- * the refusals of its `<Chart>` tags are collected here instead, and those tags are left as text:
- * the caller turns them into the answer. Conversion is synchronous, so one list at a time is safe.
- */
-let collecting: string[] | null = null
-
-export function collectChartRefusals<T>(run: () => T): { value: T; refusals: string[] } {
-  const outer = collecting
-  const refusals: string[] = []
-  collecting = refusals
-  try {
-    return { value: run(), refusals }
-  } finally {
-    collecting = outer
-  }
+  const issues = chartTagIssues(read)
+  if (issues.length > 0) throw new Error(`${refusalPrefix('Chart')} ${describeChartIssues(issues)}`)
+  return chartFromProps(read)
 }
 
 /** `jsx.import`: the block's fields for the tag, or false (and a collected refusal) when it is invalid */
-export function importChartTag(props: Record<string, unknown>): StoredChart | false {
-  try {
-    return chartFromJsx(props)
-  } catch (error) {
-    if (!collecting) throw error
-    collecting.push(error instanceof Error ? error.message : String(error))
-    return false
-  }
-}
+export const importChartTag = (props: Record<string, unknown>): StoredChart | false =>
+  importOrRefuse(() => chartFromJsx(props))

@@ -3,11 +3,13 @@ import type { RichTextValue } from '@/platform/lib'
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import { parseChartSpec } from '@/platform/lib/chart/spec'
 import { fromChartSpec } from '@/platform/richtext/editorial/chart'
+import { FACT_TABS_FIXTURE } from '@/platform/richtext/editorial/factTabsFixtures'
 
 /*
  * A post's body as the editor stores it (#640): the visual blocks in a row, with a chart of each
  * kind between them, so one page shows that a new block never breaks the others. The charts are
  * the City's published budget figures (`FIXTURES`), stored the way the Chart block stores them.
+ * The four fact tabs (#664) open the same figures one view at a time.
  */
 
 /** A block node as Lexical stores one */
@@ -40,6 +42,7 @@ export const SAMPLE_BLOCKS_POST = root([
       { value: '+$24.8M', label: 'More than in 2026', icon: 'taxes', certainty: 'estimate' },
     ],
   }),
+  block({ blockType: 'factTabs', ...FACT_TABS_FIXTURE }),
   heading('h3', 'Where each $100 goes'),
   chart('paysFor'),
   p('The same money, a bar for each year.'),

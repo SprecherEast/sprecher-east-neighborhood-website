@@ -1,6 +1,7 @@
 import type { Field, TextFieldSingleValidation } from 'payload'
 
 import { EDITORIAL_LINK_MAX_LENGTH, validateEditorialLink } from './editorialLink'
+import { LINK_LABEL_MAX } from './editorialLimits'
 
 // The address is checked together with its link text: both or neither
 const validateLinkUrl: TextFieldSingleValidation = (value, { siblingData }) =>
@@ -13,7 +14,7 @@ const validateLinkUrl: TextFieldSingleValidation = (value, { siblingData }) =>
  */
 export const editorialLinkFields = ({
   labelExample = 'Read more',
-  labelMaxLength = 60,
+  labelMaxLength = LINK_LABEL_MAX,
   urlMaxLength = EDITORIAL_LINK_MAX_LENGTH,
 }: { labelExample?: string; labelMaxLength?: number; urlMaxLength?: number } = {}): Field => ({
   type: 'row',

@@ -1,16 +1,23 @@
-import type { ArrayFieldValidation, Block } from 'payload'
-import { array } from 'payload/shared'
+import type { Block } from 'payload'
 
+import { TIMELINE_LIMITS } from './editorialLimits'
 import { editorialLinkFields } from './linkFields'
-import { TIMELINE_STATUS_OPTIONS } from './timelineStatus'
+import { rowsBetween } from './rowCount'
+import { hasTooManyNextUp, NEXT_UP_MESSAGE, TIMELINE_STATUS_OPTIONS } from './timelineStatus'
 
-// One milestone at most is "Next up": it's the reader's "you are here"
-const validateEntries: ArrayFieldValidation = (value, args) => {
-  const nextUp = Array.isArray(value)
-    ? value.filter((entry) => (entry as { status?: string }).status === 'next').length
-    : 0
-  if (nextUp > 1) return 'Mark only one milestone as "Next up".'
-  return array(value, args)
+// Rows are counted by `rowsBetween`; one milestone at most is "Next up" (`hasTooManyNextUp`)
+const countEntries = rowsBetween(
+  TIMELINE_LIMITS.minEntries,
+  TIMELINE_LIMITS.maxEntries,
+  'milestones',
+)
+const validateEntries = (value: unknown, args: { event?: unknown }): true | string => {
+  const rows = countEntries(value, args)
+  if (rows !== true) return rows
+  const statuses = Array.isArray(value)
+    ? value.map((entry) => (entry as { status?: unknown }).status)
+    : []
+  return hasTooManyNextUp(statuses) ? NEXT_UP_MESSAGE : true
 }
 
 /**
@@ -31,8 +38,8 @@ export const TimelineBlockConfig: Block = {
       admin: {
         description: 'In the order they happen, oldest first. Two to twelve milestones.',
       },
-      minRows: 2,
-      maxRows: 12,
+      minRows: TIMELINE_LIMITS.minEntries,
+      maxRows: TIMELINE_LIMITS.maxEntries,
       required: true,
       validate: validateEntries,
       fields: [
@@ -44,7 +51,7 @@ export const TimelineBlockConfig: Block = {
               type: 'text',
               label: 'When',
               required: true,
-              maxLength: 40,
+              maxLength: TIMELINE_LIMITS.date,
               admin: {
                 width: '50%',
                 description: 'As readers should see it: "Dec 5, 2024", "Spring 2027", "Not set".',
@@ -60,11 +67,11 @@ export const TimelineBlockConfig: Block = {
             },
           ],
         },
-        { name: 'title', type: 'text', required: true, maxLength: 100 },
+        { name: 'title', type: 'text', required: true, maxLength: TIMELINE_LIMITS.title },
         {
           name: 'description',
           type: 'textarea',
-          maxLength: 300,
+          maxLength: TIMELINE_LIMITS.description,
           admin: { description: 'One or two plain sentences. Optional.' },
         },
         editorialLinkFields({ labelExample: 'Read the decision' }),

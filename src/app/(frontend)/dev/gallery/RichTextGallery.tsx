@@ -1,6 +1,9 @@
 import React from 'react'
 
 import { CodeBlock } from '@/platform/richtext/CodeBlock'
+import { FactTabs } from '@/platform/richtext/editorial/FactTabs'
+import { toFactTabsProps } from '@/platform/richtext/editorial/factTabs'
+import { FACT_TABS_FIXTURE } from '@/platform/richtext/editorial/factTabsFixtures'
 import { KeyFacts } from '@/platform/richtext/editorial/KeyFacts'
 import { RichText } from '@/platform/richtext/RichText'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
@@ -9,6 +12,8 @@ import { READING_WIDTH } from '@/platform/ui/layoutSizes'
 import { SAMPLE_BLOCKS_POST } from './blocksPostSample'
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 import { SAMPLE_CODE, SAMPLE_KEY_FACTS, SAMPLE_RICH_TEXT } from './sampleData'
+
+const FACT_TABS = toFactTabsProps(FACT_TABS_FIXTURE)
 
 /** The rich-text renderer and the code block inside it */
 export function RichTextGallery() {
@@ -25,10 +30,10 @@ export function RichTextGallery() {
 
       <GalleryEntry
         name="RichTextBlocks"
-        description="A post body with the visual blocks in a row and a chart of each kind between them, rendered as a post page does."
+        description="A post body with the visual blocks in a row, fact tabs and a chart of each kind between them, rendered as a post page does."
       >
         <GalleryVariant
-          label="key facts, charts, timeline, steps and an outcome fork"
+          label="key facts, fact tabs, charts, timeline, steps and an outcome fork"
           className="block"
         >
           <RichText
@@ -61,6 +66,30 @@ export function RichTextGallery() {
           className="block"
         >
           <KeyFacts facts={SAMPLE_KEY_FACTS.slice(1)} />
+        </GalleryVariant>
+      </GalleryEntry>
+
+      <GalleryEntry
+        name="FactTabs"
+        description="Key facts that are tab buttons, each opening its heading, definition and charts or timeline. Every panel is server-rendered: with scripting off they stack under their headings."
+      >
+        <GalleryVariant label="four tabs: 2 by 2 on a phone, one row from sm up" className="block">
+          <FactTabs {...FACT_TABS} />
+        </GalleryVariant>
+        <GalleryVariant
+          label="three tabs: the last spans the phone's two columns"
+          className="block"
+        >
+          <FactTabs tabs={FACT_TABS.tabs.slice(1, 4)} />
+        </GalleryVariant>
+        <GalleryVariant label="two tabs, the second one without pictures" className="block">
+          <FactTabs
+            tabs={FACT_TABS.tabs
+              .flatMap((tab, index) =>
+                index === 0 ? [{ ...tab, panel: [] }] : index === 3 ? [tab] : [],
+              )
+              .reverse()}
+          />
         </GalleryVariant>
       </GalleryEntry>
     </>

@@ -2892,7 +2892,7 @@ export interface StepsBlock {
  */
 export interface KeyFactsBlock {
   /**
-   * Two to six facts. They sit side by side on wide screens.
+   * 2 to 6 facts. They sit side by side on wide screens.
    */
   facts: {
     /**
@@ -3030,6 +3030,7 @@ export interface ChartBlock {
          * A site path (/events) or https:// address.
          */
         linkUrl?: string | null
+        id?: string | null
       }[]
     | null
   mode?: ('perHundred' | 'each') | null
@@ -3068,7 +3069,9 @@ export interface ChartBlock {
            * Stripes mark an amount that is only proposed.
            */
           hatch?: boolean | null
+          id?: string | null
         }[]
+        id?: string | null
       }[]
     | null
   /**
@@ -3138,6 +3141,68 @@ export interface ChartBlock {
   id?: string | null
   blockName?: string | null
   blockType: 'chart'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FactTabsBlock".
+ */
+export interface FactTabsBlock {
+  /**
+   * 2 to 4 tabs. Readers see each tab's key fact as a button; it opens the heading, definition and pictures you add here.
+   */
+  tabs: {
+    /**
+     * What it is about, as a short title: "Who pays for the ramps".
+     */
+    label: string
+    /**
+     * The big text: where it stands, or the number. "Pending", "2040s", "$10M".
+     */
+    value: string
+    /**
+     * Optional. One plain sentence that explains it: "City and State are still negotiating."
+     */
+    detail?: string | null
+    icon:
+      | 'info'
+      | 'date'
+      | 'time'
+      | 'money'
+      | 'taxes'
+      | 'government'
+      | 'place'
+      | 'people'
+      | 'traffic'
+      | 'walking'
+      | 'biking'
+      | 'noise'
+      | 'construction'
+    certainty: 'confirmed' | 'estimate' | 'unknown'
+    /**
+     * Optional, for example "City budget".
+     */
+    linkLabel?: string | null
+    /**
+     * A site path (/events) or https:// address.
+     */
+    linkUrl?: string | null
+    /**
+     * The name of what this tab opens: "Big-project money".
+     */
+    heading: string
+    /**
+     * In plain words, what the key fact means and where it comes from.
+     */
+    definition: string
+    /**
+     * 1 to 2 charts or timelines shown when the tab is open.
+     */
+    panel: (ChartBlock | TimelineBlock)[]
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'factTabs'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

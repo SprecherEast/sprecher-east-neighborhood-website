@@ -2,11 +2,14 @@ import type { Block, Field } from 'payload'
 
 import { CERTAINTY_OPTIONS } from '@/platform/lib/certainty'
 
+import { KEY_FACT_LIMITS, KEY_FACTS_LIMITS } from './editorialLimits'
 import { FACT_ICON_OPTIONS } from './factIcons'
+import { filledText } from './filledText'
 import { editorialLinkFields } from './linkFields'
+import { rowsBetween } from './rowCount'
 
-/** The most characters each text on a fact card may have, so a phone card never overflows */
-export const KEY_FACT_LIMITS = { label: 60, value: 24, detail: 90 } as const
+const valueFilled = filledText('Add the big text: where it stands, or the number.')
+const labelFilled = filledText('Add what the fact is about, as a short title.')
 
 /**
  * The fields of one fact (#660, #674), in the order the card reads: what it is about (the label),
@@ -23,6 +26,7 @@ export const keyFactFields = (): Field[] => [
         type: 'text',
         required: true,
         maxLength: KEY_FACT_LIMITS.label,
+        validate: labelFilled,
         admin: {
           width: '50%',
           description: 'What it is about, as a short title: "Who pays for the ramps".',
@@ -33,6 +37,7 @@ export const keyFactFields = (): Field[] => [
         type: 'text',
         required: true,
         maxLength: KEY_FACT_LIMITS.value,
+        validate: valueFilled,
         admin: {
           width: '50%',
           description: 'The big text: where it stands, or the number. "Pending", "2040s", "$10M".',
@@ -87,10 +92,13 @@ export const KeyFactsBlockConfig: Block = {
       name: 'facts',
       type: 'array',
       labels: { singular: 'Fact', plural: 'Facts' },
-      admin: { description: 'Two to six facts. They sit side by side on wide screens.' },
-      minRows: 2,
-      maxRows: 6,
+      admin: {
+        description: `${KEY_FACTS_LIMITS.minFacts} to ${KEY_FACTS_LIMITS.maxFacts} facts. They sit side by side on wide screens.`,
+      },
+      minRows: KEY_FACTS_LIMITS.minFacts,
+      maxRows: KEY_FACTS_LIMITS.maxFacts,
       required: true,
+      validate: rowsBetween(KEY_FACTS_LIMITS.minFacts, KEY_FACTS_LIMITS.maxFacts, 'facts'),
       fields: keyFactFields(),
     },
   ],
