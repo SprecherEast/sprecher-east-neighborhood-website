@@ -113,7 +113,8 @@ describe('Breadcrumbs', () => {
     const link = trail().getByRole('link', { name: 'B'.repeat(60) })
     expect(link.className).toContain('min-w-16')
     expect(link.querySelector('.truncate')).not.toBeNull()
-    expect(link.closest('li')?.className).toContain('min-w-16')
+    // The item's floor holds its separator, its gap and the link's own floor: 1rem + 0.25rem + 4rem
+    expect(link.closest('li')?.className).toContain('min-w-21')
   })
 
   it('has no accessibility violations', async () => {

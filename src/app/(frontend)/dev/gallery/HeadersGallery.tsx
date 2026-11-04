@@ -14,6 +14,7 @@ import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 import {
   SAMPLE_BREADCRUMBS,
   SAMPLE_BREADCRUMBS_LONG,
+  SAMPLE_BREADCRUMBS_TIGHT,
   SAMPLE_CAPTION_RICH_TEXT,
   SAMPLE_FACTS,
   SAMPLE_IMAGE,
@@ -100,6 +101,9 @@ export function HeadersGallery() {
         </GalleryVariant>
         <GalleryVariant label="a long last crumb is cut with an ellipsis" className="w-full">
           <Breadcrumbs items={SAMPLE_BREADCRUMBS_LONG} />
+        </GalleryVariant>
+        <GalleryVariant label="a long middle crumb and a long last crumb" className="w-full">
+          <Breadcrumbs items={SAMPLE_BREADCRUMBS_TIGHT} />
         </GalleryVariant>
       </GalleryEntry>
 

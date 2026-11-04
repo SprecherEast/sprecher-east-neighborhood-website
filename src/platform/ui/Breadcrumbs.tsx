@@ -49,7 +49,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                 key={index}
                 className={cn(
                   'flex items-center gap-1',
-                  isHome ? 'shrink-0' : isLast ? 'min-w-0' : 'min-w-16',
+                  isHome ? 'shrink-0' : isLast ? 'min-w-0' : 'min-w-21',
                 )}
               >
                 {index > 0 && <ChevronRight aria-hidden="true" className="size-4 shrink-0" />}
