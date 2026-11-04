@@ -14,6 +14,7 @@ import { Text } from '@/platform/ui/Text'
 import type { ChartAdapter } from './chartAdapter'
 import { ChartDataTable } from './ChartDataTable'
 import { toChartLegends } from './chartLegends'
+import { CHART_DRAWING_ATTRIBUTE } from './chartDrawing'
 import { CHART_PALETTE } from './chartPalette'
 import { adapterFor } from './chartRegistry'
 import { ChartZoom } from './ChartZoom.client'
@@ -74,7 +75,7 @@ export function Chart({ spec: input, adapter: chosen, zoom = true, className }: 
           {toChartSummary(spec)}
         </p>
         <div
-          data-chart-drawing
+          {...{ [CHART_DRAWING_ATTRIBUTE]: '' }}
           className={cn(
             thumbnail && [
               'mt-4 w-full @2xl/chart:col-start-1 @2xl/chart:row-span-4 @2xl/chart:row-start-1 @2xl/chart:mt-0',

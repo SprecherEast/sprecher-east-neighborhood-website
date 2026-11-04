@@ -5,7 +5,10 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { Button } from '@/platform/ui/Button'
 import { Dialog } from '@/platform/ui/Dialog.client'
+import { cn } from '@/platform/lib/cn'
 import { CHART_LARGE_WIDTH } from '@/platform/ui/layoutSizes'
+
+import { CHART_DRAWING_SELECTOR } from './chartDrawing'
 
 export type ChartZoomProps = {
   /** The chart's title: names the button and the dialog */
@@ -13,9 +16,6 @@ export type ChartZoomProps = {
   /** The server-rendered chart. It is in the page, or in the dialog while it is open, never both */
   children: React.ReactNode
 }
-
-/** What a click on the drawing itself opens from: `Chart` marks the drawing with this attribute */
-const DRAWING = '[data-chart-drawing]'
 
 /**
  * Lets a reader enlarge a chart (#681). The chart is a thumbnail in the page; "Enlarge", or a click
@@ -47,7 +47,8 @@ export function ChartZoom({ title, children }: ChartZoomProps) {
     const element = holder.current
     if (!element || open) return
     const onClick = (event: MouseEvent) => {
-      if (event.target instanceof Element && event.target.closest(DRAWING)) change(true)
+      if (event.target instanceof Element && event.target.closest(CHART_DRAWING_SELECTOR))
+        change(true)
     }
     element.addEventListener('click', onClick)
     return () => element.removeEventListener('click', onClick)
@@ -73,7 +74,7 @@ export function ChartZoom({ title, children }: ChartZoomProps) {
         }
       >
         <div className="container py-8">
-          <div className={`@container/chart mx-auto ${CHART_LARGE_WIDTH}`}>{children}</div>
+          <div className={cn('@container/chart mx-auto', CHART_LARGE_WIDTH)}>{children}</div>
         </div>
       </Dialog>
       <div
