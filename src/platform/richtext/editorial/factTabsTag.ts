@@ -47,6 +47,7 @@ const chartPicture = z.looseObject({ block: z.literal('chart') })
 const tab = z.strictObject({
   value: text(KEY_FACT_LIMITS.value),
   label: text(KEY_FACT_LIMITS.label),
+  detail: text(KEY_FACT_LIMITS.detail).optional(),
   icon: z.enum(Object.keys(FACT_ICONS) as [keyof typeof FACT_ICONS]),
   certainty: z.enum(CERTAINTIES),
   link: link.optional(),
@@ -105,6 +106,7 @@ export function factTabsFromTag(input: unknown): StoredFactTabs {
     tabs: result.data.map((t) => ({
       value: t.value,
       label: t.label,
+      detail: t.detail,
       icon: t.icon,
       certainty: t.certainty,
       linkLabel: t.link?.label,
@@ -127,6 +129,7 @@ export const factTabsToTag = (props: readonly FactTabProps[]) =>
   props.map(({ fact, heading, definition, panel }) => ({
     value: fact.value,
     label: fact.label,
+    ...(fact.detail ? { detail: fact.detail } : {}),
     icon: fact.icon,
     certainty: fact.certainty,
     ...(fact.source ? { link: { label: fact.source.label, href: fact.source.href } } : {}),

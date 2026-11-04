@@ -13,6 +13,7 @@ const FACT: KeyFact = {
   value: '$477.5M',
   label: 'Day-to-day money',
   icon: 'money',
+  detail: null,
   certainty: 'confirmed',
   source: {
     href: 'https://example.com',

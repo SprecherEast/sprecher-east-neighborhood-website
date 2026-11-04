@@ -9,11 +9,12 @@ import { FACT_ICONS } from './factIcons'
 import type { KeyFact } from './keyFacts'
 
 /**
- * One fact as a small card (#509, #660): the icon beside what the fact is on the first row, the
- * big short value under it, then how sure we are in words and the source. The label comes before
- * the value in reading order through `dt`/`dd`. The icon sits inside the `dt`, decorative, and
- * aligned to the label's first line so a label that wraps doesn't centre it awkwardly. Drawn here
- * so the key facts row and any later block that shows a fact look the same.
+ * One fact as a small card (#509, #660, #674): the icon beside what the fact is about, in bold
+ * body-size text, on the first row; the big short value under it; an optional one-line
+ * explanation; then how sure we are in words and the source. The same order on screen and for
+ * screen readers (`dt`, then `dd`s). The icon sits inside the `dt`, decorative, and aligned to the
+ * label's first line so a label that wraps doesn't centre it awkwardly. Drawn here so the key
+ * facts row and any later block that shows a fact look the same.
  *
  * `variant="tab"` (#664) is the same fact as the face of a tab button: the same rows, but in
  * phrasing elements with no card, since the tab button is the box (its border, selected state and
@@ -30,19 +31,24 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
   const body = (
     <>
       <Facts className="flex flex-col gap-1">
-        <Label
-          className={cn(
-            'flex items-start gap-2 text-sm leading-snug',
-            // The selected tab is tinted, where the muted grey is just under 4.5:1
-            tab ? 'text-foreground' : 'text-muted-foreground',
-          )}
-        >
+        <Label className="flex items-start gap-2 text-base leading-snug font-semibold text-foreground">
           <Icon aria-hidden="true" className="size-5 shrink-0 text-primary" />
           <span className="min-w-0 [overflow-wrap:anywhere]">{fact.label}</span>
         </Label>
         <Value className="block text-2xl leading-tight font-bold [overflow-wrap:anywhere] text-foreground">
           {fact.value}
         </Value>
+        {fact.detail && (
+          <Value
+            className={cn(
+              'block text-sm leading-snug [overflow-wrap:anywhere]',
+              // The selected tab is tinted, where the muted grey is just under 4.5:1
+              tab ? 'text-foreground' : 'text-muted-foreground',
+            )}
+          >
+            {fact.detail}
+          </Value>
+        )}
       </Facts>
       <Foot className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
         <CertaintyBadge certainty={fact.certainty} />

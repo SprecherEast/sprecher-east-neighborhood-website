@@ -11,6 +11,7 @@ export const LINK_LABEL_MAX = 60
 export const KEY_FACT_LIMITS = {
   value: 24,
   label: 60,
+  detail: 90,
 } as const
 
 /** The key facts block */

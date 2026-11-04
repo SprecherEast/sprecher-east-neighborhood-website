@@ -23,6 +23,15 @@ describe('factTabsToJsx and importFactTabsTag', () => {
     expect(factTabsToJsx(back as never)).toBe(tag)
   })
 
+  it("keeps a tab's one-line detail through the tag", () => {
+    const withDetail = {
+      tabs: FACT_TABS_FIXTURE.tabs?.map((t, i) => (i === 0 ? { ...t, detail: 'Per year' } : t)),
+    } as StoredFactTabs
+    const back = importFactTabsTag(propsOf(factTabsToJsx(withDetail) as string)) as StoredFactTabs
+    expect(back.tabs?.[0]?.detail).toBe('Per year')
+    expect(back.tabs?.[1]?.detail).toBeUndefined()
+  })
+
   it('throws the reasons outside a conversion, starting "Invalid <FactTabs>:"', () => {
     expect(() => importFactTabsTag({ tabs: [] })).toThrow(/^Invalid <FactTabs>: tabs/)
     expect(() => importFactTabsTag({})).toThrow(/Invalid <FactTabs>/)
