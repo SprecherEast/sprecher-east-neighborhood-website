@@ -4,6 +4,7 @@ import { LoaderCircle } from 'lucide-react'
 import type NextLink from 'next/link'
 
 import { AppLink } from './AppLink'
+import { TOUCH_MIN_HEIGHT } from './layoutSizes'
 import type { ComponentProps, ReactNode } from 'react'
 
 /**
@@ -30,7 +31,7 @@ export const buttonVariants = cva(
       },
       // Every size is at least 44 px tall on phones (WCAG 2.5.8); `sm` shrinks from lg up
       size: {
-        sm: 'min-h-11 px-4 text-sm lg:min-h-9 lg:px-3',
+        sm: `${TOUCH_MIN_HEIGHT} px-4 text-sm lg:px-3`,
         md: 'min-h-11 px-5 text-base',
         lg: 'min-h-12 px-8 text-base',
         icon: 'size-11 [&_svg]:size-5',

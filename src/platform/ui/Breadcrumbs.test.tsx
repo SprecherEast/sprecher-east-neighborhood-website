@@ -61,7 +61,7 @@ describe('Breadcrumbs', () => {
     expect(trail().queryByText('/')).toBeNull()
   })
 
-  it('keeps a long last crumb on one line with an ellipsis, its full text still in the page', () => {
+  it('marks a long last crumb to be cut on one line, its full text still in the page', () => {
     const title = 'A'.repeat(60)
     render(<Breadcrumbs items={[...ITEMS.slice(0, 2), { label: title }]} />)
 
@@ -71,6 +71,49 @@ describe('Breadcrumbs', () => {
     expect(trail().getByRole('list').className).not.toContain('flex-wrap')
     // Inside a flex parent the trail may not grow past it, or the ellipsis would never apply
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' }).className).toContain('max-w-full')
+  })
+
+  it('draws a crumb with no link as quiet text, not as the current page', () => {
+    render(
+      <Breadcrumbs
+        items={[{ label: 'Home', href: '/' }, { label: 'Archive' }, { label: 'Post' }]}
+      />,
+    )
+
+    const crumb = trail().getByText('Archive')
+    expect(crumb.getAttribute('aria-current')).toBeNull()
+    expect(crumb.closest('a')).toBeNull()
+    expect(crumb.className).not.toContain('font-semibold')
+  })
+
+  it('shows text, not the home icon, for a first crumb that links elsewhere', () => {
+    render(<Breadcrumbs items={[{ label: 'News', href: '/posts' }, { label: 'Post' }]} />)
+
+    expect(trail().getByRole('link', { name: 'News' }).querySelector('svg')).toBeNull()
+  })
+
+  it('draws a single crumb as the current page, with no separator', () => {
+    const { container } = render(<Breadcrumbs items={[{ label: 'Post' }]} />)
+
+    expect(trail().getByText('Post').getAttribute('aria-current')).toBe('page')
+    expect(container.querySelectorAll('svg')).toHaveLength(0)
+  })
+
+  it('lets a long linked middle crumb shrink with an ellipsis too', () => {
+    render(
+      <Breadcrumbs
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'B'.repeat(60), href: '/long' },
+          { label: 'Post' },
+        ]}
+      />,
+    )
+
+    const link = trail().getByRole('link', { name: 'B'.repeat(60) })
+    expect(link.className).toContain('min-w-16')
+    expect(link.querySelector('.truncate')).not.toBeNull()
+    expect(link.closest('li')?.className).toContain('min-w-16')
   })
 
   it('has no accessibility violations', async () => {
