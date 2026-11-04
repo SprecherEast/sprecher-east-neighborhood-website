@@ -43,7 +43,11 @@ fails `tsc`.
 
 Page-builder blocks: `archive`, `content`, `cta`, `eventsThisWeek` (from `events`), `formBlock`
 (from `contact`), `mediaBlock`, `topIssues` (from `news`). Blocks inside rich text
-(`src/platform/richtext/`): `banner`, `code`, `mediaBlock`.
+(`src/platform/richtext/`): `banner`, `code`, `mediaBlock`, and the visual blocks in
+`EDITORIAL_BLOCKS` (`timeline`, `steps`, `keyFacts`, `outcomeFork`, `diagramKey`, `chart`). A block
+that agents may write in Markdown has a `jsx` converter (`chart` does, #640): `export` writes one
+`<Chart … />` tag and `import` reads it back through the same rules as the editor's fields. Payload's
+Markdown converter swallows an error an import throws, so use `collectChartRefusals` to hear the reasons.
 
 ## Heroes
 

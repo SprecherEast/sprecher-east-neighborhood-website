@@ -201,6 +201,9 @@ export interface PayloadMcpApiKeyAuthOperations {
  */
 export interface Page {
   id: number
+  /**
+   * Up to 60 characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.
+   */
   title: string
   hero: {
     type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact'
@@ -278,6 +281,9 @@ export interface Page {
  */
 export interface Post {
   id: number
+  /**
+   * Up to 60 characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.
+   */
   title: string
   heroImage?: (number | null) | Media
   content: {
@@ -950,6 +956,9 @@ export interface TopIssuesBlock {
  */
 export interface Event {
   id: number
+  /**
+   * Up to 60 characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.
+   */
   title: string
   date: string
   timeStart?: string | null
@@ -2973,6 +2982,155 @@ export interface DiagramKeyBlock {
   id?: string | null
   blockName?: string | null
   blockType: 'diagramKey'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ChartBlock".
+ */
+export interface ChartBlock {
+  /**
+   * What the chart shows: "Where each $100 goes".
+   */
+  title: string
+  /**
+   * The takeaway, in a sentence or two. It sits under the title and is what screen readers hear first.
+   */
+  summary: string
+  kind: 'units' | 'bar' | 'stacked'
+  /**
+   * What the numbers count.
+   */
+  unit: 'usd' | 'percent' | 'mills' | 'count'
+  /**
+   * When the figures are from: "Mayor’s proposal, October 2026".
+   */
+  asOf?: string | null
+  /**
+   * Leave empty to show no label.
+   */
+  certainty?: ('confirmed' | 'estimate' | 'unknown') | null
+  /**
+   * Optional small print under the chart: what was rounded or calculated.
+   */
+  finePrint?: string | null
+  /**
+   * Where the numbers come from. Up to four.
+   */
+  sources?:
+    | {
+        /**
+         * Optional, for example "City of Madison, 2027 budget".
+         */
+        linkLabel?: string | null
+        /**
+         * A site path (/events) or https:// address.
+         */
+        linkUrl?: string | null
+      }[]
+    | null
+  mode?: ('perHundred' | 'each') | null
+  /**
+   * What one square or tile stands for, in a sentence.
+   */
+  unitNote?: string | null
+  /**
+   * One grid for each group; two put them side by side, such as 2026 next to 2027. A grid shows at most six parts; a row of tiles up to twelve.
+   */
+  groups?:
+    | {
+        label: string
+        /**
+         * Optional: the whole the parts add up to.
+         */
+        total?: number | null
+        /**
+         * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+         */
+        key?: string | null
+        parts: {
+          label: string
+          /**
+           * In the unit above. Never negative.
+           */
+          value: number
+          /**
+           * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+           */
+          key?: string | null
+          /**
+           * Stripes mark an amount that is only proposed.
+           */
+          hatch?: boolean | null
+        }[]
+      }[]
+    | null
+  /**
+   * One to twelve bars, top to bottom.
+   */
+  bars?:
+    | {
+        label: string
+        /**
+         * In the unit above. Never negative.
+         */
+        value: number
+        /**
+         * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+         */
+        key?: string | null
+        /**
+         * Stripes mark an amount that is only proposed.
+         */
+        hatch?: boolean | null
+      }[]
+    | null
+  /**
+   * The parts each bar splits into, such as “Borrowed” and “Other sources”.
+   */
+  series?:
+    | {
+        label: string
+        /**
+         * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+         */
+        key?: string | null
+        /**
+         * Stripes mark an amount that is only proposed.
+         */
+        hatch?: boolean | null
+        /**
+         * Added on top of the first part: shown as “+$24.8M”.
+         */
+        increase?: boolean | null
+      }[]
+    | null
+  /**
+   * One bar per row. Give each a number for every part above, in the same order.
+   */
+  rows?:
+    | {
+        label: string
+        /**
+         * Optional note beside the bar. Give every bar one, or none.
+         */
+        note?: string | null
+        /**
+         * One number for each part, in the order of the parts.
+         */
+        values?:
+          | {
+              value: number
+            }[]
+          | null
+      }[]
+    | null
+  /**
+   * Optional. The end of the scale. Charts with the same scale draw the same number the same length.
+   */
+  scaleMax?: number | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'chart'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

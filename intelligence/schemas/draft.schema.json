@@ -18,7 +18,7 @@
       "description": "Markdown that fits one screen without scrolling (docs/guidelines/brand-voice.md): what, when, where, one action, why it matters to Sprecher East, official links.",
       "type": "string",
       "minLength": 1,
-      "maxLength": 3000
+      "maxLength": 12000
     },
     "summary": {
       "description": "The card text residents see first: one or two plain sentences, no Markdown, no links. Stored as a post's meta description or an event's description.",

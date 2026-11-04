@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { CERTAINTIES } from '@/platform/lib/certainty'
+import { isLinkAddress, LINK_ADDRESS_HINT } from '@/platform/lib/linkAddress'
 
 /*
  * What a chart is, as plain data (#639, #592): no React and no chart library, so any adapter can
@@ -17,30 +18,58 @@ export const MAX_COLOURED_PARTS = 6
 export const SQUARES_PER_HUNDRED = 100
 /** A group's printed total may differ from the sum of its parts by this much (rounding) */
 export const TOTAL_TOLERANCE = 1
-const MAX_ROWS = 12
+
+/**
+ * Every size limit of a chart, defined once: the schema below and the editor's block fields
+ * (`richtext/editorial/chart*Fields.ts`) both read these, so what the editor saves is what the
+ * spec accepts.
+ */
+export const CHART_LIMITS = {
+  /** Rows of a bar chart or stacked chart, parts of a row of tiles */
+  rows: 12,
+  /** Parts of a grid, and series of a stacked chart: one chart colour each */
+  parts: MAX_COLOURED_PARTS,
+  groups: 2,
+  sources: 4,
+  key: 40,
+  label: 80,
+  title: 120,
+  summary: 400,
+  asOf: 120,
+  finePrint: 400,
+  sourceLabel: 120,
+  sourceHref: 500,
+  unitNote: 300,
+  rowNote: 120,
+} as const
+
+const MAX_ROWS = CHART_LIMITS.rows
 
 const text = (max: number) => z.string().trim().min(1).max(max)
 
 const datumSchema = z.object({
-  key: text(40),
-  label: text(80),
+  key: text(CHART_LIMITS.key),
+  label: text(CHART_LIMITS.label),
   value: z.number().finite().nonnegative(),
   /** Hatched marks read by pattern as well as colour (a proposed amount, an increase) */
   pattern: z.literal('hatch').optional(),
 })
 
-const sourceSchema = z.object({ label: text(120), href: text(500) })
+const sourceSchema = z.object({
+  label: text(CHART_LIMITS.sourceLabel),
+  href: text(CHART_LIMITS.sourceHref).refine(isLinkAddress, { message: LINK_ADDRESS_HINT }),
+})
 
 const baseShape = {
-  title: text(120),
+  title: text(CHART_LIMITS.title),
   /** The takeaway in words: shown under the title */
-  summary: text(400),
+  summary: text(CHART_LIMITS.summary),
   unit: z.enum(CHART_UNITS),
   /** When the figures are from, such as "Mayor's proposal, October 2026" */
-  asOf: text(120).optional(),
+  asOf: text(CHART_LIMITS.asOf).optional(),
   certainty: z.enum(CERTAINTIES).optional(),
-  sources: z.array(sourceSchema).max(4).optional(),
-  finePrint: text(400).optional(),
+  sources: z.array(sourceSchema).max(CHART_LIMITS.sources).optional(),
+  finePrint: text(CHART_LIMITS.finePrint).optional(),
 }
 
 const orientation = z.enum(['horizontal', 'vertical'])
@@ -50,13 +79,23 @@ const dataList = (max: number) =>
     .array(datumSchema)
     .min(1)
     .max(max)
-    .refine((data) => new Set(data.map((d) => d.key)).size === data.length, {
-      message: 'A part appears twice: each key can be used once',
+    .superRefine((data, ctx) => {
+      const seen = new Map<string, string>()
+      data.forEach((d, i) => {
+        const first = seen.get(d.key)
+        if (first !== undefined) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [i, 'key'],
+            message: `The key "${d.key}" is used twice: "${d.label}" repeats the key of "${first}"`,
+          })
+        } else seen.set(d.key, d.label)
+      })
     })
 
 const groupSchema = z.object({
-  key: text(40),
-  label: text(80),
+  key: text(CHART_LIMITS.key),
+  label: text(CHART_LIMITS.label),
   /** The whole the parts add up to, if the chart states it */
   total: z.number().finite().nonnegative().optional(),
   data: dataList(MAX_ROWS),
@@ -69,8 +108,8 @@ const unitsSchema = z
     /** `perHundred`: 100 squares share out each group's total. `each`: one tile per part. */
     mode: z.enum(['perHundred', 'each']),
     /** What one square or tile stands for, in a sentence */
-    unitNote: text(300),
-    groups: z.array(groupSchema).min(1).max(2),
+    unitNote: text(CHART_LIMITS.unitNote),
+    groups: z.array(groupSchema).min(1).max(CHART_LIMITS.groups),
   })
   .superRefine((spec, ctx) => {
     if (spec.mode === 'perHundred' && spec.unit !== 'usd') {
@@ -121,8 +160,8 @@ const barSchema = z
   })
 
 const seriesSchema = z.object({
-  key: text(40),
-  label: text(80),
+  key: text(CHART_LIMITS.key),
+  label: text(CHART_LIMITS.label),
   pattern: z.literal('hatch').optional(),
   /** An amount added on top of the first one: its value reads "+$24.8M" */
   increase: z.literal(true).optional(),
@@ -135,11 +174,11 @@ const stackedSchema = z
     kind: z.literal('stacked'),
     orientation,
     /** The rows (or columns) the series are stacked in, such as years */
-    x: z.array(text(80)).min(1).max(MAX_ROWS),
-    series: z.array(seriesSchema).min(1).max(MAX_COLOURED_PARTS),
+    x: z.array(text(CHART_LIMITS.label)).min(1).max(MAX_ROWS),
+    series: z.array(seriesSchema).min(1).max(CHART_LIMITS.parts),
     scaleMax: z.number().positive().optional(),
     /** One short note per row, such as "$66 of every $100 is borrowed" */
-    rowNotes: z.array(text(120)).max(MAX_ROWS).optional(),
+    rowNotes: z.array(text(CHART_LIMITS.rowNote)).max(MAX_ROWS).optional(),
   })
   .superRefine((spec, ctx) => {
     const add = (message: string) => ctx.addIssue({ code: 'custom', message })

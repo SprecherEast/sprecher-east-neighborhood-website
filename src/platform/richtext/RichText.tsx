@@ -20,6 +20,7 @@ import { Link } from '@/platform/ui/Link'
 import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 import type {
   BannerBlock,
+  ChartBlock,
   DiagramKeyBlock,
   KeyFactsBlock,
   MediaBlock,
@@ -41,6 +42,7 @@ export type RichTextBlockNode = SerializedBlockNode<
   | KeyFactsBlock
   | OutcomeForkBlock
   | DiagramKeyBlock
+  | ChartBlock
 >
 
 type NodeTypes = DefaultNodeTypes | RichTextBlockNode
