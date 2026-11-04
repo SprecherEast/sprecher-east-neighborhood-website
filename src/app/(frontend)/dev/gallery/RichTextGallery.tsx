@@ -3,7 +3,10 @@ import React from 'react'
 import { CodeBlock } from '@/platform/richtext/CodeBlock'
 import { KeyFacts } from '@/platform/richtext/editorial/KeyFacts'
 import { RichText } from '@/platform/richtext/RichText'
+import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
+import { READING_WIDTH } from '@/platform/ui/layoutSizes'
 
+import { SAMPLE_BLOCKS_POST } from './blocksPostSample'
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 import { SAMPLE_CODE, SAMPLE_KEY_FACTS, SAMPLE_RICH_TEXT } from './sampleData'
 
@@ -17,6 +20,23 @@ export function RichTextGallery() {
         </GalleryVariant>
         <GalleryVariant label="without prose" className="block">
           <RichText data={SAMPLE_RICH_TEXT} enableGutter={false} enableProse={false} />
+        </GalleryVariant>
+      </GalleryEntry>
+
+      <GalleryEntry
+        name="RichTextBlocks"
+        description="A post body with the visual blocks in a row and a chart of each kind between them, rendered as a post page does."
+      >
+        <GalleryVariant
+          label="key facts, charts, timeline, steps and an outcome fork"
+          className="block"
+        >
+          <RichText
+            className={READING_WIDTH}
+            data={SAMPLE_BLOCKS_POST}
+            blocks={richTextBlocks}
+            enableGutter={false}
+          />
         </GalleryVariant>
       </GalleryEntry>
 

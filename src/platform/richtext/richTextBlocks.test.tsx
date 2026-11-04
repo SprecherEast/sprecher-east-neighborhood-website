@@ -3,9 +3,12 @@ import type { JSXConverterArgs } from '@payloadcms/richtext-lexical/react'
 import { describe, expect, it } from 'vitest'
 
 import { READING_WIDTH } from '@/platform/ui/layoutSizes'
+import { Chart } from '@/platform/ui/chart/Chart'
+import { vi } from 'vitest'
 
 import type {
   BannerBlock as BannerFields,
+  ChartBlock as ChartFields,
   MediaBlock as MediaFields,
   DiagramKeyBlock as DiagramKeyFields,
   KeyFactsBlock as KeyFactsFields,
@@ -139,5 +142,29 @@ describe('richTextBlocks', () => {
     expect(element.type).toBe(DiagramKey)
     expect(element.props.className).toBe('col-start-2')
     expect(element.props.items).toHaveLength(2)
+  })
+
+  it('draws a chart in the middle column, from a spec the mapper checked', () => {
+    const fields = {
+      blockType: 'chart',
+      kind: 'bar',
+      title: 'Budget',
+      summary: 'Up a little.',
+      unit: 'usd',
+      bars: [{ label: '2026', value: 4 }],
+    } as ChartFields
+    const element = richTextBlocks.chart(argsFor(fields))
+
+    expect(element?.type).toBe(Chart)
+    expect(element?.props.className).toBe('col-start-2')
+    expect(element?.props.spec).toMatchObject({ kind: 'bar', title: 'Budget' })
+  })
+
+  it('leaves out a chart that does not add up, and logs why, so the rest of the post still shows', () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const fields = { blockType: 'chart', kind: 'bar', title: '', summary: 'x', unit: 'usd' }
+    expect(richTextBlocks.chart(argsFor(fields as ChartFields))).toBeNull()
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('Chart block left out'))
+    log.mockRestore()
   })
 })

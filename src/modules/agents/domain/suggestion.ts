@@ -14,7 +14,8 @@ export const SUGGESTION_CAPS = {
   // Payload checks a title's length when an editor publishes, not when a draft is saved (#633), so
   // this cap is the only guard for a suggestion: a longer title would fail later, on publish
   title: TITLE_MAX_LENGTH,
-  bodyMarkdown: 3_000,
+  // Room for a long explainer with chart tags: the 2027 budget post is 4 to 5 KB (#640)
+  bodyMarkdown: 12_000,
   cardSummary: 160,
   categorySlug: 100,
   categories: 2,

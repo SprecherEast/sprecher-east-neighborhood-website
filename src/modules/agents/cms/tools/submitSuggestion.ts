@@ -8,6 +8,7 @@ import {
 } from 'payload'
 
 import { SITE_TIMEZONE } from '@/platform/lib/timezone'
+import { collectChartRefusals } from '@/platform/richtext/editorial/chartMarkdown'
 
 import {
   type CategoryNode,
@@ -28,7 +29,12 @@ function toContent(req: PayloadRequest, input: SubmitSuggestionInput) {
   )
   if (!field) throw new APIError(`${input.collection} has no content field`, 500)
   const editorConfig = editorConfigFactory.fromField({ field })
-  return convertMarkdownToLexical({ editorConfig, markdown: input.bodyMarkdown })
+  // A malformed <Chart> tag is refused with its reasons, so the agent can fix the tag (#640)
+  const { value, refusals } = collectChartRefusals(() =>
+    convertMarkdownToLexical({ editorConfig, markdown: input.bodyMarkdown }),
+  )
+  if (refusals.length > 0) throw new APIError(refusals.join(' '), 400, null, true)
+  return value
 }
 
 const idOf = (value: unknown): number | null => {

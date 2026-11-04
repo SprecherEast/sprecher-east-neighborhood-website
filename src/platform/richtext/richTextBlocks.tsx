@@ -2,6 +2,7 @@ import React from 'react'
 
 import { BannerBlock } from './BannerBlock'
 import { CodeBlock } from './CodeBlock'
+import { toChartSpec } from './editorial/chart'
 import { DiagramKey } from './editorial/DiagramKey'
 import { toDiagramKeyProps } from './editorial/diagramKey'
 import { KeyFacts } from './editorial/KeyFacts'
@@ -14,6 +15,7 @@ import { Timeline } from './editorial/Timeline'
 import { toTimelineProps } from './editorial/timeline'
 import { MediaBlock } from './MediaBlock'
 import type { RichTextBlocks } from './RichText'
+import { Chart } from '@/platform/ui/chart/Chart'
 import { READING_WIDTH } from '@/platform/ui/layoutSizes'
 
 /**
@@ -33,6 +35,16 @@ export const richTextBlocks = {
   diagramKey: ({ node }) => (
     <DiagramKey className="col-start-2" {...toDiagramKeyProps(node.fields)} />
   ),
+  chart: ({ node }) => {
+    try {
+      return <Chart className="col-start-2" spec={toChartSpec(node.fields)} />
+    } catch (error) {
+      // A chart that fails its rules was not saved through the editor (the field checks refuse
+      // it); leave it out rather than break the whole post, and say why in the log
+      console.error(`Chart block left out: ${error instanceof Error ? error.message : error}`)
+      return null
+    }
+  },
   outcomeFork: ({ node }) => (
     <OutcomeFork className="col-start-2" {...toOutcomeForkProps(node.fields)} />
   ),

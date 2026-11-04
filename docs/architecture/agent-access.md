@@ -36,7 +36,11 @@ characters, the card text), `categories` (1–2 category slugs), `startsAt`, `en
 `allDay`, `venue`, `address`, `sourceName`, `sourceUrl`, `externalId` (`<source id>:<id>`),
 `contentHash` (sha256, lowercase hex), `audience` (the `AUDIENCES` values, each once) and `runId`
 (the `runId` of one of its own runs). The Markdown becomes the collection's `content` through
-Payload's converter (`convertMarkdownToLexical`) with that field's own editor config. For an
+Payload's converter (`convertMarkdownToLexical`) with that field's own editor config. A
+`<Chart kind="…" title="…" summary="…" unit="…" data={[…]} />` tag becomes a chart block (#640):
+its props are checked with the same `ChartSpec` rules as the editor's block, and a tag that breaks
+them refuses the whole call with the reasons (`Invalid <Chart>: …`), so the agent can fix it. The
+tag is in `intelligence/prompts/draft.md`. For an
 event, `startsAt` is required (a date-time with a zone); it gives `date` and, unless `allDay`,
 `timeStart` and `timeEnd` in the site timezone (`toEventSchedule`); `venue` and `address` give
 `locationName` and `locationAddress`. The summary becomes an event's `description` or a post's
@@ -63,7 +67,7 @@ under each run); the agent reads its own, can't change or delete them, and only 
 own runs.
 
 **Size caps** (`SUGGESTION_CAPS` in `domain/suggestion.ts`; the tool refuses anything larger):
-`runId` 100, title 60 (the CMS's `TITLE_MAX_LENGTH`), body 3,000, venue 200, address 300, source name 200, links 2,048,
+`runId` 100, title 60 (the CMS's `TITLE_MAX_LENGTH`), body 12,000 (room for a long explainer with `<Chart>` tags, #640), venue 200, address 300, source name 200, links 2,048,
 `externalId` 200, summary 1,000, 5 evidence items with `says` up to 500, 20 flags.
 
 ## Safeguards
