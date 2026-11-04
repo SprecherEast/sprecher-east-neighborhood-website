@@ -1,7 +1,7 @@
 import type { ResolvedLink } from '@/platform/lib'
 import type { KeyFactsBlock as StoredKeyFacts } from '@/payload-types'
 
-import { isCertainty, type Certainty } from './certainty'
+import { isCertainty, type Certainty } from '@/platform/lib/certainty'
 import { toEditorialLink } from './editorialLink'
 import { isFactIcon, type FactIcon } from './factIcons'
 

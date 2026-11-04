@@ -114,10 +114,11 @@ coverage table, `Field · email` means a field holding `Field.Input type="email"
 
 ## Rich text (`src/platform/richtext/`)
 
-| Component   | Variants (`cva`)                         | Props                              | Today                                                                                              | Elements   |
-| ----------- | ---------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------- | ---------- |
-| `RichText`  | `variant`: `prose`, `compact`, `inverse` | `data` (`RichTextValue`), `gutter` | `src/platform/richtext/RichText.tsx` restyled with `[&_h2]`-style selectors in five files          | B1–B4, F10 |
-| `CodeBlock` | one look                                 | `code`, `language`                 | `src/platform/richtext/CodeBlock.tsx`; copy button becomes `Button · secondary` with a Lucide icon | B6         |
+| Component   | Variants (`cva`)                         | Props                              | Today                                                                                                                                                                                                                                                                                  | Elements   |
+| ----------- | ---------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `RichText`  | `variant`: `prose`, `compact`, `inverse` | `data` (`RichTextValue`), `gutter` | `src/platform/richtext/RichText.tsx` restyled with `[&_h2]`-style selectors in five files                                                                                                                                                                                              | B1–B4, F10 |
+| `CodeBlock` | one look                                 | `code`, `language`                 | `src/platform/richtext/CodeBlock.tsx`; copy button becomes `Button · secondary` with a Lucide icon                                                                                                                                                                                     | B6         |
+| `KeyFacts`  | one look (2 or 3 columns by count)       | `facts` (`KeyFact[]`)              | `src/platform/richtext/editorial/KeyFacts.tsx` (#509) in a `CardGrid`; each `FactCard.tsx` (#660) has the icon (`size-5`, decorative) beside the label on one row, the value under it, then the certainty `Badge` and source `Link`; label before value for screen readers (`dt`/`dd`) | -          |
 
 ## How many, and what to build first
 

@@ -3,6 +3,7 @@ import { createElement } from 'react'
 
 import { linkNode, p, paragraph, root, text, heading } from '@/endpoints/seed/helpers/lexical'
 import type { ImageRef, RichTextValue } from '@/platform/lib'
+import type { KeyFact } from '@/platform/richtext/editorial/keyFacts'
 import type { BreadcrumbItem } from '@/platform/ui/Breadcrumbs'
 import type { LegendItem } from '@/platform/ui/Legend'
 import type { IconMetaItem, LabelledMetaItem } from '@/platform/ui/MetaList'
@@ -115,6 +116,36 @@ export const SAMPLE_RICH_TEXT = root([
   heading('h3', 'A smaller heading'),
   p('A second paragraph under it.'),
 ]) as RichTextValue
+
+/** Key facts: the second has the longest label the editor allows (60 characters) */
+export const SAMPLE_KEY_FACTS: KeyFact[] = [
+  {
+    value: '2040s',
+    label: 'earliest construction',
+    icon: 'date',
+    certainty: 'estimate',
+    source: null,
+  },
+  {
+    value: '$10M',
+    label: 'total cost of the whole project including each phase, in all',
+    icon: 'money',
+    certainty: 'unknown',
+    source: null,
+  },
+  {
+    value: 'None',
+    label: 'tax increase verified',
+    icon: 'taxes',
+    certainty: 'confirmed',
+    source: {
+      href: 'https://example.com',
+      label: 'City budget',
+      external: true,
+      appearance: 'default',
+    },
+  },
+]
 
 export const SAMPLE_CODE = `export function greet(name: string) {
   return \`Hello, \${name}!\`
