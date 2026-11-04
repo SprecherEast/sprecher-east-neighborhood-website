@@ -90,8 +90,8 @@ calculated it, says so. A number with one source is "estimate", never rounded in
 | should, needs to, deserves (about a public decision)                         | "the Council decides", "here's how to comment"  |
 | common sense, fair share, controversial (unquoted)                           | describe the positions, attributed              |
 
-**Allowed:** "The proposal is $477.5 million, up 5.5% from 2026 (City of Madison)." "The City says
-the change is under $7 a month for an average home; Isthmus reports about $90 a year." "Supporters
+**Allowed:** "The proposal is $477.5 million, up 5.5% from 2026 ([City of Madison](https://www.cityofmadison.com/node/127641))." "The City says
+the change is about $7 a month for an average home; Isthmus reports about $90 a year" ([City](https://www.cityofmadison.com/node/127291), [Isthmus](https://isthmus.com/news/news/10-bites-from-madison-budget-briefings/)). "Supporters
 and opponents spoke at the hearing; the minutes are here." "Here's how to comment by Monday."
 
 ## Local awareness
@@ -197,3 +197,12 @@ Three questions anyone can ask of a draft (or give an AI reviewer with this file
 
 This is the default voice that ships with the site. An association can replace it with its own
 later; until then, and whenever that custom voice can't be reached, this one applies.
+
+## Where the example figures come from
+
+The numbers in the examples are illustrations, checked 2026-11-03. Never copy one into a piece: look
+it up again. 2027 proposed budget: [City page](https://www.cityofmadison.com/node/127641). Door Creek
+Park shelter: [City project page](https://cityofmadison.com/parks/projects/door-creek-park-shelter)
+(no cost listed) and a [Cap Times report](https://captimes.com/news/community/madison-s-3-new-park-shelters-cost-6-million-to-open-this-spring/article_646acdce-fe90-11ef-836b-d3ba41accae2.html)
+($3.5 million). Town of Blooming Grove date: [City](https://www.cityofmadison.com/city-hall/town-of-blooming-grove).
+Tax rates: City 2026 adopted budget tables (the 7.0141 vs 7.0032 gap is open on #647).
