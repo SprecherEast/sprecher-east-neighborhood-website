@@ -10,6 +10,9 @@ import { cn } from '@/platform/lib/cn'
  * quiet uppercase name of a sidebar list or a footer column; `lead` and `small` are body text,
  * large and small.
  */
+/** Small body text: also the look of a figure's caption (`Caption`), so the two can't drift apart */
+export const SMALL_TEXT = 'text-sm leading-relaxed text-muted-foreground'
+
 const textVariants = cva('', {
   variants: {
     variant: {
@@ -18,7 +21,7 @@ const textVariants = cva('', {
       overline: 'text-xs font-bold tracking-widest text-primary uppercase',
       label: 'text-xs font-bold tracking-widest text-muted-foreground uppercase',
       lead: 'text-lg text-muted-foreground',
-      small: 'text-sm leading-relaxed text-muted-foreground',
+      small: SMALL_TEXT,
     },
     clamp: { 1: 'line-clamp-1', 2: 'line-clamp-2', 3: 'line-clamp-3' },
   },

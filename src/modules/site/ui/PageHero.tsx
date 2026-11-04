@@ -5,6 +5,7 @@ import type { ResolvedLink, RichTextValue } from '@/platform/lib'
 import { RichText } from '@/platform/richtext/RichText'
 import { splitHeadingFromBody } from '@/platform/richtext/splitHeadingFromBody'
 import { Button } from '@/platform/ui'
+import { Caption, CAPTION_RICH_TEXT } from '@/platform/ui/Caption'
 import { LinkButton } from '@/platform/ui/CMSLink'
 import { Media } from '@/platform/ui/Media'
 import { Section } from '@/platform/ui/Section'
@@ -119,9 +120,9 @@ function MediumHero({ body, image, links }: PhotoHeroProps) {
         <Section as="div" spacing="none">
           <Media className="-mx-4 md:-mx-8 2xl:-mx-16" priority resource={image} />
           {image.caption && (
-            <div className="mt-3">
-              <RichText data={image.caption} enableGutter={false} />
-            </div>
+            <Caption as="div" className="mt-4">
+              <RichText data={image.caption} enableGutter={false} className={CAPTION_RICH_TEXT} />
+            </Caption>
           )}
         </Section>
       )}

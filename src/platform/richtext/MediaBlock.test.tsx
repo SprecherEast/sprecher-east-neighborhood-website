@@ -126,6 +126,14 @@ describe('MediaBlock caption (#635)', () => {
     expect(prose.className).toContain('--tw-prose-body:var(--color-muted-foreground)')
   })
 
+  it('keeps the rich text in a div inside the figcaption, never a bare paragraph', () => {
+    render(<MediaBlock blockType="mediaBlock" media={mediaWithCaption} />)
+
+    const figcaption = screen.getByText('Source: WisDOT').closest('figcaption') as HTMLElement
+    expect(figcaption.querySelector(':scope > p')).toBeNull()
+    expect(figcaption.firstElementChild?.tagName).toBe('DIV')
+  })
+
   it('draws no caption element without a caption', () => {
     const { container } = render(<MediaBlock blockType="mediaBlock" media={1} />)
 

@@ -67,6 +67,7 @@ describe('Caption', () => {
     const caption = screen.getByText('Photo: Jane Doe')
     expect(caption.className).toContain('text-xs')
     expect(caption.className).not.toContain('text-sm')
+    expect(caption.className).toContain('text-muted-foreground')
   })
 
   it('takes a class for placement, which wins over the defaults', () => {
