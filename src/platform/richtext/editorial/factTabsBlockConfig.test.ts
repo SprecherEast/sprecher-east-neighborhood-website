@@ -105,13 +105,34 @@ describe('FactTabsBlockConfig', () => {
 
     it.each([
       ['tabs', 1, 2, 4],
+      ['tabs', 5, 2, 4],
       ['panel', 0, 1, 2],
-    ])(
-      '%s: gives no opinion while Admin builds the form, so no stale message stays',
-      (name, rows) => {
-        expect(check(name)(rows, { event: 'onChange' })).toBe(true)
-        expect(check(name)([], { event: 'onChange' })).toBe(true)
-        expect(check(name)([{ id: 'x' }], { event: 'onChange' })).toBe(true)
+    ])('%s: says why under the field while Admin counts %i rows', (name, rows, min, max) => {
+      const noun = name === 'tabs' ? 'tabs' : 'pictures'
+      expect(check(name)(rows, { event: 'onChange' })).toMatch(new RegExp(`^Add ${min} to ${max}`))
+      expect(check(name)(rows, { event: 'onChange' })).toContain(noun)
+    })
+
+    it.each([
+      ['tabs', 2],
+      ['tabs', 4],
+      ['panel', 1],
+    ])('%s: adding the row that makes %i clears the message at once', (name, rows) => {
+      expect(check(name)(rows, { event: 'onChange' })).toBe(true)
+    })
+
+    it('judges the rows Admin sends as they are, even when a fresh row holds only its id', () => {
+      expect(check('tabs')([{ id: 'a' }], { event: 'onChange' })).toMatch(/there is 1/)
+      expect(check('tabs')([{ id: 'a' }, { id: 'b' }], { event: 'onChange' })).toBe(true)
+      expect(check('panel')([], { event: 'onChange' })).toMatch(/there are 0/)
+    })
+
+    it.each(['tabs', 'panel'])(
+      '%s: gives no opinion on what Admin sends that cannot be counted',
+      (name) => {
+        for (const value of [undefined, null, 'x', {}]) {
+          expect(check(name)(value, { event: 'onChange' })).toBe(true)
+        }
       },
     )
 

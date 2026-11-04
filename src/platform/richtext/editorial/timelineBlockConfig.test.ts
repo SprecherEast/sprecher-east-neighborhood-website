@@ -35,9 +35,19 @@ describe('the timeline block', () => {
     expect(await validate(2, { ...args, event: 'submit' })).not.toBe(true)
   })
 
-  it('gives no opinion while Admin builds the form, and never throws on what it sends', async () => {
+  it('says why under the field while Admin counts the rows, and clears it at the second row', async () => {
     const building = { ...args, event: 'onChange' }
-    for (const value of [0, 2, [], [{ id: 'x' }], undefined, null]) {
+    expect(await validate(1, building)).toMatch(/^Add 2 to 12 milestones: there is 1/)
+    expect(await validate(13, building)).toMatch(/^Add 2 to 12 milestones: there are 13/)
+    expect(await validate([{ id: 'a' }], building)).toMatch(/there is 1/)
+    expect(await validate([{ id: 'a' }, { id: 'b' }], building)).toBe(true)
+    expect(await validate(2, building)).toBe(true)
+    expect(await validate(12, building)).toBe(true)
+  })
+
+  it('gives no opinion on what Admin sends that cannot be counted, and never throws', async () => {
+    const building = { ...args, event: 'onChange' }
+    for (const value of [undefined, null, 'x']) {
       expect(await validate(value, building)).toBe(true)
     }
     // Two "Next up" is still said on an array: the rows exist
