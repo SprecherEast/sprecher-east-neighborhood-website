@@ -15,6 +15,7 @@ export const GALLERY_COMPONENTS = [
   'DateTime',
   'EmptyState',
   'Disclosure',
+  'Tabs',
   'PageHeader',
   'Breadcrumbs',
   'Media',

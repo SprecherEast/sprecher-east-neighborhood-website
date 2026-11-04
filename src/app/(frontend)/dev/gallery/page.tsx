@@ -16,6 +16,7 @@ import { InteractiveGallery } from './InteractiveGallery.client'
 import { isGalleryEnabled } from './isGalleryEnabled'
 import { LayoutGallery } from './LayoutGallery'
 import { RichTextGallery } from './RichTextGallery'
+import { TabsGallery } from './TabsGallery'
 
 export const metadata: Metadata = {
   title: 'Component gallery',
@@ -57,6 +58,7 @@ export default function GalleryPage() {
         <ActionsGallery />
         <FieldsGallery />
         <DisplayGallery />
+        <TabsGallery />
         <HeadersGallery />
         <LayoutGallery />
         <InteractiveGallery />
