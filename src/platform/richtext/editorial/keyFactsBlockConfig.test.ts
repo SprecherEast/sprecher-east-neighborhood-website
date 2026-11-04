@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { keyFactFields, KeyFactsBlockConfig } from './keyFactsBlockConfig'
+import { KEY_FACT_LIMITS, keyFactFields, KeyFactsBlockConfig } from './keyFactsBlockConfig'
 
 function names(fields: unknown[]): string[] {
   return fields.flatMap((field) => {
@@ -32,7 +32,7 @@ describe('keyFactFields', () => {
       .flatMap((field) => ('fields' in field ? field.fields : [field]))
       .find((field) => 'name' in field && field.name === 'detail')
 
-    expect(detail).toMatchObject({ type: 'text', maxLength: 90 })
+    expect(detail).toMatchObject({ type: 'text', maxLength: KEY_FACT_LIMITS.detail })
     expect(detail).not.toHaveProperty('required', true)
   })
 })

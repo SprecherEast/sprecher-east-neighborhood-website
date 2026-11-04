@@ -2896,15 +2896,15 @@ export interface KeyFactsBlock {
    */
   facts: {
     /**
-     * What it is about: "Who pays for the ramps".
+     * What it is about, as a short title: "Who pays for the ramps".
      */
     label: string
     /**
-     * Where it stands, or the number: "Pending", "2040s", "$10M".
+     * The big text: where it stands, or the number. "Pending", "2040s", "$10M".
      */
     value: string
     /**
-     * Optional. One plain sentence on why: "City and State are still negotiating."
+     * Optional. One plain sentence that explains it: "City and State are still negotiating."
      */
     detail?: string | null
     icon:

@@ -5,6 +5,9 @@ import { CERTAINTY_OPTIONS } from '@/platform/lib/certainty'
 import { FACT_ICON_OPTIONS } from './factIcons'
 import { editorialLinkFields } from './linkFields'
 
+/** The most characters each text on a fact card may have, so a phone card never overflows */
+export const KEY_FACT_LIMITS = { label: 60, value: 24, detail: 90 } as const
+
 /**
  * The fields of one fact (#660, #674), in the order the card reads: what it is about (the label),
  * where it stands (the value), an optional one-line explanation, an icon, how sure we are and an
@@ -19,17 +22,20 @@ export const keyFactFields = (): Field[] => [
         name: 'label',
         type: 'text',
         required: true,
-        maxLength: 60,
-        admin: { width: '50%', description: 'What it is about: "Who pays for the ramps".' },
+        maxLength: KEY_FACT_LIMITS.label,
+        admin: {
+          width: '50%',
+          description: 'What it is about, as a short title: "Who pays for the ramps".',
+        },
       },
       {
         name: 'value',
         type: 'text',
         required: true,
-        maxLength: 24,
+        maxLength: KEY_FACT_LIMITS.value,
         admin: {
           width: '50%',
-          description: 'Where it stands, or the number: "Pending", "2040s", "$10M".',
+          description: 'The big text: where it stands, or the number. "Pending", "2040s", "$10M".',
         },
       },
     ],
@@ -37,9 +43,10 @@ export const keyFactFields = (): Field[] => [
   {
     name: 'detail',
     type: 'text',
-    maxLength: 90,
+    maxLength: KEY_FACT_LIMITS.detail,
     admin: {
-      description: 'Optional. One plain sentence on why: "City and State are still negotiating."',
+      description:
+        'Optional. One plain sentence that explains it: "City and State are still negotiating."',
     },
   },
   {

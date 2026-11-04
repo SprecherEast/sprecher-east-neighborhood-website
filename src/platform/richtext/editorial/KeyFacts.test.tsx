@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { KeyFacts } from './KeyFacts'
+import { KEY_FACT_LIMITS } from './keyFactsBlockConfig'
 import type { KeyFact } from './keyFacts'
 
 afterEach(cleanup)
@@ -136,8 +137,8 @@ describe('KeyFacts', () => {
     ).toBeTruthy()
   })
 
-  it('wraps the longest allowed label (60 characters) inside the card', async () => {
-    const label = 'a'.repeat(60)
+  it('wraps the longest allowed label inside the card', async () => {
+    const label = 'a'.repeat(KEY_FACT_LIMITS.label)
     const { container } = render(<KeyFacts facts={[{ ...FACTS[0], label }, FACTS[1]]} />)
     const term = container.querySelector('dt') as HTMLElement
     expect(term.textContent).toBe(label)
