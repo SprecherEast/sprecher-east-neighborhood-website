@@ -6,6 +6,7 @@ import { RichText } from './RichText'
 
 import type { MediaBlock as MediaBlockProps } from '@/payload-types'
 
+import { Caption, CAPTION_RICH_TEXT } from '@/platform/ui/Caption'
 import { FIGURE_GAP } from '@/platform/ui/layoutSizes'
 import { Media } from '@/platform/ui/Media'
 
@@ -41,7 +42,7 @@ export const MediaBlock: React.FC<Props> = (props) => {
   if (media && typeof media === 'object') caption = media.caption
 
   return (
-    <div
+    <figure
       className={cn(inline ? `relative z-10 ${FIGURE_GAP}` : 'container py-10 md:py-14', className)}
     >
       {(media || staticImage) && (
@@ -56,10 +57,10 @@ export const MediaBlock: React.FC<Props> = (props) => {
       {caption && (
         // No container of its own in either placement: the block's own container (section) or the
         // article column (inline) already sets the width, and a nested one would indent the caption
-        <div className={cn('mt-6', captionClassName)}>
-          <RichText data={caption} enableGutter={false} />
-        </div>
+        <Caption as="figcaption" className={cn('mt-4', captionClassName)}>
+          <RichText data={caption} enableGutter={false} className={CAPTION_RICH_TEXT} />
+        </Caption>
       )}
-    </div>
+    </figure>
   )
 }

@@ -39,6 +39,16 @@ describe('ImageCredit', () => {
     await expectAccessible(container)
   })
 
+  it('is the shared caption, in its small size, and takes a class for placement', () => {
+    const { container } = render(<ImageCredit image={photo} className="text-right" />)
+
+    const credit = container.firstElementChild as HTMLElement
+    expect(credit.tagName).toBe('P')
+    expect(credit.className).toContain('text-xs')
+    expect(credit.className).toContain('text-muted-foreground')
+    expect(credit.className).toContain('text-right')
+  })
+
   it('shows plain text when the item has no links', () => {
     const { container } = render(
       <ImageCredit image={{ ...photo, sourceUrl: null, licenseUrl: null }} />,

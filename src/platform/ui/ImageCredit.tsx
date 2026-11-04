@@ -1,9 +1,9 @@
 import React from 'react'
 
-import { cn } from '@/platform/lib/cn'
 import type { ImageRef } from '@/platform/lib/content'
 import { toLicenseName } from '@/platform/lib/mediaLicenses'
 
+import { Caption } from './Caption'
 import { Link } from './Link'
 
 /**
@@ -24,7 +24,7 @@ export function ImageCredit({
   const licenseName = toLicenseName(image.license, image.licenseUrl)
 
   return (
-    <p className={cn('text-xs text-muted-foreground', className)}>
+    <Caption size="sm" className={className}>
       Photo:{' '}
       {image.sourceUrl ? (
         <Link href={image.sourceUrl} external variant="caption">
@@ -45,6 +45,6 @@ export function ImageCredit({
           )}
         </>
       )}
-    </p>
+    </Caption>
   )
 }

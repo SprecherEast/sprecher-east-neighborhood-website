@@ -81,6 +81,11 @@ export const SAMPLE_WHITE_IMAGE: ImageRef = {
 
 export const SAMPLE_PHOTO = samplePhoto
 
+// A figure's caption as an editor writes it in the Media collection's caption field
+export const SAMPLE_CAPTION_RICH_TEXT = root([
+  p('A sample diagram. Source: a made-up agency, with numbers added for this neighborhood guide.'),
+]) as unknown as RichTextValue
+
 // The seed's Lexical helpers type nodes loosely (as Payload's field type does), so the result is
 // asserted to the renderer's type, as the seed's own documents are when Payload stores them
 export const SAMPLE_RICH_TEXT = root([

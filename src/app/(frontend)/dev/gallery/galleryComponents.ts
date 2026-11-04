@@ -19,6 +19,7 @@ export const GALLERY_COMPONENTS = [
   'Breadcrumbs',
   'Media',
   'ImageCredit',
+  'Caption',
   'Legend',
   'Alert',
   'Section',
