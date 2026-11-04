@@ -15,7 +15,7 @@
       "maxLength": 120
     },
     "bodyMarkdown": {
-      "description": "Under 300 words of Markdown: what, when, where, one action, why it matters to Sprecher East, official links.",
+      "description": "Markdown, under 150 words for an event and under 300 for a news post (docs/guidelines/brand-voice.md): what, when, where, one action, why it matters to Sprecher East, official links.",
       "type": "string",
       "minLength": 1,
       "maxLength": 3000
