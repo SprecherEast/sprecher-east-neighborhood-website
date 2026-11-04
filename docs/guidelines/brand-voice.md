@@ -33,19 +33,19 @@ what they say, without telling you what to think.
 
 ## Length budget
 
-| Piece                               | Limit                                                                 |
-| ----------------------------------- | --------------------------------------------------------------------- |
-| Headline                            | Aim for 60 characters; never over 120. Says the news, not a teaser.   |
-| Lead (first sentence)               | 25 words max. Answers "what is it, and what do I do?"                 |
-| Card summary                        | 1 or 2 sentences, under 160 characters, no links.                     |
-| Site message (form, error, success) | 1 or 2 sentences, 20 words ideally, 30 max.                           |
-| Email                               | Subject under 50 characters. Body under 120 words, one link to act.   |
-| Event                               | Under 150 words: what, when, where, who it's for, one action.         |
-| News post                           | Under 300 words.                                                      |
-| Explainer                           | One idea per section, each section under 150 words, plus its picture. |
-| Sentence                            | Average 15 words; split anything over 25.                             |
+| Piece                               | Limit                                                                                                                                                                  |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Headline                            | Aim for 60 characters; never over 120. Says the news, not a teaser.                                                                                                    |
+| Lead (first sentence)               | 25 words max. Answers "what is it, and what do I do?"                                                                                                                  |
+| Card summary                        | 1 or 2 sentences, under 160 characters, no links.                                                                                                                      |
+| Site message (form, error, success) | 1 or 2 sentences, 20 words ideally, 30 max.                                                                                                                            |
+| Email                               | Subject under 50 characters. Body under 120 words, one link to act.                                                                                                    |
+| Event                               | Fits on one screen without scrolling (a 1080p display at 100% zoom, and a phone's first view): what, when, where, who it's for, one action. Need more? Link to a post. |
+| News post                           | Fits on one screen at 1080p and 100% zoom, with its picture. Longer? Make it an explainer.                                                                             |
+| Explainer                           | One idea per screen, each with its picture. The page may scroll; no single idea runs longer than a screen.                                                             |
+| Sentence                            | Average 15 words; split anything over 25.                                                                                                                              |
 
-The drafting prompt (`intelligence/prompts/draft.md`) and its schema carry a copy of the event and news limits because the pipeline doesn't load this file. Change them together.
+The drafting prompt (`intelligence/prompts/draft.md`) and its schema carry a copy of the event and news rule because the pipeline doesn't load this file. Change them together. The owner chose the screen rule in place of word counts (2026-11-03, voice call with Claude, quoted on #535).
 
 Over budget? Cut words before facts. If the facts don't fit, split the piece.
 
@@ -54,17 +54,17 @@ Over budget? Cut words before facts. If the facts don't fit, split the piece.
 Voice stays the same; tone moves with the moment. Humor dial: 0 none, 1 a warm word, 2 a light
 line, 3 playful.
 
-| Situation                | Tone                                                       | Humor |
-| ------------------------ | ---------------------------------------------------------- | ----- |
-| Welcome                  | Glad you're here, no pressure, what to do first.           | 2     |
-| How-to, forms, errors    | Calm and exact. What happened, how to fix it. Never blame. | 1     |
-| Event                    | Inviting and concrete: when, where, what to bring.         | 2–3   |
-| Good news                | Glad, not gushing. Credit whoever did it.                  | 2     |
-| Bad news, safety         | Calm, fact first, what to do now, who to call.             | 0     |
-| Money and taxes          | Even and exact. Numbers with year and source.              | 0–1\* |
-| Politics, city decisions | Neutral process: who decides, when, how to weigh in.       | 0     |
-| Holiday                  | Warm, inclusive, short.                                    | 1–2   |
-| Correction               | Plain and prominent: what was wrong, what's right.         | 0     |
+| Situation                | Tone                                                                                                                                                                   | Humor |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| Welcome                  | Glad you're here, no pressure, what to do first.                                                                                                                       | 2     |
+| How-to, forms, errors    | Calm and exact. What happened, how to fix it. Never blame.                                                                                                             | 1     |
+| Event                    | Fits on one screen without scrolling (a 1080p display at 100% zoom, and a phone's first view): what, when, where, who it's for, one action. Need more? Link to a post. |
+| Good news                | Glad, not gushing. Credit whoever did it.                                                                                                                              | 2     |
+| Bad news, safety         | Calm, fact first, what to do now, who to call.                                                                                                                         | 0     |
+| Money and taxes          | Even and exact. Numbers with year and source.                                                                                                                          | 0–1\* |
+| Politics, city decisions | Neutral process: who decides, when, how to weigh in.                                                                                                                   | 0     |
+| Holiday                  | Warm, inclusive, short.                                                                                                                                                | 1–2   |
+| Correction               | Plain and prominent: what was wrong, what's right.                                                                                                                     | 0     |
 
 \*A light welcome line is fine ("Grab a coffee; this one has charts"); never a joke about the money,
 a tax, a decision or a person. Humor is never at anyone's expense or about crime, loss, damage or
@@ -146,26 +146,26 @@ X, but Y", endings like "highlighting its importance", lists of three for rhythm
 
 Examples show the voice only. Events in them are illustrations; never copy a fact from here.
 
-| Case           | Before                                                                                          | After                                                                                                                                               |
-| -------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Form error     | An account associated with this email address already exists.                                   | Looks like you already have an account. Sign in and we'll pick up where you left off.                                                               |
-| Form error     | Invalid input. Please enter a valid email address.                                              | That email doesn't look right. Check for a missing @ or a typo.                                                                                     |
-| Email          | Thank you for contacting the Association. Your inquiry has been received and will be processed. | Got it, thanks. We'll reply to {email} as soon as we can.                                                                                           |
-| Welcome        | Welcome to our website. We are dedicated to fostering a vibrant community.                      | Welcome, neighbor. Here's what's on around Sprecher East this week, and how to jump in.                                                             |
-| How-to         | To utilize the forum, users must first complete the registration process.                       | To post in the forum, sign up first. Then tap New post.                                                                                             |
-| Event          | Join us for an exciting, can't-miss celebration that truly brings our community together!       | Leaf-raking morning, Saturday 10 a.m., Door Creek Park. Bring gloves; we'll bring cider.                                                            |
-| Good news      | We are thrilled to announce the amazing completion of the new shelter!                          | The Door Creek Park shelter is substantially complete, the City says. Here's the City's update.                                                     |
-| Bad news       | Due to unforeseen circumstances, the event has been cancelled.                                  | We've cancelled Saturday's cleanup: storms are forecast. New date: {date}. Sorry for the short notice.                                              |
-| Safety         | ALERT!!! Cars broken into AGAIN. Lock your doors, people!                                       | Police report car break-ins near {place} this week ({link}). Lock up and take valuables inside. Happening now? Call 911.                            |
-| Holiday        | Merry Christmas from all of us! (a December note to everyone)                                   | Happy holidays, neighbors. Whatever you celebrate, or if you just enjoy the quiet, we hope it's a good one.                                         |
-| Seasonal       | Halloween festivities will occur on the designated evening.                                     | Trick-or-treat is {date}, {hours} ({source}). Porch light on means come on up.                                                                      |
-| Tax lead       | Your December property tax bill adds up four taxing bodies, then subtracts a State credit.      | Of every $100 on your December 2025 tax bill, about $51 goes to the school district and $34 to the City (our math, from City rates).                |
-| Tax term       | The bill applies a mill rate to assessed value.                                                 | A mill is $1 of tax for every $1,000 your home is assessed at.                                                                                      |
-| Budget vote    | The mayor's bloated budget hikes your taxes again. Tell the Council enough is enough!           | The Common Council is scheduled to vote on the 2027 City budget on November 10. Here's how to watch or comment.                                     |
-| Budget vote    | Finally, a budget that invests in our neighborhood!                                             | The proposed 2027 operating budget is $477.5 million, up 5.5% from 2026 (City of Madison).                                                          |
-| Not sure yet   | The new Door Creek Park shelter cost $3.5 million.                                              | What did the shelter cost? We're still checking. A news report says about $3.5 million; the City's page lists no cost.                              |
-| Correction     | UPDATE: Incorrect information was previously displayed.                                         | Correction, {date}: we said the City's rate was 7.0141 mills. Its levy table says 7.0032. We've fixed the chart.                                    |
-| Town addresses | Annexation will impose new municipal taxes on Town properties.                                  | If your home is still in the Town of Blooming Grove, it's scheduled to join the City on October 31, 2027. See the City's estimate for what changes. |
+| Case           | Before                                                                                                                                                                 | After                                                                                                                                               |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Form error     | An account associated with this email address already exists.                                                                                                          | Looks like you already have an account. Sign in and we'll pick up where you left off.                                                               |
+| Form error     | Invalid input. Please enter a valid email address.                                                                                                                     | That email doesn't look right. Check for a missing @ or a typo.                                                                                     |
+| Email          | Thank you for contacting the Association. Your inquiry has been received and will be processed.                                                                        | Got it, thanks. We'll reply to {email} as soon as we can.                                                                                           |
+| Welcome        | Welcome to our website. We are dedicated to fostering a vibrant community.                                                                                             | Welcome, neighbor. Here's what's on around Sprecher East this week, and how to jump in.                                                             |
+| How-to         | To utilize the forum, users must first complete the registration process.                                                                                              | To post in the forum, sign up first. Then tap New post.                                                                                             |
+| Event          | Fits on one screen without scrolling (a 1080p display at 100% zoom, and a phone's first view): what, when, where, who it's for, one action. Need more? Link to a post. |
+| Good news      | We are thrilled to announce the amazing completion of the new shelter!                                                                                                 | The Door Creek Park shelter is substantially complete, the City says. Here's the City's update.                                                     |
+| Bad news       | Due to unforeseen circumstances, the event has been cancelled.                                                                                                         | We've cancelled Saturday's cleanup: storms are forecast. New date: {date}. Sorry for the short notice.                                              |
+| Safety         | ALERT!!! Cars broken into AGAIN. Lock your doors, people!                                                                                                              | Police report car break-ins near {place} this week ({link}). Lock up and take valuables inside. Happening now? Call 911.                            |
+| Holiday        | Merry Christmas from all of us! (a December note to everyone)                                                                                                          | Happy holidays, neighbors. Whatever you celebrate, or if you just enjoy the quiet, we hope it's a good one.                                         |
+| Seasonal       | Halloween festivities will occur on the designated evening.                                                                                                            | Trick-or-treat is {date}, {hours} ({source}). Porch light on means come on up.                                                                      |
+| Tax lead       | Your December property tax bill adds up four taxing bodies, then subtracts a State credit.                                                                             | Of every $100 on your December 2025 tax bill, about $51 goes to the school district and $34 to the City (our math, from City rates).                |
+| Tax term       | The bill applies a mill rate to assessed value.                                                                                                                        | A mill is $1 of tax for every $1,000 your home is assessed at.                                                                                      |
+| Budget vote    | The mayor's bloated budget hikes your taxes again. Tell the Council enough is enough!                                                                                  | The Common Council is scheduled to vote on the 2027 City budget on November 10. Here's how to watch or comment.                                     |
+| Budget vote    | Finally, a budget that invests in our neighborhood!                                                                                                                    | The proposed 2027 operating budget is $477.5 million, up 5.5% from 2026 (City of Madison).                                                          |
+| Not sure yet   | The new Door Creek Park shelter cost $3.5 million.                                                                                                                     | What did the shelter cost? We're still checking. A news report says about $3.5 million; the City's page lists no cost.                              |
+| Correction     | UPDATE: Incorrect information was previously displayed.                                                                                                                | Correction, {date}: we said the City's rate was 7.0141 mills. Its levy table says 7.0032. We've fixed the chart.                                    |
+| Town addresses | Annexation will impose new municipal taxes on Town properties.                                                                                                         | If your home is still in the Town of Blooming Grove, it's scheduled to join the City on October 31, 2027. See the City's estimate for what changes. |
 
 ## Before publishing: 10 checks
 
