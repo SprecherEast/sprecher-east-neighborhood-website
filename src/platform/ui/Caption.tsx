@@ -10,10 +10,10 @@ import { SMALL_TEXT } from './Text'
  * what it shows and where it came from. Every figure's caption looks the same, so none is styled
  * by hand.
  */
-const captionVariants = cva('text-muted-foreground', {
+const captionVariants = cva('', {
   variants: {
     // `md` is a caption on its own line; `sm` is a credit line that sits under or beside an image
-    size: { md: SMALL_TEXT, sm: 'text-xs' },
+    size: { md: SMALL_TEXT, sm: 'text-xs text-muted-foreground' },
   },
   defaultVariants: { size: 'md' },
 })
