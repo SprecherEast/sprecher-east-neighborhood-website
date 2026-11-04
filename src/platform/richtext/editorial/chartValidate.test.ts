@@ -35,8 +35,18 @@ describe('chartFieldError', () => {
         { label: 'B', value: -2 },
       ],
     })
-    expect(chartFieldError('bars', stored)).toMatch(/^Bar 2: .*>=0/)
+    // The bar's own number field already says it (`min: 0`), so the bars list adds nothing
+    expect(chartFieldError('bars', stored)).toBe(true)
     expect(chartFieldError('title', stored)).toBe(true)
+  })
+
+  it('says a negative number in plain words, without the schema wording', () => {
+    const stored = block(FIXTURES.borrowed, {
+      rows: [{ label: 'A', values: [{ value: -2 }, { value: 1 }] }],
+    })
+    const said = chartFieldError('rows', stored)
+    expect(said).toMatch(/can't be negative/)
+    expect(said).not.toMatch(/Too small|expected number/)
   })
 
   it('shows an empty title or summary on its own field', () => {
@@ -95,10 +105,16 @@ describe('chartFieldError', () => {
   it("leaves Payload's own check out of half-built form state, where an array is its count", async () => {
     const own = vi.fn(() => 'This field requires at least 1 Rows.' as const)
     const form = { kind: 'bar', title: 'T', summary: 'S', unit: 'usd', bars: 2, sources: 0 }
-    expect(await checked('bars', own)(2 as never, { siblingData: form })).toBe(true)
+    expect(await checked('bars', own)(2 as never, { siblingData: form, event: 'onChange' })).toBe(
+      true,
+    )
     expect(own).not.toHaveBeenCalled()
     const rows = { ...form, bars: [{ label: 'A', value: 1 }], sources: [] }
     expect(await checked('bars', own)(rows.bars as never, { siblingData: rows })).toBe(own())
+    // On the real save a count is no rows: Payload's own check and the chart rules both run
+    expect(await checked('bars', own)(2 as never, { siblingData: form, event: 'submit' })).toBe(
+      own(),
+    )
   })
 
   describe('with the data Admin builds while it fills in the form', () => {
@@ -184,14 +200,15 @@ describe('chartFieldError', () => {
 
     it.each(formStates)('never throws, and has no opinion, for %s', (_name, data) => {
       for (const field of FIELDS) {
-        expect(() => chartFieldError(field, data)).not.toThrow()
+        expect(() => chartFieldError(field, data, 'onChange')).not.toThrow()
+        expect(() => chartFieldError(field, data, 'submit')).not.toThrow()
       }
     })
 
     it.each(formStates.filter(([name]) => name !== 'a row with only its id'))(
       'does not say a count is a chart that is empty or wrong: %s',
       (_name, data) => {
-        for (const field of FIELDS) expect(chartFieldError(field, data)).toBe(true)
+        for (const field of FIELDS) expect(chartFieldError(field, data, 'onChange')).toBe(true)
       },
     )
   })

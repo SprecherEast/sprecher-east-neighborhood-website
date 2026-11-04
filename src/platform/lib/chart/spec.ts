@@ -79,8 +79,18 @@ const dataList = (max: number) =>
     .array(datumSchema)
     .min(1)
     .max(max)
-    .refine((data) => new Set(data.map((d) => d.key)).size === data.length, {
-      message: 'A part appears twice: each key can be used once',
+    .superRefine((data, ctx) => {
+      const seen = new Map<string, string>()
+      data.forEach((d, i) => {
+        const first = seen.get(d.key)
+        if (first !== undefined) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [i, 'key'],
+            message: `The key "${d.key}" is used twice: "${d.label}" repeats the key of "${first}"`,
+          })
+        } else seen.set(d.key, d.label)
+      })
     })
 
 const groupSchema = z.object({

@@ -103,6 +103,29 @@ describe('saving a Chart block', () => {
     )
   })
 
+  it.each([
+    [
+      'an empty title with bars sent as a count',
+      { kind: 'bar', title: '', summary: '', unit: 'usd', bars: 3 },
+    ],
+    [
+      'a wrong total with sources sent as a count',
+      {
+        kind: 'units',
+        title: 'T',
+        summary: 'S',
+        unit: 'usd',
+        mode: 'each',
+        unitNote: 'x',
+        sources: 1,
+        groups: [{ label: 'A', total: 90, parts: [{ label: 'x', value: 5 }] }],
+      },
+    ],
+    ['a too-short scale with a leftover count', { ...BAR, scaleMax: 1, series: 2 }],
+  ])('refuses %s (a count is not rows on a real save)', async (_name, fields) => {
+    await expect(savePost(fields)).rejects.toThrow(/invalid|chart|title|summary|value|total|scale/i)
+  })
+
   it('does not check the fields of a kind that is not chosen', async () => {
     await expect(
       savePost({ ...BAR, groups: [{ label: 'old', total: 1, parts: [] }] }),
@@ -147,6 +170,7 @@ describe('a Chart tag in Markdown', () => {
     '12" pipe',
     'Café ✓ 😀 and  two  spaces',
     'a /> b <x>',
+    'see <Chart x and <chart',
     'a literal &quot; and &amp; here',
     'line one\nline two',
   ]

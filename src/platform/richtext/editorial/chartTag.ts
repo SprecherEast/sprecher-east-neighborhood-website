@@ -9,6 +9,7 @@
 /** Text props in quotes can't hold these raw; they are written as entities and read back */
 const ENTITIES: Record<string, string> = {
   '&': '&amp;',
+  '<': '&lt;',
   '"': '&quot;',
   '\\': '&#92;',
   '\n': '&#10;',
@@ -19,11 +20,11 @@ const READ_ENTITIES: Record<string, string> = Object.fromEntries(
 )
 
 /** Text as it is written inside a tag's quotes */
-const writeText = (text: string) => text.replace(/[&"\\\n\r]/g, (char) => ENTITIES[char])
+const writeText = (text: string) => text.replace(/[&<"\\\n\r]/g, (char) => ENTITIES[char])
 
 /** The inverse: text from inside a tag's quotes, as written */
 export const readText = (text: string) =>
-  text.replace(/&(?:amp|quot|#92|#10|#13);/g, (entity) => READ_ENTITIES[entity])
+  text.replace(/&(?:amp|lt|quot|#92|#10|#13);/g, (entity) => READ_ENTITIES[entity])
 
 /**
  * A list or object as JSON, with every character the tag reader mishandles inside a string
@@ -35,7 +36,7 @@ const escapeCode = (char: string) => `\\u${char.charCodeAt(0).toString(16).padSt
 const writeJson = (value: unknown) =>
   JSON.stringify(value).replace(/"((?:[^"\\]|\\.)*)"/g, (_literal, body: string) => {
     // Escape pairs are read whole, so `\\` followed by a quote is not taken for `\"`
-    const safe = body.replace(/\\[\s\S]|['{}[\]]/g, (part) =>
+    const safe = body.replace(/\\[\s\S]|['<{}[\]]/g, (part) =>
       part === '\\"' ? escapeCode('"') : part.length === 1 ? escapeCode(part) : part,
     )
     return `"${safe}"`

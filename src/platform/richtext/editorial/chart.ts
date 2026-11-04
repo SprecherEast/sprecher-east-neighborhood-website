@@ -1,9 +1,9 @@
-import { slugify } from 'payload/shared'
-
 import type { ChartBlock } from '@/payload-types'
 
 import { chartIssues, InvalidChartError, type ChartIssue } from '@/platform/lib/chart/issues'
-import { CHART_LIMITS, parseChartSpec, type ChartSpec } from '@/platform/lib/chart/spec'
+import { parseChartSpec, type ChartSpec } from '@/platform/lib/chart/spec'
+
+import { blank, keysOf } from './chartKeys'
 
 /**
  * The chart block's stored fields and `ChartSpec`, both ways (#640, decision 0013). The block
@@ -25,37 +25,7 @@ type Stored<K extends keyof StoredChart> = NonNullable<StoredChart[K]>
 const list = <T>(value: readonly T[] | number | null | undefined): readonly T[] =>
   Array.isArray(value) ? value : []
 
-const blank = (text: string | null | undefined) => text?.trim() || undefined
 const orUndefined = <T>(items: T[]): T[] | undefined => (items.length > 0 ? items : undefined)
-
-/** A part's key from its label ("Police dept." is `police-dept`): the site's slug, accents folded */
-const keyFromLabel = (label: string): string =>
-  slugify(label.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
-    ?.replace(/-{2,}/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, CHART_LIMITS.key)
-    .replace(/-$/, '') || 'part'
-
-/**
- * Each item's key: the one typed (kept exactly: a key typed twice is for the spec to refuse, not
- * for us to rename), or made from its label, where a repeat gets `-2`, `-3`... within the limit.
- */
-function keysOf(items: readonly { key?: string | null; label?: string | null }[]): string[] {
-  const typed = items.map((item) => blank(item.key))
-  const used = new Set(typed.filter((key): key is string => key !== undefined))
-  return items.map((item, i) => {
-    const given = typed[i]
-    if (given !== undefined) return given
-    const base = keyFromLabel(item.label ?? '')
-    let key = base
-    for (let n = 2; used.has(key); n++) {
-      const suffix = `-${n}`
-      key = base.slice(0, CHART_LIMITS.key - suffix.length).replace(/-$/, '') + suffix
-    }
-    used.add(key)
-    return key
-  })
-}
 
 /** The value without the properties left undefined, so an unset field is absent, not `undefined` */
 function prune<T>(value: T): T {

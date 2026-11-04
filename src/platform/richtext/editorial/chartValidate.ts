@@ -64,10 +64,17 @@ function where(path: ChartIssue['path']): string | null {
   }
 }
 
+const NEGATIVE = /^Too small: expected number to be >=0$/
+
+/** A bar's own number field has `min: 0` and says so under itself, so the list need not repeat it */
+const saidByItsField = (issue: ChartIssue) =>
+  issue.path[0] === 'data' && issue.path[2] === 'value' && NEGATIVE.test(issue.message)
+
 /** One issue in the editor's words: where it is, then what is wrong */
 function describe(issue: ChartIssue): string {
   const message = issue.message
     .replace(/^Invalid input: expected number, received NaN$/, 'enter a number')
+    .replace(NEGATIVE, "can't be negative")
     .replace(
       /^Too small: expected array to have >=(\d+) items$/,
       (_m, n) => `Add at least ${n} row.`,
@@ -87,13 +94,22 @@ function issuesOf(stored: StoredChart): ChartIssue[] {
   return last.issues
 }
 
+/**
+ * Payload asks twice per save: while Admin builds the form (event `onChange`, with counts where
+ * the rows will be) and on the real save (event `submit`, the data as sent). Only the first
+ * gets no opinion on a count; on a real save a count is not rows, so it is judged as none.
+ */
+const buildingForm = (event: unknown, block: unknown) =>
+  event === 'onChange' && isFormState(block as StoredChart)
+
 /** What is wrong with a chart's `field`, or true. Reads the whole block from the field's siblings. */
-export function chartFieldError(field: ChartField, block: unknown): true | string {
+export function chartFieldError(field: ChartField, block: unknown, event?: unknown): true | string {
   const stored = block as StoredChart
-  // Admin asks while it is still building the form, with counts where the rows will be
-  if (!stored.kind || isFormState(stored)) return true
+  if (!stored.kind || buildingForm(event, stored)) return true
   const issues = issuesOf(stored).filter(
-    (issue) => fieldOf(issue, stored.kind as keyof typeof WHOLE_CHART_FIELD) === field,
+    (issue) =>
+      !saidByItsField(issue) &&
+      fieldOf(issue, stored.kind as keyof typeof WHOLE_CHART_FIELD) === field,
   )
   return issues.length === 0 ? true : [...new Set(issues.map(describe))].join('; ')
 }
@@ -104,14 +120,14 @@ type Validate<V, A> = (value: V, args: A) => true | string | Promise<true | stri
  * Payload's own validation for the field (required, row counts) first, then the chart rules.
  * Fields in other kinds' conditions are not validated while hidden, so only the chosen kind speaks.
  */
-export function checked<V, A extends { siblingData: unknown }>(
+export function checked<V, A extends { siblingData: unknown; event?: unknown }>(
   field: ChartField,
   own: Validate<V, A>,
 ): (value: V, args: A) => Promise<true | string> {
   return async (value, args) => {
     // Half-built form state (`bars: 2`): Payload's own check would read the count as the rows
-    if (isFormState(args.siblingData as StoredChart)) return true
+    if (buildingForm(args.event, args.siblingData)) return true
     const first = await own(value, args)
-    return first === true ? chartFieldError(field, args.siblingData) : first
+    return first === true ? chartFieldError(field, args.siblingData, args.event) : first
   }
 }
