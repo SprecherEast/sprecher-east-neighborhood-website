@@ -70,3 +70,27 @@
 @utility bg-hatch {
   background-image: repeating-linear-gradient(135deg, transparent 0 3px, var(--background) 3px 5px);
 }
+
+/*
+ * `chart-reveal` (#639): a chart's grid wipes in from the left as it scrolls into view. Only where
+ * the reader allows motion and the browser supports scroll-driven animation; everywhere else, and
+ * before and after the wipe, the grid is simply drawn in full.
+ */
+@keyframes chart-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@utility chart-reveal {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      animation: chart-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 70%;
+    }
+  }
+}
