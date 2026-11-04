@@ -3,6 +3,9 @@ import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
+/** Small body text: also the look of a figure's caption (`Caption`), so the two can't drift apart */
+export const SMALL_TEXT = 'text-sm leading-relaxed text-muted-foreground'
+
 /*
  * The site's text styles in one place (#441): headings inside a page and the paragraph sizes around
  * them. A page's `h1` comes from `PageHeader` or a hero. `section` heads a part of the page,
@@ -18,7 +21,7 @@ const textVariants = cva('', {
       overline: 'text-xs font-bold tracking-widest text-primary uppercase',
       label: 'text-xs font-bold tracking-widest text-muted-foreground uppercase',
       lead: 'text-lg text-muted-foreground',
-      small: 'text-sm leading-relaxed text-muted-foreground',
+      small: SMALL_TEXT,
     },
     clamp: { 1: 'line-clamp-1', 2: 'line-clamp-2', 3: 'line-clamp-3' },
   },

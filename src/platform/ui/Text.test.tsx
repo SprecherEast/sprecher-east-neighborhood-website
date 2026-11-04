@@ -2,7 +2,7 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { Text } from './Text'
+import { SMALL_TEXT, Text } from './Text'
 
 afterEach(cleanup)
 
@@ -38,5 +38,13 @@ describe('Text', () => {
     )
 
     expect(screen.getByText('A long summary').className).toContain('line-clamp-2')
+  })
+
+  it('exports its small style, so a caption can share it (#635)', () => {
+    render(<Text variant="small">Small</Text>)
+
+    for (const name of SMALL_TEXT.split(' ')) {
+      expect(screen.getByText('Small').className).toContain(name)
+    }
   })
 })

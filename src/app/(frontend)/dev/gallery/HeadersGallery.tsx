@@ -1,8 +1,10 @@
 import React from 'react'
 
 import { MediaBlock } from '@/platform/richtext/MediaBlock'
+import { RichText } from '@/platform/richtext/RichText'
 import { Badge, BadgeList } from '@/platform/ui/Badge'
 import { Breadcrumbs } from '@/platform/ui/Breadcrumbs'
+import { Caption, CAPTION_RICH_TEXT } from '@/platform/ui/Caption'
 import { ImageCredit } from '@/platform/ui/ImageCredit'
 import { Legend } from '@/platform/ui/Legend'
 import { Media } from '@/platform/ui/Media'
@@ -11,6 +13,7 @@ import { PageHeader } from '@/platform/ui/PageHeader'
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 import {
   SAMPLE_BREADCRUMBS,
+  SAMPLE_CAPTION_RICH_TEXT,
   SAMPLE_FACTS,
   SAMPLE_IMAGE,
   SAMPLE_LEGEND_ITEMS,
@@ -116,6 +119,32 @@ export function HeadersGallery() {
       <GalleryEntry name="ImageCredit" description="Shows nothing for an image without a credit.">
         <GalleryVariant label="with source and license links">
           <ImageCredit image={SAMPLE_IMAGE} />
+        </GalleryVariant>
+      </GalleryEntry>
+
+      <GalleryEntry
+        name="Caption"
+        description="Small, muted text under a picture, diagram or chart; an optional second line of fine print."
+      >
+        <GalleryVariant label="under an image, with fine print" className="w-full max-w-3xl">
+          <figure className="w-full">
+            <Media resource={SAMPLE_IMAGE} imgClassName="h-auto w-full rounded-2xl" />
+            <Caption as="figcaption" className="mt-4" finePrint="Not final drawings; not to scale.">
+              A sample diagram, with the numbers added for this neighborhood guide.
+            </Caption>
+          </figure>
+        </GalleryVariant>
+        <GalleryVariant label="rich text, as MediaBlock draws it" className="w-full max-w-3xl">
+          <Caption as="div">
+            <RichText
+              data={SAMPLE_CAPTION_RICH_TEXT}
+              enableGutter={false}
+              className={CAPTION_RICH_TEXT}
+            />
+          </Caption>
+        </GalleryVariant>
+        <GalleryVariant label="size sm, for a credit on its own line">
+          <Caption size="sm">Photo: Sample Photographer</Caption>
         </GalleryVariant>
       </GalleryEntry>
 

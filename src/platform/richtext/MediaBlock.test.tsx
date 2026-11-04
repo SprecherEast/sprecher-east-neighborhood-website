@@ -106,3 +106,37 @@ describe('MediaBlock spacing (#541)', () => {
     expect(screen.getByText('Source: WisDOT').closest('.container')).toBe(wrapper(container))
   })
 })
+
+describe('MediaBlock caption (#635)', () => {
+  it('is a figure whose figcaption is the shared small, muted caption', () => {
+    const { container } = render(<MediaBlock blockType="mediaBlock" media={mediaWithCaption} />)
+
+    expect(wrapper(container).tagName).toBe('FIGURE')
+    const figcaption = screen.getByText('Source: WisDOT').closest('figcaption')
+    expect(figcaption).not.toBeNull()
+    expect(figcaption?.parentElement).toBe(wrapper(container))
+    expect(figcaption?.className).toContain('text-muted-foreground')
+  })
+
+  it('draws the caption text small and muted, not at article size', () => {
+    render(<MediaBlock blockType="mediaBlock" media={mediaWithCaption} />)
+
+    const prose = screen.getByText('Source: WisDOT').closest('.prose') as HTMLElement
+    expect(prose.className).toContain('prose-sm')
+    expect(prose.className).toContain('--tw-prose-body:var(--color-muted-foreground)')
+  })
+
+  it('keeps the rich text in a div inside the figcaption, never a bare paragraph', () => {
+    render(<MediaBlock blockType="mediaBlock" media={mediaWithCaption} />)
+
+    const figcaption = screen.getByText('Source: WisDOT').closest('figcaption') as HTMLElement
+    expect(figcaption.querySelector(':scope > p')).toBeNull()
+    expect(figcaption.firstElementChild?.tagName).toBe('DIV')
+  })
+
+  it('draws no caption element without a caption', () => {
+    const { container } = render(<MediaBlock blockType="mediaBlock" media={1} />)
+
+    expect(container.querySelector('figcaption')).toBeNull()
+  })
+})

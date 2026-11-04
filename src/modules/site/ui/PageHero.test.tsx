@@ -67,6 +67,14 @@ describe('PageHero', () => {
     await expectAccessible(container)
   })
 
+  it('medium: draws the image caption as the shared small, muted caption (#635)', () => {
+    inMain(<PageHero variant="medium" body={body} image={image} links={links} />)
+
+    const caption = screen.getByText('Photo by a neighbor').closest('.prose') as HTMLElement
+    expect(caption.className).toContain('prose-sm')
+    expect(caption.parentElement?.className).toContain('text-muted-foreground')
+  })
+
   it('medium and low start clear of the site header, with the same space (#202)', () => {
     for (const hero of [
       <PageHero key="medium" variant="medium" body={body} image={image} links={links} />,

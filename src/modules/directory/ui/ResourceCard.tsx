@@ -5,6 +5,7 @@ import { Link } from '@/platform/ui'
 import { Card, CardFooter, CardTitle } from '@/platform/ui/Card'
 import { ImageCredit } from '@/platform/ui/ImageCredit'
 import { Media } from '@/platform/ui/Media'
+import { Text } from '@/platform/ui/Text'
 
 import { resourcePortrait } from '../domain/resourcePortrait'
 import { isResourceUrl } from '../domain/resourceUrl'
@@ -40,7 +41,9 @@ export function ResourceCard({ resource }: { resource: ResourceSummary }) {
         title
       )}
       {resource.description && (
-        <p className="mb-3 text-sm leading-relaxed text-muted-foreground">{resource.description}</p>
+        <Text variant="small" className="mb-3">
+          {resource.description}
+        </Text>
       )}
       <CardFooter className="pt-0">
         {resource.url && (
