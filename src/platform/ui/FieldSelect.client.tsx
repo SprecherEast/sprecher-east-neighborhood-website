@@ -8,6 +8,7 @@ import type { Ref } from 'react'
 
 import { controlVariants } from './controlVariants'
 import { useFieldControl } from './fieldContext'
+import { TOUCH_MIN_HEIGHT } from './layoutSizes'
 
 export type SelectOption = { label: string; value: string }
 
@@ -79,7 +80,10 @@ export function FieldSelect({
               <SelectPrimitive.Item
                 key={option.value}
                 value={option.value}
-                className="relative flex min-h-11 cursor-default items-center rounded-md py-2 pr-9 pl-3 text-base outline-none select-none data-disabled:opacity-60 data-highlighted:bg-secondary lg:min-h-9 lg:text-sm"
+                className={cn(
+                  TOUCH_MIN_HEIGHT,
+                  'relative flex cursor-default items-center rounded-md py-2 pr-9 pl-3 text-base outline-none select-none data-disabled:opacity-60 data-highlighted:bg-secondary lg:text-sm',
+                )}
               >
                 <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
                 <SelectPrimitive.ItemIndicator className="absolute right-3 flex">

@@ -45,6 +45,20 @@ export const SAMPLE_BREADCRUMBS: BreadcrumbItem[] = [
   { label: 'Summer picnic' },
 ]
 
+/** A long linked crumb in the middle and a long last title, the tightest a trail can get */
+export const SAMPLE_BREADCRUMBS_TIGHT: BreadcrumbItem[] = [
+  { label: 'Home', href: '/' },
+  { label: 'A category with a very long name', href: '/posts' },
+  { label: 'A title written before the limit existed, long enough to run past the edge' },
+]
+
+/** A title from before the length limit (#633), so the trail shows how a long one is cut */
+export const SAMPLE_BREADCRUMBS_LONG: BreadcrumbItem[] = [
+  { label: 'Home', href: '/' },
+  { label: 'News', href: '/posts' },
+  { label: 'A title written before the limit existed, long enough to run past the edge' },
+]
+
 /** Markers for the `Legend` sample: the numbers come from the order, as on an annotated image */
 export const SAMPLE_LEGEND_ITEMS: LegendItem[] = [
   { label: 'North entrance', text: 'Traffic from the north joins the freeway here.' },

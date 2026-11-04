@@ -21,6 +21,14 @@ export const PAGE_MIN_HEIGHT = 'min-h-[var(--page-min-height)]'
 /** The least height of a page's hero band */
 export const HERO_MIN_HEIGHT = 'min-h-[var(--hero-min-height)]'
 
+/**
+ * The least height and width of something you tap: 44 px on a phone (WCAG 2.5.8), a compact 36 px
+ * from `lg` up where a pointer is precise (#634). Written here once for links, buttons and menu
+ * rows, so the number is never typed again.
+ */
+export const TOUCH_MIN_HEIGHT = 'min-h-11 lg:min-h-9'
+export const TOUCH_MIN_WIDTH = 'min-w-11 lg:min-w-9'
+
 /** The space above and below an image block in an article (#636) */
 export const FIGURE_GAP = 'my-[var(--figure-gap)]'
 

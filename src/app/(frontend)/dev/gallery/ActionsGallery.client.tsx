@@ -88,6 +88,11 @@ export function ActionsGallery() {
             </Link>
           </div>
         </GalleryVariant>
+        <GalleryVariant label="crumb (one step of a breadcrumb trail)">
+          <Link href="/events" variant="crumb">
+            Events
+          </Link>
+        </GalleryVariant>
         <GalleryVariant label="muted, caption, action">
           <Link href="/faq" variant="muted">
             muted
