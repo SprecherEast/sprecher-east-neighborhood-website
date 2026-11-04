@@ -97,6 +97,32 @@
 }
 
 /*
+ * `chart-reveal-x` (#663): a bar chart's bars grow out from the baseline as they scroll into view
+ * (put it on the `g` that holds one row's bars). The same conditions as `chart-reveal`: on screen,
+ * motion allowed, scroll-driven animation supported; everywhere else the bars are drawn in full.
+ */
+@keyframes chart-reveal-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@utility chart-reveal-x {
+  @media screen and (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      transform-box: fill-box;
+      transform-origin: left center;
+      animation: chart-reveal-x linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 70%;
+    }
+  }
+}
+
+/*
  * `print-exact` (#639): print this element's colours as they are. A browser drops background
  * colours when printing unless the reader turns on "background graphics", which would erase a
  * chart's squares and key swatches and leave only the text. Tailwind has no class for it.

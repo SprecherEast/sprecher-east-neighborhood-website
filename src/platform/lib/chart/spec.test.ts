@@ -95,4 +95,53 @@ describe('parseChartSpec', () => {
     }
     expect(() => parseChartSpec(unitsSpec({ mode: 'each', unit: 'count' }))).not.toThrow()
   })
+
+  describe('scale and increases on bars (#663)', () => {
+    const bars = (overrides: Record<string, unknown> = {}) => ({
+      ...base,
+      kind: 'bar',
+      orientation: 'horizontal',
+      data: [datum('a', 100), datum('b', 400)],
+      ...overrides,
+    })
+    const stacked = (overrides: Record<string, unknown> = {}) => ({
+      ...base,
+      kind: 'stacked',
+      orientation: 'horizontal',
+      x: ['2026', '2027'],
+      series: [
+        { key: 'same', label: 'Same', values: [100, 100] },
+        { key: 'more', label: 'More', values: [0, 20], pattern: 'hatch', increase: true },
+      ],
+      ...overrides,
+    })
+
+    it('accepts a scaleMax at least as long as the longest bar, and refuses a shorter one', () => {
+      expect(() => parseChartSpec(bars({ scaleMax: 400 }))).not.toThrow()
+      expect(() => parseChartSpec(bars({ scaleMax: 399 }))).toThrow(/scaleMax/)
+      expect(() => parseChartSpec(stacked({ scaleMax: 120 }))).not.toThrow()
+      expect(() => parseChartSpec(stacked({ scaleMax: 119 }))).toThrow(/scaleMax/)
+    })
+
+    it('does not refuse a scaleMax that equals the longest bar only up to float rounding', () => {
+      const decimals = bars({ data: [datum('a', 0.1 + 0.2)], scaleMax: 0.3 })
+      expect(() => parseChartSpec(decimals)).not.toThrow()
+      const sums = stacked({
+        series: [
+          { key: 'a', label: 'A', values: [171.7, 1] },
+          { key: 'b', label: 'B', values: [114.5, 1] },
+        ],
+        scaleMax: 286.2,
+      })
+      expect(() => parseChartSpec(sums)).not.toThrow()
+      expect(() => parseChartSpec(bars({ data: [datum('a', 0.30001)], scaleMax: 0.3 }))).toThrow(
+        /scaleMax/,
+      )
+    })
+
+    it('accepts a series marked as an increase', () => {
+      const spec = parseChartSpec(stacked())
+      expect(spec.kind === 'stacked' && spec.series[1].increase).toBe(true)
+    })
+  })
 })

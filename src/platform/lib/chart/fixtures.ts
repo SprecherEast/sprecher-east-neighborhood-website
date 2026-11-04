@@ -145,6 +145,29 @@ export const FIXTURES = {
     rowNotes: ['$60 of every $100 is borrowed', '$66 of every $100 is borrowed'],
     finePrint: 'The $60 and $66 are our calculation from the City’s figures.',
   },
+  /** Stacked bars on the bars' scale: 2027 is 2026's amount plus the proposed increase, hatched */
+  operating: {
+    kind: 'stacked',
+    orientation: 'horizontal',
+    title: 'The day-to-day budget, with the proposed increase',
+    summary: 'The Mayor proposes $24.8 million more than the 2026 budget.',
+    unit: 'usd',
+    asOf: PROPOSAL,
+    certainty: 'confirmed',
+    sources: [EXEC_OPERATING],
+    x: ['2026 adopted', '2027 proposed'],
+    scaleMax: 500_000_000,
+    series: [
+      { key: 'same', label: 'Same as 2026', values: [452_723_152, 452_723_152] },
+      {
+        key: 'increase',
+        label: 'Proposed increase',
+        values: [0, 24_826_701],
+        pattern: 'hatch',
+        increase: true,
+      },
+    ],
+  },
   /** Two bars: the day-to-day budget, 2027 hatched because it is only proposed */
   bars: {
     kind: 'bar',
