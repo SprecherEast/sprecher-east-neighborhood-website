@@ -26,10 +26,16 @@ export const cssAdapter: ChartAdapter = {
       <div
         role="img"
         aria-labelledby={`${titleId} ${descId}`}
-        className={groups.length > 1 ? 'grid grid-cols-2 gap-4' : undefined}
+        className={
+          groups.length > 1
+            ? mode === 'perHundred'
+              ? 'grid grid-cols-2 gap-4'
+              : 'space-y-6'
+            : undefined
+        }
       >
         {groups.map((group, groupIndex) => (
-          <div key={group.key} className="min-w-0">
+          <div key={group.key} className="@container/tiles min-w-0">
             <Text variant="small" as="p" className="mb-2 font-semibold text-foreground">
               {group.label}
             </Text>
