@@ -21,11 +21,6 @@ export type ChartProps = {
   spec: ChartSpec
   /** Draws with this adapter instead of the registry's choice: for the gallery and the contract tests */
   adapter?: ChartAdapter
-  /**
-   * Shows a picture as a thumbnail that opens bigger (#681). On by default; the gallery and the
-   * tests turn it off. Words (the text adapter) never zoom.
-   */
-  zoom?: boolean
   className?: string
 }
 
@@ -37,7 +32,7 @@ export type ChartProps = {
  * error and never a wrong picture. A picture is a thumbnail a reader can enlarge (`ChartZoom`,
  * #681); the layout and sizes are `ChartLayout`'s.
  */
-export function Chart({ spec: input, adapter: chosen, zoom = true, className }: ChartProps) {
+export function Chart({ spec: input, adapter: chosen, className }: ChartProps) {
   const spec = parseChartSpec(input)
   const id = useId()
   const titleId = `${id}-title`
@@ -84,8 +79,8 @@ export function Chart({ spec: input, adapter: chosen, zoom = true, className }: 
     ),
   }
 
-  if (!adapter.enlargeable) return <ChartLayout size="full" className={className} {...parts} />
-  if (!zoom) return <ChartLayout className={className} {...parts} />
+  // A picture is a thumbnail a reader can enlarge; words already read at any width
+  if (!adapter.enlargeable) return <ChartLayout variant="plain" className={className} {...parts} />
   return <ChartZoom title={spec.title} className={className} {...parts} />
 }
 

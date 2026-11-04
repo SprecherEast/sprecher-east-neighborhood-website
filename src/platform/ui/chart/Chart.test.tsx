@@ -66,14 +66,9 @@ describe('Chart', () => {
     expect(screen.getAllByText('$171,688,393', { exact: false }).length).toBeGreaterThan(0)
   })
 
-  it('has no Enlarge button on the text adapter, or when zoom is off (#681)', () => {
-    const { unmount } = render(<Chart spec={FIXTURES.borrowed} adapter={textAdapter} />)
+  it('has no Enlarge button on the text adapter: words read at any width (#681)', () => {
+    render(<Chart spec={FIXTURES.borrowed} adapter={textAdapter} />)
     expect(screen.queryByRole('button', { name: /Enlarge/ })).toBeNull()
-    unmount()
-
-    render(<Chart spec={FIXTURES.bars} zoom={false} />)
-    expect(screen.queryByRole('button', { name: /Enlarge/ })).toBeNull()
-    expect(screen.getByRole('img', { name: /The day-to-day budget, proposed/ })).toBeTruthy()
   })
 
   it('sets the drawing’s width itself: small in the page, none on the text adapter (#681)', () => {

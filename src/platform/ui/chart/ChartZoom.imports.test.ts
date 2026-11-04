@@ -56,7 +56,7 @@ describe('ChartZoom sends no chart code to the browser', () => {
     ).toEqual([])
   })
 
-  it('reaches only the dialog, the button and the layout', () => {
+  it('does reach the dialog, the button and the layout (so the guard walks the real graph)', () => {
     expect(files).toEqual(
       expect.arrayContaining([
         'platform/ui/chart/ChartLayout.tsx',

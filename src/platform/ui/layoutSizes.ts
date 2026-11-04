@@ -52,7 +52,9 @@ export const CHART_LARGE = '[--chart-width:var(--chart-large-width)]'
  * The thumbnail (#681): from 40rem of room (a container query, so it reads the same in a Fact tab
  * panel and in a post body) the drawing takes the first column, at the small width, and the
  * title, takeaway, key and caption sit beside it. Narrower, everything stacks. The last row is
- * the flexible one, so a tall drawing never stretches the text rows apart.
+ * the flexible one, so a tall drawing never stretches the text rows apart. The 40rem here is the
+ * room the side-by-side layout needs; it is independent of `--chart-large-width`, which only sizes
+ * the enlarged drawing.
  */
 export const CHART_THUMBNAIL_FIGURE =
   '@min-[40rem]:grid @min-[40rem]:grid-cols-[var(--chart-small-width)_1fr] @min-[40rem]:grid-rows-[repeat(4,auto)_1fr] @min-[40rem]:gap-x-8 @min-[40rem]:gap-y-3'

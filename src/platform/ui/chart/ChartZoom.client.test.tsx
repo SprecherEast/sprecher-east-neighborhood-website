@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
+import { CHART_LARGE, CHART_SMALL } from '@/platform/ui/layoutSizes'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { Chart } from './Chart'
+import { CHART_ZOOM_HEIGHT_VAR, CHART_ZOOM_KEEP_HEIGHT } from './ChartZoom.client'
 
 afterEach(cleanup)
 
@@ -111,11 +113,11 @@ describe('ChartZoom, through Chart (#681)', () => {
 
   it('draws the dialog’s chart at the large width and stacked, the page’s at the small one', async () => {
     const { container } = render(<Chart spec={SPEC} />)
-    expect(container.innerHTML).toContain('[--chart-width:var(--chart-small-width)]')
-    expect(container.innerHTML).not.toContain('chart-large-width')
+    expect(container.innerHTML).toContain(CHART_SMALL)
+    expect(container.innerHTML).not.toContain(CHART_LARGE)
 
     const dialog = await openByButton()
-    expect(dialog.innerHTML).toContain('[--chart-width:var(--chart-large-width)]')
+    expect(dialog.innerHTML).toContain(CHART_LARGE)
     // The side-by-side thumbnail layout is the page's; the dialog stacks
     expect(dialog.innerHTML).not.toContain('grid-cols-[var(--chart-small-width)')
   })
@@ -135,12 +137,31 @@ describe('ChartZoom, through Chart (#681)', () => {
   it('leaves a box of the chart’s height in the page, so the page does not jump', async () => {
     const { container } = render(<Chart spec={SPEC} />)
     const root = container.firstElementChild as HTMLElement
-    expect(root.className).toContain('min-h-[var(--chart-zoom-height,0px)]')
+    expect(root.className).toContain(CHART_ZOOM_KEEP_HEIGHT)
+    expect(CHART_ZOOM_KEEP_HEIGHT).toContain(CHART_ZOOM_HEIGHT_VAR)
 
     await openByButton()
-    expect(root.style.getPropertyValue('--chart-zoom-height')).toMatch(/px$/)
+    expect(root.style.getPropertyValue(CHART_ZOOM_HEIGHT_VAR)).toMatch(/px$/)
     await userEvent.keyboard('{Escape}')
-    expect(root.style.getPropertyValue('--chart-zoom-height')).toBe('')
+    expect(root.style.getPropertyValue(CHART_ZOOM_HEIGHT_VAR)).toBe('')
+  })
+
+  it('does not open when a reader has just selected the chart’s text', async () => {
+    render(<Chart spec={SPEC} />)
+    const title = screen.getByText(SPEC.summary)
+    const range = document.createRange()
+    range.selectNodeContents(title)
+    window.getSelection()?.removeAllRanges()
+    window.getSelection()?.addRange(range)
+
+    // A drag-select ends in a click with the selection still in place (user-event's click would
+    // collapse it on pointer down, so the click is sent directly)
+    fireEvent.click(screen.getByRole('img', { name: new RegExp(SPEC.title) }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    window.getSelection()?.removeAllRanges()
+    fireEvent.click(screen.getByRole('img', { name: new RegExp(SPEC.title) }))
+    expect(screen.getByRole('dialog', { name: SPEC.title })).toBeTruthy()
   })
 
   it('passes axe closed and open', async () => {
