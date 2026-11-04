@@ -11,28 +11,14 @@ The goal: content so relevant and well-crafted that residents bookmark the site 
 
 ## Brand Voice
 
-### Tone
+The voice itself, its length limits and the checks before publishing are in the
+[brand voice guideline](../guidelines/brand-voice.md). This section is the content lead's short list.
 
-- **Warm and welcoming** — like a neighbor who actually knows your name
-- **Honest and transparent** — we're AI-assisted and unofficial, and we say so openly
-- **Practical and useful** — every piece of content must provide value, not filler
-- **Inclusive and respectful** — language that works for everyone regardless of age, background, or tech comfort
-- **Optimistic but grounded** — celebrate what's good, acknowledge what needs work, never sugarcoat
+### In short
 
-### Reading Level
-
-- Target 8th-grade reading level for all general content
-- Avoid jargon, acronyms (or explain them on first use), and bureaucratic language
-- Short paragraphs (3-4 sentences max)
-- Active voice, present tense when possible
-- Subheadings every 2-3 paragraphs for scannability
-
-### Never Say
-
-- The abbreviated acronym — always use the full name "Sprecher East"
-- "Users" — say "residents," "neighbors," or "visitors"
-- "Content" (in resident-facing copy) — say "articles," "news," "updates"
-- "Stakeholders" — say "neighbors," "community members," "local businesses"
+Warm, honest about being AI-assisted and unofficial, practical, inclusive. Everything else (tone,
+reading level, words to avoid, neutrality on money and politics) is in the brand voice guideline
+above. Don't restate it here.
 
 ## Content Types
 

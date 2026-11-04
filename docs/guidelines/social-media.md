@@ -2,7 +2,7 @@
 
 How Sprecher East shows up on Nextdoor, Facebook and other platforms. It is an unofficial site run
 by one resident, with AI tools doing research and drafting, and every post says so. Tone and word
-choices are in the [brand voice guidelines](../brand-voice-guidelines.md); sourcing is in
+choices are in the [brand voice guidelines](brand-voice.md); sourcing is in
 [content marketing](content-marketing.md#sources-every-factual-claim-must-be-checkable).
 
 ## Platforms

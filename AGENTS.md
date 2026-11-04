@@ -12,6 +12,9 @@ change this file through the same workflow below.
 
 - **The name is "Sprecher East"**: never "SENA", "SE" or another abbreviation.
 - **The site is unofficial and AI-assisted**, and says so. Content is factual and inclusive.
+- **Anything a neighbor reads follows the [brand voice](docs/guidelines/brand-voice.md):** messages,
+  emails, posts, events and explainers. Read it before you write one. It sets the voice, the length
+  limits, the neutral wording for money and politics, and the checks before publishing.
 - **The repo is public.** Never commit secrets or real personal data (see
   [security](docs/guidelines/security.md)).
 - **Native first, then plugins, then our code.** Before building a feature, check what Payload,
