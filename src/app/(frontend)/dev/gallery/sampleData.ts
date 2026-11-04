@@ -143,7 +143,7 @@ export const SAMPLE_KEY_FACTS: KeyFact[] = [
   },
   {
     value: '$10M',
-    label: 'total cost of the whole project including each phase, in all',
+    label: 'Total cost of the whole project including each phase, in all',
     detail:
       'No price has been published, so this is the City’s earlier share, not the ramps’ cost.',
     icon: 'money',
