@@ -5,7 +5,7 @@ import { linkNode, p, paragraph, root, text, heading } from '@/endpoints/seed/he
 import type { ImageRef, RichTextValue } from '@/platform/lib'
 import type { KeyFact } from '@/platform/richtext/editorial/keyFacts'
 import type { BreadcrumbItem } from '@/platform/ui/Breadcrumbs'
-import type { LegendItem } from '@/platform/ui/Legend'
+import type { LegendItem, LegendSwatchItem } from '@/platform/ui/Legend'
 import type { IconMetaItem, LabelledMetaItem } from '@/platform/ui/MetaList'
 import type { SelectOption } from '@/platform/ui'
 import samplePhoto from '@/endpoints/seed/image-hero1.webp'
@@ -66,6 +66,17 @@ export const SAMPLE_LEGEND_ITEMS: LegendItem[] = [
   { label: 'South entrance', text: 'The matching ramp for traffic from the south.' },
   { label: 'Eastbound ramp', text: null },
   { label: 'Westbound ramp', text: 'Meets the crossing road at a roundabout.' },
+]
+
+/** Swatches for the `Legend` sample under a chart: a colour per slot, a hatch on the "more" part */
+export const SAMPLE_LEGEND_SWATCHES: LegendSwatchItem[] = [
+  { label: 'Borrowed', text: '$179.8M', slot: 1 },
+  { label: 'Other money', text: '$92.4M', slot: 2 },
+  { label: 'Added in 2027', text: '+$24.8M', slot: 2, pattern: 'hatch' },
+  { label: 'Fees and charges', text: null, slot: 3 },
+  { label: 'State and federal aid', text: null, slot: 4 },
+  { label: 'Savings', text: null, slot: 5, pattern: 'hatch' },
+  { label: 'Everything else', text: null, slot: 6 },
 ]
 
 /** An image as the media collection stores it, pointing at a file bundled with the site */

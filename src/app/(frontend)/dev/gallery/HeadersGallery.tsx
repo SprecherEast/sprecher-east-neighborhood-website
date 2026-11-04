@@ -19,6 +19,7 @@ import {
   SAMPLE_FACTS,
   SAMPLE_IMAGE,
   SAMPLE_LEGEND_ITEMS,
+  SAMPLE_LEGEND_SWATCHES,
   SAMPLE_PHOTO,
   SAMPLE_WHITE_IMAGE,
 } from './sampleData'
@@ -158,7 +159,7 @@ export function HeadersGallery() {
 
       <GalleryEntry
         name="Legend"
-        description="Numbered markers under an annotated image or a chart, hanging from the image like a drawer: square top tucked under it, rounded bottom, narrower than the image, no animation."
+        description="Numbered markers under an annotated image, hanging from the image like a drawer: square top tucked under it, rounded bottom, narrower than the image, no animation. With marker swatch, the chart colour of each item (and its hatch pattern), as a plain list under a chart."
       >
         <GalleryVariant label="under an image block" className="w-full max-w-3xl">
           {/* The real inline image block, so the sample can't drift from the article */}
@@ -169,6 +170,9 @@ export function HeadersGallery() {
             staticImage={SAMPLE_PHOTO}
           />
           <Legend label="Diagram key" items={SAMPLE_LEGEND_ITEMS} />
+        </GalleryVariant>
+        <GalleryVariant label="swatches, a plain list under a chart" className="w-full max-w-3xl">
+          <Legend marker="swatch" attach="none" label="Chart key" items={SAMPLE_LEGEND_SWATCHES} />
         </GalleryVariant>
       </GalleryEntry>
     </>
