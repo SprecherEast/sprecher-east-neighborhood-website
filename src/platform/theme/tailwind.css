@@ -61,3 +61,12 @@
  * only then: with scripting off, every panel shows, stacked, each under its heading.
  */
 @custom-variant scripted (@media (scripting: enabled));
+
+/*
+ * `bg-hatch` (#662): diagonal stripes in the page background laid over a mark's own colour
+ * (`bg-chart-2 bg-hatch`), so a mark reads by pattern as well as colour. The legend's swatches and
+ * the chart marks share it, so a swatch always matches its mark.
+ */
+@utility bg-hatch {
+  background-image: repeating-linear-gradient(135deg, transparent 0 3px, var(--background) 3px 5px);
+}
