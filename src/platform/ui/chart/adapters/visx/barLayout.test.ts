@@ -4,7 +4,7 @@ import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import { parseChartSpec } from '@/platform/lib/chart/spec'
 
 import { toBarModel } from './barModel'
-import { SEGMENT_GAP, VIEW_WIDTH, layoutBars, placeLabels } from './barLayout'
+import { SEGMENT_GAP, VIEW_WIDTH, layoutBars, placeLabels, wrapText } from './barLayout'
 
 const layout = (spec: unknown) => layoutBars(toBarModel(parseChartSpec(spec)))
 
@@ -64,6 +64,71 @@ describe('layoutBars', () => {
     const withNotes = layout(FIXTURES.borrowed)
     const { rowNotes: _unused, ...plain } = FIXTURES.borrowed
     expect(withNotes.height).toBeGreaterThan(layout(plain).height)
+  })
+})
+
+const stackedOf = (values: number[][], extra: Record<string, unknown> = {}) => ({
+  ...FIXTURES.borrowed,
+  x: values[0].map((_, i) => `Row ${i}`),
+  series: values.map((v, i) => ({ key: `s${i}`, label: `S${i}`, values: v })),
+  rowNotes: undefined,
+  scaleMax: 100,
+  ...extra,
+})
+
+describe('segment gaps', () => {
+  it('keeps a segment narrower than the gap visible, and still draws its mark', () => {
+    const [row] = layout(stackedOf([[99.5], [0.5]])).rows
+    expect(row.segments).toHaveLength(2)
+    expect(row.segments[1].width).toBeGreaterThan(0)
+    expect(row.segments[1].gap).toBeLessThan(SEGMENT_GAP)
+  })
+
+  it('puts no gap before the first visible segment, even after a zero one', () => {
+    const [row] = layout(stackedOf([[0], [100]])).rows
+    expect(row.segments[1].gap).toBe(0)
+    expect(row.segments[1].x).toBe(0)
+  })
+})
+
+describe('wrapText', () => {
+  it('keeps short text on one line and breaks long text at spaces within the limit', () => {
+    expect(wrapText('short note', 20)).toEqual(['short note'])
+    const lines = wrapText(
+      'Borrowing pays for $66 of every $100 in the 2027 proposed capital budget.',
+      30,
+    )
+    expect(lines.length).toBeGreaterThan(1)
+    expect(lines.every((l) => l.length <= 30)).toBe(true)
+    expect(lines.join(' ')).toBe(
+      'Borrowing pays for $66 of every $100 in the 2027 proposed capital budget.',
+    )
+  })
+
+  it('leaves a single word longer than the limit on its own line', () => {
+    expect(wrapText('aaaaaaaaaaaa b', 5)).toEqual(['aaaaaaaaaaaa', 'b'])
+  })
+})
+
+describe('long rows', () => {
+  const NOTE = 'Borrowing pays for $66 of every $100 in the 2027 proposed capital budget.'
+  it('wraps a long note and makes the row and the drawing taller for each extra line', () => {
+    const short = layout(stackedOf([[10], [20]], { rowNotes: ['Short note'] }))
+    const long = layout(stackedOf([[10], [20]], { rowNotes: [NOTE] }))
+    expect(long.rows[0].noteLines.length).toBeGreaterThan(1)
+    expect(long.rows[0].height).toBeGreaterThan(short.rows[0].height)
+    expect(long.height).toBeGreaterThan(short.height)
+  })
+
+  it('wraps a row label too wide for the drawing, moves the bar down and keeps the total', () => {
+    const label = 'A very long name for the year of the City budget that is proposed'
+    const plain = layout(stackedOf([[10], [20]])).rows[0]
+    const long = layout(stackedOf([[10], [20]], { x: [label] })).rows[0]
+    expect(long.headLines.length).toBeGreaterThan(1)
+    expect(long.headLines.map((l) => l.text).join(' ')).toBe(label)
+    expect(long.headLines.at(-1)?.total).toBe('$30')
+    expect(long.barY).toBeGreaterThan(plain.barY)
+    expect(plain.headLines).toEqual([{ text: 'Row 0', total: '$30' }])
   })
 })
 

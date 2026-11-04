@@ -20,9 +20,8 @@ export const PAD_X = 4
 /** Baselines inside a row: its name and total, the first line of value labels, and each line after */
 export const HEAD_BASELINE = 12
 export const BAR_TOP = 20
-export const LABEL_BASELINE = BAR_TOP + BAR_HEIGHT + 14
+const LABEL_OFFSET = BAR_HEIGHT + 14
 export const LINE_HEIGHT = 13
-const NOTE_LINE = 16
 const ROW_GAP = 14
 const AXIS_GAP = 8
 const AXIS_HEIGHT = 18
@@ -45,9 +44,13 @@ export type PlacedSegment = {
 export type PlacedLabel = { text: string; x: number; anchor: 'start' | 'end'; line: number }
 
 export type PlacedRow = {
-  label: string
-  totalText: string
-  note: string | null
+  /** The name, wrapped to the drawing's width; the total ends the last line */
+  headLines: { text: string; total: string | null }[]
+  noteLines: string[]
+  /** Top of the bar, which moves down when the name takes more than one line */
+  barY: number
+  /** Baseline of the first line of value labels */
+  labelY: number
   /** Top of the row */
   y: number
   segments: PlacedSegment[]
@@ -68,6 +71,33 @@ export type BarLayout = {
 }
 
 const textWidth = (text: string, size = SMALL_FONT_SIZE) => text.length * size * CHAR_WIDTH
+
+/** Words kept on lines of at most `maxChars`; a word longer than that stands alone */
+export function wrapText(text: string, maxChars: number): string[] {
+  const lines: string[] = []
+  for (const word of text.split(' ')) {
+    const last = lines.at(-1)
+    if (last !== undefined && last.length + 1 + word.length <= maxChars) {
+      lines[lines.length - 1] = `${last} ${word}`
+    } else {
+      lines.push(word)
+    }
+  }
+  return lines
+}
+
+/** The name (bold) takes a little more room per character than the notes do */
+const BOLD_FACTOR = 1.1
+
+/** The name's lines, the total joining the last one when it fits and standing alone when it does not */
+function headLines(label: string, total: string, plotWidth: number) {
+  const max = Math.floor(plotWidth / (FONT_SIZE * CHAR_WIDTH * BOLD_FACTOR))
+  const lines = wrapText(label, max).map((text) => ({ text, total: null as string | null }))
+  const last = lines[lines.length - 1]
+  if (last.text.length + 1 + total.length <= max) last.total = total
+  else lines.push({ text: '', total })
+  return lines
+}
 
 /**
  * Value labels under their segments, left to right. A label starts at its segment; one that would
@@ -97,9 +127,11 @@ function placeSegments(segments: BarSegment[], scale: (value: number) => number)
   let at = 0
   return segments.map((segment, i): PlacedSegment => {
     const end = at + segment.value
-    const gap = i > 0 && segment.value > 0 ? SEGMENT_GAP : 0
+    const span = scale(end) - scale(at)
+    // a gap only after something drawn, and never more than half the segment, so a sliver stays visible
+    const gap = at > 0 && segment.value > 0 ? Math.min(SEGMENT_GAP, span / 2) : 0
     const x = scale(at) + gap
-    const width = Math.max(0, scale(end) - scale(at) - gap)
+    const width = Math.max(0, span - gap)
     at = end
     return {
       key: segment.key,
@@ -133,17 +165,22 @@ export function layoutBars(model: BarModel): BarLayout {
           )
         : []
     const lines = labels.length === 0 ? 0 : Math.max(...labels.map((l) => l.line)) + 1
-    const labelsBottom = BAR_TOP + BAR_HEIGHT + (lines === 0 ? 0 : 4 + lines * LINE_HEIGHT)
-    const noteY = labelsBottom + 15
-    const height = labelsBottom + (row.note ? NOTE_LINE + 3 : 0)
+    const head = headLines(row.label, row.totalText, plotWidth)
+    const barY = BAR_TOP + (head.length - 1) * LINE_HEIGHT
+    const labelsBottom = barY + BAR_HEIGHT + (lines === 0 ? 0 : 4 + lines * LINE_HEIGHT)
+    const noteLines = row.note
+      ? wrapText(row.note, Math.floor(plotWidth / (SMALL_FONT_SIZE * CHAR_WIDTH)))
+      : []
+    const height = labelsBottom + (noteLines.length === 0 ? 0 : 3 + noteLines.length * LINE_HEIGHT)
     const placed: PlacedRow = {
-      label: row.label,
-      totalText: row.totalText,
-      note: row.note,
+      headLines: head,
+      noteLines,
+      barY,
+      labelY: barY + LABEL_OFFSET,
       y,
       segments,
       labels,
-      noteY,
+      noteY: labelsBottom + 15,
       height,
     }
     y += height + ROW_GAP

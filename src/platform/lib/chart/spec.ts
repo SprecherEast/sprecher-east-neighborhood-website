@@ -101,8 +101,10 @@ const unitsSchema = z
   })
 
 const SCALE_MAX_MESSAGE = 'scaleMax is shorter than the longest bar, so that bar would not fit'
+/** Sums of decimals can land a hair over the scale (0.1 + 0.2 > 0.3), so compare with a relative margin */
+const SCALE_TOLERANCE = 1e-9
 const fitsScale = (scaleMax: number | undefined, longest: number) =>
-  scaleMax === undefined || longest <= scaleMax
+  scaleMax === undefined || longest <= scaleMax * (1 + SCALE_TOLERANCE)
 
 const barSchema = z
   .object({

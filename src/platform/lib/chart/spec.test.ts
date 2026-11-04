@@ -123,6 +123,22 @@ describe('parseChartSpec', () => {
       expect(() => parseChartSpec(stacked({ scaleMax: 119 }))).toThrow(/scaleMax/)
     })
 
+    it('does not refuse a scaleMax that equals the longest bar only up to float rounding', () => {
+      const decimals = bars({ data: [datum('a', 0.1 + 0.2)], scaleMax: 0.3 })
+      expect(() => parseChartSpec(decimals)).not.toThrow()
+      const sums = stacked({
+        series: [
+          { key: 'a', label: 'A', values: [171.7, 1] },
+          { key: 'b', label: 'B', values: [114.5, 1] },
+        ],
+        scaleMax: 286.2,
+      })
+      expect(() => parseChartSpec(sums)).not.toThrow()
+      expect(() => parseChartSpec(bars({ data: [datum('a', 0.30001)], scaleMax: 0.3 }))).toThrow(
+        /scaleMax/,
+      )
+    })
+
     it('accepts a series marked as an increase', () => {
       const spec = parseChartSpec(stacked())
       expect(spec.kind === 'stacked' && spec.series[1].increase).toBe(true)

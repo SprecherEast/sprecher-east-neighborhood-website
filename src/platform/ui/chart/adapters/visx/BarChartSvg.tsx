@@ -9,11 +9,9 @@ import type { ChartRenderContext } from '../../chartAdapter'
 
 import {
   BAR_HEIGHT,
-  BAR_TOP,
   GRID_OVERHANG,
   FONT_SIZE,
   HEAD_BASELINE,
-  LABEL_BASELINE,
   LINE_HEIGHT,
   PAD_X,
   SMALL_FONT_SIZE,
@@ -37,21 +35,30 @@ function RowView({ row, gridX, palette, patternId }: RowProps) {
       {gridX.map((x) => (
         <Line
           key={x}
-          from={{ x, y: BAR_TOP - GRID_OVERHANG }}
-          to={{ x, y: BAR_TOP + BAR_HEIGHT + GRID_OVERHANG }}
+          from={{ x, y: row.barY - GRID_OVERHANG }}
+          to={{ x, y: row.barY + BAR_HEIGHT + GRID_OVERHANG }}
           className="stroke-border"
           strokeWidth={1}
         />
       ))}
-      <text y={HEAD_BASELINE} fontSize={FONT_SIZE} className="fill-foreground">
-        <tspan className="font-semibold">{row.label}</tspan> <tspan dx={4}>{row.totalText}</tspan>
-      </text>
+      {row.headLines.map((line, i) => (
+        <text
+          key={i}
+          y={HEAD_BASELINE + i * LINE_HEIGHT}
+          fontSize={FONT_SIZE}
+          className="fill-foreground"
+        >
+          <tspan className="font-semibold">{line.text}</tspan>
+          {line.total && line.text && ' '}
+          {line.total && <tspan dx={line.text ? 4 : 0}>{line.total}</tspan>}
+        </text>
+      ))}
       <g className="chart-reveal-x">
         {row.segments.map((segment, i) => (
           <BarSegment
             key={`${segment.key}-${i}`}
             segment={segment}
-            y={BAR_TOP}
+            y={row.barY}
             palette={palette}
             patternId={patternId}
           />
@@ -61,7 +68,7 @@ function RowView({ row, gridX, palette, patternId }: RowProps) {
         <text
           key={label.text}
           x={label.x}
-          y={LABEL_BASELINE + label.line * LINE_HEIGHT}
+          y={row.labelY + label.line * LINE_HEIGHT}
           textAnchor={label.anchor}
           fontSize={SMALL_FONT_SIZE}
           className="fill-foreground"
@@ -69,11 +76,16 @@ function RowView({ row, gridX, palette, patternId }: RowProps) {
           {label.text}
         </text>
       ))}
-      {row.note && (
-        <text y={row.noteY} fontSize={SMALL_FONT_SIZE} className="fill-muted-foreground">
-          {row.note}
+      {row.noteLines.map((line, i) => (
+        <text
+          key={i}
+          y={row.noteY + i * LINE_HEIGHT}
+          fontSize={SMALL_FONT_SIZE}
+          className="fill-muted-foreground"
+        >
+          {line}
         </text>
-      )}
+      ))}
     </Group>
   )
 }
@@ -107,13 +119,7 @@ export function BarChartSvg({ model, titleId, descId, palette }: Props) {
       )}
       <Group left={PAD_X}>
         {layout.rows.map((row) => (
-          <RowView
-            key={row.label}
-            row={row}
-            gridX={gridX}
-            palette={palette}
-            patternId={patternId}
-          />
+          <RowView key={row.y} row={row} gridX={gridX} palette={palette} patternId={patternId} />
         ))}
         {layout.ticks.map((tick, i) => (
           <text

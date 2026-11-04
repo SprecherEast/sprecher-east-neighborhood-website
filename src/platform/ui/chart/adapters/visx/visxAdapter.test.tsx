@@ -95,6 +95,17 @@ describe('visxAdapter', () => {
     expect(texts).toContain('$66 of every $100 is borrowed')
   })
 
+  it('wraps a long note into lines that stay inside the drawing', () => {
+    const note = 'Borrowing pays for $66 of every $100 in the 2027 proposed capital budget.'
+    const { container } = draw({ ...FIXTURES.borrowed, rowNotes: [note, 'Short note'] })
+    const lines = [...container.querySelectorAll('text.fill-muted-foreground')].map(
+      (t) => t.textContent,
+    )
+    expect(lines.filter((l) => note.includes(l ?? '#')).join(' ')).toBe(note)
+    expect(lines.length).toBeGreaterThan(3)
+    expect(lines.every((l) => (l?.length ?? 0) <= 43)).toBe(true)
+  })
+
   it('labels a few ticks on the shared scale: $0, $250M, $500M', () => {
     const { container } = draw(FIXTURES.bars)
     const texts = [...container.querySelectorAll('text')].map((t) => t.textContent)
