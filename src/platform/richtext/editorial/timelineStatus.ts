@@ -30,3 +30,10 @@ export const TIMELINE_STATUS_OPTIONS = [
 export function isTimelineStatus(value: unknown): value is TimelineStatus {
   return (TIMELINE_STATUSES as readonly unknown[]).includes(value)
 }
+
+/** At most one milestone is "Next up": it is the reader's "you are here" */
+export const NEXT_UP_MESSAGE = 'Mark only one milestone as "Next up".'
+
+/** True when more than one of the statuses is `next` */
+export const hasTooManyNextUp = (statuses: Iterable<unknown>): boolean =>
+  [...statuses].filter((status) => status === 'next').length > 1

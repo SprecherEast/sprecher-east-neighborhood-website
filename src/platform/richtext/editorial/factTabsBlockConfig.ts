@@ -3,26 +3,11 @@ import type { Block } from 'payload'
 import { ChartBlockConfig } from './chartBlockConfig'
 import { FACT_TABS_LIMITS } from './editorialLimits'
 import { filledText, filledTextarea } from './filledText'
+import { rowsBetween } from './rowCount'
 import { factTabsToJsx, importFactTabsTag } from './factTabsMarkdown'
 import { keyFactFields } from './keyFactsBlockConfig'
 import { TimelineBlockConfig } from './timelineBlockConfig'
 import type { StoredFactTabs } from './factTabs'
-
-/**
- * How many rows a list must have, judged on the real save only. Admin asks twice: while the form
- * is built (event `onChange`, where a list is its row count or a half-built row) and on the real
- * save (`submit`). Payload's own `minRows` check would run on every keystroke and leave "at least
- * 2 Tabs" on screen after the second tab was added, so the lists keep `minRows` and `maxRows` for
- * the Add button and judge the count here. A count is not rows: it is read as none.
- */
-const rowsBetween =
-  (min: number, max: number, noun: string) =>
-  (value: unknown, { event }: { event?: unknown }): true | string => {
-    if (event === 'onChange') return true
-    const rows = Array.isArray(value) ? value.length : 0
-    if (rows >= min && rows <= max) return true
-    return `Add ${min} to ${max} ${noun}: there ${rows === 1 ? 'is' : 'are'} ${rows}.`
-  }
 
 /**
  * Key facts that open pictures (#664): two to four tabs, each a key fact (value, label, icon,

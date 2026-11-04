@@ -13,6 +13,9 @@ export const KEY_FACT_LIMITS = {
   label: 60,
 } as const
 
+/** The key facts block */
+export const KEY_FACTS_LIMITS = { minFacts: 2, maxFacts: 6 } as const
+
 /** The timeline block */
 export const TIMELINE_LIMITS = {
   minEntries: 2,

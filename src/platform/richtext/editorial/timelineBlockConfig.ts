@@ -1,17 +1,23 @@
-import type { ArrayFieldValidation, Block } from 'payload'
-import { array } from 'payload/shared'
+import type { Block } from 'payload'
 
 import { TIMELINE_LIMITS } from './editorialLimits'
 import { editorialLinkFields } from './linkFields'
-import { TIMELINE_STATUS_OPTIONS } from './timelineStatus'
+import { rowsBetween } from './rowCount'
+import { hasTooManyNextUp, NEXT_UP_MESSAGE, TIMELINE_STATUS_OPTIONS } from './timelineStatus'
 
-// One milestone at most is "Next up": it's the reader's "you are here"
-const validateEntries: ArrayFieldValidation = (value, args) => {
-  const nextUp = Array.isArray(value)
-    ? value.filter((entry) => (entry as { status?: string }).status === 'next').length
-    : 0
-  if (nextUp > 1) return 'Mark only one milestone as "Next up".'
-  return array(value, args)
+// Rows are counted by `rowsBetween`; one milestone at most is "Next up" (`hasTooManyNextUp`)
+const countEntries = rowsBetween(
+  TIMELINE_LIMITS.minEntries,
+  TIMELINE_LIMITS.maxEntries,
+  'milestones',
+)
+const validateEntries = (value: unknown, args: { event?: unknown }): true | string => {
+  const rows = countEntries(value, args)
+  if (rows !== true) return rows
+  const statuses = Array.isArray(value)
+    ? value.map((entry) => (entry as { status?: unknown }).status)
+    : []
+  return hasTooManyNextUp(statuses) ? NEXT_UP_MESSAGE : true
 }
 
 /**

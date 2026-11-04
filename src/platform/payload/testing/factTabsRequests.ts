@@ -1,7 +1,7 @@
 import { REST_PATCH, REST_POST } from '@payloadcms/next/routes'
 import type { Payload, SanitizedConfig } from 'payload'
 
-import { bootPayload, createAccount } from './inMemoryPayload'
+import { type Account, bootPayload, createAccount } from './inMemoryPayload'
 
 /**
  * Shared by the Fact tabs tests (#664): Payload booted on in-memory SQLite with an admin who has
@@ -13,6 +13,7 @@ export async function bootWithAdmin(): Promise<{
   payload: Payload
   config: SanitizedConfig
   token: string
+  editor: Account
 }> {
   const { payload, config } = await bootPayload()
   const admin = await createAccount(payload, 'admin', 'ana')
@@ -20,7 +21,8 @@ export async function bootWithAdmin(): Promise<{
     collection: 'users',
     data: { email: admin.email, password: 'ana-password-for-tests' },
   })
-  return { payload, config, token: login.token ?? '' }
+  const editor = await createAccount(payload, 'editor', 'eddie')
+  return { payload, config, token: login.token ?? '', editor }
 }
 
 export const node = (fields: Record<string, unknown>) => ({

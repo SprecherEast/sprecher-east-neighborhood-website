@@ -50,9 +50,7 @@ A block that agents may write in Markdown has a `jsx` converter (`chart` #640 an
 rules as the editor's fields. Write the props with `writeProp` from `editorialTag.ts`: Payload's tag
 reader mishandles quotes, braces and backslashes in text. Payload's Markdown converter swallows an
 error an import throws, so use `collectTagRefusals` to hear the reasons and `unreadTags` to notice a
-tag it could not close. A block field nested in an array (the fact tabs' `panel`) judges its row
-count in its own `validate` and gives no opinion while Admin builds the form (`event: 'onChange'`),
-and every array or blocks field in a rich-text block needs an `admin` key.
+tag it could not close.
 
 ## Heroes
 

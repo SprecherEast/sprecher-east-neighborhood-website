@@ -15,7 +15,7 @@ import {
 import { refusalPrefix } from './editorialTag'
 import { FACT_ICONS } from './factIcons'
 import type { FactTabProps, StoredFactTabs } from './factTabs'
-import { TIMELINE_STATUSES } from './timelineStatus'
+import { hasTooManyNextUp, NEXT_UP_MESSAGE, TIMELINE_STATUSES } from './timelineStatus'
 
 /**
  * What a `<FactTabs tabs={[…]} />` tag holds (#664): one list of tabs as plain JSON, each a key
@@ -62,10 +62,9 @@ const tabs = z.array(tab).min(FACT_TABS_LIMITS.minTabs).max(FACT_TABS_LIMITS.max
 type Tab = z.infer<typeof tab>
 type Picture = Tab['panel'][number]
 
-/** "Next up" marks the one milestone the reader is waiting for: at most one per timeline */
 const nextUpIssues = (picture: Picture, path: (string | number)[]): ChartIssue[] =>
-  picture.block === 'timeline' && picture.entries.filter((e) => e.status === 'next').length > 1
-    ? [{ path: [...path, 'entries'], message: 'Mark only one milestone as "Next up".' }]
+  picture.block === 'timeline' && hasTooManyNextUp(picture.entries.map((e) => e.status))
+    ? [{ path: [...path, 'entries'], message: NEXT_UP_MESSAGE }]
     : []
 
 /** The chart rules for the charts of a panel, with each reason placed at its tab and picture */

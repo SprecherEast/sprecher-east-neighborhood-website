@@ -2,10 +2,11 @@ import type { Block, Field } from 'payload'
 
 import { CERTAINTY_OPTIONS } from '@/platform/lib/certainty'
 
-import { KEY_FACT_LIMITS } from './editorialLimits'
+import { KEY_FACT_LIMITS, KEY_FACTS_LIMITS } from './editorialLimits'
 import { filledText } from './filledText'
 import { FACT_ICON_OPTIONS } from './factIcons'
 import { editorialLinkFields } from './linkFields'
+import { rowsBetween } from './rowCount'
 
 const valueFilled = filledText('Add the short value, such as "$10M".')
 const labelFilled = filledText('Add what the value is, such as "earliest construction".')
@@ -75,10 +76,13 @@ export const KeyFactsBlockConfig: Block = {
       name: 'facts',
       type: 'array',
       labels: { singular: 'Fact', plural: 'Facts' },
-      admin: { description: 'Two to six facts. They sit side by side on wide screens.' },
-      minRows: 2,
-      maxRows: 6,
+      admin: {
+        description: `${KEY_FACTS_LIMITS.minFacts} to ${KEY_FACTS_LIMITS.maxFacts} facts. They sit side by side on wide screens.`,
+      },
+      minRows: KEY_FACTS_LIMITS.minFacts,
+      maxRows: KEY_FACTS_LIMITS.maxFacts,
       required: true,
+      validate: rowsBetween(KEY_FACTS_LIMITS.minFacts, KEY_FACTS_LIMITS.maxFacts, 'facts'),
       fields: keyFactFields(),
     },
   ],
