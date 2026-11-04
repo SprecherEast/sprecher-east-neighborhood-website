@@ -13,6 +13,7 @@ import { PageHeader } from '@/platform/ui/PageHeader'
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 import {
   SAMPLE_BREADCRUMBS,
+  SAMPLE_BREADCRUMBS_LONG,
   SAMPLE_CAPTION_RICH_TEXT,
   SAMPLE_FACTS,
   SAMPLE_IMAGE,
@@ -94,8 +95,11 @@ export function HeadersGallery() {
       </GalleryEntry>
 
       <GalleryEntry name="Breadcrumbs" description="A flat trail, with its JSON-LD.">
-        <GalleryVariant label="one look">
+        <GalleryVariant label="one look" className="w-full">
           <Breadcrumbs items={SAMPLE_BREADCRUMBS} />
+        </GalleryVariant>
+        <GalleryVariant label="a long last crumb is cut with an ellipsis" className="w-full">
+          <Breadcrumbs items={SAMPLE_BREADCRUMBS_LONG} />
         </GalleryVariant>
       </GalleryEntry>
 

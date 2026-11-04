@@ -26,6 +26,9 @@ export const linkVariants = cva(
           'inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary-strong aria-[current=page]:text-primary-strong',
         // A photo credit or caption: small, quiet, still underlined so it reads as a link (#405)
         caption: 'text-muted-foreground underline underline-offset-2 hover:text-primary-strong',
+        // One step of a breadcrumb trail (`Breadcrumbs`): a quiet pill that is a touch target on a phone
+        crumb:
+          'inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground hover:bg-secondary hover:text-primary-strong lg:min-h-9',
         // A single follow-up next to content: "Visit website", "Back to all events"
         // 44 px tall: it stands alone, so it's a touch target (WCAG 2.5.8). primary-strong because
         // it often sits on a surface panel, where plain primary is 4.33:1
