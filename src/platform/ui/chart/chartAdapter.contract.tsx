@@ -21,6 +21,15 @@ const COLOUR_LITERAL = /#[0-9a-f]{3,8}\b|\b(rgb|rgba|hsl|hsla|oklch|oklab)\(/i
 const RAW_PALETTE_CLASS =
   /^(bg|text|fill|stroke|border|ring)-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone|white|black)(-\d+)?$/
 
+/** Marks that have a chart colour and also hold text. Reads the class attribute, since an svg mark's `className` is not a string. */
+export function coloursWithText(root: ParentNode) {
+  return [...root.querySelectorAll('[data-chart-mark]')].filter(
+    (mark) =>
+      /-chart-\d+\b/.test(mark.getAttribute('class') ?? '') &&
+      (mark.textContent?.trim() ?? '') !== '',
+  )
+}
+
 /**
  * The suite every chart adapter must pass before the registry may use it (#639): it proves a
  * library can be swapped without a page noticing. For one fixture of each kind the adapter
@@ -68,8 +77,7 @@ export function describeChartAdapter(adapter: ChartAdapter, { markCount }: Contr
           expect(text).toContain(point.label)
           expect(text).toContain(point.text)
         }
-        const coloured = drawing(document).filter((mark) => /-chart-\d+\b/.test(mark.className))
-        for (const mark of coloured) expect(mark.textContent?.trim() ?? '').toBe('')
+        expect(coloursWithText(document)).toEqual([])
       })
 
       it('names any img it draws by ids that exist, and draws an svg as an img', () => {

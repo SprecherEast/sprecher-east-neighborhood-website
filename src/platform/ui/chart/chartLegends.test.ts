@@ -41,4 +41,22 @@ describe('toChartLegends', () => {
       { label: 'Other sources', text: null, slot: 2, pattern: 'hatch' },
     ])
   })
+
+  it('shares one key only when every part matches in key, label and pattern', () => {
+    const relabelled = structuredClone(FIXTURES.paysFor)
+    relabelled.groups[1].data[0].label = 'Police and fire'
+    expect(legends(relabelled).map((k) => k.label)).toEqual([
+      'Chart key: 2026 adopted',
+      'Chart key: 2027 proposed',
+    ])
+
+    const hatched = structuredClone(FIXTURES.paysFor)
+    Object.assign(hatched.groups[1].data[1], { pattern: 'hatch' })
+    const keys = legends(hatched)
+    expect(keys).toHaveLength(2)
+    expect(keys[1].items[1].pattern).toBe('hatch')
+    expect(keys[0].items[1].pattern).toBeUndefined()
+
+    expect(legends(FIXTURES.paysFor)).toHaveLength(1)
+  })
 })

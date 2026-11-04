@@ -30,9 +30,10 @@ function unitsLegends(spec: Units, palette: ChartPalette): ChartLegendSpec[] {
         ]
   }
   const counts = groups.map((g) => toUnitCounts(g.data, SQUARES_PER_HUNDRED))
-  const sharedKeys = groups.every(
-    (g) => g.data.map((d) => d.key).join() === groups[0].data.map((d) => d.key).join(),
-  )
+  // One key serves every grid only when each part has the same key, label and pattern in all
+  const partsOf = (g: (typeof groups)[number]) =>
+    JSON.stringify(g.data.map((d) => [d.key, d.label, d.pattern ?? null]))
+  const sharedKeys = groups.every((g) => partsOf(g) === partsOf(groups[0]))
   const shown = sharedKeys ? [groups[0]] : groups
   return shown.map((group) => ({
     label: sharedKeys ? 'Chart key' : `Chart key: ${group.label}`,
