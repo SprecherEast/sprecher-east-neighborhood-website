@@ -11,6 +11,9 @@ The goal: content so relevant and well-crafted that residents bookmark the site 
 
 ## Brand Voice
 
+The voice itself, its length limits and the checks before publishing are in the
+[brand voice guideline](../guidelines/brand-voice.md). This section is the content lead's short list.
+
 ### Tone
 
 - **Warm and welcoming** — like a neighbor who actually knows your name

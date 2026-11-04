@@ -6,16 +6,16 @@ Operational instructions for the A-Content (Content & Voice) and B-Research (Res
 
 The Content Agent produces at least one blog post per week (additional posts on demand as news warrants) following this cadence:
 
-| Day          | Phase                | Activities                                                                                                                        |
-| ------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Monday AM    | Source Review        | Review RSS feeds (Fri-Sun backlog), scan social media, identify 2-3 lead stories + 3-4 supporting insights, document source URLs  |
-| Monday PM    | Story Development    | Answer "why does this matter to Sprecher East?", research background, outline post structure                                      |
-| Tuesday AM   | Draft                | Write 250-450 word post. Structure: **Hook** > **Context** > **Sprecher East Angle** > **Action**. Include 2-3 source links + CTA |
-| Tuesday PM   | Review               | Self-edit for clarity, tone, accuracy. Fact-check all links and quotes. Refine headline                                           |
-| Wednesday AM | Stakeholder Review   | Share draft with 1-2 board members for feedback (if time permits)                                                                 |
-| Wednesday PM | Publish & Cross-Post | Publish via CMS, create platform-specific social versions, tag relevant accounts                                                  |
-| Thursday     | Engagement           | Respond to comments/replies, share to email list, note engagement metrics, begin next week's research                             |
-| Friday       | Metrics & Planning   | Document weekly metrics, identify what resonated, preliminary research for next post                                              |
+| Day          | Phase                | Activities                                                                                                                                                                                                    |
+| ------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Monday AM    | Source Review        | Review RSS feeds (Fri-Sun backlog), scan social media, identify 2-3 lead stories + 3-4 supporting insights, document source URLs                                                                              |
+| Monday PM    | Story Development    | Answer "why does this matter to Sprecher East?", research background, outline post structure                                                                                                                  |
+| Tuesday AM   | Draft                | Write a post within the length budget in [brand voice](brand-voice.md) (news posts under 300 words). Structure: **Hook** > **Context** > **Sprecher East Angle** > **Action**. Include 2-3 source links + CTA |
+| Tuesday PM   | Review               | Self-edit for clarity, tone, accuracy. Fact-check all links and quotes. Refine headline                                                                                                                       |
+| Wednesday AM | Stakeholder Review   | Share draft with 1-2 board members for feedback (if time permits)                                                                                                                                             |
+| Wednesday PM | Publish & Cross-Post | Publish via CMS, create platform-specific social versions, tag relevant accounts                                                                                                                              |
+| Thursday     | Engagement           | Respond to comments/replies, share to email list, note engagement metrics, begin next week's research                                                                                                         |
+| Friday       | Metrics & Planning   | Document weekly metrics, identify what resonated, preliminary research for next post                                                                                                                          |
 
 ## Blog Post Structure
 
@@ -28,7 +28,7 @@ Every post follows this template:
 
 Requirements:
 
-- 250-450 words, conversational and accessible tone
+- Within the length budget in [brand voice](brand-voice.md) (news posts under 300 words), conversational and accessible tone
 - 2-3 embedded links to official sources or previous posts
 - Every post ends with a call-to-action
 - Optional: photo, neighborhood map, or graphic

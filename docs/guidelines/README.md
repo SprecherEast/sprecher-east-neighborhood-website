@@ -8,19 +8,20 @@ Guidelines say how things should be. Step-by-step procedures are Agent Skills in
 [`.agents/skills/`](../../.agents/skills/), and facts about the system are in
 [`docs/project.md`](../project.md) and [`docs/architecture/`](../architecture/README.md).
 
-| Guideline                                           | Read it when                                                                   |
-| --------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [Guard rails](guard-rails.md)                       | Always, before any change: the non-negotiable rules and what enforces them.    |
-| [Development](development.md)                       | Always: native first, configuration over code, DRY, failing explicitly.        |
-| [Security](security.md)                             | Always: packages, input, secrets, access control, roles, the server.           |
-| [Payload CMS](payload-cms.md)                       | You touch collections, blocks, heroes, hooks, fields, migrations or seed data. |
-| [Next.js and Tailwind](nextjs-tailwind.md)          | You touch routes, metadata, caching, styling, design tokens, dates or images.  |
-| [Components and content](components-and-content.md) | You build UI or forms, or write site content or seed data.                     |
-| [UI/UX design](ui-ux-design.md)                     | You change how anything looks: hierarchy, spacing, color, accessibility.       |
-| [Frontend patterns](frontend-patterns/README.md)    | You need a tested snippet for a hero, section, card, CTA, motion or backdrop.  |
-| [Content marketing](content-marketing.md)           | You plan, research or write blog posts and neighborhood news.                  |
-| [Social media](social-media.md)                     | You plan or write posts and replies for Nextdoor, Facebook or other platforms. |
-| [Asana (legacy)](asana-workflow.md)                 | A task is still mirrored in Asana. GitHub issues are the source of truth.      |
+| Guideline                                           | Read it when                                                                      |
+| --------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [Guard rails](guard-rails.md)                       | Always, before any change: the non-negotiable rules and what enforces them.       |
+| [Development](development.md)                       | Always: native first, configuration over code, DRY, failing explicitly.           |
+| [Security](security.md)                             | Always: packages, input, secrets, access control, roles, the server.              |
+| [Payload CMS](payload-cms.md)                       | You touch collections, blocks, heroes, hooks, fields, migrations or seed data.    |
+| [Next.js and Tailwind](nextjs-tailwind.md)          | You touch routes, metadata, caching, styling, design tokens, dates or images.     |
+| [Components and content](components-and-content.md) | You build UI or forms, or write site content or seed data.                        |
+| [UI/UX design](ui-ux-design.md)                     | You change how anything looks: hierarchy, spacing, color, accessibility.          |
+| [Frontend patterns](frontend-patterns/README.md)    | You need a tested snippet for a hero, section, card, CTA, motion or backdrop.     |
+| [Brand voice](brand-voice.md)                       | You write anything a neighbor reads: messages, emails, posts, events, explainers. |
+| [Content marketing](content-marketing.md)           | You plan, research or write blog posts and neighborhood news.                     |
+| [Social media](social-media.md)                     | You plan or write posts and replies for Nextdoor, Facebook or other platforms.    |
+| [Asana (legacy)](asana-workflow.md)                 | A task is still mirrored in Asana. GitHub issues are the source of truth.         |
 
 ## Changing a guideline
 
