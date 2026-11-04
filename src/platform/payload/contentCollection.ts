@@ -44,6 +44,6 @@ export const titleField = (): Field => ({
   required: true,
   maxLength: TITLE_MAX_LENGTH,
   admin: {
-    description: `Up to ${TITLE_MAX_LENGTH} characters: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.`,
+    description: `Up to ${TITLE_MAX_LENGTH} characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.`,
   },
 })

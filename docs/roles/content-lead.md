@@ -83,7 +83,7 @@ above. Don't restate it here.
 ### Admin Workflow
 
 1. Log in at `/admin`
-2. Create new Post or Page
+2. Create new Post or Page (the title is at most 60 characters, so it fits the breadcrumb trail and a phone: the editor refuses a longer one when you publish)
 3. Select hero type and fill hero fields
 4. Add content blocks (Content, Media, CTA, Form, etc.) via the layout builder
 5. Fill in SEO fields (meta title, description, OG image)

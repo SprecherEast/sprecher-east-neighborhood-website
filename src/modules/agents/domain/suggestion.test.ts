@@ -14,7 +14,7 @@ const CHICAGO = 'America/Chicago'
 
 describe('SUGGESTION_CAPS', () => {
   it('lets a suggested title be no longer than the CMS saves (#633)', () => {
-    // A longer one would pass the tool's check and then fail when the draft is created
+    // A longer one would pass the tool's check and only fail later, when an editor publishes it
     expect(SUGGESTION_CAPS.title).toBe(TITLE_MAX_LENGTH)
   })
 })

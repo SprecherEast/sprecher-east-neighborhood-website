@@ -11,7 +11,8 @@ import { TITLE_MAX_LENGTH } from '@/platform/lib'
  */
 export const SUGGESTION_CAPS = {
   runId: 100,
-  // The CMS refuses a longer title (#633), so a longer one would fail when its draft is created
+  // Payload checks a title's length when an editor publishes, not when a draft is saved (#633), so
+  // this cap is the only guard for a suggestion: a longer title would fail later, on publish
   title: TITLE_MAX_LENGTH,
   bodyMarkdown: 3_000,
   cardSummary: 160,

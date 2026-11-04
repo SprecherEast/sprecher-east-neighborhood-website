@@ -1,7 +1,8 @@
 import type { Payload } from 'payload'
-import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 
 import { TITLE_MAX_LENGTH } from '@/platform/lib'
+import { bootPayload, NO_REVALIDATE } from '@/platform/payload/testing/inMemoryPayload'
 
 /**
  * The title limit (#633): posts, events and pages take their title from the one `titleField()`,
@@ -9,18 +10,10 @@ import { TITLE_MAX_LENGTH } from '@/platform/lib'
  * trail. Payload runs on an in-memory SQLite database: no file, no network.
  */
 
-// The posts' revalidation hook needs a Next.js request, which a test doesn't have
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
-
 let payload: Payload
 
 beforeAll(async () => {
-  vi.stubEnv('DATABASE_URI', 'file::memory:')
-  vi.stubEnv('PAYLOAD_SECRET', 'title-limit-test-secret-0123456789abcdef')
-  vi.stubEnv('SMTP_HOST', '')
-  const { getPayload } = await import('payload')
-  const config = await (await import('@payload-config')).default
-  payload = await getPayload({ config })
+  ;({ payload } = await bootPayload())
 }, 60_000)
 
 const paragraph = (text: string) => ({
@@ -53,6 +46,7 @@ const createPost = (title: string, status: 'draft' | 'published' = 'draft') =>
       _status: status,
     },
     draft: status === 'draft',
+    context: NO_REVALIDATE,
     overrideAccess: true,
   })
 
@@ -76,9 +70,10 @@ describe('the title limit', () => {
 
   // Payload checks a field's limits when a document is published, not on every draft autosave
   it('refuses to publish a title one character over the limit', async () => {
-    await expect(createPost('x'.repeat(TITLE_MAX_LENGTH + 1), 'published')).rejects.toThrow(
-      /title/i,
-    )
+    await expect(createPost('x'.repeat(TITLE_MAX_LENGTH + 1), 'published')).rejects.toMatchObject({
+      name: 'ValidationError',
+      data: { errors: [{ path: 'title' }] },
+    })
   })
 
   it('still saves a draft with a long title, so an editor can shorten it later', async () => {
