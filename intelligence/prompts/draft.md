@@ -23,8 +23,8 @@ One item with `$.candidate`, `$.taxonomy` (the site's category tree), `$.verific
    news, decisions and deadlines.
 2. Write `$.title` (plain, specific, under 120 characters; never "Meeting") and `$.bodyMarkdown`
    (Markdown; short enough to fit one screen without scrolling, as in
-   docs/guidelines/brand-voice.md; for more, link to a post. Include: what, when, where, one action, a short "why this matters to
-   Sprecher East" from `$.curation.whyItMatters`, and the official links). Follow the site's voice:
+   docs/guidelines/brand-voice.md. If there is more to say, link to the longer post. Include:
+   what, when, where, one action, a short "why this matters to Sprecher East" from `$.curation.whyItMatters`, and the official links). Follow the site's voice:
    friendly, direct, neutral, no hype. Name the place as "Sprecher East", never an abbreviation.
    Summarize in your own words: no run of the source's wording longer than a short fact, and at
    most 0.3 n-gram overlap with `$.candidate.sourceText`. Leave out private people's names, phone
