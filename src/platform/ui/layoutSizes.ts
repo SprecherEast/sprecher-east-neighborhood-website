@@ -20,3 +20,14 @@ export const PAGE_MIN_HEIGHT = 'min-h-[var(--page-min-height)]'
 
 /** The least height of a page's hero band */
 export const HERO_MIN_HEIGHT = 'min-h-[var(--hero-min-height)]'
+
+/** The space above and below an image block in an article (#636) */
+export const FIGURE_GAP = 'my-[var(--figure-gap)]'
+
+/**
+ * A legend hangs from the image above it (#636): it cancels the image block's bottom space and
+ * reaches a little further up under the image, so its square top corners are hidden. Its top
+ * padding adds the hidden part back, so the content starts below the image's edge.
+ */
+export const LEGEND_HANG = '-mt-[calc(var(--figure-gap)+var(--legend-overlap))]'
+export const LEGEND_TUCK = 'pt-[calc(var(--legend-overlap)+1rem)]'

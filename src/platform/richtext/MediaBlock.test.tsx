@@ -69,7 +69,11 @@ describe('MediaBlock spacing (#541)', () => {
     )
 
     const classes = wrapper(container).className
-    expect(classes).toContain('my-8')
+    // The shared gap (`--figure-gap`), which a legend under the image reaches back over (#636),
+    // and a stacking level above that legend, so the legend's top hides beneath the image
+    expect(classes).toContain('my-[var(--figure-gap)]')
+    expect(classes).toContain('relative')
+    expect(classes).toContain('z-10')
     // No second layer of spacing: neither the section padding nor a container
     expect(classes).not.toMatch(/\bpy-/)
     expect(classes).not.toMatch(/\bmd:py-/)

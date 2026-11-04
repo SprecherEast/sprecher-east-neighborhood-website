@@ -4,6 +4,7 @@ import { createElement } from 'react'
 import { linkNode, p, paragraph, root, text, heading } from '@/endpoints/seed/helpers/lexical'
 import type { ImageRef, RichTextValue } from '@/platform/lib'
 import type { BreadcrumbItem } from '@/platform/ui/Breadcrumbs'
+import type { LegendItem } from '@/platform/ui/Legend'
 import type { IconMetaItem, LabelledMetaItem } from '@/platform/ui/MetaList'
 import type { SelectOption } from '@/platform/ui'
 import samplePhoto from '@/endpoints/seed/image-hero1.webp'
@@ -42,6 +43,14 @@ export const SAMPLE_BREADCRUMBS: BreadcrumbItem[] = [
   { label: 'Home', href: '/' },
   { label: 'Events', href: '/events' },
   { label: 'Summer picnic' },
+]
+
+/** Markers for the `Legend` sample: the numbers come from the order, as on an annotated image */
+export const SAMPLE_LEGEND_ITEMS: LegendItem[] = [
+  { label: 'North entrance', text: 'Traffic from the north joins the freeway here.' },
+  { label: 'South entrance', text: 'The matching ramp for traffic from the south.' },
+  { label: 'Eastbound ramp', text: null },
+  { label: 'Westbound ramp', text: 'Meets the crossing road at a roundabout.' },
 ]
 
 /** An image as the media collection stores it, pointing at a file bundled with the site */

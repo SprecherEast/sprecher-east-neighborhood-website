@@ -1,8 +1,10 @@
 import React from 'react'
 
+import { MediaBlock } from '@/platform/richtext/MediaBlock'
 import { Badge, BadgeList } from '@/platform/ui/Badge'
 import { Breadcrumbs } from '@/platform/ui/Breadcrumbs'
 import { ImageCredit } from '@/platform/ui/ImageCredit'
+import { Legend } from '@/platform/ui/Legend'
 import { Media } from '@/platform/ui/Media'
 import { PageHeader } from '@/platform/ui/PageHeader'
 
@@ -11,6 +13,7 @@ import {
   SAMPLE_BREADCRUMBS,
   SAMPLE_FACTS,
   SAMPLE_IMAGE,
+  SAMPLE_LEGEND_ITEMS,
   SAMPLE_PHOTO,
   SAMPLE_WHITE_IMAGE,
 } from './sampleData'
@@ -113,6 +116,22 @@ export function HeadersGallery() {
       <GalleryEntry name="ImageCredit" description="Shows nothing for an image without a credit.">
         <GalleryVariant label="with source and license links">
           <ImageCredit image={SAMPLE_IMAGE} />
+        </GalleryVariant>
+      </GalleryEntry>
+
+      <GalleryEntry
+        name="Legend"
+        description="Numbered markers under an annotated image or a chart, hanging from the image like a drawer: square top tucked under it, rounded bottom, narrower than the image, no animation."
+      >
+        <GalleryVariant label="under an image block" className="w-full max-w-3xl">
+          {/* The real inline image block, so the sample can't drift from the article */}
+          <MediaBlock
+            blockType="mediaBlock"
+            media={0}
+            placement="inline"
+            staticImage={SAMPLE_PHOTO}
+          />
+          <Legend label="Diagram key" items={SAMPLE_LEGEND_ITEMS} />
         </GalleryVariant>
       </GalleryEntry>
     </>
