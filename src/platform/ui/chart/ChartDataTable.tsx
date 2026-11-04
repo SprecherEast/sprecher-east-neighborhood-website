@@ -30,7 +30,7 @@ export function ChartDataTable({ table }: { table: ChartTable }) {
           {table.rows.map((row, index) => (
             <tr key={index} className="border-b border-border last:border-b-0">
               {row.map((cell, column) =>
-                column === 0 ? (
+                column < table.rowHeaders ? (
                   <th key={column} scope="row" className="px-2 py-1.5 font-medium">
                     {cell}
                   </th>

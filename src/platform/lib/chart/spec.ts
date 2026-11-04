@@ -73,6 +73,13 @@ const unitsSchema = z
     groups: z.array(groupSchema).min(1).max(2),
   })
   .superRefine((spec, ctx) => {
+    if (spec.mode === 'perHundred' && spec.unit !== 'usd') {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'A perHundred grid shares out dollars, so its unit must be dollars (usd)',
+        path: ['unit'],
+      })
+    }
     for (const group of spec.groups) {
       const sum = group.data.reduce((total, d) => total + d.value, 0)
       const issue = (message: string) => ctx.addIssue({ code: 'custom', message, path: ['groups'] })

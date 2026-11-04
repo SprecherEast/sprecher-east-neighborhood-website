@@ -10,6 +10,7 @@ const SHORT_MONEY = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
   notation: 'compact',
+  minimumFractionDigits: 0,
   maximumFractionDigits: 1,
 })
 const NUMBER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 })

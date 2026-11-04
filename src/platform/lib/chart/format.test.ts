@@ -19,6 +19,7 @@ describe('formatValue', () => {
 
   it('writes dollars short on request', () => {
     expect(formatValue(194_768_276, 'usd', { compact: true })).toBe('$194.8M')
+    expect(formatValue(10_000_000, 'usd', { compact: true })).toBe('$10M')
     expect(formatValue(4_775_499, 'usd', { compact: true })).toBe('$4.8M')
     expect(formatValue(7.5, 'usd', { compact: true })).toBe('$7.50')
   })

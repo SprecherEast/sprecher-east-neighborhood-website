@@ -17,6 +17,7 @@ describe('ChartDataTable', () => {
             ['2026', '$1'],
             ['2027', '$2'],
           ],
+          rowHeaders: 1,
         }}
       />,
     )
@@ -28,5 +29,29 @@ describe('ChartDataTable', () => {
     const row = screen.getByRole('row', { name: /2027/ })
     expect(within(row).getByRole('rowheader').textContent).toBe('2027')
     expect(within(row).getByRole('cell').textContent).toBe('$2')
+  })
+
+  it('names the group and the part on a numeric cell when two columns head the row', () => {
+    render(
+      <ChartDataTable
+        table={{
+          caption: 'Pays for',
+          head: ['Group', 'Part', 'Squares', 'Amount'],
+          rows: [['2027', 'Public works', '12', '$56']],
+          rowHeaders: 2,
+        }}
+      />,
+    )
+    const row = screen.getByRole('row', { name: /Public works/ })
+    expect(
+      within(row)
+        .getAllByRole('rowheader')
+        .map((c) => c.textContent),
+    ).toEqual(['2027', 'Public works'])
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((c) => c.textContent),
+    ).toEqual(['12', '$56'])
   })
 })

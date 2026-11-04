@@ -88,4 +88,11 @@ describe('parseChartSpec', () => {
       }),
     ).toThrow(/rows/i)
   })
+
+  it('refuses a perHundred grid that is not in dollars, since it is a share of every $100', () => {
+    for (const unit of ['count', 'percent', 'mills']) {
+      expect(() => parseChartSpec(unitsSpec({ unit })), unit).toThrow(/dollars/i)
+    }
+    expect(() => parseChartSpec(unitsSpec({ mode: 'each', unit: 'count' }))).not.toThrow()
+  })
 })

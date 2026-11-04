@@ -3,7 +3,13 @@ import { SQUARES_PER_HUNDRED, type ChartSpec, type ChartUnit } from './spec'
 import { toUnitCounts } from './unitCells'
 
 /** The numbers behind a chart as a table: the first cell of each row heads that row */
-export type ChartTable = { caption: string; head: string[]; rows: string[][] }
+export type ChartTable = {
+  caption: string
+  head: string[]
+  rows: string[][]
+  /** How many leading columns name the row (group and part: 2), so each is a row header */
+  rowHeaders: number
+}
 
 /** One number a chart shows, with the group it belongs to (when the chart has groups) */
 export type ChartPoint = { group: string | null; label: string; value: number; text: string }
@@ -36,6 +42,7 @@ export function toChartTable(spec: ChartSpec): ChartTable {
     case 'bar':
       return {
         caption,
+        rowHeaders: 1,
         head: ['Item', UNIT_HEADERS[spec.unit]],
         rows: spec.data.map((d) => [d.label, money(d.value)]),
       }
@@ -43,6 +50,7 @@ export function toChartTable(spec: ChartSpec): ChartTable {
       const notes = spec.rowNotes
       return {
         caption,
+        rowHeaders: 1,
         head: ['Item', ...spec.series.map((s) => s.label), 'Total', ...(notes ? ['Note'] : [])],
         rows: spec.x.map((row, i) => [
           row,
@@ -57,6 +65,7 @@ export function toChartTable(spec: ChartSpec): ChartTable {
       const perHundred = squares(spec)
       return {
         caption,
+        rowHeaders: grouped ? 2 : 1,
         head: [
           ...(grouped ? ['Group'] : []),
           perHundred ? 'Part' : 'Item',
@@ -109,4 +118,20 @@ export function toChartSummary(spec: ChartSpec): string {
         })
         .join(' ')
   }
+}
+
+/**
+ * What one square is worth, per grid, worked out from the data so the wording cannot drift from
+ * it. Two grids have different totals, so equal square counts are not equal dollars. Null for
+ * charts that are not a grid of 100.
+ */
+export function toScaleNote(spec: ChartSpec): string | null {
+  if (spec.kind !== 'units' || spec.mode !== 'perHundred') return null
+  const perSquare = (group: (typeof spec.groups)[number]) => {
+    const total = group.total ?? group.data.reduce((sum, d) => sum + d.value, 0)
+    return `about ${formatValue(total / SQUARES_PER_HUNDRED, spec.unit, { compact: true })}`
+  }
+  const lead = `Each square is $1 of every $${SQUARES_PER_HUNDRED}`
+  if (spec.groups.length === 1) return `${lead} (${perSquare(spec.groups[0])}).`
+  return `${lead}: ${list(spec.groups.map((g) => `${perSquare(g)} in ${g.label}`))}. Equal numbers of squares are not equal dollars.`
 }

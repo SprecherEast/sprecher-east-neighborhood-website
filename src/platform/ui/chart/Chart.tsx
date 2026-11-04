@@ -2,7 +2,7 @@ import React, { useId } from 'react'
 
 import { cn } from '@/platform/lib/cn'
 import { parseChartSpec, type ChartSpec } from '@/platform/lib/chart/spec'
-import { toChartSummary, toChartTable } from '@/platform/lib/chart/table'
+import { toChartSummary, toChartTable, toScaleNote } from '@/platform/lib/chart/table'
 import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { Caption } from '@/platform/ui/Caption'
 import { Disclosure } from '@/platform/ui/Disclosure'
@@ -73,10 +73,10 @@ export function Chart({ spec: input, adapter: chosen, className }: ChartProps) {
 
 /** What a unit means, when the figures are from, where they came from and how sure we are */
 function ChartCaption({ spec }: { spec: ChartSpec }) {
-  const note = spec.kind === 'units' ? spec.unitNote : null
+  const notes = [toScaleNote(spec), spec.kind === 'units' ? spec.unitNote : null].filter(Boolean)
   return (
     <Caption as="figcaption" finePrint={spec.finePrint}>
-      {note && <span className="block">{note}</span>}
+      {notes.length > 0 && <span className="block">{notes.join(' ')}</span>}
       <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
         {spec.asOf && <span>{spec.asOf}</span>}
         {spec.sources?.map((source) => (
