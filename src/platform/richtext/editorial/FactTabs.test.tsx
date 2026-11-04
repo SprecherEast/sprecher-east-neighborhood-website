@@ -71,6 +71,21 @@ describe('FactTabs', () => {
     expect(within(present(panels[3])).getByText('The Council votes on the budget')).toBeTruthy()
   })
 
+  it('shows the editor’s heading with scripting on, where Tabs hides its own: one heading each way, never two', () => {
+    const { container } = setup()
+    const panels = [...container.querySelectorAll('[role="tabpanel"]')]
+    for (const panel of panels) {
+      const own = [...panel.children].filter((child) => child.tagName === 'H3')
+      expect(own.map((h) => h.textContent)).toHaveLength(1)
+      const scripted = panel.querySelector(':scope > div > h3')
+      expect(scripted?.textContent).toBe(own[0]?.textContent)
+      // Tabs' heading is for scripting off, this one for scripting on (the media query shows one)
+      expect(own[0]?.className).toContain('scripted:hidden')
+      expect(scripted?.className).toMatch(/\bhidden\b/)
+      expect(scripted?.className).toContain('scripted:block')
+    }
+  })
+
   it('reads in full with every panel stacked under its heading when scripting is off', () => {
     const { container } = setup()
     // The headings are visible unless scripting is on (`scripted:hidden`)

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { toFactTabsProps } from './factTabs'
+import { toFactTabsProps, type StoredFactTabs } from './factTabs'
 import { FACT_TABS_FIXTURE } from './factTabsFixtures'
 import { factTabsToJsx, importFactTabsTag } from './factTabsMarkdown'
 import { present } from '@/platform/payload/testing/present'
@@ -36,6 +36,46 @@ describe('factTabsToJsx and importFactTabsTag', () => {
     )
     const bad = { ...good, heading: '', icon: 'rocket' }
     expect(() => importFactTabsTag({ tabs: [bad, good] })).toThrow(/heading.*icon|icon.*heading/s)
+  })
+})
+
+describe('factTabsToJsx leaves out a block its own tag could not be read back from', () => {
+  const [first, second] = FACT_TABS_FIXTURE.tabs ?? []
+  const two = (change: Record<string, unknown>) =>
+    ({ tabs: [{ ...first, ...change }, second] }) as unknown as StoredFactTabs
+
+  it('writes two valid tabs', () => {
+    expect(factTabsToJsx(two({}))).toMatch(/^<FactTabs /)
+  })
+
+  it.each([
+    ['an empty definition', { definition: '' }],
+    ['a heading over its limit', { heading: 'x'.repeat(41) }],
+    [
+      'a one-milestone timeline',
+      {
+        panel: [
+          { blockType: 'timeline', entries: [{ date: 'Now', status: 'next', title: 'Start' }] },
+        ],
+      },
+    ],
+    [
+      'two "Next up" milestones',
+      {
+        panel: [
+          {
+            blockType: 'timeline',
+            entries: [
+              { date: 'a', status: 'next', title: 'A' },
+              { date: 'b', status: 'next', title: 'B' },
+            ],
+          },
+        ],
+      },
+    ],
+    ['no picture that can be drawn', { panel: [{ blockType: 'chart', kind: 'bar' }] }],
+  ])('for %s', (_name, change) => {
+    expect(factTabsToJsx(two(change))).toBe(false)
   })
 })
 

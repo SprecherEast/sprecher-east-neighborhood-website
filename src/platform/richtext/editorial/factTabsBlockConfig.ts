@@ -1,29 +1,12 @@
-import type { Block, TextareaFieldValidation, TextFieldSingleValidation } from 'payload'
-import { text, textarea } from 'payload/shared'
+import type { Block } from 'payload'
 
 import { ChartBlockConfig } from './chartBlockConfig'
 import { FACT_TABS_LIMITS } from './editorialLimits'
+import { filledText, filledTextarea } from './filledText'
 import { factTabsToJsx, importFactTabsTag } from './factTabsMarkdown'
 import { keyFactFields } from './keyFactsBlockConfig'
 import { TimelineBlockConfig } from './timelineBlockConfig'
 import type { StoredFactTabs } from './factTabs'
-
-/**
- * Payload's `required` lets a field of only spaces through, which would show an empty heading or
- * definition: these check the text is not blank after its own checks (maxLength, required).
- */
-const headingFilled: TextFieldSingleValidation = (value, args) => {
-  const own = text(value, args)
-  if (own !== true) return own
-  return typeof value === 'string' && value.trim() === '' ? 'Add the heading for this tab.' : true
-}
-const definitionFilled: TextareaFieldValidation = (value, args) => {
-  const own = textarea(value, args)
-  if (own !== true) return own
-  return typeof value === 'string' && value.trim() === ''
-    ? 'Add a definition: what the key fact means.'
-    : true
-}
 
 /**
  * How many rows a list must have, judged on the real save only. Admin asks twice: while the form
@@ -72,7 +55,7 @@ export const FactTabsBlockConfig: Block = {
           type: 'text',
           required: true,
           maxLength: FACT_TABS_LIMITS.heading,
-          validate: headingFilled,
+          validate: filledText('Add the heading for this tab.'),
           admin: { description: 'The name of what this tab opens: "Big-project money".' },
         },
         {
@@ -80,7 +63,7 @@ export const FactTabsBlockConfig: Block = {
           type: 'textarea',
           required: true,
           maxLength: FACT_TABS_LIMITS.definition,
-          validate: definitionFilled,
+          validate: filledTextarea('Add a definition: what the key fact means.'),
           admin: {
             description: 'In plain words, what the key fact means and where it comes from.',
           },

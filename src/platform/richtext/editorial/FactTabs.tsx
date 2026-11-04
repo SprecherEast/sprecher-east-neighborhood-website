@@ -10,10 +10,15 @@ import { FactCard } from './FactCard'
 import type { FactTabProps, FactTabsProps } from './factTabs'
 import { Timeline } from './Timeline'
 
-/** What one tab opens: its definition, where the number comes from, then its charts and timelines */
-function FactTabPanel({ definition, fact, panel }: FactTabProps) {
+/** What one tab opens: its heading (with scripting on), its definition, where the number comes from, then its charts and timelines */
+function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
   return (
     <div className="space-y-4">
+      {/* Tabs shows its heading only with scripting off; with it on the tab is the title, so this one
+          shows then, and the reader always sees the heading the editor wrote, once */}
+      <Text variant="subsection" as="h3" className="hidden scripted:block">
+        {heading}
+      </Text>
       {definition && <Text variant="lead">{definition}</Text>}
       {fact.source && (
         <Text variant="small">

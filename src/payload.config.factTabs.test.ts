@@ -72,6 +72,8 @@ describe('saving a Fact tabs block', () => {
     ['an empty definition', { tabs: [tab({ definition: '' }), tab()] }],
     ['a definition of only spaces', { tabs: [tab({ definition: '  ' }), tab()] }],
     ['a definition over 240 characters', { tabs: [tab({ definition: 'x'.repeat(241) }), tab()] }],
+    ['a value of only spaces', { tabs: [tab({ value: '   ' }), tab()] }],
+    ['a label of only spaces', { tabs: [tab({ label: ' ' }), tab()] }],
     ['no value', { tabs: [tab({ value: '' }), tab()] }],
     ['a tab with no pictures', { tabs: [tab({ panel: [] }), tab()] }],
     ['three pictures', { tabs: [tab({ panel: [BAR, TIMELINE, BAR] }), tab()] }],
@@ -134,6 +136,24 @@ describe('saving a Fact tabs block', () => {
         'POST',
         [collection],
         SHAPES[collection](fields as never) as never,
+      )
+      expect(response.status).toBe(400)
+    },
+  )
+
+  it.each(collections)(
+    'answers 400, in %s, for a Key facts block with a value of only spaces (the shared fields)',
+    async (collection) => {
+      const facts = [
+        { value: ' ', label: 'Cost', icon: 'money', certainty: 'confirmed' },
+        { value: '$2M', label: 'Other', icon: 'money', certainty: 'confirmed' },
+      ]
+      const response = await rest(
+        config,
+        token,
+        'POST',
+        [collection],
+        SHAPES[collection]({ blockType: 'keyFacts', facts }) as never,
       )
       expect(response.status).toBe(400)
     },

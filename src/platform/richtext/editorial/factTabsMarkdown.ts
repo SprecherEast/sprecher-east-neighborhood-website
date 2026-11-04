@@ -1,7 +1,6 @@
 import { importOrRefuse, writeProp } from './editorialTag'
 import { toFactTabsProps, type StoredFactTabs } from './factTabs'
 import { factTabsFromTag, factTabsToTag } from './factTabsTag'
-import { FACT_TABS_LIMITS } from './editorialLimits'
 
 /**
  * The fact tabs block as one Markdown tag (#664), for agents: `<FactTabs tabs={[…]} />`, written
@@ -11,16 +10,20 @@ import { FACT_TABS_LIMITS } from './editorialLimits'
  */
 
 /**
- * The block as its Markdown tag, or false when it could not be read back: tabs outside the limits
- * or a tab with nothing in its panel (a chart that fails its rules is left out of the panel).
+ * The block as its Markdown tag, or false when the tag would not read back: the tabs as written are
+ * judged by the import's own rules (`factTabsFromTag`: the limits, the chart rules, one "Next up"),
+ * so what is exported can always be imported. A drawn chart that fails its rules is left out of its
+ * panel before that, and a panel left empty fails the check. A draft may hold any of this, since
+ * Payload skips validation for drafts.
  */
 export function factTabsToJsx(fields: StoredFactTabs): string | false {
-  const { tabs } = toFactTabsProps(fields)
-  const complete =
-    tabs.length >= FACT_TABS_LIMITS.minTabs &&
-    tabs.length <= FACT_TABS_LIMITS.maxTabs &&
-    tabs.every(({ panel }) => panel.length >= FACT_TABS_LIMITS.minPanelBlocks)
-  return complete ? `<FactTabs ${writeProp('tabs', factTabsToTag(tabs))} />` : false
+  const written = factTabsToTag(toFactTabsProps(fields).tabs)
+  try {
+    factTabsFromTag(written)
+  } catch {
+    return false
+  }
+  return `<FactTabs ${writeProp('tabs', written)} />`
 }
 
 /** `jsx.import`: the block's fields for the tag, or false (and a collected refusal) when it is invalid */

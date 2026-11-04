@@ -5,7 +5,7 @@ import { EDITORIAL_BLOCKS, EVENT_RICH_TEXT_BLOCKS, RICH_TEXT_BLOCKS } from '../b
 
 import { FACT_TABS_LIMITS, KEY_FACT_LIMITS, TIMELINE_LIMITS } from './editorialLimits'
 import { FactTabsBlockConfig } from './factTabsBlockConfig'
-import { keyFactFields } from './keyFactsBlockConfig'
+import { keyFactFields, KeyFactsBlockConfig } from './keyFactsBlockConfig'
 
 /** Every field, including those in rows, arrays and the blocks of a blocks field */
 const fieldsOf = (fields: Field[]): Field[] =>
@@ -75,6 +75,28 @@ describe('FactTabsBlockConfig', () => {
       minRows: TIMELINE_LIMITS.minEntries,
       maxRows: TIMELINE_LIMITS.maxEntries,
     })
+  })
+
+  describe('blank text', () => {
+    type Check = (value: unknown, args: object) => true | string
+    it.each(['value', 'label', 'heading', 'definition'])(
+      '%s refuses text of only spaces, in the key facts block too',
+      (name) => {
+        const check = byName(name).validate as unknown as Check
+        const args = {
+          required: true,
+          req: { t: (key: string) => key, payload: { config: { localization: false } } },
+        }
+        expect(typeof check('   ', args)).toBe('string')
+        expect(check('Fine', args)).toBe(true)
+        if (name === 'value' || name === 'label') {
+          const shared = fieldsOf(KeyFactsBlockConfig.fields).find(
+            (f) => 'name' in f && f.name === name,
+          ) as unknown as { validate: Check }
+          expect(shared.validate).toBe(check)
+        }
+      },
+    )
   })
 
   describe('the row counts, as Admin and a real save send them', () => {

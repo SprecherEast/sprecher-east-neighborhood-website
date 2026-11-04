@@ -3,8 +3,12 @@ import type { Block, Field } from 'payload'
 import { CERTAINTY_OPTIONS } from '@/platform/lib/certainty'
 
 import { KEY_FACT_LIMITS } from './editorialLimits'
+import { filledText } from './filledText'
 import { FACT_ICON_OPTIONS } from './factIcons'
 import { editorialLinkFields } from './linkFields'
+
+const valueFilled = filledText('Add the short value, such as "$10M".')
+const labelFilled = filledText('Add what the value is, such as "earliest construction".')
 
 /**
  * The fields of one fact (#660): a value, a label, an icon, how sure we are and an optional
@@ -20,6 +24,7 @@ export const keyFactFields = (): Field[] => [
         type: 'text',
         required: true,
         maxLength: KEY_FACT_LIMITS.value,
+        validate: valueFilled,
         admin: { width: '50%', description: 'Short: "2040s", "$10M", "Not set".' },
       },
       {
@@ -27,6 +32,7 @@ export const keyFactFields = (): Field[] => [
         type: 'text',
         required: true,
         maxLength: KEY_FACT_LIMITS.label,
+        validate: labelFilled,
         admin: { width: '50%', description: 'What it is: "earliest construction".' },
       },
     ],
