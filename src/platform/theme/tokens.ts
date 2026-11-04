@@ -55,6 +55,7 @@ export const THEME_TOKENS = {
   'chart-3': { modes: 'both', meaning: 'Chart series 3' },
   'chart-4': { modes: 'both', meaning: 'Chart series 4' },
   'chart-5': { modes: 'both', meaning: 'Chart series 5' },
+  'chart-6': { modes: 'both', meaning: 'Chart series 6' },
   radius: { modes: 'base', meaning: 'Base corner radius; sm to xl derive from it' },
 } as const satisfies Record<string, { modes: Modes; meaning: string }>
 
@@ -97,6 +98,26 @@ export const CONTRAST_PAIRS: ReadonlyArray<readonly [text: ThemeToken, backgroun
   // An outcome fork's "open" card: body text on the muted surface (#510)
   ['foreground', 'muted'],
 ]
+
+/** WCAG 1.4.11 minimum for graphics: chart marks, icons, control borders. */
+export const MIN_GRAPHIC_CONTRAST = 3
+
+/**
+ * Chart marks (#659): each chart colour against every surface a chart sits on, at 3:1 in both
+ * modes. Use the slots in order (1 to 6): adjacent pairs are only clean that way. Text never sits
+ * on a mark; values and labels use the text tokens.
+ */
+const CHART_TOKENS = [
+  'chart-1',
+  'chart-2',
+  'chart-3',
+  'chart-4',
+  'chart-5',
+  'chart-6',
+] as const satisfies readonly ThemeToken[]
+export const CHART_PAIRS = CHART_TOKENS.flatMap((chart) =>
+  (['background', 'surface', 'card'] as const).map((background) => [chart, background] as const),
+)
 
 /**
  * Text on a tint of a colour over a background, as `Alert` draws its tones (`bg-<tint>/10`):

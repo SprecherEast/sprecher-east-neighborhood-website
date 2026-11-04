@@ -29,11 +29,12 @@
   /* Form control borders: 3.4:1 on --surface, 3.8:1 on --background, 4.0:1 on --card (WCAG 1.4.11) */
   --input: #857e74;
   --ring: #3d7a5e;
-  --chart-1: #3d7a5e;
-  --chart-2: #e8923a;
-  --chart-3: #4f9974;
-  --chart-4: #c97830;
-  --chart-5: #2e5e47;
+  --chart-1: #14805a;
+  --chart-2: #2b6cc4;
+  --chart-3: #c4581c;
+  --chart-4: #6a55c9;
+  --chart-5: #8f6a00;
+  --chart-6: #b4457e;
   --radius: 0.625rem;
   --success: #3d7a5e;
   --warning: #e8923a;
@@ -82,11 +83,12 @@
   /* 3.3:1 on --surface, 3.9:1 on --background, 3.5:1 on --card */
   --input: #6b7186;
   --ring: #4e9b76;
-  --chart-1: #4e9b76;
-  --chart-2: #f0a04b;
-  --chart-3: #5fb88e;
-  --chart-4: #d48a38;
-  --chart-5: #3d7a5e;
+  --chart-1: #2f9e74;
+  --chart-2: #4a8ad8;
+  --chart-3: #d0692c;
+  --chart-4: #8a7be0;
+  --chart-5: #b48f12;
+  --chart-6: #d0679d;
   --success: #4e9b76;
   --warning: #f0a04b;
   --error: #ef4444;
