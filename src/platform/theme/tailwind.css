@@ -73,8 +73,9 @@
 
 /*
  * `chart-reveal` (#639): a chart's grid wipes in from the left as it scrolls into view. Only where
- * the reader allows motion and the browser supports scroll-driven animation; everywhere else, and
- * before and after the wipe, the grid is simply drawn in full.
+ * the reader allows motion and the browser supports scroll-driven animation; on screen only, because
+ * a printed page never scrolls. Everywhere else, and before and after the wipe, the grid is drawn in
+ * full.
  */
 @keyframes chart-reveal {
   from {
@@ -86,7 +87,7 @@
 }
 
 @utility chart-reveal {
-  @media (prefers-reduced-motion: no-preference) {
+  @media screen and (prefers-reduced-motion: no-preference) {
     @supports (animation-timeline: view()) {
       animation: chart-reveal linear both;
       animation-timeline: view();
