@@ -13,14 +13,23 @@ const FACTS: KeyFact[] = [
   {
     value: '2040s',
     label: 'earliest construction',
+    detail: null,
     icon: 'date',
     certainty: 'estimate',
     source: null,
   },
-  { value: '?', label: 'total cost', icon: 'money', certainty: 'unknown', source: null },
+  {
+    value: '?',
+    label: 'total cost',
+    detail: 'No price has been published.',
+    icon: 'money',
+    certainty: 'unknown',
+    source: null,
+  },
   {
     value: 'None',
     label: 'tax increase verified',
+    detail: null,
     icon: 'taxes',
     certainty: 'confirmed',
     source: {
@@ -73,6 +82,58 @@ describe('KeyFacts', () => {
     expect(term.compareDocumentPosition(definition) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(term.textContent).toBe('earliest construction')
     await expectAccessible(container)
+  })
+
+  it('leads with the label in bold body-size text, not the small grey line it used to be', () => {
+    const { container } = render(<KeyFacts facts={FACTS.slice(0, 1)} />)
+    const term = container.querySelector('dt') as HTMLElement
+
+    expect(term.className).toContain('text-base')
+    expect(term.className).toContain('font-semibold')
+    expect(term.className).toContain('text-foreground')
+    expect(term.className).not.toContain('text-sm')
+    expect(term.className).not.toContain('text-muted-foreground')
+  })
+
+  it('keeps the value the biggest text on the card, above the explanation', () => {
+    const { container } = render(<KeyFacts facts={FACTS.slice(1, 2)} />)
+    const [value, detail] = Array.from(container.querySelectorAll('dd')) as HTMLElement[]
+
+    expect(value.textContent).toBe('?')
+    expect(value.className).toContain('text-2xl')
+    expect(value.className).toContain('font-bold')
+    expect(detail.textContent).toBe('No price has been published.')
+    expect(detail.className).toContain('text-sm')
+    expect(detail.className).toContain('text-muted-foreground')
+    expect(value.compareDocumentPosition(detail) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('shows the same order on screen as screen readers hear: no reversed column', () => {
+    const { container } = render(<KeyFacts facts={FACTS.slice(1, 2)} />)
+    expect(container.querySelector('dl')?.className).not.toContain('flex-col-reverse')
+  })
+
+  it('leaves out the explanation, and its gap, when a fact has none', async () => {
+    const { container } = render(<KeyFacts facts={FACTS.slice(0, 1)} />)
+
+    expect(container.querySelectorAll('dd')).toHaveLength(1)
+    await expectAccessible(container)
+  })
+
+  it('puts the certainty and the source after the explanation', () => {
+    const { container } = render(<KeyFacts facts={FACTS.slice(1, 3)} />)
+    const [first, second] = Array.from(container.querySelectorAll('li')) as HTMLElement[]
+    const detail = within(first).getByText('No price has been published.')
+    const certainty = within(first).getByText('Unknown')
+    const link = within(second).getByRole('link', { name: /City budget/ })
+
+    expect(
+      detail.compareDocumentPosition(certainty) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(
+      within(second).getByText('Confirmed').compareDocumentPosition(link) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
   })
 
   it('wraps the longest allowed label (60 characters) inside the card', async () => {

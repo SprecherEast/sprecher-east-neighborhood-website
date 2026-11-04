@@ -10,10 +10,11 @@ function names(fields: unknown[]): string[] {
 }
 
 describe('keyFactFields', () => {
-  it('gives value, label, icon, certainty and the link, in that order', () => {
+  it('gives label, value, detail, icon, certainty and the link, in the order the card reads', () => {
     expect(names(keyFactFields())).toEqual([
-      'value',
       'label',
+      'value',
+      'detail',
       'icon',
       'certainty',
       'linkLabel',
@@ -24,5 +25,14 @@ describe('keyFactFields', () => {
   it('is what the key facts block stores for each fact', () => {
     const facts = KeyFactsBlockConfig.fields[0] as { fields: unknown[] }
     expect(facts.fields).toEqual(keyFactFields())
+  })
+
+  it('keeps the explanation optional and short enough for a phone card', () => {
+    const detail = keyFactFields()
+      .flatMap((field) => ('fields' in field ? field.fields : [field]))
+      .find((field) => 'name' in field && field.name === 'detail')
+
+    expect(detail).toMatchObject({ type: 'text', maxLength: 90 })
+    expect(detail).not.toHaveProperty('required', true)
   })
 })

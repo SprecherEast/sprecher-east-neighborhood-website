@@ -128,11 +128,15 @@ export const SAMPLE_RICH_TEXT = root([
   p('A second paragraph under it.'),
 ]) as RichTextValue
 
-/** Key facts: the second has the longest label the editor allows (60 characters) */
+/**
+ * Key facts: the first has an explanation, the second the longest label (60 characters) and the
+ * longest explanation (90) the editor allows, the third none
+ */
 export const SAMPLE_KEY_FACTS: KeyFact[] = [
   {
     value: '2040s',
-    label: 'earliest construction',
+    label: 'Earliest construction',
+    detail: 'Only if the funding comes through.',
     icon: 'date',
     certainty: 'estimate',
     source: null,
@@ -140,13 +144,16 @@ export const SAMPLE_KEY_FACTS: KeyFact[] = [
   {
     value: '$10M',
     label: 'total cost of the whole project including each phase, in all',
+    detail:
+      'No price has been published, so this is the City’s earlier share, not the ramps’ cost.',
     icon: 'money',
     certainty: 'unknown',
     source: null,
   },
   {
     value: 'None',
-    label: 'tax increase verified',
+    label: 'Tax increase',
+    detail: null,
     icon: 'taxes',
     certainty: 'confirmed',
     source: {
