@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
 
 import { fromChartSpec } from './chart'
-import { chartFieldError } from './chartValidate'
+import { checked, chartFieldError } from './chartValidate'
 
 const block = (spec: Parameters<typeof fromChartSpec>[0], extra: Record<string, unknown> = {}) => ({
   ...fromChartSpec(spec),
@@ -60,6 +60,16 @@ describe('chartFieldError', () => {
     expect(chartFieldError('rows', stored)).toMatch(/Bar 1: .*3 numbers.*2 parts/)
   })
 
+  it('asks for at least one row in words, on the field that holds the rows', () => {
+    expect(chartFieldError('bars', block(FIXTURES.bars, { bars: [] }))).toBe('Add at least 1 row.')
+    expect(chartFieldError('rows', block(FIXTURES.borrowed, { rows: [] }))).toBe(
+      'Add at least 1 row.',
+    )
+    expect(chartFieldError('groups', block(FIXTURES.months, { groups: [] }))).toBe(
+      'Add at least 1 row.',
+    )
+  })
+
   it('refuses a scale shorter than the longest bar on the scale field', () => {
     expect(chartFieldError('scaleMax', block(FIXTURES.bars, { scaleMax: 1 }))).toMatch(/scaleMax/)
   })
@@ -80,5 +90,109 @@ describe('chartFieldError', () => {
 
   it('is silent until a kind is chosen', () => {
     expect(chartFieldError('title', {})).toBe(true)
+  })
+
+  it("leaves Payload's own check out of half-built form state, where an array is its count", async () => {
+    const own = vi.fn(() => 'This field requires at least 1 Rows.' as const)
+    const form = { kind: 'bar', title: 'T', summary: 'S', unit: 'usd', bars: 2, sources: 0 }
+    expect(await checked('bars', own)(2 as never, { siblingData: form })).toBe(true)
+    expect(own).not.toHaveBeenCalled()
+    const rows = { ...form, bars: [{ label: 'A', value: 1 }], sources: [] }
+    expect(await checked('bars', own)(rows.bars as never, { siblingData: rows })).toBe(own())
+  })
+
+  describe('with the data Admin builds while it fills in the form', () => {
+    // Admin's form state gives an array field as its row count until the rows are built, and
+    // a row with only its id before its fields are filled in (seen in a real Admin session)
+    const FIELDS = [
+      'title',
+      'summary',
+      'kind',
+      'unit',
+      'asOf',
+      'certainty',
+      'finePrint',
+      'sources',
+      'bars',
+      'series',
+      'rows',
+      'groups',
+      'scaleMax',
+      'mode',
+      'unitNote',
+    ] as const
+    const formStates: [string, Record<string, unknown>][] = [
+      [
+        'array fields as row counts',
+        {
+          kind: 'bar',
+          title: 'T',
+          summary: 'S',
+          unit: 'usd',
+          sources: 0,
+          bars: 2,
+          series: 0,
+          rows: 0,
+          groups: 0,
+        },
+      ],
+      [
+        'a row with only its id',
+        { kind: 'bar', title: 'T', summary: 'S', unit: 'usd', sources: 0, bars: [{ id: 'a' }] },
+      ],
+      [
+        'nested arrays as counts',
+        {
+          kind: 'stacked',
+          title: 'T',
+          summary: 'S',
+          unit: 'usd',
+          series: [{ id: 'a', label: 'A' }],
+          rows: [{ id: 'r', label: '2026', values: 1 }],
+        },
+      ],
+      [
+        'parts as a count',
+        {
+          kind: 'units',
+          mode: 'each',
+          unitNote: 'n',
+          title: 'T',
+          summary: 'S',
+          unit: 'usd',
+          groups: [{ id: 'g', label: 'G', parts: 3 }],
+        },
+      ],
+    ]
+    it('still judges the chart when Admin gives an empty array as 0 (as it does when publishing)', () => {
+      const publishing = {
+        kind: 'stacked',
+        title: 'T',
+        summary: 'S',
+        unit: 'usd',
+        sources: 0,
+        bars: 0,
+        groups: 0,
+        series: [{ label: 'A' }, { label: 'B' }],
+        rows: [{ label: 'r', values: [{ value: 1 }] }],
+      }
+      expect(chartFieldError('rows', publishing)).toMatch(
+        /Bar 1: has 1 number but there are 2 parts/,
+      )
+      expect(chartFieldError('title', publishing)).toBe(true)
+    })
+
+    it.each(formStates)('never throws, and has no opinion, for %s', (_name, data) => {
+      for (const field of FIELDS) {
+        expect(() => chartFieldError(field, data)).not.toThrow()
+      }
+    })
+
+    it.each(formStates.filter(([name]) => name !== 'a row with only its id'))(
+      'does not say a count is a chart that is empty or wrong: %s',
+      (_name, data) => {
+        for (const field of FIELDS) expect(chartFieldError(field, data)).toBe(true)
+      },
+    )
   })
 })

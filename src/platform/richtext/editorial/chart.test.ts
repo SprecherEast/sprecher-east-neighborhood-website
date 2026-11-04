@@ -75,15 +75,40 @@ describe('toChartSpec', () => {
         bars: [
           { label: long, value: 1 },
           { label: long, value: 2 },
-          { key: 'b'.repeat(40), label: 'x', value: 1 },
-          { key: 'b'.repeat(40), label: 'y', value: 1 },
         ],
       }),
     )
     const keys = spec.kind === 'bar' ? spec.data.map((d) => d.key) : []
     expect(keys.every((key) => key.length <= 40)).toBe(true)
-    expect(new Set(keys).size).toBe(4)
+    expect(new Set(keys).size).toBe(2)
     expect(keys[1]).toMatch(/-2$/)
+  })
+
+  it('does not rename a key somebody typed twice: it says so', () => {
+    expect(() =>
+      toChartSpec(
+        stored({
+          kind: 'bar',
+          bars: [
+            { key: 'same', label: 'A', value: 1 },
+            { key: 'same', label: 'B', value: 2 },
+          ],
+        }),
+      ),
+    ).toThrow(/appears twice/)
+  })
+
+  it('gives a made key a suffix that also clears a key typed later', () => {
+    const spec = toChartSpec(
+      stored({
+        kind: 'bar',
+        bars: [
+          { label: 'Fire', value: 1 },
+          { key: 'fire', label: 'Other', value: 2 },
+        ],
+      }),
+    )
+    expect(spec.kind === 'bar' && spec.data.map((d) => d.key)).toEqual(['fire-2', 'fire'])
   })
 
   it('keeps a key the editor or an agent gave, and makes repeated labels unique', () => {

@@ -144,4 +144,34 @@ describe('parseChartSpec', () => {
       expect(spec.kind === 'stacked' && spec.series[1].increase).toBe(true)
     })
   })
+
+  describe('source links', () => {
+    const withHref = (href: string) =>
+      parseChartSpec({
+        ...base,
+        kind: 'bar',
+        orientation: 'horizontal',
+        data: [datum('a', 1)],
+        sources: [{ label: 'City budget', href }],
+      })
+
+    it('takes a site path or a full http or https address', () => {
+      for (const href of ['/budget', 'https://example.com/b', 'http://example.com/b']) {
+        expect(() => withHref(href)).not.toThrow()
+      }
+    })
+
+    it('refuses anything a browser could run or send off the site', () => {
+      for (const href of [
+        'javascript:alert(1)',
+        'data:text/html,x',
+        '//evil.example',
+        '/\\evil.example',
+        'mailto:a@b.c',
+        'budget',
+      ]) {
+        expect(() => withHref(href), href).toThrow(/site path/)
+      }
+    })
+  })
 })

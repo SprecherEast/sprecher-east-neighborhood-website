@@ -9,6 +9,7 @@ import {
 
 import { SITE_TIMEZONE } from '@/platform/lib/timezone'
 import { collectChartRefusals } from '@/platform/richtext/editorial/chartMarkdown'
+import { unreadChartTags } from '@/platform/richtext/editorial/chartTag'
 
 import {
   type CategoryNode,
@@ -34,6 +35,16 @@ function toContent(req: PayloadRequest, input: SubmitSuggestionInput) {
     convertMarkdownToLexical({ editorConfig, markdown: input.bodyMarkdown }),
   )
   if (refusals.length > 0) throw new APIError(refusals.join(' '), 400, null, true)
+  // A tag Payload can't find the end of is dropped with the whole body, and nothing says so
+  const unread = unreadChartTags(input.bodyMarkdown, value, refusals)
+  if (unread > 0) {
+    throw new APIError(
+      `${unread} <Chart> tag(s) could not be read, so nothing was stored. Check that every tag ends with /> and that a quote, brace or bracket inside text is written as \\u0022, \\u007b, \\u007d, \\u005b or \\u005d.`,
+      400,
+      null,
+      true,
+    )
+  }
   return value
 }
 

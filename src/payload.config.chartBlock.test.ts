@@ -3,16 +3,18 @@ import {
   convertMarkdownToLexical,
   editorConfigFactory,
 } from '@payloadcms/richtext-lexical'
-import { extractPropsFromJSXPropsString } from '@payloadcms/richtext-lexical/shared'
 import type { Payload, RichTextField } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
+import { parseChartSpec } from '@/platform/lib/chart/spec'
+import { fromChartSpec } from '@/platform/richtext/editorial/chart'
 import {
   chartFromJsx,
   chartToJsx,
   collectChartRefusals,
 } from '@/platform/richtext/editorial/chartMarkdown'
+import { unreadChartTags } from '@/platform/richtext/editorial/chartTag'
 import { bootPayload, NO_REVALIDATE } from '@/platform/payload/testing/inMemoryPayload'
 
 /**
@@ -22,10 +24,6 @@ import { bootPayload, NO_REVALIDATE } from '@/platform/payload/testing/inMemoryP
  */
 
 let payload: Payload
-const extractProps = (tag: string) =>
-  extractPropsFromJSXPropsString({
-    propsString: tag.replace(/^<Chart\s+/, '').replace(/\s*\/>$/, ''),
-  })
 beforeAll(async () => {
   payload = (await bootPayload()).payload
 }, 60_000)
@@ -139,20 +137,49 @@ describe('a Chart tag in Markdown', () => {
     },
   )
 
-  it('keeps apostrophes and quotes in the words, and reads a tag written over several lines', () => {
-    const bar = {
-      ...FIXTURES.bars,
-      title: 'The Mayor’s "big" plan, isn\'t it?',
-      data: [{ key: 'a', label: 'Mayor\'s "share"', value: 3 }],
-      scaleMax: undefined,
-    }
-    const tag = chartToJsx({ blockType: 'chart', ...chartFromJsx(bar) } as never) as string
-    const again = toMarkdown(toLexical(tag))
-    expect(again).toBe(tag)
-    expect(chartFromJsx(extractProps(again))).toMatchObject({
-      title: bar.title,
-      bars: [{ label: 'Mayor\'s "share"' }],
-    })
+  // Text that Payload's tag reader trips on: quotes, braces, brackets, backslashes, `/>`, entities
+  const NASTY = [
+    'Mayor’s "big" plan, isn\'t it?',
+    'a } b { c ] d [ e',
+    'back\\slash',
+    'ends with a backslash\\',
+    'one " quote',
+    '12" pipe',
+    'Café ✓ 😀 and  two  spaces',
+    'a /> b <x>',
+    'a literal &quot; and &amp; here',
+    'line one\nline two',
+  ]
+  const dataOf = (text: string, where: 'title' | 'label') => ({
+    ...FIXTURES.bars,
+    scaleMax: undefined,
+    ...(where === 'title' ? { title: text } : {}),
+    data: [{ key: 'a', label: where === 'label' ? text : 'A', value: 3 }],
+  })
+
+  it.each(NASTY.flatMap((text) => [[text, 'title'] as const, [text, 'label'] as const]))(
+    'keeps the words exactly through the real converters, twice: %j in the %s',
+    (text, where) => {
+      const tag = chartToJsx({
+        blockType: 'chart',
+        ...fromChartSpec(parseChartSpec(dataOf(text, where))),
+      } as never) as string
+      expect(tag).not.toContain('\n')
+      for (let round = 0; round < 2; round++) {
+        const { value, refusals } = collectChartRefusals(() => toLexical(tag))
+        expect(refusals).toEqual([])
+        expect(toMarkdown(value)).toBe(tag)
+        const block = JSON.parse(JSON.stringify(value)).root.children[0].fields
+        expect(where === 'title' ? block.title : block.bars[0].label).toBe(text)
+      }
+    },
+  )
+
+  it('reads a tag written over several lines', () => {
+    const tag = chartToJsx({
+      blockType: 'chart',
+      ...chartFromJsx(FIXTURES.bars),
+    } as never) as string
     const spread = tag.replace(' data=', '\n  data=').replace(' summary=', '\n  summary=')
     const { refusals, value } = collectChartRefusals(() =>
       toLexical(`Before.\n\n${spread}\n\nAfter.`),
@@ -165,5 +192,33 @@ describe('a Chart tag in Markdown', () => {
     const { refusals } = collectChartRefusals(() => toLexical('<Chart kind="bar" title="T" />'))
     expect(refusals).toHaveLength(1)
     expect(refusals[0]).toMatch(/^Invalid <Chart>:.*summary/)
+  })
+
+  it.each([
+    [
+      'an escaped quote in a label',
+      '<Chart kind="bar" title="T" summary="S." unit="count" data={[{"key":"a","label":"12\\" pipe","value":4}]} />',
+    ],
+    [
+      'a tag with no closing />',
+      '<Chart kind="bar" title="T" summary="S." unit="count" data={[{"key":"a","label":"A","value":4}]}',
+    ],
+  ])('notices a tag Payload could not read (%s), which leaves the body empty', (_name, tag) => {
+    const markdown = `Intro.\n\n${tag}\n\nOutro.`
+    const { value, refusals } = collectChartRefusals(() => toLexical(markdown))
+    expect(unreadChartTags(markdown, value, refusals)).toBe(1)
+  })
+
+  it('counts nothing unread when every tag became a block or a refusal', () => {
+    const tag = chartToJsx({
+      blockType: 'chart',
+      ...chartFromJsx(FIXTURES.bars),
+    } as never) as string
+    const bad =
+      '<Chart kind="bar" title="T" unit="usd" data={[{"key":"a","label":"A","value":1}]} />'
+    const markdown = `${tag}\n\n${bad}\n\nOutro.`
+    const { value, refusals } = collectChartRefusals(() => toLexical(markdown))
+    expect(refusals).toHaveLength(1)
+    expect(unreadChartTags(markdown, value, refusals)).toBe(0)
   })
 })

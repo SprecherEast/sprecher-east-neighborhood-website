@@ -74,9 +74,7 @@ const barFields = (): Field[] => [
     name: 'bars',
     type: 'array',
     labels: { singular: 'Bar', plural: 'Bars' },
-    minRows: 1,
     maxRows: CHART_LIMITS.rows,
-    required: true,
     admin: { condition: forKinds('bar'), description: 'One to twelve bars, top to bottom.' },
     validate: checked('bars', array),
     fields: partFields(),
@@ -88,9 +86,7 @@ const stackedFields = (): Field[] => [
     name: 'series',
     type: 'array',
     labels: { singular: 'Part', plural: 'Parts' },
-    minRows: 1,
     maxRows: CHART_LIMITS.parts,
-    required: true,
     admin: {
       condition: forKinds('stacked'),
       description: 'The parts each bar splits into, such as “Borrowed” and “Other sources”.',
@@ -119,9 +115,7 @@ const stackedFields = (): Field[] => [
     name: 'rows',
     type: 'array',
     labels: { singular: 'Bar', plural: 'Bars' },
-    minRows: 1,
     maxRows: CHART_LIMITS.rows,
-    required: true,
     admin: {
       condition: forKinds('stacked'),
       description: 'One bar per row. Give each a number for every part above, in the same order.',
@@ -191,9 +185,7 @@ const unitsFields = (): Field[] => [
     name: 'groups',
     type: 'array',
     labels: { singular: 'Group', plural: 'Groups' },
-    minRows: 1,
     maxRows: CHART_LIMITS.groups,
-    required: true,
     admin: {
       condition: forKinds('units'),
       description:

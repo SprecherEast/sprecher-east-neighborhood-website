@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { CERTAINTIES } from '@/platform/lib/certainty'
+import { isLinkAddress, LINK_ADDRESS_HINT } from '@/platform/lib/linkAddress'
 
 /*
  * What a chart is, as plain data (#639, #592): no React and no chart library, so any adapter can
@@ -56,7 +57,7 @@ const datumSchema = z.object({
 
 const sourceSchema = z.object({
   label: text(CHART_LIMITS.sourceLabel),
-  href: text(CHART_LIMITS.sourceHref),
+  href: text(CHART_LIMITS.sourceHref).refine(isLinkAddress, { message: LINK_ADDRESS_HINT }),
 })
 
 const baseShape = {

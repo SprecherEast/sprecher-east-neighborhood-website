@@ -6,7 +6,7 @@ import {
   type ChartSpec,
 } from '@/platform/lib/chart/spec'
 
-import { isEditorialLinkUrl } from './editorialLink'
+import { readText, writeProp } from './chartTag'
 import { fromChartSpec, toChartSpec, type StoredChart } from './chart'
 
 /**
@@ -25,20 +25,9 @@ const PROPS: Record<ChartKind, readonly string[]> = {
 }
 /** Charts are drawn horizontally only for now, so the tag has no orientation to write */
 const ORIENTATION = 'orientation'
+const PROP_NAME = /^[A-Za-z][A-Za-z0-9]*$/
 const isKind = (value: unknown): value is ChartKind =>
   (CHART_KINDS as readonly unknown[]).includes(value)
-
-/**
- * A prop as the tag writes it: text in quotes (a quote as `&quot;`, line breaks as spaces so the
- * tag stays on one line), a number or list in braces. Payload's own `propsToJSXString` writes
- * the same shapes, but it escapes an apostrophe inside a list as `\\'`, which reads back as a
- * backslash and an apostrophe and grows each time the tag is saved and loaded, so the list
- * is written as JSON with the apostrophe as `\u0027` instead.
- */
-function propValue(value: unknown): string {
-  if (typeof value === 'string') return `"${value.replace(/\s+/g, ' ').replaceAll('"', '&quot;')}"`
-  return `{${JSON.stringify(value).replaceAll("'", '\\u0027')}}`
-}
 
 /** The block as its Markdown tag, or false when the stored chart is not valid (it is left out) */
 export function chartToJsx(fields: StoredChart): string | false {
@@ -53,13 +42,11 @@ export function chartToJsx(fields: StoredChart): string | false {
     PROPS[spec.kind].flatMap((name) => (values[name] === undefined ? [] : [[name, values[name]]])),
   )
   return `<Chart ${Object.entries(props)
-    .map(([name, value]) => `${name}=${propValue(value)}`)
+    .map(([name, value]) => writeProp(name, value))
     .join(' ')} />`
 }
 
-/** `&quot;` is how the converter writes a quote inside a string; it does not read it back itself */
-const unquote = (value: unknown) =>
-  typeof value === 'string' ? value.replaceAll('&quot;', '"').replaceAll('\\"', '"') : value
+const unquote = (value: unknown) => (typeof value === 'string' ? readText(value) : value)
 
 /** What is wrong with the tag's props beyond the chart's own rules: unknown props, a vertical chart */
 function tagIssues(props: Record<string, unknown>): ChartIssue[] {
@@ -69,19 +56,11 @@ function tagIssues(props: Record<string, unknown>): ChartIssue[] {
   const issues: ChartIssue[] = Object.keys(props)
     .filter((name) => !known.has(name))
     .map((name) => ({
-      path: [name],
-      message: `${name} is not a property of a ${kind} chart (use ${PROPS[kind].join(', ')})`,
+      path: [],
+      message: PROP_NAME.test(name)
+        ? `${name} is not a property of a ${kind} chart (use ${PROPS[kind].join(', ')})`
+        : `the tag could not be read near "${name.slice(0, 20)}": check that quotes, braces and brackets inside text are written as \\u0022, \\u007b, \\u007d, \\u005b and \\u005d`,
     }))
-  // The editor's source fields accept only a site path or an https address; so does a tag
-  const sources = Array.isArray(props.sources) ? (props.sources as { href?: unknown }[]) : []
-  sources.forEach((source, i) => {
-    if (typeof source?.href === 'string' && !isEditorialLinkUrl(source.href)) {
-      issues.push({
-        path: ['sources', i, 'href'],
-        message: 'use a site path such as /budget or a full https:// address',
-      })
-    }
-  })
   if (props[ORIENTATION] !== undefined && props[ORIENTATION] !== 'horizontal') {
     issues.push({
       path: [ORIENTATION],

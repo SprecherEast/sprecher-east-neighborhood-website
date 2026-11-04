@@ -34,6 +34,13 @@ describe('ChartBlockConfig', () => {
     expect(byName('unit').options?.map((o) => o.value)).toEqual([...CHART_UNITS])
   })
 
+  it('leaves "at least one row" to the chart rules, so no native message competes with the reason', () => {
+    for (const name of ['bars', 'series', 'rows', 'groups']) {
+      expect(byName(name)).not.toHaveProperty('required')
+      expect(byName(name)).not.toHaveProperty('minRows')
+    }
+  })
+
   it('asks for a title and a summary', () => {
     expect(byName('title')).toMatchObject({ required: true })
     expect(byName('summary')).toMatchObject({ required: true })

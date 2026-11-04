@@ -1,6 +1,6 @@
 import type { ChartIssue } from '@/platform/lib/chart/issues'
 
-import { storedChartIssues, type StoredChart } from './chart'
+import { isFormState, storedChartIssues, type StoredChart } from './chart'
 
 /**
  * Field errors for a chart block (#640): the block is checked as a whole with the `ChartSpec`
@@ -53,7 +53,8 @@ function where(path: ChartIssue['path']): string | null {
     case 'rowNotes':
       return typeof i === 'number' ? `Bar ${n(i)}` : null
     case 'series':
-      return tail === 'values' ? `Bar ${n(j)}, number ${n(i)}` : `Part ${n(i)}`
+      if (tail === 'values') return j === undefined ? null : `Bar ${n(j)}, number ${n(i)}`
+      return `Part ${n(i)}`
     case 'groups':
       return typeof i === 'number'
         ? `Group ${n(i)}${tail === 'data' ? `, part ${n(j)}` : ''}`
@@ -65,10 +66,12 @@ function where(path: ChartIssue['path']): string | null {
 
 /** One issue in the editor's words: where it is, then what is wrong */
 function describe(issue: ChartIssue): string {
-  const message = issue.message.replace(
-    /^Invalid input: expected number, received NaN$/,
-    'enter a number',
-  )
+  const message = issue.message
+    .replace(/^Invalid input: expected number, received NaN$/, 'enter a number')
+    .replace(
+      /^Too small: expected array to have >=(\d+) items$/,
+      (_m, n) => `Add at least ${n} row.`,
+    )
   const place = where(issue.path)
   return place ? `${place}: ${message}` : message
 }
@@ -87,11 +90,12 @@ function issuesOf(stored: StoredChart): ChartIssue[] {
 /** What is wrong with a chart's `field`, or true. Reads the whole block from the field's siblings. */
 export function chartFieldError(field: ChartField, block: unknown): true | string {
   const stored = block as StoredChart
-  if (!stored.kind) return true
+  // Admin asks while it is still building the form, with counts where the rows will be
+  if (!stored.kind || isFormState(stored)) return true
   const issues = issuesOf(stored).filter(
     (issue) => fieldOf(issue, stored.kind as keyof typeof WHOLE_CHART_FIELD) === field,
   )
-  return issues.length === 0 ? true : issues.map(describe).join('; ')
+  return issues.length === 0 ? true : [...new Set(issues.map(describe))].join('; ')
 }
 
 type Validate<V, A> = (value: V, args: A) => true | string | Promise<true | string>
@@ -105,6 +109,8 @@ export function checked<V, A extends { siblingData: unknown }>(
   own: Validate<V, A>,
 ): (value: V, args: A) => Promise<true | string> {
   return async (value, args) => {
+    // Half-built form state (`bars: 2`): Payload's own check would read the count as the rows
+    if (isFormState(args.siblingData as StoredChart)) return true
     const first = await own(value, args)
     return first === true ? chartFieldError(field, args.siblingData) : first
   }

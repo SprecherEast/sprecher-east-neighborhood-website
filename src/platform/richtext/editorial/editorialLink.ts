@@ -1,4 +1,5 @@
 import type { ResolvedLink } from '@/platform/lib'
+import { isLinkAddress, LINK_ADDRESS_HINT } from '@/platform/lib/linkAddress'
 
 /**
  * The one optional "read more" link an editorial block item may carry (a label and an address).
@@ -6,21 +7,11 @@ import type { ResolvedLink } from '@/platform/lib'
  * inside rich text isn't populated, so a plain address is the reliable choice here.
  */
 
-/**
- * A site path (`/events/…`) or an http(s) address. A site path can't start with a second slash
- * or hold a backslash anywhere: browsers read `\` as `/`, so `/\host` and `//host` both leave the
- * site while looking like a path (#513 review).
- */
-const SITE_PATH = /^\/(?![/\\])[^\s\\]*$/
-const WEB_ADDRESS = /^https?:\/\/[^\s\\]+$/i
-
 /** The longest address an editor can save, the common URL limit. */
 export const EDITORIAL_LINK_MAX_LENGTH = 2048
 
 export function isEditorialLinkUrl(value: string): boolean {
-  const address = value.trim()
-  if (address.length > EDITORIAL_LINK_MAX_LENGTH) return false
-  return SITE_PATH.test(address) || WEB_ADDRESS.test(address)
+  return value.trim().length <= EDITORIAL_LINK_MAX_LENGTH && isLinkAddress(value)
 }
 
 /** Payload field validation: both parts or neither, and an address the site can link to. */
@@ -33,9 +24,7 @@ export function validateEditorialLink(
   if (!hasUrl && !hasLabel) return true
   if (!hasUrl) return 'Add the address the link goes to, or clear the link text.'
   if (!hasLabel) return 'Add the link text readers see, or clear the address.'
-  return isEditorialLinkUrl(url as string)
-    ? true
-    : 'Use a site path such as /events or a full address starting with https://'
+  return isEditorialLinkUrl(url as string) ? true : LINK_ADDRESS_HINT
 }
 
 /** The link as `Link` takes it, or null when there is none or it isn't valid. */

@@ -99,6 +99,11 @@ describe('chartFromJsx', () => {
     )
   })
 
+  it('says a name that is not a property means the tag was not readable, not that the name is a property', () => {
+    expect(() => chartFromJsx({ ...FIXTURES.bars, '}': '}' })).toThrow(/could not be read.*\\u007d/)
+    expect(() => chartFromJsx({ ...FIXTURES.bars, '}': '}' })).not.toThrow(/is not a property/)
+  })
+
   it('starts the message with <Chart> so an agent knows which tag to fix', () => {
     expect(() => chartFromJsx({})).toThrow(/^Invalid <Chart>/)
   })

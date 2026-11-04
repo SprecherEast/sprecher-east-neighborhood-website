@@ -83,4 +83,28 @@ describe('a <Chart> tag in a suggestion', () => {
     expect(answered.text).toMatch(/summary/)
     expect(await payload.count({ collection: 'posts', overrideAccess: true })).toEqual(before)
   })
+
+  it.each([
+    [
+      'an escaped quote in a label',
+      '<Chart kind="bar" title="Pipes" summary="Sizes." unit="count" data={[{"key":"a","label":"12\\" pipe","value":4}]} />',
+    ],
+    [
+      'a tag with no closing />',
+      '<Chart kind="bar" title="Pipes" summary="Sizes." unit="count" data={[{"key":"a","label":"A","value":4}]}',
+    ],
+    [
+      'a brace in a label',
+      '<Chart kind="bar" title="Pipes" summary="Sizes." unit="count" data={[{"key":"a","label":"Fund }","value":4}]} />',
+    ],
+  ])('refuses a tag it cannot read (%s) instead of storing an empty body', async (_name, tag) => {
+    const before = await payload.count({ collection: 'posts', overrideAccess: true })
+    const answered = await call(
+      suggestion({ bodyMarkdown: `Intro paragraph.\n\n${tag}\n\nOutro paragraph.` }),
+    )
+    expect(answered.isError).toBe(true)
+    expect(answered.text).toMatch(/Chart/)
+    expect(answered.text).toMatch(/could not be read|Invalid <Chart>/)
+    expect(await payload.count({ collection: 'posts', overrideAccess: true })).toEqual(before)
+  })
 })

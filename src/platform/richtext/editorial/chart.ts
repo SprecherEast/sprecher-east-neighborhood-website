@@ -18,6 +18,13 @@ export type StoredChart = Partial<Omit<ChartBlock, 'blockType' | 'id' | 'blockNa
 /** What `fromChartSpec` fills in; `StoredChart` without the nulls */
 type Stored<K extends keyof StoredChart> = NonNullable<StoredChart[K]>
 
+/**
+ * An array field's rows. Admin's form state gives the row count (a number) until the rows are
+ * built, so anything that is not an array has no rows: this never throws on what Admin hands it.
+ */
+const list = <T>(value: readonly T[] | number | null | undefined): readonly T[] =>
+  Array.isArray(value) ? value : []
+
 const blank = (text: string | null | undefined) => text?.trim() || undefined
 const orUndefined = <T>(items: T[]): T[] | undefined => (items.length > 0 ? items : undefined)
 
@@ -29,11 +36,17 @@ const keyFromLabel = (label: string): string =>
     .slice(0, CHART_LIMITS.key)
     .replace(/-$/, '') || 'part'
 
-/** Each item's key: the one given, or made from its label; a repeat gets `-2`, `-3`... within the key limit */
+/**
+ * Each item's key: the one typed (kept exactly: a key typed twice is for the spec to refuse, not
+ * for us to rename), or made from its label, where a repeat gets `-2`, `-3`... within the limit.
+ */
 function keysOf(items: readonly { key?: string | null; label?: string | null }[]): string[] {
-  const used = new Set<string>()
-  return items.map((item) => {
-    const base = blank(item.key) ?? keyFromLabel(item.label ?? '')
+  const typed = items.map((item) => blank(item.key))
+  const used = new Set(typed.filter((key): key is string => key !== undefined))
+  return items.map((item, i) => {
+    const given = typed[i]
+    if (given !== undefined) return given
+    const base = keyFromLabel(item.label ?? '')
     let key = base
     for (let n = 2; used.has(key); n++) {
       const suffix = `-${n}`
@@ -77,26 +90,26 @@ function partsOf(
 }
 
 function stackedOf(stored: StoredChart) {
-  const rows = stored.rows ?? []
-  const keys = keysOf(stored.series ?? [])
+  const rows = list(stored.rows)
+  const keys = keysOf(list(stored.series))
   const notes = rows.map((row) => blank(row.note))
   return {
     orientation: 'horizontal',
     scaleMax: stored.scaleMax ?? undefined,
     x: rows.map((row) => row.label ?? ''),
-    series: (stored.series ?? []).map((series, i) => ({
+    series: list(stored.series).map((series, i) => ({
       key: keys[i],
       label: series.label ?? '',
       ...hatch(series.hatch),
       ...(series.increase ? { increase: true } : {}),
-      values: rows.map((row) => row.values?.[i]?.value ?? NaN),
+      values: rows.map((row) => list(row.values)[i]?.value ?? NaN),
     })),
     rowNotes: notes.some(Boolean) ? notes.map((note) => note ?? '') : undefined,
   }
 }
 
 function unitsOf(stored: StoredChart) {
-  const groups = stored.groups ?? []
+  const groups = list(stored.groups)
   const keys = keysOf(groups)
   return {
     mode: stored.mode ?? undefined,
@@ -105,14 +118,14 @@ function unitsOf(stored: StoredChart) {
       key: keys[i],
       label: group.label ?? '',
       total: group.total ?? undefined,
-      data: partsOf(group.parts ?? []),
+      data: partsOf(list(group.parts)),
     })),
   }
 }
 
 /** The spec the stored block describes, not yet checked. `NaN` stands for a number left empty. */
 export function toChartSpecInput(stored: StoredChart): Record<string, unknown> {
-  const sources = (stored.sources ?? [])
+  const sources = list(stored.sources)
     .filter((source) => blank(source.linkLabel) || blank(source.linkUrl))
     .map((source) => ({ label: source.linkLabel ?? '', href: source.linkUrl ?? '' }))
   const base = {
@@ -131,7 +144,7 @@ export function toChartSpecInput(stored: StoredChart): Record<string, unknown> {
         ...base,
         orientation: 'horizontal',
         scaleMax: stored.scaleMax ?? undefined,
-        data: partsOf(stored.bars ?? []),
+        data: partsOf(list(stored.bars)),
       })
     case 'stacked':
       return prune({ ...base, ...stackedOf(stored) })
@@ -149,8 +162,8 @@ export function toChartSpecInput(stored: StoredChart): Record<string, unknown> {
 function rowIssues(stored: StoredChart): ChartIssue[] {
   if (stored.kind !== 'stacked') return []
   const parts = stored.series?.length ?? 0
-  return (stored.rows ?? []).flatMap((row, i) => {
-    const count = row.values?.length ?? 0
+  return list(stored.rows).flatMap((row, i) => {
+    const count = list(row.values).length
     return count === parts
       ? []
       : [
@@ -223,4 +236,18 @@ export function fromChartSpec(spec: ChartSpec): StoredChart {
         })),
       }
   }
+}
+
+/**
+ * True when `stored` is Admin's half-built form state, where an array field is its row count
+ * (`bars: 2`) rather than its rows: there is no chart to judge yet. A count of 0 is no rows.
+ */
+export function isFormState(stored: StoredChart): boolean {
+  // 0 is an empty array: Admin gives that too, including when publishing
+  const counted = (value: unknown) => typeof value === 'number' && value > 0
+  return (
+    [stored.sources, stored.bars, stored.series, stored.rows, stored.groups].some(counted) ||
+    list(stored.rows).some((row) => counted(row.values)) ||
+    list(stored.groups).some((group) => counted(group.parts))
+  )
 }
