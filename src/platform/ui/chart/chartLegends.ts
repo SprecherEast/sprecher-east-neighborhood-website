@@ -61,7 +61,7 @@ export function toChartLegends(spec: ChartSpec, palette: ChartPalette): ChartLeg
           items: spec.series.map((s, i) => ({
             label: s.label,
             text: null,
-            slot: slotAt(palette, i).slot,
+            slot: slotAt(palette, s.increase ? 0 : i).slot,
             ...(s.pattern && { pattern: s.pattern }),
           })),
         },

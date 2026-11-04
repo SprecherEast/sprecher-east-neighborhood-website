@@ -28,7 +28,7 @@ the ladder) draws the bars and stacked bars in #663; our code is the spec, the p
   the palette (`chart-1` to `chart-6`, a part's slot is its position + 1 and never repeats), `Chart`
   and its table. `Chart` is the only component the app uses to draw one.
 - Adapters: `css` draws `units` as HTML; `text` draws every kind as words and is the fallback;
-  `visx` (in #663) will draw `bar` and `stacked`. Each is in its own folder under `adapters/`.
+  `visx` (#663) draws `bar` and horizontal `stacked` as one SVG on the server, with `@visx/shape`, `scale`, `group` and `pattern` (`@visx/axis` is left out: its tick labels draw a nested `<svg style=…>`, which the contract refuses, so the ticks are plain `<text>`). `next build` shows no `@visx` code in any client chunk. Each adapter is in its own folder under `adapters/`.
 - ESLint (`CHART_LIBRARIES` in `eslint.boundaries.config.mjs`) allows `@visx/*`, `d3-*`,
   `recharts`, `echarts` and `@nivo/*` only in `src/platform/ui/chart/adapters/`. A test lints real
   sources to prove it fires.

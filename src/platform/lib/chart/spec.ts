@@ -100,19 +100,30 @@ const unitsSchema = z
     }
   })
 
-const barSchema = z.object({
-  ...baseShape,
-  kind: z.literal('bar'),
-  orientation,
-  /** The longest bar's length stands for this much, so bars in different charts compare */
-  scaleMax: z.number().positive().optional(),
-  data: dataList(MAX_ROWS),
-})
+const SCALE_MAX_MESSAGE = 'scaleMax is shorter than the longest bar, so that bar would not fit'
+const fitsScale = (scaleMax: number | undefined, longest: number) =>
+  scaleMax === undefined || longest <= scaleMax
+
+const barSchema = z
+  .object({
+    ...baseShape,
+    kind: z.literal('bar'),
+    orientation,
+    /** The scale's end: charts with the same scaleMax draw the same value the same length */
+    scaleMax: z.number().positive().optional(),
+    data: dataList(MAX_ROWS),
+  })
+  .refine((spec) => fitsScale(spec.scaleMax, Math.max(...spec.data.map((d) => d.value))), {
+    message: SCALE_MAX_MESSAGE,
+    path: ['scaleMax'],
+  })
 
 const seriesSchema = z.object({
   key: text(40),
   label: text(80),
   pattern: z.literal('hatch').optional(),
+  /** An amount added on top of the first one: its value reads "+$24.8M" */
+  increase: z.literal(true).optional(),
   values: z.array(z.number().finite().nonnegative()).min(1).max(MAX_ROWS),
 })
 
@@ -135,6 +146,10 @@ const stackedSchema = z
     }
     if (spec.rowNotes && spec.rowNotes.length !== spec.x.length)
       add('Give a note for every row, or none')
+    const longest = Math.max(
+      ...spec.x.map((_, i) => spec.series.reduce((t, s) => t + (s.values[i] ?? 0), 0)),
+    )
+    if (!fitsScale(spec.scaleMax, longest)) add(SCALE_MAX_MESSAGE)
   })
 
 export const chartSpecSchema = z.discriminatedUnion('kind', [unitsSchema, barSchema, stackedSchema])

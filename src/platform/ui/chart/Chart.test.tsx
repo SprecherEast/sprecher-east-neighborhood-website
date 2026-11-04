@@ -6,6 +6,7 @@ import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
+import { textAdapter } from './adapters/text/textAdapter'
 import { Chart } from './Chart'
 
 afterEach(cleanup)
@@ -56,8 +57,8 @@ describe('Chart', () => {
     )
   })
 
-  it('falls back to the text adapter for a kind no grid draws, with no colour key', () => {
-    const { container } = render(<Chart spec={FIXTURES.borrowed} />)
+  it('draws with the text adapter when it is chosen, with no colour key', () => {
+    const { container } = render(<Chart spec={FIXTURES.borrowed} adapter={textAdapter} />)
     expect(container.querySelector('[role="img"]')).toBeNull()
     expect(container.querySelectorAll('[data-legend-swatch]')).toHaveLength(0)
     expect(screen.getAllByText('$171,688,393', { exact: false }).length).toBeGreaterThan(0)

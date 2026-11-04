@@ -2,6 +2,7 @@ import type { ChartKind } from '@/platform/lib/chart/spec'
 
 import { cssAdapter } from './adapters/css/cssAdapter'
 import { textAdapter } from './adapters/text/textAdapter'
+import { visxAdapter } from './adapters/visx/visxAdapter'
 import type { ChartAdapter } from './chartAdapter'
 
 /**
@@ -9,7 +10,7 @@ import type { ChartAdapter } from './chartAdapter'
  * supports every kind, so it is the last resort. Changing a chart library is a new adapter
  * placed here.
  */
-const ADAPTERS: readonly ChartAdapter[] = [cssAdapter, textAdapter]
+const ADAPTERS: readonly ChartAdapter[] = [cssAdapter, visxAdapter, textAdapter]
 
 export function adapterFor(kind: ChartKind): ChartAdapter {
   return ADAPTERS.find((adapter) => adapter.kinds.has(kind)) ?? textAdapter

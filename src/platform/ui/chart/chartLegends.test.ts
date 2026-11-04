@@ -42,6 +42,14 @@ describe('toChartLegends', () => {
     ])
   })
 
+  it('gives an increase its base series’ colour, hatched', () => {
+    const [key] = legends(FIXTURES.operating)
+    expect(key.items).toEqual([
+      { label: 'Same as 2026', text: null, slot: 1 },
+      { label: 'Proposed increase', text: null, slot: 1, pattern: 'hatch' },
+    ])
+  })
+
   it('shares one key only when every part matches in key, label and pattern', () => {
     const relabelled = structuredClone(FIXTURES.paysFor)
     relabelled.groups[1].data[0].label = 'Police and fire'

@@ -16,10 +16,11 @@ describe('print-exact', () => {
     expect(utility).toContain('-webkit-print-color-adjust: exact')
   })
 
-  it.each(['src/platform/ui/chart/adapters/css/UnitGrid.tsx', 'src/platform/ui/Legend.tsx'])(
-    'is on the marks drawn in %s',
-    (file) => {
-      expect(source(file)).toContain('print-exact')
-    },
-  )
+  it.each([
+    'src/platform/ui/chart/adapters/css/UnitGrid.tsx',
+    'src/platform/ui/chart/adapters/visx/BarChartSvg.tsx',
+    'src/platform/ui/Legend.tsx',
+  ])('is on the marks drawn in %s', (file) => {
+    expect(source(file)).toContain('print-exact')
+  })
 })

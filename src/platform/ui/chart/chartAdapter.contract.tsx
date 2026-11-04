@@ -37,7 +37,9 @@ export function coloursWithText(root: ParentNode) {
  *  - draws one mark per datum or cell, in the server's HTML (not only in a browser);
  *  - has no `style` attribute and no colour literal, and uses only palette classes for colour;
  *  - gives every label and value as real text;
- *  - names any `img` it draws by ids that exist, and passes axe.
+ *  - names any `img` it draws by ids that exist, and passes axe;
+ *  - for `svg` output, scales with its container (a `viewBox`, no fixed size) and puts no text
+ *    inside a mark.
  */
 export function describeChartAdapter(adapter: ChartAdapter, { markCount }: ContractOptions) {
   const fixtures = Object.entries(FIXTURES).filter(([, spec]) => adapter.kinds.has(spec.kind))
@@ -93,6 +95,19 @@ export function describeChartAdapter(adapter: ChartAdapter, { markCount }: Contr
           expect(svg?.getAttribute('aria-labelledby')).toBeTruthy()
         }
       })
+
+      if (adapter.output === 'svg') {
+        it('scales with its container and keeps every text element off the marks', () => {
+          const svg = document.querySelector('svg[role="img"]')
+          expect(svg?.getAttribute('viewBox')).toBeTruthy()
+          expect(svg?.hasAttribute('width') || svg?.hasAttribute('height')).toBe(false)
+          expect(document.querySelectorAll('svg text').length).toBeGreaterThan(0)
+          for (const mark of drawing(document)) {
+            expect(mark.closest('text'), 'a mark inside a text element').toBeNull()
+            expect(mark.querySelector('text, tspan'), 'text inside a mark').toBeNull()
+          }
+        })
+      }
 
       it('passes axe', async () => {
         const container = window.document.createElement('div')
