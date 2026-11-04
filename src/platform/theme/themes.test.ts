@@ -4,7 +4,9 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import {
+  CHART_PAIRS,
   CONTRAST_PAIRS,
+  MIN_GRAPHIC_CONTRAST,
   MIN_TEXT_CONTRAST,
   THEME_TOKENS,
   THEME_TOKEN_NAMES,
@@ -43,6 +45,14 @@ describe('theme files', () => {
         expect(ratio, `--${text} on --${background}: ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(
           MIN_TEXT_CONTRAST,
         )
+      })
+
+      it.each(CHART_PAIRS)('%s on %s passes 3:1 for graphics', (chart, background) => {
+        const ratio = contrastRatio(modes[mode][chart], modes[mode][background])
+        expect(
+          ratio,
+          `--${chart} on --${background}: ${ratio.toFixed(2)}:1`,
+        ).toBeGreaterThanOrEqual(MIN_GRAPHIC_CONTRAST)
       })
 
       it.each([...TINTED_PAIRS, ...SCRIM_PAIRS])(
