@@ -2,11 +2,11 @@ import type { Payload } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { TITLE_MAX_LENGTH } from '@/platform/lib'
-import { bootPayload, NO_REVALIDATE } from '@/platform/payload/testing/inMemoryPayload'
+import { bootPayload, NO_REVALIDATE, paragraph } from '@/platform/payload/testing/inMemoryPayload'
 
 /**
  * The title limit (#633): posts, events and pages take their title from the one `titleField()`,
- * so each stops at `TITLE_MAX_LENGTH` and no editor can save a title too long for the breadcrumb
+ * so each stops at `TITLE_MAX_LENGTH` and no editor can publish a title too long for the breadcrumb
  * trail. Payload runs on an in-memory SQLite database: no file, no network.
  */
 
@@ -15,26 +15,6 @@ let payload: Payload
 beforeAll(async () => {
   ;({ payload } = await bootPayload())
 }, 60_000)
-
-const paragraph = (text: string) => ({
-  root: {
-    type: 'root',
-    version: 1,
-    direction: 'ltr' as const,
-    format: '' as const,
-    indent: 0,
-    children: [
-      {
-        type: 'paragraph',
-        version: 1,
-        direction: 'ltr' as const,
-        format: '' as const,
-        indent: 0,
-        children: [{ type: 'text', version: 1, text, format: 0, detail: 0, mode: 'normal' }],
-      },
-    ],
-  },
-})
 
 const createPost = (title: string, status: 'draft' | 'published' = 'draft') =>
   payload.create({
