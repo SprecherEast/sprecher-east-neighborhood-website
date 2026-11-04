@@ -10,6 +10,7 @@ describe('toKeyFactsProps', () => {
           {
             value: ' 2040s ',
             label: ' earliest construction ',
+            detail: ' Not before the state signs off. ',
             icon: 'date',
             certainty: 'estimate',
             linkLabel: 'City budget',
@@ -22,6 +23,7 @@ describe('toKeyFactsProps', () => {
         {
           value: '2040s',
           label: 'earliest construction',
+          detail: 'Not before the state signs off.',
           icon: 'date',
           certainty: 'estimate',
           source: {
@@ -43,7 +45,25 @@ describe('toKeyFactsProps', () => {
       ],
     })
     expect(facts).toEqual([
-      { value: '?', label: 'total cost', icon: 'info', certainty: 'unknown', source: null },
+      {
+        value: '?',
+        label: 'total cost',
+        detail: null,
+        icon: 'info',
+        certainty: 'unknown',
+        source: null,
+      },
     ])
+  })
+
+  it('treats a blank or missing explanation as none', () => {
+    const { facts } = toKeyFactsProps({
+      facts: [
+        { value: 'A', label: 'a', detail: '   ', icon: 'info', certainty: 'confirmed' },
+        { value: 'B', label: 'b', detail: null, icon: 'info', certainty: 'confirmed' },
+        { value: 'C', label: 'c', icon: 'info', certainty: 'confirmed' },
+      ],
+    })
+    expect(facts.map((fact) => fact.detail)).toEqual([null, null, null])
   })
 })

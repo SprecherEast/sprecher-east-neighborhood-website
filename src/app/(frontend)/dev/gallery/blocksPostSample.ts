@@ -32,11 +32,12 @@ export const SAMPLE_BLOCKS_POST = root([
     facts: [
       {
         value: '$477.5M',
-        label: 'proposed day-to-day budget',
+        label: 'Proposed day-to-day budget',
+        detail: 'What the City would spend on services in 2027.',
         icon: 'money',
         certainty: 'confirmed',
       },
-      { value: '+$24.8M', label: 'more than in 2026', icon: 'taxes', certainty: 'estimate' },
+      { value: '+$24.8M', label: 'More than in 2026', icon: 'taxes', certainty: 'estimate' },
     ],
   }),
   heading('h3', 'Where each $100 goes'),

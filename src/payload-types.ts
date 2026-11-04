@@ -2896,13 +2896,17 @@ export interface KeyFactsBlock {
    */
   facts: {
     /**
-     * Short: "2040s", "$10M", "Not set".
+     * What it is about, as a short title: "Who pays for the ramps".
+     */
+    label: string
+    /**
+     * The big text: where it stands, or the number. "Pending", "2040s", "$10M".
      */
     value: string
     /**
-     * What it is: "earliest construction".
+     * Optional. One plain sentence that explains it: "City and State are still negotiating."
      */
-    label: string
+    detail?: string | null
     icon:
       | 'info'
       | 'date'
@@ -3047,6 +3051,9 @@ export interface ChartBlock {
          * Optional. Leave empty to use the label. Parts with the same key share a colour key.
          */
         key?: string | null
+        /**
+         * The parts of this group, such as one tile or square each.
+         */
         parts: {
           label: string
           /**

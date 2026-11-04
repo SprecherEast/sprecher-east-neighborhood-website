@@ -51,12 +51,15 @@ export function RichTextGallery() {
 
       <GalleryEntry
         name="KeyFacts"
-        description="A row of fact cards inside rich text: icon and label on one line, then the value."
+        description="A row of fact cards inside rich text: icon and bold subject on one line, the big value, an optional explanation, then how sure we are and the source."
       >
         <GalleryVariant label="three facts" className="block">
           <KeyFacts facts={SAMPLE_KEY_FACTS} />
         </GalleryVariant>
-        <GalleryVariant label="two facts, the longest label (60 characters)" className="block">
+        <GalleryVariant
+          label="two facts, the longest label (60 characters) and explanation (90)"
+          className="block"
+        >
           <KeyFacts facts={SAMPLE_KEY_FACTS.slice(1)} />
         </GalleryVariant>
       </GalleryEntry>
