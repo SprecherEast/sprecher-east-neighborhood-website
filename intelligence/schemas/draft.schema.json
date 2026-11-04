@@ -12,7 +12,7 @@
     "title": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 120
+      "maxLength": 60
     },
     "bodyMarkdown": {
       "description": "Markdown that fits one screen without scrolling (docs/guidelines/brand-voice.md): what, when, where, one action, why it matters to Sprecher East, official links.",

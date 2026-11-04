@@ -21,7 +21,7 @@ One item with `$.candidate`, `$.taxonomy` (the site's category tree), `$.verific
 
 1. Choose `$.collection`: `events` for something with a date residents can attend, `posts` for
    news, decisions and deadlines.
-2. Write `$.title` (plain, specific, under 120 characters; never "Meeting") and `$.bodyMarkdown`
+2. Write `$.title` (plain, specific, at most 60 characters, the CMS refuses more; never "Meeting") and `$.bodyMarkdown`
    (Markdown; short enough to sit on one screen beside the header and facts panel, with no
    scrolling. If there is more to say, link to a verified official page from the input and note
    any missing detail in `$.missing`; never invent a post to link. Include:

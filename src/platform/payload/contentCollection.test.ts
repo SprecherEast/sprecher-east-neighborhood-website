@@ -1,6 +1,8 @@
 import type { PayloadRequest } from 'payload'
 import { describe, expect, it } from 'vitest'
 
+import { TITLE_MAX_LENGTH } from '@/platform/lib'
+
 import { draftVersions, previewAdmin, titleField } from './contentCollection'
 
 const req = {} as PayloadRequest
@@ -47,6 +49,14 @@ describe('draftVersions', () => {
 
 describe('titleField', () => {
   it('is a required text field called title', () => {
-    expect(titleField()).toEqual({ name: 'title', type: 'text', required: true })
+    expect(titleField()).toMatchObject({ name: 'title', type: 'text', required: true })
+  })
+
+  it('stops at the one shared limit, and tells the editor why (#633)', () => {
+    const field = titleField() as { maxLength?: number; admin?: { description?: string } }
+
+    expect(field.maxLength).toBe(TITLE_MAX_LENGTH)
+    expect(field.admin?.description).toContain(String(TITLE_MAX_LENGTH))
+    expect(field.admin?.description).toMatch(/breadcrumb/i)
   })
 })
