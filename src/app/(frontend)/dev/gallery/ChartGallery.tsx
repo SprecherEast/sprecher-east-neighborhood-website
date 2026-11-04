@@ -3,6 +3,7 @@ import React from 'react'
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import { Chart } from '@/platform/ui/chart/Chart'
 import { textAdapter } from '@/platform/ui/chart/adapters/text/textAdapter'
+import { SpikeBars } from '@/platform/ui/chart/adapters/visx/SpikeBars'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 
@@ -39,6 +40,9 @@ export function ChartGallery() {
         className="block"
       >
         <Chart spec={FIXTURES.comesIn} adapter={textAdapter} />
+      </GalleryVariant>
+      <GalleryVariant label="spike: visx bars (server component)" className="block">
+        <SpikeBars />
       </GalleryVariant>
     </GalleryEntry>
   )
