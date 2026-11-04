@@ -136,7 +136,7 @@ function Swatch({ slot, pattern }: Pick<LegendSwatchItem, 'slot' | 'pattern'>) {
       aria-hidden="true"
       data-legend-swatch=""
       className={cn(
-        'mt-1 size-5 shrink-0 rounded-sm ring-1 ring-foreground/30',
+        'mt-1 size-5 shrink-0 rounded-sm ring-1 ring-foreground/30 print-exact',
         SWATCH_COLOUR[slot],
         pattern === 'hatch' && 'bg-hatch',
       )}

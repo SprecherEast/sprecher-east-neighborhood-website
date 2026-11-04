@@ -28,7 +28,7 @@ export function SquareGrid({ data, palette }: { data: Datum[]; palette: ChartPal
             key={cell}
             data-chart-mark={key}
             className={cn(
-              'aspect-square rounded-sm',
+              'aspect-square rounded-sm print-exact',
               markClasses(palette, index, data[index].pattern === 'hatch'),
             )}
           />
@@ -57,7 +57,7 @@ export function TileGrid({
           <span
             data-chart-mark={datum.key}
             className={cn(
-              'block h-10 rounded-sm',
+              'block h-10 rounded-sm print-exact',
               markClasses(palette, slotIndex, datum.pattern === 'hatch'),
             )}
           />

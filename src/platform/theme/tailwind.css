@@ -95,3 +95,13 @@
     }
   }
 }
+
+/*
+ * `print-exact` (#639): print this element's colours as they are. A browser drops background
+ * colours when printing unless the reader turns on "background graphics", which would erase a
+ * chart's squares and key swatches and leave only the text. Tailwind has no class for it.
+ */
+@utility print-exact {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
