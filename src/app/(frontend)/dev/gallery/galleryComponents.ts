@@ -31,4 +31,5 @@ export const GALLERY_COMPONENTS = [
   'LoadMore',
   'RichText',
   'CodeBlock',
+  'KeyFacts',
 ] as const
