@@ -20,7 +20,7 @@ const markClasses = (palette: ChartPalette, slotIndex: number, hatched: boolean 
  */
 export function SquareGrid({ data, palette }: { data: Datum[]; palette: ChartPalette }) {
   return (
-    <div className="grid w-full max-w-sm chart-reveal grid-cols-10 gap-0.5 sm:gap-1">
+    <div className="grid w-full chart-reveal grid-cols-10 gap-0.5 sm:gap-1">
       {toUnitCells(data, SQUARES_PER_HUNDRED).map((key, cell) => {
         const index = data.findIndex((datum) => datum.key === key)
         return (

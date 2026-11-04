@@ -105,7 +105,7 @@ export function BarChartSvg({ model, titleId, descId, palette }: Props) {
       role="img"
       aria-labelledby={`${titleId} ${descId}`}
       viewBox={`0 0 ${VIEW_WIDTH} ${layout.height}`}
-      className="block h-auto w-full max-w-md print-exact"
+      className="block h-auto w-full print-exact"
     >
       {hatched && (
         <PatternLines

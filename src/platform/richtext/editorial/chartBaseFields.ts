@@ -48,7 +48,7 @@ export const chartBaseFields = (): Field[] => [
     maxLength: CHART_LIMITS.summary,
     admin: {
       description:
-        'The takeaway, in a sentence or two. It sits under the title and is what screen readers hear first.',
+        'The takeaway: keep it to one short line. The chart shows small with this beside it, and readers can enlarge it. Screen readers hear it first.',
     },
     validate: checked('summary', (value, args) =>
       text(value as string | null | undefined, args as never),

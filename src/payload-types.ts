@@ -2997,7 +2997,7 @@ export interface ChartBlock {
    */
   title: string
   /**
-   * The takeaway, in a sentence or two. It sits under the title and is what screen readers hear first.
+   * The takeaway: keep it to one short line. The chart shows small with this beside it, and readers can enlarge it. Screen readers hear it first.
    */
   summary: string
   kind: 'units' | 'bar' | 'stacked'

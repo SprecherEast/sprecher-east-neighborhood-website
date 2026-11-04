@@ -16,6 +16,7 @@ export const visxAdapter: ChartAdapter = {
   output: 'svg',
   kinds: new Set<'bar' | 'stacked'>(['bar', 'stacked']),
   usesColour: true,
+  enlargeable: true,
   render(spec, context) {
     return <BarChartSvg model={toBarModel(spec)} {...context} />
   },
