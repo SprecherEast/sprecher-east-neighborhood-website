@@ -213,6 +213,9 @@ const unitsFields = (): Field[] => [
         minRows: 1,
         maxRows: CHART_LIMITS.rows,
         required: true,
+        // An array inside a Lexical block is not given an `admin` by Payload, and the form
+        // state reads `admin.initCollapsed` of every array: without one, saving fails (events)
+        admin: { description: 'The parts of this group, such as one tile or square each.' },
         fields: partFields(),
       },
     ],

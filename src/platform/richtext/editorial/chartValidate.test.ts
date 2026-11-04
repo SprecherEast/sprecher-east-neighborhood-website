@@ -117,6 +117,47 @@ describe('chartFieldError', () => {
     )
   })
 
+  describe('a row Admin has not had filled in yet', () => {
+    const unfinished = block(FIXTURES.bars, { bars: [{ label: '2026', value: 452 }, { id: 'x' }] })
+
+    it('has no opinion while the form is being built, so a stale reason is never shown', () => {
+      expect(chartFieldError('bars', unfinished, 'onChange')).toBe(true)
+      expect(
+        chartFieldError(
+          'bars',
+          block(FIXTURES.bars, { bars: [{ id: 'x', label: ' ' }] }),
+          'onChange',
+        ),
+      ).toBe(true)
+    })
+
+    it('is judged on the real save, in words an editor can use', () => {
+      const said = chartFieldError('bars', unfinished, 'submit') as string
+      expect(said).toMatch(/Bar 2: the label can't be empty; Bar 2: enter a number/)
+      expect(said).not.toMatch(/Too small|expected/)
+    })
+
+    it('has no opinion on a list with no rows yet, which Admin would leave on screen', () => {
+      expect(chartFieldError('bars', block(FIXTURES.bars, { bars: [] }), 'onChange')).toBe(true)
+      expect(chartFieldError('bars', block(FIXTURES.bars, { bars: [] }), 'submit')).toBe(
+        'Add at least 1 row.',
+      )
+    })
+
+    it('still judges a finished chart as it is typed: a wrong total is shown live', () => {
+      const wrong = block(FIXTURES.months, {
+        groups: [{ label: 'A', total: 90, parts: [{ label: 'x', value: 5 }] }],
+      })
+      expect(chartFieldError('groups', wrong, 'onChange')).toMatch(/total 90/)
+    })
+  })
+
+  it('names the group, not part NaN, when a group has no parts', () => {
+    const stored = block(FIXTURES.months, { groups: [{ label: 'A', parts: [] }] })
+    const said = chartFieldError('groups', stored, 'submit') as string
+    expect(said).toBe('Group 1: Add at least 1 part.')
+  })
+
   describe('with the data Admin builds while it fills in the form', () => {
     // Admin's form state gives an array field as its row count until the rows are built, and
     // a row with only its id before its fields are filled in (seen in a real Admin session)

@@ -21,6 +21,12 @@ const shownFor = (name: string, kind: string) =>
   byName(name).admin?.condition?.({}, { kind }) ?? true
 
 describe('ChartBlockConfig', () => {
+  it('gives every array an admin config: Payload reads admin.initCollapsed of each one', () => {
+    const arrays = fieldsOf(ChartBlockConfig.fields).filter((f) => f.type === 'array')
+    expect(arrays.length).toBeGreaterThan(4)
+    for (const array of arrays) expect('admin' in array && array.admin).toBeTruthy()
+  })
+
   it('is offered in posts and events, after the other visual blocks', () => {
     const slugs = (blocks: Block[]) => blocks.map((b) => b.slug)
     expect(slugs(EDITORIAL_BLOCKS).at(-1)).toBe('chart')

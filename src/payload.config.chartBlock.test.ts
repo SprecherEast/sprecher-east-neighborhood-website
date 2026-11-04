@@ -84,6 +84,28 @@ describe('saving a Chart block', () => {
     expect(JSON.stringify(event.content)).toContain('"blockType":"chart"')
   })
 
+  it.each(Object.entries(FIXTURES))(
+    'stores the %s fixture in a post and in an event',
+    async (name, spec) => {
+      const fields = fromChartSpec(parseChartSpec(spec))
+      const post = await savePost(fields)
+      expect(JSON.stringify(post.content)).toContain('"blockType":"chart"')
+      const event = await payload.create({
+        collection: 'events',
+        data: {
+          title: `Night ${name}`,
+          slug: `night-${name}`,
+          date: '2026-11-20T00:00:00.000Z',
+          _status: 'published',
+          content: content(chartNode(fields)) as never,
+        },
+        context: NO_REVALIDATE,
+        overrideAccess: true,
+      })
+      expect(JSON.stringify(event.content)).toContain('"blockType":"chart"')
+    },
+  )
+
   it.each([
     ['an empty title', { title: ' ' }],
     ['an empty summary', { summary: '' }],
