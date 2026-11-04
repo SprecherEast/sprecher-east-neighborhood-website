@@ -1,14 +1,17 @@
 import type { Block, Field } from 'payload'
 import { describe, expect, it } from 'vitest'
 
-import { CHART_KINDS, CHART_UNITS } from '@/platform/lib/chart/spec'
+import { CHART_KINDS, CHART_LIMITS, CHART_UNITS } from '@/platform/lib/chart/spec'
 
 import { EDITORIAL_BLOCKS, EVENT_RICH_TEXT_BLOCKS, RICH_TEXT_BLOCKS } from '../blockConfigs'
 
 import { ChartBlockConfig } from './chartBlockConfig'
 
+/** Every field, including those inside rows and arrays (an array comes before its own fields) */
 const fieldsOf = (fields: Field[]): Field[] =>
-  fields.flatMap((f) => ('fields' in f && f.type === 'row' ? fieldsOf(f.fields) : [f]))
+  fields.flatMap((f) =>
+    'fields' in f ? (f.type === 'row' ? fieldsOf(f.fields) : [f, ...fieldsOf(f.fields)]) : [f],
+  )
 const byName = (name: string) =>
   fieldsOf(ChartBlockConfig.fields).find((f) => 'name' in f && f.name === name) as Field & {
     options?: { value: string }[]
@@ -58,9 +61,17 @@ describe('ChartBlockConfig', () => {
     expect(byName('orientation')).toBeUndefined()
   })
 
-  it('limits a grid to two groups of at most 12 parts, a chart to four sources', () => {
-    expect(byName('groups')).toMatchObject({ maxRows: 2 })
-    expect(byName('sources')).toMatchObject({ maxRows: 4 })
+  it('takes every limit from the spec, so the editor accepts what the spec does', () => {
+    expect(byName('groups')).toMatchObject({ maxRows: CHART_LIMITS.groups })
+    expect(byName('sources')).toMatchObject({ maxRows: CHART_LIMITS.sources })
+    expect(byName('bars')).toMatchObject({ maxRows: CHART_LIMITS.rows })
+    expect(byName('series')).toMatchObject({ maxRows: CHART_LIMITS.parts })
+    expect(byName('title')).toMatchObject({ maxLength: CHART_LIMITS.title })
+    expect(byName('summary')).toMatchObject({ maxLength: CHART_LIMITS.summary })
+    expect(byName('unitNote')).toMatchObject({ maxLength: CHART_LIMITS.unitNote })
+    // a 61 to 120 character citation passes the spec, so it must save
+    expect(byName('linkLabel')).toMatchObject({ maxLength: CHART_LIMITS.sourceLabel })
+    expect(byName('linkUrl')).toMatchObject({ maxLength: CHART_LIMITS.sourceHref })
   })
 
   it('converts to and from Markdown with the chart converter', () => {

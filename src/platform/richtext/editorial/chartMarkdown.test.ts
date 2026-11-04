@@ -76,6 +76,29 @@ describe('chartFromJsx', () => {
     expect(() => chartFromJsx({ ...FIXTURES.bars, groups: [] })).toThrow(/groups/)
   })
 
+  it('refuses a source link that is not a site path or an https address', () => {
+    for (const href of [
+      'javascript:alert(1)',
+      'data:text/html,x',
+      '//evil.example',
+      'mailto:a@b.c',
+    ]) {
+      expect(() =>
+        chartFromJsx({ ...FIXTURES.bars, sources: [{ label: 'Source', href }] }),
+      ).toThrow(/sources\.0\.href/)
+    }
+    expect(() =>
+      chartFromJsx({ ...FIXTURES.bars, sources: [{ label: 'Source', href: '/budget' }] }),
+    ).not.toThrow()
+  })
+
+  it('refuses a stacked tag whose series have more or fewer values than the rows', () => {
+    const series = [{ key: 'a', label: 'A', values: [1, 2, 3] }]
+    expect(() => chartFromJsx({ ...FIXTURES.borrowed, series, rowNotes: undefined })).toThrow(
+      /one value for each/,
+    )
+  })
+
   it('starts the message with <Chart> so an agent knows which tag to fix', () => {
     expect(() => chartFromJsx({})).toThrow(/^Invalid <Chart>/)
   })

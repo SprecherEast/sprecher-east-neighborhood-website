@@ -1,7 +1,9 @@
+import { slugify } from 'payload/shared'
+
 import type { ChartBlock } from '@/payload-types'
 
-import { chartIssues, InvalidChartError } from '@/platform/lib/chart/issues'
-import { parseChartSpec, type ChartSpec } from '@/platform/lib/chart/spec'
+import { chartIssues, InvalidChartError, type ChartIssue } from '@/platform/lib/chart/issues'
+import { CHART_LIMITS, parseChartSpec, type ChartSpec } from '@/platform/lib/chart/spec'
 
 /**
  * The chart block's stored fields and `ChartSpec`, both ways (#640, decision 0013). The block
@@ -19,26 +21,24 @@ type Stored<K extends keyof StoredChart> = NonNullable<StoredChart[K]>
 const blank = (text: string | null | undefined) => text?.trim() || undefined
 const orUndefined = <T>(items: T[]): T[] | undefined => (items.length > 0 ? items : undefined)
 
-/** A part's key from its label ("Police dept." is `police-dept`), the way a Payload slug is made */
-function keyFromLabel(label: string): string {
-  const key = label
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40)
-    .replace(/-+$/, '')
-  return key || 'part'
-}
+/** A part's key from its label ("Police dept." is `police-dept`): the site's slug, accents folded */
+const keyFromLabel = (label: string): string =>
+  slugify(label.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+    ?.replace(/-{2,}/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, CHART_LIMITS.key)
+    .replace(/-$/, '') || 'part'
 
-/** Each item's key: the one given, or made from its label; a repeat gets `-2`, `-3`... */
+/** Each item's key: the one given, or made from its label; a repeat gets `-2`, `-3`... within the key limit */
 function keysOf(items: readonly { key?: string | null; label?: string | null }[]): string[] {
   const used = new Set<string>()
   return items.map((item) => {
     const base = blank(item.key) ?? keyFromLabel(item.label ?? '')
     let key = base
-    for (let n = 2; used.has(key); n++) key = `${base}-${n}`
+    for (let n = 2; used.has(key); n++) {
+      const suffix = `-${n}`
+      key = base.slice(0, CHART_LIMITS.key - suffix.length).replace(/-$/, '') + suffix
+    }
     used.add(key)
     return key
   })
@@ -142,10 +142,35 @@ export function toChartSpecInput(stored: StoredChart): Record<string, unknown> {
   }
 }
 
+/**
+ * What is wrong with a stacked chart's rows before they are laid out as the spec's series: a row
+ * with more or fewer numbers than there are parts would be cut or padded without a word.
+ */
+function rowIssues(stored: StoredChart): ChartIssue[] {
+  if (stored.kind !== 'stacked') return []
+  const parts = stored.series?.length ?? 0
+  return (stored.rows ?? []).flatMap((row, i) => {
+    const count = row.values?.length ?? 0
+    return count === parts
+      ? []
+      : [
+          {
+            path: ['rows', i, 'values'],
+            message: `has ${count} ${count === 1 ? 'number' : 'numbers'} but there ${parts === 1 ? 'is' : 'are'} ${parts} ${parts === 1 ? 'part' : 'parts'}: give one number for each`,
+          },
+        ]
+  })
+}
+
+/** Every reason the stored block is not a valid chart, empty when it is */
+export function storedChartIssues(stored: StoredChart): ChartIssue[] {
+  return [...rowIssues(stored), ...chartIssues(toChartSpecInput(stored))]
+}
+
 /** The stored block as a valid `ChartSpec`, or an `InvalidChartError` listing every reason */
 export function toChartSpec(stored: StoredChart): ChartSpec {
   const input = toChartSpecInput(stored)
-  const issues = chartIssues(input)
+  const issues = storedChartIssues(stored)
   if (issues.length > 0) throw new InvalidChartError(issues)
   return parseChartSpec(input)
 }

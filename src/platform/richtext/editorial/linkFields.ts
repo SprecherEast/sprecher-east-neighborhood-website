@@ -13,21 +13,23 @@ const validateLinkUrl: TextFieldSingleValidation = (value, { siblingData }) =>
  */
 export const editorialLinkFields = ({
   labelExample = 'Read more',
-}: { labelExample?: string } = {}): Field => ({
+  labelMaxLength = 60,
+  urlMaxLength = EDITORIAL_LINK_MAX_LENGTH,
+}: { labelExample?: string; labelMaxLength?: number; urlMaxLength?: number } = {}): Field => ({
   type: 'row',
   fields: [
     {
       name: 'linkLabel',
       type: 'text',
       label: 'Link text',
-      maxLength: 60,
+      maxLength: labelMaxLength,
       admin: { width: '50%', description: `Optional, for example "${labelExample}".` },
     },
     {
       name: 'linkUrl',
       type: 'text',
       label: 'Link address',
-      maxLength: EDITORIAL_LINK_MAX_LENGTH,
+      maxLength: urlMaxLength,
       admin: { width: '50%', description: 'A site path (/events) or https:// address.' },
       validate: validateLinkUrl,
     },

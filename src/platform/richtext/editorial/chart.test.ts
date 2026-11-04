@@ -51,6 +51,41 @@ describe('toChartSpec', () => {
     })
   })
 
+  it('makes a key from accents and symbols the way the site makes any slug', () => {
+    const spec = toChartSpec(
+      stored({
+        kind: 'bar',
+        bars: [
+          { label: 'Café & the "Big" Plan', value: 1 },
+          { label: '???', value: 2 },
+        ],
+      }),
+    )
+    expect(spec.kind === 'bar' && spec.data.map((d) => d.key)).toEqual([
+      'cafe-the-big-plan',
+      'part',
+    ])
+  })
+
+  it('keeps a made key within the spec limit when a repeat gets its -2 suffix', () => {
+    const long = 'a'.repeat(60)
+    const spec = toChartSpec(
+      stored({
+        kind: 'bar',
+        bars: [
+          { label: long, value: 1 },
+          { label: long, value: 2 },
+          { key: 'b'.repeat(40), label: 'x', value: 1 },
+          { key: 'b'.repeat(40), label: 'y', value: 1 },
+        ],
+      }),
+    )
+    const keys = spec.kind === 'bar' ? spec.data.map((d) => d.key) : []
+    expect(keys.every((key) => key.length <= 40)).toBe(true)
+    expect(new Set(keys).size).toBe(4)
+    expect(keys[1]).toMatch(/-2$/)
+  })
+
   it('keeps a key the editor or an agent gave, and makes repeated labels unique', () => {
     const spec = toChartSpec(
       stored({
@@ -89,6 +124,17 @@ describe('toChartSpec', () => {
         { key: 'other', label: 'Other', values: [4, 3], pattern: 'hatch', increase: true },
       ],
     })
+  })
+
+  it('refuses a row with more or fewer numbers than there are parts, instead of cutting it', () => {
+    const rows = (values: number[]) => [
+      { label: '2026', values: values.map((value) => ({ value })) },
+    ]
+    for (const values of [[10, 90], []]) {
+      expect(() =>
+        toChartSpec(stored({ kind: 'stacked', series: [{ label: 'A' }], rows: rows(values) })),
+      ).toThrow(/rows\.0\.values: .*1 part/)
+    }
   })
 
   it('leaves out row notes when no row has one', () => {

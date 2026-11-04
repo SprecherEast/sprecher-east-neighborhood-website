@@ -53,6 +53,13 @@ describe('chartFieldError', () => {
     expect(chartFieldError('series', stored)).toBe(true)
   })
 
+  it('shows a row with too many numbers on the rows, saying which bar', () => {
+    const stored = block(FIXTURES.borrowed, {
+      rows: [{ label: '2026', values: [{ value: 1 }, { value: 2 }, { value: 3 }] }],
+    })
+    expect(chartFieldError('rows', stored)).toMatch(/Bar 1: .*3 numbers.*2 parts/)
+  })
+
   it('refuses a scale shorter than the longest bar on the scale field', () => {
     expect(chartFieldError('scaleMax', block(FIXTURES.bars, { scaleMax: 1 }))).toMatch(/scaleMax/)
   })
@@ -62,6 +69,13 @@ describe('chartFieldError', () => {
       groups: [{ label: 'Per month', total: 5, parts: [{ label: 'x', value: 90 }] }],
     })
     expect(chartFieldError('groups', stored)).toMatch(/Per month: the total 5/)
+  })
+
+  it('answers for the data as it is now, not as an earlier call saw it', () => {
+    const stored = block(FIXTURES.bars, { title: ' ' })
+    expect(chartFieldError('title', stored)).not.toBe(true)
+    expect(chartFieldError('title', { ...stored, title: 'Fixed' })).toBe(true)
+    expect(chartFieldError('title', stored)).not.toBe(true)
   })
 
   it('is silent until a kind is chosen', () => {

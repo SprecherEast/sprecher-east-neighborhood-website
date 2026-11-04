@@ -1,6 +1,8 @@
 import type { Field } from 'payload'
 import { array, number, select, text } from 'payload/shared'
 
+import { CHART_LIMITS } from '@/platform/lib/chart/spec'
+
 import { checked } from './chartValidate'
 
 /** Shown only when the block's `kind` is one of these */
@@ -14,7 +16,7 @@ const labelField = (width: string): Field => ({
   name: 'label',
   type: 'text',
   required: true,
-  maxLength: 80,
+  maxLength: CHART_LIMITS.label,
   admin: { width },
 })
 
@@ -22,7 +24,7 @@ const labelField = (width: string): Field => ({
 const keyField = (): Field => ({
   name: 'key',
   type: 'text',
-  maxLength: 40,
+  maxLength: CHART_LIMITS.key,
   admin: {
     width: '40%',
     description:
@@ -73,7 +75,7 @@ const barFields = (): Field[] => [
     type: 'array',
     labels: { singular: 'Bar', plural: 'Bars' },
     minRows: 1,
-    maxRows: 12,
+    maxRows: CHART_LIMITS.rows,
     required: true,
     admin: { condition: forKinds('bar'), description: 'One to twelve bars, top to bottom.' },
     validate: checked('bars', array),
@@ -87,7 +89,7 @@ const stackedFields = (): Field[] => [
     type: 'array',
     labels: { singular: 'Part', plural: 'Parts' },
     minRows: 1,
-    maxRows: 6,
+    maxRows: CHART_LIMITS.parts,
     required: true,
     admin: {
       condition: forKinds('stacked'),
@@ -118,7 +120,7 @@ const stackedFields = (): Field[] => [
     type: 'array',
     labels: { singular: 'Bar', plural: 'Bars' },
     minRows: 1,
-    maxRows: 12,
+    maxRows: CHART_LIMITS.rows,
     required: true,
     admin: {
       condition: forKinds('stacked'),
@@ -133,7 +135,7 @@ const stackedFields = (): Field[] => [
           {
             name: 'note',
             type: 'text',
-            maxLength: 120,
+            maxLength: CHART_LIMITS.rowNote,
             admin: {
               width: '60%',
               description: 'Optional note beside the bar. Give every bar one, or none.',
@@ -146,7 +148,7 @@ const stackedFields = (): Field[] => [
         type: 'array',
         labels: { singular: 'Number', plural: 'Numbers' },
         minRows: 1,
-        maxRows: 6,
+        maxRows: CHART_LIMITS.parts,
         admin: { description: 'One number for each part, in the order of the parts.' },
         fields: [{ name: 'value', type: 'number', required: true, min: 0 }],
       },
@@ -176,7 +178,7 @@ const unitsFields = (): Field[] => [
     name: 'unitNote',
     type: 'textarea',
     required: true,
-    maxLength: 300,
+    maxLength: CHART_LIMITS.unitNote,
     admin: {
       condition: forKinds('units'),
       description: 'What one square or tile stands for, in a sentence.',
@@ -190,7 +192,7 @@ const unitsFields = (): Field[] => [
     type: 'array',
     labels: { singular: 'Group', plural: 'Groups' },
     minRows: 1,
-    maxRows: 2,
+    maxRows: CHART_LIMITS.groups,
     required: true,
     admin: {
       condition: forKinds('units'),
@@ -217,7 +219,7 @@ const unitsFields = (): Field[] => [
         type: 'array',
         labels: { singular: 'Part', plural: 'Parts' },
         minRows: 1,
-        maxRows: 12,
+        maxRows: CHART_LIMITS.rows,
         required: true,
         fields: partFields(),
       },

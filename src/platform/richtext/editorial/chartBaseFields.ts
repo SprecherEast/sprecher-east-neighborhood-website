@@ -2,7 +2,7 @@ import type { Field } from 'payload'
 import { array, select, text } from 'payload/shared'
 
 import { CERTAINTY_OPTIONS } from '@/platform/lib/certainty'
-import type { CHART_KINDS, CHART_UNITS } from '@/platform/lib/chart/spec'
+import { CHART_LIMITS, type CHART_KINDS, type CHART_UNITS } from '@/platform/lib/chart/spec'
 
 import { checked } from './chartValidate'
 import { editorialLinkFields } from './linkFields'
@@ -37,7 +37,7 @@ export const chartBaseFields = (): Field[] => [
     name: 'title',
     type: 'text',
     required: true,
-    maxLength: 120,
+    maxLength: CHART_LIMITS.title,
     admin: { description: 'What the chart shows: "Where each $100 goes".' },
     validate: checked('title', text),
   },
@@ -45,7 +45,7 @@ export const chartBaseFields = (): Field[] => [
     name: 'summary',
     type: 'textarea',
     required: true,
-    maxLength: 400,
+    maxLength: CHART_LIMITS.summary,
     admin: {
       description:
         'The takeaway, in a sentence or two. It sits under the title and is what screen readers hear first.',
@@ -84,7 +84,7 @@ export const chartBaseFields = (): Field[] => [
         name: 'asOf',
         type: 'text',
         label: 'As of',
-        maxLength: 120,
+        maxLength: CHART_LIMITS.asOf,
         admin: {
           width: '50%',
           description: 'When the figures are from: "Mayor’s proposal, October 2026".',
@@ -103,7 +103,7 @@ export const chartBaseFields = (): Field[] => [
   {
     name: 'finePrint',
     type: 'textarea',
-    maxLength: 400,
+    maxLength: CHART_LIMITS.finePrint,
     admin: { description: 'Optional small print under the chart: what was rounded or calculated.' },
     validate: checked('finePrint', (value, args) =>
       text(value as string | null | undefined, args as never),
@@ -113,9 +113,15 @@ export const chartBaseFields = (): Field[] => [
     name: 'sources',
     type: 'array',
     labels: { singular: 'Source', plural: 'Sources' },
-    maxRows: 4,
+    maxRows: CHART_LIMITS.sources,
     admin: { description: 'Where the numbers come from. Up to four.' },
     validate: checked('sources', array),
-    fields: [editorialLinkFields({ labelExample: 'City of Madison, 2027 budget' })],
+    fields: [
+      editorialLinkFields({
+        labelExample: 'City of Madison, 2027 budget',
+        labelMaxLength: CHART_LIMITS.sourceLabel,
+        urlMaxLength: CHART_LIMITS.sourceHref,
+      }),
+    ],
   },
 ]

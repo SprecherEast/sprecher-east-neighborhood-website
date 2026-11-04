@@ -6,6 +6,7 @@ import {
   type ChartSpec,
 } from '@/platform/lib/chart/spec'
 
+import { isEditorialLinkUrl } from './editorialLink'
 import { fromChartSpec, toChartSpec, type StoredChart } from './chart'
 
 /**
@@ -65,12 +66,22 @@ function tagIssues(props: Record<string, unknown>): ChartIssue[] {
   const kind = props.kind
   if (!isKind(kind)) return []
   const known = new Set([...PROPS[kind], ...(kind === 'units' ? [] : [ORIENTATION])])
-  const issues = Object.keys(props)
+  const issues: ChartIssue[] = Object.keys(props)
     .filter((name) => !known.has(name))
     .map((name) => ({
       path: [name],
       message: `${name} is not a property of a ${kind} chart (use ${PROPS[kind].join(', ')})`,
     }))
+  // The editor's source fields accept only a site path or an https address; so does a tag
+  const sources = Array.isArray(props.sources) ? (props.sources as { href?: unknown }[]) : []
+  sources.forEach((source, i) => {
+    if (typeof source?.href === 'string' && !isEditorialLinkUrl(source.href)) {
+      issues.push({
+        path: ['sources', i, 'href'],
+        message: 'use a site path such as /budget or a full https:// address',
+      })
+    }
+  })
   if (props[ORIENTATION] !== undefined && props[ORIENTATION] !== 'horizontal') {
     issues.push({
       path: [ORIENTATION],
