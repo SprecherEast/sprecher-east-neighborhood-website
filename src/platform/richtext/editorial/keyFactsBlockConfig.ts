@@ -2,6 +2,7 @@ import type { Block, Field } from 'payload'
 
 import { CERTAINTY_OPTIONS } from '@/platform/lib/certainty'
 
+import { KEY_FACT_LIMITS } from './editorialLimits'
 import { FACT_ICON_OPTIONS } from './factIcons'
 import { editorialLinkFields } from './linkFields'
 
@@ -18,14 +19,14 @@ export const keyFactFields = (): Field[] => [
         name: 'value',
         type: 'text',
         required: true,
-        maxLength: 24,
+        maxLength: KEY_FACT_LIMITS.value,
         admin: { width: '50%', description: 'Short: "2040s", "$10M", "Not set".' },
       },
       {
         name: 'label',
         type: 'text',
         required: true,
-        maxLength: 60,
+        maxLength: KEY_FACT_LIMITS.label,
         admin: { width: '50%', description: 'What it is: "earliest construction".' },
       },
     ],

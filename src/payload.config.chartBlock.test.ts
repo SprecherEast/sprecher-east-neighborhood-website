@@ -9,12 +9,8 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import { parseChartSpec } from '@/platform/lib/chart/spec'
 import { fromChartSpec } from '@/platform/richtext/editorial/chart'
-import {
-  chartFromJsx,
-  chartToJsx,
-  collectChartRefusals,
-} from '@/platform/richtext/editorial/chartMarkdown'
-import { unreadChartTags } from '@/platform/richtext/editorial/chartTag'
+import { chartFromJsx, chartToJsx } from '@/platform/richtext/editorial/chartMarkdown'
+import { collectTagRefusals, unreadTags } from '@/platform/richtext/editorial/editorialTag'
 import { bootPayload, NO_REVALIDATE } from '@/platform/payload/testing/inMemoryPayload'
 
 /**
@@ -212,7 +208,7 @@ describe('a Chart tag in Markdown', () => {
       } as never) as string
       expect(tag).not.toContain('\n')
       for (let round = 0; round < 2; round++) {
-        const { value, refusals } = collectChartRefusals(() => toLexical(tag))
+        const { value, refusals } = collectTagRefusals(() => toLexical(tag))
         expect(refusals).toEqual([])
         expect(toMarkdown(value)).toBe(tag)
         const block = JSON.parse(JSON.stringify(value)).root.children[0].fields
@@ -227,7 +223,7 @@ describe('a Chart tag in Markdown', () => {
       ...chartFromJsx(FIXTURES.bars),
     } as never) as string
     const spread = tag.replace(' data=', '\n  data=').replace(' summary=', '\n  summary=')
-    const { refusals, value } = collectChartRefusals(() =>
+    const { refusals, value } = collectTagRefusals(() =>
       toLexical(`Before.\n\n${spread}\n\nAfter.`),
     )
     expect(refusals).toEqual([])
@@ -235,7 +231,7 @@ describe('a Chart tag in Markdown', () => {
   })
 
   it('is refused with the reason when the tag is malformed', () => {
-    const { refusals } = collectChartRefusals(() => toLexical('<Chart kind="bar" title="T" />'))
+    const { refusals } = collectTagRefusals(() => toLexical('<Chart kind="bar" title="T" />'))
     expect(refusals).toHaveLength(1)
     expect(refusals[0]).toMatch(/^Invalid <Chart>:.*summary/)
   })
@@ -251,8 +247,8 @@ describe('a Chart tag in Markdown', () => {
     ],
   ])('notices a tag Payload could not read (%s), which leaves the body empty', (_name, tag) => {
     const markdown = `Intro.\n\n${tag}\n\nOutro.`
-    const { value, refusals } = collectChartRefusals(() => toLexical(markdown))
-    expect(unreadChartTags(markdown, value, refusals)).toBe(1)
+    const { value, refusals } = collectTagRefusals(() => toLexical(markdown))
+    expect(unreadTags(markdown, value, refusals)).toEqual([{ name: 'Chart', count: 1 }])
   })
 
   it('counts nothing unread when every tag became a block or a refusal', () => {
@@ -263,8 +259,8 @@ describe('a Chart tag in Markdown', () => {
     const bad =
       '<Chart kind="bar" title="T" unit="usd" data={[{"key":"a","label":"A","value":1}]} />'
     const markdown = `${tag}\n\n${bad}\n\nOutro.`
-    const { value, refusals } = collectChartRefusals(() => toLexical(markdown))
+    const { value, refusals } = collectTagRefusals(() => toLexical(markdown))
     expect(refusals).toHaveLength(1)
-    expect(unreadChartTags(markdown, value, refusals)).toBe(0)
+    expect(unreadTags(markdown, value, refusals)).toEqual([])
   })
 })

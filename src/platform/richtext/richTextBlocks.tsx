@@ -4,6 +4,8 @@ import { BannerBlock } from './BannerBlock'
 import { CodeBlock } from './CodeBlock'
 import { toChartSpec } from './editorial/chart'
 import { DiagramKey } from './editorial/DiagramKey'
+import { FactTabs } from './editorial/FactTabs'
+import { toFactTabsProps } from './editorial/factTabs'
 import { toDiagramKeyProps } from './editorial/diagramKey'
 import { KeyFacts } from './editorial/KeyFacts'
 import { toKeyFactsProps } from './editorial/keyFacts'
@@ -45,6 +47,7 @@ export const richTextBlocks = {
       return null
     }
   },
+  factTabs: ({ node }) => <FactTabs className="col-start-2" {...toFactTabsProps(node.fields)} />,
   outcomeFork: ({ node }) => (
     <OutcomeFork className="col-start-2" {...toOutcomeForkProps(node.fields)} />
   ),

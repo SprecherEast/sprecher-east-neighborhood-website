@@ -11,6 +11,7 @@ import type {
   ChartBlock as ChartFields,
   MediaBlock as MediaFields,
   DiagramKeyBlock as DiagramKeyFields,
+  FactTabsBlock as FactTabsFields,
   KeyFactsBlock as KeyFactsFields,
   OutcomeForkBlock as OutcomeForkFields,
   StepsBlock as StepsFields,
@@ -21,6 +22,8 @@ import { BannerBlock } from './BannerBlock'
 import { RICH_TEXT_BLOCKS } from './blockConfigs'
 import { CodeBlock, type CodeBlockProps } from './CodeBlock'
 import { DiagramKey } from './editorial/DiagramKey'
+import { FactTabs } from './editorial/FactTabs'
+import { FACT_TABS_FIXTURE } from './editorial/factTabsFixtures'
 import { KeyFacts } from './editorial/KeyFacts'
 import { OutcomeFork } from './editorial/OutcomeFork'
 import { Steps } from './editorial/Steps'
@@ -166,5 +169,15 @@ describe('richTextBlocks', () => {
     expect(richTextBlocks.chart(argsFor(fields as ChartFields))).toBeNull()
     expect(log).toHaveBeenCalledWith(expect.stringContaining('Chart block left out'))
     log.mockRestore()
+  })
+
+  it('draws fact tabs in the middle column, from props the mapper built', () => {
+    const fields = { blockType: 'factTabs', ...FACT_TABS_FIXTURE } as FactTabsFields
+    const element = richTextBlocks.factTabs(argsFor(fields))
+
+    expect(element.type).toBe(FactTabs)
+    expect(element.props.className).toBe('col-start-2')
+    expect(element.props.tabs).toHaveLength(4)
+    expect(element.props.tabs[0]).toMatchObject({ fact: { value: '$477.5M' } })
   })
 })

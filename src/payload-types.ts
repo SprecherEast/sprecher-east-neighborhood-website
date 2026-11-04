@@ -3026,6 +3026,7 @@ export interface ChartBlock {
          * A site path (/events) or https:// address.
          */
         linkUrl?: string | null
+        id?: string | null
       }[]
     | null
   mode?: ('perHundred' | 'each') | null
@@ -3047,6 +3048,9 @@ export interface ChartBlock {
          * Optional. Leave empty to use the label. Parts with the same key share a colour key.
          */
         key?: string | null
+        /**
+         * The parts of this group, such as one tile or square each.
+         */
         parts: {
           label: string
           /**
@@ -3061,7 +3065,9 @@ export interface ChartBlock {
            * Stripes mark an amount that is only proposed.
            */
           hatch?: boolean | null
+          id?: string | null
         }[]
+        id?: string | null
       }[]
     | null
   /**
@@ -3131,6 +3137,64 @@ export interface ChartBlock {
   id?: string | null
   blockName?: string | null
   blockType: 'chart'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FactTabsBlock".
+ */
+export interface FactTabsBlock {
+  /**
+   * 2 to 4 tabs. Readers see each tab's key fact as a button; it opens the heading, definition and pictures you add here.
+   */
+  tabs: {
+    /**
+     * Short: "2040s", "$10M", "Not set".
+     */
+    value: string
+    /**
+     * What it is: "earliest construction".
+     */
+    label: string
+    icon:
+      | 'info'
+      | 'date'
+      | 'time'
+      | 'money'
+      | 'taxes'
+      | 'government'
+      | 'place'
+      | 'people'
+      | 'traffic'
+      | 'walking'
+      | 'biking'
+      | 'noise'
+      | 'construction'
+    certainty: 'confirmed' | 'estimate' | 'unknown'
+    /**
+     * Optional, for example "City budget".
+     */
+    linkLabel?: string | null
+    /**
+     * A site path (/events) or https:// address.
+     */
+    linkUrl?: string | null
+    /**
+     * The name of what this tab opens: "Big-project money".
+     */
+    heading: string
+    /**
+     * In plain words, what the key fact means and where it comes from.
+     */
+    definition: string
+    /**
+     * 1 to 2 charts or timelines shown when the tab is open.
+     */
+    panel: (ChartBlock | TimelineBlock)[]
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'factTabs'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -1,6 +1,7 @@
 import type { ArrayFieldValidation, Block } from 'payload'
 import { array } from 'payload/shared'
 
+import { TIMELINE_LIMITS } from './editorialLimits'
 import { editorialLinkFields } from './linkFields'
 import { TIMELINE_STATUS_OPTIONS } from './timelineStatus'
 
@@ -31,8 +32,8 @@ export const TimelineBlockConfig: Block = {
       admin: {
         description: 'In the order they happen, oldest first. Two to twelve milestones.',
       },
-      minRows: 2,
-      maxRows: 12,
+      minRows: TIMELINE_LIMITS.minEntries,
+      maxRows: TIMELINE_LIMITS.maxEntries,
       required: true,
       validate: validateEntries,
       fields: [
@@ -44,7 +45,7 @@ export const TimelineBlockConfig: Block = {
               type: 'text',
               label: 'When',
               required: true,
-              maxLength: 40,
+              maxLength: TIMELINE_LIMITS.date,
               admin: {
                 width: '50%',
                 description: 'As readers should see it: "Dec 5, 2024", "Spring 2027", "Not set".',
@@ -60,11 +61,11 @@ export const TimelineBlockConfig: Block = {
             },
           ],
         },
-        { name: 'title', type: 'text', required: true, maxLength: 100 },
+        { name: 'title', type: 'text', required: true, maxLength: TIMELINE_LIMITS.title },
         {
           name: 'description',
           type: 'textarea',
-          maxLength: 300,
+          maxLength: TIMELINE_LIMITS.description,
           admin: { description: 'One or two plain sentences. Optional.' },
         },
         editorialLinkFields({ labelExample: 'Read the decision' }),

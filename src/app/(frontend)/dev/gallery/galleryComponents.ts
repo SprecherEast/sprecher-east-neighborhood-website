@@ -35,4 +35,5 @@ export const GALLERY_COMPONENTS = [
   'RichTextBlocks',
   'CodeBlock',
   'KeyFacts',
+  'FactTabs',
 ] as const

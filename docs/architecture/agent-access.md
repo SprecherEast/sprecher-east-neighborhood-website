@@ -40,7 +40,12 @@ Payload's converter (`convertMarkdownToLexical`) with that field's own editor co
 `<Chart kind="…" title="…" summary="…" unit="…" data={[…]} />` tag becomes a chart block (#640):
 its props are checked with the same `ChartSpec` rules as the editor's block, and a tag that breaks
 them refuses the whole call with the reasons (`Invalid <Chart>: …`), so the agent can fix it. The
-tag is in `intelligence/prompts/draft.md`. For an
+tag is in `intelligence/prompts/draft.md`. A `<FactTabs tabs={[…]} />` tag becomes a fact tabs block
+(#664) the same way: its tabs, with nested chart and timeline pictures as plain JSON, are checked
+with the editor's limits, the chart rules and the one link rule, and a bad one is refused with
+`Invalid <FactTabs>: …`. Payload drops the whole body when it can't find where a tag ends, so
+`submitSuggestion` counts the `<Chart` and `<FactTabs` openings against the blocks and refusals and
+refuses the call, naming the tag, when one was neither. For an
 event, `startsAt` is required (a date-time with a zone); it gives `date` and, unless `allDay`,
 `timeStart` and `timeEnd` in the site timezone (`toEventSchedule`); `venue` and `address` give
 `locationName` and `locationAddress`. The summary becomes an event's `description` or a post's
