@@ -4,7 +4,7 @@ import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import { describe, expect, it } from 'vitest'
 
-import { AUDIENCES } from '@/platform/lib'
+import { AUDIENCES, TITLE_MAX_LENGTH } from '@/platform/lib'
 
 import { FETCH_USED, RUN_STATUSES, SOURCE_CHECK_STATUSES } from '../../domain/runs'
 import { REVIEW_FLAGS, REVIEW_ITEM_KINDS } from '../../domain/suggestion'
@@ -104,7 +104,7 @@ describe('submitSuggestion arguments', () => {
     ['a full event', SUGGESTION],
     ['a post', { ...SUGGESTION, collection: 'posts', startsAt: null, allDay: null, venue: null }],
     ...evalSuggestions().map((s, i): [string, Record<string, unknown>] => [`eval item ${i}`, s]),
-    ['a long title', { ...SUGGESTION, title: long(120) }],
+    ['a long title', { ...SUGGESTION, title: long(TITLE_MAX_LENGTH) }],
     ['a long body', { ...SUGGESTION, bodyMarkdown: long(3_000) }],
     ['a long venue', { ...SUGGESTION, venue: long(200) }],
     ['a long address', { ...SUGGESTION, address: long(300) }],

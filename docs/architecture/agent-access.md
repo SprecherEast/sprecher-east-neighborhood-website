@@ -63,7 +63,7 @@ under each run); the agent reads its own, can't change or delete them, and only 
 own runs.
 
 **Size caps** (`SUGGESTION_CAPS` in `domain/suggestion.ts`; the tool refuses anything larger):
-`runId` 100, title 120, body 3,000, venue 200, address 300, source name 200, links 2,048,
+`runId` 100, title 60 (the CMS's `TITLE_MAX_LENGTH`), body 3,000, venue 200, address 300, source name 200, links 2,048,
 `externalId` 200, summary 1,000, 5 evidence items with `says` up to 500, 20 flags.
 
 ## Safeguards

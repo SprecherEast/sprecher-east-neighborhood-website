@@ -1,5 +1,7 @@
 import type { CollectionConfig, Field } from 'payload'
 
+import { TITLE_MAX_LENGTH } from '@/platform/lib'
+
 import { generatePreviewPath } from './generatePreviewPath'
 
 type PreviewCollection = Parameters<typeof generatePreviewPath>[0]['collection']
@@ -32,5 +34,16 @@ export const draftVersions = (maxPerDoc: number): NonNullable<CollectionConfig['
   maxPerDoc,
 })
 
-/** The title every content collection starts with. */
-export const titleField = (): Field => ({ name: 'title', type: 'text', required: true })
+/**
+ * The title every content collection starts with. Payload's own `maxLength` stops a title longer
+ * than `TITLE_MAX_LENGTH` (#633), and the note says why, so an editor isn't surprised.
+ */
+export const titleField = (): Field => ({
+  name: 'title',
+  type: 'text',
+  required: true,
+  maxLength: TITLE_MAX_LENGTH,
+  admin: {
+    description: `Up to ${TITLE_MAX_LENGTH} characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.`,
+  },
+})

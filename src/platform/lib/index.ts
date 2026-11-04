@@ -2,6 +2,7 @@
 // A module's domain may import these and nothing else from platform/.
 export { parseClientIp } from './clientIp'
 export type { ImageRef, ResolvedLink, RichTextValue } from './content'
+export { TITLE_MAX_LENGTH } from './contentLimits'
 export { formatDuration } from './formatDuration'
 export { CONFIRMATION_LINK_LIFETIME_MS } from './linkLifetimes'
 export { message, type MessageKey } from './messages'
