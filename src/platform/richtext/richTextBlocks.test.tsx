@@ -163,6 +163,23 @@ describe('richTextBlocks', () => {
     expect(element?.props.spec).toMatchObject({ kind: 'bar', title: 'Budget' })
   })
 
+  it('lets a chart be enlarged unless the editor turned that off (#686)', () => {
+    const base = {
+      blockType: 'chart',
+      kind: 'bar',
+      title: 'Budget',
+      summary: 'Up a little.',
+      unit: 'usd',
+      bars: [{ label: '2026', value: 4 }],
+    }
+    const zoomOf = (extra: object) =>
+      richTextBlocks.chart(argsFor({ ...base, ...extra } as ChartFields))?.props.zoom
+    expect(zoomOf({})).toBe(true)
+    expect(zoomOf({ enlarge: null })).toBe(true)
+    expect(zoomOf({ enlarge: true })).toBe(true)
+    expect(zoomOf({ enlarge: false })).toBe(false)
+  })
+
   it('leaves out a chart that does not add up, and logs why, so the rest of the post still shows', () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     const fields = { blockType: 'chart', kind: 'bar', title: '', summary: 'x', unit: 'usd' }

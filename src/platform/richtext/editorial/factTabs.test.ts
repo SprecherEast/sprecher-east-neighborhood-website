@@ -84,3 +84,31 @@ describe('toFactTabsProps', () => {
     expect(shown.tabs[0]?.fact.source).toBeNull()
   })
 })
+
+describe('a chart’s enlarge choice in the tabs’ props (#686)', () => {
+  const chartTab = (enlarge?: boolean | null) =>
+    tab({
+      panel: [
+        {
+          blockType: 'chart',
+          kind: 'bar',
+          title: 'Budget',
+          summary: 'Up a little.',
+          unit: 'usd',
+          bars: [{ label: '2026', value: 4 }],
+          ...(enlarge === undefined ? {} : { enlarge }),
+        },
+      ],
+    })
+  const enlargeOf = (enlarge?: boolean | null) =>
+    toFactTabsProps(stored(chartTab(enlarge))).tabs[0]?.panel[0]
+
+  it.each([
+    ['not stored (every existing chart)', undefined, true],
+    ['null', null, true],
+    ['on', true, true],
+    ['off', false, false],
+  ])('is %s: %s', (_name, value, expected) => {
+    expect(enlargeOf(value)).toMatchObject({ kind: 'chart', enlarge: expected })
+  })
+})

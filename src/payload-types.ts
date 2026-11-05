@@ -3033,6 +3033,10 @@ export interface ChartBlock {
         id?: string | null
       }[]
     | null
+  /**
+   * Turn this off for a simple chart that is easy to read at its normal size, such as two bars.
+   */
+  enlarge?: boolean | null
   mode?: ('perHundred' | 'each') | null
   /**
    * What one square or tile stands for, in a sentence.

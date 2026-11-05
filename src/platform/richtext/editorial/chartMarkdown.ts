@@ -7,7 +7,7 @@ import {
 } from '@/platform/lib/chart/spec'
 
 import { importOrRefuse, readText, refusalPrefix, writeProp } from './editorialTag'
-import { fromChartSpec, toChartSpec, type StoredChart } from './chart'
+import { fromChartSpec, isEnlargeable, toChartSpec, type StoredChart } from './chart'
 
 /**
  * The chart block as one Markdown tag (#640), for agents: Payload's block `jsx` converter writes
@@ -16,7 +16,19 @@ import { fromChartSpec, toChartSpec, type StoredChart } from './chart'
  * `submitSuggestion` can hand them back to the agent.
  */
 
-const COMMON = ['kind', 'title', 'summary', 'unit', 'asOf', 'certainty', 'sources', 'finePrint']
+/** The one prop that is not part of the drawing: written only when off (#686) */
+const ENLARGE = 'enlarge'
+const COMMON = [
+  'kind',
+  'title',
+  'summary',
+  'unit',
+  'asOf',
+  'certainty',
+  'sources',
+  'finePrint',
+  ENLARGE,
+]
 /** The props each kind takes, in the order they are written (the long arrays last) */
 const PROPS: Record<ChartKind, readonly string[]> = {
   bar: [...COMMON, 'scaleMax', 'data'],
@@ -30,8 +42,8 @@ const isKind = (value: unknown): value is ChartKind =>
   (CHART_KINDS as readonly unknown[]).includes(value)
 
 /** The props a valid chart writes into a tag (or into a fact tab's panel), in the order written */
-export function chartSpecTagProps(spec: ChartSpec): Record<string, unknown> {
-  const values: Record<string, unknown> = spec
+export function chartSpecTagProps(spec: ChartSpec, enlarge = true): Record<string, unknown> {
+  const values: Record<string, unknown> = { ...spec, [ENLARGE]: enlarge ? undefined : 'false' }
   return Object.fromEntries(
     PROPS[spec.kind].flatMap((name) => (values[name] === undefined ? [] : [[name, values[name]]])),
   )
@@ -40,7 +52,7 @@ export function chartSpecTagProps(spec: ChartSpec): Record<string, unknown> {
 /** The same for a stored chart, or false when it is not valid (it is left out) */
 export function chartTagProps(fields: StoredChart): Record<string, unknown> | false {
   try {
-    return chartSpecTagProps(toChartSpec(fields))
+    return chartSpecTagProps(toChartSpec(fields), isEnlargeable(fields))
   } catch {
     return false
   }
@@ -54,6 +66,14 @@ export function chartToJsx(fields: StoredChart): string | false {
     .map(([name, value]) => writeProp(name, value))
     .join(' ')} />`
 }
+
+/** `enlarge` as the tag gives it: the text "true" or "false" (a fact tab's JSON may use a boolean) */
+const enlargeValue = (value: unknown): boolean | undefined =>
+  value === 'true' || value === true
+    ? true
+    : value === 'false' || value === false
+      ? false
+      : undefined
 
 const unquote = (value: unknown) => (typeof value === 'string' ? readText(value) : value)
 
@@ -70,6 +90,12 @@ function tagIssues(props: Record<string, unknown>): ChartIssue[] {
         ? `${name} is not a property of a ${kind} chart (use ${PROPS[kind].join(', ')})`
         : `the tag could not be read near "${name.slice(0, 20)}": check that quotes, braces and brackets inside text are written as \\u0022, \\u007b, \\u007d, \\u005b and \\u005d`,
     }))
+  if (props[ENLARGE] !== undefined && enlargeValue(props[ENLARGE]) === undefined) {
+    issues.push({
+      path: [ENLARGE],
+      message: 'enlarge must be "true" or "false" (leave it out to let readers enlarge the chart)',
+    })
+  }
   if (props[ORIENTATION] !== undefined && props[ORIENTATION] !== 'horizontal') {
     issues.push({
       path: [ORIENTATION],
@@ -86,12 +112,16 @@ function tagIssues(props: Record<string, unknown>): ChartIssue[] {
  */
 export function chartTagIssues(read: Record<string, unknown>): ChartIssue[] {
   // The drawing is horizontal, so a tag needs no orientation: the spec gets it here
-  return [...tagIssues(read), ...chartIssues({ ...read, orientation: 'horizontal' })]
+  const { [ENLARGE]: _enlarge, ...drawing } = read
+  return [...tagIssues(read), ...chartIssues({ ...drawing, orientation: 'horizontal' })]
 }
 
 /** The block's fields for props that passed `chartTagIssues` (text already read) */
-export const chartFromProps = (read: Record<string, unknown>): StoredChart =>
-  fromChartSpec(parseChartSpec({ ...read, orientation: 'horizontal' }))
+export function chartFromProps(read: Record<string, unknown>): StoredChart {
+  const { [ENLARGE]: enlarge, ...drawing } = read
+  const stored = fromChartSpec(parseChartSpec({ ...drawing, orientation: 'horizontal' }))
+  return enlargeValue(enlarge) === false ? { ...stored, enlarge: false } : stored
+}
 
 /**
  * The block's fields for a tag's props. Throws `Invalid <Chart>: …` with every reason when the

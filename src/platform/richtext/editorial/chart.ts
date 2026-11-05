@@ -40,6 +40,12 @@ function prune<T>(value: T): T {
   return value
 }
 
+/**
+ * Whether readers can tap the chart to enlarge it (#686). The editor's checkbox is on by default
+ * and a chart stored before it existed has no value, so only an explicit `false` turns it off.
+ */
+export const isEnlargeable = (stored: StoredChart): boolean => stored.enlarge !== false
+
 const hatch = (on: boolean | null | undefined) => (on ? ({ pattern: 'hatch' } as const) : {})
 
 function partsOf(

@@ -27,6 +27,13 @@ describe('ChartBlockConfig', () => {
     for (const array of arrays) expect('admin' in array && array.admin).toBeTruthy()
   })
 
+  it('has a checkbox to turn enlarging off, on by default, with its label (#686)', () => {
+    const field = byName('enlarge') as Field & { defaultValue?: unknown; label?: unknown }
+    expect(field.type).toBe('checkbox')
+    expect(field.defaultValue).toBe(true)
+    expect(field.label).toBe('Readers can tap to enlarge this chart')
+  })
+
   it('is offered in posts and events', () => {
     const slugs = (blocks: Block[]) => blocks.map((b) => b.slug)
     expect(slugs(EDITORIAL_BLOCKS)).toContain('chart')

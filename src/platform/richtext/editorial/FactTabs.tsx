@@ -30,7 +30,7 @@ function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
       )}
       {panel.map((item, index) =>
         item.kind === 'chart' ? (
-          <Chart key={index} spec={item.spec} />
+          <Chart key={index} spec={item.spec} zoom={item.enlarge} />
         ) : (
           <Timeline key={index} {...item.timeline} className="my-0" />
         ),

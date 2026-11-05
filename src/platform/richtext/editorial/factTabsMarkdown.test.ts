@@ -102,3 +102,39 @@ describe('the example in the draft prompt', () => {
     expect(factTabsToJsx(fields as never)).toBe(tags[0])
   })
 })
+
+describe('a fact tab chart with enlarge off (#686)', () => {
+  const tabs = () =>
+    JSON.parse(
+      (factTabsToJsx(FACT_TABS_FIXTURE) as string)
+        .replace(/^<FactTabs tabs=\{/, '')
+        .replace(/\} \/>$/, ''),
+    ) as { panel: Record<string, unknown>[] }[]
+
+  it('writes it in the picture, reads it back and shows it in the props', () => {
+    const stored = {
+      tabs: FACT_TABS_FIXTURE.tabs?.map((t, i) =>
+        i === 0
+          ? { ...t, panel: t.panel?.map((p, j) => (j === 0 ? { ...p, enlarge: false } : p)) }
+          : t,
+      ),
+    } as StoredFactTabs
+    const tag = factTabsToJsx(stored) as string
+    expect(tag.match(/"enlarge":"false"/g)).toHaveLength(1)
+    const back = importFactTabsTag(propsOf(tag)) as StoredFactTabs
+    const [first, second] = toFactTabsProps(back).tabs[0]?.panel ?? []
+    expect(first).toMatchObject({ kind: 'chart', enlarge: false })
+    expect(second).toMatchObject({ kind: 'chart', enlarge: true })
+    expect(factTabsToJsx(back)).toBe(tag)
+  })
+
+  it('accepts a JSON boolean and refuses another value with its place', () => {
+    const [good] = tabs()
+    const withValue = (value: unknown) => ({
+      tabs: [{ ...good, panel: [{ ...good?.panel[0], enlarge: value }] }, ...tabs().slice(1)],
+    })
+    expect(() => importFactTabsTag(withValue(false))).not.toThrow()
+    expect(() => importFactTabsTag(withValue('false'))).not.toThrow()
+    expect(() => importFactTabsTag(withValue('later'))).toThrow(/panel.*enlarge/s)
+  })
+})

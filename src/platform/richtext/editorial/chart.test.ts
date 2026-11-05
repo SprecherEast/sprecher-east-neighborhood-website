@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import { parseChartSpec } from '@/platform/lib/chart/spec'
 
-import { fromChartSpec, toChartSpec } from './chart'
+import { fromChartSpec, isEnlargeable, toChartSpec } from './chart'
 
 /** The block as stored: the fields the editor fills in, with empty ones as null (Payload's way). */
 const stored = (extra: Record<string, unknown>) =>
@@ -201,5 +201,16 @@ describe('fromChartSpec', () => {
   it('stores a hatch as a checkbox and an increase as true', () => {
     const fields = fromChartSpec(parseChartSpec(FIXTURES.operating))
     expect(fields.series?.[1]).toMatchObject({ key: 'increase', hatch: true, increase: true })
+  })
+})
+
+describe('isEnlargeable (#686)', () => {
+  it.each([
+    ['a chart stored before the choice existed', undefined, true],
+    ['an empty value', null, true],
+    ['the choice on', true, true],
+    ['the choice off', false, false],
+  ])('is %s: %s', (_name, value, expected) => {
+    expect(isEnlargeable(stored({ enlarge: value }))).toBe(expected)
   })
 })

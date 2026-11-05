@@ -2,7 +2,7 @@ import React from 'react'
 
 import { BannerBlock } from './BannerBlock'
 import { CodeBlock } from './CodeBlock'
-import { toChartSpec } from './editorial/chart'
+import { isEnlargeable, toChartSpec } from './editorial/chart'
 import { DiagramKey } from './editorial/DiagramKey'
 import { FactTabs } from './editorial/FactTabs'
 import { toFactTabsProps } from './editorial/factTabs'
@@ -39,7 +39,13 @@ export const richTextBlocks = {
   ),
   chart: ({ node }) => {
     try {
-      return <Chart className="col-start-2" spec={toChartSpec(node.fields)} />
+      return (
+        <Chart
+          className="col-start-2"
+          spec={toChartSpec(node.fields)}
+          zoom={isEnlargeable(node.fields)}
+        />
+      )
     } catch (error) {
       // A chart that fails its rules was not saved through the editor (the field checks refuse
       // it); leave it out rather than break the whole post, and say why in the log
