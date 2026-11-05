@@ -3,7 +3,8 @@ import { createElement } from 'react'
 
 import { linkNode, p, paragraph, root, text, heading } from '@/endpoints/seed/helpers/lexical'
 import type { ImageRef, RichTextValue } from '@/platform/lib'
-import type { KeyFact } from '@/platform/richtext/editorial/keyFacts'
+import { toKeyFactsProps, type KeyFact } from '@/platform/richtext/editorial/keyFacts'
+import { LONGEST_FACT, UNEVEN_FACTS } from '@/platform/richtext/editorial/keyFactsFixtures'
 import type { BreadcrumbItem } from '@/platform/ui/Breadcrumbs'
 import type { LegendItem, LegendSwatchItem } from '@/platform/ui/Legend'
 import type { IconMetaItem, LabelledMetaItem } from '@/platform/ui/MetaList'
@@ -141,15 +142,7 @@ export const SAMPLE_KEY_FACTS: KeyFact[] = [
     certainty: 'estimate',
     source: null,
   },
-  {
-    value: '$10M',
-    label: 'Total cost of the whole project including each phase, in all',
-    detail:
-      'No price has been published, so this is the City’s earlier share, not the ramps’ cost.',
-    icon: 'money',
-    certainty: 'unknown',
-    source: null,
-  },
+  ...toKeyFactsProps({ facts: [LONGEST_FACT] }).facts,
   {
     value: 'None',
     label: 'Tax increase',
@@ -164,6 +157,9 @@ export const SAMPLE_KEY_FACTS: KeyFact[] = [
     },
   },
 ]
+
+/** The three cards of "The short version" that came out uneven (#678): the middle title wraps */
+export const UNEVEN_KEY_FACTS: KeyFact[] = toKeyFactsProps({ facts: UNEVEN_FACTS }).facts
 
 export const SAMPLE_CODE = `export function greet(name: string) {
   return \`Hello, \${name}!\`

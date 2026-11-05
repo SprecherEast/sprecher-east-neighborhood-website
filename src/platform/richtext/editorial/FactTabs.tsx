@@ -58,6 +58,8 @@ export function FactTabs({ tabs, className }: FactTabsProps & { className?: stri
       label="Key facts"
       items={items}
       defaultValue="tab-0"
+      // The tab buttons share four rows, so the same part of each fact lines up (#678)
+      rows="shared"
       className={cn('not-prose my-8 w-full', className)}
     />
   )

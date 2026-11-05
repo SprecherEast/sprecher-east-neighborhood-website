@@ -72,3 +72,11 @@ export const root = (children: LexicalNode[]) => ({
 
 // Convenience: wrap a single line of text in a paragraph
 export const p = (value: string) => paragraph(text(value))
+
+// A block node (a custom block inside rich text) as Lexical stores one; `id` is unique in its post
+export const block = (id: string, fields: Record<string, unknown>): LexicalNode => ({
+  type: 'block',
+  version: 2,
+  format: '',
+  fields: { id, ...fields },
+})

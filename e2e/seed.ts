@@ -9,6 +9,7 @@ import { getPayload } from 'payload'
 import config from '../src/payload.config'
 import { contactForm } from '../src/endpoints/seed/contact-form'
 import { contact } from '../src/endpoints/seed/contact-page'
+import { alignmentPost } from './support/alignmentPage'
 
 const payload = await getPayload({ config })
 const context = { disableRevalidate: true }
@@ -28,5 +29,13 @@ await payload.create({
   overrideAccess: true, // test setup, no user
 })
 
-payload.logger.info('e2e: seeded the contact form and page')
+await payload.create({
+  collection: 'posts',
+  depth: 0,
+  data: alignmentPost(),
+  context,
+  overrideAccess: true, // test setup, no user
+})
+
+payload.logger.info('e2e: seeded the contact form and page, and the alignment post')
 process.exit(0)

@@ -39,3 +39,24 @@ export const FIGURE_GAP = 'my-[var(--figure-gap)]'
  */
 export const LEGEND_HANG = '-mt-[calc(var(--figure-gap)+var(--legend-overlap))]'
 export const LEGEND_TUCK = 'pt-[calc(var(--legend-overlap)+1rem)]'
+
+/**
+ * Rows of a grid handed on to what a box holds (CSS subgrid, #678). Fact cards and the tab buttons
+ * of Fact tabs use them, so in a row of them the same part of every card (what it's about, the
+ * value, the explanation, the foot) sits on one line, whatever wraps or is missing in one card.
+ * A card spans four rows; the facts inside it span the first three, and the foot is the fourth.
+ * The grid of tab buttons has no parent grid to take rows from, so it declares the four itself.
+ */
+export const SUBGRID_FOUR_ROWS = 'row-span-4 grid grid-rows-subgrid'
+export const SUBGRID_THREE_ROWS = 'row-span-3 grid grid-rows-subgrid'
+export const SUBGRID_FOUR_ROWS_EXPLICIT = 'grid-rows-[repeat(4,auto)]'
+
+/**
+ * A shared row's gap would sit inside every card, so a list of cards that share rows has no row
+ * gap. Each card keeps its distance from the next one below with a bottom margin, and the list
+ * takes the last one back with the same negative margin. The pair must equal the column gap, so
+ * each lives here: the first for a `CardGrid` with `gap="sm"` (`gap-4`), the second for the tab
+ * buttons (`gap-2`).
+ */
+export const SHARED_ROWS_SPACE_4 = { item: 'mb-4', list: '-mb-4 gap-y-0' }
+export const SHARED_ROWS_SPACE_2 = { item: 'mb-2', list: '-mb-2 gap-y-0' }
