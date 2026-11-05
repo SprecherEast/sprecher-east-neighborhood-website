@@ -39,8 +39,9 @@ layout system, and never redesigns the site from scratch.
 Symmetry and alignment is HIGH although it is listed last: judge it on every change that repeats
 something. Measure it, don't eyeball it. In each row, stack or grid of repeated items, the same
 part of every item (title, value, badge, button, bottom edge) must be on one line at each of the
-six widths, with the shortest and the longest content and with a part missing; a wrapped title,
-a missing explanation or a lone item on its own row is a finding. On small screens the order is
+six widths, with the shortest and the longest content and with a part missing. A wrapped title or
+a missing explanation is not a finding in itself: report a part that is out of line within a row,
+or a lone last item in a multi-column layout. One item per row on a narrow screen is correct. On small screens the order is
 the page menu, the page content, then the related content
 ([Symmetry and alignment](../../../docs/guidelines/ui-ux-design.md#symmetry-and-alignment)).
 
