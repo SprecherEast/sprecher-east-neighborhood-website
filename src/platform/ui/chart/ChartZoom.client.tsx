@@ -48,6 +48,8 @@ export function ChartZoom({ title, children }: ChartZoomProps) {
     const element = holder.current
     if (!element || open) return
     const onClick = (event: MouseEvent) => {
+      // Selecting the chart's text ends in a click: a reader copying it is not asking to enlarge
+      if (window.getSelection()?.toString()) return
       if (event.target instanceof Element && event.target.closest(CHART_DRAWING_SELECTOR))
         change(true)
     }

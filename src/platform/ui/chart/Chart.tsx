@@ -92,6 +92,7 @@ export function Chart({ spec: input, adapter: chosen, zoom = true, className }: 
                 key={legend.label}
                 marker="swatch"
                 attach="none"
+                columns="one"
                 label={legend.label}
                 items={legend.items}
               />

@@ -55,18 +55,20 @@ export function Dialog({
             className,
           )}
         >
-          <div className="container flex items-center justify-between gap-4 border-b border-border py-4">
-            {start}
-            <RadixDialog.Title
-              className={cn('text-lg font-semibold text-foreground', hideTitle && 'sr-only')}
-            >
-              {title}
-            </RadixDialog.Title>
-            <RadixDialog.Close asChild>
-              <Button variant="ghost" size="icon" className="ml-auto" aria-label={closeLabel}>
-                <X aria-hidden="true" />
-              </Button>
-            </RadixDialog.Close>
+          <div className="border-b border-border">
+            <div className="container flex items-center justify-between gap-4 py-4">
+              {start}
+              <RadixDialog.Title
+                className={cn('text-lg font-semibold text-foreground', hideTitle && 'sr-only')}
+              >
+                {title}
+              </RadixDialog.Title>
+              <RadixDialog.Close asChild>
+                <Button variant="ghost" size="icon" className="ml-auto" aria-label={closeLabel}>
+                  <X aria-hidden="true" />
+                </Button>
+              </RadixDialog.Close>
+            </div>
           </div>
           {children}
         </RadixDialog.Content>

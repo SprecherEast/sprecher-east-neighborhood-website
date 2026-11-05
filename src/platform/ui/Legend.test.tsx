@@ -73,6 +73,17 @@ describe('Legend', () => {
     })
   })
 
+  describe('columns (#681)', () => {
+    it('sets two columns from `sm` by default, and one with `columns="one"`', () => {
+      const { container, rerender } = render(<Legend items={ITEMS} />)
+      expect(container.querySelector('ol')?.className).toContain('sm:grid-cols-2')
+
+      rerender(<Legend columns="one" items={ITEMS} />)
+      expect(container.querySelector('ol')?.className).toContain('grid-cols-1')
+      expect(container.querySelector('ol')?.className).not.toContain('sm:grid-cols-2')
+    })
+  })
+
   describe('colour swatches under a chart (#662)', () => {
     const SWATCHES = [
       { label: 'Borrowed', text: '$179.8M', slot: 1 as const },

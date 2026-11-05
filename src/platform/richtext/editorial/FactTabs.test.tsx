@@ -130,4 +130,27 @@ describe('FactTabs', () => {
     } as unknown as StoredFactTabs
     expect(() => setup(toFactTabsProps(broken))).not.toThrow()
   })
+
+  it('enlarges a chart in a tab, and still switches tabs before and after (#681)', async () => {
+    setup()
+    const user = userEvent.setup()
+    const enlarge = (name: RegExp) => screen.getAllByRole('button', { name })
+
+    // Tab 1 holds two charts: enlarge the first, close it, and the tab is as it was
+    await user.click(enlarge(/Enlarge chart: The day-to-day budget, proposed/)[0] as HTMLElement)
+    expect(screen.getByRole('dialog', { name: 'The day-to-day budget, proposed' })).toBeTruthy()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getAllByRole('tab')[0]?.getAttribute('aria-selected')).toBe('true')
+
+    // Then another tab, whose own chart enlarges too
+    await user.click(screen.getAllByRole('tab')[1] as HTMLElement)
+    expect(screen.getAllByRole('tab')[1]?.getAttribute('aria-selected')).toBe('true')
+    await user.click(enlarge(/Enlarge chart: How the big projects are paid for/)[0] as HTMLElement)
+    expect(screen.getByRole('dialog', { name: /How the big projects are paid for/ })).toBeTruthy()
+    expect(document.querySelectorAll('[role="img"]')).toHaveLength(
+      // every chart is in the page once: the open one is in the dialog, not drawn twice
+      props.tabs.flatMap((tab) => tab.panel.filter((item) => item.kind === 'chart')).length,
+    )
+  })
 })

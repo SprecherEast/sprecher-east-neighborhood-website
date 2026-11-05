@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -95,6 +95,23 @@ describe('ChartZoom', () => {
   it('opens when the drawing itself is clicked', async () => {
     const { container } = setup()
     await userEvent.click(container.querySelector('[data-chart-drawing] text') as Element)
+    expect(screen.getByRole('dialog', { name: 'Where the money goes' })).toBeTruthy()
+  })
+
+  it('does not open when a reader has just selected the drawing’s text (#681)', () => {
+    const { container } = setup()
+    const text = container.querySelector('[data-chart-drawing] text') as Element
+    const range = document.createRange()
+    range.selectNodeContents(text)
+    window.getSelection()?.removeAllRanges()
+    window.getSelection()?.addRange(range)
+
+    // A drag-select ends in a click with the selection in place (user-event's click would collapse it)
+    fireEvent.click(text)
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    window.getSelection()?.removeAllRanges()
+    fireEvent.click(text)
     expect(screen.getByRole('dialog', { name: 'Where the money goes' })).toBeTruthy()
   })
 
