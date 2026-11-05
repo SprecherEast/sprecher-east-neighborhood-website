@@ -10,6 +10,6 @@ describe('the chart drawing marker', () => {
   it('is the attribute the Tailwind classes that style the drawing name', () => {
     expect(CHART_LARGE_WIDTH).toContain(`[${CHART_DRAWING_ATTRIBUTE}]`)
     const zoom = readFileSync(join(__dirname, 'ChartZoom.client.tsx'), 'utf8')
-    expect(zoom).toContain(`[&_[${CHART_DRAWING_ATTRIBUTE}]]:cursor-zoom-in`)
+    expect(zoom).toContain(`scripted:[&_[${CHART_DRAWING_ATTRIBUTE}]]:cursor-zoom-in`)
   })
 })

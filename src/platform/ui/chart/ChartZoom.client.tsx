@@ -37,7 +37,8 @@ export function ChartZoom({ title, children }: ChartZoomProps) {
     setOpen(next)
   }
 
-  // The empty box keeps the chart's height; a plain assignment, as the height is only known here
+  // The one DOM style write: the chart's height is known only at runtime, so no class can hold it; it
+  // is a measured value on one element (not styling written in markup), and it is cleared on close
   useLayoutEffect(() => {
     if (holder.current) holder.current.style.height = open ? `${height.current}px` : ''
   }, [open])
@@ -81,7 +82,7 @@ export function ChartZoom({ title, children }: ChartZoomProps) {
         ref={holder}
         data-chart-zoom-holder
         aria-hidden={open || undefined}
-        className="w-full [&_[data-chart-drawing]]:cursor-zoom-in"
+        className="w-full scripted:[&_[data-chart-drawing]]:cursor-zoom-in"
       >
         {open ? null : children}
       </div>
