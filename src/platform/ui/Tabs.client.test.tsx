@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { SHARED_ROWS_SPACE_2, SUBGRID_FOUR_ROWS, SUBGRID_FOUR_ROWS_EXPLICIT } from './layoutSizes'
 import { expectAccessible } from './testing/expectAccessible'
 import { Tabs, type TabsItem } from './Tabs.client'
 
@@ -97,6 +98,20 @@ describe('Tabs (#661)', () => {
     for (const tab of screen.getAllByRole('tab')) {
       expect(tab.className).toContain('min-h-11')
     }
+  })
+
+  it('lets the tab buttons share four rows only when asked, with the space the gap would have been (#678)', () => {
+    const { rerender } = render(<Tabs label="Budget views" items={ITEMS} defaultValue="money" />)
+    const list = () => screen.getByRole('tablist')
+    const [tab] = screen.getAllByRole('tab')
+    expect(list().className).not.toContain(SUBGRID_FOUR_ROWS_EXPLICIT)
+    expect(tab?.className).not.toContain(SUBGRID_FOUR_ROWS)
+
+    rerender(<Tabs label="Budget views" items={ITEMS} defaultValue="money" rows="shared" />)
+    expect(list().className).toContain(SUBGRID_FOUR_ROWS_EXPLICIT)
+    expect(list().className).toContain(SHARED_ROWS_SPACE_2.list)
+    expect(screen.getAllByRole('tab')[0]?.className).toContain(SUBGRID_FOUR_ROWS)
+    expect(screen.getAllByRole('tab')[0]?.className).toContain(SHARED_ROWS_SPACE_2.item)
   })
 
   it('changes the selected tab on click', async () => {

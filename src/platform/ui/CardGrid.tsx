@@ -14,6 +14,8 @@ const cardGridVariants = cva('grid grid-cols-1', {
       2: 'sm:grid-cols-2',
       3: 'sm:grid-cols-2 lg:grid-cols-3',
       4: 'sm:grid-cols-2 lg:grid-cols-4',
+      // No screen-width rule: the caller sets the columns, for example by container query (#678)
+      none: '',
     },
     gap: {
       sm: 'gap-4',
