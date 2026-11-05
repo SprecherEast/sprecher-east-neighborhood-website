@@ -124,4 +124,14 @@ export const chartBaseFields = (): Field[] => [
       }),
     ],
   },
+  {
+    name: 'enlarge',
+    type: 'checkbox',
+    label: 'Readers can tap to enlarge this chart',
+    defaultValue: true,
+    admin: {
+      description:
+        'Turn this off for a simple chart that is easy to read at its normal size, such as two bars.',
+    },
+  },
 ]

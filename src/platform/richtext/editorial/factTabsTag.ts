@@ -137,7 +137,7 @@ export const factTabsToTag = (props: readonly FactTabProps[]) =>
     definition,
     panel: panel.map((item) =>
       item.kind === 'chart'
-        ? { block: 'chart', ...chartSpecTagProps(item.spec) }
+        ? { block: 'chart', ...chartSpecTagProps(item.spec, item.enlarge) }
         : {
             block: 'timeline',
             entries: item.timeline.entries.map(({ date, status, title, description, link }) => ({

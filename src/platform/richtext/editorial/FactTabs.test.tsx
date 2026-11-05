@@ -172,3 +172,35 @@ describe('FactTabs', () => {
     )
   })
 })
+
+describe('FactTabs enlarge choice (#686)', () => {
+  const withEnlarge = (values: (boolean | undefined)[]) =>
+    toFactTabsProps({
+      tabs: FACT_TABS_FIXTURE.tabs?.map((t, i) =>
+        i === 0 ? { ...t, panel: t.panel?.map((p, j) => ({ ...p, enlarge: values[j] })) } : t,
+      ),
+    } as StoredFactTabs)
+  const panel = () => screen.getAllByRole('tabpanel', { hidden: true })[0] as HTMLElement
+  const drawings = () => [...panel().querySelectorAll('[data-chart-drawing]')]
+
+  it('shows no Enlarge button, no zoom cursor and the same size for a chart that is off', () => {
+    render(<FactTabs {...withEnlarge([false, true])} />)
+    const [off, on] = drawings()
+    expect(within(panel()).getAllByRole('button', { name: /Enlarge chart/ })).toHaveLength(1)
+    expect(off?.closest('[data-chart-zoom-holder]')).toBeNull()
+    expect(on?.closest('[data-chart-zoom-holder]')).not.toBeNull()
+    expect(off?.className).toContain('max-w-[var(--chart-small-width)]')
+    expect(off?.className).toBe(on?.className)
+  })
+
+  it('keeps the Enlarge button on a chart with no value (every stored chart)', () => {
+    render(<FactTabs {...withEnlarge([undefined, undefined])} />)
+    expect(within(panel()).getAllByRole('button', { name: /Enlarge chart/ })).toHaveLength(2)
+  })
+
+  it('opens no dialog when the drawing of a chart that is off is clicked', async () => {
+    render(<FactTabs {...withEnlarge([false, false])} />)
+    await userEvent.click(drawings()[0] as Element)
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+})

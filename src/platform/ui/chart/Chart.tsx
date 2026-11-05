@@ -31,7 +31,7 @@ export type ChartProps = {
   spec: ChartSpec
   /** Draws with this adapter instead of the registry's choice: for the gallery and the contract tests */
   adapter?: ChartAdapter
-  /** Shows a thumbnail a reader can enlarge (#681). On by default; off only in the gallery and tests */
+  /** Shows a thumbnail a reader can enlarge (#681). On by default; an editor turns it off for one chart (#686) */
   zoom?: boolean
   className?: string
 }

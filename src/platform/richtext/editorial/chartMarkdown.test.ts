@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import { parseChartSpec } from '@/platform/lib/chart/spec'
 
-import { toChartSpec } from './chart'
+import { isEnlargeable, toChartSpec } from './chart'
 import { chartFromJsx, chartToJsx } from './chartMarkdown'
 
 /** What Payload hands `jsx.import`: the tag's props, read back from the Markdown by its own reader. */
@@ -122,5 +122,45 @@ describe('the examples in the draft prompt', () => {
 
   it.each([0, 1, 2])('reads example %i back as a valid chart', (index) => {
     expect(() => chartFromJsx(propsOf(tags[index]))).not.toThrow()
+  })
+})
+
+describe('enlarge (#686)', () => {
+  const off = () => chartFromJsx({ ...FIXTURES.bars, enlarge: 'false' })
+
+  it('is on when the tag leaves it out, and the tag stays as it was', () => {
+    const block = chartFromJsx(FIXTURES.bars)
+    expect(block.enlarge).toBeUndefined()
+    expect(chartToJsx(asBlock(block))).not.toContain('enlarge')
+  })
+
+  it('writes enlarge="false" only when it is off, and reads it back', () => {
+    const tag = chartToJsx(asBlock(off())) as string
+    expect(tag).toMatch(/ enlarge="false" /)
+    expect(tag.match(/enlarge/g)).toHaveLength(1)
+    const back = chartFromJsx(propsOf(tag))
+    expect(back.enlarge).toBe(false)
+    expect(chartToJsx(asBlock(back))).toBe(tag)
+    expect(toChartSpec(asBlock(back))).toEqual(parseChartSpec(FIXTURES.bars))
+  })
+
+  it('accepts enlarge="true" as the default, writing nothing for it', () => {
+    const block = chartFromJsx({ ...FIXTURES.bars, enlarge: 'true' })
+    expect(isEnlargeable(asBlock(block))).toBe(true)
+    expect(chartToJsx(asBlock(block))).not.toContain('enlarge')
+  })
+
+  it('takes it on every kind of chart', () => {
+    for (const fixture of Object.values(FIXTURES)) {
+      const block = chartFromJsx({ ...fixture, enlarge: 'false' })
+      expect(chartToJsx(asBlock(block))).toContain('enlarge="false"')
+    }
+  })
+
+  it('refuses any other value, with the reason', () => {
+    expect(() => chartFromJsx({ ...FIXTURES.bars, enlarge: 'maybe' })).toThrow(
+      /Invalid <Chart>:.*enlarge.*"true" or "false"/,
+    )
+    expect(() => chartFromJsx({ ...FIXTURES.bars, enlarge: '' })).toThrow(/enlarge/)
   })
 })

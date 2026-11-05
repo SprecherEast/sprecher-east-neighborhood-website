@@ -2,7 +2,7 @@ import type { FactTabsBlock } from '@/payload-types'
 
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 
-import { toChartSpec } from './chart'
+import { isEnlargeable, toChartSpec } from './chart'
 import { toKeyFactsProps, type KeyFact } from './keyFacts'
 import { toTimelineProps, type TimelineProps } from './timeline'
 
@@ -11,7 +11,7 @@ export type StoredFactTabs = Pick<FactTabsBlock, 'tabs'>
 
 /** One picture in a tab's panel, as the page draws it */
 export type FactTabPanelItem =
-  | { kind: 'chart'; spec: ChartSpec }
+  | { kind: 'chart'; spec: ChartSpec; enlarge: boolean }
   | { kind: 'timeline'; timeline: TimelineProps }
 
 /** One tab: the key fact that is the button, and what it opens */
@@ -36,7 +36,7 @@ type StoredPanelItem = NonNullable<StoredTab['panel']>[number]
 function toPanelItem(block: StoredPanelItem): FactTabPanelItem | null {
   if (block.blockType === 'chart') {
     try {
-      return { kind: 'chart', spec: toChartSpec(block) }
+      return { kind: 'chart', spec: toChartSpec(block), enlarge: isEnlargeable(block) }
     } catch (error) {
       console.error(`Fact tabs: chart left out: ${error instanceof Error ? error.message : error}`)
       return null
