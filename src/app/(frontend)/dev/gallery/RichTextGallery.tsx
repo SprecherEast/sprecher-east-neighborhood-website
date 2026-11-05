@@ -11,7 +11,7 @@ import { READING_WIDTH } from '@/platform/ui/layoutSizes'
 
 import { SAMPLE_BLOCKS_POST } from './blocksPostSample'
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
-import { SAMPLE_CODE, SAMPLE_KEY_FACTS, SAMPLE_RICH_TEXT } from './sampleData'
+import { SAMPLE_CODE, SAMPLE_KEY_FACTS, SAMPLE_RICH_TEXT, UNEVEN_KEY_FACTS } from './sampleData'
 
 const FACT_TABS = toFactTabsProps(FACT_TABS_FIXTURE)
 
@@ -66,6 +66,15 @@ export function RichTextGallery() {
           className="block"
         >
           <KeyFacts facts={SAMPLE_KEY_FACTS.slice(1)} />
+        </GalleryVariant>
+        <GalleryVariant
+          label="three facts where one title wraps and one has no explanation (#678)"
+          className="block"
+        >
+          <KeyFacts facts={UNEVEN_KEY_FACTS} />
+        </GalleryVariant>
+        <GalleryVariant label="six facts" className="block">
+          <KeyFacts facts={[...UNEVEN_KEY_FACTS, ...SAMPLE_KEY_FACTS]} />
         </GalleryVariant>
       </GalleryEntry>
 

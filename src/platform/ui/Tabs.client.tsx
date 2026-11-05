@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
+import { SHARED_ROWS_SPACE_2, SUBGRID_FOUR_ROWS, SUBGRID_FOUR_ROWS_EXPLICIT } from './layoutSizes'
 import { Text, type TextProps } from './Text'
 
 export type TabsItem = {
@@ -28,6 +29,12 @@ export type TabsProps = {
   /** The heading level of each panel's heading: below the heading of the section that holds the tabs */
   headingAs?: Extract<NonNullable<TextProps['as']>, 'h2' | 'h3' | 'h4' | 'h5' | 'h6'>
   className?: string
+  /**
+   * `shared`: the tab buttons share four rows (`SUBGRID_FOUR_ROWS`), so when each holds the same
+   * parts, such as a fact's label, value, explanation and foot, the same part of every button sits
+   * on one line (#678). `own` (default): each button lays out by itself.
+   */
+  rows?: 'own' | 'shared'
 }
 
 /*
@@ -39,7 +46,16 @@ export type TabsProps = {
  * headings hidden. With scripting off every panel shows, stacked, each under its heading.
  * With three tabs the last one spans both columns of the phone's grid, so none sits alone, half wide.
  */
-export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }: TabsProps) {
+export function Tabs({
+  label,
+  items,
+  defaultValue,
+  headingAs = 'h3',
+  className,
+  rows = 'own',
+}: TabsProps) {
+  const shared = rows === 'shared'
+
   // The fade runs after the reader changes tab, not on the page's first paint
   const [changed, setChanged] = useState(false)
 
@@ -52,13 +68,19 @@ export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }
     >
       <RadixTabs.List
         aria-label={label}
-        className="hidden grid-cols-2 gap-2 sm:auto-cols-fr sm:grid-flow-col scripted:grid"
+        className={cn(
+          'hidden grid-cols-2 gap-2 sm:auto-cols-fr sm:grid-flow-col scripted:grid',
+          shared && [SUBGRID_FOUR_ROWS_EXPLICIT, SHARED_ROWS_SPACE_2.list],
+        )}
       >
         {items.map(({ value, trigger }) => (
           <RadixTabs.Trigger
             key={value}
             value={value}
-            className="min-h-11 rounded-xl border border-border bg-card px-3 py-2 text-left text-foreground transition-colors duration-200 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=active]:border-primary data-[state=active]:bg-primary/10 max-sm:odd:last:col-span-2 sm:px-4"
+            className={cn(
+              'min-h-11 rounded-xl border border-border bg-card px-3 py-2 text-left text-foreground transition-colors duration-200 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=active]:border-primary data-[state=active]:bg-primary/10 max-sm:odd:last:col-span-2 sm:px-4',
+              shared && [SUBGRID_FOUR_ROWS, SHARED_ROWS_SPACE_2.item],
+            )}
           >
             {trigger}
           </RadixTabs.Trigger>

@@ -1,4 +1,4 @@
-import { heading, p, root } from '@/endpoints/seed/helpers/lexical'
+import { block as lexicalBlock, heading, p, root } from '@/endpoints/seed/helpers/lexical'
 import type { RichTextValue } from '@/platform/lib'
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import { parseChartSpec } from '@/platform/lib/chart/spec'
@@ -12,16 +12,12 @@ import { FACT_TABS_FIXTURE } from '@/platform/richtext/editorial/factTabsFixture
  * The four fact tabs (#664) open the same figures one view at a time.
  */
 
-/** A block node as Lexical stores one */
-const block = (fields: Record<string, unknown>) => ({
-  type: 'block',
-  version: 2,
-  format: '',
-  fields: {
-    id: `sample-${fields.blockType}-${String(fields.title ?? fields.question ?? '')}`,
-    ...fields,
-  },
-})
+/** A block node with an id from its kind and title, as the editor would store it */
+const block = (fields: Record<string, unknown>) =>
+  lexicalBlock(
+    `sample-${fields.blockType}-${String(fields.title ?? fields.question ?? '')}`,
+    fields,
+  )
 const chart = (name: keyof typeof FIXTURES) =>
   block({ blockType: 'chart', ...fromChartSpec(parseChartSpec(FIXTURES[name])) })
 

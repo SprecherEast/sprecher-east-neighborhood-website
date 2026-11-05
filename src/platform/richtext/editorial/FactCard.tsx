@@ -4,6 +4,7 @@ import { cn } from '@/platform/lib/cn'
 import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { Card } from '@/platform/ui/Card'
 import { Link } from '@/platform/ui/Link'
+import { SUBGRID_FOUR_ROWS, SUBGRID_THREE_ROWS } from '@/platform/ui/layoutSizes'
 
 import { FACT_ICONS } from './factIcons'
 import type { KeyFact } from './keyFacts'
@@ -30,18 +31,21 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
   const Foot = tab ? 'span' : 'div'
   const body = (
     <>
-      <Facts className="flex flex-col gap-1">
+      <Facts className={SUBGRID_THREE_ROWS}>
         <Label className="flex items-start gap-2 text-base leading-snug font-semibold text-foreground">
           <Icon aria-hidden="true" className="size-5 shrink-0 text-primary" />
           <span className="min-w-0 [overflow-wrap:anywhere]">{fact.label}</span>
         </Label>
-        <Value className="block text-2xl leading-tight font-bold [overflow-wrap:anywhere] text-foreground">
+        <Value
+          data-fact-part="value"
+          className="mt-1 block text-2xl leading-tight font-bold [overflow-wrap:anywhere] text-foreground"
+        >
           {fact.value}
         </Value>
         {fact.detail && (
           <Value
             className={cn(
-              'block text-sm leading-snug [overflow-wrap:anywhere]',
+              'mt-1 block text-sm leading-snug [overflow-wrap:anywhere]',
               // The selected tab is tinted, where the muted grey is just under 4.5:1
               tab ? 'text-foreground' : 'text-muted-foreground',
             )}
@@ -50,7 +54,12 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
           </Value>
         )}
       </Facts>
-      <Foot className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
+      {/* The foot is its own row: the badges of a row's cards share a line, and the row is as tall
+          as its tallest foot */}
+      <Foot
+        data-fact-part="foot"
+        className="mt-2 flex flex-wrap content-start items-center gap-x-3 gap-y-1 pt-1"
+      >
         <CertaintyBadge certainty={fact.certainty} />
         {!tab && fact.source && (
           <Link href={fact.source.href} external={fact.source.external} className="text-sm">
@@ -60,9 +69,9 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
       </Foot>
     </>
   )
-  if (tab) return <span className="flex h-full flex-col gap-2">{body}</span>
+  if (tab) return <span className={SUBGRID_FOUR_ROWS}>{body}</span>
   return (
-    <Card variant="muted" padding="sm" className="flex flex-col gap-2">
+    <Card variant="muted" padding="sm" className={SUBGRID_FOUR_ROWS}>
       {body}
     </Card>
   )

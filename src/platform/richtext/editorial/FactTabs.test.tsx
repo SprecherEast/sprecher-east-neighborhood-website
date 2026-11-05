@@ -3,6 +3,11 @@ import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import {
+  SHARED_ROWS_SPACE_2,
+  SUBGRID_FOUR_ROWS,
+  SUBGRID_FOUR_ROWS_EXPLICIT,
+} from '@/platform/ui/layoutSizes'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { FactTabs } from './FactTabs'
@@ -16,6 +21,19 @@ const props = toFactTabsProps(FACT_TABS_FIXTURE)
 const setup = (shown = props) => render(<FactTabs {...shown} />)
 
 describe('FactTabs', () => {
+  it('lets the tab buttons share four rows, so one wrapping title cannot misalign them (#678)', () => {
+    setup()
+    const list = screen.getByRole('tablist', { name: 'Key facts' })
+    const [first] = screen.getAllByRole('tab')
+
+    expect(list.className).toContain(SUBGRID_FOUR_ROWS_EXPLICIT)
+    expect(list.className).toContain(SHARED_ROWS_SPACE_2.list)
+    expect(first?.className).toContain(SUBGRID_FOUR_ROWS)
+    expect(first?.className).toContain(SHARED_ROWS_SPACE_2.item)
+    // Card face and card use the same four rows
+    expect(first?.firstElementChild?.className).toContain(SUBGRID_FOUR_ROWS)
+  })
+
   it('is a tab list of the key facts, the first one selected', () => {
     setup()
     expect(screen.getByRole('tablist', { name: 'Key facts' })).toBeTruthy()

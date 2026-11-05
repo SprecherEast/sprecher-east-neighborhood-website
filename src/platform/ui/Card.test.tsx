@@ -117,4 +117,19 @@ describe('CardGrid', () => {
     expect(grid?.className).toContain('lg:grid-cols-4')
     expect(grid?.className).toContain('gap-4')
   })
+
+  it('sets no screen-width columns with `columns="none"`, for a caller that sets its own (#678)', () => {
+    const { container } = render(
+      <CardGrid columns="none" className="@lg:grid-cols-2">
+        <CardGridItem>
+          <Card>One</Card>
+        </CardGridItem>
+      </CardGrid>,
+    )
+
+    const grid = container.firstElementChild as HTMLElement
+    expect(grid.className).toContain('grid-cols-1')
+    expect(grid.className).toContain('@lg:grid-cols-2')
+    expect(grid.className).not.toMatch(/(^|\s)(sm|md|lg|xl):grid-cols/)
+  })
 })

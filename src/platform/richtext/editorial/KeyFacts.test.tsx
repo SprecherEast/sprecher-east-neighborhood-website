@@ -2,6 +2,11 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import {
+  SHARED_ROWS_SPACE_4,
+  SUBGRID_FOUR_ROWS,
+  SUBGRID_THREE_ROWS,
+} from '@/platform/ui/layoutSizes'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { KeyFacts } from './KeyFacts'
@@ -57,13 +62,43 @@ describe('KeyFacts', () => {
     await expectAccessible(container)
   })
 
-  it('puts exactly three facts three across from sm, two or four in two columns', () => {
+  it('chooses its columns by its own width, never by the screen (#678)', () => {
     const { container, rerender } = render(<KeyFacts facts={FACTS} />)
-    expect(container.querySelector('ul')?.className).toContain('sm:grid-cols-3')
-    expect(container.querySelector('ul')?.getAttribute('role')).toBe('list')
+    const list = () => container.querySelector('ul') as HTMLElement
 
+    // The block is the container its columns are measured against
+    expect(container.firstElementChild?.className).toContain('@container')
+    expect(list().getAttribute('role')).toBe('list')
+
+    // Three facts: three across where each card has room, otherwise one per row, never 2 and 1
+    expect(list().className).toContain('@2xl:grid-cols-3')
+    expect(list().className).not.toMatch(/(^|\s)(sm|md|lg|xl):grid-cols/)
+    expect(list().className).not.toContain('@lg:grid-cols-2')
+
+    // Two, four or five pair up; six go in twos, then in threes
     rerender(<KeyFacts facts={FACTS.slice(0, 2)} />)
-    expect(container.querySelector('ul')?.className).not.toMatch(/grid-cols-3/)
+    expect(list().className).toContain('@lg:grid-cols-2')
+    expect(list().className).not.toMatch(/grid-cols-3/)
+    rerender(<KeyFacts facts={[...FACTS, ...FACTS]} />)
+    expect(list().className).toContain('@lg:grid-cols-2')
+    expect(list().className).toContain('@2xl:grid-cols-3')
+  })
+
+  it('lets the cards of a row share their rows, so one wrapping title cannot misalign them (#678)', () => {
+    const { container } = render(<KeyFacts facts={FACTS} />)
+    const list = container.querySelector('ul') as HTMLElement
+    const item = container.querySelector('li') as HTMLElement
+    const card = item.firstElementChild as HTMLElement
+    const facts = container.querySelector('dl') as HTMLElement
+
+    // The list has no row gap (a shared row's gap would sit inside every card); the cards keep
+    // their distance below with a margin the list takes back at the end
+    expect(list.className).toContain(SHARED_ROWS_SPACE_4.list)
+    expect(item.className).toContain(SUBGRID_FOUR_ROWS)
+    expect(item.className).toContain(SHARED_ROWS_SPACE_4.item)
+    // Item, card and the facts inside it hand the rows down: four, then the three text rows
+    expect(card.className).toContain(SUBGRID_FOUR_ROWS)
+    expect(facts.className).toContain(SUBGRID_THREE_ROWS)
   })
 
   it('puts the icon and the label on one row, before the value', async () => {
