@@ -50,7 +50,7 @@ const TAB_LOOK = [
   'motion-safe:data-[state=inactive]:hover:-translate-y-0.5',
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-sm:odd:last:col-span-2',
   'data-[state=active]:z-10 data-[state=active]:border-primary data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/30 data-[state=active]:to-primary/10 data-[state=active]:ring-1 data-[state=active]:ring-card/60 data-[state=active]:ring-inset data-[state=active]:shadow-md data-[state=active]:backdrop-blur-md',
-  "after:absolute after:top-[calc(100%+var(--tabs-gap))] after:left-1/2 after:hidden after:size-3 after:-translate-x-1/2 after:-translate-y-1/2 after:rotate-45 after:border-t after:border-l after:border-primary/70 after:bg-card after:content-[''] sm:data-[state=active]:after:block",
+  "after:absolute after:top-[calc(100%+var(--tabs-gap))] after:left-1/2 after:hidden after:size-3 after:-translate-x-1/2 after:-translate-y-1/2 after:rotate-45 after:border-t after:border-l after:border-primary after:bg-card after:content-[''] sm:data-[state=active]:after:block",
 ].join(' ')
 
 /*
@@ -107,7 +107,7 @@ export function Tabs({
           className={cn(
             cardVariants({ variant: 'elevated', padding: 'sm' }),
             // The selected tab's border, so the panel reads as the tab's own area
-            'space-y-4 border-primary/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-safe:group-data-[changed]/tabs:data-[state=active]:animate-in motion-safe:group-data-[changed]/tabs:data-[state=active]:duration-150 motion-safe:group-data-[changed]/tabs:data-[state=active]:fade-in-0 sm:p-6 scripted:data-[state=inactive]:hidden',
+            'space-y-4 border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-safe:group-data-[changed]/tabs:data-[state=active]:animate-in motion-safe:group-data-[changed]/tabs:data-[state=active]:duration-150 motion-safe:group-data-[changed]/tabs:data-[state=active]:fade-in-0 sm:p-6 scripted:data-[state=inactive]:hidden',
           )}
         >
           <Text variant="subsection" as={headingAs} className="scripted:hidden">

@@ -191,6 +191,8 @@ describe('Tabs (#661)', () => {
       for (const panel of panels(container)) {
         expect(panel.className).toContain('rounded-2xl')
         expect(panel.className).toContain('border-primary')
+        // Full strength: the frame is a UI edge, which needs 3:1 against the page (WCAG 1.4.11)
+        expect(panel.className).not.toMatch(/border-primary\//)
         expect(panel.className).toContain('bg-card')
         expect(panel.className).toContain('shadow-sm')
       }
@@ -201,6 +203,7 @@ describe('Tabs (#661)', () => {
       const [tab, other] = screen.getAllByRole('tab')
       expect(tab?.className).toContain('sm:data-[state=active]:after:block')
       expect(tab?.className).toContain('after:border-primary')
+      expect(tab?.className).not.toMatch(/after:border-primary\//)
       expect(tab?.className).toContain('after:bg-card')
       // The notch is drawn on the selected tab only, and above the panel's own edge
       expect(tab?.className).toContain('data-[state=active]:z-10')
