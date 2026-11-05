@@ -103,6 +103,18 @@ Consistent spacing creates visual rhythm. Use Tailwind's spacing scale exclusive
 
 The goal is **visual balance**, not visual symmetry. A left-aligned text block with a photo on the right is more engaging than the same text centered with nothing around it.
 
+## Symmetry and Alignment
+
+The owner's rule (Amine, 2026-11-04, quoted on #679; extended in a voice session with Claude the same day, #678): symmetry, being on the same line, and a layout that flows are required, and every agent follows them without being told. This is about repeated items; the section above is about centred text.
+
+- **Alignment comes from the layout, never from the content.** Anything that repeats (a row of cards, a stack, a grid, a ring of items) keeps the same part of every item on one line (titles, values, badges, buttons, bottom edges), whatever the items hold. Never fix a misalignment by trimming or padding one item's text.
+- **Build it with the layout:** shared rows by CSS subgrid (`SUBGRID_*` in `src/platform/ui/layoutSizes.ts`), items as tall as each other, and columns chosen by the block's own width (a container query), not the screen's.
+- **Stack instead of wrapping.** When space runs short, shorten the text first, then put the items one per row, before letting one item wrap alone. Never two across and a lonely one.
+- **Text has a sweet spot.** A label, a value and an explanation are neither one or two words nor a paragraph. Set the limits (the editor's limits are in `editorialLimits.ts`) when you add a field, and decide them yourself.
+- **Prove it by measuring, not by class names.** A Playwright test measures the same part of every item in a row, with the shortest content, the longest and a missing part, at the six test widths, and fails when they are not on one line (`e2e/alignment.spec.ts` is the example). A unit test of class names does not count.
+- **Look at it.** After any visual change, open the page at a phone width and at a desktop width and look the way a neighbor would: do things line up, is it balanced, does it flow? Passing checks are not a substitute.
+- **On small screens** the order is the page menu at the top, then the page content, then the related content at the bottom.
+
 ## Card Design
 
 Cards are the primary content container pattern. Build them with the `Card` component

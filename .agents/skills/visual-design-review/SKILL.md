@@ -34,10 +34,20 @@ layout system, and never redesigns the site from scratch.
 | 6        | Color Harmony          | MEDIUM   | Design tokens only; the palette feels cohesive              |
 | 7        | Component Polish       | MEDIUM   | Consistent border radius; hover and focus states            |
 | 8        | Animation & Motion     | LOW      | 150–300 ms transitions; no janky layout shifts              |
+| 9        | Symmetry & Alignment   | HIGH     | Rows stay aligned at all six widths; mobile order holds     |
+
+Symmetry and alignment is HIGH although it is listed last: judge it on every change that repeats
+something. Measure it, don't eyeball it. In each row, stack or grid of repeated items, the same
+part of every item (title, value, badge, button, bottom edge) must be on one line at each of the
+six widths, with the shortest and the longest content and with a part missing; a wrapped title,
+a missing explanation or a lone item on its own row is a finding. On small screens the order is
+the page menu, the page content, then the related content
+([Symmetry and alignment](../../../docs/guidelines/ui-ux-design.md#symmetry-and-alignment)).
 
 Then the first-impression tests: the 3-second test, the squint test, the comparison test (next
-to a polished product site), the theme test (both themes), and the edge test (narrowest and
-widest widths).
+to a polished product site), the theme test (both themes), the edge test (narrowest and
+widest widths), and the owner's test: look at the page the way a neighbor would, and ask whether
+things line up, are balanced and flow.
 
 The standards behind each category are in [UI/UX design](../../../docs/guidelines/ui-ux-design.md).
 Flag the [anti-patterns](../../../docs/guidelines/frontend-patterns/README.md#anti-patterns-to-flag)
