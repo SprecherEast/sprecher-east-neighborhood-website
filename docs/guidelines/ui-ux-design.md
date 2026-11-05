@@ -107,7 +107,7 @@ The goal is **visual balance**, not visual symmetry. A left-aligned text block w
 
 Cards are the primary content container pattern. Build them with the `Card` component
 ([component set](../ui/component-set.md#display)), whose variants keep today's looks (the owner's
-choice, 2026-10-26, Claude Code session, quoted on #426):
+choice, 2026-10-26, Claude Code session, recorded on #426):
 
 - **Variants**: `elevated` (`bg-card`, `border border-border`, `shadow-sm`) for content cards;
   `outline` (`bg-background` with the border) for form boxes; `muted` (`bg-surface` with the border)
@@ -151,7 +151,7 @@ Three tiers of visual importance:
 
 ### Hero Sections
 
-- Full-viewport or near-full (`min-h-[60vh]` to `min-h-[80vh]`) for the home page and landing pages. A post or event header is not a hero: it is a short photo band, `min-h-[clamp(16rem,42svh,28rem)]`, with the title on it and the facts in a row under it, so the article starts on the first screen (the owner's request, 2026-11-02, Claude in Chrome side panel, quoted on #571)
+- Full-viewport or near-full (`min-h-[60vh]` to `min-h-[80vh]`) for the home page and landing pages. A post or event header is not a hero: it is a short photo band, `min-h-[clamp(16rem,42svh,28rem)]`, with the title on it and the facts in a row under it, so the article starts on the first screen (the owner's request, 2026-11-02, Claude in Chrome side panel, recorded on #571)
 - Background image with dark gradient overlay (`from-foreground/70 via-foreground/50 to-transparent`)
 - `text-on-image` on a `scrim` overlay for maximum contrast (never raw `white`/`black`: themes set these)
 - Clear CTA buttons at the bottom of the hero content
@@ -210,7 +210,7 @@ Three tiers of visual importance:
 
 ## Common Anti-Patterns (Never Do These)
 
-- A card preview inside an article's layout, in any mode (the owner's rule, 2026-10-31, Claude in Chrome side panel, quoted on #532)
+- A card preview inside an article's layout, in any mode (the owner's rule, 2026-10-31, Claude in Chrome side panel, recorded on #532)
 - Empty sections with no content — hide them entirely, don't show empty boxes
 - Text that disappears in dark/light mode — always test both themes
 - Huge whitespace gaps between header and content

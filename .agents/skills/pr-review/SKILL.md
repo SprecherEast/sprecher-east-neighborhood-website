@@ -37,9 +37,10 @@ gh api "repos/{owner}/{repo}/stacks?pull_request=<number>" -H 'X-GitHub-Api-Vers
       `docs/process/` (sprint length, Ready or Done, levels, the board's columns and fields, but
       not wording, link or fact fixes), list each such change under
       **Policy changes** in the review. Then check the owner asked for it. Agents file issues
-      through his account, so an issue alone isn't proof: the issue or PR must quote his words,
-      with the date and where he said them. Check the change stays within that quote. If there
-      is no quote, or the change goes beyond it, the verdict is **Waits for owner**. A PR can
+      through his account, so an issue alone isn't proof: the issue or PR must record a short
+      summary of what he decided, with the date and where he decided it. Check the change stays
+      within that summary. If there is no summary, or the change goes beyond it, the verdict is
+      **Waits for owner**. A PR can
       change the checks that run on itself, so read workflow changes carefully.
 
 ## 2b. Check the guard rails (blockers)
@@ -108,9 +109,10 @@ Group findings by severity:
 - **Major:** should fix before merge
 - **Minor:** fine to fix in a follow-up issue. Never a guard-rail breach: those are Blockers
 
-List policy changes under their own **Policy changes** heading, with the owner's quote that covers
-them. They are for visibility, not findings, so they don't count against Ready to merge. List
-separately any safeguard agents added that isn't in his words, so he can drop it if he wants.
+List policy changes under their own **Policy changes** heading, with the summary of the owner's decision
+that covers them, never his exact words. They are for visibility, not findings, so they don't count
+against Ready to merge. List separately any safeguard agents added that goes beyond what he decided,
+so he can drop it if he wants.
 
 ```bash
 gh pr review <number> --comment --body-file review.md
@@ -124,7 +126,7 @@ End the review with a verdict. When a PR has findings to fix and also waits for 
 verdict is **Changes requested**: it's fixed first, so he gets a clean PR.
 
 - **Ready to merge:** no Blocker or Major left to fix, and every policy change is covered by the
-  owner's words. The author then merges ([`change-workflow`](../change-workflow/SKILL.md),
+  owner's recorded decision. The author then merges ([`change-workflow`](../change-workflow/SKILL.md),
   step 6).
 - **Changes requested:** list them. The author fixes them and asks for a re-review.
 - **Waits for owner:** the PR or its issue is labeled `needs owner`, it rests on a genuine product

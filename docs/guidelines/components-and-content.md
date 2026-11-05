@@ -91,4 +91,4 @@ What a resident reads after an action (sent, failed, expired) lives in the catal
 `src/platform/lib/messages/` ([decision 0017](../architecture/decisions/0017-one-message-catalog.md)),
 not inline. Write whole sentences in the [brand voice](brand-voice.md), short enough for a phone, with `{blanks}` for
 anything that varies. Never type a time: use `formatDuration()` on the real setting. The owner's
-rule (2026-11-01, quoted on #551): messages sound like a human who understands this neighborhood.
+rule (2026-11-01, recorded on #551): messages sound like a human who understands this neighborhood.

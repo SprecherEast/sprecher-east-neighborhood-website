@@ -39,7 +39,7 @@ the current one is In review or Done.
 ## 1a. Grooming
 
 Before every major change (a new epic, a sprint, a batch of work), groom the backlog
-([rules and the owner's words](../../../docs/process/project-management.md#grooming-and-one-task-at-a-time)).
+([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-one-task-at-a-time)).
 For each issue:
 
 1. Give it a plain summary, acceptance criteria, a parent epic, and the type, area and `priority:`
