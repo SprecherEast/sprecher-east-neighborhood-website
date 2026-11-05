@@ -6,6 +6,7 @@ import React, { useState } from 'react'
 import { cn } from '@/platform/lib/cn'
 
 import { SHARED_ROWS_SPACE_2, SUBGRID_FOUR_ROWS, SUBGRID_FOUR_ROWS_EXPLICIT } from './layoutSizes'
+import { cardVariants } from './Card'
 import { Text, type TextProps } from './Text'
 
 export type TabsItem = {
@@ -38,6 +39,21 @@ export type TabsProps = {
 }
 
 /*
+ * How a tab looks (#688): raised and lifting on hover, so it reads as a button; the selected one is
+ * a brighter, glassy green with the primary border its panel wears too, drawn above its neighbours.
+ * In a row of tabs (`sm` up) the selected tab also points at its panel with a notch on the panel's
+ * edge, the notch's top and left borders joined to the panel's border. `--tabs-gap` is the one
+ * definition of the space between the tabs and the panel, so the notch lands on that edge.
+ */
+const TAB_LOOK = [
+  'relative min-h-11 cursor-pointer rounded-xl border border-border bg-card px-3 py-2 text-left text-foreground shadow-sm transition-all duration-200 hover:bg-surface hover:shadow-md sm:px-4',
+  'motion-safe:data-[state=inactive]:hover:-translate-y-0.5',
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-sm:odd:last:col-span-2',
+  'data-[state=active]:z-10 data-[state=active]:border-primary data-[state=active]:bg-gradient-to-b data-[state=active]:from-primary/30 data-[state=active]:to-primary/10 data-[state=active]:ring-1 data-[state=active]:ring-card/60 data-[state=active]:ring-inset data-[state=active]:shadow-md data-[state=active]:backdrop-blur-md',
+  "after:absolute after:top-[calc(100%+var(--tabs-gap))] after:left-1/2 after:hidden after:size-3 after:-translate-x-1/2 after:-translate-y-1/2 after:rotate-45 after:border-t after:border-l after:border-primary after:bg-card after:content-[''] sm:data-[state=active]:after:block",
+].join(' ')
+
+/*
  * Tabs that read without JavaScript (#661, docs/ui/component-set.md). Radix Tabs gives the pattern:
  * roving focus, arrow keys, Home and End, and the ARIA roles. Every panel is rendered by the server
  * (`forceMount`, which also leaves Radix's `hidden` off), so what a panel holds, such as a chart,
@@ -64,7 +80,7 @@ export function Tabs({
       defaultValue={defaultValue}
       onValueChange={() => setChanged(true)}
       data-changed={changed || undefined}
-      className={cn('group/tabs flex flex-col gap-6', className)}
+      className={cn('group/tabs flex flex-col gap-(--tabs-gap) [--tabs-gap:1rem]', className)}
     >
       <RadixTabs.List
         aria-label={label}
@@ -77,10 +93,7 @@ export function Tabs({
           <RadixTabs.Trigger
             key={value}
             value={value}
-            className={cn(
-              'min-h-11 rounded-xl border border-border bg-card px-3 py-2 text-left text-foreground transition-colors duration-200 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=active]:border-primary data-[state=active]:bg-primary/10 max-sm:odd:last:col-span-2 sm:px-4',
-              shared && [SUBGRID_FOUR_ROWS, SHARED_ROWS_SPACE_2.item],
-            )}
+            className={cn(TAB_LOOK, shared && [SUBGRID_FOUR_ROWS, SHARED_ROWS_SPACE_2.item])}
           >
             {trigger}
           </RadixTabs.Trigger>
@@ -91,7 +104,11 @@ export function Tabs({
           key={value}
           value={value}
           forceMount
-          className="space-y-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-safe:group-data-[changed]/tabs:data-[state=active]:animate-in motion-safe:group-data-[changed]/tabs:data-[state=active]:duration-150 motion-safe:group-data-[changed]/tabs:data-[state=active]:fade-in-0 scripted:data-[state=inactive]:hidden"
+          className={cn(
+            cardVariants({ variant: 'elevated', padding: 'sm' }),
+            // The selected tab's border, so the panel reads as the tab's own area
+            'space-y-4 border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-safe:group-data-[changed]/tabs:data-[state=active]:animate-in motion-safe:group-data-[changed]/tabs:data-[state=active]:duration-150 motion-safe:group-data-[changed]/tabs:data-[state=active]:fade-in-0 sm:p-6 scripted:data-[state=inactive]:hidden',
+          )}
         >
           <Text variant="subsection" as={headingAs} className="scripted:hidden">
             {heading}

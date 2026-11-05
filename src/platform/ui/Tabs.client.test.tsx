@@ -159,6 +159,68 @@ describe('Tabs (#661)', () => {
     expect(container.firstElementChild?.hasAttribute('data-changed')).toBe(true)
   })
 
+  describe('looks pressable and ties the selected tab to its area (#688)', () => {
+    const panels = (container: HTMLElement) => [...container.querySelectorAll('[role="tabpanel"]')]
+
+    it('raises every tab off the page and lifts it on hover, so it reads as a button', () => {
+      setup()
+      for (const tab of screen.getAllByRole('tab')) {
+        expect(tab.className).toContain('cursor-pointer')
+        expect(tab.className).toContain('shadow-sm')
+        expect(tab.className).toContain('hover:shadow-md')
+        // The lift only with motion allowed, and not on the selected tab, whose notch must stay on the panel's edge
+        expect(tab.className).toContain('motion-safe:data-[state=inactive]:hover:-translate-y-0.5')
+      }
+    })
+
+    it('makes the selected tab a brighter, glassy green that sits higher than the rest', () => {
+      setup()
+      const [tab] = screen.getAllByRole('tab')
+      expect(tab?.className).toContain('data-[state=active]:border-primary')
+      expect(tab?.className).toContain('data-[state=active]:bg-gradient-to-b')
+      expect(tab?.className).toContain('data-[state=active]:from-primary/30')
+      // A light inner edge, the glass's catch of light
+      expect(tab?.className).toContain('data-[state=active]:ring-inset')
+      expect(tab?.className).toContain('data-[state=active]:to-primary/10')
+      expect(tab?.className).toContain('data-[state=active]:backdrop-blur-md')
+      expect(tab?.className).toContain('data-[state=active]:shadow-md')
+    })
+
+    it('frames each panel in the selected tab’s border, so the tab’s area has an edge on every side', () => {
+      const { container } = setup()
+      for (const panel of panels(container)) {
+        expect(panel.className).toContain('rounded-2xl')
+        expect(panel.className).toContain('border-primary')
+        // Full strength: the frame is a UI edge, which needs 3:1 against the page (WCAG 1.4.11)
+        expect(panel.className).not.toMatch(/border-primary\//)
+        expect(panel.className).toContain('bg-card')
+        expect(panel.className).toContain('shadow-sm')
+      }
+    })
+
+    it('points the selected tab at its panel with a notch on the panel’s edge, in a row of tabs', () => {
+      setup()
+      const [tab, other] = screen.getAllByRole('tab')
+      expect(tab?.className).toContain('sm:data-[state=active]:after:block')
+      expect(tab?.className).toContain('after:border-primary')
+      expect(tab?.className).not.toMatch(/after:border-primary\//)
+      expect(tab?.className).toContain('after:bg-card')
+      // The notch is drawn on the selected tab only, and above the panel's own edge
+      expect(tab?.className).toContain('data-[state=active]:z-10')
+      expect(other?.className).toBe(tab?.className)
+    })
+
+    it('has one definition of the space between the tabs and the panel, so the notch lands on the edge', () => {
+      const { container } = setup()
+      const root = container.firstElementChild as HTMLElement
+      expect(root.className).toContain('[--tabs-gap:1rem]')
+      expect(root.className).toContain('gap-(--tabs-gap)')
+      expect(screen.getAllByRole('tab')[0]?.className).toContain(
+        'after:top-[calc(100%+var(--tabs-gap))]',
+      )
+    })
+  })
+
   it('lets the heading level be chosen, h3 by default', () => {
     const { container, rerender } = setup()
     expect(container.querySelectorAll('h3')).toHaveLength(3)
