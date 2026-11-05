@@ -11,7 +11,7 @@ export function ChartGallery() {
   return (
     <GalleryEntry
       name="Chart"
-      description="The one chart. Square grids and tiles are plain HTML (the css adapter); bars and stacked bars are one SVG drawn on the server (the visx adapter); the text adapter, words and a table, is the fallback. The 2027 figures are the Mayor's proposal."
+      description="The one chart, shown as a thumbnail (the drawing 20rem wide, its title, takeaway, key and caption beside it where there is room) with an Enlarge button; the button or a click on the drawing opens the same chart at 40rem in a dialog. Square grids and tiles are plain HTML (the css adapter); bars and stacked bars are one SVG drawn on the server (the visx adapter); the text adapter, words and a table, is the fallback. The 2027 figures are the Mayor's proposal."
     >
       <GalleryVariant
         label="units · perHundred, two groups: 2026 adopted next to 2027 proposed"
@@ -46,11 +46,20 @@ export function ChartGallery() {
       >
         <Chart spec={FIXTURES.borrowed} />
       </GalleryVariant>
-      <GalleryVariant label="stacked forced onto the text adapter (the fallback)" className="block">
+      <GalleryVariant
+        label="bar · zoom off: the same thumbnail without the Enlarge button (gallery and tests only)"
+        className="block"
+      >
+        <Chart spec={FIXTURES.bars} zoom={false} />
+      </GalleryVariant>
+      <GalleryVariant
+        label="stacked forced onto the text adapter (the fallback): words, so no Enlarge button"
+        className="block"
+      >
         <Chart spec={FIXTURES.borrowed} adapter={textAdapter} />
       </GalleryVariant>
       <GalleryVariant
-        label="units forced onto the text adapter: the same grid as words"
+        label="units forced onto the text adapter: the same grid as words, no Enlarge button"
         className="block"
       >
         <Chart spec={FIXTURES.comesIn} adapter={textAdapter} />

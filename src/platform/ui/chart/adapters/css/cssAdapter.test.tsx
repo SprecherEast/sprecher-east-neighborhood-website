@@ -75,3 +75,36 @@ describe('cssAdapter', () => {
     expect(() => draw(FIXTURES.bars)).toThrow(/does not draw/)
   })
 })
+
+describe('cssAdapter tiles follow their own width, not the screen (#681)', () => {
+  const months = parseChartSpec(FIXTURES.months) as Extract<ChartSpec, { kind: 'units' }>
+  const twoGroups = parseChartSpec({
+    ...months,
+    groups: [months.groups[0], { ...months.groups[0], key: 'second', label: 'Second' }],
+  } as ChartSpec)
+  const tileGrids = (container: HTMLElement) =>
+    [...container.querySelectorAll('.grid')].filter((el) => el.querySelector('[data-chart-mark]'))
+
+  it('puts three tiles across and six only in a group box 32rem wide', () => {
+    const { container } = draw(months)
+    const [grid] = tileGrids(container)
+    expect(grid.className).toContain('grid-cols-3')
+    expect(grid.className).toContain('@lg/tiles:grid-cols-6')
+    expect(grid.className).not.toMatch(/(^|\s)sm:grid-cols/)
+    expect(grid.parentElement?.className).toContain('@container/tiles')
+  })
+
+  it('stacks two groups of tiles instead of squeezing them side by side', () => {
+    const { container } = draw(twoGroups)
+    const root = container.querySelector('[role="img"]') as HTMLElement
+    expect(root.className).not.toContain('grid-cols-2')
+    expect(tileGrids(container)).toHaveLength(2)
+  })
+
+  it('keeps two groups of squares side by side', () => {
+    const { container } = draw(FIXTURES.paysFor)
+    expect((container.querySelector('[role="img"]') as HTMLElement).className).toContain(
+      'grid-cols-2',
+    )
+  })
+})

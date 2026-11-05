@@ -1,9 +1,14 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, within } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
+import { CHART_LARGE_WIDTH, CHART_SMALL_WIDTH } from '@/platform/ui/layoutSizes'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { textAdapter } from './adapters/text/textAdapter'
@@ -17,7 +22,8 @@ describe('Chart', () => {
     const figure = screen.getByRole('figure')
     const kids = [...figure.children].map((el) => el.tagName + (el.getAttribute('role') ?? ''))
     // title block, hidden description, the img, the key, the figcaption (last, as HTML requires)
-    expect(kids).toEqual(['DIV', 'P', 'DIVimg', 'DIV', 'FIGCAPTION'])
+    expect(kids).toEqual(['DIV', 'P', 'DIV', 'DIV', 'FIGCAPTION'])
+    expect(within(figure).getByRole('img')).toBeTruthy()
     expect(within(figure).getByText(FIXTURES.paysFor.title)).toBeTruthy()
     expect(within(figure).getByText(FIXTURES.paysFor.summary)).toBeTruthy()
     expect(container.querySelectorAll('[data-legend-swatch]')).toHaveLength(6)
@@ -73,5 +79,97 @@ describe('Chart', () => {
   it.each(Object.entries(FIXTURES))('passes axe: %s', async (_name, spec) => {
     const { container } = render(<Chart spec={spec} />)
     await expectAccessible(container)
+  })
+
+  describe('enlarging (#681)', () => {
+    const enlarge = (title: string) =>
+      screen.queryByRole('button', { name: `Enlarge chart: ${title}` })
+    const spec = FIXTURES.bars
+
+    it.each([
+      ['bars (svg)', FIXTURES.bars],
+      ['squares (html)', FIXTURES.paysFor],
+    ])('puts an Enlarge button on %s by default', (_name, chart) => {
+      render(<Chart spec={chart} />)
+      expect(enlarge(chart.title)).toBeTruthy()
+    })
+
+    it('has no Enlarge button for the text adapter or with zoom off', () => {
+      const { unmount } = render(<Chart spec={spec} adapter={textAdapter} />)
+      expect(enlarge(spec.title)).toBeNull()
+      unmount()
+      render(<Chart spec={spec} zoom={false} />)
+      expect(enlarge(spec.title)).toBeNull()
+    })
+
+    it('gives the drawing the small width and marks it as the click target', () => {
+      const { container } = render(<Chart spec={spec} />)
+      const drawing = container.querySelector('[data-chart-drawing]') as HTMLElement
+      expect(drawing.className).toContain('max-w-[var(--chart-small-width)]')
+      expect(drawing.querySelector('svg[role="img"]')).toBeTruthy()
+    })
+
+    it('draws the dialog’s chart at the large width and stacked, the page’s at the small one', async () => {
+      const { container } = render(<Chart spec={spec} />)
+      const classesOf = (root: ParentNode) =>
+        [...root.querySelectorAll('[class]')].map((el) => el.getAttribute('class') ?? '')
+      const has = (root: ParentNode, token: string) =>
+        classesOf(root).some((classes) => classes.split(' ').includes(token))
+      const [largeToken] = CHART_LARGE_WIDTH.split(' ')
+      expect(has(container, CHART_SMALL_WIDTH)).toBe(true)
+      expect(has(container, largeToken)).toBe(false)
+
+      await userEvent.click(enlarge(spec.title) as HTMLElement)
+      const dialog = screen.getByRole('dialog', { name: spec.title })
+      expect(has(dialog, largeToken)).toBe(true)
+      // It stacks because the dialog's box (the large width) is narrower than the 42rem (`@2xl`)
+      // container query that puts the text beside the drawing
+      expect(classesOf(dialog).join(' ')).toContain('@2xl/chart:grid-cols-')
+      const css = readFileSync(join(__dirname, '../../../app/(frontend)/globals.css'), 'utf8')
+      const large = /--chart-large-width:\s*([\d.]+)rem/.exec(css)
+      expect(Number(large?.[1])).toBeLessThan(42)
+    })
+
+    it('keeps a box of the chart’s height in the page while it is open, and clears it after', async () => {
+      const { container } = render(<Chart spec={spec} />)
+      const holder = container.querySelector('[data-chart-zoom-holder]') as HTMLElement
+      await userEvent.click(enlarge(spec.title) as HTMLElement)
+      expect(holder.style.height).toMatch(/px$/)
+      await userEvent.keyboard('{Escape}')
+      expect(holder.style.height).toBe('')
+    })
+
+    it('sets no small width on the text adapter’s words', () => {
+      const { container } = render(<Chart spec={spec} adapter={textAdapter} />)
+      expect(container.querySelector(`[class~="${CHART_SMALL_WIDTH}"]`)).toBeNull()
+    })
+
+    it('keeps one drawing, one table and unique ids when enlarged, all real text', async () => {
+      render(<Chart spec={spec} />)
+      await userEvent.click(enlarge(spec.title) as HTMLElement)
+
+      const dialog = screen.getByRole('dialog', { name: spec.title })
+      expect(document.querySelectorAll('svg[role="img"]')).toHaveLength(1)
+      expect(document.querySelectorAll('table')).toHaveLength(1)
+      expect(within(dialog).getByText('Show the numbers')).toBeTruthy()
+      const ids = [...document.querySelectorAll('[id]')].map((el) => el.id)
+      expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual([])
+      // No picture of any kind: shapes and text only
+      expect(dialog.querySelectorAll('img, canvas, picture, [style]')).toHaveLength(0)
+      expect(dialog.querySelectorAll('svg text').length).toBeGreaterThan(0)
+      expect(dialog.innerHTML).not.toMatch(/background-image|url\(data:/)
+      await expectAccessible(document.body)
+    })
+
+    it('draws two charts on one page with their own ids', () => {
+      render(
+        <>
+          <Chart spec={FIXTURES.bars} />
+          <Chart spec={FIXTURES.operating} />
+        </>,
+      )
+      const ids = [...document.querySelectorAll('[id]')].map((el) => el.id)
+      expect(new Set(ids).size).toBe(ids.length)
+    })
   })
 })

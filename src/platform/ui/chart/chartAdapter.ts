@@ -25,6 +25,8 @@ export interface ChartAdapter {
   readonly kinds: ReadonlySet<ChartKind>
   /** True when marks take the palette's colours, so `Chart` draws the colour key under them */
   readonly usesColour: boolean
+  /** True when the drawing gains from a bigger size, so `Chart` shows it small with an Enlarge button (#681); words don't */
+  readonly enlargeable: boolean
   /**
    * A server component tree: no hooks, no `'use client'`, no `style` attribute and no colour
    * literal. Every mark carries `data-chart-mark`.

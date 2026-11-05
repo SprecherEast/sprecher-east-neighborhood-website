@@ -66,8 +66,8 @@ A post that explains numbers (a budget, a tax rate, a project cost) may hold cha
 `$.bodyMarkdown`, each one self-closing `<Chart ... />` tag on its own lines between paragraphs.
 Use one only for figures that are in the input, with the unit they are in; a news item or an event
 needs none. Every chart has `kind`, `title` (the subject), `summary` (the takeaway in a plain
-sentence, required) and `unit` (`usd`, `percent`, `mills` or `count`); `asOf` (when the figures
-are from), `certainty` (`confirmed`, `estimate` or `unknown`) and `sources` (`[{ "label", "href" }]`,
+sentence, required; a chart shows small with its takeaway beside it, so keep it to one short
+line) and `unit` (`usd`, `percent`, `mills` or `count`); `asOf` (when the figures are from), `certainty` (`confirmed`, `estimate` or `unknown`) and `sources` (`[{ "label", "href" }]`,
 at most four) are optional but should be given for any figure that is proposed or estimated. Text
 props are in double quotes, numbers and lists in braces. Values are never negative, every `key` is
 used once in its list, and no tag can have other properties. A tag the server cannot read is

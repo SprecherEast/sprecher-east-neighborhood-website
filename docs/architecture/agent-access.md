@@ -40,7 +40,9 @@ Payload's converter (`convertMarkdownToLexical`) with that field's own editor co
 `<Chart kind="…" title="…" summary="…" unit="…" data={[…]} />` tag becomes a chart block (#640):
 its props are checked with the same `ChartSpec` rules as the editor's block, and a tag that breaks
 them refuses the whole call with the reasons (`Invalid <Chart>: …`), so the agent can fix it. The
-tag is in `intelligence/prompts/draft.md`. A `<FactTabs tabs={[…]} />` tag becomes a fact tabs block
+tag is in `intelligence/prompts/draft.md`. Every chart shows as a small thumbnail with its `summary` beside it and an Enlarge button
+(#681), so a summary is one short line, in Fact tabs especially; there is no prop to turn that
+off. A `<FactTabs tabs={[…]} />` tag becomes a fact tabs block
 (#664) the same way: its tabs, with nested chart and timeline pictures as plain JSON, are checked
 with the editor's limits, the chart rules and the one link rule, and a bad one is refused with
 `Invalid <FactTabs>: …`. Payload drops the whole body when it can't find where a tag ends, so

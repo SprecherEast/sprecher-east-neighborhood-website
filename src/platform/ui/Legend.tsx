@@ -30,6 +30,11 @@ type LegendCommon = {
    * under a chart.
    */
   attach?: 'drawer' | 'none'
+  /**
+   * `auto` (the default) puts the items in two columns from `sm`; `one` keeps one column, for a
+   * legend in a narrow column such as the text beside a small chart (#681).
+   */
+  columns?: 'auto' | 'one'
   className?: string
 }
 
@@ -57,7 +62,10 @@ const SWATCH_COLOUR: Record<LegendSlot, string> = {
   6: 'bg-chart-6',
 }
 
-const LIST_CLASSES = 'grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2'
+const LIST_CLASSES = {
+  auto: 'grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2',
+  one: 'grid grid-cols-1 gap-y-3',
+}
 
 /**
  * The legend under an annotated image or a chart (#636, from the diagram key of #515): one numbered
@@ -78,7 +86,7 @@ const LIST_CLASSES = 'grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2'
  * beside the label, which is always text.
  */
 export function Legend(props: LegendProps) {
-  const { label = 'Legend', attach = 'drawer', className } = props
+  const { label = 'Legend', attach = 'drawer', columns = 'auto', className } = props
   if (props.items.length === 0) return null
   // One entry per item: its marker, and the hidden prefix a screen reader hears before the label
   const entries =
@@ -107,7 +115,7 @@ export function Legend(props: LegendProps) {
       )}
     >
       {/* `role="list"`: Safari drops list semantics from a list without bullets */}
-      <List role="list" aria-label={label} className={LIST_CLASSES}>
+      <List role="list" aria-label={label} className={LIST_CLASSES[columns]}>
         {entries.map(({ item, marker, prefix }, index) => (
           <li key={`${index}-${item.label}`} className="flex items-start gap-3">
             {marker}

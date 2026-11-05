@@ -4,6 +4,8 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import {
+  CHART_LARGE_WIDTH,
+  CHART_SMALL_WIDTH,
   FIGURE_GAP,
   HERO_MIN_HEIGHT,
   LEGEND_HANG,
@@ -30,6 +32,8 @@ describe('layout sizes', () => {
     expect(READING_GRID).toBe('lg:grid-cols-[1fr_var(--reading-width)_1fr]')
     expect(PAGE_MIN_HEIGHT).toBe('min-h-[var(--page-min-height)]')
     expect(HERO_MIN_HEIGHT).toBe('min-h-[var(--hero-min-height)]')
+    expect(CHART_SMALL_WIDTH).toBe('max-w-[var(--chart-small-width)]')
+    expect(CHART_LARGE_WIDTH).toContain('max-w-[var(--chart-large-width)]')
     expect(FIGURE_GAP).toBe('my-[var(--figure-gap)]')
     expect(LEGEND_HANG).toBe('-mt-[calc(var(--figure-gap)+var(--legend-overlap))]')
     expect(LEGEND_TUCK).toBe('pt-[calc(var(--legend-overlap)+1rem)]')
@@ -59,6 +63,8 @@ describe('layout sizes', () => {
       '--hero-min-height',
       '--figure-gap',
       '--legend-overlap',
+      '--chart-small-width',
+      '--chart-large-width',
     ]) {
       const definitions = globalsCss.match(new RegExp(`^\\s*${name}:`, 'gm')) ?? []
       expect(definitions, name).toHaveLength(1)

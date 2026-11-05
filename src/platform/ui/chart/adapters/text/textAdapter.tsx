@@ -23,6 +23,7 @@ export const textAdapter: ChartAdapter = {
   output: 'html',
   kinds: new Set(CHART_KINDS),
   usesColour: false,
+  enlargeable: false,
   render(spec) {
     return (
       <div className="space-y-4">

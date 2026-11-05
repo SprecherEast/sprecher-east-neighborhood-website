@@ -20,7 +20,7 @@ const markClasses = (palette: ChartPalette, slotIndex: number, hatched: boolean 
  */
 export function SquareGrid({ data, palette }: { data: Datum[]; palette: ChartPalette }) {
   return (
-    <div className="grid w-full max-w-sm chart-reveal grid-cols-10 gap-0.5 sm:gap-1">
+    <div className="grid w-full chart-reveal grid-cols-10 gap-0.5 sm:gap-1">
       {toUnitCells(data, SQUARES_PER_HUNDRED).map((key, cell) => {
         const index = data.findIndex((datum) => datum.key === key)
         return (
@@ -38,7 +38,7 @@ export function SquareGrid({ data, palette }: { data: Datum[]; palette: ChartPal
   )
 }
 
-/** One tile per part, the part's name and amount as text under it (never on the colour) */
+/** One tile per part (three across, six once the group's own box is 32rem wide: the thumbnail is 20rem, the dialog 40rem), the part's name and amount as text under it (never on the colour) */
 export function TileGrid({
   data,
   unit,
@@ -51,7 +51,7 @@ export function TileGrid({
   palette: ChartPalette
 }) {
   return (
-    <div className="grid chart-reveal grid-cols-3 gap-x-2 gap-y-3 sm:grid-cols-6">
+    <div className="grid chart-reveal grid-cols-3 gap-x-2 gap-y-3 @lg/tiles:grid-cols-6">
       {data.map((datum) => (
         <div key={datum.key} className="min-w-0">
           <span

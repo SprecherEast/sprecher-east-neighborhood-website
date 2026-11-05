@@ -41,6 +41,15 @@ export const LEGEND_HANG = '-mt-[calc(var(--figure-gap)+var(--legend-overlap))]'
 export const LEGEND_TUCK = 'pt-[calc(var(--legend-overlap)+1rem)]'
 
 /**
+ * How wide a chart's drawing runs (#681). In the page it is a thumbnail, 20rem: the drawing's own
+ * 320-unit width at 1:1, so its labels are the size they were designed at. In the enlarged dialog
+ * it fills a 40rem body. Both numbers are variables in globals.css; no adapter sets a width.
+ */
+export const CHART_SMALL_WIDTH = 'max-w-[var(--chart-small-width)]'
+export const CHART_LARGE_WIDTH =
+  'max-w-[var(--chart-large-width)] [&_[data-chart-drawing]]:max-w-full'
+
+/**
  * Rows of a grid handed on to what a box holds (CSS subgrid, #678). Fact cards and the tab buttons
  * of Fact tabs use them, so in a row of them the same part of every card (what it's about, the
  * value, the explanation, the foot) sits on one line, whatever wraps or is missing in one card.

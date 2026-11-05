@@ -38,6 +38,7 @@ export function coloursWithText(root: ParentNode) {
  *  - has no `style` attribute and no colour literal, and uses only palette classes for colour;
  *  - gives every label and value as real text;
  *  - names any `img` it draws by ids that exist, and passes axe;
+ *  - sets no width of its own (`Chart` sizes the drawing);
  *  - for `svg` output, scales with its container (a `viewBox`, no fixed size) and puts no text
  *    inside a mark.
  */
@@ -59,6 +60,16 @@ export function describeChartAdapter(adapter: ChartAdapter, { markCount }: Contr
 
       it('draws one mark per datum or cell in the server markup', () => {
         expect(drawing(document)).toHaveLength(markCount(spec))
+      })
+
+      it('sets no width of its own: Chart sizes the drawing (#681)', () => {
+        const drawn = renderToStaticMarkup(
+          <>{adapter.render(spec, { titleId: 't', descId: 'd', palette: CHART_PALETTE })}</>,
+        )
+        const classes = [
+          ...new DOMParser().parseFromString(drawn, 'text/html').querySelectorAll('[class]'),
+        ].flatMap((el) => [...el.classList])
+        expect(classes.filter((name) => /(^|:)max-w-/.test(name))).toEqual([])
       })
 
       it('has no style attribute and no colour literal', () => {

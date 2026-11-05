@@ -18,6 +18,7 @@ export const cssAdapter: ChartAdapter = {
   output: 'html',
   kinds: new Set<ChartSpec['kind']>(['units']),
   usesColour: true,
+  enlargeable: true,
   render(spec, { titleId, descId, palette }) {
     if (spec.kind !== 'units') throw new Error(`The css adapter does not draw ${spec.kind} charts`)
     const { mode, groups, unit } = spec
@@ -25,10 +26,16 @@ export const cssAdapter: ChartAdapter = {
       <div
         role="img"
         aria-labelledby={`${titleId} ${descId}`}
-        className={groups.length > 1 ? 'grid gap-8 sm:grid-cols-2' : undefined}
+        className={
+          groups.length > 1
+            ? mode === 'perHundred'
+              ? 'grid grid-cols-2 gap-4'
+              : 'space-y-6'
+            : undefined
+        }
       >
         {groups.map((group, groupIndex) => (
-          <div key={group.key} className="min-w-0">
+          <div key={group.key} className="@container/tiles min-w-0">
             <Text variant="small" as="p" className="mb-2 font-semibold text-foreground">
               {group.label}
             </Text>
