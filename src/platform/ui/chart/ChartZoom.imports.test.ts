@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest'
  * so everything it imports, however deep, is sent to the browser. Chart libraries, zod and the
  * chart's spec rules are server code and must never be on that path.
  */
-const SRC = join(process.cwd(), 'src')
+const SRC = join(__dirname, '..', '..', '..')
 const IMPORT = /(?:import|export)[^'"`;]*?from\s+['"]([^'"]+)['"]|import\s+['"]([^'"]+)['"]/g
 
 function resolveLocal(from: string, specifier: string): string | null {

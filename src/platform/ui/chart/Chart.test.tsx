@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, within } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
+import { CHART_LARGE_WIDTH, CHART_SMALL_WIDTH } from '@/platform/ui/layoutSizes'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { textAdapter } from './adapters/text/textAdapter'
@@ -103,6 +107,41 @@ describe('Chart', () => {
       const drawing = container.querySelector('[data-chart-drawing]') as HTMLElement
       expect(drawing.className).toContain('max-w-[var(--chart-small-width)]')
       expect(drawing.querySelector('svg[role="img"]')).toBeTruthy()
+    })
+
+    it('draws the dialog’s chart at the large width and stacked, the page’s at the small one', async () => {
+      const { container } = render(<Chart spec={spec} />)
+      const classesOf = (root: ParentNode) =>
+        [...root.querySelectorAll('[class]')].map((el) => el.getAttribute('class') ?? '')
+      const has = (root: ParentNode, token: string) =>
+        classesOf(root).some((classes) => classes.split(' ').includes(token))
+      const [largeToken] = CHART_LARGE_WIDTH.split(' ')
+      expect(has(container, CHART_SMALL_WIDTH)).toBe(true)
+      expect(has(container, largeToken)).toBe(false)
+
+      await userEvent.click(enlarge(spec.title) as HTMLElement)
+      const dialog = screen.getByRole('dialog', { name: spec.title })
+      expect(has(dialog, largeToken)).toBe(true)
+      // It stacks because the dialog's box (the large width) is narrower than the 42rem (`@2xl`)
+      // container query that puts the text beside the drawing
+      expect(classesOf(dialog).join(' ')).toContain('@2xl/chart:grid-cols-')
+      const css = readFileSync(join(__dirname, '../../../app/(frontend)/globals.css'), 'utf8')
+      const large = /--chart-large-width:\s*([\d.]+)rem/.exec(css)
+      expect(Number(large?.[1])).toBeLessThan(42)
+    })
+
+    it('keeps a box of the chart’s height in the page while it is open, and clears it after', async () => {
+      const { container } = render(<Chart spec={spec} />)
+      const holder = container.querySelector('[data-chart-zoom-holder]') as HTMLElement
+      await userEvent.click(enlarge(spec.title) as HTMLElement)
+      expect(holder.style.height).toMatch(/px$/)
+      await userEvent.keyboard('{Escape}')
+      expect(holder.style.height).toBe('')
+    })
+
+    it('sets no small width on the text adapter’s words', () => {
+      const { container } = render(<Chart spec={spec} adapter={textAdapter} />)
+      expect(container.querySelector(`[class~="${CHART_SMALL_WIDTH}"]`)).toBeNull()
     })
 
     it('keeps one drawing, one table and unique ids when enlarged, all real text', async () => {
