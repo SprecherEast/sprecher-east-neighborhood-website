@@ -24,12 +24,21 @@ export const BUDGET_LINES = 300
 export const LOAD_MAP = 'docs/guidelines/README.md'
 export const GENERATED_DIR = '.claude/rules/generated'
 const LOAD_COLUMN = /loads by itself/i
+/** What the load column says for a reference that has no globs on purpose. */
+const NO_GLOBS = /^\s*(no\b|always\b)/i
 
-/** Reads the load map: every table row whose load column holds backticked globs. */
+/** Normalizes Windows line endings, so a checkout with `autocrlf` reads the same. */
+const unix = (text) => text.replace(/\r\n/g, '\n')
+
+/**
+ * Reads the load map: every table row whose load column holds backticked globs. A row with a link
+ * whose load column has no globs and doesn't start with "No" or "Always" throws, so a mistyped
+ * row fails instead of being dropped.
+ */
 export function parseLoadMap(markdown, mapPath = LOAD_MAP) {
   const entries = []
   let column = -1
-  for (const line of markdown.split('\n')) {
+  for (const line of unix(markdown).split('\n')) {
     if (!line.trim().startsWith('|')) {
       column = -1
       continue
@@ -40,9 +49,15 @@ export function parseLoadMap(markdown, mapPath = LOAD_MAP) {
       continue
     }
     if (/^\s*:?-+:?\s*$/.test(cells[0])) continue
-    const link = cells[0].match(/\]\(([^)#]+\.md)\)/)
+    const link = cells[0].match(/\]\(([^)#]+\.md)(?:#[^)]*)?\)/)
     const globs = [...(cells[column] ?? '').matchAll(/`([^`]+)`/g)].map((match) => match[1])
-    if (!link || globs.length === 0) continue
+    if (!link) continue
+    if (globs.length === 0) {
+      if (NO_GLOBS.test(cells[column] ?? '')) continue
+      throw new Error(
+        `${mapPath}: the row for ${link[1]} has no backticked globs; write them, or "No" or "Always"`,
+      )
+    }
     entries.push({
       source: path.posix.normalize(path.posix.join(path.posix.dirname(mapPath), link[1])),
       paths: globs,
@@ -74,7 +89,11 @@ export function ruleName(source) {
   return `${source.replace(/\.md$/, '').replaceAll('/', '--')}.md`
 }
 
-/** A glob as Claude Code reads it (`**`, `*`, `?`), as a regular expression over posix paths. */
+/**
+ * A glob as Claude Code reads it (`**`, `*`, `?`), as a regular expression over posix paths.
+ * Braces (`{a,b}`) are valid in Claude Code but not handled here: they are read literally, match
+ * no file, and the check fails, so write one glob per alternative instead.
+ */
 export function globToRegExp(glob) {
   let pattern = ''
   for (let i = 0; i < glob.length; i++) {
@@ -92,7 +111,7 @@ export function globToRegExp(glob) {
 
 /** Whether a Markdown file starts with frontmatter that has a `paths` field. */
 export function hasPaths(markdown) {
-  const match = markdown.match(/^---\n([\s\S]*?)\n---/)
+  const match = unix(markdown).match(/^---\n([\s\S]*?)\n---/)
   return Boolean(match && /^paths:/m.test(match[1]))
 }
 
@@ -133,7 +152,9 @@ export function startupFiles(read, rules) {
 export function run(root, { write = false } = {}) {
   const read = (file) => {
     const full = path.join(root, file)
-    return fs.existsSync(full) && fs.statSync(full).isFile() ? fs.readFileSync(full, 'utf8') : null
+    return fs.existsSync(full) && fs.statSync(full).isFile()
+      ? unix(fs.readFileSync(full, 'utf8'))
+      : null
   }
   const problems = []
   const tracked = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' }).split('\n')

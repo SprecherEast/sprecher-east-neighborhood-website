@@ -27,13 +27,15 @@ change this file through the same workflow below.
   fast, simple interactions on mobile first. Add tests, get the code reviewed, and record each
   decision briefly on its issue. Ask the owner only about genuine product trade-offs, meaningful
   costs, legal or privacy commitments, or decisions established best practice can't reasonably
-  resolve. Several valid technical approaches are never a reason to wait for him (#315).
+  resolve. Several valid technical approaches are never a reason to wait for him (the owner's rule,
+  2026-10-24, #315).
 - **Test every finished flow as a resident would use it:** on a phone, with expired links,
   wrong input, and recovering from errors (#315).
 - **Push back before building what's probably not the best way.** When the owner asks for something
   weaker than the standard approach (a security trade-off, say), don't build it as asked: explain
-  the better option with sources, then stop until he has read it and decided (#305). Push back when
-  his request is weaker than the standard; decide routine things yourself.
+  the better option with sources, then stop until he has read it and decided (the owner's rule,
+  2026-10-23, #305). Push back when his request is weaker than the standard; decide routine things
+  yourself.
 
 ## Guard rails: non-negotiable
 
@@ -81,8 +83,8 @@ change, however small, follows these five steps:
    check passes on its current head, the review of that head says **Ready to merge**, and no
    conversation is open. A review of an earlier head still counts only when the head changed because
    a PR below it merged (or `main` moved) and the PR's own diff is unchanged; if a PR below changed
-   after the review, this PR needs a new review, which can be short, checking it against what
-   changed below. The owner doesn't need to be involved, but he can merge, hold or revert anything.
+   after the review, this PR needs a new review even when its own diff didn't change; it can be
+   short, checking it against what changed below. The owner doesn't need to be involved, but he can merge, hold or revert anything.
    A PR labeled `needs owner`, or whose issue is, waits for his answer. A stack merges one layer at
    a time from the bottom, waiting for each layer's checks on its rebased head and, if the merge
    started a deploy, for the deploy to succeed ([`change-workflow`](.agents/skills/change-workflow/SKILL.md),
@@ -150,8 +152,8 @@ tool-specific commands or model names), and keep each file under 250 lines.
 - A convention: a guideline in [`docs/guidelines/`](docs/guidelines/README.md). A procedure: a skill.
   What a role checks: its guide in [`docs/roles/`](docs/roles/README.md).
 - A fact about the system: [`docs/project.md`](docs/project.md) (stack, hosting, gotchas),
-  [`docs/architecture/`](docs/architecture/README.md) (where code goes, data model), `ops/README.md`
-  (server scripts). The reason behind a decision: a record in `docs/architecture/decisions/`.
+  [`docs/architecture/`](docs/architecture/README.md) (where code goes, data model; read it before
+  coding), `ops/README.md` (server scripts). The reason behind a decision: a record in `docs/architecture/decisions/`.
 
 **Before you change files, read the references the table in
 [`docs/guidelines/README.md`](docs/guidelines/README.md) names for them.** Claude Code loads them

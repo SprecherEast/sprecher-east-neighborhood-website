@@ -33,6 +33,19 @@ describe('parseLoadMap', () => {
     ])
   })
 
+  it('reads a link with an anchor and a map with Windows line endings', () => {
+    const map = MAP.replace('(payload-cms.md)', '(payload-cms.md#collections)').replaceAll(
+      '\n',
+      '\r\n',
+    )
+    expect(parseLoadMap(map, 'docs/guidelines/README.md')).toHaveLength(2)
+  })
+
+  it('refuses a row it would otherwise drop: a link, no globs, and not "No" or "Always"', () => {
+    const map = MAP.replace('| No                ', '| src/app           ')
+    expect(() => parseLoadMap(map, 'docs/guidelines/README.md')).toThrow(/brand-voice\.md/)
+  })
+
   it('ignores a table without a load column', () => {
     expect(parseLoadMap('| [A](a.md) | `src/**` |\n| --- | --- |\n| [B](b.md) | `x/**` |')).toEqual(
       [],
@@ -87,6 +100,13 @@ describe('renderRule', () => {
 describe('ruleName', () => {
   it('flattens the source path', () => {
     expect(ruleName('docs/guidelines/payload-cms.md')).toBe('docs--guidelines--payload-cms.md')
+  })
+})
+
+describe('hasPaths', () => {
+  it('reads frontmatter with Windows line endings', () => {
+    expect(hasPaths("---\r\npaths:\r\n  - 'src/**'\r\n---\r\n\r\nText")).toBe(true)
+    expect(hasPaths('# No frontmatter\r\n')).toBe(false)
   })
 })
 

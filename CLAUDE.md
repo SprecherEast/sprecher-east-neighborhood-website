@@ -32,6 +32,8 @@ they load when the work touches `CLAUDE.md`, `.claude/`, `.agents/` or `.github/
   `.claude/agents/` on `sonnet` at `medium`. Start the reviewer on `opus` at `high` only when the PR
   touches sign-in or accounts, access rules, migrations, the deploy or server scripts, or other
   security code. Use the plain aliases, never a version. Never `fable` in unattended runs.
+- **Unattended runs:** never `--dangerously-skip-permissions`, and keep `ANTHROPIC_API_KEY` out of
+  the environment (it switches `-p` runs to API billing). Details in `claude-code-setup.md`.
 - **Waiting for checks:** poll `gh pr checks <number>` in the background (`run_in_background`),
   about once a minute and for at most 15 minutes, without pushing; after that, tell the user.
 - **Browser and dev server:** `.claude/settings.json` allows the Playwright MCP tools used for
