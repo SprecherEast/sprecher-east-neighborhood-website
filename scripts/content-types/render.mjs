@@ -10,12 +10,17 @@ export const GENERATED_NOTICE =
 /** The longest a page may be, as in `AGENTS.md`: a longer one is split. */
 export const PAGE_LINE_LIMIT = 250
 
+/**
+ * Text for a Markdown table cell. Backslashes are escaped first, so one in the text can't cancel
+ * the escape of the pipe after it; then pipes; then line breaks become spaces.
+ */
 const cell = (text) =>
   String(text)
+    .replace(/\\/g, '\\\\')
     .replace(/\|/g, '\\|')
     .replace(/\s*\n\s*/g, ' ')
 
-const code = (text) => (text ? `\`${text}\`` : '')
+const code = (text) => (text ? `\`${cell(text)}\`` : '')
 
 /** A name in a table: inline functions have no name worth quoting. */
 const nameCell = (name) => (name === 'inline' ? 'inline' : code(name))
@@ -38,7 +43,7 @@ export function renderFieldTable(rows) {
   return table(
     ['Field', 'Type', 'Required', 'Target or options', 'Notes'],
     rows.map((row) => [
-      code(cell(row.path)),
+      code(row.path),
       cell(row.type),
       row.required,
       cell(row.detail),
@@ -70,7 +75,7 @@ function renderFieldHooks(rows) {
   if (hooks.length === 0) return ''
   return table(
     ['Field', 'Phase', 'Function', 'Defined in'],
-    hooks.map((h) => [code(cell(h.path)), h.phase, nameCell(h.name), fileCell(h.file)]),
+    hooks.map((h) => [code(h.path), h.phase, nameCell(h.name), fileCell(h.file)]),
   )
 }
 

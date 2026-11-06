@@ -33,6 +33,11 @@ describe('renderFieldTable', () => {
       '| `a\\|b` | select | no | x, y |  |',
     ])
   })
+
+  it('escapes a backslash before escaping a pipe, so a backslash can not cancel the escape', () => {
+    const [, , body] = renderFieldTable([row({ detail: 'a\\|b', path: 'c\\|d' })]).split('\n')
+    expect(body).toBe('| `c\\\\\\|d` | text | yes | a\\\\\\|b |  |')
+  })
 })
 
 describe('renderAccess', () => {
