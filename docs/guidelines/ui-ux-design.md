@@ -103,6 +103,31 @@ Consistent spacing creates visual rhythm. Use Tailwind's spacing scale exclusive
 
 The goal is **visual balance**, not visual symmetry. A left-aligned text block with a photo on the right is more engaging than the same text centered with nothing around it.
 
+## Symmetry and Alignment
+
+Baseline every agent follows without being told. Summary of the owner's direction (2026-11-04, recorded on #679): symmetry, same-line layouts, and flow. Summary of his decision (2026-11-05, voice call, recorded on #679): replace the six extras beyond that direction with this eighteen-item baseline. About that baseline; the section above is about centred text.
+
+1. Align related elements to shared edges and baselines so nothing looks accidentally out of line.
+2. Center elements accurately within their intended container, not merely within the screen.
+3. Use consistent spacing, keeping related items closer together than unrelated groups.
+4. Keep margins and padding equal wherever the layout calls for equal insets.
+5. Preserve symmetry where intended and make asymmetry look deliberate and balanced.
+6. Repeat the same alignment, spacing and structure across similar items.
+7. Keep text, images, controls and sections proportionate to one another.
+8. Make hierarchy clear so headings, primary actions and supporting details are easy to tell apart.
+9. Provide readable contrast for text, controls and meaningful visual states.
+10. Give equivalent components consistent type, size, color, borders and interaction states.
+11. Prevent text overlapping, clipping or overflowing; make wrapping and truncation intentional.
+12. Preserve image proportions, crop thoughtfully and never obscure the important subject.
+13. Use enough white space to separate sections without creating unexplained gaps or isolated elements.
+14. Keep typography readable and consistent, with comfortable line lengths and line spacing.
+15. Inspect the finished page and fix awkward wrapping, stray items, uneven edges, collisions and accidental imbalance before calling it done.
+16. Support keyboard navigation, visible focus states, and accessible labels / screen-reader text.
+17. Make forms usable with clear labels and helpful error messages placed near the field.
+18. Keep motion subtle and purposeful, not decorative, and respect reduced-motion preferences.
+
+**On small screens** the order is the page menu at the top, then the page content, then the related content at the bottom.
+
 ## Card Design
 
 Cards are the primary content container pattern. Build them with the `Card` component
