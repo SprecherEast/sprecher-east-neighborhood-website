@@ -6,7 +6,7 @@ generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.m
 
 ## Notes
 
-None yet. The first, for `events`, comes with the pilot (#715).
+- [Events](../../src/modules/events/README.md): the calendar, its listings, category pages and "this week" block; what "upcoming" means, what a save refreshes, official meetings, cancelled events, suggestions held as drafts.
 
 ## Reference (generated)
 

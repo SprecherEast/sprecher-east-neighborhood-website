@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url'
 
 export const BUDGET_LINES = 300
 export const LOAD_MAP = 'docs/guidelines/README.md'
+export const KNOWLEDGE_MAP = 'docs/knowledge/map.json'
 export const GENERATED_DIR = '.claude/rules/generated'
 const LOAD_COLUMN = /loads by itself/i
 /** What the load column says for a reference that has no globs on purpose. */
@@ -64,6 +65,36 @@ export function parseLoadMap(markdown, mapPath = LOAD_MAP) {
     })
   }
   return entries
+}
+
+/**
+ * Reads the knowledge map (decision 0019, §5): a JSON list of `{ note, paths }`, one per note,
+ * giving the paths the note describes. Each entry becomes a path-scoped rule like a guideline's.
+ * Throws on a map it would misread, so a mistyped entry fails instead of being dropped.
+ */
+export function parseKnowledgeMap(json, mapPath = KNOWLEDGE_MAP) {
+  let list
+  try {
+    list = JSON.parse(json)
+  } catch (error) {
+    throw new Error(`${mapPath} is not valid JSON: ${error.message}`)
+  }
+  if (!Array.isArray(list)) throw new Error(`${mapPath} must be a list of { note, paths }`)
+  return list.map((entry, index) => {
+    const { note, paths } = entry ?? {}
+    const valid =
+      typeof note === 'string' &&
+      note.endsWith('.md') &&
+      Array.isArray(paths) &&
+      paths.length > 0 &&
+      paths.every((glob) => typeof glob === 'string' && glob !== '')
+    if (!valid) {
+      throw new Error(
+        `${mapPath}: entry ${index + 1} needs a "note" (a .md path) and a non-empty "paths" list of globs`,
+      )
+    }
+    return { source: note, paths, origin: mapPath }
+  })
 }
 
 /** Turns a relative Markdown link in `text`, written from `source`, into a repo-root link. */
@@ -167,14 +198,19 @@ export function run(root, { write = false } = {}) {
   }
   const problems = []
   const tracked = execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' }).split('\n')
-  const entries = parseLoadMap(read(LOAD_MAP) ?? '')
-  if (entries.length === 0) problems.push(`${LOAD_MAP} has no load map with globs`)
+  const guidelines = parseLoadMap(read(LOAD_MAP) ?? '').map((entry) => ({
+    ...entry,
+    origin: LOAD_MAP,
+  }))
+  if (guidelines.length === 0) problems.push(`${LOAD_MAP} has no load map with globs`)
+  const notes = parseKnowledgeMap(read(KNOWLEDGE_MAP) ?? '[]')
+  const entries = [...guidelines, ...notes]
 
   const expected = new Map()
   for (const entry of entries) {
     const text = read(entry.source)
     if (text === null) {
-      problems.push(`${LOAD_MAP} lists ${entry.source}, which doesn't exist`)
+      problems.push(`${entry.origin} lists ${entry.source}, which doesn't exist`)
       continue
     }
     for (const glob of entry.paths) {
