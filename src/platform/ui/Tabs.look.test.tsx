@@ -128,6 +128,8 @@ describe('the selected tab and its panel are one folder-shaped outline (#704)', 
     expect(classes).toContain('before:[background-position:left_top,right_top]')
     expect(classes).toContain('before:h-(--tabs-flare)')
     expect(classes).toContain('before:hidden')
+    // Above the extension, so the flare's fill hides the straight wall beside each curve
+    expect(classes).toContain('before:z-10')
     expect(classes).toContain('data-[state=active]:before:block')
   })
 

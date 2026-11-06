@@ -69,7 +69,7 @@ const TAB_LOOK = [
   // The extension over the gap and the panel's top edge
   "after:absolute after:top-full after:-left-px after:-right-px after:hidden after:h-[calc(var(--tabs-gap)+1px)] after:border-x after:border-primary after:bg-card after:content-[''] data-[state=active]:after:block",
   // The flares, level with the panel's top edge: left, right, or on one side only
-  "before:absolute before:top-[calc(100%_+_var(--tabs-gap)_+_1px_-_var(--tabs-flare))] before:right-[calc(var(--tabs-flare)_*_-1)] before:left-[calc(var(--tabs-flare)_*_-1)] before:hidden before:h-(--tabs-flare) before:bg-no-repeat before:content-[''] before:[background-image:var(--tabs-flare-left),var(--tabs-flare-right)] before:[background-position:left_top,right_top] before:[background-size:var(--tabs-flare)_var(--tabs-flare)] first:before:[background-image:var(--tabs-flare-right)] first:before:[background-position:right_top] last:before:[background-image:var(--tabs-flare-left)] last:before:[background-position:left_top] only:before:[background-image:none] data-[state=active]:before:block",
+  "before:absolute before:top-[calc(100%_+_var(--tabs-gap)_+_1px_-_var(--tabs-flare))] before:right-[calc(var(--tabs-flare)_*_-1)] before:left-[calc(var(--tabs-flare)_*_-1)] before:z-10 before:hidden before:h-(--tabs-flare) before:bg-no-repeat before:content-[''] before:[background-image:var(--tabs-flare-left),var(--tabs-flare-right)] before:[background-position:left_top,right_top] before:[background-size:var(--tabs-flare)_var(--tabs-flare)] first:before:[background-image:var(--tabs-flare-right)] first:before:[background-position:right_top] last:before:[background-image:var(--tabs-flare-left)] last:before:[background-position:left_top] only:before:[background-image:none] data-[state=active]:before:block",
 ].join(' ')
 
 /*
@@ -108,7 +108,7 @@ export function Tabs({
       <RadixTabs.List
         aria-label={label}
         className={cn(
-          'hidden auto-cols-[minmax(0,1fr)] grid-flow-col gap-1 sm:gap-2 scripted:grid',
+          'hidden auto-cols-[minmax(0,1fr)] grid-flow-col gap-x-1 sm:gap-x-2 scripted:grid',
           shared && [SUBGRID_FOUR_ROWS_EXPLICIT, 'gap-y-0'],
         )}
       >

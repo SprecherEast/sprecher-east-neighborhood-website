@@ -86,6 +86,11 @@ describe('Tabs (#661)', () => {
     // One row, as the folder shape needs: a tab in a lower row would be cut off from its panel
     expect(list.className).toContain('grid-flow-col')
     expect(list.className).toContain('auto-cols-[minmax(0,1fr)]')
+    // Only the column gap changes with width: `sm:gap-2` would also set the row gap and put it
+    // back inside the cards that share rows
+    expect(list.className).toContain('gap-x-1')
+    expect(list.className).toContain('sm:gap-x-2')
+    expect(list.className).not.toMatch(/(^|\s)(sm:)?gap-[12](\s|$)/)
     expect(list.className).not.toContain('grid-cols-2')
     for (const tab of screen.getAllByRole('tab')) {
       expect(tab.className).toContain('min-h-11')
