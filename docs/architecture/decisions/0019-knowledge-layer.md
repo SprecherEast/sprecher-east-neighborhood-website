@@ -61,7 +61,8 @@ agent and any person; instructions follow [AGENTS.md](https://agents.md/), proce
 
 1. **Index**, `docs/knowledge/index.md`, at most 25 lines: one line per note and per reference
    section, kept small because it loads every session (#713 asked for under 80; 25 fits the
-   300-line budget of #144 with room). #715 imports it in `CLAUDE.md` with the first note;
+   session-start token budget of #144 and #737 with room). #715 imports it in `CLAUDE.md` with the
+   first note;
    `AGENTS.md` points to it for Codex and people.
 2. **Notes**, next to the code, at most 80 lines each (§3). Each loads by itself when the work reads
    or edits a file under its paths: `scripts/agent-context.mjs` generates a path-scoped rule from

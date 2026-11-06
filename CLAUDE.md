@@ -4,7 +4,7 @@ Claude Code reads this file automatically. It connects Claude Code to the repo's
 guidance and adds only what is specific to Claude Code. Rules, procedures and facts go where
 [`AGENTS.md`](AGENTS.md#where-knowledge-lives) says, so every agent sees them.
 
-Loaded into every session, so keep it short (`npm run agent-context` fails over 300 lines, #144):
+Loaded into every session, so keep it short (`npm run agent-context` fails over its token budget, #144, #737):
 
 @AGENTS.md
 @docs/guidelines/guard-rails.md

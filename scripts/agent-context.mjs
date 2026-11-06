@@ -9,8 +9,10 @@
  * rule loads at session start whatever its `paths` say, and git on Windows checks symlinks out as
  * plain text unless symlinks are enabled (both tested on 2026-11-06, recorded on #144).
  *
- * It also counts the lines loaded at session start (CLAUDE.md, what it imports, and rules with no
- * `paths`) and fails over the budget.
+ * It also counts the tokens loaded at session start (CLAUDE.md, what it imports, and rules with no
+ * `paths`) and fails over the budget (#737). Tokens, not lines, because line length varies too much.
+ * The count is approximate: Claude's own tokenizer isn't published, so it uses OpenAI's `o200k_base`
+ * through `js-tiktoken`, which runs offline. The lines are printed for information only.
  *
  *   node scripts/agent-context.mjs            check: the copies are current, the budget holds
  *   node scripts/agent-context.mjs --write    rewrite the copies
@@ -20,82 +22,27 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-export const BUDGET_LINES = 300
-export const LOAD_MAP = 'docs/guidelines/README.md'
-export const KNOWLEDGE_MAP = 'docs/knowledge/map.json'
+import { Tiktoken } from 'js-tiktoken/lite'
+import o200kBase from 'js-tiktoken/ranks/o200k_base'
+
+import {
+  KNOWLEDGE_MAP,
+  LOAD_MAP,
+  globToRegExp,
+  parseKnowledgeMap,
+  parseLoadMap,
+  unix,
+} from './agent-context-maps.mjs'
+
+// The parsers live in a module with no packages, so `PR Policy` can import them (#737)
+export { KNOWLEDGE_MAP, LOAD_MAP, globToRegExp, parseKnowledgeMap, parseLoadMap }
+
+/**
+ * The most tokens that session start may load (#737). Measured at 5459 on 2026-11-06, plus about
+ * 10% headroom. The owner may raise or lower it: it is the only place the number lives.
+ */
+export const BUDGET_TOKENS = 6000
 export const GENERATED_DIR = '.claude/rules/generated'
-const LOAD_COLUMN = /loads by itself/i
-/** What the load column says for a reference that has no globs on purpose. */
-const NO_GLOBS = /^\s*(no\b|always\b)/i
-
-/** Normalizes Windows line endings, so a checkout with `autocrlf` reads the same. */
-const unix = (text) => text.replace(/\r\n/g, '\n')
-
-/**
- * Reads the load map: every table row whose load column holds backticked globs. A row with a link
- * whose load column has no globs and doesn't start with "No" or "Always" throws, so a mistyped
- * row fails instead of being dropped.
- */
-export function parseLoadMap(markdown, mapPath = LOAD_MAP) {
-  const entries = []
-  let column = -1
-  for (const line of unix(markdown).split('\n')) {
-    if (!line.trim().startsWith('|')) {
-      column = -1
-      continue
-    }
-    const cells = line.split('|').slice(1, -1)
-    if (column === -1) {
-      column = cells.findIndex((cell) => LOAD_COLUMN.test(cell))
-      continue
-    }
-    if (/^\s*:?-+:?\s*$/.test(cells[0])) continue
-    const link = cells[0].match(/\]\(([^)#]+\.md)(?:#[^)]*)?\)/)
-    const globs = [...(cells[column] ?? '').matchAll(/`([^`]+)`/g)].map((match) => match[1])
-    if (!link) continue
-    if (globs.length === 0) {
-      if (NO_GLOBS.test(cells[column] ?? '')) continue
-      throw new Error(
-        `${mapPath}: the row for ${link[1]} has no backticked globs; write them, or "No" or "Always"`,
-      )
-    }
-    entries.push({
-      source: path.posix.normalize(path.posix.join(path.posix.dirname(mapPath), link[1])),
-      paths: globs,
-    })
-  }
-  return entries
-}
-
-/**
- * Reads the knowledge map (decision 0019, §5): a JSON list of `{ note, paths }`, one per note,
- * giving the paths the note describes. Each entry becomes a path-scoped rule like a guideline's.
- * Throws on a map it would misread, so a mistyped entry fails instead of being dropped.
- */
-export function parseKnowledgeMap(json, mapPath = KNOWLEDGE_MAP) {
-  let list
-  try {
-    list = JSON.parse(json)
-  } catch (error) {
-    throw new Error(`${mapPath} is not valid JSON: ${error.message}`)
-  }
-  if (!Array.isArray(list)) throw new Error(`${mapPath} must be a list of { note, paths }`)
-  return list.map((entry, index) => {
-    const { note, paths } = entry ?? {}
-    const valid =
-      typeof note === 'string' &&
-      note.endsWith('.md') &&
-      Array.isArray(paths) &&
-      paths.length > 0 &&
-      paths.every((glob) => typeof glob === 'string' && glob !== '')
-    if (!valid) {
-      throw new Error(
-        `${mapPath}: entry ${index + 1} needs a "note" (a .md path) and a non-empty "paths" list of globs`,
-      )
-    }
-    return { source: note, paths, origin: mapPath }
-  })
-}
 
 /** Turns a relative Markdown link in `text`, written from `source`, into a repo-root link. */
 export function rootLinks(text, source) {
@@ -120,26 +67,6 @@ export function ruleName(source) {
   return `${source.replace(/\.md$/, '').replaceAll('/', '--')}.md`
 }
 
-/**
- * A glob as Claude Code reads it (`**`, `*`, `?`), as a regular expression over posix paths.
- * Braces (`{a,b}`) are valid in Claude Code but not handled here: they are read literally, match
- * no file, and the check fails, so write one glob per alternative instead.
- */
-export function globToRegExp(glob) {
-  let pattern = ''
-  for (let i = 0; i < glob.length; i++) {
-    const char = glob[i]
-    if (char === '*' && glob[i + 1] === '*') {
-      const slash = glob[i + 2] === '/'
-      pattern += slash ? '(?:.*/)?' : '.*'
-      i += slash ? 2 : 1
-    } else if (char === '*') pattern += '[^/]*'
-    else if (char === '?') pattern += '[^/]'
-    else pattern += char.replace(/[.+^${}()|[\]\\]/g, '\\$&')
-  }
-  return new RegExp(`^${pattern}$`)
-}
-
 /** Whether a Markdown file starts with frontmatter that has a `paths` field. */
 export function hasPaths(markdown) {
   const match = unix(markdown).match(/^---\n([\s\S]*?)\n---/)
@@ -152,10 +79,17 @@ export function importsOf(markdown) {
   return [...prose.matchAll(/(?:^|\s)@([^\s)]+)/g)].map((match) => match[1])
 }
 
+let encoder
+/** Approximate tokens in `text` (see the header: not Claude's own tokenizer). */
+export function countTokens(text) {
+  encoder ??= new Tiktoken(o200kBase)
+  return encoder.encode(text, [], []).length
+}
+
 const lineCount = (text) => text.replace(/\n$/, '').split('\n').length
 
 /**
- * Every file loaded at session start, with its line count: CLAUDE.md, rules without `paths`,
+ * Every file loaded at session start, with its line and token counts: CLAUDE.md, rules without `paths`,
  * what they import, and what rules with `paths` import, each file counted once. `read(file)`
  * returns its text or null.
  */
@@ -165,7 +99,7 @@ export function startupFiles(read, rules) {
     if (seen.has(file) || depth > 4) return
     const text = read(file)
     if (text === null) return
-    seen.set(file, lineCount(text))
+    seen.set(file, { lines: lineCount(text), tokens: countTokens(text) })
     for (const target of importsOf(text)) {
       const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(file), target))
       visit(resolved, depth + 1)
@@ -185,11 +119,11 @@ export function startupFiles(read, rules) {
       visit(path.posix.normalize(path.posix.join(path.posix.dirname(rule), target)), 1)
     }
   }
-  return [...seen].map(([file, lines]) => ({ file, lines }))
+  return [...seen].map(([file, counts]) => ({ file, ...counts }))
 }
 
 /** All problems with the generated rules and the budget, as messages. Writes the rules if asked. */
-export function run(root, { write = false } = {}) {
+export function run(root, { write = false, budgetTokens = BUDGET_TOKENS } = {}) {
   const read = (file) => {
     const full = path.join(root, file)
     return fs.existsSync(full) && fs.statSync(full).isFile()
@@ -237,19 +171,26 @@ export function run(root, { write = false } = {}) {
 
   const rules = tracked.filter((file) => file.startsWith('.claude/rules/') && file.endsWith('.md'))
   const loaded = startupFiles(read, write ? [...new Set([...rules, ...expected.keys()])] : rules)
-  const total = loaded.reduce((sum, { lines }) => sum + lines, 0)
-  if (total > BUDGET_LINES) {
-    problems.push(`session start loads ${total} lines, over the budget of ${BUDGET_LINES}`)
+  const total = loaded.reduce((sum, { tokens }) => sum + tokens, 0)
+  const lines = loaded.reduce((sum, file) => sum + file.lines, 0)
+  if (total > budgetTokens) {
+    problems.push(
+      `session start loads ${total} tokens (approximate), over the budget of ${budgetTokens}`,
+    )
   }
-  return { problems, loaded, total }
+  return { problems, loaded, total, lines }
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
   const write = process.argv.includes('--write')
-  const { problems, loaded, total } = run(root, { write })
-  for (const { file, lines } of loaded) console.log(`${String(lines).padStart(5)}  ${file}`)
-  console.log(`${String(total).padStart(5)}  loaded at session start (budget ${BUDGET_LINES})`)
+  const { problems, loaded, total, lines } = run(root, { write })
+  const row = (tokens, lineCount, label) =>
+    console.log(
+      `${String(tokens).padStart(6)} tokens  ${String(lineCount).padStart(4)} lines  ${label}`,
+    )
+  for (const file of loaded) row(file.tokens, file.lines, file.file)
+  row(total, lines, `loaded at session start (approximate; budget ${BUDGET_TOKENS} tokens)`)
   if (problems.length > 0) {
     for (const problem of problems) console.error(`error: ${problem}`)
     if (problems.some((p) => /out of date|stale/.test(p))) {
