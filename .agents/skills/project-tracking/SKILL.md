@@ -33,8 +33,10 @@ issue is **Ready**:
 
 When the board can't be read (cloud sessions), skip the size check and say so in a comment on the
 issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read the parent epic too: it
-says what the issue is part of. Work on one task at a time across the project: start the next only when
-the current one is In review or Done.
+says what the issue is part of. Work on one task at a time across the project, or two when
+their **Files likely touched** and the shared hot spots don't overlap and neither blocks the other
+([the rule](../../../docs/process/project-management.md#grooming-and-one-task-at-a-time)). Start
+another only when the current ones are In review or Done, or the overlap check below passes.
 
 ## 1a. Grooming
 
@@ -129,7 +131,7 @@ For each issue:
    - stop: it waits for him
      ([waits for owner](../../../docs/process/project-management.md#waits-for-owner))
 
-   Ask him on the issue, and in the chat too when he's there. Make it easy to answer:
+   Ask him on the issue under a `### [QUESTION]` header, and in the chat too when he's there. Make it easy to answer:
 
    ```markdown
    **Question:** Should volunteers sign up with a phone number as well as an email?
@@ -145,9 +147,22 @@ For each issue:
 
 ## 4. While working
 
-- Keep the issue current: comment when something important is decided or found, and when a
-  plan changes.
-- New work found along the way becomes a new issue (§3). Don't widen the current PR.
+- **Claim the issue first** ([the record on the issue](../../../docs/process/project-management.md#the-record-on-the-issue)):
+  1. Overlap check, if anything is already In progress: list it with
+     `gh project item-list 2 --owner boulaajaj --limit 1000 --format json --jq '.items[]|select(.status=="In progress")|.content.number'`
+     (`--limit` matters: the default stops at 30 items). Read each one's **Files likely touched**
+     and compare with this issue's. A shared file or hot spot, or a blocker between them, means
+     wait. More than one other issue In progress means wait too.
+  2. Assign it: `gh issue edit <n> --add-assignee <login>`, then read the assignees back; if
+     another agent is also there, back off, since GitHub has no atomic claim.
+  3. Post a `### [STEP]` comment with the branch name, then set **In progress** (below). Only now
+     start the first commit.
+- Keep the issue current with the comment headers in the record on the issue: `[DECISION]` for
+  a choice and its reason, `[QUESTION]` for what you need answered (`needs owner` if only the
+  owner can), `[PUSHBACK]` when a request looks weaker than the standard approach, `[STEP]` as
+  the work moves.
+- New work found along the way becomes a new issue (§3) with the `scope-creep` label, linked
+  with a `[SCOPE]` comment on the original. Don't widen the current PR.
 - **Set In progress when work starts, before the first commit.** On the owner's computer, move the
   board's **Status** (`In progress`; `In review` and Done are automatic) with `gh project item-edit`. It needs the item, project, field and option IDs: get them from
   `gh project item-list 2 --owner boulaajaj --format json`,

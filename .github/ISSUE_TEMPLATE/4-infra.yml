@@ -37,6 +37,21 @@ body:
       label: Acceptance criteria
     validations:
       required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Files likely touched
+      description: The paths or areas this will edit, so two issues that overlap are not worked on at the same time. Groomers fill it in when unknown.
+  - type: textarea
+    id: avoid
+    attributes:
+      label: Must not touch
+      description: Files or areas to leave alone, such as shared code another open issue is changing.
+  - type: textarea
+    id: questions
+    attributes:
+      label: Open questions
+      description: Anything that needs an answer before or during the work. A question only the owner can answer gets the `needs owner` label.
   - type: dropdown
     id: area
     attributes:

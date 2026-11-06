@@ -54,6 +54,10 @@ The allowed labels are in [`.github/label-policy.json`](../../.github/label-poli
     `needs owner` issue is listed in the checklist of the owner-actions epic (#169); its parent
     stays the epic it belongs to. The issues that depend on it are marked **blocked by** it, so
     nobody starts them too early.
+  - `scope-creep`: work found while doing another issue. It gets its own issue, linked to the
+    original with a `[SCOPE]` comment, and the original PR does not widen.
+  - `proposed-close`: an agent thinks the issue is obsolete or a duplicate. It waits for the owner;
+    an agent never closes an old idea by itself.
   - `shared-component`: a "watch out" flag on a PR that changes shared code many pages use:
     `src/platform/` (`ui/`, `richtext/`, `theme/`, `lib/`, `turnstile/`), `src/themes/`, the
     frontend layout and `globals.css`, and the site header, nav, footer and logo. The labeler sets
@@ -95,7 +99,7 @@ built on 2026-10-21 from the spec in #90.
 | ----------- | ----------------------------------------------------------------------------------------- |
 | Backlog     | Captured, not ready yet.                                                                  |
 | Ready       | Meets the Definition of Ready (below). Can go into a sprint.                              |
-| In progress | Work has started (set before the first commit). Only one task at a time.                  |
+| In progress | Work has started (set before the first commit). One task, or two with no shared files.    |
 | In review   | A PR that closes it is open, even as a draft. Linking the PR moves the issue here.        |
 | Done        | Merged: the issue closes and the item moves here on its own. `wrapped` checks any deploy. |
 
@@ -126,12 +130,34 @@ what's being done and what isn't.
   **Size**, which is effort: S, M or L (a cloud session that can't read the board skips Size and
   says so, as in the Definition of Ready). Anything bigger is split. When it meets the
   [Definition of Ready](#definition-of-ready), it moves to **Ready**.
-- **Work in progress is limited to one task across the project,** whoever works on it. The next
-  starts only when the current one is In review or Done. The highest-priority Ready item goes first.
+- **Work in progress is one task across the project, or two when their files don't overlap**
+  (the owner's direction, 2026-11-04, recorded on #685; the cap of 2 is the working default and the
+  agent team's chief of staff enforces it). A second issue starts only if the **Files likely
+  touched** of both issues, and the shared hot spots (the layout, header and navigation,
+  `globals.css`, the Payload config, anything in `src/platform/`), don't overlap, and the second
+  isn't blocked by the first. When in doubt, wait until the first is In review or Done. The
+  highest-priority Ready item goes first.
 - **In progress is set when work starts,** before the first commit, so the board shows it. In
   review and Done stay automatic.
 - **Only a session on the owner's computer moves cards** (the Access note above). A cloud session
   says on the issue which card to move.
+
+## The record on the issue
+
+Every step an agent takes leaves a comment, so the issue shows what happened without reading chat.
+A comment starts with one of these headers, so a person or a script can find it:
+
+- `### [STEP] <title>`: claimed, started, PR opened, review finished, merged.
+- `### [DECISION] <title>`: a choice and why, with the alternatives. Include the date and where
+  the owner decided, when he did, as a summary, never his words.
+- `### [QUESTION] <title>`: one plain question with options and a recommendation. If only the owner
+  can answer, add the `needs owner` label and end with `Owner needed: yes`.
+- `### [PUSHBACK] <title>`: why an agent thinks a request is weaker than the standard approach.
+- `### [SCOPE] <title>`: new work found; links the new issue, which gets `scope-creep`.
+
+**Claiming.** Only the chief of staff, or a person, assigns an issue, so two agents can't win the
+same one. The claim is: assign, post a `[STEP]` comment naming the branch, set **In progress**,
+and check for overlap (above) when something else is already In progress. Then start.
 
 ## Definition of Ready
 
@@ -139,6 +165,7 @@ An issue is **Ready** when it has:
 
 - what and why, in plain language
 - acceptance criteria someone else could check
+- **Files likely touched** and **Must not touch** filled in, so overlap with other work can be checked
 - a parent epic, labels (type, area, priority) and a size. When the board can't be read (cloud
   sessions), skip Size and say so on the issue
   ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §1)
