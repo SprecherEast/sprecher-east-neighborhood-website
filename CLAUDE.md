@@ -1,90 +1,40 @@
 # CLAUDE.md — Claude Code adapter
 
 Claude Code reads this file automatically. It connects Claude Code to the repo's tool-neutral
-guidance, which applies to every agent and human, and adds only what is specific to Claude Code.
-Don't add rules, procedures or facts here: they go where
+guidance and adds only what is specific to Claude Code. Rules, procedures and facts go where
 [`AGENTS.md`](AGENTS.md#where-knowledge-lives) says, so every agent sees them.
 
-Loaded into every session:
+Loaded into every session, so keep it short (`npm run agent-context` fails over 300 lines, #144):
 
 @AGENTS.md
-@docs/project.md
-@docs/process/project-management.md
 @docs/guidelines/guard-rails.md
-@docs/guidelines/development.md
-@docs/guidelines/security.md
-@docs/guidelines/payload-cms.md
-@docs/guidelines/nextjs-tailwind.md
-@docs/guidelines/components-and-content.md
-@docs/guidelines/ui-ux-design.md
 
-Read the other guidelines (frontend patterns, content marketing, Asana) when a task needs them;
-[`docs/guidelines/README.md`](docs/guidelines/README.md) says when.
+Every other guideline, `docs/project.md` and `docs/process/project-management.md` load by
+themselves when the work reads or edits a matching file: `.claude/rules/generated/` holds a copy of
+each, made from the load map in [`docs/guidelines/README.md`](docs/guidelines/README.md). Edit the
+reference or the map, never the copy, then run `npm run agent-context -- --write`. The setup notes
+(agent team, unattended runs, subagents, hooks, plugins) are `.claude/rules/claude-code-setup.md`;
+they load when the work touches `CLAUDE.md`, `.claude/`, `.agents/` or `.github/`.
 
 ## Claude Code specifics
 
-- **Skills:** each `.claude/skills/<name>/SKILL.md` is a pointer to
-  `.agents/skills/<name>/SKILL.md`, so Claude Code finds the repo's skills (`simplify` is the one
-  alias, below). Edit the `.agents/skills/` copy. A new skill gets a pointer too, with the same
-  `name` and `description`.
+- **Skills:** each `.claude/skills/<name>/SKILL.md` points to `.agents/skills/<name>/SKILL.md`
+  (`simplify` is the one alias, below). Edit that copy. A new skill gets a pointer too, with the
+  same `name` and `description`.
 - **Self-review:** `/simplify` and `/self-review` both run this repo's
-  [`self-review`](.agents/skills/self-review/SKILL.md) skill, with its four reviews as parallel
-  subagents. `.claude/skills/simplify/` replaces Claude Code's built-in `/simplify`, a generic check
-  that doesn't apply this repo's guidelines or the visual design review. Because a project
-  `simplify` skill exists, Claude Code also runs it before each commit that isn't docs or tests
-  (Claude Code v2.1.286 or later; a personal `~/.claude/skills/simplify` would win over it). Run
-  it again before opening or updating a PR.
+  [`self-review`](.agents/skills/self-review/SKILL.md), with its reviews as parallel subagents. The
+  project `simplify` replaces Claude Code's generic built-in one and also runs before each commit
+  that isn't docs or tests. Run it again before opening or updating a PR.
 - **After every merge,** run `/wrapped` (the [`wrapped`](.agents/skills/wrapped/SKILL.md) skill).
-- **Independent review:** run the [`pr-review`](.agents/skills/pr-review/SKILL.md) skill in a
-  separate session or a subagent (for example `qa-reviewer`), never in the context that wrote
-  the change.
-- **Models and effort** (#522, the owner's choice to save Opus for where it counts):
-  `.claude/settings.json` starts sessions on `opusplan` (Opus in plan mode, Sonnet once the plan is
-  approved) at `medium` effort, and every agent in `.claude/agents/` runs on Sonnet at `medium`.
-  Start the review on Opus at `high` effort (pass the model and effort when you start the
-  reviewer) only when the PR touches sign-in or accounts, access rules, migrations, the deploy or
-  server scripts, or other security code. Use the plain aliases (`opus`, `sonnet`), never a
-  version, so the newest model is always used.
-- **Agent team** ([operating model](docs/process/agent-operating-model.md), #685, #721). Planned
-  (#695, after the knowledge layer, #712): the chief of staff will run on `opus`, at `high` effort
-  for grooming and issue text, and the one worker and standard reviewers stay on `sonnet` at
-  `medium`. Its helper procedures are skills, so they run in its session and need no model of
-  their own. Review depth today is the #522 rule above and nothing wider. Never `fable` in
-  unattended runs: it can bill to usage credits, and in `-p` runs without asking
-  ([model config](https://code.claude.com/docs/en/model-config)). Gotchas from the
-  subagent docs: `isolation: worktree` branches from the default branch, not the parent's `HEAD`;
-  the `Agent(name, …)` limit on `tools` and `initialPrompt` apply only to an agent run as the main
-  session (`claude --agent`) ([subagents](https://code.claude.com/docs/en/sub-agents)). A reviewer
-  is a new, non-forked subagent, so it starts with no memory of the change.
-- **Unattended runs** (#694): the owner's computer runs Windows 11, where the built-in sandbox
-  runs commands unsandboxed; it needs WSL2 ([sandboxing](https://code.claude.com/docs/en/sandboxing)).
-  So a headless run uses `--permission-mode dontAsk` with an exact `--allowedTools` list (the
-  documented pattern for CI). `.claude/settings.json` allows `Bash(*)`, `Edit(*)` and `Write(*)`,
-  and a run in the project inherits them, so an unattended run needs its own settings without
-  those wildcards, and a test that an unlisted command is refused (#697) before the setup is
-  trusted. Never use
-  `--dangerously-skip-permissions`, which is for containers and VMs only
-  ([permission modes](https://code.claude.com/docs/en/permission-modes)). A WSL2 sandbox is an
-  option the owner decides in #697. Keep `ANTHROPIC_API_KEY` out of the environment: in `-p` runs
-  the key is always used when present, which switches usage from the subscription to API billing
-  ([authentication](https://code.claude.com/docs/en/authentication)). It was not set on the
-  owner's computer on 2026-11-05 (user, machine and session scope).
+- **Independent review:** run [`pr-review`](.agents/skills/pr-review/SKILL.md) in a separate
+  session or a new subagent (for example `qa-reviewer`), never in the context that wrote the change.
+- **Models and effort** (#522): sessions start on `opusplan` at `medium` effort, and the agents in
+  `.claude/agents/` on `sonnet` at `medium`. Start the reviewer on `opus` at `high` only when the PR
+  touches sign-in or accounts, access rules, migrations, the deploy or server scripts, or other
+  security code. Use the plain aliases, never a version. Never `fable` in unattended runs.
+- **Unattended runs:** never `--dangerously-skip-permissions`, and keep `ANTHROPIC_API_KEY` out of
+  the environment (it switches `-p` runs to API billing). Details in `claude-code-setup.md`.
 - **Waiting for checks:** poll `gh pr checks <number>` in the background (`run_in_background`),
-  about once a minute and for at most 15 minutes. Don't push while waiting. If the checks still
-  haven't finished after 15 minutes, tell the user.
-- **Subagents:** `.claude/agents/` registers each [role guide](docs/roles/README.md) as a subagent
-  Claude Code can delegate to. Those files only hold Claude Code settings; edit the guide. #695
-  replaces them with one worker that loads the guides as skills.
-- **Hooks** (#446, in `.claude/settings.json`, scripts and tests in `.claude/hooks/`): after each
-  Edit or Write, the file is formatted with Prettier and checked with ESLint in the checkout or
-  worktree that holds it, and an error comes back to fix at once. Before each Bash command, the
-  commands `AGENTS.md` forbids (`--admin`, `bypass_rules: true`, a push to `main`) are refused, and
-  so is a commit whose `src/payload-types.ts` change is only `next dev` reformatting it. CI stays
-  the real gate. Hooks run in local and cloud sessions alike.
-- **Security plugin:** `.claude/settings.json` turns on Anthropic's `security-guidance` plugin,
-  which reviews Claude's changes for security mistakes as it works. Local sessions install it once
-  with `claude plugin install security-guidance@claude-plugins-official --scope project` (it needs
-  Python 3.8+). Cloud sessions don't load plugins a repository turns on, so there CodeQL and the
-  reviews cover it.
+  about once a minute and for at most 15 minutes, without pushing; after that, tell the user.
 - **Browser and dev server:** `.claude/settings.json` allows the Playwright MCP tools used for
   screenshots, and `.claude/launch.json` starts `npm run dev`.

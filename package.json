@@ -18,7 +18,8 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "prepare": "husky",
     "knip": "knip",
-    "duplication": "jscpd"
+    "duplication": "jscpd",
+    "agent-context": "node scripts/agent-context.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",

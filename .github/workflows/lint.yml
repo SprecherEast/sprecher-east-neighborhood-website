@@ -38,6 +38,25 @@ jobs:
       - name: Check Prettier formatting
         run: npx prettier --check .
 
+  # What agents load at session start stays small, and the generated rules match the guidelines
+  # they copy (#144). Node only: the script uses no packages.
+  agent-context:
+    name: Agent context
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Check the generated rules and the session-start budget
+        run: node scripts/agent-context.mjs
+
   # ESLint skipped for docs-only changes (no JS/TS to lint)
   eslint:
     name: ESLint
