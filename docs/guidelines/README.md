@@ -8,20 +8,29 @@ Guidelines say how things should be. Step-by-step procedures are Agent Skills in
 [`.agents/skills/`](../../.agents/skills/), and facts about the system are in
 [`docs/project.md`](../project.md) and [`docs/architecture/`](../architecture/README.md).
 
-| Guideline                                           | Read it when                                                                      |
-| --------------------------------------------------- | --------------------------------------------------------------------------------- |
-| [Guard rails](guard-rails.md)                       | Always, before any change: the non-negotiable rules and what enforces them.       |
-| [Development](development.md)                       | Always: native first, configuration over code, DRY, failing explicitly.           |
-| [Security](security.md)                             | Always: packages, input, secrets, access control, roles, the server.              |
-| [Payload CMS](payload-cms.md)                       | You touch collections, blocks, heroes, hooks, fields, migrations or seed data.    |
-| [Next.js and Tailwind](nextjs-tailwind.md)          | You touch routes, metadata, caching, styling, design tokens, dates or images.     |
-| [Components and content](components-and-content.md) | You build UI or forms, or write site content or seed data.                        |
-| [UI/UX design](ui-ux-design.md)                     | You change how anything looks: hierarchy, spacing, color, accessibility.          |
-| [Frontend patterns](frontend-patterns/README.md)    | You need a tested snippet for a hero, section, card, CTA, motion or backdrop.     |
-| [Brand voice](brand-voice.md)                       | You write anything a neighbor reads: messages, emails, posts, events, explainers. |
-| [Content marketing](content-marketing.md)           | You plan, research or write blog posts and neighborhood news.                     |
-| [Social media](social-media.md)                     | You plan or write posts and replies for Nextdoor, Facebook or other platforms.    |
-| [Asana (legacy)](asana-workflow.md)                 | A task is still mirrored in Asana. GitHub issues are the source of truth.         |
+Guard rails load into every session ([`CLAUDE.md`](../../CLAUDE.md) imports them, and
+[`AGENTS.md`](../../AGENTS.md) summarizes them). Every other reference loads by itself as soon as the
+work reads or edits a file that matches its globs, so a session only carries what its task needs.
+Read one by hand whenever a task needs it and it hasn't loaded (#144). This table is the one place
+the globs are written: `scripts/agent-context.mjs` copies each listed reference into the Claude Code
+adapter with them, and CI fails when a copy is out of date.
+
+| Reference                                           | Loads by itself when the work touches                                                                                                                                                                    | Read it when                                                                      |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [Guard rails](guard-rails.md)                       | Always loaded                                                                                                                                                                                            | Always, before any change: the non-negotiable rules and what enforces them.       |
+| [Development](development.md)                       | `src/**`, `scripts/**`, `intelligence/**`, `ops/**`, `e2e/**`, `.claude/hooks/**`, `*.config.*`, `package.json`                                                                                          | Any code change: native first, configuration over code, DRY, failing explicitly.  |
+| [Security](security.md)                             | `src/**`, `scripts/**`, `intelligence/**`, `ops/**`, `.github/workflows/**`, `package.json`, `.env*`                                                                                                     | Any code change: packages, input, secrets, access control, roles, the server.     |
+| [Payload CMS](payload-cms.md)                       | `src/**/cms/**`, `src/**/cms.ts`, `src/**/data/**`, `src/payload.config.ts`, `src/payload-types.ts`, `src/platform/payload/**`, `src/platform/richtext/**`, `src/migrations/**`, `src/endpoints/seed/**` | You touch collections, blocks, heroes, hooks, fields, migrations or seed data.    |
+| [Next.js and Tailwind](nextjs-tailwind.md)          | `src/app/**`, `src/**/*.tsx`, `src/**/*.css`, `src/themes/**`, `src/platform/theme/**`, `src/platform/seo/**`, `src/platform/lib/**`, `src/proxy.ts`, `next.config.*`                                    | You touch routes, metadata, caching, styling, design tokens, dates or images.     |
+| [Components and content](components-and-content.md) | `src/**/*.tsx`, `src/platform/ui/**`, `src/platform/lib/messages/**`, `src/endpoints/seed/**`                                                                                                            | You build UI or forms, or write site content or seed data.                        |
+| [UI/UX design](ui-ux-design.md)                     | `src/**/*.tsx`, `src/**/*.css`, `src/themes/**`, `src/platform/ui/**`, `src/platform/theme/**`                                                                                                           | You change how anything looks: hierarchy, spacing, color, accessibility.          |
+| [Frontend patterns](frontend-patterns/README.md)    | No, read by hand                                                                                                                                                                                         | You need a tested snippet for a hero, section, card, CTA, motion or backdrop.     |
+| [Brand voice](brand-voice.md)                       | No, read by hand                                                                                                                                                                                         | You write anything a neighbor reads: messages, emails, posts, events, explainers. |
+| [Content marketing](content-marketing.md)           | No, read by hand                                                                                                                                                                                         | You plan, research or write blog posts and neighborhood news.                     |
+| [Social media](social-media.md)                     | No, read by hand                                                                                                                                                                                         | You plan or write posts and replies for Nextdoor, Facebook or other platforms.    |
+| [Asana (legacy)](asana-workflow.md)                 | No, read by hand                                                                                                                                                                                         | A task is still mirrored in Asana. GitHub issues are the source of truth.         |
+| [Project facts](../project.md)                      | `src/**`, `scripts/**`, `intelligence/**`, `ops/**`, `e2e/**`, `.github/workflows/**`, `package.json`, `next.config.*`, `ecosystem.config.cjs`, `.env*`                                                  | Any code or server change: stack, hosting, environment variables, gotchas.        |
+| [How we work](../process/project-management.md)     | `docs/process/**`, `docs/product/**`, `.github/ISSUE_TEMPLATE/**`, `.github/label-policy.json`, `.agents/skills/change-workflow/**`, `.agents/skills/project-tracking/**`                                | You file, groom, pick up or report work, or open a pull request.                  |
 
 ## Changing a guideline
 

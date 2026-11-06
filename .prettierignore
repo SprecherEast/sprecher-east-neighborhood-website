@@ -10,3 +10,5 @@ src/app/(payload)
 # Vendored unchanged from Vercel (#424): keep them byte-for-byte as upstream
 .agents/skills/vercel-*/SKILL.md
 .agents/skills/vercel-*/rules
+# Generated from the guidelines by scripts/agent-context.mjs (#144); CI checks them against the sources
+.claude/rules/generated
