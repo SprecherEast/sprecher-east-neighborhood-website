@@ -44,6 +44,8 @@ The site is useful and inviting enough to promote across the neighborhood.
 | [#309](https://github.com/boulaajaj/sprecher-east-neighborhood-website/issues/309) Self-service accounts and contact        | Residents sign up, sign in and contact the association without friction.                                                       |
 | [#270](https://github.com/boulaajaj/sprecher-east-neighborhood-website/issues/270) Use what's built in                      | Under way: our own code goes only into events, news and community.                                                             |
 | [#444](https://github.com/boulaajaj/sprecher-east-neighborhood-website/issues/444) Tools that check our rules automatically | Ongoing: machines check the rules on every change.                                                                             |
+| [#712](https://github.com/boulaajaj/sprecher-east-neighborhood-website/issues/712) Knowledge layer                          | Under way, first: an index, notes next to the code and generated reference, kept in sync with the code by a required check.    |
+| [#685](https://github.com/boulaajaj/sprecher-east-neighborhood-website/issues/685) Chief of staff agent team                | After the knowledge layer: one agent to talk to, one worker per issue, a fresh reviewer per pull request.                      |
 
 New ideas start as GitHub issues: a new capability as an epic, anything smaller under the epic it
 belongs to. An epic gets a milestone when it's planned.

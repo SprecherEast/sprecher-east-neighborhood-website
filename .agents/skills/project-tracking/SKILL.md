@@ -34,9 +34,9 @@ issue is **Ready**:
 
 When the board can't be read (cloud sessions), skip the size check and say so in a comment on the
 issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read the parent epic too: it
-says what the issue is part of. Work in progress is capped
-([the rule and the cap](../../../docs/process/project-management.md#grooming-and-work-in-progress)),
-and a second issue needs the overlap check below to pass.
+says what the issue is part of. More than one issue may be in progress only when their files
+don't overlap ([the rule](../../../docs/process/project-management.md#grooming-and-work-in-progress)),
+so every issue after the first needs the overlap check below to pass.
 
 ## 1a. Grooming
 
@@ -157,7 +157,7 @@ For each issue:
      `gh project item-list 2 --owner boulaajaj --limit 1000 --format json --jq '.items[]|select(.status=="In progress")|.content.number'`
      (`--limit` matters: the default stops at 30 items). Read each one's **Files likely touched**
      and compare with this issue's and with the shared hot spots. A shared file or hot spot, or a
-     blocker between them, means wait. So does reaching the cap.
+     blocker between them, means wait.
   2. Check it isn't already claimed: not In progress, and no `### [STEP]` claim comment. All
      agents use the owner's login, so the assignee can't tell them apart. An agent the chief of
      staff started has already been handed the issue; it never picks another.

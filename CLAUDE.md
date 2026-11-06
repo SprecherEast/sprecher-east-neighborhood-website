@@ -45,11 +45,13 @@ Read the other guidelines (frontend patterns, content marketing, Asana) when a t
   reviewer) only when the PR touches sign-in or accounts, access rules, migrations, the deploy or
   server scripts, or other security code. Use the plain aliases (`opus`, `sonnet`), never a
   version, so the newest model is always used.
-- **Agent team** ([operating model](docs/process/agent-operating-model.md), #685). Planned
-  (#695): the chief of staff and the helpers will run on `opus`, and workers and standard
-  reviewers stay on `sonnet` at `medium`. Review depth today is the #522 rule above and nothing
-  wider. Never `fable` in unattended runs: it can bill to usage credits, and in `-p` runs without
-  asking ([model config](https://code.claude.com/docs/en/model-config)). Gotchas from the
+- **Agent team** ([operating model](docs/process/agent-operating-model.md), #685, #721). Planned
+  (#695, after the knowledge layer, #712): the chief of staff will run on `opus`, at `high` effort
+  for grooming and issue text, and the one worker and standard reviewers stay on `sonnet` at
+  `medium`. Its helper procedures are skills, so they run in its session and need no model of
+  their own. Review depth today is the #522 rule above and nothing wider. Never `fable` in
+  unattended runs: it can bill to usage credits, and in `-p` runs without asking
+  ([model config](https://code.claude.com/docs/en/model-config)). Gotchas from the
   subagent docs: `isolation: worktree` branches from the default branch, not the parent's `HEAD`;
   the `Agent(name, …)` limit on `tools` and `initialPrompt` apply only to an agent run as the main
   session (`claude --agent`) ([subagents](https://code.claude.com/docs/en/sub-agents)). A reviewer
@@ -71,7 +73,8 @@ Read the other guidelines (frontend patterns, content marketing, Asana) when a t
   about once a minute and for at most 15 minutes. Don't push while waiting. If the checks still
   haven't finished after 15 minutes, tell the user.
 - **Subagents:** `.claude/agents/` registers each [role guide](docs/roles/README.md) as a subagent
-  Claude Code can delegate to. Those files only hold Claude Code settings; edit the guide.
+  Claude Code can delegate to. Those files only hold Claude Code settings; edit the guide. #695
+  replaces them with one worker that loads the guides as skills.
 - **Hooks** (#446, in `.claude/settings.json`, scripts and tests in `.claude/hooks/`): after each
   Edit or Write, the file is formatted with Prettier and checked with ESLint in the checkout or
   worktree that holds it, and an error comes back to fix at once. Before each Bash command, the
