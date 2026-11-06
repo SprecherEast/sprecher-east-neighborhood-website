@@ -144,6 +144,19 @@ describe('FactTabs', () => {
     expect(sure?.getAttribute('aria-hidden')).toBe('true')
   })
 
+  it('shows a fact’s explanation in its open panel, not on the tab, so every tab holds the same amount of text (#707)', () => {
+    const { container } = setup()
+    const tabs = screen.getAllByRole('tab')
+    expect(tabs.map((tab) => tab.textContent).join(' ')).not.toContain('The City’s release')
+    const panels = [...container.querySelectorAll('[role="tabpanel"]')]
+    // The last two words stay together, so the line never ends on a lone "month"
+    expect(panels[2]?.querySelector('[data-panel-detail]')?.textContent).toBe(
+      'The City’s release says about $7 a\u00a0month',
+    )
+    // A fact with no explanation gets no empty line
+    expect(panels[0]?.querySelector('[data-panel-detail]')).toBeNull()
+  })
+
   it('has no accessibility violations, with charts and a timeline inside', async () => {
     const { container } = setup()
     await expectAccessible(container)

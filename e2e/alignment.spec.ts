@@ -103,3 +103,68 @@ test.describe('cards in a row stay in line', () => {
     }
   })
 })
+
+// What the owner saw on the real post (#707): the tabs hang apart from the open panel, one tab
+// carries a line the others lack, and a figure breaks in the middle of a phrase.
+const TAB = '[role="tab"]'
+const ACTIVE_PANEL = '[role="tabpanel"][data-state="active"]'
+/** The explanation the fixture's third fact has and the others lack; a tab must not show it */
+const DETAIL = 'The City’s release says about $7 a month'
+
+test.describe('fact tabs stay tidy', () => {
+  for (const width of WIDTHS) {
+    test(`gap, parts and wrapping at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto(POST)
+      const list = page.locator(TAB_LISTS).first()
+      await list.scrollIntoViewIfNeeded()
+
+      const measured = await list.evaluate(
+        (list, { tab, panel, value }) => {
+          const tabs = [...list.querySelectorAll(tab)]
+          const box = (e: Element) => e.getBoundingClientRect()
+          const active = document.querySelector(panel)
+          if (!active || tabs.length < 2) throw new Error('No fact tabs with an open panel')
+          // Each word of a figure, with its line, to see where it breaks
+          const lines = tabs.map((t) => {
+            const figure = t.querySelector(value)
+            if (!figure?.firstChild) throw new Error('A tab has no figure')
+            const words: { word: string; top: number; right: number }[] = []
+            for (const m of (figure.textContent ?? '').matchAll(/\S+/g)) {
+              const range = document.createRange()
+              range.setStart(figure.firstChild, m.index)
+              range.setEnd(figure.firstChild, m.index + m[0].length)
+              const r = range.getBoundingClientRect()
+              words.push({ word: m[0], top: Math.round(r.top), right: Math.round(r.right) })
+            }
+            return { words, tabRight: Math.round(box(t).right) }
+          })
+          return {
+            tabGap: Math.round(box(tabs[1]).left - box(tabs[0]).right),
+            panelGap: Math.round(box(active).top - box(tabs[0]).bottom),
+            texts: tabs.map((t) => t.textContent ?? ''),
+            lines,
+          }
+        },
+        { tab: TAB, panel: ACTIVE_PANEL, value: VALUE },
+      )
+
+      // The space under the tabs is the space between them, not a wider, unexplained one
+      expect(measured.panelGap, 'tabs to panel equals tab to tab').toBe(measured.tabGap)
+      for (const text of measured.texts) {
+        expect(text, 'a tab carries no line the others lack').not.toContain(DETAIL)
+      }
+      for (const { words, tabRight } of measured.lines) {
+        const label = words.map((w) => w.word).join(' ')
+        words.forEach((w, i) => {
+          expect(w.right, `${label} stays inside its tab`).toBeLessThanOrEqual(tabRight)
+          // A line never ends on a lone short word: "+$90 a / year" reads as broken
+          const next = words[i + 1]
+          if (next && w.word.length === 1) {
+            expect(next.top, `"${w.word}" stays with "${next.word}" in ${label}`).toBe(w.top)
+          }
+        })
+      }
+    })
+  }
+})

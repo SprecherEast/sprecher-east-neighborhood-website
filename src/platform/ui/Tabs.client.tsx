@@ -47,7 +47,9 @@ export type TabsProps = {
  * at a corner. The first tab has no left flare and the last no right one, where the outline runs
  * on into the panel's own edge. Both numbers the geometry depends on are variables on the root:
  * `--tabs-gap` (between the tabs and the panel) and `--tabs-flare` (the flare's radius, never more
- * than the gap, so it stays below the neighbouring tabs).
+ * than the gap, so it stays below the neighbouring tabs). The tabs sit the same distance from each
+ * other as from the panel (`gap-x-2` on the list, `--tabs-gap` under it, #707): two gaps of
+ * different sizes on one edge look accidental.
  */
 // Tailwind reads class names as written in the source, so none of these are built from pieces. The
 // two gradients are variables on the root (each written once, a ring of the outline colour on a
@@ -100,7 +102,7 @@ export function Tabs({
       onValueChange={() => setChanged(true)}
       data-changed={changed || undefined}
       className={cn(
-        'group/tabs flex flex-col gap-(--tabs-gap) [--tabs-flare:0.75rem] [--tabs-gap:1rem]',
+        'group/tabs flex flex-col gap-(--tabs-gap) [--tabs-flare:0.5rem] [--tabs-gap:0.5rem]',
         FLARES,
         className,
       )}
@@ -108,7 +110,7 @@ export function Tabs({
       <RadixTabs.List
         aria-label={label}
         className={cn(
-          'hidden auto-cols-[minmax(0,1fr)] grid-flow-col gap-x-1 sm:gap-x-2 scripted:grid',
+          'hidden auto-cols-[minmax(0,1fr)] grid-flow-col gap-x-2 scripted:grid',
           shared && [SUBGRID_FOUR_ROWS_EXPLICIT, 'gap-y-0'],
         )}
       >

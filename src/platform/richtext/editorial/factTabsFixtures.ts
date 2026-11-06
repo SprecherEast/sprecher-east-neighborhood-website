@@ -41,8 +41,9 @@ export const FACT_TABS_FIXTURE = {
       panel: [chart('borrowed')],
     },
     {
-      value: '+$90.04',
-      label: 'More a year, City share, average home',
+      value: '+$90 a year',
+      label: 'City’s share, average home',
+      detail: 'The City’s release says about $7 a month',
       icon: 'taxes',
       certainty: 'confirmed',
       heading: 'One average home',

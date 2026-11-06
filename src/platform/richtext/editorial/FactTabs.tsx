@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
+import { joinLastWords } from '@/platform/lib/joinLastWords'
 import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { Chart } from '@/platform/ui/chart/Chart'
 import { Link } from '@/platform/ui/Link'
@@ -25,6 +26,12 @@ function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
       <div data-panel-certainty className="sm:hidden" aria-hidden="true">
         <CertaintyBadge certainty={fact.certainty} />
       </div>
+      {/* The explanation a tab leaves out so all the tabs hold the same parts (#707) */}
+      {fact.detail && (
+        <div data-panel-detail>
+          <Text variant="small">{joinLastWords(fact.detail)}</Text>
+        </div>
+      )}
       {definition && <Text variant="lead">{definition}</Text>}
       {fact.source && (
         <Text variant="small">
