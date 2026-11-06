@@ -11,12 +11,17 @@ import {
 } from '../../src/platform/richtext/editorial/keyFactsFixtures'
 import { ALIGNMENT_POST_SLUG } from './alignmentSlug'
 
+/** The caption the figure test measures: long enough to run to two lines on a phone (#658) */
+export const FIGURE_CAPTION =
+  'A sample figure with a caption that runs to more than one line on a phone.'
+
 /**
  * A post of repeating cards with the content most likely to knock them out of line (#678): one
  * title that wraps beside titles that don't, a missing explanation, a source link that wraps, and
- * a title at the editor's longest. The alignment test measures it at six widths.
+ * a title at the editor's longest. The alignment test measures it at six widths. It ends with an
+ * image that has a caption, and the legend under it (#658).
  */
-export const alignmentPost = (): RequiredDataFromCollectionSlug<'posts'> => ({
+export const alignmentPost = (mediaId: number): RequiredDataFromCollectionSlug<'posts'> => ({
   slug: ALIGNMENT_POST_SLUG,
   title: 'Alignment check',
   _status: 'published',
@@ -34,5 +39,15 @@ export const alignmentPost = (): RequiredDataFromCollectionSlug<'posts'> => ({
     heading('h2', 'Four fact tabs'),
     p('Each tab is a fact; the tab buttons are a row of cards too.'),
     block('alignment-4', { blockType: 'factTabs', ...FACT_TABS_FIXTURE }),
+    heading('h2', 'An image with a caption and a legend'),
+    block('alignment-5', { blockType: 'mediaBlock', media: mediaId }),
+    block('alignment-6', {
+      blockType: 'diagramKey',
+      items: [
+        { label: 'North roundabout', text: 'Ramps meet the crossing road.' },
+        { label: 'Westbound loop', text: null },
+        { label: 'South roundabout', text: 'The matching junction on the other side of I-94.' },
+      ],
+    }),
   ]),
 })
