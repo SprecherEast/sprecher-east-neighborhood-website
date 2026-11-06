@@ -1,7 +1,8 @@
 name: PR Policy
 
 # Enforces AGENTS.md steps 1–2 on every pull request: a linked issue with exactly one
-# type label, an area label and a priority label, and a fully filled-in PR description.
+# type label, an area label and a priority label, a fully filled-in PR description, and a
+# knowledge note updated with the code it describes (.github/scripts/knowledge-sync.mjs).
 # Required status check on main ("PR Policy"). Allowed labels: .github/label-policy.json
 #
 # Note: this runs the PR's own copy of this file. Changes to it (or to any workflow)
@@ -26,10 +27,8 @@ jobs:
     name: PR Policy
     runs-on: ubuntu-latest
     steps:
+      # The whole tree: the knowledge check looks for each note named in docs/knowledge/map.json
       - uses: actions/checkout@v6
-        with:
-          sparse-checkout: .github/label-policy.json
-          sparse-checkout-cone-mode: false
 
       - uses: actions/github-script@v8
         with:
@@ -45,7 +44,11 @@ jobs:
             const REQUIRED_SECTIONS = ['What changed', 'Why', 'How', 'How to test', 'Risk & rollback', 'Self-review'];
             const SELF_REVIEW_ITEMS = ['Reuse', 'Quality', 'Efficiency', 'Guidelines', 'Visual'];
             const problems = [];
-            const body = (pr.body || '').replace(/<!--[\s\S]*?-->/g, '');
+            const { pathToFileURL } = require('url');
+            const scripts = (name) => import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/${name}`).href);
+            const { sectionsOf, withoutComments } = await scripts('pr-body.mjs');
+            const { knowledgeProblems } = await scripts('knowledge-sync.mjs');
+            const body = withoutComments(pr.body);
 
             // 1. Linked issue(s): "Closes #N" (closes it on merge) or "Part of #N" (multi-PR issue)
             const numbers = (re) => [...body.matchAll(re)].map((m) => Number(m[1]));
@@ -81,12 +84,7 @@ jobs:
             }
 
             // 2. Every template section filled in
-            const sections = {};
-            for (const part of body.split(/^##\s+/m).slice(1)) {
-              const nl = part.indexOf('\n');
-              const title = (nl === -1 ? part : part.slice(0, nl)).trim().toLowerCase();
-              sections[title] = nl === -1 ? '' : part.slice(nl + 1);
-            }
+            const sections = sectionsOf(body);
             for (const name of REQUIRED_SECTIONS) {
               const text = (sections[name.toLowerCase()] || '').replace(/^\s*\d+\.\s*$/gm, '').trim();
               if (text.length < 10) problems.push(`Fill in the "## ${name}" section of the PR description.`);
@@ -99,6 +97,22 @@ jobs:
               const answer = (line || '').replace(/^[^:]*:/, '').trim();
               if (answer.length < 10) problems.push(`Self-review: write a line "- ${item}: what you checked and fixed" (10+ characters).`);
             }
+
+            // 3. The knowledge layer stays in sync with the code (decision 0019 section 6, #716):
+            // a change under a mapped path updates its note, or says "Behavior change: none" and why
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              ...context.repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+            problems.push(
+              ...knowledgeProblems({
+                mapJson: fs.readFileSync('docs/knowledge/map.json', 'utf8'),
+                changedFiles: files.flatMap((f) => [f.filename, f.previous_filename].filter(Boolean)),
+                noteExists: (note) => fs.existsSync(note),
+                body,
+              }),
+            );
 
             if (problems.length) {
               core.setFailed(

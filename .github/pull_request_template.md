@@ -47,6 +47,16 @@ For each, what you checked and what you fixed; "not applicable, because ..." onl
 - Guidelines:
 - Visual:
 
+## Knowledge
+
+<!-- Decision 0019 section 6. Behavior change = anything a visitor, an editor or an agent would see
+or get differently (a screen, a message, fields, access, a route, an email, a job, a limit).
+Not one: a refactor that keeps behavior, tests, comments, formatting.
+If this PR changes code under a path in docs/knowledge/map.json, update that note in the same PR,
+or write "Behavior change: none" and why (20+ characters). The reviewer checks it against the diff. -->
+
+Behavior change:
+
 ## Checklist
 
 - [ ] The linked issue has a type, an area, and a priority label

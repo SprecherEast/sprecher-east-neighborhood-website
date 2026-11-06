@@ -75,7 +75,9 @@ change, however small, follows these five steps:
    the reviewer checks the change stays within it. A policy change an agent proposes on its own is
    labeled `needs owner` when it's filed, and waits for him.
 4. **Everything green.** All required checks pass before merge: `Type-check & Build`, `Prettier`,
-   `ESLint`, `Dependency Audit`, and `PR Policy` (which verifies steps 1–2). Never bypass a failing
+   `ESLint`, `Dependency Audit`, `Agent context`, `Knowledge sync`, and `PR Policy` (which
+   verifies steps 1–2, and that a change under a path in `docs/knowledge/map.json` updates its
+   note or declares `Behavior change: none` with a reason). Never bypass a failing
    or missing check. In a stack, every PR must be green on its own. Dependabot PRs are exempt from
    the issue and description rules only; they still need green checks and a review, and whoever
    picks one up (usually the ops lead) owns and merges it.
@@ -84,11 +86,13 @@ change, however small, follows these five steps:
    conversation is open. A review of an earlier head still counts only when the head changed because
    a PR below it merged (or `main` moved) and the PR's own diff is unchanged; if a PR below changed
    after the review, this PR needs a new review even when its own diff didn't change; it can be
-   short, checking it against what changed below. The owner doesn't need to be involved, but he can merge, hold or revert anything.
+   short, checking it against what changed below. The owner doesn't need to be involved, but he
+   can merge, hold or revert anything.
    A PR labeled `needs owner`, or whose issue is, waits for his answer. A stack merges one layer at
    a time from the bottom, waiting for each layer's checks on its rebased head and, if the merge
-   started a deploy, for the deploy to succeed ([`change-workflow`](.agents/skills/change-workflow/SKILL.md),
-   step 6). After the merge, the linked issue closes with a comment on how it was fixed
+   started a deploy, for the deploy to succeed
+   ([`change-workflow`](.agents/skills/change-workflow/SKILL.md), step 6). After the merge, the
+   linked issue closes with a comment on how it was fixed
    (`.github/workflows/issue-fix-summary.yml`).
 
 ### Never

@@ -192,6 +192,8 @@ An issue is **Done** when:
 
 - its PR has passed every required check and its independent review, and is merged
   ([`AGENTS.md`](../../AGENTS.md))
+- the knowledge note for the code it changed is updated, or the PR declares "no behavior change"
+  and the reviewer agreed ([decision 0019](../architecture/decisions/0019-knowledge-layer.md))
 - if the merge started a deploy, the deploy succeeded and the changed behavior was checked on
   the live site (the [`wrapped`](../../.agents/skills/wrapped/SKILL.md) skill)
 - the issue is closed with a summary of what changed. Server changes are recorded on the
