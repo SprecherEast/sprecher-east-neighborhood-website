@@ -114,9 +114,9 @@ built on 2026-10-21 from the spec in #90.
 ## Grooming and one task at a time
 
 Summary of the owner's rule (2026-10-31, Claude Code session, text, recorded on #524): groom before
-every major change, sorting tasks by effort and priority and moving them into Ready. Then work one
-task at a time, setting each to In Progress, so the board always shows at a glance what's being done
-and what isn't.
+every major change, sorting tasks by effort and priority and moving them into Ready. Once everything is
+in Ready, work one task at a time, setting each to In Progress, so the board always shows at a glance
+what's being done and what isn't.
 
 - **Groom before every major change:** a new epic, a sprint, or a batch of work. Each issue gets
   its plain summary, acceptance criteria, parent epic, labels (type, area, `priority:`) and a

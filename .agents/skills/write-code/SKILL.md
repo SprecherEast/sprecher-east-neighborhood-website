@@ -11,22 +11,22 @@ through them. Read a reference file below only when the step needs it.
 
 ## What the owner asked for
 
-Amine, 2026-10-20 and 2026-10-21 (in the Claude Code sessions that planned #127 and this skill):
+Summary of the owner's direction (2026-10-20 and 2026-10-21, in the Claude Code sessions that
+planned #127 and this skill):
 
-- "follow the domain-driven design and bounded context, and avoid all those anti-patterns, like
-  modules referencing other modules"
-- "very easy to plug with different themes, and very easy to plug with different CMS systems. Our
-  business logic and our core things are separated."
-- "we don't want to reinvent the wheel or overengineer"
-- "very manageable, even for a human to browse and understand the structure of the website just
-  from the folder structure"
+- Follow domain-driven design and bounded contexts, and avoid anti-patterns such as modules
+  referencing other modules.
+- Make it easy to plug in different themes and CMS systems, with business logic and core code kept
+  separate.
+- Don't reinvent the wheel or overengineer.
+- Keep things manageable, so a person can understand the site's structure from its folders alone.
 - From the epics built on his requests (#127, #163): files under 250 lines, each rule
   and component written and tested once and reused, shared components instead of plain HTML
   elements.
 
-Amine, 2026-10-22 (Claude chat, #262): "check the native configuration, check the native
-features. And then if they are not there, look for the plugin that is official. If it's not there,
-look for a open source plugin [...] If none of it is there, only then we can write the code."
+Summary of the owner's direction (2026-10-22, Claude chat, #262): check native configuration and
+features first, then an official plugin, then an open-source plugin. Write code only when none of
+those exists.
 
 ## 1. Find what exists first
 

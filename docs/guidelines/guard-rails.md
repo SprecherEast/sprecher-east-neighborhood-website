@@ -1,10 +1,11 @@
 # Guard rails: non-negotiable
 
 These rules apply to every change, by every agent and every human. They are not preferences and
-they cannot be traded for speed. Summary of the owner's direction (2026-11-03, Claude Code session, text, recorded on #609):
-shortcuts, duplicated code and raw tags are not allowed, and neither is bypassing or skipping these
-rules. They are hard rules and non-negotiable. Build each thing once and reuse it everywhere, keep
-reviews simple, and stay within domain-driven design, clean architecture and test-driven development.
+they cannot be traded for speed. Summary of the owner's direction (2026-11-03, Claude Code session, text, recorded on #609 and in PR
+#612): shortcuts, duplicated code, raw tags and the like are not allowed, and neither is bypassing or
+skipping these rules. They are hard rules and non-negotiable. Above all, build each thing once and
+reuse it everywhere. Keep simplifying and reviewing, and stay within domain-driven design, clean
+architecture, test-driven development and similar bounds.
 
 ## The rules
 
