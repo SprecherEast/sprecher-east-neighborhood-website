@@ -111,10 +111,10 @@ flowchart LR
 - **Issue first, claimed, In progress, before the first commit.** The chief of staff assigns; one
   dispatcher means two agents can't win the same issue, because GitHub has no atomic claim
   ([REST assignees](https://docs.github.com/en/rest/issues/assignees)). In review and Done move on
-  their own ([project-management](project-management.md#the-board)). Planned: #693.
+  their own ([project-management](project-management.md#the-board)). Built: #693.
 - **Every step leaves a comment** under a fixed header the chief of staff and scripts can find:
   `### [STEP]`, `[DECISION]`, `[QUESTION]`, `[PUSHBACK]` or `[SCOPE]`, followed by context, the
-  decision or question, why, and `Owner needed: yes/no`. A convention, not a GitHub feature. Planned: #693.
+  decision or question, why, and `Owner needed: yes/no`. A convention, not a GitHub feature. Built: #693.
 - **Owner questions** get the `needs owner` label and one plain question with options and a
   recommendation, as in [`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §3.
   Silence is never a yes: the issue waits ([waits for owner](project-management.md#waits-for-owner)).
@@ -123,11 +123,11 @@ flowchart LR
 - **Scope creep** becomes a new issue, linked to the original with a `[SCOPE]` comment. The current
   PR does not widen.
 - **Parallel work.** More than one issue may be In progress only if the files each declares, and
-  the shared hot spots (layout, header, `globals.css`, the Payload config), don't overlap, at most 2
-  at first. Anthropic's guidance for parallel agents is that each owns a different set of files
+  the shared hot spots (listed in project-management), don't overlap, up to the
+  cap in project-management. Anthropic's guidance for parallel agents is that each owns a different set of files
   ([agent teams](https://code.claude.com/docs/en/agent-teams)). Dependent PRs go on a native
-  stack ([`stacked-prs`](../../.agents/skills/stacked-prs/SKILL.md)). This changes the current
-  one-task-at-a-time rule, so it takes effect only when #693 merges. Until then: one task at a time.
+  stack ([`stacked-prs`](../../.agents/skills/stacked-prs/SKILL.md)). The rule is in
+  [project-management](project-management.md#grooming-and-work-in-progress) (built: #693).
 - **Scheduled check.** Every open issue is checked on a schedule: duplicate bugs get a label and are
   closed after three days without objection; anything else that looks obsolete gets `proposed-close`
   for the owner; an old idea is never closed by an agent, it gets `needs owner`. Planned: #697.
@@ -229,7 +229,7 @@ flowchart LR
 | ---------------------------------------------------------- | ------- | ------------------------------ |
 | Board, issue flow, role agents, skills, hooks, checks      | Built   | [`AGENTS.md`](../../AGENTS.md) |
 | This page and the visual plan                              | This PR | #692                           |
-| Issue fields, comment header, labels, claim, parallel rule | Planned | #693                           |
+| Issue fields, comment header, labels, claim, parallel rule | Built   | #693                           |
 | Code owners and chief of staff limits                      | Planned | #694                           |
 | Chief of staff, helpers, reviewer perspectives             | Planned | #695                           |
 | Design department                                          | Planned | #696                           |

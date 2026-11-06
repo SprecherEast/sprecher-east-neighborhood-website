@@ -27,23 +27,26 @@ items (§2 step 4 without `--query`, then find the issue by number in the JSON).
 issue is **Ready**:
 
 - it has acceptance criteria, a parent, type, area and priority labels, and a size
+- **Files likely touched** and **Must not touch** are filled in (`None` when there is nothing)
 - nothing it's blocked by is still open
 - it isn't labeled `needs owner`
 - no open PR already closes it (the list in §2 step 3)
 
 When the board can't be read (cloud sessions), skip the size check and say so in a comment on the
 issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read the parent epic too: it
-says what the issue is part of. Work on one task at a time across the project: start the next only when
-the current one is In review or Done.
+says what the issue is part of. Work in progress is capped
+([the rule and the cap](../../../docs/process/project-management.md#grooming-and-work-in-progress)),
+and a second issue needs the overlap check below to pass.
 
 ## 1a. Grooming
 
 Before every major change (a new epic, a sprint, a batch of work), groom the backlog
-([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-one-task-at-a-time)).
+([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-work-in-progress)).
 For each issue:
 
-1. Give it a plain summary, acceptance criteria, a parent epic, and the type, area and `priority:`
-   labels (§3).
+1. Give it a plain summary, acceptance criteria, a parent epic, the type, area and `priority:`
+   labels (§3), and its **Files likely touched** and **Must not touch** (`None` when nothing),
+   which the overlap check in §4 reads.
 2. Set its **Size** as effort: S, M or L. If it is bigger than L, split it into sub-issues. In a
    cloud session, which can't read the board, skip Size and say so on the issue.
 3. When it meets the Definition of Ready, move it to **Ready**. On the owner's computer, move the
@@ -92,7 +95,8 @@ For each issue:
    ```
 
 3. **Create it** with the issue form's sections (`### Problem`, `### Proposed fix`,
-   `### Acceptance criteria`, `### Area`, `### Priority`) in `issue.md`. `parent_issue_id` is the
+   `### Acceptance criteria`, `### Files likely touched`, `### Must not touch`,
+   `### Area`, `### Priority`) in `issue.md`. `parent_issue_id` is the
    epic's `id` (not its number); leave it out for a new epic.
 
    ```bash
@@ -129,7 +133,7 @@ For each issue:
    - stop: it waits for him
      ([waits for owner](../../../docs/process/project-management.md#waits-for-owner))
 
-   Ask him on the issue, and in the chat too when he's there. Make it easy to answer:
+   Ask him on the issue under a `### [QUESTION]` header, and in the chat too when he's there. Make it easy to answer:
 
    ```markdown
    **Question:** Should volunteers sign up with a phone number as well as an email?
@@ -145,9 +149,27 @@ For each issue:
 
 ## 4. While working
 
-- Keep the issue current: comment when something important is decided or found, and when a
-  plan changes.
-- New work found along the way becomes a new issue (§3). Don't widen the current PR.
+- **Claim the issue first.** The dispatcher does this (the chief of staff, or the owner's own
+  session until #695 builds it), in order; a worker started by it only checks that the claim
+  names its branch and never claims anything itself
+  ([the record on the issue](../../../docs/process/project-management.md#the-record-on-the-issue)):
+  1. Overlap check, if anything is already In progress: list it with
+     `gh project item-list 2 --owner boulaajaj --limit 1000 --format json --jq '.items[]|select(.status=="In progress")|.content.number'`
+     (`--limit` matters: the default stops at 30 items). Read each one's **Files likely touched**
+     and compare with this issue's and with the shared hot spots. A shared file or hot spot, or a
+     blocker between them, means wait. So does reaching the cap.
+  2. Check it isn't already claimed: not In progress, and no `### [STEP]` claim comment. All
+     agents use the owner's login, so the assignee can't tell them apart. An agent the chief of
+     staff started has already been handed the issue; it never picks another.
+  3. Post a `### [STEP]` comment with the branch name and assign the issue
+     (`gh issue edit <n> --add-assignee <login>`), then set **In progress** (below). Only now
+     start the first commit.
+- Keep the issue current with the comment headers in the record on the issue: `[DECISION]` for
+  a choice and its reason, `[QUESTION]` for what you need answered (`needs owner` if only the
+  owner can), `[PUSHBACK]` when a request looks weaker than the standard approach, `[STEP]` as
+  the work moves.
+- New work found along the way becomes a new issue (§3) with the `scope-creep` label, linked
+  with a `[SCOPE]` comment on the original. Don't widen the current PR.
 - **Set In progress when work starts, before the first commit.** On the owner's computer, move the
   board's **Status** (`In progress`; `In review` and Done are automatic) with `gh project item-edit`. It needs the item, project, field and option IDs: get them from
   `gh project item-list 2 --owner boulaajaj --format json`,
