@@ -7,6 +7,15 @@ describe('withoutComments', () => {
     expect(withoutComments('a<!-- x\ny -->b')).toBe('ab')
   })
 
+  it('leaves no comment marker behind when removal joins two halves of one', () => {
+    expect(withoutComments('<!<!-- x -->-- Behavior change: none -->')).toBe('')
+    expect(withoutComments('<!-<!-- a -->- b -->ok')).toBe('ok')
+  })
+
+  it('drops everything after a comment that is never closed', () => {
+    expect(withoutComments('keep\n<!-- Behavior change: none and a long reason')).toBe('keep\n')
+  })
+
   it('treats a missing body as empty', () => {
     expect(withoutComments(null)).toBe('')
   })
