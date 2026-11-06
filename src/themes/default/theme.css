@@ -56,6 +56,9 @@
   /* Text and overlays on photos: the same in both modes, as the photo doesn't change */
   --on-image: #ffffff;
   --scrim: #000000;
+  /* The orange drawn into diagram images, so a legend's circles match them. Light mode only: the
+     photo doesn't change in dark mode, so neither does this */
+  --diagram-marker: #e8923a;
   /* Dark chrome on any page (admin bar, code blocks) */
   --inverse: #000000;
   --inverse-foreground: #ffffff;

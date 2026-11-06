@@ -69,8 +69,9 @@ const LIST_CLASSES = {
 
 /**
  * The legend under an annotated image or a chart (#636, from the diagram key of #515): one numbered
- * circle per marker, drawn like the markers on the photo (white number and ring on the accent
- * orange the site's diagrams use), each with a bold label and a short line.
+ * circle per marker, drawn like the markers on the photo (a bold white number and a thick white
+ * ring on the diagram's own orange, `diagram-marker`, which doesn't change in dark mode), each with
+ * a bold label and a short line.
  *
  * It is a panel as wide as the image above it, with the image's caption (if any) between them:
  * rounded all round, with a border (a shadow barely shows in dark mode) and a small shadow. It is
@@ -128,7 +129,7 @@ function NumberMarker({ number }: { number: number }) {
   return (
     <span
       aria-hidden="true"
-      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent text-base font-bold text-on-image ring-2 ring-on-image"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-diagram-marker text-lg font-bold text-on-image ring-3 ring-on-image"
     >
       {number}
     </span>

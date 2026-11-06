@@ -16,7 +16,7 @@ const ITEMS = [
 ]
 
 describe('Legend', () => {
-  it('numbers each marker once, in the accent colour, readable as "Marker N"', async () => {
+  it('numbers each marker once, drawn like the markers on the photo, readable as "Marker N"', async () => {
     const { container } = render(<Legend label="Diagram key" items={ITEMS} />)
 
     const list = screen.getByRole('list', { name: 'Diagram key' })
@@ -27,10 +27,17 @@ describe('Legend', () => {
     ])
     const circle = items[0].querySelector('[aria-hidden="true"]')
     expect(circle?.textContent).toBe('1')
-    // Like the numbered markers drawn on the photo: white on the accent orange, with a white ring
-    expect(circle?.className).toContain('bg-accent')
+    // Like the numbered markers drawn on the photo (#658): a bold white number in an orange disc
+    // with a thick white ring. The orange is the photo's own, so it stays put in dark mode (the
+    // theme's accent turns lighter there), and contrast is not the point: the owner asked for them
+    // to match (#711 tracks it)
+    expect(circle?.className).toContain('bg-diagram-marker')
+    expect(circle?.className).not.toContain('bg-accent')
     expect(circle?.className).toContain('text-on-image')
     expect(circle?.className).toContain('ring-on-image')
+    expect(circle?.className).toContain('ring-3')
+    expect(circle?.className).toContain('font-bold')
+    expect(circle?.className).toContain('size-8')
     expect(circle?.className).not.toContain('text-accent-foreground')
     await expectAccessible(container)
   })
