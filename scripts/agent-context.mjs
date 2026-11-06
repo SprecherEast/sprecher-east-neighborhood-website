@@ -125,7 +125,8 @@ const lineCount = (text) => text.replace(/\n$/, '').split('\n').length
 
 /**
  * Every file loaded at session start, with its line count: CLAUDE.md, rules without `paths`,
- * and what they import, each file counted once. `read(file)` returns its text or null.
+ * what they import, and what rules with `paths` import, each file counted once. `read(file)`
+ * returns its text or null.
  */
 export function startupFiles(read, rules) {
   const seen = new Map()
@@ -143,7 +144,15 @@ export function startupFiles(read, rules) {
   visit('.claude/CLAUDE.md', 0)
   for (const rule of rules) {
     const text = read(rule)
-    if (text !== null && !hasPaths(text)) visit(rule, 0)
+    if (text === null) continue
+    if (!hasPaths(text)) {
+      visit(rule, 0)
+      continue
+    }
+    // A scoped rule's own text waits for its paths, but its imports load at start
+    for (const target of importsOf(text)) {
+      visit(path.posix.normalize(path.posix.join(path.posix.dirname(rule), target)), 1)
+    }
   }
   return [...seen].map(([file, lines]) => ({ file, lines }))
 }

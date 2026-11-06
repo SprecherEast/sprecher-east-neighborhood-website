@@ -135,4 +135,19 @@ describe('startupFiles', () => {
       { file: '.claude/rules/always.md', lines: 1 },
     ])
   })
+
+  it("counts what a path-scoped rule imports, which loads at start, but not the rule's own text", () => {
+    const withImport = {
+      ...files,
+      '.claude/rules/scoped.md': "---\npaths:\n  - 'src/**'\n---\n\n@../../docs/big.md\n",
+      'docs/big.md': 'x\ny\nz\n',
+    }
+    const readWith = (file) => withImport[file] ?? null
+    expect(startupFiles(readWith, ['.claude/rules/scoped.md'])).toEqual([
+      { file: 'CLAUDE.md', lines: 4 },
+      { file: 'AGENTS.md', lines: 3 },
+      { file: 'docs/guard.md', lines: 2 },
+      { file: 'docs/big.md', lines: 3 },
+    ])
+  })
 })
