@@ -8,8 +8,7 @@ import {
   CHART_SMALL_WIDTH,
   FIGURE_GAP,
   HERO_MIN_HEIGHT,
-  LEGEND_HANG,
-  LEGEND_TUCK,
+  LEGEND_GAP,
   PAGE_MIN_HEIGHT,
   PAGE_SHELL,
   READING_GRID,
@@ -34,8 +33,7 @@ describe('layout sizes', () => {
     expect(CHART_SMALL_WIDTH).toBe('max-w-[var(--chart-small-width)]')
     expect(CHART_LARGE_WIDTH).toContain('max-w-[var(--chart-large-width)]')
     expect(FIGURE_GAP).toBe('my-[var(--figure-gap)]')
-    expect(LEGEND_HANG).toBe('-mt-[calc(var(--figure-gap)+var(--legend-overlap))]')
-    expect(LEGEND_TUCK).toBe('pt-[calc(var(--legend-overlap)+1rem)]')
+    expect(LEGEND_GAP).toBe('-mt-[calc(var(--figure-gap)_-_var(--legend-gap))]')
   })
 
   it('share their rows by subgrid: one count in all three classes, one fewer for the facts (#678)', () => {
@@ -60,7 +58,7 @@ describe('layout sizes', () => {
       '--page-min-height',
       '--hero-min-height',
       '--figure-gap',
-      '--legend-overlap',
+      '--legend-gap',
       '--chart-small-width',
       '--chart-large-width',
     ]) {

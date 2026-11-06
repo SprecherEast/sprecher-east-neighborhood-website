@@ -159,13 +159,29 @@ export function HeadersGallery() {
 
       <GalleryEntry
         name="Legend"
-        description="Numbered markers under an annotated image, hanging from the image like a drawer: square top tucked under it, rounded bottom, narrower than the image, no animation. With marker swatch, the chart colour of each item (and its hatch pattern), as a plain list under a chart."
+        description="Numbered markers (white number and ring on the accent orange, like the markers on a photo) in a panel as wide as the annotated image above it and its caption, no animation. With marker swatch, the chart colour of each item (and its hatch pattern), as a plain list under a chart."
       >
         <GalleryVariant label="under an image block" className="w-full max-w-3xl">
           {/* The real inline image block, so the sample can't drift from the article */}
           <MediaBlock
             blockType="mediaBlock"
             media={0}
+            placement="inline"
+            staticImage={SAMPLE_PHOTO}
+          />
+          <Legend label="Diagram key" items={SAMPLE_LEGEND_ITEMS} />
+        </GalleryVariant>
+        <GalleryVariant label="under an image block with a caption" className="w-full max-w-3xl">
+          {/* The caption sits between the image and the legend; the legend never covers it (#658) */}
+          <MediaBlock
+            blockType="mediaBlock"
+            media={{
+              id: 0,
+              alt: 'A sample diagram',
+              caption: SAMPLE_CAPTION_RICH_TEXT,
+              createdAt: '',
+              updatedAt: '',
+            }}
             placement="inline"
             staticImage={SAMPLE_PHOTO}
           />

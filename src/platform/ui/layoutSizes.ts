@@ -33,12 +33,11 @@ export const TOUCH_MIN_WIDTH = 'min-w-11 lg:min-w-9'
 export const FIGURE_GAP = 'my-[var(--figure-gap)]'
 
 /**
- * A legend hangs from the image above it (#636): it cancels the image block's bottom space and
- * reaches a little further up under the image, so its square top corners are hidden. Its top
- * padding adds the hidden part back, so the content starts below the image's edge.
+ * A legend sits under the image block above it (#636, #658) with a small gap, `--legend-gap`
+ * (1rem), instead of the full `--figure-gap`. It only takes back blank margin, so it never covers
+ * the image or its caption.
  */
-export const LEGEND_HANG = '-mt-[calc(var(--figure-gap)+var(--legend-overlap))]'
-export const LEGEND_TUCK = 'pt-[calc(var(--legend-overlap)+1rem)]'
+export const LEGEND_GAP = '-mt-[calc(var(--figure-gap)_-_var(--legend-gap))]'
 
 /**
  * How wide a chart's drawing runs (#681). In the page it is a thumbnail, 20rem: the drawing's own

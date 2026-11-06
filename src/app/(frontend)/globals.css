@@ -102,10 +102,10 @@
   /* How wide article text and the blocks around it run (#616). Classes: platform/ui/layoutSizes.ts */
   --reading-width: 48rem;
 
-  /* The space an image block leaves above and below it in an article, and how far a legend reaches
-     up under that image so its square top corners stay hidden (#636). Classes: layoutSizes.ts */
+  /* The space an image block leaves above and below it in an article, and the smaller space a
+     legend leaves between itself and that image (#636, #658). Classes: layoutSizes.ts */
   --figure-gap: 2rem;
-  --legend-overlap: 1rem;
+  --legend-gap: 1rem;
 
   /* How wide a chart's drawing runs as a thumbnail in the page and enlarged in its dialog (#681).
      20rem is the drawing's own 320-unit width at 1:1. Classes: platform/ui/layoutSizes.ts */
