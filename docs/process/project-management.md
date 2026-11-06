@@ -137,7 +137,7 @@ parallel work when issues don't touch the same files; the rule below says how.
   2026-11-04, recorded on #685: parallel work is fine when issues don't touch the same files. The
   cap itself is a working default. Past the first, an issue starts only if the **Files likely
   touched** of both issues, and the **shared hot spots**, don't overlap, and it isn't blocked by
-  the one in progress. The chief of staff enforces the cap. When in doubt, wait until the first is In review or Done. The
+  any issue in progress. The chief of staff enforces the cap. When in doubt, wait until the first is In review or Done. The
   highest-priority Ready item goes first.
 - **Shared hot spots** (this list is the one definition; two issues that each touch any of these
   count as overlapping, even in different lines): anything in `src/platform/` and `src/themes/`;
