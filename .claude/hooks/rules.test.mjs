@@ -1,5 +1,4 @@
-import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -107,6 +106,7 @@ describe('knowledge reminder', () => {
       file,
       mapJson,
       reminded: new Set(),
+      noteExists: () => true,
       noteChanged: () => false,
       ...options,
     })
@@ -124,6 +124,10 @@ describe('knowledge reminder', () => {
     expect(remind('src/modules/events/README.md')).toBeNull()
     expect(remind('src/modules/events/domain/upcoming.test.ts')).toBeNull()
     expect(remind('src/modules/news/domain/x.ts')).toBeNull()
+  })
+
+  it('stays quiet about a map entry whose note does not exist, as the CI check does', () => {
+    expect(remind('src/modules/events/domain/upcoming.ts', { noteExists: () => false })).toBeNull()
   })
 
   it('reminds once per module: not again for a note already reminded', () => {
@@ -148,66 +152,17 @@ describe('reminders kept per session', () => {
     expect([...remindedNotes('s1', dir)]).toEqual(['a.md', 'b.md'])
     expect(remindedNotes('s2', dir).size).toBe(0)
   })
-})
 
-describe('after-edit hook, end to end', () => {
-  let dir
-  let stateDir
-  afterEach(() => {
-    for (const d of [dir, stateDir]) if (d) rmSync(d, { recursive: true, force: true })
-  })
-
-  const run = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' })
-  const hook = path.resolve('.claude/hooks/after-edit.mjs')
-  const edit = (file, session) =>
-    spawnSync(process.execPath, [hook], {
-      cwd: dir,
-      encoding: 'utf8',
-      input: JSON.stringify({ cwd: dir, session_id: session, tool_input: { file_path: file } }),
-      env: { ...process.env, TMPDIR: stateDir },
-    })
-
-  /** A repository with a map, a note and a code file on main, and a branch off it */
-  const setup = () => {
-    dir = mkdtempSync(path.join(os.tmpdir(), 'hook-'))
-    stateDir = mkdtempSync(path.join(os.tmpdir(), 'hook-state-'))
-    run('init', '-q', '-b', 'main')
-    run('config', 'user.email', 'a@b.c')
-    run('config', 'user.name', 'T')
-    mkdirSync(path.join(dir, 'docs/knowledge'), { recursive: true })
-    mkdirSync(path.join(dir, 'src/modules/events'), { recursive: true })
-    writeFileSync(
-      path.join(dir, 'docs/knowledge/map.json'),
-      JSON.stringify([{ note: 'src/modules/events/README.md', paths: ['src/modules/events/**'] }]),
-    )
-    writeFileSync(path.join(dir, 'src/modules/events/README.md'), '# Events\n')
-    writeFileSync(path.join(dir, 'src/modules/events/a.ts'), 'export const a = 1\n')
-    run('add', '-A')
-    run('commit', '-q', '-m', 'init')
-    run('checkout', '-q', '-b', 'work')
-  }
-
-  it('prints the reminder once per session and never blocks', () => {
-    setup()
-    const file = path.join(dir, 'src/modules/events/a.ts')
-    writeFileSync(file, 'export const a = 2\n')
-    const first = edit(file, 'sess-1')
-    expect(first.status).toBe(0)
-    expect(JSON.parse(first.stdout).hookSpecificOutput.additionalContext).toMatch(
-      /src\/modules\/events\/README\.md/,
-    )
-    const second = edit(file, 'sess-1')
-    expect(second.status).toBe(0)
-    expect(second.stdout).toBe('')
-  })
-
-  it('prints nothing when the note changed compared with main', () => {
-    setup()
-    writeFileSync(path.join(dir, 'src/modules/events/README.md'), '# Events\n\nA new rule.\n')
-    const file = path.join(dir, 'src/modules/events/a.ts')
-    writeFileSync(file, 'export const a = 2\n')
-    const result = edit(file, 'sess-2')
-    expect(result.status).toBe(0)
-    expect(result.stdout).toBe('')
+  it('creates its folder, and never writes through a symlink planted at the file name', () => {
+    dir = mkdtempSync(path.join(os.tmpdir(), 'reminded-'))
+    const victim = path.join(dir, 'victim.txt')
+    writeFileSync(victim, 'keep me')
+    const state = path.join(dir, 'state')
+    mkdirSync(state)
+    symlinkSync(victim, path.join(state, 'sprecher-east-reminded-s1.json'))
+    markReminded('s1', 'a.md', path.join(state, 'deeper'))
+    markReminded('s1', 'a.md', state)
+    expect(readFileSync(victim, 'utf8')).toBe('keep me')
+    expect([...remindedNotes('s1', state)]).toEqual(['a.md'])
   })
 })

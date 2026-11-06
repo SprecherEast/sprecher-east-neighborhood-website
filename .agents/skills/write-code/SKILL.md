@@ -115,10 +115,12 @@ npx tsc --noEmit && npm run lint && npm test && npm run knip
 
 **Documentation follows behavior** ([0019](../../../docs/architecture/decisions/0019-knowledge-layer.md)
 §6). If what a visitor, an editor or an agent gets changed (a screen, a message, a field, access, a
-hook, a route, an email, a job, a limit), update the module's note in this PR, in the section the
-[template](../../../docs/knowledge/note-template.md) names. If a content type, a route or a shared
-component changed, run `npm run docs:generate`. If nothing changed in behavior, the PR says
-`Behavior change: none` and why.
+hook, a route, an email, a job, a limit), update the note that describes it in this PR: the one
+`docs/knowledge/map.json` names for the path, in the section the
+[template](../../../docs/knowledge/note-template.md) names, or the generated reference. A path the
+map doesn't list: the doc that describes it (a guideline, the setup notes, a skill). A module with
+no note yet needs none. If a content type changed, run `npm run docs:generate` (routes and
+components once #718 lands). If behavior didn't change, the PR says `Behavior change: none` and why.
 
 Fix new lint warnings in the files you touched, then run [`self-review`](../self-review/SKILL.md)
 (and [`visual-design-review`](../visual-design-review/SKILL.md) when the page looks different).

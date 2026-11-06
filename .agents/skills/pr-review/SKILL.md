@@ -47,7 +47,7 @@ gh api "repos/{owner}/{repo}/stacks?pull_request=<number>" -H 'X-GitHub-Api-Vers
 ## 2b. Check the guard rails (blockers)
 
 Read [`docs/guidelines/guard-rails.md`](../../../docs/guidelines/guard-rails.md). Check the diff
-against each of rules 1–6, and the PR's **Self-review** section against the diff:
+against each of rules 1–6 (rule 9 is step 2c), and the PR's **Self-review** section against the diff:
 
 - [ ] **Reuse:** no copied logic, markup, class strings or constants; a number two files must agree
       on has one definition. Search the repo for what the diff adds.
@@ -70,15 +70,17 @@ change: [decision 0019](../../../docs/architecture/decisions/0019-knowledge-laye
    get differently. Read the code, not the PR title. No change: say so in the review.
 2. For each, find the sentence that now describes it: in the note the
    [map](../../../docs/knowledge/map.json) names for the changed path, or in the generated page in
-   `docs/reference/`. Quote it in the review. A change with no matching sentence is a **Blocker**.
+   `docs/reference/`. For a path the map doesn't list, in the doc that describes it (a guideline,
+   the setup notes, a skill). Quote it in the review. A change with no matching sentence is a
+   **Blocker**, except in a module with no note yet: say so, no Blocker.
 3. Read the Knowledge section in the raw description (`gh pr view --json body`), not the rendered
    page. `Behavior change: none` needs a true reason as written. A reason hidden from readers (a
    Markdown link-reference comment such as `[//]: # (…)`, an HTML comment), a stock phrase, or a
-   claim the diff contradicts is a **Blocker**. `yes` with no note change is a **Blocker**.
+   claim the diff contradicts is a **Blocker**. `yes` with no change to the note or doc that describes it is a **Blocker**.
 4. A change to `docs/knowledge/map.json` is a behavior-change surface and a policy change: list it
    under **Policy changes**. Check every entry it adds points to a note that exists, and every
    entry it drops or narrows has a stated reason. Otherwise **Blocker**.
-5. Run `npm run docs:check` for a change to a content type, a route or a shared component.
+5. Run `npm run docs:check` for a change to a content type (routes and components once #718 lands).
 
 ## 3. Check the change
 

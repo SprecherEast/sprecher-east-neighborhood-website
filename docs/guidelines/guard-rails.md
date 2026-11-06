@@ -46,7 +46,8 @@ architecture, test-driven development and similar bounds.
    don't follow the process. If a rule seems to block the task, stop, say which rule and why, and
    ask. A breach found after merge is fixed first, in its own PR, before other work.
 9. **Documentation follows behavior.** A change in what a visitor, an editor or an agent gets
-   changes the module's knowledge note in the same PR ([0019](../architecture/decisions/0019-knowledge-layer.md) §6).
+   changes the note that describes it (`docs/knowledge/map.json`), or the generated reference, in
+   the same PR (owner, 2026-11-06, #712; [0019](../architecture/decisions/0019-knowledge-layer.md) §6).
 
 ## What enforces them
 

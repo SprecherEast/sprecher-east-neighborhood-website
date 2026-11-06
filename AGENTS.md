@@ -152,8 +152,8 @@ tool-specific commands or model names), and keep each file under 250 lines.
 - A rule everyone follows on every change: this file.
 - How a module or the content types work: [`docs/knowledge/index.md`](docs/knowledge/index.md), one
   line per note, each next to its code (`src/modules/<name>/README.md`), plus the generated
-  `docs/reference/`. Read the note before changing a module. **A behavior change and its note
-  change in the same PR** ([0019](docs/architecture/decisions/0019-knowledge-layer.md) §6).
+  `docs/reference/`. Read the note before changing a module. **A behavior change and the note that
+  describes it change in the same PR** ([0019](docs/architecture/decisions/0019-knowledge-layer.md) §6).
 - Why the site exists and what comes next: [`docs/product/`](docs/product/vision.md).
 - How work is planned and tracked, and how the agent team works:
   [`docs/process/`](docs/process/project-management.md).

@@ -1,6 +1,6 @@
 ---
 name: self-review
-description: Review and clean up your own change before opening or updating a pull request — reuse of existing helpers, code quality, efficiency, the repo's guidelines, and a visual design review for UI changes — then fix what it finds. Use when a change is done and before asking for the independent review.
+description: Review and clean up your own change before opening or updating a pull request — reuse of existing helpers, code quality, efficiency, the repo's guidelines, whether the notes and docs still describe the behavior, and a visual design review for UI changes — then fix what it finds. Use when a change is done and before asking for the independent review.
 ---
 
 # Self-review before a PR
@@ -71,9 +71,11 @@ treatment: follow [`visual-design-review`](../visual-design-review/SKILL.md).
 1. List what a visitor, an editor or an agent would now see or get differently
    ([what counts](../../../docs/architecture/decisions/0019-knowledge-layer.md)): screens,
    messages, fields, access, hooks, routes, emails, jobs, limits.
-2. For each, find the sentence in the module's note (or the generated page in `docs/reference/`)
-   that says so. None: update the note in this PR; run `npm run docs:generate` for a content type,
-   a route or a shared component.
+2. For each, find the sentence in the note that describes it (`docs/knowledge/map.json` names it)
+   or in the generated page in `docs/reference/`; for a path the map doesn't list, in the doc that
+   describes it (a guideline, the setup notes, a skill). None: update it in this PR. A module with
+   no note yet needs none. Run `npm run docs:generate` for a content type (routes and components
+   once #718 lands).
 3. Nothing changed? Check the PR's `Behavior change: none` reason is true of the diff.
 4. A change to `docs/knowledge/map.json` can drop a module from the check: say why in the PR.
 
