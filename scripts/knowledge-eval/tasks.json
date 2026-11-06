@@ -1,0 +1,136 @@
+[
+  {
+    "id": "1",
+    "kind": "question",
+    "prompt": "Which cached pages and cache tags are refreshed when a published event is edited, and which file does it? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["revalidateEvent"],
+      ["/events/<slug>", "/events/[slug]"],
+      ["/category/[category]", "every category page", "category pages"],
+      ["list/[scope]", "list pages", "list page"],
+      ["home page", "homepage"],
+      ["/(frontend)/[slug]", "cms pages", "cms page"],
+      ["'events'", "`events`"],
+      ["events_sitemap_cache_tag", "events-sitemap", "sitemap tag"]
+    ]
+  },
+  {
+    "id": "2",
+    "kind": "question",
+    "prompt": "When does an event stop counting as \"upcoming\", and in which timezone? Name the file with the rule. Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["data/scope.ts", "domain/scope.ts"],
+      ["America/Chicago"],
+      ["SITE_TIMEZONE"],
+      ["on or after today", "today or later", "date >= today"]
+    ]
+  },
+  {
+    "id": "3",
+    "kind": "question",
+    "prompt": "Who may create an event, and what happens to one an AI agent creates? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["admin"],
+      ["editor"],
+      ["isStaffOrAgent", "suggestibleContentAccess"],
+      ["holdSuggestions", "reviewQueue"],
+      ["suggested"],
+      ["draft"]
+    ]
+  },
+  {
+    "id": "4",
+    "kind": "question",
+    "prompt": "What bounds can an editor set on the \"this week\" block (days, rows, events per row), and what are the defaults? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["THIS_WEEK_LIMITS", "thisWeek.ts"],
+      ["/days[^\\n]*\\b1\\b[^\\n]*\\b31\\b[^\\n]*\\b7\\b/"],
+      ["/rows[^\\n]*\\b1\\b[^\\n]*\\b4\\b/"],
+      ["/(events per row|limit)[^\\n]*\\b1\\b[^\\n]*\\b6\\b[^\\n]*\\b3\\b/"]
+    ]
+  },
+  {
+    "id": "5",
+    "kind": "question",
+    "prompt": "How long does a sign-in last, and after how many failed attempts is an account locked, for how long? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/7200|two hours|2 hours/"],
+      ["7 days"],
+      ["/\\b(5|five) failed attempts/"],
+      ["/10 minutes|600000|600,000/"]
+    ]
+  },
+  {
+    "id": "6",
+    "kind": "question",
+    "prompt": "Which official bodies can an event belong to, and what makes an agenda link valid? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["officialMeetings"],
+      ["city"],
+      ["county"],
+      ["https://"],
+      ["2048"],
+      ["/whitespace|no spaces/"],
+      ["/username|user name/"],
+      ["password"]
+    ]
+  },
+  {
+    "id": "7",
+    "kind": "change",
+    "prompt": "Change: let the \"this week\" block show up to 8 events per row instead of 6, with a test. Make the change in this checkout, tests included, and run the relevant tests and the type check. Don't commit or push.",
+    "commands": [
+      {
+        "cmd": "npx vitest run src/modules/events"
+      },
+      {
+        "cmd": "npx tsc --noEmit",
+        "tolerate": [
+          "error TS2307: Cannot find module '@/endpoints/seed/image-hero1.webp'",
+          "error TS2307: Cannot find module '@/endpoints/seed/image-white-test.webp'"
+        ]
+      }
+    ],
+    "mustChange": ["^src/modules/events/domain/thisWeek\\.ts$", "\\.test\\.tsx?$"],
+    "mustContain": [
+      {
+        "file": "^src/modules/events/domain/thisWeek\\.ts$",
+        "pattern": "limit:\\s*\\{[^}]*\\bmax:\\s*8\\b"
+      }
+    ]
+  },
+  {
+    "id": "8",
+    "kind": "change",
+    "prompt": "Change: add an optional plain-text \"accessibility notes\" field to events, shown on the event's page under the location, with tests. Make the change in this checkout, tests included, and run the relevant tests and the type check. Don't commit or push.",
+    "commands": [
+      {
+        "cmd": "npx vitest run src/modules/events"
+      },
+      {
+        "cmd": "npx tsc --noEmit",
+        "tolerate": [
+          "error TS2307: Cannot find module '@/endpoints/seed/image-hero1.webp'",
+          "error TS2307: Cannot find module '@/endpoints/seed/image-white-test.webp'"
+        ]
+      }
+    ],
+    "mustChange": [
+      "^src/modules/events/cms/events\\.ts$",
+      "^src/modules/events/data/mappers\\.ts$",
+      "^src/modules/events/data/mappers[^/]*\\.test\\.ts$",
+      "^src/modules/events/ui/[^/]*\\.test\\.tsx?$",
+      "^src/payload-types\\.ts$"
+    ],
+    "mustContain": [
+      {
+        "file": "^src/modules/events/cms/events\\.ts$",
+        "pattern": "accessibility_?notes"
+      },
+      {
+        "file": "^src/modules/events/data/mappers\\.ts$",
+        "pattern": "accessibility_?notes"
+      }
+    ]
+  }
+]
