@@ -11,7 +11,7 @@ everything it does is recorded on a GitHub issue. This page is the target. Each 
 **built** or **planned**; a planned part names the sub-issue of #685 that builds it. Until a part is
 built, the rules already in `AGENTS.md` and `project-management.md` stand.
 
-## The owner's direction (summary, 2026-11-04 and 2026-11-05)
+## The owner's direction (summary; 2026-11-04 voice and text sessions, 2026-11-05 Claude Code session, recorded on #685)
 
 - One agent to talk to; it uses helpers, and the helpers use workers with narrow jobs.
 - An issue exists, is claimed by a named agent and is In progress before any code changes. After a
@@ -63,7 +63,8 @@ tasks having less parallel work than research does
 simplest arrangement and add agents only where work truly runs in parallel
 ([Anthropic](https://www.anthropic.com/engineering/building-effective-agents)). Each helper brief
 states the objective, the output format, the sources to use and the boundaries; vague briefs
-caused duplicated work in Anthropic's own system.
+caused duplicated work in
+[Anthropic's own system](https://www.anthropic.com/engineering/multi-agent-research-system).
 
 Capability levels are tool-neutral. [`CLAUDE.md`](../../CLAUDE.md) says which model each level uses.
 
@@ -114,10 +115,11 @@ flowchart LR
 - **Every step leaves a comment** under a fixed header the chief of staff and scripts can find:
   `### [STEP]`, `[DECISION]`, `[QUESTION]`, `[PUSHBACK]` or `[SCOPE]`, followed by context, the
   decision or question, why, and `Owner needed: yes/no`. A convention, not a GitHub feature. Planned: #693.
-- **Owner questions** get the `needs owner` label and one plain question with options, a
-  recommendation and a default, as in [`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §3.
+- **Owner questions** get the `needs owner` label and one plain question with options and a
+  recommendation, as in [`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §3.
+  Silence is never a yes: the issue waits ([waits for owner](project-management.md#waits-for-owner)).
   At the start of a session the chief of staff lists them, oldest first, at most seven, one line each.
-  The label is the queue (`gh search issues`). Planned: #695, #697.
+  The label is the queue. Planned: #695, #697.
 - **Scope creep** becomes a new issue, linked to the original with a `[SCOPE]` comment. The current
   PR does not widen.
 - **Parallel work.** More than one issue may be In progress only if the files each declares, and
@@ -126,7 +128,7 @@ flowchart LR
   ([agent teams](https://code.claude.com/docs/en/agent-teams)). Dependent PRs go on a native
   stack ([`stacked-prs`](../../.agents/skills/stacked-prs/SKILL.md)). This changes the current
   one-task-at-a-time rule, so it takes effect only when #693 merges. Until then: one task at a time.
-- **Scheduled check.** Every open issue is checked on a schedule: duplicates get a label and are
+- **Scheduled check.** Every open issue is checked on a schedule: duplicate bugs get a label and are
   closed after three days without objection; anything else that looks obsolete gets `proposed-close`
   for the owner; an old idea is never closed by an agent, it gets `needs owner`. Planned: #697.
 
@@ -159,6 +161,10 @@ perspectives from the level. Planned: #695.
 
 ## 6. How much scrutiny a change gets
 
+**Status: planned (#695).** Today the reviewer's depth follows the one rule in
+[`CLAUDE.md`](../../CLAUDE.md) (the strongest reviewer for sign-in, access rules, migrations,
+deploy and server scripts, and security code, #522). This scale takes effect when #695 merges.
+
 Scrutiny costs time and tokens, so it follows risk. The level is the highest one that matches;
 the author proposes it, the reviewer may raise it. Google's guidance names the same judgment: some
 code deserves more careful scrutiny, such as security and privacy, concurrency and user-visible
@@ -172,12 +178,12 @@ flowchart LR
   L2 --> L3["Level 3 Critical<br/>strongest reviewer, security angle,<br/>owner decides policy"]
 ```
 
-| Level          | When                                                                                                                                                                                                          | Review                                                                                                                                                              |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **0 Light**    | Wording, link and fact fixes in docs; patch-level dependency updates; test-only changes                                                                                                                       | Required checks and one quick standard review. No extra scrutiny: the cost isn't worth it                                                                           |
-| **1 Standard** | Ordinary code, content and UI inside one module                                                                                                                                                               | Self-review, then one independent review                                                                                                                            |
-| **2 Elevated** | Shared components (`shared-component`); CMS fields and blocks; public facts about money, politics or dates; anything several pages use                                                                        | Level 1, plus the specialist perspectives that apply (design, accessibility, content accuracy); a design brief first for new UI                                     |
-| **3 Critical** | Sign-in and accounts; access rules and roles; migrations; deploys and server scripts; secrets; the process itself (`AGENTS.md`, `.agents/`, `.claude/`, `.github/`, guidelines, role guides, `docs/process/`) | Strongest reviewer at high effort, a security perspective, and for policy files a check against the owner's dated summary; **Waits for owner** if it goes beyond it |
+| Level          | When                                                                                                                                                                                                          | Review                                                                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0 Light**    | Wording, link and fact fixes in docs; patch-level dependency updates; test-only changes                                                                                                                       | Required checks and one quick standard review. No extra scrutiny: the cost isn't worth it                                                                                               |
+| **1 Standard** | Ordinary code, content and UI inside one module                                                                                                                                                               | Self-review, then one independent review                                                                                                                                                |
+| **2 Elevated** | Shared components (`shared-component`); CMS fields and blocks; public facts about money, politics or dates; anything several pages use                                                                        | Level 1, plus the specialist perspectives that apply (design, accessibility, content accuracy); a design brief first for new UI                                                         |
+| **3 Critical** | Sign-in and accounts; access rules and roles; migrations; deploys and server scripts; secrets; the process itself (`AGENTS.md`, `.agents/`, `.claude/`, `.github/`, guidelines, role guides, `docs/process/`) | For code: the strongest reviewer at high effort, plus a security perspective. For policy files: a check against the owner's dated summary, and **Waits for owner** if it goes beyond it |
 
 Where extra scrutiny does **not** apply: documentation wording, dependency patches that pass the
 checks, test-only changes, seed data. Where it always does: anything that can lock a resident out,
@@ -210,7 +216,8 @@ flowchart LR
    owner, review rounds per PR and slow or flaky checks. A step that costs many hours a week and
    follows fixed rules becomes automation.
 5. **Reinforce what works.** `outcome: clean` PRs are kept as examples. A pattern becomes a skill
-   example or a shared component only after three clean PRs.
+   example or a shared component only after three clean PRs and a with/without test that shows it
+   helps ([skill best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)).
 6. **Limits.** At most three fix PRs a week. The process analyst and the design department
    propose; agents never merge a change to their own guardrails, which the owner decides.
    Measures: first-pass clean rate, rework within 14 days, owner corrections per PR, and whether a
@@ -228,9 +235,9 @@ flowchart LR
 | Design department                                          | Planned | #696                           |
 | Phone, push and the daily sweep (Windows)                  | Planned | #697                           |
 | Feedback loop                                              | Planned | #698                           |
+| Scrutiny levels as one scale (§6)                          | Planned | #695                           |
 
 The order is fixed by what each needs: #692, then #693 and #694, then #695, then #696 to #698.
-Parent: #685.
 
 ## Sources
 

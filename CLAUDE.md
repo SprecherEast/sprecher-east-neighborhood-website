@@ -45,17 +45,15 @@ Read the other guidelines (frontend patterns, content marketing, Asana) when a t
   reviewer) only when the PR touches sign-in or accounts, access rules, migrations, the deploy or
   server scripts, or other security code. Use the plain aliases (`opus`, `sonnet`), never a
   version, so the newest model is always used.
-- **Agent team** ([operating model](docs/process/agent-operating-model.md), #685): the capability
-  levels there map to the plain aliases `opus` (chief of staff, helpers, and the reviewer for
-  Level 3 changes, at `high` effort) and `sonnet` (workers and standard reviewers, at `medium`).
-  Never `fable` in unattended runs: it bills to usage credits
-  ([model config](https://code.claude.com/docs/en/model-config)). Gotchas from the subagent docs:
-  `isolation: worktree` branches from the default branch, not the parent's `HEAD`; `initialPrompt`
-  runs only for an agent run as the main session
-  ([subagents](https://code.claude.com/docs/en/sub-agents)). One reading of the docs, not yet
-  tested here (#695 tests it): the `Agent(name, …)` limit on `tools` applies only to the main
-  session (`claude --agent`). A reviewer is a new, non-forked subagent, so it starts with no
-  memory of the change.
+- **Agent team** ([operating model](docs/process/agent-operating-model.md), #685). Planned
+  (#695): the chief of staff and the helpers will run on `opus`, and workers and standard
+  reviewers stay on `sonnet` at `medium`. Review depth today is the #522 rule above and nothing
+  wider. Never `fable` in unattended runs: it can bill to usage credits, and in `-p` runs without
+  asking ([model config](https://code.claude.com/docs/en/model-config)). Gotchas from the
+  subagent docs: `isolation: worktree` branches from the default branch, not the parent's `HEAD`;
+  the `Agent(name, …)` limit on `tools` and `initialPrompt` apply only to an agent run as the main
+  session (`claude --agent`) ([subagents](https://code.claude.com/docs/en/sub-agents)). A reviewer
+  is a new, non-forked subagent, so it starts with no memory of the change.
 - **Waiting for checks:** poll `gh pr checks <number>` in the background (`run_in_background`),
   about once a minute and for at most 15 minutes. Don't push while waiting. If the checks still
   haven't finished after 15 minutes, tell the user.
