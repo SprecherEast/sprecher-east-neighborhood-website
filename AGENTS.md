@@ -75,10 +75,9 @@ change, however small, follows these five steps:
    the reviewer checks the change stays within it. A policy change an agent proposes on its own is
    labeled `needs owner` when it's filed, and waits for him.
 4. **Everything green.** All required checks pass before merge: `Type-check & Build`, `Prettier`,
-   `ESLint`, `Dependency Audit`, `Knowledge sync`, and `PR Policy` (steps 1–2, and the knowledge
-   note: decision 0019 §6). `Agent context` runs on every PR and becomes required if the owner
-   agrees (#737). Never bypass a failing
-   or missing check. In a stack, every PR must be green on its own. Dependabot PRs are exempt from
+   `ESLint`, `Dependency Audit`, `PR Policy` (steps 1–2, and the knowledge note: decision 0019
+   §6), `Knowledge sync` and `Agent context` (the session-start token budget, #737). Never bypass
+   a failing or missing check. In a stack, every PR must be green on its own. Dependabot PRs are exempt from
    the issue and description rules only; they still need green checks and a review, and whoever
    picks one up (usually the ops lead) owns and merges it.
 5. **Merge, then CI/CD takes over.** The agent that owns the PR squash-merges it once every required
@@ -115,7 +114,7 @@ DNS records and third-party dashboards (Mailgun, Porkbun, Hostinger) live only o
 Before changing any of them, open an `infra` issue saying what will change, why, and how to roll it
 back; afterwards, comment what actually changed. Never put secret values in the issue.
 
-**How GitHub enforces this.** The `main` ruleset requires a pull request, the five checks above
+**How GitHub enforces this.** The `main` ruleset requires a pull request, the required checks in step 4
 and resolved conversations, and blocks force pushes and deletion; stacks enforce the merge order.
 Agents work through the owner's account, which has admin rights, so until they have their own
 GitHub identity (#106) the no-bypass rule rests on every agent merging with `bypass_rules: false`.
