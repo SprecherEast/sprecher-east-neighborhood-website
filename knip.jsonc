@@ -17,6 +17,8 @@
         "ops/*.mjs",
         // Run by hand or by CI
         "scripts/*.{ts,mjs}",
+        // Loaded by the PR Policy workflow (#716); their tests are found by Vitest
+        ".github/scripts/*.mjs",
         // The knowledge eval (#715): run by hand, never in CI; its tests are found by Vitest
         "scripts/knowledge-eval/{run,analyze}.mjs",
         // Run by `payload run` from e2e/serve.mjs (which knip finds through playwright.config.ts)

@@ -21,7 +21,12 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['src/**/*.test.{ts,tsx}', '.claude/hooks/**/*.test.mjs', 'scripts/**/*.test.mjs'],
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      '.claude/hooks/**/*.test.mjs',
+      '.github/scripts/**/*.test.mjs',
+      'scripts/**/*.test.mjs',
+    ],
     environment: 'node',
     setupFiles: ['./vitest.setup.ts'],
     // Every test starts clean: spies, stubbed env vars and stubbed globals are undone after each.
