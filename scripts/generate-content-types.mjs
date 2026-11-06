@@ -16,34 +16,28 @@ import prettier from 'prettier'
 
 import { compareFiles, describeDifferences } from './content-types/compare.mjs'
 import { describeContentType } from './content-types/describe.mjs'
+import { pinEnvironment } from './content-types/environment.mjs'
 import { createLocator } from './content-types/locate.mjs'
 import { buildPages } from './content-types/render.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const OUTPUT = 'docs/reference/content-types'
 
-/** Payload’s own collections and globals share one page; every other type has its own. */
-const INTERNAL = [
-  'payload-jobs',
-  'payload-jobs-stats',
-  'payload-kv',
-  'payload-locked-documents',
-  'payload-migrations',
-  'payload-preferences',
-]
-
 async function loadModels() {
-  // The config only reads these to build; nothing connects. Fixed, so the output never depends
-  // on the machine's environment.
-  process.env.PAYLOAD_SECRET = 'docs-generate-placeholder-secret-32-chars'
-  process.env.DATABASE_URI = 'file::memory:'
+  // Fixed, so the output never depends on the machine's environment (see environment.mjs)
+  pinEnvironment()
   const { loadConfig } = await import('../src/platform/payload/testing/accessHarness.ts')
   const config = await loadConfig()
-  const options = { locate: createLocator(ROOT), root: ROOT }
-  return [
-    ...config.collections.map((entry) => describeContentType(entry, 'collection', options)),
-    ...config.globals.map((entry) => describeContentType(entry, 'global', options)),
-  ]
+  const { locate, close } = createLocator(ROOT)
+  try {
+    const options = { locate, root: ROOT }
+    return [
+      ...config.collections.map((entry) => describeContentType(entry, 'collection', options)),
+      ...config.globals.map((entry) => describeContentType(entry, 'global', options)),
+    ]
+  } finally {
+    close()
+  }
 }
 
 async function formatted(files) {
@@ -68,7 +62,7 @@ function readCommitted(directory) {
 
 const started = Date.now()
 const directory = path.join(ROOT, OUTPUT)
-const pages = await formatted(buildPages(await loadModels(), { internal: INTERNAL }))
+const pages = await formatted(buildPages(await loadModels()))
 const seconds = ((Date.now() - started) / 1000).toFixed(1)
 
 if (process.argv.includes('--check')) {

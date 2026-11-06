@@ -39,15 +39,51 @@ What the access functions mean (`src/platform/payload/`):
 
 Also present, added by Payload or its plugins rather than defined here: `payload-folders` (from `media.folders: true`; staff-only through `folders.collectionOverrides` in `payload.config.ts`, #143), `payload-jobs` (access set by `jobs.access` in `payload.config.ts`; `jobs.autoRun` runs the `retention` queue, #274, and the `default` queue that scheduled publishing uses, every minute, #141, both in the app's own process; decisions 0010 and 0011), the global `payload-jobs-stats` (when each scheduled task last ran; admin-only, set on the built config by `src/platform/payload/restrictJobStats.ts`), `payload-locked-documents` (edit locks; staff-only since #147, set on the built config by `src/platform/payload/restrictEditLocks.ts`), `payload-kv`, `payload-preferences` and `payload-migrations`.
 
-These are described on the [internal types page](../reference/content-types/payload-internal.md) (and `payload-folders` and `payload-mcp-api-keys` on their own).
+Each of these has its own generated page, listed in the [reference README](../reference/content-types/README.md).
 
 ## Notes by content type
 
-What the generated pages cannot say.
+What the generated pages cannot say: rules a validator or a hook enforces, where a value comes from, and who a field is for.
+
+### pages
+
+The page with slug `home` is the site root. `hero.media` is required when the hero type is `highImpact` or `mediumImpact`. Page-builder blocks are listed on the page; `eventsThisWeek` is from #122 and `topIssues` from #484 (`reviewedAt` is a day only). `publishedAt` is set by the hook `populatePublishedAt`.
+
+### posts
+
+`content` is Lexical: headings h1–h4, bold, italic, underline, links (to pages, posts or a URL), a horizontal rule, and the blocks `banner`, `code` and `mediaBlock`. `relatedPosts` leaves out the post itself. `populatedAuthors` is filled by the afterRead hook `populateAuthors` and refuses writes. The review-queue fields (`moderationStatus`, `sourceName`, `sourceUrl`, `externalId`, `contentHash`, `audience`) are described in [review queue](review-queue.md) (#123). `publishedAt` is set to now by a field hook when `_status` is published and it is empty.
+
+### events
+
+`date` is a day-only picker; `timeStart` and `timeEnd` are free text, such as "6:00 PM". `locationName`, `locationAddress` and `mapsUrl` are hidden in Admin when `locationType` is `virtual`. `description` is the short text on event cards. `content` is Lexical with headings h2–h4, toolbars and a horizontal rule. `categories` are the same tree as posts, subcategories included (#362). `officialBody` (`city` or `county`) marks an official meeting (#122); the agenda link shows once a body is set and must be `https://`. The review-queue fields are the same as posts.
+
+### categories
+
+No drafts. `parent` and `breadcrumbs` come from the nested-docs plugin; `breadcrumbs` is read-only and its URL is the slugs joined with `/`. `defaultImage` is the image agent suggestions in this category get, and so does a subcategory without one (#362, #363).
+
+### media
+
+`credit` is who made the image, as it should be credited (#362), shown under event and post heroes (#405). `license` takes its values from `MEDIA_LICENSES` in `src/platform/lib/mediaLicenses.ts`; the credit links to `licenseUrl` and shows its Creative Commons version (#405). `sourceUrl` is an http(s) link. Files are saved to `public/media`, `focalPoint` is on, and there is no `mimeTypes` limit. `folder` comes from `folders: true`.
+
+### users
+
+The first account on an empty database is made `admin` by the beforeChange hook `firstAccountIsAdmin` (#354); every later account is a `guest`, and only an admin changes a role. `auth.verify` (#187) leaves a new account unverified until its one-time link is opened, and it can't sign in before; accounts from before #187 were marked verified by its migration. A verification link can be sent again at most 3 times per 3 hours (`VERIFICATION_RESENDS`, #289), and a resend sets `verificationSetsPassword`, so the verify page has the person choose the password before the account opens. `verifiedTokenHash` is the SHA-256 of the link that verified the account, so the verify page can say a link opened again is already confirmed (#391). There are no OAuth fields: `payload-oauth2` is not in `package.json` or `src/`.
+
+### faq and resources
+
+`faq.answer` uses the site's default Lexical editor (paragraph, bold, italic, underline, links to pages and posts). `faq` and `resources` have no `slug` field. `order` defaults to 99, a lower number comes first (within its category for `resources`), and it is also the default sort. `resources.url` ("Visit Website") and each `links[].url` must start with `http://` or `https://`; `links` holds up to 3 rows, shown after it. The `photo` group is in Admin only for `elected-officials` and is used only with the official's permission (#393); the credit is required with a photo and shown as "Photo: …" (so it has no leading "Photo:"), the source is validated like `url`, and the credit links to it.
+
+### team-members
+
+`title` and `capabilities` show in Admin only when `memberType` is `ai-agent`. `order` defaults to 99 and a lower number comes first. `email` is readable by staff only (see field-level access below).
+
+### forms
+
+Payment fields are disabled in the form builder.
 
 ### email-confirmations
 
-One record per address (#183). The server writes it through the Local API with access bypassed;
+One record per address (#183), with `email` stored trimmed and lowercase. `tokenHash` is the SHA-256 of the latest link's token and is hidden from every API; the token itself is never stored. `tokenExpiresAt` is 24 hours after the link was sent, and `sendCount` with `sendWindowStart` count the links sent to the address in the current 24-hour window. The server writes it through the Local API with access bypassed;
 only admins can see it.
 
 Endpoint: `POST /api/email-confirmations/confirm` with `{ token }`, public (the token is the proof),

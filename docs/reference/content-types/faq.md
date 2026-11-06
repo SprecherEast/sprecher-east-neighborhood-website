@@ -22,8 +22,8 @@
 | Phase        | Function              | Defined in                                        |
 | ------------ | --------------------- | ------------------------------------------------- |
 | beforeChange | `populatePublishedAt` | `src/platform/payload/populatePublishedAt.ts`     |
-| afterChange  | `afterChange`         | `src/modules/directory/cms/revalidateListPage.ts` |
-| afterDelete  | `afterDelete`         | `src/modules/directory/cms/revalidateListPage.ts` |
+| afterChange  | inline                | `src/modules/directory/cms/revalidateListPage.ts` |
+| afterDelete  | inline                | `src/modules/directory/cms/revalidateListPage.ts` |
 
 ## Fields
 

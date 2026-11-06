@@ -21,20 +21,26 @@
 
 None.
 
+## Custom endpoints
+
+| Method | Path       | Handler | Defined in                                        |
+| ------ | ---------- | ------- | ------------------------------------------------- |
+| POST   | `/confirm` | inline  | `src/modules/verification/cms/confirmEndpoint.ts` |
+
 ## Fields
 
-| Field             | Type   | Required | Target or options | Notes                                          |
-| ----------------- | ------ | -------- | ----------------- | ---------------------------------------------- |
-| `email`           | email  | yes      |                   | read only; unique; indexed                     |
-| `confirmedAt`     | date   | no       |                   | read only; indexed                             |
-| `welcomeSentAt`   | date   | no       |                   | read only                                      |
-| `lastSentAt`      | date   | no       |                   | read only; indexed                             |
-| `tokenHash`       | text   | no       |                   | indexed; access create, read, update: nobody   |
-| `tokenExpiresAt`  | date   | no       |                   | read only                                      |
-| `sendCount`       | number | no       |                   | default 0; access create, read, update: nobody |
-| `sendWindowStart` | date   | no       |                   | access create, read, update: nobody            |
-| `updatedAt`       | date   | no       |                   | hidden; indexed                                |
-| `createdAt`       | date   | no       |                   | hidden; indexed                                |
+| Field             | Type   | Required | Target or options | Notes                                                                  |
+| ----------------- | ------ | -------- | ----------------- | ---------------------------------------------------------------------- |
+| `email`           | email  | yes      |                   | read only; unique; indexed                                             |
+| `confirmedAt`     | date   | no       |                   | read only; indexed                                                     |
+| `welcomeSentAt`   | date   | no       |                   | read only                                                              |
+| `lastSentAt`      | date   | no       |                   | read only; indexed                                                     |
+| `tokenHash`       | text   | no       |                   | hidden; indexed; access create, read, update: nobody (always denies)   |
+| `tokenExpiresAt`  | date   | no       |                   | read only                                                              |
+| `sendCount`       | number | no       |                   | hidden; default 0; access create, read, update: nobody (always denies) |
+| `sendWindowStart` | date   | no       |                   | hidden; access create, read, update: nobody (always denies)            |
+| `updatedAt`       | date   | no       |                   | hidden; indexed                                                        |
+| `createdAt`       | date   | no       |                   | hidden; indexed                                                        |
 
 ### Field hooks
 

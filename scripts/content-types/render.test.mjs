@@ -4,6 +4,7 @@ import {
   GENERATED_NOTICE,
   buildPages,
   renderAccess,
+  renderEndpoints,
   renderFieldTable,
   renderHooks,
 } from './render.mjs'
@@ -53,8 +54,27 @@ describe('renderAccess', () => {
     )
   })
 
+  it('adds what an inline function does when it only allows or denies', () => {
+    expect(
+      renderAccess([{ operation: 'read', name: 'inline', note: 'always allows', file: 'payload' }]),
+    ).toContain('| read | inline (always allows) | payload |')
+  })
+
   it('says the Payload default applies when nothing is set', () => {
     expect(renderAccess([])).toContain('default applies')
+  })
+})
+
+describe('renderEndpoints', () => {
+  it('writes nothing when there are none', () => {
+    expect(renderEndpoints([])).toBe('')
+  })
+
+  it('writes method, path, handler and file', () => {
+    const endpoint = { method: 'POST', path: '/verify/:token', name: 'inline', file: 'src/a.ts' }
+    expect(renderEndpoints([endpoint])).toContain(
+      '| POST | `/verify/:token` | inline | `src/a.ts` |',
+    )
   })
 })
 
@@ -78,6 +98,7 @@ const model = (over) => ({
   versions: ['Drafts: no', 'Versions: none kept'],
   access: [],
   hooks: [],
+  endpoints: [],
   fields: [row()],
   auth: [],
   upload: [],
@@ -86,32 +107,34 @@ const model = (over) => ({
 
 describe('buildPages', () => {
   it('starts every page with the generated notice, then the title', () => {
-    const pages = buildPages([model()], { internal: [] })
+    const pages = buildPages([model()])
     const events = pages.get('events.md')
     expect(events.split('\n')[0]).toBe(GENERATED_NOTICE)
     expect(events).toContain('# Events (`events`)')
   })
 
+  it('shows a type’s custom endpoints under its hooks, and none when it has none', () => {
+    const endpoint = { method: 'POST', path: '/verify/:token', name: 'inline', file: 'src/a.ts' }
+    const pages = buildPages([model({ endpoints: [endpoint] }), model({ slug: 'faq' })])
+    expect(pages.get('events.md')).toContain('## Custom endpoints')
+    expect(pages.get('faq.md')).not.toContain('Custom endpoints')
+  })
+
+  it('says in the README that the pages are generated for production', () => {
+    expect(buildPages([model()]).get('README.md')).toContain('NODE_ENV=production')
+  })
+
   it('lists every page in the README, one line each', () => {
-    const pages = buildPages([model(), model({ slug: 'faq', title: 'FAQ' })], { internal: [] })
+    const pages = buildPages([model(), model({ slug: 'faq', title: 'FAQ' })])
     const readme = pages.get('README.md')
     expect(readme).toContain('[`events`](events.md)')
     expect(readme).toContain('[`faq`](faq.md)')
   })
 
-  it('puts the internal types on one shared page, each still listed in the README', () => {
-    const pages = buildPages([model(), model({ slug: 'payload-kv', title: 'Payload kv' })], {
-      internal: ['payload-kv'],
-    })
-    expect([...pages.keys()].sort()).toEqual(['README.md', 'events.md', 'payload-internal.md'])
-    expect(pages.get('payload-internal.md')).toContain('## `payload-kv`')
-    expect(pages.get('README.md')).toContain('[`payload-kv`](payload-internal.md#payload-kv)')
-  })
-
   it('is the same on every run and sorts the pages by slug', () => {
     const models = [model({ slug: 'b' }), model({ slug: 'a' })]
-    const first = buildPages(models, { internal: [] })
-    const second = buildPages([...models].reverse(), { internal: [] })
+    const first = buildPages(models)
+    const second = buildPages([...models].reverse())
     expect([...first]).toEqual([...second])
     expect(first.get('README.md').indexOf('(a.md)')).toBeLessThan(
       first.get('README.md').indexOf('(b.md)'),
@@ -124,7 +147,7 @@ describe('buildPages', () => {
       ...Array.from({ length: 15 }, (_, i) => row({ path: `hero.f${i}`, section: 'Hero' })),
       ...Array.from({ length: 15 }, (_, i) => row({ path: `seo.f${i}`, section: 'SEO tab' })),
     ]
-    const pages = buildPages([model({ fields: rows })], { internal: [], limit: 40 })
+    const pages = buildPages([model({ fields: rows })], { limit: 40 })
     expect([...pages.keys()].sort()).toEqual([
       'README.md',
       'events--hero.md',
@@ -141,14 +164,14 @@ describe('buildPages', () => {
 
   it('keeps a page whole when it is within the limit', () => {
     const rows = [row(), row({ path: 'hero.type', section: 'Hero' })]
-    const pages = buildPages([model({ fields: rows })], { internal: [] })
+    const pages = buildPages([model({ fields: rows })])
     expect([...pages.keys()].sort()).toEqual(['README.md', 'events.md'])
     expect(pages.get('events.md')).toContain('`hero.type`')
   })
 
   it('fails when a section is still over the limit, so the split is never silent', () => {
     const rows = Array.from({ length: 60 }, (_, i) => row({ path: `hero.f${i}`, section: 'Hero' }))
-    expect(() => buildPages([model({ fields: rows })], { internal: [], limit: 40 })).toThrow(
+    expect(() => buildPages([model({ fields: rows })], { limit: 40 })).toThrow(
       /events--hero\.md.*lines/,
     )
   })

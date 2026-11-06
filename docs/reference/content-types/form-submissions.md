@@ -8,13 +8,13 @@
 
 ## Access
 
-| Operation | Function              | Defined in                               |
-| --------- | --------------------- | ---------------------------------------- |
-| create    | `create`              | `src/modules/contact/cms/formBuilder.ts` |
-| read      | `isAdmin`             | `src/platform/payload/roles.ts`          |
-| update    | `isAdmin`             | `src/platform/payload/roles.ts`          |
-| delete    | `isAdmin`             | `src/platform/payload/roles.ts`          |
-| unlock    | `defaultUnlockAccess` | payload                                  |
+| Operation | Function               | Defined in                               |
+| --------- | ---------------------- | ---------------------------------------- |
+| create    | inline (always allows) | `src/modules/contact/cms/formBuilder.ts` |
+| read      | `isAdmin`              | `src/platform/payload/roles.ts`          |
+| update    | `isAdmin`              | `src/platform/payload/roles.ts`          |
+| delete    | `isAdmin`              | `src/platform/payload/roles.ts`          |
+| unlock    | `defaultUnlockAccess`  | payload                                  |
 
 ## Hooks
 
@@ -31,20 +31,20 @@
 
 ## Fields
 
-| Field                    | Type         | Required | Target or options | Notes                                                                               |
-| ------------------------ | ------------ | -------- | ----------------- | ----------------------------------------------------------------------------------- |
-| `form`                   | relationship | yes      | → forms           |                                                                                     |
-| `submissionData`         | array        | no       |                   |                                                                                     |
-| `submissionData[].field` | text         | yes      |                   |                                                                                     |
-| `submissionData[].value` | textarea     | yes      |                   |                                                                                     |
-| `submissionData[].id`    | text         | no       |                   | hidden                                                                              |
-| `senderEmail`            | text         | no       |                   | read only; indexed; access read: isAdminFieldAccess                                 |
-| `emailConfirmed`         | checkbox     | no       |                   | read only; default false; access read: isAdminFieldAccess                           |
-| `heldEmails`             | json         | no       |                   | access create, read, update: nobody                                                 |
-| `retentionHold`          | checkbox     | no       |                   | default false; access create: create; access read, update: isAdminFieldAccess       |
-| `retentionHoldReason`    | textarea     | no       |                   | shown conditionally; access create: create; access read, update: isAdminFieldAccess |
-| `updatedAt`              | date         | no       |                   | hidden; indexed                                                                     |
-| `createdAt`              | date         | no       |                   | hidden; indexed                                                                     |
+| Field                    | Type         | Required | Target or options | Notes                                                                                               |
+| ------------------------ | ------------ | -------- | ----------------- | --------------------------------------------------------------------------------------------------- |
+| `form`                   | relationship | yes      | → forms           |                                                                                                     |
+| `submissionData`         | array        | no       |                   |                                                                                                     |
+| `submissionData[].field` | text         | yes      |                   |                                                                                                     |
+| `submissionData[].value` | textarea     | yes      |                   |                                                                                                     |
+| `submissionData[].id`    | text         | no       |                   | hidden                                                                                              |
+| `senderEmail`            | text         | no       |                   | read only; indexed; access read: isAdminFieldAccess                                                 |
+| `emailConfirmed`         | checkbox     | no       |                   | read only; default false; access read: isAdminFieldAccess                                           |
+| `heldEmails`             | json         | no       |                   | hidden; access create, read, update: nobody (always denies)                                         |
+| `retentionHold`          | checkbox     | no       |                   | default false; access create: inline (always denies); access read, update: isAdminFieldAccess       |
+| `retentionHoldReason`    | textarea     | no       |                   | shown conditionally; access create: inline (always denies); access read, update: isAdminFieldAccess |
+| `updatedAt`              | date         | no       |                   | hidden; indexed                                                                                     |
+| `createdAt`              | date         | no       |                   | hidden; indexed                                                                                     |
 
 ### Field hooks
 

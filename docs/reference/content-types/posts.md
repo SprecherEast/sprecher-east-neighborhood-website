@@ -30,32 +30,32 @@
 
 ## Fields
 
-| Field                     | Type         | Required | Target or options                                                   | Notes                            |
-| ------------------------- | ------------ | -------- | ------------------------------------------------------------------- | -------------------------------- |
-| `title`                   | text         | yes      |                                                                     | max length 60                    |
-| `heroImage`               | upload       | no       | → media                                                             |                                  |
-| `content`                 | richText     | yes      |                                                                     |                                  |
-| `relatedPosts`            | relationship | no       | → posts (many)                                                      |                                  |
-| `categories`              | relationship | no       | → categories (many)                                                 |                                  |
-| `meta.title`              | text         | no       |                                                                     |                                  |
-| `meta.image`              | upload       | no       | → media                                                             |                                  |
-| `meta.description`        | textarea     | no       |                                                                     |                                  |
-| `publishedAt`             | date         | no       |                                                                     |                                  |
-| `authors`                 | relationship | no       | → users (many)                                                      |                                  |
-| `populatedAuthors`        | array        | no       |                                                                     | read only; access update: update |
-| `populatedAuthors[].id`   | text         | no       |                                                                     |                                  |
-| `populatedAuthors[].name` | text         | no       |                                                                     |                                  |
-| `generateSlug`            | checkbox     | no       |                                                                     | hidden; default true             |
-| `slug`                    | text         | yes      |                                                                     | unique; indexed                  |
-| `moderationStatus`        | select       | no       | suggested, approved, rejected                                       | indexed                          |
-| `sourceName`              | text         | no       |                                                                     |                                  |
-| `sourceUrl`               | text         | no       |                                                                     |                                  |
-| `externalId`              | text         | no       |                                                                     | unique; indexed                  |
-| `contentHash`             | text         | no       |                                                                     | unique; indexed                  |
-| `audience`                | select       | no       | everyone, families, youth, seniors, volunteers, association-leaders |                                  |
-| `updatedAt`               | date         | no       |                                                                     | hidden; indexed                  |
-| `createdAt`               | date         | no       |                                                                     | hidden; indexed                  |
-| `_status`                 | select       | no       | draft, published                                                    | indexed; default draft           |
+| Field                     | Type         | Required | Target or options                                                   | Notes                                            |
+| ------------------------- | ------------ | -------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| `title`                   | text         | yes      |                                                                     | max length 60                                    |
+| `heroImage`               | upload       | no       | → media                                                             |                                                  |
+| `content`                 | richText     | yes      |                                                                     |                                                  |
+| `relatedPosts`            | relationship | no       | → posts (many)                                                      |                                                  |
+| `categories`              | relationship | no       | → categories (many)                                                 |                                                  |
+| `meta.title`              | text         | no       |                                                                     |                                                  |
+| `meta.image`              | upload       | no       | → media                                                             |                                                  |
+| `meta.description`        | textarea     | no       |                                                                     |                                                  |
+| `publishedAt`             | date         | no       |                                                                     |                                                  |
+| `authors`                 | relationship | no       | → users (many)                                                      |                                                  |
+| `populatedAuthors`        | array        | no       |                                                                     | read only; access update: inline (always denies) |
+| `populatedAuthors[].id`   | text         | no       |                                                                     |                                                  |
+| `populatedAuthors[].name` | text         | no       |                                                                     |                                                  |
+| `generateSlug`            | checkbox     | no       |                                                                     | hidden; default true                             |
+| `slug`                    | text         | yes      |                                                                     | unique; indexed                                  |
+| `moderationStatus`        | select       | no       | suggested, approved, rejected                                       | indexed                                          |
+| `sourceName`              | text         | no       |                                                                     |                                                  |
+| `sourceUrl`               | text         | no       |                                                                     |                                                  |
+| `externalId`              | text         | no       |                                                                     | unique; indexed                                  |
+| `contentHash`             | text         | no       |                                                                     | unique; indexed                                  |
+| `audience`                | select       | no       | everyone, families, youth, seniors, volunteers, association-leaders |                                                  |
+| `updatedAt`               | date         | no       |                                                                     | hidden; indexed                                  |
+| `createdAt`               | date         | no       |                                                                     | hidden; indexed                                  |
+| `_status`                 | select       | no       | draft, published                                                    | indexed; default draft                           |
 
 ### Field hooks
 

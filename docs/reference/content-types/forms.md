@@ -8,13 +8,13 @@
 
 ## Access
 
-| Operation | Function              | Defined in                       |
-| --------- | --------------------- | -------------------------------- |
-| create    | `isAdminOrEditor`     | `src/platform/payload/roles.ts`  |
-| read      | `anyone`              | `src/platform/payload/anyone.ts` |
-| update    | `isAdminOrEditor`     | `src/platform/payload/roles.ts`  |
-| delete    | `isAdmin`             | `src/platform/payload/roles.ts`  |
-| unlock    | `defaultUnlockAccess` | payload                          |
+| Operation | Function                 | Defined in                       |
+| --------- | ------------------------ | -------------------------------- |
+| create    | `isAdminOrEditor`        | `src/platform/payload/roles.ts`  |
+| read      | `anyone` (always allows) | `src/platform/payload/anyone.ts` |
+| update    | `isAdminOrEditor`        | `src/platform/payload/roles.ts`  |
+| delete    | `isAdmin`                | `src/platform/payload/roles.ts`  |
+| unlock    | `defaultUnlockAccess`    | payload                          |
 
 ## Hooks
 

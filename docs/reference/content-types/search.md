@@ -9,17 +9,23 @@
 
 ## Access
 
-| Operation | Function              | Defined in                      |
-| --------- | --------------------- | ------------------------------- |
-| create    | `create`              | @payloadcms/plugin-search       |
-| read      | `read`                | @payloadcms/plugin-search       |
-| update    | `isAdminOrEditor`     | `src/platform/payload/roles.ts` |
-| delete    | `isAdminOrEditor`     | `src/platform/payload/roles.ts` |
-| unlock    | `defaultUnlockAccess` | payload                         |
+| Operation | Function               | Defined in                      |
+| --------- | ---------------------- | ------------------------------- |
+| create    | inline (always denies) | @payloadcms/plugin-search       |
+| read      | inline (always allows) | @payloadcms/plugin-search       |
+| update    | `isAdminOrEditor`      | `src/platform/payload/roles.ts` |
+| delete    | `isAdminOrEditor`      | `src/platform/payload/roles.ts` |
+| unlock    | `defaultUnlockAccess`  | payload                         |
 
 ## Hooks
 
 None.
+
+## Custom endpoints
+
+| Method | Path       | Handler | Defined in                |
+| ------ | ---------- | ------- | ------------------------- |
+| POST   | `/reindex` | inline  | @payloadcms/plugin-search |
 
 ## Fields
 

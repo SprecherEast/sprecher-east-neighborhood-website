@@ -8,10 +8,10 @@
 
 ## Access
 
-| Operation | Function          | Defined in                          |
-| --------- | ----------------- | ----------------------------------- |
-| read      | `read`            | `src/modules/site/cms/navGlobal.ts` |
-| update    | `isAdminOrEditor` | `src/platform/payload/roles.ts`     |
+| Operation | Function               | Defined in                          |
+| --------- | ---------------------- | ----------------------------------- |
+| read      | inline (always allows) | `src/modules/site/cms/navGlobal.ts` |
+| update    | `isAdminOrEditor`      | `src/platform/payload/roles.ts`     |
 
 ## Hooks
 

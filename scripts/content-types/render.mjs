@@ -22,8 +22,11 @@ const cell = (text) =>
 
 const code = (text) => (text ? `\`${cell(text)}\`` : '')
 
-/** A name in a table: inline functions have no name worth quoting. */
-const nameCell = (name) => (name === 'inline' ? 'inline' : code(name))
+/** A name in a table: inline functions have no name worth quoting; a note says what they do. */
+const nameCell = (name, note = '') => {
+  const shown = name === 'inline' ? 'inline' : code(name)
+  return note ? `${shown} (${note})` : shown
+}
 
 /** A file in a table: a path is code, the other answers are plain words. */
 const fileCell = (file) => (file.startsWith('src/') ? code(file) : cell(file))
@@ -58,7 +61,16 @@ export function renderAccess(access) {
   }
   return table(
     ['Operation', 'Function', 'Defined in'],
-    access.map((a) => [a.operation, nameCell(a.name), fileCell(a.file)]),
+    access.map((a) => [a.operation, nameCell(a.name, a.note), fileCell(a.file)]),
+  )
+}
+
+/** The custom endpoints table, or nothing when a type has none. */
+export function renderEndpoints(endpoints) {
+  if (endpoints.length === 0) return ''
+  return table(
+    ['Method', 'Path', 'Handler', 'Defined in'],
+    endpoints.map((e) => [e.method, code(e.path), nameCell(e.name), fileCell(e.file)]),
   )
 }
 
@@ -117,6 +129,8 @@ function renderBody(model, level, { split = false } = {}) {
     h('Hooks'),
     renderHooks(model.hooks),
   ]
+  if (model.endpoints.length > 0)
+    parts.push(h('Custom endpoints'), renderEndpoints(model.endpoints))
   if (model.auth.length > 0) parts.push(h('Sign-in settings'), settingsTable(model.auth))
   if (model.upload.length > 0) parts.push(h('Upload settings'), settingsTable(model.upload))
   parts.push(h('Fields'))
@@ -145,16 +159,9 @@ function renderSectionPage(model, section) {
 
 const lineCount = (text) => text.trimEnd().split('\n').length
 
-function renderInternalPage(models) {
-  const intro =
-    'Payload’s own collections and globals, which hold its queue, locks, saved settings and migration record. They are in the loaded config, so they are described here, on one page.'
-  const bodies = models.map((model) => block(heading(2, code(model.slug)), renderBody(model, 2)))
-  return `${block(GENERATED_NOTICE, heading(1, 'Payload internal content types'), intro, ...bodies)}\n`
-}
-
 function renderReadme(entries) {
   const intro =
-    'One page for every collection and global in the loaded Payload config, plugins included. Generated. What each type is for, why the model is shaped this way, its relations and what each hook is for are in [`docs/architecture/data-model.md`](../../architecture/data-model.md). “Defined in” is the file the function was written in, or the package for Payload’s and the plugins’ own; `inline` in the Function column is an anonymous function.'
+    'One page for every collection and global in the loaded Payload config, plugins included. Generated. What each type is for, why the model is shaped this way, its relations and what each hook is for are in [`docs/architecture/data-model.md`](../../architecture/data-model.md). “Defined in” is the file the function was written in, or the package for Payload’s and the plugins’ own; `inline` in the Function column is an anonymous function, with what it does when it only allows or denies. The config is loaded with `NODE_ENV=production`, as the live site runs, so settings that depend on it (the Secure sign-in cookie) show their production value.'
   const rows = entries.map((entry) => [
     `[${code(entry.slug)}](${entry.link})`,
     entry.kind,
@@ -164,46 +171,38 @@ function renderReadme(entries) {
   return `${block(GENERATED_NOTICE, heading(1, 'Content types'), intro, table(['Page', 'Kind', 'Description in the config', 'Drafts'], rows))}\n`
 }
 
+/** One page for a type, or when it is over the limit a main page and a page for each section. */
+function addTypePage(files, model, limit) {
+  const whole = renderPage(model, {})
+  if (lineCount(whole) <= limit) {
+    files.set(`${model.slug}.md`, whole)
+    return
+  }
+  files.set(`${model.slug}.md`, renderPage(model, { split: true }))
+  for (const section of sections(model.fields)) {
+    files.set(sectionFile(model, section), renderSectionPage(model, section))
+  }
+}
+
 /**
- * Builds every file: a page per content type (split by section when it is over the line limit),
- * one shared page for the internal ones, and the README. Returns a Map of file name to text,
+ * Builds every file: a page per content type (split by section when it is over the line limit)
+ * and the README. Returns a Map of file name to text,
  * sorted by name. Throws when a file is still over the limit, so a split is never silent.
  */
-export function buildPages(models, { internal = [], limit = PAGE_LINE_LIMIT } = {}) {
+export function buildPages(models, { limit = PAGE_LINE_LIMIT } = {}) {
   const sorted = [...models].sort((a, b) => a.slug.localeCompare(b.slug))
   const files = new Map()
-  const entries = []
-  for (const model of sorted.filter((m) => !internal.includes(m.slug))) {
-    const whole = renderPage(model, {})
-    if (lineCount(whole) <= limit) {
-      files.set(`${model.slug}.md`, whole)
-    } else {
-      files.set(`${model.slug}.md`, renderPage(model, { split: true }))
-      for (const section of sections(model.fields)) {
-        files.set(sectionFile(model, section), renderSectionPage(model, section))
-      }
-    }
-    entries.push({ model, link: `${model.slug}.md` })
-  }
-  const shared = sorted.filter((m) => internal.includes(m.slug))
-  if (shared.length > 0) {
-    files.set('payload-internal.md', renderInternalPage(shared))
-    for (const model of shared) {
-      entries.push({ model, link: `payload-internal.md#${model.slug}` })
-    }
-  }
+  for (const model of sorted) addTypePage(files, model, limit)
   files.set(
     'README.md',
     renderReadme(
-      entries
-        .map(({ model, link }) => ({
-          slug: model.slug,
-          link,
-          kind: model.kind,
-          summary: model.purpose.split(/(?<=\.)\s/)[0],
-          drafts: model.versions[0].startsWith('Drafts: yes') ? 'yes' : 'no',
-        }))
-        .sort((a, b) => a.slug.localeCompare(b.slug)),
+      sorted.map((model) => ({
+        slug: model.slug,
+        link: `${model.slug}.md`,
+        kind: model.kind,
+        summary: model.purpose.split(/(?<=\.)\s/)[0],
+        drafts: model.versions[0].startsWith('Drafts: yes') ? 'yes' : 'no',
+      })),
     ),
   )
   for (const [file, text] of files) {

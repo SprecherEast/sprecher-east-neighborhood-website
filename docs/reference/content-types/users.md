@@ -28,51 +28,52 @@
 | beforeChange    | `requireConfirmedEmailChange` | `src/modules/accounts/cms/requireConfirmedEmailChange.ts` |
 | beforeLogin     | `noPasswordSignInForAgents`   | `src/modules/accounts/cms/noPasswordSignInForAgents.ts`   |
 
+## Custom endpoints
+
+| Method | Path          | Handler | Defined in                                       |
+| ------ | ------------- | ------- | ------------------------------------------------ |
+| POST   | `/verify/:id` | inline  | `src/modules/accounts/cms/verifyFromSiteOnly.ts` |
+
 ## Sign-in settings
 
 | Setting                               | Value                |
 | ------------------------------------- | -------------------- |
-| `cookies.sameSite`                    | Lax                  |
-| `cookies.secure`                      | false                |
+| `cookies.secure`                      | true                 |
 | `forgotPassword.expiration`           | 3600000              |
 | `forgotPassword.generateEmailHTML`    | generateEmailHTML    |
 | `forgotPassword.generateEmailSubject` | generateEmailSubject |
-| `forgotPassword.minRequestInterval`   | 15000                |
 | `lockTime`                            | 600000               |
-| `loginWithUsername`                   | false                |
 | `maxLoginAttempts`                    | 5                    |
-| `strategies`                          | 0 items              |
 | `tokenExpiration`                     | 7200                 |
-| `useSessions`                         | true                 |
 | `verify.generateEmailHTML`            | generateEmailHTML    |
 | `verify.generateEmailSubject`         | generateEmailSubject |
 
 ## Fields
 
-| Field                      | Type     | Required | Target or options                     | Notes                                                                       |
-| -------------------------- | -------- | -------- | ------------------------------------- | --------------------------------------------------------------------------- |
-| `name`                     | text     | no       |                                       |                                                                             |
-| `role`                     | select   | yes      | admin, editor, guest, resident, agent | default guest; access create, update: isAdminFieldAccess; access read: read |
-| `verificationResends`      | number   | no       |                                       | default 0; access create, read, update: nobody                              |
-| `verificationResendsSince` | date     | no       |                                       | access create, read, update: nobody                                         |
-| `verificationSetsPassword` | checkbox | no       |                                       | default false; access create, read, update: nobody                          |
-| `verifiedTokenHash`        | text     | no       |                                       | indexed; access create, read, update: nobody                                |
-| `updatedAt`                | date     | no       |                                       | hidden; indexed                                                             |
-| `createdAt`                | date     | no       |                                       | hidden; indexed                                                             |
-| `email`                    | email    | yes      |                                       | unique                                                                      |
-| `resetPasswordToken`       | text     | no       |                                       | access create: create; access update: update                                |
-| `resetPasswordExpiration`  | date     | no       |                                       | access create: create; access update: update                                |
-| `salt`                     | text     | no       |                                       | access create: create; access update: update                                |
-| `hash`                     | text     | no       |                                       | access create: create; access update: update                                |
-| `resetPasswordRequestedAt` | date     | no       |                                       | access create: create; access update: update                                |
-| `_verified`                | checkbox | no       |                                       | access create, read, update: defaultAccess                                  |
-| `_verificationToken`       | text     | no       |                                       | access create: create; access update: update                                |
-| `loginAttempts`            | number   | no       |                                       | default 0; access create: create; access update: update                     |
-| `lockUntil`                | date     | no       |                                       | access create: create; access update: update                                |
-| `sessions`                 | array    | no       |                                       | access read: read; access update: update                                    |
-| `sessions[].id`            | text     | yes      |                                       |                                                                             |
-| `sessions[].createdAt`     | date     | no       |                                       |                                                                             |
-| `sessions[].expiresAt`     | date     | yes      |                                       |                                                                             |
+| Field                      | Type     | Required | Target or options                     | Notes                                                                                         |
+| -------------------------- | -------- | -------- | ------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `name`                     | text     | no       |                                       |                                                                                               |
+| `role`                     | select   | yes      | admin, editor, guest, resident, agent | default guest; access create, update: isAdminFieldAccess; access read: inline (always allows) |
+| `verificationResends`      | number   | no       |                                       | hidden; default 0; access create, read, update: nobody (always denies)                        |
+| `verificationResendsSince` | date     | no       |                                       | hidden; access create, read, update: nobody (always denies)                                   |
+| `verificationSetsPassword` | checkbox | no       |                                       | hidden; default false; access create, read, update: nobody (always denies)                    |
+| `verifiedTokenHash`        | text     | no       |                                       | hidden; indexed; access create, read, update: nobody (always denies)                          |
+| `updatedAt`                | date     | no       |                                       | hidden; indexed                                                                               |
+| `createdAt`                | date     | no       |                                       | hidden; indexed                                                                               |
+| `email`                    | email    | yes      |                                       | unique                                                                                        |
+| `resetPasswordToken`       | text     | no       |                                       | hidden; access create, update: inline (always denies)                                         |
+| `resetPasswordExpiration`  | date     | no       |                                       | hidden; access create, update: inline (always denies)                                         |
+| `salt`                     | text     | no       |                                       | hidden; access create, update: inline (always denies)                                         |
+| `hash`                     | text     | no       |                                       | hidden; access create, update: inline (always denies)                                         |
+| `resetPasswordRequestedAt` | date     | no       |                                       | hidden; access create, update: inline (always denies)                                         |
+| `_verified`                | checkbox | no       |                                       | access create, read, update: defaultAccess                                                    |
+| `_verificationToken`       | text     | no       |                                       | hidden; access create, update: inline (always denies)                                         |
+| `loginAttempts`            | number   | no       |                                       | hidden; default 0; access create, update: inline (always denies)                              |
+| `lockUntil`                | date     | no       |                                       | hidden; access create, update: inline (always denies)                                         |
+| `sessions`                 | array    | no       |                                       | access read: inline; access update: inline (always denies)                                    |
+| `sessions[].id`            | text     | yes      |                                       |                                                                                               |
+| `sessions[].createdAt`     | date     | no       |                                       |                                                                                               |
+| `sessions[].expiresAt`     | date     | yes      |                                       |                                                                                               |
 
 ### Field hooks
 

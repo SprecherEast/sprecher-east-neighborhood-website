@@ -25,47 +25,42 @@
 
 ## Sign-in settings
 
-| Setting                             | Value   |
-| ----------------------------------- | ------- |
-| `cookies.sameSite`                  | Lax     |
-| `cookies.secure`                    | false   |
-| `disableLocalStrategy`              | true    |
-| `forgotPassword.minRequestInterval` | 15000   |
-| `lockTime`                          | 600000  |
-| `loginWithUsername`                 | false   |
-| `maxLoginAttempts`                  | 5       |
-| `strategies`                        | 0 items |
-| `tokenExpiration`                   | 7200    |
-| `useAPIKey`                         | true    |
-| `useSessions`                       | true    |
-| `verify`                            | false   |
+| Setting                | Value  |
+| ---------------------- | ------ |
+| `cookies.secure`       | false  |
+| `disableLocalStrategy` | true   |
+| `lockTime`             | 600000 |
+| `maxLoginAttempts`     | 5      |
+| `tokenExpiration`      | 7200   |
+| `useAPIKey`            | true   |
+| `verify`               | false  |
 
 ## Fields
 
-| Field                               | Type         | Required | Target or options | Notes                                                             |
-| ----------------------------------- | ------------ | -------- | ----------------- | ----------------------------------------------------------------- |
-| `user`                              | relationship | yes      | → users           | access create, update: isAdminFieldAccess                         |
-| `label`                             | text         | no       |                   |                                                                   |
-| `description`                       | text         | no       |                   |                                                                   |
-| `events`                            | group        | no       |                   |                                                                   |
-| `events.find`                       | checkbox     | no       |                   | default false                                                     |
-| `posts`                             | group        | no       |                   |                                                                   |
-| `posts.find`                        | checkbox     | no       |                   | default false                                                     |
-| `categories`                        | group        | no       |                   |                                                                   |
-| `categories.find`                   | checkbox     | no       |                   | default false                                                     |
-| `agentRuns`                         | group        | no       |                   |                                                                   |
-| `agentRuns.find`                    | checkbox     | no       |                   | default false                                                     |
-| `agentRuns.create`                  | checkbox     | no       |                   | default false                                                     |
-| `agentRuns.update`                  | checkbox     | no       |                   | default false                                                     |
-| `payload-mcp-tool`                  | group        | no       |                   |                                                                   |
-| `payload-mcp-tool.submitSuggestion` | checkbox     | no       |                   | default true                                                      |
-| `payload-mcp-tool.reportItem`       | checkbox     | no       |                   | default true                                                      |
-| `updatedAt`                         | date         | no       |                   | hidden; indexed                                                   |
-| `createdAt`                         | date         | no       |                   | hidden; indexed                                                   |
-| `enableAPIKey`                      | checkbox     | no       |                   | access create, update: canCreateOrUpdateAPIKey                    |
-| `apiKey`                            | text         | no       |                   | access create, update: canCreateOrUpdateAPIKey; access read: read |
-| `apiKeyIndex`                       | text         | no       |                   | access create, update: canCreateOrUpdateAPIKey; access read: read |
-| `hasAPIKey`                         | checkbox     | no       |                   | access read: canCreateOrUpdateAPIKey                              |
+| Field                               | Type         | Required | Target or options | Notes                                                                                       |
+| ----------------------------------- | ------------ | -------- | ----------------- | ------------------------------------------------------------------------------------------- |
+| `user`                              | relationship | yes      | → users           | access create, update: isAdminFieldAccess                                                   |
+| `label`                             | text         | no       |                   |                                                                                             |
+| `description`                       | text         | no       |                   |                                                                                             |
+| `events`                            | group        | no       |                   |                                                                                             |
+| `events.find`                       | checkbox     | no       |                   | default false                                                                               |
+| `posts`                             | group        | no       |                   |                                                                                             |
+| `posts.find`                        | checkbox     | no       |                   | default false                                                                               |
+| `categories`                        | group        | no       |                   |                                                                                             |
+| `categories.find`                   | checkbox     | no       |                   | default false                                                                               |
+| `agentRuns`                         | group        | no       |                   |                                                                                             |
+| `agentRuns.find`                    | checkbox     | no       |                   | default false                                                                               |
+| `agentRuns.create`                  | checkbox     | no       |                   | default false                                                                               |
+| `agentRuns.update`                  | checkbox     | no       |                   | default false                                                                               |
+| `payload-mcp-tool`                  | group        | no       |                   |                                                                                             |
+| `payload-mcp-tool.submitSuggestion` | checkbox     | no       |                   | default true                                                                                |
+| `payload-mcp-tool.reportItem`       | checkbox     | no       |                   | default true                                                                                |
+| `updatedAt`                         | date         | no       |                   | hidden; indexed                                                                             |
+| `createdAt`                         | date         | no       |                   | hidden; indexed                                                                             |
+| `enableAPIKey`                      | checkbox     | no       |                   | access create, update: canCreateOrUpdateAPIKey                                              |
+| `apiKey`                            | text         | no       |                   | access create, update: canCreateOrUpdateAPIKey; access read: inline (always denies)         |
+| `apiKeyIndex`                       | text         | no       |                   | hidden; access create, update: canCreateOrUpdateAPIKey; access read: inline (always denies) |
+| `hasAPIKey`                         | checkbox     | no       |                   | access read: canCreateOrUpdateAPIKey                                                        |
 
 ### Field hooks
 
