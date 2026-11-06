@@ -4,6 +4,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import type { Media } from '@/payload-types'
 
+import { Legend } from '@/platform/ui/Legend'
+import { FIGURE_GAP, LEGEND_GAP } from '@/platform/ui/layoutSizes'
+
 import { MediaBlock } from './MediaBlock'
 
 afterEach(cleanup)
@@ -69,11 +72,10 @@ describe('MediaBlock spacing (#541)', () => {
     )
 
     const classes = wrapper(container).className
-    // The shared gap (`--figure-gap`), which a legend under the image reaches back over (#636),
-    // and a stacking level above that legend, so the legend's top hides beneath the image
+    // The shared gap (`--figure-gap`), which a legend under the image takes part of back (#636,
+    // #658); no stacking level, because nothing is tucked under the image any more
     expect(classes).toContain('my-[var(--figure-gap)]')
-    expect(classes).toContain('relative')
-    expect(classes).toContain('z-10')
+    expect(classes).not.toMatch(/\bz-/)
     // No second layer of spacing: neither the section padding nor a container
     expect(classes).not.toMatch(/\bpy-/)
     expect(classes).not.toMatch(/\bmd:py-/)
@@ -138,5 +140,38 @@ describe('MediaBlock caption (#635)', () => {
     const { container } = render(<MediaBlock blockType="mediaBlock" media={1} />)
 
     expect(container.querySelector('figcaption')).toBeNull()
+  })
+})
+
+describe('MediaBlock with a legend under it (#658)', () => {
+  const renderBoth = () =>
+    render(
+      <>
+        <MediaBlock blockType="mediaBlock" media={mediaWithCaption} placement="inline" />
+        <Legend label="Diagram key" items={[{ label: 'North roundabout', text: null }]} />
+      </>,
+    )
+
+  it('keeps the caption in the figure, above the legend, in reading order', () => {
+    const { container } = renderBoth()
+    const figure = container.querySelector('figure') as HTMLElement
+    const legend = screen.getByRole('list', { name: 'Diagram key' }).parentElement as HTMLElement
+
+    expect(figure.querySelector('figcaption')?.textContent).toBe('Source: WisDOT')
+    // The legend comes after the whole figure, so it can't sit over the caption
+    expect(figure.compareDocumentPosition(legend) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(figure.contains(legend)).toBe(false)
+  })
+
+  it('shares the figure gap: the legend takes back margin only, and nothing stacks over it', () => {
+    const { container } = renderBoth()
+    const figure = container.querySelector('figure') as HTMLElement
+    const legend = screen.getByRole('list', { name: 'Diagram key' }).parentElement as HTMLElement
+
+    expect(figure.className).toContain(FIGURE_GAP)
+    expect(legend.className).toContain(LEGEND_GAP)
+    // No z-index games: nothing is layered over the other
+    expect(figure.className).not.toMatch(/\bz-/)
+    expect(legend.className).not.toMatch(/\bz-/)
   })
 })
