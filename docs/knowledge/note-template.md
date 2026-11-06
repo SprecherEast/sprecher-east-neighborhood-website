@@ -27,7 +27,10 @@ One line each, with the file: "Publishing an event expires the `events` tag (`cm
 
 ## Shared pieces it uses
 
-<Components, helpers and blocks from `src/platform/` or another module's entry, one line each.>
+<Components, helpers and blocks from `src/platform/`, one line each. No module imports another
+([0008](../architecture/decisions/0008-compose-modules-at-the-app-level.md)): where this module
+meets another, name the composition root that joins them (a page in `src/app/`, the block
+registry, or `src/payload.config.ts`).>
 
 ## Rules and the tests that protect them
 
