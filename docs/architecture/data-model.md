@@ -1,37 +1,37 @@
 # Data model
 
-Everything is stored in one SQLite database (`DATABASE_URI`, default `file:./data/payload.db`); the schema is set up in `src/payload.config.ts` (collections, globals, plugins), each collection lives in its module's `cms/` (`src/modules/<area>/cms/`), media in `src/platform/payload/media.ts`, and plugin overrides are in `src/payload.config.ts` (the form builder's in `src/modules/contact/cms/formBuilder.ts`). Reflects `main` at `190cb3d` (Payload 3.91), written from the configs, `src/payload-types.ts` and the Payload 3.91.0 package defaults. Update this page in the same PR as any schema or access change.
+Everything is stored in one SQLite database (`DATABASE_URI`, default `file:./data/payload.db`); the schema is set up in `src/payload.config.ts` (collections, globals, plugins), each collection lives in its module's `cms/` (`src/modules/<area>/cms/`), media in `src/platform/payload/media.ts`, and plugin overrides are in `src/payload.config.ts` (the form builder's in `src/modules/contact/cms/formBuilder.ts`).
+
+**What each content type holds is generated, not written here.** [`docs/reference/content-types/`](../reference/content-types/README.md) has one page per collection and global, plugins included: its fields (type, required, relation, options, field access and hooks), access per operation by function name, hooks by phase, drafts and versions, and sign-in and upload settings. `npm run docs:generate` writes them from the loaded Payload config, and CI (`Knowledge sync`) fails when a committed page is out of date ([decision 0019](decisions/0019-knowledge-layer.md), #714). This page keeps what a script can't know: what each type is for, why the model is shaped this way, the relations, and what each hook is for. A change to a content type regenerates its page in the same PR.
 
 Every collection also has `id` (number), `createdAt` and `updatedAt`. Draft-enabled collections also have `_status` (`draft` | `published`). `slugField()` (Payload built-in) adds a hidden `generateSlug` checkbox (default true) and a `slug` text field (required, unique, indexed) generated from `title`.
 
 ## Collections
 
-| Slug                   | Purpose                                                                                     | Drafts?                                | Read                          | Create/Update                                           | Delete            | Config file                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------- | ----------------------------- | ------------------------------------------------------- | ----------------- | ------------------------------------------------------------- |
-| `pages`                | Pages built from hero and blocks                                                            | Yes (autosave, scheduled, 50 versions) | `authenticatedOrPublished`    | `isAdminOrEditor`                                       | `isAdmin`         | `src/modules/site/cms/pages.ts`                               |
-| `posts`                | News articles with rich text                                                                | Yes (autosave, scheduled, 50 versions) | `authenticatedOrPublished`    | `isAdminOrEditor`; create also agents (#336)            | `isAdmin`         | `src/modules/news/cms/posts.ts`                               |
-| `events`               | Neighborhood events with date and place                                                     | Yes (autosave, scheduled, 25 versions) | `authenticatedOrPublished`    | `isAdminOrEditor`; create also agents (#336)            | `isAdmin`         | `src/modules/events/cms/events.ts`                            |
-| `faq`                  | Questions and answers by category                                                           | Yes (plain)                            | `authenticatedOrPublished`    | `isAdminOrEditor`                                       | `isAdmin`         | `src/modules/directory/cms/faq.ts`                            |
-| `resources`            | Local links and contacts by category                                                        | Yes (plain)                            | `authenticatedOrPublished`    | `isAdminOrEditor`                                       | `isAdmin`         | `src/modules/directory/cms/resources.ts`                      |
-| `team-members`         | Board members and AI agents                                                                 | No                                     | `anyone`                      | `isAdminOrEditor`                                       | `isAdmin`         | `src/modules/directory/cms/teamMembers.ts`                    |
-| `categories`           | Nested categories for posts and events                                                      | No                                     | `anyone`                      | `isAdminOrEditor`                                       | `isAdmin`         | `src/modules/news/cms/categories.ts`                          |
-| `media`                | Uploaded images and files                                                                   | No                                     | `anyone`                      | `isAdminOrEditor`                                       | `isAdmin`         | `src/platform/payload/media.ts`                               |
-| `users`                | Login accounts with roles                                                                   | No                                     | `isAdminOrSelf`               | create `isAdmin`; update `isAdminOrSelf`                | `isAdmin`         | `src/modules/accounts/cms/users.ts`                           |
-| `email-confirmations`  | Typed addresses and whether they were confirmed by link                                     | No                                     | `isAdmin`                     | `isAdmin`                                               | `isAdmin`         | `src/modules/verification/cms/emailConfirmations.ts`          |
-| `agent-runs`           | Each agent run: sources and cursors, counts, errors, cost ([agent access](agent-access.md)) | No                                     | admin all; an agent its own   | create admin or agent; update admin or its own          | `isAdmin`         | `src/modules/agents/cms/agentRuns.ts`                         |
-| `agent-review-items`   | What an agent asks an editor to look at, one per report, linked to its run                  | No                                     | staff all; an agent its own   | create admin or agent (own runs only); update `isAdmin` | `isAdmin`         | `src/modules/agents/cms/agentReviewItems.ts`                  |
-| `payload-mcp-api-keys` | MCP API keys, each acting as one agent account                                              | No                                     | `isAdmin`                     | `isAdmin`                                               | `isAdmin`         | plugin MCP, `src/modules/agents/cms/apiKeys.ts`               |
-| `forms`                | Form definitions built in admin                                                             | No                                     | `anyone`                      | `isAdminOrEditor`                                       | `isAdmin`         | plugin form-builder, `src/modules/contact/cms/formBuilder.ts` |
-| `form-submissions`     | Data visitors submit through forms                                                          | No                                     | `isAdmin`                     | create `() => true` (inline); update `isAdmin`          | `isAdmin`         | plugin form-builder, `src/modules/contact/cms/formBuilder.ts` |
-| `redirects`            | Old URL to new URL mappings                                                                 | No                                     | `isAdmin`                     | `isAdmin`                                               | `isAdmin`         | plugin redirects, `src/payload.config.ts`                     |
-| `search`               | Search index of posts and events                                                            | No                                     | `() => true` (plugin default) | create `() => false` (plugin); update `isAdminOrEditor` | `isAdminOrEditor` | plugin search, `src/modules/news/cms/search.ts`               |
+| Slug                                                                         | Purpose                                                                                     | Config file                                                   |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [`pages`](../reference/content-types/pages.md)                               | Pages built from hero and blocks                                                            | `src/modules/site/cms/pages.ts`                               |
+| [`posts`](../reference/content-types/posts.md)                               | News articles with rich text                                                                | `src/modules/news/cms/posts.ts`                               |
+| [`events`](../reference/content-types/events.md)                             | Neighborhood events with date and place                                                     | `src/modules/events/cms/events.ts`                            |
+| [`faq`](../reference/content-types/faq.md)                                   | Questions and answers by category                                                           | `src/modules/directory/cms/faq.ts`                            |
+| [`resources`](../reference/content-types/resources.md)                       | Local links and contacts by category                                                        | `src/modules/directory/cms/resources.ts`                      |
+| [`team-members`](../reference/content-types/team-members.md)                 | Board members and AI agents                                                                 | `src/modules/directory/cms/teamMembers.ts`                    |
+| [`categories`](../reference/content-types/categories.md)                     | Nested categories for posts and events                                                      | `src/modules/news/cms/categories.ts`                          |
+| [`media`](../reference/content-types/media.md)                               | Uploaded images and files                                                                   | `src/platform/payload/media.ts`                               |
+| [`users`](../reference/content-types/users.md)                               | Login accounts with roles                                                                   | `src/modules/accounts/cms/users.ts`                           |
+| [`email-confirmations`](../reference/content-types/email-confirmations.md)   | Typed addresses and whether they were confirmed by link                                     | `src/modules/verification/cms/emailConfirmations.ts`          |
+| [`agent-runs`](../reference/content-types/agent-runs.md)                     | Each agent run: sources and cursors, counts, errors, cost ([agent access](agent-access.md)) | `src/modules/agents/cms/agentRuns.ts`                         |
+| [`agent-review-items`](../reference/content-types/agent-review-items.md)     | What an agent asks an editor to look at, one per report, linked to its run                  | `src/modules/agents/cms/agentReviewItems.ts`                  |
+| [`payload-mcp-api-keys`](../reference/content-types/payload-mcp-api-keys.md) | MCP API keys, each acting as one agent account                                              | plugin MCP, `src/modules/agents/cms/apiKeys.ts`               |
+| [`forms`](../reference/content-types/forms.md)                               | Form definitions built in admin                                                             | plugin form-builder, `src/modules/contact/cms/formBuilder.ts` |
+| [`form-submissions`](../reference/content-types/form-submissions.md)         | Data visitors submit through forms                                                          | plugin form-builder, `src/modules/contact/cms/formBuilder.ts` |
+| [`redirects`](../reference/content-types/redirects.md)                       | Old URL to new URL mappings                                                                 | plugin redirects, `src/payload.config.ts`                     |
+| [`search`](../reference/content-types/search.md)                             | Search index of posts and events                                                            | plugin search, `src/modules/news/cms/search.ts`               |
 
 What the access functions mean (`src/platform/payload/`):
 
 - `anyone`: always true.
 - `authenticatedOrPublished`: admin and editor see everything, including drafts; everyone else only sees `_status = published`.
-- `readVersions` is not set on any draft-enabled collection, so Payload's default lets any signed-in user read every version, drafts included, through `/api/<collection>/versions`. Gap tracked in #140.
-- `unlock` is not set on `users`, so any account in the `users` collection may unlock another. Gap tracked in #140.
 - `isAdmin`: role `admin`. `isAdminOrEditor`: role `admin` or `editor`. A user with no role counts as `guest`.
 - `isAdminOrSelf`: admin, or a user whose id equals the document id. Without an id (a list query) non-admins are denied.
 - `users` also sets `access.admin: isAdminOrEditorBoolean` (who may open `/admin`: admin and editor).
@@ -39,106 +39,16 @@ What the access functions mean (`src/platform/payload/`):
 
 Also present, added by Payload or its plugins rather than defined here: `payload-folders` (from `media.folders: true`; staff-only through `folders.collectionOverrides` in `payload.config.ts`, #143), `payload-jobs` (access set by `jobs.access` in `payload.config.ts`; `jobs.autoRun` runs the `retention` queue, #274, and the `default` queue that scheduled publishing uses, every minute, #141, both in the app's own process; decisions 0010 and 0011), the global `payload-jobs-stats` (when each scheduled task last ran; admin-only, set on the built config by `src/platform/payload/restrictJobStats.ts`), `payload-locked-documents` (edit locks; staff-only since #147, set on the built config by `src/platform/payload/restrictEditLocks.ts`), `payload-kv`, `payload-preferences` and `payload-migrations`.
 
-## Fields by collection
+These are described on the [internal types page](../reference/content-types/payload-internal.md) (and `payload-folders` and `payload-mcp-api-keys` on their own).
 
-### pages
+## Notes by content type
 
-| Field                  | Type           | Required    | Notes                                                                                                                                                                                                                                                                                                                                   |
-| ---------------------- | -------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`                | text           | Yes         | Admin title                                                                                                                                                                                                                                                                                                                             |
-| `hero`                 | group          | `type` only | Tab Hero. `type` select: `none`, `highImpact`, `mediumImpact`, `lowImpact` (default `lowImpact`); `richText`; `links` (array, max 2, each a link group with `appearance` default or outline); `media` → media (required when type is highImpact or mediumImpact)                                                                        |
-| `layout`               | blocks         | Yes         | Tab Content. Allowed block types: `cta`, `content`, `mediaBlock`, `archive`, `formBlock`, `eventsThisWeek` (`heading`, `days` 1–31, `rows` max 4: `title`, `source` all/official/category, `category`, `limit` 1–6; #122), `topIssues` (`heading`, `reviewedAt` day only, `items` 1–5: `title` max 80, `summary` max 200, `link`; #484) |
-| `meta`                 | group          | No          | meta (SEO plugin)                                                                                                                                                                                                                                                                                                                       |
-| `publishedAt`          | date           | No          | Sidebar. Set by hook `populatePublishedAt`                                                                                                                                                                                                                                                                                              |
-| `generateSlug`, `slug` | checkbox, text | slug: Yes   | `slugField()`. Slug `home` is the site root                                                                                                                                                                                                                                                                                             |
-
-### posts
-
-| Field                  | Type                            | Required  | Notes                                                                                                                                   |
-| ---------------------- | ------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`                | text                            | Yes       |                                                                                                                                         |
-| `heroImage`            | upload → media                  | No        |                                                                                                                                         |
-| `content`              | richText                        | Yes       | Lexical: headings h1-h4, bold/italic/underline, links (to pages, posts, or URL), horizontal rule, blocks `banner`, `code`, `mediaBlock` |
-| `relatedPosts`         | → posts (many)                  | No        | Sidebar. Filter excludes the post itself                                                                                                |
-| `categories`           | → categories (many)             | No        | Sidebar                                                                                                                                 |
-| `meta`                 | group                           | No        | meta (SEO plugin)                                                                                                                       |
-| `publishedAt`          | date (day and time)             | No        | Sidebar. Field hook sets it to now if `_status` is published and it is empty                                                            |
-| `authors`              | → users (many)                  | No        | Sidebar                                                                                                                                 |
-| `populatedAuthors`     | array of `id` text, `name` text | No        | Hidden. Filled by afterRead hook `populateAuthors`; `update` access is `() => false`                                                    |
-| review queue           | sidebar fields                  | No        | `moderationStatus`, `sourceName`, `sourceUrl`, `externalId`, `contentHash`, `audience` ([review queue](review-queue.md), #123)          |
-| `generateSlug`, `slug` | checkbox, text                  | slug: Yes | `slugField()`                                                                                                                           |
-
-### events
-
-| Field                                        | Type                | Required  | Notes                                                                                                        |
-| -------------------------------------------- | ------------------- | --------- | ------------------------------------------------------------------------------------------------------------ |
-| `title`                                      | text                | Yes       |                                                                                                              |
-| `date`                                       | date (day only)     | Yes       | Day-only picker (`pickerAppearance: 'dayOnly'`)                                                              |
-| `timeStart`, `timeEnd`                       | text                | No        | Free text, e.g. "6:00 PM"                                                                                    |
-| `featured`                                   | checkbox            | No        | Default false                                                                                                |
-| `locationType`                               | select              | No        | `in-person`, `virtual`, `hybrid`; default `in-person`                                                        |
-| `locationName`, `locationAddress`, `mapsUrl` | text                | No        | Hidden in admin when `locationType` is `virtual`                                                             |
-| `registrationUrl`                            | text                | No        |                                                                                                              |
-| `heroImage`                                  | upload → media      | No        |                                                                                                              |
-| `description`                                | textarea            | No        | Short text for event cards                                                                                   |
-| `content`                                    | richText            | No        | Lexical: headings h2-h4, toolbars, horizontal rule                                                           |
-| `meta`                                       | group               | No        | meta (SEO plugin)                                                                                            |
-| `publishedAt`                                | date (day and time) | No        | Sidebar. Set by hook `populatePublishedAt`                                                                   |
-| `categories`                                 | → categories (many) | No        | Sidebar. The same tree as posts, subcategories included (#362)                                               |
-| `officialBody`, `agendaUrl`                  | select, text        | No        | Official meeting (#122): `city` or `county`; the agenda link shows once a body is set and must be `https://` |
-| `cancelled`, review queue                    | checkbox, sidebar   | No        | `cancelled` default false; the same review-queue fields as posts ([review queue](review-queue.md))           |
-| `generateSlug`, `slug`                       | checkbox, text      | slug: Yes | `slugField()`                                                                                                |
-
-### categories
-
-| Field                  | Type                                        | Required  | Notes                                                                                       |
-| ---------------------- | ------------------------------------------- | --------- | ------------------------------------------------------------------------------------------- |
-| `title`                | text                                        | Yes       |                                                                                             |
-| `generateSlug`, `slug` | checkbox, text                              | slug: Yes | `slugField()`. No drafts                                                                    |
-| `parent`               | → categories (one)                          | No        | Added by nested-docs plugin                                                                 |
-| `breadcrumbs`          | array of `doc` → categories, `url`, `label` | No        | Read-only; filled by nested-docs (URL = slugs joined with `/`)                              |
-| `defaultImage`         | upload → media                              | No        | The image agent suggestions in this category get, or a subcategory without one (#362, #363) |
-
-### media
-
-| Field         | Type                                                                                                      | Required | Notes                                                                                                                                                                                                      |
-| ------------- | --------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `alt`         | text                                                                                                      | Yes      |                                                                                                                                                                                                            |
-| `caption`     | richText                                                                                                  | No       |                                                                                                                                                                                                            |
-| `credit`      | text (max 200)                                                                                            | No       | Who made the image, as it should be credited (#362); shown under event and post heroes (#405)                                                                                                              |
-| `license`     | select                                                                                                    | No       | `own`, `permission`, `cc-by`, `cc-by-sa`, `cc0`, `other` (`MEDIA_LICENSES` in `src/platform/lib/mediaLicenses.ts`)                                                                                         |
-| `licenseUrl`  | text                                                                                                      | No       | The license itself; the credit links to it and shows its Creative Commons version (#405)                                                                                                                   |
-| `sourceUrl`   | text                                                                                                      | No       | Where the image came from; an http(s) link                                                                                                                                                                 |
-| `folder`      | → payload-folders (one)                                                                                   | No       | From `folders: true`                                                                                                                                                                                       |
-| upload fields | `url`, `thumbnailURL`, `filename`, `mimeType`, `filesize`, `width`, `height`, `focalX`, `focalY`, `sizes` | Auto     | Files saved to `public/media`; `focalPoint` on; no `mimeTypes` limit. `sizes`: `thumbnail` 300w, `square` 500x500, `small` 600w, `medium` 900w, `large` 1400w, `xlarge` 1920w, `og` 1200x630 (crop center) |
-
-### users
-
-| Field                      | Type                                                                                                                                                       | Required   | Notes                                                                                                                                                                               |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                     | text                                                                                                                                                       | No         |                                                                                                                                                                                     |
-| `role`                     | select                                                                                                                                                     | Yes        | `admin`, `editor`, `guest`, `resident`, `agent`; default `guest` (the first account on an empty database is made `admin`); sidebar                                                  |
-| `verificationResends`      | number                                                                                                                                                     | No         | Hidden. How often the verification link was sent again in the current window (#289), at most 3                                                                                      |
-| `verificationResendsSince` | date                                                                                                                                                       | No         | Hidden. When that window started; it lasts 3 hours (`VERIFICATION_RESENDS`)                                                                                                         |
-| `verificationSetsPassword` | checkbox                                                                                                                                                   | No         | Hidden. Set by a resend: the verify page then has the person choose the password before the account opens (#289)                                                                    |
-| `verifiedTokenHash`        | text (indexed)                                                                                                                                             | No         | Hidden, server only. SHA-256 of the link that verified the account, so the verify page can say a link opened again is already confirmed (#391)                                      |
-| auth fields                | `email`, `password`, `hash`, `salt`, `resetPasswordToken`, `resetPasswordExpiration`, `resetPasswordRequestedAt`, `loginAttempts`, `lockUntil`, `sessions` | email: Yes | From `auth: true`. `timestamps: true`. No OAuth fields: `payload-oauth2` is not in `package.json` or `src/`                                                                         |
-| verification fields        | `_verified`, `_verificationToken`                                                                                                                          | No         | From `auth.verify` (#187): a new account is unverified until its one-time link is opened, and can't sign in before. Accounts from before #187 were marked verified by its migration |
+What the generated pages cannot say.
 
 ### email-confirmations
 
 One record per address (#183). The server writes it through the Local API with access bypassed;
 only admins can see it.
-
-| Field                          | Type         | Required | Notes                                                                                       |
-| ------------------------------ | ------------ | -------- | ------------------------------------------------------------------------------------------- |
-| `email`                        | email        | Yes      | Unique, indexed, stored trimmed and lowercase                                               |
-| `confirmedAt`                  | date         | No       | When the link was clicked; empty while unconfirmed                                          |
-| `welcomeSentAt`                | date         | No       | When the welcome email was claimed (once), not that it was delivered                        |
-| `lastSentAt`                   | date         | No       | When the latest link was sent                                                               |
-| `tokenHash`                    | text         | No       | SHA-256 of the latest link's token, hidden from every API; the token itself is never stored |
-| `tokenExpiresAt`               | date         | No       | 24 hours after the link was sent                                                            |
-| `sendCount`, `sendWindowStart` | number, date | No       | Hidden: links sent to this address in the current 24-hour window                            |
 
 Endpoint: `POST /api/email-confirmations/confirm` with `{ token }`, public (the token is the proof),
 20 tries an hour per connection, and the robot check (Turnstile token in `x-turnstile-token`,
@@ -158,53 +68,17 @@ message from the address is kept and no account uses it (the keepers `payload.co
 in), so in effect 12 months after the person's last message. The hourly task
 `deleteExpiredEmailConfirmations` does it (jobs queue `retention`). An admin can delete one sooner.
 
-### faq
+### form-submissions
 
-| Field         | Type     | Required | Notes                                                                                  |
-| ------------- | -------- | -------- | -------------------------------------------------------------------------------------- |
-| `question`    | text     | Yes      |                                                                                        |
-| `answer`      | richText | Yes      | Site default Lexical editor (paragraph, bold, italic, underline, links to pages/posts) |
-| `category`    | select   | No       | `general`, `membership`, `events`, `neighborhood`; default `general`                   |
-| `order`       | number   | No       | Default 99; lower first; sidebar; also the default sort. No `slug` field               |
-| `publishedAt` | date     | No       | Sidebar. Set by hook `populatePublishedAt`                                             |
+The plugin adds `form` and `submissionData`; `src/modules/contact/cms/senderEmail.ts` (#183) adds `senderEmail` and `emailConfirmed`, and `src/modules/contact/cms/retentionHold.ts` (#274) adds `retentionHold` and `retentionHoldReason`. `senderEmail` is text, taken from the form's first email field, so Payload's stricter email check can never refuse a message. `heldEmails` keeps an unconfirmed sender's emails, as the form builder made them after the safety rules, until the sender confirms and then they are sent (#287); `recordSenderEmail` clears anything a visitor sends in it. Retention (#274): the hourly task `deleteExpiredContactMessages` deletes an unconfirmed message 48 hours after it was sent (not confirmed, and it has a sender address or its form asks for one: this includes rows stored before #183), and any other 12 months after its sender's last message (one from a form with no email field, 12 months after it was sent); never one on hold. The delete is one statement that re-checks the hold and the confirmation.
 
-### resources
+### search and redirects
 
-| Field                                    | Type                       | Required              | Notes                                                                                                                                                                                                                                                       |
-| ---------------------------------------- | -------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`                                  | text                       | Yes                   |                                                                                                                                                                                                                                                             |
-| `description`, `phone`                   | textarea, text             | No                    |                                                                                                                                                                                                                                                             |
-| `url`, `links`                           | text, array                | No                    | `url` is "Visit Website", validated: must start with `http://` or `https://`. `links`: up to 3 rows of `label` (max 60) and `url` (validated the same), shown after it                                                                                      |
-| `category`                               | select                     | Yes                   | `elected-officials`, `public-safety`, `childcare`, `renting`, `parks`, `community`, `utilities`, `other`                                                                                                                                                    |
-| `photo`, `photoCredit`, `photoSourceUrl` | upload → media, text, text | No; credit with photo | Portrait group, in admin only for `elected-officials`, used only with the official's permission (#393). The credit is required with a photo and shown as "Photo: …" (so no leading "Photo:"); the source is validated like `url` and the credit links to it |
-| `order`                                  | number                     | No                    | Default 99; lower first within category; sidebar; also the default sort. No `slug` field                                                                                                                                                                    |
-| `publishedAt`                            | date                       | No                    | Sidebar. Set by hook `populatePublishedAt`                                                                                                                                                                                                                  |
+`search` is synced from `posts` and `events` only, and drafts are excluded; `sourceName` and `sourceUrl` are copied by the sync (#471, #492). The redirects plugin covers `pages` and `posts`.
 
-### team-members
+### header and footer
 
-| Field                   | Type           | Required | Notes                                                       |
-| ----------------------- | -------------- | -------- | ----------------------------------------------------------- |
-| `memberType`            | select         | Yes      | `board-member`, `ai-agent`; default `board-member`; sidebar |
-| `name`                  | text           | Yes      |                                                             |
-| `role`                  | text           | Yes      | e.g. President                                              |
-| `title`, `capabilities` | text, textarea | No       | Shown in admin only when `memberType` is `ai-agent`         |
-| `bio`                   | textarea       | No       |                                                             |
-| `email`                 | email          | No       |                                                             |
-| `status`                | select         | Yes      | `active`, `inactive`; default `active`; sidebar             |
-| `order`                 | number         | No       | Default 99; lower first; sidebar                            |
-| `photo`                 | upload → media | No       |                                                             |
-
-### Plugin-created collections
-
-- `forms`: `title` (required), `fields` (blocks: `checkbox`, `country`, `email`, `message`, `number`, `select`, `state`, `text`, `textarea`; payment disabled), `submitButtonLabel`, `confirmationType` (`message` | `redirect`, default `message`), `confirmationMessage` (richText, required for message), `redirect.url`, `emails` (array: `emailTo`, `cc`, `bcc`, `replyTo`, `emailFrom`, `subject` required, `message` richText).
-- `form-submissions`: `form` → forms (required), `submissionData` (array of `field` text, `value` textarea, both required). Added by `src/modules/contact/cms/senderEmail.ts` (#183): `senderEmail` (text, indexed, from the form's first email field; text so Payload's stricter email check can never refuse a message) and `emailConfirmed` (checkbox, default false); both set by the server only. `heldEmails` (json, hidden, no read or write access): an unconfirmed sender's emails, as the form builder made them after the safety rules, kept until the sender confirms and then sent (#287). `recordSenderEmail` clears anything a visitor sends in it. Added by `src/modules/contact/cms/retentionHold.ts` (#274): `retentionHold` (checkbox, default false) and `retentionHoldReason` (textarea, required while the hold is on), admin-only and never set on create. Retention (#274): the hourly task `deleteExpiredContactMessages` deletes an unconfirmed message 48 hours after it was sent (not confirmed, and it has a sender address or its form asks for one: this includes rows stored before #183), and any other 12 months after its sender's last message (one from a form with no email field, 12 months after it was sent); never one on hold. The delete is one statement that re-checks the hold and the confirmation.
-- `redirects`: `from` (text, required, unique, indexed), `to` (group: `type` reference | custom, `reference` → pages | posts, `url`). Plugin covers `pages` and `posts`. `search`: `title`, `priority`, `doc` → posts | events (required), `slug`, `cancelled` (checkbox), `sourceName`, `sourceUrl` (copied by the sync, #471, #492), `meta` (`title`, `description`, `image` → media), `categories` (array of `relationTo`, `categoryID`, `title`). Synced from `posts` and `events` only, drafts excluded.
-
-## Globals
-
-`header` and `footer` have the same shape and the same access, from one factory in `src/modules/site/cms/navGlobal.ts`: `read: () => true`; `update: isAdminOrEditor` (#140).
-
-The footer also has `forumUrl` (text, default `https://discourse.sprechereast.org`, https only or empty; #485). Field `navItems`: array, max 6 rows, optional. Each row is one `link` group: `type` (radio `reference` | `custom`, default `reference`), `newTab` (checkbox), `reference` → pages | posts (required when type is `reference`), `url` (text, required when type is `custom`), `label` (text, required). There is no `appearance` field.
+`header` and `footer` have the same shape and the same access, from one factory in `src/modules/site/cms/navGlobal.ts` (#140). The footer also has `forumUrl` (default `https://discourse.sprechereast.org`, https only or empty; #485). Each `navItems` row is one `link` group (no `appearance` field).
 
 ## Relations
 
@@ -243,7 +117,7 @@ All revalidation hooks skip when `context.disableRevalidate` is set (seed script
 | form-submissions              | `guardFormEmails` (plugin `beforeEmail`, runs in the plugin's afterChange email send)                      | create          | Drops emails whose to/cc/bcc contains `{{...}}` from the form values; blanks a From built from form values; keeps a form-based Reply-To only if it is a single address. An unconfirmed sender's emails are held instead of sent (#287); otherwise it adds "Sender's email: confirmed." and caps form emails at 30 per hour site-wide. The submission is stored either way |
 | email-confirmations           | `onConfirmed`: contact's `markSubmissionsConfirmed`                                                        | confirm         | Sends the emails held for that address's messages (each once, marked confirmed, within the email cap; #287), then sets `emailConfirmed` on every message from that address                                                                                                                                                                                                |
 
-## Field-level access
+## Field-level access: why
 
 - `users.role`: create and update `isAdminFieldAccess` (admin only); read `() => true`. `forms.emails`: read `isAdminOrEditorFieldAccess` (overrides the plugin default so recipients and templates stay private even though `forms` is publicly readable).
 - `posts.populatedAuthors`: update `() => false`. `team-members.email`: read `isAdminOrEditorFieldAccess`, so the public read of `team-members` leaves it out (#140).

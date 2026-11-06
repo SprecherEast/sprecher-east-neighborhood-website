@@ -161,6 +161,32 @@ jobs:
       - name: jscpd
         run: npm run duplication
 
+  # The generated reference pages match the code (#714, decision 0019 §6): the content-type pages in
+  # docs/reference/content-types/ are regenerated from the Payload config and the job fails on any
+  # difference, so a content type can't change without its page. It loads the config only: no
+  # database, no server. The run time goes to the job summary. Not a required check yet; the
+  # sync-gate sub-issue of #712 makes it one.
+  knowledge-sync:
+    name: Knowledge sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check the generated content-type pages
+        run: |
+          start=$(date +%s)
+          npm run docs:check
+          echo "docs:check took $(( $(date +%s) - start )) s" | tee -a "$GITHUB_STEP_SUMMARY"
+
   # The account and contact flows as a resident uses them, on a phone and a desktop (#311):
   # Playwright against a production build with a fresh database, emails caught by a local SMTP
   # server and the robot check off (e2e/serve.mjs). Not a required check yet, and the deploy
