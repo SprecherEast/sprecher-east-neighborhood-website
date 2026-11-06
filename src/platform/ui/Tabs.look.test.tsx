@@ -37,7 +37,8 @@ describe('looks pressable and ties the selected tab to its area (#688)', () => {
   it('frames each panel in the selected tab’s border, so the tab’s area has an edge on every side', () => {
     const { container } = setup()
     for (const panel of panels(container)) {
-      expect(panel.className).toContain('rounded-2xl')
+      expect(panel.className).toContain('rounded-(--tabs-radius)')
+      expect(panel.className).not.toContain('rounded-2xl')
       expect(panel.className).toContain('border-primary')
       // Full strength: the frame is a UI edge, which needs 3:1 against the page (WCAG 1.4.11)
       expect(panel.className).not.toMatch(/border-primary\//)
@@ -46,13 +47,31 @@ describe('looks pressable and ties the selected tab to its area (#688)', () => {
     }
   })
 
-  it('has one definition of the space between the tabs and the panel and of the flare size', () => {
+  it('has one definition of the space between the tabs and the panel', () => {
     const { container } = setup()
     const root = container.firstElementChild as HTMLElement
     expect(root.className).toContain('[--tabs-gap:0.5rem]')
     expect(root.className).toContain('gap-(--tabs-gap)')
-    // The flare sits in the gap, so it can never be taller than the gap
-    expect(root.className).toContain('[--tabs-flare:0.5rem]')
+  })
+
+  it('has one corner radius, read by the tab, the curved joins and the box, so they cannot differ (#738)', () => {
+    const { container } = setup()
+    const root = container.firstElementChild as HTMLElement
+    const rootClasses = root.className.split(' ')
+    // Defined once, on the root, and the join's radius is that same variable
+    expect(rootClasses.filter((c) => c.startsWith('[--tabs-radius:'))).toEqual([
+      '[--tabs-radius:1rem]',
+    ])
+    expect(rootClasses).toContain('[--tabs-flare:var(--tabs-radius)]')
+    // The tab's top corners
+    for (const tab of screen.getAllByRole('tab')) {
+      expect(tab.className).toContain('rounded-(--tabs-radius)')
+      expect(tab.className).not.toMatch(/(^| )rounded-(xl|2xl|lg|md)( |$)/)
+    }
+    // The box's corners
+    for (const panel of container.querySelectorAll('[role="tabpanel"]')) {
+      expect(panel.className).toContain('rounded-(--tabs-radius)')
+    }
   })
 })
 

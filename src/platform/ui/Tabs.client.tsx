@@ -45,10 +45,13 @@ export type TabsProps = {
  * stops under the tab. Its `before` is the two flares: a quarter-circle ring on each side of the
  * tab's base, so the outline curves from the panel's top edge up into the tab instead of meeting it
  * at a corner. The first tab has no left flare and the last no right one, where the outline runs
- * on into the panel's own edge. Both numbers the geometry depends on are variables on the root:
- * `--tabs-gap` (between the tabs and the panel) and `--tabs-flare` (the flare's radius, never more
- * than the gap, so it stays below the neighbouring tabs). The tabs sit the same distance from each
- * other as from the panel (the list's column gap and the space under it are both `--tabs-gap`, #707): two gaps of
+ * on into the panel's own edge. The numbers the geometry depends on are variables on the root:
+ * `--tabs-gap` (between the tabs and the panel) and `--tabs-radius` (the corner of the tab, of the
+ * box and of each flare, #738: the curve is one radius all the way round, so no corner looks
+ * pointier than another). `--tabs-flare` is that radius, kept as its own name for the flare's
+ * sizes. A flare taller than the gap is fine: the ring hugs the tab's side where the neighbouring
+ * tab ends, so it never reaches it. The tabs sit the same distance from each other as from the
+ * panel (the list's column gap and the space under it are both `--tabs-gap`, #707): two gaps of
  * different sizes on one edge look accidental.
  */
 // Tailwind reads class names as written in the source, so none of these are built from pieces. The
@@ -63,7 +66,7 @@ const FLARES =
  * too, drawn above its neighbours and opening into the panel (see above).
  */
 const TAB_LOOK = [
-  'relative min-h-11 min-w-0 cursor-pointer rounded-xl border border-border bg-card px-1.5 py-2 text-left text-foreground [overflow-wrap:anywhere] shadow-sm transition-all max-sm:text-sm duration-200 hover:bg-surface hover:shadow-md min-[400px]:px-3 sm:px-4',
+  'relative min-h-11 min-w-0 cursor-pointer rounded-(--tabs-radius) border border-border bg-card px-1.5 py-2 text-left text-foreground [overflow-wrap:anywhere] shadow-sm transition-all max-sm:text-sm duration-200 hover:bg-surface hover:shadow-md min-[400px]:px-3 sm:px-4',
   'motion-safe:data-[state=inactive]:hover:-translate-y-0.5',
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
   // The selected tab: no shadow and no inset ring, either would draw a line along its open bottom
@@ -102,7 +105,7 @@ export function Tabs({
       onValueChange={() => setChanged(true)}
       data-changed={changed || undefined}
       className={cn(
-        'group/tabs flex flex-col gap-(--tabs-gap) [--tabs-flare:0.5rem] [--tabs-gap:0.5rem]',
+        'group/tabs flex flex-col gap-(--tabs-gap) [--tabs-flare:var(--tabs-radius)] [--tabs-gap:0.5rem] [--tabs-radius:1rem]',
         FLARES,
         className,
       )}
@@ -131,6 +134,8 @@ export function Tabs({
           forceMount
           className={cn(
             cardVariants({ variant: 'elevated', padding: 'sm' }),
+            // The box's corners are the tab's and the joins' radius (#738), not the card's own
+            'rounded-(--tabs-radius)',
             // The selected tab's border, so the panel reads as the tab's own area; under the first or
             // last tab the outline runs straight up into the tab, so that top corner is square
             index === 0 && 'scripted:rounded-tl-none',
