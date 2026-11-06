@@ -57,7 +57,10 @@ Read the other guidelines (frontend patterns, content marketing, Asana) when a t
 - **Unattended runs** (#694): the owner's computer runs Windows 11, where the built-in sandbox
   runs commands unsandboxed; it needs WSL2 ([sandboxing](https://code.claude.com/docs/en/sandboxing)).
   So a headless run uses `--permission-mode dontAsk` with an exact `--allowedTools` list (the
-  documented pattern for CI), never
+  documented pattern for CI). `.claude/settings.json` allows `Bash(*)`, `Edit(*)` and `Write(*)`,
+  and a run in the project inherits them, so an unattended run needs its own settings without
+  those wildcards, and a test that an unlisted command is refused (#697) before the setup is
+  trusted. Never use
   `--dangerously-skip-permissions`, which is for containers and VMs only
   ([permission modes](https://code.claude.com/docs/en/permission-modes)). A WSL2 sandbox is an
   option the owner decides in #697. Keep `ANTHROPIC_API_KEY` out of the environment: in `-p` runs
