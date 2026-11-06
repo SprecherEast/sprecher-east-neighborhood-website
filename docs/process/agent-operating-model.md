@@ -4,15 +4,14 @@ How the agent team is organized: who plans, who builds, who reviews, how much ch
 gets, and how the team learns from its mistakes. It applies to every agent and human. The rules for
 how a change reaches `main` are in [`AGENTS.md`](../../AGENTS.md); how work is planned and tracked is in
 [`project-management.md`](project-management.md). The research behind this page, with its sources,
-is on #685 and #721.
+is on #685 and #721; each source is linked where it is used.
 
 The owner talks to **one agent, the chief of staff**. Everything else happens behind it, and
 everything it does is recorded on a GitHub issue. This page is the target. Each part is marked
 **built** or **planned**; a planned part names the issue that builds it. Until a part is built, the
 rules already in `AGENTS.md` and `project-management.md` stand.
 
-**Order of work.** The knowledge layer (#712) is built first, then the team on this page: a worker
-that can read what a module does needs less context and fewer agents around it.
+**Order of work.** The knowledge layer (#712) is built first, then the team on this page.
 
 ## The owner's direction (summary, recorded on #685 and #721)
 
@@ -67,8 +66,7 @@ Partly built: the [role agents](../roles/README.md) and `pr-review` exist; #695 
 than research ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)). In a
 test of 180 setups, more agents helped parallel work and made step-by-step work worse
 ([Google Research](https://research.google/blog/towards-a-science-of-scaling-agent-systems-when-and-why-agent-systems-work/)).
-What holds up is one coordinator that splits the work, read-only helpers, and a reviewer with no
-shared context; several writers on one thing still don't
+What holds up is one coordinator, read-only helpers and a reviewer with no shared context
 ([Cognition](https://cognition.com/blog/multi-agents-working)).
 
 **When to add an agent.** A procedure or a role guide becomes its own agent only when its work is
@@ -97,11 +95,12 @@ are often skipped ([Vercel](https://vercel.com/blog/agents-md-outperforms-skills
 
 **What a guide owns is unchanged.** Implementation: code that follows the architecture and the
 [guard rails](../guidelines/guard-rails.md), inside the issue's declared files. Content: posts,
-events and legal pages in the [brand voice](../guidelines/brand-voice.md). Operations: CI/CD, the
-server and deploys, with an `infra` issue before a server change. Guard rails, guidelines and role
-guides are policy: the owner decides them, and an agent never edits its own rules
-([`AGENTS.md`](../../AGENTS.md), step 3). Workers build to the guard rails, the architecture and the
-open standards the repo follows (WCAG 2.1 AA, structured data, Core Web Vitals, and
+events and legal pages in the [brand voice](../guidelines/brand-voice.md); it may only propose
+changes to the voice or the money and politics wording. Operations: CI/CD, the server and deploys,
+with an `infra` issue before a server change. Guard rails, guidelines and role guides are policy:
+the owner decides them, and an agent never edits its own rules ([`AGENTS.md`](../../AGENTS.md),
+step 3). Workers build to the guard rails, the architecture and the open standards the repo follows
+(WCAG 2.1 AA, structured data, Core Web Vitals,
 [native first](../guidelines/development.md#native-first-then-plugins-then-our-code)).
 
 ## 4. How an issue moves
@@ -127,7 +126,8 @@ flowchart LR
 - **Owner questions** get the `needs owner` label and one plain question with options and a
   recommendation ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §3). Silence
   is never a yes: the issue [waits for owner](project-management.md#waits-for-owner). A session
-  starts with the chief of staff listing them, oldest first, at most seven. Planned: #695, #697.
+  starts with the chief of staff listing them, oldest first, at most seven, one line each. The
+  label is the queue. Planned: #695, #697.
 - **Scope creep** becomes a new issue linked with a `[SCOPE]` comment. The current PR does not widen.
 - **Parallel work.** More than one issue may be In progress only if the files each declares, and
   the shared hot spots, don't overlap. There is no fixed number
@@ -149,8 +149,8 @@ says, not what the author meant. The author still runs
 
 This is the evaluator-optimizer pattern, which fits when there are clear evaluation criteria
 ([Anthropic](https://www.anthropic.com/engineering/building-effective-agents)); here the criteria
-are the guard rails, the guidelines and the issue's acceptance criteria. Google's reviewers approve
-once a change definitely improves the code's health, and check design first
+are the guard rails, the guidelines and the issue's acceptance criteria. Google's reviewers favor
+approving once a change definitely improves the code's health, and check design first
 ([Google](https://google.github.io/eng-practices/review/reviewer/standard.html)).
 
 | Perspective                | Checks                                                                              | Procedure                                                                                                        | Status |
@@ -223,10 +223,12 @@ flowchart LR
 5. **Reinforce what works.** `outcome: clean` PRs are kept as examples. A pattern becomes a skill
    example only after three clean PRs and a with/without test that shows it helps
    ([skill best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)).
-   Reuse doesn't wait: repeated code becomes a shared component at its second use (guard rails, rule 1).
-6. **Limits.** At most three fix PRs a week. The chief of staff proposes; the owner decides changes
-   to the guardrails. Measures, read over four weeks or more: first-pass clean rate, rework within
-   14 days, owner corrections per PR, and whether a fixed cause comes back.
+   This does not delay reuse: repeated code or UI becomes a shared component at its second use,
+   in that same PR ([guard rails](../guidelines/guard-rails.md), rule 1).
+6. **Limits.** At most three fix PRs a week. The chief of staff proposes; agents never merge a
+   change to their own guardrails, which the owner decides. Measures, read over four weeks or more:
+   first-pass clean rate, rework within 14 days, owner corrections per PR, and whether a fixed
+   cause comes back.
 
 ## 8. What is built and what is next
 
@@ -243,7 +245,3 @@ flowchart LR
 | Feedback loop                                                   | Planned | #698                           |
 
 The order is fixed by what each needs: #712, then #695, then #696 to #698.
-
-## Sources
-
-Each source is linked where it is used. The full lists are on #685 and #721.
