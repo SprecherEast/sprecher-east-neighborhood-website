@@ -149,7 +149,10 @@ For each issue:
 
 ## 4. While working
 
-- **Claim the issue first** ([the record on the issue](../../../docs/process/project-management.md#the-record-on-the-issue)):
+- **Claim the issue first.** The dispatcher does this (the chief of staff, or the owner's own
+  session until #695 builds it), in order; a worker started by it only checks that the claim
+  names its branch and never claims anything itself
+  ([the record on the issue](../../../docs/process/project-management.md#the-record-on-the-issue)):
   1. Overlap check, if anything is already In progress: list it with
      `gh project item-list 2 --owner boulaajaj --limit 1000 --format json --jq '.items[]|select(.status=="In progress")|.content.number'`
      (`--limit` matters: the default stops at 30 items). Read each one's **Files likely touched**
