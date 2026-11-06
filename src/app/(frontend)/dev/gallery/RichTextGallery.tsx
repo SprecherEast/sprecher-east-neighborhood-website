@@ -82,7 +82,7 @@ export function RichTextGallery() {
         name="FactTabs"
         description="Key facts that are tab buttons, each opening its heading, definition and charts or timeline. Every panel is server-rendered: with scripting off they stack under their headings."
       >
-        <GalleryVariant label="four tabs: 2 by 2 on a phone, one row from sm up" className="block">
+        <GalleryVariant label="four tabs, one row at every width" className="block">
           <FactTabs {...FACT_TABS} />
         </GalleryVariant>
         <GalleryVariant

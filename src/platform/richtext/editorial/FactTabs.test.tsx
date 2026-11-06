@@ -3,11 +3,7 @@ import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import {
-  SHARED_ROWS_SPACE_2,
-  SUBGRID_FOUR_ROWS,
-  SUBGRID_FOUR_ROWS_EXPLICIT,
-} from '@/platform/ui/layoutSizes'
+import { SUBGRID_FOUR_ROWS, SUBGRID_FOUR_ROWS_EXPLICIT } from '@/platform/ui/layoutSizes'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { FactTabs } from './FactTabs'
@@ -27,9 +23,8 @@ describe('FactTabs', () => {
     const [first] = screen.getAllByRole('tab')
 
     expect(list.className).toContain(SUBGRID_FOUR_ROWS_EXPLICIT)
-    expect(list.className).toContain(SHARED_ROWS_SPACE_2.list)
+    expect(list.className).toContain('gap-y-0')
     expect(first?.className).toContain(SUBGRID_FOUR_ROWS)
-    expect(first?.className).toContain(SHARED_ROWS_SPACE_2.item)
     // Card face and card use the same four rows
     expect(first?.firstElementChild?.className).toContain(SUBGRID_FOUR_ROWS)
   })
@@ -131,10 +126,22 @@ describe('FactTabs', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('spans the last of three tabs across the phone grid, so none sits alone half wide', () => {
+  it('keeps the tabs in one row, whatever their number (#704)', () => {
     setup({ tabs: props.tabs.slice(0, 3) })
-    const tabs = screen.getAllByRole('tab')
-    expect(tabs[2]?.className).toMatch(/max-sm:odd:last:col-span-2/)
+    const list = screen.getByRole('tablist')
+    expect(screen.getAllByRole('tab')).toHaveLength(3)
+    expect(list.className).toContain('grid-flow-col')
+    expect(list.className).not.toContain('grid-cols-2')
+  })
+
+  it('shows how sure we are in the open panel on a phone, where the tab shows only its icon and figure (#704)', () => {
+    const { container } = setup()
+    const [panel] = [...container.querySelectorAll('[role="tabpanel"]')]
+    const sure = panel?.querySelector('[data-panel-certainty]')
+    expect(sure?.className).toContain('sm:hidden')
+    expect(sure?.textContent).toContain('Confirmed')
+    // The tab already says it to a screen reader
+    expect(sure?.getAttribute('aria-hidden')).toBe('true')
   })
 
   it('has no accessibility violations, with charts and a timeline inside', async () => {

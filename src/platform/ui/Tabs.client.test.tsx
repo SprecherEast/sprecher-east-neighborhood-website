@@ -6,22 +6,12 @@ import { join } from 'node:path'
 import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { SHARED_ROWS_SPACE_2, SUBGRID_FOUR_ROWS, SUBGRID_FOUR_ROWS_EXPLICIT } from './layoutSizes'
+import { SUBGRID_FOUR_ROWS, SUBGRID_FOUR_ROWS_EXPLICIT } from './layoutSizes'
 import { expectAccessible } from './testing/expectAccessible'
-import { Tabs, type TabsItem } from './Tabs.client'
+import { Tabs } from './Tabs.client'
+import { TAB_ITEMS as ITEMS } from './testing/tabsFixtures'
 
 afterEach(cleanup)
-
-const ITEMS: TabsItem[] = [
-  { value: 'money', trigger: 'Day-to-day', heading: 'Day-to-day money', panel: <p>Panel one</p> },
-  {
-    value: 'build',
-    trigger: 'Big projects',
-    heading: 'Big-project money',
-    panel: <p>Panel two</p>,
-  },
-  { value: 'home', trigger: 'One home', heading: 'One home', panel: <p>Panel three</p> },
-]
 
 function setup(defaultValue = 'money') {
   return render(<Tabs label="Budget views" items={ITEMS} defaultValue={defaultValue} />)
@@ -89,18 +79,20 @@ describe('Tabs (#661)', () => {
     ).toEqual(screen.getAllByRole('tab').map((tab) => tab.id))
   })
 
-  it('lays the tabs out 2 by 2 on a phone and in one row from sm up, with 44px targets', () => {
+  it('lays the tabs out in one row at every width, with 44px targets', () => {
     setup()
     const list = screen.getByRole('tablist')
 
-    expect(list.className).toContain('grid-cols-2')
-    expect(list.className).toContain('sm:grid-flow-col')
+    // One row, as the folder shape needs: a tab in a lower row would be cut off from its panel
+    expect(list.className).toContain('grid-flow-col')
+    expect(list.className).toContain('auto-cols-[minmax(0,1fr)]')
+    expect(list.className).not.toContain('grid-cols-2')
     for (const tab of screen.getAllByRole('tab')) {
       expect(tab.className).toContain('min-h-11')
     }
   })
 
-  it('lets the tab buttons share four rows only when asked, with the space the gap would have been (#678)', () => {
+  it('lets the tab buttons share four rows only when asked, with no row gap inside them (#678)', () => {
     const { rerender } = render(<Tabs label="Budget views" items={ITEMS} defaultValue="money" />)
     const list = () => screen.getByRole('tablist')
     const [tab] = screen.getAllByRole('tab')
@@ -109,9 +101,8 @@ describe('Tabs (#661)', () => {
 
     rerender(<Tabs label="Budget views" items={ITEMS} defaultValue="money" rows="shared" />)
     expect(list().className).toContain(SUBGRID_FOUR_ROWS_EXPLICIT)
-    expect(list().className).toContain(SHARED_ROWS_SPACE_2.list)
+    expect(list().className).toContain('gap-y-0')
     expect(screen.getAllByRole('tab')[0]?.className).toContain(SUBGRID_FOUR_ROWS)
-    expect(screen.getAllByRole('tab')[0]?.className).toContain(SHARED_ROWS_SPACE_2.item)
   })
 
   it('changes the selected tab on click', async () => {
@@ -157,68 +148,6 @@ describe('Tabs (#661)', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Big projects' }))
     expect(container.firstElementChild?.hasAttribute('data-changed')).toBe(true)
-  })
-
-  describe('looks pressable and ties the selected tab to its area (#688)', () => {
-    const panels = (container: HTMLElement) => [...container.querySelectorAll('[role="tabpanel"]')]
-
-    it('raises every tab off the page and lifts it on hover, so it reads as a button', () => {
-      setup()
-      for (const tab of screen.getAllByRole('tab')) {
-        expect(tab.className).toContain('cursor-pointer')
-        expect(tab.className).toContain('shadow-sm')
-        expect(tab.className).toContain('hover:shadow-md')
-        // The lift only with motion allowed, and not on the selected tab, whose notch must stay on the panel's edge
-        expect(tab.className).toContain('motion-safe:data-[state=inactive]:hover:-translate-y-0.5')
-      }
-    })
-
-    it('makes the selected tab a brighter, glassy green that sits higher than the rest', () => {
-      setup()
-      const [tab] = screen.getAllByRole('tab')
-      expect(tab?.className).toContain('data-[state=active]:border-primary')
-      expect(tab?.className).toContain('data-[state=active]:bg-gradient-to-b')
-      expect(tab?.className).toContain('data-[state=active]:from-primary/30')
-      // A light inner edge, the glass's catch of light
-      expect(tab?.className).toContain('data-[state=active]:ring-inset')
-      expect(tab?.className).toContain('data-[state=active]:to-primary/10')
-      expect(tab?.className).toContain('data-[state=active]:backdrop-blur-md')
-      expect(tab?.className).toContain('data-[state=active]:shadow-md')
-    })
-
-    it('frames each panel in the selected tab’s border, so the tab’s area has an edge on every side', () => {
-      const { container } = setup()
-      for (const panel of panels(container)) {
-        expect(panel.className).toContain('rounded-2xl')
-        expect(panel.className).toContain('border-primary')
-        // Full strength: the frame is a UI edge, which needs 3:1 against the page (WCAG 1.4.11)
-        expect(panel.className).not.toMatch(/border-primary\//)
-        expect(panel.className).toContain('bg-card')
-        expect(panel.className).toContain('shadow-sm')
-      }
-    })
-
-    it('points the selected tab at its panel with a notch on the panel’s edge, in a row of tabs', () => {
-      setup()
-      const [tab, other] = screen.getAllByRole('tab')
-      expect(tab?.className).toContain('sm:data-[state=active]:after:block')
-      expect(tab?.className).toContain('after:border-primary')
-      expect(tab?.className).not.toMatch(/after:border-primary\//)
-      expect(tab?.className).toContain('after:bg-card')
-      // The notch is drawn on the selected tab only, and above the panel's own edge
-      expect(tab?.className).toContain('data-[state=active]:z-10')
-      expect(other?.className).toBe(tab?.className)
-    })
-
-    it('has one definition of the space between the tabs and the panel, so the notch lands on the edge', () => {
-      const { container } = setup()
-      const root = container.firstElementChild as HTMLElement
-      expect(root.className).toContain('[--tabs-gap:1rem]')
-      expect(root.className).toContain('gap-(--tabs-gap)')
-      expect(screen.getAllByRole('tab')[0]?.className).toContain(
-        'after:top-[calc(100%+var(--tabs-gap))]',
-      )
-    })
   })
 
   it('lets the heading level be chosen, h3 by default', () => {
