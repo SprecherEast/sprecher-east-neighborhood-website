@@ -109,6 +109,7 @@
     "eslint-plugin-boundaries": "^7.2.0",
     "eslint-plugin-unused-imports": "^4.4.1",
     "husky": "^9.1.7",
+    "js-tiktoken": "^1.0.21",
     "js-yaml": "^4.3.2",
     "jscpd": "4.3.0",
     "jsdom": "^29.1.1",

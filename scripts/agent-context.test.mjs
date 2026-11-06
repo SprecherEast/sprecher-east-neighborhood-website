@@ -6,6 +6,8 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import {
+  BUDGET_TOKENS,
+  countTokens,
   globToRegExp,
   hasPaths,
   importsOf,
@@ -136,10 +138,14 @@ describe('startupFiles', () => {
 
   it('counts CLAUDE.md, its imports and the rules without paths, once each', () => {
     expect(startupFiles(read, ['.claude/rules/always.md', '.claude/rules/scoped.md'])).toEqual([
-      { file: 'CLAUDE.md', lines: 4 },
-      { file: 'AGENTS.md', lines: 3 },
-      { file: 'docs/guard.md', lines: 2 },
-      { file: '.claude/rules/always.md', lines: 1 },
+      { file: 'CLAUDE.md', lines: 4, tokens: countTokens(files['CLAUDE.md']) },
+      { file: 'AGENTS.md', lines: 3, tokens: countTokens(files['AGENTS.md']) },
+      { file: 'docs/guard.md', lines: 2, tokens: countTokens(files['docs/guard.md']) },
+      {
+        file: '.claude/rules/always.md',
+        lines: 1,
+        tokens: countTokens(files['.claude/rules/always.md']),
+      },
     ])
   })
 
@@ -150,12 +156,31 @@ describe('startupFiles', () => {
       'docs/big.md': 'x\ny\nz\n',
     }
     const readWith = (file) => withImport[file] ?? null
-    expect(startupFiles(readWith, ['.claude/rules/scoped.md'])).toEqual([
+    const loaded = startupFiles(readWith, ['.claude/rules/scoped.md'])
+    expect(loaded.map(({ file, lines }) => ({ file, lines }))).toEqual([
       { file: 'CLAUDE.md', lines: 4 },
       { file: 'AGENTS.md', lines: 3 },
       { file: 'docs/guard.md', lines: 2 },
       { file: 'docs/big.md', lines: 3 },
     ])
+  })
+})
+
+describe('countTokens', () => {
+  it('counts tokens of an OpenAI-style encoding, offline', () => {
+    expect(countTokens('')).toBe(0)
+    expect(countTokens('hello world')).toBe(2)
+  })
+
+  it('counts one long line for more than ten short ones, which a line count cannot tell', () => {
+    const short = 'a\n'.repeat(10)
+    const long = `${'The neighborhood association meets monthly. '.repeat(10)}\n`
+    expect(countTokens(long)).toBeGreaterThan(countTokens(short))
+  })
+
+  it('has a budget that is a positive whole number of tokens', () => {
+    expect(Number.isInteger(BUDGET_TOKENS)).toBe(true)
+    expect(BUDGET_TOKENS).toBeGreaterThan(0)
   })
 })
 
@@ -179,24 +204,51 @@ describe('parseKnowledgeMap', () => {
   })
 })
 
-describe('run, with a knowledge map', () => {
-  /** A throwaway git repository holding `files`, so `run` sees tracked files as in CI. */
-  function repo(files) {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-context-'))
-    const base = {
-      'docs/guidelines/README.md':
-        '| Reference | Loads by itself when the work touches |\n| - | - |\n',
-      'CLAUDE.md': '# Adapter\n',
-      ...files,
-    }
-    for (const [file, text] of Object.entries(base)) {
-      fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true })
-      fs.writeFileSync(path.join(root, file), text)
-    }
-    execFileSync('git', ['init', '-q'], { cwd: root })
-    execFileSync('git', ['add', '-A'], { cwd: root })
-    return root
+/** A throwaway git repository holding `files`, so `run` sees tracked files as in CI. */
+function repo(files) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-context-'))
+  const base = {
+    'docs/guidelines/README.md':
+      '| Reference | Loads by itself when the work touches |\n| - | - |\n',
+    'CLAUDE.md': '# Adapter\n',
+    ...files,
   }
+  for (const [file, text] of Object.entries(base)) {
+    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true })
+    fs.writeFileSync(path.join(root, file), text)
+  }
+  execFileSync('git', ['init', '-q'], { cwd: root })
+  execFileSync('git', ['add', '-A'], { cwd: root })
+  return root
+}
+
+describe('run, with the session-start budget', () => {
+  const budgetProblems = (root, options) =>
+    run(root, options).problems.filter((problem) => problem.includes('session start'))
+
+  it('fails over the token budget and says the count is approximate', () => {
+    const [problem] = budgetProblems(repo({ 'CLAUDE.md': 'word '.repeat(200) }), {
+      budgetTokens: 100,
+    })
+    expect(problem).toMatch(/loads \d+ tokens/)
+    expect(problem).toContain('over the budget of 100')
+    expect(problem).toMatch(/approximate/i)
+  })
+
+  it('passes under the token budget however many lines there are', () => {
+    const root = repo({ 'CLAUDE.md': 'a\n'.repeat(400) })
+    const { total, loaded } = run(root, { budgetTokens: 5000 })
+    expect(loaded[0].lines).toBe(400)
+    expect(total).toBe(loaded[0].tokens)
+    expect(budgetProblems(root, { budgetTokens: 5000 })).toEqual([])
+  })
+
+  it('uses the default budget when none is given', () => {
+    expect(budgetProblems(repo({}))).toEqual([])
+  })
+})
+
+describe('run, with a knowledge map', () => {
   const map = JSON.stringify([{ note: 'src/mod/README.md', paths: ['src/mod/**'] }])
   const files = {
     'docs/knowledge/map.json': map,
