@@ -35,9 +35,19 @@ describe('buildRunRow', () => {
       'src/modules/events/domain/thisWeek.ts',
       'src/modules/events/domain/thisWeek.test.ts',
     ]
+    const contents = { [changedFiles[0]]: 'limit: { min: 1, max: 8, default: 3 }' }
     expect(
-      buildRunRow(task('7'), { ...base, commands, changedFiles }, transcript('A-7-1')).grade,
+      buildRunRow(task('7'), { ...base, commands, changedFiles, contents }, transcript('A-7-1'))
+        .grade,
     ).toBe('pass')
+    const wrong = { [changedFiles[0]]: 'limit: { min: 1, max: 7, default: 3 }' }
+    expect(
+      buildRunRow(
+        task('7'),
+        { ...base, commands, changedFiles, contents: wrong },
+        transcript('A-7-1'),
+      ).grade,
+    ).toBe('fail')
     expect(
       buildRunRow(task('7'), { ...base, commands, changedFiles: [] }, transcript('A-7-1')).grade,
     ).toBe('fail')

@@ -13,7 +13,15 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { buildClaudeArgs, checkoutProblem } from './claude.mjs'
+import {
+  apiKeyProblem,
+  buildClaudeArgs,
+  changedPaths,
+  checkoutProblem,
+  childEnv,
+  isolatePermissions,
+  runChanges,
+} from './claude.mjs'
 import { parseOptions } from './options.mjs'
 import { loadTasks, validateTasks } from './tasks.mjs'
 
@@ -30,11 +38,45 @@ function toplevelOf(dir) {
   }
 }
 
+// What is running now, so Ctrl-C or a kill can stop the sessions and delete the worktrees
+const running = { workdirs: new Set(), children: new Set(), repo: null, root: null }
+
+function cleanUp() {
+  for (const child of running.children) child.kill('SIGTERM')
+  for (const workdir of running.workdirs) {
+    spawnSync('git', ['worktree', 'remove', '--force', workdir], { cwd: running.repo })
+  }
+  if (running.root) fs.rmSync(running.root, { recursive: true, force: true })
+}
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => {
+    cleanUp()
+    process.exit(130)
+  })
+}
+
+/** Replace the checkout's permissions with the eval's own lists (see `isolatePermissions`). */
+function isolateSettings(workdir) {
+  const file = path.join(workdir, '.claude', 'settings.json')
+  let settings
+  try {
+    settings = JSON.parse(fs.readFileSync(file, 'utf8'))
+  } catch {
+    settings = undefined // the commit has none
+  }
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  fs.writeFileSync(file, `${JSON.stringify(isolatePermissions(settings), null, 2)}\n`)
+  fs.rmSync(path.join(workdir, '.claude', 'settings.local.json'), { force: true })
+}
+
 function createWorktree(repo, workdir, sha) {
   fs.rmSync(workdir, { recursive: true, force: true })
   git(repo, 'worktree', 'prune') // a leftover record of a deleted worktree makes `add` fail
   git(repo, 'worktree', 'add', '--quiet', '--detach', workdir, sha)
+  running.workdirs.add(workdir)
   fs.symlinkSync(path.join(repo, 'node_modules'), path.join(workdir, 'node_modules'))
+  isolateSettings(workdir)
   const problem = checkoutProblem({
     dir: fs.realpathSync(workdir),
     toplevel: toplevelOf(workdir),
@@ -49,14 +91,23 @@ function runClaude(workdir, prompt, options, base) {
     const err = fs.openSync(`${base}.err`, 'w')
     const child = spawn('claude', buildClaudeArgs(options), {
       cwd: workdir,
+      env: childEnv(process.env),
       stdio: ['pipe', out, err],
     })
+    running.children.add(child)
     const timer = setTimeout(() => child.kill('SIGTERM'), RUN_TIMEOUT_MS)
-    child.on('close', (code) => {
+    let finished = false
+    const finish = (code) => {
+      if (finished) return // 'error' and 'close' can both fire
+      finished = true
       clearTimeout(timer)
+      running.children.delete(child)
+      fs.closeSync(out)
+      fs.closeSync(err)
       resolve(code)
-    })
-    child.on('error', () => resolve(-1))
+    }
+    child.once('close', finish)
+    child.once('error', () => finish(-1))
     child.stdin.end(prompt)
   })
 }
@@ -76,12 +127,23 @@ function runCommand(workdir, { cmd }) {
 }
 
 function changedFilesOf(workdir) {
-  const status = git(workdir, 'status', '--porcelain', '--untracked-files=all')
-  return status
-    .split('\n')
-    .filter(Boolean)
-    .map((line) => line.slice(3))
-    .filter((file) => !file.startsWith('node_modules'))
+  const status = execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], {
+    cwd: workdir,
+    encoding: 'utf8',
+  })
+  return runChanges(changedPaths(status))
+}
+
+/** The text of the changed files a task's `mustContain` entries look at, by path. */
+function readContents(workdir, task, changedFiles) {
+  const contents = {}
+  for (const { file } of task.mustContain ?? []) {
+    const regex = new RegExp(file)
+    for (const name of changedFiles.filter((f) => regex.test(f))) {
+      contents[name] = fs.readFileSync(path.join(workdir, name), 'utf8')
+    }
+  }
+  return contents
 }
 
 async function runOne(job, options, repo, wtRoot, outDir) {
@@ -94,14 +156,20 @@ async function runOne(job, options, repo, wtRoot, outDir) {
     createWorktree(repo, workdir, sha)
     meta.exitCode = await runClaude(workdir, task.prompt, options, base)
     meta.changedFiles = changedFilesOf(workdir)
-    fs.writeFileSync(`${base}.diff`, git(workdir, 'diff'))
-    if (task.kind === 'change')
+    fs.writeFileSync(
+      `${base}.diff`,
+      git(workdir, 'diff', '--', '.', ':(exclude).claude/settings.json'),
+    )
+    if (task.kind === 'change') {
+      meta.contents = readContents(workdir, task, meta.changedFiles)
       meta.commands = task.commands.map((command) => runCommand(workdir, command))
+    }
   } catch (error) {
     meta.error = error.message
     fs.writeFileSync(`${base}.err`, `${error.message}\n`, { flag: 'a' })
   } finally {
     spawnSync('git', ['worktree', 'remove', '--force', workdir], { cwd: repo })
+    running.workdirs.delete(workdir)
   }
   fs.writeFileSync(`${base}.json`, `${JSON.stringify(meta, null, 2)}\n`)
   console.log(`${name} done${meta.error ? ` (failed: ${meta.error})` : ''}`)
@@ -109,6 +177,8 @@ async function runOne(job, options, repo, wtRoot, outDir) {
 
 async function main() {
   const options = parseOptions(process.argv.slice(2))
+  const keyProblem = apiKeyProblem(process.env)
+  if (keyProblem) throw new Error(keyProblem)
   const here = path.dirname(fileURLToPath(import.meta.url))
   const repo = toplevelOf(here)
   if (!repo) throw new Error('run this from a checkout of the repository')
@@ -121,6 +191,7 @@ async function main() {
   const wtRoot = path.join(os.tmpdir(), `knowledge-eval-wt-${process.pid}`)
   fs.mkdirSync(outDir, { recursive: true })
   fs.mkdirSync(wtRoot, { recursive: true })
+  Object.assign(running, { repo, root: wtRoot })
   const shas = {
     A: git(repo, 'rev-parse', '--verify', `${options.a}^{commit}`),
     B: git(repo, 'rev-parse', '--verify', `${options.b}^{commit}`),

@@ -6,12 +6,12 @@
     "key": [
       ["revalidateEvent"],
       ["/events/<slug>", "/events/[slug]"],
-      ["category"],
+      ["/category/[category]", "every category page", "category pages"],
       ["list/[scope]", "list pages", "list page"],
       ["home page", "homepage"],
-      ["[slug]", "cms page"],
+      ["/(frontend)/[slug]", "cms pages", "cms page"],
       ["'events'", "`events`"],
-      ["sitemap"]
+      ["events_sitemap_cache_tag", "events-sitemap", "sitemap tag"]
     ]
   },
   {
@@ -33,8 +33,7 @@
       ["admin"],
       ["editor"],
       ["isStaffOrAgent", "suggestibleContentAccess"],
-      ["holdSuggestions"],
-      ["reviewQueue"],
+      ["holdSuggestions", "reviewQueue"],
       ["suggested"],
       ["draft"]
     ]
@@ -45,11 +44,9 @@
     "prompt": "What bounds can an editor set on the \"this week\" block (days, rows, events per row), and what are the defaults? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["THIS_WEEK_LIMITS", "thisWeek.ts"],
-      ["/days[^\\n]*\\b31\\b/"],
-      ["/days[^\\n]*\\b7\\b/"],
-      ["/rows[^\\n]*\\b4\\b/"],
-      ["/(events per row|limit)[^\\n]*\\b6\\b/"],
-      ["/(events per row|limit)[^\\n]*\\b3\\b/"]
+      ["/days[^\\n]*\\b1\\b[^\\n]*\\b31\\b[^\\n]*\\b7\\b/"],
+      ["/rows[^\\n]*\\b1\\b[^\\n]*\\b4\\b/"],
+      ["/(events per row|limit)[^\\n]*\\b1\\b[^\\n]*\\b6\\b[^\\n]*\\b3\\b/"]
     ]
   },
   {
@@ -74,7 +71,8 @@
       ["https://"],
       ["2048"],
       ["/whitespace|no spaces/"],
-      ["/username|user name/"]
+      ["/username|user name/"],
+      ["password"]
     ]
   },
   {
@@ -82,18 +80,40 @@
     "kind": "change",
     "prompt": "Change: let the \"this week\" block show up to 8 events per row instead of 6, with a test. Make the change in this checkout, tests included, and run the relevant tests and the type check. Don't commit or push.",
     "commands": [
-      { "cmd": "npx vitest run src/modules/events" },
-      { "cmd": "npx tsc --noEmit", "tolerate": ["image-hero1.webp", "image-white-test.webp"] }
+      {
+        "cmd": "npx vitest run src/modules/events"
+      },
+      {
+        "cmd": "npx tsc --noEmit",
+        "tolerate": [
+          "error TS2307: Cannot find module '@/endpoints/seed/image-hero1.webp'",
+          "error TS2307: Cannot find module '@/endpoints/seed/image-white-test.webp'"
+        ]
+      }
     ],
-    "mustChange": ["^src/modules/events/domain/thisWeek\\.ts$", "\\.test\\.tsx?$"]
+    "mustChange": ["^src/modules/events/domain/thisWeek\\.ts$", "\\.test\\.tsx?$"],
+    "mustContain": [
+      {
+        "file": "^src/modules/events/domain/thisWeek\\.ts$",
+        "pattern": "limit:\\s*\\{[^}]*\\bmax:\\s*8\\b"
+      }
+    ]
   },
   {
     "id": "8",
     "kind": "change",
     "prompt": "Change: add an optional plain-text \"accessibility notes\" field to events, shown on the event's page under the location, with tests. Make the change in this checkout, tests included, and run the relevant tests and the type check. Don't commit or push.",
     "commands": [
-      { "cmd": "npx vitest run src/modules/events" },
-      { "cmd": "npx tsc --noEmit", "tolerate": ["image-hero1.webp", "image-white-test.webp"] }
+      {
+        "cmd": "npx vitest run src/modules/events"
+      },
+      {
+        "cmd": "npx tsc --noEmit",
+        "tolerate": [
+          "error TS2307: Cannot find module '@/endpoints/seed/image-hero1.webp'",
+          "error TS2307: Cannot find module '@/endpoints/seed/image-white-test.webp'"
+        ]
+      }
     ],
     "mustChange": [
       "^src/modules/events/cms/events\\.ts$",
@@ -101,6 +121,16 @@
       "^src/modules/events/data/mappers[^/]*\\.test\\.ts$",
       "^src/modules/events/ui/[^/]*\\.test\\.tsx?$",
       "^src/payload-types\\.ts$"
+    ],
+    "mustContain": [
+      {
+        "file": "^src/modules/events/cms/events\\.ts$",
+        "pattern": "accessibility_?notes"
+      },
+      {
+        "file": "^src/modules/events/data/mappers\\.ts$",
+        "pattern": "accessibility_?notes"
+      }
     ]
   }
 ]

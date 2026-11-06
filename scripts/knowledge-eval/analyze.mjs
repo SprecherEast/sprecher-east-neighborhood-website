@@ -20,7 +20,11 @@ export function buildRunRow(task, meta, transcriptText) {
   const graded =
     task.kind === 'question'
       ? gradeAnswer(parsed.answer, task.key)
-      : gradeChange(task, { commands: meta.commands, changedFiles: meta.changedFiles })
+      : gradeChange(task, {
+          commands: meta.commands,
+          changedFiles: meta.changedFiles,
+          contents: meta.contents,
+        })
   const grade =
     task.kind === 'question' ? graded.score : graded.pass && parsed.finished ? 'pass' : 'fail'
   return {

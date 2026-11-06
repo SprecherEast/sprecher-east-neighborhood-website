@@ -35,15 +35,20 @@ function commandPassed(spec, result) {
   const tolerate = spec.tolerate ?? []
   const errors = (result.errors ?? []).filter((line) => ERROR_LINE.test(line))
   if (errors.length === 0) return false
-  return errors.every((line) => tolerate.some((part) => line.includes(part)))
+  // Only a missing-module error (TS2307) the task names; any other error is the change's own
+  return errors.every(
+    (line) => line.includes('TS2307') && tolerate.some((part) => line.includes(part)),
+  )
 }
 
 /**
  * Grade a change from what the runner recorded after the session: the exit code of each listed
  * command, and the files that changed. Passes only if every command passes (type errors the task
- * names as already there are tolerated) and every `mustChange` pattern matches a changed file.
+ * names as already there are tolerated), every `mustChange` pattern matches a changed file, and
+ * every `mustContain` entry finds its pattern in a changed file whose path matches its `file`
+ * (the runner reads those files back into `contents`, keyed by path).
  */
-export function gradeChange(spec, { commands, changedFiles }) {
+export function gradeChange(spec, { commands, changedFiles, contents = {} }) {
   const failures = []
   for (const command of spec.commands) {
     const result = commands.find((c) => c.cmd === command.cmd)
@@ -54,6 +59,14 @@ export function gradeChange(spec, { commands, changedFiles }) {
     const regex = new RegExp(pattern)
     if (!changedFiles.some((file) => regex.test(file)))
       failures.push(`no changed file matches ${pattern}`)
+  }
+  for (const { file, pattern } of spec.mustContain ?? []) {
+    const fileRegex = new RegExp(file)
+    const textRegex = new RegExp(pattern, 'i')
+    const found = Object.entries(contents).some(
+      ([name, text]) => fileRegex.test(name) && textRegex.test(text),
+    )
+    if (!found) failures.push(`no changed file matching ${file} contains ${pattern}`)
   }
   return { pass: failures.length === 0, failures }
 }
