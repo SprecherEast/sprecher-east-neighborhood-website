@@ -27,6 +27,9 @@ out a change to one, and a change the owner didn't ask for waits for him
 | UI Designer                | [`ui-designer`](ui-designer.md)           | Visual polish: designs, visual bugs, brand consistency, effects.         |
 | UX Designer                | [`ux-designer`](ux-designer.md)           | New pages, navigation, content hierarchy, usability problems.            |
 
+How the roles are grouped into departments, who reviews whom and how much scrutiny a change gets is
+in the [agent operating model](../process/agent-operating-model.md).
+
 ## Using a role from your tool
 
 - **Claude Code** registers each role as a subagent in `.claude/agents/<role>.md`. Those files only

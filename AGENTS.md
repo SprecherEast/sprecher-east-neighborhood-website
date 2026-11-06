@@ -173,7 +173,7 @@ APIs. `write-code` and the reviews apply them; this repo's own rules come first 
 | Doc                                                   | What's in it                                                                                          |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | [`docs/product/`](docs/product/vision.md)             | Why the site exists, who it serves, what's out of scope, and the roadmap of milestones and epics.     |
-| [`docs/process/`](docs/process/project-management.md) | How work is planned and tracked: epics, milestones, sprints, the board, Ready and Done.               |
+| [`docs/process/`](docs/process/project-management.md) | How work is planned and tracked, and how the agent team works.                                        |
 | [`docs/project.md`](docs/project.md)                  | The system: stack, hosting, environment variables, local setup, known gotchas.                        |
 | [`docs/architecture/`](docs/architecture/README.md)   | Where code goes, dependency rules, naming, data model, decisions. Read before coding.                 |
 | [`docs/guidelines/`](docs/guidelines/README.md)       | Conventions by topic: development, security, Payload, Next.js and Tailwind, UI/UX, patterns, content. |
