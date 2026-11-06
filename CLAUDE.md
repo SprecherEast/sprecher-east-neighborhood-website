@@ -56,7 +56,8 @@ Read the other guidelines (frontend patterns, content marketing, Asana) when a t
   is a new, non-forked subagent, so it starts with no memory of the change.
 - **Unattended runs** (#694): the owner's computer runs Windows 11, where the built-in sandbox
   runs commands unsandboxed; it needs WSL2 ([sandboxing](https://code.claude.com/docs/en/sandboxing)).
-  So a headless run uses the auto permission mode with prompts off and an exact allowlist, never
+  So a headless run uses `--permission-mode dontAsk` with an exact `--allowedTools` list (the
+  documented pattern for CI), never
   `--dangerously-skip-permissions`, which is for containers and VMs only
   ([permission modes](https://code.claude.com/docs/en/permission-modes)). A WSL2 sandbox is an
   option the owner decides in #697. Keep `ANTHROPIC_API_KEY` out of the environment: in `-p` runs
