@@ -3,10 +3,10 @@
  * a path the knowledge map lists must change that path's note, or declare
  * `Behavior change: none` with a reason. Run by the `PR Policy` workflow.
  *
- * The glob matching and the map parsing are the ones `scripts/agent-context.mjs` already has (it
+ * The glob matching and the map parsing are the ones `scripts/agent-context-maps.mjs` already has (it
  * reads the same map to load the notes), so they are imported, not written a second time.
  */
-import { globToRegExp, parseKnowledgeMap } from '../../scripts/agent-context.mjs'
+import { globToRegExp, parseKnowledgeMap } from '../../scripts/agent-context-maps.mjs'
 import { sectionsOf } from './pr-body.mjs'
 
 /** The shortest reason a "none" declaration needs. */

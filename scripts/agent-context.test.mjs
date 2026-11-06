@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
@@ -221,6 +222,40 @@ function repo(files) {
   execFileSync('git', ['add', '-A'], { cwd: root })
   return root
 }
+
+describe('the parsers PR Policy imports', () => {
+  it('load in a checkout with no installed packages, so without the token counter', () => {
+    // The PR Policy workflow runs .github/scripts/knowledge-sync.mjs without `npm ci` (#737)
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-context-bare-'))
+    const copies = [
+      'scripts/agent-context-maps.mjs',
+      '.github/scripts/knowledge-sync.mjs',
+      '.github/scripts/pr-body.mjs',
+    ]
+    for (const file of copies) {
+      fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true })
+      fs.copyFileSync(file, path.join(root, file))
+    }
+    const entry = pathToFileURL(path.join(root, '.github/scripts/knowledge-sync.mjs')).href
+    const output = execFileSync(
+      process.execPath,
+      [
+        '--input-type=module',
+        '-e',
+        `const m = await import(${JSON.stringify(entry)}); console.log(typeof m.MIN_REASON_LENGTH)`,
+      ],
+      { cwd: root, encoding: 'utf8' },
+    )
+    expect(output.trim()).toBe('number')
+  })
+
+  it('are the same functions agent-context.mjs exports', async () => {
+    const maps = await import('./agent-context-maps.mjs')
+    expect(parseLoadMap).toBe(maps.parseLoadMap)
+    expect(parseKnowledgeMap).toBe(maps.parseKnowledgeMap)
+    expect(globToRegExp).toBe(maps.globToRegExp)
+  })
+})
 
 describe('run, with the session-start budget', () => {
   const budgetProblems = (root, options) =>
