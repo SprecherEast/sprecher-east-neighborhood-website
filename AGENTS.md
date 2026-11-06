@@ -77,7 +77,7 @@ change, however small, follows these five steps:
 4. **Everything green.** All required checks pass before merge: `Type-check & Build`, `Prettier`,
    `ESLint`, `Dependency Audit`, `Knowledge sync`, and `PR Policy` (steps 1–2, and the knowledge
    note: decision 0019 §6). `Agent context` runs on every PR and becomes required if the owner
-   agrees (#716). Never bypass a failing
+   agrees (#737). Never bypass a failing
    or missing check. In a stack, every PR must be green on its own. Dependabot PRs are exempt from
    the issue and description rules only; they still need green checks and a review, and whoever
    picks one up (usually the ops lead) owns and merges it.

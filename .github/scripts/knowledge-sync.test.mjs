@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { changedPaths, declaredBehavior, knowledgeProblems } from './knowledge-sync.mjs'
+import {
+  LIST_FILES_LIMIT,
+  changedPaths,
+  declaredBehavior,
+  knowledgeProblems,
+} from './knowledge-sync.mjs'
 
 const EVENTS_NOTE = 'src/modules/events/README.md'
 const NEWS_NOTE = 'src/modules/news/README.md'
@@ -175,8 +180,8 @@ describe('changedPaths', () => {
   })
 
   it('refuses a list GitHub may have cut short', () => {
-    const files = Array.from({ length: 3000 }, (_, i) => ({ filename: `f${i}` }))
-    expect(() => changedPaths(files)).toThrow(/3000/)
+    const files = Array.from({ length: LIST_FILES_LIMIT }, (_, i) => ({ filename: `f${i}` }))
+    expect(() => changedPaths(files)).toThrow(new RegExp(String(LIST_FILES_LIMIT)))
     expect(() => changedPaths(files.slice(1))).not.toThrow()
   })
 })
