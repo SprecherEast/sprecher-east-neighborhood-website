@@ -161,9 +161,7 @@ perspectives from the level. Planned: #695.
 
 ## 6. How much scrutiny a change gets
 
-**Status: planned (#695).** Today the reviewer's depth follows the one rule in
-[`CLAUDE.md`](../../CLAUDE.md) (the strongest reviewer for sign-in, access rules, migrations,
-deploy and server scripts, and security code, #522). This scale takes effect when #695 merges.
+**Status: planned (#695).** Today review depth follows the one rule in [`CLAUDE.md`](../../CLAUDE.md) (#522); this scale takes effect when #695 merges.
 
 Scrutiny costs time and tokens, so it follows risk. The level is the highest one that matches;
 the author proposes it, the reviewer may raise it. Google's guidance names the same judgment: some
@@ -173,14 +171,14 @@ four levels below are this repo's own scale (inference).
 
 ```mermaid
 flowchart LR
-  L0["Level 0 Light<br/>checks only plus a quick review"] --> L1["Level 1 Standard<br/>self-review plus 1 reviewer"]
+  L0["Level 0 Light<br/>self-review, checks, quick review"] --> L1["Level 1 Standard<br/>self-review plus 1 reviewer"]
   L1 --> L2["Level 2 Elevated<br/>plus a specialist reviewer<br/>and a design brief first"]
   L2 --> L3["Level 3 Critical<br/>strongest reviewer, security angle,<br/>owner decides policy"]
 ```
 
 | Level          | When                                                                                                                                                                                                          | Review                                                                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **0 Light**    | Wording, link and fact fixes in docs; patch-level dependency updates; test-only changes                                                                                                                       | Required checks and one quick standard review. No extra scrutiny: the cost isn't worth it                                                                                               |
+| **0 Light**    | Wording, link and fact fixes in docs; patch-level dependency updates; test-only changes                                                                                                                       | Self-review (always required, [guard rails](../guidelines/guard-rails.md) rule 6), required checks and one quick standard review. No extra scrutiny beyond that                         |
 | **1 Standard** | Ordinary code, content and UI inside one module                                                                                                                                                               | Self-review, then one independent review                                                                                                                                                |
 | **2 Elevated** | Shared components (`shared-component`); CMS fields and blocks; public facts about money, politics or dates; anything several pages use                                                                        | Level 1, plus the specialist perspectives that apply (design, accessibility, content accuracy); a design brief first for new UI                                                         |
 | **3 Critical** | Sign-in and accounts; access rules and roles; migrations; deploys and server scripts; secrets; the process itself (`AGENTS.md`, `.agents/`, `.claude/`, `.github/`, guidelines, role guides, `docs/process/`) | For code: the strongest reviewer at high effort, plus a security perspective. For policy files: a check against the owner's dated summary, and **Waits for owner** if it goes beyond it |
@@ -216,8 +214,10 @@ flowchart LR
    owner, review rounds per PR and slow or flaky checks. A step that costs many hours a week and
    follows fixed rules becomes automation.
 5. **Reinforce what works.** `outcome: clean` PRs are kept as examples. A pattern becomes a skill
-   example or a shared component only after three clean PRs and a with/without test that shows it
-   helps ([skill best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)).
+   example only after three clean PRs and a with/without test that shows it helps
+   ([skill best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)).
+   This does not delay reuse: repeated code or UI becomes a shared component at its second use,
+   in that same PR ([guard rails](../guidelines/guard-rails.md), rule 1).
 6. **Limits.** At most three fix PRs a week. The process analyst and the design department
    propose; agents never merge a change to their own guardrails, which the owner decides.
    Measures: first-pass clean rate, rework within 14 days, owner corrections per PR, and whether a
