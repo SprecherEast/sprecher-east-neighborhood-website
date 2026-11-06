@@ -45,7 +45,7 @@ what they say, without telling you what to think.
 | Explainer                           | One idea per screen, each with its picture. The page may scroll; no single idea runs longer than a screen.                                                                                                                                                                                      |
 | Sentence                            | Average 15 words; split anything over 25.                                                                                                                                                                                                                                                       |
 
-The drafting prompt (`intelligence/prompts/draft.md`) and its schema carry a copy of the event and news rule because the pipeline doesn't load this file. Change them together. The owner chose the screen rule in place of word counts (2026-11-03, voice call with Claude, quoted on #535).
+The drafting prompt (`intelligence/prompts/draft.md`) and its schema carry a copy of the event and news rule because the pipeline doesn't load this file. Change them together. The owner chose the screen rule in place of word counts (2026-11-03, voice call with Claude, recorded on #535).
 
 Over budget? Cut words before facts. If the facts don't fit, split the piece.
 

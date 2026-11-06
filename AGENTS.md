@@ -29,14 +29,14 @@ change this file through the same workflow below.
   the code reviewed. Record each decision briefly on its issue. Ask the owner only about genuine
   product trade-offs, meaningful costs, legal or privacy commitments, or decisions established
   best practice can't reasonably resolve. Several valid technical approaches are never a reason
-  to wait for him (the owner's rule, 2026-10-24, quoted on #315).
+  to wait for him (the owner's rule, 2026-10-24, recorded on #315).
 - **Test every finished flow as a resident would use it:** on a phone, with expired links,
   wrong input, and recovering from errors (#315).
 - **Push back before building what's probably not the best way.** When the owner asks for
   something that looks weaker than the standard approach (for example a security trade-off),
   don't build it as asked. Explain the better option with sources, then stop and wait until he
   has read it and decided. Building first wastes work on a change that may be thrown away (the
-  owner's rule, 2026-10-23, quoted on #305). This and the rule above fit together: push back
+  owner's rule, 2026-10-23, recorded on #305). This and the rule above fit together: push back
   when his request is weaker than the standard; decide routine things yourself.
 
 ## Guard rails: non-negotiable
@@ -44,7 +44,7 @@ change this file through the same workflow below.
 Build once and reuse everywhere; the UI kit instead of raw tags; theme tokens only; domain-driven,
 clean architecture; tests first; the self-review before every PR; a breach is a Blocker. No one
 can waive these, and "keep going" or "merge without waiting" never means skipping them. The full
-rules, with the owner's words and what enforces each, are in
+rules, with a summary of the owner's direction and what enforces each, are in
 [`docs/guidelines/guard-rails.md`](docs/guidelines/guard-rails.md). Read it before any change.
 
 ## The only way code reaches `main` and production
@@ -88,8 +88,8 @@ Merging code changes to `main` deploys them to production automatically
    levels of work, or the board's columns and fields; fixing wording, links or facts there isn't
    a policy change. A policy change the owner (Amine) asked for follows the normal path. Agents
    file issues through his account, so an issue alone doesn't show he asked: the issue or PR
-   quotes his words, with the date and where he said them, and the reviewer checks the change
-   stays within that quote. A policy change an agent proposes on its own is labeled
+   records a short summary of what he decided, with the date and where he decided it, and the
+   reviewer checks the change stays within that summary. A policy change an agent proposes on its own is labeled
    `needs owner` when it's filed, and waits for him.
 
 4. **Everything green.** All required checks pass before merge: `Type-check & Build`,
@@ -119,9 +119,11 @@ Merging code changes to `main` deploys them to production automatically
 - Never push to `main` directly, and never merge a PR whose checks or review aren't done.
 - Never bypass a rule: no `--admin`, no `bypass_rules: true`, no other ruleset bypass, even when
   the account you're using has admin rights.
-- Never remove the `needs owner` label without the owner's answer: quote his words on the issue
-  or PR, with the date and where he said them, first
+- Never remove the `needs owner` label without the owner's answer: record a summary of it on the
+  issue or PR, with the date and where he gave it, first
   ([waits for owner](docs/process/project-management.md#waits-for-owner)).
+- Never copy what the owner types or dictates word for word into issues, PRs, comments, reviews,
+  commit messages, docs or code comments. Summarize it in clean wording.
 - **Never change code on the server.** No editing files in `/var/www/sprecher-east`, no
   `git apply` or hotfixes over SSH. If production is broken, fix or revert through a PR.
 - Never commit secrets (`.env.local`, keys, tokens, passwords).

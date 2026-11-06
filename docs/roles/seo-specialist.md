@@ -76,11 +76,11 @@ The root layout already sets `twitter.card` to `summary_large_image`.
 
 ### Keeping pages out of search results
 
-The owner's decision on #280 (2026-10-24, in a Claude Code session): "Choose B, with appropriate
-scope. Add noindex to sign-in, sign-up, password recovery, and account-management pages. Prevent
-indexing of raw API responses where appropriate. Ensure private API data is protected through
-actual authentication and authorization, not merely search-engine directives. Keep intended
-public neighborhood pages discoverable."
+Summary of the owner's decision on #280 (2026-10-24, in a Claude Code session): use option B with
+appropriate scope. Add noindex to the sign-in, sign-up, password recovery and account-management
+pages. Keep raw API responses out of search results where appropriate. Protect private API data
+through real authentication and authorization, not just search-engine directives. Keep the intended
+public neighborhood pages findable.
 
 - **Account and confirmation pages** (`/login`, `/sign-up`, `/verify-account`, `/forgot-password`,
   `/reset-password`, `/account`, `/confirm-email`) set `robots: NOT_INDEXED` from

@@ -63,8 +63,8 @@ nobody decides for him, merges it, or starts anything marked blocked by it. Fixi
 findings on a waiting PR is fine, so he gets a clean one. Other work goes on, and silence is
 never a yes.
 
-When he answers, whoever acts on it quotes his words on the issue or PR (with the date and where
-he said them), then removes the `needs owner` label and carries on as he decided. He can also
+When he answers, whoever acts on it records a short summary on the issue or PR (with the date and
+where he gave it), then removes the `needs owner` label and carries on as he decided. He can also
 merge or remove the label himself.
 
 How to ask him ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) step 5):
@@ -113,13 +113,10 @@ built on 2026-10-21 from the spec in #90.
 
 ## Grooming and one task at a time
 
-The owner's rule (Amine, 2026-10-31, Claude Code session, text, quoted on #524):
-
-> _"We'll do some grooming before every major change. You groom the tasks, categorize them based
-> on effort and priority, and then move them into Ready. Once we have everything in Ready, we will
-> start to work one task at a time. Every time we work on a task, it will need to be switched to In
-> Progress so that everything is visible on the project board. If I would like to know where things
-> are, what's being done, and what's not, I can just go to the board very quickly."_
+Summary of the owner's rule (2026-10-31, Claude Code session, text, recorded on #524): groom before
+every major change, sorting tasks by effort and priority and moving them into Ready. Once everything is
+in Ready, work one task at a time, setting each to In Progress, so the board always shows at a glance
+what's being done and what isn't.
 
 - **Groom before every major change:** a new epic, a sprint, or a batch of work. Each issue gets
   its plain summary, acceptance criteria, parent epic, labels (type, area, `priority:`) and a
