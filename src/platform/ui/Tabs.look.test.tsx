@@ -49,10 +49,10 @@ describe('looks pressable and ties the selected tab to its area (#688)', () => {
   it('has one definition of the space between the tabs and the panel and of the flare size', () => {
     const { container } = setup()
     const root = container.firstElementChild as HTMLElement
-    expect(root.className).toContain('[--tabs-gap:1rem]')
+    expect(root.className).toContain('[--tabs-gap:0.5rem]')
     expect(root.className).toContain('gap-(--tabs-gap)')
     // The flare sits in the gap, so it can never be taller than the gap
-    expect(root.className).toContain('[--tabs-flare:0.75rem]')
+    expect(root.className).toContain('[--tabs-flare:0.5rem]')
   })
 })
 

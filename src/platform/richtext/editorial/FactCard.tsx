@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
+import { joinLastWords } from '@/platform/lib/joinLastWords'
 import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { Card } from '@/platform/ui/Card'
 import { Link } from '@/platform/ui/Link'
@@ -20,9 +21,12 @@ import type { KeyFact } from './keyFacts'
  * `variant="tab"` (#664) is the same fact as the face of a tab button: the same rows, but in
  * phrasing elements with no card, since the tab button is the box (its border, selected state and
  * focus ring), and with no link, because a link can't sit inside a button. The source link is
- * drawn by whoever shows the tab's panel. On a phone four tabs share one row (#704), so a tab shows
- * only its icon and figure, centred; the label, explanation and certainty stay for screen readers
- * (`sr-only`) and the open panel shows the label as its heading and the certainty in a line.
+ * drawn by whoever shows the tab's panel. A tab has the same parts for every fact (#707): the
+ * explanation is left to the open panel, so one fact having one doesn't make its tab fuller than
+ * the rest. On a phone four tabs share one row (#704), so a tab shows only its icon and figure,
+ * centred; the label and certainty stay for screen readers (`sr-only`) and the open panel shows the
+ * label as its heading and the certainty in a line. The figure keeps its last two words together,
+ * so "+$90 a year" wraps as "+$90" over "a year".
  */
 export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 'card' | 'tab' }) {
   const { Icon } = FACT_ICONS[fact.icon]
@@ -54,17 +58,10 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
               : 'text-2xl',
           )}
         >
-          {fact.value}
+          {tab ? joinLastWords(fact.value) : fact.value}
         </Value>
-        {fact.detail && (
-          <Value
-            className={cn(
-              'mt-1 block text-sm leading-snug [overflow-wrap:anywhere]',
-              phoneHidden,
-              // The selected tab is tinted, where the muted grey is just under 4.5:1
-              tab ? 'text-foreground' : 'text-muted-foreground',
-            )}
-          >
+        {!tab && fact.detail && (
+          <Value className="mt-1 block text-sm leading-snug [overflow-wrap:anywhere] text-muted-foreground">
             {fact.detail}
           </Value>
         )}

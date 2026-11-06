@@ -8,13 +8,13 @@ import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 const SAMPLE_TABS = [
   {
     value: 'day',
-    trigger: 'Day to day',
+    trigger: 'Daily',
     heading: 'Day-to-day money',
     text: 'What the City spends in a year on services.',
   },
   {
     value: 'projects',
-    trigger: 'Big projects',
+    trigger: 'Roads',
     heading: 'Big-project money',
     text: 'What the City builds and repairs, paid over many years.',
   },
