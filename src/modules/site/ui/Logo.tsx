@@ -36,7 +36,6 @@ export const LogoLink = ({
 }) => (
   <NextLink
     href="/"
-    aria-label="Sprecher East"
     onClick={onClick}
     className={clsx('inline-flex shrink-0 items-center', TOUCH_MIN_HEIGHT, className)}
   >

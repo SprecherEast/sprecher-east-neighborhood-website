@@ -27,8 +27,11 @@ describe('SiteFooter (#741)', () => {
   it('makes the logo and the links tall enough to tap', async () => {
     render(await SiteFooter())
 
-    for (const name of ['Sprecher East', 'Events']) {
-      expect(screen.getByRole('link', { name }).className).toContain(TOUCH_MIN_HEIGHT)
+    for (const link of [
+      screen.getByRole('link', { name: /Sprecher\s*East/ }),
+      screen.getByRole('link', { name: 'Events' }),
+    ]) {
+      expect(link.className).toContain(TOUCH_MIN_HEIGHT)
     }
   })
 })

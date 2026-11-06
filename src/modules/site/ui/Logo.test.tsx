@@ -12,8 +12,12 @@ describe('LogoLink (#741)', () => {
   it('links the name to the home page, as tall as a tap needs', () => {
     render(<LogoLink />)
 
-    const link = screen.getByRole('link', { name: 'Sprecher East' })
+    const link = screen.getByRole('link')
     expect(link.getAttribute('href')).toBe('/')
+    // The visible words are its name: an aria-label that spells them differently from the page
+    // text fails axe's label-content-name-mismatch (the end-to-end run caught it)
+    expect(link.hasAttribute('aria-label')).toBe(false)
+    expect(link.textContent).toBe('SprecherEast')
     expect(link.className).toContain(TOUCH_MIN_HEIGHT)
     expect(link.className).toContain('items-center')
   })
