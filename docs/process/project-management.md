@@ -100,7 +100,7 @@ built on 2026-10-21 from the spec in #90.
 | ----------- | ----------------------------------------------------------------------------------------- |
 | Backlog     | Captured, not ready yet.                                                                  |
 | Ready       | Meets the Definition of Ready (below). Can go into a sprint.                              |
-| In progress | Work has started (set before the first commit). One task, or two with no shared files.    |
+| In progress | Work has started (set before the first commit). Up to the cap, with no shared files.      |
 | In review   | A PR that closes it is open, even as a draft. Linking the PR moves the issue here.        |
 | Done        | Merged: the issue closes and the item moves here on its own. `wrapped` checks any deploy. |
 
@@ -132,11 +132,12 @@ parallel work when issues don't touch the same files; the rule below says how.
   **Size**, which is effort: S, M or L (a cloud session that can't read the board skips Size and
   says so, as in the Definition of Ready). Anything bigger is split. When it meets the
   [Definition of Ready](#definition-of-ready), it moves to **Ready**.
-- **Work in progress is one task across the project, or two when their files don't overlap**
-  (the owner's direction, 2026-11-04, recorded on #685; the cap of 2 is the working default and the
-  agent team's chief of staff enforces it). A second issue starts only if the **Files likely
-  touched** of both issues, and the **shared hot spots**, don't overlap, and the second isn't
-  blocked by the first. When in doubt, wait until the first is In review or Done. The
+- **Work in progress is capped at 2 issues across the project** (the **cap**; this is the only
+  place the number is written, so change it here). That follows the owner's direction of
+  2026-11-04, recorded on #685: parallel work is fine when issues don't touch the same files. The
+  cap itself is a working default. Past the first, an issue starts only if the **Files likely
+  touched** of both issues, and the **shared hot spots**, don't overlap, and it isn't blocked by
+  the one in progress. The chief of staff enforces the cap. When in doubt, wait until the first is In review or Done. The
   highest-priority Ready item goes first.
 - **Shared hot spots** (this list is the one definition; two issues that each touch any of these
   count as overlapping, even in different lines): anything in `src/platform/` and `src/themes/`;
@@ -162,8 +163,9 @@ A comment starts with one of these headers, so a person or a script can find it:
 - `### [PUSHBACK] <title>`: why an agent thinks a request is weaker than the standard approach.
 - `### [SCOPE] <title>`: new work found; links the new issue, which gets `scope-creep`.
 
-**Claiming.** Only the chief of staff, or a person, hands an issue to an agent, so two agents
-can't win the same one. Agents all act through the owner's GitHub login, so the assignee can't
+**Claiming.** One dispatcher (the chief of staff, or a person) hands an issue to an agent and does
+the steps below in order, so two agents can't win the same one; a worker checks that the claim
+names its branch and doesn't claim anything itself. Agents all act through the owner's GitHub login, so the assignee can't
 show who holds an issue: the `[STEP]` comment and the **In progress** status do. In order: (1)
 check for overlap with whatever is already In progress; (2) check the issue isn't already
 claimed (not In progress, no `[STEP]` claim comment); (3) post a `[STEP]` comment naming the
@@ -175,7 +177,8 @@ An issue is **Ready** when it has:
 
 - what and why, in plain language
 - acceptance criteria someone else could check
-- **Files likely touched** and **Must not touch** filled in, so overlap with other work can be checked
+- **Files likely touched** and **Must not touch** filled in (write `None` when there is nothing),
+  so overlap with other work can be checked
 - a parent epic, labels (type, area, priority) and a size. When the board can't be read (cloud
   sessions), skip Size and say so on the issue
   ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §1)

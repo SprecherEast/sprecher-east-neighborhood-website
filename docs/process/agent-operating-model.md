@@ -123,8 +123,8 @@ flowchart LR
 - **Scope creep** becomes a new issue, linked to the original with a `[SCOPE]` comment. The current
   PR does not widen.
 - **Parallel work.** More than one issue may be In progress only if the files each declares, and
-  the shared hot spots (listed in project-management), don't overlap, at most 2
-  at first. Anthropic's guidance for parallel agents is that each owns a different set of files
+  the shared hot spots (listed in project-management), don't overlap, up to the
+  cap in project-management. Anthropic's guidance for parallel agents is that each owns a different set of files
   ([agent teams](https://code.claude.com/docs/en/agent-teams)). Dependent PRs go on a native
   stack ([`stacked-prs`](../../.agents/skills/stacked-prs/SKILL.md)). The rule is in
   [project-management](project-management.md#grooming-and-work-in-progress) (built: #693).

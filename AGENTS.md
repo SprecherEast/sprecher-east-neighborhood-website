@@ -63,7 +63,7 @@ Merging code changes to `main` deploys them to production automatically
    allowed values live in one place: `.github/label-policy.json`.
 
    The issue is groomed into **Ready** first, and set **In progress** when you start, one task at
-   a time or two with no shared files ([how we work](docs/process/project-management.md#grooming-and-work-in-progress)).
+   a time, or more up to the cap when their files don't overlap ([how we work](docs/process/project-management.md#grooming-and-work-in-progress)).
 
 2. **Branch and pull request.** Work on a branch, never on `main`. Open a PR that:
    - links the issue with a closing keyword (`Closes #123`), or with `Part of #123` when an

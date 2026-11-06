@@ -27,16 +27,16 @@ items (§2 step 4 without `--query`, then find the issue by number in the JSON).
 issue is **Ready**:
 
 - it has acceptance criteria, a parent, type, area and priority labels, and a size
+- **Files likely touched** and **Must not touch** are filled in (`None` when there is nothing)
 - nothing it's blocked by is still open
 - it isn't labeled `needs owner`
 - no open PR already closes it (the list in §2 step 3)
 
 When the board can't be read (cloud sessions), skip the size check and say so in a comment on the
 issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read the parent epic too: it
-says what the issue is part of. Work on one task at a time across the project, or two when
-their **Files likely touched** and the shared hot spots don't overlap and neither blocks the other
-([the rule](../../../docs/process/project-management.md#grooming-and-work-in-progress)). Start
-another only when the current ones are In review or Done, or the overlap check below passes.
+says what the issue is part of. Work in progress is capped
+([the rule and the cap](../../../docs/process/project-management.md#grooming-and-work-in-progress)),
+and a second issue needs the overlap check below to pass.
 
 ## 1a. Grooming
 
@@ -44,8 +44,9 @@ Before every major change (a new epic, a sprint, a batch of work), groom the bac
 ([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-work-in-progress)).
 For each issue:
 
-1. Give it a plain summary, acceptance criteria, a parent epic, and the type, area and `priority:`
-   labels (§3).
+1. Give it a plain summary, acceptance criteria, a parent epic, the type, area and `priority:`
+   labels (§3), and its **Files likely touched** and **Must not touch** (`None` when nothing),
+   which the overlap check in §4 reads.
 2. Set its **Size** as effort: S, M or L. If it is bigger than L, split it into sub-issues. In a
    cloud session, which can't read the board, skip Size and say so on the issue.
 3. When it meets the Definition of Ready, move it to **Ready**. On the owner's computer, move the
@@ -94,7 +95,8 @@ For each issue:
    ```
 
 3. **Create it** with the issue form's sections (`### Problem`, `### Proposed fix`,
-   `### Acceptance criteria`, `### Area`, `### Priority`) in `issue.md`. `parent_issue_id` is the
+   `### Acceptance criteria`, `### Files likely touched`, `### Must not touch`,
+   `### Area`, `### Priority`) in `issue.md`. `parent_issue_id` is the
    epic's `id` (not its number); leave it out for a new epic.
 
    ```bash
@@ -152,7 +154,7 @@ For each issue:
      `gh project item-list 2 --owner boulaajaj --limit 1000 --format json --jq '.items[]|select(.status=="In progress")|.content.number'`
      (`--limit` matters: the default stops at 30 items). Read each one's **Files likely touched**
      and compare with this issue's and with the shared hot spots. A shared file or hot spot, or a
-     blocker between them, means wait. More than one other issue In progress means wait too.
+     blocker between them, means wait. So does reaching the cap.
   2. Check it isn't already claimed: not In progress, and no `### [STEP]` claim comment. All
      agents use the owner's login, so the assignee can't tell them apart. An agent the chief of
      staff started has already been handed the issue; it never picks another.
