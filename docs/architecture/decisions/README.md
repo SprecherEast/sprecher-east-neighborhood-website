@@ -24,6 +24,7 @@ that supersedes the old one; don't edit history.
 | [0016](0016-one-service-helper-no-pass-through-use-cases.md) | One service helper; no use case for a plain read                | 2026-10-31 | Accepted                             |
 | [0017](0017-one-message-catalog.md)                          | One message catalog in code; durations come from the settings   | 2026-11-01 | Accepted                             |
 | [0018](0018-charts-behind-our-own-port.md)                   | Charts behind our own port; HTML for square grids, visx for SVG | 2026-11-04 | Accepted                             |
+| [0019](0019-knowledge-layer.md)                              | Short notes and generated reference, kept in sync by CI         | 2026-11-06 | Accepted                             |
 
 Template for a new record: **Context** (the problem and the forces), **Decision**, **Consequences**
 (what gets easier, what gets harder), **Links** (issues, PRs, sources).
