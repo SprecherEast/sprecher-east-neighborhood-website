@@ -48,7 +48,7 @@ export type TabsProps = {
  * on into the panel's own edge. Both numbers the geometry depends on are variables on the root:
  * `--tabs-gap` (between the tabs and the panel) and `--tabs-flare` (the flare's radius, never more
  * than the gap, so it stays below the neighbouring tabs). The tabs sit the same distance from each
- * other as from the panel (`gap-x-2` on the list, `--tabs-gap` under it, #707): two gaps of
+ * other as from the panel (the list's column gap and the space under it are both `--tabs-gap`, #707): two gaps of
  * different sizes on one edge look accidental.
  */
 // Tailwind reads class names as written in the source, so none of these are built from pieces. The
@@ -110,7 +110,7 @@ export function Tabs({
       <RadixTabs.List
         aria-label={label}
         className={cn(
-          'hidden auto-cols-[minmax(0,1fr)] grid-flow-col gap-x-2 scripted:grid',
+          'hidden auto-cols-[minmax(0,1fr)] grid-flow-col gap-x-(--tabs-gap) scripted:grid',
           shared && [SUBGRID_FOUR_ROWS_EXPLICIT, 'gap-y-0'],
         )}
       >
