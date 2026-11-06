@@ -4,24 +4,34 @@ How the agent team is organized: who plans, who builds, who reviews, how much ch
 gets, and how the team learns from its mistakes. It applies to every agent and human. The rules for
 how a change reaches `main` are in [`AGENTS.md`](../../AGENTS.md); how work is planned and tracked is in
 [`project-management.md`](project-management.md). The research behind this page, with its sources,
-is on #685.
+is on #685 and #721.
 
 The owner talks to **one agent, the chief of staff**. Everything else happens behind it, and
 everything it does is recorded on a GitHub issue. This page is the target. Each part is marked
-**built** or **planned**; a planned part names the sub-issue of #685 that builds it. Until a part is
-built, the rules already in `AGENTS.md` and `project-management.md` stand.
+**built** or **planned**; a planned part names the issue that builds it. Until a part is built, the
+rules already in `AGENTS.md` and `project-management.md` stand.
 
-## The owner's direction (summary; 2026-11-04 voice and text sessions, 2026-11-05 Claude Code session, recorded on #685)
+**Order of work.** The knowledge layer (#712) is built first, then the team on this page: a worker
+that can read what a module does needs less context and fewer agents around it.
 
-- One agent to talk to; it uses helpers, and the helpers use workers with narrow jobs.
-- An issue exists, is claimed by a named agent and is In progress before any code changes. After a
-  reviewed, green merge the issue closes and moves to Done. The five board columns stay.
+## The owner's direction (summary, recorded on #685 and #721)
+
+Sessions of 2026-11-04 (voice and text) and 2026-11-05 (Claude Code):
+
+- One agent to talk to. An issue exists, is claimed and is In progress before any code changes; a
+  reviewed, green merge closes it and moves it to Done. The five board columns stay.
 - Every question, pushback and decision is a comment on the issue. Scope creep becomes a new issue.
-- Parallel work is fine when issues don't touch the same files.
 - Questions for the owner wait in a queue and reach his phone.
-- A design department designs, and keeps improving how the implementation department builds.
-- A feedback loop fixes repeated failures at the root cause.
-- Sources for decisions are official documentation and widely used, maintained open source.
+- Design comes before building, the builders' standards are kept current, and a feedback loop fixes
+  repeated failures at the root cause. Sources are official documentation and maintained open source.
+
+Session of 2026-11-06 (Claude, text), after two outside reviews and a check against research:
+
+- A leaner team: the chief of staff, one temporary worker per issue, a fresh reviewer per PR.
+- The role guides become skills a worker loads. The four helpers planned earlier (planner, design
+  lead, review lead, process analyst) become procedures in the chief of staff's skill.
+- More agents are added only if this proves too thin.
+- Parallel work has no fixed number: whether issues touch the same files decides.
 
 ## 1. At a glance
 
@@ -29,71 +39,70 @@ built, the rules already in `AGENTS.md` and `project-management.md` stand.
 flowchart TB
   O["Owner<br/>decides what only he can"]
   C["Chief of staff<br/>grooms, dispatches, keeps the record<br/>never edits code"]
+  S["Its procedures (skills)<br/>groom, overlap check, review depth,<br/>design brief, weekly analysis"]
+  W["Worker, one per issue<br/>own branch and worktree<br/>loads the role guides its brief names"]
+  PR["Pull request"]
+  REV["Reviewer, fresh session<br/>sees only the PR and its issue"]
   O <--> C
-  C --> P["Planner<br/>files likely touched, overlap check"]
-  C --> D["Design Lead<br/>design and standards"]
-  C --> R["Review Lead<br/>picks reviewers by level"]
-  C --> A["Process Analyst<br/>feedback loop"]
-  D --> DD["Design department<br/>UX, UI, system architect"]
-  C --> IMP["Implementation department<br/>backend, CMS, frontend, media, SEO"]
-  C --> CON["Content department<br/>content, events, legal"]
-  C --> OPS["Operations<br/>ops lead"]
-  IMP -. "built to the standards the design department keeps" .- DD
-  IMP --> PR["Pull request"]
-  CON --> PR
-  OPS --> PR
-  PR --> REV["Independent reviewers<br/>fresh session each"]
-  REV --> C
-  A -. "weekly findings" .-> D
+  C -.- S
+  C -->|"one issue, one brief"| W
+  W --> PR
+  PR --> REV
+  REV -->|"verdict"| C
 ```
 
-## 2. Levels
+## 2. Who gets a session
 
-| Level          | Does                                                                                          | Capability                                          | Edits code?                  | Status  |
+| Session        | Does                                                                                          | Capability                                          | Edits code?                  | Status  |
 | -------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------- | ------- |
-| Chief of staff | Talks to the owner; grooms; assigns one worker per issue; keeps the record; manages the queue | Strongest, high effort                              | No. Issues and comments only | Planned |
-| Helpers        | Planner, Design Lead, Review Lead, Process Analyst. Called when needed, read-only             | Strongest                                           | No                           | Planned |
-| Workers        | The role agents in [`docs/roles/`](../roles/README.md). One issue each, own branch            | Standard, medium effort                             | Yes, in their own branch     | Built   |
-| Reviewers      | Review one PR from one angle, in a fresh session ([§5](#5-reviewers-in-a-fresh-session))      | By level ([§6](#6-how-much-scrutiny-a-change-gets)) | No, they report              | Partly  |
+| Chief of staff | Talks to the owner; grooms; assigns one worker per issue; keeps the record; manages the queue | Strongest; high effort for grooming and issue text  | No. Issues and comments only | Planned |
+| Worker         | One issue, in its own branch and worktree, then it ends                                       | Standard, medium effort                             | Yes, in its own branch       | Partly  |
+| Reviewer       | Reviews one PR in a fresh session ([§5](#5-reviewers-in-a-fresh-session))                     | By level ([§6](#6-how-much-scrutiny-a-change-gets)) | No, it reports               | Partly  |
 
-Why helpers are on-demand and read-only: the research found no source showing a standing manager
-layer improves results, and multi-agent work costs about 15 times a chat's tokens, with most coding
-tasks having less parallel work than research does
-([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)). Start with the
-simplest arrangement and add agents only where work truly runs in parallel
-([Anthropic](https://www.anthropic.com/engineering/building-effective-agents)). Each helper brief
-states the objective, the output format, the sources to use and the boundaries; vague briefs
-caused duplicated work in
-[Anthropic's own system](https://www.anthropic.com/engineering/multi-agent-research-system).
+Three kinds of session and no standing layer between them. A fourth, the scheduled sweep, only
+labels and comments (planned, #697). [`CLAUDE.md`](../../CLAUDE.md) says which model each uses.
+Partly built: the [role agents](../roles/README.md) and `pr-review` exist; #695 builds the rest.
 
-Capability levels are tool-neutral. [`CLAUDE.md`](../../CLAUDE.md) says which model each level uses.
+**Why so few.** Several agents use about 15 times a chat's tokens, and coding has less parallel work
+than research ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)). In a
+test of 180 setups, more agents helped parallel work and made step-by-step work worse
+([Google Research](https://research.google/blog/towards-a-science-of-scaling-agent-systems-when-and-why-agent-systems-work/)).
+What holds up is one coordinator that splits the work, read-only helpers, and a reviewer with no
+shared context; several writers on one thing still don't
+([Cognition](https://cognition.com/blog/multi-agents-working)).
 
-## 3. Departments
+**When to add an agent.** A procedure or a role guide becomes its own agent only when its work is
+self-contained, needs different permissions or truly runs in parallel, and a comparison on real
+issues with and without it, recorded on an issue, shows it helps. Each part of this setup is a guess
+about what a model can't do alone, so it is re-tested as models change
+([Anthropic](https://anthropic.com/engineering/harness-design-long-running-apps)).
 
-| Department         | Members                                                                                 | Owns                                                                                                                                                      | May only propose                                                   |
-| ------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| **Design**         | Design Lead (planned, #696), UX designer, UI designer, system architect (planned, #696) | Designs and specs before building anything new and visible; the architecture and component set; keeping the implementation department's standards current | Changes to guard rails, guidelines, role guides: the owner decides |
-| **Implementation** | Backend, CMS and frontend engineers; media manager; SEO specialist                      | Code that follows the architecture, the guard rails and the standards below                                                                               | Anything outside its issue's declared files                        |
-| **Content**        | Content lead, events manager, legal and compliance                                      | Posts, events, resources, legal pages, in the [brand voice](../guidelines/brand-voice.md)                                                                 | Changes to the voice or the money and politics wording             |
-| **Operations**     | Ops lead                                                                                | CI/CD, the server, deploys, backups, server scripts                                                                                                       | Server changes need an `infra` issue first                         |
+## 3. Skills, not agents
 
-**What the design department does for the implementation department.** It does not write feature
-code. It (1) designs before building, for anything new that residents see or any new structure,
-so implementers receive a short brief and not a blank page; (2) keeps the standards current:
-the architecture, the shared component set, the guidelines and the role guides, aligned with open
-standards and industry practice; and (3) reads the feedback loop's findings and turns a repeated
-failure into a design change at the root: a shared component, a test, a lint rule, a clearer
-guideline ([§7](#7-the-feedback-loop)). It proposes these as pull requests. Guard rails, guidelines
-and role guides are policy, so the owner decides them and an agent never edits its own rules
-([`AGENTS.md`](../../AGENTS.md), step 3).
+A separate agent is for isolated side work; the knowledge and checklists a task needs belong in the
+session doing it
+([Claude Code](https://claude.com/blog/steering-claude-code-skills-hooks-rules-subagents-and-more)).
+An issue that touches a page, its CMS fields and its metadata needs all three guides in one head.
+The brief names the guides and notes to load, because instructions an agent has to choose to open
+are often skipped ([Vercel](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals)).
 
-**The standards implementers build to.** The guard rails ([`guard-rails.md`](../guidelines/guard-rails.md)),
-the architecture, and the open standards the repo already follows: WCAG 2.1 AA, structured data,
-Core Web Vitals, Payload's and Next.js's documented practice
-([native first](../guidelines/development.md#native-first-then-plugins-then-our-code)). The system
-architect may propose adding others, such as a security verification standard, when the feedback loop
-shows a recurring gap (inference). Industry standards come from the vendors' own documentation first,
-then widely used, maintained open source.
+| What                                    | Who loads it     | Covers                                                                                                                 | Status        |
+| --------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------- |
+| The twelve role guides                  | The worker       | Design (UX, UI), implementation (backend, CMS, frontend, media, SEO), content (content, events, legal), operations, QA | Guides: built |
+| Groom, overlap check, dispatch brief    | Chief of staff   | A Ready issue a worker can follow; no shared files or hot spots; a brief with the objective, done, sources, boundaries | Planned, #695 |
+| Review depth                            | Chief of staff   | A lookup in the table in [§6](#6-how-much-scrutiny-a-change-gets), not an agent                                        | Planned, #695 |
+| Design brief, standards upkeep          | Chief of staff   | A short design on the issue before new UI is built; root-cause fixes proposed as PRs                                   | Planned, #696 |
+| Weekly analysis                         | Chief of staff   | The feedback loop in [§7](#7-the-feedback-loop)                                                                        | Planned, #698 |
+| Knowledge notes and generated reference | Worker, reviewer | What a module does, its screens and data, its content types and shared components                                      | Planned, #712 |
+
+**What a guide owns is unchanged.** Implementation: code that follows the architecture and the
+[guard rails](../guidelines/guard-rails.md), inside the issue's declared files. Content: posts,
+events and legal pages in the [brand voice](../guidelines/brand-voice.md). Operations: CI/CD, the
+server and deploys, with an `infra` issue before a server change. Guard rails, guidelines and role
+guides are policy: the owner decides them, and an agent never edits its own rules
+([`AGENTS.md`](../../AGENTS.md), step 3). Workers build to the guard rails, the architecture and the
+open standards the repo follows (WCAG 2.1 AA, structured data, Core Web Vitals, and
+[native first](../guidelines/development.md#native-first-then-plugins-then-our-code)).
 
 ## 4. How an issue moves
 
@@ -116,36 +125,33 @@ flowchart LR
   `### [STEP]`, `[DECISION]`, `[QUESTION]`, `[PUSHBACK]` or `[SCOPE]`, followed by context, the
   decision or question, why, and `Owner needed: yes/no`. A convention, not a GitHub feature. Built: #693.
 - **Owner questions** get the `needs owner` label and one plain question with options and a
-  recommendation, as in [`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §3.
-  Silence is never a yes: the issue waits ([waits for owner](project-management.md#waits-for-owner)).
-  At the start of a session the chief of staff lists them, oldest first, at most seven, one line each.
-  The label is the queue. Planned: #695, #697.
-- **Scope creep** becomes a new issue, linked to the original with a `[SCOPE]` comment. The current
-  PR does not widen.
+  recommendation ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §3). Silence
+  is never a yes: the issue [waits for owner](project-management.md#waits-for-owner). A session
+  starts with the chief of staff listing them, oldest first, at most seven. Planned: #695, #697.
+- **Scope creep** becomes a new issue linked with a `[SCOPE]` comment. The current PR does not widen.
 - **Parallel work.** More than one issue may be In progress only if the files each declares, and
-  the shared hot spots (listed in project-management), don't overlap, up to the
-  cap in project-management. Anthropic's guidance for parallel agents is that each owns a different set of files
-  ([agent teams](https://code.claude.com/docs/en/agent-teams)). Dependent PRs go on a native
-  stack ([`stacked-prs`](../../.agents/skills/stacked-prs/SKILL.md)). The rule is in
-  [project-management](project-management.md#grooming-and-work-in-progress) (built: #693).
+  the shared hot spots, don't overlap. There is no fixed number
+  ([the rule](project-management.md#grooming-and-work-in-progress); built #693, changed #721).
+  Parallel agents work when each owns different files ([agent teams](https://code.claude.com/docs/en/agent-teams))
+  and the tests are strong ([Anthropic](https://www.anthropic.com/engineering/building-c-compiler)).
+  Dependent PRs go on a native stack ([`stacked-prs`](../../.agents/skills/stacked-prs/SKILL.md)).
 - **Scheduled check.** Every open issue is checked on a schedule: duplicate bugs get a label and are
   closed after three days without objection; anything else that looks obsolete gets `proposed-close`
-  for the owner; an old idea is never closed by an agent, it gets `needs owner`. Planned: #697.
+  for the owner; an old idea is never closed by an agent, it gets `needs owner`. The parts that
+  follow fixed rules run as a script with no model. Planned: #697.
 
 ## 5. Reviewers in a fresh session
 
-The author never reviews its own change, and a reviewer never inherits the author's reasoning.
-A reviewer starts with only the PR, its issue and the repository, in a new session. Reading the
-change cold is the point: it sees what the diff says, not what the author meant. The author still
-runs [`self-review`](../../.agents/skills/self-review/SKILL.md) first; that catches the easy things
-and does not count as the independent review.
+The author never reviews its own change, and a reviewer never inherits the author's reasoning. It
+starts in a new session with only the PR, its issue and the repository, so it sees what the diff
+says, not what the author meant. The author still runs
+[`self-review`](../../.agents/skills/self-review/SKILL.md) first; that is not the independent review.
 
 This is the evaluator-optimizer pattern, which fits when there are clear evaluation criteria
 ([Anthropic](https://www.anthropic.com/engineering/building-effective-agents)); here the criteria
-are the guard rails, the guidelines and the issue's acceptance criteria. Google's reviewers favor
-approving once a change definitely improves the code's health, and treat design as the most
-important thing to check ([Google](https://google.github.io/eng-practices/review/reviewer/standard.html),
-[what to look for](https://google.github.io/eng-practices/review/reviewer/looking-for.html)).
+are the guard rails, the guidelines and the issue's acceptance criteria. Google's reviewers approve
+once a change definitely improves the code's health, and check design first
+([Google](https://google.github.io/eng-practices/review/reviewer/standard.html)).
 
 | Perspective                | Checks                                                                              | Procedure                                                                                                        | Status |
 | -------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------ |
@@ -156,8 +162,10 @@ important thing to check ([Google](https://google.github.io/eng-practices/review
 | Process fit                | Does the diff match the owner's summary on the issue                                | `pr-review` policy section                                                                                       | Built  |
 
 A review ends with the verdict **Ready to merge**, **Changes requested** or **Waits for owner**,
-and a reviewer may raise the scrutiny level but never lower it. The review lead picks the
-perspectives from the level. Planned: #695.
+and a reviewer may raise the scrutiny level but never lower it. The chief of staff picks the
+perspectives from the level; they run inside the one reviewer session as short-lived subagents, the
+way `self-review` works (planned, #695). A check of every behavior change against the knowledge
+layer joins with #717.
 
 ## 6. How much scrutiny a change gets
 
@@ -201,9 +209,8 @@ flowchart LR
 1. **Capture.** When work is wrapped up the author adds `outcome: clean` or one `fail:` label
    (spec misread, convention, test gap, CI, security, scope creep, process, tooling) and a
    comment: Outcome, Why, Prevention. Planned: #698.
-2. **Count and find the root.** Weekly, the process analyst counts the labels and reads what
-   happened in the worst cases. It notes the **first** failure in each, groups them into a few
-   categories, and fixes the largest group
+2. **Count and find the root.** Weekly, as a procedure, the chief of staff counts the labels, reads
+   the worst cases, notes the **first** failure in each, groups them and fixes the largest group
    ([Husain and Shankar](https://hamel.dev/blog/posts/evals-faq/)). Blameless: fix the system,
    never blame an agent ([Google SRE](https://sre.google/sre-book/postmortem-culture/)).
 3. **Fix with the strongest tool that works.** In this order: a test, lint rule or CI check; then
@@ -211,39 +218,32 @@ flowchart LR
    rule alone is context, not enforcement ([Claude Code](https://code.claude.com/docs/en/features-overview)).
    The same mistake twice means a rule; the same procedure a third time means a skill.
 4. **Bottlenecks.** The same weekly report shows time in each board column, time waiting for the
-   owner, review rounds per PR and slow or flaky checks. A step that costs many hours a week and
-   follows fixed rules becomes automation.
+   owner, review rounds per PR, slow or flaky checks, and tokens per merged PR. A step that costs
+   many hours a week and follows fixed rules becomes automation.
 5. **Reinforce what works.** `outcome: clean` PRs are kept as examples. A pattern becomes a skill
    example only after three clean PRs and a with/without test that shows it helps
    ([skill best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)).
-   This does not delay reuse: repeated code or UI becomes a shared component at its second use,
-   in that same PR ([guard rails](../guidelines/guard-rails.md), rule 1).
-6. **Limits.** At most three fix PRs a week. The process analyst and the design department
-   propose; agents never merge a change to their own guardrails, which the owner decides.
-   Measures: first-pass clean rate, rework within 14 days, owner corrections per PR, and whether a
-   fixed cause comes back. Read trends over four weeks or more.
+   Reuse doesn't wait: repeated code becomes a shared component at its second use (guard rails, rule 1).
+6. **Limits.** At most three fix PRs a week. The chief of staff proposes; the owner decides changes
+   to the guardrails. Measures, read over four weeks or more: first-pass clean rate, rework within
+   14 days, owner corrections per PR, and whether a fixed cause comes back.
 
 ## 8. What is built and what is next
 
-| Part                                                       | Status  | Where                          |
-| ---------------------------------------------------------- | ------- | ------------------------------ |
-| Board, issue flow, role agents, skills, hooks, checks      | Built   | [`AGENTS.md`](../../AGENTS.md) |
-| This page and the visual plan                              | This PR | #692                           |
-| Issue fields, comment header, labels, claim, parallel rule | Built   | #693                           |
-| Code owners and chief of staff limits                      | Planned | #694                           |
-| Chief of staff, helpers, reviewer perspectives             | Planned | #695                           |
-| Design department                                          | Planned | #696                           |
-| Phone, push and the daily sweep (Windows)                  | Planned | #697                           |
-| Feedback loop                                              | Planned | #698                           |
-| Scrutiny levels as one scale (§6)                          | Planned | #695                           |
+| Part                                                            | Status  | Where                          |
+| --------------------------------------------------------------- | ------- | ------------------------------ |
+| Board, issue flow, role guides, skills, hooks, checks           | Built   | [`AGENTS.md`](../../AGENTS.md) |
+| This page and the visual plan                                   | Built   | #692, #721                     |
+| Issue fields, comment header, labels, claim, parallel rule      | Built   | #693, #721                     |
+| Code owners for the rule files                                  | Built   | #694                           |
+| Knowledge layer: lean context, notes, generated reference, sync | Planned | #712, first                    |
+| Chief of staff, one worker, one reviewer; guides as skills; §6  | Planned | #695                           |
+| Design brief and standards upkeep as procedures                 | Planned | #696                           |
+| Phone, push and the daily sweep (Windows)                       | Planned | #697                           |
+| Feedback loop                                                   | Planned | #698                           |
 
-The order is fixed by what each needs: #692, then #693 and #694, then #695, then #696 to #698.
+The order is fixed by what each needs: #712, then #695, then #696 to #698.
 
 ## Sources
 
-Vendor documentation first: [Anthropic engineering](https://www.anthropic.com/engineering/building-effective-agents),
-[Claude Code subagents](https://code.claude.com/docs/en/sub-agents),
-[model configuration](https://code.claude.com/docs/en/model-config),
-[GitHub issues and projects](https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-built-in-automations),
-[Google engineering practices](https://google.github.io/eng-practices/review/reviewer/standard.html),
-[Google SRE](https://sre.google/sre-book/postmortem-culture/). The full list is on #685.
+Each source is linked where it is used. The full lists are on #685 and #721.

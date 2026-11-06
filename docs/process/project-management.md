@@ -6,7 +6,7 @@ is in [`AGENTS.md`](../../AGENTS.md). Where the work is heading is in the
 [roadmap](../product/roadmap.md). The [`project-tracking`](../../.agents/skills/project-tracking/SKILL.md)
 skill is the step-by-step version for agents.
 
-How the agent team (chief of staff, departments, reviewers) works on top of this is in the
+How the agent team (chief of staff, workers, reviewers) works on top of this is in the
 [agent operating model](agent-operating-model.md).
 
 GitHub is the only tracker for new work. Asana is being retired (#89: export #91, cutover #93).
@@ -100,7 +100,7 @@ built on 2026-10-21 from the spec in #90.
 | ----------- | ----------------------------------------------------------------------------------------- |
 | Backlog     | Captured, not ready yet.                                                                  |
 | Ready       | Meets the Definition of Ready (below). Can go into a sprint.                              |
-| In progress | Work has started (set before the first commit). Up to the cap, with no shared files.      |
+| In progress | Work has started (set before the first commit). More than one only with no shared files.  |
 | In review   | A PR that closes it is open, even as a draft. Linking the PR moves the issue here.        |
 | Done        | Merged: the issue closes and the item moves here on its own. `wrapped` checks any deploy. |
 
@@ -125,20 +125,21 @@ Summary of the owner's rule (2026-10-31, Claude Code session, text, recorded on 
 every major change, sorting tasks by effort and priority and moving them into Ready. Once everything is
 in Ready, work one task at a time, setting each to In Progress, so the board always shows at a glance
 what's being done and what isn't. On 2026-11-04 (voice and text sessions, recorded on #685) he allowed
-parallel work when issues don't touch the same files; the rule below says how.
+parallel work when issues don't touch the same files, with no fixed number, and confirmed it on
+2026-11-06 (Claude session, text, recorded on #685 and #721); the rule below says how.
 
 - **Groom before every major change:** a new epic, a sprint, or a batch of work. Each issue gets
   its plain summary, acceptance criteria, parent epic, labels (type, area, `priority:`) and a
   **Size**, which is effort: S, M or L (a cloud session that can't read the board skips Size and
   says so, as in the Definition of Ready). Anything bigger is split. When it meets the
   [Definition of Ready](#definition-of-ready), it moves to **Ready**.
-- **Work in progress is capped at 2 issues across the project** (the **cap**; this is the only
-  place the number is written, so change it here). That follows the owner's direction of
-  2026-11-04, recorded on #685: parallel work is fine when issues don't touch the same files. The
-  cap itself is a working default. Past the first, an issue starts only if the **Files likely
-  touched** of both issues, and the **shared hot spots**, don't overlap, and it isn't blocked by
-  any issue in progress. The chief of staff enforces the cap. When in doubt, wait until the first is In review or Done. The
-  highest-priority Ready item goes first.
+- **Work in progress has no fixed number.** What limits it is whether issues touch the same
+  files, and the owner's plan usage (the earlier working default of 2 is withdrawn, #721). Past
+  the first, an issue starts only if its **Files likely touched** don't overlap with those of any
+  issue in progress, the two don't both touch the **shared hot spots**, and it isn't blocked by
+  any issue in progress. The dispatcher (the chief of staff, or the owner's own session until #695
+  builds it) runs that check before every claim. When in doubt, wait until one is In review or
+  Done. The highest-priority Ready item goes first.
 - **Shared hot spots** (this list is the one definition; two issues that each touch any of these
   count as overlapping, even in different lines): anything in `src/platform/` and `src/themes/`;
   the frontend layout, header, navigation and `globals.css`; `src/payload.config.ts`,
