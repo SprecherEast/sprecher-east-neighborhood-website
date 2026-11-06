@@ -57,6 +57,7 @@ npx tsc --noEmit                    # zero errors
 npx eslint . --max-warnings=10
 npx prettier --check .              # fix with: npx prettier --write <files>
 npm run build                       # when code or dependencies changed
+npm run docs:check                  # the generated reference matches the code (`npm run docs:generate` fixes it)
 ```
 
 Then review your own diff with [`self-review`](../self-review/SKILL.md) and fix what it finds.
@@ -84,7 +85,10 @@ check fails otherwise:
   when more PRs will follow; the last PR uses `Closes`.
 - **What changed**, **Why**, **How**, **How to test** (numbered steps someone else can
   follow), **Risk & rollback**, **Self-review** (one line each for reuse, quality, efficiency,
-  guidelines and visual)
+  guidelines and visual), **Knowledge** (`Behavior change: yes` and which note or page now says so,
+  or `Behavior change: none` and why in 20+ characters; what counts:
+  [0019 §6](../../../docs/architecture/decisions/0019-knowledge-layer.md). A reason that is
+  hidden markup or a stock phrase is a Blocker in the review)
 
 Open it as a draft (`--draft`) while work is incomplete.
 

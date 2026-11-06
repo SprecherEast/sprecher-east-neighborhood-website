@@ -1,6 +1,7 @@
 // The checks the Claude Code hooks run (#446). Pure functions, tested in rules.test.mjs; the hook
 // scripts beside this file only read stdin, ask git, and call them. CI stays the real gate: these
 // catch the same mistakes earlier, inside the session that makes them.
+import { globToRegExp, parseKnowledgeMap } from '../../scripts/agent-context-maps.mjs'
 
 /**
  * Splits a shell command into simple commands (at `;`, `&&`, `||`, `|` and new lines), each a list
@@ -145,6 +146,33 @@ export function inspect(command) {
     result.reason ??= 'AGENTS.md: never bypass a rule; merge with bypass_rules: false.'
   }
   return result
+}
+
+/** A test file: the sync check (`.github/scripts/knowledge-sync.mjs`) leaves these out too */
+const TEST_FILE = /\.test\.[^/]*$/
+
+/**
+ * The reminder for an edit to `file` (#717, decision 0019 §6): when the knowledge map lists a note
+ * for it, that note is unchanged (`noteChanged`) and this session wasn't reminded about it yet
+ * (`reminded`). The map is read and matched by the same helpers the loader and CI use. Null when
+ * there is nothing to say; throws on a map it can't read, which the hook ignores.
+ * @param {{ file: string, mapJson: string, reminded: Set<string>, noteChanged: (note: string) => boolean }} input
+ */
+export function knowledgeReminder({ file, mapJson, reminded, noteChanged }) {
+  if (TEST_FILE.test(file)) return null
+  for (const { source: note, paths } of parseKnowledgeMap(mapJson)) {
+    if (file === note || reminded.has(note)) continue
+    if (!paths.some((glob) => globToRegExp(glob).test(file)) || noteChanged(note)) continue
+    return {
+      note,
+      message:
+        `Knowledge: ${file} is described by ${note}, which has no change on this branch yet. ` +
+        'If behavior changed (what a visitor, an editor or an agent gets), update the note in ' +
+        'this PR; if not, the PR says "Behavior change: none" and why. Decision 0019 §6. ' +
+        'Said once per module per session; CI checks.',
+    }
+  }
+  return null
 }
 
 /** The generated types file that `next dev` rewrites without Prettier */

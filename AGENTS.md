@@ -60,7 +60,7 @@ change, however small, follows these five steps:
 2. **Branch and pull request.** Work on a branch, never on `main`. The PR links the issue with
    `Closes #123` (or `Part of #123` when an issue needs several PRs; the last one uses `Closes`),
    fills in every section of `.github/pull_request_template.md` (**What changed**, **Why**,
-   **How**, **How to test**, **Risk & rollback**, **Self-review**), and **sits on a native GitHub
+   **How**, **How to test**, **Risk & rollback**, **Self-review**, **Knowledge**: did behavior change?), and **sits on a native GitHub
    stack when it depends on another open PR**, so GitHub enforces the merge order. A merge order
    written in prose is never enough ([`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)).
 3. **Review.** Every PR gets an **independent review** by a reviewer that did not write it (a
@@ -151,7 +151,9 @@ tool-specific commands or model names), and keep each file under 250 lines.
 
 - A rule everyone follows on every change: this file.
 - How a module or the content types work: [`docs/knowledge/index.md`](docs/knowledge/index.md), one
-  line per note, each note next to its code (`src/modules/<name>/README.md`).
+  line per note, each next to its code (`src/modules/<name>/README.md`), plus the generated
+  `docs/reference/`. Read the note before changing a module. **A behavior change and its note
+  change in the same PR** ([0019](docs/architecture/decisions/0019-knowledge-layer.md) §6).
 - Why the site exists and what comes next: [`docs/product/`](docs/product/vision.md).
 - How work is planned and tracked, and how the agent team works:
   [`docs/process/`](docs/process/project-management.md).

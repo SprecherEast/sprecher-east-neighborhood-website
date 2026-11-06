@@ -19,9 +19,9 @@ git diff HEAD            # plus anything not committed yet
 
 If there are no changes, review the files you edited in this session.
 
-## 2. Review it four ways
+## 2. Review it five ways
 
-Give each review the full diff. If your tool can run sub-agents, run the four in parallel, one
+Give each review the full diff. If your tool can run sub-agents, run the five in parallel, one
 each; otherwise do them one after another.
 
 ### Reuse
@@ -65,6 +65,17 @@ each; otherwise do them one after another.
 
 Only when the diff touches CSS, Tailwind classes, HTML structure, component markup or image
 treatment: follow [`visual-design-review`](../visual-design-review/SKILL.md).
+
+### Knowledge
+
+1. List what a visitor, an editor or an agent would now see or get differently
+   ([what counts](../../../docs/architecture/decisions/0019-knowledge-layer.md)): screens,
+   messages, fields, access, hooks, routes, emails, jobs, limits.
+2. For each, find the sentence in the module's note (or the generated page in `docs/reference/`)
+   that says so. None: update the note in this PR; run `npm run docs:generate` for a content type,
+   a route or a shared component.
+3. Nothing changed? Check the PR's `Behavior change: none` reason is true of the diff.
+4. A change to `docs/knowledge/map.json` can drop a module from the check: say why in the PR.
 
 ## 3. Fix
 
