@@ -45,4 +45,37 @@ describe('FactCard', () => {
     const text = container.textContent ?? ''
     expect(text.indexOf('Day-to-day money')).toBeLessThan(text.indexOf('$477.5M'))
   })
+
+  it('as a tab face on a phone: keeps the icon and the value, and reads the rest to screen readers only (#704)', () => {
+    const withDetail: KeyFact = { ...FACT, detail: 'The City’s release says about $7 a month' }
+    const { container } = render(<FactCard fact={withDetail} variant="tab" />)
+    const hidden = (text: string) => {
+      const part = [...container.querySelectorAll('span')].find(
+        (span) => span.textContent === text && span.children.length === 0,
+      )
+      return part?.className ?? ''
+    }
+    // Still in the page for a screen reader, which names the tab from its content
+    expect(hidden('Day-to-day money')).toContain('max-sm:sr-only')
+    expect(hidden('The City’s release says about $7 a month')).toContain('max-sm:sr-only')
+    expect(container.querySelector('[data-fact-part="foot"]')?.className).toContain(
+      'max-sm:sr-only',
+    )
+    // The value stays, and nothing hides the icon
+    expect(hidden('$477.5M')).not.toContain('sr-only')
+    expect(container.querySelector('svg')?.getAttribute('class')).not.toContain('sr-only')
+  })
+
+  it('as a tab face: the figure steps down for narrow phones, so it never breaks across lines (#704)', () => {
+    const { container } = render(<FactCard fact={FACT} variant="tab" />)
+    const value = container.querySelector('[data-fact-part="value"]')
+    for (const size of ['text-xs', 'min-[360px]:text-sm', 'min-[400px]:text-base', 'sm:text-2xl']) {
+      expect(value?.className).toContain(size)
+    }
+  })
+
+  it('as a card: nothing is hidden on a phone', () => {
+    const { container } = render(<FactCard fact={FACT} />)
+    expect(container.innerHTML).not.toContain('max-sm:sr-only')
+  })
 })

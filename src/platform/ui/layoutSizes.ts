@@ -64,8 +64,7 @@ export const SUBGRID_FOUR_ROWS_EXPLICIT = 'grid-rows-[repeat(4,auto)]'
  * A shared row's gap would sit inside every card, so a list of cards that share rows has no row
  * gap. Each card keeps its distance from the next one below with a bottom margin, and the list
  * takes the last one back with the same negative margin. The pair must equal the column gap, so
- * each lives here: the first for a `CardGrid` with `gap="sm"` (`gap-4`), the second for the tab
- * buttons (`gap-2`).
+ * it lives here, for a `CardGrid` with `gap="sm"` (`gap-4`). The tab buttons are always one row,
+ * so they need only the missing row gap (`gap-y-0`).
  */
 export const SHARED_ROWS_SPACE_4 = { item: 'mb-4', list: '-mb-4 gap-y-0' }
-export const SHARED_ROWS_SPACE_2 = { item: 'mb-2', list: '-mb-2 gap-y-0' }

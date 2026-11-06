@@ -14,7 +14,6 @@ import {
   PAGE_SHELL,
   READING_GRID,
   READING_WIDTH,
-  SHARED_ROWS_SPACE_2,
   SHARED_ROWS_SPACE_4,
   SUBGRID_FOUR_ROWS,
   SUBGRID_FOUR_ROWS_EXPLICIT,
@@ -53,7 +52,6 @@ describe('layout sizes', () => {
   it('keep the rows of cards that share them apart by a margin the list takes back', () => {
     // The margin equals the gap it replaces: gap-4 for a `CardGrid` gap="sm", gap-2 for tab buttons
     expect(SHARED_ROWS_SPACE_4).toEqual({ item: 'mb-4', list: '-mb-4 gap-y-0' })
-    expect(SHARED_ROWS_SPACE_2).toEqual({ item: 'mb-2', list: '-mb-2 gap-y-0' })
   })
 
   it('are defined in globals.css, once each', () => {

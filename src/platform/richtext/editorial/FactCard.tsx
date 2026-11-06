@@ -20,7 +20,9 @@ import type { KeyFact } from './keyFacts'
  * `variant="tab"` (#664) is the same fact as the face of a tab button: the same rows, but in
  * phrasing elements with no card, since the tab button is the box (its border, selected state and
  * focus ring), and with no link, because a link can't sit inside a button. The source link is
- * drawn by whoever shows the tab's panel.
+ * drawn by whoever shows the tab's panel. On a phone four tabs share one row (#704), so a tab shows
+ * only its icon and figure, centred; the label, explanation and certainty stay for screen readers
+ * (`sr-only`) and the open panel shows the label as its heading and the certainty in a line.
  */
 export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 'card' | 'tab' }) {
   const { Icon } = FACT_ICONS[fact.icon]
@@ -29,16 +31,28 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
   const Label = tab ? 'span' : 'dt'
   const Value = tab ? 'span' : 'dd'
   const Foot = tab ? 'span' : 'div'
+  // What a tab drops on a phone, where four of them share one row
+  const phoneHidden = tab ? 'max-sm:sr-only' : ''
   const body = (
     <>
       <Facts className={SUBGRID_THREE_ROWS}>
-        <Label className="flex items-start gap-2 text-base leading-snug font-semibold text-foreground">
+        <Label
+          className={cn(
+            'flex items-start gap-2 text-base leading-snug font-semibold text-foreground',
+            tab && 'max-sm:justify-center',
+          )}
+        >
           <Icon aria-hidden="true" className="size-5 shrink-0 text-primary" />
-          <span className="min-w-0 [overflow-wrap:anywhere]">{fact.label}</span>
+          <span className={cn('min-w-0 [overflow-wrap:anywhere]', phoneHidden)}>{fact.label}</span>
         </Label>
         <Value
           data-fact-part="value"
-          className="mt-1 block text-2xl leading-tight font-bold [overflow-wrap:anywhere] text-foreground"
+          className={cn(
+            'mt-1 block leading-tight font-bold [overflow-wrap:anywhere] text-foreground',
+            tab
+              ? 'text-center text-xs min-[360px]:text-sm min-[400px]:text-base sm:text-left sm:text-2xl'
+              : 'text-2xl',
+          )}
         >
           {fact.value}
         </Value>
@@ -46,6 +60,7 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
           <Value
             className={cn(
               'mt-1 block text-sm leading-snug [overflow-wrap:anywhere]',
+              phoneHidden,
               // The selected tab is tinted, where the muted grey is just under 4.5:1
               tab ? 'text-foreground' : 'text-muted-foreground',
             )}
@@ -58,7 +73,10 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
           as its tallest foot */}
       <Foot
         data-fact-part="foot"
-        className="mt-2 flex flex-wrap content-start items-center gap-x-3 gap-y-1 pt-1"
+        className={cn(
+          'mt-2 flex flex-wrap content-start items-center gap-x-3 gap-y-1 pt-1',
+          phoneHidden,
+        )}
       >
         <CertaintyBadge certainty={fact.certainty} />
         {!tab && fact.source && (

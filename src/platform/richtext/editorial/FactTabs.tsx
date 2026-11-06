@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
+import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { Chart } from '@/platform/ui/chart/Chart'
 import { Link } from '@/platform/ui/Link'
 import { Tabs, type TabsItem } from '@/platform/ui/Tabs.client'
@@ -19,6 +20,11 @@ function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
       <Text variant="subsection" as="h3" className="hidden scripted:block">
         {heading}
       </Text>
+      {/* On a phone the tab shows only an icon and the figure, so how sure we are shows here; the
+          tab already says it to a screen reader */}
+      <div data-panel-certainty className="sm:hidden" aria-hidden="true">
+        <CertaintyBadge certainty={fact.certainty} />
+      </div>
       {definition && <Text variant="lead">{definition}</Text>}
       {fact.source && (
         <Text variant="small">
