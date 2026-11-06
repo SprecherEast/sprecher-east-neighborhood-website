@@ -114,7 +114,7 @@ DNS records and third-party dashboards (Mailgun, Porkbun, Hostinger) live only o
 Before changing any of them, open an `infra` issue saying what will change, why, and how to roll it
 back; afterwards, comment what actually changed. Never put secret values in the issue.
 
-**How GitHub enforces this.** The `main` ruleset requires a pull request, the five checks above
+**How GitHub enforces this.** The `main` ruleset requires a pull request, the required checks in step 4
 and resolved conversations, and blocks force pushes and deletion; stacks enforce the merge order.
 Agents work through the owner's account, which has admin rights, so until they have their own
 GitHub identity (#106) the no-bypass rule rests on every agent merging with `bypass_rules: false`.
