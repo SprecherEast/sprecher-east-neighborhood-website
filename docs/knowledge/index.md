@@ -10,4 +10,5 @@ None yet. The first, for `events`, comes with the pilot (#715).
 
 ## Reference (generated)
 
-None yet: content types (#714), screens and shared components (#718).
+- [Content types](../reference/content-types/README.md): every collection and global, plugins included: fields, access per operation, hooks, drafts. `npm run docs:generate` writes it; CI (`Knowledge sync`) checks it.
+- Screens and shared components: not yet (#718).
