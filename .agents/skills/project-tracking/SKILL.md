@@ -35,13 +35,13 @@ When the board can't be read (cloud sessions), skip the size check and say so in
 issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read the parent epic too: it
 says what the issue is part of. Work on one task at a time across the project, or two when
 their **Files likely touched** and the shared hot spots don't overlap and neither blocks the other
-([the rule](../../../docs/process/project-management.md#grooming-and-one-task-at-a-time)). Start
+([the rule](../../../docs/process/project-management.md#grooming-and-work-in-progress)). Start
 another only when the current ones are In review or Done, or the overlap check below passes.
 
 ## 1a. Grooming
 
 Before every major change (a new epic, a sprint, a batch of work), groom the backlog
-([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-one-task-at-a-time)).
+([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-work-in-progress)).
 For each issue:
 
 1. Give it a plain summary, acceptance criteria, a parent epic, and the type, area and `priority:`
@@ -151,11 +151,13 @@ For each issue:
   1. Overlap check, if anything is already In progress: list it with
      `gh project item-list 2 --owner boulaajaj --limit 1000 --format json --jq '.items[]|select(.status=="In progress")|.content.number'`
      (`--limit` matters: the default stops at 30 items). Read each one's **Files likely touched**
-     and compare with this issue's. A shared file or hot spot, or a blocker between them, means
-     wait. More than one other issue In progress means wait too.
-  2. Assign it: `gh issue edit <n> --add-assignee <login>`, then read the assignees back; if
-     another agent is also there, back off, since GitHub has no atomic claim.
-  3. Post a `### [STEP]` comment with the branch name, then set **In progress** (below). Only now
+     and compare with this issue's and with the shared hot spots. A shared file or hot spot, or a
+     blocker between them, means wait. More than one other issue In progress means wait too.
+  2. Check it isn't already claimed: not In progress, and no `### [STEP]` claim comment. All
+     agents use the owner's login, so the assignee can't tell them apart. An agent the chief of
+     staff started has already been handed the issue; it never picks another.
+  3. Post a `### [STEP]` comment with the branch name and assign the issue
+     (`gh issue edit <n> --add-assignee <login>`), then set **In progress** (below). Only now
      start the first commit.
 - Keep the issue current with the comment headers in the record on the issue: `[DECISION]` for
   a choice and its reason, `[QUESTION]` for what you need answered (`needs owner` if only the

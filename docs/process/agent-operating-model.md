@@ -123,11 +123,11 @@ flowchart LR
 - **Scope creep** becomes a new issue, linked to the original with a `[SCOPE]` comment. The current
   PR does not widen.
 - **Parallel work.** More than one issue may be In progress only if the files each declares, and
-  the shared hot spots (layout, header, `globals.css`, the Payload config), don't overlap, at most 2
+  the shared hot spots (listed in project-management), don't overlap, at most 2
   at first. Anthropic's guidance for parallel agents is that each owns a different set of files
   ([agent teams](https://code.claude.com/docs/en/agent-teams)). Dependent PRs go on a native
   stack ([`stacked-prs`](../../.agents/skills/stacked-prs/SKILL.md)). The rule is in
-  [project-management](project-management.md#grooming-and-one-task-at-a-time) (built: #693).
+  [project-management](project-management.md#grooming-and-work-in-progress) (built: #693).
 - **Scheduled check.** Every open issue is checked on a schedule: duplicate bugs get a label and are
   closed after three days without objection; anything else that looks obsolete gets `proposed-close`
   for the owner; an old idea is never closed by an agent, it gets `needs owner`. Planned: #697.

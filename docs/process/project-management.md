@@ -56,8 +56,9 @@ The allowed labels are in [`.github/label-policy.json`](../../.github/label-poli
     nobody starts them too early.
   - `scope-creep`: work found while doing another issue. It gets its own issue, linked to the
     original with a `[SCOPE]` comment, and the original PR does not widen.
-  - `proposed-close`: an agent thinks the issue is obsolete or a duplicate. It waits for the owner;
-    an agent never closes an old idea by itself.
+  - `proposed-close`: an agent thinks the issue is obsolete, or duplicates another idea. It waits
+    for the owner; an agent never closes an old idea by itself. (Duplicate bugs are the exception
+    set out in the [agent operating model](agent-operating-model.md#4-how-an-issue-moves).)
   - `shared-component`: a "watch out" flag on a PR that changes shared code many pages use:
     `src/platform/` (`ui/`, `richtext/`, `theme/`, `lib/`, `turnstile/`), `src/themes/`, the
     frontend layout and `globals.css`, and the site header, nav, footer and logo. The labeler sets
@@ -83,7 +84,7 @@ optional; the type label stays the required one because the `PR Policy` check re
 ## Sprints
 
 - **One week**, Monday to Sunday, starting 2026-10-26. A sprint is the board's **Sprint** field.
-- **Planning (Monday):** groom the backlog ([below](#grooming-and-one-task-at-a-time)), then pick
+- **Planning (Monday):** groom the backlog ([below](#grooming-and-work-in-progress)), then pick
   **Ready** items, highest priority first, enough for the week. Leave room for bugs.
 - **Review (end of the week):** the "Done last 7 days" view is the report of what shipped.
 - **Retro (end of the week):** one thing to keep, one to change. A change becomes a rule (a PR to
@@ -118,12 +119,13 @@ built on 2026-10-21 from the spec in #90.
   and milestones right, say in a comment on the issue which card needs moving (and to which
   column), and let the board's automations do the rest. The next session on his computer moves it.
 
-## Grooming and one task at a time
+## Grooming and work in progress
 
 Summary of the owner's rule (2026-10-31, Claude Code session, text, recorded on #524): groom before
 every major change, sorting tasks by effort and priority and moving them into Ready. Once everything is
 in Ready, work one task at a time, setting each to In Progress, so the board always shows at a glance
-what's being done and what isn't.
+what's being done and what isn't. On 2026-11-04 (voice and text sessions, recorded on #685) he allowed
+parallel work when issues don't touch the same files; the rule below says how.
 
 - **Groom before every major change:** a new epic, a sprint, or a batch of work. Each issue gets
   its plain summary, acceptance criteria, parent epic, labels (type, area, `priority:`) and a
@@ -133,10 +135,15 @@ what's being done and what isn't.
 - **Work in progress is one task across the project, or two when their files don't overlap**
   (the owner's direction, 2026-11-04, recorded on #685; the cap of 2 is the working default and the
   agent team's chief of staff enforces it). A second issue starts only if the **Files likely
-  touched** of both issues, and the shared hot spots (the layout, header and navigation,
-  `globals.css`, the Payload config, anything in `src/platform/`), don't overlap, and the second
-  isn't blocked by the first. When in doubt, wait until the first is In review or Done. The
+  touched** of both issues, and the **shared hot spots**, don't overlap, and the second isn't
+  blocked by the first. When in doubt, wait until the first is In review or Done. The
   highest-priority Ready item goes first.
+- **Shared hot spots** (this list is the one definition; two issues that each touch any of these
+  count as overlapping, even in different lines): anything in `src/platform/` and `src/themes/`;
+  the frontend layout, header, navigation and `globals.css`; `src/payload.config.ts`,
+  `src/payload-types.ts` and `src/migrations/`; `package.json` and the lockfile; and the process
+  files (`AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `.github/`, `docs/guidelines/`,
+  `docs/roles/`, `docs/process/`).
 - **In progress is set when work starts,** before the first commit, so the board shows it. In
   review and Done stay automatic.
 - **Only a session on the owner's computer moves cards** (the Access note above). A cloud session
@@ -155,9 +162,12 @@ A comment starts with one of these headers, so a person or a script can find it:
 - `### [PUSHBACK] <title>`: why an agent thinks a request is weaker than the standard approach.
 - `### [SCOPE] <title>`: new work found; links the new issue, which gets `scope-creep`.
 
-**Claiming.** Only the chief of staff, or a person, assigns an issue, so two agents can't win the
-same one. The claim is: assign, post a `[STEP]` comment naming the branch, set **In progress**,
-and check for overlap (above) when something else is already In progress. Then start.
+**Claiming.** Only the chief of staff, or a person, hands an issue to an agent, so two agents
+can't win the same one. Agents all act through the owner's GitHub login, so the assignee can't
+show who holds an issue: the `[STEP]` comment and the **In progress** status do. In order: (1)
+check for overlap with whatever is already In progress; (2) check the issue isn't already
+claimed (not In progress, no `[STEP]` claim comment); (3) post a `[STEP]` comment naming the
+branch and assign the issue; (4) set **In progress**. Then start.
 
 ## Definition of Ready
 
