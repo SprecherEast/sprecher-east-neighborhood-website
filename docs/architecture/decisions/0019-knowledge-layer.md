@@ -60,11 +60,12 @@ agent and any person; instructions follow [AGENTS.md](https://agents.md/), proce
 ### 2. Three levels, loaded progressively
 
 1. **Index**, `docs/knowledge/index.md`, at most 25 lines: one line per note and per reference
-   section. `CLAUDE.md` imports it once the first note exists (#715), inside the 300-line budget of
-   #144; `AGENTS.md` points to it for Codex and people.
+   section, kept small because it loads every session (#713 asked for under 80; 25 fits the
+   300-line budget of #144 with room). #715 imports it in `CLAUDE.md` with the first note;
+   `AGENTS.md` points to it for Codex and people.
 2. **Notes**, next to the code, at most 80 lines each (§3). Each loads by itself when the work reads
    or edits a file under its paths: `scripts/agent-context.mjs` generates a path-scoped rule from
-   the knowledge map (§5), as it does for the guidelines.
+   the knowledge map (§5), as it does for the guidelines. #715 extends the script to read the map.
 3. **Reference**, `docs/reference/`, generated (§4). Read on demand: a note links its pages.
 
 Below level 3 is the code itself, which stays the source of truth.
@@ -113,8 +114,8 @@ found (2026-11-06, recorded on #713):
 
 `docs/knowledge/map.json` lists every note with the path patterns it describes:
 `[{ "note": "src/modules/events/README.md", "paths": ["src/modules/events/**"] }]`. One list, read by
-three tools: the loader (§2), the sync check (§6) and the stale check (#720). A note enters the map
-with its first commit.
+three tools: the loader (§2), the sync check (§6) and the stale check (#720). #715 creates it with
+the events entry, #716 reads it, and each note of #719 adds its entry with its first commit.
 
 ### 6. The sync rule
 
@@ -140,14 +141,15 @@ impossible; the judgment stays with the author and the reviewer.
 
 ### 7. What already exists
 
-Every `.md` under `docs/` and every `README.md` under `src/`, checked on 2026-11-06 at `aa0bd3d`:
+Every `.md` under `docs/` (except `docs/knowledge/`, which this record creates) and every
+`README.md` under `src/`, checked on 2026-11-06 at `aa0bd3d`:
 
 | Files                                                                                           | Verdict                                                                                                                 |
 | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `architecture/README.md`, `conventions.md`, `glossary.md`, `agent-access.md`, `review-queue.md` | Keep. The notes link to them                                                                                            |
 | `architecture/data-model.md`                                                                    | Keep the reasons, relations and hooks; its field lists are replaced by the reference (#714)                             |
-| `architecture/decisions/` (18 records and the index)                                            | Keep, as history of reasons                                                                                             |
-| `guidelines/` (13 files and `frontend-patterns/`, 5 files)                                      | Keep. They load by path since #144. Open drift: #279, #517, #531                                                        |
+| `architecture/decisions/` (0001 to 0018, and the index)                                         | Keep, as history of reasons                                                                                             |
+| `guidelines/` (12 files and `frontend-patterns/`, 5 files)                                      | Keep. They load by path since #144. Open drift: #279, #517, #531                                                        |
 | `process/`, `product/`, `project.md`                                                            | Keep                                                                                                                    |
 | `roles/` (README and 12 guides)                                                                 | Keep; they become skills in #695. Open drift: #158, #366                                                                |
 | `ui/component-set.md`                                                                           | Keep its rules and decided choices; its props tables are replaced by the reference (#718)                               |
