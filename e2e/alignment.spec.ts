@@ -124,7 +124,10 @@ test.describe('fact tabs stay tidy', () => {
           const tabs = [...list.querySelectorAll(tab)]
           const box = (e: Element) => e.getBoundingClientRect()
           const active = document.querySelector(panel)
-          if (!active || tabs.length < 2) throw new Error('No fact tabs with an open panel')
+          const activeTab = tabs.find((t) => t.getAttribute('data-state') === 'active')
+          if (!active || !activeTab || tabs.length < 2) {
+            throw new Error('No fact tabs with an open panel')
+          }
           // Each word of a figure, with its line, to see where it breaks
           const lines = tabs.map((t) => {
             const figure = t.querySelector(value)
@@ -144,6 +147,12 @@ test.describe('fact tabs stay tidy', () => {
             panelGap: Math.round(box(active).top - box(tabs[0]).bottom),
             texts: tabs.map((t) => t.textContent ?? ''),
             lines,
+            // The tab's corner, the curved join's size and the box's corner (#738)
+            radii: {
+              tab: getComputedStyle(activeTab).borderTopRightRadius,
+              join: getComputedStyle(activeTab, '::before').height,
+              box: getComputedStyle(active).borderBottomRightRadius,
+            },
           }
         },
         { tab: TAB, panel: ACTIVE_PANEL, value: VALUE },
@@ -151,6 +160,9 @@ test.describe('fact tabs stay tidy', () => {
 
       // The space under the tabs is the space between them, not a wider, unexplained one
       expect(measured.panelGap, 'tabs to panel equals tab to tab').toBe(measured.tabGap)
+      // One radius all the way round: the tab, the curved join beside it and the box
+      expect(measured.radii.join, 'the join is as round as the tab').toBe(measured.radii.tab)
+      expect(measured.radii.box, 'the box is as round as the tab').toBe(measured.radii.tab)
       for (const text of measured.texts) {
         expect(text, 'a tab carries no line the others lack').not.toContain(DETAIL)
       }
