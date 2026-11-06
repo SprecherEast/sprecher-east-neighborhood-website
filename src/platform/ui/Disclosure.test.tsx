@@ -4,6 +4,7 @@ import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { Disclosure } from './Disclosure'
+import { TOUCH_MIN_HEIGHT } from './layoutSizes'
 import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
@@ -90,5 +91,19 @@ describe('Disclosure', () => {
     )
 
     await expectAccessible(container)
+  })
+})
+
+describe('Disclosure, card, as a row to tap (#741)', () => {
+  it('has a summary row as tall as a tap needs: 44 px on a phone, 36 px from lg', () => {
+    render(
+      <Disclosure variant="card" summary="When is the meeting?">
+        Tuesday.
+      </Disclosure>,
+    )
+
+    expect(screen.getByText('When is the meeting?').closest('summary')?.className).toContain(
+      TOUCH_MIN_HEIGHT,
+    )
   })
 })

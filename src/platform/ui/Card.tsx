@@ -105,7 +105,9 @@ export function CardTitle({
   children: React.ReactNode
 }) {
   return (
-    <Heading className={cn('text-lg leading-snug font-semibold text-foreground', className)}>
+    <Heading
+      className={cn('text-lg leading-snug font-semibold text-balance text-foreground', className)}
+    >
       {href ? (
         <NextLink
           href={href}

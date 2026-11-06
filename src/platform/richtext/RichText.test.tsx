@@ -205,3 +205,13 @@ describe('RichText', () => {
     expect(screen.getByRole('heading', { level: 4 }).hasAttribute('id')).toBe(false)
   })
 })
+
+describe('RichText, headings (#741)', () => {
+  it('balances the lines of its headings, so one never ends on a lone word', () => {
+    const { container } = render(<RichText data={doc(paragraph(text('Body')))} />)
+
+    expect((container.firstElementChild as HTMLElement).className).toContain(
+      'prose-headings:text-balance',
+    )
+  })
+})

@@ -5,6 +5,7 @@ import React from 'react'
 import { cn } from '@/platform/lib/cn'
 
 import { cardVariants } from './Card'
+import { TOUCH_MIN_HEIGHT } from './layoutSizes'
 
 /*
  * The one open-and-close box (#610): a native `<details>` with the kit's summary row, chevron and
@@ -17,7 +18,7 @@ const summaryVariants = cva(
   {
     variants: {
       variant: {
-        card: 'font-medium focus-visible:outline-offset-2',
+        card: cn(TOUCH_MIN_HEIGHT, 'font-medium focus-visible:outline-offset-2'),
         bar: 'min-h-[var(--section-bar-height)] px-4 text-sm font-semibold text-foreground focus-visible:-outline-offset-2 md:px-8',
       },
     },
