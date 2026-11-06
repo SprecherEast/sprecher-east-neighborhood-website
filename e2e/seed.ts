@@ -9,7 +9,8 @@ import { getPayload } from 'payload'
 import config from '../src/payload.config'
 import { contactForm } from '../src/endpoints/seed/contact-form'
 import { contact } from '../src/endpoints/seed/contact-page'
-import { alignmentPost } from './support/alignmentPage'
+import { root, p } from '../src/endpoints/seed/helpers/lexical'
+import { alignmentPost, FIGURE_CAPTION } from './support/alignmentPage'
 
 const payload = await getPayload({ config })
 const context = { disableRevalidate: true }
@@ -29,10 +30,20 @@ await payload.create({
   overrideAccess: true, // test setup, no user
 })
 
+// The figure's picture is one of the demo seed's own, with a caption (#658)
+const figure = await payload.create({
+  collection: 'media',
+  depth: 0,
+  data: { alt: 'A sample figure', caption: root([p(FIGURE_CAPTION)]) },
+  filePath: 'src/endpoints/seed/image-post1.webp',
+  context,
+  overrideAccess: true, // test setup, no user
+})
+
 await payload.create({
   collection: 'posts',
   depth: 0,
-  data: alignmentPost(),
+  data: alignmentPost(figure.id),
   context,
   overrideAccess: true, // test setup, no user
 })

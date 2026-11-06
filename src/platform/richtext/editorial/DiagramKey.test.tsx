@@ -28,7 +28,9 @@ describe('DiagramKey', () => {
     const circle = items[0].querySelector('[aria-hidden="true"]')
     expect(circle?.textContent).toBe('1')
     expect(circle?.className).toContain('bg-accent')
-    expect(circle?.className).toContain('text-accent-foreground')
+    // White on the orange with a white ring, like the markers on the photo (#658)
+    expect(circle?.className).toContain('text-on-image')
+    expect(circle?.className).toContain('ring-on-image')
     await expectAccessible(container)
   })
 

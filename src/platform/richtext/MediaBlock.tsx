@@ -17,8 +17,8 @@ type Props = MediaBlockProps & {
    *   container and the section padding.
    * - `inline`: inside rich text. The article flow already spaces its children, so the block opts
    *   out of the `prose` typography styles (their `picture` margins) and sets one margin, the
-   *   shared `FIGURE_GAP`, which a legend under the image reaches back over (#636). It also sits
-   *   above the legend, whose square top tucks under the image.
+   *   shared `FIGURE_GAP`, which a legend under the image takes part of back (#636, #658). The
+   *   caption, if there is one, stays inside the figure, above the legend.
    */
   placement?: 'section' | 'inline'
   captionClassName?: string
@@ -42,9 +42,7 @@ export const MediaBlock: React.FC<Props> = (props) => {
   if (media && typeof media === 'object') caption = media.caption
 
   return (
-    <figure
-      className={cn(inline ? `relative z-10 ${FIGURE_GAP}` : 'container py-10 md:py-14', className)}
-    >
+    <figure className={cn(inline ? FIGURE_GAP : 'container py-10 md:py-14', className)}>
       {(media || staticImage) && (
         <Media
           // Only the image opts out of `prose`: the caption below is rich text and keeps it

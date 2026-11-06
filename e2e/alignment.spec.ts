@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 
 import { ALIGNMENT_POST_SLUG } from './support/alignmentSlug'
 import { expect, test } from './support/test'
@@ -165,6 +165,44 @@ test.describe('fact tabs stay tidy', () => {
           }
         })
       }
+    })
+  }
+})
+
+// A figure's caption, then its legend (#658): the legend starts below the caption instead of
+// covering it, and is as wide as the image, so their left and right edges are the same.
+test.describe('a legend sits under its figure and caption', () => {
+  for (const width of WIDTHS) {
+    test(`caption and legend at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto(POST)
+      const legend = page.locator('ol[aria-label="Diagram key"]').locator('..')
+      await legend.scrollIntoViewIfNeeded()
+      const figure = legend.locator('xpath=preceding-sibling::figure[1]')
+
+      const box = async (locator: Locator) => {
+        const rect = await locator.boundingBox()
+        if (!rect) throw new Error('Nothing to measure: the element is not on the page')
+        return {
+          left: rect.x,
+          right: rect.x + rect.width,
+          top: rect.y,
+          bottom: rect.y + rect.height,
+        }
+      }
+      const image = await box(figure.locator('img'))
+      const caption = await box(figure.locator('figcaption'))
+      const key = await box(legend)
+
+      expect(key.top, 'the legend starts below the whole caption').toBeGreaterThanOrEqual(
+        caption.bottom,
+      )
+      expect(Math.round(key.left), 'legend and image share a left edge').toBe(
+        Math.round(image.left),
+      )
+      expect(Math.round(key.right), 'legend and image share a right edge').toBe(
+        Math.round(image.right),
+      )
     })
   }
 })

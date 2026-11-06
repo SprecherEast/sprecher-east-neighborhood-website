@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { DiagramKey } from '@/platform/richtext/editorial/DiagramKey'
 
 import { Legend } from './Legend'
+import { LEGEND_GAP } from './layoutSizes'
 import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
@@ -26,12 +27,15 @@ describe('Legend', () => {
     ])
     const circle = items[0].querySelector('[aria-hidden="true"]')
     expect(circle?.textContent).toBe('1')
+    // Like the numbered markers drawn on the photo: white on the accent orange, with a white ring
     expect(circle?.className).toContain('bg-accent')
-    expect(circle?.className).toContain('text-accent-foreground')
+    expect(circle?.className).toContain('text-on-image')
+    expect(circle?.className).toContain('ring-on-image')
+    expect(circle?.className).not.toContain('text-accent-foreground')
     await expectAccessible(container)
   })
 
-  it('draws the Diagram key exactly as before (#662 snapshot)', () => {
+  it('draws the Diagram key (snapshot)', () => {
     const { container } = render(<DiagramKey items={ITEMS} />)
     expect(container.innerHTML).toMatchSnapshot()
   })
@@ -46,17 +50,15 @@ describe('Legend', () => {
     expect(container.innerHTML).toBe('')
   })
 
-  describe('the drawer under the image (#636)', () => {
-    it('hangs from the image: square top hidden under it, rounded bottom only, still', () => {
+  describe('the panel under the image (#636, #658)', () => {
+    it('is a full-width panel: rounded all round, bordered, with a small shadow, still', () => {
       const { container } = render(<Legend items={ITEMS} />)
       const classes = (container.firstElementChild as HTMLElement).className.split(' ')
 
-      // Rounded at the bottom only; no border on top, where the image covers it
-      expect(classes).toContain('rounded-b-2xl')
-      expect(classes).toContain('border-t-0')
-      expect(classes.some((name) => name.startsWith('rounded-t'))).toBe(false)
-      // Narrower than the image, so it never meets the image's rounded corners
-      expect(classes).toContain('mx-4')
+      expect(classes).toContain('rounded-2xl')
+      expect(classes).toContain('border')
+      // The same width as the image above it: no inset on either side
+      expect(classes.some((name) => /^(md:)?m[xlr]-/.test(name))).toBe(false)
       // A small shadow, and a border, which still shows in dark mode where shadows barely do
       expect(classes).toContain('shadow-sm')
       expect(classes).toContain('border-border')
@@ -64,12 +66,13 @@ describe('Legend', () => {
       expect(classes.some((name) => /transition|animate|duration/.test(name))).toBe(false)
     })
 
-    it('reaches up over the image block margin by the shared sizes, not numbers of its own', () => {
+    it('never reaches back over what is above it: it only takes back blank margin (#658)', () => {
       const { container } = render(<Legend items={ITEMS} />)
       const className = (container.firstElementChild as HTMLElement).className
 
-      expect(className).toContain('-mt-[calc(var(--figure-gap)+var(--legend-overlap))]')
-      expect(className).toContain('pt-[calc(var(--legend-overlap)+1rem)]')
+      expect(className).toContain(LEGEND_GAP)
+      expect(className).not.toContain('legend-overlap')
+      expect(className).not.toContain('border-t-0')
     })
   })
 
@@ -130,15 +133,15 @@ describe('Legend', () => {
       classes.forEach((name, index) => expect(name).toContain(`bg-chart-${index + 1}`))
     })
 
-    it('is a plain list with attach "none": no drawer, no hang, no shadow', () => {
+    it('is a plain list with attach "none": no panel, no gap, no shadow', () => {
       const { container } = render(<Legend marker="swatch" attach="none" items={SWATCHES} />)
       const className = (container.firstElementChild as HTMLElement).className
-      expect(className).not.toMatch(/rounded-b-2xl|border-t-0|shadow|-mt-|legend-overlap/)
+      expect(className).not.toMatch(/rounded-2xl|shadow|-mt-|legend-gap/)
     })
 
-    it('keeps the drawer when a swatch legend asks for it', () => {
+    it('keeps the panel when a swatch legend asks for it', () => {
       const { container } = render(<Legend marker="swatch" items={SWATCHES} />)
-      expect((container.firstElementChild as HTMLElement).className).toContain('rounded-b-2xl')
+      expect((container.firstElementChild as HTMLElement).className).toContain('rounded-2xl')
     })
 
     it('never puts inline style on the legend', () => {

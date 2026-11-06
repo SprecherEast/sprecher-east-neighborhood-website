@@ -2,7 +2,7 @@ import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
-import { LEGEND_HANG, LEGEND_TUCK } from './layoutSizes'
+import { LEGEND_GAP } from './layoutSizes'
 
 /** One marker's entry: a short bold label and an optional line of text. */
 export type LegendItem = {
@@ -26,10 +26,10 @@ type LegendCommon = {
   /** What assistive technology calls the list, such as "Diagram key"; "Legend" by default */
   label?: string
   /**
-   * `drawer` (the default) hangs from the image block above it; `none` is a plain list, such as
-   * under a chart.
+   * `panel` (the default) is a full-width box under the image block above it; `none` is a plain
+   * list, such as under a chart.
    */
-  attach?: 'drawer' | 'none'
+  attach?: 'panel' | 'none'
   /**
    * `auto` (the default) puts the items in two columns from `sm`; `one` keeps one column, for a
    * legend in a narrow column such as the text beside a small chart (#681).
@@ -41,7 +41,7 @@ type LegendCommon = {
 export type LegendProps = LegendCommon &
   (
     | {
-        /** Numbered orange circles, for an annotated image; the default */
+        /** Numbered orange circles with white numbers, for an annotated image; the default */
         marker?: 'number'
         items: LegendItem[]
       }
@@ -69,24 +69,22 @@ const LIST_CLASSES = {
 
 /**
  * The legend under an annotated image or a chart (#636, from the diagram key of #515): one numbered
- * circle in the accent colour per marker, the orange the site's diagrams use, each with a bold
- * label and a short line.
+ * circle per marker, drawn like the markers on the photo (white number and ring on the accent
+ * orange the site's diagrams use), each with a bold label and a short line.
  *
- * It looks like a drawer that slid out from under the image: its square top is hidden beneath the
- * image block above (which stacks over it), its bottom corners are rounded, and it is inset on both
- * sides so it never meets the image's own rounded corners. A small shadow and a border (a shadow
- * barely shows in dark mode) lift it. It is still: no animation. Put it directly after the image
- * block; the sizes it shares with that block are in `layoutSizes.ts`.
+ * It is a panel as wide as the image above it, with the image's caption (if any) between them:
+ * rounded all round, with a border (a shadow barely shows in dark mode) and a small shadow. It is
+ * still: no animation. Put it directly after the image block; it sits `--legend-gap` below it.
  *
  * The circles are decoration; screen readers hear "Marker 2: Westbound entrance loop" from a hidden
  * prefix.
  *
  * Under a chart (#662), `marker="swatch"` draws each item's chart colour instead, with the hatch
- * where the item has one, and `attach="none"` leaves out the drawer. The swatch is a second cue
+ * where the item has one, and `attach="none"` leaves out the panel. The swatch is a second cue
  * beside the label, which is always text.
  */
 export function Legend(props: LegendProps) {
-  const { label = 'Legend', attach = 'drawer', columns = 'auto', className } = props
+  const { label = 'Legend', attach = 'panel', columns = 'auto', className } = props
   if (props.items.length === 0) return null
   // One entry per item: its marker, and the hidden prefix a screen reader hears before the label
   const entries =
@@ -106,10 +104,9 @@ export function Legend(props: LegendProps) {
     <div
       className={cn(
         'not-prose',
-        attach === 'drawer' && [
-          'relative z-0 mx-4 mb-10 rounded-b-2xl border border-t-0 border-border bg-surface px-4 pb-4 shadow-sm md:mx-8 md:px-6 md:pb-6',
-          LEGEND_HANG,
-          LEGEND_TUCK,
+        attach === 'panel' && [
+          'mb-10 rounded-2xl border border-border bg-surface p-4 shadow-sm md:p-6',
+          LEGEND_GAP,
         ],
         className,
       )}
@@ -131,7 +128,7 @@ function NumberMarker({ number }: { number: number }) {
   return (
     <span
       aria-hidden="true"
-      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground ring-2 ring-background"
+      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent text-base font-bold text-on-image ring-2 ring-on-image"
     >
       {number}
     </span>
