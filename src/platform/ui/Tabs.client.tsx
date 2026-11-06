@@ -23,7 +23,7 @@ export type TabsItem = {
 export type TabsProps = {
   /** Names the tab list for screen readers ("Budget views") */
   label: string
-  /** Two to four items fit the phone's 2 by 2 layout */
+  /** Two to four items fit one row on a phone, each tab as wide as the others */
   items: TabsItem[]
   /** The tab that is selected on the first render, on the server too, so nothing moves on load */
   defaultValue: string
@@ -61,7 +61,7 @@ const FLARES =
  * too, drawn above its neighbours and opening into the panel (see above).
  */
 const TAB_LOOK = [
-  'relative min-h-11 cursor-pointer rounded-xl border border-border bg-card px-1.5 py-2 text-left text-foreground shadow-sm transition-all duration-200 hover:bg-surface hover:shadow-md min-[400px]:px-3 sm:px-4',
+  'relative min-h-11 min-w-0 cursor-pointer rounded-xl border border-border bg-card px-1.5 py-2 text-left text-foreground [overflow-wrap:anywhere] shadow-sm transition-all max-sm:text-sm duration-200 hover:bg-surface hover:shadow-md min-[400px]:px-3 sm:px-4',
   'motion-safe:data-[state=inactive]:hover:-translate-y-0.5',
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
   // The selected tab: no shadow and no inset ring, either would draw a line along its open bottom

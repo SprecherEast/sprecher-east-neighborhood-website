@@ -92,6 +92,15 @@ describe('Tabs (#661)', () => {
     }
   })
 
+  it('lets plain-text tab names wrap and shrink on a phone instead of being clipped', () => {
+    setup()
+    for (const tab of screen.getAllByRole('tab')) {
+      expect(tab.className).toContain('min-w-0')
+      expect(tab.className).toContain('[overflow-wrap:anywhere]')
+      expect(tab.className).toContain('max-sm:text-sm')
+    }
+  })
+
   it('lets the tab buttons share four rows only when asked, with no row gap inside them (#678)', () => {
     const { rerender } = render(<Tabs label="Budget views" items={ITEMS} defaultValue="money" />)
     const list = () => screen.getByRole('tablist')
