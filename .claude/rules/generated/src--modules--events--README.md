@@ -31,7 +31,8 @@ for CMS pages. Fields, access and hooks: [events content type](/docs/reference/c
 - An event with `officialBody` is an official meeting: labelled wherever it shows, with the body's `https://` agenda link on its page, and the body as organizer in structured data (`domain/officialMeetings.ts`, `ui/OfficialAgenda.tsx`, `ui/eventJsonLd.ts`).
 - Category filters are pages, not query strings; the proxy sends `/events?category=x` to the page and 404s malformed slugs (`src/proxy.ts`, decision 0015).
 - The "this week" strip: a row is `all`, `official` or one category; window of 1 to 31 days (default 7) from today; at most 4 rows, 1 to 6 events each; empty rows are hidden, and with none left it shows a message (`domain/thisWeek.ts`, `data/thisWeek.ts`).
-- Saving, unpublishing or deleting an event refreshes its page, `/events`, every category and list page, `/` and all CMS pages, and expires the `events` and `events-sitemap` cache tags (`cms/revalidateEvent.ts`).
+- Saving a published event, unpublishing one that was published, or deleting one refreshes its page, `/events`, every category and list page, `/` and all CMS pages, and expires the `events` and `events-sitemap` cache tags (`cms/revalidateEvent.ts`); saving a draft refreshes nothing.
+- Events can be scheduled to publish or unpublish (`schedulePublish` in `src/platform/payload/contentCollection.ts`), run by Payload's jobs queue inside the app (`autoRun` in `src/payload.config.ts`); event pages re-render every 10 minutes (`revalidate = 600`), so visitors see the change within 10 minutes (decision 0011).
 - Events created by agents or non-staff are stored as `suggested` drafts and need a source; staff publishing approves them (`cms/events.ts` via `holdSuggestions`).
 - Events are indexed for search, though this module doesn't name it (`src/payload.config.ts`, `searchPlugin`).
 - Admin has Live Preview and a preview link from the draft (`cms/events.ts` via `previewAdmin`); the event page emits schema.org `Event` data (`ui/eventJsonLd.ts`).
@@ -66,5 +67,5 @@ for CMS pages. Fields, access and hooks: [events content type](/docs/reference/c
 
 ## Known gaps
 
-- `featured` is unused: its description promises prominence on the home page, but only `cms/events.ts` and the seed mention it.
+- `featured` is unused: its description promises prominence on the home page, but no page, query or mapper reads it. Only `cms/events.ts` and the seed set it; the generated types and migrations also mention it.
 - The filter row counts read every published event's category ids; fine for a small calendar (`data/categories.ts`).
