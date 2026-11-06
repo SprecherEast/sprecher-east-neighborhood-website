@@ -8,6 +8,7 @@ Loaded into every session, so keep it short (`npm run agent-context` fails over 
 
 @AGENTS.md
 @docs/guidelines/guard-rails.md
+@docs/knowledge/index.md
 
 Every other guideline, `docs/project.md` and `docs/process/project-management.md` load by
 themselves when the work reads or edits a matching file: `.claude/rules/generated/` holds a copy of

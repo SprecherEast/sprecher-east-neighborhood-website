@@ -165,14 +165,20 @@ New contradictions found while checking, filed as #725: `docs/project.md`'s fold
 
 ### 8. How the pilot is measured (#715)
 
-Three tasks on the events module, written and posted before the note exists: one "find and
-explain" with a known answer, one rule change in `domain/`, one new field through `cms/`, the
-mapper and a component. Each runs twice in a fresh session at the same model and effort, in a
-throwaway worktree: with the index and the note, and with neither. For each run: tokens, tool calls
-and files read before the first edit, whether the acceptance criteria were met, wrong turns. The
-rollout goes ahead if the runs with the note use fewer tokens before the first correct edit in at
-least two of three tasks and do no worse on correctness. Otherwise the template is revised once
-and measured again, or the owner is told.
+The owner chose this eval (2026-11-06, Claude session, text, recorded on #712 and #715).
+
+- **Tasks:** 8, written and posted on #715 before the note exists, each with a known answer or a
+  test that grades it. At least 5 are on the events module (a "find and explain", a rule change in
+  `domain/`, a new field through `cms/`, the mapper and a component); the rest are on content types
+  the generated reference (#714) covers.
+- **Conditions:** two. `main` before #144, at `aa0bd3d` (no path-scoped rules, no knowledge layer),
+  and `main` with the knowledge layer (the index, the note, the map and the generated rule).
+- **Runs:** 2 per task per condition (32 in all), each in a fresh session at the same model and
+  effort, in a throwaway worktree that is never pushed.
+- **Measures, for each run:** tokens, tool calls and files read before the first correct edit,
+  whether the task was done correctly (graded by its answer or test), and any wrong turn.
+- **Gate:** the rollout goes ahead if correctness doesn't drop and tokens fall on at least 5 of the
+  8 tasks. Otherwise the template is revised once and measured again, or the owner is told.
 
 ## Consequences
 

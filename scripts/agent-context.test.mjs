@@ -1,13 +1,20 @@
+import { execFileSync } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
 import {
   globToRegExp,
   hasPaths,
   importsOf,
+  parseKnowledgeMap,
   parseLoadMap,
   renderRule,
   rootLinks,
   ruleName,
+  run,
   startupFiles,
 } from './agent-context.mjs'
 
@@ -148,6 +155,89 @@ describe('startupFiles', () => {
       { file: 'AGENTS.md', lines: 3 },
       { file: 'docs/guard.md', lines: 2 },
       { file: 'docs/big.md', lines: 3 },
+    ])
+  })
+})
+
+describe('parseKnowledgeMap', () => {
+  const entry = { note: 'src/modules/events/README.md', paths: ['src/modules/events/**'] }
+
+  it('reads each note with the paths it describes', () => {
+    expect(parseKnowledgeMap(JSON.stringify([entry]))).toEqual([
+      { source: entry.note, paths: entry.paths, origin: 'docs/knowledge/map.json' },
+    ])
+  })
+
+  it('refuses a map it would otherwise misread, naming the entry', () => {
+    const bad = (value) => () => parseKnowledgeMap(JSON.stringify(value), 'map.json')
+    expect(() => parseKnowledgeMap('{', 'map.json')).toThrow('map.json')
+    expect(bad({})).toThrow('a list')
+    expect(bad([{ note: 'a.md' }])).toThrow('entry 1')
+    expect(bad([{ note: 'a.md', paths: [] }])).toThrow('entry 1')
+    expect(bad([{ note: 'a.md', paths: [3] }])).toThrow('entry 1')
+    expect(bad([{ note: 'a.txt', paths: ['a/**'] }])).toThrow('entry 1')
+  })
+})
+
+describe('run, with a knowledge map', () => {
+  /** A throwaway git repository holding `files`, so `run` sees tracked files as in CI. */
+  function repo(files) {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-context-'))
+    const base = {
+      'docs/guidelines/README.md':
+        '| Reference | Loads by itself when the work touches |\n| - | - |\n',
+      'CLAUDE.md': '# Adapter\n',
+      ...files,
+    }
+    for (const [file, text] of Object.entries(base)) {
+      fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true })
+      fs.writeFileSync(path.join(root, file), text)
+    }
+    execFileSync('git', ['init', '-q'], { cwd: root })
+    execFileSync('git', ['add', '-A'], { cwd: root })
+    return root
+  }
+  const map = JSON.stringify([{ note: 'src/mod/README.md', paths: ['src/mod/**'] }])
+  const files = {
+    'docs/knowledge/map.json': map,
+    'src/mod/README.md': '# Mod\n\nSee [x](../../docs/x.md).\n',
+    'src/mod/code.ts': 'export {}\n',
+  }
+  const rule = '.claude/rules/generated/src--mod--README.md'
+  // The fixture's load map is empty on purpose; that problem is not what these tests are about
+  const problemsOf = (root, options) =>
+    run(root, options).problems.filter((problem) => !problem.includes('no load map'))
+
+  it('writes a path-scoped rule for each note, then finds it current', () => {
+    const root = repo(files)
+    expect(problemsOf(root, { write: true })).toEqual([])
+    const text = fs.readFileSync(path.join(root, rule), 'utf8')
+    expect(text).toContain("paths:\n  - 'src/mod/**'")
+    expect(text).toContain('](/docs/x.md)')
+    expect(problemsOf(root)).toEqual([])
+  })
+
+  it('fails when the rule is out of date or the note is gone', () => {
+    const root = repo(files)
+    problemsOf(root, { write: true })
+    fs.appendFileSync(path.join(root, 'src/mod/README.md'), 'More.\n')
+    expect(problemsOf(root)).toEqual([`${rule} is out of date`])
+
+    fs.rmSync(path.join(root, 'src/mod/README.md'))
+    expect(problemsOf(root)).toContain(
+      "docs/knowledge/map.json lists src/mod/README.md, which doesn't exist",
+    )
+  })
+
+  it('fails when a pattern matches no tracked file', () => {
+    const root = repo({
+      ...files,
+      'docs/knowledge/map.json': JSON.stringify([
+        { note: 'src/mod/README.md', paths: ['src/gone/**'] },
+      ]),
+    })
+    expect(problemsOf(root, { write: true })).toEqual([
+      'src/mod/README.md: `src/gone/**` matches no file in the repository',
     ])
   })
 })
