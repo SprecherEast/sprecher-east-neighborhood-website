@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { declaredBehavior, knowledgeProblems } from './knowledge-sync.mjs'
+import { changedPaths, declaredBehavior, knowledgeProblems } from './knowledge-sync.mjs'
 
 const EVENTS_NOTE = 'src/modules/events/README.md'
 const NEWS_NOTE = 'src/modules/news/README.md'
@@ -53,6 +53,26 @@ describe('declaredBehavior', () => {
     expect(
       declaredBehavior(bodyWith('<!-- Behavior change: none, a long enough reason -->')),
     ).toBeNull()
+  })
+
+  it('reads a declaration in a CRLF body', () => {
+    const body =
+      '## Knowledge\r\n\r\nBehavior change: none, only renames a local variable\r\n\r\n## Why\r\nx'
+    expect(declaredBehavior(body)).toEqual({
+      change: 'none',
+      reason: 'only renames a local variable',
+    })
+  })
+
+  it.each([
+    ['spaces', 'Behavior change' + ' '.repeat(10_000)],
+    ['spaces before the answer', 'Behavior change:' + ' '.repeat(10_000) + 'maybe'],
+    ['asterisks', 'Behavior change' + '*'.repeat(10_000) + 'x'],
+    ['mixed', 'Behavior change' + ' *'.repeat(5_000) + 'x'],
+  ])('reads a 10,000-character line of %s quickly', (_name, line) => {
+    const started = Date.now()
+    expect(declaredBehavior(bodyWith(line))).toBeNull()
+    expect(Date.now() - started).toBeLessThan(500)
   })
 
   it('ignores the line outside the Knowledge section', () => {
@@ -135,5 +155,28 @@ describe('knowledgeProblems', () => {
 
   it('throws on a map it cannot read', () => {
     expect(() => check({ changedFiles: [CARD], map: '{}' })).toThrow(/list/)
+  })
+})
+
+describe('changedPaths', () => {
+  it('lists the new path and, for a rename, the old one too', () => {
+    const files = [
+      { filename: 'src/platform/ui/EventCard.tsx', previous_filename: CARD },
+      { filename: 'docs/project.md' },
+    ]
+    expect(changedPaths(files)).toEqual(['src/platform/ui/EventCard.tsx', CARD, 'docs/project.md'])
+  })
+
+  it('makes a rename out of a mapped folder ask for the note', () => {
+    const files = [{ filename: 'src/platform/ui/EventCard.tsx', previous_filename: CARD }]
+    const problems = check({ changedFiles: changedPaths(files) })
+    expect(problems).toHaveLength(1)
+    expect(problems[0]).toContain(EVENTS_NOTE)
+  })
+
+  it('refuses a list GitHub may have cut short', () => {
+    const files = Array.from({ length: 3000 }, (_, i) => ({ filename: `f${i}` }))
+    expect(() => changedPaths(files)).toThrow(/3000/)
+    expect(() => changedPaths(files.slice(1))).not.toThrow()
   })
 })

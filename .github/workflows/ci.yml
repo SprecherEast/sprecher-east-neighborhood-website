@@ -164,7 +164,7 @@ jobs:
   # The generated reference pages match the code (#714, decision 0019 §6): the content-type pages in
   # docs/reference/content-types/ are regenerated from the Payload config and the job fails on any
   # difference, so a content type can't change without its page. It loads the config only: no
-  # database, no server. The run time goes to the job summary. A required check since #716.
+  # database, no server. The run time goes to the job summary. Required on `main` once #716 merges.
   knowledge-sync:
     name: Knowledge sync
     runs-on: ubuntu-latest

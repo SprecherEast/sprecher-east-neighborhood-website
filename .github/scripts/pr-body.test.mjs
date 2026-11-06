@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { sectionsOf, withoutComments } from './pr-body.mjs'
+import { linkedIssues, sectionsOf, withoutComments } from './pr-body.mjs'
 
 describe('withoutComments', () => {
   it('removes HTML comments, also across lines', () => {
@@ -14,6 +14,11 @@ describe('withoutComments', () => {
 
   it('drops everything after a comment that is never closed', () => {
     expect(withoutComments('keep\n<!-- Behavior change: none and a long reason')).toBe('keep\n')
+  })
+
+  it('reads a CRLF body like an LF one', () => {
+    expect(withoutComments('a\r\n<!-- x\r\ny -->b')).toBe('a\nb')
+    expect(sectionsOf('## Why\r\nBecause\r\n').why).toBe('Because\n')
   })
 
   it('treats a missing body as empty', () => {
@@ -34,5 +39,24 @@ describe('sectionsOf', () => {
 
   it('ignores text before the first heading', () => {
     expect(sectionsOf('Closes #1')).toEqual({})
+  })
+})
+
+describe('linkedIssues', () => {
+  it('reads Closes, Fixes and Resolves forms as closing', () => {
+    const body = 'Closes #1\nfixes: #2\nResolved #3'
+    expect(linkedIssues(body).closes).toEqual([1, 2, 3])
+  })
+
+  it('reads "Part of" as progress, unless the same issue is also closed', () => {
+    expect(linkedIssues('Part of #4\nCloses #5\nPart of #5')).toEqual({ closes: [5], partOf: [4] })
+  })
+
+  it('lists each issue once and ignores links inside comments', () => {
+    expect(linkedIssues('Closes #1 Closes #1 <!-- Closes #9 -->').closes).toEqual([1])
+  })
+
+  it('finds nothing in a body with no link', () => {
+    expect(linkedIssues(undefined)).toEqual({ closes: [], partOf: [] })
   })
 })

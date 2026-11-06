@@ -75,9 +75,9 @@ change, however small, follows these five steps:
    the reviewer checks the change stays within it. A policy change an agent proposes on its own is
    labeled `needs owner` when it's filed, and waits for him.
 4. **Everything green.** All required checks pass before merge: `Type-check & Build`, `Prettier`,
-   `ESLint`, `Dependency Audit`, `Agent context`, `Knowledge sync`, and `PR Policy` (which
-   verifies steps 1–2, and that a change under a path in `docs/knowledge/map.json` updates its
-   note or declares `Behavior change: none` with a reason). Never bypass a failing
+   `ESLint`, `Dependency Audit`, `Knowledge sync`, and `PR Policy` (steps 1–2, and the knowledge
+   note: decision 0019 §6). `Agent context` runs on every PR and becomes required if the owner
+   agrees (#716). Never bypass a failing
    or missing check. In a stack, every PR must be green on its own. Dependabot PRs are exempt from
    the issue and description rules only; they still need green checks and a review, and whoever
    picks one up (usually the ops lead) owns and merges it.

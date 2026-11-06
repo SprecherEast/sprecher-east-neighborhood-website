@@ -26,9 +26,12 @@ jobs:
   policy:
     name: PR Policy
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       # The whole tree: the knowledge check looks for each note named in docs/knowledge/map.json
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: actions/github-script@v8
         with:
@@ -46,18 +49,13 @@ jobs:
             const problems = [];
             const { pathToFileURL } = require('url');
             const scripts = (name) => import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/${name}`).href);
-            const { sectionsOf, withoutComments } = await scripts('pr-body.mjs');
-            const { knowledgeProblems } = await scripts('knowledge-sync.mjs');
+            const { linkedIssues, sectionsOf, withoutComments } = await scripts('pr-body.mjs');
+            const { changedPaths, knowledgeProblems } = await scripts('knowledge-sync.mjs');
             const body = withoutComments(pr.body);
 
             // 1. Linked issue(s): "Closes #N" (closes it on merge) or "Part of #N" (multi-PR issue)
-            const numbers = (re) => [...body.matchAll(re)].map((m) => Number(m[1]));
-            const refs = [
-              ...new Set([
-                ...numbers(/\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+#(\d+)\b/gi),
-                ...numbers(/\bpart of:?\s+#(\d+)\b/gi),
-              ]),
-            ];
+            const { closes, partOf } = linkedIssues(body);
+            const refs = [...closes, ...partOf];
             if (refs.length === 0) {
               problems.push('Link the issue this PR addresses: "Closes #123" (or "Part of #123" if more PRs will follow).');
             }
@@ -108,7 +106,7 @@ jobs:
             problems.push(
               ...knowledgeProblems({
                 mapJson: fs.readFileSync('docs/knowledge/map.json', 'utf8'),
-                changedFiles: files.flatMap((f) => [f.filename, f.previous_filename].filter(Boolean)),
+                changedFiles: changedPaths(files),
                 noteExists: (note) => fs.existsSync(note),
                 body,
               }),

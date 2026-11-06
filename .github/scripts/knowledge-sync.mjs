@@ -13,9 +13,30 @@ import { sectionsOf } from './pr-body.mjs'
 export const MIN_REASON_LENGTH = 20
 
 const TEST_FILE = /\.test\.[^/]*$/
-const DECLARATION =
-  /^\s*(?:[-*]\s*)?\**\s*behavior change\s*:?\s*\**\s*:?\s*\**\s*(yes|none)\b\**\s*[-–—:.,]?\s*(.*)$/i
-const BLANK_DECLARATION = /^\s*(?:[-*]\s*)?\**\s*behavior change\b/i
+// Matched on a line with `*`, `_` and runs of spaces already reduced (see `plain`), so the
+// patterns stay linear: nothing here can backtrack on a long line of spaces or asterisks.
+const DECLARATION = /^(?:- )?behavior change ?:? ?(yes|none)\b ?[-–—:.,]? ?(.*)$/i
+const BLANK_DECLARATION = /^(?:- )?behavior change\b/i
+
+/** A line without Markdown emphasis, and with each run of white space as one space. */
+const plain = (line) => line.replace(/[*_]/g, '').replace(/\s+/g, ' ').trim()
+
+/** GitHub's `pulls.listFiles` stops at this many files, so a list this long may be incomplete. */
+export const LIST_FILES_LIMIT = 3000
+
+/**
+ * Every path a pull request touches, from GitHub's file list: a rename gives its old path too, so
+ * moving a file out of a mapped folder still asks for the note. Throws on a list that may have
+ * been cut short, so the gate fails instead of passing on part of the diff.
+ */
+export function changedPaths(files) {
+  if (files.length >= LIST_FILES_LIMIT) {
+    throw new Error(
+      `This PR changes ${LIST_FILES_LIMIT} files or more, more than GitHub lists, so the knowledge check can't see them all. Split the PR.`,
+    )
+  }
+  return files.flatMap((file) => [file.filename, file.previous_filename].filter(Boolean))
+}
 
 /**
  * What the Knowledge section of a description declares: `{ change: 'yes' | 'none', reason }`, with
@@ -23,7 +44,7 @@ const BLANK_DECLARATION = /^\s*(?:[-*]\s*)?\**\s*behavior change\b/i
  * the line is missing, or the line says neither.
  */
 export function declaredBehavior(body) {
-  const lines = (sectionsOf(body).knowledge ?? '').split('\n')
+  const lines = (sectionsOf(body).knowledge ?? '').split('\n').map(plain)
   const start = lines.findIndex((line) => DECLARATION.test(line))
   if (start === -1) return null
   const [, change, rest] = lines[start].match(DECLARATION)
