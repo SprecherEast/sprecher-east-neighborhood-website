@@ -48,6 +48,10 @@ export const THEME_TOKENS = {
   error: { modes: 'both', meaning: 'Error state' },
   'on-image': { modes: 'both', meaning: 'Text and icons on photos (heroes, image cards)' },
   scrim: { modes: 'both', meaning: 'Overlays and shadows that keep text readable on photos' },
+  'diagram-marker': {
+    modes: 'base',
+    meaning: 'The orange of the numbered markers drawn into diagrams; the same in both modes',
+  },
   inverse: { modes: 'both', meaning: 'Dark chrome on any page: the admin bar, code blocks' },
   'inverse-foreground': { modes: 'both', meaning: 'Text on the inverse surface' },
   'chart-1': { modes: 'both', meaning: 'Chart series 1' },

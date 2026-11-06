@@ -39,6 +39,14 @@ describe('theme files', () => {
       },
     )
 
+    it('keeps the diagram marker orange the same in both modes (it matches the artwork)', () => {
+      // The numbered markers drawn into a diagram image are one fixed orange; the legend's circles
+      // must match them in dark mode too, where the accent turns lighter (#658)
+      expect(modes.light['diagram-marker']).toBe('#e8923a')
+      expect(modes.darkOwn['diagram-marker']).toBeUndefined()
+      expect(modes.dark['diagram-marker']).toBe(modes.light['diagram-marker'])
+    })
+
     describe.each(['light', 'dark'] as const)('%s mode contrast', (mode) => {
       it.each(CONTRAST_PAIRS)('%s on %s passes WCAG AA', (text, background) => {
         const ratio = contrastRatio(modes[mode][text], modes[mode][background])
