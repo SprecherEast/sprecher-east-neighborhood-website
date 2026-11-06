@@ -23,8 +23,10 @@ export const linkVariants = cva(
         // Hover and current use primary-strong: plain primary is 4.33:1 on the secondary fill
         nav: 'inline-flex items-center gap-2 rounded-md font-medium text-foreground hover:bg-secondary hover:text-primary-strong aria-[current=page]:text-primary-strong',
         // Footer and other quiet lists
-        muted:
+        muted: cn(
+          TOUCH_MIN_HEIGHT,
           'inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary-strong aria-[current=page]:text-primary-strong',
+        ),
         // A photo credit or caption: small, quiet, still underlined so it reads as a link (#405)
         caption: 'text-muted-foreground underline underline-offset-2 hover:text-primary-strong',
         // One step of a breadcrumb trail (`Breadcrumbs`): a quiet pill, 44 px tall on a phone and 36 px from `lg`

@@ -1,4 +1,3 @@
-import NextLink from 'next/link'
 import React from 'react'
 import { MapPin, Mail } from 'lucide-react'
 
@@ -9,7 +8,7 @@ import { Text } from '@/platform/ui/Text'
 
 import { toForumUrl } from '../domain/forum'
 import { getFooter } from '../data/globals'
-import { Logo } from './Logo'
+import { LogoLink } from './Logo'
 
 export async function SiteFooter() {
   const footerData = await getFooter()
@@ -25,9 +24,7 @@ export async function SiteFooter() {
         <div className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-12">
           {/* Brand column */}
           <div className="space-y-4">
-            <NextLink href="/" className="inline-block">
-              <Logo className="text-2xl" />
-            </NextLink>
+            <LogoLink logoClassName="text-2xl" />
             <Text variant="small" className="max-w-xs">
               Connecting neighbors on Madison&apos;s Far East Side.
             </Text>
@@ -35,10 +32,10 @@ export async function SiteFooter() {
 
           {/* Quick links column */}
           <div>
-            <Text variant="label" as="h3" className="mb-5">
+            <Text variant="label" as="h2" className="mb-5">
               Quick Links
             </Text>
-            <nav aria-label="Footer" className="flex flex-col gap-3">
+            <nav aria-label="Footer" className="flex flex-col gap-1">
               {navItems.map(({ link }, i) => {
                 const resolved = resolveLink(link)
                 if (!resolved) return null
@@ -64,7 +61,7 @@ export async function SiteFooter() {
 
           {/* Contact column */}
           <div>
-            <Text variant="label" as="h3" className="mb-5">
+            <Text variant="label" as="h2" className="mb-5">
               Get in Touch
             </Text>
             <MetaList

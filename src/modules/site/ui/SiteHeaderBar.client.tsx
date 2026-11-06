@@ -1,12 +1,11 @@
 'use client'
-import NextLink from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { type ReactNode, useCallback, useEffect, useState } from 'react'
 
 import { Button } from '@/platform/ui'
 import { Dialog } from '@/platform/ui/Dialog.client'
 import { Menu } from 'lucide-react'
-import { Logo } from './Logo'
+import { LogoLink } from './Logo'
 import type { HeaderNavLink } from '../domain/nav'
 import { HeaderNav } from './HeaderNav.client'
 
@@ -65,9 +64,7 @@ export const SiteHeaderBar: React.FC<SiteHeaderBarProps> = ({
       }`}
     >
       <div className="container flex items-center justify-between py-4 compact:px-4!">
-        <NextLink href="/" className="shrink-0">
-          <Logo loading="eager" priority="high" />
-        </NextLink>
+        <LogoLink />
 
         {/* Desktop nav */}
         {/* Desktop nav starts at lg (960px): below it the items don't fit and the page scrolls sideways.
@@ -95,11 +92,7 @@ export const SiteHeaderBar: React.FC<SiteHeaderBarProps> = ({
           title="Menu"
           hideTitle
           closeLabel="Close menu"
-          start={
-            <NextLink href="/" className="shrink-0" onClick={closeMobileMenu}>
-              <Logo />
-            </NextLink>
-          }
+          start={<LogoLink onClick={closeMobileMenu} />}
           className="lg:hidden"
           trigger={
             <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu">

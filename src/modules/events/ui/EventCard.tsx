@@ -56,7 +56,7 @@ export const EventCard: React.FC<{
 
   if (compact) {
     return (
-      <Card as="article" padding="sm" interactive className="flex items-center gap-4">
+      <Card as="article" padding="sm" interactive className="flex items-start gap-4">
         <DateBadge date={date} className="bg-surface text-center" />
         <div className="min-w-0">
           <DateTime value={date} className="text-xs text-muted-foreground" />

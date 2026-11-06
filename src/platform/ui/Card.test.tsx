@@ -133,3 +133,11 @@ describe('CardGrid', () => {
     expect(grid.className).not.toMatch(/(^|\s)(sm|md|lg|xl):grid-cols/)
   })
 })
+
+describe('CardTitle, wrapping (#741)', () => {
+  it('balances its lines, so a title that wraps never leaves one word alone', () => {
+    render(<CardTitle>Neighborhood cleanup and potluck</CardTitle>)
+
+    expect(screen.getByRole('heading').className).toContain('text-balance')
+  })
+})

@@ -143,3 +143,13 @@ describe('SidebarEvents, with an official meeting (#122)', () => {
     await expectAccessible(container)
   })
 })
+
+describe('EventCard, compact, in a row of cards (#741)', () => {
+  it('starts the date badge and the title block on one line, however many lines the title takes', () => {
+    const { container } = render(<EventCard event={event} compact />)
+    const card = container.querySelector('article') as HTMLElement
+
+    expect(card.className).toContain('items-start')
+    expect(card.className).not.toContain('items-center')
+  })
+})
