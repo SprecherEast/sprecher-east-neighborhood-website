@@ -92,6 +92,20 @@ When fixing transitive vulnerabilities:
 - Always validate before reloading: `caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy`
 - Live domains (`sprechereast.com`, `www.sprechereast.com`) must NEVER be removed from the Caddyfile
 
+## Agents and the rules that bind them
+
+- **Agents never change their own guardrails.** `AGENTS.md`, the tool adapters, `.agents/`,
+  `.github/`, `docs/guidelines/`, `docs/roles/` and `docs/process/` set the rules. A change to any of
+  them is a pull request the owner decides, and the independent review lists it as a policy change
+  ([`AGENTS.md`](../../AGENTS.md), step 3). `.github/CODEOWNERS` maps these paths to the owner.
+- **Code-owner review is not required yet** (#694). The `main` ruleset needs a pull request and the
+  checks but no approvals, and agents open pull requests through the owner's own account; GitHub
+  doesn't let an author approve their own pull request, so requiring a code owner's approval would
+  block every pull request that touches a protected path. It becomes possible when agents have
+  their own identity (#106). Until then the rule rests on this file, `AGENTS.md` and the review.
+- An agent that coordinates other agents (the chief of staff) may not edit code, push or merge;
+  workers still merge their own reviewed pull requests (#695).
+
 ## GitHub Security Features (Active)
 
 - Secret scanning: detects leaked credentials in commits

@@ -54,6 +54,16 @@ Read the other guidelines (frontend patterns, content marketing, Asana) when a t
   the `Agent(name, …)` limit on `tools` and `initialPrompt` apply only to an agent run as the main
   session (`claude --agent`) ([subagents](https://code.claude.com/docs/en/sub-agents)). A reviewer
   is a new, non-forked subagent, so it starts with no memory of the change.
+- **Unattended runs** (#694): the owner's computer runs Windows 11, where the built-in sandbox
+  runs commands unsandboxed; it needs WSL2 ([sandboxing](https://code.claude.com/docs/en/sandboxing)).
+  So a headless run uses `--permission-mode dontAsk` with an exact `--allowedTools` list (the
+  documented pattern for CI), never
+  `--dangerously-skip-permissions`, which is for containers and VMs only
+  ([permission modes](https://code.claude.com/docs/en/permission-modes)). A WSL2 sandbox is an
+  option the owner decides in #697. Keep `ANTHROPIC_API_KEY` out of the environment: in `-p` runs
+  the key is always used when present, which switches usage from the subscription to API billing
+  ([authentication](https://code.claude.com/docs/en/authentication)). It was not set on the
+  owner's computer on 2026-11-05 (user, machine and session scope).
 - **Waiting for checks:** poll `gh pr checks <number>` in the background (`run_in_background`),
   about once a minute and for at most 15 minutes. Don't push while waiting. If the checks still
   haven't finished after 15 minutes, tell the user.

@@ -1,0 +1,21 @@
+# Who must look at changes to the files that set the rules for agents and people.
+# The owner asked for these paths to be protected (summary of 2026-11-05, recorded on #685).
+#
+# This file requests the owner's review of a pull request that touches a protected path. It does
+# not block a merge: the `main` ruleset does not require code-owner review, because agents open
+# pull requests through the owner's own GitHub account and GitHub does not let an author approve
+# their own pull request. Enforcement waits for agents to have their own identity (#106).
+# Until then the rule that agents never change their own guardrails rests on AGENTS.md, the
+# independent review, which lists every policy change.
+#
+# Changing this file is itself a policy change.
+
+/.github/CODEOWNERS @boulaajaj
+/AGENTS.md @boulaajaj
+/CLAUDE.md @boulaajaj
+/.agents/ @boulaajaj
+/.claude/ @boulaajaj
+/.github/ @boulaajaj
+/docs/guidelines/ @boulaajaj
+/docs/roles/ @boulaajaj
+/docs/process/ @boulaajaj
