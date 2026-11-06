@@ -105,15 +105,28 @@ The goal is **visual balance**, not visual symmetry. A left-aligned text block w
 
 ## Symmetry and Alignment
 
-The owner's rule (Amine, 2026-11-04, quoted on #679; extended in a voice session with Claude the same day, #678): symmetry, being on the same line, and a layout that flows are required, and every agent follows them without being told. This is about repeated items; the section above is about centred text.
+Baseline every agent follows without being told. Summary of the owner's direction (2026-11-04, recorded on #679): symmetry, same-line layouts, and flow. Summary of his decision (2026-11-05, voice call, recorded on #679): replace the six extras beyond that direction with this eighteen-item baseline. About that baseline; the section above is about centred text.
 
-- **Alignment comes from the layout, never from the content.** Anything that repeats (a row of cards, a grid, a ring of items) keeps the same part of every item in a rendered row on one line (titles, values, badges, buttons, bottom edges), whatever the items hold. A stack of one item per row has no row to line up, so its items just share the same width and structure. Never fix a misalignment by trimming or padding one item's text: any valid content must align.
-- **Build it with the layout:** shared rows by CSS subgrid (`SUBGRID_*` in `src/platform/ui/layoutSizes.ts`), items as tall as each other, and columns chosen by the block's own width (a container query), not the screen's.
-- **Stack instead of wrapping.** When the space is too short for the items to sit side by side, put them one per row, before letting one item wrap alone. Never two across and a lonely one. Write concise copy to each field's limit as well, but the layout never depends on it.
-- **Text has a sweet spot, set per field.** Decide the least and the most each field should hold when you add it (a value can be one figure; a label, a few words; an explanation, one sentence) and record it as the field's limits (the editor's are in `editorialLimits.ts`). No field is a paragraph, and no minimum word count applies across fields.
-- **Prove it by measuring, not by class names.** A Playwright test measures the same part of every item in a row, with the shortest content, the longest and a missing part, at the six test widths, and fails when they are not on one line (`e2e/alignment.spec.ts` is the example). A unit test of class names does not count.
-- **Look at it.** After any visual change, open the page at a phone width and at a desktop width and look the way a neighbor would: do things line up, is it balanced, does it flow? Passing checks are not a substitute.
-- **On small screens** the order is the page menu at the top, then the page content, then the related content at the bottom.
+1. Align related elements to shared edges and baselines so nothing looks accidentally out of line.
+2. Center elements accurately within their intended container, not merely within the screen.
+3. Use consistent spacing, keeping related items closer together than unrelated groups.
+4. Keep margins and padding equal wherever the layout calls for equal insets.
+5. Preserve symmetry where intended and make asymmetry look deliberate and balanced.
+6. Repeat the same alignment, spacing and structure across similar items.
+7. Keep text, images, controls and sections proportionate to one another.
+8. Make hierarchy clear so headings, primary actions and supporting details are easy to tell apart.
+9. Provide readable contrast for text, controls and meaningful visual states.
+10. Give equivalent components consistent type, size, color, borders and interaction states.
+11. Prevent text overlapping, clipping or overflowing; make wrapping and truncation intentional.
+12. Preserve image proportions, crop thoughtfully and never obscure the important subject.
+13. Use enough white space to separate sections without creating unexplained gaps or isolated elements.
+14. Keep typography readable and consistent, with comfortable line lengths and line spacing.
+15. Inspect the finished page and fix awkward wrapping, stray items, uneven edges, collisions and accidental imbalance before calling it done.
+16. Support keyboard navigation, visible focus states, and accessible labels / screen-reader text.
+17. Make forms usable with clear labels and helpful error messages placed near the field.
+18. Keep motion subtle and purposeful, not decorative, and respect reduced-motion preferences.
+
+**On small screens** the order is the page menu at the top, then the page content, then the related content at the bottom.
 
 ## Card Design
 
