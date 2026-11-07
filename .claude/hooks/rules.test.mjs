@@ -8,8 +8,6 @@ import { markReminded, remindedFile, remindedNotes } from './io.mjs'
 import {
   BEHAVIOR_REMINDER_KEY,
   behaviorReminder,
-  IMAGE_REVIEW_MARKER,
-  imagePublishCheck,
   inspect,
   knowledgeReminder,
   parseCommands,
@@ -217,36 +215,5 @@ describe('reminders kept per session', () => {
     symlinkSync(victim, `${remindedFile('s1', dir)}.${process.pid}.tmp`)
     markReminded('s1', 'a.md', dir)
     expect(readFileSync(victim, 'utf8')).toBe('keep me')
-  })
-})
-
-describe('imagePublishCheck', () => {
-  const upload =
-    "const fd = new FormData(); await fetch('/api/media', { method: 'POST', body: fd })"
-  const assign =
-    "await fetch('/api/events/16', { method: 'PATCH', body: JSON.stringify({ heroImage: 32 }) })"
-
-  it('refuses a media upload without the review line', () => {
-    expect(imagePublishCheck(upload)).toMatch(/Image review first/)
-  })
-
-  it('refuses setting a hero image or meta image without it', () => {
-    expect(imagePublishCheck(assign)).toMatch(/Image review first/)
-    const meta =
-      "fetch('/api/posts/6', { method: 'PATCH', body: JSON.stringify({ meta: { image: 30 } }) })"
-    expect(imagePublishCheck(meta)).toMatch(/Image review first/)
-  })
-
-  it('lets a script that carries the review line run', () => {
-    expect(imagePublishCheck(`// ${IMAGE_REVIEW_MARKER}\n${upload}`)).toBeNull()
-    expect(imagePublishCheck(`/* ${IMAGE_REVIEW_MARKER} */ ${assign}`)).toBeNull()
-  })
-
-  it('ignores scripts that publish no image', () => {
-    expect(imagePublishCheck("fetch('/api/events?limit=5')")).toBeNull()
-    expect(
-      imagePublishCheck("fetch('/api/events/16', { method: 'PATCH', body: '{\"title\":\"x\"}' })"),
-    ).toBeNull()
-    expect(imagePublishCheck(undefined)).toBeNull()
   })
 })

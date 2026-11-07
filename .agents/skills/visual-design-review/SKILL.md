@@ -12,7 +12,7 @@ config-only, or docs-only changes. Fix every Critical and High finding before op
 publishing the image.
 
 **Images made for the site:** review the finished file against
-[Images made for the site](../../../docs/guidelines/ui-ux-design.md#images-made-for-the-site):
+[Images made for the site](../../../docs/guidelines/images.md):
 open the component that shows it to find what overlays it, preview the image at the card size on a
 phone, fix what the checks find, publish, then screenshot the live page at phone and desktop width.
 Claude Code stops a browser script that uploads media or sets an image until it carries the line

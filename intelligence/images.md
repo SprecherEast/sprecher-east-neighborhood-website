@@ -9,7 +9,7 @@ so in the review notes. A missing image is better than a wrong one.
 - **A real photo.** Never an AI-generated or drawn image, even a realistic one: readers take a
   photo next to local news as a picture of the real thing. The exception is an illustration the
   owner asked for (event and explainer heroes in the site's drawn style): it is reviewed under
-  [Images made for the site](../docs/guidelines/ui-ux-design.md#images-made-for-the-site) first.
+  [Images made for the site](../docs/guidelines/images.md) first.
 - **Free to use, with a license we can name.** CC0, public domain, CC BY or CC BY-SA, for example
   from Wikimedia Commons, or our own photo, or one used with written permission. Check the license
   on the file's own page, not on a page that reuses it.

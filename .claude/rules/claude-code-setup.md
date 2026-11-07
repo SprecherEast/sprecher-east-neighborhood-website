@@ -51,10 +51,11 @@ Claude Code.
   note a lower PR in a stack changed. Before each Bash command, the
   commands `AGENTS.md` forbids (`--admin`, `bypass_rules: true`, a push to `main`) are refused, and
   so is a commit whose `src/payload-types.ts` change is only `next dev` reformatting it. Before a
-  browser script runs (`javascript_tool` of any browser MCP), one that uploads to `/api/media` or
-  sets an image on a record is refused unless it carries `image-review: passed`, which says the
-  [image review](/docs/guidelines/ui-ux-design.md#images-made-for-the-site) was done (#812); the
-  hook can't judge the image, the review does. CI stays
+  browser script runs (`javascript_tool` of any browser MCP), one that writes to `/api/media`, or writes an
+  image field (`heroImage`, `image`) through any `/api/` route or GraphQL, is refused unless it carries `image-review: passed`, which says the
+  [image review](/docs/guidelines/images.md) was done (#812); the
+  hook can't judge the image, the review does, and it doesn't see the `file_upload` browser tools or
+  the admin UI. CI stays
   the real gate. Hooks run in local and cloud sessions alike.
 - **Security plugin:** `.claude/settings.json` turns on Anthropic's `security-guidance` plugin,
   which reviews Claude's changes for security mistakes as it works. Local sessions install it once
