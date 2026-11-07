@@ -18,6 +18,7 @@ generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.m
 - [Site pages](../../src/modules/site/README.md): page hero and page-builder blocks, what a page save refreshes.
 - [Rich text](../../src/platform/richtext/README.md): article text, editorial blocks, limits, Markdown tags.
 - [Shared Payload code](../../src/platform/payload/README.md): roles, drafts, review queue, jobs, helpers.
+- [News](../../src/modules/news/README.md): posts, bylines and sources, search, the shared category tree, "top issues".
 
 ## Reference (generated)
 

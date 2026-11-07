@@ -69,5 +69,9 @@
   {
     "note": "src/platform/richtext/README.md",
     "paths": ["src/platform/richtext/**"]
+  },
+  {
+    "note": "src/modules/news/README.md",
+    "paths": ["src/modules/news/**"]
   }
 ]
