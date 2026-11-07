@@ -128,15 +128,31 @@ tests, comments, formatting, dependency patches with no behavior change.
 
 - **In the PR:** the template gets a **Knowledge** section with one line, `Behavior change: yes`
   and what changed, or `Behavior change: none` and why.
-- **Blocking check** (#716, in `PR Policy`, already required): a PR that changes a file under a
-  mapped path (tests and the note excepted) must change that note, or declare
-  `Behavior change: none` with a reason of at least 20 characters. The reviewer verifies the
-  declaration against the diff; a false one is a Blocker.
+- **Blocking check** (#716, widened by #770, in `PR Policy`, already required): it covers the
+  whole repository, and a mapped path no longer decides whether a PR is checked (owner,
+  2026-11-06, Claude Code voice session relayed in text, #770). A PR that changes anything that can
+  alter behavior must change a note, a reference or a doc, or declare `Behavior change: none` with
+  a reason of at least 20 characters. Where `map.json` names a note for a changed path, that note
+  itself must change (or the declaration is made). The reviewer verifies the declaration against
+  the diff; a false one is a Blocker.
+- **What the check skips, and what it asks for.** One classifier decides, in
+  `scripts/behavior-change.mjs` (shared with the hook), file by file, from the path and GitHub's
+  diff. Skipped: tests, specs, fixtures and end-to-end files; docs (Markdown, `docs/`), which
+  also satisfy the check when they change; lockfiles; the generated `src/payload-types.ts`;
+  `package.json` when only dependency patch versions move; a diff of only comments or only
+  formatting (whitespace, line breaks, quotes, semicolons, trailing commas). Everything else is
+  behavior-bearing: source, scripts, workflows, `ops/`, config, migrations, assets, and any move
+  or deletion of them. Unsure means required: a missing or unreadable diff, a trailing comment, a
+  reordering, or a `*` line outside a visible block comment counts as behavior, because missing a
+  real change is the worse failure. A pure refactor can't be told from a change, so it declares
+  `none`. The rules are in that one file and tested in its test.
 - **Generated reference:** `Knowledge sync` regenerates it and fails on a difference (#714, #718),
   so a content type, a route or a component can't change without its page.
 - **Before and during the work** (#717): `write-code` reads the note first and updates it after; the
   self-review and `pr-review` list every behavior change and find the sentence that now describes
-  it. A Claude Code hook reminds, CI blocks.
+  it. A Claude Code hook reminds (once per session, for any file the classifier calls
+  behavior-bearing while no doc has changed on the branch, and once per module for a mapped note),
+  CI blocks.
 
 No tool can decide with certainty whether a diff changes behavior. The check makes silence
 impossible; the judgment stays with the author and the reviewer.

@@ -52,8 +52,10 @@ For each, what you checked and what you fixed; "not applicable, because ..." onl
 <!-- Decision 0019 section 6. Behavior change = anything a visitor, an editor or an agent would see
 or get differently (a screen, a message, fields, access, a route, an email, a job, a limit).
 Not one: a refactor that keeps behavior, tests, comments, formatting.
-If this PR changes code under a path in docs/knowledge/map.json, update that note in the same PR,
-or write "Behavior change: none" and why (20+ characters).
+If this PR changes anything that can alter behavior, anywhere (tests, comments, formatting, docs
+and lockfile patches don't count), change the note, guideline or reference that describes it in
+the same PR (and the note docs/knowledge/map.json names for that code), or write
+"Behavior change: none" and why (20+ characters).
 The reviewer checks it against the diff. -->
 
 Behavior change:

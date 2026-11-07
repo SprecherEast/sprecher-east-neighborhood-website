@@ -50,7 +50,7 @@ jobs:
             const { pathToFileURL } = require('url');
             const scripts = (name) => import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/${name}`).href);
             const { linkedIssues, sectionsOf, withoutComments } = await scripts('pr-body.mjs');
-            const { changedPaths, knowledgeProblems } = await scripts('knowledge-sync.mjs');
+            const { changedFiles, knowledgeProblems } = await scripts('knowledge-sync.mjs');
             const body = withoutComments(pr.body);
 
             // 1. Linked issue(s): "Closes #N" (closes it on merge) or "Part of #N" (multi-PR issue)
@@ -106,7 +106,7 @@ jobs:
             problems.push(
               ...knowledgeProblems({
                 mapJson: fs.readFileSync('docs/knowledge/map.json', 'utf8'),
-                changedFiles: changedPaths(files),
+                files: changedFiles(files),
                 noteExists: (note) => fs.existsSync(note),
                 body,
               }),

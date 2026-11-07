@@ -229,6 +229,7 @@ describe('the parsers PR Policy imports', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-context-bare-'))
     const copies = [
       'scripts/agent-context-maps.mjs',
+      'scripts/behavior-change.mjs',
       '.github/scripts/knowledge-sync.mjs',
       '.github/scripts/pr-body.mjs',
     ]

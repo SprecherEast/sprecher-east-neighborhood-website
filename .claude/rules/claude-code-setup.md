@@ -45,8 +45,10 @@ Claude Code.
   Edit or Write, the file is formatted with Prettier and checked with ESLint in the checkout or
   worktree that holds it, and an error comes back to fix at once. If the file is one a knowledge
   note describes (`docs/knowledge/map.json`) and that note has no change compared with `main`, a
-  reminder follows, once per module per session; it never blocks (#717; the rule is in `AGENTS.md`,
-  the skills and CI). It compares with `main`, so it is quiet in a shallow clone and does not see a
+  reminder follows, once per module per session. For any other file the classifier calls
+  behavior-bearing (`scripts/behavior-change.mjs`, by path), while no doc has changed compared
+  with `main`, one repository-wide reminder follows, once per session (#770). Neither blocks
+  (#717; the rule is in `AGENTS.md`, the skills and CI). It compares with `main`, so it is quiet in a shallow clone and does not see a
   note a lower PR in a stack changed. Before each Bash command, the
   commands `AGENTS.md` forbids (`--admin`, `bypass_rules: true`, a push to `main`) are refused, and
   so is a commit whose `src/payload-types.ts` change is only `next dev` reformatting it. CI stays
