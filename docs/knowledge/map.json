@@ -65,5 +65,9 @@
       "src/platform/turnstile/**",
       "src/platform/service/**"
     ]
+  },
+  {
+    "note": "src/modules/news/README.md",
+    "paths": ["src/modules/news/**"]
   }
 ]

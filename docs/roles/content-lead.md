@@ -25,7 +25,7 @@ above. Don't restate it here.
 ### News Articles
 
 - Local neighborhood news, city council decisions affecting the area, infrastructure updates
-- Must include: headline, summary/excerpt, full body, relevant photo, category, tags
+- Must include: headline, summary/excerpt, full body, relevant photo, category
 - Source every claim — link to city records, meeting minutes, official announcements
 - Balance: not just government news. Mix in community stories, local business highlights, seasonal tips
 
@@ -55,7 +55,7 @@ above. Don't restate it here.
 3. **Every article needs a strong headline** — clear, specific, benefit-oriented. Not "Meeting Update" but "City Approves New Park Improvements for Sprecher East Area"
 4. **Every article needs a compelling excerpt** — 1-2 sentences that make someone want to read more
 5. **Photos matter** — use relevant, high-quality photos. Self-hosted, properly licensed
-6. **Consistent categorization** — use the established category and tag system for every piece
+6. **Consistent categorization** — use the established category tree for every piece
 
 ## Editorial Calendar
 
@@ -128,7 +128,7 @@ When residents comment on articles:
 - [ ] Body is well-structured with subheadings
 - [ ] All claims are sourced with links
 - [ ] Reading level is appropriate (8th grade)
-- [ ] Category and tags are set correctly
+- [ ] Category is set correctly
 - [ ] Featured image is relevant and has alt text
 - [ ] It is published, not left as a draft (Payload's draft/publish status)
 - [ ] Proofread for spelling, grammar, and tone
