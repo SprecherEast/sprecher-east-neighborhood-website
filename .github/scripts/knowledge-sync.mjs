@@ -6,13 +6,12 @@
  * The glob matching and the map parsing are the ones `scripts/agent-context-maps.mjs` already has (it
  * reads the same map to load the notes), so they are imported, not written a second time.
  */
-import { globToRegExp, parseKnowledgeMap } from '../../scripts/agent-context-maps.mjs'
+import { describes, parseKnowledgeMap } from '../../scripts/agent-context-maps.mjs'
 import { sectionsOf } from './pr-body.mjs'
 
 /** The shortest reason a "none" declaration needs. */
 export const MIN_REASON_LENGTH = 20
 
-const TEST_FILE = /\.test\.[^/]*$/
 // Matched on a line with `*`, `_` and runs of spaces already reduced (see `plain`), so the
 // patterns stay linear: nothing here can backtrack on a long line of spaces or asterisks.
 const DECLARATION = /^(?:- )?behavior change ?:? ?(yes|none)\b ?[-–—:.,]? ?(.*)$/i
@@ -65,12 +64,10 @@ export function declaredBehavior(body) {
 export function knowledgeProblems({ mapJson, changedFiles, noteExists, body }) {
   const declared = declaredBehavior(body)
   const problems = []
-  for (const { source: note, paths } of parseKnowledgeMap(mapJson)) {
+  for (const entry of parseKnowledgeMap(mapJson)) {
+    const note = entry.source
     if (!noteExists(note) || changedFiles.includes(note)) continue
-    const matchers = paths.map(globToRegExp)
-    const touched = changedFiles.filter(
-      (file) => !TEST_FILE.test(file) && matchers.some((matcher) => matcher.test(file)),
-    )
+    const touched = changedFiles.filter((file) => describes(entry, file))
     if (touched.length === 0) continue
     if (declared?.change === 'none' && declared.reason.length >= MIN_REASON_LENGTH) continue
 

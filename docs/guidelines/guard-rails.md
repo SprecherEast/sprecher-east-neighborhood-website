@@ -37,7 +37,7 @@ architecture, test-driven development and similar bounds.
    checked and what was fixed (write "not applicable, because …" where it truly is not). `PR Policy` fails an empty section or
    an item with under 10 characters, but it can't judge whether the text is true: the reviewer does
    (rule 7).
-7. **Violations are Blockers.** A reviewer treats any breach of rules 1–6 as a **Blocker**: never
+7. **Violations are Blockers.** A reviewer treats any breach of rules 1–6 and 9 as a **Blocker**: never
    "Minor", never "accepted", never a follow-up issue. The author fixes it in the PR. The review
    checks the Self-review section against the diff, and a section that claims what the diff
    doesn't show is itself a Blocker.
@@ -45,6 +45,9 @@ architecture, test-driven development and similar bounds.
    long session never permit skipping a rule or a step: they mean don't wait for the owner, not
    don't follow the process. If a rule seems to block the task, stop, say which rule and why, and
    ask. A breach found after merge is fixed first, in its own PR, before other work.
+9. **Documentation follows behavior.** A change in what a visitor, an editor or an agent gets
+   changes the note that describes it (`docs/knowledge/map.json`), or the generated reference, in
+   the same PR (owner, 2026-11-06, #712; [0019](../architecture/decisions/0019-knowledge-layer.md) §6).
 
 ## What enforces them
 
@@ -54,6 +57,7 @@ architecture, test-driven development and similar bounds.
 | Raw tags (2)          | ESLint ban on raw `a`, `button`, `input`, `select`, `textarea`, `details`, `summary` and `img` outside the kit (#465, #609, #610)                                              |
 | Architecture (4)      | ESLint boundaries (`eslint.boundaries.config.mjs`); knip reports unused code (not a required check yet)                                                                        |
 | Duplication (1)       | `Duplicate code (jscpd)` fails a repeated block of 12+ lines (#611, #622; not a required check yet), then review for what a tool can't see: the same logic written differently |
+| Documentation (9)     | `PR Policy` and `Knowledge sync` in CI; the reviewer lists every behavior change and finds its sentence                                                                        |
 | Self-review (6)       | `PR Policy` requires the Self-review section, then the reviewer checks it                                                                                                      |
 | Tests (5), violations | Required CI (tests, axe), then the reviewer. These two rest on the reviewer's diligence                                                                                        |
 

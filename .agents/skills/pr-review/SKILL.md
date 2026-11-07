@@ -12,7 +12,7 @@ say so.
 ## 1. Gather context
 
 ```bash
-gh pr view <number> --json title,body,author,labels,files,closingIssuesReferences
+gh pr view <number> --json title,body,author,labels,files,closingIssuesReferences   # body is raw Markdown: read it as written
 gh pr diff <number>
 gh issue view <linked-issue-number>
 gh pr checks <number>
@@ -24,7 +24,7 @@ gh api "repos/{owner}/{repo}/stacks?pull_request=<number>" -H 'X-GitHub-Api-Vers
 - [ ] The PR links an issue with a closing keyword. The issue describes the problem and has a
       type, an area, and a priority label.
 - [ ] Every PR template section is filled in: What changed, Why, How, How to test,
-      Risk & rollback.
+      Risk & rollback, Knowledge.
 - [ ] The diff matches the issue. No unrelated changes slipped in.
 - [ ] The test steps are concrete enough for someone else to follow.
 - [ ] **Dependent PRs are stacked.** If this PR needs another open PR, both are on a native
@@ -32,7 +32,8 @@ gh api "repos/{owner}/{repo}/stacks?pull_request=<number>" -H 'X-GitHub-Api-Vers
       below, the description starts with the stack line, and nothing outside the stack is
       needed. A merge order written only in prose is a **Blocker**.
 - [ ] **Policy changes are flagged.** If the diff touches `AGENTS.md`, `.agents/`,
-      `.github/` (workflows, templates, label policy), `docs/guidelines/`, `docs/roles/`, or the
+      `.github/` (workflows, templates, label policy), `docs/guidelines/`, `docs/roles/`,
+      `docs/knowledge/map.json` (it decides which changes the sync check enforces), or the
       Claude Code adapter (`CLAUDE.md`, `.claude/`), or changes how the team works in
       `docs/process/` (sprint length, Ready or Done, levels, the board's columns and fields, but
       not wording, link or fact fixes), list each such change under
@@ -46,7 +47,7 @@ gh api "repos/{owner}/{repo}/stacks?pull_request=<number>" -H 'X-GitHub-Api-Vers
 ## 2b. Check the guard rails (blockers)
 
 Read [`docs/guidelines/guard-rails.md`](../../../docs/guidelines/guard-rails.md). Check the diff
-against each of rules 1–6, and the PR's **Self-review** section against the diff:
+against each of rules 1–6 (rule 9 is step 2c), and the PR's **Self-review** section against the diff:
 
 - [ ] **Reuse:** no copied logic, markup, class strings or constants; a number two files must agree
       on has one definition. Search the repo for what the diff adds.
@@ -59,6 +60,27 @@ against each of rules 1–6, and the PR's **Self-review** section against the di
 
 Any breach is a **Blocker**. Never grade one as Minor, never accept it, never leave it to a
 follow-up issue. A Self-review that claims what the diff doesn't show is a Blocker too.
+
+## 2c. Check for behavior changes (every review, blockers)
+
+Run this on every PR, also when the description says nothing changed. Definition of a behavior
+change: [decision 0019](../../../docs/architecture/decisions/0019-knowledge-layer.md) §6.
+
+1. List every behavior change in the diff: what a visitor, an editor or an agent would now see or
+   get differently. Read the code, not the PR title. No change: say so in the review.
+2. For each, find the sentence that now describes it: in the note the
+   [map](../../../docs/knowledge/map.json) names for the changed path, or in the generated page in
+   `docs/reference/`. For a path the map doesn't list, in the doc that describes it (a guideline,
+   the setup notes, a skill). Quote it in the review. A change with no matching sentence is a
+   **Blocker**, except in a module with no note yet: say so, no Blocker.
+3. Read the Knowledge section in the raw description (`gh pr view --json body`), not the rendered
+   page. `Behavior change: none` needs a true reason as written. A reason hidden from readers (a
+   Markdown link-reference comment such as `[//]: # (…)`, an HTML comment), a stock phrase, or a
+   claim the diff contradicts is a **Blocker**. `yes` with no change to the note or doc that describes it is a **Blocker**.
+4. A change to `docs/knowledge/map.json` is a behavior-change surface and a policy change: list it
+   under **Policy changes**. Check every entry it adds points to a note that exists, and every
+   entry it drops or narrows has a stated reason. Otherwise **Blocker**.
+5. Run `npm run docs:check` for a change to a content type (routes and components once #718 lands).
 
 ## 3. Check the change
 
