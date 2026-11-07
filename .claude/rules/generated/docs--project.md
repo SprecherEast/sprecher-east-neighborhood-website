@@ -122,27 +122,28 @@ src/
 
 ## Key Files
 
-| File                                | Purpose                                                                                                             |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `src/payload.config.ts`             | Payload CMS config (SQLite, collections, plugins)                                                                   |
-| `src/app/(frontend)/globals.css`    | Tailwind setup and base styles; imports the theme and its Tailwind mapping                                          |
-| `src/themes/default/theme.css`      | The default theme: every token's value in light and dark mode                                                       |
-| `src/platform/theme/tokens.ts`      | The theme contract: token names, and the contrast pairs `themes.test.ts` checks                                     |
-| `src/modules/site/cms/pages.ts`     | Pages collection with layout builder blocks                                                                         |
-| `src/modules/news/cms/posts.ts`     | News posts collection                                                                                               |
-| `src/modules/events/cms/events.ts`  | Events collection (custom)                                                                                          |
-| `src/modules/accounts/cms/users.ts` | Users collection with Payload native auth                                                                           |
-| `src/modules/verification/cms/`     | Email confirmations collection and confirmation service                                                             |
-| `src/platform/payload/media.ts`     | Media uploads with size variants                                                                                    |
-| `src/modules/site/cms/`             | Block, hero and link-group field configs, globals (the link field itself is `src/platform/payload/link.ts`)         |
-| `src/modules/site/ui/`              | Blocks, heroes, header and footer components                                                                        |
-| `src/platform/payload/roles.ts`     | Role checks and access functions                                                                                    |
-| `src/platform/theme/`               | Theme contract and its test, Tailwind mapping, light and dark mode providers and init script                        |
-| `ecosystem.config.cjs`              | PM2 config for VPS (CommonJS: package is ESM)                                                                       |
-| `eslint.boundaries.config.mjs`      | Dependency rules as lint errors (#137)                                                                              |
-| `eslint.theme.config.mjs`           | Lint errors for raw colours in classes: components use theme tokens only (#146)                                     |
-| `eslint.ui-kit.config.mjs`          | Lint errors for raw `button`, `input`, `select` and `textarea` outside `src/platform/ui/` (#465)                    |
-| `intelligence/`                     | Intelligence agents: sources, prompts, schemas (#337), and the runner that runs them (`intelligence/runner/`, #364) |
+| File                                                | Purpose                                                                                                                                               |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/payload.config.ts`                             | Payload CMS config (SQLite, collections, plugins)                                                                                                     |
+| `src/app/(frontend)/globals.css`                    | Tailwind setup and base styles; imports the theme and its Tailwind mapping                                                                            |
+| `src/themes/default/theme.css`                      | The default theme: every token's value in light and dark mode                                                                                         |
+| `src/platform/theme/tokens.ts`                      | The theme contract: token names, and the contrast pairs `themes.test.ts` checks                                                                       |
+| `src/modules/site/cms/pages.ts`                     | Pages collection with layout builder blocks                                                                                                           |
+| `src/modules/news/cms/posts.ts`                     | News posts collection                                                                                                                                 |
+| `src/modules/events/cms/events.ts`                  | Events collection (custom)                                                                                                                            |
+| `src/modules/accounts/cms/users.ts`                 | Users collection with Payload native auth                                                                                                             |
+| `src/modules/verification/cms/`                     | Email confirmations collection and confirmation service                                                                                               |
+| `src/platform/payload/media.ts`                     | Media uploads with size variants                                                                                                                      |
+| `src/modules/site/cms/`                             | Block, hero and link-group field configs, globals (the link field itself is `src/platform/payload/link.ts`)                                           |
+| `src/modules/site/ui/`                              | Blocks, heroes, header and footer components                                                                                                          |
+| `src/app/icon.svg`, `favicon.ico`, `apple-icon.png` | The tab and home-screen icon: a placeholder house outline (#749); Next.js writes the `<link>` tags from these files, so the layout links none by hand |
+| `src/platform/payload/roles.ts`                     | Role checks and access functions                                                                                                                      |
+| `src/platform/theme/`                               | Theme contract and its test, Tailwind mapping, light and dark mode providers and init script                                                          |
+| `ecosystem.config.cjs`                              | PM2 config for VPS (CommonJS: package is ESM)                                                                                                         |
+| `eslint.boundaries.config.mjs`                      | Dependency rules as lint errors (#137)                                                                                                                |
+| `eslint.theme.config.mjs`                           | Lint errors for raw colours in classes: components use theme tokens only (#146)                                                                       |
+| `eslint.ui-kit.config.mjs`                          | Lint errors for raw `button`, `input`, `select` and `textarea` outside `src/platform/ui/` (#465)                                                      |
+| `intelligence/`                                     | Intelligence agents: sources, prompts, schemas (#337), and the runner that runs them (`intelligence/runner/`, #364)                                   |
 
 ## Design Tokens
 
