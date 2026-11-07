@@ -15,20 +15,22 @@ If GitHub Copilot's review agent is out of credit, blocked or down, the PR still
 independent review, and every time (the owner's rule, 2026-11-06, Claude in Chrome side panel,
 recorded on #779).
 
-**How to tell** (the owner asked for an explicit check, 2026-11-06, #779). Request Copilot's review
-when the PR leaves draft, then read the PR's reviews and comments
-(`gh api repos/{owner}/{repo}/pulls/<n>/reviews` and `.../issues/<n>/comments`). Copilot is out when
-either is true:
+**How to tell** (the owner asked for a reliable check, #779 and #800). Judge by what happens, not by
+what Copilot says. Request Copilot's review when the PR leaves draft, then wait. Copilot is available
+only if a Copilot review exists on the PR's **current head** by the end of the wait (read
+`gh api repos/{owner}/{repo}/pulls/<n>/reviews`; a wait of about ten minutes is enough). No review on
+the current head after the wait means Copilot is out, whatever any message says or doesn't say.
 
-- Copilot posted a message saying it could not review, or reviewed no files, such as "Copilot was unable to review this
-  pull request because the user who requested the review has reached their quota limit"
-  ([reported here](https://github.com/orgs/community/discussions/209724); GitHub's docs don't
-  describe a visible signal, so match on "unable", "not able", "quota" or "limit"). The same message
-  means it is out for the rest of the session, so skip the wait on later PRs and use this section.
-- No Copilot review appears 10 minutes after the request, since a failed run can leave nothing.
-
-A Copilot review with comments or an approval assessment is a real review: answer it as usual. If
-you can't tell, count Copilot as out. Record on the PR which signal you saw.
+- **Messages and usage are secondary evidence.** A comment saying Copilot couldn't review, or
+  GitHub's premium-request usage report, may explain why. Neither overrides the outcome: a "can't
+  review" message with no review is out, and silence with no review is out too. GitHub documents no
+  such message, so never depend on its wording. The usage report has no remaining-allowance field
+  and needs a token with the Plan user permission, which cloud sessions don't have.
+- **A review with comments or an approval assessment is a real review.** Answer it as usual. If
+  you can't tell whether one arrived, count Copilot as out.
+- **Once out, stop waiting.** Later PRs in the same session go straight to the fallback below, and
+  Copilot is requested again now and then, so a return is noticed rather than assumed away.
+- **Record on the PR** which outcome decided it.
 
 What to do then:
 
