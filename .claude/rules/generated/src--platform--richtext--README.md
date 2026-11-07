@@ -9,7 +9,7 @@ paths:
 
 How an article's text is drawn, the blocks an editor can put inside it (banner, code, media and
 the editorial blocks: timeline, steps, key facts, outcome fork, diagram key, chart, fact tabs),
-the limits those share, and how agents write two of them as Markdown tags. Posts and events use it;
+the limits those share, and how agents write two of them as Markdown tags. [News](/src/modules/news/README.md) posts and [events](/src/modules/events/README.md) use it;
 page-builder blocks are in the [site note](/src/modules/site/README.md). Props and where each
 renderer is used: [rich-text components](/docs/reference/components/rich-text.md); the
 rich-text fields of each collection: [content types](/docs/reference/content-types/README.md).
@@ -19,7 +19,7 @@ rich-text fields of each collection: [content types](/docs/reference/content-typ
 - Limits of key facts, the timeline and fact tabs are written once (`editorial/editorialLimits.ts`); the block's fields, the Markdown tag's checks and the tests read them. A chart's limits are `CHART_LIMITS` in `src/platform/lib/chart/spec.ts`.
 - Block slugs of key facts, fact tabs and outcome fork are written once (`editorial/blockTypes.ts`); their configs, the Markdown tags and the article-width rule match on them.
 - Stored block to plain props: each `editorial/<block>.ts` maps the stored fields to what the renderer draws and drops items without a heading, title or value (decision 0013). `editorial/chart.ts` maps both ways between the stored rows (numbers, a hatching checkbox) and `ChartSpec`.
-- `<Chart … />` and `<FactTabs … />` are written and read with one escaping (`editorial/editorialTag.ts`, `chartMarkdown.ts`, `factTabsMarkdown.ts`); the agents' suggestions use them.
+- `<Chart … />` and `<FactTabs … />` are written and read with one escaping (`editorial/editorialTag.ts`, `chartMarkdown.ts`, `factTabsMarkdown.ts`); the [agents](/src/modules/agents/README.md)' suggestions use them.
 - Heading text to anchor id (`headingAnchors.ts`): the renderer's heading ids and the "On this page" menu (`articleToc.tsx`) both read it, so they match.
 - A document's first heading becomes a hero title (`splitHeadingFromBody.ts`, used by `src/modules/site/ui/PageHero.tsx`).
 - A chart part's key comes from its label (`editorial/chartKeys.ts`), so one part links across two groups' legends.
@@ -39,7 +39,8 @@ rich-text fields of each collection: [content types](/docs/reference/content-typ
 - Renderers are passed in by the caller, so `RichText.tsx` imports no block and a block can hold rich text without an import cycle (#135). Post and event pages pass `richTextBlocks.tsx`.
 - Posts offer banner, code, media and all editorial blocks; events offer the same without code (`blockConfigs.ts`: `RICH_TEXT_BLOCKS`, `EVENT_RICH_TEXT_BLOCKS`). The code block is kept and available to posts; no repository content uses it.
 - The composition roots are `src/modules/news/cms/posts.ts` and `src/modules/events/cms/events.ts`, which pass the block lists to the editor.
-- Chart drawing is `src/platform/ui/chart/`; the "On this page" menu is `src/platform/ui/OnThisPage.client.tsx`.
+- Chart drawing is `src/platform/ui/chart/`; the "On this page" menu is `src/platform/ui/OnThisPage.client.tsx` (both in the [UI kit note](/src/platform/ui/README.md)).
+- Also used by [directory](/src/modules/directory/README.md) (FAQ answers and their `FAQPage` text) and by the [site note](/src/modules/site/README.md)'s hero and content blocks; rich-text colours come from [theme](/src/platform/theme/README.md) tokens.
 
 ## Rules and the tests that protect them
 

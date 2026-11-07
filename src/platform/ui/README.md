@@ -10,7 +10,7 @@ their props, and which values they share with the CSS. Props, variants and where
 - `layoutSizes.ts` and `scrollMargin.ts` hold Tailwind classes that read CSS variables from `src/app/(frontend)/globals.css` (`--reading-width`, `--header-clearance`, `--anchor-offset`, `--chart-small-width`), so each size is defined once (#616); `layoutSizes.test.ts` and `scrollMargin.test.ts` check the names.
 - `Button` and `Link` render through `AppLink`: `next/link` for routes, a plain `<a>` for in-page `#` links so keyboard focus moves (`AppLink.tsx`). `LinkButton` (`CMSLink.tsx`) turns a resolved CMS link into a `Button`: appearance `outline` becomes `secondary`, anything else `primary`.
 - `Media` picks `VideoMedia` for a `video` mime type, else `ImageMedia` (`Media.tsx`). `getMediaUrl` keeps upload paths relative so Next optimizes them as local images, and the image's `updatedAt` is appended as its cache key (`ImageMedia.client.tsx`, `src/platform/lib/getMediaUrl.ts`).
-- A chart's colours follow its parts' order, `chart-1` to `chart-6`; a seventh part throws (`chart/chartPalette.ts`), and the spec refuses it first (`src/platform/lib/chart/spec.ts`).
+- A chart's colours follow its parts' order, `chart-1` to `chart-6`, the [theme](../theme/README.md)'s chart tokens; a seventh part throws (`chart/chartPalette.ts`), and the spec refuses it first (`src/platform/lib/chart/spec.ts`).
 - A `Field` hands its one control its id, `aria-describedby` and `aria-invalid` through one context; a control outside a `Field` throws (`fieldContext.ts`, `Field.client.tsx`).
 
 ## Behaviors
@@ -28,6 +28,7 @@ their props, and which values they share with the CSS. Props, variants and where
 
 ## Shared pieces it uses
 
+- Related notes: [theme](../theme/README.md) (chart tokens; its `ThemeSelector` uses `Field`), [rich text](../richtext/README.md) (renders charts and blocks with the kit, and the "On this page" menu), [shared Payload code](../payload/README.md) (`AdminBar` reads `isStaffRole`).
 - Helpers from `src/platform/lib/` (`cn`, `getMediaUrl`, chart `spec`/`table`, `googleMapsEmbed`, `getURL`) and `src/platform/payload/roles.ts`; `@/cssVariables` and `@/imageQualities` for images.
 
 ## Rules and the tests that protect them
