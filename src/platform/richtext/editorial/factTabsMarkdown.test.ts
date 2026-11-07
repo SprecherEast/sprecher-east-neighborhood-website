@@ -32,6 +32,20 @@ describe('factTabsToJsx and importFactTabsTag', () => {
     expect(back.tabs?.[1]?.detail).toBeUndefined()
   })
 
+  it("keeps a panel chart's palette through the tag", () => {
+    const [first, ...rest] = FACT_TABS_FIXTURE.tabs ?? []
+    const warm = {
+      tabs: [
+        { ...first, panel: first?.panel?.map((b) => ({ ...b, palette: 'warm' as const })) },
+        ...rest,
+      ],
+    } as StoredFactTabs
+    const tag = factTabsToJsx(warm) as string
+    const back = importFactTabsTag(propsOf(tag)) as StoredFactTabs
+    expect(back.tabs?.[0]?.panel?.every((b) => 'palette' in b && b.palette === 'warm')).toBe(true)
+    expect(factTabsToJsx(back as never)).toBe(tag)
+  })
+
   it('throws the reasons outside a conversion, starting "Invalid <FactTabs>:"', () => {
     expect(() => importFactTabsTag({ tabs: [] })).toThrow(/^Invalid <FactTabs>: tabs/)
     expect(() => importFactTabsTag({})).toThrow(/Invalid <FactTabs>/)

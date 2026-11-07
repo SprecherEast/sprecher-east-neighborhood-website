@@ -5,7 +5,7 @@ import { CERTAINTY_OPTIONS } from '@/platform/lib/certainty'
 import {
   CHART_LIMITS,
   type CHART_KINDS,
-  type CHART_PALETTES,
+  type ChartPaletteName,
   type CHART_UNITS,
 } from '@/platform/lib/chart/spec'
 
@@ -35,7 +35,7 @@ const UNIT_OPTIONS = [
 const PALETTE_OPTIONS = [
   { label: 'The usual colors', value: 'default' },
   { label: 'Orange and gray', value: 'warm' },
-] satisfies { label: string; value: (typeof CHART_PALETTES)[number] }[]
+] satisfies { label: string; value: ChartPaletteName }[]
 
 /**
  * The fields every kind of chart has, first in the block: what it is called, the takeaway in
