@@ -6,7 +6,6 @@
 
 - **Strategy docs (private, archived):** GitHub: `boulaajaj/sprecher-east-strategy`, read-only history since #538
 - **Website code (public):** This repo → GitHub: `boulaajaj/sprecher-east-neighborhood-website` (PUBLIC)
-- **Asana role tags:** All tasks use `[R#-Role]` prefix (history only: the archived strategy repo)
 
 ## Project Summary
 
@@ -145,7 +144,6 @@ Association page at `/association` (footer link, not in main nav)
 - **npm installs**: Always use `--legacy-peer-deps` for Payload packages (peer dep conflicts)
 - **`graphql` package**: Must install separately — `@payloadcms/graphql` doesn't bundle it
 - **`npx payload run` fails on Node v24**: `payload/dist/bin/loadEnv.js` incompatible. Use direct node scripts instead.
-- **Asana REST API**: Use `$ASANA_PAT` (user env var) with `curl` instead of MCP tools. Supports comments, subtasks, attachments. On Windows, pass JSON via temp file to avoid escaping issues.
 - **MCP tools limitation**: Slack MCP tools only work in the main conversation, NOT in spawned subagents
 - **Write tool requires prior Read**: Always read a file before writing it
 

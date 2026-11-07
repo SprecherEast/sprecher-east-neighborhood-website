@@ -1,6 +1,6 @@
 ---
 name: wrapped
-description: Post-merge wrap-up, run right after you merge a PR or when someone says the PRs are merged (or "wrapped") — verify each merge, check the deploy and the live site, report server results on the linked issues, close out any Asana task, sync your local main, and report. Use after every merge; never assume a merge happened.
+description: Post-merge wrap-up, run right after you merge a PR or when someone says the PRs are merged (or "wrapped") — verify each merge, check the deploy and the live site, report server results on the linked issues, sync your local main, and report. Use after every merge; never assume a merge happened.
 ---
 
 # Wrapped: after a merge
@@ -52,12 +52,6 @@ Never fix it on the server.
 - For server changes (`infra` issues), comment what actually changed on the server, from the
   deploy annotations. Never paste secret values.
 - An issue linked with `Part of #N` stays open until its last PR merges.
-
-## 4. Asana (legacy, only if linked)
-
-If a PR body has `Asana: https://app.asana.com/0/0/<task_gid>/f`, add a completion comment with
-the PR link to that task and mark it complete
-([`asana-workflow.md`](../../../docs/guidelines/asana-workflow.md)). No link, nothing to do.
 
 ## 5. Sync and report
 

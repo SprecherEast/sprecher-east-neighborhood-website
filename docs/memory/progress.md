@@ -66,9 +66,7 @@ Full static HTML site deployed to VPS.
 - [x] Decided on Option A: Payload CMS v3 Website Template (fresh scaffold, same repo)
 - [x] Single SQLite database replaces dual-DB architecture (removed auth.db)
 - [x] Updated all 12 agent profiles with Payload CMS knowledge
-- [x] Superseded 30 Sprint 2.x Asana tasks with migration notes
 - [x] Marked 3 Sprint 1 carried-over tasks as ON HOLD
-- [x] Created new Asana project: "Sprint 2 — Payload CMS Migration" (5 phases, 20 tasks)
 - [x] Added Sprint Retrospective section to all 12 agent profiles
 - [x] Created `docs/memory/retro/sprint-2.md` retro file
 - [x] Updated all memory files (MEMORY.md, progress.md, next-session-plan.md)

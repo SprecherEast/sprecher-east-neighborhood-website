@@ -16,9 +16,8 @@ Sprint dates: March 1 - March 14, 2026
 
 ### 2026-03-01 — Ops Lead / All Agents
 
-- **Observation**: MCP tools (Asana, Slack) are not available to spawned subagents — only the main conversation can use them
-- **Impact**: Asana sprint restructuring had to be handled directly in the main conversation instead of delegated, adding ~30 minutes to the session
-- **Recommendation**: Always handle Asana/Slack operations in the main conversation. Don't attempt to delegate MCP-dependent tasks to subagents
+- **Observation**: MCP tools (Slack) are not available to spawned subagents — only the main conversation can use them
+- **Recommendation**: Always handle Slack operations in the main conversation. Don't attempt to delegate MCP-dependent tasks to subagents
 
 - **Observation**: Major architectural pivot from Better Auth to Payload CMS native auth + payload-oauth2, plus rebuilding from the Payload Website Template
 - **Impact**: 30 Sprint 2.x tasks superseded, all 12 agent profiles updated with new CMS knowledge, new 20-task sprint created
