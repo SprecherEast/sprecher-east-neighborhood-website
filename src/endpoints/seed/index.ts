@@ -452,14 +452,14 @@ export const seed = async ({
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-/**
- * Load an image from the public/images/ directory.
- * Tries multiple possible base paths (dev vs built vs VPS deploy).
- */
 // Remote stand-in used when a local photo is missing
 const POST1_FALLBACK_URL =
   'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-post1.webp'
 
+/**
+ * Load an image from the public/images/ directory.
+ * Tries multiple possible base paths (dev vs built vs VPS deploy).
+ */
 async function loadLocalImage(filename: string, mimetype: string): Promise<File> {
   const possiblePaths = [
     path.resolve(process.cwd(), 'public/images', filename),
