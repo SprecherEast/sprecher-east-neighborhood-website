@@ -18,6 +18,26 @@ Patterns for using existing components and maintaining content quality standards
 2. Prefer Payload layout builder blocks (configs in `src/modules/site/cms/`, components in `src/modules/site/ui/`) over custom page components for content pages
 3. Use the UI kit's primitives from `src/platform/ui/` for generic UI (`Button`, `Link`, `Field`, `Form`, etc.)
 
+## Shared components: use, configure or split
+
+The owner's standing rule (2026-11-06, text session, decided in the #728 audit review and recorded
+on #759): shared components are used everywhere, and they grow by configuration until that would
+make them do everything.
+
+1. **Use it.** Where a shared component covers the need, every page and module uses it. A
+   hand-built copy found in a file you touch is moved onto the shared one in the same PR.
+2. **Configure it.** When it doesn't quite fit, give the shared component a variant, size or
+   compound part ([`vercel-composition-patterns`](/.agents/skills/vercel-composition-patterns/SKILL.md)),
+   never a local copy or a wrapper that overrides its classes.
+3. **Split before it bloats.** Stop configuring and create a new shared component when the change
+   would turn it into a do-everything component. Signs: a prop that switches it into another mode,
+   options only one caller uses that change its structure rather than its look, variants that
+   render different markup or roles, a file outgrowing one purpose. The new one lives in
+   `src/platform/ui/`, may compose the old one, and comes with what every shared component needs
+   ([guard rail 5](/docs/guidelines/guard-rails.md#the-rules)).
+
+Which of these applies is a routine technical call: make it, and note it on the issue.
+
 ## Key Reusable Components
 
 The full list of shared components, with their variants and props, is

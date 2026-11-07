@@ -19,7 +19,9 @@ architecture, test-driven development and similar bounds.
    `#` links), `Button`, `Field`, `Card`, `Media`, `Text`, `Section`, and `lucide-react` for icons.
    No raw `<a>`, `<button>`, `<input>`, `<select>`, `<textarea>`, `<img>` or inline SVG in feature
    code. A native element the kit lacks (`<details>`) lives inside a kit component, never in a
-   page or module. A missing variant is added to the kit component, not worked around.
+   page or module. A missing variant is added to the kit component, not worked around, unless it
+   would bloat it: then it's a new shared component
+   ([use, configure or split](components-and-content.md#shared-components-use-configure-or-split)).
 3. **Theme isolation.** Colour, radius, shadow, type and spacing come from theme tokens
    ([`nextjs-tailwind.md`](nextjs-tailwind.md)). No literals or raw palette classes outside the
    theme, and both light and dark checked.

@@ -47,7 +47,10 @@ each; otherwise do them one after another.
    [security](../../../docs/guidelines/security.md).
 7. **Component API**: a shared component or one meant for reuse follows
    [`vercel-composition-patterns`](../vercel-composition-patterns/SKILL.md) (explicit variants,
-   compound parts, no boolean-prop modes).
+   compound parts, no boolean-prop modes), and the diff uses, configures or splits shared
+   components as
+   [the rule](../../../docs/guidelines/components-and-content.md#shared-components-use-configure-or-split)
+   says.
 
 ### Efficiency
 

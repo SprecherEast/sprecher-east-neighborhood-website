@@ -52,7 +52,9 @@ against each of rules 1–6 (rule 9 is step 2c), and the PR's **Self-review** se
 - [ ] **Reuse:** no copied logic, markup, class strings or constants; a number two files must agree
       on has one definition. Search the repo for what the diff adds.
 - [ ] **UI kit:** no raw `<a>`, `<button>`, `<input>`, `<select>`, `<textarea>`, `<img>`, inline SVG
-      or `<details>` outside the kit; no theme literals.
+      or `<details>` outside the kit; no theme literals; shared components used, configured or
+      split as [the rule](../../../docs/guidelines/components-and-content.md#shared-components-use-configure-or-split)
+      says.
 - [ ] **Architecture:** code in its module and layer; no module importing another.
 - [ ] **Tests first:** new rules, guards, mappers and components have tests; a bug fix has its
       reproducing test.
