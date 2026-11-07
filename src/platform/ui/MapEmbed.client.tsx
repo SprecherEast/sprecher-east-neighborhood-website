@@ -86,7 +86,7 @@ export function MapEmbed({
               src={src}
               title={title}
               className="h-[80svh] min-h-96 w-full rounded-xl border border-border"
-              referrerPolicy="no-referrer-when-downgrade"
+              referrerPolicy="strict-origin-when-cross-origin"
               sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
               allowFullScreen
             />

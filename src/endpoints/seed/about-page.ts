@@ -37,7 +37,7 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
       blockType: 'mapBlock',
       title: 'Where we are',
       description:
-        'Find us between I-94 to the north, Sprecher Road to the west and Cottage Grove Road to the south, with Door Creek Park and the Door Creek valley to the east. We are in Madison\u2019s District 16. North Star and Richmond Hill Homeowners are our nearest neighbors.',
+        'Find us between I-94 to the north, Sprecher Road to the west and Cottage Grove Road to the south, with Door Creek Park to the east. We are in Madison\u2019s District 16. North Star lies to the west, and Richmond Hill Homeowners to the southwest.',
       preview: args.mapImage.id,
     })
   }

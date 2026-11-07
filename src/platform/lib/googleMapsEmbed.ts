@@ -13,7 +13,9 @@ const EMBED_PATH = /^\/maps\/(?:embed|d\/(?:u\/\d+\/)?embed)\/?$/
 function pastedAddress(value: string): string | null {
   const text = value.trim()
   if (!text.startsWith('<')) return text
-  return /\ssrc\s*=\s*["']([^"']+)["']/i.exec(text)?.[1] ?? null
+  const src = /\ssrc\s*=\s*["']([^"']+)["']/i.exec(text)?.[1]
+  // An attribute holds `&amp;` where the address has `&`
+  return src ? src.replaceAll('&amp;', '&') : null
 }
 
 /**

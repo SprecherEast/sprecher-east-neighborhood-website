@@ -42,6 +42,10 @@ describe('MapEmbed (#764)', () => {
     expect(frame?.getAttribute('src')).toBe(EMBED)
     // The frame carries its name (axe's frame-title rule); jsdom can't run axe across a frame
     expect(frame?.getAttribute('title')).toBe('Where Sprecher East is')
+
+    // axe can't look across a frame in jsdom, so it checks the open dialog without it
+    frame?.remove()
+    await expectAccessible(dialog)
   })
 
   it('opens from the text button too, and closes on Escape with focus back on it', async () => {
@@ -65,7 +69,7 @@ describe('MapEmbed (#764)', () => {
     expect(frame?.getAttribute('sandbox')).toBe(
       'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox',
     )
-    expect(frame?.getAttribute('referrerpolicy')).toBe('no-referrer-when-downgrade')
+    expect(frame?.getAttribute('referrerpolicy')).toBe('strict-origin-when-cross-origin')
   })
 
   it.each([

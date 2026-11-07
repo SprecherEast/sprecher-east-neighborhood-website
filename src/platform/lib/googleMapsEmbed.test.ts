@@ -22,6 +22,12 @@ describe('toGoogleMapsEmbedUrl (#764)', () => {
     expect(toGoogleMapsEmbedUrl(snippet)).toBe(SHARE_EMBED)
   })
 
+  it('reads `&amp;` in a pasted snippet as `&`', () => {
+    const snippet =
+      '<iframe src="https://www.google.com/maps/d/embed?mid=1AbC_dEf&amp;ehbc=2E312F"></iframe>'
+    expect(toGoogleMapsEmbedUrl(snippet)).toBe(MY_MAPS_EMBED)
+  })
+
   it('ignores spaces around the address', () => {
     expect(toGoogleMapsEmbedUrl(`  ${MY_MAPS_EMBED}\n`)).toBe(MY_MAPS_EMBED)
   })
