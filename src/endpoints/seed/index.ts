@@ -96,7 +96,7 @@ export const seed = async ({
 
   payload.logger.info(`— Seeding media...`)
 
-  // Try to load local images from assets/images/, fall back to remote Payload template images
+  // Try to load local images from public/images/, fall back to remote Payload template images
   const [image1Buffer, image2Buffer, image3Buffer, hero1Buffer] = await Promise.all([
     loadLocalImage('image-asset.jpeg', 'image/jpeg').catch(() =>
       fetchFileByURL(
@@ -445,13 +445,13 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 /**
- * Load an image from the assets/images/ directory.
+ * Load an image from the public/images/ directory.
  * Tries multiple possible base paths (dev vs built vs VPS deploy).
  */
 async function loadLocalImage(filename: string, mimetype: string): Promise<File> {
   const possiblePaths = [
-    path.resolve(process.cwd(), 'assets/images', filename),
-    path.resolve(__dirname, '../../../../assets/images', filename),
+    path.resolve(process.cwd(), 'public/images', filename),
+    path.resolve(__dirname, '../../../../public/images', filename),
   ]
 
   for (const filePath of possiblePaths) {
