@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { ALLOWED_TOOLS, DISALLOWED_TOOLS, buildClaudeArgs, checkoutProblem } from './claude.mjs'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+
+import {
+  ALLOWED_TOOLS,
+  DISALLOWED_TOOLS,
+  buildClaudeArgs,
+  checkoutProblem,
+  linkNodeModules,
+} from './claude.mjs'
 import { parseOptions } from './options.mjs'
 import { loadTasks, selectTasks, validateTasks } from './tasks.mjs'
 
@@ -184,5 +194,19 @@ describe('selectTasks and validateTasks for the larger set', () => {
     for (const style of ['vague', 'specific', 'cross'])
       expect(core.some((t) => t.style === style)).toBe(true)
     expect(core.length).toBeLessThan(all.length)
+  })
+})
+
+describe('linkNodeModules', () => {
+  it("makes the repo's node_modules readable from the throwaway checkout", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'link-test-'))
+    const repo = path.join(root, 'repo')
+    const workdir = path.join(root, 'work')
+    fs.mkdirSync(path.join(repo, 'node_modules', 'pkg'), { recursive: true })
+    fs.writeFileSync(path.join(repo, 'node_modules', 'pkg', 'index.js'), 'x')
+    fs.mkdirSync(workdir)
+    linkNodeModules(repo, workdir)
+    expect(fs.readFileSync(path.join(workdir, 'node_modules', 'pkg', 'index.js'), 'utf8')).toBe('x')
+    fs.rmSync(root, { recursive: true, force: true })
   })
 })

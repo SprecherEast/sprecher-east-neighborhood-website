@@ -21,6 +21,7 @@ import {
   childEnv,
   isolatePermissions,
   runChanges,
+  linkNodeModules,
 } from './claude.mjs'
 import { parseOptions } from './options.mjs'
 import { loadTasks, selectTasks, validateTasks } from './tasks.mjs'
@@ -75,7 +76,7 @@ function createWorktree(repo, workdir, sha) {
   git(repo, 'worktree', 'prune') // a leftover record of a deleted worktree makes `add` fail
   git(repo, 'worktree', 'add', '--quiet', '--detach', workdir, sha)
   running.workdirs.add(workdir)
-  fs.symlinkSync(path.join(repo, 'node_modules'), path.join(workdir, 'node_modules'))
+  linkNodeModules(repo, workdir)
   isolateSettings(workdir)
   const problem = checkoutProblem({
     dir: fs.realpathSync(workdir),

@@ -1,4 +1,5 @@
 // How the eval starts `claude` (#715). One place, so both conditions get the same session.
+import fs from 'node:fs'
 
 /**
  * What a run may use: read files, run the tests and the type check, read git history. Edit and
@@ -134,4 +135,13 @@ export function checkoutProblem({ dir, toplevel, hasAgentsFile }) {
   if (toplevel !== dir) return `${dir} is not the root of a checkout (git says ${toplevel})`
   if (!hasAgentsFile) return `${dir} has no AGENTS.md, so it is not this repository`
   return null
+}
+
+/**
+ * Makes `node_modules` of the repo visible in a throwaway checkout. A junction, because Windows
+ * allows a plain symbolic link only to an administrator or in developer mode; elsewhere the
+ * 'junction' type is ignored and this is an ordinary symbolic link.
+ */
+export function linkNodeModules(repo, workdir) {
+  fs.symlinkSync(`${repo}/node_modules`, `${workdir}/node_modules`, 'junction')
 }
