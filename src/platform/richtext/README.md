@@ -1,7 +1,7 @@
 # Rich text and the editorial blocks
 
 How an article's text is drawn, the blocks an editor can put inside it (banner, code, media and
-the editorial blocks: timeline, steps, key facts, outcome fork, diagram key, chart, fact tabs),
+the editorial blocks: timeline, steps, key facts, outcome fork, diagram key, figure, chart, fact tabs),
 the limits those share, and how agents write two of them as Markdown tags. Posts and events use it;
 page-builder blocks are in the [site note](../../modules/site/README.md). Props and where each
 renderer is used: [rich-text components](../../../docs/reference/components/rich-text.md); the
@@ -26,6 +26,7 @@ rich-text fields of each collection: [content types](../../../docs/reference/con
 - A banner can be closed by the visitor and hidden after its end time; pages refresh every 10 minutes (`BannerBlock.tsx`).
 - The media block has two placements: `section` (page builder, brings its own container) and `inline` (inside text, uses the shared figure gap) (`MediaBlock.tsx`, #541).
 - Rich text is `flow-root`, so a floated figure stays inside the article's text and what follows never wraps around it (`RichText.tsx`, #816).
+- The figure block holds an image, a title, a label, a short and a long caption, a width and an optional numbered key; the key marker list is shared with the diagram key (`editorial/diagramKeyBlockConfig.ts`). `editorial/figure.ts` leaves out empty text and passes the rest to the shared `Figure` (`FigureBlock.tsx`, #817).
 - Plain text for structured data (`toPlainText.ts`): blocks are separated by a blank line, then trimmed.
 
 ## Shared pieces it uses
