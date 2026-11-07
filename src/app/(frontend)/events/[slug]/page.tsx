@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react'
 import React from 'react'
 
 import { PayloadRedirects } from '@/modules/site/server'
+import { articleColumnClass } from '@/platform/richtext/articleColumn'
 import { articleToc } from '@/platform/richtext/articleToc'
 import { RichText } from '@/platform/richtext/RichText'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
@@ -24,7 +25,6 @@ import { Alert, Button } from '@/platform/ui'
 import { generateMeta } from '@/platform/seo/generateMeta'
 import { cn } from '@/platform/lib/cn'
 import { Text } from '@/platform/ui/Text'
-import { READING_COLUMN } from '@/platform/ui/layoutSizes'
 
 // A scheduled publish or unpublish runs outside a request, where Next can't refresh the cache, so
 // the page also re-renders every 10 minutes (#141, decision 0011)
@@ -111,7 +111,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
       {event.content && (
         <RichText
           blocks={richTextBlocks}
-          className={READING_COLUMN}
+          className={articleColumnClass(event.content)}
           data={event.content}
           enableGutter={false}
         />

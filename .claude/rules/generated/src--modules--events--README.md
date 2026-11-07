@@ -36,6 +36,7 @@ for CMS pages. Fields, access and hooks: [events content type](/docs/reference/c
 - Events created by agents or non-staff are stored as `suggested` drafts and need a source; staff publishing approves them (`cms/events.ts` via `holdSuggestions`).
 - Events are indexed for search, though this module doesn't name it (`src/payload.config.ts`, `searchPlugin`).
 - Admin has Live Preview and a preview link from the draft (`cms/events.ts` via `previewAdmin`); the event page emits schema.org `Event` data (`ui/eventJsonLd.ts`).
+- An event's text keeps the reading width, unless it holds key facts, fact tabs or an outcome fork: then it fills the column up to the page margin (`articleColumnClass` in `src/platform/richtext/articleColumn.ts`, #774).
 - The map link is the editor's `mapsUrl`, else a Google Maps search of the address (`domain/maps.ts`).
 
 ## Shared pieces it uses

@@ -6,6 +6,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { markReminded, remindedFile, remindedNotes } from './io.mjs'
 import {
+  BEHAVIOR_REMINDER_KEY,
+  behaviorReminder,
   inspect,
   knowledgeReminder,
   parseCommands,
@@ -137,6 +139,42 @@ describe('knowledge reminder', () => {
 
   it('throws on a map it cannot read, for the hook to ignore', () => {
     expect(() => remind('src/a.ts', { mapJson: '{' })).toThrow()
+  })
+})
+
+describe('behavior reminder (#770)', () => {
+  const remind = (file, options = {}) =>
+    behaviorReminder({ file, reminded: new Set(), docChanged: () => false, ...options })
+
+  it('reminds when a file that can change behavior is edited and no doc changed yet', () => {
+    const found = remind('scripts/deploy.mjs')
+    expect(found.note).toBe(BEHAVIOR_REMINDER_KEY)
+    expect(found.message).toMatch(/Behavior change: none/)
+    expect(found.message).toMatch(/scripts\/deploy\.mjs/)
+  })
+
+  it('stays quiet for tests, docs, lockfiles and generated types', () => {
+    for (const file of [
+      'src/a.test.ts',
+      'e2e/home.spec.ts',
+      'docs/project.md',
+      'package-lock.json',
+      'src/payload-types.ts',
+    ]) {
+      expect(remind(file)).toBeNull()
+    }
+  })
+
+  it('stays quiet once a doc changed, and once reminded in the session', () => {
+    expect(remind('src/a.ts', { docChanged: () => true })).toBeNull()
+    expect(remind('src/a.ts', { reminded: new Set([BEHAVIOR_REMINDER_KEY]) })).toBeNull()
+  })
+
+  it('does not ask the repository about a file it would stay quiet about', () => {
+    const docChanged = () => {
+      throw new Error('asked')
+    }
+    expect(remind('src/a.test.ts', { docChanged })).toBeNull()
   })
 })
 

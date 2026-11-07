@@ -31,19 +31,28 @@ function SourceValue({ source }: { source: PostSource }) {
 }
 
 /**
- * The top of a post's page as `PageHeader` props (#461): its categories, title, byline, date and
- * source, on its hero photo (`image`), or plain (`default`) when it has none.
+ * A post's author, date and source (#774): the facts the page puts as the first row of the article
+ * column, right-aligned from `lg`, so they sit on the text's right edge and not in the header.
  */
-export function postHeaderProps(post: PostDetail): PageHeaderProps {
-  const { categories, heroImage, publishedAt, source, title } = post
-  const byline = formatAuthors(post.authors)
-  const facts: LabelledMetaItem[] = [
-    ...(byline ? [{ label: 'Author', value: byline }] : []),
+export function postByline(post: PostDetail): LabelledMetaItem[] {
+  const { publishedAt, source } = post
+  const authors = formatAuthors(post.authors)
+  return [
+    ...(authors ? [{ label: 'Author', value: authors }] : []),
     ...(publishedAt
       ? [{ label: 'Date Published', value: <DateTime value={publishedAt} format="long" /> }]
       : []),
     ...(source ? [{ label: 'Source', value: <SourceValue source={source} /> }] : []),
   ]
+}
+
+/**
+ * The top of a post's page as `PageHeader` props (#461): its categories and title, on its hero
+ * photo (`image`), or plain (`default`) when it has none. The author, date and source are
+ * `postByline`, above the article text (#774).
+ */
+export function postHeaderProps(post: PostDetail): PageHeaderProps {
+  const { categories, heroImage, title } = post
   const badge = heroImage ? 'on-image' : 'category'
   const eyebrow =
     categories.length > 0 ? (
@@ -56,7 +65,5 @@ export function postHeaderProps(post: PostDetail): PageHeaderProps {
       </BadgeList>
     ) : undefined
 
-  return heroImage
-    ? { variant: 'image', image: heroImage, eyebrow, title, facts }
-    : { eyebrow, title, facts }
+  return heroImage ? { variant: 'image', image: heroImage, eyebrow, title } : { eyebrow, title }
 }

@@ -8,6 +8,7 @@ import { factTabsToJsx, importFactTabsTag } from './factTabsMarkdown'
 import { keyFactFields } from './keyFactsBlockConfig'
 import { TimelineBlockConfig } from './timelineBlockConfig'
 import type { StoredFactTabs } from './factTabs'
+import { FACT_TABS_BLOCK_TYPE } from './blockTypes'
 
 /**
  * Key facts that open pictures (#664): two to four tabs, each a key fact (value, label, icon,
@@ -18,7 +19,7 @@ import type { StoredFactTabs } from './factTabs'
  * The `jsx` converter writes it as one `<FactTabs … />` tag in Markdown, for agents.
  */
 export const FactTabsBlockConfig: Block = {
-  slug: 'factTabs',
+  slug: FACT_TABS_BLOCK_TYPE,
   interfaceName: 'FactTabsBlock',
   labels: { singular: 'Fact tabs', plural: 'Fact tabs' },
   fields: [

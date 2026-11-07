@@ -54,6 +54,18 @@ describe('Breadcrumbs', () => {
     expect(home.querySelector('.sr-only')?.textContent).toBe('Home')
   })
 
+  it('starts the home icon on the left edge of the column, at every width', () => {
+    render(<Breadcrumbs items={ITEMS} />)
+
+    // The link's 0.5rem of padding is taken back, so the icon's own edge, not the tap target's,
+    // sits on the line the page menu and the text share. The tap target keeps its size.
+    const home = trail().getByRole('link', { name: 'Home' })
+    expect(home.className).toContain('-ml-2')
+    expect(home.className).toContain('justify-start')
+    expect(home.className).not.toContain('justify-center')
+    expect(home.className).toContain('min-h-11')
+  })
+
   it('separates crumbs with hidden chevrons, not slash characters', () => {
     const { container } = render(<Breadcrumbs items={ITEMS} />)
 
