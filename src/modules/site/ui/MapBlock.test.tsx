@@ -1,0 +1,71 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { afterEach, describe, expect, it } from 'vitest'
+
+import type { ImageRef } from '@/platform/lib'
+import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
+
+import { MapBlock } from './MapBlock'
+
+afterEach(cleanup)
+
+const preview = {
+  id: 1,
+  alt: 'Sprecher East, outlined, with I-94 to the north',
+  url: '/api/media/file/map.png',
+  filename: 'map.png',
+  mimeType: 'image/png',
+  width: 1017,
+  height: 848,
+  createdAt: '2026-11-06T00:00:00.000Z',
+  updatedAt: '2026-11-06T00:00:00.000Z',
+} as ImageRef
+
+const props = {
+  title: 'Where Sprecher East is',
+  description: 'I-94 to the north, Sprecher Road to the west, Cottage Grove Road to the south.',
+  embedUrl: 'https://www.google.com/maps/d/embed?mid=1AbC_dEf',
+  preview,
+}
+
+describe('MapBlock (#764)', () => {
+  it('draws the title, the description in words and the small picture', async () => {
+    const { container } = render(
+      <main>
+        <MapBlock {...props} />
+      </main>,
+    )
+
+    expect(screen.getByRole('heading', { name: 'Where Sprecher East is' })).toBeTruthy()
+    expect(screen.getByText(/I-94 to the north, Sprecher Road/)).toBeTruthy()
+    expect(screen.getByAltText(preview.alt as string)).toBeTruthy()
+    expect(container.querySelector('iframe')).toBeNull()
+    await expectAccessible(container)
+  })
+
+  it('opens the live map from the picture or the button', async () => {
+    render(<MapBlock {...props} />)
+    expect(screen.getAllByRole('button', { name: 'View the larger map' })).toHaveLength(2)
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'View the larger map' })[1])
+
+    const dialog = screen.getByRole('dialog', { name: 'Where Sprecher East is' })
+    expect(dialog.querySelector('iframe')?.getAttribute('src')).toBe(props.embedUrl)
+  })
+
+  it('shows the picture and text only until an editor adds the Google address', () => {
+    render(<MapBlock {...props} embedUrl={undefined} />)
+
+    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.getByAltText(preview.alt as string)).toBeTruthy()
+  })
+
+  it('sets the picture at about a fifth of the width from md up', () => {
+    const { container } = render(<MapBlock {...props} />)
+
+    expect(
+      container.querySelector('.md\\:grid-cols-\\[minmax\\(0\\,1fr\\)_minmax\\(0\\,4fr\\)\\]'),
+    ).toBeTruthy()
+  })
+})

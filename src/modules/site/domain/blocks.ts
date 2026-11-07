@@ -1,4 +1,4 @@
-import type { ResolvedLink, RichTextValue } from '@/platform/lib'
+import type { ImageRef, ResolvedLink, RichTextValue } from '@/platform/lib'
 
 /*
  * The plain props of site's page-builder blocks (decision 0013). The mappers in `data/mappers.ts`
@@ -44,4 +44,15 @@ export type CallToActionBlockProps = {
 export type ArchiveBlockProps = {
   id?: string
   intro?: RichTextValue
+}
+
+/**
+ * The map block (#764): its text, a small picture and, once an editor has pasted one, the Google
+ * map embed address the picture opens. The mapper drops an address that isn't a Google embed.
+ */
+export type MapBlockProps = {
+  title: string
+  description: string
+  embedUrl?: string
+  preview?: ImageRef
 }

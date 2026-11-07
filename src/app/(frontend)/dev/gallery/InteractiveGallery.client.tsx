@@ -6,6 +6,7 @@ import React, { useState } from 'react'
 import { Button } from '@/platform/ui/Button'
 import { Dialog } from '@/platform/ui/Dialog.client'
 import { LoadMoreFooter } from '@/platform/ui/LoadMore.client'
+import { MapEmbed } from '@/platform/ui/MapEmbed.client'
 import { Toast } from '@/platform/ui/Toast'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
@@ -17,6 +18,29 @@ export function InteractiveGallery() {
       <GalleryEntry name="Dialog" description="A full-screen sheet; Radix gives the behaviour.">
         <GalleryVariant label="sheet">
           <SampleDialog />
+        </GalleryVariant>
+      </GalleryEntry>
+
+      <GalleryEntry
+        name="MapEmbed"
+        description="A small map picture with its text; a live Google map opens in a dialog on tap."
+      >
+        <GalleryVariant label="with a map address, and without" className="block space-y-8">
+          <MapEmbed
+            embedUrl="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3000!2d-89.3!3d43.1"
+            title="Sample map"
+            actionLabel="View the larger map"
+            preview={<div className="aspect-square bg-surface" />}
+          >
+            <p>The frame loads only after the button is tapped.</p>
+          </MapEmbed>
+          <MapEmbed
+            title="Sample map"
+            actionLabel="View the larger map"
+            preview={<div className="aspect-square bg-surface" />}
+          >
+            <p>Without an address there is the picture and the text, and no button.</p>
+          </MapEmbed>
         </GalleryVariant>
       </GalleryEntry>
 

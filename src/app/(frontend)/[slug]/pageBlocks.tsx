@@ -12,6 +12,7 @@ import {
   ArchiveBlock,
   CallToActionBlock,
   ContentBlock,
+  MapBlock,
   type PageBlockComponents,
 } from '@/modules/site/server'
 import { MediaBlock } from '@/platform/richtext/MediaBlock'
@@ -57,6 +58,7 @@ export const pageBlocks: PageBlockComponents = {
   // @ts-expect-error The contact form types its form with the form-builder plugin's `Form`, which
   // the generated `Form` doesn't match; the page query populates it, as before #135
   formBlock: FormBlock,
+  mapBlock: MapBlock,
   mediaBlock: MediaBlock,
   topIssues: TopIssuesFromBlock,
 }

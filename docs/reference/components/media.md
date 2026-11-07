@@ -85,3 +85,23 @@ Source: `src/platform/ui/VideoMedia.client.tsx`
 **Used by** (direct imports):
 
 - Platform: `platform/ui`
+
+## `MapEmbed`
+
+A small map picture with its text, and a live Google map in a dialog when a neighbor taps either button (#764, docs/ui/component-set.md). The frame is created only once the dialog is open, so the page asks Google for nothing until then. A missing or unsafe address leaves the picture and the text, with no button.
+
+Source: `src/platform/ui/MapEmbed.client.tsx`
+
+| Prop          | Type                                                                                                                                                                       | Required | Description                                                                          |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------ |
+| `embedUrl`    | `string`                                                                                                                                                                   | no       | A Google map embed address (`toGoogleMapsEmbedUrl`); anything else draws no live map |
+| `title`       | `string`                                                                                                                                                                   | yes      | Names the dialog and the frame for screen readers                                    |
+| `actionLabel` | `string`                                                                                                                                                                   | yes      | What the buttons say: "View the larger map"                                          |
+| `preview`     | `React.ReactNode`                                                                                                                                                          | yes      | The small picture of the map, drawn by the caller (`Media`)                          |
+| `children`    | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The text beside the picture; the button that opens the live map follows it           |
+| `className`   | `string`                                                                                                                                                                   | no       |                                                                                      |
+
+**Used by** (direct imports):
+
+- Modules: `site`
+- Routes: `/dev/gallery`

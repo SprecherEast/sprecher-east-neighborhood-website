@@ -7,10 +7,12 @@ import type {
   EventsThisWeekBlock,
   FormBlock,
   Header,
+  MapBlock,
   MediaBlock,
   Page,
   TopIssuesBlock,
 } from '@/payload-types'
+import { toGoogleMapsEmbedUrl } from '@/platform/lib/googleMapsEmbed'
 import { toImageRef } from '@/platform/payload/imageRef'
 import { resolveLink } from '@/platform/payload/resolveLink'
 
@@ -21,6 +23,7 @@ import type {
   ContentCardGroup,
   ContentColumn,
   ContentLayout,
+  MapBlockProps,
 } from '../domain/blocks'
 import type { PageHeroProps } from '../domain/hero'
 import { type HeaderNavLink, isHeaderButtonPath } from '../domain/nav'
@@ -39,6 +42,7 @@ export type PageLayoutBlock =
   | (ContentBlockProps & { blockType: 'content' })
   | (CallToActionBlockProps & { blockType: 'cta' })
   | (ArchiveBlockProps & { blockType: 'archive'; postQuery: ArchivePostQuery })
+  | (MapBlockProps & { blockType: 'mapBlock' })
   | FormBlock
   | MediaBlock
   | EventsThisWeekBlock
@@ -115,6 +119,23 @@ export function toArchiveBlockProps({
   }
 }
 
+/** The map block as plain props: an address that isn't a Google map embed is dropped (#764) */
+export function toMapBlockProps({
+  title,
+  description,
+  embedUrl,
+  preview,
+}: Pick<MapBlock, 'title' | 'description' | 'embedUrl' | 'preview'>): MapBlockProps {
+  const safeEmbedUrl = toGoogleMapsEmbedUrl(embedUrl)
+  const image = toImageRef(preview)
+  return {
+    title,
+    description,
+    ...(safeEmbedUrl && { embedUrl: safeEmbedUrl }),
+    ...(image && { preview: image }),
+  }
+}
+
 /** A page's layout with site's own blocks mapped; a block type the site doesn't know is dropped */
 export function toPageLayout(layout: Page['layout']): PageLayoutBlock[] {
   return layout.flatMap((block): PageLayoutBlock[] => {
@@ -128,6 +149,8 @@ export function toPageLayout(layout: Page['layout']): PageLayoutBlock[] {
         const postQuery = { populateBy, categories, limit, selectedDocs }
         return [{ blockType: 'archive', ...toArchiveBlockProps(block), postQuery }]
       }
+      case 'mapBlock':
+        return [{ blockType: 'mapBlock', ...toMapBlockProps(block) }]
       case 'formBlock':
       case 'mediaBlock':
       case 'eventsThisWeek':

@@ -61,7 +61,7 @@ export const COMPONENT_GROUPS = [
     slug: 'media',
     title: 'Media',
     intro: 'Images and video. `Media` picks the right one for an uploaded file.',
-    components: ['Media', 'ImageMedia', 'VideoMedia'],
+    components: ['Media', 'ImageMedia', 'VideoMedia', 'MapEmbed'],
   },
   {
     slug: 'feedback',

@@ -28,6 +28,7 @@ export const GALLERY_COMPONENTS = [
   'DetailLayout',
   'OnThisPage',
   'Dialog',
+  'MapEmbed',
   'Toast',
   'LoadMore',
   'Chart',
