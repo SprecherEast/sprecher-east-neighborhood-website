@@ -20,6 +20,8 @@ import {
   run,
   startupFiles,
 } from './agent-context.mjs'
+import { describes } from './agent-context-maps.mjs'
+import { classifyFile, isTestFile } from './behavior-change.mjs'
 
 const MAP = `
 | Guideline                     | Loads by itself when the work touches | Read it when  |
@@ -327,5 +329,25 @@ describe('run, with a knowledge map', () => {
     expect(problemsOf(root, { write: true })).toEqual([
       'src/mod/README.md: `src/gone/**` matches no file in the repository',
     ])
+  })
+})
+
+describe('what counts as a test file when matching a knowledge note (#770)', () => {
+  const entry = { paths: ['src/modules/events/**'] }
+
+  it.each([
+    'src/modules/events/a.test.ts',
+    'src/modules/events/a.spec.ts',
+    'src/modules/events/__fixtures__/x.ts',
+    'src/modules/events/__tests__/x.ts',
+    'src/modules/events/__mocks__/x.ts',
+  ])('matches the behavior classifier: %s is a test, which no note describes', (file) => {
+    expect(isTestFile(file)).toBe(true)
+    expect(describes(entry, file)).toBe(false)
+    expect(classifyFile({ filename: file }).kind).toBe('test')
+  })
+
+  it('still matches code', () => {
+    expect(describes(entry, 'src/modules/events/a.ts')).toBe(true)
   })
 })

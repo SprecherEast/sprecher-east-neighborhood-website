@@ -96,8 +96,10 @@ jobs:
               if (answer.length < 10) problems.push(`Self-review: write a line "- ${item}: what you checked and fixed" (10+ characters).`);
             }
 
-            // 3. The knowledge layer stays in sync with the code (decision 0019 section 6, #716):
-            // a change under a mapped path updates its note, or says "Behavior change: none" and why
+            // 3. The knowledge layer stays in sync with the code (decision 0019 section 6, #716, #770):
+            // a behavior-bearing change anywhere in the repository changes a doc (and the mapped note,
+            // where there is one), or says "Behavior change: none" and why; a doc the description
+            // names must be in the diff
             const files = await github.paginate(github.rest.pulls.listFiles, {
               ...context.repo,
               pull_number: pr.number,

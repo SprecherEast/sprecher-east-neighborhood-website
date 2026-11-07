@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { classifyChanges, classifyFile, isPatchBumpOnly } from './behavior-change.mjs'
+import { classifyChanges, classifyFile, isPatchBumpOnly, isTestFile } from './behavior-change.mjs'
 
 /** A hunk the way GitHub's pull request file list gives it: no file header, just the lines. */
 const patch = (...lines) => ['@@ -1,9 +1,9 @@', ...lines].join('\n')
@@ -163,17 +163,37 @@ describe('classifyFile: by content', () => {
 })
 
 describe('package.json', () => {
-  const bump = (from, to) => patch(`-    "zod": "${from}",`, `+    "zod": "${to}",`)
+  const bump = (from, to, section = 'dependencies') =>
+    patch(` "${section}": {`, `-    "zod": "${from}",`, `+    "zod": "${to}",`)
 
-  it('exempts a patch-level dependency bump', () => {
+  it('exempts a patch-level dependency bump whose section is in view', () => {
     expect(kind(file('package.json', { patch: bump('^3.22.1', '^3.22.4') }))).toBe('exempt')
     expect(isPatchBumpOnly(bump('3.22.1', '3.22.4'))).toBe(true)
+  })
+
+  it('keeps a bump whose section is not in the patch, since it cannot be told from a move', () => {
+    const noSection = patch('-    "zod": "^3.22.1",', '+    "zod": "^3.22.4",')
+    expect(kind(file('package.json', { patch: noSection }))).toBe('behavior')
+  })
+
+  it('keeps a dependency moved to devDependencies at the same version', () => {
+    const moved = [
+      '@@ -5,4 +5,3 @@',
+      ' "dependencies": {',
+      '-    "zod": "^3.22.1",',
+      ' },',
+      '@@ -20,3 +20,4 @@',
+      ' "devDependencies": {',
+      '+    "zod": "^3.22.1",',
+      ' }',
+    ].join('\n')
+    expect(kind(file('package.json', { patch: moved }))).toBe('behavior')
   })
 
   it.each([
     ['a minor bump', bump('^3.22.1', '^3.23.0')],
     ['a major bump', bump('^3.22.1', '^4.0.0')],
-    ['a new dependency', patch('+    "zod": "^3.22.4",')],
+    ['a new dependency', patch(' "dependencies": {', '+    "zod": "^3.22.4",')],
     [
       'a script change',
       patch('-    "build": "next build",', '+    "build": "next build --turbo",'),
@@ -181,6 +201,121 @@ describe('package.json', () => {
     ['the package version', patch('-  "version": "1.0.1",', '+  "version": "1.0.2",')],
   ])('keeps %s', (_name, diff) => {
     expect(kind(file('package.json', { patch: diff }))).toBe('behavior')
+  })
+})
+
+describe('classifyFile: changes that look like comments or formatting but are not (#770 review)', () => {
+  const hunks = (...parts) =>
+    parts.map((lines) => ['@@ -1,9 +1,9 @@', ...lines].join('\n')).join('\n')
+
+  it('keeps a statement reorder as a diff shows it, with context lines', () => {
+    const f = file('src/a.ts', {
+      patch: patch(
+        ' export async function remove(id) {',
+        '-  await deleteRecord(id)',
+        '   await requireAuth(req)',
+        '+  await deleteRecord(id)',
+        ' }',
+      ),
+    })
+    expect(kind(f)).toBe('behavior')
+  })
+
+  it('keeps a line moved from one hunk to another', () => {
+    const f = file('src/a.ts', {
+      patch: hunks(['-  audit(user)', ' run()'], [' other()', '+  audit(user)']),
+    })
+    expect(kind(f)).toBe('behavior')
+  })
+
+  it('keeps a YAML key re-indented to another level', () => {
+    const f = file('.github/workflows/ci.yml', {
+      patch: patch(
+        '   build:',
+        '-    if: github.ref == main',
+        '     steps:',
+        '+      if: github.ref == main',
+      ),
+    })
+    expect(kind(f)).toBe('behavior')
+  })
+
+  it('keeps reordered workflow steps', () => {
+    const f = file('.github/workflows/ci.yml', {
+      patch: patch(' steps:', '-  - run: test', '   - run: build', '+  - run: test'),
+    })
+    expect(kind(f)).toBe('behavior')
+  })
+
+  it.each([
+    ['a word space inside a string', "-  label: 'Sign in',", "+  label: 'Signin',"],
+    ['class names run together', '-  className="px-4 py-2"', '+  className="px-4py-2"'],
+    ['a template literal', '-  const t = `a b`', '+  const t = `ab`'],
+  ])('keeps %s', (_name, removed, added) => {
+    expect(kind(file('src/a.tsx', { patch: patch(removed, added) }))).toBe('behavior')
+  })
+
+  it('keeps a shell quote change, which turns expansion off', () => {
+    const f = file('ops/deploy.sh', { patch: patch('-cd "$DIR/cache"', "+cd '$DIR/cache'") })
+    expect(kind(f)).toBe('behavior')
+  })
+
+  it('keeps code after a leading block comment', () => {
+    const f = file('src/a.ts', {
+      patch: patch(
+        '-/* istanbul ignore next */ if (user.isAdmin) allow()',
+        '+/* istanbul ignore next */ if (user) allow()',
+      ),
+    })
+    expect(kind(f)).toBe('behavior')
+  })
+
+  it('keeps a * continuation line when a glob elsewhere in the patch contains /*', () => {
+    const f = file('src/a.ts', {
+      patch: patch(" const files = 'src/**/*.ts'", ' const ms = 60', '-  * 1000', '+  * 10'),
+    })
+    expect(kind(f)).toBe('behavior')
+  })
+
+  it('keeps a * line when the block comment opener is not in the patch', () => {
+    const f = file('src/a.ts', { patch: patch('-  * 1000', '+  * 10') })
+    expect(kind(f)).toBe('behavior')
+  })
+
+  it('keeps Python and Caddyfile indentation changes', () => {
+    const py = file('tools/run.py', { patch: patch(' if ready:', '-    go()', '+go()') })
+    expect(kind(py)).toBe('behavior')
+    const caddy = file('Caddyfile', { patch: patch('-  reverse_proxy a', '+reverse_proxy a') })
+    expect(kind(caddy)).toBe('behavior')
+  })
+
+  it('still exempts a comment edit inside a block comment that opens in the patch', () => {
+    const f = file('src/a.ts', {
+      patch: patch(' /*', '-  * old words', '+  * new words', '  */', ' run()'),
+    })
+    expect(kind(f)).toBe('exempt')
+  })
+
+  it('exempts only comment lines in shell and Caddyfile, keeping indentation', () => {
+    expect(kind(file('ops/a.sh', { patch: patch('   run', '-# old', '+# new') }))).toBe('exempt')
+    expect(kind(file('Caddyfile', { patch: patch('-# old', '+# new') }))).toBe('exempt')
+  })
+
+  it('exempts a reformat that leaves strings intact', () => {
+    const f = file('src/a.ts', {
+      patch: patch("-const t = fn('a b', {x: 1});", '+const t = fn("a b", {', '+  x: 1,', '+})'),
+    })
+    expect(kind(f)).toBe('exempt')
+  })
+})
+
+describe('isTestFile', () => {
+  it('is the one test-file rule', () => {
+    expect(isTestFile('src/a.test.ts')).toBe(true)
+    expect(isTestFile('src/a.spec.ts')).toBe(true)
+    expect(isTestFile('src/__fixtures__/x.ts')).toBe(true)
+    expect(isTestFile('src/a.ts')).toBe(false)
+    expect(isTestFile('docs/a.md')).toBe(false)
   })
 })
 

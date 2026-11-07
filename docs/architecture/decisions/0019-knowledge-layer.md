@@ -133,19 +133,29 @@ tests, comments, formatting, dependency patches with no behavior change.
   2026-11-06, Claude Code voice session relayed in text, #770). A PR that changes anything that can
   alter behavior must change a note, a reference or a doc, or declare `Behavior change: none` with
   a reason of at least 20 characters. Where `map.json` names a note for a changed path, that note
-  itself must change (or the declaration is made). The reviewer verifies the declaration against
-  the diff; a false one is a Blocker.
+  itself must change (or the declaration is made). A doc the Knowledge section names by path
+  (`docs/guidelines/payload-cms.md`) must be in the diff, so a claim that a doc was updated is
+  checked; the only other test is that some doc changed, a weak proxy the reviewer completes. The
+  reviewer verifies the declaration against the diff; a false one is a Blocker.
 - **What the check skips, and what it asks for.** One classifier decides, in
-  `scripts/behavior-change.mjs` (shared with the hook), file by file, from the path and GitHub's
-  diff. Skipped: tests, specs, fixtures and end-to-end files; docs (Markdown, `docs/`), which
-  also satisfy the check when they change; lockfiles; the generated `src/payload-types.ts`;
-  `package.json` when only dependency patch versions move; a diff of only comments or only
-  formatting (whitespace, line breaks, quotes, semicolons, trailing commas). Everything else is
-  behavior-bearing: source, scripts, workflows, `ops/`, config, migrations, assets, and any move
-  or deletion of them. Unsure means required: a missing or unreadable diff, a trailing comment, a
-  reordering, or a `*` line outside a visible block comment counts as behavior, because missing a
-  real change is the worse failure. A pure refactor can't be told from a change, so it declares
-  `none`. The rules are in that one file and tested in its test.
+  `scripts/behavior-change.mjs` (shared with the hook and the map matching), file by file, from
+  the path and GitHub's diff. Skipped: tests, specs, fixtures and end-to-end files (one
+  `isTestFile` rule); docs (Markdown, `docs/`), which also count as a doc change; the generated
+  `src/payload-types.ts`; lockfiles, whatever versions move, because `package.json` declares the
+  ranges and is classified on its own; `package.json` when only dependency patch versions move
+  within a section whose opening line is in the diff; a diff of only comment lines or only
+  formatting. A diff is compared hunk by hunk, old side (context and removed lines) against new
+  side (context and added lines), so a reorder or a move shows. In JS, TS and CSS formatting
+  means spacing outside strings, the quote style of a plain string, semicolons and trailing
+  commas; anywhere else (YAML, shell, Caddyfile, Dockerfile, JSON, other types) lines must match
+  exactly, indentation and quotes included, and only a comment line may differ. Everything else
+  is behavior-bearing: source, scripts, workflows, `ops/`, config, migrations, assets, and any
+  move or deletion of them. Unsure means required: a missing diff, a trailing comment, code after
+  a `/* */`, a `*` line whose `/*` opener is not in the diff, or a dependency whose section is not
+  in view counts as behavior, because missing a real change is the worse failure. A pure refactor
+  can't be told from a change, so it declares `none`. A diff that only looks like comments or
+  formatting but changes meaning can still be exempted in a case the rules don't foresee; the
+  reviewer judges what the check skipped.
 - **Generated reference:** `Knowledge sync` regenerates it and fails on a difference (#714, #718),
   so a content type, a route or a component can't change without its page.
 - **Before and during the work** (#717): `write-code` reads the note first and updates it after; the

@@ -256,7 +256,7 @@ describe('knowledgeProblems: the whole repository (#770)', () => {
     const pkg = {
       filename: 'package.json',
       status: 'modified',
-      patch: '@@ -1 +1 @@\n-    "zod": "^3.22.1",\n+    "zod": "^3.22.4",',
+      patch: '@@ -1,3 +1,3 @@\n "dependencies": {\n-    "zod": "^3.22.1",\n+    "zod": "^3.22.4",',
     }
     expect(check({ changed: [pkg, 'package-lock.json'] })).toEqual([])
   })
@@ -279,28 +279,110 @@ describe('knowledgeProblems: the whole repository (#770)', () => {
     expect(problems[0]).not.toContain('Link.tsx')
   })
 
-  it('replays PR #766: map block code under site and platform, payload-cms.md not changed', () => {
-    const body = bodyWith(
-      'Behavior change: yes, a new map block. Updated the block list in docs/guidelines/payload-cms.md',
-    )
-    const problems = check({
-      changed: [
-        BLOCK,
-        'src/modules/site/cms/blocks/mapBlock.ts',
-        PLATFORM,
-        'src/platform/ui/MapEmbed.tsx',
-        'src/modules/site/ui/MapBlock.test.tsx',
-        'src/payload-types.ts',
-      ],
-      body,
-    })
+  it('fails when a doc some other change updated is not the doc the description names', () => {
+    const body = bodyWith(`Behavior change: yes, a new block. Updated \`${GUIDELINE}\`.`)
+    const problems = check({ changed: [BLOCK, 'docs/ui/component-set.md'], body })
     expect(problems).toHaveLength(1)
-    expect(problems[0]).toContain(BLOCK)
-    expect(problems[0]).toContain('yes')
+    expect(problems[0]).toContain(GUIDELINE)
+    expect(problems[0]).toContain('does not change')
   })
 
-  it('passes the #766 replay once the guideline is in the diff', () => {
-    expect(check({ changed: [BLOCK, PLATFORM, GUIDELINE] })).toEqual([])
+  it('passes once the named doc is in the diff, whether the path is quoted, bracketed or ends a sentence', () => {
+    for (const text of [`\`${GUIDELINE}\``, `(${GUIDELINE})`, `${GUIDELINE}.`, `${GUIDELINE},`]) {
+      const body = bodyWith(`Behavior change: yes, a new block, see ${text} and docs/reference`)
+      expect(check({ changed: [BLOCK, GUIDELINE], body })).toEqual([])
+    }
+  })
+
+  it('does not ask for a folder, a code path or a doc named in a "none" reason', () => {
+    const folder = bodyWith('Behavior change: yes, regenerated docs/reference and docs/guidelines/')
+    expect(check({ changed: [BLOCK, 'docs/ui/component-set.md'], body: folder })).toEqual([])
+    const none = bodyWith(`Behavior change: none, ${GUIDELINE} already describes it exactly`)
+    expect(check({ changed: [BLOCK], body: none })).toEqual([])
+  })
+
+  it('keeps the leading dot of a hidden folder in a named path', () => {
+    const skill = '.agents/skills/pr-review/SKILL.md'
+    const body = bodyWith(`Behavior change: yes, reviewers do more, see ${skill}`)
+    expect(check({ changed: [BLOCK], body })[0]).toContain(skill)
+    expect(check({ changed: [BLOCK, skill], body })).toEqual([])
+  })
+
+  it('checks a named doc even when no code changed', () => {
+    const body = bodyWith(`Behavior change: yes, the setup notes changed in ${GUIDELINE}`)
+    const problems = check({ changed: ['docs/project.md'], body })
+    expect(problems).toHaveLength(1)
+    expect(problems[0]).toContain(GUIDELINE)
+  })
+
+  describe('replays PR #766 from its real file list', () => {
+    // GET /repos/.../pulls/766/files: 36 files, four of them docs, none of them payload-cms.md
+    const REAL = [
+      'docs/reference/components/README.md',
+      'docs/reference/components/media.md',
+      'docs/reference/content-types/pages.md',
+      'docs/ui/component-set.md',
+      'public/images/sprecher-east-map.png',
+      'scripts/reference/componentGroups.mjs',
+      'src/app/(frontend)/[slug]/pageBlocks.test.tsx',
+      'src/app/(frontend)/[slug]/pageBlocks.tsx',
+      'src/app/(frontend)/dev/gallery/InteractiveGallery.client.tsx',
+      'src/app/(frontend)/dev/gallery/galleryComponents.ts',
+      'src/endpoints/seed/about-page.ts',
+      'src/endpoints/seed/image-3.ts',
+      'src/endpoints/seed/index.ts',
+      'src/migrations/20261107_015722_map_block.json',
+      'src/migrations/20261107_015722_map_block.ts',
+      'src/migrations/index.ts',
+      'src/modules/site/cms/layoutBlocks.ts',
+      'src/modules/site/cms/mapBlock.test.ts',
+      'src/modules/site/cms/mapBlock.ts',
+      'src/modules/site/cms/pages.test.ts',
+      'src/modules/site/data/mapBlockMapper.test.ts',
+      'src/modules/site/data/mappers.test.ts',
+      'src/modules/site/data/mappers.ts',
+      'src/modules/site/domain/blocks.ts',
+      'src/modules/site/server.ts',
+      'src/modules/site/ui/MapBlock.test.tsx',
+      'src/modules/site/ui/MapBlock.tsx',
+      'src/modules/site/ui/RenderBlocks.test.tsx',
+      'src/modules/site/ui/RenderBlocks.tsx',
+      'src/payload-types.ts',
+      'src/payload.config.test.ts',
+      'src/platform/lib/googleMapsEmbed.test.ts',
+      'src/platform/lib/googleMapsEmbed.ts',
+      'src/platform/lib/index.ts',
+      'src/platform/ui/MapEmbed.client.test.tsx',
+      'src/platform/ui/MapEmbed.client.tsx',
+    ]
+    // The Knowledge section of #766 as it was merged
+    const KNOWLEDGE =
+      'Behavior change: editors get a Map block and visitors get a live map in a dialog. Generated reference (`docs/reference`) regenerated and `docs:check` passes; the block list in `docs/guidelines/payload-cms.md` is updated.'
+    const changed = () => REAL.map((name) => ({ filename: name, status: 'modified', patch: PATCH }))
+    const PATCH = '@@ -1,3 +1,3 @@\n run()\n-const a = 1\n+const a = 2'
+
+    it('flags the claim that payload-cms.md was updated, though other docs changed', () => {
+      const problems = knowledgeProblems({
+        mapJson,
+        files: changed(),
+        noteExists: () => false,
+        body: bodyWith(KNOWLEDGE),
+      })
+      expect(problems).toHaveLength(1)
+      expect(problems[0]).toContain('docs/guidelines/payload-cms.md')
+      expect(problems[0]).toContain('does not change')
+    })
+
+    it('passes once payload-cms.md is in the diff', () => {
+      const files = [...changed(), { filename: GUIDELINE, status: 'modified' }]
+      const problems = knowledgeProblems({
+        mapJson,
+        files,
+        noteExists: () => false,
+        body: bodyWith(KNOWLEDGE),
+      })
+      expect(problems).toEqual([])
+    })
   })
 
   it('shortens a long list of files', () => {

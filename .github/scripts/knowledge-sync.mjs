@@ -54,6 +54,23 @@ export function declaredBehavior(body) {
   return { change: change.toLowerCase(), reason: [rest, ...following].join(' ').trim() }
 }
 
+/**
+ * The documents the Knowledge section names by path: a word with a slash that ends in `.md` or
+ * `.mdx`, or starts with `docs/` and has a file extension. A folder (`docs/reference`) is not one.
+ * Read word by word, so nothing here can backtrack on a long line.
+ */
+export function namedDocs(body) {
+  const names = new Set()
+  for (const word of (sectionsOf(body).knowledge ?? '').split(/[\s`'"<>,;:()[\]]+/)) {
+    const path = word.replace(/^\.\//, '').replace(/[.!?]+$/, '')
+    if (!/^[\w./@-]+$/.test(path) || !path.includes('/')) continue
+    if (/\.mdx?$/i.test(path) || (path.startsWith('docs/') && /\.\w+$/.test(path))) {
+      names.add(path)
+    }
+  }
+  return [...names]
+}
+
 const shown = (paths) =>
   paths.slice(0, 3).join(', ') + (paths.length > 3 ? ` and ${paths.length - 3} more` : '')
 
@@ -81,14 +98,24 @@ function howToFix(declared) {
  */
 export function knowledgeProblems({ mapJson, files, noteExists, body }) {
   const { behavior, docs } = classifyChanges(files)
-  if (behavior.length === 0) return []
   const declared = declaredBehavior(body)
-  if (declared?.change === 'none' && declared.reason.length >= MIN_REASON_LENGTH) return []
-
   const pathsOf = (list) => list.flatMap((f) => [f.filename, f.previous_filename].filter(Boolean))
   const changedPaths = pathsOf(files)
+
+  // A description that says a doc was updated must be telling the truth, whatever else changed
+  const problems =
+    declared?.change === 'none'
+      ? []
+      : namedDocs(body)
+          .filter((doc) => !changedPaths.includes(doc))
+          .map(
+            (doc) =>
+              `The Knowledge section names \`${doc}\`, but this PR does not change it. Update it in this PR, or correct the description.`,
+          )
+  if (behavior.length === 0) return problems
+  if (declared?.change === 'none' && declared.reason.length >= MIN_REASON_LENGTH) return problems
+
   const behaviorPaths = pathsOf(behavior)
-  const problems = []
   const covered = new Set()
   for (const entry of parseKnowledgeMap(mapJson)) {
     const note = entry.source
