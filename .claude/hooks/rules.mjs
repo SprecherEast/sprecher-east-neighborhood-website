@@ -2,6 +2,7 @@
 // scripts beside this file only read stdin, ask git, and call them. CI stays the real gate: these
 // catch the same mistakes earlier, inside the session that makes them.
 import { describes, parseKnowledgeMap } from '../../scripts/agent-context-maps.mjs'
+import { classifyFile } from '../../scripts/behavior-change.mjs'
 
 /**
  * Splits a shell command into simple commands (at `;`, `&&`, `||`, `|` and new lines), each a list
@@ -171,6 +172,30 @@ export function knowledgeReminder({ file, mapJson, reminded, noteExists, noteCha
     }
   }
   return null
+}
+
+/** What the session remembers once the repository-wide behavior reminder was shown */
+export const BEHAVIOR_REMINDER_KEY = '(repository)'
+
+/**
+ * The repository-wide reminder for an edit to `file` (#770, decision 0019 §6): when the file can
+ * change behavior (the classifier in `scripts/behavior-change.mjs`, by path only, as the diff isn't
+ * known yet), no doc has changed on this branch (`docChanged`, asked last, as it runs git) and this
+ * session wasn't reminded yet. CI is the gate; this only says so earlier.
+ * @param {{ file: string, reminded: Set<string>, docChanged: () => boolean }} input
+ */
+export function behaviorReminder({ file, reminded, docChanged }) {
+  if (reminded.has(BEHAVIOR_REMINDER_KEY)) return null
+  if (classifyFile({ filename: file, status: 'modified' }).kind !== 'behavior') return null
+  if (docChanged()) return null
+  return {
+    note: BEHAVIOR_REMINDER_KEY,
+    message:
+      `Knowledge: ${file} can change behavior and no note, reference or doc has changed on this ` +
+      'branch yet. If behavior changed (what a visitor, an editor or an agent gets), update the ' +
+      'doc that describes it in this PR; if not, the PR says "Behavior change: none" and why ' +
+      '(20+ characters). Decision 0019 §6. Said once per session; CI checks.',
+  }
 }
 
 /** The generated types file that `next dev` rewrites without Prettier */

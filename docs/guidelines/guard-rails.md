@@ -47,9 +47,13 @@ architecture, test-driven development and similar bounds.
    long session never permit skipping a rule or a step: they mean don't wait for the owner, not
    don't follow the process. If a rule seems to block the task, stop, say which rule and why, and
    ask. A breach found after merge is fixed first, in its own PR, before other work.
-9. **Documentation follows behavior.** A change in what a visitor, an editor or an agent gets
-   changes the note that describes it (`docs/knowledge/map.json`), or the generated reference, in
-   the same PR (owner, 2026-11-06, #712; [0019](../architecture/decisions/0019-knowledge-layer.md) §6).
+9. **Documentation follows behavior, anywhere in the repository.** A change in what a visitor, an
+   editor or an agent gets changes the note, guideline or generated reference that describes it,
+   in the same PR; where `docs/knowledge/map.json` names a note for the code, that note. A PR that
+   truly changes nothing (tests, comments, formatting, docs, lockfile patches are exempt by
+   themselves) declares `Behavior change: none` with a reason of 20+ characters, and when the
+   check cannot tell, the declaration is required (owner, 2026-11-06, #712 and #770;
+   [0019](../architecture/decisions/0019-knowledge-layer.md) §6).
 
 ## What enforces them
 
@@ -59,7 +63,7 @@ architecture, test-driven development and similar bounds.
 | Raw tags (2)          | ESLint ban on raw `a`, `button`, `input`, `select`, `textarea`, `details`, `summary` and `img` outside the kit (#465, #609, #610)                                              |
 | Architecture (4)      | ESLint boundaries (`eslint.boundaries.config.mjs`); knip reports unused code (not a required check yet)                                                                        |
 | Duplication (1)       | `Duplicate code (jscpd)` fails a repeated block of 12+ lines (#611, #622; not a required check yet), then review for what a tool can't see: the same logic written differently |
-| Documentation (9)     | `PR Policy` and `Knowledge sync` in CI; the reviewer lists every behavior change and finds its sentence                                                                        |
+| Documentation (9)     | `PR Policy` (the whole repository, `scripts/behavior-change.mjs`) and `Knowledge sync` in CI; the reviewer lists every behavior change and finds its sentence                  |
 | Self-review (6)       | `PR Policy` requires the Self-review section, then the reviewer checks it                                                                                                      |
 | Tests (5), violations | Required CI (tests, axe), then the reviewer. These two rest on the reviewer's diligence                                                                                        |
 

@@ -33,7 +33,8 @@ gh api "repos/{owner}/{repo}/stacks?pull_request=<number>" -H 'X-GitHub-Api-Vers
       needed. A merge order written only in prose is a **Blocker**.
 - [ ] **Policy changes are flagged.** If the diff touches `AGENTS.md`, `.agents/`,
       `.github/` (workflows, templates, label policy), `docs/guidelines/`, `docs/roles/`,
-      `docs/knowledge/map.json` (it decides which changes the sync check enforces), or the
+      `docs/knowledge/map.json` (it names the note for a path), `scripts/behavior-change.mjs` (the
+      classifier of what the sync check enforces), or the
       Claude Code adapter (`CLAUDE.md`, `.claude/`), or changes how the team works in
       `docs/process/` (sprint length, Ready or Done, levels, the board's columns and fields, but
       not wording, link or fact fixes), list each such change under
@@ -73,7 +74,10 @@ change: [decision 0019](../../../docs/architecture/decisions/0019-knowledge-laye
 2. For each, find the sentence that now describes it: in the note the
    [map](../../../docs/knowledge/map.json) names for the changed path, or in the generated page in
    `docs/reference/`. For a path the map doesn't list, in the doc that describes it (a guideline,
-   the setup notes, a skill). Quote it in the review. A change with no matching sentence is a
+   the setup notes, a skill). The check covers the whole repository (#770), so this applies to
+   scripts, workflows, config and `ops/` too. Quote it in the review. Also judge what the check
+   skipped (comment-only, formatting-only, tests, lockfile patches): a "formatting" diff that
+   moves logic is a **Blocker**. A change with no matching sentence is a
    **Blocker**, except in a module with no note yet: say so, no Blocker.
 3. Read the Knowledge section in the raw description (`gh pr view --json body`), not the rendered
    page. `Behavior change: none` needs a true reason as written. A reason hidden from readers (a

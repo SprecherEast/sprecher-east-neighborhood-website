@@ -5,6 +5,8 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
+import { classifyFile } from '../../scripts/behavior-change.mjs'
+
 /** The hook input, or null when stdin isn't JSON (then the hook does nothing) */
 export function readInput() {
   try {
@@ -88,6 +90,24 @@ export function noteChangedSinceMain(root, note) {
     git(root, '--literal-pathspecs', 'ls-files', '--others', '--exclude-standard', '--', note) !==
       ''
   )
+}
+
+/**
+ * Whether any doc (Markdown or under `docs/`) differs from where this branch left `main`
+ * (committed, staged, edited or new). True when that can't be told, like `noteChangedSinceMain`.
+ */
+export function docChangedSinceMain(root) {
+  const main = ['origin/main', 'main'].find((ref) => git(root, 'rev-parse', '--verify', '-q', ref))
+  const base = main && git(root, 'merge-base', 'HEAD', main)
+  if (!base) return true
+  const names = [
+    git(root, 'diff', '--name-only', base),
+    git(root, 'ls-files', '--others', '--exclude-standard'),
+  ]
+    .join('\n')
+    .split('\n')
+    .filter(Boolean)
+  return names.some((name) => classifyFile({ filename: name }).kind === 'doc')
 }
 
 /** Where each tool's command-line script sits inside node_modules */

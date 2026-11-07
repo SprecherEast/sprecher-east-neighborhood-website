@@ -6,6 +6,8 @@
 
 import path from 'node:path'
 
+import { isTestFile } from './behavior-change.mjs'
+
 export const LOAD_MAP = 'docs/guidelines/README.md'
 export const KNOWLEDGE_MAP = 'docs/knowledge/map.json'
 
@@ -102,14 +104,11 @@ export function globToRegExp(glob) {
   return new RegExp(`^${pattern}$`)
 }
 
-/** A test file: the sync check and the Claude Code hook leave these out when matching a note. */
-const TEST_FILE = /\.test\.[^/]*$/
-
 /**
  * Whether a knowledge-map entry describes `file`: it matches one of the entry's globs and is not a
  * test. The one definition the `PR Policy` check (`.github/scripts/knowledge-sync.mjs`) and the
  * Claude Code hook (`.claude/hooks/rules.mjs`) share, so they can't drift apart.
  */
 export function describes({ paths }, file) {
-  return !TEST_FILE.test(file) && paths.some((glob) => globToRegExp(glob).test(file))
+  return !isTestFile(file) && paths.some((glob) => globToRegExp(glob).test(file))
 }

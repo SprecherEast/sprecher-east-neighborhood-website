@@ -82,11 +82,25 @@ describe('after-edit hook, end to end', () => {
     expect(result.stdout).toBe('')
   })
 
-  it('prints nothing when the map lists a note that does not exist', () => {
+  it('gives the repository-wide reminder, not a note one, when the mapped note does not exist', () => {
     const file = setup({ note: false })
     const result = edit(file, 'sess-4')
     expect(result.status).toBe(0)
-    expect(result.stdout).toBe('')
+    const message = JSON.parse(result.stdout).hookSpecificOutput.additionalContext
+    expect(message).toMatch(/can change behavior/)
+    expect(message).not.toMatch(/README\.md/)
+  })
+
+  it('reminds about a file outside any mapped module, once, and not after a doc changed', () => {
+    setup()
+    write('scripts/tool.mjs', 'export const t = 1\n')
+    const tool = path.join(dir, 'scripts/tool.mjs')
+    expect(JSON.parse(edit(tool, 'sess-7').stdout).hookSpecificOutput.additionalContext).toMatch(
+      /scripts\/tool\.mjs/,
+    )
+    expect(edit(tool, 'sess-7').stdout).toBe('')
+    write('docs/new.md', '# New\n')
+    expect(edit(tool, 'sess-8').stdout).toBe('')
   })
 
   it('prints nothing when there is no main to compare with', () => {
