@@ -46,7 +46,7 @@ describe('FactCard', () => {
     expect(text.indexOf('Day-to-day money')).toBeLessThan(text.indexOf('$477.5M'))
   })
 
-  it('as a tab face: the icon sits on its own line with the label under it, centred (#856)', () => {
+  it('as a tab face: the icon sits on its own line with the label under it, all left-aligned (#856)', () => {
     const { container } = render(<FactCard fact={FACT} variant="tab" />)
     const icon = container.querySelector('svg')
     const label = [...container.querySelectorAll('span')].find(
@@ -55,9 +55,13 @@ describe('FactCard', () => {
     const line = icon?.parentElement
     // The icon and the label are siblings in a column, so the label wraps under the icon
     expect(line?.className).toContain('flex-col')
-    expect(line?.className).toContain('items-center')
+    expect(line?.className).toContain('items-start')
     expect(line?.contains(label ?? null)).toBe(true)
-    expect(label?.className).toContain('text-center')
+    expect(label?.className).toContain('text-left')
+    expect(label?.className).not.toContain('text-center')
+    const value = container.querySelector('[data-fact-part="value"]')
+    expect(value?.className).toContain('text-left')
+    expect(value?.className).not.toContain('text-center')
     // A single long word still breaks rather than widening a tab
     expect(label?.className).toContain('break-words')
     expect(icon?.compareDocumentPosition(label as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
