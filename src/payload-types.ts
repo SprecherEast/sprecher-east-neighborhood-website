@@ -1175,7 +1175,7 @@ export interface Faq {
   _status?: ('draft' | 'published') | null
 }
 /**
- * Addresses typed into a public form, and when they were confirmed by link. Unconfirmed ones are deleted automatically 48 hours after their last link. A confirmed one is deleted automatically 12 months after the person’s last message, unless they have an account or a message on hold. To remove an address on request sooner, delete it here.
+ * Addresses typed into a public form, and when they were confirmed by link. Unconfirmed ones are deleted automatically 48 hours after their last link. A confirmed one is deleted automatically 12 months after it was confirmed, unless they have an account or a message that is still kept (one from the last 12 months, or on hold). To remove an address on request sooner, delete it here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "email-confirmations".
