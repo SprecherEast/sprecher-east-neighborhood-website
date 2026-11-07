@@ -82,6 +82,8 @@ the [media page](../reference/components/media.md).
 
 Components: [feedback and overlays](../reference/components/feedback.md).
 
+`Alert` has four tones: `info` is blue (`info` and `info-strong` theme tokens, #818), `success` green, `warning` amber and `error` red. Each is a 10% tint with its `-strong` text, checked at 4.5:1 in light and dark, and each has its own icon, so colour is never the only cue.
+
 ## Navigation
 
 Components: [navigation and page tools](../reference/components/navigation.md).

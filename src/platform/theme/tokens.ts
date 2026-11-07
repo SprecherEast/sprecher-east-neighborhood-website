@@ -135,7 +135,6 @@ export const CHART_PAIRS = CHART_TOKENS.flatMap((chart) =>
  */
 export const TINT_ALPHA = 0.1
 const ALERT_TONES = [
-  ['foreground', 'muted-foreground'],
   // `Card · tinted` (`bg-primary/10`): the sidebar box's text (#216)
   ['foreground', 'primary'],
   ['primary-strong', 'primary'],
