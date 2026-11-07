@@ -38,10 +38,12 @@ import {
 export { KNOWLEDGE_MAP, LOAD_MAP, globToRegExp, parseKnowledgeMap, parseLoadMap }
 
 /**
- * The most tokens that session start may load (#737). Measured at 5459 on 2026-11-06, plus about
- * 10% headroom. The owner may raise or lower it: it is the only place the number lives.
+ * The most tokens that session start may load (#737, #799). It keeps what every session pays for
+ * small: current need plus modest headroom, enough for one short index line per knowledge note.
+ * It is our own ceiling, not a vendor limit, and the owner may raise or lower it. It is the only
+ * place the number lives; the check prints the live count.
  */
-export const BUDGET_TOKENS = 6000
+export const BUDGET_TOKENS = 6500
 export const GENERATED_DIR = '.claude/rules/generated'
 
 /** Turns a relative Markdown link in `text`, written from `source`, into a repo-root link. */
