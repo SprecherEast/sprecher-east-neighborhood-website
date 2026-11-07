@@ -1,13 +1,22 @@
 ---
 name: visual-design-review
-description: Design review of a change to how the Sprecher East site looks — screenshot the affected pages at six widths in light and dark themes, judge them against the design guidelines in priority order, and report each finding with the pattern and code that fixes it. Use before opening or updating a PR that touches CSS, Tailwind classes, markup, components or images, and when asked for a design audit.
+description: Design review of a change to how the Sprecher East site looks, or of any image, illustration or graphic made for it — screenshot the affected pages at six widths in light and dark themes, judge them against the design guidelines in priority order, and report each finding with the pattern and code that fixes it. Use before opening or updating a PR that touches CSS, Tailwind classes, markup, components or images, before publishing any image or illustration made for the site (including through the CMS, where no diff exists), and when asked for a design audit.
 ---
 
 # Visual design review
 
 Required for any diff that touches CSS, Tailwind classes, HTML structure, component markup, or
-image treatment. Skip it for backend-only, config-only, or docs-only changes. Fix every Critical
-and High finding before opening the PR.
+image treatment, and for every image, illustration or graphic made or edited for the site, even
+when it is published through the CMS and no diff exists (#812). Skip it for backend-only,
+config-only, or docs-only changes. Fix every Critical and High finding before opening the PR or
+publishing the image.
+
+**Images made for the site:** review the finished file against
+[Images made for the site](../../../docs/guidelines/images.md):
+open the component that shows it to find what overlays it, preview the image at the card size on a
+phone, fix what the checks find, publish, then screenshot the live page at phone and desktop width.
+Claude Code stops a browser script that uploads media or sets an image until it carries the line
+`image-review: passed`; write that line only after this review.
 
 The reviewer acts as a design director: it evolves the existing design within the brand and the
 layout system, and never redesigns the site from scratch.
