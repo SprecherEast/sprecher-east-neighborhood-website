@@ -128,8 +128,20 @@ change: [decision 0019](../../../docs/architecture/decisions/0019-knowledge-laye
 
 - **Correctness:** does it do what the issue asks? Look for edge cases, error handling,
   failure modes, and behavior when configuration is missing (local dev, CI).
-- **Security:** no secrets in the diff. Input is validated at boundaries. Access control on
-  Payload collections and endpoints is unchanged or intentionally changed.
+- **Security:** no secrets or real personal data in the diff. Walk the change through each of
+  these and note which apply:
+  - Authentication and access rules: who can read or write, per operation, is unchanged or
+    intentionally changed, on Payload collections, endpoints and routes alike.
+  - Input is validated at every boundary (forms, query strings, uploads, webhooks, API bodies),
+    and output built from user content is escaped or sanitized, never trusted as markup.
+  - Secrets and personal data stay out of code, logs, error messages, fixtures and client bundles.
+  - A new or upgraded dependency is established and maintained, and `Dependency Audit` stays green.
+  - Server scripts, workflows and deploy steps run with the least permission and trust only
+    their own repository's inputs.
+  - Redirects, fetches of URLs and file paths built from input can't be steered to other targets.
+    A finding in any of these is a **Blocker**. Treat code-scanning and secret-scanning alerts on
+    the PR as findings to answer, not noise. For a change that touches sign-in, accounts, access
+    rules, migrations, deploy or server scripts, the stronger reviewer model applies.
 - **Native first, then plugins, then our code:** new custom code (a flow, a token, a limiter, a
   service) comes with the issue's findings for each step of the
   [ladder](../../../docs/guidelines/development.md#native-first-then-plugins-then-our-code):
