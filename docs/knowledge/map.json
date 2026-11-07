@@ -65,5 +65,9 @@
       "src/platform/turnstile/**",
       "src/platform/service/**"
     ]
+  },
+  {
+    "note": "src/platform/richtext/README.md",
+    "paths": ["src/platform/richtext/**"]
   }
 ]
