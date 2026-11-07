@@ -85,14 +85,14 @@ All forms must use the UI kit's primitives — never raw HTML `<input>`, `<label
 - **Form**: `src/platform/ui/Form.client.tsx` — react-hook-form with a Zod schema, the fields grid and the fixed success or error message; for forms that submit data. A plain search box can use a `<form>` with `Field`
 - **Button**: `src/platform/ui/Button.tsx` — CVA variants (`primary`, `secondary`, `ghost`, etc.)
 
-For feedback messages (errors, success), use design tokens — never hardcoded Tailwind color classes. Always include ARIA live regions so screen readers announce state changes:
+For feedback messages (errors, success), use `Alert` from `src/platform/ui/Alert.tsx`, which carries the tone's tokens, icon and ARIA live region (errors interrupt; the rest wait their turn; `live={false}` for a message that is part of the page's content). Never hand-write the box or use hardcoded Tailwind colour classes:
 
 ```tsx
-// Error — role="alert" + aria-live="assertive" for immediate announcement
-<div role="alert" aria-live="assertive" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+// Error: announced at once (role="alert")
+<Alert tone="error">Something went wrong. Please try again.</Alert>
 
-// Success — role="status" + aria-live="polite" for non-urgent announcement
-<div role="status" aria-live="polite" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm text-primary">
+// Success: announced politely (role="status")
+<Alert tone="success">Thanks, your message was sent.</Alert>
 ```
 
 ## Icons

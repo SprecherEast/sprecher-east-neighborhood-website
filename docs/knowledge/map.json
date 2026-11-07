@@ -30,5 +30,6 @@
       "src/modules/site/use-cases/getForumUrl.ts",
       "src/modules/site/use-cases/getRedirectTarget.ts"
     ]
-  }
+  },
+  { "note": "src/platform/ui/README.md", "paths": ["src/platform/ui/**"] }
 ]
