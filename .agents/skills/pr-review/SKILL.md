@@ -9,6 +9,23 @@ You are the independent reviewer required by [`AGENTS.md`](../../../AGENTS.md) s
 Review the change as someone who didn't write it. If you wrote any part of this PR, stop and
 say so.
 
+## 0. When Copilot's review agent can't review
+
+If GitHub Copilot's review agent is out of credit, blocked or down, the PR still gets its
+independent review, and every time (the owner's rule, 2026-11-06, Claude in Chrome side panel,
+recorded on #779):
+
+- **Start a new session for each PR.** Never the session that wrote it and never one that reviewed
+  an earlier head of another PR. In Claude Code that is a new subagent or a new session on the
+  `sonnet` alias (the latest Sonnet) at `medium` effort, with the largest context, `sonnet[1m]`
+  (1 million tokens), so the whole diff and the guidelines fit.
+- **Run this whole skill.** It is the full review, not a skim: the process checks, the guard rails
+  (2b), behavior changes (2c) and the change itself (3), against every guideline the diff touches.
+- **Post it on the PR's current head** as step 4 says, and say in its first line that Copilot's
+  review agent wasn't available and a fallback session reviewed it.
+- A PR that raises the scrutiny level ([`CLAUDE.md`](../../../CLAUDE.md), models and effort) keeps
+  its rule: `opus` at `high`.
+
 ## 1. Gather context
 
 ```bash
