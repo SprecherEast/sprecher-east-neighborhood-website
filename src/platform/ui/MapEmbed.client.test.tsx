@@ -69,10 +69,9 @@ describe('MapEmbed (#764)', () => {
       .closest('button')?.parentElement
     const text = screen.getByText('Our boundary, with I-94 to the north.').parentElement
 
-    expect(grid.className).toContain('md:grid-cols-[minmax(0,4fr)_minmax(0,1fr)]')
+    expect(grid.className).toContain('md:grid-cols-[minmax(0,5fr)_minmax(0,3fr)]')
     expect(text?.className).toContain('md:order-1')
     expect(preview?.className).toContain('md:order-2')
-    expect(preview?.className).toContain('md:justify-self-end')
     // Below md the preview stays above the text: it is first in the page order
     expect(grid.firstElementChild).toBe(preview)
   })

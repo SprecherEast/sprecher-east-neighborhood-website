@@ -68,7 +68,7 @@ no control repeats that wiring. Each control works with a controlled value or re
 Components: [cards](../reference/components/cards.md), [display](../reference/components/display.md), [sections and page headers](../reference/components/sections.md) and [media](../reference/components/media.md).
 
 **`MapEmbed`** (#764) is a small map picture beside its text, with the text on the left and the
-picture, about a fifth of the width, on the right from `md` up (the picture sits above the text on a
+picture, about three eighths of the width and centred against the text, on the right from `md` up (the picture sits above the text on a
 phone), and a live Google map in a `Dialog`
 when a neighbor taps the picture or the "View the larger map" button. The frame is created only
 after that tap, so the page asks Google for nothing before it, and then Google receives the visit
