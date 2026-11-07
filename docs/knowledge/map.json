@@ -1,5 +1,9 @@
 [
   { "note": "src/modules/events/README.md", "paths": ["src/modules/events/**"] },
   { "note": "src/modules/contact/README.md", "paths": ["src/modules/contact/**"] },
+  { "note": "src/modules/agents/README.md", "paths": ["src/modules/agents/**"] },
+  { "note": "src/modules/verification/README.md", "paths": ["src/modules/verification/**"] },
+  { "note": "src/modules/directory/README.md", "paths": ["src/modules/directory/**"] },
+  { "note": "src/platform/theme/README.md", "paths": ["src/platform/theme/**", "src/themes/**"] },
   { "note": "src/modules/accounts/README.md", "paths": ["src/modules/accounts/**"] }
 ]

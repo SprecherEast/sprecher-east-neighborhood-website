@@ -8,6 +8,10 @@ generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.m
 
 - [Events](../../src/modules/events/README.md): the calendar, its listings, category pages and "this week" block; what "upcoming" means, what a save refreshes, official meetings, cancelled events, suggestions held as drafts.
 - [Contact](../../src/modules/contact/README.md): form checks, emails held until the sender confirms, retention.
+- [Agents](../../src/modules/agents/README.md): MCP access, what agents may read, suggestions held as drafts, run history.
+- [Verification](../../src/modules/verification/README.md): email confirmation by link, its limits, the welcome email, retention.
+- [Directory](../../src/modules/directory/README.md): the FAQ and resources pages; how entries are grouped, when an official's photo shows, what a save refreshes.
+- [Theme](../../src/platform/theme/README.md): tokens, light and dark mode, theme options and decorations.
 - [Accounts](../../src/modules/accounts/README.md): sign-up, verification, sign-in, password changes and resets, and the guards on each.
 
 ## Reference (generated)

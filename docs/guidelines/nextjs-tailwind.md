@@ -65,17 +65,11 @@ Fetch data through the owning module's use cases (from its `server.ts`), whose `
 
 ## Design Tokens
 
-Values in `src/themes/default/theme.css` (a few of them):
-
-| Token                      | Light     | Dark      |
-| -------------------------- | --------- | --------- |
-| `--color-primary`          | `#3d7a5e` | `#4e9b76` |
-| `--color-accent`           | `#e8923a` | `#f0a04b` |
-| `--color-background`       | `#f9f8f5` | `#0f1117` |
-| `--color-surface`          | `#f0ede6` | `#1e2130` |
-| `--color-foreground`       | `#1a1a1a` | `#e8e6e3` |
-| `--color-muted-foreground` | `#6b6b6b` | `#9ca3af` |
-| `--color-border`           | `#e2ddd6` | `#2d3040` |
+Each token is named in `src/platform/theme/tokens.ts` and valued, for light and dark, in
+`src/themes/default/theme.css`: that file is the one place the values live. Components use them
+through the Tailwind classes `src/platform/theme/tailwind.css` maps them to (`bg-primary`,
+`text-muted-foreground`). How the pieces fit is in the
+[theme note](../../src/platform/theme/README.md).
 
 ## Dates and Timezone
 
