@@ -58,6 +58,8 @@ describe('FactCard', () => {
     expect(line?.className).toContain('items-center')
     expect(line?.contains(label ?? null)).toBe(true)
     expect(label?.className).toContain('text-center')
+    // A single long word still breaks rather than widening a tab
+    expect(label?.className).toContain('break-words')
     expect(icon?.compareDocumentPosition(label as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   })
 

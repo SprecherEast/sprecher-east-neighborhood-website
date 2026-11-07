@@ -50,7 +50,10 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
         >
           <Icon aria-hidden="true" className="size-5 shrink-0 text-primary" />
           <span
-            className={cn('min-w-0', tab ? 'text-center text-balance' : '[overflow-wrap:anywhere]')}
+            className={cn(
+              'min-w-0',
+              tab ? 'text-center text-balance break-words' : '[overflow-wrap:anywhere]',
+            )}
           >
             {fact.label}
           </span>
