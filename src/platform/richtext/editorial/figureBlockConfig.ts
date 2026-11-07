@@ -17,7 +17,10 @@ export const FigureBlockConfig: Block = {
       type: 'upload',
       relationTo: 'media',
       required: true,
-      admin: { description: 'The large picture. It shows small in the article.' },
+      admin: {
+        description:
+          'The large picture. It shows small in the article. It does not set the card or link-preview image.',
+      },
     },
     {
       name: 'title',

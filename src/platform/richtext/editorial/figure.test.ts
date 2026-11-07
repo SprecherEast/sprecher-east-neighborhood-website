@@ -31,6 +31,15 @@ describe('toFigureProps', () => {
     })
   })
 
+  it('drops empty markers at the end of the key, never one in the middle', () => {
+    const props = toFigureProps({
+      image: 7,
+      title: 'Concept',
+      items: [{ label: 'One' }, { label: '' }, { label: 'Three' }, { label: ' ', text: ' ' }],
+    })
+    expect(props.items?.map((item) => item.label)).toEqual(['One', '', 'Three'])
+  })
+
   it('leaves out what is empty, and keeps the default size', () => {
     const props = toFigureProps({ image: 7, title: 'Concept', label: ' ', caption: '', items: [] })
     expect(props.label).toBeUndefined()

@@ -12,6 +12,7 @@ import type {
   MediaBlock as MediaFields,
   DiagramKeyBlock as DiagramKeyFields,
   FactTabsBlock as FactTabsFields,
+  FigureBlock as FigureFields,
   KeyFactsBlock as KeyFactsFields,
   OutcomeForkBlock as OutcomeForkFields,
   StepsBlock as StepsFields,
@@ -28,6 +29,7 @@ import { KeyFacts } from './editorial/KeyFacts'
 import { OutcomeFork } from './editorial/OutcomeFork'
 import { Steps } from './editorial/Steps'
 import { Timeline } from './editorial/Timeline'
+import { FigureBlock } from './FigureBlock'
 import { MediaBlock } from './MediaBlock'
 import { richTextBlocks } from './richTextBlocks'
 
@@ -145,6 +147,19 @@ describe('richTextBlocks', () => {
     expect(element.type).toBe(DiagramKey)
     expect(element.props.className).toBe('col-start-2')
     expect(element.props.items).toHaveLength(2)
+  })
+
+  it('draws a figure from plain props, without the column class', () => {
+    const fields: FigureFields = {
+      blockType: 'figure',
+      image: 7,
+      title: 'Concept',
+      items: [{ label: 'One' }, { label: 'Two' }],
+    }
+    const element = richTextBlocks.figure(argsFor(fields))
+
+    expect(element.type).toBe(FigureBlock)
+    expect(element.props.title).toBe('Concept')
   })
 
   it('draws a chart in the middle column, from a spec the mapper checked', () => {
