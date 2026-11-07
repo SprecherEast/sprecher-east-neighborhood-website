@@ -67,7 +67,7 @@ export const COMPONENT_GROUPS = [
     slug: 'feedback',
     title: 'Feedback and overlays',
     intro: 'Messages, toasts and dialogs.',
-    components: ['Alert', 'Dismissible', 'Toast', 'Dialog'],
+    components: ['Alert', 'Dismissible', 'Toast', 'Dialog', 'Zoom'],
   },
   {
     slug: 'navigation',
