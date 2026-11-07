@@ -6,6 +6,7 @@ import { Figure } from '@/platform/ui/Figure'
 import { Zoom } from '@/platform/ui/Zoom.client'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
+import { SAMPLE_PHOTO } from './sampleData'
 
 /** What a reader can close or enlarge */
 export function DismissAndZoomGallery() {
@@ -43,13 +44,13 @@ export function DismissAndZoomGallery() {
         name="Figure"
         description="A small picture floated right in an article, with a label badge and a short caption. Click it for the large picture, the long caption and the numbered key."
       >
-        <GalleryVariant label="two fifths, with a key" className="block w-full max-w-xl">
+        <GalleryVariant label="two fifths, with a key" className="block flow-root w-full max-w-xl">
           <p>
             Text wraps on the left of the picture from md up, and the picture sits between
             paragraphs on a phone.
           </p>
           <Figure
-            src={{ src: '/favicon.ico', width: 64, height: 64 }}
+            src={SAMPLE_PHOTO}
             alt="Sample picture"
             title="Sample figure"
             label="Figure 1"
