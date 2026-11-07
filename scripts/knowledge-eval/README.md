@@ -78,6 +78,8 @@ questions and also carry:
 - `core`: part of the 36-task core set (every note once vague and once specific, plus level 3 and
   cross tasks).
 
+`--tasks` ids win over `--set`: `--tasks EV-2 --set core` runs `EV-2` even if it is not core.
+
 Every key fact was checked against the code, not only the notes, so a note's mistake doesn't
 define the right answer.
 

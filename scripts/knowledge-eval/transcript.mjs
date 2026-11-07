@@ -3,7 +3,9 @@
 
 // A note, a doc or a generated rule is the knowledge layer; any other file read is code.
 const isKnowledgeFile = (file) =>
-  /(^|\/)README\.md$/.test(file) || /^(docs|\.claude|\.agents)\//.test(file)
+  /(^|\/)README\.md$/.test(file) ||
+  /^(AGENTS|CLAUDE)\.md$/.test(file) ||
+  /^(docs|\.claude|\.agents)\//.test(file)
 
 /** Every token the session used, over all models: input, output and both cache counts. */
 export function totalTokens(modelUsage) {

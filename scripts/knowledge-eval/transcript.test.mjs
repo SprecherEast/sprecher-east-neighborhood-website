@@ -86,6 +86,8 @@ describe('parseTranscript', () => {
     const text = [
       read('/w/src/modules/events/README.md'),
       read('/w/docs/reference/routes.md'),
+      read('/w/AGENTS.md'),
+      read('/w/CLAUDE.md'),
       read('/w/.claude/rules/generated/a.md'),
       read('/w/src/modules/events/domain/scope.ts'),
       read('/w/src/modules/events/domain/scope.ts'),
