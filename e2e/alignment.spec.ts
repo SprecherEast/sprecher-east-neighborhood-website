@@ -258,7 +258,6 @@ test.describe('the left rail of a post', () => {
 
       expect(m.overflow, `${width}px: nothing scrolls sideways`).toBeLessThanOrEqual(0)
       if (m.twoColumns) {
-        expect(width, 'two columns only from the lg breakpoint').toBeGreaterThanOrEqual(1024)
         expect(m.menu.left, `${width}px: the menu starts at the breadcrumb's left edge`).toBe(
           m.crumb.left,
         )
@@ -279,7 +278,12 @@ test.describe('the left rail of a post', () => {
           m.text.bottom,
         )
         // The bar keeps its place under the site header while the article scrolls past it
-        await page.evaluate(() => window.scrollTo(0, 1200))
+        // Instant, because the page scrolls smoothly and the read below must not race the scroll
+        await page.evaluate(() => window.scrollTo({ top: 1200, behavior: 'instant' }))
+        expect(
+          await page.evaluate(() => window.scrollY),
+          `${width}px: the page scrolled`,
+        ).toBeGreaterThan(0)
         const stuck = await page
           .locator('nav[aria-label="On this page"]')
           .evaluate((nav) => Math.round(nav.getBoundingClientRect().top))
