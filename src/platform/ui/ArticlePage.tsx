@@ -24,7 +24,7 @@ export type ArticlePageProps = {
   breadcrumbs: BreadcrumbItem[]
   /** The "On this page" menu, when the article has headings to list */
   toc?: React.ReactNode
-  /** The sidebar: related items, a call to action */
+  /** The related content: related items, a call to action */
   aside: React.ReactNode
   /** The article's top and bottom space, which a post and an event set differently */
   className?: string
@@ -33,8 +33,8 @@ export type ArticlePageProps = {
 
 /*
  * A post's or an event's page: the article with its structured data, header, breadcrumbs, and the
- * `DetailLayout` of text and sidebar. Written once for both; each page keeps what is its own (the
- * header's facts, the text above the body, the sidebar).
+ * `DetailLayout` of text and left rail. Written once for both; each page keeps what is its own (the
+ * header's facts, the text above the body, the related content).
  */
 export function ArticlePage({
   jsonLd,

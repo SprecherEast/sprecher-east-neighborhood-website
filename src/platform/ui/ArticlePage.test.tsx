@@ -35,7 +35,7 @@ const renderArticle = (props: Partial<Parameters<typeof ArticlePage>[0]> = {}) =
   )
 
 describe('ArticlePage', () => {
-  it('reads as an article: the title, the trail, the text, then the sidebar', async () => {
+  it('reads as an article: the title, the trail, the text, then the related content', async () => {
     const { container } = renderArticle()
 
     const article = screen.getByRole('article')

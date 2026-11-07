@@ -8,7 +8,7 @@ import { expectAccessible } from './testing/expectAccessible'
 afterEach(cleanup)
 
 describe('DetailLayout', () => {
-  it('puts the sidebar in an aside beside the content (#434)', async () => {
+  it('puts the related content in an aside beside the content (#434)', async () => {
     const { container } = render(
       <main>
         <DetailLayout aside={<p>Upcoming events</p>}>
@@ -48,6 +48,13 @@ describe('DetailLayout', () => {
       expect(rail?.contains(aside)).toBe(true)
       expect(rail?.contains(article)).toBe(false)
       await expectAccessible(container)
+    })
+
+    it('moves the related content below the article on small screens', () => {
+      renderWithMenu()
+      // The rail comes first in the markup: `order` is what puts the article before the aside
+      expect(screen.getByRole('complementary').className).toContain('max-lg:order-3')
+      expect(screen.getByText('The post').parentElement?.className).toContain('max-lg:order-2')
     })
 
     it('divides the page menu from the related content', () => {

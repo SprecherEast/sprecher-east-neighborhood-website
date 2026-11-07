@@ -11,7 +11,9 @@ export type DetailLayoutProps = {
   aside: React.ReactNode
   /**
    * The article's "On this page" menu (`OnThisPage`, #574). Given, it leads the rail from `lg` (a
-   * bar above the article before that), with a divider between it and the related content.
+   * bar above the article before that), with a divider between it and the related content. Pass
+   * nothing when the article has no menu (`articleToc` does): an element that renders nothing
+   * would still get the divider.
    */
   toc?: React.ReactNode
   className?: string
@@ -24,9 +26,13 @@ export type DetailLayoutProps = {
  * screen. Below `lg` it is one column in reading order: the page menu bar, the article, then the
  * related content under it, never directly under the page menu.
  *
+ * The rail's padding and the same negative margin give the links at its edges room for their focus
+ * ring, which the rail's own scrolling would otherwise clip.
+ *
  * The rail comes first in the markup and `order` moves the related content below the article on
  * small screens (`contents` lets the rail's parts take part in that order), so on a wide screen
- * the reading and tab order are the same as what is on the screen.
+ * the reading and tab order are the same as what is on the screen. The cost: on a small screen a
+ * keyboard or screen-reader user reaches the related content before the article text (#677).
  */
 export function DetailLayout({ children, aside, toc, className }: DetailLayoutProps) {
   const hasAside = aside !== null && aside !== undefined && aside !== false
@@ -44,7 +50,7 @@ export function DetailLayout({ children, aside, toc, className }: DetailLayoutPr
       {hasRail && (
         <div
           data-detail-rail
-          className="max-lg:contents lg:sticky lg:top-[var(--anchor-offset)] lg:max-h-[calc(100svh-var(--anchor-offset)-1rem)] lg:self-start lg:overflow-y-auto"
+          className="max-lg:contents lg:sticky lg:top-[var(--anchor-offset)] lg:-m-1 lg:max-h-[calc(100svh-var(--anchor-offset)-1rem)] lg:self-start lg:overflow-y-auto lg:p-1"
         >
           {toc}
           {hasAside && (
