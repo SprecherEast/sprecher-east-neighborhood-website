@@ -13,7 +13,7 @@ import { cn } from '@/platform/lib/cn'
 const alertVariants = cva('flex gap-3 rounded-md border p-3 text-sm', {
   variants: {
     tone: {
-      info: 'border-muted-foreground/30 bg-muted-foreground/10 text-foreground',
+      info: 'border-info/30 bg-info/10 text-info-strong',
       success: 'border-primary/30 bg-primary/10 text-primary-strong',
       warning: 'border-warning/30 bg-warning/10 text-warning-strong',
       error: 'border-destructive/30 bg-destructive/10 text-destructive-strong',

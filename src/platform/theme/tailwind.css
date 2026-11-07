@@ -36,6 +36,7 @@
   --radius-xl: calc(var(--radius) + 4px);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-info: var(--info);
   --color-error: var(--error);
   --color-surface: var(--surface);
   --color-primary-dark: var(--primary-dark);
@@ -46,6 +47,7 @@
   --color-primary-strong: var(--primary-strong);
   --color-destructive-strong: var(--destructive-strong);
   --color-warning-strong: var(--warning-strong);
+  --color-info-strong: var(--info-strong);
   --color-on-image: var(--on-image);
   --color-scrim: var(--scrim);
   --color-diagram-marker: var(--diagram-marker);

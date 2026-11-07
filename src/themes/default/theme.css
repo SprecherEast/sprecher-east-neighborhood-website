@@ -38,6 +38,7 @@
   --radius: 0.625rem;
   --success: #3d7a5e;
   --warning: #e8923a;
+  --info: #2f6fb3;
   --error: #dc2626;
   --surface: #f0ede6;
   --primary-dark: #2e5e47;
@@ -53,6 +54,8 @@
   --destructive-strong: #b91c1c;
   /* Warning text: 5.4:1 or more on the warning tint, on --surface too */
   --warning-strong: #8a4a0e;
+  /* Information text: 6:1 or more on the info tint, on --surface too */
+  --info-strong: #1d4f8c;
   /* Text and overlays on photos: the same in both modes, as the photo doesn't change */
   --on-image: #ffffff;
   --scrim: #000000;
@@ -94,6 +97,7 @@
   --chart-6: #d0679d;
   --success: #4e9b76;
   --warning: #f0a04b;
+  --info: #5a9bde;
   --error: #ef4444;
   --surface: #1e2130;
   --primary-dark: #3d7a5e;
@@ -107,6 +111,7 @@
   /* 5.8:1 on --surface, 6.1:1 on --card, 6.8:1 on --background */
   --destructive-strong: #f87171;
   --warning-strong: #f5b76e;
+  --info-strong: #8fbdf0;
   --on-image: #ffffff;
   --scrim: #000000;
   /* Dark chrome on any page (admin bar, code blocks) */
