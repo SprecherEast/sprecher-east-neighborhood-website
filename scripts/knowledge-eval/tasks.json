@@ -201,7 +201,7 @@
     "prompt": "Using the generated reference for the events collection: which access function guards update and which guards delete, and does any page or query read the 'featured' checkbox? Answer concisely and name the files you relied on. Don't change any files.",
     "key": [
       ["isAdminOrEditor"],
-      ["/isadmin\b/"],
+      ["/isadmin\\b/"],
       [
         "no page",
         "not read",
@@ -307,7 +307,7 @@
       ["defaultImage"],
       ["parent"],
       ["nested-docs", "nested docs", "nestedDocs"],
-      ["/isadmin\b/"],
+      ["/isadmin\\b/"],
       ["content-types/categories.md"]
     ],
     "core": true
@@ -383,7 +383,7 @@
     "key": [
       ["anyone"],
       ["isAdminOrEditor"],
-      ["/isadmin\b/"],
+      ["/isadmin\\b/"],
       ["email"],
       [
         "no page",

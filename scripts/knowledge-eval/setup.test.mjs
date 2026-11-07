@@ -168,6 +168,15 @@ describe('selectTasks and validateTasks for the larger set', () => {
     expect(validateTasks(loadTasks())).toEqual([])
   })
 
+  it('writes every /regex/ key so that it compiles and holds no control character', () => {
+    const alternatives = loadTasks().flatMap((t) => (t.key ?? []).flat())
+    for (const alt of alternatives.filter((a) => /^\/.+\/$/.test(a))) {
+      // oxlint-disable-next-line no-control-regex
+      expect(alt, alt).not.toMatch(/[\u0000-\u001f]/)
+      expect(() => new RegExp(alt.slice(1, -1), 'i')).not.toThrow()
+    }
+  })
+
   it('covers every level and style, and the core set is a proper subset', () => {
     const all = loadTasks()
     const core = all.filter((t) => t.core)
