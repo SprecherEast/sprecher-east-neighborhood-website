@@ -42,7 +42,7 @@ Without step 1 editors can't add the block. Once the types are regenerated, a mi
 fails `tsc`.
 
 Page-builder blocks: `archive`, `content`, `cta`, `eventsThisWeek` (from `events`), `formBlock`
-(from `contact`), `mapBlock`, `mediaBlock`, `topIssues` (from `news`). Blocks inside rich text
+(from `contact`), `mediaBlock`, `topIssues` (from `news`). Blocks inside rich text
 (`src/platform/richtext/`): `banner`, `code`, `mediaBlock`, and the visual blocks in
 `EDITORIAL_BLOCKS` (`timeline`, `steps`, `keyFacts`, `outcomeFork`, `diagramKey`, `chart`, `factTabs`).
 A block that agents may write in Markdown has a `jsx` converter (`chart` #640 and `factTabs` #664 do):
