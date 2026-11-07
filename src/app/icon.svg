@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Sprecher East</title>
+  <!-- Roofline: two straight strokes cross at the peak and run slightly past each other.
+       Colors are the theme's primary token (src/themes/default/theme.css): #3d7a5e light, #4e9b76 dark. -->
+  <style>
+    path { stroke: #3d7a5e; }
+    @media (prefers-color-scheme: dark) { path { stroke: #4e9b76; } }
+  </style>
+  <g fill="none" stroke-width="10" stroke-linecap="butt">
+    <path d="M9 54 L36 14" />
+    <path d="M55 54 L28 14" />
+  </g>
+</svg>
