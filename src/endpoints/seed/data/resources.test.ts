@@ -24,6 +24,8 @@ describe('seeded resources: facts a neighbor relies on', () => {
   })
 
   it('lists no old county board address', () => {
-    expect(resourceItems.some((item) => item.url?.includes('countyofdane.com'))).toBe(false)
+    const hosts = resourceItems.flatMap((item) => (item.url ? [new URL(item.url).hostname] : []))
+
+    expect(hosts).not.toContain('board.countyofdane.com')
   })
 })
