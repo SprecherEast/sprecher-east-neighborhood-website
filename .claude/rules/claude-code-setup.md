@@ -36,8 +36,7 @@ Claude Code.
   ([permission modes](https://code.claude.com/docs/en/permission-modes)). A WSL2 sandbox is an
   option the owner decides in #697. Keep `ANTHROPIC_API_KEY` out of the environment: in `-p` runs
   the key is always used when present, which switches usage from the subscription to API billing
-  ([authentication](https://code.claude.com/docs/en/authentication)). It was not set on the
-  owner's computer on 2026-11-05 (user, machine and session scope).
+  ([authentication](https://code.claude.com/docs/en/authentication)).
 - **Subagents:** `.claude/agents/` registers each [role guide](/docs/roles/README.md) as a subagent
   Claude Code can delegate to. Those files only hold Claude Code settings; edit the guide. #695
   replaces them with one worker that loads the guides as skills.
@@ -58,7 +57,7 @@ Claude Code.
   with `claude plugin install security-guidance@claude-plugins-official --scope project` (it needs
   Python 3.8+). Cloud sessions don't load plugins a repository turns on, so there CodeQL and the
   reviews cover it.
-- **How instructions load** (#144, tested on 2026-11-06 with Claude Code 2.1.318): a rule in
+- **How instructions load** (#144): a rule in
   `.claude/rules/` with `paths` loads when Claude reads or edits a matching file, and one without
   `paths` loads at session start. An `@import` inside a rule loads at session start whatever the
   rule's `paths` say, so the generated rules carry the text itself. Symlinked rules work, but git

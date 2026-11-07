@@ -24,7 +24,7 @@ Sessions of 2026-11-04 (voice and text) and 2026-11-05 (Claude Code):
 - Design comes before building, the builders' standards are kept current, and a feedback loop fixes
   repeated failures at the root cause. Sources are official documentation and maintained open source.
 
-Session of 2026-11-06 (Claude, text), after two outside reviews and a check against research:
+Session of 2026-11-06 (Claude, text):
 
 - A leaner team: the chief of staff, one temporary worker per issue, a fresh reviewer per PR.
 - The role guides become skills a worker loads. The four helpers planned earlier (planner, design

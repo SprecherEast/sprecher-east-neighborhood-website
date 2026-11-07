@@ -134,7 +134,7 @@ parallel work when issues don't touch the same files, with no fixed number, and 
   says so, as in the Definition of Ready). Anything bigger is split. When it meets the
   [Definition of Ready](#definition-of-ready), it moves to **Ready**.
 - **Work in progress has no fixed number.** What limits it is whether issues touch the same
-  files (the earlier working default of 2 is withdrawn, #721). Past
+  files (#721). Past
   the first, an issue starts only if its **Files likely touched** don't overlap with those of any
   issue in progress, the two don't both touch the **shared hot spots**, and it isn't blocked by
   any issue in progress. The dispatcher (the chief of staff, or the owner's own session until #695
