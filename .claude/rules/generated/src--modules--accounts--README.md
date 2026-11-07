@@ -25,7 +25,7 @@ The six account pages, their routes and data are in the [screens reference](/doc
 
 ## Behaviors and events
 
-- Sign-up makes a guest that cannot sign in until its emailed link is pressed as Confirm on `/verify-account`, after the robot check, so a mail scanner opening the link verifies nothing (`use-cases/signUpResident.ts`, `use-cases/verifyAccountFromLink.ts`).
+- Sign-up makes a guest that cannot sign in until its emailed link is pressed as Confirm on `/verify-account`, after the robot check, so a mail scanner opening the link verifies nothing. The link has no expiry (Payload's own verify), and a resend replaces it (`use-cases/signUpResident.ts`, `use-cases/verifyAccountFromLink.ts`).
 - Payload's own REST verify answers 403 (`cms/verifyFromSiteOnly.ts`, on the collection in `cms/users.ts`); its GraphQL verify mutation fails a validation rule instead (`noVerifyMutation`, registered in `src/payload.config.ts`); the admin's verify page and forgot page redirect to the site's (`src/proxy.ts`).
 - No answer says whether an account exists. Sign-up answers the same for a new and a used email, sign-in has one wrong-credentials failure (`data/failures.ts`), forgot password answers at once and sends in `after()` (`use-cases/requestPasswordReset.ts`). A failed sign-up email deletes the half-made account so the address isn't stuck (`data/signUp.ts`).
 - A repeat sign-up for an unverified address resends the link after the answer, one resend at a time per address, within the cap (`use-cases/signUpResident.ts`).
