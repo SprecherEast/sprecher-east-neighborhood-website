@@ -7,8 +7,10 @@
  * Content types (#714): loads the real Payload config with `loadConfig` from the access-policy
  * tests, no database and no server; the pure parts are in scripts/content-types/. Screens and
  * shared components (#718): the TypeScript compiler API reads src/; the pure parts are in
- * scripts/reference/. UI element coverage (#495): read from the element tables in docs/ui/. Run through `tsx`, which resolves the `@payload-config` alias from
- * tsconfig.json and loads the TypeScript config.
+ * scripts/reference/. UI element coverage (#495): read from the element tables in docs/ui/.
+ *
+ * Run through `tsx`, which resolves the `@payload-config` alias from tsconfig.json and loads the
+ * TypeScript config.
  */
 import fs from 'node:fs'
 import path from 'node:path'
