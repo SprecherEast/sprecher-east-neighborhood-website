@@ -7,12 +7,14 @@ import { Button } from '@/platform/ui/Button'
 import { Card } from '@/platform/ui/Card'
 import { DetailLayout } from '@/platform/ui/DetailLayout'
 import { OnThisPage } from '@/platform/ui/OnThisPage.client'
+import { PageBackdrop } from '@/platform/ui/PageBackdrop'
 import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 import { Section } from '@/platform/ui/Section'
 import { SidebarCTA } from '@/platform/ui/SidebarCTA'
 import { Text } from '@/platform/ui/Text'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
+import { SAMPLE_IMAGE } from './sampleData'
 
 const TONES: AlertTone[] = ['info', 'success', 'warning', 'error']
 const SECTION_TONES = ['plain', 'surface', 'brand'] as const
@@ -88,6 +90,35 @@ export function LayoutGallery() {
               </Section>
             </div>
           ))}
+        </GalleryVariant>
+      </GalleryEntry>
+
+      <GalleryEntry
+        name="PageBackdrop"
+        description="A faded, grayed photo behind a page's content, washed into the theme background so text stays readable (#777). Decorative; the sample photo is a blurred test image."
+      >
+        <GalleryVariant label="with a photo" className="block">
+          <div className={FRAME}>
+            <PageBackdrop image={SAMPLE_IMAGE}>
+              <Section as="div" spacing="md">
+                <Text variant="subsection" as="p">
+                  Text over the backdrop
+                </Text>
+                <Text variant="small" className="mt-2">
+                  Muted text over the lightest and darkest parts of the photo.
+                </Text>
+              </Section>
+            </PageBackdrop>
+          </div>
+        </GalleryVariant>
+        <GalleryVariant label="without a photo" className="block">
+          <div className={FRAME}>
+            <PageBackdrop image={null}>
+              <Section as="div" spacing="md">
+                <Text variant="small">Only the content, as before.</Text>
+              </Section>
+            </PageBackdrop>
+          </div>
         </GalleryVariant>
       </GalleryEntry>
 

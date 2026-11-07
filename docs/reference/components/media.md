@@ -20,6 +20,7 @@ Source: `src/platform/ui/Media.tsx`
 | `onLoad`           | `() => void`                                                                                                                                                           | no       |             |
 | `loading`          | `"lazy" \| "eager"`                                                                                                                                                    | no       |             |
 | `priority`         | `boolean`                                                                                                                                                              | no       |             |
+| `quality`          | `number`                                                                                                                                                               | no       |             |
 | `ref`              | `((instance: HTMLImageElement \| HTMLVideoElement \| null) => void \| (() => VoidOrUndefinedOnly) \| React.DO_NOT_USE_OR_YOU_WILL_BE_FIRED_CALLBACK_REF_RETURN_VALUE…` | no       |             |
 | `resource`         | `string \| number \| Media`                                                                                                                                            | no       |             |
 | `size`             | `string`                                                                                                                                                               | no       |             |
@@ -50,6 +51,7 @@ Source: `src/platform/ui/ImageMedia.client.tsx`
 | `onLoad`           | `() => void`                                                                                                                                                           | no       |             |
 | `loading`          | `"lazy" \| "eager"`                                                                                                                                                    | no       |             |
 | `priority`         | `boolean`                                                                                                                                                              | no       |             |
+| `quality`          | `number`                                                                                                                                                               | no       |             |
 | `ref`              | `((instance: HTMLImageElement \| HTMLVideoElement \| null) => void \| (() => VoidOrUndefinedOnly) \| React.DO_NOT_USE_OR_YOU_WILL_BE_FIRED_CALLBACK_REF_RETURN_VALUE…` | no       |             |
 | `resource`         | `string \| number \| Media`                                                                                                                                            | no       |             |
 | `size`             | `string`                                                                                                                                                               | no       |             |
@@ -76,6 +78,7 @@ Source: `src/platform/ui/VideoMedia.client.tsx`
 | `onLoad`           | `() => void`                                                                                                                                                           | no       |             |
 | `loading`          | `"lazy" \| "eager"`                                                                                                                                                    | no       |             |
 | `priority`         | `boolean`                                                                                                                                                              | no       |             |
+| `quality`          | `number`                                                                                                                                                               | no       |             |
 | `ref`              | `((instance: HTMLImageElement \| HTMLVideoElement \| null) => void \| (() => VoidOrUndefinedOnly) \| React.DO_NOT_USE_OR_YOU_WILL_BE_FIRED_CALLBACK_REF_RETURN_VALUE…` | no       |             |
 | `resource`         | `string \| number \| Media`                                                                                                                                            | no       |             |
 | `size`             | `string`                                                                                                                                                               | no       |             |

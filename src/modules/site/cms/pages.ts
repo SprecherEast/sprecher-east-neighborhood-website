@@ -4,6 +4,7 @@ import { slugField } from 'payload'
 
 import { populatePublishedAt } from '@/platform/payload/populatePublishedAt'
 import { draftContentAccess } from '@/platform/payload/draftContentAccess'
+import { imagesOnly } from '@/platform/payload/imagesOnly'
 import { seoTab } from '@/platform/payload/seoTab'
 
 import { hero } from './hero'
@@ -62,6 +63,17 @@ export const createPagesCollection = ({
       name: 'publishedAt',
       type: 'date',
       admin: {
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'backdrop',
+      type: 'upload',
+      relationTo: 'media',
+      filterOptions: imagesOnly,
+      admin: {
+        description:
+          'An optional photo shown faded and grayed behind the whole page, under its text. Pick a wide, level photo with a quiet sky or field; the text stays readable in light and dark.',
         position: 'sidebar',
       },
     },

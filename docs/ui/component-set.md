@@ -88,6 +88,16 @@ Components: [navigation and page tools](../reference/components/navigation.md).
 
 Components: [layout and page structure](../reference/components/layout.md).
 
+**`PageBackdrop`** (#777) draws an editor's photo faded and grayed behind a page, under its text. The
+photo fills the top 28 rem of the page and is washed into the theme's background at both ends, so
+it is felt rather than seen and leaves no edge; it is never placed between a title and its content.
+It is a decoration: hidden from assistive tech, empty alt, no motion, and the field takes pictures
+only (`imagesOnly`). It loads at once (`priority`), at the lighter `IMAGE_QUALITIES.backdrop`. Inside
+it, for **all of the page's content** and not only the photo's area, muted text becomes a mix of the
+main text colour and the background, and primary-coloured text takes `primary-strong`, so text keeps
+AA contrast over the photo in light and dark. With no photo it draws only its children, so a page
+without one is unchanged. Its test checks these with axe.
+
 ## Rich text (`src/platform/richtext/`)
 
 Components: [rich text](../reference/components/rich-text.md) (`src/platform/richtext/`).

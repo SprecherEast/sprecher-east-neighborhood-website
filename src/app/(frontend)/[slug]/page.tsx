@@ -15,6 +15,7 @@ import {
 import { generateMeta } from '@/platform/seo/generateMeta'
 import { HOME_PAGE_SLUG } from '@/platform/payload/documentHref'
 import { LivePreviewListener } from '@/platform/ui/LivePreviewListener.client'
+import { PageBackdrop } from '@/platform/ui/PageBackdrop'
 import { pageBlocks } from './pageBlocks'
 
 // A scheduled publish or unpublish runs outside a request, where Next can't refresh the cache, so
@@ -48,14 +49,14 @@ export default async function Page({ params: paramsPromise }: Args) {
   const page =
     (await getPageBySlug(decodedSlug)) ??
     (slug === HOME_PAGE_SLUG
-      ? { ...homeStatic, hero: toSiteHero(homeStatic.hero), layout: [] }
+      ? { ...homeStatic, hero: toSiteHero(homeStatic.hero), layout: [], backdrop: null }
       : null)
 
   if (!page) {
     return <PayloadRedirects url={url} />
   }
 
-  const { hero, layout } = page
+  const { hero, layout, backdrop } = page
 
   return (
     <article className="pb-0">
@@ -64,8 +65,10 @@ export default async function Page({ params: paramsPromise }: Args) {
 
       {draft && <LivePreviewListener />}
 
-      {hero && <PageHero {...hero} />}
-      <RenderBlocks blocks={layout} components={pageBlocks} />
+      <PageBackdrop image={backdrop}>
+        {hero && <PageHero {...hero} />}
+        <RenderBlocks blocks={layout} components={pageBlocks} />
+      </PageBackdrop>
     </article>
   )
 }
