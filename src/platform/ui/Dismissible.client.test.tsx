@@ -25,7 +25,7 @@ function setup(props: Partial<React.ComponentProps<typeof Dismissible>> = {}) {
           WisDOT meets on Nov 10
         </Alert>
       </Dismissible>
-      <p tabIndex={-1}>Article text</p>
+      <p>Article text</p>
     </>,
   )
 }
@@ -90,6 +90,37 @@ describe('Dismissible', () => {
     })
 
     expect(screen.queryByText('WisDOT meets on Nov 10')).toBeNull()
+  })
+
+  it('does not leave the content after it as a tab stop once focus moves on', async () => {
+    setup()
+    await userEvent.click(screen.getByRole('button', { name: 'Close this notice' }))
+    const article = screen.getByText('Article text')
+    expect(article.getAttribute('tabindex')).toBe('-1')
+
+    act(() => article.blur())
+
+    expect(article.hasAttribute('tabindex')).toBe(false)
+  })
+
+  it('closes without error when nothing follows it', async () => {
+    render(
+      <Dismissible id="last">
+        <Alert tone="info" live={false}>
+          Last block
+        </Alert>
+      </Dismissible>,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close this notice' }))
+
+    expect(screen.queryByText('Last block')).toBeNull()
+  })
+
+  it('has no accessibility violations after closing', async () => {
+    const { container } = setup()
+    await userEvent.click(screen.getByRole('button', { name: 'Close this notice' }))
+    await expectAccessible(container)
   })
 
   it('has no accessibility violations, open', async () => {

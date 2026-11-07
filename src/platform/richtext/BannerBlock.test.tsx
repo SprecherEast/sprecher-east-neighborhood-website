@@ -55,6 +55,13 @@ describe('BannerBlock', () => {
     expect(screen.getByRole('button', { name: 'Close this notice' })).toBeTruthy()
   })
 
+  it('shows no close button for a block without an id, since it could not be remembered', () => {
+    render(<BannerBlock blockType="banner" style="info" dismissible content={content} />)
+
+    expect(screen.getByText('Meeting soon')).toBeTruthy()
+    expect(screen.queryByRole('button')).toBeNull()
+  })
+
   it('renders nothing once its end time has passed', () => {
     const { container } = render(
       <BannerBlock

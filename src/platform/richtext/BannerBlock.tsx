@@ -38,6 +38,7 @@ export const BannerBlock: React.FC<Props> = ({
     </Alert>
   )
 
+  // A block without an id can't be remembered as closed, so it shows without a close button
   if (!dismissible || !id) return alert
   return (
     <Dismissible id={id} showUntil={showUntil}>

@@ -52,7 +52,11 @@ export function Dismissible({
     // The wrapper is about to leave the page: send focus to the content after it
     const next = ref.current?.nextElementSibling
     if (next instanceof HTMLElement) {
-      if (!next.hasAttribute('tabindex')) next.setAttribute('tabindex', '-1')
+      if (!next.hasAttribute('tabindex')) {
+        // Only so it can take focus now; taken off again once focus leaves, so it isn't a tab stop
+        next.setAttribute('tabindex', '-1')
+        next.addEventListener('blur', () => next.removeAttribute('tabindex'), { once: true })
+      }
       next.focus()
     }
     rememberBannerDismissed(id)
