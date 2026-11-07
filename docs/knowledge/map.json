@@ -5,6 +5,7 @@
   { "note": "src/modules/verification/README.md", "paths": ["src/modules/verification/**"] },
   { "note": "src/modules/directory/README.md", "paths": ["src/modules/directory/**"] },
   { "note": "src/platform/theme/README.md", "paths": ["src/platform/theme/**", "src/themes/**"] },
+  { "note": "src/modules/accounts/README.md", "paths": ["src/modules/accounts/**"] },
   {
     "note": "src/modules/site/navigation/README.md",
     "paths": [
