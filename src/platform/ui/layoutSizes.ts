@@ -9,6 +9,19 @@ export const READING_WIDTH = 'max-w-[var(--reading-width)]'
 /** The same, from the `lg` breakpoint up, where a block's container may be wider than the text */
 export const READING_WIDTH_LG = 'lg:max-w-[var(--reading-width)]'
 
+/**
+ * Reading-width text that starts at the column's left edge instead of being centred in it. Posts and
+ * events put their text beside a left rail (#677), so it must share the left edge the breadcrumb
+ * and the rail have, not float in the middle of a column wider than the text.
+ */
+export const READING_COLUMN = `mx-0 ${READING_WIDTH}`
+
+/**
+ * The grid of a post's or an event's page from `lg`: the rail (page menu and related content) on
+ * the left, the article taking the rest (#677). The rail's width is a variable in globals.css.
+ */
+export const DETAIL_GRID = 'lg:grid lg:grid-cols-[var(--detail-rail-width)_minmax(0,1fr)] lg:gap-8'
+
 /** A page grid with a centred reading column of that width between two flexible sides */
 export const READING_GRID = 'lg:grid-cols-[1fr_var(--reading-width)_1fr]'
 

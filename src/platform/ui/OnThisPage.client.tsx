@@ -85,7 +85,7 @@ function SectionList({
 }
 
 /**
- * The article's sections as a menu (#574): a sticky rail from `lg`, a bar under the site header
+ * The article's sections as a menu (#574): the top of the left rail from `lg`, a bar under the site header
  * before that. Jumps are plain `#id` links, so they work without JavaScript; only the highlight of
  * the section being read needs it. Shows nothing for an article with fewer than three sections.
  * Place it where `DetailLayout` takes its `toc`.
@@ -101,9 +101,10 @@ export function OnThisPage({ sections, className }: OnThisPageProps) {
     <nav
       aria-label="On this page"
       className={cn(
-        // Phones and tablets: a bar that sticks under the site header. From lg: a rail beside the article
+        // Phones and tablets: a bar that sticks under the site header. From lg: the top of the left
+        // rail, which `DetailLayout` makes stick and scroll as one piece with the related content
         'sticky top-[var(--header-height)] z-30 -mx-4 mb-6 border-y border-border bg-background md:-mx-8 noscript:static',
-        'lg:top-[var(--anchor-offset)] lg:-mx-1 lg:mb-0 lg:max-h-[calc(100svh-var(--anchor-offset)-1rem)] lg:overflow-y-auto lg:border-0 lg:bg-transparent lg:px-1 lg:py-1',
+        'lg:static lg:mx-0 lg:mb-0 lg:border-0 lg:bg-transparent lg:p-0',
         className,
       )}
     >

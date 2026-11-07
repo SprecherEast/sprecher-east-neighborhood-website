@@ -218,3 +218,78 @@ test.describe('a legend sits under its figure and caption', () => {
     })
   }
 })
+
+// The page menu, the related content and the article of a post keep one left edge and a fixed
+// order (#677). From `lg` the left rail holds the page menu above the related content, and the
+// article sits beside it; before `lg` it is one column: page menu, article, related content.
+test.describe('the left rail of a post', () => {
+  for (const width of WIDTHS) {
+    test(`left edge and order at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto(POST)
+
+      const m = await page.evaluate(() => {
+        const element = (selector: string) => {
+          const found = document.querySelector(selector)
+          if (!found) throw new Error(`Nothing matches ${selector}`)
+          return found
+        }
+        const rect = (selector: string) => {
+          const { left, right, top, bottom } = element(selector).getBoundingClientRect()
+          return {
+            left: Math.round(left),
+            right: Math.round(right),
+            top: Math.round(top),
+            bottom: Math.round(bottom),
+          }
+        }
+        const layout = element('[data-detail-rail]').parentElement as HTMLElement
+        return {
+          crumb: rect('nav[aria-label="Breadcrumb"]'),
+          menu: rect('nav[aria-label="On this page"]'),
+          related: rect('[data-detail-rail] > aside'),
+          text: rect('.payload-richtext'),
+          // The rail is a box of its own only where the layout has two columns
+          twoColumns: getComputedStyle(element('[data-detail-rail]')).display !== 'contents',
+          gap: parseFloat(getComputedStyle(layout).columnGap),
+          overflow: document.documentElement.scrollWidth - window.innerWidth,
+        }
+      })
+
+      expect(m.overflow, `${width}px: nothing scrolls sideways`).toBeLessThanOrEqual(0)
+      if (m.twoColumns) {
+        expect(m.menu.left, `${width}px: the menu starts at the breadcrumb's left edge`).toBe(
+          m.crumb.left,
+        )
+        expect(m.text.left, `${width}px: the article sits right of the rail`).toBe(
+          m.related.right + Math.round(m.gap),
+        )
+        expect(m.related.top, `${width}px: related content is under the page menu`).toBeGreaterThan(
+          m.menu.bottom,
+        )
+      } else {
+        expect(m.text.left, `${width}px: the text starts at the breadcrumb's left edge`).toBe(
+          m.crumb.left,
+        )
+        expect(m.menu.top, `${width}px: the page menu is above the article`).toBeLessThan(
+          m.text.top,
+        )
+        expect(m.related.top, `${width}px: related content is below the article`).toBeGreaterThan(
+          m.text.bottom,
+        )
+        // The bar keeps its place under the site header while the article scrolls past it
+        // Instant, because the page scrolls smoothly and the read below must not race the scroll
+        await page.evaluate(() => window.scrollTo({ top: 1200, behavior: 'instant' }))
+        expect(
+          await page.evaluate(() => window.scrollY),
+          `${width}px: the page scrolled`,
+        ).toBeGreaterThan(0)
+        const stuck = await page
+          .locator('nav[aria-label="On this page"]')
+          .evaluate((nav) => Math.round(nav.getBoundingClientRect().top))
+        expect(stuck, `${width}px: the page menu bar stays at the top`).toBeGreaterThanOrEqual(0)
+        expect(stuck, `${width}px: the page menu bar stays at the top`).toBeLessThan(120)
+      }
+    })
+  }
+})
