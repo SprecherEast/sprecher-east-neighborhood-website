@@ -9,6 +9,40 @@ You are the independent reviewer required by [`AGENTS.md`](../../../AGENTS.md) s
 Review the change as someone who didn't write it. If you wrote any part of this PR, stop and
 say so.
 
+## 0. When Copilot's review agent can't review
+
+If GitHub Copilot's review agent is out of credit, blocked or down, the PR still gets its
+independent review, and every time (the owner's rule, 2026-11-06, Claude in Chrome side panel,
+recorded on #779).
+
+**How to tell** (the owner asked for an explicit check, 2026-11-06, #779). Request Copilot's review
+when the PR leaves draft, then read the PR's reviews and comments
+(`gh api repos/{owner}/{repo}/pulls/<n>/reviews` and `.../issues/<n>/comments`). Copilot is out when
+either is true:
+
+- Copilot posted a message saying it could not review, or reviewed no files, such as "Copilot was unable to review this
+  pull request because the user who requested the review has reached their quota limit"
+  ([reported here](https://github.com/orgs/community/discussions/209724); GitHub's docs don't
+  describe a visible signal, so match on "unable", "not able", "quota" or "limit"). The same message
+  means it is out for the rest of the session, so skip the wait on later PRs and use this section.
+- No Copilot review appears 10 minutes after the request, since a failed run can leave nothing.
+
+A Copilot review with comments or an approval assessment is a real review: answer it as usual. If
+you can't tell, count Copilot as out. Record on the PR which signal you saw.
+
+What to do then:
+
+- **Start a new session for each PR.** Never the session that wrote the PR, and never one that already reviewed
+  a different PR. In Claude Code that is a new subagent or a new session on the
+  `sonnet` alias (the latest Sonnet) at `medium` effort, with the largest context, `sonnet[1m]`
+  (1 million tokens), so the whole diff and the guidelines fit.
+- **Run this whole skill.** It is the full review, not a skim: the process checks, the guard rails
+  (2b), behavior changes (2c) and the change itself (3), against every guideline the diff touches.
+- **Post it on the PR's current head** as step 4 says, and say in its first line that Copilot's
+  review agent wasn't available and a fallback session reviewed it.
+- A PR that raises the scrutiny level ([`CLAUDE.md`](../../../CLAUDE.md), models and effort) keeps
+  its rule: `opus` at `high`.
+
 ## 1. Gather context
 
 ```bash

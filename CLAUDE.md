@@ -32,7 +32,7 @@ they load when the work touches `CLAUDE.md`, `.claude/`, `.agents/` or `.github/
 - **Models and effort** (#522): sessions start on `opusplan` at `medium` effort, and the agents in
   `.claude/agents/` on `sonnet` at `medium`. Start the reviewer on `opus` at `high` only when the PR
   touches sign-in or accounts, access rules, migrations, the deploy or server scripts, or other
-  security code. Use the plain aliases, never a version. Never `fable` in unattended runs.
+  security code. Fallback reviewer: `sonnet[1m]`, `medium`. Use the plain aliases, never a version. Never `fable` in unattended runs.
 - **Unattended runs:** never `--dangerously-skip-permissions`, and keep `ANTHROPIC_API_KEY` out of
   the environment (it switches `-p` runs to API billing). Details in `claude-code-setup.md`.
 - **Waiting for checks:** poll `gh pr checks <number>` in the background (`run_in_background`),

@@ -66,7 +66,7 @@ change, however small, follows these five steps:
 3. **Review.** Every PR gets an **independent review** by a reviewer that did not write it (a
    separate agent session following [`pr-review`](.agents/skills/pr-review/SKILL.md), or a human),
    posted on the PR and ending with **Ready to merge**, and every review comment is answered and
-   resolved. Changes to the process are policy changes the review calls out explicitly:
+   resolved. Without Copilot's review agent, a new session reviews each PR (`pr-review` step 0). Changes to the process are policy changes the review calls out explicitly:
    `AGENTS.md`, `.agents/`, `docs/guidelines/`, `docs/roles/`, `.github/`, the Claude Code adapter
    (`CLAUDE.md`, `.claude/`), and, in `docs/process/`, how the team works (sprint length, Ready or
    Done, the levels of work, the board's columns and fields), not wording, links or facts. A policy
