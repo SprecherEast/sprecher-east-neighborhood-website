@@ -59,8 +59,8 @@ You are not just a critic — you are a creative designer. Your job is to **make
 
 ### Brand Colors (from `src/themes/default/theme.css`)
 
-The tokens and their light and dark values are in
-[`nextjs-tailwind.md`](../guidelines/nextjs-tailwind.md#design-tokens) (the one table to keep current).
+The tokens are named in `src/platform/theme/tokens.ts` and their light and dark values are set in
+`src/themes/default/theme.css` (see [`nextjs-tailwind.md`](../guidelines/nextjs-tailwind.md#design-tokens)).
 How to use them:
 
 - `primary`: headers, CTAs, active states, links

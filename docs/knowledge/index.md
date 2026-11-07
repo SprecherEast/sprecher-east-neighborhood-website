@@ -7,6 +7,7 @@ generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.m
 ## Notes
 
 - [Events](../../src/modules/events/README.md): the calendar, its listings, category pages and "this week" block; what "upcoming" means, what a save refreshes, official meetings, cancelled events, suggestions held as drafts.
+- [Theme](../../src/platform/theme/README.md): tokens, light and dark mode, theme options and decorations.
 
 ## Reference (generated)
 
