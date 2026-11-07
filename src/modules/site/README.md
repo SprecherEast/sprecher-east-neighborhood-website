@@ -1,7 +1,7 @@
 # Site: pages and the page builder
 
 How CMS pages are drawn: the hero, each page-builder block, and what a save refreshes. The header,
-footer, forum link and redirects have their own note, `navigation/README.md`. Fields, access and hooks:
+footer, forum link and redirects have their own note, [navigation](navigation/README.md). Fields, access and hooks:
 [pages content type](../../../docs/reference/content-types/pages.md); the routes `/` and `/[slug]`:
 [screens](../../../docs/reference/routes.md); the kit pieces: [sections](../../../docs/reference/components/sections.md).
 
@@ -34,6 +34,7 @@ footer, forum link and redirects have their own note, `navigation/README.md`. Fi
 - Collection helpers from `src/platform/payload/`: `draftVersions`, `previewAdmin`, `titleField`, `draftContentAccess`, `seoTab`, `imagesOnly`, `link`, `headingsEditor`.
 - UI kit and richtext from `src/platform/ui/` (`Section`, `Card`, `CardGrid`, `Button`, `LinkButton`, `Media`, `Text`, `MapEmbed`) and `src/platform/richtext/` (`RichText`).
 - Where it meets other modules (0008): `src/payload.config.ts` and `pageBlocks.tsx`.
+- Related notes: [navigation](navigation/README.md) (header and footer link to these pages, and a page save doesn't refresh them), [events](../events/README.md) ("this week" block; an event save refreshes every CMS page), [news](../news/README.md) (archive and "top issues" blocks; a post save does too), [contact](../contact/README.md) (form block), [directory](../directory/README.md) (a page save never refreshes `/faq`, and FAQ answers link pages, so a renamed page shows there within 10 minutes), [rich text](../../platform/richtext/README.md) (hero title split, `RichText`), [UI kit](../../platform/ui/README.md).
 
 ## Rules and the tests that protect them
 

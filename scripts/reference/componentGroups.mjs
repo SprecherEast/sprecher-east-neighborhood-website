@@ -61,7 +61,7 @@ export const COMPONENT_GROUPS = [
     slug: 'media',
     title: 'Media',
     intro: 'Images and video. `Media` picks the right one for an uploaded file.',
-    components: ['Media', 'ImageMedia', 'VideoMedia', 'MapEmbed'],
+    components: ['Media', 'ImageMedia', 'VideoMedia', 'MapEmbed', 'Figure'],
   },
   {
     slug: 'feedback',
@@ -121,6 +121,7 @@ export const COMPONENT_GROUPS = [
       'Timeline',
       'OutcomeFork',
       'DiagramKey',
+      'FigureBlock',
     ],
   },
 ]

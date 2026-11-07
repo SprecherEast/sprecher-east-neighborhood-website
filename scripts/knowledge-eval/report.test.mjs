@@ -54,6 +54,43 @@ describe('summarize', () => {
   })
 })
 
+describe('time, code reads and levels', () => {
+  const leveled = [
+    run('A', 'EV-2', 100_000, { level: 2, durationMs: 60_000, codeFilesRead: 5 }),
+    run('B', 'EV-2', 50_000, { level: 2, durationMs: 30_000, codeFilesRead: 0 }),
+    run('A', 'EV-10', 100_000, { level: 3, durationMs: 40_000, codeFilesRead: 4 }),
+    run('B', 'EV-10', 90_000, { level: 3, durationMs: 50_000, codeFilesRead: 3 }),
+  ]
+
+  it('orders task ids with a prefix by their number', () => {
+    expect(summarize(leveled).map((r) => r.task)).toEqual(['EV-2', 'EV-10'])
+  })
+
+  it('averages the time and the code files read', () => {
+    expect(summarize(leveled)[0]).toMatchObject({
+      level: 2,
+      A: { durationMs: 60_000, codeFilesRead: 5 },
+      B: { durationMs: 30_000, codeFilesRead: 0 },
+    })
+  })
+
+  it('shows time and code files in the token table and a table by level', () => {
+    const text = renderReport(leveled, { minTasksFaster: 1 })
+    expect(text).toContain('Time A → B')
+    expect(text).toContain(
+      '| EV-2 | 100k | 50k | −50% | 2.0 → 2.0 | 1.0 → 1.0 | 60s → 30s | 5.0 → 0.0 |',
+    )
+    expect(text).toContain('| 2 | 1 | 100k | 50k | −50% | 60s → 30s |')
+    expect(text).toContain('| 3 | 1 | 100k | 90k | −10% | 40s → 50s |')
+  })
+
+  it('lists the tasks where B still read three or more code files on average', () => {
+    expect(renderReport(leveled, { minTasksFaster: 1 })).toContain(
+      'B read 3 or more code files on average: EV-10.',
+    )
+  })
+})
+
 describe('evaluateGate', () => {
   it('passes when correctness does not drop and tokens fall on enough tasks', () => {
     const rows = summarize([

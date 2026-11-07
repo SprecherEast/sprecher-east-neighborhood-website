@@ -108,3 +108,31 @@ Source: `src/platform/ui/MapEmbed.client.tsx`
 
 - Modules: `site`
 - Routes: `/dev/gallery`
+
+## `Figure`
+
+A picture that floats right in an article, small, with a short caption (#816). Clicking or tapping it opens the large picture with its numbered key and the long caption. The key is never in the small view: its numbers can't be read there. Without scripting the small picture stays as it is.
+
+Source: `src/platform/ui/Figure.tsx`
+
+**Variants:**
+
+- `size`: `FigureSize`
+
+| Prop          | Type                                                                                                                                                                       | Required | Description                                                                        |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------- |
+| `resource`    | `string \| number \| Media`                                                                                                                                                | no       |                                                                                    |
+| `alt`         | `string`                                                                                                                                                                   | no       |                                                                                    |
+| `src`         | `StaticImageData`                                                                                                                                                          | no       |                                                                                    |
+| `title`       | `string`                                                                                                                                                                   | yes      | Names the Enlarge button and the dialog                                            |
+| `label`       | `string`                                                                                                                                                                   | no       | The figure's number or name in its source ("Figure 2-9"), shown in a neutral badge |
+| `caption`     | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The short line under the small picture                                             |
+| `longCaption` | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The long caption and credit, shown only in the dialog                              |
+| `items`       | `LegendItem[]`                                                                                                                                                             | no       | The numbered key, shown only in the dialog beside or under the large picture       |
+| `keyLabel`    | `string`                                                                                                                                                                   | no       | Its label for assistive technology; "Diagram key" by default                       |
+| `className`   | `string`                                                                                                                                                                   | no       |                                                                                    |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`
+- Platform: `platform/richtext`

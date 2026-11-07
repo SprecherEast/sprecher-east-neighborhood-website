@@ -13,7 +13,7 @@ Source: `src/platform/richtext/RichText.tsx`
 | Prop           | Type                                                                                                                                                               | Required | Description                                                                                                                                                                                                                                                          |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `data`         | `RichTextValue`                                                                                                                                                    | yes      |                                                                                                                                                                                                                                                                      |
-| `blocks`       | `{ banner?: JSXConverter<SerializedBlockNode<BannerBlock>>; code?: JSXConverter<SerializedBlockNode<CodeBlockProps>>; mediaBlock?: JSXConverter<SerializedBlockN…` | no       | Renderers for the blocks this field may hold. Pass them for any field whose editor has a blocks feature: Payload draws a block with no renderer as "unknown node". Today post and event content have blocks (`payload.config.test.ts` checks every rich-text field). |
+| `blocks`       | `{ banner?: JSXConverter<SerializedBlockNode<BannerBlock>>; code?: JSXConverter<SerializedBlockNode<CodeBlockProps>>; figure?: JSXConverter<SerializedBlockNode<…` | no       | Renderers for the blocks this field may hold. Pass them for any field whose editor has a blocks feature: Payload draws a block with no renderer as "unknown node". Today post and event content have blocks (`payload.config.test.ts` checks every rich-text field). |
 | `enableGutter` | `boolean`                                                                                                                                                          | no       |                                                                                                                                                                                                                                                                      |
 | `enableProse`  | `boolean`                                                                                                                                                          | no       |                                                                                                                                                                                                                                                                      |
 
@@ -209,6 +209,30 @@ Source: `src/platform/richtext/editorial/DiagramKey.tsx`
 | ----------- | ------------------ | -------- | ----------- |
 | `items`     | `DiagramKeyItem[]` | yes      |             |
 | `className` | `string`           | no       |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
+## `FigureBlock`
+
+The editor's "Figure" block, drawn with the shared `Figure` (#817)
+
+Source: `src/platform/richtext/FigureBlock.tsx`
+
+| Prop          | Type                                                               | Required | Description                                                                                |
+| ------------- | ------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------ |
+| `image`       | `number \| Media`                                                  | yes      | The large picture. It shows small in the article.                                          |
+| `title`       | `string`                                                           | yes      | What the picture shows, in a few words. It names the Enlarge button.                       |
+| `label`       | `string`                                                           | no       | Its number in the source, such as "Figure 2-9". Optional.                                  |
+| `caption`     | `string`                                                           | no       | One short line under the small picture. Optional.                                          |
+| `longCaption` | `string`                                                           | no       | Source, how it was made and conditions. Shown only when the picture is enlarged. Optional. |
+| `size`        | `"two-fifths" \| "third" \| "half"`                                | no       | How wide it is beside the text on a tablet or larger.                                      |
+| `items`       | `{ label: string; text?: string \| null; id?: string \| null; }[]` | no       | One per numbered marker on the image, in number order. Don’t type the numbers.             |
+| `id`          | `string`                                                           | no       |                                                                                            |
+| `blockName`   | `string`                                                           | no       |                                                                                            |
+| `blockType`   | `"figure"`                                                         | yes      |                                                                                            |
+| `className`   | `string`                                                           | no       |                                                                                            |
 
 **Used by** (direct imports):
 

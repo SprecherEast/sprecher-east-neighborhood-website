@@ -47,6 +47,7 @@ own types (`EventSummary`, `PostSummary`), and rich text and images travel as `R
 | `eventsThisWeek`    | page layout            | `EventsThisWeek` · default                                                                         |
 | `topIssues`         | page layout            | `TopIssuesBlock` · default                                                                         |
 | `banner`            | rich text              | `Alert` · `{style}`, `Dismissible` when `dismissible` is on (`showUntil` hides it after that time) |
+| `figure`            | rich text              | `Figure` (small picture floated right; `Zoom` dialog with the long caption and the numbered key)   |
 | `code`              | rich text              | `CodeBlock` · default                                                                              |
 
 ## Form-builder fields

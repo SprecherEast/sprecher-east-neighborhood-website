@@ -6,7 +6,7 @@ const wholeNumber = (value, name) => {
   return n
 }
 
-/** The runner's command line: the two commits to compare and how many runs of each task. */
+/** The runner's command line: the two commits, how many runs of each task, and which tasks. */
 export function parseOptions(argv) {
   const { values } = parseArgs({
     args: argv,
@@ -15,6 +15,7 @@ export function parseOptions(argv) {
       b: { type: 'string' },
       runs: { type: 'string', default: '2' },
       tasks: { type: 'string' },
+      set: { type: 'string', default: 'all' },
       jobs: { type: 'string', default: '1' },
       out: { type: 'string' },
       model: { type: 'string', default: 'sonnet' },
@@ -24,11 +25,13 @@ export function parseOptions(argv) {
   for (const name of ['a', 'b']) {
     if (!values[name]) throw new Error(`--${name} <commit> is required`)
   }
+  if (!['all', 'core'].includes(values.set)) throw new Error('--set must be all or core')
   return {
     a: values.a,
     b: values.b,
     runs: wholeNumber(values.runs, '--runs'),
     jobs: wholeNumber(values.jobs, '--jobs'),
+    set: values.set,
     tasks: values.tasks ? values.tasks.split(',').map((id) => id.trim()) : null,
     out: values.out ?? null,
     model: values.model,

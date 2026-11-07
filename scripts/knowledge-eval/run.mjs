@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Runs the knowledge eval (#715): every task, in two conditions, in throwaway worktrees.
 //
-//   node scripts/knowledge-eval/run.mjs --a <commit> --b <commit> [--runs 2] [--tasks 1,3] [--jobs 1] [--out dir]
+//   node scripts/knowledge-eval/run.mjs --a <commit> --b <commit> [--runs 2] [--tasks 1,3 | --set core] [--jobs 1] [--out dir]
 //
 // Each run is a fresh headless `claude -p` session in its own worktree, which is deleted after.
 // Nothing is pushed. This costs usage (about 32 sessions) and is never run in CI. The logic worth
@@ -23,7 +23,7 @@ import {
   runChanges,
 } from './claude.mjs'
 import { parseOptions } from './options.mjs'
-import { loadTasks, validateTasks } from './tasks.mjs'
+import { loadTasks, selectTasks, validateTasks } from './tasks.mjs'
 
 const RUN_TIMEOUT_MS = 25 * 60 * 1000
 const COMMAND_TIMEOUT_MS = 15 * 60 * 1000
@@ -182,7 +182,7 @@ async function main() {
   const here = path.dirname(fileURLToPath(import.meta.url))
   const repo = toplevelOf(here)
   if (!repo) throw new Error('run this from a checkout of the repository')
-  const tasks = loadTasks().filter((t) => !options.tasks || options.tasks.includes(t.id))
+  const tasks = selectTasks(loadTasks(), options)
   const problems = validateTasks(tasks)
   if (problems.length || tasks.length === 0)
     throw new Error(`bad task set: ${problems.join('; ') || 'no tasks selected'}`)
