@@ -768,7 +768,10 @@
     "modules": ["accounts"],
     "covers": "intro (index line)",
     "prompt": "Which note describes how a neighbor signs up, signs in and resets a password, and what guards each step? Name the file. Answer concisely and name the files you relied on. Don't change any files.",
-    "key": [["src/modules/accounts/README.md", "modules/accounts/README"]],
+    "key": [
+      ["src/modules/accounts/README.md", "modules/accounts/README"],
+      ["guard", "robot check", "rate limit", "limit", "lock", "throttle", "captcha", "verif"]
+    ],
     "core": true
   },
   {
@@ -1603,7 +1606,7 @@
       ["draft"],
       ["/source[\\s\\S]{0,60}(name|link|url|address)/"],
       ["approved", "approve"],
-      ["/(agent|non-staff)[\\s\\S]{0,120}(refused|no\\b|can.t|cannot|may not|never)/"],
+      ["/(agent|non-staff)[\\s\\S]{0,120}(refused|can.t|cannot|may not|never|\\bnot\\b)/"],
       ["reviewQueue"],
       [
         "/(externalId|contentHash)[\\s\\S]{0,80}(unique|twice)|(unique|twice)[\\s\\S]{0,80}(externalId|contentHash)/"
