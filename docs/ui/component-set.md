@@ -67,6 +67,15 @@ no control repeats that wiring. Each control works with a controlled value or re
 
 Components: [cards](../reference/components/cards.md), [display](../reference/components/display.md), [sections and page headers](../reference/components/sections.md) and [media](../reference/components/media.md).
 
+**`MapEmbed`** (#764) is a small map picture beside its text, and a live Google map in a `Dialog`
+when a neighbor taps the picture or the "View the larger map" button. The frame is created only
+after that tap, so the page asks Google for nothing before it, and then Google receives the visit
+(the page's origin only, `strict-origin-when-cross-origin`). Only Google's keyless embed addresses
+("Embed a map" and My Maps) are accepted (`toGoogleMapsEmbedUrl`); with none, the picture and text
+show and there is no button. Its test checks the closed and the open dialog with axe (the frame
+removed, since jsdom can't run axe across one), the gallery shows both states, and its props are in
+the [media page](../reference/components/media.md).
+
 ## Feedback and overlays
 
 Components: [feedback and overlays](../reference/components/feedback.md).

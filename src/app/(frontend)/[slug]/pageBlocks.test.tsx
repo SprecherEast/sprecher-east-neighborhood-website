@@ -11,6 +11,7 @@ const modules = vi.hoisted(() => ({
   ArchiveBlock: () => null,
   CallToActionBlock: () => null,
   ContentBlock: () => null,
+  MapBlock: () => null,
   findEventsThisWeek: vi.fn(),
   EventsThisWeek: () => null,
   toTopIssuesBlockProps: vi.fn(),
@@ -31,6 +32,7 @@ vi.mock('@/modules/site/server', () => ({
   ArchiveBlock: modules.ArchiveBlock,
   CallToActionBlock: modules.CallToActionBlock,
   ContentBlock: modules.ContentBlock,
+  MapBlock: modules.MapBlock,
 }))
 
 import { MediaBlock } from '@/platform/richtext/MediaBlock'
@@ -43,6 +45,7 @@ describe('pageBlocks', () => {
     expect(pageBlocks.cta).toBe(modules.CallToActionBlock)
     expect(pageBlocks.formBlock).toBe(modules.FormBlock)
     expect(pageBlocks.mediaBlock).toBe(MediaBlock)
+    expect(pageBlocks.mapBlock).toBe(modules.MapBlock)
   })
 
   it('draws the archive block around the posts news loads for it', async () => {

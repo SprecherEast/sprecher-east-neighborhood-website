@@ -22,6 +22,7 @@ import * as migration_20261027_184942_search_status_source from './20261027_1849
 import * as migration_20261027_193414_forum_url from './20261027_193414_forum_url'
 import * as migration_20261031_214018_guest_role from './20261031_214018_guest_role'
 import * as migration_20261101_182251_resource_portraits from './20261101_182251_resource_portraits'
+import * as migration_20261107_015722_map_block from './20261107_015722_map_block'
 
 export const migrations = [
   {
@@ -143,5 +144,10 @@ export const migrations = [
     up: migration_20261101_182251_resource_portraits.up,
     down: migration_20261101_182251_resource_portraits.down,
     name: '20261101_182251_resource_portraits',
+  },
+  {
+    up: migration_20261107_015722_map_block.up,
+    down: migration_20261107_015722_map_block.down,
+    name: '20261107_015722_map_block',
   },
 ]

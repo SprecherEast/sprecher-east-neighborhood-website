@@ -127,6 +127,7 @@ describe('the Pages collection', () => {
       'cta',
       'content',
       'mediaBlock',
+      'mapBlock',
       'archive',
       'formBlock',
       'eventsThisWeek',

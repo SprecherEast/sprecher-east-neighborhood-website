@@ -64,6 +64,7 @@ describe('SITE_LAYOUT_BLOCKS', () => {
       'cta',
       'content',
       'mediaBlock',
+      'mapBlock',
       'archive',
     ])
   })

@@ -252,6 +252,7 @@ export interface Page {
     | CallToActionBlock
     | ContentBlock
     | MediaBlock
+    | MapBlock
     | ArchiveBlock
     | FormBlock
     | EventsThisWeekBlock
@@ -655,6 +656,31 @@ export interface MediaBlock {
   id?: string | null
   blockName?: string | null
   blockType: 'mediaBlock'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MapBlock".
+ */
+export interface MapBlock {
+  /**
+   * Names the map for screen readers, for example "Where Sprecher East is".
+   */
+  title: string
+  /**
+   * Says in words what the map shows: its boundaries and what touches them. Neighbors who cannot use the map read this.
+   */
+  description: string
+  /**
+   * The small picture of the map, shown on the page.
+   */
+  preview: number | Media
+  /**
+   * The live map opened by a tap. In Google Maps choose Share, then Embed a map, and paste the whole code or only its address. A shared My Maps map works too. Leave empty to show the picture only.
+   */
+  embedUrl?: string | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'mapBlock'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1744,6 +1770,7 @@ export interface PagesSelect<T extends boolean = true> {
         cta?: T | CallToActionBlockSelect<T>
         content?: T | ContentBlockSelect<T>
         mediaBlock?: T | MediaBlockSelect<T>
+        mapBlock?: T | MapBlockSelect<T>
         archive?: T | ArchiveBlockSelect<T>
         formBlock?: T | FormBlockSelect<T>
         eventsThisWeek?: T | EventsThisWeekBlockSelect<T>
@@ -1819,6 +1846,18 @@ export interface ContentBlockSelect<T extends boolean = true> {
  */
 export interface MediaBlockSelect<T extends boolean = true> {
   media?: T
+  id?: T
+  blockName?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MapBlock_select".
+ */
+export interface MapBlockSelect<T extends boolean = true> {
+  title?: T
+  description?: T
+  preview?: T
+  embedUrl?: T
   id?: T
   blockName?: T
 }

@@ -8,6 +8,7 @@ export { CONFIRMATION_LINK_LIFETIME_MS } from './linkLifetimes'
 export { message, type MessageKey } from './messages'
 export { isSingleAddress, parseEmailAddress } from './emailAddress'
 export { escapeMarkup } from './escapeMarkup'
+export { toGoogleMapsEmbedUrl } from './googleMapsEmbed'
 export { toEmailHtml, type OutgoingEmail } from './emailLayout'
 export {
   cursorAfterLast,

@@ -4,6 +4,7 @@ import type {
   ArchiveBlock,
   ContentBlock,
   Header,
+  MapBlock,
   MediaBlock,
   Page,
   TopIssuesBlock,
@@ -201,6 +202,15 @@ describe('toPageLayout', () => {
     items: [{ title: 'Events', link: { type: 'custom', url: '/events' } }],
   }
 
+  const map: MapBlock = {
+    blockType: 'mapBlock',
+    id: 'p1',
+    title: 'Where we are',
+    description: 'Our boundary.',
+    embedUrl: null,
+    preview: 1,
+  }
+
   it('maps site’s blocks to props and keeps the others as stored', () => {
     const layout = toPageLayout([
       { blockType: 'content', columns: [column('full')] },
@@ -208,6 +218,7 @@ describe('toPageLayout', () => {
       archive,
       media,
       topIssues,
+      map,
     ])
 
     expect(layout).toEqual([
@@ -221,6 +232,7 @@ describe('toPageLayout', () => {
       },
       media,
       topIssues,
+      { blockType: 'mapBlock', title: 'Where we are', description: 'Our boundary.' },
     ])
   })
 

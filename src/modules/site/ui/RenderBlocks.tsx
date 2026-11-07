@@ -26,6 +26,8 @@ function renderBlock(block: LayoutBlock, components: PageBlockComponents): React
       return <components.cta {...block} disableInnerContainer />
     case 'formBlock':
       return <components.formBlock {...block} disableInnerContainer />
+    case 'mapBlock':
+      return <components.mapBlock {...block} disableInnerContainer />
     case 'mediaBlock':
       return <components.mediaBlock {...block} disableInnerContainer />
     case 'eventsThisWeek':

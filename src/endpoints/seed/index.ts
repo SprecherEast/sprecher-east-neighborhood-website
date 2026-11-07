@@ -108,7 +108,7 @@ export const seed = async ({
         'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-post2.webp',
       ),
     ),
-    loadLocalImage('East_Madison_NAs.png', 'image/png').catch(() =>
+    loadLocalImage('sprecher-east-map.png', 'image/png').catch(() =>
       fetchFileByURL(
         'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-post3.webp',
       ),
