@@ -12,6 +12,9 @@ generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.m
 - [Verification](../../src/modules/verification/README.md): email confirmation by link, its limits, the welcome email, retention.
 - [Directory](../../src/modules/directory/README.md): the FAQ and resources pages; how entries are grouped, when an official's photo shows, what a save refreshes.
 - [Theme](../../src/platform/theme/README.md): tokens, light and dark mode, theme options and decorations.
+- [Accounts](../../src/modules/accounts/README.md): sign-up, verification, sign-in, password changes and resets, and the guards on each.
+- [Site navigation](../../src/modules/site/navigation/README.md): header, footer, forum link, redirects, refresh timing.
+- [UI kit](../../src/platform/ui/README.md): shared components' behavior: links, charts, version check, staff bar, shared sizes.
 - [Site pages](../../src/modules/site/README.md): page hero and page-builder blocks, what a page save refreshes.
 
 ## Reference (generated)

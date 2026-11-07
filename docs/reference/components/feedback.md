@@ -25,6 +25,22 @@ Source: `src/platform/ui/Alert.tsx`
 - Routes: `/dev/gallery`, `/events/[slug]`
 - Platform: `platform/richtext`, `platform/ui`
 
+## `Dismissible`
+
+Source: `src/platform/ui/Dismissible.client.tsx`
+
+| Prop         | Type              | Required | Description                                                         |
+| ------------ | ----------------- | -------- | ------------------------------------------------------------------- |
+| `id`         | `string`          | yes      | Identifies the notice, so a closed one stays closed on this browser |
+| `showUntil`  | `string`          | no       | The notice stops showing at this moment (an ISO date and time)      |
+| `closeLabel` | `string`          | no       |                                                                     |
+| `children`   | `React.ReactNode` | yes      |                                                                     |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`
+- Platform: `platform/richtext`
+
 ## `Toast`
 
 Source: `src/platform/ui/Toast.tsx`

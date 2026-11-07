@@ -56,7 +56,7 @@ footer, forum link and redirects have their own note, `navigation/README.md`. Fi
 ## Shared pieces it uses
 
 - Collection helpers from `src/platform/payload/`: `draftVersions`, `previewAdmin`, `titleField`, `draftContentAccess`, `seoTab`, `imagesOnly`, `link`, `headingsEditor`.
-- UI kit and richtext from `src/platform/ui/` (`Section`, `Card`, `CardGrid`, `Button`, `LinkButton`, `Media`, `Text`, `MapEmbed`) and `src/platform/richtext/` (`RichText`, `MediaBlock`).
+- UI kit and richtext from `src/platform/ui/` (`Section`, `Card`, `CardGrid`, `Button`, `LinkButton`, `Media`, `Text`, `MapEmbed`) and `src/platform/richtext/` (`RichText`).
 - Where it meets other modules (0008): `src/payload.config.ts` and `pageBlocks.tsx`.
 
 ## Rules and the tests that protect them

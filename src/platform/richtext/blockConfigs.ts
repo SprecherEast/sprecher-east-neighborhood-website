@@ -33,6 +33,26 @@ export const Banner: Block = {
       required: true,
     },
     {
+      name: 'dismissible',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'Close button',
+      admin: {
+        description:
+          'Visitors can close the notice, and it stays closed on their browser. Leave off for warnings that must be read.',
+      },
+    },
+    {
+      name: 'showUntil',
+      type: 'date',
+      label: 'Show until',
+      admin: {
+        date: { pickerAppearance: 'dayAndTime' },
+        description:
+          'The notice disappears at this time. For a meeting, set the meeting’s start time. Leave empty to show it always.',
+      },
+    },
+    {
       name: 'content',
       type: 'richText',
       editor: lexicalEditor({
@@ -109,5 +129,5 @@ export const EDITORIAL_BLOCKS: Block[] = [
 /** The blocks a post's content may hold, in the order the editor offers them. */
 export const RICH_TEXT_BLOCKS: Block[] = [Banner, Code, MediaBlock, ...EDITORIAL_BLOCKS]
 
-/** The blocks an event's content may hold: images and the visual blocks, no banner or code. */
-export const EVENT_RICH_TEXT_BLOCKS: Block[] = [MediaBlock, ...EDITORIAL_BLOCKS]
+/** The blocks an event's content may hold: a banner (for a notice such as a meeting), images and the visual blocks, no code. */
+export const EVENT_RICH_TEXT_BLOCKS: Block[] = [Banner, MediaBlock, ...EDITORIAL_BLOCKS]

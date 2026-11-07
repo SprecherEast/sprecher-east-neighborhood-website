@@ -9,7 +9,7 @@ skill is the step-by-step version for agents.
 How the agent team (chief of staff, workers, reviewers) works on top of this is in the
 [agent operating model](agent-operating-model.md).
 
-GitHub is the only tracker for new work. Asana is being retired (#89: export #91, cutover #93).
+GitHub is the only tracker for new work.
 
 Changing a rule here (how the team works: sprint length, Ready or Done, the levels, the board's
 columns and fields) is a policy change, so the owner agrees first ([`AGENTS.md`](../../AGENTS.md),

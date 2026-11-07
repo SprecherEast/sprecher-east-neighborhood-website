@@ -1,0 +1,65 @@
+# Site navigation
+
+The header navigation, the footer, the forum link and the redirects editors set: where their links
+come from, when they refresh, and how a redirect is followed without showing a draft. Fields, access
+and hooks: [header](../../../../docs/reference/content-types/header.md), [footer](../../../../docs/reference/content-types/footer.md),
+[redirects](../../../../docs/reference/content-types/redirects.md); kit pieces:
+[navigation](../../../../docs/reference/components/navigation.md). Pages and blocks are in the site note.
+
+## How the links connect
+
+- A nav item is the shared link field (a page or post, or a custom URL); `resolveLink` turns it into an `href`, and "open in new tab" becomes `external` (`src/platform/payload/link.ts`, `resolveLink.ts`). A link with no address or an unpopulated reference is dropped (`ui/SiteFooter.tsx`, `data/mappers.ts`).
+- Header and footer are read with their linked pages populated whether or not those pages are published (`data/globals.ts`, #251).
+- The footer global holds the forum address. The footer and each post page link to it through `toForumUrl`, and both links are hidden unless it is a plain `https://` address with a real host (`domain/forum.ts`, `use-cases/getForumUrl.ts`, `ui/SiteFooter.tsx`, `ui/ForumPrompt.tsx`).
+- A redirect's target is a page or post reference or a custom URL; a custom URL wins, and a reference is looked up as a visitor (`use-cases/getRedirectTarget.ts`, `data/documents.ts`).
+- Each cache tag is named once (`domain/cacheTags.ts`) and used by both the cached read (`data/globals.ts`, `data/redirects.ts`) and the hook that expires it (`cms/revalidateGlobal.ts`, `cms/revalidateRedirects.ts`).
+- The account links arrive as slots (`accountMenu`, `mobileAccountMenu`) from the layout, which composes the accounts module (`ui/SiteHeader.tsx`, decision 0008).
+
+## Behaviors and events
+
+- The header and footer are cached until an editor saves them; saving expires `global_header` or `global_footer`, unless the save sets `disableRevalidate` (the seed) (`cms/revalidateGlobal.ts`).
+- Nothing refreshes them when a linked page is published or renamed, so a link to a page not yet published already shows, and a renamed page keeps its old link until the global is saved (`data/globals.ts`, #251).
+- The header nav leaves out an item that points to `/contact`, since the header has its own Contact button, and always ends with Search (`domain/nav.ts`, `data/mappers.ts`, `ui/HeaderNav.client.tsx`). The footer keeps every resolvable item and adds the forum link last.
+- A nav link is current on its own page and on every page inside its section, never on one that only starts with the same letters; outside links are never current (`domain/nav.ts`).
+- The mobile menu closes when the page changes, when a link or button inside it is used, and when the screen grows past the desktop breakpoint, so the scroll lock cannot stay (`ui/SiteHeaderBar.client.tsx`).
+- Saving a redirect expires the `redirects` tag, so the next request follows the new list (`cms/revalidateRedirects.ts`). Deleting one expires nothing.
+- A redirect is followed at render time by `PayloadRedirects`: a match sends the visitor on. With none, the page answers 404, unless the page exists and says so (`disableNotFound`), which still honours a redirect set over it (`ui/PayloadRedirects.tsx`, used by `src/app/(frontend)/[slug]/page.tsx` and `posts/[slug]/page.tsx`).
+- A redirect whose target is a draft, deleted or unreadable answers `null`, so it never reveals a draft (`use-cases/getRedirectTarget.ts`).
+- Looked-up targets are cached for 10 minutes with no tag refresh yet, so a published or renamed target shows within 10 minutes (`data/documents.ts`).
+- The redirects plugin covers pages and posts; only admins can read or change redirects in Admin, while the site reads them regardless (`src/payload.config.ts`, `data/redirects.ts`).
+- Redirects in `redirects.js` run before any page renders and are an empty list today; editor redirects are separate (`redirects.js`, `src/redirects.test.ts`).
+- The logo link is as tall as a tap needs, from one shared component used by header, mobile menu and footer (`ui/Logo.tsx`, #741).
+
+## Shared pieces it uses
+
+- `link` and `resolveLink` (`src/platform/payload/`), `expireCacheTag`, `documentHref` (the home page is `/`), `isAdminOrEditor` and `isAdmin`.
+- Kit: `Link`, `Button`, `Dialog`, `Text`, `MetaList`, `layoutSizes` (`src/platform/ui/`).
+- Where it meets other modules (decision 0008): the layout supplies the account slots; pages in `src/app/` mount `PayloadRedirects` and `ForumPrompt`; `src/payload.config.ts` sets up the plugin and globals.
+
+## Rules and the tests that protect them
+
+- Header and footer are readable by anyone, editable by staff only, and saving expires only their own tag (unless told not to): `cms/navGlobal.test.ts`. The shared link-group helper merges overrides: `cms/linkGroup.test.ts`.
+- Linked pages are populated and cached under the global's tag: `data/globals.test.ts`.
+- The forum address must be https with a real host and no login in it; anything else draws no link: `domain/forum.test.ts`, `ui/ForumPrompt.test.tsx`.
+- Current-section marking and the Contact exclusion: `domain/nav.test.ts`, `ui/HeaderNav.client.test.tsx`.
+- The mobile menu opens, closes and matches the `lg` width: `ui/SiteHeaderBar.client.test.tsx`.
+- Footer headings and tap sizes, and the logo link: `ui/SiteFooter.test.tsx`, `ui/Logo.test.tsx`.
+- Saving a redirect expires its tag: `cms/revalidateRedirects.test.ts`.
+- A redirect never leaks a draft, and a custom URL or post target resolves: `use-cases/getRedirectTarget.test.ts`.
+- 404 versus render versus redirect: `ui/PayloadRedirects.test.tsx`.
+- The code redirects list stays a list `next.config.js` can call: `src/redirects.test.ts`.
+
+## Boundaries
+
+- Entry files: `server.ts` (header, footer, forum, redirects), `cms.ts` (globals, hooks), `index.ts` (the forum default and the sitemap tag). `ui/SiteHeaderBar.client.tsx` and `ui/HeaderNav.client.tsx` are client code and get plain props only.
+- It imports no other module; lint enforces the layer and module rules (`eslint.boundaries.config.mjs`).
+
+## Decisions
+
+[0008](../../../../docs/architecture/decisions/0008-compose-modules-at-the-app-level.md). Forum: #485. Nav caching: #251.
+
+## Known gaps
+
+- The header maps generated Payload types in `data/mappers.ts`; moving it to plain props is #617.
+- The redirect "from" field's Admin text says a rebuild is needed, but the list refreshes on save (`src/payload.config.ts`, `cms/revalidateRedirects.ts`).
+- Deleting a redirect does not expire the cached list (`cms/revalidateRedirects.ts` runs on save only).

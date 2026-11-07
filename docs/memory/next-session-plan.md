@@ -44,7 +44,6 @@ Before any scaffolding, update the project CLAUDE.md to reflect:
 - Payload CMS docs: https://payloadcms.com/llms-full.txt
 - payload-oauth2: https://github.com/wilsonle/payload-oauth2
 - Website Template: https://github.com/payloadcms/payload/tree/main/templates/website
-- Asana project: "Sprint 2 — Payload CMS Migration" (created March 1, 2026)
 
 ## Carried-Over Sprint 1 Tasks (ON HOLD)
 

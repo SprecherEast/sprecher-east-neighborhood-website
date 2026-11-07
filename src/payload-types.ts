@@ -2839,6 +2839,14 @@ export interface TaskSchedulePublish {
  */
 export interface BannerBlock {
   style: 'info' | 'warning' | 'error' | 'success'
+  /**
+   * Visitors can close the notice, and it stays closed on their browser. Leave off for warnings that must be read.
+   */
+  dismissible?: boolean | null
+  /**
+   * The notice disappears at this time. For a meeting, set the meeting’s start time. Leave empty to show it always.
+   */
+  showUntil?: string | null
   content: {
     root: {
       type: string
@@ -3117,7 +3125,6 @@ export interface ChartBlock {
            * Stripes mark an amount that is only proposed.
            */
           hatch?: boolean | null
-          id?: string | null
         }[]
         id?: string | null
       }[]
