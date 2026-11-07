@@ -105,7 +105,7 @@ The goal is **visual balance**, not visual symmetry. A left-aligned text block w
 
 ## Symmetry and Alignment
 
-Baseline every agent follows without being told. Summary of the owner's direction (2026-11-04, recorded on #679): symmetry, same-line layouts, and flow. Summary of his decision (2026-11-05, voice call, recorded on #679): replace the six extras beyond that direction with this eighteen-item baseline. About that baseline; the section above is about centred text.
+Baseline every agent follows without being told. Summary of the owner's direction (2026-11-04, recorded on #679): symmetry, same-line layouts, and flow. Summary of his decision (2026-11-05, voice call, recorded on #679): this baseline replaces any extras beyond that direction. About that baseline; the section above is about centred text.
 
 1. Align related elements to shared edges and baselines so nothing looks accidentally out of line.
 2. Center elements accurately within their intended container, not merely within the screen.

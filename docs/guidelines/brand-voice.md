@@ -78,6 +78,10 @@ never say whether a tax, budget, project or official is good or bad, and we neve
 referendum, a candidate or a budget amendment. Every number has a year, a source and, if we
 calculated it, says so. A number only one source reports is labeled "reported by {source}, not yet confirmed" (an exact figure from its official publisher is not an estimate). A number we or the source rounded or projected is called an estimate, and says by whom.
 
+**Sources that differ by rounding agree.** Small differences that come from rounding between
+sources are not discrepancies: use the official publisher's figure and don't flag or list the
+difference. Only a gap too large to be rounding is flagged as unconfirmed or as a conflict.
+
 **Tripwires.** If one of these appears in our own words, rewrite it (inside a quote, attribute it):
 
 | Tripwire                                                                     | Say instead                                     |

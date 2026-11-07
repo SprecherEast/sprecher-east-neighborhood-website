@@ -34,18 +34,16 @@ layout system, and never redesigns the site from scratch.
 | 6        | Color Harmony          | MEDIUM   | Design tokens only; the palette feels cohesive              |
 | 7        | Component Polish       | MEDIUM   | Consistent border radius; hover and focus states            |
 | 8        | Animation & Motion     | LOW      | 150–300 ms transitions; no janky layout shifts              |
-| 9        | Symmetry & Alignment   | HIGH     | Eighteen-item baseline; mobile order holds                  |
+| 9        | Symmetry & Alignment   | HIGH     | The baseline; mobile order holds                            |
 
 Symmetry and alignment is HIGH although it is listed last: judge every visual change against the
-eighteen-item baseline in
+baseline in
 [Symmetry and alignment](../../../docs/guidelines/ui-ux-design.md#symmetry-and-alignment)
 (alignment, centering, spacing, margins, symmetry, repeated patterns, proportion, hierarchy,
 contrast, consistent components, overflow, images, white space, typography, finished-page
 inspection, keyboard and screen-reader accessibility, near-field form errors, and subtle
 motion that respects reduced-motion). Report a clear break of that baseline as a finding. Do not
-require the superseded extras (mandatory subgrid or equal-height items, container-only columns,
-banning text adjustments, always stacking instead of wrapping, per-field text min/max, or a
-six-width measurement mandate as the only proof). On small screens the order is the page menu,
+require extras beyond it. On small screens the order is the page menu,
 the page content, then the related content.
 
 Then the first-impression tests: the 3-second test, the squint test, the comparison test (next
