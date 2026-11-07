@@ -37,17 +37,17 @@ own types (`EventSummary`, `PostSummary`), and rich text and images travel as `R
 
 ## Blocks and the component for each
 
-| Block (`blockType`) | Where it can go        | Component · variant                                      |
-| ------------------- | ---------------------- | -------------------------------------------------------- |
-| `content`           | page layout            | `ContentBlock` · `single`, `columns`, `cards` or `stats` |
-| `cta`               | page layout, rich text | `CallToActionBlock` · default                            |
-| `mediaBlock`        | page layout, rich text | `Media · framed`                                         |
-| `archive`           | page layout            | `ArchiveBlock` · default                                 |
-| `formBlock`         | page layout            | `FormBlock` · default                                    |
-| `eventsThisWeek`    | page layout            | `EventsThisWeek` · default                               |
-| `topIssues`         | page layout            | `TopIssuesBlock` · default                               |
-| `banner`            | rich text              | `Alert` · `{style}`                                      |
-| `code`              | rich text              | `CodeBlock` · default                                    |
+| Block (`blockType`) | Where it can go        | Component · variant                                                                                |
+| ------------------- | ---------------------- | -------------------------------------------------------------------------------------------------- |
+| `content`           | page layout            | `ContentBlock` · `single`, `columns`, `cards` or `stats`                                           |
+| `cta`               | page layout, rich text | `CallToActionBlock` · default                                                                      |
+| `mediaBlock`        | page layout, rich text | `Media · framed`                                                                                   |
+| `archive`           | page layout            | `ArchiveBlock` · default                                                                           |
+| `formBlock`         | page layout            | `FormBlock` · default                                                                              |
+| `eventsThisWeek`    | page layout            | `EventsThisWeek` · default                                                                         |
+| `topIssues`         | page layout            | `TopIssuesBlock` · default                                                                         |
+| `banner`            | rich text              | `Alert` · `{style}`, `Dismissible` when `dismissible` is on (`showUntil` hides it after that time) |
+| `code`              | rich text              | `CodeBlock` · default                                                                              |
 
 ## Form-builder fields
 
