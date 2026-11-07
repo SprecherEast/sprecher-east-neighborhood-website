@@ -63,6 +63,39 @@ describe('ArticlePage', () => {
     expect(screen.getByTestId('live-preview')).toBeTruthy()
   })
 
+  describe('the byline', () => {
+    const byline = [
+      { label: 'Author', value: 'Ana' },
+      { label: 'Date Published', value: 'Tue, Nov 3, 2026' },
+    ]
+
+    it('is the first row of the article column, above the text, not in the header', () => {
+      renderArticle({ byline })
+
+      const row = screen.getByText('Author').closest('dl')
+      expect(row).not.toBeNull()
+      expect(row?.closest('header')).toBeNull()
+      // Same column as the text, and directly before it
+      expect(row?.nextElementSibling?.textContent).toBe('The article')
+      expect(row?.parentElement).toBe(screen.getByText('The article').parentElement)
+    })
+
+    it('starts at the left on a small screen and ends at the right edge from lg', () => {
+      renderArticle({ byline })
+
+      const row = screen.getByText('Author').closest('dl')
+      expect(row?.className).toContain('lg:justify-end')
+      expect(row?.className).not.toContain('justify-end ')
+    })
+
+    it('draws nothing when there are no facts', () => {
+      renderArticle({ byline: [] })
+
+      expect(screen.queryByRole('term')).toBeNull()
+      expect(screen.getByText('The article').parentElement?.children).toHaveLength(1)
+    })
+  })
+
   it('leaves room under a photo header only when there is one', () => {
     const body = () => screen.getByRole('article').querySelector('article > div')
 

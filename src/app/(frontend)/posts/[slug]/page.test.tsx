@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
+import { READING_COLUMN } from '@/platform/ui/layoutSizes'
 
 // The modules are replaced: this tests the page's wiring, not news, events or the renderer
 const mocks = vi.hoisted(() => ({
@@ -17,6 +18,7 @@ vi.mock('@/modules/news/server', () => ({
   getPostBySlug: mocks.getPostBySlug,
   listPostSlugs: async () => [],
   postHeaderProps: () => ({ title: 'Park cleanup' }),
+  postByline: () => [{ label: 'Author', value: 'Ana' }],
   postJsonLd: () => ({}),
   SidebarPosts: () => null,
 }))
@@ -61,6 +63,29 @@ describe('/posts/[slug]', () => {
     )
     // Under the post, the prompt to discuss it on the forum (#485)
     expect(mocks.forumPrompt).toHaveBeenCalledWith({ href: 'https://forum.example.org' })
+  })
+
+  it('puts the byline above the text, and keeps a text-only post at the reading width (#774)', async () => {
+    const content = { root: { type: 'root', children: [] } }
+    mocks.getPostBySlug.mockResolvedValue({ slug: 'park-cleanup', title: 'Park cleanup', content })
+
+    render(await PostPage(params('park-cleanup')))
+
+    expect(screen.getByText('Author')).toBeDefined()
+    expect(mocks.richText).toHaveBeenCalledWith(
+      expect.objectContaining({ className: READING_COLUMN }),
+    )
+  })
+
+  it('lets a post with card blocks fill the column (#774)', async () => {
+    const content = {
+      root: { type: 'root', children: [{ type: 'block', fields: { blockType: 'factTabs' } }] },
+    }
+    mocks.getPostBySlug.mockResolvedValue({ slug: 'budget', title: 'Budget', content })
+
+    render(await PostPage(params('budget')))
+
+    expect(mocks.richText).toHaveBeenCalledWith(expect.objectContaining({ className: undefined }))
   })
 
   it('follows a redirect, or answers 404, when there is no such post', async () => {
