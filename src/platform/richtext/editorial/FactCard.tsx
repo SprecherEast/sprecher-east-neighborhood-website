@@ -23,8 +23,8 @@ import type { KeyFact } from './keyFacts'
  * focus ring), and with no link, because a link can't sit inside a button. The source link is
  * drawn by whoever shows the tab's panel. A tab has the same parts for every fact (#707): the
  * explanation is left to the open panel, so one fact having one doesn't make its tab fuller than
- * the rest. The icon sits on its own line with the label under it, centred (#856), so a
- * short label fits four to a row. On a phone (#704) the certainty is left to screen readers
+ * the rest. The icon sits on its own line with the label under it (#856), centred on a
+ * phone and left-aligned from `sm` up, so a short label fits four to a row. On a phone (#704) the certainty is left to screen readers
  * (`sr-only`) and the open panel shows it in a line. The figure keeps its last two words together,
  * so "+$90 a year" wraps as "+$90" over "a year".
  */
@@ -44,7 +44,7 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
           className={cn(
             'flex gap-2 leading-snug font-semibold text-foreground',
             tab
-              ? 'flex-col items-center gap-1 text-xs min-[400px]:text-sm sm:text-base'
+              ? 'flex-col items-center gap-1 text-xs min-[400px]:text-sm sm:items-start sm:text-base'
               : 'items-start text-base',
           )}
         >
@@ -52,7 +52,9 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
           <span
             className={cn(
               'min-w-0',
-              tab ? 'text-center text-balance break-words' : '[overflow-wrap:anywhere]',
+              tab
+                ? 'text-center text-balance break-words sm:text-left'
+                : '[overflow-wrap:anywhere]',
             )}
           >
             {fact.label}
@@ -63,7 +65,7 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
           className={cn(
             'mt-1 block leading-tight font-bold [overflow-wrap:anywhere] text-foreground',
             tab
-              ? 'text-center text-xs min-[360px]:text-sm min-[400px]:text-base sm:text-xl lg:text-2xl'
+              ? 'text-center text-xs min-[360px]:text-sm min-[400px]:text-base sm:text-left sm:text-xl lg:text-2xl'
               : 'text-2xl',
           )}
         >
