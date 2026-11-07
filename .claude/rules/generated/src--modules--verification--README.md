@@ -24,7 +24,7 @@ page's URL: [screens](/docs/reference/routes.md).
 ## Behaviors and events
 
 - Opening the link changes nothing: the page only reads where the link stands (`use-cases/getConfirmationLinkStatus.ts`, #391) and hides the Confirm button for a used, expired or unknown link (`ui/ConfirmEmail.client.tsx`).
-- The Confirm button posts the token with the robot check (Turnstile, decision 0003), because mail scanners open links and some run scripts (`cms/confirmEndpoint.ts`, #303). Without a passing check nothing is confirmed.
+- The Confirm button posts the token with the robot check (Turnstile, decision 0003), because mail scanners open links and some run scripts (`cms/confirmEndpoint.ts`, #303). When the check is on (it runs only while the verifier is enabled), nothing is confirmed without a passing one.
 - The first valid click within 24 hours confirms, runs every listener, then sends the welcome email. One failing listener, or a failed welcome, is logged and stops nothing; a later click answers `already-confirmed` (`cms/confirmEmail.ts`, `domain/rules.ts`).
 - Confirming is one conditional write, so two clicks at once confirm once. It also sets `welcomeSentAt` before the send: the welcome goes at most once and is never retried (`cms/store.ts` `markConfirmed`).
 - A request sends a link only within the limits below; a new link replaces the old one, so only the newest works. The record is saved before the email goes out (`cms/requestConfirmation.ts`).
