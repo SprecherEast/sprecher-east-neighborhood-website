@@ -29,6 +29,14 @@ describe('Chart', () => {
     expect(container.querySelectorAll('[data-legend-swatch]')).toHaveLength(6)
   })
 
+  it('marks the chart that asks for the warm colours, and no other (#856)', () => {
+    const warm = render(<Chart spec={{ ...FIXTURES.paysFor, palette: 'warm' }} />)
+    expect(warm.container.querySelector('[data-chart-palette="warm"]')).not.toBeNull()
+    cleanup()
+    const usual = render(<Chart spec={FIXTURES.paysFor} />)
+    expect(usual.container.querySelector('[data-chart-palette]')).toBeNull()
+  })
+
   it('names the figure’s drawing by its title and its description', () => {
     render(<Chart spec={FIXTURES.paysFor} />)
     const image = screen.getByRole('img', { name: /What the money pays for, proposed/ })

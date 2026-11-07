@@ -23,6 +23,7 @@ const COMMON = [
   'title',
   'summary',
   'unit',
+  'palette',
   'asOf',
   'certainty',
   'sources',

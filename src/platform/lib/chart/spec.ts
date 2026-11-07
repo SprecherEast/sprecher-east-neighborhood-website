@@ -12,6 +12,13 @@ import { isLinkAddress, LINK_ADDRESS_HINT } from '@/platform/lib/linkAddress'
 export const CHART_UNITS = ['usd', 'percent', 'mills', 'count'] as const
 export type ChartUnit = (typeof CHART_UNITS)[number]
 
+/**
+ * The colour set a chart is drawn in (#856): the usual one (`chart-1` to `chart-6`), or `warm`,
+ * orange and gray. A theme sets each set's colours; the chart only names which one.
+ */
+export const CHART_PALETTES = ['default', 'warm'] as const
+export type ChartPaletteName = (typeof CHART_PALETTES)[number]
+
 /** Colours a chart can use (`chart-1` to `chart-6`). Slot = position + 1, and a colour never repeats. */
 export const MAX_COLOURED_PARTS = 6
 /** Squares in a "per hundred" grid */
@@ -65,6 +72,8 @@ const baseShape = {
   /** The takeaway in words: shown under the title */
   summary: text(CHART_LIMITS.summary),
   unit: z.enum(CHART_UNITS),
+  /** The colour set: left out means the usual one */
+  palette: z.enum(CHART_PALETTES).optional(),
   /** When the figures are from, such as "Mayor's proposal, October 2026" */
   asOf: text(CHART_LIMITS.asOf).optional(),
   certainty: z.enum(CERTAINTIES).optional(),

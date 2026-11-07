@@ -2,7 +2,12 @@ import type { Field } from 'payload'
 import { array, select, text } from 'payload/shared'
 
 import { CERTAINTY_OPTIONS } from '@/platform/lib/certainty'
-import { CHART_LIMITS, type CHART_KINDS, type CHART_UNITS } from '@/platform/lib/chart/spec'
+import {
+  CHART_LIMITS,
+  type CHART_KINDS,
+  type CHART_PALETTES,
+  type CHART_UNITS,
+} from '@/platform/lib/chart/spec'
 
 import { checked } from './chartValidate'
 import { editorialLinkFields } from './linkFields'
@@ -26,6 +31,11 @@ const UNIT_OPTIONS = [
   { label: 'Mills (tax per $1,000 of value)', value: 'mills' },
   { label: 'A count (people, homes, items)', value: 'count' },
 ] satisfies { label: string; value: (typeof CHART_UNITS)[number] }[]
+
+const PALETTE_OPTIONS = [
+  { label: 'The usual colors', value: 'default' },
+  { label: 'Orange and gray', value: 'warm' },
+] satisfies { label: string; value: (typeof CHART_PALETTES)[number] }[]
 
 /**
  * The fields every kind of chart has, first in the block: what it is called, the takeaway in
@@ -76,6 +86,13 @@ export const chartBaseFields = (): Field[] => [
         validate: checked('unit', select),
       },
     ],
+  },
+  {
+    name: 'palette',
+    type: 'select',
+    options: PALETTE_OPTIONS,
+    admin: { description: 'The colors the chart is drawn in. Leave empty for the usual ones.' },
+    validate: checked('palette', select),
   },
   {
     type: 'row',
