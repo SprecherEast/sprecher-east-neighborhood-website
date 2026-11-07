@@ -114,7 +114,7 @@ secret_set=$([ -n "$(env_value TURNSTILE_SECRET_KEY)" ] && echo yes || echo no)
 (cd "$RELEASE" && node -e 'require("sharp"); require("libsql")') >/dev/null 2>&1 ||
   stop "the release's native modules (sharp, libsql) do not load with this server's Node"
 
-# 2. Shared files. The release's own copies (the seed's JSON in data/) give way to the links.
+# 2. Shared files. The release's own data/ and public/media give way to the links.
 mkdir -p "$APP_DIR/data" "$APP_DIR/public/media"
 rm -rf "${RELEASE:?}/data" "${RELEASE:?}/public/media" "${RELEASE:?}/.env.local"
 ln -s "$APP_DIR/.env.local" "$RELEASE/.env.local"

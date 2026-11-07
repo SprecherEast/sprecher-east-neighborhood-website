@@ -22,7 +22,7 @@ The Sprecher East events calendar requires manual research and updates to stay c
 - Proof of concept already validated: our research agent successfully pulled 15+ meetings from the API including Plan Commission, Common Council, Finance Committee, Transportation Commission, and Board of Health
 - Directly solves the stale-content problem — the #1 issue across all Madison neighborhood websites
 - Can run as a scheduled Claude Code session (weekly) or as a cron job
-- Data format maps cleanly to our `data/events.json` schema
+- Data format maps cleanly to the Events collection's fields
 
 **Implementation plan:**
 
@@ -30,7 +30,7 @@ The Sprecher East events calendar requires manual research and updates to stay c
 2. Filter results by body (Common Council, Plan Commission, etc.)
 3. Enrich with District 16 relevance notes
 4. Also scrape Alder O'Brien's blog at `https://www.cityofmadison.com/council/district16/blog` for local events
-5. Output to `data/events.json` or directly into Payload CMS via Local API
+5. Write directly into Payload CMS via the Local API
 6. Run weekly as a Claude Code session or GitHub Action
 
 **Effort:** ~4-6 hours to build, 30 minutes/week to maintain

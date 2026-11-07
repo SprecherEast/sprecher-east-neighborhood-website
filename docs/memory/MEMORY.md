@@ -84,11 +84,9 @@ src/
   payload/collections/        Payload CMS schemas
     Events.ts, Posts.ts, BoardMembers.ts, Users.ts, Media.ts
 payload.config.ts             Payload config (SQLite, collections, admin)
-scripts/seed.ts               One-time: imports data/*.json into Payload DB
 data/
-  events.json, posts.json, board.json, site.json   (source of truth until seeded)
-  payload.db, auth.db         (SQLite — gitignored, created at runtime)
-public/images/               (must copy from assets/images — see setup)
+  payload.db                  (SQLite — gitignored, created at runtime)
+public/images/               Photos, also read by the demo seed (src/endpoints/seed)
 ```
 
 ## Design Tokens (src/app/globals.css @theme block)
