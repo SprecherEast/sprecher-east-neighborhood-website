@@ -10,6 +10,7 @@ generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.m
 - [Contact](../../src/modules/contact/README.md): form checks, emails held until the sender confirms, retention.
 - [Agents](../../src/modules/agents/README.md): MCP access, what agents may read, suggestions held as drafts, run history.
 - [Verification](../../src/modules/verification/README.md): email confirmation by link, its limits, the welcome email, retention.
+- [Directory](../../src/modules/directory/README.md): the FAQ and resources pages; how entries are grouped, when an official's photo shows, what a save refreshes.
 
 ## Reference (generated)
 
