@@ -132,5 +132,1566 @@
         "pattern": "accessibility_?notes"
       }
     ]
+  },
+  {
+    "id": "EV-1",
+    "kind": "question",
+    "level": 1,
+    "style": "vague",
+    "modules": ["events"],
+    "covers": "index line: where the calendar lives",
+    "prompt": "Where in the repository does the neighborhood calendar live, and which note should I read before changing how events behave? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [["src/modules/events"], ["modules/events/README.md"]],
+    "core": true
+  },
+  {
+    "id": "EV-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["events"],
+    "covers": "Screens (event page); link: cancelled + registrationUrl -> register button",
+    "prompt": "A resident says the Register button is missing on an event's page even though the editor typed in a registration link. What can cause that, and which file decides it? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [["cancelled", "canceled"], ["registrationUrl"], ["events/[slug]/page.tsx"]],
+    "core": false
+  },
+  {
+    "id": "EV-3",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["events"],
+    "covers": "Behaviors (map link); link: mapsUrl / locationAddress -> mapsHref",
+    "prompt": "An event has no map link pasted in, yet its page has an 'open in Google Maps' link. How is that link built, and when is there none at all? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["domain/maps.ts", "toMapsHref"],
+      ["mapsUrl"],
+      ["locationAddress", "address"],
+      ["google.com/maps/search"],
+      ["neither", "no address", "null"],
+      ["encodeURIComponent", "url-encoded", "encoded"]
+    ],
+    "core": false
+  },
+  {
+    "id": "EV-4",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["events"],
+    "covers": "Behaviors (official meetings), Shared pieces; link: officialBody -> organizer in structured data",
+    "prompt": "For an event whose official body is set, what organizer does the page's schema.org structured data name for each of the two bodies, and what organizer does an ordinary event get? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["eventJsonLd"],
+      ["GovernmentOrganization"],
+      ["City of Madison"],
+      ["Dane County"],
+      ["Sprecher East"],
+      ["formatOfficialBody", "domain/officialMeetings.ts"]
+    ],
+    "core": false
+  },
+  {
+    "id": "EV-5",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["events"],
+    "covers": "generated reference (events content type: access) + Known gaps (featured)",
+    "prompt": "Using the generated reference for the events collection: which access function guards update and which guards delete, and does any page or query read the 'featured' checkbox? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["isAdminOrEditor"],
+      ["/isadmin(?!oreditor)/"],
+      [
+        "no page",
+        "not read",
+        "unused",
+        "nothing reads",
+        "no query",
+        "isn't read",
+        "isn't used",
+        "not used"
+      ],
+      ["content-types/events.md", "cms/events.ts"]
+    ],
+    "core": true
+  },
+  {
+    "id": "NW-1",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["news"],
+    "covers": "Behaviors (search) + Known gaps (12 results, no paging)",
+    "prompt": "What does the site's search look through, how many results does it show, can you page through them, and how does the search box react while someone types? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["data/filters.ts", "searchMatch", "data/queries.ts"],
+      ["slug"],
+      ["/\\b12\\b[^\\n]*(result|match|entr)|(result|match|entr)[^\\n]*\\b12\\b/"],
+      [
+        "/(no|without|doesn't|does not|isn't|not|can't|cannot)[^\\n]*(paging|pagination|page through|count)/"
+      ],
+      ["/200 ?ms|200 milliseconds/"],
+      ["/enter (key|searches)|pressing enter|on enter|enter[^\\n]*(immediately|at once|instantly)/"]
+    ],
+    "core": true
+  },
+  {
+    "id": "NW-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["news"],
+    "covers": "Links between fields (authors -> populatedAuthors -> byline)",
+    "prompt": "Post bylines show people's names, but visitors can't read user accounts. How do the names get onto a post, how are several names joined, and what happens when an author account is gone? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["populatedAuthors"],
+      ["cms/populateAuthors.ts", "populateAuthors"],
+      ["domain/authors.ts", "formatAuthors"],
+      ["/(left out|skipped|dropped|omitted|ignored)/"],
+      ["overrideAccess", "past access", "bypass", "skips access", "regardless of access"]
+    ],
+    "core": false
+  },
+  {
+    "id": "NW-3",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["news"],
+    "covers": "Links between fields (sourceName/sourceUrl -> card source)",
+    "prompt": "How do a post's sourceName and sourceUrl become the source shown on its card and page: what is shown if only the link is set, what if the link is not an absolute web address, and what if neither is set? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["toPostSource"],
+      ["data/mappers.ts"],
+      ["hostname", "host name", "its host", "the host"],
+      ["/absolute|http\\(s\\)|http or https|http:\\/\\/ or https/"],
+      ["/no source|neither[^\\n]*(nothing|null|none|no)/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "NW-4",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["news"],
+    "covers": "Behaviors ('top issues' limits and hiding)",
+    "prompt": "What limits does the 'top issues' block put on the number of items, the title length and the summary length, and which items are left out of what visitors see? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["TOP_ISSUES_LIMITS", "domain/topIssues.ts"],
+      ["/(items?|issues?)[^\\n]*\\b(5|five)\\b|\\b(5|five)\\b[^\\n]*(items?|issues?)/"],
+      ["/title[^\\n]*\\b80\\b|\\b80\\b[^\\n]*title/"],
+      ["/summary[^\\n]*\\b200\\b|\\b200\\b[^\\n]*summary/"],
+      [
+        "isSafeHref",
+        "unsafe",
+        "javascript",
+        "not http",
+        "unreadable",
+        "no title",
+        "without a title"
+      ]
+    ],
+    "core": false
+  },
+  {
+    "id": "NW-5",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["news", "agents"],
+    "covers": "generated reference (categories) ; link: categories.defaultImage -> agent suggestion image",
+    "prompt": "From the generated reference for categories: which field supplies the picture of an agent's suggestion, which plugin adds the parent and breadcrumbs fields, and which access function guards delete? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["defaultImage"],
+      ["parent"],
+      ["nested-docs", "nested docs", "nestedDocs"],
+      ["/isadmin(?!oreditor)/"],
+      ["content-types/categories.md"]
+    ],
+    "core": true
+  },
+  {
+    "id": "DI-1",
+    "kind": "question",
+    "level": 1,
+    "style": "vague",
+    "modules": ["directory"],
+    "covers": "index line: where FAQ and resources live",
+    "prompt": "Where do the rules for the neighborhood FAQ page and the resources list live, and which note should I read first? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [["src/modules/directory"], ["modules/directory/README.md"]],
+    "core": true
+  },
+  {
+    "id": "DI-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["directory"],
+    "covers": "Links (category + photo + photoCredit -> portrait)",
+    "prompt": "On the resources page, the card for one city official shows a portrait and the card for another doesn't. What decides whether a portrait shows, and whose credit appears under it? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["resourcePortrait"],
+      ["elected-officials", "elected officials"],
+      ["photoCredit"],
+      ["resource's own", "its own credit", "own credit", "the resource's"]
+    ],
+    "core": false
+  },
+  {
+    "id": "DI-3",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["directory"],
+    "covers": "Links (category options = section headings)",
+    "prompt": "How do the FAQ and resource category options stay in step with the headings on the pages (name the constants), and where does an entry with no category, or with one no longer on the list, appear on each page? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["FAQ_CATEGORIES"],
+      ["RESOURCE_CATEGORIES"],
+      ["domain/categories.ts"],
+      ["/faq[^\\n]*general|general[^\\n]*faq/"],
+      ["/resources?[^\\n]*\\bother\\b|\\bother\\b[^\\n]*resources?/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "DI-4",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["directory"],
+    "covers": "Links (order) + Known gaps (200 entries)",
+    "prompt": "How do editors control the order of entries on the FAQ and resources pages, what happens if they leave that empty, and how many entries can a page list? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["orderField", "cms/orderField.ts"],
+      ["/default[^\\n]*\\b99\\b|\\b99\\b[^\\n]*default/"],
+      ["lower"],
+      ["/\\b200\\b[^\\n]*(entr|item|resource|faq)|(up to|at most|max)[^\\n]*\\b200\\b/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "DI-5",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["directory"],
+    "covers": "generated reference (team-members access, hidden field) + Known gaps (no page reads it)",
+    "prompt": "From the generated reference: who may read team members, who may create, update and delete them, which field is kept from the public, and does any page show team members yet? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["anyone"],
+      ["isAdminOrEditor"],
+      ["/isadmin(?!oreditor)/"],
+      ["email"],
+      [
+        "no page",
+        "no query",
+        "not read",
+        "nothing reads",
+        "isn't read",
+        "no screen",
+        "not used",
+        "unused"
+      ]
+    ],
+    "core": true
+  },
+  {
+    "id": "SP-1",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["site"],
+    "covers": "generated reference (screens: /[slug])",
+    "prompt": "Per the generated screens reference, which URL pattern renders CMS pages, after how many seconds is it re-rendered, are its pages built ahead of time, and which module entry point does it import? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/[slug]"],
+      ["/\\b600\\b|10 minutes/"],
+      ["prebuilt", "generateStaticParams", "ahead of time", "built ahead"],
+      ["@/modules/site/server"]
+    ],
+    "core": true
+  },
+  {
+    "id": "SP-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["site"],
+    "covers": "Links between fields (column sizes -> layout)",
+    "prompt": "An editor's content block with several columns shows as a row of cards on one page and as plain text with a side card on another. What decides which look it gets, and what are the possible looks? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["toContentLayout"],
+      ["data/mappers.ts"],
+      ["/stats[^\\n]*(four|4)|(four|4)[^\\n]*stats/"],
+      ["/columns[^\\n]*(two|2)[^\\n]*half|(two|2)[^\\n]*(not both|isn't|aren't)[^\\n]*half/"],
+      ["/single[^\\n]*(one column|full)|(one column|full)[^\\n]*single/"]
+    ],
+    "core": true
+  },
+  {
+    "id": "SP-3",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["site"],
+    "covers": "Links between fields (hero type -> look) + Behaviors (empty hero)",
+    "prompt": "How does a page's hero type setting map to the look it draws, which look splits its rich text into a title and a description, and when does a hero draw nothing? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["toPageHeroProps"],
+      ["highImpact"],
+      ["splitHeadingFromBody", "first heading"],
+      ["PageHero.tsx"],
+      ["/low[^\\n]*(text)|text[^\\n]*low/"],
+      ["/none[^\\n]*(nothing|draws)|draws nothing/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "SP-4",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["site", "news"],
+    "covers": "Links (archive block fields -> postQuery -> news) + Known gaps (limit default)",
+    "prompt": "On the home page the 'Recent News' block lists posts, yet the site module never queries posts. How does the block get its posts, and how many does it show if the editor leaves the count empty? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["pageBlocks.tsx"],
+      ["postQuery"],
+      ["findArchivePosts"],
+      [
+        "/\\b3\\b[^\\n]*(empty|zero|no limit|not set|left)|(empty|zero|not set|left)[^\\n]*\\b3\\b/"
+      ],
+      ["/editor[^\\n]*\\b10\\b|\\b10\\b[^\\n]*editor/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "SP-5",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["site"],
+    "covers": "Behaviors (what a save refreshes)",
+    "prompt": "What does saving a published CMS page refresh, what extra happens when a published page is unpublished, and what is refreshed by saving a draft or by a save the seed script makes? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["cms/revalidatePage.ts", "revalidatePage"],
+      ["pages-sitemap", "PAGES_SITEMAP_CACHE_TAG", "pages sitemap"],
+      ["every cms page", "all cms pages", "/(frontend)/[slug]"],
+      ["/old (path|address)|previous path|unpublish[^\\n]*(old|previous)/"],
+      ["disableRevalidate"],
+      ["/draft[^\\n]*(nothing|not refresh|no refresh|doesn't|does not|isn't)/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "NV-1",
+    "kind": "question",
+    "level": 1,
+    "style": "vague",
+    "modules": ["site-navigation"],
+    "covers": "index line: where header/footer/redirects live",
+    "prompt": "Where do I look to understand how the top menu, the bottom links and the redirects editors set are refreshed? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [["src/modules/site/navigation"], ["navigation/README.md"]],
+    "core": true
+  },
+  {
+    "id": "NV-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["site-navigation", "news"],
+    "covers": "Links (footer forumUrl -> forum links)",
+    "prompt": "The forum link at the bottom of every page and on each news post has vanished. Where is the forum address kept, and what could make both links disappear? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["forumUrl"],
+      ["toForumUrl", "domain/forum.ts"],
+      ["/https:\\/\\/|https address|plain https/"],
+      ["/user ?name|password|login/"],
+      ["footer"]
+    ],
+    "core": false
+  },
+  {
+    "id": "NV-3",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["site-navigation"],
+    "covers": "Behaviors (header nav vs footer) ; link: nav item -> resolveLink -> href",
+    "prompt": "A CMS header nav item that points to the Contact page does not show in the header. Why, does the footer drop it too, and what is always added at the end of the header nav? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["domain/nav.ts"],
+      ["/own contact button|contact button|its own button/"],
+      ["/footer[^\\n]*(keep|still|does not|doesn't|include|show)/"],
+      ["search"]
+    ],
+    "core": false
+  },
+  {
+    "id": "NV-4",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["site-navigation"],
+    "covers": "Behaviors (redirects: drafts, cache, delete)",
+    "prompt": "An editor sets up a redirect to a page that is still a draft. What does a visitor get, how soon does the site follow a redirect that is edited, and what happens to the list when one is deleted? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["getRedirectTarget"],
+      ["404", "not found"],
+      ["revalidateRedirects", "redirects tag", "`redirects`", "'redirects'"],
+      ["/delet[^\\n]*(nothing|not expire|doesn't|does not|isn't|not refresh|stale)/"],
+      ["/10 minutes|600/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "NV-5",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["site-navigation"],
+    "covers": "generated reference (redirects, header, footer)",
+    "prompt": "From the generated reference: who may create, read, change and delete redirects, which two collections can a redirect point at, how many links can the header hold, and what extra field does the footer have, with what default? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/isadmin\\b/"],
+      ["/pages[^\\n]*posts|posts[^\\n]*pages/"],
+      ["/(links|items|rows|nav)[^\\n]*\\b(6|six)\\b|\\b(6|six)\\b[^\\n]*(links|items|rows|nav)/"],
+      ["forumUrl"],
+      ["discourse.sprechereast.org"]
+    ],
+    "core": true
+  },
+  {
+    "id": "CT-1",
+    "kind": "question",
+    "level": 1,
+    "style": "vague",
+    "modules": ["contact"],
+    "covers": "intro (index line)",
+    "prompt": "A neighbor says they filled in the contact form on the site, but the neighborhood team did not get an email right away. Which note explains why that can happen, and what is the reason? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["src/modules/contact/README.md", "modules/contact/README"],
+      ["held", "hold", "waits", "wait for", "until the sender confirms", "until they confirm"],
+      ["confirm"]
+    ],
+    "core": true
+  },
+  {
+    "id": "CT-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["contact"],
+    "covers": "Behaviors and events (retention); Decisions",
+    "prompt": "How long does the site keep what people send through its contact form before deleting it, and can staff stop one message from being deleted? Which decision record is behind the periods? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      [
+        "/48 hours?[^\\n]*(confirm|click|never|unconfirmed|wait)|(confirm|click|never|unconfirmed|wait)[^\\n]*48 hours?/"
+      ],
+      ["/12 months?[^\\n]*(last message|sender|sent)|(last message|sender)[^\\n]*12 months?/"],
+      ["retentionHold", "keep longer"],
+      ["retentionHoldReason", "reason"],
+      ["0010", "contact-data-retention"]
+    ],
+    "core": false
+  },
+  {
+    "id": "CT-3",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["contact"],
+    "covers": "How the fields and hooks link up",
+    "prompt": "In the contact module, how do guardFormEmails, requestSenderConfirmation and markSubmissionsConfirmed pass the form's team emails along while the sender has not confirmed? Name the request-context key, the field the emails end up in, which hook stores them, and what happens to them once the sender clicks the link. Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["HELD_EMAILS", "heldFormEmails"],
+      ["heldEmails"],
+      [
+        "/requestSenderConfirmation[\\s\\S]{0,160}(heldEmails|stor|held)|(heldEmails|stor|held)[\\s\\S]{0,160}requestSenderConfirmation/"
+      ],
+      ["markSubmissionsConfirmed"],
+      ["emailConfirmed"],
+      [
+        "/(cleared before|clears?[^\\n]*before[^\\n]*send|only once|sends? each[^\\n]*once|not twice)/"
+      ],
+      ["onConfirmed", "payload.config.ts"]
+    ],
+    "core": true
+  },
+  {
+    "id": "CT-4",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["contact"],
+    "covers": "Behaviors and events (order); Rules and the tests that protect them",
+    "prompt": "In what order does a contact form submission pass its checks and hooks (size, rate limit, robot check, sender lookup, the form plugin's email step, and the two after-save hooks), which file sets that order, and which test file protects it? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      [
+        "/size[\\s\\S]{0,200}rate[\\s\\S]{0,200}(robot|turnstile|human)[\\s\\S]{0,200}(sender|recordSenderEmail)/"
+      ],
+      [
+        "/guardFormEmails[\\s\\S]{0,300}requestSenderConfirmation[\\s\\S]{0,300}acknowledgeConfirmedSender/"
+      ],
+      ["cms/formBuilder.ts"],
+      ["formBuilder.test.ts"],
+      [
+        "/plugin[^\\n]*(email|after)[^\\n]*(before|then|right after)|before our two|after the save|right after the save/"
+      ]
+    ],
+    "core": false
+  },
+  {
+    "id": "CT-5",
+    "kind": "question",
+    "level": 3,
+    "style": "vague",
+    "modules": ["contact"],
+    "covers": "Behaviors and events (access); generated reference",
+    "prompt": "Can a visitor read what other neighbors wrote through the contact form, or the email address they typed? Who can create, read, change or delete a message, who can see the stored sender address, and who can read a form's own email settings? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/create[\\s\\S]{0,80}(anyone|always|public|everyone|visitor|inline)/"],
+      ["/(read|update|delete)[\\s\\S]{0,80}isadmin|isadmin[\\s\\S]{0,80}(read|update|delete)/"],
+      ["isAdminFieldAccess"],
+      ["/heldemails[\\s\\S]{0,140}(nobody|no one|denies|server)/"],
+      ["/emails[\\s\\S]{0,120}(staff|admin|editor|isAdminOrEditorFieldAccess)/"],
+      ["form-submissions.md", "forms.md", "cms/formBuilder.ts"]
+    ],
+    "core": false
+  },
+  {
+    "id": "VR-1",
+    "kind": "question",
+    "level": 1,
+    "style": "vague",
+    "modules": ["verification"],
+    "covers": "intro (index line)",
+    "prompt": "Which note covers how the site checks that someone owns the email address they typed, and what does it send them? Name the file. Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["src/modules/verification/README.md", "modules/verification/README"],
+      ["link"],
+      ["welcome"]
+    ],
+    "core": true
+  },
+  {
+    "id": "VR-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["verification"],
+    "covers": "Limits; Behaviors and events",
+    "prompt": "A neighbor asked for the confirmation email again and again and now nothing arrives, and the page does not say why. What limits apply, what does the person see when one is hit, and how long does a link work? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/24 hours?|24h|one day|a day/"],
+      [
+        "/(5|five)[\\s\\S]{0,40}hour[\\s\\S]{0,60}(connection|ip|client)|(connection|ip|client)[\\s\\S]{0,60}(5|five)[\\s\\S]{0,30}hour/"
+      ],
+      [
+        "/(3|three)[\\s\\S]{0,30}(day|24)[\\s\\S]{0,40}address|address[\\s\\S]{0,40}(3|three)[\\s\\S]{0,30}(day|24)/"
+      ],
+      ["/(30|thirty)[\\s\\S]{0,40}(site|hour)|site[\\s\\S]{0,40}(30|thirty)/"],
+      [
+        "/same answer|answer is the same|nothing is sent|no email|not reveal|doesn.t say|does not say/"
+      ],
+      ["/log/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "VR-3",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["verification"],
+    "covers": "Behaviors and events",
+    "prompt": "Walk through what happens when someone presses Confirm on a valid confirmation link: the checks before anything is confirmed, what runs after, how often welcomeSentAt is set relative to the send, and what a second click or a failing step does. Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["turnstile", "robot check"],
+      ["/20[\\s\\S]{0,60}(hour|connection)|429/"],
+      ["listener", "onConfirmed", "markSubmissionsConfirmed"],
+      ["welcome"],
+      [
+        "/welcomeSentAt[\\s\\S]{0,120}(before|first)|(before)[\\s\\S]{0,60}welcomeSentAt|never retried|at most once/"
+      ],
+      ["already-confirmed", "already confirmed"],
+      ["/(logged|log)[\\s\\S]{0,80}(stop|nothing|not)/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "VR-4",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["verification"],
+    "covers": "generated reference + Links between things",
+    "prompt": "From the email-confirmations content type: who may create, read, update and delete, which fields nobody can write (not even an admin), what the custom endpoint is (method and path), and which pair of fields feeds the per-address send limit and which function reads them? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["isAdmin"],
+      ["tokenHash"],
+      ["/sendCount[\\s\\S]{0,120}sendWindowStart|sendWindowStart[\\s\\S]{0,120}sendCount/"],
+      ["checkAddressLimit", "domain/rules.ts"],
+      ["/post[^\\n]{0,12}\\/confirm\\b/"],
+      ["confirmEndpoint", "cms/confirmEndpoint.ts"],
+      ["email-confirmations.md"]
+    ],
+    "core": true
+  },
+  {
+    "id": "VR-5",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["verification"],
+    "covers": "Behaviors and events (retention); Known gaps",
+    "prompt": "How long does the site keep an email address that someone confirmed, and what can make it stay longer or go sooner? Does the description the admin screen shows agree with what the code actually does? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/48 hours?/"],
+      ["/12 months?[\\s\\S]{0,80}(confirm)|confirm[\\s\\S]{0,80}12 months?/"],
+      ["keepSendersWithMessages"],
+      ["keepAccountEmails"],
+      [
+        "/(failing|fails)[\\s\\S]{0,60}keeper[\\s\\S]{0,80}(stop|before)|keeper[\\s\\S]{0,60}(fail)[\\s\\S]{0,80}(stop|before)/"
+      ],
+      ["/(description|admin)[\\s\\S]{0,240}(last message)/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "AC-1",
+    "kind": "question",
+    "level": 1,
+    "style": "vague",
+    "modules": ["accounts"],
+    "covers": "intro (index line)",
+    "prompt": "Which note describes how a neighbor signs up, signs in and resets a password, and what guards each step? Name the file. Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["src/modules/accounts/README.md", "modules/accounts/README"],
+      ["guard", "robot check", "rate limit", "limit"]
+    ],
+    "core": true
+  },
+  {
+    "id": "AC-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["accounts"],
+    "covers": "Behaviors and events; Links between fields and flags",
+    "prompt": "A neighbor signed up but cannot sign in, and says the link in the email did nothing. How does verifying an account work here, why does a mail scanner opening the link not verify it, and how many times can the link be sent again? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/verify-account"],
+      ["robot check", "turnstile"],
+      [
+        "/guest[\\s\\S]{0,120}(cannot|can.t|not)[\\s\\S]{0,30}sign in|cannot sign in[\\s\\S]{0,120}confirm/"
+      ],
+      ["/(3|three)[\\s\\S]{0,40}(3|three)[\\s\\S]{0,6}hour/"],
+      ["verificationResends"],
+      ["/same answer|no answer says|not reveal|does not say whether|enumerat|doesn.t reveal/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "AC-3",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["accounts"],
+    "covers": "Links between fields and flags (read first); Known gaps",
+    "prompt": "How does the users collection stop a signed-in user from changing their own password or email through the REST API without proof? Name the request-context flag for each, what sets it, which hook checks it, and whether the email flow exists yet. Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["CURRENT_PASSWORD_CONFIRMED"],
+      ["setOwnPassword"],
+      ["requireCurrentPassword"],
+      ["/context[\\s\\S]{0,80}(empty|starts)[\\s\\S]{0,80}request|no http caller/"],
+      ["NEW_EMAIL_CONFIRMED"],
+      ["requireConfirmedEmailChange"],
+      [
+        "/(no code|nothing|never|not)[\\s\\S]{0,60}(sets?|built)[\\s\\S]{0,100}NEW_EMAIL_CONFIRMED|NEW_EMAIL_CONFIRMED[\\s\\S]{0,160}(never|not set|no code|isn.t built|not built|nothing sets|nothing sets it)/"
+      ],
+      ["553"]
+    ],
+    "core": false
+  },
+  {
+    "id": "AC-4",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["accounts"],
+    "covers": "generated reference (users); Behaviors and events",
+    "prompt": "From the users content type: access per operation, the roles and the default role, the sign-in settings (login attempts, lock time, token expiry, reset-link expiry), and which hook runs before login. Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/isadminorself[\\s\\S]{0,100}(read|update)|(read|update)[\\s\\S]{0,100}isadminorself/"],
+      ["/(create|delete)[\\s\\S]{0,60}isadmin\\b/"],
+      ["/(maxloginattempts|attempts)[^\\n]{0,40}\\b5\\b/"],
+      ["/(locktime|lock time|lockout)[^\\n]{0,60}(600000|600,000|10 min)/"],
+      ["/(tokenexpiration|token)[^\\n]{0,60}(7200|2 hours|two hours)/"],
+      ["/(forgotpassword\\.expiration|reset)[^\\n]{0,80}(3600000|1 hour|one hour|60 min)/"],
+      ["guest", "resident", "agent"],
+      ["noPasswordSignInForAgents"]
+    ],
+    "core": true
+  },
+  {
+    "id": "AC-5",
+    "kind": "question",
+    "level": 3,
+    "style": "vague",
+    "modules": ["accounts"],
+    "covers": "Screens (routes reference); Behaviors and events (requireUser, requireRole)",
+    "prompt": "Which pages does the site have for accounts, and which of them need you to be signed in? What happens to a visitor who is not signed in, and to a signed-in user without the right role? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/account"],
+      ["/login"],
+      ["/sign-up"],
+      ["/forgot-password"],
+      ["/reset-password"],
+      ["/verify-account"],
+      ["/only[\\s\\S]{0,40}\\/account|\\/account[\\s\\S]{0,60}(only|gated)/"],
+      ["requireUser"],
+      ["/404|not found|notfound/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "AG-1",
+    "kind": "question",
+    "level": 1,
+    "style": "vague",
+    "modules": ["agents"],
+    "covers": "intro (index line)",
+    "prompt": "How do the neighborhood's AI agents reach the site, and can they publish anything? Which note covers it? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["src/modules/agents/README.md", "modules/agents/README"],
+      ["mcp"],
+      ["draft", "suggest", "never publish", "not publish"]
+    ],
+    "core": true
+  },
+  {
+    "id": "AG-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["agents"],
+    "covers": "How the pieces link; Behaviors and events",
+    "prompt": "An agent proposes a new event. What does the editor end up with, how is its picture chosen from its categories, and what stops the same item being stored twice or filed under a made-up category? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["submitSuggestion"],
+      ["suggested"],
+      ["defaultImage"],
+      ["/first category[\\s\\S]{0,160}parent[\\s\\S]{0,200}(next|second)/"],
+      ["externalId"],
+      ["contentHash"],
+      ["duplicate"],
+      ["/unknown[\\s\\S]{0,40}categor|(refus|reject)[\\s\\S]{0,60}(slug|categor)/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "AG-3",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["agents"],
+    "covers": "Behaviors and events (MCP access, limits)",
+    "prompt": "How is MCP access to the site limited? Give the endpoint path, the per-connection and per-key request limits with their window and which one is checked first, the status returned past a limit, and what must be true of the key's account on every request. Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/api/mcp"],
+      ["/120[\\s\\S]{0,60}minute[\\s\\S]{0,60}connection|connection[\\s\\S]{0,60}120/"],
+      ["/60[\\s\\S]{0,40}minute[\\s\\S]{0,40}key|key[\\s\\S]{0,60}\\b60\\b/"],
+      ["429"],
+      ["/connection[\\s\\S]{0,160}(before|first)[\\s\\S]{0,100}key/"],
+      ["/(agent role|role)[\\s\\S]{0,120}(each|every) request|hasAgent/"],
+      ["/in memory|one (server )?process|single process|pm2/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "AG-4",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["agents"],
+    "covers": "generated reference (agent runs, review items, API keys); How the pieces link",
+    "prompt": "From the generated references: which access function decides create, read, update and delete on agent-runs and on agent-review-items, which beforeChange hook sets each one's agent field and from what, and which run fields an agent cannot change after creating the run? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["isAdminOrAgent"],
+      ["adminOrOwnRuns"],
+      ["staffOrOwnItems"],
+      ["recordRunAgent"],
+      ["recordReporter"],
+      [
+        "/agent[\\s\\S]{0,100}(key|account)[\\s\\S]{0,80}(server|set)|set[\\s\\S]{0,80}from the key/"
+      ],
+      ["RUN_IDENTITY", "runId"],
+      ["agent-runs.md", "agent-review-items.md", "cms/agentRuns.ts", "cms/agentReviewItems.ts"]
+    ],
+    "core": true
+  },
+  {
+    "id": "AG-5",
+    "kind": "question",
+    "level": 3,
+    "style": "vague",
+    "modules": ["agents"],
+    "covers": "Behaviors and events (reportItem, runs); generated reference (review item kinds)",
+    "prompt": "If an agent thinks an existing event is wrong or cancelled, can it change it? How does it tell the editors, what kinds of report exist, and can one agent see another agent's runs or reports? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["reportItem"],
+      ["needs-review"],
+      ["rejected-invalid"],
+      ["/never[\\s\\S]{0,40}chang|not change|cannot change|doesn.t change/"],
+      ["/own run|own runs|its own|agent.s own/"],
+      ["/not found/"],
+      ["/admins?[\\s\\S]{0,60}(change|update|delete)/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "TH-1",
+    "kind": "question",
+    "level": 1,
+    "style": "vague",
+    "modules": ["theme"],
+    "covers": "index line",
+    "prompt": "Which part of the repo documents how the site's colours, dark mode and seasonal decorations are handled, and what does that note cover? Name the file. Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["src/platform/theme/README.md", "platform/theme/README"],
+      ["decoration"],
+      ["token"],
+      ["light and dark", "dark mode"]
+    ],
+    "core": true
+  },
+  {
+    "id": "TH-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["theme"],
+    "covers": "Behaviors",
+    "prompt": "Visitors sometimes see the wrong colours flash for a moment on load, and on the 'page not found' screen the chosen light or dark look is missing. Which pieces make the right look appear before paint, and why is a second piece needed for the not-found page? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["InitTheme"],
+      ["ThemeProvider"],
+      ["data-theme"],
+      ["404", "not found", "notFound"],
+      ["head"],
+      ["before first paint", "blocking script", "before paint"]
+    ],
+    "core": false
+  },
+  {
+    "id": "TH-3",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["theme"],
+    "covers": "How the pieces link",
+    "prompt": "Where is a theme token named, where is its value set for light and dark, and where is it mapped to a Tailwind class? Which test checks that every theme folder sets every token, and which test checks the theme registry against the folders? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["tokens.ts"],
+      ["theme.css", "src/themes"],
+      ["tailwind.css"],
+      ["themes.test.ts"],
+      ["registry.test.ts"]
+    ],
+    "core": true
+  },
+  {
+    "id": "TH-4",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["theme"],
+    "covers": "Known gaps + Boundaries",
+    "prompt": "Is there anything in the theme area that doesn't work for visitors today or could throw in some browsers? Which of its components are client components? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["ThemeSelector"],
+      [
+        "rendered nowhere",
+        "not rendered",
+        "never rendered",
+        "not used",
+        "isn't rendered",
+        "is not rendered"
+      ],
+      ["localStorage"],
+      ["unguarded", "not guarded", "try/catch", "without try"],
+      ["ThemeProvider"],
+      ["no runtime switching", "runtime switching", "ACTIVE_THEME"]
+    ],
+    "core": false
+  },
+  {
+    "id": "TH-5",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["theme"],
+    "covers": "Behaviors + Decisions + Rules",
+    "prompt": "How does a theme turn on a seasonal decoration, what is the default, which decoration exists, and what accessibility limits apply to its movement and to assistive technology? Which decision records explain it? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["options.ts", "DECORATIONS"],
+      ["registry.ts"],
+      ["snowfall"],
+      ["/5 seconds|five seconds/"],
+      ["reduced motion", "prefers-reduced-motion"],
+      ["aria-hidden", "hidden from assistive", "assistive technology"],
+      ["0012"],
+      ["registry.test.ts"]
+    ],
+    "core": false
+  },
+  {
+    "id": "UI-1",
+    "kind": "question",
+    "level": 1,
+    "style": "vague",
+    "modules": ["ui"],
+    "covers": "index line",
+    "prompt": "Where is it written down how the shared building blocks (links, buttons, charts, the version check, the staff bar) behave, and where would I look up what props a component takes? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["src/platform/ui/README.md", "platform/ui/README"],
+      ["docs/reference/components", "reference/components"]
+    ],
+    "core": true
+  },
+  {
+    "id": "UI-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["ui"],
+    "covers": "Behaviors (LoadMore)",
+    "prompt": "On a long list, does the next batch of items load by itself without limit? What does a resident without JavaScript get, and where does keyboard focus go when the last batch has loaded? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["LoadMore"],
+      ["/\\b(4|four) pages|AUTO_LOAD_PAGES/"],
+      ["link to the next numbered page", "real link", "fallbackHref"],
+      ["status line"],
+      ["Load more"]
+    ],
+    "core": false
+  },
+  {
+    "id": "UI-3",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["ui"],
+    "covers": "How the pieces link",
+    "prompt": "How do Button and Link render, when is a plain anchor used instead of next/link, and how does LinkButton turn a CMS link's appearance into a Button variant? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["AppLink"],
+      ["next/link", "NextLink"],
+      ["#"],
+      ["CMSLink", "LinkButton"],
+      ["outline"],
+      ["secondary"],
+      ["primary"]
+    ],
+    "core": true
+  },
+  {
+    "id": "UI-4",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["ui"],
+    "covers": "Behaviors (VersionCheck)",
+    "prompt": "How does an open browser tab learn that the site was redeployed, how often does it check, when does it stay quiet, and what happens when the reader dismisses the notice? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["VersionCheck"],
+      ["/api/version"],
+      ["/30 ?s|30 seconds|30_000|30000/"],
+      ["development"],
+      ["dismiss"],
+      ["Refresh", "reload"]
+    ],
+    "core": false
+  },
+  {
+    "id": "UI-5",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["ui"],
+    "covers": "Rules + Boundaries + Known gaps",
+    "prompt": "Which raw HTML elements may not be used outside the UI kit and which lint config enforces that? May the UI kit import from a module? What are its two known gaps? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["eslint.ui-kit.config.mjs"],
+      ["details"],
+      ["summary"],
+      ["textarea"],
+      ["img"],
+      [
+        "no module",
+        "never imports a module",
+        "imports only from",
+        "does not import",
+        "doesn't import",
+        "no file here imports"
+      ],
+      ["#769", "tone names"],
+      ["VersionCheck"]
+    ],
+    "core": false
+  },
+  {
+    "id": "RT-1",
+    "kind": "question",
+    "level": 1,
+    "style": "vague",
+    "modules": ["richtext"],
+    "covers": "index line",
+    "prompt": "Where is it documented how an article's body text is drawn, which special blocks an editor can add, and the Markdown tags agents use? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["src/platform/richtext/README.md", "platform/richtext/README"],
+      ["editorial"],
+      ["limit"]
+    ],
+    "core": true
+  },
+  {
+    "id": "RT-2",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["richtext"],
+    "covers": "Links between fields and values",
+    "prompt": "Where are the size limits of the key facts, timeline and fact tabs blocks written once, where are the block type slugs shared by configs and Markdown tags, and where are a chart's limits? What are the most key facts and the most timeline entries? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["editorialLimits.ts"],
+      ["blockTypes.ts"],
+      ["CHART_LIMITS"],
+      ["lib/chart/spec.ts", "chart/spec.ts"],
+      [
+        "/maxFacts[^\\n]*\\b6\\b|\\b6\\b[^\\n]*key facts|key facts[^\\n]*\\b6\\b|up to 6 facts|2 to 6/"
+      ],
+      [
+        "/maxEntries[^\\n]*\\b12\\b|\\b12\\b[^\\n]*(milestone|entries|timeline)|(milestone|entries|timeline)[^\\n]*\\b12\\b|2 to 12/"
+      ]
+    ],
+    "core": true
+  },
+  {
+    "id": "RT-3",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["richtext"],
+    "covers": "Behaviors (article width)",
+    "prompt": "Why do some articles run across the whole column while most keep a narrow readable line, and which kinds of pages apply that rule? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["articleColumn"],
+      ["key facts"],
+      ["fact tabs"],
+      ["outcome fork"],
+      ["reading width"],
+      ["post"],
+      ["event"]
+    ],
+    "core": false
+  },
+  {
+    "id": "RT-4",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["richtext"],
+    "covers": "Behaviors + Rules (charts, TOC)",
+    "prompt": "An editor puts a chart in an article that breaks the chart rules. What do readers see, and what does the editor see on save? And from how many sections does the 'On this page' menu appear and which headings count? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["left out", "omitted", "not rendered", "dropped", "skipped"],
+      ["logged", "console.error", "logs"],
+      ["refuse", "validated", "validation", "rejects"],
+      ["/(3|three) sections|from three|at least (3|three)/"],
+      ["h2"],
+      ["h3"]
+    ],
+    "core": false
+  },
+  {
+    "id": "RT-5",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["richtext"],
+    "covers": "Shared pieces + Known gaps + Decisions",
+    "prompt": "Which block lists do posts and events offer to the editor, which file defines them, which files pass them to the editor, and which one lacks the code block? Which known gaps does the note list for steps, outcome fork and diagram key, with issue numbers? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["RICH_TEXT_BLOCKS"],
+      ["EVENT_RICH_TEXT_BLOCKS"],
+      ["blockConfigs.ts"],
+      ["news/cms/posts.ts", "posts.ts"],
+      ["events/cms/events.ts", "events.ts"],
+      ["#843"],
+      ["#676"]
+    ],
+    "core": false
+  },
+  {
+    "id": "PL-1",
+    "kind": "question",
+    "level": 1,
+    "style": "vague",
+    "modules": ["payload"],
+    "covers": "index line",
+    "prompt": "Where is it described how roles, draft visibility, suggestions waiting for review and background jobs are shared by every collection? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["src/platform/payload/README.md", "platform/payload/README"],
+      ["role"],
+      ["review queue", "suggestion"],
+      ["job"]
+    ],
+    "core": true
+  },
+  {
+    "id": "PL-2",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["payload"],
+    "covers": "Behaviors (review queue)",
+    "prompt": "What happens to an event an AI agent creates, what must it name, and what may it not do afterwards? What happens when staff publish it? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["suggested"],
+      ["draft"],
+      ["source"],
+      ["http(s)", "http or https", "https"],
+      ["/refused|forbidden|can't update|cannot update|may not|not allowed/"],
+      ["approved"],
+      ["holdSuggestions"]
+    ],
+    "core": false
+  },
+  {
+    "id": "PL-3",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["payload"],
+    "covers": "How the pieces link",
+    "prompt": "Where is a document's site address written (pages, the home page, other collections), which function turns a CMS link field into an href, and which two helpers order and page a listing by one date with the id as tie-break? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["documentHref"],
+      ["resolveLink"],
+      ["keysetSort"],
+      ["afterCursor"],
+      ["home"],
+      ["cursor"]
+    ],
+    "core": true
+  },
+  {
+    "id": "PL-4",
+    "kind": "question",
+    "level": 2,
+    "style": "vague",
+    "modules": ["payload"],
+    "covers": "Behaviors (jobs) + Decisions",
+    "prompt": "Scheduled publishes must go live on time and old contact data must be purged. How often do those background jobs run, how many publishes per run, and when do the runners start after a restart? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["every minute", "* * * * *", "1 minute"],
+      ["/\\b10\\b[^\\n]*(per run|at most|publish)|(at most|up to) 10/"],
+      ["/every 10 minutes|\\*\\/10/"],
+      ["first request"],
+      ["never during build", "not during build", "not during `next build`"],
+      ["0010"],
+      ["0011"]
+    ],
+    "core": false
+  },
+  {
+    "id": "PL-5",
+    "kind": "question",
+    "level": 2,
+    "style": "specific",
+    "modules": ["payload"],
+    "covers": "Boundaries + Known gaps",
+    "prompt": "What known gaps does the shared Payload code list, and what is the boundary rule for lib/index.ts, sha256.ts and for modules importing it? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["isLinkAddress"],
+      ["resolveLink"],
+      ["populatePublishedAt"],
+      ["no test"],
+      ["sha256"],
+      ["node:crypto"],
+      ["Nothing here imports a module", "imports no module", "no module"]
+    ],
+    "core": false
+  },
+  {
+    "id": "L3-1",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["contact"],
+    "covers": "reference/content-types/form-submissions.md",
+    "prompt": "In the generated content-types reference, who may create and who may read a form submission, and which hooks run before a submission is changed (size, rate, robot check, sender email)? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["isAdmin"],
+      ["always allows"],
+      ["limitSubmissionSize"],
+      ["rateLimitSubmissions"],
+      ["verifyHumanSubmission"],
+      ["senderEmail"]
+    ],
+    "core": true
+  },
+  {
+    "id": "L3-2",
+    "kind": "question",
+    "level": 3,
+    "style": "vague",
+    "modules": ["site"],
+    "covers": "reference/content-types/redirects.md",
+    "prompt": "Who can manage redirects on the site, what can a redirect point to, and what happens to the site's cache after a redirect is saved? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [["admin"], ["pages"], ["posts"], ["custom"], ["revalidateRedirects"], ["unique"]],
+    "core": false
+  },
+  {
+    "id": "L3-3",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["agents"],
+    "covers": "reference/content-types/agent-review-items.md",
+    "prompt": "For the collection where agents record items for an editor to review: which function decides who can create and who can read, which kinds of items exist, and which fields link to other collections? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["isAdminOrAgent"],
+      ["staffOrOwnItems"],
+      ["needs-review"],
+      ["rejected-invalid"],
+      ["agent-runs"],
+      ["users"],
+      ["recordReporter"]
+    ],
+    "core": true
+  },
+  {
+    "id": "L3-4",
+    "kind": "question",
+    "level": 3,
+    "style": "vague",
+    "modules": ["events", "news", "directory"],
+    "covers": "reference/content-types (Drafts lines)",
+    "prompt": "Which content types autosave drafts, which keep drafts without autosave, and how many past versions does each of events, posts and the FAQ keep? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["100 ms", "100ms"],
+      ["scheduled publishing", "schedulePublish"],
+      ["no autosave", "without autosave"],
+      ["/events?[^\\n]{0,60}\\b25\\b|\\b25\\b[^\\n]{0,40}events?/"],
+      ["/posts?[^\\n]{0,60}\\b50\\b|\\b50\\b[^\\n]{0,40}posts?/"],
+      ["/(faq|resources)[^\\n]{0,60}\\b100\\b|\\b100\\b[^\\n]{0,40}(faq|resources)/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "L3-5",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["news", "events", "site"],
+    "covers": "reference/routes.md",
+    "prompt": "In the generated screens reference, which module entry points does the single-post page import, how often does it revalidate, and is it prebuilt or reads draft mode? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/posts/[slug]", "posts/[slug]"],
+      ["@/modules/news/server"],
+      ["@/modules/events/server"],
+      ["@/modules/site/server"],
+      ["600"],
+      ["prebuilt"],
+      ["draftMode", "draft mode"]
+    ],
+    "core": true
+  },
+  {
+    "id": "L3-6",
+    "kind": "question",
+    "level": 3,
+    "style": "vague",
+    "modules": ["events"],
+    "covers": "reference/routes.md",
+    "prompt": "How long can a change to the main events list page take to show, is that page generated once ahead of time, and is a single event's page set up differently? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["600", "10 minutes"],
+      ["force-static"],
+      ["prebuilt", "generateStaticParams"],
+      ["draftMode", "draft mode"],
+      ["/events/[slug]", "events/[slug]"]
+    ],
+    "core": false
+  },
+  {
+    "id": "L3-7",
+    "kind": "question",
+    "level": 3,
+    "style": "specific",
+    "modules": ["ui"],
+    "covers": "reference/components/actions.md",
+    "prompt": "What variants and sizes does Button offer, what does fullWidth accept, and which modules and routes import it? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["primary"],
+      ["secondary"],
+      ["accent"],
+      ["ghost"],
+      ["inverse-outline"],
+      ["icon"],
+      ["mobile"],
+      ["accounts"],
+      ["verification"],
+      ["/dev/gallery", "dev/gallery"]
+    ],
+    "core": true
+  },
+  {
+    "id": "L3-8",
+    "kind": "question",
+    "level": 3,
+    "style": "vague",
+    "modules": ["richtext", "contact", "directory", "site"],
+    "covers": "reference/components/rich-text.md",
+    "prompt": "Which props must be given to draw saved article text, which are optional, and which modules and pages use that component? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["data"],
+      ["blocks"],
+      ["enableGutter"],
+      ["enableProse"],
+      ["contact"],
+      ["directory"],
+      ["site"],
+      ["/events/[slug]", "events/[slug]"],
+      ["/posts/[slug]", "posts/[slug]"]
+    ],
+    "core": false
+  },
+  {
+    "id": "X-1",
+    "kind": "question",
+    "level": 2,
+    "style": "cross",
+    "modules": ["events", "agents", "news"],
+    "covers": "events + agents + news: suggestion image and held draft",
+    "prompt": "An AI agent suggests a calendar event in a category that has no picture of its own. Which image does the suggested event get, in which module is that image field defined, and in what state is the new event stored? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["defaultImage"],
+      ["parent"],
+      ["pickDefaultImage", "domain/suggestion.ts"],
+      ["src/modules/news", "news/cms/categories.ts"],
+      ["suggested"],
+      ["draft"]
+    ],
+    "core": true
+  },
+  {
+    "id": "X-2",
+    "kind": "question",
+    "level": 2,
+    "style": "cross",
+    "modules": ["site", "directory"],
+    "covers": "site pages + directory: FAQ links to pages after a slug change",
+    "prompt": "An editor changes the slug of a published page that an FAQ answer links to. When will visitors see the FAQ link point to the new address, and why? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/faq[^\\n]*(600|10 minutes)|(600|10 minutes)[^\\n]*faq/"],
+      ["cms/revalidatePage.ts", "revalidatePage"],
+      ["depth 1", "populate"],
+      ["findFaqEntries", "data/queries.ts"]
+    ],
+    "core": false
+  },
+  {
+    "id": "X-11",
+    "kind": "question",
+    "level": 2,
+    "style": "cross",
+    "modules": ["contact", "verification"],
+    "covers": "links: contact <-> verification (who confirms, which email waits, what the link does)",
+    "prompt": "A neighbor sends a message through the contact form with an email address they never confirmed. Which email waits and where is it stored, who gets a confirmation link, what does the link do when clicked, and what do the neighbor and the team each receive afterwards? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["heldEmails"],
+      ["held", "hold", "waits"],
+      ["24 hours"],
+      ["/confirm-email"],
+      ["markSubmissionsConfirmed"],
+      ["welcome"],
+      ["/received your message|acknowledg/"],
+      ["email: confirmed", "sender’s email", "sender's email"]
+    ],
+    "core": true
+  },
+  {
+    "id": "X-12",
+    "kind": "question",
+    "level": 2,
+    "style": "cross",
+    "modules": ["verification", "contact", "accounts"],
+    "covers": "links: verification <-> contact <-> accounts (retention keepers, decision 0008)",
+    "prompt": "The site deletes unconfirmed addresses and messages after a while and confirmed ones later. Which task deletes the confirmed addresses, how do the contact and accounts modules get a say before a confirmed address goes, where is that wired, and where do the two periods live? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["keepSendersWithMessages"],
+      ["keepAccountEmails"],
+      ["payload.config.ts"],
+      ["platform/lib/retention.ts", "lib/retention.ts"],
+      ["/48 hours?/"],
+      ["/12 months?/"],
+      ["keeper"]
+    ],
+    "core": true
+  },
+  {
+    "id": "X-13",
+    "kind": "question",
+    "level": 2,
+    "style": "cross",
+    "modules": ["accounts", "verification"],
+    "covers": "links: accounts <-> verification (two separate confirmation flows)",
+    "prompt": "Do account sign-up and the contact form use the same email confirmation? Compare how an account's email gets verified with how a contact sender's does: which page the link opens, how long it works, what limits apply to sending it again, and what the confirmation page offers afterwards. Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["/verify-account"],
+      ["/confirm-email"],
+      ["/(3|three)[\\s\\S]{0,40}(3|three)[\\s\\S]{0,6}hour/"],
+      [
+        "/(3|three)[\\s\\S]{0,30}(day|24)[\\s\\S]{0,40}address|address[\\s\\S]{0,40}(3|three)[\\s\\S]{0,30}(day|24)/"
+      ],
+      ["24 hours"],
+      ["AccountOffer"],
+      ["email-confirmations"],
+      ["/separate|own verif|not the same|different|doesn.t use|does not use|independent/"]
+    ],
+    "core": true
+  },
+  {
+    "id": "X-14",
+    "kind": "question",
+    "level": 2,
+    "style": "cross",
+    "modules": ["accounts", "agents"],
+    "covers": "links: accounts <-> agents (agent credentials vs account guards)",
+    "prompt": "How does an AI agent get into the site, and why can an agent account not sign in with a password like a neighbor? Who can create an agent's key or account, what ties a key to an account, and what happens to the key if that account's role is changed? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["noPasswordSignInForAgents"],
+      ["/api/mcp"],
+      [
+        "getSessionPayloadUser",
+        "not a signed-in account",
+        "isn't a signed-in account",
+        "no session",
+        "no password sign-in or session"
+      ],
+      ["/payload-mcp-api-keys|api keys?[\\s\\S]{0,60}(admin|isadmin)|admin-only/"],
+      [
+        "/(filterOptions|role[\\s\\S]{0,30}agent)[\\s\\S]{0,100}(key|user)|key[\\s\\S]{0,100}role[\\s\\S]{0,30}agent|bound to an account/"
+      ],
+      [
+        "/role[\\s\\S]{0,80}(changed|change)[\\s\\S]{0,100}(stop|refus|reject|401|unauthor)|hasAgent|still be an agent/"
+      ],
+      ["/role[\\s\\S]{0,80}admin[\\s\\S]{0,10}-?only|only admins[\\s\\S]{0,40}(role|change)/"]
+    ],
+    "core": false
+  },
+  {
+    "id": "X-15",
+    "kind": "question",
+    "level": 2,
+    "style": "cross",
+    "modules": ["agents", "events"],
+    "covers": "links: agents <-> events (suggestions held as drafts)",
+    "prompt": "An agent suggests an event. Which access rule lets it create one, which hook holds it as a draft, what status and fields does it get, what must the suggestion include, and what changes when a staff member publishes it? Can the agent edit or publish it afterwards? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["holdSuggestions"],
+      ["suggestibleContentAccess", "isStaffOrAgent"],
+      ["suggested"],
+      ["draft"],
+      ["/source[\\s\\S]{0,60}(name|link|url|address)/"],
+      ["approved", "approve"],
+      [
+        "/(agent|non-staff)[\\s\\S]{0,80}(can.t|cannot|may not|not|never)[\\s\\S]{0,60}(update|publish|change|edit)/"
+      ],
+      ["reviewQueue"],
+      [
+        "/(externalId|contentHash)[\\s\\S]{0,80}(unique|twice)|(unique|twice)[\\s\\S]{0,80}(externalId|contentHash)/"
+      ]
+    ],
+    "core": true
+  },
+  {
+    "id": "X-16",
+    "kind": "question",
+    "level": 2,
+    "style": "cross",
+    "modules": ["agents", "news"],
+    "covers": "links: agents <-> news (categories' defaultImage feeds a suggestion's image)",
+    "prompt": "When an agent suggests a news post, where does the post's picture come from, which collection field holds it and which module owns that collection, and where do the suggestion's summary and its categories end up on the post? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["defaultImage"],
+      ["categories"],
+      ["news"],
+      ["/nearest[\\s\\S]{0,40}parent|parent/"],
+      ["heroImage", "hero image"],
+      ["/(meta|search-engine|seo)[\\s\\S]{0,60}description|meta\\.description/"],
+      ["pickDefaultImage", "domain/suggestion.ts"]
+    ],
+    "core": false
+  },
+  {
+    "id": "X-21",
+    "kind": "question",
+    "level": 2,
+    "style": "cross",
+    "modules": ["theme", "ui"],
+    "covers": "theme + UI kit via charts",
+    "prompt": "A designer wants a seventh chart colour. What stops a chart from using it today, and what would each of the theme area and the UI kit area need to change? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["chartPalette.ts", "CHART_PALETTE"],
+      ["chart-6", "six"],
+      ["lib/chart/spec.ts", "MAX_COLOURED_PARTS", "chart/spec"],
+      ["tokens.ts"],
+      ["theme.css"],
+      ["CHART_PAIRS", "contrast"]
+    ],
+    "core": true
+  },
+  {
+    "id": "X-22",
+    "kind": "question",
+    "level": 2,
+    "style": "cross",
+    "modules": ["richtext", "news", "events"],
+    "covers": "rich text + posts/events",
+    "prompt": "Why can a post's article hold a code block but an event's cannot, and which module files wire the rich-text blocks into each? Which shared rule decides how wide their article text runs? Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["RICH_TEXT_BLOCKS"],
+      ["EVENT_RICH_TEXT_BLOCKS"],
+      ["news/cms/posts.ts", "posts.ts"],
+      ["events/cms/events.ts", "events.ts"],
+      ["articleColumn"]
+    ],
+    "core": false
+  },
+  {
+    "id": "X-23",
+    "kind": "question",
+    "level": 2,
+    "style": "cross",
+    "modules": ["payload", "verification", "contact"],
+    "covers": "shared payload + contact + verification",
+    "prompt": "When someone confirms their email by link, how does the confirmation service reach the contact form's held messages when modules may not import each other? Name the contract file, who wires it and the contact function that runs. Answer concisely and name the files you relied on. Don't change any files.",
+    "key": [
+      ["emailConfirmer.ts"],
+      ["payload.config.ts"],
+      ["markSubmissionsConfirmed"],
+      ["onConfirmed", "listener"],
+      ["0008"],
+      ["keepSendersWithMessages", "keeper"]
+    ],
+    "core": false
   }
 ]

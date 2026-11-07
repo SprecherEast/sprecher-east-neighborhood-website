@@ -2,15 +2,15 @@ import { describe, expect, it } from 'vitest'
 
 import { ALLOWED_TOOLS, DISALLOWED_TOOLS, buildClaudeArgs, checkoutProblem } from './claude.mjs'
 import { parseOptions } from './options.mjs'
-import { loadTasks, validateTasks } from './tasks.mjs'
+import { loadTasks, selectTasks, validateTasks } from './tasks.mjs'
 
 describe('the task set', () => {
-  it('has the 8 tasks of #715, six questions with a key and two changes with commands', () => {
-    const tasks = loadTasks()
+  it('keeps the 8 tasks of #715 first: six questions with a key and two changes with commands', () => {
+    const tasks = loadTasks().slice(0, 8)
     expect(tasks.map((t) => t.id)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8'])
     expect(tasks.filter((t) => t.kind === 'question')).toHaveLength(6)
     expect(tasks.filter((t) => t.kind === 'change')).toHaveLength(2)
-    expect(validateTasks(tasks)).toEqual([])
+    expect(validateTasks(loadTasks())).toEqual([])
   })
 
   it('reports a task that cannot be graded', () => {
@@ -139,5 +139,41 @@ describe('parseOptions', () => {
   it('rejects a missing commit and a bad number', () => {
     expect(() => parseOptions(['--a', 'x'])).toThrow(/--b/)
     expect(() => parseOptions(['--a', 'x', '--b', 'y', '--runs', '0'])).toThrow(/--runs/)
+  })
+})
+
+describe('selectTasks and validateTasks for the larger set', () => {
+  const tasks = [{ id: 'a', core: true }, { id: 'b' }, { id: 'c', core: true }]
+
+  it('keeps all tasks by default and only the core set with --set core', () => {
+    expect(selectTasks(tasks, { tasks: null, set: 'all' }).map((t) => t.id)).toEqual([
+      'a',
+      'b',
+      'c',
+    ])
+    expect(selectTasks(tasks, { tasks: null, set: 'core' }).map((t) => t.id)).toEqual(['a', 'c'])
+    expect(selectTasks(tasks, { tasks: ['b'], set: 'core' }).map((t) => t.id)).toEqual(['b'])
+  })
+
+  it('reads --set and rejects an unknown set', () => {
+    expect(parseOptions(['--a', 'x', '--b', 'y', '--set', 'core']).set).toBe('core')
+    expect(parseOptions(['--a', 'x', '--b', 'y']).set).toBe('all')
+    expect(() => parseOptions(['--a', 'x', '--b', 'y', '--set', 'few'])).toThrow(/--set/)
+  })
+
+  it('flags a bad level or style and passes the real task set', () => {
+    const base = { kind: 'question', prompt: 'p', key: [['k']] }
+    expect(validateTasks([{ id: '1', ...base, level: 4 }])[0]).toMatch(/level/)
+    expect(validateTasks([{ id: '1', ...base, style: 'odd' }])[0]).toMatch(/style/)
+    expect(validateTasks(loadTasks())).toEqual([])
+  })
+
+  it('covers every level and style, and the core set is a proper subset', () => {
+    const all = loadTasks()
+    const core = all.filter((t) => t.core)
+    for (const level of [1, 2, 3]) expect(core.some((t) => t.level === level)).toBe(true)
+    for (const style of ['vague', 'specific', 'cross'])
+      expect(core.some((t) => t.style === style)).toBe(true)
+    expect(core.length).toBeLessThan(all.length)
   })
 })
