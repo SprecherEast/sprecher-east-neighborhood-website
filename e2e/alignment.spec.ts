@@ -218,3 +218,65 @@ test.describe('a legend sits under its figure and caption', () => {
     })
   }
 })
+
+// The page menu, the related content and the article of a post keep one left edge and a fixed
+// order (#677). From `lg` the left rail holds the page menu above the related content, and the
+// article sits beside it; before `lg` it is one column: page menu, article, related content.
+const LG = 960
+/** The gap between the rail and the article (`gap-8`) */
+const RAIL_GAP = 32
+
+test.describe('the left rail of a post', () => {
+  for (const width of WIDTHS) {
+    test(`left edge and order at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto(POST)
+
+      const m = await page.evaluate(() => {
+        const rect = (selector: string) => {
+          const element = document.querySelector(selector)
+          if (!element) throw new Error(`Nothing matches ${selector}`)
+          const { left, right, top, bottom } = element.getBoundingClientRect()
+          return {
+            left: Math.round(left),
+            right: Math.round(right),
+            top: Math.round(top),
+            bottom: Math.round(bottom),
+          }
+        }
+        return {
+          crumb: rect('nav[aria-label="Breadcrumb"]'),
+          menu: rect('nav[aria-label="On this page"]'),
+          related: rect('[data-detail-rail] > aside'),
+          text: rect('.payload-richtext'),
+          rail: rect('[data-detail-rail]'),
+          overflow: document.documentElement.scrollWidth - window.innerWidth,
+        }
+      })
+
+      expect(m.overflow, `${width}px: nothing scrolls sideways`).toBeLessThanOrEqual(0)
+      if (width >= LG) {
+        expect(m.rail.left, `${width}px: the rail starts at the breadcrumb's left edge`).toBe(
+          m.crumb.left,
+        )
+        expect(m.text.left, `${width}px: the article sits right of the rail`).toBe(
+          m.rail.right + RAIL_GAP,
+        )
+        expect(m.related.top, `${width}px: related content is under the page menu`).toBeGreaterThan(
+          m.menu.bottom,
+        )
+        expect(m.menu.left, `${width}px: the menu starts in the rail`).toBe(m.rail.left)
+      } else {
+        expect(m.text.left, `${width}px: the text starts at the breadcrumb's left edge`).toBe(
+          m.crumb.left,
+        )
+        expect(m.menu.top, `${width}px: the page menu is above the article`).toBeLessThan(
+          m.text.top,
+        )
+        expect(m.related.top, `${width}px: related content is below the article`).toBeGreaterThan(
+          m.text.bottom,
+        )
+      }
+    })
+  }
+})

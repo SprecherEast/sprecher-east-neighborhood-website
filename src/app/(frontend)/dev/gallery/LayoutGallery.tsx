@@ -92,7 +92,7 @@ export function LayoutGallery() {
 
       <GalleryEntry
         name="DetailLayout"
-        description="Content with a sidebar beside it from lg, below it before that."
+        description="Content with the related content in a left rail from lg, below the content before that (#677)."
       >
         <GalleryVariant label="with-sidebar" className="block">
           <div className={`${FRAME} py-6`}>
@@ -120,7 +120,7 @@ export function LayoutGallery() {
       </GalleryEntry>
       <GalleryEntry
         name="ArticlePage"
-        description="A post's or an event's page: header, breadcrumbs, text and sidebar, with its structured data."
+        description="A post's or an event's page: header, breadcrumbs, text and the left rail, with its structured data."
       >
         <GalleryVariant label="with-sidebar" className="block">
           <div className={`${FRAME} py-6`}>
@@ -154,13 +154,17 @@ export function LayoutGallery() {
       </GalleryEntry>
       <GalleryEntry
         name="OnThisPage"
-        description="An article's sections as a menu: a sticky rail from lg, a bar under the site header before that."
+        description="An article's sections as a menu: the top of the left rail from lg, a bar under the site header before that."
       >
         <GalleryVariant label="with-toc" className="block">
           <div className="w-full rounded-2xl border border-border py-6">
             <DetailLayout
               toc={<OnThisPage sections={[...TOC_SECTIONS]} />}
-              aside={<p>The sidebar reads below the article.</p>}
+              aside={
+                <p>
+                  The related content sits under the menu from lg, below the article before that.
+                </p>
+              }
             >
               {TOC_SECTIONS.map((section) => (
                 <section key={section.id} className="mb-10">

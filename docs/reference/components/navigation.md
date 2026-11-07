@@ -21,7 +21,7 @@ Source: `src/platform/ui/Breadcrumbs.tsx`
 
 ## `OnThisPage`
 
-The article's sections as a menu (#574): a sticky rail from `lg`, a bar under the site header before that. Jumps are plain `#id` links, so they work without JavaScript; only the highlight of the section being read needs it. Shows nothing for an article with fewer than three sections. Place it where `DetailLayout` takes its `toc`.
+The article's sections as a menu (#574): the top of the left rail from `lg`, a bar under the site header before that. Jumps are plain `#id` links, so they work without JavaScript; only the highlight of the section being read needs it. Shows nothing for an article with fewer than three sections. Place it where `DetailLayout` takes its `toc`.
 
 Source: `src/platform/ui/OnThisPage.client.tsx`
 

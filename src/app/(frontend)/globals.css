@@ -102,6 +102,10 @@
   /* How wide article text and the blocks around it run (#616). Classes: platform/ui/layoutSizes.ts */
   --reading-width: 48rem;
 
+  /* How wide the left rail of a post or event page is: the page menu and the related content (#677).
+     Classes: platform/ui/layoutSizes.ts */
+  --detail-rail-width: 18rem;
+
   /* The space an image block leaves above and below it in an article, and the smaller space a
      legend leaves between itself and that image (#636, #658). Classes: layoutSizes.ts */
   --figure-gap: 2rem;
