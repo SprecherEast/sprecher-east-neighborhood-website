@@ -61,6 +61,22 @@ describe('MapEmbed (#764)', () => {
     expect(document.activeElement).toBe(textButton)
   })
 
+  it('puts the text on the left and the preview on the right from md up, the preview first on a phone', () => {
+    const { container } = renderMap()
+    const grid = container.firstElementChild as HTMLElement
+    const preview = screen
+      .getByRole('img', { name: 'Map of Sprecher East' })
+      .closest('button')?.parentElement
+    const text = screen.getByText('Our boundary, with I-94 to the north.').parentElement
+
+    expect(grid.className).toContain('md:grid-cols-[minmax(0,4fr)_minmax(0,1fr)]')
+    expect(text?.className).toContain('md:order-1')
+    expect(preview?.className).toContain('md:order-2')
+    expect(preview?.className).toContain('md:justify-self-end')
+    // Below md the preview stays above the text: it is first in the page order
+    expect(grid.firstElementChild).toBe(preview)
+  })
+
   it('limits what the frame may do', async () => {
     renderMap()
     await userEvent.click(screen.getAllByRole('button', { name: 'View the larger map' })[0])

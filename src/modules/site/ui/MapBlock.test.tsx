@@ -61,11 +61,11 @@ describe('MapBlock (#764)', () => {
     expect(screen.getByAltText(preview.alt as string)).toBeTruthy()
   })
 
-  it('sets the picture at about a fifth of the width from md up', () => {
+  it('sets the picture at about a fifth of the width, on the right, from md up', () => {
     const { container } = render(<MapBlock {...props} />)
 
     expect(
-      container.querySelector('.md\\:grid-cols-\\[minmax\\(0\\,1fr\\)_minmax\\(0\\,4fr\\)\\]'),
+      container.querySelector('.md\\:grid-cols-\\[minmax\\(0\\,4fr\\)_minmax\\(0\\,1fr\\)\\]'),
     ).toBeTruthy()
   })
 })
