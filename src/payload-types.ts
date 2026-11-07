@@ -268,6 +268,10 @@ export interface Page {
   }
   publishedAt?: string | null
   /**
+   * An optional photo shown faded and grayed behind the whole page, under its text. Pick a wide, level photo with a quiet sky or field; the text stays readable in light and dark.
+   */
+  backdrop?: (number | null) | Media
+  /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null
@@ -1784,6 +1788,7 @@ export interface PagesSelect<T extends boolean = true> {
         description?: T
       }
   publishedAt?: T
+  backdrop?: T
   generateSlug?: T
   slug?: T
   updatedAt?: T

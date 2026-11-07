@@ -24,6 +24,7 @@ export const GALLERY_COMPONENTS = [
   'Legend',
   'Alert',
   'Section',
+  'PageBackdrop',
   'ArticlePage',
   'DetailLayout',
   'OnThisPage',

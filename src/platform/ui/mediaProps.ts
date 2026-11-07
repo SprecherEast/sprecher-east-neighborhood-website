@@ -14,6 +14,7 @@ export interface MediaProps {
   onLoad?: () => void
   loading?: 'lazy' | 'eager' // for NextImage only
   priority?: boolean // for NextImage only
+  quality?: number // for NextImage only; 100 when left out
   ref?: Ref<HTMLImageElement | HTMLVideoElement | null>
   resource?: MediaType | string | number | null // for Payload media
   size?: string // for NextImage only

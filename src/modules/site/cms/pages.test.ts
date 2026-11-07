@@ -44,6 +44,19 @@ describe('createPagesCollection', () => {
     expect(hooks?.afterDelete).toEqual([revalidateDelete])
   })
 
+  // The page draws it faded behind its content (#777); it is never required, so a page without one is unchanged
+  it('offers an optional backdrop photo from the media library, in the sidebar', () => {
+    const { fields } = createPagesCollection({ layoutBlocks: [] })
+    const backdrop = fields.find((field) => 'name' in field && field.name === 'backdrop')
+
+    expect(backdrop).toMatchObject({
+      type: 'upload',
+      relationTo: 'media',
+      admin: { position: 'sidebar' },
+    })
+    expect(backdrop && 'required' in backdrop && backdrop.required).toBeFalsy()
+  })
+
   it('previews a page at its address on the site', () => {
     vi.stubEnv('PREVIEW_SECRET', 'shh')
     const { admin } = createPagesCollection({ layoutBlocks: [] })

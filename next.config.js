@@ -39,8 +39,9 @@ const nextConfig = {
   images: {
     // Uploads are served by Payload under this path; getMediaUrl keeps them relative (local)
     localPatterns: [{ pathname: '/api/media/file/**' }],
-    // ImageMedia asks for quality 100; Next 16 allows only 75 unless listed
-    qualities: [100],
+    // ImageMedia asks for quality 100, and the page backdrop (PageBackdrop) for 50; Next 16 allows
+    // only 75 unless listed
+    qualities: [50, 100],
     remotePatterns: [
       ...[NEXT_PUBLIC_SERVER_URL /* 'https://example.com' */].map((item) => {
         const url = new URL(item)

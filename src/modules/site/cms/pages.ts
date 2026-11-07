@@ -65,6 +65,16 @@ export const createPagesCollection = ({
         position: 'sidebar',
       },
     },
+    {
+      name: 'backdrop',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description:
+          'An optional photo shown faded and grayed behind the whole page, under its text. Pick a wide, level photo with a quiet sky or field; the text stays readable in light and dark.',
+        position: 'sidebar',
+      },
+    },
     slugField(),
   ],
   hooks: {

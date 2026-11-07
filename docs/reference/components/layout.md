@@ -27,6 +27,19 @@ Source: `src/platform/ui/Section.tsx`
 - Modules: `events`, `news`, `site`
 - Routes: `/account`, `/confirm-email`, `/dev/gallery`, `/forgot-password`, `/login`, `/reset-password`, `/sign-up`, `/verify-account`
 
+## `PageBackdrop`
+
+Source: `src/platform/ui/PageBackdrop.tsx`
+
+| Prop       | Type              | Required | Description |
+| ---------- | ----------------- | -------- | ----------- |
+| `image`    | `Media`           | no       |             |
+| `children` | `React.ReactNode` | yes      |             |
+
+**Used by** (direct imports):
+
+- Routes: `/[slug]`, `/dev/gallery`
+
 ## `ArticlePage`
 
 Source: `src/platform/ui/ArticlePage.tsx`

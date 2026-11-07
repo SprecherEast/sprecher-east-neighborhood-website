@@ -127,6 +127,7 @@
 | `meta.image`                                | upload       | no       | → media                                                                                   |                                    |
 | `meta.description`                          | textarea     | no       |                                                                                           |                                    |
 | `publishedAt`                               | date         | no       |                                                                                           |                                    |
+| `backdrop`                                  | upload       | no       | → media                                                                                   |                                    |
 | `generateSlug`                              | checkbox     | no       |                                                                                           | hidden; default true               |
 | `slug`                                      | text         | yes      |                                                                                           | unique; indexed                    |
 | `updatedAt`                                 | date         | no       |                                                                                           | hidden; indexed                    |
