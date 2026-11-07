@@ -1,4 +1,5 @@
 [
   { "note": "src/modules/events/README.md", "paths": ["src/modules/events/**"] },
+  { "note": "src/modules/contact/README.md", "paths": ["src/modules/contact/**"] },
   { "note": "src/modules/accounts/README.md", "paths": ["src/modules/accounts/**"] }
 ]

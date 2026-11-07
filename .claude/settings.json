@@ -31,6 +31,16 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "mcp__.*javascript_tool",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/before-browser-script.mjs\"",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "PostToolUse": [
