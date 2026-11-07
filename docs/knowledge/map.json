@@ -5,5 +5,31 @@
   { "note": "src/modules/verification/README.md", "paths": ["src/modules/verification/**"] },
   { "note": "src/modules/directory/README.md", "paths": ["src/modules/directory/**"] },
   { "note": "src/platform/theme/README.md", "paths": ["src/platform/theme/**", "src/themes/**"] },
+  { "note": "src/modules/accounts/README.md", "paths": ["src/modules/accounts/**"] },
+  {
+    "note": "src/modules/site/navigation/README.md",
+    "paths": [
+      "src/modules/site/cms/navGlobal.ts",
+      "src/modules/site/cms/linkGroup.ts",
+      "src/modules/site/cms/NavItemRowLabel.client.tsx",
+      "src/modules/site/cms/revalidateGlobal.ts",
+      "src/modules/site/cms/revalidateRedirects.ts",
+      "src/modules/site/data/globals.ts",
+      "src/modules/site/data/redirects.ts",
+      "src/modules/site/data/documents.ts",
+      "src/modules/site/domain/nav.ts",
+      "src/modules/site/domain/forum.ts",
+      "src/modules/site/domain/cacheTags.ts",
+      "src/modules/site/ui/SiteHeader.tsx",
+      "src/modules/site/ui/SiteHeaderBar.client.tsx",
+      "src/modules/site/ui/HeaderNav.client.tsx",
+      "src/modules/site/ui/SiteFooter.tsx",
+      "src/modules/site/ui/Logo.tsx",
+      "src/modules/site/ui/ForumPrompt.tsx",
+      "src/modules/site/ui/PayloadRedirects.tsx",
+      "src/modules/site/use-cases/getForumUrl.ts",
+      "src/modules/site/use-cases/getRedirectTarget.ts"
+    ]
+  },
   { "note": "src/platform/ui/README.md", "paths": ["src/platform/ui/**"] }
 ]
