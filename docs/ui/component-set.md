@@ -78,6 +78,14 @@ show and there is no button. Its test checks the closed and the open dialog with
 removed, since jsdom can't run axe across one), the gallery shows both states, and its props are in
 the [media page](../reference/components/media.md).
 
+**`Figure`** (#816) is a small picture that floats right in an article, about two fifths of the text
+column by default (`size`: `third`, `two-fifths` or `half`), with the text wrapping on its left from
+`md` up; below `md` it fills the column between paragraphs. Its label ("Figure 2-9") sits in a
+neutral badge with the short caption. A click or tap opens the `Zoom` dialog with the large picture,
+and beside it (under it on a narrow screen) the long caption and the numbered key: the key never
+shows in the small view. Its test covers the float classes, the size, the dialog and axe; the gallery
+shows it.
+
 ## Feedback and overlays
 
 Components: [feedback and overlays](../reference/components/feedback.md).
