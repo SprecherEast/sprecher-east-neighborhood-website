@@ -29,7 +29,6 @@ The site is useful and inviting enough to promote across the neighborhood.
 | [#161](https://github.com/boulaajaj/sprecher-east-neighborhood-website/issues/161) News, events and city council updates | A resident can find this week's events, the latest civic update and the forum in one click.                           |
 | [#162](https://github.com/boulaajaj/sprecher-east-neighborhood-website/issues/162) Get involved                          | A resident can sign up to help, on a phone, in under two minutes.                                                     |
 | [#163](https://github.com/boulaajaj/sprecher-east-neighborhood-website/issues/163) Shared component library              | Every screen in this milestone is built from one tested set of components, chosen from an inventory of the live site. |
-| [#89](https://github.com/boulaajaj/sprecher-east-neighborhood-website/issues/89) Run the project on GitHub               | The board and the conventions are done.                                                                               |
 | [#169](https://github.com/boulaajaj/sprecher-east-neighborhood-website/issues/169) Owner actions                         | Everything that needs the owner's login, money or decision is done or decided.                                        |
 
 ## No milestone
