@@ -131,7 +131,7 @@ through the pointers in `.claude/skills/`, and a human reads them as plain Markd
 | [`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)                   | A PR depends on another open PR, or a PR in a stack has to change.         |
 | [`write-code`](.agents/skills/write-code/SKILL.md)                     | Writing, moving or reviewing code: where it goes, reuse, tests, the rules. |
 | [`self-review`](.agents/skills/self-review/SKILL.md)                   | A change is done: review your own diff before opening or updating the PR.  |
-| [`visual-design-review`](.agents/skills/visual-design-review/SKILL.md) | The change affects how pages look.                                         |
+| [`visual-design-review`](.agents/skills/visual-design-review/SKILL.md) | The change affects how pages look, or you make an image for the site.      |
 | [`pr-review`](.agents/skills/pr-review/SKILL.md)                       | You are the independent reviewer of a PR you didn't write.                 |
 | [`wrapped`](.agents/skills/wrapped/SKILL.md)                           | After a merge: verify it, check the deploy, close the loop, report.        |
 | [`project-tracking`](.agents/skills/project-tracking/SKILL.md)         | Picking up, filing or reporting work: epics, milestones, sprint, blockers. |

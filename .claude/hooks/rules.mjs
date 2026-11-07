@@ -214,3 +214,27 @@ export function shouldFormat(file) {
 export function shouldLint(file) {
   return typeof file === 'string' && LINT.test(file)
 }
+
+/** The line a browser script carries once the image review was done (#812) */
+export const IMAGE_REVIEW_MARKER = 'image-review: passed'
+
+const MEDIA_UPLOAD = /\/api\/media\b/
+const IMAGE_ASSIGN =
+  /\/api\/(?:events|posts|pages)\/[^\s'"`]*[\s\S]*\b(?:heroImage|meta\s*:[\s\S]*\bimage)\b/
+
+/**
+ * The refusal for a browser script that publishes an image (#812): an upload to `/api/media`, or a
+ * change that sets a record's hero or meta image, without the line saying the image review
+ * (`visual-design-review`, "Images made for the site") was done. Null when it may run.
+ * @param {string} script
+ */
+export function imagePublishCheck(script) {
+  if (typeof script !== 'string' || script.includes(IMAGE_REVIEW_MARKER)) return null
+  if (!MEDIA_UPLOAD.test(script) && !IMAGE_ASSIGN.test(script)) return null
+  return (
+    'Image review first (#812): this script publishes an image. Review the finished image against ' +
+    'docs/guidelines/ui-ux-design.md "Images made for the site": the area the layout overlays is ' +
+    'empty, text is legible at phone card size, nothing repeats the title or date, no filler. Then ' +
+    `add a comment line "${IMAGE_REVIEW_MARKER}" to the script and run it again.`
+  )
+}
