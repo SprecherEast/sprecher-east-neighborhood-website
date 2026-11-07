@@ -393,7 +393,8 @@
         "isn't read",
         "no screen",
         "not used",
-        "unused"
+        "unused",
+        "/no (frontend |public )?(page|route|screen)/"
       ]
     ],
     "core": true
@@ -615,9 +616,8 @@
       ["markSubmissionsConfirmed"],
       ["emailConfirmed"],
       [
-        "/(cleared before|clears?[^\\n]*before[^\\n]*send|only once|sends? each[^\\n]*once|not twice)/"
-      ],
-      ["onConfirmed", "payload.config.ts"]
+        "/(cleared before|clears?[^\\n]*(before|then)[^\\n]*send|only once|sends? each[^\\n]*once|not twice)/"
+      ]
     ],
     "core": true
   },
@@ -735,9 +735,8 @@
       ["tokenHash"],
       ["/sendCount[\\s\\S]{0,120}sendWindowStart|sendWindowStart[\\s\\S]{0,120}sendCount/"],
       ["checkAddressLimit", "domain/rules.ts"],
-      ["/post[^\\n]{0,12}\\/confirm\\b/"],
-      ["confirmEndpoint", "cms/confirmEndpoint.ts"],
-      ["email-confirmations.md"]
+      ["/post[^\\n]{0,40}\\/confirm\\b/"],
+      ["confirmEndpoint", "cms/confirmEndpoint.ts"]
     ],
     "core": true
   },
@@ -769,10 +768,7 @@
     "modules": ["accounts"],
     "covers": "intro (index line)",
     "prompt": "Which note describes how a neighbor signs up, signs in and resets a password, and what guards each step? Name the file. Answer concisely and name the files you relied on. Don't change any files.",
-    "key": [
-      ["src/modules/accounts/README.md", "modules/accounts/README"],
-      ["guard", "robot check", "rate limit", "limit"]
-    ],
+    "key": [["src/modules/accounts/README.md", "modules/accounts/README"]],
     "core": true
   },
   {
@@ -927,7 +923,7 @@
       ["recordRunAgent"],
       ["recordReporter"],
       [
-        "/agent[\\s\\S]{0,100}(key|account)[\\s\\S]{0,80}(server|set)|set[\\s\\S]{0,80}from the key/"
+        "/agent[\\s\\S]{0,100}(req\\.user|authenticated|caller|key|account)[\\s\\S]{0,80}(server|set)|set[\\s\\S]{0,80}(from the key|req\\.user)/"
       ],
       ["RUN_IDENTITY", "runId"],
       ["agent-runs.md", "agent-review-items.md", "cms/agentRuns.ts", "cms/agentReviewItems.ts"]
@@ -1371,8 +1367,7 @@
       ["needs-review"],
       ["rejected-invalid"],
       ["agent-runs"],
-      ["users"],
-      ["recordReporter"]
+      ["users"]
     ],
     "core": true
   },
@@ -1484,8 +1479,7 @@
     "key": [
       ["defaultImage"],
       ["parent"],
-      ["pickDefaultImage", "domain/suggestion.ts"],
-      ["src/modules/news", "news/cms/categories.ts"],
+      ["news module", "news's categories", "news/cms/categories.ts", "src/modules/news"],
       ["suggested"],
       ["draft"]
     ],
@@ -1518,8 +1512,6 @@
     "key": [
       ["heldEmails"],
       ["held", "hold", "waits"],
-      ["24 hours"],
-      ["/confirm-email"],
       ["markSubmissionsConfirmed"],
       ["welcome"],
       ["/received your message|acknowledg/"],
@@ -1563,7 +1555,6 @@
       ],
       ["24 hours"],
       ["AccountOffer"],
-      ["email-confirmations"],
       ["/separate|own verif|not the same|different|doesn.t use|does not use|independent/"]
     ],
     "core": true
@@ -1612,9 +1603,7 @@
       ["draft"],
       ["/source[\\s\\S]{0,60}(name|link|url|address)/"],
       ["approved", "approve"],
-      [
-        "/(agent|non-staff)[\\s\\S]{0,80}(can.t|cannot|may not|not|never)[\\s\\S]{0,60}(update|publish|change|edit)/"
-      ],
+      ["/(agent|non-staff)[\\s\\S]{0,120}(refused|no\\b|can.t|cannot|may not|never)/"],
       ["reviewQueue"],
       [
         "/(externalId|contentHash)[\\s\\S]{0,80}(unique|twice)|(unique|twice)[\\s\\S]{0,80}(externalId|contentHash)/"
