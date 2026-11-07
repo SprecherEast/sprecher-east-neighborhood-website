@@ -50,7 +50,7 @@ describe('About page seed (#764)', () => {
   it('opens the first section with the site, not the neighborhood', () => {
     const first = textOf(layout[0])
     expect(first.join(' ')).toMatch(/This is an unofficial site/)
-    expect(first.join(' ')).toMatch(/one-resident project/)
+    expect(first.join(' ')).toMatch(/run by one neighbor/)
   })
 
   it('gives the map block the Sprecher East My Maps address, which the site accepts', () => {
@@ -88,6 +88,16 @@ describe('About page seed (#764)', () => {
     expect(words).not.toMatch(/(?<![\w-])(I|me|my)(?![\w-])/)
     expect(words).toContain('AI tools')
     expect(words).not.toMatch(/Claude|Gemini|Grok|ChatGPT/)
+  })
+
+  it('keeps every sentence to 25 words and avoids the word "resident"', () => {
+    const pieces = textOf(page)
+    for (const piece of pieces) {
+      for (const sentence of piece.split(/(?<=[.!?])\s+/)) {
+        expect(sentence.trim().split(/\s+/).length, sentence).toBeLessThanOrEqual(25)
+      }
+    }
+    expect(pieces.join(' ')).not.toMatch(/resident/i)
   })
 
   it('leaves the map block out when there is no preview picture', () => {

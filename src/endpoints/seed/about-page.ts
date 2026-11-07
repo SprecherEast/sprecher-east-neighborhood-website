@@ -23,7 +23,7 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
               'This is an unofficial site for Sprecher East, the neighborhood on Madison’s far east side. We gather news, events and public notices for neighbors in one place.',
             ),
             p(
-              'It’s a one-resident project, not run by the City, an HOA or a registered neighborhood association, and there are no dues or membership.',
+              'It’s run by one neighbor, not by the City, an HOA or a registered neighborhood association, and there are no dues or membership.',
             ),
           ]),
           size: 'full',
@@ -38,7 +38,7 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
       blockType: 'mapBlock',
       title: 'Where we are',
       description:
-        'Sprecher East is in Madison’s District 16: I-94 to the north, Sprecher Road to the west, Cottage Grove Road to the south, and Door Creek Park and the Door Creek valley to the east. North Star is next door to the west, and Richmond Hill Homeowners lies to the southwest.',
+        'Sprecher East is in Madison’s District 16. I-94 is to the north, Sprecher Road to the west, and Cottage Grove Road to the south. Door Creek Park and the Door Creek valley lie to the east. North Star is next door to the west, and Richmond Hill Homeowners lies to the southwest.',
       preview: args.mapImage.id,
       embedUrl: SPRECHER_EAST_MAP_EMBED_URL,
     })
@@ -53,7 +53,7 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
           richText: root([
             heading('h2', 'How AI helps'),
             p(
-              'AI tools help us gather public information, like city meetings, road and development projects, and local news. A resident reviews what we publish, and longer pieces list their sources.',
+              'AI tools help us gather public information, like city meetings, road and development projects, and local news. A neighbor reviews what we publish, and longer pieces list their sources.',
             ),
             paragraph(
               text('If enough neighbors want one, forming a neighborhood association is a goal. '),
