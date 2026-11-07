@@ -55,4 +55,4 @@ rich-text fields of each collection: [content types](../../../docs/reference/con
 ## Known gaps
 
 - #676: steps, outcome fork and diagram key accept a number in place of their list.
-- Limits of steps, outcome fork and diagram key are literals in their configs, not in `editorial/editorialLimits.ts` (filed as a scope-creep issue, see #790).
+- Limits of steps, outcome fork and diagram key are literals in their configs, not in `editorial/editorialLimits.ts` (#843).
