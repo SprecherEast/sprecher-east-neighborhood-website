@@ -13,6 +13,7 @@ generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.m
 - [Directory](../../src/modules/directory/README.md): the FAQ and resources pages; how entries are grouped, when an official's photo shows, what a save refreshes.
 - [Theme](../../src/platform/theme/README.md): tokens, light and dark mode, theme options and decorations.
 - [Accounts](../../src/modules/accounts/README.md): sign-up, verification, sign-in, password changes and resets, and the guards on each.
+- [Site navigation](../../src/modules/site/navigation/README.md): header, footer, forum link, redirects, refresh timing.
 
 ## Reference (generated)
 
