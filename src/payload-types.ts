@@ -3022,7 +3022,7 @@ export interface OutcomeForkBlock {
  */
 export interface DiagramKeyBlock {
   /**
-   * One per numbered marker on the image above, in number order. Don’t type the numbers.
+   * One per numbered marker on the image, in number order. Don’t type the numbers.
    */
   items: {
     /**
@@ -3038,6 +3038,55 @@ export interface DiagramKeyBlock {
   id?: string | null
   blockName?: string | null
   blockType: 'diagramKey'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FigureBlock".
+ */
+export interface FigureBlock {
+  /**
+   * The large picture. It shows small in the article.
+   */
+  image: number | Media
+  /**
+   * What the picture shows, in a few words. It names the Enlarge button.
+   */
+  title: string
+  /**
+   * Its number in the source, such as "Figure 2-9". Optional.
+   */
+  label?: string | null
+  /**
+   * One short line under the small picture. Optional.
+   */
+  caption?: string | null
+  /**
+   * Source, how it was made and conditions. Shown only when the picture is enlarged. Optional.
+   */
+  longCaption?: string | null
+  /**
+   * How wide it is beside the text on a tablet or larger.
+   */
+  size?: ('two-fifths' | 'third' | 'half') | null
+  /**
+   * One per numbered marker on the image, in number order. Don’t type the numbers.
+   */
+  items?:
+    | {
+        /**
+         * Short: "North roundabout".
+         */
+        label: string
+        /**
+         * One line: what it is or does. Optional.
+         */
+        text?: string | null
+        id?: string | null
+      }[]
+    | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'figure'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3125,6 +3174,7 @@ export interface ChartBlock {
            * Stripes mark an amount that is only proposed.
            */
           hatch?: boolean | null
+          id?: string | null
         }[]
         id?: string | null
       }[]
@@ -3147,6 +3197,7 @@ export interface ChartBlock {
          * Stripes mark an amount that is only proposed.
          */
         hatch?: boolean | null
+        id?: string | null
       }[]
     | null
   /**
@@ -3167,6 +3218,7 @@ export interface ChartBlock {
          * Added on top of the first part: shown as “+$24.8M”.
          */
         increase?: boolean | null
+        id?: string | null
       }[]
     | null
   /**
@@ -3185,8 +3237,10 @@ export interface ChartBlock {
         values?:
           | {
               value: number
+              id?: string | null
             }[]
           | null
+        id?: string | null
       }[]
     | null
   /**

@@ -60,7 +60,7 @@ Page-builder blocks: `archive`, `content`, `cta`, `eventsThisWeek` (from `events
 (from `contact`), `mapBlock` (a small picture that opens a live Google map, #764), `mediaBlock`,
 `topIssues` (from `news`). Blocks inside rich text
 (`src/platform/richtext/`): `banner`, `code`, `mediaBlock`, and the visual blocks in
-`EDITORIAL_BLOCKS` (`timeline`, `steps`, `keyFacts`, `outcomeFork`, `diagramKey`, `chart`, `factTabs`).
+`EDITORIAL_BLOCKS` (`timeline`, `steps`, `keyFacts`, `outcomeFork`, `diagramKey`, `figure`, `chart`, `factTabs`).
 A block that agents may write in Markdown has a `jsx` converter (`chart` #640 and `factTabs` #664 do):
 `export` writes one `<Chart … />` or `<FactTabs … />` tag and `import` reads it back through the same
 rules as the editor's fields. Write the props with `writeProp` from `editorialTag.ts`: Payload's tag

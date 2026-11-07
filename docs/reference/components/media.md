@@ -135,3 +135,4 @@ Source: `src/platform/ui/Figure.tsx`
 **Used by** (direct imports):
 
 - Routes: `/dev/gallery`
+- Platform: `platform/richtext`
