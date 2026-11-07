@@ -2,15 +2,10 @@ import { slugify } from 'payload/shared'
 
 import type { RichTextValue } from '@/platform/lib'
 
+import { lexicalRoot, type LexicalNode } from './lexicalTree'
+
 /** A section heading in an article: its link address, words and level (#573) */
 export type HeadingAnchor = { id: string; text: string; level: 2 | 3 }
-
-type LexicalNode = {
-  type?: string
-  tag?: string
-  text?: string
-  children?: LexicalNode[]
-}
 
 const ANCHOR_TAGS = { h2: 2, h3: 3 } as const
 
@@ -62,7 +57,7 @@ export function anchorsByNode(data: RichTextValue | null | undefined): Map<objec
     node.children?.forEach(walk)
   }
 
-  const root = (data as unknown as { root?: LexicalNode } | null | undefined)?.root
+  const root = lexicalRoot(data)
   if (root) walk(root)
   return anchors
 }

@@ -72,6 +72,8 @@ describe('/posts/[slug]', () => {
     render(await PostPage(params('park-cleanup')))
 
     expect(screen.getByText('Author')).toBeDefined()
+    // The byline takes the text's width, so it ends on the text's right edge
+    expect(screen.getByText('Author').closest('dl')?.className).toContain('mx-0')
     expect(mocks.richText).toHaveBeenCalledWith(
       expect.objectContaining({ className: READING_COLUMN }),
     )

@@ -60,6 +60,8 @@ export default async function Post({ params: paramsPromise }: Args) {
     getForumUrl(),
   ])
 
+  const textClassName = articleColumnClass(post.content)
+
   return (
     <ArticlePage
       // Without a photo the header is plain, so it keeps clear of the site header (#461)
@@ -71,6 +73,7 @@ export default async function Post({ params: paramsPromise }: Args) {
       hasHeroImage={Boolean(post.heroImage)}
       header={postHeaderProps(post)}
       byline={postByline(post)}
+      textClassName={textClassName}
       breadcrumbs={[
         { label: 'Home', href: '/' },
         { label: 'News & Updates', href: '/posts' },
@@ -92,7 +95,7 @@ export default async function Post({ params: paramsPromise }: Args) {
       }
     >
       <RichText
-        className={articleColumnClass(post.content)}
+        className={textClassName}
         data={post.content}
         blocks={richTextBlocks}
         enableGutter={false}

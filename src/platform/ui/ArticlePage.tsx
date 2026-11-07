@@ -29,6 +29,11 @@ export type ArticlePageProps = {
    * facts belong in the header (an event's date and place).
    */
   byline?: LabelledMetaItem[]
+  /**
+   * The width class the page gives the article's text (`articleColumnClass`). The byline takes it
+   * too, so a text-only article's byline ends on the text's right edge, not past it (#774).
+   */
+  textClassName?: string
   /** The "On this page" menu, when the article has headings to list */
   toc?: React.ReactNode
   /** The related content: related items, a call to action */
@@ -51,6 +56,7 @@ export function ArticlePage({
   header,
   breadcrumbs,
   byline,
+  textClassName,
   toc,
   aside,
   className,
@@ -75,7 +81,7 @@ export function ArticlePage({
             <MetaList
               variant="inline"
               items={byline}
-              className="mb-6 gap-x-6 gap-y-1 text-sm lg:justify-end"
+              className={cn('mb-6 gap-x-6 gap-y-1 text-sm lg:justify-end', textClassName)}
             />
           )}
           {children}

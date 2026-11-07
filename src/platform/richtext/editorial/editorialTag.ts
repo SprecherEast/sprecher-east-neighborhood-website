@@ -1,3 +1,5 @@
+import { countBlocksOfType, type LexicalNode } from '../lexicalTree'
+
 /**
  * How an editorial block's props are written into, and read out of, Markdown (#640, #664): the
  * tags `<Chart … />` and `<FactTabs … />`. Payload's tag reader
@@ -54,16 +56,6 @@ const TAGS = [
 ] as const
 export type EditorialTagName = (typeof TAGS)[number]['name']
 
-const countBlocks = (node: unknown, blockType: string): number => {
-  if (!node || typeof node !== 'object') return 0
-  const { fields, children } = node as { fields?: { blockType?: unknown }; children?: unknown }
-  const own = fields?.blockType === blockType ? 1 : 0
-  return (
-    own +
-    (Array.isArray(children) ? children.reduce((n, c) => n + countBlocks(c, blockType), 0) : 0)
-  )
-}
-
 /** Why a tag was refused always starts like this, so a refusal can be traced to its tag */
 export const refusalPrefix = (name: EditorialTagName) => `Invalid <${name}>:`
 
@@ -81,7 +73,15 @@ export function unreadTags(
   return TAGS.map(({ name, blockType }) => {
     const written = markdown.match(new RegExp(`<${name}(?=\\s|>|$)`, 'gi'))?.length ?? 0
     const refused = refusals.filter((reason) => reason.startsWith(refusalPrefix(name))).length
-    return { name, count: Math.max(0, written - countBlocks(converted.root, blockType) - refused) }
+    return {
+      name,
+      count: Math.max(
+        0,
+        written -
+          (converted.root ? countBlocksOfType(converted.root as LexicalNode, blockType) : 0) -
+          refused,
+      ),
+    }
   }).filter(({ count }) => count > 0)
 }
 

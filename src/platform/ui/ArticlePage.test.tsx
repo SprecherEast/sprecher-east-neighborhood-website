@@ -85,7 +85,13 @@ describe('ArticlePage', () => {
 
       const row = screen.getByText('Author').closest('dl')
       expect(row?.className).toContain('lg:justify-end')
-      expect(row?.className).not.toContain('justify-end ')
+      expect(row?.className.split(' ')).not.toContain('justify-end')
+    })
+
+    it('takes the width the page gives the text, so it ends on the text’s edge (#774)', () => {
+      renderArticle({ byline, textClassName: 'max-w-[40rem]' })
+
+      expect(screen.getByText('Author').closest('dl')?.className).toContain('max-w-[40rem]')
     })
 
     it('draws nothing when there are no facts', () => {

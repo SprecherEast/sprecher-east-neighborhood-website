@@ -189,7 +189,7 @@ Three tiers of visual importance:
 
 ### Hero Sections
 
-- Full-viewport or near-full (`min-h-[60vh]` to `min-h-[80vh]`) for the home page and landing pages. A post or event header is not a hero: it is a short photo band, `min-h-[clamp(16rem,42svh,28rem)]`, with the title on it and the facts in a row under it, so the article starts on the first screen (the owner's request, 2026-11-02, Claude in Chrome side panel, recorded on #571)
+- Full-viewport or near-full (`min-h-[60vh]` to `min-h-[80vh]`) for the home page and landing pages. A post or event header is not a hero: it is a short photo band, `min-h-[clamp(16rem,42svh,28rem)]`, with the title on it, so the article starts on the first screen; a post's author, date and source are not on the photo but a row above the text, on its right (the owner's requests, 2026-11-02, Claude in Chrome side panel, recorded on #571, and 2026-11-06, recorded on #774)
 - Background image with dark gradient overlay (`from-foreground/70 via-foreground/50 to-transparent`)
 - `text-on-image` on a `scrim` overlay for maximum contrast (never raw `white`/`black`: themes set these)
 - Clear CTA buttons at the bottom of the hero content

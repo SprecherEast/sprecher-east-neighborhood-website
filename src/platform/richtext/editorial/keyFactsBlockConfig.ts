@@ -78,13 +78,16 @@ export const keyFactFields = (): Field[] => [
   editorialLinkFields({ labelExample: 'City budget' }),
 ]
 
+/** The block's type, which the page also reads to tell a row of cards from text */
+export const KEY_FACTS_BLOCK_TYPE = 'keyFacts'
+
 /**
  * The facts a reader wants first (#509): an icon with what each is about, a short value, a line
  * of explanation, how sure we are and where it comes from. It follows the USWDS icon list and
  * summary box: a few scannable facts, each labelled, never a value on its own.
  */
 export const KeyFactsBlockConfig: Block = {
-  slug: 'keyFacts',
+  slug: KEY_FACTS_BLOCK_TYPE,
   interfaceName: 'KeyFactsBlock',
   labels: { singular: 'Key facts', plural: 'Key facts' },
   fields: [
