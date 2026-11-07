@@ -45,6 +45,8 @@ export const THEME_TOKENS = {
   success: { modes: 'both', meaning: 'Success state' },
   warning: { modes: 'both', meaning: 'Warning state' },
   'warning-strong': { modes: 'both', meaning: 'Warning text that passes on panels' },
+  info: { modes: 'both', meaning: 'Information state: notices such as an upcoming meeting' },
+  'info-strong': { modes: 'both', meaning: 'Information text that passes on panels' },
   error: { modes: 'both', meaning: 'Error state' },
   'on-image': { modes: 'both', meaning: 'Text and icons on photos (heroes, image cards)' },
   scrim: { modes: 'both', meaning: 'Overlays and shadows that keep text readable on photos' },
@@ -99,6 +101,9 @@ export const CONTRAST_PAIRS: ReadonlyArray<readonly [text: ThemeToken, backgroun
   ['warning-strong', 'background'],
   ['warning-strong', 'surface'],
   ['warning-strong', 'card'],
+  ['info-strong', 'background'],
+  ['info-strong', 'surface'],
+  ['info-strong', 'card'],
   // An outcome fork's "open" card: body text on the muted surface (#510)
   ['foreground', 'muted'],
 ]
@@ -130,11 +135,11 @@ export const CHART_PAIRS = CHART_TOKENS.flatMap((chart) =>
  */
 export const TINT_ALPHA = 0.1
 const ALERT_TONES = [
-  ['foreground', 'muted-foreground'],
   // `Card · tinted` (`bg-primary/10`): the sidebar box's text (#216)
   ['foreground', 'primary'],
   ['primary-strong', 'primary'],
   ['warning-strong', 'warning'],
+  ['info-strong', 'info'],
   ['destructive-strong', 'destructive'],
   // An outcome fork's "stop" card: its body text on the destructive tint (#510)
   ['foreground', 'destructive'],

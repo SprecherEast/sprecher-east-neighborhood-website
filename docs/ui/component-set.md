@@ -99,6 +99,8 @@ dialog, drawn once. With scripting off the button is hidden. `ChartZoom` is a th
 `Figure` (#816) is another. Its test covers both layouts, the keyboard, focus return and axe, and the
 gallery shows it.
 
+`Alert` has four tones: `info` is blue (`info` and `info-strong` theme tokens, #818), `success` green, `warning` amber and `error` red. Each is a 10% tint with its `-strong` text, checked at 4.5:1 in light and dark, and each has its own icon, so colour is never the only cue.
+
 ## Navigation
 
 Components: [navigation and page tools](../reference/components/navigation.md).

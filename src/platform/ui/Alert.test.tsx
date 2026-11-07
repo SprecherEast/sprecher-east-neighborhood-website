@@ -43,6 +43,18 @@ describe('Alert', () => {
     expect(screen.getByRole('status').textContent).toBe('Heads upThe meeting moved to Thursday.')
   })
 
+  it('draws the info tone in the info tokens, not a neutral gray (#818)', () => {
+    const { container } = render(
+      <Alert tone="info" live={false}>
+        An upcoming meeting
+      </Alert>,
+    )
+    const classes = (container.firstElementChild as HTMLElement).className
+
+    expect(classes).toContain('bg-info/10')
+    expect(classes).toContain('text-info-strong')
+  })
+
   it('is not a live region when it is part of the content', () => {
     const { container } = render(
       <Alert tone="info" live={false}>

@@ -12,6 +12,7 @@ route is involved, so the generated reference has nothing on it.
 - Each name in `registry.ts` has a folder in `src/themes/`; `registry.test.ts` checks the two lists match.
 - `ACTIVE_THEME` in `registry.ts` is the theme the site shows, and `src/app/(frontend)/globals.css` imports that theme's `theme.css`; `registry.test.ts` checks they agree.
 - What tokens can't express is a theme option, with defaults in `options.ts`; `registry.ts` lists the options each theme sets, and `{}` means all defaults (decision 0012).
+- The `info` tone (an `Alert`, so a banner too) is blue: `info` for its border and tint, `info-strong` for its text, with contrast pairs in `tokens.ts` checked by `themes.test.ts` (#818). A theme sets both, like every token.
 - Chart colours and their contrast pairs are in `tokens.ts` (`CHART_PAIRS`), checked by `themes.test.ts` (#659); the [UI kit](../ui/README.md) draws a chart's parts with `chart-1` to `chart-6`.
 
 ## Behaviors
