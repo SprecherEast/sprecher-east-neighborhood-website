@@ -15,9 +15,9 @@ What happens when a neighbor sends a form on the site: the checks it passes, why
 
 ## Screens
 
-| Screen     | Route        | Data comes from                                                                                             |
-| ---------- | ------------ | ----------------------------------------------------------------------------------------------------------- |
-| Form block | any CMS page | the `formBlock` block's `forms` relation and optional intro (`cms/formBlock.ts`, `ui/FormBlock.client.tsx`) |
+| Screen     | Route        | Data comes from                                                                                            |
+| ---------- | ------------ | ---------------------------------------------------------------------------------------------------------- |
+| Form block | any CMS page | the `formBlock` block's `form` relation and optional intro (`cms/formBlock.ts`, `ui/FormBlock.client.tsx`) |
 
 ## Behaviors and events
 
