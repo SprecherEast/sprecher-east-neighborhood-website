@@ -10,7 +10,7 @@ Source: `src/platform/ui/Card.tsx`
 
 **Variants:**
 
-- `variant`: `"elevated" | "outline" | "muted" | "tinted"`
+- `variant`: `"success" | "neutral" | "elevated" | "outline" | "muted" | "tinted" | "danger"`
 - `padding`: `"sm" | "md" | "lg" | "none"`
 - `interactive`: `boolean`
 
@@ -77,6 +77,7 @@ Source: `src/platform/ui/Card.tsx`
 
 - Modules: `directory`, `events`, `news`
 - Routes: `/dev/gallery`
+- Platform: `platform/richtext`
 
 ## `CardMeta`
 
