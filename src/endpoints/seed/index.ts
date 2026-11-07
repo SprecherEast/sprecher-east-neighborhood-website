@@ -15,6 +15,7 @@ import { image1 } from './image-1'
 import { image2 } from './image-2'
 import { image3 } from './image-3'
 import { imageHero1 } from './image-hero-1'
+import { imagePark } from './image-park'
 import { placeholderPortrait, placeholderPortraitFile } from './placeholder-portrait'
 import { post1 } from './post-1'
 import { post2 } from './post-2'
@@ -97,11 +98,9 @@ export const seed = async ({
   payload.logger.info(`— Seeding media...`)
 
   // Try to load local images from public/images/, fall back to remote Payload template images
-  const [image1Buffer, image2Buffer, image3Buffer, hero1Buffer] = await Promise.all([
+  const [image1Buffer, image2Buffer, image3Buffer, hero1Buffer, parkBuffer] = await Promise.all([
     loadLocalImage('image-asset.jpeg', 'image/jpeg').catch(() =>
-      fetchFileByURL(
-        'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-post1.webp',
-      ),
+      fetchFileByURL(POST1_FALLBACK_URL),
     ),
     loadLocalImage('image.jpeg', 'image/jpeg').catch(() =>
       fetchFileByURL(
@@ -118,6 +117,9 @@ export const seed = async ({
         'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-hero1.webp',
       ),
     ),
+    loadLocalImage('parks-greenspace.jpg', 'image/jpeg').catch(() =>
+      fetchFileByURL(POST1_FALLBACK_URL),
+    ),
   ])
 
   const seedPassword = process.env.SEED_PASSWORD || crypto.randomUUID()
@@ -125,41 +127,47 @@ export const seed = async ({
     payload.logger.warn('— SEED_PASSWORD not set, using random password for demo user')
   }
 
-  const [demoAuthor, image1Doc, image2Doc, image3Doc, imageHomeDoc] = await Promise.all([
-    payload.create({
-      collection: 'users',
-      data: {
-        name: 'Sprecher East',
-        email: 'demo-author@example.com',
-        password: seedPassword,
-        role: ROLES.admin,
-        // The demo admin can sign in at once: with `auth.verify` on, Payload would otherwise
-        // store it unverified and email example.com a link (#187)
-        _verified: true,
-      },
-      disableVerificationEmail: true,
-    }),
-    payload.create({
-      collection: 'media',
-      data: image1,
-      file: image1Buffer,
-    }),
-    payload.create({
-      collection: 'media',
-      data: image2,
-      file: image2Buffer,
-    }),
-    payload.create({
-      collection: 'media',
-      data: image3,
-      file: image3Buffer,
-    }),
-    payload.create({
-      collection: 'media',
-      data: imageHero1,
-      file: hero1Buffer,
-    }),
-  ])
+  const [demoAuthor, image1Doc, image2Doc, image3Doc, imageHomeDoc, imageParkDoc] =
+    await Promise.all([
+      payload.create({
+        collection: 'users',
+        data: {
+          name: 'Sprecher East',
+          email: 'demo-author@example.com',
+          password: seedPassword,
+          role: ROLES.admin,
+          // The demo admin can sign in at once: with `auth.verify` on, Payload would otherwise
+          // store it unverified and email example.com a link (#187)
+          _verified: true,
+        },
+        disableVerificationEmail: true,
+      }),
+      payload.create({
+        collection: 'media',
+        data: image1,
+        file: image1Buffer,
+      }),
+      payload.create({
+        collection: 'media',
+        data: image2,
+        file: image2Buffer,
+      }),
+      payload.create({
+        collection: 'media',
+        data: image3,
+        file: image3Buffer,
+      }),
+      payload.create({
+        collection: 'media',
+        data: imageHero1,
+        file: hero1Buffer,
+      }),
+      payload.create({
+        collection: 'media',
+        data: imagePark,
+        file: parkBuffer,
+      }),
+    ])
 
   payload.logger.info(`— Seeding posts...`)
 
@@ -168,7 +176,7 @@ export const seed = async ({
     collection: 'posts',
     depth: 0,
     context: { disableRevalidate: true },
-    data: post1({ heroImage: imageHomeDoc, author: demoAuthor }),
+    data: post1({ heroImage: imageParkDoc, author: demoAuthor }),
   })
 
   const post2Doc = await payload.create({
@@ -443,6 +451,10 @@ export const seed = async ({
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// Remote stand-in used when a local photo is missing
+const POST1_FALLBACK_URL =
+  'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-post1.webp'
 
 /**
  * Load an image from the public/images/ directory.
