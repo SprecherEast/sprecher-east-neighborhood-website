@@ -1,6 +1,12 @@
 // Reads one run's `claude -p --output-format stream-json` transcript (#715). Pure: no files, no
 // network.
 
+// A note, a doc or a generated rule is the knowledge layer; any other file read is code.
+const isKnowledgeFile = (file) =>
+  /(^|\/)README\.md$/.test(file) ||
+  /^(AGENTS|CLAUDE)\.md$/.test(file) ||
+  /^(docs|\.claude|\.agents)\//.test(file)
+
 /** Every token the session used, over all models: input, output and both cache counts. */
 export function totalTokens(modelUsage) {
   let total = 0
@@ -34,6 +40,7 @@ export function parseTranscript(text, workdir) {
   const prefix = `${workdir}/`
   const files = new Set()
   let toolCalls = 0
+  let searches = 0
   let result = null
   for (const event of parseLines(text)) {
     if (event.type === 'result') result = event
@@ -41,6 +48,7 @@ export function parseTranscript(text, workdir) {
     for (const block of event.message?.content ?? []) {
       if (block.type !== 'tool_use') continue
       toolCalls += 1
+      if (block.name === 'Grep' || block.name === 'Glob') searches += 1
       const file = block.input?.file_path
       if (block.name === 'Read' && file)
         files.add(file.startsWith(prefix) ? file.slice(prefix.length) : file)
@@ -51,6 +59,8 @@ export function parseTranscript(text, workdir) {
     tokens: totalTokens(result?.modelUsage),
     toolCalls,
     filesRead: [...files].sort(),
+    codeFilesRead: [...files].filter((file) => !isKnowledgeFile(file)).sort(),
+    searches,
     turns: result?.num_turns ?? 0,
     durationMs: result?.duration_ms ?? 0,
     costUsd: result?.total_cost_usd ?? 0,

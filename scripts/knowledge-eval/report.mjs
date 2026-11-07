@@ -17,6 +17,7 @@ export function formatChange(before, after) {
 }
 
 const oneDecimal = (n) => n.toFixed(1)
+const seconds = (ms) => `${Math.round(ms / 1000)}s`
 
 function side(runs) {
   return {
@@ -24,6 +25,8 @@ function side(runs) {
     tokens: mean(runs.map((r) => r.tokens)),
     toolCalls: mean(runs.map((r) => r.toolCalls)),
     filesRead: mean(runs.map((r) => r.filesRead)),
+    codeFilesRead: mean(runs.map((r) => r.codeFilesRead ?? 0)),
+    durationMs: mean(runs.map((r) => r.durationMs ?? 0)),
     costUsd: mean(runs.map((r) => r.costUsd)),
     grades: runs.map((r) => r.grade),
     correctness: mean(runs.map((r) => GRADE_RANK[r.grade] ?? 0)),
@@ -32,10 +35,13 @@ function side(runs) {
 
 /** One row per task, in task order, with the mean of each condition's runs. */
 export function summarize(runs) {
-  const tasks = [...new Set(runs.map((r) => r.task))].sort((x, y) => Number(x) - Number(y))
+  const tasks = [...new Set(runs.map((r) => r.task))].sort((x, y) =>
+    x.localeCompare(y, 'en', { numeric: true }),
+  )
   return tasks.map((task) => {
     const of = (cond) => side(runs.filter((r) => r.task === task && r.cond === cond))
-    return { task, A: of('A'), B: of('B') }
+    const first = runs.find((r) => r.task === task)
+    return { task, level: first.level, style: first.style, A: of('A'), B: of('B') }
   })
 }
 
@@ -57,22 +63,53 @@ export function evaluateGate(rows, { minTasksFaster = 5 } = {}) {
 
 function tokenTable(rows) {
   const lines = [
-    '| Task | A | B | Change | Tool calls A → B | Files read A → B |',
-    '| ---- | - | - | ------ | ---------------- | ---------------- |',
+    '| Task | A | B | Change | Tool calls A → B | Files read A → B | Time A → B | Code files read A → B |',
+    '| ---- | - | - | ------ | ---------------- | ---------------- | ---------- | --------------------- |',
   ]
   for (const { task, A, B } of rows) {
     lines.push(
       `| ${task} | ${formatTokens(A.tokens)} | ${formatTokens(B.tokens)} | ${formatChange(A.tokens, B.tokens)} | ` +
-        `${oneDecimal(A.toolCalls)} → ${oneDecimal(B.toolCalls)} | ${oneDecimal(A.filesRead)} → ${oneDecimal(B.filesRead)} |`,
+        `${oneDecimal(A.toolCalls)} → ${oneDecimal(B.toolCalls)} | ${oneDecimal(A.filesRead)} → ${oneDecimal(B.filesRead)} | ` +
+        `${seconds(A.durationMs)} → ${seconds(B.durationMs)} | ${oneDecimal(A.codeFilesRead)} → ${oneDecimal(B.codeFilesRead)} |`,
     )
   }
   const total = (cond, key) => sum(rows.map((r) => r[cond][key]))
   lines.push(
     `| **All** | **${formatTokens(total('A', 'tokens'))}** | **${formatTokens(total('B', 'tokens'))}** | ` +
       `**${formatChange(total('A', 'tokens'), total('B', 'tokens'))}** ` +
-      `(cost ${formatChange(total('A', 'costUsd'), total('B', 'costUsd'))}) | | |`,
+      `(cost ${formatChange(total('A', 'costUsd'), total('B', 'costUsd'))}) | | | | |`,
   )
   return lines
+}
+
+/** One row per task level: how many tasks, mean tokens and time of each side (levels 1 to 3 of the knowledge layer). */
+function levelTable(rows) {
+  const levels = [...new Set(rows.map((r) => r.level).filter(Boolean))].sort()
+  if (levels.length === 0) return []
+  const lines = [
+    '| Level | Tasks | A | B | Change | Time A → B |',
+    '| ----- | ----- | - | - | ------ | ---------- |',
+  ]
+  for (const level of levels) {
+    const of = rows.filter((r) => r.level === level)
+    const mine = (cond, key) => mean(of.map((r) => r[cond][key]))
+    lines.push(
+      `| ${level} | ${of.length} | ${formatTokens(mine('A', 'tokens'))} | ${formatTokens(mine('B', 'tokens'))} | ` +
+        `${formatChange(mine('A', 'tokens'), mine('B', 'tokens'))} | ` +
+        `${seconds(mine('A', 'durationMs'))} → ${seconds(mine('B', 'durationMs'))} |`,
+    )
+  }
+  return lines
+}
+
+/** Tasks where B still read this many code files or more on average: candidates for reverse engineering. */
+const DIG_THRESHOLD = 3
+
+function digLine(rows) {
+  const digs = rows.filter((r) => r.B.codeFilesRead >= DIG_THRESHOLD).map((r) => r.task)
+  return digs.length
+    ? `With the notes, B read ${DIG_THRESHOLD} or more code files on average: ${digs.join(', ')}. Read these transcripts.`
+    : `With the notes, no task had B reading ${DIG_THRESHOLD} or more code files on average.`
 }
 
 function correctnessTable(rows) {
@@ -105,6 +142,16 @@ export function renderReport(runs, gateOptions) {
     '**Correctness** (one entry per run: questions full, half or none against the key; changes pass or fail):',
     '',
     ...correctnessTable(rows),
+    '',
+    ...(levelTable(rows).length
+      ? [
+          '**By level** (1 index, 2 note, 3 generated reference; mean per task):',
+          '',
+          ...levelTable(rows),
+          '',
+        ]
+      : []),
+    digLine(rows),
     '',
     gateLine(evaluateGate(rows, gateOptions)),
     '',
