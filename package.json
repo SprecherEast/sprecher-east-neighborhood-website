@@ -20,8 +20,8 @@
     "knip": "knip",
     "duplication": "jscpd",
     "agent-context": "node scripts/agent-context.mjs",
-    "docs:generate": "tsx --tsconfig tsconfig.json scripts/generate-content-types.mjs",
-    "docs:check": "tsx --tsconfig tsconfig.json scripts/generate-content-types.mjs --check"
+    "docs:generate": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs",
+    "docs:check": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs --check"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",
