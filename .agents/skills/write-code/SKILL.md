@@ -89,7 +89,9 @@ test Payload, Next.js or styling. How: [`references/tests.md`](references/tests.
 - No abstraction before it pays: an interface only for an outside service, a second
   implementation, or a test double ([conventions](../../../docs/architecture/conventions.md#interfaces-and-adapters)).
 - A component takes props for its variants (`cva`) instead of being copied; a second use moves
-  it to `src/platform/ui/`.
+  it to `src/platform/ui/`. Use, configure or split a shared component as
+  [the rule](../../../docs/guidelines/components-and-content.md#shared-components-use-configure-or-split)
+  says.
 - Use the shared primitives (`Button`, `Field`, `Form`, `Link`, `Media`), not raw `<button>`,
   `<input>` or `<img>`.
 
