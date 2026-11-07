@@ -8,8 +8,9 @@ import { cn } from '@/platform/lib/cn'
  * The one card (#163, docs/ui/component-set.md): a box with parts. The variants keep today's looks
  * (the owner's choice, 2026-10-26, #426): `elevated` content cards (border and shadow; the border
  * still shows in dark mode, where shadows barely do), `outline` form boxes, `muted` panels inside
- * a page, the `tinted` sidebar box, and the toned `success`, `danger` and `neutral` boxes. Every card has the same corners, and an `interactive` card,
- * one whose title is a link, has the one hover: a deeper shadow and a small lift.
+ * a page, the `tinted` sidebar box, and the toned `success`, `danger` and `neutral` boxes. Every
+ * card has the same corners, and an `interactive` card, one whose title is a link, has the one
+ * hover: a deeper shadow and a small lift.
  */
 export const cardVariants = cva('relative min-w-0 rounded-2xl', {
   variants: {
