@@ -12,6 +12,7 @@ generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.m
 - [Verification](../../src/modules/verification/README.md): email confirmation by link, its limits, the welcome email, retention.
 - [Directory](../../src/modules/directory/README.md): the FAQ and resources pages; how entries are grouped, when an official's photo shows, what a save refreshes.
 - [Theme](../../src/platform/theme/README.md): tokens, light and dark mode, theme options and decorations.
+- [Shared Payload code](../../src/platform/payload/README.md): roles, drafts, review queue, jobs, helpers.
 
 ## Reference (generated)
 
