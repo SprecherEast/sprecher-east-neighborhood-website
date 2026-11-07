@@ -148,7 +148,8 @@ export function RichText(props: Props) {
         anchorsByNode(props.data),
       )}
       className={cn(
-        'payload-richtext',
+        // flow-root keeps a floated figure inside the text, so what follows never wraps around it
+        'payload-richtext flow-root',
         {
           container: enableGutter,
           'mx-auto prose md:prose-md prose-headings:text-balance': enableProse,

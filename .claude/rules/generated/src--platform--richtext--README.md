@@ -32,6 +32,7 @@ rich-text fields of each collection: [content types](/docs/reference/content-typ
 - A chart that fails its rules is left out of the page and logged, not allowed to break the article (`richTextBlocks.tsx`). The editor refuses it on save.
 - A banner can be closed by the visitor and hidden after its end time; pages refresh every 10 minutes (`BannerBlock.tsx`).
 - The media block has two placements: `section` (page builder, brings its own container) and `inline` (inside text, uses the shared figure gap) (`MediaBlock.tsx`, #541).
+- Rich text is `flow-root`, so a floated figure stays inside the article's text and what follows never wraps around it (`RichText.tsx`, #816).
 - Plain text for structured data (`toPlainText.ts`): blocks are separated by a blank line, then trimmed.
 
 ## Shared pieces it uses
