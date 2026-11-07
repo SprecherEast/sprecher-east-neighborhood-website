@@ -98,7 +98,7 @@ describe('posts and events', () => {
     expect(features.has('orderedList')).toBe(true)
   })
 
-  it('offers inline images and the editorial blocks in event content, each with a renderer', () => {
+  it('offers a banner, inline images and the editorial blocks in event content, each with a renderer', () => {
     const content = allFields(collection('events').fields).find(
       (field) => 'name' in field && field.name === 'content',
     )
@@ -106,7 +106,7 @@ describe('posts and events', () => {
 
     const slugs = editorBlocks(content).map((block) => block.slug)
     expect(slugs).toEqual(EVENT_RICH_TEXT_BLOCKS.map((block) => block.slug))
-    expect(slugs).toEqual(['mediaBlock', ...EDITORIAL_BLOCKS.map((block) => block.slug)])
+    expect(slugs).toEqual(['banner', 'mediaBlock', ...EDITORIAL_BLOCKS.map((block) => block.slug)])
     for (const slug of slugs) expect(richTextBlocks).toHaveProperty(slug)
   })
 
