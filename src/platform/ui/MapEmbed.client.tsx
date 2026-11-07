@@ -51,9 +51,12 @@ export function MapEmbed({
 
   return (
     <div
-      className={cn('grid items-start gap-6 md:grid-cols-[minmax(0,4fr)_minmax(0,1fr)]', className)}
+      className={cn(
+        'grid items-start gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,3fr)] md:gap-8',
+        className,
+      )}
     >
-      <div className="w-44 max-w-full md:order-2 md:w-full md:justify-self-end">
+      <div className="w-56 max-w-full md:order-2 md:w-full">
         {src ? (
           <Button
             variant="ghost"
