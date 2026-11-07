@@ -5,11 +5,18 @@
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   // An export used in its own file (a constant a test or a type also reads) is not dead code
   "ignoreExportsUsedInFile": true,
+  // Also check what the entry files export, so a re-export nothing imports is reported
+  "includeEntryExports": true,
+  "ignoreIssues": {
+    // PM2 reads the default export on the server
+    "ecosystem.config.cjs": ["exports"],
+    // Kept on purpose: only its tests call it today (#756)
+    "src/modules/accounts/server.ts": ["exports"],
+  },
   "workspaces": {
     ".": {
       "entry": [
-        // A module's entry files are its public contract (architecture rule 2): what they
-        // export is checked by the modules that import them, not reported as unused
+        // A module's entry files are its public contract (architecture rule 2)
         "src/modules/*/{index,server,cms,actions}.ts",
         "src/platform/*/index.ts",
         // Run on the server, not imported: the PM2 config and the backup script (ops/*.sh)
