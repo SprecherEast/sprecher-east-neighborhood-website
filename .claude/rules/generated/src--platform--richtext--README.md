@@ -34,6 +34,7 @@ rich-text fields of each collection: [content types](/docs/reference/content-typ
 - The media block has two placements: `section` (page builder, brings its own container) and `inline` (inside text, uses the shared figure gap) (`MediaBlock.tsx`, #541).
 - Rich text is `flow-root`, so a floated figure stays inside the article's text and what follows never wraps around it (`RichText.tsx`, #816).
 - The figure block holds an image, a title, a label, a short and a long caption, a width and an optional numbered key; the key marker list is shared with the diagram key (`editorial/diagramKeyBlockConfig.ts`). `editorial/figure.ts` leaves out empty text and passes the rest to the shared `Figure` (`FigureBlock.tsx`, #817).
+- A fact tab button shows its icon on its own line with a short label under it, then the figure; on a phone only the certainty is left to screen readers (`editorial/FactCard.tsx`, #856).
 - Plain text for structured data (`toPlainText.ts`): blocks are separated by a blank line, then trimmed.
 
 ## Shared pieces it uses
