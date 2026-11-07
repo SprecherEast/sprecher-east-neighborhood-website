@@ -4,6 +4,7 @@ import { draftMode } from 'next/headers'
 import React from 'react'
 
 import { ForumPrompt, getForumUrl, PayloadRedirects } from '@/modules/site/server'
+import { articleColumnClass } from '@/platform/richtext/articleColumn'
 import { articleToc } from '@/platform/richtext/articleToc'
 import { RichText } from '@/platform/richtext/RichText'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
@@ -14,13 +15,13 @@ import {
   findRecentPosts,
   getPostBySlug,
   listPostSlugs,
+  postByline,
   postHeaderProps,
   postJsonLd,
   SidebarPosts,
 } from '@/modules/news/server'
 import { generateMeta } from '@/platform/seo/generateMeta'
 import { cn } from '@/platform/lib/cn'
-import { READING_COLUMN } from '@/platform/ui/layoutSizes'
 
 // A scheduled publish or unpublish runs outside a request, where Next can't refresh the cache, so
 // the page also re-renders every 10 minutes (#141, decision 0011)
@@ -59,6 +60,8 @@ export default async function Post({ params: paramsPromise }: Args) {
     getForumUrl(),
   ])
 
+  const textClassName = articleColumnClass(post.content)
+
   return (
     <ArticlePage
       // Without a photo the header is plain, so it keeps clear of the site header (#461)
@@ -69,6 +72,8 @@ export default async function Post({ params: paramsPromise }: Args) {
       draft={draft}
       hasHeroImage={Boolean(post.heroImage)}
       header={postHeaderProps(post)}
+      byline={postByline(post)}
+      textClassName={textClassName}
       breadcrumbs={[
         { label: 'Home', href: '/' },
         { label: 'News & Updates', href: '/posts' },
@@ -90,7 +95,7 @@ export default async function Post({ params: paramsPromise }: Args) {
       }
     >
       <RichText
-        className={READING_COLUMN}
+        className={textClassName}
         data={post.content}
         blocks={richTextBlocks}
         enableGutter={false}

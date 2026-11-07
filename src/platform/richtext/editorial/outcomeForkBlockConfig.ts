@@ -1,6 +1,7 @@
 import type { Block } from 'payload'
 
 import { OUTCOME_TONE_OPTIONS } from './outcomeTone'
+import { OUTCOME_FORK_BLOCK_TYPE } from './blockTypes'
 
 /**
  * One open question and the two or three ways it can go (#510): the question on top, lines
@@ -8,7 +9,7 @@ import { OUTCOME_TONE_OPTIONS } from './outcomeTone'
  * decision ("Will the City and State agree on cost?").
  */
 export const OutcomeForkBlockConfig: Block = {
-  slug: 'outcomeFork',
+  slug: OUTCOME_FORK_BLOCK_TYPE,
   interfaceName: 'OutcomeForkBlock',
   labels: { singular: 'Outcome fork', plural: 'Outcome forks' },
   fields: [

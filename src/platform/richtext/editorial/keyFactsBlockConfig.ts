@@ -7,6 +7,7 @@ import { FACT_ICON_OPTIONS } from './factIcons'
 import { filledText } from './filledText'
 import { editorialLinkFields } from './linkFields'
 import { rowsBetween } from './rowCount'
+import { KEY_FACTS_BLOCK_TYPE } from './blockTypes'
 
 const valueFilled = filledText('Add the big text: where it stands, or the number.')
 const labelFilled = filledText('Add what the fact is about, as a short title.')
@@ -84,7 +85,7 @@ export const keyFactFields = (): Field[] => [
  * summary box: a few scannable facts, each labelled, never a value on its own.
  */
 export const KeyFactsBlockConfig: Block = {
-  slug: 'keyFacts',
+  slug: KEY_FACTS_BLOCK_TYPE,
   interfaceName: 'KeyFactsBlock',
   labels: { singular: 'Key facts', plural: 'Key facts' },
   fields: [

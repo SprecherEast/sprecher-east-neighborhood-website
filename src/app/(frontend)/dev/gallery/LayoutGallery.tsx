@@ -2,6 +2,7 @@ import React from 'react'
 
 import { Alert, type AlertTone } from '@/platform/ui/Alert'
 import { ArticlePage } from '@/platform/ui/ArticlePage'
+import { READING_COLUMN } from '@/platform/ui/layoutSizes'
 import { Button } from '@/platform/ui/Button'
 import { Card } from '@/platform/ui/Card'
 import { DetailLayout } from '@/platform/ui/DetailLayout'
@@ -148,6 +149,30 @@ export function LayoutGallery() {
               }
             >
               <Text variant="small">The article&apos;s text goes here.</Text>
+            </ArticlePage>
+          </div>
+        </GalleryVariant>
+        <GalleryVariant label="with-byline" className="block">
+          <div className={`${FRAME} py-6`}>
+            <ArticlePage
+              jsonLd={{ '@context': 'https://schema.org', '@type': 'Article', headline: 'Sample' }}
+              redirects={null}
+              draft={false}
+              hasHeroImage={false}
+              header={{ title: 'A sample article' }}
+              breadcrumbs={[
+                { label: 'Home', href: '/' },
+                { label: 'News', href: '/posts' },
+                { label: 'A sample article' },
+              ]}
+              byline={[
+                { label: 'Author', value: 'Ana and Ben' },
+                { label: 'Date Published', value: 'Nov 6, 2026' },
+              ]}
+              textClassName={READING_COLUMN}
+              aside={null}
+            >
+              <Text variant="small">The byline ends on the text&apos;s right edge from lg.</Text>
             </ArticlePage>
           </div>
         </GalleryVariant>

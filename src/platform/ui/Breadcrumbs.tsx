@@ -67,7 +67,11 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
                     variant="crumb"
                     icon={isHome ? <House aria-hidden="true" /> : undefined}
                     iconOnly={isHome}
-                    className={isHome ? cn(TOUCH_MIN_WIDTH, 'justify-center') : 'min-w-16 shrink'}
+                    // The icon starts on the column's left edge, as the page menu does: the link's
+                    // 0.5rem of padding is taken back (-ml-2), and the tap target keeps its size (#774)
+                    className={
+                      isHome ? cn(TOUCH_MIN_WIDTH, '-ml-2 justify-start') : 'min-w-16 shrink'
+                    }
                   >
                     {isHome ? item.label : <span className="truncate">{item.label}</span>}
                   </Link>

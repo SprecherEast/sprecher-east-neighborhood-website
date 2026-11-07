@@ -6,6 +6,7 @@ import { Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs'
 import { DetailLayout } from './DetailLayout'
 import { JsonLd } from './JsonLd'
 import { LivePreviewListener } from './LivePreviewListener.client'
+import { MetaList, type LabelledMetaItem } from './MetaList'
 import { PageHeader, type PageHeaderProps } from './PageHeader'
 
 export type ArticlePageProps = {
@@ -22,6 +23,17 @@ export type ArticlePageProps = {
   hasHeroImage: boolean
   header: PageHeaderProps
   breadcrumbs: BreadcrumbItem[]
+  /**
+   * Facts about the article (author, date, source), drawn as the first row of the article column,
+   * right-aligned from `lg` so it ends on the text's right edge (#774). Leave it out for a page whose
+   * facts belong in the header (an event's date and place).
+   */
+  byline?: LabelledMetaItem[]
+  /**
+   * The width class the page gives the article's text (`articleColumnClass`). The byline takes it
+   * too, so a text-only article's byline ends on the text's right edge, not past it (#774).
+   */
+  textClassName?: string
   /** The "On this page" menu, when the article has headings to list */
   toc?: React.ReactNode
   /** The related content: related items, a call to action */
@@ -43,6 +55,8 @@ export function ArticlePage({
   hasHeroImage,
   header,
   breadcrumbs,
+  byline,
+  textClassName,
   toc,
   aside,
   className,
@@ -63,6 +77,13 @@ export function ArticlePage({
           <Breadcrumbs items={breadcrumbs} />
         </div>
         <DetailLayout toc={toc} aside={aside}>
+          {byline && byline.length > 0 && (
+            <MetaList
+              variant="inline"
+              items={byline}
+              className={cn('mb-6 gap-x-6 gap-y-1 text-sm lg:justify-end', textClassName)}
+            />
+          )}
           {children}
         </DetailLayout>
       </div>

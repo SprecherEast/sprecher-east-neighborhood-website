@@ -9,7 +9,7 @@ export { listPostPageNumbers } from './use-cases/listPostPageNumbers'
 export { toTopIssuesBlockProps } from './data/mappers'
 
 export { PostGrid } from './ui/PostGrid'
-export { postHeaderProps } from './ui/postHeader'
+export { postByline, postHeaderProps } from './ui/postHeader'
 export { postJsonLd } from './ui/postJsonLd'
 export { PostsFeed } from './ui/PostsFeed.client'
 export { SearchBox } from './ui/SearchBox.client'
