@@ -36,7 +36,7 @@ describe('FactTabs', () => {
     expect(tabs).toHaveLength(4)
     expect(tabs[0]?.getAttribute('aria-selected')).toBe('true')
     expect(within(present(tabs[0])).getByText('$477.5M')).toBeTruthy()
-    expect(within(present(tabs[0])).getByText('Day-to-day money, proposed')).toBeTruthy()
+    expect(within(present(tabs[0])).getByText('Day-to-day')).toBeTruthy()
     expect(within(present(tabs[0])).getByText('Confirmed')).toBeTruthy()
     expect(within(present(tabs[3])).getByText('Estimate')).toBeTruthy()
   })

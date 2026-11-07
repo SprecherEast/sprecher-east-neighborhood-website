@@ -25,6 +25,7 @@ rich-text fields of each collection: [content types](../../../docs/reference/con
 - A chart that fails its rules is left out of the page and logged, not allowed to break the article (`richTextBlocks.tsx`). The editor refuses it on save.
 - A banner can be closed by the visitor and hidden after its end time; pages refresh every 10 minutes (`BannerBlock.tsx`).
 - The media block has two placements: `section` (page builder, brings its own container) and `inline` (inside text, uses the shared figure gap) (`MediaBlock.tsx`, #541).
+- A fact tab button shows its icon on its own line with a short label under it, then the figure; on a phone only the certainty is left to screen readers (`editorial/FactCard.tsx`, #856).
 - Plain text for structured data (`toPlainText.ts`): blocks are separated by a blank line, then trimmed.
 
 ## Shared pieces it uses

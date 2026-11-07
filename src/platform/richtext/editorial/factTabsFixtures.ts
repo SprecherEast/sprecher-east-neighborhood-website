@@ -20,7 +20,7 @@ export const FACT_TABS_FIXTURE = {
   tabs: [
     {
       value: '$477.5M',
-      label: 'Day-to-day money, proposed',
+      label: 'Day-to-day',
       icon: 'money',
       certainty: 'confirmed',
       linkLabel: OPERATING_SOURCE.label,
@@ -32,7 +32,7 @@ export const FACT_TABS_FIXTURE = {
     },
     {
       value: '$272.2M',
-      label: 'Big-project money, proposed',
+      label: 'Big-project',
       icon: 'construction',
       certainty: 'confirmed',
       heading: 'Big-project money, proposed',
@@ -42,7 +42,7 @@ export const FACT_TABS_FIXTURE = {
     },
     {
       value: '+$90 a year',
-      label: 'City’s share, average home',
+      label: 'Your share',
       detail: 'The City’s release says about $7 a month',
       icon: 'taxes',
       certainty: 'confirmed',
@@ -52,13 +52,13 @@ export const FACT_TABS_FIXTURE = {
       panel: [chart('months')],
     },
     {
-      value: 'Nov 10',
-      label: 'Council votes (Nov 11-12 if needed)',
+      value: 'Nov. 10',
+      label: 'Council vote',
       icon: 'date',
       certainty: 'estimate',
       heading: 'When the Council votes',
       definition:
-        'The Council can change the proposal before it votes. The dates here are placeholders until the City posts the final schedule.',
+        'The Council can change the proposal before it votes. If the vote is not finished on Nov. 10, it continues on Nov. 11 and 12. The dates here are placeholders until the City posts the final schedule.',
       panel: [
         {
           blockType: 'timeline' as const,

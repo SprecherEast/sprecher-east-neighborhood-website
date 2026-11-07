@@ -23,9 +23,9 @@ import type { KeyFact } from './keyFacts'
  * focus ring), and with no link, because a link can't sit inside a button. The source link is
  * drawn by whoever shows the tab's panel. A tab has the same parts for every fact (#707): the
  * explanation is left to the open panel, so one fact having one doesn't make its tab fuller than
- * the rest. On a phone four tabs share one row (#704), so a tab shows only its icon and figure,
- * centred; the label and certainty stay for screen readers (`sr-only`) and the open panel shows the
- * label as its heading and the certainty in a line. The figure keeps its last two words together,
+ * the rest. The icon sits on its own line with the label under it, centred (#856), so a
+ * short label fits four to a row. On a phone (#704) the certainty is left to screen readers
+ * (`sr-only`) and the open panel shows it in a line. The figure keeps its last two words together,
  * so "+$90 a year" wraps as "+$90" over "a year".
  */
 export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 'card' | 'tab' }) {
@@ -35,26 +35,32 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
   const Label = tab ? 'span' : 'dt'
   const Value = tab ? 'span' : 'dd'
   const Foot = tab ? 'span' : 'div'
-  // What a tab drops on a phone, where four of them share one row
+  // What a tab drops on a phone, where four of them share one row: only the certainty
   const phoneHidden = tab ? 'max-sm:sr-only' : ''
   const body = (
     <>
       <Facts className={SUBGRID_THREE_ROWS}>
         <Label
           className={cn(
-            'flex items-start gap-2 text-base leading-snug font-semibold text-foreground',
-            tab && 'max-sm:justify-center',
+            'flex gap-2 leading-snug font-semibold text-foreground',
+            tab
+              ? 'flex-col items-center gap-1 text-xs min-[400px]:text-sm sm:text-base'
+              : 'items-start text-base',
           )}
         >
           <Icon aria-hidden="true" className="size-5 shrink-0 text-primary" />
-          <span className={cn('min-w-0 [overflow-wrap:anywhere]', phoneHidden)}>{fact.label}</span>
+          <span
+            className={cn('min-w-0', tab ? 'text-center text-balance' : '[overflow-wrap:anywhere]')}
+          >
+            {fact.label}
+          </span>
         </Label>
         <Value
           data-fact-part="value"
           className={cn(
             'mt-1 block leading-tight font-bold [overflow-wrap:anywhere] text-foreground',
             tab
-              ? 'text-center text-xs min-[360px]:text-sm min-[400px]:text-base sm:text-left sm:text-2xl'
+              ? 'text-center text-xs min-[360px]:text-sm min-[400px]:text-base sm:text-xl lg:text-2xl'
               : 'text-2xl',
           )}
         >

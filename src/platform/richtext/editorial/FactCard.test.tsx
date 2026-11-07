@@ -46,7 +46,22 @@ describe('FactCard', () => {
     expect(text.indexOf('Day-to-day money')).toBeLessThan(text.indexOf('$477.5M'))
   })
 
-  it('as a tab face on a phone: keeps the icon and the value, and reads the rest to screen readers only (#704)', () => {
+  it('as a tab face: the icon sits on its own line with the label under it, centred (#856)', () => {
+    const { container } = render(<FactCard fact={FACT} variant="tab" />)
+    const icon = container.querySelector('svg')
+    const label = [...container.querySelectorAll('span')].find(
+      (span) => span.textContent === 'Day-to-day money' && span.children.length === 0,
+    )
+    const line = icon?.parentElement
+    // The icon and the label are siblings in a column, so the label wraps under the icon
+    expect(line?.className).toContain('flex-col')
+    expect(line?.className).toContain('items-center')
+    expect(line?.contains(label ?? null)).toBe(true)
+    expect(label?.className).toContain('text-center')
+    expect(icon?.compareDocumentPosition(label as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+
+  it('as a tab face on a phone: keeps the icon, label and value, and reads only the certainty to screen readers (#704, #856)', () => {
     const { container } = render(<FactCard fact={FACT} variant="tab" />)
     const hidden = (text: string) => {
       const part = [...container.querySelectorAll('span')].find(
@@ -54,12 +69,10 @@ describe('FactCard', () => {
       )
       return part?.className ?? ''
     }
-    // Still in the page for a screen reader, which names the tab from its content
-    expect(hidden('Day-to-day money')).toContain('max-sm:sr-only')
     expect(container.querySelector('[data-fact-part="foot"]')?.className).toContain(
       'max-sm:sr-only',
     )
-    // The value stays, and nothing hides the icon
+    expect(hidden('Day-to-day money')).not.toContain('sr-only')
     expect(hidden('$477.5M')).not.toContain('sr-only')
     expect(container.querySelector('svg')?.getAttribute('class')).not.toContain('sr-only')
   })
@@ -92,7 +105,13 @@ describe('FactCard', () => {
   it('as a tab face: the figure steps down for narrow phones, so it never breaks across lines (#704)', () => {
     const { container } = render(<FactCard fact={FACT} variant="tab" />)
     const value = container.querySelector('[data-fact-part="value"]')
-    for (const size of ['text-xs', 'min-[360px]:text-sm', 'min-[400px]:text-base', 'sm:text-2xl']) {
+    for (const size of [
+      'text-xs',
+      'min-[360px]:text-sm',
+      'min-[400px]:text-base',
+      'sm:text-xl',
+      'lg:text-2xl',
+    ]) {
       expect(value?.className).toContain(size)
     }
   })
