@@ -8,15 +8,3 @@ export {
   VERIFY_ACCOUNT_PATH,
 } from './domain/paths'
 export { parseLinkToken } from './domain/linkToken'
-export type {
-  AccountSummary,
-  ActionResult,
-  CurrentUser,
-  ForgotPasswordFailure,
-  PasswordFailure,
-  ResetPasswordFailure,
-  SignInFailure,
-  SignUpFailure,
-  VerificationLinkStatus,
-  VerifyAccountFailure,
-} from './domain/types'
