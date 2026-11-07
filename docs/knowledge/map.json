@@ -54,5 +54,16 @@
       "src/modules/site/server.ts",
       "src/modules/site/cms.ts"
     ]
+  },
+  {
+    "note": "src/platform/payload/README.md",
+    "paths": [
+      "src/platform/payload/**",
+      "src/platform/lib/**",
+      "src/platform/seo/**",
+      "src/platform/email/**",
+      "src/platform/turnstile/**",
+      "src/platform/service/**"
+    ]
   }
 ]
