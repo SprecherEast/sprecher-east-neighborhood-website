@@ -1,10 +1,12 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-sqlite'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
-  await db.run(sql`ALTER TABLE \`pages\` ADD \`backdrop_id\` integer REFERENCES media(id);`)
+  await db.run(
+    sql`ALTER TABLE \`pages\` ADD \`backdrop_id\` integer REFERENCES media(id) ON UPDATE no action ON DELETE set null;`,
+  )
   await db.run(sql`CREATE INDEX \`pages_backdrop_idx\` ON \`pages\` (\`backdrop_id\`);`)
   await db.run(
-    sql`ALTER TABLE \`_pages_v\` ADD \`version_backdrop_id\` integer REFERENCES media(id);`,
+    sql`ALTER TABLE \`_pages_v\` ADD \`version_backdrop_id\` integer REFERENCES media(id) ON UPDATE no action ON DELETE set null;`,
   )
   await db.run(
     sql`CREATE INDEX \`_pages_v_version_version_backdrop_idx\` ON \`_pages_v\` (\`version_backdrop_id\`);`,
@@ -37,7 +39,6 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   )
   await db.run(sql`DROP TABLE \`pages\`;`)
   await db.run(sql`ALTER TABLE \`__new_pages\` RENAME TO \`pages\`;`)
-  await db.run(sql`PRAGMA foreign_keys=ON;`)
   await db.run(sql`CREATE INDEX \`pages_hero_hero_media_idx\` ON \`pages\` (\`hero_media_id\`);`)
   await db.run(sql`CREATE INDEX \`pages_meta_meta_image_idx\` ON \`pages\` (\`meta_image_id\`);`)
   await db.run(sql`CREATE UNIQUE INDEX \`pages_slug_idx\` ON \`pages\` (\`slug\`);`)
@@ -97,4 +98,6 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   await db.run(sql`CREATE INDEX \`_pages_v_updated_at_idx\` ON \`_pages_v\` (\`updated_at\`);`)
   await db.run(sql`CREATE INDEX \`_pages_v_latest_idx\` ON \`_pages_v\` (\`latest\`);`)
   await db.run(sql`CREATE INDEX \`_pages_v_autosave_idx\` ON \`_pages_v\` (\`autosave\`);`)
+  // Back on only now: with it on, dropping `_pages_v` above would delete its blocks and relations
+  await db.run(sql`PRAGMA foreign_keys=ON;`)
 }

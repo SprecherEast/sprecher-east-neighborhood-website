@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { IMAGE_QUALITIES } from '@/imageQualities'
 import type { ImageRef } from '@/platform/lib'
 
 import { Media } from './Media'
@@ -11,7 +12,9 @@ import { Media } from './Media'
  * the top 28 rem of the page only and fades out at both ends, so it leaves no edge and a long page
  * doesn't stretch a small photo. Over the photo, text is stronger in both themes (the owner's ask):
  * muted gray becomes a mix of the main text colour and the background, and primary-coloured text (links, eyebrows) takes
- * `primary-strong`, the shade made for panels; both only inside this component. It is a decoration:
+ * `primary-strong`, the shade made for panels; both only inside this component, but for all of the
+ * page's content, below the photo too, so the page's accents stay one set. The photo is at the top
+ * of the page and is likely its largest picture, so it loads at once (`priority`), never lazily. It is a decoration:
  * hidden from assistive tech, with an empty alt, never between a title and its content. Without a
  * photo it draws only its children.
  */
@@ -33,7 +36,8 @@ export function PageBackdrop({ image, children }: PageBackdropProps) {
         <Media
           resource={{ ...image, alt: '' }}
           fill
-          quality={50}
+          quality={IMAGE_QUALITIES.backdrop}
+          priority
           size="100vw"
           htmlElement={null}
           imgClassName="object-cover object-[center_45%] opacity-35 grayscale dark:opacity-45"

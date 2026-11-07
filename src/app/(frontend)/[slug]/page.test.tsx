@@ -9,6 +9,7 @@ const site = vi.hoisted(() => ({
   redirects: vi.fn(),
   hero: vi.fn(),
   blocks: vi.fn(),
+  backdrop: vi.fn(),
 }))
 vi.mock('next/headers', () => ({ draftMode: async () => ({ isEnabled: false }) }))
 vi.mock('@/modules/site/server', () => ({
@@ -26,6 +27,13 @@ vi.mock('@/modules/site/server', () => ({
   RenderBlocks: (props: unknown) => {
     site.blocks(props)
     return null
+  },
+}))
+// The backdrop is tested on its own (PageBackdrop.test.tsx): here, what the page hands it
+vi.mock('@/platform/ui/PageBackdrop', () => ({
+  PageBackdrop: ({ image, children }: { image: unknown; children: React.ReactNode }) => {
+    site.backdrop(image)
+    return <>{children}</>
   },
 }))
 vi.mock('./pageBlocks', () => ({ pageBlocks: { marker: 'the block registry' } }))
@@ -73,6 +81,33 @@ describe('/[slug]', () => {
 
     expect(site.redirects).toHaveBeenCalledExactlyOnceWith({ url: '/gone' })
     expect(site.blocks).not.toHaveBeenCalled()
+  })
+
+  // #777: the page's stored photo reaches the component that draws it behind the hero and blocks
+  it('hands the page’s backdrop photo to the backdrop, and its content is drawn inside', async () => {
+    const backdrop = { url: '/api/media/file/dusk.jpg', alt: 'Dusk', width: 1920, height: 983 }
+    site.getPageBySlug.mockResolvedValue({
+      slug: 'get-involved',
+      hero: { variant: 'low', body: { root: {} } },
+      layout: [],
+      backdrop,
+    })
+
+    render(await Page(params('get-involved')))
+
+    expect(site.backdrop).toHaveBeenCalledExactlyOnceWith(backdrop)
+    expect(site.hero).toHaveBeenCalled()
+    expect(site.blocks).toHaveBeenCalled()
+  })
+
+  it('hands the backdrop none when the page has no photo, as the starter home page does', async () => {
+    site.getPageBySlug.mockResolvedValue({ slug: 'about', hero: null, layout: [], backdrop: null })
+    render(await Page(params('about')))
+    expect(site.backdrop).toHaveBeenLastCalledWith(null)
+
+    site.getPageBySlug.mockResolvedValue(null)
+    render(await Page(params()))
+    expect(site.backdrop).toHaveBeenLastCalledWith(null)
   })
 
   it('draws no hero when the page has none', async () => {

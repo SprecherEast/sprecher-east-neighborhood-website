@@ -2,17 +2,33 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { IMAGE_QUALITIES } from '@/imageQualities'
 import type { ImageRef } from '@/platform/lib'
 
 import { PageBackdrop } from './PageBackdrop'
 import { expectAccessible } from './testing/expectAccessible'
 
-// The image's encode quality is a prop of next/image, and its allowed values live in next.config.js,
-// which Vitest doesn't load: draw a plain img that shows the props it got
+// The image's quality and priority are props of next/image, and the allowed qualities are applied
+// by next.config.js, which Vitest doesn't load: draw a plain img that shows the props it got
 vi.mock('next/image', () => ({
-  default: ({ alt, className, quality }: { alt: string; className?: string; quality?: number }) => (
+  default: ({
+    alt,
+    className,
+    quality,
+    priority,
+  }: {
+    alt: string
+    className?: string
+    quality?: number
+    priority?: boolean
+  }) => (
     // eslint-disable-next-line @next/next/no-img-element -- a test double for next/image
-    <img alt={alt} className={className} data-quality={quality} />
+    <img
+      alt={alt}
+      className={className}
+      data-quality={quality}
+      data-priority={String(!!priority)}
+    />
   ),
 }))
 
@@ -101,7 +117,20 @@ describe('PageBackdrop', () => {
       </PageBackdrop>,
     )
 
-    expect(container.querySelector('img')?.getAttribute('data-quality')).toBe('50')
+    expect(container.querySelector('img')?.getAttribute('data-quality')).toBe(
+      String(IMAGE_QUALITIES.backdrop),
+    )
+  })
+
+  // At the top of the page it is likely the largest picture (LCP): a lazy load would delay it
+  it('loads the photo at once, not lazily', () => {
+    const { container } = render(
+      <PageBackdrop image={image}>
+        <p>Content</p>
+      </PageBackdrop>,
+    )
+
+    expect(container.querySelector('img')?.getAttribute('data-priority')).toBe('true')
   })
 
   it('keeps the page content above the photo in its own stacking context', () => {

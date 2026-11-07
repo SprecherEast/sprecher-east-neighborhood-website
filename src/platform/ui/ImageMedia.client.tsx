@@ -9,6 +9,7 @@ import React from 'react'
 import type { MediaProps } from './mediaProps'
 
 import { cssVariables } from '@/cssVariables'
+import { IMAGE_QUALITIES } from '@/imageQualities'
 import { getMediaUrl } from '@/platform/lib/getMediaUrl'
 
 const { breakpoints } = cssVariables
@@ -30,7 +31,7 @@ export const ImageMedia: React.FC<MediaProps> = (props) => {
     pictureClassName,
     imgClassName,
     priority,
-    quality = 100,
+    quality = IMAGE_QUALITIES.full,
     resource,
     size: sizeFromProps,
     src: srcFromProps,

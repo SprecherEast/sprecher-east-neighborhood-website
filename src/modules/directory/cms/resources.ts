@@ -2,6 +2,7 @@ import type { CollectionConfig, TextFieldSingleValidation } from 'payload'
 import { text } from 'payload/shared'
 
 import { draftContentAccess } from '@/platform/payload/draftContentAccess'
+import { imagesOnly } from '@/platform/payload/imagesOnly'
 import { populatePublishedAt } from '@/platform/payload/populatePublishedAt'
 
 import { RESOURCE_CATEGORIES } from '../domain/categories'
@@ -100,9 +101,8 @@ export const Resources: CollectionConfig<'resources'> = {
           name: 'photo',
           type: 'upload',
           relationTo: 'media',
-          // A portrait is an image: the media library also holds PDFs and videos, which the
-          // card can't draw as one. Payload applies this when choosing and when saving
-          filterOptions: { mimeType: { contains: 'image/' } },
+          // A portrait is an image, not a PDF or a video
+          filterOptions: imagesOnly,
         },
         {
           name: 'photoCredit',

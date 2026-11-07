@@ -57,6 +57,14 @@ describe('createPagesCollection', () => {
     expect(backdrop && 'required' in backdrop && backdrop.required).toBeFalsy()
   })
 
+  // A video would loop behind the page as motion, and a PDF can't be drawn as a photo
+  it('takes pictures only, not the videos and PDFs the media library also holds', () => {
+    const { fields } = createPagesCollection({ layoutBlocks: [] })
+    const backdrop = fields.find((field) => 'name' in field && field.name === 'backdrop')
+
+    expect(backdrop).toMatchObject({ filterOptions: { mimeType: { contains: 'image/' } } })
+  })
+
   it('previews a page at its address on the site', () => {
     vi.stubEnv('PREVIEW_SECRET', 'shh')
     const { admin } = createPagesCollection({ layoutBlocks: [] })
