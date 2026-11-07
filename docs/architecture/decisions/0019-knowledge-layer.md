@@ -93,6 +93,7 @@ page starts with a line saying it is generated and how to regenerate it.
 | Content types and globals | The loaded Payload config, plugins included                         | #714     |
 | Screens (routes)          | The `src/app/(frontend)/` tree and each route's entry imports       | #718     |
 | Shared components         | `src/platform/ui/` and the shared parts of `src/platform/richtext/` | #718     |
+| UI element coverage       | The "Target component · variant" column of `docs/ui/elements-*.md`  | #495     |
 
 What each step of the [native-first ladder](../../guidelines/development.md#native-first-then-plugins-then-our-code)
 found (2026-11-06, recorded on #713):
