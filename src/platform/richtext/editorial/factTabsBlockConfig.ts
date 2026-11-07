@@ -8,9 +8,7 @@ import { factTabsToJsx, importFactTabsTag } from './factTabsMarkdown'
 import { keyFactFields } from './keyFactsBlockConfig'
 import { TimelineBlockConfig } from './timelineBlockConfig'
 import type { StoredFactTabs } from './factTabs'
-
-/** The block's type, which the page also reads to tell a row of cards from text */
-export const FACT_TABS_BLOCK_TYPE = 'factTabs'
+import { FACT_TABS_BLOCK_TYPE } from './blockTypes'
 
 /**
  * Key facts that open pictures (#664): two to four tabs, each a key fact (value, label, icon,

@@ -1,9 +1,7 @@
 import type { Block } from 'payload'
 
 import { OUTCOME_TONE_OPTIONS } from './outcomeTone'
-
-/** The block's type, which the page also reads to tell a row of cards from text */
-export const OUTCOME_FORK_BLOCK_TYPE = 'outcomeFork'
+import { OUTCOME_FORK_BLOCK_TYPE } from './blockTypes'
 
 /**
  * One open question and the two or three ways it can go (#510): the question on top, lines

@@ -1,9 +1,11 @@
 import type { RichTextValue } from '@/platform/lib'
 import { READING_COLUMN } from '@/platform/ui/layoutSizes'
 
-import { FACT_TABS_BLOCK_TYPE } from './editorial/factTabsBlockConfig'
-import { KEY_FACTS_BLOCK_TYPE } from './editorial/keyFactsBlockConfig'
-import { OUTCOME_FORK_BLOCK_TYPE } from './editorial/outcomeForkBlockConfig'
+import {
+  FACT_TABS_BLOCK_TYPE,
+  KEY_FACTS_BLOCK_TYPE,
+  OUTCOME_FORK_BLOCK_TYPE,
+} from './editorial/blockTypes'
 import { countBlocksOfType, lexicalRoot } from './lexicalTree'
 
 /**

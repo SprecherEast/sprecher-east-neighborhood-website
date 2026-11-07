@@ -7,6 +7,7 @@ import { FACT_ICON_OPTIONS } from './factIcons'
 import { filledText } from './filledText'
 import { editorialLinkFields } from './linkFields'
 import { rowsBetween } from './rowCount'
+import { KEY_FACTS_BLOCK_TYPE } from './blockTypes'
 
 const valueFilled = filledText('Add the big text: where it stands, or the number.')
 const labelFilled = filledText('Add what the fact is about, as a short title.')
@@ -77,9 +78,6 @@ export const keyFactFields = (): Field[] => [
   },
   editorialLinkFields({ labelExample: 'City budget' }),
 ]
-
-/** The block's type, which the page also reads to tell a row of cards from text */
-export const KEY_FACTS_BLOCK_TYPE = 'keyFacts'
 
 /**
  * The facts a reader wants first (#509): an icon with what each is about, a short value, a line

@@ -1,4 +1,5 @@
 import { countBlocksOfType, type LexicalNode } from '../lexicalTree'
+import { FACT_TABS_BLOCK_TYPE } from './blockTypes'
 
 /**
  * How an editorial block's props are written into, and read out of, Markdown (#640, #664): the
@@ -52,7 +53,7 @@ export const writeProp = (name: string, value: unknown): string =>
 /** The editorial blocks that are written as a Markdown tag: the tag's name and its block type */
 const TAGS = [
   { name: 'Chart', blockType: 'chart' },
-  { name: 'FactTabs', blockType: 'factTabs' },
+  { name: 'FactTabs', blockType: FACT_TABS_BLOCK_TYPE },
 ] as const
 export type EditorialTagName = (typeof TAGS)[number]['name']
 
