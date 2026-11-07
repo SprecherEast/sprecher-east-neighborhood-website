@@ -29,14 +29,16 @@ Source: `src/platform/richtext/RichText.tsx`
 
 Source: `src/platform/richtext/BannerBlock.tsx`
 
-| Prop        | Type                                                                                                                                                                 | Required | Description |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------- |
-| `className` | `string`                                                                                                                                                             | no       |             |
-| `style`     | `"info" \| "warning" \| "error" \| "success"`                                                                                                                        | yes      |             |
-| `content`   | `{ [k: string]: unknown; root: { type: string; children: { type: any; version: number; [k: string]: unknown; }[]; direction: ("ltr" \| "rtl") \| null; format: "le…` | yes      |             |
-| `id`        | `string`                                                                                                                                                             | no       |             |
-| `blockName` | `string`                                                                                                                                                             | no       |             |
-| `blockType` | `"banner"`                                                                                                                                                           | yes      |             |
+| Prop          | Type                                                                                                                                                                 | Required | Description                                                                                                     |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
+| `className`   | `string`                                                                                                                                                             | no       |                                                                                                                 |
+| `style`       | `"info" \| "warning" \| "error" \| "success"`                                                                                                                        | yes      |                                                                                                                 |
+| `dismissible` | `boolean`                                                                                                                                                            | no       | Visitors can close the notice, and it stays closed on their browser. Leave off for warnings that must be read.  |
+| `showUntil`   | `string`                                                                                                                                                             | no       | The notice disappears at this time. For a meeting, set the meeting’s start time. Leave empty to show it always. |
+| `content`     | `{ [k: string]: unknown; root: { type: string; children: { type: any; version: number; [k: string]: unknown; }[]; direction: ("ltr" \| "rtl") \| null; format: "le…` | yes      |                                                                                                                 |
+| `id`          | `string`                                                                                                                                                             | no       |                                                                                                                 |
+| `blockName`   | `string`                                                                                                                                                             | no       |                                                                                                                 |
+| `blockType`   | `"banner"`                                                                                                                                                           | yes      |                                                                                                                 |
 
 **Used by** (direct imports):
 
