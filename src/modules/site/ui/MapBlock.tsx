@@ -8,9 +8,10 @@ import { Text } from '@/platform/ui/Text'
 import type { MapBlockProps } from '../domain/blocks'
 
 /*
- * The map block (#764): a small picture of the map beside its text, about a fifth of the page's
- * width from `md` up and above the text before that. A tap on the picture or the button under the
- * text opens the live Google map (`MapEmbed`); with no address the picture and text stand alone.
+ * The map block (#764): the text on the left and a small picture of the map on its right, about a
+ * fifth of the page's width from `md` up; on a phone the picture sits above the text. A tap on the
+ * picture or the button under the text opens the live Google map (`MapEmbed`); with no address the
+ * picture and text stand alone.
  */
 export function MapBlock({ title, description, embedUrl, preview }: MapBlockProps) {
   return (

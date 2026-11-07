@@ -1,28 +1,29 @@
 import type { RequiredDataFromCollectionSlug } from 'payload'
 import type { Media } from '@/payload-types'
-import { heading, root, p } from './helpers/lexical'
+import { heading, linkNode, p, paragraph, root, text } from './helpers/lexical'
 
 type AboutArgs = {
   mapImage?: Media
 }
 
+/** The shared "Sprecher East" Google My Maps map: the boundary, drawn by the owner (#764) */
+const SPRECHER_EAST_MAP_EMBED_URL =
+  'https://www.google.com/maps/d/embed?mid=1mbTKP1-2eN6g5YPReAaQg6J1lV2DX7g'
+
 export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pages'> = (args) => {
   const layout: RequiredDataFromCollectionSlug<'pages'>['layout'] = [
     {
-      blockName: 'Who We Are',
+      blockName: 'What This Site Is',
       blockType: 'content',
       columns: [
         {
           richText: root([
-            heading('h2', 'Hello, neighbor'),
+            heading('h2', 'What this site is'),
             p(
-              'Sprecher East is a friendly group of neighbors on Madison\u2019s far east side. We share news, events and ways to meet each other.',
+              'This is an unofficial site for Sprecher East, the neighborhood on Madison’s far east side. We gather news, events and public notices for neighbors in one place.',
             ),
             p(
-              'We are not a homeowners association. There are no dues and no rules about your fence or your paint. Anyone who lives here is welcome.',
-            ),
-            p(
-              'This site is unofficial, and AI helps us write and organize it. People still decide what goes on it.',
+              'It’s run by one neighbor, not by the City, an HOA or a registered neighborhood association, and there are no dues or membership.',
             ),
           ]),
           size: 'full',
@@ -37,37 +38,60 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
       blockType: 'mapBlock',
       title: 'Where we are',
       description:
-        'Find us between I-94 to the north, Sprecher Road to the west and Cottage Grove Road to the south, with Door Creek Park to the east. We are in Madison\u2019s District 16. North Star lies to the west, and Richmond Hill Homeowners to the southwest.',
+        'Sprecher East is in Madison’s District 16. I-94 is to the north, Sprecher Road to the west, and Cottage Grove Road to the south. Door Creek Park and the Door Creek valley lie to the east. North Star is next door to the west, and Richmond Hill Homeowners lies to the southwest.',
       preview: args.mapImage.id,
+      embedUrl: SPRECHER_EAST_MAP_EMBED_URL,
     })
   }
 
-  layout.push({
-    blockName: 'Get Involved CTA',
-    blockType: 'cta',
-    links: [
-      {
-        link: {
-          type: 'custom',
-          appearance: 'default',
-          label: 'Get Involved',
-          url: '/get-involved',
+  layout.push(
+    {
+      blockName: 'How AI Helps',
+      blockType: 'content',
+      columns: [
+        {
+          richText: root([
+            heading('h2', 'How AI helps'),
+            p(
+              'AI tools help us gather public information, like city meetings, road and development projects, and local news. A neighbor reviews what we publish, and longer pieces list their sources.',
+            ),
+            paragraph(
+              text('If enough neighbors want one, forming a neighborhood association is a goal. '),
+              linkNode('Here’s the story so far', '/posts/sprecher-east-is-coming-together'),
+              text('.'),
+            ),
+          ]),
+          size: 'full',
         },
-      },
-      {
-        link: {
-          type: 'custom',
-          appearance: 'outline',
-          label: 'Contact Us',
-          url: '/contact',
+      ],
+    },
+    {
+      blockName: 'Get Involved CTA',
+      blockType: 'cta',
+      links: [
+        {
+          link: {
+            type: 'custom',
+            appearance: 'default',
+            label: 'Get Involved',
+            url: '/get-involved',
+          },
         },
-      },
-    ],
-    richText: root([
-      heading('h3', 'Come say hello'),
-      p('New here or been here for years, we would love to hear from you.'),
-    ]),
-  })
+        {
+          link: {
+            type: 'custom',
+            appearance: 'outline',
+            label: 'Contact Us',
+            url: '/contact',
+          },
+        },
+      ],
+      richText: root([
+        heading('h3', 'See something wrong or missing?'),
+        p('Tell us, and we’ll fix it.'),
+      ]),
+    },
+  )
 
   return {
     slug: 'about',
@@ -79,7 +103,7 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
     layout,
     meta: {
       description:
-        'Meet Sprecher East, a friendly group of neighbors on Madison\u2019s far east side, and see where we are on the map.',
+        'What this unofficial site is, who runs it, and where Sprecher East sits on Madison’s far east side, with a map.',
       title: 'About',
     },
     title: 'About',

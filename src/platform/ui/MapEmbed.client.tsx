@@ -18,7 +18,7 @@ export type MapEmbedProps = {
   actionLabel: string
   /** The small picture of the map, drawn by the caller (`Media`) */
   preview: React.ReactNode
-  /** The text beside the picture; the button that opens the live map follows it */
+  /** The text beside the picture, on its left from `md` up; the button that opens the live map follows it */
   children?: React.ReactNode
   className?: string
 }
@@ -51,9 +51,9 @@ export function MapEmbed({
 
   return (
     <div
-      className={cn('grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,4fr)]', className)}
+      className={cn('grid items-start gap-6 md:grid-cols-[minmax(0,4fr)_minmax(0,1fr)]', className)}
     >
-      <div className="w-44 max-w-full md:w-full">
+      <div className="w-44 max-w-full md:order-2 md:w-full md:justify-self-end">
         {src ? (
           <Button
             variant="ghost"
@@ -67,7 +67,7 @@ export function MapEmbed({
           <div className="overflow-hidden rounded-xl border border-border">{preview}</div>
         )}
       </div>
-      <div className="space-y-4">
+      <div className="space-y-4 text-left md:order-1">
         {children}
         {src && (
           <Button

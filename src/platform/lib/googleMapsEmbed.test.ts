@@ -17,6 +17,11 @@ describe('toGoogleMapsEmbedUrl (#764)', () => {
     )
   })
 
+  it('accepts the plain My Maps embed address built from a shared map id', () => {
+    const plain = 'https://www.google.com/maps/d/embed?mid=1mbTKP1-2eN6g5YPReAaQg6J1lV2DX7g'
+    expect(toGoogleMapsEmbedUrl(plain)).toBe(plain)
+  })
+
   it('takes the address out of a pasted iframe snippet', () => {
     const snippet = `<iframe src="${SHARE_EMBED}" width="600" height="450" loading="lazy"></iframe>`
     expect(toGoogleMapsEmbedUrl(snippet)).toBe(SHARE_EMBED)
