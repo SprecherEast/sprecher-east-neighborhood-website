@@ -33,6 +33,7 @@ Listing, post page, search page and the blocks' components are in the generated 
 - The archive block (home page "Recent News") lists the newest posts, optionally in some categories (default 3), or the posts the editor picked, leaving out those the reader may not see (`use-cases/findArchivePosts.ts`).
 - "Top issues": one to five items, title up to 80 and summary up to 200 characters (`TOP_ISSUES_LIMITS` in `domain/topIssues.ts`), most important first, with the day it was last reviewed, shown as "Updated" when set. An item without a title, or whose link is unreadable by the visitor or unsafe (not http(s) or a path on this site), is left out; with none left nothing is drawn (`data/mappers.ts`, `ui/TopIssuesBlock.tsx`).
 - The post page emits schema.org `Article`, naming the original source with `isBasedOn` (`ui/postJsonLd.ts`).
+- The post's text keeps the reading width unless it holds key facts, fact tabs or an outcome fork, which fill the column (`articleColumnClass` in `src/platform/richtext/articleColumn.ts`, used by `posts/[slug]/page.tsx`, #774).
 - Both the nested-docs plugin and GraphQL are kept. The site's pages use neither: no page or query reads `breadcrumbs`, and the site makes no GraphQL calls. GraphQL is available for any collection or global, under each one's own access rules; only the account verify mutation is refused (`src/payload.config.ts`, `src/modules/accounts/cms/verifyFromSiteOnly.ts`). What GraphQL is for hasn't been decided yet.
 
 ## Shared pieces it uses
@@ -40,6 +41,7 @@ Listing, post page, search page and the blocks' components are in the generated 
 - Collection helpers from `src/platform/payload/`: `contentCollection`, `draftContentAccess`, `reviewQueue`, `seoTab`, `keyset`, `published`, `documentHref`, `resolveLink`.
 - UI kit from `src/platform/ui/` (`Card`, `LoadMore.client`, `Field`, `Section`, `Text`, `DateTime`).
 - Where it meets other modules (decision 0008): `src/payload.config.ts` (search and nested-docs setup, which names events), the block registry in `src/app/(frontend)/[slug]/pageBlocks.tsx` (archive and "top issues"), and the posts page, which joins the events sidebar.
+- Related notes: [events](/src/modules/events/README.md) (shares `categories` and the search index, and supplies the sidebar), [agents](/src/modules/agents/README.md) (suggest posts and use a category's `defaultImage`), [site pages](/src/modules/site/README.md) (draw the archive and "top issues" blocks), [rich text](/src/platform/richtext/README.md) (a post's content, blocks and width rule), [shared Payload code](/src/platform/payload/README.md) (review queue, keyset paging).
 
 ## Rules and the tests that protect them
 

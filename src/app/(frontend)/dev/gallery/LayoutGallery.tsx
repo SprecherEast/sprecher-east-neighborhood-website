@@ -6,7 +6,6 @@ import { READING_COLUMN } from '@/platform/ui/layoutSizes'
 import { Button } from '@/platform/ui/Button'
 import { Card } from '@/platform/ui/Card'
 import { DetailLayout } from '@/platform/ui/DetailLayout'
-import { Dismissible } from '@/platform/ui/Dismissible.client'
 import { OnThisPage } from '@/platform/ui/OnThisPage.client'
 import { PageBackdrop } from '@/platform/ui/PageBackdrop'
 import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
@@ -47,19 +46,6 @@ export function LayoutGallery() {
               A message in the {tone} tone.
             </Alert>
           ))}
-        </GalleryVariant>
-      </GalleryEntry>
-
-      <GalleryEntry
-        name="Dismissible"
-        description="A notice with a close button. It stays closed on that browser, and can stop showing at a set time."
-      >
-        <GalleryVariant label="closable banner" className="block w-full">
-          <Dismissible id="gallery-dismissible">
-            <Alert tone="info" live={false} className="pr-14">
-              WisDOT holds a virtual public meeting on Tue, Nov 10 at 5:30 PM Central.
-            </Alert>
-          </Dismissible>
         </GalleryVariant>
       </GalleryEntry>
 

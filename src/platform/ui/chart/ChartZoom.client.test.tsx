@@ -79,7 +79,7 @@ describe('ChartZoom', () => {
     const { container } = setup()
     await userEvent.click(enlarge())
 
-    const holder = container.querySelector('[data-chart-zoom-holder]') as HTMLElement
+    const holder = container.querySelector('[data-zoom-holder]') as HTMLElement
     expect(holder.querySelector('svg[role="img"]')).toBeNull()
     expect(holder.getAttribute('aria-hidden')).toBe('true')
   })

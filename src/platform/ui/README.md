@@ -10,14 +10,14 @@ their props, and which values they share with the CSS. Props, variants and where
 - `layoutSizes.ts` and `scrollMargin.ts` hold Tailwind classes that read CSS variables from `src/app/(frontend)/globals.css` (`--reading-width`, `--header-clearance`, `--anchor-offset`, `--chart-small-width`), so each size is defined once (#616); `layoutSizes.test.ts` and `scrollMargin.test.ts` check the names.
 - `Button` and `Link` render through `AppLink`: `next/link` for routes, a plain `<a>` for in-page `#` links so keyboard focus moves (`AppLink.tsx`). `LinkButton` (`CMSLink.tsx`) turns a resolved CMS link into a `Button`: appearance `outline` becomes `secondary`, anything else `primary`.
 - `Media` picks `VideoMedia` for a `video` mime type, else `ImageMedia` (`Media.tsx`). `getMediaUrl` keeps upload paths relative so Next optimizes them as local images, and the image's `updatedAt` is appended as its cache key (`ImageMedia.client.tsx`, `src/platform/lib/getMediaUrl.ts`).
-- A chart's colours follow its parts' order, `chart-1` to `chart-6`; a seventh part throws (`chart/chartPalette.ts`), and the spec refuses it first (`src/platform/lib/chart/spec.ts`).
+- A chart's colours follow its parts' order, `chart-1` to `chart-6`, the [theme](../theme/README.md)'s chart tokens; a seventh part throws (`chart/chartPalette.ts`), and the spec refuses it first (`src/platform/lib/chart/spec.ts`).
 - A `Field` hands its one control its id, `aria-describedby` and `aria-invalid` through one context; a control outside a `Field` throws (`fieldContext.ts`, `Field.client.tsx`).
 
 ## Behaviors
 
 - A button with `loading` shows a spinner and ignores clicks but stays focusable (`aria-disabled`), so focus isn't lost (`Button.tsx`). `external` opens a new tab and adds spoken text saying so (`Button.tsx`, `Link.tsx`).
 - Charts: `Chart` checks the spec, asks `chart/chartRegistry.ts` for an adapter, and draws the key, caption and numbers table around it. The first adapter that supports the kind draws it (`css`: units; `visx`: bar, stacked); the `text` adapter supports every kind and is last. Every adapter passes `chart/chartAdapter.contract.tsx`; chart libraries are allowed only under `chart/adapters/` (lint, `CHART_LIBRARIES` in `eslint.boundaries.config.mjs`).
-- Every chart carries its numbers as a real table under "Show the numbers", closed by default (`chart/ChartDataTable.tsx`). A drawing that gains from size is a thumbnail; `ChartZoom` moves the same server-rendered chart into a `Dialog` instead of copying it, and is the chart's only client code (`chart/ChartZoom.client.tsx`). With scripting off the Enlarge button is hidden.
+- Every chart carries its numbers as a real table under "Show the numbers", closed by default (`chart/ChartDataTable.tsx`). A drawing that gains from size is a thumbnail; `ChartZoom` is a thin caller of the shared `Zoom`, which moves the same server-rendered chart into a full-screen `Dialog` instead of copying it, and is the chart's only client code (`chart/ChartZoom.client.tsx`, `Zoom.client.tsx`). With scripting off the Enlarge button is hidden.
 - `VersionCheck` (root layout) polls `/api/version` every 30 s, but only while the reader has been active in the last 30 s and the tab is visible, and again when the tab regains focus. The first answer is the baseline; a different build shows a toast with a Refresh button that reloads. A dismissed build isn't offered again; a newer one is. It does nothing when the server reports `development` (`VersionCheck.client.tsx`, `src/app/(frontend)/api/version/route.ts`).
 - `AdminBar` is always mounted but hidden until Payload's bar reports a signed-in admin or editor (`isStaffRole`); residents see nothing (`AdminBar.client.tsx`, #203). `LivePreviewListener` refreshes the page when the editor saves in Live Preview; `[slug]/page.tsx` mounts it only in draft mode.
 - `LoadMore` (`useLoadMore`, `LoadMoreFooter`) loads the next page by cursor shortly before the end, for 4 pages counting the first (`AUTO_LOAD_PAGES`); after that the reader clicks "Load more", so the footer stays reachable. The button is a real link to the next numbered page, so it works without JavaScript and in a new tab; a repeated item is dropped; if focus was on the button when the last load removed it, focus moves to the status line (`LoadMore.client.tsx`).
@@ -28,6 +28,7 @@ their props, and which values they share with the CSS. Props, variants and where
 
 ## Shared pieces it uses
 
+- Related notes: [theme](../theme/README.md) (chart tokens; its `ThemeSelector` uses `Field`), [rich text](../richtext/README.md) (renders charts and blocks with the kit, and the "On this page" menu), [shared Payload code](../payload/README.md) (`AdminBar` reads `isStaffRole`).
 - Helpers from `src/platform/lib/` (`cn`, `getMediaUrl`, chart `spec`/`table`, `googleMapsEmbed`, `getURL`) and `src/platform/payload/roles.ts`; `@/cssVariables` and `@/imageQualities` for images.
 
 ## Rules and the tests that protect them

@@ -18,7 +18,7 @@ never publish and never change existing content. Fields, access and hooks:
 
 - A suggestion's categories are found by slug; an unknown slug is refused, never created. Its image is the first category's `defaultImage` (a field of news's `categories`), else the nearest parent's, else the next category's, else none (`cms/tools/submitSuggestion.ts`, `domain/suggestion.ts`).
 - The Markdown body becomes the collection's own rich text; `<Chart>` and `<FactTabs>` tags are read by the editorial converters, and a malformed or unreadable tag refuses the call and stores nothing (`cms/tools/submitSuggestion.ts`, `src/platform/richtext/editorial/*Markdown.ts`, `editorialTag.ts`).
-- Card text: a post's `summary` fills its search-engine description and share image; an event's fills its description. The same image is also the hero image of both (`cms/tools/submitSuggestion.ts`).
+- Card text: a post's `summary` fills its search-engine description (`meta.description`) only; an event's fills its description. The share image of a post is the category's default image, which is also the hero image of both (`cms/tools/submitSuggestion.ts`).
 - An event's day and times come from `startsAt`, `endsAt` and `allDay` in the site timezone; an end on another day is dropped (`domain/suggestion.ts`).
 - `externalId` and `contentHash` are unique on events and posts, so one item is never stored twice; the slug ends with the start of the hash (`src/platform/payload/reviewQueue.ts`, `domain/suggestion.ts`).
 - A run's `agent` and a review item's `agent` are set by the server from the key's account, never by the caller (`cms/agentRuns.ts`, `cms/agentReviewItems.ts`).
@@ -43,7 +43,7 @@ never publish and never change existing content. Fields, access and hooks:
 ## Shared pieces it uses
 
 - `src/platform/payload/`: `roles`, `reviewQueue` (unique ids, `holdSuggestions`), and `src/platform/richtext/editorial/` for chart and fact-tab tags.
-- Where it meets other modules (decision 0008): `src/payload.config.ts` adds the plugin and both collections; accounts refuses agent sign-in; events and posts apply the review queue; news owns `categories`.
+- Where it meets other modules (decision 0008): `src/payload.config.ts` adds the plugin and both collections; [accounts](/src/modules/accounts/README.md) refuses agent sign-in; [events](/src/modules/events/README.md) and [news](/src/modules/news/README.md) posts apply the review queue and are what `submitSuggestion` writes; news owns `categories`; the queue, roles and rich-text tags are in the [shared Payload note](/src/platform/payload/README.md) and the [rich-text note](/src/platform/richtext/README.md).
 
 ## Rules and the tests that protect them
 

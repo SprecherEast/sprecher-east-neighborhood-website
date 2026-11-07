@@ -30,11 +30,11 @@ The header navigation, the footer, the forum link and the redirects editors set:
 come from, when they refresh, and how a redirect is followed without showing a draft. Fields, access
 and hooks: [header](/docs/reference/content-types/header.md), [footer](/docs/reference/content-types/footer.md),
 [redirects](/docs/reference/content-types/redirects.md); kit pieces:
-[navigation](/docs/reference/components/navigation.md). Pages and blocks are in the site note.
+[navigation](/docs/reference/components/navigation.md). Pages and blocks are in the [site note](/src/modules/site/README.md).
 
 ## How the links connect
 
-- A nav item is the shared link field (a page or post, or a custom URL); `resolveLink` turns it into an `href`, and "open in new tab" becomes `external` (`src/platform/payload/link.ts`, `resolveLink.ts`). A link with no address or an unpopulated reference is dropped (`ui/SiteFooter.tsx`, `data/mappers.ts`).
+- A nav item is the shared link field (a page or post, or a custom URL); `resolveLink` turns it into an `href`, and "open in new tab" becomes `external` (`src/platform/payload/link.ts`, `resolveLink.ts`). A link with no address or an unpopulated reference is dropped (`ui/SiteFooter.tsx`, `src/modules/site/data/mappers.ts`).
 - Header and footer are read with their linked pages populated whether or not those pages are published (`data/globals.ts`, #251).
 - The footer global holds the forum address. The footer and each post page link to it through `toForumUrl`, and both links are hidden unless it is a plain `https://` address with a real host (`domain/forum.ts`, `use-cases/getForumUrl.ts`, `ui/SiteFooter.tsx`, `ui/ForumPrompt.tsx`).
 - A redirect's target is a page or post reference or a custom URL; a custom URL wins, and a reference is looked up as a visitor (`use-cases/getRedirectTarget.ts`, `data/documents.ts`).
@@ -45,7 +45,7 @@ and hooks: [header](/docs/reference/content-types/header.md), [footer](/docs/ref
 
 - The header and footer are cached until an editor saves them; saving expires `global_header` or `global_footer`, unless the save sets `disableRevalidate` (the seed) (`cms/revalidateGlobal.ts`).
 - Nothing refreshes them when a linked page is published or renamed, so a link to a page not yet published already shows, and a renamed page keeps its old link until the global is saved (`data/globals.ts`, #251).
-- The header nav leaves out an item that points to `/contact`, since the header has its own Contact button, and always ends with Search (`domain/nav.ts`, `data/mappers.ts`, `ui/HeaderNav.client.tsx`). The footer keeps every resolvable item and adds the forum link last.
+- The header nav leaves out an item that points to `/contact`, since the header has its own Contact button, and always ends with Search (`domain/nav.ts`, `toHeaderNavLinks` in `src/modules/site/data/mappers.ts`, `ui/HeaderNav.client.tsx`). The footer keeps every resolvable item and adds the forum link last.
 - A nav link is current on its own page and on every page inside its section, never on one that only starts with the same letters; outside links are never current (`domain/nav.ts`).
 - The mobile menu closes when the page changes, when a link or button inside it is used, and when the screen grows past the desktop breakpoint, so the scroll lock cannot stay (`ui/SiteHeaderBar.client.tsx`).
 - Saving a redirect expires the `redirects` tag, so the next request follows the new list (`cms/revalidateRedirects.ts`). Deleting one expires nothing.
@@ -60,6 +60,7 @@ and hooks: [header](/docs/reference/content-types/header.md), [footer](/docs/ref
 
 - `link` and `resolveLink` (`src/platform/payload/`), `expireCacheTag`, `documentHref` (the home page is `/`), `isAdminOrEditor` and `isAdmin`.
 - Kit: `Link`, `Button`, `Dialog`, `Text`, `MetaList`, `layoutSizes` (`src/platform/ui/`).
+- Related notes: [site pages](/src/modules/site/README.md) (the pages and posts the links point to; a renamed page keeps its old link until the global is saved), [accounts](/src/modules/accounts/README.md) (the account slots), [shared Payload code](/src/platform/payload/README.md) (`link`, `resolveLink`, `documentHref`), [UI kit](/src/platform/ui/README.md).
 - Where it meets other modules (decision 0008): the layout supplies the account slots; pages in `src/app/` mount `PayloadRedirects` and `ForumPrompt`; `src/payload.config.ts` sets up the plugin and globals.
 
 ## Rules and the tests that protect them
@@ -86,6 +87,6 @@ and hooks: [header](/docs/reference/content-types/header.md), [footer](/docs/ref
 
 ## Known gaps
 
-- The header maps generated Payload types in `data/mappers.ts`; moving it to plain props is #617.
+- The header maps generated Payload types in `src/modules/site/data/mappers.ts` (`toHeaderNavLinks`); moving it to plain props is #617.
 - The redirect "from" field's Admin text says a rebuild is needed, but the list refreshes on save (`src/payload.config.ts`, `cms/revalidateRedirects.ts`).
 - Deleting a redirect does not expire the cached list (`cms/revalidateRedirects.ts` runs on save only).

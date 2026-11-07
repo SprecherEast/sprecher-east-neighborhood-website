@@ -22,7 +22,7 @@ The helpers every collection is built from (`src/platform/payload/`) and the hel
 - `populatePublishedAt` stamps `publishedAt` when the request body has none (pages, events, FAQ, resources); posts set it in their own field hook (`payload/populatePublishedAt.ts`, `news/cms/posts.ts`).
 - The link field stores a reference or a custom URL; `resolveLink` is the one place it becomes an `href`. `documentHref` is the one place a document's address is written: pages at `/slug`, the slug `home` at `/`, the rest under their collection (`payload/link.ts`, `resolveLink.ts`, `documentHref.ts`).
 - `keysetSort` and `afterCursor` order a listing by one date with the id as tie-break; `lib/cursor.ts` encodes that pair as the opaque cursor "Load more" sends back on events and news (`payload/keyset.ts`, decision 0014).
-- `emailConfirmer.ts` is the contract `verification` provides and `contact` and sign-up use; `payload.config.ts` hands one to the other (decision 0008).
+- `emailConfirmer.ts` is the contract [verification](/src/modules/verification/README.md) provides and [contact](/src/modules/contact/README.md) uses; accounts only supplies a keeper (`keepAccountEmails`), and sign-up uses Payload's own verify, not this contract; `payload.config.ts` hands them over (decision 0008).
 
 ## Behaviors and events
 
@@ -42,7 +42,7 @@ The helpers every collection is built from (`src/platform/payload/`) and the hel
 - Email layout takes fixed paragraphs only, escaped, with inline colors (`lib/emailLayout.ts`, decision 0004). `emailAdapterFromEnv` builds SMTP from `SMTP_*`; with no host, or a bad setting (address, port, half a login), it logs and emails go to the log; with a login it insists on STARTTLS (`email/emailAdapter.ts`).
 - Robot check: off until both Turnstile keys are set; the server fails closed on any error, checks action and hostname, and sends no IP. The widget appears only when Cloudflare asks (`interaction-only`), and a token is single use, so `useRobotCheck` renews it after each attempt (`turnstile/turnstileVerifier.ts`, `TurnstileWidget.client.tsx`, `useRobotCheck.client.ts`, decision 0003).
 - Search engines: account and token pages use `NOT_INDEXED`; a page whose address holds a token also sends no referrer (`seo/notIndexed.ts`, `privateAddress.ts`, #280). `mergeOpenGraph` fills site defaults, and the image is the `og` size, else the upload, else a default photo (`seo/mergeOpenGraph.ts`, `generateMeta.ts`).
-- `runUseCase` catches, logs only the error's class name (never a message with an email in it) and returns the fallback; `runAction` does the same and turns a throw into a failure code (`service/runUseCase.ts`, #521).
+- `runUseCase` catches, logs only the error's class name (never a message with an email in it) and returns the fallback; `runAction` turns a throw into a failure code and logs it only when that code is `server-error`, since any other code is an expected refusal (`service/runUseCase.ts`, #521).
 - Small helpers: `getMediaUrl` strips the site origin so next/image reads uploads as local files; `sha256Hex` stores link tokens as hashes, so a database copy holds no working link; `parseEmailAddress` trims and lowercases, so one address is one record; `toGoogleMapsEmbedUrl` accepts only Google's keyless embed pages (`lib/getMediaUrl.ts`, `sha256.ts`, `emailAddress.ts`, `googleMapsEmbed.ts`).
 - `parseChartSpec` is the one gate a chart passes, its limits shared with the editor's block fields (`lib/chart/spec.ts`); `isLinkAddress` accepts a site path or an http(s) address (`lib/linkAddress.ts`).
 
@@ -59,6 +59,7 @@ The helpers every collection is built from (`src/platform/payload/`) and the hel
 ## Shared pieces it uses
 
 - It uses Payload's own types and plugins (the SEO plugin's fields in `seoTab`, the Nodemailer adapter) and the site timezone; modules meet each other only through `src/payload.config.ts` and the pages in `src/app/` (decision 0008).
+- Module notes that rely on it: [events](/src/modules/events/README.md) and [news](/src/modules/news/README.md) (review queue, drafts, keyset paging), [agents](/src/modules/agents/README.md) (review queue, roles), [contact](/src/modules/contact/README.md) and [verification](/src/modules/verification/README.md) (confirmer contract, retention), [accounts](/src/modules/accounts/README.md) (roles), [UI kit](/src/platform/ui/README.md) (`AdminBar` reads `isStaffRole`).
 
 ## Boundaries
 

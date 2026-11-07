@@ -38,7 +38,7 @@ Source: `src/platform/ui/chart/ChartDataTable.tsx`
 
 ## `ChartZoom`
 
-Lets a reader enlarge a chart (#681). The chart is a thumbnail in the page; "Enlarge", or a click or tap on the drawing, opens the same server-rendered chart in the kit's `Dialog` (focus trap, Escape, scroll lock, focus back to the button). The chart moves rather than being copied, so there is one drawing, one set of ids and one data table at any moment, and no picture is made. The chart's layout reads this component's width (`@container/chart`), here and in the dialog. An empty box of the same height keeps the page from collapsing behind the dialog. With scripting off the button is hidden and the chart simply stays at its thumbnail size. This is the only client code of the chart: it imports no chart library.
+Lets a reader enlarge a chart (#681). The chart is a thumbnail in the page; "Enlarge", or a click or tap on the drawing, opens the same server-rendered chart in the shared `Zoom` (#815), so there is one drawing, one set of ids and one data table at any moment, and no picture is made. The chart's layout reads this wrapper's width (`@container/chart`), here and in the dialog. This is the only client code of the chart: it imports no chart library.
 
 Source: `src/platform/ui/chart/ChartZoom.client.tsx`
 

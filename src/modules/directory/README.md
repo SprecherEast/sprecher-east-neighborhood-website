@@ -13,7 +13,7 @@ plus a `team-members` collection no page reads yet. Fields, access and hooks:
 - `order` sorts each list, lower first, default 99; both the collection's default sort and the queries use it (`cms/orderField.ts`, `data/queries.ts`).
 - `photo` shows only when `category` is `elected-officials`, the photo is loaded as an image and `photoCredit` is set. The card draws it with the resource's own credit and source, never the media item's (`domain/resourcePortrait.ts`, `cms/resources.ts`).
 - `photoCredit` is required once `photo` is set; the check reads its sibling `photo` (`cms/resources.ts`, `domain/resourcePortrait.ts`).
-- FAQ answers load their linked pages and posts at depth 1 so links keep their address; a document the reader may not see stays an id and shows as plain text (`data/queries.ts`).
+- FAQ answers load their linked pages and posts at depth 1 so links keep their address; a document the reader may not see stays an id and shows as plain text (`data/queries.ts`). A page or post save refreshes pages, but never `/faq` ([site pages](../site/README.md), [news](../news/README.md)), so a renamed target shows there when `/faq` next re-renders, within 10 minutes.
 - The queries return the stored shape, with no mapper (`domain/types.ts`, architecture rule 8). `server.ts` exports them straight from `data/` (decision 0016).
 
 ## Screens
@@ -36,7 +36,7 @@ plus a `team-members` collection no page reads yet. Fields, access and hooks:
 ## Shared pieces it uses
 
 - Collection helpers from `src/platform/payload/`: `draftContentAccess`, `populatePublishedAt`, `imagesOnly`, `published`, `expireCacheTag`, `roles` (`cms/`, `data/queries.ts`).
-- UI kit from `src/platform/ui/` (`Card`, `Disclosure`, `Media`, `ImageCredit`, `Link`, `Text`) and `RichText` from `src/platform/richtext/`.
+- UI kit from [`src/platform/ui/`](../../platform/ui/README.md) (`Card`, `Disclosure`, `Media`, `ImageCredit`, `Link`, `Text`) and `RichText` from [`src/platform/richtext/`](../../platform/richtext/README.md) (FAQ answers and the `FAQPage` text).
 - Where it meets other modules (decision 0008): the pages in `src/app/(frontend)/faq` and `resources`, and `src/payload.config.ts` for the collections.
 
 ## Rules and the tests that protect them

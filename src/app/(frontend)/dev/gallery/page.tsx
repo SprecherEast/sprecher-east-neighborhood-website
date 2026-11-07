@@ -15,6 +15,7 @@ import { GALLERY_COMPONENTS } from './galleryComponents'
 import { HeadersGallery } from './HeadersGallery'
 import { InteractiveGallery } from './InteractiveGallery.client'
 import { isGalleryEnabled } from './isGalleryEnabled'
+import { DismissAndZoomGallery } from './DismissAndZoomGallery'
 import { LayoutGallery } from './LayoutGallery'
 import { RichTextGallery } from './RichTextGallery'
 import { TabsGallery } from './TabsGallery'
@@ -62,6 +63,7 @@ export default function GalleryPage() {
         <TabsGallery />
         <HeadersGallery />
         <LayoutGallery />
+        <DismissAndZoomGallery />
         <InteractiveGallery />
         <ChartGallery />
         <RichTextGallery />
