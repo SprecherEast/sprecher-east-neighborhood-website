@@ -76,7 +76,7 @@ export function Figure({
       imgClassName="h-auto w-full rounded-xl border border-border"
     />
   )
-  const hasAside = items.length > 0 || Boolean(longCaption)
+  const hasAside = items.length > 0 || Boolean(longCaption) || Boolean(label)
 
   return (
     <figure className={cn(figureVariants({ size }), className)}>

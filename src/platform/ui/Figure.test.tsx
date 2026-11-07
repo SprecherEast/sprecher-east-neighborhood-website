@@ -71,6 +71,14 @@ describe('Figure', () => {
     expect(within(screen.getByRole('dialog')).queryByRole('list')).toBeNull()
   })
 
+  it('shows the label in the dialog even without a key or a long caption', async () => {
+    setup({ items: [], longCaption: undefined })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Enlarge: Concept for Milwaukee Street' }),
+    )
+    expect(within(screen.getByRole('dialog')).getByText('Figure 2-9')).toBeTruthy()
+  })
+
   it('has no accessibility violations', async () => {
     const { container } = setup()
     await expectAccessible(container)
