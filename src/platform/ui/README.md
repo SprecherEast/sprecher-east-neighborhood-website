@@ -24,7 +24,7 @@ their props, and which values they share with the CSS. Props, variants and where
 - The "On this page" menu needs at least 3 sections (`MIN_SECTIONS` in `onThisPage.ts`); the highlighted section is the last heading above a reading line taken from the heading's own scroll margin plus a little slack, so the heading a click lands on is the highlighted one.
 - `MapEmbed` draws a live map only when `toGoogleMapsEmbedUrl` accepts the address (an `https` Google embed address). The frame is created only once the dialog opens, and with no valid address only the picture and text show (`MapEmbed.client.tsx`, `src/platform/lib/googleMapsEmbed.ts`).
 - `FORM_MESSAGES` are the fixed texts for a failed send ("offline", "failed"); each form adds only its own cases (`formMessages.ts`, #204).
-- `Alert` announces itself unless `live={false}`: errors interrupt, other tones wait their turn (`Alert.tsx`).
+- `Alert` announces itself unless `live={false}`: errors interrupt, other tones wait their turn (`Alert.tsx`); the `info` tone is blue, from the `info` and `info-strong` theme tokens (#818).
 
 ## Shared pieces it uses
 
