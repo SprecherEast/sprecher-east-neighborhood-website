@@ -68,4 +68,15 @@ describe('MapBlock (#764)', () => {
       container.querySelector('.md\\:grid-cols-\\[minmax\\(0\\,5fr\\)_minmax\\(0\\,3fr\\)\\]'),
     ).toBeTruthy()
   })
+
+  it('puts the heading above the row, so the picture starts level with the text', () => {
+    const { container } = render(<MapBlock {...props} />)
+    const heading = screen.getByText(props.title)
+    const grid = container.querySelector(
+      '.md\\:grid-cols-\\[minmax\\(0\\,5fr\\)_minmax\\(0\\,3fr\\)\\]',
+    )
+
+    expect(grid?.contains(heading)).toBe(false)
+    expect(grid?.className).toContain('items-start')
+  })
 })

@@ -52,7 +52,7 @@ export function MapEmbed({
   return (
     <div
       className={cn(
-        'grid items-center gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,3fr)] md:gap-8',
+        'grid items-start gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,3fr)] md:gap-8',
         className,
       )}
     >
