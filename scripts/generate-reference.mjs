@@ -7,8 +7,10 @@
  * Content types (#714): loads the real Payload config with `loadConfig` from the access-policy
  * tests, no database and no server; the pure parts are in scripts/content-types/. Screens and
  * shared components (#718): the TypeScript compiler API reads src/; the pure parts are in
- * scripts/reference/. Run through `tsx`, which resolves the `@payload-config` alias from
- * tsconfig.json and loads the TypeScript config.
+ * scripts/reference/. UI element coverage (#495): read from the element tables in docs/ui/.
+ *
+ * Run through `tsx`, which resolves the `@payload-config` alias from tsconfig.json and loads the
+ * TypeScript config.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -21,6 +23,12 @@ import { describeContentType } from './content-types/describe.mjs'
 import { pinEnvironment } from './content-types/environment.mjs'
 import { createLocator } from './content-types/locate.mjs'
 import { PAGE_LINE_LIMIT, buildPages } from './content-types/render.mjs'
+import {
+  ELEMENT_FILES,
+  buildCoverage,
+  parseElementRows,
+  renderCoverage,
+} from './reference/coverage.mjs'
 import { COMPONENT_GROUPS } from './reference/componentGroups.mjs'
 import {
   describeComponents,
@@ -83,6 +91,14 @@ function buildComponentPages() {
   return pages
 }
 
+/** The element-to-component coverage page (#495), made from the element tables in docs/ui/. */
+function buildCoveragePage() {
+  const rows = ELEMENT_FILES.flatMap((file) =>
+    parseElementRows(fs.readFileSync(path.join(ROOT, file), 'utf8')),
+  )
+  return renderCoverage(buildCoverage(rows))
+}
+
 async function formatted(files) {
   const config = (await prettier.resolveConfig(path.join(ROOT, OUTPUT, 'routes.md'))) ?? {}
   const out = new Map()
@@ -124,6 +140,7 @@ const pages = await formatted(
   new Map([
     ...contentTypes,
     ['routes.md', renderRoutes(collectRoutes(ROOT))],
+    ['ui-coverage.md', buildCoveragePage()],
     ...buildComponentPages(),
   ]),
 )
