@@ -3,22 +3,29 @@
 Issue #170, part of epic #163. Every route and state of the public site, every UI element on it,
 the data each element shows, and the component set the elements point to.
 
+> **A dated snapshot, taken at `e887427` on 2026-10-21.** Routes and components have changed since
+> (the events category pages and the paged lists, for one). For the current list of screens read
+> [`docs/reference/routes.md`](../reference/routes.md), and for the current components
+> [`docs/reference/components/`](../reference/components/README.md); both are generated from the
+> code and checked on every pull request (#718). This inventory is kept for the screenshots and the
+> element tables, which are not refreshed in place (#495).
+>
 > **Approved.** The owner approved the [component set](component-set.md) on 2026-10-21, with the
 > merges he asked for that day. Each component is built in its own issue under #163.
 
 ## The files
 
-| File                                                             | What's in it                                                         |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `inventory.md` (this file)                                       | How the inventory was made, and every route and state with pictures. |
-| [`elements-layout-navigation.md`](elements-layout-navigation.md) | Layout and chrome (L), navigation (N), heroes and page headers (H).  |
-| [`elements-content.md`](elements-content.md)                     | Cards and lists (C), media (M), blocks and rich text (B).            |
-| [`elements-forms-feedback.md`](elements-forms-feedback.md)       | Form fields and actions (F), feedback, empty states, overlays (S).   |
-| [`data-types.md`](data-types.md)                                 | Each data type and Payload field type, and the component for it.     |
-| [`component-set.md`](component-set.md)                           | The shared components: variants, props, where they live.             |
-| [`component-set-modules.md`](component-set-modules.md)           | Area components, what's not needed yet, and the coverage check.      |
-| [`evidence.md`](evidence.md)                                     | Duplication, inconsistencies and bugs found, with file references.   |
-| [`screenshots/`](screenshots/)                                   | 172 WebP screenshots (6.4 MB, 6,446,992 bytes).                      |
+| File                                                             | What's in it                                                           |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `inventory.md` (this file)                                       | How the inventory was made, and every route and state with pictures.   |
+| [`elements-layout-navigation.md`](elements-layout-navigation.md) | Layout and chrome (L), navigation (N), heroes and page headers (H).    |
+| [`elements-content.md`](elements-content.md)                     | Cards and lists (C), media (M), blocks and rich text (B).              |
+| [`elements-forms-feedback.md`](elements-forms-feedback.md)       | Form fields and actions (F), feedback, empty states, overlays (S).     |
+| [`data-types.md`](data-types.md)                                 | Each data type and Payload field type, and the component for it.       |
+| [`component-set.md`](component-set.md)                           | The shared components' rules and decided choices; props are generated. |
+| [`component-set-modules.md`](component-set-modules.md)           | Area components, what's not needed yet, and the coverage check.        |
+| [`evidence.md`](evidence.md)                                     | Duplication, inconsistencies and bugs found, with file references.     |
+| [`screenshots/`](screenshots/)                                   | 172 WebP screenshots (6.4 MB, 6,446,992 bytes).                        |
 
 ## How it was made
 

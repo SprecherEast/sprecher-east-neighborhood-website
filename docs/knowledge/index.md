@@ -11,4 +11,5 @@ generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.m
 ## Reference (generated)
 
 - [Content types](../reference/content-types/README.md): every collection and global, plugins included: fields, access per operation, hooks, drafts. `npm run docs:generate` writes it; CI (`Knowledge sync`) checks it.
-- Screens and shared components: not yet (#718).
+- [Screens](../reference/routes.md): every `page.tsx` and `route.ts` under `src/app/(frontend)/`: URL, the module entry points it imports, rendering and revalidate, where its metadata comes from.
+- [Shared components](../reference/components/README.md): every component of `src/platform/ui/` and `src/platform/richtext/` with its props, variants and the modules and routes that use it. Rules and decided choices stay in [component-set.md](../ui/component-set.md).

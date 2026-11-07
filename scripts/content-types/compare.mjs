@@ -22,7 +22,7 @@ export function describeDifferences({ changed, missing, extra }, directory) {
   ]
   if (lines.length === 0) return ''
   return [
-    `${directory} is out of date with the Payload config:`,
+    `${directory} is out of date with the code:`,
     ...lines,
     'Run `npm run docs:generate` and commit the result.',
   ].join('\n')
