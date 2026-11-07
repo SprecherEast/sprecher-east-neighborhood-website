@@ -136,7 +136,9 @@ choice, 2026-10-26, Claude Code session, recorded on #426):
 
 - **Variants**: `elevated` (`bg-card`, `border border-border`, `shadow-sm`) for content cards;
   `outline` (`bg-background` with the border) for form boxes; `muted` (`bg-surface` with the border)
-  for panels inside a page; `tinted` (`bg-primary/10`, no border) for a sidebar box
+  for panels inside a page; `tinted` (`bg-primary/10`, no border) for a sidebar box; `success`,
+  `danger` and `neutral` (a tinted border and fill) for boxes that carry a tone, such as the outcomes
+  of a decision fork (#517), always paired with an icon and words
 - **Shadow only on `elevated`**: the other variants are flat. The border stays on `elevated`
   because shadows barely show in dark mode
 - **Border radius**: `rounded-2xl` for every card variant (today's `rounded-lg` panels and compact

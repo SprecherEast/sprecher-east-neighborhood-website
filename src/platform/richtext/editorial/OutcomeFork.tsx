@@ -2,6 +2,7 @@ import { ArrowRight, CircleHelp, X } from 'lucide-react'
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
+import { Card, CardTitle, type CardProps } from '@/platform/ui/Card'
 
 import type { Outcome, OutcomeForkProps } from './outcomeFork'
 import { OUTCOME_TONE_LABELS, type OutcomeTone } from './outcomeTone'
@@ -21,9 +22,9 @@ export function OutcomeFork({
   const columns = outcomes.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
   return (
     <div className={cn('not-prose my-8 w-full', className)}>
-      <h3 className="rounded-2xl border border-border bg-surface px-6 py-4 text-lg leading-snug font-semibold text-pretty text-foreground sm:text-center">
-        {question}
-      </h3>
+      <Card variant="muted">
+        <CardTitle className="text-pretty sm:text-center">{question}</CardTitle>
+      </Card>
       {/* The stem from the question down to the branches (wide screens) */}
       <div
         aria-hidden="true"
@@ -47,14 +48,13 @@ export function OutcomeFork({
   )
 }
 
-const CARD: Record<OutcomeTone, { card: string; title: string; Icon: typeof X }> = {
-  go: { card: 'border-primary/40 bg-primary/10', title: 'text-primary-strong', Icon: ArrowRight },
-  stop: {
-    card: 'border-destructive/30 bg-destructive/10',
-    title: 'text-destructive-strong',
-    Icon: X,
-  },
-  open: { card: 'border-border bg-muted', title: 'text-foreground', Icon: CircleHelp },
+const CARD: Record<
+  OutcomeTone,
+  { variant: NonNullable<CardProps['variant']>; title: string; Icon: typeof X }
+> = {
+  go: { variant: 'success', title: 'text-primary-strong', Icon: ArrowRight },
+  stop: { variant: 'danger', title: 'text-destructive-strong', Icon: X },
+  open: { variant: 'neutral', title: 'text-foreground', Icon: CircleHelp },
 }
 
 function OutcomeItem({
@@ -66,7 +66,7 @@ function OutcomeItem({
   first: boolean
   last: boolean
 }) {
-  const { card, title, Icon } = CARD[outcome.tone]
+  const { variant, title, Icon } = CARD[outcome.tone]
   return (
     <li className="relative sm:pt-6">
       {/* Phones: the line down the left, hung from the question box's flat bottom edge (16 px in,
@@ -97,7 +97,7 @@ function OutcomeItem({
         aria-hidden="true"
         className="absolute top-0 left-1/2 hidden h-6 w-0.5 -translate-x-1/2 bg-muted-foreground/50 sm:block"
       />
-      <div className={cn('h-full rounded-2xl border p-6', card)}>
+      <Card variant={variant} className="h-full">
         <p className={cn('flex items-center gap-2 text-base font-semibold', title)}>
           <Icon aria-hidden="true" className="size-5 shrink-0" />
           <span>
@@ -108,7 +108,7 @@ function OutcomeItem({
         {outcome.description && (
           <p className="mt-2 text-base leading-relaxed text-foreground">{outcome.description}</p>
         )}
-      </div>
+      </Card>
     </li>
   )
 }

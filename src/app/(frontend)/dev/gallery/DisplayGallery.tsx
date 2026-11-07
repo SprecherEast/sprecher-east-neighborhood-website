@@ -25,6 +25,7 @@ import {
 } from './sampleData'
 
 const CARD_VARIANTS = ['elevated', 'outline', 'muted', 'tinted'] as const
+const CARD_TONES = ['success', 'danger', 'neutral'] as const
 const CARD_PADDINGS = ['sm', 'md', 'lg'] as const
 const META_VARIANTS = ['inline', 'stacked'] as const
 
@@ -83,7 +84,7 @@ export function DisplayGallery() {
 
       <GalleryEntry name="Card" description="A box with parts; looks are variants.">
         <GalleryVariant label="variant" className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {CARD_VARIANTS.map((variant) => (
+          {[...CARD_VARIANTS, ...CARD_TONES].map((variant) => (
             <Card key={variant} variant={variant}>
               <CardTitle>{variant}</CardTitle>
               <Text variant="small" className="mt-2 text-foreground">
