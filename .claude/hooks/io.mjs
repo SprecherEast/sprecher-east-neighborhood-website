@@ -33,7 +33,7 @@ export function repoRoot(dir) {
 }
 
 /** Where a session's list of reminded notes is kept: one small file per session */
-function remindedFile(sessionId, dir) {
+export function remindedFile(sessionId, dir) {
   return path.join(dir, `reminded-${String(sessionId).replace(/[^\w-]/g, '_')}.json`)
 }
 

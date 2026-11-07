@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { markReminded, remindedNotes } from './io.mjs'
+import { markReminded, remindedFile, remindedNotes } from './io.mjs'
 import {
   inspect,
   knowledgeReminder,
@@ -153,16 +153,29 @@ describe('reminders kept per session', () => {
     expect(remindedNotes('s2', dir).size).toBe(0)
   })
 
-  it('creates its folder, and never writes through a symlink planted at the file name', () => {
+  it('creates its folder', () => {
+    dir = mkdtempSync(path.join(os.tmpdir(), 'reminded-'))
+    const state = path.join(dir, 'a', 'b')
+    markReminded('s1', 'a.md', state)
+    expect([...remindedNotes('s1', state)]).toEqual(['a.md'])
+  })
+
+  it('never writes through a symlink planted at the state file', () => {
     dir = mkdtempSync(path.join(os.tmpdir(), 'reminded-'))
     const victim = path.join(dir, 'victim.txt')
     writeFileSync(victim, 'keep me')
-    const state = path.join(dir, 'state')
-    mkdirSync(state)
-    symlinkSync(victim, path.join(state, 'sprecher-east-reminded-s1.json'))
-    markReminded('s1', 'a.md', path.join(state, 'deeper'))
-    markReminded('s1', 'a.md', state)
+    symlinkSync(victim, remindedFile('s1', dir))
+    markReminded('s1', 'a.md', dir)
     expect(readFileSync(victim, 'utf8')).toBe('keep me')
-    expect([...remindedNotes('s1', state)]).toEqual(['a.md'])
+    expect([...remindedNotes('s1', dir)]).toEqual(['a.md'])
+  })
+
+  it('never writes through a symlink planted at the temporary name either', () => {
+    dir = mkdtempSync(path.join(os.tmpdir(), 'reminded-'))
+    const victim = path.join(dir, 'victim.txt')
+    writeFileSync(victim, 'keep me')
+    symlinkSync(victim, `${remindedFile('s1', dir)}.${process.pid}.tmp`)
+    markReminded('s1', 'a.md', dir)
+    expect(readFileSync(victim, 'utf8')).toBe('keep me')
   })
 })
