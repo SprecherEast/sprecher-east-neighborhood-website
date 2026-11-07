@@ -82,6 +82,14 @@ the [media page](../reference/components/media.md).
 
 Components: [feedback and overlays](../reference/components/feedback.md).
 
+**`Zoom`** (#815) is a small view that opens larger in a full-screen `Dialog`: the Enlarge button, or a
+click or tap on the small view, opens it, with focus kept in the dialog and returned to the button on
+close. The optional `aside` (a legend, a long caption) shows beside the large view from `lg` and under
+it below, and never in the small view; without a `large` view the small view itself moves into the
+dialog, drawn once. With scripting off the button is hidden. `ChartZoom` is a thin caller of it, and
+`Figure` (#816) is another. Its test covers both layouts, the keyboard, focus return and axe, and the
+gallery shows it.
+
 ## Navigation
 
 Components: [navigation and page tools](../reference/components/navigation.md).
