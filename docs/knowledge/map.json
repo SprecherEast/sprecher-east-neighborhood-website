@@ -4,5 +4,28 @@
   { "note": "src/modules/agents/README.md", "paths": ["src/modules/agents/**"] },
   { "note": "src/modules/verification/README.md", "paths": ["src/modules/verification/**"] },
   { "note": "src/modules/directory/README.md", "paths": ["src/modules/directory/**"] },
-  { "note": "src/platform/theme/README.md", "paths": ["src/platform/theme/**", "src/themes/**"] }
+  { "note": "src/platform/theme/README.md", "paths": ["src/platform/theme/**", "src/themes/**"] },
+  {
+    "note": "src/modules/site/README.md",
+    "paths": [
+      "src/modules/site/cms/pages.ts",
+      "src/modules/site/cms/hero.ts",
+      "src/modules/site/cms/layoutBlocks.ts",
+      "src/modules/site/cms/*Block.ts",
+      "src/modules/site/cms/revalidatePage.ts",
+      "src/modules/site/data/pages.ts",
+      "src/modules/site/data/mappers.ts",
+      "src/modules/site/domain/blocks.ts",
+      "src/modules/site/domain/hero.ts",
+      "src/modules/site/domain/types.ts",
+      "src/modules/site/ui/*Block.tsx",
+      "src/modules/site/ui/PageHero.tsx",
+      "src/modules/site/ui/RenderBlocks.tsx",
+      "src/modules/site/ui/testing/**",
+      "src/modules/site/use-cases/getPageBySlug.ts",
+      "src/modules/site/index.ts",
+      "src/modules/site/server.ts",
+      "src/modules/site/cms.ts"
+    ]
+  }
 ]
