@@ -3,6 +3,7 @@ import type { Block } from 'payload'
 import { ChartBlockConfig } from './editorial/chartBlockConfig'
 import { DiagramKeyBlockConfig } from './editorial/diagramKeyBlockConfig'
 import { FactTabsBlockConfig } from './editorial/factTabsBlockConfig'
+import { FigureBlockConfig } from './editorial/figureBlockConfig'
 import { KeyFactsBlockConfig } from './editorial/keyFactsBlockConfig'
 import { OutcomeForkBlockConfig } from './editorial/outcomeForkBlockConfig'
 import { StepsBlockConfig } from './editorial/stepsBlockConfig'
@@ -122,6 +123,7 @@ export const EDITORIAL_BLOCKS: Block[] = [
   KeyFactsBlockConfig,
   OutcomeForkBlockConfig,
   DiagramKeyBlockConfig,
+  FigureBlockConfig,
   ChartBlockConfig,
   FactTabsBlockConfig,
 ]

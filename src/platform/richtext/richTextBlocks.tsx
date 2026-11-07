@@ -15,6 +15,7 @@ import { Steps } from './editorial/Steps'
 import { toStepsProps } from './editorial/steps'
 import { Timeline } from './editorial/Timeline'
 import { toTimelineProps } from './editorial/timeline'
+import { FigureBlock } from './FigureBlock'
 import { MediaBlock } from './MediaBlock'
 import type { RichTextBlocks } from './RichText'
 import { Chart } from '@/platform/ui/chart/Chart'
@@ -37,6 +38,7 @@ export const richTextBlocks = {
   diagramKey: ({ node }) => (
     <DiagramKey className="col-start-2" {...toDiagramKeyProps(node.fields)} />
   ),
+  figure: ({ node }) => <FigureBlock {...node.fields} />,
   chart: ({ node }) => {
     try {
       return (

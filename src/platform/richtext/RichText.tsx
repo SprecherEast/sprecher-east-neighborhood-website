@@ -23,6 +23,7 @@ import type {
   ChartBlock,
   DiagramKeyBlock,
   FactTabsBlock,
+  FigureBlock,
   KeyFactsBlock,
   MediaBlock,
   OutcomeForkBlock,
@@ -45,6 +46,7 @@ export type RichTextBlockNode = SerializedBlockNode<
   | DiagramKeyBlock
   | ChartBlock
   | FactTabsBlock
+  | FigureBlock
 >
 
 type NodeTypes = DefaultNodeTypes | RichTextBlockNode

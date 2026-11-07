@@ -121,6 +121,7 @@ export const COMPONENT_GROUPS = [
       'Timeline',
       'OutcomeFork',
       'DiagramKey',
+      'FigureBlock',
     ],
   },
 ]

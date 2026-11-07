@@ -84,7 +84,8 @@ column by default (`size`: `third`, `two-fifths` or `half`), with the text wrapp
 neutral badge with the short caption. A click or tap opens the `Zoom` dialog with the large picture,
 and beside it (under it on a narrow screen) the long caption and the numbered key: the key never
 shows in the small view. Its test covers the float classes, the size, the dialog and axe; the gallery
-shows it.
+shows it. `FigureBlock` (#817) is the editor's block: it maps the stored fields to `Figure`'s props
+and is shown by the same gallery entry; its test checks the render and axe.
 
 ## Feedback and overlays
 
