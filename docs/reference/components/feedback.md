@@ -80,3 +80,27 @@ Source: `src/platform/ui/Dialog.client.tsx`
 - Modules: `site`
 - Routes: `/dev/gallery`
 - Platform: `platform/ui`
+
+## `Zoom`
+
+A small view the reader can enlarge (#815, from the chart's #681). "Enlarge", or a click or tap on the small view, opens a full-screen `Dialog` (focus trap, Escape, scroll lock, focus back to the button) with the large view and, beside or under it, the `aside`. The small view never shows the aside: a legend's numbers can't be read small. An empty box of the same height keeps the page from collapsing behind the dialog when the small view itself moves in. Without scripting the button is hidden and the small view simply stays as it is.
+
+Source: `src/platform/ui/Zoom.client.tsx`
+
+| Prop              | Type                                                                                                                                                                       | Required | Description                                                                                                                                                       |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`           | `string`                                                                                                                                                                   | yes      | Names the button and the dialog                                                                                                                                   |
+| `kind`            | `string`                                                                                                                                                                   | no       | What is enlarged, for the button's name: "Enlarge chart: <title>"; "Enlarge: <title>" without it                                                                  |
+| `children`        | `React.ReactNode`                                                                                                                                                          | yes      | The small view, in the page. With no `large`, this same server-rendered content moves into the dialog while it is open, so it is drawn once, with one set of ids. |
+| `large`           | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | What the dialog shows, when it isn't the small view itself (a larger rendition of a picture)                                                                      |
+| `aside`           | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | Shown beside `large` from `lg`, under it below: a legend and the long caption. Only in the dialog                                                                 |
+| `pointerSelector` | `string`                                                                                                                                                                   | no       | Only a click on a match of this selector opens it; any click on the small view does when left out                                                                 |
+| `bodyClassName`   | `string`                                                                                                                                                                   | no       | The wrapper of the dialog's body when there is no `aside` (a chart sets its width here)                                                                           |
+| `className`       | `string`                                                                                                                                                                   | no       | The wrapper of the small view and the button                                                                                                                      |
+| `holderClassName` | `string`                                                                                                                                                                   | no       | Classes of the box around the small view, such as a zoom-in cursor on part of it                                                                                  |
+| `buttonClassName` | `string`                                                                                                                                                                   | no       | Where the Enlarge button sits; it is hidden without scripting whatever this says                                                                                  |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`
+- Platform: `platform/ui`

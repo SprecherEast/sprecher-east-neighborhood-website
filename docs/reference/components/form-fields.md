@@ -34,7 +34,7 @@ Source: `src/platform/ui/Field.client.tsx`
 
 **Variants:**
 
-- `width`: `"full" | "half"`
+- `width`: `"half" | "full"`
 - `layout`: `"inline" | "stacked"`
 
 | Prop        | Type                                                                                                                                                                      | Required | Description                                                                          |

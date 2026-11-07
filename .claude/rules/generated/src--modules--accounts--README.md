@@ -35,13 +35,14 @@ The six account pages, their routes and data are in the [screens reference](/doc
 - Changing your password ends your other sessions (`data/session.ts`); a reset ends every other session and sets no cookie, so the person signs in next (`data/passwordReset.ts`).
 - Agent accounts cannot sign in with a password (`cms/noPasswordSignInForAgents.ts`); an MCP key is not a signed-in account (`getSessionPayloadUser` in `data/session.ts`).
 - `requireUser` sends a visitor to sign in; `requireRole` gives a signed-in user without the role a 404 (`use-cases/requireUser.ts`).
-- Account pages stay out of search results: each page sets `NOT_INDEXED` and the sitemap leaves out `ACCOUNT_PAGE_PATHS` (`src/app/sitemap.ts`).
+- Account pages stay out of search results: each page sets `NOT_INDEXED` and the sitemap leaves out `ACCOUNT_PAGE_PATHS` and verification's `CONFIRM_EMAIL_PATH` (`src/app/sitemap.ts`).
 - Server actions return fixed failure codes, never Payload's error text; the pages map them to fixed messages (`domain/types.ts`, `ui/*Message*.ts`, `platform/lib/messages/accounts.ts`).
 
 ## Shared pieces it uses
 
 - `SlidingWindowCounter`, `HumanVerifier`, `ROLES` from `src/platform/lib`; `TurnstileVerifier` (`src/platform/turnstile`); role checks and `serverOnlyFieldAccess` (`src/platform/payload/roles.ts`); `runAction`, `runUseCase` (`src/platform/service`); `NOT_INDEXED` (`src/platform/seo`).
 - Where it meets other modules (decision 0008): pages in `src/app/`, the collection, `noVerifyMutation` and the retention task in `src/payload.config.ts`, redirects in `src/proxy.ts`.
+- Related notes: [verification](/src/modules/verification/README.md) (keeps a confirmed address while an account uses it, and shows `AccountOffer` after a contact confirmation; sign-up itself uses Payload's own verify, not its confirmer), [agents](/src/modules/agents/README.md) (an agent account is the owner of an MCP key, and sign-in is refused for it), [shared Payload code](/src/platform/payload/README.md) (roles, `runAction`).
 
 ## Rules and the tests that protect them
 

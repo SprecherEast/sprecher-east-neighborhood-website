@@ -7,24 +7,25 @@ paths:
 
 # Verification
 
-Checks that an email address belongs to whoever typed it, by a link sent to it. Contact (and sign-up)
-ask for a confirmation; this module sends the link, follows it and keeps the result. It is not an
-account system (`accounts`) and holds no messages. Fields, access and the confirm endpoint:
+Checks that an email address belongs to whoever typed it, by a link sent to it. Contact asks for a
+confirmation; this module sends the link, follows it and keeps the result. It is not an
+account system and holds no messages. Sign-up does not use it: an account is verified by Payload's own
+verify, in the [accounts note](/src/modules/accounts/README.md). Fields, access and the confirm endpoint:
 [email-confirmations content type](/docs/reference/content-types/email-confirmations.md); the
 page's URL: [screens](/docs/reference/routes.md).
 
 ## Links between things
 
 - The link's token is never stored: the record keeps its SHA-256, and a click finds the record again by that hash (`cms/token.ts`, `cms/store.ts`).
-- Other modules never import this one. They call the service shaped by `src/platform/payload/emailConfirmer.ts`; `src/payload.config.ts` hands it over, with the `onConfirmed` listeners (contact's `markSubmissionsConfirmed`, which sends the held emails and marks messages confirmed) and the retention `keepers` (contact's `keepSendersWithMessages`, accounts' `keepAccountEmails`), decision 0008.
+- Other modules never import this one. They call the service shaped by `src/platform/payload/emailConfirmer.ts`; `src/payload.config.ts` hands it over, with the `onConfirmed` listeners ([contact](/src/modules/contact/README.md)'s `markSubmissionsConfirmed`, which sends the held emails and marks messages confirmed) and the retention `keepers` (contact's `keepSendersWithMessages`, [accounts](/src/modules/accounts/README.md)' `keepAccountEmails`), decision 0008. The contract and the shared retention and error helpers are in the [shared Payload note](/src/platform/payload/README.md).
 - Retention periods are in `src/platform/lib/retention.ts` (shared with contact); the link's 24 hours is `CONFIRMATION_LINK_LIFETIME_MS` in `src/platform/lib/linkLifetimes.ts`, used by `domain/limits.ts` and by the email's wording (`domain/emails.ts`).
 - The per-address window (`sendCount`, `sendWindowStart`) and `tokenHash` are hidden and written only by the server (`cms/emailConfirmations.ts`, `domain/rules.ts`).
-- `/confirm-email` (`src/app/(frontend)/confirm-email/page.tsx`) joins this module's button with accounts' `AccountOffer`, shown after confirming.
+- `/confirm-email` (`src/app/(frontend)/confirm-email/page.tsx`) joins this module's button with [accounts](/src/modules/accounts/README.md)' `AccountOffer`, shown after confirming.
 
 ## Behaviors and events
 
 - Opening the link changes nothing: the page only reads where the link stands (`use-cases/getConfirmationLinkStatus.ts`, #391) and hides the Confirm button for a used, expired or unknown link (`ui/ConfirmEmail.client.tsx`).
-- The Confirm button posts the token with the robot check (Turnstile, decision 0003), because mail scanners open links and some run scripts (`cms/confirmEndpoint.ts`, #303). Without a passing check nothing is confirmed.
+- The Confirm button posts the token with the robot check (Turnstile, decision 0003), because mail scanners open links and some run scripts (`cms/confirmEndpoint.ts`, #303). When the check is on (it runs only while the verifier is enabled), nothing is confirmed without a passing one.
 - The first valid click within 24 hours confirms, runs every listener, then sends the welcome email. One failing listener, or a failed welcome, is logged and stops nothing; a later click answers `already-confirmed` (`cms/confirmEmail.ts`, `domain/rules.ts`).
 - Confirming is one conditional write, so two clicks at once confirm once. It also sets `welcomeSentAt` before the send: the welcome goes at most once and is never retried (`cms/store.ts` `markConfirmed`).
 - A request sends a link only within the limits below; a new link replaces the old one, so only the newest works. The record is saved before the email goes out (`cms/requestConfirmation.ts`).
@@ -64,4 +65,4 @@ page's URL: [screens](/docs/reference/routes.md).
 
 ## Known gaps
 
-- The collection's admin description says a confirmed address goes 12 months after the person's last message; the code deletes 12 months after confirming unless a keeper needs it, which has that effect only while contact's keeper holds (`cms/emailConfirmations.ts`, `cms/retention.ts`).
+None known.

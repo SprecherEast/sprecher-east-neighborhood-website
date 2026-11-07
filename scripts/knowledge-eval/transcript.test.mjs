@@ -73,4 +73,36 @@ describe('parseTranscript', () => {
     )
     expect(run.filesRead).toEqual(['/elsewhere/b.ts', 'a.ts'])
   })
+
+  it('counts the code files read and the searches, apart from notes and docs', () => {
+    const read = (file) => ({
+      type: 'assistant',
+      message: { content: [{ type: 'tool_use', name: 'Read', input: { file_path: file } }] },
+    })
+    const search = (name) => ({
+      type: 'assistant',
+      message: { content: [{ type: 'tool_use', name: name, input: { pattern: 'x' } }] },
+    })
+    const text = [
+      read('/w/src/modules/events/README.md'),
+      read('/w/docs/reference/routes.md'),
+      read('/w/AGENTS.md'),
+      read('/w/CLAUDE.md'),
+      read('/w/.claude/rules/generated/a.md'),
+      read('/w/src/modules/events/domain/scope.ts'),
+      read('/w/src/modules/events/domain/scope.ts'),
+      read('/w/src/modules/events/cms/events.ts'),
+      search('Grep'),
+      search('Glob'),
+      search('Bash'),
+    ]
+      .map((event) => JSON.stringify(event))
+      .join('\n')
+    const run = parseTranscript(text, '/w')
+    expect(run.codeFilesRead).toEqual([
+      'src/modules/events/cms/events.ts',
+      'src/modules/events/domain/scope.ts',
+    ])
+    expect(run.searches).toBe(2)
+  })
 })

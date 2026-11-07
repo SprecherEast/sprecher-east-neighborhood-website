@@ -7,7 +7,7 @@ paths:
 
 # Contact
 
-What happens when a neighbor sends a form on the site: the checks it passes, why its emails wait for the sender to confirm their address, who gets which email, and when messages are deleted. The forms and submissions are the form-builder plugin's; this module adds the hooks. The confirmation link itself belongs to the verification module. Fields, access and hook names: [forms](/docs/reference/content-types/forms.md) and [form submissions](/docs/reference/content-types/form-submissions.md).
+What happens when a neighbor sends a form on the site: the checks it passes, why its emails wait for the sender to confirm their address, who gets which email, and when messages are deleted. The forms and submissions are the form-builder plugin's; this module adds the hooks. The confirmation link itself belongs to the [verification module](/src/modules/verification/README.md). Fields, access and hook names: [forms](/docs/reference/content-types/forms.md) and [form submissions](/docs/reference/content-types/form-submissions.md).
 
 ## How the fields and hooks link up
 
@@ -22,9 +22,9 @@ What happens when a neighbor sends a form on the site: the checks it passes, why
 
 ## Screens
 
-| Screen     | Route        | Data comes from                                                                                             |
-| ---------- | ------------ | ----------------------------------------------------------------------------------------------------------- |
-| Form block | any CMS page | the `formBlock` block's `forms` relation and optional intro (`cms/formBlock.ts`, `ui/FormBlock.client.tsx`) |
+| Screen     | Route        | Data comes from                                                                                            |
+| ---------- | ------------ | ---------------------------------------------------------------------------------------------------------- |
+| Form block | any CMS page | the `formBlock` block's `form` relation and optional intro (`cms/formBlock.ts`, `ui/FormBlock.client.tsx`) |
 
 ## Behaviors and events
 
@@ -44,7 +44,7 @@ What happens when a neighbor sends a form on the site: the checks it passes, why
 ## Shared pieces it uses
 
 - `Form`, `Field`, `Button`, `Card` from `src/platform/ui/`; the robot check from `src/platform/turnstile/` and `src/platform/lib/humanCheck.ts`; `src/platform/lib/retention.ts`; the confirmer types in `src/platform/payload/emailConfirmer.ts`.
-- Where it meets verification (decision 0008): `src/payload.config.ts` passes the confirmer in and the listener and keeper out.
+- Where it meets [verification](/src/modules/verification/README.md) (decision 0008): `src/payload.config.ts` passes the confirmer in and the listener and keeper out; the confirmer's contract, and the shared retention periods are in the [shared Payload note](/src/platform/payload/README.md).
 
 ## Rules and the tests that protect them
 

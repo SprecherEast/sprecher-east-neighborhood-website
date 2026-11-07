@@ -132,7 +132,7 @@ describe('Chart', () => {
 
     it('keeps a box of the chart’s height in the page while it is open, and clears it after', async () => {
       const { container } = render(<Chart spec={spec} />)
-      const holder = container.querySelector('[data-chart-zoom-holder]') as HTMLElement
+      const holder = container.querySelector('[data-zoom-holder]') as HTMLElement
       await userEvent.click(enlarge(spec.title) as HTMLElement)
       expect(holder.style.height).toMatch(/px$/)
       await userEvent.keyboard('{Escape}')

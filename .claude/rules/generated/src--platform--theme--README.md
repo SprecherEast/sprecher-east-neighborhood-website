@@ -21,7 +21,7 @@ route is involved, so the generated reference has nothing on it.
 - `ACTIVE_THEME` in `registry.ts` is the theme the site shows, and `src/app/(frontend)/globals.css` imports that theme's `theme.css`; `registry.test.ts` checks they agree.
 - What tokens can't express is a theme option, with defaults in `options.ts`; `registry.ts` lists the options each theme sets, and `{}` means all defaults (decision 0012).
 - The `info` tone (an `Alert`, so a banner too) is blue: `info` for its border and tint, `info-strong` for its text, with contrast pairs in `tokens.ts` checked by `themes.test.ts` (#818). A theme sets both, like every token.
-- Chart colours and their contrast pairs are in `tokens.ts` (`CHART_PAIRS`), checked by `themes.test.ts` (#659).
+- Chart colours and their contrast pairs are in `tokens.ts` (`CHART_PAIRS`), checked by `themes.test.ts` (#659); the [UI kit](/src/platform/ui/README.md) draws a chart's parts with `chart-1` to `chart-6`.
 
 ## Behaviors
 
@@ -33,12 +33,12 @@ route is involved, so the generated reference has nothing on it.
 - `ThemeDecoration.tsx` is rendered once in the root layout. It draws the active theme's `decoration` option, or nothing; the default theme has none. The layer is hidden from assistive technology, takes no clicks and is faint (`decorations.css`).
 - A decoration's movement stops within 5 seconds and doesn't start when the visitor asks for reduced motion (`decorations.css`, #409).
 - The chart reveal and bar-grow effects (`chart-reveal`, `chart-reveal-x` in `tailwind.css`) run only on screen, with motion allowed and scroll-driven animation supported; otherwise charts draw finished. `print-exact` keeps chart marks and legend swatches coloured in print.
-- Rich-text colours come from `tailwind.config.mjs` and are all token variables, so a theme recolours posts without touching it; none are inverted for dark, which follows `data-theme`, not the device.
+- Rich-text colours (the [rich-text note](/src/platform/richtext/README.md)) come from `tailwind.config.mjs` and are all token variables, so a theme recolours posts without touching it; none are inverted for dark, which follows `data-theme`, not the device.
 - Components use token classes only: lint rejects raw palette classes and hex or rgb values in classes (`eslint.theme.config.mjs`).
 
 ## Shared pieces it uses
 
-- `Field` from `src/platform/ui/` for the selector. The layout (`src/app/(frontend)/layout.tsx`) joins `InitTheme`, `Providers` and `ThemeDecoration`.
+- `Field` from `src/platform/ui/` for the selector ([UI kit note](/src/platform/ui/README.md)). The layout (`src/app/(frontend)/layout.tsx`) joins `InitTheme`, `Providers` and `ThemeDecoration`.
 
 ## Rules and the tests that protect them
 

@@ -33,8 +33,9 @@ for CMS pages. Fields, access and hooks: [events content type](/docs/reference/c
 - The "this week" strip: a row is `all`, `official` or one category; window of 1 to 31 days (default 7) from today; at most 4 rows, 1 to 6 events each; empty rows are hidden, and with none left it shows a message (`domain/thisWeek.ts`, `data/thisWeek.ts`).
 - Saving a published event, unpublishing one that was published, or deleting one refreshes its page, `/events`, every category and list page, `/` and all CMS pages, and expires the `events` and `events-sitemap` cache tags (`cms/revalidateEvent.ts`); saving a draft refreshes nothing.
 - Event content can hold a banner block (for a notice such as a meeting): it can have a close button, remembered on the visitor's browser, and a "show until" time after which it disappears on the next refresh (#814).
+- Event content can hold a figure block (#817): a small picture floated right in the text, with a label badge and a short caption; enlarging it opens a dialog with the large picture, the long caption and a numbered key. The key never shows in the small view. Posts offer the same block.
 - Events can be scheduled to publish or unpublish (`schedulePublish` in `src/platform/payload/contentCollection.ts`), run by Payload's jobs queue inside the app (`autoRun` in `src/payload.config.ts`); event pages re-render every 10 minutes (`revalidate = 600`), so visitors see the change within 10 minutes (decision 0011).
-- Events created by agents or non-staff are stored as `suggested` drafts and need a source; staff publishing approves them (`cms/events.ts` via `holdSuggestions`).
+- Events created by agents or non-staff are stored as `suggested` drafts and need a source name and an http(s) source link; staff publishing approves them. The review-queue fields (source, `audience`, status, `externalId`, `contentHash`) come from the [shared Payload note](/src/platform/payload/README.md) (`cms/events.ts` via `holdSuggestions`, `src/platform/payload/reviewQueue.ts`); [agents](/src/modules/agents/README.md) are the usual source.
 - Events are indexed for search, though this module doesn't name it (`src/payload.config.ts`, `searchPlugin`).
 - Admin has Live Preview and a preview link from the draft (`cms/events.ts` via `previewAdmin`); the event page emits schema.org `Event` data (`ui/eventJsonLd.ts`).
 - An event's text keeps the reading width, unless it holds key facts, fact tabs or an outcome fork: then it fills the column up to the page margin (`articleColumnClass` in `src/platform/richtext/articleColumn.ts`, #774).
@@ -45,6 +46,7 @@ for CMS pages. Fields, access and hooks: [events content type](/docs/reference/c
 - Collection helpers from `src/platform/payload/`: `contentCollection`, `draftContentAccess`, `reviewQueue`, `seoTab`, `keyset`, `published` (`cms/events.ts`, `data/queries.ts`).
 - UI kit and layout from `src/platform/ui/` (`Card`, `Badge`, `LoadMore.client`, `PageHeader`, `ArticlePage`, `CardGrid`) and the site timezone from `src/platform/lib/timezone.ts`.
 - Where it meets other modules (decision 0008): pages in `src/app/`, `pageBlocks.tsx` for the block, `src/payload.config.ts` for the collection, block and search.
+- Related notes: [news](/src/modules/news/README.md) (owns the `categories` tree events use, the search index both feed, and the post page that shows the sidebar), [site pages](/src/modules/site/README.md) (the "this week" block sits in a page, and an event save refreshes every CMS page), [rich text](/src/platform/richtext/README.md) (an event's text and its width rule), [agents](/src/modules/agents/README.md).
 
 ## Rules and the tests that protect them
 

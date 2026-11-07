@@ -62,6 +62,12 @@ export const CHART_LARGE_WIDTH =
   'max-w-[var(--chart-large-width)] [&_[data-chart-drawing]]:max-w-full'
 
 /**
+ * The enlarged dialog of a picture with a key (#815): the picture takes two thirds from `lg` and the
+ * key one third beside it; below `lg` the key sits under the picture.
+ */
+export const ZOOM_SPLIT = 'grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]'
+
+/**
  * Rows of a grid handed on to what a box holds (CSS subgrid, #678). Fact cards and the tab buttons
  * of Fact tabs use them, so in a row of them the same part of every card (what it's about, the
  * value, the explanation, the foot) sits on one line, whatever wraps or is missing in one card.
