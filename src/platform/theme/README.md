@@ -13,7 +13,7 @@ route is involved, so the generated reference has nothing on it.
 - `ACTIVE_THEME` in `registry.ts` is the theme the site shows, and `src/app/(frontend)/globals.css` imports that theme's `theme.css`; `registry.test.ts` checks they agree.
 - What tokens can't express is a theme option, with defaults in `options.ts`; `registry.ts` lists the options each theme sets, and `{}` means all defaults (decision 0012).
 - The `info` tone (an `Alert`, so a banner too) is blue: `info` for its border and tint, `info-strong` for its text, with contrast pairs in `tokens.ts` checked by `themes.test.ts` (#818). A theme sets both, like every token.
-- Chart colours and their contrast pairs are in `tokens.ts` (`CHART_PAIRS`), checked by `themes.test.ts` (#659); the [UI kit](../ui/README.md) draws a chart's parts with `chart-1` to `chart-6`. A chart can ask for the warm set, orange and gray: a theme sets `chart-warm-1` to `chart-warm-6`, they pass the same contrast pairs, and inside a chart with `data-chart-palette="warm"` the names `chart-1` to `chart-6` mean those (`tailwind.css`, #856).
+- Chart colours and their contrast pairs are in `tokens.ts` (`CHART_PAIRS`), checked by `themes.test.ts` (#659); the [UI kit](../ui/README.md) draws a chart's parts with `chart-1` to `chart-6`. A chart can ask for the warm set, orange and gray: a theme sets `chart-warm-1` to `chart-warm-6` as one ramp, darkest orange first, through brighter orange and orange mixed with gray, to a plain warm gray (never white), so the slot order reads as size order; they pass the same contrast pairs (in light mode the tail fades by losing color, not by lightening), and inside a chart with `data-chart-palette="warm"` the names `chart-1` to `chart-6` mean those (`tailwind.css`, #856).
 
 ## Behaviors
 
