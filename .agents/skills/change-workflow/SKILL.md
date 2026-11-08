@@ -118,6 +118,8 @@ Open it as a draft (`--draft`) while work is incomplete.
    change he didn't ask for, `AGENTS.md` step 3), note the head SHA and go to step 6. If it waits
    for him, label the PR `needs owner`, ask him one plain question, and stop
    ([waits for owner](../../../docs/process/project-management.md#waits-for-owner)).
+   Also re-read the description's `End-to-end exemption:` line: if it is not `none`, it must be the
+   one the review checked, because editing a description moves neither the head nor the checks.
 5. **A PR below yours changed** (stacked PRs): rebase yours onto it and push, as in
    [`stacked-prs`](../stacked-prs/SKILL.md) step 4.
 

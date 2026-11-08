@@ -5,6 +5,7 @@ import {
   e2eDecision,
   e2eExemption,
   e2eProblems,
+  gateFor,
   summaryOf,
 } from './e2e-gate.mjs'
 
@@ -118,5 +119,82 @@ describe('summaryOf: what the job prints', () => {
 
   it('states a skip', () => {
     expect(summaryOf(decide([]))).toContain('e2e-gate: decision=skip')
+  })
+})
+
+describe('e2eDecision: code the suite walks through', () => {
+  it.each([
+    'src/modules/accounts/actions.ts',
+    'src/modules/accounts/use-cases/signUp.ts',
+    'src/modules/contact/domain/limits.ts',
+    'src/modules/verification/cms/emailConfirmations.ts',
+    'src/payload.config.ts',
+    'src/endpoints/seed/contact-form.ts',
+    'src/endpoints/seed/contact-page.ts',
+    'src/endpoints/seed/helpers/lexical.ts',
+    'src/platform/richtext/editorial/factTabsFixtures.ts',
+  ])('runs for a change to %s', (name) => {
+    const decision = decide([code(name)])
+    expect(decision.run).toBe(true)
+    expect(decision.flows).toHaveLength(1)
+  })
+
+  it('ignores a test, a comment or a formatting edit there', () => {
+    const comment = {
+      filename: 'src/modules/accounts/actions.ts',
+      patch: '@@ -1 +1 @@\n-// a\n+// b',
+    }
+    expect(decide([code('src/modules/accounts/actions.test.ts'), comment]).run).toBe(false)
+  })
+
+  it('can be exempted with a written reason, like a UI change', () => {
+    const body = bodyWith(`End-to-end exemption: ${REASON}`)
+    expect(decide([code('src/payload.config.ts')], body).run).toBe(false)
+  })
+
+  it('does not run for the other modules', () => {
+    expect(decide([code('src/modules/events/domain/upcoming.ts')]).run).toBe(false)
+  })
+})
+
+describe('e2eExemption: reasons keep their characters', () => {
+  it('keeps underscores in the reason', () => {
+    expect(
+      e2eExemption(bodyWith('End-to-end exemption: only renames snake_case_names in a note'))
+        .reason,
+    ).toContain('snake_case_names')
+  })
+})
+
+describe('gateFor: the job environment', () => {
+  const env = { EVENT_NAME: 'pull_request', REPO: 'o/r', PR_NUMBER: '1' }
+
+  it('decides from what it reads', () => {
+    const read = { files: () => [CARD], body: () => '' }
+    expect(gateFor(env, read).run).toBe(true)
+    expect(gateFor(env, { files: () => [], body: () => '' }).run).toBe(false)
+  })
+
+  it('runs the tests when reading the pull request fails', () => {
+    const read = {
+      files: () => {
+        throw new Error('HTTP 502\nsecond line')
+      },
+      body: () => '',
+    }
+    const decision = gateFor(env, read)
+    expect(decision.run).toBe(true)
+    expect(decision.reason).toContain('could not decide (HTTP 502)')
+    expect(summaryOf(decision)).toContain('decision=run')
+  })
+
+  it('does not read anything for a push', () => {
+    const read = {
+      files: () => {
+        throw new Error('not called')
+      },
+      body: () => '',
+    }
+    expect(gateFor({ EVENT_NAME: 'push' }, read).reason).toContain('push to main')
   })
 })

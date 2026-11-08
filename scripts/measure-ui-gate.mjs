@@ -1,13 +1,12 @@
 /**
- * Measures the UI-change detector (#868) on merged pull requests: for each of the last N it prints
- * whether the gate would have fired and which files made it, plus the other changed files, so a
+ * Measures the end-to-end gate (#868) on merged pull requests, as if none had an exemption: for each
+ * of the last N it prints whether the gate would have run the browser tests, and why and which files made it, plus the other changed files, so a
  * person can judge from the diff whether a visual change really happened (false alarm), and spot
  * the visual changes the gate missed. Needs the `gh` CLI signed in. Read-only.
  *
  *   node scripts/measure-ui-gate.mjs [owner/repo] [count]    one JSON object per line
  */
-import { listAll, pullFiles } from '../.github/scripts/e2e-gate.mjs'
-import { uiChanges } from './behavior-change.mjs'
+import { e2eDecision, listAll, pullFiles } from '../.github/scripts/e2e-gate.mjs'
 
 const repo = process.argv[2] ?? 'boulaajaj/sprecher-east-neighborhood-website'
 const count = Number(process.argv[3] ?? 40)
@@ -22,15 +21,17 @@ const merged = closed
 
 for (const pr of merged) {
   const files = pullFiles(repo, pr.number)
-  const ui = uiChanges(files)
-  const flagged = new Set(ui.map((f) => f.filename))
+  const { run, reason, ui, flows } = e2eDecision({ event: 'pull_request', files, body: '' })
+  const flagged = new Set([...ui, ...flows].map((f) => f.filename))
   console.log(
     JSON.stringify({
       number: pr.number,
       title: pr.title,
       mergedAt: pr.merged_at,
-      flagged: ui.length > 0,
+      flagged: run,
+      reason,
       ui: ui.map((f) => f.filename),
+      flows: flows.map((f) => f.filename),
       others: files.filter((f) => !flagged.has(f.filename)).map((f) => f.filename),
     }),
   )

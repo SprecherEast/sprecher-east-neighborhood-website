@@ -11,14 +11,17 @@
  *   reason of 20 or more characters. The independent reviewer checks the reason against the diff,
  *   as with `Behavior change: none`. A model may only add cases (`End-to-end exemption: run`
  *   asks for the tests on any pull request); it can never skip one without that written reason.
- * - A change to the tests, their config or the workflow runs them too, whatever the exemption says.
+ * - A change to the tests, their config, the workflow or the gate's own rules runs them, whatever
+ *   the exemption says. A change to the code the suite walks through (the accounts, contact and
+ *   verification modules, the Payload config, the seed files it imports) runs them like a UI change.
  * - If anything here fails (the API, a list too long to read), the tests run.
  */
 import { execFileSync } from 'node:child_process'
 import { appendFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
-import { uiChanges } from '../../scripts/behavior-change.mjs'
+import { classifyFile } from '../../scripts/behavior-change.mjs'
+import { uiChanges } from '../../scripts/ui-change.mjs'
 import { withoutComments } from './pr-body.mjs'
 import { changedFiles } from './knowledge-sync.mjs'
 
@@ -33,7 +36,20 @@ const TEST_INFRASTRUCTURE = [
   /^e2e\//,
   /^playwright\.config\./,
   /^\.github\/workflows\/ci\.yml$/,
-  /^\.github\/scripts\/e2e-gate\.mjs$/,
+  // The rules that decide, so one diff can't narrow them and change the UI
+  /^\.github\/scripts\/(?:e2e-gate|pr-body|knowledge-sync)\.mjs$/,
+  /^scripts\/(?:ui-change|behavior-change)\.mjs$/,
+]
+/**
+ * Code the suite walks through, or the seed and fixtures it imports: a change to any of it that
+ * isn't a test, a comment or formatting needs the tests even when no UI file changed (the suite
+ * used to run on every PR, so these cases keep it running where it matters).
+ */
+const FLOW_PATHS = [
+  /^src\/modules\/(?:accounts|contact|verification)\//,
+  /^src\/payload\.config\.ts$/,
+  /^src\/endpoints\/seed\/(?:contact-form|contact-page|helpers\/lexical)\b/,
+  /^src\/platform\/richtext\/editorial\/factTabsFixtures\.ts$/,
 ]
 
 /**
@@ -42,7 +58,7 @@ const TEST_INFRASTRUCTURE = [
  */
 export function e2eExemption(body) {
   for (const raw of withoutComments(body).split('\n')) {
-    const line = raw.replace(/[*_]/g, '').replace(/\s+/g, ' ').trim()
+    const line = raw.replace(/\*/g, '').replace(/\s+/g, ' ').trim()
     const match = line.match(LINE)
     if (!match) continue
     const value = match[1].trim()
@@ -60,19 +76,25 @@ export function e2eExemption(body) {
  */
 export function e2eDecision({ event, files, body }) {
   const ui = uiChanges(files)
+  const flows = files.filter(
+    (f) =>
+      [f.filename, f.previous_filename].some(
+        (path) => path && FLOW_PATHS.some((re) => re.test(path)),
+      ) && classifyFile(f).kind === 'behavior',
+  )
   const exemption = e2eExemption(body)
-  const answer = (run, reason) => ({ run, reason, ui, exemption })
+  const answer = (run, reason) => ({ run, reason, ui, flows, exemption })
   if (event !== 'pull_request') return answer(true, 'a push to main always runs them')
   if (exemption.kind === 'run') return answer(true, 'the description asks for them')
   const paths = files.flatMap((f) => [f.filename, f.previous_filename].filter(Boolean))
   if (paths.some((path) => TEST_INFRASTRUCTURE.some((re) => re.test(path)))) {
     return answer(true, 'the browser tests or their workflow changed')
   }
-  if (ui.length === 0) return answer(false, 'no UI change')
+  if (ui.length === 0 && flows.length === 0) return answer(false, 'no UI change')
   if (exemption.kind === 'exempt' && exemption.reason.length >= MIN_EXEMPTION_REASON) {
     return answer(false, `exempt, reason given: ${exemption.reason}`)
   }
-  return answer(true, 'the UI changed')
+  return answer(true, ui.length > 0 ? 'the UI changed' : 'a flow the tests cover changed')
 }
 
 /** The problems `PR Policy` reports about what the description says on the browser tests */
@@ -87,11 +109,13 @@ export function e2eProblems({ body }) {
 }
 
 /** The decision as lines for the job log and its summary, easy to read and to count later (#882) */
-export function summaryOf({ run, reason, ui }) {
-  const files = ui.map((f) => `- ${f.filename} (${f.reason})`)
+export function summaryOf({ run, reason, ui, flows = [] }) {
+  const list = (title, found) =>
+    found.length ? [title, ...found.map((f) => `- ${f.filename} (${f.reason ?? 'changed'})`)] : []
   return [
-    `e2e-gate: decision=${run ? 'run' : 'skip'} ui_files=${ui.length} reason="${reason}"`,
-    ...(files.length ? ['UI files that count:', ...files] : []),
+    `e2e-gate: decision=${run ? 'run' : 'skip'} ui_files=${ui.length} flow_files=${flows.length} reason="${reason}"`,
+    ...list('UI files that count:', ui),
+    ...list('Flow files that count:', flows),
   ].join('\n')
 }
 
@@ -116,23 +140,32 @@ export const pullFiles = (repo, number) =>
 /** A pull request's description, read when the job runs, so a re-run sees an edited one */
 export const pullBody = (repo, number) => gh(`repos/${repo}/pulls/${number}`).body ?? ''
 
-function main(env) {
-  let decision
+/**
+ * The gate's decision for a job's environment. `read` fetches the PR's files and description; when
+ * it throws (API down, a file list too long to read), the answer is to run the tests.
+ */
+export function gateFor(env, read = { files: pullFiles, body: pullBody }) {
   try {
     const event = env.EVENT_NAME
     const pull = event === 'pull_request'
-    decision = e2eDecision({
+    return e2eDecision({
       event,
-      files: pull ? pullFiles(env.REPO, env.PR_NUMBER) : [],
-      body: pull ? pullBody(env.REPO, env.PR_NUMBER) : '',
+      files: pull ? read.files(env.REPO, env.PR_NUMBER) : [],
+      body: pull ? read.body(env.REPO, env.PR_NUMBER) : '',
     })
   } catch (error) {
-    decision = {
+    const why = String(error.message).split('\n')[0]
+    return {
       run: true,
-      reason: `the gate could not decide (${error.message.split('\n')[0]}), so it runs`,
+      reason: `the gate could not decide (${why}), so it runs`,
       ui: [],
+      flows: [],
     }
   }
+}
+
+function main(env) {
+  const decision = gateFor(env)
   const text = summaryOf(decision)
   console.log(text)
   if (env.GITHUB_STEP_SUMMARY)

@@ -120,8 +120,8 @@ jobs:
             // description holds "End-to-end exemption: <reason>"; the reason needs 20+ characters and
             // the independent reviewer checks it against the diff. Shown here so the verdict is on record
             problems.push(...e2eProblems({ body }));
-            const e2e = e2eDecision({ event: 'pull_request', files, body });
-            core.info(`e2e-gate: decision=${e2e.run ? 'run' : 'skip'} ui_files=${e2e.ui.length} reason="${e2e.reason}"`);
+            const e2e = e2eDecision({ event: 'pull_request', files: changedFiles(files), body });
+            core.info(`e2e-gate: decision=${e2e.run ? 'run' : 'skip'} ui_files=${e2e.ui.length} flow_files=${e2e.flows.length} reason="${e2e.reason}"`);
 
             if (problems.length) {
               core.setFailed(
