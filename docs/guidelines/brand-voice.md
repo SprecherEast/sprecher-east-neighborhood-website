@@ -33,10 +33,10 @@ what they say, without telling you what to think.
 
 ## Kind when we ask
 
-Whenever we ask a neighbor for something (feedback, a reply, a sign-up, a correction), we ask the
-way a good neighbor would: politely, with a please or a thanks, and as an invitation, not an order.
-A bare command ("Tell us", "Sign up now") is rewritten. This is warmth, not padding: the polite
-word replaces nothing and stays inside the length budget.
+When we ask a neighbor to do something for us or for the neighborhood, we ask the way a good
+neighbor would: in polite wording, as an invitation, never as a bare order. Step-by-step
+directions (how to use a form or find a page) stay plain and exact; the kindness is in how we ask,
+not in extra words, so it stays inside the length budget.
 
 ## Length budget
 
