@@ -22,6 +22,7 @@ const event = (slug: string, title: string, extra: Partial<EventSummary> = {}): 
   categories: [],
   description: null,
   locationName: null,
+  place: { kind: 'unconfirmed', label: 'Location to be confirmed' },
   image: null,
   ...extra,
 })

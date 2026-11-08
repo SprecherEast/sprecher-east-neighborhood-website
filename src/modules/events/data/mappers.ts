@@ -7,6 +7,7 @@ import type { EventCategoryRef } from '../domain/categories'
 import { eventsHref, isCategorySlug } from '../domain/filters'
 import { toMapsHref } from '../domain/maps'
 import { isAgendaUrl, isOfficialBody } from '../domain/officialMeetings'
+import { eventPlace } from '../domain/place'
 import {
   clampWhole,
   THIS_WEEK_DEFAULT_HEADING,
@@ -29,6 +30,7 @@ export const SUMMARY_FIELDS = {
   categories: true,
   description: true,
   locationName: true,
+  locationType: true,
   heroImage: true,
 } as const
 
@@ -57,6 +59,7 @@ export function toEventSummary(doc: SummaryDoc): EventSummary {
     categories: toCategories(doc.categories),
     description: doc.description ?? null,
     locationName: doc.locationName ?? null,
+    place: eventPlace({ locationType: doc.locationType ?? null, locationName: doc.locationName ?? null }),
     image: toImageRef(doc.heroImage),
   }
 }
@@ -67,6 +70,11 @@ export function toEventDetail(doc: Event): EventDetail {
   const summary = toEventSummary(doc)
   return {
     ...summary,
+    place: eventPlace({
+      locationType: doc.locationType ?? null,
+      locationName: summary.locationName,
+      locationAddress,
+    }),
     locationType: doc.locationType ?? null,
     locationAddress,
     mapsHref: toMapsHref(doc.mapsUrl ?? null, locationAddress),

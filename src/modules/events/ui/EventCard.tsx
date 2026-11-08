@@ -47,8 +47,7 @@ export const EventCard: React.FC<{
   /** `h2` where no heading sits between the page's `h1` and the list; `h4` under a row's `h3` */
   headingLevel?: 'h2' | 'h3' | 'h4'
 }> = ({ event, compact, headingLevel = 'h3' }) => {
-  const { slug, title, date, timeStart, timeEnd, categories, description, locationName, image } =
-    event
+  const { slug, title, date, timeStart, timeEnd, categories, description, place, image } = event
 
   if (!slug) return null
 
@@ -65,6 +64,10 @@ export const EventCard: React.FC<{
             {/* Two lines, not one: a phone-wide card cut "Common Council Me…" to one (#122) */}
             <span className="line-clamp-2">{title}</span>
           </CardTitle>
+          <Text variant="small" className="mt-1 flex items-center gap-1.5 text-xs">
+            <MapPin aria-hidden="true" className="size-4 shrink-0" />
+            <span>{place.label}</span>
+          </Text>
         </div>
       </Card>
     )
@@ -112,9 +115,7 @@ export const EventCard: React.FC<{
                 </>
               ),
             },
-            ...(locationName
-              ? [{ icon: <MapPin />, value: locationName } satisfies IconMetaItem]
-              : []),
+            { icon: <MapPin />, value: place.label } satisfies IconMetaItem,
           ]}
         />
 

@@ -22,6 +22,7 @@ const event: EventSummary = {
   categories: [{ id: 1, title: 'Social' }],
   description: 'Bring a dish.',
   locationName: 'Park shelter',
+  place: { kind: 'venue', label: 'Park shelter' },
   image: null,
 }
 const cancelled = { ...event, cancelled: true }
@@ -31,6 +32,39 @@ const council: EventSummary = {
   title: 'Common Council',
   officialBody: 'city',
 }
+
+describe('EventCard, place (#873)', () => {
+  const online: EventSummary = { ...event, place: { kind: 'online', label: 'Online' } }
+  const unconfirmed: EventSummary = {
+    ...event,
+    place: { kind: 'unconfirmed', label: 'Location to be confirmed' },
+  }
+
+  it.each([
+    ['full', false],
+    ['compact', true],
+  ])(
+    'shows the venue, "Online" or "Location to be confirmed" on the %s card',
+    async (_, compact) => {
+      for (const [e, text] of [
+        [event, 'Park shelter'],
+        [online, 'Online'],
+        [unconfirmed, 'Location to be confirmed'],
+      ] as const) {
+        const { container } = render(<EventCard event={e} compact={compact} />)
+        expect(screen.getByText(text)).toBeDefined()
+        await expectAccessible(container)
+        cleanup()
+      }
+    },
+  )
+
+  it('shows it on a past event too, since the card does not look at the date', () => {
+    render(<EventCard event={{ ...unconfirmed, date: '2020-01-05T00:00:00.000Z' }} />)
+
+    expect(screen.getByText('Location to be confirmed')).toBeDefined()
+  })
+})
 
 describe('EventCard, for a cancelled event (#122)', () => {
   it.each([

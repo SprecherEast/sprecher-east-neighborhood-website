@@ -26,6 +26,7 @@ export function eventHeaderProps(event: EventDetail): PageHeaderProps {
     image,
     locationType,
     officialBody,
+    place,
     timeEnd,
     timeStart,
     title,
@@ -40,6 +41,7 @@ export function eventHeaderProps(event: EventDetail): PageHeaderProps {
           },
         ]
       : []),
+    { label: 'Location', value: place.label },
     ...(locationType ? [{ label: 'Format', value: formatEventLocationType(locationType) }] : []),
   ]
   const badge = image ? 'on-image' : 'category'
