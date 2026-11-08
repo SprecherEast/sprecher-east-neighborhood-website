@@ -23,7 +23,9 @@ export function MapBlock({
   return (
     <Section spacing="sm" placement={placement}>
       <div className="space-y-6">
-        <Text variant="section">{title}</Text>
+        <Text variant="section" className="tracking-tight md:text-3xl">
+          {title}
+        </Text>
         <MapEmbed
           embedUrl={embedUrl}
           title={title}

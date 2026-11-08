@@ -84,4 +84,12 @@ describe('MapBlock (#764)', () => {
     expect(container.querySelector('.container')).toBeNull()
     expect(container.firstElementChild?.className).not.toContain('py-')
   })
+
+  // The text blocks beside it head their part at this size, so the two columns read as one set (#891)
+  it('heads the map at the same size as the text blocks around it', () => {
+    render(<MapBlock {...props} />)
+    const heading = screen.getByRole('heading', { name: props.title })
+    expect(heading.className).toMatch(/\bmd:text-3xl\b/)
+    expect(heading.className).toMatch(/\btracking-tight\b/)
+  })
 })

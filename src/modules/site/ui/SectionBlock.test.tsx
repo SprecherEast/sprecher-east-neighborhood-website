@@ -94,4 +94,26 @@ describe('SectionBlock (#884)', () => {
     const { container } = render(<SectionBlock items={[]} />)
     expect(container.firstChild).toBeNull()
   })
+
+  // Blocks stacked in one item are separated by the same space the section keeps between items (#891)
+  it('spaces blocks stacked in one item evenly', () => {
+    render(
+      <SectionBlock
+        items={[
+          item('x', {
+            children: (
+              <>
+                <p>First block</p>
+                <p>Second block</p>
+              </>
+            ),
+          }),
+        ]}
+      />,
+    )
+    const stack = cell('First block')
+    expect(stack.className).toMatch(/\bflex\b/)
+    expect(stack.className).toMatch(/\bflex-col\b/)
+    expect(stack.className).toMatch(/\bgap-8\b/)
+  })
 })

@@ -56,6 +56,7 @@ export function SectionBlock({ items }: { items: SectionBlockItem[] }) {
           <div
             key={index}
             className={cn(
+              'flex flex-col gap-8',
               COLUMN_SPAN[width],
               TEXT_ALIGN[align],
               SELF[verticalAlign],
