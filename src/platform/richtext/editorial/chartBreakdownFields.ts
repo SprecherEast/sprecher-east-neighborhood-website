@@ -6,6 +6,21 @@ import { CHART_LIMITS } from '@/platform/lib/chart/spec'
 import { forKinds, keyField, labelField } from './chartDataFields'
 import { checked } from './chartValidate'
 
+/** A name and a dollar amount side by side: the first line of an area and of a piece */
+const nameAndDollars = (): Field => ({
+  type: 'row',
+  fields: [
+    labelField('40%'),
+    {
+      name: 'value',
+      type: 'number',
+      required: true,
+      min: 0,
+      admin: { width: '40%', description: 'In dollars.' },
+    },
+  ],
+})
+
 /** The fields of a breakdown chart (#866): what a square is worth, and the areas with their pieces */
 export const chartBreakdownFields = (): Field[] => [
   {
@@ -31,19 +46,7 @@ export const chartBreakdownFields = (): Field[] => [
     },
     validate: checked('areas', array),
     fields: [
-      {
-        type: 'row',
-        fields: [
-          labelField('40%'),
-          {
-            name: 'value',
-            type: 'number',
-            required: true,
-            min: 0,
-            admin: { width: '40%', description: 'In dollars.' },
-          },
-        ],
-      },
+      nameAndDollars(),
       { type: 'row', fields: [keyField()] },
       {
         name: 'pieces',
@@ -56,19 +59,7 @@ export const chartBreakdownFields = (): Field[] => [
             'Optional smaller parts of this area. Pieces marked "Shown" sit under the area; the rest go in "See the smaller pieces".',
         },
         fields: [
-          {
-            type: 'row',
-            fields: [
-              labelField('40%'),
-              {
-                name: 'value',
-                type: 'number',
-                required: true,
-                min: 0,
-                admin: { width: '40%', description: 'In dollars.' },
-              },
-            ],
-          },
+          nameAndDollars(),
           {
             type: 'row',
             fields: [
