@@ -145,9 +145,14 @@ export function checkOverlap(issues, { candidate } = {}) {
           if (!seen.has(line)) clashes.push({ kind: 'files', issues: pair, detail: line })
           seen.add(line)
         }
-      const shared = hotSpotsTouched(a.files).filter((n) => hotSpotsTouched(b.files).includes(n))
-      for (const name of shared)
-        clashes.push({ kind: 'hot-spot', issues: pair, detail: `both touch ${name}` })
+      // The written rule: two issues that each touch any hot spot overlap
+      const [hotA, hotB] = [hotSpotsTouched(a.files), hotSpotsTouched(b.files)]
+      if (hotA.length && hotB.length)
+        clashes.push({
+          kind: 'hot-spot',
+          issues: pair,
+          detail: `#${a.number} touches ${hotA.join(', ')}; #${b.number} touches ${hotB.join(', ')}`,
+        })
     }
   }
   return clashes.sort(byIssues)
@@ -156,6 +161,34 @@ export function checkOverlap(issues, { candidate } = {}) {
 /** One line per clash. */
 export function formatClashes(clashes) {
   return clashes.map((c) => `${c.issues.map((n) => `#${n}`).join(' / ')} ${c.kind}: ${c.detail}`)
+}
+
+const isList = (value, test) => Array.isArray(value) && value.every(test)
+
+/**
+ * Why the input cannot be checked, or null. A wrong or missing candidate must never read as "no
+ * overlap", so it is bad input (exit 2), not a pass.
+ */
+export function inputProblem(list, candidate) {
+  if (!Array.isArray(list) || list.length === 0)
+    return 'The input must be a non-empty list of issues.'
+  const numbers = new Set()
+  for (const item of list) {
+    if (!Number.isInteger(item?.number)) return 'Every issue in the list needs a number.'
+    if (numbers.has(item.number)) return `Issue #${item.number} is in the list twice.`
+    numbers.add(item.number)
+    const isPath = (v) => typeof v === 'string'
+    if (item.body !== undefined && typeof item.body !== 'string')
+      return `#${item.number}: body must be text.`
+    for (const key of ['files', 'mustNotTouch'])
+      if (item[key] !== undefined && !isList(item[key], isPath))
+        return `#${item.number}: ${key} must be a list of paths.`
+    if (item.blockedBy !== undefined && !isList(item.blockedBy, Number.isInteger))
+      return `#${item.number}: blockedBy must be a list of issue numbers.`
+  }
+  if (candidate !== undefined && !numbers.has(candidate))
+    return `The candidate #${candidate} is not in the list; add it, or the check says nothing about it.`
+  return null
 }
 
 /** Runs the command line; returns the exit code. */
@@ -175,8 +208,9 @@ export function main(argv, out = console.log) {
     out(`Cannot read ${file}: ${error.message}`)
     return 2
   }
-  if (!Array.isArray(list) || list.some((i) => !Number.isInteger(i?.number))) {
-    out('The input must be a list of issues, each with a number.')
+  const problem = inputProblem(list, candidate)
+  if (problem) {
+    out(problem)
     return 2
   }
   const issues = list.map(normalizeIssue)

@@ -24,6 +24,12 @@ piece is on #695 (2026-11-08). Everything you decide, claim or ask is a comment 
      -q '.[] | "#\(.number)\(if .pull_request then " (PR)" else "" end) \(.title) (since \(.created_at[:10]))"'
    ```
 
+   Count them with the search API, since the list stops at seven:
+
+   ```bash
+   gh api "search/issues?q=repo:{owner}/{repo}+is:open+label:%22needs+owner%22&per_page=1" -q .total_count
+   ```
+
    If there are more than seven, say how many wait and show the seven oldest. Stop there and let
    the owner answer before anything else. Silence is never a yes.
 
@@ -38,7 +44,8 @@ Write or rewrite an issue so a worker can follow it without guessing, at high ef
 [Definition of Ready](../../../docs/process/project-management.md#definition-of-ready): a plain
 summary, then details, then acceptance criteria someone else can check; labels (one type, areas,
 one priority); a parent; a size; **Files likely touched** and **Must not touch**, each as
-backticked paths (the overlap check reads only those) or `None`; the role guides and knowledge
+backticked paths (the overlap check reads only those; a bare name with no extension, such as
+`Makefile`, or prose counts as undeclared, so write the folder or add the extension) or `None`; the role guides and knowledge
 notes a worker must load; and an open-questions line. Split anything bigger than L. Sizing,
 priority and sprint judgment stay with you; moves that must happen every time belong to the
 board's built-in workflows, not to you.
@@ -56,16 +63,22 @@ Before every claim, with the candidate and every issue In progress:
    Add `"blockedBy": [<numbers>]` from `issues/<n>/dependencies/blocked_by` when there are any.
 
 2. Run `node scripts/overlap-check.mjs issues.json --candidate <n>`.
-3. Exit 0: claim it. Exit 1: the lines name each clash (shared files, a shared hot spot, a blocker,
-   an issue that declared nothing). Wait, regroom the issue to narrow its files, or take another.
-   When in doubt, wait. The shared hot spots are listed once, in `scripts/overlap-hot-spots.mjs`.
+3. Exit 0: claim it. Exit 1: the lines name each clash (shared files, a shared hot spot, a
+   blocker, an issue that declared nothing). Wait, regroom the issue to narrow its files, or take
+   another. Exit 2: the input is wrong (the candidate is missing from the list, an empty list, a
+   malformed entry); fix it and run again, it is never a pass. When in doubt, wait.
+4. The written rule is followed literally: two issues that each touch any shared hot spot overlap,
+   even in different lines. The hot spots are listed once, in `scripts/overlap-hot-spots.mjs`, and
+   a test keeps that list and the rule in `project-management.md` in step.
 
 ## 4. Review depth
 
 Look the level up in the [scrutiny table](../../../docs/process/agent-operating-model.md#6-how-much-scrutiny-a-change-gets).
-It is a lookup, not an agent: take the highest level any row matches, and put it, with the
-perspectives it calls for, in the brief. A reviewer may raise it, never lower it. Start the
-reviewer as a new subagent that gets only the pull request and its issue.
+It is a lookup, not an agent: take the highest level any row matches. **The levels do not take
+effect yet** (a later piece of #695 does that). Until then review depth follows the model and
+effort rule in [`CLAUDE.md`](../../../CLAUDE.md), and the level you look up is only a proposal in
+the brief, which no one is bound by. Start the reviewer as a new subagent that gets only the pull
+request and its issue.
 
 ## 5. Dispatch brief
 
@@ -83,7 +96,7 @@ required checks green, one pull request with every template section>
 guidelines and skills that apply>
 **May touch:** <backticked paths>
 **Must not touch:** <backticked paths>
-**Scrutiny level:** <0 to 3, from the table, and the perspectives it calls for>
+**Proposed scrutiny level:** <0 to 3, from the table; a proposal until the levels take effect>
 **Branch:** <name>. Depends on: <open pull requests to stack on, or none>
 **Owner needed:** <no, or the question>
 ```

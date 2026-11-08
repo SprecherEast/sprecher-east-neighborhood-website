@@ -18,7 +18,8 @@ Claude Code.
 - **Agent team** ([operating model](/docs/process/agent-operating-model.md), #685, #721). The chief
   of staff is built (#695 piece one): `.claude/agents/chief-of-staff.md`, run with
   `claude --agent chief-of-staff`, on `opus` at `high` effort, with `disallowedTools` for Edit,
-  Write, NotebookEdit, MultiEdit, push, merge and the merge API, and `Agent(worker, qa-reviewer)` as
+  Write, NotebookEdit, MultiEdit, push, merge, `PUT` API calls and GraphQL mutations (known
+  holes are in the [manual test](/docs/process/chief-of-staff-manual-test.md)), and `Agent(worker, qa-reviewer)` as
   the only agents it may start. The worker agent comes in a later piece; the standard reviewers stay
   on `sonnet` at `medium`. Its helper procedures are skills, so they run in its session and need no model of
   their own. Review depth today is the #522 rule in `CLAUDE.md` and nothing wider. Never `fable` in

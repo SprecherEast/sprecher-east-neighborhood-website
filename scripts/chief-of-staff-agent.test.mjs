@@ -2,8 +2,7 @@
  * Static check of the chief of staff agent's limits (#695). It reads `disallowedTools` and `tools`
  * from the agent file and applies Claude Code's documented matching for `Bash(...)` rules to each
  * forbidden action. This proves the file lists the actions; it does not prove the harness refuses
- * them. The refusal itself is tried by hand: see "Manual test: the chief of staff's limits" in
- * docs/process/agent-operating-model.md, whose results table stays empty until someone runs it.
+ * them. The refusal itself is tried by hand: see docs/process/chief-of-staff-manual-test.md, whose results table stays empty until someone runs it.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -70,6 +69,11 @@ describe('the chief of staff agent file', () => {
     'gh pr merge 12 --squash',
     'gh api -X PUT repos/o/r/pulls/12/merge-async -f merge_method=squash',
     'gh api -X PUT repos/o/r/pulls/12/merge',
+    'gh api --method PUT repos/o/r/pulls/12/merge-async',
+    'gh api repos/o/r/pulls/12/merge-async -X PUT -f merge_method=squash',
+    'gh api -X PUT repos/o/r/contents/src/a.ts -f message=x -f content=eA==',
+    'gh api repos/o/r/contents/src/a.ts --method=PUT -f message=x',
+    'gh api graphql -f query="mutation { enablePullRequestAutoMerge(input: {}) { clientMutationId } }"',
   ])('refuses the command: %s', (command) => {
     expect(refuses(disallowed, 'Bash', command)).toBe(true)
   })
@@ -79,6 +83,11 @@ describe('the chief of staff agent file', () => {
     'git log --oneline',
     'git merge-base main HEAD',
     'gh api repos/o/r/issues/695',
+    'gh api repos/o/r/pulls/12 --jq .mergeable',
+    'gh api repos/o/r/pulls/12/merge-async/abc',
+    'gh api -X POST repos/o/r/issues/695/comments -f body=x',
+    'gh api -X PATCH repos/o/r/issues/695 -f state=open',
+    'gh api graphql -f query="query { viewer { login } }"',
     'gh pr view 12',
     'node scripts/overlap-check.mjs issues.json',
   ])('still allows the command: %s', (command) => {
@@ -90,10 +99,15 @@ describe('the chief of staff agent file', () => {
     expect(agentTools).toEqual(['Agent(worker, qa-reviewer)'])
   })
 
-  it('leaves the twelve role agents as they are', () => {
-    const files = fs
+  it('leaves the other role agents pointing at their guides', () => {
+    const others = fs
       .readdirSync(path.join(root, '.claude/agents'))
       .filter((f) => f !== 'chief-of-staff.md')
-    expect(files).toHaveLength(12)
+    expect(others.length).toBeGreaterThan(0)
+    for (const file of others) {
+      const guide = `docs/roles/${file}`
+      expect(fs.readFileSync(path.join(root, '.claude/agents', file), 'utf8')).toContain(guide)
+      expect(fs.existsSync(path.join(root, guide)), `${guide} exists`).toBe(true)
+    }
   })
 })

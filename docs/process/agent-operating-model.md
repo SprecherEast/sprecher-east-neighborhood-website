@@ -60,7 +60,7 @@ flowchart TB
 
 Three kinds of session and no standing layer between them. A fourth, the scheduled sweep, only
 labels and comments (planned, #697). [`CLAUDE.md`](../../CLAUDE.md) says which model each uses.
-Partly built: the [role agents](../roles/README.md) and `pr-review` exist; #695 builds the rest.
+Partly built: the [role agents](../roles/README.md) and `pr-review` exist; #695 builds the rest ([limits: manual test, not run](chief-of-staff-manual-test.md)).
 
 **Why so few.** Several agents use about 15 times a chat's tokens, and coding has less parallel work
 than research ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)). In a
@@ -246,5 +246,4 @@ flowchart LR
 | Phone, push and the daily sweep (Windows)                       | Planned | #697                           |
 | Feedback loop                                                   | Planned | #698                           |
 
-The order is fixed by what each needs: #712, then #695, then #696 to #698. The chief of staff's
-limits are checked statically; the refusals are tried by hand ([manual test](chief-of-staff-manual-test.md), not run).
+The order is fixed by what each needs: #712, then #695, then #696 to #698.

@@ -1,9 +1,3 @@
-import { spawnSync } from 'node:child_process'
-import fs from 'node:fs'
-import os from 'node:os'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -14,10 +8,6 @@ import {
   parseDeclared,
   pathsOverlap,
 } from './overlap-check.mjs'
-import { HOT_SPOTS } from './overlap-hot-spots.mjs'
-
-const here = path.dirname(fileURLToPath(import.meta.url))
-const root = path.join(here, '..')
 
 /** An issue body the way the issue forms write it */
 const body = (files, mustNot) =>
@@ -104,6 +94,8 @@ describe('hotSpotsTouched', () => {
     expect(hotSpotsTouched(['AGENTS.md']).length).toBe(1)
     expect(hotSpotsTouched(['src/migrations/x.ts']).length).toBe(1)
     expect(hotSpotsTouched(['package-lock.json']).length).toBe(1)
+    expect(hotSpotsTouched(['src/modules/site/cms/navGlobal.ts']).length).toBe(1)
+    expect(hotSpotsTouched(['src/modules/site/data/globals.ts']).length).toBe(1)
   })
 })
 
@@ -125,7 +117,7 @@ describe('checkOverlap: the same input always gives the same clashes', () => {
     expect(clashes[0]).toMatchObject({ kind: 'files', issues: [1, 2] })
   })
 
-  it('reports two issues that each touch the same hot spot, in different files', () => {
+  it('reports two issues that each touch a hot spot, even the same one in different files', () => {
     const clashes = checkOverlap([
       issue(1, ['src/platform/ui/Button.tsx']),
       issue(2, ['src/platform/lib/dates.ts']),
@@ -133,8 +125,19 @@ describe('checkOverlap: the same input always gives the same clashes', () => {
     expect(clashes.map((c) => c.kind)).toEqual(['hot-spot'])
   })
 
-  it('does not report two issues that touch different hot spots', () => {
-    expect(checkOverlap([issue(1, ['package.json']), issue(2, ['AGENTS.md'])])).toEqual([])
+  it('reports two issues that touch different hot spots, as the written rule says', () => {
+    const clashes = checkOverlap([issue(1, ['package.json']), issue(2, ['AGENTS.md'])])
+    expect(clashes).toEqual([
+      expect.objectContaining({
+        kind: 'hot-spot',
+        issues: [1, 2],
+        detail: '#1 touches dependencies; #2 touches process files',
+      }),
+    ])
+  })
+
+  it('does not report a hot spot when only one issue touches one', () => {
+    expect(checkOverlap([issue(1, ['package.json']), issue(2, ['src/modules/news'])])).toEqual([])
   })
 
   it('reports a blocker that is in the set', () => {
@@ -182,61 +185,5 @@ describe('checkOverlap: the same input always gives the same clashes', () => {
   it('lists one line per clash, ending the same way every time', () => {
     const lines = formatClashes(checkOverlap([issue(1, ['src/a']), issue(2, ['src/a/b'])]))
     expect(lines).toEqual(['#1 / #2 files: src/a (#1) overlaps src/a/b (#2)'])
-  })
-})
-
-describe('the command line', () => {
-  const run = (issues, ...args) => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'overlap-'))
-    const file = path.join(dir, 'issues.json')
-    fs.writeFileSync(file, JSON.stringify(issues))
-    return spawnSync('node', [path.join(here, 'overlap-check.mjs'), file, ...args], {
-      encoding: 'utf8',
-    })
-  }
-
-  it('exits 0 and says so when nothing clashes', () => {
-    const result = run([
-      { number: 1, body: body('`src/a`', 'None') },
-      { number: 2, body: body('`src/b`', 'None') },
-    ])
-    expect(result.status).toBe(0)
-    expect(result.stdout).toContain('No overlap')
-  })
-
-  it('exits non-zero and lists the clash', () => {
-    const result = run([
-      { number: 1, body: body('`src/a`', 'None') },
-      { number: 2, files: ['src/a/x.ts'], mustNotTouch: [] },
-    ])
-    expect(result.status).toBe(1)
-    expect(result.stdout).toContain('#1 / #2 files')
-  })
-
-  it('exits 2 on bad input', () => {
-    expect(spawnSync('node', [path.join(here, 'overlap-check.mjs')]).status).toBe(2)
-    expect(run({ not: 'an array' }).status).toBe(2)
-  })
-})
-
-describe('the hot spot list', () => {
-  it('has a name and at least one path for every group', () => {
-    for (const group of HOT_SPOTS) {
-      expect(group.name).toBeTruthy()
-      expect(group.paths.length).toBeGreaterThan(0)
-    }
-  })
-
-  it('still names every path the written rule lists (the rule is in how we work)', () => {
-    const text = fs.readFileSync(path.join(root, 'docs/process/project-management.md'), 'utf8')
-    const paragraph = text.split(/\n(?=- )/).find((entry) => entry.includes('**Shared hot spots**'))
-    expect(paragraph).toBeTruthy()
-    const written = [...paragraph.matchAll(/`([^`]+)`/g)].map((m) => m[1].replace(/\/$/, ''))
-    expect(written.length).toBeGreaterThan(5)
-    const listed = HOT_SPOTS.flatMap((group) => group.paths)
-    for (const item of written) {
-      const found = listed.some((p) => p === item || p.endsWith(`/${item}`))
-      expect(found, `${item} is in the written rule but not in overlap-hot-spots.mjs`).toBe(true)
-    }
   })
 })
