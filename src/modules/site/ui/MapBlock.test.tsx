@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import type { ImageRef } from '@/platform/lib'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
+import { TITLE_TEXT } from './blockStyles'
 import { MapBlock } from './MapBlock'
 
 afterEach(cleanup)
@@ -89,7 +90,7 @@ describe('MapBlock (#764)', () => {
   it('heads the map at the same size as the text blocks around it', () => {
     render(<MapBlock {...props} />)
     const heading = screen.getByRole('heading', { name: props.title })
-    expect(heading.className).toMatch(/\bmd:text-3xl\b/)
-    expect(heading.className).toMatch(/\btracking-tight\b/)
+    // the same class the text blocks put on their title wrapper, so one edit moves both
+    expect(heading.parentElement?.className).toBe(TITLE_TEXT)
   })
 })

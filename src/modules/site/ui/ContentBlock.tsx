@@ -13,6 +13,7 @@ import type {
   ContentColumn,
   ContentColumnSize,
 } from '../domain/blocks'
+import { TITLE_TEXT } from './blockStyles'
 import { COLUMN_SPAN } from './columnSpan'
 
 /*
@@ -39,8 +40,6 @@ const SIDE_CARD_TEXT =
   '[&_h3]:mb-3 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-foreground [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted-foreground'
 const STAT_TEXT =
   '[&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-foreground [&_p]:mt-1 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted-foreground'
-const TITLE_TEXT =
-  '[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:text-foreground md:[&_h2]:text-3xl'
 
 /** A column's text, then its link button */
 function ColumnContent({ body, link }: Pick<ContentColumn, 'body' | 'link'>) {
