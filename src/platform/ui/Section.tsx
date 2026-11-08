@@ -37,7 +37,15 @@ const widthClass = {
   narrow: 'mx-auto max-w-md',
 } as const
 
+/**
+ * Where the band sits: `section` (default) is its own band of the page and brings the container
+ * and the vertical padding; `inline` sits inside a layout that already owns the space (a cell of
+ * a section block), so it draws neither.
+ */
+export type SectionPlacement = 'section' | 'inline'
+
 export type SectionProps = VariantProps<typeof sectionVariants> & {
+  placement?: SectionPlacement
   width?: keyof typeof widthClass
   /** `div` where it only sets the width and spacing, not a part of the page with a heading */
   as?: 'section' | 'div'
@@ -53,10 +61,18 @@ export function Section({
   tone,
   spacing,
   as: Element = 'section',
+  placement = 'section',
   className,
   children,
   ...rest
 }: SectionProps) {
+  if (placement === 'inline') {
+    return (
+      <Element {...rest} className={cn(sectionVariants({ tone, spacing: 'none' }), className)}>
+        {children}
+      </Element>
+    )
+  }
   return (
     <Element
       {...rest}

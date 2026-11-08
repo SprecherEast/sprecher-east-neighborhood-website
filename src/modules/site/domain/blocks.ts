@@ -5,8 +5,11 @@ import type { ImageRef, ResolvedLink, RichTextValue } from '@/platform/lib'
  * build them from the stored blocks; the components in `ui/` draw them.
  */
 
-/** How wide a content column runs on a large screen, as the editor chose it */
-export type ContentColumnSize = 'full' | 'half' | 'oneThird' | 'twoThirds'
+/** How wide a column or section item runs on a large screen, as the editor chose it */
+export type LayoutWidth = 'full' | 'threeQuarters' | 'twoThirds' | 'half' | 'oneThird' | 'quarter'
+
+/** The widths a content column offers: the section's, less the quarters */
+export type ContentColumnSize = Exclude<LayoutWidth, 'threeQuarters' | 'quarter'>
 
 /** One column of a content block: its text and an optional link button */
 export type ContentColumn = {
@@ -56,3 +59,27 @@ export type MapBlockProps = {
   embedUrl?: string
   preview?: ImageRef
 }
+
+/** How an item's text lines up inside its column */
+export type SectionAlign = 'start' | 'center' | 'end'
+
+/** Where an item sits against the tallest item beside it */
+export type SectionVerticalAlign = 'top' | 'center' | 'bottom'
+
+/** Where an item shows on a phone, where the items stack: as listed, above the rest, or below */
+export type SectionPhoneOrder = 'inOrder' | 'first' | 'last'
+
+/** One item of a section: its layout, as the editor chose it, and the blocks it holds (`B`) */
+export type SectionItem<B> = {
+  width: LayoutWidth
+  align: SectionAlign
+  verticalAlign: SectionVerticalAlign
+  phoneOrder: SectionPhoneOrder
+  blocks: B[]
+}
+
+/**
+ * The section block: a row of items that each hold blocks, laid out by the editor's choices
+ * instead of by code. The items wrap onto new rows when their widths add up to more than a row.
+ */
+export type SectionBlockProps<B> = { items: SectionItem<B>[] }

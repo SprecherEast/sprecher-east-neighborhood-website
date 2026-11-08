@@ -10,6 +10,7 @@ import type {
   MapBlock,
   MediaBlock,
   Page,
+  SectionBlock,
   TopIssuesBlock,
 } from '@/payload-types'
 import { toGoogleMapsEmbedUrl } from '@/platform/lib/googleMapsEmbed'
@@ -24,6 +25,7 @@ import type {
   ContentColumn,
   ContentLayout,
   MapBlockProps,
+  SectionBlockProps,
 } from '../domain/blocks'
 import type { PageHeroProps } from '../domain/hero'
 import { type HeaderNavLink, isHeaderButtonPath } from '../domain/nav'
@@ -43,6 +45,7 @@ export type PageLayoutBlock =
   | (CallToActionBlockProps & { blockType: 'cta' })
   | (ArchiveBlockProps & { blockType: 'archive'; postQuery: ArchivePostQuery })
   | (MapBlockProps & { blockType: 'mapBlock' })
+  | (SectionBlockProps<PageLayoutBlock> & { blockType: 'section' })
   | FormBlock
   | MediaBlock
   | EventsThisWeekBlock
@@ -136,6 +139,21 @@ export function toMapBlockProps({
   }
 }
 
+/** The section block as plain props: each item's layout and its blocks, mapped like the page's (#884) */
+export function toSectionBlockProps({
+  items,
+}: Pick<SectionBlock, 'items'>): SectionBlockProps<PageLayoutBlock> {
+  return {
+    items: items.map(({ width, align, verticalAlign, phoneOrder, content }) => ({
+      width,
+      align,
+      verticalAlign,
+      phoneOrder,
+      blocks: toPageLayout(content ?? []),
+    })),
+  }
+}
+
 /** A page's layout with site's own blocks mapped; a block type the site doesn't know is dropped */
 export function toPageLayout(layout: Page['layout']): PageLayoutBlock[] {
   return layout.flatMap((block): PageLayoutBlock[] => {
@@ -151,6 +169,8 @@ export function toPageLayout(layout: Page['layout']): PageLayoutBlock[] {
       }
       case 'mapBlock':
         return [{ blockType: 'mapBlock', ...toMapBlockProps(block) }]
+      case 'section':
+        return [{ blockType: 'section', ...toSectionBlockProps(block) }]
       case 'formBlock':
       case 'mediaBlock':
       case 'eventsThisWeek':

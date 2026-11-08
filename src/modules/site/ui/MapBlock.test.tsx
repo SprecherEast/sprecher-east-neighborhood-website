@@ -61,22 +61,27 @@ describe('MapBlock (#764)', () => {
     expect(screen.getByAltText(preview.alt as string)).toBeTruthy()
   })
 
-  it('sets the picture at about three eighths of the width, on the right, from md up', () => {
+  it('fills the width of the section item it sits in, with no arrangement of its own', () => {
     const { container } = render(<MapBlock {...props} />)
 
-    expect(
-      container.querySelector('.md\\:grid-cols-\\[minmax\\(0\\,5fr\\)_minmax\\(0\\,3fr\\)\\]'),
-    ).toBeTruthy()
+    expect(container.querySelector('[class*="grid-cols"]')).toBeNull()
+    expect(container.querySelector('[class*="md:order"]')).toBeNull()
   })
 
-  it('puts the heading above the row, so the picture starts level with the text', () => {
-    const { container } = render(<MapBlock {...props} />)
+  it('draws the heading, the picture, then the text under it', () => {
+    render(<MapBlock {...props} />)
     const heading = screen.getByText(props.title)
-    const grid = container.querySelector(
-      '.md\\:grid-cols-\\[minmax\\(0\\,5fr\\)_minmax\\(0\\,3fr\\)\\]',
-    )
+    const picture = screen.getByAltText(preview.alt as string)
+    const text = screen.getByText(/I-94 to the north, Sprecher Road/)
 
-    expect(grid?.contains(heading)).toBe(false)
-    expect(grid?.className).toContain('items-start')
+    expect(heading.compareDocumentPosition(picture) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(picture.compareDocumentPosition(text) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('draws without its own container or padding when it sits inside a section item', () => {
+    const { container } = render(<MapBlock {...props} placement="inline" />)
+
+    expect(container.querySelector('.container')).toBeNull()
+    expect(container.firstElementChild?.className).not.toContain('py-')
   })
 })

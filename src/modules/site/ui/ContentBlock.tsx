@@ -5,7 +5,7 @@ import { RichText } from '@/platform/richtext/RichText'
 import { Card } from '@/platform/ui/Card'
 import { CardGrid, CardGridItem } from '@/platform/ui/CardGrid'
 import { LinkButton } from '@/platform/ui/CMSLink'
-import { Section } from '@/platform/ui/Section'
+import { Section, type SectionPlacement } from '@/platform/ui/Section'
 
 import type {
   ContentBlockProps,
@@ -13,6 +13,7 @@ import type {
   ContentColumn,
   ContentColumnSize,
 } from '../domain/blocks'
+import { COLUMN_SPAN } from './columnSpan'
 
 /*
  * Text, cards or stats from the page builder (B8–B11). The mapper picks the layout; this draws it.
@@ -21,10 +22,10 @@ import type {
 
 /** A column's width on the 12-column grid of the single and columns layouts */
 const SPAN: Record<ContentColumnSize, string> = {
-  full: 'col-span-4 lg:col-span-12',
-  half: 'col-span-4 lg:col-span-6',
-  oneThird: 'col-span-4 lg:col-span-4',
-  twoThirds: 'col-span-4 lg:col-span-8',
+  full: COLUMN_SPAN.full,
+  half: COLUMN_SPAN.half,
+  oneThird: COLUMN_SPAN.oneThird,
+  twoThirds: COLUMN_SPAN.twoThirds,
 }
 
 /** A card's width in a `CardGrid`: a full card takes the row, two-thirds two of three columns */
@@ -139,13 +140,13 @@ function Layout(props: ContentBlockProps) {
   }
 }
 
-export function ContentBlock(props: ContentBlockProps) {
+export function ContentBlock(props: ContentBlockProps & { placement?: SectionPlacement }) {
   const isEmpty = props.layout === 'cards' ? props.groups.length === 0 : props.columns.length === 0
   if (isEmpty) return null
 
   const isBand = props.layout === 'cards' || props.layout === 'stats'
   return (
-    <Section tone={isBand ? 'surface' : 'plain'} spacing="sm">
+    <Section tone={isBand ? 'surface' : 'plain'} spacing="sm" placement={props.placement}>
       <Layout {...props} />
     </Section>
   )

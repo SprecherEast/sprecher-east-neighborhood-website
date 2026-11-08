@@ -251,6 +251,7 @@ export interface Page {
   layout: (
     | CallToActionBlock
     | ContentBlock
+    | SectionBlock
     | MediaBlock
     | MapBlock
     | ArchiveBlock
@@ -650,6 +651,32 @@ export interface ContentBlock {
   id?: string | null
   blockName?: string | null
   blockType: 'content'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionBlock".
+ */
+export interface SectionBlock {
+  items: {
+    /**
+     * How much of the row this item takes on a large screen. Items that add up to more than a row move to the next one. On a phone every item is full width.
+     */
+    width: 'full' | 'threeQuarters' | 'twoThirds' | 'half' | 'oneThird' | 'quarter'
+    align: 'start' | 'center' | 'end'
+    /**
+     * Where the item sits beside a taller item in the same row.
+     */
+    verticalAlign: 'top' | 'center' | 'bottom'
+    /**
+     * Where this item shows when the items stack on a phone.
+     */
+    phoneOrder: 'inOrder' | 'first' | 'last'
+    content?: (ContentBlock | MediaBlock | MapBlock)[] | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'section'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1773,6 +1800,7 @@ export interface PagesSelect<T extends boolean = true> {
     | {
         cta?: T | CallToActionBlockSelect<T>
         content?: T | ContentBlockSelect<T>
+        section?: T | SectionBlockSelect<T>
         mediaBlock?: T | MediaBlockSelect<T>
         mapBlock?: T | MapBlockSelect<T>
         archive?: T | ArchiveBlockSelect<T>
@@ -1839,6 +1867,30 @@ export interface ContentBlockSelect<T extends boolean = true> {
               url?: T
               label?: T
               appearance?: T
+            }
+        id?: T
+      }
+  id?: T
+  blockName?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionBlock_select".
+ */
+export interface SectionBlockSelect<T extends boolean = true> {
+  items?:
+    | T
+    | {
+        width?: T
+        align?: T
+        verticalAlign?: T
+        phoneOrder?: T
+        content?:
+          | T
+          | {
+              content?: T | ContentBlockSelect<T>
+              mediaBlock?: T | MediaBlockSelect<T>
+              mapBlock?: T | MapBlockSelect<T>
             }
         id?: T
       }

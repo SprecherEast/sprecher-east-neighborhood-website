@@ -84,6 +84,7 @@ describe('SITE_LAYOUT_BLOCKS', () => {
     expect(SITE_LAYOUT_BLOCKS.map((b) => b.slug)).toEqual([
       'cta',
       'content',
+      'section',
       'mediaBlock',
       'mapBlock',
       'archive',

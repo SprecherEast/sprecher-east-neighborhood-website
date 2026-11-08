@@ -1,6 +1,7 @@
 import React, { type ComponentType, type ReactNode } from 'react'
 
 import type { PageLayoutBlock as LayoutBlock } from '../use-cases/getPageBySlug'
+import { SectionBlock } from './SectionBlock'
 
 type BlockOf<T extends LayoutBlock['blockType']> = Extract<LayoutBlock, { blockType: T }>
 
@@ -12,28 +13,52 @@ type BlockOf<T extends LayoutBlock['blockType']> = Extract<LayoutBlock, { blockT
  * supplies the map and `RenderBlocks` imports none of them (0008).
  */
 export type PageBlockComponents = {
-  [T in LayoutBlock['blockType']]: ComponentType<BlockOf<T> & { disableInnerContainer?: boolean }>
+  [T in Exclude<LayoutBlock['blockType'], 'section'>]: ComponentType<
+    BlockOf<T> & { disableInnerContainer?: boolean; placement?: 'section' | 'inline' }
+  >
 }
 
+/**
+ * Where a block is drawn: its own band of the page, or a cell of a section block, which owns the
+ * space around it (#884).
+ */
+type Placement = 'section' | 'inline'
+
 /** One block with its component; an unknown block type draws nothing. */
-function renderBlock(block: LayoutBlock, components: PageBlockComponents): ReactNode {
+function renderBlock(
+  block: LayoutBlock,
+  components: PageBlockComponents,
+  placement: Placement = 'section',
+): ReactNode {
   switch (block.blockType) {
+    case 'section':
+      // The section draws its items' blocks with the page's own components, as cells
+      return (
+        <SectionBlock
+          items={block.items.map(({ blocks, ...layout }) => ({
+            ...layout,
+            children: blocks.map((inner, index) => (
+              <div key={index}>{renderBlock(inner, components, 'inline')}</div>
+            )),
+          }))}
+        />
+      )
     case 'archive':
-      return <components.archive {...block} disableInnerContainer />
+      return <components.archive {...block} disableInnerContainer placement={placement} />
     case 'content':
-      return <components.content {...block} disableInnerContainer />
+      return <components.content {...block} disableInnerContainer placement={placement} />
     case 'cta':
-      return <components.cta {...block} disableInnerContainer />
+      return <components.cta {...block} disableInnerContainer placement={placement} />
     case 'formBlock':
-      return <components.formBlock {...block} disableInnerContainer />
+      return <components.formBlock {...block} disableInnerContainer placement={placement} />
     case 'mapBlock':
-      return <components.mapBlock {...block} disableInnerContainer />
+      return <components.mapBlock {...block} disableInnerContainer placement={placement} />
     case 'mediaBlock':
-      return <components.mediaBlock {...block} disableInnerContainer />
+      return <components.mediaBlock {...block} disableInnerContainer placement={placement} />
     case 'eventsThisWeek':
-      return <components.eventsThisWeek {...block} disableInnerContainer />
+      return <components.eventsThisWeek {...block} disableInnerContainer placement={placement} />
     case 'topIssues':
-      return <components.topIssues {...block} disableInnerContainer />
+      return <components.topIssues {...block} disableInnerContainer placement={placement} />
     default:
       // A block type added to Pages without a case here fails tsc; an unknown type in old data
       // still draws nothing at runtime

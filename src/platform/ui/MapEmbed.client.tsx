@@ -18,14 +18,15 @@ export type MapEmbedProps = {
   actionLabel: string
   /** The small picture of the map, drawn by the caller (`Media`) */
   preview: React.ReactNode
-  /** The text beside the picture, on its left from `md` up; the button that opens the live map follows it */
+  /** The text under the picture; the button that opens the live map follows it */
   children?: React.ReactNode
   className?: string
 }
 
 /**
- * A small map picture with its text, and a live Google map in a dialog when a neighbor taps
- * either button (#764, docs/ui/component-set.md). The frame is created only once the dialog is
+ * A map picture with its text under it, and a live Google map in a dialog when a neighbor taps
+ * either button (#764, docs/ui/component-set.md). It fills the width it is given: the section it
+ * sits in decides how wide and where it goes (#884). The frame is created only once the dialog is
  * open, so the page asks Google for nothing until then. A missing or unsafe address leaves the
  * picture and the text, with no button.
  */
@@ -50,13 +51,8 @@ export function MapEmbed({
   }, [open])
 
   return (
-    <div
-      className={cn(
-        'grid items-start gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,3fr)] md:gap-8',
-        className,
-      )}
-    >
-      <div className="w-56 max-w-full md:order-2 md:w-full">
+    <div className={cn('space-y-4', className)}>
+      <div>
         {src ? (
           <Button
             variant="ghost"
@@ -70,7 +66,7 @@ export function MapEmbed({
           <div className="overflow-hidden rounded-xl border border-border">{preview}</div>
         )}
       </div>
-      <div className="space-y-4 text-left md:order-1">
+      <div className="space-y-4">
         {children}
         {src && (
           <Button
