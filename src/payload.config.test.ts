@@ -126,6 +126,7 @@ describe('the Pages collection', () => {
     expect(layout.blocks.map((block) => block.slug)).toEqual([
       'cta',
       'content',
+      'section',
       'mediaBlock',
       'mapBlock',
       'archive',

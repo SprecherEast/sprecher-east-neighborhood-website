@@ -30,6 +30,7 @@ function renderBlock(
   components: PageBlockComponents,
   placement: Placement = 'section',
 ): ReactNode {
+  const common = { disableInnerContainer: true, placement }
   switch (block.blockType) {
     case 'section':
       // The section draws its items' blocks with the page's own components, as cells
@@ -44,21 +45,21 @@ function renderBlock(
         />
       )
     case 'archive':
-      return <components.archive {...block} disableInnerContainer placement={placement} />
+      return <components.archive {...block} {...common} />
     case 'content':
-      return <components.content {...block} disableInnerContainer placement={placement} />
+      return <components.content {...block} {...common} />
     case 'cta':
-      return <components.cta {...block} disableInnerContainer placement={placement} />
+      return <components.cta {...block} {...common} />
     case 'formBlock':
-      return <components.formBlock {...block} disableInnerContainer placement={placement} />
+      return <components.formBlock {...block} {...common} />
     case 'mapBlock':
-      return <components.mapBlock {...block} disableInnerContainer placement={placement} />
+      return <components.mapBlock {...block} {...common} />
     case 'mediaBlock':
-      return <components.mediaBlock {...block} disableInnerContainer placement={placement} />
+      return <components.mediaBlock {...block} {...common} />
     case 'eventsThisWeek':
-      return <components.eventsThisWeek {...block} disableInnerContainer placement={placement} />
+      return <components.eventsThisWeek {...block} {...common} />
     case 'topIssues':
-      return <components.topIssues {...block} disableInnerContainer placement={placement} />
+      return <components.topIssues {...block} {...common} />
     default:
       // A block type added to Pages without a case here fails tsc; an unknown type in old data
       // still draws nothing at runtime
