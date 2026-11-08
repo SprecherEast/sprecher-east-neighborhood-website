@@ -1,0 +1,548 @@
+<title>Budget breakdown preview</title>
+<meta name="claude:viewport-fit-sides" content="cover" />
+<style>
+  /* Layout: two stacked cards (day-to-day, big-project). Each card: a waffle of $5M squares with its key beside and below,
+     then ranked bars, then expandable smaller pieces. Colour follows size: darkest orange = biggest share, fading to near-white. */
+  :root {
+    --bg: #f6f4f1;
+    --fg: #23201d;
+    --card: #ffffff;
+    --track: #ece8e3;
+    --line: #e2ddd6;
+    --muted: #6d665f;
+    --link: #a8480d;
+    --child-bar: #a39b92;
+    --sq-edge: rgba(35, 32, 29, 0.16);
+    /* the ramp: rank 1 (largest) to rank 6 (smallest) */
+    --r1: #c8570f; /* orange, a little less bright */
+    --r2: #f0a028; /* bright orange with a touch of green */
+    --r3: #b7dca0; /* green with a little white */
+    --r4: #3f9f6a; /* green */
+    --r5: #f4f2ee; /* white */
+    --r6: #8c9096; /* gray */
+    --r7: #c3c6ca; /* lighter gray */
+    --scale: 2.2; /* bar length = share of total x 2.2, same in both charts */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --bg: #0f1117;
+      --fg: #e8e6e3;
+      --card: #1a1d27;
+      --track: #262a3a;
+      --line: #2d3040;
+      --muted: #9ca3af;
+      --link: #f0a04b;
+      --child-bar: #6b7186;
+      --sq-edge: rgba(255, 255, 255, 0.08);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme='dark'] {
+    --bg: #0f1117;
+    --fg: #e8e6e3;
+    --card: #1a1d27;
+    --track: #262a3a;
+    --line: #2d3040;
+    --muted: #9ca3af;
+    --link: #f0a04b;
+    --child-bar: #6b7186;
+    --sq-edge: rgba(255, 255, 255, 0.08);
+    color-scheme: dark;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    margin: 0;
+    font-family:
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
+    padding-block: 24px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    display: grid;
+    gap: 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    min-width: 0;
+  }
+  h2 {
+    margin: 0 0 4px;
+    font-size: 1.15rem;
+    text-wrap: balance;
+  }
+  .sub {
+    margin: 0 0 16px;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .hundred {
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .pic {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .waffle {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 3px;
+    width: 200px;
+  }
+  .sq {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    background: var(--c);
+    box-shadow: inset 0 0 0 1px var(--sq-edge);
+    animation: pop 0.35s ease-out both;
+    animation-delay: calc(var(--i) * 7ms);
+  }
+  .legend {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+  .legend h3 {
+    margin: 0 0 4px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .lg {
+    display: grid;
+    grid-template-columns: 14px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    font-size: 0.88rem;
+  }
+  .sw {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: var(--c);
+    box-shadow: inset 0 0 0 1px var(--sq-edge);
+  }
+  .lg b {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .lg i {
+    font-style: normal;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .key {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .key .sq {
+    width: 14px;
+    animation: none;
+    background: var(--r3);
+    flex: none;
+  }
+  .key b {
+    color: var(--fg);
+    font-weight: 600;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 190px 1fr 70px 46px;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 0;
+  }
+  .label {
+    white-space: nowrap;
+    font-size: 0.9rem;
+    min-width: 0;
+  }
+  .grp {
+    margin: 12px 0 2px;
+    color: var(--muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .row.child {
+    margin-left: 10px;
+    padding-left: 14px;
+    border-left: 2px solid color-mix(in srgb, var(--c) 55%, transparent);
+  }
+  .row.child.flat {
+    border-left-color: var(--line);
+  }
+  .row.child .label {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .row.child .track {
+    height: 8px;
+    border-radius: 4px;
+  }
+  .label small {
+    display: block;
+    margin-top: 1px;
+    color: var(--muted);
+    font-size: 0.72rem;
+    opacity: 0.85;
+  }
+  .track {
+    height: 14px;
+    background: var(--track);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+  .bar {
+    display: block;
+    height: 100%;
+    border-radius: 7px;
+    background: var(--c, var(--child-bar));
+    width: calc(var(--p) * var(--scale) * 1%);
+    animation: grow 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    box-shadow: inset 0 0 0 1px var(--sq-edge);
+  }
+  .row.child .bar {
+    border-radius: 4px;
+  }
+  .amt,
+  .pct {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.88rem;
+  }
+  .amt {
+    font-weight: 600;
+  }
+  .pct {
+    color: var(--muted);
+  }
+  .row.child .amt {
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  details {
+    margin-top: 8px;
+  }
+  summary {
+    cursor: pointer;
+    color: var(--link);
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 6px 0;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary::before {
+    content: '+ ';
+  }
+  details[open] summary::before {
+    content: '\2212  ';
+  }
+  summary:focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .note {
+    margin: 14px 0 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes grow {
+    from {
+      width: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sq,
+    .bar {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 560px) {
+    body {
+      padding-block: 16px;
+    }
+    .card {
+      padding: 16px;
+    }
+    .pic {
+      grid-template-columns: 1fr;
+      justify-items: center;
+    }
+    .legend {
+      width: 100%;
+    }
+    .row {
+      grid-template-columns: 1fr 66px 42px;
+      gap: 8px;
+      row-gap: 4px;
+    }
+    .track {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+    .row.child {
+      margin-left: 4px;
+      padding-left: 10px;
+    }
+  }
+  @media (max-width: 359px) {
+    .row {
+      grid-template-columns: 1fr 62px 40px;
+    }
+    .label {
+      grid-column: 1 / -1;
+    }
+    .track {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    .amt {
+      grid-column: 2;
+      grid-row: 2;
+    }
+    .pct {
+      grid-column: 3;
+      grid-row: 2;
+    }
+  }
+</style>
+
+<div class="wrap">
+  <section class="card">
+    <h2>Day-to-day budget: $477.5M</h2>
+    <p class="sub">Where the operating money goes (general and library funds), biggest first</p>
+    <div class="hundred">
+      <div class="pic">
+        <div
+          class="waffle"
+          id="w-ops"
+          role="img"
+          aria-label="Squares showing how the day-to-day budget is split, five million dollars per square"
+        ></div>
+        <div class="legend" id="l-ops"></div>
+      </div>
+      <div class="key">
+        <span class="sq"></span><span><b>= $5 million</b> each. Rounded to whole squares.</span>
+      </div>
+    </div>
+    <div id="ops"></div>
+    <p class="note">
+      Debt service repays money borrowed for construction. Public Health is the City's share of a
+      joint City-County agency. Metro Transit shows only its City subsidy. Figures may not add
+      exactly because of rounding.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Big-project budget: $272.2M</h2>
+    <p class="sub">Where 2027 capital spending goes, all funding sources, biggest first</p>
+    <div class="hundred">
+      <div class="pic">
+        <div
+          class="waffle"
+          id="w-cap"
+          role="img"
+          aria-label="Squares showing how the big-project budget is split, five million dollars per square"
+        ></div>
+        <div class="legend" id="l-cap"></div>
+      </div>
+      <div class="key">
+        <span class="sq"></span><span><b>= $5 million</b> each. Rounded to whole squares.</span>
+      </div>
+    </div>
+    <div id="cap"></div>
+    <p class="note">
+      Much of this is paid by TIF districts, utility rates and grants, not property tax.
+    </p>
+  </section>
+
+  <p class="note" style="text-align: center">
+    Mayor's 2027 executive budget. Percentages calculated from City of Madison figures. The Council
+    can still change it.
+  </p>
+</div>
+
+<script>
+  const SQUARE = 5 // $ millions per square, the same in both charts
+  // amounts in $ millions
+  const ops = {
+    total: 477.549853,
+    groups: [
+      {
+        name: 'Public safety & health',
+        amt: 194.768276,
+        kids: [
+          { name: 'Police', amt: 102.492663, always: true },
+          { name: 'Fire / EMS', amt: 81.114847, always: true },
+          { name: 'Public Health', amt: 10.728438 },
+        ],
+      },
+      { name: 'Debt service', amt: 80.479929, kids: [] },
+      {
+        name: 'Public works',
+        amt: 56.659014,
+        kids: [
+          { name: 'Streets', amt: 30.473166 },
+          { name: 'Parks', amt: 18.91529 },
+        ],
+      },
+      { name: 'Transportation', amt: 37.858292, kids: [{ name: 'Metro Transit', amt: 25.506519 }] },
+      { name: 'Administration', amt: 36.85902, kids: [] },
+      {
+        name: 'Everything else',
+        amt: 70.925323,
+        kids: [
+          { name: 'Planning & development', amt: 31.479633 },
+          { name: 'Library', amt: 24.927453 },
+          { name: 'Miscellaneous', amt: 10.969427 },
+          { name: 'General government', amt: 3.54881 },
+        ],
+      },
+    ],
+  }
+  const cap = {
+    total: 272.207463,
+    groups: [
+      { name: 'Housing & economic dev.', amt: 78.845, kids: [] },
+      { name: 'Streets, bike & traffic', amt: 75.523, kids: [] },
+      { name: 'Water, sewer & storm', amt: 35.184, kids: [] },
+      { name: 'Fleet vehicles', amt: 18.793, kids: [] },
+      { name: 'Parks', amt: 17.9, kids: [] },
+      {
+        name: 'Everything else',
+        amt: 45.9625,
+        kids: [
+          { name: 'Transit & parking', amt: 16.901 },
+          { name: 'City buildings & other', amt: 13.3915 },
+          { name: 'Administration & IT', amt: 8.755 },
+          { name: 'Police & Fire', amt: 4.356 },
+          { name: 'Library', amt: 2.559 },
+        ],
+      },
+    ],
+  }
+
+  const money = (m) => '$' + (m >= 100 ? m.toFixed(0) : m.toFixed(1)) + 'M'
+  const pct = (a, t) => (a / t) * 100
+
+  // whole squares at $SQUARE million each, largest-remainder so the parts add up to the total's squares
+  function squares(groups, total) {
+    const n = Math.round(total / SQUARE)
+    const raw = groups.map((g) => (g.amt / total) * n)
+    const out = raw.map(Math.floor)
+    const left = n - out.reduce((a, b) => a + b, 0)
+    raw
+      .map((v, i) => [v - Math.floor(v), i])
+      .sort((a, b) => b[0] - a[0])
+      .slice(0, left)
+      .forEach(([, i]) => out[i]++)
+    return out
+  }
+
+  function row(name, amt, total, color, child, flat) {
+    const p = pct(amt, total)
+    return (
+      `<div class="row ${child ? 'child' : ''} ${flat ? 'flat' : ''}" style="--p:${p.toFixed(2)};${color ? '--c:' + color : ''}">` +
+      `<span class="label">${name}</span>` +
+      `<span class="track"><span class="bar"></span></span>` +
+      `<span class="amt">${money(amt)}</span><span class="pct">${p.toFixed(1)}%</span></div>`
+    )
+  }
+
+  function render(prefix, data) {
+    // biggest first, so the colour ramp runs darkest to lightest down the page
+    data.groups.sort((a, b) => b.amt - a.amt)
+    data.groups.forEach((g, i) => {
+      g.color = `var(--r${i + 1})`
+    })
+    const sq = squares(data.groups, data.total)
+    let n = 0
+    document.getElementById('w-' + prefix).innerHTML = data.groups
+      .map((g, i) =>
+        Array.from(
+          { length: sq[i] },
+          () => `<span class="sq" style="--c:${g.color};--i:${n++}"></span>`,
+        ).join(''),
+      )
+      .join('')
+    document.getElementById('l-' + prefix).innerHTML =
+      `<h3>Where the money goes:</h3>` +
+      data.groups
+        .map(
+          (g, i) =>
+            `<div class="lg"><span class="sw" style="--c:${g.color}"></span><span>${g.name}</span><b>${money(g.amt)}</b></div>`,
+        )
+        .join('')
+
+    let main = ''
+    const rest = []
+    data.groups.forEach((g) => {
+      main += row(g.name, g.amt, data.total, g.color, false)
+      g.kids.forEach((k) => {
+        if (k.always) main += row(k.name, k.amt, data.total, g.color, true)
+        else rest.push({ k, g })
+      })
+    })
+    // the smaller pieces: one list, biggest first, each tagged with the area it sits in
+    // in this list the colour follows the piece's own rank: darkest orange for the largest, fading to gray
+    const sorted = rest.sort((a, b) => b.k.amt - a.k.amt)
+    const more = sorted
+      .map(({ k, g }, i) =>
+        row(
+          `${k.name}<small>in ${g.name}</small>`,
+          k.amt,
+          data.total,
+          `var(--r${Math.min(7, Math.floor((i * 7) / sorted.length) + 1)})`,
+          true,
+          true,
+        ),
+      )
+      .join('')
+    document.getElementById(prefix).innerHTML =
+      main + (more ? `<details><summary>See the smaller pieces</summary>${more}</details>` : '')
+  }
+  render('ops', ops)
+  render('cap', cap)
+</script>

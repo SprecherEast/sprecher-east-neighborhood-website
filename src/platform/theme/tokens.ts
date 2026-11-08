@@ -68,6 +68,39 @@ export const THEME_TOKENS = {
   'chart-warm-4': { modes: 'both', meaning: 'Warm chart colour 4: orange and gray' },
   'chart-warm-5': { modes: 'both', meaning: 'Warm chart colour 5: orange and gray' },
   'chart-warm-6': { modes: 'both', meaning: 'Warm chart colour 6: orange and gray' },
+  'chart-ramp-1': {
+    modes: 'both',
+    meaning: 'Breakdown colour step 1 of 7, biggest to smallest: orange, a little less bright',
+  },
+  'chart-ramp-2': {
+    modes: 'both',
+    meaning:
+      'Breakdown colour step 2 of 7, biggest to smallest: bright orange with a touch of green',
+  },
+  'chart-ramp-3': {
+    modes: 'both',
+    meaning: 'Breakdown colour step 3 of 7, biggest to smallest: green with a little white',
+  },
+  'chart-ramp-4': {
+    modes: 'both',
+    meaning: 'Breakdown colour step 4 of 7, biggest to smallest: green',
+  },
+  'chart-ramp-5': {
+    modes: 'both',
+    meaning: 'Breakdown colour step 5 of 7, biggest to smallest: white',
+  },
+  'chart-ramp-6': {
+    modes: 'both',
+    meaning: 'Breakdown colour step 6 of 7, biggest to smallest: gray',
+  },
+  'chart-ramp-7': {
+    modes: 'both',
+    meaning: 'Breakdown colour step 7 of 7, biggest to smallest: lighter gray',
+  },
+  'chart-ramp-edge': {
+    modes: 'both',
+    meaning: 'The thin outline of every breakdown mark, so the pale steps keep a visible edge',
+  },
   radius: { modes: 'base', meaning: 'Base corner radius; sm to xl derive from it' },
 } as const satisfies Record<string, { modes: Modes; meaning: string }>
 
@@ -137,6 +170,20 @@ const CHART_WARM_TOKENS = [
   'chart-warm-4',
   'chart-warm-5',
   'chart-warm-6',
+] as const satisfies readonly ThemeToken[]
+/**
+ * The breakdown's seven-step ramp (#866). It is not in `CHART_PAIRS` on purpose: its steps run
+ * from orange to near-white, so the pale ones are under 3:1 on a light page. Every ramp mark
+ * therefore carries a thin outline (`chart-ramp-edge`) and its amount as text, never colour alone.
+ */
+export const CHART_RAMP_TOKENS = [
+  'chart-ramp-1',
+  'chart-ramp-2',
+  'chart-ramp-3',
+  'chart-ramp-4',
+  'chart-ramp-5',
+  'chart-ramp-6',
+  'chart-ramp-7',
 ] as const satisfies readonly ThemeToken[]
 export const CHART_PAIRS = [...CHART_TOKENS, ...CHART_WARM_TOKENS].flatMap((chart) =>
   (['background', 'surface', 'card'] as const).map((background) => [chart, background] as const),

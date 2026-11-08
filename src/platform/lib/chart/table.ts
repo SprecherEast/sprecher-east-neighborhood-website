@@ -1,3 +1,4 @@
+import { toBreakdown } from './breakdown'
 import { formatValue, UNIT_HEADERS } from './format'
 import { SQUARES_PER_HUNDRED, type ChartSpec, type ChartUnit } from './spec'
 import { toUnitCounts } from './unitCells'
@@ -31,6 +32,15 @@ export function toChartPoints(spec: ChartSpec): ChartPoint[] {
       return spec.data.map((d) => point(null, d.label, d.value))
     case 'stacked':
       return spec.x.flatMap((row, i) => spec.series.map((s) => point(row, s.label, s.values[i])))
+    case 'breakdown': {
+      const { areas, smaller } = toBreakdown(spec)
+      return areas.flatMap((area) => [
+        point(null, area.label, area.value),
+        ...[...area.shown, ...smaller.filter((p) => p.area === area.label)]
+          .sort((a, b) => b.value - a.value)
+          .map((piece) => point(area.label, piece.label, piece.value)),
+      ])
+    }
   }
 }
 
@@ -57,6 +67,28 @@ export function toChartTable(spec: ChartSpec): ChartTable {
           ...spec.series.map((s) => money(s.values[i])),
           money(spec.series.reduce((total, s) => total + s.values[i], 0)),
           ...(notes ? [notes[i]] : []),
+        ]),
+      }
+    }
+    case 'breakdown': {
+      const { areas, smaller, total } = toBreakdown(spec)
+      const percent = (value: number) =>
+        formatValue(Number(((value / total) * 100).toFixed(1)), 'percent')
+      return {
+        caption,
+        rowHeaders: 2,
+        head: ['Area', 'Piece', 'Squares', UNIT_HEADERS[spec.unit], 'Share (percent)'],
+        rows: areas.flatMap((area) => [
+          [area.label, 'Whole area', String(area.squares), money(area.value), percent(area.value)],
+          ...[...area.shown, ...smaller.filter((p) => p.area === area.label)]
+            .sort((a, b) => b.value - a.value)
+            .map((piece) => [
+              area.label,
+              piece.label,
+              '',
+              money(piece.value),
+              percent(piece.value),
+            ]),
         ]),
       }
     }
@@ -107,6 +139,10 @@ export function toChartSummary(spec: ChartSpec): string {
             `${row}: ${list(spec.series.map((s) => `${s.label} ${say(s.values[i], spec.unit)}`))}.`,
         )
         .join(' ')}`
+    case 'breakdown': {
+      const { areas, squareCount, total } = toBreakdown(spec)
+      return `A grid of ${squareCount} squares, ${say(spec.squareValue, spec.unit)} each, sharing out ${say(total, spec.unit)}: ${list(areas.map((a) => `${a.label} ${say(a.value, spec.unit)}`))}.`
+    }
     case 'units':
       return spec.groups
         .map((g) => {

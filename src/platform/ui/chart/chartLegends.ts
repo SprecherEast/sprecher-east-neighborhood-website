@@ -67,6 +67,7 @@ export function toChartLegends(spec: ChartSpec, palette: ChartPalette): ChartLeg
         },
       ]
     case 'bar':
+    case 'breakdown':
       return []
   }
 }

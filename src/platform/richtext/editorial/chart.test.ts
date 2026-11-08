@@ -228,3 +228,38 @@ describe('isEnlargeable (#686)', () => {
     expect(isEnlargeable(stored({ enlarge: value }))).toBe(expected)
   })
 })
+
+describe('a breakdown block', () => {
+  const area = (label: string, value: number | null, pieces?: Record<string, unknown>[]) => ({
+    label,
+    value,
+    pieces,
+  })
+  const base = {
+    kind: 'breakdown',
+    squareValue: 5_000_000,
+    areas: [
+      area('Public safety', 60_000_000, [
+        { label: 'Police', value: 40_000_000, shown: true },
+        { label: 'Library', value: 5_000_000 },
+      ]),
+      area('Streets', 40_000_000, [{ label: 'Library', value: 1_000_000 }]),
+    ],
+  }
+
+  it('maps areas and pieces, with keys that stay unique across areas', () => {
+    const spec = toChartSpec(stored(base))
+    if (spec.kind !== 'breakdown') throw new Error('not a breakdown')
+    const keys = spec.areas.flatMap((a) => [a.key, ...(a.pieces ?? []).map((p) => p.key)])
+    expect(new Set(keys).size).toBe(keys.length)
+    expect(spec.areas[0].pieces?.[0]).toMatchObject({ label: 'Police', shown: true })
+    expect(spec.areas[0].pieces?.[1]).not.toHaveProperty('shown')
+  })
+
+  it('refuses an empty square value and an area without a number', () => {
+    expect(() => toChartSpec(stored({ ...base, squareValue: null }))).toThrow(/squareValue/)
+    expect(() =>
+      toChartSpec(stored({ ...base, areas: [area('A', null), area('B', 1_000_000)] })),
+    ).toThrow(/areas/)
+  })
+})

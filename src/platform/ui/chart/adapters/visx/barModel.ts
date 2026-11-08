@@ -28,7 +28,9 @@ const short = (value: number, unit: ChartUnit) => formatValue(value, unit, { com
 
 /** A bar or stacked spec as rows of segments, in the units the drawing needs and nothing of the library's */
 export function toBarModel(spec: ChartSpec): BarModel {
-  if (spec.kind === 'units') throw new Error('The visx adapter does not draw units charts')
+  if (spec.kind === 'units' || spec.kind === 'breakdown') {
+    throw new Error(`The visx adapter does not draw ${spec.kind} charts`)
+  }
   if (spec.orientation !== 'horizontal') {
     throw new RangeError('The visx adapter draws horizontal bars only')
   }

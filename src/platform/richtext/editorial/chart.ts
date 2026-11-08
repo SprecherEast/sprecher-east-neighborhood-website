@@ -99,6 +99,37 @@ function unitsOf(stored: StoredChart) {
   }
 }
 
+/**
+ * A breakdown's areas and their pieces. Keys are made over areas and pieces together, so a piece
+ * that shares a name with another area's piece still gets its own.
+ */
+function breakdownOf(stored: StoredChart) {
+  const areas = list(stored.areas)
+  const pieces = areas.map((area) => list(area.pieces))
+  const keys = keysOf([...areas, ...pieces.flat()])
+  let next = areas.length
+  return {
+    squareValue: stored.squareValue ?? NaN,
+    areas: areas.map((area, i) => {
+      const own = pieces[i].map((piece) => {
+        const key = keys[next++]
+        return {
+          key,
+          label: piece.label ?? '',
+          value: piece.value ?? NaN,
+          ...(piece.shown ? { shown: true as const } : {}),
+        }
+      })
+      return {
+        key: keys[i],
+        label: area.label ?? '',
+        value: area.value ?? NaN,
+        pieces: orUndefined(own),
+      }
+    }),
+  }
+}
+
 /** The spec the stored block describes, not yet checked. `NaN` stands for a number left empty. */
 export function toChartSpecInput(stored: StoredChart): Record<string, unknown> {
   const sources = list(stored.sources)
@@ -127,6 +158,8 @@ export function toChartSpecInput(stored: StoredChart): Record<string, unknown> {
       return prune({ ...base, ...stackedOf(stored) })
     case 'units':
       return prune({ ...base, ...unitsOf(stored) })
+    case 'breakdown':
+      return prune({ ...base, ...breakdownOf(stored) })
     default:
       return prune(base)
   }
@@ -201,6 +234,22 @@ export function fromChartSpec(spec: ChartSpec): StoredChart {
           values: spec.series.map((s) => ({ value: s.values[row] })),
         })),
       }
+    case 'breakdown':
+      return {
+        ...base,
+        squareValue: spec.squareValue,
+        areas: spec.areas.map((area) => ({
+          key: area.key,
+          label: area.label,
+          value: area.value,
+          pieces: area.pieces?.map((piece) => ({
+            key: piece.key,
+            label: piece.label,
+            value: piece.value,
+            shown: piece.shown === true,
+          })),
+        })),
+      }
     case 'units':
       return {
         ...base,
@@ -224,7 +273,10 @@ export function isFormState(stored: StoredChart): boolean {
   // 0 is an empty array: Admin gives that too, including when publishing
   const counted = (value: unknown) => typeof value === 'number' && value > 0
   return (
-    [stored.sources, stored.bars, stored.series, stored.rows, stored.groups].some(counted) ||
+    [stored.sources, stored.bars, stored.series, stored.rows, stored.groups, stored.areas].some(
+      counted,
+    ) ||
+    list(stored.areas).some((area) => counted(area.pieces)) ||
     list(stored.rows).some((row) => counted(row.values)) ||
     list(stored.groups).some((group) => counted(group.parts))
   )

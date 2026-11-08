@@ -220,6 +220,11 @@ export function DisplayGallery() {
             </Disclosure>
           </div>
         </GalleryVariant>
+        <GalleryVariant label="link (inside a chart)" className="block">
+          <Disclosure variant="link" summary="See the smaller pieces">
+            <Text variant="small">A plain list goes here.</Text>
+          </Disclosure>
+        </GalleryVariant>
       </GalleryEntry>
     </>
   )

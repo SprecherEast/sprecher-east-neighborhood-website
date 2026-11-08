@@ -93,3 +93,47 @@ describe('toScaleNote', () => {
     expect(toScaleNote(parseChartSpec(spec))).toContain('about $10M')
   })
 })
+
+describe('a breakdown chart', () => {
+  const spec = parseChartSpec(FIXTURES.dayToDay)
+
+  it('lists every area, then its pieces, with squares for the areas and shares for all', () => {
+    const table = toChartTable(spec)
+    expect(table.head).toEqual([
+      'Area',
+      'Piece',
+      'Squares',
+      'Amount (US dollars)',
+      'Share (percent)',
+    ])
+    expect(table.rowHeaders).toBe(2)
+    expect(table.rows[0]).toEqual([
+      'Public safety & health',
+      'Whole area',
+      '39',
+      '$194,768,276',
+      '40.8%',
+    ])
+    expect(table.rows[1]).toEqual(['Public safety & health', 'Police', '', '$102,492,663', '21.5%'])
+    const names = table.rows.map((row) => row[1])
+    expect(names).toContain('General government')
+  })
+
+  it('has one point per area and per piece, the pieces under their area', () => {
+    const points = toChartPoints(spec)
+    expect(points[0]).toMatchObject({ group: null, label: 'Public safety & health' })
+    expect(points).toContainEqual(
+      expect.objectContaining({ group: 'Public safety & health', label: 'Police' }),
+    )
+  })
+
+  it('describes the grid and the areas in whole sentences', () => {
+    const summary = toChartSummary(spec)
+    expect(summary).toMatch(/^A grid of 96 squares, \$5M each/)
+    expect(summary).toContain('Public safety & health $194.8M')
+  })
+
+  it('has no scale note: the grid draws its own key', () => {
+    expect(toScaleNote(spec)).toBeNull()
+  })
+})

@@ -23,6 +23,10 @@ const KIND_OPTIONS = [
     label: 'Stacked bars: bars that split into parts, such as 2026 next to 2027',
     value: 'stacked',
   },
+  {
+    label: 'Breakdown: squares worth a fixed amount, ranked bars and a list of smaller pieces',
+    value: 'breakdown',
+  },
 ] satisfies { label: string; value: (typeof CHART_KINDS)[number] }[]
 
 const UNIT_OPTIONS = [
