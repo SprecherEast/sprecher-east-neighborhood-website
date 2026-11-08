@@ -19,15 +19,13 @@ step 3). Fixing wording, links or facts isn't.
 
 ## Levels of work
 
-| Level         | Answers                                            | Size                      | On GitHub                                        |
-| ------------- | -------------------------------------------------- | ------------------------- | ------------------------------------------------ |
-| Vision        | Why does the site exist?                           | years                     | [`docs/product/vision.md`](../product/vision.md) |
-| Milestone     | What outcome is done, and how do we know?          | months (\*)               | A milestone; a due date only for a real date     |
-| Epic          | What capability is part of that outcome?           | a month to a quarter (\*) | An issue labeled `epic`, with sub-issues         |
-| Feature, task | What does a user get? What single change ships it? | a day or a few            | A sub-issue of an epic; one PR closes it         |
-| Bug           | What's broken?                                     | S to L                    | A sub-issue of the epic it belongs to            |
-
-(\*) Guidance, not a rule.
+| Level         | Answers                                            | Size                   | On GitHub                                        |
+| ------------- | -------------------------------------------------- | ---------------------- | ------------------------------------------------ |
+| Vision        | Why does the site exist?                           | years                  | [`docs/product/vision.md`](../product/vision.md) |
+| Milestone     | What outcome is done, and how do we know?          | several capabilities   | A milestone; a due date only for a real date     |
+| Epic          | What capability is part of that outcome?           | several related issues | An issue labeled `epic`, with sub-issues         |
+| Feature, task | What does a user get? What single change ships it? | a day or a few         | A sub-issue of an epic; one PR closes it         |
+| Bug           | What's broken?                                     | S to L                 | A sub-issue of the epic it belongs to            |
 
 Rules:
 
@@ -35,7 +33,7 @@ Rules:
 - **Every planned epic belongs to a milestone.** Unscheduled epics wait in the backlog with no
   milestone, and so does foundation work done step by step alongside the milestones (#127).
 - **A milestone is an outcome with a done test,** one per issue, and has a due date only when a
-  real date exists. Sprints are not milestones; they're the board's Sprint field.
+  real date exists (a date the owner decides counts). Sprints are not milestones; they're the board's Sprint field.
 - **One PR closes one issue** (`Closes #N`). When an issue needs several PRs, each uses
   `Part of #N` and the last one uses `Closes #N`.
 - **Split ahead of time.** Split anything bigger than size L (3 days). An epic's features become

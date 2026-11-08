@@ -60,7 +60,7 @@ For each issue:
 
 ## 2. "What's next?"
 
-1. Find the current milestone, the open one with the nearest due date:
+1. Find the current milestone, the open one with the nearest due date (milestones without one sort last):
    `gh api "repos/{owner}/{repo}/milestones?state=open&sort=due_on&direction=asc" -q '.[0] | {number, title, due_on, open_issues, closed_issues}'`
 2. List its open issues:
    `gh api "repos/{owner}/{repo}/issues?milestone=<number>&state=open&per_page=100" -q '.[] | select(.pull_request | not) | "#\(.number) [\([.labels[].name] | join(", "))] \(.title)"'`
@@ -87,8 +87,8 @@ For each issue:
 
 1. **Choose the level** with the [decision tree](../../../docs/process/planning-model.md#which-layer)
    and the [naming templates](../../../docs/process/planning-model.md#templates).
-   - An outcome over months, with a done test, is a milestone; a capability of a month to a
-     quarter is an epic (label `epic`, one milestone).
+   - An outcome with a done test, spanning several capabilities, is a milestone; a capability
+     grouping several related issues is an epic (label `epic`, one milestone).
    - One deliverable that fits one sprint and one PR is an issue; a standalone one says why.
    - Something broken is a bug.
 2. **Search first** to avoid duplicates. Loop over the pages, since the repo has more than 100

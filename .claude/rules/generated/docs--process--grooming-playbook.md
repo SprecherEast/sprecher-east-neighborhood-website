@@ -181,6 +181,7 @@ milestone; an epic titled as a task. Propose the right layer and how to get ther
 
 A milestone's description still matches its scope; open work under a milestone whose due date has
 passed is reported with a proposal (re-scope or a new date with a reason), never moved silently;
+as a dated milestone nears, its open items are flagged and their priority raised in the daily sweep;
 an epic whose children are all closed has its acceptance checked; the epic's list matches its
 sub-issues. Progress numbers are read from GitHub, never recomputed from memory.
 

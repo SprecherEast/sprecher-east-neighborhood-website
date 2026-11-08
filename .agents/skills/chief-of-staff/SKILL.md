@@ -131,7 +131,7 @@ Follow the [grooming playbook](../../../docs/process/grooming-playbook.md): the
 
 3. **Apply, when approved,** with the REST calls the changes need: create or edit a milestone
    (`-X POST` or `-X PATCH` on `milestones`, with `title` and `description`, and `due_on` only for
-   a real date), set an issue's milestone (`-X PATCH issues/<n> -F milestone=<number>`), link a
+   a real date, including one the owner decides), set an issue's milestone (`-X PATCH issues/<n> -F milestone=<number>`), link a
    child ([`project-tracking`](../project-tracking/SKILL.md) §3 step 4). Comment before closing a
    duplicate and name its survivor.
 4. **Retro-organization** of existing issues is the playbook's

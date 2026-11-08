@@ -21,8 +21,8 @@ only: no examples taken from current work, so it stays true as the work changes.
 
 | Layer     | Answers                                      | Size                       | On GitHub                                      |
 | --------- | -------------------------------------------- | -------------------------- | ---------------------------------------------- |
-| Milestone | Which outcome is done, and how do we know?   | months                     | A milestone; each issue has at most one        |
-| Epic      | Which capability does this body of work add? | a month to a quarter       | A parent issue labeled `epic`, with sub-issues |
+| Milestone | Which outcome is done, and how do we know?   | several capabilities       | A milestone; each issue has at most one        |
+| Epic      | Which capability does this body of work add? | several related issues     | A parent issue labeled `epic`, with sub-issues |
 | Issue     | What single deliverable ships?               | fits in one sprint         | An issue; normally one PR closes it            |
 | Sub-issue | Which step is worth tracking on its own?     | part of an issue           | A child of an issue                            |
 | Sprint    | What do we pull in for this time slice?      | one iteration of the board | The board's iteration field                    |
@@ -57,13 +57,15 @@ them. GitHub differs in ways that shape the rules here:
 
 ## Milestone
 
-An outcome with a clear "done" state that spans several capabilities, taking months.
+An outcome with a clear "done" state that spans several capabilities.
 
 - **One per issue,** and the title states the outcome as a result for someone, in plain words.
 - **The description is the contract:** goal, scope, what is out of scope, and the done test (see
   [templates](#templates)). If you cannot write a pass or fail done test, it is not a milestone.
 - **A due date only when a real date exists** (an event, a commitment, a dependency outside the
-  team), with the reason in the description. A date chosen to feel firm is a guess dressed as a plan.
+  team, or a date the owner decides), with the reason in the description. A date chosen to feel
+  firm is a guess dressed as a plan. As a dated milestone nears, the sweep flags its open items
+  and raises their priority.
 - **Progress** is the share of its issues that are closed. For that number to mean something, the
   epics and the issues under them carry the milestone, not the epics alone.
 - **It closes when the done test passes,** not when the issues run out. Closed issues may belong
@@ -73,8 +75,9 @@ An outcome with a clear "done" state that spans several capabilities, taking mon
 
 A body of related issues delivering one capability.
 
-- **A parent issue with sub-issues,** roughly a month to a quarter of work (Atlassian's guidance
-  for epics). Shorter is probably an issue; longer is probably several epics or a milestone.
+- **A parent issue with sub-issues,** sized by shape, not by time: it groups several related
+  issues that are tracked and searched together. Work that fits one pull request is an issue; work
+  spanning several capabilities is a milestone.
 - **It belongs to one milestone** when it is planned. Unplanned and ongoing work may have none,
   with the reason stated (see [anti-patterns](#anti-patterns)).
 - **The title is a capability noun phrase.** It names what the site or process can do, not an
@@ -131,9 +134,9 @@ lower priority than what it blocks is a planning error: raise it or lower the bl
 
 Work through it in order and stop at the first yes.
 
-1. **Is it an outcome that several capabilities add up to, with one pass or fail done test, over
-   months?** Milestone.
-2. **Is it a capability made of several deliverables, a month to a quarter?** Epic.
+1. **Is it an outcome that several capabilities add up to, with one pass or fail done test?**
+   Milestone.
+2. **Is it a capability made of several related deliverables?** Epic.
 3. **Can one person or agent finish it in a sprint with one pull request?** Issue. If not, split it
    until each piece can.
 4. **For an issue:** does an epic already hold this capability? Make it a sub-issue of that epic.
@@ -142,7 +145,7 @@ Work through it in order and stop at the first yes.
 5. **Is it a step of an issue, separately assignable or checkable?** Sub-issue of that issue.
    Otherwise write it as a line in the acceptance criteria.
 6. **Milestone for an epic:** does an open outcome milestone exist whose done test this epic helps
-   pass? Assign it. If the epic is planned within months and none exists, propose a milestone. If
+   pass? Assign it. If the epic is planned and none exists, propose a milestone. If
    not, leave it out and say why.
 
 ## Anti-patterns
