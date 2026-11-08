@@ -132,7 +132,8 @@ its "End-to-end gate" summary in the job log for the decision and the files that
 
 1. **Exemption.** If the description holds `End-to-end exemption: <reason>` (anything but `none` or
    `run`), the reason must be true of the diff: no markup, class, style, theme or layout change a
-   browser could show differently. A reason that is a stock phrase, or contradicted by the diff, is a
+   browser could show differently (for a flow trigger: the change cannot alter what the account,
+   contact or verification flows do or show). A reason that is a stock phrase, or contradicted by the diff, is a
    **Blocker**. Record in the review that you checked it, and quote the line. Editing a description
    neither moves the head nor starts CI, so the merging agent re-reads the line before merging
    (`change-workflow` step 5.4) and confirms it is the one that was reviewed.

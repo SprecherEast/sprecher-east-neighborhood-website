@@ -80,11 +80,16 @@ describe('e2eDecision: do the browser tests run', () => {
     expect(decide([], bodyWith('End-to-end exemption: run')).run).toBe(true)
   })
 
-  it('runs when the tests or their workflow change', () => {
+  it('runs when the tests, their workflow or the gate rules change', () => {
     for (const name of [
       'e2e/alignment.spec.ts',
       'playwright.config.ts',
       '.github/workflows/ci.yml',
+      '.github/scripts/e2e-gate.mjs',
+      '.github/scripts/pr-body.mjs',
+      '.github/scripts/knowledge-sync.mjs',
+      'scripts/ui-change.mjs',
+      'scripts/behavior-change.mjs',
     ]) {
       expect(decide([code(name)]).run, name).toBe(true)
     }
