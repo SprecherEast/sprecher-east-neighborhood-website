@@ -77,7 +77,8 @@ change, however small, follows these five steps:
 4. **Everything green.** All required checks pass before merge: `Type-check & Build`, `Prettier`,
    `ESLint`, `Dependency Audit`, `PR Policy` (steps 1–2, and the knowledge note: decision 0019
    §6), `Knowledge sync` and `Agent context` (the session-start token budget, #737). Never bypass
-   a failing or missing check. In a stack, every PR must be green on its own. Dependabot PRs are exempt from
+   a failing or missing check. The deploy waits for the same set, except `PR Policy`, which runs on
+   pull requests only. In a stack, every PR must be green on its own. Dependabot PRs are exempt from
    the issue and description rules only; they still need green checks and a review, and whoever
    picks one up (usually the ops lead) owns and merges it.
 5. **Merge, then CI/CD takes over.** The agent that owns the PR squash-merges it once every required
