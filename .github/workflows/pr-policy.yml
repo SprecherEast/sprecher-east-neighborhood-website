@@ -2,7 +2,8 @@ name: PR Policy
 
 # Enforces AGENTS.md steps 1–2 on every pull request: a linked issue with exactly one
 # type label, an area label and a priority label, a fully filled-in PR description, and a
-# knowledge note updated with the code it describes (.github/scripts/knowledge-sync.mjs).
+# knowledge note updated with the code it describes (.github/scripts/knowledge-sync.mjs), and a
+# reason of 20+ characters for any end-to-end exemption (.github/scripts/e2e-gate.mjs, #868).
 # Required status check on main ("PR Policy"). Allowed labels: .github/label-policy.json
 #
 # Note: this runs the PR's own copy of this file. Changes to it (or to any workflow)
@@ -51,6 +52,7 @@ jobs:
             const scripts = (name) => import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/${name}`).href);
             const { linkedIssues, sectionsOf, withoutComments } = await scripts('pr-body.mjs');
             const { changedFiles, knowledgeProblems } = await scripts('knowledge-sync.mjs');
+            const { e2eDecision, e2eProblems } = await scripts('e2e-gate.mjs');
             const body = withoutComments(pr.body);
 
             // 1. Linked issue(s): "Closes #N" (closes it on merge) or "Part of #N" (multi-PR issue)
@@ -113,6 +115,13 @@ jobs:
                 body,
               }),
             );
+
+            // 4. The browser tests (#868): a UI change runs them in CI ("End-to-end tests"), unless the
+            // description holds "End-to-end exemption: <reason>"; the reason needs 20+ characters and
+            // the independent reviewer checks it against the diff. Shown here so the verdict is on record
+            problems.push(...e2eProblems({ body }));
+            const e2e = e2eDecision({ event: 'pull_request', files, body });
+            core.info(`e2e-gate: decision=${e2e.run ? 'run' : 'skip'} ui_files=${e2e.ui.length} reason="${e2e.reason}"`);
 
             if (problems.length) {
               core.setFailed(

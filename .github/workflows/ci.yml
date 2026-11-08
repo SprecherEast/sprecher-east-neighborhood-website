@@ -189,7 +189,13 @@ jobs:
   # The account and contact flows as a resident uses them, on a phone and a desktop (#311):
   # Playwright against a production build with a fresh database, emails caught by a local SMTP
   # server and the robot check off (e2e/serve.mjs). Not a required check yet, and the deploy
-  # doesn't wait for it; it becomes required once it has stayed green on main for a while.
+  # doesn't wait for it; the ruleset change that requires it is the owner's step (#868).
+  #
+  # The job always runs so "End-to-end tests" always reports a result: a skipped job counts as
+  # passing and could hide a failure. A step decides whether the rest run (.github/scripts/e2e-gate.mjs):
+  # always on a push to main, on a pull request that changes the UI (comment-only and
+  # formatting-only edits, tests and docs don't count) unless its description holds a written
+  # "End-to-end exemption", or when the tests themselves change. If the step fails, they run.
   e2e:
     name: End-to-end tests
     runs-on: ubuntu-latest
@@ -197,22 +203,35 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Decide whether the browser tests are due
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node .github/scripts/e2e-gate.mjs
+
       - uses: actions/setup-node@v6
+        if: steps.gate.outputs.run != 'false'
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
+        if: steps.gate.outputs.run != 'false'
         run: npm ci
 
       - name: Install the browser
+        if: steps.gate.outputs.run != 'false'
         run: npx playwright install --with-deps chromium
 
       - name: Run the flows
+        if: steps.gate.outputs.run != 'false'
         run: npx playwright test
 
       - name: Keep the report
-        if: failure()
+        if: failure() && steps.gate.outputs.run != 'false'
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
