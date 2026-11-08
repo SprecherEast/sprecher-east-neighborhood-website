@@ -9,7 +9,8 @@ The conventions are in [how we work](../../../docs/process/project-management.md
 how to choose one in the [planning model](../../../docs/process/planning-model.md), grooming
 triggers, board-move criteria and the sweep in the
 [grooming playbook](../../../docs/process/grooming-playbook.md), and the milestones and epics in
-the [roadmap](../../../docs/product/roadmap.md). This skill is the procedure. GitHub is the only source of truth: answer from it, never from memory or chat history.
+the [roadmap](../../../docs/product/roadmap.md). This skill is the procedure. GitHub is the only
+source of truth: answer from it, never from memory or chat history.
 
 The commands use the REST API through `gh api`, which works in cloud sessions too (`gh issue` and
 `gh pr` subcommands use GraphQL, which some sandboxes block). In this repo, `{owner}/{repo}` is
@@ -48,8 +49,8 @@ Before every major change (a new epic, a sprint, a batch of work), groom the bac
 For each issue:
 
 1. Give it a plain summary, acceptance criteria, a parent epic (or a stated reason it stands
-   alone), the type, area and `priority:` labels (§3), and its **Files likely touched** and **Must not touch** (`None` when nothing),
-   which the overlap check in §4 reads.
+   alone), the type, area and `priority:` labels (§3), and its **Files likely touched** and
+   **Must not touch** (`None` when nothing), which the overlap check in §4 reads.
 2. Set its **Size** as effort: S, M or L. If it is bigger than L, split it into sub-issues. In a
    cloud session, which can't read the board, skip Size and say so on the issue.
 3. When it meets the Definition of Ready (the

@@ -33,11 +33,14 @@ them. GitHub differs in ways that shape the rules here:
 - **An epic is a convention.** GitHub has no epic type. An epic here is a parent issue with the
   `epic` label. The level above it is the milestone, so we do not nest epics inside epics.
 - **Issue types and issue fields are organization features.** Issue types, and organization-wide
-  issue fields such as Priority and Effort, are defined at the organization level, so they exist
-  only for repositories an organization owns. Where they exist, native Priority and Effort are the
-  ranking and size, and the board's own fields cover only what they do not (iteration). While a
-  check or automation still reads the `priority:` label, the label stays required and the two
-  must agree; the sweep reports any that differ.
+  issue fields such as Priority and Effort, are defined at the organization level (the docs
+  describe them for organizations and say nothing about personal accounts). Where they exist,
+  native Priority and Effort are the ranking and size, and the board's own fields cover only what
+  they do not (iteration). While a check or automation still reads the `priority:` label, the
+  label stays required and the two must agree; the sweep reports any that differ. [How we
+  work](project-management.md) still describes the board as a user project with priority as a
+  label only; it is the older description and a later change brings it in line, so until then
+  treat this page as the direction and that page as the current setup.
 - **Sprints are a board field.** An iteration field on a project, not a repository feature, so a
   sprint is independent of milestones and pulls work from any of them.
 

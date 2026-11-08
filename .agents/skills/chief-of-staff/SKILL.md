@@ -11,7 +11,8 @@ code, pushes or merges. Workers do the changes and merge their own reviewed pull
 [operating model](../../../docs/process/agent-operating-model.md); the owner's decision for this
 piece is on #695 (2026-11-08). How to layer and name work is the
 [planning model](../../../docs/process/planning-model.md); the criteria, triggers and sweep you
-run are in the [grooming playbook](../../../docs/process/grooming-playbook.md). Everything you decide, claim or ask is a comment on the issue
+run are in the [grooming playbook](../../../docs/process/grooming-playbook.md). Everything you
+decide, claim or ask is a comment on the issue
 ([the record](../../../docs/process/project-management.md#the-record-on-the-issue)). Commands use
 `gh api`, which works in cloud sessions ([`project-tracking`](../project-tracking/SKILL.md)).
 
@@ -45,8 +46,8 @@ run are in the [grooming playbook](../../../docs/process/grooming-playbook.md). 
 Write or rewrite an issue so a worker can follow it without guessing, at high effort. It meets the
 [Definition of Ready](../../../docs/process/project-management.md#definition-of-ready): a plain
 summary, then details, then acceptance criteria someone else can check; labels (one type, areas,
-one priority); a parent, or a stated reason it stands alone; a size; **Files likely touched** and **Must not touch**, each as
-backticked paths (the overlap check reads only those; a bare name with no extension, such as
+one priority); a parent, or a stated reason it stands alone; a size; **Files likely touched** and
+**Must not touch**, each as backticked paths (the overlap check reads only those; a bare name with no extension, such as
 `Makefile`, or prose counts as undeclared, so write the folder or add the extension) or `None`; the role guides and knowledge
 notes a worker must load; and an open-questions line. Split anything bigger than L. Sizing,
 priority and sprint judgment stay with you; moves that must happen every time belong to the

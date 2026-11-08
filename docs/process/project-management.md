@@ -182,8 +182,8 @@ An issue is **Ready** when it has:
 - acceptance criteria someone else could check
 - **Files likely touched** and **Must not touch** filled in (write `None` when there is nothing),
   so overlap with other work can be checked
-- a parent epic (or a stated reason it stands alone), labels (type, area, priority) and a size. When the board can't be read (cloud
-  sessions), skip Size and say so on the issue
+- a parent epic (or a stated reason it stands alone), labels (type, area, priority) and a size.
+  When the board can't be read (cloud sessions), skip Size and say so on the issue
   ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §1)
 - no open blocker: nothing it's **blocked by** is still open
 - no `needs owner` label: that work waits for the owner, not for a sprint
