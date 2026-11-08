@@ -7,7 +7,9 @@ is in [`AGENTS.md`](../../AGENTS.md). Where the work is heading is in the
 skill is the step-by-step version for agents.
 
 How the agent team (chief of staff, workers, reviewers) works on top of this is in the
-[agent operating model](agent-operating-model.md).
+[agent operating model](agent-operating-model.md). Which layer a piece of work belongs at, and how
+to name it, is in the [planning model](planning-model.md); when to groom, what each board move
+requires and how the sweep works is in the [grooming playbook](grooming-playbook.md).
 
 GitHub is the only tracker for new work.
 
@@ -17,23 +19,23 @@ step 3). Fixing wording, links or facts isn't.
 
 ## Levels of work
 
-| Level         | Answers                                            | Size            | On GitHub                                        |
-| ------------- | -------------------------------------------------- | --------------- | ------------------------------------------------ |
-| Vision        | Why does the site exist?                           | years           | [`docs/product/vision.md`](../product/vision.md) |
-| Milestone     | What outcome do we deliver, by when?               | 1–3 months (\*) | A milestone with a due date                      |
-| Epic          | What capability is part of that outcome?           | weeks           | An issue labeled `epic`, with sub-issues         |
-| Feature, task | What does a user get? What single change ships it? | a day or a few  | A sub-issue of an epic; one PR closes it         |
-| Bug           | What's broken?                                     | S to L          | A sub-issue of the epic it belongs to            |
+| Level         | Answers                                            | Size                      | On GitHub                                        |
+| ------------- | -------------------------------------------------- | ------------------------- | ------------------------------------------------ |
+| Vision        | Why does the site exist?                           | years                     | [`docs/product/vision.md`](../product/vision.md) |
+| Milestone     | What outcome is done, and how do we know?          | months (\*)               | A milestone; a due date only for a real date     |
+| Epic          | What capability is part of that outcome?           | a month to a quarter (\*) | An issue labeled `epic`, with sub-issues         |
+| Feature, task | What does a user get? What single change ships it? | a day or a few            | A sub-issue of an epic; one PR closes it         |
+| Bug           | What's broken?                                     | S to L                    | A sub-issue of the epic it belongs to            |
 
 (\*) Guidance, not a rule.
 
 Rules:
 
-- **Every feature, task and bug belongs to an epic.**
+- **Every feature, task and bug normally belongs to an epic;** one that stands alone says why in its body.
 - **Every planned epic belongs to a milestone.** Unscheduled epics wait in the backlog with no
   milestone, and so does foundation work done step by step alongside the milestones (#127).
-- **A milestone groups the work for one outcome or context, with a due date,** such as "Ready for
-  neighbors". Sprints are not milestones; they're the board's Sprint field.
+- **A milestone is an outcome with a done test,** one per issue, and has a due date only when a
+  real date exists. Sprints are not milestones; they're the board's Sprint field.
 - **One PR closes one issue** (`Closes #N`). When an issue needs several PRs, each uses
   `Part of #N` and the last one uses `Closes #N`.
 - **Split ahead of time.** Split anything bigger than size L (3 days). An epic's features become
@@ -180,11 +182,14 @@ An issue is **Ready** when it has:
 - acceptance criteria someone else could check
 - **Files likely touched** and **Must not touch** filled in (write `None` when there is nothing),
   so overlap with other work can be checked
-- a parent epic, labels (type, area, priority) and a size. When the board can't be read (cloud
+- a parent epic (or a stated reason it stands alone), labels (type, area, priority) and a size. When the board can't be read (cloud
   sessions), skip Size and say so on the issue
   ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §1)
 - no open blocker: nothing it's **blocked by** is still open
 - no `needs owner` label: that work waits for the owner, not for a sprint
+
+The criteria for each board move, including Ready, are spelled out in the
+[grooming playbook](grooming-playbook.md#board-moves-entry-and-exit-criteria).
 
 ## Definition of Done
 

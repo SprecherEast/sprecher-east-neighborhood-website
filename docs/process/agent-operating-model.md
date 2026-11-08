@@ -136,10 +136,10 @@ flowchart LR
   Parallel agents work when each owns different files ([agent teams](https://code.claude.com/docs/en/agent-teams))
   and the tests are strong ([Anthropic](https://www.anthropic.com/engineering/building-c-compiler)).
   Dependent PRs go on a native stack ([`stacked-prs`](../../.agents/skills/stacked-prs/SKILL.md)).
-- **Scheduled check.** Every open issue is checked on a schedule: duplicate bugs get a label and are
-  closed after three days without objection; anything else that looks obsolete gets `proposed-close`
-  for the owner; an old idea is never closed by an agent, it gets `needs owner`. The parts that
-  follow fixed rules run as a script with no model. Planned: #697.
+- **Scheduled check** ([the sweep](grooming-playbook.md#the-sweep)). Every open issue is checked on
+  a schedule: duplicate bugs get a label and are closed after three days without objection; anything
+  else that looks obsolete gets `proposed-close` for the owner; an old idea is never closed by an
+  agent, it gets `needs owner`. Fixed-rule parts run as a script with no model. Planned: #697.
 
 ## 5. Reviewers in a fresh session
 

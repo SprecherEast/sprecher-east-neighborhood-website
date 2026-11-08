@@ -5,9 +5,11 @@ description: Keep the project's plan on GitHub. Before starting work, read the i
 
 # Project tracking
 
-The conventions are in [how we work](../../../docs/process/project-management.md), and the
-milestones and epics in the [roadmap](../../../docs/product/roadmap.md). This skill is the
-procedure. GitHub is the only source of truth: answer from it, never from memory or chat history.
+The conventions are in [how we work](../../../docs/process/project-management.md), the layers and
+how to choose one in the [planning model](../../../docs/process/planning-model.md), grooming
+triggers, board-move criteria and the sweep in the
+[grooming playbook](../../../docs/process/grooming-playbook.md), and the milestones and epics in
+the [roadmap](../../../docs/product/roadmap.md). This skill is the procedure. GitHub is the only source of truth: answer from it, never from memory or chat history.
 
 The commands use the REST API through `gh api`, which works in cloud sessions too (`gh issue` and
 `gh pr` subcommands use GraphQL, which some sandboxes block). In this repo, `{owner}/{repo}` is
@@ -26,7 +28,8 @@ The sprint and the size are board fields. On the owner's computer, read them fro
 items (§2 step 4 without `--query`, then find the issue by number in the JSON). Start only if the
 issue is **Ready**:
 
-- it has acceptance criteria, a parent, type, area and priority labels, and a size
+- it has acceptance criteria, a parent (or a stated reason it stands alone), type, area and
+  priority labels, and a size
 - **Files likely touched** and **Must not touch** are filled in (`None` when there is nothing)
 - nothing it's blocked by is still open
 - it isn't labeled `needs owner`
@@ -44,12 +47,14 @@ Before every major change (a new epic, a sprint, a batch of work), groom the bac
 ([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-work-in-progress)).
 For each issue:
 
-1. Give it a plain summary, acceptance criteria, a parent epic, the type, area and `priority:`
-   labels (§3), and its **Files likely touched** and **Must not touch** (`None` when nothing),
+1. Give it a plain summary, acceptance criteria, a parent epic (or a stated reason it stands
+   alone), the type, area and `priority:` labels (§3), and its **Files likely touched** and **Must not touch** (`None` when nothing),
    which the overlap check in §4 reads.
 2. Set its **Size** as effort: S, M or L. If it is bigger than L, split it into sub-issues. In a
    cloud session, which can't read the board, skip Size and say so on the issue.
-3. When it meets the Definition of Ready, move it to **Ready**. On the owner's computer, move the
+3. When it meets the Definition of Ready (the
+   [Backlog to Ready criteria](../../../docs/process/grooming-playbook.md#board-moves-entry-and-exit-criteria)),
+   move it to **Ready**. On the owner's computer, move the
    card as in §4. In a cloud session, comment on the issue that its card goes to Ready.
 
 ## 2. "What's next?"
@@ -79,9 +84,11 @@ For each issue:
 
 ## 3. Filing new work
 
-1. **Choose the level** ([how we work](../../../docs/process/project-management.md#levels-of-work)).
-   - A new capability that takes weeks is an epic: label it `epic`.
-   - One deliverable is a feature or a task.
+1. **Choose the level** with the [decision tree](../../../docs/process/planning-model.md#which-layer)
+   and the [naming templates](../../../docs/process/planning-model.md#templates).
+   - An outcome over months, with a done test, is a milestone; a capability of a month to a
+     quarter is an epic (label `epic`, one milestone).
+   - One deliverable that fits one sprint and one PR is an issue; a standalone one says why.
    - Something broken is a bug.
 2. **Search first** to avoid duplicates. Loop over the pages, since the repo has more than 100
    issues and PRs:
@@ -164,6 +171,8 @@ For each issue:
   3. Post a `### [STEP]` comment with the branch name and assign the issue
      (`gh issue edit <n> --add-assignee <login>`), then set **In progress** (below). Only now
      start the first commit.
+- Post a progress comment as work happens: claimed, started, PR opened, review done, merged
+  ([triggers](../../../docs/process/grooming-playbook.md#triggers)).
 - Keep the issue current with the comment headers in the record on the issue: `[DECISION]` for
   a choice and its reason, `[QUESTION]` for what you need answered (`needs owner` if only the
   owner can), `[PUSHBACK]` when a request looks weaker than the standard approach, `[STEP]` as
