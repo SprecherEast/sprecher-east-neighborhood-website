@@ -36,6 +36,12 @@ describe('parseChartSpec', () => {
     ).toBe('bar')
   })
 
+  it('accepts the two palettes and refuses an unknown one', () => {
+    expect(parseChartSpec(unitsSpec({ palette: 'warm' })).palette).toBe('warm')
+    expect(parseChartSpec(unitsSpec({ palette: 'default' })).palette).toBe('default')
+    expect(() => parseChartSpec(unitsSpec({ palette: 'neon' }))).toThrow()
+  })
+
   it('refuses an unknown kind', () => {
     expect(() => parseChartSpec({ ...base, kind: 'pie' })).toThrow()
   })

@@ -134,3 +134,19 @@
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
+
+/*
+ * The warm chart colours (#856): a chart that asks for them (`data-chart-palette="warm"`, from the
+ * spec's `palette`) has `chart-1` to `chart-6` mean the warm ones inside it, so no component needs
+ * a second set of classes. Each theme sets `chart-warm-1` to `chart-warm-6` (`themes.test.ts`).
+ */
+@layer base {
+  [data-chart-palette='warm'] {
+    --chart-1: var(--chart-warm-1);
+    --chart-2: var(--chart-warm-2);
+    --chart-3: var(--chart-warm-3);
+    --chart-4: var(--chart-warm-4);
+    --chart-5: var(--chart-warm-5);
+    --chart-6: var(--chart-warm-6);
+  }
+}

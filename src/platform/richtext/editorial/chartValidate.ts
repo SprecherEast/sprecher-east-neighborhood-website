@@ -15,6 +15,7 @@ const FIELD_OF = {
   title: 'title',
   summary: 'summary',
   unit: 'unit',
+  palette: 'palette',
   asOf: 'asOf',
   certainty: 'certainty',
   sources: 'sources',

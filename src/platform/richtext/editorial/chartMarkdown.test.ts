@@ -125,6 +125,21 @@ describe('the examples in the draft prompt', () => {
   })
 })
 
+describe('palette', () => {
+  it('writes the palette only when it is set, and reads it back', () => {
+    expect(chartToJsx(asBlock(chartFromJsx(FIXTURES.bars)))).not.toContain('palette')
+    const tag = chartToJsx(asBlock(chartFromJsx({ ...FIXTURES.bars, palette: 'warm' }))) as string
+    expect(tag).toMatch(/ palette="warm" /)
+    const back = chartFromJsx(propsOf(tag))
+    expect(chartToJsx(asBlock(back))).toBe(tag)
+    expect(toChartSpec(asBlock(back)).palette).toBe('warm')
+  })
+
+  it('refuses an unknown palette, naming the property', () => {
+    expect(() => chartFromJsx({ ...FIXTURES.bars, palette: 'neon' })).toThrow(/palette/)
+  })
+})
+
 describe('enlarge (#686)', () => {
   const off = () => chartFromJsx({ ...FIXTURES.bars, enlarge: 'false' })
 

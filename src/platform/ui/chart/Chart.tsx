@@ -55,7 +55,10 @@ export function Chart({ spec: input, adapter: chosen, zoom = true, className }: 
   const thumbnail = adapter.enlargeable
   const enlargeable = zoom && thumbnail
   const body = (
-    <div className={cn('not-prose space-y-3', thumbnail && !zoom && '@container/chart', className)}>
+    <div
+      data-chart-palette={spec.palette}
+      className={cn('not-prose space-y-3', thumbnail && !zoom && '@container/chart', className)}
+    >
       <figure className={cn(!thumbnail && 'space-y-4', thumbnail && THUMBNAIL_FIGURE)}>
         <div
           className={cn(

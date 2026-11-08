@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import { parseChartSpec } from '@/platform/lib/chart/spec'
 
-import { fromChartSpec, isEnlargeable, toChartSpec } from './chart'
+import { fromChartSpec, isEnlargeable, toChartSpec, type StoredChart } from './chart'
 
 /** The block as stored: the fields the editor fills in, with empty ones as null (Payload's way). */
 const stored = (extra: Record<string, unknown>) =>
@@ -63,6 +63,20 @@ describe('toChartSpec', () => {
         }),
       ),
     ).toThrow(/key "same" is used twice: "B" repeats the key of "A"/)
+  })
+
+  it('carries the palette both ways, and leaves it out when none is chosen (#856)', () => {
+    const stored: StoredChart = {
+      kind: 'bar',
+      title: 'Where it goes',
+      summary: 'Most goes to one place.',
+      unit: 'usd',
+      palette: 'warm',
+      bars: [{ label: 'One', value: 10 }],
+    }
+    expect(toChartSpec(stored).palette).toBe('warm')
+    expect(fromChartSpec(toChartSpec(stored)).palette).toBe('warm')
+    expect(toChartSpec({ ...stored, palette: null }).palette).toBeUndefined()
   })
 
   it('maps a stacked block: rows and their values to x, series values and row notes', () => {

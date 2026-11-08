@@ -62,6 +62,12 @@ export const THEME_TOKENS = {
   'chart-4': { modes: 'both', meaning: 'Chart series 4' },
   'chart-5': { modes: 'both', meaning: 'Chart series 5' },
   'chart-6': { modes: 'both', meaning: 'Chart series 6' },
+  'chart-warm-1': { modes: 'both', meaning: 'Warm chart colour 1: orange and gray' },
+  'chart-warm-2': { modes: 'both', meaning: 'Warm chart colour 2: orange and gray' },
+  'chart-warm-3': { modes: 'both', meaning: 'Warm chart colour 3: orange and gray' },
+  'chart-warm-4': { modes: 'both', meaning: 'Warm chart colour 4: orange and gray' },
+  'chart-warm-5': { modes: 'both', meaning: 'Warm chart colour 5: orange and gray' },
+  'chart-warm-6': { modes: 'both', meaning: 'Warm chart colour 6: orange and gray' },
   radius: { modes: 'base', meaning: 'Base corner radius; sm to xl derive from it' },
 } as const satisfies Record<string, { modes: Modes; meaning: string }>
 
@@ -124,7 +130,15 @@ const CHART_TOKENS = [
   'chart-5',
   'chart-6',
 ] as const satisfies readonly ThemeToken[]
-export const CHART_PAIRS = CHART_TOKENS.flatMap((chart) =>
+const CHART_WARM_TOKENS = [
+  'chart-warm-1',
+  'chart-warm-2',
+  'chart-warm-3',
+  'chart-warm-4',
+  'chart-warm-5',
+  'chart-warm-6',
+] as const satisfies readonly ThemeToken[]
+export const CHART_PAIRS = [...CHART_TOKENS, ...CHART_WARM_TOKENS].flatMap((chart) =>
   (['background', 'surface', 'card'] as const).map((background) => [chart, background] as const),
 )
 
