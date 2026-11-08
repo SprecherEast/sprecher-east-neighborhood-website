@@ -32,7 +32,12 @@ started by hand (Actions → Deploy to VPS → Run workflow, on `main`).
    `Dependency Audit`, `Knowledge sync`, `Agent context`) have passed on the commit, then reads
    the server's facts over SSH. A check that is missing or skipped stops the deploy. `PR Policy`
    runs on pull requests only and the end-to-end tests are not required yet, so the deploy does not
-   wait for them. It skips
+   wait for them. It also stops the deploy when the server's `.env.local` lacks either Turnstile
+   key (the robot check on the contact form and sign-up, #869): the `::error` says how to fix it.
+   The visible opt-out is the repository variable `ALLOW_NO_ROBOT_CHECK` set to `true` (Settings →
+   Secrets and variables → Actions → Variables); the deploy then goes out without the check and
+   shows a `::warning` on its run every time. Only the keys' presence is checked, not that
+   Cloudflare accepts them (`.github/scripts/robot-check-gate.sh`). It skips
    the deploy when that commit, or a newer one, is already live, or when only docs and repo
    tooling changed since the live commit.
 2. **Build release** runs on Ubuntu 24.04 with the server's exact Node version, without any

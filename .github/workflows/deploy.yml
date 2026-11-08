@@ -51,6 +51,8 @@ jobs:
       - name: Read the server's Node version and public settings
         id: facts
         if: steps.checks.outputs.cancelled != 'true'
+        env:
+          ALLOW_NO_ROBOT_CHECK: ${{ vars.ALLOW_NO_ROBOT_CHECK }}
         run: |
           set -euo pipefail
           facts=$(cat ops/lib.sh ops/server-facts.sh | ssh vps 'bash -s')
@@ -60,13 +62,12 @@ jobs:
           [[ "$node" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error title=Preflight::unexpected Node version from the server"; exit 1; }
           [[ "$url" =~ ^https?://[A-Za-z0-9.-]+(:[0-9]+)?$ ]] || { echo "::error title=Preflight::NEXT_PUBLIC_SERVER_URL in .env.local is not a plain origin"; exit 1; }
           [[ "$key" =~ ^[A-Za-z0-9_-]*$ ]] || { echo "::error title=Preflight::unexpected NEXT_PUBLIC_TURNSTILE_SITE_KEY"; exit 1; }
-          if [ -n "$key" ] && [ "$secret" = yes ]; then paired=yes
-          elif [ -z "$key" ] && [ "$secret" = no ]; then paired=no
-          else echo "::error title=Preflight::only one of the two Turnstile keys is set in .env.local"; exit 1; fi
+          # Both Turnstile keys, or the visible opt-out (#869); the decision is in the script.
+          SITE_KEY="$key" SECRET_SET="$secret" bash .github/scripts/robot-check-gate.sh
           [ "${free_kb:-0}" -gt 3145728 ] || { echo "::error title=Preflight::less than 3 GB free on the server"; exit 1; }
           {
             echo "node=$node"; echo "server_url=$url"; echo "turnstile_site_key=$key"
-            echo "turnstile_paired=$paired"; echo "deployed=$(get deployed)"
+            echo "deployed=$(get deployed)"
           } >> "$GITHUB_OUTPUT"
           echo "::notice title=Preflight::server runs Node $node; live commit $(get deployed | cut -c1-7)"
 
