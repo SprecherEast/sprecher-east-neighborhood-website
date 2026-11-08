@@ -17,6 +17,7 @@ const event: EventDetail = {
   categories: [{ id: 1, title: 'Social' }],
   description: 'Bring a dish.',
   locationName: 'Park shelter',
+  place: { kind: 'venue', label: 'Park shelter' },
   image: null,
   locationType: 'in-person',
   locationAddress: '4605 Sprecher Rd',

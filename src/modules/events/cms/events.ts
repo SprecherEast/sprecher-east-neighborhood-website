@@ -28,6 +28,7 @@ export const Events: CollectionConfig<'events'> = {
     categories: true,
     description: true,
     locationName: true,
+    locationType: true,
     heroImage: true,
     meta: {
       title: true,

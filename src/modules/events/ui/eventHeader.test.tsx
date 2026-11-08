@@ -23,6 +23,7 @@ const event: EventDetail = {
   categories: [{ id: 1, title: 'Social' }],
   description: 'Bring a dish.',
   locationName: 'Park shelter',
+  place: { kind: 'venue', label: 'Park shelter' },
   image: null,
   locationType: 'in-person',
   locationAddress: '4605 Sprecher Rd',
@@ -45,6 +46,29 @@ describe('eventHeaderProps', () => {
     expect(screen.getByText('Time').nextElementSibling?.textContent).toMatch(/^6:00 PM – 8:00 PM /)
     expect(screen.getByText('Format').nextElementSibling?.textContent).toBe('In Person')
     expect(screen.getByText('Date').nextElementSibling?.querySelector('time')).not.toBeNull()
+  })
+
+  it.each([
+    ['online', { ...event, place: { kind: 'online', label: 'Online' } } as EventDetail, 'Online'],
+    [
+      'to be confirmed',
+      {
+        ...event,
+        place: { kind: 'unconfirmed', label: 'Location to be confirmed' },
+      } as EventDetail,
+      'Location to be confirmed',
+    ],
+  ])('states a place that is not a venue in the facts: %s (#873)', async (_, e, text) => {
+    const { container } = render(<PageHeader {...eventHeaderProps(e)} />)
+
+    expect(screen.getByText('Location').nextElementSibling?.textContent).toBe(text)
+    await expectAccessible(container)
+  })
+
+  it('leaves a venue to the Location panel below the header, so the place is not said twice (#873)', () => {
+    render(<PageHeader {...eventHeaderProps(event)} />)
+
+    expect(screen.queryByText('Location')).toBeNull()
   })
 
   it('puts an event with a photo on it, its category on the photo', () => {
