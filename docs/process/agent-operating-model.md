@@ -52,11 +52,11 @@ flowchart TB
 
 ## 2. Who gets a session
 
-| Session        | Does                                                                                          | Capability                                          | Edits code?                  | Status  |
-| -------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------- | ------- |
-| Chief of staff | Talks to the owner; grooms; assigns one worker per issue; keeps the record; manages the queue | Strongest; high effort for grooming and issue text  | No. Issues and comments only | Planned |
-| Worker         | One issue, in its own branch and worktree, then it ends                                       | Standard, medium effort                             | Yes, in its own branch       | Partly  |
-| Reviewer       | Reviews one PR in a fresh session ([§5](#5-reviewers-in-a-fresh-session))                     | By level ([§6](#6-how-much-scrutiny-a-change-gets)) | No, it reports               | Partly  |
+| Session        | Does                                                                                          | Capability                                          | Edits code?                  | Status                              |
+| -------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------- | ----------------------------------- |
+| Chief of staff | Talks to the owner; grooms; assigns one worker per issue; keeps the record; manages the queue | Strongest; high effort for grooming and issue text  | No. Issues and comments only | Partly, #695 piece one (2026-11-08) |
+| Worker         | One issue, in its own branch and worktree, then it ends                                       | Standard, medium effort                             | Yes, in its own branch       | Partly                              |
+| Reviewer       | Reviews one PR in a fresh session ([§5](#5-reviewers-in-a-fresh-session))                     | By level ([§6](#6-how-much-scrutiny-a-change-gets)) | No, it reports               | Partly                              |
 
 Three kinds of session and no standing layer between them. A fourth, the scheduled sweep, only
 labels and comments (planned, #697). [`CLAUDE.md`](../../CLAUDE.md) says which model each uses.
@@ -84,14 +84,14 @@ An issue that touches a page, its CMS fields and its metadata needs all three gu
 The brief names the guides and notes to load, because instructions an agent has to choose to open
 are often skipped ([Vercel](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals)).
 
-| What                                    | Who loads it     | Covers                                                                                                                 | Status        |
-| --------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------- |
-| The twelve role guides                  | The worker       | Design (UX, UI), implementation (backend, CMS, frontend, media, SEO), content (content, events, legal), operations, QA | Guides: built |
-| Groom, overlap check, dispatch brief    | Chief of staff   | A Ready issue a worker can follow; no shared files or hot spots; a brief with the objective, done, sources, boundaries | Planned, #695 |
-| Review depth                            | Chief of staff   | A lookup in the table in [§6](#6-how-much-scrutiny-a-change-gets), not an agent                                        | Planned, #695 |
-| Design brief, standards upkeep          | Chief of staff   | A short design on the issue before new UI is built; root-cause fixes proposed as PRs                                   | Planned, #696 |
-| Weekly analysis                         | Chief of staff   | The feedback loop in [§7](#7-the-feedback-loop)                                                                        | Planned, #698 |
-| Knowledge notes and generated reference | Worker, reviewer | What a module does, its screens and data, its content types and shared components                                      | Planned, #712 |
+| What                                    | Who loads it     | Covers                                                                                                                 | Status                                                                        |
+| --------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| The twelve role guides                  | The worker       | Design (UX, UI), implementation (backend, CMS, frontend, media, SEO), content (content, events, legal), operations, QA | Guides: built                                                                 |
+| Groom, overlap check, dispatch brief    | Chief of staff   | A Ready issue a worker can follow; no shared files or hot spots; a brief with the objective, done, sources, boundaries | Built, #695 piece one                                                         |
+| Review depth                            | Chief of staff   | A lookup in the table in [§6](#6-how-much-scrutiny-a-change-gets), not an agent                                        | Built, #695 piece one (the lookup; the levels take effect with a later piece) |
+| Design brief, standards upkeep          | Chief of staff   | A short design on the issue before new UI is built; root-cause fixes proposed as PRs                                   | Planned, #696                                                                 |
+| Weekly analysis                         | Chief of staff   | The feedback loop in [§7](#7-the-feedback-loop)                                                                        | Planned, #698                                                                 |
+| Knowledge notes and generated reference | Worker, reviewer | What a module does, its screens and data, its content types and shared components                                      | Planned, #712                                                                 |
 
 **What a guide owns is unchanged.** Implementation: code that follows the architecture and the
 [guard rails](../guidelines/guard-rails.md), inside the issue's declared files. Content: posts,
@@ -127,7 +127,8 @@ flowchart LR
   recommendation ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §3). Silence
   is never a yes: the issue [waits for owner](project-management.md#waits-for-owner). A session
   starts with the chief of staff listing them, oldest first, at most seven, one line each. The
-  label is the queue. Planned: #695, #697.
+  label is the queue. Built: the list, in the `chief-of-staff` skill (#695 piece one). Planned: the
+  phone, #697.
 - **Scope creep** becomes a new issue linked with a `[SCOPE]` comment. The current PR does not widen.
 - **Parallel work.** More than one issue may be In progress only if the files each declares, and
   the shared hot spots, don't overlap. There is no fixed number
@@ -239,9 +240,11 @@ flowchart LR
 | Issue fields, comment header, labels, claim, parallel rule      | Built   | #693, #721                     |
 | Code owners for the rule files                                  | Built   | #694                           |
 | Knowledge layer: lean context, notes, generated reference, sync | Planned | #712, first                    |
-| Chief of staff, one worker, one reviewer; guides as skills; §6  | Planned | #695                           |
+| Chief of staff session, skill, overlap check (piece one)        | Built   | #695, 2026-11-08               |
+| One worker, one reviewer; guides as skills; §6 takes effect     | Planned | #695, later pieces             |
 | Design brief and standards upkeep as procedures                 | Planned | #696                           |
 | Phone, push and the daily sweep (Windows)                       | Planned | #697                           |
 | Feedback loop                                                   | Planned | #698                           |
 
-The order is fixed by what each needs: #712, then #695, then #696 to #698.
+The order is fixed by what each needs: #712, then #695, then #696 to #698. The chief of staff's
+limits are checked statically; the refusals are tried by hand ([manual test](chief-of-staff-manual-test.md), not run).
