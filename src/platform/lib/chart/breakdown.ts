@@ -27,6 +27,8 @@ export type BreakdownArea = BreakdownPiece & {
 }
 
 export type BreakdownModel = {
+  /** Bar length as a multiple of the share: `BAR_SCALE`, or less when the biggest area would overflow its track */
+  barScale: number
   total: number
   squareCount: number
   /** Biggest first: the order of the grid, the key and the bars */
@@ -95,7 +97,9 @@ export function toBreakdown(spec: Breakdown): BreakdownModel {
       area: piece.area,
     }),
   )
-  return { total, squareCount, areas, smaller }
+  const biggest = Math.max(...areas.map((area) => area.share))
+  const barScale = Math.min(BAR_SCALE, 100 / biggest)
+  return { barScale, total, squareCount, areas, smaller }
 }
 
 /** Bar length as a multiple of the share: 40% is a bar 88% of the track long, the same in every breakdown */

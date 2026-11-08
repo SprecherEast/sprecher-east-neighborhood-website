@@ -2,7 +2,6 @@ import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 import {
-  BAR_SCALE,
   formatMillions,
   formatShare,
   formatSquareValue,
@@ -23,10 +22,11 @@ type RowProps = {
   nested?: 'area' | 'flat'
   /** "in Everything else", for a piece in the smaller list */
   area?: string
+  scale: number
 }
 
 /** One bar: its length is the share times the shared scale, so a dollar is the same length in every breakdown */
-function Bar({ piece, nested }: { piece: BreakdownPiece; nested: boolean }) {
+function Bar({ piece, nested, scale }: { piece: BreakdownPiece; nested: boolean; scale: number }) {
   const ramp = rampAt(piece.step)
   const radius = nested ? 4 : 7
   return (
@@ -39,7 +39,7 @@ function Bar({ piece, nested }: { piece: BreakdownPiece; nested: boolean }) {
       <g className="chart-reveal-x">
         <rect
           data-chart-mark={piece.key}
-          width={`${(piece.share * BAR_SCALE).toFixed(2)}%`}
+          width={`${(piece.share * scale).toFixed(2)}%`}
           height="100%"
           rx={radius}
           className={cn(ramp.fill, 'stroke-chart-ramp-edge')}
@@ -51,7 +51,7 @@ function Bar({ piece, nested }: { piece: BreakdownPiece; nested: boolean }) {
 }
 
 /** A label, a bar, the dollars and the percent: on a phone the bar drops under the label */
-function BarRow({ piece, nested, area }: RowProps) {
+function BarRow({ piece, nested, area, scale }: RowProps) {
   const ramp = rampAt(piece.step)
   return (
     <li
@@ -78,7 +78,7 @@ function BarRow({ piece, nested, area }: RowProps) {
         )}
       </span>
       <span className="order-last col-span-full row-start-2 sm:order-none sm:col-span-1 sm:col-start-2 sm:row-start-1">
-        <Bar piece={piece} nested={Boolean(nested)} />
+        <Bar piece={piece} nested={Boolean(nested)} scale={scale} />
       </span>
       <Text
         variant="small"
@@ -111,7 +111,7 @@ type Props = {
  * grid is an image; the key and the bars are text, so a screen reader reads every figure.
  */
 export function BreakdownChart({ model, squareValue, titleId, descId }: Props) {
-  const { areas, smaller } = model
+  const { areas, smaller, barScale } = model
   return (
     <div className="space-y-5">
       <div className="space-y-3">
@@ -182,9 +182,9 @@ export function BreakdownChart({ model, squareValue, titleId, descId }: Props) {
       <ul role="list">
         {areas.map((area) => (
           <React.Fragment key={area.key}>
-            <BarRow piece={area} />
+            <BarRow piece={area} scale={barScale} />
             {area.shown.map((piece) => (
-              <BarRow key={piece.key} piece={piece} nested="area" />
+              <BarRow key={piece.key} piece={piece} nested="area" scale={barScale} />
             ))}
           </React.Fragment>
         ))}
@@ -193,7 +193,13 @@ export function BreakdownChart({ model, squareValue, titleId, descId }: Props) {
         <Disclosure variant="link" summary="See the smaller pieces">
           <ul role="list">
             {smaller.map((piece) => (
-              <BarRow key={piece.key} piece={piece} nested="flat" area={piece.area} />
+              <BarRow
+                key={piece.key}
+                piece={piece}
+                nested="flat"
+                area={piece.area}
+                scale={barScale}
+              />
             ))}
           </ul>
         </Disclosure>

@@ -73,6 +73,26 @@ describe('toBreakdown', () => {
   })
 })
 
+describe('the bar scale', () => {
+  it('is the shared scale when the biggest bar fits its track', () => {
+    expect(breakdownOf(spec).barScale).toBe(2.2)
+  })
+
+  it('shrinks so the biggest area still fits when it is over half the total', () => {
+    const big = parseChartSpec({
+      ...FIXTURES.dayToDay,
+      areas: [
+        { key: 'a', label: 'A', value: 80_000_000 },
+        { key: 'b', label: 'B', value: 20_000_000 },
+        { key: 'c', label: 'C', value: 20_000_000 },
+      ],
+    })
+    const { barScale, areas } = breakdownOf(big)
+    expect(barScale).toBeLessThan(2.2)
+    expect(areas[0].share * barScale).toBeLessThanOrEqual(100)
+  })
+})
+
 describe('formatMillions and formatShare', () => {
   it('writes millions short: whole from 100M, one decimal below', () => {
     expect(formatMillions(194_768_276)).toBe('$195M')
