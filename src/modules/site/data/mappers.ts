@@ -36,6 +36,11 @@ type StoredSize = StoredColumn['size']
 /** What news needs to load an archive block's posts: the stored fields, as the editor set them */
 export type ArchivePostQuery = Pick<ArchiveBlock, 'populateBy' | 'categories' | 'limit' | 'selectedDocs'>
 
+/** A section of the page: its items hold blocks of the same kind (an interface, so the type can refer to itself) */
+export interface SectionLayoutBlock extends SectionBlockProps<PageLayoutBlock> {
+  blockType: 'section'
+}
+
 /**
  * One block of a page's layout: site's own blocks as plain props (each keeps its `blockType`),
  * and the blocks other modules or `platform/` map as stored (decision 0013, point 4).
@@ -45,7 +50,7 @@ export type PageLayoutBlock =
   | (CallToActionBlockProps & { blockType: 'cta' })
   | (ArchiveBlockProps & { blockType: 'archive'; postQuery: ArchivePostQuery })
   | (MapBlockProps & { blockType: 'mapBlock' })
-  | (SectionBlockProps<PageLayoutBlock> & { blockType: 'section' })
+  | SectionLayoutBlock
   | FormBlock
   | MediaBlock
   | EventsThisWeekBlock

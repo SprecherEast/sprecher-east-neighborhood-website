@@ -34,27 +34,34 @@ function headings(value: unknown): string[] {
 describe('About page seed (#764)', () => {
   const page = aboutPage({ mapImage })
   const layout = page.layout ?? []
+  type Item = { width?: string | null; content?: Record<string, unknown>[] | null }
+  const items = (layout[0] as { items: Item[] }).items
+  const map = items[1].content?.[0] as {
+    blockType: string
+    title: string
+    description: string
+    embedUrl?: string | null
+    preview?: number
+  }
 
   it('says what the site is first, then where we are, then how AI helps, then the call to act', () => {
-    expect(layout.map((block) => block.blockType)).toEqual([
-      'content',
-      'mapBlock',
-      'content',
-      'cta',
-    ])
-    expect(headings(layout[0])).toEqual(['What this site is'])
-    expect(layout[1]).toMatchObject({ blockType: 'mapBlock', title: 'Where we are' })
-    expect(headings(layout[2])).toEqual(['How AI helps'])
+    expect(layout.map((block) => block.blockType)).toEqual(['section', 'content', 'cta'])
+    expect(headings(items[0])).toEqual(['What this site is'])
+    expect(map).toMatchObject({ blockType: 'mapBlock', title: 'Where we are' })
+    expect(headings(layout[1])).toEqual(['How AI helps'])
+  })
+
+  it('puts the text beside the map, two thirds and one third, set as fields an editor can change', () => {
+    expect(items.map((item) => item.width)).toEqual(['twoThirds', 'oneThird'])
   })
 
   it('opens the first section with the site, not the neighborhood', () => {
-    const first = textOf(layout[0])
+    const first = textOf(items[0])
     expect(first.join(' ')).toMatch(/This is an unofficial site/)
     expect(first.join(' ')).toMatch(/run by one neighbor/)
   })
 
   it('gives the map block the Sprecher East My Maps address, which the site accepts', () => {
-    const map = layout[1] as { embedUrl?: string | null; preview?: number }
     expect(map.embedUrl).toBe(
       'https://www.google.com/maps/d/embed?mid=1mbTKP1-2eN6g5YPReAaQg6J1lV2DX7g',
     )
@@ -63,7 +70,6 @@ describe('About page seed (#764)', () => {
   })
 
   it('names the boundary and what touches it, from the verified area', () => {
-    const map = layout[1] as { description: string }
     for (const place of [
       'I-94',
       'Sprecher Road',

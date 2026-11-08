@@ -10,39 +10,57 @@ type AboutArgs = {
 const SPRECHER_EAST_MAP_EMBED_URL =
   'https://www.google.com/maps/d/embed?mid=1mbTKP1-2eN6g5YPReAaQg6J1lV2DX7g'
 
-export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pages'> = (args) => {
-  const layout: RequiredDataFromCollectionSlug<'pages'>['layout'] = [
-    {
-      blockName: 'What This Site Is',
-      blockType: 'content',
-      columns: [
-        {
-          richText: root([
-            heading('h2', 'What this site is'),
-            p(
-              'This is an unofficial site for Sprecher East, the neighborhood on Madison’s far east side. We gather news, events and public notices for neighbors in one place.',
-            ),
-            p(
-              'It’s run by one neighbor, not by the City, an HOA or a registered neighborhood association, and there are no dues or membership.',
-            ),
-          ]),
-          size: 'full',
-        },
-      ],
-    },
-  ]
+/** A section item's other layout choices, at their defaults */
+const ITEM = { align: 'start', verticalAlign: 'top', phoneOrder: 'inOrder' } as const
 
-  if (args?.mapImage) {
-    layout.push({
-      blockName: 'Neighborhood Map',
-      blockType: 'mapBlock',
-      title: 'Where we are',
-      description:
-        'Sprecher East is in Madison’s District 16. I-94 is to the north, Sprecher Road to the west, and Cottage Grove Road to the south. Door Creek Park and the Door Creek valley lie to the east. North Star is next door to the west, and Richmond Hill Homeowners lies to the southwest.',
-      preview: args.mapImage.id,
-      embedUrl: SPRECHER_EAST_MAP_EMBED_URL,
-    })
+export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pages'> = (args) => {
+  const intro = {
+    blockName: 'What This Site Is',
+    blockType: 'content' as const,
+    columns: [
+      {
+        richText: root([
+          heading('h2', 'What this site is'),
+          p(
+            'This is an unofficial site for Sprecher East, the neighborhood on Madison’s far east side. We gather news, events and public notices for neighbors in one place.',
+          ),
+          p(
+            'It’s run by one neighbor, not by the City, an HOA or a registered neighborhood association, and there are no dues or membership.',
+          ),
+        ]),
+        size: 'full' as const,
+      },
+    ],
   }
+
+  // The text takes two thirds and the map one third, side by side from a large screen up and stacked
+  // on a phone; an editor changes the widths, the order or the alignment in Admin (#884)
+  const layout: RequiredDataFromCollectionSlug<'pages'>['layout'] = args?.mapImage
+    ? [
+        {
+          blockName: 'Intro and Map',
+          blockType: 'section',
+          items: [
+            { ...ITEM, width: 'twoThirds', content: [intro] },
+            {
+              ...ITEM,
+              width: 'oneThird',
+              content: [
+                {
+                  blockName: 'Neighborhood Map',
+                  blockType: 'mapBlock',
+                  title: 'Where we are',
+                  description:
+                    'Sprecher East is in Madison’s District 16. I-94 is to the north, Sprecher Road to the west, and Cottage Grove Road to the south. Door Creek Park and the Door Creek valley lie to the east. North Star is next door to the west, and Richmond Hill Homeowners lies to the southwest.',
+                  preview: args.mapImage.id,
+                  embedUrl: SPRECHER_EAST_MAP_EMBED_URL,
+                },
+              ],
+            },
+          ],
+        },
+      ]
+    : [intro]
 
   layout.push(
     {
