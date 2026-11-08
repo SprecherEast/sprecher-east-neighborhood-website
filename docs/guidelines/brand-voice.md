@@ -31,6 +31,13 @@ what they say, without telling you what to think.
   streetlight only if someone actually did.
 - **We don't speak for every neighbor.** "Many of us walk Door Creek Park", not "we all love it".
 
+## Kind when we ask
+
+When we ask a neighbor to do something for us or for the neighborhood, we ask the way a good
+neighbor would: in polite wording, as an invitation, never as a bare order. Step-by-step
+directions (how to use a form or find a page) stay plain and exact; the kindness is in how we ask,
+not in extra words, so it stays inside the length budget.
+
 ## Length budget
 
 | Piece                               | Limit                                                                                                                                                                                                                                                                                           |
@@ -46,6 +53,10 @@ what they say, without telling you what to think.
 | Sentence                            | Average 15 words; split anything over 25.                                                                                                                                                                                                                                                       |
 
 The drafting prompt (`intelligence/prompts/draft.md`) and its schema carry a copy of the event and news rule because the pipeline doesn't load this file. Change them together. The owner chose the screen rule in place of word counts (2026-11-03, voice call with Claude, recorded on #535).
+
+**Say it once.** A title, label or picture that already says it needs no sentence repeating it.
+What a list, a card or a chart shows needs no intro. Say the thing once, in one short sentence, or
+leave it out.
 
 Over budget? Cut words before facts. If the facts don't fit, split the piece.
 
