@@ -19,6 +19,7 @@ const summary = (slug: string): EventSummary => ({
   categories: [],
   description: null,
   locationName: null,
+  place: { kind: 'unconfirmed', label: 'Location to be confirmed' },
   image: null,
 })
 

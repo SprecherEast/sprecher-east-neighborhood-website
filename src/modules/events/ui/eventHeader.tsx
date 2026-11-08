@@ -26,6 +26,7 @@ export function eventHeaderProps(event: EventDetail): PageHeaderProps {
     image,
     locationType,
     officialBody,
+    place,
     timeEnd,
     timeStart,
     title,
@@ -40,6 +41,8 @@ export function eventHeaderProps(event: EventDetail): PageHeaderProps {
           },
         ]
       : []),
+    // A venue is in the Location panel below with its address and map link; saying it twice is noise
+    ...(place.kind === 'venue' ? [] : [{ label: 'Location', value: place.label }]),
     ...(locationType ? [{ label: 'Format', value: formatEventLocationType(locationType) }] : []),
   ]
   const badge = image ? 'on-image' : 'category'

@@ -3153,7 +3153,7 @@ export interface ChartBlock {
    * The takeaway: keep it to one short line. The chart shows small with this beside it, and readers can enlarge it. Screen readers hear it first.
    */
   summary: string
-  kind: 'units' | 'bar' | 'stacked'
+  kind: 'units' | 'bar' | 'stacked' | 'breakdown'
   /**
    * What the numbers count.
    */
@@ -3232,6 +3232,48 @@ export interface ChartBlock {
           hatch?: boolean | null
           id?: string | null
         }[]
+        id?: string | null
+      }[]
+    | null
+  /**
+   * What one square stands for, in dollars: 5000000 makes each square $5 million. Pick an amount that gives 20 to 200 squares.
+   */
+  squareValue?: number | null
+  /**
+   * The big areas of the budget, up to seven. They are ranked by size, and the colors run from the biggest to the smallest.
+   */
+  areas?:
+    | {
+        label: string
+        /**
+         * In dollars.
+         */
+        value: number
+        /**
+         * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+         */
+        key?: string | null
+        /**
+         * Optional smaller parts of this area. Pieces marked "Shown" sit under the area; the rest go in "See the smaller pieces".
+         */
+        pieces?:
+          | {
+              label: string
+              /**
+               * In dollars.
+               */
+              value: number
+              /**
+               * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+               */
+              key?: string | null
+              /**
+               * Show this piece right under its area.
+               */
+              shown?: boolean | null
+              id?: string | null
+            }[]
+          | null
         id?: string | null
       }[]
     | null

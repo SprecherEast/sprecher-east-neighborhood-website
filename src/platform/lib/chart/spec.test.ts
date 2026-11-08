@@ -181,3 +181,80 @@ describe('parseChartSpec', () => {
     })
   })
 })
+
+const piece = (key: string, value: number, shown?: true) => ({
+  key,
+  label: `Piece ${key}`,
+  value,
+  ...(shown && { shown }),
+})
+const area = (key: string, value: number, pieces?: ReturnType<typeof piece>[]) => ({
+  key,
+  label: `Area ${key}`,
+  value,
+  ...(pieces && { pieces }),
+})
+const breakdownSpec = (overrides: Record<string, unknown> = {}) => ({
+  ...base,
+  kind: 'breakdown',
+  squareValue: 5_000_000,
+  areas: [
+    area('a', 60_000_000, [piece('a1', 40_000_000, true), piece('a2', 10_000_000)]),
+    area('b', 40_000_000),
+  ],
+  ...overrides,
+})
+
+describe('parseChartSpec: breakdown', () => {
+  it('accepts areas with pieces, and a piece shown under its area', () => {
+    const spec = parseChartSpec(breakdownSpec())
+    expect(spec.kind).toBe('breakdown')
+  })
+
+  it('needs dollars, because a square stands for a dollar amount', () => {
+    expect(() => parseChartSpec(breakdownSpec({ unit: 'percent' }))).toThrow(/dollars/i)
+  })
+
+  it('refuses a square that is not a positive amount', () => {
+    expect(() => parseChartSpec(breakdownSpec({ squareValue: 0 }))).toThrow()
+    expect(() => parseChartSpec(breakdownSpec({ squareValue: -5 }))).toThrow()
+  })
+
+  it('refuses more than 7 areas: the colour ramp has 7 steps', () => {
+    const areas = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => area(String(n), n * 1_000_000))
+    expect(() => parseChartSpec(breakdownSpec({ areas }))).toThrow(/7/)
+  })
+
+  it('refuses an area of zero dollars: it could not be drawn', () => {
+    expect(() => parseChartSpec(breakdownSpec({ areas: [area('a', 0), area('b', 1)] }))).toThrow()
+  })
+
+  it('refuses pieces that add up to more than their area', () => {
+    const areas = [area('a', 10_000_000, [piece('a1', 8_000_000), piece('a2', 8_000_000)])]
+    expect(() => parseChartSpec(breakdownSpec({ areas }))).toThrow(/Area a/)
+  })
+
+  it('refuses a key used twice, in areas or pieces', () => {
+    expect(() =>
+      parseChartSpec(breakdownSpec({ areas: [area('a', 5_000_000), area('a', 5_000_000)] })),
+    ).toThrow(/used twice/)
+    expect(() =>
+      parseChartSpec(
+        breakdownSpec({
+          areas: [
+            area('a', 9_000_000, [piece('x', 1_000_000)]),
+            area('b', 9_000_000, [piece('x', 1_000_000)]),
+          ],
+        }),
+      ),
+    ).toThrow(/used twice/)
+  })
+
+  it('refuses a square so small that the grid would need more than 200 squares', () => {
+    expect(() => parseChartSpec(breakdownSpec({ squareValue: 100_000 }))).toThrow(/200/)
+  })
+
+  it('refuses a square so big that the areas could not each get one', () => {
+    expect(() => parseChartSpec(breakdownSpec({ squareValue: 100_000_000 }))).toThrow(/square/i)
+  })
+})

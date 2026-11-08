@@ -98,6 +98,7 @@ export const COMPONENT_GROUPS = [
       'ChartZoom',
       'SquareGrid',
       'TileGrid',
+      'BreakdownChart',
       'BarChartSvg',
       'BarSegment',
     ],

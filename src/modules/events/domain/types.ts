@@ -3,6 +3,7 @@ import type { ImageRef, RichTextValue } from '@/platform/lib'
 import type { EventCategoryRef } from './categories'
 import type { EventLocationType } from './locationTypes'
 import type { OfficialBody } from './officialMeetings'
+import type { EventPlace } from './place'
 
 /** What an event card or list item shows. */
 export type EventSummary = {
@@ -22,6 +23,8 @@ export type EventSummary = {
   categories: EventCategoryRef[]
   description: string | null
   locationName: string | null
+  /** The venue, "Online" or "Location to be confirmed": every event shows one (#873) */
+  place: EventPlace
   image: ImageRef | null
 }
 

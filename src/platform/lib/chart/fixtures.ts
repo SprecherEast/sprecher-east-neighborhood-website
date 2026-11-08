@@ -33,6 +33,21 @@ const MONTHS = [
   'December',
 ]
 
+/** Dollars from the budget's figures in millions, to the dollar */
+const millions = (m: number) => Math.round(m * 1_000_000)
+const piece = (key: string, label: string, m: number, shown?: true) => ({
+  key,
+  label,
+  value: millions(m),
+  ...(shown && { shown }),
+})
+const area = (key: string, label: string, m: number, pieces?: ReturnType<typeof piece>[]) => ({
+  key,
+  label,
+  value: millions(m),
+  ...(pieces && { pieces }),
+})
+
 export const FIXTURES = {
   /** Two grids on one screen: what the money pays for, 2026 adopted next to 2027 proposed */
   paysFor: {
@@ -182,6 +197,62 @@ export const FIXTURES = {
     data: [
       part('y2026', '2026 adopted', 452_723_152),
       { ...part('y2027', '2027 proposed', 477_549_853), pattern: 'hatch' },
+    ],
+  },
+  /** Where the day-to-day (General and Library Funds) money goes: $5M a square, smaller pieces folded away */
+  dayToDay: {
+    kind: 'breakdown',
+    title: 'Where the day-to-day dollars go',
+    summary: 'Public safety and health take the biggest share of the $477.5M day-to-day budget.',
+    unit: 'usd',
+    squareValue: millions(5),
+    asOf: PROPOSAL,
+    sources: [EXEC_OPERATING],
+    areas: [
+      area('debt', 'Debt service', 80.479929),
+      area('safety', 'Public safety & health', 194.768276, [
+        piece('police', 'Police', 102.492663, true),
+        piece('fire', 'Fire / EMS', 81.114847, true),
+        piece('health', 'Public Health', 10.728438),
+      ]),
+      area('works', 'Public works', 56.659014, [
+        piece('streets', 'Streets', 30.473166),
+        piece('parks', 'Parks', 18.91529),
+      ]),
+      area('transport', 'Transportation', 37.858292, [
+        piece('transit', 'Metro Transit', 25.506519),
+      ]),
+      area('admin', 'Administration', 36.85902),
+      area('else', 'Everything else', 70.925323, [
+        piece('planning', 'Planning & development', 31.479633),
+        piece('library', 'Library', 24.927453),
+        piece('misc', 'Miscellaneous', 10.969427),
+        piece('general', 'General government', 3.54881),
+      ]),
+    ],
+  },
+  /** Where the big-project (capital) money goes: all funding sources */
+  bigProject: {
+    kind: 'breakdown',
+    title: 'Where the big-project dollars go',
+    summary: 'Housing and streets take the biggest shares of the $272.2M big-project budget.',
+    unit: 'usd',
+    squareValue: millions(5),
+    asOf: PROPOSAL,
+    sources: [EXEC_CAPITAL],
+    areas: [
+      area('housing', 'Housing & economic dev.', 78.845),
+      area('streets', 'Streets, bike & traffic', 75.523),
+      area('water', 'Water, sewer & storm', 35.184),
+      area('fleet', 'Fleet vehicles', 18.793),
+      area('parks', 'Parks', 17.9),
+      area('else', 'Everything else', 45.9625, [
+        piece('transit', 'Transit & parking', 16.901),
+        piece('buildings', 'City buildings & other', 13.3915),
+        piece('admin', 'Administration & IT', 8.755),
+        piece('public-safety', 'Police & Fire', 4.356),
+        piece('library', 'Library', 2.559),
+      ]),
     ],
   },
 } satisfies Record<string, ChartSpec>

@@ -35,18 +35,18 @@ only when the run failed; the run log is in Admin → Agents → Agent Runs.
 
 ## How the parts fit
 
-| File                  | Does                                                                                     |
-| --------------------- | ---------------------------------------------------------------------------------------- |
-| `lib/contract.mjs`    | Loads `pipeline.yaml`, `sources.yaml`, `coverage.md`, the prompts and the JSON Schemas   |
-| `lib/fetchSource.mjs` | Direct fetch: ETag and Last-Modified, 3 redirects, one retry, gates, robots.txt          |
-| `lib/parsers.mjs`     | Legistar events and matters (JSON), RSS and Atom; `lib/ics.mjs`: iCalendar via ical.js   |
-| `lib/html.mjs`        | The HTML pages with no feed (#390): City article lists, City meetings, WisDOT meetings   |
-| `lib/scout.mjs`       | Candidates with `externalId`, `contentHash` and `change`; the Legistar area filter       |
-| `lib/model.mjs`       | The model adapter: OpenClaw (`openclaw agent --agent … --json`), or a fake for tests     |
-| `lib/stages.mjs`      | One stage: prompt + coverage + item, schema check, one retry; verify's escalation        |
-| `lib/submit.mjs`      | Routing, the MCP envelope, validation, one retry, follow-up review and image reports     |
-| `lib/cms.mjs`         | The MCP client with the key, and the dry-run CMS that records writes                     |
-| `lib/pipeline.mjs`    | One run: kill switch and the run log; `lib/process.mjs`: budgets, state, items, failures |
+| File                  | Does                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------ |
+| `lib/contract.mjs`    | Loads `pipeline.yaml`, `sources.yaml`, `coverage.md`, the prompts and the JSON Schemas                 |
+| `lib/fetchSource.mjs` | Direct fetch: ETag and Last-Modified, 3 redirects, one retry, gates, robots.txt                        |
+| `lib/parsers.mjs`     | Legistar events and matters (JSON), RSS and Atom; `lib/ics.mjs`: iCalendar via ical.js                 |
+| `lib/html.mjs`        | The HTML pages with no feed (#390): City article lists, City meetings, WisDOT meetings                 |
+| `lib/scout.mjs`       | Candidates with `externalId`, `contentHash` and `change`; the Legistar area filter                     |
+| `lib/model.mjs`       | The model adapter: OpenClaw (`openclaw agent --agent … --json`), or a fake for tests                   |
+| `lib/stages.mjs`      | One stage: prompt + coverage + item, schema check, one retry; verify's escalation, the promotion guard |
+| `lib/submit.mjs`      | Routing, the MCP envelope, validation, one retry, follow-up review and image reports                   |
+| `lib/cms.mjs`         | The MCP client with the key, and the dry-run CMS that records writes                                   |
+| `lib/pipeline.mjs`    | One run: kill switch and the run log; `lib/process.mjs`: budgets, state, items, failures               |
 
 ## Not built yet
 
@@ -55,5 +55,3 @@ only when the run failed; the run log is in Admin → Agents → Agent Runs.
   `skipped`, and its evals are skipped in the tests.
 - **Cost in dollars**: runs use the owner's flat subscription, so `cost.usd` is 0; token counts
   are logged only if OpenClaw reports them, which its docs don't promise.
-- **A code guard on low verify confidence** after the rerun: curate's prompt sends such items to
-  review today.

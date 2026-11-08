@@ -42,6 +42,7 @@ describe('toEventSummary', () => {
       categories: [{ id: 3, title: 'Social' }],
       description: 'Bring a dish.',
       locationName: 'Park shelter',
+      place: { kind: 'venue', label: 'Park shelter' },
       image,
     })
   })
@@ -62,6 +63,23 @@ describe('toEventSummary', () => {
       description: null,
       locationName: null,
       image: null,
+    })
+  })
+
+  it('gives every event a place: venue, online or to be confirmed, and selects what decides it (#873)', () => {
+    expect(SUMMARY_FIELDS).toHaveProperty('locationType', true)
+    expect(toEventSummary({ ...doc, locationName: null, locationType: 'virtual' }).place).toEqual({
+      kind: 'online',
+      label: 'Online',
+    })
+    expect(toEventSummary({ ...doc, locationName: null, locationType: 'in-person' }).place).toEqual({
+      kind: 'unconfirmed',
+      label: 'Location to be confirmed',
+    })
+    // The page can also use the street address when there is no venue name
+    expect(toEventDetail({ ...doc, locationName: null }).place).toEqual({
+      kind: 'venue',
+      label: '4605 Sprecher Rd',
     })
   })
 

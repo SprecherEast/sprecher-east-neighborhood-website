@@ -83,6 +83,23 @@ Source: `src/platform/ui/chart/adapters/css/UnitGrid.tsx`
 
 - Platform: `platform/ui`
 
+## `BreakdownChart`
+
+A breakdown (#866): a grid of squares worth a fixed amount each, the key beside it in dollars, then ranked bars with the areas' main pieces nested under them, and the other pieces in one list biggest first. Colour follows size down the page, from orange to green to gray. Only the grid is an image; the key and the bars are text, so a screen reader reads every figure.
+
+Source: `src/platform/ui/chart/adapters/breakdown/BreakdownChart.tsx`
+
+| Prop          | Type             | Required | Description |
+| ------------- | ---------------- | -------- | ----------- |
+| `model`       | `BreakdownModel` | yes      |             |
+| `squareValue` | `number`         | yes      |             |
+| `titleId`     | `string`         | yes      |             |
+| `descId`      | `string`         | yes      |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/ui`
+
 ## `BarChartSvg`
 
 Horizontal bars, or stacked bars, as one `<svg role="img">` (#663). Every row shares one scale from $0 to `scaleMax`, with a few quiet tick labels. Names and values are real text beside the marks, never on them; the svg scales with its container and holds no inline style.

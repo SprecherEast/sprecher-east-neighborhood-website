@@ -9,7 +9,7 @@ import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
 
-const VARIANTS = ['card', 'bar'] as const
+const VARIANTS = ['card', 'bar', 'link'] as const
 
 describe('Disclosure', () => {
   it.each(VARIANTS)(
@@ -105,5 +105,16 @@ describe('Disclosure, card, as a row to tap (#741)', () => {
     expect(screen.getByText('When is the meeting?').closest('summary')?.className).toContain(
       TOUCH_MIN_HEIGHT,
     )
+  })
+
+  it('the link look has no box: a bare link-coloured row that opens a plain list', () => {
+    const { container } = render(
+      <Disclosure variant="link" summary="See the smaller pieces">
+        List
+      </Disclosure>,
+    )
+    const details = container.querySelector('details') as HTMLElement
+    expect(details.className).not.toMatch(/\bborder\b|\bshadow/)
+    expect(container.querySelector('summary')?.className).toContain('text-primary-strong')
   })
 })

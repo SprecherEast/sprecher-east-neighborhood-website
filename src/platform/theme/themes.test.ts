@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CHART_PAIRS,
+  CHART_RAMP_TOKENS,
   CONTRAST_PAIRS,
   MIN_GRAPHIC_CONTRAST,
   MIN_TEXT_CONTRAST,
@@ -61,6 +62,15 @@ describe('theme files', () => {
           ratio,
           `--${chart} on --${background}: ${ratio.toFixed(2)}:1`,
         ).toBeGreaterThanOrEqual(MIN_GRAPHIC_CONTRAST)
+      })
+
+      it('keeps the breakdown ramp apart: no two steps are the same colour', () => {
+        const values = CHART_RAMP_TOKENS.map((token) => modes[mode][token])
+        expect(new Set(values).size).toBe(CHART_RAMP_TOKENS.length)
+      })
+
+      it('gives the breakdown marks their outline, which keeps the pale steps visible', () => {
+        expect(modes[mode]['chart-ramp-edge'], '--chart-ramp-edge is missing').toBeDefined()
       })
 
       it.each([...TINTED_PAIRS, ...SCRIM_PAIRS])(

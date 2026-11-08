@@ -9,7 +9,7 @@ import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import type { ChartAdapter } from './chartAdapter'
 import { Chart } from './Chart'
-import { CHART_PALETTE } from './chartPalette'
+import { CHART_PALETTE, CHART_RAMP } from './chartPalette'
 
 type ContractOptions = {
   /** How many `[data-chart-mark]` elements the adapter draws for a spec (a datum, or a cell) */
@@ -17,6 +17,7 @@ type ContractOptions = {
 }
 
 const PALETTE_CLASSES = new Set(CHART_PALETTE.flatMap(({ bg, fill, stroke }) => [bg, fill, stroke]))
+const RAMP_CLASSES = new Set(CHART_RAMP.flatMap(({ bg, fill, border }) => [bg, fill, border]))
 const COLOUR_LITERAL = /#[0-9a-f]{3,8}\b|\b(rgb|rgba|hsl|hsla|oklch|oklab)\(/i
 const RAW_PALETTE_CLASS =
   /^(bg|text|fill|stroke|border|ring)-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone|white|black)(-\d+)?$/
@@ -25,7 +26,7 @@ const RAW_PALETTE_CLASS =
 export function coloursWithText(root: ParentNode) {
   return [...root.querySelectorAll('[data-chart-mark]')].filter(
     (mark) =>
-      /-chart-\d+\b/.test(mark.getAttribute('class') ?? '') &&
+      /-chart-(ramp-)?\d+\b/.test(mark.getAttribute('class') ?? '') &&
       (mark.textContent?.trim() ?? '') !== '',
   )
 }
@@ -82,6 +83,8 @@ export function describeChartAdapter(adapter: ChartAdapter, { markCount }: Contr
         expect(classes.filter((name) => RAW_PALETTE_CLASS.test(name))).toEqual([])
         const chartColours = classes.filter((name) => /-chart-\d+$/.test(name))
         expect(chartColours.filter((name) => !PALETTE_CLASSES.has(name))).toEqual([])
+        const rampColours = classes.filter((name) => /-chart-ramp-\d(\/\d+)?$/.test(name))
+        expect(rampColours.filter((name) => !RAMP_CLASSES.has(name))).toEqual([])
       })
 
       it('gives every label and value as text, and puts no text on a coloured mark', () => {

@@ -19,6 +19,18 @@ budgets:
 escalation:
   verifyBelowConfidence: 0.6
   to: high
+# Code-level guard on promotion (#870): whatever curate returns, an `accept` goes to the
+# `needs-review` route when verify's confidence is below `escalation.verifyBelowConfidence`
+# (after the rerun) or verify's flags include one of these. README.md, "The pipeline".
+promotionGuard:
+  blockingFlags:
+    - ambiguous-location
+    - missing-location
+    - missing-date
+    - needs-date
+    - wrong-offset
+    - conflicting-sources
+    - prompt-injection
 # The MCP tool the submit stage calls for each curate decision (prompts/submit.md).
 routes:
   accept: submitSuggestion

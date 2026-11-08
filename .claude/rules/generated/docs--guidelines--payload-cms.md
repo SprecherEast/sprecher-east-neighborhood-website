@@ -68,6 +68,19 @@ reader mishandles quotes, braces and backslashes in text. Payload's Markdown con
 error an import throws, so use `collectTagRefusals` to hear the reasons and `unreadTags` to notice a
 tag it could not close.
 
+## Layout is content
+
+Every layout choice (width, alignment, position, order, spacing, grouping) is a field that an editor,
+or an agent working through Admin, can change in the CMS, with no code change and no deploy. The owner's
+direction (2026-11-07, text chat, recorded on #885).
+
+- Build layouts from the CMS's native blocks and layout fields.
+- When a layout can't be expressed yet, add the missing field to the block. Never hard-code an
+  arrangement in a component, and never reach for a code change to move or resize something.
+- A code change for layout is the last resort, used only when no field can express it.
+- After any content, markup or code change, check the result in a browser, in light and dark and at
+  phone and desktop width, before calling it done.
+
 ## Heroes
 
 Hero components live in `src/modules/site/ui/`. Four types: `highImpact`, `mediumImpact`, `lowImpact`, `none`.
