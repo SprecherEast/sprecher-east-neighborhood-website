@@ -59,7 +59,11 @@ export function MetaList({ items, variant, className }: MetaListProps) {
             </span>
           )}
           {item.label && <dt className={labelClass[look]}>{item.label}</dt>}
-          {labelled ? <dd>{item.value}</dd> : <span>{item.value}</span>}
+          {labelled ? (
+            <dd className="min-w-0">{item.value}</dd>
+          ) : (
+            <span className="min-w-0">{item.value}</span>
+          )}
         </Item>
       ))}
     </List>

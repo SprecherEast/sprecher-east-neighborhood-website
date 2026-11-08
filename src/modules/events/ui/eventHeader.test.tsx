@@ -49,7 +49,6 @@ describe('eventHeaderProps', () => {
   })
 
   it.each([
-    ['a venue', event, 'Park shelter'],
     ['online', { ...event, place: { kind: 'online', label: 'Online' } } as EventDetail, 'Online'],
     [
       'to be confirmed',
@@ -59,11 +58,17 @@ describe('eventHeaderProps', () => {
       } as EventDetail,
       'Location to be confirmed',
     ],
-  ])('states the place in the facts: %s (#873)', async (_, e, text) => {
+  ])('states a place that is not a venue in the facts: %s (#873)', async (_, e, text) => {
     const { container } = render(<PageHeader {...eventHeaderProps(e)} />)
 
     expect(screen.getByText('Location').nextElementSibling?.textContent).toBe(text)
     await expectAccessible(container)
+  })
+
+  it('leaves a venue to the Location panel below the header, so the place is not said twice (#873)', () => {
+    render(<PageHeader {...eventHeaderProps(event)} />)
+
+    expect(screen.queryByText('Location')).toBeNull()
   })
 
   it('puts an event with a photo on it, its category on the photo', () => {

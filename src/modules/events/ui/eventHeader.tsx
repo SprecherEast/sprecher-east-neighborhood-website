@@ -41,7 +41,8 @@ export function eventHeaderProps(event: EventDetail): PageHeaderProps {
           },
         ]
       : []),
-    { label: 'Location', value: place.label },
+    // A venue is in the Location panel below with its address and map link; saying it twice is noise
+    ...(place.kind === 'venue' ? [] : [{ label: 'Location', value: place.label }]),
     ...(locationType ? [{ label: 'Format', value: formatEventLocationType(locationType) }] : []),
   ]
   const badge = image ? 'on-image' : 'category'

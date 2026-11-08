@@ -41,6 +41,13 @@ const DateBadge: React.FC<{
   )
 }
 
+/** A place on one line, cut with an ellipsis, so cards in a row stay level (#873); the event page has it in full. */
+const PlaceLabel: React.FC<{ label: string; className?: string }> = ({ label, className }) => (
+  <Text as="span" variant="small" clamp={1} className={cn('min-w-0', className)}>
+    {label}
+  </Text>
+)
+
 export const EventCard: React.FC<{
   event: EventSummary
   compact?: boolean
@@ -66,7 +73,7 @@ export const EventCard: React.FC<{
           </CardTitle>
           <Text variant="small" className="mt-1 flex items-center gap-1.5 text-xs">
             <MapPin aria-hidden="true" className="size-4 shrink-0" />
-            <span>{place.label}</span>
+            <PlaceLabel label={place.label} className="text-xs" />
           </Text>
         </div>
       </Card>
@@ -115,7 +122,7 @@ export const EventCard: React.FC<{
                 </>
               ),
             },
-            { icon: <MapPin />, value: place.label } satisfies IconMetaItem,
+            { icon: <MapPin />, value: <PlaceLabel label={place.label} /> } satisfies IconMetaItem,
           ]}
         />
 

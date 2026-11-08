@@ -59,6 +59,19 @@ describe('EventCard, place (#873)', () => {
     },
   )
 
+  it.each([
+    ['full', false],
+    ['compact', true],
+  ])('keeps a very long place to one line on the %s card, so cards stay level', (_, compact) => {
+    const label =
+      'The Sprecher East Neighborhood Community Center and Recreation Annex Building, '.repeat(3)
+    render(<EventCard event={{ ...event, place: { kind: 'venue', label } }} compact={compact} />)
+
+    const text = screen.getByText(label.trim())
+    expect(text.className).toContain('line-clamp-1')
+    expect(text.className).toContain('min-w-0')
+  })
+
   it('shows it on a past event too, since the card does not look at the date', () => {
     render(<EventCard event={{ ...unconfirmed, date: '2020-01-05T00:00:00.000Z' }} />)
 

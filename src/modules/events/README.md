@@ -32,7 +32,7 @@ for CMS pages. Fields, access and hooks: [events content type](../../../docs/ref
 - Events are indexed for search, though this module doesn't name it (`src/payload.config.ts`, `searchPlugin`).
 - Admin has Live Preview and a preview link from the draft (`cms/events.ts` via `previewAdmin`); the event page emits schema.org `Event` data (`ui/eventJsonLd.ts`).
 - An event's text keeps the reading width, unless it holds key facts, fact tabs or an outcome fork: then it fills the column up to the page margin (`articleColumnClass` in `src/platform/richtext/articleColumn.ts`, #774).
-- Every event card (full and compact) and the event page header states a place: the venue name (else the address, on the page), "Online" for a virtual event, or "Location to be confirmed" when an in-person or hybrid event has none. A virtual event always says "Online", since the editor hides its venue fields. Past events follow the same rule (`domain/place.ts`, #873).
+- Every event card (full and compact) and the event page header states a place: the venue name (else the address, on the page; the page header leaves a venue to its Location panel and states only the other two), one line with an ellipsis on cards, "Online" for a virtual event, or "Location to be confirmed" when an in-person or hybrid event has none. A virtual event always says "Online", since the editor hides its venue fields. Past events follow the same rule (`domain/place.ts`, #873).
 - The map link is the editor's `mapsUrl`, else a Google Maps search of the address (`domain/maps.ts`).
 
 ## Shared pieces it uses
