@@ -73,6 +73,10 @@ describe('the chief of staff agent file', () => {
     'gh api repos/o/r/pulls/12/merge-async -X PUT -f merge_method=squash',
     'gh api -X PUT repos/o/r/contents/src/a.ts -f message=x -f content=eA==',
     'gh api repos/o/r/contents/src/a.ts --method=PUT -f message=x',
+    'gh api --method=PUT repos/o/r/pulls/1/merge',
+    'gh api --method=PUT repos/o/r/pulls/1/merge-async -f merge_method=squash',
+    'gh api -X PUT repos/o/r/pulls/1/merge',
+    'gh api --method PUT repos/o/r/pulls/1/merge',
     'gh api graphql -f query="mutation { enablePullRequestAutoMerge(input: {}) { clientMutationId } }"',
   ])('refuses the command: %s', (command) => {
     expect(refuses(disallowed, 'Bash', command)).toBe(true)

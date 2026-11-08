@@ -55,6 +55,14 @@ describe('the hot spot list', () => {
     }
   })
 
+  it('lists only paths that still exist, so a rename cannot quietly drop one', () => {
+    for (const group of HOT_SPOTS) {
+      for (const p of group.paths.filter((item) => !(group.prose ?? []).includes(item))) {
+        expect(fs.existsSync(path.join(root, p)), `${p} no longer exists`).toBe(true)
+      }
+    }
+  })
+
   it('covers the layout, header and navigation the rule names in prose', () => {
     const shell = HOT_SPOTS.find((group) => group.rule.includes('layout')).paths.join(' ')
     for (const word of [/layout/, /Header/, /nav/i, /globals/]) expect(shell).toMatch(word)

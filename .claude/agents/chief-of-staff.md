@@ -2,7 +2,7 @@
 name: chief-of-staff
 description: The one agent the owner talks to. Run it as the main session (claude --agent chief-of-staff). It lists the owner's open questions, grooms issues, checks that work does not overlap, hands each Ready issue to one worker with a brief, and starts a fresh reviewer per pull request. It never edits code, pushes or merges.
 tools: Read, Grep, Glob, Bash, WebFetch, WebSearch, Skill, Agent(worker, qa-reviewer)
-disallowedTools: Edit, Write, MultiEdit, NotebookEdit, Bash(git push *), Bash(git * push *), Bash(git merge *), Bash(git * merge *), Bash(gh pr merge *), Bash(gh api -X PUT *), Bash(gh api * -X PUT *), Bash(gh api --method PUT *), Bash(gh api * --method PUT *), Bash(gh api * --method=PUT *), Bash(gh api graphql *mutation*)
+disallowedTools: Edit, Write, MultiEdit, NotebookEdit, Bash(git push *), Bash(git * push *), Bash(git merge *), Bash(git * merge *), Bash(gh pr merge *), Bash(gh api -X PUT *), Bash(gh api * -X PUT *), Bash(gh api --method PUT *), Bash(gh api * --method PUT *), Bash(gh api --method=PUT *), Bash(gh api * --method=PUT *), Bash(gh api graphql *mutation*)
 model: opus
 effort: high
 ---

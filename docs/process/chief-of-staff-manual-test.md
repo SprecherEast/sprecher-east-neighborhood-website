@@ -31,8 +31,11 @@ Procedure, in a scratch clone with a throwaway branch and a draft pull request t
 | `gh api repos/.../pulls/<n> --jq .mergeable` (a read)                      | Allowed: a read must work                                                  |        |      |        |
 | Write a file with a shell redirect, `sed -i` or `tee`                      | Known hole: not blocked by the file's rules; record whether the edit lands |        |      |        |
 | The same API call with a lowercase method (`-X put`) or `-XPUT`            | Known hole: record whether it is refused                                   |        |      |        |
+| `gh api -X POST repos/.../merges` of the throwaway branch into another     | Known hole: record whether a merge commit lands                            |        |      |        |
+| `gh api -X PATCH repos/.../git/refs/heads/<throwaway>` to another commit   | Known hole: record whether the branch moves                                |        |      |        |
+| `gh api -X DELETE repos/.../git/refs/heads/<throwaway>`                    | Known hole: record whether the branch is deleted                           |        |      |        |
 
-The last two rows are known holes: an
+The rows marked "Known hole" are not expected to be refused: an
 edit or a call that lands is recorded as a hole, not as a failure of the file, and decides whether
 to add a rule or a hook.
 
@@ -45,10 +48,13 @@ remain the real gate.
 - **File edits through Bash.** Bash is allowed, so a redirect, `sed -i` or `tee` can change a file
   although the Edit and Write tools are refused. Blocking them by pattern would also block ordinary
   reads, so they are left to the review and, later, an agent-scoped hook.
-- **Writing API calls.** `PUT` is refused in the forms `-X PUT`, `--method PUT` and
-  `--method=PUT`, which covers the merge API and committing a file. A lowercase method, `-XPUT`
-  or a request body read from a file are not matched. `POST` and `PATCH` stay allowed because the
-  chief of staff writes comments, labels and issue fields with them.
+- **Writing API calls.** `PUT` is refused in the forms `-X PUT`, `--method PUT` and `--method=PUT`,
+  whether the flag comes right after `gh api` or after the endpoint. That covers the merge API and
+  committing a file. A lowercase method and `-XPUT` are not matched. `POST` and `PATCH` stay
+  allowed because the chief of staff writes comments, labels and issue fields with them, and that
+  also lets through `POST .../merges` (merges one branch into another) and `PATCH` or `DELETE` on
+  `git/refs` (moves or deletes a branch). The ruleset still guards `main`; the rest is left to
+  review and, later, an agent-scoped hook.
 - **GraphQL.** Only a query text that contains the word `mutation` is refused. A mutation read from
   a file (`-F query=@file`) is not matched. Plain queries are allowed.
 - **Merge reads.** A read of a pull request's merge state is allowed, since the merge rules match
