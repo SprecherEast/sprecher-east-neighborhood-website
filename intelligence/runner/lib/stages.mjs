@@ -71,3 +71,29 @@ export async function runVerify(contract, ask, item, { deadline } = {}) {
   }
   return { ...second, usage, escalated: true }
 }
+
+/**
+ * The promotion guard (pipeline.yaml `promotionGuard`, #870): an `accept` whose verification is
+ * below the confidence threshold or carries a blocking flag becomes `needs-review`, whatever the
+ * model decided. Answers the curation to route, with the reason added when it was downgraded.
+ */
+export function guardPromotion(pipeline, verification, curation) {
+  if (curation.decision !== 'accept') return curation
+  const { verifyBelowConfidence = 0.6 } = pipeline.escalation ?? {}
+  const blocking = new Set(pipeline.promotionGuard?.blockingFlags ?? [])
+  const problems = []
+  if (verification.confidence < verifyBelowConfidence) {
+    problems.push(
+      `verification confidence ${verification.confidence} is below ${verifyBelowConfidence}`,
+    )
+  }
+  const flagged = verification.flags.filter((flag) => blocking.has(flag))
+  if (flagged.length > 0) problems.push(`verification flags: ${flagged.join(', ')}`)
+  if (problems.length === 0) return curation
+  const reason = `Held for review, not accepted: ${problems.join('; ')}.`
+  return {
+    ...curation,
+    decision: 'needs-review',
+    reasons: [reason, ...curation.reasons].slice(0, 5),
+  }
+}

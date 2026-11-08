@@ -1,6 +1,6 @@
 import { pilotSources } from './contract.mjs'
 import { mergeAcrossSources, mergedCopies, scoutSource } from './scout.mjs'
-import { runStage, runVerify, StageError } from './stages.mjs'
+import { guardPromotion, runStage, runVerify, StageError } from './stages.mjs'
 import { markSeen } from './state.mjs'
 import { sendReport, submitItem } from './submit.mjs'
 
@@ -115,7 +115,8 @@ export async function processRun(run) {
       const verify = await runVerify(contract, ask, item, { deadline })
       item.verification = verify.output
       const curate = await runStage(contract, ask, 'curate', item, { deadline })
-      item.curation = curate.output
+      // Code, not the prompt, decides what may be accepted (pipeline.yaml `promotionGuard`)
+      item.curation = guardPromotion(pipeline, item.verification, curate.output)
       addUsage(cost, verify.usage, curate.usage)
       const route = pipeline.routes?.[item.curation.decision] ?? 'none'
       if (route === 'submitSuggestion') {

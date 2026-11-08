@@ -13,6 +13,7 @@
     "area",
     "stages",
     "escalation",
+    "promotionGuard",
     "routes"
   ],
   "additionalProperties": false,
@@ -80,6 +81,19 @@
           "maximum": 1
         },
         "to": { "const": "high" }
+      }
+    },
+    "promotionGuard": {
+      "description": "Code refuses to submit an accept, and sends it to the needs-review route, when verify's confidence is below escalation.verifyBelowConfidence or its flags include one of these, whatever the model decided.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blockingFlags"],
+      "properties": {
+        "blockingFlags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/flag" }
+        }
       }
     },
     "routes": {

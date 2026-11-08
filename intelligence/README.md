@@ -162,6 +162,11 @@ Routing by the curate decision (`routes` in `pipeline.yaml`): `accept` → `subm
 → `reportItem`; `reject`, `duplicate` → counted only. A suggestion with missing facts or low
 confidence also gets a `needs-review` report pointing at it.
 
+Before routing, code applies `promotionGuard` (`pipeline.yaml`, #870): an `accept` becomes
+`needs-review` when verify's confidence is below `escalation.verifyBelowConfidence` after the
+rerun, or verify's flags include one of `promotionGuard.blockingFlags`, whatever the model
+answered. The threshold and the flag list each have one definition, in `pipeline.yaml`.
+
 Until #336 is live, a run writes the same calls and its run log as a digest for an editor instead.
 
 ## Turning it off
