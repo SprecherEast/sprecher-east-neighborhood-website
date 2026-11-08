@@ -15,10 +15,13 @@ Claude Code.
 - **Self-review alias:** because a project `simplify` skill exists, Claude Code runs it before each
   commit that isn't docs or tests (Claude Code v2.1.286 or later; a personal
   `~/.claude/skills/simplify` would win over it).
-- **Agent team** ([operating model](/docs/process/agent-operating-model.md), #685, #721). Planned
-  (#695, after the knowledge layer, #712): the chief of staff will run on `opus`, at `high` effort
-  for grooming and issue text, and the one worker and standard reviewers stay on `sonnet` at
-  `medium`. Its helper procedures are skills, so they run in its session and need no model of
+- **Agent team** ([operating model](/docs/process/agent-operating-model.md), #685, #721). The chief
+  of staff is built (#695 piece one): `.claude/agents/chief-of-staff.md`, run with
+  `claude --agent chief-of-staff`, on `opus` at `high` effort, with `disallowedTools` for Edit,
+  Write, NotebookEdit, MultiEdit, push, merge, `PUT` API calls and GraphQL mutations (known
+  holes are in the [manual test](/docs/process/chief-of-staff-manual-test.md)), and `Agent(worker, qa-reviewer)` as
+  the only agents it may start. The worker agent comes in a later piece; the standard reviewers stay
+  on `sonnet` at `medium`. Its helper procedures are skills, so they run in its session and need no model of
   their own. Review depth today is the #522 rule in `CLAUDE.md` and nothing wider. Never `fable` in
   unattended runs: it can bill to usage credits, and in `-p` runs without asking
   ([model config](https://code.claude.com/docs/en/model-config)). Gotchas from the subagent docs:

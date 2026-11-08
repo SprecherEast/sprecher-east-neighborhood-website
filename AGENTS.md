@@ -136,6 +136,7 @@ through the pointers in `.claude/skills/`, and a human reads them as plain Markd
 | [`pr-review`](.agents/skills/pr-review/SKILL.md)                       | You are the independent reviewer of a PR you didn't write.                 |
 | [`wrapped`](.agents/skills/wrapped/SKILL.md)                           | After a merge: verify it, check the deploy, close the loop, report.        |
 | [`project-tracking`](.agents/skills/project-tracking/SKILL.md)         | Picking up, filing or reporting work: epics, milestones, sprint, blockers. |
+| [`chief-of-staff`](.agents/skills/chief-of-staff/SKILL.md)             | You are the chief of staff: open questions, grooming, overlap, briefs.     |
 
 Two skills come from Vercel, unchanged (MIT, source in each `SOURCE.md`, #424):
 [`vercel-react-best-practices`](.agents/skills/vercel-react-best-practices/SKILL.md) for React and
