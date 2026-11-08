@@ -35,6 +35,7 @@ const PROPS: Record<ChartKind, readonly string[]> = {
   bar: [...COMMON, 'scaleMax', 'data'],
   stacked: [...COMMON, 'scaleMax', 'x', 'series', 'rowNotes'],
   units: [...COMMON, 'mode', 'unitNote', 'groups'],
+  breakdown: [...COMMON, 'squareValue', 'areas'],
 }
 /** Charts are drawn horizontally only for now, so the tag has no orientation to write */
 const ORIENTATION = 'orientation'
@@ -82,7 +83,10 @@ const unquote = (value: unknown) => (typeof value === 'string' ? readText(value)
 function tagIssues(props: Record<string, unknown>): ChartIssue[] {
   const kind = props.kind
   if (!isKind(kind)) return []
-  const known = new Set([...PROPS[kind], ...(kind === 'units' ? [] : [ORIENTATION])])
+  const known = new Set([
+    ...PROPS[kind],
+    ...(kind === 'units' || kind === 'breakdown' ? [] : [ORIENTATION]),
+  ])
   const issues: ChartIssue[] = Object.keys(props)
     .filter((name) => !known.has(name))
     .map((name) => ({

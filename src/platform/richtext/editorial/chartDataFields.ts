@@ -3,16 +3,17 @@ import { array, number, select, text } from 'payload/shared'
 
 import { CHART_LIMITS } from '@/platform/lib/chart/spec'
 
+import { chartBreakdownFields } from './chartBreakdownFields'
 import { checked } from './chartValidate'
 
 /** Shown only when the block's `kind` is one of these */
-const forKinds =
+export const forKinds =
   (...kinds: string[]) =>
   (_data: unknown, sibling: { kind?: string | null }) =>
     kinds.includes(sibling?.kind ?? '')
 
 /** The name of a part, bar, group or row */
-const labelField = (width: string): Field => ({
+export const labelField = (width: string): Field => ({
   name: 'label',
   type: 'text',
   required: true,
@@ -21,7 +22,7 @@ const labelField = (width: string): Field => ({
 })
 
 /** A part's optional name and its hatch: the key links the same part in two groups' legends */
-const keyField = (): Field => ({
+export const keyField = (): Field => ({
   name: 'key',
   type: 'text',
   maxLength: CHART_LIMITS.key,
@@ -225,6 +226,7 @@ const unitsFields = (): Field[] => [
 /** The fields of each kind, shown only for that kind, then the scale shared by the bar kinds */
 export const chartDataFields = (): Field[] => [
   ...unitsFields(),
+  ...chartBreakdownFields(),
   ...barFields(),
   ...stackedFields(),
   scaleMaxField(),

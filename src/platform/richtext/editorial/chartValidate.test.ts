@@ -254,3 +254,18 @@ describe('chartFieldError', () => {
     )
   })
 })
+
+describe('chartFieldError: breakdown', () => {
+  it('shows a square that is too big on the square value field', () => {
+    const stored = block(FIXTURES.dayToDay, { squareValue: 500_000_000 })
+    expect(chartFieldError('squareValue', stored)).toMatch(/square/i)
+    expect(chartFieldError('areas', stored)).toBe(true)
+  })
+
+  it('says which area has pieces adding up to more than the area', () => {
+    const stored = block(FIXTURES.dayToDay, {
+      areas: [{ label: 'Only', value: 10_000_000, pieces: [{ label: 'Big', value: 20_000_000 }] }],
+    })
+    expect(chartFieldError('areas', stored)).toMatch(/Only/)
+  })
+})

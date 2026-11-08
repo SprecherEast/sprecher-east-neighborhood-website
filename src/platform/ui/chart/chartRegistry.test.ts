@@ -10,6 +10,7 @@ describe('adapterFor', () => {
     expect(adapterFor('units').name).toBe('css')
     expect(adapterFor('bar').name).toBe('visx')
     expect(adapterFor('stacked').name).toBe('visx')
+    expect(adapterFor('breakdown').name).toBe('breakdown')
   })
 
   it('keeps the text adapter as the last resort for every kind', () => {

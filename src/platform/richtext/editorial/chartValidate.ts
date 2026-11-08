@@ -29,12 +29,19 @@ const FIELD_OF = {
   mode: 'mode',
   unitNote: 'unitNote',
   groups: 'groups',
+  squareValue: 'squareValue',
+  areas: 'areas',
 } as const satisfies Record<string, string>
 
 /** The fields of the block that carry the chart rules */
 export type ChartField = (typeof FIELD_OF)[keyof typeof FIELD_OF]
 /** Where a rule about the whole chart (no path) is shown, per kind */
-const WHOLE_CHART_FIELD = { bar: 'bars', stacked: 'rows', units: 'groups' } as const
+const WHOLE_CHART_FIELD = {
+  bar: 'bars',
+  stacked: 'rows',
+  units: 'groups',
+  breakdown: 'areas',
+} as const
 
 const fieldOf = (issue: ChartIssue, kind: keyof typeof WHOLE_CHART_FIELD): ChartField => {
   // The numbers of a stacked chart are typed in its rows, though the spec keeps them in the series
@@ -56,6 +63,9 @@ function where(path: ChartIssue['path']): string | null {
     case 'series':
       if (tail === 'values') return j === undefined ? null : `Bar ${n(j)}, number ${n(i)}`
       return `Part ${n(i)}`
+    case 'areas':
+      if (typeof i !== 'number') return null
+      return `Area ${n(i)}${tail === 'pieces' && typeof j === 'number' ? `, piece ${n(j)}` : ''}`
     case 'groups':
       if (typeof i !== 'number') return null
       return `Group ${n(i)}${tail === 'data' && typeof j === 'number' ? `, part ${n(j)}` : ''}`
@@ -115,12 +125,21 @@ function isUnfinished(stored: StoredChart): boolean {
     bar: [stored.bars],
     stacked: [stored.series, stored.rows],
     units: [stored.groups],
+    breakdown: [stored.areas],
   }
   if (stored.kind && lists[stored.kind].some((list) => rowsOf(list).length === 0)) return true
   return (
     rowsOf(stored.bars).some((row) => unlabelled(row) || unnumbered(row)) ||
     rowsOf(stored.series).some(unlabelled) ||
     rowsOf(stored.rows).some((row) => unlabelled(row) || rowsOf(row.values).some(unnumbered)) ||
+    rowsOf(stored.areas).some(
+      (area) =>
+        unlabelled(area) ||
+        unnumbered(area) ||
+        rowsOf((area as Row & { pieces?: unknown }).pieces).some(
+          (piece) => unlabelled(piece) || unnumbered(piece),
+        ),
+    ) ||
     rowsOf(stored.groups).some(
       (group) =>
         unlabelled(group) ||

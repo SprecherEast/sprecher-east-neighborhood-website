@@ -37,6 +37,12 @@ export const CHART_LIMITS = {
   /** Parts of a grid, and series of a stacked chart: one chart colour each */
   parts: MAX_COLOURED_PARTS,
   groups: 2,
+  /** Areas of a breakdown: one step of the seven-step ramp each */
+  areas: 7,
+  /** Pieces inside one area of a breakdown */
+  pieces: 8,
+  /** Squares in a breakdown's grid: more would not fit a phone */
+  squares: 200,
   sources: 4,
   key: 40,
   label: 80,
@@ -148,6 +154,71 @@ const unitsSchema = z
     }
   })
 
+const areaSchema = z.object({
+  key: text(CHART_LIMITS.key),
+  label: text(CHART_LIMITS.label),
+  value: z.number().finite().positive(),
+  /** The smaller parts of this area: shown under it, or in the list of smaller pieces */
+  pieces: z
+    .array(
+      z.object({
+        key: text(CHART_LIMITS.key),
+        label: text(CHART_LIMITS.label),
+        value: z.number().finite().positive(),
+        /** Shown right under its area, not folded into the list of smaller pieces */
+        shown: z.literal(true).optional(),
+      }),
+    )
+    .max(CHART_LIMITS.pieces)
+    .optional(),
+})
+
+const breakdownSchema = z
+  .object({
+    ...baseShape,
+    kind: z.literal('breakdown'),
+    /** What one square of the grid stands for, in dollars */
+    squareValue: z.number().finite().positive(),
+    areas: z.array(areaSchema).min(1).max(CHART_LIMITS.areas),
+  })
+  .superRefine((spec, ctx) => {
+    const issue = (message: string, path: (string | number)[] = []) =>
+      ctx.addIssue({ code: 'custom', message, path })
+    if (spec.unit !== 'usd') {
+      issue('A breakdown shares out dollars, so its unit must be dollars (usd)', ['unit'])
+    }
+    const seen = new Map<string, string>()
+    const claim = (key: string, label: string, path: (string | number)[]) => {
+      const first = seen.get(key)
+      if (first === undefined) seen.set(key, label)
+      else issue(`The key "${key}" is used twice: "${label}" repeats the key of "${first}"`, path)
+    }
+    spec.areas.forEach((area, i) => {
+      claim(area.key, area.label, ['areas', i, 'key'])
+      area.pieces?.forEach((piece, j) =>
+        claim(piece.key, piece.label, ['areas', i, 'pieces', j, 'key']),
+      )
+      const inside = (area.pieces ?? []).reduce((sum, piece) => sum + piece.value, 0)
+      if (inside > area.value + TOTAL_TOLERANCE) {
+        issue(`${area.label}: its pieces add up to more than the area itself`, ['areas', i])
+      }
+    })
+    const squares = Math.round(
+      spec.areas.reduce((sum, area) => sum + area.value, 0) / spec.squareValue,
+    )
+    if (squares > CHART_LIMITS.squares) {
+      issue(
+        `A square this small makes a grid of ${squares} squares: at most ${CHART_LIMITS.squares} fit, so make each square worth more`,
+        ['squareValue'],
+      )
+    } else if (squares < spec.areas.length) {
+      issue(
+        `A square this big makes a grid of ${squares} squares for ${spec.areas.length} areas: make each square worth less`,
+        ['squareValue'],
+      )
+    }
+  })
+
 const SCALE_MAX_MESSAGE = 'scaleMax is shorter than the longest bar, so that bar would not fit'
 /** Sums of decimals can land a hair over the scale (0.1 + 0.2 > 0.3), so compare with a relative margin */
 const SCALE_TOLERANCE = 1e-9
@@ -202,11 +273,21 @@ const stackedSchema = z
     if (!fitsScale(spec.scaleMax, longest)) add(SCALE_MAX_MESSAGE)
   })
 
-export const chartSpecSchema = z.discriminatedUnion('kind', [unitsSchema, barSchema, stackedSchema])
+export const chartSpecSchema = z.discriminatedUnion('kind', [
+  unitsSchema,
+  barSchema,
+  stackedSchema,
+  breakdownSchema,
+])
 
 export type ChartSpec = z.infer<typeof chartSpecSchema>
 export type ChartKind = ChartSpec['kind']
-export const CHART_KINDS = ['units', 'bar', 'stacked'] as const satisfies readonly ChartKind[]
+export const CHART_KINDS = [
+  'units',
+  'bar',
+  'stacked',
+  'breakdown',
+] as const satisfies readonly ChartKind[]
 
 /** The one gate: returns the spec, or throws with every reason it is refused */
 export function parseChartSpec(input: unknown): ChartSpec {

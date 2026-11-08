@@ -31,6 +31,15 @@ export function ChartGallery() {
       >
         <Chart spec={{ ...FIXTURES.comesIn, palette: 'warm' }} />
       </GalleryVariant>
+      <GalleryVariant
+        label="breakdown · $5M squares, ranked bars with Police and Fire / EMS nested, smaller pieces folded away"
+        className="block"
+      >
+        <Chart spec={FIXTURES.dayToDay} />
+      </GalleryVariant>
+      <GalleryVariant label="breakdown · the big-project budget, the same scale" className="block">
+        <Chart spec={FIXTURES.bigProject} />
+      </GalleryVariant>
       <GalleryVariant label="units · each: twelve month tiles" className="block">
         <Chart spec={FIXTURES.months} />
       </GalleryVariant>
