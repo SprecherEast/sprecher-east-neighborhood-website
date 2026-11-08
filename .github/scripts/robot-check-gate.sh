@@ -30,7 +30,7 @@ elif [ "$ALLOW_NO_ROBOT_CHECK" = true ]; then
   paired=no
   echo "::warning title=Robot check::deploying WITHOUT a robot check: neither Turnstile key is set and the ALLOW_NO_ROBOT_CHECK repository variable is true. Contact messages and sign-ups still wait for email confirmation."
 else
-  echo "::error title=Robot check::neither Turnstile key is set in .env.local, so the contact form and sign-up would run without a robot check. Add both keys on the server, or set the repository variable ALLOW_NO_ROBOT_CHECK to true to deploy without one (Settings → Secrets and variables → Actions → Variables)."
+  echo "::error title=Robot check::neither Turnstile key is set in .env.local, so the contact form and sign-up would run without a robot check. Add both keys on the server, or, as the owner's decision, set the repository variable ALLOW_NO_ROBOT_CHECK to true to deploy without one (Settings → Secrets and variables → Actions → Variables)."
   exit 1
 fi
 echo "turnstile_paired=$paired" >>"$GITHUB_OUTPUT"

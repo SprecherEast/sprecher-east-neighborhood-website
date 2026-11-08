@@ -36,7 +36,10 @@ started by hand (Actions → Deploy to VPS → Run workflow, on `main`).
    key (the robot check on the contact form and sign-up, #869): the `::error` says how to fix it.
    The visible opt-out is the repository variable `ALLOW_NO_ROBOT_CHECK` set to `true` (Settings →
    Secrets and variables → Actions → Variables); the deploy then goes out without the check and
-   shows a `::warning` on its run every time. Only the keys' presence is checked, not that
+   shows a `::warning` on its run every time. Setting that variable is the owner's decision alone:
+   an agent asks him (label `needs owner`) and records the change on an `infra` issue first. The
+   gate runs before the docs-only skip, so a docs-only push also fails while keys are missing and
+   no opt-out is set. Only the keys' presence is checked, not that
    Cloudflare accepts them (`.github/scripts/robot-check-gate.sh`). It skips
    the deploy when that commit, or a newer one, is already live, or when only docs and repo
    tooling changed since the live commit.
