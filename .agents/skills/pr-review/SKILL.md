@@ -70,7 +70,7 @@ gh api "repos/{owner}/{repo}/stacks?pull_request=<number>" -H 'X-GitHub-Api-Vers
 - [ ] **Policy changes are flagged.** If the diff touches `AGENTS.md`, `.agents/`,
       `.github/` (workflows, templates, label policy), `docs/guidelines/`, `docs/roles/`,
       `docs/knowledge/map.json` (it names the note for a path), `scripts/behavior-change.mjs` (the
-      classifier of what the sync check enforces), or the
+      classifier of what the sync check enforces), `scripts/ui-change.mjs` (what counts as a UI change), or the
       Claude Code adapter (`CLAUDE.md`, `.claude/`), or changes how the team works in
       `docs/process/` (sprint length, Ready or Done, levels, the board's columns and fields, but
       not wording, link or fact fixes), list each such change under
@@ -123,6 +123,27 @@ change: [decision 0019](../../../docs/architecture/decisions/0019-knowledge-laye
    under **Policy changes**. Check every entry it adds points to a note that exists, and every
    entry it drops or narrows has a stated reason. Otherwise **Blocker**.
 5. Run `npm run docs:check` for a change to a content type (routes and components once #718 lands).
+
+## 2d. Check the browser tests (UI changes)
+
+The `End-to-end tests` job runs on a UI change by itself
+([`development.md`](../../../docs/guidelines/development.md#visual-qa-is-mandatory-for-uiux-changes)); read
+its "End-to-end gate" summary in the job log for the decision and the files that counted.
+
+1. **Exemption.** If the description holds `End-to-end exemption: <reason>` (anything but `none` or
+   `run`), the reason must be true of the diff: no markup, class, style, theme or layout change a
+   browser could show differently (for a flow trigger: the change cannot alter what the account,
+   contact or verification flows do or show). A reason that is a stock phrase, or contradicted by the diff, is a
+   **Blocker**. Record in the review that you checked it, and quote the line. Editing a description
+   neither moves the head nor starts CI, so the merging agent re-reads the line before merging
+   (`change-workflow` step 5.4) and confirms it is the one that was reviewed.
+2. **Misses.** If the diff changes how a page looks and the gate did not fire (a path it doesn't
+   cover), say so under **Misses** and ask for `End-to-end exemption: run`. You may add cases that
+   require the tests, never remove one.
+3. **Alarms.** If the gate fired and nothing visual changed, say **false alarm** in the review. These
+   verdicts are what measures the gate (#882).
+4. A PR that touches the gate itself (`scripts/ui-change.mjs`, `.github/scripts/e2e-gate.mjs`,
+   the `End-to-end tests` job) is a policy change: list it under **Policy changes**.
 
 ## 3. Check the change
 

@@ -27,6 +27,13 @@ New custom code: link the issue comment with what each step of the ladder found
 
 1.
 
+<!-- Browser tests (#868): CI runs "End-to-end tests" when this PR changes the UI (the UI kit, styles
+or theme, pages and layouts, a module's ui/ folder; comment-only and formatting-only edits, tests
+and docs don't count). If they truly are not needed, replace "none" with the reason, 20+ characters;
+the reviewer checks it against the diff. Write "run" to ask for the tests on any PR. -->
+
+End-to-end exemption: none
+
 ## Risk & rollback
 
 <!-- What could break, server/env changes needed (no secret values), and how to undo it. -->
