@@ -96,7 +96,9 @@ jobs:
         if: steps.filter.outputs.code == 'true'
         run: npx eslint . --max-warnings=10
 
-  # Dependency audit: runs on schedule (daily) or when package files change
+  # Dependency audit: runs every step on every PR, every push to main and the daily schedule. It
+  # has no path filter: a skipped step counts as success, so a filtered audit passed without
+  # auditing (#868). The deploy waits for this job (.github/scripts/require-checks.sh).
   security:
     name: Dependency Audit
     runs-on: ubuntu-latest
@@ -106,27 +108,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect dependency changes
-        if: github.event_name != 'schedule'
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            deps:
-              - 'package.json'
-              - 'package-lock.json'
-
       - name: Setup Node.js
-        if: github.event_name == 'schedule' || steps.filter.outputs.deps == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
 
       - name: Install dependencies
-        if: github.event_name == 'schedule' || steps.filter.outputs.deps == 'true'
         run: npm ci
 
       - name: Audit for critical/high vulnerabilities
-        if: github.event_name == 'schedule' || steps.filter.outputs.deps == 'true'
         run: npm audit --audit-level=high --omit=dev

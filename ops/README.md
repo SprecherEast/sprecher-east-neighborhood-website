@@ -29,7 +29,10 @@ CI calls the deploy once its `Type-check & Build` job passes on a push to `main`
 started by hand (Actions → Deploy to VPS → Run workflow, on `main`).
 
 1. **Preflight** waits until the required checks (`Type-check & Build`, `Prettier`, `ESLint`,
-   `Dependency Audit`) have passed on the commit, then reads the server's facts over SSH. It skips
+   `Dependency Audit`, `Knowledge sync`, `Agent context`) have passed on the commit, then reads
+   the server's facts over SSH. A check that is missing or skipped stops the deploy. `PR Policy`
+   runs on pull requests only and the end-to-end tests are not required yet, so the deploy does not
+   wait for them. It skips
    the deploy when that commit, or a newer one, is already live, or when only docs and repo
    tooling changed since the live commit.
 2. **Build release** runs on Ubuntu 24.04 with the server's exact Node version, without any
