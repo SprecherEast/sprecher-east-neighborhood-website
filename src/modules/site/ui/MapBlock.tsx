@@ -2,20 +2,26 @@ import React from 'react'
 
 import { MapEmbed } from '@/platform/ui/MapEmbed.client'
 import { Media } from '@/platform/ui/Media'
-import { Section } from '@/platform/ui/Section'
+import { Section, type SectionPlacement } from '@/platform/ui/Section'
 import { Text } from '@/platform/ui/Text'
 
 import type { MapBlockProps } from '../domain/blocks'
 
 /*
- * The map block (#764): the heading over the full row, then the text on the left and a picture of
- * the map on its right, about three eighths of the row from `md` up and level with the text's first
- * line. On a phone the picture sits above the text. A tap on the picture or the button under the
- * text opens the live Google map (`MapEmbed`); with no address the picture and text stand alone.
+ * The map block (#764): the heading, the picture of the map, then the text under it. It fills the
+ * width it is given, so where it sits and how wide it is come from the section that holds it
+ * (#884), not from this component. A tap on the picture or the button under the text opens the
+ * live Google map (`MapEmbed`); with no address the picture and text stand alone.
  */
-export function MapBlock({ title, description, embedUrl, preview }: MapBlockProps) {
+export function MapBlock({
+  title,
+  description,
+  embedUrl,
+  preview,
+  placement,
+}: MapBlockProps & { placement?: SectionPlacement }) {
   return (
-    <Section spacing="sm">
+    <Section spacing="sm" placement={placement}>
       <div className="space-y-6">
         <Text variant="section">{title}</Text>
         <MapEmbed

@@ -15,6 +15,7 @@ Source: `src/platform/ui/Section.tsx`
 
 | Prop              | Type                            | Required | Description                                                                           |
 | ----------------- | ------------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `placement`       | `SectionPlacement`              | no       |                                                                                       |
 | `width`           | `"page" \| "prose" \| "narrow"` | no       |                                                                                       |
 | `as`              | `"section" \| "div"`            | no       | `div` where it only sets the width and spacing, not a part of the page with a heading |
 | `id`              | `string`                        | no       | An anchor to link to the band                                                         |

@@ -27,143 +27,192 @@
 
 ## Fields
 
-| Field                                       | Type         | Required | Target or options                                                                         | Notes                              |
-| ------------------------------------------- | ------------ | -------- | ----------------------------------------------------------------------------------------- | ---------------------------------- |
-| `title`                                     | text         | yes      |                                                                                           | max length 60                      |
-| `hero`                                      | group        | no       |                                                                                           |                                    |
-| `hero.type`                                 | select       | yes      | none, highImpact, mediumImpact, lowImpact                                                 | default lowImpact                  |
-| `hero.richText`                             | richText     | no       |                                                                                           |                                    |
-| `hero.links`                                | array        | no       |                                                                                           | max rows 2                         |
-| `hero.links[].link`                         | group        | no       |                                                                                           |                                    |
-| `hero.links[].link.type`                    | radio        | no       | reference, custom                                                                         | default reference                  |
-| `hero.links[].link.newTab`                  | checkbox     | no       |                                                                                           |                                    |
-| `hero.links[].link.reference`               | relationship | yes      | → pages, posts                                                                            | shown conditionally                |
-| `hero.links[].link.url`                     | text         | yes      |                                                                                           | shown conditionally                |
-| `hero.links[].link.label`                   | text         | yes      |                                                                                           |                                    |
-| `hero.links[].link.appearance`              | select       | no       | default, outline                                                                          | default default                    |
-| `hero.links[].id`                           | text         | no       |                                                                                           | hidden                             |
-| `hero.media`                                | upload       | yes      | → media                                                                                   | shown conditionally                |
-| `layout`                                    | blocks       | yes      | blocks: cta, content, mediaBlock, mapBlock, archive, formBlock, eventsThisWeek, topIssues |                                    |
-| `layout{cta}`                               | block        | no       |                                                                                           |                                    |
-| `layout{cta}.richText`                      | richText     | no       |                                                                                           |                                    |
-| `layout{cta}.links`                         | array        | no       |                                                                                           | max rows 2                         |
-| `layout{cta}.links[].link`                  | group        | no       |                                                                                           |                                    |
-| `layout{cta}.links[].link.type`             | radio        | no       | reference, custom                                                                         | default reference                  |
-| `layout{cta}.links[].link.newTab`           | checkbox     | no       |                                                                                           |                                    |
-| `layout{cta}.links[].link.reference`        | relationship | yes      | → pages, posts                                                                            | shown conditionally                |
-| `layout{cta}.links[].link.url`              | text         | yes      |                                                                                           | shown conditionally                |
-| `layout{cta}.links[].link.label`            | text         | yes      |                                                                                           |                                    |
-| `layout{cta}.links[].link.appearance`       | select       | no       | default, outline                                                                          | default default                    |
-| `layout{cta}.links[].id`                    | text         | no       |                                                                                           | hidden                             |
-| `layout{cta}.id`                            | text         | no       |                                                                                           | hidden                             |
-| `layout{cta}.blockName`                     | text         | no       |                                                                                           |                                    |
-| `layout{content}`                           | block        | no       |                                                                                           |                                    |
-| `layout{content}.columns`                   | array        | no       |                                                                                           |                                    |
-| `layout{content}.columns[].size`            | select       | no       | oneThird, half, twoThirds, full                                                           | default oneThird                   |
-| `layout{content}.columns[].richText`        | richText     | no       |                                                                                           |                                    |
-| `layout{content}.columns[].enableLink`      | checkbox     | no       |                                                                                           |                                    |
-| `layout{content}.columns[].link`            | group        | no       |                                                                                           | shown conditionally                |
-| `layout{content}.columns[].link.type`       | radio        | no       | reference, custom                                                                         | default reference                  |
-| `layout{content}.columns[].link.newTab`     | checkbox     | no       |                                                                                           |                                    |
-| `layout{content}.columns[].link.reference`  | relationship | yes      | → pages, posts                                                                            | shown conditionally                |
-| `layout{content}.columns[].link.url`        | text         | yes      |                                                                                           | shown conditionally                |
-| `layout{content}.columns[].link.label`      | text         | yes      |                                                                                           |                                    |
-| `layout{content}.columns[].link.appearance` | select       | no       | default, outline                                                                          | default default                    |
-| `layout{content}.columns[].id`              | text         | no       |                                                                                           | hidden                             |
-| `layout{content}.id`                        | text         | no       |                                                                                           | hidden                             |
-| `layout{content}.blockName`                 | text         | no       |                                                                                           |                                    |
-| `layout{mediaBlock}`                        | block        | no       |                                                                                           |                                    |
-| `layout{mediaBlock}.media`                  | upload       | yes      | → media                                                                                   |                                    |
-| `layout{mediaBlock}.id`                     | text         | no       |                                                                                           | hidden                             |
-| `layout{mediaBlock}.blockName`              | text         | no       |                                                                                           |                                    |
-| `layout{mapBlock}`                          | block        | no       |                                                                                           |                                    |
-| `layout{mapBlock}.title`                    | text         | yes      |                                                                                           | max length 80                      |
-| `layout{mapBlock}.description`              | textarea     | yes      |                                                                                           |                                    |
-| `layout{mapBlock}.preview`                  | upload       | yes      | → media                                                                                   |                                    |
-| `layout{mapBlock}.embedUrl`                 | text         | no       |                                                                                           |                                    |
-| `layout{mapBlock}.id`                       | text         | no       |                                                                                           | hidden                             |
-| `layout{mapBlock}.blockName`                | text         | no       |                                                                                           |                                    |
-| `layout{archive}`                           | block        | no       |                                                                                           |                                    |
-| `layout{archive}.introContent`              | richText     | no       |                                                                                           |                                    |
-| `layout{archive}.populateBy`                | select       | no       | collection, selection                                                                     | default collection                 |
-| `layout{archive}.relationTo`                | select       | no       | posts                                                                                     | default posts; shown conditionally |
-| `layout{archive}.categories`                | relationship | no       | → categories (many)                                                                       | shown conditionally                |
-| `layout{archive}.limit`                     | number       | no       |                                                                                           | default 10; shown conditionally    |
-| `layout{archive}.selectedDocs`              | relationship | no       | → posts (many)                                                                            | shown conditionally                |
-| `layout{archive}.id`                        | text         | no       |                                                                                           | hidden                             |
-| `layout{archive}.blockName`                 | text         | no       |                                                                                           |                                    |
-| `layout{formBlock}`                         | block        | no       |                                                                                           |                                    |
-| `layout{formBlock}.form`                    | relationship | yes      | → forms                                                                                   |                                    |
-| `layout{formBlock}.enableIntro`             | checkbox     | no       |                                                                                           |                                    |
-| `layout{formBlock}.introContent`            | richText     | no       |                                                                                           | shown conditionally                |
-| `layout{formBlock}.id`                      | text         | no       |                                                                                           | hidden                             |
-| `layout{formBlock}.blockName`               | text         | no       |                                                                                           |                                    |
-| `layout{eventsThisWeek}`                    | block        | no       |                                                                                           |                                    |
-| `layout{eventsThisWeek}.heading`            | text         | yes      |                                                                                           | default This week in Sprecher East |
-| `layout{eventsThisWeek}.days`               | number       | yes      |                                                                                           | min 1; max 31; default 7           |
-| `layout{eventsThisWeek}.rows`               | array        | yes      |                                                                                           | min rows 1; max rows 4             |
-| `layout{eventsThisWeek}.rows[].title`       | text         | yes      |                                                                                           |                                    |
-| `layout{eventsThisWeek}.rows[].source`      | select       | yes      | all, official, category                                                                   | default all                        |
-| `layout{eventsThisWeek}.rows[].category`    | relationship | yes      | → categories                                                                              | shown conditionally                |
-| `layout{eventsThisWeek}.rows[].limit`       | number       | yes      |                                                                                           | min 1; max 6; default 3            |
-| `layout{eventsThisWeek}.rows[].id`          | text         | no       |                                                                                           | hidden                             |
-| `layout{eventsThisWeek}.id`                 | text         | no       |                                                                                           | hidden                             |
-| `layout{eventsThisWeek}.blockName`          | text         | no       |                                                                                           |                                    |
-| `layout{topIssues}`                         | block        | no       |                                                                                           |                                    |
-| `layout{topIssues}.heading`                 | text         | yes      |                                                                                           | default Top issues right now       |
-| `layout{topIssues}.reviewedAt`              | date         | no       |                                                                                           |                                    |
-| `layout{topIssues}.items`                   | array        | yes      |                                                                                           | min rows 1; max rows 5             |
-| `layout{topIssues}.items[].title`           | text         | yes      |                                                                                           | max length 80                      |
-| `layout{topIssues}.items[].summary`         | textarea     | no       |                                                                                           | max length 200                     |
-| `layout{topIssues}.items[].link`            | group        | no       |                                                                                           |                                    |
-| `layout{topIssues}.items[].link.type`       | radio        | no       | reference, custom                                                                         | default reference                  |
-| `layout{topIssues}.items[].link.newTab`     | checkbox     | no       |                                                                                           |                                    |
-| `layout{topIssues}.items[].link.reference`  | relationship | yes      | → pages, posts                                                                            | shown conditionally                |
-| `layout{topIssues}.items[].link.url`        | text         | yes      |                                                                                           | shown conditionally                |
-| `layout{topIssues}.items[].id`              | text         | no       |                                                                                           | hidden                             |
-| `layout{topIssues}.id`                      | text         | no       |                                                                                           | hidden                             |
-| `layout{topIssues}.blockName`               | text         | no       |                                                                                           |                                    |
-| `meta.title`                                | text         | no       |                                                                                           |                                    |
-| `meta.image`                                | upload       | no       | → media                                                                                   |                                    |
-| `meta.description`                          | textarea     | no       |                                                                                           |                                    |
-| `publishedAt`                               | date         | no       |                                                                                           |                                    |
-| `backdrop`                                  | upload       | no       | → media                                                                                   |                                    |
-| `generateSlug`                              | checkbox     | no       |                                                                                           | hidden; default true               |
-| `slug`                                      | text         | yes      |                                                                                           | unique; indexed                    |
-| `updatedAt`                                 | date         | no       |                                                                                           | hidden; indexed                    |
-| `createdAt`                                 | date         | no       |                                                                                           | hidden; indexed                    |
-| `_status`                                   | select       | no       | draft, published                                                                          | indexed; default draft             |
+| Field                                                                | Type         | Required | Target or options                                                                                  | Notes                              |
+| -------------------------------------------------------------------- | ------------ | -------- | -------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `title`                                                              | text         | yes      |                                                                                                    | max length 60                      |
+| `hero`                                                               | group        | no       |                                                                                                    |                                    |
+| `hero.type`                                                          | select       | yes      | none, highImpact, mediumImpact, lowImpact                                                          | default lowImpact                  |
+| `hero.richText`                                                      | richText     | no       |                                                                                                    |                                    |
+| `hero.links`                                                         | array        | no       |                                                                                                    | max rows 2                         |
+| `hero.links[].link`                                                  | group        | no       |                                                                                                    |                                    |
+| `hero.links[].link.type`                                             | radio        | no       | reference, custom                                                                                  | default reference                  |
+| `hero.links[].link.newTab`                                           | checkbox     | no       |                                                                                                    |                                    |
+| `hero.links[].link.reference`                                        | relationship | yes      | → pages, posts                                                                                     | shown conditionally                |
+| `hero.links[].link.url`                                              | text         | yes      |                                                                                                    | shown conditionally                |
+| `hero.links[].link.label`                                            | text         | yes      |                                                                                                    |                                    |
+| `hero.links[].link.appearance`                                       | select       | no       | default, outline                                                                                   | default default                    |
+| `hero.links[].id`                                                    | text         | no       |                                                                                                    | hidden                             |
+| `hero.media`                                                         | upload       | yes      | → media                                                                                            | shown conditionally                |
+| `layout`                                                             | blocks       | yes      | blocks: cta, content, section, mediaBlock, mapBlock, archive, formBlock, eventsThisWeek, topIssues |                                    |
+| `layout{cta}`                                                        | block        | no       |                                                                                                    |                                    |
+| `layout{cta}.richText`                                               | richText     | no       |                                                                                                    |                                    |
+| `layout{cta}.links`                                                  | array        | no       |                                                                                                    | max rows 2                         |
+| `layout{cta}.links[].link`                                           | group        | no       |                                                                                                    |                                    |
+| `layout{cta}.links[].link.type`                                      | radio        | no       | reference, custom                                                                                  | default reference                  |
+| `layout{cta}.links[].link.newTab`                                    | checkbox     | no       |                                                                                                    |                                    |
+| `layout{cta}.links[].link.reference`                                 | relationship | yes      | → pages, posts                                                                                     | shown conditionally                |
+| `layout{cta}.links[].link.url`                                       | text         | yes      |                                                                                                    | shown conditionally                |
+| `layout{cta}.links[].link.label`                                     | text         | yes      |                                                                                                    |                                    |
+| `layout{cta}.links[].link.appearance`                                | select       | no       | default, outline                                                                                   | default default                    |
+| `layout{cta}.links[].id`                                             | text         | no       |                                                                                                    | hidden                             |
+| `layout{cta}.id`                                                     | text         | no       |                                                                                                    | hidden                             |
+| `layout{cta}.blockName`                                              | text         | no       |                                                                                                    |                                    |
+| `layout{content}`                                                    | block        | no       |                                                                                                    |                                    |
+| `layout{content}.columns`                                            | array        | no       |                                                                                                    |                                    |
+| `layout{content}.columns[].size`                                     | select       | no       | oneThird, half, twoThirds, full                                                                    | default oneThird                   |
+| `layout{content}.columns[].richText`                                 | richText     | no       |                                                                                                    |                                    |
+| `layout{content}.columns[].enableLink`                               | checkbox     | no       |                                                                                                    |                                    |
+| `layout{content}.columns[].link`                                     | group        | no       |                                                                                                    | shown conditionally                |
+| `layout{content}.columns[].link.type`                                | radio        | no       | reference, custom                                                                                  | default reference                  |
+| `layout{content}.columns[].link.newTab`                              | checkbox     | no       |                                                                                                    |                                    |
+| `layout{content}.columns[].link.reference`                           | relationship | yes      | → pages, posts                                                                                     | shown conditionally                |
+| `layout{content}.columns[].link.url`                                 | text         | yes      |                                                                                                    | shown conditionally                |
+| `layout{content}.columns[].link.label`                               | text         | yes      |                                                                                                    |                                    |
+| `layout{content}.columns[].link.appearance`                          | select       | no       | default, outline                                                                                   | default default                    |
+| `layout{content}.columns[].id`                                       | text         | no       |                                                                                                    | hidden                             |
+| `layout{content}.id`                                                 | text         | no       |                                                                                                    | hidden                             |
+| `layout{content}.blockName`                                          | text         | no       |                                                                                                    |                                    |
+| `layout{section}`                                                    | block        | no       |                                                                                                    |                                    |
+| `layout{section}.items`                                              | array        | yes      |                                                                                                    | min rows 1                         |
+| `layout{section}.items[].width`                                      | select       | yes      | full, threeQuarters, twoThirds, half, oneThird, quarter                                            | default full                       |
+| `layout{section}.items[].align`                                      | select       | yes      | start, center, end                                                                                 | default start                      |
+| `layout{section}.items[].verticalAlign`                              | select       | yes      | top, center, bottom                                                                                | default top                        |
+| `layout{section}.items[].phoneOrder`                                 | select       | yes      | inOrder, first, last                                                                               | default inOrder                    |
+| `layout{section}.items[].content`                                    | blocks       | no       | blocks: content, mediaBlock, mapBlock                                                              |                                    |
+| `layout{section}.items[].content{content}`                           | block        | no       |                                                                                                    |                                    |
+| `layout{section}.items[].content{content}.columns`                   | array        | no       |                                                                                                    |                                    |
+| `layout{section}.items[].content{content}.columns[].size`            | select       | no       | oneThird, half, twoThirds, full                                                                    | default oneThird                   |
+| `layout{section}.items[].content{content}.columns[].richText`        | richText     | no       |                                                                                                    |                                    |
+| `layout{section}.items[].content{content}.columns[].enableLink`      | checkbox     | no       |                                                                                                    |                                    |
+| `layout{section}.items[].content{content}.columns[].link`            | group        | no       |                                                                                                    | shown conditionally                |
+| `layout{section}.items[].content{content}.columns[].link.type`       | radio        | no       | reference, custom                                                                                  | default reference                  |
+| `layout{section}.items[].content{content}.columns[].link.newTab`     | checkbox     | no       |                                                                                                    |                                    |
+| `layout{section}.items[].content{content}.columns[].link.reference`  | relationship | yes      | → pages, posts                                                                                     | shown conditionally                |
+| `layout{section}.items[].content{content}.columns[].link.url`        | text         | yes      |                                                                                                    | shown conditionally                |
+| `layout{section}.items[].content{content}.columns[].link.label`      | text         | yes      |                                                                                                    |                                    |
+| `layout{section}.items[].content{content}.columns[].link.appearance` | select       | no       | default, outline                                                                                   | default default                    |
+| `layout{section}.items[].content{content}.columns[].id`              | text         | no       |                                                                                                    | hidden                             |
+| `layout{section}.items[].content{content}.id`                        | text         | no       |                                                                                                    | hidden                             |
+| `layout{section}.items[].content{content}.blockName`                 | text         | no       |                                                                                                    |                                    |
+| `layout{section}.items[].content{mediaBlock}`                        | block        | no       |                                                                                                    |                                    |
+| `layout{section}.items[].content{mediaBlock}.media`                  | upload       | yes      | → media                                                                                            |                                    |
+| `layout{section}.items[].content{mediaBlock}.id`                     | text         | no       |                                                                                                    | hidden                             |
+| `layout{section}.items[].content{mediaBlock}.blockName`              | text         | no       |                                                                                                    |                                    |
+| `layout{section}.items[].content{mapBlock}`                          | block        | no       |                                                                                                    |                                    |
+| `layout{section}.items[].content{mapBlock}.title`                    | text         | yes      |                                                                                                    | max length 80                      |
+| `layout{section}.items[].content{mapBlock}.description`              | textarea     | yes      |                                                                                                    |                                    |
+| `layout{section}.items[].content{mapBlock}.preview`                  | upload       | yes      | → media                                                                                            |                                    |
+| `layout{section}.items[].content{mapBlock}.embedUrl`                 | text         | no       |                                                                                                    |                                    |
+| `layout{section}.items[].content{mapBlock}.id`                       | text         | no       |                                                                                                    | hidden                             |
+| `layout{section}.items[].content{mapBlock}.blockName`                | text         | no       |                                                                                                    |                                    |
+| `layout{section}.items[].id`                                         | text         | no       |                                                                                                    | hidden                             |
+| `layout{section}.id`                                                 | text         | no       |                                                                                                    | hidden                             |
+| `layout{section}.blockName`                                          | text         | no       |                                                                                                    |                                    |
+| `layout{mediaBlock}`                                                 | block        | no       |                                                                                                    |                                    |
+| `layout{mediaBlock}.media`                                           | upload       | yes      | → media                                                                                            |                                    |
+| `layout{mediaBlock}.id`                                              | text         | no       |                                                                                                    | hidden                             |
+| `layout{mediaBlock}.blockName`                                       | text         | no       |                                                                                                    |                                    |
+| `layout{mapBlock}`                                                   | block        | no       |                                                                                                    |                                    |
+| `layout{mapBlock}.title`                                             | text         | yes      |                                                                                                    | max length 80                      |
+| `layout{mapBlock}.description`                                       | textarea     | yes      |                                                                                                    |                                    |
+| `layout{mapBlock}.preview`                                           | upload       | yes      | → media                                                                                            |                                    |
+| `layout{mapBlock}.embedUrl`                                          | text         | no       |                                                                                                    |                                    |
+| `layout{mapBlock}.id`                                                | text         | no       |                                                                                                    | hidden                             |
+| `layout{mapBlock}.blockName`                                         | text         | no       |                                                                                                    |                                    |
+| `layout{archive}`                                                    | block        | no       |                                                                                                    |                                    |
+| `layout{archive}.introContent`                                       | richText     | no       |                                                                                                    |                                    |
+| `layout{archive}.populateBy`                                         | select       | no       | collection, selection                                                                              | default collection                 |
+| `layout{archive}.relationTo`                                         | select       | no       | posts                                                                                              | default posts; shown conditionally |
+| `layout{archive}.categories`                                         | relationship | no       | → categories (many)                                                                                | shown conditionally                |
+| `layout{archive}.limit`                                              | number       | no       |                                                                                                    | default 10; shown conditionally    |
+| `layout{archive}.selectedDocs`                                       | relationship | no       | → posts (many)                                                                                     | shown conditionally                |
+| `layout{archive}.id`                                                 | text         | no       |                                                                                                    | hidden                             |
+| `layout{archive}.blockName`                                          | text         | no       |                                                                                                    |                                    |
+| `layout{formBlock}`                                                  | block        | no       |                                                                                                    |                                    |
+| `layout{formBlock}.form`                                             | relationship | yes      | → forms                                                                                            |                                    |
+| `layout{formBlock}.enableIntro`                                      | checkbox     | no       |                                                                                                    |                                    |
+| `layout{formBlock}.introContent`                                     | richText     | no       |                                                                                                    | shown conditionally                |
+| `layout{formBlock}.id`                                               | text         | no       |                                                                                                    | hidden                             |
+| `layout{formBlock}.blockName`                                        | text         | no       |                                                                                                    |                                    |
+| `layout{eventsThisWeek}`                                             | block        | no       |                                                                                                    |                                    |
+| `layout{eventsThisWeek}.heading`                                     | text         | yes      |                                                                                                    | default This week in Sprecher East |
+| `layout{eventsThisWeek}.days`                                        | number       | yes      |                                                                                                    | min 1; max 31; default 7           |
+| `layout{eventsThisWeek}.rows`                                        | array        | yes      |                                                                                                    | min rows 1; max rows 4             |
+| `layout{eventsThisWeek}.rows[].title`                                | text         | yes      |                                                                                                    |                                    |
+| `layout{eventsThisWeek}.rows[].source`                               | select       | yes      | all, official, category                                                                            | default all                        |
+| `layout{eventsThisWeek}.rows[].category`                             | relationship | yes      | → categories                                                                                       | shown conditionally                |
+| `layout{eventsThisWeek}.rows[].limit`                                | number       | yes      |                                                                                                    | min 1; max 6; default 3            |
+| `layout{eventsThisWeek}.rows[].id`                                   | text         | no       |                                                                                                    | hidden                             |
+| `layout{eventsThisWeek}.id`                                          | text         | no       |                                                                                                    | hidden                             |
+| `layout{eventsThisWeek}.blockName`                                   | text         | no       |                                                                                                    |                                    |
+| `layout{topIssues}`                                                  | block        | no       |                                                                                                    |                                    |
+| `layout{topIssues}.heading`                                          | text         | yes      |                                                                                                    | default Top issues right now       |
+| `layout{topIssues}.reviewedAt`                                       | date         | no       |                                                                                                    |                                    |
+| `layout{topIssues}.items`                                            | array        | yes      |                                                                                                    | min rows 1; max rows 5             |
+| `layout{topIssues}.items[].title`                                    | text         | yes      |                                                                                                    | max length 80                      |
+| `layout{topIssues}.items[].summary`                                  | textarea     | no       |                                                                                                    | max length 200                     |
+| `layout{topIssues}.items[].link`                                     | group        | no       |                                                                                                    |                                    |
+| `layout{topIssues}.items[].link.type`                                | radio        | no       | reference, custom                                                                                  | default reference                  |
+| `layout{topIssues}.items[].link.newTab`                              | checkbox     | no       |                                                                                                    |                                    |
+| `layout{topIssues}.items[].link.reference`                           | relationship | yes      | → pages, posts                                                                                     | shown conditionally                |
+| `layout{topIssues}.items[].link.url`                                 | text         | yes      |                                                                                                    | shown conditionally                |
+| `layout{topIssues}.items[].id`                                       | text         | no       |                                                                                                    | hidden                             |
+| `layout{topIssues}.id`                                               | text         | no       |                                                                                                    | hidden                             |
+| `layout{topIssues}.blockName`                                        | text         | no       |                                                                                                    |                                    |
+| `meta.title`                                                         | text         | no       |                                                                                                    |                                    |
+| `meta.image`                                                         | upload       | no       | → media                                                                                            |                                    |
+| `meta.description`                                                   | textarea     | no       |                                                                                                    |                                    |
+| `publishedAt`                                                        | date         | no       |                                                                                                    |                                    |
+| `backdrop`                                                           | upload       | no       | → media                                                                                            |                                    |
+| `generateSlug`                                                       | checkbox     | no       |                                                                                                    | hidden; default true               |
+| `slug`                                                               | text         | yes      |                                                                                                    | unique; indexed                    |
+| `updatedAt`                                                          | date         | no       |                                                                                                    | hidden; indexed                    |
+| `createdAt`                                                          | date         | no       |                                                                                                    | hidden; indexed                    |
+| `_status`                                                            | select       | no       | draft, published                                                                                   | indexed; default draft             |
 
 ### Field hooks
 
-| Field                              | Phase           | Function | Defined in                         |
-| ---------------------------------- | --------------- | -------- | ---------------------------------- |
-| `hero.links[].id`                  | beforeChange    | inline   | payload                            |
-| `hero.links[].id`                  | beforeDuplicate | inline   | payload                            |
-| `layout{cta}.links[].id`           | beforeChange    | inline   | payload                            |
-| `layout{cta}.links[].id`           | beforeDuplicate | inline   | payload                            |
-| `layout{cta}.id`                   | beforeChange    | inline   | payload                            |
-| `layout{cta}.id`                   | beforeDuplicate | inline   | payload                            |
-| `layout{content}.columns[].id`     | beforeChange    | inline   | payload                            |
-| `layout{content}.columns[].id`     | beforeDuplicate | inline   | payload                            |
-| `layout{content}.id`               | beforeChange    | inline   | payload                            |
-| `layout{content}.id`               | beforeDuplicate | inline   | payload                            |
-| `layout{mediaBlock}.id`            | beforeChange    | inline   | payload                            |
-| `layout{mediaBlock}.id`            | beforeDuplicate | inline   | payload                            |
-| `layout{mapBlock}.embedUrl`        | beforeValidate  | inline   | `src/modules/site/cms/mapBlock.ts` |
-| `layout{mapBlock}.id`              | beforeChange    | inline   | payload                            |
-| `layout{mapBlock}.id`              | beforeDuplicate | inline   | payload                            |
-| `layout{archive}.id`               | beforeChange    | inline   | payload                            |
-| `layout{archive}.id`               | beforeDuplicate | inline   | payload                            |
-| `layout{formBlock}.id`             | beforeChange    | inline   | payload                            |
-| `layout{formBlock}.id`             | beforeDuplicate | inline   | payload                            |
-| `layout{eventsThisWeek}.rows[].id` | beforeChange    | inline   | payload                            |
-| `layout{eventsThisWeek}.rows[].id` | beforeDuplicate | inline   | payload                            |
-| `layout{eventsThisWeek}.id`        | beforeChange    | inline   | payload                            |
-| `layout{eventsThisWeek}.id`        | beforeDuplicate | inline   | payload                            |
-| `layout{topIssues}.items[].id`     | beforeChange    | inline   | payload                            |
-| `layout{topIssues}.items[].id`     | beforeDuplicate | inline   | payload                            |
-| `layout{topIssues}.id`             | beforeChange    | inline   | payload                            |
-| `layout{topIssues}.id`             | beforeDuplicate | inline   | payload                            |
-| `generateSlug`                     | beforeChange    | inline   | payload                            |
-| `slug`                             | beforeDuplicate | `unique` | payload                            |
+| Field                                                   | Phase           | Function | Defined in                         |
+| ------------------------------------------------------- | --------------- | -------- | ---------------------------------- |
+| `hero.links[].id`                                       | beforeChange    | inline   | payload                            |
+| `hero.links[].id`                                       | beforeDuplicate | inline   | payload                            |
+| `layout{cta}.links[].id`                                | beforeChange    | inline   | payload                            |
+| `layout{cta}.links[].id`                                | beforeDuplicate | inline   | payload                            |
+| `layout{cta}.id`                                        | beforeChange    | inline   | payload                            |
+| `layout{cta}.id`                                        | beforeDuplicate | inline   | payload                            |
+| `layout{content}.columns[].id`                          | beforeChange    | inline   | payload                            |
+| `layout{content}.columns[].id`                          | beforeDuplicate | inline   | payload                            |
+| `layout{content}.id`                                    | beforeChange    | inline   | payload                            |
+| `layout{content}.id`                                    | beforeDuplicate | inline   | payload                            |
+| `layout{section}.items[].content{content}.columns[].id` | beforeChange    | inline   | payload                            |
+| `layout{section}.items[].content{content}.columns[].id` | beforeDuplicate | inline   | payload                            |
+| `layout{section}.items[].content{content}.id`           | beforeChange    | inline   | payload                            |
+| `layout{section}.items[].content{content}.id`           | beforeDuplicate | inline   | payload                            |
+| `layout{section}.items[].content{mediaBlock}.id`        | beforeChange    | inline   | payload                            |
+| `layout{section}.items[].content{mediaBlock}.id`        | beforeDuplicate | inline   | payload                            |
+| `layout{section}.items[].content{mapBlock}.embedUrl`    | beforeValidate  | inline   | `src/modules/site/cms/mapBlock.ts` |
+| `layout{section}.items[].content{mapBlock}.id`          | beforeChange    | inline   | payload                            |
+| `layout{section}.items[].content{mapBlock}.id`          | beforeDuplicate | inline   | payload                            |
+| `layout{section}.items[].id`                            | beforeChange    | inline   | payload                            |
+| `layout{section}.items[].id`                            | beforeDuplicate | inline   | payload                            |
+| `layout{section}.id`                                    | beforeChange    | inline   | payload                            |
+| `layout{section}.id`                                    | beforeDuplicate | inline   | payload                            |
+| `layout{mediaBlock}.id`                                 | beforeChange    | inline   | payload                            |
+| `layout{mediaBlock}.id`                                 | beforeDuplicate | inline   | payload                            |
+| `layout{mapBlock}.embedUrl`                             | beforeValidate  | inline   | `src/modules/site/cms/mapBlock.ts` |
+| `layout{mapBlock}.id`                                   | beforeChange    | inline   | payload                            |
+| `layout{mapBlock}.id`                                   | beforeDuplicate | inline   | payload                            |
+| `layout{archive}.id`                                    | beforeChange    | inline   | payload                            |
+| `layout{archive}.id`                                    | beforeDuplicate | inline   | payload                            |
+| `layout{formBlock}.id`                                  | beforeChange    | inline   | payload                            |
+| `layout{formBlock}.id`                                  | beforeDuplicate | inline   | payload                            |
+| `layout{eventsThisWeek}.rows[].id`                      | beforeChange    | inline   | payload                            |
+| `layout{eventsThisWeek}.rows[].id`                      | beforeDuplicate | inline   | payload                            |
+| `layout{eventsThisWeek}.id`                             | beforeChange    | inline   | payload                            |
+| `layout{eventsThisWeek}.id`                             | beforeDuplicate | inline   | payload                            |
+| `layout{topIssues}.items[].id`                          | beforeChange    | inline   | payload                            |
+| `layout{topIssues}.items[].id`                          | beforeDuplicate | inline   | payload                            |
+| `layout{topIssues}.id`                                  | beforeChange    | inline   | payload                            |
+| `layout{topIssues}.id`                                  | beforeDuplicate | inline   | payload                            |
+| `generateSlug`                                          | beforeChange    | inline   | payload                            |
+| `slug`                                                  | beforeDuplicate | `unique` | payload                            |

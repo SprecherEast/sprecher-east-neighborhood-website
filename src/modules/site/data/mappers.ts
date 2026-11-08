@@ -10,6 +10,7 @@ import type {
   MapBlock,
   MediaBlock,
   Page,
+  SectionBlock,
   TopIssuesBlock,
 } from '@/payload-types'
 import { toGoogleMapsEmbedUrl } from '@/platform/lib/googleMapsEmbed'
@@ -24,6 +25,7 @@ import type {
   ContentColumn,
   ContentLayout,
   MapBlockProps,
+  SectionBlockProps,
 } from '../domain/blocks'
 import type { PageHeroProps } from '../domain/hero'
 import { type HeaderNavLink, isHeaderButtonPath } from '../domain/nav'
@@ -34,6 +36,11 @@ type StoredSize = StoredColumn['size']
 /** What news needs to load an archive block's posts: the stored fields, as the editor set them */
 export type ArchivePostQuery = Pick<ArchiveBlock, 'populateBy' | 'categories' | 'limit' | 'selectedDocs'>
 
+/** A section of the page: its items hold blocks of the same kind (an interface, so the type can refer to itself) */
+export interface SectionLayoutBlock extends SectionBlockProps<PageLayoutBlock> {
+  blockType: 'section'
+}
+
 /**
  * One block of a page's layout: site's own blocks as plain props (each keeps its `blockType`),
  * and the blocks other modules or `platform/` map as stored (decision 0013, point 4).
@@ -43,6 +50,7 @@ export type PageLayoutBlock =
   | (CallToActionBlockProps & { blockType: 'cta' })
   | (ArchiveBlockProps & { blockType: 'archive'; postQuery: ArchivePostQuery })
   | (MapBlockProps & { blockType: 'mapBlock' })
+  | SectionLayoutBlock
   | FormBlock
   | MediaBlock
   | EventsThisWeekBlock
@@ -136,6 +144,21 @@ export function toMapBlockProps({
   }
 }
 
+/** The section block as plain props: each item's layout and its blocks, mapped like the page's (#884) */
+export function toSectionBlockProps({
+  items,
+}: Pick<SectionBlock, 'items'>): SectionBlockProps<PageLayoutBlock> {
+  return {
+    items: items.map(({ width, align, verticalAlign, phoneOrder, content }) => ({
+      width,
+      align,
+      verticalAlign,
+      phoneOrder,
+      blocks: toPageLayout(content ?? []),
+    })),
+  }
+}
+
 /** A page's layout with site's own blocks mapped; a block type the site doesn't know is dropped */
 export function toPageLayout(layout: Page['layout']): PageLayoutBlock[] {
   return layout.flatMap((block): PageLayoutBlock[] => {
@@ -151,6 +174,8 @@ export function toPageLayout(layout: Page['layout']): PageLayoutBlock[] {
       }
       case 'mapBlock':
         return [{ blockType: 'mapBlock', ...toMapBlockProps(block) }]
+      case 'section':
+        return [{ blockType: 'section', ...toSectionBlockProps(block) }]
       case 'formBlock':
       case 'mediaBlock':
       case 'eventsThisWeek':

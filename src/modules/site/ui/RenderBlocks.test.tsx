@@ -90,3 +90,76 @@ describe('RenderBlocks', () => {
     expect(container.innerHTML).toBe('')
   })
 })
+
+describe('RenderBlocks: a section (#884)', () => {
+  const section = {
+    blockType: 'section',
+    id: 's',
+    items: [
+      {
+        width: 'twoThirds',
+        align: 'start',
+        verticalAlign: 'top',
+        phoneOrder: 'inOrder',
+        blocks: [{ blockType: 'content', id: 'in1', layout: 'single', columns: [] }],
+      },
+      {
+        width: 'oneThird',
+        align: 'end',
+        verticalAlign: 'center',
+        phoneOrder: 'first',
+        blocks: [{ blockType: 'mapBlock', id: 'in2', title: 'Map', description: 'Map text' }],
+      },
+    ],
+  } as unknown as PageLayoutBlock
+
+  it('draws each item’s blocks with the page’s own components, inside the item', () => {
+    const { container } = render(<RenderBlocks blocks={[section]} components={components} />)
+
+    expect(
+      [...container.querySelectorAll<HTMLElement>('[data-block]')].map(({ dataset }) => [
+        dataset.block,
+        dataset.id,
+      ]),
+    ).toEqual([
+      ['content', 'in1'],
+      ['mapBlock', 'in2'],
+    ])
+  })
+
+  it('applies each item’s layout choices to its cell', () => {
+    const { container } = render(<RenderBlocks blocks={[section]} components={components} />)
+    const cells = [...container.querySelectorAll('[data-block]')].map(
+      (el) => el.closest('[class*="col-span"]') as HTMLElement,
+    )
+
+    expect(cells[0].className).toContain('lg:col-span-8')
+    expect(cells[1].className).toContain('lg:col-span-4')
+    expect(cells[1].className).toContain('order-first')
+  })
+
+  it('tells the blocks inside an item they sit inline, and the page’s own blocks they do not', () => {
+    const placements = (blocks: PageLayoutBlock[]) => {
+      const seen: (string | undefined)[] = []
+      const Spy = ({ placement }: { placement?: string }) => {
+        seen.push(placement)
+        return <section />
+      }
+      render(
+        <RenderBlocks
+          blocks={blocks}
+          components={{ ...components, content: Spy as PageBlockComponents['content'] }}
+        />,
+      )
+      return seen
+    }
+    const inner = { blockType: 'content', id: 'x', layout: 'single', columns: [] }
+    const nested = {
+      ...section,
+      items: [{ ...(section as { items: object[] }).items[0], blocks: [inner] }],
+    } as unknown as PageLayoutBlock
+
+    expect(placements([inner as unknown as PageLayoutBlock])).toEqual(['section'])
+    expect(placements([nested])).toEqual(['inline'])
+  })
+})
