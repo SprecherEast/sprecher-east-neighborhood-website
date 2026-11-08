@@ -105,4 +105,21 @@ describe('parseTranscript', () => {
     ])
     expect(run.searches).toBe(2)
   })
+
+  it('counts notes and docs as knowledge when paths use Windows backslashes', () => {
+    const read = (file) => ({
+      type: 'assistant',
+      message: { content: [{ type: 'tool_use', name: 'Read', input: { file_path: file } }] },
+    })
+    const text = [
+      read('C:\\w\\src\\modules\\events\\README.md'),
+      read('C:\\w\\docs\\reference\\routes.md'),
+      read('C:\\w\\src\\modules\\events\\cms\\events.ts'),
+    ]
+      .map((event) => JSON.stringify(event))
+      .join('\n')
+    const run = parseTranscript(text, 'C:\\w')
+    expect(run.filesRead).toHaveLength(3)
+    expect(run.codeFilesRead).toEqual(['src/modules/events/cms/events.ts'])
+  })
 })

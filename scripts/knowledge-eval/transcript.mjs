@@ -7,6 +7,9 @@ const isKnowledgeFile = (file) =>
   /^(AGENTS|CLAUDE)\.md$/.test(file) ||
   /^(docs|\.claude|\.agents)\//.test(file)
 
+// Windows runs report `C:\\repo\\src\\a.ts`: compare paths with forward slashes only.
+const toSlashes = (file) => file.replaceAll('\\', '/')
+
 /** Every token the session used, over all models: input, output and both cache counts. */
 export function totalTokens(modelUsage) {
   let total = 0
@@ -37,7 +40,7 @@ function parseLines(text) {
  * A run without a `result` event (timeout, crash) is `finished: false` with zero tokens.
  */
 export function parseTranscript(text, workdir) {
-  const prefix = `${workdir}/`
+  const prefix = `${toSlashes(workdir)}/`
   const files = new Set()
   let toolCalls = 0
   let searches = 0
@@ -49,7 +52,7 @@ export function parseTranscript(text, workdir) {
       if (block.type !== 'tool_use') continue
       toolCalls += 1
       if (block.name === 'Grep' || block.name === 'Glob') searches += 1
-      const file = block.input?.file_path
+      const file = block.input?.file_path && toSlashes(block.input.file_path)
       if (block.name === 'Read' && file)
         files.add(file.startsWith(prefix) ? file.slice(prefix.length) : file)
     }
