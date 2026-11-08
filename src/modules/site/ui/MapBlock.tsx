@@ -6,6 +6,7 @@ import { Section, type SectionPlacement } from '@/platform/ui/Section'
 import { Text } from '@/platform/ui/Text'
 
 import type { MapBlockProps } from '../domain/blocks'
+import { TITLE_TEXT } from './blockStyles'
 
 /*
  * The map block (#764): the heading, the picture of the map, then the text under it. It fills the
@@ -23,7 +24,9 @@ export function MapBlock({
   return (
     <Section spacing="sm" placement={placement}>
       <div className="space-y-6">
-        <Text variant="section">{title}</Text>
+        <div className={TITLE_TEXT}>
+          <Text variant="section">{title}</Text>
+        </div>
         <MapEmbed
           embedUrl={embedUrl}
           title={title}

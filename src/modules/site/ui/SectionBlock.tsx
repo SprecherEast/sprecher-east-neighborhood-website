@@ -9,6 +9,7 @@ import type {
   SectionVerticalAlign,
   LayoutWidth,
 } from '../domain/blocks'
+import { SECTION_GAP } from './blockStyles'
 import { COLUMN_SPAN } from './columnSpan'
 
 /*
@@ -51,11 +52,13 @@ export function SectionBlock({ items }: { items: SectionBlockItem[] }) {
 
   return (
     <Section spacing="sm">
-      <div className="grid grid-cols-4 gap-x-8 gap-y-8 lg:grid-cols-12 lg:gap-x-12">
+      <div className={cn('grid grid-cols-4 lg:grid-cols-12 lg:gap-x-12', SECTION_GAP)}>
         {items.map(({ width, align, verticalAlign, phoneOrder, children }, index) => (
           <div
             key={index}
             className={cn(
+              'flex flex-col',
+              SECTION_GAP,
               COLUMN_SPAN[width],
               TEXT_ALIGN[align],
               SELF[verticalAlign],

@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import type { SectionAlign, SectionPhoneOrder, SectionVerticalAlign } from '../domain/blocks'
+import { SECTION_GAP } from './blockStyles'
 import { SectionBlock } from './SectionBlock'
 
 afterEach(cleanup)
@@ -93,5 +94,27 @@ describe('SectionBlock (#884)', () => {
   it('draws nothing without items', () => {
     const { container } = render(<SectionBlock items={[]} />)
     expect(container.firstChild).toBeNull()
+  })
+
+  // Blocks stacked in one item are separated by the section's own gap (#891)
+  it('spaces blocks stacked in one item evenly', () => {
+    render(
+      <SectionBlock
+        items={[
+          item('x', {
+            children: (
+              <>
+                <p>First block</p>
+                <p>Second block</p>
+              </>
+            ),
+          }),
+        ]}
+      />,
+    )
+    const stack = cell('First block')
+    expect(stack.className).toMatch(/\bflex\b/)
+    expect(stack.className).toMatch(/\bflex-col\b/)
+    expect(stack.className).toContain(SECTION_GAP)
   })
 })
