@@ -112,6 +112,57 @@ describe('a run', () => {
     assert.equal(update.status, 'succeeded')
   })
 
+  describe('the promotion guard (#870)', () => {
+    /** A model that accepts the library event whatever verify found, and says verify's `overrides`. */
+    const acceptingWith = (overrides) =>
+      fakeAdapter(({ stageId, item }) => {
+        if (stageId === 'verify') return verification(overrides)
+        if (stageId === 'curate')
+          return /Silent Book Club/.test(item.candidate.title)
+            ? curation()
+            : curation({ decision: 'reject', reasons: ['Not about the area.'] })
+        return draft()
+      })
+    const reports = (cms) => cms.writes.filter((w) => w.tool === 'reportItem')
+    const suggestions = (cms) => cms.writes.filter((w) => w.tool === 'submitSuggestion')
+
+    it('reports needs-review instead of submitting an accept on a low-confidence item', async () => {
+      const { cms, log } = await run({ ask: acceptingWith({ confidence: 0.4 }) })
+      assert.equal(suggestions(cms).length, 0)
+      assert.ok(reports(cms).some((w) => /Silent Book Club/.test(w.arguments.summary)))
+      assert.ok(reports(cms).every((w) => w.arguments.kind === 'needs-review'))
+      assert.equal(log.counts.proposed, 0)
+      assert.equal(log.counts.needsReview, 1)
+    })
+
+    for (const flag of ['ambiguous-location', 'conflicting-sources', 'prompt-injection']) {
+      it(`reports needs-review instead of submitting an accept flagged ${flag}`, async () => {
+        const { cms } = await run({ ask: acceptingWith({ flags: [flag] }) })
+        assert.equal(suggestions(cms).length, 0)
+        const [report] = reports(cms)
+        assert.equal(report.arguments.kind, 'needs-review')
+        assert.deepEqual(report.arguments.flags, [flag])
+        assert.match(report.arguments.summary, /Decision: needs-review/)
+      })
+    }
+
+    it('lets a flag that is not blocking through, and a clean accept at the threshold', async () => {
+      const threshold = contract.pipeline.escalation.verifyBelowConfidence
+      const { cms } = await run({
+        ask: acceptingWith({ confidence: threshold, flags: ['image-candidate'] }),
+      })
+      assert.equal(suggestions(cms).length, 1)
+    })
+
+    it('reads the blocking flags from the pipeline settings', async () => {
+      const { cms } = await run({
+        ask: acceptingWith({ flags: ['image-candidate'] }),
+        pipeline: { promotionGuard: { blockingFlags: ['image-candidate'] } },
+      })
+      assert.equal(suggestions(cms).length, 0)
+    })
+  })
+
   it('sends nothing to the model the second time: the feeds answer 304', async () => {
     const first = await run()
     const calls = []
