@@ -21,12 +21,7 @@ import { COLUMN_SPAN } from './columnSpan'
  */
 
 /** A column's width on the 12-column grid of the single and columns layouts */
-const SPAN: Record<ContentColumnSize, string> = {
-  full: COLUMN_SPAN.full,
-  half: COLUMN_SPAN.half,
-  oneThird: COLUMN_SPAN.oneThird,
-  twoThirds: COLUMN_SPAN.twoThirds,
-}
+const SPAN: Record<ContentColumnSize, string> = COLUMN_SPAN
 
 /** A card's width in a `CardGrid`: a full card takes the row, two-thirds two of three columns */
 const CARD_SPAN: Record<ContentColumnSize, string> = {
