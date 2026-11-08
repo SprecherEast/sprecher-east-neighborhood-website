@@ -93,7 +93,7 @@ merge or remove the label himself.
 How to ask him ([`project-tracking`](/.agents/skills/project-tracking/SKILL.md) step 5):
 one plain question, the options in a sentence each, a recommendation, and what happens next.
 
-Priority lives only in the `priority:` label. GitHub's issue types (Bug, Feature, Task) are
+Priority lives only in the `priority:` label. (This and the board section below describe the setup before the repository moved to an organization; the [planning model](/docs/process/planning-model.md#githubs-model-compared-with-jiras) says what applies now, and a later change updates this page.) GitHub's issue types (Bug, Feature, Task) are
 optional; the type label stays the required one because the `PR Policy` check reads labels.
 
 ## Sprints

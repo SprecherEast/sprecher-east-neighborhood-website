@@ -137,5 +137,11 @@ Follow the [grooming playbook](../../../docs/process/grooming-playbook.md): the
 4. **Retro-organization** of existing issues is the playbook's
    [procedure](../../../docs/process/grooming-playbook.md#retro-organization): a dry-run proposal of
    milestones, epics and groupings first, owner approval, then apply in the order it gives.
-5. You still never edit code, push or merge. A cloud session cannot move board cards: say which
+5. **Sprints and native fields** (Priority, Effort, Size, iteration): read them from the board when
+   the session can reach it, and set a board field or move an iteration only from a session on the
+   owner's computer (`gh project item-edit`). Native issue fields are written with a `PUT`, which
+   this agent cannot send, so list each as a proposal ("set Priority to X on #N") for a session
+   that can. Sprint pulls and rollover follow the
+   [planning model](../../../docs/process/planning-model.md#sprint).
+6. You still never edit code, push or merge. A cloud session cannot move board cards: say which
    card moves where.
