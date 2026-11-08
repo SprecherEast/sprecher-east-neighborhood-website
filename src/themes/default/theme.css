@@ -35,6 +35,12 @@
   --chart-4: #6a55c9;
   --chart-5: #8f6a00;
   --chart-6: #b4457e;
+  --chart-warm-1: #b34700;
+  --chart-warm-2: #6b6b6b;
+  --chart-warm-3: #d4631a;
+  --chart-warm-4: #858585;
+  --chart-warm-5: #3f3f3f;
+  --chart-warm-6: #a2653a;
   --radius: 0.625rem;
   --success: #3d7a5e;
   --warning: #e8923a;
@@ -95,6 +101,12 @@
   --chart-4: #8a7be0;
   --chart-5: #b48f12;
   --chart-6: #d0679d;
+  --chart-warm-1: #f08a3c;
+  --chart-warm-2: #a3a3a3;
+  --chart-warm-3: #d9742a;
+  --chart-warm-4: #7f7f7f;
+  --chart-warm-5: #d0d0d0;
+  --chart-warm-6: #ffb27a;
   --success: #4e9b76;
   --warning: #f0a04b;
   --info: #5a9bde;

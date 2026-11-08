@@ -25,6 +25,12 @@ export function ChartGallery() {
       >
         <Chart spec={FIXTURES.comesIn} />
       </GalleryVariant>
+      <GalleryVariant
+        label="palette · warm: the same grid in orange and gray, from the theme's chart-warm tokens"
+        className="block"
+      >
+        <Chart spec={{ ...FIXTURES.comesIn, palette: 'warm' }} />
+      </GalleryVariant>
       <GalleryVariant label="units · each: twelve month tiles" className="block">
         <Chart spec={FIXTURES.months} />
       </GalleryVariant>

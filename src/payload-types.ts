@@ -3045,7 +3045,7 @@ export interface DiagramKeyBlock {
  */
 export interface FigureBlock {
   /**
-   * The large picture. It shows small in the article.
+   * The large picture. It shows small in the article. It does not set the card or link-preview image.
    */
   image: number | Media
   /**
@@ -3106,6 +3106,10 @@ export interface ChartBlock {
    * What the numbers count.
    */
   unit: 'usd' | 'percent' | 'mills' | 'count'
+  /**
+   * The colors the chart is drawn in. Leave empty for the usual ones.
+   */
+  palette?: ('default' | 'warm') | null
   /**
    * When the figures are from: "Mayor’s proposal, October 2026".
    */

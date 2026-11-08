@@ -22,6 +22,7 @@ rich-text fields of each collection: [content types](/docs/reference/content-typ
 - `<Chart … />` and `<FactTabs … />` are written and read with one escaping (`editorial/editorialTag.ts`, `chartMarkdown.ts`, `factTabsMarkdown.ts`); the [agents](/src/modules/agents/README.md)' suggestions use them.
 - Heading text to anchor id (`headingAnchors.ts`): the renderer's heading ids and the "On this page" menu (`articleToc.tsx`) both read it, so they match.
 - A document's first heading becomes a hero title (`splitHeadingFromBody.ts`, used by `src/modules/site/ui/PageHero.tsx`).
+- A chart block has a Colors choice: the usual colors or orange and gray (`palette`, `editorial/chartBaseFields.ts`, #856).
 - A chart part's key comes from its label (`editorial/chartKeys.ts`), so one part links across two groups' legends.
 
 ## Behaviors and events
