@@ -82,12 +82,12 @@ export function guardPromotion(pipeline, verification, curation) {
   const { verifyBelowConfidence = 0.6 } = pipeline.escalation ?? {}
   const blocking = new Set(pipeline.promotionGuard?.blockingFlags ?? [])
   const problems = []
-  if (verification.confidence < verifyBelowConfidence) {
+  if (!(verification.confidence >= verifyBelowConfidence)) {
     problems.push(
-      `verification confidence ${verification.confidence} is below ${verifyBelowConfidence}`,
+      `verification confidence ${verification.confidence} is not at least ${verifyBelowConfidence}`,
     )
   }
-  const flagged = verification.flags.filter((flag) => blocking.has(flag))
+  const flagged = (verification.flags ?? []).filter((flag) => blocking.has(flag))
   if (flagged.length > 0) problems.push(`verification flags: ${flagged.join(', ')}`)
   if (problems.length === 0) return curation
   const reason = `Held for review, not accepted: ${problems.join('; ')}.`
