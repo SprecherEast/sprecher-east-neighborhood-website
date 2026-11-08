@@ -158,18 +158,18 @@ npm run dev                         # → http://localhost:3000
 
 ## Env Vars (all secrets go in `.env.local`, never commit)
 
-| Var                                                                                       | Purpose                                                          |
-| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `PAYLOAD_SECRET`                                                                          | Payload JWT signing (32+ random chars)                           |
-| `DATABASE_URI`                                                                            | `file:./data/payload.db`                                         |
-| `NEXT_PUBLIC_SERVER_URL`                                                                  | `http://localhost:3000` (dev) or production URL                  |
-| `PREVIEW_SECRET`                                                                          | Draft preview URL signing                                        |
-| `SITE_TIMEZONE`                                                                           | IANA timezone for dates (default: `America/Chicago`)             |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`                                  | Robot check on public forms; set both or neither, then rebuild   |
-| `TURNSTILE_ALLOWED_HOSTNAMES`                                                             | Extra hostnames a Turnstile token may come from (optional)       |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_ADDRESS`, `SMTP_FROM_NAME` | Outgoing email; unset `SMTP_HOST` logs emails instead            |
-| `CONTACT_NOTIFY_EMAIL`, `CONTACT_EMAIL_FROM`                                              | Used by the seed only, for the contact form's owner notification |
-| `SEED_PASSWORD`                                                                           | Seed only: the demo user's password (random when unset)          |
+| Var                                                                                       | Purpose                                                                                               |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `PAYLOAD_SECRET`                                                                          | Payload JWT signing (32+ random chars)                                                                |
+| `DATABASE_URI`                                                                            | `file:./data/payload.db`                                                                              |
+| `NEXT_PUBLIC_SERVER_URL`                                                                  | `http://localhost:3000` (dev) or production URL                                                       |
+| `PREVIEW_SECRET`                                                                          | Draft preview URL signing                                                                             |
+| `SITE_TIMEZONE`                                                                           | IANA timezone for dates (default: `America/Chicago`)                                                  |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`                                  | Robot check on public forms; set both, then rebuild (deploy needs both unless `ALLOW_NO_ROBOT_CHECK`) |
+| `TURNSTILE_ALLOWED_HOSTNAMES`                                                             | Extra hostnames a Turnstile token may come from (optional)                                            |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_ADDRESS`, `SMTP_FROM_NAME` | Outgoing email; unset `SMTP_HOST` logs emails instead                                                 |
+| `CONTACT_NOTIFY_EMAIL`, `CONTACT_EMAIL_FROM`                                              | Used by the seed only, for the contact form's owner notification                                      |
+| `SEED_PASSWORD`                                                                           | Seed only: the demo user's password (random when unset)                                               |
 
 System-level env vars (not in .env.local):
 | Var | Purpose |
