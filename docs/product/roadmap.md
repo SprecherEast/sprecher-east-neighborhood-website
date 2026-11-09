@@ -11,7 +11,7 @@ live status:**
 This file lists only the milestones and their epics, as a snapshot. GitHub is the source: this
 command prints the open epics by milestone, and the tables below must match it. Update the tables
 when an epic is added, rescheduled or finished, not as work moves. How the levels fit together is in
-[how we work](../process/project-management.md).
+[how we work](../process/project-management.md) and the [planning model](../process/planning-model.md).
 
 ```bash
 gh api "repos/{owner}/{repo}/issues?labels=epic&state=open&per_page=100" \
