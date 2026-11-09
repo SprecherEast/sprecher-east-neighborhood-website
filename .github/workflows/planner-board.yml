@@ -1,0 +1,55 @@
+name: Planner Board
+
+# Keeps the organization board in step with the work (#941), signed in as the "Sprecher East
+# Planner" app. A new or reopened issue goes into the sprint that is running; an assigned issue,
+# which is how work is claimed, also becomes In progress. In review and Done are GitHub's own board
+# rules. Run it by hand with an issue number to catch up one issue. It checks out and runs only the
+# repository's own main-branch code and never anything from an issue's text.
+
+on:
+  issues:
+    types: [opened, reopened, assigned]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: Issue number to bring up to date
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: planner-board-${{ github.event.issue.number || inputs.issue }}
+  cancel-in-progress: false
+
+jobs:
+  board:
+    name: Move the card
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: scripts
+          sparse-checkout-cone-mode: true
+          persist-credentials: false
+
+      - name: Get a short-lived token as the app
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ vars.PLANNER_APP_ID }}
+          private-key: ${{ secrets.PLANNER_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-issues: read
+          permission-organization-projects: write
+
+      - name: Put the card where the work is
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          REPO: ${{ github.repository }}
+          ISSUE: ${{ github.event.issue.number || inputs.issue }}
+          ACTION: ${{ github.event.action || 'assigned' }}
+        run: node scripts/planner-board.mjs

@@ -185,9 +185,9 @@ For each issue:
   `gh project item-list 1 --owner SprecherEast --format json`,
   `gh project field-list 1 --owner SprecherEast --format json` and
   `gh project view 1 --owner SprecherEast --format json -q .id`. Closing an issue or
-  merging a PR moves the item to Done on its own. A cloud session can't move cards: it comments
-  on the issue which card to move and to which column ("move to In progress"), and the next
-  session on his computer moves it.
+  merging a PR moves the item to Done on its own. Assigning the issue moves its card to In progress
+  by itself (the planner app), so a cloud session only assigns it. If that did not happen, comment
+  which card should move, and the next session on the owner's computer moves it.
 
 ## 5. Weekly report: "what got done this week?"
 
