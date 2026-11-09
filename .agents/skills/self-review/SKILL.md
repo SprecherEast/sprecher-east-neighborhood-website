@@ -63,6 +63,9 @@ each; otherwise do them one after another.
 7. **React and Next.js**: React and Next.js code is checked against the CRITICAL and HIGH rules of
    [`vercel-react-best-practices`](../vercel-react-best-practices/SKILL.md) (waterfalls, bundle
    size, server-side work, data sent to client components).
+8. **Public pages stay fast:** a change to a public page, a query or what ships to the browser
+   follows [Fast by default](../../../docs/guidelines/development.md#fast-by-default-public-pages-first),
+   and a number it moves is explained in the PR.
 
 ### Visual design
 
