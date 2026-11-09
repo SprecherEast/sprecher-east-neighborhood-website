@@ -25,7 +25,7 @@ export const breakdownAdapter: ChartAdapter = {
     return (
       <BreakdownChart
         model={toBreakdown(spec)}
-        squareValue={spec.squareValue}
+        squareValue={spec.squareValue ?? 0}
         titleId={titleId}
         descId={descId}
       />

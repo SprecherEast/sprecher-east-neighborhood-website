@@ -85,7 +85,7 @@ Source: `src/platform/ui/chart/adapters/css/UnitGrid.tsx`
 
 ## `BreakdownChart`
 
-A breakdown (#866): a grid of squares worth a fixed amount each, the key beside it in dollars, then ranked bars with the areas' main pieces nested under them, and the other pieces in one list biggest first. Colour follows size down the page, from orange to green to gray. Only the grid is an image; the key and the bars are text, so a screen reader reads every figure.
+A breakdown (#866): a grid of squares worth a fixed amount each, the key beside it in dollars (both left out when the chart hides its squares), then ranked bars with the areas' main pieces nested under them, and the other pieces in one list biggest first. Colour follows size down the page, from orange to green to gray. Only the grid is an image; the key and the bars are text, so a screen reader reads every figure.
 
 Source: `src/platform/ui/chart/adapters/breakdown/BreakdownChart.tsx`
 

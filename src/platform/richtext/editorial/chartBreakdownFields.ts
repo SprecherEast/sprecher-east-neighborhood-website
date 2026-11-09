@@ -24,11 +24,21 @@ const nameAndDollars = (): Field => ({
 /** The fields of a breakdown chart (#866): what a square is worth, and the areas with their pieces */
 export const chartBreakdownFields = (): Field[] => [
   {
+    name: 'hideSquares',
+    type: 'checkbox',
+    label: 'Hide the squares',
+    admin: {
+      condition: forKinds('breakdown'),
+      description: 'Shows only the ranked bars, with no grid of squares and no key.',
+    },
+  },
+  {
     name: 'squareValue',
     type: 'number',
     min: 0,
     admin: {
-      condition: forKinds('breakdown'),
+      condition: (_data, sibling: { kind?: string | null; hideSquares?: boolean | null }) =>
+        sibling?.kind === 'breakdown' && !sibling?.hideSquares,
       description:
         'What one square stands for, in dollars: 5000000 makes each square $5 million. Pick an amount that gives 20 to 200 squares.',
     },

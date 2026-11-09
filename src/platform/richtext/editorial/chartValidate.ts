@@ -30,6 +30,7 @@ const FIELD_OF = {
   unitNote: 'unitNote',
   groups: 'groups',
   squareValue: 'squareValue',
+  hideSquares: 'hideSquares',
   areas: 'areas',
 } as const satisfies Record<string, string>
 

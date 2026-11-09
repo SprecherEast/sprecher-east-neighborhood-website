@@ -3236,6 +3236,10 @@ export interface ChartBlock {
       }[]
     | null
   /**
+   * Shows only the ranked bars, with no grid of squares and no key.
+   */
+  hideSquares?: boolean | null
+  /**
    * What one square stands for, in dollars: 5000000 makes each square $5 million. Pick an amount that gives 20 to 200 squares.
    */
   squareValue?: number | null

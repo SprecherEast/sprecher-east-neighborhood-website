@@ -71,21 +71,35 @@ export function toChartTable(spec: ChartSpec): ChartTable {
       }
     }
     case 'breakdown': {
-      const { areas, smaller, total } = toBreakdown(spec)
+      const { areas, smaller, total, showSquares } = toBreakdown(spec)
       const percent = (value: number) =>
         formatValue(Number(((value / total) * 100).toFixed(1)), 'percent')
+      // The squares column is left out, with the grid it counts, when the squares are hidden
+      const squaresCell = (cell: string) => (showSquares ? [cell] : [])
       return {
         caption,
         rowHeaders: 2,
-        head: ['Area', 'Piece', 'Squares', UNIT_HEADERS[spec.unit], 'Share (percent)'],
+        head: [
+          'Area',
+          'Piece',
+          ...squaresCell('Squares'),
+          UNIT_HEADERS[spec.unit],
+          'Share (percent)',
+        ],
         rows: areas.flatMap((area) => [
-          [area.label, 'Whole area', String(area.squares), money(area.value), percent(area.value)],
+          [
+            area.label,
+            'Whole area',
+            ...squaresCell(String(area.squares)),
+            money(area.value),
+            percent(area.value),
+          ],
           ...[...area.shown, ...smaller.filter((p) => p.area === area.label)]
             .sort((a, b) => b.value - a.value)
             .map((piece) => [
               area.label,
               piece.label,
-              '',
+              ...squaresCell(''),
               money(piece.value),
               percent(piece.value),
             ]),
@@ -140,8 +154,12 @@ export function toChartSummary(spec: ChartSpec): string {
         )
         .join(' ')}`
     case 'breakdown': {
-      const { areas, squareCount, total } = toBreakdown(spec)
-      return `A grid of ${squareCount} squares, ${say(spec.squareValue, spec.unit)} each, sharing out ${say(total, spec.unit)}: ${list(areas.map((a) => `${a.label} ${say(a.value, spec.unit)}`))}.`
+      const { areas, squareCount, total, showSquares } = toBreakdown(spec)
+      const shares = list(areas.map((a) => `${a.label} ${say(a.value, spec.unit)}`))
+      if (!showSquares || spec.squareValue === undefined) {
+        return `Ranked bars sharing out ${say(total, spec.unit)}: ${shares}.`
+      }
+      return `A grid of ${squareCount} squares, ${say(spec.squareValue, spec.unit)} each, sharing out ${say(total, spec.unit)}: ${shares}.`
     }
     case 'units':
       return spec.groups

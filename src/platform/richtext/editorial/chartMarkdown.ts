@@ -35,7 +35,7 @@ const PROPS: Record<ChartKind, readonly string[]> = {
   bar: [...COMMON, 'scaleMax', 'data'],
   stacked: [...COMMON, 'scaleMax', 'x', 'series', 'rowNotes'],
   units: [...COMMON, 'mode', 'unitNote', 'groups'],
-  breakdown: [...COMMON, 'squareValue', 'areas'],
+  breakdown: [...COMMON, 'squareValue', 'hideSquares', 'areas'],
 }
 /** Charts are drawn horizontally only for now, so the tag has no orientation to write */
 const ORIENTATION = 'orientation'

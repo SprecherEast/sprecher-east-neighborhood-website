@@ -31,6 +31,8 @@ export type BreakdownModel = {
   barScale: number
   total: number
   squareCount: number
+  /** False when the spec hides the grid of squares and its key */
+  showSquares: boolean
   /** Biggest first: the order of the grid, the key and the bars */
   areas: BreakdownArea[]
   /** Every piece not shown under its area, biggest first, coloured by its own rank */
@@ -55,9 +57,10 @@ const stepOf = (rank: number, count: number) =>
  */
 export function toBreakdown(spec: Breakdown): BreakdownModel {
   const total = spec.areas.reduce((sum, area) => sum + area.value, 0)
-  const squareCount = Math.round(total / spec.squareValue)
+  const showSquares = !spec.hideSquares && spec.squareValue !== undefined
+  const squareCount = showSquares ? Math.round(total / (spec.squareValue ?? 1)) : 0
   const ranked = byValueDesc(spec.areas)
-  const counts = toUnitCounts(ranked, squareCount)
+  const counts = showSquares ? toUnitCounts(ranked, squareCount) : ranked.map(() => 0)
   const share = (value: number) => (value / total) * 100
 
   const areas = ranked.map((area, rank): BreakdownArea => {
@@ -99,7 +102,7 @@ export function toBreakdown(spec: Breakdown): BreakdownModel {
   )
   const biggest = Math.max(...areas.map((area) => area.share))
   const barScale = Math.min(BAR_SCALE, 100 / biggest)
-  return { barScale, total, squareCount, areas, smaller }
+  return { barScale, total, squareCount, showSquares, areas, smaller }
 }
 
 /** Bar length as a multiple of the share: 40% is a bar 88% of the track long, the same in every breakdown */
