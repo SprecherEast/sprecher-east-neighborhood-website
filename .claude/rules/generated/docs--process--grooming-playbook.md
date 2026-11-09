@@ -169,6 +169,11 @@ An epic with one child or one pull request of work; an issue larger than the siz
 several pull requests; a milestone with no done test or named for an activity; a sprint-shaped
 milestone; an epic titled as a task. Propose the right layer and how to get there.
 
+For each open milestone, also ask whether it can still be taken in at a glance
+([planning model](/docs/process/planning-model.md#milestone)): too many open issues, or a goal that no longer
+fits one line, means a proposed split. Check that its description and done test still match what
+its issues now do; propose updated wording, and ask the owner first when the goal itself moved.
+
 ### Consistency fixes
 
 - **Parent and milestone:** a child carries its epic's milestone; an epic's milestone matches an
