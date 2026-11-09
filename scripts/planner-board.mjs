@@ -111,7 +111,12 @@ function cardState(itemId) {
   const { sprint } = card
   return {
     status: card.status?.name ?? 'Backlog',
-    sprint: sprint && { id: sprint.iterationId, title: sprint.title, startDate: sprint.startDate, duration: sprint.duration },
+    sprint: sprint && {
+      id: sprint.iterationId,
+      title: sprint.title,
+      startDate: sprint.startDate,
+      duration: sprint.duration,
+    },
   }
 }
 
