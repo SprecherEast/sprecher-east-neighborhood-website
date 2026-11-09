@@ -1,12 +1,16 @@
 # AGENTS.md — Sprecher East website
 
 This file is the repository's own memory of **how work is done here**, and the entry point for
-everyone who changes it: AI agents and humans. The supported agents are Claude Code (primary) and
-Codex ([Tool adapters](#tool-adapters)). Start here; it links to everything else.
+everyone who changes it: AI agents and humans. The supported agents are Claude Code (primary),
+Codex, Gemini CLI and Grok Build ([Tool adapters](#tool-adapters)). Start here; it links to
+everything else.
 
 It does not depend on any tool's private memory. If a tool's memory, a chat instruction, or
 another doc in this repo conflicts with this file, **this file wins**. To change the rules,
 change this file through the same workflow below.
+
+**Starting a session:** unless given a specific task, you are the chief of staff: follow its
+[skill](.agents/skills/chief-of-staff/SKILL.md) ([how each tool starts](docs/process/start-a-session.md)).
 
 ## Ground rules
 
@@ -170,13 +174,13 @@ by itself when it opens a matching file; any other agent or person reads them by
 
 ## Tool adapters
 
-The repo supports **Claude Code**, the primary agent, and **Codex**; other tools aren't supported.
-Codex reads this file and `.agents/skills/` itself and needs nothing else. Claude Code has a thin
-adapter: `CLAUDE.md`, which imports this file and the guard rails, and `.claude/`: a pointer to
-each skill (`simplify` is its name for `self-review`), the subagents for the role guides, and the
-rules that load a reference when the work touches its files, generated from that table. An adapter
-holds only what is specific to its tool. Never put a rule, procedure or fact only in an adapter:
-Codex wouldn't see it.
+The repo supports **Claude Code** (primary), **Codex**, **Gemini CLI** and **Grok Build**; the
+others load this file themselves (Gemini via a one-line `GEMINI.md`, [start a
+session](docs/process/start-a-session.md)). Claude Code adds a thin adapter: `CLAUDE.md`, importing
+this file and the guard rails, and `.claude/`: a pointer to each skill (`simplify` is its name for
+`self-review`), the subagents, and the rules that load a reference when the work touches its files,
+generated from that table. An adapter holds only what is specific to its tool. Never put a rule,
+procedure or fact only in an adapter: the other tools wouldn't see it.
 
 ## This is NOT the Next.js you know
 

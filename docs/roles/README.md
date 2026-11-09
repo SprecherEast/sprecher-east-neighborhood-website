@@ -24,6 +24,7 @@ out a change to one, and a change the owner didn't ask for waits for him
 | Operations Lead            | [`ops-lead`](ops-lead.md)                 | Infrastructure, deployments, the server, operational coordination.       |
 | Quality Assurance Reviewer | [`qa-reviewer`](qa-reviewer.md)           | Checking finished work for quality, consistency and correctness.         |
 | SEO Specialist             | [`seo-specialist`](seo-specialist.md)     | Search, metadata, structured data, discoverability.                      |
+| Worker                     | [`worker`](worker.md)                     | Finishing one Ready issue, from claim to merge.                          |
 | UI Designer                | [`ui-designer`](ui-designer.md)           | Visual polish: designs, visual bugs, brand consistency, effects.         |
 | UX Designer                | [`ux-designer`](ux-designer.md)           | New pages, navigation, content hierarchy, usability problems.            |
 
