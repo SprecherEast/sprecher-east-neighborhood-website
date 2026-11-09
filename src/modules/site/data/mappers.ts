@@ -75,12 +75,19 @@ function isTitleOnly({ enableLink, richText }: StoredColumn): boolean {
   return !enableLink && nodes.length > 0 && nodes.every((node) => node.type === 'heading')
 }
 
-function toContentColumn({ size, richText, enableLink, link }: StoredColumn): ContentColumn {
+function toContentColumn({
+  size,
+  richText,
+  enableLink,
+  link,
+  linkAlign,
+}: StoredColumn): ContentColumn {
   const resolved = enableLink ? resolveLink(link) : null
   return {
     size: size ?? 'full',
     ...(richText && { body: richText }),
     ...(resolved && { link: resolved }),
+    ...(resolved && linkAlign === 'end' && { linkAlign }),
   }
 }
 

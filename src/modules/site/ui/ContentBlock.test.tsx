@@ -35,9 +35,62 @@ describe('ContentBlock', () => {
     const text = screen.getByRole('heading', { name: 'Who we are' }).closest('.border-l-4')
     expect(text?.className).toContain('max-w-prose')
     expect(text?.className).toContain('lg:col-span-12')
+    // No column gap: it would overflow a narrow section item (a half-width item, say)
+    expect(text?.parentElement?.className).not.toMatch(/gap-x-/)
     // The editor's outline look is the secondary button
     expect(screen.getByRole('link', { name: 'Read more' }).className).toContain('border-primary')
     await expectAccessible(container)
+  })
+
+  it.each([
+    ['single', 'full'],
+    ['columns', 'oneThird'],
+  ] as const)(
+    'puts a link button at the end of its column in the %s layout',
+    async (layout, size) => {
+      const link = {
+        href: '/about',
+        label: 'Read more',
+        external: false,
+        appearance: 'outline' as const,
+      }
+      const columns =
+        layout === 'columns'
+          ? [
+              column('Our area', 'twoThirds'),
+              { ...column('Quick facts', size), link, linkAlign: 'end' as const },
+            ]
+          : [{ ...column('Our area', size), link, linkAlign: 'end' as const }]
+      const { container } = render(
+        <main>
+          <ContentBlock layout={layout} columns={columns} />
+        </main>,
+      )
+
+      expect(screen.getByRole('link', { name: 'Read more' }).parentElement?.className).toContain(
+        'justify-end',
+      )
+      await expectAccessible(container)
+    },
+  )
+
+  it('leaves a link button at the start of its column unless told otherwise', () => {
+    const link = {
+      href: '/about',
+      label: 'Read more',
+      external: false,
+      appearance: 'outline' as const,
+    }
+    render(
+      <main>
+        <ContentBlock layout="single" columns={[{ ...column('Our area', 'full'), link }]} />
+      </main>,
+    )
+
+    const wrapper = screen.getByRole('link', { name: 'Read more' }).parentElement
+    expect(wrapper?.className).not.toContain('justify-end')
+    // Either way the button has room above it
+    expect(wrapper?.className).toContain('mt-4')
   })
 
   it('draws text beside a side card', async () => {
