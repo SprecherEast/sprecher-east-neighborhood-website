@@ -91,4 +91,29 @@ describe('Badge', () => {
     expect(screen.getByText('Done').className).toContain('bg-done/10')
     expect(screen.getByText('frontend').className).not.toMatch(/bg-/)
   })
+
+  it('is small by default and has a slightly bigger size with larger words and icon (#952)', () => {
+    render(
+      <>
+        <Badge variant="open">
+          <svg aria-hidden="true" />
+          Open
+        </Badge>
+        <Badge variant="open" size="md">
+          <svg aria-hidden="true" />
+          Done
+        </Badge>
+      </>,
+    )
+
+    const small = screen.getByText('Open')
+    const bigger = screen.getByText('Done')
+    expect(small.className).toContain('text-xs')
+    expect(small.className).toContain('[&_svg]:size-3.5')
+    expect(bigger.className).toContain('text-sm')
+    expect(bigger.className).toContain('[&_svg]:size-4')
+    expect(bigger.className).not.toContain('text-xs')
+    expect(bigger.className).not.toContain('size-3.5')
+    expect(bigger.className).toContain('text-success-strong')
+  })
 })

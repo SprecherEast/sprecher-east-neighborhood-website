@@ -30,6 +30,20 @@ describe('StateBadge', () => {
   })
 })
 
+describe('sizes (#952)', () => {
+  it('makes the state mark slightly bigger and leaves the labels small', () => {
+    render(
+      <>
+        <StateBadge state="open" />
+        <LabelBadges labels={['frontend']} />
+      </>,
+    )
+
+    expect(screen.getByText('Open').className).toContain('text-sm')
+    expect(screen.getByText('frontend').className).toContain('text-xs')
+  })
+})
+
 describe('LabelBadges', () => {
   it('shows labels as plain outlines, without the epic label', () => {
     render(<LabelBadges labels={['epic', 'frontend']} />)

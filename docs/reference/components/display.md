@@ -11,6 +11,7 @@ Source: `src/platform/ui/Badge.tsx`
 **Variants:**
 
 - `variant`: `"category" | "on-image" | "status" | "official" | "current" | "caution" | "neutral" | "open" | "done" | "outline"`
+- `size`: `"sm" | "md"`
 
 | Prop        | Type              | Required | Description |
 | ----------- | ----------------- | -------- | ----------- |

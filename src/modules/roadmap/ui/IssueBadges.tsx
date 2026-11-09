@@ -21,7 +21,7 @@ const STATE_LOOK = {
 export function StateBadge({ state }: { state: PlanIssueState }) {
   const { variant, Icon } = STATE_LOOK[state]
   return (
-    <Badge variant={variant}>
+    <Badge variant={variant} size="md">
       <Icon aria-hidden="true" />
       {STATE_WORDS[state]}
     </Badge>
