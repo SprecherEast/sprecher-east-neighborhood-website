@@ -65,16 +65,16 @@ export function buildPlan({
 
   return {
     generatedAt,
-    milestones: [...milestones].sort(byMilestoneOrder).map(
-      (m): PlanMilestone => ({
+    milestones: [...milestones].sort(byMilestoneOrder).map((m): PlanMilestone => {
+      // A title or description that holds something screened is left out; the milestone stays
+      const shown = isShownPublicly({ labels: [], title: m.title, body: m.description })
+      return {
         ...m,
-        // A description that holds something screened is left out; the milestone itself stays
-        description: isShownPublicly({ labels: [], title: m.title, body: m.description })
-          ? m.description
-          : '',
+        title: shown ? m.title : `Milestone ${m.number}`,
+        description: shown ? m.description : '',
         epics: inMilestone(m.number),
-      }),
-    ),
+      }
+    }),
     unscheduled: shown
       .filter((s) => s.milestoneNumber === null || !known.has(s.milestoneNumber))
       .map((s) => s.epic),

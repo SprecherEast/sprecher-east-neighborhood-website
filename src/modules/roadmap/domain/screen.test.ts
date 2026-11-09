@@ -18,6 +18,15 @@ describe('isShownPublicly', () => {
     expect(isShownPublicly(issue({ labels: ['bug', label] }))).toBe(false)
   })
 
+  it('matches the hidden labels however they are cased or spaced', () => {
+    expect(isShownPublicly(issue({ labels: [' Infra '] }))).toBe(false)
+    expect(isShownPublicly(issue({ labels: ['Needs Owner'] }))).toBe(false)
+  })
+
+  it('hides an issue whose label name holds something screened', () => {
+    expect(isShownPublicly(issue({ labels: ['ask ada@example.com'] }))).toBe(false)
+  })
+
   it('hides a server address in the body or the title', () => {
     expect(isShownPublicly(issue({ body: 'ssh to 203.0.113.7 first' }))).toBe(false)
     expect(isShownPublicly(issue({ title: 'Move 198.51.100.20 behind Caddy' }))).toBe(false)

@@ -12,7 +12,8 @@ const PLUG_AND_PLAY = /plug[\s-]+and[\s-]+play/i
 type Screenable = { labels: string[]; title: string; body: string }
 
 export function isShownPublicly({ labels, title, body }: Screenable): boolean {
-  if (labels.some((label) => (HIDDEN_LABELS as readonly string[]).includes(label))) return false
-  const text = `${title}\n${body}`
+  const names = labels.map((label) => label.trim().toLowerCase())
+  if (names.some((name) => (HIDDEN_LABELS as readonly string[]).includes(name))) return false
+  const text = `${title}\n${body}\n${labels.join('\n')}`
   return !IPV4.test(text) && !EMAIL.test(text) && !PLUG_AND_PLAY.test(text)
 }

@@ -126,6 +126,17 @@ describe('milestone descriptions', () => {
   })
 })
 
+describe('milestone titles', () => {
+  it('shows a neutral name for a title that holds something screened', () => {
+    const plan = buildPlan({
+      generatedAt: NOW,
+      milestones: [milestone(7, { title: 'Move 203.0.113.7', description: 'Fine' })],
+      epics: [],
+    })
+    expect(plan.milestones[0]).toMatchObject({ number: 7, title: 'Milestone 7', description: '' })
+  })
+})
+
 describe('findPlanIssue', () => {
   const plan = buildPlan({
     generatedAt: NOW,

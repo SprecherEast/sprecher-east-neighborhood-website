@@ -38,10 +38,7 @@ export type PlanIssue = {
 
 export type PlanEpic = PlanIssue & { children: PlanIssue[] }
 
-export type PlanMilestone = Omit<RawMilestone, 'number'> & {
-  number: number
-  epics: PlanEpic[]
-}
+export type PlanMilestone = RawMilestone & { epics: PlanEpic[] }
 
 export type Plan = {
   /** When we read the plan from GitHub (an ISO time), so the page can say how fresh it is */
