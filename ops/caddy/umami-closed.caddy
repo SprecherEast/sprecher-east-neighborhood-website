@@ -1,0 +1,7 @@
+# Managed by the website repo (ops/caddy/umami-closed.caddy, #948). ops/install-umami.sh puts this
+# in place of ops/caddy/umami.caddy whenever Umami might be running with its default admin
+# password: before it starts, and when securing it fails. The address answers 503 until the
+# password is replaced and the proxy is put back.
+__UMAMI_HOST__ {
+	respond "Unavailable" 503
+}

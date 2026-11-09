@@ -8,6 +8,7 @@ set -euo pipefail
 
 CRON_FILE="${CRON_FILE:-/etc/cron.d/sprecher-east-backup}"
 BACKUP_SCRIPT="$APP_DIR/current/ops/backup.sh"
+UMAMI_BACKUP_SCRIPT="$APP_DIR/current/ops/backup-umami.sh" # after the site's own backup; does nothing until Umami is installed (#948)
 
 if [ ! -f "$BACKUP_SCRIPT" ]; then
   report "ERROR: $BACKUP_SCRIPT not found, so the daily backup job was not changed"
@@ -27,7 +28,7 @@ cat >"$tmp" <<EOF
 # Managed by ops/install-cron.sh in the website repo; changes here are overwritten on deploy.
 SHELL=/bin/bash
 PATH=$node_dir:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-15 8 * * * root bash $BACKUP_SCRIPT daily >> /var/log/sprecher-east-backup.log 2>&1
+15 8 * * * root bash $BACKUP_SCRIPT daily >> /var/log/sprecher-east-backup.log 2>&1; bash $UMAMI_BACKUP_SCRIPT daily >> /var/log/sprecher-east-backup.log 2>&1
 EOF
 install -m 644 "$tmp" "$CRON_FILE"
 rm -f "$tmp"
