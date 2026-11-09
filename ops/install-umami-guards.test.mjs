@@ -44,6 +44,17 @@ describe('install-umami.sh: the guards before the address opens', () => {
   })
 })
 
+describe('install-umami.sh: the Caddyfile is never replaced by a partial copy', () => {
+  it('adds nothing and leaves the Caddyfile as it was when its copy cannot be written', async () => {
+    const before = h.caddyfile()
+    const { code, out } = await h.install({ STUB_CAT_FAILS: '1' })
+    expect(code).toBe(0)
+    expect(out).toContain('could not be put in place')
+    expect(out).not.toContain('Umami is live')
+    expect(h.caddyfile()).toBe(before)
+  })
+})
+
 describe('install-umami.sh: when Umami counts as secured', () => {
   it('closes the address when Umami runs but its database does not', async () => {
     await h.install()

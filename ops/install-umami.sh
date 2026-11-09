@@ -54,7 +54,7 @@ trap 'on_unexpected_error $LINENO' ERR
 MEMINFO="${MEMINFO:-/proc/meminfo}"
 MIN_FREE_KB="${MIN_FREE_KB:-1048576}" # about 1 GB for Umami and its database; the server has 4 GB
 UP_WAIT="${UP_WAIT:-120}"             # seconds Umami may take to answer after it starts
-UP_TIMEOUT="${UP_TIMEOUT:-900}"       # seconds `compose up` may take, with the image pulls
+UP_TIMEOUT="${UP_TIMEOUT:-600}"       # seconds `compose up` may take, with the image pulls
 PUBLIC_WAIT="${PUBLIC_WAIT:-60}"      # seconds Caddy may take to get the certificate
 MIN_DISK_KB="${MIN_DISK_KB:-2097152}" # about 2 GB for the two images and the first data
 DISK_PATH="${DISK_PATH:-/var/lib/docker}"

@@ -55,7 +55,7 @@ annotation, and none holds a secret value.
    a failed reload restores both), and check that `https://stats.<domain>` answers and rejects the
    default password. No answer within a minute is a warning (the certificate may still be coming).
 
-A failure from step 3 on turns the deploy red with the address closed; the site is already live and
+A failure from step 3 on turns the deploy red with the address closed and the Umami container stopped until the next deploy (even an update of a Umami that was serving); `compose up`, with the image pulls, gets 10 minutes; the site is already live and
 unaffected. Port 3100 is also checked from outside on every deploy.
 
 **Memory caps.** `mem_limit` is 768 MB for Umami and 512 MB for Postgres, so the two stay under about
@@ -80,13 +80,13 @@ key a restored dump can't decrypt the stored two-factor secrets.
 - **Stop it:** in `/var/www/umami`, `docker compose down` (the data stays in the `umami-db-data`
   volume). Revert the pull request; then on the server remove the `import` line and
   `/etc/caddy/sprecher-east-umami.caddy` and reload Caddy. Deleting the volume is a separate,
-  deliberate step. Never start Umami by hand with `docker compose up` (see the next point).
+  deliberate step. (Its full name is `umami_umami-db-data`: the project name, then the volume.) Never start Umami by hand with `docker compose up` (see the next point).
 - **Start it only by re-running the deploy** (Actions → Deploy to VPS → Run workflow), which closes
   the address, replaces the default password and only then opens it. Before any start by hand, run
   `bash /var/www/sprecher-east/current/ops/install-umami.sh` with no secret in the environment: it
   closes the address and then skips, because the secret is missing. Without that, a start on an empty
   database would be public on Umami's default admin password.
-- **Restore a dump** into an empty database, with the address closed as above. Every merge deploys,
+- **Restore a dump** into an empty database. The address is closed by that script only when Umami and its database are not both running, so check first that Umami is stopped. Every merge deploys,
   and a deploy starts Umami, whose first start would create its own tables in the empty database and
   clash with the restore. So restore while no deploy is running and hold merges until it is done
   (Actions → Deploy to VPS). Restore `.env` from its copy, then in `/var/www/umami`:

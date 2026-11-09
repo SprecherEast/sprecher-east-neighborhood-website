@@ -165,9 +165,10 @@ describe('install-umami.sh: other failures', () => {
   })
 
   it('says the address is closed when an unexpected error follows the start', async () => {
-    const { code, out } = await h.install({ STUB_MKTEMP_FAILS: '1' })
+    const { code, out, log } = await h.install({ STUB_MKTEMP_FAILS: '1' })
     expect(code).toBe(1)
     expect(out).toContain('failed unexpectedly')
     expect(out).toContain('its public address is closed')
+    expect(log).toContain('stop umami') // the backstop in the error trap
   })
 })

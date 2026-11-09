@@ -120,6 +120,7 @@ export function setUpUmamiHarness() {
         'exec /bin/cp "$@"',
       ].join('\n'),
     )
+    stub('cat', '[ -n "$STUB_CAT_FAILS" ] && [ "$1" = "$CADDYFILE" ] && exit 1; exec /bin/cat "$@"')
     stub('openssl', '[ -z "$STUB_OPENSSL_FAILS" ] || exit 1; exec /usr/bin/openssl "$@"')
     stub('mktemp', '[ -z "$STUB_MKTEMP_FAILS" ] || exit 1; exec /usr/bin/mktemp "$@"')
     stub(
