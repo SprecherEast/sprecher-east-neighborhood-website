@@ -3,7 +3,8 @@
 # /var/www/umami/.env (root only, never in the repository): the published port, the database
 # password, APP_SECRET and the two-factor key. Change this file in the repository, not on the server.
 #
-# Both containers listen on 127.0.0.1 only; Caddy (ops/caddy/umami.caddy) is the only public way in.
+# Umami is published on 127.0.0.1 only and the database is not published at all; Caddy
+# (ops/caddy/umami.caddy) is the only public way in.
 # Based on the Docker Compose file in Umami's repository and https://docs.umami.is/docs/install.
 name: umami
 
@@ -19,6 +20,10 @@ services:
       TWO_FACTOR_ENCRYPTION_KEY: ${UMAMI_TWO_FACTOR_KEY}
       DISABLE_TELEMETRY: '1'
       DISABLE_UPDATES: '1'
+      # Umami takes a visitor's address from the first of several headers it finds (true-client-ip,
+      # x-real-ip, ...), and Caddy passes those through. Naming the one header Caddy sets itself
+      # means a visitor can't fake it (src/lib/ip.ts in Umami 3.4.1; docs.umami.is, environment variables).
+      CLIENT_IP_HEADER: x-forwarded-for
       # MCP_ENABLED stays off (its default) until the Claude connection is set up (#951).
     depends_on:
       db:

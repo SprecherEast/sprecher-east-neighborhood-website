@@ -130,6 +130,7 @@ ln -s "$APP_DIR/public/media" "$RELEASE/public/media"
 
 # 3. Back up, then migrate. The old release keeps serving during both.
 bash "$RELEASE/ops/backup.sh" pre-deploy || stop "the pre-deploy backup failed"
+export PRE_DEPLOY_BACKUP_DONE=yes # install-umami.sh needs no second one for a first install (#948)
 echo "→ Running database migrations..."
 (cd "$RELEASE" && NODE_OPTIONS=--no-deprecation node_modules/.bin/payload migrate) ||
   stop "the database migrations failed (the pre-deploy backup has the data from before)"

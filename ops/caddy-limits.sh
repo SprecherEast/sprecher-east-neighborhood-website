@@ -22,9 +22,7 @@ on_unexpected_error() {
 }
 trap 'on_unexpected_error $LINENO' ERR
 
-CADDYFILE="${CADDYFILE:-/etc/caddy/Caddyfile}"
 LIMITS_FILE="${LIMITS_FILE:-/etc/caddy/sprecher-east-form-limits.caddy}"
-RELOAD_CADDY="${RELOAD_CADDY:-systemctl reload caddy}"
 APP_PORT="${APP_PORT:-3000}"
 SOURCE="$CODE_DIR/ops/caddy/form-limits.caddy"
 IMPORT_LINE="import $LIMITS_FILE"

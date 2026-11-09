@@ -191,17 +191,20 @@ jobs:
           # shellcheck disable=SC2029 # $RELEASE (a commit hash) is meant to expand here
           printf '%s' "$UMAMI_ADMIN_PASSWORD" | ssh vps "bash /var/www/sprecher-east/releases/$RELEASE/ops/deploy-release.sh --umami-password-stdin"
 
-      - name: Check that port 3000 is closed to the internet (#118)
+      - name: Check that ports 3000 and 3100 are closed to the internet (#118, #948)
         # Also after a failed deploy step: the outside view is what tells a failure apart (#338).
         if: ${{ !cancelled() && steps.order.outputs.skip != 'true' }}
         env:
           HOST: ${{ secrets.VPS_HOST }}
         run: |
-          if timeout 5 bash -c "exec 3<>/dev/tcp/$HOST/3000" 2>/dev/null; then
-            echo "::warning title=Port 3000::reachable from the internet"
-          else
-            echo "::notice title=Port 3000::not reachable from the internet"
-          fi
+          # 3000 is the app, 3100 Umami (UMAMI_PORT in ops/umami-lib.sh; ops/umami.test.mjs checks they agree)
+          for port in 3000 3100; do
+            if timeout 5 bash -c "exec 3<>/dev/tcp/$HOST/$port" 2>/dev/null; then
+              echo "::warning title=Port $port::reachable from the internet"
+            else
+              echo "::notice title=Port $port::not reachable from the internet"
+            fi
+          done
 
       # What a visitor gets, from outside the server (#235): HSTS on the domain, plain HTTP to the
       # domain and to the server's SSH address (VPS_HOST, the IP or its hostname, which the `:80`
