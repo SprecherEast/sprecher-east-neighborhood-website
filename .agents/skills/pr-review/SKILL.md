@@ -183,6 +183,11 @@ its "End-to-end gate" summary in the job log for the decision and the files that
   [`vercel-react-best-practices`](../vercel-react-best-practices/SKILL.md), and shared components
   follow [`vercel-composition-patterns`](../vercel-composition-patterns/SKILL.md). This repo's own
   rules come first where they differ (#424).
+- **Fast by default:** a change to a public page, a query or what ships to the browser follows
+  [Fast by default](../../../docs/guidelines/development.md#fast-by-default-public-pages-first).
+  A number the PR moves is explained, and a budget changed without its reason is **Changes
+  requested**. A performance check that fires gets a verdict in the review: right, false alarm, or
+  a miss when a speed change was not flagged.
 - **Tool-neutral guidance:** a new rule, procedure or fact lands in `AGENTS.md`, `docs/` or
   `.agents/skills/`, never only in the Claude Code adapter (`CLAUDE.md`, `.claude/`), where
   Codex wouldn't see it.

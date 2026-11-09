@@ -98,7 +98,8 @@ Where code goes: [`docs/architecture/`](../architecture/README.md).
 - Images are optimized (WebP preferred, proper sizing)
 - No unnecessary client-side JavaScript
 - Lazy loading on below-fold content
-- Lighthouse scores: target 90+ on all categories
+- The rules in [Fast by default](../guidelines/development.md#fast-by-default-public-pages-first)
+  hold, and the numbers come from the measured budgets, not a fixed score
 
 ## Review Process
 

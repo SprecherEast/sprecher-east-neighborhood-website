@@ -94,6 +94,9 @@ test Payload, Next.js or styling. How: [`references/tests.md`](references/tests.
   says.
 - Use the shared primitives (`Button`, `Field`, `Form`, `Link`, `Media`), not raw `<button>`,
   `<input>` or `<img>`.
+- Public pages first: follow
+  [Fast by default](../../../docs/guidelines/development.md#fast-by-default-public-pages-first)
+  for rendering, queries, client JavaScript and images.
 
 ## Expert guidance for React and Next.js
 

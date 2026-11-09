@@ -159,6 +159,29 @@ Changes that touch CSS, Tailwind classes, HTML structure, or component markup th
 
 Code that "builds without errors" but looks broken on mobile is a bug. The visual QA loop is: change → screenshot → inspect → fix → re-screenshot → commit.
 
+## Fast By Default, Public Pages First
+
+The public site must stay fast for a neighbor on a phone; the admin follows the same rules after
+it. These are principles. Budgets and automatic checks come from a measured baseline, not from
+this page.
+
+- **Render once, serve many.** A public page is static or revalidated and refreshed on save
+  through the existing revalidate hooks. Anything that forces a page to render on every request
+  (cookies, headers, search params, draft mode) needs a reason.
+- **Ask the database only for what the page shows:** `select`, a small `depth`, a `limit`, an
+  index on what is filtered or sorted, no query inside a loop, and independent reads run together.
+- **Ship less JavaScript.** Server components by default, client components as small leaves, heavy
+  and rarely used UI loaded on demand, and no large library for a small job.
+- **Images only through `Media`,** sized for where they show, with only the first visible image
+  loading early.
+- **Measure, don't guess.** A change that moves a measured number says why in the PR.
+- **A mechanical check beats judgment.** Where a free, maintained tool can fail a pull request by
+  itself, use it, and keep our own check for what no tool covers. A red check is fixed by making
+  the page lighter, or by changing its budget in the same PR with the reason.
+
+[`vercel-react-best-practices`](/.agents/skills/vercel-react-best-practices/SKILL.md) is the
+detailed reference for React and Next.js; this section says what is ours.
+
 ## Keep Dependencies Lean
 
 Before adding a new package:
