@@ -33,10 +33,11 @@ on a tool above does the writing.
 
 ## Check it works on the organization's repository
 
-A cloud session writes to GitHub through the Claude GitHub app, which has to be installed on the
-`SprecherEast` organization and allowed on this repository. Without it the session can read the
-plan but every write (issue, comment, label) is refused. The repository is
-`SprecherEast/sprecher-east-neighborhood-website`; the old personal address only redirects to it.
+A cloud session writes to GitHub through the Claude GitHub app, which probably has to be installed
+on the `SprecherEast` organization and allowed on this repository (inferred from a refusal, not
+confirmed). Without it, a write (issue, comment, label) fails with "Resource not accessible by
+integration". To check, ask the session to add a comment to a throwaway issue. The repository is
+`SprecherEast/sprecher-east-neighborhood-website`; the old personal address redirects to it.
 Sessions on the owner's computer use his signed-in `gh` instead and are not affected.
 
 ## What the chief of staff can and cannot do today

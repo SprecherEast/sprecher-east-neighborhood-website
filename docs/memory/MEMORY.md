@@ -5,7 +5,7 @@
 ## Single Source of Truth
 
 - **Strategy docs (private, archived):** GitHub: `boulaajaj/sprecher-east-strategy`, read-only history since #538
-- **Website code (public):** This repo → GitHub: `boulaajaj/sprecher-east-neighborhood-website` (PUBLIC)
+- **Website code (public):** This repo → GitHub: `SprecherEast/sprecher-east-neighborhood-website` (PUBLIC)
 
 ## Project Summary
 

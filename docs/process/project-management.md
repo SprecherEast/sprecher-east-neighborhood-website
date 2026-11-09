@@ -114,9 +114,10 @@ built on 2026-10-21 from the spec in #90 and moved to the organization after.
   (also as not planned), moves it to Done. Moving an item to Done by hand doesn't close the issue.
   Closed items are archived after two weeks.
 - **Access:** changing the board needs the owner's account with the `project` scope: the owner in
-  the web UI, or an agent on his computer signed in with `gh` and that scope. A cloud session reaches the board
-  only through the planner app, and writes issues only where the Claude GitHub app is installed on
-  the organization; without either it reads but cannot write. So it keeps issue state, labels, parents
+  the web UI, or an agent on his computer signed in with `gh` and that scope. A cloud session's GitHub access
+  can be read-only: an error such as "Resource not accessible by integration" means the Claude
+  GitHub app is probably not installed on the organization (not confirmed). The planner app is the
+  route to the board that does not need anyone's computer. Where a cloud session can write issues, it keeps issue state, labels, parents
   and milestones right, say in a comment on the issue which card needs moving (and to which
   column), and let the board's automations do the rest. The next session on his computer moves it.
 - **The planner app:** a GitHub App owned by the organization can read and change the board without
