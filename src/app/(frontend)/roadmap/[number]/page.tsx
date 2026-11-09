@@ -8,8 +8,8 @@ import {
   getPlanIssueFromAddress,
   IssueDetail,
   listPlanIssueNumbers,
+  planIssueMetadata,
 } from '@/modules/roadmap/server'
-import { NOT_INDEXED } from '@/platform/seo/notIndexed'
 import { PageHeader } from '@/platform/ui/PageHeader'
 import { PAGE_SHELL } from '@/platform/ui/layoutSizes'
 
@@ -47,7 +47,6 @@ export default async function PlanIssuePage(args: Args) {
   )
 }
 
-export async function generateMetadata(args: Args): Promise<Metadata> {
-  const issue = await lookup(args)
-  return { title: issue?.title ?? 'Our plan', robots: NOT_INDEXED }
+export async function generateMetadata({ params }: Args): Promise<Metadata> {
+  return planIssueMetadata((await params).number)
 }

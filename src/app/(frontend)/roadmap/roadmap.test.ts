@@ -4,9 +4,14 @@ import { NOT_INDEXED } from '@/platform/seo/notIndexed'
 
 const stub = () => null
 const getPlanIssue = vi.fn()
+const planIssueMetadata = vi.fn(async (value: string) => ({
+  title: `Issue ${value}`,
+  robots: NOT_INDEXED,
+}))
 vi.mock('@/modules/roadmap/server', () => ({
   getPlan: vi.fn(),
   getPlanIssueFromAddress: (value: string) => getPlanIssue(value),
+  planIssueMetadata: (value: string) => planIssueMetadata(value),
   listPlanIssueNumbers: vi.fn(async () => [10, 11]),
   IssueDetail: stub,
   PlanSummary: stub,
@@ -24,12 +29,15 @@ describe('the plan pages', () => {
     expect(metadata.robots).toEqual(NOT_INDEXED)
   })
 
-  it('an issue page asks not to be indexed or followed, and is named for the issue', async () => {
-    getPlanIssue.mockResolvedValue({ number: 11, title: 'Add a page' })
-    const { generateMetadata } = await import('./[number]/page')
-    const metadata = await generateMetadata({ params: Promise.resolve({ number: '11' }) })
-    expect(metadata.robots).toEqual(NOT_INDEXED)
-    expect(metadata.title).toBe('Add a page')
+  it('an issue page and the dialog it opens in return the same metadata, from one function', async () => {
+    const args = { params: Promise.resolve({ number: '11' }) }
+    const page = await import('./[number]/page')
+    const dialog = await import('./@modal/(.)[number]/page')
+    const fromPage = await page.generateMetadata(args)
+    const fromDialog = await dialog.generateMetadata(args)
+    expect(fromDialog).toEqual(fromPage)
+    expect(fromPage).toEqual({ title: 'Issue 11', robots: NOT_INDEXED })
+    expect(planIssueMetadata).toHaveBeenCalledWith('11')
   })
 
   it('an issue page answers 404 for a screened, unknown or malformed number', async () => {
