@@ -59,6 +59,14 @@ An outcome with a clear "done" state that spans several capabilities.
   epics and the issues under them carry the milestone, not the epics alone.
 - **It closes when the done test passes,** not when the issues run out. Closed issues may belong
   to it, and they count toward its progress.
+- **You can take it in at a glance.** The goal fits in one line and the open work is small enough
+  to read through. Past roughly a few dozen open issues, or when the goal no longer fits one line, it
+  may be two outcomes: the chief of staff proposes a split, and the owner decides. There is no hard limit; the test is whether a neighbor could still read it.
+- **The text is living.** When the route changes, the description and done test change with it,
+  and a dated comment on the milestone says what changed and why. A change to the goal, the scope or the
+  done test is proposed to the owner first; fixing wording is not.
+- **A new milestone is proposed, not created.** The chief of staff names it, gives its done test
+  and the issues it would hold, and waits for the owner's yes.
 
 ## Epic
 

@@ -158,6 +158,10 @@ An epic with one child or one pull request of work; an issue larger than the siz
 several pull requests; a milestone with no done test or named for an activity; a sprint-shaped
 milestone; an epic titled as a task. Propose the right layer and how to get there.
 
+For each open milestone, also ask whether it can still be taken in at a glance
+([planning model](planning-model.md#milestone)): too many open issues, or a goal that no longer
+fits one line, means a proposed split.
+
 ### Consistency fixes
 
 - **Parent and milestone:** a child carries its epic's milestone; an epic's milestone matches an
@@ -168,7 +172,8 @@ milestone; an epic titled as a task. Propose the right layer and how to get ther
 
 ### Milestone and epic progress
 
-A milestone's description still matches its scope; open work under a milestone whose due date has
+A milestone's description and done test still match its scope, and a stale one gets proposed
+wording, recorded with a dated comment once approved ([planning model](planning-model.md#milestone)); open work under a milestone whose due date has
 passed is reported with a proposal (re-scope or a new date with a reason), never moved silently;
 as a dated milestone nears, its open items are flagged and their priority raised in the daily sweep;
 an epic whose children are all closed has its acceptance checked; the epic's list matches its
