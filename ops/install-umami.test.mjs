@@ -70,7 +70,7 @@ describe('install-umami.sh: skips, safely', () => {
   it('does not check memory for Umami that is already running', async () => {
     write(h.p('umami/.env'), 'UMAMI_PORT=1\n')
     fs.writeFileSync(h.p('meminfo'), 'MemAvailable: 500000 kB\n')
-    const { code } = await h.install({ STUB_RUNNING: '1' })
+    const { code } = await h.install({ STUB_RUNNING: 'umami db' })
     expect(code).toBe(0)
   })
 })
@@ -119,7 +119,10 @@ describe('install-umami.sh: install', () => {
   it('keeps its secrets, its Caddy line and the password on the next deploy', async () => {
     await h.install()
     const first = h.envFile()
-    const { code, out, log } = await h.install({ STUB_RUNNING: '1', MEMINFO: '/nonexistent' })
+    const { code, out, log } = await h.install({
+      STUB_RUNNING: 'umami db',
+      MEMINFO: '/nonexistent',
+    })
     expect(code).toBe(0)
     expect(h.envFile()).toBe(first)
     expect(out).toContain('Umami updated')

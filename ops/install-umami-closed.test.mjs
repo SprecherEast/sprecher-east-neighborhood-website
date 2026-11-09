@@ -65,13 +65,33 @@ describe('install-umami.sh: never public with the default password', () => {
     const before = fs.readFileSync(h.p('log'), 'utf8')
     const { code, out, log } = await h.install({ RELOAD_CADDY: '/bin/false' })
     expect(code).toBe(1)
-    expect(out).toContain('could not be closed before starting it')
+    expect(out).toContain('could not be closed, so nothing was started')
     expect(log.slice(before.length)).not.toContain(' up ')
+  })
+
+  it('closes it when only the database is running: a database alone is not Umami', async () => {
+    await h.install()
+    h.state.admin = 'umami' // an emptied database, brought up on its own (the restore steps)
+    const { code, log } = await h.install({ STUB_RUNNING: 'db' })
+    expect(code).toBe(0)
+    expect(log).toMatch(/route at up: .*respond "Unavailable" 503/)
+    expect(log).not.toMatch(/route at up: .*reverse_proxy/)
+    expect(h.state.admin).not.toBe('umami')
+    expect(h.route()).toContain('reverse_proxy') // opened again after the password was replaced
+  })
+
+  it('closes it before refusing to start for lack of memory', async () => {
+    await h.install()
+    fs.writeFileSync(h.p('meminfo'), 'MemAvailable: 500000 kB\n')
+    const { code, out } = await h.install()
+    expect(code).toBe(0)
+    expect(out).toContain('memory')
+    closed()
   })
 
   it('does not close the address of Umami that is already running', async () => {
     await h.install()
-    const { code, log } = await h.install({ STUB_RUNNING: '1' })
+    const { code, log } = await h.install({ STUB_RUNNING: 'umami db' })
     expect(code).toBe(0)
     expect(log).toMatch(/route at up: .*reverse_proxy/)
   })
@@ -91,7 +111,7 @@ describe('install-umami.sh: Caddy', () => {
     const before = h.caddyfile()
     const { code, out } = await h.install({ STUB_CADDY_REJECTS: '1' })
     expect(code).toBe(0)
-    expect(out).toContain('did not accept')
+    expect(out).toContain('could not be put in place')
     expect(h.caddyfile()).toBe(before)
     expect(fs.existsSync(h.p('caddy/sprecher-east-umami.caddy'))).toBe(false)
   })
@@ -119,9 +139,35 @@ describe('install-umami.sh: Caddy', () => {
     expect(fs.statSync(h.p('caddy/Caddyfile')).mode & 0o777).toBe(0o644)
   })
 
+  it('adds no import line, and leaves no route file, when the Caddyfile backup cannot be written', async () => {
+    const before = h.caddyfile()
+    const { code, out } = await h.install({ STUB_CP_FAILS: '1' })
+    expect(code).toBe(0)
+    expect(out).toContain('could not be put in place')
+    expect(h.caddyfile()).toBe(before)
+    expect(fs.existsSync(h.p('caddy/sprecher-east-umami.caddy'))).toBe(false)
+  })
+
   it('warns, without failing, when the HTTPS address does not answer yet', async () => {
     const { code, out } = await h.install({ PUBLIC_BASE: 'http://127.0.0.1:1' })
     expect(code).toBe(0)
     expect(out).toContain('did not answer')
+  })
+})
+
+describe('install-umami.sh: other failures', () => {
+  it('writes no empty secret when openssl fails, and starts nothing', async () => {
+    const { code, out, log } = await h.install({ STUB_OPENSSL_FAILS: '1' })
+    expect(code).toBe(1)
+    expect(out).toContain('could not generate its secrets')
+    expect(fs.existsSync(h.p('umami/.env'))).toBe(false)
+    expect(log).not.toContain(' up ')
+  })
+
+  it('says the address is closed when an unexpected error follows the start', async () => {
+    const { code, out } = await h.install({ STUB_MKTEMP_FAILS: '1' })
+    expect(code).toBe(1)
+    expect(out).toContain('failed unexpectedly')
+    expect(out).toContain('its public address is closed')
   })
 })

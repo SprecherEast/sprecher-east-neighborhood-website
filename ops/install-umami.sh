@@ -14,8 +14,9 @@
 #   1. skip (exit 0) when the secret or the stats DNS name is missing, the password is weak, or
 #      Docker is missing; refuse (exit 0, warning) when free memory is short and Umami isn't running
 #   2. back up: the site on a first install (unless this deploy did), Umami's database on updates
-#   3. close the public address if the Caddyfile imports it and Umami isn't running, write
-#      /var/www/umami/.env and compose.yaml, start the containers, wait for Umami on 127.0.0.1
+#   (before 2: close the public address if the Caddyfile imports it and the Umami container isn't
+#   running; a running database alone doesn't count)
+#   3. write /var/www/umami/.env and compose.yaml, start the containers, wait for Umami on 127.0.0.1
 #   4. replace the default admin password with the secret, then check the default is rejected
 #   5. only then put the proxy in place, check it answers over HTTPS and rejects the default
 # A failure from step 3 on exits 1 with the public address closed.
@@ -38,8 +39,11 @@ secured=no # yes once the default admin password is known to be rejected
 on_unexpected_error() {
   [ "$BASH_SUBSHELL" -eq 0 ] || return 0
   trap - ERR
-  if [ "$started" = yes ] && [ "$secured" = no ]; then close_route || true; fi
-  report "ERROR: install-umami.sh failed unexpectedly at line $1; Umami stays closed to the public unless an earlier step reported it open"
+  local state="its public address is as the last successful run left it"
+  if [ "$started" = yes ] && [ "$secured" = no ]; then
+    if close_route; then state="its public address is closed"; else state="its public address could not be closed: see ops/umami/README.md"; fi
+  fi
+  report "ERROR: install-umami.sh failed unexpectedly at line $1; $state"
   exit 1
 }
 trap 'on_unexpected_error $LINENO' ERR
@@ -91,9 +95,17 @@ if ! command -v docker >/dev/null || ! docker compose version >/dev/null 2>&1; t
   exit 0
 fi
 
+# Whether Umami itself runs: a running database alone is not Umami, and starting Umami on a
+# database that came back empty gives it the default admin password.
 was_running=no
-umami_running && was_running=yes
+umami_running umami && was_running=yes
 if [ "$was_running" = no ]; then
+  # Closed whenever it isn't running, even if a skip below ends this run: a start by hand later
+  # must not be public with a default password.
+  close_route || {
+    report "ERROR: Umami's public address could not be closed, so nothing was started"
+    exit 1
+  }
   free_kb=$(awk '$1 == "MemAvailable:" { print $2 }' "$MEMINFO" 2>/dev/null || true)
   if [ "${free_kb:-0}" -lt "$MIN_FREE_KB" ]; then
     report "WARNING: Umami was not started: $((${free_kb:-0} / 1024)) MB of memory is available and it needs about $((MIN_FREE_KB / 1024)) MB"
@@ -109,33 +121,35 @@ if [ "$first_install" = yes ]; then
       exit 1
     }
   fi
-elif [ "$was_running" = yes ]; then
+elif umami_running db; then
   bash "$here/backup-umami.sh" pre-deploy || report "WARNING: the Umami database dump before this update failed; continuing"
 fi
 
-# 3. Closed first: a database that was emptied comes back with Umami's default admin password.
-if [ "$was_running" = no ]; then
-  close_route || {
-    report "ERROR: Umami's public address could not be closed before starting it, so nothing was started"
-    exit 1
-  }
-fi
+# 3. Settings and containers. (The address was closed above if Umami wasn't running.)
 mkdir -p "$UMAMI_DIR"
 chmod 700 "$UMAMI_DIR"
 env_file="$UMAMI_DIR/.env"
 saved() { sed -n "s/^$1=//p" "$env_file" 2>/dev/null | tail -n 1 || true; }
-secret_or_new() { # <name>: the saved value, or a new random one (hex: safe in a URL and a file)
+# The saved value, or a new random one (hex: safe in a URL and a file). Fails rather than prints
+# anything else, so an empty secret is never written.
+secret_or_new() { # <name>
   local value
   value=$(saved "$1")
-  [[ "$value" =~ ^[0-9a-f]{64}$ ]] || value=$(openssl rand -hex 32)
+  [[ "$value" =~ ^[0-9a-f]{64}$ ]] || value=$(openssl rand -hex 32 2>/dev/null || true)
+  [[ "$value" =~ ^[0-9a-f]{64}$ ]] || return 1
   printf '%s' "$value"
+}
+db_password=$(secret_or_new UMAMI_DB_PASSWORD) && app_secret=$(secret_or_new UMAMI_APP_SECRET) &&
+  two_factor_key=$(secret_or_new UMAMI_TWO_FACTOR_KEY) || {
+  report "ERROR: Umami was not $verb: could not generate its secrets (openssl failed); nothing was started"
+  exit 1
 }
 {
   echo "# Written by ops/install-umami.sh on every deploy; the secrets are kept, never printed or committed."
   echo "UMAMI_PORT=$UMAMI_PORT"
-  echo "UMAMI_DB_PASSWORD=$(secret_or_new UMAMI_DB_PASSWORD)"
-  echo "UMAMI_APP_SECRET=$(secret_or_new UMAMI_APP_SECRET)"
-  echo "UMAMI_TWO_FACTOR_KEY=$(secret_or_new UMAMI_TWO_FACTOR_KEY)"
+  echo "UMAMI_DB_PASSWORD=$db_password"
+  echo "UMAMI_APP_SECRET=$app_secret"
+  echo "UMAMI_TWO_FACTOR_KEY=$two_factor_key"
 } >"$env_file.new"
 mv -f "$env_file.new" "$env_file"
 install -m 644 "$here/umami/compose.yaml" "$UMAMI_DIR/compose.yaml"

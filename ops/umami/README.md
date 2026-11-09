@@ -34,8 +34,9 @@ annotation, and none holds a secret value.
    missing. **Refuses with a warning** when under 1 GB of memory is available and Umami isn't running.
 2. A first install relies on the deploy's own `backup.sh pre-deploy`. Later runs dump Umami's database
    first.
-3. If the Caddyfile already imports Umami's route and Umami isn't running, the route is switched to a
-   closed block (503) and Caddy reloaded **before** anything starts: a database that came back empty
+3. If the Caddyfile already imports Umami's route and the Umami container isn't running (a running
+   database alone doesn't count), the route is switched to a closed block (503) and Caddy reloaded
+   **before** anything else, even when memory then stops the run: a database that came back empty
    has Umami's default admin password. Then it writes the settings, starts the containers and waits up
    to 2 minutes for `/api/heartbeat`.
 4. Logs in as `admin`. With the secret's password it is done (a login that asks for the two-factor code
@@ -66,5 +67,11 @@ key a restored dump can't decrypt the stored two-factor secrets.
   volume). Revert the pull request; then on the server remove the `import` line and
   `/etc/caddy/sprecher-east-umami.caddy` and reload Caddy. Deleting the volume is a separate,
   deliberate step. If it is deleted and Umami starts again, the deploy closes the address first.
-- **Restore a dump** into an empty database: restore `.env` from its copy, `docker compose up -d db`,
-  then `gunzip -c <dump> | docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`.
+- **Restore a dump** into an empty database. Every merge deploys, and a deploy starts Umami: it
+  closes the public address first, so nothing is exposed, but Umami's first start would create its own
+  tables in the empty database and clash with the restore. So restore while no deploy is running and
+  hold merges until it is done (Actions → Deploy to VPS). Restore `.env` from its copy, then
+  `docker compose up -d db`, then
+  `gunzip -c <dump> | docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`,
+  then `docker compose up -d` (or let the next deploy do it). If a deploy did start Umami first, drop
+  the volume and begin again.

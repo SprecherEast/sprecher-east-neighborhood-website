@@ -14,44 +14,60 @@ put_back() { # <saved copy or empty>: the route file as it was
 
 # Puts a template's block in the route file, validated before Caddy reloads, and (when asked) adds
 # the import line to the Caddyfile (backed up first). Returns 0 (done, or nothing to change),
-# 3 (no Caddy or Caddyfile), 4 (Caddy did not accept it; nothing changed) or 5 (Caddy would not
-# reload; put back as it was).
+# 3 (no Caddy or Caddyfile), 4 (Caddy did not accept it or a file could not be written; nothing
+# changed) or 5 (Caddy would not reload; put back as it was).
 set_route() { # <template in ops/caddy> <yes|no: add the import line>
   local template="$CODE_DIR/ops/caddy/$1" add_import="$2" stamp new old="" candidate="" changed=no
   if ! command -v caddy >/dev/null || [ ! -f "$CADDYFILE" ]; then return 3; fi
   stamp=$(date -u +%Y%m%dT%H%M%SZ)
   new=$(mktemp "$UMAMI_CADDY_FILE.XXXXXX")
-  sed -e "s|__UMAMI_HOST__|$UMAMI_HOST|" -e "s|__UMAMI_PORT__|$UMAMI_PORT|" -e "s|__HSTS_FILE__|$HSTS_FILE|" "$template" >"$new"
-  chmod 644 "$new"
+  # set -e does not apply here (the callers test the result), so each step that matters is checked.
+  if ! { sed -e "s|__UMAMI_HOST__|$UMAMI_HOST|" -e "s|__UMAMI_PORT__|$UMAMI_PORT|" -e "s|__HSTS_FILE__|$HSTS_FILE|" "$template" >"$new" && chmod 644 "$new"; }; then
+    rm -f "$new"
+    return 4
+  fi
   if [ -f "$UMAMI_CADDY_FILE" ]; then
     old=$(mktemp "$UMAMI_CADDY_FILE.XXXXXX")
-    cp -p "$UMAMI_CADDY_FILE" "$old"
+    if ! cp -p "$UMAMI_CADDY_FILE" "$old"; then
+      rm -f "$new" "$old"
+      return 4
+    fi
   fi
   cmp -s "$new" "$UMAMI_CADDY_FILE" 2>/dev/null || changed=yes
-  mv -f "$new" "$UMAMI_CADDY_FILE"
+  if ! mv -f "$new" "$UMAMI_CADDY_FILE"; then
+    rm -f "$new" "$old"
+    return 4
+  fi
   if [ "$add_import" = yes ] && ! umami_route_imported; then
     changed=yes
     candidate=$(mktemp "$CADDYFILE.XXXXXX")
     { cat "$CADDYFILE"; printf '\n# Umami analytics (ops/install-umami.sh, #948)\n%s\n' "$(import_line)"; } >"$candidate"
     # mktemp makes it root-only; Caddy runs as its own user and must keep reading the Caddyfile
-    chmod --reference="$CADDYFILE" "$candidate"
+    chmod --reference="$CADDYFILE" "$candidate" || changed=failed
     chown --reference="$CADDYFILE" "$candidate" 2>/dev/null || true
   fi
   if [ "$changed" = no ]; then
     rm -f "$old"
     return 0
   fi
-  if ! caddy_accepts "${candidate:-$CADDYFILE}"; then
+  if [ "$changed" = failed ] || ! caddy_accepts "${candidate:-$CADDYFILE}"; then
     put_back "$old"
     [ -z "$candidate" ] || rm -f "$candidate"
     return 4
   fi
   if [ -n "$candidate" ]; then
-    cp -p "$CADDYFILE" "$CADDYFILE.bak-umami-$stamp"
-    mv -f "$candidate" "$CADDYFILE"
+    # The import line goes in only with a backup to come back to, and never without the route file.
+    if ! cp -p "$CADDYFILE" "$CADDYFILE.bak-umami-$stamp" || ! mv -f "$candidate" "$CADDYFILE"; then
+      put_back "$old"
+      rm -f "$candidate"
+      return 4
+    fi
   fi
   if ! $RELOAD_CADDY >/dev/null 2>&1; then
-    [ -z "$candidate" ] || cp -p "$CADDYFILE.bak-umami-$stamp" "$CADDYFILE"
+    if [ -n "$candidate" ] && ! cp -p "$CADDYFILE.bak-umami-$stamp" "$CADDYFILE"; then
+      rm -f "$old" # the import line is still there: the route file must stay so it resolves
+      return 5
+    fi
     put_back "$old"
     $RELOAD_CADDY >/dev/null 2>&1 || true
     return 5
@@ -78,7 +94,7 @@ open_route() {
   case "$status" in
     0) return 0 ;;
     3) report "WARNING: Caddy or $CADDYFILE not found, so Umami's public address was not opened" ;;
-    4) report "WARNING: Caddy did not accept the Umami block, so the public address was left as it was" ;;
+    4) report "WARNING: the Umami block could not be put in place (Caddy did not accept it, or a file could not be written), so the public address was left as it was" ;;
     *)
       report "ERROR: Caddy would not reload with the Umami block; the Caddy files were put back"
       exit 1

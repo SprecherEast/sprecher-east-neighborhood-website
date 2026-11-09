@@ -41,7 +41,7 @@ describe('backup-umami.sh', () => {
 
   it('dumps the database and copies the settings, both root-only', async () => {
     installed()
-    const { code, out } = await h.run('backup-umami.sh', { STUB_RUNNING: '1' })
+    const { code, out } = await h.run('backup-umami.sh', { STUB_RUNNING: 'umami db' })
     expect(code).toBe(0)
     expect(out).toContain('database dump ok')
     const [dump] = dumps('daily')
@@ -61,7 +61,7 @@ describe('backup-umami.sh', () => {
   it('leaves nothing behind when the dump fails', async () => {
     installed()
     const { code, out } = await h.run('backup-umami.sh', {
-      STUB_RUNNING: '1',
+      STUB_RUNNING: 'umami db',
       STUB_DUMP_FAILS: '1',
     })
     expect(code).toBe(1)
@@ -79,7 +79,7 @@ describe('backup-umami.sh', () => {
         write(h.p('backups/umami', `umami-${kind}-2000-01-0${i}T0000Z.${ext}`), 'old')
     }
     write(h.p('backups/umami/umami-other-2000-01-01T0000Z.sql.gz'), 'x')
-    const { code } = await h.run('backup-umami.sh', { STUB_RUNNING: '1' }, [kind])
+    const { code } = await h.run('backup-umami.sh', { STUB_RUNNING: 'umami db' }, [kind])
     expect(code).toBe(0)
     expect(dumps(kind)).toHaveLength(keep)
     expect(envs(kind)).toHaveLength(keep)

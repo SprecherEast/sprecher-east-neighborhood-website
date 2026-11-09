@@ -100,7 +100,7 @@ export function setUpUmamiHarness() {
         'shift; args="$*"; echo "docker $args" >> "$STUB_LOG"',
         'case "$args" in',
         '  version*) exit 0 ;;',
-        '  *" ps "*) [ -z "$STUB_RUNNING" ] || echo abc123 ;;',
+        '  *" ps "*) last="${@: -1}"; case "$last" in umami|db) case " $STUB_RUNNING " in *" $last "*) echo abc123 ;; esac ;; *) [ -z "$STUB_RUNNING" ] || echo abc123 ;; esac ;;',
         '  *" up "*) echo "route at up: $(cat "$STUB_ROUTE_FILE" 2>/dev/null | tr -d "\\n\\t")" >> "$STUB_LOG"; [ -z "$STUB_UP_FAILS" ] ;;',
         '  *" exec "*) [ -z "$STUB_DUMP_FAILS" ] && echo "-- dump" || exit 1 ;;',
         'esac',
@@ -108,6 +108,12 @@ export function setUpUmamiHarness() {
     )
     stub('getent', '[ -z "$STUB_NO_DNS" ]')
     stub('caddy', '[ "$1" != validate ] || [ -z "$STUB_CADDY_REJECTS" ]')
+    stub(
+      'cp',
+      'case "$*" in *bak-umami*) [ -z "$STUB_CP_FAILS" ] || exit 1 ;; esac; exec /bin/cp "$@"',
+    )
+    stub('openssl', '[ -z "$STUB_OPENSSL_FAILS" ] || exit 1; exec /usr/bin/openssl "$@"')
+    stub('mktemp', '[ -z "$STUB_MKTEMP_FAILS" ] || exit 1; exec /usr/bin/mktemp "$@"')
     stub('reload-caddy', 'echo reload >> "$STUB_LOG"')
   })
 
