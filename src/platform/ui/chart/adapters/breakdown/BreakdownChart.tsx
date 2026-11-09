@@ -105,80 +105,82 @@ type Props = {
 }
 
 /**
- * A breakdown (#866): a grid of squares worth a fixed amount each, the key beside it in dollars,
- * then ranked bars with the areas' main pieces nested under them, and the other pieces in one
+ * A breakdown (#866): a grid of squares worth a fixed amount each, the key beside it in dollars
+ * (both left out when the chart hides its squares), then ranked bars with the areas' main pieces nested under them, and the other pieces in one
  * list biggest first. Colour follows size down the page, from orange to green to gray. Only the
  * grid is an image; the key and the bars are text, so a screen reader reads every figure.
  */
 export function BreakdownChart({ model, squareValue, titleId, descId }: Props) {
-  const { areas, smaller, barScale } = model
+  const { areas, smaller, barScale, showSquares } = model
   return (
     <div className="space-y-5">
-      <div className="space-y-3">
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-          <div
-            role="img"
-            aria-labelledby={`${titleId} ${descId}`}
-            className="grid w-50 shrink-0 chart-reveal grid-cols-10 gap-[3px]"
-          >
-            {areas.flatMap((area) =>
-              Array.from({ length: area.squares }, (_, index) => (
-                <span
-                  key={`${area.key}-${index}`}
-                  data-chart-mark={area.key}
-                  className={cn(
-                    'aspect-square rounded-[3px] ramp-edge print-exact',
-                    rampAt(area.step).bg,
-                  )}
-                />
-              )),
-            )}
-          </div>
-          <div className="w-full min-w-0 space-y-1.5">
-            <Text variant="small" as="p" className="font-semibold text-foreground">
-              {KEY_TITLE}:
-            </Text>
-            <ul role="list" aria-label={KEY_TITLE} className="space-y-1.5">
-              {areas.map((area) => (
-                <li
-                  key={area.key}
-                  className="grid grid-cols-[0.875rem_1fr_auto] items-center gap-2.5"
-                >
+      {showSquares && (
+        <div className="space-y-3">
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
+            <div
+              role="img"
+              aria-labelledby={`${titleId} ${descId}`}
+              className="grid w-50 shrink-0 chart-reveal grid-cols-10 gap-[3px]"
+            >
+              {areas.flatMap((area) =>
+                Array.from({ length: area.squares }, (_, index) => (
                   <span
-                    aria-hidden="true"
+                    key={`${area.key}-${index}`}
+                    data-chart-mark={area.key}
                     className={cn(
-                      'size-3.5 rounded-[3px] ramp-edge print-exact',
+                      'aspect-square rounded-[3px] ramp-edge print-exact',
                       rampAt(area.step).bg,
                     )}
                   />
-                  <Text variant="small" as="span" className="text-foreground">
-                    {area.label}
-                  </Text>
-                  <Text
-                    variant="small"
-                    as="span"
-                    className="font-semibold text-foreground tabular-nums"
+                )),
+              )}
+            </div>
+            <div className="w-full min-w-0 space-y-1.5">
+              <Text variant="small" as="p" className="font-semibold text-foreground">
+                {KEY_TITLE}:
+              </Text>
+              <ul role="list" aria-label={KEY_TITLE} className="space-y-1.5">
+                {areas.map((area) => (
+                  <li
+                    key={area.key}
+                    className="grid grid-cols-[0.875rem_1fr_auto] items-center gap-2.5"
                   >
-                    {formatMillions(area.value)}
-                  </Text>
-                </li>
-              ))}
-            </ul>
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        'size-3.5 rounded-[3px] ramp-edge print-exact',
+                        rampAt(area.step).bg,
+                      )}
+                    />
+                    <Text variant="small" as="span" className="text-foreground">
+                      {area.label}
+                    </Text>
+                    <Text
+                      variant="small"
+                      as="span"
+                      className="font-semibold text-foreground tabular-nums"
+                    >
+                      {formatMillions(area.value)}
+                    </Text>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
+          <p className="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className={cn('size-3.5 shrink-0 rounded-[3px] ramp-edge print-exact', rampAt(3).bg)}
+            />
+            <Text variant="small" as="span">
+              <span className="font-semibold text-foreground">
+                = {formatSquareValue(squareValue)}
+              </span>{' '}
+              each. Rounded to whole squares.
+            </Text>
+          </p>
         </div>
-        <p className="flex items-center gap-2">
-          <span
-            aria-hidden="true"
-            className={cn('size-3.5 shrink-0 rounded-[3px] ramp-edge print-exact', rampAt(3).bg)}
-          />
-          <Text variant="small" as="span">
-            <span className="font-semibold text-foreground">
-              = {formatSquareValue(squareValue)}
-            </span>{' '}
-            each. Rounded to whole squares.
-          </Text>
-        </p>
-      </div>
+      )}
       <ul role="list">
         {areas.map((area) => (
           <React.Fragment key={area.key}>

@@ -257,4 +257,20 @@ describe('parseChartSpec: breakdown', () => {
   it('refuses a square so big that the areas could not each get one', () => {
     expect(() => parseChartSpec(breakdownSpec({ squareValue: 100_000_000 }))).toThrow(/square/i)
   })
+
+  it('needs no square value, and ignores one, when the squares are hidden', () => {
+    expect(parseChartSpec(breakdownSpec({ hideSquares: true, squareValue: undefined })).kind).toBe(
+      'breakdown',
+    )
+    expect(parseChartSpec(breakdownSpec({ hideSquares: true, squareValue: 100_000 })).kind).toBe(
+      'breakdown',
+    )
+  })
+
+  it('still needs a square value while the squares show', () => {
+    expect(() => parseChartSpec(breakdownSpec({ squareValue: undefined }))).toThrow(/squareValue/)
+    expect(() =>
+      parseChartSpec(breakdownSpec({ hideSquares: false, squareValue: undefined })),
+    ).toThrow(/squareValue/)
+  })
 })

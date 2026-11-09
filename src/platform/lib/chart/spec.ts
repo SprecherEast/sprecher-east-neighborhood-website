@@ -177,8 +177,10 @@ const breakdownSchema = z
   .object({
     ...baseShape,
     kind: z.literal('breakdown'),
-    /** What one square of the grid stands for, in dollars */
-    squareValue: z.number().finite().positive(),
+    /** What one square of the grid stands for, in dollars; not needed when the squares are hidden */
+    squareValue: z.number().finite().positive().optional(),
+    /** Leaves out the grid of squares and its key, so only the ranked bars show */
+    hideSquares: z.boolean().optional(),
     areas: z.array(areaSchema).min(1).max(CHART_LIMITS.areas),
   })
   .superRefine((spec, ctx) => {
@@ -203,6 +205,13 @@ const breakdownSchema = z
         issue(`${area.label}: its pieces add up to more than the area itself`, ['areas', i])
       }
     })
+    if (spec.hideSquares) return
+    if (spec.squareValue === undefined) {
+      issue('squareValue is needed while the squares show: say what one square stands for', [
+        'squareValue',
+      ])
+      return
+    }
     const squares = Math.round(
       spec.areas.reduce((sum, area) => sum + area.value, 0) / spec.squareValue,
     )

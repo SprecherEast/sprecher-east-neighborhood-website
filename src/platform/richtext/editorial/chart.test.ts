@@ -256,6 +256,12 @@ describe('a breakdown block', () => {
     expect(spec.areas[0].pieces?.[1]).not.toHaveProperty('shown')
   })
 
+  it('keeps the setting that hides the squares, and then needs no square value', () => {
+    const spec = toChartSpec(stored({ ...base, squareValue: null, hideSquares: true }))
+    expect(spec).toMatchObject({ kind: 'breakdown', hideSquares: true })
+    expect(toChartSpec(stored(base))).not.toHaveProperty('hideSquares', true)
+  })
+
   it('refuses an empty square value and an area without a number', () => {
     expect(() => toChartSpec(stored({ ...base, squareValue: null }))).toThrow(/squareValue/)
     expect(() =>

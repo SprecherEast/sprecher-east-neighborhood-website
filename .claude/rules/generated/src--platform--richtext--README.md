@@ -23,7 +23,7 @@ rich-text fields of each collection: [content types](/docs/reference/content-typ
 - Heading text to anchor id (`headingAnchors.ts`): the renderer's heading ids and the "On this page" menu (`articleToc.tsx`) both read it, so they match.
 - A document's first heading becomes a hero title (`splitHeadingFromBody.ts`, used by `src/modules/site/ui/PageHero.tsx`).
 - A chart block has a Colors choice: the usual colors or orange and gray (`palette`, `editorial/chartBaseFields.ts`, #856).
-- A chart can be a breakdown (kind `breakdown`): a square value in dollars and up to seven areas, each with optional pieces; a piece marked Shown sits under its area, the others go in the smaller-pieces list (`editorial/chartBreakdownFields.ts`, #866).
+- A chart can be a breakdown (kind `breakdown`): a square value in dollars (or Hide the squares, for ranked bars only, #943) and up to seven areas, each with optional pieces; a piece marked Shown sits under its area, the others go in the smaller-pieces list (`editorial/chartBreakdownFields.ts`, #866).
 - A chart part's key comes from its label (`editorial/chartKeys.ts`), so one part links across two groups' legends.
 
 ## Behaviors and events

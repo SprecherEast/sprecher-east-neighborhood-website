@@ -62,6 +62,15 @@ describe('breakdownAdapter', () => {
     }
   })
 
+  it('draws only the ranked bars when the squares are hidden: no grid, key or square note', () => {
+    const { container, queryByRole } = draw({ ...FIXTURES.dayToDay, hideSquares: true })
+    expect(container.querySelector('[role="img"]')).toBeNull()
+    expect(queryByRole('list', { name: 'Where the money goes' })).toBeNull()
+    expect(container.textContent).not.toContain('Rounded to whole squares')
+    expect(container.querySelectorAll('[data-breakdown-row]').length).toBeGreaterThan(5)
+    expect(container.textContent).toContain('$195M')
+  })
+
   it('explains what a square is worth, in dollars', () => {
     const { container } = draw(FIXTURES.dayToDay)
     expect(container.textContent).toContain('= $5 million each. Rounded to whole squares.')

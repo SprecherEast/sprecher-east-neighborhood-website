@@ -119,6 +119,16 @@ describe('a breakdown chart', () => {
     expect(names).toContain('General government')
   })
 
+  it('leaves out the squares column and the grid sentence when the squares are hidden', () => {
+    const bars = parseChartSpec({ ...FIXTURES.dayToDay, hideSquares: true })
+    const table = toChartTable(bars)
+    expect(table.head).toEqual(['Area', 'Piece', 'Amount (US dollars)', 'Share (percent)'])
+    expect(table.rows[0]).toEqual(['Public safety & health', 'Whole area', '$194,768,276', '40.8%'])
+    expect(table.rows[1]).toEqual(['Public safety & health', 'Police', '$102,492,663', '21.5%'])
+    expect(toChartSummary(bars)).not.toMatch(/square/i)
+    expect(toChartSummary(bars)).toMatch(/Public safety & health \$194\.8M/)
+  })
+
   it('has one point per area and per piece, the pieces under their area', () => {
     const points = toChartPoints(spec)
     expect(points[0]).toMatchObject({ group: null, label: 'Public safety & health' })

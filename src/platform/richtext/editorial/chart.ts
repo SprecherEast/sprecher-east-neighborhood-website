@@ -109,7 +109,7 @@ function breakdownOf(stored: StoredChart) {
   const keys = keysOf([...areas, ...pieces.flat()])
   let next = areas.length
   return {
-    squareValue: stored.squareValue ?? NaN,
+    ...(stored.hideSquares ? { hideSquares: true } : { squareValue: stored.squareValue ?? NaN }),
     areas: areas.map((area, i) => {
       const own = pieces[i].map((piece) => {
         const key = keys[next++]
@@ -238,6 +238,7 @@ export function fromChartSpec(spec: ChartSpec): StoredChart {
       return {
         ...base,
         squareValue: spec.squareValue,
+        hideSquares: spec.hideSquares === true,
         areas: spec.areas.map((area) => ({
           key: area.key,
           label: area.label,
