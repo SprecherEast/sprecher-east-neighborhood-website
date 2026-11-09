@@ -35,6 +35,7 @@ jobs:
         with:
           sparse-checkout: scripts/planner-rules.mjs
           sparse-checkout-cone-mode: false
+          persist-credentials: false
 
       - name: Get a short-lived token as the app
         id: app
@@ -53,7 +54,9 @@ jobs:
         run: |
           fields=$(gh project field-list "$PROJECT" --owner "$ORG" --format json -q '.totalCount')
           gh project item-list "$PROJECT" --owner "$ORG" --limit 1000 --format json > items.json
-          echo "Read OK: $fields fields, $(jq '.items | length' items.json) cards"
+          cards=$(jq '.items | length' items.json)
+          echo "Read OK: $fields fields, $cards cards"
+          if [ "$cards" -ge 1000 ]; then echo "::warning::Read stopped at the 1000-card limit; raise it"; fi
 
       - name: Check the sprint rule against the real board
         run: node scripts/planner-rules.mjs < items.json
@@ -65,20 +68,29 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          number=$(gh issue list --state all --search "in:title \"$TEST_TITLE\"" --json number -q '.[0].number // empty')
+          number=$(gh issue list --state all --search "$TEST_TITLE in:title" --limit 30 --json number,title -q '[.[] | select(.title == env.TEST_TITLE)] | .[0].number // empty')
           if [ -z "$number" ]; then
             number=$(gh issue create --title "$TEST_TITLE" --body "Created by the Planner App Check workflow to prove the app can write. It is closed again after every run and reused." | grep -o '[0-9]*$')
           else
             gh issue reopen "$number"
           fi
+          echo "TEST_ISSUE=$number" >> "$GITHUB_ENV"
           url="https://github.com/$GH_REPO/issues/$number"
           item=$(gh project item-add "$PROJECT" --owner "$ORG" --url "$url" --format json -q '.id')
+          echo "TEST_ITEM=$item" >> "$GITHUB_ENV"
           project_id=$(gh project view "$PROJECT" --owner "$ORG" --format json -q '.id')
           field=$(gh project field-list "$PROJECT" --owner "$ORG" --format json -q '.fields[] | select(.name=="Status")')
           field_id=$(jq -r '.id' <<<"$field")
           option_id=$(jq -r '.options[] | select(.name=="Backlog") | .id' <<<"$field")
           gh project item-edit --id "$item" --project-id "$project_id" --field-id "$field_id" --single-select-option-id "$option_id"
           echo "Write OK: issue #$number reopened, on the board, Status set to Backlog"
-          gh project item-delete "$PROJECT" --owner "$ORG" --id "$item"
-          gh issue close "$number" --reason "not planned"
-          echo "Cleanup OK: card removed from the board, issue #$number closed"
+
+      - name: Clean up the throwaway issue and its card
+        if: ${{ always() && inputs.write_test }}
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if [ -n "${TEST_ITEM:-}" ]; then gh project item-delete "$PROJECT" --owner "$ORG" --id "$TEST_ITEM"; fi
+          if [ -n "${TEST_ISSUE:-}" ]; then gh issue close "$TEST_ISSUE" --reason "not planned"; fi
+          echo "Cleanup OK: card removed from the board, issue #${TEST_ISSUE:-none} closed"
