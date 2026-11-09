@@ -159,7 +159,7 @@ parallel work when issues don't touch the same files, with no fixed number, and 
 - **In progress is set when work starts,** before the first commit, so the board shows it. In
   review and Done stay automatic.
 - **Assigning the issue moves its card** to In progress, through the planner app (the Access note
-  above), from any device. Where that workflow is not running, a session on the owner's computer
+  above), from any device. An agent never moves a card by hand or by comment: it assigns the issue and the app does the rest. Where that workflow is not running, a session on the owner's computer
   moves the card, and a cloud session says on the issue which card to move.
 
 ## The record on the issue
