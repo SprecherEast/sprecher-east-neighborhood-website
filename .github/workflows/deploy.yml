@@ -183,10 +183,13 @@ jobs:
         if: steps.order.outputs.skip != 'true'
         env:
           RELEASE: ${{ needs.preflight.outputs.redeploy == 'true' && format('{0}-run{1}', github.sha, github.run_id) || github.sha }}
+          UMAMI_ADMIN_PASSWORD: ${{ secrets.UMAMI_ADMIN_PASSWORD }}
         run: |
           [[ "$RELEASE" =~ ^[0-9a-f]{40}(-run[0-9]+)?$ ]] || { echo "::error::bad release name '$RELEASE'"; exit 1; }
+          # The Umami admin password goes over the SSH session's stdin (#948), never into a
+          # command line or file; empty while the secret isn't set, and the script then does nothing.
           # shellcheck disable=SC2029 # $RELEASE (a commit hash) is meant to expand here
-          ssh vps "bash /var/www/sprecher-east/releases/$RELEASE/ops/deploy-release.sh"
+          printf '%s' "$UMAMI_ADMIN_PASSWORD" | ssh vps "bash /var/www/sprecher-east/releases/$RELEASE/ops/deploy-release.sh --umami-password-stdin"
 
       - name: Check that port 3000 is closed to the internet (#118)
         # Also after a failed deploy step: the outside view is what tells a failure apart (#338).

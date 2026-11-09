@@ -11,7 +11,7 @@
 #      database on its first visit, then is cached as usual
 #   5. switch the `current` link atomically and reload the app under PM2 (ops/restart-app.sh)
 #   6. check the site answers through Caddy with this release's build; if not, switch back
-#   7. refresh the backup job and the Caddy settings (request limits, HTTPS), and keep the newest
+#   7. refresh the backup job, the Caddy settings (request limits, HTTPS) and Umami analytics, and keep the newest
 #      $KEEP_RELEASES releases
 #
 # The first run moves the app from the old checkout in $APP_DIR to `current`; the checkout stays
@@ -21,6 +21,13 @@ umask 022
 trap '' HUP # a dropped SSH session must not stop the script between the switch and a switch back
 
 . "$(dirname "$0")/lib.sh"
+
+# The workflow sends the Umami admin password on stdin and says so with this flag (#948), so a
+# run by hand never waits for input. It goes to ops/install-umami.sh only; never an argument.
+umami_admin_password=""
+if [ "${1:-}" = --umami-password-stdin ]; then
+  IFS= read -r -d '' umami_admin_password || true
+fi
 
 RELEASE="$CODE_DIR"
 RELEASES="$APP_DIR/releases"
@@ -166,6 +173,9 @@ failed=0
 bash "$RELEASE/ops/install-cron.sh" || failed=1
 bash "$RELEASE/ops/caddy-limits.sh" || failed=1
 bash "$RELEASE/ops/caddy-https.sh" || failed=1
+# After the Caddy scripts: its block imports the HSTS file caddy-https.sh writes. A missing
+# secret or DNS name is a notice, not a failure.
+UMAMI_ADMIN_PASSWORD="$umami_admin_password" bash "$RELEASE/ops/install-umami.sh" || failed=1
 
 keep="$KEEP_RELEASES"
 [ "$keep" -ge 2 ] 2>/dev/null || keep=2

@@ -25,6 +25,7 @@ export default defineConfig({
       'src/**/*.test.{ts,tsx}',
       '.claude/hooks/**/*.test.mjs',
       '.github/scripts/**/*.test.mjs',
+      'ops/**/*.test.mjs',
       'scripts/**/*.test.mjs',
     ],
     environment: 'node',

@@ -62,6 +62,10 @@ It is an unofficial, AI-assisted initiative (ground rules in [`AGENTS.md`](/AGEN
   `127.0.0.1:3000` only (#118), so visitors reach it through Caddy
 - **Web server**: Caddy (HTTPS on 443 and HTTP on 80, reverse proxy → `127.0.0.1:3000`); request
   body limit on the form endpoints (#124)
+- **Analytics**: Umami (self-hosted, Docker: Umami and Postgres on `127.0.0.1:3100`, in
+  `/var/www/umami`), installed by the deploy at `stats.<domain>` once the GitHub secret
+  `UMAMI_ADMIN_PASSWORD` and the DNS record exist; the default admin password is replaced before
+  Caddy exposes it (`ops/install-umami.sh`, #948, steps in [`ops/README.md`](/ops/README.md))
 - **Backups**: daily, weekly and pre-deploy archives of the database, media and `.env.local` in
   `/var/backups/sprecher-east` (#148); restore steps in [`ops/README.md`](/ops/README.md)
 - **Hostinger API**: Use `$HOSTINGER_API_KEY` env var for snapshots and management
@@ -222,4 +226,4 @@ System-level env vars (not in .env.local):
 ## Connected Tools
 
 - **Slack** (MCP): sprechereast.slack.com, channel #sprecher-east-na (ID: C0AJ124LBB2)
-- **Analytics**: PostHog (planned — cookieless mode, free cloud tier)
+- **Analytics**: Umami, self-hosted (see VPS / Hosting); no tracker on the site yet

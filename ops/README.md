@@ -4,19 +4,21 @@ Scripts the deploy workflow (`.github/workflows/deploy.yml`) runs on the GitHub 
 on the VPS. Nothing here is run by hand during a normal deploy. Changes to the server still follow
 `AGENTS.md`: an `infra` issue first, then a pull request.
 
-| Script              | Where  | What it does                                                                                                                                             | Issue      |
-| ------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `server-facts.sh`   | VPS    | Prints the server's Node version, its public `NEXT_PUBLIC_*` settings and the live commit, for the build                                                 | #245       |
-| `build-release.sh`  | runner | Builds a release in the folder it will run from on the server, with the server's Node and settings, and packs it                                         | #245       |
-| `deploy-release.sh` | VPS    | Checks the release, links the shared files, backs up, migrates, switches `current`, checks the site and switches back if it fails                        | #245       |
-| `rollback.sh`       | VPS    | By hand: puts an earlier release back live                                                                                                               | #245       |
-| `backup.sh`         | VPS    | Archives the database, uploaded media and `.env.local`; keeps 7 daily, 5 weekly, 5 pre-deploy                                                            | #148       |
-| `backup-db.mjs`     | VPS    | Copies the live SQLite database with `VACUUM INTO` and checks the copy                                                                                   | #148       |
-| `install-cron.sh`   | VPS    | Installs the daily backup job (08:15 UTC) in `/etc/cron.d/sprecher-east-backup`                                                                          | #148       |
-| `restart-app.sh`    | VPS    | Reloads the app under PM2; starts it fresh, with a way back, when its start settings change. Listens on `127.0.0.1:3000` only. Deletes old sitemap files | #118, #267 |
-| `caddy-limits.sh`   | VPS    | Caps request bodies on the public form endpoints and `/api/mcp` at Caddy (`caddy/form-limits.caddy`)                                                     | #124       |
-| `caddy-https.sh`    | VPS    | Sends HSTS on the domain (`caddy/hsts.caddy`), and adds a redirect to HTTPS in the plain-HTTP site blocks                                                | #235       |
-| `lib.sh`            | VPS    | Shared helpers: annotations, reading non-secret settings, checking the site through Caddy, the `current` link                                            |            |
+| Script              | Where  | What it does                                                                                                                                                         | Issue      |
+| ------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `server-facts.sh`   | VPS    | Prints the server's Node version, its public `NEXT_PUBLIC_*` settings and the live commit, for the build                                                             | #245       |
+| `build-release.sh`  | runner | Builds a release in the folder it will run from on the server, with the server's Node and settings, and packs it                                                     | #245       |
+| `deploy-release.sh` | VPS    | Checks the release, links the shared files, backs up, migrates, switches `current`, checks the site and switches back if it fails                                    | #245       |
+| `rollback.sh`       | VPS    | By hand: puts an earlier release back live                                                                                                                           | #245       |
+| `backup.sh`         | VPS    | Archives the database, uploaded media and `.env.local`; keeps 7 daily, 5 weekly, 5 pre-deploy                                                                        | #148       |
+| `backup-db.mjs`     | VPS    | Copies the live SQLite database with `VACUUM INTO` and checks the copy                                                                                               | #148       |
+| `install-cron.sh`   | VPS    | Installs the daily backup job (08:15 UTC) in `/etc/cron.d/sprecher-east-backup`                                                                                      | #148       |
+| `restart-app.sh`    | VPS    | Reloads the app under PM2; starts it fresh, with a way back, when its start settings change. Listens on `127.0.0.1:3000` only. Deletes old sitemap files             | #118, #267 |
+| `caddy-limits.sh`   | VPS    | Caps request bodies on the public form endpoints and `/api/mcp` at Caddy (`caddy/form-limits.caddy`)                                                                 | #124       |
+| `caddy-https.sh`    | VPS    | Sends HSTS on the domain (`caddy/hsts.caddy`), and adds a redirect to HTTPS in the plain-HTTP site blocks                                                            | #235       |
+| `install-umami.sh`  | VPS    | Installs and updates Umami analytics in Docker (`umami/compose.yaml`), replaces its default admin password, then exposes it at its own address (`caddy/umami.caddy`) | #948       |
+| `backup-umami.sh`   | VPS    | Dumps Umami's Postgres database; run after the daily backup and before an Umami update                                                                               | #948       |
+| `lib.sh`            | VPS    | Shared helpers: annotations, reading non-secret settings, checking the site through Caddy, the `current` link                                                        |            |
 
 The scripts print `::notice` and `::warning` lines, which appear as annotations on the deploy run
 whether it succeeds or fails, so the result can be read without opening the logs. The deploy log
@@ -60,8 +62,8 @@ started by hand (Actions → Deploy to VPS → Run workflow, on `main`).
    - switches `current` to the release in one step and reloads PM2 (`restart-app.sh`)
    - checks the home page answers 200 through Caddy and `/api/version` reports the new build; if
      not, switches `current` back and reloads
-   - then installs the backup job, applies the Caddy limits and HTTPS settings, and keeps the
-     newest 3 releases
+   - then installs the backup job, applies the Caddy limits and HTTPS settings, installs or
+     updates Umami (below), and keeps the newest 3 releases
      (a release that failed is the first to go)
 
 Until the switch, a failure stops the deploy and the live release keeps serving. The reload is the
@@ -195,6 +197,46 @@ following it until it expires. **To undo the IP redirect,** revert the pull requ
 it, then on the server delete the `redir https://<domain>{uri} 308` lines and run
 `caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy`. Deleting them without
 the revert doesn't last: the next deploy adds them back.
+
+## Umami analytics
+
+`install-umami.sh` runs last among the Caddy scripts (its block imports the HSTS file
+`caddy-https.sh` writes). Umami and its Postgres database run from `umami/compose.yaml`, copied
+to `/var/www/umami/`, both published on `127.0.0.1` only (port 3100, defined once in the script).
+`DISABLE_TELEMETRY` and `DISABLE_UPDATES` are on, `MCP_ENABLED` is left off (#951), and the image
+is pinned to a version (a bump is a one-line pull request; tags: `ghcr.io/umami-software/umami`).
+`/var/www/umami/.env` (root only, never in the repository or the log) holds the generated database
+password, `APP_SECRET` and two-factor key, and is kept between deploys. Umami has its own address,
+`stats.<domain>`, because the prebuilt image can't run under a path (`BASE_PATH` is fixed at build).
+
+The admin password comes from the GitHub secret `UMAMI_ADMIN_PASSWORD`. The workflow sends it over
+the SSH session's stdin (`deploy-release.sh --umami-password-stdin`), never as an argument or file.
+Order, with every step an annotation and no secret value in any:
+
+1. **Skips** (`::notice`, the deploy still succeeds) while the secret or the DNS name `stats.<domain>`
+   is missing (#949); **skips with a warning** for a password under 12 characters or when Docker is
+   missing. **Refuses with a warning** on a first start when under 1 GB of memory is available.
+2. First install: `backup.sh pre-deploy`. Later runs dump Umami's database first.
+3. Writes the settings, starts the containers, waits up to 2 minutes for `/api/heartbeat`.
+4. Logs in as `admin`. With the secret's password it is done; with Umami's documented default it
+   changes the password (`POST /api/me/password`); with neither, someone changed it by hand and it
+   is left. It then checks that the default is rejected. Any other answer fails the deploy.
+5. Only then adds `import /etc/caddy/sprecher-east-umami.caddy` to the end of the Caddyfile (backed
+   up as `Caddyfile.bak-umami-<time>`, validated first; reload failure restores both). It checks
+   that `https://stats.<domain>` answers and rejects the default password. No answer within a
+   minute is a warning (the certificate may still be coming).
+
+A failure from step 2 on turns the deploy red; the site is already live and unaffected.
+
+**Backups.** The daily job (`install-cron.sh`) runs `backup-umami.sh daily` after the site's
+backup: `/var/backups/sprecher-east/umami/umami-daily-<time>.sql.gz`, 7 kept (pre-deploy dumps, 5).
+
+**Roll back.** In `/var/www/umami`, `docker compose down` (the data stays in the `umami-db-data`
+volume); revert the pull request, then on the server remove the `import` line and
+`/etc/caddy/sprecher-east-umami.caddy`, and reload Caddy. Deleting the volume is a separate,
+deliberate step. **Restore a dump:** `docker compose up -d db`, then
+`gunzip -c <dump> | docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`
+into an empty database.
 
 ## Backups
 

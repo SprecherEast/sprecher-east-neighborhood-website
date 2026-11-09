@@ -1,0 +1,12 @@
+# Managed by the website repo (ops/caddy/umami.caddy, #948). ops/install-umami.sh fills in the host
+# and port, copies the result to /etc/caddy/sprecher-east-umami.caddy and imports it from
+# the Caddyfile, but only after Umami's default admin password has been replaced. Change it in
+# the repo, not on the server.
+#
+# Umami has its own address because the prebuilt image cannot run under a path (BASE_PATH is
+# fixed when the image is built). Caddy gets the certificate and redirects plain HTTP by itself.
+# The HSTS rule is the site's own file (ops/caddy/hsts.caddy), so there is one definition of it.
+__UMAMI_HOST__ {
+	import /etc/caddy/sprecher-east-hsts.caddy
+	reverse_proxy 127.0.0.1:__UMAMI_PORT__
+}
