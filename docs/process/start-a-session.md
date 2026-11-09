@@ -15,7 +15,10 @@ How a session begins as the chief of staff, whichever AI tool you use. The rules
 Only Claude Code enforces the chief of staff's limits (no editing, pushing or merging) in its
 agent file. In the other tools they are instructions, so the ruleset and the review stay the real gate.
 
-A session that should only do one task says so in its first message and skips the routine.
+A session that should only do one task says so in its first message and skips the routine. In
+Claude Code the default session cannot edit files: for a task session, start `claude --agent worker`
+(a headless `-p` run also starts as the chief of staff unless given `--agent`). The Grok Build and
+Gemini CLI behavior comes from their own descriptions of what they load and is not yet tried here.
 
 ## Chat apps (ChatGPT, Claude, Gemini, Grok on the web)
 

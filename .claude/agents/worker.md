@@ -4,6 +4,7 @@ description: Does one Ready issue from start to merge: claims it, writes the tes
 tools: Read, Edit, Write, Grep, Glob, Bash, WebFetch, WebSearch, Skill
 model: sonnet
 effort: medium
+isolation: worktree
 ---
 
 You are a worker for Sprecher East. Before anything else, read your role guide,

@@ -41,8 +41,9 @@ Claude Code.
   the key is always used when present, which switches usage from the subscription to API billing
   ([authentication](https://code.claude.com/docs/en/authentication)).
 - **Subagents:** `.claude/agents/` registers each [role guide](/docs/roles/README.md) as a subagent
-  Claude Code can delegate to. Those files only hold Claude Code settings; edit the guide. #695
-  replaces them with one worker that loads the guides as skills.
+  Claude Code can delegate to. Those files only hold Claude Code settings; edit the guide. The
+  `worker` agent does each issue; the role agents stay for direct use until #695 moves the guides
+  into skills. A headless `-p` run in the project also starts as the chief of staff; no workflow does.
 - **Hooks** (#446, in `.claude/settings.json`, scripts and tests in `.claude/hooks/`): after each
   Edit or Write, the file is formatted with Prettier and checked with ESLint in the checkout or
   worktree that holds it, and an error comes back to fix at once. If the file is one a knowledge

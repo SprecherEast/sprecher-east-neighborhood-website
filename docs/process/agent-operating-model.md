@@ -233,17 +233,17 @@ flowchart LR
 
 ## 8. What is built and what is next
 
-| Part                                                            | Status  | Where                          |
-| --------------------------------------------------------------- | ------- | ------------------------------ |
-| Board, issue flow, role guides, skills, hooks, checks           | Built   | [`AGENTS.md`](../../AGENTS.md) |
-| This page and the visual plan                                   | Built   | #692, #721                     |
-| Issue fields, comment header, labels, claim, parallel rule      | Built   | #693, #721                     |
-| Code owners for the rule files                                  | Built   | #694                           |
-| Knowledge layer: lean context, notes, generated reference, sync | Planned | #712, first                    |
-| Chief of staff session, skill, overlap check (piece one)        | Built   | #695, 2026-11-08               |
-| One worker, one reviewer; guides as skills; §6 takes effect     | Planned | #695, later pieces             |
-| Design brief and standards upkeep as procedures                 | Planned | #696                           |
-| Phone, push and the daily sweep (Windows)                       | Planned | #697                           |
-| Feedback loop                                                   | Planned | #698                           |
+| Part                                                             | Status  | Where                          |
+| ---------------------------------------------------------------- | ------- | ------------------------------ |
+| Board, issue flow, role guides, skills, hooks, checks            | Built   | [`AGENTS.md`](../../AGENTS.md) |
+| This page and the visual plan                                    | Built   | #692, #721                     |
+| Issue fields, comment header, labels, claim, parallel rule       | Built   | #693, #721                     |
+| Code owners for the rule files                                   | Built   | #694                           |
+| Knowledge layer: lean context, notes, generated reference, sync  | Planned | #712, first                    |
+| Chief of staff session, skill, overlap check (piece one)         | Built   | #695, 2026-11-08               |
+| One worker agent built (#934); guides as skills; §6 takes effect | Partly  | #695, later pieces             |
+| Design brief and standards upkeep as procedures                  | Planned | #696                           |
+| Phone, push and the daily sweep (Windows)                        | Planned | #697                           |
+| Feedback loop                                                    | Planned | #698                           |
 
 The order is fixed by what each needs: #712, then #695, then #696 to #698.

@@ -89,8 +89,9 @@ request and its issue.
 ## 5. Dispatch brief
 
 One worker per issue, in its own branch and worktree. Post the brief as a `### [STEP]` comment on
-the issue, and pass the same text to the worker. A worker only reads what the brief names, so name
-it.
+the issue, and pass the same text to the worker, which you start with the Agent tool. The claim
+comment names the worker's branch. You also start the fresh reviewer for its pull request: a worker
+starts no agents. A worker only reads what the brief names, so name it.
 
 ```markdown
 ### [STEP] Brief for <issue title>

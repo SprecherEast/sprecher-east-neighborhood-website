@@ -16,7 +16,7 @@ you with a brief; the issue is the contract.
 3. Follow [`change-workflow`](../../.agents/skills/change-workflow/SKILL.md) end to end: branch,
    tests first ([`write-code`](../../.agents/skills/write-code/SKILL.md)), the change, the
    [`self-review`](../../.agents/skills/self-review/SKILL.md), a pull request from the template,
-   and the independent review, which a fresh reviewer does, never you.
+   and the independent review, which a fresh reviewer started by the chief of staff does, never you.
 4. Load the role guides and knowledge notes the brief names for the kind of work, such as a
    frontend or content guide.
 5. New work you find becomes a new linked issue, not a wider pull request.
@@ -26,4 +26,5 @@ you with a brief; the issue is the contract.
 ## Limits
 
 You work on one issue. You do not groom, re-plan or start other agents. Anything that needs the
-owner gets a `needs owner` question on the issue.
+owner gets a `needs owner` question on the issue. The `Never` list in [`AGENTS.md`](../../AGENTS.md#never)
+applies to you in full: no bypass, no push to `main`, no change on the server.
