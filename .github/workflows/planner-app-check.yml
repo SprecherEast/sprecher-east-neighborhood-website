@@ -1,0 +1,84 @@
+name: Planner App Check
+
+# Proves the "Sprecher East Planner" GitHub App works (#903): it signs in with a short-lived token,
+# reads the organization board, and (when asked) writes to one throwaway issue and its card. Run it
+# by hand from the Actions tab. It never runs on its own and touches no code. The app's ID is the
+# repository variable PLANNER_APP_ID; its key is the secret PLANNER_APP_KEY.
+
+on:
+  workflow_dispatch:
+    inputs:
+      write_test:
+        description: Also write to a throwaway issue and its board card, then clean up
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: planner-app-check
+  cancel-in-progress: false
+
+env:
+  ORG: SprecherEast
+  PROJECT: '1'
+  TEST_TITLE: Planner app write test (safe to ignore)
+
+jobs:
+  check:
+    name: Read, write and sprint rule
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: scripts/planner-rules.mjs
+          sparse-checkout-cone-mode: false
+
+      - name: Get a short-lived token as the app
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ vars.PLANNER_APP_ID }}
+          private-key: ${{ secrets.PLANNER_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-issues: write
+          permission-organization-projects: write
+
+      - name: Read the board
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+        run: |
+          fields=$(gh project field-list "$PROJECT" --owner "$ORG" --format json -q '.totalCount')
+          gh project item-list "$PROJECT" --owner "$ORG" --limit 1000 --format json > items.json
+          echo "Read OK: $fields fields, $(jq '.items | length' items.json) cards"
+
+      - name: Check the sprint rule against the real board
+        run: node scripts/planner-rules.mjs < items.json
+
+      - name: Write to a throwaway issue and its card
+        if: ${{ inputs.write_test }}
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          number=$(gh issue list --state all --search "in:title \"$TEST_TITLE\"" --json number -q '.[0].number // empty')
+          if [ -z "$number" ]; then
+            number=$(gh issue create --title "$TEST_TITLE" --body "Created by the Planner App Check workflow to prove the app can write. It is closed again after every run and reused." | grep -o '[0-9]*$')
+          else
+            gh issue reopen "$number"
+          fi
+          url="https://github.com/$GH_REPO/issues/$number"
+          item=$(gh project item-add "$PROJECT" --owner "$ORG" --url "$url" --format json -q '.id')
+          project_id=$(gh project view "$PROJECT" --owner "$ORG" --format json -q '.id')
+          field=$(gh project field-list "$PROJECT" --owner "$ORG" --format json -q '.fields[] | select(.name=="Status")')
+          field_id=$(jq -r '.id' <<<"$field")
+          option_id=$(jq -r '.options[] | select(.name=="Backlog") | .id' <<<"$field")
+          gh project item-edit --id "$item" --project-id "$project_id" --field-id "$field_id" --single-select-option-id "$option_id"
+          echo "Write OK: issue #$number reopened, on the board, Status set to Backlog"
+          gh project item-delete "$PROJECT" --owner "$ORG" --id "$item"
+          gh issue close "$number" --reason "not planned"
+          echo "Cleanup OK: card removed from the board, issue #$number closed"
