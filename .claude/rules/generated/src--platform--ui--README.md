@@ -36,6 +36,8 @@ their props, and which values they share with the CSS. Props, variants and where
 - A `MetaList` value can shrink inside its row, so a clamped or truncated value stays on its line instead of widening the list (`MetaList.tsx`).
 - `FORM_MESSAGES` are the fixed texts for a failed send ("offline", "failed"); each form adds only its own cases (`formMessages.ts`, #204).
 - `ProgressBar` is a native `<progress>` with a required `label` for screen readers; its fill comes from the element's own value (no inline style), a value is kept between 0 and `max`, and a `max` of 0 shows an empty bar. Callers always write the numbers beside it (`ProgressBar.tsx`, #939).
+- `Dialog` is a full-screen `sheet` by default; `placement="center"` is a panel over a dimmed page. `RouteDialog` is an always-open centered `Dialog` for an intercepted route: its close button, back button and Escape all call `router.back()` (`Dialog.client.tsx`, `RouteDialog.client.tsx`, #946).
+- `Badge` has `open` (green) and `done` (purple) marks, each with words and an icon from the caller, and `outline` for a plain label (`Badge.tsx`, #946).
 - `Alert` announces itself unless `live={false}`: errors interrupt, other tones wait their turn (`Alert.tsx`); the `info` tone is blue, from the `info` and `info-strong` theme tokens (#818).
 
 ## Shared pieces it uses
@@ -50,7 +52,7 @@ their props, and which values they share with the CSS. Props, variants and where
 - The registry's order and the text fallback: `chart/chartRegistry.test.ts`; every adapter's markup (no `style`, no colour literals, real text, axe): `chart/chartAdapter.contract.test.tsx`.
 - Chart libraries stay in the adapters: `chart/chartLibraries.lint.test.ts`; the browser never gets a library or the spec rules through the zoom: `chart/ChartZoom.imports.test.ts`.
 - Chart colours, the six-part limit and the seven-step ramp: `chart/chartPalette.test.ts`; the breakdown: `chart/adapters/breakdown/breakdownAdapter.test.tsx`.
-- Each component's behavior and accessibility: its `*.test.tsx` beside it (`Button`, `Link`, `Field.client`, `LoadMore.client`, `MapEmbed.client`, `AdminBar.client`, `OnThisPage.client`, `Dialog.client`, `Toast`, `ProgressBar` and others).
+- Each component's behavior and accessibility: its `*.test.tsx` beside it (`Button`, `Link`, `Field.client`, `LoadMore.client`, `MapEmbed.client`, `AdminBar.client`, `OnThisPage.client`, `Dialog.client`, `Toast`, `ProgressBar`, `RouteDialog.client` and others).
 
 ## Boundaries
 

@@ -75,4 +75,20 @@ describe('Badge', () => {
     expect(container.firstElementChild?.className).toContain('flex-wrap')
     await expectAccessible(container)
   })
+
+  it('marks work that is open in green, finished in purple, and a label as a plain outline (#946)', () => {
+    render(
+      <>
+        <Badge variant="open">Open</Badge>
+        <Badge variant="done">Done</Badge>
+        <Badge variant="outline">frontend</Badge>
+      </>,
+    )
+
+    expect(screen.getByText('Open').className).toContain('text-success-strong')
+    expect(screen.getByText('Open').className).toContain('bg-success/10')
+    expect(screen.getByText('Done').className).toContain('text-done-strong')
+    expect(screen.getByText('Done').className).toContain('bg-done/10')
+    expect(screen.getByText('frontend').className).not.toMatch(/bg-/)
+  })
 })

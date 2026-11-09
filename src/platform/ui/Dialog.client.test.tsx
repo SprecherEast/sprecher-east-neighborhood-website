@@ -62,4 +62,18 @@ describe('Dialog', () => {
     await userEvent.keyboard('{Escape}')
     expect(document.body.hasAttribute('data-scroll-locked')).toBe(false)
   })
+
+  it('can be a centered panel over the page, not the whole screen (#946)', async () => {
+    render(
+      <Dialog open onOpenChange={() => {}} title="An issue" placement="center">
+        <p>Its text</p>
+      </Dialog>,
+    )
+
+    const dialog = screen.getByRole('dialog', { name: 'An issue' })
+    expect(dialog.className).toContain('rounded-2xl')
+    expect(dialog.className).not.toContain('inset-0')
+    expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy()
+    await expectAccessible(document.body)
+  })
 })

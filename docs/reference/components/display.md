@@ -10,7 +10,7 @@ Source: `src/platform/ui/Badge.tsx`
 
 **Variants:**
 
-- `variant`: `"category" | "on-image" | "status" | "official" | "current" | "caution" | "neutral"`
+- `variant`: `"category" | "on-image" | "status" | "official" | "current" | "caution" | "neutral" | "open" | "done" | "outline"`
 
 | Prop        | Type              | Required | Description |
 | ----------- | ----------------- | -------- | ----------- |
@@ -142,7 +142,7 @@ Source: `src/platform/ui/Text.tsx`
 **Used by** (direct imports):
 
 - Modules: `directory`, `events`, `news`, `roadmap`, `site`
-- Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/resources`, `/roadmap/[number]`
+- Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/resources`
 - Platform: `platform/richtext`, `platform/ui`
 
 ## `Caption`

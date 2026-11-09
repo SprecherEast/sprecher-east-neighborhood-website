@@ -17,7 +17,10 @@ import { cn } from '@/platform/lib/cn'
  * editorial timeline (#507), each with its own words: `current` (primary-foreground on the primary
  * fill, the button pair) for what's next; `caution` (warning-strong on the warning tint, `Alert`'s
  * warning pair) for what depends on something else; `neutral` (muted-foreground on muted) for what
- * is expected later. Every pair is one the theme contract checks.
+ * is expected later. `open` (success-strong on the success tint) and `done` (done-strong on the
+ * done tint, purple) mark whether work is under way or finished, each with its own words and
+ * icon (#946); `outline` is a label with no fill, so a state mark stands out beside it. Every pair
+ * is one the theme contract checks.
  */
 const badgeVariants = cva(
   'inline-flex max-w-full items-center gap-1 rounded-full px-3 py-1 text-xs font-medium [overflow-wrap:anywhere] [&_svg]:size-3.5 [&_svg]:shrink-0',
@@ -33,6 +36,9 @@ const badgeVariants = cva(
         current: 'bg-primary-fill font-semibold text-primary-foreground',
         caution: 'border border-warning/40 bg-warning/10 font-semibold text-warning-strong',
         neutral: 'border border-border bg-muted text-muted-foreground',
+        open: 'border border-success/40 bg-success/10 font-semibold text-success-strong',
+        done: 'border border-done/40 bg-done/10 font-semibold text-done-strong',
+        outline: 'border border-border font-normal text-muted-foreground',
       },
     },
     defaultVariants: { variant: 'category' },

@@ -43,6 +43,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --color-success: var(--success);
+  --color-done: var(--done);
   --color-warning: var(--warning);
   --color-info: var(--info);
   --color-error: var(--error);
@@ -56,6 +57,8 @@
   --color-destructive-strong: var(--destructive-strong);
   --color-warning-strong: var(--warning-strong);
   --color-info-strong: var(--info-strong);
+  --color-success-strong: var(--success-strong);
+  --color-done-strong: var(--done-strong);
   --color-on-image: var(--on-image);
   --color-scrim: var(--scrim);
   --color-diagram-marker: var(--diagram-marker);
