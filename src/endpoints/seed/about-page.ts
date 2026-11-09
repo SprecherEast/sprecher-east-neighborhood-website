@@ -79,13 +79,16 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
               linkNode('Here’s the story so far', '/posts/sprecher-east-is-coming-together'),
               text('.'),
             ),
-            paragraph(
-              text('Curious what we’re working on? '),
-              linkNode('See our plan', ROADMAP_PATH),
-              text('.'),
-            ),
           ]),
           size: 'full',
+          // The same link button the live page has, the only link to the plan (#953)
+          enableLink: true,
+          link: {
+            type: 'custom',
+            appearance: 'outline',
+            label: 'See our progress',
+            url: ROADMAP_PATH,
+          },
         },
       ],
     },
