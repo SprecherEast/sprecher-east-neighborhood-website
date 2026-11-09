@@ -118,6 +118,12 @@ built on 2026-10-21 from the spec in #90.
   sessions can't reach a board on a personal account, so they keep issue state, labels, parents
   and milestones right, say in a comment on the issue which card needs moving (and to which
   column), and let the board's automations do the rest. The next session on his computer moves it.
+- **The planner app:** a GitHub App owned by the organization can read and change the board without
+  anyone's computer, signing in with a short-lived token made from a key kept only as a repository
+  secret. The `Planner App Check` workflow, run by hand, proves it can read the board and write to
+  one throwaway issue and its card. One rule guards sprint history: work that finished in a sprint
+  keeps that sprint, and only unfinished work moves forward (GitHub has no setting that locks it,
+  so the app's code enforces it).
 
 ## Grooming and work in progress
 
