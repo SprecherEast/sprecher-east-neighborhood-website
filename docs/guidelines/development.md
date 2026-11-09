@@ -161,7 +161,7 @@ this page.
   itself, use it, and keep our own check for what no tool covers. A red check is fixed by making
   the page lighter, or by changing its budget in the same PR with the reason.
 
-[`vercel-react-best-practices`](/.agents/skills/vercel-react-best-practices/SKILL.md) is the
+[`vercel-react-best-practices`](../../.agents/skills/vercel-react-best-practices/SKILL.md) is the
 detailed reference for React and Next.js; this section says what is ours.
 
 ## Keep Dependencies Lean
