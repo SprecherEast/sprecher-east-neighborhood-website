@@ -14,7 +14,7 @@ source of truth: answer from it, never from memory or chat history.
 
 The commands use the REST API through `gh api`, which works in cloud sessions too (`gh issue` and
 `gh pr` subcommands use GraphQL, which some sandboxes block). In this repo, `{owner}/{repo}` is
-`boulaajaj/sprecher-east-neighborhood-website`. List calls return at most 100 items, so loop over
+`SprecherEast/sprecher-east-neighborhood-website`. List calls return at most 100 items, so loop over
 `&page=N` as in §3 when a list can be longer; `--paginate` fails in some sandboxes.
 
 ## 1. Before starting an issue
@@ -79,7 +79,7 @@ For each issue:
 
 4. On the owner's computer, the board is the authority on what's in the sprint. Read the current
    sprint with
-   `gh project item-list 2 --owner boulaajaj --limit 1000 --query "sprint:@current" --format json`.
+   `gh project item-list 1 --owner SprecherEast --limit 1000 --query "sprint:@current" --format json`.
    That needs `gh` signed in with the `project` scope. Cloud sessions can't reach the board, so
    say that the answer comes from the milestone instead.
 
@@ -162,7 +162,7 @@ For each issue:
   names its branch and never claims anything itself
   ([the record on the issue](../../../docs/process/project-management.md#the-record-on-the-issue)):
   1. Overlap check, if anything is already In progress: list it with
-     `gh project item-list 2 --owner boulaajaj --limit 1000 --format json --jq '.items[]|select(.status=="In progress")|.content.number'`
+     `gh project item-list 1 --owner SprecherEast --limit 1000 --format json --jq '.items[]|select(.status=="In progress")|.content.number'`
      (`--limit` matters: the default stops at 30 items). Read each one's **Files likely touched**
      and compare with this issue's and with the shared hot spots. A shared file or hot spot, or a
      blocker between them, means wait.
@@ -182,9 +182,9 @@ For each issue:
   with a `[SCOPE]` comment on the original. Don't widen the current PR.
 - **Set In progress when work starts, before the first commit.** On the owner's computer, move the
   board's **Status** (`In progress`; `In review` and Done are automatic) with `gh project item-edit`. It needs the item, project, field and option IDs: get them from
-  `gh project item-list 2 --owner boulaajaj --format json`,
-  `gh project field-list 2 --owner boulaajaj --format json` and
-  `gh project view 2 --owner boulaajaj --format json -q .id`. Closing an issue or
+  `gh project item-list 1 --owner SprecherEast --format json`,
+  `gh project field-list 1 --owner SprecherEast --format json` and
+  `gh project view 1 --owner SprecherEast --format json -q .id`. Closing an issue or
   merging a PR moves the item to Done on its own. A cloud session can't move cards: it comments
   on the issue which card to move and to which column ("move to In progress"), and the next
   session on his computer moves it.
