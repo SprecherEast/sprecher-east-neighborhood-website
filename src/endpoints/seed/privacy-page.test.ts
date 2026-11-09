@@ -32,6 +32,7 @@ describe('Privacy page seed (#950)', () => {
     for (const item of [
       'title',
       'browser',
+      'device',
       'system',
       'screen size',
       'language',
@@ -39,6 +40,14 @@ describe('Privacy page seed (#950)', () => {
       'delete',
     ]) {
       expect(words).toContain(item)
+    }
+    expect(words).toContain('We keep these notes until we delete them')
+    expect(words).not.toContain('keep the counts')
+  })
+
+  it('keeps every sentence to 25 words or fewer', () => {
+    for (const sentence of words.split(/(?<=[.!])\s+/)) {
+      expect(sentence.trim().split(/\s+/).length).toBeLessThanOrEqual(25)
     }
   })
 

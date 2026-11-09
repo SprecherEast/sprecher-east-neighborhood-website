@@ -21,7 +21,7 @@ export const privacyPage: () => RequiredDataFromCollectionSlug<'pages'> = () => 
               'We count visits to see which pages help neighbors. The counter runs on our own server and sets no cookies. It keeps no names, emails or IP addresses, and ignores anything after a ? in a page address.',
             ),
             p(
-              'Each visit notes the page and its title, where you came from, your browser, system, screen size and language, and your country, region and city. If your browser sends Do Not Track, we don’t count you. We keep the counts until we delete them.',
+              'Each visit notes the page and its title, where you came from, and your country, region and city. It also notes your browser, device, system, screen size and language. If your browser sends Do Not Track, we don’t count you. We keep these notes until we delete them.',
             ),
           ]),
           size: 'full',

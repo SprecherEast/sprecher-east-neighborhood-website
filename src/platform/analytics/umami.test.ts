@@ -19,7 +19,17 @@ describe('umamiConfig (#950)', () => {
     expect(config?.domains).toBe('www.sprechereast.com,sprechereast.com')
   })
 
-  it.each([undefined, '', '  ', 'not-an-id'])('counts nothing for the ID %j', (id) => {
+  it.each([
+    undefined,
+    '',
+    '  ',
+    'not-an-id',
+    // The same values the deploy preflight refuses (.github/scripts/umami-id-gate.test.mjs)
+    '------------------------------------',
+    'a969368e-4514-4aa9-828a-fb0cd9d8330',
+    'a969368e45144aa9828afb0cd9d8330b0000',
+    'g969368e-4514-4aa9-828a-fb0cd9d8330b',
+  ])('counts nothing for the ID %j', (id) => {
     expect(umamiConfig(id, 'https://sprechereast.com')).toBeNull()
   })
 
