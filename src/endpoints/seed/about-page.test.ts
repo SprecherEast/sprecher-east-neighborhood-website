@@ -84,10 +84,24 @@ describe('About page seed (#764)', () => {
     }
   })
 
-  it('links our plan from the paragraph about how AI helps, so neighbors can see what we work on', () => {
-    const block = JSON.stringify(layout[1])
-    expect(block).toContain(`"url":"${ROADMAP_PATH}"`)
-    expect(textOf(layout[1]).join(' ')).toContain('See our plan')
+  it('links our plan with an outline button in the How AI helps column, as the live page does (#953)', () => {
+    const [column] = (layout[1] as { columns: Record<string, unknown>[] }).columns
+    expect(column.enableLink).toBe(true)
+    expect(column.link).toEqual({
+      type: 'custom',
+      appearance: 'outline',
+      label: 'See our progress',
+      url: ROADMAP_PATH,
+    })
+    expect(ROADMAP_PATH).toBe('/roadmap')
+  })
+
+  it('has no plain-text line about the plan, and no other link to it', () => {
+    expect(textOf(page).join(' ')).not.toMatch(/See our plan|Curious what we/)
+    const links = JSON.stringify(page).match(/"url":"\/roadmap"/g) ?? []
+    expect(links).toHaveLength(1)
+    expect(JSON.stringify(layout[0])).not.toContain(ROADMAP_PATH)
+    expect(JSON.stringify(layout[2])).not.toContain(ROADMAP_PATH)
   })
 
   it('keeps the story link and drops the subdivisions that have no source', () => {
