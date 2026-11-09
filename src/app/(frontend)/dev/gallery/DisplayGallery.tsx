@@ -1,10 +1,8 @@
-import { ArrowRight, CircleDashed, CircleX, Clock, Landmark } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import React from 'react'
 
-import { CERTAINTIES } from '@/platform/lib/certainty'
-import { Badge, BadgeList } from '@/platform/ui/Badge'
+import { Badge } from '@/platform/ui/Badge'
 import { Button } from '@/platform/ui/Button'
-import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { Card, CardBody, CardFooter, CardMedia, CardMeta, CardTitle } from '@/platform/ui/Card'
 import { CardGrid, CardGridItem } from '@/platform/ui/CardGrid'
 import { DateTime } from '@/platform/ui/DateTime'
@@ -15,6 +13,7 @@ import { Media } from '@/platform/ui/Media'
 import { MetaList } from '@/platform/ui/MetaList'
 import { Text } from '@/platform/ui/Text'
 
+import { BadgeGallery } from './BadgeGallery'
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 import {
   SAMPLE_DATE_TIME,
@@ -33,54 +32,7 @@ const META_VARIANTS = ['inline', 'stacked'] as const
 export function DisplayGallery() {
   return (
     <>
-      <GalleryEntry name="Badge">
-        <GalleryVariant label="category">
-          <BadgeList>
-            <Badge>Parks</Badge>
-            <Badge variant="category">Community meeting</Badge>
-          </BadgeList>
-        </GalleryVariant>
-        <GalleryVariant label="on-image (on the photo of PageHeader · image)">
-          <div className="rounded-2xl bg-scrim p-6">
-            <Badge variant="on-image">Events</Badge>
-          </div>
-        </GalleryVariant>
-        <GalleryVariant label="CertaintyBadge: confirmed, estimate, unknown (key facts, chart captions)">
-          <BadgeList>
-            {CERTAINTIES.map((certainty) => (
-              <CertaintyBadge key={certainty} certainty={certainty} />
-            ))}
-          </BadgeList>
-        </GalleryVariant>
-        <GalleryVariant label="status (a cancelled event, #122)">
-          <Badge variant="status">
-            <CircleX aria-hidden="true" />
-            Cancelled
-          </Badge>
-        </GalleryVariant>
-        <GalleryVariant label="official (an official meeting, #122)">
-          <Badge variant="official">
-            <Landmark aria-hidden="true" />
-            Official meeting
-          </Badge>
-        </GalleryVariant>
-        <GalleryVariant label="current, caution, neutral (a timeline step, #507)">
-          <BadgeList>
-            <Badge variant="current">
-              <ArrowRight aria-hidden="true" />
-              Next up
-            </Badge>
-            <Badge variant="caution">
-              <CircleDashed aria-hidden="true" />
-              Depends
-            </Badge>
-            <Badge variant="neutral">
-              <Clock aria-hidden="true" />
-              Later
-            </Badge>
-          </BadgeList>
-        </GalleryVariant>
-      </GalleryEntry>
+      <BadgeGallery />
 
       <GalleryEntry name="Card" description="A box with parts; looks are variants.">
         <GalleryVariant label="variant" className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-4">

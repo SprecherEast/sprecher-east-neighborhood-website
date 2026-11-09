@@ -20,10 +20,11 @@ import { cn } from '@/platform/lib/cn'
  * is expected later. `open` (success-strong on the success tint) and `done` (done-strong on the
  * done tint, purple) mark whether work is under way or finished, each with its own words and
  * icon (#946); `outline` is a label with no fill, so a state mark stands out beside it. Every pair
- * is one the theme contract checks.
+ * is one the theme contract checks. `size` is `sm` (the default) or `md`, slightly bigger words and
+ * icon for a mark that must stand out among small labels (#952).
  */
 const badgeVariants = cva(
-  'inline-flex max-w-full items-center gap-1 rounded-full px-3 py-1 text-xs font-medium [overflow-wrap:anywhere] [&_svg]:size-3.5 [&_svg]:shrink-0',
+  'inline-flex max-w-full items-center gap-1 rounded-full px-3 py-1 font-medium [overflow-wrap:anywhere] [&_svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -40,8 +41,12 @@ const badgeVariants = cva(
         done: 'border border-done/40 bg-done/10 font-semibold text-done-strong',
         outline: 'border border-border font-normal text-muted-foreground',
       },
+      size: {
+        sm: 'text-xs [&_svg]:size-3.5',
+        md: 'py-1.5 text-sm [&_svg]:size-4',
+      },
     },
-    defaultVariants: { variant: 'category' },
+    defaultVariants: { variant: 'category', size: 'sm' },
   },
 )
 
@@ -50,8 +55,8 @@ export type BadgeProps = VariantProps<typeof badgeVariants> & {
   children: React.ReactNode
 }
 
-export function Badge({ variant, className, children }: BadgeProps) {
-  return <span className={cn(badgeVariants({ variant }), className)}>{children}</span>
+export function Badge({ variant, size, className, children }: BadgeProps) {
+  return <span className={cn(badgeVariants({ variant, size }), className)}>{children}</span>
 }
 
 /** Badges in a row that wraps on small screens */
