@@ -28,6 +28,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # A hard cap, so a leak in Umami is killed (and restarted) inside its container, never by the
+    # kernel picking the site's Node process (ops/umami/README.md says how it was chosen).
+    mem_limit: 768m
     init: true
     restart: unless-stopped
     healthcheck:
@@ -42,6 +45,7 @@ services:
       POSTGRES_DB: umami
       POSTGRES_USER: umami
       POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD}
+    mem_limit: 512m
     volumes:
       - umami-db-data:/var/lib/postgresql/data
     restart: unless-stopped

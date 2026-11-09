@@ -11,17 +11,17 @@
 # PRE_DEPLOY_BACKUP_DONE=yes (set by deploy-release.sh) means this deploy already made a backup.
 #
 # Steps, each reported as an annotation (never a secret value):
+#   0. close the public address (the route file Caddy serves becomes a 503 block, and Caddy is
+#      reloaded) whenever the Umami container isn't running; a running database alone doesn't count
 #   1. skip (exit 0) when the secret or the stats DNS name is missing, the password is weak, or
 #      Docker is missing; refuse (exit 0, warning) when free memory is short and Umami isn't running
 #   2. back up: the site on a first install (unless this deploy did), Umami's database on updates
-#   (before 2: close the public address if the Caddyfile imports it and the Umami container isn't
-#   running; a running database alone doesn't count)
 #   3. write /var/www/umami/.env and compose.yaml, start the containers, wait for Umami on 127.0.0.1
 #   4. replace the default admin password with the secret, then check the default is rejected
 #   5. only then put the proxy in place, check it answers over HTTPS and rejects the default
 # A failure from step 3 on exits 1 with the public address closed.
 #
-# Test seams (default to the server's real values): UMAMI_DIR, UMAMI_PORT, UMAMI_HOST, CADDYFILE,
+# Test seams (default to the server's real values): DISK_PATH, MIN_DISK_KB, UMAMI_DIR, UMAMI_PORT, UMAMI_HOST, CADDYFILE,
 # UMAMI_CADDY_FILE, HSTS_FILE, RELOAD_CADDY, MEMINFO, MIN_FREE_KB, UP_WAIT, PUBLIC_WAIT,
 # PUBLIC_BASE and PUBLIC_CURL_ARGS (how the public address is reached from the server itself).
 set -Eeuo pipefail
@@ -34,12 +34,14 @@ here=$(dirname "$0")
 . "$here/umami-caddy.sh"
 . "$here/umami-admin.sh"
 
-started=no # yes once the containers are being started
-secured=no # yes once the default admin password is known to be rejected
+started=no   # yes once the containers are being started
+secured=no   # yes once the default admin password is known to be rejected
+closed_here=no # yes once this run closed the public address before anything else
 on_unexpected_error() {
   [ "$BASH_SUBSHELL" -eq 0 ] || return 0
   trap - ERR
   local state="its public address is as the last successful run left it"
+  [ "$closed_here" != yes ] || state="its public address was closed at the start of this run"
   if [ "$started" = yes ] && [ "$secured" = no ]; then
     if close_route; then state="its public address is closed"; else state="its public address could not be closed: see ops/umami/README.md"; fi
   fi
@@ -52,6 +54,9 @@ MEMINFO="${MEMINFO:-/proc/meminfo}"
 MIN_FREE_KB="${MIN_FREE_KB:-1048576}" # about 1 GB for Umami and its database; the server has 4 GB
 UP_WAIT="${UP_WAIT:-120}"             # seconds Umami may take to answer after it starts
 PUBLIC_WAIT="${PUBLIC_WAIT:-60}"      # seconds Caddy may take to get the certificate
+MIN_DISK_KB="${MIN_DISK_KB:-2097152}" # about 2 GB for the two images and the first data
+DISK_PATH="${DISK_PATH:-/var/lib/docker}"
+[ -d "$DISK_PATH" ] || DISK_PATH=$(dirname "$UMAMI_DIR")
 MIN_PASSWORD_LENGTH=12
 password="${UMAMI_ADMIN_PASSWORD:-}"
 unset UMAMI_ADMIN_PASSWORD # not for the commands below to inherit
@@ -77,13 +82,30 @@ if [ -z "$url" ] || ! [[ "$UMAMI_HOST" =~ ^[A-Za-z0-9.-]+$ ]]; then
   report "WARNING: Umami was not $verb: NEXT_PUBLIC_SERVER_URL in .env.local gives no usable domain for its address"
   exit 0
 fi
+
+# Whether Umami itself runs: a running database alone is not Umami, and starting Umami on a
+# database that came back empty gives it the default admin password. When it isn't running its
+# public address is closed, before any skip below: a start by hand later must not be public.
+was_running=no
+if command -v docker >/dev/null && umami_running umami; then was_running=yes; fi
+if [ "$was_running" = no ]; then
+  close_route || {
+    report "ERROR: Umami's public address could not be closed, so nothing was started"
+    exit 1
+  }
+  closed_here=yes
+fi
+
 missing=()
-[ -n "$password" ] || missing+=("the UMAMI_ADMIN_PASSWORD secret")
-getent hosts "$UMAMI_HOST" >/dev/null 2>&1 || missing+=("the DNS name $UMAMI_HOST")
+yet=""
+if [ "$first_install" = yes ]; then yet=" yet (#949)"; fi
+[ -n "$password" ] || missing+=("the UMAMI_ADMIN_PASSWORD secret is not set$yet")
+if ! getent hosts "$UMAMI_HOST" >/dev/null 2>&1; then
+  if [ "$first_install" = yes ]; then missing+=("the DNS name $UMAMI_HOST is not set up yet (#949)"); else missing+=("the DNS name $UMAMI_HOST does not resolve right now"); fi
+fi
 if [ "${#missing[@]}" -gt 0 ]; then
   printf -v list '%s and ' "${missing[@]}"
-  [ "${#missing[@]}" -gt 1 ] && are=are || are=is
-  report "Umami was not $verb: ${list% and } $are not set up yet (#949); nothing was changed and the deploy is not affected"
+  report "Umami was not $verb: ${list% and }; its public address was not changed beyond closing it if Umami isn't running, and the deploy is not affected"
   exit 0
 fi
 if [ "${#password}" -lt "$MIN_PASSWORD_LENGTH" ] || [[ "$password" == *[[:cntrl:]]* ]]; then
@@ -95,21 +117,18 @@ if ! command -v docker >/dev/null || ! docker compose version >/dev/null 2>&1; t
   exit 0
 fi
 
-# Whether Umami itself runs: a running database alone is not Umami, and starting Umami on a
-# database that came back empty gives it the default admin password.
-was_running=no
-umami_running umami && was_running=yes
 if [ "$was_running" = no ]; then
-  # Closed whenever it isn't running, even if a skip below ends this run: a start by hand later
-  # must not be public with a default password.
-  close_route || {
-    report "ERROR: Umami's public address could not be closed, so nothing was started"
-    exit 1
-  }
   free_kb=$(awk '$1 == "MemAvailable:" { print $2 }' "$MEMINFO" 2>/dev/null || true)
   if [ "${free_kb:-0}" -lt "$MIN_FREE_KB" ]; then
     report "WARNING: Umami was not started: $((${free_kb:-0} / 1024)) MB of memory is available and it needs about $((MIN_FREE_KB / 1024)) MB"
     exit 0
+  fi
+  if [ "$first_install" = yes ]; then # the first start pulls two images
+    disk_kb=$(df -Pk "$DISK_PATH" 2>/dev/null | awk 'NR == 2 { print $4 }' || true)
+    if [ "${disk_kb:-0}" -lt "$MIN_DISK_KB" ]; then
+      report "WARNING: Umami was not installed: $((${disk_kb:-0} / 1024)) MB of disk is free where Docker keeps its images and it needs about $((MIN_DISK_KB / 1024)) MB"
+      exit 0
+    fi
   fi
 fi
 
@@ -125,7 +144,7 @@ elif umami_running db; then
   bash "$here/backup-umami.sh" pre-deploy || report "WARNING: the Umami database dump before this update failed; continuing"
 fi
 
-# 3. Settings and containers. (The address was closed above if Umami wasn't running.)
+# 3. Settings and containers (the address was closed above if Umami wasn't running).
 mkdir -p "$UMAMI_DIR"
 chmod 700 "$UMAMI_DIR"
 env_file="$UMAMI_DIR/.env"

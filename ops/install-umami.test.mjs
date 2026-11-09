@@ -18,7 +18,7 @@ describe('install-umami.sh: skips, safely', () => {
     expect(code).toBe(0)
     expect(out).toContain('::notice')
     expect(out).toContain(
-      'the UMAMI_ADMIN_PASSWORD secret and the DNS name stats.sprechereast.com are not set up yet',
+      'the UMAMI_ADMIN_PASSWORD secret is not set yet (#949) and the DNS name stats.sprechereast.com is not set up yet (#949)',
     )
     untouched(log)
   })
@@ -26,7 +26,7 @@ describe('install-umami.sh: skips, safely', () => {
   it('does nothing when only the secret is missing', async () => {
     const { code, out, log } = await h.install({ UMAMI_ADMIN_PASSWORD: '' })
     expect(code).toBe(0)
-    expect(out).toContain('the UMAMI_ADMIN_PASSWORD secret is not set up yet')
+    expect(out).toContain('the UMAMI_ADMIN_PASSWORD secret is not set yet (#949)')
     expect(out).not.toContain('DNS name')
     untouched(log)
   })
@@ -34,7 +34,7 @@ describe('install-umami.sh: skips, safely', () => {
   it('does nothing when only the DNS name is missing', async () => {
     const { code, out, log } = await h.install({ STUB_NO_DNS: '1' })
     expect(code).toBe(0)
-    expect(out).toContain('the DNS name stats.sprechereast.com is not set up yet')
+    expect(out).toContain('the DNS name stats.sprechereast.com is not set up yet (#949)')
     expect(out).not.toContain('UMAMI_ADMIN_PASSWORD')
     untouched(log)
   })
@@ -44,6 +44,21 @@ describe('install-umami.sh: skips, safely', () => {
     const { code, out, log } = await h.install({ UMAMI_ADMIN_PASSWORD: '' })
     expect(code).toBe(0)
     expect(out).toContain('Umami was not updated')
+    expect(log).not.toContain(' up ')
+  })
+
+  it('does not blame the owner steps when the DNS lookup fails on a server that has Umami', async () => {
+    write(h.p('umami/.env'), 'UMAMI_PORT=1\n')
+    const { code, out } = await h.install({ STUB_NO_DNS: '1' })
+    expect(code).toBe(0)
+    expect(out).toContain('does not resolve right now')
+    expect(out).not.toContain('#949')
+  })
+
+  it('refuses, with a warning, when there is no room for the images on a first install', async () => {
+    const { code, out, log } = await h.install({ STUB_FREE_KB: '100000' })
+    expect(code).toBe(0)
+    expect(out).toContain('disk')
     expect(log).not.toContain(' up ')
   })
 
@@ -130,6 +145,16 @@ describe('install-umami.sh: install', () => {
     expect(log).toContain('exec -T db') // the dump before an update
     expect(h.caddyfile().match(/import /g)).toHaveLength(1)
     expect(h.state.requests.filter((r) => r === 'POST /api/me/password')).toHaveLength(1)
+  })
+
+  it('dumps the database before an update when the database runs, and not when only Umami does', async () => {
+    await h.install()
+    fs.writeFileSync(h.p('log'), '')
+    await h.install({ STUB_RUNNING: 'db' })
+    expect(fs.readFileSync(h.p('log'), 'utf8')).toContain('exec -T db')
+    fs.writeFileSync(h.p('log'), '')
+    await h.install({ STUB_RUNNING: 'umami' })
+    expect(fs.readFileSync(h.p('log'), 'utf8')).not.toContain('exec -T db')
   })
 
   it('leaves a password someone changed in Umami as it is, and still opens the address', async () => {

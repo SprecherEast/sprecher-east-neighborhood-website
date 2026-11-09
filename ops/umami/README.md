@@ -6,7 +6,7 @@ Postgres database run from `compose.yaml` in `/var/www/umami`. Umami is publishe
 only public way in, at `stats.<domain>`: the prebuilt image can't run under a path (`BASE_PATH` is
 fixed when the image is built). `DISABLE_TELEMETRY` and `DISABLE_UPDATES` are on, `MCP_ENABLED` is
 left off (#951), `CLIENT_IP_HEADER` is `x-forwarded-for` (Caddy sets it, so a visitor can't fake
-their address), and the image is pinned to a version (a bump is a one-line pull request; tags:
+their address), both containers have a memory cap (below), and the image is pinned to a version (a bump is a one-line pull request; tags:
 `ghcr.io/umami-software/umami`).
 
 ## The scripts
@@ -29,16 +29,20 @@ The admin password is the GitHub secret `UMAMI_ADMIN_PASSWORD`, sent over the SS
 (`deploy-release.sh --umami-password-stdin`), never as an argument or a file. Every step is an
 annotation, and none holds a secret value.
 
+0. **Closes first.** Whenever the Umami container isn't running (a running database alone doesn't
+   count) and the route file exists, the route file Caddy serves becomes a closed block (503) and Caddy
+   is reloaded, before anything else, whatever happens next, even when a skip below ends the run. It
+   reloads even if the file already was the closed block, and it doesn't depend on the Caddyfile's
+   import line looking a certain way. A database that came back empty has Umami's default admin
+   password, so nothing may be public while Umami might start with it.
 1. **Skips** (`::notice`, the deploy still succeeds) while the secret or the DNS name `stats.<domain>`
-   is missing (#949). **Skips with a warning** for a password under 12 characters or when Docker is
-   missing. **Refuses with a warning** when under 1 GB of memory is available and Umami isn't running.
+   is missing (#949 on a first install; on a server that has Umami, a DNS lookup that fails once says
+   so without blaming it). **Skips with a warning** for a password under 12 characters or when Docker
+   is missing. **Refuses with a warning** when under 1 GB of memory is available and Umami isn't
+   running, or on a first install when under 2 GB of disk is free where Docker keeps its images.
 2. A first install relies on the deploy's own `backup.sh pre-deploy`. Later runs dump Umami's database
-   first.
-3. If the Caddyfile already imports Umami's route and the Umami container isn't running (a running
-   database alone doesn't count), the route is switched to a closed block (503) and Caddy reloaded
-   **before** anything else, even when memory then stops the run: a database that came back empty
-   has Umami's default admin password. Then it writes the settings, starts the containers and waits up
-   to 2 minutes for `/api/heartbeat`.
+   first, when its database container runs.
+3. Writes the settings, starts the containers and waits up to 2 minutes for `/api/heartbeat`.
 4. Logs in as `admin`. With the secret's password it is done (a login that asks for the two-factor code
    counts: the password was right). With Umami's documented default it changes the password
    (`POST /api/me/password`). With neither, someone changed it in Umami and it is left. Then the
@@ -50,6 +54,13 @@ annotation, and none holds a secret value.
 
 A failure from step 3 on turns the deploy red with the address closed; the site is already live and
 unaffected. Port 3100 is also checked from outside on every deploy.
+
+**Memory caps.** `mem_limit` is 768 MB for Umami and 512 MB for Postgres, so the two stay under about
+1.25 GB of the server's 4 GB while the site's Node process and the system keep the rest. No figure for
+these comes from Umami's documentation: they follow the roughly 1 GB the issue (#948) estimated, with
+some headroom. A container that goes over is killed and restarted by Docker (`restart:
+unless-stopped`) inside its own limit, so a leak in Umami can't make the kernel pick the site's
+process. Raise a limit in `compose.yaml` if the logs show repeated restarts.
 
 **Changing the admin password.** Change it in Umami first, then the GitHub secret. Changing only the
 secret does nothing: once the password is no longer the default, the script leaves it as it is.

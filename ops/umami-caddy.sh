@@ -6,18 +6,23 @@
 # Needs $UMAMI_HOST. Messages never include file contents.
 
 import_line() { echo "import $UMAMI_CADDY_FILE"; }
-umami_route_imported() { grep -qxF "$(import_line)" "$CADDYFILE" 2>/dev/null; }
+# True when the Caddyfile has the import line, however it was indented or spaced by hand.
+umami_route_imported() {
+  awk -v want="$UMAMI_CADDY_FILE" '$1 == "import" && $2 == want && NF == 2 { found = 1 } END { exit !found }' "$CADDYFILE" 2>/dev/null
+}
 
 put_back() { # <saved copy or empty>: the route file as it was
   if [ -n "$1" ]; then mv -f "$1" "$UMAMI_CADDY_FILE"; else rm -f "$UMAMI_CADDY_FILE"; fi
 }
 
 # Puts a template's block in the route file, validated before Caddy reloads, and (when asked) adds
-# the import line to the Caddyfile (backed up first). Returns 0 (done, or nothing to change),
-# 3 (no Caddy or Caddyfile), 4 (Caddy did not accept it or a file could not be written; nothing
-# changed) or 5 (Caddy would not reload; put back as it was).
-set_route() { # <template in ops/caddy> <yes|no: add the import line>
-  local template="$CODE_DIR/ops/caddy/$1" add_import="$2" stamp new old="" candidate="" changed=no
+# the import line to the Caddyfile (backed up first). With the third argument `reload`, Caddy is
+# reloaded even when nothing changed on disk. Returns 0 (done, or nothing to change), 3 (no Caddy or
+# Caddyfile), 4 (Caddy did not accept it or a file could not be written; nothing changed), 5 (Caddy
+# would not reload; put back as it was) or 6 (would not reload, and the Caddyfile could not be put
+# back from its backup; the route file was kept so the import line still resolves).
+set_route() { # <template in ops/caddy> <yes|no: add the import line> [reload]
+  local template="$CODE_DIR/ops/caddy/$1" add_import="$2" force="${3:-}" stamp new old="" candidate="" changed=no
   if ! command -v caddy >/dev/null || [ ! -f "$CADDYFILE" ]; then return 3; fi
   stamp=$(date -u +%Y%m%dT%H%M%SZ)
   new=$(mktemp "$UMAMI_CADDY_FILE.XXXXXX")
@@ -46,7 +51,7 @@ set_route() { # <template in ops/caddy> <yes|no: add the import line>
     chmod --reference="$CADDYFILE" "$candidate" || changed=failed
     chown --reference="$CADDYFILE" "$candidate" 2>/dev/null || true
   fi
-  if [ "$changed" = no ]; then
+  if [ "$changed" = no ] && [ "$force" != reload ]; then
     rm -f "$old"
     return 0
   fi
@@ -66,7 +71,7 @@ set_route() { # <template in ops/caddy> <yes|no: add the import line>
   if ! $RELOAD_CADDY >/dev/null 2>&1; then
     if [ -n "$candidate" ] && ! cp -p "$CADDYFILE.bak-umami-$stamp" "$CADDYFILE"; then
       rm -f "$old" # the import line is still there: the route file must stay so it resolves
-      return 5
+      return 6
     fi
     put_back "$old"
     $RELOAD_CADDY >/dev/null 2>&1 || true
@@ -75,12 +80,16 @@ set_route() { # <template in ops/caddy> <yes|no: add the import line>
   rm -f "$old"
 }
 
-# Closes the public address if the Caddyfile imports it: a closed block takes the proxy's place.
-# Nothing to do (and nothing public) when the import line was never added. 0 when closed or
-# nothing to close, 1 when it could not be closed.
+# Closes the public address: the route file Caddy serves becomes the closed block, and Caddy is
+# reloaded even if the file already was one (a run killed between the write and the reload, or a
+# failed put-back, leaves Caddy serving what it last loaded). Needs only the route file, not the
+# Caddyfile's import line, which may have been edited by hand. 0 when closed or when there is
+# nothing to close (no route file, or no Caddy), 1 when it could not be closed.
 close_route() {
-  umami_route_imported || return 0
-  set_route umami-closed.caddy no
+  [ -f "$UMAMI_CADDY_FILE" ] || return 0
+  local status=0
+  set_route umami-closed.caddy no reload || status=$?
+  case "$status" in 0 | 3) return 0 ;; *) return 1 ;; esac
 }
 
 # Puts the proxy in place and imports it. Warns, and returns 1, when it can't.
@@ -95,8 +104,12 @@ open_route() {
     0) return 0 ;;
     3) report "WARNING: Caddy or $CADDYFILE not found, so Umami's public address was not opened" ;;
     4) report "WARNING: the Umami block could not be put in place (Caddy did not accept it, or a file could not be written), so the public address was left as it was" ;;
-    *)
+    5)
       report "ERROR: Caddy would not reload with the Umami block; the Caddy files were put back"
+      exit 1
+      ;;
+    *)
+      report "ERROR: Caddy would not reload with the Umami block, and the Caddyfile could not be put back from $CADDYFILE.bak-umami-*: check it by hand"
       exit 1
       ;;
   esac

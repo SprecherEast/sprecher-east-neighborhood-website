@@ -114,6 +114,11 @@ export function setUpUmamiHarness() {
     )
     stub('openssl', '[ -z "$STUB_OPENSSL_FAILS" ] || exit 1; exec /usr/bin/openssl "$@"')
     stub('mktemp', '[ -z "$STUB_MKTEMP_FAILS" ] || exit 1; exec /usr/bin/mktemp "$@"')
+    stub(
+      'df',
+      'printf "Filesystem 1024-blocks Used Available Capacity Mounted\\nx 1 1 %s 1%% /\\n" "${STUB_FREE_KB:-10000000}"',
+    )
+    stub('node', `[ -z "$STUB_NODE_FAILS" ] || exit 1; exec ${process.execPath} "$@"`)
     stub('reload-caddy', 'echo reload >> "$STUB_LOG"')
   })
 
