@@ -24,7 +24,7 @@ Source: `src/platform/ui/Card.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `accounts`, `contact`, `directory`, `events`, `news`, `site`
+- Modules: `accounts`, `contact`, `directory`, `events`, `news`, `roadmap`, `site`
 - Routes: `/account`, `/dev/gallery`
 - Platform: `platform/richtext`, `platform/ui`
 

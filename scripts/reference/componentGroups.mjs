@@ -42,6 +42,7 @@ export const COMPONENT_GROUPS = [
       'BadgeList',
       'CancelledBadge',
       'CertaintyBadge',
+      'ProgressBar',
       'DateTime',
       'MetaList',
       'Text',

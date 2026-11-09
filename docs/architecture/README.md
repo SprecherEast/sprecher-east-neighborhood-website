@@ -57,6 +57,7 @@ grows should split its top level "into domain oriented modules which are interna
 | `site`         | CMS pages, page-builder blocks, heroes, header, footer, redirects                      | `pages`, `redirects`, globals `header`, `footer`                    | `/[slug]`, home, sitemap entries                                                           |
 | `agents`       | Agent access over MCP (keys, limits, what the model sees), the agents' run history     | `agent-runs`, `agent-review-items`, `payload-mcp-api-keys` (plugin) | `/api/mcp` (plugin)                                                                        |
 | `verification` | Confirming an email by link: the token, its expiry, the limits, the emails             | `email-confirmations`                                               | `/confirm-email`                                                                           |
+| `roadmap`      | The public plan: milestones, epics and issues read from GitHub, what is screened out   | (none: reads GitHub over REST)                                      | `/roadmap`, `/roadmap/[number]`                                                            |
 | `comments`     | Resident comments (future)                                                             | (future)                                                            | (future)                                                                                   |
 
 `src/platform/` holds what every module uses, and imports no module:

@@ -25,7 +25,7 @@ Source: `src/platform/ui/PageHeader.tsx`
 **Used by** (direct imports):
 
 - Modules: `events`
-- Routes: `/account`, `/confirm-email`, `/dev/gallery`, `/events`, `/faq`, `/forgot-password`, `/login`, `/posts`, `/posts/page/[pageNumber]`, `/reset-password`, `/resources`, `/search`, `/sign-up`, `/verify-account`
+- Routes: `/account`, `/confirm-email`, `/dev/gallery`, `/events`, `/faq`, `/forgot-password`, `/login`, `/posts`, `/posts/page/[pageNumber]`, `/reset-password`, `/resources`, `/roadmap`, `/roadmap/[number]`, `/search`, `/sign-up`, `/verify-account`
 - Platform: `platform/ui`
 
 ## `EmptyState`
@@ -45,7 +45,7 @@ Source: `src/platform/ui/EmptyState.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `events`, `news`
+- Modules: `events`, `news`, `roadmap`
 - Routes: `/`, `/dev/gallery`, `/faq`, `/resources`, `/search`
 - Elsewhere: `src/app/global-error.tsx`
 
@@ -83,7 +83,7 @@ Source: `src/platform/ui/Disclosure.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `directory`
+- Modules: `directory`, `roadmap`
 - Routes: `/dev/gallery`
 - Platform: `platform/ui`
 

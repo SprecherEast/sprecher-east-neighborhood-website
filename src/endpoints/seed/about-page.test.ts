@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Media } from '@/payload-types'
+import { ROADMAP_PATH } from '@/modules/roadmap'
 import { toGoogleMapsEmbedUrl } from '@/platform/lib/googleMapsEmbed'
 
 import { aboutPage } from './about-page'
@@ -81,6 +82,12 @@ describe('About page seed (#764)', () => {
     ]) {
       expect(map.description).toContain(place)
     }
+  })
+
+  it('links our plan from the paragraph about how AI helps, so neighbors can see what we work on', () => {
+    const block = JSON.stringify(layout[1])
+    expect(block).toContain(`"url":"${ROADMAP_PATH}"`)
+    expect(textOf(layout[1]).join(' ')).toContain('See our plan')
   })
 
   it('keeps the story link and drops the subdivisions that have no source', () => {
