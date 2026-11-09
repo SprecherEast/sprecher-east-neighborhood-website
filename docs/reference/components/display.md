@@ -19,7 +19,7 @@ Source: `src/platform/ui/Badge.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `events`, `news`
+- Modules: `events`, `news`, `roadmap`
 - Routes: `/dev/gallery`
 - Platform: `platform/richtext`, `platform/ui`
 
@@ -36,7 +36,7 @@ Source: `src/platform/ui/Badge.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `events`, `news`
+- Modules: `events`, `news`, `roadmap`
 - Routes: `/dev/gallery`
 
 ## `CancelledBadge`
@@ -68,6 +68,26 @@ Source: `src/platform/ui/CertaintyBadge.tsx`
 
 - Routes: `/dev/gallery`
 - Platform: `platform/richtext`, `platform/ui`
+
+## `ProgressBar`
+
+Source: `src/platform/ui/ProgressBar.tsx`
+
+**Variants:**
+
+- `size`: `"sm" | "md"`
+
+| Prop        | Type     | Required | Description                                                 |
+| ----------- | -------- | -------- | ----------------------------------------------------------- |
+| `value`     | `number` | yes      |                                                             |
+| `max`       | `number` | yes      |                                                             |
+| `label`     | `string` | yes      | What it measures, for screen readers: "Launch: 3 of 8 done" |
+| `className` | `string` | no       |                                                             |
+
+**Used by** (direct imports):
+
+- Modules: `roadmap`
+- Routes: `/dev/gallery`
 
 ## `DateTime`
 
@@ -121,8 +141,8 @@ Source: `src/platform/ui/Text.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `directory`, `events`, `news`, `site`
-- Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/resources`
+- Modules: `directory`, `events`, `news`, `roadmap`, `site`
+- Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/resources`, `/roadmap/[number]`
 - Platform: `platform/richtext`, `platform/ui`
 
 ## `Caption`

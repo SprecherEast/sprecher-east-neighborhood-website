@@ -1,0 +1,23 @@
+# Roadmap
+
+The public plan page: milestones, then epics, then issues, read from GitHub. No collection; the
+page is static and refreshes itself. Routes: [screens](../../../docs/reference/routes.md).
+
+## Screens
+
+| Screen    | Route               | Data comes from                                                      |
+| --------- | ------------------- | -------------------------------------------------------------------- |
+| The plan  | `/roadmap`          | `getPlan` (GitHub milestones, epic issues and their sub-issues)      |
+| One issue | `/roadmap/[number]` | the same plan, `getPlanIssue`; the number must be one the plan shows |
+
+## Behaviors and events
+
+- GitHub is the only source. The page reads milestones, issues labeled `epic` and each epic's sub-issues over GitHub's REST API (`data/github.ts`); nothing is copied into the CMS, so nothing can drift.
+- Both pages are static and re-render every hour (`revalidate = 3600`, `PLAN_REVALIDATE_SECONDS`). Both ask search engines not to index them.
+- Screened out, and never shown or counted as shown: issues labeled `infra` or `needs owner`, and any issue whose title or text holds a server address, an email address or a plug-and-play plan. A screened epic takes its sub-issues with it. A milestone description that fails the screen is left blank, the milestone stays. The page says how many issues are not shown (`domain/screen.ts`, `domain/plan.ts`).
+- A screened, unknown or malformed issue number answers 404, so a screened issue can't be reached by its address.
+- The numbers at the top and each row's progress count open and done issues; ones closed as not planned are left out of the progress. "Done this week" and "this month" are the last 7 and 30 days in the site timezone (`domain/stats.ts`).
+- Issue text is Markdown shown safely: raw HTML appears as text, only web links open (in a new tab), images show their description only, task lists read "Done" or "Not done", and no issue heading becomes the page's h1 (`ui/IssueMarkdown.tsx`).
+- If GitHub can't be read at run time, the render fails, so the last good page stays. During `next build` the plan is empty and the page shows its empty state until the first visit.
+- Without a token GitHub allows 60 reads an hour, which an hourly refresh of a larger plan can pass. Set `GITHUB_READ_TOKEN` (read-only) on the server. A wrong token makes GitHub answer 401 and the first render fail ([project facts](../../../docs/project.md)).
+- Skipped pull requests: GitHub lists them with issues; the plan drops them.
