@@ -10,7 +10,7 @@ Source: `src/platform/ui/Card.tsx`
 
 **Variants:**
 
-- `variant`: `"success" | "neutral" | "elevated" | "outline" | "muted" | "tinted" | "danger"`
+- `variant`: `"success" | "neutral" | "outline" | "elevated" | "muted" | "tinted" | "danger"`
 - `padding`: `"sm" | "md" | "lg" | "none"`
 - `interactive`: `boolean`
 

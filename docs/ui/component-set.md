@@ -92,6 +92,12 @@ and is shown by the same gallery entry; its test checks the render and axe.
 
 Components: [feedback and overlays](../reference/components/feedback.md).
 
+**`RouteDialog`** (#946) is a `Dialog` that is a page of its own: it opens over the page that led to it,
+and its close button, its back button and Escape all go back one step in the browser's history. It uses the
+`center` placement of `Dialog`, a panel over a dimmed page, where the default `sheet` fills the screen.
+Next.js intercepts the route for a click inside the site, and a direct visit or refresh shows the full page,
+so the address always works. Its test covers the three ways out and axe.
+
 **`Zoom`** (#815) is a small view that opens larger in a full-screen `Dialog`: the Enlarge button, or a
 click or tap on the small view, opens it, with focus kept in the dialog and returned to the button on
 close. The optional `aside` (a legend, a long caption) shows beside the large view from `lg` and under

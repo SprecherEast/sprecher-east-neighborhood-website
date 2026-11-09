@@ -63,23 +63,38 @@ Source: `src/platform/ui/Toast.tsx`
 
 Source: `src/platform/ui/Dialog.client.tsx`
 
-| Prop           | Type                                                                                                                                                                       | Required | Description                                                                       |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------- |
-| `open`         | `boolean`                                                                                                                                                                  | yes      |                                                                                   |
-| `onOpenChange` | `(open: boolean) => void`                                                                                                                                                  | yes      |                                                                                   |
-| `title`        | `string`                                                                                                                                                                   | yes      | Names the dialog for screen readers; `hideTitle` keeps it off screen              |
-| `hideTitle`    | `boolean`                                                                                                                                                                  | no       |                                                                                   |
-| `trigger`      | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The button that opens it; focus returns there when the dialog closes              |
-| `closeLabel`   | `string`                                                                                                                                                                   | no       | What the close button says to screen readers                                      |
-| `start`        | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | Shown left of the close button in the sheet's top bar: the site logo for the menu |
-| `className`    | `string`                                                                                                                                                                   | no       | Classes for the panel: the mobile menu sets `lg:hidden`                           |
-| `children`     | `React.ReactNode`                                                                                                                                                          | yes      |                                                                                   |
+| Prop           | Type                                                                                                                                                                       | Required | Description                                                                                             |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `open`         | `boolean`                                                                                                                                                                  | yes      |                                                                                                         |
+| `onOpenChange` | `(open: boolean) => void`                                                                                                                                                  | yes      |                                                                                                         |
+| `title`        | `string`                                                                                                                                                                   | yes      | Names the dialog for screen readers; `hideTitle` keeps it off screen                                    |
+| `hideTitle`    | `boolean`                                                                                                                                                                  | no       |                                                                                                         |
+| `trigger`      | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The button that opens it; focus returns there when the dialog closes                                    |
+| `closeLabel`   | `string`                                                                                                                                                                   | no       | What the close button says to screen readers                                                            |
+| `start`        | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | Shown left of the close button in the sheet's top bar: the site logo for the menu                       |
+| `placement`    | `"center" \| "sheet"`                                                                                                                                                      | no       | `sheet` fills the screen (the default); `center` is a panel over the page, for reading one thing (#946) |
+| `className`    | `string`                                                                                                                                                                   | no       | Classes for the panel: the mobile menu sets `lg:hidden`                                                 |
+| `children`     | `React.ReactNode`                                                                                                                                                          | yes      |                                                                                                         |
 
 **Used by** (direct imports):
 
 - Modules: `site`
 - Routes: `/dev/gallery`
 - Platform: `platform/ui`
+
+## `RouteDialog`
+
+Source: `src/platform/ui/RouteDialog.client.tsx`
+
+| Prop        | Type              | Required | Description                                           |
+| ----------- | ----------------- | -------- | ----------------------------------------------------- |
+| `title`     | `string`          | yes      | Names the dialog and heads it                         |
+| `backLabel` | `string`          | yes      | What the back button says, such as "Back to our plan" |
+| `children`  | `React.ReactNode` | yes      |                                                       |
+
+**Used by** (direct imports):
+
+- Routes: `/roadmap/@modal/(.)[number]`
 
 ## `Zoom`
 

@@ -57,7 +57,7 @@ Source: `src/platform/ui/Link.tsx`
 **Used by** (direct imports):
 
 - Modules: `accounts`, `directory`, `events`, `news`, `roadmap`, `site`, `verification`
-- Routes: `/dev/gallery`, `/roadmap/[number]`
+- Routes: `/dev/gallery`
 - Platform: `platform/richtext`, `platform/ui`
 
 ## `AppLink`

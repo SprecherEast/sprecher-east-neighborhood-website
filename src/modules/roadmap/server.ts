@@ -2,10 +2,8 @@
 import 'server-only'
 
 export { getPlan } from './use-cases/getPlan'
-export { getPlanIssue, listPlanIssueNumbers } from './use-cases/getPlanIssue'
+export { getPlanIssueFromAddress, listPlanIssueNumbers } from './use-cases/getPlanIssue'
 
-export { IssueMarkdown } from './ui/IssueMarkdown'
+export { IssueDetail } from './ui/IssueDetail'
 export { PlanSummary } from './ui/PlanSummary'
-export { LabelBadges, StateBadge } from './ui/IssueBadges'
-export { IssueList } from './ui/IssueList'
 export { PlanTree } from './ui/PlanTree'

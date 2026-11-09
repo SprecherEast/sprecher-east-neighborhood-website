@@ -51,6 +51,7 @@
   --chart-ramp-edge: rgb(35 32 29 / 0.16);
   --radius: 0.625rem;
   --success: #3d7a5e;
+  --done: #7c4dcc;
   --warning: #e8923a;
   --info: #2f6fb3;
   --error: #dc2626;
@@ -70,6 +71,9 @@
   --warning-strong: #8a4a0e;
   /* Information text: 6:1 or more on the info tint, on --surface too */
   --info-strong: #1d4f8c;
+  /* Success and done text that pass on their tints and on --surface */
+  --success-strong: #25573f;
+  --done-strong: #5b34a8;
   /* Text and overlays on photos: the same in both modes, as the photo doesn't change */
   --on-image: #ffffff;
   --scrim: #000000;
@@ -124,6 +128,7 @@
   --chart-ramp-7: #c3c6ca;
   --chart-ramp-edge: rgb(255 255 255 / 0.12);
   --success: #4e9b76;
+  --done: #a98bf0;
   --warning: #f0a04b;
   --info: #5a9bde;
   --error: #ef4444;
@@ -140,6 +145,8 @@
   --destructive-strong: #f87171;
   --warning-strong: #f5b76e;
   --info-strong: #8fbdf0;
+  --success-strong: #8fd0b0;
+  --done-strong: #c9b5f7;
   --on-image: #ffffff;
   --scrim: #000000;
   /* Dark chrome on any page (admin bar, code blocks) */

@@ -13,16 +13,19 @@ page is static and refreshes itself. Routes: [screens](/docs/reference/routes.md
 
 ## Screens
 
-| Screen    | Route               | Data comes from                                                      |
-| --------- | ------------------- | -------------------------------------------------------------------- |
-| The plan  | `/roadmap`          | `getPlan` (GitHub milestones, epic issues and their sub-issues)      |
-| One issue | `/roadmap/[number]` | the same plan, `getPlanIssue`; the number must be one the plan shows |
+| Screen                 | Route                                        | Data comes from                                                          |
+| ---------------------- | -------------------------------------------- | ------------------------------------------------------------------------ |
+| The plan               | `/roadmap`                                   | `getPlan` (GitHub milestones, epic issues and their sub-issues)          |
+| One issue              | `/roadmap/[number]`                          | the same plan, `getPlanIssue`; the number must be one the plan shows     |
+| One issue, in a dialog | `/roadmap/[number]` from a click on the plan | the same page's content (`IssueDetail`), shown in a dialog over the plan |
 
 ## Behaviors and events
 
 - GitHub is the only source. The page reads milestones, issues labeled `epic` and each epic's sub-issues over GitHub's REST API (`data/github.ts`); nothing is copied into the CMS, so nothing can drift.
 - Both pages are static and re-render every hour (`revalidate = 3600`, `PLAN_REVALIDATE_SECONDS`). Both ask search engines not to index them.
 - Screened out, and never shown or counted as shown: issues labeled `infra` or `needs owner`, and any issue whose title or text holds a server address, an email address or a plug-and-play plan. A screened epic takes its sub-issues with it. A milestone whose title or description fails the screen shows as "Milestone N" with no description. Label names are screened too, and the hidden labels match in any case. The screen is best effort: it finds IPv4 addresses and plain email addresses, not every spelling. The page says how many issues are not shown (`domain/screen.ts`, `domain/plan.ts`).
+- Clicking an issue or epic on the plan opens it in a dialog over the plan, and its close button, back button, Escape and the browser's back button return to the plan where it was. A direct visit, a refresh or a shared link shows the issue's own page, so every address works without a script. The dialog and the page show the same `IssueDetail` (`app/(frontend)/roadmap/@modal`, `ui/IssueDetail.tsx`, #946).
+- A state mark is green for open, purple for done and gray for not planned, each with its words and an icon, and labels are plain outlines so the state stands out (`ui/IssueBadges.tsx`, #946).
 - A screened, unknown or malformed issue number answers 404, so a screened issue can't be reached by its address.
 - The numbers at the top and each row's progress count open and done issues; ones closed as not planned are left out of the progress. "Done this week" and "this month" are the last 7 and 30 days in the site timezone (`domain/stats.ts`).
 - Issue text is Markdown shown safely: raw HTML appears as text, only web links open (in a new tab), images show their description only, task lists read "Done" or "Not done", and no issue heading becomes the page's h1 (`ui/IssueMarkdown.tsx`).

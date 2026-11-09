@@ -6,14 +6,11 @@ const stub = () => null
 const getPlanIssue = vi.fn()
 vi.mock('@/modules/roadmap/server', () => ({
   getPlan: vi.fn(),
-  getPlanIssue: (n: number) => getPlanIssue(n),
+  getPlanIssueFromAddress: (value: string) => getPlanIssue(value),
   listPlanIssueNumbers: vi.fn(async () => [10, 11]),
-  IssueList: stub,
-  IssueMarkdown: stub,
-  LabelBadges: stub,
+  IssueDetail: stub,
   PlanSummary: stub,
   PlanTree: stub,
-  StateBadge: stub,
 }))
 vi.mock('next/navigation', () => ({
   notFound: () => {
@@ -49,5 +46,17 @@ describe('the plan pages', () => {
   it('builds a page for every issue the plan shows', async () => {
     const { generateStaticParams } = await import('./[number]/page')
     expect(await generateStaticParams()).toEqual([{ number: '10' }, { number: '11' }])
+  })
+
+  it('the dialog an issue opens in is named for it, and a screened or unknown number answers 404 there too', async () => {
+    const { default: IssueDialog } = await import('./@modal/(.)[number]/page')
+    getPlanIssue.mockResolvedValue({ number: 11, title: 'Add a page' })
+    const dialog = await IssueDialog({ params: Promise.resolve({ number: '11' }) })
+    expect(dialog.props.title).toBe('Add a page')
+
+    getPlanIssue.mockResolvedValue(undefined)
+    await expect(IssueDialog({ params: Promise.resolve({ number: '999' }) })).rejects.toThrow(
+      'NEXT_NOT_FOUND',
+    )
   })
 })

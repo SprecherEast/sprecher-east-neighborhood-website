@@ -43,6 +43,9 @@ export const THEME_TOKENS = {
   input: { modes: 'both', meaning: 'Form control borders (3:1, WCAG 1.4.11)' },
   ring: { modes: 'both', meaning: 'Focus ring' },
   success: { modes: 'both', meaning: 'Success state' },
+  'success-strong': { modes: 'both', meaning: 'Success text that passes on panels' },
+  done: { modes: 'both', meaning: 'Finished work: the purple of a done mark' },
+  'done-strong': { modes: 'both', meaning: 'Done text that passes on panels' },
   warning: { modes: 'both', meaning: 'Warning state' },
   'warning-strong': { modes: 'both', meaning: 'Warning text that passes on panels' },
   info: { modes: 'both', meaning: 'Information state: notices such as an upcoming meeting' },
@@ -143,6 +146,12 @@ export const CONTRAST_PAIRS: ReadonlyArray<readonly [text: ThemeToken, backgroun
   ['info-strong', 'background'],
   ['info-strong', 'surface'],
   ['info-strong', 'card'],
+  ['success-strong', 'background'],
+  ['success-strong', 'surface'],
+  ['success-strong', 'card'],
+  ['done-strong', 'background'],
+  ['done-strong', 'surface'],
+  ['done-strong', 'card'],
   // An outcome fork's "open" card: body text on the muted surface (#510)
   ['foreground', 'muted'],
 ]
@@ -201,6 +210,8 @@ const ALERT_TONES = [
   ['primary-strong', 'primary'],
   ['warning-strong', 'warning'],
   ['info-strong', 'info'],
+  ['success-strong', 'success'],
+  ['done-strong', 'done'],
   ['destructive-strong', 'destructive'],
   // An outcome fork's "stop" card: its body text on the destructive tint (#510)
   ['foreground', 'destructive'],

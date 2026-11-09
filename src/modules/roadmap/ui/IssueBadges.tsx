@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react'
+import { Ban, CircleCheck, CircleDot } from 'lucide-react'
 import React from 'react'
 
 import { Badge, BadgeList } from '@/platform/ui/Badge'
@@ -11,11 +11,18 @@ const STATE_WORDS: Record<PlanIssueState, string> = {
   'not-planned': 'Not planned',
 }
 
-/** An issue's state in words, with a check for done, so colour is never the only signal */
+const STATE_LOOK = {
+  open: { variant: 'open', Icon: CircleDot },
+  done: { variant: 'done', Icon: CircleCheck },
+  'not-planned': { variant: 'neutral', Icon: Ban },
+} as const
+
+/** An issue's state: its words and an icon in a colour of its own, so colour is never the only signal */
 export function StateBadge({ state }: { state: PlanIssueState }) {
+  const { variant, Icon } = STATE_LOOK[state]
   return (
-    <Badge variant={state === 'done' ? 'category' : 'neutral'}>
-      {state === 'done' && <Check aria-hidden="true" />}
+    <Badge variant={variant}>
+      <Icon aria-hidden="true" />
       {STATE_WORDS[state]}
     </Badge>
   )
@@ -28,7 +35,7 @@ export function LabelBadges({ labels }: { labels: string[] }) {
   return (
     <BadgeList>
       {shown.map((label) => (
-        <Badge key={label} variant="neutral">
+        <Badge key={label} variant="outline">
           {label}
         </Badge>
       ))}
