@@ -50,14 +50,11 @@ function ColumnContent({
   return (
     <>
       {body && <RichText data={body} enableGutter={false} />}
-      {link &&
-        (linkAlign === 'end' ? (
-          <div className="flex justify-end">
-            <LinkButton link={link} />
-          </div>
-        ) : (
+      {link && (
+        <div className={cn('mt-4', linkAlign === 'end' && 'flex justify-end')}>
           <LinkButton link={link} />
-        ))}
+        </div>
+      )}
     </>
   )
 }

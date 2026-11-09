@@ -87,9 +87,10 @@ describe('ContentBlock', () => {
       </main>,
     )
 
-    expect(screen.getByRole('link', { name: 'Read more' }).parentElement?.className).not.toContain(
-      'justify-end',
-    )
+    const wrapper = screen.getByRole('link', { name: 'Read more' }).parentElement
+    expect(wrapper?.className).not.toContain('justify-end')
+    // Either way the button has room above it
+    expect(wrapper?.className).toContain('mt-4')
   })
 
   it('draws text beside a side card', async () => {
