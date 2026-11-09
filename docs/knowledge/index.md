@@ -19,7 +19,7 @@ generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.m
 - [Rich text](../../src/platform/richtext/README.md): article text, editorial blocks, limits, Markdown tags.
 - [Shared Payload code](../../src/platform/payload/README.md): roles, drafts, review queue, jobs, link and site-address helpers, keyset paging.
 - [News](../../src/modules/news/README.md): posts, bylines and sources, search, the shared category tree, "top issues".
-- [Roadmap](../../src/modules/roadmap/README.md): the public plan page: where it reads from, what is screened out, hourly refresh, what happens when GitHub can't be read.
+- [Roadmap](../../src/modules/roadmap/README.md): the public plan page.
 
 ## Reference (generated)
 
