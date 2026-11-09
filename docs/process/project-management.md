@@ -117,15 +117,17 @@ built on 2026-10-21 from the spec in #90 and moved to the organization after.
   the web UI, or an agent on his computer signed in with `gh` and that scope. A cloud session's GitHub access
   can be read-only: an error such as "Resource not accessible by integration" means the Claude
   GitHub app is probably not installed on the organization (not confirmed). The planner app is the
-  route to the board that does not need anyone's computer. Where a cloud session can write issues, it keeps issue state, labels, parents
-  and milestones right, say in a comment on the issue which card needs moving (and to which
-  column), and let the board's automations do the rest. The next session on his computer moves it.
+  route to the board that does not need anyone's computer. A cloud session that can write issues keeps
+  issue state, labels, parents and milestones right and never needs the board: assigning an issue
+  is how work is claimed, and the planner app then moves the card (below).
 - **The planner app:** a GitHub App owned by the organization can read and change the board without
   anyone's computer, signing in with a short-lived token made from a key kept only as a repository
   secret. The `Planner App Check` workflow, run by hand, proves it can read the board and write to
   one throwaway issue and its card. One rule guards sprint history: work that finished in a sprint
   keeps that sprint, and only unfinished work moves forward (GitHub has no setting that locks it,
-  so the app's code enforces it).
+  so the app's code enforces it). The `Planner Board` workflow runs as the app on a native signal,
+  not on comments: a new or reopened issue joins the sprint that is running, and an assigned issue
+  also becomes In progress. A card never moves backwards, and it can be run by hand for one issue.
 
 ## Grooming and work in progress
 
@@ -156,8 +158,9 @@ parallel work when issues don't touch the same files, with no fixed number, and 
   `docs/roles/`, `docs/process/`).
 - **In progress is set when work starts,** before the first commit, so the board shows it. In
   review and Done stay automatic.
-- **Only a session on the owner's computer moves cards** (the Access note above). A cloud session
-  says on the issue which card to move.
+- **Assigning the issue moves its card** to In progress, through the planner app (the Access note
+  above), from any device. Where that workflow is not running, a session on the owner's computer
+  moves the card, and a cloud session says on the issue which card to move.
 
 ## The record on the issue
 

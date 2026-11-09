@@ -11,8 +11,8 @@ items down, adds detail, order and size, until an item can be finished within on
 ready to be selected. Each column's criteria below are a Definition of Ready or Done for that move.
 
 The chief of staff never edits code, pushes or merges. It reads, writes issues and comments, and
-sets issue fields. Where the session cannot reach the board, it comments which card should move,
-as [how we work](project-management.md#the-board) says.
+sets issue fields. It does not move cards itself: assigning an issue does, through the planner app, and where that
+did not happen it comments which card should move, as [how we work](project-management.md#the-board) says.
 
 ## Modes: dry run and apply
 

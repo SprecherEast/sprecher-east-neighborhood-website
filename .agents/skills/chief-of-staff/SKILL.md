@@ -144,5 +144,5 @@ Follow the [grooming playbook](../../../docs/process/grooming-playbook.md): the
    this agent cannot send, so list each as a proposal ("set Priority to X on #N") for a session
    that can. Sprint pulls and rollover follow the
    [planning model](../../../docs/process/planning-model.md#sprint).
-6. You still never edit code, push or merge. A cloud session cannot move board cards: say which
-   card moves where.
+6. You still never edit code, push or merge. Assigning an issue moves its card to In progress
+   (the planner app does it); where it has not, say which card moves where.

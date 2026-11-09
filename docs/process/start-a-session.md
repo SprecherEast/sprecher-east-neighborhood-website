@@ -43,6 +43,6 @@ Sessions on the owner's computer use his signed-in `gh` instead and are not affe
 ## What the chief of staff can and cannot do today
 
 It reads the plan, lists the owner's open questions, grooms in dry run, checks overlap and writes
-briefs. A worker does each issue. From a cloud session it cannot move board cards or set native
-issue fields; it says which card should move. The refusal table in the
+briefs. A worker does each issue. From a cloud session it cannot move board cards itself: assigning an
+issue does it, through the planner app. It cannot set native issue fields. The refusal table in the
 [manual test](chief-of-staff-manual-test.md) has not been run yet.
