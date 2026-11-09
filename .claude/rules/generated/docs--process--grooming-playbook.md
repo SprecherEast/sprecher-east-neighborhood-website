@@ -171,8 +171,7 @@ milestone; an epic titled as a task. Propose the right layer and how to get ther
 
 For each open milestone, also ask whether it can still be taken in at a glance
 ([planning model](/docs/process/planning-model.md#milestone)): too many open issues, or a goal that no longer
-fits one line, means a proposed split. Check that its description and done test still match what
-its issues now do; propose updated wording, and ask the owner first when the goal itself moved.
+fits one line, means a proposed split.
 
 ### Consistency fixes
 
@@ -184,7 +183,8 @@ its issues now do; propose updated wording, and ask the owner first when the goa
 
 ### Milestone and epic progress
 
-A milestone's description still matches its scope; open work under a milestone whose due date has
+A milestone's description and done test still match its scope, and a stale one gets proposed
+wording, recorded with a dated comment once approved ([planning model](/docs/process/planning-model.md#milestone)); open work under a milestone whose due date has
 passed is reported with a proposal (re-scope or a new date with a reason), never moved silently;
 as a dated milestone nears, its open items are flagged and their priority raised in the daily sweep;
 an epic whose children are all closed has its acceptance checked; the epic's list matches its
