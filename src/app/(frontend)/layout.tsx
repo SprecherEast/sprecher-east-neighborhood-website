@@ -13,6 +13,7 @@ import { InitTheme } from '@/platform/theme/InitTheme'
 import { Providers } from '@/platform/theme/Providers'
 import { mergeOpenGraph } from '@/platform/seo/mergeOpenGraph'
 import { organizationJsonLd } from '@/platform/seo/organizationJsonLd'
+import { UmamiScript } from '@/platform/analytics/UmamiScript'
 import { VersionCheck } from '@/platform/ui/VersionCheck.client'
 import { draftMode } from 'next/headers'
 
@@ -70,6 +71,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {/* The active theme's decorative layer, if it has one (#409) */}
           <ThemeDecoration />
           <VersionCheck />
+          {/* Counts visits, but never a draft preview (#950); the admin has its own layout */}
+          {!isEnabled && <UmamiScript />}
         </Providers>
       </body>
     </html>

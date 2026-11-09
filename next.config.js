@@ -36,6 +36,8 @@ const nextConfig = {
     // later to .env.local (check on) while the browser bundle has none (no widget). `env`
     // entries are inlined even when empty, so both sides always agree.
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '',
+    // The visit counter's site ID (#950), pinned the same way; empty means no counting
+    NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID ?? '',
   },
   images: {
     // Uploads are served by Payload under this path; getMediaUrl keeps them relative (local)

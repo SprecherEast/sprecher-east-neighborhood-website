@@ -67,6 +67,7 @@
       "src/platform/seo/**",
       "src/platform/email/**",
       "src/platform/turnstile/**",
+      "src/platform/analytics/**",
       "src/platform/service/**"
     ]
   },

@@ -114,6 +114,8 @@ build_id=$(cat "$RELEASE/.next/BUILD_ID")
   stop "the release was built for a different NEXT_PUBLIC_SERVER_URL than .env.local has"
 [ "$(info turnstile_site_key)" = "$(env_value NEXT_PUBLIC_TURNSTILE_SITE_KEY)" ] ||
   stop "the release was built with a different Turnstile site key than .env.local has"
+[ "$(info umami_website_id)" = "$(env_value NEXT_PUBLIC_UMAMI_WEBSITE_ID)" ] ||
+  stop "the release was built with a different Umami site ID than .env.local has"
 site_key_set=$([ -n "$(env_value NEXT_PUBLIC_TURNSTILE_SITE_KEY)" ] && echo yes || echo no)
 secret_set=$([ -n "$(env_value TURNSTILE_SECRET_KEY)" ] && echo yes || echo no)
 [ "$site_key_set" = "$secret_set" ] ||

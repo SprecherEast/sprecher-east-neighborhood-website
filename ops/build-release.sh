@@ -8,12 +8,14 @@
 # a secret: the build only sees public values (NEXT_PUBLIC_*) and throwaway placeholders.
 #
 # Environment: RELEASE_DIR, SHA, NODE_VERSION (the server's `node -v`), NEXT_PUBLIC_SERVER_URL,
-# NEXT_PUBLIC_TURNSTILE_SITE_KEY (may be empty), TURNSTILE_PAIRED (yes|no), OUT (archive path).
+# NEXT_PUBLIC_TURNSTILE_SITE_KEY (may be empty), NEXT_PUBLIC_UMAMI_WEBSITE_ID (may be
+# empty), TURNSTILE_PAIRED (yes|no), OUT (archive path).
 set -euo pipefail
 
 : "${RELEASE_DIR:?}" "${SHA:?}" "${NODE_VERSION:?}" "${NEXT_PUBLIC_SERVER_URL:?}" "${OUT:?}"
 TURNSTILE_PAIRED="${TURNSTILE_PAIRED:-no}"
 NEXT_PUBLIC_TURNSTILE_SITE_KEY="${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}"
+NEXT_PUBLIC_UMAMI_WEBSITE_ID="${NEXT_PUBLIC_UMAMI_WEBSITE_ID:-}"
 
 if [ "$(node -v)" != "$NODE_VERSION" ]; then
   echo "::error title=Build::runner Node $(node -v) is not the server's $NODE_VERSION"
@@ -34,7 +36,7 @@ npm ci --no-audit --no-fund
 export DATABASE_URI=file:./data/payload.db
 PAYLOAD_SECRET="build-only-$(openssl rand -hex 24)"
 export PAYLOAD_SECRET
-export NEXT_PUBLIC_SERVER_URL NEXT_PUBLIC_TURNSTILE_SITE_KEY
+export NEXT_PUBLIC_SERVER_URL NEXT_PUBLIC_TURNSTILE_SITE_KEY NEXT_PUBLIC_UMAMI_WEBSITE_ID
 # next.config.js refuses to build with only one Turnstile key. The secret is read at runtime, so
 # the build gets a placeholder when the server has both keys, and nothing when it has neither.
 if [ "$TURNSTILE_PAIRED" = yes ]; then export TURNSTILE_SECRET_KEY=build-placeholder-not-a-secret; fi
@@ -58,6 +60,7 @@ fi
   echo "node=$NODE_VERSION"
   echo "server_url=$NEXT_PUBLIC_SERVER_URL"
   echo "turnstile_site_key=$NEXT_PUBLIC_TURNSTILE_SITE_KEY"
+  echo "umami_website_id=$NEXT_PUBLIC_UMAMI_WEBSITE_ID"
   echo "build_id=$(cat .next/BUILD_ID)"
   echo "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 } >.release-info

@@ -95,3 +95,13 @@ key a restored dump can't decrypt the stored two-factor secrets.
   (it stops at the first error rather than leaving a half-restored database), and finally re-run the
   deploy to start Umami. If a deploy did start Umami first, run `docker compose down -v` and begin
   again.
+
+## The site's tracking script (#950)
+
+The public layout loads `https://stats.<domain>/script.js` after the page, only when
+`NEXT_PUBLIC_UMAMI_WEBSITE_ID` is in `/var/www/sprecher-east/.env.local` at build time (the site's
+ID from Umami, public). It sets `data-do-not-track` and `data-domains`, so a browser that asks not
+to be tracked, or a copy of the site on another hostname, counts nothing. Caddy proxies every path
+of `stats.<domain>`, so `/script.js` and `/api/send` are public, as is the login page; the site has
+no Content-Security-Policy that would block either. After adding or changing the ID, redeploy
+(Actions → Deploy to VPS → Run workflow).
