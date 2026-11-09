@@ -58,6 +58,7 @@ function boardFields(org, number) {
 
 function run() {
   const { REPO, ISSUE, ACTION, ORG = 'SprecherEast', PROJECT = '1' } = process.env
+  if (!/^\d+$/.test(ISSUE ?? '')) throw new Error('ISSUE must be an issue number.')
   const url = `https://github.com/${REPO}/issues/${ISSUE}`
   const board = boardFields(ORG, PROJECT)
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' })
@@ -75,22 +76,7 @@ function run() {
     '--format',
     'json',
   ).id
-  const items = json(
-    'project',
-    'item-list',
-    PROJECT,
-    '--owner',
-    ORG,
-    '--limit',
-    '1000',
-    '--format',
-    'json',
-  ).items
-  const card = items.find((entry) => entry.id === itemId) ?? { status: 'Backlog' }
-  const item = {
-    status: card.status,
-    sprint: card.sprint && { ...card.sprint, id: iterationId(board, card.sprint.title) },
-  }
+  const item = cardState(itemId)
   const changes = decideChanges({ action: ACTION, item, current })
   console.log(`#${ISSUE} ${ACTION}: ${JSON.stringify(changes)}`)
 
@@ -114,8 +100,19 @@ function run() {
   if (changes.sprintId) edit(board.sprint.id, '--iteration-id', changes.sprintId)
 }
 
-function iterationId(board, title) {
-  return board.sprint?.configuration?.iterations.find((sprint) => sprint.title === title)?.id
+/** Reads this one card's status and sprint; throws when it cannot, so a guess never moves a card. */
+function cardState(itemId) {
+  const query = `query($id:ID!){node(id:$id){... on ProjectV2Item{
+    status:fieldValueByName(name:"Status"){... on ProjectV2ItemFieldSingleSelectValue{name}}
+    sprint:fieldValueByName(name:"Sprint"){... on ProjectV2ItemFieldIterationValue{iterationId title startDate duration}}}}}`
+  const { data } = json('api', 'graphql', '-f', `query=${query}`, '-F', `id=${itemId}`)
+  const card = data?.node
+  if (!card) throw new Error('Could not read the card, so it is left alone.')
+  const { sprint } = card
+  return {
+    status: card.status?.name ?? 'Backlog',
+    sprint: sprint && { id: sprint.iterationId, title: sprint.title, startDate: sprint.startDate, duration: sprint.duration },
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) run()
