@@ -6,9 +6,9 @@
 # Needs $UMAMI_HOST. Messages never include file contents.
 
 import_line() { echo "import $UMAMI_CADDY_FILE"; }
-# True when the Caddyfile has the import line, however it was indented or spaced by hand.
+# True when the Caddyfile has the import line, however it was indented, spaced or commented by hand.
 umami_route_imported() {
-  awk -v want="$UMAMI_CADDY_FILE" '$1 == "import" && $2 == want && NF == 2 { found = 1 } END { exit !found }' "$CADDYFILE" 2>/dev/null
+  awk -v want="$UMAMI_CADDY_FILE" '{ sub(/#.*/, "") } $1 == "import" && $2 == want && NF == 2 { found = 1 } END { exit !found }' "$CADDYFILE" 2>/dev/null
 }
 
 put_back() { # <saved copy or empty>: the route file as it was
@@ -46,7 +46,7 @@ set_route() { # <template in ops/caddy> <yes|no: add the import line> [reload]
   if [ "$add_import" = yes ] && ! umami_route_imported; then
     changed=yes
     candidate=$(mktemp "$CADDYFILE.XXXXXX")
-    { cat "$CADDYFILE"; printf '\n# Umami analytics (ops/install-umami.sh, #948)\n%s\n' "$(import_line)"; } >"$candidate"
+    { cat "$CADDYFILE" && printf '\n# Umami analytics (ops/install-umami.sh, #948)\n%s\n' "$(import_line)"; } >"$candidate" || changed=failed
     # mktemp makes it root-only; Caddy runs as its own user and must keep reading the Caddyfile
     chmod --reference="$CADDYFILE" "$candidate" || changed=failed
     chown --reference="$CADDYFILE" "$candidate" 2>/dev/null || true
@@ -73,7 +73,8 @@ set_route() { # <template in ops/caddy> <yes|no: add the import line> [reload]
       rm -f "$old" # the import line is still there: the route file must stay so it resolves
       return 6
     fi
-    put_back "$old"
+    # A closed block stays on disk even when Caddy would not reload: it is what the next start loads.
+    if [ "$1" = umami-closed.caddy ]; then rm -f "$old"; else put_back "$old"; fi
     $RELOAD_CADDY >/dev/null 2>&1 || true
     return 5
   fi
@@ -82,11 +83,11 @@ set_route() { # <template in ops/caddy> <yes|no: add the import line> [reload]
 
 # Closes the public address: the route file Caddy serves becomes the closed block, and Caddy is
 # reloaded even if the file already was one (a run killed between the write and the reload, or a
-# failed put-back, leaves Caddy serving what it last loaded). Needs only the route file, not the
-# Caddyfile's import line, which may have been edited by hand. 0 when closed or when there is
-# nothing to close (no route file, or no Caddy), 1 when it could not be closed.
+# failed put-back, leaves Caddy serving what it last loaded). Needs only the route file, or an import
+# line that points at a route file deleted by hand. 0 when closed or when there is nothing to
+# close (neither, or no Caddy), 1 when it could not be closed.
 close_route() {
-  [ -f "$UMAMI_CADDY_FILE" ] || return 0
+  [ -f "$UMAMI_CADDY_FILE" ] || umami_route_imported || return 0
   local status=0
   set_route umami-closed.caddy no reload || status=$?
   case "$status" in 0 | 3) return 0 ;; *) return 1 ;; esac
@@ -120,6 +121,7 @@ open_route() {
 # the public address is closed first, and the message says if that did not work.
 fail_closed() { # <what happened>
   trap - ERR
+  stop_umami
   if close_route; then
     report "ERROR: $1; Umami stays closed to the public until this is fixed"
   else

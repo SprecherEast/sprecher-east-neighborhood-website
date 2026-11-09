@@ -29,12 +29,15 @@ The admin password is the GitHub secret `UMAMI_ADMIN_PASSWORD`, sent over the SS
 (`deploy-release.sh --umami-password-stdin`), never as an argument or a file. Every step is an
 annotation, and none holds a secret value.
 
-0. **Closes first.** Whenever the Umami container isn't running (a running database alone doesn't
-   count) and the route file exists, the route file Caddy serves becomes a closed block (503) and Caddy
-   is reloaded, before anything else, whatever happens next, even when a skip below ends the run. It
-   reloads even if the file already was the closed block, and it doesn't depend on the Caddyfile's
-   import line looking a certain way. A database that came back empty has Umami's default admin
-   password, so nothing may be public while Umami might start with it.
+0. **Closes first.** Unless both the Umami container and its database container are running (a running
+   database alone doesn't count, and neither does Umami alone), and when the route file exists or the
+   Caddyfile still imports it, the route file Caddy serves becomes a closed block (503) and Caddy is
+   reloaded, before anything else and whatever happens next, even when a skip below ends the run. The
+   one exception is the first skip: a `NEXT_PUBLIC_SERVER_URL` that gives no usable domain ends the run
+   before this step, because the address can't be named. It reloads even if the file already was the
+   closed block, doesn't depend on the import line's spacing or a trailing comment, and keeps the
+   closed block on disk even when Caddy would not reload. A database that came back empty has Umami's
+   default admin password, so nothing may be public while Umami might start with it.
 1. **Skips** (`::notice`, the deploy still succeeds) while the secret or the DNS name `stats.<domain>`
    is missing (#949 on a first install; on a server that has Umami, a DNS lookup that fails once says
    so without blaming it). **Skips with a warning** for a password under 12 characters or when Docker
@@ -77,12 +80,18 @@ key a restored dump can't decrypt the stored two-factor secrets.
 - **Stop it:** in `/var/www/umami`, `docker compose down` (the data stays in the `umami-db-data`
   volume). Revert the pull request; then on the server remove the `import` line and
   `/etc/caddy/sprecher-east-umami.caddy` and reload Caddy. Deleting the volume is a separate,
-  deliberate step. If it is deleted and Umami starts again, the deploy closes the address first.
-- **Restore a dump** into an empty database. Every merge deploys, and a deploy starts Umami: it
-  closes the public address first, so nothing is exposed, but Umami's first start would create its own
-  tables in the empty database and clash with the restore. So restore while no deploy is running and
-  hold merges until it is done (Actions → Deploy to VPS). Restore `.env` from its copy, then
-  `docker compose up -d db`, then
-  `gunzip -c <dump> | docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`,
-  then `docker compose up -d` (or let the next deploy do it). If a deploy did start Umami first, drop
-  the volume and begin again.
+  deliberate step. Never start Umami by hand with `docker compose up` (see the next point).
+- **Start it only by re-running the deploy** (Actions → Deploy to VPS → Run workflow), which closes
+  the address, replaces the default password and only then opens it. Before any start by hand, run
+  `bash /var/www/sprecher-east/current/ops/install-umami.sh` with no secret in the environment: it
+  closes the address and then skips, because the secret is missing. Without that, a start on an empty
+  database would be public on Umami's default admin password.
+- **Restore a dump** into an empty database, with the address closed as above. Every merge deploys,
+  and a deploy starts Umami, whose first start would create its own tables in the empty database and
+  clash with the restore. So restore while no deploy is running and hold merges until it is done
+  (Actions → Deploy to VPS). Restore `.env` from its copy, then in `/var/www/umami`:
+  `docker compose down -v` (empties the database), `docker compose up -d db`, then
+  `gunzip -c <dump> | docker compose exec -T db sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`
+  (it stops at the first error rather than leaving a half-restored database), and finally re-run the
+  deploy to start Umami. If a deploy did start Umami first, run `docker compose down -v` and begin
+  again.

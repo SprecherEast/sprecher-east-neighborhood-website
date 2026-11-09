@@ -33,6 +33,7 @@ export function setUpUmamiHarness() {
       loginStatus: null,
       ignoreChange: false,
       twoFactor: false,
+      alwaysDefault: false,
       requests: [],
     }
     h.server = http.createServer((req, res) => {
@@ -48,6 +49,9 @@ export function setUpUmamiHarness() {
         if (req.url === '/api/heartbeat') return send(h.state.heartbeat, { ok: true })
         if (req.url === '/api/auth/login') {
           if (h.state.loginStatus) return send(h.state.loginStatus)
+          // A broken Umami that keeps accepting the default password after it was changed.
+          if (h.state.alwaysDefault && body.password === DEFAULT)
+            return send(200, { token: 'fake-token' })
           if (body.username === 'admin' && body.password === h.state.admin) {
             // With two-factor sign-in on, Umami answers 200 with no token (docs.umami.is/docs/api/authentication).
             if (h.state.twoFactor)
@@ -101,7 +105,7 @@ export function setUpUmamiHarness() {
         'case "$args" in',
         '  version*) exit 0 ;;',
         '  *" ps "*) last="${@: -1}"; case "$last" in umami|db) case " $STUB_RUNNING " in *" $last "*) echo abc123 ;; esac ;; *) [ -z "$STUB_RUNNING" ] || echo abc123 ;; esac ;;',
-        '  *" up "*) echo "route at up: $(cat "$STUB_ROUTE_FILE" 2>/dev/null | tr -d "\\n\\t")" >> "$STUB_LOG"; [ -z "$STUB_UP_FAILS" ] ;;',
+        '  *" up "*) echo "route at up: $(cat "$STUB_ROUTE_FILE" 2>/dev/null | tr -d "\\n\\t")" >> "$STUB_LOG"; [ -z "$STUB_UP_HANGS" ] || exec sleep 30; [ -z "$STUB_UP_FAILS" ] ;;',
         '  *" exec "*) [ -z "$STUB_DUMP_FAILS" ] && echo "-- dump" || exit 1 ;;',
         'esac',
       ].join('\n'),
@@ -110,7 +114,11 @@ export function setUpUmamiHarness() {
     stub('caddy', '[ "$1" != validate ] || [ -z "$STUB_CADDY_REJECTS" ]')
     stub(
       'cp',
-      'case "$*" in *bak-umami*) [ -z "$STUB_CP_FAILS" ] || exit 1 ;; esac; exec /bin/cp "$@"',
+      [
+        'case "$*" in *bak-umami*) [ -z "$STUB_CP_FAILS" ] || exit 1 ;; esac',
+        'case "$2" in *bak-umami*) [ -z "$STUB_CP_RESTORE_FAILS" ] || exit 1 ;; esac', // the copy back from the backup
+        'exec /bin/cp "$@"',
+      ].join('\n'),
     )
     stub('openssl', '[ -z "$STUB_OPENSSL_FAILS" ] || exit 1; exec /usr/bin/openssl "$@"')
     stub('mktemp', '[ -z "$STUB_MKTEMP_FAILS" ] || exit 1; exec /usr/bin/mktemp "$@"')

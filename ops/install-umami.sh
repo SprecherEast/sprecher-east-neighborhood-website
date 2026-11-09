@@ -12,7 +12,7 @@
 #
 # Steps, each reported as an annotation (never a secret value):
 #   0. close the public address (the route file Caddy serves becomes a 503 block, and Caddy is
-#      reloaded) whenever the Umami container isn't running; a running database alone doesn't count
+#      reloaded) unless the Umami and database containers both run
 #   1. skip (exit 0) when the secret or the stats DNS name is missing, the password is weak, or
 #      Docker is missing; refuse (exit 0, warning) when free memory is short and Umami isn't running
 #   2. back up: the site on a first install (unless this deploy did), Umami's database on updates
@@ -43,6 +43,7 @@ on_unexpected_error() {
   local state="its public address is as the last successful run left it"
   [ "$closed_here" != yes ] || state="its public address was closed at the start of this run"
   if [ "$started" = yes ] && [ "$secured" = no ]; then
+    stop_umami
     if close_route; then state="its public address is closed"; else state="its public address could not be closed: see ops/umami/README.md"; fi
   fi
   report "ERROR: install-umami.sh failed unexpectedly at line $1; $state"
@@ -53,6 +54,7 @@ trap 'on_unexpected_error $LINENO' ERR
 MEMINFO="${MEMINFO:-/proc/meminfo}"
 MIN_FREE_KB="${MIN_FREE_KB:-1048576}" # about 1 GB for Umami and its database; the server has 4 GB
 UP_WAIT="${UP_WAIT:-120}"             # seconds Umami may take to answer after it starts
+UP_TIMEOUT="${UP_TIMEOUT:-900}"       # seconds `compose up` may take, with the image pulls
 PUBLIC_WAIT="${PUBLIC_WAIT:-60}"      # seconds Caddy may take to get the certificate
 MIN_DISK_KB="${MIN_DISK_KB:-2097152}" # about 2 GB for the two images and the first data
 DISK_PATH="${DISK_PATH:-/var/lib/docker}"
@@ -86,9 +88,13 @@ fi
 # Whether Umami itself runs: a running database alone is not Umami, and starting Umami on a
 # database that came back empty gives it the default admin password. When it isn't running its
 # public address is closed, before any skip below: a start by hand later must not be public.
-was_running=no
-if command -v docker >/dev/null && umami_running umami; then was_running=yes; fi
-if [ "$was_running" = no ]; then
+umami_up=no     # the Umami container runs (the memory check)
+secure_start=no # Umami and its database both run: it is not starting on a new, empty database
+if command -v docker >/dev/null && umami_running umami; then
+  umami_up=yes
+  if umami_running db; then secure_start=yes; fi
+fi
+if [ "$secure_start" = no ]; then
   close_route || {
     report "ERROR: Umami's public address could not be closed, so nothing was started"
     exit 1
@@ -117,7 +123,7 @@ if ! command -v docker >/dev/null || ! docker compose version >/dev/null 2>&1; t
   exit 0
 fi
 
-if [ "$was_running" = no ]; then
+if [ "$umami_up" = no ]; then
   free_kb=$(awk '$1 == "MemAvailable:" { print $2 }' "$MEMINFO" 2>/dev/null || true)
   if [ "${free_kb:-0}" -lt "$MIN_FREE_KB" ]; then
     report "WARNING: Umami was not started: $((${free_kb:-0} / 1024)) MB of memory is available and it needs about $((MIN_FREE_KB / 1024)) MB"
@@ -175,7 +181,7 @@ install -m 644 "$here/umami/compose.yaml" "$UMAMI_DIR/compose.yaml"
 
 started=yes
 # Compose's own messages stay out of the public log; `docker compose logs` on the server has them.
-umami_compose up -d --quiet-pull >/dev/null 2>&1 || fail_closed "docker compose could not start Umami (see docker compose logs in $UMAMI_DIR)"
+timeout "$UP_TIMEOUT" "${UMAMI_COMPOSE[@]}" up -d --quiet-pull >/dev/null 2>&1 || fail_closed "docker compose could not start Umami (see docker compose logs in $UMAMI_DIR)"
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT

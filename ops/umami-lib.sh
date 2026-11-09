@@ -6,7 +6,10 @@ UMAMI_DIR="${UMAMI_DIR:-/var/www/umami}"
 UMAMI_PORT="${UMAMI_PORT:-3100}" # written to .env for compose, filled into the Caddy block, checked by deploy.yml
 UMAMI_CADDY_FILE="${UMAMI_CADDY_FILE:-/etc/caddy/sprecher-east-umami.caddy}"
 
-umami_compose() { docker compose -f "$UMAMI_DIR/compose.yaml" --project-directory "$UMAMI_DIR" "$@"; }
+UMAMI_COMPOSE=(docker compose -f "$UMAMI_DIR/compose.yaml" --project-directory "$UMAMI_DIR")
+umami_compose() { "${UMAMI_COMPOSE[@]}" "$@"; }
+# Backstop when the public address might not be closed: nothing then answers there at all.
+stop_umami() { umami_compose stop umami >/dev/null 2>&1 || true; }
 
 # True when the containers (or the named service) are running.
 umami_running() { [ -n "$({ umami_compose ps --status running -q "$@" 2>/dev/null || true; } | head -n 1)" ]; }

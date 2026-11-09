@@ -23,6 +23,12 @@ describe('how the pieces agree', () => {
     expect(compose).not.toMatch(/^\s+MCP_ENABLED:/m)
   })
 
+  it('caps the memory of both containers', () => {
+    const compose = read('umami/compose.yaml')
+    expect(compose).toMatch(/^ {2}umami:\n(?: {4}.*\n| *\n)*? {4}mem_limit: 768m$/m)
+    expect(compose).toMatch(/^ {2}db:\n(?: {4}.*\n| *\n)*? {4}mem_limit: 512m$/m)
+  })
+
   it('hands the password from the workflow to install-umami.sh over stdin only', () => {
     expect(read('..', '.github/workflows/deploy.yml')).toContain(
       `printf '%s' "$UMAMI_ADMIN_PASSWORD" | ssh vps "bash /var/www/sprecher-east/releases/$RELEASE/ops/deploy-release.sh --umami-password-stdin"`,
