@@ -16,6 +16,8 @@ export type ContentColumn = {
   size: ContentColumnSize
   body?: RichTextValue
   link?: ResolvedLink
+  /** Where the link button sits in its column; left out when it sits at the start */
+  linkAlign?: 'end'
 }
 
 /** Cards under an optional section title: a column holding only a heading starts a group */

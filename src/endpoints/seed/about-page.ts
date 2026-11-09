@@ -34,7 +34,7 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
     ],
   }
 
-  // The text takes two thirds and the map one third, side by side from a large screen up and stacked
+  // The text and the map take half each, side by side from a large screen up and stacked
   // on a phone; an editor changes the widths, the order or the alignment in Admin (#884)
   const layout: RequiredDataFromCollectionSlug<'pages'>['layout'] = args?.mapImage
     ? [
@@ -42,10 +42,10 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
           blockName: 'Intro and Map',
           blockType: 'section',
           items: [
-            { ...ITEM, width: 'twoThirds', content: [intro] },
+            { ...ITEM, width: 'half', content: [intro] },
             {
               ...ITEM,
-              width: 'oneThird',
+              width: 'half',
               content: [
                 {
                   blockName: 'Neighborhood Map',
@@ -83,6 +83,7 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
           size: 'full',
           // The same link button the live page has, the only link to the plan (#953)
           enableLink: true,
+          linkAlign: 'end',
           link: {
             type: 'custom',
             appearance: 'outline',

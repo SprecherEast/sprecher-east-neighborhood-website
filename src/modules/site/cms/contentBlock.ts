@@ -47,6 +47,20 @@ const columnFields: Field[] = [
       },
     },
   }),
+  {
+    name: 'linkAlign',
+    type: 'select',
+    label: 'Link button position',
+    defaultValue: 'start',
+    options: [
+      { label: 'Start (left)', value: 'start' },
+      { label: 'End (right)', value: 'end' },
+    ],
+    admin: {
+      description: 'Where the link button sits in its column.',
+      condition: (_data, siblingData) => Boolean(siblingData?.enableLink),
+    },
+  },
 ]
 
 export const Content: Block = {

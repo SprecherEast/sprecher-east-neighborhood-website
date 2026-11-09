@@ -645,6 +645,10 @@ export interface ContentBlock {
            */
           appearance?: ('default' | 'outline') | null
         }
+        /**
+         * Where the link button sits in its column.
+         */
+        linkAlign?: ('start' | 'end') | null
         id?: string | null
       }[]
     | null
@@ -1868,6 +1872,7 @@ export interface ContentBlockSelect<T extends boolean = true> {
               label?: T
               appearance?: T
             }
+        linkAlign?: T
         id?: T
       }
   id?: T

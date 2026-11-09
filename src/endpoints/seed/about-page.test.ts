@@ -52,8 +52,8 @@ describe('About page seed (#764)', () => {
     expect(headings(layout[1])).toEqual(['How AI helps'])
   })
 
-  it('puts the text beside the map, two thirds and one third, set as fields an editor can change', () => {
-    expect(items.map((item) => item.width)).toEqual(['twoThirds', 'oneThird'])
+  it('puts the text beside the map, half and half, set as fields an editor can change', () => {
+    expect(items.map((item) => item.width)).toEqual(['half', 'half'])
   })
 
   it('opens the first section with the site, not the neighborhood', () => {
@@ -87,6 +87,7 @@ describe('About page seed (#764)', () => {
   it('links our plan with an outline button in the How AI helps column, as the live page does (#953)', () => {
     const [column] = (layout[1] as { columns: Record<string, unknown>[] }).columns
     expect(column.enableLink).toBe(true)
+    expect(column.linkAlign).toBe('end')
     expect(column.link).toEqual({
       type: 'custom',
       appearance: 'outline',

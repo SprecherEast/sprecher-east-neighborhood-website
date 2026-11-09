@@ -25,6 +25,7 @@ import * as migration_20261101_182251_resource_portraits from './20261101_182251
 import * as migration_20261107_015722_map_block from './20261107_015722_map_block'
 import * as migration_20261107_042752_page_backdrop from './20261107_042752_page_backdrop'
 import * as migration_20261108_032245_section_block from './20261108_032245_section_block'
+import * as migration_20261109_204957_link_align from './20261109_204957_link_align'
 
 export const migrations = [
   {
@@ -161,5 +162,10 @@ export const migrations = [
     up: migration_20261108_032245_section_block.up,
     down: migration_20261108_032245_section_block.down,
     name: '20261108_032245_section_block',
+  },
+  {
+    up: migration_20261109_204957_link_align.up,
+    down: migration_20261109_204957_link_align.down,
+    name: '20261109_204957_link_align',
   },
 ]

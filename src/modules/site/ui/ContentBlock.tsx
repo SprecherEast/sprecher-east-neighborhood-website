@@ -41,12 +41,23 @@ const SIDE_CARD_TEXT =
 const STAT_TEXT =
   '[&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-foreground [&_p]:mt-1 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted-foreground'
 
-/** A column's text, then its link button */
-function ColumnContent({ body, link }: Pick<ContentColumn, 'body' | 'link'>) {
+/** A column's text, then its link button, at the start of the column or at the end */
+function ColumnContent({
+  body,
+  link,
+  linkAlign,
+}: Pick<ContentColumn, 'body' | 'link' | 'linkAlign'>) {
   return (
     <>
       {body && <RichText data={body} enableGutter={false} />}
-      {link && <LinkButton link={link} />}
+      {link &&
+        (linkAlign === 'end' ? (
+          <div className="flex justify-end">
+            <LinkButton link={link} />
+          </div>
+        ) : (
+          <LinkButton link={link} />
+        ))}
     </>
   )
 }
@@ -123,7 +134,9 @@ function Layout(props: ContentBlockProps) {
       )
     case 'single':
       return (
-        <div className="grid grid-cols-4 gap-x-16 gap-y-8 lg:grid-cols-12">
+        // Every column spans the row, so there is no column gap: twelve tracks with a gap between each
+        // would be wider than a narrow section item and push the text out over its neighbor
+        <div className="grid grid-cols-4 gap-y-8 lg:grid-cols-12">
           {props.columns.map(({ size, ...column }, index) => (
             <div key={index} className={cn(SPAN[size], SINGLE_TEXT)}>
               <ColumnContent {...column} />
