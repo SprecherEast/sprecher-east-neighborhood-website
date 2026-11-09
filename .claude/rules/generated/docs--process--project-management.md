@@ -105,9 +105,9 @@ optional; the type label stays the required one because the `PR Policy` check re
 
 ## The board
 
-[GitHub Project #2 "Sprecher East"](https://github.com/users/boulaajaj/projects/2), owned by
-`boulaajaj` and linked to this repo. It's private, so only the owner's account can open it. It was
-built on 2026-10-21 from the spec in #90.
+[GitHub Project #1 "Sprecher East"](https://github.com/orgs/SprecherEast/projects/1), owned by
+the `SprecherEast` organization and linked to this repo. It's private to the organization. It was
+built on 2026-10-21 from the spec in #90 and moved to the organization after.
 
 | Status      | Means                                                                                     |
 | ----------- | ----------------------------------------------------------------------------------------- |
@@ -127,8 +127,10 @@ built on 2026-10-21 from the spec in #90.
   (also as not planned), moves it to Done. Moving an item to Done by hand doesn't close the issue.
   Closed items are archived after two weeks.
 - **Access:** changing the board needs the owner's account with the `project` scope: the owner in
-  the web UI, or an agent on his computer signed in with `gh` and that scope. Agents in cloud
-  sessions can't reach a board on a personal account, so they keep issue state, labels, parents
+  the web UI, or an agent on his computer signed in with `gh` and that scope. A cloud session's GitHub access
+  can be read-only: an error such as "Resource not accessible by integration" means the Claude
+  GitHub app is probably not installed on the organization (not confirmed). The planner app is the
+  route to the board that does not need anyone's computer. Where a cloud session can write issues, it keeps issue state, labels, parents
   and milestones right, say in a comment on the issue which card needs moving (and to which
   column), and let the board's automations do the rest. The next session on his computer moves it.
 - **The planner app:** a GitHub App owned by the organization can read and change the board without

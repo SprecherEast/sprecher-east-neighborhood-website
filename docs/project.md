@@ -12,7 +12,7 @@ It is an unofficial, AI-assisted initiative (ground rules in [`AGENTS.md`](../AG
 
 **Repos:**
 
-- Website (this repo, PUBLIC): `boulaajaj/sprecher-east-neighborhood-website`
+- Website (this repo, PUBLIC): `SprecherEast/sprecher-east-neighborhood-website` (the SprecherEast organization; moved from the owner's personal account)
 - Strategy docs: `boulaajaj/sprecher-east-strategy` (PRIVATE, archived and read-only since #538; this repo is the source of truth)
 
 ## Current Stack
