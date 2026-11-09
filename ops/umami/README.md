@@ -100,8 +100,11 @@ key a restored dump can't decrypt the stored two-factor secrets.
 
 The public layout loads `https://stats.<domain>/script.js` after the page, only when
 `NEXT_PUBLIC_UMAMI_WEBSITE_ID` is in `/var/www/sprecher-east/.env.local` at build time (the site's
-ID from Umami, public). It sets `data-do-not-track` and `data-domains`, so a browser that asks not
-to be tracked, or a copy of the site on another hostname, counts nothing. Caddy proxies every path
+ID from Umami, public). It sets `data-do-not-track`, `data-domains` (the site's address and its bare domain) and
+`data-exclude-search`, so a browser that asks not to be tracked, or a copy of the site on another
+hostname, counts nothing, and no page address reaches Umami with its query string (reset and
+verification tokens, a sign-up email and search words travel there). Umami keeps what it records
+until someone deletes it; the Privacy page says so. A malformed ID stops the deploy at the preflight. Caddy proxies every path
 of `stats.<domain>`, so `/script.js` and `/api/send` are public, as is the login page; the site has
 no Content-Security-Policy that would block either. After adding or changing the ID, redeploy
 (Actions → Deploy to VPS → Run workflow).

@@ -24,6 +24,8 @@ describe('UmamiScript (#950)', () => {
       'data-website-id': ID,
       'data-domains': 'sprechereast.com',
       'data-do-not-track': 'true',
+      // Tokens, emails and search words live in the query string; it must never leave the page
+      'data-exclude-search': 'true',
     })
   })
 

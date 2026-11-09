@@ -22,10 +22,24 @@ describe('Privacy page seed (#950)', () => {
     expect(page.slug).toBe('privacy')
   })
 
-  it('says visits are counted without cookies or personal details, and Do Not Track is honored', () => {
-    expect(words).toMatch(/no cookies/)
-    expect(words).toMatch(/personal details/)
+  it('says visits are counted without cookies, names or emails, and Do Not Track is honored', () => {
+    expect(words).toMatch(/sets no cookies/)
+    expect(words).toMatch(/keeps no names, emails or IP addresses/)
     expect(words).toMatch(/Do Not Track/)
+  })
+
+  it('names everything the counter stores, and how long it is kept', () => {
+    for (const item of [
+      'title',
+      'browser',
+      'system',
+      'screen size',
+      'language',
+      'city',
+      'delete',
+    ]) {
+      expect(words).toContain(item)
+    }
   })
 
   it('speaks as we, never as I or me', () => {

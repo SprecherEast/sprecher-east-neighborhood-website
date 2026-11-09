@@ -9,14 +9,14 @@ describe('umamiConfig (#950)', () => {
     expect(umamiConfig(ID, 'https://sprechereast.com')).toEqual({
       src: 'https://stats.sprechereast.com/script.js',
       websiteId: ID,
-      domain: 'sprechereast.com',
+      domains: 'sprechereast.com',
     })
   })
 
-  it('treats www. and the bare domain alike', () => {
-    expect(umamiConfig(ID, 'https://www.sprechereast.com')?.src).toBe(
-      'https://stats.sprechereast.com/script.js',
-    )
+  it('keeps the stats address on the bare domain, and counts both spellings of a www site', () => {
+    const config = umamiConfig(ID, 'https://www.sprechereast.com')
+    expect(config?.src).toBe('https://stats.sprechereast.com/script.js')
+    expect(config?.domains).toBe('www.sprechereast.com,sprechereast.com')
   })
 
   it.each([undefined, '', '  ', 'not-an-id'])('counts nothing for the ID %j', (id) => {

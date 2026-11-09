@@ -18,10 +18,10 @@ export const privacyPage: () => RequiredDataFromCollectionSlug<'pages'> = () => 
           richText: root([
             heading('h2', 'Counting visits'),
             p(
-              'We count visits to see which pages help neighbors. The counter runs on our own server, sets no cookies, and keeps no names, emails or other personal details.',
+              'We count visits to see which pages help neighbors. The counter runs on our own server and sets no cookies. It keeps no names, emails or IP addresses, and ignores anything after a ? in a page address.',
             ),
             p(
-              'It notes the page, where you came from, your browser and device type, and a rough area. If your browser sends Do Not Track, we don’t count you at all.',
+              'Each visit notes the page and its title, where you came from, your browser, system, screen size and language, and your country, region and city. If your browser sends Do Not Track, we don’t count you. We keep the counts until we delete them.',
             ),
           ]),
           size: 'full',

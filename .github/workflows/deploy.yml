@@ -64,7 +64,7 @@ jobs:
           [[ "$node" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error title=Preflight::unexpected Node version from the server"; exit 1; }
           [[ "$url" =~ ^https?://[A-Za-z0-9.-]+(:[0-9]+)?$ ]] || { echo "::error title=Preflight::NEXT_PUBLIC_SERVER_URL in .env.local is not a plain origin"; exit 1; }
           [[ "$key" =~ ^[A-Za-z0-9_-]*$ ]] || { echo "::error title=Preflight::unexpected NEXT_PUBLIC_TURNSTILE_SITE_KEY"; exit 1; }
-          [[ "$umami" =~ ^([0-9a-fA-F-]{36})?$ ]] || { echo "::error title=Preflight::unexpected NEXT_PUBLIC_UMAMI_WEBSITE_ID"; exit 1; }
+          UMAMI_ID="$umami" bash .github/scripts/umami-id-gate.sh
           # Both Turnstile keys, or the visible opt-out (#869); the decision is in the script.
           SITE_KEY="$key" SECRET_SET="$secret" bash .github/scripts/robot-check-gate.sh
           [ "${free_kb:-0}" -gt 3145728 ] || { echo "::error title=Preflight::less than 3 GB free on the server"; exit 1; }
