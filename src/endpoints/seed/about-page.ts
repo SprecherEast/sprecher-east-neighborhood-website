@@ -1,4 +1,5 @@
 import type { RequiredDataFromCollectionSlug } from 'payload'
+import { ROADMAP_PATH } from '@/modules/roadmap'
 import type { Media } from '@/payload-types'
 import { heading, linkNode, p, paragraph, root, text } from './helpers/lexical'
 
@@ -76,6 +77,11 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
             paragraph(
               text('If enough neighbors want one, forming a neighborhood association is a goal. '),
               linkNode('Here’s the story so far', '/posts/sprecher-east-is-coming-together'),
+              text('.'),
+            ),
+            paragraph(
+              text('Curious what we’re working on? '),
+              linkNode('See our plan', ROADMAP_PATH),
               text('.'),
             ),
           ]),
