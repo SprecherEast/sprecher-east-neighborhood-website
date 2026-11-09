@@ -161,9 +161,11 @@ Code that "builds without errors" but looks broken on mobile is a bug. The visua
 
 ## Fast By Default, Public Pages First
 
-The public site must stay fast for a neighbor on a phone; the admin follows the same rules after
-it. These are principles. Budgets and automatic checks come from a measured baseline, not from
-this page.
+The public site should feel fast for a neighbor on a phone; the admin follows after it. Aim for
+decent, not extreme: write code the sensible way, and do not go out of your way, add complexity or
+delay a change to squeeze out more. These are principles. Budgets and automatic checks come from a
+measured baseline, start as advisory (they report, they do not block), and tighten only when
+measurements show they should.
 
 - **Render once, serve many.** A public page is static or revalidated and refreshed on save
   through the existing revalidate hooks. Anything that forces a page to render on every request
@@ -177,7 +179,8 @@ this page.
 - **Measure, don't guess.** A change that moves a measured number says why in the PR.
 - **A mechanical check beats judgment.** Where a free, maintained tool can fail a pull request by
   itself, use it, and keep our own check for what no tool covers. A red check is fixed by making
-  the page lighter, or by changing its budget in the same PR with the reason.
+  the page lighter, or by changing its budget in the same PR with the reason. While a check is
+  advisory, a finding is read and answered in the PR, not fixed at any cost.
 
 [`vercel-react-best-practices`](/.agents/skills/vercel-react-best-practices/SKILL.md) is the
 detailed reference for React and Next.js; this section says what is ours.

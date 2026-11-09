@@ -20,7 +20,7 @@ Claude Code.
   `claude --agent chief-of-staff`, on `opus` at `high` effort, with `disallowedTools` for Edit,
   Write, NotebookEdit, MultiEdit, push, merge, `PUT` API calls and GraphQL mutations (known
   holes are in the [manual test](/docs/process/chief-of-staff-manual-test.md)), and `Agent(worker, qa-reviewer)` as
-  the only agents it may start. The worker agent comes in a later piece; the standard reviewers stay
+  the only agents it may start. `.claude/settings.json` names it as the default agent (`agent`), so a session in the project starts as the chief of staff; `--agent` overrides it. The worker agent (`.claude/agents/worker.md`) does each issue; the standard reviewers stay
   on `sonnet` at `medium`. Its helper procedures are skills, so they run in its session and need no model of
   their own. Review depth today is the #522 rule in `CLAUDE.md` and nothing wider. Never `fable` in
   unattended runs: it can bill to usage credits, and in `-p` runs without asking
@@ -41,8 +41,9 @@ Claude Code.
   the key is always used when present, which switches usage from the subscription to API billing
   ([authentication](https://code.claude.com/docs/en/authentication)).
 - **Subagents:** `.claude/agents/` registers each [role guide](/docs/roles/README.md) as a subagent
-  Claude Code can delegate to. Those files only hold Claude Code settings; edit the guide. #695
-  replaces them with one worker that loads the guides as skills.
+  Claude Code can delegate to. Those files only hold Claude Code settings; edit the guide. The
+  `worker` agent does each issue; the role agents stay for direct use until #695 moves the guides
+  into skills. A headless `-p` run in the project also starts as the chief of staff; no workflow does.
 - **Hooks** (#446, in `.claude/settings.json`, scripts and tests in `.claude/hooks/`): after each
   Edit or Write, the file is formatted with Prettier and checked with ESLint in the checkout or
   worktree that holds it, and an error comes back to fix at once. If the file is one a knowledge

@@ -16,5 +16,5 @@ not edit files, push or merge; a worker merges its own reviewed pull request und
 start only a worker and a reviewer. If a task needs more than that, say so on the issue.
 
 This file only registers the role as a Claude Code agent. Edit the skill, not this file. The
-`Agent(...)` limit works only when the agent runs as the main session. The worker agent arrives
-with a later piece of #695; until then a brief goes to the owner to start a worker session with.
+`Agent(...)` limit works only when the agent runs as the main session. Start one `worker` agent per issue
+with the Agent tool, and a fresh reviewer per pull request.

@@ -29,7 +29,7 @@ they load when the work touches `CLAUDE.md`, `.claude/`, `.agents/` or `.github/
 - **After every merge,** run `/wrapped` (the [`wrapped`](.agents/skills/wrapped/SKILL.md) skill).
 - **Independent review:** run [`pr-review`](.agents/skills/pr-review/SKILL.md) in a separate
   session or a new subagent (for example `qa-reviewer`), never in the context that wrote the change.
-- **Models and effort** (#522): sessions start on `opusplan` at `medium` effort, and the agents in
+- **Models and effort** (#522): other sessions start on `opusplan` at `medium` effort, and the agents in
   `.claude/agents/` on `sonnet` at `medium`. Start the reviewer on `opus` at `high` only when the PR
   touches sign-in or accounts, access rules, migrations, the deploy or server scripts, or other
   security code. Fallback reviewer: `sonnet[1m]`, `medium`. Use the plain aliases, never a version. Never `fable` in unattended runs.

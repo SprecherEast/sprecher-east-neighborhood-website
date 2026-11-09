@@ -26,6 +26,7 @@ out a change to one, and a change the owner didn't ask for waits for him
 | SEO Specialist             | [`seo-specialist`](seo-specialist.md)     | Search, metadata, structured data, discoverability.                      |
 | UI Designer                | [`ui-designer`](ui-designer.md)           | Visual polish: designs, visual bugs, brand consistency, effects.         |
 | UX Designer                | [`ux-designer`](ux-designer.md)           | New pages, navigation, content hierarchy, usability problems.            |
+| Worker                     | [`worker`](worker.md)                     | Finishing one Ready issue, from claim to merge.                          |
 
 How the agent team uses the guides, who reviews whom and how much scrutiny a change gets is in the
 [agent operating model](../process/agent-operating-model.md).

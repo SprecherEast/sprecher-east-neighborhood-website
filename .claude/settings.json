@@ -1,4 +1,5 @@
 {
+  "agent": "chief-of-staff",
   "model": "opusplan",
   "effortLevel": "medium",
   "permissions": {
