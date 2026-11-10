@@ -41,6 +41,7 @@ their props, and which values they share with the CSS. Props, variants and where
 ## Rules and the tests that protect them
 
 - Pages and modules use the kit, never raw `a`, `button`, `input`, `select`, `textarea`, `details`, `summary` or `img`; the native element lives inside a kit component (guard rail 2). Lint bans them outside `src/platform/ui/` (`eslint.ui-kit.config.mjs`).
+- A `Disclosure` chevron turns only for its own box, so boxes can nest: `Disclosure.test.tsx` runs the real Tailwind output against a nested and a top-level box (#967).
 - Sizes and scroll margins read one variable each: `layoutSizes.test.ts`, `scrollMargin.test.ts`.
 - The registry's order and the text fallback: `chart/chartRegistry.test.ts`; every adapter's markup (no `style`, no colour literals, real text, axe): `chart/chartAdapter.contract.test.tsx`.
 - Chart libraries stay in the adapters: `chart/chartLibraries.lint.test.ts`; the browser never gets a library or the spec rules through the zoom: `chart/ChartZoom.imports.test.ts`.
