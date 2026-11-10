@@ -12,7 +12,7 @@ import type { PostDetail, PostSource } from '../domain/types'
 
 /**
  * Where the news came from (#483): the source's name, linking to the original in a new tab when
- * the post has a link, in the site's link color: the facts sit on the page, not on the photo (#571).
+ * the post has a link, in the site's link color.
  */
 function SourceValue({ source }: { source: PostSource }) {
   if (!source.url) return source.name
@@ -47,23 +47,22 @@ export function postByline(post: PostDetail): LabelledMetaItem[] {
 }
 
 /**
- * The top of a post's page as `PageHeader` props (#461): its categories and title, on its hero
- * photo (`image`), or plain (`default`) when it has none. The author, date and source are
- * `postByline`, above the article text (#774).
+ * The top of a post's page as `PageHeader` props (#461): its categories and title on a plain
+ * band, whether or not it has a picture, which `FeaturedImage` shows in the article (#1013). The
+ * author, date and source are `postByline`, above the article text (#774).
  */
 export function postHeaderProps(post: PostDetail): PageHeaderProps {
-  const { categories, heroImage, title } = post
-  const badge = heroImage ? 'on-image' : 'category'
+  const { categories, title } = post
   const eyebrow =
     categories.length > 0 ? (
       <BadgeList>
         {categories.map((category) => (
-          <Badge key={category.id} variant={badge}>
+          <Badge key={category.id} variant="category">
             {category.title}
           </Badge>
         ))}
       </BadgeList>
     ) : undefined
 
-  return heroImage ? { variant: 'image', image: heroImage, eyebrow, title } : { eyebrow, title }
+  return { variant: 'band', eyebrow, title }
 }

@@ -205,3 +205,19 @@ Source: `src/platform/ui/ImageCredit.tsx`
 - Modules: `directory`
 - Routes: `/dev/gallery`
 - Platform: `platform/ui`
+
+## `FeaturedImage`
+
+The picture of a post or an event, at the top of the article's column (#1013): shown whole, at its own proportions, never cropped, so a picture that carries text (a panel of facts) stays readable at every width. It is the first image the visitor sees, so it loads early, and it takes the reading width from the column's left edge so its edges line up with the text. Its credit shows under it. With no picture it draws nothing, so no gap is left.
+
+Source: `src/platform/ui/FeaturedImage.tsx`
+
+| Prop        | Type                         | Required | Description |
+| ----------- | ---------------------------- | -------- | ----------- |
+| `image`     | `Media \| null \| undefined` | yes      |             |
+| `className` | `string`                     | no       |             |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`
+- Platform: `platform/ui`

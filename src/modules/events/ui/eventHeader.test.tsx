@@ -37,9 +37,9 @@ const event: EventDetail = {
 const photo = { id: 3, alt: 'The park shelter', url: '/api/media/file/shelter.webp' } as ImageRef
 
 describe('eventHeaderProps', () => {
-  it('heads an event without a photo plainly, with its category pill and facts (#461)', () => {
+  it('heads an event on a plain band, with its category pill and facts (#461, #1013)', () => {
     const props = eventHeaderProps(event)
-    expect(props.variant).toBeUndefined()
+    expect(props.variant).toBe('band')
 
     render(<PageHeader {...props} />)
     expect(screen.getByText('Social').className).toContain('text-primary-strong')
@@ -71,12 +71,18 @@ describe('eventHeaderProps', () => {
     expect(screen.queryByText('Location')).toBeNull()
   })
 
-  it('puts an event with a photo on it, its category on the photo', () => {
-    const props = eventHeaderProps({ ...event, image: photo })
-    expect(props).toMatchObject({ variant: 'image', image: photo, title: 'Fall potluck' })
+  it('keeps the picture out of the band, with or without one (#1013)', () => {
+    for (const image of [photo, null]) {
+      const props = eventHeaderProps({ ...event, image })
+      expect(props).toMatchObject({ variant: 'band', title: 'Fall potluck' })
+      expect(props).not.toHaveProperty('image')
 
-    render(<PageHeader {...props} />)
-    expect(screen.getByText('Social').className).toContain('bg-scrim/60')
+      const { container } = render(<PageHeader {...props} />)
+      expect(container.querySelector('img')).toBeNull()
+      // Labels sit on the band's surface in their usual look, not on a scrim
+      expect(screen.getByText('Social').className).toContain('text-primary-strong')
+      cleanup()
+    }
   })
 
   it('leaves out the time and format it does not know', () => {
@@ -98,12 +104,6 @@ describe('eventHeaderProps', () => {
       expect(label.parentElement?.textContent).toBe('CancelledSocial')
       expect(screen.getByRole('heading', { level: 1, name: 'Fall potluck' })).toBeDefined()
       await expectAccessible(container)
-    })
-
-    it('puts the label on the photo, on its own scrim', () => {
-      render(<PageHeader {...eventHeaderProps({ ...event, cancelled: true, image: photo })} />)
-
-      expect(screen.getByText('Cancelled').className).toContain('bg-scrim/60')
     })
 
     it('shows the label even when the event has no categories', () => {
@@ -131,14 +131,6 @@ describe('eventHeaderProps', () => {
       expect(label.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
       expect(label.parentElement?.textContent).toBe('CancelledCity of Madison meetingSocial')
       await expectAccessible(container)
-    })
-
-    it('puts the label on the photo, on its own scrim', () => {
-      render(
-        <PageHeader {...eventHeaderProps({ ...council, officialBody: 'county', image: photo })} />,
-      )
-
-      expect(screen.getByText('Dane County meeting').className).toContain('bg-scrim/60')
     })
 
     it('shows the label even when the meeting has no categories', () => {

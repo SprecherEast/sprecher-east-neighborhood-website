@@ -2,6 +2,8 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import type { ImageRef } from '@/platform/lib/content'
+
 import { ArticlePage } from './ArticlePage'
 import { expectAccessible } from './testing/expectAccessible'
 
@@ -19,8 +21,7 @@ const renderArticle = (props: Partial<Parameters<typeof ArticlePage>[0]> = {}) =
         jsonLd={{ '@type': 'NewsArticle' }}
         redirects={<span data-testid="redirects" />}
         draft={false}
-        hasHeroImage={false}
-        header={{ title: 'Park cleanup' }}
+        header={{ variant: 'band', title: 'Park cleanup' }}
         breadcrumbs={[
           { label: 'Home', href: '/' },
           { label: 'News', href: '/posts' },
@@ -102,14 +103,44 @@ describe('ArticlePage', () => {
     })
   })
 
-  it('leaves room under a photo header only when there is one', () => {
-    const body = () => screen.getByRole('article').querySelector('article > div')
+  describe('the featured image (#1013)', () => {
+    const picture = {
+      id: 1,
+      alt: 'A poster with its details in a panel',
+      url: '/api/media/file/poster.webp',
+      width: 1670,
+      height: 941,
+      mimeType: 'image/webp',
+      updatedAt: '2026-10-01T12:00:00.000Z',
+      createdAt: '2026-10-01T12:00:00.000Z',
+    } as ImageRef
 
-    renderArticle({ hasHeroImage: true })
-    expect(body()?.className).toContain('pt-8')
+    it('is the first thing in the article column, whole, and not in the header', async () => {
+      const { container } = renderArticle({
+        image: picture,
+        byline: [{ label: 'Author', value: 'Ana' }],
+      })
 
-    cleanup()
-    renderArticle({ hasHeroImage: false })
-    expect(body()?.className ?? '').not.toContain('pt-8')
+      const img = screen.getByRole('img', { name: picture.alt ?? '' })
+      expect(img.closest('header')).toBeNull()
+      const column = screen.getByText('The article').parentElement
+      expect(column?.firstElementChild?.contains(img)).toBe(true)
+      expect(img.className).not.toContain('object-')
+      await expectAccessible(container)
+    })
+
+    it('draws nothing, and leaves no gap, on a page without a picture', () => {
+      const { container } = renderArticle({ image: null })
+
+      expect(container.querySelector('img')).toBeNull()
+      expect(container.querySelector('figure')).toBeNull()
+      expect(screen.getByText('The article').parentElement?.children).toHaveLength(1)
+    })
+  })
+
+  it('always leaves room under the title band', () => {
+    renderArticle()
+
+    expect(screen.getByRole('article').querySelector('article > div')?.className).toContain('pt-8')
   })
 })

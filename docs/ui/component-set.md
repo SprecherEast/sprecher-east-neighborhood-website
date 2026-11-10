@@ -81,6 +81,8 @@ show and there is no button. Its test checks the closed and the open dialog with
 removed, since jsdom can't run axe across one), the gallery shows both states, and its props are in
 the [media page](../reference/components/media.md).
 
+**`FeaturedImage`** (#1013) is the picture of a post or an event, at the top of the article's column: the whole picture at its own proportions, never cropped, up to the reading width from the column's left edge, loading early (it is the first image seen), with its credit under it. With no picture it draws nothing and leaves no gap. `ArticlePage` draws it, and the page header above it is the plain `PageHeader` `band` (a themed surface, no picture), so a picture that carries text stays readable at every width. Its test checks the proportions, the reading width, the early load, the empty case and axe; the gallery shows both cases.
+
 **`Figure`** (#816) is a small picture that floats right in an article, about two fifths of the text
 column by default (`size`: `third`, `two-fifths` or `half`), with the text wrapping on its left from
 `md` up; below `md` it fills the column between paragraphs. Its label ("Figure 2-9") sits in a

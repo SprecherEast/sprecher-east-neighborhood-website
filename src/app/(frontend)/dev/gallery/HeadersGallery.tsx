@@ -5,6 +5,7 @@ import { RichText } from '@/platform/richtext/RichText'
 import { Badge, BadgeList } from '@/platform/ui/Badge'
 import { Breadcrumbs } from '@/platform/ui/Breadcrumbs'
 import { Caption, CAPTION_RICH_TEXT } from '@/platform/ui/Caption'
+import { FeaturedImage } from '@/platform/ui/FeaturedImage'
 import { ImageCredit } from '@/platform/ui/ImageCredit'
 import { Legend } from '@/platform/ui/Legend'
 import { Media } from '@/platform/ui/Media'
@@ -21,7 +22,6 @@ import {
   SAMPLE_LEGEND_ITEMS,
   SAMPLE_LEGEND_SWATCHES,
   SAMPLE_PHOTO,
-  SAMPLE_WHITE_IMAGE,
 } from './sampleData'
 
 // A frame round each header, so it reads as a sample and not as the gallery's own header
@@ -57,16 +57,15 @@ export function HeadersGallery() {
             />
           </div>
         </GalleryVariant>
-        <GalleryVariant label="image, with badges as the eyebrow" labelAs="p">
-          {/* The image header slides under the sticky site header; here it starts in place */}
+        <GalleryVariant label="band, with badges as the eyebrow and facts under it" labelAs="p">
+          {/* The band slides under the sticky site header; here it starts in place */}
           <div className={`${FRAME} [--header-height:0px]`}>
             <PageHeader
-              variant="image"
-              image={SAMPLE_IMAGE}
+              variant="band"
               eyebrow={
                 <BadgeList>
-                  <Badge variant="on-image">Events</Badge>
-                  <Badge variant="on-image">Parks</Badge>
+                  <Badge variant="category">Events</Badge>
+                  <Badge variant="category">Parks</Badge>
                 </BadgeList>
               }
               title="Summer picnic in the park"
@@ -75,17 +74,13 @@ export function HeadersGallery() {
             />
           </div>
         </GalleryVariant>
-        <GalleryVariant
-          label="image, on a pure white photo (the worst case for readability)"
-          labelAs="p"
-        >
+        <GalleryVariant label="band, with a title that wraps" labelAs="p">
           <div className={`${FRAME} [--header-height:0px]`}>
             <PageHeader
-              variant="image"
-              image={SAMPLE_WHITE_IMAGE}
+              variant="band"
               eyebrow={
                 <BadgeList>
-                  <Badge variant="on-image">Development</Badge>
+                  <Badge variant="category">Development</Badge>
                 </BadgeList>
               }
               title="A new way onto I-94 at Milwaukee Street: what it could mean for our streets"
@@ -128,6 +123,23 @@ export function HeadersGallery() {
       <GalleryEntry name="ImageCredit" description="Shows nothing for an image without a credit.">
         <GalleryVariant label="with source and license links">
           <ImageCredit image={SAMPLE_IMAGE} />
+        </GalleryVariant>
+      </GalleryEntry>
+
+      <GalleryEntry
+        name="FeaturedImage"
+        description="The picture of a post or an event, shown whole at the top of the article's column, within the reading width; nothing without a picture."
+      >
+        <GalleryVariant label="whole picture, with its credit" className="w-full">
+          <div className={`${FRAME} p-6`}>
+            <FeaturedImage image={SAMPLE_IMAGE} className="mb-0" />
+          </div>
+        </GalleryVariant>
+        <GalleryVariant label="no picture: nothing is drawn and no gap is left" className="w-full">
+          <div className={`${FRAME} p-6`}>
+            <FeaturedImage image={null} />
+            <p>The text starts right away.</p>
+          </div>
         </GalleryVariant>
       </GalleryEntry>
 

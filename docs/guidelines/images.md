@@ -40,10 +40,8 @@ text panel to the checks above.
 10. **Same style as the rest.** Follow the existing illustrations' palette, outline and type.
 11. **Review, then publish, then check live.** Preview the finished file, fix what the checks above
     find, publish, and open the live page at phone width and desktop width to confirm.
-12. **Set the focal point on the subject.** A post or event page crops its picture into a wide band
-    around the upload's focal point (the centre when none is set), while cards show the whole
-    picture. Set the focal point in the CMS on the part of the picture that should lead, and when
-    the picture has a text panel, on the part that is not the panel, so the band doesn't cut
-    through its words. A focal point only chooses which part of the picture the band shows, so
-    look at the band at every width after setting it: where the panel still shows, the picture
-    is not suited to the band.
+12. **A picture that carries text is shown whole.** A post or event page shows its picture whole,
+    never cropped, at the top of the article, so the text in it stays readable at every width. A
+    cropping band behind a title can't promise that: it shows a different part of the picture at
+    each width, and a focal point only chooses which part. Where the site does crop a picture, set
+    the focal point in the CMS on the part that should lead, and look at it at every width.

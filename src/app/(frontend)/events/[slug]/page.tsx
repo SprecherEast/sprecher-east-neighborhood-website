@@ -23,7 +23,6 @@ import {
 } from '@/modules/events/server'
 import { Alert, Button } from '@/platform/ui'
 import { generateMeta } from '@/platform/seo/generateMeta'
-import { cn } from '@/platform/lib/cn'
 import { Text } from '@/platform/ui/Text'
 
 // A scheduled publish or unpublish runs outside a request, where Next can't refresh the cache, so
@@ -54,15 +53,14 @@ export default async function EventPage({ params: paramsPromise }: Args) {
   if (!event) return <PayloadRedirects url={url} />
 
   const upcomingEvents = await findUpcomingEvents({ excludeId: event.id })
-  const hasHeroImage = event.image !== null
+  const hasImage = event.image !== null
   return (
     <ArticlePage
-      // Without a photo the header is plain, so it keeps clear of the site header
-      className={cn('pb-24', !hasHeroImage && 'pt-32')}
+      className="pt-16 pb-24"
       jsonLd={eventJsonLd(event)}
       redirects={<PayloadRedirects disableNotFound url={url} />}
       draft={draft}
-      hasHeroImage={hasHeroImage}
+      image={event.image}
       header={eventHeaderProps(event)}
       breadcrumbs={[
         { label: 'Home', href: '/' },
@@ -97,7 +95,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
         </div>
       )}
 
-      {event.description && !hasHeroImage && (
+      {event.description && !hasImage && (
         <Text variant="lead" className="mb-8">
           {event.description}
         </Text>
