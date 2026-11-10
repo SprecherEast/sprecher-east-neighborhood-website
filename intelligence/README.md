@@ -26,24 +26,25 @@ One run takes each new or changed item through five stages. Each stage reads the
 its own section (`schemas/item.schema.json`); it never changes an earlier one.
 
 1. **Scout** (code). Fetches the pilot sources, parses them, and builds a candidate with a stable
-   `externalId` and a `contentHash`. Items already seen with the same hash stop here. It also
-   notes any organizer or publisher in an accepted item that isn't in `sources.yaml` and proposes
-   it as a `pending` source.
+   `externalId` and a `contentHash`. Items already seen with the same hash stop here.
 2. **Verify** (model). Finds the real place, date and status from primary sources, sets the
    coverage tier, and lists every unknown. Runs the five checks in `coverage.md`, "Review
    passes": primary source, place against the City's boundary, freshness, physical facts and
    stage of a project.
 3. **Curate** (model). Accepts, rejects or sends to review, scores the item, and says who
    benefits and what they can do. Detects duplicates, updates and cancellations of known items.
-   It is the second read of the verify result.
+   It is the second read of the verify result, and proposes any accepted item's organizer or
+   publisher that isn't in `sources.yaml` as a `pending` source in its reasons (no code records
+   it yet, #1008).
 4. **Draft** (model). Writes the short suggestion, with only confirmed facts and a list of what's
    missing.
 5. **Submit** (code). Sends accepted drafts as suggestions and everything an editor must check
    as review items, through #336's MCP tools, and writes the run log.
 
-Before an editor publishes, an item has been read three times: the verify checks, curate's second
-read, and a freshness re-check right before publishing. A safety item never auto-publishes
-(`coverage.md`, "Review passes").
+The pipeline reads an item twice: the verify checks, then curate's second read. Both are prompt
+rules. The freshness re-check right before publishing is a step for the person or AI agent who
+publishes by hand, not a pipeline stage. A safety item is never accepted by curate; that is a
+prompt rule the promotion guard doesn't enforce yet (#1007). See `coverage.md`, "Review passes".
 
 Deterministic steps come first: fetching, parsing and deduplication never use a model. The
 model handles only relevance, location ambiguity and the write-up, at medium effort, escalating to

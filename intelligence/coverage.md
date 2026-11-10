@@ -41,13 +41,13 @@ Facts to keep straight:
 
 Every verified item gets one `coverage` value (`schemas/common.schema.json`):
 
-| Value       | Means                                                                                                                                                                                                                                                                                                                   |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core`      | The confirmed address or affected place is inside the area.                                                                                                                                                                                                                                                             |
-| `catchment` | Close enough that residents use it: Pinney Library, Door Creek Park, Elvehjem Sanctuary, the stretches of Sprecher Road, Cottage Grove Road and I-94 that bound the area, District 16 meetings that name a place near the area, and the major events and public matters of the neighboring associations in `area.yaml`. |
-| `citywide`  | City of Madison or Dane County, not tied to a place, with a direct use for residents: a deadline, a service, a council decision, a free program open to everyone.                                                                                                                                                       |
-| `outside`   | Somewhere else, including places with similar names.                                                                                                                                                                                                                                                                    |
-| `unknown`   | The location couldn't be confirmed from a primary source.                                                                                                                                                                                                                                                               |
+| Value       | Means                                                                                                                                                                                                                                                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core`      | The confirmed address or affected place is inside the area.                                                                                                                                                                                                                                                               |
+| `catchment` | Close enough that residents use it: Pinney Library, Door Creek Park, Elvehjem Sanctuary, the stretches of Sprecher Road, Cottage Grove Road and I-94 that bound the area, District 16 meetings that name a place near the area, and the major events and public matters of the neighboring associations in `area.yaml`.   |
+| `citywide`  | City of Madison or Dane County, with a direct use for residents: a deadline, a service, a council decision, a free program open to everyone. Not tied to a place, or at a fixed place elsewhere in the city only when it is a public event or service open to anyone and of wide interest (see "Review passes", check 2). |
+| `outside`   | Somewhere else, including places with similar names.                                                                                                                                                                                                                                                                      |
+| `unknown`   | The location couldn't be confirmed from a primary source.                                                                                                                                                                                                                                                                 |
 
 ## Known venues
 
@@ -99,17 +99,19 @@ sources conflict, or the item is borderline. Route a change to an item already i
 
 ## Review passes
 
-Every item is read three times before it can publish, and these rules are written only here;
-`prompts/verify.md`, `prompts/curate.md` and the publish step point to them.
+These rules are written only here; `prompts/verify.md` and `prompts/curate.md` point to them.
 
-1. **Verify** applies the five checks below.
-2. **Curate** reads the item again with the relevance rules, and checks the verify result against
-   them. It doesn't repeat the lookups.
-3. **Publish** re-checks freshness (check 3) right before an editor publishes the suggestion;
-   an item that is no longer current is withdrawn.
+What the pipeline does is two reads: **verify** applies the five checks below, and **curate** reads
+the result again with the relevance rules and sends the item to `needs-review` when a check
+wasn't met. Both are prompt rules, a model's judgment; code guards only what `promotionGuard` in
+`pipeline.yaml` lists. The third step is not a pipeline stage: **before publishing**, the person
+or AI agent who publishes by hand re-checks freshness (check 3) and withdraws an item that is no
+longer current.
 
-A safety item (an incident, a hazard, a weather alert, anything about people's safety) never
-auto-publishes: it always goes to an editor as `needs-review`, whatever its scores.
+A safety item (an incident, a hazard, a weather alert, anything about people's safety) is never
+`accept`: curate decides `needs-review`. That is a prompt rule today. The promotion guard does not
+enforce it yet; #1007 will enforce it in code. Nothing publishes by itself either way: agents only
+create suggested drafts.
 
 The five checks, which verify runs on every item:
 
@@ -117,9 +119,13 @@ The five checks, which verify runs on every item:
    body's own page. A date, time or number found only in one secondary report is left out, or
    attributed to that report (`unverified-claim`, and `missing-date` when it is the date).
 2. **Place.** Test the item's location against the City's own boundary for the neighborhood
-   (`boundary` in `area.yaml`, the City's Neighborhood Associations layer), and label it: inside
-   the area (`core`), nearby (`catchment`) or citywide. When it is not inside, the text says so
-   plainly, and never implies it is in the neighborhood.
+   (`boundary` in `area.yaml`, the City's Neighborhood Associations layer; the test is not built
+   yet, #1009, so placing is still by word match), and give it a tier from the table above:
+   `core`, `catchment`, `citywide` or `outside`. An item at a fixed place elsewhere is still
+   accepted only when it is a public event or service open to anyone in the city and of wide
+   interest: it is tiered `citywide`, and its text says where it is and that it is not in the
+   neighborhood. Anything else at a fixed place elsewhere stays `outside` and is rejected. Never
+   imply an item is in the neighborhood when it is not.
 3. **Freshness.** Right before publishing, check again that the item is still current: not ended,
    cancelled, moved or superseded.
 4. **Physical facts.** For anything on the ground (a signal, a store, a road, a building), not
@@ -132,8 +138,10 @@ The five checks, which verify runs on every item:
 ## Discovering sources
 
 An organizer or publisher met in an accepted item that isn't in `sources.yaml` is a candidate
-source. The scout stage notes each one and proposes it as `pending`, with what was observed
-(`prompts/scout.md`, "Discovering sources"). Nothing is polled until a hand check makes it `valid`.
+source. Curate notes each one in its reasons and proposes it as `pending`, with what was observed
+(`prompts/curate.md`, "Discovering sources"). No code records the proposal yet (#1008): an editor
+reads it in the reasons, and only a pull request changes the registry. Nothing is polled until a
+hand check makes it `valid`.
 
 ## What never changes
 

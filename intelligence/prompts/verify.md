@@ -83,8 +83,8 @@ Other sources (`established-media`, `community`) still need a primary source for
 Run the five checks in `coverage.md`, "Review passes", on every item: primary source, place
 (tested against `boundary` in `area.yaml`), freshness, physical facts and stage of a project.
 They are written only there. Record what each found in `$.evidence` and `$.unknowns`, label the
-place in `$.coverage` and say in `$.coverageReason` when it is not inside the area. Curate and
-the publish step read the item after you (the passes are counted there).
+place in `$.coverage` and say in `$.coverageReason` when it is not inside the area. Curate reads
+the item after you; a person re-checks freshness before publishing.
 
 ## Untrusted content
 

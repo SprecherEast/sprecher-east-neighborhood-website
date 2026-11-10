@@ -289,13 +289,15 @@ cases:
     stage: verify
     tags: [place, boundary]
     input:
-      sourceId: district16-blog
-      title: Free holiday lights evening at the zoo
+      sourceId: henry-vilas-zoo-lights
+      title: Free public holiday lights evening
       sourceText: >-
-        A free evening of holiday lights, open to everyone, listed by the organizer with its date
-        and hours.
+        A free evening open to anyone in the city, listed with its date, hours and venue by the
+        organizer.
       startsAt: 2026-12-12T17:00:00-06:00
       locationText: Henry Vilas Zoo, Madison, WI
+    given:
+      sources: [{ id: henry-vilas-zoo-lights, result: valid, pilotRank: 9, cadence: daily }]
     expected:
       {
         decision: accept,
@@ -306,9 +308,21 @@ cases:
     graders:
       - check: model
         rubric: >-
-          The place is tested against the City's boundary for the area and labeled citywide, not
-          inside; the coverage reason and the text say plainly that it is not in the neighborhood.
-    why: A real, open event can be accepted, but its place is outside the boundary, so it is labeled and never presented as local.
+          The place is outside the area's boundary but the event is public, open to anyone and of
+          wide interest, so it is tiered citywide and the coverage reason says where it is and that
+          it is not in the neighborhood.
+    why: The owner's rule of 2026-11-10 (public events elsewhere in the city, clearly marked as not in the neighborhood), applied through coverage.md check 2.
+  - id: verify-routine-item-elsewhere-in-city
+    stage: verify
+    tags: [place, boundary]
+    input:
+      sourceId: legistar-events
+      title: Weekly members-only club meeting
+      sourceText: A routine weekly meeting for members, at the club's own building.
+      startsAt: 2026-11-18T19:00:00-06:00
+      locationText: A community building on the far west side, Madison, WI
+    expected: { decision: reject, coverage: outside, route: none }
+    why: A routine item at a fixed place elsewhere in the city is not of wide interest, so it stays outside and is rejected.
   - id: verify-date-only-in-secondary-report
     stage: verify
     tags: [primary-source]
@@ -338,7 +352,7 @@ cases:
       title: Approving a site plan for a new housing development on Cottage Grove Road
       sourceText: The Plan Commission approved the site plan. No construction start date is stated.
       startsAt: null
-      locationText: Cottage Grove Road, Madison, WI
+      locationText: Cottage Grove Road at Sprecher Road, Madison, WI
       sourceStatus: unknown
     expected:
       { decision: needs-review, coverage: catchment, flags: [unverified-claim], route: reportItem }
