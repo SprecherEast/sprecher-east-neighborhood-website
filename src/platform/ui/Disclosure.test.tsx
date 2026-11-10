@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { compile } from 'tailwindcss'
 import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -10,6 +11,19 @@ import { expectAccessible } from './testing/expectAccessible'
 afterEach(cleanup)
 
 const VARIANTS = ['card', 'bar', 'link'] as const
+
+/*
+ * Whether the chevron is turned, decided by the real CSS Tailwind makes from its classes (jsdom
+ * has no stylesheet): the rule that sets `rotate`, with its selector tried on the element (#967).
+ */
+async function isTurned(chevron: Element): Promise<boolean> {
+  const css = (await compile('@tailwind utilities;')).build([...chevron.classList])
+  const selectors = [...css.matchAll(/\{\s*([^{}]+?)\s*\{\s*rotate: 180deg/g)].map(
+    (match) => match[1],
+  )
+  expect(selectors.length).toBeGreaterThan(0)
+  return selectors.some((selector) => chevron.matches(selector.replace(/&/g, 'svg')))
+}
 
 describe('Disclosure', () => {
   it.each(VARIANTS)(
@@ -57,7 +71,43 @@ describe('Disclosure', () => {
     const chevron = container.querySelector('summary svg')
 
     expect(chevron?.getAttribute('aria-hidden')).toBe('true')
-    expect(chevron?.getAttribute('class')).toContain('group-open:rotate-180')
+  })
+
+  it('turns the chevron only for its own box, not for an open box around it (#967)', async () => {
+    const { container } = render(
+      <Disclosure variant="card" summary="Outer" defaultOpen>
+        <Disclosure variant="card" summary="Inner">
+          Inner body
+        </Disclosure>
+      </Disclosure>,
+    )
+    const [outer, inner] = Array.from(container.querySelectorAll('details'))
+    const outerChevron = outer.querySelector(':scope > summary svg') as Element
+    const innerChevron = inner.querySelector(':scope > summary svg') as Element
+
+    expect(await isTurned(outerChevron)).toBe(true)
+    expect(await isTurned(innerChevron)).toBe(false)
+
+    inner.setAttribute('open', '')
+    expect(await isTurned(innerChevron)).toBe(true)
+
+    outer.removeAttribute('open')
+    expect(await isTurned(outerChevron)).toBe(false)
+    expect(await isTurned(innerChevron)).toBe(true)
+  })
+
+  it('turns a top-level box open and back closed (#967)', async () => {
+    const { container } = render(
+      <Disclosure variant="bar" summary="On this page">
+        Body
+      </Disclosure>,
+    )
+    const details = container.querySelector('details') as HTMLDetailsElement
+    const chevron = details.querySelector('summary svg') as Element
+
+    expect(await isTurned(chevron)).toBe(false)
+    details.setAttribute('open', '')
+    expect(await isTurned(chevron)).toBe(true)
   })
 
   it('gives the caller the details element, to close it (the bar closes when a link is chosen)', () => {

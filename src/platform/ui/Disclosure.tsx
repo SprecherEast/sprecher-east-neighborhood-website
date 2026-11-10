@@ -30,15 +30,19 @@ const summaryVariants = cva(
   },
 )
 
-const chevronVariants = cva('shrink-0 transition-transform duration-200 group-open:rotate-180', {
-  variants: {
-    variant: {
-      card: 'size-4 text-muted-foreground',
-      bar: 'size-5',
-      link: 'size-4',
+// The chevron turns for its own box only: `group-open:` would also fire for any open box around it (#967)
+const chevronVariants = cva(
+  'shrink-0 transition-transform duration-200 [details[open]>summary_&]:rotate-180',
+  {
+    variants: {
+      variant: {
+        card: 'size-4 text-muted-foreground',
+        bar: 'size-5',
+        link: 'size-4',
+      },
     },
   },
-})
+)
 
 const bodyVariants = cva('', {
   variants: {
@@ -78,7 +82,6 @@ export function Disclosure({
       ref={ref}
       open={defaultOpen || undefined}
       className={cn(
-        'group',
         variant === 'card' && cardVariants({ variant: 'elevated', padding: 'sm' }),
         className,
       )}
