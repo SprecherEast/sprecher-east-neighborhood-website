@@ -41,8 +41,8 @@ The Definition of Ready, spelled out:
 
 - A plain summary, then details, then acceptance criteria someone else can check.
 - The layer is right ([which layer](planning-model.md#which-layer)): small enough for one pull
-  request and one sprint (INVEST: independent, estimable, small, testable), with a parent epic or
-  a stated reason it stands alone, and the epic's milestone where the epic has one.
+  request and one sprint (INVEST: independent, estimable, small, testable), in a milestone, with an
+  epic above it only for multi-part work ([the rule](../../AGENTS.md#one-issue-one-pull-request)).
 - Labels: one type, at least one area, one priority. A size on the board when it can be read.
 - Files likely touched and must not touch, filled in or `None`.
 - Known dependencies are blocked-by links, and nothing it is blocked by is still open.
@@ -71,9 +71,9 @@ The Definition of Ready, spelled out:
   conversation is open ([`AGENTS.md`](../../AGENTS.md#the-only-way-code-reaches-main-and-production)).
 - The knowledge note is updated or behavior change is declared absent, and any deploy is verified
   ([`wrapped`](../../.agents/skills/wrapped/SKILL.md)).
-- The issue is closed with a summary. Then its parent epic is checked: if that was the last open
-  child, the epic's own acceptance is tested before it closes, and the milestone's progress and
-  done test are looked at.
+- The issue is closed with a summary. Then its parent (the epic, or an issue under it) is
+  checked: if that was the last open child, the parent's own acceptance is tested before it
+  closes, and the milestone's progress and done test are looked at.
 
 ### Reopen
 
@@ -113,7 +113,9 @@ For each, the chief of staff checks and updates the following.
 
 ## The sweep
 
-The sweep reads every open issue, the milestones, and the open pull requests.
+The sweep reads every open issue, the milestones, and the open pull requests. Its milestone
+checks skip the Backlog milestone, the one catch-all with no done test
+([planning model](planning-model.md#milestone)).
 
 ### Duplicates
 
@@ -142,15 +144,15 @@ comment. Duplicate bugs may be closed as the
 - **Stale:** an open item with no activity for several sprints, not blocked and not waiting for
   the owner; an In progress item with no claim, no progress comment and no pull request; a Ready
   item that never gets pulled. Ask on the issue what changed; if it is obsolete, `proposed-close`.
-- **Orphans:** no parent and no stated standalone reason; an epic with no children; an open child
-  of a closed parent; an open epic whose children are all closed; a milestone with nothing open
-  that has not been closed; an open issue in a closed milestone.
+- **Orphans:** an issue with no milestone ([the rule](../../AGENTS.md#one-issue-one-pull-request)); an epic with no children; an open
+  child of a closed parent; an open epic whose children are all closed; a milestone with nothing
+  open that has not been closed; an open issue in a closed milestone.
 
 ### Missing fields
 
-Any of: acceptance criteria, type, area, priority, size where readable, files declared, a parent
-or stated reason, a milestone where the parent has one, blocked-by links for dependencies named in
-prose.
+Any of: acceptance criteria, type, area, priority, size where readable, files declared, a milestone
+([the rule](../../AGENTS.md#one-issue-one-pull-request)), blocked-by
+links for dependencies named in prose.
 
 ### Wrong layer
 
@@ -212,13 +214,13 @@ approval.
    group the clusters by outcome: which several capabilities together make something with one done
    test.
 3. **Report** as a dry-run proposal: each proposed milestone with the full description from the
-   [templates](planning-model.md#templates); each proposed epic with its children; issues that
-   stay standalone with the reason; duplicates and stale items from the sweep; and anything
-   ambiguous as a question. Closed issues may be grouped into milestones and epics too, so a
+   [templates](planning-model.md#templates); each proposed epic with its children; issues with
+   no fitting milestone yet, with where each would go ([the rule](../../AGENTS.md#one-issue-one-pull-request));
+   duplicates and stale items from the sweep; and anything ambiguous as a question. Closed issues may be grouped into milestones and epics too, so a
    milestone's progress shows what already shipped.
 4. **Owner approves** per item or per milestone, and may edit titles and boundaries.
 5. **Apply in order:** milestones, then epics, then parent links, then milestone assignment on the
    epics and their children, then priority and label fixes. Comment on each issue it touched,
    once, and keep a list of what changed.
-6. **Verify** with a fresh dry run: no orphans left without a reason, milestone counts match the
+6. **Verify** with a fresh dry run: no orphans left (an issue with no milestone), milestone counts match the
    approved list, no child outside its parent's milestone.

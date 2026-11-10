@@ -38,8 +38,7 @@ change this file through the same workflow below.
 - **Push back before building what's probably not the best way.** When the owner asks for something
   weaker than the standard approach (a security trade-off, say), don't build it as asked: explain
   the better option with sources, then stop until he has read it and decided (the owner's rule,
-  2026-10-23, #305). Push back when his request is weaker than the standard; decide routine things
-  yourself.
+  2026-10-23, #305).
 
 ## Guard rails: non-negotiable
 
@@ -61,12 +60,10 @@ change, however small, follows these five steps:
    **priority** (`priority: high`, `priority: medium`, `priority: low`). The issue is groomed into
    **Ready** first, and set **In progress** when you start, one task at a time, or more when their
    files don't overlap ([how we work](docs/process/project-management.md#grooming-and-work-in-progress)).
-2. **Branch and pull request.** Work on a branch, never on `main`. The PR links the issue with
-   `Closes #123` (or `Part of #123` when an issue needs several PRs; the last one uses `Closes`),
-   fills in every section of `.github/pull_request_template.md` (**What changed**, **Why**,
-   **How**, **How to test**, **Risk & rollback**, **Self-review**, **Knowledge**: did behavior change?), and **sits on a native GitHub
-   stack when it depends on another open PR**, so GitHub enforces the merge order. A merge order
-   written in prose is never enough ([`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)).
+2. **Branch and pull request.** Work on a branch, never on `main`; the PR closes one issue
+   ([the rule](#one-issue-one-pull-request)) and fills in every section of
+   `.github/pull_request_template.md` (**What changed**, **Why**, **How**, **How to test**,
+   **Risk & rollback**, **Self-review**, **Knowledge**: did behavior change?).
 3. **Review.** Every PR gets an **independent review** by a reviewer that did not write it (a
    separate agent session following [`pr-review`](.agents/skills/pr-review/SKILL.md), or a human),
    posted on the PR and ending with **Ready to merge**, and every review comment is answered and
@@ -99,6 +96,14 @@ change, however small, follows these five steps:
    linked issue closes with a comment on how it was fixed
    (`.github/workflows/issue-fix-summary.yml`).
 
+### One issue, one pull request
+
+- **A PR closes exactly one issue** (`Closes #N`); bigger work splits into sub-issues.
+- **Dependent PRs sit on a native GitHub stack,** so GitHub enforces the order
+  ([`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)); independent ones run in parallel.
+- **Every issue has a milestone** (Backlog until planned). **An epic is optional,** for multi-part
+  work; a lone issue has none. Its sub-issues sit under it.
+
 ### Never
 
 - Never push to `main` directly, and never merge a PR whose checks or review aren't done.
@@ -112,7 +117,6 @@ change, however small, follows these five steps:
 - **Never change code on the server.** No editing files in `/var/www/sprecher-east`, no
   `git apply` or hotfixes over SSH. If production is broken, fix or revert through a PR.
 - Never commit secrets (`.env.local`, keys, tokens, passwords).
-- Never hand over dependent PRs as separate PRs with a merge order in prose. Stack them.
 
 **Server configuration is not code, but it is still tracked.** `.env.local`, the Caddy config, PM2,
 DNS records and third-party dashboards (Mailgun, Porkbun, Hostinger) live only on the servers.
@@ -120,7 +124,7 @@ Before changing any of them, open an `infra` issue saying what will change, why,
 back; afterwards, comment what actually changed. Never put secret values in the issue.
 
 **How GitHub enforces this.** The `main` ruleset requires a pull request, the required checks in step 4
-and resolved conversations, and blocks force pushes and deletion; stacks enforce the merge order.
+and resolved conversations, and blocks force pushes and deletion.
 Agents work through the owner's account, which has admin rights, so until they have their own
 GitHub identity (#106) the no-bypass rule rests on every agent merging with `bypass_rules: false`.
 

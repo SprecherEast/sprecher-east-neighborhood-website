@@ -29,15 +29,16 @@ The sprint and the size are board fields. On the owner's computer, read them fro
 items (§2 step 4 without `--query`, then find the issue by number in the JSON). Start only if the
 issue is **Ready**:
 
-- it has acceptance criteria, a parent (or a stated reason it stands alone), type, area and
-  priority labels, and a size
+- it has acceptance criteria, a milestone (an epic only for multi-part work;
+  [the rule](../../../AGENTS.md#one-issue-one-pull-request)), type, area and priority labels,
+  and a size
 - **Files likely touched** and **Must not touch** are filled in (`None` when there is nothing)
 - nothing it's blocked by is still open
 - it isn't labeled `needs owner`
 - no open PR already closes it (the list in §2 step 3)
 
 When the board can't be read (cloud sessions), skip the size check and say so in a comment on the
-issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read the parent epic too: it
+issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read its epic too, if it has one: it
 says what the issue is part of. More than one issue may be in progress only when their files
 don't overlap ([the rule](../../../docs/process/project-management.md#grooming-and-work-in-progress)),
 so every issue after the first needs the overlap check below to pass.
@@ -48,8 +49,8 @@ Before every major change (a new epic, a sprint, a batch of work), groom the bac
 ([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-work-in-progress)).
 For each issue:
 
-1. Give it a plain summary, acceptance criteria, a parent epic (or a stated reason it stands
-   alone), the type, area and `priority:` labels (§3), and its **Files likely touched** and
+1. Give it a plain summary, acceptance criteria, a milestone, and an epic only for multi-part work
+   ([the rule](../../../AGENTS.md#one-issue-one-pull-request)), the type, area and `priority:` labels (§3), and its **Files likely touched** and
    **Must not touch** (`None` when nothing), which the overlap check in §4 reads.
 2. Set its **Size** as effort: S, M or L. If it is bigger than L, split it into sub-issues. In a
    cloud session, which can't read the board, skip Size and say so on the issue.
@@ -67,11 +68,11 @@ For each issue:
 3. Leave out:
    - epics, and anything labeled `needs owner`
    - anything with an open blocker (one `blocked_by` call per issue, as in §1)
-   - anything an open PR already closes or is part of. Those are **in progress**:
+   - anything an open PR already closes. Those are **in progress**:
 
      ```bash
      gh api "repos/{owner}/{repo}/pulls?state=open&per_page=100" \
-       -q '.[] | "PR #\(.number) → \([(.body // "") | scan("(?i)(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|part of):?\\s+#[0-9]+")] | join(", "))"'
+       -q '.[] | "PR #\(.number) → \([(.body // "") | scan("(?i)(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\\s+#[0-9]+")] | join(", "))"'
      ```
 
    Order the rest by priority label, then by the order of the epic's sub-issues
@@ -89,7 +90,8 @@ For each issue:
    and the [naming templates](../../../docs/process/planning-model.md#templates).
    - An outcome with a done test, spanning several capabilities, is a milestone; a capability
      grouping several related issues is an epic (label `epic`, one milestone).
-   - One deliverable that fits one sprint and one PR is an issue; a standalone one says why.
+   - One deliverable that fits one sprint and one PR is an issue
+     ([the rule](../../../AGENTS.md#one-issue-one-pull-request)).
    - Something broken is a bug.
 2. **Search first** to avoid duplicates. Loop over the pages, since the repo has more than 100
    issues and PRs:
@@ -111,7 +113,7 @@ For each issue:
    epic=$(gh api repos/{owner}/{repo}/issues/<epic> -q .id)
    gh api -X POST repos/{owner}/{repo}/issues -f title='<type>: <short problem statement>' \
      -F body=@issue.md -f 'labels[]=bug' -f 'labels[]=cms' -f 'labels[]=priority: medium' \
-     -F parent_issue_id=$epic -F milestone=<number>   # milestone only if it's planned
+     -F parent_issue_id=$epic -F milestone=<number>   # parent only under an epic; Backlog until planned
    ```
 
    Exactly one type, at least one area and one priority

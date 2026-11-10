@@ -32,23 +32,24 @@ step 3). Fixing wording, links or facts isn't.
 
 ## Levels of work
 
-| Level         | Answers                                            | Size                   | On GitHub                                        |
-| ------------- | -------------------------------------------------- | ---------------------- | ------------------------------------------------ |
-| Vision        | Why does the site exist?                           | years                  | [`docs/product/vision.md`](/docs/product/vision.md) |
-| Milestone     | What outcome is done, and how do we know?          | several capabilities   | A milestone; a due date only for a real date     |
-| Epic          | What capability is part of that outcome?           | several related issues | An issue labeled `epic`, with sub-issues         |
-| Feature, task | What does a user get? What single change ships it? | a day or a few         | A sub-issue of an epic; one PR closes it         |
-| Bug           | What's broken?                                     | S to L                 | A sub-issue of the epic it belongs to            |
+| Level         | Answers                                            | Size                   | On GitHub                                                |
+| ------------- | -------------------------------------------------- | ---------------------- | -------------------------------------------------------- |
+| Vision        | Why does the site exist?                           | years                  | [`docs/product/vision.md`](/docs/product/vision.md)         |
+| Milestone     | What outcome is done, and how do we know?          | several capabilities   | A milestone; a due date only for a real date             |
+| Epic          | What capability is part of that outcome?           | several related issues | An issue labeled `epic`, with sub-issues                 |
+| Feature, task | What does a user get? What single change ships it? | a day or a few         | A sub-issue of its epic, if it has one; one PR closes it |
+| Bug           | What's broken?                                     | S to L                 | A sub-issue of its epic, if it has one; one PR closes it |
 
 Rules:
 
-- **Every feature, task and bug normally belongs to an epic;** one that stands alone says why in its body.
-- **Every planned epic belongs to a milestone.** Unscheduled epics wait in the backlog with no
-  milestone, and so does foundation work done step by step alongside the milestones (#127).
-- **A milestone is an outcome with a done test,** one per issue, and has a due date only when a
+- **Every feature, task and bug sits in a milestone; an epic is optional,** for multi-part work
+  ([the rule](/AGENTS.md#one-issue-one-pull-request)).
+- **Every epic belongs to a milestone.** Unscheduled epics, and foundation work done step by step
+  alongside the milestones (#127), sit in the catch-all Backlog milestone until they're planned.
+- **A milestone is an outcome with a done test** (the Backlog milestone is the one exception,
+  [planning model](/docs/process/planning-model.md#milestone)), one per issue, and has a due date only when a
   real date exists (a date the owner decides counts). Sprints are not milestones; they're the board's Sprint field.
-- **One PR closes one issue** (`Closes #N`). When an issue needs several PRs, each uses
-  `Part of #N` and the last one uses `Closes #N`.
+- **One PR closes one issue** ([the rule](/AGENTS.md#one-issue-one-pull-request)).
 - **Split ahead of time.** Split anything bigger than size L (3 days). An epic's features become
   sub-issues when they're planned, not all up front.
 
@@ -152,7 +153,8 @@ parallel work when issues don't touch the same files, with no fixed number, and 
 2026-11-06 (Claude session, text, recorded on #685 and #721); the rule below says how.
 
 - **Groom before every major change:** a new epic, a sprint, or a batch of work. Each issue gets
-  its plain summary, acceptance criteria, parent epic, labels (type, area, `priority:`) and a
+  its plain summary, acceptance criteria, a milestone, and an epic only for multi-part work
+  ([the rule](/AGENTS.md#one-issue-one-pull-request)), labels (type, area, `priority:`) and a
   **Size**, which is effort: S, M or L (a cloud session that can't read the board skips Size and
   says so, as in the Definition of Ready). Anything bigger is split. When it meets the
   [Definition of Ready](#definition-of-ready), it moves to **Ready**.
@@ -204,7 +206,8 @@ An issue is **Ready** when it has:
 - acceptance criteria someone else could check
 - **Files likely touched** and **Must not touch** filled in (write `None` when there is nothing),
   so overlap with other work can be checked
-- a parent epic (or a stated reason it stands alone), labels (type, area, priority) and a size.
+- a milestone, and an epic only for multi-part work
+  ([the rule](/AGENTS.md#one-issue-one-pull-request)), labels (type, area, priority) and a size.
   When the board can't be read (cloud sessions), skip Size and say so on the issue
   ([`project-tracking`](/.agents/skills/project-tracking/SKILL.md) §1)
 - no open blocker: nothing it's **blocked by** is still open

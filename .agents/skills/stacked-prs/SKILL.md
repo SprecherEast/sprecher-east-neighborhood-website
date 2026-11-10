@@ -31,8 +31,15 @@ GitHub's documentation: [About stacked PRs](https://docs.github.com/en/pull-requ
   PRs change the same lines and must land in a set order.
 - **Don't stack** independent changes. Each gets its own PR on `main`, so neither waits for the
   other.
-- **One issue, several PRs:** stack them. Every PR says `Part of #<issue>` except the top one,
-  which says `Closes #<issue>`. Otherwise each PR closes its own issue.
+- **Work that needs several PRs** is split into sub-issues first, one per PR, and each PR says
+  `Closes #<its sub-issue>` ([one issue, one pull request](../../../AGENTS.md#one-issue-one-pull-request)).
+  Sub-issues that must land in order get stacked PRs, in that order; independent ones each go
+  on `main`.
+- **Upper layers may not link yet.** GitHub reads closing keywords only on a PR that targets the
+  default branch ([linking a PR to an issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue)).
+  A layer above the bottom shows on its issue's timeline as a mention, but may not count as a
+  linked PR, so its card may not move to In review. Once the layer below merges and it targets
+  `main`, check that its issue lists it as linked, and say so on the issue if it doesn't.
 
 ## 1. Build the branches
 
