@@ -97,6 +97,44 @@ Send to **needs review** instead of guessing when the location, date or status c
 sources conflict, or the item is borderline. Route a change to an item already in the CMS as
 `update`, and a cancelled one as `cancel`; a second copy of the same item is a `duplicate`.
 
+## Review passes
+
+Every item is read three times before it can publish, and these rules are written only here;
+`prompts/verify.md`, `prompts/curate.md` and the publish step point to them.
+
+1. **Verify** applies the five checks below.
+2. **Curate** reads the item again with the relevance rules, and checks the verify result against
+   them. It doesn't repeat the lookups.
+3. **Publish** re-checks freshness (check 3) right before an editor publishes the suggestion;
+   an item that is no longer current is withdrawn.
+
+A safety item (an incident, a hazard, a weather alert, anything about people's safety) never
+auto-publishes: it always goes to an editor as `needs-review`, whatever its scores.
+
+The five checks, which verify runs on every item:
+
+1. **Primary source.** Every fact in an item is confirmed on the organizer's or the official
+   body's own page. A date, time or number found only in one secondary report is left out, or
+   attributed to that report (`unverified-claim`, and `missing-date` when it is the date).
+2. **Place.** Test the item's location against the City's own boundary for the neighborhood
+   (`boundary` in `area.yaml`, the City's Neighborhood Associations layer), and label it: inside
+   the area (`core`), nearby (`catchment`) or citywide. When it is not inside, the text says so
+   plainly, and never implies it is in the neighborhood.
+3. **Freshness.** Right before publishing, check again that the item is still current: not ended,
+   cancelled, moved or superseded.
+4. **Physical facts.** For anything on the ground (a signal, a store, a road, a building), not
+   finding an announcement proves nothing. A resident's first-hand report outranks missing
+   paperwork and is written as reported until a record is found. Keep searching in meeting
+   records and contract awards, not only news pages.
+5. **Stage of a project.** Approved is not built. A development item needs evidence of its
+   current stage before it says more than "approved".
+
+## Discovering sources
+
+An organizer or publisher met in an accepted item that isn't in `sources.yaml` is a candidate
+source. The scout stage notes each one and proposes it as `pending`, with what was observed
+(`prompts/scout.md`, "Discovering sources"). Nothing is polled until a hand check makes it `valid`.
+
 ## What never changes
 
 - Unknown facts stay unknown. No stage fills in an address, time, price or audience the sources
