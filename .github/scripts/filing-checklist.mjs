@@ -1,8 +1,9 @@
 /**
- * Builds the filing checklist (#971) from the rule lists the two gates export, so a gate message
- * and its checklist line have one source: `PR_RULE_FIXES` (the pull request gate) and
- * `ISSUE_RULE_FIXES` (the issue check). `npm run filing-checklist` writes the page; the test
- * fails when the page differs from this output or a rule ID has no line.
+ * Builds the filing checklist (#971) from the rule lists the two gates export: `PR_RULE_FIXES`
+ * (the pull request gate) and `ISSUE_RULE_FIXES` (the issue check). Only the rule IDs are tied
+ * together: the gates' messages are separate text, so a message and its checklist line can
+ * differ. `npm run filing-checklist` writes the page; the test fails when the page differs from
+ * this output or a rule ID has no line.
  */
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'

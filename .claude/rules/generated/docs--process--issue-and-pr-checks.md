@@ -59,9 +59,9 @@ no files or checkboxes of its own), so one that was flagged before it became an 
 label and its comment is marked clear on the next run.
 
 Both gates and Issue Labels read a body without its HTML comments, as Markdown renders it. A
-comment opener that is never closed hides everything after it, even inside a code span, so write
-such text in a code block or leave the opener out; otherwise the later answers or sections count
-as missing.
+comment opener that is never closed hides everything after it, from the opener to the end of the
+text, even inside a code span or a code block. A code block is no cover, so leave the opener out
+and describe it in words; otherwise the later answers or sections count as missing.
 
 | ID                | The rule                                                                               |
 | ----------------- | -------------------------------------------------------------------------------------- |
