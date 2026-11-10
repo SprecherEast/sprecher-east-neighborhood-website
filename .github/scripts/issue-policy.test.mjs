@@ -192,6 +192,27 @@ describe('issueProblems', () => {
     })
   })
 
+  describe('epics', () => {
+    it('are exempt from every rule, so a flagged epic is cleared', () => {
+      const bare = groomed({ labels: [{ name: 'epic' }], milestone: null, body: null })
+      expect(issueProblems(bare, policy)).toEqual([])
+    })
+    it('lose the label and get the comment marked clear when it was flagged earlier', () => {
+      const epic = groomed({ labels: [{ name: 'epic' }, { name: GROOMING_LABEL }] })
+      const old = {
+        id: 4,
+        body: groomingComment(['ISSUE-FILES: Fill in.']),
+        user: { type: 'Bot', login: 'github-actions[bot]' },
+      }
+      expect(
+        groomingPlan({ problems: issueProblems(epic, policy), issue: epic, comments: [old] }),
+      ).toEqual({
+        comment: { action: 'update', id: 4, body: clearComment() },
+        label: 'remove',
+      })
+    })
+  })
+
   describe('ISSUE-MILESTONE', () => {
     it('needs a milestone, any milestone', () => {
       expect(ids(groomed({ milestone: null }))).toEqual(['ISSUE-MILESTONE'])
@@ -215,11 +236,6 @@ describe('skipReason', () => {
     expect(skipReason(groomed({ user: { login: 'dependabot[bot]', type: 'Bot' } }))).toMatch(/bot/i)
     expect(skipReason(groomed({ user: { login: 'dependabot[bot]', type: 'User' } }))).toMatch(
       /bot/i,
-    )
-  })
-  it('skips an epic: a parent issue has no files or checkboxes of its own', () => {
-    expect(skipReason(groomed({ labels: [{ name: 'epic' }, { name: 'process' }] }))).toMatch(
-      /epic/i,
     )
   })
   it('skips a closed issue', () => {

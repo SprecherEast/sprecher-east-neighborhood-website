@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   closeProblems,
+  headingBlocks,
   descriptionProblems,
   issueProblems,
   linkedIssues,
@@ -242,17 +243,22 @@ describe('descriptionProblems', () => {
   })
 })
 
-describe('sectionsOf heading levels', () => {
+describe('headingBlocks', () => {
   const body = '## Two\na\n### Three\nb\n#### Four\nc\n##### Five\nd\n'
 
   it('reads only second-level headings by default, as the PR gate always has', () => {
-    expect(Object.keys(sectionsOf(body))).toEqual(['two'])
+    expect(headingBlocks(body).map((block) => block.title)).toEqual(['two'])
     expect(sectionsOf(body).two).toContain('### Three')
   })
 
-  it('reads deeper headings up to maxLevel, which is how issue forms write theirs', () => {
-    expect(Object.keys(sectionsOf(body, { maxLevel: 4 }))).toEqual(['two', 'three', 'four'])
-    expect(sectionsOf(body, { maxLevel: 4 }).three).toBe('b\n')
+  it('reads a wider range of levels in order when asked', () => {
+    const blocks = headingBlocks(body, { minLevel: 2, maxLevel: 4 })
+    expect(blocks.map((block) => block.title)).toEqual(['two', 'three', 'four'])
+    expect(blocks[1].text).toBe('b\n')
+  })
+
+  it('reads a single level', () => {
+    expect(headingBlocks(body, { minLevel: 3, maxLevel: 3 }).map((b) => b.title)).toEqual(['three'])
   })
 })
 

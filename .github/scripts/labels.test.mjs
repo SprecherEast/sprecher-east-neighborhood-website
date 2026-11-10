@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { dropLabel, ensureLabel } from './labels.mjs'
 
-const failing = (status) => async () => {
-  throw Object.assign(new Error('api'), { status })
+// An Octokit error: the status, and the validation errors GitHub lists in the response body
+const failing = (status, code) => async () => {
+  throw Object.assign(new Error('api'), {
+    status,
+    response: { data: { errors: code ? [{ resource: 'Label', code }] : [] } },
+  })
 }
 const github = (overrides) => ({ rest: { issues: overrides } })
 
@@ -15,8 +19,13 @@ describe('ensureLabel', () => {
     expect(calls).toEqual([{ owner: 'o', repo: 'r', name: 'x', color: 'abc123' }])
   })
 
+  it('passes on a 422 that is not "already exists", such as a description that is too long', async () => {
+    const api = github({ createLabel: failing(422, 'invalid') })
+    await expect(ensureLabel(api, { owner: 'o', repo: 'r' }, { name: 'x' })).rejects.toThrow('api')
+  })
+
   it('accepts a label that already exists (422)', async () => {
-    const api = github({ createLabel: failing(422) })
+    const api = github({ createLabel: failing(422, 'already_exists') })
     await expect(
       ensureLabel(api, { owner: 'o', repo: 'r' }, { name: 'x' }),
     ).resolves.toBeUndefined()

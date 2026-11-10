@@ -1,7 +1,9 @@
 /**
  * Reads a pull request description: the one parser for the `PR Policy` and `Issue Fix Summary`
  * workflows and the knowledge-sync check (#716), so comments, sections and linked issues are
- * read in one place.
+ * read in one place. The issue check and Issue Labels read issue bodies through the same
+ * heading reader (`issue-form.mjs`), and the issue-plan reading of labels and milestone is shared
+ * with the PR gate.
  */
 
 /**
@@ -20,21 +22,30 @@ export function withoutComments(body) {
 }
 
 /**
- * The sections of a description: each heading of level 2 up to `maxLevel` (2 by default, the PR
- * template's), lower-cased, mapped to the text under it. Issue forms write `###` headings, so the
- * issue check passes 4.
+ * Every heading of a body in order, as `{ title, text }` with the title lower-cased and the text
+ * untrimmed, comments removed. The one reader of headings: the PR template's are level 2 (the
+ * default), issue forms' are level 3 (`issue-form.mjs`).
  */
-export function sectionsOf(body, { maxLevel = 2 } = {}) {
-  const sections = {}
-  for (const part of withoutComments(body)
-    .split(new RegExp(`^#{2,${maxLevel}}\\s+`, 'm'))
-    .slice(1)) {
-    const newline = part.indexOf('\n')
-    const title = (newline === -1 ? part : part.slice(0, newline)).trim().toLowerCase()
-    sections[title] = newline === -1 ? '' : part.slice(newline + 1)
-  }
-  return sections
+export function headingBlocks(body, { minLevel = 2, maxLevel = 2 } = {}) {
+  return withoutComments(body)
+    .split(new RegExp(`^#{${minLevel},${maxLevel}}\\s+`, 'm'))
+    .slice(1)
+    .map((part) => {
+      const newline = part.indexOf('\n')
+      return {
+        title: (newline === -1 ? part : part.slice(0, newline)).trim().toLowerCase(),
+        text: newline === -1 ? '' : part.slice(newline + 1),
+      }
+    })
 }
+
+/** The sections of a description: each `## Heading`, lower-cased, mapped to the text under it. */
+export function sectionsOf(body) {
+  return Object.fromEntries(headingBlocks(body).map(({ title, text }) => [title, text]))
+}
+
+/** The prefix of a priority label (`priority: high`). */
+export const PRIORITY_PREFIX = 'priority: '
 
 /**
  * The issues a description links: `closes` for "Closes/Fixes/Resolves #N", `partOf` for
@@ -95,7 +106,7 @@ export function planGaps(issue, policy) {
   return {
     types: labels.filter((label) => policy.types.includes(label)).length,
     hasArea: labels.some((label) => policy.areas.includes(label)),
-    priorities: labels.filter((label) => label.startsWith('priority: ')).length,
+    priorities: labels.filter((label) => label.startsWith(PRIORITY_PREFIX)).length,
     hasMilestone: Boolean(issue.milestone),
   }
 }

@@ -137,9 +137,10 @@ pull request whose issue still has the label is planned in
 [#984](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/984), and until
 then that gate checks only the issue's labels, assignee and milestone (`PR-LABELS`,
 `PR-ASSIGNED`, `PR-MILESTONE`), reading them the same way. It is stricter in one place: it asks
-for exactly one priority label, where the gate accepts one or more. Pull requests, closed issues,
-epics (a parent issue has no files or checkboxes of its own) and issues filed by a bot are not
-checked.
+for exactly one priority label, where the gate accepts one or more. Pull requests, closed issues
+and issues filed by a bot are not checked. An epic is exempt from every rule (a parent issue has
+no files or checkboxes of its own), so one that was flagged before it became an epic loses the
+label and its comment is marked clear on the next run.
 
 | ID                | The rule                                                                               |
 | ----------------- | -------------------------------------------------------------------------------------- |

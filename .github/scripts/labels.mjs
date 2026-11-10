@@ -4,12 +4,17 @@
  * github-script client.
  */
 
-/** Creates `label` ({ name, color, description }); a label that already exists (422) is fine. */
+/**
+ * Creates `label` ({ name, color, description }). Only "already exists" is fine: any other 422,
+ * such as a description over GitHub's 100-character limit, is a real error and surfaces.
+ */
 export async function ensureLabel(github, { owner, repo }, label) {
   try {
     await github.rest.issues.createLabel({ owner, repo, ...label })
   } catch (error) {
-    if (error.status !== 422) throw error
+    const exists =
+      error.status === 422 && error.response?.data?.errors?.some((e) => e.code === 'already_exists')
+    if (!exists) throw error
   }
 }
 

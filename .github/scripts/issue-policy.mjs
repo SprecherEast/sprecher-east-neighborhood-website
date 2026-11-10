@@ -4,26 +4,24 @@
  * and the `needs grooming` label up to date. The rule IDs are listed in
  * docs/process/project-management.md ("The issue check"), where the pull request gate's are too.
  */
-import { labelNames, planGaps, ruleMessage, sectionsOf } from './pr-body.mjs'
+import { formAnswers } from './issue-form.mjs'
+import { labelNames, planGaps, ruleMessage } from './pr-body.mjs'
 
 export const GROOMING_LABEL = 'needs grooming'
 export const COMMENT_MARKER = '<!-- issue-policy -->'
 
-const PLACEHOLDER = '_No response_'
-
 /**
- * Sections of an issue body, trimmed, with the issue form's empty answer read as empty. Issue
- * forms write `###` headings and hand-written issues often `##`; comments are removed first, so a
- * hidden heading counts for nothing.
+ * Sections of an issue body by heading, the last one winning. Issue forms write `###` headings and
+ * hand-written issues often `##`, so levels 2 to 4 count.
  */
 function issueSections(body) {
   return Object.fromEntries(
-    Object.entries(sectionsOf(body, { maxLevel: 4 })).map(([title, text]) => [
-      title,
-      text.trim() === PLACEHOLDER ? '' : text.trim(),
-    ]),
+    formAnswers(body, { minLevel: 2, maxLevel: 4 }).map(({ title, text }) => [title, text]),
   )
 }
+
+/** An epic is a parent issue: it has no files or checkboxes of its own and never goes to In progress. */
+const isEpic = (issue) => labelNames(issue).includes('epic')
 
 // The forms call the plain-language statement "Problem"; hand-written issues say "Summary" or "Goal"
 const SUMMARY_HEADINGS = ['summary', 'problem', 'goal']
@@ -31,6 +29,8 @@ const SUMMARY_MIN_LENGTH = 20
 
 /** The issue rules: ISSUE-TYPE, -AREA, -PRIORITY, -SUMMARY, -CRITERIA, -FILES and -MILESTONE. */
 export function issueProblems(issue, policy) {
+  // An epic is exempt, so one flagged before it became an epic is cleared on the next run
+  if (isEpic(issue)) return []
   const gaps = planGaps(issue, policy)
   const sections = issueSections(issue.body)
   const problems = []
@@ -84,14 +84,12 @@ export function issueProblems(issue, policy) {
 }
 
 /**
- * Why an issue is not checked, or null: pull requests, closed issues, epics (a parent issue has
- * no files or checkboxes of its own and never goes to In progress) and bot-filed noise.
+ * Why an issue is not checked, or null: pull requests, closed issues and bot-filed noise. (An
+ * epic is checked but exempt from every rule, so its label and comment get cleared.)
  */
 export function skipReason(issue) {
   if (issue.pull_request) return 'a pull request, which the PR Policy check covers'
   if (issue.state === 'closed') return 'a closed issue'
-  if (labelNames(issue).includes('epic'))
-    return 'an epic, which the Definition of Ready does not fit'
   if (issue.user?.type === 'Bot' || issue.user?.login?.endsWith('[bot]'))
     return 'filed by a bot (for example a dependency update)'
   return null

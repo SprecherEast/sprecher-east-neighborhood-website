@@ -23,10 +23,10 @@
   },
   "markers": {
     "epic": "Parent issue that groups features and tasks as sub-issues",
-    "needs grooming": "The issue check found something missing (docs/process/project-management.md, the issue check); not Ready until it is fixed",
+    "needs grooming": "Set by the issue check: something the Definition of Ready needs is missing",
     "needs owner": "Needs the owner: a login, a payment, or a decision agents cannot make",
     "scope-creep": "Work found while doing another issue; it got its own issue, linked to the original",
-    "proposed-close": "An agent thinks the issue is obsolete or duplicates another idea; it waits for the owner to confirm before closing",
+    "proposed-close": "An agent thinks the issue is obsolete or a duplicate; waits for the owner to confirm",
     "shared-component": "Watch out: changes shared code many pages use; check every page that uses it"
   }
 }
