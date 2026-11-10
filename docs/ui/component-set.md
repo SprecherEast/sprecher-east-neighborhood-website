@@ -84,8 +84,8 @@ the [media page](../reference/components/media.md).
 **`FeaturedImage`** (#1013) is the picture of a post or an event, at the top of the article's column: the whole picture at its own proportions, never cropped, up to the reading width from the column's left edge, loading early (it is the first image seen), with its credit under it. With no picture it draws nothing and leaves no gap. `ArticlePage` draws it, and the page header above it is the plain `PageHeader` `band` (a themed surface, no picture), so a picture that carries text stays readable at every width. Its test checks the proportions, the reading width, the early load, the empty case and axe; the gallery shows both cases.
 
 **`MetaBar`** (#1002) is the metadata of a post or an event, the industry's byline or meta bar: one thin
-line of small text at the top right of the article's column, under the picture and above the text,
-right-aligned, with a hairline between the items. Values are `text-xs`; the labels are small, uppercase
+line of small text at the top left of the article's column, under the picture and above the text,
+left-aligned, with a hairline between the items. Values are `text-xs`; the labels are small, uppercase
 and muted, in the theme's finest text size (`text-fine`, the `type-fine` token). A post shows author,
 published and, when it has one, the source; an event shows when (date and time) and where (the venue
 or address, with its format). Directly under the text, across the whole column, runs one straight
@@ -94,10 +94,12 @@ and the line is the same at every width. It is one decorative element, hidden fr
 technology, with no measuring and no inline SVG; the metadata is a description list of real text.
 From `md` the items sit in one row aligned on their text baseline (a link and its icon never lower
 a neighbour); below `md` they become a two-column list, labels in one column and values in the
-other, right-aligned above the line. A value too long for one line (a place) is cut with an ellipsis
-(`title` on the item, as `Breadcrumbs` does), with its whole text in the title and in the page; the
-page's Location panel states it in full. `ArticlePage` draws it from its `byline` items at the text's
-width, with clear space (2.5rem) under it. Its test checks the labels, the hidden line, the missing
+other, both starting at the left edge, above the line. A value too long for one line (a place) is cut with an ellipsis,
+capped at 20rem so the items stay grouped at the left, and it is the item that gives up width
+first, so the others (a date and time) stay on one line while the row can hold them (`title` on the
+item, as `Breadcrumbs` does), with its whole text in the title and in the page; the
+page's Location panel states it in full. `ArticlePage` draws it from its `byline` items at the width of what sits
+under it (a post: the text; an event: the whole column), with clear space (2.5rem) under it. Its test checks the labels, the hidden line, the missing
 box, the baseline and stacking classes, the cut value, the label token and axe; the gallery shows two
 items and a long value.
 

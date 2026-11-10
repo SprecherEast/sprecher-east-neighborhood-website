@@ -26,42 +26,45 @@ export type MetaBarProps = {
 
 /*
  * The metadata bar of a post or an event page (#1002, the industry's "byline" or "meta bar"): one
- * thin line of small text at the top right of the article's column, labels kept (small, uppercase,
+ * thin line of small text at the left edge of the article's column, labels kept (small, uppercase,
  * muted) and a hairline between the items, with one straight groove line directly under it across
  * the whole column. There is no box, tab or pill: the line is the only frame, and it is the same
  * at every width.
  *
  * From `md` the items sit in one row, aligned on their text baseline, so a link or its icon never
- * lowers its neighbour. Below `md` they become a two-column list, labels in one column and values
- * in the other, right-aligned above the line. A value that is too long for one line (a place) is
+ * lowers its neighbour, and they stay grouped at the left: a cut value is capped at 20rem, so a
+ * long place never spreads them across the row. Below `md` they become a two-column list, labels in one column and values
+ * in the other, both starting at the left edge, above the line. A value that is too long for one line (a place) is
  * cut with an ellipsis, with its whole text in `title` and in the page for assistive technology.
  * The line is decoration and hidden from assistive technology; the metadata is a description list
  * of real text.
  */
 export function MetaBar({ items, className }: MetaBarProps) {
   if (items.length === 0) return null
+  // With a cut value in the row it is the one that gives up width; the others stay whole
+  const hasCutValue = items.some((item) => item.title)
 
   return (
     <div className={cn('mb-10', className)}>
-      <div className="flex justify-end pb-2">
+      <div className="pb-2">
         <dl className="grid max-w-full min-w-0 grid-cols-[auto_minmax(0,max-content)] items-baseline gap-x-2 gap-y-1 md:flex md:gap-x-0">
           {items.map((item, index) => (
             <div
               key={item.label}
               className={cn(
                 'contents md:flex md:min-w-0 md:items-baseline md:gap-1.5',
-                // The cut value gives way first, so the other items stay on one line
-                item.title && 'md:shrink-[20]',
+                // The cut value gives up width first, so the other items stay on one line
+                hasCutValue && !item.title && 'md:shrink-0',
                 index > 0 && 'md:border-l md:border-border md:pl-3',
                 index < items.length - 1 && 'md:pr-3',
               )}
             >
-              <dt className="shrink-0 text-right text-fine font-medium tracking-widest text-muted-foreground uppercase md:text-left">
+              <dt className="shrink-0 text-fine font-medium tracking-widest text-muted-foreground uppercase">
                 {item.label}
               </dt>
               <dd className="flex min-w-0 text-xs break-words text-foreground">
                 {item.title ? (
-                  <span className="min-w-0 truncate" title={item.title}>
+                  <span className="min-w-0 truncate md:max-w-80" title={item.title}>
                     {item.value}
                   </span>
                 ) : (

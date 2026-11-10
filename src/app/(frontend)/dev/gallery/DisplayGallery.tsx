@@ -120,7 +120,7 @@ export function DisplayGallery() {
 
       <GalleryEntry
         name="MetaBar"
-        description="A post's or event's metadata on one thin line, right-aligned above one straight groove line."
+        description="A post's or event's metadata on one thin line, left-aligned above one straight groove line."
       >
         <GalleryVariant label="two items" className="block">
           <div className="w-full max-w-[var(--reading-width)]">

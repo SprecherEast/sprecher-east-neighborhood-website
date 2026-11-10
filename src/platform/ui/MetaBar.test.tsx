@@ -63,12 +63,12 @@ describe('MetaBar (#1002)', () => {
     expect(container.querySelector('[class*="before:"], [class*="after:"]')).toBeNull()
   })
 
-  it('right-aligns the metadata above the line', () => {
+  it('aligns the metadata to the left edge of the column, above the line', () => {
     render(<MetaBar items={items} />)
 
-    expect(screen.getByText('Author').closest('dl')?.parentElement?.className).toContain(
-      'justify-end',
-    )
+    const wrapper = screen.getByText('Author').closest('dl')?.parentElement
+    expect(wrapper?.className).not.toMatch(/justify-end|text-right|text-center|ml-auto/)
+    expect(screen.getByText('Author').className).not.toMatch(/text-right|text-center/)
   })
 
   it('sets its items in one row from md, on one text baseline, with a hairline between them', () => {
@@ -93,7 +93,8 @@ describe('MetaBar (#1002)', () => {
     expect(list?.className).toContain('grid-cols-[auto_minmax(0,max-content)]')
     // Each item's label and value are the grid's own cells
     expect(list?.firstElementChild?.className).toContain('contents')
-    expect(screen.getByText('Author').className).toContain('text-right')
+    // Both labels share the column's left edge, and a wrapped value starts at the value column
+    expect(screen.getByText('Author').className).not.toContain('text-right')
   })
 
   it('sets its labels in the theme’s finest text size, a token, smaller than the values', () => {
@@ -126,7 +127,7 @@ describe('MetaBar (#1002)', () => {
       await expectAccessible(container)
     })
 
-    it('gives way before the other items, so they stay whole while there is room', () => {
+    it('gives up width before the other items, which stay whole while the row can hold them', () => {
       render(
         <MetaBar
           items={[
@@ -136,8 +137,20 @@ describe('MetaBar (#1002)', () => {
         />,
       )
 
-      expect(screen.getByText('Where').parentElement?.className).toContain('md:shrink-[20]')
-      expect(screen.getByText('When').parentElement?.className).not.toContain('shrink-[20]')
+      expect(screen.getByText('When').parentElement?.className).toContain('md:shrink-0')
+      expect(screen.getByText('Where').parentElement?.className).not.toContain('shrink-0')
+    })
+
+    it('is capped at 20rem, so the items stay grouped at the left instead of spreading across the row', () => {
+      render(<MetaBar items={[{ label: 'Where', value: long, title: long }]} />)
+
+      expect(screen.getByTitle(long).className).toContain('md:max-w-80')
+    })
+
+    it('lets items shrink as usual when no value is cut', () => {
+      render(<MetaBar items={items} />)
+
+      expect(screen.getByText('Author').parentElement?.className).not.toContain('shrink-0')
     })
 
     it('keeps a suffix whole beside the cut value', () => {

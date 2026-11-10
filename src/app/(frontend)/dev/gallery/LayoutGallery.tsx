@@ -202,7 +202,7 @@ export function LayoutGallery() {
               aside={null}
             >
               <Text variant="small">
-                The metadata bar sits above its groove line, at the top right of the column.
+                The metadata bar sits above its groove line, at the top left of the column.
               </Text>
             </ArticlePage>
           </div>

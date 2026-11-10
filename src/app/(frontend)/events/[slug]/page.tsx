@@ -64,8 +64,9 @@ export default async function EventPage({ params: paramsPromise }: Args) {
       draft={draft}
       image={event.image}
       header={eventHeaderProps(event)}
+      // No text width: what sits under the bar (the Location panel, the notices) runs the column's
+      // full width, so the bar's groove does too
       byline={eventByline(event)}
-      textClassName={textClassName}
       breadcrumbs={[
         { label: 'Home', href: '/' },
         { label: 'Community Events', href: '/events' },

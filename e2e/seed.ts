@@ -11,6 +11,7 @@ import { contactForm } from '../src/endpoints/seed/contact-form'
 import { contact } from '../src/endpoints/seed/contact-page'
 import { root, p } from '../src/endpoints/seed/helpers/lexical'
 import { alignmentPost, FIGURE_CAPTION } from './support/alignmentPage'
+import { EDGES_EVENT_SLUG } from './support/alignmentSlug'
 
 const payload = await getPayload({ config })
 const context = { disableRevalidate: true }
@@ -48,5 +49,25 @@ await payload.create({
   overrideAccess: true, // test setup, no user
 })
 
-payload.logger.info('e2e: seeded the contact form and page, and the alignment post')
+await payload.create({
+  collection: 'events',
+  depth: 0,
+  data: {
+    slug: EDGES_EVENT_SLUG,
+    title: 'Edges check',
+    _status: 'published',
+    date: '2030-01-15T00:00:00.000Z',
+    timeStart: '6:30 PM',
+    timeEnd: '8:30 PM',
+    locationType: 'hybrid',
+    locationName:
+      'The community room at the far end of the long lakeside building next to the Sprecher Road library branch',
+    locationAddress: '4605 Sprecher Rd, Madison, WI',
+    content: root([p('Some text under the event’s panels.')]),
+  },
+  context,
+  overrideAccess: true, // test setup, no user
+})
+
+payload.logger.info('e2e: seeded the contact form and page, the alignment post and an event')
 process.exit(0)

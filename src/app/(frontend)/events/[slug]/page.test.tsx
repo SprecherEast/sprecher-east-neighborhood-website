@@ -40,4 +40,11 @@ describe('/events/[slug]', () => {
     expect(screen.getByText('When').closest('dl')?.closest('header')).toBeNull()
     expect(screen.getByText('When').nextElementSibling?.textContent).toBe('Sat, Nov 7')
   })
+
+  it('gives the bar the width of what sits under it, the whole column, not the reading width (#1002)', async () => {
+    render(await EventPage({ params: Promise.resolve({ slug: 'leaf-raking' }) }))
+
+    const bar = screen.getByText('When').closest('dl')?.parentElement?.parentElement
+    expect(bar?.className).not.toMatch(/max-w|mx-0/)
+  })
 })
