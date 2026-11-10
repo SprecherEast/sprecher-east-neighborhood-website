@@ -10,7 +10,6 @@ page short. Dependabot pull requests are exempt from the gate. The rules live in
 The `PR Policy` check (`.github/workflows/pr-policy.yml`, rules in `.github/scripts/pr-body.mjs`)
 fails a pull request with one line per broken rule, each starting with a stable ID, so a failure
 can be fixed in one try and counted ([#970](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/970)).
-Dependabot pull requests are exempt.
 
 | ID               | The rule                                                                                   |
 | ---------------- | ------------------------------------------------------------------------------------------ |
@@ -48,6 +47,11 @@ for exactly one priority label, where the gate accepts one or more. Pull request
 and issues filed by a bot are not checked. An epic is exempt from every rule (a parent issue has
 no files or checkboxes of its own), so one that was flagged before it became an epic loses the
 label and its comment is marked clear on the next run.
+
+Both gates and Issue Labels read a body without its HTML comments, as Markdown renders it. A
+comment opener that is never closed hides everything after it, even inside a code span, so write
+such text in a code block or leave the opener out; otherwise the later answers or sections count
+as missing.
 
 | ID                | The rule                                                                               |
 | ----------------- | -------------------------------------------------------------------------------------- |

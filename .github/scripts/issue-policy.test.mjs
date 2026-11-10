@@ -138,11 +138,9 @@ describe('issueProblems', () => {
       }
     })
     it('accepts a heading of any level from two to four', () => {
-      for (const marks of ['##', '####']) {
-        expect(
-          ids(groomed({ body: GROOMED_BODY.replace('### Summary', `${marks} Summary`) })),
-        ).toEqual([])
-      }
+      expect(ids(groomed({ body: GROOMED_BODY.replace('### Summary', '#### Summary') }))).toEqual(
+        [],
+      )
     })
     it('accepts a second-level heading', () => {
       expect(ids(groomed({ body: GROOMED_BODY.replace('### Summary', '## Summary') }))).toEqual([])
@@ -257,6 +255,14 @@ describe('groomingComment', () => {
     expect(body.startsWith(COMMENT_MARKER)).toBe(true)
     for (const problem of problems) expect(body.split(problem)).toHaveLength(2)
     expect(body).toContain(GROOMING_LABEL)
+  })
+  it('links the rules by an absolute URL, which works from an issue comment', () => {
+    for (const body of [groomingComment(problems), clearComment()]) {
+      const link = body.match(/\[the rules\]\(([^)]+)\)/)?.[1]
+      expect(link).toMatch(
+        /^https:\/\/github\.com\/[^/]+\/[^/]+\/blob\/main\/docs\/process\/issue-and-pr-checks\.md#the-issue-check$/,
+      )
+    }
   })
   it('has a cleared form that carries the marker and no rule ID', () => {
     expect(clearComment().startsWith(COMMENT_MARKER)).toBe(true)

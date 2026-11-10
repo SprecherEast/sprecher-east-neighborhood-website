@@ -95,7 +95,9 @@ export function skipReason(issue) {
   return null
 }
 
-const DOCS = 'docs/process/issue-and-pr-checks.md#the-issue-check'
+// Absolute, because a relative path does not resolve from an issue comment
+const DOCS =
+  'https://github.com/SprecherEast/sprecher-east-neighborhood-website/blob/main/docs/process/issue-and-pr-checks.md#the-issue-check'
 
 /** The one comment on a failing issue: each failed rule with its fix. */
 export function groomingComment(problems) {
