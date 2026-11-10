@@ -50,7 +50,7 @@ owner's decision, #972). The limits:
 - It never takes the place of a required check, a review, or a fix through a pull request, and it
   never bypasses a rule.
 - First check that no deploy is running. A merge's deploy runs inside the **CI** run, so look at
-  both workflows that can deploy, `ci.yml` and `deploy.yml`, on `main`: nothing may be `in_progress`
+  both workflows that can deploy, `ci.yml` and `deploy.yml`, on `main`: no run may be `in_progress`
   or `queued`. If one is, wait for it. The deploy job's concurrency group holds one running and one
   pending job and a newer arrival replaces the pending one, so starting during a run can drop a
   queued deploy.
