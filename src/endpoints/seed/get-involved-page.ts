@@ -79,7 +79,7 @@ export const getInvolvedPage: () => RequiredDataFromCollectionSlug<'pages'> = ()
             richText: root([
               heading('h3', 'Come to an Event'),
               p(
-                'Events and City meetings are open to all neighbors. Come listen, ask questions or share an idea.',
+                'City meetings and many events are open to all neighbors. Come listen, ask questions or share an idea.',
               ),
             ]),
             size: 'oneThird',

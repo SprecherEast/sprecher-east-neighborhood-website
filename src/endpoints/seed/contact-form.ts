@@ -4,7 +4,7 @@ import { heading, root, p } from './helpers/lexical'
 /** Optional sender override; empty uses the SMTP default (SMTP_FROM_NAME <SMTP_FROM_ADDRESS>). */
 const CONTACT_EMAIL_FROM = process.env.CONTACT_EMAIL_FROM
 
-/** Where contact-form messages are sent (e.g. the association inbox). Unset = no email. */
+/** Where contact-form messages are sent (the site's own inbox). Unset = no email. */
 const CONTACT_NOTIFY_EMAIL = process.env.CONTACT_NOTIFY_EMAIL
 
 export const contactForm: RequiredDataFromCollectionSlug<'forms'> = {
@@ -48,10 +48,8 @@ export const contactForm: RequiredDataFromCollectionSlug<'forms'> = {
       required: true,
       width: 100,
       options: [
-        { label: 'Membership', value: 'membership' },
         { label: 'Events', value: 'events' },
         { label: 'Neighborhood Issue', value: 'issue' },
-        { label: 'Board / Association', value: 'board' },
         { label: 'Resources', value: 'resources' },
         { label: 'Volunteering', value: 'volunteer' },
         { label: 'General Question', value: 'general' },

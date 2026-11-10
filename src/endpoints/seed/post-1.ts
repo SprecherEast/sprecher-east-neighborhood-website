@@ -32,15 +32,13 @@ export const post1: (args: PostArgs) => RequiredDataFromCollectionSlug<'posts'> 
       ),
       heading('h2', 'What We\u2019re Building'),
       p(
-        'A neighborhood association that speaks up for our area at City Hall, if enough neighbors want one. A website with events, news, and resources that actually matter to us. Community connections that go deeper than a Nextdoor post. A voice for District 16 residents who feel like the far east side gets forgotten.',
+        'A neighborhood association that speaks up for our area at City Hall, if enough neighbors want one. A website with events, news, and resources that actually matter to us. Community connections that go deeper than a Nextdoor post. A place for District 16 neighbors who feel like the far east side gets forgotten.',
       ),
       heading('h2', 'What We Need From You'),
       p(
-        'Show up \u2014 come to a meeting, say hi, bring a friend. Speak up \u2014 got a neighborhood concern? An idea? We want to hear it. Spread the word \u2014 tell your neighbors. Volunteer \u2014 even an hour a month makes a real difference.',
+        'Say hi \u2014 come to an event and bring a friend. Speak up \u2014 got a concern or an idea? Please tell us. Spread the word \u2014 tell your neighbors. And if you have a little time, we\u2019d love your help with the site.',
       ),
-      p(
-        'We\u2019re not official yet \u2014 registration with the City of Madison takes time. But the community we\u2019re building? That\u2019s already real. And it starts with you.',
-      ),
+      p('The community here is already real. It starts with you.'),
       p('Let\u2019s do this together.'),
     ]),
     heroImage: heroImage.id,

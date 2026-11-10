@@ -1,5 +1,6 @@
 import type { RequiredDataFromCollectionSlug } from 'payload'
 import { heading, paragraph, text, root } from './helpers/lexical'
+import { HOME_DESCRIPTION } from './home-description'
 
 // Used for pre-seeded content so that the homepage is not empty
 export const homeStatic: RequiredDataFromCollectionSlug<'pages'> = {
@@ -17,8 +18,7 @@ export const homeStatic: RequiredDataFromCollectionSlug<'pages'> = {
     ]),
   },
   meta: {
-    description:
-      'News, events and City updates for Sprecher East on Madison\u2019s Far East Side: Meadowlands, Door Creek and Reston Heights. An unofficial site.',
+    description: HOME_DESCRIPTION,
     title: 'Home',
   },
   title: 'Home',

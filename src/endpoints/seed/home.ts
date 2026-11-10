@@ -1,6 +1,7 @@
 import type { RequiredDataFromCollectionSlug } from 'payload'
 import type { Media } from '@/payload-types'
 import { heading, paragraph, text, boldText, root, p } from './helpers/lexical'
+import { HOME_DESCRIPTION } from './home-description'
 
 type HomeArgs = {
   heroImage: Media
@@ -12,7 +13,7 @@ type HomeArgs = {
   comingTogetherPostId: number
 }
 
-/** The neighborhood's forum, where a top issue can send residents to talk it over (#484) */
+/** The neighborhood's forum, where a top issue can send neighbors to talk it over (#484) */
 const FORUM_URL = 'https://discourse.sprechereast.org'
 
 export const home: (args: HomeArgs) => RequiredDataFromCollectionSlug<'pages'> = ({
@@ -48,9 +49,7 @@ export const home: (args: HomeArgs) => RequiredDataFromCollectionSlug<'pages'> =
       media: heroImage.id,
       richText: root([
         heading('h1', 'Your Neighborhood, Your Community'),
-        p(
-          'News, events and City updates for Sprecher East on Madison\u2019s Far East Side: Meadowlands, Door Creek and Reston Heights.',
-        ),
+        p('News, events and City updates for neighbors on Madison\u2019s Far East Side.'),
       ]),
     },
     layout: [
@@ -112,7 +111,6 @@ export const home: (args: HomeArgs) => RequiredDataFromCollectionSlug<'pages'> =
               heading('h3', 'Quick Facts'),
               p('\u2713 Far East Side \u2014 Madison\u2019s District 16'),
               p('\u2713 Three subdivisions \u2014 Meadowlands, Door Creek, Reston Heights'),
-              p('\u2713 No membership \u2014 no sign-up, no dues'),
             ]),
             size: 'oneThird',
           },
@@ -160,8 +158,7 @@ export const home: (args: HomeArgs) => RequiredDataFromCollectionSlug<'pages'> =
       },
     ],
     meta: {
-      description:
-        'News, events and City updates for Sprecher East on Madison\u2019s Far East Side: Meadowlands, Door Creek and Reston Heights. An unofficial site.',
+      description: HOME_DESCRIPTION,
       image: metaImage.id,
       title: 'Home',
     },

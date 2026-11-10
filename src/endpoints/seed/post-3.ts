@@ -30,7 +30,7 @@ export const post3: (args: PostArgs) => RequiredDataFromCollectionSlug<'posts'> 
     heroImage: heroImage.id,
     meta: {
       description:
-        'We\u2019ve refreshed our neighborhood website to make it easier to find events, news, and resources. Sprecher East has been a community since 2006.',
+        'We\u2019ve refreshed our neighborhood website to make it easier to find events, news, and resources.',
       image: heroImage.id,
       title: 'Welcome to the Sprecher East Website',
     },

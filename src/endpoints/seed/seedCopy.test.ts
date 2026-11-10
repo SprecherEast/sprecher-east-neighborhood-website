@@ -14,7 +14,10 @@ const files = [
   'home.ts',
   'home-static.ts',
   'post-1.ts',
+  'post-2.ts',
   'post-3.ts',
+  'contact-form.ts',
+  'data/resources.ts',
   'get-involved-page.ts',
   'about-page.ts',
   'privacy-page.ts',
@@ -26,8 +29,29 @@ const read = (file: string) => readFileSync(path.resolve(__dirname, file), 'utf8
 describe('seed copy makes no association claims (#1010)', () => {
   it.each(files)('%s claims no initiative, association or membership', (file) => {
     const source = read(file)
-    expect(source).not.toMatch(/grassroots|neighborhood initiative|Neighborhood Association/)
+    expect(source).not.toMatch(/grassroots|neighborhood initiative|Neighborhood Association\b/)
     expect(source).not.toMatch(/Free membership|Membership is|Membership in/)
+  })
+
+  it.each(files)(
+    '%s has no founding year, membership option, board or registration claim',
+    (file) => {
+      const source = read(file)
+      expect(source).not.toMatch(/since 20\d\d|Established \d{4}|a community since/i)
+      expect(source).not.toMatch(/label: 'Membership'|Board \/ Association|label: 'Board/)
+      expect(source).not.toMatch(/not official yet|registration with the City/i)
+      expect(source).not.toMatch(/come to a meeting|our meetings/i)
+    },
+  )
+
+  it.each(files)('%s says "neighbors", not "residents"', (file) => {
+    expect(read(file)).not.toMatch(/\bresidents?\b/i)
+  })
+
+  it('writes the Home description once, for the full and the static Home page', () => {
+    expect(read('home.ts')).toContain('HOME_DESCRIPTION')
+    expect(read('home-static.ts')).toContain('HOME_DESCRIPTION')
+    expect(read('home.ts') + read('home-static.ts')).not.toContain('An unofficial site.')
   })
 
   it('points the source-code link at the SprecherEast organization', () => {
