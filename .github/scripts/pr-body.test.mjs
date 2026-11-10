@@ -2,11 +2,15 @@ import { describe, expect, it } from 'vitest'
 
 import {
   closeProblems,
+  headingBlocks,
   descriptionProblems,
   issueProblems,
   linkedIssues,
   isDependabot,
+  labelNames,
   lookupProblems,
+  planGaps,
+  PRIORITY_PREFIX,
   ruleMessage,
   sectionsOf,
   timelineShowsPr,
@@ -237,5 +241,56 @@ describe('descriptionProblems', () => {
   it('fails PR-SELF-REVIEW for an item with no answer', () => {
     const body = filled.replace('- Visual: checked and fixed it', '- Visual:')
     expect(descriptionProblems(body)).toEqual([expect.stringMatching(/^PR-SELF-REVIEW: .*Visual/)])
+  })
+})
+
+describe('headingBlocks', () => {
+  const body = '## Two\na\n### Three\nb\n#### Four\nc\n##### Five\nd\n'
+
+  it('reads only second-level headings by default, as the PR gate always has', () => {
+    expect(headingBlocks(body).map((block) => block.title)).toEqual(['two'])
+    expect(sectionsOf(body).two).toContain('### Three')
+  })
+
+  it('reads a wider range of levels in order when asked', () => {
+    const blocks = headingBlocks(body, { minLevel: 2, maxLevel: 4 })
+    expect(blocks.map((block) => block.title)).toEqual(['two', 'three', 'four'])
+    expect(blocks[1].text).toBe('b\n')
+  })
+
+  it('reads a single level', () => {
+    expect(headingBlocks(body, { minLevel: 3, maxLevel: 3 }).map((b) => b.title)).toEqual(['three'])
+  })
+})
+
+describe('labelNames', () => {
+  it('reads label objects and plain strings, and a missing list', () => {
+    expect(labelNames({ labels: [{ name: 'bug' }, 'ci'] })).toEqual(['bug', 'ci'])
+    expect(labelNames({})).toEqual([])
+  })
+})
+
+describe('planGaps', () => {
+  it('counts the type and priority labels and reports area and milestone', () => {
+    expect(planGaps(goodIssue, policy)).toEqual({
+      types: 1,
+      hasArea: true,
+      priorities: 1,
+      hasMilestone: true,
+    })
+    expect(
+      planGaps({ labels: ['bug', 'process', 'priority: low', 'priority: high'] }, policy),
+    ).toEqual({ types: 2, hasArea: false, priorities: 2, hasMilestone: false })
+  })
+
+  it('leaves the PR gate accepting more than one priority label, which only the issue check flags', () => {
+    const two = { ...goodIssue, labels: ['bug', 'ci', 'priority: low', 'priority: high'] }
+    expect(issueProblems(7, { ...two, assignees: [{ login: 'a' }] }, policy)).toEqual([])
+  })
+})
+
+describe('PRIORITY_PREFIX', () => {
+  it('is the start of every priority label, with its space', () => {
+    expect(PRIORITY_PREFIX).toBe('priority: ')
   })
 })

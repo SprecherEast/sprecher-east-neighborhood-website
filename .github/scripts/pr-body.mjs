@@ -1,7 +1,9 @@
 /**
  * Reads a pull request description: the one parser for the `PR Policy` and `Issue Fix Summary`
  * workflows and the knowledge-sync check (#716), so comments, sections and linked issues are
- * read in one place.
+ * read in one place. The issue check and Issue Labels read issue bodies through the same
+ * heading reader (`issue-form.mjs`), and the issue-plan reading of labels and milestone is shared
+ * with the PR gate.
  */
 
 /**
@@ -19,18 +21,31 @@ export function withoutComments(body) {
   return text
 }
 
+/**
+ * Every heading of a body in order, as `{ title, text }` with the title lower-cased and the text
+ * untrimmed, comments removed. The one reader of headings: the PR template's are level 2 (the
+ * default), issue forms' are level 3 (`issue-form.mjs`).
+ */
+export function headingBlocks(body, { minLevel = 2, maxLevel = 2 } = {}) {
+  return withoutComments(body)
+    .split(new RegExp(`^#{${minLevel},${maxLevel}}\\s+`, 'm'))
+    .slice(1)
+    .map((part) => {
+      const newline = part.indexOf('\n')
+      return {
+        title: (newline === -1 ? part : part.slice(0, newline)).trim().toLowerCase(),
+        text: newline === -1 ? '' : part.slice(newline + 1),
+      }
+    })
+}
+
 /** The sections of a description: each `## Heading`, lower-cased, mapped to the text under it. */
 export function sectionsOf(body) {
-  const sections = {}
-  for (const part of withoutComments(body)
-    .split(/^##\s+/m)
-    .slice(1)) {
-    const newline = part.indexOf('\n')
-    const title = (newline === -1 ? part : part.slice(0, newline)).trim().toLowerCase()
-    sections[title] = newline === -1 ? '' : part.slice(newline + 1)
-  }
-  return sections
+  return Object.fromEntries(headingBlocks(body).map(({ title, text }) => [title, text]))
 }
+
+/** The prefix of a priority label (`priority: high`). */
+export const PRIORITY_PREFIX = 'priority: '
 
 /**
  * The issues a description links: `closes` for "Closes/Fixes/Resolves #N", `partOf` for
@@ -74,26 +89,47 @@ export function closeProblems({ closes, partOf }) {
   return []
 }
 
+/** The names of an issue's labels, whether the API gave label objects or plain strings. */
+export function labelNames(issue) {
+  return (issue.labels ?? []).map((label) => (typeof label === 'string' ? label : label.name))
+}
+
+/**
+ * What an issue has of the plan's labels and milestone: the one reading both gates (`PR Policy`
+ * and `Issue Policy`) use, each with its own IDs and wording. `types` and `priorities` are counts
+ * so a gate can ask for exactly one or at least one. The PR gate takes one or more priority
+ * labels, since a pull request is not worth blocking over a second one; the issue check asks for
+ * exactly one, because two priorities is a ranking nobody can read.
+ */
+export function planGaps(issue, policy) {
+  const labels = labelNames(issue)
+  return {
+    types: labels.filter((label) => policy.types.includes(label)).length,
+    hasArea: labels.some((label) => policy.areas.includes(label)),
+    priorities: labels.filter((label) => label.startsWith(PRIORITY_PREFIX)).length,
+    hasMilestone: Boolean(issue.milestone),
+  }
+}
+
 /** PR-LABELS, PR-ASSIGNED and PR-MILESTONE: what the closed issue needs (an epic is optional). */
 export function issueProblems(number, issue, policy) {
-  const labels = issue.labels.map((label) => (typeof label === 'string' ? label : label.name))
-  const types = labels.filter((label) => policy.types.includes(label))
+  const gaps = planGaps(issue, policy)
   const problems = []
-  if (types.length !== 1)
+  if (gaps.types !== 1)
     problems.push(
       ruleMessage(
         'PR-LABELS',
-        `Give issue #${number} exactly one type label (${policy.types.join(', ')}); it has ${types.length}.`,
+        `Give issue #${number} exactly one type label (${policy.types.join(', ')}); it has ${gaps.types}.`,
       ),
     )
-  if (!labels.some((label) => policy.areas.includes(label)))
+  if (!gaps.hasArea)
     problems.push(
       ruleMessage(
         'PR-LABELS',
         `Give issue #${number} at least one area label (${policy.areas.join(', ')}).`,
       ),
     )
-  if (!labels.some((label) => label.startsWith('priority: ')))
+  if (gaps.priorities === 0)
     problems.push(
       ruleMessage(
         'PR-LABELS',
@@ -107,7 +143,7 @@ export function issueProblems(number, issue, policy) {
         `Assign issue #${number} (assigning is how its card moves to In progress).`,
       ),
     )
-  if (!issue.milestone)
+  if (!gaps.hasMilestone)
     problems.push(
       ruleMessage(
         'PR-MILESTONE',

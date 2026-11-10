@@ -1,0 +1,90 @@
+name: Issue Policy
+
+# Warns when an issue is missing what the Definition of Ready needs (#969): one comment, kept
+# up to date in place, and the label `needs grooming`; both go away once every rule passes. It
+# never blocks (GitHub cannot stop an issue being filed). The rules are pure functions in
+# .github/scripts/issue-policy.mjs (IDs in docs/process/issue-and-pr-checks.md, "The issue check").
+#
+# On opened and edited it runs after Issue Labels, which calls it once the form's answers are
+# labels (events made with GITHUB_TOKEN start no workflow, so it can't wait for them on its own).
+# Label and milestone changes by a person start it directly. This workflow's own comment and
+# label changes start nothing, and it writes nothing when comment and label already match.
+#
+# Issue text is untrusted: it only goes through pure functions in github-script, never into a
+# shell step or an expression that reaches one. The issue is read again from the API, so a
+# queued run never judges a stale copy.
+
+on:
+  issues:
+    types: [reopened, labeled, unlabeled, milestoned, demilestoned]
+  workflow_call:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: issue-policy-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check the issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const { pathToFileURL } = require('url');
+            const scripts = (name) => import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/${name}`).href);
+            const { GROOMING_LABEL, groomingPlan, issueProblems, skipReason } = await scripts('issue-policy.mjs');
+            const { dropLabel, ensureLabel } = await scripts('labels.mjs');
+            const policy = JSON.parse(fs.readFileSync('.github/label-policy.json', 'utf8'));
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.issue.number;
+
+            const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number });
+            const skipped = skipReason(issue);
+            if (skipped) {
+              core.info(`Skipped: #${issue_number} is ${skipped}.`);
+              return;
+            }
+
+            const problems = issueProblems(issue, policy);
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const plan = groomingPlan({
+              problems,
+              issue,
+              comments,
+            });
+            core.info(`#${issue_number}: ${problems.length} failed rule(s); comment=${plan.comment.action}, label=${plan.label}`);
+
+            if (plan.comment.action === 'create') {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body: plan.comment.body });
+            } else if (plan.comment.action === 'update') {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: plan.comment.id, body: plan.comment.body });
+            }
+
+            if (plan.label === 'add') {
+              await ensureLabel(github, context.repo, {
+                name: GROOMING_LABEL,
+                color: 'd93f0b',
+                description: policy.markers[GROOMING_LABEL],
+              });
+              await github.rest.issues.addLabels({ owner, repo, issue_number, labels: [GROOMING_LABEL] });
+            } else if (plan.label === 'remove') {
+              await dropLabel(github, { owner, repo, issue_number }, GROOMING_LABEL);
+            }

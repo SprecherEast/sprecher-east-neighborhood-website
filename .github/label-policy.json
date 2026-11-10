@@ -1,5 +1,5 @@
 {
-  "$comment": "Single source of truth for issue labels required by AGENTS.md. Read by issue-labels.yml and pr-policy.yml. Keep the issue forms' dropdown options in .github/ISSUE_TEMPLATE in sync. 'markers' are optional labels with a fixed meaning (docs/process/project-management.md); the checks don't require them.",
+  "$comment": "Single source of truth for issue labels required by AGENTS.md. Read by issue-labels.yml, issue-policy.yml and pr-policy.yml. Keep the issue forms' dropdown options in .github/ISSUE_TEMPLATE in sync. 'markers' are optional labels with a fixed meaning (docs/process/project-management.md); the checks don't require them.",
   "types": ["bug", "enhancement", "documentation", "tech-debt", "process"],
   "areas": [
     "frontend",
@@ -23,9 +23,10 @@
   },
   "markers": {
     "epic": "Parent issue that groups features and tasks as sub-issues",
+    "needs grooming": "Set by the issue check: something the Definition of Ready needs is missing",
     "needs owner": "Needs the owner: a login, a payment, or a decision agents cannot make",
     "scope-creep": "Work found while doing another issue; it got its own issue, linked to the original",
-    "proposed-close": "An agent thinks the issue is obsolete or duplicates another idea; it waits for the owner to confirm before closing",
+    "proposed-close": "An agent thinks the issue is obsolete or a duplicate; waits for the owner to confirm",
     "shared-component": "Watch out: changes shared code many pages use; check every page that uses it"
   }
 }
