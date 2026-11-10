@@ -4,7 +4,7 @@ import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
-import { READING_GRID, READING_WIDTH } from './layoutSizes'
+import { DETAIL_GRID, READING_WIDTH } from './layoutSizes'
 import { Link } from './Link'
 import { MetaList, type LabelledMetaItem } from './MetaList'
 import { Text } from './Text'
@@ -15,15 +15,13 @@ type HeaderBase = {
   className?: string
 }
 
-/** Heads a list page, or a post or event page without a photo */
+/** Heads a list page */
 type DefaultHeaderProps = HeaderBase & {
   variant?: 'default'
   /** A short label above the title: the section ("News") or a `Badge` */
   eyebrow?: React.ReactNode
   /** One or two sentences on what the page holds */
   description?: React.ReactNode
-  /** Facts about the page's item, label and value: "Date", "Time" */
-  facts?: LabelledMetaItem[]
   /** A way back, for a page inside a list: "Back to all events" */
   backLink?: { href: string; label: string }
   /** A control that belongs to the header, such as the search box */
@@ -35,7 +33,6 @@ type CompactHeaderProps = HeaderBase & {
   variant: 'compact'
   description?: React.ReactNode
   eyebrow?: never
-  facts?: never
   backLink?: never
   children?: never
 }
@@ -70,9 +67,8 @@ const titleVariants = cva('font-bold text-balance', {
 const EYEBROW_CLASS = 'mb-3'
 
 /*
- * The top of a page (#430, docs/ui/component-set.md). `default` heads a list page, and a post or
- * event without a photo: eyebrow, title, description, facts, an optional way back and control,
- * left-aligned. `compact` is the small header of a form page, inside the page's own column.
+ * The top of a page (#430, docs/ui/component-set.md). `default` heads a list page: eyebrow, title,
+ * description, an optional way back and control, left-aligned. `compact` is the small header of a form page, inside the page's own column.
  * `band` puts the title on a short plain band, a themed surface under the site header, and the facts
  * in a row under it, as posts and events show it (#461, #571, #1013): the article starts on the
  * first screen, and the page's picture is shown whole in the article, never cropped behind the title.
@@ -90,7 +86,7 @@ export function PageHeader(props: PageHeaderProps) {
 
   if (props.variant === 'band') return <BandHeader {...props} />
 
-  const { eyebrow, title, description, facts, backLink, children, className } = props
+  const { eyebrow, title, description, backLink, children, className } = props
   return (
     <header className={cn('container mb-12 md:mb-16', className)}>
       <Eyebrow>{eyebrow}</Eyebrow>
@@ -100,7 +96,6 @@ export function PageHeader(props: PageHeaderProps) {
           {description}
         </Text>
       )}
-      {facts && facts.length > 0 && <MetaList variant="inline" items={facts} className="mt-6" />}
       {backLink && (
         <Link
           href={backLink.href}
@@ -121,19 +116,21 @@ function BandHeader({ eyebrow, title, facts, className }: BandHeaderProps) {
     <header className={className}>
       {/* The band slides under the sticky site header, so it reads as one block with it */}
       <div className="-mt-[var(--header-height)] border-b border-border bg-surface">
-        <div className={cn('container pt-[var(--header-height)] pb-6 lg:grid', READING_GRID)}>
-          <div className="lg:col-span-2 lg:col-start-2">
+        <div className={cn('container pt-[var(--header-height)] pb-6', DETAIL_GRID)}>
+          {/* From `lg` the title is in the article's column, the one `DetailLayout` gives the picture
+              and the text, so they share a left edge (the grid is defined once, in layoutSizes) */}
+          <div className="lg:col-start-2">
             <Eyebrow>{eyebrow}</Eyebrow>
             <h1 className={titleVariants({ variant: 'band' })}>{title}</h1>
           </div>
         </div>
       </div>
       {facts && facts.length > 0 && (
-        <div className={cn('container mt-3 lg:grid', READING_GRID)}>
+        <div className={cn('container mt-3', DETAIL_GRID)}>
           <MetaList
             variant="inline"
             items={facts}
-            className="gap-x-6 gap-y-1 text-sm lg:col-span-2 lg:col-start-2"
+            className="gap-x-6 gap-y-1 text-sm lg:col-start-2"
           />
         </div>
       )}

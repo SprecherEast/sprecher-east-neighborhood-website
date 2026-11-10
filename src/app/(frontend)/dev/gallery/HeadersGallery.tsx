@@ -35,13 +35,12 @@ export function HeadersGallery() {
         name="PageHeader"
         description="Each variant holds the page's h1, so each sample here has one."
       >
-        <GalleryVariant label="default, with facts and a back link" labelAs="p">
+        <GalleryVariant label="default, with a back link" labelAs="p">
           <div className={`${FRAME} py-8`}>
             <PageHeader
               eyebrow="Events"
               title="Summer picnic in the park"
               description="Bring a dish to share. Everyone in the neighborhood is welcome."
-              facts={SAMPLE_FACTS}
               backLink={{ href: '/events', label: 'Back to all events' }}
               className="mb-0 md:mb-0"
             />

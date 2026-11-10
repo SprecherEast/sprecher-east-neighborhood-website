@@ -3,6 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { Badge } from './Badge'
+import { DETAIL_GRID } from './layoutSizes'
 import { PageHeader } from './PageHeader'
 import { expectAccessible } from './testing/expectAccessible'
 
@@ -103,6 +104,23 @@ describe('PageHeader', () => {
     await expectAccessible(container)
   })
 
+  it('puts the title and the facts on the article column, the grid `DetailLayout` uses (#1013)', () => {
+    const { container } = render(
+      <main>
+        <PageHeader variant="band" title="Park cleanup" facts={facts} />
+      </main>,
+    )
+
+    const titleRow = screen.getByRole('heading', { level: 1 }).parentElement?.parentElement
+    const factsRow = screen.getByText('Date').closest('dl')?.parentElement
+    for (const row of [titleRow, factsRow]) {
+      for (const token of DETAIL_GRID.split(' ')) expect(row?.className).toContain(token)
+      // The article is the grid's second column, beside the rail
+      expect(row?.firstElementChild?.className).toContain('lg:col-start-2')
+    }
+    expect(container.querySelector('[class*="reading-width"]')).toBeNull()
+  })
+
   it('draws a band with no facts or eyebrow', async () => {
     const { container } = render(
       <main>
@@ -115,16 +133,13 @@ describe('PageHeader', () => {
     await expectAccessible(container)
   })
 
-  it('shows facts as a plain inline row on a header without a photo', async () => {
+  it('keeps a badge eyebrow in its own look on the default header', async () => {
     const { container } = render(
       <main>
-        <PageHeader eyebrow={<Badge>Parks</Badge>} title="Park cleanup" facts={facts} />
+        <PageHeader eyebrow={<Badge>Parks</Badge>} title="Park cleanup" />
       </main>,
     )
 
-    const list = screen.getByText('Date').closest('dl')
-    expect(list?.className).toContain('text-muted-foreground')
-    expect(screen.getByText('In person').tagName).toBe('DD')
     // A badge eyebrow keeps its own look: no uppercase overline around it
     expect(screen.getByText('Parks').parentElement?.className).not.toContain('uppercase')
     expect(container.querySelector('img')).toBeNull()

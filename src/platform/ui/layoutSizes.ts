@@ -18,12 +18,10 @@ export const READING_COLUMN = `mx-0 ${READING_WIDTH}`
 
 /**
  * The grid of a post's or an event's page from `lg`: the rail (page menu and related content) on
- * the left, the article taking the rest (#677). The rail's width is a variable in globals.css.
+ * the left, the article taking the rest (#677). The rail's width is a variable in globals.css. The
+ * page's title band uses it too (#1013), so its title and facts start where the article does.
  */
 export const DETAIL_GRID = 'lg:grid lg:grid-cols-[var(--detail-rail-width)_minmax(0,1fr)] lg:gap-8'
-
-/** A page grid with a centred reading column of that width between two flexible sides */
-export const READING_GRID = 'lg:grid-cols-[1fr_var(--reading-width)_1fr]'
 
 /** The space above and below a list page's content, which clears the sticky site header */
 export const PAGE_SHELL = 'py-24'

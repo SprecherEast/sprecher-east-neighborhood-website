@@ -43,5 +43,4 @@ text panel to the checks above.
 12. **A picture that carries text is shown whole.** A post or event page shows its picture whole,
     never cropped, at the top of the article, so the text in it stays readable at every width. A
     cropping band behind a title can't promise that: it shows a different part of the picture at
-    each width, and a focal point only chooses which part. Where the site does crop a picture, set
-    the focal point in the CMS on the part that should lead, and look at it at every width.
+    each width, and a focal point only chooses which part.

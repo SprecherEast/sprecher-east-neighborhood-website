@@ -11,7 +11,6 @@ import {
   LEGEND_GAP,
   PAGE_MIN_HEIGHT,
   PAGE_SHELL,
-  READING_GRID,
   READING_WIDTH,
   SHARED_ROWS_SPACE_4,
   SUBGRID_FOUR_ROWS,
@@ -27,7 +26,6 @@ describe('layout sizes', () => {
     expect(READING_WIDTH).toBe('max-w-[var(--reading-width)]')
     expect(PAGE_SHELL).toBe('py-24')
     expect(READING_WIDTH_LG).toBe('lg:max-w-[var(--reading-width)]')
-    expect(READING_GRID).toBe('lg:grid-cols-[1fr_var(--reading-width)_1fr]')
     expect(PAGE_MIN_HEIGHT).toBe('min-h-[var(--page-min-height)]')
     expect(HERO_MIN_HEIGHT).toBe('min-h-[var(--hero-min-height)]')
     expect(CHART_SMALL_WIDTH).toBe('max-w-[var(--chart-small-width)]')
