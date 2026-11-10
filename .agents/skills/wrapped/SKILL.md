@@ -42,9 +42,26 @@ whether anything deploys: docs-only changes, and commits older than the live one
      checks from the internet.
 3. Open https://sprechereast.com and check the behavior the PRs changed.
 
-Never re-run or start the deploy yourself (it can be started by hand: Actions → Deploy to VPS →
-Run workflow, on `main`). A failed deploy gets a new issue and is fixed or reverted through a PR.
-Never fix it on the server.
+### Starting the deploy by hand
+
+An agent may start the `Deploy to VPS` workflow by hand, on `main`, when a redeploy is needed (the
+owner's decision, #972). The limits:
+
+- It never takes the place of a required check, a review, or a fix through a pull request, and it
+  never bypasses a rule.
+- First check that no deploy is running. A merge's deploy runs inside the **CI** run, so look at
+  every run of `main` that is not finished, and wait for it:
+  `gh api "repos/{owner}/{repo}/actions/runs?branch=main&status=in_progress"`, and again with
+  `status=queued`. Both must list no run.
+- Start it with the REST call below, then verify it as in this step: find the run, read the
+  annotations, check the site.
+- Say on the linked issue why it was started, and which run.
+- A failed deploy gets a new issue and is fixed or reverted through a PR. Never fix it on the server.
+
+```bash
+gh api -X POST repos/{owner}/{repo}/actions/workflows/deploy.yml/dispatches -f ref=main
+# 200: the answer names the new run (workflow_run_id, html_url). Watch it: gh run watch <id>
+```
 
 ## 3. Close the loop on the issues
 

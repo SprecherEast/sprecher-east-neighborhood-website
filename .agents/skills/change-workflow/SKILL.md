@@ -153,6 +153,7 @@ A `409` means a merge of this PR is already running: poll it instead of starting
   [`wrapped`](../wrapped/SKILL.md): verify the merge, read the deploy's annotations, check the
   site (`https://sprechereast.com`) and the behavior that changed, and report.
 - A failed deploy is fixed or reverted through a new PR, never on the server.
+- A redeploy by hand is allowed within the limits in [`wrapped`](../wrapped/SKILL.md) step 2.
 - The issue closes automatically. `issue-fix-summary.yml` comments on it with how it was fixed.
 
 ## Server or dashboard changes (`infra`)

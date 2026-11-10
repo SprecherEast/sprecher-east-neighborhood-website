@@ -28,7 +28,17 @@ from `NEXT_PUBLIC_SERVER_URL` in `.env.local`, and the check goes to Caddy on th
 ## How a deploy runs
 
 CI calls the deploy once its `Type-check & Build` job passes on a push to `main`. It can also be
-started by hand (Actions → Deploy to VPS → Run workflow, on `main`).
+started by hand on `main` when a redeploy is needed, by the owner (Actions → Deploy to VPS → Run
+workflow) or by an agent with the REST call below. A manual start never replaces a required check, a
+review or a fix through a pull request; check first that no run of `main` is `in_progress` or
+`queued` (a merge's deploy runs inside the CI run), verify it afterwards, and say on the linked issue
+why it was started ([`wrapped`](../.agents/skills/wrapped/SKILL.md), step 2). A failed deploy is fixed
+or reverted through a pull request, never on the server.
+
+```bash
+gh api "repos/{owner}/{repo}/actions/runs?branch=main&status=in_progress"   # and status=queued
+gh api -X POST repos/{owner}/{repo}/actions/workflows/deploy.yml/dispatches -f ref=main
+```
 
 1. **Preflight** waits until the required checks (`Type-check & Build`, `Prettier`, `ESLint`,
    `Dependency Audit`, `Knowledge sync`, `Agent context`) have passed on the commit, then reads
