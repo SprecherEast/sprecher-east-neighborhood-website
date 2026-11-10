@@ -13,6 +13,7 @@ import { InitTheme } from '@/platform/theme/InitTheme'
 import { Providers } from '@/platform/theme/Providers'
 import { mergeOpenGraph } from '@/platform/seo/mergeOpenGraph'
 import { organizationJsonLd } from '@/platform/seo/organizationJsonLd'
+import { LikelyHumanClicks } from '@/platform/analytics/LikelyHumanClicks.client'
 import { UmamiScript } from '@/platform/analytics/UmamiScript'
 import { VersionCheck } from '@/platform/ui/VersionCheck.client'
 import { draftMode } from 'next/headers'
@@ -71,8 +72,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {/* The active theme's decorative layer, if it has one (#409) */}
           <ThemeDecoration />
           <VersionCheck />
-          {/* Counts visits, but never a draft preview (#950); the admin has its own layout */}
-          {!isEnabled && <UmamiScript />}
+          {/* Counts visits and likely-human clicks, but never a draft preview (#950, #975); the admin has its own layout */}
+          {!isEnabled && (
+            <>
+              <UmamiScript />
+              <LikelyHumanClicks />
+            </>
+          )}
         </Providers>
       </body>
     </html>

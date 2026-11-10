@@ -211,4 +211,4 @@ System-level env vars (not in .env.local):
 ## Connected Tools
 
 - **Slack** (MCP): sprechereast.slack.com, channel #sprecher-east-na (ID: C0AJ124LBB2)
-- **Analytics**: Umami, self-hosted (see VPS / Hosting); no tracker on the site yet
+- **Analytics**: Umami, self-hosted (see VPS / Hosting); the public site counts visits and, as a separate "likely human, not certain" event, clicks on buttons and outbound links (`src/platform/analytics/`, #950, #975)

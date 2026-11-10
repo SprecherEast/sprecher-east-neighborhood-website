@@ -23,6 +23,9 @@ export const privacyPage: () => RequiredDataFromCollectionSlug<'pages'> = () => 
             p(
               'Each visit notes the page and its title, where you came from, and your country, region and city. It also notes your browser, device, system, screen size and language. If your browser sends Do Not Track, we don’t count you. We keep these notes until we delete them.',
             ),
+            p(
+              'Robots visit too, so we also note a click on a button, or on a link that leaves our site. That is a likely person, not certain. We count each once per visit, and note the button’s name or the other site’s name, not the full address. A browser with Do Not Track sends none of this.',
+            ),
           ]),
           size: 'full',
         },

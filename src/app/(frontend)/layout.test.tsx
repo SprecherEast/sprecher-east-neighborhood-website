@@ -15,6 +15,7 @@ vi.mock('@/modules/accounts/server', () => ({
 
 import { SiteHeader } from '@/modules/site/server'
 import { AccountMenu, AccountProvider } from '@/modules/accounts/server'
+import { LikelyHumanClicks } from '@/platform/analytics/LikelyHumanClicks.client'
 import { UmamiScript } from '@/platform/analytics/UmamiScript'
 
 import RootLayout from './layout'
@@ -46,9 +47,12 @@ describe('RootLayout', () => {
     }
   })
 
-  it('counts visits on public pages, but not in a draft preview (#950)', async () => {
+  it.each([
+    ['visits', UmamiScript],
+    ['likely-human clicks', LikelyHumanClicks],
+  ])('counts %s on public pages, but not in a draft preview (#950, #975)', async (_what, part) => {
     const found = async () =>
-      elements(await RootLayout({ children: null })).some((element) => element.type === UmamiScript)
+      elements(await RootLayout({ children: null })).some((element) => element.type === part)
 
     expect(await found()).toBe(true)
     draft.isEnabled = true
