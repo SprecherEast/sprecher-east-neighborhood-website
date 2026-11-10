@@ -1,6 +1,8 @@
 <!--
 Every PR closes exactly one issue and fills in every section below. The "PR Policy" check enforces
-this. Rules: AGENTS.md. Procedure: .agents/skills/change-workflow/SKILL.md
+this and names each failure by rule ID (PR-CLOSES, PR-LINKED, PR-LABELS, PR-ASSIGNED, PR-MILESTONE,
+PR-SECTIONS, PR-SELF-REVIEW, PR-KNOWLEDGE, PR-E2E): docs/process/project-management.md#the-pull-request-gate
+Rules: AGENTS.md. Procedure: .agents/skills/change-workflow/SKILL.md
 If this PR depends on another open PR, put both on a native GitHub stack and start this
 description with the stack line: .agents/skills/stacked-prs/SKILL.md
 -->
@@ -69,7 +71,7 @@ Behavior change:
 
 ## Checklist
 
-- [ ] The linked issue has a type, an area, and a priority label
+- [ ] The closed issue has a type, an area, a priority label, an assignee and a milestone
 - [ ] `npx tsc --noEmit`, ESLint and Prettier pass locally
 - [ ] Self-review done and recorded above, and every finding fixed
 - [ ] Independent review requested (`.agents/skills/pr-review/SKILL.md`)
