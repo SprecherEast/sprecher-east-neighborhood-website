@@ -38,8 +38,7 @@ change this file through the same workflow below.
 - **Push back before building what's probably not the best way.** When the owner asks for something
   weaker than the standard approach (a security trade-off, say), don't build it as asked: explain
   the better option with sources, then stop until he has read it and decided (the owner's rule,
-  2026-10-23, #305). Push back when his request is weaker than the standard; decide routine things
-  yourself.
+  2026-10-23, #305).
 
 ## Guard rails: non-negotiable
 
@@ -101,9 +100,10 @@ change, however small, follows these five steps:
 
 - **A PR closes exactly one issue** (`Closes #N`), so each shows the other. Bigger work splits
   into sub-issues first.
-- **Dependent PRs sit on a native GitHub stack,** never an order in prose; independent ones run in
-  parallel ([`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)).
-- **Every issue has an epic and a milestone** (Backlog until planned).
+- **Dependent PRs sit on a native GitHub stack,** so GitHub enforces the order, not prose;
+  independent ones run in parallel ([`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)).
+- **Every issue has a milestone** (Backlog until planned) **and, unless it is an epic, an epic
+  above it.**
 
 ### Never
 

@@ -62,6 +62,8 @@ An outcome with a clear "done" state that spans several capabilities.
 - **One per issue,** and the title states the outcome as a result for someone, in plain words.
 - **The description is the contract:** goal, scope, what is out of scope, and the done test (see
   [templates](#templates)). If you cannot write a pass or fail done test, it is not a milestone.
+- **Backlog is the one exception:** a catch-all milestone for work not planned yet, with no done
+  test and no finish line. The sweep's milestone checks skip it.
 - **A due date only when a real date exists** (an event, a commitment, a dependency outside the
   team, or a date the owner decides), with the reason in the description. A date chosen to feel
   firm is a guess dressed as a plan. As a dated milestone nears, the sweep flags its open items
@@ -100,9 +102,8 @@ A body of related issues delivering one capability.
 - **An issue is one deliverable,** small enough for one pull request and one sprint. This is the
   INVEST idea of a small, independent, testable story: it can be estimated, delivers value on its
   own, and has acceptance criteria someone else can check.
-- **Every issue has a parent epic and a milestone**
-  ([the rule](/AGENTS.md#one-issue-one-pull-request)). Work that needs more than one pull
-  request is split into sub-issues first, one per pull request.
+- **Every issue other than an epic has an epic above it,** and every issue has a milestone
+  ([the rule](/AGENTS.md#one-issue-one-pull-request)). Its parent is the epic, or an issue under it.
 - **A sub-issue of an issue is a step worth tracking:** separately assignable or verifiable, and
   too big for a line in the acceptance criteria. If it is not, it is a line, not an issue.
 - **A child has one parent.** Moving it to another parent is a deliberate change with a comment,

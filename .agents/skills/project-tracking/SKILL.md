@@ -48,8 +48,8 @@ Before every major change (a new epic, a sprint, a batch of work), groom the bac
 ([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-work-in-progress)).
 For each issue:
 
-1. Give it a plain summary, acceptance criteria, a parent epic (or a stated reason it stands
-   alone), the type, area and `priority:` labels (§3), and its **Files likely touched** and
+1. Give it a plain summary, acceptance criteria, an epic above it and a milestone
+   ([the rule](../../../AGENTS.md#one-issue-one-pull-request)), the type, area and `priority:` labels (§3), and its **Files likely touched** and
    **Must not touch** (`None` when nothing), which the overlap check in §4 reads.
 2. Set its **Size** as effort: S, M or L. If it is bigger than L, split it into sub-issues. In a
    cloud session, which can't read the board, skip Size and say so on the issue.
@@ -89,9 +89,8 @@ For each issue:
    and the [naming templates](../../../docs/process/planning-model.md#templates).
    - An outcome with a done test, spanning several capabilities, is a milestone; a capability
      grouping several related issues is an epic (label `epic`, one milestone).
-   - One deliverable that fits one sprint and one PR is an issue, under an epic and a milestone
-     ([the rule](../../../AGENTS.md#one-issue-one-pull-request)). Work that needs more PRs is
-     split into sub-issues, one per PR.
+   - One deliverable that fits one sprint and one PR is an issue
+     ([the rule](../../../AGENTS.md#one-issue-one-pull-request)).
    - Something broken is a bug.
 2. **Search first** to avoid duplicates. Loop over the pages, since the repo has more than 100
    issues and PRs:

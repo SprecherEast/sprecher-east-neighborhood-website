@@ -52,8 +52,8 @@ The Definition of Ready, spelled out:
 
 - A plain summary, then details, then acceptance criteria someone else can check.
 - The layer is right ([which layer](/docs/process/planning-model.md#which-layer)): small enough for one pull
-  request and one sprint (INVEST: independent, estimable, small, testable), with a parent epic or
-  a stated reason it stands alone, and the epic's milestone where the epic has one.
+  request and one sprint (INVEST: independent, estimable, small, testable), under an epic and in
+  a milestone ([the rule](/AGENTS.md#one-issue-one-pull-request)).
 - Labels: one type, at least one area, one priority. A size on the board when it can be read.
 - Files likely touched and must not touch, filled in or `None`.
 - Known dependencies are blocked-by links, and nothing it is blocked by is still open.
@@ -124,7 +124,9 @@ For each, the chief of staff checks and updates the following.
 
 ## The sweep
 
-The sweep reads every open issue, the milestones, and the open pull requests.
+The sweep reads every open issue, the milestones, and the open pull requests. Its milestone
+checks skip the Backlog milestone, the one catch-all with no done test
+([planning model](/docs/process/planning-model.md#milestone)).
 
 ### Duplicates
 
@@ -153,15 +155,16 @@ comment. Duplicate bugs may be closed as the
 - **Stale:** an open item with no activity for several sprints, not blocked and not waiting for
   the owner; an In progress item with no claim, no progress comment and no pull request; a Ready
   item that never gets pulled. Ask on the issue what changed; if it is obsolete, `proposed-close`.
-- **Orphans:** no parent and no stated standalone reason; an epic with no children; an open child
-  of a closed parent; an open epic whose children are all closed; a milestone with nothing open
-  that has not been closed; an open issue in a closed milestone.
+- **Orphans:** an issue with no milestone, or no epic above it unless it is an epic
+  ([the rule](/AGENTS.md#one-issue-one-pull-request)); an epic with no children; an open
+  child of a closed parent; an open epic whose children are all closed; a milestone with nothing
+  open that has not been closed; an open issue in a closed milestone.
 
 ### Missing fields
 
 Any of: acceptance criteria, type, area, priority, size where readable, files declared, a parent
-or stated reason, a milestone where the parent has one, blocked-by links for dependencies named in
-prose.
+and a milestone ([the rule](/AGENTS.md#one-issue-one-pull-request)), blocked-by links for dependencies
+named in prose.
 
 ### Wrong layer
 
@@ -223,9 +226,9 @@ approval.
    group the clusters by outcome: which several capabilities together make something with one done
    test.
 3. **Report** as a dry-run proposal: each proposed milestone with the full description from the
-   [templates](/docs/process/planning-model.md#templates); each proposed epic with its children; issues that
-   stay standalone with the reason; duplicates and stale items from the sweep; and anything
-   ambiguous as a question. Closed issues may be grouped into milestones and epics too, so a
+   [templates](/docs/process/planning-model.md#templates); each proposed epic with its children; issues with
+   no fitting epic or milestone yet, with where each would go ([the rule](/AGENTS.md#one-issue-one-pull-request));
+   duplicates and stale items from the sweep; and anything ambiguous as a question. Closed issues may be grouped into milestones and epics too, so a
    milestone's progress shows what already shipped.
 4. **Owner approves** per item or per milestone, and may edit titles and boundaries.
 5. **Apply in order:** milestones, then epics, then parent links, then milestone assignment on the

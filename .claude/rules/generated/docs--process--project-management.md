@@ -42,14 +42,14 @@ step 3). Fixing wording, links or facts isn't.
 
 Rules:
 
-- **Every feature, task and bug belongs to an epic and a milestone**
+- **Every feature, task and bug sits under an epic and in a milestone**
   ([the rule](/AGENTS.md#one-issue-one-pull-request)).
 - **Every epic belongs to a milestone.** Unscheduled epics, and foundation work done step by step
   alongside the milestones (#127), sit in the catch-all Backlog milestone until they're planned.
-- **A milestone is an outcome with a done test,** one per issue, and has a due date only when a
+- **A milestone is an outcome with a done test** (the Backlog milestone is the one exception,
+  [planning model](/docs/process/planning-model.md#milestone)), one per issue, and has a due date only when a
   real date exists (a date the owner decides counts). Sprints are not milestones; they're the board's Sprint field.
-- **One PR closes one issue** (`Closes #N`). Work that needs more is split into sub-issues first,
-  one per PR ([the rule](/AGENTS.md#one-issue-one-pull-request)).
+- **One PR closes one issue** ([the rule](/AGENTS.md#one-issue-one-pull-request)).
 - **Split ahead of time.** Split anything bigger than size L (3 days). An epic's features become
   sub-issues when they're planned, not all up front.
 
@@ -205,7 +205,8 @@ An issue is **Ready** when it has:
 - acceptance criteria someone else could check
 - **Files likely touched** and **Must not touch** filled in (write `None` when there is nothing),
   so overlap with other work can be checked
-- a parent epic and a milestone, labels (type, area, priority) and a size.
+- an epic above it and a milestone ([the rule](/AGENTS.md#one-issue-one-pull-request)), labels (type,
+  area, priority) and a size.
   When the board can't be read (cloud sessions), skip Size and say so on the issue
   ([`project-tracking`](/.agents/skills/project-tracking/SKILL.md) §1)
 - no open blocker: nothing it's **blocked by** is still open
