@@ -29,8 +29,8 @@ The sprint and the size are board fields. On the owner's computer, read them fro
 items (§2 step 4 without `--query`, then find the issue by number in the JSON). Start only if the
 issue is **Ready**:
 
-- it has acceptance criteria, an epic above it and a milestone
-  ([the rule](../../../AGENTS.md#one-issue-one-pull-request)), type, area and priority labels,
+- it has acceptance criteria, a milestone (an epic only for multi-part work;
+  [the rule](../../../AGENTS.md#one-issue-one-pull-request)), type, area and priority labels,
   and a size
 - **Files likely touched** and **Must not touch** are filled in (`None` when there is nothing)
 - nothing it's blocked by is still open
@@ -38,7 +38,7 @@ issue is **Ready**:
 - no open PR already closes it (the list in §2 step 3)
 
 When the board can't be read (cloud sessions), skip the size check and say so in a comment on the
-issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read the epic above it too: it
+issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read its epic too, if it has one: it
 says what the issue is part of. More than one issue may be in progress only when their files
 don't overlap ([the rule](../../../docs/process/project-management.md#grooming-and-work-in-progress)),
 so every issue after the first needs the overlap check below to pass.
@@ -49,7 +49,7 @@ Before every major change (a new epic, a sprint, a batch of work), groom the bac
 ([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-work-in-progress)).
 For each issue:
 
-1. Give it a plain summary, acceptance criteria, an epic above it and a milestone
+1. Give it a plain summary, acceptance criteria, a milestone, and an epic only for multi-part work
    ([the rule](../../../AGENTS.md#one-issue-one-pull-request)), the type, area and `priority:` labels (§3), and its **Files likely touched** and
    **Must not touch** (`None` when nothing), which the overlap check in §4 reads.
 2. Set its **Size** as effort: S, M or L. If it is bigger than L, split it into sub-issues. In a
@@ -113,7 +113,7 @@ For each issue:
    epic=$(gh api repos/{owner}/{repo}/issues/<epic> -q .id)
    gh api -X POST repos/{owner}/{repo}/issues -f title='<type>: <short problem statement>' \
      -F body=@issue.md -f 'labels[]=bug' -f 'labels[]=cms' -f 'labels[]=priority: medium' \
-     -F parent_issue_id=$epic -F milestone=<number>   # Backlog until it's planned
+     -F parent_issue_id=$epic -F milestone=<number>   # parent only under an epic; Backlog until planned
    ```
 
    Exactly one type, at least one area and one priority

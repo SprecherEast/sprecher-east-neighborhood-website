@@ -98,12 +98,11 @@ change, however small, follows these five steps:
 
 ### One issue, one pull request
 
-- **A PR closes exactly one issue** (`Closes #N`), so each shows the other. Bigger work splits
-  into sub-issues first.
-- **Dependent PRs sit on a native GitHub stack,** so GitHub enforces the order, not prose;
-  independent ones run in parallel ([`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)).
-- **Every issue has a milestone** (Backlog until planned) **and, unless it is an epic, an epic
-  above it.**
+- **A PR closes exactly one issue** (`Closes #N`); bigger work splits into sub-issues.
+- **Dependent PRs sit on a native GitHub stack,** so GitHub enforces the order
+  ([`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)); independent ones run in parallel.
+- **Every issue has a milestone** (Backlog until planned). **An epic is optional,** for multi-part
+  work; a lone issue has none. Its sub-issues sit under it.
 
 ### Never
 

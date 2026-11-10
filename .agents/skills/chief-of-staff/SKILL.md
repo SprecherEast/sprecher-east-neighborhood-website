@@ -46,7 +46,7 @@ decide, claim or ask is a comment on the issue
 Write or rewrite an issue so a worker can follow it without guessing, at high effort. It meets the
 [Definition of Ready](../../../docs/process/project-management.md#definition-of-ready): a plain
 summary, then details, then acceptance criteria someone else can check; labels (one type, areas,
-one priority); an epic above it and a milestone
+one priority); a milestone, and an epic only for multi-part work
 ([the rule](../../../AGENTS.md#one-issue-one-pull-request)); a size; **Files likely touched** and
 **Must not touch**, each as backticked paths (the overlap check reads only those; a bare name with no extension, such as
 `Makefile`, or prose counts as undeclared, so write the folder or add the extension) or `None`; the role guides and knowledge

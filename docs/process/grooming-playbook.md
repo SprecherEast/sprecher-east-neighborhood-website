@@ -41,8 +41,8 @@ The Definition of Ready, spelled out:
 
 - A plain summary, then details, then acceptance criteria someone else can check.
 - The layer is right ([which layer](planning-model.md#which-layer)): small enough for one pull
-  request and one sprint (INVEST: independent, estimable, small, testable), under an epic and in
-  a milestone ([the rule](../../AGENTS.md#one-issue-one-pull-request)).
+  request and one sprint (INVEST: independent, estimable, small, testable), in a milestone, with an
+  epic above it only for multi-part work ([the rule](../../AGENTS.md#one-issue-one-pull-request)).
 - Labels: one type, at least one area, one priority. A size on the board when it can be read.
 - Files likely touched and must not touch, filled in or `None`.
 - Known dependencies are blocked-by links, and nothing it is blocked by is still open.
@@ -144,15 +144,14 @@ comment. Duplicate bugs may be closed as the
 - **Stale:** an open item with no activity for several sprints, not blocked and not waiting for
   the owner; an In progress item with no claim, no progress comment and no pull request; a Ready
   item that never gets pulled. Ask on the issue what changed; if it is obsolete, `proposed-close`.
-- **Orphans:** an issue with no milestone, or no epic above it unless it is an epic
-  ([the rule](../../AGENTS.md#one-issue-one-pull-request)); an epic with no children; an open
+- **Orphans:** an issue with no milestone ([the rule](../../AGENTS.md#one-issue-one-pull-request)); an epic with no children; an open
   child of a closed parent; an open epic whose children are all closed; a milestone with nothing
   open that has not been closed; an open issue in a closed milestone.
 
 ### Missing fields
 
-Any of: acceptance criteria, type, area, priority, size where readable, files declared, an epic
-above it and a milestone ([the rule](../../AGENTS.md#one-issue-one-pull-request)), blocked-by
+Any of: acceptance criteria, type, area, priority, size where readable, files declared, a milestone
+([the rule](../../AGENTS.md#one-issue-one-pull-request)), blocked-by
 links for dependencies named in prose.
 
 ### Wrong layer
@@ -216,7 +215,7 @@ approval.
    test.
 3. **Report** as a dry-run proposal: each proposed milestone with the full description from the
    [templates](planning-model.md#templates); each proposed epic with its children; issues with
-   no fitting epic or milestone yet, with where each would go ([the rule](../../AGENTS.md#one-issue-one-pull-request));
+   no fitting milestone yet, with where each would go ([the rule](../../AGENTS.md#one-issue-one-pull-request));
    duplicates and stale items from the sweep; and anything ambiguous as a question. Closed issues may be grouped into milestones and epics too, so a
    milestone's progress shows what already shipped.
 4. **Owner approves** per item or per milestone, and may edit titles and boundaries.

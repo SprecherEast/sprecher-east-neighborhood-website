@@ -102,8 +102,9 @@ A body of related issues delivering one capability.
 - **An issue is one deliverable,** small enough for one pull request and one sprint. This is the
   INVEST idea of a small, independent, testable story: it can be estimated, delivers value on its
   own, and has acceptance criteria someone else can check.
-- **Every issue other than an epic has an epic above it,** and every issue has a milestone
-  ([the rule](/AGENTS.md#one-issue-one-pull-request)). Its parent is the epic, or an issue under it.
+- **Every issue has a milestone; an epic above it is optional,** for work with several parts
+  ([the rule](/AGENTS.md#one-issue-one-pull-request)). A lone issue sits in its milestone with
+  no epic. A sub-issue's parent is its epic, or an issue under it.
 - **A sub-issue of an issue is a step worth tracking:** separately assignable or verifiable, and
   too big for a line in the acceptance criteria. If it is not, it is a line, not an issue.
 - **A child has one parent.** Moving it to another parent is a deliberate change with a comment,
@@ -150,8 +151,8 @@ Work through it in order and stop at the first yes.
 3. **Can one person or agent finish it in a sprint with one pull request?** Issue. If not, split it
    until each piece can.
 4. **For an issue:** does an epic already hold this capability? Make it a sub-issue of that epic.
-   Is a capability starting, with more related issues foreseeable? Create the epic. Otherwise put
-   it under the epic whose capability it touches most.
+   Is a capability starting, with more related issues foreseeable? Create the epic. Otherwise it
+   sits in its milestone with no epic above it.
 5. **Is it a step of an issue, separately assignable or checkable?** Sub-issue of that issue.
    Otherwise write it as a line in the acceptance criteria.
 6. **Milestone for an epic:** does an open outcome milestone exist whose done test this epic helps

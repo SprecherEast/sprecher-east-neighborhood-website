@@ -29,7 +29,7 @@ step 3). Fixing wording, links or facts isn't.
 
 Rules:
 
-- **Every feature, task and bug sits under an epic and in a milestone**
+- **Every feature, task and bug sits in a milestone; an epic is optional,** for multi-part work
   ([the rule](../../AGENTS.md#one-issue-one-pull-request)).
 - **Every epic belongs to a milestone.** Unscheduled epics, and foundation work done step by step
   alongside the milestones (#127), sit in the catch-all Backlog milestone until they're planned.
@@ -140,7 +140,7 @@ parallel work when issues don't touch the same files, with no fixed number, and 
 2026-11-06 (Claude session, text, recorded on #685 and #721); the rule below says how.
 
 - **Groom before every major change:** a new epic, a sprint, or a batch of work. Each issue gets
-  its plain summary, acceptance criteria, an epic above it and a milestone
+  its plain summary, acceptance criteria, a milestone, and an epic only for multi-part work
   ([the rule](../../AGENTS.md#one-issue-one-pull-request)), labels (type, area, `priority:`) and a
   **Size**, which is effort: S, M or L (a cloud session that can't read the board skips Size and
   says so, as in the Definition of Ready). Anything bigger is split. When it meets the
@@ -193,8 +193,8 @@ An issue is **Ready** when it has:
 - acceptance criteria someone else could check
 - **Files likely touched** and **Must not touch** filled in (write `None` when there is nothing),
   so overlap with other work can be checked
-- an epic above it and a milestone ([the rule](../../AGENTS.md#one-issue-one-pull-request)), labels (type,
-  area, priority) and a size.
+- a milestone, and an epic only for multi-part work
+  ([the rule](../../AGENTS.md#one-issue-one-pull-request)), labels (type, area, priority) and a size.
   When the board can't be read (cloud sessions), skip Size and say so on the issue
   ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §1)
 - no open blocker: nothing it's **blocked by** is still open
