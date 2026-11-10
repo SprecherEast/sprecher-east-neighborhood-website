@@ -165,6 +165,15 @@ export function DisplayGallery() {
             </Disclosure>
           </div>
         </GalleryVariant>
+        <GalleryVariant label="nested (the arrow turns only for its own box)" className="block">
+          <div className="max-w-prose">
+            <Disclosure variant="card" summary="An open box around another" defaultOpen>
+              <Disclosure variant="card" summary="The box inside, closed: its arrow stays down">
+                <Text variant="small">Open it and its arrow turns.</Text>
+              </Disclosure>
+            </Disclosure>
+          </div>
+        </GalleryVariant>
         <GalleryVariant label="bar (the On this page row on small screens)" className="block">
           <div className="max-w-prose rounded-2xl border border-border">
             <Disclosure variant="bar" summary="On this page" bodyClassName="px-4 py-3">
