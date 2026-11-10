@@ -22,12 +22,18 @@ function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
   const parts = splitDefinitionAtSource(definition, fact.source)
   const picture = (item: FactTabProps['panel'][number], index: number) =>
     item.kind === 'chart' ? (
-      <Chart key={index} spec={item.spec} zoom={item.enlarge} numbers="screen-reader" />
+      <Chart
+        key={index}
+        spec={item.spec}
+        zoom={item.enlarge}
+        numbers="screen-reader"
+        heading={index === 0 ? 'screen-reader' : 'visible'}
+      />
     ) : (
       <Timeline key={index} {...item.timeline} className="my-0" />
     )
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Tabs shows its heading only with scripting off; with it on the tab is the title, so this one
           shows then, and the reader always sees the heading the editor wrote, once */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

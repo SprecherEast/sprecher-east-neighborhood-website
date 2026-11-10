@@ -79,6 +79,31 @@ describe('Chart', () => {
     expect(container.querySelector('.sr-only table')).toBeNull()
   })
 
+  it('can leave the title and takeaway to screen readers, when the heading above already says it (#980)', () => {
+    const { container } = render(<Chart spec={FIXTURES.paysFor} heading="screen-reader" />)
+    const title = screen.getByText(FIXTURES.paysFor.title)
+    expect(title.closest('.sr-only')).toBeTruthy()
+    // The figure keeps its name for assistive technology
+    expect(
+      container.querySelector('figure svg, figure [role="img"]')?.getAttribute('aria-labelledby'),
+    ).toBeTruthy()
+  })
+
+  it('draws no empty caption, so a chart with nothing to add has no gap under it (#980)', () => {
+    const { container } = render(
+      <Chart
+        spec={{
+          ...FIXTURES.borrowed,
+          finePrint: undefined,
+          asOf: undefined,
+          sources: [],
+          certainty: undefined,
+        }}
+      />,
+    )
+    expect(container.querySelector('figcaption')).toBeNull()
+  })
+
   it('shares one key between two grids of the same parts, with each grid’s squares', () => {
     render(<Chart spec={FIXTURES.paysFor} />)
     const key = screen.getByRole('list', { name: 'Chart key' })

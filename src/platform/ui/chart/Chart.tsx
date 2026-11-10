@@ -38,6 +38,11 @@ export type ChartProps = {
    * readers only, for a chart whose drawing already prints every value (#980)
    */
   numbers?: 'disclosure' | 'screen-reader'
+  /**
+   * Whether the title and takeaway show: kept for screen readers only when the heading above the
+   * chart already says it, so two headings never sit one after another (#980)
+   */
+  heading?: 'visible' | 'screen-reader'
   className?: string
 }
 
@@ -53,6 +58,7 @@ export function Chart({
   adapter: chosen,
   zoom = true,
   numbers = 'disclosure',
+  heading = 'visible',
   className,
 }: ChartProps) {
   const spec = parseChartSpec(input)
@@ -74,6 +80,7 @@ export function Chart({
         <div
           className={cn(
             'space-y-1',
+            heading === 'screen-reader' && 'sr-only',
             thumbnail && '@2xl/chart:col-start-2 @2xl/chart:row-start-1',
             enlargeable && 'scripted:@2xl/chart:pr-36',
           )}
@@ -113,10 +120,12 @@ export function Chart({
             ))}
           </div>
         )}
-        <ChartCaption
-          spec={spec}
-          className={cn(thumbnail && 'mt-4 @2xl/chart:col-start-2 @2xl/chart:row-start-3')}
-        />
+        {hasCaption(spec) && (
+          <ChartCaption
+            spec={spec}
+            className={cn(thumbnail && 'mt-4 @2xl/chart:col-start-2 @2xl/chart:row-start-3')}
+          />
+        )}
       </figure>
       {numbers === 'screen-reader' ? (
         <div className="sr-only">
@@ -130,6 +139,18 @@ export function Chart({
     </div>
   )
   return enlargeable ? <ChartZoom title={spec.title}>{body}</ChartZoom> : body
+}
+
+/** Whether there is anything to put under the drawing: an empty caption would only leave a gap */
+function hasCaption(spec: ChartSpec) {
+  return Boolean(
+    toScaleNote(spec) ||
+    (spec.kind === 'units' && spec.unitNote) ||
+    spec.finePrint ||
+    spec.asOf ||
+    spec.sources?.length ||
+    spec.certainty,
+  )
 }
 
 /** What a unit means, when the figures are from, where they came from and how sure we are */

@@ -98,6 +98,14 @@ describe('FactTabs', () => {
     expect(follows(definition, figures[1])).toBe(true)
   })
 
+  it('leaves the first chart’s title to screen readers, since the tab heading is its title, and keeps the next chart’s (#980)', () => {
+    setup()
+    const [panel] = screen.getAllByRole('tabpanel', { hidden: true })
+    const titles = [...present(panel).querySelectorAll('figure [id$="-title"]')]
+    expect(titles[0].closest('.sr-only')).toBeTruthy()
+    expect(titles[1].closest('.sr-only')).toBeNull()
+  })
+
   it('shows no "Show the numbers" box in a tab, and keeps each chart’s table for screen readers (#980)', () => {
     const { container } = setup()
     expect(screen.queryByText('Show the numbers')).toBeNull()
