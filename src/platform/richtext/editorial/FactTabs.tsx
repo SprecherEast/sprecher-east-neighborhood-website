@@ -8,12 +8,18 @@ import { Link } from '@/platform/ui/Link'
 import { Tabs, type TabsItem } from '@/platform/ui/Tabs.client'
 import { Text } from '@/platform/ui/Text'
 
+import { splitDefinitionAtSource } from './definitionWithSource'
 import { FactCard } from './FactCard'
 import type { FactTabProps, FactTabsProps } from './factTabs'
 import { Timeline } from './Timeline'
 
-/** What one tab opens: its heading (with scripting on), its definition, where the number comes from, then its charts and timelines */
+/**
+ * What one tab opens (#980): its heading (with scripting on), then its charts and timelines, then
+ * the short definition, whose City term is the link to the source (a "Source:" line only when the
+ * definition never says it)
+ */
 function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
+  const parts = splitDefinitionAtSource(definition, fact.source)
   return (
     <div className="space-y-4">
       {/* Tabs shows its heading only with scripting off; with it on the tab is the title, so this one
@@ -32,21 +38,40 @@ function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
           <Text variant="small">{joinLastWords(fact.detail)}</Text>
         </div>
       )}
-      {definition && <Text variant="lead">{definition}</Text>}
-      {fact.source && (
+      {panel.map((item, index) =>
+        item.kind === 'chart' ? (
+          <Chart key={index} spec={item.spec} zoom={item.enlarge} numbers="screen-reader" />
+        ) : (
+          <Timeline key={index} {...item.timeline} className="my-0" />
+        ),
+      )}
+      {definition && (
+        <Text variant="lead">
+          {parts
+            ? parts.map((part, index) =>
+                part.kind === 'link' ? (
+                  <Link
+                    key={index}
+                    href={part.link.href}
+                    external={part.link.external}
+                    className="font-semibold"
+                  >
+                    {part.link.label}
+                  </Link>
+                ) : (
+                  <React.Fragment key={index}>{part.text}</React.Fragment>
+                ),
+              )
+            : definition}
+        </Text>
+      )}
+      {!parts && fact.source && (
         <Text variant="small">
           Source:{' '}
           <Link href={fact.source.href} external={fact.source.external}>
             {fact.source.label}
           </Link>
         </Text>
-      )}
-      {panel.map((item, index) =>
-        item.kind === 'chart' ? (
-          <Chart key={index} spec={item.spec} zoom={item.enlarge} />
-        ) : (
-          <Timeline key={index} {...item.timeline} className="my-0" />
-        ),
       )}
     </div>
   )

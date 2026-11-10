@@ -60,7 +60,7 @@ export const FIXTURES = {
     asOf: PROPOSAL,
     certainty: 'confirmed',
     sources: [EXEC_OPERATING],
-    unitNote: 'Squares are rounded to whole squares; exact amounts are under Show the numbers.',
+    unitNote: 'Squares are rounded to whole squares.',
     finePrint:
       'The 2027 figures are the Mayor’s proposal, not the budget the Council adopts. General and Library funds only.',
     groups: [
@@ -102,7 +102,7 @@ export const FIXTURES = {
     asOf: PROPOSAL,
     certainty: 'confirmed',
     sources: [EXEC_OPERATING],
-    unitNote: 'Squares are rounded to whole squares; exact amounts are under Show the numbers.',
+    unitNote: 'Squares are rounded to whole squares.',
     groups: [
       {
         key: 'y2027',

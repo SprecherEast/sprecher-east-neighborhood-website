@@ -29,6 +29,7 @@ rich-text fields of each collection: [content types](../../../docs/reference/con
 - The media block has two placements: `section` (page builder, brings its own container) and `inline` (inside text, uses the shared figure gap) (`MediaBlock.tsx`, #541).
 - Rich text is `flow-root`, so a floated figure stays inside the article's text and what follows never wraps around it (`RichText.tsx`, #816).
 - The figure block holds an image, a title, a label, a short and a long caption, a width and an optional numbered key; the key marker list is shared with the diagram key (`editorial/diagramKeyBlockConfig.ts`). `editorial/figure.ts` leaves out empty text and passes the rest to the shared `Figure` (`FigureBlock.tsx`, #817).
+- A fact tab opens with its charts and timelines first, then the short definition; the tab's source link becomes the link on the first mention of its text in the definition, and a "Source:" line shows only when the definition never says it. Its charts show no "Show the numbers" box and keep the table for screen readers (`editorial/FactTabs.tsx`, `editorial/definitionWithSource.ts`, #980).
 - A fact tab button shows its icon on its own line with a short label under it, then the figure, all left-aligned; on a phone only the certainty is left to screen readers (`editorial/FactCard.tsx`, #856).
 - Plain text for structured data (`toPlainText.ts`): blocks are separated by a blank line, then trimmed.
 

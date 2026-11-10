@@ -69,19 +69,50 @@ describe('FactTabs', () => {
     expect(tab?.className).toMatch(/focus-visible:outline-2/)
   })
 
-  it('shows each panel’s heading, definition, source and pictures', () => {
+  it('shows each panel’s heading, definition and pictures, with the source as a link inside the definition (#980)', () => {
     setup()
     const panels = screen.getAllByRole('tabpanel', { hidden: true })
     expect(panels).toHaveLength(4)
     const first = present(panels[0])
     expect(within(first).getByText(/\$24\.8 million more than in 2026/)).toBeTruthy()
-    const source = within(first).getAllByText(/^Source:/)[0]
-    expect(
-      within(present(source)).getByRole('link', { name: /Executive Operating Budget/ }),
-    ).toBeTruthy()
+    expect(within(first).queryByText(/^Source:/)).toBeNull()
+    // The charts' own captions name the same source, so find the link that sits in the sentence
+    const link = within(first)
+      .getAllByRole('link', { name: /Executive Operating Budget/ })
+      .find((a) => a.closest('p')?.textContent?.includes('$24.8 million more than in 2026'))
+    expect(link).toBeTruthy()
+    expect(link?.className).toContain('font-semibold')
     expect(within(first).getAllByRole('figure').length).toBeGreaterThanOrEqual(2)
     expect(within(present(panels[3])).getByRole('list')).toBeTruthy()
     expect(within(present(panels[3])).getByText('The Council votes on the budget')).toBeTruthy()
+  })
+
+  it('shows the pictures before the definition, so a neighbor sees the chart first (#980)', () => {
+    setup()
+    const [panel] = screen.getAllByRole('tabpanel', { hidden: true })
+    const firstFigure = present(panel).querySelector('figure')
+    const definition = within(present(panel)).getByText(/\$24\.8 million more than in 2026/)
+    expect(
+      firstFigure?.compareDocumentPosition(definition) === Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBe(true)
+  })
+
+  it('shows no "Show the numbers" box in a tab, and keeps each chart’s table for screen readers (#980)', () => {
+    const { container } = setup()
+    expect(screen.queryByText('Show the numbers')).toBeNull()
+    expect(container.querySelectorAll('details summary')).not.toContainEqual(
+      expect.objectContaining({ textContent: 'Show the numbers' }),
+    )
+    expect(container.querySelectorAll('.sr-only table').length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('falls back to a "Source:" line when the definition never says the link text, so a source is never lost (#980)', () => {
+    const [first] = props.tabs
+    setup({
+      tabs: [{ ...present(first), definition: 'Pays for services.' }, present(props.tabs[3])],
+    })
+    const panels = screen.getAllByRole('tabpanel', { hidden: true })
+    expect(within(present(panels[0])).getByText(/^Source:/)).toBeTruthy()
   })
 
   it('shows the editor’s heading with scripting on, where Tabs hides its own: one heading each way, never two', () => {

@@ -27,7 +27,7 @@ export const FACT_TABS_FIXTURE = {
       linkUrl: OPERATING_SOURCE.href,
       heading: 'Day-to-day money, proposed',
       definition:
-        'What the City would spend in 2027 on services residents use every day, such as police, fire, health, streets and parks. That is $24.8 million more than in 2026.',
+        'What the City would spend in 2027 on services residents use every day, such as police, fire, health, streets and parks, as in the City of Madison, 2027 Executive Operating Budget, page 15. That is $24.8 million more than in 2026.',
       panel: [chart('bars'), chart('paysFor')],
     },
     {
