@@ -13,7 +13,8 @@ export const NO_RESPONSE = '_No response_'
  * empty answer read as empty. Third-level headings only, as the forms write them, unless a wider
  * range is asked for. A heading inside an HTML comment is not there (Markdown hides it, so a
  * reader of the issue can't see it either). An unclosed `<!--` hides every later answer, also
- * inside a code span: deliberate, the same reading the PR gate gives a description.
+ * inside a code span or a code block: deliberate, the same reading the PR gate gives a
+ * description. A code block is no cover, so leave such an opener out and describe it in words.
  */
 export function formAnswers(body, { minLevel = 3, maxLevel = 3 } = {}) {
   return headingBlocks(body, { minLevel, maxLevel }).map(({ title, text }) => ({
