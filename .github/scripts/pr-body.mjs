@@ -119,12 +119,38 @@ export function issueProblems(number, issue, policy) {
 
 /** PR-LINKED: the issue's timeline shows this PR, so the link works from both sides. */
 export function timelineShowsPr(events, prNumber) {
+  // A `connected` event (a manual link) carries no `source` in the REST timeline, so only the
+  // cross-reference a closing keyword creates can name this PR
   return events.some(
     (event) =>
-      (event.event === 'connected' ||
-        (event.event === 'cross-referenced' && event.source?.issue?.pull_request)) &&
-      event.source?.issue?.number === prNumber,
+      event.event === 'cross-referenced' &&
+      event.source?.issue?.pull_request &&
+      event.source.issue.number === prNumber,
   )
+}
+
+/** The ID in front of each problem another check reports (PR-KNOWLEDGE, PR-E2E). */
+export function withRuleId(id, problems) {
+  return problems.map((problem) => ruleMessage(id, problem))
+}
+
+/** Dependabot pull requests are exempt from the issue and description rules (AGENTS.md). */
+export function isDependabot(pr) {
+  return pr.user.login === 'dependabot[bot]'
+}
+
+/** PR-CLOSES: the number after "Closes" must be an issue that exists (`issue` is null if not). */
+export function lookupProblems(number, issue) {
+  if (!issue)
+    return [ruleMessage('PR-CLOSES', `#${number} was not found; close an issue that exists.`)]
+  if (issue.pull_request)
+    return [
+      ruleMessage(
+        'PR-CLOSES',
+        `#${number} is a pull request, not an issue; close the issue instead.`,
+      ),
+    ]
+  return []
 }
 
 const SECTION_NAMES = [

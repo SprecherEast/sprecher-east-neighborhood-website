@@ -40,7 +40,21 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            if (pr.user.login === 'dependabot[bot]') {
+            const { pathToFileURL } = require('url');
+            const scripts = (name) => import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/${name}`).href);
+            const {
+              closeProblems,
+              descriptionProblems,
+              isDependabot,
+              issueProblems,
+              linkedIssues,
+              lookupProblems,
+              ruleMessage,
+              timelineShowsPr,
+              withoutComments,
+              withRuleId,
+            } = await scripts('pr-body.mjs');
+            if (isDependabot(pr)) {
               core.info('Dependabot PR: exempt from the issue/description rules (AGENTS.md). Checks and review still apply.');
               return;
             }
@@ -48,10 +62,6 @@ jobs:
             const fs = require('fs');
             const policy = JSON.parse(fs.readFileSync('.github/label-policy.json', 'utf8'));
             const problems = [];
-            const { pathToFileURL } = require('url');
-            const scripts = (name) => import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/${name}`).href);
-            const { closeProblems, descriptionProblems, issueProblems, linkedIssues, ruleMessage, timelineShowsPr, withoutComments } =
-              await scripts('pr-body.mjs');
             const { changedFiles, knowledgeProblems } = await scripts('knowledge-sync.mjs');
             const { e2eDecision, e2eProblems } = await scripts('e2e-gate.mjs');
             const body = withoutComments(pr.body);
@@ -62,17 +72,15 @@ jobs:
             const links = linkedIssues(body);
             problems.push(...closeProblems(links));
             for (const number of links.closes) {
-              let issue;
+              let issue = null;
               try {
                 ({ data: issue } = await github.rest.issues.get({ ...context.repo, issue_number: number }));
               } catch {
-                problems.push(ruleMessage('PR-CLOSES', `#${number} was not found; close an issue that exists.`));
-                continue;
+                // lookupProblems reports it as not found
               }
-              if (issue.pull_request) {
-                problems.push(ruleMessage('PR-CLOSES', `#${number} is a pull request, not an issue; close the issue instead.`));
-                continue;
-              }
+              const lookup = lookupProblems(number, issue);
+              problems.push(...lookup);
+              if (lookup.length) continue;
               problems.push(...issueProblems(number, issue, policy));
 
               // GitHub adds the closing keyword to the issue's timeline a moment after the PR is saved,
@@ -106,18 +114,21 @@ jobs:
               per_page: 100,
             });
             problems.push(
-              ...knowledgeProblems({
-                mapJson: fs.readFileSync('docs/knowledge/map.json', 'utf8'),
-                files: changedFiles(files),
-                noteExists: (note) => fs.existsSync(note),
-                body,
-              }).map((problem) => ruleMessage('PR-KNOWLEDGE', problem)),
+              ...withRuleId(
+                'PR-KNOWLEDGE',
+                knowledgeProblems({
+                  mapJson: fs.readFileSync('docs/knowledge/map.json', 'utf8'),
+                  files: changedFiles(files),
+                  noteExists: (note) => fs.existsSync(note),
+                  body,
+                }),
+              ),
             );
 
             // 4. The browser tests (#868): a UI change runs them in CI ("End-to-end tests"), unless the
             // description holds "End-to-end exemption: <reason>"; the reason needs 20+ characters and
             // the independent reviewer checks it against the diff. Shown here so the verdict is on record
-            problems.push(...e2eProblems({ body }).map((problem) => ruleMessage('PR-E2E', problem)));
+            problems.push(...withRuleId('PR-E2E', e2eProblems({ body })));
             const e2e = e2eDecision({ event: 'pull_request', files: changedFiles(files), body });
             core.info(`e2e-gate: decision=${e2e.run ? 'run' : 'skip'} ui_files=${e2e.ui.length} flow_files=${e2e.flows.length} reason="${e2e.reason}"`);
 

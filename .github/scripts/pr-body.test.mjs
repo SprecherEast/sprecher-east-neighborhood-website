@@ -5,10 +5,13 @@ import {
   descriptionProblems,
   issueProblems,
   linkedIssues,
+  isDependabot,
+  lookupProblems,
   ruleMessage,
   sectionsOf,
   timelineShowsPr,
   withoutComments,
+  withRuleId,
 } from './pr-body.mjs'
 
 describe('withoutComments', () => {
@@ -80,6 +83,44 @@ const goodIssue = {
 describe('ruleMessage', () => {
   it('starts every message with its stable ID', () => {
     expect(ruleMessage('PR-CLOSES', 'Add "Closes #N".')).toBe('PR-CLOSES: Add "Closes #N".')
+  })
+})
+
+describe('withRuleId', () => {
+  it('puts the ID in front of each problem, for PR-KNOWLEDGE and PR-E2E alike', () => {
+    expect(withRuleId('PR-KNOWLEDGE', ['Update the note.', 'Say why.'])).toEqual([
+      'PR-KNOWLEDGE: Update the note.',
+      'PR-KNOWLEDGE: Say why.',
+    ])
+    expect(withRuleId('PR-E2E', ['Give a reason.'])).toEqual(['PR-E2E: Give a reason.'])
+  })
+
+  it('gives nothing for no problems', () => {
+    expect(withRuleId('PR-E2E', [])).toEqual([])
+  })
+})
+
+describe('isDependabot', () => {
+  it('exempts the Dependabot account only', () => {
+    expect(isDependabot({ user: { login: 'dependabot[bot]' } })).toBe(true)
+    expect(isDependabot({ user: { login: 'someone' } })).toBe(false)
+    expect(isDependabot({ user: { login: 'dependabot-lookalike' } })).toBe(false)
+  })
+})
+
+describe('lookupProblems', () => {
+  it('passes a real issue', () => {
+    expect(lookupProblems(7, goodIssue)).toEqual([])
+  })
+
+  it('fails PR-CLOSES for an issue that was not found', () => {
+    expect(lookupProblems(7, null)).toEqual([expect.stringMatching(/^PR-CLOSES: #7 was not found/)])
+  })
+
+  it('fails PR-CLOSES when the number is a pull request', () => {
+    expect(lookupProblems(7, { ...goodIssue, pull_request: {} })).toEqual([
+      expect.stringMatching(/^PR-CLOSES: #7 is a pull request/),
+    ])
   })
 })
 
@@ -161,10 +202,8 @@ describe('timelineShowsPr', () => {
     expect(timelineShowsPr([{ event: 'labeled' }, crossReference(12)], 12)).toBe(true)
   })
 
-  it('finds the PR as a connected event', () => {
-    expect(timelineShowsPr([{ event: 'connected', source: { issue: { number: 12 } } }], 12)).toBe(
-      true,
-    )
+  it('ignores a connected event, which carries no source in the REST timeline', () => {
+    expect(timelineShowsPr([{ event: 'connected', actor: { login: 'someone' } }], 12)).toBe(false)
   })
 
   it('does not count another PR, or an issue that has the same number', () => {
