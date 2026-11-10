@@ -69,7 +69,7 @@ describe('ArticlePage', () => {
       { label: 'Author', value: 'Ana' },
       { label: 'Published', value: 'Tue, Nov 3, 2026' },
     ]
-    const bar = () => screen.getByText('Author').closest('dl')?.parentElement
+    const bar = () => screen.getByText('Author').closest('dl')?.parentElement?.parentElement
 
     it('is the first row of the article column, above the text, not in the header', () => {
       renderArticle({ byline })

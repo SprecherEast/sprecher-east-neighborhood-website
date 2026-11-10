@@ -5,8 +5,9 @@ const WIDTHS = [320, 430, 768, 1024, 1280, 1920]
 const POST = `/posts/${ALIGNMENT_POST_SLUG}`
 
 // The body, the metadata bar above it and the breadcrumb's home icon share the page's edges (#774,
-// #1002): the body of a post with cards runs to the right margin the breadcrumb has, the bar's
-// line runs from the body's left edge to its right edge at every width, and the home icon starts
+// #1002): the body of a post with cards runs to the right margin the breadcrumb has, the
+// groove runs from the body's left edge to its right edge at every width, with the metadata
+// right-aligned above it, and the home icon starts
 // on the left edge of the page menu.
 test.describe('the body, metadata bar and breadcrumb of a post share edges', () => {
   for (const width of WIDTHS) {
@@ -28,7 +29,7 @@ test.describe('the body, metadata bar and breadcrumb of a post share edges', () 
           dl.textContent?.includes('Published'),
         )
         if (!byline) throw new Error('No metadata bar on the page')
-        const bar = byline.parentElement as Element
+        const bar = byline.parentElement?.parentElement as Element
         const homeIcon = element('nav[aria-label="Breadcrumb"] a svg')
         return {
           crumb: rect(element('nav[aria-label="Breadcrumb"]')),
@@ -37,6 +38,7 @@ test.describe('the body, metadata bar and breadcrumb of a post share edges', () 
           text: rect(element('.payload-richtext')),
           bar: rect(bar),
           metadata: rect(byline),
+          line: rect(bar.querySelector('[aria-hidden="true"]') as Element),
           bylineInHeader: byline.closest('header') !== null,
           overflow: document.documentElement.scrollWidth - window.innerWidth,
         }
@@ -54,16 +56,20 @@ test.describe('the body, metadata bar and breadcrumb of a post share edges', () 
       )
 
       expect(m.bylineInHeader, `${width}px: the bar is in the article, not the header`).toBe(false)
-      expect(edge(m.bar.left), `${width}px: the bar's line starts on the body's left edge`).toBe(
+      expect(edge(m.line.left), `${width}px: the groove starts on the body's left edge`).toBe(
         edge(m.text.left),
       )
-      expect(edge(m.bar.right), `${width}px: the bar's line ends on the body's right edge`).toBe(
+      expect(edge(m.line.right), `${width}px: the groove ends on the body's right edge`).toBe(
         edge(m.text.right),
       )
       expect(
         edge(m.metadata.right),
-        `${width}px: the metadata stays inside the line, short of the right edge`,
-      ).toBeLessThan(edge(m.bar.right))
+        `${width}px: the metadata is right-aligned, ending on the groove's right end`,
+      ).toBe(edge(m.line.right))
+      expect(
+        m.metadata.bottom,
+        `${width}px: the metadata sits above the groove`,
+      ).toBeLessThanOrEqual(m.line.top + 1)
       expect(m.bar.bottom, `${width}px: the bar is above the text`).toBeLessThanOrEqual(m.text.top)
       expect(
         m.text.top - m.bar.bottom,

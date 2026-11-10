@@ -127,10 +127,10 @@ Source: `src/platform/ui/MetaList.tsx`
 
 Source: `src/platform/ui/MetaBar.tsx`
 
-| Prop        | Type                 | Required | Description                                             |
-| ----------- | -------------------- | -------- | ------------------------------------------------------- |
-| `items`     | `LabelledMetaItem[]` | yes      | Author and date for a post, when and where for an event |
-| `className` | `string`             | no       |                                                         |
+| Prop        | Type            | Required | Description                                             |
+| ----------- | --------------- | -------- | ------------------------------------------------------- |
+| `items`     | `MetaBarItem[]` | yes      | Author and date for a post, when and where for an event |
+| `className` | `string`        | no       |                                                         |
 
 **Used by** (direct imports):
 

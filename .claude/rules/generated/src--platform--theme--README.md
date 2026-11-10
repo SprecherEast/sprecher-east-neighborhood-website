@@ -27,7 +27,7 @@ route is involved, so the generated reference has nothing on it.
 
 ## Behaviors
 
-- A token marked `both` in `tokens.ts` must be set in light and in dark; one marked `base` (`diagram-marker`, `radius`) is set once. Dark inherits any light token it leaves out (`themeFile.ts`).
+- A token marked `both` in `tokens.ts` must be set in light and in dark; one marked `base` (`diagram-marker`, `radius`, `type-fine`) is set once. `type-fine` is the finest text size, `text-fine`: the small uppercase labels of the metadata bar (#1002). Dark inherits any light token it leaves out (`themeFile.ts`).
 - `InitTheme.tsx` is a blocking script in `<head>` of the root layout. Before first paint it sets `data-theme` on `<html>` to the stored choice (`light` or `dark`), else to the system's dark preference, else to `defaultTheme` (`theme.ts`).
 - `ThemeProvider.client.tsx` wraps the page (`Providers.tsx`). On mount it reads the stored choice, else the system preference, and sets `data-theme` again: a 404 is served without the layout's `<head>`, so the script never ran there (#413). With no stored choice it follows later changes of the system preference.
 - `setTheme(null)` ("Auto") removes the stored choice; `setTheme('light' | 'dark')` stores it. The storage key is `themeLocalStorageKey` in `theme.ts`.

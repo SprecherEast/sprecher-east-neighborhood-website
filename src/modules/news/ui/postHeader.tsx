@@ -24,7 +24,7 @@ function SourceValue({ source }: { source: PostSource }) {
       {source.name.slice(0, split)}
       <span className="whitespace-nowrap">
         {source.name.slice(split)}
-        <ExternalLink aria-hidden="true" className="-my-1 ml-1 inline align-[-0.125em]" />
+        <ExternalLink aria-hidden="true" className="ml-1 inline align-[-0.125em]" />
       </span>
     </Link>
   )

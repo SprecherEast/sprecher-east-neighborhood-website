@@ -104,11 +104,17 @@ describe('eventHeaderProps', () => {
       expect(screen.getByText('Where').nextElementSibling?.textContent).toBe('Park shelter')
     })
 
-    it('keeps a long venue name in the bar without a sideways scroll: it wraps in its item', () => {
-      const long = 'The community room at the far end of the long lakeside building '.repeat(4)
-      render(<Bar event={{ ...event, place: { kind: 'venue', label: long } }} />)
+    it('keeps a long place on one line with an ellipsis, its whole text in the title, and the format whole', () => {
+      const long = 'The community room at the far end of the long lakeside building '
+        .repeat(4)
+        .trim()
+      render(
+        <Bar event={{ ...event, locationType: 'hybrid', place: { kind: 'venue', label: long } }} />,
+      )
 
-      expect(screen.getByText('Where').nextElementSibling?.className).toContain('break-words')
+      const cut = screen.getByTitle(long)
+      expect(cut.className).toContain('truncate')
+      expect(screen.getByText('· Hybrid').className).toContain('shrink-0')
     })
   })
 

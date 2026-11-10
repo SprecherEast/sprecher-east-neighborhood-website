@@ -11,4 +11,9 @@ describe('cn', () => {
   it('keeps bg-hatch beside a background colour: it is an image, not a colour (#662)', () => {
     expect(cn('bg-chart-2', 'bg-hatch')).toBe('bg-chart-2 bg-hatch')
   })
+
+  it('keeps text-fine beside a text colour: it is a size, the theme’s finest (#1002)', () => {
+    expect(cn('text-fine', 'text-muted-foreground')).toBe('text-fine text-muted-foreground')
+    expect(cn('text-xs', 'text-fine')).toBe('text-fine')
+  })
 })

@@ -7,8 +7,7 @@ import { DetailLayout } from './DetailLayout'
 import { FeaturedImage } from './FeaturedImage'
 import { JsonLd } from './JsonLd'
 import { LivePreviewListener } from './LivePreviewListener.client'
-import { MetaBar } from './MetaBar'
-import type { LabelledMetaItem } from './MetaList'
+import { MetaBar, type MetaBarItem } from './MetaBar'
 import { PageHeader, type PageHeaderProps } from './PageHeader'
 
 export type ArticlePageProps = {
@@ -33,7 +32,7 @@ export type ArticlePageProps = {
    * as the `MetaBar` at the top right of the article column, under the picture and above the text,
    * ending on the text's right edge (#774, #1002).
    */
-  byline?: LabelledMetaItem[]
+  byline?: MetaBarItem[]
   /**
    * The width class the page gives the article's text (`articleColumnClass`). The metadata bar takes
    * it too, so a text-only article's bar ends on the text's right edge, not past it (#774).

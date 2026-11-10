@@ -27,6 +27,8 @@ import {
 const CARD_VARIANTS = ['elevated', 'outline', 'muted', 'tinted'] as const
 const CARD_TONES = ['success', 'danger', 'neutral'] as const
 const CARD_PADDINGS = ['sm', 'md', 'lg'] as const
+const LONG_PLACE =
+  'The community room at the far end of the long lakeside building on Sprecher Road, next to the library'
 const META_VARIANTS = ['inline', 'stacked'] as const
 
 /** Small pieces that show content: badges, cards, text, facts, dates and empty states */
@@ -118,22 +120,23 @@ export function DisplayGallery() {
 
       <GalleryEntry
         name="MetaBar"
-        description="A post's or event's metadata on one thin line, framed by a groove line over it."
+        description="A post's or event's metadata on one thin line, right-aligned above one straight groove line."
       >
         <GalleryVariant label="two items" className="block">
           <div className="w-full max-w-[var(--reading-width)]">
             <MetaBar items={SAMPLE_FACTS} />
           </div>
         </GalleryVariant>
-        <GalleryVariant label="a long value wraps inside its item" className="block">
+        <GalleryVariant label="a long place is cut to one line" className="block">
           <div className="w-full max-w-[var(--reading-width)]">
             <MetaBar
               items={[
                 { label: 'When', value: 'Sat, Nov 7, 2026 · 6:00 PM – 8:00 PM Central Time' },
                 {
                   label: 'Where',
-                  value:
-                    'The community room at the far end of the long lakeside building on Sprecher Road · In Person',
+                  value: LONG_PLACE,
+                  title: LONG_PLACE,
+                  suffix: ' · In Person',
                 },
               ]}
             />

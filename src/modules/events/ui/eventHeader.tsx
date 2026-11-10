@@ -3,7 +3,7 @@ import React from 'react'
 import { siteTimeZoneLabel } from '@/platform/lib/timezone'
 import { Badge, BadgeList } from '@/platform/ui/Badge'
 import { DateTime } from '@/platform/ui/DateTime'
-import type { LabelledMetaItem } from '@/platform/ui/MetaList'
+import type { MetaBarItem } from '@/platform/ui/MetaBar'
 import type { PageHeaderProps } from '@/platform/ui/PageHeader'
 
 import { formatEventLocationType } from '../domain/locationTypes'
@@ -18,7 +18,7 @@ import { OfficialMeetingBadge } from './OfficialMeetingBadge'
  * place (a venue too, now that it sits in the bar beside the Location panel's address) and the
  * format. A virtual event's format is already said by "Online", so it is not said twice.
  */
-export function eventByline(event: EventDetail): LabelledMetaItem[] {
+export function eventByline(event: EventDetail): MetaBarItem[] {
   const { date, locationType, place, timeEnd, timeStart } = event
   const time = timeStart
     ? `${timeStart}${timeEnd ? ` – ${timeEnd}` : ''} ${siteTimeZoneLabel()}`
@@ -36,7 +36,14 @@ export function eventByline(event: EventDetail): LabelledMetaItem[] {
         </>
       ),
     },
-    { label: 'Where', value: format ? `${place.label} · ${format}` : place.label },
+    // The venue's name, else its address, on one line: a long one is cut with an ellipsis, its
+    // whole text in the title (the Location panel below states it in full). The format stays whole
+    {
+      label: 'Where',
+      value: place.label,
+      title: place.label,
+      suffix: format && ` · ${format}`,
+    },
   ]
 }
 

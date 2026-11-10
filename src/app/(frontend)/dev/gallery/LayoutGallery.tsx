@@ -201,7 +201,9 @@ export function LayoutGallery() {
               textClassName={READING_COLUMN}
               aside={null}
             >
-              <Text variant="small">The metadata bar runs over the top of the text.</Text>
+              <Text variant="small">
+                The metadata bar sits above its groove line, at the top right of the column.
+              </Text>
             </ArticlePage>
           </div>
         </GalleryVariant>
