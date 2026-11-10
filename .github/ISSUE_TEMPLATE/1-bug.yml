@@ -5,6 +5,9 @@ labels: [bug]
 body:
   - type: markdown
     attributes:
+      value: Before filing, read the [filing checklist](https://github.com/SprecherEast/sprecher-east-neighborhood-website/blob/main/docs/process/filing-checklist.md) for what the issue check looks for.
+  - type: markdown
+    attributes:
       value: Describe the problem. The fix itself goes in the pull request that closes this issue.
   - type: textarea
     id: problem

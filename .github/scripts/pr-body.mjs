@@ -68,6 +68,26 @@ export function ruleMessage(id, text) {
   return `${id}: ${text}`
 }
 
+/**
+ * The one-line fix for each rule ID of the gate: the list the filing checklist
+ * (docs/process/filing-checklist.md, #971) is generated from. A test finds every ID the gate can
+ * report in its source and fails when one has no entry here.
+ */
+export const PR_RULE_FIXES = {
+  'PR-CLOSES':
+    'Put `Closes #N` in the description for the one issue the PR finishes; never `Part of #N`.',
+  'PR-LINKED': 'Check the number after `Closes`, so the issue shows the PR on its timeline.',
+  'PR-LABELS': 'The closed issue needs one type, at least one area and one priority label.',
+  'PR-ASSIGNED': 'Assign the closed issue (assigning claims it and moves its card to In progress).',
+  'PR-MILESTONE': 'Give the closed issue a milestone (Backlog until planned); an epic is optional.',
+  'PR-SECTIONS': 'Fill in every section of the PR template, each with 10+ characters.',
+  'PR-SELF-REVIEW':
+    'Under "Self-review" write a line for Reuse, Quality, Efficiency, Guidelines and Visual.',
+  'PR-KNOWLEDGE':
+    'Change the note that describes the behavior, or write `Behavior change: none` with a reason of 20+ characters.',
+  'PR-E2E': 'Give an `End-to-end exemption:` reason of 20+ characters, or write `none` or `run`.',
+}
+
 /** PR-CLOSES: the description closes exactly one issue; "Part of" no longer counts. */
 export function closeProblems({ closes, partOf }) {
   if (partOf.length > 0)

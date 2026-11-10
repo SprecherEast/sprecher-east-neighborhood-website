@@ -2,6 +2,9 @@ name: Task (docs, tech debt, process)
 description: Documentation, refactoring/tech debt, or a change to how we work.
 title: 'chore: '
 body:
+  - type: markdown
+    attributes:
+      value: Before filing, read the [filing checklist](https://github.com/SprecherEast/sprecher-east-neighborhood-website/blob/main/docs/process/filing-checklist.md) for what the issue check looks for.
   - type: dropdown
     id: type
     attributes:

@@ -27,6 +27,20 @@ const isEpic = (issue) => labelNames(issue).includes('epic')
 const SUMMARY_HEADINGS = ['summary', 'problem', 'goal']
 const SUMMARY_MIN_LENGTH = 20
 
+/** The one-line fix for each rule ID of the issue check, for the filing checklist (#971). */
+export const ISSUE_RULE_FIXES = {
+  'ISSUE-TYPE': 'Give the issue exactly one type label.',
+  'ISSUE-AREA': 'Give the issue at least one area label.',
+  'ISSUE-PRIORITY': 'Give the issue exactly one priority label (high, medium or low).',
+  'ISSUE-SUMMARY':
+    'Start with a "Problem" (or "Summary") section: a plain-language sentence or two.',
+  'ISSUE-CRITERIA':
+    'Add an "Acceptance criteria" section with at least one `- [ ]` checkbox that has text.',
+  'ISSUE-FILES':
+    'Fill in "Files likely touched" and "Must not touch" (write `None` when there is nothing).',
+  'ISSUE-MILESTONE': 'Set a milestone (Backlog until planned); an epic is optional.',
+}
+
 /** The issue rules: ISSUE-TYPE, -AREA, -PRIORITY, -SUMMARY, -CRITERIA, -FILES and -MILESTONE. */
 export function issueProblems(issue, policy) {
   // An epic is exempt, so one flagged before it became an epic is cleared on the next run

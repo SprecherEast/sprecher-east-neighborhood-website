@@ -20,6 +20,7 @@
     "knip": "knip",
     "duplication": "jscpd",
     "agent-context": "node scripts/agent-context.mjs",
+    "filing-checklist": "node .github/scripts/filing-checklist.mjs --write",
     "docs:generate": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs",
     "docs:check": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs --check"
   },

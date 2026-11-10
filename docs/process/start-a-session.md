@@ -20,6 +20,22 @@ Claude Code the default session cannot edit files: for a task session, start `cl
 (a headless `-p` run also starts as the chief of staff unless given `--agent`). The Grok Build and
 Gemini CLI behavior comes from their own descriptions of what they load and is not yet tried here.
 
+## A session attached to the repository mid-conversation
+
+A cloud session that gets the repository partway through a chat has not loaded the instructions
+yet, so the chief of staff agent is not registered until they reload. Then:
+
+1. Read `AGENTS.md`, then load the
+   [chief of staff skill](../../.agents/skills/chief-of-staff/SKILL.md) by hand and follow its
+   start-of-session routine.
+2. Say what is unreachable from that session: the project board and the organization project API
+   (so no card can be read or moved, and a card moves only when an issue is assigned), and say it
+   on the issue or in the report instead of guessing at board state.
+3. Before filing an issue or opening a pull request, read the [filing checklist](filing-checklist.md),
+   in a task session too.
+
+An instruction helps only if the tool reads it; the checks stay the safety net.
+
 ## Chat apps (ChatGPT, Claude, Gemini, Grok on the web)
 
 A chat app with a connected repository does not load these files by itself, so nothing starts
