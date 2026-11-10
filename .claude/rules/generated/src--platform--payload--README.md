@@ -24,6 +24,7 @@ The helpers every collection is built from (`src/platform/payload/`) and the hel
 - The link field stores a reference or a custom URL; `resolveLink` is the one place it becomes an `href`. `documentHref` is the one place a document's address is written: pages at `/slug`, the slug `home` at `/`, the rest under their collection (`payload/link.ts`, `resolveLink.ts`, `documentHref.ts`).
 - `keysetSort` and `afterCursor` order a listing by one date with the id as tie-break; `lib/cursor.ts` encodes that pair as the opaque cursor "Load more" sends back on events and news (`payload/keyset.ts`, decision 0014).
 - `emailConfirmer.ts` is the contract [verification](/src/modules/verification/README.md) provides and [contact](/src/modules/contact/README.md) uses; accounts only supplies a keeper (`keepAccountEmails`), and sign-up uses Payload's own verify, not this contract; `payload.config.ts` hands them over (decision 0008).
+- `cn` (`lib/cn.ts`) joins class names and lets a later Tailwind class win over a conflicting one; it knows `bg-hatch` is a background image beside a colour (#662) and, since #1002, that `text-fine`, the theme's finest text size, is a size, so it stays beside a text colour and replaces another size (`lib/cn.test.ts`).
 
 ## Behaviors and events
 
