@@ -54,6 +54,7 @@ and hooks: [header](/docs/reference/content-types/header.md), [footer](/docs/ref
 - Looked-up targets are cached for 10 minutes with no tag refresh yet, so a published or renamed target shows within 10 minutes (`data/documents.ts`).
 - The redirects plugin covers pages and posts; only admins can read or change redirects in Admin, while the site reads them regardless (`src/payload.config.ts`, `data/redirects.ts`).
 - Redirects in `redirects.js` run before any page renders and are an empty list today; editor redirects are separate (`redirects.js`, `src/redirects.test.ts`).
+- The footer's closing line is fixed text, not an editor field: "This is an unofficial neighborhood site, made with AI tools and reviewed by a neighbor." It never calls the site an association or an initiative (`ui/SiteFooter.tsx`, `ui/SiteFooter.test.tsx`, #1010).
 - The logo link is as tall as a tap needs, from one shared component used by header, mobile menu and footer (`ui/Logo.tsx`, #741).
 
 ## Shared pieces it uses
