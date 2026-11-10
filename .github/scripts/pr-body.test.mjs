@@ -10,6 +10,7 @@ import {
   labelNames,
   lookupProblems,
   planGaps,
+  PRIORITY_PREFIX,
   ruleMessage,
   sectionsOf,
   timelineShowsPr,
@@ -285,5 +286,11 @@ describe('planGaps', () => {
   it('leaves the PR gate accepting more than one priority label, which only the issue check flags', () => {
     const two = { ...goodIssue, labels: ['bug', 'ci', 'priority: low', 'priority: high'] }
     expect(issueProblems(7, { ...two, assignees: [{ login: 'a' }] }, policy)).toEqual([])
+  })
+})
+
+describe('PRIORITY_PREFIX', () => {
+  it('is the start of every priority label, with its space', () => {
+    expect(PRIORITY_PREFIX).toBe('priority: ')
   })
 })

@@ -58,7 +58,7 @@ The Definition of Ready, spelled out:
 - Files likely touched and must not touch, filled in or `None`.
 - Known dependencies are blocked-by links, and nothing it is blocked by is still open.
 - It is not a duplicate of anything (the sweep checked) and carries no `needs owner` label.
-- It carries no `needs grooming` label: the [issue check](/docs/process/project-management.md#the-issue-check)
+- It carries no `needs grooming` label: the [issue check](/docs/process/issue-and-pr-checks.md#the-issue-check)
   names each missing item, so fixing those clears it.
 - The role guides and knowledge notes a worker must load are named.
 

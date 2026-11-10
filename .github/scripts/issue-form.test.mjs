@@ -69,14 +69,35 @@ describe('formChoices', () => {
   })
 
   it('takes the first valid Type and the last valid Area and Priority, so typed headings cannot spoof them', () => {
+    // A free-text answer can hold a heading with a valid value: it comes before the real dropdown
     const body =
       '### Type\n\nbug\n\n### Problem\n\nx\n\n### Type\n\nprocess\n\n### Area\n\nci\n\n' +
-      '### Area\n\nfrontend\n\n### Priority\n\nlow\n\n### Priority\n\nnot-a-priority\n'
+      '### Priority\n\nhigh\n\n### Area\n\nfrontend\n\n### Priority\n\nlow\n\n' +
+      '### Priority\n\nnot-a-priority\n'
     expect(formChoices(body, policy)).toEqual({
       type: 'bug',
       areas: ['frontend'],
       priority: 'low',
     })
+  })
+
+  it('does not let an empty answer count as valid, so it cannot replace an earlier valid one', () => {
+    const body = `### Priority\n\nlow\n\n### Priority\n\n${NO_RESPONSE}\n\n### Area\n\nci\n\n### Area\n\n`
+    expect(formChoices(body, policy)).toEqual({ type: undefined, areas: ['ci'], priority: 'low' })
+  })
+
+  it('starts a section only at a third-level heading, so a deeper one in an answer is text', () => {
+    const body = '### Priority\n\nlow\n\n#### Priority\n\nhigh\n'
+    expect(formAnswers(body)).toEqual([{ title: 'priority', text: 'low\n\n#### Priority\n\nhigh' }])
+    // the deeper line is part of the one answer, which is then not a valid option
+    expect(formChoices(body, policy).priority).toBeUndefined()
+  })
+
+  it('ignores blank entries in a list of values', () => {
+    expect(formChoices(form('bug', 'ci, ,tooling,', 'low'), policy).areas).toEqual([
+      'ci',
+      'tooling',
+    ])
   })
 
   it('does not count a heading hidden in a comment (a hidden spoof used to count)', () => {

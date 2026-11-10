@@ -2,7 +2,7 @@
  * The issue check's rules (#969): pure functions, so the workflow keeps only the API calls. The
  * check warns and never blocks (GitHub cannot stop an issue being filed): it keeps one comment
  * and the `needs grooming` label up to date. The rule IDs are listed in
- * docs/process/project-management.md ("The issue check"), where the pull request gate's are too.
+ * docs/process/issue-and-pr-checks.md ("The issue check"), where the pull request gate's are too.
  */
 import { formAnswers } from './issue-form.mjs'
 import { labelNames, planGaps, ruleMessage } from './pr-body.mjs'
@@ -95,7 +95,7 @@ export function skipReason(issue) {
   return null
 }
 
-const DOCS = 'docs/process/project-management.md#the-issue-check'
+const DOCS = 'docs/process/issue-and-pr-checks.md#the-issue-check'
 
 /** The one comment on a failing issue: each failed rule with its fix. */
 export function groomingComment(problems) {

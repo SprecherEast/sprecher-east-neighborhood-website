@@ -137,6 +137,13 @@ describe('issueProblems', () => {
         expect(ids(groomed({ body }))).toEqual([])
       }
     })
+    it('accepts a heading of any level from two to four', () => {
+      for (const marks of ['##', '####']) {
+        expect(
+          ids(groomed({ body: GROOMED_BODY.replace('### Summary', `${marks} Summary`) })),
+        ).toEqual([])
+      }
+    })
     it('accepts a second-level heading', () => {
       expect(ids(groomed({ body: GROOMED_BODY.replace('### Summary', '## Summary') }))).toEqual([])
     })

@@ -3,7 +3,7 @@ name: Issue Policy
 # Warns when an issue is missing what the Definition of Ready needs (#969): one comment, kept
 # up to date in place, and the label `needs grooming`; both go away once every rule passes. It
 # never blocks (GitHub cannot stop an issue being filed). The rules are pure functions in
-# .github/scripts/issue-policy.mjs (IDs in docs/process/project-management.md, "The issue check").
+# .github/scripts/issue-policy.mjs (IDs in docs/process/issue-and-pr-checks.md, "The issue check").
 #
 # On opened and edited it runs after Issue Labels, which calls it once the form's answers are
 # labels (events made with GITHUB_TOKEN start no workflow, so it can't wait for them on its own).
