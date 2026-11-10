@@ -50,17 +50,23 @@ owner's decision, #972). The limits:
 - It never takes the place of a required check, a review, or a fix through a pull request, and it
   never bypasses a rule.
 - First check that no deploy is running. A merge's deploy runs inside the **CI** run, so look at
-  every run of `main` that is not finished, and wait for it:
-  `gh api "repos/{owner}/{repo}/actions/runs?branch=main&status=in_progress"`, and again with
-  `status=queued`. Both must list no run.
+  both workflows that can deploy, `ci.yml` and `deploy.yml`, on `main`: nothing may be `in_progress`
+  or `queued`. If one is, wait for it. The deploy job's concurrency group holds one running and one
+  pending job and a newer arrival replaces the pending one, so starting during a run can drop a
+  queued deploy.
 - Start it with the REST call below, then verify it as in this step: find the run, read the
   annotations, check the site.
 - Say on the linked issue why it was started, and which run.
 - A failed deploy gets a new issue and is fixed or reverted through a PR. Never fix it on the server.
 
 ```bash
-gh api -X POST repos/{owner}/{repo}/actions/workflows/deploy.yml/dispatches -f ref=main
-# 200: the answer names the new run (workflow_run_id, html_url). Watch it: gh run watch <id>
+for w in ci deploy; do for st in in_progress queued; do
+  gh api "repos/{owner}/{repo}/actions/workflows/$w.yml/runs?branch=main&status=$st" --jq .total_count
+done; done   # all four must print 0
+gh api -X POST repos/{owner}/{repo}/actions/workflows/deploy.yml/dispatches -f ref=main -F return_run_details=true
+# 200 with workflow_run_id and html_url. Without return_run_details, gh's default API version
+# answers 204 with no body and the run id must be looked up: gh run list --workflow deploy.yml
+# Watch it: gh run watch <workflow_run_id>
 ```
 
 ## 3. Close the loop on the issues
