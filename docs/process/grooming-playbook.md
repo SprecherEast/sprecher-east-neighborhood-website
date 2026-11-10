@@ -222,5 +222,5 @@ approval.
 5. **Apply in order:** milestones, then epics, then parent links, then milestone assignment on the
    epics and their children, then priority and label fixes. Comment on each issue it touched,
    once, and keep a list of what changed.
-6. **Verify** with a fresh dry run: no orphans left without a reason, milestone counts match the
+6. **Verify** with a fresh dry run: no orphans left (an issue with no milestone), milestone counts match the
    approved list, no child outside its parent's milestone.

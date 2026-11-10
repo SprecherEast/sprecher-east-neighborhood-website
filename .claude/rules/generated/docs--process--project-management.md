@@ -32,13 +32,13 @@ step 3). Fixing wording, links or facts isn't.
 
 ## Levels of work
 
-| Level         | Answers                                            | Size                   | On GitHub                                        |
-| ------------- | -------------------------------------------------- | ---------------------- | ------------------------------------------------ |
-| Vision        | Why does the site exist?                           | years                  | [`docs/product/vision.md`](/docs/product/vision.md) |
-| Milestone     | What outcome is done, and how do we know?          | several capabilities   | A milestone; a due date only for a real date     |
-| Epic          | What capability is part of that outcome?           | several related issues | An issue labeled `epic`, with sub-issues         |
-| Feature, task | What does a user get? What single change ships it? | a day or a few         | A sub-issue of an epic; one PR closes it         |
-| Bug           | What's broken?                                     | S to L                 | A sub-issue of the epic it belongs to            |
+| Level         | Answers                                            | Size                   | On GitHub                                                |
+| ------------- | -------------------------------------------------- | ---------------------- | -------------------------------------------------------- |
+| Vision        | Why does the site exist?                           | years                  | [`docs/product/vision.md`](/docs/product/vision.md)         |
+| Milestone     | What outcome is done, and how do we know?          | several capabilities   | A milestone; a due date only for a real date             |
+| Epic          | What capability is part of that outcome?           | several related issues | An issue labeled `epic`, with sub-issues                 |
+| Feature, task | What does a user get? What single change ships it? | a day or a few         | A sub-issue of its epic, if it has one; one PR closes it |
+| Bug           | What's broken?                                     | S to L                 | A sub-issue of its epic, if it has one; one PR closes it |
 
 Rules:
 
