@@ -36,7 +36,7 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
   const Value = tab ? 'span' : 'dd'
   const Foot = tab ? 'span' : 'div'
   // A tab leaves how sure we are to screen readers: the open panel shows it once, beside its heading (#980)
-  const phoneHidden = tab ? 'sr-only' : ''
+  const leftToScreenReaders = tab ? 'sr-only' : ''
   const body = (
     <>
       <Facts className={SUBGRID_THREE_ROWS}>
@@ -81,7 +81,7 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
         data-fact-part="foot"
         className={cn(
           'mt-2 flex flex-wrap content-start items-center gap-x-3 gap-y-1 pt-1',
-          phoneHidden,
+          leftToScreenReaders,
         )}
       >
         <CertaintyBadge certainty={fact.certainty} />
