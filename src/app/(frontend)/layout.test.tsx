@@ -18,7 +18,7 @@ import { AccountMenu, AccountProvider } from '@/modules/accounts/server'
 import { LikelyHumanClicks } from '@/platform/analytics/LikelyHumanClicks.client'
 import { UmamiScript } from '@/platform/analytics/UmamiScript'
 
-import RootLayout from './layout'
+import RootLayout, { metadata } from './layout'
 
 type Props = { children?: ReactNode } & Record<string, unknown>
 
@@ -58,5 +58,14 @@ describe('RootLayout', () => {
     draft.isEnabled = true
     expect(await found()).toBe(false)
     draft.isEnabled = false
+  })
+})
+
+describe('default metadata', () => {
+  it('titles the site "Sprecher East", never as an association', () => {
+    expect(metadata.title).toEqual({
+      template: '%s — Sprecher East',
+      default: 'Sprecher East',
+    })
   })
 })

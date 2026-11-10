@@ -89,7 +89,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(getServerSideURL()),
   title: {
     template: '%s — Sprecher East',
-    default: 'Sprecher East — Neighborhood Association',
+    default: 'Sprecher East',
   },
   description:
     "Connecting neighbors on Madison's Far East Side. Community events, local news, and resources for the Sprecher East neighborhood.",

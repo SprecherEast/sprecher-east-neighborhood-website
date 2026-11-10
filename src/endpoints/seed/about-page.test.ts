@@ -105,9 +105,9 @@ describe('About page seed (#764)', () => {
     expect(JSON.stringify(layout[2])).not.toContain(ROADMAP_PATH)
   })
 
-  it('keeps the story link and drops the subdivisions that have no source', () => {
+  it('links no post that is gone, and drops the subdivisions that have no source (#1010)', () => {
     const all = JSON.stringify(page)
-    expect(all).toContain('/posts/sprecher-east-is-coming-together')
+    expect(all).not.toContain('/posts/sprecher-east-is-coming-together')
     expect(all).not.toMatch(/Meadowlands|Reston Heights subdivision/)
   })
 

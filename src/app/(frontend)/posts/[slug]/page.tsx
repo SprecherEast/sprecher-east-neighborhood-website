@@ -87,8 +87,8 @@ export default async function Post({ params: paramsPromise }: Args) {
           <SidebarEvents events={upcomingEvents} title="Upcoming Events" />
           <SidebarCTA
             heading="Get Involved"
-            description="Join your neighbors in building a stronger Sprecher East community."
-            buttonLabel="Learn How"
+            description="Know something we’re missing? Please tell us."
+            buttonLabel="Get Involved"
             buttonHref="/get-involved"
           />
         </>

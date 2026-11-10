@@ -84,8 +84,7 @@ export async function SiteFooter() {
         {/* Disclaimer + copyright */}
         <div className="mt-12 border-t border-border pt-8">
           <Text variant="small" className="mb-2">
-            Sprecher East is an unofficial grassroots neighborhood initiative. This website was
-            built with AI assistance.
+            This is an unofficial neighborhood site, made with AI tools and reviewed by a neighbor.
           </Text>
           <Text variant="small">&copy; {currentYear} Sprecher East</Text>
         </div>

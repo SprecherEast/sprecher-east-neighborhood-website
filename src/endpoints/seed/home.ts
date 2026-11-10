@@ -49,7 +49,7 @@ export const home: (args: HomeArgs) => RequiredDataFromCollectionSlug<'pages'> =
       richText: root([
         heading('h1', 'Your Neighborhood, Your Community'),
         p(
-          'Sprecher East is a grassroots neighborhood initiative on Madison\u2019s Far East Side \u2014 connecting residents of Meadowlands, Door Creek, and Reston Heights since 2006.',
+          'News, events and City updates for Sprecher East on Madison\u2019s Far East Side: Meadowlands, Door Creek and Reston Heights.',
         ),
       ]),
     },
@@ -102,7 +102,7 @@ export const home: (args: HomeArgs) => RequiredDataFromCollectionSlug<'pages'> =
                 'Sprecher East covers the far east side of Madison, bounded by I-94 to the north, Door Creek Park to the east, Sprecher Road to the west, and Cottage Grove Road to the south. Our community includes the Meadowlands, Door Creek, and Reston Heights subdivisions.',
               ),
               p(
-                'We\u2019re a free, voluntary neighborhood association \u2014 not an HOA. No dues, no fees, no mandatory rules. Just neighbors working together to make our corner of Madison a better place to live.',
+                'This is an unofficial site, not an HOA or an association. There are no dues and no rules, just news, events and City updates for neighbors.',
               ),
             ]),
             size: 'twoThirds',
@@ -110,10 +110,9 @@ export const home: (args: HomeArgs) => RequiredDataFromCollectionSlug<'pages'> =
           {
             richText: root([
               heading('h3', 'Quick Facts'),
-              p('\u2713 Established 2006 \u2014 nearly 20 years serving our community'),
               p('\u2713 Far East Side \u2014 Madison\u2019s District 16'),
               p('\u2713 Three subdivisions \u2014 Meadowlands, Door Creek, Reston Heights'),
-              p('\u2713 Free membership \u2014 open to all residents, no dues or fees'),
+              p('\u2713 No membership \u2014 no sign-up, no dues'),
             ]),
             size: 'oneThird',
           },
@@ -152,19 +151,17 @@ export const home: (args: HomeArgs) => RequiredDataFromCollectionSlug<'pages'> =
           },
         ],
         richText: root([
-          heading('h3', 'Join Your Neighbors'),
+          heading('h3', 'Know something we\u2019re missing?'),
           paragraph(
-            text(
-              'Whether you\u2019ve lived here for years or just moved in, there\u2019s a place for you. ',
-            ),
-            boldText('Membership is free and open to all residents.'),
+            text('Whether you\u2019ve lived here for years or just moved in, '),
+            boldText('please tell us.'),
           ),
         ]),
       },
     ],
     meta: {
       description:
-        'Sprecher East is a grassroots neighborhood initiative on Madison\u2019s Far East Side \u2014 connecting residents of Meadowlands, Door Creek, and Reston Heights.',
+        'News, events and City updates for Sprecher East on Madison\u2019s Far East Side: Meadowlands, Door Creek and Reston Heights. An unofficial site.',
       image: metaImage.id,
       title: 'Home',
     },

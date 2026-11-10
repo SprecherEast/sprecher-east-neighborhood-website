@@ -11,17 +11,17 @@ export const getInvolvedPage: () => RequiredDataFromCollectionSlug<'pages'> = ()
     },
     layout: [
       {
-        blockName: 'Membership Info',
+        blockName: 'Intro',
         blockType: 'content',
         columns: [
           {
             richText: root([
-              heading('h2', 'Join Sprecher East'),
+              heading('h2', 'Help this site'),
               p(
-                'Membership in Sprecher East is free, voluntary, and open to all residents within our boundaries. There are no dues, no fees, and no obligations. We\u2019re simply neighbors who want to make our community better.',
+                'There\u2019s no membership, no sign-up and no dues. Tell us what you need, point out what\u2019s wrong, and pass it on.',
               ),
               p(
-                'By getting involved, you help shape the future of our neighborhood \u2014 from development decisions at City Hall to community events right here at home.',
+                'Your help keeps neighbors informed, from development decisions at City Hall to events right here at home.',
               ),
             ]),
             size: 'full',
@@ -40,9 +40,7 @@ export const getInvolvedPage: () => RequiredDataFromCollectionSlug<'pages'> = ()
             enableLink: false,
             richText: root([
               heading('h3', 'Have a Voice'),
-              p(
-                'Neighborhood associations are how Madison residents influence city decisions. Your voice matters at Plan Commission, Common Council, and zoning hearings.',
-              ),
+              p('Your voice matters at Plan Commission, Common Council and zoning hearings.'),
             ]),
             size: 'oneThird',
           },
@@ -79,9 +77,9 @@ export const getInvolvedPage: () => RequiredDataFromCollectionSlug<'pages'> = ()
           {
             enableLink: false,
             richText: root([
-              heading('h3', 'Attend a Meeting'),
+              heading('h3', 'Come to an Event'),
               p(
-                'Our meetings are open to all residents. Come listen, ask questions, or share your ideas for the neighborhood.',
+                'Events and City meetings are open to all neighbors. Come listen, ask questions or share an idea.',
               ),
             ]),
             size: 'oneThird',
@@ -100,9 +98,7 @@ export const getInvolvedPage: () => RequiredDataFromCollectionSlug<'pages'> = ()
             enableLink: false,
             richText: root([
               heading('h3', 'Spread the Word'),
-              p(
-                'Tell your neighbors about Sprecher East. Share our website, invite someone to a meeting, or post about us on social media.',
-              ),
+              p('Tell your neighbors about this site. Share it, or invite someone to an event.'),
             ]),
             size: 'oneThird',
           },
@@ -137,7 +133,7 @@ export const getInvolvedPage: () => RequiredDataFromCollectionSlug<'pages'> = ()
     ],
     meta: {
       description:
-        'Join Sprecher East \u2014 free membership, no dues. Learn how to get involved in your neighborhood on Madison\u2019s far east side.',
+        'Ways to help this unofficial Sprecher East site: tell us what you need, point out what\u2019s wrong, and pass it on.',
       title: 'Get Involved',
     },
     title: 'Get Involved',

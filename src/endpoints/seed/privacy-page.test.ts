@@ -46,8 +46,8 @@ describe('Privacy page seed (#950)', () => {
   })
 
   it('says which clicks are counted, that it is a likely-human guess, and what is kept (#975)', () => {
-    expect(words).toContain('likely')
-    expect(words).toMatch(/not certain/)
+    expect(words).toContain('probably a person')
+    expect(words).toMatch(/can’t be certain/)
     expect(words).toMatch(/button/)
     expect(words).toMatch(/leaves/)
     expect(words).toMatch(/once per visit/)

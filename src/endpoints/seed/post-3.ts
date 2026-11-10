@@ -20,10 +20,10 @@ export const post3: (args: PostArgs) => RequiredDataFromCollectionSlug<'posts'> 
         'Sprecher East is one of the newest neighborhoods on the far east side of Madison. We are bounded by I-94 to the north, Door Creek Park to the east, Sprecher Road to the west, and Cottage Grove Road to the south.',
       ),
       p(
-        'Our neighborhood includes the Meadowlands, Door Creek, and Reston Heights subdivisions. The Sprecher East Neighborhood Association has served this community since 2006.',
+        'Our neighborhood includes the Meadowlands, Door Creek, and Reston Heights subdivisions. This unofficial site, run by one neighbor, shares news and events for the area.',
       ),
       p(
-        'Membership is open to any resident within our boundaries, and it\u2019s always free and optional. We\u2019re here to represent neighborhood interests, keep everyone informed, and build a great community together.',
+        'There\u2019s no membership and no dues. We\u2019re here to keep neighbors informed and share what\u2019s happening around us.',
       ),
       p('Stay connected \u2014 check this site for upcoming events and news!'),
     ]),

@@ -22,7 +22,7 @@ export default async function ResourcesPage() {
       <PageHeader
         eyebrow="Directory"
         title="Neighborhood Resources"
-        description="Helpful contacts, services, and organizations for Sprecher East residents."
+        description="Contacts and services neighbors use."
       />
 
       <div className="container space-y-16">

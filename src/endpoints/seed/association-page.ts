@@ -4,7 +4,8 @@ import { heading, root, p } from './helpers/lexical'
 export const associationPage: () => RequiredDataFromCollectionSlug<'pages'> = () => {
   return {
     slug: 'association',
-    _status: 'published',
+    // A draft and linked from nowhere: the site doesn't present itself as an association (#1010)
+    _status: 'draft',
     hero: {
       type: 'lowImpact',
       richText: root([heading('h1', 'The Association')]),

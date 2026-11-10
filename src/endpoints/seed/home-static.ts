@@ -11,14 +11,14 @@ export const homeStatic: RequiredDataFromCollectionSlug<'pages'> = {
       heading('h1', 'Sprecher East'),
       paragraph(
         text(
-          'Welcome to Sprecher East \u2014 a grassroots neighborhood initiative on Madison\u2019s Far East Side. The full site is on its way.',
+          'Welcome to Sprecher East, an unofficial site for Madison\u2019s Far East Side. The full site is on its way.',
         ),
       ),
     ]),
   },
   meta: {
     description:
-      'Sprecher East is a grassroots neighborhood initiative on Madison\u2019s Far East Side \u2014 connecting residents of Meadowlands, Door Creek, and Reston Heights.',
+      'News, events and City updates for Sprecher East on Madison\u2019s Far East Side: Meadowlands, Door Creek and Reston Heights. An unofficial site.',
     title: 'Home',
   },
   title: 'Home',

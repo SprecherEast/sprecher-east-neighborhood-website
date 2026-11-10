@@ -427,13 +427,6 @@ export const seed = async ({
           {
             link: {
               type: 'custom',
-              label: 'Association',
-              url: '/association',
-            },
-          },
-          {
-            link: {
-              type: 'custom',
               label: 'FAQ',
               url: '/faq',
             },
@@ -450,7 +443,7 @@ export const seed = async ({
               type: 'custom',
               label: 'Source Code',
               newTab: true,
-              url: 'https://github.com/boulaajaj/sprecher-east-neighborhood-website',
+              url: 'https://github.com/SprecherEast/sprecher-east-neighborhood-website',
             },
           },
         ],

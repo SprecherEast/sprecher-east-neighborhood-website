@@ -34,4 +34,15 @@ describe('SiteFooter (#741)', () => {
       expect(link.className).toContain(TOUCH_MIN_HEIGHT)
     }
   })
+
+  it('says the site is unofficial, made with AI tools and reviewed by a neighbor, and claims no initiative', async () => {
+    render(await SiteFooter())
+
+    expect(
+      screen.getByText(
+        'This is an unofficial neighborhood site, made with AI tools and reviewed by a neighbor.',
+      ),
+    ).toBeTruthy()
+    expect(screen.queryByText(/initiative|association/i)).toBeNull()
+  })
 })
