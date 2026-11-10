@@ -44,9 +44,9 @@ jobs:
           script: |
             const fs = require('fs');
             const { pathToFileURL } = require('url');
-            const { GROOMING_LABEL, groomingPlan, issueProblems, skipReason } = await import(
-              pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/issue-policy.mjs`).href
-            );
+            const scripts = (name) => import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/${name}`).href);
+            const { GROOMING_LABEL, groomingPlan, issueProblems, skipReason } = await scripts('issue-policy.mjs');
+            const { dropLabel, ensureLabel } = await scripts('labels.mjs');
             const policy = JSON.parse(fs.readFileSync('.github/label-policy.json', 'utf8'));
             const { owner, repo } = context.repo;
             const issue_number = context.payload.issue.number;
@@ -67,7 +67,7 @@ jobs:
             });
             const plan = groomingPlan({
               problems,
-              labels: issue.labels.map((l) => (typeof l === 'string' ? l : l.name)),
+              issue,
               comments,
             });
             core.info(`#${issue_number}: ${problems.length} failed rule(s); comment=${plan.comment.action}, label=${plan.label}`);
@@ -79,22 +79,12 @@ jobs:
             }
 
             if (plan.label === 'add') {
-              try {
-                await github.rest.issues.createLabel({
-                  owner,
-                  repo,
-                  name: GROOMING_LABEL,
-                  color: 'd93f0b',
-                  description: policy.markers[GROOMING_LABEL],
-                });
-              } catch (e) {
-                if (e.status !== 422) throw e; // 422 = label already exists
-              }
+              await ensureLabel(github, context.repo, {
+                name: GROOMING_LABEL,
+                color: 'd93f0b',
+                description: policy.markers[GROOMING_LABEL],
+              });
               await github.rest.issues.addLabels({ owner, repo, issue_number, labels: [GROOMING_LABEL] });
             } else if (plan.label === 'remove') {
-              try {
-                await github.rest.issues.removeLabel({ owner, repo, issue_number, name: GROOMING_LABEL });
-              } catch (e) {
-                if (e.status !== 404) throw e;
-              }
+              await dropLabel(github, { owner, repo, issue_number }, GROOMING_LABEL);
             }

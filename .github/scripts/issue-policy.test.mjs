@@ -163,6 +163,16 @@ describe('issueProblems', () => {
     })
   })
 
+  describe('ISSUE-CRITERIA text', () => {
+    it('needs words after the checkbox', () => {
+      const body = GROOMED_BODY.replace(
+        '- [ ] A new issue missing an item gets one comment.',
+        '- [ ]',
+      )
+      expect(ids(groomed({ body }))).toEqual(['ISSUE-CRITERIA'])
+    })
+  })
+
   describe('ISSUE-FILES', () => {
     it('needs both sections', () => {
       for (const heading of ['Files likely touched', 'Must not touch']) {
@@ -207,6 +217,11 @@ describe('skipReason', () => {
       /bot/i,
     )
   })
+  it('skips an epic: a parent issue has no files or checkboxes of its own', () => {
+    expect(skipReason(groomed({ labels: [{ name: 'epic' }, { name: 'process' }] }))).toMatch(
+      /epic/i,
+    )
+  })
   it('skips a closed issue', () => {
     expect(skipReason(groomed({ state: 'closed' }))).toMatch(/closed/i)
   })
@@ -228,10 +243,13 @@ describe('groomingComment', () => {
 
 describe('groomingPlan', () => {
   const failing = ['ISSUE-TYPE: Add one type label.']
+  const flagged = groomed({ labels: [{ name: GROOMING_LABEL }] })
   const mine = (body, id = 7) => ({ id, body, user: { type: 'Bot', login: 'github-actions[bot]' } })
 
   it('creates one comment and the label for a new failing issue', () => {
-    expect(groomingPlan({ problems: failing, labels: [], comments: [] })).toEqual({
+    expect(
+      groomingPlan({ problems: failing, issue: groomed({ labels: [] }), comments: [] }),
+    ).toEqual({
       comment: { action: 'create', body: groomingComment(failing) },
       label: 'add',
     })
@@ -240,7 +258,7 @@ describe('groomingPlan', () => {
     const next = ['ISSUE-AREA: Add an area.']
     const plan = groomingPlan({
       problems: next,
-      labels: [GROOMING_LABEL],
+      issue: flagged,
       comments: [mine(groomingComment(failing))],
     })
     expect(plan).toEqual({
@@ -251,7 +269,7 @@ describe('groomingPlan', () => {
   it('does nothing when nothing changed, so label events cannot loop', () => {
     const plan = groomingPlan({
       problems: failing,
-      labels: [GROOMING_LABEL],
+      issue: flagged,
       comments: [mine(groomingComment(failing))],
     })
     expect(plan).toEqual({ comment: { action: 'none' }, label: 'none' })
@@ -259,7 +277,7 @@ describe('groomingPlan', () => {
   it('clears the label and marks the comment clear once everything passes', () => {
     const plan = groomingPlan({
       problems: [],
-      labels: [GROOMING_LABEL],
+      issue: flagged,
       comments: [mine(groomingComment(failing))],
     })
     expect(plan).toEqual({
@@ -268,7 +286,7 @@ describe('groomingPlan', () => {
     })
   })
   it('stays silent for a passing issue that was never flagged', () => {
-    expect(groomingPlan({ problems: [], labels: [], comments: [] })).toEqual({
+    expect(groomingPlan({ problems: [], issue: groomed({ labels: [] }), comments: [] })).toEqual({
       comment: { action: 'none' },
       label: 'none',
     })
@@ -276,10 +294,23 @@ describe('groomingPlan', () => {
   it('puts the label back if it was removed by hand while rules still fail', () => {
     const plan = groomingPlan({
       problems: failing,
-      labels: [],
+      issue: groomed({ labels: [] }),
       comments: [mine(groomingComment(failing))],
     })
     expect(plan.label).toBe('add')
+  })
+  it('ignores a comment from a bot other than Actions', () => {
+    const other = {
+      id: 9,
+      body: groomingComment(failing),
+      user: { type: 'Bot', login: 'other[bot]' },
+    }
+    const plan = groomingPlan({
+      problems: failing,
+      issue: groomed({ labels: [] }),
+      comments: [other],
+    })
+    expect(plan.comment.action).toBe('create')
   })
   it('ignores a look-alike comment written by a person', () => {
     const faked = {
@@ -287,8 +318,9 @@ describe('groomingPlan', () => {
       body: groomingComment(failing),
       user: { type: 'User', login: 'someone' },
     }
-    expect(groomingPlan({ problems: failing, labels: [], comments: [faked] }).comment.action).toBe(
-      'create',
-    )
+    expect(
+      groomingPlan({ problems: failing, issue: groomed({ labels: [] }), comments: [faked] }).comment
+        .action,
+    ).toBe('create')
   })
 })

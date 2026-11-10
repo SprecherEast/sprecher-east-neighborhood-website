@@ -1,5 +1,5 @@
 {
-  "$comment": "Single source of truth for issue labels required by AGENTS.md. Read by issue-labels.yml and pr-policy.yml. Keep the issue forms' dropdown options in .github/ISSUE_TEMPLATE in sync. 'markers' are optional labels with a fixed meaning (docs/process/project-management.md); the checks don't require them.",
+  "$comment": "Single source of truth for issue labels required by AGENTS.md. Read by issue-labels.yml, issue-policy.yml and pr-policy.yml. Keep the issue forms' dropdown options in .github/ISSUE_TEMPLATE in sync. 'markers' are optional labels with a fixed meaning (docs/process/project-management.md); the checks don't require them.",
   "types": ["bug", "enhancement", "documentation", "tech-debt", "process"],
   "areas": [
     "frontend",

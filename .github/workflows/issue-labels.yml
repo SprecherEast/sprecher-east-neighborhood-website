@@ -22,13 +22,17 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          sparse-checkout: .github/label-policy.json
+          sparse-checkout: .github
           sparse-checkout-cone-mode: false
 
       - uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
+            const { pathToFileURL } = require('url');
+            const { dropLabel, ensureLabel } = await import(
+              pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/labels.mjs`).href
+            );
             const policy = JSON.parse(fs.readFileSync('.github/label-policy.json', 'utf8'));
             const issue = context.payload.issue;
             const current = issue.labels.map((l) => l.name);
@@ -58,21 +62,13 @@ jobs:
             }
             if (priority) {
               const name = `priority: ${priority}`;
-              try {
-                await github.rest.issues.createLabel({ ...context.repo, name, color: policy.priorities[priority] });
-              } catch (e) {
-                if (e.status !== 422) throw e; // 422 = label already exists
-              }
+              await ensureLabel(github, context.repo, { name, color: policy.priorities[priority] });
               add.add(name);
               remove.push(...current.filter((l) => l.startsWith('priority: ') && l !== name));
             }
 
             for (const name of remove) {
-              try {
-                await github.rest.issues.removeLabel({ ...context.repo, issue_number: issue.number, name });
-              } catch (e) {
-                if (e.status !== 404) throw e;
-              }
+              await dropLabel(github, { ...context.repo, issue_number: issue.number }, name);
             }
             if (add.size === 0) {
               core.info('No issue-form answers found; nothing to label.');
@@ -87,6 +83,7 @@ jobs:
   groom:
     name: Check the issue
     needs: label
+    if: ${{ !cancelled() }}
     permissions:
       contents: read
       issues: write

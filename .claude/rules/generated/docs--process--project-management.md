@@ -62,6 +62,8 @@ The allowed labels are in [`.github/label-policy.json`](/.github/label-policy.js
   ([the gate](#the-pull-request-gate)).
 - **Markers** (optional, with a fixed meaning):
   - `epic`: a parent issue whose sub-issues are the work.
+  - `needs grooming`: set by [the issue check](#the-issue-check) while an issue misses something
+    the Definition of Ready needs; the check removes it when nothing is missing.
   - `needs owner`: needs the owner's login or money, or his decision on a genuine product
     trade-off, a meaningful cost, a legal or privacy commitment, or a decision established best
     practice can't reasonably resolve. Agents can't do it. A choice between technically valid
@@ -128,17 +130,24 @@ rules in `.github/scripts/issue-policy.mjs`,
 against the Definition of Ready below. GitHub cannot stop an issue being filed, so it only warns:
 one comment, kept up to date in place and never repeated, lists each failed rule with its ID and a
 one-line fix, and the issue gets the `needs grooming` label. When everything passes, the label
-goes and the comment says so. An issue with the label is not Ready, and the pull request gate
-fails a pull request whose issue is not groomed. Pull requests, closed issues and issues filed by a
-bot are not checked.
+goes and the comment says so. The check owns the label: it removes it from an issue that passes
+and puts it back on one that still fails, so adding or removing it by hand changes nothing. An
+issue with the label is not Ready. The check only warns today; making the pull request gate fail a
+pull request whose issue still has the label is planned in
+[#984](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/984), and until
+then that gate checks only the issue's labels, assignee and milestone (`PR-LABELS`,
+`PR-ASSIGNED`, `PR-MILESTONE`), reading them the same way. It is stricter in one place: it asks
+for exactly one priority label, where the gate accepts one or more. Pull requests, closed issues,
+epics (a parent issue has no files or checkboxes of its own) and issues filed by a bot are not
+checked.
 
 | ID                | The rule                                                                               |
 | ----------------- | -------------------------------------------------------------------------------------- |
 | `ISSUE-TYPE`      | Exactly one type label.                                                                |
 | `ISSUE-AREA`      | At least one area label.                                                               |
-| `ISSUE-PRIORITY`  | One priority label.                                                                    |
+| `ISSUE-PRIORITY`  | Exactly one priority label.                                                            |
 | `ISSUE-SUMMARY`   | A plain-language summary section (the forms call it Problem).                          |
-| `ISSUE-CRITERIA`  | Acceptance criteria with at least one checkbox.                                        |
+| `ISSUE-CRITERIA`  | Acceptance criteria with at least one checkbox that has text.                          |
 | `ISSUE-FILES`     | "Files likely touched" and "Must not touch" filled in, or `None`.                      |
 | `ISSUE-MILESTONE` | A milestone (Backlog until planned). An epic is optional, so there is no parent check. |
 

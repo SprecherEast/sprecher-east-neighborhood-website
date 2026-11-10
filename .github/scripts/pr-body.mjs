@@ -19,11 +19,15 @@ export function withoutComments(body) {
   return text
 }
 
-/** The sections of a description: each `## Heading`, lower-cased, mapped to the text under it. */
-export function sectionsOf(body) {
+/**
+ * The sections of a description: each heading of level 2 up to `maxLevel` (2 by default, the PR
+ * template's), lower-cased, mapped to the text under it. Issue forms write `###` headings, so the
+ * issue check passes 4.
+ */
+export function sectionsOf(body, { maxLevel = 2 } = {}) {
   const sections = {}
   for (const part of withoutComments(body)
-    .split(/^##\s+/m)
+    .split(new RegExp(`^#{2,${maxLevel}}\\s+`, 'm'))
     .slice(1)) {
     const newline = part.indexOf('\n')
     const title = (newline === -1 ? part : part.slice(0, newline)).trim().toLowerCase()
@@ -74,26 +78,47 @@ export function closeProblems({ closes, partOf }) {
   return []
 }
 
+/** The names of an issue's labels, whether the API gave label objects or plain strings. */
+export function labelNames(issue) {
+  return (issue.labels ?? []).map((label) => (typeof label === 'string' ? label : label.name))
+}
+
+/**
+ * What an issue has of the plan's labels and milestone: the one reading both gates (`PR Policy`
+ * and `Issue Policy`) use, each with its own IDs and wording. `types` and `priorities` are counts
+ * so a gate can ask for exactly one or at least one. The PR gate takes one or more priority
+ * labels, since a pull request is not worth blocking over a second one; the issue check asks for
+ * exactly one, because two priorities is a ranking nobody can read.
+ */
+export function planGaps(issue, policy) {
+  const labels = labelNames(issue)
+  return {
+    types: labels.filter((label) => policy.types.includes(label)).length,
+    hasArea: labels.some((label) => policy.areas.includes(label)),
+    priorities: labels.filter((label) => label.startsWith('priority: ')).length,
+    hasMilestone: Boolean(issue.milestone),
+  }
+}
+
 /** PR-LABELS, PR-ASSIGNED and PR-MILESTONE: what the closed issue needs (an epic is optional). */
 export function issueProblems(number, issue, policy) {
-  const labels = issue.labels.map((label) => (typeof label === 'string' ? label : label.name))
-  const types = labels.filter((label) => policy.types.includes(label))
+  const gaps = planGaps(issue, policy)
   const problems = []
-  if (types.length !== 1)
+  if (gaps.types !== 1)
     problems.push(
       ruleMessage(
         'PR-LABELS',
-        `Give issue #${number} exactly one type label (${policy.types.join(', ')}); it has ${types.length}.`,
+        `Give issue #${number} exactly one type label (${policy.types.join(', ')}); it has ${gaps.types}.`,
       ),
     )
-  if (!labels.some((label) => policy.areas.includes(label)))
+  if (!gaps.hasArea)
     problems.push(
       ruleMessage(
         'PR-LABELS',
         `Give issue #${number} at least one area label (${policy.areas.join(', ')}).`,
       ),
     )
-  if (!labels.some((label) => label.startsWith('priority: ')))
+  if (gaps.priorities === 0)
     problems.push(
       ruleMessage(
         'PR-LABELS',
@@ -107,7 +132,7 @@ export function issueProblems(number, issue, policy) {
         `Assign issue #${number} (assigning is how its card moves to In progress).`,
       ),
     )
-  if (!issue.milestone)
+  if (!gaps.hasMilestone)
     problems.push(
       ruleMessage(
         'PR-MILESTONE',

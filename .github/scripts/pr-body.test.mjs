@@ -6,7 +6,9 @@ import {
   issueProblems,
   linkedIssues,
   isDependabot,
+  labelNames,
   lookupProblems,
+  planGaps,
   ruleMessage,
   sectionsOf,
   timelineShowsPr,
@@ -237,5 +239,45 @@ describe('descriptionProblems', () => {
   it('fails PR-SELF-REVIEW for an item with no answer', () => {
     const body = filled.replace('- Visual: checked and fixed it', '- Visual:')
     expect(descriptionProblems(body)).toEqual([expect.stringMatching(/^PR-SELF-REVIEW: .*Visual/)])
+  })
+})
+
+describe('sectionsOf heading levels', () => {
+  const body = '## Two\na\n### Three\nb\n#### Four\nc\n##### Five\nd\n'
+
+  it('reads only second-level headings by default, as the PR gate always has', () => {
+    expect(Object.keys(sectionsOf(body))).toEqual(['two'])
+    expect(sectionsOf(body).two).toContain('### Three')
+  })
+
+  it('reads deeper headings up to maxLevel, which is how issue forms write theirs', () => {
+    expect(Object.keys(sectionsOf(body, { maxLevel: 4 }))).toEqual(['two', 'three', 'four'])
+    expect(sectionsOf(body, { maxLevel: 4 }).three).toBe('b\n')
+  })
+})
+
+describe('labelNames', () => {
+  it('reads label objects and plain strings, and a missing list', () => {
+    expect(labelNames({ labels: [{ name: 'bug' }, 'ci'] })).toEqual(['bug', 'ci'])
+    expect(labelNames({})).toEqual([])
+  })
+})
+
+describe('planGaps', () => {
+  it('counts the type and priority labels and reports area and milestone', () => {
+    expect(planGaps(goodIssue, policy)).toEqual({
+      types: 1,
+      hasArea: true,
+      priorities: 1,
+      hasMilestone: true,
+    })
+    expect(
+      planGaps({ labels: ['bug', 'process', 'priority: low', 'priority: high'] }, policy),
+    ).toEqual({ types: 2, hasArea: false, priorities: 2, hasMilestone: false })
+  })
+
+  it('leaves the PR gate accepting more than one priority label, which only the issue check flags', () => {
+    const two = { ...goodIssue, labels: ['bug', 'ci', 'priority: low', 'priority: high'] }
+    expect(issueProblems(7, { ...two, assignees: [{ login: 'a' }] }, policy)).toEqual([])
   })
 })
