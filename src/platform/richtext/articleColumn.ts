@@ -25,7 +25,7 @@ export function hasWideBlocks(data: RichTextValue | null | undefined): boolean {
  * column's left edge, so long lines stay comfortable, unless the article holds a row of cards, which
  * fills the column up to the page margin the page menu has on the left (#774). `undefined` leaves
  * `RichText`'s own full width. Post and event pages both use it, so the rule is written once; the
- * page also gives it to `ArticlePage`, so the metadata line ends where the text does.
+ * page also gives it to `ArticlePage`, so the byline ends on the text's right edge.
  */
 export function articleColumnClass(data: RichTextValue | null | undefined): string | undefined {
   return hasWideBlocks(data) ? undefined : READING_COLUMN
