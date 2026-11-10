@@ -26,6 +26,16 @@ neighbors:
   names:
     - north star
     - richmond hill
+# The City's own boundary for the neighborhood, used by verify to test an item's place (prompts/verify.md,
+# pass 2). Observed 2026-11-10 and to be re-verified: the layer is the City's Neighborhood
+# Associations layer above, and Sprecher East is the feature whose NA_ID is 146. Query the layer's
+# `query` operation with that NA_ID as the where clause and geometry returned, then test the
+# item's point or address against the polygon. No coordinates are kept here.
+boundary:
+  source: https://maps.cityofmadison.com/arcgis/rest/services/Public/OPEN_DATA/MapServer/12
+  naId: 146
+  checked: '2026-11-10'
+  verified: false
 # A highway alone names half the city. It counts only when the same item also names one of `with`:
 # an interchange or a cross street at the area's edge.
 highways:

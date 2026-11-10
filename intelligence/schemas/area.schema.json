@@ -4,7 +4,7 @@
   "title": "The words code uses to tell that an item is about the area (area.yaml)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "places", "neighbors", "highways"],
+  "required": ["version", "places", "neighbors", "boundary", "highways"],
   "$defs": {
     "words": {
       "type": "array",
@@ -24,6 +24,18 @@
         "source": { "type": "string", "pattern": "^https://" },
         "checked": { "$ref": "common.schema.json#/$defs/date" },
         "names": { "$ref": "#/$defs/words" }
+      }
+    },
+    "boundary": {
+      "description": "The City's own boundary feature for the area, which verify tests a place against. `verified` is false until someone confirms the layer and ID by hand.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "naId", "checked", "verified"],
+      "properties": {
+        "source": { "type": "string", "pattern": "^https://" },
+        "naId": { "type": "integer", "minimum": 1 },
+        "checked": { "$ref": "common.schema.json#/$defs/date" },
+        "verified": { "type": "boolean" }
       }
     },
     "highways": {

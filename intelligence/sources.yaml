@@ -1,7 +1,7 @@
 # Source registry for the intelligence agents (#271, #352). Summary: sources.md. Only `valid` is
 # polled; `pilotRank` marks the daily pilot; `fetchStrategy` is `direct` unless stated.
 version: 1
-checkedOn: '2026-10-27'
+checkedOn: '2026-11-10'
 sources:
   - id: legistar-events
     name: City of Madison meetings (Legistar API)
@@ -45,6 +45,10 @@ sources:
     treatment: >-
       Items changed since the cursor whose title names a place in the area (coverage.md). Match
       text on our side: a substringof() filter on MatterTitle returned a server error.
+    notes: >-
+      Observed 2026-11-10 (#994): contract awards and resolutions here are where the paper trail of
+      a physical project, such as a traffic signal, turns up. Verify searches it when news pages
+      show nothing (coverage.md, "Review passes", pass 4).
     example:
       title: MatterId 103134, file 95368, Proposed 2027 Transportation budgets
       date: '2026-10-23'
@@ -71,7 +75,8 @@ sources:
       date: '2026-11-17'
       url: https://www.madisonpubliclibrary.org/events/calendar/library-type/1940/237/export.ics
     notes: >-
-      The check tool cut the all-events file (~89,000 characters) off in May 2026. The Book
+      The library's event search page disallows automated reading (observed 2026-11-10): keep this
+      iCalendar source and never read the search page. The check tool cut the all-events file (~89,000 characters) off in May 2026. The Book
       Discussion feed was read whole (to 2026-12-15). #272 logs a future all-events UID first.
   - id: madison365-news
     name: Madison365 (RSS)
@@ -126,7 +131,7 @@ sources:
     reliability: official
     access: Public web page. No RSS or iCalendar found; email list only.
     cadence: none
-    lastChecked: '2026-10-24'
+    lastChecked: '2026-11-10'
     result: pending
     pilotRank: null
     fetchStrategy: direct-then-playwright
@@ -135,6 +140,7 @@ sources:
     treatment: >-
       Page parsing approved on #352. A direct GET on 2026-10-24 served the list in the HTML (no
       JavaScript needed), with item links. Stays pending until the collector records a parse.
+    notes: 'Observed 2026-11-10: dated events with a stable link per event; still no feed. Hand check: #995.'
     example:
       title: Bird & Nature Adventures, Aldo Leopold Nature Center
       date: '2026-10-24'
@@ -286,3 +292,309 @@ sources:
     pilotRank: null
     treatment: Not collected. content-marketing.md lists this page as a feed; it only links to feeds.
     example: null
+  - id: madison-police-incident-reports
+    name: 'Madison Police incident reports feed'
+    owner: 'City of Madison Police Department'
+    canonicalUrl: https://www.cityofmadison.com/feed/incident-reports
+    feedUrl: https://www.cityofmadison.com/feed/incident-reports
+    format: rss
+    scope: 'Incident reports, with the block address only in the description'
+    audiences: [everyone]
+    reliability: official
+    access: 'Public feed; robots.txt not checked for this path.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected. A safety item never auto-publishes (coverage.md, "Review passes"); place comes from the description text only.'
+    example: null
+    notes: 'Observed 2026-11-10: Answered as RSS 2.0 with a guid, pubDate and link per item. The block address appears only inside the description; there is no district field. The incident reports page does not link to the feed. Hand check: #993.'
+  - id: city-traffic-engineering-news
+    name: 'City of Madison Traffic Engineering news'
+    owner: 'City of Madison Traffic Engineering'
+    canonicalUrl: https://www.cityofmadison.com/traffic-engineering/news
+    feedUrl: null
+    format: html
+    scope: 'Street and lane closures and traffic changes'
+    audiences: [everyone]
+    reliability: official
+    access: 'Public web page; no feed link found; robots.txt not checked for this path.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected until a parser exists.'
+    example: null
+    notes: 'Observed 2026-11-10: Dated items with stable links. Hand check: #994.'
+  - id: madison-road-closures-layer
+    name: 'City of Madison Road Closures (open-data layer)'
+    owner: 'City of Madison'
+    canonicalUrl: https://geo.btaa.org/catalog/912f842a975542978e4dc5ffa216ebc8_14
+    feedUrl: null
+    format: json-api
+    scope: 'Road closures with start date, end date, closure type and road'
+    audiences: [everyone]
+    reliability: official
+    access: 'Open-data layer, found through a catalog entry; the live service address is not confirmed.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: "Not collected. Confirm the live service address on the City's own site first."
+    example: null
+    notes: 'Observed 2026-11-10: The catalog entry lists fields for start date, end date, closure type and road. Hand check: #994.'
+  - id: wisconsin-511-events-api
+    name: '511 Wisconsin events API'
+    owner: 'Wisconsin Department of Transportation'
+    canonicalUrl: https://511wi.gov/developers/help
+    feedUrl: null
+    format: json-api
+    scope: 'Road events and closures across Wisconsin'
+    audiences: [everyone]
+    reliability: official
+    access: 'Documented API; whether a free key is needed is not confirmed.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected. Confirm the key terms first; if a key is needed, it goes through the owner.'
+    example: null
+    notes: 'Observed 2026-11-10: The developer help page documents the API. Hand check: #994, #997.'
+  - id: door-creek-park-page
+    name: 'Door Creek Park page (City of Madison Parks)'
+    owner: 'City of Madison Parks Division'
+    canonicalUrl: https://www.cityofmadison.com/parks/doorcreek
+    feedUrl: null
+    format: html
+    scope: 'Winter status of the rink and ski trails at Door Creek Park'
+    audiences: [everyone, families]
+    reliability: official
+    access: 'Public web page; no feed; robots.txt not checked for this path.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected until a parser exists.'
+    example: null
+    notes: 'Observed 2026-11-10: Winter status of the rink and ski trails is on the page. Hand check: #995.'
+  - id: mpo-events
+    name: 'Greater Madison MPO events'
+    owner: 'Greater Madison Metropolitan Planning Organization'
+    canonicalUrl: https://www.cityofmadison.com/mpo/events/
+    feedUrl: null
+    format: html
+    scope: 'Transportation planning meetings and events, one page per event'
+    audiences: [everyone, association-leaders]
+    reliability: official
+    access: 'Public web pages; no feed; robots.txt not checked for this path.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected until a parser exists.'
+    example: null
+    notes: 'Observed 2026-11-10: Event pages sit under /mpo/events/. Hand check: #995.'
+  - id: dcfm-holiday-market
+    name: "Dane County Farmers' Market holiday market"
+    owner: "Dane County Farmers' Market"
+    canonicalUrl: https://www.dcfm.org/markets/holiday-market
+    feedUrl: null
+    format: html
+    scope: 'Holiday market dates and place'
+    audiences: [everyone, families]
+    reliability: community
+    access: 'Public web page; no feed; robots.txt not checked.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected until a parser exists.'
+    example: null
+    notes: 'Observed 2026-11-10: Market page for the holiday season. Hand check: #995.'
+  - id: cottage-grove-chamber-events
+    name: 'Cottage Grove Chamber of Commerce events'
+    owner: 'Cottage Grove Chamber of Commerce'
+    canonicalUrl: https://www.cottagegrovechamber.com/cottagegrovechamberevents.html
+    feedUrl: null
+    format: html
+    scope: 'Events in the Village of Cottage Grove, a separate municipality east of the area'
+    audiences: [everyone, families]
+    reliability: community
+    access: 'Public web page; no feed; robots.txt not checked.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected until a parser exists. Items are nearby or outside, never inside.'
+    example: null
+    notes: 'Observed 2026-11-10: Events page. The Village is not the area (coverage.md, "Names that are not the area"). Hand check: #995.'
+  - id: henry-vilas-zoo-lights
+    name: 'Henry Vilas Zoo holiday lights'
+    owner: 'Henry Vilas Zoo'
+    canonicalUrl: https://henryvilaszoo.gov/home/lights
+    feedUrl: null
+    format: html
+    scope: 'Holiday lights dates, hours and tickets'
+    audiences: [everyone, families]
+    reliability: official
+    access: 'Public web page; no feed; robots.txt not checked.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected until a parser exists. Citywide at most.'
+    example: null
+    notes: 'Observed 2026-11-10: Holiday lights page. Hand check: #995.'
+  - id: visit-madison-holiday-guide
+    name: 'Visit Madison holiday lights and tree lighting guide'
+    owner: 'Destination Madison (Visit Madison)'
+    canonicalUrl: https://www.visitmadison.com/blog/stories/post/madison-area-holiday-lights-tree-lighting-guide/
+    feedUrl: null
+    format: html
+    scope: 'A roundup of holiday lights and tree lightings around Madison'
+    audiences: [everyone, families]
+    reliability: community
+    access: 'Public blog post; robots.txt not checked.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Discovery only: find events here, then confirm each with the organizer (coverage.md, "Review passes"). Never the source of a date.'
+    example: null
+    notes: 'Observed 2026-11-10: A secondary roundup. Hand check: #995.'
+  - id: alder-weekly-roundups
+    name: "Other alders' weekly City roundups"
+    owner: 'City of Madison Common Council'
+    canonicalUrl: https://www.cityofmadison.com/council/district3/blog
+    feedUrl: null
+    format: html
+    scope: 'Citywide meetings and events in one weekly post per district'
+    audiences: [everyone, association-leaders]
+    reliability: official
+    access: 'Public web pages; no feed; robots.txt not checked for this path.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected until a parser exists. Reads like the District 16 blog, with the same alder-post caution.'
+    example: null
+    notes: "Observed 2026-11-10: The area's own alder blog was quiet for two weeks. District 3's blog lists citywide meetings and events in one weekly post; District 3 borders the area. Hand check: #995."
+  - id: mmsd-boundary-review
+    name: 'Madison Metropolitan School District boundary review'
+    owner: 'Madison Metropolitan School District'
+    canonicalUrl: https://www.madison.k12.wi.us/about/building-for-the-future-boundary-review
+    feedUrl: null
+    format: html
+    scope: 'Status, draft maps and input sessions for the boundary review'
+    audiences: [everyone, families]
+    reliability: official
+    access: 'Public web page; no feed; robots.txt not checked.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected until a parser exists. Never say which school serves the area (sources.md, "Corrections").'
+    example: null
+    notes: 'Observed 2026-11-10: Status, draft maps and input sessions are on the page. Hand check: #996.'
+  - id: metro-public-hearing-update
+    name: 'Metro Transit public hearing update'
+    owner: 'City of Madison Metro Transit'
+    canonicalUrl: https://www.cityofmadison.com/metro/contact/public-hearing-update
+    feedUrl: null
+    format: html
+    scope: 'Public hearings on Metro Transit service changes'
+    audiences: [everyone]
+    reliability: official
+    access: 'Public web page; no feed; robots.txt not checked for this path.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected until a parser exists.'
+    example: null
+    notes: 'Observed 2026-11-10: Hearing update page. Hand check: #997.'
+  - id: metro-developer-feeds
+    name: 'Metro Transit developer feeds'
+    owner: 'City of Madison Metro Transit'
+    canonicalUrl: https://www.cityofmadison.com/metro/business/information-for-developers
+    feedUrl: null
+    format: html
+    scope: 'Developer-facing transit feeds'
+    audiences: [everyone]
+    reliability: official
+    access: 'Public web page listing the feeds; terms not checked.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected. Which feed holds service alerts is for #997 to confirm.'
+    example: null
+    notes: "Observed 2026-11-10: Page for developers listing Metro's feeds. Hand check: #997."
+  - id: nws-api
+    name: 'National Weather Service API'
+    owner: 'National Weather Service'
+    canonicalUrl: https://www.weather.gov/documentation/services-web-api
+    feedUrl: null
+    format: json-api
+    scope: 'Forecasts and weather alerts by location'
+    audiences: [everyone]
+    reliability: official
+    access: 'Documented public API; terms and user-agent rules not checked.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected. Alerts are safety items and never auto-publish.'
+    example: null
+    notes: 'Observed 2026-11-10: Documentation page for the web API. Hand check: #997.'
+  - id: city-streets-holiday-collection
+    name: 'City of Madison Streets holiday collection schedule'
+    owner: 'City of Madison Streets Division'
+    canonicalUrl: https://www.cityofmadison.com/streets/trash-recycling/guidelines/holiday-schedules
+    feedUrl: null
+    format: html
+    scope: 'Trash and recycling schedule changes around holidays'
+    audiences: [everyone]
+    reliability: official
+    access: 'Public web page; no feed; robots.txt not checked for this path.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected until a parser exists.'
+    example: null
+    notes: 'Observed 2026-11-10: Holiday schedule page. Hand check: #995.'
+  - id: united-way-volunteer-listings
+    name: 'United Way of Dane County volunteer listings'
+    owner: 'United Way of Dane County'
+    canonicalUrl: https://www.volunteeryourtime.org/need/
+    feedUrl: null
+    format: html
+    scope: 'Volunteer needs across Dane County'
+    audiences: [volunteers]
+    reliability: community
+    access: 'Refused an automated read on 2026-11-10; terms need a hand check.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected. Hand check the terms first; never get around the refusal.'
+    example: null
+    notes: 'Observed 2026-11-10: Refused an automated read. Hand check: #998.'
+  - id: goodman-community-center
+    name: 'Goodman Community Center'
+    owner: 'Goodman Community Center'
+    canonicalUrl: https://www.goodmancenter.org/
+    feedUrl: null
+    format: html
+    scope: 'Seasonal drives and community programs'
+    audiences: [everyone, volunteers, families]
+    reliability: community
+    access: 'Public web page; no feed; robots.txt not checked.'
+    cadence: none
+    lastChecked: '2026-11-10'
+    result: pending
+    pilotRank: null
+    treatment: 'Not collected until a parser exists.'
+    example: null
+    notes: 'Observed 2026-11-10: Seasonal drives. Hand check: #998.'

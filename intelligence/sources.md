@@ -1,7 +1,7 @@
 # Intelligence sources
 
 The approved sources for the neighborhood intelligence agents (#255), checked on **2026-10-24**
-for #271. The machine-readable registry is [`sources.yaml`](sources.yaml): one entry per source,
+for #271, and extended by a hand sweep on **2026-11-10** (#1001). The machine-readable registry is [`sources.yaml`](sources.yaml): one entry per source,
 with its feed URL, format, owner, scope, audiences, access limits, cadence, result and an example
 item. This page explains the results and what to fix. Change both only through a pull request.
 
@@ -37,6 +37,24 @@ Only `valid` sources are ever fetched automatically.
 | madison.com                     | RSS      | restricted | no    |
 | The Capital Times               | RSS      | invalid    | no    |
 | Channel 3000                    | HTML     | invalid    | no    |
+| Madison Police incident reports | RSS      | pending    | no    |
+| Traffic Engineering news        | HTML     | pending    | no    |
+| Road Closures open-data layer   | JSON API | pending    | no    |
+| 511 Wisconsin events API        | JSON API | pending    | no    |
+| Door Creek Park page            | HTML     | pending    | no    |
+| Greater Madison MPO events      | HTML     | pending    | no    |
+| Dane County Farmers' Market     | HTML     | pending    | no    |
+| Cottage Grove Chamber events    | HTML     | pending    | no    |
+| Henry Vilas Zoo lights          | HTML     | pending    | no    |
+| Visit Madison holiday guide     | HTML     | pending    | no    |
+| Other alders' weekly roundups   | HTML     | pending    | no    |
+| MMSD boundary review            | HTML     | pending    | no    |
+| Metro Transit public hearings   | HTML     | pending    | no    |
+| Metro Transit developer feeds   | HTML     | pending    | no    |
+| National Weather Service API    | JSON API | pending    | no    |
+| City streets holiday collection | HTML     | pending    | no    |
+| United Way volunteer listings   | HTML     | pending    | no    |
+| Goodman Community Center        | HTML     | pending    | no    |
 
 Older lists ([content-marketing guideline](../docs/guidelines/content-marketing.md)) named
 madison.com, Capital Times, Channel 3000, Dane County and the City planning page as RSS feeds. On
@@ -96,6 +114,27 @@ to the west and Cottage Grove Road to the south. That matches the eastern half o
 [Sprecher Neighborhood Development Plan](https://www.cityofmadison.com/dpced/planning/documents/Sprecher%20NDP_2012.pdf)
 area (I-90 to Door Creek valley, I-94 to Cottage Grove Road, bisected by Sprecher Road), which is
 partly in the Town of Blooming Grove. [coverage.md](coverage.md) holds the working definition.
+
+## The 2026-11-10 sweep (#1001)
+
+A hand sweep found the sources above marked `pending`. Each entry in `sources.yaml` records what
+was seen that day and the issue that finishes its hand check (#993 to #998). None is polled, and
+no parser exists yet: those belong to the same issues. Madison Parks events (already listed) got
+its new observation, and City Legistar (already `valid`) got a note: contract awards and
+resolutions are where a physical project's paper trail turns up.
+
+**Not checked.** The sweep read the pages, not their robots.txt files, so these entries carry no
+`robots` check, and a source that needs one (`direct-then-playwright`) can't get it until a hand
+check records it. Whether 511 Wisconsin needs a free key isn't confirmed, nor is the live address
+of the Road Closures layer (only a catalog entry was found).
+
+**Discovery only.** The Visit Madison guide is a secondary roundup: use it to find events, then
+confirm each with its organizer ([coverage](coverage.md), "Review passes").
+
+**Not readable by automation.** The public library's event search page disallows automated
+reading (keep the iCalendar source above). United Way's volunteer listings refused an automated
+read, so their terms need a hand check (#998). Nextdoor and Facebook need a login, so resident
+reports from them reach the Scout only through the owner.
 
 ## Out of scope
 

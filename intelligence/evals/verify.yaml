@@ -285,3 +285,80 @@ cases:
       The feed reports anything but an iCalendar CANCELLED status as scheduled, so text that says
       cancelled still wins over the feed's fields; a cancelled item the site doesn't have is not
       suggested (as curate-cancel-unknown-item).
+  - id: verify-real-event-outside-area
+    stage: verify
+    tags: [place, boundary]
+    input:
+      sourceId: henry-vilas-zoo-lights
+      title: Free public holiday lights evening
+      sourceText: >-
+        A free evening open to anyone in the city, listed with its date, hours and venue by the
+        organizer.
+      startsAt: 2026-12-12T17:00:00-06:00
+      locationText: Henry Vilas Zoo, Madison, WI
+    given:
+      sources: [{ id: henry-vilas-zoo-lights, result: valid, pilotRank: 9, cadence: daily }]
+    expected:
+      {
+        decision: accept,
+        coverage: citywide,
+        flagsAbsent: [missing-date, missing-location, unverified-claim],
+        route: submitSuggestion,
+      }
+    graders:
+      - check: model
+        rubric: >-
+          The place is outside the area's boundary but the event is public, open to anyone and of
+          wide interest, so it is tiered citywide and the coverage reason says where it is and that
+          it is not in the neighborhood.
+    why: The owner's rule of 2026-11-10 (public events elsewhere in the city, clearly marked as not in the neighborhood), applied through coverage.md check 2.
+  - id: verify-routine-item-elsewhere-in-city
+    stage: verify
+    tags: [place, boundary]
+    input:
+      sourceId: legistar-events
+      title: Weekly members-only club meeting
+      sourceText: A routine weekly meeting for members, at the club's own building.
+      startsAt: 2026-11-18T19:00:00-06:00
+      locationText: A community building on the far west side, Madison, WI
+    expected: { decision: reject, coverage: outside, route: none }
+    why: A routine item at a fixed place elsewhere in the city is not of wide interest, so it stays outside and is rejected.
+  - id: verify-date-only-in-secondary-report
+    stage: verify
+    tags: [primary-source]
+    input:
+      sourceId: madison365-news
+      title: Park winter festival planned for next month
+      sourceText: A news report says the festival will be on December 5 at 6 pm. The organizer has not posted a date.
+      startsAt: null
+      locationText: Door Creek Park
+      sourceStatus: unknown
+    expected:
+      {
+        decision: needs-review,
+        coverage: catchment,
+        flags: [missing-date, unverified-claim],
+        route: reportItem,
+      }
+    graders:
+      - { check: equals, field: $.dateConfirmed, value: false }
+    why: A date that only one secondary report gives is left out, or attributed to that report; it is never stated as the organizer's.
+  - id: verify-project-approved-not-built
+    stage: verify
+    tags: [project-stage, physical-facts]
+    input:
+      sourceId: legistar-matters
+      kind: legislation
+      title: Approving a site plan for a new housing development on Cottage Grove Road
+      sourceText: The Plan Commission approved the site plan. No construction start date is stated.
+      startsAt: null
+      locationText: Cottage Grove Road at Sprecher Road, Madison, WI
+      sourceStatus: unknown
+    expected:
+      { decision: needs-review, coverage: catchment, flags: [unverified-claim], route: reportItem }
+    graders:
+      - check: model
+        rubric: >-
+          The result says the project is approved and nothing more; it does not describe it as
+          under construction or underway, and lists the missing evidence of its current stage.
+    why: Approved is not built. Without proof of construction, the item says "approved" only.
