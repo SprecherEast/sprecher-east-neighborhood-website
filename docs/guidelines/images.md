@@ -40,3 +40,7 @@ text panel to the checks above.
 10. **Same style as the rest.** Follow the existing illustrations' palette, outline and type.
 11. **Review, then publish, then check live.** Preview the finished file, fix what the checks above
     find, publish, and open the live page at phone width and desktop width to confirm.
+12. **A picture that carries text is shown whole.** A post or event page shows its picture whole,
+    never cropped, at the top of the article, so the text in it stays readable at every width. A
+    cropping band behind a title can't promise that: it shows a different part of the picture at
+    each width, and a focal point only chooses which part.

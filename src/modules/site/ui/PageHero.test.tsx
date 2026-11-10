@@ -46,6 +46,25 @@ describe('PageHero', () => {
     await expectAccessible(container)
   })
 
+  it("high: crops the photo around the upload's focal point, the centre when it has none (#1013)", () => {
+    const { container, rerender } = inMain(
+      <PageHero
+        variant="high"
+        body={body}
+        image={{ ...image, focalX: 20, focalY: 80 }}
+        links={links}
+      />,
+    )
+    expect(container.querySelector('img')?.style.objectPosition).toBe('20% 80%')
+
+    rerender(
+      <main>
+        <PageHero variant="high" body={body} image={image} links={links} />
+      </main>,
+    )
+    expect(container.querySelector('img')?.style.objectPosition).toBe('50% 50%')
+  })
+
   it('high: draws no button list without links', () => {
     inMain(<PageHero variant="high" body={body} links={[]} />)
 

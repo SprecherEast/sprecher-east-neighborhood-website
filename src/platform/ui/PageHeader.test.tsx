@@ -2,25 +2,12 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import type { ImageRef } from '@/platform/lib/content'
-
 import { Badge } from './Badge'
+import { DETAIL_GRID } from './layoutSizes'
 import { PageHeader } from './PageHeader'
 import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
-
-const photo = {
-  id: 1,
-  alt: 'Volunteers planting trees in the park',
-  url: '/api/media/file/park.webp',
-  width: 1600,
-  height: 900,
-  mimeType: 'image/webp',
-  credit: 'Jane Doe',
-  updatedAt: '2026-10-01T12:00:00.000Z',
-  createdAt: '2026-10-01T12:00:00.000Z',
-} as ImageRef
 
 const facts = [
   { label: 'Date', value: 'Tue, Mar 3, 2026' },
@@ -88,13 +75,12 @@ describe('PageHeader', () => {
     render(<PageHeader variant="compact" title="Log In" eyebrow="Account" />)
   })
 
-  it('puts the title and facts on the photo, which loads first, with its credit (#461)', async () => {
+  it('heads a post or an event on a plain band with no picture, the facts under it (#1013)', async () => {
     const { container } = render(
       <main>
         <PageHeader
-          variant="image"
-          image={photo}
-          eyebrow={<Badge variant="on-image">Parks</Badge>}
+          variant="band"
+          eyebrow={<Badge>Parks</Badge>}
           title="Park cleanup"
           facts={facts}
         />
@@ -102,28 +88,43 @@ describe('PageHeader', () => {
     )
 
     const title = screen.getByRole('heading', { level: 1 })
-    expect(title.className).toContain('text-on-image')
+    expect(title.className).toContain('text-foreground')
+    expect(title.className).not.toContain('text-on-image')
     expect(title.className).toContain('font-bold')
-    const image = screen.getByRole('img', { name: photo.alt ?? '' })
-    // `priority`: next/image preloads it and never lazy-loads it
-    expect(image.getAttribute('loading')).not.toBe('lazy')
-    expect(container.querySelector('[class*="from-scrim"]')).not.toBeNull()
-    // The facts sit under the photo, on the page background, not on the photo (#571)
+    // A themed surface from tokens, and no picture, scrim or photo credit
+    const band = title.closest('[class*="bg-surface"]')
+    expect(band).toBeTruthy()
+    expect(container.querySelector('img')).toBeNull()
+    expect(container.querySelector('[class*="scrim"]')).toBeNull()
+    // The facts sit under the band, on the page background
     const list = screen.getByText('Date').closest('dl')
     expect(list?.className).toContain('text-muted-foreground')
-    const band = container.querySelector('[class*="min-h-[clamp"]')?.parentElement
-    expect(band).toBeTruthy()
     expect(band?.contains(list)).toBe(false)
-    expect(band?.contains(screen.getByRole('heading', { level: 1 }))).toBe(true)
-    expect(screen.getByText('Parks').className).toContain('bg-scrim/60')
-    expect(screen.getByText(/Jane Doe/)).toBeTruthy()
+    expect(band?.contains(screen.getByText('Parks'))).toBe(true)
     await expectAccessible(container)
   })
 
-  it('draws a photo header with no facts or eyebrow', async () => {
+  it('puts the title and the facts on the article column, the grid `DetailLayout` uses (#1013)', () => {
     const { container } = render(
       <main>
-        <PageHeader variant="image" image={photo} title="Park cleanup" />
+        <PageHeader variant="band" title="Park cleanup" facts={facts} />
+      </main>,
+    )
+
+    const titleRow = screen.getByRole('heading', { level: 1 }).parentElement?.parentElement
+    const factsRow = screen.getByText('Date').closest('dl')?.parentElement
+    for (const row of [titleRow, factsRow]) {
+      for (const token of DETAIL_GRID.split(' ')) expect(row?.className).toContain(token)
+      // The article is the grid's second column, beside the rail
+      expect(row?.firstElementChild?.className).toContain('lg:col-start-2')
+    }
+    expect(container.querySelector('[class*="reading-width"]')).toBeNull()
+  })
+
+  it('draws a band with no facts or eyebrow', async () => {
+    const { container } = render(
+      <main>
+        <PageHeader variant="band" title="Park cleanup" />
       </main>,
     )
 
@@ -132,24 +133,21 @@ describe('PageHeader', () => {
     await expectAccessible(container)
   })
 
-  it('shows facts as a plain inline row on a header without a photo', async () => {
+  it('keeps a badge eyebrow in its own look on the default header', async () => {
     const { container } = render(
       <main>
-        <PageHeader eyebrow={<Badge>Parks</Badge>} title="Park cleanup" facts={facts} />
+        <PageHeader eyebrow={<Badge>Parks</Badge>} title="Park cleanup" />
       </main>,
     )
 
-    const list = screen.getByText('Date').closest('dl')
-    expect(list?.className).toContain('text-muted-foreground')
-    expect(screen.getByText('In person').tagName).toBe('DD')
     // A badge eyebrow keeps its own look: no uppercase overline around it
     expect(screen.getByText('Parks').parentElement?.className).not.toContain('uppercase')
     expect(container.querySelector('img')).toBeNull()
     await expectAccessible(container)
   })
 
-  it('takes no description or control on a photo header', () => {
-    // @ts-expect-error The photo header shows title, eyebrow and facts only
-    render(<PageHeader variant="image" image={photo} title="Park cleanup" description="No" />)
+  it('takes no picture, description or control on the band', () => {
+    // @ts-expect-error The band shows title, eyebrow and facts only
+    render(<PageHeader variant="band" title="Park cleanup" description="No" />)
   })
 })

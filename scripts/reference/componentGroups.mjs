@@ -49,6 +49,7 @@ export const COMPONENT_GROUPS = [
       'Caption',
       'Legend',
       'ImageCredit',
+      'FeaturedImage',
     ],
   },
   {

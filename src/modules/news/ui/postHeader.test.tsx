@@ -41,13 +41,17 @@ const post: PostDetail = {
 }
 
 describe('postHeaderProps', () => {
-  it('puts a post on its hero photo with its categories and title (#461)', () => {
-    const props = postHeaderProps(post)
-    expect(props).toMatchObject({ variant: 'image', image: photo, title: 'Road study hearings' })
+  it('heads a post on a plain band with its categories and title, whether or not it has a picture (#461, #1013)', () => {
+    for (const heroImage of [photo, null]) {
+      const props = postHeaderProps({ ...post, heroImage })
+      expect(props).toMatchObject({ variant: 'band', title: 'Road study hearings' })
+      expect(props).not.toHaveProperty('image')
 
-    render(<PageHeader {...props} />)
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Road study hearings')
-    expect(screen.getByText('Transportation').className).toContain('bg-scrim/60')
+      const { container } = render(<PageHeader {...props} />)
+      expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Road study hearings')
+      expect(container.querySelector('img')).toBeNull()
+      cleanup()
+    }
   })
 
   it('leaves the author, date and source out of the header: the page puts them above the text (#774)', () => {
@@ -59,11 +63,9 @@ describe('postHeaderProps', () => {
     }
   })
 
-  it('heads a post without a photo plainly, never white text on the page', () => {
-    const props = postHeaderProps({ ...post, heroImage: null, authors: [] })
-    expect(props.variant).toBeUndefined()
+  it('sets the title and the category in the page’s own colors, never white text on the page', () => {
+    render(<PageHeader {...postHeaderProps({ ...post, authors: [] })} />)
 
-    render(<PageHeader {...props} />)
     expect(screen.getByRole('heading', { level: 1 }).className).toContain('text-foreground')
     expect(screen.getByText('Transportation').className).toContain('text-primary-strong')
   })

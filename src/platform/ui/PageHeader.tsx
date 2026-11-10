@@ -3,12 +3,9 @@ import { ArrowLeft } from 'lucide-react'
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
-import type { ImageRef } from '@/platform/lib/content'
 
-import { ImageCredit } from './ImageCredit'
-import { READING_GRID, READING_WIDTH } from './layoutSizes'
+import { DETAIL_GRID, READING_WIDTH } from './layoutSizes'
 import { Link } from './Link'
-import { Media } from './Media'
 import { MetaList, type LabelledMetaItem } from './MetaList'
 import { Text } from './Text'
 
@@ -18,15 +15,13 @@ type HeaderBase = {
   className?: string
 }
 
-/** Heads a list page, or a post or event page without a photo */
+/** Heads a list page */
 type DefaultHeaderProps = HeaderBase & {
   variant?: 'default'
   /** A short label above the title: the section ("News") or a `Badge` */
   eyebrow?: React.ReactNode
   /** One or two sentences on what the page holds */
   description?: React.ReactNode
-  /** Facts about the page's item, label and value: "Date", "Time" */
-  facts?: LabelledMetaItem[]
   /** A way back, for a page inside a list: "Back to all events" */
   backLink?: { href: string; label: string }
   /** A control that belongs to the header, such as the search box */
@@ -38,17 +33,17 @@ type CompactHeaderProps = HeaderBase & {
   variant: 'compact'
   description?: React.ReactNode
   eyebrow?: never
-  facts?: never
   backLink?: never
   children?: never
 }
 
-/** Heads a post or event page with a photo: the title on a short photo band, the facts under it (#571) */
-type ImageHeaderProps = HeaderBase & {
-  variant: 'image'
-  /** The photo behind the title; it loads first, and its credit shows under it */
-  image: ImageRef
-  /** A short label above the title, or `Badge · on-image` items */
+/**
+ * Heads a post or event page: the title on a short plain band, the facts under it (#1013). The
+ * page's picture is not in the band: `FeaturedImage` shows it whole in the article.
+ */
+type BandHeaderProps = HeaderBase & {
+  variant: 'band'
+  /** A short label above the title, or `Badge` items */
   eyebrow?: React.ReactNode
   facts?: LabelledMetaItem[]
   description?: never
@@ -56,7 +51,7 @@ type ImageHeaderProps = HeaderBase & {
   children?: never
 }
 
-export type PageHeaderProps = DefaultHeaderProps | CompactHeaderProps | ImageHeaderProps
+export type PageHeaderProps = DefaultHeaderProps | CompactHeaderProps | BandHeaderProps
 
 // The h1 of each variant. Every one is bold (the photo title was weight 400, docs/ui/evidence.md)
 const titleVariants = cva('font-bold text-balance', {
@@ -64,25 +59,19 @@ const titleVariants = cva('font-bold text-balance', {
     variant: {
       default: 'text-4xl tracking-tight text-foreground md:text-5xl',
       compact: 'text-3xl text-foreground',
-      image: 'text-2xl text-on-image text-shadow-photo sm:text-3xl lg:text-4xl',
+      band: 'text-2xl text-foreground sm:text-3xl lg:text-4xl',
     },
   },
 })
 
-// A text eyebrow is the coloured overline; on a photo it takes the photo's text color
-const eyebrowVariants = cva('', {
-  variants: {
-    variant: { default: 'mb-3', image: 'mb-3 text-on-image' },
-  },
-})
+const EYEBROW_CLASS = 'mb-3'
 
 /*
- * The top of a page (#430, docs/ui/component-set.md). `default` heads a list page, and a post or
- * event without a photo: eyebrow, title, description, facts, an optional way back and control,
- * left-aligned. `compact` is the small header of a form page, inside the page's own column.
- * `image` puts the title on a short photo band behind a `scrim` fade and the facts in a byline row
- * under the photo, as posts and events with a photo show it (#461, #571): the article starts on the
- * first screen.
+ * The top of a page (#430, docs/ui/component-set.md). `default` heads a list page: eyebrow, title,
+ * description, an optional way back and control, left-aligned. `compact` is the small header of a form page, inside the page's own column.
+ * `band` puts the title on a short plain band, a themed surface under the site header, and the facts
+ * in a row under it, as posts and events show it (#461, #571, #1013): the article starts on the
+ * first screen, and the page's picture is shown whole in the article, never cropped behind the title.
  */
 export function PageHeader(props: PageHeaderProps) {
   if (props.variant === 'compact') {
@@ -95,19 +84,18 @@ export function PageHeader(props: PageHeaderProps) {
     )
   }
 
-  if (props.variant === 'image') return <ImageHeader {...props} />
+  if (props.variant === 'band') return <BandHeader {...props} />
 
-  const { eyebrow, title, description, facts, backLink, children, className } = props
+  const { eyebrow, title, description, backLink, children, className } = props
   return (
     <header className={cn('container mb-12 md:mb-16', className)}>
-      <Eyebrow variant="default">{eyebrow}</Eyebrow>
+      <Eyebrow>{eyebrow}</Eyebrow>
       <h1 className={titleVariants({ variant: 'default' })}>{title}</h1>
       {description && (
         <Text variant="lead" className="mt-4 max-w-2xl">
           {description}
         </Text>
       )}
-      {facts && facts.length > 0 && <MetaList variant="inline" items={facts} className="mt-6" />}
       {backLink && (
         <Link
           href={backLink.href}
@@ -123,38 +111,26 @@ export function PageHeader(props: PageHeaderProps) {
   )
 }
 
-function ImageHeader({ image, eyebrow, title, facts, className }: ImageHeaderProps) {
+function BandHeader({ eyebrow, title, facts, className }: BandHeaderProps) {
   return (
     <header className={className}>
-      <div className="relative -mt-[var(--header-height)] flex items-end">
-        <div
-          className={cn(
-            'relative z-10 container pt-[var(--header-height)] pb-6 text-on-image lg:grid',
-            READING_GRID,
-          )}
-        >
-          <div className="lg:col-span-2 lg:col-start-2">
-            <Eyebrow variant="image">{eyebrow}</Eyebrow>
-            <h1 className={titleVariants({ variant: 'image' })}>{title}</h1>
+      {/* The band slides under the sticky site header, so it reads as one block with it */}
+      <div className="-mt-[var(--header-height)] border-b border-border bg-surface">
+        <div className={cn('container pt-[var(--header-height)] pb-6', DETAIL_GRID)}>
+          {/* From `lg` the title is in the article's column, the one `DetailLayout` gives the picture
+              and the text, so they share a left edge (the grid is defined once, in layoutSizes) */}
+          <div className="lg:col-start-2">
+            <Eyebrow>{eyebrow}</Eyebrow>
+            <h1 className={titleVariants({ variant: 'band' })}>{title}</h1>
           </div>
         </div>
-        {/* A band, not a hero: about 42% of the screen, 16rem to 28rem, so the article starts on
-            the first screen. `svh` keeps a phone's address bar from making it jump (#571) */}
-        <div className="min-h-[clamp(16rem,42svh,28rem)] select-none">
-          <Media fill priority imgClassName="-z-10 object-cover" resource={image} />
-          {/* The whole band is darkened, never lighter than 55% at the top, so a title that wraps
-              onto three lines still sits on a scrim. `ON_IMAGE_TITLE_SCRIM_ALPHA` tests that 55%
-              over a white photo (#572) */}
-          <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-scrim/80 via-scrim/65 to-scrim/55" />
-        </div>
       </div>
-      <ImageCredit image={image} className="container mt-2 text-right" />
       {facts && facts.length > 0 && (
-        <div className={cn('container mt-3 lg:grid', READING_GRID)}>
+        <div className={cn('container mt-3', DETAIL_GRID)}>
           <MetaList
             variant="inline"
             items={facts}
-            className="gap-x-6 gap-y-1 text-sm lg:col-span-2 lg:col-start-2"
+            className="gap-x-6 gap-y-1 text-sm lg:col-start-2"
           />
         </div>
       )}
@@ -163,19 +139,12 @@ function ImageHeader({ image, eyebrow, title, facts, className }: ImageHeaderPro
 }
 
 /** Text is the overline; anything else (a row of badges) keeps its own look */
-function Eyebrow({
-  variant,
-  children,
-}: {
-  variant: 'default' | 'image'
-  children: React.ReactNode
-}) {
+function Eyebrow({ children }: { children: React.ReactNode }) {
   if (!children) return null
-  const className = eyebrowVariants({ variant })
-  if (typeof children !== 'string') return <div className={className}>{children}</div>
+  if (typeof children !== 'string') return <div className={EYEBROW_CLASS}>{children}</div>
 
   return (
-    <Text variant="overline" as="div" className={className}>
+    <Text variant="overline" as="div" className={EYEBROW_CLASS}>
       {children}
     </Text>
   )

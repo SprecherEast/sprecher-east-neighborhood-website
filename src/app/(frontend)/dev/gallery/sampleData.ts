@@ -10,7 +10,6 @@ import type { LegendItem, LegendSwatchItem } from '@/platform/ui/Legend'
 import type { IconMetaItem, LabelledMetaItem } from '@/platform/ui/MetaList'
 import type { SelectOption } from '@/platform/ui'
 import samplePhoto from '@/endpoints/seed/image-hero1.webp'
-import whitePhoto from '@/endpoints/seed/image-white-test.webp'
 
 /*
  * Fixed sample props for the component gallery (#466): no database, no network, so a change in a
@@ -95,15 +94,6 @@ export const SAMPLE_IMAGE: ImageRef = {
   // Empty, so the URL gets no cache-busting query: next/image allows bundled files without one
   updatedAt: '',
   createdAt: '',
-}
-
-/** The worst case for text on a photo: pure white (#572) */
-export const SAMPLE_WHITE_IMAGE: ImageRef = {
-  ...SAMPLE_IMAGE,
-  alt: 'A plain white image (a sample for checking text on bright photos)',
-  url: whitePhoto.src,
-  width: whitePhoto.width,
-  height: whitePhoto.height,
 }
 
 export const SAMPLE_PHOTO = samplePhoto

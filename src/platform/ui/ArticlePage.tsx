@@ -1,9 +1,11 @@
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
+import type { ImageRef } from '@/platform/lib/content'
 
 import { Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs'
 import { DetailLayout } from './DetailLayout'
+import { FeaturedImage } from './FeaturedImage'
 import { JsonLd } from './JsonLd'
 import { LivePreviewListener } from './LivePreviewListener.client'
 import { MetaList, type LabelledMetaItem } from './MetaList'
@@ -19,8 +21,11 @@ export type ArticlePageProps = {
   redirects: React.ReactNode
   /** Draft mode: refresh the page when an editor saves in Admin's Live Preview (#363) */
   draft: boolean
-  /** The header has a photo: the text starts clear of it, with a little room under it */
-  hasHeroImage: boolean
+  /**
+   * The article's picture, shown whole at the top of its column (`FeaturedImage`, #1013); never
+   * cropped behind the header. Without one, nothing is drawn.
+   */
+  image?: ImageRef | null
   header: PageHeaderProps
   breadcrumbs: BreadcrumbItem[]
   /**
@@ -52,7 +57,7 @@ export function ArticlePage({
   jsonLd,
   redirects,
   draft,
-  hasHeroImage,
+  image,
   header,
   breadcrumbs,
   byline,
@@ -72,11 +77,12 @@ export function ArticlePage({
 
       <PageHeader {...header} />
 
-      <div className={cn(hasHeroImage && 'pt-8')}>
+      <div className="pt-8">
         <div className="container">
           <Breadcrumbs items={breadcrumbs} />
         </div>
         <DetailLayout toc={toc} aside={aside}>
+          <FeaturedImage image={image} />
           {byline && byline.length > 0 && (
             <MetaList
               variant="inline"

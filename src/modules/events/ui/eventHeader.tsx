@@ -14,7 +14,8 @@ import { OfficialMeetingBadge } from './OfficialMeetingBadge'
 
 /**
  * The top of an event's page as `PageHeader` props (#461): its categories, title, date, time and
- * format, on its photo (`image`), or plain (`default`) when it has none. A cancelled event's
+ * format on a plain band, whether or not it has a picture, which `FeaturedImage` shows in the
+ * article (#1013). A cancelled event's
  * "Cancelled" label leads the eyebrow, and an official meeting's body follows it, as in
  * "City of Madison meeting" (#122).
  */
@@ -23,7 +24,6 @@ export function eventHeaderProps(event: EventDetail): PageHeaderProps {
     cancelled,
     categories,
     date,
-    image,
     locationType,
     officialBody,
     place,
@@ -45,23 +45,22 @@ export function eventHeaderProps(event: EventDetail): PageHeaderProps {
     ...(place.kind === 'venue' ? [] : [{ label: 'Location', value: place.label }]),
     ...(locationType ? [{ label: 'Format', value: formatEventLocationType(locationType) }] : []),
   ]
-  const badge = image ? 'on-image' : 'category'
   const eyebrow =
     cancelled || officialBody || categories.length > 0 ? (
       <BadgeList>
-        {cancelled && <CancelledBadge variant={image ? 'on-image' : 'status'} />}
+        {cancelled && <CancelledBadge variant="status" />}
         {officialBody && (
-          <OfficialMeetingBadge variant={image ? 'on-image' : 'official'}>
+          <OfficialMeetingBadge variant="official">
             {formatOfficialBody(officialBody)} meeting
           </OfficialMeetingBadge>
         )}
         {categories.map((category) => (
-          <Badge key={category.id} variant={badge}>
+          <Badge key={category.id} variant="category">
             {category.title}
           </Badge>
         ))}
       </BadgeList>
     ) : undefined
 
-  return image ? { variant: 'image', image, eyebrow, title, facts } : { eyebrow, title, facts }
+  return { variant: 'band', eyebrow, title, facts }
 }

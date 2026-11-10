@@ -21,7 +21,6 @@ import {
   SidebarPosts,
 } from '@/modules/news/server'
 import { generateMeta } from '@/platform/seo/generateMeta'
-import { cn } from '@/platform/lib/cn'
 
 // A scheduled publish or unpublish runs outside a request, where Next can't refresh the cache, so
 // the page also re-renders every 10 minutes (#141, decision 0011)
@@ -64,13 +63,12 @@ export default async function Post({ params: paramsPromise }: Args) {
 
   return (
     <ArticlePage
-      // Without a photo the header is plain, so it keeps clear of the site header (#461)
-      className={cn('pb-16', post.heroImage ? 'pt-16' : 'pt-32')}
+      className="pt-16 pb-16"
       jsonLd={postJsonLd(post)}
       // Allows redirects for valid pages too
       redirects={<PayloadRedirects disableNotFound url={url} />}
       draft={draft}
-      hasHeroImage={Boolean(post.heroImage)}
+      image={post.heroImage}
       header={postHeaderProps(post)}
       byline={postByline(post)}
       textClassName={textClassName}

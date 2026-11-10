@@ -37,7 +37,7 @@ function HighHero({ body: richText, image, links }: PhotoHeroProps) {
     <div className="relative -mt-[var(--header-height)]">
       {/* The photo stays vivid at the top and darkens at the bottom, where the text is */}
       <div aria-hidden="true" className="absolute inset-0 select-none">
-        {image && <Media fill imgClassName="object-cover" priority resource={image} />}
+        {image && <Media fill atFocalPoint imgClassName="object-cover" priority resource={image} />}
       </div>
 
       {/* The scrim darkens the bottom left, where the text is anchored */}

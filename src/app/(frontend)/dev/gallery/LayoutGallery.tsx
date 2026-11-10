@@ -160,7 +160,6 @@ export function LayoutGallery() {
               jsonLd={{ '@context': 'https://schema.org', '@type': 'Article', headline: 'Sample' }}
               redirects={null}
               draft={false}
-              hasHeroImage={false}
               header={{
                 title: 'A sample article',
                 description: 'The header, then the trail, the text and the sidebar.',
@@ -189,7 +188,6 @@ export function LayoutGallery() {
               jsonLd={{ '@context': 'https://schema.org', '@type': 'Article', headline: 'Sample' }}
               redirects={null}
               draft={false}
-              hasHeroImage={false}
               header={{ title: 'A sample article' }}
               breadcrumbs={[
                 { label: 'Home', href: '/' },
