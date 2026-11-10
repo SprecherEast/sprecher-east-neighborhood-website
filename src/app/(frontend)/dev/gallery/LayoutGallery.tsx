@@ -196,12 +196,12 @@ export function LayoutGallery() {
               ]}
               byline={[
                 { label: 'Author', value: 'Ana and Ben' },
-                { label: 'Date Published', value: 'Nov 6, 2026' },
+                { label: 'Published', value: 'Nov 6, 2026' },
               ]}
               textClassName={READING_COLUMN}
               aside={null}
             >
-              <Text variant="small">The byline ends on the text&apos;s right edge from lg.</Text>
+              <Text variant="small">The metadata bar runs over the top of the text.</Text>
             </ArticlePage>
           </div>
         </GalleryVariant>

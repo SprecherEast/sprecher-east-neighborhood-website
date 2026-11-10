@@ -10,6 +10,7 @@ import { Disclosure } from '@/platform/ui/Disclosure'
 import { EmptyState } from '@/platform/ui/EmptyState'
 import { Link } from '@/platform/ui/Link'
 import { Media } from '@/platform/ui/Media'
+import { MetaBar } from '@/platform/ui/MetaBar'
 import { MetaList } from '@/platform/ui/MetaList'
 import { Text } from '@/platform/ui/Text'
 
@@ -111,6 +112,31 @@ export function DisplayGallery() {
         <GalleryVariant label="on-image">
           <div className="w-full rounded-2xl bg-scrim p-6">
             <MetaList variant="on-image" items={SAMPLE_FACTS} />
+          </div>
+        </GalleryVariant>
+      </GalleryEntry>
+
+      <GalleryEntry
+        name="MetaBar"
+        description="A post's or event's metadata on one thin line, framed by a groove line over it."
+      >
+        <GalleryVariant label="two items" className="block">
+          <div className="w-full max-w-[var(--reading-width)]">
+            <MetaBar items={SAMPLE_FACTS} />
+          </div>
+        </GalleryVariant>
+        <GalleryVariant label="a long value wraps inside its item" className="block">
+          <div className="w-full max-w-[var(--reading-width)]">
+            <MetaBar
+              items={[
+                { label: 'When', value: 'Sat, Nov 7, 2026 · 6:00 PM – 8:00 PM Central Time' },
+                {
+                  label: 'Where',
+                  value:
+                    'The community room at the far end of the long lakeside building on Sprecher Road · In Person',
+                },
+              ]}
+            />
           </div>
         </GalleryVariant>
       </GalleryEntry>

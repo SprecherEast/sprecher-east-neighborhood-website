@@ -45,6 +45,7 @@ export const COMPONENT_GROUPS = [
       'ProgressBar',
       'DateTime',
       'MetaList',
+      'MetaBar',
       'Text',
       'Caption',
       'Legend',

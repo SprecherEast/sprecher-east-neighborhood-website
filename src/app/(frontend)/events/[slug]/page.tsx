@@ -12,6 +12,7 @@ import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
 import { ArticlePage } from '@/platform/ui/ArticlePage'
 import { SidebarCTA } from '@/platform/ui/SidebarCTA'
 import {
+  eventByline,
   eventHeaderProps,
   EventLocation,
   SidebarEvents,
@@ -54,6 +55,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
 
   const upcomingEvents = await findUpcomingEvents({ excludeId: event.id })
   const hasImage = event.image !== null
+  const textClassName = articleColumnClass(event.content)
   return (
     <ArticlePage
       className="pt-16 pb-24"
@@ -62,6 +64,8 @@ export default async function EventPage({ params: paramsPromise }: Args) {
       draft={draft}
       image={event.image}
       header={eventHeaderProps(event)}
+      byline={eventByline(event)}
+      textClassName={textClassName}
       breadcrumbs={[
         { label: 'Home', href: '/' },
         { label: 'Community Events', href: '/events' },
@@ -104,7 +108,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
       {event.content && (
         <RichText
           blocks={richTextBlocks}
-          className={articleColumnClass(event.content)}
+          className={textClassName}
           data={event.content}
           enableGutter={false}
         />

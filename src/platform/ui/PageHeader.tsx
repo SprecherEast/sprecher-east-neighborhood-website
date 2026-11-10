@@ -6,7 +6,6 @@ import { cn } from '@/platform/lib/cn'
 
 import { DETAIL_GRID, READING_WIDTH } from './layoutSizes'
 import { Link } from './Link'
-import { MetaList, type LabelledMetaItem } from './MetaList'
 import { Text } from './Text'
 
 type HeaderBase = {
@@ -38,14 +37,14 @@ type CompactHeaderProps = HeaderBase & {
 }
 
 /**
- * Heads a post or event page: the title on a short plain band, the facts under it (#1013). The
- * page's picture is not in the band: `FeaturedImage` shows it whole in the article.
+ * Heads a post or event page: the title on a short plain band (#1013). The page's picture is not
+ * in the band: `FeaturedImage` shows it whole in the article. Its facts are the `MetaBar` in the
+ * article column (#1002).
  */
 type BandHeaderProps = HeaderBase & {
   variant: 'band'
   /** A short label above the title, or `Badge` items */
   eyebrow?: React.ReactNode
-  facts?: LabelledMetaItem[]
   description?: never
   backLink?: never
   children?: never
@@ -69,8 +68,8 @@ const EYEBROW_CLASS = 'mb-3'
 /*
  * The top of a page (#430, docs/ui/component-set.md). `default` heads a list page: eyebrow, title,
  * description, an optional way back and control, left-aligned. `compact` is the small header of a form page, inside the page's own column.
- * `band` puts the title on a short plain band, a themed surface under the site header, and the facts
- * in a row under it, as posts and events show it (#461, #571, #1013): the article starts on the
+ * `band` puts the title on a short plain band, a themed surface under the site header, as posts and
+ * events show it (#461, #571, #1013): the article starts on the
  * first screen, and the page's picture is shown whole in the article, never cropped behind the title.
  */
 export function PageHeader(props: PageHeaderProps) {
@@ -111,7 +110,7 @@ export function PageHeader(props: PageHeaderProps) {
   )
 }
 
-function BandHeader({ eyebrow, title, facts, className }: BandHeaderProps) {
+function BandHeader({ eyebrow, title, className }: BandHeaderProps) {
   return (
     <header className={className}>
       {/* The band slides under the sticky site header, so it reads as one block with it */}
@@ -125,15 +124,6 @@ function BandHeader({ eyebrow, title, facts, className }: BandHeaderProps) {
           </div>
         </div>
       </div>
-      {facts && facts.length > 0 && (
-        <div className={cn('container mt-3', DETAIL_GRID)}>
-          <MetaList
-            variant="inline"
-            items={facts}
-            className="gap-x-6 gap-y-1 text-sm lg:col-start-2"
-          />
-        </div>
-      )}
     </header>
   )
 }

@@ -122,6 +122,19 @@ Source: `src/platform/ui/MetaList.tsx`
 
 - Modules: `events`, `site`
 - Routes: `/account`, `/dev/gallery`
+
+## `MetaBar`
+
+Source: `src/platform/ui/MetaBar.tsx`
+
+| Prop        | Type                 | Required | Description                                             |
+| ----------- | -------------------- | -------- | ------------------------------------------------------- |
+| `items`     | `LabelledMetaItem[]` | yes      | Author and date for a post, when and where for an event |
+| `className` | `string`             | no       |                                                         |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`
 - Platform: `platform/ui`
 
 ## `Text`

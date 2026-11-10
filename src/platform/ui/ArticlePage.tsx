@@ -1,6 +1,5 @@
 import React from 'react'
 
-import { cn } from '@/platform/lib/cn'
 import type { ImageRef } from '@/platform/lib/content'
 
 import { Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs'
@@ -8,7 +7,8 @@ import { DetailLayout } from './DetailLayout'
 import { FeaturedImage } from './FeaturedImage'
 import { JsonLd } from './JsonLd'
 import { LivePreviewListener } from './LivePreviewListener.client'
-import { MetaList, type LabelledMetaItem } from './MetaList'
+import { MetaBar } from './MetaBar'
+import type { LabelledMetaItem } from './MetaList'
 import { PageHeader, type PageHeaderProps } from './PageHeader'
 
 export type ArticlePageProps = {
@@ -29,14 +29,14 @@ export type ArticlePageProps = {
   header: PageHeaderProps
   breadcrumbs: BreadcrumbItem[]
   /**
-   * Facts about the article (author, date, source), drawn as the first row of the article column,
-   * right-aligned from `lg` so it ends on the text's right edge (#774). Leave it out for a page whose
-   * facts belong in the header (an event's date and place).
+   * Facts about the article (a post's author, date and source; an event's when and where), drawn
+   * as the `MetaBar` at the top right of the article column, under the picture and above the text,
+   * ending on the text's right edge (#774, #1002).
    */
   byline?: LabelledMetaItem[]
   /**
-   * The width class the page gives the article's text (`articleColumnClass`). The byline takes it
-   * too, so a text-only article's byline ends on the text's right edge, not past it (#774).
+   * The width class the page gives the article's text (`articleColumnClass`). The metadata bar takes
+   * it too, so a text-only article's bar ends on the text's right edge, not past it (#774).
    */
   textClassName?: string
   /** The "On this page" menu, when the article has headings to list */
@@ -51,7 +51,7 @@ export type ArticlePageProps = {
 /*
  * A post's or an event's page: the article with its structured data, header, breadcrumbs, and the
  * `DetailLayout` of text and left rail. Written once for both; each page keeps what is its own (the
- * header's facts, the text above the body, the related content).
+ * metadata, the text above the body, the related content).
  */
 export function ArticlePage({
   jsonLd,
@@ -83,13 +83,7 @@ export function ArticlePage({
         </div>
         <DetailLayout toc={toc} aside={aside}>
           <FeaturedImage image={image} />
-          {byline && byline.length > 0 && (
-            <MetaList
-              variant="inline"
-              items={byline}
-              className={cn('mb-6 gap-x-6 gap-y-1 text-sm lg:justify-end', textClassName)}
-            />
-          )}
+          {byline && byline.length > 0 && <MetaBar items={byline} className={textClassName} />}
           {children}
         </DetailLayout>
       </div>

@@ -17,7 +17,6 @@ import {
   SAMPLE_BREADCRUMBS_LONG,
   SAMPLE_BREADCRUMBS_TIGHT,
   SAMPLE_CAPTION_RICH_TEXT,
-  SAMPLE_FACTS,
   SAMPLE_IMAGE,
   SAMPLE_LEGEND_ITEMS,
   SAMPLE_LEGEND_SWATCHES,
@@ -56,7 +55,7 @@ export function HeadersGallery() {
             />
           </div>
         </GalleryVariant>
-        <GalleryVariant label="band, with badges as the eyebrow and facts under it" labelAs="p">
+        <GalleryVariant label="band, with badges as the eyebrow" labelAs="p">
           {/* The band slides under the sticky site header; here it starts in place */}
           <div className={`${FRAME} [--header-height:0px]`}>
             <PageHeader
@@ -68,7 +67,6 @@ export function HeadersGallery() {
                 </BadgeList>
               }
               title="Summer picnic in the park"
-              facts={SAMPLE_FACTS}
               className="pb-2"
             />
           </div>
@@ -83,7 +81,6 @@ export function HeadersGallery() {
                 </BadgeList>
               }
               title="A new way onto I-94 at Milwaukee Street: what it could mean for our streets"
-              facts={SAMPLE_FACTS}
               className="pb-2"
             />
           </div>

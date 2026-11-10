@@ -3,7 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { ImageRef } from '@/platform/lib/content'
-import { MetaList } from '@/platform/ui/MetaList'
+import { MetaBar } from '@/platform/ui/MetaBar'
 import { PageHeader } from '@/platform/ui/PageHeader'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
@@ -11,9 +11,7 @@ import type { PostDetail } from '../domain/types'
 import { postByline, postHeaderProps } from './postHeader'
 
 /** A post's byline as the page draws it: the facts above the article text (#774) */
-const Byline = ({ post }: { post: PostDetail }) => (
-  <MetaList variant="inline" items={postByline(post)} />
-)
+const Byline = ({ post }: { post: PostDetail }) => <MetaBar items={postByline(post)} />
 
 afterEach(cleanup)
 
@@ -59,7 +57,7 @@ describe('postHeaderProps', () => {
       cleanup()
       render(<PageHeader {...postHeaderProps({ ...post, heroImage })} />)
       expect(screen.queryByText('Author')).toBeNull()
-      expect(screen.queryByText('Date Published')).toBeNull()
+      expect(screen.queryByText('Published')).toBeNull()
     }
   })
 
@@ -75,12 +73,10 @@ describe('postHeaderProps', () => {
       render(<Byline post={post} />)
 
       expect(screen.getByText('Author').nextElementSibling?.textContent).toBe('Ana and Ben')
-      expect(
-        screen.getByText('Date Published').nextElementSibling?.querySelector('time'),
-      ).not.toBeNull()
+      expect(screen.getByText('Published').nextElementSibling?.querySelector('time')).not.toBeNull()
       expect(screen.getAllByRole('term').map((term) => term.textContent)).toEqual([
         'Author',
-        'Date Published',
+        'Published',
       ])
     })
 
@@ -88,7 +84,7 @@ describe('postHeaderProps', () => {
       render(<Byline post={{ ...post, authors: [] }} />)
 
       expect(screen.queryByText('Author')).toBeNull()
-      expect(screen.getByText('Date Published')).toBeDefined()
+      expect(screen.getByText('Published')).toBeDefined()
     })
 
     it('is empty for a post with no author, date or source', () => {
@@ -113,7 +109,7 @@ describe('postHeaderProps', () => {
       expect(link.className).not.toContain('text-on-image')
       expect(sourceFact()?.contains(link)).toBe(true)
       // The date stays next to it
-      expect(screen.getByText('Date Published')).toBeDefined()
+      expect(screen.getByText('Published')).toBeDefined()
       await expectAccessible(container)
     })
 

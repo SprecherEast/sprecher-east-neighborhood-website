@@ -24,15 +24,15 @@ function SourceValue({ source }: { source: PostSource }) {
       {source.name.slice(0, split)}
       <span className="whitespace-nowrap">
         {source.name.slice(split)}
-        <ExternalLink aria-hidden="true" className="ml-1 inline align-[-0.125em]" />
+        <ExternalLink aria-hidden="true" className="-my-1 ml-1 inline align-[-0.125em]" />
       </span>
     </Link>
   )
 }
 
 /**
- * A post's author, date and source (#774): the facts the page puts as the first row of the article
- * column, right-aligned from `lg`, so they sit on the text's right edge and not in the header.
+ * A post's author, date and source (#774): the facts the page draws as its `MetaBar` (#1002), at
+ * the top right of the article column, so they sit on the text's right edge and not in the header.
  */
 export function postByline(post: PostDetail): LabelledMetaItem[] {
   const { publishedAt, source } = post
@@ -40,7 +40,7 @@ export function postByline(post: PostDetail): LabelledMetaItem[] {
   return [
     ...(authors ? [{ label: 'Author', value: authors }] : []),
     ...(publishedAt
-      ? [{ label: 'Date Published', value: <DateTime value={publishedAt} format="long" /> }]
+      ? [{ label: 'Published', value: <DateTime value={publishedAt} format="long" /> }]
       : []),
     ...(source ? [{ label: 'Source', value: <SourceValue source={source} /> }] : []),
   ]

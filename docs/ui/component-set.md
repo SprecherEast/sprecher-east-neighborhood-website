@@ -83,6 +83,21 @@ the [media page](../reference/components/media.md).
 
 **`FeaturedImage`** (#1013) is the picture of a post or an event, at the top of the article's column: the whole picture at its own proportions, never cropped, up to the reading width from the column's left edge, loading early (it is the first image seen), with its credit under it. With no picture it draws nothing and leaves no gap. `ArticlePage` draws it, and the page header above it is the plain `PageHeader` `band` (a themed surface, no picture), so a picture that carries text stays readable at every width. Its test checks the proportions, the reading width, the early load, the empty case and axe; the gallery shows both cases.
 
+**`MetaBar`** (#1002) is the metadata of a post or an event, the industry's byline or meta bar: one thin
+line of small text (about 12px values, 10px uppercase muted labels) at the top right of the article's
+column, under the picture and above the text, with a hairline between items. A post shows author,
+published and, when it has one, the source; an event shows when (date and time) and where (the place,
+with its format). It has no box: a groove line (two hairlines, a dark one and the theme's accent) runs
+across the column at the text's mid-height, rises just before it, passes over it and comes back
+down, then continues about 1.5rem to the column's right edge, with square corners. It is drawn by
+two decorative spans and one pseudo-element sized to the metadata's own box (pure CSS, no measuring,
+no inline SVG), all hidden from assistive technology; the metadata is a description list of real
+text. Below `sm` the items stack, right-aligned, one per line, and the line runs over them; from
+`sm` they sit in one row. A long value wraps inside its item. `ArticlePage` draws it from its
+`byline` items and gives it the text's width, with clear space (2.5rem) under it. Its test checks the
+labels, the hidden line, the missing box, the stacking and wrapping classes and axe; the gallery shows
+two items and a long value.
+
 **`Figure`** (#816) is a small picture that floats right in an article, about two fifths of the text
 column by default (`size`: `third`, `two-fifths` or `half`), with the text wrapping on its left from
 `md` up; below `md` it fills the column between paragraphs. Its label ("Figure 2-9") sits in a
