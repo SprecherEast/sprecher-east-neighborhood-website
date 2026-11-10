@@ -80,3 +80,14 @@ jobs:
             }
             await github.rest.issues.addLabels({ ...context.repo, issue_number: issue.number, labels: [...add] });
             core.info(`Labels applied: ${[...add].join(', ')}${remove.length ? `; removed: ${remove.join(', ')}` : ''}`);
+
+  # Checks the issue once the labels above are on it (#969): warns with one comment and the
+  # `needs grooming` label. Issue Policy also starts by itself when a person changes a label or
+  # the milestone.
+  groom:
+    name: Check the issue
+    needs: label
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/issue-policy.yml

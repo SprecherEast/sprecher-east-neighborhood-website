@@ -107,6 +107,28 @@ there ([`stacked-prs`](../../.agents/skills/stacked-prs/SKILL.md#when-to-stack))
 the default-branch checks for every pull request in the stack, and a mention still reaches the
 issue's timeline, so each layer passes on its own with its own `Closes #N`.
 
+## The issue check
+
+When an issue is filed or changed, the `Issue Policy` workflow (`.github/workflows/issue-policy.yml`,
+rules in `.github/scripts/issue-policy.mjs`,
+[#969](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/969)) checks it
+against the Definition of Ready below. GitHub cannot stop an issue being filed, so it only warns:
+one comment, kept up to date in place and never repeated, lists each failed rule with its ID and a
+one-line fix, and the issue gets the `needs grooming` label. When everything passes, the label
+goes and the comment says so. An issue with the label is not Ready, and the pull request gate
+fails a pull request whose issue is not groomed. Pull requests, closed issues and issues filed by a
+bot are not checked.
+
+| ID                | The rule                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| `ISSUE-TYPE`      | Exactly one type label.                                                                |
+| `ISSUE-AREA`      | At least one area label.                                                               |
+| `ISSUE-PRIORITY`  | One priority label.                                                                    |
+| `ISSUE-SUMMARY`   | A plain-language summary section (the forms call it Problem).                          |
+| `ISSUE-CRITERIA`  | Acceptance criteria with at least one checkbox.                                        |
+| `ISSUE-FILES`     | "Files likely touched" and "Must not touch" filled in, or `None`.                      |
+| `ISSUE-MILESTONE` | A milestone (Backlog until planned). An epic is optional, so there is no parent check. |
+
 ## Sprints
 
 - **One week**, Monday to Sunday, starting 2026-10-26. A sprint is the board's **Sprint** field.
@@ -224,6 +246,7 @@ An issue is **Ready** when it has:
   ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §1)
 - no open blocker: nothing it's **blocked by** is still open
 - no `needs owner` label: that work waits for the owner, not for a sprint
+- no `needs grooming` label: [the issue check](#the-issue-check) found nothing missing
 
 The criteria for each board move, including Ready, are spelled out in the
 [grooming playbook](grooming-playbook.md#board-moves-entry-and-exit-criteria).
