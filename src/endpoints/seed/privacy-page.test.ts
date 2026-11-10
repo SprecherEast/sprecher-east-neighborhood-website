@@ -45,6 +45,15 @@ describe('Privacy page seed (#950)', () => {
     expect(words).not.toContain('keep the counts')
   })
 
+  it('says which clicks are counted, that it is a likely-human guess, and what is kept (#975)', () => {
+    expect(words).toContain('likely')
+    expect(words).toMatch(/not certain/)
+    expect(words).toMatch(/button/)
+    expect(words).toMatch(/leaves/)
+    expect(words).toMatch(/once per visit/)
+    expect(words).toMatch(/not the full address/)
+  })
+
   it('keeps every sentence to 25 words or fewer', () => {
     for (const sentence of words.split(/(?<=[.!])\s+/)) {
       expect(sentence.trim().split(/\s+/).length).toBeLessThanOrEqual(25)

@@ -108,3 +108,19 @@ until someone deletes it; the Privacy page says so. A malformed ID stops the dep
 of `stats.<domain>`, so `/script.js` and `/api/send` are public, as is the login page; the site has
 no Content-Security-Policy that would block either. After adding or changing the ID, redeploy
 (Actions → Deploy to VPS → Run workflow).
+
+## Likely-human clicks (#975)
+
+Page views include robots, so the site also sends one custom event, `likely-human-click`, that
+says "a person likely used this". It is a guess, always called **likely human, not certain**: in
+Umami it is under Events. One global listener (`src/platform/analytics/likelyHumanClicks.ts`,
+mounted next to the script in the public layout) counts a click the browser made for a person
+(`isTrusted`) on a button or on a link to another web site, once per button or link per visit. It
+sends nothing for same-site links, `mailto:` or `tel:` links, disabled buttons, script-made
+clicks, automated browsers (`navigator.webdriver` or a headless user agent) or a browser with Do
+Not Track on, the same rule the tracker follows. Umami's own filter for known robots still applies;
+there is no robot list of ours. The visit's memory is a set in the page, so there is no cookie,
+storage or identifier. The event's data is `kind` (`button` or `outbound-link`) and `target` (the
+button's label, cut to 60 characters, or the other site's host, never a path or query). Nothing on
+the server changes, and no deploy step is involved. The Privacy page seed says so; the live page
+is edited in the CMS.
