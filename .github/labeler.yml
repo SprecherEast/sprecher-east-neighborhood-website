@@ -1,3 +1,7 @@
+# Area labels and markers only, from the changed paths. Never add a type label here: a pull
+# request has exactly one type (.github/label-policy.json), set by the author from the issue, and
+# scripts/labeler-config.test.mjs fails if a rule here is named after one.
+
 frontend:
   - changed-files:
       - any-glob-to-any-file:
@@ -17,10 +21,6 @@ auth:
   - changed-files:
       - any-glob-to-any-file: ['src/modules/accounts/**', 'src/modules/verification/**']
 
-documentation:
-  - changed-files:
-      - any-glob-to-any-file: ['docs/**', '*.md', 'CLAUDE.md', '.claude/**', '.agents/**']
-
 ci:
   - changed-files:
       - any-glob-to-any-file: ['.github/**']
@@ -38,25 +38,6 @@ config:
   - changed-files:
       - any-glob-to-any-file:
           ['*.config.*', '.prettierrc', '.eslintrc*', 'eslint.config.*', 'tsconfig.json']
-
-process:
-  - changed-files:
-      - any-glob-to-any-file:
-          [
-            'AGENTS.md',
-            'CONTRIBUTING.md',
-            'CLAUDE.md',
-            '.agents/**',
-            '.claude/**',
-            'docs/guidelines/**',
-            'docs/roles/**',
-            'docs/process/**',
-            '.github/ISSUE_TEMPLATE/**',
-            '.github/pull_request_template.md',
-            '.github/workflows/pr-policy.yml',
-            '.github/workflows/issue-labels.yml',
-            '.github/workflows/issue-fix-summary.yml',
-          ]
 
 # A "watch out" marker (#447): the change reaches every page that uses this code
 shared-component:

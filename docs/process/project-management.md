@@ -47,6 +47,10 @@ The allowed labels are in [`.github/label-policy.json`](../../.github/label-poli
 - **Required on every issue:** exactly one type, at least one area, and one priority. The
   `PR Policy` check enforces this for the issue a pull request closes
   ([the gate](issue-and-pr-checks.md#the-pull-request-gate)).
+- **The labeler adds areas and markers only.** On a pull request it sets area labels and the
+  `shared-component` marker from the changed paths (`.github/labeler.yml`), never a type: the
+  author gives the pull request the one type of the issue it closes, and a test fails if a
+  labeler rule is named after a type.
 - **Markers** (optional, with a fixed meaning):
   - `epic`: a parent issue whose sub-issues are the work.
   - `needs grooming`: set by [the issue check](issue-and-pr-checks.md#the-issue-check) while an issue misses something
