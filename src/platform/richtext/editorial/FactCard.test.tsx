@@ -67,7 +67,7 @@ describe('FactCard', () => {
     expect(icon?.compareDocumentPosition(label as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   })
 
-  it('as a tab face on a phone: keeps the icon, label and value, and reads only the certainty to screen readers (#704, #856)', () => {
+  it('as a tab face: keeps the icon, label and value, and reads only the certainty to screen readers, the open panel showing it once (#704, #856, #980)', () => {
     const { container } = render(<FactCard fact={FACT} variant="tab" />)
     const hidden = (text: string) => {
       const part = [...container.querySelectorAll('span')].find(
@@ -75,9 +75,8 @@ describe('FactCard', () => {
       )
       return part?.className ?? ''
     }
-    expect(container.querySelector('[data-fact-part="foot"]')?.className).toContain(
-      'max-sm:sr-only',
-    )
+    expect(container.querySelector('[data-fact-part="foot"]')?.className).toContain('sr-only')
+    expect(container.querySelector('[data-fact-part="foot"]')?.className).not.toContain('max-sm')
     expect(hidden('Day-to-day money')).not.toContain('sr-only')
     expect(hidden('$477.5M')).not.toContain('sr-only')
     expect(container.querySelector('svg')?.getAttribute('class')).not.toContain('sr-only')

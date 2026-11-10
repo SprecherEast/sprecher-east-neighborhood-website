@@ -10,12 +10,14 @@ The one chart (#639): the only component the app uses to draw one. A figure with
 
 Source: `src/platform/ui/chart/Chart.tsx`
 
-| Prop        | Type                                                                                                                                                                 | Required | Description                                                                                               |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------- |
-| `spec`      | `{ kind: "bar"; orientation: "horizontal" \| "vertical"; data: { key: string; label: string; value: number; pattern?: "hatch" \| undefined; }[]; title: string; su…` | yes      |                                                                                                           |
-| `adapter`   | `ChartAdapter`                                                                                                                                                       | no       | Draws with this adapter instead of the registry's choice: for the gallery and the contract tests          |
-| `zoom`      | `boolean`                                                                                                                                                            | no       | Shows a thumbnail a reader can enlarge (#681). On by default; an editor turns it off for one chart (#686) |
-| `className` | `string`                                                                                                                                                             | no       |                                                                                                           |
+| Prop        | Type                                                                                                                                                                 | Required | Description                                                                                                                                                                 |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spec`      | `{ kind: "bar"; orientation: "horizontal" \| "vertical"; data: { key: string; label: string; value: number; pattern?: "hatch" \| undefined; }[]; title: string; su…` | yes      |                                                                                                                                                                             |
+| `adapter`   | `ChartAdapter`                                                                                                                                                       | no       | Draws with this adapter instead of the registry's choice: for the gallery and the contract tests                                                                            |
+| `zoom`      | `boolean`                                                                                                                                                            | no       | Shows a thumbnail a reader can enlarge (#681). On by default; an editor turns it off for one chart (#686)                                                                   |
+| `numbers`   | `"disclosure" \| "screen-reader"`                                                                                                                                    | no       | Where the numbers table goes: under a closed "Show the numbers" box (default), or kept for screen readers only, for a chart whose drawing already prints every value (#980) |
+| `heading`   | `"screen-reader" \| "visible"`                                                                                                                                       | no       | Whether the title and takeaway show: kept for screen readers only when the heading above the chart already says it, so two headings never sit one after another (#980)      |
+| `className` | `string`                                                                                                                                                             | no       |                                                                                                                                                                             |
 
 **Used by** (direct imports):
 
@@ -28,9 +30,10 @@ The numbers behind a chart as a real table (#639): a caption, column headers and
 
 Source: `src/platform/ui/chart/ChartDataTable.tsx`
 
-| Prop    | Type         | Required | Description |
-| ------- | ------------ | -------- | ----------- |
-| `table` | `ChartTable` | yes      |             |
+| Prop        | Type         | Required | Description                                                                                          |
+| ----------- | ------------ | -------- | ---------------------------------------------------------------------------------------------------- |
+| `table`     | `ChartTable` | yes      |                                                                                                      |
+| `focusable` | `boolean`    | no       | Off when the table is read by screen readers only: nothing invisible takes the keyboard focus (#980) |
 
 **Used by** (direct imports):
 

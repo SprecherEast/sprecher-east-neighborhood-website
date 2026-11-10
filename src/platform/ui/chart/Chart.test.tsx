@@ -63,6 +63,47 @@ describe('Chart', () => {
     expect(within(details).getByRole('table', { hidden: true })).toBeTruthy()
   })
 
+  it('can leave the "Show the numbers" box out and keep the same table for screen readers only (#980)', () => {
+    const { container } = render(<Chart spec={FIXTURES.paysFor} numbers="screen-reader" />)
+    expect(container.querySelector('details')).toBeNull()
+    expect(screen.queryByText('Show the numbers')).toBeNull()
+    const table = within(container).getByRole('table', { hidden: true })
+    expect(table.closest('.sr-only')).toBeTruthy()
+    // Nothing invisible can take the keyboard focus
+    expect(container.querySelector('.sr-only [tabindex]')).toBeNull()
+  })
+
+  it('keeps the closed box by default, so a chart outside a fact tab is unchanged (#980)', () => {
+    const { container } = render(<Chart spec={FIXTURES.paysFor} />)
+    expect(container.querySelectorAll('details')).toHaveLength(1)
+    expect(container.querySelector('.sr-only table')).toBeNull()
+  })
+
+  it('can leave the title and takeaway to screen readers, when the heading above already says it (#980)', () => {
+    const { container } = render(<Chart spec={FIXTURES.paysFor} heading="screen-reader" />)
+    const title = screen.getByText(FIXTURES.paysFor.title)
+    expect(title.closest('.sr-only')).toBeTruthy()
+    // The figure keeps its name for assistive technology
+    expect(
+      container.querySelector('figure svg, figure [role="img"]')?.getAttribute('aria-labelledby'),
+    ).toBeTruthy()
+  })
+
+  it('draws no empty caption, so a chart with nothing to add has no gap under it (#980)', () => {
+    const { container } = render(
+      <Chart
+        spec={{
+          ...FIXTURES.borrowed,
+          finePrint: undefined,
+          asOf: undefined,
+          sources: [],
+          certainty: undefined,
+        }}
+      />,
+    )
+    expect(container.querySelector('figcaption')).toBeNull()
+  })
+
   it('shares one key between two grids of the same parts, with each grid’s squares', () => {
     render(<Chart spec={FIXTURES.paysFor} />)
     const key = screen.getByRole('list', { name: 'Chart key' })

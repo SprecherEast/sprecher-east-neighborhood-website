@@ -50,4 +50,12 @@ must say which adapter draws it.
 
 ## Links
 
-#639, #592, #645, #659 (colours), #662 (swatch legend), #663 (visx bars)
+#639, #592, #645, #659 (colours), #662 (swatch legend), #663 (visx bars), #980 (amendment below)
+
+## Amendment (#980)
+
+A chart can keep its numbers table for screen readers only (`numbers="screen-reader"`), with no
+"Show the numbers" box, where the drawing already prints every value and the tab would otherwise
+show the box once per chart. The table stays in the page, visually hidden and out of the tab
+order, so the text alternative is not lost. Fact tabs use it; a chart anywhere else keeps the
+closed box, which stays the default.

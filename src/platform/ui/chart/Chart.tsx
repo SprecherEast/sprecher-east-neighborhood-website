@@ -33,6 +33,16 @@ export type ChartProps = {
   adapter?: ChartAdapter
   /** Shows a thumbnail a reader can enlarge (#681). On by default; an editor turns it off for one chart (#686) */
   zoom?: boolean
+  /**
+   * Where the numbers table goes: under a closed "Show the numbers" box (default), or kept for screen
+   * readers only, for a chart whose drawing already prints every value (#980)
+   */
+  numbers?: 'disclosure' | 'screen-reader'
+  /**
+   * Whether the title and takeaway show: kept for screen readers only when the heading above the
+   * chart already says it, so two headings never sit one after another (#980)
+   */
+  heading?: 'visible' | 'screen-reader'
   className?: string
 }
 
@@ -43,7 +53,14 @@ export type ChartProps = {
  * table that starts closed. The spec is checked first, so a chart that does not add up is an
  * error and never a wrong picture.
  */
-export function Chart({ spec: input, adapter: chosen, zoom = true, className }: ChartProps) {
+export function Chart({
+  spec: input,
+  adapter: chosen,
+  zoom = true,
+  numbers = 'disclosure',
+  heading = 'visible',
+  className,
+}: ChartProps) {
   const spec = parseChartSpec(input)
   const id = useId()
   const titleId = `${id}-title`
@@ -63,6 +80,7 @@ export function Chart({ spec: input, adapter: chosen, zoom = true, className }: 
         <div
           className={cn(
             'space-y-1',
+            heading === 'screen-reader' && 'sr-only',
             thumbnail && '@2xl/chart:col-start-2 @2xl/chart:row-start-1',
             enlargeable && 'scripted:@2xl/chart:pr-36',
           )}
@@ -102,17 +120,37 @@ export function Chart({ spec: input, adapter: chosen, zoom = true, className }: 
             ))}
           </div>
         )}
-        <ChartCaption
-          spec={spec}
-          className={cn(thumbnail && 'mt-4 @2xl/chart:col-start-2 @2xl/chart:row-start-3')}
-        />
+        {hasCaption(spec) && (
+          <ChartCaption
+            spec={spec}
+            className={cn(thumbnail && 'mt-4 @2xl/chart:col-start-2 @2xl/chart:row-start-3')}
+          />
+        )}
       </figure>
-      <Disclosure variant="card" summary="Show the numbers">
-        <ChartDataTable table={toChartTable(spec)} />
-      </Disclosure>
+      {numbers === 'screen-reader' ? (
+        <div className="sr-only">
+          <ChartDataTable table={toChartTable(spec)} focusable={false} />
+        </div>
+      ) : (
+        <Disclosure variant="card" summary="Show the numbers">
+          <ChartDataTable table={toChartTable(spec)} />
+        </Disclosure>
+      )}
     </div>
   )
   return enlargeable ? <ChartZoom title={spec.title}>{body}</ChartZoom> : body
+}
+
+/** Whether there is anything to put under the drawing: an empty caption would only leave a gap */
+function hasCaption(spec: ChartSpec) {
+  return Boolean(
+    toScaleNote(spec) ||
+    (spec.kind === 'units' && spec.unitNote) ||
+    spec.finePrint ||
+    spec.asOf ||
+    spec.sources?.length ||
+    spec.certainty,
+  )
 }
 
 /** What a unit means, when the figures are from, where they came from and how sure we are */

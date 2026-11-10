@@ -69,19 +69,59 @@ describe('FactTabs', () => {
     expect(tab?.className).toMatch(/focus-visible:outline-2/)
   })
 
-  it('shows each panel’s heading, definition, source and pictures', () => {
+  it('shows each panel’s heading, definition and pictures, with the source as a link inside the definition (#980)', () => {
     setup()
     const panels = screen.getAllByRole('tabpanel', { hidden: true })
     expect(panels).toHaveLength(4)
     const first = present(panels[0])
     expect(within(first).getByText(/\$24\.8 million more than in 2026/)).toBeTruthy()
-    const source = within(first).getAllByText(/^Source:/)[0]
-    expect(
-      within(present(source)).getByRole('link', { name: /Executive Operating Budget/ }),
-    ).toBeTruthy()
+    expect(within(first).queryByText(/^Source:/)).toBeNull()
+    // The charts' own captions name the same source, so find the link that sits in the sentence
+    const link = within(first)
+      .getAllByRole('link', { name: /Executive Operating Budget/ })
+      .find((a) => a.closest('p')?.textContent?.includes('$24.8 million more than in 2026'))
+    expect(link).toBeTruthy()
+    expect(link?.className).toContain('font-semibold')
     expect(within(first).getAllByRole('figure').length).toBeGreaterThanOrEqual(2)
     expect(within(present(panels[3])).getByRole('list')).toBeTruthy()
     expect(within(present(panels[3])).getByText('The Council votes on the budget')).toBeTruthy()
+  })
+
+  it('shows the first picture, then the definition, then the other pictures, so a neighbor sees a chart first and the breakdown after the words (#980)', () => {
+    setup()
+    const [panel] = screen.getAllByRole('tabpanel', { hidden: true })
+    const figures = [...present(panel).querySelectorAll('figure')]
+    const definition = within(present(panel)).getByText(/\$24\.8 million more than in 2026/)
+    const follows = (a?: Element, b?: Element) =>
+      a?.compareDocumentPosition(b as Node) === Node.DOCUMENT_POSITION_FOLLOWING
+    expect(follows(figures[0], definition)).toBe(true)
+    expect(follows(definition, figures[1])).toBe(true)
+  })
+
+  it('leaves the first chart’s title to screen readers, since the tab heading is its title, and keeps the next chart’s (#980)', () => {
+    setup()
+    const [panel] = screen.getAllByRole('tabpanel', { hidden: true })
+    const titles = [...present(panel).querySelectorAll('figure [id$="-title"]')]
+    expect(titles[0].closest('.sr-only')).toBeTruthy()
+    expect(titles[1].closest('.sr-only')).toBeNull()
+  })
+
+  it('shows no "Show the numbers" box in a tab, and keeps each chart’s table for screen readers (#980)', () => {
+    const { container } = setup()
+    expect(screen.queryByText('Show the numbers')).toBeNull()
+    expect(container.querySelectorAll('details summary')).not.toContainEqual(
+      expect.objectContaining({ textContent: 'Show the numbers' }),
+    )
+    expect(container.querySelectorAll('.sr-only table').length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('falls back to a "Source:" line when the definition never says the link text, so a source is never lost (#980)', () => {
+    const [first] = props.tabs
+    setup({
+      tabs: [{ ...present(first), definition: 'Pays for services.' }, present(props.tabs[3])],
+    })
+    const panels = screen.getAllByRole('tabpanel', { hidden: true })
+    expect(within(present(panels[0])).getByText(/^Source:/)).toBeTruthy()
   })
 
   it('shows the editor’s heading with scripting on, where Tabs hides its own: one heading each way, never two', () => {
@@ -90,7 +130,7 @@ describe('FactTabs', () => {
     for (const panel of panels) {
       const own = [...panel.children].filter((child) => child.tagName === 'H3')
       expect(own.map((h) => h.textContent)).toHaveLength(1)
-      const scripted = panel.querySelector(':scope > div > h3')
+      const scripted = panel.querySelector(':scope > div > div > h3')
       expect(scripted?.textContent).toBe(own[0]?.textContent)
       // Tabs' heading is for scripting off, this one for scripting on (the media query shows one)
       expect(own[0]?.className).toContain('scripted:hidden')
@@ -134,11 +174,12 @@ describe('FactTabs', () => {
     expect(list.className).not.toContain('grid-cols-2')
   })
 
-  it('shows how sure we are in the open panel on a phone, where the tab shows only its icon and figure (#704)', () => {
+  it('shows how sure we are once, in the open panel beside its heading, since the tab leaves it to screen readers (#704, #980)', () => {
     const { container } = setup()
     const [panel] = [...container.querySelectorAll('[role="tabpanel"]')]
     const sure = panel?.querySelector('[data-panel-certainty]')
-    expect(sure?.className).toContain('sm:hidden')
+    expect(sure?.className ?? '').not.toContain('hidden')
+    expect(sure?.previousElementSibling?.tagName).toBe('H3')
     expect(sure?.textContent).toContain('Confirmed')
     // The tab already says it to a screen reader
     expect(sure?.getAttribute('aria-hidden')).toBe('true')
