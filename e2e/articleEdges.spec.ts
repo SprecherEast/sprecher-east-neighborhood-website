@@ -197,13 +197,20 @@ test.describe('the groove accent hairline is exactly the accent colour', () => {
         .removeAlpha()
         .raw()
         .toBuffer({ resolveWithObject: true })
-      const rows = [0, 1, 2].map((row) =>
-        Array.from(data.subarray(row * info.width * 3, row * info.width * 3 + 3)),
-      )
+      // Every device pixel row of the clip (a phone screen has several per CSS pixel), as the
+      // colour it has across the whole clip, or "mixed" when it varies
+      const rows = Array.from({ length: info.height }, (_, y) => {
+        const colours = new Set<string>()
+        for (let x = 0; x < info.width; x += 1) {
+          const at = (y * info.width + x) * 3
+          colours.add(Array.from(data.subarray(at, at + 3)).join(','))
+        }
+        return colours.size === 1 ? [...colours][0] : 'mixed'
+      })
       expect(
-        rows.some((row) => row.every((value, index) => value === resolved[index])),
-        `${theme}: one pixel row is exactly ${probe.accent}, found ${JSON.stringify(rows)}`,
-      ).toBe(true)
+        rows,
+        `${theme}: a pixel row is exactly ${resolved.join(',')} along the whole line`,
+      ).toContain(resolved.join(','))
     })
   }
 })
