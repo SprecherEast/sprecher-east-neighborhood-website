@@ -53,12 +53,12 @@ Source: `src/platform/ui/EmptyState.tsx`
 
 Source: `src/platform/ui/SidebarCTA.tsx`
 
-| Prop          | Type     | Required | Description |
-| ------------- | -------- | -------- | ----------- |
-| `heading`     | `string` | yes      |             |
-| `description` | `string` | yes      |             |
-| `buttonLabel` | `string` | yes      |             |
-| `buttonHref`  | `string` | yes      |             |
+| Prop          | Type     | Required | Description                                         |
+| ------------- | -------- | -------- | --------------------------------------------------- |
+| `heading`     | `string` | yes      |                                                     |
+| `description` | `string` | no       | Left out when the heading and button already say it |
+| `buttonLabel` | `string` | yes      |                                                     |
+| `buttonHref`  | `string` | yes      |                                                     |
 
 **Used by** (direct imports):
 

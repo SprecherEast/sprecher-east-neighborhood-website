@@ -8,7 +8,7 @@
  */
 import { e2eDecision, listAll, pullFiles } from '../.github/scripts/e2e-gate.mjs'
 
-const repo = process.argv[2] ?? 'boulaajaj/sprecher-east-neighborhood-website'
+const repo = process.argv[2] ?? 'SprecherEast/sprecher-east-neighborhood-website'
 const count = Number(process.argv[3] ?? 40)
 
 const closed = listAll(`repos/${repo}/pulls?state=closed&sort=updated&direction=desc`, {

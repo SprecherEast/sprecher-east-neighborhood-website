@@ -50,8 +50,7 @@ export default async function FAQPage() {
 
 export function generateMetadata(): Metadata {
   const title = 'FAQ'
-  const description =
-    'Frequently asked questions about the Sprecher East Neighborhood Association in Madison, WI.'
+  const description = 'Common questions about this unofficial Sprecher East site.'
 
   return {
     title,

@@ -11,6 +11,6 @@ export function organizationJsonLd(): WithContext<Record<string, unknown>> {
     name: 'Sprecher East',
     url: siteUrl,
     description:
-      "Grassroots neighborhood association on Madison's Far East Side — connecting residents of Meadowlands, Door Creek, and Reston Heights.",
+      "An unofficial site for Sprecher East on Madison's Far East Side: Meadowlands, Door Creek and Reston Heights.",
   }
 }

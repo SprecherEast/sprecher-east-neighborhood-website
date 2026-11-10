@@ -23,16 +23,16 @@ export const post2: (args: PostArgs) => RequiredDataFromCollectionSlug<'posts'> 
         'A virtual hearing took place July 29, 2024 via YouTube Live. An in-person hearing was held July 30, 2024 at Madison College Truax Building, 1701 Wright Street, Madison, WI 53704.',
       ),
       p(
-        'The I-39/90/94 corridor is a critical transportation route that directly affects residents on Madison\u2019s far east side. Changes to this corridor will impact traffic patterns, noise levels, and development potential in the Sprecher East area for decades to come.',
+        'The I-39/90/94 corridor is a critical transportation route that directly affects neighbors on Madison\u2019s far east side. Changes to this corridor will impact traffic patterns, noise levels, and development potential in the Sprecher East area for decades to come.',
       ),
       p(
-        'Residents are encouraged to stay informed about this project as it progresses. The WisDOT project page has the latest information, maps, and environmental impact documents.',
+        'Neighbors are encouraged to stay informed about this project as it progresses. The WisDOT project page has the latest information, maps, and environmental impact documents.',
       ),
     ]),
     heroImage: heroImage.id,
     meta: {
       description:
-        'WisDOT held public hearings on the I-39/90/94 Corridor Study. The project directly affects Madison\u2019s far east side residents.',
+        'WisDOT held public hearings on the I-39/90/94 Corridor Study. The project directly affects Madison\u2019s far east side neighbors.',
       image: heroImage.id,
       title: 'WisDOT Holds Public Hearings on I-39/90/94 Corridor Study',
     },

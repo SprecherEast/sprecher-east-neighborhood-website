@@ -199,7 +199,7 @@ export const resourceItems: ResourceItem[] = [
   {
     title: 'Streets Division \u2014 Recycling & Trash',
     description:
-      'Curbside collection schedules, recycling guidelines, and large item pickup for Madison residents.',
+      'Curbside collection schedules, recycling guidelines, and large item pickup for Madison neighbors.',
     url: 'https://www.cityofmadison.com/streets/recycling/',
     phone: '(608) 246-4532',
     category: 'utilities',

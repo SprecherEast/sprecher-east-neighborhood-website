@@ -1,7 +1,7 @@
 import type { RequiredDataFromCollectionSlug } from 'payload'
 import { ROADMAP_PATH } from '@/modules/roadmap'
 import type { Media } from '@/payload-types'
-import { heading, linkNode, p, paragraph, root, text } from './helpers/lexical'
+import { heading, p, root } from './helpers/lexical'
 
 type AboutArgs = {
   mapImage?: Media
@@ -74,11 +74,6 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
             p(
               'AI tools help us gather public information, like city meetings, road and development projects, and local news. A neighbor reviews what we publish, and longer pieces list their sources.',
             ),
-            paragraph(
-              text('If enough neighbors want one, forming a neighborhood association is a goal. '),
-              linkNode('Here’s the story so far', '/posts/sprecher-east-is-coming-together'),
-              text('.'),
-            ),
           ]),
           size: 'full',
           // The same link button the live page has, the only link to the plan (#953)
@@ -116,7 +111,7 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
       ],
       richText: root([
         heading('h3', 'See something wrong or missing?'),
-        p('Tell us, and we’ll fix it.'),
+        p('Please tell us and we’ll fix it.'),
       ]),
     },
   )

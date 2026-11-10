@@ -5,15 +5,15 @@ for CMS pages. Fields, access and hooks: [events content type](../../../docs/ref
 
 ## Screens
 
-| Screen       | Route                                                                            | Data comes from                                                                                                                                                      |
-| ------------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| All events   | `/events`                                                                        | `events`, upcoming and past, first page of each (`src/app/(frontend)/events/(index)/page.tsx`)                                                                       |
-| Category     | `/events/category/[category]`                                                    | `events` in one `categories` doc (`.../(index)/category/[category]/page.tsx`)                                                                                        |
-| Filter row   | above both                                                                       | `categories` that have published events, with counts (`use-cases/findEventFilterMenu.ts`); title and intro are hardcoded in `(index)/layout.tsx`                     |
-| Paged lists  | `/events/list/[scope]/[page]`, `/events/category/[category]/list/[scope]/[page]` | `events`; the no-JavaScript "Load more" target (`ui/EventListPage.tsx`)                                                                                              |
-| Event        | `/events/[slug]`                                                                 | `events` by slug, draft in draft mode (`use-cases/getEventBySlug.ts`); the "Cancelled" text and the "Stay in the Loop" box are hardcoded in `events/[slug]/page.tsx` |
-| This week    | block on any CMS page                                                            | the `eventsThisWeek` block's rows, then `events` (`use-cases/findEventsThisWeek.ts`); joined in `src/app/(frontend)/[slug]/pageBlocks.tsx`                           |
-| Sidebar list | event and post pages                                                             | next 3 upcoming events (`use-cases/findUpcomingEvents.ts`); joined in `posts/[slug]/page.tsx`                                                                        |
+| Screen       | Route                                                                            | Data comes from                                                                                                                                                 |
+| ------------ | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| All events   | `/events`                                                                        | `events`, upcoming and past, first page of each (`src/app/(frontend)/events/(index)/page.tsx`)                                                                  |
+| Category     | `/events/category/[category]`                                                    | `events` in one `categories` doc (`.../(index)/category/[category]/page.tsx`)                                                                                   |
+| Filter row   | above both                                                                       | `categories` that have published events, with counts (`use-cases/findEventFilterMenu.ts`); title and intro are hardcoded in `(index)/layout.tsx`                |
+| Paged lists  | `/events/list/[scope]/[page]`, `/events/category/[category]/list/[scope]/[page]` | `events`; the no-JavaScript "Load more" target (`ui/EventListPage.tsx`)                                                                                         |
+| Event        | `/events/[slug]`                                                                 | `events` by slug, draft in draft mode (`use-cases/getEventBySlug.ts`); the "Cancelled" text and the "More events" box are hardcoded in `events/[slug]/page.tsx` |
+| This week    | block on any CMS page                                                            | the `eventsThisWeek` block's rows, then `events` (`use-cases/findEventsThisWeek.ts`); joined in `src/app/(frontend)/[slug]/pageBlocks.tsx`                      |
+| Sidebar list | event and post pages                                                             | next 3 upcoming events (`use-cases/findUpcomingEvents.ts`); joined in `posts/[slug]/page.tsx`                                                                   |
 
 ## Behaviors and events
 

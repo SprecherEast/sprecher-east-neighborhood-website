@@ -90,6 +90,19 @@ describe('/posts/[slug]', () => {
     expect(mocks.richText).toHaveBeenCalledWith(expect.objectContaining({ className: undefined }))
   })
 
+  it('asks neighbors kindly for tips in the sidebar, and links to Get Involved', async () => {
+    const content = { root: { type: 'root', children: [] } }
+    mocks.getPostBySlug.mockResolvedValue({ slug: 'park-cleanup', title: 'Park cleanup', content })
+
+    render(await PostPage(params('park-cleanup')))
+
+    expect(screen.getByText('Know something we’re missing? Please tell us.')).toBeDefined()
+    expect(screen.getByRole('link', { name: 'Get Involved' }).getAttribute('href')).toBe(
+      '/get-involved',
+    )
+    expect(screen.queryByText(/stronger Sprecher East community/)).toBeNull()
+  })
+
   it('follows a redirect, or answers 404, when there is no such post', async () => {
     mocks.getPostBySlug.mockResolvedValue(null)
 

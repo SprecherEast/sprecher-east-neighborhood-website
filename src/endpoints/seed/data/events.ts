@@ -80,7 +80,7 @@ export const eventItems: EventItem[] = [
       'The City of Madison Parks and Engineering Divisions will conduct prescribed burns from March through May at several District 16 parks: Acewood Conservation Park, Door Creek Park, Elvehjem Sanctuary, Owl Creek Park, and Upper Mud Lake Pond.',
   },
   {
-    title: 'MPD Recognition Event \u2014 Near Sprecher East',
+    title: 'MPD Recognition Event',
     slug: 'mpd-recognition-2026-04-22',
     date: '2026-04-22T00:00:00.000Z',
     timeStart: '1:00 PM',
@@ -91,7 +91,7 @@ export const eventItems: EventItem[] = [
     locationAddress: '5702 Femrite Dr., Madison, WI 53718',
     mapsUrl: 'https://maps.google.com?q=5702+Femrite+Dr+Madison+WI+53718',
     description:
-      'Madison Police Department Recognition Event at the MPD Training Center on Femrite Drive, located within the Sprecher East neighborhood area. Open to the public.',
+      'The Madison Police Department holds a recognition event at its Training Center on Femrite Drive. It’s open to the public.',
   },
   {
     title: 'Common Council Meeting',

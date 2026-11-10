@@ -73,12 +73,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
       aside={
         <>
           <SidebarEvents events={upcomingEvents} title="Upcoming Events" />
-          <SidebarCTA
-            heading="Stay in the Loop"
-            description="Browse all upcoming events and find ways to connect with your neighbors."
-            buttonLabel="View All Events"
-            buttonHref="/events"
-          />
+          <SidebarCTA heading="More events" buttonLabel="View All Events" buttonHref="/events" />
         </>
       }
     >
