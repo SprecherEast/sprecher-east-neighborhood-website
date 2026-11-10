@@ -3,7 +3,7 @@
 The two automatic checks on how work is filed and shipped: what each rule is, its stable ID, and
 what it does. They are described here, not in [how we work](project-management.md), to keep that
 page short. Dependabot pull requests are exempt from the gate. The rules live in
-`.github/scripts/` and run from `.github/workflows/`.
+`.github/scripts/` and run from `.github/workflows/`. The one-line fixes are on the generated [filing checklist](filing-checklist.md), which sessions read before filing.
 
 ## The pull request gate
 

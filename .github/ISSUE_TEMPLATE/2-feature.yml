@@ -3,6 +3,9 @@ description: New functionality or an improvement to something that works.
 title: 'feat: '
 labels: [enhancement]
 body:
+  - type: markdown
+    attributes:
+      value: Before filing, read the [filing checklist](https://github.com/SprecherEast/sprecher-east-neighborhood-website/blob/main/docs/process/filing-checklist.md) for what the issue check looks for.
   - type: textarea
     id: problem
     attributes:

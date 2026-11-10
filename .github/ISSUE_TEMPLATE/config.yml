@@ -2,4 +2,4 @@ blank_issues_enabled: false
 contact_links:
   - name: How changes are made in this repo
     url: https://github.com/SprecherEast/sprecher-east-neighborhood-website/blob/main/AGENTS.md
-    about: Every change starts with an issue from one of these forms. Read AGENTS.md for the full workflow.
+    about: Every change starts with an issue from one of these forms. Read AGENTS.md for the full workflow and docs/process/filing-checklist.md for what the checks look for.

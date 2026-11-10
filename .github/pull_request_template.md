@@ -2,6 +2,7 @@
 Every PR closes exactly one issue and fills in every section below. The "PR Policy" check enforces
 this and names each failure by rule ID (PR-CLOSES, PR-LINKED, PR-LABELS, PR-ASSIGNED, PR-MILESTONE,
 PR-SECTIONS, PR-SELF-REVIEW, PR-KNOWLEDGE, PR-E2E): docs/process/issue-and-pr-checks.md#the-pull-request-gate
+Before opening: read docs/process/filing-checklist.md (one line per rule ID, with its fix)
 Rules: AGENTS.md. Procedure: .agents/skills/change-workflow/SKILL.md
 If this PR depends on another open PR, put both on a native GitHub stack and start this
 description with the stack line: .agents/skills/stacked-prs/SKILL.md

@@ -36,6 +36,7 @@ tokenizer, so treat it as a close guide, not an exact figure).
 | [Planning model](../process/planning-model.md)           | `docs/process/**`, `docs/product/**`, `.github/ISSUE_TEMPLATE/**`, `.agents/skills/project-tracking/**`, `.agents/skills/chief-of-staff/**`                                                                   | You choose a layer (milestone, epic, issue, sprint), name work, or write a milestone or epic. |
 | [Grooming playbook](../process/grooming-playbook.md)     | `docs/process/**`, `docs/product/**`, `.github/ISSUE_TEMPLATE/**`, `.agents/skills/project-tracking/**`, `.agents/skills/chief-of-staff/**`                                                                   | You groom, sweep, move a card, or reorganize existing issues.                                 |
 | [Issue and PR checks](../process/issue-and-pr-checks.md) | `.github/scripts/**`, `.github/workflows/issue-*.yml`, `.github/workflows/pr-policy.yml`, `docs/process/project-management.md`                                                                                | You change the issue check or the pull request gate, or read why one fired.                   |
+| [Filing checklist](../process/filing-checklist.md)       | `.github/ISSUE_TEMPLATE/**`, `.github/pull_request_template.md`, `docs/process/filing-checklist.md`                                                                                                           | You file an issue or open a pull request.                                                     |
 
 ## Changing a guideline
 

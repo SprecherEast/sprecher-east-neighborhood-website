@@ -5,6 +5,9 @@ labels: [infra]
 body:
   - type: markdown
     attributes:
+      value: Before filing, read the [filing checklist](https://github.com/SprecherEast/sprecher-east-neighborhood-website/blob/main/docs/process/filing-checklist.md) for what the issue check looks for.
+  - type: markdown
+    attributes:
       value: Never put secret values (passwords, keys, tokens) in this issue.
   - type: dropdown
     id: type
