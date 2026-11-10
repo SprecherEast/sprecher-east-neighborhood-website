@@ -141,7 +141,7 @@ function ImageHeader({ image, eyebrow, title, facts, className }: ImageHeaderPro
         {/* A band, not a hero: about 42% of the screen, 16rem to 28rem, so the article starts on
             the first screen. `svh` keeps a phone's address bar from making it jump (#571) */}
         <div className="min-h-[clamp(16rem,42svh,28rem)] select-none">
-          <Media fill priority imgClassName="-z-10 object-cover" resource={image} />
+          <Media fill priority atFocalPoint imgClassName="-z-10 object-cover" resource={image} />
           {/* The whole band is darkened, never lighter than 55% at the top, so a title that wraps
               onto three lines still sits on a scrim. `ON_IMAGE_TITLE_SCRIM_ALPHA` tests that 55%
               over a white photo (#572) */}

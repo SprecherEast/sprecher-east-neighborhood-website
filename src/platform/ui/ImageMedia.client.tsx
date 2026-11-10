@@ -10,6 +10,7 @@ import type { MediaProps } from './mediaProps'
 
 import { cssVariables } from '@/cssVariables'
 import { IMAGE_QUALITIES } from '@/imageQualities'
+import { toObjectPosition } from '@/platform/lib/focalPoint'
 import { getMediaUrl } from '@/platform/lib/getMediaUrl'
 
 const { breakpoints } = cssVariables
@@ -28,6 +29,7 @@ export const ImageMedia: React.FC<MediaProps> = (props) => {
   const {
     alt: altFromProps,
     fill,
+    atFocalPoint,
     pictureClassName,
     imgClassName,
     priority,
@@ -55,6 +57,11 @@ export const ImageMedia: React.FC<MediaProps> = (props) => {
     src = getMediaUrl(url, cacheTag)
   }
 
+  const focalPosition =
+    atFocalPoint && resource && typeof resource === 'object'
+      ? toObjectPosition(resource)
+      : undefined
+
   const loading = loadingFromProps || (!priority ? 'lazy' : undefined)
 
   // NOTE: this is used by the browser to determine which image to download at different screen sizes
@@ -78,6 +85,8 @@ export const ImageMedia: React.FC<MediaProps> = (props) => {
         loading={loading}
         sizes={sizes}
         src={src}
+        // A value from the upload, so it can't be a class: next/image's own `style` is the native way
+        style={focalPosition ? { objectPosition: focalPosition } : undefined}
         width={!fill ? width : undefined}
       />
     </picture>

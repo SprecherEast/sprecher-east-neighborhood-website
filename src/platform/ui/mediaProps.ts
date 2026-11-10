@@ -8,6 +8,8 @@ export interface MediaProps {
   alt?: string
   className?: string
   fill?: boolean // for NextImage only
+  /** Crop around the upload's focal point (Payload's `focalX`, `focalY`) instead of the centre; for a picture shown cropped with `object-cover` */
+  atFocalPoint?: boolean // for NextImage only
   htmlElement?: ElementType | null
   pictureClassName?: string
   imgClassName?: string

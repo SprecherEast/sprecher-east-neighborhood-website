@@ -120,6 +120,16 @@ describe('PageHeader', () => {
     await expectAccessible(container)
   })
 
+  it("keeps the photo's focal point in the band, and the centre when it has none (#1013)", () => {
+    const { rerender } = render(
+      <PageHeader variant="image" image={{ ...photo, focalX: 25, focalY: 75 }} title="Park" />,
+    )
+    expect(screen.getByRole('img').style.objectPosition).toBe('25% 75%')
+
+    rerender(<PageHeader variant="image" image={photo} title="Park" />)
+    expect(screen.getByRole('img').style.objectPosition).toBe('50% 50%')
+  })
+
   it('draws a photo header with no facts or eyebrow', async () => {
     const { container } = render(
       <main>
