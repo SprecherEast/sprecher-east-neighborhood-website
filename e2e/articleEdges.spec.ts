@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { ALIGNMENT_POST_SLUG, EDGES_EVENT_SLUG } from './support/alignmentSlug'
 import { expect, test } from './support/test'
 
@@ -38,7 +40,13 @@ test.describe('the body, metadata bar and breadcrumb of a post share edges', () 
           text: rect(element('.payload-richtext')),
           bar: rect(bar),
           metadata: rect(byline.querySelector('dt') as Element),
-          label: rect(byline.querySelector('dt') as Element),
+          // The text itself: the label's own box can be stretched wider than its words
+          label: (() => {
+            const range = document.createRange()
+            range.selectNodeContents(byline.querySelector('dt') as Element)
+            const { left, right, top, bottom, height } = range.getBoundingClientRect()
+            return { left, right, top, bottom, height }
+          })(),
           value: rect(byline.querySelector('dd') as Element),
           line: rect(bar.querySelector('[aria-hidden="true"]') as Element),
           bylineInHeader: byline.closest('header') !== null,
@@ -163,7 +171,15 @@ test.describe('the metadata bar of an event shares the edges of what is under it
 // the pixel row under the dark hairline is sampled from a screenshot and compared with the resolved
 // `--accent` token, so a blend with the dark hairline or a darker shade fails.
 test.describe('the groove accent hairline is exactly the accent colour', () => {
-  const ACCENTS = { light: [232, 146, 58], dark: [240, 160, 75] } // `--accent` in theme.css
+  // The expected colours come from the theme file itself, not from literals in the test
+  const themeCss = readFileSync('src/themes/default/theme.css', 'utf8')
+  const accentOf = (block: string) => {
+    const hex = /--accent:\s*#([0-9a-f]{6})\s*;/i.exec(block)?.[1]
+    if (!hex) throw new Error('No --accent in the theme file')
+    return [0, 2, 4].map((at) => parseInt(hex.slice(at, at + 2), 16))
+  }
+  const [lightBlock, darkBlock] = themeCss.split("[data-theme='dark']")
+  const ACCENTS = { light: accentOf(lightBlock), dark: accentOf(darkBlock) }
   for (const theme of ['light', 'dark'] as const) {
     test(`${theme} theme`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: theme })

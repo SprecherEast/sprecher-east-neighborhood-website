@@ -32,7 +32,7 @@ function SourceValue({ source }: { source: PostSource }) {
 
 /**
  * A post's author, date and source (#774): the facts the page draws as its `MetaBar` (#1002), at
- * the top right of the article column, so they sit on the text's right edge and not in the header.
+ * the top left of the article column, so they sit on the text's left edge and not in the header.
  */
 export function postByline(post: PostDetail): LabelledMetaItem[] {
   const { publishedAt, source } = post

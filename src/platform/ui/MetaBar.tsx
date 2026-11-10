@@ -35,7 +35,7 @@ export type MetaBarProps = {
  * lowers its neighbour, and they stay grouped at the left: a cut value is capped at 20rem, so a
  * long place never spreads them across the row. Below `md` they become a two-column list, labels in one column and values
  * in the other, both starting at the left edge, above the line. A value that is too long for one line (a place) is
- * cut with an ellipsis, with its whole text in `title` and in the page for assistive technology.
+ * cut with an ellipsis, with its whole text in the page (assistive technology and the Location panel have it) and in `title`, an extra for a mouse that a touch screen does not show.
  * The line is decoration and hidden from assistive technology; the metadata is a description list
  * of real text.
  */
@@ -47,7 +47,7 @@ export function MetaBar({ items, className }: MetaBarProps) {
   return (
     <div className={cn('mb-10', className)}>
       <div className="pb-2">
-        <dl className="grid max-w-full min-w-0 grid-cols-[auto_minmax(0,max-content)] items-baseline justify-start gap-x-2 gap-y-1 md:flex md:gap-x-0">
+        <dl className="grid max-w-full min-w-0 grid-cols-[max-content_minmax(0,1fr)] items-baseline gap-x-2 gap-y-1 md:flex md:gap-x-0">
           {items.map((item, index) => (
             <div
               key={item.label}

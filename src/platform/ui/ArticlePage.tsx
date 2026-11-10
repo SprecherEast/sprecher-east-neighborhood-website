@@ -30,12 +30,12 @@ export type ArticlePageProps = {
   /**
    * Facts about the article (a post's author, date and source; an event's when and where), drawn
    * as the `MetaBar` at the top left of the article column, under the picture and above the text,
-   * ending on the text's right edge (#774, #1002).
+   * above one groove line (#774, #1002).
    */
   byline?: MetaBarItem[]
   /**
    * The width class the page gives the article's text (`articleColumnClass`). The metadata bar takes
-   * it too, so a text-only article's bar ends on the text's right edge, not past it (#774).
+   * it too, so a text-only article's line ends where the text does, not past it (#774).
    */
   textClassName?: string
   /** The "On this page" menu, when the article has headings to list */

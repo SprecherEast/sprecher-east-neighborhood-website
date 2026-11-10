@@ -90,7 +90,7 @@ describe('MetaBar (#1002)', () => {
 
     const list = screen.getByText('Author').closest('dl')
     expect(list?.className).toContain('grid')
-    expect(list?.className).toContain('grid-cols-[auto_minmax(0,max-content)]')
+    expect(list?.className).toContain('grid-cols-[max-content_minmax(0,1fr)]')
     // Each item's label and value are the grid's own cells
     expect(list?.firstElementChild?.className).toContain('contents')
     // Both labels share the column's left edge, and a wrapped value starts at the value column
@@ -100,10 +100,10 @@ describe('MetaBar (#1002)', () => {
   it('keeps the value column right after the label column, even with a single short item', () => {
     render(<MetaBar items={[{ label: 'Published', value: 'Tue, Nov 10, 2026' }]} />)
 
-    // Without `justify-start` the grid's auto column takes the free width and pushes the value to
-    // the far edge of the row
+    // The label column is as wide as its labels and the value column takes the rest, so no free
+    // width is left to push a short value to the far edge of the row
     const list = screen.getByText('Published').closest('dl')
-    expect(list?.className).toContain('justify-start')
+    expect(list?.className).toContain('grid-cols-[max-content_minmax(0,1fr)]')
     expect(list?.className).toContain('gap-x-2')
   })
 
