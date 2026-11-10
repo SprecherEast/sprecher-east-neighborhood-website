@@ -74,7 +74,8 @@ gh api -X POST repos/{owner}/{repo}/actions/workflows/deploy.yml/dispatches -f r
 - The linked issues close themselves on merge, and `issue-fix-summary.yml` comments on each.
 - For server changes (`infra` issues), comment what actually changed on the server, from the
   deploy annotations. Never paste secret values.
-- An issue linked with `Part of #N` stays open until its last PR merges.
+- A parent issue or epic stays open until its sub-issues are closed and its own acceptance is
+  checked ([grooming playbook](../../../docs/process/grooming-playbook.md#in-review-to-done)).
 
 ## 5. Sync and report
 

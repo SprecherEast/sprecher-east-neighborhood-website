@@ -10,9 +10,9 @@ only: no examples taken from current work, so it stays true as the work changes.
 
 | Layer     | Answers                                      | Size                       | On GitHub                                      |
 | --------- | -------------------------------------------- | -------------------------- | ---------------------------------------------- |
-| Milestone | Which outcome is done, and how do we know?   | several capabilities       | A milestone; each issue has at most one        |
+| Milestone | Which outcome is done, and how do we know?   | several capabilities       | A milestone; each issue has exactly one        |
 | Epic      | Which capability does this body of work add? | several related issues     | A parent issue labeled `epic`, with sub-issues |
-| Issue     | What single deliverable ships?               | fits in one sprint         | An issue; normally one PR closes it            |
+| Issue     | What single deliverable ships?               | fits in one sprint         | An issue; one PR closes it                     |
 | Sub-issue | Which step is worth tracking on its own?     | part of an issue           | A child of an issue                            |
 | Sprint    | What do we pull in for this time slice?      | one iteration of the board | The board's iteration field                    |
 
@@ -75,8 +75,8 @@ A body of related issues delivering one capability.
 - **A parent issue with sub-issues,** sized by shape, not by time: it groups several related
   issues that are tracked and searched together. Work that fits one pull request is an issue; work
   spanning several capabilities is a milestone.
-- **It belongs to one milestone** when it is planned. Unplanned and ongoing work may have none,
-  with the reason stated (see [anti-patterns](#anti-patterns)).
+- **It belongs to one milestone.** Unplanned and ongoing work sits in the catch-all Backlog
+  milestone until it is planned ([the rule](../../AGENTS.md#one-issue-one-pull-request)).
 - **The title is a capability noun phrase.** It names what the site or process can do, not an
   activity.
 - **It closes when every child is done and its own acceptance is met.** Closed children are
@@ -89,8 +89,9 @@ A body of related issues delivering one capability.
 - **An issue is one deliverable,** small enough for one pull request and one sprint. This is the
   INVEST idea of a small, independent, testable story: it can be estimated, delivers value on its
   own, and has acceptance criteria someone else can check.
-- **Standalone is allowed** when the work is not part of a capability, such as a one-off fix. Say
-  why in the body so a sweep does not flag it as an orphan.
+- **Every issue has a parent epic and a milestone**
+  ([the rule](../../AGENTS.md#one-issue-one-pull-request)). Work that needs more than one pull
+  request is split into sub-issues first, one per pull request.
 - **A sub-issue of an issue is a step worth tracking:** separately assignable or verifiable, and
   too big for a line in the acceptance criteria. If it is not, it is a line, not an issue.
 - **A child has one parent.** Moving it to another parent is a deliberate change with a comment,
@@ -137,13 +138,13 @@ Work through it in order and stop at the first yes.
 3. **Can one person or agent finish it in a sprint with one pull request?** Issue. If not, split it
    until each piece can.
 4. **For an issue:** does an epic already hold this capability? Make it a sub-issue of that epic.
-   Is a capability starting, with more related issues foreseeable? Create the epic. Otherwise it is
-   standalone, with the reason in the body.
+   Is a capability starting, with more related issues foreseeable? Create the epic. Otherwise put
+   it under the epic whose capability it touches most.
 5. **Is it a step of an issue, separately assignable or checkable?** Sub-issue of that issue.
    Otherwise write it as a line in the acceptance criteria.
 6. **Milestone for an epic:** does an open outcome milestone exist whose done test this epic helps
-   pass? Assign it. If the epic is planned and none exists, propose a milestone. If
-   not, leave it out and say why.
+   pass? Assign it. If the epic is planned and none exists, propose a milestone. If not, it sits
+   in the Backlog milestone.
 
 ## Anti-patterns
 
@@ -153,8 +154,8 @@ Work through it in order and stop at the first yes.
 - **An issue that is really an epic:** bigger than one sprint, or needing several pull requests
   that each deliver something.
 - **Labels that duplicate hierarchy:** a label for a milestone, an epic or a sprint.
-- **Work under no layer with no stated reason.** Ongoing upkeep has no done state, so it gets no
-  milestone and a stated reason, never an invented finish line.
+- **Work under no layer.** Ongoing upkeep has no done state, so it sits in the Backlog milestone,
+  never under an invented finish line.
 - **Prose dependencies** and **a second scope list** in an epic body that drifts from the children.
 - **Moving children between epics to group them,** and **dates that slide silently** when a
   milestone slips: change them with a comment that says why.
@@ -182,11 +183,11 @@ Epic body:
 
 **Out of scope:** <what this epic will not do>
 **Done when:** <acceptance for the whole capability, beyond the children closing>
-**Milestone:** <which outcome it serves, or why it has none>
+**Milestone:** <which outcome it serves, or Backlog until it is planned>
 ```
 
 An issue's body follows the issue forms (problem, proposed fix, acceptance criteria, files likely
-touched, must not touch, area, priority), and a standalone issue adds one line saying why.
+touched, must not touch, area, priority).
 
 ## Sources
 

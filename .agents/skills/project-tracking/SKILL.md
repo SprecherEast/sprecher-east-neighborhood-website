@@ -29,7 +29,7 @@ The sprint and the size are board fields. On the owner's computer, read them fro
 items (§2 step 4 without `--query`, then find the issue by number in the JSON). Start only if the
 issue is **Ready**:
 
-- it has acceptance criteria, a parent (or a stated reason it stands alone), type, area and
+- it has acceptance criteria, a parent epic and a milestone, type, area and
   priority labels, and a size
 - **Files likely touched** and **Must not touch** are filled in (`None` when there is nothing)
 - nothing it's blocked by is still open
@@ -67,11 +67,11 @@ For each issue:
 3. Leave out:
    - epics, and anything labeled `needs owner`
    - anything with an open blocker (one `blocked_by` call per issue, as in §1)
-   - anything an open PR already closes or is part of. Those are **in progress**:
+   - anything an open PR already closes. Those are **in progress**:
 
      ```bash
      gh api "repos/{owner}/{repo}/pulls?state=open&per_page=100" \
-       -q '.[] | "PR #\(.number) → \([(.body // "") | scan("(?i)(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|part of):?\\s+#[0-9]+")] | join(", "))"'
+       -q '.[] | "PR #\(.number) → \([(.body // "") | scan("(?i)(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\\s+#[0-9]+")] | join(", "))"'
      ```
 
    Order the rest by priority label, then by the order of the epic's sub-issues
@@ -89,7 +89,9 @@ For each issue:
    and the [naming templates](../../../docs/process/planning-model.md#templates).
    - An outcome with a done test, spanning several capabilities, is a milestone; a capability
      grouping several related issues is an epic (label `epic`, one milestone).
-   - One deliverable that fits one sprint and one PR is an issue; a standalone one says why.
+   - One deliverable that fits one sprint and one PR is an issue, under an epic and a milestone
+     ([the rule](../../../AGENTS.md#one-issue-one-pull-request)). Work that needs more PRs is
+     split into sub-issues, one per PR.
    - Something broken is a bug.
 2. **Search first** to avoid duplicates. Loop over the pages, since the repo has more than 100
    issues and PRs:
@@ -111,7 +113,7 @@ For each issue:
    epic=$(gh api repos/{owner}/{repo}/issues/<epic> -q .id)
    gh api -X POST repos/{owner}/{repo}/issues -f title='<type>: <short problem statement>' \
      -F body=@issue.md -f 'labels[]=bug' -f 'labels[]=cms' -f 'labels[]=priority: medium' \
-     -F parent_issue_id=$epic -F milestone=<number>   # milestone only if it's planned
+     -F parent_issue_id=$epic -F milestone=<number>   # Backlog until it's planned
    ```
 
    Exactly one type, at least one area and one priority

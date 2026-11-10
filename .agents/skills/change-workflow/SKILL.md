@@ -81,8 +81,9 @@ steps 2 and 3. Never hand over dependent PRs with the merge order written in pro
 `pr.md` follows `.github/pull_request_template.md`. Fill in every section; the `PR Policy`
 check fails otherwise:
 
-- `Closes #<issue>` — links the issue and closes it on merge. Use `Part of #<issue>`
-  when more PRs will follow; the last PR uses `Closes`.
+- `Closes #<issue>` — links the one issue this PR closes, both ways, and closes it on merge.
+  Work that needs more PRs is split into sub-issues first
+  ([one issue, one pull request](../../../AGENTS.md#one-issue-one-pull-request)).
 - **What changed**, **Why**, **How**, **How to test** (numbered steps someone else can
   follow), **Risk & rollback**, **Self-review** (one line each for reuse, quality, efficiency,
   guidelines and visual), **Knowledge** (`Behavior change: yes` and which note, page or doc now says so,
