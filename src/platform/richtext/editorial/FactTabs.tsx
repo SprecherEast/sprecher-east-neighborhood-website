@@ -14,23 +14,31 @@ import type { FactTabProps, FactTabsProps } from './factTabs'
 import { Timeline } from './Timeline'
 
 /**
- * What one tab opens (#980): its heading (with scripting on), then its charts and timelines, then
- * the short definition, whose City term is the link to the source (a "Source:" line only when the
- * definition never says it)
+ * What one tab opens (#980): its heading (with scripting on) with how sure we are beside it, then
+ * its first picture, then the short definition, whose City term is the link to the source (a
+ * "Source:" line only when the definition never says it), then the other pictures
  */
 function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
   const parts = splitDefinitionAtSource(definition, fact.source)
+  const picture = (item: FactTabProps['panel'][number], index: number) =>
+    item.kind === 'chart' ? (
+      <Chart key={index} spec={item.spec} zoom={item.enlarge} numbers="screen-reader" />
+    ) : (
+      <Timeline key={index} {...item.timeline} className="my-0" />
+    )
   return (
     <div className="space-y-4">
       {/* Tabs shows its heading only with scripting off; with it on the tab is the title, so this one
           shows then, and the reader always sees the heading the editor wrote, once */}
-      <Text variant="subsection" as="h3" className="hidden scripted:block">
-        {heading}
-      </Text>
-      {/* On a phone the tab shows only an icon and the figure, so how sure we are shows here; the
-          tab already says it to a screen reader */}
-      <div data-panel-certainty className="sm:hidden" aria-hidden="true">
-        <CertaintyBadge certainty={fact.certainty} />
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <Text variant="subsection" as="h3" className="hidden scripted:block">
+          {heading}
+        </Text>
+        {/* How sure we are, once, beside the heading: the tab button leaves it to screen readers
+            (#980) */}
+        <div data-panel-certainty aria-hidden="true">
+          <CertaintyBadge certainty={fact.certainty} />
+        </div>
       </div>
       {/* The explanation a tab leaves out so all the tabs hold the same parts (#707) */}
       {fact.detail && (
@@ -38,13 +46,7 @@ function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
           <Text variant="small">{joinLastWords(fact.detail)}</Text>
         </div>
       )}
-      {panel.map((item, index) =>
-        item.kind === 'chart' ? (
-          <Chart key={index} spec={item.spec} zoom={item.enlarge} numbers="screen-reader" />
-        ) : (
-          <Timeline key={index} {...item.timeline} className="my-0" />
-        ),
-      )}
+      {panel.slice(0, 1).map(picture)}
       {definition && (
         <Text variant="lead">
           {parts
@@ -73,6 +75,7 @@ function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
           </Link>
         </Text>
       )}
+      {panel.slice(1).map((item, index) => picture(item, index + 1))}
     </div>
   )
 }

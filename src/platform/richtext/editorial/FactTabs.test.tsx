@@ -87,14 +87,15 @@ describe('FactTabs', () => {
     expect(within(present(panels[3])).getByText('The Council votes on the budget')).toBeTruthy()
   })
 
-  it('shows the pictures before the definition, so a neighbor sees the chart first (#980)', () => {
+  it('shows the first picture, then the definition, then the other pictures, so a neighbor sees a chart first and the breakdown after the words (#980)', () => {
     setup()
     const [panel] = screen.getAllByRole('tabpanel', { hidden: true })
-    const firstFigure = present(panel).querySelector('figure')
+    const figures = [...present(panel).querySelectorAll('figure')]
     const definition = within(present(panel)).getByText(/\$24\.8 million more than in 2026/)
-    expect(
-      firstFigure?.compareDocumentPosition(definition) === Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBe(true)
+    const follows = (a?: Element, b?: Element) =>
+      a?.compareDocumentPosition(b as Node) === Node.DOCUMENT_POSITION_FOLLOWING
+    expect(follows(figures[0], definition)).toBe(true)
+    expect(follows(definition, figures[1])).toBe(true)
   })
 
   it('shows no "Show the numbers" box in a tab, and keeps each chart’s table for screen readers (#980)', () => {
@@ -121,7 +122,7 @@ describe('FactTabs', () => {
     for (const panel of panels) {
       const own = [...panel.children].filter((child) => child.tagName === 'H3')
       expect(own.map((h) => h.textContent)).toHaveLength(1)
-      const scripted = panel.querySelector(':scope > div > h3')
+      const scripted = panel.querySelector(':scope > div > div > h3')
       expect(scripted?.textContent).toBe(own[0]?.textContent)
       // Tabs' heading is for scripting off, this one for scripting on (the media query shows one)
       expect(own[0]?.className).toContain('scripted:hidden')
@@ -165,11 +166,12 @@ describe('FactTabs', () => {
     expect(list.className).not.toContain('grid-cols-2')
   })
 
-  it('shows how sure we are in the open panel on a phone, where the tab shows only its icon and figure (#704)', () => {
+  it('shows how sure we are once, in the open panel beside its heading, since the tab leaves it to screen readers (#704, #980)', () => {
     const { container } = setup()
     const [panel] = [...container.querySelectorAll('[role="tabpanel"]')]
     const sure = panel?.querySelector('[data-panel-certainty]')
-    expect(sure?.className).toContain('sm:hidden')
+    expect(sure?.className ?? '').not.toContain('hidden')
+    expect(sure?.previousElementSibling?.tagName).toBe('H3')
     expect(sure?.textContent).toContain('Confirmed')
     // The tab already says it to a screen reader
     expect(sure?.getAttribute('aria-hidden')).toBe('true')

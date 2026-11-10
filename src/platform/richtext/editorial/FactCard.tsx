@@ -35,8 +35,8 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
   const Label = tab ? 'span' : 'dt'
   const Value = tab ? 'span' : 'dd'
   const Foot = tab ? 'span' : 'div'
-  // What a tab drops on a phone, where four of them share one row: only the certainty
-  const phoneHidden = tab ? 'max-sm:sr-only' : ''
+  // A tab leaves how sure we are to screen readers: the open panel shows it once, beside its heading (#980)
+  const phoneHidden = tab ? 'sr-only' : ''
   const body = (
     <>
       <Facts className={SUBGRID_THREE_ROWS}>
