@@ -47,7 +47,7 @@ export function MetaBar({ items, className }: MetaBarProps) {
   return (
     <div className={cn('mb-10', className)}>
       <div className="pb-2">
-        <dl className="grid max-w-full min-w-0 grid-cols-[auto_minmax(0,max-content)] items-baseline gap-x-2 gap-y-1 md:flex md:gap-x-0">
+        <dl className="grid max-w-full min-w-0 grid-cols-[auto_minmax(0,max-content)] items-baseline justify-start gap-x-2 gap-y-1 md:flex md:gap-x-0">
           {items.map((item, index) => (
             <div
               key={item.label}

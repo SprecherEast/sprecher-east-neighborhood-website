@@ -38,6 +38,8 @@ test.describe('the body, metadata bar and breadcrumb of a post share edges', () 
           text: rect(element('.payload-richtext')),
           bar: rect(bar),
           metadata: rect(byline.querySelector('dt') as Element),
+          label: rect(byline.querySelector('dt') as Element),
+          value: rect(byline.querySelector('dd') as Element),
           line: rect(bar.querySelector('[aria-hidden="true"]') as Element),
           bylineInHeader: byline.closest('header') !== null,
           overflow: document.documentElement.scrollWidth - window.innerWidth,
@@ -66,6 +68,12 @@ test.describe('the body, metadata bar and breadcrumb of a post share edges', () 
         edge(m.metadata.left),
         `${width}px: the metadata is left-aligned, starting on the groove's left end`,
       ).toBe(edge(m.line.left))
+      if (width < 768) {
+        expect(
+          m.value.left - m.label.right,
+          `${width}px: the value sits right after its label, not at the far edge`,
+        ).toBeLessThanOrEqual(12)
+      }
       expect(
         m.metadata.bottom,
         `${width}px: the metadata sits above the groove`,

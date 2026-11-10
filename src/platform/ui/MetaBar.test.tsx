@@ -97,6 +97,16 @@ describe('MetaBar (#1002)', () => {
     expect(screen.getByText('Author').className).not.toContain('text-right')
   })
 
+  it('keeps the value column right after the label column, even with a single short item', () => {
+    render(<MetaBar items={[{ label: 'Published', value: 'Tue, Nov 10, 2026' }]} />)
+
+    // Without `justify-start` the grid's auto column takes the free width and pushes the value to
+    // the far edge of the row
+    const list = screen.getByText('Published').closest('dl')
+    expect(list?.className).toContain('justify-start')
+    expect(list?.className).toContain('gap-x-2')
+  })
+
   it('sets its labels in the theme’s finest text size, a token, smaller than the values', () => {
     render(<MetaBar items={items} />)
 
