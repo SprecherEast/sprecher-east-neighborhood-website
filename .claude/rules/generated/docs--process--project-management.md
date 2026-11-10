@@ -153,7 +153,8 @@ parallel work when issues don't touch the same files, with no fixed number, and 
 2026-11-06 (Claude session, text, recorded on #685 and #721); the rule below says how.
 
 - **Groom before every major change:** a new epic, a sprint, or a batch of work. Each issue gets
-  its plain summary, acceptance criteria, parent epic, labels (type, area, `priority:`) and a
+  its plain summary, acceptance criteria, an epic above it and a milestone
+  ([the rule](/AGENTS.md#one-issue-one-pull-request)), labels (type, area, `priority:`) and a
   **Size**, which is effort: S, M or L (a cloud session that can't read the board skips Size and
   says so, as in the Definition of Ready). Anything bigger is split. When it meets the
   [Definition of Ready](#definition-of-ready), it moves to **Ready**.

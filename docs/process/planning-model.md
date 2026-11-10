@@ -52,7 +52,7 @@ An outcome with a clear "done" state that spans several capabilities.
 - **The description is the contract:** goal, scope, what is out of scope, and the done test (see
   [templates](#templates)). If you cannot write a pass or fail done test, it is not a milestone.
 - **Backlog is the one exception:** a catch-all milestone for work not planned yet, with no done
-  test and no finish line. The sweep's milestone checks skip it.
+  test, no outcome title and no finish line. The sweep's milestone checks skip it.
 - **A due date only when a real date exists** (an event, a commitment, a dependency outside the
   team, or a date the owner decides), with the reason in the description. A date chosen to feel
   firm is a guess dressed as a plan. As a dated milestone nears, the sweep flags its open items

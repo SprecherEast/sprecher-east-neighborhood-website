@@ -71,9 +71,9 @@ The Definition of Ready, spelled out:
   conversation is open ([`AGENTS.md`](../../AGENTS.md#the-only-way-code-reaches-main-and-production)).
 - The knowledge note is updated or behavior change is declared absent, and any deploy is verified
   ([`wrapped`](../../.agents/skills/wrapped/SKILL.md)).
-- The issue is closed with a summary. Then its parent epic is checked: if that was the last open
-  child, the epic's own acceptance is tested before it closes, and the milestone's progress and
-  done test are looked at.
+- The issue is closed with a summary. Then its parent (the epic, or an issue under it) is
+  checked: if that was the last open child, the parent's own acceptance is tested before it
+  closes, and the milestone's progress and done test are looked at.
 
 ### Reopen
 
@@ -151,9 +151,9 @@ comment. Duplicate bugs may be closed as the
 
 ### Missing fields
 
-Any of: acceptance criteria, type, area, priority, size where readable, files declared, a parent
-and a milestone ([the rule](../../AGENTS.md#one-issue-one-pull-request)), blocked-by links for dependencies
-named in prose.
+Any of: acceptance criteria, type, area, priority, size where readable, files declared, an epic
+above it and a milestone ([the rule](../../AGENTS.md#one-issue-one-pull-request)), blocked-by
+links for dependencies named in prose.
 
 ### Wrong layer
 

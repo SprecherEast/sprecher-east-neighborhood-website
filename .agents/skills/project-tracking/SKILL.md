@@ -29,15 +29,16 @@ The sprint and the size are board fields. On the owner's computer, read them fro
 items (§2 step 4 without `--query`, then find the issue by number in the JSON). Start only if the
 issue is **Ready**:
 
-- it has acceptance criteria, a parent epic and a milestone, type, area and
-  priority labels, and a size
+- it has acceptance criteria, an epic above it and a milestone
+  ([the rule](../../../AGENTS.md#one-issue-one-pull-request)), type, area and priority labels,
+  and a size
 - **Files likely touched** and **Must not touch** are filled in (`None` when there is nothing)
 - nothing it's blocked by is still open
 - it isn't labeled `needs owner`
 - no open PR already closes it (the list in §2 step 3)
 
 When the board can't be read (cloud sessions), skip the size check and say so in a comment on the
-issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read the parent epic too: it
+issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read the epic above it too: it
 says what the issue is part of. More than one issue may be in progress only when their files
 don't overlap ([the rule](../../../docs/process/project-management.md#grooming-and-work-in-progress)),
 so every issue after the first needs the overlap check below to pass.
