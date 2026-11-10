@@ -1,9 +1,11 @@
 name: PR Policy
 
-# Enforces AGENTS.md steps 1–2 on every pull request: a linked issue with exactly one
-# type label, an area label and a priority label, a fully filled-in PR description, and a
-# knowledge note updated with the code it describes (.github/scripts/knowledge-sync.mjs), and a
-# reason of 20+ characters for any end-to-end exemption (.github/scripts/e2e-gate.mjs, #868).
+# Enforces AGENTS.md steps 1–2 on every pull request: it closes exactly one issue, that issue is
+# claimed (assigned), planned (milestone) and labeled (one type, an area, a priority), the issue
+# shows the PR on its timeline, the PR description is fully filled in, a knowledge note is updated
+# with the code it describes (.github/scripts/knowledge-sync.mjs), and any end-to-end exemption has
+# a reason of 20+ characters (.github/scripts/e2e-gate.mjs, #868). Each failure starts with a
+# stable rule ID (PR-CLOSES, PR-LINKED, ...; the rules are in .github/scripts/pr-body.mjs, #970).
 # Required status check on main ("PR Policy"). Allowed labels: .github/label-policy.json
 #
 # Note: this runs the PR's own copy of this file. Changes to it (or to any workflow)
@@ -38,65 +40,69 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            if (pr.user.login === 'dependabot[bot]') {
+            const { pathToFileURL } = require('url');
+            const scripts = (name) => import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/${name}`).href);
+            const {
+              closeProblems,
+              descriptionProblems,
+              isDependabot,
+              issueProblems,
+              linkedIssues,
+              lookupProblems,
+              ruleMessage,
+              timelineShowsPr,
+              withoutComments,
+              withRuleId,
+            } = await scripts('pr-body.mjs');
+            if (isDependabot(pr)) {
               core.info('Dependabot PR: exempt from the issue/description rules (AGENTS.md). Checks and review still apply.');
               return;
             }
 
             const fs = require('fs');
             const policy = JSON.parse(fs.readFileSync('.github/label-policy.json', 'utf8'));
-            const REQUIRED_SECTIONS = ['What changed', 'Why', 'How', 'How to test', 'Risk & rollback', 'Self-review'];
-            const SELF_REVIEW_ITEMS = ['Reuse', 'Quality', 'Efficiency', 'Guidelines', 'Visual'];
             const problems = [];
-            const { pathToFileURL } = require('url');
-            const scripts = (name) => import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/${name}`).href);
-            const { linkedIssues, sectionsOf, withoutComments } = await scripts('pr-body.mjs');
             const { changedFiles, knowledgeProblems } = await scripts('knowledge-sync.mjs');
             const { e2eDecision, e2eProblems } = await scripts('e2e-gate.mjs');
             const body = withoutComments(pr.body);
 
-            // 1. Linked issue(s): "Closes #N" (closes it on merge) or "Part of #N" (multi-PR issue)
-            const { closes, partOf } = linkedIssues(body);
-            const refs = [...closes, ...partOf];
-            if (refs.length === 0) {
-              problems.push('Link the issue this PR addresses: "Closes #123" (or "Part of #123" if more PRs will follow).');
-            }
-            for (const number of refs) {
-              let issue;
+            // 1. The issue: the PR closes exactly one (PR-CLOSES), which is labeled (PR-LABELS), claimed
+            // (PR-ASSIGNED), in the plan (PR-MILESTONE; an epic is optional) and shows this PR on its
+            // timeline (PR-LINKED). A "Part of" link no longer counts (AGENTS.md, one issue, one PR).
+            const links = linkedIssues(body);
+            problems.push(...closeProblems(links));
+            for (const number of links.closes) {
+              let issue = null;
               try {
                 ({ data: issue } = await github.rest.issues.get({ ...context.repo, issue_number: number }));
               } catch {
-                problems.push(`#${number} was not found.`);
-                continue;
+                // lookupProblems reports it as not found
               }
-              if (issue.pull_request) {
-                problems.push(`#${number} is a pull request, not an issue.`);
-                continue;
+              const lookup = lookupProblems(number, issue);
+              problems.push(...lookup);
+              if (lookup.length) continue;
+              problems.push(...issueProblems(number, issue, policy));
+
+              // GitHub adds the closing keyword to the issue's timeline a moment after the PR is saved,
+              // so look a few times before calling the link one-way
+              let linked = false;
+              for (let attempt = 0; attempt < 4 && !linked; attempt++) {
+                if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 5000));
+                const events = await github.paginate(github.rest.issues.listEventsForTimeline, {
+                  ...context.repo,
+                  issue_number: number,
+                  per_page: 100,
+                });
+                linked = timelineShowsPr(events, pr.number);
               }
-              const labels = issue.labels.map((l) => (typeof l === 'string' ? l : l.name));
-              const types = labels.filter((l) => policy.types.includes(l));
-              if (types.length !== 1)
-                problems.push(`Issue #${number} needs exactly one type label (${policy.types.join(', ')}); it has ${types.length}.`);
-              if (!labels.some((l) => policy.areas.includes(l)))
-                problems.push(`Issue #${number} needs at least one area label (${policy.areas.join(', ')}).`);
-              if (!labels.some((l) => l.startsWith('priority: ')))
-                problems.push(`Issue #${number} needs a priority label (priority: high / medium / low).`);
+              if (!linked)
+                problems.push(
+                  ruleMessage('PR-LINKED', `Issue #${number} does not show this PR on its timeline; check the number in "Closes #${number}", then edit the PR description to re-run.`),
+                );
             }
 
-            // 2. Every template section filled in
-            const sections = sectionsOf(body);
-            for (const name of REQUIRED_SECTIONS) {
-              const text = (sections[name.toLowerCase()] || '').replace(/^\s*\d+\.\s*$/gm, '').trim();
-              if (text.length < 10) problems.push(`Fill in the "## ${name}" section of the PR description.`);
-            }
-
-            // The self-review (docs/guidelines/guard-rails.md, rule 6) says something about each item
-            const selfReview = sections['self-review'] || '';
-            for (const item of SELF_REVIEW_ITEMS) {
-              const line = selfReview.split('\n').find((l) => new RegExp(`^\\s*[-*]\\s*\\**${item}\\**\\s*:`, 'i').test(l));
-              const answer = (line || '').replace(/^[^:]*:/, '').trim();
-              if (answer.length < 10) problems.push(`Self-review: write a line "- ${item}: what you checked and fixed" (10+ characters).`);
-            }
+            // 2. Every template section filled in (PR-SECTIONS, PR-SELF-REVIEW)
+            problems.push(...descriptionProblems(body));
 
             // 3. The knowledge layer stays in sync with the code (decision 0019 section 6, #716, #770):
             // a behavior-bearing change anywhere in the repository changes a doc (and the mapped note,
@@ -108,26 +114,29 @@ jobs:
               per_page: 100,
             });
             problems.push(
-              ...knowledgeProblems({
-                mapJson: fs.readFileSync('docs/knowledge/map.json', 'utf8'),
-                files: changedFiles(files),
-                noteExists: (note) => fs.existsSync(note),
-                body,
-              }),
+              ...withRuleId(
+                'PR-KNOWLEDGE',
+                knowledgeProblems({
+                  mapJson: fs.readFileSync('docs/knowledge/map.json', 'utf8'),
+                  files: changedFiles(files),
+                  noteExists: (note) => fs.existsSync(note),
+                  body,
+                }),
+              ),
             );
 
             // 4. The browser tests (#868): a UI change runs them in CI ("End-to-end tests"), unless the
             // description holds "End-to-end exemption: <reason>"; the reason needs 20+ characters and
             // the independent reviewer checks it against the diff. Shown here so the verdict is on record
-            problems.push(...e2eProblems({ body }));
+            problems.push(...withRuleId('PR-E2E', e2eProblems({ body })));
             const e2e = e2eDecision({ event: 'pull_request', files: changedFiles(files), body });
             core.info(`e2e-gate: decision=${e2e.run ? 'run' : 'skip'} ui_files=${e2e.ui.length} flow_files=${e2e.flows.length} reason="${e2e.reason}"`);
 
             if (problems.length) {
               core.setFailed(
                 `This PR does not meet AGENTS.md yet:\n- ${problems.join('\n- ')}\n\n` +
-                  'Fix the issue labels or the PR description, then edit the PR (or re-run this check).',
+                  'Each line starts with its rule ID (docs/process/project-management.md#the-pull-request-gate). Fix the issue or the PR description, then edit the PR (or re-run this check).',
               );
             } else {
-              core.info(`PR Policy passed. Linked issue(s): ${refs.map((n) => '#' + n).join(', ')}`);
+              core.info(`PR Policy passed. Closes: ${links.closes.map((n) => '#' + n).join(', ')}`);
             }
