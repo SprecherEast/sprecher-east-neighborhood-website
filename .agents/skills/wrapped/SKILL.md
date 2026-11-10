@@ -42,9 +42,32 @@ whether anything deploys: docs-only changes, and commits older than the live one
      checks from the internet.
 3. Open https://sprechereast.com and check the behavior the PRs changed.
 
-Never re-run or start the deploy yourself (it can be started by hand: Actions → Deploy to VPS →
-Run workflow, on `main`). A failed deploy gets a new issue and is fixed or reverted through a PR.
-Never fix it on the server.
+### Starting the deploy by hand
+
+An agent may start the `Deploy to VPS` workflow by hand, on `main`, when a redeploy is needed (the
+owner's decision, #972). The limits:
+
+- It never takes the place of a required check, a review, or a fix through a pull request, and it
+  never bypasses a rule.
+- First check that no deploy is running. A merge's deploy runs inside the **CI** run, so look at
+  both workflows that can deploy, `ci.yml` and `deploy.yml`, on `main`: no run may be `in_progress`
+  or `queued`. If one is, wait for it. The deploy job's concurrency group holds one running and one
+  pending job and a newer arrival replaces the pending one, so starting during a run can drop a
+  queued deploy.
+- Start it with the REST call below, then verify it as in this step: find the run, read the
+  annotations, check the site.
+- Say on the linked issue why it was started, and which run.
+- A failed deploy gets a new issue and is fixed or reverted through a PR. Never fix it on the server.
+
+```bash
+for w in ci deploy; do for st in in_progress queued; do
+  gh api "repos/{owner}/{repo}/actions/workflows/$w.yml/runs?branch=main&status=$st" --jq .total_count
+done; done   # all four must print 0
+gh api -X POST repos/{owner}/{repo}/actions/workflows/deploy.yml/dispatches -f ref=main -F return_run_details=true
+# 200 with workflow_run_id and html_url. Without return_run_details, gh's default API version
+# answers 204 with no body and the run id must be looked up: gh run list --workflow deploy.yml
+# Watch it: gh run watch <workflow_run_id>
+```
 
 ## 3. Close the loop on the issues
 

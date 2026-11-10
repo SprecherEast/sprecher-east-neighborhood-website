@@ -27,8 +27,10 @@ from `NEXT_PUBLIC_SERVER_URL` in `.env.local`, and the check goes to Caddy on th
 
 ## How a deploy runs
 
-CI calls the deploy once its `Type-check & Build` job passes on a push to `main`. It can also be
-started by hand (Actions → Deploy to VPS → Run workflow, on `main`).
+CI calls the deploy once its `Type-check & Build` job passes on a push to `main`. When a redeploy is
+needed it can also be started by hand on `main`: by the owner (Actions → Deploy to VPS → Run workflow)
+or by an agent, within the limits in [`wrapped`](../.agents/skills/wrapped/SKILL.md) step 2, with
+`gh api -X POST repos/{owner}/{repo}/actions/workflows/deploy.yml/dispatches -f ref=main -F return_run_details=true`.
 
 1. **Preflight** waits until the required checks (`Type-check & Build`, `Prettier`, `ESLint`,
    `Dependency Audit`, `Knowledge sync`, `Agent context`) have passed on the commit, then reads
