@@ -42,7 +42,9 @@ started by hand (Actions → Deploy to VPS → Run workflow, on `main`).
    an agent asks him (label `needs owner`) and records the change on an `infra` issue first. The
    gate runs before the docs-only skip, so a docs-only push also fails while keys are missing and
    no opt-out is set. Only the keys' presence is checked, not that
-   Cloudflare accepts them (`.github/scripts/robot-check-gate.sh`). It skips
+   Cloudflare accepts them (`.github/scripts/robot-check-gate.sh`). It also stops the deploy
+   when `NEXT_PUBLIC_UMAMI_WEBSITE_ID` is set to anything but a UUID (the visit counter's site ID, #950;
+   unset is fine and counts nothing; `.github/scripts/umami-id-gate.sh`). It skips
    the deploy when that commit, or a newer one, is already live, or when only docs and repo
    tooling changed since the live commit.
 2. **Build release** runs on Ubuntu 24.04 with the server's exact Node version, without any

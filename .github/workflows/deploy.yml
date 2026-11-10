@@ -24,6 +24,7 @@ jobs:
       server_url: ${{ steps.facts.outputs.server_url }}
       turnstile_site_key: ${{ steps.facts.outputs.turnstile_site_key }}
       turnstile_paired: ${{ steps.facts.outputs.turnstile_paired }}
+      umami_website_id: ${{ steps.facts.outputs.umami_website_id }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -58,15 +59,17 @@ jobs:
           facts=$(cat ops/lib.sh ops/server-facts.sh | ssh vps 'bash -s')
           get() { sed -n "s/^$1=//p" <<<"$facts" | tail -n 1; }
           node=$(get node); url=$(get server_url); key=$(get turnstile_site_key)
+          umami=$(get umami_website_id)
           secret=$(get turnstile_secret); free_kb=$(get free_kb)
           [[ "$node" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error title=Preflight::unexpected Node version from the server"; exit 1; }
           [[ "$url" =~ ^https?://[A-Za-z0-9.-]+(:[0-9]+)?$ ]] || { echo "::error title=Preflight::NEXT_PUBLIC_SERVER_URL in .env.local is not a plain origin"; exit 1; }
           [[ "$key" =~ ^[A-Za-z0-9_-]*$ ]] || { echo "::error title=Preflight::unexpected NEXT_PUBLIC_TURNSTILE_SITE_KEY"; exit 1; }
+          UMAMI_ID="$umami" bash .github/scripts/umami-id-gate.sh
           # Both Turnstile keys, or the visible opt-out (#869); the decision is in the script.
           SITE_KEY="$key" SECRET_SET="$secret" bash .github/scripts/robot-check-gate.sh
           [ "${free_kb:-0}" -gt 3145728 ] || { echo "::error title=Preflight::less than 3 GB free on the server"; exit 1; }
           {
-            echo "node=$node"; echo "server_url=$url"; echo "turnstile_site_key=$key"
+            echo "node=$node"; echo "server_url=$url"; echo "turnstile_site_key=$key"; echo "umami_website_id=$umami"
             echo "deployed=$(get deployed)"
           } >> "$GITHUB_OUTPUT"
           echo "::notice title=Preflight::server runs Node $node; live commit $(get deployed | cut -c1-7)"
@@ -106,6 +109,7 @@ jobs:
           NODE_VERSION: ${{ needs.preflight.outputs.node }}
           NEXT_PUBLIC_SERVER_URL: ${{ needs.preflight.outputs.server_url }}
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ needs.preflight.outputs.turnstile_site_key }}
+          NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${{ needs.preflight.outputs.umami_website_id }}
           TURNSTILE_PAIRED: ${{ needs.preflight.outputs.turnstile_paired }}
           OUT: ${{ runner.temp }}/release.tar.gz
         run: bash ops/build-release.sh

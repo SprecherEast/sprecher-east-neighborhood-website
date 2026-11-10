@@ -10,6 +10,7 @@ import { contact as contactPageData } from './contact-page'
 import { home } from './home'
 import { aboutPage } from './about-page'
 import { getInvolvedPage } from './get-involved-page'
+import { privacyPage } from './privacy-page'
 import { associationPage } from './association-page'
 import { image1 } from './image-1'
 import { image2 } from './image-2'
@@ -317,8 +318,8 @@ export const seed = async ({
     return id
   }
 
-  const [_homePage, contactPage, aboutPageDoc, getInvolvedDoc, _associationDoc] = await Promise.all(
-    [
+  const [_homePage, contactPage, aboutPageDoc, getInvolvedDoc, _associationDoc, _privacyDoc] =
+    await Promise.all([
       payload.create({
         collection: 'pages',
         depth: 0,
@@ -350,8 +351,12 @@ export const seed = async ({
         depth: 0,
         data: associationPage(),
       }),
-    ],
-  )
+      payload.create({
+        collection: 'pages',
+        depth: 0,
+        data: privacyPage(),
+      }),
+    ])
 
   payload.logger.info(`— Seeding globals...`)
 
@@ -431,6 +436,13 @@ export const seed = async ({
               type: 'custom',
               label: 'FAQ',
               url: '/faq',
+            },
+          },
+          {
+            link: {
+              type: 'custom',
+              label: 'Privacy',
+              url: '/privacy',
             },
           },
           {

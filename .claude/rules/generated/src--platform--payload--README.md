@@ -5,6 +5,7 @@ paths:
   - 'src/platform/seo/**'
   - 'src/platform/email/**'
   - 'src/platform/turnstile/**'
+  - 'src/platform/analytics/**'
   - 'src/platform/service/**'
 ---
 
@@ -12,7 +13,7 @@ paths:
 
 # Shared Payload code
 
-The helpers every collection is built from (`src/platform/payload/`) and the helpers modules share (`lib/`, `seo/`, `email/`, `turnstile/`, `service/` beside it). The rules a module note states (staff see drafts, suggestions wait as drafts, publishes are scheduled, limits are counted in memory) are defined here. Access functions and hooks per collection: [content types](/docs/reference/content-types/README.md).
+The helpers every collection is built from (`src/platform/payload/`) and the helpers modules share (`lib/`, `seo/`, `email/`, `turnstile/`, `analytics/`, `service/` beside it). The rules a module note states (staff see drafts, suggestions wait as drafts, publishes are scheduled, limits are counted in memory) are defined here. Access functions and hooks per collection: [content types](/docs/reference/content-types/README.md).
 
 ## How the pieces link
 
@@ -40,6 +41,7 @@ The helpers every collection is built from (`src/platform/payload/`) and the hel
 - Dates: `SITE_TIMEZONE` (env, default Central) decides "today"; day-only dates are midnight UTC and show in UTC, other timestamps in the site timezone (`lib/timezone.ts`, `lib/formatDateTime.ts`).
 - Messages are whole sentences with `{blanks}`; `message()` throws on a missing value, and durations come in words from `formatDuration` (whole minutes). `retention.ts` and `linkLifetimes.ts` hold the periods two modules share (`lib/messages/`, `lib/formatDuration.ts`, decision 0017).
 - Email layout takes fixed paragraphs only, escaped, with inline colors (`lib/emailLayout.ts`, decision 0004). `emailAdapterFromEnv` builds SMTP from `SMTP_*`; with no host, or a bad setting (address, port, half a login), it logs and emails go to the log; with a login it insists on STARTTLS (`email/emailAdapter.ts`).
+- Visit counter: the self-hosted Umami script loads from the public layout after the page, never in the admin or a draft preview, only when `NEXT_PUBLIC_UMAMI_WEBSITE_ID` is set (fixed at build) and the site has a real domain; it counts for the site's own hostnames only (the address and its bare domain), sets no cookies, honors Do Not Track and sends no query string (`data-exclude-search`: reset and verification tokens, a sign-up email and search words travel there, so a campaign tag is lost too). The script comes from `stats.<domain>` (`analytics/umami.ts`, `UmamiScript.tsx`, #950). The seeded Privacy page says so; live content is edited in the CMS.
 - Robot check: off until both Turnstile keys are set; the server fails closed on any error, checks action and hostname, and sends no IP. The widget appears only when Cloudflare asks (`interaction-only`), and a token is single use, so `useRobotCheck` renews it after each attempt (`turnstile/turnstileVerifier.ts`, `TurnstileWidget.client.tsx`, `useRobotCheck.client.ts`, decision 0003).
 - Search engines: account and token pages use `NOT_INDEXED`; a page whose address holds a token also sends no referrer (`seo/notIndexed.ts`, `privateAddress.ts`, #280). `mergeOpenGraph` fills site defaults, and the image is the `og` size, else the upload, else a default photo (`seo/mergeOpenGraph.ts`, `generateMeta.ts`).
 - `runUseCase` catches, logs only the error's class name (never a message with an email in it) and returns the fallback; `runAction` turns a throw into a failure code and logs it only when that code is `server-error`, since any other code is an expected refusal (`service/runUseCase.ts`, #521).
@@ -54,6 +56,7 @@ The helpers every collection is built from (`src/platform/payload/`) and the hel
 - Titles stop at one shared limit when publishing, not when saving a draft: `src/payload.config.titleLimit.test.ts`, `payload/contentCollection.test.ts`.
 - Links, paging and cursors: `payload/resolveLink.test.ts`, `documentHref.test.ts`, `keyset.test.ts`, `lib/cursor.test.ts`, `lib/paging.test.ts`.
 - Limits, dates, messages and email: `lib/slidingWindow.test.ts`, `clientIp.test.ts`, `timezone.test.ts`, `formatDateTime.test.ts`, `formatDuration.test.ts`, `retention.test.ts`, `emailLayout.test.ts`, `lib/messages/*.test.ts`, `email/emailAdapter.test.ts`.
+- The visit counter: `analytics/umami.test.ts`, `UmamiScript.test.tsx`, `src/app/(frontend)/layout.test.tsx`, `src/app/nextConfigEnv.test.ts` (the build-time pins).
 - The robot check, metadata and the service helper: `turnstile/turnstileVerifier.test.ts`, `seo/generateMeta.test.ts`, `seo/privateAddress.test.ts`, `service/runUseCase.test.ts`.
 
 ## Shared pieces it uses
