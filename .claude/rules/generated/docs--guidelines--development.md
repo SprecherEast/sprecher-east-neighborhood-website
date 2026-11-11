@@ -151,6 +151,22 @@ function ChildForm() {
 }
 ```
 
+## Documentation Follows Behavior
+
+A change alters behavior when a visitor, an editor or an agent would get something different: what
+is shown, sent, stored, allowed or limited, or how a screen, field, route, job or tool works. Then
+the note or doc that describes it changes in the same pull request. When nothing like that changes,
+the pull request says so: `Behavior change: none` and a reason that is true of the diff.
+
+- Decide by what someone using the site, the CMS or the agent tools would notice, not by which
+  folder changed. A mapped folder does not by itself mean behavior changed.
+- A good reason says why nothing observable changed, not that the change is small.
+- Do not edit a note only to satisfy the check. If the note is still true, the true statement is
+  the declaration; if it is no longer true, fix the note.
+- Before opening the pull request, run the local check (`npm run knowledge:check`) and read each
+  note the diff maps to against the diff.
+- The reviewer checks the reason against the diff. A reason the diff does not support is a Blocker.
+
 ## Visual QA Is Mandatory for UI/UX Changes
 
 Changes that touch CSS, Tailwind classes, HTML structure, or component markup that affects rendering **must** be visually verified before committing. Use Playwright (the Playwright MCP server, or a Playwright script) to screenshot affected pages at all 6 test viewports (see [`nextjs-tailwind.md`](/docs/guidelines/nextjs-tailwind.md#responsive-design--6-viewport-testing) for the full viewport table and workflow, and the [`visual-design-review`](/.agents/skills/visual-design-review/SKILL.md) skill). Skip for backend-only, config-only, or docs-only changes.
