@@ -239,3 +239,21 @@ describe('Field accessibility', () => {
     await expectAccessible(container)
   })
 })
+
+describe('Field, row layout (#1054)', () => {
+  afterEach(cleanup)
+
+  it('puts the label and the control on one line, with the error under both', () => {
+    render(
+      <Field label="Your home’s value" layout="row" error="Enter a number">
+        <Field.Input defaultValue="1" />
+      </Field>,
+    )
+    const label = screen.getByText('Your home’s value')
+    const input = screen.getByLabelText('Your home’s value')
+    expect(label.parentElement).toBe(input.parentElement?.parentElement)
+    expect(label.className).toContain('whitespace-nowrap')
+    const row = label.parentElement as HTMLElement
+    expect(row.contains(screen.getByRole('alert'))).toBe(false)
+  })
+})

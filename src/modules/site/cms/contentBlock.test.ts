@@ -18,4 +18,16 @@ describe('Content block', () => {
         : []
     expect(values).toEqual(['default', 'outline', 'accent'])
   })
+
+  it('lets an editor put a column link beside its text (#1058)', () => {
+    const columns = Content.fields.find((field) => 'name' in field && field.name === 'columns')
+    const columnFields: Field[] = columns && 'fields' in columns ? columns.fields : []
+    const position = columnFields.find((field) => 'name' in field && field.name === 'linkAlign')
+
+    const values =
+      position && 'options' in position
+        ? position.options.map((option) => (typeof option === 'string' ? option : option.value))
+        : []
+    expect(values).toEqual(['start', 'end', 'beside'])
+  })
 })

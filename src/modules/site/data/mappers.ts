@@ -87,7 +87,7 @@ function toContentColumn({
     size: size ?? 'full',
     ...(richText && { body: richText }),
     ...(resolved && { link: resolved }),
-    ...(resolved && linkAlign === 'end' && { linkAlign }),
+    ...(resolved && (linkAlign === 'end' || linkAlign === 'beside') && { linkAlign }),
   }
 }
 
