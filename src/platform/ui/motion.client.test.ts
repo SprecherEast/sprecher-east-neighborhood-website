@@ -48,6 +48,26 @@ describe('scrollToUnlessVisible', () => {
     expect(element.scrollIntoView).not.toHaveBeenCalled()
   })
 
+  it('scrolls when the element sits under the sticky header, which its scroll margin keeps clear', async () => {
+    const element = box(40, 600)
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({
+      scrollMarginTop: '88px',
+    } as CSSStyleDeclaration)
+    const done = scrollToUnlessVisible(element)
+    await vi.advanceTimersByTimeAsync(2500)
+    await done
+    expect(element.scrollIntoView).toHaveBeenCalled()
+  })
+
+  it("does not scroll when the element is just below the header's clearance", async () => {
+    const element = box(100, 600)
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({
+      scrollMarginTop: '88px',
+    } as CSSStyleDeclaration)
+    await scrollToUnlessVisible(element)
+    expect(element.scrollIntoView).not.toHaveBeenCalled()
+  })
+
   it('scrolls smoothly, by the least distance, when part of it is below the screen', async () => {
     const element = box(300, 1100)
     const done = scrollToUnlessVisible(element)

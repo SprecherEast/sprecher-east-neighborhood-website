@@ -191,3 +191,26 @@ describe('BillShare, Estimate with motion allowed', () => {
     expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' })
   })
 })
+
+describe('BillShare, the card and the total after Estimate (#1051)', () => {
+  const total = () => screen.getByText('Total property tax').closest('p') as HTMLElement
+
+  it('keeps the whole card clear of the sticky header when it scrolls into view', () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    const card = screen.getByRole('region', { name: 'Your rough property tax' })
+    expect(card.className).toContain('scroll-mt-')
+  })
+
+  it('flashes the total once a new bill has been estimated, and not on load', async () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    expect(total().className).not.toContain('total-pulse')
+    await estimate('300000')
+    expect(total().className).toContain('total-pulse')
+  })
+
+  it('flashes the total when a rate year changes the bill', () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    expect(total().className).toContain('total-pulse')
+  })
+})
