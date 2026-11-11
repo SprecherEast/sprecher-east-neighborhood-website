@@ -158,7 +158,7 @@ built on 2026-10-21 from the spec in #90 and moved to the organization after.
   also becomes In progress, and the `ready` label moves a card from Backlog to Ready. A Ready card
   returns to Backlog when the label goes, or while the issue has `needs owner` or fails
   [the issue check](issue-and-pr-checks.md#the-issue-check) (the app runs the check's rules itself
-  on every change to the issue). A card never moves back from In progress, In review or Done. Run
+  when the issue changes; a manual run catches up anything it missed). A card never moves back from In progress, In review or Done. Run
   by hand for one issue, the workflow brings that card in line with the issue as it is now.
 
 ## Grooming and work in progress

@@ -4,8 +4,9 @@ name: Planner Board
 # Planner" app. A new or reopened issue goes into the sprint that is running; an assigned issue,
 # which is how work is claimed, also becomes In progress; the "ready" label moves a card between
 # Backlog and Ready, and only while the issue passes the issue check and does not wait for the
-# owner. The check's own label changes start no workflow (GITHUB_TOKEN), so this one runs the
-# check's rules itself on every change to the issue. In review and Done are GitHub's own board
+# owner. Label changes made by other workflows start no run (GITHUB_TOKEN), so this one runs the
+# check's rules itself when a person or an agent changes the issue; a run can read the issue a
+# moment before another workflow's labels land, and the next event or a manual run catches up. In review and Done are GitHub's own board
 # rules. Run it by hand with an issue number to bring one card in line with its issue. It checks
 # out and runs only the repository's own main-branch code. Issue text is untrusted: it goes only
 # through the pure rule functions, and the label name is an environment variable compared with

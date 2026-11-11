@@ -56,9 +56,9 @@ const isClaim = (action, issue) =>
 
 /**
  * Both directions read the issue as it is now, so a run GitHub dropped is caught up by the next
- * one. A Ready card without the label is moved back only when the label was removed (this event,
- * or the issue's history) or on a manual run, because cards moved to Ready by hand before the
- * label existed never carried it.
+ * one. A Ready card without the label is moved back only when the label was ever removed (in this
+ * event, or at any time in the issue's history) or on a manual run, because cards moved to Ready
+ * by hand before the label existed never carried it.
  */
 function statusFor({ action, label, issue, status }) {
   if (issue.state !== 'open' || NO_BACKWARDS.has(status)) return status
