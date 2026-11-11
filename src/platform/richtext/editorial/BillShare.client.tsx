@@ -17,6 +17,7 @@ import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
 import { Link } from '@/platform/ui/Link'
 import { scrollToUnlessVisible } from '@/platform/ui/motion.client'
 import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
+import { ShareBar } from '@/platform/ui/ShareBar.client'
 import { SharePie } from '@/platform/ui/SharePie.client'
 import { Text } from '@/platform/ui/Text'
 import { useCountedNumber } from '@/platform/ui/useCountedNumber.client'
@@ -24,6 +25,7 @@ import { useCountedNumber } from '@/platform/ui/useCountedNumber.client'
 import type { BillShareProps } from './billShare'
 import { joinNames, reservedNote, ROUGH_NOTE, unconfirmedNote } from './billShareNotes'
 import { receiptFor } from './billShareView'
+import { shareBarFor } from './shareBarView'
 import { cityBarFor, figuresFor } from './billFigures'
 import { useReportFigures } from './BillFigures.client'
 import { RoughEstimator } from './RoughEstimator'
@@ -42,7 +44,8 @@ export type CityPanelProps = {
 
 /**
  * The whole property-tax bill at the top of a fact tab (#1018, #1022): two cards of one height, side
- * by side from `lg` and stacked below it. The Rough Estimator holds the home value the reader can
+ * by side from `lg` and stacked below it, with the same bill under them as a bar whose City slice
+ * joins the City's panel (#1030). The Rough Estimator holds the home value the reader can
  * change (it starts at the City's average home), the switch between tax years and the notes on how
  * rough the answer is; the other is the bill as a pie whose wedges are as big as their shares. The
  * City's panel sits under both: the City's own tax as one bar, a short line, then where that tax
@@ -93,6 +96,7 @@ export function BillShare({
   const { rates } = fillFromEarlier(year.rates, years[yearIndex - 1]?.rates)
   const bill = computeBillShare(shown, rates)
   const receipt = receiptFor(bill, shown)
+  const shareBar = shareBarFor(receipt.slices)
   // What a screen reader hears: the bill for the value estimated, not each step of the count
   const summary = receiptFor(computeBillShare(target, rates), target).summary
 
@@ -197,9 +201,15 @@ export function BillShare({
           </div>
         </Card>
       </div>
-      <Card variant="elevated" padding="sm" className="sm:p-6">
-        {panel}
-      </Card>
+      {shareBar.slices.length > 0 ? (
+        <ShareBar slices={shareBar.slices} label={shareBar.label}>
+          {panel}
+        </ShareBar>
+      ) : (
+        <Card variant="elevated" padding="sm" className="sm:p-6">
+          {panel}
+        </Card>
+      )}
       <Text variant="small">
         Uses {year.year} rates.
         {year.source && (

@@ -137,44 +137,6 @@ Source: `src/platform/ui/chart/adapters/visx/BarSegments.tsx`
 
 - Platform: `platform/ui`
 
-## `SharePie`
-
-One whole as a pie (#1022): a wedge for each slice, as big as its exact share, the first slice starting at the top and the rest clockwise from it, with one highlighted wedge in the theme's green and the others in three grays that are easy to tell apart. Each wedge writes its percent inside it when that fits (a thin wedge on a small pie leaves it to the legend). The legend under the pie lists every slice with its color, dollars and percent, and reads as a receipt: an optional heading on top and an optional total at the bottom. Its rows keep one height, so a card holding the pie never changes height when the shares do. The pie is one named picture for screen readers, whose label the caller writes with every wedge's name, dollars and percent.
-
-Source: `src/platform/ui/SharePie.client.tsx`
-
-| Prop        | Type                                 | Required | Description                                                                                 |
-| ----------- | ------------------------------------ | -------- | ------------------------------------------------------------------------------------------- |
-| `slices`    | `readonly SharePieSlice[]`           | yes      |                                                                                             |
-| `label`     | `string`                             | yes      | What the pie shows, for screen readers                                                      |
-| `heading`   | `string`                             | no       | The line above the legend's rows, such as the home the amounts are for                      |
-| `total`     | `{ label: string; amount: string; }` | no       | The line under the rows: what the amounts add up to                                         |
-| `pulseKey`  | `number`                             | no       | Changes each time the total should flash once (the page's accent), unless motion is reduced |
-| `className` | `string`                             | no       |                                                                                             |
-
-**Used by** (direct imports):
-
-- Routes: `/dev/gallery`
-- Platform: `platform/richtext`
-
-## `AmountBar`
-
-One amount as a single bar split into parts, each as wide as its share, with the year and the whole amount above it and, when there is more than one part, each part named under it with its dollars. The bar is one named picture; every figure is also text. A part marked `hatch` is the proposed increase: the same colour, striped, as in the charts. Widths are percent attributes, never inline styles.
-
-Source: `src/platform/ui/AmountBar.tsx`
-
-| Prop        | Type                       | Required | Description                 |
-| ----------- | -------------------------- | -------- | --------------------------- |
-| `title`     | `string`                   | yes      |                             |
-| `total`     | `string`                   | yes      | The whole amount, formatted |
-| `parts`     | `readonly AmountBarPart[]` | yes      |                             |
-| `className` | `string`                   | no       |                             |
-
-**Used by** (direct imports):
-
-- Routes: `/dev/gallery`
-- Platform: `platform/richtext`
-
 ## `ScaledBreakdown`
 
 A breakdown chart drawn in the browser with every amount multiplied by `factor` (#1020): the City's tax on the home a reader typed, split the way the budget is. It is the same figure as `Chart` draws for a breakdown (title, takeaway, the drawing, the caption) from the same drawing code, but it takes a spec that was already checked on the server and never parses it, so no spec rules (zod) and no chart library reach the browser; `ScaledBreakdown.test.tsx` guards that. Every figure is text in the drawing, so it has no separate numbers table.

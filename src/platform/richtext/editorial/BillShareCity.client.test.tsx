@@ -28,7 +28,7 @@ describe('BillShare, the City’s panel (#1020)', () => {
       const before = order[i] as HTMLElement
       expect(before.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     })
-    expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(2)
+    expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(3)
   })
 
   it('shows the City’s part of the bill above as the bar’s whole amount, split as the chart splits it', () => {

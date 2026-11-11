@@ -119,11 +119,15 @@ export const COMPONENT_GROUPS = [
       'BreakdownChart',
       'BarChartSvg',
       'BarSegment',
-      'SharePie',
-      'AmountBar',
       'ScaledBreakdown',
       'ChartCaption',
     ],
+  },
+  {
+    slug: 'shares',
+    title: 'Shares of a whole',
+    intro: 'One whole drawn as a bar, a pie or a single split amount.',
+    components: ['ShareBar', 'ShareBarEdge', 'SharePie', 'AmountBar'],
   },
   {
     slug: 'rich-text',
