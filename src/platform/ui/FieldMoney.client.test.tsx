@@ -54,6 +54,28 @@ describe('Field.Money', () => {
     expect(input.selectionStart).toBe(5)
   })
 
+  it('keeps the caret where it was when a typed letter is refused in the middle', async () => {
+    render(<Box start="$12,500" />)
+    const input = box()
+    input.focus()
+    fireEvent.change(input, { target: { value: '$12,a500', selectionStart: 5, selectionEnd: 5 } })
+    await Promise.resolve()
+    expect(input.value).toBe('$12,500')
+    // after the second digit, as before the letter was typed
+    expect(input.selectionStart).toBe(3)
+  })
+
+  it('moves the caret left over a comma that Backspace removed, rather than to the end', async () => {
+    render(<Box start="$12,500" />)
+    const input = box()
+    input.focus()
+    // Backspace with the caret right after the comma: "$12,|500" becomes "$12|500"
+    fireEvent.change(input, { target: { value: '$12500', selectionStart: 3, selectionEnd: 3 } })
+    await Promise.resolve()
+    expect(input.value).toBe('$12,500')
+    expect(input.selectionStart).toBe(3)
+  })
+
   it('has no accessibility violations', async () => {
     const { container } = render(<Box start="$500,300" />)
     await expectAccessible(container)

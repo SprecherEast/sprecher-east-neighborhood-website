@@ -37,8 +37,20 @@ export function FieldMoney({ value, onValueChange, ref, ...rest }: FieldMoneyPro
 
   const change = (event: ChangeEvent<HTMLInputElement>) => {
     const { value: typed, selectionStart } = event.target
-    digits.current = typed.slice(0, selectionStart ?? typed.length).replace(/\D/g, '').length
-    onValueChange(formatMoneyTyping(typed))
+    const before = typed.slice(0, selectionStart ?? typed.length).replace(/\D/g, '').length
+    const written = formatMoneyTyping(typed)
+    if (written === value) {
+      // Nothing changes, so React draws nothing and the browser would send the caret to the end
+      // (a refused letter, a comma removed by Backspace): put it back once React has reset the box
+      const input = event.target
+      queueMicrotask(() => {
+        const at = caretAfterDigits(input.value, before)
+        input.setSelectionRange(at, at)
+      })
+      return
+    }
+    digits.current = before
+    onValueChange(written)
   }
 
   return (
