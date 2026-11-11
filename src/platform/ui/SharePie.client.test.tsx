@@ -96,6 +96,39 @@ describe('SharePie', () => {
     expect(inside(small, 'matc')).toBeNull()
   })
 
+  it("writes a wedge's short name above its percent, centred, when both fit (#1068)", () => {
+    measuredAt(560)
+    const named = SLICES.map((slice) =>
+      slice.key === 'city'
+        ? { ...slice, caption: 'City tax' }
+        : slice.key === 'schools'
+          ? { ...slice, caption: 'School tax' }
+          : slice,
+    )
+    const { container } = render(<SharePie slices={named} label="Pie" />)
+    const lines = (key: string) =>
+      Array.from(container.querySelectorAll(`text[data-pie-label="${key}"] tspan`)).map(
+        (line) => line.textContent,
+      )
+    expect(lines('city')).toEqual(['City tax', '38%'])
+    expect(lines('schools')).toEqual(['School tax', '46%'])
+    // A wedge without a short name keeps just its percent
+    expect(inside(container, 'county')).toBe('13%')
+    cleanup()
+    measuredAt(120)
+    const tiny = render(<SharePie slices={named} label="Pie" />).container
+    // Too small for the name: the percent alone, as before
+    expect(tiny.querySelector('text[data-pie-label="city"] tspan')).toBeNull()
+  })
+
+  it("bands the highlighted row in the theme's green (#1068)", () => {
+    measuredAt(560)
+    const { container } = render(<SharePie slices={SLICES} label="Pie" />)
+    const rows = Array.from(container.querySelectorAll('[data-pie-legend] li'))
+    expect(rows[0]?.className).toContain('bg-primary/10')
+    expect(rows.slice(1).some((row) => row.className.includes('bg-primary'))).toBe(false)
+  })
+
   it('lists every slice in the legend, in order, with its dollars and percent', () => {
     measuredAt(560)
     const { container } = render(<SharePie slices={SLICES} label="Pie" />)
@@ -113,14 +146,19 @@ describe('SharePie', () => {
       <SharePie
         slices={SLICES}
         label="Pie"
-        heading="For a home valued at $500,300"
+        heading={{ lead: 'For a home valued at', value: '$500,300' }}
         total={{ label: 'Total property tax', amount: '$9,296' }}
       />,
     )
     const receipt = container.querySelector('[data-pie-legend]')
     expect(receipt?.firstElementChild?.textContent).toBe('For a home valued at $500,300')
-    // Big, bold and orange, so it is the first thing read under the pie
-    expect(receipt?.firstElementChild?.className).toMatch(/text-lg.*font-bold.*text-accent-dark/)
+    // The words are small and regular; the amount stays big, bold and orange, on one line (#1068)
+    const [lead, value] = Array.from(receipt?.firstElementChild?.children ?? [])
+    expect(lead?.className).toContain('text-xs xs:text-sm')
+    expect(lead?.className).not.toContain('font-bold')
+    expect(value?.className).toContain('text-lg')
+    expect(value?.className).toContain('font-bold')
+    expect(receipt?.firstElementChild?.className).toContain('text-accent-dark')
     expect(receipt?.lastElementChild?.textContent).toBe('Total property tax$9,296')
   })
 
@@ -177,7 +215,7 @@ describe('SharePie', () => {
       <SharePie
         slices={SLICES}
         label="Pie"
-        heading="For a home valued at $500,300"
+        heading={{ lead: 'For a home valued at', value: '$500,300' }}
         total={{ label: 'Total property tax', amount: '$9,296' }}
       />,
     )

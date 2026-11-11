@@ -46,14 +46,14 @@ One whole as a pie (#1022): a wedge for each slice, as big as its exact share, t
 
 Source: `src/platform/ui/SharePie.client.tsx`
 
-| Prop        | Type                                 | Required | Description                                                                                 |
-| ----------- | ------------------------------------ | -------- | ------------------------------------------------------------------------------------------- |
-| `slices`    | `readonly SharePieSlice[]`           | yes      |                                                                                             |
-| `label`     | `string`                             | yes      | What the pie shows, for screen readers                                                      |
-| `heading`   | `string`                             | no       | The line above the legend's rows, such as the home the amounts are for                      |
-| `total`     | `{ label: string; amount: string; }` | no       | The line under the rows: what the amounts add up to                                         |
-| `pulseKey`  | `number`                             | no       | Changes each time the total should flash once (the page's accent), unless motion is reduced |
-| `className` | `string`                             | no       |                                                                                             |
+| Prop        | Type                                 | Required | Description                                                                                  |
+| ----------- | ------------------------------------ | -------- | -------------------------------------------------------------------------------------------- |
+| `slices`    | `readonly SharePieSlice[]`           | yes      |                                                                                              |
+| `label`     | `string`                             | yes      | What the pie shows, for screen readers                                                       |
+| `heading`   | `{ lead: string; value: string; }`   | no       | The line above the legend's rows: what the amounts are for in words, then the amount in bold |
+| `total`     | `{ label: string; amount: string; }` | no       | The line under the rows: what the amounts add up to                                          |
+| `pulseKey`  | `number`                             | no       | Changes each time the total should flash once (the page's accent), unless motion is reduced  |
+| `className` | `string`                             | no       |                                                                                              |
 
 **Used by** (direct imports):
 

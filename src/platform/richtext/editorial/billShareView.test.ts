@@ -12,7 +12,13 @@ describe('receiptFor', () => {
     expect(receipt.slices.map((slice) => slice.key)).toEqual(['city', 'schools', 'county', 'matc'])
     expect(receipt.slices[0]).toMatchObject({ name: 'City of Madison', tone: 'highlight' })
     expect(receipt.total).toEqual({ label: 'Total property tax', amount: '$9,339' })
-    expect(receipt.heading).toBe('For a home valued at $500,300')
+    expect(receipt.heading).toEqual({ lead: 'For a home valued at', value: '$500,300' })
+    expect(receipt.slices.map((slice) => slice.caption)).toEqual([
+      'City tax',
+      'School tax',
+      undefined,
+      undefined,
+    ])
   })
 
   it('names every slice, its dollars and its percent for screen readers', () => {
@@ -35,7 +41,7 @@ describe('receiptFor', () => {
     expect(receiptFor(null, null)).toEqual({
       slices: [],
       total: null,
-      heading: '',
+      heading: null,
       label: '',
       summary: '',
     })

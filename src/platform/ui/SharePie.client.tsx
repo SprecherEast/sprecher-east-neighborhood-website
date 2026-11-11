@@ -3,7 +3,15 @@
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
-import { PIE_PERCENT_AT, pieArcs, pieAt, pieLabelFits, piePath } from '@/platform/lib/pie'
+import {
+  PIE_CAPTION_AT,
+  PIE_CAPTION_PX,
+  PIE_PERCENT_AT,
+  pieArcs,
+  pieAt,
+  pieLabelFits,
+  piePath,
+} from '@/platform/lib/pie'
 
 import { useElementWidth } from './useElementWidth.client'
 
@@ -33,6 +41,8 @@ const TONE_SWATCH = {
 export type SharePieSlice = {
   key: string
   name: string
+  /** A short name written inside the wedge above its percent when both fit (the big wedges' "City tax") */
+  caption?: string
   /** What the wedge is worth, already written, such as "$3,467" */
   amount: string
   /** Its share, as the whole number written on it */
@@ -63,8 +73,8 @@ export function SharePie({
   slices: readonly SharePieSlice[]
   /** What the pie shows, for screen readers */
   label: string
-  /** The line above the legend's rows, such as the home the amounts are for */
-  heading?: string
+  /** The line above the legend's rows: what the amounts are for in words, then the amount in bold */
+  heading?: { lead: string; value: string } | null
   /** The line under the rows: what the amounts add up to */
   total?: { label: string; amount: string }
   /** Changes each time the total should flash once (the page's accent), unless motion is reduced */
@@ -106,8 +116,41 @@ export function SharePie({
         })}
         {slices.map((slice, index) => {
           const arc = arcs[index]
+          if (!arc) return null
           const text = `${slice.percent}%`
-          if (!arc || !pieLabelFits({ share: slice.share, radius, text })) return null
+          // A wedge with a short name writes it above the percent, the pair centred in the wedge
+          if (
+            slice.caption &&
+            pieLabelFits({ share: slice.share, radius, text, at: PIE_CAPTION_AT }) &&
+            pieLabelFits({
+              share: slice.share,
+              radius,
+              text: slice.caption,
+              at: PIE_CAPTION_AT,
+              px: PIE_CAPTION_PX,
+            })
+          ) {
+            const middle = pieAt(center, center, radius * PIE_CAPTION_AT, arc.mid)
+            return (
+              <text
+                key={slice.key}
+                data-pie-label={slice.key}
+                x={middle.x}
+                y={middle.y}
+                textAnchor="middle"
+                dominantBaseline="central"
+                className="fill-foreground text-base font-semibold"
+              >
+                <tspan x={middle.x} dy="-0.6em" className="text-xs font-medium">
+                  {slice.caption}
+                </tspan>
+                <tspan x={middle.x} dy="1.2em">
+                  {text}
+                </tspan>
+              </text>
+            )
+          }
+          if (!pieLabelFits({ share: slice.share, radius, text })) return null
           const at = pieAt(center, center, radius * PIE_PERCENT_AT, arc.mid)
           return (
             <text
@@ -126,14 +169,21 @@ export function SharePie({
       </svg>
       <div data-pie-legend className="mt-4 space-y-2 text-sm">
         {heading && (
-          <p className="min-h-14 text-lg font-bold text-accent-dark sm:min-h-10">{heading}</p>
+          <p className="flex min-h-7 flex-wrap items-baseline gap-x-1.5 text-accent-dark">
+            <span className="text-xs xs:text-sm">{heading.lead} </span>
+            <span className="text-lg font-bold">{heading.value}</span>
+          </p>
         )}
         {/* One grid for every row; the percent and amount columns have fixed widths, so a longer amount never narrows the names and changes how they wrap */}
         <ul className="grid grid-cols-[1fr_2.75rem_5.5rem] gap-x-2">
           {slices.map((slice) => (
             <li
               key={slice.key}
-              className="col-span-3 grid min-h-10 grid-cols-subgrid items-center border-t border-border py-1 first:border-t-0"
+              className={cn(
+                'col-span-3 grid min-h-10 grid-cols-subgrid items-center border-t border-border py-1 first:border-t-0',
+                // The one highlighted row is banded in the theme's green, wider than the columns so its text keeps their lines
+                slice.tone === 'highlight' && '-mx-2 rounded-md bg-primary/10 px-2',
+              )}
             >
               <span className="flex min-w-0 items-center gap-x-2">
                 <span
