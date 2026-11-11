@@ -57,7 +57,9 @@ One item with `$.candidate`, `$.taxonomy` (the site's category tree), `$.verific
    otherwise.
 9. For an incident, hazard or safety item an editor approved, follow the brand voice's "Editorial
    integrity": a calm factual title and summary, attribution, confirmed or reported, no trend
-   claim, the place as precisely as the source gives it, what is not known in `$.missing`.
+   claim, the place as precisely as the source gives it, what is not known in `$.missing`, and
+   no `$.imageCandidates` that dramatize it (police tape, a stock crime photo): a picture of the
+   place or none.
 10. Never state an end time, duration, address or price the input doesn't give. List every
     missing or unconfirmed fact in `$.missing`, in plain words ("start time not
     published", "address not confirmed"), from `$.verification.unknowns`. The submit stage sends

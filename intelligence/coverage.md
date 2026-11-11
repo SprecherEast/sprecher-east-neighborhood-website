@@ -110,8 +110,10 @@ How curate reads an incident, hazard or other safety item, under the standard in
    post or one unconfirmed report carries `unverified-claim`.
 3. **Context.** Say what the item does not show (no pattern, no suspect, no injuries) and whether
    it is isolated, ongoing or resolved. Never present an isolated report as a trend.
-4. **Resolved or past.** A resolved incident with nothing left to do is rejected as `past`; an
-   item already published is corrected or marked resolved by an editor, never silently removed.
+4. **Resolved or past.** A resolved incident with nothing left to do and nothing published is
+   rejected as `past`. When the CMS already holds the item (`$.known`), route the resolution or
+   correction as an `update`, so the editor adds it with the date and the record stays; never
+   `reject` or remove it. An old incident stays findable, with its resolution first.
 5. **Always a reason.** Every accept, reject and `needs-review` has at least one reason an editor can check.
 
 ## Review passes

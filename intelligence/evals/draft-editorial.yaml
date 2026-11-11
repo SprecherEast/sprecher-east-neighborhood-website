@@ -23,7 +23,7 @@ cases:
         rubric: >-
           The title and summary are calm and factual and attribute the facts to the police report. The text
           does not call it a trend, does not say the area is safe or unsafe, names no person, and lists
-          what is not known (suspect, cause) in the missing field.
+          what is not known (suspect, cause) in the missing field. Any image candidate shows the place, not a dramatized scene.
     why: An editor-approved incident is written as one reported event with its limits stated, never as a pattern.
   - id: draft-editorial-unverified-claim
     stage: draft

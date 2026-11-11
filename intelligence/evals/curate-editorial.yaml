@@ -53,6 +53,8 @@ cases:
       sourceText: A post in a neighborhood Facebook group claims several break-ins this week. Police have not confirmed any pattern.
       startsAt: null
       locationText: Door Creek Park, Madison
+    given:
+      verification: { coverage: catchment, flags: [unverified-claim] }
     expected:
       { decision: needs-review, coverage: catchment, flags: [unverified-claim], route: reportItem }
     graders:
@@ -84,4 +86,32 @@ cases:
       startsAt: 2026-11-07T09:00:00-06:00
       locationText: Door Creek Park, Madison
     expected: { decision: accept, coverage: catchment, route: submitSuggestion }
-    why: Constructive, sourced news residents can act on is accepted on its merits, as the safety items are read on theirs.
+    why: The contrast case, with a sourced, constructive item that has a clear way to help; safety items are read on their own terms.
+  - id: editorial-resolved-published-incident
+    stage: curate
+    tags: [editorial, safety, resolved]
+    input:
+      sourceId: city-traffic-engineering-news
+      externalId: city-traffic-engineering-news:placeholder-signal-outage
+      contentHash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      kind: news
+      title: Traffic signal outage at Sprecher Road and Cottage Grove Road resolved
+      sourceText: The City says the signals are working again.
+      startsAt: null
+      locationText: Sprecher Road and Cottage Grove Road, Madison
+      change: updated
+    known:
+      collection: posts
+      id: 77
+      externalId: 'city-traffic-engineering-news:placeholder-signal-outage'
+      contentHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      status: active
+    expected:
+      {
+        decision: update,
+        coverage: core,
+        route: reportItem,
+        targetCollection: posts,
+        targetId: 77,
+      }
+    why: An item already published is updated with its resolution and the date, never rejected or silently removed.
