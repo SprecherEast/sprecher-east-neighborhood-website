@@ -12,15 +12,16 @@ export const ROUGH_NOTE =
 
 /**
  * The note for a year in which a body has not set its rate, so the estimate borrows the year
- * before's. It says only that the year's rates are not confirmed, never which bodies; null for a
- * year with nothing borrowed.
+ * before's. It says the City's rate for the year is proposed, not confirmed (the article is about
+ * the City's tax), and never which other bodies' rates were borrowed; null for a year with nothing
+ * borrowed.
  */
 export function unconfirmedNote(years: readonly BillShareYear[], index: number): string | null {
   const year = years[index]
   const earlier = years[index - 1]
   if (!year || !earlier) return null
   const { filled } = fillFromEarlier(year.rates, earlier.rates)
-  return filled.length === 0 ? null : `${year.year} rates are not confirmed, only proposed.`
+  return filled.length === 0 ? null : `The City’s ${year.year} tax rate is proposed, not confirmed.`
 }
 
 /** The note that takes the room kept for it in every year: the first year's that has one */

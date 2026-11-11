@@ -16,7 +16,15 @@ export const COMPONENT_GROUPS = [
     slug: 'form-fields',
     title: 'Form fields',
     intro: 'A `Form` holds `Field`s; a `Field` holds exactly one control.',
-    components: ['Form', 'Field', 'FieldInput', 'FieldTextArea', 'FieldSelect', 'FieldCheckbox'],
+    components: [
+      'Form',
+      'Field',
+      'FieldInput',
+      'FieldMoney',
+      'FieldTextArea',
+      'FieldSelect',
+      'FieldCheckbox',
+    ],
   },
   {
     slug: 'cards',

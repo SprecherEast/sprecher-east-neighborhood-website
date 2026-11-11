@@ -7,8 +7,6 @@ import {
   computeBillShare,
   fillFromEarlier,
   parseHomeValue,
-  type BillBody,
-  type BillPart,
 } from '@/platform/lib/billShare'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
@@ -16,24 +14,14 @@ import { AmountBar } from '@/platform/ui/AmountBar'
 import { Card, CardTitle } from '@/platform/ui/Card'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
 import { Link } from '@/platform/ui/Link'
-import { SharePie, type SharePieSlice } from '@/platform/ui/SharePie.client'
+import { SharePie } from '@/platform/ui/SharePie.client'
 import { Text } from '@/platform/ui/Text'
 
 import type { BillShareProps } from './billShare'
 import { joinNames, reservedNote, ROUGH_NOTE, unconfirmedNote } from './billShareNotes'
+import { receiptFor } from './billShareView'
 import { toCityBar } from './cityBar'
 import { RoughEstimator } from './RoughEstimator'
-
-/** The slices in the order the pie and the receipt show them: the City first */
-const SLICE_ORDER: readonly BillBody[] = ['city', 'schools', 'county', 'matc']
-
-/** A wedge's tone: the City highlighted, the others three grays, the schools' the lightest */
-const TONE: Record<BillBody, SharePieSlice['tone']> = {
-  schools: 'light',
-  city: 'highlight',
-  county: 'medium',
-  matc: 'dark',
-}
 
 /** What the City's panel holds besides the pictures a tab only draws once (#1020) */
 export type CityPanelProps = {
@@ -77,12 +65,7 @@ export function BillShare({
   const homeValue = parseHomeValue(text)
   const { rates } = fillFromEarlier(year.rates, years[yearIndex - 1]?.rates)
   const bill = homeValue === null ? null : computeBillShare(homeValue, rates)
-  const part = (key: BillBody): BillPart | undefined => bill?.parts.find((p) => p.key === key)
-  const summary = !bill
-    ? ''
-    : bill.complete && bill.total !== null
-      ? `If your home is worth ${formatWholeDollars(homeValue ?? 0)}, your whole bill is about ${formatWholeDollars(bill.total)}.`
-      : `The City’s part of a ${formatWholeDollars(homeValue ?? 0)} home’s bill would be about ${formatWholeDollars(part('city')?.amount ?? 0)}.`
+  const receipt = receiptFor(bill, homeValue)
 
   // The City's panel follows the home typed (the average home while the box holds no number)
   const home = homeValue ?? year.averageHome
@@ -109,30 +92,6 @@ export function BillShare({
       {children}
     </div>
   )
-
-  const slices: SharePieSlice[] =
-    bill?.complete === true
-      ? SLICE_ORDER.flatMap((key) => {
-          const found = part(key)
-          return found
-            ? [
-                {
-                  key,
-                  name: BILL_BODY_NAMES[key],
-                  amount: formatWholeDollars(found.amount ?? 0),
-                  percent: found.percent ?? 0,
-                  share: found.share ?? 0,
-                  tone: TONE[key],
-                },
-              ]
-            : []
-        })
-      : []
-  const receiptTotal = bill?.complete === true && bill.total !== null ? bill.total : null
-  const pieLabel =
-    slices.length > 0
-      ? `Your rough property tax: ${slices.map((slice) => `${slice.name} ${slice.amount}, ${slice.percent}%`).join('; ')}`
-      : ''
 
   // The notes always take their room, so a year with none to show never makes the card shorter
   const kept = reservedNote(years)
@@ -183,18 +142,14 @@ export function BillShare({
               <span id={pieTitleId}>Your rough property tax</span>
             </CardTitle>
             <p role="status" className="sr-only">
-              {bill && settled ? summary : ''}
+              {settled ? receipt.summary : ''}
             </p>
-            {slices.length > 0 ? (
+            {receipt.slices.length > 0 ? (
               <SharePie
-                slices={slices}
-                label={pieLabel}
-                heading={`For a home valued at ${formatWholeDollars(homeValue ?? 0)}`}
-                total={
-                  receiptTotal === null
-                    ? undefined
-                    : { label: 'Total property tax', amount: formatWholeDollars(receiptTotal) }
-                }
+                slices={receipt.slices}
+                label={receipt.label}
+                heading={receipt.heading}
+                total={receipt.total ?? undefined}
               />
             ) : (
               <Text variant="small" className="py-16 text-center">

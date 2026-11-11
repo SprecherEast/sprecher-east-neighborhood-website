@@ -56,7 +56,7 @@ describe('RoughEstimator', () => {
     )
     const box = screen.getByRole('textbox')
     fireEvent.change(box, { target: { value: '300000' } })
-    expect(onValueChange).toHaveBeenCalledWith('300000')
+    expect(onValueChange).toHaveBeenCalledWith('$300,000')
     fireEvent.blur(box)
     expect(onValueBlur).toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: '2026 rates' }))

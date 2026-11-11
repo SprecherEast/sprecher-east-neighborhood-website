@@ -6,6 +6,7 @@ import { Children, type ReactElement, type ReactNode, useId } from 'react'
 
 import { FieldCheckbox } from './FieldCheckbox.client'
 import { FieldInput } from './FieldInput.client'
+import { FieldMoney } from './FieldMoney.client'
 import { FieldSelect } from './FieldSelect.client'
 import { FieldTextArea } from './FieldTextArea.client'
 import { FieldContext, type FieldControlProps } from './fieldContext'
@@ -133,6 +134,7 @@ export function Field({
 }
 
 Field.Input = FieldInput
+Field.Money = FieldMoney
 Field.TextArea = FieldTextArea
 Field.Select = FieldSelect
 Field.Checkbox = FieldCheckbox
