@@ -42,4 +42,65 @@ describe('FactTabs with a whole tax bill', () => {
     const afterBar = bar.parentElement?.lastElementChild
     expect(afterBar?.textContent).toContain('What the City would spend in 2027')
   })
+
+  it('draws the City’s stacked chart as one bar and its breakdown from the typed home, in the panel (#1020)', () => {
+    const [first] = props.tabs
+    const bars = {
+      kind: 'chart' as const,
+      enlarge: false,
+      spec: {
+        kind: 'stacked' as const,
+        title: 'City tax',
+        summary: 'Up.',
+        unit: 'usd' as const,
+        orientation: 'horizontal' as const,
+        x: ['2026 adopted', '2027 proposed'],
+        series: [
+          { key: 'same', label: 'Same as 2026', values: [3000, 3000] },
+          { key: 'more', label: 'Proposed increase', pattern: 'hatch' as const, values: [0, 100] },
+        ],
+      },
+    }
+    const breakdown = {
+      kind: 'chart' as const,
+      enlarge: false,
+      spec: {
+        kind: 'breakdown' as const,
+        title: 'Where that City tax goes, estimated',
+        summary: 'Our estimate.',
+        unit: 'usd' as const,
+        hideSquares: true,
+        areas: [{ key: 'a', label: 'Everything', value: 3100 }],
+      },
+    }
+    const billShare = {
+      kind: 'billShare' as const,
+      billShare: {
+        intro: 'Based on the City’s average home.',
+        years: [
+          {
+            year: 2026,
+            label: '2026 rates',
+            averageHome: 481300,
+            rates: { city: 7 },
+            source: null,
+          },
+          {
+            year: 2027,
+            label: '2027 rates',
+            averageHome: 500300,
+            rates: { city: 6.93 },
+            source: null,
+          },
+        ],
+      },
+    }
+    const tab = { ...present(first), panel: [billShare, bars, breakdown] }
+    const { container } = setup({ tabs: [tab] })
+    const panel = present(container.querySelector('[role="tabpanel"]'))
+    // The two charts are not drawn a second time the usual way: one bar and one breakdown
+    expect(panel.querySelectorAll('[data-amount-part]')).toHaveLength(2)
+    expect(panel.querySelectorAll('[data-breakdown-row]')).toHaveLength(1)
+    expect(panel.textContent).toContain('2027 proposed')
+  })
 })

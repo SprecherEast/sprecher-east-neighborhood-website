@@ -4,14 +4,12 @@ import { cn } from '@/platform/lib/cn'
 import { parseChartSpec, type ChartSpec } from '@/platform/lib/chart/spec'
 import { toChartSummary, toChartTable, toScaleNote } from '@/platform/lib/chart/table'
 import { CHART_SMALL_WIDTH } from '@/platform/ui/layoutSizes'
-import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
-import { Caption } from '@/platform/ui/Caption'
 import { Disclosure } from '@/platform/ui/Disclosure'
 import { Legend } from '@/platform/ui/Legend'
-import { Link } from '@/platform/ui/Link'
 import { Text } from '@/platform/ui/Text'
 
 import type { ChartAdapter } from './chartAdapter'
+import { ChartCaption, hasCaption, type ChartCaptionProps } from './ChartCaption'
 import { ChartDataTable } from './ChartDataTable'
 import { toChartLegends } from './chartLegends'
 import { CHART_DRAWING_ATTRIBUTE } from './chartDrawing'
@@ -44,6 +42,19 @@ export type ChartProps = {
    */
   heading?: 'visible' | 'screen-reader'
   className?: string
+}
+
+/** What goes under the drawing: what a unit means, when the figures are from, where they came from, how sure we are */
+function captionOf(spec: ChartSpec): ChartCaptionProps {
+  return {
+    notes: [toScaleNote(spec), spec.kind === 'units' ? spec.unitNote : null].filter(
+      (note): note is string => Boolean(note),
+    ),
+    finePrint: spec.finePrint,
+    asOf: spec.asOf,
+    sources: spec.sources,
+    certainty: spec.certainty,
+  }
 }
 
 /**
@@ -120,9 +131,9 @@ export function Chart({
             ))}
           </div>
         )}
-        {hasCaption(spec) && (
+        {hasCaption(captionOf(spec)) && (
           <ChartCaption
-            spec={spec}
+            {...captionOf(spec)}
             className={cn(thumbnail && 'mt-4 @2xl/chart:col-start-2 @2xl/chart:row-start-3')}
           />
         )}
@@ -139,40 +150,4 @@ export function Chart({
     </div>
   )
   return enlargeable ? <ChartZoom title={spec.title}>{body}</ChartZoom> : body
-}
-
-/** Whether there is anything to put under the drawing: an empty caption would only leave a gap */
-function hasCaption(spec: ChartSpec) {
-  return Boolean(
-    toScaleNote(spec) ||
-    (spec.kind === 'units' && spec.unitNote) ||
-    spec.finePrint ||
-    spec.asOf ||
-    spec.sources?.length ||
-    spec.certainty,
-  )
-}
-
-/** What a unit means, when the figures are from, where they came from and how sure we are */
-function ChartCaption({ spec, className }: { spec: ChartSpec; className?: string }) {
-  const notes = [toScaleNote(spec), spec.kind === 'units' ? spec.unitNote : null].filter(Boolean)
-  return (
-    <Caption as="figcaption" finePrint={spec.finePrint} className={className}>
-      {notes.length > 0 && <span className="block">{notes.join(' ')}</span>}
-      <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-        {spec.asOf && <span>{spec.asOf}</span>}
-        {spec.sources?.map((source) => (
-          <Link
-            key={source.href}
-            href={source.href}
-            external={source.href.startsWith('http')}
-            variant="caption"
-          >
-            {source.label}
-          </Link>
-        ))}
-        {spec.certainty && <CertaintyBadge certainty={spec.certainty} />}
-      </span>
-    </Caption>
-  )
 }

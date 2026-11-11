@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
+import type { ChartSpec } from '@/platform/lib/chart/spec'
+
 import { BillShare } from './BillShare.client'
 import type { BillShareProps } from './billShare'
 
@@ -33,6 +35,39 @@ const PROPS: BillShareProps = {
     },
   ],
 }
+
+const BARS: Extract<ChartSpec, { kind: 'stacked' }> = {
+  kind: 'stacked',
+  title: 'City tax on an average home',
+  summary: 'Up $90.',
+  unit: 'usd',
+  orientation: 'horizontal',
+  x: ['2026 adopted', '2027 proposed'],
+  series: [
+    { key: 'same', label: 'Same as 2026', values: [3375.89, 3375.89] },
+    {
+      key: 'more',
+      label: 'Proposed increase',
+      pattern: 'hatch',
+      increase: true,
+      values: [0, 90.04],
+    },
+  ],
+}
+
+const BREAKDOWN: Extract<ChartSpec, { kind: 'breakdown' }> = {
+  kind: 'breakdown',
+  title: 'Where that City tax goes, estimated',
+  summary: 'Our estimate.',
+  unit: 'usd',
+  hideSquares: true,
+  areas: [
+    { key: 'safety', label: 'Public safety', value: 1500 },
+    { key: 'other', label: 'Everything else', value: 1500 },
+  ],
+}
+
+const city = { cityBars: BARS, cityBreakdown: BREAKDOWN, definition: <p>Short line</p> }
 
 const box = () => screen.getByRole('textbox', { name: /home’s value/i }) as HTMLInputElement
 
@@ -85,7 +120,12 @@ describe('BillShare', () => {
   it('lists each body with its dollars and its percent, and the source', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
-    for (const name of ['Madison schools', 'City of Madison', 'Dane County', 'Madison College']) {
+    for (const name of [
+      'Madison schools',
+      'City of Madison',
+      'Dane County',
+      'Madison College (MATC)',
+    ]) {
       expect(screen.getAllByText(name).length).toBeGreaterThan(0)
     }
     expect(screen.getByText(/about 38%/)).toBeTruthy()
@@ -95,5 +135,87 @@ describe('BillShare', () => {
   it('has no accessibility violations', async () => {
     const { container } = render(<BillShare {...PROPS}>City detail</BillShare>)
     await expectAccessible(container)
+  })
+
+  describe('the City’s panel (#1020)', () => {
+    const rows = (container: HTMLElement) =>
+      Array.from(container.querySelectorAll('[data-breakdown-row] [data-amount]')).map((n) =>
+        Number(n.textContent?.replace(/[^0-9]/g, '')),
+      )
+
+    it('starts with the City’s tax as one bar, then the short line, then where it goes, then the rest', () => {
+      const { container } = render(
+        <BillShare {...PROPS} {...city}>
+          <p>The rest</p>
+        </BillShare>,
+      )
+      const order = ['2027 proposed', 'Short line', 'Where that City tax goes', 'The rest'].map(
+        (text) => screen.getAllByText(new RegExp(text))[0] as HTMLElement,
+      )
+      order.slice(1).forEach((node, i) => {
+        const before = order[i] as HTMLElement
+        expect(before.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      })
+      expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(2)
+    })
+
+    it('shows the City’s part of the bill above as the bar’s whole amount, split as the chart splits it', () => {
+      render(
+        <BillShare {...PROPS} {...city}>
+          x
+        </BillShare>,
+      )
+      // 6.93 mills on $500,300, in the City's slice above and in the bar
+      expect(screen.getAllByText('$3,467').length).toBeGreaterThanOrEqual(2)
+      expect(screen.getByText('+$90')).toBeTruthy()
+    })
+
+    it('redraws the bar and every breakdown amount at once for the home typed', () => {
+      const { container } = render(
+        <BillShare {...PROPS} {...city}>
+          x
+        </BillShare>,
+      )
+      const sum = () => rows(container).reduce((all, n) => all + n, 0)
+      expect(Math.abs(sum() - 3467)).toBeLessThanOrEqual(1)
+      fireEvent.change(box(), { target: { value: '200000' } })
+      expect(Math.abs(sum() - 1386)).toBeLessThanOrEqual(1)
+      expect(screen.getAllByText('$1,386').length).toBeGreaterThanOrEqual(2)
+      expect(screen.getByText('+$36')).toBeTruthy()
+    })
+
+    it('switches the bar to the other year’s amount, with no increase for last year', () => {
+      const { container } = render(
+        <BillShare {...PROPS} {...city}>
+          x
+        </BillShare>,
+      )
+      fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+      expect(screen.getByText('2026 adopted')).toBeTruthy()
+      expect(screen.queryByText(/Proposed increase/)).toBeNull()
+      expect(container.querySelector('rect[data-amount-hatch]')).toBeNull()
+      // 7.0139 mills on $481,300
+      expect(screen.getAllByText('$3,376').length).toBeGreaterThanOrEqual(2)
+    })
+
+    it('keeps the panel on the average home while the box holds no number', () => {
+      render(
+        <BillShare {...PROPS} {...city}>
+          x
+        </BillShare>,
+      )
+      fireEvent.change(box(), { target: { value: 'abc' } })
+      expect(screen.getByText('2027 proposed')).toBeTruthy()
+      expect(screen.getAllByText('$3,467').length).toBeGreaterThan(0)
+    })
+
+    it('has no accessibility violations', async () => {
+      const { container } = render(
+        <BillShare {...PROPS} {...city}>
+          x
+        </BillShare>,
+      )
+      await expectAccessible(container)
+    })
   })
 })
