@@ -89,17 +89,18 @@ export function BillShare({
     if (lastBill.current !== null && lastBill.current !== billKey) setPulse((count) => count + 1)
     lastBill.current = billKey
   }, [settled, billKey])
-  // The tab's button and heading follow the home estimated (not each step of the count)
-  const tabBar = cityBarFor(cityBars, years, yearIndex, target)
-  useReportFigures(tabId, tabBar ? figuresFor(tabBar.increase) : undefined)
-  if (!year) return null
-
-  const text = typed ?? formatWholeDollars(year.averageHome)
-  const homeValue = parseHomeValue(text)
   const yearRates = years.map(
     (each, index) => fillFromEarlier(each.rates, years[index - 1]?.rates).rates,
   )
   const rates = ratesAtPosition(yearRates, yearPosition / YEAR_STEPS)
+  // The City's bar counts with the pie: the year between two years, the home value as it counts (#1096)
+  const cityBar = cityBarFor(cityBars, years, yearPosition / YEAR_STEPS, shown, rates)
+  // The tab's button and heading count with it
+  useReportFigures(tabId, cityBar ? figuresFor(cityBar.increase) : undefined)
+  if (!year) return null
+
+  const text = typed ?? formatWholeDollars(year.averageHome)
+  const homeValue = parseHomeValue(text)
   const bill = computeBillShare(shown, rates)
   const receipt = receiptFor(bill, shown)
   const shareBar = shareBarFor(receipt.slices)
@@ -127,8 +128,6 @@ export function BillShare({
   const breakdownTotal = cityBreakdown?.areas.reduce((sum, area) => sum + area.value, 0) ?? 0
   const breakdownFactor =
     cityAmount !== null && breakdownTotal > 0 ? cityAmount / breakdownTotal : homeRatio
-  // A chart whose columns are not these years cannot say which year it shows, so it draws no bar
-  const cityBar = cityBarFor(cityBars, years, yearIndex, home)
   const panel = (
     <div className="space-y-6">
       {cityBar && <AmountBar title={cityBar.title} total={cityBar.total} parts={cityBar.parts} />}

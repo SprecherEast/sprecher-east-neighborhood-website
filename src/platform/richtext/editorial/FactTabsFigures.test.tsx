@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { present } from '@/platform/payload/testing/present'
 
@@ -51,5 +51,43 @@ describe('the tab figure and heading with placeholders (#1029)', () => {
     )
     expect(button().textContent).toContain('+$90')
     expect(heading(container).textContent).toBe('One average home')
+  })
+})
+
+describe('the tab figure and heading count with the bill (#1096)', () => {
+  let frames: ((time: number) => void)[] = []
+  let now = 0
+  const step = (ms: number) =>
+    act(() => {
+      now += ms
+      const pending = frames
+      frames = []
+      pending.forEach((frame) => frame(now))
+    })
+  const yearly = () => Number(/\+\$(\d+)/.exec(button().textContent ?? '')?.[1])
+
+  beforeEach(() => {
+    frames = []
+    now = 0
+    vi.stubGlobal('requestAnimationFrame', (callback: (time: number) => void) => {
+      frames.push(callback)
+      return frames.length
+    })
+    vi.stubGlobal('cancelAnimationFrame', () => {})
+    vi.stubGlobal('matchMedia', () => ({ matches: false }))
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('moves from the old figure to the new one, ending on it', async () => {
+    render(<FactTabs tabs={[tab(WORDS)]} />)
+    expect(yearly()).toBe(90)
+    await estimate('$1,000,600')
+    step(0)
+    step(500)
+    const middle = yearly()
+    expect(middle).toBeGreaterThan(90)
+    expect(middle).toBeLessThan(180)
+    step(2000)
+    expect(yearly()).toBe(180)
   })
 })

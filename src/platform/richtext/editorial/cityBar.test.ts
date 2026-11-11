@@ -58,3 +58,23 @@ describe('toCityBar', () => {
     expect(toCityBar(SPEC, { column: 0, cityAmount: 1386 }).increase).toBe(0)
   })
 })
+
+describe('toCityBar between two years (#1096)', () => {
+  it('blends the two columns, so the bar can count from one year to the next', () => {
+    const half = toCityBar(SPEC, { column: 0.5, cityAmount: null })
+    // The increase is half of 2027's: 45.02 of 90.04, on top of the same amount as 2026
+    expect(half.parts.map((p) => p.amount)).toEqual(['$3,376', '+$45'])
+    expect(half.increase).toBe(45)
+  })
+
+  it('names the nearer year', () => {
+    expect(toCityBar(SPEC, { column: 0.4, cityAmount: null }).title).toBe('2026 adopted')
+    expect(toCityBar(SPEC, { column: 0.6, cityAmount: null }).title).toBe('2027 proposed')
+  })
+
+  it('is exactly a year’s column at a whole position', () => {
+    expect(toCityBar(SPEC, { column: 1, cityAmount: 1386 })).toEqual(
+      toCityBar(SPEC, { column: 1.0, cityAmount: 1386 }),
+    )
+  })
+})
