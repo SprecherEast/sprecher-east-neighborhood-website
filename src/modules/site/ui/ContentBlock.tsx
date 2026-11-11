@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
+import { lexicalRoot } from '@/platform/richtext/lexicalTree'
 import { RichText } from '@/platform/richtext/RichText'
 import { Card } from '@/platform/ui/Card'
 import { CardGrid, CardGridItem } from '@/platform/ui/CardGrid'
@@ -41,6 +42,20 @@ const SIDE_CARD_TEXT =
 const STAT_TEXT =
   '[&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-foreground [&_p]:mt-1 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted-foreground'
 
+/** The column's opening heading, when it starts with one, and the rest of its text */
+function splitLeadingHeading(body: ContentColumn['body']): {
+  lead: ContentColumn['body']
+  rest: ContentColumn['body']
+} {
+  const root = lexicalRoot(body)
+  if (!body || !root?.children || root.children[0]?.type !== 'heading') {
+    return { lead: undefined, rest: body }
+  }
+  const part = (nodes: typeof root.children): ContentColumn['body'] =>
+    nodes.length > 0 ? ({ ...body, root: { ...root, children: nodes } } as typeof body) : undefined
+  return { lead: part(root.children.slice(0, 1)), rest: part(root.children.slice(1)) }
+}
+
 /** A column's text, then its link button, at the start of the column or at the end */
 function ColumnContent({
   body,
@@ -48,15 +63,17 @@ function ColumnContent({
   linkAlign,
 }: Pick<ContentColumn, 'body' | 'link' | 'linkAlign'>) {
   if (link && linkAlign === 'beside') {
-    // Text and button share a row: the text takes the rest of the width, and the button's bottom
-    // is level with the text's last line at every width
+    // The button floats right under the heading and the text wraps around it, then runs full
+    // width: no row or column of its own (`besideFloat` is the article picture's float, #1023)
+    const { lead, rest } = splitLeadingHeading(body)
     return (
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-x-4">
-        <div>{body && <RichText data={body} enableGutter={false} />}</div>
-        <div>
+      <>
+        {lead && <RichText data={lead} enableGutter={false} />}
+        <div className="float-right mb-2 ml-4">
           <LinkButton link={link} />
         </div>
-      </div>
+        {rest && <RichText data={rest} enableGutter={false} besideFloat />}
+      </>
     )
   }
   return (
