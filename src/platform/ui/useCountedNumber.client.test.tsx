@@ -101,6 +101,35 @@ describe('useCountedNumber', () => {
   })
 })
 
+describe('a running count keeps its own duration (#1087)', () => {
+  function Timed({ target, ms }: { target: number; ms: number }) {
+    return <p data-testid="n">{useCountedNumber(target, { durationMs: ms })}</p>
+  }
+
+  it('is not restarted when only the duration changes mid-count', () => {
+    const { rerender } = render(<Timed target={0} ms={1000} />)
+    rerender(<Timed target={1000} ms={1000} />)
+    step(0)
+    step(500)
+    const reached = shown()
+    expect(reached).toBeGreaterThan(0)
+    // The caller now asks for a shorter count for the next change; this one carries on
+    rerender(<Timed target={1000} ms={200} />)
+    step(0)
+    expect(shown()).toBeGreaterThanOrEqual(reached)
+    step(600)
+    expect(shown()).toBe(1000)
+  })
+
+  it('uses the new duration for the next change of target', () => {
+    const { rerender } = render(<Timed target={0} ms={1000} />)
+    rerender(<Timed target={1000} ms={200} />)
+    step(0)
+    step(300)
+    expect(shown()).toBe(1000)
+  })
+})
+
 describe('the quick count for a switch of tax year (#1087)', () => {
   it('is a third as long as the count for a new home value', () => {
     expect(YEAR_COUNT_MS).toBe(500)

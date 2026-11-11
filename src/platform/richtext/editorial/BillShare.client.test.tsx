@@ -248,6 +248,24 @@ describe('BillShare, a switch of year counts the amounts in half a second (#1087
     expect(totalText()).toMatch(/\$17,\d{3}/)
   })
 
+  it('never jumps back when a year is chosen while an Estimate count is running', async () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    fireEvent.change(box(), { target: { value: '962600' } })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Estimate' }))
+    })
+    step(0)
+    step(600)
+    const amount = () => Number(totalText().replace(/\D/g, ''))
+    const before = amount()
+    expect(before).toBeGreaterThan(0)
+    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    // The year's own rates differ a little, so allow for that, but the home value's count must not restart:
+    // the total stays near where it was, far from the old home's bill
+    step(0)
+    expect(amount()).toBeGreaterThan(before * 0.9)
+  })
+
   it('flashes the total once, when the year’s count has ended', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     const total = () => screen.getByText('Total property tax').closest('p') as HTMLElement

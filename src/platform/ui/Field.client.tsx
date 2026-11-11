@@ -25,8 +25,6 @@ export const fieldVariants = cva('flex min-w-0', {
       stacked: 'flex-col gap-2',
       // A checkbox, then its label, hint and error in a column beside it
       inline: 'flex-row items-start gap-3',
-      // The label and the control on one line, never wrapped; hint and error go under both
-      row: 'flex-col gap-2',
       // The label above; under it the control and an action button side by side (a box with its
       // own Estimate or Search button); hint and error go under both
       bar: 'flex-col gap-2',
@@ -50,7 +48,7 @@ export type FieldProps = Omit<VariantProps<typeof fieldVariants>, 'layout'> & {
   hint?: ReactNode
   /** Shown under the control, announced, and marks the control invalid */
   error?: string
-  /** Defaults to `inline` for a checkbox and `stacked` for anything else; `row` puts the label and the control on one line from 360 px; `bar` puts the label above and the control with its `action` on one line under it */
+  /** Defaults to `inline` for a checkbox and `stacked` for anything else; `bar` puts the label above and the control with its `action` on one line under it */
   layout?: VariantProps<typeof fieldVariants>['layout']
   /** The control's id; generated when left out */
   id?: string
@@ -92,7 +90,6 @@ export function Field({
       htmlFor={controlId}
       className={cn(
         'text-sm font-medium text-foreground',
-        resolvedLayout === 'row' && 'shrink-0 text-base whitespace-nowrap',
         resolvedLayout === 'bar' && 'text-base',
         hideLabel && 'sr-only',
       )}
@@ -132,15 +129,6 @@ export function Field({
               {hintElement}
               {errorElement}
             </div>
-          </>
-        ) : resolvedLayout === 'row' ? (
-          <>
-            <div className="flex min-w-0 flex-col gap-2 xs:flex-row xs:items-center xs:gap-2">
-              {labelElement}
-              <div className="min-w-0 flex-1">{control}</div>
-            </div>
-            {hintElement}
-            {errorElement}
           </>
         ) : resolvedLayout === 'bar' ? (
           <>
