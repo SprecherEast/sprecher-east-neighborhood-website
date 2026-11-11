@@ -1,21 +1,19 @@
 import React from 'react'
 
-import { cn } from '@/platform/lib/cn'
 import type { ImageRef } from '@/platform/lib/content'
 
+import { Figure } from './Figure'
 import { ImageCredit } from './ImageCredit'
-import { READING_COLUMN } from './layoutSizes'
-import { Media } from './Media'
-
-// The article column is never wider than the reading width, so the browser needs no larger file
-const SIZES = '(min-width: 960px) 48rem, 100vw'
 
 /**
- * The picture of a post or an event, at the top of the article's column (#1013): shown whole, at
- * its own proportions, never cropped, so a picture that carries text (a panel of facts) stays
- * readable at every width. It is the first image the visitor sees, so it loads early, and it takes
- * the reading width from the column's left edge so its edges line up with the text. Its credit
- * shows under it. With no picture it draws nothing, so no gap is left.
+ * The picture of a post or an event, at the start of the article's text (#1013, #1023): shown whole,
+ * at its own proportions, never cropped, so a picture that carries text (a panel of facts) stays
+ * readable. On a phone it fills the column above the text; from a tablet it floats right, half the
+ * column wide, then a third from the desktop breakpoint, with the text wrapping beside it. A reader
+ * can enlarge it. It is the shared `Figure` (the article figure's float, wrap and enlarge dialog),
+ * with the Enlarge button under the picture so the picture starts on the text's first line, and
+ * loading early because it is the first image seen. Its credit shows under it and in the enlarged
+ * view. With no picture it draws nothing, so no gap is left.
  */
 export function FeaturedImage({
   image,
@@ -25,11 +23,20 @@ export function FeaturedImage({
   className?: string
 }) {
   if (!image) return null
+  const credit = image.credit?.trim() ? <ImageCredit image={image} className="text-left" /> : null
 
   return (
-    <figure className={cn('mb-8', READING_COLUMN, className)}>
-      <Media priority size={SIZES} imgClassName="h-auto w-full rounded-xl" resource={image} />
-      <ImageCredit image={image} className="mt-2 text-right" />
-    </figure>
+    <Figure
+      resource={image}
+      // What the picture shows names the Enlarge button and the dialog
+      title={image.alt?.trim() || 'Picture for this article'}
+      size="half-then-third"
+      enlarge="below"
+      priority
+      caption={credit}
+      longCaption={credit}
+      // The bar above already leaves its space, and the text's first line is the picture's top
+      className={className ? `mt-0 md:mt-0 ${className}` : 'mt-0 md:mt-0'}
+    />
   )
 }

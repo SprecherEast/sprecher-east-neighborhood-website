@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { cn } from '@/platform/lib/cn'
 import type { ImageRef } from '@/platform/lib/content'
 
 import { Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs'
@@ -9,6 +10,15 @@ import { JsonLd } from './JsonLd'
 import { LivePreviewListener } from './LivePreviewListener.client'
 import { MetaBar, type MetaBarItem } from './MetaBar'
 import { PageHeader, type PageHeaderProps } from './PageHeader'
+
+/*
+ * Under the metadata bar, the picture (a float from `md`) and the page's content share one box that
+ * contains the float, so what follows the article clears a picture taller than a short text. The
+ * text itself (`RichText` with `besideFloat`) flows beside the picture; a panel or a button that
+ * sits there is a box of its own, so from `md` it takes the room left beside the picture instead of
+ * running under it. The text's own box is left out, or it would stay that narrow down the page.
+ */
+const BESIDE_PICTURE = 'flow-root md:[&>:not(.payload-richtext)]:flow-root'
 
 export type ArticlePageProps = {
   /** The article's structured data (schema.org), from its module */
@@ -21,16 +31,23 @@ export type ArticlePageProps = {
   /** Draft mode: refresh the page when an editor saves in Admin's Live Preview (#363) */
   draft: boolean
   /**
-   * The article's picture, shown whole at the top of its column (`FeaturedImage`, #1013); never
-   * cropped behind the header. Without one, nothing is drawn.
+   * The article's picture, shown whole under the metadata bar (`FeaturedImage`, #1013, #1023): full
+   * width above the text on a phone, to the right of it from a tablet, with the text beside it. The
+   * article's `RichText` takes `besideFloat`. Without a picture, nothing is drawn.
    */
   image?: ImageRef | null
+  /**
+   * What opens the article ahead of the picture: a row of cards, which runs the whole column and
+   * can't sit beside a floated picture (`splitLeadingWideBlocks`, #1023). The picture then starts
+   * beside the first text.
+   */
+  lead?: React.ReactNode
   header: PageHeaderProps
   breadcrumbs: BreadcrumbItem[]
   /**
    * Facts about the article (a post's author, date and source; an event's when and where), drawn
-   * as the `MetaBar` at the top left of the article column, under the picture and above the text,
-   * above one groove line (#774, #1002).
+   * as the `MetaBar` at the top left of the article column, above the picture and the text, over
+   * one groove line (#774, #1002).
    */
   byline?: MetaBarItem[]
   /**
@@ -57,6 +74,7 @@ export function ArticlePage({
   redirects,
   draft,
   image,
+  lead,
   header,
   breadcrumbs,
   byline,
@@ -81,9 +99,19 @@ export function ArticlePage({
           <Breadcrumbs items={breadcrumbs} />
         </div>
         <DetailLayout toc={toc} aside={aside}>
-          <FeaturedImage image={image} />
           {byline && byline.length > 0 && <MetaBar items={byline} className={textClassName} />}
-          {children}
+          {image ? (
+            <div className={cn(BESIDE_PICTURE, textClassName)}>
+              {lead}
+              <FeaturedImage image={image} />
+              {children}
+            </div>
+          ) : (
+            <>
+              {lead}
+              {children}
+            </>
+          )}
         </DetailLayout>
       </div>
     </article>

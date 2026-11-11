@@ -4,7 +4,7 @@ import { draftMode } from 'next/headers'
 import React from 'react'
 
 import { ForumPrompt, getForumUrl, PayloadRedirects } from '@/modules/site/server'
-import { articleColumnClass } from '@/platform/richtext/articleColumn'
+import { articleColumnClass, splitLeadingWideBlocks } from '@/platform/richtext/articleColumn'
 import { articleToc } from '@/platform/richtext/articleToc'
 import { RichText } from '@/platform/richtext/RichText'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
@@ -60,6 +60,11 @@ export default async function Post({ params: paramsPromise }: Args) {
   ])
 
   const textClassName = articleColumnClass(post.content)
+  // A picture floats beside text, so an article that opens with a row of cards shows them first and
+  // the picture starts beside the text after them (#1023)
+  const { lead, rest } = post.heroImage
+    ? splitLeadingWideBlocks(post.content)
+    : { lead: null, rest: post.content }
 
   return (
     <ArticlePage
@@ -69,6 +74,17 @@ export default async function Post({ params: paramsPromise }: Args) {
       redirects={<PayloadRedirects disableNotFound url={url} />}
       draft={draft}
       image={post.heroImage}
+      lead={
+        lead && (
+          <RichText
+            className={textClassName}
+            data={lead}
+            anchorSource={post.content}
+            blocks={richTextBlocks}
+            enableGutter={false}
+          />
+        )
+      }
       header={postHeaderProps(post)}
       byline={postByline(post)}
       textClassName={textClassName}
@@ -94,9 +110,11 @@ export default async function Post({ params: paramsPromise }: Args) {
     >
       <RichText
         className={textClassName}
-        data={post.content}
+        data={rest ?? post.content}
+        anchorSource={post.content}
         blocks={richTextBlocks}
         enableGutter={false}
+        besideFloat={Boolean(post.heroImage)}
       />
       <ForumPrompt href={forumUrl} />
     </ArticlePage>

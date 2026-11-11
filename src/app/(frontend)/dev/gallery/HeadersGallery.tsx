@@ -124,11 +124,22 @@ export function HeadersGallery() {
 
       <GalleryEntry
         name="FeaturedImage"
-        description="The picture of a post or an event, shown whole at the top of the article's column, within the reading width; nothing without a picture."
+        description="The picture of a post or an event, shown whole: full width above the text on a phone, half the column to its right on a tablet, a third from the desktop breakpoint, with the text beside it and an Enlarge button under it; nothing without a picture."
       >
-        <GalleryVariant label="whole picture, with its credit" className="w-full">
-          <div className={`${FRAME} p-6`}>
-            <FeaturedImage image={SAMPLE_IMAGE} className="mb-0" />
+        <GalleryVariant
+          label="whole picture, text beside it, with its credit and Enlarge"
+          className="w-full"
+        >
+          <div className={`${FRAME} flow-root p-6`}>
+            <FeaturedImage image={SAMPLE_IMAGE} />
+            <p>
+              The text of the article starts on the picture&rsquo;s first line and runs beside it,
+              then continues under it once it is past the picture&rsquo;s end. A short article ends
+              before the picture does, and what follows clears it.
+            </p>
+            <p className="mt-4">
+              A second paragraph, so the wrapping beside the picture is visible at each width.
+            </p>
           </div>
         </GalleryVariant>
         <GalleryVariant label="no picture: nothing is drawn and no gap is left" className="w-full">

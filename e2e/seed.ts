@@ -12,6 +12,7 @@ import { contact } from '../src/endpoints/seed/contact-page'
 import { root, p } from '../src/endpoints/seed/helpers/lexical'
 import { alignmentPost, FIGURE_CAPTION } from './support/alignmentPage'
 import { EDGES_EVENT_SLUG } from './support/alignmentSlug'
+import { pictureCardsPost, pictureEvent, picturePost } from './support/featuredPicturePages'
 
 const payload = await getPayload({ config })
 const context = { disableRevalidate: true }
@@ -68,6 +69,21 @@ await payload.create({
   context,
   overrideAccess: true, // test setup, no user
 })
+
+// Posts and an event that carry a picture, for the featured-picture test (#1023)
+for (const [collection, data] of [
+  ['posts', picturePost(figure.id)],
+  ['posts', pictureCardsPost(figure.id)],
+  ['events', pictureEvent(figure.id)],
+] as const) {
+  await payload.create({
+    collection,
+    depth: 0,
+    data: data as never,
+    context,
+    overrideAccess: true, // test setup, no user
+  })
+}
 
 payload.logger.info('e2e: seeded the contact form and page, the alignment post and an event')
 process.exit(0)

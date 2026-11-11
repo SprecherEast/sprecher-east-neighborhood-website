@@ -112,6 +112,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
           className={textClassName}
           data={event.content}
           enableGutter={false}
+          besideFloat={hasImage}
         />
       )}
     </ArticlePage>
