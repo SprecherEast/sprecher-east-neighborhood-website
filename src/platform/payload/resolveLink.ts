@@ -1,6 +1,7 @@
 import type { ResolvedLink } from '@/platform/lib'
 
 import { documentHref } from './documentHref'
+import type { LinkAppearances } from './link'
 
 /**
  * The CMS link field (`./link.ts`) as plain data for `Button` and `Link`: the one place
@@ -12,7 +13,7 @@ export type CmsLink = {
   url?: string | null
   label?: string | null
   newTab?: boolean | null
-  appearance?: 'default' | 'outline' | 'accent' | null
+  appearance?: LinkAppearances | null
   reference?: {
     relationTo: string
     value: number | string | { slug?: string | null }
