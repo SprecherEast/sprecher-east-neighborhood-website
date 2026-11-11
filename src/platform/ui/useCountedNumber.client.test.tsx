@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { COUNT_MS, useCountedNumber } from './useCountedNumber.client'
+import { COUNT_MS, YEAR_COUNT_MS, useCountedNumber } from './useCountedNumber.client'
 
 let frames: ((time: number) => void)[] = []
 let now = 0
@@ -98,6 +98,13 @@ describe('useCountedNumber', () => {
     expect(shown()).toBe(middle)
     step(500)
     expect(shown()).toBe(0)
+  })
+})
+
+describe('the quick count for a switch of tax year (#1087)', () => {
+  it('is a third as long as the count for a new home value', () => {
+    expect(YEAR_COUNT_MS).toBe(500)
+    expect(YEAR_COUNT_MS).toBeLessThan(COUNT_MS)
   })
 })
 

@@ -257,3 +257,38 @@ describe('Field, row layout (#1054)', () => {
     expect(row.contains(screen.getByRole('alert'))).toBe(false)
   })
 })
+
+describe('Field, bar layout (#1087)', () => {
+  afterEach(cleanup)
+
+  it('puts the label above, then the control and its action button on one line', () => {
+    render(
+      <Field
+        label="Your home’s value:"
+        layout="bar"
+        action={<button type="submit">Estimate</button>}
+        error="Enter a number"
+      >
+        <Field.Input defaultValue="1" />
+      </Field>,
+    )
+    const label = screen.getByText('Your home’s value:')
+    const input = screen.getByLabelText('Your home’s value:')
+    const button = screen.getByRole('button', { name: 'Estimate' })
+    // The input and the button share one line; the label is not in it
+    expect(input.closest('div[data-field-bar]')).toBe(button.parentElement)
+    expect(button.parentElement?.contains(label)).toBe(false)
+    expect(label.className).toContain('text-base')
+    // The error goes under the line, not beside the button
+    expect(button.parentElement?.contains(screen.getByRole('alert'))).toBe(false)
+  })
+
+  it('has no accessibility violations', async () => {
+    const { container } = render(
+      <Field label="Value" layout="bar" action={<button type="button">Go</button>}>
+        <Field.Input />
+      </Field>,
+    )
+    await expectAccessible(container)
+  })
+})

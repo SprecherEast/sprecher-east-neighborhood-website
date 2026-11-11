@@ -54,20 +54,17 @@ describe('RoughEstimator', () => {
     expect(onSelect).toHaveBeenCalledWith(0)
   })
 
-  it('ends with a full-width Estimate button, below the box and the rate buttons', () => {
+  it('puts a compact Estimate button beside the box, above the rate buttons (#1087)', () => {
     render(<RoughEstimator {...PROPS} />)
     const estimate = screen.getByRole('button', { name: 'Estimate' })
-    const others = [
-      screen.getByRole('textbox'),
-      screen.getByRole('button', { name: '2026 rates' }),
-      screen.getByRole('button', { name: '2027 rates' }),
-    ]
-    for (const other of others) {
-      expect(
-        other.compareDocumentPosition(estimate) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy()
+    const box = screen.getByRole('textbox')
+    // One line holds the box and the button, so the button is never far from where the reader types
+    expect(estimate.parentElement?.contains(box)).toBe(true)
+    expect(estimate.className).not.toContain('w-full')
+    for (const name of ['2026 rates', '2027 rates']) {
+      const rate = screen.getByRole('button', { name })
+      expect(estimate.compareDocumentPosition(rate) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     }
-    expect(estimate.className).toContain('w-full')
   })
 
   it('turns the Estimate button off until there is a new value to estimate', () => {

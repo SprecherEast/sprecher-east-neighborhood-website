@@ -6,6 +6,8 @@ import { prefersReducedMotion } from './motion.client'
 
 /** Long enough that a reader sees the numbers move (the first, half-second count went unnoticed) */
 export const COUNT_MS = 1500
+/** A switch of tax year counts faster: the reader only needs to see the amounts move (#1087) */
+export const YEAR_COUNT_MS = 500
 
 const easeOut = (t: number) => 1 - (1 - t) ** 3
 
