@@ -119,6 +119,8 @@ describe('SharePie', () => {
     )
     const receipt = container.querySelector('[data-pie-legend]')
     expect(receipt?.firstElementChild?.textContent).toBe('For a home valued at $500,300')
+    // Big, bold and orange, so it is the first thing read under the pie
+    expect(receipt?.firstElementChild?.className).toMatch(/text-lg.*font-bold.*text-accent-dark/)
     expect(receipt?.lastElementChild?.textContent).toBe('Total property tax$9,296')
   })
 

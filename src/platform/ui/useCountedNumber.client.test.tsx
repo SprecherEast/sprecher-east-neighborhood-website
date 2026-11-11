@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs'
+
 import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useCountedNumber } from './useCountedNumber.client'
+import { COUNT_MS, useCountedNumber } from './useCountedNumber.client'
 
 let frames: ((time: number) => void)[] = []
 let now = 0
@@ -33,6 +35,9 @@ const step = (ms: number) =>
 function Counter({ target }: { target: number }) {
   return <p data-testid="n">{useCountedNumber(target, { durationMs: 400 })}</p>
 }
+function SlowCounter({ target }: { target: number }) {
+  return <p data-testid="n">{useCountedNumber(target)}</p>
+}
 const shown = () => Number(screen.getByTestId('n').textContent)
 
 describe('useCountedNumber', () => {
@@ -51,6 +56,16 @@ describe('useCountedNumber', () => {
     expect(shown()).toBeLessThan(300)
     expect(Number.isInteger(shown())).toBe(true)
     step(400)
+    expect(shown()).toBe(300)
+  })
+
+  it('takes a second and a half by default, long enough to be seen', () => {
+    const { rerender } = render(<SlowCounter target={100} />)
+    rerender(<SlowCounter target={300} />)
+    step(0)
+    step(1000)
+    expect(shown()).toBeLessThan(300)
+    step(1500)
     expect(shown()).toBe(300)
   })
 
@@ -83,5 +98,12 @@ describe('useCountedNumber', () => {
     expect(shown()).toBe(middle)
     step(500)
     expect(shown()).toBe(0)
+  })
+})
+
+describe("the count and the total's flash", () => {
+  it("last as long: the flash's CSS duration is the count's, defined once here", () => {
+    const css = readFileSync('src/platform/theme/tailwind.css', 'utf8')
+    expect(css).toContain(`animation: total-pulse ${COUNT_MS / 1000}s ease-out`)
   })
 })

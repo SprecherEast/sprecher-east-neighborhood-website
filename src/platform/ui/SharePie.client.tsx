@@ -125,7 +125,9 @@ export function SharePie({
         })}
       </svg>
       <div data-pie-legend className="mt-4 space-y-2 text-sm">
-        {heading && <p className="min-h-10 font-semibold text-foreground">{heading}</p>}
+        {heading && (
+          <p className="min-h-14 text-lg font-bold text-accent-dark sm:min-h-10">{heading}</p>
+        )}
         {/* One grid for every row; the percent and amount columns have fixed widths, so a longer amount never narrows the names and changes how they wrap */}
         <ul className="grid grid-cols-[1fr_2.75rem_5.5rem] gap-x-2">
           {slices.map((slice) => (
