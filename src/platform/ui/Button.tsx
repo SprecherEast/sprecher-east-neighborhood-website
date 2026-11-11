@@ -22,6 +22,9 @@ export const buttonVariants = cva(
         secondary:
           'border border-primary text-primary-strong hover:bg-primary/5 focus-visible:outline-ring',
         accent: 'bg-accent text-accent-foreground hover:bg-accent-dark focus-visible:outline-ring',
+        // The accent's outline twin: an inset ring, not a border, so it is as tall as `accent` (#1022)
+        'accent-outline':
+          'ring-1 ring-inset ring-accent-dark text-foreground hover:bg-accent/15 focus-visible:outline-ring',
         ghost: 'text-foreground hover:bg-surface focus-visible:outline-ring',
         // On a brand band (a data-theme="dark" scope): white fill, or a white outline
         inverse:

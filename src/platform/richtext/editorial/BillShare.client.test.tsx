@@ -81,11 +81,17 @@ describe('BillShare', () => {
     expect(screen.getByText('City detail')).toBeTruthy()
   })
 
-  it('says which rates are last year’s when a body has not set its own', () => {
+  it('says which rates are last year’s when a body has not set its own, in a note that is always there', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
-    expect(screen.getByText(/not set 2027 rates yet/i).textContent).toMatch(
-      /Madison schools, Dane County and Madison College/,
-    )
+    const note = screen.getByText(/2027 rates are not confirmed/i)
+    expect(note.textContent).toMatch(/Madison schools, Dane County and Madison College \(MATC\)/)
+    expect(note.closest('li')?.getAttribute('aria-hidden')).toBeNull()
+    // Last year's rates have nothing to confirm: the note keeps its room and is hidden from everyone
+    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    const kept = screen.getByText(/2027 rates are not confirmed/i).closest('li')
+    expect(kept?.getAttribute('aria-hidden')).toBe('true')
+    expect(kept?.className).toContain('invisible')
+    expect(screen.getByText(/this is a rough estimate/i)).toBeTruthy()
   })
 
   it('shows the bill for the home value typed, and the City’s part of it', () => {
@@ -113,23 +119,41 @@ describe('BillShare', () => {
   it('asks for a number instead of showing a wrong bill', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.change(box(), { target: { value: 'abc' } })
-    expect(screen.getByText(/enter your home’s value/i)).toBeTruthy()
+    expect(screen.getByRole('alert').textContent).toMatch(/enter your home’s value/i)
     expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.queryByRole('img', { name: /your rough property tax/i })).toBeNull()
   })
 
-  it('lists each body with its dollars and its percent, and the source', () => {
+  it('draws the whole bill as one pie of the four bodies, with the source', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    const pie = screen.getByRole('img', { name: /^Your rough property tax:/ })
+    const label = pie.getAttribute('aria-label') ?? ''
     for (const name of [
       'Madison schools',
       'City of Madison',
       'Dane County',
       'Madison College (MATC)',
     ]) {
-      expect(screen.getAllByText(name).length).toBeGreaterThan(0)
+      expect(label).toContain(name)
     }
-    expect(screen.getByText(/about 38%/)).toBeTruthy()
+    expect(label).toMatch(/City of Madison 38%/)
     expect(screen.getByRole('link', { name: /City tax detail/ })).toBeTruthy()
+  })
+
+  it('puts the Rough Estimator and the pie in two cards, and the City’s panel under both', () => {
+    render(
+      <BillShare {...PROPS} {...city}>
+        <p>The rest</p>
+      </BillShare>,
+    )
+    const estimator = screen.getByRole('heading', { name: 'Rough Estimator' })
+    const pie = screen.getByRole('heading', { name: 'Your rough property tax' })
+    const panel = screen.getByText('Short line')
+    const follows = (a: Node, b: Node) =>
+      a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING
+    expect(follows(estimator, pie)).toBeTruthy()
+    expect(follows(pie, panel)).toBeTruthy()
   })
 
   it('has no accessibility violations', async () => {

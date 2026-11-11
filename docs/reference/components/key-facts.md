@@ -53,7 +53,7 @@ Source: `src/platform/richtext/editorial/FactTabs.tsx`
 
 ## `BillShare`
 
-The whole property-tax bill at the top of a fact tab (#1018): a line saying what the estimate is based on, a home value the reader can change (it starts at the City's average home), a switch between tax years, what that home pays each body, and the bill as one bar whose slices are as wide as their shares. The City's slice is joined to the panel under it, which starts with the City's own tax as one bar, then a short line, then where that tax goes (#1020), then the rest of the tab (`children`). The bar and the breakdown are drawn again for every home value and year, so every amount in the panel is the City's slice of the bill above it. A year in which a body has not set its rate uses that body's rate from the year before, and says so.
+The whole property-tax bill at the top of a fact tab (#1018, #1022): two cards of one height, side by side from `lg` and stacked below it. The Rough Estimator holds the home value the reader can change (it starts at the City's average home), the switch between tax years and the notes on how rough the answer is; the other is the bill as a pie whose wedges are as big as their shares. The City's panel sits under both: the City's own tax as one bar, a short line, then where that tax goes (#1020), then the rest of the tab (`children`). The pie, the bar and the breakdown are drawn again for every home value and year, so every amount in the panel is the City's slice of the bill. A year in which a body has not set its rate uses that body's rate from the year before, and says so in a note whose room is always kept, so the page never changes height.
 
 Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 
@@ -65,6 +65,28 @@ Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 | `cityBreakdown` | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …`       | no       | Where the City's tax goes, drawn again for whatever the City's tax is on the home typed            |
 | `definition`    | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The short line between the two                                                                     |
 | `children`      | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       |                                                                                                    |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
+## `RoughEstimator`
+
+The tool at the top of a whole-bill picture (#1022): an orange card titled Rough Estimator, with the home value box, one button for each tax year side by side along the bottom, and the notes that say how rough the answer is. It draws what it is given and keeps no state of its own.
+
+Source: `src/platform/richtext/editorial/RoughEstimator.tsx`
+
+| Prop            | Type                                                           | Required | Description                                                                                                                                                                     |
+| --------------- | -------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `intro`         | `string`                                                       | yes      | One line under the title: what the estimate starts from                                                                                                                         |
+| `value`         | `string`                                                       | yes      | The home value box's text, as typed                                                                                                                                             |
+| `onValueChange` | `(value: string) => void`                                      | yes      |                                                                                                                                                                                 |
+| `onValueBlur`   | `() => void`                                                   | yes      | The reader left the box                                                                                                                                                         |
+| `error`         | `string`                                                       | no       | Why the box's text is no value, or nothing                                                                                                                                      |
+| `options`       | `readonly { key: string; label: string; }[]`                   | yes      | The tax years the reader can pick between, one button each                                                                                                                      |
+| `selected`      | `number`                                                       | yes      | The index of the picked option                                                                                                                                                  |
+| `onSelect`      | `(index: number) => void`                                      | yes      |                                                                                                                                                                                 |
+| `notes`         | `readonly { key: string; text: ReactNode; shown: boolean; }[]` | yes      | The notes under the buttons. A note that is not `shown` still takes its room, hidden from everyone, so the card is as tall as it will ever be and nothing moves when one shows. |
 
 **Used by** (direct imports):
 
