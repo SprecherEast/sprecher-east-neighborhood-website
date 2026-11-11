@@ -10,7 +10,8 @@ type Stacked = Extract<ChartSpec, { kind: 'stacked' }>
  * year, the proposed increase), scaled so they add up to what the City's tax is on the home typed
  * (`cityAmount`), or by `homeRatio`, the typed home's share of the chart's average home, when the
  * City's tax is not known. A part that is nothing that year is left out, and the last part takes
- * the rounding, so the rounded parts always add up to the rounded whole.
+ * the rounding, so the rounded parts always add up to the rounded whole. `increase` is what the
+ * increase parts add up to, in whole dollars, for the tab's figure and heading (#1029).
  */
 export function toCityBar(
   spec: Stacked,
@@ -19,7 +20,7 @@ export function toCityBar(
     cityAmount,
     homeRatio = 1,
   }: { column: number; cityAmount: number | null; homeRatio?: number },
-): { title: string; total: string; parts: AmountBarPart[] } {
+): { title: string; total: string; parts: AmountBarPart[]; increase: number } {
   const shown = spec.series
     .map((series) => ({ series, value: series.values[column] ?? 0 }))
     .filter(({ value }) => value > 0)
@@ -28,10 +29,13 @@ export function toCityBar(
   const factor = specTotal > 0 ? total / specTotal : 0
   const whole = Math.round(total)
   let used = 0
+  // The increase parts' rounded amounts, summed: the figure the bar itself shows (#1029)
+  let increase = 0
   const parts = shown.map(({ series, value }, index): AmountBarPart => {
     const last = index === shown.length - 1
     const amount = last ? whole - used : Math.round(value * factor)
     used += amount
+    if (series.increase) increase += Math.max(amount, 0)
     return {
       key: series.key,
       label: series.label,
@@ -40,5 +44,5 @@ export function toCityBar(
       hatch: series.pattern === 'hatch',
     }
   })
-  return { title: spec.x[column] ?? '', total: formatWholeDollars(total), parts }
+  return { title: spec.x[column] ?? '', total: formatWholeDollars(total), parts, increase }
 }
