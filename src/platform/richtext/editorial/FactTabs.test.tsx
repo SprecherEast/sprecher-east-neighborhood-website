@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { SUBGRID_FOUR_ROWS, SUBGRID_FOUR_ROWS_EXPLICIT } from '@/platform/ui/layoutSizes'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
@@ -11,6 +11,8 @@ import { toFactTabsProps, type StoredFactTabs } from './factTabs'
 import { FACT_TABS_FIXTURE } from './factTabsFixtures'
 import { present } from '@/platform/payload/testing/present'
 
+// A tab chosen in one test is in the address of the next, which would open it: start from no tab named
+beforeEach(() => window.history.replaceState(null, '', '/'))
 afterEach(cleanup)
 
 const props = toFactTabsProps(FACT_TABS_FIXTURE)
