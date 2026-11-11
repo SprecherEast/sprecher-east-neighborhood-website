@@ -3,6 +3,9 @@ name: Deploy to VPS
 # Builds the site in GitHub Actions and ships the build to the VPS, which only migrates, switches
 # and checks (#245; steps in ops/README.md). CI calls this workflow once its "Type-check & Build"
 # job has passed on a push to main; it can also be run by hand on main to redeploy.
+# The deploy secrets (VPS_*, UMAMI_ADMIN_PASSWORD) are secrets of the `production` environment, which
+# only runs from `main`, so a workflow on any other branch can't read them (#1071). The jobs that read
+# them, Preflight and Deploy, name it; Build release names none and reads no secret.
 on:
   workflow_call:
   workflow_dispatch:
@@ -15,6 +18,7 @@ jobs:
   preflight:
     name: Preflight
     if: github.ref == 'refs/heads/main'
+    environment: production # reads the VPS_* secrets
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     outputs:
@@ -124,6 +128,7 @@ jobs:
   deploy:
     name: Deploy
     needs: [preflight, build]
+    environment: production # reads the VPS_* and UMAMI_ADMIN_PASSWORD secrets
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     concurrency:
