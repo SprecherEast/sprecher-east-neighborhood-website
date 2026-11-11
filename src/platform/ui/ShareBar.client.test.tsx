@@ -59,6 +59,11 @@ describe('ShareBar', () => {
     )
     const lines = Array.from(container.querySelectorAll('text tspan')).map((n) => n.textContent)
     expect(lines).toEqual(['City tax', '38%'])
+    // The name is as big and bold as the percent under it: it takes the text's own size (#1068)
+    expect(container.querySelector('text')?.getAttribute('class')).toContain(
+      'text-sm font-semibold',
+    )
+    expect(container.querySelector('text tspan')?.getAttribute('class')).toBeNull()
   })
 
   it('draws one slice per part, as wide as its exact share, side by side', () => {

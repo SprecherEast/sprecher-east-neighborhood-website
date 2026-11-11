@@ -75,7 +75,7 @@ const BILL_TAB = {
       enlarge: false,
       spec: {
         kind: 'breakdown' as const,
-        title: 'Where that City tax goes, estimated',
+        title: 'Where your City tax share goes, estimated',
         summary: 'Sample: split like an operating budget.',
         unit: 'usd' as const,
         hideSquares: true,
@@ -87,6 +87,7 @@ const BILL_TAB = {
             pieces: [
               { key: 'police', label: 'Police', value: 743.86, shown: true as const },
               { key: 'fire', label: 'Fire / EMS', value: 588.71, shown: true as const },
+              { key: 'health', label: 'Public Health', value: 80.5 },
             ],
           },
           { key: 'debt', label: 'Debt service', value: 584.1 },

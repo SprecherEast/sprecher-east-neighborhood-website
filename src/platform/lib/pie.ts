@@ -49,6 +49,9 @@ const PADDING = 3
 /** How far out from the centre, as a part of the radius, the percent sits */
 export const PIE_PERCENT_AT = 0.85
 
+/** How far out, as a part of the radius, a wedge's name (the same size as its percent) and percent sit together: near its centre, so the pair reads as centred */
+export const PIE_CAPTION_AT = 0.55
+
 /** How wide a wedge is at a distance from the centre, in pixels (the chord, never past the pie) */
 function wedgeWidth(angle: number, distance: number) {
   return 2 * distance * Math.sin(Math.min(angle / 2, Math.PI / 2))
@@ -63,15 +66,21 @@ export function pieLabelFits({
   share,
   radius,
   text,
+  at = PIE_PERCENT_AT,
+  px = PIE_PERCENT_PX,
 }: {
   /** The wedge's share of the whole, 0 to 100 */
   share: number
   radius: number
   /** What is written on the wedge, such as "46%" */
   text: string
+  /** How far out from the centre it is drawn, as a part of the radius */
+  at?: number
+  /** Its text size, in pixels */
+  px?: number
 }): boolean {
   if (share <= 0 || text.length === 0) return false
   const angle = (share / 100) * FULL_TURN
-  const width = text.length * PIE_PERCENT_PX * CHARACTER_WIDTH
-  return width + PADDING * 2 <= wedgeWidth(angle, radius * PIE_PERCENT_AT)
+  const width = text.length * px * CHARACTER_WIDTH
+  return width + PADDING * 2 <= wedgeWidth(angle, radius * at)
 }

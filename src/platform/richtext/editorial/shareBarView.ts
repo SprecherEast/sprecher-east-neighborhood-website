@@ -28,7 +28,7 @@ export function shareBarFor(slices: SharePieSlice[]): { slices: ShareBarSlice[];
             share: slice.share,
             tone: BAR_TONE[key],
             label: `${slice.percent}%`,
-            ...(key === 'city' ? { name: 'City tax' } : {}),
+            ...(key === 'city' && slice.caption ? { name: slice.caption } : {}),
           },
         ]
       : []

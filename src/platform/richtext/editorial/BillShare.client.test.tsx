@@ -133,7 +133,7 @@ describe('BillShare', () => {
     expect(label.getAttribute('aria-label')).toMatch(/^Your rough property tax: City of Madison/)
   })
 
-  it('puts the Rough Estimator and the pie in two cards, and the City’s panel under both', () => {
+  it('puts the pie first and the Rough Estimator after it, and the City’s panel under both', () => {
     render(
       <BillShare {...PROPS} {...city}>
         <p>The rest</p>
@@ -144,8 +144,8 @@ describe('BillShare', () => {
     const panel = screen.getByText('Short line')
     const follows = (a: Node, b: Node) =>
       a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING
-    expect(follows(estimator, pie)).toBeTruthy()
-    expect(follows(pie, panel)).toBeTruthy()
+    expect(follows(pie, estimator)).toBeTruthy()
+    expect(follows(estimator, panel)).toBeTruthy()
   })
 
   it('has no accessibility violations', async () => {
@@ -154,52 +154,28 @@ describe('BillShare', () => {
   })
 })
 
-describe('BillShare, Estimate with motion allowed', () => {
+describe('BillShare, Estimate never scrolls the page (#1068)', () => {
   afterEach(() => vi.unstubAllGlobals())
 
-  const allowMotion = (visible: boolean) => {
+  it('shows the new numbers in place, with motion allowed and the card out of view', async () => {
     vi.stubGlobal('matchMedia', () => ({ matches: false }))
     const scroll = vi.fn()
     Element.prototype.scrollIntoView = scroll
-    const top = visible ? 100 : 5000
-    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
-      top,
-      bottom: top + 300,
-      left: 0,
-      right: 300,
-      width: 300,
-      height: 300,
-      x: 0,
-      y: top,
-      toJSON: () => ({}),
-    })
-    return scroll
-  }
-
-  it('does not scroll when the receipt is already fully on screen', async () => {
-    const scroll = allowMotion(true)
     render(<BillShare {...PROPS}>x</BillShare>)
     await estimate('300000')
     expect(scroll).not.toHaveBeenCalled()
     expect(screen.getByRole('status').textContent).toMatch(/\$300,000/)
   })
 
-  it('scrolls smoothly to the receipt when it is out of view', async () => {
-    const scroll = allowMotion(false)
+  it('draws the receipt card before the Rough Estimator, so the numbers move above the box', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
-    await estimate('300000')
-    expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' })
+    const card = screen.getByRole('region', { name: 'Your rough property tax' })
+    expect(card.compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })
 
 describe('BillShare, the card and the total after Estimate (#1051)', () => {
   const total = () => screen.getByText('Total property tax').closest('p') as HTMLElement
-
-  it('keeps the whole card clear of the sticky header when it scrolls into view', () => {
-    render(<BillShare {...PROPS}>x</BillShare>)
-    const card = screen.getByRole('region', { name: 'Your rough property tax' })
-    expect(card.className).toContain('scroll-mt-')
-  })
 
   it('flashes the total once a new bill has been estimated, and not on load', async () => {
     render(<BillShare {...PROPS}>x</BillShare>)

@@ -8,15 +8,12 @@ import {
   fillFromEarlier,
   parseHomeValue,
 } from '@/platform/lib/billShare'
-import { cn } from '@/platform/lib/cn'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { AmountBar } from '@/platform/ui/AmountBar'
 import { Card, CardTitle } from '@/platform/ui/Card'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
 import { Link } from '@/platform/ui/Link'
-import { scrollToUnlessVisible } from '@/platform/ui/motion.client'
-import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 import { ShareBar } from '@/platform/ui/ShareBar.client'
 import { SharePie } from '@/platform/ui/SharePie.client'
 import { Text } from '@/platform/ui/Text'
@@ -69,8 +66,6 @@ export function BillShare({
   const [typed, setTyped] = useState<string | null>(null)
   // The value last estimated, or null while the numbers are for the City's average home
   const [estimated, setEstimated] = useState<number | null>(null)
-  const estimating = useRef(false)
-  const cardRef = useRef<HTMLElement>(null)
   const pieTitleId = useId()
   const target = estimated ?? year?.averageHome ?? 0
   // Counts up each time a new bill has finished counting, so the total can flash once
@@ -100,14 +95,10 @@ export function BillShare({
   // What a screen reader hears: the bill for the value estimated, not each step of the count
   const summary = receiptFor(computeBillShare(target, rates), target).summary
 
-  // Estimating scrolls to the whole card only if it is not all on screen, and the numbers count once
-  // the page has stopped moving; a reader who asked for less motion gets them at once
-  const estimate = async () => {
-    if (homeValue === null || estimating.current) return
-    estimating.current = true
-    if (cardRef.current) await scrollToUnlessVisible(cardRef.current)
-    setEstimated(homeValue)
-    estimating.current = false
+  // Estimating changes the numbers in the card above the box, which counts them to the new bill
+  // (a reader who asked for less motion gets them at once); the page never scrolls (#1068)
+  const estimate = () => {
+    if (homeValue !== null) setEstimated(homeValue)
   }
 
   // The City's panel follows the home typed (the average home while the box holds no number)
@@ -123,12 +114,12 @@ export function BillShare({
   const panel = (
     <div className="space-y-6">
       {cityBar && <AmountBar title={cityBar.title} total={cityBar.total} parts={cityBar.parts} />}
-      {definition}
       {cityBreakdown && (
         <div className="rounded-xl bg-surface p-4">
           <ScaledBreakdown spec={cityBreakdown} factor={breakdownFactor} />
         </div>
       )}
+      {definition}
       {children}
     </div>
   )
@@ -153,31 +144,7 @@ export function BillShare({
   return (
     <div className="space-y-6">
       <div className="grid items-stretch gap-6 lg:grid-cols-2">
-        <RoughEstimator
-          intro={intro}
-          value={text}
-          onValueChange={setTyped}
-          canEstimate={homeValue !== null && homeValue !== target}
-          onEstimate={estimate}
-          error={
-            homeValue === null ? 'Enter your home’s value as a number, like $500,000.' : undefined
-          }
-          options={years.map((option) => ({
-            key: String(option.year),
-            label: option.label,
-            note: option.note,
-          }))}
-          selected={yearIndex}
-          onSelect={setYearIndex}
-          notes={notes}
-        />
-        <Card
-          as="section"
-          ref={cardRef}
-          variant="elevated"
-          aria-labelledby={pieTitleId}
-          className={cn('h-full', SECTION_SCROLL_MARGIN)}
-        >
+        <Card as="section" variant="elevated" aria-labelledby={pieTitleId} className="h-full">
           <div className="space-y-3">
             <CardTitle as="h3" className="text-xl">
               <span id={pieTitleId}>Your rough property tax</span>
@@ -200,6 +167,24 @@ export function BillShare({
             )}
           </div>
         </Card>
+        <RoughEstimator
+          intro={intro}
+          value={text}
+          onValueChange={setTyped}
+          canEstimate={homeValue !== null && homeValue !== target}
+          onEstimate={estimate}
+          error={
+            homeValue === null ? 'Enter your home’s value as a number, like $500,000.' : undefined
+          }
+          options={years.map((option) => ({
+            key: String(option.year),
+            label: option.label,
+            note: option.note,
+          }))}
+          selected={yearIndex}
+          onSelect={setYearIndex}
+          notes={notes}
+        />
       </div>
       {shareBar.slices.length > 0 ? (
         <ShareBar slices={shareBar.slices} label={shareBar.label}>

@@ -1,4 +1,5 @@
 import {
+  BILL_BODY_CAPTIONS,
   BILL_BODY_NAMES,
   type BillBody,
   type BillPart,
@@ -23,15 +24,15 @@ export type Receipt = {
   slices: SharePieSlice[]
   /** The line under the rows, or null when the bill is not whole */
   total: { label: string; amount: string } | null
-  /** The line above the rows: the home the amounts are for */
-  heading: string
+  /** The line above the rows: the home the amounts are for, in words and then the amount */
+  heading: { lead: string; value: string } | null
   /** What the pie shows, for screen readers */
   label: string
   /** The one sentence a screen reader hears when the bill changes */
   summary: string
 }
 
-const NOTHING: Receipt = { slices: [], total: null, heading: '', label: '', summary: '' }
+const NOTHING: Receipt = { slices: [], total: null, heading: null, label: '', summary: '' }
 
 /**
  * What the whole-bill picture shows for a home value (#1035): the pie's slices and the receipt
@@ -50,6 +51,7 @@ export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt
               {
                 key,
                 name: BILL_BODY_NAMES[key],
+                caption: BILL_BODY_CAPTIONS[key],
                 amount: formatWholeDollars(found.amount ?? 0),
                 percent: found.percent ?? 0,
                 share: found.share ?? 0,
@@ -65,7 +67,7 @@ export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt
       whole && bill.total !== null
         ? { label: 'Total property tax', amount: formatWholeDollars(bill.total) }
         : null,
-    heading: slices.length > 0 ? `For a home valued at ${home}` : '',
+    heading: slices.length > 0 ? { lead: 'For a home valued at', value: home } : null,
     label:
       slices.length > 0
         ? `Your rough property tax: ${slices.map((s) => `${s.name} ${s.amount}, ${s.percent}%`).join('; ')}`
