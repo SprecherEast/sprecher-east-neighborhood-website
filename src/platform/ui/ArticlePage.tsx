@@ -36,6 +36,12 @@ export type ArticlePageProps = {
    * article's `RichText` takes `besideFloat`. Without a picture, nothing is drawn.
    */
   image?: ImageRef | null
+  /**
+   * What opens the article ahead of the picture: a row of cards, which runs the whole column and
+   * can't sit beside a floated picture (`splitLeadingWideBlocks`, #1023). The picture then starts
+   * beside the first text.
+   */
+  lead?: React.ReactNode
   header: PageHeaderProps
   breadcrumbs: BreadcrumbItem[]
   /**
@@ -68,6 +74,7 @@ export function ArticlePage({
   redirects,
   draft,
   image,
+  lead,
   header,
   breadcrumbs,
   byline,
@@ -95,11 +102,15 @@ export function ArticlePage({
           {byline && byline.length > 0 && <MetaBar items={byline} className={textClassName} />}
           {image ? (
             <div className={cn(BESIDE_PICTURE, textClassName)}>
+              {lead}
               <FeaturedImage image={image} />
               {children}
             </div>
           ) : (
-            children
+            <>
+              {lead}
+              {children}
+            </>
           )}
         </DetailLayout>
       </div>

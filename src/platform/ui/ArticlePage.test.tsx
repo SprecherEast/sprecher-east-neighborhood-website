@@ -134,6 +134,29 @@ describe('ArticlePage', () => {
       expect(box?.className).toContain('md:[&>:not(.payload-richtext)]:flow-root')
     })
 
+    it('puts what leads the article, such as a card row, before the picture', () => {
+      renderArticle({ image: picture, lead: <p>The opening cards</p> })
+      const lead = screen.getByText('The opening cards')
+      const figure = screen.getByRole('img', { name: picture.alt ?? '' }).closest('figure')
+
+      expect(
+        lead.compareDocumentPosition(figure as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+      expect(
+        (figure as Node).compareDocumentPosition(screen.getByText('The article')) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+      expect(lead.parentElement).toBe(screen.getByText('The article').parentElement)
+    })
+
+    it('still shows what leads the article when there is no picture', () => {
+      renderArticle({ lead: <p>The opening cards</p> })
+
+      expect(screen.getByText('The opening cards').nextElementSibling?.textContent).toBe(
+        'The article',
+      )
+    })
+
     it('takes the width the page gives the text, so the picture is a share of it', () => {
       renderArticle({ image: picture, textClassName: 'max-w-[40rem]' })
 

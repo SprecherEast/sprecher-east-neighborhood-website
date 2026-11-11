@@ -228,6 +228,29 @@ describe('RichText beside a floated picture (#1023)', () => {
   })
 })
 
+describe('RichText as a part of an article (#1023)', () => {
+  const heading = (value: string) => ({
+    type: 'heading',
+    tag: 'h2',
+    format: '',
+    indent: 0,
+    version: 1,
+    direction: 'ltr',
+    children: [text(value)],
+  })
+
+  it('takes its heading ids from the whole article, so they match the menu', () => {
+    const first = heading('Costs')
+    const second = heading('Costs')
+    const whole = doc(first, paragraph(text('One')), second)
+    const part = { root: { ...(whole as unknown as { root: object }).root, children: [second] } }
+
+    render(<RichText data={part as unknown as RichTextValue} anchorSource={whole} />)
+
+    expect(screen.getByRole('heading', { level: 2 }).id).toBe('costs-2')
+  })
+})
+
 describe('RichText, headings (#741)', () => {
   it('balances the lines of its headings, so one never ends on a lone word', () => {
     const { container } = render(<RichText data={doc(paragraph(text('Body')))} />)

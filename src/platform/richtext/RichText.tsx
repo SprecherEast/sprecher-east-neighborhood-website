@@ -144,6 +144,12 @@ type Props = {
    * what follows the text clears the picture. A figure inside the text is still kept in it.
    */
   besideFloat?: boolean
+  /**
+   * The whole article, when `data` is only a part of it (the text after an opening card row): heading
+   * ids and the "On this page" menu then come from the whole, so they match. `data`'s nodes must be
+   * the same objects as the whole's (`splitLeadingWideBlocks`).
+   */
+  anchorSource?: RichTextValue
 } & React.HTMLAttributes<HTMLDivElement>
 
 /** Rich text as the editor saved it, with links to pages and posts resolved to site addresses. */
@@ -154,13 +160,14 @@ export function RichText(props: Props) {
     enableProse = true,
     enableGutter = true,
     besideFloat = false,
+    anchorSource,
     ...rest
   } = props
   return (
     <ConvertRichText
       converters={withHeadingIds(
         blocks ? withBlocks(blocks) : NO_BLOCKS,
-        anchorsByNode(props.data),
+        anchorsByNode(anchorSource ?? props.data),
       )}
       className={cn(
         // flow-root keeps a floated figure inside the text, so what follows never wraps around it;
