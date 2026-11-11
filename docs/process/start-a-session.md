@@ -28,9 +28,9 @@ yet, so the chief of staff agent is not registered until they reload. Then:
 1. Read `AGENTS.md`, then load the
    [chief of staff skill](../../.agents/skills/chief-of-staff/SKILL.md) by hand and follow its
    start-of-session routine.
-2. Say what is unreachable from that session: the project board and the organization project API
-   (so no card can be read or moved, and a card moves only when an issue is assigned), and say it
-   on the issue or in the report instead of guessing at board state.
+2. Say what is unreachable from that session: the project board and the organization project API.
+   No card can be read there, and a card moves only through the issue (assigning it, or the
+   `ready` label), so say so on the issue or in the report instead of guessing at board state.
 3. Before filing an issue or opening a pull request, read the [filing checklist](filing-checklist.md),
    in a task session too.
 
@@ -59,6 +59,7 @@ Sessions on the owner's computer use his signed-in `gh` instead and are not affe
 ## What the chief of staff can and cannot do today
 
 It reads the plan, lists the owner's open questions, grooms in dry run, checks overlap and writes
-briefs. A worker does each issue. From a cloud session it cannot move board cards itself: assigning an
-issue does it, through the planner app. It cannot set native issue fields. The refusal table in the
-[manual test](chief-of-staff-manual-test.md) has not been run yet.
+briefs. A worker does each issue. It never touches the board: it sets the `ready` label, Priority
+and Effort on the issue and assigns it, from any session that can write issues, and the planner app
+moves the card. It cannot read a card or change a sprint from a cloud session. The refusal table in
+the [manual test](chief-of-staff-manual-test.md) has not been run yet.

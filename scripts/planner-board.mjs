@@ -1,9 +1,16 @@
 /**
- * Keeps the board in step with the work, as the planner app (#941). When an issue is opened or
- * reopened its card goes into the sprint that is running; when it is assigned, which is how work is
- * claimed, the card also becomes In progress. GitHub's own board rules already set In review and
- * Done. Finished work keeps its sprint (`planner-rules.mjs`), and a card never moves backwards.
- * The decision is pure and tested; the command line below reads and writes the board with `gh`,
+ * Keeps the board in step with the work, as the planner app (#941, #1089). An agent changes the
+ * issue and the card follows:
+ *
+ * - opened or reopened: the card joins the sprint that is running;
+ * - assigned, which is how work is claimed: the card also becomes In progress;
+ * - the `ready` label: a Backlog card becomes Ready, unless a blocking label (`needs owner`,
+ *   `needs grooming`) is on the issue. Removing the label, or adding a blocking one, moves a Ready
+ *   card back to Backlog.
+ *
+ * GitHub's own board rules already set In review and Done. Finished work keeps its sprint
+ * (`planner-rules.mjs`), and a card never moves back from In progress, In review or Done. The
+ * decision is pure and tested; the command line below reads and writes the board with `gh`,
  * signed in as the app by the workflow.
  */
 import { execFileSync } from 'node:child_process'
@@ -13,7 +20,12 @@ import { canChangeSprint } from './planner-rules.mjs'
 
 const DAY_MS = 86_400_000
 const SPRINT_ACTIONS = new Set(['opened', 'reopened', 'assigned'])
+const LABEL_ACTIONS = new Set(['labeled', 'unlabeled'])
 const NO_BACKWARDS = new Set(['In review', 'Done'])
+/** Marker labels from `.github/label-policy.json`; a test keeps these names in step with it. */
+export const READY_LABEL = 'ready'
+export const BLOCKING_LABELS = ['needs owner', 'needs grooming']
+const NO_ISSUE = { state: 'open', labels: [], assignees: [] }
 
 /** The sprint whose days contain `today` (a yyyy-mm-dd date), if one is running. */
 export function findCurrentSprint(iterations, today) {
@@ -24,15 +36,45 @@ export function findCurrentSprint(iterations, today) {
   })
 }
 
+/** The labels that keep an issue out of Ready, in the order of the Definition of Ready. */
+export function readyBlockers(issue) {
+  return BLOCKING_LABELS.filter((label) => issue.labels.includes(label))
+}
+
+const isReady = (issue) => issue.labels.includes(READY_LABEL) && readyBlockers(issue).length === 0
+
+/**
+ * A manual run (`sync`) treats an assigned issue as claimed. A label event never does: issues
+ * assigned before the app existed would all jump to In progress the first time a label changed.
+ */
+const isClaim = (action, issue) =>
+  action === 'assigned' || (action === 'sync' && issue.assignees.length > 0)
+
+/**
+ * Promotion reads the issue as it is now, so a run GitHub dropped is caught up by the next one.
+ * Demotion needs a reason seen in this run (a blocking label, the `ready` label just removed, or a
+ * manual run), because cards moved to Ready by hand before the label existed do not carry it.
+ */
+function statusFor({ action, label, issue, status }) {
+  if (issue.state !== 'open' || NO_BACKWARDS.has(status)) return status
+  if (isClaim(action, issue)) return 'In progress'
+  if (status === 'Backlog' && isReady(issue)) return 'Ready'
+  if (status !== 'Ready' || isReady(issue)) return status
+  const labelRemoved = action === 'unlabeled' && label === READY_LABEL
+  const demote = readyBlockers(issue).length > 0 || labelRemoved || action === 'sync'
+  return demote ? 'Backlog' : status
+}
+
 /** What to change on a card: `{ status?, sprintId? }`, empty when it is already right. */
-export function decideChanges({ action, item, current }) {
-  if (!SPRINT_ACTIONS.has(action)) return {}
+export function decideChanges({ action, label, issue = NO_ISSUE, item, current }) {
   const changes = {}
-  if (action === 'assigned' && !NO_BACKWARDS.has(item.status) && item.status !== 'In progress') {
-    changes.status = 'In progress'
-  }
+  const status = statusFor({ action, label, issue, status: item.status })
+  if (status !== item.status) changes.status = status
+  const joinsSprint = SPRINT_ACTIONS.has(action) || isClaim(action, issue)
   const inCurrent = item.sprint?.id === current?.id
-  if (current && !inCurrent && canChangeSprint(item).allowed) changes.sprintId = current.id
+  if (joinsSprint && current && !inCurrent && canChangeSprint(item).allowed) {
+    changes.sprintId = current.id
+  }
   return changes
 }
 
@@ -56,10 +98,29 @@ function boardFields(org, number) {
   return data.organization.projectV2
 }
 
+/** The issue as the decision needs it: open or closed, label names, who it is assigned to. */
+function readIssue(repo, number) {
+  const issue = json('api', `repos/${repo}/issues/${number}`)
+  return {
+    state: issue.state,
+    labels: issue.labels.map((entry) => entry.name),
+    assignees: issue.assignees.map((entry) => entry.login),
+  }
+}
+
 function run() {
-  const { REPO, ISSUE, ACTION, ORG = 'SprecherEast', PROJECT = '1' } = process.env
+  const { REPO, ISSUE, ACTION = 'sync', LABEL, ORG = 'SprecherEast', PROJECT = '1' } = process.env
   if (!/^\d+$/.test(ISSUE ?? '')) throw new Error('ISSUE must be an issue number.')
   const url = `https://github.com/${REPO}/issues/${ISSUE}`
+  const issue = readIssue(REPO, ISSUE)
+  if (issue.state !== 'open' && LABEL_ACTIONS.has(ACTION)) {
+    console.log(`#${ISSUE} is closed, so a label change moves nothing.`)
+    return
+  }
+  const blockers = readyBlockers(issue)
+  if (issue.labels.includes(READY_LABEL) && blockers.length > 0) {
+    console.log(`::warning::#${ISSUE} has "${READY_LABEL}" but also ${blockers.join(', ')}.`)
+  }
   const board = boardFields(ORG, PROJECT)
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' })
   const current = findCurrentSprint(board.sprint?.configuration?.iterations ?? [], today)
@@ -77,8 +138,8 @@ function run() {
     'json',
   ).id
   const item = cardState(itemId)
-  const changes = decideChanges({ action: ACTION, item, current })
-  console.log(`#${ISSUE} ${ACTION}: ${JSON.stringify(changes)}`)
+  const changes = decideChanges({ action: ACTION, label: LABEL, issue, item, current })
+  console.log(`#${ISSUE} ${ACTION}${LABEL ? ` "${LABEL}"` : ''}: ${JSON.stringify(changes)}`)
 
   const edit = (fieldId, ...value) =>
     gh(

@@ -1,0 +1,5 @@
+{
+  "$comment": "The organization's native issue fields agents write, by name, with the ID the REST API asks for (repos/{owner}/{repo}/issues/{n}/issue-field-values). Single-select values are given by option name. How to use them: .agents/skills/project-tracking/SKILL.md",
+  "Priority": { "id": 49624796, "options": ["Urgent", "High", "Medium", "Low"] },
+  "Effort": { "id": 49624799, "options": ["High", "Medium", "Low"] }
+}

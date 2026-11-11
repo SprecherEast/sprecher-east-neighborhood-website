@@ -1,26 +1,30 @@
 name: Planner Board
 
-# Keeps the organization board in step with the work (#941), signed in as the "Sprecher East
+# Keeps the organization board in step with the work (#941, #1089), signed in as the "Sprecher East
 # Planner" app. A new or reopened issue goes into the sprint that is running; an assigned issue,
-# which is how work is claimed, also becomes In progress. In review and Done are GitHub's own board
-# rules. Run it by hand with an issue number to catch up one issue. It checks out and runs only the
-# repository's own main-branch code and never anything from an issue's text.
+# which is how work is claimed, also becomes In progress; the "ready" label moves a card between
+# Backlog and Ready. In review and Done are GitHub's own board rules. Run it by hand with an issue
+# number to bring one card in line with its issue. It checks out and runs only the repository's own
+# main-branch code and never anything from an issue's text: the label name reaches the script as an
+# environment variable and is only compared with fixed names.
 
 on:
   issues:
-    types: [opened, reopened, assigned]
+    types: [opened, reopened, assigned, labeled, unlabeled]
   workflow_dispatch:
     inputs:
       issue:
-        description: Issue number to bring up to date
+        description: Issue number to bring in line with its labels and assignee
         required: true
         type: string
 
 permissions:
   contents: read
 
+# Label runs and work runs queue apart, so the labels a form adds cannot push a waiting "opened" or
+# "assigned" run out of the queue (GitHub keeps one waiting run per group).
 concurrency:
-  group: planner-board-${{ github.event.issue.number || inputs.issue }}
+  group: planner-board-${{ github.event.issue.number || inputs.issue }}-${{ contains(fromJSON('["labeled","unlabeled"]'), github.event.action) && 'labels' || 'work' }}
   cancel-in-progress: false
 
 jobs:
@@ -51,5 +55,6 @@ jobs:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           REPO: ${{ github.repository }}
           ISSUE: ${{ github.event.issue.number || inputs.issue }}
-          ACTION: ${{ github.event.action || 'assigned' }}
+          ACTION: ${{ github.event.action || 'sync' }}
+          LABEL: ${{ github.event.label.name }}
         run: node scripts/planner-board.mjs

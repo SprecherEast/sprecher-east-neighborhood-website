@@ -38,9 +38,7 @@ them. GitHub differs in ways that shape the rules here:
   native Priority and Effort are the ranking and size, and the board's own fields cover only what
   they do not (iteration). While a check or automation still reads the `priority:` label, the
   label stays required and the two must agree; the sweep reports any that differ. [How we
-  work](project-management.md) still describes the board as a user project with priority as a
-  label only; it is the older description and a later change brings it in line, so until then
-  treat this page as the direction and that page as the current setup.
+  work](project-management.md#the-board) says how each is set and what the board shows.
 - **Sprints are a board field.** An iteration field on a project, not a repository feature, so a
   sprint is independent of milestones and pulls work from any of them.
 
