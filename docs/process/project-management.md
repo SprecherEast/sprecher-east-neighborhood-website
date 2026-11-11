@@ -92,7 +92,9 @@ optional; the type label stays the required one because the `PR Policy` check re
 ## The pull request gate
 
 The `PR Policy` check fails a pull request with one line per broken rule, each starting with a
-stable ID. The rules and IDs are in [the checks page](issue-and-pr-checks.md#the-pull-request-gate).
+stable ID, including `PR-GROOMED`, which fails a pull request while its issue still has the
+`needs grooming` label (groom the issue, then edit the PR description to re-run). The rules and IDs
+are in [the checks page](issue-and-pr-checks.md#the-pull-request-gate).
 
 ## The issue check
 

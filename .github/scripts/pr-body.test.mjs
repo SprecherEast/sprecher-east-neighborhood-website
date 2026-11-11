@@ -4,6 +4,8 @@ import {
   closeProblems,
   headingBlocks,
   descriptionProblems,
+  groomedProblems,
+  GROOMING_LABEL,
   issueProblems,
   linkedIssues,
   isDependabot,
@@ -193,6 +195,38 @@ describe('issueProblems', () => {
     const broken = { labels: [], assignees: [], milestone: null }
     const ids = issueProblems(7, broken, policy).map((message) => message.split(':')[0])
     expect(ids).toEqual(['PR-LABELS', 'PR-LABELS', 'PR-LABELS', 'PR-ASSIGNED', 'PR-MILESTONE'])
+  })
+})
+
+describe('groomedProblems', () => {
+  const flagged = { ...goodIssue, labels: [...goodIssue.labels, { name: GROOMING_LABEL }] }
+
+  it('passes an issue without the needs grooming label', () => {
+    expect(groomedProblems(7, goodIssue)).toEqual([])
+  })
+
+  it('fails PR-GROOMED while the issue carries the label, naming the issue', () => {
+    expect(groomedProblems(7, flagged)).toEqual([expect.stringMatching(/^PR-GROOMED: .*#7/)])
+  })
+
+  it('tells the author to groom, then edit the PR description to re-run the check', () => {
+    const [message] = groomedProblems(7, flagged)
+    expect(message).toMatch(/groom/i)
+    expect(message).toMatch(/edit the PR description/i)
+  })
+
+  it('reads the labels it is given, so a label the issue check removed passes on the next run', () => {
+    expect(groomedProblems(7, flagged)).toHaveLength(1)
+    expect(groomedProblems(7, { ...flagged, labels: goodIssue.labels })).toEqual([])
+  })
+
+  it('reads labels given as plain strings', () => {
+    expect(groomedProblems(7, { labels: ['bug', GROOMING_LABEL] })).toHaveLength(1)
+    expect(groomedProblems(7, { labels: ['bug'] })).toEqual([])
+  })
+
+  it('is separate from issueProblems, which does not read the label', () => {
+    expect(issueProblems(7, flagged, policy)).toEqual([])
   })
 })
 
