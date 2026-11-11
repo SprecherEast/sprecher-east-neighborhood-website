@@ -33,6 +33,9 @@ const step = (ms: number) =>
 function Counter({ target }: { target: number }) {
   return <p data-testid="n">{useCountedNumber(target, { durationMs: 400 })}</p>
 }
+function SlowCounter({ target }: { target: number }) {
+  return <p data-testid="n">{useCountedNumber(target)}</p>
+}
 const shown = () => Number(screen.getByTestId('n').textContent)
 
 describe('useCountedNumber', () => {
@@ -51,6 +54,16 @@ describe('useCountedNumber', () => {
     expect(shown()).toBeLessThan(300)
     expect(Number.isInteger(shown())).toBe(true)
     step(400)
+    expect(shown()).toBe(300)
+  })
+
+  it('takes a second and a half by default, long enough to be seen', () => {
+    const { rerender } = render(<SlowCounter target={100} />)
+    rerender(<SlowCounter target={300} />)
+    step(0)
+    step(1000)
+    expect(shown()).toBeLessThan(300)
+    step(1500)
     expect(shown()).toBe(300)
   })
 

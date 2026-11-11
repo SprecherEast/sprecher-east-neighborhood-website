@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 
 import { prefersReducedMotion } from './motion.client'
 
+/** Long enough that a reader sees the numbers move (the first, half-second count went unnoticed) */
+const COUNT_MS = 1500
+
 const easeOut = (t: number) => 1 - (1 - t) ** 3
 
 /**
@@ -12,7 +15,7 @@ const easeOut = (t: number) => 1 - (1 - t) ** 3
  * target, so nothing counts on the first paint, and it jumps straight to a new target for a reader
  * who asked for less motion.
  */
-export function useCountedNumber(target: number, { durationMs = 450 } = {}): number {
+export function useCountedNumber(target: number, { durationMs = COUNT_MS } = {}): number {
   const [state, setState] = useState({ target, from: target, shown: target })
   if (state.target !== target) {
     // Adjusting state while rendering: a new target starts a count from what is shown now

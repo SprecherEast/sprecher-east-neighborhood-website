@@ -25,6 +25,8 @@ export const fieldVariants = cva('flex min-w-0', {
       stacked: 'flex-col gap-2',
       // A checkbox, then its label, hint and error in a column beside it
       inline: 'flex-row items-start gap-3',
+      // The label and the control on one line, never wrapped; hint and error go under both
+      row: 'flex-col gap-2',
     },
     // `half` shares a row in a `Form` from 640 px; below that, and outside a Form, every field
     // is full width (the Form's grid makes each cell full width unless told otherwise)
@@ -45,7 +47,7 @@ export type FieldProps = Omit<VariantProps<typeof fieldVariants>, 'layout'> & {
   hint?: ReactNode
   /** Shown under the control, announced, and marks the control invalid */
   error?: string
-  /** Defaults to `inline` for a checkbox and `stacked` for anything else */
+  /** Defaults to `inline` for a checkbox and `stacked` for anything else; `row` puts the label and the control on one line from 375 px */
   layout?: VariantProps<typeof fieldVariants>['layout']
   /** The control's id; generated when left out */
   id?: string
@@ -82,7 +84,11 @@ export function Field({
   const labelElement = (
     <label
       htmlFor={controlId}
-      className={cn('text-sm font-medium text-foreground', hideLabel && 'sr-only')}
+      className={cn(
+        'text-sm font-medium text-foreground',
+        resolvedLayout === 'row' && 'shrink-0 whitespace-nowrap',
+        hideLabel && 'sr-only',
+      )}
     >
       {label}
       {required && (
@@ -119,6 +125,15 @@ export function Field({
               {hintElement}
               {errorElement}
             </div>
+          </>
+        ) : resolvedLayout === 'row' ? (
+          <>
+            <div className="flex min-w-0 flex-col gap-2 min-[375px]:flex-row min-[375px]:items-center min-[375px]:gap-3">
+              {labelElement}
+              <div className="min-w-0 flex-1">{control}</div>
+            </div>
+            {hintElement}
+            {errorElement}
           </>
         ) : (
           <>

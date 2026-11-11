@@ -36,7 +36,7 @@ route is involved, so the generated reference has nothing on it.
 - `ThemeDecoration.tsx` is rendered once in the root layout. It draws the active theme's `decoration` option, or nothing; the default theme has none. The layer is hidden from assistive technology, takes no clicks and is faint (`decorations.css`).
 - A decoration's movement stops within 5 seconds and doesn't start when the visitor asks for reduced motion (`decorations.css`, #409).
 - The chart reveal and bar-grow effects (`chart-reveal`, `chart-reveal-x` in `tailwind.css`) run only on screen, with motion allowed and scroll-driven animation supported; otherwise charts draw finished. `print-exact` keeps chart marks and legend swatches coloured in print.
-- `total-pulse` (`tailwind.css`, #1051) flashes the accent behind a total once and fades it over about a second, only when motion is allowed; with reduced motion the total just changes.
+- `total-pulse` (`tailwind.css`, #1051) flashes the accent behind a total once and fades it over a second and a half, as long as the count, only when motion is allowed; with reduced motion the total just changes.
 - Rich-text colours (the [rich-text note](/src/platform/richtext/README.md)) come from `tailwind.config.mjs` and are all token variables, so a theme recolours posts without touching it; none are inverted for dark, which follows `data-theme`, not the device.
 - Components use token classes only: lint rejects raw palette classes and hex or rgb values in classes (`eslint.theme.config.mjs`).
 
