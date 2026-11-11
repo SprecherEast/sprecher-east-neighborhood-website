@@ -38,6 +38,22 @@ neighbor would: in polite wording, as an invitation, never as a bare order. Step
 directions (how to use a form or find a page) stay plain and exact; the kindness is in how we ask,
 not in extra words, so it stays inside the length budget.
 
+## Before you write: the brief
+
+Nothing is written or rewritten for a page, post or message until a short brief says what it is
+for. Four answers, a few lines in all:
+
+1. **Purpose.** What is this for, in one sentence?
+2. **Audience.** Who reads it, and what do they want from it?
+3. **The next step.** The one thing we want them to do after reading.
+4. **Tone.** How it should sound while it steers them, from the tone map below.
+
+Every sentence then helps the reader get what they want or take that step; a sentence that does
+neither is cut. A page's brief is one short file in [`docs/product/briefs/`](../product/briefs/README.md),
+so the next writer, person or AI agent, starts from it instead of guessing. A rewrite starts by
+reading the brief and fixing it first if the page's job has changed. The owner asked for this
+(2026-11-11, voice session, recorded on #1103).
+
 ## Length budget
 
 | Piece                               | Limit                                                                                                                                                                                                                                                                                           |
@@ -208,7 +224,7 @@ Examples show the voice only. Events in them are illustrations; never copy a fac
 
 Every piece passes all ten, or it waits. For money, taxes and politics, a second person re-checks.
 
-1. **Voice.** Passes the voice test below.
+1. **Voice and brief.** Passes the voice test below, and does the job its brief names.
 2. **Facts and sources.** Every claim links a source; numbers have two sources, or say "reported by {source}, not yet confirmed".
 3. **Neutral.** No tripwire in our own words; nothing takes a side on money or politics.
 4. **Reading level.** Grade 8 at most; messages and leads aim lower.
