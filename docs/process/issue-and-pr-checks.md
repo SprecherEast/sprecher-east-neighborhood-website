@@ -11,17 +11,17 @@ The `PR Policy` check (`.github/workflows/pr-policy.yml`, rules in `.github/scri
 fails a pull request with one line per broken rule, each starting with a stable ID, so a failure
 can be fixed in one try and counted ([#970](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/970)).
 
-| ID               | The rule                                                                                   |
-| ---------------- | ------------------------------------------------------------------------------------------ |
-| `PR-CLOSES`      | The description closes exactly one issue with `Closes #N`; `Part of #N` does not count.    |
-| `PR-LINKED`      | The link works both ways: the issue's timeline shows the pull request (a keyword does it). |
-| `PR-LABELS`      | The issue has one type, at least one area and one priority label.                          |
-| `PR-ASSIGNED`    | The issue is assigned: assigning claims it and moves its card to In progress.              |
-| `PR-MILESTONE`   | The issue has a milestone (Backlog until planned). An epic is optional, so none is needed. |
-| `PR-SECTIONS`    | Every template section is filled in.                                                       |
-| `PR-SELF-REVIEW` | The self-review answers each item.                                                         |
-| `PR-KNOWLEDGE`   | The knowledge note follows the behavior change, or the change is declared absent.          |
-| `PR-E2E`         | An end-to-end exemption gives its reason.                                                  |
+| ID               | The rule                                                                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `PR-CLOSES`      | The description closes exactly one issue with `Closes #N`; `Part of #N` does not count.                                                |
+| `PR-LINKED`      | The link works both ways: the issue's timeline shows the pull request (a keyword does it).                                             |
+| `PR-LABELS`      | The issue has one type, at least one area and one priority label.                                                                      |
+| `PR-ASSIGNED`    | The issue is assigned: assigning claims it and moves its card to In progress.                                                          |
+| `PR-MILESTONE`   | The issue has a milestone (Backlog until planned). An epic is optional, so none is needed.                                             |
+| `PR-SECTIONS`    | Every template section is filled in.                                                                                                   |
+| `PR-SELF-REVIEW` | The self-review answers each item.                                                                                                     |
+| `PR-KNOWLEDGE`   | The knowledge note follows the behavior change, or the change is declared absent. Run it locally first with `npm run knowledge:check`. |
+| `PR-E2E`         | An end-to-end exemption gives its reason.                                                                                              |
 
 In a stack, only the bottom pull request targets `main` and GitHub reads a closing keyword only
 there ([`stacked-prs`](../../.agents/skills/stacked-prs/SKILL.md#when-to-stack)), but GitHub runs

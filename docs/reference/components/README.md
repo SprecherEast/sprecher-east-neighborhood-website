@@ -7,7 +7,7 @@
 | Page                                       | Components                                                                                                                                                                  |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Actions](actions.md)                      | `Button`, `Link`, `AppLink`, `LinkButton`                                                                                                                                   |
-| [Form fields](form-fields.md)              | `Form`, `Field`, `FieldInput`, `FieldTextArea`, `FieldSelect`, `FieldCheckbox`                                                                                              |
+| [Form fields](form-fields.md)              | `Form`, `Field`, `FieldInput`, `FieldMoney`, `FieldTextArea`, `FieldSelect`, `FieldCheckbox`                                                                                |
 | [Cards](cards.md)                          | `Card`, `CardMedia`, `CardBody`, `CardTitle`, `CardMeta`, `CardFooter`, `CardGrid`, `CardGridItem`                                                                          |
 | [Display](display.md)                      | `Badge`, `BadgeList`, `CancelledBadge`, `CertaintyBadge`, `ProgressBar`, `DateTime`, `MetaList`, `MetaBar`, `Text`, `Caption`, `Legend`, `ImageCredit`, `FeaturedImage`     |
 | [Sections and page headers](sections.md)   | `PageHeader`, `EmptyState`, `SidebarCTA`, `Disclosure`, `Tabs`                                                                                                              |

@@ -121,29 +121,32 @@ export function SharePie({
           )
         })}
       </svg>
-      <div data-pie-legend className="@container mt-4 space-y-2 text-sm">
+      <div data-pie-legend className="mt-4 space-y-2 text-sm">
         {heading && <p className="min-h-10 font-semibold text-foreground">{heading}</p>}
-        <ul className="divide-y divide-border">
+        {/* One grid for every row; the percent and amount columns have fixed widths, so a longer amount never narrows the names and changes how they wrap */}
+        <ul className="grid grid-cols-[1fr_2.75rem_5.5rem] gap-x-2">
           {slices.map((slice) => (
             <li
               key={slice.key}
-              // On a narrow card the name takes a line and the amounts the next, so no amount can
-              // wrap the name; from `@sm` it is one line. Either way the row's height is fixed.
-              className="grid min-h-14 grid-cols-[auto_1fr] items-center gap-x-2 py-1 @sm:min-h-10 @sm:grid-cols-[auto_1fr_auto_auto]"
+              className="col-span-3 grid min-h-10 grid-cols-subgrid items-center border-t border-border py-1 first:border-t-0"
             >
-              <span
-                aria-hidden="true"
-                className={cn(
-                  'row-span-2 inline-block size-3 shrink-0 @sm:row-span-1',
-                  TONE_SWATCH[slice.tone],
-                )}
-              />
-              <span className="text-foreground">{slice.name}</span>
-              <span className="col-start-2 flex items-center gap-x-2 @sm:contents">
-                <span className="font-semibold text-foreground tabular-nums">{slice.amount}</span>
-                <span className="text-muted-foreground tabular-nums @sm:w-10 @sm:text-right">
-                  {slice.percent}%
+              <span className="flex min-w-0 items-center gap-x-2">
+                <span
+                  aria-hidden="true"
+                  className={cn('inline-block size-3 shrink-0', TONE_SWATCH[slice.tone])}
+                />
+                <span
+                  data-legend-name
+                  className={cn('text-foreground', slice.tone === 'highlight' && 'font-bold')}
+                >
+                  {slice.name}
                 </span>
+              </span>
+              <span className="text-right whitespace-nowrap text-muted-foreground tabular-nums">
+                {slice.percent}%
+              </span>
+              <span className="text-right font-semibold whitespace-nowrap text-foreground tabular-nums">
+                {slice.amount}
               </span>
             </li>
           ))}

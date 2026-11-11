@@ -12,6 +12,12 @@ import { SAMPLE_OPTIONS } from './sampleData'
 
 const ERROR = 'Enter a value here.'
 
+/** A `Field.Money` that keeps its own text, as a page would */
+function Money() {
+  const [value, setValue] = useState('$500,300')
+  return <Field.Money value={value} onValueChange={setValue} />
+}
+
 /** Each `Field` control, without and with an error (client: `Field.Input` and the rest are its parts) */
 export function FieldsGallery() {
   return (
@@ -28,6 +34,9 @@ export function FieldsGallery() {
           >
             <Field label="Input" required hint="A hint under the label" error={err(withError)}>
               <Field.Input type="text" placeholder="text" />
+            </Field>
+            <Field label="Money input" hint="Digits group as you type" error={err(withError)}>
+              <Money />
             </Field>
             <Field label="Email input" error={err(withError)}>
               <Field.Input type="email" autoComplete="email" />
