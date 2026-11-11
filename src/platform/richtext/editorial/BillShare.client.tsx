@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useId, useState, type ReactNode } from 'react'
+import React, { useId, useRef, useState, type ReactNode } from 'react'
 
 import {
   BILL_BODY_NAMES,
@@ -14,8 +14,10 @@ import { AmountBar } from '@/platform/ui/AmountBar'
 import { Card, CardTitle } from '@/platform/ui/Card'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
 import { Link } from '@/platform/ui/Link'
+import { scrollToUnlessVisible } from '@/platform/ui/motion.client'
 import { SharePie } from '@/platform/ui/SharePie.client'
 import { Text } from '@/platform/ui/Text'
+import { useCountedNumber } from '@/platform/ui/useCountedNumber.client'
 
 import type { BillShareProps } from './billShare'
 import { joinNames, reservedNote, ROUGH_NOTE, unconfirmedNote } from './billShareNotes'
@@ -56,19 +58,36 @@ export function BillShare({
   const year = years[yearIndex]
   // What the reader typed, or null while the box still shows the City's average for the year
   const [typed, setTyped] = useState<string | null>(null)
-  // A screen reader hears the bill when the reader leaves the box or switches year, not on every key
-  const [settled, setSettled] = useState(true)
+  // The value last estimated, or null while the numbers are for the City's average home
+  const [estimated, setEstimated] = useState<number | null>(null)
+  const estimating = useRef(false)
+  const receiptRef = useRef<HTMLDivElement>(null)
   const pieTitleId = useId()
+  const target = estimated ?? year?.averageHome ?? 0
+  // Every number below counts to a new value, so a change is seen, not just found
+  const shown = useCountedNumber(target)
   if (!year) return null
 
   const text = typed ?? formatWholeDollars(year.averageHome)
   const homeValue = parseHomeValue(text)
   const { rates } = fillFromEarlier(year.rates, years[yearIndex - 1]?.rates)
-  const bill = homeValue === null ? null : computeBillShare(homeValue, rates)
-  const receipt = receiptFor(bill, homeValue)
+  const bill = computeBillShare(shown, rates)
+  const receipt = receiptFor(bill, shown)
+  // What a screen reader hears: the bill for the value estimated, not each step of the count
+  const summary = receiptFor(computeBillShare(target, rates), target).summary
+
+  // Estimating scrolls to the receipt only if it is not all on screen, and the numbers count once
+  // the page has stopped moving; a reader who asked for less motion gets them at once
+  const estimate = async () => {
+    if (homeValue === null || estimating.current) return
+    estimating.current = true
+    if (receiptRef.current) await scrollToUnlessVisible(receiptRef.current)
+    setEstimated(homeValue)
+    estimating.current = false
+  }
 
   // The City's panel follows the home typed (the average home while the box holds no number)
-  const home = homeValue ?? year.averageHome
+  const home = shown
   const cityAmount =
     (bill ?? computeBillShare(home, rates)).parts.find((p) => p.key === 'city')?.amount ?? null
   const homeRatio = home / year.averageHome
@@ -116,11 +135,9 @@ export function BillShare({
         <RoughEstimator
           intro={intro}
           value={text}
-          onValueChange={(value) => {
-            setTyped(value)
-            setSettled(false)
-          }}
-          onValueBlur={() => setSettled(true)}
+          onValueChange={setTyped}
+          canEstimate={homeValue !== null && homeValue !== target}
+          onEstimate={estimate}
           error={
             homeValue === null ? 'Enter your home’s value as a number, like $500,000.' : undefined
           }
@@ -130,10 +147,7 @@ export function BillShare({
             note: option.note,
           }))}
           selected={yearIndex}
-          onSelect={(index) => {
-            setYearIndex(index)
-            setSettled(true)
-          }}
+          onSelect={setYearIndex}
           notes={notes}
         />
         <Card as="section" variant="elevated" aria-labelledby={pieTitleId} className="h-full">
@@ -142,18 +156,20 @@ export function BillShare({
               <span id={pieTitleId}>Your rough property tax</span>
             </CardTitle>
             <p role="status" className="sr-only">
-              {settled ? receipt.summary : ''}
+              {summary}
             </p>
             {receipt.slices.length > 0 ? (
-              <SharePie
-                slices={receipt.slices}
-                label={receipt.label}
-                heading={receipt.heading}
-                total={receipt.total ?? undefined}
-              />
+              <div ref={receiptRef}>
+                <SharePie
+                  slices={receipt.slices}
+                  label={receipt.label}
+                  heading={receipt.heading}
+                  total={receipt.total ?? undefined}
+                />
+              </div>
             ) : (
               <Text variant="small" className="py-16 text-center">
-                Enter your home’s value to see how the bill splits.
+                The whole bill can’t be shown yet.
               </Text>
             )}
           </div>

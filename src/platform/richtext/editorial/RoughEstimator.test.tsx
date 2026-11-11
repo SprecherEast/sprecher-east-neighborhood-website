@@ -12,7 +12,8 @@ const PROPS: RoughEstimatorProps = {
   intro: 'Based on the City’s average home.',
   value: '$500,300',
   onValueChange: () => {},
-  onValueBlur: () => {},
+  canEstimate: true,
+  onEstimate: () => {},
   options: [
     { key: '2026', label: '2026 rates' },
     { key: '2027', label: '2027 rates' },
@@ -44,23 +45,56 @@ describe('RoughEstimator', () => {
 
   it('reports what the reader types, leaves, and picks', () => {
     const onValueChange = vi.fn()
-    const onValueBlur = vi.fn()
     const onSelect = vi.fn()
-    render(
-      <RoughEstimator
-        {...PROPS}
-        onValueChange={onValueChange}
-        onValueBlur={onValueBlur}
-        onSelect={onSelect}
-      />,
-    )
+    render(<RoughEstimator {...PROPS} onValueChange={onValueChange} onSelect={onSelect} />)
     const box = screen.getByRole('textbox')
     fireEvent.change(box, { target: { value: '300000' } })
     expect(onValueChange).toHaveBeenCalledWith('$300,000')
-    fireEvent.blur(box)
-    expect(onValueBlur).toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: '2026 rates' }))
     expect(onSelect).toHaveBeenCalledWith(0)
+  })
+
+  it('ends with a full-width Estimate button, below the box and the rate buttons', () => {
+    render(<RoughEstimator {...PROPS} />)
+    const estimate = screen.getByRole('button', { name: 'Estimate' })
+    const others = [
+      screen.getByRole('textbox'),
+      screen.getByRole('button', { name: '2026 rates' }),
+      screen.getByRole('button', { name: '2027 rates' }),
+    ]
+    for (const other of others) {
+      expect(
+        other.compareDocumentPosition(estimate) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+    }
+    expect(estimate.className).toContain('w-full')
+  })
+
+  it('turns the Estimate button off until there is a new value to estimate', () => {
+    const { rerender } = render(<RoughEstimator {...PROPS} canEstimate={false} />)
+    expect((screen.getByRole('button', { name: 'Estimate' }) as HTMLButtonElement).disabled).toBe(
+      true,
+    )
+    rerender(<RoughEstimator {...PROPS} />)
+    expect((screen.getByRole('button', { name: 'Estimate' }) as HTMLButtonElement).disabled).toBe(
+      false,
+    )
+  })
+
+  it('estimates when the button is pressed and when Enter is pressed in the box', () => {
+    const onEstimate = vi.fn()
+    render(<RoughEstimator {...PROPS} onEstimate={onEstimate} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Estimate' }))
+    expect(onEstimate).toHaveBeenCalledTimes(1)
+    fireEvent.submit(screen.getByRole('textbox').closest('form') as HTMLFormElement)
+    expect(onEstimate).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not estimate on Enter while there is nothing new to estimate', () => {
+    const onEstimate = vi.fn()
+    render(<RoughEstimator {...PROPS} canEstimate={false} onEstimate={onEstimate} />)
+    fireEvent.submit(screen.getByRole('textbox').closest('form') as HTMLFormElement)
+    expect(onEstimate).not.toHaveBeenCalled()
   })
 
   it('shows the error under the box and marks the box invalid', () => {
