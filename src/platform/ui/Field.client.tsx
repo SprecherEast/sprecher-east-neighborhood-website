@@ -47,7 +47,7 @@ export type FieldProps = Omit<VariantProps<typeof fieldVariants>, 'layout'> & {
   hint?: ReactNode
   /** Shown under the control, announced, and marks the control invalid */
   error?: string
-  /** Defaults to `inline` for a checkbox and `stacked` for anything else; `row` puts the label and the control on one line from 375 px */
+  /** Defaults to `inline` for a checkbox and `stacked` for anything else; `row` puts the label and the control on one line from 360 px */
   layout?: VariantProps<typeof fieldVariants>['layout']
   /** The control's id; generated when left out */
   id?: string
@@ -128,7 +128,7 @@ export function Field({
           </>
         ) : resolvedLayout === 'row' ? (
           <>
-            <div className="flex min-w-0 flex-col gap-2 min-[375px]:flex-row min-[375px]:items-center min-[375px]:gap-3">
+            <div className="flex min-w-0 flex-col gap-2 xs:flex-row xs:items-center xs:gap-2">
               {labelElement}
               <div className="min-w-0 flex-1">{control}</div>
             </div>

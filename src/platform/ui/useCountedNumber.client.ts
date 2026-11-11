@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { prefersReducedMotion } from './motion.client'
 
 /** Long enough that a reader sees the numbers move (the first, half-second count went unnoticed) */
-const COUNT_MS = 1500
+export const COUNT_MS = 1500
 
 const easeOut = (t: number) => 1 - (1 - t) ** 3
 

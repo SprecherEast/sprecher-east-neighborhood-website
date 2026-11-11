@@ -10,6 +10,8 @@
 /* `dark:` follows the site's theme toggle, not the device's setting (#225) */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/* 360 px: the narrowest phone a one-line label and money box still fit (#1054). A custom variant, not a theme breakpoint, which would also cap `container` at 360 px */
+@custom-variant xs (@media (width >= 22.5rem));
 @custom-variant sm (@media (width >= theme(--breakpoint-sm)));
 @custom-variant md (@media (width >= theme(--breakpoint-md)));
 @custom-variant lg (@media (width >= theme(--breakpoint-lg)));

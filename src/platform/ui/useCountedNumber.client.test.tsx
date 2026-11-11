@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs'
+
 import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useCountedNumber } from './useCountedNumber.client'
+import { COUNT_MS, useCountedNumber } from './useCountedNumber.client'
 
 let frames: ((time: number) => void)[] = []
 let now = 0
@@ -96,5 +98,12 @@ describe('useCountedNumber', () => {
     expect(shown()).toBe(middle)
     step(500)
     expect(shown()).toBe(0)
+  })
+})
+
+describe("the count and the total's flash", () => {
+  it("last as long: the flash's CSS duration is the count's, defined once here", () => {
+    const css = readFileSync('src/platform/theme/tailwind.css', 'utf8')
+    expect(css).toContain(`animation: total-pulse ${COUNT_MS / 1000}s ease-out`)
   })
 })
