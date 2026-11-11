@@ -1,48 +1,25 @@
-import { ExternalLink } from 'lucide-react'
 import React from 'react'
 
-import { Link } from '@/platform/ui/Link'
 import { Badge, BadgeList } from '@/platform/ui/Badge'
 import { DateTime } from '@/platform/ui/DateTime'
-import type { LabelledMetaItem } from '@/platform/ui/MetaList'
+import type { MetaBarItem } from '@/platform/ui/MetaBar'
 import type { PageHeaderProps } from '@/platform/ui/PageHeader'
 
 import { formatAuthors } from '../domain/authors'
-import type { PostDetail, PostSource } from '../domain/types'
+import type { PostDetail } from '../domain/types'
 
 /**
- * Where the news came from (#483): the source's name, linking to the original in a new tab when
- * the post has a link, in the site's link color.
+ * A post's author and date (#774, #1055): the facts the page draws as its `MetaBar` (#1002), at the
+ * right of the article column. The date is the compact one ("Nov 3"), so the row stays on one line;
+ * a long author name is cut by the bar and keeps its full text as the value's title. The source is
+ * not shown here.
  */
-function SourceValue({ source }: { source: PostSource }) {
-  if (!source.url) return source.name
-
-  // The icon stays with the name's last word, so a wrapped name never leaves it on a line alone
-  const split = source.name.lastIndexOf(' ') + 1
-  return (
-    <Link href={source.url} external>
-      {source.name.slice(0, split)}
-      <span className="whitespace-nowrap">
-        {source.name.slice(split)}
-        <ExternalLink aria-hidden="true" className="ml-1 inline align-[-0.125em]" />
-      </span>
-    </Link>
-  )
-}
-
-/**
- * A post's author, date and source (#774): the facts the page draws as its `MetaBar` (#1002), at
- * the top left of the article column, so they sit on the text's left edge and not in the header.
- */
-export function postByline(post: PostDetail): LabelledMetaItem[] {
-  const { publishedAt, source } = post
+export function postByline(post: PostDetail): MetaBarItem[] {
+  const { publishedAt } = post
   const authors = formatAuthors(post.authors)
   return [
-    ...(authors ? [{ label: 'Author', value: authors }] : []),
-    ...(publishedAt
-      ? [{ label: 'Published', value: <DateTime value={publishedAt} format="long" /> }]
-      : []),
-    ...(source ? [{ label: 'Source', value: <SourceValue source={source} /> }] : []),
+    ...(authors ? [{ label: 'Author', value: authors, title: authors }] : []),
+    ...(publishedAt ? [{ label: 'Published', value: <DateTime value={publishedAt} /> }] : []),
   ]
 }
 

@@ -42,10 +42,26 @@ const figure = await payload.create({
   overrideAccess: true, // test setup, no user
 })
 
+// An author with a long name, for the metadata bar's cut value (#1055)
+const author = await payload.create({
+  collection: 'users',
+  depth: 0,
+  data: {
+    name: 'Bartholomew Featherstonehaugh-Kowalczyk and Dorothea Wainwright-Papadopoulos',
+    email: 'long-name-author@example.com',
+    role: 'guest',
+    password: crypto.randomUUID(),
+  },
+  // The seed runs before the mail catcher listens
+  disableVerificationEmail: true,
+  context,
+  overrideAccess: true, // test setup, no user
+})
+
 await payload.create({
   collection: 'posts',
   depth: 0,
-  data: alignmentPost(figure.id),
+  data: alignmentPost(figure.id, author.id),
   context,
   overrideAccess: true, // test setup, no user
 })

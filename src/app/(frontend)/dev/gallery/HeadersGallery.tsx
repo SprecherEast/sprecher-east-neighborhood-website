@@ -149,12 +149,9 @@ export function HeadersGallery() {
 
       <GalleryEntry
         name="FeaturedImage"
-        description="The picture of a post or an event, shown whole: full width above the text on a phone, half the column to its right on a tablet, a third from the desktop breakpoint, with the text beside it and an Enlarge button under it; nothing without a picture."
+        description="The picture of a post or an event, shown whole: full width above the text on a phone, half the column to its right on a tablet, a third from the desktop breakpoint, with the text beside it and no Enlarge button; nothing without a picture."
       >
-        <GalleryVariant
-          label="whole picture, text beside it, with its credit and Enlarge"
-          className="w-full"
-        >
+        <GalleryVariant label="whole picture, text beside it, with its credit" className="w-full">
           <div className={`${FRAME} flow-root p-6`}>
             <FeaturedImage image={SAMPLE_IMAGE} />
             <p>

@@ -188,3 +188,57 @@ describe('MetaBar (#1002)', () => {
     expect(container.firstElementChild?.className).toContain('max-w-[40rem]')
   })
 })
+
+describe('MetaBar aligned to the end (#1055)', () => {
+  const longName = 'Bartholomew Featherstonehaugh-Kowalczyk and Dorothea Wainwright-Papadopoulos'
+  const post = [
+    { label: 'Author', value: longName, title: longName },
+    { label: 'Published', value: 'Nov 3' },
+  ]
+
+  it('sets one row at every width, ending on the column’s right edge, above the same groove', () => {
+    const { container } = render(<MetaBar items={post} align="end" />)
+
+    const list = container.querySelector('dl')
+    expect(list?.className).toContain('flex')
+    expect(list?.className).toContain('justify-end')
+    expect(list?.className).not.toMatch(/(^|\s)(grid|flex-col)(\s|$)/)
+    expect(container.querySelectorAll('[aria-hidden="true"]')).toHaveLength(1)
+    expect(container.querySelector('[aria-hidden="true"]')?.className).toContain('border-input')
+  })
+
+  it('sets the values in the theme’s finest text size, like the labels', () => {
+    render(<MetaBar items={post} align="end" />)
+
+    expect(screen.getByText('Nov 3').closest('dd')?.className).toContain('text-fine')
+    expect(screen.getByText('Author').className).toContain('text-fine')
+  })
+
+  it('cuts a long value to one line with an ellipsis at every width, its whole text in the title', () => {
+    render(<MetaBar items={post} align="end" />)
+
+    const cut = screen.getByTitle(longName)
+    expect(cut.className).toContain('truncate')
+    expect(cut.className).not.toContain('md:max-w')
+    expect(cut.textContent).toBe(longName)
+    // The date keeps its width: the name gives up room first
+    expect(screen.getByText('Published').parentElement?.className).toContain('shrink-0')
+    expect(screen.getByText('Author').parentElement?.className).not.toContain('shrink-0')
+  })
+
+  it('keeps a hairline between the items and none after the last', () => {
+    render(<MetaBar items={post} align="end" />)
+
+    const [first, second] = Array.from(screen.getByText('Author').closest('dl')?.children ?? [])
+    expect(first?.className).not.toContain('border-l')
+    expect(second?.className).toContain('border-l')
+    expect(second?.className).not.toContain('pr-3')
+  })
+
+  it('leaves the start alignment as it was', () => {
+    const { container } = render(<MetaBar items={items} />)
+
+    expect(container.querySelector('dl')?.className).toContain('grid')
+    expect(container.querySelector('dl')?.className).not.toContain('justify-end')
+  })
+})

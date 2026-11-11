@@ -59,14 +59,13 @@ describe('Figure', () => {
     expect(classes).toContain('lg:w-1/3')
   })
 
-  it('keeps the Enlarge button above the picture unless asked to put it below (#1023)', () => {
-    setup()
-    const above = screen.getByRole('button', { name: /Enlarge/ }).className
-    cleanup()
-    setup({ enlarge: 'below' })
+  it('draws the picture and its caption with no Enlarge button or dialog when zoom is off (#1055)', async () => {
+    setup({ zoom: false, caption: 'The ramp.' })
 
-    expect(above).not.toContain('order-last')
-    expect(screen.getByRole('button', { name: /Enlarge/ }).className).toContain('order-last')
+    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.getByText('The ramp.')).toBeTruthy()
+    await userEvent.click(screen.getByRole('img'))
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 
   it('opens a dialog with the key and the long caption', async () => {

@@ -128,10 +128,11 @@ Source: `src/platform/ui/MetaList.tsx`
 
 Source: `src/platform/ui/MetaBar.tsx`
 
-| Prop        | Type            | Required | Description                                             |
-| ----------- | --------------- | -------- | ------------------------------------------------------- |
-| `items`     | `MetaBarItem[]` | yes      | Author and date for a post, when and where for an event |
-| `className` | `string`        | no       |                                                         |
+| Prop        | Type            | Required | Description                                                                                                                                                                                                                                                              |
+| ----------- | --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `items`     | `MetaBarItem[]` | yes      | Author and date for a post, when and where for an event                                                                                                                                                                                                                  |
+| `align`     | `MetaBarAlign`  | no       | `start` (the default, an event's): the items grouped at the left, stacked in two columns on a phone. `end` (a post's, #1055): smaller text, one row at every width ending on the right edge, where a value too long for the row is cut with an ellipsis and never wraps. |
+| `className` | `string`        | no       |                                                                                                                                                                                                                                                                          |
 
 **Used by** (direct imports):
 
@@ -222,7 +223,7 @@ Source: `src/platform/ui/ImageCredit.tsx`
 
 ## `FeaturedImage`
 
-The picture of a post or an event, at the start of the article's text (#1013, #1023): shown whole, at its own proportions, never cropped, so a picture that carries text (a panel of facts) stays readable. On a phone it fills the column above the text; from a tablet it floats right, half the column wide, then a third from the desktop breakpoint, with the text wrapping beside it. A reader can enlarge it. It is the shared `Figure` (the article figure's float, wrap and enlarge dialog), with the Enlarge button under the picture so the picture starts on the text's first line, and loading early because it is the first image seen. Its credit shows under it and in the enlarged view. With no picture it draws nothing, so no gap is left.
+The picture of a post or an event, at the start of the article's text (#1013, #1023): shown whole, at its own proportions, never cropped, so a picture that carries text (a panel of facts) stays readable. On a phone it fills the column above the text; from a tablet it floats right, half the column wide, then a third from the desktop breakpoint, with the text wrapping beside it. It is the shared `Figure` (the article figure's float and wrap) without its zoom, so there is no Enlarge button and the picture starts on the text's first line, loading early because it is the first image seen. Its credit shows under it. With no picture it draws nothing, so no gap is left.
 
 Source: `src/platform/ui/FeaturedImage.tsx`
 
