@@ -11,6 +11,7 @@ The helpers every collection is built from (`src/platform/payload/`) and the hel
 - The link field stores a reference or a custom URL; `resolveLink` is the one place it becomes an `href`. `documentHref` is the one place a document's address is written: pages at `/slug`, the slug `home` at `/`, the rest under their collection (`payload/link.ts`, `resolveLink.ts`, `documentHref.ts`).
 - `keysetSort` and `afterCursor` order a listing by one date with the id as tie-break; `lib/cursor.ts` encodes that pair as the opaque cursor "Load more" sends back on events and news (`payload/keyset.ts`, decision 0014).
 - `emailConfirmer.ts` is the contract [verification](../../modules/verification/README.md) provides and [contact](../../modules/contact/README.md) uses; accounts only supplies a keeper (`keepAccountEmails`), and sign-up uses Payload's own verify, not this contract; `payload.config.ts` hands them over (decision 0008).
+- `lib/billShare.ts` is the one place a property-tax bill is worked out for the whole-bill picture of a fact tab: it reads the home value a reader types (whole dollars, `$` and commas allowed, nothing else), multiplies it by each body's rate per $1,000, gives whole percents that add up to 100 and exact shares for the bar, and takes a rate a body has not set from the year before, saying which. A rate that is empty or not above zero is "not set", never zero, and a year with any rate unset has no shares of its own (#1018).
 
 ## Behaviors and events
 
