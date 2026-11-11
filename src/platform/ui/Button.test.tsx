@@ -115,13 +115,21 @@ describe('Button', () => {
   it('has no accessibility violations in any variant, as a button or a link', async () => {
     const { container } = render(
       <>
-        {(['primary', 'secondary', 'accent', 'ghost', 'inverse', 'inverse-outline'] as const).map(
-          (variant) => (
-            <Button key={variant} variant={variant}>
-              {variant}
-            </Button>
-          ),
-        )}
+        {(
+          [
+            'primary',
+            'secondary',
+            'accent',
+            'accent-outline',
+            'ghost',
+            'inverse',
+            'inverse-outline',
+          ] as const
+        ).map((variant) => (
+          <Button key={variant} variant={variant}>
+            {variant}
+          </Button>
+        ))}
         <Button size="icon" aria-label="Go home" iconStart={<Home aria-hidden="true" />} />
         <Button href="/" iconStart={<Home aria-hidden="true" />}>
           Go home

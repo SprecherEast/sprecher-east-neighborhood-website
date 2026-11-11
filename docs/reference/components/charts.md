@@ -137,55 +137,22 @@ Source: `src/platform/ui/chart/adapters/visx/BarSegments.tsx`
 
 - Platform: `platform/ui`
 
-## `ShareBar`
+## `SharePie`
 
-One whole as a bar of slices, each exactly as wide as its share (a square bar, not a pie), with one slice highlighted: the same glassy green as the page's tabs, outlined, standing `SHARE_BAR_RISE` px above the others, its two side edges running down `SHARE_BAR_GAP` px and curving into the top edge of the panel under the bar, so the slice and the panel read as one folder tab (the way `Tabs` joins a tab to its panel). The panel holds `children`. Everything is one SVG, so a slice's width is an attribute, never an inline style. Once the bar knows its width every edge is moved to a whole pixel, so the lines and curves stay crisp and join cleanly at any screen width; until then (on the server, before the first paint) it draws in percent. A slice too narrow for its label gets the label above it with a tick. The bar is one named picture for screen readers; the numbers belong in text next to it, which the caller writes.
+One whole as a pie (#1022): a wedge for each slice, as big as its exact share, clockwise from the top, with one highlighted wedge in the theme's green and the others in three grays that are easy to tell apart. Each wedge writes its name, dollars and percent inside it when they fit, only its percent when just that fits, and nothing when not even that fits; the legend under the pie then lists every wedge that was not written in full. The pie draws from its own width, so the same wedge can fit inside on a wide screen and be left to the legend on a phone. The legend's room is always kept (a row for every wedge on a pie narrower than its largest), so a card that holds the pie never changes height when the shares do. The pie is one named picture for screen readers, whose label the caller writes with every wedge's name, dollars and percent.
 
-Source: `src/platform/ui/ShareBar.client.tsx`
+Source: `src/platform/ui/SharePie.client.tsx`
 
-| Prop        | Type                                                                                                                                                                       | Required | Description                            |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------- |
-| `slices`    | `readonly ShareBarSlice[]`                                                                                                                                                 | yes      |                                        |
-| `label`     | `string`                                                                                                                                                                   | yes      | What the bar shows, for screen readers |
-| `children`  | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The panel under the bar                |
-| `className` | `string`                                                                                                                                                                   | no       |                                        |
+| Prop        | Type                       | Required | Description                            |
+| ----------- | -------------------------- | -------- | -------------------------------------- |
+| `slices`    | `readonly SharePieSlice[]` | yes      |                                        |
+| `label`     | `string`                   | yes      | What the pie shows, for screen readers |
+| `className` | `string`                   | no       |                                        |
 
 **Used by** (direct imports):
 
 - Routes: `/dev/gallery`
 - Platform: `platform/richtext`
-
-## `ShareBarSwatch`
-
-A small square in a slice's tone, for the key: decorative, the key's text names the slice
-
-Source: `src/platform/ui/ShareBar.client.tsx`
-
-| Prop   | Type                                             | Required | Description |
-| ------ | ------------------------------------------------ | -------- | ----------- |
-| `tone` | `"strong" \| "medium" \| "light" \| "highlight"` | yes      |             |
-
-**Used by** (direct imports):
-
-- Platform: `platform/richtext`
-
-## `ShareBarEdge`
-
-One side of the highlighted slice, as one line: down from the slice's top, then the quarter circle out onto the panel's top edge. It is one path, so the edge and its curve can never part. Drawn in a nested SVG at the edge's own x, so the path's coordinates stay small and the edge can sit on a whole pixel.
-
-Source: `src/platform/ui/ShareBarEdge.tsx`
-
-| Prop       | Type                | Required | Description                            |
-| ---------- | ------------------- | -------- | -------------------------------------- |
-| `x`        | `string \| number`  | yes      |                                        |
-| `side`     | `"left" \| "right"` | yes      |                                        |
-| `top`      | `number`            | yes      |                                        |
-| `panelTop` | `number`            | yes      |                                        |
-| `flare`    | `number`            | yes      | The quarter circle's radius, in pixels |
-
-**Used by** (direct imports):
-
-- Platform: `platform/ui`
 
 ## `AmountBar`
 
