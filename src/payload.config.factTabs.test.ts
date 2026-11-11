@@ -76,7 +76,7 @@ describe('saving a Fact tabs block', () => {
     ['a label of only spaces', { tabs: [tab({ label: ' ' }), tab()] }],
     ['no value', { tabs: [tab({ value: '' }), tab()] }],
     ['a tab with no pictures', { tabs: [tab({ panel: [] }), tab()] }],
-    ['three pictures', { tabs: [tab({ panel: [BAR, TIMELINE, BAR] }), tab()] }],
+    ['four pictures', { tabs: [tab({ panel: [BAR, TIMELINE, BAR, BAR] }), tab()] }],
     ['an invalid chart (no title)', { tabs: [tab({ panel: [{ ...BAR, title: '' }] }), tab()] }],
     [
       'an invalid chart (negative number)',

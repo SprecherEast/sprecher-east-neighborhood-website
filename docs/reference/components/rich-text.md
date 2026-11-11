@@ -106,53 +106,6 @@ Source: `src/platform/richtext/CopyButton.client.tsx`
 
 - Platform: `platform/richtext`
 
-## `KeyFacts`
-
-A row of small fact cards (#509, #660), after the USWDS icon list and summary box: an icon beside what the fact is, a big short value, how sure we are in words, and the source (`FactCard`). In the shared `CardGrid`, a list, so screen readers hear how many facts there are. The cards share their rows (subgrid), so the values and sources line up even when one title wraps (#678). The row gap is zero because a shared row's gap would sit between a card's own rows: each card keeps its distance from the next one below with a bottom margin, which the list's negative margin takes back at the end.
-
-Source: `src/platform/richtext/editorial/KeyFacts.tsx`
-
-| Prop        | Type        | Required | Description |
-| ----------- | ----------- | -------- | ----------- |
-| `facts`     | `KeyFact[]` | yes      |             |
-| `className` | `string`    | no       |             |
-
-**Used by** (direct imports):
-
-- Routes: `/dev/gallery`
-- Platform: `platform/richtext`
-
-## `FactCard`
-
-One fact as a small card (#509, #660, #674): the icon beside what the fact is about, in bold body-size text, on the first row; the big short value under it; an optional one-line explanation; then how sure we are in words and the source. The same order on screen and for screen readers (`dt`, then `dd`s). The icon sits inside the `dt`, decorative, and aligned to the label's first line so a label that wraps doesn't centre it awkwardly. Drawn here so the key facts row and any later block that shows a fact look the same. `variant="tab"` (#664) is the same fact as the face of a tab button: the same rows, but in phrasing elements with no card, since the tab button is the box (its border, selected state and focus ring), and with no link, because a link can't sit inside a button. The source link is drawn by whoever shows the tab's panel. A tab has the same parts for every fact (#707): the explanation is left to the open panel, so one fact having one doesn't make its tab fuller than the rest. The icon sits on its own line with the label under it, all left-aligned (#856), so a short label fits four to a row. On a phone (#704) the certainty is left to screen readers (`sr-only`) and the open panel shows it in a line. The figure keeps its last two words together, so "+$90 a year" wraps as "+$90" over "a year".
-
-Source: `src/platform/richtext/editorial/FactCard.tsx`
-
-| Prop      | Type              | Required | Description |
-| --------- | ----------------- | -------- | ----------- |
-| `fact`    | `KeyFact`         | yes      |             |
-| `variant` | `"tab" \| "card"` | no       |             |
-
-**Used by** (direct imports):
-
-- Platform: `platform/richtext`
-
-## `FactTabs`
-
-Key facts that open pictures (#664): each fact is a tab button (`FactCard` as a tab) that shows its heading, definition and charts or timelines. `Tabs` renders every panel on the server and shows one at a time only when scripting is on, so with it off the panels read stacked, each under its heading. A tab with no renderable picture still shows its definition.
-
-Source: `src/platform/richtext/editorial/FactTabs.tsx`
-
-| Prop        | Type             | Required | Description |
-| ----------- | ---------------- | -------- | ----------- |
-| `tabs`      | `FactTabProps[]` | yes      |             |
-| `className` | `string`         | no       |             |
-
-**Used by** (direct imports):
-
-- Routes: `/dev/gallery`
-- Platform: `platform/richtext`
-
 ## `Steps`
 
 Numbered steps joined by a line (#508), following the USWDS process list: an ordered list, each step a heading and a short body. Screen readers hear "Step 2: …" from a hidden prefix in the heading; the circles show the number visually and, with the line, are decoration. `role="list"` because Safari drops list semantics from a list without bullets.

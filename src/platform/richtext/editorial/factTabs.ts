@@ -2,6 +2,7 @@ import type { FactTabsBlock } from '@/payload-types'
 
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 
+import { toBillShareProps, type BillShareProps } from './billShare'
 import { isEnlargeable, toChartSpec } from './chart'
 import { toKeyFactsProps, type KeyFact } from './keyFacts'
 import { toTimelineProps, type TimelineProps } from './timeline'
@@ -13,6 +14,7 @@ export type StoredFactTabs = Pick<FactTabsBlock, 'tabs'>
 export type FactTabPanelItem =
   | { kind: 'chart'; spec: ChartSpec; enlarge: boolean }
   | { kind: 'timeline'; timeline: TimelineProps }
+  | { kind: 'billShare'; billShare: BillShareProps }
 
 /** One tab: the key fact that is the button, and what it opens */
 export type FactTabProps = {
@@ -31,7 +33,7 @@ type StoredPanelItem = NonNullable<StoredTab['panel']>[number]
 /**
  * One picture of the panel, or null when there is nothing to draw: a chart that fails its rules
  * was not saved through the editor (the field checks refuse it), so it is left out and logged
- * rather than breaking the post, and a timeline with no milestone has nothing to show.
+ * rather than breaking the post, and a timeline with no milestone, or a bill split with no year, has nothing to show.
  */
 function toPanelItem(block: StoredPanelItem): FactTabPanelItem | null {
   if (block.blockType === 'chart') {
@@ -41,6 +43,10 @@ function toPanelItem(block: StoredPanelItem): FactTabPanelItem | null {
       console.error(`Fact tabs: chart left out: ${error instanceof Error ? error.message : error}`)
       return null
     }
+  }
+  if (block.blockType === 'billShare') {
+    const billShare = toBillShareProps(block)
+    return billShare.years.length > 0 ? { kind: 'billShare', billShare } : null
   }
   const timeline = toTimelineProps(block)
   return timeline.entries.length > 0 ? { kind: 'timeline', timeline } : null

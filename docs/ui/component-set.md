@@ -69,6 +69,8 @@ Components: [cards](../reference/components/cards.md), [display](../reference/co
 
 **`Badge`** (#952) has two sizes (`size`: `sm`, the default, and `md`, slightly bigger words and icon), set with the variant. A mark that must stand out among small labels, such as a state mark on the plan, uses `md`; labels stay `default`. Its test covers both sizes and the plan's state mark; the gallery shows `md`.
 
+**`ShareBar`** (#1018) draws one whole as a square bar of slices, each exactly as wide as its share, in three gray tones and at most one `highlight` slice. The highlighted slice is the tabs' glassy green with an outline whose two side edges run 10 px down and curve into the top edge of the panel under the bar (the way `Tabs` joins a tab to its panel); the panel holds the children. It is one SVG with a `label` for screen readers, so widths are attributes, never inline styles, and the caller writes the numbers beside it. `ShareBarSwatch` is the matching key square. Its test covers the widths, the outline and axe; the gallery shows it.
+
 **`ProgressBar`** (#939) shows how far along something is, as a native `<progress>` that screen readers read as a named bar (`label`), in two sizes (`sm`, `md`). The fill's width comes from the element's own value, not an inline style, and a `max` of 0 shows an empty bar. The caller always writes the numbers next to it ("3 of 8 done"), so the bar is never the only signal. Its test covers the clamping and axe; the gallery shows it.
 
 **`MapEmbed`** (#764, #884) is a small map picture over its text, filling the width it is given: the page's Section decides how wide it is and where it sits. It opens

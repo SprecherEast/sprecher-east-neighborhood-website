@@ -33,5 +33,13 @@ export const FACT_TABS_LIMITS = {
   heading: 40,
   definition: 240,
   minPanelBlocks: 1,
-  maxPanelBlocks: 2,
+  maxPanelBlocks: 3,
+} as const
+
+/** The bill split block (#1018): one set of rates per tax year, the latest last */
+export const BILL_SHARE_LIMITS = {
+  minYears: 1,
+  maxYears: 2,
+  intro: 160,
+  label: 40,
 } as const

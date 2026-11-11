@@ -136,3 +136,35 @@ Source: `src/platform/ui/chart/adapters/visx/BarSegments.tsx`
 **Used by** (direct imports):
 
 - Platform: `platform/ui`
+
+## `ShareBar`
+
+One whole as a bar of slices, each exactly as wide as its share (a square bar, not a pie), with one slice highlighted: the same glassy green as the page's tabs, outlined, its two side edges running down `SHARE_BAR_GAP` px and curving into the top edge of the panel under the bar, so the slice and the panel read as one folder tab (the way `Tabs` joins a tab to its panel). The panel holds `children`. Everything is one SVG, so the outline is one seamless line and a slice's width is an attribute (a percent), never an inline style. The bar is one named picture for screen readers; the numbers belong in text next to it, which the caller writes.
+
+Source: `src/platform/ui/ShareBar.tsx`
+
+| Prop        | Type                                                                                                                                                                       | Required | Description                            |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------- |
+| `slices`    | `readonly ShareBarSlice[]`                                                                                                                                                 | yes      |                                        |
+| `label`     | `string`                                                                                                                                                                   | yes      | What the bar shows, for screen readers |
+| `children`  | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The panel under the bar                |
+| `className` | `string`                                                                                                                                                                   | no       |                                        |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`
+- Platform: `platform/richtext`
+
+## `ShareBarSwatch`
+
+A small square in a slice's tone, for the key: decorative, the key's text names the slice
+
+Source: `src/platform/ui/ShareBar.tsx`
+
+| Prop   | Type                                             | Required | Description |
+| ------ | ------------------------------------------------ | -------- | ----------- |
+| `tone` | `"strong" \| "medium" \| "light" \| "highlight"` | yes      |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
