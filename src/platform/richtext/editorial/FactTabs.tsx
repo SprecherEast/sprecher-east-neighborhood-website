@@ -22,7 +22,10 @@ import { Timeline } from './Timeline'
  * pictures in a softer box of their own.
  */
 function FactTabPanel({ heading, definition, fact, panel: allPictures }: FactTabProps) {
-  const bill = allPictures.find((item) => item.kind === 'billShare')
+  const bill = allPictures.find(
+    (item): item is Extract<FactTabProps['panel'][number], { kind: 'billShare' }> =>
+      item.kind === 'billShare',
+  )
   const panel = allPictures.filter((item) => item.kind !== 'billShare')
   const parts = splitDefinitionAtSource(definition, fact.source)
   const picture = (item: FactTabProps['panel'][number], index: number) =>
@@ -97,7 +100,7 @@ function FactTabPanel({ heading, definition, fact, panel: allPictures }: FactTab
           <Text variant="small">{joinLastWords(fact.detail)}</Text>
         </div>
       )}
-      {bill && bill.kind === 'billShare' ? (
+      {bill ? (
         <BillShare {...bill.billShare}>
           <div className="space-y-6">{body}</div>
         </BillShare>

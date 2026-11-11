@@ -4,6 +4,11 @@ import { BILL_BODIES, type MillRates } from '@/platform/lib/billShare'
 
 import { toEditorialLink } from './editorialLink'
 
+/** A tab shows one whole tax bill: a second would be hidden, so the editor and the tag refuse it */
+export const BILL_SHARE_ONCE_MESSAGE = 'Add the whole tax bill once per tab.'
+export const hasTooManyBills = (blockTypes: readonly unknown[]) =>
+  blockTypes.filter((type) => type === 'billShare').length > 1
+
 /** The bill split block's fields, as stored */
 export type StoredBillShare = Partial<Pick<BillShareBlock, 'intro' | 'years'>>
 

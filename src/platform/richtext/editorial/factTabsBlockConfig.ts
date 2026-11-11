@@ -1,5 +1,6 @@
 import type { Block } from 'payload'
 
+import { BILL_SHARE_ONCE_MESSAGE, hasTooManyBills } from './billShare'
 import { BillShareBlockConfig } from './billShareBlockConfig'
 import { ChartBlockConfig } from './chartBlockConfig'
 import { FACT_TABS_LIMITS } from './editorialLimits'
@@ -10,6 +11,21 @@ import { keyFactFields } from './keyFactsBlockConfig'
 import { TimelineBlockConfig } from './timelineBlockConfig'
 import type { StoredFactTabs } from './factTabs'
 import { FACT_TABS_BLOCK_TYPE } from './blockTypes'
+
+const countPanel = rowsBetween(
+  FACT_TABS_LIMITS.minPanelBlocks,
+  FACT_TABS_LIMITS.maxPanelBlocks,
+  'pictures',
+)
+// One to three pictures, and at most one whole tax bill
+const validatePanel = (value: unknown, args: { event?: unknown }): true | string => {
+  const rows = countPanel(value, args)
+  if (rows !== true) return rows
+  const types = Array.isArray(value)
+    ? value.map((row) => (row as { blockType?: unknown }).blockType)
+    : []
+  return hasTooManyBills(types) ? BILL_SHARE_ONCE_MESSAGE : true
+}
 
 /**
  * Key facts that open pictures (#664): two to four tabs, each a key fact (value, label, icon,
@@ -65,11 +81,7 @@ export const FactTabsBlockConfig: Block = {
           minRows: FACT_TABS_LIMITS.minPanelBlocks,
           maxRows: FACT_TABS_LIMITS.maxPanelBlocks,
           required: true,
-          validate: rowsBetween(
-            FACT_TABS_LIMITS.minPanelBlocks,
-            FACT_TABS_LIMITS.maxPanelBlocks,
-            'pictures',
-          ),
+          validate: validatePanel,
           blocks: [ChartBlockConfig, TimelineBlockConfig, BillShareBlockConfig],
         },
       ],

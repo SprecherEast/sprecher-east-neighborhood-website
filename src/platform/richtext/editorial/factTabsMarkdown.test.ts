@@ -96,6 +96,24 @@ describe('factTabsToJsx and importFactTabsTag', () => {
     expect(() => importFactTabsTag({ tabs })).toThrow(/^Invalid <FactTabs>:/)
   })
 
+  it('refuses a second whole tax bill in one panel', () => {
+    const bill = {
+      block: 'billShare',
+      intro: 'x',
+      years: [{ year: 2026, label: 'y', averageHome: 1, city: 7 }],
+    }
+    const tabs = (FACT_TABS_FIXTURE.tabs ?? []).map((t) => ({
+      value: t.value,
+      label: t.label,
+      icon: t.icon,
+      certainty: t.certainty,
+      heading: t.heading,
+      definition: t.definition,
+      panel: [bill, bill],
+    }))
+    expect(() => importFactTabsTag({ tabs })).toThrow(/once per tab/)
+  })
+
   it('throws the reasons outside a conversion, starting "Invalid <FactTabs>:"', () => {
     expect(() => importFactTabsTag({ tabs: [] })).toThrow(/^Invalid <FactTabs>: tabs/)
     expect(() => importFactTabsTag({})).toThrow(/Invalid <FactTabs>/)

@@ -50,6 +50,8 @@ export function BillShare({ intro, years, children }: BillShareProps & { childre
   const year = years[yearIndex]
   // What the reader typed, or null while the box still shows the City's average for the year
   const [typed, setTyped] = useState<string | null>(null)
+  // A screen reader hears the bill when the reader leaves the box or switches year, not on every key
+  const [settled, setSettled] = useState(true)
   if (!year) return null
 
   const text = typed ?? dollars(year.averageHome)
@@ -58,6 +60,12 @@ export function BillShare({ intro, years, children }: BillShareProps & { childre
   const bill = homeValue === null ? null : computeBillShare(homeValue, rates)
   const part = (key: BillBody): BillPart | undefined => bill?.parts.find((p) => p.key === key)
   const earlier = years[yearIndex - 1]
+
+  const summary = !bill
+    ? ''
+    : bill.complete && bill.total !== null
+      ? `If your home is worth ${dollars(homeValue ?? 0)}, your whole bill is about ${dollars(bill.total)}.`
+      : `The City’s part of a ${dollars(homeValue ?? 0)} home’s bill would be about ${dollars(part('city')?.amount ?? 0)}.`
 
   const slices: ShareBarSlice[] =
     bill?.complete === true
@@ -91,7 +99,11 @@ export function BillShare({ intro, years, children }: BillShareProps & { childre
             inputMode="numeric"
             autoComplete="off"
             value={text}
-            onChange={(event) => setTyped(event.target.value)}
+            onChange={(event) => {
+              setTyped(event.target.value)
+              setSettled(false)
+            }}
+            onBlur={() => setSettled(true)}
           />
         </Field>
         {years.length > 1 && (
@@ -102,7 +114,10 @@ export function BillShare({ intro, years, children }: BillShareProps & { childre
                 size="sm"
                 variant={index === yearIndex ? 'primary' : 'secondary'}
                 aria-pressed={index === yearIndex}
-                onClick={() => setYearIndex(index)}
+                onClick={() => {
+                  setYearIndex(index)
+                  setSettled(true)
+                }}
               >
                 {option.label}
               </Button>
@@ -111,11 +126,12 @@ export function BillShare({ intro, years, children }: BillShareProps & { childre
         )}
       </div>
       {bill && (
-        <div role="status" className="space-y-1">
+        <div className="space-y-1">
+          <p role="status" className="sr-only">
+            {settled ? summary : ''}
+          </p>
           <Text variant="lead" className="text-foreground">
-            {bill.complete && bill.total !== null
-              ? `If your home is worth ${dollars(homeValue ?? 0)}, your whole bill is about ${dollars(bill.total)}.`
-              : `The City’s part of a ${dollars(homeValue ?? 0)} home’s bill would be about ${dollars(part('city')?.amount ?? 0)}.`}
+            {summary}
           </Text>
           {filled.length > 0 && earlier && (
             <Text variant="small">

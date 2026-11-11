@@ -55,6 +55,13 @@ describe('FactTabsBlockConfig', () => {
     expect(panel.blocks.map((b) => b.slug)).toEqual(['chart', 'timeline', 'billShare'])
   })
 
+  it('refuses a second whole tax bill in one panel, which would be hidden', () => {
+    const check = byName('panel').validate as unknown as (v: unknown, a: object) => true | string
+    const bill = { blockType: 'billShare' }
+    expect(check([bill, { blockType: 'chart' }], {})).toBe(true)
+    expect(check([bill, bill], {})).toMatch(/once per tab/)
+  })
+
   it('requires a heading and a definition within their limits', () => {
     expect(byName('heading')).toMatchObject({ required: true, maxLength: FACT_TABS_LIMITS.heading })
     expect(byName('definition')).toMatchObject({

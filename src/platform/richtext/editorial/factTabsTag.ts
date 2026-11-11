@@ -13,6 +13,7 @@ import {
   LINK_LABEL_MAX,
   TIMELINE_LIMITS,
 } from './editorialLimits'
+import { BILL_SHARE_ONCE_MESSAGE, hasTooManyBills } from './billShare'
 import { refusalPrefix } from './editorialTag'
 import { FACT_ICONS } from './factIcons'
 import type { FactTabProps, StoredFactTabs } from './factTabs'
@@ -73,7 +74,10 @@ const tab = z.strictObject({
   panel: z
     .array(z.discriminatedUnion('block', [chartPicture, timelinePicture, billSharePicture]))
     .min(FACT_TABS_LIMITS.minPanelBlocks)
-    .max(FACT_TABS_LIMITS.maxPanelBlocks),
+    .max(FACT_TABS_LIMITS.maxPanelBlocks)
+    .refine((panel) => !hasTooManyBills(panel.map((picture) => picture.block)), {
+      message: BILL_SHARE_ONCE_MESSAGE,
+    }),
 })
 const tabs = z.array(tab).min(FACT_TABS_LIMITS.minTabs).max(FACT_TABS_LIMITS.maxTabs)
 

@@ -61,6 +61,10 @@ describe('BillShare', () => {
     expect(result.textContent).toMatch(/\$481,300/)
     expect(result.textContent).toMatch(/about \$8,9\d\d/)
     fireEvent.change(box(), { target: { value: '962600' } })
+    // A screen reader is told when the reader leaves the box, not on every key
+    expect(screen.getByRole('status').textContent).toBe('')
+    expect(screen.getByText(/about \$17,9\d\d/)).toBeTruthy()
+    fireEvent.blur(box())
     expect(screen.getByRole('status').textContent).toMatch(/about \$17,9\d\d/)
   })
 
