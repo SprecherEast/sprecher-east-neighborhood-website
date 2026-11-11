@@ -1,7 +1,7 @@
 import type { Field, GroupField } from 'payload'
 import { deepMergeWithSourceArrays } from 'payload/shared'
 
-export type LinkAppearances = 'default' | 'outline'
+export type LinkAppearances = 'default' | 'outline' | 'accent'
 
 export const appearanceOptions: Record<LinkAppearances, { label: string; value: string }> = {
   default: {
@@ -11,6 +11,10 @@ export const appearanceOptions: Record<LinkAppearances, { label: string; value: 
   outline: {
     label: 'Outline',
     value: 'outline',
+  },
+  accent: {
+    label: 'Orange (accent)',
+    value: 'accent',
   },
 }
 

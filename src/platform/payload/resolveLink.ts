@@ -12,7 +12,7 @@ export type CmsLink = {
   url?: string | null
   label?: string | null
   newTab?: boolean | null
-  appearance?: 'default' | 'outline' | null
+  appearance?: 'default' | 'outline' | 'accent' | null
   reference?: {
     relationTo: string
     value: number | string | { slug?: string | null }
@@ -29,7 +29,8 @@ export function resolveLink(link: CmsLink | null | undefined): ResolvedLink | nu
     href,
     label: link.label ?? '',
     external: Boolean(link.newTab),
-    appearance: link.appearance === 'outline' ? 'outline' : 'default',
+    appearance:
+      link.appearance === 'outline' || link.appearance === 'accent' ? link.appearance : 'default',
   }
 }
 

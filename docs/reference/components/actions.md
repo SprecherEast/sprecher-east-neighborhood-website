@@ -78,7 +78,7 @@ Source: `src/platform/ui/AppLink.tsx`
 
 ## `LinkButton`
 
-A resolved CMS link as a `Button` in the look the editor chose: `default` is primary, `outline` secondary.
+A resolved CMS link as a `Button` in the look the editor chose.
 
 Source: `src/platform/ui/CMSLink.tsx`
 

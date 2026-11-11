@@ -4,7 +4,14 @@ import type { ResolvedLink } from '@/platform/lib'
 
 import { Button } from './Button'
 
-/** A resolved CMS link as a `Button` in the look the editor chose: `default` is primary, `outline` secondary. */
+/** The `Button` variant for each look an editor can choose: `default` primary, `outline` secondary, `accent` the orange. */
+const VARIANT = {
+  default: 'primary',
+  outline: 'secondary',
+  accent: 'accent',
+} as const satisfies Record<ResolvedLink['appearance'], 'primary' | 'secondary' | 'accent'>
+
+/** A resolved CMS link as a `Button` in the look the editor chose. */
 export function LinkButton({
   link,
   className,
@@ -18,7 +25,7 @@ export function LinkButton({
     <Button
       href={link.href}
       external={link.external}
-      variant={link.appearance === 'outline' ? 'secondary' : 'primary'}
+      variant={VARIANT[link.appearance]}
       className={className}
     >
       {link.label}

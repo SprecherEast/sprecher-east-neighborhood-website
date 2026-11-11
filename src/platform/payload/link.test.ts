@@ -32,6 +32,20 @@ describe('link', () => {
     expect(names(field)).toEqual(['type', 'newTab', 'reference', 'url'])
   })
 
+  it('offers the orange look only when asked for it', () => {
+    const lookValues = (field: GroupField) => {
+      const look = field.fields.find((child) => nameOf(child) === 'appearance')
+      return look && 'options' in look
+        ? look.options.map((option) => (typeof option === 'string' ? option : option.value))
+        : []
+    }
+
+    expect(lookValues(link() as GroupField)).toEqual(['default', 'outline'])
+    expect(
+      lookValues(link({ appearances: ['default', 'outline', 'accent'] }) as GroupField),
+    ).toEqual(['default', 'outline', 'accent'])
+  })
+
   it('sets the document or URL beside the label, half the width each', () => {
     const row = (link() as GroupField).fields[1]
 
