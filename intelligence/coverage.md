@@ -97,6 +97,26 @@ Send to **needs review** instead of guessing when the location, date or status c
 sources conflict, or the item is borderline. Route a change to an item already in the CMS as
 `update`, and a cancelled one as `cancel`; a second copy of the same item is a `duplicate`.
 
+## Public interest and context
+
+How curate reads an incident, hazard or other safety item, under the standard in
+[Editorial integrity](../docs/guidelines/brand-voice.md#editorial-integrity). Such an item is
+never `accept` (see "Review passes"): it is `needs-review` unless rule 4 routes it as `reject`
+(`past`) or `update`. This decides what the editor is told.
+
+1. **Public interest.** Can residents use it: a hazard to avoid, a service change, a decision, a
+   thing to do? Record the answer in `$.reasons`. An effect on home values is never a reason to
+   accept, reject or hold an item.
+2. **Confirmed or reported.** Say which, and who confirms it. An item resting on a social-media
+   post or one unconfirmed report carries `unverified-claim`.
+3. **Context.** Say what the item does not show (no pattern, no suspect, no injuries) and whether
+   it is isolated, ongoing or resolved. Never present an isolated report as a trend.
+4. **Resolved or past.** A resolved incident with nothing left to do and nothing published is
+   rejected as `past`. When the CMS already holds the item (`$.known`), route the resolution or
+   correction as an `update`, so the editor adds it with the date and the record stays; never
+   `reject` or remove it. An old incident stays findable, with its resolution first.
+5. **Always a reason.** Every accept, reject and `needs-review` has at least one reason an editor can check.
+
 ## Review passes
 
 These rules are written only here; `prompts/verify.md` and `prompts/curate.md` point to them.

@@ -1,0 +1,47 @@
+# Draft eval cases: editorial integrity (#1066). Drafts of items an editor approved keep the
+# standard in docs/guidelines/brand-voice.md ("Editorial integrity"). Synthetic items.
+version: 1
+asOf: '2026-10-24'
+stage: draft
+cases:
+  - id: draft-editorial-isolated-incident
+    stage: draft
+    tags: [editorial, safety]
+    input:
+      sourceId: madison-police-incident-reports
+      sourceUrl: https://www.cityofmadison.com/police/incident-reports/
+      kind: news
+      title: Shell casings recovered near a park on Sprecher Road
+      sourceText: Officers recovered spent shell casings in a parking lot near a park. No injuries were reported and no suspect has been identified.
+      startsAt: null
+      locationText: Sprecher Road, Madison
+    given:
+      curation: { decision: needs-review, audiences: [everyone] }
+    expected: { route: submitSuggestion }
+    graders:
+      - check: model
+        rubric: >-
+          The title and summary are calm and factual and attribute the facts to the police report. The text
+          does not call it a trend, does not say the area is safe or unsafe, names no person, and lists
+          what is not known (suspect, cause) in the missing field. Any image candidate shows the place, not a dramatized scene.
+    why: An editor-approved incident is written as one reported event with its limits stated, never as a pattern.
+  - id: draft-editorial-unverified-claim
+    stage: draft
+    tags: [editorial, unverified]
+    input:
+      sourceId: madison365-news
+      sourceUrl: https://madison365.com/door-creek-break-in-claims/
+      kind: news
+      title: Neighbors say a break-in ring is working near Door Creek Park
+      sourceText: A post in a neighborhood Facebook group claims several break-ins this week. Police have not confirmed any pattern.
+      startsAt: null
+      locationText: Door Creek Park, Madison
+    given:
+      curation: { decision: needs-review, audiences: [everyone] }
+    expected: { route: submitSuggestion }
+    graders:
+      - check: model
+        rubric: >-
+          The text says the claim comes from a social-media post and is not confirmed by police. It does not
+          state the break-ins or a pattern as fact, and it does not alarm or reassure.
+    why: A reported claim stays labeled reported and unconfirmed all the way into the draft.

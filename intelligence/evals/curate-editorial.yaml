@@ -1,0 +1,114 @@
+# Curate eval cases: editorial integrity (#1066). A safety or incident item is read for its
+# public-interest and context value, never for its effect on home values, and is never accepted:
+# an editor decides. Synthetic items; the standard is in docs/guidelines/brand-voice.md
+# ("Editorial integrity") and intelligence/coverage.md ("Public interest and context").
+version: 1
+asOf: '2026-10-24'
+stage: curate
+cases:
+  - id: editorial-isolated-police-report
+    stage: curate
+    tags: [editorial, safety]
+    input:
+      sourceId: madison-police-incident-reports
+      kind: news
+      title: Shell casings recovered near a park on Sprecher Road
+      sourceText: Officers recovered spent shell casings in a parking lot near a park. No injuries were reported and no suspect has been identified.
+      startsAt: null
+      locationText: Sprecher Road, Madison
+    expected:
+      { decision: needs-review, coverage: catchment, flagsAbsent: [partisan], route: reportItem }
+    graders:
+      - check: model
+        rubric: >-
+          The reasons say what the police report confirms (casings recovered, no injuries, no suspect) and
+          that one report is not a trend. They do not weigh the effect on home values and do not call the
+          area safe or unsafe.
+    why: An isolated report is a safety item, so an editor decides; the reasons record why, with no trend claimed.
+  - id: editorial-confirmed-hazard
+    stage: curate
+    tags: [editorial, safety]
+    input:
+      sourceId: city-traffic-engineering-news
+      kind: news
+      title: Traffic signal outage at Sprecher Road and Cottage Grove Road
+      sourceText: The City confirms the signals are out and crews are working on a repair. Treat the intersection as a four-way stop until further notice.
+      startsAt: null
+      locationText: Sprecher Road and Cottage Grove Road, Madison
+    expected: { decision: needs-review, coverage: core, route: reportItem }
+    graders:
+      - check: model
+        rubric: >-
+          The reasons say the City confirms an ongoing hazard residents can act on (treat it as a four-way
+          stop) and name the City as the source. The item is not downgraded because of how it might look
+          for the area.
+    why: A confirmed, ongoing hazard residents can act on is in the public interest; as a safety item it still goes to an editor.
+  - id: editorial-unverified-social-allegation
+    stage: curate
+    tags: [editorial, safety, unverified]
+    input:
+      sourceId: madison365-news
+      kind: news
+      title: Neighbors say a break-in ring is working near Door Creek Park
+      sourceText: A post in a neighborhood Facebook group claims several break-ins this week. Police have not confirmed any pattern.
+      startsAt: null
+      locationText: Door Creek Park, Madison
+    given:
+      verification: { coverage: catchment, flags: [unverified-claim] }
+    expected:
+      { decision: needs-review, coverage: catchment, flags: [unverified-claim], route: reportItem }
+    graders:
+      - check: model
+        rubric: >-
+          The reasons say the claim comes from a social-media post and that police have not confirmed a
+          pattern. The item is not described as a trend or as confirmed.
+    why: An allegation with no primary confirmation is flagged unverified and left to an editor; nothing is stated as fact.
+  - id: editorial-resolved-incident
+    stage: curate
+    tags: [editorial, safety, resolved]
+    input:
+      sourceId: city-traffic-engineering-news
+      kind: news
+      title: Water main break on Cottage Grove Road repaired, lane reopened
+      sourceText: Crews finished the repair and the lane reopened. The earlier closure notice is withdrawn.
+      startsAt: 2026-10-20T08:00:00-05:00
+      locationText: Cottage Grove Road, Madison
+    expected: { decision: reject, coverage: catchment, flags: [past], route: none }
+    graders:
+      - check: model
+        rubric: The reasons say the incident was resolved and needs no action.
+    why: Resolved and already past, with nothing left to act on; an earlier published notice is corrected or marked resolved, not silently deleted.
+  - id: editorial-constructive-neighborhood-news
+    stage: curate
+    tags: [editorial]
+    input:
+      sourceId: madison365-news
+      kind: news
+      title: Door Creek Park gets new walking path signs, volunteers welcome to help install
+      sourceText: Madison Parks is installing wayfinding signs and invites volunteers to help on Saturday morning.
+      startsAt: 2026-11-07T09:00:00-06:00
+      locationText: Door Creek Park, Madison
+    expected: { decision: accept, coverage: catchment, route: submitSuggestion }
+    why: The contrast case, with a sourced, constructive item that has a clear way to help; safety items are read on their own terms.
+  - id: editorial-resolved-published-incident
+    stage: curate
+    tags: [editorial, safety, resolved]
+    input:
+      sourceId: city-traffic-engineering-news
+      externalId: city-traffic-engineering-news:placeholder-signal-outage
+      contentHash: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      kind: news
+      title: Traffic signal outage at Sprecher Road and Cottage Grove Road resolved
+      sourceText: The City says the signals are working again.
+      startsAt: null
+      locationText: Sprecher Road and Cottage Grove Road, Madison
+      change: updated
+    known:
+      collection: posts
+      id: 77
+      externalId: 'city-traffic-engineering-news:placeholder-signal-outage'
+      contentHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      status: active
+    expected:
+      { decision: update, coverage: core, route: reportItem, targetCollection: posts, targetId: 77 }
+    why: An item already published is updated with its resolution and the date, never rejected or silently removed.
