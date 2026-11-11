@@ -86,6 +86,15 @@ describe('ArticlePage', () => {
       expect(bar()?.className).toContain('max-w-[40rem]')
     })
 
+    it('sets the bar at the start by default and at the end when the page asks (#1055)', () => {
+      renderArticle({ byline })
+      expect(bar()?.querySelector('dl')?.className).not.toContain('justify-end')
+
+      cleanup()
+      renderArticle({ byline, bylineAlign: 'end' })
+      expect(bar()?.querySelector('dl')?.className).toContain('justify-end')
+    })
+
     it('draws nothing when there are no facts', () => {
       renderArticle({ byline: [] })
 

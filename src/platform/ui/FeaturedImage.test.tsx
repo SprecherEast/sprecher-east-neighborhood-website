@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -22,7 +22,7 @@ const picture = {
   createdAt: '2026-10-01T12:00:00.000Z',
 } as ImageRef
 
-describe('FeaturedImage (#1013, #1023)', () => {
+describe('FeaturedImage (#1013, #1023, #1055)', () => {
   it('shows the whole picture, never cropped, with its alt text and credit', async () => {
     const { container } = render(
       <main>
@@ -63,32 +63,19 @@ describe('FeaturedImage (#1013, #1023)', () => {
     expect(classes).toContain('md:mt-0')
   })
 
-  describe('enlarging', () => {
-    const name = `Enlarge: ${picture.alt}`
+  it('has no Enlarge button and opens no dialog: the picture is only shown (#1055)', async () => {
+    const user = userEvent.setup()
+    render(<FeaturedImage image={picture} />)
 
-    it('has an Enlarge button named for the picture, under it, so no gap opens beside the text', () => {
-      render(<FeaturedImage image={picture} />)
+    expect(screen.queryByRole('button')).toBeNull()
+    await user.click(screen.getByRole('img'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
 
-      expect(screen.getByRole('button', { name }).className).toContain('order-last')
-    })
+  it('keeps the credit under the picture', () => {
+    const { container } = render(<FeaturedImage image={picture} />)
 
-    it('opens with the keyboard on the whole picture; Escape closes it and focus returns', async () => {
-      const user = userEvent.setup()
-      render(<FeaturedImage image={picture} />)
-      const button = screen.getByRole('button', { name })
-
-      await user.tab()
-      expect(document.activeElement).toBe(button)
-      await user.keyboard('{Enter}')
-      const dialog = screen.getByRole('dialog')
-      expect(within(dialog).getByRole('img', { name: picture.alt ?? '' })).toBeTruthy()
-      // The credit shows with the enlarged picture too
-      expect(within(dialog).getByText(/Jane Doe/)).toBeTruthy()
-
-      await user.keyboard('{Escape}')
-      expect(screen.queryByRole('dialog')).toBeNull()
-      expect(document.activeElement).toBe(button)
-    })
+    expect(container.querySelector('figcaption')?.textContent).toContain('Jane Doe')
   })
 
   it('leaves no empty caption, and so no gap, for a picture with no credit', () => {

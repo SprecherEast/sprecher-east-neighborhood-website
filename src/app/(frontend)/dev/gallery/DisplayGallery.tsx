@@ -10,11 +10,11 @@ import { Disclosure } from '@/platform/ui/Disclosure'
 import { EmptyState } from '@/platform/ui/EmptyState'
 import { Link } from '@/platform/ui/Link'
 import { Media } from '@/platform/ui/Media'
-import { MetaBar } from '@/platform/ui/MetaBar'
 import { MetaList } from '@/platform/ui/MetaList'
 import { Text } from '@/platform/ui/Text'
 
 import { BadgeGallery } from './BadgeGallery'
+import { MetaBarGallery } from './MetaBarGallery'
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 import {
   SAMPLE_DATE_TIME,
@@ -27,8 +27,6 @@ import {
 const CARD_VARIANTS = ['elevated', 'outline', 'muted', 'tinted'] as const
 const CARD_TONES = ['success', 'danger', 'neutral'] as const
 const CARD_PADDINGS = ['sm', 'md', 'lg'] as const
-const LONG_PLACE =
-  'The community room at the far end of the long lakeside building on Sprecher Road, next to the library'
 const META_VARIANTS = ['inline', 'stacked'] as const
 
 /** Small pieces that show content: badges, cards, text, facts, dates and empty states */
@@ -36,6 +34,7 @@ export function DisplayGallery() {
   return (
     <>
       <BadgeGallery />
+      <MetaBarGallery />
 
       <GalleryEntry name="Card" description="A box with parts; looks are variants.">
         <GalleryVariant label="variant" className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -114,32 +113,6 @@ export function DisplayGallery() {
         <GalleryVariant label="on-image">
           <div className="w-full rounded-2xl bg-scrim p-6">
             <MetaList variant="on-image" items={SAMPLE_FACTS} />
-          </div>
-        </GalleryVariant>
-      </GalleryEntry>
-
-      <GalleryEntry
-        name="MetaBar"
-        description="A post's or event's metadata on one thin line, left-aligned above one straight groove line."
-      >
-        <GalleryVariant label="two items" className="block">
-          <div className="w-full max-w-[var(--reading-width)]">
-            <MetaBar items={SAMPLE_FACTS} />
-          </div>
-        </GalleryVariant>
-        <GalleryVariant label="a long place is cut to one line" className="block">
-          <div className="w-full max-w-[var(--reading-width)]">
-            <MetaBar
-              items={[
-                { label: 'When', value: 'Sat, Nov 7, 2026 · 6:00 PM – 8:00 PM Central Time' },
-                {
-                  label: 'Where',
-                  value: LONG_PLACE,
-                  title: LONG_PLACE,
-                  suffix: ' · In Person',
-                },
-              ]}
-            />
           </div>
         </GalleryVariant>
       </GalleryEntry>

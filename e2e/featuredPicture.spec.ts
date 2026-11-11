@@ -86,17 +86,13 @@ for (const [name, path, textFirst] of [
       })
     }
 
-    test('can be enlarged and closed again with the keyboard', async ({ page }) => {
+    test('has no Enlarge button, and a click on it opens nothing (#1055)', async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 })
       await page.goto(path)
 
-      const button = page.getByRole('button', { name: /^Enlarge:/ })
-      await button.focus()
-      await page.keyboard.press('Enter')
-      await expect(page.getByRole('dialog')).toBeVisible()
-      await page.keyboard.press('Escape')
-      await expect(page.getByRole('dialog')).toBeHidden()
-      await expect(button).toBeFocused()
+      await expect(page.getByRole('button', { name: /Enlarge/ })).toHaveCount(0)
+      await page.locator('article figure img').first().click()
+      await expect(page.getByRole('dialog')).toHaveCount(0)
     })
   })
 }

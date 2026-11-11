@@ -8,7 +8,7 @@ import { DetailLayout } from './DetailLayout'
 import { FeaturedImage } from './FeaturedImage'
 import { JsonLd } from './JsonLd'
 import { LivePreviewListener } from './LivePreviewListener.client'
-import { MetaBar, type MetaBarItem } from './MetaBar'
+import { MetaBar, type MetaBarAlign, type MetaBarItem } from './MetaBar'
 import { PageHeader, type PageHeaderProps } from './PageHeader'
 
 /*
@@ -45,11 +45,13 @@ export type ArticlePageProps = {
   header: PageHeaderProps
   breadcrumbs: BreadcrumbItem[]
   /**
-   * Facts about the article (a post's author, date and source; an event's when and where), drawn
-   * as the `MetaBar` at the top left of the article column, above the picture and the text, over
-   * one groove line (#774, #1002).
+   * Facts about the article (a post's author and date; an event's when and where), drawn as the
+   * `MetaBar` at the top of the article column, above the picture and the text, over one groove
+   * line (#774, #1002).
    */
   byline?: MetaBarItem[]
+  /** Where the bar's text sits: `start` (an event's, the default) or `end` (a post's, #1055) */
+  bylineAlign?: MetaBarAlign
   /**
    * The width class the page gives the article's text (`articleColumnClass`). The metadata bar takes
    * it too, so a text-only article's line ends where the text does, not past it (#774).
@@ -78,6 +80,7 @@ export function ArticlePage({
   header,
   breadcrumbs,
   byline,
+  bylineAlign,
   textClassName,
   toc,
   aside,
@@ -99,7 +102,9 @@ export function ArticlePage({
           <Breadcrumbs items={breadcrumbs} />
         </div>
         <DetailLayout toc={toc} aside={aside}>
-          {byline && byline.length > 0 && <MetaBar items={byline} className={textClassName} />}
+          {byline && byline.length > 0 && (
+            <MetaBar items={byline} align={bylineAlign} className={textClassName} />
+          )}
           {image ? (
             <div className={cn(BESIDE_PICTURE, textClassName)}>
               {lead}

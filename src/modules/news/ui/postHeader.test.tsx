@@ -105,55 +105,40 @@ describe('postHeaderProps', () => {
       expect(screen.getByText('Published')).toBeDefined()
     })
 
-    it('is empty for a post with no author, date or source', () => {
+    it('is empty for a post with no author and no date', () => {
       expect(postByline({ ...post, authors: [], publishedAt: null })).toEqual([])
     })
-  })
 
-  describe('the source (#483)', () => {
-    const legistar = 'https://madison.legistar.com/Calendar.aspx'
-    const sourceFact = () => screen.getByText('Source').nextElementSibling
+    it('shows only the author and the date, never the source (#1055)', () => {
+      const withSource = {
+        ...post,
+        source: { name: 'City of Madison', url: 'https://example.com' },
+      }
 
-    it('links the source’s name to the original, in a new tab it announces', async () => {
-      const source = { name: 'City of Madison', url: legistar }
-      const { container } = render(<Byline post={{ ...post, source }} />)
-
-      const link = screen.getByRole('link', { name: /City of Madison/ })
-      expect(link.getAttribute('href')).toBe(legistar)
-      expect(link.getAttribute('target')).toBe('_blank')
-      expect(link.getAttribute('rel')).toBe('noopener noreferrer')
-      expect(link.textContent).toContain('opens in a new tab')
-      // The facts sit on the page, not on the photo, so the link keeps the site's link color (#571)
-      expect(link.className).not.toContain('text-on-image')
-      expect(sourceFact()?.contains(link)).toBe(true)
-      // The date stays next to it
-      expect(screen.getByText('Published')).toBeDefined()
-      await expectAccessible(container)
-    })
-
-    it('keeps the site’s link color on a post without a photo', async () => {
-      const source = { name: 'City of Madison', url: legistar }
-      const { container } = render(<Byline post={{ ...post, heroImage: null, source }} />)
-
-      expect(screen.getByRole('link').className).toContain('text-primary-strong')
-      await expectAccessible(container)
-    })
-
-    it('shows a source without a link as text', async () => {
-      const source = { name: 'Dane County', url: null }
-      const { container } = render(<Byline post={{ ...post, source }} />)
-
-      expect(sourceFact()?.textContent).toBe('Dane County')
-      expect(screen.queryByRole('link')).toBeNull()
-      await expectAccessible(container)
-    })
-
-    it('shows nothing extra for a post without a source', async () => {
-      const { container } = render(<Byline post={post} />)
-
+      expect(postByline(withSource).map((item) => item.label)).toEqual(['Author', 'Published'])
+      render(<Byline post={withSource} />)
       expect(screen.queryByText('Source')).toBeNull()
       expect(screen.queryByRole('link')).toBeNull()
+    })
+
+    it('gives the author names as the title of the cut value, so a long name keeps its full text', () => {
+      const names = { ...post, authors: ['Bartholomew Featherstonehaugh-Kowalczyk', 'Cy'] }
+      const [author] = postByline(names)
+
+      expect(author?.title).toBe('Bartholomew Featherstonehaugh-Kowalczyk and Cy')
+    })
+
+    it('has no accessibility violations', async () => {
+      const { container } = render(<Byline post={post} />)
+
       await expectAccessible(container)
+    })
+
+    it('writes the date compactly, so it stays on one line', () => {
+      render(<Byline post={post} />)
+
+      const date = screen.getByText('Published').nextElementSibling
+      expect(date?.textContent).toMatch(/^[A-Z][a-z]{2} \d{1,2}(, \d{4})?$/)
     })
   })
 })

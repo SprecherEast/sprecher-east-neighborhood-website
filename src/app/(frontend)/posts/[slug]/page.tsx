@@ -87,6 +87,7 @@ export default async function Post({ params: paramsPromise }: Args) {
       }
       header={postHeaderProps(post)}
       byline={postByline(post)}
+      bylineAlign="end"
       textClassName={textClassName}
       breadcrumbs={[
         { label: 'Home', href: '/' },

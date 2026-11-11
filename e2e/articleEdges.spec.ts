@@ -48,6 +48,16 @@ test.describe('the body, metadata bar and breadcrumb of a post share edges', () 
             return { left, right, top, bottom, height }
           })(),
           value: rect(byline.querySelector('dd') as Element),
+          items: [...byline.querySelectorAll('dd')].map((dd) => {
+            const cut = dd.querySelector('[title]') as HTMLElement | null
+            return {
+              box: rect(dd),
+              cut: cut ? cut.scrollWidth > cut.clientWidth : false,
+              height: dd.getBoundingClientRect().height,
+              size: parseFloat(getComputedStyle(dd).fontSize),
+            }
+          }),
+          rowHeight: byline.getBoundingClientRect().height,
           line: rect(bar.querySelector('[aria-hidden="true"]') as Element),
           bylineInHeader: byline.closest('header') !== null,
           overflow: document.documentElement.scrollWidth - window.innerWidth,
@@ -72,16 +82,24 @@ test.describe('the body, metadata bar and breadcrumb of a post share edges', () 
       expect(edge(m.line.right), `${width}px: the groove ends on the body's right edge`).toBe(
         edge(m.text.right),
       )
+      // A post's bar is right-aligned (#1055): its last item ends on the groove's right end, the
+      // row is one line at every width, and the long author name is cut, never wrapped
+      const last = m.items[m.items.length - 1]
+      expect(edge(last.box.right), `${width}px: the metadata ends on the groove's right end`).toBe(
+        edge(m.line.right),
+      )
+      expect(m.rowHeight, `${width}px: the bar is one line`).toBeLessThan(24)
+      for (const item of m.items) {
+        expect(item.height, `${width}px: each value is one line`).toBeLessThan(20)
+        expect(item.size, `${width}px: the values are in the small type`).toBeLessThanOrEqual(10.5)
+      }
+      if (width <= 430) {
+        expect(m.items[0].cut, `${width}px: the long name is cut with an ellipsis`).toBe(true)
+      }
       expect(
         edge(m.metadata.left),
-        `${width}px: the metadata is left-aligned, starting on the groove's left end`,
-      ).toBe(edge(m.line.left))
-      if (width < 768) {
-        expect(
-          m.value.left - m.label.right,
-          `${width}px: the value sits right after its label, not at the far edge`,
-        ).toBeLessThanOrEqual(12)
-      }
+        `${width}px: the bar stays inside the column`,
+      ).toBeGreaterThanOrEqual(edge(m.line.left))
       expect(
         m.metadata.bottom,
         `${width}px: the metadata sits above the groove`,
