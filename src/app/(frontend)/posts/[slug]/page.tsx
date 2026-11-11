@@ -97,6 +97,7 @@ export default async function Post({ params: paramsPromise }: Args) {
         data={post.content}
         blocks={richTextBlocks}
         enableGutter={false}
+        besideFloat={Boolean(post.heroImage)}
       />
       <ForumPrompt href={forumUrl} />
     </ArticlePage>

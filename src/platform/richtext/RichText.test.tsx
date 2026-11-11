@@ -206,6 +206,28 @@ describe('RichText', () => {
   })
 })
 
+describe('RichText beside a floated picture (#1023)', () => {
+  const rootClasses = (besideFloat?: boolean) => {
+    const { container } = render(
+      <RichText data={doc(paragraph(text('Body')))} besideFloat={besideFloat} />,
+    )
+    const classes = (container.firstElementChild as HTMLElement).className
+    cleanup()
+    return classes
+  }
+
+  it('is a box of its own by default, so a floated figure stays inside it', () => {
+    expect(rootClasses()).toContain('flow-root')
+  })
+
+  it('flows beside a picture before it, and clears it at its end, instead of staying narrow', () => {
+    const classes = rootClasses(true)
+
+    expect(classes).not.toContain('flow-root')
+    expect(classes).toContain('after:clear-both')
+  })
+})
+
 describe('RichText, headings (#741)', () => {
   it('balances the lines of its headings, so one never ends on a lone word', () => {
     const { container } = render(<RichText data={doc(paragraph(text('Body')))} />)

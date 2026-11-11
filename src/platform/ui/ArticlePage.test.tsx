@@ -106,7 +106,7 @@ describe('ArticlePage', () => {
       createdAt: '2026-10-01T12:00:00.000Z',
     } as ImageRef
 
-    it('is the first thing in the article column, whole, and not in the header', async () => {
+    it('sits under the metadata bar, before the text, whole, and not in the header', async () => {
       const { container } = renderArticle({
         image: picture,
         byline: [{ label: 'Author', value: 'Ana' }],
@@ -114,10 +114,30 @@ describe('ArticlePage', () => {
 
       const img = screen.getByRole('img', { name: picture.alt ?? '' })
       expect(img.closest('header')).toBeNull()
-      const column = screen.getByText('The article').parentElement
-      expect(column?.firstElementChild?.contains(img)).toBe(true)
+      const bar = screen.getByText('Author').closest('dl')?.parentElement?.parentElement
+      // The bar spans the column; the picture and the text share the box under it
+      const under = bar?.nextElementSibling
+      expect(under?.contains(img)).toBe(true)
+      expect(under?.contains(screen.getByText('The article'))).toBe(true)
+      expect(under?.firstElementChild?.contains(img)).toBe(true)
+      expect(bar?.contains(img)).toBe(false)
       expect(img.className).not.toContain('object-')
       await expectAccessible(container)
+    })
+
+    it('shares a box with the text that contains the float, and keeps a panel off the picture', () => {
+      renderArticle({ image: picture })
+      const box = screen.getByText('The article').parentElement
+
+      expect(box?.className).toContain('flow-root')
+      // A panel or button beside the picture is a box of its own; the text's own box is left out
+      expect(box?.className).toContain('md:[&>:not(.payload-richtext)]:flow-root')
+    })
+
+    it('takes the width the page gives the text, so the picture is a share of it', () => {
+      renderArticle({ image: picture, textClassName: 'max-w-[40rem]' })
+
+      expect(screen.getByText('The article').parentElement?.className).toContain('max-w-[40rem]')
     })
 
     it('draws nothing, and leaves no gap, on a page without a picture', () => {

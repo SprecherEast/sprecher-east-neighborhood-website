@@ -44,3 +44,10 @@ text panel to the checks above.
     never cropped, at the top of the article, so the text in it stays readable at every width. A
     cropping band behind a title can't promise that: it shows a different part of the picture at
     each width, and a focal point only chooses which part.
+13. **The article picture is sized by the screen and can be enlarged.** It fills the column above
+    the text on a phone, takes about half the column beside the text on a tablet and about a third on
+    a desktop, so it never pushes the article down. Its sizes come from the shared figure, never from
+    a width typed on a page. Because it is smaller than the article, the reader can always open it at
+    full size, and the control sits under the picture so the picture starts where the text does. A
+    picture is designed to stay readable at its small size where it can, and in the enlarged view
+    where it can't (the owner's decision, 2026-11-10, Claude Code session, recorded on #1023).

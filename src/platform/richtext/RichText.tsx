@@ -138,11 +138,24 @@ type Props = {
   blocks?: RichTextBlocks
   enableGutter?: boolean
   enableProse?: boolean
+  /**
+   * A picture floats right just before this text (the article's `FeaturedImage`, #1023): the text
+   * flows beside it, line by line, instead of forming a box that stays narrow all the way down, and
+   * what follows the text clears the picture. A figure inside the text is still kept in it.
+   */
+  besideFloat?: boolean
 } & React.HTMLAttributes<HTMLDivElement>
 
 /** Rich text as the editor saved it, with links to pages and posts resolved to site addresses. */
 export function RichText(props: Props) {
-  const { blocks, className, enableProse = true, enableGutter = true, ...rest } = props
+  const {
+    blocks,
+    className,
+    enableProse = true,
+    enableGutter = true,
+    besideFloat = false,
+    ...rest
+  } = props
   return (
     <ConvertRichText
       converters={withHeadingIds(
@@ -150,8 +163,10 @@ export function RichText(props: Props) {
         anchorsByNode(props.data),
       )}
       className={cn(
-        // flow-root keeps a floated figure inside the text, so what follows never wraps around it
-        'payload-richtext flow-root',
+        // flow-root keeps a floated figure inside the text, so what follows never wraps around it;
+        // beside a float the text is not a box of its own, and a clearing end does the same job
+        'payload-richtext',
+        besideFloat ? 'block after:clear-both after:block after:content-[""]' : 'flow-root',
         {
           container: enableGutter,
           'mx-auto prose md:prose-md prose-headings:text-balance': enableProse,

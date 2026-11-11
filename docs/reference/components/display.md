@@ -221,7 +221,7 @@ Source: `src/platform/ui/ImageCredit.tsx`
 
 ## `FeaturedImage`
 
-The picture of a post or an event, at the top of the article's column (#1013): shown whole, at its own proportions, never cropped, so a picture that carries text (a panel of facts) stays readable at every width. It is the first image the visitor sees, so it loads early, and it takes the reading width from the column's left edge so its edges line up with the text. Its credit shows under it. With no picture it draws nothing, so no gap is left.
+The picture of a post or an event, at the start of the article's text (#1013, #1023): shown whole, at its own proportions, never cropped, so a picture that carries text (a panel of facts) stays readable. On a phone it fills the column above the text; from a tablet it floats right, half the column wide, then a third from the desktop breakpoint, with the text wrapping beside it. A reader can enlarge it. It is the shared `Figure` (the article figure's float, wrap and enlarge dialog), with the Enlarge button under the picture so the picture starts on the text's first line, and loading early because it is the first image seen. Its credit shows under it and in the enlarged view. With no picture it draws nothing, so no gap is left.
 
 Source: `src/platform/ui/FeaturedImage.tsx`
 

@@ -51,6 +51,24 @@ describe('Figure', () => {
     expect((container.firstElementChild as HTMLElement).className).toContain('md:w-1/2')
   })
 
+  it('floats at half the column on a tablet and a third from lg when asked (#1023)', () => {
+    const { container } = setup({ size: 'half-then-third' })
+    const classes = (container.firstElementChild as HTMLElement).className
+
+    expect(classes).toContain('md:w-1/2')
+    expect(classes).toContain('lg:w-1/3')
+  })
+
+  it('keeps the Enlarge button above the picture unless asked to put it below (#1023)', () => {
+    setup()
+    const above = screen.getByRole('button', { name: /Enlarge/ }).className
+    cleanup()
+    setup({ enlarge: 'below' })
+
+    expect(above).not.toContain('order-last')
+    expect(screen.getByRole('button', { name: /Enlarge/ }).className).toContain('order-last')
+  })
+
   it('opens a dialog with the key and the long caption', async () => {
     setup({ longCaption: 'Source: WisDOT. We added the numbers.' })
 
