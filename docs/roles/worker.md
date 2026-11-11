@@ -14,7 +14,7 @@ you with a brief; the issue is the contract.
    say so on the issue instead of guessing.
 2. Check the claim comment names your branch. You never claim an issue yourself.
 3. Follow [`change-workflow`](../../.agents/skills/change-workflow/SKILL.md) end to end: branch,
-   tests first ([`write-code`](../../.agents/skills/write-code/SKILL.md)), the change, the
+   tests first ([`write-code`](../../.agents/skills/write-code/SKILL.md)), the change, the local knowledge check (`npm run knowledge:check`), the
    [`self-review`](../../.agents/skills/self-review/SKILL.md), a pull request from the template,
    and the independent review, which a fresh reviewer started by the chief of staff does, never you.
 4. Load the role guides and knowledge notes the brief names for the kind of work, such as a
