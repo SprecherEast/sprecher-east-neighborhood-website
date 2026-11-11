@@ -69,12 +69,12 @@ line, 3 playful.
 | ------------------------ | ---------------------------------------------------------- | ----- |
 | Welcome                  | Glad you're here, no pressure, what to do first.           | 2     |
 | How-to, forms, errors    | Calm and exact. What happened, how to fix it. Never blame. | 1     |
-| Event                    | Inviting and concrete: when, where, what to bring.         | 2â€“3   |
+| Event                    | Inviting and concrete: when, where, what to bring.         | 2–3   |
 | Good news                | Glad, not gushing. Credit whoever did it.                  | 2     |
 | Bad news, safety         | Calm, fact first, what to do now, who to call.             | 0     |
-| Money and taxes          | Even and exact. Numbers with year and source.              | 0â€“1\* |
+| Money and taxes          | Even and exact. Numbers with year and source.              | 0–1\* |
 | Politics, city decisions | Neutral process: who decides, when, how to weigh in.       | 0     |
-| Holiday                  | Warm, inclusive, short.                                    | 1â€“2   |
+| Holiday                  | Warm, inclusive, short.                                    | 1–2   |
 | Correction               | Plain and prominent: what was wrong, what's right.         | 0     |
 
 \*A light welcome line is fine ("Grab a coffee; this one has charts"); never a joke about the money,
