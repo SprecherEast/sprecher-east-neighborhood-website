@@ -15,24 +15,30 @@ const run = (files, body = '') =>
 
 describe('parseNameStatus', () => {
   it('reads added, modified, removed and renamed files the way GitHub lists them', () => {
-    const text = 'A\tsrc/a.ts\nM\tsrc/b.ts\nD\tsrc/c.ts\nR087\tsrc/old.ts\tsrc/new.ts\n'
+    const text =
+      'A\0src/a.ts\0M\0src/b.ts\0D\0src/c.ts\0R087\0src/old.ts\0src/new.ts\0T\0src/d.ts\0'
     expect(parseNameStatus(text)).toEqual([
       { filename: 'src/a.ts', status: 'added' },
       { filename: 'src/b.ts', status: 'modified' },
       { filename: 'src/c.ts', status: 'removed' },
       { filename: 'src/new.ts', previous_filename: 'src/old.ts', status: 'renamed' },
+      { filename: 'src/d.ts', status: 'modified' },
     ])
   })
 
-  it('ignores blank lines', () => {
-    expect(parseNameStatus('\n\n')).toEqual([])
+  it('keeps file names with spaces, quotes and accents exactly as they are', () => {
+    const name = 'src/caf\u00e9 "x".ts'
+    expect(parseNameStatus(`M\0${name}\0`)).toEqual([{ filename: name, status: 'modified' }])
+  })
+
+  it('reads an empty list', () => {
+    expect(parseNameStatus('')).toEqual([])
   })
 })
-
 describe('patchOf', () => {
   it('keeps what GitHub calls the patch: everything from the first hunk', () => {
     const diff = 'diff --git a/f b/f\nindex 1..2 100644\n--- a/f\n+++ b/f\n' + CHANGE
-    expect(patchOf(diff)).toBe(CHANGE.trimEnd())
+    expect(patchOf(diff)).toBe(CHANGE.replace(/\n$/, ''))
   })
 
   it('is empty for a diff with no hunks, such as a binary file', () => {
