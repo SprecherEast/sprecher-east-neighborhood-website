@@ -18,19 +18,33 @@ function load(name) {
 
 /** Every secret a job reads (`secrets.NAME`, `secrets['NAME']`, `toJSON(secrets)`), except the token GitHub gives each run for free. */
 function secretsRead(job) {
-  const found = JSON.stringify(job).matchAll(
-    /secrets(?:\.([A-Za-z0-9_]+)|\[\\?['"]([A-Za-z0-9_]+)\\?['"]\]|(?![A-Za-z0-9_.\[]))/g,
+  // A calling job's own `secrets: inherit` key passes secrets on; it is not a read.
+  const body = { ...job }
+  delete body.secrets
+  const found = JSON.stringify(body).matchAll(
+    /secrets(?:\.([A-Za-z0-9_]+)|\[\\?['"]([A-Za-z0-9_]+)\\?['"]\]|(?![A-Za-z0-9_.]))/g,
   )
   return [...new Set([...found].map((m) => m[1] ?? m[2] ?? '*'))].filter(
     (n) => n !== 'GITHUB_TOKEN',
   )
 }
 
-/** The environment a job names, whether written `environment: production` or with a `name:` key. */
+/** The environment a job names, whether written `environment: production` or with a `name:` key.
+ * GitHub treats environment names as case-insensitive, so the name is lower-cased. */
 function environmentOf(job) {
   const env = job.environment
-  return typeof env === 'object' && env !== null ? env.name : env
+  const name = typeof env === 'object' && env !== null ? env.name : env
+  return name === undefined ? undefined : String(name).toLowerCase()
 }
+
+const DEPLOY_SECRETS = [
+  'VPS_HOST',
+  'VPS_USER',
+  'VPS_PORT',
+  'VPS_SSH_KEY',
+  'VPS_KNOWN_HOSTS',
+  'UMAMI_ADMIN_PASSWORD',
+]
 
 describe('deploy workflow and the production environment', () => {
   const { jobs } = load('deploy.yml')
@@ -65,9 +79,14 @@ describe('deploy workflow and the production environment', () => {
         expect(environmentOf(job), `${name} job ${id} must not use ${ENVIRONMENT}`).not.toBe(
           ENVIRONMENT,
         )
-        expect(secretsRead(job), `${name} job ${id} reads a deploy secret`).not.toEqual(
-          expect.arrayContaining(['VPS_SSH_KEY']),
-        )
+        expect(
+          String(environmentOf(job) ?? ''),
+          `${name} job ${id} names an expression`,
+        ).not.toContain('${{')
+        expect(
+          secretsRead(job).filter((n) => n === '*' || DEPLOY_SECRETS.includes(n)),
+          `${name} job ${id} reads a deploy secret`,
+        ).toEqual([])
       }
     }
   })
