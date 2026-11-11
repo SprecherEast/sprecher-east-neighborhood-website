@@ -27,6 +27,7 @@ describe('Card', () => {
     ['success', 'bg-primary/10'],
     ['danger', 'bg-destructive/10'],
     ['neutral', 'bg-muted'],
+    ['accent', 'bg-accent/10'],
   ] as const)('draws the %s variant flat, on %s', (variant, background) => {
     render(<Card variant={variant}>Body</Card>)
 

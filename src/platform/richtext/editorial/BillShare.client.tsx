@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, type ReactNode } from 'react'
+import React, { useId, useState, type ReactNode } from 'react'
 
 import {
   BILL_BODY_NAMES,
@@ -13,27 +13,24 @@ import {
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { AmountBar } from '@/platform/ui/AmountBar'
-import { Button } from '@/platform/ui/Button'
+import { Card, CardTitle } from '@/platform/ui/Card'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
-import { Field } from '@/platform/ui/Field.client'
 import { Link } from '@/platform/ui/Link'
-import { ShareBar, ShareBarSwatch, type ShareBarSlice } from '@/platform/ui/ShareBar.client'
+import { SharePie, type SharePieSlice } from '@/platform/ui/SharePie.client'
 import { Text } from '@/platform/ui/Text'
 
 import type { BillShareProps } from './billShare'
+import { joinNames, reservedNote, ROUGH_NOTE, unconfirmedNote } from './billShareNotes'
 import { toCityBar } from './cityBar'
+import { RoughEstimator } from './RoughEstimator'
 
-/** A slice's tone: the City highlighted, the others gray, the schools' the strongest */
-const TONE: Record<BillBody, ShareBarSlice['tone']> = {
-  schools: 'strong',
+/** A wedge's tone: the City highlighted, the others three grays, the schools' the lightest */
+const TONE: Record<BillBody, SharePieSlice['tone']> = {
+  schools: 'light',
   city: 'highlight',
   county: 'medium',
-  matc: 'light',
+  matc: 'dark',
 }
-
-/** "A, B and C" */
-const joinNames = (names: string[]) =>
-  names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`
 
 /** What the City's panel holds besides the pictures a tab only draws once (#1020) */
 export type CityPanelProps = {
@@ -46,14 +43,15 @@ export type CityPanelProps = {
 }
 
 /**
- * The whole property-tax bill at the top of a fact tab (#1018): a line saying what the estimate is
- * based on, a home value the reader can change (it starts at the City's average home), a switch
- * between tax years, what that home pays each body, and the bill as one bar whose slices are as
- * wide as their shares. The City's slice is joined to the panel under it, which starts with the
- * City's own tax as one bar, then a short line, then where that tax goes (#1020), then the rest of
- * the tab (`children`). The bar and the breakdown are drawn again for every home value and year, so
- * every amount in the panel is the City's slice of the bill above it. A year in which a body has
- * not set its rate uses that body's rate from the year before, and says so.
+ * The whole property-tax bill at the top of a fact tab (#1018, #1022): two cards of one height, side
+ * by side from `lg` and stacked below it. The Rough Estimator holds the home value the reader can
+ * change (it starts at the City's average home), the switch between tax years and the notes on how
+ * rough the answer is; the other is the bill as a pie whose wedges are as big as their shares. The
+ * City's panel sits under both: the City's own tax as one bar, a short line, then where that tax
+ * goes (#1020), then the rest of the tab (`children`). The pie, the bar and the breakdown are drawn
+ * again for every home value and year, so every amount in the panel is the City's slice of the
+ * bill. A year in which a body has not set its rate uses that body's rate from the year before,
+ * and says so in a note whose room is always kept, so the page never changes height.
  */
 export function BillShare({
   intro,
@@ -69,15 +67,14 @@ export function BillShare({
   const [typed, setTyped] = useState<string | null>(null)
   // A screen reader hears the bill when the reader leaves the box or switches year, not on every key
   const [settled, setSettled] = useState(true)
+  const pieTitleId = useId()
   if (!year) return null
 
   const text = typed ?? formatWholeDollars(year.averageHome)
   const homeValue = parseHomeValue(text)
-  const { rates, filled } = fillFromEarlier(year.rates, years[yearIndex - 1]?.rates)
+  const { rates } = fillFromEarlier(year.rates, years[yearIndex - 1]?.rates)
   const bill = homeValue === null ? null : computeBillShare(homeValue, rates)
   const part = (key: BillBody): BillPart | undefined => bill?.parts.find((p) => p.key === key)
-  const earlier = years[yearIndex - 1]
-
   const summary = !bill
     ? ''
     : bill.complete && bill.total !== null
@@ -110,115 +107,93 @@ export function BillShare({
     </div>
   )
 
-  const slices: ShareBarSlice[] =
+  const slices: SharePieSlice[] =
     bill?.complete === true
-      ? bill.parts.map(({ key, share, percent }) => ({
+      ? bill.parts.map(({ key, amount, share, percent }) => ({
           key,
+          name: BILL_BODY_NAMES[key],
+          amount: formatWholeDollars(amount ?? 0),
+          percent: percent ?? 0,
           share: share ?? 0,
           tone: TONE[key],
-          label: `${percent}%`,
         }))
       : []
+  const pieLabel =
+    slices.length > 0
+      ? `Your rough property tax: ${slices.map((slice) => `${slice.name} ${slice.amount}, ${slice.percent}%`).join('; ')}`
+      : ''
 
-  const picture = slices.length > 0
-  const barLabel = picture
-    ? `Your whole property tax bill: ${bill?.parts
-        .map(({ key, percent }) => `${BILL_BODY_NAMES[key]} ${percent}%`)
-        .join(', ')}`
-    : ''
+  // The notes always take their room, so a year with none to show never makes the card shorter
+  const kept = reservedNote(years)
+  const shownNote = unconfirmedNote(years, yearIndex)
+  const notes = [
+    { key: 'rough', text: ROUGH_NOTE, shown: true },
+    ...(kept ? [{ key: 'unconfirmed', text: shownNote ?? kept, shown: shownNote !== null }] : []),
+    ...(bill && !bill.complete
+      ? [
+          {
+            key: 'missing',
+            text: `${joinNames(bill.missing.map((key) => BILL_BODY_NAMES[key]))} have no rates to use, so the whole bill can’t be shown.`,
+            shown: true,
+          },
+        ]
+      : []),
+  ]
 
   return (
-    <div className="space-y-4">
-      <Text variant="small">{intro}</Text>
-      <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
-        <Field
-          label="Your home’s value"
-          className="w-full sm:w-52"
+    <div className="space-y-6">
+      <div className="grid items-stretch gap-6 lg:grid-cols-2">
+        <RoughEstimator
+          intro={intro}
+          value={text}
+          onValueChange={(value) => {
+            setTyped(value)
+            setSettled(false)
+          }}
+          onValueBlur={() => setSettled(true)}
           error={
             homeValue === null ? 'Enter your home’s value as a number, like $500,000.' : undefined
           }
-        >
-          <Field.Input
-            inputMode="numeric"
-            autoComplete="off"
-            value={text}
-            onChange={(event) => {
-              setTyped(event.target.value)
-              setSettled(false)
-            }}
-            onBlur={() => setSettled(true)}
-          />
-        </Field>
-        {years.length > 1 && (
-          <div role="group" aria-label="Tax rates to use" className="flex flex-wrap gap-2">
-            {years.map((option, index) => (
-              <Button
-                key={option.year}
-                size="sm"
-                variant={index === yearIndex ? 'primary' : 'secondary'}
-                aria-pressed={index === yearIndex}
-                onClick={() => {
-                  setYearIndex(index)
-                  setSettled(true)
-                }}
+          options={years.map((option) => ({ key: String(option.year), label: option.label }))}
+          selected={yearIndex}
+          onSelect={(index) => {
+            setYearIndex(index)
+            setSettled(true)
+          }}
+          notes={notes}
+        />
+        <Card as="section" variant="elevated" aria-labelledby={pieTitleId} className="h-full">
+          <div className="space-y-3">
+            <CardTitle as="h3" className="text-xl">
+              <span id={pieTitleId}>Your rough property tax</span>
+            </CardTitle>
+            <p role="status" className="sr-only">
+              {bill && settled ? summary : ''}
+            </p>
+            {bill && (
+              <Text
+                variant="lead"
+                aria-hidden="true"
+                className="min-h-21 text-foreground sm:min-h-14"
               >
-                {option.label}
-              </Button>
-            ))}
+                {summary}
+              </Text>
+            )}
+            {slices.length > 0 ? (
+              <SharePie slices={slices} label={pieLabel} />
+            ) : (
+              <Text variant="small" className="py-16 text-center">
+                Enter your home’s value to see how the bill splits.
+              </Text>
+            )}
           </div>
-        )}
+        </Card>
       </div>
-      {bill && (
-        <div className="space-y-1">
-          <p role="status" className="sr-only">
-            {settled ? summary : ''}
-          </p>
-          <Text variant="lead" className="text-foreground">
-            {summary}
-          </Text>
-          {filled.length > 0 && earlier && (
-            <Text variant="small">
-              {joinNames(filled.map((key) => BILL_BODY_NAMES[key]))}{' '}
-              {filled.length === 1 ? 'has' : 'have'} not set {year.year} rates yet, so this uses{' '}
-              {earlier.year}’s for {filled.length === 1 ? 'it' : 'them'}.
-            </Text>
-          )}
-          {!bill.complete && (
-            <Text variant="small">
-              {joinNames(bill.missing.map((key) => BILL_BODY_NAMES[key]))} have no rates to use, so
-              the whole bill can’t be shown.
-            </Text>
-          )}
-        </div>
-      )}
-      {picture && bill && (
-        <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
-          {bill.parts.map(({ key, amount, percent }) => (
-            <li key={key} className="flex items-start gap-2">
-              <span className="mt-1.5">
-                <ShareBarSwatch tone={TONE[key]} />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-foreground">{BILL_BODY_NAMES[key]}</span>
-                <span className="block font-semibold text-foreground">
-                  {formatWholeDollars(amount ?? 0)}
-                </span>
-                <span className="block text-muted-foreground">about {percent}%</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {picture ? (
-        <ShareBar slices={slices} label={barLabel}>
-          {panel}
-        </ShareBar>
-      ) : (
-        panel
-      )}
+      <Card variant="elevated" padding="sm" className="sm:p-6">
+        {panel}
+      </Card>
       <Text variant="small">
-        An estimate, not your bill: it uses {year.year} rates and the value above, and your real
-        bill depends on your home’s assessed value and any credits.
+        Uses {year.year} rates.
         {year.source && (
           <>
             {' '}

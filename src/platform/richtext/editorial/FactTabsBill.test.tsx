@@ -34,13 +34,13 @@ describe('FactTabs with a whole tax bill', () => {
     const shown = { tabs: [{ ...present(first), panel: [...present(first).panel, billShare] }] }
     const { container } = setup(shown)
     const panel = present(container.querySelector('[role="tabpanel"]'))
-    const bar = present(
-      panel.querySelector('svg[role="img"][aria-label^="Your whole property tax bill"]'),
-    )
+    present(panel.querySelector('svg[role="img"][aria-label^="Your rough property tax"]'))
     expect(panel.textContent).toContain('Based on the City’s average home.')
-    // The tab's own text sits in the panel after the bar
-    const afterBar = bar.parentElement?.lastElementChild
-    expect(afterBar?.textContent).toContain('What the City would spend in 2027')
+    // The tab's own text sits in the panel after the pie
+    const text = panel.textContent ?? ''
+    expect(text.indexOf('Your rough property tax')).toBeLessThan(
+      text.indexOf('What the City would spend in 2027'),
+    )
   })
 
   it('draws the City’s stacked chart as one bar and its breakdown from the typed home, in the panel (#1020)', () => {

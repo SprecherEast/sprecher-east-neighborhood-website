@@ -24,6 +24,8 @@ export const cardVariants = cva('relative min-w-0 rounded-2xl', {
       success: 'border border-primary/40 bg-primary/10',
       danger: 'border border-destructive/30 bg-destructive/10',
       neutral: 'border border-border bg-muted',
+      // The site's orange, for a box that is a tool to use rather than something to read (#1022)
+      accent: 'border border-accent bg-accent/10',
     },
     padding: {
       // Media cards stack an image and a `CardBody` that grows to the card's height; the corners

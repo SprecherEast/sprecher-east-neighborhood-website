@@ -10,7 +10,7 @@ Source: `src/platform/ui/Button.tsx`
 
 **Variants:**
 
-- `variant`: `"primary" | "secondary" | "accent" | "ghost" | "inverse" | "inverse-outline"`
+- `variant`: `"primary" | "secondary" | "accent" | "accent-outline" | "ghost" | "inverse" | "inverse-outline"`
 - `size`: `"sm" | "md" | "lg" | "icon"`
 - `fullWidth`: `boolean | "mobile"`
 
