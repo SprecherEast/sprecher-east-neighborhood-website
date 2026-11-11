@@ -4,6 +4,7 @@ import React, { useId, type ReactNode } from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
+import { ShareBarEdge } from './ShareBarEdge'
 import { useElementWidth } from './useElementWidth.client'
 
 /** How tall the bar is, in pixels */
@@ -56,35 +57,6 @@ export type ShareBarSlice = {
   tone: keyof typeof TONE_FILL | 'highlight'
   /** Written on the slice: inside it, or above it when the slice is too narrow to hold it */
   label?: string
-}
-
-/**
- * One side of the highlighted slice, as one line: down from the slice's top, then the quarter circle
- * out onto the panel's top edge. It is one path, so the edge and its curve can never part. Drawn in
- * a nested SVG at the edge's own x, so the path's coordinates stay small and the edge can sit on a
- * whole pixel.
- */
-function Edge({
-  x,
-  side,
-  top,
-  panelTop,
-}: {
-  x: number | string
-  side: 'left' | 'right'
-  top: number
-  panelTop: number
-}) {
-  // A one pixel line centred half a pixel inside the edge, so it fills exactly one pixel column
-  const inset = side === 'left' ? 0.5 : -0.5
-  const curveTop = panelTop + 0.5 - FLARE
-  const toward = side === 'left' ? -FLARE : FLARE
-  const d = `M ${inset} ${top} V ${curveTop} A ${FLARE} ${FLARE} 0 0 ${side === 'left' ? 1 : 0} ${inset + toward} ${panelTop + 0.5}`
-  return (
-    <svg x={x} overflow="visible">
-      <path d={d} fill="none" strokeWidth={1} className="stroke-primary" />
-    </svg>
-  )
 }
 
 /**
@@ -216,7 +188,7 @@ export function ShareBar({
                     x1={middle(slice)}
                     x2={middle(slice)}
                     y1={LABEL_ROW - 6}
-                    y2={barTop}
+                    y2={isHighlight ? lift : barTop}
                     strokeWidth={1}
                     className="stroke-muted-foreground"
                   />
@@ -242,8 +214,20 @@ export function ShareBar({
               height={1}
               className="fill-primary"
             />
-            <Edge x={at(highlight.start)} side="left" top={lift} panelTop={panelTop} />
-            <Edge x={at(highlight.end)} side="right" top={lift} panelTop={panelTop} />
+            <ShareBarEdge
+              x={at(highlight.start)}
+              side="left"
+              top={lift}
+              panelTop={panelTop}
+              flare={FLARE}
+            />
+            <ShareBarEdge
+              x={at(highlight.end)}
+              side="right"
+              top={lift}
+              panelTop={panelTop}
+              flare={FLARE}
+            />
           </g>
         )}
       </svg>

@@ -177,9 +177,9 @@ describe('BillShare', () => {
         </BillShare>,
       )
       const sum = () => rows(container).reduce((all, n) => all + n, 0)
-      expect(Math.abs(sum() - 3467)).toBeLessThanOrEqual(1)
+      expect(sum()).toBe(3467)
       fireEvent.change(box(), { target: { value: '200000' } })
-      expect(Math.abs(sum() - 1386)).toBeLessThanOrEqual(1)
+      expect(sum()).toBe(1386)
       expect(screen.getAllByText('$1,386').length).toBeGreaterThanOrEqual(2)
       expect(screen.getByText('+$36')).toBeTruthy()
     })
@@ -207,6 +207,38 @@ describe('BillShare', () => {
       fireEvent.change(box(), { target: { value: 'abc' } })
       expect(screen.getByText('2027 proposed')).toBeTruthy()
       expect(screen.getAllByText('$3,467').length).toBeGreaterThan(0)
+    })
+
+    it('adds the breakdown up to the City’s slice exactly, for any home typed', () => {
+      const uneven: typeof BREAKDOWN = {
+        ...BREAKDOWN,
+        areas: [1, 1, 1, 1, 1, 1, 1].map((value, i) => ({
+          key: `a${i}`,
+          label: `Area ${i}`,
+          value,
+        })),
+      }
+      const { container } = render(
+        <BillShare {...PROPS} {...city} cityBreakdown={uneven}>
+          x
+        </BillShare>,
+      )
+      for (const value of ['123457', '287311', '419999', '641234', '777777']) {
+        fireEvent.change(box(), { target: { value } })
+        const total = rows(container).reduce((all, n) => all + n, 0)
+        expect(
+          screen.getAllByText(`$${total.toLocaleString('en-US')}`).length,
+        ).toBeGreaterThanOrEqual(2)
+      }
+    })
+
+    it('draws no bar when the chart’s columns are not these years, rather than a wrong year', () => {
+      render(
+        <BillShare {...PROPS} {...city} cityBars={{ ...BARS, x: ['2027 proposed'] }}>
+          x
+        </BillShare>,
+      )
+      expect(screen.queryByText('2027 proposed')).toBeNull()
     })
 
     it('has no accessibility violations', async () => {

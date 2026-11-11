@@ -50,6 +50,22 @@ describe('scaleBreakdown', () => {
     expect(scaled.areas.every((a) => a.value > 0)).toBe(true)
   })
 
+  it('adds up exactly: areas to the whole, pieces to no more than their area, for any factor', () => {
+    for (let n = 1; n <= 400; n++) {
+      const factor = n * 0.0173
+      const scaled = scaleBreakdown(SPEC, factor)
+      const whole = 3000 * factor
+      expect(total(scaled)).toBeCloseTo(
+        whole < 100 ? Math.round(whole * 100) / 100 : Math.round(whole),
+        6,
+      )
+      for (const area of scaled.areas) {
+        const pieces = (area.pieces ?? []).reduce((sum, piece) => sum + piece.value, 0)
+        expect(pieces).toBeLessThanOrEqual(area.value)
+      }
+    }
+  })
+
   it('scales what one square stands for, so the grid keeps its squares', () => {
     const squares = { ...SPEC, hideSquares: false, squareValue: 100 }
     const scaled = scaleBreakdown(squares, 2)

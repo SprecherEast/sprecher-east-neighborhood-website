@@ -169,6 +169,24 @@ Source: `src/platform/ui/ShareBar.client.tsx`
 
 - Platform: `platform/richtext`
 
+## `ShareBarEdge`
+
+One side of the highlighted slice, as one line: down from the slice's top, then the quarter circle out onto the panel's top edge. It is one path, so the edge and its curve can never part. Drawn in a nested SVG at the edge's own x, so the path's coordinates stay small and the edge can sit on a whole pixel.
+
+Source: `src/platform/ui/ShareBarEdge.tsx`
+
+| Prop       | Type                | Required | Description                            |
+| ---------- | ------------------- | -------- | -------------------------------------- |
+| `x`        | `string \| number`  | yes      |                                        |
+| `side`     | `"left" \| "right"` | yes      |                                        |
+| `top`      | `number`            | yes      |                                        |
+| `panelTop` | `number`            | yes      |                                        |
+| `flare`    | `number`            | yes      | The quarter circle's radius, in pixels |
+
+**Used by** (direct imports):
+
+- Platform: `platform/ui`
+
 ## `AmountBar`
 
 One amount as a single bar split into parts, each as wide as its share, with the year and the whole amount above it and, when there is more than one part, each part named under it with its dollars. The bar is one named picture; every figure is also text. A part marked `hatch` is the proposed increase: the same colour, striped, as in the charts. Widths are percent attributes, never inline styles.

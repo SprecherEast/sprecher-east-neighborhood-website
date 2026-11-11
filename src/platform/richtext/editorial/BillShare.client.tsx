@@ -92,13 +92,11 @@ export function BillShare({
   const breakdownTotal = cityBreakdown?.areas.reduce((sum, area) => sum + area.value, 0) ?? 0
   const breakdownFactor =
     cityAmount !== null && breakdownTotal > 0 ? cityAmount / breakdownTotal : homeRatio
-  const cityBar = cityBars
-    ? toCityBar(cityBars, {
-        column: cityBars.x.length === years.length ? yearIndex : cityBars.x.length - 1,
-        cityAmount,
-        homeRatio,
-      })
-    : null
+  // A chart whose columns are not these years cannot say which year it shows, so it draws no bar
+  const cityBar =
+    cityBars && cityBars.x.length === years.length
+      ? toCityBar(cityBars, { column: yearIndex, cityAmount, homeRatio })
+      : null
   const panel = (
     <div className="space-y-6">
       {cityBar && <AmountBar title={cityBar.title} total={cityBar.total} parts={cityBar.parts} />}

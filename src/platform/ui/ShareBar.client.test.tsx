@@ -78,6 +78,25 @@ describe('ShareBar', () => {
     expect(3.5).toBeLessThan(SHARE_BAR_INSIDE_MIN)
   })
 
+  it("ends the tick on the narrow slice's own top, the raised City slice included", () => {
+    const plain = render(<ShareBar slices={SLICES} label="Whole bill" />).container
+    const plainTick = plain.querySelector('line[data-share-tick]')
+    const plainTop = rects(plain)
+      .find((r) => r.dataset.shareSlice === 'd')
+      ?.getAttribute('y')
+    expect(plainTick?.getAttribute('y2')).toBe(plainTop)
+    cleanup()
+    const raised = SLICES.map((s) =>
+      s.key === 'd' ? { ...s, tone: 'highlight' as const } : { ...s, tone: 'light' as const },
+    )
+    const { container } = render(<ShareBar slices={raised} label="Whole bill" />)
+    const tick = container.querySelector('line[data-share-tick]')
+    const top = rects(container)
+      .find((r) => r.dataset.shareSlice === 'd')
+      ?.getAttribute('y')
+    expect(tick?.getAttribute('y2')).toBe(top)
+  })
+
   it('leaves the row above the bar out when every label fits inside', () => {
     const wide = SLICES.map((s) => (s.key === 'd' ? { ...s, share: 10, label: '10%' } : s))
     const height = (c: HTMLElement) => Number(c.querySelector('svg')?.getAttribute('height'))

@@ -105,6 +105,7 @@ export const COMPONENT_GROUPS = [
       'BarSegment',
       'ShareBar',
       'ShareBarSwatch',
+      'ShareBarEdge',
       'AmountBar',
       'ScaledBreakdown',
       'ChartCaption',
