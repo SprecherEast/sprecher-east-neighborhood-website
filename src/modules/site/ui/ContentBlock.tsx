@@ -47,6 +47,18 @@ function ColumnContent({
   link,
   linkAlign,
 }: Pick<ContentColumn, 'body' | 'link' | 'linkAlign'>) {
+  if (link && linkAlign === 'beside') {
+    // Text and button share a row: the text takes the rest of the width, and the button's bottom
+    // is level with the text's last line at every width
+    return (
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-x-4">
+        <div>{body && <RichText data={body} enableGutter={false} />}</div>
+        <div>
+          <LinkButton link={link} />
+        </div>
+      </div>
+    )
+  }
   return (
     <>
       {body && <RichText data={body} enableGutter={false} />}

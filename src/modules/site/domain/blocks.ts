@@ -16,8 +16,11 @@ export type ContentColumn = {
   size: ContentColumnSize
   body?: RichTextValue
   link?: ResolvedLink
-  /** Where the link button sits in its column; left out when it sits at the start */
-  linkAlign?: 'end'
+  /**
+   * Where the link button sits in its column; left out when it sits at the start. `beside` puts
+   * it right of the text, its bottom level with the text's last line.
+   */
+  linkAlign?: 'end' | 'beside'
 }
 
 /** Cards under an optional section title: a column holding only a heading starts a group */
