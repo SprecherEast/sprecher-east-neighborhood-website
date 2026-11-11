@@ -100,10 +100,10 @@ describe('SharePie', () => {
     measuredAt(560)
     const { container } = render(<SharePie slices={SLICES} label="Pie" />)
     expect(legend(container)).toEqual([
-      'City of Madison$3,46738%',
-      'Madison schools$4,70046%',
-      'Dane County$1,30013%',
-      'Madison College (MATC)$3503%',
+      'City of Madison38%$3,467',
+      'Madison schools46%$4,700',
+      'Dane County13%$1,300',
+      'Madison College (MATC)3%$350',
     ])
   })
 
@@ -122,7 +122,32 @@ describe('SharePie', () => {
     expect(receipt?.lastElementChild?.textContent).toBe('Total property tax$9,296')
   })
 
-  it('has the same legend height whatever the amounts, so the card never changes height', () => {
+  it('lays the rows out as three columns, the name, the percent, then the amount, one grid for every row', () => {
+    measuredAt(560)
+    const { container } = render(<SharePie slices={SLICES} label="Pie" />)
+    const list = container.querySelector('[data-pie-legend] ul')
+    expect(list?.className).toContain('grid-cols-')
+    const rows = Array.from(container.querySelectorAll('[data-pie-legend] li'))
+    for (const row of rows) {
+      expect(row.className).toContain('grid-cols-subgrid')
+      expect(row.children).toHaveLength(3)
+      // the amount never breaks across lines, and its right edge is the column's
+      expect(row.children[2]?.className).toContain('text-right')
+      expect(row.children[2]?.className).toContain('whitespace-nowrap')
+      expect(row.children[1]?.className).toContain('text-right')
+    }
+  })
+
+  it('writes the highlighted slice’s name in bold and no other', () => {
+    measuredAt(560)
+    const { container } = render(<SharePie slices={SLICES} label="Pie" />)
+    const bold = Array.from(container.querySelectorAll('[data-pie-legend] li')).map((row) =>
+      row.querySelector('[data-legend-name]')?.className.includes('font-bold'),
+    )
+    expect(bold).toEqual([true, false, false, false])
+  })
+
+  it('has the same legend row markup whatever the amounts, so the card never changes height', () => {
     measuredAt(560)
     const a = render(<SharePie slices={SLICES} label="Pie" />).container
     const classA = a.querySelector('[data-pie-legend] li')?.className
@@ -131,7 +156,6 @@ describe('SharePie', () => {
       <SharePie slices={SLICES.map((s) => ({ ...s, amount: '$1,234,567' }))} label="Pie" />,
     ).container
     expect(b.querySelector('[data-pie-legend] li')?.className).toBe(classA)
-    expect(classA).toContain('min-h-14')
   })
 
   it('draws a pie of one slice as a whole circle', () => {

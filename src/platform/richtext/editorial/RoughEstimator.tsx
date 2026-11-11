@@ -57,13 +57,7 @@ export function RoughEstimator({
         </div>
         <div className="my-auto space-y-4">
           <Field label="Your home’s value" error={error}>
-            <Field.Input
-              inputMode="numeric"
-              autoComplete="off"
-              value={value}
-              onChange={(event) => onValueChange(event.target.value)}
-              onBlur={onValueBlur}
-            />
+            <Field.Money value={value} onValueChange={onValueChange} onBlur={onValueBlur} />
           </Field>
           {options.length > 1 && (
             <div role="group" aria-label="Tax rates to use" className="grid grid-cols-2 gap-x-2">

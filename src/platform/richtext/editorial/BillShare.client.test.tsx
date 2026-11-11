@@ -21,15 +21,15 @@ describe('BillShare', () => {
     expect(screen.getByText('City detail')).toBeTruthy()
   })
 
-  it('says a year’s rates are not confirmed, without naming the bodies, in a note that is always there', () => {
+  it('says the City’s rate for a year is proposed, without naming the other bodies, in a note that is always there', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
-    const note = screen.getByText(/2027 rates are not confirmed/i)
-    expect(note.textContent).toBe('2027 rates are not confirmed, only proposed.')
+    const note = screen.getByText(/City’s 2027 tax rate is proposed/i)
+    expect(note.textContent).toBe('The City’s 2027 tax rate is proposed, not confirmed.')
     expect(note.closest('li')?.getAttribute('aria-hidden')).toBeNull()
     expect(screen.getByText('(proposed)')).toBeTruthy()
     // Last year's rates have nothing to confirm: the note keeps its room and is hidden from everyone
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
-    const kept = screen.getByText(/2027 rates are not confirmed/i).closest('li')
+    const kept = screen.getByText(/City’s 2027 tax rate is proposed/i).closest('li')
     expect(kept?.getAttribute('aria-hidden')).toBe('true')
     expect(kept?.className).toContain('invisible')
     expect(screen.getByText(/a rough estimate/i)).toBeTruthy()
@@ -55,7 +55,7 @@ describe('BillShare', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.change(box(), { target: { value: '300000' } })
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
-    expect(box().value).toBe('300000')
+    expect(box().value).toBe('$300,000')
   })
 
   it('asks for a number instead of showing a wrong bill', () => {
