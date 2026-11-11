@@ -86,7 +86,7 @@ export function Field({
       htmlFor={controlId}
       className={cn(
         'text-sm font-medium text-foreground',
-        resolvedLayout === 'row' && 'shrink-0 whitespace-nowrap',
+        resolvedLayout === 'row' && 'shrink-0 text-base whitespace-nowrap',
         hideLabel && 'sr-only',
       )}
     >

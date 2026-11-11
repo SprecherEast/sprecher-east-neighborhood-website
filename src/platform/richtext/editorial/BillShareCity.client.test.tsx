@@ -15,13 +15,13 @@ describe('BillShare, the City’s panel (#1020)', () => {
       Number(n.textContent?.replace(/[^0-9]/g, '')),
     )
 
-  it('starts with the City’s tax as one bar, then the short line, then where it goes, then the rest', () => {
+  it('starts with the City’s tax as one bar, then where it goes, then the short line, then the rest (#1068)', () => {
     const { container } = render(
       <BillShare {...PROPS} {...city}>
         <p>The rest</p>
       </BillShare>,
     )
-    const order = ['2027 proposed', 'Short line', 'Where that City tax goes', 'The rest'].map(
+    const order = ['2027 proposed', 'Where that City tax goes', 'Short line', 'The rest'].map(
       (text) => screen.getAllByText(new RegExp(text))[0] as HTMLElement,
     )
     order.slice(1).forEach((node, i) => {
@@ -29,6 +29,31 @@ describe('BillShare, the City’s panel (#1020)', () => {
       expect(before.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     })
     expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(3)
+  })
+
+  it('keeps the “See the smaller pieces” list in the City’s panel (#1068)', () => {
+    const withSmall = {
+      ...BREAKDOWN,
+      areas: [
+        {
+          key: 'safety',
+          label: 'Public safety',
+          value: 1500,
+          pieces: [
+            { key: 'police', label: 'Police', value: 1000, shown: true as const },
+            { key: 'health', label: 'Public Health', value: 500 },
+          ],
+        },
+        { key: 'other', label: 'Everything else', value: 1500 },
+      ],
+    }
+    render(
+      <BillShare {...PROPS} {...city} cityBreakdown={withSmall}>
+        x
+      </BillShare>,
+    )
+    expect(screen.getByText('See the smaller pieces')).toBeTruthy()
+    expect(screen.getByText('Public Health')).toBeTruthy()
   })
 
   it('shows the City’s part of the bill above as the bar’s whole amount, split as the chart splits it', () => {

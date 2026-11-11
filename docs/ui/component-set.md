@@ -59,7 +59,7 @@ Components: [form fields](../reference/components/form-fields.md).
 
 **`Field` controls.** A field holds exactly one control, a part of `Field` like `CardBody` is a part
 of `Card`: `Field.Input`, `Field.Money` (a whole-dollar box that groups digits with commas as the reader types, #1035), `Field.TextArea`, `Field.Select` and `Field.Checkbox` (the field switches to
-`layout: inline`; `layout: row` puts the label and the control on one line from 360 px wide, the label never wrapping, with the hint and error under both, #1054). The frame passes the control its `id`, `aria-describedby` and `aria-invalid`, so
+`layout: inline`; `layout: row` puts the label and the control on one line from 360 px wide, the label never wrapping and in base-size text, with the hint and error under both, #1054). The frame passes the control its `id`, `aria-describedby` and `aria-invalid`, so
 no control repeats that wiring. Each control works with a controlled value or react-hook-form's
 `register`. In the coverage table, `Field · email` means a field holding `Field.Input type="email"`.
 

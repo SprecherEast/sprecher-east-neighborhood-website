@@ -66,7 +66,7 @@ export function RoughEstimator({
             if (canEstimate) onEstimate()
           }}
         >
-          <Field label="Your home’s value" error={error} layout="row">
+          <Field label="Your home’s value:" error={error} layout="row">
             <Field.Money value={value} onValueChange={onValueChange} enterKeyHint="go" />
           </Field>
           {options.length > 1 && (

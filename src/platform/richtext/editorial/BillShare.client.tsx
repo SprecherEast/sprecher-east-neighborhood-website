@@ -114,12 +114,12 @@ export function BillShare({
   const panel = (
     <div className="space-y-6">
       {cityBar && <AmountBar title={cityBar.title} total={cityBar.total} parts={cityBar.parts} />}
-      {definition}
       {cityBreakdown && (
         <div className="rounded-xl bg-surface p-4">
           <ScaledBreakdown spec={cityBreakdown} factor={breakdownFactor} />
         </div>
       )}
+      {definition}
       {children}
     </div>
   )

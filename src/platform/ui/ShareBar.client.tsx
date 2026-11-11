@@ -2,6 +2,8 @@
 
 import React, { useId, type ReactNode } from 'react'
 
+import { cn } from '@/platform/lib/cn'
+
 import { ShareBarEdge } from './ShareBarEdge'
 import { useElementWidth } from './useElementWidth.client'
 
@@ -23,7 +25,11 @@ export const SHARE_BAR_INSIDE_MIN = 8
 /** The curve where the highlighted slice's edge meets the panel: half the drop, as the owner approved */
 const FLARE = SHARE_BAR_GAP / 2
 
-/** The row above the bar that holds the label of a slice too narrow to hold its own */
+/**
+ * The row above the bar that holds the label of a slice too narrow to hold its own. Most of it is
+ * drawn in the gap the page leaves above the bar (`-mt-5` on the root), so a bar with such a label
+ * sits as far from what is above it as one without.
+ */
 const LABEL_ROW = 22
 
 /** A slice's tone: three grays, strongest first, or the one highlighted slice */
@@ -94,7 +100,7 @@ export function ShareBar({
   const middle = (slice: { start: number; end: number }) => at((slice.start + slice.end) / 2)
 
   return (
-    <div className={className}>
+    <div className={cn(narrow.length > 0 && '-mt-5', className)}>
       <svg
         ref={ref}
         role="img"
