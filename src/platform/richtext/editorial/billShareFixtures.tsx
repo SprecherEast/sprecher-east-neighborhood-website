@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 
@@ -65,3 +65,11 @@ export const BREAKDOWN: Extract<ChartSpec, { kind: 'breakdown' }> = {
 export const city = { cityBars: BARS, cityBreakdown: BREAKDOWN, definition: <p>Short line</p> }
 
 export const box = () => screen.getByRole('textbox', { name: /home’s value/i }) as HTMLInputElement
+
+/** Types a home value and presses Estimate, then lets the scroll and the count settle */
+export async function estimate(value: string) {
+  fireEvent.change(box(), { target: { value } })
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Estimate' }))
+  })
+}
