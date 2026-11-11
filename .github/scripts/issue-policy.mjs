@@ -5,9 +5,9 @@
  * docs/process/issue-and-pr-checks.md ("The issue check"), where the pull request gate's are too.
  */
 import { formAnswers } from './issue-form.mjs'
-import { labelNames, planGaps, ruleMessage } from './pr-body.mjs'
+import { GROOMING_LABEL, labelNames, planGaps, ruleMessage } from './pr-body.mjs'
 
-export const GROOMING_LABEL = 'needs grooming'
+export { GROOMING_LABEL }
 export const COMMENT_MARKER = '<!-- issue-policy -->'
 
 /**

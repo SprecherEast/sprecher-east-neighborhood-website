@@ -18,6 +18,7 @@ can be fixed in one try and counted ([#970](https://github.com/SprecherEast/spre
 | `PR-LABELS`      | The issue has one type, at least one area and one priority label.                                                                      |
 | `PR-ASSIGNED`    | The issue is assigned: assigning claims it and moves its card to In progress.                                                          |
 | `PR-MILESTONE`   | The issue has a milestone (Backlog until planned). An epic is optional, so none is needed.                                             |
+| `PR-GROOMED`     | The issue has no `needs grooming` label. Groom it, then edit the PR description to re-run the check.                                   |
 | `PR-SECTIONS`    | Every template section is filled in.                                                                                                   |
 | `PR-SELF-REVIEW` | The self-review answers each item.                                                                                                     |
 | `PR-KNOWLEDGE`   | The knowledge note follows the behavior change, or the change is declared absent. Run it locally first with `npm run knowledge:check`. |
@@ -38,11 +39,11 @@ one comment, kept up to date in place and never repeated, lists each failed rule
 one-line fix, and the issue gets the `needs grooming` label. When everything passes, the label
 goes and the comment says so. The check owns the label: it removes it from an issue that passes
 and puts it back on one that still fails, so adding or removing it by hand changes nothing. An
-issue with the label is not Ready. The check only warns today; making the pull request gate fail a
-pull request whose issue still has the label is planned in
-[#984](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/984), and until
-then that gate checks only the issue's labels, assignee and milestone (`PR-LABELS`,
-`PR-ASSIGNED`, `PR-MILESTONE`), reading them the same way. It is stricter in one place: it asks
+issue with the label is not Ready. The check only warns, but the pull request gate (`PR-GROOMED`)
+fails a pull request whose issue still has the label. The gate reads the label when it runs, and
+the issue check removing it starts nothing, so after grooming, edit the PR description to re-run.
+The gate also checks the issue's labels, assignee and milestone (`PR-LABELS`, `PR-ASSIGNED`,
+`PR-MILESTONE`), reading them the same way. It is stricter in one place: it asks
 for exactly one priority label, where the gate accepts one or more. Pull requests, closed issues
 and issues filed by a bot are not checked. An epic is exempt from every rule (a parent issue has
 no files or checkboxes of its own), so one that was flagged before it became an epic loses the

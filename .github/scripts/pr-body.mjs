@@ -62,7 +62,7 @@ export function linkedIssues(body) {
 /**
  * The PR gate's rules (#970). Every failure starts with a stable ID, so it can be counted and the
  * next attempt knows which rule to fix: PR-CLOSES, PR-LINKED, PR-LABELS, PR-ASSIGNED,
- * PR-MILESTONE, PR-SECTIONS, PR-SELF-REVIEW, PR-KNOWLEDGE and PR-E2E.
+ * PR-MILESTONE, PR-GROOMED, PR-SECTIONS, PR-SELF-REVIEW, PR-KNOWLEDGE and PR-E2E.
  */
 export function ruleMessage(id, text) {
   return `${id}: ${text}`
@@ -80,6 +80,8 @@ export const PR_RULE_FIXES = {
   'PR-LABELS': 'The closed issue needs one type, at least one area and one priority label.',
   'PR-ASSIGNED': 'Assign the closed issue (assigning claims it and moves its card to In progress).',
   'PR-MILESTONE': 'Give the closed issue a milestone (Backlog until planned); an epic is optional.',
+  'PR-GROOMED':
+    'Groom the closed issue until it has no `needs grooming` label, then edit the PR description to re-run the check.',
   'PR-SECTIONS': 'Fill in every section of the PR template, each with 10+ characters.',
   'PR-SELF-REVIEW':
     'Under "Self-review" write a line for Reuse, Quality, Efficiency, Guidelines and Visual.',
@@ -171,6 +173,24 @@ export function issueProblems(number, issue, policy) {
       ),
     )
   return problems
+}
+
+/** The label the issue check (issue-policy.mjs) puts on an issue that misses a Definition of Ready rule. */
+export const GROOMING_LABEL = 'needs grooming'
+
+/**
+ * PR-GROOMED (#984): the closed issue does not carry the `needs grooming` label. It reads the labels
+ * of the issue as fetched when the check runs; the issue check removes the label once the issue is
+ * groomed, but nothing re-runs this gate then, so the message says to edit the description.
+ */
+export function groomedProblems(number, issue) {
+  if (!labelNames(issue).includes(GROOMING_LABEL)) return []
+  return [
+    ruleMessage(
+      'PR-GROOMED',
+      `Issue #${number} still has the "${GROOMING_LABEL}" label; groom it (the issue check then removes the label), then edit the PR description to re-run this check.`,
+    ),
+  ]
 }
 
 /** PR-LINKED: the issue's timeline shows this PR, so the link works from both sides. */
