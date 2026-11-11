@@ -85,7 +85,7 @@ show and there is no button. Its test checks the closed and the open dialog with
 removed, since jsdom can't run axe across one), the gallery shows both states, and its props are in
 the [media page](../reference/components/media.md).
 
-**`FeaturedImage`** (#1013, #1023) is the picture of a post or an event, under the metadata bar: the whole picture at its own proportions, never cropped, loading early (it is the first image seen), with its credit under it. It is the shared `Figure` (size `half-then-third`, Enlarge under the picture): full width above the text on a phone, floated right from `md` at half the column, and a third from `lg`, with the text wrapping beside it, and it can be enlarged in the `Zoom` dialog, which also shows the credit. With no picture it draws nothing and leaves no gap. `ArticlePage` draws it in one box with the content, which contains the float so what follows a short article clears the picture; the article's `RichText` takes `besideFloat`; `ArticlePage`'s `lead` is what opens the article ahead of the picture (a row of cards, which can't sit beside it). The page header above is the `PageHeader` `band` (a themed surface, optionally over a faded photo, `BandBackdrop`; never the page's own picture). Its test checks the three sizes, the float, the early load, the Enlarge button with the keyboard and focus return, the empty case and axe; the gallery shows it beside text.
+**`FeaturedImage`** (#1013, #1023) is the picture of a post or an event, under the metadata bar: the whole picture at its own proportions, never cropped, loading early (it is the first image seen), with its credit under it. It is the shared `Figure` (size `half-then-third`, `zoom={false}`): full width above the text on a phone, floated right from `md` at half the column, and a third from `lg`, with the text wrapping beside it; it has no Enlarge button and opens no dialog (#1055). With no picture it draws nothing and leaves no gap. `ArticlePage` draws it in one box with the content, which contains the float so what follows a short article clears the picture; the article's `RichText` takes `besideFloat`; `ArticlePage`'s `lead` is what opens the article ahead of the picture (a row of cards, which can't sit beside it). The page header above is the `PageHeader` `band` (a themed surface, optionally over a faded photo, `BandBackdrop`; never the page's own picture). Its test checks the three sizes, the float, the early load, the missing Enlarge button, the empty case and axe; the gallery shows it beside text.
 
 **`BandBackdrop`** (#1024) is the faded photo behind the title band of a post or an event
 (`PageHeader` `variant="band"`, `backdrop`). It is edge to edge inside the band, grayed
@@ -102,8 +102,8 @@ alt) and loads lightly (`IMAGE_QUALITIES.backdrop`, `sizes="100vw"`, no early lo
 all of this and axe; the gallery shows it in the headers entry.
 
 **`MetaBar`** (#1002) is the metadata of a post or an event, the industry's byline or meta bar: one thin
-line of small text at the top left of the article's column, under the picture and above the text,
-left-aligned, with a hairline between the items. Values are `text-xs`; the labels are small, uppercase
+line of small text at the top right of the article's column, above the text,
+right-aligned (#1055, reversing #1002's left alignment), with a hairline between the items. Values are `text-xs`; the labels are small, uppercase
 and muted, in the theme's finest text size (`text-fine`, the `type-fine` token). A post shows author,
 published and, when it has one, the source; an event shows when (date and time) and where (the venue
 or address, with its format). Directly under the text, across the whole column, runs one straight
@@ -111,9 +111,9 @@ groove line: two hairlines, a dark one (`input`) and the theme's accent. There i
 and the line is the same at every width. It is one decorative element, hidden from assistive
 technology, with no measuring and no inline SVG; the metadata is a description list of real text.
 From `md` the items sit in one row aligned on their text baseline (a link and its icon never lower
-a neighbour); below `md` they become a two-column list, labels in one column and values in the
-other, both starting at the left edge, above the line. A value too long for one line (a place) is cut with an ellipsis,
-capped at 20rem so the items stay grouped at the left, and it is the item that gives up width
+a neighbour), the last ending on the column's right edge; below `md` they stack, one line per item
+with the label right before its value and the pair ending on the right edge, above the line. A value too long for one line (a place) is cut with an ellipsis,
+capped at 20rem so the items stay grouped at the right, and it is the item that gives up width
 first, so the others (a date and time) stay on one line while the row can hold them (`title` on the
 item, as `Breadcrumbs` does), with its whole text in the title and in the page; the
 page's Location panel states it in full. `ArticlePage` draws it from its `byline` items at the width of what sits
@@ -123,8 +123,7 @@ items and a long value.
 
 **`Figure`** (#816) is a small picture that floats right in an article, about two fifths of the text
 column by default (`size`: `third`, `two-fifths`, `half`, or `half-then-third` for `FeaturedImage`),
-with the text wrapping on its left from `md` up; `enlarge="below"` puts the Enlarge button under the
-picture instead of above it (`FeaturedImage` does, so the picture starts on the text's first line); below `md` it fills the column between paragraphs. Its label ("Figure 2-9") sits in a
+with the text wrapping on its left from `md` up; `zoom={false}` draws only the picture and its caption, with no Enlarge button or dialog (`FeaturedImage` does, so the picture starts on the text's first line); below `md` it fills the column between paragraphs. Its label ("Figure 2-9") sits in a
 neutral badge with the short caption. A click or tap opens the `Zoom` dialog with the large picture,
 and beside it (under it on a narrow screen) the long caption and the numbered key: the key never
 shows in the small view. Its test covers the float classes, the size, the dialog and axe; the gallery

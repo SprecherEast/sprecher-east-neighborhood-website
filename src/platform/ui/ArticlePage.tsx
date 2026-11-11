@@ -46,7 +46,7 @@ export type ArticlePageProps = {
   breadcrumbs: BreadcrumbItem[]
   /**
    * Facts about the article (a post's author, date and source; an event's when and where), drawn
-   * as the `MetaBar` at the top left of the article column, above the picture and the text, over
+   * as the `MetaBar` at the top right of the article column, above the picture and the text, over
    * one groove line (#774, #1002).
    */
   byline?: MetaBarItem[]

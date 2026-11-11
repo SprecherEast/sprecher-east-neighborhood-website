@@ -25,19 +25,21 @@ export type MetaBarProps = {
 }
 
 /*
- * The metadata bar of a post or an event page (#1002, the industry's "byline" or "meta bar"): one
- * thin line of small text at the left edge of the article's column, labels kept (small, uppercase,
- * muted) and a hairline between the items, with one straight groove line directly under it across
- * the whole column. There is no box, tab or pill: the line is the only frame, and it is the same
- * at every width.
+ * The metadata bar of a post or an event page (#1002, #1055, the industry's "byline" or "meta bar"):
+ * one thin line of small text at the right edge of the article's column, labels kept (small,
+ * uppercase, muted) and a hairline between the items, with one straight groove line directly under
+ * it across the whole column. There is no box, tab or pill: the line is the only frame, and it is
+ * the same at every width.
  *
  * From `md` the items sit in one row, aligned on their text baseline, so a link or its icon never
- * lowers its neighbour, and they stay grouped at the left: a cut value is capped at 20rem, so a
- * long place never spreads them across the row. Below `md` they become a two-column list, labels in one column and values
- * in the other, both starting at the left edge, above the line. A value that is too long for one line (a place) is
- * cut with an ellipsis, with its whole text in the page (assistive technology and the Location panel have it) and in `title`, an extra for a mouse that a touch screen does not show.
- * The line is decoration and hidden from assistive technology; the metadata is a description list
- * of real text.
+ * lowers its neighbour, and they stay grouped at the right, the last one ending on the column's
+ * edge: a cut value is capped at 20rem, so a long place never spreads them across the row. Below
+ * `md` they stack, one line per item, each label right before its value and the pair ending on the
+ * right edge, above the line; a value too long for the line wraps, right-aligned. A value that is
+ * too long for one line from `md` (a place) is cut with an ellipsis, with its whole text in the page
+ * (assistive technology and the Location panel have it) and in `title`, an extra for a mouse that a
+ * touch screen does not show. The line is decoration and hidden from assistive technology; the
+ * metadata is a description list of real text.
  */
 export function MetaBar({ items, className }: MetaBarProps) {
   if (items.length === 0) return null
@@ -47,12 +49,12 @@ export function MetaBar({ items, className }: MetaBarProps) {
   return (
     <div className={cn('mb-10', className)}>
       <div className="pb-2">
-        <dl className="grid max-w-full min-w-0 grid-cols-[max-content_minmax(0,1fr)] items-baseline gap-x-2 gap-y-1 md:flex md:gap-x-0">
+        <dl className="flex max-w-full min-w-0 flex-col items-end gap-y-1 md:flex-row md:items-baseline md:justify-end md:gap-x-0">
           {items.map((item, index) => (
             <div
               key={item.label}
               className={cn(
-                'contents md:flex md:min-w-0 md:items-baseline md:gap-1.5',
+                'flex max-w-full min-w-0 items-baseline justify-end gap-2 md:gap-1.5',
                 // The cut value gives up width first, so the other items stay on one line
                 hasCutValue && !item.title && 'md:shrink-0',
                 index > 0 && 'md:border-l md:border-border md:pl-3',
@@ -62,7 +64,7 @@ export function MetaBar({ items, className }: MetaBarProps) {
               <dt className="shrink-0 text-fine font-medium tracking-widest text-muted-foreground uppercase">
                 {item.label}
               </dt>
-              <dd className="flex min-w-0 text-xs break-words text-foreground">
+              <dd className="flex min-w-0 justify-end text-right text-xs break-words text-foreground">
                 {item.title ? (
                   <span className="min-w-0 truncate md:max-w-80" title={item.title}>
                     {item.value}

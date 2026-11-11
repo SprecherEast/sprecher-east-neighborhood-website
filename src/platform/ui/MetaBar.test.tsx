@@ -63,12 +63,18 @@ describe('MetaBar (#1002)', () => {
     expect(container.querySelector('[class*="before:"], [class*="after:"]')).toBeNull()
   })
 
-  it('aligns the metadata to the left edge of the column, above the line', () => {
+  it('aligns the metadata to the right edge of the column, above the line (#1055)', () => {
     render(<MetaBar items={items} />)
 
-    const wrapper = screen.getByText('Author').closest('dl')?.parentElement
-    expect(wrapper?.className).not.toMatch(/justify-end|text-right|text-center|ml-auto/)
-    expect(screen.getByText('Author').className).not.toMatch(/text-right|text-center/)
+    const list = screen.getByText('Author').closest('dl')
+    // Phone: the items stack, each one ending on the right edge; from md: one row ending there
+    expect(list?.className).toContain('items-end')
+    expect(list?.className).toContain('md:justify-end')
+    for (const item of Array.from(list?.children ?? [])) {
+      expect(item.className).toContain('justify-end')
+    }
+    expect(screen.getByText('Ana and Ben').closest('dd')?.className).toContain('text-right')
+    expect(list?.className).not.toMatch(/text-left|justify-start/)
   })
 
   it('sets its items in one row from md, on one text baseline, with a hairline between them', () => {
@@ -85,26 +91,17 @@ describe('MetaBar (#1002)', () => {
     expect(second?.className).not.toContain('md:pr-3')
   })
 
-  it('becomes a two-column list below md: labels in one column, values in the other', () => {
+  it('stacks below md: one line per item, label then value, both ending on the right edge', () => {
     render(<MetaBar items={items} />)
 
     const list = screen.getByText('Author').closest('dl')
-    expect(list?.className).toContain('grid')
-    expect(list?.className).toContain('grid-cols-[max-content_minmax(0,1fr)]')
-    // Each item's label and value are the grid's own cells
-    expect(list?.firstElementChild?.className).toContain('contents')
-    // Both labels share the column's left edge, and a wrapped value starts at the value column
-    expect(screen.getByText('Author').className).not.toContain('text-right')
-  })
-
-  it('keeps the value column right after the label column, even with a single short item', () => {
-    render(<MetaBar items={[{ label: 'Published', value: 'Tue, Nov 10, 2026' }]} />)
-
-    // The label column is as wide as its labels and the value column takes the rest, so no free
-    // width is left to push a short value to the far edge of the row
-    const list = screen.getByText('Published').closest('dl')
-    expect(list?.className).toContain('grid-cols-[max-content_minmax(0,1fr)]')
-    expect(list?.className).toContain('gap-x-2')
+    expect(list?.className).toContain('flex-col')
+    expect(list?.className).not.toContain('grid')
+    // The label sits right before its value inside the item, so a short value never drifts away
+    const item = screen.getByText('Author').parentElement
+    expect(item?.className).toContain('flex')
+    expect(item?.className).not.toContain('contents')
+    expect(screen.getByText('Author').nextElementSibling?.textContent).toBe('Ana and Ben')
   })
 
   it('sets its labels in the theme’s finest text size, a token, smaller than the values', () => {
@@ -151,7 +148,7 @@ describe('MetaBar (#1002)', () => {
       expect(screen.getByText('Where').parentElement?.className).not.toContain('shrink-0')
     })
 
-    it('is capped at 20rem, so the items stay grouped at the left instead of spreading across the row', () => {
+    it('is capped at 20rem, so the items stay grouped at the right instead of spreading across the row', () => {
       render(<MetaBar items={[{ label: 'Where', value: long, title: long }]} />)
 
       expect(screen.getByTitle(long).className).toContain('md:max-w-80')

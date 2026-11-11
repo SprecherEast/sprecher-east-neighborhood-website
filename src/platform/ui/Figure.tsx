@@ -38,7 +38,7 @@ const SMALL_SIZES = '(min-width: 1024px) 24rem, (min-width: 768px) 40vw, 100vw'
 const SMALL_SIZES_HALF_THEN_THIRD = '(min-width: 960px) 20rem, (min-width: 768px) 50vw, 100vw'
 
 export type FigureProps = Pick<MediaProps, 'resource' | 'src' | 'alt'> & {
-  /** Names the Enlarge button and the dialog */
+  /** Names the Enlarge button and the dialog (the picture's name when zoom is off) */
   title: string
   /** The figure's number or name in its source ("Figure 2-9"), shown in a neutral badge */
   label?: string
@@ -54,11 +54,8 @@ export type FigureProps = Pick<MediaProps, 'resource' | 'src' | 'alt'> & {
   size?: FigureSize
   /** The first image the reader sees: loads early instead of lazily */
   priority?: boolean
-  /**
-   * Where the Enlarge button sits, which is above the picture unless given. Below it, the picture
-   * starts on the first line of the text beside it, with no gap.
-   */
-  enlarge?: 'above' | 'below'
+  /** False draws only the picture and its caption: no Enlarge button, no dialog (the article's own picture) */
+  zoom?: boolean
   className?: string
 }
 
@@ -76,7 +73,7 @@ export function Figure({
   keyLabel = 'Diagram key',
   size,
   priority,
-  enlarge = 'above',
+  zoom = true,
   className,
   resource,
   src,
@@ -94,11 +91,30 @@ export function Figure({
   )
   const hasAside = items.length > 0 || Boolean(longCaption) || Boolean(label)
 
+  const small = picture(
+    size === 'half-then-third' ? SMALL_SIZES_HALF_THEN_THIRD : SMALL_SIZES,
+    priority,
+  )
+  const captionBlock = (label || caption) && (
+    <figcaption className="mt-2 flex flex-col items-start gap-2">
+      {label && <Badge variant="neutral">{label}</Badge>}
+      {caption && <Caption as="div">{caption}</Caption>}
+    </figcaption>
+  )
+
+  if (!zoom) {
+    return (
+      <figure className={cn(figureVariants({ size }), className)}>
+        {small}
+        {captionBlock}
+      </figure>
+    )
+  }
+
   return (
     <figure className={cn(figureVariants({ size }), className)}>
       <Zoom
         title={title}
-        buttonClassName={enlarge === 'below' ? 'order-last' : undefined}
         large={picture('(min-width: 1024px) 66vw, 100vw')}
         aside={
           hasAside ? (
@@ -116,14 +132,9 @@ export function Figure({
           ) : undefined
         }
       >
-        {picture(size === 'half-then-third' ? SMALL_SIZES_HALF_THEN_THIRD : SMALL_SIZES, priority)}
+        {small}
       </Zoom>
-      {(label || caption) && (
-        <figcaption className="mt-2 flex flex-col items-start gap-2">
-          {label && <Badge variant="neutral">{label}</Badge>}
-          {caption && <Caption as="div">{caption}</Caption>}
-        </figcaption>
-      )}
+      {captionBlock}
     </figure>
   )
 }

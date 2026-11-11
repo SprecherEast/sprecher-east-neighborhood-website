@@ -120,11 +120,22 @@ export function DisplayGallery() {
 
       <GalleryEntry
         name="MetaBar"
-        description="A post's or event's metadata on one thin line, left-aligned above one straight groove line."
+        description="A post's or event's metadata on one thin line, right-aligned above one straight groove line."
       >
         <GalleryVariant label="two items" className="block">
           <div className="w-full max-w-[var(--reading-width)]">
             <MetaBar items={SAMPLE_FACTS} />
+          </div>
+        </GalleryVariant>
+        <GalleryVariant label="three items" className="block">
+          <div className="w-full max-w-[var(--reading-width)]">
+            <MetaBar
+              items={[
+                { label: 'Author', value: 'Ana, Ben and Cy' },
+                { label: 'Published', value: 'Tue, Nov 3, 2026' },
+                { label: 'Source', value: 'City of Madison' },
+              ]}
+            />
           </div>
         </GalleryVariant>
         <GalleryVariant label="a long place is cut to one line" className="block">
