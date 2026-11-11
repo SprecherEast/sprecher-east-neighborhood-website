@@ -29,6 +29,7 @@ route is involved, so the generated reference has nothing on it.
 - A decoration's movement stops within 5 seconds and doesn't start when the visitor asks for reduced motion (`decorations.css`, #409).
 - The chart reveal and bar-grow effects (`chart-reveal`, `chart-reveal-x` in `tailwind.css`) run only on screen, with motion allowed and scroll-driven animation supported; otherwise charts draw finished. `print-exact` keeps chart marks and legend swatches coloured in print.
 - `total-pulse` (`tailwind.css`, #1051) flashes the accent behind a total once and fades it over a second and a half, as long as the count, only when motion is allowed; with reduced motion the total just changes.
+- `shadow-on-photo` (`--shadow-on-photo` in `tailwind.css`, #1061) is the edge a button gets over a photo: a dark hairline, a soft glow-like shadow and a thin light outline, built from the `scrim` and `on-image` tokens so it follows every theme. The UI kit's `Button onPhoto` applies it; the home hero's buttons use it.
 - Rich-text colours (the [rich-text note](../richtext/README.md)) come from `tailwind.config.mjs` and are all token variables, so a theme recolours posts without touching it; none are inverted for dark, which follows `data-theme`, not the device.
 - Components use token classes only: lint rejects raw palette classes and hex or rgb values in classes (`eslint.theme.config.mjs`).
 
