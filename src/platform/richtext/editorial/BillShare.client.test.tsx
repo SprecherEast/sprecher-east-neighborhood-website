@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
@@ -187,6 +187,93 @@ describe('BillShare, the card and the total after Estimate (#1051)', () => {
   it('flashes the total when a rate year changes the bill', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    expect(total().className).toContain('total-pulse')
+  })
+})
+
+describe('BillShare, a switch of year counts the amounts in half a second (#1087)', () => {
+  let frames: ((time: number) => void)[] = []
+  let now = 0
+  const step = (ms: number) =>
+    act(() => {
+      now += ms
+      const pending = frames
+      frames = []
+      pending.forEach((frame) => frame(now))
+    })
+  const totalText = () => screen.getByText('Total property tax').closest('p')?.textContent ?? ''
+
+  beforeEach(() => {
+    frames = []
+    now = 0
+    vi.stubGlobal('requestAnimationFrame', (callback: (time: number) => void) => {
+      frames.push(callback)
+      return frames.length
+    })
+    vi.stubGlobal('cancelAnimationFrame', () => {})
+    vi.stubGlobal('matchMedia', () => ({ matches: false }))
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('moves the amounts through the years’ rates, ending on the new year’s bill within half a second', () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    const before = totalText()
+    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    step(0)
+    // Not there yet: the amounts have not jumped to the other year's bill
+    expect(totalText()).toBe(before)
+    step(200)
+    expect(totalText()).not.toBe(before)
+    step(400)
+    const after = totalText()
+    expect(after).not.toBe(before)
+    // And it stays: a settled count, so no further change
+    step(1000)
+    expect(totalText()).toBe(after)
+    expect(screen.getByRole('status').textContent).toMatch(/\$481,300/)
+  })
+
+  it('counts a new home value over the longer time, not half a second', async () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    fireEvent.change(box(), { target: { value: '962600' } })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Estimate' }))
+    })
+    step(0)
+    step(700)
+    // Past half a second, still counting
+    const middle = totalText()
+    step(1500)
+    expect(totalText()).not.toBe(middle)
+    expect(totalText()).toMatch(/\$17,\d{3}/)
+  })
+
+  it('never jumps back when a year is chosen while an Estimate count is running', async () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    fireEvent.change(box(), { target: { value: '962600' } })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Estimate' }))
+    })
+    step(0)
+    step(600)
+    const amount = () => Number(totalText().replace(/\D/g, ''))
+    const before = amount()
+    expect(before).toBeGreaterThan(0)
+    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    // The year's own rates differ a little, so allow for that, but the home value's count must not restart:
+    // the total stays near where it was, far from the old home's bill
+    step(0)
+    expect(amount()).toBeGreaterThan(before * 0.9)
+  })
+
+  it('flashes the total once, when the year’s count has ended', () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    const total = () => screen.getByText('Total property tax').closest('p') as HTMLElement
+    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    step(0)
+    step(200)
+    expect(total().className).not.toContain('total-pulse')
+    step(400)
     expect(total().className).toContain('total-pulse')
   })
 })

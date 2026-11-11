@@ -32,10 +32,11 @@ export type RoughEstimatorProps = {
 
 /**
  * The tool at the top of a whole-bill picture (#1022): an orange card titled Rough Estimator, with
- * the home value box, one button for each tax year side by side (a year can carry a short note
- * under its button, such as "proposed", and every button keeps the room for one), an Estimate
- * button last, which is on only while the typed value is a new number (Enter in the box does the
- * same), and the notes that say how rough the answer is. It draws what it is given and keeps no state of its own.
+ * the home value box with its Estimate button, one button for each tax year side by side (a year can carry a short note
+ * under its button, such as "proposed", and every button keeps the room for one), and the notes
+ * that say how rough the answer is. The box has a compact Estimate button beside it, which is on
+ * only while the typed value is a new number (Enter in the box does the same), so on a phone it
+ * sits right above the keyboard (#1087). It draws what it is given and keeps no state of its own.
  */
 export function RoughEstimator({
   intro,
@@ -66,7 +67,16 @@ export function RoughEstimator({
             if (canEstimate) onEstimate()
           }}
         >
-          <Field label="Your home’s value:" error={error} layout="row">
+          <Field
+            label="Your home’s value:"
+            error={error}
+            layout="bar"
+            action={
+              <Button type="submit" variant="primary" size="sm" disabled={!canEstimate}>
+                Estimate
+              </Button>
+            }
+          >
             <Field.Money value={value} onValueChange={onValueChange} enterKeyHint="go" />
           </Field>
           {options.length > 1 && (
@@ -93,9 +103,6 @@ export function RoughEstimator({
               ))}
             </div>
           )}
-          <Button type="submit" variant="primary" fullWidth disabled={!canEstimate}>
-            Estimate
-          </Button>
         </form>
         <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
           {notes.map((note) => (

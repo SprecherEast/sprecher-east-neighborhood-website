@@ -17,7 +17,7 @@ import { Link } from '@/platform/ui/Link'
 import { ShareBar } from '@/platform/ui/ShareBar.client'
 import { SharePie } from '@/platform/ui/SharePie.client'
 import { Text } from '@/platform/ui/Text'
-import { useCountedNumber } from '@/platform/ui/useCountedNumber.client'
+import { COUNT_MS, YEAR_COUNT_MS, useCountedNumber } from '@/platform/ui/useCountedNumber.client'
 
 import type { BillShareProps } from './billShare'
 import { joinNames, reservedNote, ROUGH_NOTE, unconfirmedNote } from './billShareNotes'
@@ -25,7 +25,11 @@ import { receiptFor } from './billShareView'
 import { shareBarFor } from './shareBarView'
 import { cityBarFor, figuresFor } from './billFigures'
 import { useReportFigures } from './BillFigures.client'
+import { ratesAtPosition } from './rateBlend'
 import { RoughEstimator } from './RoughEstimator'
+
+/** The year's position is counted in whole numbers, so each year step is this many of them */
+const YEAR_STEPS = 1000
 
 /** What the City's panel holds besides the pictures a tab only draws once (#1020) */
 export type CityPanelProps = {
@@ -72,10 +76,14 @@ export function BillShare({
   const [pulse, setPulse] = useState(0)
   const lastBill = useRef<string | null>(null)
   // Every number below counts to a new value, so a change is seen, not just found
-  const shown = useCountedNumber(target)
+  // (a new home value takes the long count, a switch of year the short one, #1087)
+  const [countMs, setCountMs] = useState(COUNT_MS)
+  const shown = useCountedNumber(target, { durationMs: countMs })
+  // The year counts too: the rates move from the old year's to the new one's, so the amounts follow
+  const yearPosition = useCountedNumber(yearIndex * YEAR_STEPS, { durationMs: YEAR_COUNT_MS })
   // Once the count has ended on a bill that differs from the last one, the total flashes once
   const billKey = `${yearIndex}:${target}`
-  const settled = shown === target
+  const settled = shown === target && yearPosition === yearIndex * YEAR_STEPS
   useEffect(() => {
     if (!settled) return
     if (lastBill.current !== null && lastBill.current !== billKey) setPulse((count) => count + 1)
@@ -88,17 +96,27 @@ export function BillShare({
 
   const text = typed ?? formatWholeDollars(year.averageHome)
   const homeValue = parseHomeValue(text)
-  const { rates } = fillFromEarlier(year.rates, years[yearIndex - 1]?.rates)
+  const yearRates = years.map(
+    (each, index) => fillFromEarlier(each.rates, years[index - 1]?.rates).rates,
+  )
+  const rates = ratesAtPosition(yearRates, yearPosition / YEAR_STEPS)
   const bill = computeBillShare(shown, rates)
   const receipt = receiptFor(bill, shown)
   const shareBar = shareBarFor(receipt.slices)
   // What a screen reader hears: the bill for the value estimated, not each step of the count
-  const summary = receiptFor(computeBillShare(target, rates), target).summary
+  const summary = receiptFor(computeBillShare(target, yearRates[yearIndex] ?? {}), target).summary
 
   // Estimating changes the numbers in the card above the box, which counts them to the new bill
   // (a reader who asked for less motion gets them at once); the page never scrolls (#1068)
   const estimate = () => {
-    if (homeValue !== null) setEstimated(homeValue)
+    if (homeValue === null) return
+    setCountMs(COUNT_MS)
+    setEstimated(homeValue)
+  }
+  // Choosing a year moves the amounts to its rates in half a second
+  const selectYear = (index: number) => {
+    setCountMs(YEAR_COUNT_MS)
+    setYearIndex(index)
   }
 
   // The City's panel follows the home typed (the average home while the box holds no number)
@@ -182,7 +200,7 @@ export function BillShare({
             note: option.note,
           }))}
           selected={yearIndex}
-          onSelect={setYearIndex}
+          onSelect={selectYear}
           notes={notes}
         />
       </div>
