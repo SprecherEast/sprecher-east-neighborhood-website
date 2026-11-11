@@ -50,6 +50,27 @@ describe('buildPlan', () => {
     expect(plan.hiddenCount).toBe(0)
   })
 
+  it('leaves out a milestone with no epic to show', () => {
+    const plan = buildPlan({
+      generatedAt: NOW,
+      milestones: [milestone(1), milestone(2), milestone(3)],
+      epics: [
+        epic(10, [issue(11)], { milestoneNumber: 1 }),
+        epic(20, [issue(21)], { milestoneNumber: 2, labels: ['epic', 'infra'] }),
+      ],
+    })
+    expect(plan.milestones.map((m) => m.number)).toEqual([1])
+  })
+
+  it('brings the milestone back once one of its epics can be shown', () => {
+    const hidden = epic(20, [], { milestoneNumber: 2, labels: ['epic', 'needs owner'] })
+    const shown = epic(20, [], { milestoneNumber: 2 })
+    const build = (epics: RawEpic[]) =>
+      buildPlan({ generatedAt: NOW, milestones: [milestone(2)], epics })
+    expect(build([hidden]).milestones).toHaveLength(0)
+    expect(build([shown]).milestones).toHaveLength(1)
+  })
+
   it('marks a closed issue that was not planned', () => {
     const plan = buildPlan({
       generatedAt: NOW,
@@ -77,7 +98,7 @@ describe('buildPlan', () => {
         milestone(3, { dueOn: '2026-12-01T00:00:00Z' }),
         milestone(4, { dueOn: '2026-11-01T00:00:00Z' }),
       ],
-      epics: [],
+      epics: [1, 2, 3, 4].map((n) => epic(n * 10, [], { milestoneNumber: n })),
     })
     expect(plan.milestones.map((m) => m.number)).toEqual([4, 3, 2, 1])
   })
@@ -104,7 +125,7 @@ describe('buildPlan', () => {
         epic(10, [issue(11), issue(12)], { milestoneNumber: 1, labels: ['epic', 'needs owner'] }),
       ],
     })
-    expect(plan.milestones[0]?.epics).toEqual([])
+    expect(plan.milestones).toEqual([])
     expect(plan.hiddenCount).toBe(3)
   })
 })
@@ -117,7 +138,7 @@ describe('milestone descriptions', () => {
         milestone(1, { description: 'Mail ada@example.com' }),
         milestone(2, { description: 'Fine' }),
       ],
-      epics: [],
+      epics: [epic(10, [], { milestoneNumber: 1 }), epic(20, [], { milestoneNumber: 2 })],
     })
     expect(plan.milestones.map((m) => [m.number, m.description])).toEqual([
       [1, ''],
@@ -131,7 +152,7 @@ describe('milestone titles', () => {
     const plan = buildPlan({
       generatedAt: NOW,
       milestones: [milestone(7, { title: 'Move 203.0.113.7', description: 'Fine' })],
-      epics: [],
+      epics: [epic(10, [], { milestoneNumber: 7 })],
     })
     expect(plan.milestones[0]).toMatchObject({ number: 7, title: 'Milestone 7', description: '' })
   })

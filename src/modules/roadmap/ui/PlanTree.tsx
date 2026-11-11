@@ -75,11 +75,9 @@ export function PlanTree({ plan, now }: { plan: Plan; now: Date }) {
             >
               <div className="space-y-4">
                 {milestone.description && <IssueMarkdown>{milestone.description}</IssueMarkdown>}
-                {milestone.epics.length > 0 ? (
-                  milestone.epics.map((epic) => <EpicBox key={epic.number} epic={epic} now={now} />)
-                ) : (
-                  <Text variant="small">No epics to show in this milestone yet.</Text>
-                )}
+                {milestone.epics.map((epic) => (
+                  <EpicBox key={epic.number} epic={epic} now={now} />
+                ))}
               </div>
             </Disclosure>
           )
