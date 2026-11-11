@@ -18,11 +18,11 @@ jobs:
     # The job always runs so "Type-check & Build" always reports a result
     # (it is a required check on main). Docs-only changes skip the heavy steps.
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Detect code changes
         id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           predicate-quantifier: 'every'
           filters: |
@@ -35,7 +35,7 @@ jobs:
               - '!.env.local.example'
               - '!LICENSE'
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: steps.filter.outputs.code == 'true'
         with:
           node-version: 20
@@ -82,11 +82,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Detect changes
         id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             intelligence:
@@ -94,7 +94,7 @@ jobs:
               - 'scripts/check-intelligence.mjs'
               - 'package-lock.json'
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: steps.filter.outputs.intelligence == 'true'
         with:
           node-version: 22
@@ -126,10 +126,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Node 22: on Node 20 knip exits 13 at random (#455)
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -148,9 +148,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -170,9 +170,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -201,7 +201,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Decide whether the browser tests are due
         id: gate
@@ -212,7 +212,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: node .github/scripts/e2e-gate.mjs
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: steps.gate.outputs.run != 'false'
         with:
           node-version: 22
@@ -232,7 +232,7 @@ jobs:
 
       - name: Keep the report
         if: failure() && steps.gate.outputs.run != 'false'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
