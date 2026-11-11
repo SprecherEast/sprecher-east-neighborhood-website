@@ -93,7 +93,7 @@ describe('ContentBlock', () => {
     expect(wrapper?.className).toContain('mt-4')
   })
 
-  it('puts a link button beside the text, bottom level with it (#1058)', async () => {
+  it('floats a link button right under the heading, with the text wrapping around it (#1062)', async () => {
     const link = {
       href: '/contact',
       label: 'Contact Us',
@@ -110,14 +110,53 @@ describe('ContentBlock', () => {
     )
 
     const button = screen.getByRole('link', { name: 'Contact Us' })
-    const row = button.parentElement?.parentElement
-    // One row: the text takes the rest of the width, the button sits at the bottom of the row
-    expect(row?.className).toContain('grid')
-    expect(row?.className).toContain('items-end')
-    expect(row?.contains(screen.getByRole('heading', { name: 'Our area' }))).toBe(true)
-    // The row spaces the button, so it needs no margin above it
-    expect(button.parentElement?.className).not.toContain('mt-4')
+    const floated = button.parentElement
+    const title = screen.getByRole('heading', { name: 'Our area' })
+    const paragraph = screen.getByText('About Our area')
+    // The button floats right, after the heading and before the paragraph it sits beside
+    expect(floated?.className).toContain('float-right')
+    expect(title.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(
+      button.compareDocumentPosition(paragraph) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    // A small margin keeps the text off the button; no row or column of its own
+    expect(floated?.className).toContain('ml-4')
+    expect(floated?.className).toContain('mb-2')
+    expect(floated?.parentElement?.className ?? '').not.toContain('grid')
+    // The text after it is not a box of its own, and what follows clears the float
+    expect(paragraph.parentElement?.className).toContain('after:clear-both')
     await expectAccessible(container)
+  })
+
+  it('floats the button before the first paragraph when the column has no heading (#1062)', () => {
+    const link = {
+      href: '/contact',
+      label: 'Contact Us',
+      external: false,
+      appearance: 'accent' as const,
+    }
+    render(
+      <main>
+        <ContentBlock
+          layout="single"
+          columns={[
+            {
+              size: 'full',
+              body: doc(paragraph(text('Plain words'))),
+              link,
+              linkAlign: 'beside' as const,
+            },
+          ]}
+        />
+      </main>,
+    )
+
+    const button = screen.getByRole('link', { name: 'Contact Us' })
+    expect(button.parentElement?.className).toContain('float-right')
+    expect(
+      button.compareDocumentPosition(screen.getByText('Plain words')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
   })
 
   it('draws text beside a side card', async () => {
