@@ -18,9 +18,9 @@ function load(name) {
 
 /** Every secret a job reads (`secrets.NAME`, `secrets['NAME']`, `toJSON(secrets)`), except the token GitHub gives each run for free. */
 function secretsRead(job) {
-  // A calling job's own `secrets: inherit` key passes secrets on; it is not a read.
+  // A calling job's `secrets: inherit` passes secrets on without naming one; a `secrets:` mapping names them, so it still counts.
   const body = { ...job }
-  delete body.secrets
+  if (body.secrets === 'inherit') delete body.secrets
   const found = JSON.stringify(body).matchAll(
     /secrets(?:\.([A-Za-z0-9_]+)|\[\\?['"]([A-Za-z0-9_]+)\\?['"]\]|(?![A-Za-z0-9_.]))/g,
   )
@@ -84,7 +84,7 @@ describe('deploy workflow and the production environment', () => {
           `${name} job ${id} names an expression`,
         ).not.toContain('${{')
         expect(
-          secretsRead(job).filter((n) => n === '*' || DEPLOY_SECRETS.includes(n)),
+          secretsRead(job).filter((n) => n === '*' || DEPLOY_SECRETS.includes(n.toUpperCase())),
           `${name} job ${id} reads a deploy secret`,
         ).toEqual([])
       }
