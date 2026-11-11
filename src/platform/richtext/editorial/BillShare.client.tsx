@@ -24,11 +24,14 @@ import { useCountedNumber } from '@/platform/ui/useCountedNumber.client'
 import type { BillShareProps } from './billShare'
 import { joinNames, reservedNote, ROUGH_NOTE, unconfirmedNote } from './billShareNotes'
 import { receiptFor } from './billShareView'
-import { toCityBar } from './cityBar'
+import { cityBarFor, figuresFor } from './billFigures'
+import { useReportFigures } from './BillFigures.client'
 import { RoughEstimator } from './RoughEstimator'
 
 /** What the City's panel holds besides the pictures a tab only draws once (#1020) */
 export type CityPanelProps = {
+  /** The tab this bill is in, so the tab's button and heading can follow it (#1029) */
+  tabId?: string
   /** A chart of the City's tax by year: the panel starts with its column for the year shown, as one bar */
   cityBars?: Extract<ChartSpec, { kind: 'stacked' }>
   /** Where the City's tax goes, drawn again for whatever the City's tax is on the home typed */
@@ -51,6 +54,7 @@ export type CityPanelProps = {
 export function BillShare({
   intro,
   years,
+  tabId,
   cityBars,
   cityBreakdown,
   definition,
@@ -79,6 +83,9 @@ export function BillShare({
     if (lastBill.current !== null && lastBill.current !== billKey) setPulse((count) => count + 1)
     lastBill.current = billKey
   }, [settled, billKey])
+  // The tab's button and heading follow the home estimated (not each step of the count)
+  const tabBar = cityBarFor(cityBars, years, yearIndex, target)
+  useReportFigures(tabId, tabBar ? figuresFor(tabBar.increase) : undefined)
   if (!year) return null
 
   const text = typed ?? formatWholeDollars(year.averageHome)
@@ -108,10 +115,7 @@ export function BillShare({
   const breakdownFactor =
     cityAmount !== null && breakdownTotal > 0 ? cityAmount / breakdownTotal : homeRatio
   // A chart whose columns are not these years cannot say which year it shows, so it draws no bar
-  const cityBar =
-    cityBars && cityBars.x.length === years.length
-      ? toCityBar(cityBars, { column: yearIndex, cityAmount, homeRatio })
-      : null
+  const cityBar = cityBarFor(cityBars, years, yearIndex, home)
   const panel = (
     <div className="space-y-6">
       {cityBar && <AmountBar title={cityBar.title} total={cityBar.total} parts={cityBar.parts} />}

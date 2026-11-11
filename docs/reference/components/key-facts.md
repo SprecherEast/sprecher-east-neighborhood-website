@@ -22,14 +22,15 @@ Source: `src/platform/richtext/editorial/KeyFacts.tsx`
 
 ## `FactCard`
 
-One fact as a small card (#509, #660, #674): the icon beside what the fact is about, in bold body-size text, on the first row; the big short value under it; an optional one-line explanation; then how sure we are in words and the source. The same order on screen and for screen readers (`dt`, then `dd`s). The icon sits inside the `dt`, decorative, and aligned to the label's first line so a label that wraps doesn't centre it awkwardly. Drawn here so the key facts row and any later block that shows a fact look the same. `variant="tab"` (#664) is the same fact as the face of a tab button: the same rows, but in phrasing elements with no card, since the tab button is the box (its border, selected state and focus ring), and with no link, because a link can't sit inside a button. The source link is drawn by whoever shows the tab's panel. A tab has the same parts for every fact (#707): the explanation is left to the open panel, so one fact having one doesn't make its tab fuller than the rest. The icon sits on its own line with the label under it, all left-aligned (#856), so a short label fits four to a row. On a phone (#704) the certainty is left to screen readers (`sr-only`) and the open panel shows it in a line. The figure keeps its last two words together, so "+$90 a year" wraps as "+$90" over "a year".
+One fact as a small card (#509, #660, #674): the icon beside what the fact is about, in bold body-size text, on the first row; the big short value under it; an optional one-line explanation; then how sure we are in words and the source. The same order on screen and for screen readers (`dt`, then `dd`s). The icon sits inside the `dt`, decorative, and aligned to the label's first line so a label that wraps doesn't centre it awkwardly. Drawn here so the key facts row and any later block that shows a fact look the same. `variant="tab"` (#664) is the same fact as the face of a tab button: the same rows, but in phrasing elements with no card, since the tab button is the box (its border, selected state and focus ring), and with no link, because a link can't sit inside a button. The source link is drawn by whoever shows the tab's panel. A tab has the same parts for every fact (#707): the explanation is left to the open panel, so one fact having one doesn't make its tab fuller than the rest. The icon sits on its own line with the label under it, all left-aligned (#856), so a short label fits four to a row. On a phone (#704) the certainty is left to screen readers (`sr-only`) and the open panel shows it in a line. The figure keeps its last two words together, so "+$90 a year" wraps as "+$90" over "a year". With a `tabId`, `{yearly}` and `{monthly}` in the figure follow the tab's whole tax bill (#1029).
 
 Source: `src/platform/richtext/editorial/FactCard.tsx`
 
-| Prop      | Type              | Required | Description |
-| --------- | ----------------- | -------- | ----------- |
-| `fact`    | `KeyFact`         | yes      |             |
-| `variant` | `"tab" \| "card"` | no       |             |
+| Prop      | Type              | Required | Description                                                                                   |
+| --------- | ----------------- | -------- | --------------------------------------------------------------------------------------------- |
+| `fact`    | `KeyFact`         | yes      |                                                                                               |
+| `variant` | `"tab" \| "card"` | no       |                                                                                               |
+| `tabId`   | `string`          | no       | The tab this button opens, so a `{yearly}` in its figure follows the tab's whole bill (#1029) |
 
 **Used by** (direct imports):
 
@@ -61,6 +62,7 @@ Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------- |
 | `intro`         | `string`                                                                                                                                                                   | yes      |                                                                                                    |
 | `years`         | `BillShareYear[]`                                                                                                                                                          | yes      |                                                                                                    |
+| `tabId`         | `string`                                                                                                                                                                   | no       | The tab this bill is in, so the tab's button and heading can follow it (#1029)                     |
 | `cityBars`      | `{ kind: "stacked"; orientation: "horizontal" \| "vertical"; x: string[]; series: { key: string; label: string; values: number[]; pattern?: "hatch" \| undefined; …`       | no       | A chart of the City's tax by year: the panel starts with its column for the year shown, as one bar |
 | `cityBreakdown` | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …`       | no       | Where the City's tax goes, drawn again for whatever the City's tax is on the home typed            |
 | `definition`    | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The short line between the two                                                                     |
@@ -88,6 +90,37 @@ Source: `src/platform/richtext/editorial/RoughEstimator.tsx`
 | `selected`      | `number`                                                       | yes      | The index of the picked option                                                                                                                                                  |
 | `onSelect`      | `(index: number) => void`                                      | yes      |                                                                                                                                                                                 |
 | `notes`         | `readonly { key: string; text: ReactNode; shown: boolean; }[]` | yes      | The notes under the buttons. A note that is not `shown` still takes its room, hidden from everyone, so the card is as tall as it will ever be and nothing moves when one shows. |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
+## `BillFiguresProvider`
+
+Shares each tab's City figures between its button and its heading, which sit apart in the tab list and the panel (#1029). The whole bill in a panel reports the figures for the home estimated and the year chosen; the button and the heading read them. Rendered on the server with the average home's figures, so nothing flashes wrong before scripts run.
+
+Source: `src/platform/richtext/editorial/BillFigures.client.tsx`
+
+| Prop       | Type                                       | Required | Description |
+| ---------- | ------------------------------------------ | -------- | ----------- |
+| `initial`  | `Record<string, BillFigures \| undefined>` | yes      |             |
+| `children` | `React.ReactNode`                          | yes      |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
+## `FilledText`
+
+A tab's text with `{yearly}` and `{monthly}` written out for the home and year shown. Text without them, or in a tab with no whole tax bill, shows as written. `keepLastWords` ties the last two words (a tab button's figure, #707).
+
+Source: `src/platform/richtext/editorial/BillFigures.client.tsx`
+
+| Prop            | Type      | Required | Description |
+| --------------- | --------- | -------- | ----------- |
+| `tab`           | `string`  | yes      |             |
+| `text`          | `string`  | yes      |             |
+| `keepLastWords` | `boolean` | no       |             |
 
 **Used by** (direct imports):
 

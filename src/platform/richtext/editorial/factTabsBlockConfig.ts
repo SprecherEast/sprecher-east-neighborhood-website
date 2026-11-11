@@ -1,5 +1,6 @@
 import type { Block } from 'payload'
 
+import { FIGURES_HELP } from './billFigures'
 import { BILL_SHARE_ONCE_MESSAGE, hasTooManyBills } from './billShare'
 import { BillShareBlockConfig } from './billShareBlockConfig'
 import { ChartBlockConfig } from './chartBlockConfig'
@@ -52,14 +53,16 @@ export const FactTabsBlockConfig: Block = {
       required: true,
       validate: rowsBetween(FACT_TABS_LIMITS.minTabs, FACT_TABS_LIMITS.maxTabs, 'tabs'),
       fields: [
-        ...keyFactFields(),
+        ...keyFactFields({ figures: true }),
         {
           name: 'heading',
           type: 'text',
           required: true,
           maxLength: FACT_TABS_LIMITS.heading,
           validate: filledText('Add the heading for this tab.'),
-          admin: { description: 'The name of what this tab opens: "Big-project money".' },
+          admin: {
+            description: `The name of what this tab opens: "Big-project money". ${FIGURES_HELP}`,
+          },
         },
         {
           name: 'definition',

@@ -52,4 +52,9 @@ describe('toCityBar', () => {
     const bar = toCityBar(SPEC, { column: 1, cityAmount: null, homeRatio: 0.5 })
     expect(bar.total).toBe('$1,733')
   })
+
+  it('reports the increase as the rounded sum of the increase parts, the figure the bar shows', () => {
+    expect(toCityBar(SPEC, { column: 1, cityAmount: 1386 }).increase).toBe(36)
+    expect(toCityBar(SPEC, { column: 0, cityAmount: 1386 }).increase).toBe(0)
+  })
 })

@@ -2,6 +2,7 @@ import type { Block, Field } from 'payload'
 
 import { CERTAINTY_OPTIONS } from '@/platform/lib/certainty'
 
+import { FIGURES_HELP } from './billFigures'
 import { KEY_FACT_LIMITS, KEY_FACTS_LIMITS } from './editorialLimits'
 import { FACT_ICON_OPTIONS } from './factIcons'
 import { filledText } from './filledText'
@@ -18,7 +19,7 @@ const labelFilled = filledText('Add what the fact is about, as a short title.')
  * optional link. One definition, so the key facts block and any later block that draws a fact
  * (the fact tabs) store it the same way.
  */
-export const keyFactFields = (): Field[] => [
+export const keyFactFields = ({ figures = false }: { figures?: boolean } = {}): Field[] => [
   {
     type: 'row',
     fields: [
@@ -41,7 +42,7 @@ export const keyFactFields = (): Field[] => [
         validate: valueFilled,
         admin: {
           width: '50%',
-          description: 'The big text: where it stands, or the number. "Pending", "2040s", "$10M".',
+          description: `The big text: where it stands, or the number. "Pending", "2040s", "$10M".${figures ? ` ${FIGURES_HELP}` : ''}`,
         },
       },
     ],
