@@ -29,8 +29,9 @@ from `NEXT_PUBLIC_SERVER_URL` in `.env.local`, and the check goes to Caddy on th
 
 The secrets the deploy reads (`VPS_HOST`, `VPS_USER`, `VPS_PORT`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`
 and `UMAMI_ADMIN_PASSWORD`) are secrets of the GitHub environment `production` (Settings →
-Environments → production), not repository secrets. That environment only runs from `main`, so a
-workflow on any other branch cannot read them (#1071). Only the jobs that read them, Preflight and
+Environments → production). That environment only runs from `main`, so a workflow on any other
+branch cannot read them (#1071). A job that names an environment still sees repository secrets, so
+they are only out of reach once the repository-level copies of the same names are deleted. Only the jobs that read them, Preflight and
 Deploy, name the environment; Build release names none and reads no secret.
 `.github/scripts/deploy-secrets-environment.test.mjs` fails when that stops being true.
 

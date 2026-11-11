@@ -16,12 +16,20 @@ function load(name) {
   return yaml.load(fs.readFileSync(path.join(WORKFLOWS, name), 'utf8'))
 }
 
-/** Every `secrets.NAME` a job reads, except the token GitHub gives each run for free. */
+/** Every secret a job reads (`secrets.NAME`, `secrets['NAME']`, `toJSON(secrets)`), except the token GitHub gives each run for free. */
 function secretsRead(job) {
-  const names = JSON.stringify(job).match(/secrets\.[A-Za-z0-9_]+/g) ?? []
-  return [...new Set(names.map((n) => n.slice('secrets.'.length)))].filter(
+  const found = JSON.stringify(job).matchAll(
+    /secrets(?:\.([A-Za-z0-9_]+)|\[\\?['"]([A-Za-z0-9_]+)\\?['"]\]|(?![A-Za-z0-9_.\[]))/g,
+  )
+  return [...new Set([...found].map((m) => m[1] ?? m[2] ?? '*'))].filter(
     (n) => n !== 'GITHUB_TOKEN',
   )
+}
+
+/** The environment a job names, whether written `environment: production` or with a `name:` key. */
+function environmentOf(job) {
+  const env = job.environment
+  return typeof env === 'object' && env !== null ? env.name : env
 }
 
 describe('deploy workflow and the production environment', () => {
@@ -37,26 +45,30 @@ describe('deploy workflow and the production environment', () => {
     (id) => {
       const reads = secretsRead(jobs[id])
       if (reads.length > 0) {
-        expect(jobs[id].environment, `${id} reads ${reads.join(', ')}`).toBe(ENVIRONMENT)
+        expect(environmentOf(jobs[id]), `${id} reads ${reads.join(', ')}`).toBe(ENVIRONMENT)
       } else {
-        expect(jobs[id].environment, `${id} reads no secret`).toBeUndefined()
+        expect(environmentOf(jobs[id]), `${id} reads no secret`).toBeUndefined()
       }
     },
   )
 
   it('the build job, which runs npm install scripts, reads no secret and names no environment', () => {
     expect(secretsRead(jobs.build)).toEqual([])
-    expect(jobs.build.environment).toBeUndefined()
+    expect(environmentOf(jobs.build)).toBeUndefined()
   })
 
-  it('every job that runs for a pull request of this repository stays out of the environment', () => {
+  it('no workflow but the deploy names the environment, in either form', () => {
     // Only the reusable deploy is allowed to name it, and CI calls that on pushes to main alone.
     for (const name of fs.readdirSync(WORKFLOWS).filter((f) => /\.ya?ml$/.test(f))) {
       if (name === 'deploy.yml') continue
-      const text = fs.readFileSync(path.join(WORKFLOWS, name), 'utf8')
-      expect(text, `${name} must not use the ${ENVIRONMENT} environment`).not.toMatch(
-        new RegExp(`environment:\\s*['"]?${ENVIRONMENT}\\b`),
-      )
+      for (const [id, job] of Object.entries(load(name).jobs ?? {})) {
+        expect(environmentOf(job), `${name} job ${id} must not use ${ENVIRONMENT}`).not.toBe(
+          ENVIRONMENT,
+        )
+        expect(secretsRead(job), `${name} job ${id} reads a deploy secret`).not.toEqual(
+          expect.arrayContaining(['VPS_SSH_KEY']),
+        )
+      }
     }
   })
 
