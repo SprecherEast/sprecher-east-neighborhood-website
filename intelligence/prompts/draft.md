@@ -55,10 +55,13 @@ One item with `$.candidate`, `$.taxonomy` (the site's category tree), `$.verific
    are none.
 8. Set `$.confidence`: `high` when everything is confirmed, `medium` with minor gaps, `low`
    otherwise.
-9. Never state an end time, duration, address or price the input doesn't give. List every
-   missing or unconfirmed fact in `$.missing`, in plain words ("start time not
-   published", "address not confirmed"), from `$.verification.unknowns`. The submit stage sends
-   these to the editor as a review note.
+9. For an incident, hazard or safety item an editor approved, follow the brand voice's "Editorial
+   integrity": a calm factual title and summary, attribution, confirmed or reported, no trend
+   claim, the place as precisely as the source gives it, what is not known in `$.missing`.
+10. Never state an end time, duration, address or price the input doesn't give. List every
+    missing or unconfirmed fact in `$.missing`, in plain words ("start time not
+    published", "address not confirmed"), from `$.verification.unknowns`. The submit stage sends
+    these to the editor as a review note.
 
 ## Charts (explainer posts only)
 

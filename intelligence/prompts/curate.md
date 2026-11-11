@@ -51,7 +51,9 @@ this stage (its collection, id, hash and status), or null when the CMS has none.
 You are the second of the two reads the pipeline does (`coverage.md`, "Review passes"). Check the verify result
 against its five checks: a fact with only a secondary report, a place not tested, a physical fact
 or a project stage taken from an announcement alone sends the item to `needs-review`. A safety
-item is never `accept`: decide `needs-review`.
+item is never `accept`: decide `needs-review`, and apply `coverage.md`, "Public interest and
+context": the reasons say whether residents can act on it, whether it is confirmed or reported,
+and what it does not show. Never weigh an effect on home values.
 
 ## Discovering sources
 
