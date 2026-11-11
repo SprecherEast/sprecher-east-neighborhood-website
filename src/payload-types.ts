@@ -665,7 +665,7 @@ export interface ContentBlock {
         /**
          * Where the link button sits in its column.
          */
-        linkAlign?: ('start' | 'end') | null
+        linkAlign?: ('start' | 'end' | 'beside') | null
         id?: string | null
       }[]
     | null

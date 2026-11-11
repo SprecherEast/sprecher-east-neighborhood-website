@@ -56,6 +56,7 @@ const columnFields: Field[] = [
     options: [
       { label: 'Start (left)', value: 'start' },
       { label: 'End (right)', value: 'end' },
+      { label: 'Beside the text (right, level with the last line)', value: 'beside' },
     ],
     admin: {
       description: 'Where the link button sits in its column.',

@@ -93,6 +93,33 @@ describe('ContentBlock', () => {
     expect(wrapper?.className).toContain('mt-4')
   })
 
+  it('puts a link button beside the text, bottom level with it (#1058)', async () => {
+    const link = {
+      href: '/contact',
+      label: 'Contact Us',
+      external: false,
+      appearance: 'accent' as const,
+    }
+    const { container } = render(
+      <main>
+        <ContentBlock
+          layout="single"
+          columns={[{ ...column('Our area', 'full'), link, linkAlign: 'beside' as const }]}
+        />
+      </main>,
+    )
+
+    const button = screen.getByRole('link', { name: 'Contact Us' })
+    const row = button.parentElement?.parentElement
+    // One row: the text takes the rest of the width, the button sits at the bottom of the row
+    expect(row?.className).toContain('grid')
+    expect(row?.className).toContain('items-end')
+    expect(row?.contains(screen.getByRole('heading', { name: 'Our area' }))).toBe(true)
+    // The row spaces the button, so it needs no margin above it
+    expect(button.parentElement?.className).not.toContain('mt-4')
+    await expectAccessible(container)
+  })
+
   it('draws text beside a side card', async () => {
     const { container } = render(
       <main>

@@ -23,4 +23,13 @@ describe('toContentBlockProps link position', () => {
     const columns = 'columns' in props ? props.columns : []
     expect(columns.map((c) => c.linkAlign)).toEqual(['end', undefined, undefined])
   })
+
+  it('passes on a link button placed beside the text (#1058)', () => {
+    const props = toContentBlockProps({
+      columns: [column({ enableLink: true, link, linkAlign: 'beside' })],
+    })
+
+    const columns = 'columns' in props ? props.columns : []
+    expect(columns.map((c) => c.linkAlign)).toEqual(['beside'])
+  })
 })
