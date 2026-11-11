@@ -17,6 +17,7 @@ export const GALLERY_COMPONENTS = [
   'EmptyState',
   'Disclosure',
   'ProgressBar',
+  'ShareBar',
   'SharePie',
   'AmountBar',
   'Tabs',

@@ -10,7 +10,12 @@ import { Text } from '@/platform/ui/Text'
 import { ActionsGallery } from './ActionsGallery.client'
 import { ChartGallery } from './ChartGallery'
 import { DisplayGallery } from './DisplayGallery'
-import { AmountBarGallery, ProgressGallery, SharePieGallery } from './ProgressGallery'
+import {
+  AmountBarGallery,
+  ProgressGallery,
+  ShareBarGallery,
+  SharePieGallery,
+} from './ProgressGallery'
 import { FieldsGallery } from './FieldsGallery.client'
 import { GALLERY_COMPONENTS } from './galleryComponents'
 import { HeadersGallery } from './HeadersGallery'
@@ -62,6 +67,7 @@ export default function GalleryPage() {
         <FieldsGallery />
         <DisplayGallery />
         <ProgressGallery />
+        <ShareBarGallery />
         <SharePieGallery />
         <AmountBarGallery />
         <TabsGallery />

@@ -16,6 +16,7 @@ import { AmountBar } from '@/platform/ui/AmountBar'
 import { Card, CardTitle } from '@/platform/ui/Card'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
 import { Link } from '@/platform/ui/Link'
+import { ShareBar, type ShareBarSlice } from '@/platform/ui/ShareBar.client'
 import { SharePie, type SharePieSlice } from '@/platform/ui/SharePie.client'
 import { Text } from '@/platform/ui/Text'
 
@@ -35,6 +36,17 @@ const TONE: Record<BillBody, SharePieSlice['tone']> = {
   matc: 'dark',
 }
 
+/** The bar's order, as it always was: the schools, the City (the highlighted slice), the county, the college */
+const BAR_ORDER: readonly BillBody[] = ['schools', 'city', 'county', 'matc']
+
+/** A slice's tone in the bar, in the same lightness order as the pie's wedges */
+const BAR_TONE: Record<BillBody, ShareBarSlice['tone']> = {
+  schools: 'light',
+  city: 'highlight',
+  county: 'medium',
+  matc: 'strong',
+}
+
 /** What the City's panel holds besides the pictures a tab only draws once (#1020) */
 export type CityPanelProps = {
   /** A chart of the City's tax by year: the panel starts with its column for the year shown, as one bar */
@@ -47,7 +59,7 @@ export type CityPanelProps = {
 
 /**
  * The whole property-tax bill at the top of a fact tab (#1018, #1022): two cards of one height, side
- * by side from `lg` and stacked below it. The Rough Estimator holds the home value the reader can
+ * by side from `lg` and stacked below it, with the same bill under them as a bar whose City slice joins the City's panel. The Rough Estimator holds the home value the reader can
  * change (it starts at the City's average home), the switch between tax years and the notes on how
  * rough the answer is; the other is the bill as a pie whose wedges are as big as their shares. The
  * City's panel sits under both: the City's own tax as one bar, a short line, then where that tax
@@ -128,6 +140,28 @@ export function BillShare({
             : []
         })
       : []
+  // The bar is made from the pie's slices, so the two always show the same shares for the same home and year
+  const barSlices: ShareBarSlice[] = BAR_ORDER.flatMap((key) => {
+    const slice = slices.find((candidate) => candidate.key === key)
+    return slice
+      ? [
+          {
+            key,
+            share: slice.share,
+            tone: BAR_TONE[key],
+            label: `${slice.percent}%`,
+            // The City's slice says what it is, name first and then the number, as the page's other lines do
+            ...(key === 'city' ? { name: 'City tax' } : {}),
+          },
+        ]
+      : []
+  })
+  const barLabel = `Your whole property tax bill: ${barSlices
+    .map((bar) => {
+      const slice = slices.find((candidate) => candidate.key === bar.key)
+      return `${slice?.name} ${slice?.percent}%`
+    })
+    .join(', ')}`
   const receiptTotal = bill?.complete === true && bill.total !== null ? bill.total : null
   const pieLabel =
     slices.length > 0
@@ -204,9 +238,15 @@ export function BillShare({
           </div>
         </Card>
       </div>
-      <Card variant="elevated" padding="sm" className="sm:p-6">
-        {panel}
-      </Card>
+      {barSlices.length > 0 ? (
+        <ShareBar slices={barSlices} label={barLabel}>
+          {panel}
+        </ShareBar>
+      ) : (
+        <Card variant="elevated" padding="sm" className="sm:p-6">
+          {panel}
+        </Card>
+      )}
       <Text variant="small">
         Uses {year.year} rates.
         {year.source && (
