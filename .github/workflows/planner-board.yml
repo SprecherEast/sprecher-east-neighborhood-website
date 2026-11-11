@@ -1,26 +1,35 @@
 name: Planner Board
 
-# Keeps the organization board in step with the work (#941), signed in as the "Sprecher East
+# Keeps the organization board in step with the work (#941, #1089), signed in as the "Sprecher East
 # Planner" app. A new or reopened issue goes into the sprint that is running; an assigned issue,
-# which is how work is claimed, also becomes In progress. In review and Done are GitHub's own board
-# rules. Run it by hand with an issue number to catch up one issue. It checks out and runs only the
-# repository's own main-branch code and never anything from an issue's text.
+# which is how work is claimed, also becomes In progress; the "ready" label moves a card between
+# Backlog and Ready, and only while the issue passes the issue check and does not wait for the
+# owner. Label changes made by other workflows start no run (GITHUB_TOKEN), so this one runs the
+# check's rules itself when a person or an agent changes the issue; a run can read the issue a
+# moment before another workflow's labels land, and the next event or a manual run catches up. In review and Done are GitHub's own board
+# rules. Run it by hand with an issue number to bring one card in line with its issue. It checks
+# out and runs only the repository's own main-branch code. Issue text is untrusted: it goes only
+# through the pure rule functions, and the label name is an environment variable compared with
+# fixed names; neither reaches a shell.
 
 on:
   issues:
-    types: [opened, reopened, assigned]
+    types: [opened, reopened, assigned, labeled, unlabeled, edited, milestoned, demilestoned]
   workflow_dispatch:
     inputs:
       issue:
-        description: Issue number to bring up to date
+        description: Issue number to bring in line with its labels and assignee
         required: true
         type: string
 
 permissions:
   contents: read
 
+# Work runs (opened, reopened, assigned) queue apart from the others, so the labels a form adds
+# cannot push a waiting work run out of the queue (GitHub keeps one waiting run per group). The
+# others read the issue as it is, so the last one to run is enough.
 concurrency:
-  group: planner-board-${{ github.event.issue.number || inputs.issue }}
+  group: planner-board-${{ github.event.issue.number || inputs.issue }}-${{ contains(fromJSON('["opened","reopened","assigned"]'), github.event.action) && 'work' || 'state' }}
   cancel-in-progress: false
 
 jobs:
@@ -31,8 +40,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          sparse-checkout: scripts
-          sparse-checkout-cone-mode: true
+          sparse-checkout: |
+            /scripts/
+            /.github/scripts/
+            /.github/label-policy.json
+          sparse-checkout-cone-mode: false
           persist-credentials: false
 
       - name: Get a short-lived token as the app
@@ -51,5 +63,6 @@ jobs:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           REPO: ${{ github.repository }}
           ISSUE: ${{ github.event.issue.number || inputs.issue }}
-          ACTION: ${{ github.event.action || 'assigned' }}
+          ACTION: ${{ github.event.action || 'sync' }}
+          LABEL: ${{ github.event.label.name }}
         run: node scripts/planner-board.mjs

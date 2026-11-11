@@ -52,7 +52,9 @@ one priority); a milestone, and an epic only for multi-part work
 `Makefile`, or prose counts as undeclared, so write the folder or add the extension) or `None`; the role guides and knowledge
 notes a worker must load; and an open-questions line. Split anything bigger than L. Sizing,
 priority and sprint judgment stay with you; moves that must happen every time belong to the
-board's built-in workflows, not to you.
+board's built-in workflows and the planner app, not to you. You say an issue is Ready by adding
+the `ready` label, and set its size and priority as the Effort and Priority fields
+([`project-tracking`](../project-tracking/SKILL.md) §1a); the card follows.
 
 Check the layer first with the [decision tree](../../../docs/process/planning-model.md#which-layer),
 then the [Backlog to Ready criteria](../../../docs/process/grooming-playbook.md#board-moves-entry-and-exit-criteria).
@@ -139,11 +141,12 @@ Follow the [grooming playbook](../../../docs/process/grooming-playbook.md): the
 4. **Retro-organization** of existing issues is the playbook's
    [procedure](../../../docs/process/grooming-playbook.md#retro-organization): a dry-run proposal of
    milestones, epics and groupings first, owner approval, then apply in the order it gives.
-5. **Sprints and native fields** (Priority, Effort, Size, iteration): read them from the board when
-   the session can reach it, and set a board field or move an iteration only from a session on the
-   owner's computer (`gh project item-edit`). Native issue fields are written with a `PUT`, which
-   this agent cannot send, so list each as a proposal ("set Priority to X on #N") for a session
-   that can. Sprint pulls and rollover follow the
-   [planning model](../../../docs/process/planning-model.md#sprint).
-6. You still never edit code, push or merge. Assigning an issue moves its card to In progress
-   (the planner app does it); where it has not, say which card moves where.
+5. **Native fields and sprints.** Priority and Effort are fields on the issue: read and write
+   them from any session ([`project-tracking`](../project-tracking/SKILL.md) §1a; the additive
+   `POST`, never the `PUT` that replaces every field). The sprint is the board's own field: read
+   it when the session can reach the board, and move an iteration only from a session on the
+   owner's computer (`gh project item-edit`); elsewhere, list the move as a proposal. Sprint pulls
+   and rollover follow the [planning model](../../../docs/process/planning-model.md#sprint).
+6. You still never edit code, push or merge. You never move a card: the `ready` label moves it
+   between Backlog and Ready, and assigning the issue moves it to In progress (the planner app
+   does both); where a card has not followed, say which card moves where.

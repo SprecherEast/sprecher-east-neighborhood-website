@@ -22,8 +22,9 @@ items down, adds detail, order and size, until an item can be finished within on
 ready to be selected. Each column's criteria below are a Definition of Ready or Done for that move.
 
 The chief of staff never edits code, pushes or merges. It reads, writes issues and comments, and
-sets issue fields. It does not move cards itself: assigning an issue does, through the planner app, and where that
-did not happen it comments which card should move, as [how we work](/docs/process/project-management.md#the-board) says.
+sets issue fields and labels. It does not move cards itself: the `ready` label and assigning an
+issue do, through the planner app, and where that did not happen it comments which card should
+move, as [how we work](/docs/process/project-management.md#the-board) says.
 
 ## Modes: dry run and apply
 
@@ -54,13 +55,16 @@ The Definition of Ready, spelled out:
 - The layer is right ([which layer](/docs/process/planning-model.md#which-layer)): small enough for one pull
   request and one sprint (INVEST: independent, estimable, small, testable), in a milestone, with an
   epic above it only for multi-part work ([the rule](/AGENTS.md#one-issue-one-pull-request)).
-- Labels: one type, at least one area, one priority. A size on the board when it can be read.
+- Labels: one type, at least one area, one priority. A size, set as the Effort field.
 - Files likely touched and must not touch, filled in or `None`.
 - Known dependencies are blocked-by links, and nothing it is blocked by is still open.
 - It is not a duplicate of anything (the sweep checked) and carries no `needs owner` label.
 - It carries no `needs grooming` label: the [issue check](/docs/process/issue-and-pr-checks.md#the-issue-check)
   names each missing item, so fixing those clears it.
 - The role guides and knowledge notes a worker must load are named.
+
+When all of it holds, add the `ready` label: that is the move. The planner app sets the card to
+Ready, and refuses while the issue has `needs owner` or fails the issue check.
 
 ### Ready to In progress
 
@@ -97,8 +101,9 @@ Ready only through the Backlog to Ready criteria again.
 
 ### Park
 
-Parking is a deliberate "not now". Move the card to Backlog, take it out of the sprint, and
-comment the reason and the condition that would bring it back. A parked item whose condition will
+Parking is a deliberate "not now". Remove the `ready` label, which moves the card to Backlog,
+and comment the reason and the condition that would bring it back. Taking a card out of the
+sprint needs the board, so name it in the report for a session that can reach it. A parked item whose condition will
 never come is obsolete: label it `proposed-close` for the owner, and never close an old idea
 yourself. Blocked work is not parked; it keeps its blocked-by link and stays where it is.
 
@@ -163,7 +168,7 @@ comment. Duplicate bugs may be closed as the
 
 ### Missing fields
 
-Any of: acceptance criteria, type, area, priority, size where readable, files declared, a milestone
+Any of: acceptance criteria, type, area, priority, size, files declared, a milestone
 ([the rule](/AGENTS.md#one-issue-one-pull-request)), blocked-by
 links for dependencies named in prose.
 
@@ -181,7 +186,8 @@ fits one line, means a proposed split.
 
 - **Parent and milestone:** a child carries its epic's milestone; an epic's milestone matches an
   outcome it serves.
-- **Priority:** a blocker ranked below what it blocks; a child ranked far above its parent's need.
+- **Priority:** a blocker ranked below what it blocks; a child ranked far above its parent's need;
+  a `priority:` label and a Priority field that differ (the label wins, since the checks read it).
 - **Labels:** none that duplicate hierarchy; the `epic` marker only on parents.
 - **Dependencies:** blocked-by links instead of prose, and none that form a cycle.
 

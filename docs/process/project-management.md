@@ -62,6 +62,8 @@ The allowed labels are in [`.github/label-policy.json`](../../.github/label-poli
     `needs owner` issue is listed in the checklist of the owner-actions epic (#169); its parent
     stays the epic it belongs to. The issues that depend on it are marked **blocked by** it, so
     nobody starts them too early.
+  - `ready`: the issue meets the [Definition of Ready](#definition-of-ready). Adding it moves the
+    card to Ready and removing it parks the card in Backlog ([the board](#the-board)).
   - `scope-creep`: work found while doing another issue. It gets its own issue, linked to the
     original with a `[SCOPE]` comment, and the original PR does not widen.
   - `proposed-close`: an agent thinks the issue is obsolete, or duplicates another idea. It waits
@@ -86,7 +88,10 @@ merge or remove the label himself.
 How to ask him ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) step 5):
 one plain question, the options in a sentence each, a recommendation, and what happens next.
 
-Priority lives only in the `priority:` label. (This and the board section below describe the setup before the repository moved to an organization; the [planning model](planning-model.md#githubs-model-compared-with-jiras) says what applies now, and a later change updates this page.) GitHub's issue types (Bug, Feature, Task) are
+Priority is the `priority:` label, which the checks read, and the organization's native Priority
+field (its Urgent option is not used); the two agree, and the sweep reports any that differ. Size is the
+native Effort field: Low is S, Medium is M, High is L
+([the board](#the-board)). GitHub's issue types (Bug, Feature, Task) are
 optional; the type label stays the required one because the `PR Policy` check reads labels.
 
 ## The pull request gate
@@ -125,8 +130,10 @@ built on 2026-10-21 from the spec in #90 and moved to the organization after.
 | In review   | A PR that closes it is open, even as a draft. Linking the PR moves the issue here.        |
 | Done        | Merged: the issue closes and the item moves here on its own. `wrapped` checks any deploy. |
 
-- **Fields:** Status, Sprint, Size (S is under half a day, M is 1–2 days, L is up to 3 days),
-  plus the built-in Labels, Milestone, Parent issue and Sub-issue progress.
+- **Fields:** Status and Sprint are the board's own. Priority and Effort are the organization's
+  issue fields, set on the issue; a view shows them once it includes their columns. Effort is the
+  size: Low is S (under half a day), Medium is M (1–2 days), High is L (up to 3 days). Agents no
+  longer write the board's older Size field. Plus the built-in Labels, Milestone and Parent issue.
 - **Views:** This sprint (board), Backlog (everything not Done; each epic expands to its
   sub-issues), Roadmap (grouped by milestone, dated by Sprint), and Done last 7 days (issues closed
   as completed, `reason:completed`).
@@ -134,21 +141,25 @@ built on 2026-10-21 from the spec in #90 and moved to the organization after.
   parent. Linking a PR moves an issue to In review. Merging its PR, or closing it for any reason
   (also as not planned), moves it to Done. Moving an item to Done by hand doesn't close the issue.
   Closed items are archived after two weeks.
-- **Access:** changing the board needs the owner's account with the `project` scope: the owner in
-  the web UI, or an agent on his computer signed in with `gh` and that scope. A cloud session's GitHub access
-  can be read-only: an error such as "Resource not accessible by integration" means the Claude
-  GitHub app is probably not installed on the organization (not confirmed). The planner app is the
-  route to the board that does not need anyone's computer. A cloud session that can write issues keeps
-  issue state, labels, parents and milestones right and never needs the board: assigning an issue
-  is how work is claimed, and the planner app then moves the card (below).
+- **Access:** the board belongs to the organization and a cloud session reaches only the
+  repository, so an agent changes the issue and the card follows: assigning claims it, the `ready`
+  label says it is groomed, and Priority and Effort are fields on the issue (IDs in
+  `.github/issue-fields.json`). Reading the board or changing it directly needs the owner's
+  account with the `project` scope: in the web UI, or `gh` on his computer. A write that fails with
+  "Resource not accessible by integration" means the session's GitHub access is read-only
+  ([start a session](start-a-session.md#check-it-works-on-the-organizations-repository)).
 - **The planner app:** a GitHub App owned by the organization can read and change the board without
   anyone's computer, signing in with a short-lived token made from a key kept only as a repository
   secret. The `Planner App Check` workflow, run by hand, proves it can read the board and write to
   one throwaway issue and its card. One rule guards sprint history: work that finished in a sprint
   keeps that sprint, and only unfinished work moves forward (GitHub has no setting that locks it,
   so the app's code enforces it). The `Planner Board` workflow runs as the app on a native signal,
-  not on comments: a new or reopened issue joins the sprint that is running, and an assigned issue
-  also becomes In progress. A card never moves backwards, and it can be run by hand for one issue.
+  not on comments: a new or reopened issue joins the sprint that is running, an assigned issue
+  also becomes In progress, and the `ready` label moves a card from Backlog to Ready. A Ready card
+  returns to Backlog when the label goes, or while the issue has `needs owner` or fails
+  [the issue check](issue-and-pr-checks.md#the-issue-check) (the app runs the check's rules itself
+  when the issue changes; a manual run catches up anything it missed). A card never moves back from In progress, In review or Done. Run
+  by hand for one issue, the workflow brings that card in line with the issue as it is now.
 
 ## Grooming and work in progress
 
@@ -162,9 +173,9 @@ parallel work when issues don't touch the same files, with no fixed number, and 
 - **Groom before every major change:** a new epic, a sprint, or a batch of work. Each issue gets
   its plain summary, acceptance criteria, a milestone, and an epic only for multi-part work
   ([the rule](../../AGENTS.md#one-issue-one-pull-request)), labels (type, area, `priority:`) and a
-  **Size**, which is effort: S, M or L (a cloud session that can't read the board skips Size and
-  says so, as in the Definition of Ready). Anything bigger is split. When it meets the
-  [Definition of Ready](#definition-of-ready), it moves to **Ready**.
+  size, which is the Effort field: Low, Medium or High. Anything bigger is split. When it meets
+  the [Definition of Ready](#definition-of-ready), it gets the `ready` label and its card moves to
+  **Ready**.
 - **Work in progress has no fixed number.** What limits it is whether issues touch the same
   files (#721). Past
   the first, an issue starts only if its **Files likely touched** don't overlap with those of any
@@ -181,8 +192,9 @@ parallel work when issues don't touch the same files, with no fixed number, and 
 - **In progress is set when work starts,** before the first commit, so the board shows it. In
   review and Done stay automatic.
 - **Assigning the issue moves its card** to In progress, through the planner app (the Access note
-  above), from any device. An agent never moves a card by hand or by comment: it assigns the issue and the app does the rest. Where that workflow is not running, a session on the owner's computer
-  moves the card, and a cloud session says on the issue which card to move.
+  above), from any device. An agent never moves a card by hand or by comment: it assigns the issue
+  or sets `ready`. Where that workflow is not running, a session on the owner's computer moves
+  the card, and a cloud session says on the issue which card to move.
 
 ## The record on the issue
 
@@ -214,9 +226,8 @@ An issue is **Ready** when it has:
 - **Files likely touched** and **Must not touch** filled in (write `None` when there is nothing),
   so overlap with other work can be checked
 - a milestone, and an epic only for multi-part work
-  ([the rule](../../AGENTS.md#one-issue-one-pull-request)), labels (type, area, priority) and a size.
-  When the board can't be read (cloud sessions), skip Size and say so on the issue
-  ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §1)
+  ([the rule](../../AGENTS.md#one-issue-one-pull-request)), labels (type, area, priority) and a
+  size, the Effort field ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §1a)
 - no open blocker: nothing it's **blocked by** is still open
 - no `needs owner` label: that work waits for the owner, not for a sprint
 - no `needs grooming` label: [the issue check](issue-and-pr-checks.md#the-issue-check) found nothing missing
