@@ -7,7 +7,22 @@ import { loadPlan } from './getPlan'
 
 const raw = {
   milestones: [{ number: 1, title: 'M', description: '', state: 'open' as const, dueOn: null }],
-  epics: [],
+  epics: [
+    {
+      epic: {
+        number: 10,
+        title: 'E',
+        body: '',
+        state: 'open' as const,
+        stateReason: null,
+        closedAt: null,
+        labels: ['epic'],
+        milestoneNumber: 1,
+        url: 'https://github.com/o/r/issues/10',
+      },
+      children: [],
+    },
+  ],
 }
 
 afterEach(() => {
