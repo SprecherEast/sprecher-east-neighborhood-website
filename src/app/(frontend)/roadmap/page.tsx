@@ -24,7 +24,7 @@ export default async function RoadmapPage() {
 
   return (
     <div className={PAGE_SHELL}>
-      <PageHeader eyebrow="Roadmap" title="What we’re working on" description={intro} />
+      <PageHeader title="Roadmap" description={intro} />
       <div className="container max-w-3xl space-y-8">
         {stats.epics > 0 && <PlanSummary stats={stats} generatedAt={plan.generatedAt} />}
         <PlanTree plan={plan} now={now} />
