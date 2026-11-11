@@ -101,7 +101,8 @@ sources conflict, or the item is borderline. Route a change to an item already i
 
 How curate reads an incident, hazard or other safety item, under the standard in
 [Editorial integrity](../docs/guidelines/brand-voice.md#editorial-integrity). Such an item is
-`needs-review` (see "Review passes"); this decides what the editor is told.
+never `accept` (see "Review passes"): it is `needs-review` unless rule 4 routes it as `reject`
+(`past`) or `update`. This decides what the editor is told.
 
 1. **Public interest.** Can residents use it: a hazard to avoid, a service change, a decision, a
    thing to do? Record the answer in `$.reasons`. An effect on home values is never a reason to

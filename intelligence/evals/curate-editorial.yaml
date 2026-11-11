@@ -74,6 +74,9 @@ cases:
       startsAt: 2026-10-20T08:00:00-05:00
       locationText: Cottage Grove Road, Madison
     expected: { decision: reject, coverage: catchment, flags: [past], route: none }
+    graders:
+      - check: model
+        rubric: The reasons say the incident was resolved and needs no action.
     why: Resolved and already past, with nothing left to act on; an earlier published notice is corrected or marked resolved, not silently deleted.
   - id: editorial-constructive-neighborhood-news
     stage: curate
@@ -107,11 +110,5 @@ cases:
       contentHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
       status: active
     expected:
-      {
-        decision: update,
-        coverage: core,
-        route: reportItem,
-        targetCollection: posts,
-        targetId: 77,
-      }
+      { decision: update, coverage: core, route: reportItem, targetCollection: posts, targetId: 77 }
     why: An item already published is updated with its resolution and the date, never rejected or silently removed.
