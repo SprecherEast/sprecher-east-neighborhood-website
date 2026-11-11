@@ -85,7 +85,7 @@ treatment: follow [`visual-design-review`](../visual-design-review/SKILL.md).
 3. Nothing changed? Check the PR's `Behavior change: none` reason is true of the diff ([how to decide](../../../docs/guidelines/development.md#documentation-follows-behavior)).
 4. A change to `docs/knowledge/map.json` can drop a module from the check: say why in the PR.
 5. Run `npm run knowledge:check -- --body-file <your draft description>` on the committed diff. It applies the rule CI applies, so a missing note shows now and not after the pull request opens. Fix what it reports; a pass here is advisory and CI decides, and is not a reason to skip step 3. Compare against the pull request's real base after fetching it (`--base`), which for a pull request in a stack is the pull request below.
-6. Read the diff against each note it maps to, and flag only a claim in the note that the diff makes false, with the sentence and the line that contradicts it. Nothing to update is a valid answer: do not rewrite a note that is still true, add detail the note did not carry, or touch a note only because the folder changed. This is advice for the author and the reviewer; it does not block a pull request by itself, and CI does not depend on it.
+6. Read the diff against each note it maps to, and flag only a claim in the note that the diff makes false, with the sentence and the line that contradicts it. Nothing to update is a valid answer: do not rewrite a note that is still true, or touch a note only because the folder changed. Beyond what steps 1 and 2 require, do not add detail the note did not carry. This read is not a CI check and does not fail the pull request on its own, but a note the diff makes false still breaches guard rail 9: fix it in this pull request.
 
 ## 3. Fix
 
