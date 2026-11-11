@@ -105,6 +105,11 @@ export const THEME_TOKENS = {
     meaning: 'The thin outline of every breakdown mark, so the pale steps keep a visible edge',
   },
   radius: { modes: 'base', meaning: 'Base corner radius; sm to xl derive from it' },
+  'type-fine': {
+    modes: 'base',
+    meaning:
+      'Finest text size (`text-fine`): the small uppercase labels beside a value, smaller than `text-xs`',
+  },
 } as const satisfies Record<string, { modes: Modes; meaning: string }>
 
 export type ThemeToken = keyof typeof THEME_TOKENS

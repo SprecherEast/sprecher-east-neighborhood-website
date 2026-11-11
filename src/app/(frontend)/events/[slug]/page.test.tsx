@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 // The modules are replaced: this tests the page's wiring, not events or the renderer
 vi.mock('next/headers', () => ({ draftMode: async () => ({ isEnabled: false }) }))
 vi.mock('@/modules/events/server', () => ({
+  eventByline: () => [{ label: 'When', value: 'Sat, Nov 7' }],
   eventHeaderProps: () => ({ title: 'Leaf raking' }),
   EventLocation: () => null,
   eventJsonLd: () => ({}),
@@ -31,5 +32,19 @@ describe('/events/[slug]', () => {
       '/events',
     )
     expect(screen.queryByText(/Stay in the Loop|find ways to connect/)).toBeNull()
+  })
+
+  it('draws the event’s when and where as the metadata bar in the article column (#1002)', async () => {
+    render(await EventPage({ params: Promise.resolve({ slug: 'leaf-raking' }) }))
+
+    expect(screen.getByText('When').closest('dl')?.closest('header')).toBeNull()
+    expect(screen.getByText('When').nextElementSibling?.textContent).toBe('Sat, Nov 7')
+  })
+
+  it('gives the bar the width of what sits under it, the whole column, not the reading width (#1002)', async () => {
+    render(await EventPage({ params: Promise.resolve({ slug: 'leaf-raking' }) }))
+
+    const bar = screen.getByText('When').closest('dl')?.parentElement?.parentElement
+    expect(bar?.className).not.toMatch(/max-w|mx-0/)
   })
 })

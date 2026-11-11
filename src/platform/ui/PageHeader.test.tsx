@@ -9,11 +9,6 @@ import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
 
-const facts = [
-  { label: 'Date', value: 'Tue, Mar 3, 2026' },
-  { label: 'Format', value: 'In person' },
-]
-
 describe('PageHeader', () => {
   it("draws the page's one h1 with its eyebrow and description, with no accessibility violations", async () => {
     const { container } = render(
@@ -75,15 +70,10 @@ describe('PageHeader', () => {
     render(<PageHeader variant="compact" title="Log In" eyebrow="Account" />)
   })
 
-  it('heads a post or an event on a plain band with no picture, the facts under it (#1013)', async () => {
+  it('heads a post or an event on a plain band with no picture or facts (#1013, #1002)', async () => {
     const { container } = render(
       <main>
-        <PageHeader
-          variant="band"
-          eyebrow={<Badge>Parks</Badge>}
-          title="Park cleanup"
-          facts={facts}
-        />
+        <PageHeader variant="band" eyebrow={<Badge>Parks</Badge>} title="Park cleanup" />
       </main>,
     )
 
@@ -96,32 +86,27 @@ describe('PageHeader', () => {
     expect(band).toBeTruthy()
     expect(container.querySelector('img')).toBeNull()
     expect(container.querySelector('[class*="scrim"]')).toBeNull()
-    // The facts sit under the band, on the page background
-    const list = screen.getByText('Date').closest('dl')
-    expect(list?.className).toContain('text-muted-foreground')
-    expect(band?.contains(list)).toBe(false)
+    // The metadata is the article's `MetaBar`, not part of the band
+    expect(container.querySelector('dl')).toBeNull()
     expect(band?.contains(screen.getByText('Parks'))).toBe(true)
     await expectAccessible(container)
   })
 
-  it('puts the title and the facts on the article column, the grid `DetailLayout` uses (#1013)', () => {
+  it('puts the title on the article column, the grid `DetailLayout` uses (#1013)', () => {
     const { container } = render(
       <main>
-        <PageHeader variant="band" title="Park cleanup" facts={facts} />
+        <PageHeader variant="band" title="Park cleanup" />
       </main>,
     )
 
     const titleRow = screen.getByRole('heading', { level: 1 }).parentElement?.parentElement
-    const factsRow = screen.getByText('Date').closest('dl')?.parentElement
-    for (const row of [titleRow, factsRow]) {
-      for (const token of DETAIL_GRID.split(' ')) expect(row?.className).toContain(token)
-      // The article is the grid's second column, beside the rail
-      expect(row?.firstElementChild?.className).toContain('lg:col-start-2')
-    }
+    for (const token of DETAIL_GRID.split(' ')) expect(titleRow?.className).toContain(token)
+    // The article is the grid's second column, beside the rail
+    expect(titleRow?.firstElementChild?.className).toContain('lg:col-start-2')
     expect(container.querySelector('[class*="reading-width"]')).toBeNull()
   })
 
-  it('draws a band with no facts or eyebrow', async () => {
+  it('draws a band with no eyebrow', async () => {
     const { container } = render(
       <main>
         <PageHeader variant="band" title="Park cleanup" />
@@ -147,7 +132,7 @@ describe('PageHeader', () => {
   })
 
   it('takes no picture, description or control on the band', () => {
-    // @ts-expect-error The band shows title, eyebrow and facts only
+    // @ts-expect-error The band shows title and eyebrow only
     render(<PageHeader variant="band" title="Park cleanup" description="No" />)
   })
 })

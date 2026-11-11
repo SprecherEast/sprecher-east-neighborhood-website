@@ -38,6 +38,8 @@
   --color-chart-ramp-6: var(--chart-ramp-6);
   --color-chart-ramp-7: var(--chart-ramp-7);
   --color-chart-ramp-edge: var(--chart-ramp-edge);
+  /* The finest text size, `text-fine` (#1002) */
+  --text-fine: var(--type-fine);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

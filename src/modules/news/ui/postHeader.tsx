@@ -31,8 +31,8 @@ function SourceValue({ source }: { source: PostSource }) {
 }
 
 /**
- * A post's author, date and source (#774): the facts the page puts as the first row of the article
- * column, right-aligned from `lg`, so they sit on the text's right edge and not in the header.
+ * A post's author, date and source (#774): the facts the page draws as its `MetaBar` (#1002), at
+ * the top left of the article column, so they sit on the text's left edge and not in the header.
  */
 export function postByline(post: PostDetail): LabelledMetaItem[] {
   const { publishedAt, source } = post
@@ -40,7 +40,7 @@ export function postByline(post: PostDetail): LabelledMetaItem[] {
   return [
     ...(authors ? [{ label: 'Author', value: authors }] : []),
     ...(publishedAt
-      ? [{ label: 'Date Published', value: <DateTime value={publishedAt} format="long" /> }]
+      ? [{ label: 'Published', value: <DateTime value={publishedAt} format="long" /> }]
       : []),
     ...(source ? [{ label: 'Source', value: <SourceValue source={source} /> }] : []),
   ]

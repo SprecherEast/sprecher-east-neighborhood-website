@@ -12,6 +12,7 @@ export const GALLERY_COMPONENTS = [
   'CardGrid',
   'Text',
   'MetaList',
+  'MetaBar',
   'DateTime',
   'EmptyState',
   'Disclosure',

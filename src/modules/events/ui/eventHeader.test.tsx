@@ -3,11 +3,15 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { ImageRef } from '@/platform/lib/content'
+import { MetaBar } from '@/platform/ui/MetaBar'
 import { PageHeader } from '@/platform/ui/PageHeader'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import type { EventDetail } from '../domain/types'
-import { eventHeaderProps } from './eventHeader'
+import { eventByline, eventHeaderProps } from './eventHeader'
+
+/** An event's metadata as the page draws it: the bar in the article column (#1002) */
+const Bar = ({ event: e }: { event: EventDetail }) => <MetaBar items={eventByline(e)} />
 
 afterEach(cleanup)
 
@@ -37,38 +41,81 @@ const event: EventDetail = {
 const photo = { id: 3, alt: 'The park shelter', url: '/api/media/file/shelter.webp' } as ImageRef
 
 describe('eventHeaderProps', () => {
-  it('heads an event on a plain band, with its category pill and facts (#461, #1013)', () => {
+  it('heads an event on a plain band with its category pill, and no facts: they are in the bar (#461, #1013, #1002)', () => {
     const props = eventHeaderProps(event)
     expect(props.variant).toBe('band')
+    expect(props).not.toHaveProperty('facts')
 
-    render(<PageHeader {...props} />)
+    const { container } = render(<PageHeader {...props} />)
     expect(screen.getByText('Social').className).toContain('text-primary-strong')
-    expect(screen.getByText('Time').nextElementSibling?.textContent).toMatch(/^6:00 PM – 8:00 PM /)
-    expect(screen.getByText('Format').nextElementSibling?.textContent).toBe('In Person')
-    expect(screen.getByText('Date').nextElementSibling?.querySelector('time')).not.toBeNull()
+    expect(container.querySelector('dl')).toBeNull()
   })
 
-  it.each([
-    ['online', { ...event, place: { kind: 'online', label: 'Online' } } as EventDetail, 'Online'],
-    [
-      'to be confirmed',
-      {
-        ...event,
-        place: { kind: 'unconfirmed', label: 'Location to be confirmed' },
-      } as EventDetail,
-      'Location to be confirmed',
-    ],
-  ])('states a place that is not a venue in the facts: %s (#873)', async (_, e, text) => {
-    const { container } = render(<PageHeader {...eventHeaderProps(e)} />)
+  describe('eventByline (#1002)', () => {
+    it('says when: the date with its time range and zone', () => {
+      render(<Bar event={event} />)
 
-    expect(screen.getByText('Location').nextElementSibling?.textContent).toBe(text)
-    await expectAccessible(container)
-  })
+      const when = screen.getByText('When').nextElementSibling
+      expect(when?.querySelector('time')).not.toBeNull()
+      expect(when?.textContent).toMatch(/ · 6:00 PM – 8:00 PM /)
+    })
 
-  it('leaves a venue to the Location panel below the header, so the place is not said twice (#873)', () => {
-    render(<PageHeader {...eventHeaderProps(event)} />)
+    it('says where, with the format beside the venue', () => {
+      render(<Bar event={event} />)
 
-    expect(screen.queryByText('Location')).toBeNull()
+      expect(screen.getByText('Where').nextElementSibling?.textContent).toBe(
+        'Park shelter · In Person',
+      )
+    })
+
+    it('keeps the hybrid format with the venue', () => {
+      render(<Bar event={{ ...event, locationType: 'hybrid' }} />)
+
+      expect(screen.getByText('Where').nextElementSibling?.textContent).toBe(
+        'Park shelter · Hybrid',
+      )
+    })
+
+    it.each([
+      [
+        'online, without saying "Virtual" twice',
+        { ...event, locationType: 'virtual', place: { kind: 'online', label: 'Online' } },
+        'Online',
+      ],
+      [
+        'to be confirmed',
+        { ...event, place: { kind: 'unconfirmed', label: 'Location to be confirmed' } },
+        'Location to be confirmed · In Person',
+      ],
+    ] as [string, EventDetail, string][])(
+      'states a place that is not a venue: %s (#873)',
+      async (_, e, text) => {
+        const { container } = render(<Bar event={e} />)
+
+        expect(screen.getByText('Where').nextElementSibling?.textContent).toBe(text)
+        await expectAccessible(container)
+      },
+    )
+
+    it('leaves out the time and format it does not know', () => {
+      render(<Bar event={{ ...event, timeStart: null, locationType: null }} />)
+
+      expect(screen.getByText('When').nextElementSibling?.textContent).not.toContain('·')
+      expect(screen.getByText('Where').nextElementSibling?.textContent).toBe('Park shelter')
+    })
+
+    it('keeps a long place on one line with an ellipsis, its whole text in the title, and the format whole', () => {
+      const long = 'The community room at the far end of the long lakeside building '
+        .repeat(4)
+        .trim()
+      render(
+        <Bar event={{ ...event, locationType: 'hybrid', place: { kind: 'venue', label: long } }} />,
+      )
+
+      const cut = screen.getByTitle(long)
+      expect(cut.className).toContain('truncate')
+      expect(screen.getByText('· Hybrid').className).toContain('shrink-0')
+    })
   })
 
   it('keeps the picture out of the band, with or without one (#1013)', () => {
@@ -83,13 +130,6 @@ describe('eventHeaderProps', () => {
       expect(screen.getByText('Social').className).toContain('text-primary-strong')
       cleanup()
     }
-  })
-
-  it('leaves out the time and format it does not know', () => {
-    render(<PageHeader {...eventHeaderProps({ ...event, timeStart: null, locationType: null })} />)
-
-    expect(screen.queryByText('Time')).toBeNull()
-    expect(screen.queryByText('Format')).toBeNull()
   })
 
   describe('a cancelled event (#122)', () => {

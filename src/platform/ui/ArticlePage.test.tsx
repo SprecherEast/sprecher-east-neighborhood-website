@@ -64,35 +64,26 @@ describe('ArticlePage', () => {
     expect(screen.getByTestId('live-preview')).toBeTruthy()
   })
 
-  describe('the byline', () => {
+  describe('the metadata bar (#1002)', () => {
     const byline = [
       { label: 'Author', value: 'Ana' },
-      { label: 'Date Published', value: 'Tue, Nov 3, 2026' },
+      { label: 'Published', value: 'Tue, Nov 3, 2026' },
     ]
+    const bar = () => screen.getByText('Author').closest('dl')?.parentElement?.parentElement
 
     it('is the first row of the article column, above the text, not in the header', () => {
       renderArticle({ byline })
 
-      const row = screen.getByText('Author').closest('dl')
-      expect(row).not.toBeNull()
-      expect(row?.closest('header')).toBeNull()
+      expect(screen.getByText('Author').closest('dl')?.closest('header')).toBeNull()
       // Same column as the text, and directly before it
-      expect(row?.nextElementSibling?.textContent).toBe('The article')
-      expect(row?.parentElement).toBe(screen.getByText('The article').parentElement)
+      expect(bar()?.nextElementSibling?.textContent).toBe('The article')
+      expect(bar()?.parentElement).toBe(screen.getByText('The article').parentElement)
     })
 
-    it('starts at the left on a small screen and ends at the right edge from lg', () => {
-      renderArticle({ byline })
-
-      const row = screen.getByText('Author').closest('dl')
-      expect(row?.className).toContain('lg:justify-end')
-      expect(row?.className.split(' ')).not.toContain('justify-end')
-    })
-
-    it('takes the width the page gives the text, so it ends on the text’s edge (#774)', () => {
+    it('takes the width the page gives the text, so its line ends on the text’s edge (#774)', () => {
       renderArticle({ byline, textClassName: 'max-w-[40rem]' })
 
-      expect(screen.getByText('Author').closest('dl')?.className).toContain('max-w-[40rem]')
+      expect(bar()?.className).toContain('max-w-[40rem]')
     })
 
     it('draws nothing when there are no facts', () => {
