@@ -88,6 +88,25 @@
 }
 
 /*
+ * `total-pulse` (#1051): a total flashes the accent once and fades back, to mark that a new amount is
+ * ready. Only where the reader allows motion; otherwise the total just changes.
+ */
+@keyframes total-pulse {
+  from {
+    background-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@utility total-pulse {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: total-pulse 1.1s ease-out;
+  }
+}
+
+/*
  * `chart-reveal` (#639): a chart's grid wipes in from the left as it scrolls into view. Only where
  * the reader allows motion and the browser supports scroll-driven animation; on screen only, because
  * a printed page never scrolls. Everywhere else, and before and after the wipe, the grid is drawn in

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useId, useRef, useState, type ReactNode } from 'react'
+import React, { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 import {
   BILL_BODY_NAMES,
@@ -8,6 +8,7 @@ import {
   fillFromEarlier,
   parseHomeValue,
 } from '@/platform/lib/billShare'
+import { cn } from '@/platform/lib/cn'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { AmountBar } from '@/platform/ui/AmountBar'
@@ -15,6 +16,7 @@ import { Card, CardTitle } from '@/platform/ui/Card'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
 import { Link } from '@/platform/ui/Link'
 import { scrollToUnlessVisible } from '@/platform/ui/motion.client'
+import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 import { SharePie } from '@/platform/ui/SharePie.client'
 import { Text } from '@/platform/ui/Text'
 import { useCountedNumber } from '@/platform/ui/useCountedNumber.client'
@@ -61,11 +63,22 @@ export function BillShare({
   // The value last estimated, or null while the numbers are for the City's average home
   const [estimated, setEstimated] = useState<number | null>(null)
   const estimating = useRef(false)
-  const receiptRef = useRef<HTMLDivElement>(null)
+  const cardRef = useRef<HTMLElement>(null)
   const pieTitleId = useId()
   const target = estimated ?? year?.averageHome ?? 0
+  // Counts up each time a new bill has finished counting, so the total can flash once
+  const [pulse, setPulse] = useState(0)
+  const lastBill = useRef<string | null>(null)
   // Every number below counts to a new value, so a change is seen, not just found
   const shown = useCountedNumber(target)
+  // Once the count has ended on a bill that differs from the last one, the total flashes once
+  const billKey = `${yearIndex}:${target}`
+  const settled = shown === target
+  useEffect(() => {
+    if (!settled) return
+    if (lastBill.current !== null && lastBill.current !== billKey) setPulse((count) => count + 1)
+    lastBill.current = billKey
+  }, [settled, billKey])
   if (!year) return null
 
   const text = typed ?? formatWholeDollars(year.averageHome)
@@ -76,12 +89,12 @@ export function BillShare({
   // What a screen reader hears: the bill for the value estimated, not each step of the count
   const summary = receiptFor(computeBillShare(target, rates), target).summary
 
-  // Estimating scrolls to the receipt only if it is not all on screen, and the numbers count once
+  // Estimating scrolls to the whole card only if it is not all on screen, and the numbers count once
   // the page has stopped moving; a reader who asked for less motion gets them at once
   const estimate = async () => {
     if (homeValue === null || estimating.current) return
     estimating.current = true
-    if (receiptRef.current) await scrollToUnlessVisible(receiptRef.current)
+    if (cardRef.current) await scrollToUnlessVisible(cardRef.current)
     setEstimated(homeValue)
     estimating.current = false
   }
@@ -150,7 +163,13 @@ export function BillShare({
           onSelect={setYearIndex}
           notes={notes}
         />
-        <Card as="section" variant="elevated" aria-labelledby={pieTitleId} className="h-full">
+        <Card
+          as="section"
+          ref={cardRef}
+          variant="elevated"
+          aria-labelledby={pieTitleId}
+          className={cn('h-full', SECTION_SCROLL_MARGIN)}
+        >
           <div className="space-y-3">
             <CardTitle as="h3" className="text-xl">
               <span id={pieTitleId}>Your rough property tax</span>
@@ -159,14 +178,13 @@ export function BillShare({
               {summary}
             </p>
             {receipt.slices.length > 0 ? (
-              <div ref={receiptRef}>
-                <SharePie
-                  slices={receipt.slices}
-                  label={receipt.label}
-                  heading={receipt.heading}
-                  total={receipt.total ?? undefined}
-                />
-              </div>
+              <SharePie
+                slices={receipt.slices}
+                label={receipt.label}
+                heading={receipt.heading}
+                total={receipt.total ?? undefined}
+                pulseKey={pulse}
+              />
             ) : (
               <Text variant="small" className="py-16 text-center">
                 The whole bill can’t be shown yet.

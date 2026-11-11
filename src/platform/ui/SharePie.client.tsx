@@ -57,6 +57,7 @@ export function SharePie({
   label,
   heading,
   total,
+  pulseKey,
   className,
 }: {
   slices: readonly SharePieSlice[]
@@ -66,6 +67,8 @@ export function SharePie({
   heading?: string
   /** The line under the rows: what the amounts add up to */
   total?: { label: string; amount: string }
+  /** Changes each time the total should flash once (the page's accent), unless motion is reduced */
+  pulseKey?: number
   className?: string
 }) {
   const [ref, width] = useElementWidth<HTMLDivElement>()
@@ -152,7 +155,13 @@ export function SharePie({
           ))}
         </ul>
         {total && (
-          <p className="flex min-h-10 items-center justify-between gap-x-2 border-t-2 border-foreground/30 font-semibold text-foreground">
+          <p
+            key={pulseKey}
+            className={cn(
+              'flex min-h-10 items-center justify-between gap-x-2 border-t-2 border-foreground/30 font-semibold text-foreground',
+              pulseKey ? 'total-pulse' : undefined,
+            )}
+          >
             <span>{total.label}</span>
             <span className="tabular-nums">{total.amount}</span>
           </p>
