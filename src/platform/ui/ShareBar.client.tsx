@@ -155,7 +155,7 @@ export function ShareBar({
                 >
                   {slice.name ? (
                     <>
-                      <tspan x={middle(slice)} dy="-0.55em" className="text-xs font-medium">
+                      <tspan x={middle(slice)} dy="-0.6em">
                         {slice.name}
                       </tspan>
                       <tspan x={middle(slice)} dy="1.2em">

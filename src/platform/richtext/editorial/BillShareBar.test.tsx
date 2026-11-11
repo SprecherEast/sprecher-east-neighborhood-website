@@ -77,4 +77,19 @@ describe('the share bar over the City’s panel (#1030)', () => {
     fireEvent.change(box(), { target: { value: 'abc' } })
     screen.getByRole('img', { name: /^Your whole property tax bill:/ })
   })
+
+  it('changes the City’s percent on the bar with the tax year chosen (#1068)', () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    const cityPercent = () =>
+      percents(
+        screen
+          .getByRole('img', { name: /^Your whole property tax bill:/ })
+          .getAttribute('aria-label') ?? '',
+      )['City of Madison']
+    const proposed = cityPercent()
+    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    expect(cityPercent()).not.toBe(proposed)
+    fireEvent.click(screen.getByRole('button', { name: /2027 rates/ }))
+    expect(cityPercent()).toBe(proposed)
+  })
 })

@@ -14,12 +14,11 @@ Source: `src/platform/ui/Card.tsx`
 - `padding`: `"sm" | "md" | "lg" | "none"`
 - `interactive`: `boolean`
 
-| Prop        | Type                                                                                                                                                                  | Required | Description                                                                         |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------- |
-| `as`        | `CardElement`                                                                                                                                                         | no       | `article` for a self-contained item in a list, `section` for a panel with a heading |
-| `className` | `string`                                                                                                                                                              | no       |                                                                                     |
-| `ref`       | `((instance: HTMLElement \| null) => void \| (() => VoidOrUndefinedOnly) \| React.DO_NOT_USE_OR_YOU_WILL_BE_FIRED_CALLBACK_REF_RETURN_VALUES[keyof React.DO_NOT_USE…` | no       | The card's element, for a caller that scrolls to it or measures it                  |
-| `children`  | `React.ReactNode`                                                                                                                                                     | yes      |                                                                                     |
+| Prop        | Type              | Required | Description                                                                         |
+| ----------- | ----------------- | -------- | ----------------------------------------------------------------------------------- |
+| `as`        | `CardElement`     | no       | `article` for a self-contained item in a list, `section` for a panel with a heading |
+| `className` | `string`          | no       |                                                                                     |
+| `children`  | `React.ReactNode` | yes      |                                                                                     |
 
 277 more props from package types (HTML attributes and the like) are not listed.
 

@@ -52,8 +52,6 @@ export type CardProps = VariantProps<typeof cardVariants> &
     /** `article` for a self-contained item in a list, `section` for a panel with a heading */
     as?: CardElement
     className?: string
-    /** The card's element, for a caller that scrolls to it or measures it */
-    ref?: React.Ref<HTMLElement>
     children: React.ReactNode
   }
 
@@ -63,17 +61,11 @@ export function Card({
   padding,
   interactive,
   className,
-  ref,
   children,
   ...rest
 }: CardProps) {
   return (
-    // One ref type for three element names: the element is a div, section or article, all HTMLElements
-    <Element
-      {...rest}
-      ref={ref as React.Ref<HTMLDivElement>}
-      className={cn(cardVariants({ variant, padding, interactive }), className)}
-    >
+    <Element {...rest} className={cn(cardVariants({ variant, padding, interactive }), className)}>
       {children}
     </Element>
   )
