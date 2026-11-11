@@ -157,12 +157,9 @@ test.describe('the metadata bar of an event shares the edges of what is under it
           line: rect(line),
           below: rect(below),
           first: rect(list.querySelector('dt') as Element),
-          lastValue: (() => {
-            const range = document.createRange()
-            range.selectNodeContents(list.lastElementChild?.querySelector('dd') as Element)
-            const { left, right } = range.getBoundingClientRect()
-            return { left, right }
-          })(),
+          // The box of the value's last element (a cut place's box, or the format after it): the
+          // text of a cut place runs past its box, so a text range would measure the hidden part
+          lastValue: rect(list.lastElementChild?.querySelector('dd')?.lastElementChild as Element),
           when: rect(when),
           cut: where.scrollWidth > where.clientWidth,
           whereHeight: where.getBoundingClientRect().height,

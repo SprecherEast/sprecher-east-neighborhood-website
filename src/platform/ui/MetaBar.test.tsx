@@ -104,6 +104,14 @@ describe('MetaBar (#1002)', () => {
     expect(screen.getByText('Author').nextElementSibling?.textContent).toBe('Ana and Ben')
   })
 
+  it('keeps a short value whole beside long ones: from md no item shrinks below 11rem (#1055)', () => {
+    render(<MetaBar items={items} />)
+
+    for (const item of Array.from(screen.getByText('Author').closest('dl')?.children ?? [])) {
+      expect(item.className).toContain('md:min-w-44')
+    }
+  })
+
   it('sets its labels in the theme’s finest text size, a token, smaller than the values', () => {
     render(<MetaBar items={items} />)
 

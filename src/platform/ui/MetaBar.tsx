@@ -54,7 +54,8 @@ export function MetaBar({ items, className }: MetaBarProps) {
             <div
               key={item.label}
               className={cn(
-                'flex max-w-full min-w-0 items-baseline justify-end gap-2 md:gap-1.5',
+                // From md an item never shrinks below 11rem: a short value (a date) stays on one line while a long one (names, a source) gives width and wraps
+                'flex max-w-full min-w-0 items-baseline justify-end gap-2 md:min-w-44 md:gap-1.5',
                 // The cut value gives up width first, so the other items stay on one line
                 hasCutValue && !item.title && 'md:shrink-0',
                 index > 0 && 'md:border-l md:border-border md:pl-3',
