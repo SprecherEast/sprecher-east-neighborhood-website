@@ -139,7 +139,7 @@ Source: `src/platform/ui/chart/adapters/visx/BarSegments.tsx`
 
 ## `SharePie`
 
-One whole as a pie (#1022): a wedge for each slice, as big as its exact share, clockwise from the top, with one highlighted wedge in the theme's green and the others in three grays that are easy to tell apart. Each wedge writes its name, dollars and percent inside it when they fit, only its percent when just that fits, and nothing when not even that fits; the legend under the pie then lists every wedge that was not written in full. The pie draws from its own width, so the same wedge can fit inside on a wide screen and be left to the legend on a phone. The legend's room is always kept, so a card that holds the pie never changes height when the shares do. The pie is one named picture for screen readers; the numbers belong in text next to it, which the caller writes.
+One whole as a pie (#1022): a wedge for each slice, as big as its exact share, clockwise from the top, with one highlighted wedge in the theme's green and the others in three grays that are easy to tell apart. Each wedge writes its name, dollars and percent inside it when they fit, only its percent when just that fits, and nothing when not even that fits; the legend under the pie then lists every wedge that was not written in full. The pie draws from its own width, so the same wedge can fit inside on a wide screen and be left to the legend on a phone. The legend's room is always kept (a row for every wedge on a pie narrower than its largest), so a card that holds the pie never changes height when the shares do. The pie is one named picture for screen readers, whose label the caller writes with every wedge's name, dollars and percent.
 
 Source: `src/platform/ui/SharePie.client.tsx`
 

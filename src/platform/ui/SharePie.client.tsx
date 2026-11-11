@@ -59,8 +59,9 @@ export type SharePieSlice = {
  * percent when just that fits, and nothing when not even that fits; the legend under the pie then
  * lists every wedge that was not written in full. The pie draws from its own width, so the same wedge
  * can fit inside on a wide screen and be left to the legend on a phone. The legend's room is always
- * kept, so a card that holds the pie never changes height when the shares do. The pie is one named
- * picture for screen readers; the numbers belong in text next to it, which the caller writes.
+ * kept (a row for every wedge on a pie narrower than its largest), so a card that holds the pie never
+ * changes height when the shares do. The pie is one named
+ * picture for screen readers, whose label the caller writes with every wedge's name, dollars and percent.
  */
 export function SharePie({
   slices,
@@ -76,6 +77,9 @@ export function SharePie({
   const size = Math.min(width > 0 ? width : FIRST_PAINT_PX, MAX_PIE_PX)
   const center = size / 2
   const radius = center - RIM
+  // A pie narrower than its largest keeps two lines of legend room for every wedge, hidden when the
+  // wedge is written inside, so no change of shares moves the page
+  const keepEveryRow = size < MAX_PIE_PX
   const arcs = pieArcs(slices.map((slice) => slice.share))
   const fits = slices.map((slice) =>
     pieLabelFit({
@@ -132,7 +136,7 @@ export function SharePie({
             >
               {lines.map((line, lineIndex) => (
                 <tspan
-                  key={line}
+                  key={lineIndex}
                   x={at.x}
                   dy={lineIndex === 0 ? 0 : LINE_PX}
                   className={lineIndex === lines.length - 1 ? 'font-semibold' : undefined}
@@ -145,9 +149,20 @@ export function SharePie({
         })}
       </svg>
       <ul data-pie-legend className="mt-3 min-h-18 space-y-1 text-sm">
-        {slices.map((slice, index) =>
-          fits[index] === 'full' ? null : (
-            <li key={slice.key} className="flex flex-wrap items-center gap-x-2">
+        {slices.map((slice, index) => {
+          const written = fits[index] === 'full'
+          if (written && !keepEveryRow) return null
+          return (
+            <li
+              key={slice.key}
+              aria-hidden={written || undefined}
+              className={cn(
+                'flex flex-wrap items-center gap-x-2',
+                // Two lines of room: a longer amount can wrap a row without moving the page
+                keepEveryRow && 'min-h-10 content-center',
+                written && 'invisible',
+              )}
+            >
               <span
                 aria-hidden="true"
                 className={cn('inline-block size-3 shrink-0', TONE_SWATCH[slice.tone])}
@@ -156,8 +171,8 @@ export function SharePie({
               <span className="font-semibold text-foreground">{slice.amount}</span>
               <span className="text-muted-foreground">about {slice.percent}%</span>
             </li>
-          ),
-        )}
+          )
+        })}
       </ul>
     </div>
   )

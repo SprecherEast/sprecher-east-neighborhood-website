@@ -120,7 +120,7 @@ export function BillShare({
       : []
   const pieLabel =
     slices.length > 0
-      ? `Your rough property tax: ${slices.map((slice) => `${slice.name} ${slice.percent}%`).join(', ')}`
+      ? `Your rough property tax: ${slices.map((slice) => `${slice.name} ${slice.amount}, ${slice.percent}%`).join('; ')}`
       : ''
 
   // The notes always take their room, so a year with none to show never makes the card shorter
@@ -167,15 +167,17 @@ export function BillShare({
             <CardTitle as="h3" className="text-xl">
               <span id={pieTitleId}>Your rough property tax</span>
             </CardTitle>
+            <p role="status" className="sr-only">
+              {bill && settled ? summary : ''}
+            </p>
             {bill && (
-              <>
-                <p role="status" className="sr-only">
-                  {settled ? summary : ''}
-                </p>
-                <Text variant="lead" className="min-h-14 text-foreground">
-                  {summary}
-                </Text>
-              </>
+              <Text
+                variant="lead"
+                aria-hidden="true"
+                className="min-h-21 text-foreground sm:min-h-14"
+              >
+                {summary}
+              </Text>
             )}
             {slices.length > 0 ? (
               <SharePie slices={slices} label={pieLabel} />

@@ -91,6 +91,19 @@ describe('SharePie', () => {
     expect(entry).toContain('3%')
   })
 
+  it('keeps a row for every wedge on a small pie, hidden from everyone when the wedge is written inside', () => {
+    measuredAt(380)
+    const { container } = render(<SharePie slices={SLICES} label="Pie" />)
+    const rows = Array.from(container.querySelectorAll('[data-pie-legend] li'))
+    expect(rows).toHaveLength(SLICES.length)
+    const hidden = rows.filter((row) => row.getAttribute('aria-hidden') === 'true')
+    expect(hidden.length).toBeGreaterThan(0)
+    expect(hidden.every((row) => row.className.includes('invisible'))).toBe(true)
+    expect(hidden.length).toBe(
+      SLICES.length - rows.filter((r) => !r.hasAttribute('aria-hidden')).length,
+    )
+  })
+
   it('keeps the legend’s room whether or not it has entries, so the card never changes height', () => {
     measuredAt(560)
     const roomy = render(

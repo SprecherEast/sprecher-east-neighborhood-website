@@ -120,7 +120,7 @@ describe('BillShare', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.change(box(), { target: { value: 'abc' } })
     expect(screen.getByRole('alert').textContent).toMatch(/enter your home’s value/i)
-    expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.getByRole('status').textContent).toBe('')
     expect(screen.queryByRole('img', { name: /your rough property tax/i })).toBeNull()
   })
 
@@ -137,7 +137,7 @@ describe('BillShare', () => {
     ]) {
       expect(label).toContain(name)
     }
-    expect(label).toMatch(/City of Madison 38%/)
+    expect(label).toMatch(/City of Madison \$[\d,]+, 38%/)
     expect(screen.getByRole('link', { name: /City tax detail/ })).toBeTruthy()
   })
 
