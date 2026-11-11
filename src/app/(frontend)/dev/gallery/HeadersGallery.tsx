@@ -85,6 +85,25 @@ export function HeadersGallery() {
             />
           </div>
         </GalleryVariant>
+        <GalleryVariant
+          label="band, over a faded photo (a post's or an event's backdrop)"
+          labelAs="p"
+        >
+          <div className={`${FRAME} [--header-height:0px]`}>
+            <PageHeader
+              variant="band"
+              eyebrow={
+                <BadgeList plated>
+                  <Badge variant="category">Events</Badge>
+                  <Badge variant="category">Parks</Badge>
+                </BadgeList>
+              }
+              title="Summer picnic in the park"
+              backdrop={{ phone: null, tablet: null, desktop: SAMPLE_IMAGE }}
+              className="pb-2"
+            />
+          </div>
+        </GalleryVariant>
       </GalleryEntry>
 
       <GalleryEntry name="Breadcrumbs" description="A flat trail, with its JSON-LD.">

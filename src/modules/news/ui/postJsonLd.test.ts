@@ -14,6 +14,7 @@ const post: PostDetail = {
   image: null,
   source: null,
   heroImage: null,
+  backdrop: null,
   content: {
     root: { type: 'root', children: [], direction: null, format: '', indent: 0, version: 1 },
   },

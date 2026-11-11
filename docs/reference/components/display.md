@@ -26,13 +26,14 @@ Source: `src/platform/ui/Badge.tsx`
 
 ## `BadgeList`
 
-Badges in a row that wraps on small screens
+Badges in a row that wraps on small screens. `plated` lays each on a solid plate of the surface, for a row over a photo: a badge's tint is see-through, so a photo behind would change its contrast. On the plain surface the plate cannot be seen (#1024).
 
 Source: `src/platform/ui/Badge.tsx`
 
 | Prop        | Type              | Required | Description |
 | ----------- | ----------------- | -------- | ----------- |
 | `className` | `string`          | no       |             |
+| `plated`    | `boolean`         | no       |             |
 | `children`  | `React.ReactNode` | yes      |             |
 
 **Used by** (direct imports):

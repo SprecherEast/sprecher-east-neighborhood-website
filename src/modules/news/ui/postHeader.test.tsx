@@ -28,6 +28,7 @@ const post: PostDetail = {
   image: null,
   source: null,
   heroImage: photo,
+  backdrop: null,
   content: {
     root: { type: 'root', children: [], direction: null, format: '', indent: 0, version: 1 },
   },
@@ -50,6 +51,23 @@ describe('postHeaderProps', () => {
       expect(container.querySelector('img')).toBeNull()
       cleanup()
     }
+  })
+
+  it('carries the post’s backdrop to the band and plates its category over it (#1024)', () => {
+    const backdrop = { phone: null, tablet: null, desktop: photo }
+    const props = postHeaderProps({ ...post, backdrop })
+    expect(props).toMatchObject({ variant: 'band', backdrop })
+
+    render(<PageHeader {...props} />)
+    expect(screen.getByText('Transportation').parentElement?.className).toContain('bg-surface')
+  })
+
+  it('keeps the plain band, with its category pill as before, when there is no backdrop (#1024)', () => {
+    const props = postHeaderProps(post)
+    expect(props).toMatchObject({ backdrop: null })
+
+    render(<PageHeader {...props} />)
+    expect(screen.getByText('Transportation').parentElement?.className).not.toContain('bg-surface')
   })
 
   it('leaves the author, date and source out of the header: the page puts them above the text (#774)', () => {

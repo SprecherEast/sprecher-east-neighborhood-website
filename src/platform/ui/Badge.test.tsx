@@ -76,6 +76,34 @@ describe('Badge', () => {
     await expectAccessible(container)
   })
 
+  it('can lay each badge on a solid plate of the surface, so a photo behind never shows through its tint (#1024)', () => {
+    const { container } = render(
+      <BadgeList plated>
+        <Badge>Meeting</Badge>
+        {false}
+        <Badge variant="status">Cancelled</Badge>
+      </BadgeList>,
+    )
+
+    const plates = Array.from(container.firstElementChild?.children ?? [])
+    expect(plates).toHaveLength(2)
+    for (const plate of plates) {
+      expect(plate.className).toContain('bg-surface')
+      expect(plate.className).toContain('rounded-full')
+    }
+    expect(plates[0].textContent).toBe('Meeting')
+  })
+
+  it('draws badges as they are, with no plate, by default', () => {
+    const { container } = render(
+      <BadgeList>
+        <Badge>Meeting</Badge>
+      </BadgeList>,
+    )
+
+    expect(container.firstElementChild?.firstElementChild?.className).toContain('bg-primary/10')
+  })
+
   it('marks work that is open in green, finished in purple, and a label as a plain outline (#946)', () => {
     render(
       <>

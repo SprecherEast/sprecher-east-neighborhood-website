@@ -89,7 +89,14 @@ export const COMPONENT_GROUPS = [
     slug: 'layout',
     title: 'Layout and page structure',
     intro: 'The frames a page is built in, and the structured data it carries.',
-    components: ['Section', 'PageBackdrop', 'ArticlePage', 'DetailLayout', 'JsonLd'],
+    components: [
+      'Section',
+      'PageBackdrop',
+      'BandBackdrop',
+      'ArticlePage',
+      'DetailLayout',
+      'JsonLd',
+    ],
   },
   {
     slug: 'charts',

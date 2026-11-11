@@ -3,6 +3,7 @@ import 'server-only'
 import type { ArchiveBlock, Post, Search, TopIssuesBlock } from '@/payload-types'
 import { isHttpUrl } from '@/platform/lib/reviewQueue'
 import { documentHref } from '@/platform/payload/documentHref'
+import { toBandBackdrop } from '@/platform/payload/bandBackdrop'
 import { toImageRef } from '@/platform/payload/imageRef'
 import { resolveLink } from '@/platform/payload/resolveLink'
 
@@ -77,6 +78,7 @@ export function toPostDetail(doc: Post): PostDetail {
   return {
     ...toPostSummary(doc),
     heroImage: toImageRef(doc.heroImage),
+    backdrop: toBandBackdrop(doc.backdrop),
     content: doc.content,
     authors: (doc.populatedAuthors ?? []).flatMap(({ name }) => (name ? [name] : [])),
     relatedPosts: (doc.relatedPosts ?? []).flatMap((related) =>
