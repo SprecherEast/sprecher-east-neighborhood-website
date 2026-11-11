@@ -165,7 +165,7 @@ the pull request says so: `Behavior change: none` and a reason that is true of t
   the declaration; if it is no longer true, fix the note.
 - Before opening the pull request, run the local check (`npm run knowledge:check`) and read each
   note the diff maps to against the diff.
-- The reviewer checks the reason against the diff. A reason the diff does not support is a Blocker.
+- The reviewer checks the reason against the diff. A reason the diff does not support is a **Blocker**.
 
 ## Visual QA Is Mandatory for UI/UX Changes
 
