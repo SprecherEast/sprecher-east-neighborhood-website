@@ -9,9 +9,9 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import {
-  BLOCKING_LABELS,
   decideChanges,
   findCurrentSprint,
+  OWNER_LABEL,
   READY_LABEL,
   readyBlockers,
 } from './planner-board.mjs'
@@ -91,7 +91,7 @@ describe('decideChanges', () => {
 describe('the names the app and the agents rely on', () => {
   it('uses only marker labels the label policy defines', () => {
     const { markers } = read('../.github/label-policy.json')
-    for (const label of [READY_LABEL, ...BLOCKING_LABELS]) expect(markers[label]).toBeTruthy()
+    for (const label of [READY_LABEL, OWNER_LABEL]) expect(markers[label]).toBeTruthy()
   })
 
   it('lists each native issue field with a numeric ID and its option names', () => {
@@ -106,7 +106,13 @@ describe('the names the app and the agents rely on', () => {
 })
 
 describe('decideChanges with the ready label', () => {
-  const open = (labels = [], assignees = []) => ({ state: 'open', labels, assignees })
+  const open = (labels = [], assignees = [], problems = []) => ({
+    state: 'open',
+    labels,
+    assignees,
+    problems,
+  })
+  const failing = ['ISSUE-MILESTONE: Set a milestone (Backlog until it is planned).']
   const labeled = (label, issue, status) =>
     decideChanges({ action: 'labeled', label, issue, item: { status, sprint: current }, current })
 
@@ -118,16 +124,44 @@ describe('decideChanges with the ready label', () => {
     expect(labeled('frontend', open(['ready', 'frontend']), 'Backlog')).toEqual({ status: 'Ready' })
   })
 
-  it.each(['needs owner', 'needs grooming'])(
-    'leaves the card in Backlog while %s is on',
-    (label) => {
-      expect(labeled('ready', open(['ready', label]), 'Backlog')).toEqual({})
-      expect(readyBlockers(open(['ready', label]))).toEqual([label])
-    },
-  )
+  it('leaves the card in Backlog while the issue waits for the owner', () => {
+    const issue = open(['ready', 'needs owner'])
+    expect(labeled('ready', issue, 'Backlog')).toEqual({})
+    expect(readyBlockers(issue)).toEqual(['needs owner'])
+  })
 
-  it.each(['needs owner', 'needs grooming'])('moves a Ready card back when %s appears', (label) => {
-    expect(labeled(label, open(['ready', label]), 'Ready')).toEqual({ status: 'Backlog' })
+  it('leaves the card in Backlog while the issue fails the issue check', () => {
+    const issue = open(['ready'], [], failing)
+    expect(labeled('ready', issue, 'Backlog')).toEqual({})
+    expect(readyBlockers(issue)).toEqual(failing)
+  })
+
+  it('moves a Ready card back when either blocker appears, on any event', () => {
+    expect(labeled('needs owner', open(['ready', 'needs owner']), 'Ready')).toEqual({
+      status: 'Backlog',
+    })
+    const edited = decideChanges({
+      action: 'edited',
+      issue: open(['ready'], [], failing),
+      item: { status: 'Ready', sprint: current },
+      current,
+    })
+    expect(edited).toEqual({ status: 'Backlog' })
+  })
+
+  it('moves the card to Ready on the event that fixes the last gap', () => {
+    const fixed = decideChanges({
+      action: 'milestoned',
+      issue: open(['ready']),
+      item: { status: 'Backlog', sprint: current },
+      current,
+    })
+    expect(fixed).toEqual({ status: 'Ready' })
+  })
+
+  it('catches up on a removed label from the history when its own run was dropped', () => {
+    const issue = { ...open(['frontend']), readyRemoved: true }
+    expect(labeled('frontend', issue, 'Ready')).toEqual({ status: 'Backlog' })
   })
 
   it('parks a Ready card in Backlog when the label is removed', () => {
@@ -209,6 +243,11 @@ describe('decideChanges on a manual run', () => {
     const plain = { state: 'open', labels: [], assignees: [] }
     expect(sync(ready, { status: 'Backlog', sprint: current })).toEqual({ status: 'Ready' })
     expect(sync(plain, { status: 'Ready', sprint: current })).toEqual({ status: 'Backlog' })
+  })
+
+  it('leaves a closed issue alone, also when it is assigned', () => {
+    const closed = { state: 'closed', labels: [], assignees: ['someone'] }
+    expect(sync(closed, { status: 'In progress', sprint: past })).toEqual({})
   })
 
   it('does not move an unassigned card into the sprint', () => {

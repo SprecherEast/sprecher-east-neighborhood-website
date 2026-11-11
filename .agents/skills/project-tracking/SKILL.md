@@ -74,7 +74,7 @@ For each issue:
    gh api -X POST repos/{owner}/{repo}/issues/<n>/labels -f 'labels[]=ready'
    ```
 
-   The app leaves the card in Backlog while `needs owner` or `needs grooming` is on the issue. To
+   The app leaves the card in Backlog while the issue has `needs owner` or fails the issue check. To
    park an issue, remove the label (`-X DELETE .../issues/<n>/labels/ready`).
 
 ## 2. "What's next?"

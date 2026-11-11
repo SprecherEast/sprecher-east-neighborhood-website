@@ -3,14 +3,17 @@ name: Planner Board
 # Keeps the organization board in step with the work (#941, #1089), signed in as the "Sprecher East
 # Planner" app. A new or reopened issue goes into the sprint that is running; an assigned issue,
 # which is how work is claimed, also becomes In progress; the "ready" label moves a card between
-# Backlog and Ready. In review and Done are GitHub's own board rules. Run it by hand with an issue
-# number to bring one card in line with its issue. It checks out and runs only the repository's own
-# main-branch code and never anything from an issue's text: the label name reaches the script as an
-# environment variable and is only compared with fixed names.
+# Backlog and Ready, and only while the issue passes the issue check and does not wait for the
+# owner. The check's own label changes start no workflow (GITHUB_TOKEN), so this one runs the
+# check's rules itself on every change to the issue. In review and Done are GitHub's own board
+# rules. Run it by hand with an issue number to bring one card in line with its issue. It checks
+# out and runs only the repository's own main-branch code. Issue text is untrusted: it goes only
+# through the pure rule functions, and the label name is an environment variable compared with
+# fixed names; neither reaches a shell.
 
 on:
   issues:
-    types: [opened, reopened, assigned, labeled, unlabeled]
+    types: [opened, reopened, assigned, labeled, unlabeled, edited, milestoned, demilestoned]
   workflow_dispatch:
     inputs:
       issue:
@@ -21,10 +24,11 @@ on:
 permissions:
   contents: read
 
-# Label runs and work runs queue apart, so the labels a form adds cannot push a waiting "opened" or
-# "assigned" run out of the queue (GitHub keeps one waiting run per group).
+# Work runs (opened, reopened, assigned) queue apart from the others, so the labels a form adds
+# cannot push a waiting work run out of the queue (GitHub keeps one waiting run per group). The
+# others read the issue as it is, so the last one to run is enough.
 concurrency:
-  group: planner-board-${{ github.event.issue.number || inputs.issue }}-${{ contains(fromJSON('["labeled","unlabeled"]'), github.event.action) && 'labels' || 'work' }}
+  group: planner-board-${{ github.event.issue.number || inputs.issue }}-${{ contains(fromJSON('["opened","reopened","assigned"]'), github.event.action) && 'work' || 'state' }}
   cancel-in-progress: false
 
 jobs:
@@ -35,8 +39,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          sparse-checkout: scripts
-          sparse-checkout-cone-mode: true
+          sparse-checkout: |
+            /scripts/
+            /.github/scripts/
+            /.github/label-policy.json
+          sparse-checkout-cone-mode: false
           persist-credentials: false
 
       - name: Get a short-lived token as the app

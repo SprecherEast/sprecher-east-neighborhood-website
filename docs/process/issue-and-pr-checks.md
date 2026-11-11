@@ -39,7 +39,8 @@ one comment, kept up to date in place and never repeated, lists each failed rule
 one-line fix, and the issue gets the `needs grooming` label. When everything passes, the label
 goes and the comment says so. The check owns the label: it removes it from an issue that passes
 and puts it back on one that still fails, so adding or removing it by hand changes nothing. An
-issue with the label is not Ready. The check only warns, but the pull request gate (`PR-GROOMED`)
+issue with the label is not Ready: the planner app runs the same rules, so `ready` on a failing
+issue leaves its card in Backlog. The check only warns, but the pull request gate (`PR-GROOMED`)
 fails a pull request whose issue still has the label. The gate reads the label when it runs, and
 the issue check removing it starts nothing, so after grooming, edit the PR description to re-run.
 The gate also checks the issue's labels, assignee and milestone (`PR-LABELS`, `PR-ASSIGNED`,

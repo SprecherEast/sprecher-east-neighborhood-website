@@ -4,9 +4,10 @@
  *
  * - opened or reopened: the card joins the sprint that is running;
  * - assigned, which is how work is claimed: the card also becomes In progress;
- * - the `ready` label: a Backlog card becomes Ready, unless a blocking label (`needs owner`,
- *   `needs grooming`) is on the issue. Removing the label, or adding a blocking one, moves a Ready
- *   card back to Backlog.
+ * - the `ready` label: a Backlog card becomes Ready, unless the issue waits for the owner
+ *   (`needs owner`) or fails the issue check (the rules behind `needs grooming`, run here on the
+ *   issue itself, because the check's own label changes start no workflow). Removing the label,
+ *   or either blocker appearing, moves a Ready card back to Backlog.
  *
  * GitHub's own board rules already set In review and Done. Finished work keeps its sprint
  * (`planner-rules.mjs`), and a card never moves back from In progress, In review or Done. The
@@ -14,18 +15,19 @@
  * signed in as the app by the workflow.
  */
 import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
+import { issueProblems, skipReason } from '../.github/scripts/issue-policy.mjs'
 import { canChangeSprint } from './planner-rules.mjs'
 
 const DAY_MS = 86_400_000
 const SPRINT_ACTIONS = new Set(['opened', 'reopened', 'assigned'])
-const LABEL_ACTIONS = new Set(['labeled', 'unlabeled'])
 const NO_BACKWARDS = new Set(['In review', 'Done'])
 /** Marker labels from `.github/label-policy.json`; a test keeps these names in step with it. */
 export const READY_LABEL = 'ready'
-export const BLOCKING_LABELS = ['needs owner', 'needs grooming']
-const NO_ISSUE = { state: 'open', labels: [], assignees: [] }
+export const OWNER_LABEL = 'needs owner'
+const NO_ISSUE = { state: 'open', labels: [], assignees: [], problems: [], readyRemoved: false }
 
 /** The sprint whose days contain `today` (a yyyy-mm-dd date), if one is running. */
 export function findCurrentSprint(iterations, today) {
@@ -36,9 +38,10 @@ export function findCurrentSprint(iterations, today) {
   })
 }
 
-/** The labels that keep an issue out of Ready, in the order of the Definition of Ready. */
+/** What keeps an issue out of Ready: it waits for the owner, or a rule of the issue check fails. */
 export function readyBlockers(issue) {
-  return BLOCKING_LABELS.filter((label) => issue.labels.includes(label))
+  const waits = issue.labels.includes(OWNER_LABEL) ? [OWNER_LABEL] : []
+  return [...waits, ...(issue.problems ?? [])]
 }
 
 const isReady = (issue) => issue.labels.includes(READY_LABEL) && readyBlockers(issue).length === 0
@@ -48,19 +51,21 @@ const isReady = (issue) => issue.labels.includes(READY_LABEL) && readyBlockers(i
  * assigned before the app existed would all jump to In progress the first time a label changed.
  */
 const isClaim = (action, issue) =>
-  action === 'assigned' || (action === 'sync' && issue.assignees.length > 0)
+  action === 'assigned' ||
+  (action === 'sync' && issue.state === 'open' && issue.assignees.length > 0)
 
 /**
- * Promotion reads the issue as it is now, so a run GitHub dropped is caught up by the next one.
- * Demotion needs a reason seen in this run (a blocking label, the `ready` label just removed, or a
- * manual run), because cards moved to Ready by hand before the label existed do not carry it.
+ * Both directions read the issue as it is now, so a run GitHub dropped is caught up by the next
+ * one. A Ready card without the label is moved back only when the label was removed (this event,
+ * or the issue's history) or on a manual run, because cards moved to Ready by hand before the
+ * label existed never carried it.
  */
 function statusFor({ action, label, issue, status }) {
   if (issue.state !== 'open' || NO_BACKWARDS.has(status)) return status
   if (isClaim(action, issue)) return 'In progress'
   if (status === 'Backlog' && isReady(issue)) return 'Ready'
   if (status !== 'Ready' || isReady(issue)) return status
-  const labelRemoved = action === 'unlabeled' && label === READY_LABEL
+  const labelRemoved = issue.readyRemoved || (action === 'unlabeled' && label === READY_LABEL)
   const demote = readyBlockers(issue).length > 0 || labelRemoved || action === 'sync'
   return demote ? 'Backlog' : status
 }
@@ -98,14 +103,29 @@ function boardFields(org, number) {
   return data.organization.projectV2
 }
 
-/** The issue as the decision needs it: open or closed, label names, who it is assigned to. */
+const POLICY = new URL('../.github/label-policy.json', import.meta.url)
+
+/**
+ * The issue as the decision needs it: open or closed, label names, who it is assigned to, and the
+ * issue-check rules it fails. Its text only goes through those pure functions, never into a command.
+ */
 function readIssue(repo, number) {
   const issue = json('api', `repos/${repo}/issues/${number}`)
+  const policy = JSON.parse(readFileSync(POLICY, 'utf8'))
   return {
     state: issue.state,
     labels: issue.labels.map((entry) => entry.name),
     assignees: issue.assignees.map((entry) => entry.login),
+    problems: skipReason(issue) ? [] : issueProblems(issue, policy),
+    readyRemoved: false,
   }
+}
+
+/** Whether the `ready` label was ever taken off this issue, from its history. */
+function readyWasRemoved(repo, number) {
+  const filter = `[.[] | select(.event == "unlabeled" and .label.name == "${READY_LABEL}")] | length`
+  const counts = gh('api', '--paginate', `repos/${repo}/issues/${number}/events`, '-q', filter)
+  return counts.split('\n').some((count) => Number(count) > 0)
 }
 
 function run() {
@@ -113,13 +133,15 @@ function run() {
   if (!/^\d+$/.test(ISSUE ?? '')) throw new Error('ISSUE must be an issue number.')
   const url = `https://github.com/${REPO}/issues/${ISSUE}`
   const issue = readIssue(REPO, ISSUE)
-  if (issue.state !== 'open' && LABEL_ACTIONS.has(ACTION)) {
-    console.log(`#${ISSUE} is closed, so a label change moves nothing.`)
+  if (issue.state !== 'open' && !SPRINT_ACTIONS.has(ACTION) && ACTION !== 'sync') {
+    console.log(`#${ISSUE} is closed, so this change moves nothing.`)
     return
   }
   const blockers = readyBlockers(issue)
   if (issue.labels.includes(READY_LABEL) && blockers.length > 0) {
-    console.log(`::warning::#${ISSUE} has "${READY_LABEL}" but also ${blockers.join(', ')}.`)
+    console.log(
+      `::warning::#${ISSUE} has "${READY_LABEL}" but is not Ready: ${blockers.join('; ')}`,
+    )
   }
   const board = boardFields(ORG, PROJECT)
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' })
@@ -138,6 +160,9 @@ function run() {
     'json',
   ).id
   const item = cardState(itemId)
+  if (item.status === 'Ready' && !issue.labels.includes(READY_LABEL)) {
+    issue.readyRemoved = readyWasRemoved(REPO, ISSUE)
+  }
   const changes = decideChanges({ action: ACTION, label: LABEL, issue, item, current })
   console.log(`#${ISSUE} ${ACTION}${LABEL ? ` "${LABEL}"` : ''}: ${JSON.stringify(changes)}`)
 

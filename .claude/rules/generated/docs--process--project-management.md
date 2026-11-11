@@ -102,7 +102,7 @@ How to ask him ([`project-tracking`](/.agents/skills/project-tracking/SKILL.md) 
 one plain question, the options in a sentence each, a recommendation, and what happens next.
 
 Priority is the `priority:` label, which the checks read, and the organization's native Priority
-field; the two agree, and the sweep reports any that differ. Size is the
+field (its Urgent option is not used); the two agree, and the sweep reports any that differ. Size is the
 native Effort field: Low is S, Medium is M, High is L
 ([the board](#the-board)). GitHub's issue types (Bug, Feature, Task) are
 optional; the type label stays the required one because the `PR Policy` check reads labels.
@@ -169,9 +169,10 @@ built on 2026-10-21 from the spec in #90 and moved to the organization after.
   so the app's code enforces it). The `Planner Board` workflow runs as the app on a native signal,
   not on comments: a new or reopened issue joins the sprint that is running, an assigned issue
   also becomes In progress, and the `ready` label moves a card from Backlog to Ready. A Ready card
-  returns to Backlog when the label goes or while `needs owner` or `needs grooming` is on the
-  issue. A card never moves back from In progress, In review or Done. Run by hand for one issue,
-  the workflow brings that card in line with the issue's labels and assignee as they are now.
+  returns to Backlog when the label goes, or while the issue has `needs owner` or fails
+  [the issue check](/docs/process/issue-and-pr-checks.md#the-issue-check) (the app runs the check's rules itself
+  on every change to the issue). A card never moves back from In progress, In review or Done. Run
+  by hand for one issue, the workflow brings that card in line with the issue as it is now.
 
 ## Grooming and work in progress
 

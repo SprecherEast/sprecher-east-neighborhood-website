@@ -64,7 +64,7 @@ The Definition of Ready, spelled out:
 - The role guides and knowledge notes a worker must load are named.
 
 When all of it holds, add the `ready` label: that is the move. The planner app sets the card to
-Ready, and refuses while `needs owner` or `needs grooming` is on the issue.
+Ready, and refuses while the issue has `needs owner` or fails the issue check.
 
 ### Ready to In progress
 
@@ -186,7 +186,8 @@ fits one line, means a proposed split.
 
 - **Parent and milestone:** a child carries its epic's milestone; an epic's milestone matches an
   outcome it serves.
-- **Priority:** a blocker ranked below what it blocks; a child ranked far above its parent's need.
+- **Priority:** a blocker ranked below what it blocks; a child ranked far above its parent's need;
+  a `priority:` label and a Priority field that differ (the label wins, since the checks read it).
 - **Labels:** none that duplicate hierarchy; the `epic` marker only on parents.
 - **Dependencies:** blocked-by links instead of prose, and none that form a cycle.
 
