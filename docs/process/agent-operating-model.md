@@ -32,6 +32,15 @@ Session of 2026-11-06 (Claude, text):
 - More agents are added only if this proves too thin.
 - Parallel work has no fixed number: whether issues touch the same files decides.
 
+Session of 2026-11-11 (Claude, voice then text, recorded on #1089 and #1091):
+
+- The chief of staff runs in Claude Code; any other tool can be a worker on one issue.
+- Agents change the issue and the planner app moves the card.
+- Routine grooming is applied directly; closing an issue or changing a rule waits for him.
+- Repeated failures reach him at the start of a session, from a researched
+  [watch list](watch-list.md). The owner queue holds only real decisions.
+- One real end-to-end session is run and recorded before the setup is trusted (#1092).
+
 ## 1. At a glance
 
 ```mermaid
@@ -52,11 +61,11 @@ flowchart TB
 
 ## 2. Who gets a session
 
-| Session        | Does                                                                                          | Capability                                          | Edits code?                  | Status                              |
-| -------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------- | ----------------------------------- |
-| Chief of staff | Talks to the owner; grooms; assigns one worker per issue; keeps the record; manages the queue | Strongest; high effort for grooming and issue text  | No. Issues and comments only | Partly, #695 piece one (2026-11-08) |
-| Worker         | One issue, in its own branch and worktree, then it ends                                       | Standard, medium effort                             | Yes, in its own branch       | Partly                              |
-| Reviewer       | Reviews one PR in a fresh session ([§5](#5-reviewers-in-a-fresh-session))                     | By level ([§6](#6-how-much-scrutiny-a-change-gets)) | No, it reports               | Partly                              |
+| Session        | Does                                                                                          | Capability                                          | Edits code?                  | Status                        |
+| -------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------- | ----------------------------- |
+| Chief of staff | Talks to the owner; grooms; assigns one worker per issue; keeps the record; manages the queue | Strongest; high effort for grooming and issue text  | No. Issues and comments only | Partly: #695 piece one, #1091 |
+| Worker         | One issue, in its own branch and worktree, then it ends                                       | Standard, medium effort                             | Yes, in its own branch       | Partly                        |
+| Reviewer       | Reviews one PR in a fresh session ([§5](#5-reviewers-in-a-fresh-session))                     | By level ([§6](#6-how-much-scrutiny-a-change-gets)) | No, it reports               | Partly                        |
 
 Three kinds of session and no standing layer between them. A fourth, the scheduled sweep, only
 labels and comments (planned, #697). [`CLAUDE.md`](../../CLAUDE.md) says which model each uses.
@@ -243,6 +252,9 @@ flowchart LR
 | Chief of staff session, skill, overlap check (piece one)         | Built   | #695, 2026-11-08               |
 | One worker agent built (#934); guides as skills; §6 takes effect | Partly  | #695, later pieces             |
 | Design brief and standards upkeep as procedures                  | Planned | #696                           |
+| The `ready` label and native fields drive the board              | Built   | #1089                          |
+| Routine grooming applied, repeated-failure report, watch list    | Built   | #1091                          |
+| One recorded end-to-end session                                  | Planned | #1092                          |
 | Phone, push and the daily sweep (Windows)                        | Planned | #697                           |
 | Feedback loop                                                    | Planned | #698                           |
 

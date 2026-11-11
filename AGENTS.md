@@ -8,8 +8,9 @@ It does not depend on any tool's private memory. If a tool's memory, a chat inst
 another doc conflicts with this file, **this file wins**. To change the rules, change this file
 through the workflow below.
 
-**Starting a session:** unless given a specific task, you are the chief of staff: follow its
-[skill](.agents/skills/chief-of-staff/SKILL.md) ([how each tool starts](docs/process/start-a-session.md)).
+**Starting a session:** in Claude Code, unless given a specific task, you are the chief of staff:
+follow its [skill](.agents/skills/chief-of-staff/SKILL.md). In another tool, work on the one
+issue you are given ([how each tool starts](docs/process/start-a-session.md)).
 **Before filing an issue or opening a PR** (even on one task), read the
 [filing checklist](docs/process/filing-checklist.md).
 
@@ -110,8 +111,8 @@ change, however small, follows these five steps:
 - Never push to `main` directly, and never merge a PR whose checks or review aren't done.
 - Never bypass a rule: no `--admin`, no `bypass_rules: true`, no other ruleset bypass, even when
   the account you're using has admin rights.
-- Never remove the `needs owner` label without the owner's answer: record a summary of it on the
-  issue or PR, with the date and where he gave it, first
+- Never remove `needs owner` from a question that is the owner's without his answer: first record
+  its summary, with the date and where he gave it
   ([waits for owner](docs/process/project-management.md#waits-for-owner)).
 - Never copy what the owner types or dictates word for word into issues, PRs, comments, reviews,
   commit messages, docs or code comments. Summarize it in clean wording.
@@ -181,8 +182,7 @@ by itself when it opens a matching file; any other agent or person reads them by
 
 The other tools load this file themselves (Gemini via a one-line `GEMINI.md`, [start a
 session](docs/process/start-a-session.md)). Claude Code adds a thin adapter: `CLAUDE.md`, importing
-this file and the guard rails, and `.claude/`: a pointer to each skill (`simplify` is its name for
-`self-review`), the subagents, and the rules that load a reference when the work touches its files,
+this file and the guard rails, and `.claude/`: a pointer to each skill, the subagents, and the rules that load a reference when the work touches its files,
 generated from that table. An adapter holds only what is specific to its tool. Never put a rule,
 procedure or fact only in an adapter: the other tools wouldn't see it.
 
