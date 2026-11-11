@@ -49,6 +49,12 @@ describe('resolveLink', () => {
     expect(resolveLink({ type: 'custom', url: '/a', label: 'A' })?.appearance).toBe('default')
   })
 
+  it('keeps the accent appearance, the orange button', () => {
+    expect(
+      resolveLink({ type: 'custom', url: '/a', label: 'A', appearance: 'accent' })?.appearance,
+    ).toBe('accent')
+  })
+
   it('returns null when the reference is unpopulated or has no slug, or there is no URL', () => {
     expect(
       resolveLink({ type: 'reference', label: 'X', reference: { relationTo: 'pages', value: 3 } }),

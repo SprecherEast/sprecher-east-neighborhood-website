@@ -39,6 +39,7 @@ const columnFields: Field[] = [
     type: 'checkbox',
   },
   link({
+    appearances: ['default', 'outline', 'accent'],
     overrides: {
       admin: {
         condition: (_data, siblingData) => {

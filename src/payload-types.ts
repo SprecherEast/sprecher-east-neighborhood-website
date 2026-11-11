@@ -660,7 +660,7 @@ export interface ContentBlock {
           /**
            * Choose how the link should be rendered.
            */
-          appearance?: ('default' | 'outline') | null
+          appearance?: ('default' | 'outline' | 'accent') | null
         }
         /**
          * Where the link button sits in its column.
