@@ -74,4 +74,40 @@ describe('a link for every tab (#1097)', () => {
     setup()
     expect(selected()).toBe('Day-to-day')
   })
+
+  it('follows the arrow keys the same way, since Radix opens a tab on focus', async () => {
+    setup()
+    await userEvent.click(screen.getByRole('tab', { name: 'Day-to-day' }))
+    await userEvent.keyboard('{ArrowRight}')
+    expect(selected()).toBe('Big projects')
+    expect(window.location.hash).toBe('#tab-projects')
+  })
+
+  const twoBlocks = () =>
+    render(
+      <>
+        <Tabs label="First" items={ITEMS} defaultValue="money" />
+        <Tabs label="Second" items={ITEMS} defaultValue="money" />
+      </>,
+    )
+  const states = () => screen.getAllByRole('tab').map((tab) => tab.getAttribute('aria-selected'))
+
+  it('gives each of two tabbed blocks with the same names a link of its own', async () => {
+    twoBlocks()
+    await userEvent.click(screen.getAllByRole('tab')[4] as HTMLElement)
+    expect(window.location.hash).toBe('#tab-projects-2')
+    expect(states()).toEqual(['true', 'false', 'false', 'false', 'true', 'false'])
+  })
+
+  it('opens the second block’s tab from its link and leaves the first block alone', () => {
+    window.history.replaceState(null, '', '/post#tab-projects-2')
+    twoBlocks()
+    expect(states()).toEqual(['true', 'false', 'false', 'false', 'true', 'false'])
+  })
+
+  it('opens the first block’s tab from the plain link', () => {
+    window.history.replaceState(null, '', '/post#tab-projects')
+    twoBlocks()
+    expect(states()).toEqual(['false', 'true', 'false', 'true', 'false', 'false'])
+  })
 })

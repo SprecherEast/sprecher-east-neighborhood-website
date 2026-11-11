@@ -3467,7 +3467,7 @@ export interface FactTabsBlock {
      */
     label: string
     /**
-     * The big text: where it stands, or the number. "Pending", "2040s", "$10M". In a tab with a whole tax bill, write {yearly} or {monthly} for the City’s extra tax in a year or a month on the home and year the reader chose.
+     * The big text: where it stands, or the number. "Pending", "2040s", "$10M".
      */
     value: string
     /**
@@ -3498,7 +3498,7 @@ export interface FactTabsBlock {
      */
     linkUrl?: string | null
     /**
-     * The name of what this tab opens: "Big-project money". In a tab with a whole tax bill, write {yearly} or {monthly} for the City’s extra tax in a year or a month on the home and year the reader chose.
+     * The name of what this tab opens: "Big-project money".
      */
     heading: string
     /**

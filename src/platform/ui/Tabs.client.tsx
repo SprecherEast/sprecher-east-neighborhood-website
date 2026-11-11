@@ -106,6 +106,17 @@ export function Tabs({
   // Every tab has a link of its own (#1097): the page's address plus the tab's name
   const anchors = items.map((item) => item.anchor ?? item.value)
   const names = anchors.join('\n')
+  const values = items.map((item) => item.value).join('\n')
+
+  // The link of a tab: its name, numbered `-2`, `-3` when an earlier tabbed block on the page has the
+  // same name, so every tab on a page has a link of its own
+  const linkOf = (anchor: string) => {
+    const roots = [...document.querySelectorAll<HTMLElement>('[data-tab-names]')]
+    const earlier = roots
+      .slice(0, root.current ? roots.indexOf(root.current) : 0)
+      .filter((other) => other.dataset.tabNames?.split('\n').includes(anchor)).length
+    return earlier > 0 ? `${anchor}-${earlier + 1}` : anchor
+  }
 
   // A link that names a tab opens it and brings the tabs into view, on load and whenever the
   // address changes on the page (a link, or Back); a name that is not a tab changes nothing
@@ -117,31 +128,32 @@ export function Tabs({
       } catch {
         return
       }
-      const index = names.split('\n').indexOf(wanted)
-      const item = wanted ? items[index] : undefined
-      if (!item) return
-      setCurrent(item.value)
+      const list = names.split('\n')
+      const index = wanted ? list.findIndex((anchor) => linkOf(anchor) === wanted) : -1
+      const value = values.split('\n')[index]
+      if (value === undefined) return
+      setCurrent(value)
       root.current?.scrollIntoView({ block: 'start' })
     }
     open()
     window.addEventListener('hashchange', open)
     return () => window.removeEventListener('hashchange', open)
-    // `names` stands for the items' names: the items themselves are new on every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [names])
+    // `names` and `values` stand for the items': the items themselves are new on every render
+  }, [names, values])
 
   // Choosing a tab puts its link in the address bar to copy, replacing the entry so Back leaves the page
   const choose = (value: string) => {
     setChanged(true)
     setCurrent(value)
     const index = items.findIndex((item) => item.value === value)
-    window.history.replaceState(window.history.state, '', `#${anchors[index] ?? value}`)
+    window.history.replaceState(window.history.state, '', `#${linkOf(anchors[index] ?? value)}`)
   }
 
   return (
     <RadixTabs.Root
       ref={root}
       value={current}
+      data-tab-names={names}
       onValueChange={choose}
       data-changed={changed || undefined}
       className={cn(
