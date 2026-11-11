@@ -14,6 +14,35 @@ import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 import { SAMPLE_CODE, SAMPLE_KEY_FACTS, SAMPLE_RICH_TEXT, UNEVEN_KEY_FACTS } from './sampleData'
 
 const FACT_TABS = toFactTabsProps(FACT_TABS_FIXTURE)
+/** The first tab with a whole tax bill at the top of its panel (sample rates, not the City's) */
+const BILL_TAB = {
+  ...(FACT_TABS.tabs[0] as (typeof FACT_TABS.tabs)[number]),
+  panel: [
+    {
+      kind: 'billShare' as const,
+      billShare: {
+        intro: 'Sample: based on an average home. Change the value to see yours.',
+        years: [
+          {
+            year: 2026,
+            label: '2026 rates',
+            averageHome: 481300,
+            rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 },
+            source: null,
+          },
+          {
+            year: 2027,
+            label: '2027 rates (proposed)',
+            averageHome: 500300,
+            rates: { city: 6.93 },
+            source: null,
+          },
+        ],
+      },
+    },
+    ...(FACT_TABS.tabs[0]?.panel ?? []),
+  ],
+}
 
 /** The rich-text renderer and the code block inside it */
 export function RichTextGallery() {
@@ -90,6 +119,12 @@ export function RichTextGallery() {
           className="block"
         >
           <FactTabs tabs={FACT_TABS.tabs.slice(1, 4)} />
+        </GalleryVariant>
+        <GalleryVariant
+          label="a whole tax bill first, the rest of the tab under the City's slice"
+          className="block"
+        >
+          <FactTabs tabs={[BILL_TAB]} />
         </GalleryVariant>
         <GalleryVariant label="two tabs, the second one without pictures" className="block">
           <FactTabs

@@ -50,9 +50,9 @@ describe('FactTabsBlockConfig', () => {
     expect([FACT_TABS_LIMITS.minTabs, FACT_TABS_LIMITS.maxTabs]).toEqual([2, 4])
   })
 
-  it('offers only a chart and a timeline in a panel, as the blocks themselves', () => {
+  it('offers only a chart, a timeline and a whole tax bill in a panel, as the blocks themselves', () => {
     const panel = byName('panel') as unknown as { blocks: Block[] }
-    expect(panel.blocks.map((b) => b.slug)).toEqual(['chart', 'timeline'])
+    expect(panel.blocks.map((b) => b.slug)).toEqual(['chart', 'timeline', 'billShare'])
   })
 
   it('requires a heading and a definition within their limits', () => {
@@ -106,7 +106,7 @@ describe('FactTabsBlockConfig', () => {
     it.each([
       ['tabs', 1, 2, 4],
       ['tabs', 5, 2, 4],
-      ['panel', 0, 1, 2],
+      ['panel', 0, 1, 3],
     ])('%s: says why under the field while Admin counts %i rows', (name, rows, min, max) => {
       const noun = name === 'tabs' ? 'tabs' : 'pictures'
       expect(check(name)(rows, { event: 'onChange' })).toMatch(new RegExp(`^Add ${min} to ${max}`))
@@ -138,7 +138,7 @@ describe('FactTabsBlockConfig', () => {
 
     it.each([
       ['tabs', 2, 4],
-      ['panel', 1, 2],
+      ['panel', 1, 3],
     ])(
       '%s: judges the real save, %i to %i rows, and reads a count as no rows',
       (name, min, max) => {

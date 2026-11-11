@@ -46,6 +46,56 @@ describe('factTabsToJsx and importFactTabsTag', () => {
     expect(factTabsToJsx(back as never)).toBe(tag)
   })
 
+  it('keeps a whole tax bill, its rates left empty where a body has not set one, through the tag (#1018)', () => {
+    const [first, ...rest] = FACT_TABS_FIXTURE.tabs ?? []
+    const bill = {
+      blockType: 'billShare' as const,
+      intro: 'Based on the City’s average home.',
+      years: [
+        {
+          year: 2026,
+          label: '2026 rates',
+          averageHome: 481300,
+          schools: 8.6814,
+          county: 2.3564,
+          matc: 0.6153,
+          city: 7.0139,
+          linkLabel: 'City tax detail',
+          linkUrl: 'https://example.org/tax',
+        },
+        { year: 2027, label: '2027 rates (proposed)', averageHome: 500300, city: 6.93 },
+      ],
+    }
+    const stored = {
+      tabs: [{ ...first, panel: [...(first?.panel ?? []), bill] }, ...rest],
+    } as unknown as StoredFactTabs
+    const tag = factTabsToJsx(stored) as string
+    const back = importFactTabsTag(propsOf(tag)) as StoredFactTabs
+    expect(toFactTabsProps(back as never)).toEqual(toFactTabsProps(stored))
+    expect(factTabsToJsx(back as never)).toBe(tag)
+    const shown = toFactTabsProps(back as never).tabs[0]?.panel.at(-1)
+    expect(shown).toMatchObject({ kind: 'billShare' })
+  })
+
+  it('refuses a whole tax bill with a rate that is not a number above zero', () => {
+    const tabs = (FACT_TABS_FIXTURE.tabs ?? []).map((t) => ({
+      value: t.value,
+      label: t.label,
+      icon: t.icon,
+      certainty: t.certainty,
+      heading: t.heading,
+      definition: t.definition,
+      panel: [
+        {
+          block: 'billShare',
+          intro: 'x',
+          years: [{ year: 2026, label: 'y', averageHome: 1, city: -1 }],
+        },
+      ],
+    }))
+    expect(() => importFactTabsTag({ tabs })).toThrow(/^Invalid <FactTabs>:/)
+  })
+
   it('throws the reasons outside a conversion, starting "Invalid <FactTabs>:"', () => {
     expect(() => importFactTabsTag({ tabs: [] })).toThrow(/^Invalid <FactTabs>: tabs/)
     expect(() => importFactTabsTag({})).toThrow(/Invalid <FactTabs>/)

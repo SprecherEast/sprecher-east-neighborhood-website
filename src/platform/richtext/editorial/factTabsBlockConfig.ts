@@ -1,5 +1,6 @@
 import type { Block } from 'payload'
 
+import { BillShareBlockConfig } from './billShareBlockConfig'
 import { ChartBlockConfig } from './chartBlockConfig'
 import { FACT_TABS_LIMITS } from './editorialLimits'
 import { filledText, filledTextarea } from './filledText'
@@ -59,7 +60,7 @@ export const FactTabsBlockConfig: Block = {
           type: 'blocks',
           labels: { singular: 'Picture', plural: 'Pictures' },
           admin: {
-            description: `${FACT_TABS_LIMITS.minPanelBlocks} to ${FACT_TABS_LIMITS.maxPanelBlocks} charts or timelines shown when the tab is open.`,
+            description: `${FACT_TABS_LIMITS.minPanelBlocks} to ${FACT_TABS_LIMITS.maxPanelBlocks} charts, timelines or a whole tax bill shown when the tab is open.`,
           },
           minRows: FACT_TABS_LIMITS.minPanelBlocks,
           maxRows: FACT_TABS_LIMITS.maxPanelBlocks,
@@ -69,7 +70,7 @@ export const FactTabsBlockConfig: Block = {
             FACT_TABS_LIMITS.maxPanelBlocks,
             'pictures',
           ),
-          blocks: [ChartBlockConfig, TimelineBlockConfig],
+          blocks: [ChartBlockConfig, TimelineBlockConfig, BillShareBlockConfig],
         },
       ],
     },

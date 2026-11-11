@@ -103,6 +103,8 @@ export const COMPONENT_GROUPS = [
       'BreakdownChart',
       'BarChartSvg',
       'BarSegment',
+      'ShareBar',
+      'ShareBarSwatch',
     ],
   },
   {
@@ -117,14 +119,18 @@ export const COMPONENT_GROUPS = [
       'Code',
       'CodeBlock',
       'CopyButton',
-      'KeyFacts',
-      'FactCard',
-      'FactTabs',
       'Steps',
       'Timeline',
       'OutcomeFork',
       'DiagramKey',
       'FigureBlock',
     ],
+  },
+  {
+    slug: 'key-facts',
+    title: 'Key facts and fact tabs',
+    intro:
+      'Key facts as cards, and the fact tabs that open charts, timelines and the whole tax bill (`src/platform/richtext/editorial/`).',
+    components: ['KeyFacts', 'FactCard', 'FactTabs', 'BillShare'],
   },
 ]
