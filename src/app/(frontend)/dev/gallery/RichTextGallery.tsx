@@ -40,7 +40,55 @@ const BILL_TAB = {
         ],
       },
     },
-    ...(FACT_TABS.tabs[0]?.panel ?? []),
+    {
+      kind: 'chart' as const,
+      enlarge: false,
+      spec: {
+        kind: 'stacked' as const,
+        title: 'Sample: City tax on an average home',
+        summary: 'Sample figures.',
+        unit: 'usd' as const,
+        orientation: 'horizontal' as const,
+        x: ['2026 adopted', '2027 proposed'],
+        series: [
+          { key: 'same', label: 'Same as 2026', values: [3375.89, 3375.89] },
+          {
+            key: 'more',
+            label: 'Proposed increase',
+            pattern: 'hatch' as const,
+            increase: true as const,
+            values: [0, 90.04],
+          },
+        ],
+      },
+    },
+    {
+      kind: 'chart' as const,
+      enlarge: false,
+      spec: {
+        kind: 'breakdown' as const,
+        title: 'Where that City tax goes, estimated',
+        summary: 'Sample: split like an operating budget.',
+        unit: 'usd' as const,
+        hideSquares: true,
+        areas: [
+          {
+            key: 'safety',
+            label: 'Public safety & health',
+            value: 1413.57,
+            pieces: [
+              { key: 'police', label: 'Police', value: 743.86, shown: true as const },
+              { key: 'fire', label: 'Fire / EMS', value: 588.71, shown: true as const },
+            ],
+          },
+          { key: 'debt', label: 'Debt service', value: 584.1 },
+          { key: 'else', label: 'Everything else', value: 514.76 },
+          { key: 'works', label: 'Public works', value: 411.22 },
+          { key: 'transport', label: 'Transportation', value: 274.77 },
+          { key: 'admin', label: 'Administration', value: 267.51 },
+        ],
+      },
+    },
   ],
 }
 

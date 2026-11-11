@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatValue } from './format'
+import { formatValue, formatWholeDollars } from './format'
 
 describe('formatValue', () => {
   it.each([
@@ -22,5 +22,13 @@ describe('formatValue', () => {
     expect(formatValue(10_000_000, 'usd', { compact: true })).toBe('$10M')
     expect(formatValue(4_775_499, 'usd', { compact: true })).toBe('$4.8M')
     expect(formatValue(7.5, 'usd', { compact: true })).toBe('$7.50')
+  })
+})
+
+describe('formatWholeDollars', () => {
+  it('rounds to whole dollars and never shows cents', () => {
+    expect(formatWholeDollars(1385.6)).toBe('$1,386')
+    expect(formatWholeDollars(1385.4)).toBe('$1,385')
+    expect(formatWholeDollars(0)).toBe('$0')
   })
 })

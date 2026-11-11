@@ -139,9 +139,9 @@ Source: `src/platform/ui/chart/adapters/visx/BarSegments.tsx`
 
 ## `ShareBar`
 
-One whole as a bar of slices, each exactly as wide as its share (a square bar, not a pie), with one slice highlighted: the same glassy green as the page's tabs, outlined, its two side edges running down `SHARE_BAR_GAP` px and curving into the top edge of the panel under the bar, so the slice and the panel read as one folder tab (the way `Tabs` joins a tab to its panel). The panel holds `children`. Everything is one SVG, so the outline is one seamless line and a slice's width is an attribute (a percent), never an inline style. The bar is one named picture for screen readers; the numbers belong in text next to it, which the caller writes.
+One whole as a bar of slices, each exactly as wide as its share (a square bar, not a pie), with one slice highlighted: the same glassy green as the page's tabs, outlined, standing `SHARE_BAR_RISE` px above the others, its two side edges running down `SHARE_BAR_GAP` px and curving into the top edge of the panel under the bar, so the slice and the panel read as one folder tab (the way `Tabs` joins a tab to its panel). The panel holds `children`. Everything is one SVG, so a slice's width is an attribute, never an inline style. Once the bar knows its width every edge is moved to a whole pixel, so the lines and curves stay crisp and join cleanly at any screen width; until then (on the server, before the first paint) it draws in percent. A slice too narrow for its label gets the label above it with a tick. The bar is one named picture for screen readers; the numbers belong in text next to it, which the caller writes.
 
-Source: `src/platform/ui/ShareBar.tsx`
+Source: `src/platform/ui/ShareBar.client.tsx`
 
 | Prop        | Type                                                                                                                                                                       | Required | Description                            |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------- |
@@ -159,7 +159,7 @@ Source: `src/platform/ui/ShareBar.tsx`
 
 A small square in a slice's tone, for the key: decorative, the key's text names the slice
 
-Source: `src/platform/ui/ShareBar.tsx`
+Source: `src/platform/ui/ShareBar.client.tsx`
 
 | Prop   | Type                                             | Required | Description |
 | ------ | ------------------------------------------------ | -------- | ----------- |
@@ -168,3 +168,73 @@ Source: `src/platform/ui/ShareBar.tsx`
 **Used by** (direct imports):
 
 - Platform: `platform/richtext`
+
+## `ShareBarEdge`
+
+One side of the highlighted slice, as one line: down from the slice's top, then the quarter circle out onto the panel's top edge. It is one path, so the edge and its curve can never part. Drawn in a nested SVG at the edge's own x, so the path's coordinates stay small and the edge can sit on a whole pixel.
+
+Source: `src/platform/ui/ShareBarEdge.tsx`
+
+| Prop       | Type                | Required | Description                            |
+| ---------- | ------------------- | -------- | -------------------------------------- |
+| `x`        | `string \| number`  | yes      |                                        |
+| `side`     | `"left" \| "right"` | yes      |                                        |
+| `top`      | `number`            | yes      |                                        |
+| `panelTop` | `number`            | yes      |                                        |
+| `flare`    | `number`            | yes      | The quarter circle's radius, in pixels |
+
+**Used by** (direct imports):
+
+- Platform: `platform/ui`
+
+## `AmountBar`
+
+One amount as a single bar split into parts, each as wide as its share, with the year and the whole amount above it and, when there is more than one part, each part named under it with its dollars. The bar is one named picture; every figure is also text. A part marked `hatch` is the proposed increase: the same colour, striped, as in the charts. Widths are percent attributes, never inline styles.
+
+Source: `src/platform/ui/AmountBar.tsx`
+
+| Prop        | Type                       | Required | Description                 |
+| ----------- | -------------------------- | -------- | --------------------------- |
+| `title`     | `string`                   | yes      |                             |
+| `total`     | `string`                   | yes      | The whole amount, formatted |
+| `parts`     | `readonly AmountBarPart[]` | yes      |                             |
+| `className` | `string`                   | no       |                             |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`
+- Platform: `platform/richtext`
+
+## `ScaledBreakdown`
+
+A breakdown chart drawn in the browser with every amount multiplied by `factor` (#1020): the City's tax on the home a reader typed, split the way the budget is. It is the same figure as `Chart` draws for a breakdown (title, takeaway, the drawing, the caption) from the same drawing code, but it takes a spec that was already checked on the server and never parses it, so no spec rules (zod) and no chart library reach the browser; `ScaledBreakdown.test.tsx` guards that. Every figure is text in the drawing, so it has no separate numbers table.
+
+Source: `src/platform/ui/chart/ScaledBreakdown.tsx`
+
+| Prop     | Type                                                                                                                                                                 | Required | Description |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------- |
+| `spec`   | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …` | yes      |             |
+| `factor` | `number`                                                                                                                                                             | yes      |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
+## `ChartCaption`
+
+What a unit means, when the figures are from, where they came from and how sure we are: the text under a chart's drawing. It takes plain parts, not the spec, so a chart drawn in the browser (a breakdown scaled to a reader's home) writes the same caption without the spec's rules.
+
+Source: `src/platform/ui/chart/ChartCaption.tsx`
+
+| Prop        | Type                                          | Required | Description                                     |
+| ----------- | --------------------------------------------- | -------- | ----------------------------------------------- |
+| `notes`     | `readonly string[]`                           | yes      | What a unit or a scale means, one sentence each |
+| `finePrint` | `string`                                      | no       |                                                 |
+| `asOf`      | `string`                                      | no       | When the figures are from                       |
+| `sources`   | `readonly { label: string; href: string; }[]` | no       |                                                 |
+| `certainty` | `"confirmed" \| "estimate" \| "unknown"`      | no       |                                                 |
+| `className` | `string`                                      | no       |                                                 |
+
+**Used by** (direct imports):
+
+- Platform: `platform/ui`

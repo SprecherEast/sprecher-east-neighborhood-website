@@ -10,14 +10,18 @@ import {
   type BillBody,
   type BillPart,
 } from '@/platform/lib/billShare'
-import { formatValue } from '@/platform/lib/chart/format'
+import { formatWholeDollars } from '@/platform/lib/chart/format'
+import type { ChartSpec } from '@/platform/lib/chart/spec'
+import { AmountBar } from '@/platform/ui/AmountBar'
 import { Button } from '@/platform/ui/Button'
+import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
 import { Field } from '@/platform/ui/Field.client'
 import { Link } from '@/platform/ui/Link'
-import { ShareBar, ShareBarSwatch, type ShareBarSlice } from '@/platform/ui/ShareBar'
+import { ShareBar, ShareBarSwatch, type ShareBarSlice } from '@/platform/ui/ShareBar.client'
 import { Text } from '@/platform/ui/Text'
 
 import type { BillShareProps } from './billShare'
+import { toCityBar } from './cityBar'
 
 /** A slice's tone: the City highlighted, the others gray, the schools' the strongest */
 const TONE: Record<BillBody, ShareBarSlice['tone']> = {
@@ -27,25 +31,38 @@ const TONE: Record<BillBody, ShareBarSlice['tone']> = {
   matc: 'light',
 }
 
-/** A slice this wide or wider has room for its percent written inside it */
-const LABEL_MIN_SHARE = 8
-
-const dollars = (amount: number) => formatValue(Math.round(amount), 'usd')
-
 /** "A, B and C" */
 const joinNames = (names: string[]) =>
   names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`
+
+/** What the City's panel holds besides the pictures a tab only draws once (#1020) */
+export type CityPanelProps = {
+  /** A chart of the City's tax by year: the panel starts with its column for the year shown, as one bar */
+  cityBars?: Extract<ChartSpec, { kind: 'stacked' }>
+  /** Where the City's tax goes, drawn again for whatever the City's tax is on the home typed */
+  cityBreakdown?: Extract<ChartSpec, { kind: 'breakdown' }>
+  /** The short line between the two */
+  definition?: ReactNode
+}
 
 /**
  * The whole property-tax bill at the top of a fact tab (#1018): a line saying what the estimate is
  * based on, a home value the reader can change (it starts at the City's average home), a switch
  * between tax years, what that home pays each body, and the bill as one bar whose slices are as
- * wide as their shares. The City's slice is joined to the panel under it, which holds the rest of
- * the tab (`children`: the City's adopted and proposed bars and where its part goes), so the
- * reader sees where the City's share sits in the whole. A year in which a body has not set its rate
- * uses that body's rate from the year before, and says so.
+ * wide as their shares. The City's slice is joined to the panel under it, which starts with the
+ * City's own tax as one bar, then a short line, then where that tax goes (#1020), then the rest of
+ * the tab (`children`). The bar and the breakdown are drawn again for every home value and year, so
+ * every amount in the panel is the City's slice of the bill above it. A year in which a body has
+ * not set its rate uses that body's rate from the year before, and says so.
  */
-export function BillShare({ intro, years, children }: BillShareProps & { children?: ReactNode }) {
+export function BillShare({
+  intro,
+  years,
+  cityBars,
+  cityBreakdown,
+  definition,
+  children,
+}: BillShareProps & CityPanelProps & { children?: ReactNode }) {
   const [yearIndex, setYearIndex] = useState(Math.max(years.length - 1, 0))
   const year = years[yearIndex]
   // What the reader typed, or null while the box still shows the City's average for the year
@@ -54,7 +71,7 @@ export function BillShare({ intro, years, children }: BillShareProps & { childre
   const [settled, setSettled] = useState(true)
   if (!year) return null
 
-  const text = typed ?? dollars(year.averageHome)
+  const text = typed ?? formatWholeDollars(year.averageHome)
   const homeValue = parseHomeValue(text)
   const { rates, filled } = fillFromEarlier(year.rates, years[yearIndex - 1]?.rates)
   const bill = homeValue === null ? null : computeBillShare(homeValue, rates)
@@ -64,8 +81,34 @@ export function BillShare({ intro, years, children }: BillShareProps & { childre
   const summary = !bill
     ? ''
     : bill.complete && bill.total !== null
-      ? `If your home is worth ${dollars(homeValue ?? 0)}, your whole bill is about ${dollars(bill.total)}.`
-      : `The City’s part of a ${dollars(homeValue ?? 0)} home’s bill would be about ${dollars(part('city')?.amount ?? 0)}.`
+      ? `If your home is worth ${formatWholeDollars(homeValue ?? 0)}, your whole bill is about ${formatWholeDollars(bill.total)}.`
+      : `The City’s part of a ${formatWholeDollars(homeValue ?? 0)} home’s bill would be about ${formatWholeDollars(part('city')?.amount ?? 0)}.`
+
+  // The City's panel follows the home typed (the average home while the box holds no number)
+  const home = homeValue ?? year.averageHome
+  const cityAmount =
+    (bill ?? computeBillShare(home, rates)).parts.find((p) => p.key === 'city')?.amount ?? null
+  const homeRatio = home / year.averageHome
+  const breakdownTotal = cityBreakdown?.areas.reduce((sum, area) => sum + area.value, 0) ?? 0
+  const breakdownFactor =
+    cityAmount !== null && breakdownTotal > 0 ? cityAmount / breakdownTotal : homeRatio
+  // A chart whose columns are not these years cannot say which year it shows, so it draws no bar
+  const cityBar =
+    cityBars && cityBars.x.length === years.length
+      ? toCityBar(cityBars, { column: yearIndex, cityAmount, homeRatio })
+      : null
+  const panel = (
+    <div className="space-y-6">
+      {cityBar && <AmountBar title={cityBar.title} total={cityBar.total} parts={cityBar.parts} />}
+      {definition}
+      {cityBreakdown && (
+        <div className="rounded-xl bg-surface p-4">
+          <ScaledBreakdown spec={cityBreakdown} factor={breakdownFactor} />
+        </div>
+      )}
+      {children}
+    </div>
+  )
 
   const slices: ShareBarSlice[] =
     bill?.complete === true
@@ -73,7 +116,7 @@ export function BillShare({ intro, years, children }: BillShareProps & { childre
           key,
           share: share ?? 0,
           tone: TONE[key],
-          ...((share ?? 0) >= LABEL_MIN_SHARE ? { label: `${percent}%` } : {}),
+          label: `${percent}%`,
         }))
       : []
 
@@ -157,7 +200,9 @@ export function BillShare({ intro, years, children }: BillShareProps & { childre
               </span>
               <span className="min-w-0">
                 <span className="block text-foreground">{BILL_BODY_NAMES[key]}</span>
-                <span className="block font-semibold text-foreground">{dollars(amount ?? 0)}</span>
+                <span className="block font-semibold text-foreground">
+                  {formatWholeDollars(amount ?? 0)}
+                </span>
                 <span className="block text-muted-foreground">about {percent}%</span>
               </span>
             </li>
@@ -166,10 +211,10 @@ export function BillShare({ intro, years, children }: BillShareProps & { childre
       )}
       {picture ? (
         <ShareBar slices={slices} label={barLabel}>
-          {children}
+          {panel}
         </ShareBar>
       ) : (
-        children
+        panel
       )}
       <Text variant="small">
         An estimate, not your bill: it uses {year.year} rates and the value above, and your real
