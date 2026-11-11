@@ -19,8 +19,8 @@ function load(name) {
 /** Every secret a job reads (`secrets.NAME`, `secrets['NAME']`, `toJSON(secrets)`), except the token GitHub gives each run for free. */
 function secretsRead(job) {
   // A calling job's `secrets: inherit` passes secrets on without naming one; a `secrets:` mapping names them, so it still counts.
-  const body = { ...job }
-  if (body.secrets === 'inherit') delete body.secrets
+  const { secrets: passed, ...body } = job
+  if (passed !== undefined && passed !== 'inherit') body.passed = passed
   const found = JSON.stringify(body).matchAll(
     /secrets(?:\.([A-Za-z0-9_]+)|\[\\?['"]([A-Za-z0-9_]+)\\?['"]\]|(?![A-Za-z0-9_.]))/g,
   )
@@ -37,14 +37,10 @@ function environmentOf(job) {
   return name === undefined ? undefined : String(name).toLowerCase()
 }
 
-const DEPLOY_SECRETS = [
-  'VPS_HOST',
-  'VPS_USER',
-  'VPS_PORT',
-  'VPS_SSH_KEY',
-  'VPS_KNOWN_HOSTS',
-  'UMAMI_ADMIN_PASSWORD',
-]
+// The deploy secrets are whatever deploy.yml reads, so the workflow and this test can't drift apart.
+const DEPLOY_SECRETS = [...new Set(Object.values(load('deploy.yml').jobs).flatMap(secretsRead))]
+  .filter((n) => n !== '*')
+  .map((n) => n.toUpperCase())
 
 describe('deploy workflow and the production environment', () => {
   const { jobs } = load('deploy.yml')
