@@ -35,6 +35,20 @@ describe('Button', () => {
     expect(onSubmit).toHaveBeenCalledOnce()
   })
 
+  it('onPhoto adds the edge shadow that keeps a button apart from a photo, and nothing else changes', () => {
+    render(
+      <>
+        <Button onPhoto>On a photo</Button>
+        <Button>Plain</Button>
+      </>,
+    )
+
+    expect(screen.getByRole('button', { name: 'On a photo' }).className).toContain(
+      'shadow-on-photo',
+    )
+    expect(screen.getByRole('button', { name: 'Plain' }).className).not.toContain('shadow')
+  })
+
   it('renders a link when given href', () => {
     render(<Button href="/contact">Contact us</Button>)
 

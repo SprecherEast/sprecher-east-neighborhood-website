@@ -12,6 +12,7 @@ Source: `src/platform/ui/Button.tsx`
 
 - `variant`: `"primary" | "secondary" | "accent" | "accent-outline" | "ghost" | "inverse" | "inverse-outline"`
 - `size`: `"sm" | "md" | "lg" | "icon"`
+- `onPhoto`: `boolean`
 - `fullWidth`: `boolean | "mobile"`
 
 | Prop        | Type                                                                                                                                                                      | Required | Description                                                                                                                                                         |

@@ -30,10 +30,13 @@ export const home: (args: HomeArgs) => RequiredDataFromCollectionSlug<'pages'> =
       type: 'highImpact',
       links: [
         {
+          link: { type: 'custom', appearance: 'default', label: 'News', url: '/posts' },
+        },
+        {
           link: {
             type: 'custom',
             appearance: 'default',
-            label: 'Upcoming Events',
+            label: 'Upcoming events',
             url: '/events',
           },
         },
@@ -41,15 +44,15 @@ export const home: (args: HomeArgs) => RequiredDataFromCollectionSlug<'pages'> =
           link: {
             type: 'custom',
             appearance: 'outline',
-            label: 'Get Involved',
+            label: 'Get involved',
             url: '/get-involved',
           },
         },
       ],
       media: heroImage.id,
       richText: root([
-        heading('h1', 'Your Neighborhood, Your Community'),
-        p('News, events and City updates for neighbors on Madison\u2019s Far East Side.'),
+        heading('h1', 'Your Sprecher East neighborhood guide'),
+        p('An unofficial neighborhood guide made by neighbors for neighbors.'),
       ]),
     },
     layout: [

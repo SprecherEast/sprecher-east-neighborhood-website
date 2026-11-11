@@ -28,6 +28,14 @@ export function ActionsGallery() {
             </Button>
           ))}
         </GalleryVariant>
+        <GalleryVariant label="onPhoto (an edge that stays clear of a photo, #1061)">
+          <div className="flex w-full flex-wrap gap-4 rounded-2xl bg-primary-light p-6">
+            <Button onPhoto>primary</Button>
+            <Button variant="accent" onPhoto>
+              accent
+            </Button>
+          </div>
+        </GalleryVariant>
         <GalleryVariant label="variant: inverse, inverse-outline (on a brand band)">
           <Section tone="brand" spacing="sm" as="div" className="w-full rounded-2xl">
             <div className="flex flex-wrap gap-4">
