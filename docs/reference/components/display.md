@@ -128,10 +128,11 @@ Source: `src/platform/ui/MetaList.tsx`
 
 Source: `src/platform/ui/MetaBar.tsx`
 
-| Prop        | Type            | Required | Description                                             |
-| ----------- | --------------- | -------- | ------------------------------------------------------- |
-| `items`     | `MetaBarItem[]` | yes      | Author and date for a post, when and where for an event |
-| `className` | `string`        | no       |                                                         |
+| Prop        | Type            | Required | Description                                                                                                                                                                                                                                                              |
+| ----------- | --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `items`     | `MetaBarItem[]` | yes      | Author and date for a post, when and where for an event                                                                                                                                                                                                                  |
+| `align`     | `MetaBarAlign`  | no       | `start` (the default, an event's): the items grouped at the left, stacked in two columns on a phone. `end` (a post's, #1055): smaller text, one row at every width ending on the right edge, where a value too long for the row is cut with an ellipsis and never wraps. |
+| `className` | `string`        | no       |                                                                                                                                                                                                                                                                          |
 
 **Used by** (direct imports):
 

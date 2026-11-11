@@ -9,7 +9,7 @@ const POST = `/posts/${ALIGNMENT_POST_SLUG}`
 // The body, the metadata bar above it and the breadcrumb's home icon share the page's edges (#774,
 // #1002): the body of a post with cards runs to the right margin the breadcrumb has, the
 // groove runs from the body's left edge to its right edge at every width, with the metadata
-// aligned to its right end above it, and the home icon starts
+// aligned to its left end above it, and the home icon starts
 // on the left edge of the page menu.
 test.describe('the body, metadata bar and breadcrumb of a post share edges', () => {
   for (const width of WIDTHS) {
@@ -48,16 +48,16 @@ test.describe('the body, metadata bar and breadcrumb of a post share edges', () 
             return { left, right, top, bottom, height }
           })(),
           value: rect(byline.querySelector('dd') as Element),
-          // The text itself of every value and label: the box of a right-aligned one can be wider than its words
-          pairs: [...byline.querySelectorAll('dt')].map((dt) => {
-            const textRect = (target: Element) => {
-              const range = document.createRange()
-              range.selectNodeContents(target)
-              const { left, right, top, bottom } = range.getBoundingClientRect()
-              return { left, right, top, bottom }
+          items: [...byline.querySelectorAll('dd')].map((dd) => {
+            const cut = dd.querySelector('[title]') as HTMLElement | null
+            return {
+              box: rect(dd),
+              cut: cut ? cut.scrollWidth > cut.clientWidth : false,
+              height: dd.getBoundingClientRect().height,
+              size: parseFloat(getComputedStyle(dd).fontSize),
             }
-            return { label: textRect(dt), value: textRect(dt.nextElementSibling as Element) }
           }),
+          rowHeight: byline.getBoundingClientRect().height,
           line: rect(bar.querySelector('[aria-hidden="true"]') as Element),
           bylineInHeader: byline.closest('header') !== null,
           overflow: document.documentElement.scrollWidth - window.innerWidth,
@@ -82,31 +82,24 @@ test.describe('the body, metadata bar and breadcrumb of a post share edges', () 
       expect(edge(m.line.right), `${width}px: the groove ends on the body's right edge`).toBe(
         edge(m.text.right),
       )
-      const last = m.pairs[m.pairs.length - 1]
-      expect(
-        edge(last.value.right),
-        `${width}px: the metadata is right-aligned, ending on the groove's right end`,
-      ).toBe(edge(m.line.right))
+      // A post's bar is right-aligned (#1055): its last item ends on the groove's right end, the
+      // row is one line at every width, and the long author name is cut, never wrapped
+      const last = m.items[m.items.length - 1]
+      expect(edge(last.box.right), `${width}px: the metadata ends on the groove's right end`).toBe(
+        edge(m.line.right),
+      )
+      expect(m.rowHeight, `${width}px: the bar is one line`).toBeLessThan(24)
+      for (const item of m.items) {
+        expect(item.height, `${width}px: each value is one line`).toBeLessThan(20)
+        expect(item.size, `${width}px: the values are in the small type`).toBeLessThanOrEqual(10.5)
+      }
+      if (width <= 430) {
+        expect(m.items[0].cut, `${width}px: the long name is cut with an ellipsis`).toBe(true)
+      }
       expect(
         edge(m.metadata.left),
-        `${width}px: and starts inside the column, not past its left edge`,
+        `${width}px: the bar stays inside the column`,
       ).toBeGreaterThanOrEqual(edge(m.line.left))
-      for (const pair of m.pairs) {
-        expect(
-          pair.label.right,
-          `${width}px: each label comes before its own value`,
-        ).toBeLessThanOrEqual(pair.value.left + 1)
-        if (width < 768) {
-          expect(
-            edge(pair.value.right),
-            `${width}px: stacked, every value ends on the right edge`,
-          ).toBe(edge(m.line.right))
-          expect(
-            pair.value.left - pair.label.right,
-            `${width}px: the value sits right after its label`,
-          ).toBeLessThanOrEqual(12)
-        }
-      }
       expect(
         m.metadata.bottom,
         `${width}px: the metadata sits above the groove`,
@@ -131,7 +124,7 @@ test.describe('the body, metadata bar and breadcrumb of a post share edges', () 
 
 // An event's metadata bar and what sits directly under it share the column's edges (#1002): the
 // groove runs from the left edge to the right edge of the panel below it, the metadata is grouped
-// at the right end of it, "When" stays on one line wherever the row has room for it, and a long
+// at the left end of it, "When" stays on one line wherever the row has room for it, and a long
 // place is cut to one line instead of widening the row.
 test.describe('the metadata bar of an event shares the edges of what is under it', () => {
   for (const width of WIDTHS) {
@@ -157,9 +150,7 @@ test.describe('the metadata bar of an event shares the edges of what is under it
           line: rect(line),
           below: rect(below),
           first: rect(list.querySelector('dt') as Element),
-          // The box of the value's last element (a cut place's box, or the format after it): the
-          // text of a cut place runs past its box, so a text range would measure the hidden part
-          lastValue: rect(list.lastElementChild?.querySelector('dd')?.lastElementChild as Element),
+          last: rect(list.lastElementChild as Element),
           when: rect(when),
           cut: where.scrollWidth > where.clientWidth,
           whereHeight: where.getBoundingClientRect().height,
@@ -177,19 +168,18 @@ test.describe('the metadata bar of an event shares the edges of what is under it
         edge(m.line.right),
         `${width}px: the groove ends where the content under it does`,
       ).toBe(edge(m.below.right))
-      expect(
-        edge(m.lastValue.right),
-        `${width}px: the metadata ends on the groove's right end`,
-      ).toBe(edge(m.line.right))
+      expect(edge(m.first.left), `${width}px: the metadata starts on the groove's left end`).toBe(
+        edge(m.line.left),
+      )
       expect(m.whereHeight, `${width}px: the place is one line`).toBeLessThan(20)
       if (width >= 768) {
         expect(m.when.height, `${width}px: "When" is on one line`).toBeLessThan(20)
       }
       if (width >= 1280) {
         expect(
-          m.first.left,
-          `${width}px: the items sit together at the right, not spread across the row`,
-        ).toBeGreaterThan(m.line.left + (m.line.right - m.line.left) * 0.05)
+          m.last.right,
+          `${width}px: the items sit together at the left, not spread across the row`,
+        ).toBeLessThan(m.line.right - (m.line.right - m.line.left) * 0.05)
       }
     })
   }

@@ -21,7 +21,12 @@ export const FIGURE_CAPTION =
  * a title at the editor's longest. The alignment test measures it at six widths. It ends with an
  * image that has a caption, and the legend under it (#658).
  */
-export const alignmentPost = (mediaId: number): RequiredDataFromCollectionSlug<'posts'> => ({
+export const alignmentPost = (
+  mediaId: number,
+  authorId: number,
+): RequiredDataFromCollectionSlug<'posts'> => ({
+  // One author with a long name: the metadata bar cuts it to one line (#1055)
+  authors: [authorId],
   slug: ALIGNMENT_POST_SLUG,
   title: 'Alignment check',
   _status: 'published',

@@ -101,25 +101,25 @@ set is the plain band, with identical markup. It is a decoration (hidden from as
 alt) and loads lightly (`IMAGE_QUALITIES.backdrop`, `sizes="100vw"`, no early load). Its test checks
 all of this and axe; the gallery shows it in the headers entry.
 
-**`MetaBar`** (#1002) is the metadata of a post or an event, the industry's byline or meta bar: one thin
-line of small text at the top right of the article's column, above the text,
-right-aligned (#1055, reversing #1002's left alignment), with a hairline between the items. Values are `text-xs`; the labels are small, uppercase
-and muted, in the theme's finest text size (`text-fine`, the `type-fine` token). A post shows author,
-published and, when it has one, the source; an event shows when (date and time) and where (the venue
+**`MetaBar`** (#1002, #1055) is the metadata of a post or an event, the industry's byline or meta bar: one thin
+line of small text at the top of the article's column, above the text, with a hairline between the items. The labels are
+small, uppercase and muted, in the theme's finest text size (`text-fine`, the `type-fine` token). A post shows
+its author and its published date, nothing else; an event shows when (date and time) and where (the venue
 or address, with its format). Directly under the text, across the whole column, runs one straight
 groove line: two hairlines, a dark one (`input`) and the theme's accent. There is no box, tab or pill,
 and the line is the same at every width. It is one decorative element, hidden from assistive
 technology, with no measuring and no inline SVG; the metadata is a description list of real text.
-From `md` the items sit in one row aligned on their text baseline (a link and its icon never lower
-a neighbour), the last ending on the column's right edge; below `md` they stack, one line per item
-with the label right before its value and the pair ending on the right edge, above the line. A value too long for one line (a place) is cut with an ellipsis,
-capped at 20rem so the items stay grouped at the right, and it is the item that gives up width
-first, so the others (a date and time) stay on one line while the row can hold them (`title` on the
-item, as `Breadcrumbs` does), with its whole text in the title and in the page; the
-page's Location panel states it in full. `ArticlePage` draws it from its `byline` items at the width of what sits
+`align` sets where the text sits. `start` (the default, an event's) groups the items at the left with values in
+`text-xs`: from `md` one row aligned on their text baseline, below `md` a two-column list, labels in one
+column and values in the other, both starting at the left edge; a place too long for one line is cut with an
+ellipsis, capped at 20rem, and it gives up width first, so the date and time stay on one line. `end` (a post's)
+puts the labels and values in `text-fine` and keeps one row at every width, ending on the column's right edge: the
+author, a value too long for the row, is cut with an ellipsis and never wraps, and the date, written compactly
+("Nov 3"), keeps its width. In both, a cut value has its whole text in its `title` (as `Breadcrumbs` does) and in
+the page. `ArticlePage` draws it from its `byline` items, with `bylineAlign` for the alignment, at the width of what sits
 under it (a post: the text; an event: the whole column), with clear space (2.5rem) under it. Its test checks the labels, the hidden line, the missing
-box, the baseline and stacking classes, the cut value, the label token and axe; the gallery shows two
-items and a long value.
+box, the baseline and stacking classes, both alignments, the cut value, the label token and axe; the gallery shows two
+items and a long value at the start, and a post's bar with a short and a long name at the end.
 
 **`Figure`** (#816) is a small picture that floats right in an article, about two fifths of the text
 column by default (`size`: `third`, `two-fifths`, `half`, or `half-then-third` for `FeaturedImage`),
