@@ -21,12 +21,12 @@ Grooming makes an issue correct and complete without asking, and asks before it 
 team has agreed to do.
 
 - **Applied directly.** What brings an issue in line with the rules already written: labels,
-  priority and size, an existing milestone, a parent, blocked-by links, the body's sections (not
-  what it promises), the `ready` label, a mislabeled `needs owner`. One comment per issue says why.
+  priority and size, an existing milestone, blocked-by links for dependencies named in prose, the
+  body's sections (not what it promises), the `ready` label. One comment per issue says why.
 - **Proposed, then applied once the owner agrees.** Closing anything or labeling it
   `proposed-close` (duplicate bugs are the exception the
   [operating model](agent-operating-model.md#4-how-an-issue-moves) allows); an issue's scope or
-  acceptance criteria; creating, renaming, splitting or re-scoping a milestone or an epic; a
+  acceptance criteria; a parent; creating, renaming, splitting or re-scoping a milestone or an epic; a
   sprint's goal; anything about a rule. The proposal is a numbered report. He approves by number
   or category, in chat or on the issue, and only approved items are applied; approval from an
   earlier run does not carry over. The record is a summary with where he said it, never his words.

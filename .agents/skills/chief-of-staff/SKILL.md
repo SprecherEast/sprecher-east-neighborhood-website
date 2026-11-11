@@ -29,7 +29,8 @@ Three things, in this order, in one reply. Nothing here waits for the owner befo
      -q '[.workflow_runs[].name] | group_by(.) | map({name: .[0], failed: length}) | sort_by(-.failed) | .[] | "\(.failed) \(.name)"'
    ```
 
-   A check that failed again and again is a wall the workers keep hitting: say so in one line with
+   It reads the latest hundred failures, enough to see a pattern, not an exact total. A check
+   that failed again and again is a wall the workers keep hitting: say so in one line with
    its count, and file or find the issue that fixes its cause
    ([watch list](../../../docs/process/watch-list.md)). Add anything else from the watch list that
    repeated. Nothing repeated: say nothing.

@@ -39,14 +39,14 @@ DORA's five measures, in this project's terms.
 | How often a change reaches the live site                           | Deploy runs on `main`                                                   | Not yet        |
 | A deploy that fails, and how long the site stays affected          | The deploy run, then [`wrapped`](../../.agents/skills/wrapped/SKILL.md) | Chief of staff |
 | A merged change that needs a fix or a revert soon after            | A bug or revert linked to a recent pull request                         | Not yet        |
-| Work redone: a reopened issue, a second pull request for one issue | Reopen events, pull requests per issue                                  | Chief of staff |
+| Work redone: a reopened issue, a second pull request for one issue | Reopen events, pull requests per issue                                  | Not yet        |
 
 ## Agent work
 
 | Watch                                                                          | Signal                                                 | Today          |
 | ------------------------------------------------------------------------------ | ------------------------------------------------------ | -------------- |
 | A check that rejects pull request after pull request                           | Failed workflow runs, counted by check                 | Chief of staff |
-| Review rounds per pull request, and the same finding across pull requests      | Reviews and their findings                             | Not yet        |
+| The same review finding across pull requests                                   | Reviews and their findings                             | Chief of staff |
 | Drift: a change outside the files its issue declared, or beyond its criteria   | The diff against the issue; the reviewer's scope check | Chief of staff |
 | Done in words only: closed without a merge, criteria unchecked, card not moved | Issue state against its pull request and criteria      | Chief of staff |
 | A claim with no progress: In progress, no comment, no pull request             | The sweep's stale check                                | Chief of staff |
@@ -58,13 +58,13 @@ DORA's five measures, in this project's terms.
 
 ## Instructions and knowledge
 
-| Watch                                                            | Signal                                            | Today          |
-| ---------------------------------------------------------------- | ------------------------------------------------- | -------------- |
-| What every session loads at the start keeps growing              | The session-start token budget                    | Check          |
-| The docs say one thing and the code does another                 | `Knowledge sync` and the pull request gate        | Check          |
-| Two documents contradict each other, or a rule points at nothing | Link checks in tests; the reviewer; a doc audit   | Chief of staff |
-| A rule that is always worked around, or never comes up           | Review findings and questions about the same rule | Not yet        |
-| A setup built for an older model's limits                        | Re-testing with and without it when models change | Not yet        |
+| Watch                                                            | Signal                                            | Today   |
+| ---------------------------------------------------------------- | ------------------------------------------------- | ------- |
+| What every session loads at the start keeps growing              | The session-start token budget                    | Check   |
+| The docs say one thing and the code does another                 | `Knowledge sync` and the pull request gate        | Check   |
+| Two documents contradict each other, or a rule points at nothing | Link checks in tests; the reviewer; a doc audit   | Not yet |
+| A rule that is always worked around, or never comes up           | Review findings and questions about the same rule | Not yet |
+| A setup built for an older model's limits                        | Re-testing with and without it when models change | Not yet |
 
 Each part of an agent setup is a guess about what a model cannot do alone, so it is re-tested as
 models change ([Anthropic](https://anthropic.com/engineering/harness-design-long-running-apps)).
@@ -86,34 +86,34 @@ consistency ([grooming playbook](grooming-playbook.md#the-sweep)). Two more belo
 
 The four signals Google's SRE practice starts from, for a small site on one server.
 
-| Watch                                                             | Signal                                        | Today          |
-| ----------------------------------------------------------------- | --------------------------------------------- | -------------- |
-| Errors: pages or forms that fail                                  | Server logs; the live check after each deploy | Chief of staff |
-| Slowness: how long a page takes for a neighbor on a phone         | A measured baseline, then a check against it  | Not yet        |
-| Traffic: visits, and what neighbors open                          | The visit counter                             | Chief of staff |
-| Room left: disk, memory and processor on the server               | The backup's disk check; server facts         | Not yet        |
-| The site is down and nobody is looking                            | A check from outside the server               | Not yet        |
-| Stale content: an empty events list, a scout that stopped running | The pages themselves; the agents' run history | Chief of staff |
-| Email that does not arrive: confirmations, contact form           | The mail provider's delivery report           | Not yet        |
+| Watch                                                             | Signal                                        | Today   |
+| ----------------------------------------------------------------- | --------------------------------------------- | ------- |
+| Errors: pages or forms that fail                                  | Server logs; the live check after each deploy | Not yet |
+| Slowness: how long a page takes for a neighbor on a phone         | A measured baseline, then a check against it  | Not yet |
+| Traffic: visits, and what neighbors open                          | The visit counter                             | Not yet |
+| Room left: disk, memory and processor on the server               | The backup's disk check; server facts         | Not yet |
+| The site is down and nobody is looking                            | A check from outside the server               | Not yet |
+| Stale content: an empty events list, a scout that stopped running | The pages themselves; the agents' run history | Not yet |
+| Email that does not arrive: confirmations, contact form           | The mail provider's delivery report           | Not yet |
 
 ## Operations and safety
 
-| Watch                                                           | Signal                                          | Today          |
-| --------------------------------------------------------------- | ----------------------------------------------- | -------------- |
-| Backups run, and one has been restored on purpose               | The backup log; a dated restore on an issue     | Not yet        |
-| A package with a known flaw                                     | `Dependency Audit`, daily and on each change    | Check          |
-| Dependency updates left open                                    | Age of open update pull requests                | Chief of staff |
-| A secret in the repository, or one that is old or widely shared | Secret scanning; the date each was last changed | Not yet        |
-| A domain or certificate close to expiry                         | Registrar and server dates                      | Not yet        |
-| A limit of an outside service: mail sends, certificates, plan   | That service's usage page                       | Not yet        |
-| A new cost                                                      | The owner approves it first, always             | Chief of staff |
-| Access: who and what can change the site and its data           | Reviews of access rules, keys and roles         | Chief of staff |
+| Watch                                                           | Signal                                          | Today   |
+| --------------------------------------------------------------- | ----------------------------------------------- | ------- |
+| Backups run, and one has been restored on purpose               | The backup log; a dated restore on an issue     | Not yet |
+| A package with a known flaw                                     | `Dependency Audit`, daily and on each change    | Check   |
+| Dependency updates left open                                    | Age of open update pull requests                | Not yet |
+| A secret in the repository, or one that is old or widely shared | Secret scanning; the date each was last changed | Not yet |
+| A domain or certificate close to expiry                         | Registrar and server dates                      | Not yet |
+| A limit of an outside service: mail sends, certificates, plan   | That service's usage page                       | Not yet |
+| Access: who and what can change the site and its data           | Reviews of access rules, keys and roles         | Not yet |
 
 ## What the chief of staff says, and when
 
 - **Start of session:** anything repeated since the last session, each in one line. Nothing
   repeated, nothing said.
-- **In the sweep:** every row marked Chief of staff, as findings in the report.
+- **In the sweep:** every row marked Chief of staff, as findings in the report. A row is marked
+  that way only when the skill or the playbook has the step that reads its signal.
 - **A gap that starts to hurt:** a row marked Not yet becomes an issue when its problem shows up
   for real, with the cheapest mechanical check that would have caught it.
 
