@@ -26,13 +26,15 @@ const BILL_TAB = {
           {
             year: 2026,
             label: '2026 rates',
+            note: '',
             averageHome: 481300,
             rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 },
             source: null,
           },
           {
             year: 2027,
-            label: '2027 rates (proposed)',
+            label: '2027 rates',
+            note: 'proposed',
             averageHome: 500300,
             rates: { city: 6.93 },
             source: null,

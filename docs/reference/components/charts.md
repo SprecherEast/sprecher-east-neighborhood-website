@@ -139,15 +139,17 @@ Source: `src/platform/ui/chart/adapters/visx/BarSegments.tsx`
 
 ## `SharePie`
 
-One whole as a pie (#1022): a wedge for each slice, as big as its exact share, clockwise from the top, with one highlighted wedge in the theme's green and the others in three grays that are easy to tell apart. Each wedge writes its name, dollars and percent inside it when they fit, only its percent when just that fits, and nothing when not even that fits; the legend under the pie then lists every wedge that was not written in full. The pie draws from its own width, so the same wedge can fit inside on a wide screen and be left to the legend on a phone. The legend's room is always kept (a row for every wedge on a pie narrower than its largest), so a card that holds the pie never changes height when the shares do. The pie is one named picture for screen readers, whose label the caller writes with every wedge's name, dollars and percent.
+One whole as a pie (#1022): a wedge for each slice, as big as its exact share, the first slice starting at the top and the rest clockwise from it, with one highlighted wedge in the theme's green and the others in three grays that are easy to tell apart. Each wedge writes its percent inside it when that fits (a thin wedge on a small pie leaves it to the legend). The legend under the pie lists every slice with its color, dollars and percent, and reads as a receipt: an optional heading on top and an optional total at the bottom. Its rows keep one height, so a card holding the pie never changes height when the shares do. The pie is one named picture for screen readers, whose label the caller writes with every wedge's name, dollars and percent.
 
 Source: `src/platform/ui/SharePie.client.tsx`
 
-| Prop        | Type                       | Required | Description                            |
-| ----------- | -------------------------- | -------- | -------------------------------------- |
-| `slices`    | `readonly SharePieSlice[]` | yes      |                                        |
-| `label`     | `string`                   | yes      | What the pie shows, for screen readers |
-| `className` | `string`                   | no       |                                        |
+| Prop        | Type                                 | Required | Description                                                            |
+| ----------- | ------------------------------------ | -------- | ---------------------------------------------------------------------- |
+| `slices`    | `readonly SharePieSlice[]`           | yes      |                                                                        |
+| `label`     | `string`                             | yes      | What the pie shows, for screen readers                                 |
+| `heading`   | `string`                             | no       | The line above the legend's rows, such as the home the amounts are for |
+| `total`     | `{ label: string; amount: string; }` | no       | The line under the rows: what the amounts add up to                    |
+| `className` | `string`                             | no       |                                                                        |
 
 **Used by** (direct imports):
 

@@ -41,21 +41,13 @@ export function piePath(cx: number, cy: number, radius: number, start: number, e
   return `M ${n(cx)} ${n(cy)} L ${n(from.x)} ${n(from.y)} A ${radius} ${radius} 0 ${large} 1 ${n(to.x)} ${n(to.y)} Z`
 }
 
-/** Text size of a label inside the pie, in pixels, and how wide a character runs (a safe average) */
-export const PIE_FONT_PX = 12
+/** Text size of the percent written on a wedge, in pixels, and how wide a character runs (a safe average) */
+export const PIE_PERCENT_PX = 16
 const CHARACTER_WIDTH = 0.6
-/** Space kept clear on each side of a label inside its wedge, in pixels */
-const PADDING = 6
-/** The percent alone needs more room than that, so it stays out of a pie too small to read it */
-const PERCENT_PADDING = 10
-/** How far out from the centre, as a part of the radius, the full label and the percent sit */
-export const PIE_FULL_AT = 0.6
+/** Space kept clear on each side of the percent inside its wedge, in pixels */
+const PADDING = 3
+/** How far out from the centre, as a part of the radius, the percent sits */
 export const PIE_PERCENT_AT = 0.85
-
-export type PieLabelFit = 'full' | 'percent' | 'out'
-
-/** The width of one line of label text, in pixels */
-const textWidth = (line: string) => line.length * PIE_FONT_PX * CHARACTER_WIDTH
 
 /** How wide a wedge is at a distance from the centre, in pixels (the chord, never past the pie) */
 function wedgeWidth(angle: number, distance: number) {
@@ -63,31 +55,23 @@ function wedgeWidth(angle: number, distance: number) {
 }
 
 /**
- * Where a wedge's label goes, decided from its size: `full` writes every line inside it, `percent`
- * writes only its last line (the percent) inside it, and `out` leaves it to a legend. Each case needs
- * the widest line plus padding to fit across the wedge at the distance it is drawn, so the same
- * share fits inside a big pie and is pulled out of a small one.
+ * Whether the percent written on a wedge fits inside it at the distance it is drawn: the text plus
+ * padding must fit across the wedge there. The same share fits inside a big pie and is left to the
+ * legend on a small one.
  */
-export function pieLabelFit({
+export function pieLabelFits({
   share,
   radius,
-  lines,
+  text,
 }: {
   /** The wedge's share of the whole, 0 to 100 */
   share: number
   radius: number
-  /** What the label says, one line each; the last is the percent */
-  lines: readonly string[]
-}): PieLabelFit {
-  if (share <= 0 || lines.length === 0) return 'out'
+  /** What is written on the wedge, such as "46%" */
+  text: string
+}): boolean {
+  if (share <= 0 || text.length === 0) return false
   const angle = (share / 100) * FULL_TURN
-  const widest = Math.max(...lines.map(textWidth))
-  const tall = lines.length * PIE_FONT_PX * 1.3
-  if (widest + PADDING * 2 <= wedgeWidth(angle, radius * PIE_FULL_AT) && tall <= radius * 0.7) {
-    return 'full'
-  }
-  const percent = textWidth(lines.at(-1) ?? '')
-  return percent + PERCENT_PADDING * 2 <= wedgeWidth(angle, radius * PIE_PERCENT_AT)
-    ? 'percent'
-    : 'out'
+  const width = text.length * PIE_PERCENT_PX * CHARACTER_WIDTH
+  return width + PADDING * 2 <= wedgeWidth(angle, radius * PIE_PERCENT_AT)
 }

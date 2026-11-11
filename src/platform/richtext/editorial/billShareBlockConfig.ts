@@ -58,7 +58,7 @@ export const BillShareBlockConfig: Block = {
               required: true,
               min: 2000,
               max: 2100,
-              admin: { width: '25%', description: 'The budget year: 2027.' },
+              admin: { width: '20%', description: 'The budget year: 2027.' },
             },
             {
               name: 'label',
@@ -67,8 +67,19 @@ export const BillShareBlockConfig: Block = {
               maxLength: BILL_SHARE_LIMITS.label,
               validate: filledText('Add the name readers see on the switch.'),
               admin: {
-                width: '50%',
-                description: 'On the switch: "2026 rates (last year)".',
+                width: '30%',
+                description: 'On the switch: "2026 rates".',
+              },
+            },
+            {
+              name: 'note',
+              type: 'text',
+              maxLength: BILL_SHARE_LIMITS.note,
+              label: 'Note under the switch',
+              admin: {
+                width: '25%',
+                description:
+                  'Shown in parentheses under the switch: "proposed". Leave empty once the rates are set.',
               },
             },
             {

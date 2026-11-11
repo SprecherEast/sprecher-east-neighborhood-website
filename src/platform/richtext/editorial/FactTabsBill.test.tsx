@@ -24,6 +24,7 @@ describe('FactTabs with a whole tax bill', () => {
           {
             year: 2026,
             label: '2026 rates',
+            note: '',
             averageHome: 481300,
             rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 },
             source: null,
@@ -81,6 +82,7 @@ describe('FactTabs with a whole tax bill', () => {
           {
             year: 2026,
             label: '2026 rates',
+            note: '',
             averageHome: 481300,
             rates: { city: 7 },
             source: null,
@@ -88,6 +90,7 @@ describe('FactTabs with a whole tax bill', () => {
           {
             year: 2027,
             label: '2027 rates',
+            note: '',
             averageHome: 500300,
             rates: { city: 6.93 },
             source: null,

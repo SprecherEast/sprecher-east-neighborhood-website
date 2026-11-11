@@ -7,7 +7,7 @@ const stored = (years: Record<string, unknown>[], intro = 'Based on the City’s
 
 const year = (extra: Record<string, unknown> = {}) => ({
   year: 2026,
-  label: '2026 rates (last year)',
+  label: '2026 rates',
   averageHome: 481300,
   schools: 8.6814,
   county: 2.3564,
@@ -25,11 +25,19 @@ describe('toBillShareProps', () => {
     expect(years).toHaveLength(1)
     expect(years[0]).toMatchObject({
       year: 2026,
-      label: '2026 rates (last year)',
+      label: '2026 rates',
       averageHome: 481300,
       rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 },
       source: { label: 'City tax detail', href: 'https://example.org/tax' },
     })
+  })
+
+  it('reads a year’s note for under its switch, and none when it is empty', () => {
+    const { years } = toBillShareProps(
+      stored([year({ note: ' proposed ' }), year({ year: 2027, note: '  ' })]),
+    )
+    expect(years[0]?.note).toBe('proposed')
+    expect(years[1]?.note).toBe('')
   })
 
   it('leaves a rate that is empty out, so the picture says it is not set', () => {

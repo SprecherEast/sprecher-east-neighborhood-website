@@ -17,7 +17,7 @@ export type RoughEstimatorProps = {
   /** Why the box's text is no value, or nothing */
   error?: string
   /** The tax years the reader can pick between, one button each */
-  options: readonly { key: string; label: string }[]
+  options: readonly { key: string; label: string; note?: string }[]
   /** The index of the picked option */
   selected: number
   onSelect: (index: number) => void
@@ -30,8 +30,9 @@ export type RoughEstimatorProps = {
 
 /**
  * The tool at the top of a whole-bill picture (#1022): an orange card titled Rough Estimator, with
- * the home value box, one button for each tax year side by side along the bottom, and the notes
- * that say how rough the answer is. It draws what it is given and keeps no state of its own.
+ * the home value box, one button for each tax year side by side along the bottom (a year can carry a
+ * short note under its button, such as "proposed", and every button keeps the room for one), and the
+ * notes that say how rough the answer is. It draws what it is given and keeps no state of its own.
  */
 export function RoughEstimator({
   intro,
@@ -65,17 +66,26 @@ export function RoughEstimator({
             />
           </Field>
           {options.length > 1 && (
-            <div role="group" aria-label="Tax rates to use" className="grid grid-cols-2 gap-2">
+            <div role="group" aria-label="Tax rates to use" className="grid grid-cols-2 gap-x-2">
               {options.map((option, index) => (
-                <Button
-                  key={option.key}
-                  variant={index === selected ? 'accent' : 'accent-outline'}
-                  aria-pressed={index === selected}
-                  fullWidth
-                  onClick={() => onSelect(index)}
-                >
-                  {option.label}
-                </Button>
+                <div key={option.key} className="space-y-1">
+                  <Button
+                    variant={index === selected ? 'accent' : 'accent-outline'}
+                    aria-pressed={index === selected}
+                    fullWidth
+                    onClick={() => onSelect(index)}
+                  >
+                    {option.label}
+                  </Button>
+                  {options.some((other) => other.note) && (
+                    <p
+                      data-switch-note
+                      className="min-h-5 text-center text-sm text-muted-foreground"
+                    >
+                      {option.note ? `(${option.note})` : ''}
+                    </p>
+                  )}
+                </div>
               ))}
             </div>
           )}

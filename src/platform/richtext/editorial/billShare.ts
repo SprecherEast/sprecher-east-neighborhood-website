@@ -16,6 +16,8 @@ export type StoredBillShare = Partial<Pick<BillShareBlock, 'intro' | 'years'>>
 export type BillShareYear = {
   year: number
   label: string
+  /** A word under the year's switch, such as "proposed" until its rates are set; empty for none */
+  note: string
   /** The City's average home that year, in dollars: what the box starts with */
   averageHome: number
   /** Net rates per $1,000 of value; a body that has not set its rate is missing */
@@ -43,6 +45,7 @@ export function toBillShareProps(stored: StoredBillShare): BillShareProps {
       {
         year: row.year,
         label,
+        note: row.note?.trim() ?? '',
         averageHome: row.averageHome,
         rates,
         source: toEditorialLink(row.linkUrl, row.linkLabel),

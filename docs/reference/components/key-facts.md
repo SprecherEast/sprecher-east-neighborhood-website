@@ -72,7 +72,7 @@ Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 
 ## `RoughEstimator`
 
-The tool at the top of a whole-bill picture (#1022): an orange card titled Rough Estimator, with the home value box, one button for each tax year side by side along the bottom, and the notes that say how rough the answer is. It draws what it is given and keeps no state of its own.
+The tool at the top of a whole-bill picture (#1022): an orange card titled Rough Estimator, with the home value box, one button for each tax year side by side along the bottom (a year can carry a short note under its button, such as "proposed", and every button keeps the room for one), and the notes that say how rough the answer is. It draws what it is given and keeps no state of its own.
 
 Source: `src/platform/richtext/editorial/RoughEstimator.tsx`
 
@@ -83,7 +83,7 @@ Source: `src/platform/richtext/editorial/RoughEstimator.tsx`
 | `onValueChange` | `(value: string) => void`                                      | yes      |                                                                                                                                                                                 |
 | `onValueBlur`   | `() => void`                                                   | yes      | The reader left the box                                                                                                                                                         |
 | `error`         | `string`                                                       | no       | Why the box's text is no value, or nothing                                                                                                                                      |
-| `options`       | `readonly { key: string; label: string; }[]`                   | yes      | The tax years the reader can pick between, one button each                                                                                                                      |
+| `options`       | `readonly { key: string; label: string; note?: string; }[]`    | yes      | The tax years the reader can pick between, one button each                                                                                                                      |
 | `selected`      | `number`                                                       | yes      | The index of the picked option                                                                                                                                                  |
 | `onSelect`      | `(index: number) => void`                                      | yes      |                                                                                                                                                                                 |
 | `notes`         | `readonly { key: string; text: ReactNode; shown: boolean; }[]` | yes      | The notes under the buttons. A note that is not `shown` still takes its room, hidden from everyone, so the card is as tall as it will ever be and nothing moves when one shows. |

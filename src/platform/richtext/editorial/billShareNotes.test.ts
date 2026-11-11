@@ -6,6 +6,7 @@ import { joinNames, reservedNote, ROUGH_NOTE, unconfirmedNote } from './billShar
 const year = (y: number, rates: BillShareYear['rates']): BillShareYear => ({
   year: y,
   label: `${y} rates`,
+  note: '',
   averageHome: 500000,
   rates,
   source: null,
@@ -24,18 +25,16 @@ describe('joinNames', () => {
 })
 
 describe('ROUGH_NOTE', () => {
-  it('says the estimate is rough and why a real bill differs', () => {
+  it('says the estimate is rough and why a real bill differs, in one short line', () => {
     expect(ROUGH_NOTE).toMatch(/rough estimate/i)
     expect(ROUGH_NOTE).toMatch(/credits|exemptions/i)
+    expect(ROUGH_NOTE.length).toBeLessThan(90)
   })
 })
 
 describe('unconfirmedNote', () => {
-  it('says which bodies have not set the year’s rates and whose rates stand in', () => {
-    const note = unconfirmedNote(YEARS, 1)
-    expect(note).toContain('2027 rates are not confirmed')
-    expect(note).toContain('Madison schools, Dane County and Madison College (MATC)')
-    expect(note).toContain('2026’s')
+  it('says only that the year’s rates are not confirmed, without naming the bodies', () => {
+    expect(unconfirmedNote(YEARS, 1)).toBe('2027 rates are not confirmed, only proposed.')
   })
 
   it('has nothing to say about a year every body has set', () => {

@@ -47,6 +47,7 @@ const rate = z.number().positive().max(100)
 const billYear = z.strictObject({
   year: z.number().int().min(2000).max(2100),
   label: text(BILL_SHARE_LIMITS.label),
+  note: text(BILL_SHARE_LIMITS.note).optional(),
   averageHome: z.number().positive(),
   schools: rate.optional(),
   county: rate.optional(),
@@ -175,8 +176,9 @@ export const factTabsToTag = (props: readonly FactTabProps[]) =>
           ? {
               block: 'billShare',
               intro: item.billShare.intro,
-              years: item.billShare.years.map(({ source, rates, ...year }) => ({
+              years: item.billShare.years.map(({ source, rates, note, ...year }) => ({
                 ...year,
+                ...(note ? { note } : {}),
                 ...rates,
                 ...(source ? { link: { label: source.label, href: source.href } } : {}),
               })),

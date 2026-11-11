@@ -3,15 +3,7 @@
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
-import {
-  PIE_FONT_PX,
-  PIE_FULL_AT,
-  PIE_PERCENT_AT,
-  pieArcs,
-  pieAt,
-  pieLabelFit,
-  piePath,
-} from '@/platform/lib/pie'
+import { PIE_PERCENT_AT, pieArcs, pieAt, pieLabelFits, piePath } from '@/platform/lib/pie'
 
 import { useElementWidth } from './useElementWidth.client'
 
@@ -21,15 +13,13 @@ const MAX_PIE_PX = 460
 const FIRST_PAINT_PX = 400
 /** Room kept for the wedges' outline at the pie's edge, in pixels */
 const RIM = 2
-/** Line height of the label text inside a wedge, in pixels */
-const LINE_PX = PIE_FONT_PX * 1.3
 
 /** A wedge's tone: three grays, lightest first, or the one highlighted wedge in the theme's green */
 const TONE_FILL = {
   light: 'fill-muted-foreground/20 stroke-card',
   medium: 'fill-muted-foreground/40 stroke-card',
   dark: 'fill-muted-foreground/60 stroke-card',
-  highlight: 'fill-primary/30 stroke-primary',
+  highlight: 'fill-primary/30 stroke-primary/50',
 } as const
 
 /** The same tones as a small square in the legend */
@@ -37,7 +27,7 @@ const TONE_SWATCH = {
   light: 'bg-muted-foreground/20',
   medium: 'bg-muted-foreground/40',
   dark: 'bg-muted-foreground/60',
-  highlight: 'bg-primary/30 border border-primary',
+  highlight: 'bg-primary/30 border border-primary/50',
 } as const
 
 export type SharePieSlice = {
@@ -53,41 +43,40 @@ export type SharePieSlice = {
 }
 
 /**
- * One whole as a pie (#1022): a wedge for each slice, as big as its exact share, clockwise from the
- * top, with one highlighted wedge in the theme's green and the others in three grays that are easy
- * to tell apart. Each wedge writes its name, dollars and percent inside it when they fit, only its
- * percent when just that fits, and nothing when not even that fits; the legend under the pie then
- * lists every wedge that was not written in full. The pie draws from its own width, so the same wedge
- * can fit inside on a wide screen and be left to the legend on a phone. The legend's room is always
- * kept (a row for every wedge on a pie narrower than its largest), so a card that holds the pie never
- * changes height when the shares do. The pie is one named
- * picture for screen readers, whose label the caller writes with every wedge's name, dollars and percent.
+ * One whole as a pie (#1022): a wedge for each slice, as big as its exact share, the first slice
+ * starting at the top and the rest clockwise from it, with one highlighted wedge in the theme's green
+ * and the others in three grays that are easy to tell apart. Each wedge writes its percent inside it
+ * when that fits (a thin wedge on a small pie leaves it to the legend). The legend under the pie lists
+ * every slice with its color, dollars and percent, and reads as a receipt: an optional heading on top
+ * and an optional total at the bottom. Its rows keep one height, so a card holding the pie never
+ * changes height when the shares do. The pie is one named picture for screen readers, whose label
+ * the caller writes with every wedge's name, dollars and percent.
  */
 export function SharePie({
   slices,
   label,
+  heading,
+  total,
   className,
 }: {
   slices: readonly SharePieSlice[]
   /** What the pie shows, for screen readers */
   label: string
+  /** The line above the legend's rows, such as the home the amounts are for */
+  heading?: string
+  /** The line under the rows: what the amounts add up to */
+  total?: { label: string; amount: string }
   className?: string
 }) {
   const [ref, width] = useElementWidth<HTMLDivElement>()
   const size = Math.min(width > 0 ? width : FIRST_PAINT_PX, MAX_PIE_PX)
   const center = size / 2
   const radius = center - RIM
-  // A pie narrower than its largest keeps two lines of legend room for every wedge, hidden when the
-  // wedge is written inside, so no change of shares moves the page
-  const keepEveryRow = size < MAX_PIE_PX
   const arcs = pieArcs(slices.map((slice) => slice.share))
-  const fits = slices.map((slice) =>
-    pieLabelFit({
-      share: slice.share,
-      radius,
-      lines: [slice.name, slice.amount, `${slice.percent}%`],
-    }),
-  )
+  // The highlighted wedge is drawn last, so its outline shows along every edge it shares
+  const drawOrder = slices
+    .map((slice, index) => ({ slice, index }))
+    .sort((a, b) => Number(a.slice.tone === 'highlight') - Number(b.slice.tone === 'highlight'))
 
   return (
     <div ref={ref} className={cn('w-full', className)}>
@@ -98,7 +87,7 @@ export function SharePie({
         height={size}
         className="mx-auto block max-w-full"
       >
-        {slices.map((slice, index) => {
+        {drawOrder.map(({ slice, index }) => {
           const arc = arcs[index]
           if (!arc || arc.end <= arc.start) return null
           return (
@@ -106,7 +95,7 @@ export function SharePie({
               key={slice.key}
               data-pie-slice={slice.key}
               d={piePath(center, center, radius, arc.start, arc.end)}
-              strokeWidth={2}
+              strokeWidth={slice.tone === 'highlight' ? 1.5 : 2}
               strokeLinejoin="round"
               className={TONE_FILL[slice.tone]}
             />
@@ -114,66 +103,58 @@ export function SharePie({
         })}
         {slices.map((slice, index) => {
           const arc = arcs[index]
-          const fit = fits[index]
-          if (!arc || fit === 'out' || fit === undefined) return null
-          const lines =
-            fit === 'full' ? [slice.name, slice.amount, `${slice.percent}%`] : [`${slice.percent}%`]
-          const at = pieAt(
-            center,
-            center,
-            radius * (fit === 'full' ? PIE_FULL_AT : PIE_PERCENT_AT),
-            arc.mid,
-          )
+          const text = `${slice.percent}%`
+          if (!arc || !pieLabelFits({ share: slice.share, radius, text })) return null
+          const at = pieAt(center, center, radius * PIE_PERCENT_AT, arc.mid)
           return (
             <text
               key={slice.key}
               data-pie-label={slice.key}
               x={at.x}
-              y={at.y - ((lines.length - 1) * LINE_PX) / 2}
+              y={at.y}
               textAnchor="middle"
               dominantBaseline="central"
-              className="fill-foreground text-xs"
+              className="fill-foreground text-base font-semibold"
             >
-              {lines.map((line, lineIndex) => (
-                <tspan
-                  key={lineIndex}
-                  x={at.x}
-                  dy={lineIndex === 0 ? 0 : LINE_PX}
-                  className={lineIndex === lines.length - 1 ? 'font-semibold' : undefined}
-                >
-                  {line}
-                </tspan>
-              ))}
+              {text}
             </text>
           )
         })}
       </svg>
-      <ul data-pie-legend className="mt-3 min-h-18 space-y-1 text-sm">
-        {slices.map((slice, index) => {
-          const written = fits[index] === 'full'
-          if (written && !keepEveryRow) return null
-          return (
+      <div data-pie-legend className="@container mt-4 space-y-2 text-sm">
+        {heading && <p className="min-h-10 font-semibold text-foreground">{heading}</p>}
+        <ul className="divide-y divide-border">
+          {slices.map((slice) => (
             <li
               key={slice.key}
-              aria-hidden={written || undefined}
-              className={cn(
-                'flex flex-wrap items-center gap-x-2',
-                // Two lines of room: a longer amount can wrap a row without moving the page
-                keepEveryRow && 'min-h-10 content-center',
-                written && 'invisible',
-              )}
+              // On a narrow card the name takes a line and the amounts the next, so no amount can
+              // wrap the name; from `@sm` it is one line. Either way the row's height is fixed.
+              className="grid min-h-14 grid-cols-[auto_1fr] items-center gap-x-2 py-1 @sm:min-h-10 @sm:grid-cols-[auto_1fr_auto_auto]"
             >
               <span
                 aria-hidden="true"
-                className={cn('inline-block size-3 shrink-0', TONE_SWATCH[slice.tone])}
+                className={cn(
+                  'row-span-2 inline-block size-3 shrink-0 @sm:row-span-1',
+                  TONE_SWATCH[slice.tone],
+                )}
               />
               <span className="text-foreground">{slice.name}</span>
-              <span className="font-semibold text-foreground">{slice.amount}</span>
-              <span className="text-muted-foreground">about {slice.percent}%</span>
+              <span className="col-start-2 flex items-center gap-x-2 @sm:contents">
+                <span className="font-semibold text-foreground tabular-nums">{slice.amount}</span>
+                <span className="text-muted-foreground tabular-nums @sm:w-10 @sm:text-right">
+                  {slice.percent}%
+                </span>
+              </span>
             </li>
-          )
-        })}
-      </ul>
+          ))}
+        </ul>
+        {total && (
+          <p className="flex min-h-10 items-center justify-between gap-x-2 border-t-2 border-foreground/30 font-semibold text-foreground">
+            <span>{total.label}</span>
+            <span className="tabular-nums">{total.amount}</span>
+          </p>
+        )}
+      </div>
     </div>
   )
 }

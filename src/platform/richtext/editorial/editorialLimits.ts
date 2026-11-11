@@ -42,4 +42,5 @@ export const BILL_SHARE_LIMITS = {
   maxYears: 2,
   intro: 160,
   label: 40,
+  note: 20,
 } as const
