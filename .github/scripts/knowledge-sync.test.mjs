@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'node:fs'
+
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -402,5 +404,21 @@ describe('changedFiles', () => {
     const files = Array.from({ length: LIST_FILES_LIMIT }, (_, i) => ({ filename: `f${i}` }))
     expect(() => changedFiles(files)).toThrow(new RegExp(String(LIST_FILES_LIMIT)))
     expect(() => changedFiles(files.slice(1))).not.toThrow()
+  })
+})
+
+describe('the knowledge map', () => {
+  const entries = JSON.parse(readFileSync('docs/knowledge/map.json', 'utf8'))
+
+  it('names notes that exist', () => {
+    for (const { note } of entries) expect(existsSync(note), note).toBe(true)
+  })
+
+  it('lists no file that does not exist, so a rename cannot leave a stale entry', () => {
+    for (const { note, paths } of entries) {
+      for (const path of paths.filter((p) => !p.includes('*'))) {
+        expect(existsSync(path), `${note} lists ${path}`).toBe(true)
+      }
+    }
   })
 })
