@@ -27,7 +27,11 @@ export function PageHero(props: PageHeroProps) {
   }
 }
 
-/** Home's hero: the title and a frosted-glass description over the photo, buttons beside them */
+/**
+ * Home's hero: the title and a frosted-glass note at the top, under the site name, then open
+ * space for the photo, then the buttons (#1061). Phone: the buttons stack across the width.
+ * Desktop: the text stays top left and the buttons stack at the bottom right.
+ */
 function HighHero({ body: richText, image, links }: PhotoHeroProps) {
   // The title and the description come from the same rich text without repeating it in the DOM
   // (two copies meant two <h1> elements on the home page)
@@ -35,54 +39,54 @@ function HighHero({ body: richText, image, links }: PhotoHeroProps) {
 
   return (
     <div className="relative -mt-[var(--header-height)]">
-      {/* The photo stays vivid at the top and darkens at the bottom, where the text is */}
       <div aria-hidden="true" className="absolute inset-0 select-none">
         {image && <Media fill atFocalPoint imgClassName="object-cover" priority resource={image} />}
       </div>
 
-      {/* The scrim darkens the bottom left, where the text is anchored */}
+      {/* Scrims keep the text readable: the left and the top, where the text sits, and the bottom, behind the buttons */}
       <div className="absolute inset-0 bg-gradient-to-r from-scrim/60 via-scrim/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-scrim/55 via-scrim/25 via-35% to-transparent to-60%" />
+      <div className="absolute inset-0 bg-gradient-to-t from-scrim/45 to-transparent to-40%" />
 
       <div
         className={cn(
-          'relative z-10 container flex',
+          'relative z-10 container flex flex-col justify-between gap-8',
           HERO_MIN_HEIGHT,
-          'items-end pt-[var(--header-height)] pb-16 md:pb-20',
+          'pt-[calc(var(--header-height)+0.5rem)] pb-16 md:pb-20',
         )}
         data-theme="dark"
       >
-        <div className="flex w-full flex-col gap-8 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-2xl">
-            {heading && (
-              <RichText
-                className="mb-0 [&_h1]:text-3xl [&_h1]:leading-tight [&_h1]:font-bold [&_h1]:tracking-tight [&_h1]:text-balance [&_h1]:text-on-image [&_h1]:text-shadow-photo sm:[&_h1]:text-4xl lg:[&_h1]:text-5xl"
-                data={heading}
-                enableGutter={false}
-              />
-            )}
-            {body && <FrostedText body={body} />}
-          </div>
-
-          {links.length > 0 && (
-            <ul className="flex shrink-0 flex-col gap-3 sm:flex-row md:w-60 md:flex-col md:pb-2">
-              {links.map((link, i) => (
-                <li key={i}>
-                  {/* By position, as the design asks: the first is the main action */}
-                  <Button
-                    href={link.href}
-                    external={link.external}
-                    size="lg"
-                    variant={i === 0 ? 'primary' : 'accent'}
-                    // A white focus ring: the theme ring is green on a green photo
-                    className="w-full focus-visible:outline-primary-foreground sm:w-auto md:w-full"
-                  >
-                    {link.label}
-                  </Button>
-                </li>
-              ))}
-            </ul>
+        <div className="max-w-2xl">
+          {heading && (
+            <RichText
+              className="mb-0 [&_h1]:text-3xl [&_h1]:leading-tight [&_h1]:font-bold [&_h1]:tracking-tight [&_h1]:text-balance [&_h1]:text-on-image [&_h1]:text-shadow-photo sm:[&_h1]:text-4xl lg:[&_h1]:text-5xl"
+              data={heading}
+              enableGutter={false}
+            />
           )}
+          {body && <FrostedText body={body} />}
         </div>
+
+        {links.length > 0 && (
+          <ul className="flex flex-col gap-3 md:w-60 md:self-end">
+            {links.map((link, i) => (
+              <li key={i}>
+                {/* By position, as the design asks: the last is the orange action, the others the main green ones */}
+                <Button
+                  href={link.href}
+                  external={link.external}
+                  size="lg"
+                  variant={links.length > 1 && i === links.length - 1 ? 'accent' : 'primary'}
+                  onPhoto
+                  // A white focus ring: the theme ring is green on a green photo
+                  className="w-full focus-visible:outline-primary-foreground"
+                >
+                  {link.label}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* The bottom fades into the page */}

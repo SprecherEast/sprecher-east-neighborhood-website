@@ -25,6 +25,12 @@ const links = [
   { href: '/events', label: 'Upcoming Events', external: false, appearance: 'default' as const },
   { href: '/get-involved', label: 'Get Involved', external: false, appearance: 'outline' as const },
 ]
+// The home page's three buttons, in the order they stack
+const homeLinks = [
+  { href: '/posts', label: 'News', external: false, appearance: 'default' as const },
+  { href: '/events', label: 'Upcoming events', external: false, appearance: 'default' as const },
+  { href: '/get-involved', label: 'Get involved', external: false, appearance: 'outline' as const },
+]
 
 const inMain = (hero: React.ReactNode) => render(<main>{hero}</main>)
 
@@ -44,6 +50,32 @@ describe('PageHero', () => {
     )
     expect(screen.getByRole('link', { name: 'Get Involved' }).className).toContain('bg-accent')
     await expectAccessible(container)
+  })
+
+  it('high: the title and the note first, then the buttons stacked, the last one orange (#1061)', () => {
+    inMain(<PageHero variant="high" body={body} image={image} links={homeLinks} />)
+
+    const title = screen.getByRole('heading', { level: 1 })
+    const note = screen.getByText('Neighbors on the Far East Side.')
+    const buttons = screen.getAllByRole('link').map((link) => link.textContent)
+    expect(buttons).toEqual(['News', 'Upcoming events', 'Get involved'])
+    // Reading order: title, note, then the buttons
+    const follows = (a: Node, b: Node) =>
+      a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING
+    expect(follows(title, note)).toBeTruthy()
+    expect(follows(note, screen.getByRole('link', { name: 'News' }))).toBeTruthy()
+    for (const name of ['News', 'Upcoming events']) {
+      expect(screen.getByRole('link', { name }).className).toContain('bg-primary-fill')
+    }
+    expect(screen.getByRole('link', { name: 'Get involved' }).className).toContain('bg-accent')
+    // Every button keeps its edge clear of the photo
+    for (const link of screen.getAllByRole('link')) {
+      expect(link.className).toContain('shadow-on-photo')
+    }
+    // Phone: the buttons fill the width; desktop: a column at the bottom right
+    const list = screen.getByRole('list')
+    expect(list.className).toContain('flex-col')
+    expect(list.className).toContain('md:self-end')
   })
 
   it("high: crops the photo around the upload's focal point, the centre when it has none (#1013)", () => {

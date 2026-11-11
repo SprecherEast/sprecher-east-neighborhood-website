@@ -39,13 +39,18 @@ export const buttonVariants = cva(
         lg: 'min-h-12 px-8 text-base',
         icon: 'size-11 [&_svg]:size-5',
       },
+      // On a photo: an edge that stays clear of the picture behind it (`shadow-on-photo`, #1061)
+      onPhoto: {
+        true: 'shadow-on-photo',
+        false: '',
+      },
       fullWidth: {
         true: 'w-full',
         false: '',
         mobile: 'w-full sm:w-auto',
       },
     },
-    defaultVariants: { variant: 'primary', size: 'md', fullWidth: false },
+    defaultVariants: { variant: 'primary', size: 'md', onPhoto: false, fullWidth: false },
   },
 )
 
@@ -100,6 +105,7 @@ const spinner = <LoaderCircle aria-hidden="true" className="motion-safe:animate-
 function ButtonElement({
   variant,
   size,
+  onPhoto,
   fullWidth,
   className,
   children,
@@ -115,7 +121,7 @@ function ButtonElement({
       {...rest}
       {...busy(loading, onClick)}
       type={type}
-      className={cn(buttonVariants({ variant, size, fullWidth }), className)}
+      className={cn(buttonVariants({ variant, size, onPhoto, fullWidth }), className)}
     >
       {loading ? spinner : iconStart}
       {children}
@@ -127,6 +133,7 @@ function ButtonElement({
 function ButtonLink({
   variant,
   size,
+  onPhoto,
   fullWidth,
   className,
   children,
@@ -140,7 +147,7 @@ function ButtonLink({
   const props = {
     ...busy(loading, onClick),
     ...(external && { target: '_blank', rel: 'noopener noreferrer' }),
-    className: cn(buttonVariants({ variant, size, fullWidth }), className),
+    className: cn(buttonVariants({ variant, size, onPhoto, fullWidth }), className),
   }
   const content = (
     <>

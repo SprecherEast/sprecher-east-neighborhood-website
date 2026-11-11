@@ -32,6 +32,7 @@ footer, forum link and redirects have their own note, [navigation](/src/modules/
 ## Links between fields
 
 - The hero's `type` picks the look: `highImpact`, `mediumImpact` or `lowImpact` become `high`, `medium` or `low`; `none` draws nothing (`data/mappers.ts`, `domain/hero.ts`).
+- The high hero draws the title and the note at the top under the site name, open photo, then the links stacked: across the width on a phone, a column at the bottom right from `md` up. The links are styled by position, not by the field's `appearance`: the last of two or more is the orange one, the others the green main ones, and all carry `Button onPhoto`. The home page's three buttons are three links in order (News, Upcoming events, Get involved), so `hero.links` allows three rows (`ui/PageHero.tsx`, `cms/hero.ts`, #1061).
 - Only the high hero splits its rich text: the first heading is the title (the page's `h1`), the rest is the description on the photo (`ui/PageHero.tsx`, `src/platform/richtext/splitHeadingFromBody.ts`). Medium and low draw the whole rich text as written.
 - A content block's layout comes from its columns' `size` values, not from a field (`toContentLayout` in `data/mappers.ts`): one column, or only `full` ones, is `single`; four columns with none `full` is `stats`; two columns that are not both `half` is `columns`; anything else is `cards`.
 - In `cards`, a column holding only headings and no link starts a card group and becomes its title; cards before any title form an untitled group (`data/mappers.ts`, `domain/blocks.ts`).

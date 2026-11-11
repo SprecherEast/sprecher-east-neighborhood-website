@@ -41,7 +41,8 @@ export const hero: Field = {
     },
     linkGroup({
       overrides: {
-        maxRows: 2,
+        // The home hero's three buttons: News, Upcoming events and Get involved (#1061)
+        maxRows: 3,
       },
     }),
     {

@@ -68,6 +68,16 @@
   --text-shadow-photo:
     0 2px 4px color-mix(in srgb, var(--scrim) 80%, transparent),
     0 4px 16px color-mix(in srgb, var(--scrim) 50%, transparent);
+  /*
+   * A button over a photo (`shadow-on-photo`, the `Button` prop `onPhoto`, #1061): a dark hairline,
+   * a soft glow-like shadow and a thin light outline inside, so its edge stays clear against bright
+   * grass and roofs
+   */
+  --shadow-on-photo:
+    0 0 0 1px color-mix(in srgb, var(--scrim) 70%, transparent),
+    0 0 14px 2px color-mix(in srgb, var(--scrim) 60%, transparent),
+    0 8px 24px color-mix(in srgb, var(--scrim) 50%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--on-image) 85%, transparent);
   --color-inverse: var(--inverse);
   --color-inverse-foreground: var(--inverse-foreground);
 }
