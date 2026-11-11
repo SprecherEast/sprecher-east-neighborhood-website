@@ -35,6 +35,7 @@ const event: EventDetail = {
   registrationUrl: null,
   agendaUrl: null,
   content: null,
+  backdrop: null,
   meta: { title: null, description: null, image: null },
 }
 
@@ -130,6 +131,24 @@ describe('eventHeaderProps', () => {
       expect(screen.getByText('Social').className).toContain('text-primary-strong')
       cleanup()
     }
+  })
+
+  it('carries the event’s backdrop to the band and plates its labels over it (#1024)', () => {
+    const backdrop = { phone: null, tablet: null, desktop: photo }
+    const props = eventHeaderProps({ ...event, cancelled: true, backdrop })
+    expect(props).toMatchObject({ variant: 'band', backdrop })
+
+    render(<PageHeader {...props} />)
+    expect(screen.getByText('Cancelled').parentElement?.className).toContain('bg-surface')
+    expect(screen.getByText('Social').parentElement?.className).toContain('bg-surface')
+  })
+
+  it('has no backdrop and no plates when the event has none (#1024)', () => {
+    const props = eventHeaderProps(event)
+    expect(props).toMatchObject({ backdrop: null })
+
+    render(<PageHeader {...props} />)
+    expect(screen.getByText('Social').parentElement?.className).not.toContain('bg-surface')
   })
 
   describe('a cancelled event (#122)', () => {

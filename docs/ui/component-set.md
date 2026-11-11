@@ -85,7 +85,21 @@ show and there is no button. Its test checks the closed and the open dialog with
 removed, since jsdom can't run axe across one), the gallery shows both states, and its props are in
 the [media page](../reference/components/media.md).
 
-**`FeaturedImage`** (#1013, #1023) is the picture of a post or an event, under the metadata bar: the whole picture at its own proportions, never cropped, loading early (it is the first image seen), with its credit under it. It is the shared `Figure` (size `half-then-third`, Enlarge under the picture): full width above the text on a phone, floated right from `md` at half the column, and a third from `lg`, with the text wrapping beside it, and it can be enlarged in the `Zoom` dialog, which also shows the credit. With no picture it draws nothing and leaves no gap. `ArticlePage` draws it in one box with the content, which contains the float so what follows a short article clears the picture; the article's `RichText` takes `besideFloat`; `ArticlePage`'s `lead` is what opens the article ahead of the picture (a row of cards, which can't sit beside it). The page header above is the plain `PageHeader` `band` (a themed surface, no picture). Its test checks the three sizes, the float, the early load, the Enlarge button with the keyboard and focus return, the empty case and axe; the gallery shows it beside text.
+**`FeaturedImage`** (#1013, #1023) is the picture of a post or an event, under the metadata bar: the whole picture at its own proportions, never cropped, loading early (it is the first image seen), with its credit under it. It is the shared `Figure` (size `half-then-third`, Enlarge under the picture): full width above the text on a phone, floated right from `md` at half the column, and a third from `lg`, with the text wrapping beside it, and it can be enlarged in the `Zoom` dialog, which also shows the credit. With no picture it draws nothing and leaves no gap. `ArticlePage` draws it in one box with the content, which contains the float so what follows a short article clears the picture; the article's `RichText` takes `besideFloat`; `ArticlePage`'s `lead` is what opens the article ahead of the picture (a row of cards, which can't sit beside it). The page header above is the `PageHeader` `band` (a themed surface, optionally over a faded photo, `BandBackdrop`; never the page's own picture). Its test checks the three sizes, the float, the early load, the Enlarge button with the keyboard and focus return, the empty case and axe; the gallery shows it beside text.
+
+**`BandBackdrop`** (#1024) is the faded photo behind the title band of a post or an event
+(`PageHeader` `variant="band"`, `backdrop`). It is edge to edge inside the band, grayed
+(`grayscale-50`), faded (`opacity-60`) and washed with a `--surface` scrim (`bg-surface/50`), so the
+photo reaches the title at 30% of its strength; those two numbers are `BAND_PHOTO_ALPHA` and
+`BAND_SCRIM_ALPHA` in the theme contract, and `themes.test.ts` checks the title's colour on the band
+over a black and over a white photo, in light and dark, so contrast holds whatever the photo. A
+band's category badges sit on a solid plate (`BadgeList plated`), since a badge's tint is
+see-through. The backdrop is one crop per screen size (phone under `md`, tablet from `md`, desktop
+from `lg`), each an upload with its own focal point; a photo several sizes use is drawn once, and
+an image not shown at the screen's size is not loaded. It adds no height: it fills the band. Nothing
+set is the plain band, with identical markup. It is a decoration (hidden from assistive tech, empty
+alt) and loads lightly (`IMAGE_QUALITIES.backdrop`, `sizes="100vw"`, no early load). Its test checks
+all of this and axe; the gallery shows it in the headers entry.
 
 **`MetaBar`** (#1002) is the metadata of a post or an event, the industry's byline or meta bar: one thin
 line of small text at the top left of the article's column, under the picture and above the text,

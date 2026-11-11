@@ -46,6 +46,10 @@
 | `mapsUrl`          | text         | no       |                                                                     | shown conditionally                  |
 | `registrationUrl`  | text         | no       |                                                                     |                                      |
 | `heroImage`        | upload       | no       | → media                                                             |                                      |
+| `backdrop`         | group        | no       |                                                                     |                                      |
+| `backdrop.phone`   | upload       | no       | → media                                                             |                                      |
+| `backdrop.tablet`  | upload       | no       | → media                                                             |                                      |
+| `backdrop.desktop` | upload       | no       | → media                                                             |                                      |
 | `description`      | textarea     | no       |                                                                     |                                      |
 | `content`          | richText     | no       |                                                                     |                                      |
 | `meta.title`       | text         | no       |                                                                     |                                      |

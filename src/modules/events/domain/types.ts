@@ -1,4 +1,4 @@
-import type { ImageRef, RichTextValue } from '@/platform/lib'
+import type { BandBackdrop, ImageRef, RichTextValue } from '@/platform/lib'
 
 import type { EventCategoryRef } from './categories'
 import type { EventLocationType } from './locationTypes'
@@ -38,6 +38,8 @@ export type EventDetail = EventSummary & {
   /** The official meeting's agenda, an `https://` link; null when the event isn't official */
   agendaUrl: string | null
   content: RichTextValue | null
+  /** The photo behind the title band, one crop per screen size; `null` keeps the plain band (#1024) */
+  backdrop: BandBackdrop | null
   meta: {
     title: string | null
     description: string | null

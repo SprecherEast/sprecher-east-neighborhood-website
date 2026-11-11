@@ -2,8 +2,10 @@ import { cva } from 'class-variance-authority'
 import { ArrowLeft } from 'lucide-react'
 import React from 'react'
 
+import { resolveBandBackdrop, type BandBackdrop as BandBackdropCrops } from '@/platform/lib'
 import { cn } from '@/platform/lib/cn'
 
+import { BandBackdrop } from './BandBackdrop'
 import { DETAIL_GRID, READING_WIDTH } from './layoutSizes'
 import { Link } from './Link'
 import { Text } from './Text'
@@ -37,14 +39,16 @@ type CompactHeaderProps = HeaderBase & {
 }
 
 /**
- * Heads a post or event page: the title on a short plain band (#1013). The page's picture is not
- * in the band: `FeaturedImage` shows it whole in the article. Its facts are the `MetaBar` in the
- * article column (#1002).
+ * Heads a post or event page: the title on a short band (#1013), plain or over a faded photo
+ * (#1024). The page's picture is not in the band: `FeaturedImage` shows it whole in the article.
+ * Its facts are the `MetaBar` in the article column (#1002).
  */
 type BandHeaderProps = HeaderBase & {
   variant: 'band'
-  /** A short label above the title, or `Badge` items */
+  /** A short label above the title, or `Badge` items (in a `BadgeList plated` over a photo) */
   eyebrow?: React.ReactNode
+  /** The photo behind the band, a crop per screen size; none or empty is the plain band */
+  backdrop?: BandBackdropCrops | null
   description?: never
   backLink?: never
   children?: never
@@ -110,12 +114,26 @@ export function PageHeader(props: PageHeaderProps) {
   )
 }
 
-function BandHeader({ eyebrow, title, className }: BandHeaderProps) {
+function BandHeader({ eyebrow, title, backdrop, className }: BandHeaderProps) {
+  const photo = resolveBandBackdrop(backdrop).length > 0
   return (
     <header className={className}>
-      {/* The band slides under the sticky site header, so it reads as one block with it */}
-      <div className="-mt-[var(--header-height)] border-b border-border bg-surface">
-        <div className={cn('container pt-[var(--header-height)] pb-6', DETAIL_GRID)}>
+      {/* The band slides under the sticky site header, so it reads as one block with it. A photo
+          fills it without adding to its height, and the text sits above it */}
+      <div
+        className={cn(
+          '-mt-[var(--header-height)] border-b border-border bg-surface',
+          photo && 'relative overflow-hidden',
+        )}
+      >
+        <BandBackdrop backdrop={backdrop} />
+        <div
+          className={cn(
+            'container pt-[var(--header-height)] pb-6',
+            photo && 'relative',
+            DETAIL_GRID,
+          )}
+        >
           {/* From `lg` the title is in the article's column, the one `DetailLayout` gives the picture
               and the text, so they share a left edge (the grid is defined once, in layoutSizes) */}
           <div className="lg:col-start-2">

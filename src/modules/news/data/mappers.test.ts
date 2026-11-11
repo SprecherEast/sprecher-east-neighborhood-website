@@ -108,6 +108,17 @@ describe('toPostDetail', () => {
     })
   })
 
+  it('maps the title band backdrop, one crop per screen size, and none when no crop is loaded (#1024)', () => {
+    const crop = { id: 11, alt: 'Field', url: '/api/media/file/field.jpg' } as Media
+    expect(toPostDetail({ ...doc, backdrop: { desktop: crop, phone: 12 } }).backdrop).toEqual({
+      phone: null,
+      tablet: null,
+      desktop: crop,
+    })
+    expect(toPostDetail(doc).backdrop).toBeNull()
+    expect(toPostDetail({ ...doc, backdrop: { phone: 12 } }).backdrop).toBeNull()
+  })
+
   it('keeps only the related posts the reader may see, in the editor’s order', () => {
     // A related post the reader may not see (a draft) comes back as its id only
     expect(toPostDetail(doc).relatedPosts).toEqual([toPostSummary(related)])

@@ -25,6 +25,7 @@ const event: EventDetail = {
   registrationUrl: null,
   agendaUrl: null,
   content: null,
+  backdrop: null,
   meta: { title: null, description: null, image: null },
 }
 
