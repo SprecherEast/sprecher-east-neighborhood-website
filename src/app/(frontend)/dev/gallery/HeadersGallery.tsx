@@ -85,6 +85,12 @@ export function HeadersGallery() {
             />
           </div>
         </GalleryVariant>
+      </GalleryEntry>
+
+      <GalleryEntry
+        name="BandBackdrop"
+        description="The faded, grayed photo behind a post's or an event's title band, with a crop per screen size (#1024). The title keeps its contrast over any photo, so the band reads the same over the sample photo as over none. Decorative; the sample photo is a blurred test image."
+      >
         <GalleryVariant
           label="band, over a faded photo (a post's or an event's backdrop)"
           labelAs="p"
