@@ -88,12 +88,14 @@
 }
 
 /*
- * `total-pulse` (#1051): a total flashes the accent once and fades back, to mark that a new amount is
- * ready. Only where the reader allows motion; otherwise the total just changes.
+ * `total-pulse` (#1051, #1095): a total flashes the accent once and fades back, to mark that a new
+ * amount is ready. The flash is a layer of its own behind the row's text (never the row's own
+ * background, never over the text) and starts soft, so the figures stay readable. Only where the
+ * reader allows motion; otherwise the total just changes.
  */
 @keyframes total-pulse {
   from {
-    background-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background-color: color-mix(in srgb, var(--accent) 30%, transparent);
   }
   to {
     background-color: transparent;
@@ -102,7 +104,17 @@
 
 @utility total-pulse {
   @media (prefers-reduced-motion: no-preference) {
-    animation: total-pulse 1.5s ease-out;
+    isolation: isolate;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      animation: total-pulse 1.5s ease-out;
+    }
   }
 }
 
