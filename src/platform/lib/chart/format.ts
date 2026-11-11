@@ -40,3 +40,6 @@ export function formatValue(value: number, unit: ChartUnit, options?: { compact?
       return NUMBER.format(value)
   }
 }
+
+/** Dollars as a whole number, rounded: an estimate has no cents ($1,386) */
+export const formatWholeDollars = (amount: number) => formatValue(Math.round(amount), 'usd')

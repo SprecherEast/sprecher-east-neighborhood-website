@@ -3360,6 +3360,49 @@ export interface ChartBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BillShareBlock".
+ */
+export interface BillShareBlock {
+  /**
+   * One line above the home value box: what the estimate is based on.
+   */
+  intro: string
+  /**
+   * 1 to 2 tax years, oldest first. Readers switch between them. Use only rates the bodies have officially set.
+   */
+  years: {
+    /**
+     * The budget year: 2027.
+     */
+    year: number
+    /**
+     * On the switch: "2026 rates (last year)".
+     */
+    label: string
+    /**
+     * The City’s average home that year, in dollars.
+     */
+    averageHome: number
+    schools?: number | null
+    city?: number | null
+    county?: number | null
+    matc?: number | null
+    /**
+     * Optional, for example "City tax detail".
+     */
+    linkLabel?: string | null
+    /**
+     * A site path (/events) or https:// address.
+     */
+    linkUrl?: string | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'billShare'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FactTabsBlock".
  */
 export interface FactTabsBlock {
@@ -3411,9 +3454,9 @@ export interface FactTabsBlock {
      */
     definition: string
     /**
-     * 1 to 2 charts or timelines shown when the tab is open.
+     * 1 to 3 charts, timelines or a whole tax bill shown when the tab is open.
      */
-    panel: (ChartBlock | TimelineBlock)[]
+    panel: (ChartBlock | TimelineBlock | BillShareBlock)[]
     id?: string | null
   }[]
   id?: string | null

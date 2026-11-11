@@ -14,6 +14,83 @@ import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 import { SAMPLE_CODE, SAMPLE_KEY_FACTS, SAMPLE_RICH_TEXT, UNEVEN_KEY_FACTS } from './sampleData'
 
 const FACT_TABS = toFactTabsProps(FACT_TABS_FIXTURE)
+/** The first tab with a whole tax bill at the top of its panel (sample rates, not the City's) */
+const BILL_TAB = {
+  ...(FACT_TABS.tabs[0] as (typeof FACT_TABS.tabs)[number]),
+  panel: [
+    {
+      kind: 'billShare' as const,
+      billShare: {
+        intro: 'Sample: based on an average home. Change the value to see yours.',
+        years: [
+          {
+            year: 2026,
+            label: '2026 rates',
+            averageHome: 481300,
+            rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 },
+            source: null,
+          },
+          {
+            year: 2027,
+            label: '2027 rates (proposed)',
+            averageHome: 500300,
+            rates: { city: 6.93 },
+            source: null,
+          },
+        ],
+      },
+    },
+    {
+      kind: 'chart' as const,
+      enlarge: false,
+      spec: {
+        kind: 'stacked' as const,
+        title: 'Sample: City tax on an average home',
+        summary: 'Sample figures.',
+        unit: 'usd' as const,
+        orientation: 'horizontal' as const,
+        x: ['2026 adopted', '2027 proposed'],
+        series: [
+          { key: 'same', label: 'Same as 2026', values: [3375.89, 3375.89] },
+          {
+            key: 'more',
+            label: 'Proposed increase',
+            pattern: 'hatch' as const,
+            increase: true as const,
+            values: [0, 90.04],
+          },
+        ],
+      },
+    },
+    {
+      kind: 'chart' as const,
+      enlarge: false,
+      spec: {
+        kind: 'breakdown' as const,
+        title: 'Where that City tax goes, estimated',
+        summary: 'Sample: split like an operating budget.',
+        unit: 'usd' as const,
+        hideSquares: true,
+        areas: [
+          {
+            key: 'safety',
+            label: 'Public safety & health',
+            value: 1413.57,
+            pieces: [
+              { key: 'police', label: 'Police', value: 743.86, shown: true as const },
+              { key: 'fire', label: 'Fire / EMS', value: 588.71, shown: true as const },
+            ],
+          },
+          { key: 'debt', label: 'Debt service', value: 584.1 },
+          { key: 'else', label: 'Everything else', value: 514.76 },
+          { key: 'works', label: 'Public works', value: 411.22 },
+          { key: 'transport', label: 'Transportation', value: 274.77 },
+          { key: 'admin', label: 'Administration', value: 267.51 },
+        ],
+      },
+    },
+  ],
+}
 
 /** The rich-text renderer and the code block inside it */
 export function RichTextGallery() {
@@ -90,6 +167,12 @@ export function RichTextGallery() {
           className="block"
         >
           <FactTabs tabs={FACT_TABS.tabs.slice(1, 4)} />
+        </GalleryVariant>
+        <GalleryVariant
+          label="a whole tax bill first, the rest of the tab under the City's slice"
+          className="block"
+        >
+          <FactTabs tabs={[BILL_TAB]} />
         </GalleryVariant>
         <GalleryVariant label="two tabs, the second one without pictures" className="block">
           <FactTabs

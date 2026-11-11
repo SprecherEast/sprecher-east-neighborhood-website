@@ -99,12 +99,10 @@ describe('a FactTabs tag', () => {
       /tabs\.1\.panel/,
     ],
     [
-      'three pictures',
+      'four pictures',
       (t: Record<string, unknown>[]) => {
-        present(t[0]).panel = [
-          ...(present(t[0]).panel as unknown[]),
-          (present(t[0]).panel as unknown[])[0],
-        ]
+        const first = (present(t[0]).panel as unknown[])[0]
+        present(t[0]).panel = [...(present(t[0]).panel as unknown[]), first, first]
       },
       /tabs\.0\.panel/,
     ],

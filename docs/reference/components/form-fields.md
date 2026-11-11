@@ -96,7 +96,7 @@ Source: `src/platform/ui/Field.client.tsx`
 
 - Modules: `accounts`, `contact`, `news`
 - Routes: `/dev/gallery`
-- Platform: `platform/theme`
+- Platform: `platform/richtext`, `platform/theme`
 
 ## `FieldInput`
 

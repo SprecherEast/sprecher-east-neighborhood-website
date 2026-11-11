@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
+import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { joinLastWords } from '@/platform/lib/joinLastWords'
 import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { Chart } from '@/platform/ui/chart/Chart'
@@ -9,16 +10,35 @@ import { Tabs, type TabsItem } from '@/platform/ui/Tabs.client'
 import { Text } from '@/platform/ui/Text'
 
 import { splitDefinitionAtSource } from './definitionWithSource'
+import { BillShare } from './BillShare.client'
 import { FactCard } from './FactCard'
-import type { FactTabProps, FactTabsProps } from './factTabs'
+import type { FactTabPanelItem, FactTabProps, FactTabsProps } from './factTabs'
 import { Timeline } from './Timeline'
+
+/** A chart of this kind in a panel, with its spec typed as that kind */
+const isChartOf =
+  <K extends ChartSpec['kind']>(kind: K) =>
+  (
+    item: FactTabPanelItem,
+  ): item is Extract<FactTabPanelItem, { kind: 'chart' }> & {
+    spec: Extract<ChartSpec, { kind: K }>
+  } =>
+    item.kind === 'chart' && item.spec.kind === kind
 
 /**
  * What one tab opens (#980): its heading (with scripting on) with how sure we are beside it, then
  * its first picture, then the short definition, whose City term is the link to the source (a
- * "Source:" line only when the definition never says it), then the other pictures
+ * "Source:" line only when the definition never says it), then the other pictures. A whole tax
+ * bill (#1018) goes first and holds all of that in the panel under the City's slice, which starts
+ * with the City's tax by year as one bar, then the text, then where the tax goes (both follow the
+ * home value typed, #1020), and the other pictures in a softer box of their own.
  */
-function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
+function FactTabPanel({ heading, definition, fact, panel: allPictures }: FactTabProps) {
+  const bill = allPictures.find(
+    (item): item is Extract<FactTabProps['panel'][number], { kind: 'billShare' }> =>
+      item.kind === 'billShare',
+  )
+  const panel = allPictures.filter((item) => item.kind !== 'billShare')
   const parts = splitDefinitionAtSource(definition, fact.source)
   const picture = (item: FactTabProps['panel'][number], index: number) =>
     item.kind === 'chart' ? (
@@ -29,30 +49,11 @@ function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
         numbers="screen-reader"
         heading={index === 0 ? 'screen-reader' : 'visible'}
       />
-    ) : (
+    ) : item.kind === 'timeline' ? (
       <Timeline key={index} {...item.timeline} className="my-0" />
-    )
-  return (
-    <div className="space-y-6">
-      {/* Tabs shows its heading only with scripting off; with it on the tab is the title, so this one
-          shows then, and the reader always sees the heading the editor wrote, once */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <Text variant="subsection" as="h3" className="hidden scripted:block">
-          {heading}
-        </Text>
-        {/* How sure we are, once, beside the heading: the tab button leaves it to screen readers
-            (#980) */}
-        <div data-panel-certainty aria-hidden="true">
-          <CertaintyBadge certainty={fact.certainty} />
-        </div>
-      </div>
-      {/* The explanation a tab leaves out so all the tabs hold the same parts (#707) */}
-      {fact.detail && (
-        <div data-panel-detail>
-          <Text variant="small">{joinLastWords(fact.detail)}</Text>
-        </div>
-      )}
-      {panel.slice(0, 1).map(picture)}
+    ) : null
+  const text = (
+    <>
       {definition && (
         <Text variant="lead">
           {parts
@@ -81,7 +82,56 @@ function FactTabPanel({ heading, definition, fact, panel }: FactTabProps) {
           </Link>
         </Text>
       )}
-      {panel.slice(1).map((item, index) => picture(item, index + 1))}
+    </>
+  )
+  // With a whole tax bill the City's panel starts with the City's tax as one bar, the short text,
+  // then where that tax goes, and both charts are drawn again for the home typed (#1020)
+  const cityBars = bill ? panel.find(isChartOf('stacked')) : undefined
+  const cityBreakdown = bill ? panel.find(isChartOf('breakdown')) : undefined
+  const rest = bill ? panel.filter((item) => item !== cityBars && item !== cityBreakdown) : panel
+  const body = (
+    <>
+      {!bill && rest.slice(0, 1).map(picture)}
+      {text}
+      {rest.slice(bill ? 0 : 1).map((item, index) => picture(item, index + (bill ? 0 : 1)))}
+    </>
+  )
+  return (
+    <div className="space-y-6">
+      {/* Tabs shows its heading only with scripting off; with it on the tab is the title, so this one
+          shows then, and the reader always sees the heading the editor wrote, once */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <Text variant="subsection" as="h3" className="hidden scripted:block">
+          {heading}
+        </Text>
+        {/* How sure we are, once, beside the heading: the tab button leaves it to screen readers
+            (#980) */}
+        <div data-panel-certainty aria-hidden="true">
+          <CertaintyBadge certainty={fact.certainty} />
+        </div>
+      </div>
+      {/* The explanation a tab leaves out so all the tabs hold the same parts (#707) */}
+      {fact.detail && (
+        <div data-panel-detail>
+          <Text variant="small">{joinLastWords(fact.detail)}</Text>
+        </div>
+      )}
+      {bill ? (
+        <BillShare
+          {...bill.billShare}
+          cityBars={cityBars?.spec}
+          cityBreakdown={cityBreakdown?.spec}
+          definition={text}
+        >
+          {rest.length > 0 && (
+            <div className="space-y-6 rounded-xl bg-surface p-4">
+              {rest.map((item, index) => picture(item, index + 1))}
+            </div>
+          )}
+        </BillShare>
+      ) : (
+        body
+      )}
     </div>
   )
 }
