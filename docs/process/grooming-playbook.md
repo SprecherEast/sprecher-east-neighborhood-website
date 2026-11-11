@@ -15,21 +15,25 @@ sets issue fields and labels. It does not move cards itself: the `ready` label a
 issue do, through the planner app, and where that did not happen it comments which card should
 move, as [how we work](project-management.md#the-board) says.
 
-## Modes: dry run and apply
+## Modes: apply and propose
 
-Grooming is propose-first.
+Grooming makes an issue correct and complete without asking, and asks before it changes what the
+team has agreed to do.
 
-- **Dry run (the default).** Read everything, work out what should change, and post one report as
-  a comment. A dry run changes nothing: no label, field, parent, milestone, link, status, title,
-  body or state, and nothing is closed. The comment is the only write.
-- **Apply.** Make only the changes the owner approved in a report, item by item or by named
-  category, in that run. Approval from an earlier run does not carry over. Record each change as a
-  comment saying what changed and why, or one summary comment that lists them. Anything not
-  approved stays as it was. Afterwards run a dry run again to confirm the report is clean.
-- **Approval** comes from the owner in chat or on the issue, and the record on the issue is a
-  summary with where he said it, never his words
-  ([the record](project-management.md#the-record-on-the-issue)).
-- **Unsure which mode:** dry run.
+- **Applied directly.** What brings an issue in line with the rules already written: labels,
+  priority and size, an existing milestone, blocked-by links for dependencies named in prose, the
+  body's sections (not what it promises), the `ready` label. One comment per issue says why.
+- **Proposed, then applied once the owner agrees.** Closing anything or labeling it
+  `proposed-close` (duplicate bugs are the exception the
+  [operating model](agent-operating-model.md#4-how-an-issue-moves) allows); an issue's scope or
+  acceptance criteria; a parent; creating, renaming, splitting or re-scoping a milestone or an epic; a
+  sprint's goal; anything about a rule. The proposal is a numbered report. He approves by number
+  or category, in chat or on the issue, and only approved items are applied; approval from an
+  earlier run does not carry over. The record is a summary with where he said it, never his words.
+- **Report only.** When the owner asks for a report, or for the first pass of a
+  [retro-organization](#retro-organization): a dry run changes nothing, and the report comment is
+  the only write.
+- **Unsure whether a change is routine:** propose it.
 
 ## Board moves: entry and exit criteria
 
@@ -91,8 +95,8 @@ Ready only through the Backlog to Ready criteria again.
 ### Park
 
 Parking is a deliberate "not now". Remove the `ready` label, which moves the card to Backlog,
-and comment the reason and the condition that would bring it back. Taking a card out of the
-sprint needs the board, so name it in the report for a session that can reach it. A parked item whose condition will
+and comment the reason and the condition that would bring it back; taking it out of the sprint
+needs the board, so the report names it. A parked item whose condition will
 never come is obsolete: label it `proposed-close` for the owner, and never close an old idea
 yourself. Blocked work is not parked; it keeps its blocked-by link and stays where it is.
 
@@ -101,8 +105,8 @@ yourself. Blocked work is not parked; it keeps its blocked-by link and stays whe
 For each, the chief of staff checks and updates the following.
 
 - **On filing.** Layer (the decision tree), duplicates (below), the required labels, parent and
-  milestone, the issue body against the forms, and blockers. Fix what is missing in apply mode,
-  or list it in a dry run. Anything it cannot groom gets one question on the issue, not a list.
+  milestone, the issue body against the forms, and blockers. Fix what is missing, or list it in
+  a report-only run. Anything it cannot groom gets one question on the issue, not a list.
 - **On each status change.** The exit criteria of the column left and the entry criteria of the
   column entered. A move that skips them is reported; In progress also re-runs the overlap check.
 - **When work starts and when it finishes.** A progress comment appears on the issue as it
@@ -180,6 +184,15 @@ fits one line, means a proposed split.
 - **Labels:** none that duplicate hierarchy; the `epic` marker only on parents.
 - **Dependencies:** blocked-by links instead of prose, and none that form a cycle.
 
+### Drift and repeated failures
+
+- **Drift:** work that left what was agreed: a pull request that changes files its issue did not
+  declare or delivers what its criteria do not ask for, an issue rewritten after work began, an
+  issue closed with criteria unmet. Report it on the issue; extra work becomes a new linked issue.
+- **Repeated failures:** the same check failing across pull requests, the same review finding or
+  blocker coming back. One line each with a count, and an issue for the cause
+  ([watch list](watch-list.md)).
+
 ### Milestone and epic progress
 
 A milestone's description and done test still match its scope, and a stale one gets proposed
@@ -194,10 +207,12 @@ sub-issues. Progress numbers are read from GitHub, never recomputed from memory.
 One comment, short enough to read in a minute. Items are numbered so the owner can approve by number.
 
 ```markdown
-### [STEP] Grooming report (<dry run | apply>)
+### [STEP] Grooming report (<report only | applied>)
 
 **Scope:** <what was read: the sprint, an epic, the whole backlog>
 **Summary:** <counts per finding type>
+
+**Applied** (routine, already done): <issue> <finding type>: <what changed>, one line each
 
 **Proposed changes** (numbered; approve by number or category)
 
@@ -208,8 +223,7 @@ One comment, short enough to read in a minute. Items are numbered so the owner c
 **Could not check:** <anything unreadable, such as the board from a cloud session>
 ```
 
-In apply mode the same shape lists what was changed, with the approval it rests on, and ends with
-the result of a fresh dry run.
+A second comment lists the approved items once applied, with the approval they rest on.
 
 ## Retro-organization
 

@@ -22,6 +22,7 @@ const SKILLS = [
   '.agents/skills/project-tracking/SKILL.md',
 ]
 const MANUAL_TEST = 'docs/process/chief-of-staff-manual-test.md'
+const WATCH_LIST = 'docs/process/watch-list.md'
 
 /** GitHub's heading anchor: lowercase, punctuation dropped, spaces to hyphens. */
 const slug = (heading) =>
@@ -107,7 +108,7 @@ describe('the planning model', () => {
 
 describe('the grooming playbook', () => {
   it.each([
-    'Modes: dry run and apply',
+    'Modes: apply and propose',
     'Board moves: entry and exit criteria',
     'Backlog to Ready',
     'Ready to In progress',
@@ -127,6 +128,24 @@ describe('the grooming playbook', () => {
     const text = read(PLAYBOOK)
     expect(text).toMatch(/dry run[^.]*changes nothing/i)
     expect(text).toMatch(/only[^.]*approved/i)
+  })
+
+  it('applies routine grooming directly and proposes closing, scope, structure and rules', () => {
+    const text = read(PLAYBOOK)
+    const modes = text.slice(text.indexOf('## Modes'), text.indexOf('## Board moves'))
+    const [applied, proposed] = modes.split('- **Proposed')
+    for (const word of ['labels', 'priority and size', '`ready` label']) {
+      expect(applied, word).toContain(word)
+    }
+    for (const word of ['Closing', 'acceptance criteria', 'milestone', 'rule']) {
+      expect(proposed, word).toContain(word)
+    }
+  })
+
+  it('watches for drift and repeated failures in the sweep', () => {
+    const text = read(PLAYBOOK)
+    expect(text).toContain('### Drift and repeated failures')
+    expect(links(PLAYBOOK).map((link) => link.target)).toContain(WATCH_LIST)
   })
 
   it('covers the duplicate, stale and orphan checks', () => {
@@ -173,6 +192,40 @@ describe('what points at the playbook', () => {
   it('links how-we-work to both documents', () => {
     const targets = links('docs/process/project-management.md').map((link) => link.target)
     expect(targets).toEqual(expect.arrayContaining([MODEL, PLAYBOOK]))
+  })
+})
+
+describe('the watch list', () => {
+  const text = read(WATCH_LIST)
+
+  it('stays under 250 lines and names no threshold', () => {
+    expect(text.split('\n').length).toBeLessThan(250)
+    expect(text).not.toMatch(/\d+\s*(%|percent|ms|seconds|minutes)/i)
+  })
+
+  it('says who watches each row: a check, the chief of staff, or nobody yet', () => {
+    const rows = text
+      .split('\n')
+      .filter((line) => /^\| [A-Z]/.test(line) && !/^\| Watch/.test(line))
+    expect(rows.length).toBeGreaterThan(20)
+    for (const row of rows) expect(row, row).toMatch(/\| (Check|Chief of staff|Not yet)\s*\|$/)
+  })
+
+  it('cites its sources and links only to files and sections that exist', () => {
+    for (const source of ['dora.dev', 'sre.google', 'anthropic.com', 'developers.openai.com']) {
+      expect(text, source).toContain(source)
+    }
+    for (const { target, anchor } of links(WATCH_LIST)) {
+      expect(fs.existsSync(path.join(root, target)), `${target} exists`).toBe(true)
+      if (anchor) expect(anchors(target), `${target}#${anchor}`).toContain(anchor)
+    }
+  })
+
+  it('has a load map row and is read from the chief of staff skill at the start of a session', () => {
+    expect(read('docs/guidelines/README.md')).toContain('(../process/watch-list.md)')
+    const skill = '.agents/skills/chief-of-staff/SKILL.md'
+    expect(links(skill).map((link) => link.target)).toContain(WATCH_LIST)
+    expect(read(skill)).toMatch(/status=failure&event=pull_request/)
   })
 })
 

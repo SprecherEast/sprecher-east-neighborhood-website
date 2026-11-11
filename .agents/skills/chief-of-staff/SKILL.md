@@ -18,28 +18,43 @@ decide, claim or ask is a comment on the issue
 
 ## 1. Start of session
 
-1. **List the owner's open questions first.** Everything labeled `needs owner`, open, oldest first,
-   at most seven, one line each: number, plain title, how long it has waited. Pull requests count
-   too (the issues endpoint returns them).
+Three things, in this order, in one reply. Nothing here waits for the owner before the next step.
+
+1. **What keeps failing.** Count the checks that failed on pull requests over the last week,
+   by name:
 
    ```bash
-   gh api "repos/{owner}/{repo}/issues?labels=needs%20owner&state=open&sort=created&direction=asc&per_page=7" \
-     -q '.[] | "#\(.number)\(if .pull_request then " (PR)" else "" end) \(.title) (since \(.created_at[:10]))"'
+   since=$(date -u -d '7 days ago' +%F)
+   gh api "repos/{owner}/{repo}/actions/runs?status=failure&event=pull_request&per_page=100&created=>$since" \
+     -q '[.workflow_runs[].name] | group_by(.) | map({name: .[0], failed: length}) | sort_by(-.failed) | .[] | "\(.failed) \(.name)"'
    ```
 
-   Count them with the search API, since the list stops at seven:
+   It reads the latest hundred failures, enough to see a pattern, not an exact total. A check
+   that failed again and again is a wall the workers keep hitting: say so in one line with
+   its count, and file or find the issue that fixes its cause
+   ([watch list](../../../docs/process/watch-list.md)). Add anything else from the watch list that
+   repeated. Nothing repeated: say nothing.
+
+2. **The owner's open questions.** Everything labeled `needs owner`, open, oldest first, one line
+   each: number, plain title, how long it has waited. Pull requests count too (the issues endpoint
+   returns them); the owner-actions epic is the list itself, not a question, so epics are left out.
 
    ```bash
-   gh api "search/issues?q=repo:{owner}/{repo}+is:open+label:%22needs+owner%22&per_page=1" -q .total_count
+   gh api "repos/{owner}/{repo}/issues?labels=needs%20owner&state=open&sort=created&direction=asc&per_page=100" \
+     -q '.[] | select([.labels[].name] | index("epic") | not) | "#\(.number)\(if .pull_request then " (PR)" else "" end) \(.title) (since \(.created_at[:10]))"'
    ```
 
-   If there are more than seven, say how many wait and show the seven oldest. Stop there and let
-   the owner answer before anything else. Silence is never a yes.
+   Before showing it, [triage](../../../docs/process/project-management.md#waits-for-owner) it:
+   an item that was never his to decide loses the label with a `[DECISION]` comment. Show at most
+   seven, the oldest first, and say how many wait in all. Make sure the first one has a plain
+   question he can answer in a sentence, and ask that one. Silence is never a yes, and only the
+   work blocked by a question waits for it.
 
-2. **Then propose the next batch.** From the current milestone ([`project-tracking`](../project-tracking/SKILL.md) §2),
+3. **The next batch.** From the current milestone ([`project-tracking`](../project-tracking/SKILL.md) §2),
    keep Ready issues only (§1 there), highest priority first. Run the overlap check (§3) on the
    proposed set and drop what clashes. Offer the batch with one line each and why.
-3. Dispatch only after the owner agrees to the batch, or when he has already said to keep going.
+
+Dispatch only after the owner agrees to the batch, or when he has already said to keep going.
 
 ## 2. Groom
 
@@ -121,9 +136,11 @@ Follow the [grooming playbook](../../../docs/process/grooming-playbook.md): the
 [sweep](../../../docs/process/grooming-playbook.md#the-sweep) and the
 [report format](../../../docs/process/grooming-playbook.md#report-format).
 
-1. **Default to a dry run.** Read, then post one report comment on the issue the owner names (ask
-   once if he named none). Change nothing else. Apply only what he approved in that run, and
-   comment each change ([modes](../../../docs/process/grooming-playbook.md#modes-dry-run-and-apply)).
+1. **Apply routine grooming; propose the rest.** What makes an issue correct and complete is
+   applied directly, with a comment on what changed. Closing, changing what an issue promises,
+   milestones and epics, and rules are proposed in a report and wait for the owner
+   ([modes](../../../docs/process/grooming-playbook.md#modes-apply-and-propose)). When he asks for
+   a report only, change nothing and post the report on the issue he names.
 2. **Read the plan from GitHub,** paging every list (100 items at most per call):
 
    ```bash
@@ -133,7 +150,7 @@ Follow the [grooming playbook](../../../docs/process/grooming-playbook.md): the
    gh api repos/{owner}/{repo}/issues/<epic>/sub_issues -q '.[] | "#\(.number) \(.state)"'
    ```
 
-3. **Apply, when approved,** with the REST calls the changes need: create or edit a milestone
+3. **Apply** with the REST calls the changes need, the proposed ones only once approved: create or edit a milestone
    (`-X POST` or `-X PATCH` on `milestones`, with `title` and `description`, and `due_on` only for
    a real date, including one the owner decides), set an issue's milestone (`-X PATCH issues/<n> -F milestone=<number>`), link a
    child ([`project-tracking`](../project-tracking/SKILL.md) §3 step 4). Comment before closing a
