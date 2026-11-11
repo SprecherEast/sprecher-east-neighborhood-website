@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { pieArcs, pieLabelFit, piePath } from './pie'
+import { pieArcs, pieLabelFits, piePath } from './pie'
 
 describe('pieArcs', () => {
   it('splits a full turn by share, clockwise from the top, whatever the shares add up to', () => {
@@ -42,27 +42,18 @@ describe('piePath', () => {
   })
 })
 
-describe('pieLabelFit', () => {
-  const lines = ['Dane County', '$1,500', '12%']
-
-  it('writes everything inside a slice with room for it', () => {
-    expect(
-      pieLabelFit({ share: 46, radius: 150, lines: ['Madison schools', '$3,000', '46%'] }),
-    ).toBe('full')
+describe('pieLabelFits', () => {
+  it('fits a percent inside a wedge with room for it', () => {
+    expect(pieLabelFits({ share: 46, radius: 150, text: '46%' })).toBe(true)
+    expect(pieLabelFits({ share: 12.5, radius: 110, text: '13%' })).toBe(true)
   })
 
-  it('cuts down to the percent when the name will not fit, and pulls out when even that will not', () => {
-    expect(pieLabelFit({ share: 12.5, radius: 110, lines })).toBe('percent')
-    expect(pieLabelFit({ share: 3, radius: 110, lines: ['MATC', '$300', '3%'] })).toBe('out')
+  it('leaves a thin wedge’s percent out of a small pie but writes it inside a big one', () => {
+    expect(pieLabelFits({ share: 3.5, radius: 230, text: '3%' })).toBe(true)
+    expect(pieLabelFits({ share: 3.5, radius: 130, text: '3%' })).toBe(false)
   })
 
-  it('fits a thin slice’s percent inside on a big pie and pulls it out on a small one', () => {
-    const thin = ['Madison College (MATC)', '$300', '3%']
-    expect(pieLabelFit({ share: 3.5, radius: 230, lines: thin })).toBe('percent')
-    expect(pieLabelFit({ share: 3.5, radius: 130, lines: thin })).toBe('out')
-  })
-
-  it('never fits a slice of nothing', () => {
-    expect(pieLabelFit({ share: 0, radius: 300, lines })).toBe('out')
+  it('never fits a wedge of nothing', () => {
+    expect(pieLabelFits({ share: 0, radius: 300, text: '0%' })).toBe(false)
   })
 })

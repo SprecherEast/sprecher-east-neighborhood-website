@@ -24,6 +24,9 @@ import { joinNames, reservedNote, ROUGH_NOTE, unconfirmedNote } from './billShar
 import { toCityBar } from './cityBar'
 import { RoughEstimator } from './RoughEstimator'
 
+/** The slices in the order the pie and the receipt show them: the City first */
+const SLICE_ORDER: readonly BillBody[] = ['city', 'schools', 'county', 'matc']
+
 /** A wedge's tone: the City highlighted, the others three grays, the schools' the lightest */
 const TONE: Record<BillBody, SharePieSlice['tone']> = {
   schools: 'light',
@@ -109,15 +112,23 @@ export function BillShare({
 
   const slices: SharePieSlice[] =
     bill?.complete === true
-      ? bill.parts.map(({ key, amount, share, percent }) => ({
-          key,
-          name: BILL_BODY_NAMES[key],
-          amount: formatWholeDollars(amount ?? 0),
-          percent: percent ?? 0,
-          share: share ?? 0,
-          tone: TONE[key],
-        }))
+      ? SLICE_ORDER.flatMap((key) => {
+          const found = part(key)
+          return found
+            ? [
+                {
+                  key,
+                  name: BILL_BODY_NAMES[key],
+                  amount: formatWholeDollars(found.amount ?? 0),
+                  percent: found.percent ?? 0,
+                  share: found.share ?? 0,
+                  tone: TONE[key],
+                },
+              ]
+            : []
+        })
       : []
+  const receiptTotal = bill?.complete === true && bill.total !== null ? bill.total : null
   const pieLabel =
     slices.length > 0
       ? `Your rough property tax: ${slices.map((slice) => `${slice.name} ${slice.amount}, ${slice.percent}%`).join('; ')}`
@@ -154,7 +165,11 @@ export function BillShare({
           error={
             homeValue === null ? 'Enter your home’s value as a number, like $500,000.' : undefined
           }
-          options={years.map((option) => ({ key: String(option.year), label: option.label }))}
+          options={years.map((option) => ({
+            key: String(option.year),
+            label: option.label,
+            note: option.note,
+          }))}
           selected={yearIndex}
           onSelect={(index) => {
             setYearIndex(index)
@@ -170,17 +185,17 @@ export function BillShare({
             <p role="status" className="sr-only">
               {bill && settled ? summary : ''}
             </p>
-            {bill && (
-              <Text
-                variant="lead"
-                aria-hidden="true"
-                className="min-h-21 text-foreground sm:min-h-14"
-              >
-                {summary}
-              </Text>
-            )}
             {slices.length > 0 ? (
-              <SharePie slices={slices} label={pieLabel} />
+              <SharePie
+                slices={slices}
+                label={pieLabel}
+                heading={`For a home valued at ${formatWholeDollars(homeValue ?? 0)}`}
+                total={
+                  receiptTotal === null
+                    ? undefined
+                    : { label: 'Total property tax', amount: formatWholeDollars(receiptTotal) }
+                }
+              />
             ) : (
               <Text variant="small" className="py-16 text-center">
                 Enter your home’s value to see how the bill splits.

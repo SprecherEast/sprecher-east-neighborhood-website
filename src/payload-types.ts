@@ -3376,9 +3376,13 @@ export interface BillShareBlock {
      */
     year: number
     /**
-     * On the switch: "2026 rates (last year)".
+     * On the switch: "2026 rates".
      */
     label: string
+    /**
+     * Shown in parentheses under the switch: "proposed". Leave empty once the rates are set.
+     */
+    note?: string | null
     /**
      * The City’s average home that year, in dollars.
      */

@@ -88,6 +88,29 @@ describe('RoughEstimator', () => {
     expect(shown?.getAttribute('aria-hidden')).toBeNull()
   })
 
+  it('writes a year’s note under its button in parentheses, and keeps the room when none has one', () => {
+    const { container } = render(
+      <RoughEstimator
+        {...PROPS}
+        options={[
+          { key: '2026', label: '2026 rates' },
+          { key: '2027', label: '2027 rates', note: 'proposed' },
+        ]}
+      />,
+    )
+    const note = screen.getByText('(proposed)')
+    expect(note.closest('div')?.querySelector('button')?.textContent).toBe('2027 rates')
+    // The button's own name stays the year's rates; the note is not part of it
+    expect(screen.getByRole('button', { name: '2027 rates' })).toBeTruthy()
+    const room = Array.from(container.querySelectorAll('[data-switch-note]'))
+    expect(room).toHaveLength(2)
+    expect(room[0]?.textContent).toBe('')
+    expect(room[0]?.className).toBe(room[1]?.className)
+    cleanup()
+    const none = render(<RoughEstimator {...PROPS} />).container
+    expect(none.querySelectorAll('[data-switch-note]')).toHaveLength(0)
+  })
+
   it('has no accessibility violations', async () => {
     const { container } = render(<RoughEstimator {...PROPS} />)
     await expectAccessible(container)

@@ -63,7 +63,7 @@ describe('factTabsToJsx and importFactTabsTag', () => {
           linkLabel: 'City tax detail',
           linkUrl: 'https://example.org/tax',
         },
-        { year: 2027, label: '2027 rates (proposed)', averageHome: 500300, city: 6.93 },
+        { year: 2027, label: '2027 rates', note: 'proposed', averageHome: 500300, city: 6.93 },
       ],
     }
     const stored = {
