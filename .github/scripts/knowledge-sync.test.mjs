@@ -1,4 +1,8 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it } from 'vitest'
+
+import { describes, parseKnowledgeMap } from '../../scripts/agent-context-maps.mjs'
 
 import {
   LIST_FILES_LIMIT,
@@ -402,5 +406,32 @@ describe('changedFiles', () => {
     const files = Array.from({ length: LIST_FILES_LIMIT }, (_, i) => ({ filename: `f${i}` }))
     expect(() => changedFiles(files)).toThrow(new RegExp(String(LIST_FILES_LIMIT)))
     expect(() => changedFiles(files.slice(1))).not.toThrow()
+  })
+})
+
+describe('the real knowledge map: shared helpers', () => {
+  const real = readFileSync('docs/knowledge/map.json', 'utf8')
+  const payload = parseKnowledgeMap(real).find((e) => e.source === 'src/platform/payload/README.md')
+
+  it('keeps a helper the Payload note describes mapped to it', () => {
+    expect(describes(payload, 'src/platform/lib/cn.ts')).toBe(true)
+    expect(describes(payload, 'src/platform/lib/messages/accounts.ts')).toBe(true)
+  })
+
+  it('does not map a helper the note does not describe', () => {
+    expect(describes(payload, 'src/platform/lib/canUseDOM.ts')).toBe(false)
+  })
+
+  it('still gates an unmapped helper under the whole-repository rule', () => {
+    const files = [
+      {
+        filename: 'src/platform/lib/canUseDOM.ts',
+        status: 'modified',
+        patch: '@@ -1 +1 @@\n-export const a = 1\n+export const a = 2',
+      },
+    ]
+    const problems = knowledgeProblems({ mapJson: real, files, noteExists: () => true, body: '' })
+    expect(problems).toHaveLength(1)
+    expect(problems[0]).not.toContain('src/platform/payload/README.md')
   })
 })

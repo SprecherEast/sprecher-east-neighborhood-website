@@ -1,0 +1,109 @@
+// @vitest-environment jsdom
+import { readFileSync } from 'node:fs'
+
+import { act, cleanup, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { COUNT_MS, useCountedNumber } from './useCountedNumber.client'
+
+let frames: ((time: number) => void)[] = []
+let now = 0
+
+beforeEach(() => {
+  frames = []
+  now = 0
+  vi.stubGlobal('requestAnimationFrame', (callback: (time: number) => void) => {
+    frames.push(callback)
+    return frames.length
+  })
+  vi.stubGlobal('cancelAnimationFrame', () => {})
+  vi.stubGlobal('matchMedia', () => ({ matches: false }))
+})
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
+
+const step = (ms: number) =>
+  act(() => {
+    now += ms
+    const pending = frames
+    frames = []
+    pending.forEach((frame) => frame(now))
+  })
+
+function Counter({ target }: { target: number }) {
+  return <p data-testid="n">{useCountedNumber(target, { durationMs: 400 })}</p>
+}
+function SlowCounter({ target }: { target: number }) {
+  return <p data-testid="n">{useCountedNumber(target)}</p>
+}
+const shown = () => Number(screen.getByTestId('n').textContent)
+
+describe('useCountedNumber', () => {
+  it('starts at the number it is given, with no count', () => {
+    render(<Counter target={500} />)
+    expect(shown()).toBe(500)
+  })
+
+  it('counts from the old number to the new one, in whole numbers, ending exactly on it', () => {
+    const { rerender } = render(<Counter target={100} />)
+    rerender(<Counter target={300} />)
+    step(0)
+    expect(shown()).toBe(100)
+    step(200)
+    expect(shown()).toBeGreaterThan(100)
+    expect(shown()).toBeLessThan(300)
+    expect(Number.isInteger(shown())).toBe(true)
+    step(400)
+    expect(shown()).toBe(300)
+  })
+
+  it('takes a second and a half by default, long enough to be seen', () => {
+    const { rerender } = render(<SlowCounter target={100} />)
+    rerender(<SlowCounter target={300} />)
+    step(0)
+    step(1000)
+    expect(shown()).toBeLessThan(300)
+    step(1500)
+    expect(shown()).toBe(300)
+  })
+
+  it('counts down as well as up', () => {
+    const { rerender } = render(<Counter target={300} />)
+    rerender(<Counter target={100} />)
+    step(0)
+    step(150)
+    expect(shown()).toBeLessThan(300)
+    expect(shown()).toBeGreaterThan(100)
+    step(400)
+    expect(shown()).toBe(100)
+  })
+
+  it('jumps straight to the new number for a reader who asked for less motion', () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('reduced-motion') }))
+    const { rerender } = render(<Counter target={100} />)
+    rerender(<Counter target={300} />)
+    expect(shown()).toBe(300)
+  })
+
+  it('starts the next count from where the last one had got to', () => {
+    const { rerender } = render(<Counter target={0} />)
+    rerender(<Counter target={1000} />)
+    step(0)
+    step(200)
+    const middle = shown()
+    rerender(<Counter target={0} />)
+    step(0)
+    expect(shown()).toBe(middle)
+    step(500)
+    expect(shown()).toBe(0)
+  })
+})
+
+describe("the count and the total's flash", () => {
+  it("last as long: the flash's CSS duration is the count's, defined once here", () => {
+    const css = readFileSync('src/platform/theme/tailwind.css', 'utf8')
+    expect(css).toContain(`animation: total-pulse ${COUNT_MS / 1000}s ease-out`)
+  })
+})

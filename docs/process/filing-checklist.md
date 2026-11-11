@@ -25,6 +25,7 @@ a tool that never reads it still meets them. How they work is in
 - `PR-LABELS`: The closed issue needs one type, at least one area and one priority label.
 - `PR-ASSIGNED`: Assign the closed issue (assigning claims it and moves its card to In progress).
 - `PR-MILESTONE`: Give the closed issue a milestone (Backlog until planned); an epic is optional.
+- `PR-GROOMED`: Groom the closed issue until it has no `needs grooming` label, then edit the PR description to re-run the check.
 - `PR-SECTIONS`: Fill in every section of the PR template, each with 10+ characters.
 - `PR-SELF-REVIEW`: Under "Self-review" write a line for Reuse, Quality, Efficiency, Guidelines and Visual.
 - `PR-KNOWLEDGE`: Change the note that describes the behavior, or write `Behavior change: none` with a reason of 20+ characters.

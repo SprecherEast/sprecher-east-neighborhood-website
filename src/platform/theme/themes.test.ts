@@ -4,6 +4,8 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import {
+  BAND_PHOTO_ALPHA,
+  BAND_SCRIM_ALPHA,
   CHART_PAIRS,
   CHART_RAMP_TOKENS,
   CONTRAST_PAIRS,
@@ -63,6 +65,20 @@ describe('theme files', () => {
           `--${chart} on --${background}: ${ratio.toFixed(2)}:1`,
         ).toBeGreaterThanOrEqual(MIN_GRAPHIC_CONTRAST)
       })
+
+      it.each(['#000000', '#ffffff'])(
+        'keeps the title readable on the title band over a %s photo (WCAG AA)',
+        (photo) => {
+          // Any photo lies between black and white, so passing at both ends passes for every photo
+          const { surface, foreground } = modes[mode]
+          const faded = mixOver(photo, surface, BAND_PHOTO_ALPHA)
+          const band = mixOver(surface, faded, BAND_SCRIM_ALPHA)
+          const ratio = contrastRatio(foreground, band)
+          expect(ratio, `--foreground over the band: ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(
+            MIN_TEXT_CONTRAST,
+          )
+        },
+      )
 
       it('keeps the breakdown ramp apart: no two steps are the same colour', () => {
         const values = CHART_RAMP_TOKENS.map((token) => modes[mode][token])

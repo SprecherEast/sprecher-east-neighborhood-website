@@ -55,10 +55,10 @@ export function eventByline(event: EventDetail): MetaBarItem[] {
  * column (#1002).
  */
 export function eventHeaderProps(event: EventDetail): PageHeaderProps {
-  const { cancelled, categories, officialBody, title } = event
+  const { backdrop, cancelled, categories, officialBody, title } = event
   const eyebrow =
     cancelled || officialBody || categories.length > 0 ? (
-      <BadgeList>
+      <BadgeList plated={Boolean(backdrop)}>
         {cancelled && <CancelledBadge variant="status" />}
         {officialBody && (
           <OfficialMeetingBadge variant="official">
@@ -73,5 +73,5 @@ export function eventHeaderProps(event: EventDetail): PageHeaderProps {
       </BadgeList>
     ) : undefined
 
-  return { variant: 'band', eyebrow, title }
+  return { variant: 'band', eyebrow, title, backdrop }
 }

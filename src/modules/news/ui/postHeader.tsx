@@ -52,10 +52,10 @@ export function postByline(post: PostDetail): LabelledMetaItem[] {
  * author, date and source are `postByline`, above the article text (#774).
  */
 export function postHeaderProps(post: PostDetail): PageHeaderProps {
-  const { categories, title } = post
+  const { backdrop, categories, title } = post
   const eyebrow =
     categories.length > 0 ? (
-      <BadgeList>
+      <BadgeList plated={Boolean(backdrop)}>
         {categories.map((category) => (
           <Badge key={category.id} variant="category">
             {category.title}
@@ -64,5 +64,5 @@ export function postHeaderProps(post: PostDetail): PageHeaderProps {
       </BadgeList>
     ) : undefined
 
-  return { variant: 'band', eyebrow, title }
+  return { variant: 'band', eyebrow, title, backdrop }
 }

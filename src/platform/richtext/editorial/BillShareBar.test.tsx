@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { BillShare } from './BillShare.client'
-import { box, city, PROPS } from './billShareFixtures'
+import { box, city, estimate, PROPS } from './billShareFixtures'
 
 afterEach(cleanup)
 
@@ -25,7 +25,7 @@ describe('the share bar over the City’s panel (#1030)', () => {
     matc: 'Madison College (MATC)',
   } as Record<string, string>
 
-  it('shows the same shares as the pie, for each year and for a typed home value', () => {
+  it('shows the same shares as the pie, for each year and for a home estimated', async () => {
     const { container } = render(<BillShare {...PROPS}>x</BillShare>)
     const same = () => {
       const pie = percents(
@@ -53,7 +53,7 @@ describe('the share bar over the City’s panel (#1030)', () => {
     same()
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
     same()
-    fireEvent.change(box(), { target: { value: '$900,000' } })
+    await estimate('$900,000')
     same()
   })
 
@@ -72,9 +72,9 @@ describe('the share bar over the City’s panel (#1030)', () => {
     expect(bar.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('draws no bar while the home value is not a number', () => {
+  it('keeps the bar of the last bill while the typed value is not a number', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.change(box(), { target: { value: 'abc' } })
-    expect(screen.queryByRole('img', { name: /whole property tax bill/i })).toBeNull()
+    screen.getByRole('img', { name: /^Your whole property tax bill:/ })
   })
 })

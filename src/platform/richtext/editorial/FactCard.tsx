@@ -7,6 +7,7 @@ import { Card } from '@/platform/ui/Card'
 import { Link } from '@/platform/ui/Link'
 import { SUBGRID_FOUR_ROWS, SUBGRID_THREE_ROWS } from '@/platform/ui/layoutSizes'
 
+import { FilledText } from './BillFigures.client'
 import { FACT_ICONS } from './factIcons'
 import type { KeyFact } from './keyFacts'
 
@@ -26,9 +27,19 @@ import type { KeyFact } from './keyFacts'
  * the rest. The icon sits on its own line with the label under it, all left-aligned (#856), so a
  * short label fits four to a row. On a phone (#704) the certainty is left to screen readers
  * (`sr-only`) and the open panel shows it in a line. The figure keeps its last two words together,
- * so "+$90 a year" wraps as "+$90" over "a year".
+ * so "+$90 a year" wraps as "+$90" over "a year". With a `tabId`, `{yearly}` and `{monthly}` in
+ * the figure follow the tab's whole tax bill (#1029).
  */
-export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 'card' | 'tab' }) {
+export function FactCard({
+  fact,
+  variant = 'card',
+  tabId,
+}: {
+  fact: KeyFact
+  variant?: 'card' | 'tab'
+  /** The tab this button opens, so a `{yearly}` in its figure follows the tab's whole bill (#1029) */
+  tabId?: string
+}) {
   const { Icon } = FACT_ICONS[fact.icon]
   const tab = variant === 'tab'
   const Facts = tab ? 'span' : 'dl'
@@ -67,7 +78,15 @@ export function FactCard({ fact, variant = 'card' }: { fact: KeyFact; variant?: 
               : 'text-2xl',
           )}
         >
-          {tab ? joinLastWords(fact.value) : fact.value}
+          {tab ? (
+            tabId ? (
+              <FilledText tab={tabId} text={fact.value} keepLastWords />
+            ) : (
+              joinLastWords(fact.value)
+            )
+          ) : (
+            fact.value
+          )}
         </Value>
         {!tab && fact.detail && (
           <Value className="mt-1 block text-sm leading-snug [overflow-wrap:anywhere] text-muted-foreground">

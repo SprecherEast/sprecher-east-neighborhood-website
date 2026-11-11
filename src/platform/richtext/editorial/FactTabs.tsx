@@ -1,7 +1,6 @@
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
-import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { joinLastWords } from '@/platform/lib/joinLastWords'
 import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { Chart } from '@/platform/ui/chart/Chart'
@@ -9,21 +8,13 @@ import { Link } from '@/platform/ui/Link'
 import { Tabs, type TabsItem } from '@/platform/ui/Tabs.client'
 import { Text } from '@/platform/ui/Text'
 
-import { splitDefinitionAtSource } from './definitionWithSource'
+import { BillFiguresProvider, FilledText } from './BillFigures.client'
 import { BillShare } from './BillShare.client'
+import { fillFigures, initialFigures, splitBillPanel } from './billFigures'
+import { splitDefinitionAtSource } from './definitionWithSource'
 import { FactCard } from './FactCard'
-import type { FactTabPanelItem, FactTabProps, FactTabsProps } from './factTabs'
+import type { FactTabProps, FactTabsProps } from './factTabs'
 import { Timeline } from './Timeline'
-
-/** A chart of this kind in a panel, with its spec typed as that kind */
-const isChartOf =
-  <K extends ChartSpec['kind']>(kind: K) =>
-  (
-    item: FactTabPanelItem,
-  ): item is Extract<FactTabPanelItem, { kind: 'chart' }> & {
-    spec: Extract<ChartSpec, { kind: K }>
-  } =>
-    item.kind === 'chart' && item.spec.kind === kind
 
 /**
  * What one tab opens (#980): its heading (with scripting on) with how sure we are beside it, then
@@ -33,12 +24,14 @@ const isChartOf =
  * with the City's tax by year as one bar, then the text, then where the tax goes (both follow the
  * home value typed, #1020), and the other pictures in a softer box of their own.
  */
-function FactTabPanel({ heading, definition, fact, panel: allPictures }: FactTabProps) {
-  const bill = allPictures.find(
-    (item): item is Extract<FactTabProps['panel'][number], { kind: 'billShare' }> =>
-      item.kind === 'billShare',
-  )
-  const panel = allPictures.filter((item) => item.kind !== 'billShare')
+function FactTabPanel({
+  tabId,
+  heading,
+  definition,
+  fact,
+  panel: allPictures,
+}: FactTabProps & { tabId: string }) {
+  const { bill, cityBars, cityBreakdown, rest } = splitBillPanel(allPictures)
   const parts = splitDefinitionAtSource(definition, fact.source)
   const picture = (item: FactTabProps['panel'][number], index: number) =>
     item.kind === 'chart' ? (
@@ -86,9 +79,6 @@ function FactTabPanel({ heading, definition, fact, panel: allPictures }: FactTab
   )
   // With a whole tax bill the City's panel starts with the City's tax as one bar, the short text,
   // then where that tax goes, and both charts are drawn again for the home typed (#1020)
-  const cityBars = bill ? panel.find(isChartOf('stacked')) : undefined
-  const cityBreakdown = bill ? panel.find(isChartOf('breakdown')) : undefined
-  const rest = bill ? panel.filter((item) => item !== cityBars && item !== cityBreakdown) : panel
   const body = (
     <>
       {!bill && rest.slice(0, 1).map(picture)}
@@ -102,7 +92,7 @@ function FactTabPanel({ heading, definition, fact, panel: allPictures }: FactTab
           shows then, and the reader always sees the heading the editor wrote, once */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <Text variant="subsection" as="h3" className="hidden scripted:block">
-          {heading}
+          <FilledText tab={tabId} text={heading} />
         </Text>
         {/* How sure we are, once, beside the heading: the tab button leaves it to screen readers
             (#980) */}
@@ -119,8 +109,9 @@ function FactTabPanel({ heading, definition, fact, panel: allPictures }: FactTab
       {bill ? (
         <BillShare
           {...bill.billShare}
-          cityBars={cityBars?.spec}
-          cityBreakdown={cityBreakdown?.spec}
+          tabId={tabId}
+          cityBars={cityBars}
+          cityBreakdown={cityBreakdown}
           definition={text}
         >
           {rest.length > 0 && (
@@ -144,20 +135,30 @@ function FactTabPanel({ heading, definition, fact, panel: allPictures }: FactTab
  */
 export function FactTabs({ tabs, className }: FactTabsProps & { className?: string }) {
   if (tabs.length === 0) return null
-  const items: TabsItem[] = tabs.map((tab, index) => ({
-    value: `tab-${index}`,
-    trigger: <FactCard fact={tab.fact} variant="tab" />,
-    heading: tab.heading,
-    panel: <FactTabPanel {...tab} />,
-  }))
+  // The City's figures for the average home, per tab, written by the server so nothing flashes wrong
+  const initial = Object.fromEntries(
+    tabs.map((tab, index) => [`tab-${index}`, initialFigures(tab.panel)]),
+  )
+  const items: TabsItem[] = tabs.map((tab, index) => {
+    const tabId = `tab-${index}`
+    return {
+      value: tabId,
+      trigger: <FactCard fact={tab.fact} variant="tab" tabId={tabId} />,
+      // Read with scripting off, where nothing can follow a typed value: the average home's
+      heading: fillFigures(tab.heading, initial[tabId]),
+      panel: <FactTabPanel {...tab} tabId={tabId} />,
+    }
+  })
   return (
-    <Tabs
-      label="Key facts"
-      items={items}
-      defaultValue="tab-0"
-      // The tab buttons share four rows, so the same part of each fact lines up (#678)
-      rows="shared"
-      className={cn('not-prose my-8 w-full', className)}
-    />
+    <BillFiguresProvider initial={initial}>
+      <Tabs
+        label="Key facts"
+        items={items}
+        defaultValue="tab-0"
+        // The tab buttons share four rows, so the same part of each fact lines up (#678)
+        rows="shared"
+        className={cn('not-prose my-8 w-full', className)}
+      />
+    </BillFiguresProvider>
   )
 }

@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { BillShare } from './BillShare.client'
-import { box, city, PROPS } from './billShareFixtures'
+import { box, city, estimate, PROPS } from './billShareFixtures'
 
 afterEach(cleanup)
 
@@ -21,21 +21,21 @@ describe('BillShare', () => {
     expect(screen.getByText('City detail')).toBeTruthy()
   })
 
-  it('says a year’s rates are not confirmed, without naming the bodies, in a note that is always there', () => {
+  it('says the City’s rate for a year is proposed, without naming the other bodies, in a note that is always there', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
-    const note = screen.getByText(/2027 rates are not confirmed/i)
-    expect(note.textContent).toBe('2027 rates are not confirmed, only proposed.')
+    const note = screen.getByText(/City’s 2027 tax rate is proposed/i)
+    expect(note.textContent).toBe('The City’s 2027 tax rate is proposed, not confirmed.')
     expect(note.closest('li')?.getAttribute('aria-hidden')).toBeNull()
     expect(screen.getByText('(proposed)')).toBeTruthy()
     // Last year's rates have nothing to confirm: the note keeps its room and is hidden from everyone
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
-    const kept = screen.getByText(/2027 rates are not confirmed/i).closest('li')
+    const kept = screen.getByText(/City’s 2027 tax rate is proposed/i).closest('li')
     expect(kept?.getAttribute('aria-hidden')).toBe('true')
     expect(kept?.className).toContain('invisible')
     expect(screen.getByText(/a rough estimate/i)).toBeTruthy()
   })
 
-  it('shows the bill for the home value typed, and the City’s part of it', () => {
+  it('shows the bill for the home value typed, only once Estimate is pressed', async () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
     expect(box().value).toBe('$481,300')
@@ -43,11 +43,12 @@ describe('BillShare', () => {
     expect(result.textContent).toMatch(/\$481,300/)
     expect(result.textContent).toMatch(/about \$8,9\d\d/)
     fireEvent.change(box(), { target: { value: '962600' } })
-    // A screen reader is told when the reader leaves the box, not on every key
-    expect(screen.getByRole('status').textContent).toBe('')
+    // Typing changes nothing: the numbers and the spoken sentence wait for Estimate
+    expect(screen.getByRole('status').textContent).toMatch(/\$481,300/)
+    expect(receipt().textContent).toMatch(/For a home valued at \$481,300/)
+    await estimate('962600')
     expect(receipt().textContent).toMatch(/For a home valued at \$962,600/)
     expect(receipt().textContent).toMatch(/Total property tax\$17,9\d\d/)
-    fireEvent.blur(box())
     expect(screen.getByRole('status').textContent).toMatch(/about \$17,9\d\d/)
   })
 
@@ -55,15 +56,45 @@ describe('BillShare', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.change(box(), { target: { value: '300000' } })
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
-    expect(box().value).toBe('300000')
+    expect(box().value).toBe('$300,000')
   })
 
-  it('asks for a number instead of showing a wrong bill', () => {
+  it('asks for a number, keeps the last bill and leaves Estimate off', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.change(box(), { target: { value: 'abc' } })
     expect(screen.getByRole('alert').textContent).toMatch(/enter your home’s value/i)
-    expect(screen.getByRole('status').textContent).toBe('')
-    expect(screen.queryByRole('img', { name: /your rough property tax/i })).toBeNull()
+    expect((screen.getByRole('button', { name: 'Estimate' }) as HTMLButtonElement).disabled).toBe(
+      true,
+    )
+    expect(screen.getByRole('status').textContent).toMatch(/\$500,300/)
+  })
+
+  it('turns Estimate on only for a valid value that differs from the one shown', async () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    const button = () => screen.getByRole('button', { name: 'Estimate' }) as HTMLButtonElement
+    expect(button().disabled).toBe(true)
+    fireEvent.change(box(), { target: { value: '300000' } })
+    expect(button().disabled).toBe(false)
+    await estimate('300000')
+    expect(button().disabled).toBe(true)
+    expect(screen.getByRole('status').textContent).toMatch(/\$300,000/)
+  })
+
+  it('estimates when Enter submits the box', async () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    fireEvent.change(box(), { target: { value: '400000' } })
+    await act(async () => {
+      fireEvent.submit(box().closest('form') as HTMLFormElement)
+    })
+    expect(screen.getByRole('status').textContent).toMatch(/\$400,000/)
+  })
+
+  it('applies a rate year at once while a typed value waits for Estimate', () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    fireEvent.change(box(), { target: { value: '300000' } })
+    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    expect(screen.getByRole('status').textContent).toMatch(/\$481,300/)
+    expect(box().value).toBe('$300,000')
   })
 
   it('draws the whole bill as one pie of the four bodies, with the source', () => {
@@ -120,5 +151,66 @@ describe('BillShare', () => {
   it('has no accessibility violations', async () => {
     const { container } = render(<BillShare {...PROPS}>City detail</BillShare>)
     await expectAccessible(container)
+  })
+})
+
+describe('BillShare, Estimate with motion allowed', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  const allowMotion = (visible: boolean) => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false }))
+    const scroll = vi.fn()
+    Element.prototype.scrollIntoView = scroll
+    const top = visible ? 100 : 5000
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
+      top,
+      bottom: top + 300,
+      left: 0,
+      right: 300,
+      width: 300,
+      height: 300,
+      x: 0,
+      y: top,
+      toJSON: () => ({}),
+    })
+    return scroll
+  }
+
+  it('does not scroll when the receipt is already fully on screen', async () => {
+    const scroll = allowMotion(true)
+    render(<BillShare {...PROPS}>x</BillShare>)
+    await estimate('300000')
+    expect(scroll).not.toHaveBeenCalled()
+    expect(screen.getByRole('status').textContent).toMatch(/\$300,000/)
+  })
+
+  it('scrolls smoothly to the receipt when it is out of view', async () => {
+    const scroll = allowMotion(false)
+    render(<BillShare {...PROPS}>x</BillShare>)
+    await estimate('300000')
+    expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' })
+  })
+})
+
+describe('BillShare, the card and the total after Estimate (#1051)', () => {
+  const total = () => screen.getByText('Total property tax').closest('p') as HTMLElement
+
+  it('keeps the whole card clear of the sticky header when it scrolls into view', () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    const card = screen.getByRole('region', { name: 'Your rough property tax' })
+    expect(card.className).toContain('scroll-mt-')
+  })
+
+  it('flashes the total once a new bill has been estimated, and not on load', async () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    expect(total().className).not.toContain('total-pulse')
+    await estimate('300000')
+    expect(total().className).toContain('total-pulse')
+  })
+
+  it('flashes the total when a rate year changes the bill', () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    expect(total().className).toContain('total-pulse')
   })
 })

@@ -1,7 +1,7 @@
 <!--
 Every PR closes exactly one issue and fills in every section below. The "PR Policy" check enforces
 this and names each failure by rule ID (PR-CLOSES, PR-LINKED, PR-LABELS, PR-ASSIGNED, PR-MILESTONE,
-PR-SECTIONS, PR-SELF-REVIEW, PR-KNOWLEDGE, PR-E2E): docs/process/issue-and-pr-checks.md#the-pull-request-gate
+PR-GROOMED, PR-SECTIONS, PR-SELF-REVIEW, PR-KNOWLEDGE, PR-E2E): docs/process/issue-and-pr-checks.md#the-pull-request-gate
 Before opening: read docs/process/filing-checklist.md (one line per rule ID, with its fix)
 Rules: AGENTS.md. Procedure: .agents/skills/change-workflow/SKILL.md
 If this PR depends on another open PR, put both on a native GitHub stack and start this
@@ -66,7 +66,7 @@ If this PR changes anything that can alter behavior, anywhere (tests, comments, 
 and lockfile patches don't count), change the note, guideline or reference that describes it in
 the same PR (and the note docs/knowledge/map.json names for that code), or write
 "Behavior change: none" and why (20+ characters). A doc you name by path here must be in the diff.
-The reviewer checks it against the diff. -->
+The reviewer checks it against the diff. How to decide: docs/guidelines/development.md#documentation-follows-behavior -->
 
 Behavior change:
 

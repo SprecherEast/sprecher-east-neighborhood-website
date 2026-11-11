@@ -59,13 +59,29 @@ export function Badge({ variant, size, className, children }: BadgeProps) {
   return <span className={cn(badgeVariants({ variant, size }), className)}>{children}</span>
 }
 
-/** Badges in a row that wraps on small screens */
+/**
+ * Badges in a row that wraps on small screens. `plated` lays each on a solid plate of the surface,
+ * for a row over a photo: a badge's tint is see-through, so a photo behind would change its
+ * contrast. On the plain surface the plate cannot be seen (#1024).
+ */
 export function BadgeList({
   className,
+  plated = false,
   children,
 }: {
   className?: string
+  plated?: boolean
   children: React.ReactNode
 }) {
-  return <div className={cn('flex flex-wrap gap-2', className)}>{children}</div>
+  return (
+    <div className={cn('flex flex-wrap gap-2', className)}>
+      {plated
+        ? React.Children.toArray(children).map((badge, index) => (
+            <span key={index} className="flex max-w-full rounded-full bg-surface">
+              {badge}
+            </span>
+          ))
+        : children}
+    </div>
+  )
 }

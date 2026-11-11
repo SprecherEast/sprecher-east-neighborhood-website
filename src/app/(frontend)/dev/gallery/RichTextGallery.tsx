@@ -17,6 +17,12 @@ const FACT_TABS = toFactTabsProps(FACT_TABS_FIXTURE)
 /** The first tab with a whole tax bill at the top of its panel (sample rates, not the City's) */
 const BILL_TAB = {
   ...(FACT_TABS.tabs[0] as (typeof FACT_TABS.tabs)[number]),
+  // The button and heading follow the home and year in the bill (#1029)
+  fact: {
+    ...(FACT_TABS.tabs[0] as (typeof FACT_TABS.tabs)[number]).fact,
+    value: '+{yearly} a year',
+  },
+  heading: 'Your share: {monthly} a month',
   panel: [
     {
       kind: 'billShare' as const,

@@ -20,5 +20,5 @@ export type ResolvedLink = {
   /** Opens in a new tab */
   external: boolean
   /** The look the editor chose; the UI maps it to a `Button` variant */
-  appearance: 'default' | 'outline'
+  appearance: 'default' | 'outline' | 'accent'
 }

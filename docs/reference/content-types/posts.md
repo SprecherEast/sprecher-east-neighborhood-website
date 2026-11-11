@@ -34,6 +34,10 @@
 | ------------------------- | ------------ | -------- | ------------------------------------------------------------------- | ------------------------------------------------ |
 | `title`                   | text         | yes      |                                                                     | max length 60                                    |
 | `heroImage`               | upload       | no       | → media                                                             |                                                  |
+| `backdrop`                | group        | no       |                                                                     |                                                  |
+| `backdrop.phone`          | upload       | no       | → media                                                             |                                                  |
+| `backdrop.tablet`         | upload       | no       | → media                                                             |                                                  |
+| `backdrop.desktop`        | upload       | no       | → media                                                             |                                                  |
 | `content`                 | richText     | yes      |                                                                     |                                                  |
 | `relatedPosts`            | relationship | no       | → posts (many)                                                      |                                                  |
 | `categories`              | relationship | no       | → categories (many)                                                 |                                                  |

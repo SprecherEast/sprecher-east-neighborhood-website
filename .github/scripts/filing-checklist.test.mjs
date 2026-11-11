@@ -47,8 +47,8 @@ describe('the filing checklist (#971)', () => {
     )
   })
 
-  it('names no rule for a check that is not built', () => {
-    expect(checklist).not.toContain('PR-GROOMED')
+  it('names PR-GROOMED, which the pull request gate now checks (#984)', () => {
+    expect(checklist).toContain('`PR-GROOMED`')
   })
 
   it('is pointed to from AGENTS.md, the issue forms, the PR template and the session guide', () => {

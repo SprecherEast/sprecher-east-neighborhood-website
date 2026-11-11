@@ -51,3 +51,11 @@ text panel to the checks above.
     full size, and the control sits under the picture so the picture starts where the text does. A
     picture is designed to stay readable at its small size where it can, and in the enlarged view
     where it can't (the owner's decision, 2026-11-10, Claude Code session, recorded on #1023).
+14. **A backdrop's visible band is chosen on purpose.** A photo behind a title band shows only a
+    wide, short strip of itself. Which strip is decided deliberately, per photo and per screen
+    size, with a crop for each, and checked at every width before it is published: each crop shows
+    the part of the photo worth seeing and gives a good feel, never whatever the band happens to
+    land on. A photo whose good part cannot fill a wide, short band is not used as a backdrop, and
+    neither is a photo showing identifiable people. The title and the category must read over it in
+    light and dark, so the photo is faded behind a theme scrim rather than adjusted per photo (the
+    owner's decisions, 2026-11-10 and 2026-11-11, Claude Code sessions, recorded on #1024).

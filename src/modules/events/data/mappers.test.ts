@@ -116,6 +116,17 @@ describe('toEventDetail', () => {
     })
   })
 
+  it('maps the title band backdrop, one crop per screen size, and none when no crop is loaded (#1024)', () => {
+    const crop = { id: 11, alt: 'Field', url: '/api/media/file/field.jpg' } as Media
+    expect(toEventDetail({ ...doc, backdrop: { tablet: crop } }).backdrop).toEqual({
+      phone: null,
+      tablet: crop,
+      desktop: null,
+    })
+    expect(toEventDetail(doc).backdrop).toBeNull()
+    expect(toEventDetail({ ...doc, backdrop: { desktop: 12 } }).backdrop).toBeNull()
+  })
+
   describe('an official meeting (#122)', () => {
     const council = {
       ...doc,

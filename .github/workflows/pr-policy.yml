@@ -1,7 +1,8 @@
 name: PR Policy
 
 # Enforces AGENTS.md steps 1–2 on every pull request: it closes exactly one issue, that issue is
-# claimed (assigned), planned (milestone) and labeled (one type, an area, a priority), the issue
+# claimed (assigned), planned (milestone), labeled (one type, an area, a priority) and groomed (no
+# `needs grooming` label), the issue
 # shows the PR on its timeline, the PR description is fully filled in, a knowledge note is updated
 # with the code it describes (.github/scripts/knowledge-sync.mjs), and any end-to-end exemption has
 # a reason of 20+ characters (.github/scripts/e2e-gate.mjs, #868). Each failure starts with a
@@ -45,6 +46,7 @@ jobs:
             const {
               closeProblems,
               descriptionProblems,
+              groomedProblems,
               isDependabot,
               issueProblems,
               linkedIssues,
@@ -82,6 +84,8 @@ jobs:
               problems.push(...lookup);
               if (lookup.length) continue;
               problems.push(...issueProblems(number, issue, policy));
+              // The label is read from the issue just fetched, so one the issue check removed is gone (PR-GROOMED)
+              problems.push(...groomedProblems(number, issue));
 
               // GitHub adds the closing keyword to the issue's timeline a moment after the PR is saved,
               // so look a few times before calling the link one-way

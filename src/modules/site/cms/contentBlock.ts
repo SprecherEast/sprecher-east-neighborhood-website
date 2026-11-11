@@ -39,6 +39,7 @@ const columnFields: Field[] = [
     type: 'checkbox',
   },
   link({
+    appearances: ['default', 'outline', 'accent'],
     overrides: {
       admin: {
         condition: (_data, siblingData) => {
@@ -55,6 +56,7 @@ const columnFields: Field[] = [
     options: [
       { label: 'Start (left)', value: 'start' },
       { label: 'End (right)', value: 'end' },
+      { label: 'Beside the text (right, the text wraps around it)', value: 'beside' },
     ],
     admin: {
       description: 'Where the link button sits in its column.',

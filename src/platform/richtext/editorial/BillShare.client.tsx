@@ -1,54 +1,39 @@
 'use client'
 
-import React, { useId, useState, type ReactNode } from 'react'
+import React, { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 import {
   BILL_BODY_NAMES,
   computeBillShare,
   fillFromEarlier,
   parseHomeValue,
-  type BillBody,
-  type BillPart,
 } from '@/platform/lib/billShare'
+import { cn } from '@/platform/lib/cn'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { AmountBar } from '@/platform/ui/AmountBar'
 import { Card, CardTitle } from '@/platform/ui/Card'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
 import { Link } from '@/platform/ui/Link'
-import { ShareBar, type ShareBarSlice } from '@/platform/ui/ShareBar.client'
-import { SharePie, type SharePieSlice } from '@/platform/ui/SharePie.client'
+import { scrollToUnlessVisible } from '@/platform/ui/motion.client'
+import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
+import { ShareBar } from '@/platform/ui/ShareBar.client'
+import { SharePie } from '@/platform/ui/SharePie.client'
 import { Text } from '@/platform/ui/Text'
+import { useCountedNumber } from '@/platform/ui/useCountedNumber.client'
 
 import type { BillShareProps } from './billShare'
 import { joinNames, reservedNote, ROUGH_NOTE, unconfirmedNote } from './billShareNotes'
-import { toCityBar } from './cityBar'
+import { receiptFor } from './billShareView'
+import { shareBarFor } from './shareBarView'
+import { cityBarFor, figuresFor } from './billFigures'
+import { useReportFigures } from './BillFigures.client'
 import { RoughEstimator } from './RoughEstimator'
-
-/** The slices in the order the pie and the receipt show them: the City first */
-const SLICE_ORDER: readonly BillBody[] = ['city', 'schools', 'county', 'matc']
-
-/** A wedge's tone: the City highlighted, the others three grays, the schools' the lightest */
-const TONE: Record<BillBody, SharePieSlice['tone']> = {
-  schools: 'light',
-  city: 'highlight',
-  county: 'medium',
-  matc: 'dark',
-}
-
-/** The bar's order, as it always was: the schools, the City (the highlighted slice), the county, the college */
-const BAR_ORDER: readonly BillBody[] = ['schools', 'city', 'county', 'matc']
-
-/** A slice's tone in the bar, in the same lightness order as the pie's wedges */
-const BAR_TONE: Record<BillBody, ShareBarSlice['tone']> = {
-  schools: 'light',
-  city: 'highlight',
-  county: 'medium',
-  matc: 'strong',
-}
 
 /** What the City's panel holds besides the pictures a tab only draws once (#1020) */
 export type CityPanelProps = {
+  /** The tab this bill is in, so the tab's button and heading can follow it (#1029) */
+  tabId?: string
   /** A chart of the City's tax by year: the panel starts with its column for the year shown, as one bar */
   cityBars?: Extract<ChartSpec, { kind: 'stacked' }>
   /** Where the City's tax goes, drawn again for whatever the City's tax is on the home typed */
@@ -59,7 +44,8 @@ export type CityPanelProps = {
 
 /**
  * The whole property-tax bill at the top of a fact tab (#1018, #1022): two cards of one height, side
- * by side from `lg` and stacked below it, with the same bill under them as a bar whose City slice joins the City's panel. The Rough Estimator holds the home value the reader can
+ * by side from `lg` and stacked below it, with the same bill under them as a bar whose City slice
+ * joins the City's panel (#1030). The Rough Estimator holds the home value the reader can
  * change (it starts at the City's average home), the switch between tax years and the notes on how
  * rough the answer is; the other is the bill as a pie whose wedges are as big as their shares. The
  * City's panel sits under both: the City's own tax as one bar, a short line, then where that tax
@@ -71,6 +57,7 @@ export type CityPanelProps = {
 export function BillShare({
   intro,
   years,
+  tabId,
   cityBars,
   cityBreakdown,
   definition,
@@ -80,24 +67,51 @@ export function BillShare({
   const year = years[yearIndex]
   // What the reader typed, or null while the box still shows the City's average for the year
   const [typed, setTyped] = useState<string | null>(null)
-  // A screen reader hears the bill when the reader leaves the box or switches year, not on every key
-  const [settled, setSettled] = useState(true)
+  // The value last estimated, or null while the numbers are for the City's average home
+  const [estimated, setEstimated] = useState<number | null>(null)
+  const estimating = useRef(false)
+  const cardRef = useRef<HTMLElement>(null)
   const pieTitleId = useId()
+  const target = estimated ?? year?.averageHome ?? 0
+  // Counts up each time a new bill has finished counting, so the total can flash once
+  const [pulse, setPulse] = useState(0)
+  const lastBill = useRef<string | null>(null)
+  // Every number below counts to a new value, so a change is seen, not just found
+  const shown = useCountedNumber(target)
+  // Once the count has ended on a bill that differs from the last one, the total flashes once
+  const billKey = `${yearIndex}:${target}`
+  const settled = shown === target
+  useEffect(() => {
+    if (!settled) return
+    if (lastBill.current !== null && lastBill.current !== billKey) setPulse((count) => count + 1)
+    lastBill.current = billKey
+  }, [settled, billKey])
+  // The tab's button and heading follow the home estimated (not each step of the count)
+  const tabBar = cityBarFor(cityBars, years, yearIndex, target)
+  useReportFigures(tabId, tabBar ? figuresFor(tabBar.increase) : undefined)
   if (!year) return null
 
   const text = typed ?? formatWholeDollars(year.averageHome)
   const homeValue = parseHomeValue(text)
   const { rates } = fillFromEarlier(year.rates, years[yearIndex - 1]?.rates)
-  const bill = homeValue === null ? null : computeBillShare(homeValue, rates)
-  const part = (key: BillBody): BillPart | undefined => bill?.parts.find((p) => p.key === key)
-  const summary = !bill
-    ? ''
-    : bill.complete && bill.total !== null
-      ? `If your home is worth ${formatWholeDollars(homeValue ?? 0)}, your whole bill is about ${formatWholeDollars(bill.total)}.`
-      : `The City’s part of a ${formatWholeDollars(homeValue ?? 0)} home’s bill would be about ${formatWholeDollars(part('city')?.amount ?? 0)}.`
+  const bill = computeBillShare(shown, rates)
+  const receipt = receiptFor(bill, shown)
+  const shareBar = shareBarFor(receipt.slices)
+  // What a screen reader hears: the bill for the value estimated, not each step of the count
+  const summary = receiptFor(computeBillShare(target, rates), target).summary
+
+  // Estimating scrolls to the whole card only if it is not all on screen, and the numbers count once
+  // the page has stopped moving; a reader who asked for less motion gets them at once
+  const estimate = async () => {
+    if (homeValue === null || estimating.current) return
+    estimating.current = true
+    if (cardRef.current) await scrollToUnlessVisible(cardRef.current)
+    setEstimated(homeValue)
+    estimating.current = false
+  }
 
   // The City's panel follows the home typed (the average home while the box holds no number)
-  const home = homeValue ?? year.averageHome
+  const home = shown
   const cityAmount =
     (bill ?? computeBillShare(home, rates)).parts.find((p) => p.key === 'city')?.amount ?? null
   const homeRatio = home / year.averageHome
@@ -105,10 +119,7 @@ export function BillShare({
   const breakdownFactor =
     cityAmount !== null && breakdownTotal > 0 ? cityAmount / breakdownTotal : homeRatio
   // A chart whose columns are not these years cannot say which year it shows, so it draws no bar
-  const cityBar =
-    cityBars && cityBars.x.length === years.length
-      ? toCityBar(cityBars, { column: yearIndex, cityAmount, homeRatio })
-      : null
+  const cityBar = cityBarFor(cityBars, years, yearIndex, home)
   const panel = (
     <div className="space-y-6">
       {cityBar && <AmountBar title={cityBar.title} total={cityBar.total} parts={cityBar.parts} />}
@@ -121,52 +132,6 @@ export function BillShare({
       {children}
     </div>
   )
-
-  const slices: SharePieSlice[] =
-    bill?.complete === true
-      ? SLICE_ORDER.flatMap((key) => {
-          const found = part(key)
-          return found
-            ? [
-                {
-                  key,
-                  name: BILL_BODY_NAMES[key],
-                  amount: formatWholeDollars(found.amount ?? 0),
-                  percent: found.percent ?? 0,
-                  share: found.share ?? 0,
-                  tone: TONE[key],
-                },
-              ]
-            : []
-        })
-      : []
-  // The bar is made from the pie's slices, so the two always show the same shares for the same home and year
-  const barSlices: ShareBarSlice[] = BAR_ORDER.flatMap((key) => {
-    const slice = slices.find((candidate) => candidate.key === key)
-    return slice
-      ? [
-          {
-            key,
-            share: slice.share,
-            tone: BAR_TONE[key],
-            label: `${slice.percent}%`,
-            // The City's slice says what it is, name first and then the number, as the page's other lines do
-            ...(key === 'city' ? { name: 'City tax' } : {}),
-          },
-        ]
-      : []
-  })
-  const barLabel = `Your whole property tax bill: ${barSlices
-    .map((bar) => {
-      const slice = slices.find((candidate) => candidate.key === bar.key)
-      return `${slice?.name} ${slice?.percent}%`
-    })
-    .join(', ')}`
-  const receiptTotal = bill?.complete === true && bill.total !== null ? bill.total : null
-  const pieLabel =
-    slices.length > 0
-      ? `Your rough property tax: ${slices.map((slice) => `${slice.name} ${slice.amount}, ${slice.percent}%`).join('; ')}`
-      : ''
 
   // The notes always take their room, so a year with none to show never makes the card shorter
   const kept = reservedNote(years)
@@ -191,11 +156,9 @@ export function BillShare({
         <RoughEstimator
           intro={intro}
           value={text}
-          onValueChange={(value) => {
-            setTyped(value)
-            setSettled(false)
-          }}
-          onValueBlur={() => setSettled(true)}
+          onValueChange={setTyped}
+          canEstimate={homeValue !== null && homeValue !== target}
+          onEstimate={estimate}
           error={
             homeValue === null ? 'Enter your home’s value as a number, like $500,000.' : undefined
           }
@@ -205,41 +168,41 @@ export function BillShare({
             note: option.note,
           }))}
           selected={yearIndex}
-          onSelect={(index) => {
-            setYearIndex(index)
-            setSettled(true)
-          }}
+          onSelect={setYearIndex}
           notes={notes}
         />
-        <Card as="section" variant="elevated" aria-labelledby={pieTitleId} className="h-full">
+        <Card
+          as="section"
+          ref={cardRef}
+          variant="elevated"
+          aria-labelledby={pieTitleId}
+          className={cn('h-full', SECTION_SCROLL_MARGIN)}
+        >
           <div className="space-y-3">
             <CardTitle as="h3" className="text-xl">
               <span id={pieTitleId}>Your rough property tax</span>
             </CardTitle>
             <p role="status" className="sr-only">
-              {bill && settled ? summary : ''}
+              {summary}
             </p>
-            {slices.length > 0 ? (
+            {receipt.slices.length > 0 ? (
               <SharePie
-                slices={slices}
-                label={pieLabel}
-                heading={`For a home valued at ${formatWholeDollars(homeValue ?? 0)}`}
-                total={
-                  receiptTotal === null
-                    ? undefined
-                    : { label: 'Total property tax', amount: formatWholeDollars(receiptTotal) }
-                }
+                slices={receipt.slices}
+                label={receipt.label}
+                heading={receipt.heading}
+                total={receipt.total ?? undefined}
+                pulseKey={pulse}
               />
             ) : (
               <Text variant="small" className="py-16 text-center">
-                Enter your home’s value to see how the bill splits.
+                The whole bill can’t be shown yet.
               </Text>
             )}
           </div>
         </Card>
       </div>
-      {barSlices.length > 0 ? (
-        <ShareBar slices={barSlices} label={barLabel}>
+      {shareBar.slices.length > 0 ? (
+        <ShareBar slices={shareBar.slices} label={shareBar.label}>
           {panel}
         </ShareBar>
       ) : (

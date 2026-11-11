@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { BillShare } from './BillShare.client'
-import { BARS, BREAKDOWN, box, city, PROPS } from './billShareFixtures'
+import { BARS, BREAKDOWN, box, city, estimate, PROPS } from './billShareFixtures'
 
 afterEach(cleanup)
 
@@ -42,7 +42,7 @@ describe('BillShare, the City’s panel (#1020)', () => {
     expect(screen.getByText('+$90')).toBeTruthy()
   })
 
-  it('redraws the bar and every breakdown amount at once for the home typed', () => {
+  it('redraws the bar and every breakdown amount at once for the home estimated', async () => {
     const { container } = render(
       <BillShare {...PROPS} {...city}>
         x
@@ -50,7 +50,7 @@ describe('BillShare, the City’s panel (#1020)', () => {
     )
     const sum = () => rows(container).reduce((all, n) => all + n, 0)
     expect(sum()).toBe(3467)
-    fireEvent.change(box(), { target: { value: '200000' } })
+    await estimate('200000')
     expect(sum()).toBe(1386)
     expect(screen.getAllByText('$1,386').length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('+$36')).toBeTruthy()
@@ -81,7 +81,7 @@ describe('BillShare, the City’s panel (#1020)', () => {
     expect(screen.getAllByText('$3,467').length).toBeGreaterThan(0)
   })
 
-  it('adds the breakdown up to the City’s slice exactly, for any home typed', () => {
+  it('adds the breakdown up to the City’s slice exactly, for any home estimated', async () => {
     const uneven: typeof BREAKDOWN = {
       ...BREAKDOWN,
       areas: [1, 1, 1, 1, 1, 1, 1].map((value, i) => ({
@@ -96,7 +96,7 @@ describe('BillShare, the City’s panel (#1020)', () => {
       </BillShare>,
     )
     for (const value of ['123457', '287311', '419999', '641234', '777777']) {
-      fireEvent.change(box(), { target: { value } })
+      await estimate(value)
       const total = rows(container).reduce((all, n) => all + n, 0)
       expect(
         screen.getAllByText(`$${total.toLocaleString('en-US')}`).length,

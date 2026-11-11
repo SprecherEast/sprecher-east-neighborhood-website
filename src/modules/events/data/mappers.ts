@@ -1,6 +1,7 @@
 import 'server-only'
 
 import type { Event, EventsThisWeekBlock } from '@/payload-types'
+import { toBandBackdrop } from '@/platform/payload/bandBackdrop'
 import { toImageRef } from '@/platform/payload/imageRef'
 
 import type { EventCategoryRef } from '../domain/categories'
@@ -83,6 +84,7 @@ export function toEventDetail(doc: Event): EventDetail {
     // one stored before the field was checked, is dropped rather than shown
     agendaUrl: summary.officialBody && isAgendaUrl(doc.agendaUrl) ? doc.agendaUrl : null,
     content: doc.content ?? null,
+    backdrop: toBandBackdrop(doc.backdrop),
     meta: {
       title: doc.meta?.title ?? null,
       description: doc.meta?.description ?? null,

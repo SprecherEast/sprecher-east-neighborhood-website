@@ -41,6 +41,18 @@ Source: `src/platform/ui/PageBackdrop.tsx`
 
 - Routes: `/[slug]`, `/dev/gallery`
 
+## `BandBackdrop`
+
+Source: `src/platform/ui/BandBackdrop.tsx`
+
+| Prop       | Type                            | Required | Description |
+| ---------- | ------------------------------- | -------- | ----------- |
+| `backdrop` | `Backdrop \| null \| undefined` | yes      |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/ui`
+
 ## `ArticlePage`
 
 Source: `src/platform/ui/ArticlePage.tsx`

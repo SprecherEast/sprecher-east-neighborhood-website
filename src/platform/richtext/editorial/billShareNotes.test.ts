@@ -33,8 +33,8 @@ describe('ROUGH_NOTE', () => {
 })
 
 describe('unconfirmedNote', () => {
-  it('says only that the year’s rates are not confirmed, without naming the bodies', () => {
-    expect(unconfirmedNote(YEARS, 1)).toBe('2027 rates are not confirmed, only proposed.')
+  it('says the City’s rate for the year is proposed, without naming the other bodies', () => {
+    expect(unconfirmedNote(YEARS, 1)).toBe('The City’s 2027 tax rate is proposed, not confirmed.')
   })
 
   it('has nothing to say about a year every body has set', () => {

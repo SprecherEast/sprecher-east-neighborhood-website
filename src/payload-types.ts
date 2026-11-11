@@ -292,6 +292,23 @@ export interface Post {
    */
   title: string
   heroImage?: (number | null) | Media
+  /**
+   * An optional photo shown faded behind the title, edge to edge. Choose the crop for each screen size: the band is a wide, short strip, so a photo whose good part cannot fill it is not used. A size left empty uses the nearest crop that is set; all three empty keeps the plain band. Fine-tune the part shown with the focal point of each upload in Media. Never use a photo with identifiable people.
+   */
+  backdrop?: {
+    /**
+     * Under 768 px wide. A near-square crop reads best.
+     */
+    phone?: (number | null) | Media
+    /**
+     * From 768 px to 959 px wide.
+     */
+    tablet?: (number | null) | Media
+    /**
+     * From 960 px wide: the widest, shortest strip.
+     */
+    desktop?: (number | null) | Media
+  }
   content: {
     root: {
       type: string
@@ -643,12 +660,12 @@ export interface ContentBlock {
           /**
            * Choose how the link should be rendered.
            */
-          appearance?: ('default' | 'outline') | null
+          appearance?: ('default' | 'outline' | 'accent') | null
         }
         /**
          * Where the link button sits in its column.
          */
-        linkAlign?: ('start' | 'end') | null
+        linkAlign?: ('start' | 'end' | 'beside') | null
         id?: string | null
       }[]
     | null
@@ -1046,6 +1063,23 @@ export interface Event {
   mapsUrl?: string | null
   registrationUrl?: string | null
   heroImage?: (number | null) | Media
+  /**
+   * An optional photo shown faded behind the title, edge to edge. Choose the crop for each screen size: the band is a wide, short strip, so a photo whose good part cannot fill it is not used. A size left empty uses the nearest crop that is set; all three empty keeps the plain band. Fine-tune the part shown with the focal point of each upload in Media. Never use a photo with identifiable people.
+   */
+  backdrop?: {
+    /**
+     * Under 768 px wide. A near-square crop reads best.
+     */
+    phone?: (number | null) | Media
+    /**
+     * From 768 px to 959 px wide.
+     */
+    tablet?: (number | null) | Media
+    /**
+     * From 960 px wide: the widest, shortest strip.
+     */
+    desktop?: (number | null) | Media
+  }
   /**
    * Short description shown in event cards
    */
@@ -1999,6 +2033,13 @@ export interface TopIssuesBlockSelect<T extends boolean = true> {
 export interface PostsSelect<T extends boolean = true> {
   title?: T
   heroImage?: T
+  backdrop?:
+    | T
+    | {
+        phone?: T
+        tablet?: T
+        desktop?: T
+      }
   content?: T
   relatedPosts?: T
   categories?: T
@@ -2048,6 +2089,13 @@ export interface EventsSelect<T extends boolean = true> {
   mapsUrl?: T
   registrationUrl?: T
   heroImage?: T
+  backdrop?:
+    | T
+    | {
+        phone?: T
+        tablet?: T
+        desktop?: T
+      }
   description?: T
   content?: T
   meta?:

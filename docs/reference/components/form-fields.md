@@ -35,7 +35,7 @@ Source: `src/platform/ui/Field.client.tsx`
 **Variants:**
 
 - `width`: `"half" | "full"`
-- `layout`: `"inline" | "stacked"`
+- `layout`: `"inline" | "stacked" | "row"`
 
 | Prop        | Type                                                                                                                                                                      | Required | Description                                                                          |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------ |
@@ -57,6 +57,17 @@ Source: `src/platform/ui/Field.client.tsx`
 | `leadingIcon` | `string \| number \| bigint \| boolean \| ReactElement<unknown, string \| JSXElementConstructor<any>> \| Iterable<ReactNode> \| ReactPortal \| Promise<AwaitedReactNode>` | no       | A decorative icon inside the box, before the text (the search box's magnifier) |
 
 308 more props from package types (HTML attributes and the like) are not listed.
+
+### `Field.Money`
+
+| Prop            | Type                                                                                                                                                                      | Required | Description                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------ |
+| `size`          | `"md" \| "lg"`                                                                                                                                                            | no       |                                                                                |
+| `leadingIcon`   | `string \| number \| bigint \| boolean \| ReactElement<unknown, string \| JSXElementConstructor<any>> \| Iterable<ReactNode> \| ReactPortal \| Promise<AwaitedReactNode>` | no       | A decorative icon inside the box, before the text (the search box's magnifier) |
+| `value`         | `string`                                                                                                                                                                  | yes      | The box's text, as `formatMoneyTyping` writes it                               |
+| `onValueChange` | `(value: string) => void`                                                                                                                                                 | yes      | The new text, already grouped, whenever the reader changes the box             |
+
+305 more props from package types (HTML attributes and the like) are not listed.
 
 ### `Field.TextArea`
 
@@ -111,6 +122,25 @@ Source: `src/platform/ui/FieldInput.client.tsx`
 | `leadingIcon` | `string \| number \| bigint \| boolean \| ReactElement<unknown, string \| JSXElementConstructor<any>> \| Iterable<ReactNode> \| ReactPortal \| Promise<AwaitedReactNode>` | no       | A decorative icon inside the box, before the text (the search box's magnifier) |
 
 308 more props from package types (HTML attributes and the like) are not listed.
+
+**Used by** (direct imports):
+
+- Platform: `platform/ui`
+
+## `FieldMoney`
+
+A whole-dollar box (#1035): the reader types digits and the box shows them grouped by commas after a dollar sign, as they go; cents are cut. The caret stays after the digit the reader just typed or deleted, even when commas appear before it. Place it inside a `Field`.
+
+Source: `src/platform/ui/FieldMoney.client.tsx`
+
+| Prop            | Type                                                                                                                                                                      | Required | Description                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------ |
+| `size`          | `"md" \| "lg"`                                                                                                                                                            | no       |                                                                                |
+| `leadingIcon`   | `string \| number \| bigint \| boolean \| ReactElement<unknown, string \| JSXElementConstructor<any>> \| Iterable<ReactNode> \| ReactPortal \| Promise<AwaitedReactNode>` | no       | A decorative icon inside the box, before the text (the search box's magnifier) |
+| `value`         | `string`                                                                                                                                                                  | yes      | The box's text, as `formatMoneyTyping` writes it                               |
+| `onValueChange` | `(value: string) => void`                                                                                                                                                 | yes      | The new text, already grouped, whenever the reader changes the box             |
+
+305 more props from package types (HTML attributes and the like) are not listed.
 
 **Used by** (direct imports):
 

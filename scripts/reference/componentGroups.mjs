@@ -16,7 +16,15 @@ export const COMPONENT_GROUPS = [
     slug: 'form-fields',
     title: 'Form fields',
     intro: 'A `Form` holds `Field`s; a `Field` holds exactly one control.',
-    components: ['Form', 'Field', 'FieldInput', 'FieldTextArea', 'FieldSelect', 'FieldCheckbox'],
+    components: [
+      'Form',
+      'Field',
+      'FieldInput',
+      'FieldMoney',
+      'FieldTextArea',
+      'FieldSelect',
+      'FieldCheckbox',
+    ],
   },
   {
     slug: 'cards',
@@ -89,7 +97,14 @@ export const COMPONENT_GROUPS = [
     slug: 'layout',
     title: 'Layout and page structure',
     intro: 'The frames a page is built in, and the structured data it carries.',
-    components: ['Section', 'PageBackdrop', 'ArticlePage', 'DetailLayout', 'JsonLd'],
+    components: [
+      'Section',
+      'PageBackdrop',
+      'BandBackdrop',
+      'ArticlePage',
+      'DetailLayout',
+      'JsonLd',
+    ],
   },
   {
     slug: 'charts',
@@ -138,6 +153,14 @@ export const COMPONENT_GROUPS = [
     title: 'Key facts and fact tabs',
     intro:
       'Key facts as cards, and the fact tabs that open charts, timelines and the whole tax bill (`src/platform/richtext/editorial/`).',
-    components: ['KeyFacts', 'FactCard', 'FactTabs', 'BillShare', 'RoughEstimator'],
+    components: [
+      'KeyFacts',
+      'FactCard',
+      'FactTabs',
+      'BillShare',
+      'RoughEstimator',
+      'BillFiguresProvider',
+      'FilledText',
+    ],
   },
 ]
