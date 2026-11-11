@@ -49,9 +49,7 @@ const PADDING = 3
 /** How far out from the centre, as a part of the radius, the percent sits */
 export const PIE_PERCENT_AT = 0.85
 
-/** Text size of a wedge's short name above its percent, in pixels (#1068) */
-export const PIE_CAPTION_PX = 12
-/** How far out, as a part of the radius, a wedge's name and percent sit together: near its centre, so the pair reads as centred */
+/** How far out, as a part of the radius, a wedge's name (the same size as its percent) and percent sit together: near its centre, so the pair reads as centred */
 export const PIE_CAPTION_AT = 0.55
 
 /** How wide a wedge is at a distance from the centre, in pixels (the chord, never past the pie) */

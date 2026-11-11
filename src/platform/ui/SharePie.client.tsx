@@ -5,7 +5,6 @@ import React from 'react'
 import { cn } from '@/platform/lib/cn'
 import {
   PIE_CAPTION_AT,
-  PIE_CAPTION_PX,
   PIE_PERCENT_AT,
   pieArcs,
   pieAt,
@@ -127,7 +126,6 @@ export function SharePie({
               radius,
               text: slice.caption,
               at: PIE_CAPTION_AT,
-              px: PIE_CAPTION_PX,
             })
           ) {
             const middle = pieAt(center, center, radius * PIE_CAPTION_AT, arc.mid)
@@ -141,7 +139,7 @@ export function SharePie({
                 dominantBaseline="central"
                 className="fill-foreground text-base font-semibold"
               >
-                <tspan x={middle.x} dy="-0.6em" className="text-xs font-medium">
+                <tspan x={middle.x} dy="-0.6em" className="font-medium">
                   {slice.caption}
                 </tspan>
                 <tspan x={middle.x} dy="1.2em">
