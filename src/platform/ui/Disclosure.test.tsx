@@ -87,6 +87,21 @@ describe('Disclosure', () => {
     expect(chevron?.getAttribute('aria-hidden')).toBe('true')
   })
 
+  it('draws the card and row chevron a step bigger, in the main text colour', () => {
+    for (const variant of ['card', 'row'] as const) {
+      const { container, unmount } = render(
+        <Disclosure variant={variant} summary="Question">
+          Answer
+        </Disclosure>,
+      )
+      const classes = container.querySelector('summary svg')?.classList
+      expect(classes?.contains('size-5')).toBe(true)
+      expect(classes?.contains('text-foreground')).toBe(true)
+      expect(classes?.contains('text-muted-foreground')).toBe(false)
+      unmount()
+    }
+  })
+
   it('turns the chevron only for its own box, not for an open box around it (#967)', async () => {
     const { container } = render(
       <Disclosure variant="card" summary="Outer" defaultOpen>

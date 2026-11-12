@@ -36,8 +36,8 @@ export function MissionPage({
 
       <section className="space-y-4">
         <Text variant="subsection">Projects in this mission</Text>
-        {mission.epics.map((epic, index) => (
-          <EpicBox key={epic.number} epic={epic} now={now} defaultOpen={index === 0} />
+        {mission.epics.map((epic) => (
+          <EpicBox key={epic.number} epic={epic} now={now} />
         ))}
       </section>
     </div>
