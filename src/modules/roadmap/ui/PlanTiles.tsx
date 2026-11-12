@@ -11,7 +11,8 @@ import { MissionTile } from './MissionTile'
 
 /**
  * The plan as tiles: the mission with the latest activity first, all the same size, two across on
- * a phone and three on a desktop, each opening its own page. Projects that belong to no mission follow, then a note on what is not shown.
+ * a phone and three on a desktop, each opening its own page. Projects that belong to no mission
+ * follow, then a note on what is not shown.
  */
 export function PlanTiles({ plan, now }: { plan: Plan; now: Date }) {
   const empty = plan.milestones.length === 0 && plan.unscheduled.length === 0
