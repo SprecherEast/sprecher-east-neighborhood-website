@@ -38,7 +38,8 @@ describe('BillShare', () => {
   it('shows the bill for the home value typed, only once Estimate is pressed', async () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
-    expect(box().value).toBe('$481,300')
+    // The box holds the home's value in the latest year, whichever year is shown (#1121)
+    expect(box().value).toBe('$500,300')
     const result = screen.getByRole('status')
     expect(result.textContent).toMatch(/\$481,300/)
     expect(result.textContent).toMatch(/about \$8,9\d\d/)
@@ -47,9 +48,10 @@ describe('BillShare', () => {
     expect(screen.getByRole('status').textContent).toMatch(/\$481,300/)
     expect(screen.getByText(/^Average home: \$481,300\./)).toBeTruthy()
     await estimate('962600')
-    expect(screen.getByText(/^Your home: \$962,600\./)).toBeTruthy()
-    expect(bill().textContent).toMatch(/Total property tax\$17,9\d\d/)
-    expect(screen.getByRole('status').textContent).toMatch(/about \$17,9\d\d/)
+    // 2026 prices the same home at its 2026 value: $962,600 × $481,300 / $500,300 (#1121)
+    expect(screen.getByText(/^Your home’s assumed value in 2026: \$926,043\./)).toBeTruthy()
+    expect(bill().textContent).toMatch(/Total property tax\$17,28\d/)
+    expect(screen.getByRole('status').textContent).toMatch(/about \$17,28\d/)
   })
 
   it('keeps what the reader typed when the year changes', () => {

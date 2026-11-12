@@ -54,11 +54,11 @@ export const BAR_LABEL =
 /**
  * How an aside's two children look (#1118), kept here with the grid that places them, so the one
  * width at which the aside stacks under the box (16 rem of field) is written once: the aside's
- * label is right-aligned beside the box and left-aligned when stacked, its control is as wide as
- * the field when stacked.
+ * label is centred over its control (#1121), beside the box and stacked alike, and the control is as
+ * wide as the field when stacked.
  */
-export const BAR_ASIDE_LABEL = cn(BAR_LABEL, '@[16rem]:text-right')
-export const BAR_ASIDE_CONTROL = 'w-full @[16rem]:w-auto'
+export const BAR_ASIDE_LABEL = cn(BAR_LABEL, 'text-center')
+export const BAR_ASIDE_CONTROL = 'w-full @[16rem]:w-auto @[16rem]:justify-self-center'
 
 const insideBoxClasses = cn(
   'flex h-12 items-center gap-1 rounded-lg border border-input bg-background p-1.5 transition-colors duration-200',
@@ -95,7 +95,7 @@ export type FieldProps = Omit<VariantProps<typeof fieldVariants>, 'layout'> & {
    * Something beside the box, outside it, at its end in the `bar` layout with the action inside
    * (#1118): the picker of a few options that goes with the value, such as a tax year. Give it two
    * children, a short label and the control: the label sits on the line of the field's own label,
-   * the control on the box's row. The field's own label may run on under the aside's label, which is right-aligned. In a field narrower than 16 rem the aside stacks under the box.
+   * the control on the box's row. The field's own label may run on under the aside's label, which is centred over the control. In a field narrower than 16 rem the aside stacks under the box.
    */
   aside?: ReactNode
   /** Exactly one control */

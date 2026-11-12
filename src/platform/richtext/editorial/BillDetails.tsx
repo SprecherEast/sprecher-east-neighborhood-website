@@ -8,9 +8,9 @@ import { Link } from '@/platform/ui/Link'
 import { Text } from '@/platform/ui/Text'
 
 /**
- * The three closed rows under the whole bill (#1111, #1118), in one card split by divider lines: where the City's share goes (`where`: the
+ * The three rows under the whole bill (#1111, #1118, #1121), in one card split by divider lines: where the City's share goes (`where`: the
  * City's bar and the breakdown chart, drawn for the home and year shown), how the estimate works
- * (the notes, then the tab's short text and detail) and the sources, each source once. A row with
+ * (the notes, then the tab's short text and detail) and the sources, each source once. The first row is open when the tab loads, with scripting off too; the other two are closed. A row with
  * nothing to show is left out, and a note that is not showing still takes its room, hidden from
  * everyone, so an open row never changes height when a year is chosen. Each row is the kit's
  * `Disclosure`, so it opens and closes without scripting and never moves what is above it.
@@ -31,7 +31,12 @@ export function BillDetails({
   return (
     <Card variant="elevated" padding="none" className="divide-y divide-border">
       {where && (
-        <Disclosure variant="row" summary="Where the City share goes" bodyClassName="space-y-6">
+        <Disclosure
+          variant="row"
+          summary="Where the City share goes"
+          defaultOpen
+          bodyClassName="space-y-6"
+        >
           {where}
         </Disclosure>
       )}

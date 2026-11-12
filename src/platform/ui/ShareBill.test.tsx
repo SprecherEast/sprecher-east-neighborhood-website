@@ -68,6 +68,25 @@ describe('ShareBill', () => {
     expect(bar).toEqual(['a', 'b', 'c', 'd'])
   })
 
+  it('highlights the highlighted slice’s row with a soft primary fill and bolder text, and no other (#1121)', () => {
+    const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
+    const rows = Array.from(container.querySelectorAll('li'))
+    expect(rows[0]?.className).toContain('bg-primary/10')
+    expect(rows[0]?.className).toContain('font-semibold')
+    for (const row of rows.slice(1)) {
+      expect(row.className).not.toContain('bg-primary')
+      expect(row.className).not.toContain('font-semibold')
+    }
+    // Every row has the same side padding, so the columns stay level
+    expect(new Set(rows.map((row) => /px-\S+/.exec(row.className)?.[0])).size).toBe(1)
+  })
+
+  it('writes every slice’s percent on the bar, the smallest too (#1121)', () => {
+    const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
+    const written = Array.from(container.querySelectorAll('svg text')).map((t) => t.textContent)
+    expect(written).toEqual(['38%', '46%', '13%', '3%'])
+  })
+
   it('flashes the total only once a pulse has been asked for', () => {
     const { rerender } = render(<ShareBill slices={SLICES} label="Sample bill" total={TOTAL} />)
     const flashes = () => screen.getByText('Total').closest('p')?.className.includes('total-pulse')

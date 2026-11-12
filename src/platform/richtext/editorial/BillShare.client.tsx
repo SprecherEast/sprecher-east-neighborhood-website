@@ -2,12 +2,7 @@
 
 import React, { useEffect, useRef, useState, type ReactNode } from 'react'
 
-import {
-  BILL_BODY_NAMES,
-  computeBillShare,
-  fillFromEarlier,
-  parseHomeValue,
-} from '@/platform/lib/billShare'
+import { BILL_BODY_NAMES, computeBillShare, parseHomeValue } from '@/platform/lib/billShare'
 import type { ResolvedLink } from '@/platform/lib'
 import type { Certainty } from '@/platform/lib/certainty'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
@@ -23,6 +18,7 @@ import type { BillShareProps } from './billShare'
 import { BillAnswer } from './BillAnswer'
 import { BillDetails } from './BillDetails'
 import {
+  assumedNote,
   joinNames,
   reservedNote,
   ROUGH_NOTE,
@@ -30,7 +26,7 @@ import {
   unconfirmedNote,
 } from './billShareNotes'
 import { receiptFor } from './billShareView'
-import { cityBarFor, figuresFor } from './billFigures'
+import { cityBarFor, figuresFor, homeAtPosition, homeInYear, yearRatesOf } from './billFigures'
 import { useReportFigures } from './BillFigures.client'
 import { ratesAtPosition } from './rateBlend'
 import { RoughEstimator } from './RoughEstimator'
@@ -82,43 +78,51 @@ export function BillShare({
 }: BillShareProps & CityPanelProps & { children?: ReactNode }) {
   const [yearIndex, setYearIndex] = useState(Math.max(years.length - 1, 0))
   const year = years[yearIndex]
-  // What the reader typed, or null while the box still shows the City's average for the year
+  // The box holds the home's value in the latest year, the one a reader knows (#1121); an earlier
+  // year prices the same home at its earlier value (`homeInYear`)
+  const latest = years[years.length - 1]
+  // What the reader typed, or null while the box still shows the City's average home
   const [typed, setTyped] = useState<string | null>(null)
   // The value last estimated, or null while the numbers are for the City's average home
   const [estimated, setEstimated] = useState<number | null>(null)
-  const target = estimated ?? year?.averageHome ?? 0
+  const value = estimated ?? latest?.averageHome ?? 0
   // Counts up each time a new bill has finished counting, so the total can flash once
   const [pulse, setPulse] = useState(0)
   const lastBill = useRef<string | null>(null)
   // Every number below counts to a new value, so a change is seen, not just found
   // (a new home value takes the long count, a switch of year the short one, #1087)
   const [countMs, setCountMs] = useState(COUNT_MS)
-  const shown = useCountedNumber(target, { durationMs: countMs })
+  const shownValue = useCountedNumber(value, { durationMs: countMs })
   // The year counts too: the rates move from the old year's to the new one's, so the amounts follow
   const yearPosition = useCountedNumber(yearIndex * YEAR_STEPS, { durationMs: YEAR_COUNT_MS })
   // Once the count has ended on a bill that differs from the last one, the total flashes once
-  const billKey = `${yearIndex}:${target}`
-  const settled = shown === target && yearPosition === yearIndex * YEAR_STEPS
+  const billKey = `${yearIndex}:${value}`
+  const settled = shownValue === value && yearPosition === yearIndex * YEAR_STEPS
   useEffect(() => {
     if (!settled) return
     if (lastBill.current !== null && lastBill.current !== billKey) setPulse((count) => count + 1)
     lastBill.current = billKey
   }, [settled, billKey])
-  const yearRates = years.map(
-    (each, index) => fillFromEarlier(each.rates, years[index - 1]?.rates).rates,
-  )
-  const rates = ratesAtPosition(yearRates, yearPosition / YEAR_STEPS)
+  const yearRates = yearRatesOf(years)
+  const position = yearPosition / YEAR_STEPS
+  const rates = ratesAtPosition(yearRates, position)
+  // The home as priced now: its value in the year shown, moving between the two while the year counts
+  const shown = homeAtPosition(years, position, shownValue)
   // The City's bar counts with the bill: the year between two years, the home value as it counts (#1096)
-  const cityBar = cityBarFor(cityBars, years, yearPosition / YEAR_STEPS, shown, rates)
+  const cityBar = cityBarFor(cityBars, years, position, shownValue, rates)
   // The tab's button and heading count with it
-  useReportFigures(tabId, cityBar ? figuresFor(cityBar.increase) : undefined)
-  if (!year) return null
+  useReportFigures(
+    tabId,
+    cityBar && cityBar.increase !== null ? figuresFor(cityBar.increase) : undefined,
+  )
+  if (!year || !latest) return null
 
-  const text = typed ?? formatWholeDollars(year.averageHome)
+  const text = typed ?? formatWholeDollars(latest.averageHome)
   const homeValue = parseHomeValue(text)
   const bill = computeBillShare(shown, rates)
   const receipt = receiptFor(bill, shown)
   // What a screen reader hears: the bill for the value estimated, not each step of the count
+  const target = homeInYear(years, yearIndex, value)
   const summary = receiptFor(computeBillShare(target, yearRates[yearIndex] ?? {}), target).summary
 
   // Estimating changes the numbers below the box, which counts them to the new bill
@@ -149,11 +153,13 @@ export function BillShare({
   )
 
   // The notes always take their room, so a year with none to show never makes the row shorter
+  const assumed = assumedNote(years)
   const kept = reservedNote(years)
   const shownNote = unconfirmedNote(years, yearIndex)
   const notes = [
     { key: 'rough', text: ROUGH_NOTE, shown: true },
     { key: 'rates', text: `Uses ${year.year} rates.`, shown: true },
+    ...(assumed ? [{ key: 'assumed', text: assumed, shown: true }] : []),
     ...(kept ? [{ key: 'unconfirmed', text: shownNote ?? kept, shown: shownNote !== null }] : []),
     ...(bill && !bill.complete
       ? [
@@ -172,7 +178,7 @@ export function BillShare({
       <RoughEstimator
         value={text}
         onValueChange={setTyped}
-        canEstimate={homeValue !== null && homeValue !== target}
+        canEstimate={homeValue !== null && homeValue !== value}
         onEstimate={estimate}
         error={
           homeValue === null ? 'Enter your home’s value as a number, like $500,000.' : undefined
@@ -191,6 +197,7 @@ export function BillShare({
         note={year.note}
         yours={estimated !== null}
         home={formatWholeDollars(shown)}
+        assumedYear={yearIndex < years.length - 1 ? year.year : undefined}
         cityPercent={receipt.slices.length > 0 ? (cityPart?.percent ?? null) : null}
       />
       <Card

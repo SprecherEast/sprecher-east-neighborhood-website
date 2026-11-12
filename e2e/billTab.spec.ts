@@ -5,7 +5,9 @@ import { expect, test } from './support/test'
 
 // The "Your share" tab as a page draws it (#1118): the estimator's year control is one joined
 // control on the box's row and as tall as the box, the answer card's label and badge share a row,
-// nothing sticks out sideways, and opening a row keeps its title where it was on screen.
+// nothing sticks out sideways, and opening a row keeps its title where it was on screen. Every
+// percent on the bar fits inside its slice, "Tax rates" is centred over the year control, the City's
+// receipt row is highlighted and the first row is open on load (#1121).
 
 const POST = `/posts/${BILL_POST_SLUG}`
 const WIDTHS = [320, 390, 768, 1280]
@@ -60,6 +62,16 @@ for (const width of WIDTHS) {
       card.x + card.width + 1,
     )
 
+    // "Tax rates" is centred over the joined control, beside the box and stacked alike (#1121)
+    const [name, control] = [
+      await boxOf(estimator(page).getByText('Tax rates')),
+      await boxOf(years(page)),
+    ]
+    expect(
+      Math.abs(name.x + name.width / 2 - (control.x + control.width / 2)),
+      '"Tax rates" is centred over the control',
+    ).toBeLessThanOrEqual(1)
+
     // Each year option is tapped as 44 px tall though drawn 36 px: its invisible area reaches past the box
     const reach = await years(page)
       .getByRole('button')
@@ -82,7 +94,83 @@ for (const width of WIDTHS) {
     expect(sideways, 'nothing sticks out sideways').toBeLessThanOrEqual(0)
   })
 
-  test(`opening a row keeps its title where it was on screen at ${width}px`, async ({ page }) => {
+  test(`every percent on the bar fits inside its slice, and the City's row is highlighted at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto(POST)
+    const bar = page.locator('[data-share-bill] svg[role="img"]')
+    await bar.scrollIntoViewIfNeeded()
+    // The bar measures its labels once it has hydrated; wait for the widths to settle
+    await page.waitForTimeout(500)
+    const slices = await bar.locator('rect[data-share-slice]').evaluateAll((rects) =>
+      rects.map((rect) => {
+        const key = rect.getAttribute('data-share-slice')
+        const slice = rect.getBoundingClientRect()
+        const label = (rect as SVGElement).ownerSVGElement?.querySelector(
+          `text[data-share-label="${key}"]`,
+        )
+        const text = label?.getBoundingClientRect()
+        return {
+          key,
+          percent: label?.textContent,
+          slice: { left: slice.left, right: slice.right },
+          text: text && { left: text.left, right: text.right, height: text.height },
+        }
+      }),
+    )
+    expect(slices).toHaveLength(4)
+    for (const { key, percent, slice, text } of slices) {
+      expect(percent, `${key} shows its percent`).toMatch(/^\d+%$/)
+      expect(text?.left, `${key}'s percent starts inside its slice`).toBeGreaterThanOrEqual(
+        slice.left + 2,
+      )
+      expect(text?.right, `${key}'s percent ends inside its slice`).toBeLessThanOrEqual(
+        slice.right - 2,
+      )
+      expect(text?.height, `${key}'s percent is on one line`).toBeLessThan(24)
+    }
+    // The receipt's rows keep their columns: the percents and the amounts end on the same lines
+    const ends = await page.locator('[data-share-bill] li').evaluateAll((rows) =>
+      rows.map((row) => {
+        const [, percent, amount] = Array.from(row.children).map((c) =>
+          Math.round(c.getBoundingClientRect().right),
+        )
+        return { percent, amount }
+      }),
+    )
+    expect(new Set(ends.map((end) => end.percent)).size, 'percents end level').toBe(1)
+    expect(new Set(ends.map((end) => end.amount)).size, 'amounts end level').toBe(1)
+    // The City's row has a fill and bolder text; the others have neither
+    const looks = await page.locator('[data-share-bill] li').evaluateAll((rows) =>
+      rows.map((row) => {
+        const style = getComputedStyle(row)
+        return { fill: style.backgroundColor, weight: Number(style.fontWeight) }
+      }),
+    )
+    expect(looks[0]?.fill).not.toBe('rgba(0, 0, 0, 0)')
+    expect(looks[0]?.weight).toBeGreaterThanOrEqual(600)
+    for (const other of looks.slice(1)) {
+      expect(other.fill).toBe('rgba(0, 0, 0, 0)')
+      expect(other.weight).toBeLessThan(600)
+    }
+  })
+
+  test(`the first row is open on load and the other two are closed at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto(POST)
+    const open = await page
+      .locator('details:has(> summary)')
+      .filter({ has: page.locator('summary', { hasText: /^(Where|How|Sources)/ }) })
+      .evaluateAll((rows) => rows.map((row) => (row as HTMLDetailsElement).open))
+    expect(open).toEqual([true, false, false])
+  })
+
+  test(`opening or closing a row keeps its title where it was on screen at ${width}px`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height: 844 })
     await page.goto(POST)
     for (const title of ROW_TITLES) {
@@ -97,14 +185,34 @@ for (const width of WIDTHS) {
       )
       await page.waitForTimeout(300)
       const before = await top(row)
+      const wasOpen = await row
+        .locator('xpath=..')
+        .evaluate((el) => (el as HTMLDetailsElement).open)
       await row.click()
-      await expect(row.locator('xpath=..')).toHaveJSProperty('open', true)
+      await expect(row.locator('xpath=..')).toHaveJSProperty('open', !wasOpen)
       // The view may not move while the row opens and its content settles
       for (let i = 0; i < 4; i++) {
         await page.waitForTimeout(150)
         expect(await top(row), `${title}: the title stays put`).toBeCloseTo(before, 0)
       }
       await row.click()
+      await expect(row.locator('xpath=..')).toHaveJSProperty('open', wasOpen)
+      expect(await top(row), `${title}: the title stays put when it goes back`).toBeCloseTo(
+        before,
+        0,
+      )
     }
   })
 }
+
+// With scripting off the first row is open too: it is in the page's own markup (#1121)
+test.describe('without scripting', () => {
+  test.use({ javaScriptEnabled: false })
+  test('the first row is open and the other two are closed', async ({ page }) => {
+    await page.goto(POST)
+    const open = await page
+      .locator('summary', { hasText: /^(Where the City share goes|How we estimate this|Sources)$/ })
+      .evaluateAll((rows) => rows.map((row) => (row.parentElement as HTMLDetailsElement).open))
+    expect(open).toEqual([true, false, false])
+  })
+})

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { BillShareYear } from './billShare'
 import {
+  assumedNote,
   joinNames,
   reservedNote,
   ROUGH_NOTE,
@@ -74,5 +75,18 @@ describe('uniqueSources', () => {
 
   it('lists each source once, in order, leaving out the missing ones', () => {
     expect(uniqueSources([a, null, b, { ...a, label: 'A again' }, undefined])).toEqual([a, b])
+  })
+})
+
+describe('assumedNote (#1121)', () => {
+  it('says an earlier year’s home value is assumed to have changed as the average home did', () => {
+    expect(assumedNote([year(2026, {}), year(2027, {})])).toBe(
+      'Your home’s 2026 value is assumed to have changed as the average home’s did.',
+    )
+    expect(assumedNote([year(2025, {}), year(2026, {}), year(2027, {})])).toContain('2025 and 2026')
+  })
+
+  it('is nothing for one year', () => {
+    expect(assumedNote([year(2027, {})])).toBeNull()
   })
 })

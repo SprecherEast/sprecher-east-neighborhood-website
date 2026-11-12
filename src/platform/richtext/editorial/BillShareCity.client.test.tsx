@@ -32,7 +32,8 @@ describe('BillShare, the City’s panel (#1020)', () => {
     expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(2)
     const first = container.querySelector('details') as HTMLDetailsElement
     expect(first.textContent).toContain('Where that City tax goes')
-    expect(first.open).toBe(false)
+    // The first row is open when the tab loads (#1121)
+    expect(first.open).toBe(true)
   })
 
   it('keeps the “See the smaller pieces” list in the City’s panel (#1068)', () => {
@@ -68,7 +69,8 @@ describe('BillShare, the City’s panel (#1020)', () => {
     )
     // 6.93 mills on $500,300, in the answer card, the receipt and the bar
     expect(screen.getAllByText('$3,467').length).toBeGreaterThanOrEqual(3)
-    expect(screen.getByText('+$90')).toBeTruthy()
+    // The increase is the City's tax priced for both years: $3,467 less $3,376 (#1121)
+    expect(screen.getByText('+$91')).toBeTruthy()
   })
 
   it('redraws the bar and every breakdown amount at once for the home estimated', async () => {

@@ -9,7 +9,7 @@ import { city, estimate, PROPS } from './billShareFixtures'
 
 afterEach(cleanup)
 
-describe('BillShare, the order of the tab and its three closed rows (#1111)', () => {
+describe('BillShare, the order of the tab and its three rows (#1111, #1121)', () => {
   it('shows the estimate’s notes only in the row on how it works, closed until opened (#1111)', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     const row = screen.getByText('How we estimate this').closest('details') as HTMLDetailsElement
@@ -46,7 +46,7 @@ describe('BillShare, the order of the tab and its three closed rows (#1111)', ()
     expect(screen.getAllByText(PROPS.intro)).toHaveLength(1)
   })
 
-  it('closes the three rows by default, and each source appears once (#1111)', () => {
+  it('opens the first row and closes the other two by default, and each source appears once (#1111, #1121)', () => {
     const { container } = render(
       <BillShare {...PROPS} {...city} source={PROPS.years[0]?.source}>
         x
@@ -54,7 +54,7 @@ describe('BillShare, the order of the tab and its three closed rows (#1111)', ()
     )
     const rows = Array.from(container.querySelectorAll('details'))
     expect(rows).toHaveLength(3)
-    expect(rows.every((row) => !row.open)).toBe(true)
+    expect(rows.map((row) => row.open)).toEqual([true, false, false])
     // The tab's source and the year's source are the same link: listed once
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(screen.getAllByRole('link', { name: /City tax detail/ })).toHaveLength(1)
@@ -68,7 +68,7 @@ describe('BillShare, the order of the tab and its three closed rows (#1111)', ()
     )
     const answer = screen.getByRole('region', { name: 'Your City tax' })
     expect(answer.textContent).toContain('$3,467')
-    expect(answer.textContent).toContain('Up $90 a year, about $7.50 a month')
+    expect(answer.textContent).toContain('Up $91 a year, about $7.58 a month')
     expect(answer.textContent).toContain(
       'Average home: $500,300. The City is 37% of the whole bill.',
     )

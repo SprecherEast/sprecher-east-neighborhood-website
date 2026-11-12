@@ -38,7 +38,7 @@ describe('splitBillPanel', () => {
 
 describe('initialFigures', () => {
   it('is the average home’s increase in the last year, and none for a tab without a bill', () => {
-    expect(initialFigures([bill, bars])).toEqual(figuresFor(90))
+    expect(initialFigures([bill, bars])).toEqual(figuresFor(91))
     expect(initialFigures([bars])).toBeUndefined()
     expect(initialFigures([bill])).toBeUndefined()
   })
