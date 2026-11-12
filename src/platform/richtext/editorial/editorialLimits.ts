@@ -30,6 +30,8 @@ export const TIMELINE_LIMITS = {
 export const FACT_TABS_LIMITS = {
   minTabs: 2,
   maxTabs: 4,
+  /** A tab button's label: one centred line at phone width, four to a row (#1112) */
+  label: 12,
   heading: 40,
   definition: 240,
   minPanelBlocks: 1,

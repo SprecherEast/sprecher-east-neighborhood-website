@@ -77,7 +77,9 @@ describe('FactTabsBlockConfig', () => {
       if ('name' in field) expect(byName(field.name)).toBeDefined()
     }
     expect(byName('value')).toMatchObject({ maxLength: KEY_FACT_LIMITS.value })
-    expect(byName('label')).toMatchObject({ maxLength: KEY_FACT_LIMITS.label })
+    // A tab's label sits on one line in its button (#1112), a card's label may be longer
+    expect(byName('label')).toMatchObject({ maxLength: FACT_TABS_LIMITS.label })
+    expect(FACT_TABS_LIMITS.label).toBeLessThan(KEY_FACT_LIMITS.label)
     expect(byName('entries')).toMatchObject({
       minRows: TIMELINE_LIMITS.minEntries,
       maxRows: TIMELINE_LIMITS.maxEntries,

@@ -53,7 +53,7 @@ export const FactTabsBlockConfig: Block = {
       required: true,
       validate: rowsBetween(FACT_TABS_LIMITS.minTabs, FACT_TABS_LIMITS.maxTabs, 'tabs'),
       fields: [
-        ...keyFactFields({ figures: true }),
+        ...keyFactFields({ figures: true, labelMax: FACT_TABS_LIMITS.label }),
         {
           name: 'heading',
           type: 'text',

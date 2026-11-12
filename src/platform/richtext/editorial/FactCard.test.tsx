@@ -32,57 +32,26 @@ describe('FactCard', () => {
     await expectAccessible(container)
   })
 
-  it('as a tab face: the same words in phrasing elements, with no card and no link', () => {
+  it('as a tab face: the label is the only thing drawn, in phrasing elements with no icon, card or link (#1112)', () => {
     const { container } = render(<FactCard fact={FACT} variant="tab" />)
-    expect(container.textContent).toContain('Day-to-day money')
-    expect(container.textContent).toContain('$477.5M')
-    expect(container.textContent).toContain('Confirmed')
-    expect(container.querySelector('dl, dt, dd, a, div, button')).toBeNull()
+    const label = container.querySelector('[data-fact-part="label"]')
+    expect(label?.textContent).toBe('Day-to-day money')
+    expect(label?.className).not.toContain('sr-only')
+    expect(container.querySelector('svg, dl, dt, dd, a, div, button')).toBeNull()
+    expect(container.querySelector('[data-fact-part="value"], [data-fact-part="foot"]')).toBeNull()
   })
 
-  it('reads the label before the value in a tab too', () => {
+  it('as a tab face: screen readers still hear the figure and how sure we are after the label', () => {
     const { container } = render(<FactCard fact={FACT} variant="tab" />)
+    const spoken = container.querySelector('[data-fact-part="spoken"]')
+    expect(spoken?.className).toContain('sr-only')
+    expect(spoken?.textContent).toContain('$477.5M')
+    expect(spoken?.textContent).toContain('Confirmed')
     const text = container.textContent ?? ''
     expect(text.indexOf('Day-to-day money')).toBeLessThan(text.indexOf('$477.5M'))
   })
 
-  it('as a tab face: the icon sits on its own line with the label under it, all left-aligned (#856)', () => {
-    const { container } = render(<FactCard fact={FACT} variant="tab" />)
-    const icon = container.querySelector('svg')
-    const label = [...container.querySelectorAll('span')].find(
-      (span) => span.textContent === 'Day-to-day money' && span.children.length === 0,
-    )
-    const line = icon?.parentElement
-    // The icon and the label are siblings in a column, so the label wraps under the icon
-    expect(line?.className).toContain('flex-col')
-    expect(line?.className).toContain('items-start')
-    expect(line?.contains(label ?? null)).toBe(true)
-    expect(label?.className).toContain('text-left')
-    expect(label?.className).not.toContain('text-center')
-    const value = container.querySelector('[data-fact-part="value"]')
-    expect(value?.className).toContain('text-left')
-    expect(value?.className).not.toContain('text-center')
-    // A single long word still breaks rather than widening a tab
-    expect(label?.className).toContain('break-words')
-    expect(icon?.compareDocumentPosition(label as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
-  })
-
-  it('as a tab face: keeps the icon, label and value, and reads only the certainty to screen readers, the open panel showing it once (#704, #856, #980)', () => {
-    const { container } = render(<FactCard fact={FACT} variant="tab" />)
-    const hidden = (text: string) => {
-      const part = [...container.querySelectorAll('span')].find(
-        (span) => span.textContent === text && span.children.length === 0,
-      )
-      return part?.className ?? ''
-    }
-    expect(container.querySelector('[data-fact-part="foot"]')?.className).toContain('sr-only')
-    expect(container.querySelector('[data-fact-part="foot"]')?.className).not.toContain('max-sm')
-    expect(hidden('Day-to-day money')).not.toContain('sr-only')
-    expect(hidden('$477.5M')).not.toContain('sr-only')
-    expect(container.querySelector('svg')?.getAttribute('class')).not.toContain('sr-only')
-  })
-
-  it('as a tab face: has the same parts whether or not the fact has an explanation, so no tab is taller or fuller than the rest (#707)', () => {
+  it('as a tab face: has the same parts whether or not the fact has an explanation, and never shows it', () => {
     const withDetail: KeyFact = { ...FACT, detail: 'The City’s release says about $7 a month' }
     const plain = render(<FactCard fact={FACT} variant="tab" />).container
     const detailed = render(<FactCard fact={withDetail} variant="tab" />).container
@@ -96,29 +65,6 @@ describe('FactCard', () => {
     const withDetail: KeyFact = { ...FACT, detail: 'The City’s release says about $7 a month' }
     const { container } = render(<FactCard fact={withDetail} />)
     expect(container.textContent).toContain('The City’s release says about $7 a month')
-  })
-
-  it('as a tab face: keeps the last two words of the figure together (#707)', () => {
-    const { container } = render(
-      <FactCard fact={{ ...FACT, value: '+$90 a year' }} variant="tab" />,
-    )
-    expect(container.querySelector('[data-fact-part="value"]')?.textContent).toBe(
-      '+$90 a\u00a0year',
-    )
-  })
-
-  it('as a tab face: the figure steps down for narrow phones, so it never breaks across lines (#704)', () => {
-    const { container } = render(<FactCard fact={FACT} variant="tab" />)
-    const value = container.querySelector('[data-fact-part="value"]')
-    for (const size of [
-      'text-xs',
-      'min-[360px]:text-sm',
-      'min-[400px]:text-base',
-      'sm:text-xl',
-      'lg:text-2xl',
-    ]) {
-      expect(value?.className).toContain(size)
-    }
   })
 
   it('as a card: nothing is hidden on a phone', () => {

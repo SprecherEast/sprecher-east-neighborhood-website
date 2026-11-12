@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { bootPayload } from '@/platform/payload/testing/inMemoryPayload'
 import { markdownConverters } from '@/platform/payload/testing/markdownConverters'
 import { collectTagRefusals, unreadTags } from '@/platform/richtext/editorial/editorialTag'
+import { FACT_TABS_LIMITS } from '@/platform/richtext/editorial/editorialLimits'
 import { toFactTabsProps, type StoredFactTabs } from '@/platform/richtext/editorial/factTabs'
 import { factTabsToJsx } from '@/platform/richtext/editorial/factTabsMarkdown'
 
@@ -84,7 +85,7 @@ describe('the round trip, with hostile text', () => {
     ({
       tabs: Array.from({ length: 2 + Math.floor(rand() * 3) }, (_, i) => ({
         value: fuzzText(rand, 24),
-        label: fuzzText(rand, 60),
+        label: fuzzText(rand, FACT_TABS_LIMITS.label),
         icon: 'money',
         certainty: 'estimate',
         linkLabel: fuzzText(rand, 60),

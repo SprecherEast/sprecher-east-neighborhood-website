@@ -95,12 +95,20 @@ function FactTabPanel({
         <Text variant="subsection" as="h3" className="hidden scripted:block">
           <FilledText tab={tabId} text={heading} />
         </Text>
-        {/* How sure we are, once, beside the heading: the tab button leaves it to screen readers
-            (#980). A whole tax bill shows it in its answer card instead (#1111) */}
+        {/* The tab's figure and how sure we are, once, beside the heading: the button shows only its
+            label and leaves both to screen readers (#980, #1112). A whole tax bill shows them in its
+            answer card instead (#1111) */}
         {!bill && (
-          <div data-panel-certainty aria-hidden="true">
-            <CertaintyBadge certainty={fact.certainty} />
-          </div>
+          <>
+            <Text variant="subsection" as="p">
+              <span data-panel-figure>
+                <FilledText tab={tabId} text={fact.value} keepLastWords />
+              </span>
+            </Text>
+            <div data-panel-certainty aria-hidden="true">
+              <CertaintyBadge certainty={fact.certainty} />
+            </div>
+          </>
         )}
       </div>
       {/* The explanation a tab leaves out so all the tabs hold the same parts (#707); a whole tax
@@ -171,8 +179,6 @@ export function FactTabs({ tabs, className }: FactTabsProps & { className?: stri
         label="Key facts"
         items={items}
         defaultValue="tab-0"
-        // The tab buttons share four rows, so the same part of each fact lines up (#678)
-        rows="shared"
         className={cn('not-prose my-8 w-full', className)}
       />
     </BillFiguresProvider>

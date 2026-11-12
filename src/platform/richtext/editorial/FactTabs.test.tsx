@@ -3,7 +3,6 @@ import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { SUBGRID_FOUR_ROWS, SUBGRID_FOUR_ROWS_EXPLICIT } from '@/platform/ui/layoutSizes'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { FactTabs } from './FactTabs'
@@ -19,28 +18,40 @@ const props = toFactTabsProps(FACT_TABS_FIXTURE)
 const setup = (shown = props) => render(<FactTabs {...shown} />)
 
 describe('FactTabs', () => {
-  it('lets the tab buttons share four rows, so one wrapping title cannot misalign them (#678)', () => {
-    setup()
-    const list = screen.getByRole('tablist', { name: 'Key facts' })
-    const [first] = screen.getAllByRole('tab')
-
-    expect(list.className).toContain(SUBGRID_FOUR_ROWS_EXPLICIT)
-    expect(list.className).toContain('gap-y-0')
-    expect(first?.className).toContain(SUBGRID_FOUR_ROWS)
-    // Card face and card use the same four rows
-    expect(first?.firstElementChild?.className).toContain(SUBGRID_FOUR_ROWS)
-  })
-
   it('is a tab list of the key facts, the first one selected', () => {
     setup()
     expect(screen.getByRole('tablist', { name: 'Key facts' })).toBeTruthy()
     const tabs = screen.getAllByRole('tab')
     expect(tabs).toHaveLength(4)
     expect(tabs[0]?.getAttribute('aria-selected')).toBe('true')
-    expect(within(present(tabs[0])).getByText('$477.5M')).toBeTruthy()
     expect(within(present(tabs[0])).getByText('Day-to-day')).toBeTruthy()
-    expect(within(present(tabs[0])).getByText('Confirmed')).toBeTruthy()
-    expect(within(present(tabs[3])).getByText('Estimate')).toBeTruthy()
+    expect(tabs.map((tab) => tab.textContent?.split(':')[0])).toEqual([
+      'Day-to-day',
+      'Big-project',
+      'Your share',
+      'Council vote',
+    ])
+  })
+
+  it('shows only the label on a button, and still tells a screen reader the figure and how sure we are (#1112)', () => {
+    setup()
+    const tabs = screen.getAllByRole('tab')
+    for (const tab of tabs) {
+      expect(tab.querySelector('svg')).toBeNull()
+      const visible = [...tab.querySelectorAll('span')].filter((s) => !s.closest('.sr-only'))
+      expect(visible.map((s) => s.textContent)).toHaveLength(1)
+    }
+    expect(tabs[0]?.textContent).toContain('$477.5M')
+    expect(tabs[0]?.textContent).toContain('Confirmed')
+    expect(tabs[3]?.textContent).toContain('Estimate')
+    expect(screen.getByRole('tab', { name: /^Your share.*\+\$90.*Confirmed/ })).toBeTruthy()
+  })
+
+  it('shows the figure in the open panel beside the heading and how sure we are, so nothing is lost (#1112)', () => {
+    const { container } = setup()
+    const panels = [...container.querySelectorAll('[role="tabpanel"]')]
+    expect(panels[0]?.querySelector('[data-panel-figure]')?.textContent).toBe('$477.5M')
+    expect(panels[2]?.querySelector('[data-panel-figure]')?.textContent).toBe('+$90 a\u00a0year')
   })
 
   it('puts no link, list or other control inside a tab button', () => {
@@ -63,10 +74,10 @@ describe('FactTabs', () => {
     expect(document.activeElement).toBe(screen.getAllByRole('tab')[3])
   })
 
-  it('gives a tab a 44px minimum height, a selected border and a focus ring', () => {
+  it('gives a tab a 48px minimum height, a selected border and a focus ring', () => {
     setup()
     const [tab] = screen.getAllByRole('tab')
-    expect(tab?.className).toMatch(/min-h-11/)
+    expect(tab?.className).toMatch(/min-h-12/)
     expect(tab?.className).toMatch(/data-\[state=active\]:border-primary/)
     expect(tab?.className).toMatch(/focus-visible:outline-2/)
   })
@@ -181,7 +192,7 @@ describe('FactTabs', () => {
     const [panel] = [...container.querySelectorAll('[role="tabpanel"]')]
     const sure = panel?.querySelector('[data-panel-certainty]')
     expect(sure?.className ?? '').not.toContain('hidden')
-    expect(sure?.previousElementSibling?.tagName).toBe('H3')
+    expect(sure?.previousElementSibling?.querySelector('[data-panel-figure]')).not.toBeNull()
     expect(sure?.textContent).toContain('Confirmed')
     // The tab already says it to a screen reader
     expect(sure?.getAttribute('aria-hidden')).toBe('true')

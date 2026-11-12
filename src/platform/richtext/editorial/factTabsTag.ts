@@ -65,7 +65,7 @@ const chartPicture = z.looseObject({ block: z.literal('chart') })
 
 const tab = z.strictObject({
   value: text(KEY_FACT_LIMITS.value),
-  label: text(KEY_FACT_LIMITS.label),
+  label: text(FACT_TABS_LIMITS.label),
   detail: text(KEY_FACT_LIMITS.detail).optional(),
   icon: z.enum(Object.keys(FACT_ICONS) as [keyof typeof FACT_ICONS]),
   certainty: z.enum(CERTAINTIES),

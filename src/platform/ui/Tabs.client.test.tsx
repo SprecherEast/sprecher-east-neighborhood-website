@@ -6,7 +6,6 @@ import { join } from 'node:path'
 import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { SUBGRID_FOUR_ROWS, SUBGRID_FOUR_ROWS_EXPLICIT } from './layoutSizes'
 import { expectAccessible } from './testing/expectAccessible'
 import { Tabs } from './Tabs.client'
 import { TAB_ITEMS as ITEMS } from './testing/tabsFixtures'
@@ -79,45 +78,15 @@ describe('Tabs (#661)', () => {
     ).toEqual(screen.getAllByRole('tab').map((tab) => tab.id))
   })
 
-  it('lays the tabs out in one row at every width, with 44px targets', () => {
+  it('lays the tabs out in one row at every width, with targets at the kit’s 48px height', () => {
     setup()
     const list = screen.getByRole('tablist')
-
-    // One row, as the folder shape needs: a tab in a lower row would be cut off from its panel
     expect(list.className).toContain('grid-flow-col')
     expect(list.className).toContain('auto-cols-[minmax(0,1fr)]')
-    // The column gap is the space under the tabs (`--tabs-gap`) at every width, defined once, so the
-    // tabs hang the same distance from each other as from the panel (#707). Column only: `gap-2`
-    // would also set the row gap and put it back inside the cards that share rows
-    expect(list.className).toContain('gap-x-(--tabs-gap)')
-    expect(list.className).not.toMatch(/(^|\s)(sm:)?gap-x-[0-9]/)
-    expect(list.className).not.toMatch(/(^|\s)(sm:)?gap-[12](\s|$)/)
     expect(list.className).not.toContain('grid-cols-2')
     for (const tab of screen.getAllByRole('tab')) {
-      expect(tab.className).toContain('min-h-11')
+      expect(tab.className).toContain('min-h-12')
     }
-  })
-
-  it('lets plain-text tab names wrap and shrink on a phone instead of being clipped', () => {
-    setup()
-    for (const tab of screen.getAllByRole('tab')) {
-      expect(tab.className).toContain('min-w-0')
-      expect(tab.className).toContain('[overflow-wrap:anywhere]')
-      expect(tab.className).toContain('max-sm:text-sm')
-    }
-  })
-
-  it('lets the tab buttons share four rows only when asked, with no row gap inside them (#678)', () => {
-    const { rerender } = render(<Tabs label="Budget views" items={ITEMS} defaultValue="money" />)
-    const list = () => screen.getByRole('tablist')
-    const [tab] = screen.getAllByRole('tab')
-    expect(list().className).not.toContain(SUBGRID_FOUR_ROWS_EXPLICIT)
-    expect(tab?.className).not.toContain(SUBGRID_FOUR_ROWS)
-
-    rerender(<Tabs label="Budget views" items={ITEMS} defaultValue="money" rows="shared" />)
-    expect(list().className).toContain(SUBGRID_FOUR_ROWS_EXPLICIT)
-    expect(list().className).toContain('gap-y-0')
-    expect(screen.getAllByRole('tab')[0]?.className).toContain(SUBGRID_FOUR_ROWS)
   })
 
   it('changes the selected tab on click', async () => {

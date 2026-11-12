@@ -55,7 +55,7 @@ export const BAR = {
 }
 export const tab = (extra: Record<string, unknown> = {}) => ({
   value: '$477.5M',
-  label: 'Day-to-day money',
+  label: 'Day-to-day',
   icon: 'money',
   certainty: 'confirmed',
   heading: 'Day-to-day money',

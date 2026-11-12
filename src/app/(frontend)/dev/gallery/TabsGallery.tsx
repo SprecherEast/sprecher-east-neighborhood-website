@@ -40,10 +40,13 @@ export function TabsGallery() {
   return (
     <GalleryEntry
       name="Tabs"
-      description="Radix Tabs with every panel rendered by the server. With scripting off the tab list is hidden and each panel shows under its heading; with it on, one panel shows, joined to its tab by one folder-shaped outline."
+      description="Radix Tabs with every panel rendered by the server. With scripting off the tab list is hidden and each panel shows under its heading; with it on, one panel shows. The buttons are plain and equal, one row above the panel: the label centred on one line, the selected one with the primary border and a soft primary fill."
     >
       <GalleryVariant label="four tabs, one row at every width" className="block">
         <Tabs label="Sample views" defaultValue="day" items={sampleItems(4)} />
+      </GalleryVariant>
+      <GalleryVariant label="two tabs" className="block">
+        <Tabs label="Two sample views" defaultValue="day" items={sampleItems(2)} />
       </GalleryVariant>
       <GalleryVariant label="three tabs, the second selected, headings at h4" className="block">
         <Tabs

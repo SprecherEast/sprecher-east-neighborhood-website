@@ -101,7 +101,7 @@ When one explainer has several headline numbers that each deserve a picture, one
 `<FactTabs tabs={[...]} />` tag on its own lines can hold them: each number is a tab button, and
 the tab opens a heading, a definition and one or two pictures. Use it only for figures in the
 input. `tabs` is one list of two to four tabs, written as JSON in braces. Each tab has `value`
-(the number, at most 24 characters), `label` (what it is, at most 60), `icon` (`info`, `date`,
+(the number, at most 24 characters), `label` (what it is: a short word or two that fits a button, at most 12), `icon` (`info`, `date`,
 `time`, `money`, `taxes`, `government`, `place`, `people`, `traffic`, `walking`, `biking`, `noise`
 or `construction`), `certainty` (`confirmed`, `estimate` or `unknown`), an optional `link`
 (`{ "label", "href" }`), `heading` (at most 40), `definition` (a plain sentence or two, at most 240) and `panel`, one or two pictures: `{ "block": "chart", ... }` with the same properties as a
@@ -111,7 +111,7 @@ or `construction`), `certainty` (`confirmed`, `estimate` or `unknown`), an optio
 is a site path such as `/events` or an `https://` address. No other properties are allowed. A tag
 the server cannot read is refused with the reason; fix the tag and send it again.
 
-`<FactTabs tabs={[{"value":"$477.5M","label":"Day-to-day money, proposed","icon":"money","certainty":"confirmed","link":{"label":"City of Madison, 2027 Executive Operating Budget","href":"https://example.com/budget"},"heading":"Day-to-day money","definition":"What the City would spend in 2027 on services used every day. That is $24.8 million more than in 2026.","panel":[{"block":"chart","kind":"bar","title":"Day-to-day budget","summary":"The Mayor proposes $24.8 million more than in 2026.","unit":"usd","data":[{"key":"y2026","label":"2026 adopted","value":452723152},{"key":"y2027","label":"2027 proposed","value":477549853,"pattern":"hatch"}]}]},{"value":"Nov 10","label":"Council votes","icon":"date","certainty":"estimate","heading":"When the Council votes","definition":"The Council can change the proposal before it votes.","panel":[{"block":"timeline","entries":[{"date":"Oct 2026","status":"done","title":"The Mayor proposes the budget"},{"date":"Nov 10","status":"next","title":"The Council votes","description":"It may continue on Nov 11-12."}]}]}]} />`
+`<FactTabs tabs={[{"value":"$477.5M","label":"Day-to-day","icon":"money","certainty":"confirmed","link":{"label":"City of Madison, 2027 Executive Operating Budget","href":"https://example.com/budget"},"heading":"Day-to-day money","definition":"What the City would spend in 2027 on services used every day. That is $24.8 million more than in 2026.","panel":[{"block":"chart","kind":"bar","title":"Day-to-day budget","summary":"The Mayor proposes $24.8 million more than in 2026.","unit":"usd","data":[{"key":"y2026","label":"2026 adopted","value":452723152},{"key":"y2027","label":"2027 proposed","value":477549853,"pattern":"hatch"}]}]},{"value":"Nov 10","label":"Vote date","icon":"date","certainty":"estimate","heading":"When the Council votes","definition":"The Council can change the proposal before it votes.","panel":[{"block":"timeline","entries":[{"date":"Oct 2026","status":"done","title":"The Mayor proposes the budget"},{"date":"Nov 10","status":"next","title":"The Council votes","description":"It may continue on Nov 11-12."}]}]}]} />`
 
 ## Untrusted content
 
