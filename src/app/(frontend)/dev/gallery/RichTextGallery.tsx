@@ -171,15 +171,12 @@ export function RichTextGallery() {
 
       <GalleryEntry
         name="FactTabs"
-        description="Key facts that are tab buttons, each opening its heading, definition and charts or timeline. Every panel is server-rendered: with scripting off they stack under their headings."
+        description="Key facts that are plain, equal tab buttons (the label only; screen readers also hear the figure), each opening its heading, definition and charts or timeline. Every panel is server-rendered: with scripting off they stack under their headings."
       >
         <GalleryVariant label="four tabs, one row at every width" className="block">
           <FactTabs {...FACT_TABS} />
         </GalleryVariant>
-        <GalleryVariant
-          label="three tabs: the last spans the phone's two columns"
-          className="block"
-        >
+        <GalleryVariant label="three tabs, one row of equal buttons" className="block">
           <FactTabs tabs={FACT_TABS.tabs.slice(1, 4)} />
         </GalleryVariant>
         <GalleryVariant

@@ -14,7 +14,6 @@ import {
   READING_WIDTH,
   SHARED_ROWS_SPACE_4,
   SUBGRID_FOUR_ROWS,
-  SUBGRID_FOUR_ROWS_EXPLICIT,
   SUBGRID_THREE_ROWS,
   READING_WIDTH_LG,
 } from './layoutSizes'
@@ -34,10 +33,9 @@ describe('layout sizes', () => {
     expect(LEGEND_GAP).toBe('-mt-[calc(var(--figure-gap)_-_var(--legend-gap))]')
   })
 
-  it('share their rows by subgrid: one count in all three classes, one fewer for the facts (#678)', () => {
+  it('share their rows by subgrid: one count in both classes, one fewer for the facts (#678)', () => {
     const rows = 4
     expect(SUBGRID_FOUR_ROWS).toContain(`row-span-${rows} `)
-    expect(SUBGRID_FOUR_ROWS_EXPLICIT).toBe(`grid-rows-[repeat(${rows},auto)]`)
     // The foot is the last row, so the facts above it span one fewer
     expect(SUBGRID_THREE_ROWS).toContain(`row-span-${rows - 1} `)
     for (const classes of [SUBGRID_FOUR_ROWS, SUBGRID_THREE_ROWS]) {
@@ -46,7 +44,7 @@ describe('layout sizes', () => {
   })
 
   it('keep the rows of cards that share them apart by a margin the list takes back', () => {
-    // The margin equals the gap it replaces: gap-4 for a `CardGrid` gap="sm", gap-2 for tab buttons
+    // The margin equals the gap it replaces: gap-4 for a `CardGrid` gap="sm"
     expect(SHARED_ROWS_SPACE_4).toEqual({ item: 'mb-4', list: '-mb-4 gap-y-0' })
   })
 

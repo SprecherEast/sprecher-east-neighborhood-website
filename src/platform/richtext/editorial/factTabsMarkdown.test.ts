@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
+import { FACT_TABS_LIMITS } from './editorialLimits'
 import { toFactTabsProps, type StoredFactTabs } from './factTabs'
 import { FACT_TABS_FIXTURE } from './factTabsFixtures'
 import { factTabsToJsx, importFactTabsTag } from './factTabsMarkdown'
@@ -142,6 +143,10 @@ describe('factTabsToJsx leaves out a block its own tag could not be read back fr
   it.each([
     ['an empty definition', { definition: '' }],
     ['a heading over its limit', { heading: 'x'.repeat(41) }],
+    [
+      'a label too long for one line on a button',
+      { label: 'x'.repeat(FACT_TABS_LIMITS.label + 1) },
+    ],
     [
       'a one-milestone timeline',
       {

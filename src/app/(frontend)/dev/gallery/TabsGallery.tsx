@@ -27,12 +27,17 @@ const SAMPLE_TABS = [
   { value: 'dates', trigger: 'Dates', heading: 'Dates', text: 'When the Council votes.' },
 ]
 
+/** The longest labels a live post holds: they must keep room in their buttons at 320 px */
+const LONG_LABELS = ['Day-to-day', 'Big-project', 'Your share', 'Council vote']
+
 /** Sample tabs whose panels are server-rendered text */
-function sampleItems(count: number) {
-  return SAMPLE_TABS.slice(0, count).map(({ text, ...tab }) => ({
-    ...tab,
-    panel: <Text variant="small">{text}</Text>,
-  }))
+function sampleItems(count: number, labels?: string[]) {
+  return SAMPLE_TABS.slice(0, count)
+    .map((tab, index) => ({ ...tab, trigger: labels?.[index] ?? tab.trigger }))
+    .map(({ text, ...tab }) => ({
+      ...tab,
+      panel: <Text variant="small">{text}</Text>,
+    }))
 }
 
 /** The tabs: every panel is rendered by the server, so they read without JavaScript */
@@ -40,10 +45,20 @@ export function TabsGallery() {
   return (
     <GalleryEntry
       name="Tabs"
-      description="Radix Tabs with every panel rendered by the server. With scripting off the tab list is hidden and each panel shows under its heading; with it on, one panel shows, joined to its tab by one folder-shaped outline."
+      description="Radix Tabs with every panel rendered by the server. With scripting off the tab list is hidden and each panel shows under its heading; with it on, one panel shows. The buttons are plain and equal, one row above the panel: the label centred on one line, the selected one with the primary border and a soft primary fill."
     >
       <GalleryVariant label="four tabs, one row at every width" className="block">
         <Tabs label="Sample views" defaultValue="day" items={sampleItems(4)} />
+      </GalleryVariant>
+      <GalleryVariant label="four tabs with 10 to 12 character labels" className="block">
+        <Tabs
+          label="Four long-label views"
+          defaultValue="day"
+          items={sampleItems(4, LONG_LABELS)}
+        />
+      </GalleryVariant>
+      <GalleryVariant label="two tabs" className="block">
+        <Tabs label="Two sample views" defaultValue="day" items={sampleItems(2)} />
       </GalleryVariant>
       <GalleryVariant label="three tabs, the second selected, headings at h4" className="block">
         <Tabs

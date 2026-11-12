@@ -90,14 +90,13 @@ Source: `src/platform/ui/Disclosure.tsx`
 
 Source: `src/platform/ui/Tabs.client.tsx`
 
-| Prop           | Type                                   | Required | Description                                                                                                                                                                                                                                                      |
-| -------------- | -------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label`        | `string`                               | yes      | Names the tab list for screen readers ("Budget views")                                                                                                                                                                                                           |
-| `items`        | `TabsItem[]`                           | yes      | Two to four items fit one row on a phone, each tab as wide as the others                                                                                                                                                                                         |
-| `defaultValue` | `string`                               | yes      | The tab that is selected on the first render, on the server too, so nothing moves on load                                                                                                                                                                        |
-| `headingAs`    | `"h2" \| "h3" \| "h4" \| "h5" \| "h6"` | no       | The heading level of each panel's heading: below the heading of the section that holds the tabs                                                                                                                                                                  |
-| `className`    | `string`                               | no       |                                                                                                                                                                                                                                                                  |
-| `rows`         | `"own" \| "shared"`                    | no       | `shared`: the tab buttons share four rows (`SUBGRID_FOUR_ROWS`), so when each holds the same parts, such as a fact's label, value, explanation and foot, the same part of every button sits on one line (#678). `own` (default): each button lays out by itself. |
+| Prop           | Type                                   | Required | Description                                                                                     |
+| -------------- | -------------------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
+| `label`        | `string`                               | yes      | Names the tab list for screen readers ("Budget views")                                          |
+| `items`        | `TabsItem[]`                           | yes      | Two to four items fit one row on a phone, each tab as wide as the others                        |
+| `defaultValue` | `string`                               | yes      | The tab that is selected on the first render, on the server too, so nothing moves on load       |
+| `headingAs`    | `"h2" \| "h3" \| "h4" \| "h5" \| "h6"` | no       | The heading level of each panel's heading: below the heading of the section that holds the tabs |
+| `className`    | `string`                               | no       |                                                                                                 |
 
 **Used by** (direct imports):
 

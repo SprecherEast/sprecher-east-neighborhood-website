@@ -3,185 +3,108 @@ import { cleanup, render, screen } from '@testing-library/react'
 import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { Tabs, type TabsItem } from './Tabs.client'
+import { Tabs } from './Tabs.client'
 import { TAB_ITEMS as ITEMS } from './testing/tabsFixtures'
 
 afterEach(cleanup)
 
-const setup = () => render(<Tabs label="Budget views" items={ITEMS} defaultValue="money" />)
+const setup = (count = ITEMS.length) =>
+  render(<Tabs label="Budget views" items={ITEMS.slice(0, count)} defaultValue="money" />)
 
-describe('looks pressable and ties the selected tab to its area (#688)', () => {
-  const panels = (container: HTMLElement) => [...container.querySelectorAll('[role="tabpanel"]')]
-
-  it('raises every tab off the page and lifts it on hover, so it reads as a button', () => {
-    setup()
-    for (const tab of screen.getAllByRole('tab')) {
-      expect(tab.className).toContain('cursor-pointer')
-      expect(tab.className).toContain('shadow-sm')
-      expect(tab.className).toContain('hover:shadow-md')
-      // The lift only with motion allowed, and not on the selected tab, whose notch must stay on the panel's edge
-      expect(tab.className).toContain('motion-safe:data-[state=inactive]:hover:-translate-y-0.5')
+describe('plain, equal tab buttons in one row (#1112)', () => {
+  it('shares the row out equally, for two, three and four tabs, with one gap between the buttons', () => {
+    for (const count of [2, 3]) {
+      const { unmount } = setup(count)
+      const list = screen.getByRole('tablist')
+      expect(list.className).toContain('grid-flow-col')
+      expect(list.className).toContain('auto-cols-[minmax(0,1fr)]')
+      expect(list.className).toContain('gap-1 sm:gap-2')
+      expect(screen.getAllByRole('tab')).toHaveLength(count)
+      unmount()
     }
   })
 
-  it('makes the selected tab a brighter, glassy green that sits above the rest', () => {
+  it('gives every tab the same height and centres its label on one line', () => {
+    setup()
+    for (const tab of screen.getAllByRole('tab')) {
+      expect(tab.className).toContain('min-h-12')
+      expect(tab.className).toContain('items-center')
+      expect(tab.className).toContain('justify-center')
+      expect(tab.className).toContain('text-center')
+      expect(tab.className).toContain('whitespace-nowrap')
+      expect(tab.className).toContain('min-w-0')
+    }
+  })
+
+  it('gives every tab the same classes, so only the selected state tells them apart', () => {
+    setup()
+    const [first, ...others] = screen.getAllByRole('tab')
+    for (const tab of others) expect(tab.className).toBe(first?.className)
+  })
+
+  it('gives a label of the limit’s length room at 320 px: smallest type, tight spacing and padding, stepping up at 390 px and from sm (#1112)', () => {
     setup()
     const [tab] = screen.getAllByRole('tab')
+    for (const phone of ['px-0', 'text-fine', 'tracking-tighter']) {
+      expect(tab?.className.split(' ')).toContain(phone)
+    }
+    for (const larger of [
+      'min-[390px]:text-xs',
+      'min-[390px]:tracking-tight',
+      'sm:px-2',
+      'sm:text-sm',
+      'sm:tracking-normal',
+    ]) {
+      expect(tab?.className.split(' ')).toContain(larger)
+    }
+  })
+
+  it('is a separate rounded button with a thin border, never joined to the panel', () => {
+    setup()
+    for (const tab of screen.getAllByRole('tab')) {
+      expect(tab.className).toMatch(/(^| )rounded-lg( |$)/)
+      expect(tab.className).toMatch(/(^| )border( |$)/)
+      expect(tab.className).toContain('border-border')
+      expect(tab.className).not.toMatch(/after:|before:|rounded-b-none|border-b-0/)
+    }
+  })
+
+  it('tells the selected tab apart by a primary border, a soft primary fill and a bolder label, beside aria-selected', () => {
+    setup()
+    const [tab] = screen.getAllByRole('tab')
+    expect(tab?.getAttribute('aria-selected')).toBe('true')
     expect(tab?.className).toContain('data-[state=active]:border-primary')
-    expect(tab?.className).toContain('data-[state=active]:bg-gradient-to-b')
-    expect(tab?.className).toContain('data-[state=active]:from-primary/30')
-    expect(tab?.className).toContain('data-[state=active]:backdrop-blur-md')
-    expect(tab?.className).toContain('data-[state=active]:z-10')
+    expect(tab?.className).toContain('data-[state=active]:bg-primary/10')
+    expect(tab?.className).toContain('data-[state=active]:font-semibold')
+    expect(tab?.className).toContain('font-medium')
   })
 
-  it('frames each panel in the selected tab’s border, so the tab’s area has an edge on every side', () => {
-    const { container } = setup()
-    for (const panel of panels(container)) {
-      expect(panel.className).toContain('rounded-(--tabs-radius)')
-      expect(panel.className).not.toContain('rounded-2xl')
-      expect(panel.className).toContain('border-primary')
-      // Full strength: the frame is a UI edge, which needs 3:1 against the page (WCAG 1.4.11)
-      expect(panel.className).not.toMatch(/border-primary\//)
-      expect(panel.className).toContain('bg-card')
-      expect(panel.className).toContain('shadow-sm')
-    }
+  it('keeps the quiet tabs quiet: muted label, a hover tint, no shadow or lift', () => {
+    setup()
+    const [tab] = screen.getAllByRole('tab')
+    expect(tab?.className).toContain('text-muted-foreground')
+    expect(tab?.className).toContain('hover:bg-surface')
+    expect(tab?.className).not.toMatch(/shadow|translate/)
   })
 
-  it('has one definition of the space between the tabs and the panel', () => {
-    const { container } = setup()
-    const root = container.firstElementChild as HTMLElement
-    expect(root.className).toContain('[--tabs-gap:0.5rem]')
-    expect(root.className).toContain('gap-(--tabs-gap)')
+  it('draws a focus ring and takes colours from theme tokens only', () => {
+    setup()
+    const [tab] = screen.getAllByRole('tab')
+    expect(tab?.className).toContain('focus-visible:outline-2')
+    expect(tab?.className).toContain('focus-visible:outline-ring')
+    expect(tab?.className).not.toMatch(/#[0-9a-f]{3,6}|\b(red|green|gray|slate)-\d/)
   })
 
-  it('has one corner radius, read by the tab, the curved joins and the box, so they cannot differ (#738)', () => {
+  it('keeps the panel in its own border, with no outline shared with the tab', () => {
     const { container } = setup()
     const root = container.firstElementChild as HTMLElement
-    const rootClasses = root.className.split(' ')
-    // Defined once, on the root, and the join's radius is that same variable
-    expect(rootClasses.filter((c) => c.startsWith('[--tabs-radius:'))).toEqual([
-      '[--tabs-radius:1rem]',
-    ])
-    expect(rootClasses).toContain('[--tabs-flare:var(--tabs-radius)]')
-    // The tab's top corners
-    for (const tab of screen.getAllByRole('tab')) {
-      expect(tab.className).toContain('rounded-(--tabs-radius)')
-      expect(tab.className).not.toMatch(/(^| )rounded-(xl|2xl|lg|md)( |$)/)
-    }
-    // The box's corners
+    expect(root.className).toContain('gap-1 sm:gap-2')
+    expect(root.className).not.toContain('--tabs-')
     for (const panel of container.querySelectorAll('[role="tabpanel"]')) {
-      expect(panel.className).toContain('rounded-(--tabs-radius)')
+      expect(panel.className).toContain('bg-card')
+      expect(panel.className).toContain('border')
+      expect(panel.className).not.toContain('border-primary')
+      expect(panel.className).not.toMatch(/rounded-t[lr]-none/)
     }
-  })
-})
-
-describe('the selected tab and its panel are one folder-shaped outline (#704)', () => {
-  const classesOf = (tab: HTMLElement | undefined) => (tab?.className ?? '').split(' ')
-
-  it('squares the selected tab’s bottom and drops its bottom border, so it opens into the panel', () => {
-    setup()
-    const [tab] = screen.getAllByRole('tab')
-    expect(tab?.className).toContain('data-[state=active]:rounded-b-none')
-    expect(tab?.className).toContain('data-[state=active]:border-b-0')
-  })
-
-  it('carries the selected tab down across the gap and over the panel’s top edge, with the side borders', () => {
-    setup()
-    const [tab, other] = screen.getAllByRole('tab')
-    expect(tab?.className).toContain('after:top-full')
-    expect(tab?.className).toContain('after:h-[calc(var(--tabs-gap)+1px)]')
-    expect(tab?.className).toContain('after:border-x')
-    // Full strength, like the panel's own edge (WCAG 1.4.11)
-    expect(tab?.className).toContain('after:border-primary')
-    expect(tab?.className).not.toMatch(/after:border-primary\//)
-    expect(tab?.className).toContain('after:bg-card')
-    expect(tab?.className).toContain('data-[state=active]:after:block')
-    expect(tab?.className).toContain('data-[state=active]:z-10')
-    // Hidden on every tab that isn't selected
-    expect(tab?.className).toContain('after:hidden')
-    expect(other?.className).toBe(tab?.className)
-  })
-
-  it('draws no arrow or notch', () => {
-    setup()
-    const [tab] = screen.getAllByRole('tab')
-    expect(tab?.className).not.toContain('rotate-45')
-    expect(tab?.className).not.toContain('after:size-3')
-  })
-
-  it('fades the glass into the panel’s colour and raises nothing, so no seam shows at the join', () => {
-    setup()
-    const [tab] = screen.getAllByRole('tab')
-    expect(tab?.className).toContain('data-[state=active]:from-primary/30')
-    expect(tab?.className).toContain('data-[state=active]:to-transparent')
-    expect(tab?.className).toContain('data-[state=active]:hover:bg-card')
-    // A shadow or an inset ring would draw a line along the open bottom
-    expect(tab?.className).toContain('data-[state=active]:shadow-none')
-    expect(tab?.className).not.toContain('ring-inset')
-  })
-
-  it('draws the flares as quarter-circle rings of the outline colour, defined once on the root', () => {
-    const { container } = setup()
-    const root = container.firstElementChild as HTMLElement
-    const defined = (name: string) =>
-      root.className.split(' ').find((c) => c.startsWith(`[--tabs-flare-${name}:`)) ?? ''
-    const left = defined('left')
-    const right = defined('right')
-    expect(left).toContain('circle_at_0_0')
-    expect(right).toContain('circle_at_100%_0')
-    for (const flare of [left, right]) {
-      expect(flare).toContain('var(--tabs-flare)')
-      // The outline's colour and the panel's fill, not literal ones
-      expect(flare).toContain('var(--color-primary)')
-      expect(flare).toContain('var(--color-card)')
-    }
-  })
-
-  it('puts both flares level with the panel’s edge, one on each side of the tab’s base', () => {
-    setup()
-    const [tab] = screen.getAllByRole('tab')
-    const classes = classesOf(tab)
-    expect(classes).toContain(
-      'before:[background-image:var(--tabs-flare-left),var(--tabs-flare-right)]',
-    )
-    expect(classes).toContain('before:[background-position:left_top,right_top]')
-    expect(classes).toContain('before:h-(--tabs-flare)')
-    expect(classes).toContain('before:hidden')
-    // Above the extension, so the flare's fill hides the straight wall beside each curve
-    expect(classes).toContain('before:z-10')
-    expect(classes).toContain('data-[state=active]:before:block')
-  })
-
-  it('leaves out the flare on the outer side of the first and last tab, where the outline runs on into the panel’s edge', () => {
-    setup()
-    const [tab] = screen.getAllByRole('tab')
-    const classes = classesOf(tab)
-    // The first tab keeps only its right flare, the last only its left, a lone tab neither
-    expect(classes).toContain('first:before:[background-image:var(--tabs-flare-right)]')
-    expect(classes).toContain('first:before:[background-position:right_top]')
-    expect(classes).toContain('last:before:[background-image:var(--tabs-flare-left)]')
-    expect(classes).toContain('last:before:[background-position:left_top]')
-    expect(classes).toContain('only:before:[background-image:none]')
-  })
-
-  it('squares the panel’s top corner under the first and the last tab, when scripting runs', () => {
-    const { container } = setup()
-    const [first, middle, last] = [...container.querySelectorAll('[role="tabpanel"]')]
-    expect(first?.className).toContain('scripted:rounded-tl-none')
-    expect(first?.className).not.toContain('rounded-tr-none')
-    expect(last?.className).toContain('scripted:rounded-tr-none')
-    expect(last?.className).not.toContain('rounded-tl-none')
-    expect(middle?.className).not.toContain('rounded-tl-none')
-    expect(middle?.className).not.toContain('rounded-tr-none')
-  })
-
-  it('squares both corners of a panel that has the only tab', () => {
-    const [only] = ITEMS
-    const { container } = render(
-      <Tabs label="One view" items={[only as TabsItem]} defaultValue="money" />,
-    )
-    const panel = container.querySelector('[role="tabpanel"]')
-    expect(panel?.className).toContain('scripted:rounded-tl-none')
-    expect(panel?.className).toContain('scripted:rounded-tr-none')
   })
 })

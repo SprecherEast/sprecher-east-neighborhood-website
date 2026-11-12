@@ -10,7 +10,7 @@ import { expect, test } from './support/test'
 const WIDTHS = [320, 430, 768, 1024, 1280, 1920]
 const POST = `/posts/${ALIGNMENT_POST_SLUG}`
 
-/** Where a fact's parts are marked (`FactCard`), on a key fact card and on a fact tab button alike */
+/** Where a fact's parts are marked (`FactCard`) on a key fact card */
 const VALUE = '[data-fact-part="value"]'
 const FOOT = '[data-fact-part="foot"]'
 const KEY_FACT_LISTS = `ul:has(${VALUE})`
@@ -68,18 +68,13 @@ function expectRowsAligned(groups: Box[][][], name: string, width: number) {
 
 test.describe('cards in a row stay in line', () => {
   for (const width of WIDTHS) {
-    test(`key fact cards and fact tab buttons at ${width}px`, async ({ page }) => {
+    test(`key fact cards at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 })
       await page.goto(POST)
 
       expectRowsAligned(
         await measureRows(page, KEY_FACT_LISTS, ':scope > li'),
         'key fact cards',
-        width,
-      )
-      expectRowsAligned(
-        await measureRows(page, TAB_LISTS, '[role="tab"]'),
-        'fact tab buttons',
         width,
       )
     })
@@ -104,79 +99,67 @@ test.describe('cards in a row stay in line', () => {
   })
 })
 
-// What the owner saw on the real post (#707): the tabs hang apart from the open panel, one tab
-// carries a line the others lack, and a figure breaks in the middle of a phrase.
+// The fact tab buttons (#1112): plain and equal, one row above the panel, each label on one line.
 const TAB = '[role="tab"]'
 const ACTIVE_PANEL = '[role="tabpanel"][data-state="active"]'
-/** The explanation the fixture's third fact has and the others lack; a tab must not show it */
-const DETAIL = 'The City’s release says about $7 a month'
 
 test.describe('fact tabs stay tidy', () => {
   for (const width of WIDTHS) {
-    test(`gap, parts and wrapping at ${width}px`, async ({ page }) => {
+    test(`equal buttons, one line each and a gap to the panel at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 })
       await page.goto(POST)
       const list = page.locator(TAB_LISTS).first()
       await list.scrollIntoViewIfNeeded()
 
       const measured = await list.evaluate(
-        (list, { tab, panel, value }) => {
+        (list, { tab, panel }) => {
           const tabs = [...list.querySelectorAll(tab)]
           const box = (e: Element) => e.getBoundingClientRect()
           const active = document.querySelector(panel)
-          const activeTab = tabs.find((t) => t.getAttribute('data-state') === 'active')
-          if (!active || !activeTab || tabs.length < 2) {
-            throw new Error('No fact tabs with an open panel')
-          }
-          // Each word of a figure, with its line, to see where it breaks
-          const lines = tabs.map((t) => {
-            const figure = t.querySelector(value)
-            if (!figure?.firstChild) throw new Error('A tab has no figure')
-            const words: { word: string; top: number; right: number }[] = []
-            for (const m of (figure.textContent ?? '').matchAll(/\S+/g)) {
-              const range = document.createRange()
-              range.setStart(figure.firstChild, m.index)
-              range.setEnd(figure.firstChild, m.index + m[0].length)
-              const r = range.getBoundingClientRect()
-              words.push({ word: m[0], top: Math.round(r.top), right: Math.round(r.right) })
-            }
-            return { words, tabRight: Math.round(box(t).right) }
-          })
+          if (!active || tabs.length < 2) throw new Error('No fact tabs with an open panel')
           return {
+            widths: new Set(tabs.map((t) => Math.round(box(t).width))).size,
+            heights: new Set(tabs.map((t) => Math.round(box(t).height))).size,
+            tops: new Set(tabs.map((t) => Math.round(box(t).top))).size,
+            minHeight: Math.min(...tabs.map((t) => box(t).height)),
             tabGap: Math.round(box(tabs[1]).left - box(tabs[0]).right),
             panelGap: Math.round(box(active).top - box(tabs[0]).bottom),
-            texts: tabs.map((t) => t.textContent ?? ''),
-            lines,
-            // The tab's corner, the curved join's size and the box's corner (#738)
-            radii: {
-              tab: getComputedStyle(activeTab).borderTopRightRadius,
-              join: getComputedStyle(activeTab, '::before').height,
-              box: getComputedStyle(active).borderBottomRightRadius,
-            },
+            // The label's own lines (one line top) and its room: its left and right edges against
+            // the button's, so a label spilling sideways is seen
+            lines: tabs.map((t) => {
+              const label = t.querySelector('[data-fact-part="label"]')
+              if (!label) throw new Error('A tab has no label')
+              const range = document.createRange()
+              range.selectNodeContents(label)
+              return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size
+            }),
+            room: tabs.map((t) => {
+              const label = t.querySelector('[data-fact-part="label"]')
+              if (!label) throw new Error('A tab has no label')
+              const range = document.createRange()
+              range.selectNodeContents(label)
+              const text = range.getBoundingClientRect()
+              const button = box(t)
+              return Math.min(text.left - button.left, button.right - text.right)
+            }),
+            icons: list.querySelectorAll('svg').length,
           }
         },
-        { tab: TAB, panel: ACTIVE_PANEL, value: VALUE },
+        { tab: TAB, panel: ACTIVE_PANEL },
       )
 
+      expect(measured.widths, 'every tab is as wide as the others').toBe(1)
+      expect(measured.heights, 'every tab is as tall as the others').toBe(1)
+      expect(measured.tops, 'the tabs share one row').toBe(1)
+      expect(measured.minHeight, 'a tab is at least 48px tall').toBeGreaterThanOrEqual(48)
       // The space under the tabs is the space between them, not a wider, unexplained one
       expect(measured.panelGap, 'tabs to panel equals tab to tab').toBe(measured.tabGap)
-      // One radius all the way round: the tab, the curved join beside it and the box
-      expect(measured.radii.join, 'the join is as round as the tab').toBe(measured.radii.tab)
-      expect(measured.radii.box, 'the box is as round as the tab').toBe(measured.radii.tab)
-      for (const text of measured.texts) {
-        expect(text, 'a tab carries no line the others lack').not.toContain(DETAIL)
+      expect(measured.lines, 'every label sits on one line').toEqual(measured.lines.map(() => 1))
+      // Visible room on each side of the longest labels a post holds, inside the border
+      for (const room of measured.room) {
+        expect(room, 'a label keeps room inside its button').toBeGreaterThanOrEqual(3)
       }
-      for (const { words, tabRight } of measured.lines) {
-        const label = words.map((w) => w.word).join(' ')
-        words.forEach((w, i) => {
-          expect(w.right, `${label} stays inside its tab`).toBeLessThanOrEqual(tabRight)
-          // A line never ends on a lone short word: "+$90 a / year" reads as broken
-          const next = words[i + 1]
-          if (next && w.word.length === 1) {
-            expect(next.top, `"${w.word}" stays with "${next.word}" in ${label}`).toBe(w.top)
-          }
-        })
-      }
+      expect(measured.icons, 'no icon on a tab').toBe(0)
     })
   }
 })

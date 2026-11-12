@@ -19,7 +19,14 @@ const labelFilled = filledText('Add what the fact is about, as a short title.')
  * optional link. One definition, so the key facts block and any later block that draws a fact
  * (the fact tabs) store it the same way.
  */
-export const keyFactFields = ({ figures = false }: { figures?: boolean } = {}): Field[] => [
+export const keyFactFields = ({
+  figures = false,
+  labelMax = KEY_FACT_LIMITS.label,
+}: {
+  figures?: boolean
+  /** A tab button's label is shorter than a card's: it must sit on one line (#1112) */
+  labelMax?: number
+} = {}): Field[] => [
   {
     type: 'row',
     fields: [
@@ -27,7 +34,7 @@ export const keyFactFields = ({ figures = false }: { figures?: boolean } = {}): 
         name: 'label',
         type: 'text',
         required: true,
-        maxLength: KEY_FACT_LIMITS.label,
+        maxLength: labelMax,
         validate: labelFilled,
         admin: {
           width: '50%',

@@ -12,6 +12,7 @@ import {
   tabs,
   TIMELINE,
 } from '@/platform/payload/testing/factTabsRequests'
+import { FACT_TABS_LIMITS } from '@/platform/richtext/editorial/editorialLimits'
 import { FACT_TABS_FIXTURE } from '@/platform/richtext/editorial/factTabsFixtures'
 import { toFactTabsProps } from '@/platform/richtext/editorial/factTabs'
 
@@ -73,6 +74,10 @@ describe('saving a Fact tabs block', () => {
     ['a definition of only spaces', { tabs: [tab({ definition: '  ' }), tab()] }],
     ['a definition over 240 characters', { tabs: [tab({ definition: 'x'.repeat(241) }), tab()] }],
     ['a value of only spaces', { tabs: [tab({ value: '   ' }), tab()] }],
+    [
+      'a label too long for one line on a button (#1112)',
+      { tabs: [tab({ label: 'x'.repeat(FACT_TABS_LIMITS.label + 1) }), tab()] },
+    ],
     ['a label of only spaces', { tabs: [tab({ label: ' ' }), tab()] }],
     ['no value', { tabs: [tab({ value: '' }), tab()] }],
     ['a tab with no pictures', { tabs: [tab({ panel: [] }), tab()] }],
