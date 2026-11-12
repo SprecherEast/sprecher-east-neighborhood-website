@@ -19,7 +19,7 @@ import { TOUCH_MIN_HEIGHT } from './layoutSizes'
 // The summary row and chevron the two card-like looks (`card` and `row`) share: one definition each, so they cannot drift
 const CARD_BOX = cardVariants({ variant: 'elevated', padding: 'sm' })
 const CARD_SUMMARY = cn(TOUCH_MIN_HEIGHT, 'font-medium')
-const CARD_CHEVRON = 'size-4 text-muted-foreground'
+const CARD_CHEVRON = 'size-5 text-foreground'
 
 const summaryVariants = cva(
   'flex cursor-pointer list-none items-center justify-between gap-3 focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden',

@@ -54,10 +54,11 @@ const renderPage = (over: Partial<Activity> = {}) =>
   render(<MissionPage mission={mission} activity={{ ...activity, ...over }} now={NOW} />)
 
 describe('MissionPage', () => {
-  it('opens the first project and leaves the others closed', () => {
+  it('starts every project box closed', () => {
     const { container } = renderPage()
     const boxes = [...container.querySelectorAll('details')]
-    expect(boxes.map((box) => box.open)).toEqual([true, false])
+    expect(boxes).toHaveLength(2)
+    expect(boxes.map((box) => box.open)).toEqual([false, false])
   })
 
   it('says how much of the mission is done, in words and in a named bar', () => {

@@ -10,19 +10,10 @@ import { IssueList } from './IssueList'
 import { ProgressSummary } from './ProgressSummary'
 
 /** A project (an epic) as a box that opens: its progress, a link to its own page and its issues */
-export function EpicBox({
-  epic,
-  now,
-  defaultOpen,
-}: {
-  epic: PlanEpic
-  now: Date
-  defaultOpen?: boolean
-}) {
+export function EpicBox({ epic, now }: { epic: PlanEpic; now: Date }) {
   return (
     <Disclosure
       variant="card"
-      defaultOpen={defaultOpen}
       summary={<ProgressSummary name={epic.title} level="epic" issues={epic.children} now={now} />}
     >
       <div className="space-y-3">
