@@ -42,7 +42,7 @@ export const alignmentPost = (
       facts: [SHORT_FACT, WRAPPING_FACT, NO_DETAIL_FACT, LONGEST_FACT, SHORT_FACT, WRAPPING_FACT],
     }),
     heading('h2', 'Four fact tabs'),
-    p('Each tab is a fact; the tab buttons are a row of cards too.'),
+    p('Each tab is a fact; the tab buttons are a row of plain buttons.'),
     block('alignment-4', { blockType: 'factTabs', ...FACT_TABS_FIXTURE }),
     heading('h2', 'An image with a caption and a legend'),
     block('alignment-5', { blockType: 'mediaBlock', media: mediaId }),

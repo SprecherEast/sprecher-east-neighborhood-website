@@ -54,7 +54,10 @@ export function FactCard({
           <Icon aria-hidden="true" className="size-5 shrink-0 text-primary" />
           <span className="min-w-0 [overflow-wrap:anywhere]">{fact.label}</span>
         </dt>
-        <dd className="mt-1 block text-2xl leading-tight font-bold [overflow-wrap:anywhere] text-foreground">
+        <dd
+          data-fact-part="value"
+          className="mt-1 block text-2xl leading-tight font-bold [overflow-wrap:anywhere] text-foreground"
+        >
           {fact.value}
         </dd>
         {fact.detail && (

@@ -61,6 +61,12 @@ describe('FactCard', () => {
     expect(parts(detailed)).toEqual(parts(plain))
   })
 
+  it('as a card: marks its value and foot, for the browser tests that line them up (#678)', () => {
+    const { container } = render(<FactCard fact={FACT} />)
+    expect(container.querySelector('dd[data-fact-part="value"]')?.textContent).toBe('$477.5M')
+    expect(container.querySelector('[data-fact-part="foot"]')).not.toBeNull()
+  })
+
   it('as a card: still shows the explanation', () => {
     const withDetail: KeyFact = { ...FACT, detail: 'The City’s release says about $7 a month' }
     const { container } = render(<FactCard fact={withDetail} />)
