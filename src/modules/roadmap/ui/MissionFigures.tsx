@@ -13,13 +13,12 @@ import { activityLabel, recentWords } from './activityWords'
 /** How big the figures are and whether the numbers behind the picture are written out */
 const SIZES = {
   tile: { number: 'text-2xl', picture: 'h-8', bar: 'sm', writeNumbers: false },
-  featured: { number: 'text-4xl', picture: 'h-12', bar: 'sm', writeNumbers: true },
   page: { number: 'text-3xl', picture: 'h-10', bar: 'md', writeNumbers: true },
 } as const
 
 /**
  * What a mission shows wherever it appears: how many are done, a bar, the activity over time on
- * the plan's shared scale and the same news in words. Its tile, its featured tile and its page
+ * the plan's shared scale and the same news in words. Its tile and its page
  * differ only in size, so they all draw it here.
  */
 export function MissionFigures({
