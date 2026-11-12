@@ -13,10 +13,6 @@ const stats: PlanStats = {
   open: 12,
   done: 30,
   doneThisWeek: 5,
-  doneThisMonth: 14,
-  milestones: 4,
-  epics: 9,
-  epicsDone: 2,
 }
 
 const generatedAt = '2026-11-09T18:00:00Z'

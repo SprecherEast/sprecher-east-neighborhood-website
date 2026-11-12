@@ -60,12 +60,9 @@ describe('planStats', () => {
 
     expect(stats.open).toBe(2)
     expect(stats.done).toBe(2)
-    expect(stats.milestones).toBe(1)
-    expect(stats.epics).toBe(2)
-    expect(stats.epicsDone).toBe(1)
   })
 
-  it('counts what was finished in the last 7 days, and in the last 30', () => {
+  it('counts what was finished in the last 7 days', () => {
     const stats = planStats(
       plan({
         unscheduled: [
@@ -82,7 +79,6 @@ describe('planStats', () => {
     )
 
     expect(stats.doneThisWeek).toBe(2)
-    expect(stats.doneThisMonth).toBe(3)
   })
 
   it('has zeros for an empty plan', () => {
@@ -90,10 +86,6 @@ describe('planStats', () => {
       open: 0,
       done: 0,
       doneThisWeek: 0,
-      doneThisMonth: 0,
-      milestones: 0,
-      epics: 0,
-      epicsDone: 0,
     })
   })
 })

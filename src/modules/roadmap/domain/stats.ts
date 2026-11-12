@@ -3,7 +3,7 @@ import { SITE_TIMEZONE } from '@/platform/lib/timezone'
 import type { Plan, PlanIssue } from './types'
 
 /** What "recently" means on the page, in days */
-export const RECENT_DAYS = { week: 7, month: 30 } as const
+export const RECENT_DAYS = { week: 7 } as const
 
 const DAY_MS = 86_400_000
 
@@ -11,10 +11,6 @@ export type PlanStats = {
   open: number
   done: number
   doneThisWeek: number
-  doneThisMonth: number
-  milestones: number
-  epics: number
-  epicsDone: number
 }
 
 const doneWithin = (issues: PlanIssue[], days: number, now: Date) =>
@@ -63,7 +59,7 @@ export function dueIn(dueOn: string, now: Date): number {
 
 /**
  * The numbers at the top of the page: counts of the issues the plan shows (so screened ones are
- * never in them), with epics counted apart from the issues under them. An issue decided against
+ * never in them). An issue decided against
  * is in neither the open nor the done count.
  */
 export function planStats(plan: Plan, now: Date): PlanStats {
@@ -75,9 +71,5 @@ export function planStats(plan: Plan, now: Date): PlanStats {
     open,
     done,
     doneThisWeek,
-    doneThisMonth: doneWithin(issues, RECENT_DAYS.month, now),
-    milestones: plan.milestones.length,
-    epics: epics.length,
-    epicsDone: epics.filter((e) => e.state === 'done').length,
   }
 }
