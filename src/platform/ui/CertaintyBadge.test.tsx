@@ -14,4 +14,11 @@ describe('CertaintyBadge', () => {
     expect(screen.getByText(CERTAINTY_LABELS[certainty])).toBeTruthy()
     expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
   })
+
+  it('can write its own words in place of the certainty’s, keeping the look', () => {
+    const { container } = render(<CertaintyBadge certainty="estimate" label="Proposed" />)
+    expect(screen.getByText('Proposed').className).toContain('text-warning-strong')
+    expect(screen.queryByText(CERTAINTY_LABELS.estimate)).toBeNull()
+    expect(container.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+  })
 })

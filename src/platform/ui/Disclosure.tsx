@@ -13,12 +13,12 @@ import { TOUCH_MIN_HEIGHT } from './layoutSizes'
  * JavaScript. `card` is a question that opens to its answer, in the kit's card look; `bar` is the full-width
  * row under the site header that holds the "On this page" list on small screens; `link` is a bare
  * link-coloured row with no box, for "See the smaller pieces" inside a chart (#866); `row` is the card
- * look with no vertical padding on the box, so a closed row is only as tall as its summary and a few
- * of them stack compactly (#1111).
+ * look with no box of its own: a few rows go in one card, split by divider lines, and a closed row is
+ * only as tall as its summary (#1111, #1118).
  */
-// What the two card-like looks (`card` and `row`) share: one definition each, so they cannot drift
+// The summary row and chevron the two card-like looks (`card` and `row`) share: one definition each, so they cannot drift
 const CARD_BOX = cardVariants({ variant: 'elevated', padding: 'sm' })
-const CARD_SUMMARY = cn(TOUCH_MIN_HEIGHT, 'font-medium focus-visible:outline-offset-2')
+const CARD_SUMMARY = cn(TOUCH_MIN_HEIGHT, 'font-medium')
 const CARD_CHEVRON = 'size-4 text-muted-foreground'
 
 const summaryVariants = cva(
@@ -26,8 +26,9 @@ const summaryVariants = cva(
   {
     variants: {
       variant: {
-        card: CARD_SUMMARY,
-        row: CARD_SUMMARY,
+        card: cn(CARD_SUMMARY, 'focus-visible:outline-offset-2'),
+        // Inside a card that clips its corners, so the ring is drawn inside the row
+        row: cn(CARD_SUMMARY, 'focus-visible:-outline-offset-2 max-[24rem]:text-sm'),
         bar: 'min-h-[var(--section-bar-height)] px-4 text-sm font-semibold text-foreground focus-visible:-outline-offset-2 md:px-8',
         link: cn(
           TOUCH_MIN_HEIGHT,
@@ -91,11 +92,7 @@ export function Disclosure({
     <details
       ref={ref}
       open={defaultOpen || undefined}
-      className={cn(
-        (variant === 'card' || variant === 'row') && CARD_BOX,
-        variant === 'row' && 'py-0',
-        className,
-      )}
+      className={cn(variant === 'card' && CARD_BOX, variant === 'row' && 'px-3', className)}
     >
       <summary className={summaryVariants({ variant })}>
         <span className={cn('min-w-0', variant !== 'link' && 'flex-1')}>{summary}</span>

@@ -11,6 +11,7 @@ import { contactForm } from '../src/endpoints/seed/contact-form'
 import { contact } from '../src/endpoints/seed/contact-page'
 import { root, p } from '../src/endpoints/seed/helpers/lexical'
 import { alignmentPost, FIGURE_CAPTION } from './support/alignmentPage'
+import { billPost } from './support/billPage'
 import { EDGES_EVENT_SLUG } from './support/alignmentSlug'
 import { pictureCardsPost, pictureEvent, picturePost } from './support/featuredPicturePages'
 
@@ -62,6 +63,14 @@ await payload.create({
   collection: 'posts',
   depth: 0,
   data: alignmentPost(figure.id, author.id),
+  context,
+  overrideAccess: true, // test setup, no user
+})
+
+await payload.create({
+  collection: 'posts',
+  depth: 0,
+  data: billPost(author.id),
   context,
   overrideAccess: true, // test setup, no user
 })

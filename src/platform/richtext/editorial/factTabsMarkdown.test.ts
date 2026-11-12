@@ -142,7 +142,7 @@ describe('factTabsToJsx leaves out a block its own tag could not be read back fr
 
   it.each([
     ['an empty definition', { definition: '' }],
-    ['a heading over its limit', { heading: 'x'.repeat(41) }],
+    ['a heading over its limit', { heading: 'x'.repeat(FACT_TABS_LIMITS.heading + 1) }],
     [
       'a label too long for one line on a button',
       { label: 'x'.repeat(FACT_TABS_LIMITS.label + 1) },

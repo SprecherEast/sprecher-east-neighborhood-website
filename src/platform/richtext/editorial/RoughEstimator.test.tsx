@@ -14,8 +14,8 @@ const PROPS: RoughEstimatorProps = {
   canEstimate: true,
   onEstimate: () => {},
   options: [
-    { key: '2026', label: '2026 rates' },
-    { key: '2027', label: '2027 rates' },
+    { key: '2026', label: '2026' },
+    { key: '2027', label: '2027' },
   ],
   selected: 1,
   onSelect: () => {},
@@ -31,20 +31,16 @@ describe('RoughEstimator', () => {
       (screen.getByRole('textbox', { name: 'Your home’s assessed value' }) as HTMLInputElement)
         .value,
     ).toBe('$500,300')
-    const group = screen.getByRole('group', { name: /tax rates/i })
+    const group = screen.getByRole('group', { name: 'Tax rates' })
     expect(group.querySelectorAll('button')).toHaveLength(2)
-    expect(screen.getByRole('button', { name: '2027 rates' }).getAttribute('aria-pressed')).toBe(
-      'true',
-    )
-    expect(screen.getByRole('button', { name: '2026 rates' }).getAttribute('aria-pressed')).toBe(
-      'false',
-    )
+    expect(screen.getByRole('button', { name: '2027' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: '2026' }).getAttribute('aria-pressed')).toBe('false')
   })
 
   it('draws neither an intro line nor notes: the tab shows them (#1111)', () => {
     const { container } = render(<RoughEstimator {...PROPS} />)
     expect(container.querySelector('ul')).toBeNull()
-    expect(container.querySelectorAll('p:not([data-switch-note])')).toHaveLength(0)
+    expect(container.querySelectorAll('p')).toHaveLength(0)
   })
 
   it('reports what the reader types, leaves, and picks', () => {
@@ -54,7 +50,7 @@ describe('RoughEstimator', () => {
     const box = screen.getByRole('textbox')
     fireEvent.change(box, { target: { value: '300000' } })
     expect(onValueChange).toHaveBeenCalledWith('$300,000')
-    fireEvent.click(screen.getByRole('button', { name: '2026 rates' }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(onSelect).toHaveBeenCalledWith(0)
   })
 
@@ -69,18 +65,10 @@ describe('RoughEstimator', () => {
     expect(estimate.textContent).toBe('')
     expect(estimate.querySelector('svg')).toBeTruthy()
     expect(estimate.className).not.toContain('w-full')
-    for (const name of ['2026 rates', '2027 rates']) {
+    for (const name of ['2026', '2027']) {
       const rate = screen.getByRole('button', { name })
       expect(estimate.compareDocumentPosition(rate) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     }
-  })
-
-  it('shares the row with the rate buttons where they fit and stacks them before anything wraps', () => {
-    render(<RoughEstimator {...PROPS} />)
-    const row = screen.getByRole('textbox').closest('[data-estimator-row]') as HTMLElement
-    expect(row.contains(screen.getByRole('group', { name: /tax rates/i }))).toBe(true)
-    expect(row.className).toContain('flex-col')
-    expect(row.className).toContain('@lg:flex-row')
   })
 
   it('is flat and muted while there is nothing new to estimate, raised and accented once there is', () => {
@@ -135,27 +123,34 @@ describe('RoughEstimator', () => {
     expect(screen.getByRole('textbox').getAttribute('aria-invalid')).toBe('true')
   })
 
-  it('writes a year’s note under its button in parentheses, and keeps the room when none has one', () => {
-    const { container } = render(
-      <RoughEstimator
-        {...PROPS}
-        options={[
-          { key: '2026', label: '2026 rates' },
-          { key: '2027', label: '2027 rates', note: 'proposed' },
-        ]}
-      />,
-    )
-    const note = screen.getByText('(proposed)')
-    expect(note.closest('div')?.querySelector('button')?.textContent).toBe('2027 rates')
-    // The button's own name stays the year's rates; the note is not part of it
-    expect(screen.getByRole('button', { name: '2027 rates' })).toBeTruthy()
-    const room = Array.from(container.querySelectorAll('[data-switch-note]'))
-    expect(room).toHaveLength(2)
-    expect(room[0]?.textContent).toBe('')
-    expect(room[0]?.className).toBe(room[1]?.className)
-    cleanup()
-    const none = render(<RoughEstimator {...PROPS} />).container
-    expect(none.querySelectorAll('[data-switch-note]')).toHaveLength(0)
+  it('draws the tax years as one joined control of the year numbers only, with no note under it (#1118)', () => {
+    const { container } = render(<RoughEstimator {...PROPS} />)
+    const group = screen.getByRole('group', { name: 'Tax rates' })
+    expect(Array.from(group.querySelectorAll('button')).map((b) => b.textContent)).toEqual([
+      '2026',
+      '2027',
+    ])
+    // One box holds both options, so they read as one control
+    expect(group.className).toContain('border')
+    expect(container.querySelector('[data-switch-note]')).toBeNull()
+  })
+
+  it('keeps the control on the row of the value box, never larger than the box, under a "Tax rates" label that names it (#1118)', () => {
+    render(<RoughEstimator {...PROPS} />)
+    const row = screen.getByRole('textbox').closest('[data-estimator-row]') as HTMLElement
+    const group = screen.getByRole('group', { name: 'Tax rates' })
+    expect(row.contains(group)).toBe(true)
+    expect(group.className).toContain('h-9')
+    expect(group.className).not.toContain('h-12')
+    // The visible label names the group, and sits beside the value box's own label
+    const label = screen.getByText('Tax rates')
+    expect(group.getAttribute('aria-labelledby')).toBe(label.id)
+    // It is written like the box's label (same size and weight), right-aligned over the control
+    for (const look of ['text-sm', 'font-medium', '@[20rem]:text-base', '@[16rem]:text-right']) {
+      expect(label.className).toContain(look)
+    }
+    const box = screen.getByText('Your home’s assessed value')
+    expect(box.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('has no accessibility violations', async () => {

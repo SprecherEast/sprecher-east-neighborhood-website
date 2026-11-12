@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import { BARS, PROPS } from './billShareFixtures'
-import { fillFigures, figuresFor, initialFigures, splitBillPanel } from './billFigures'
+import {
+  fillFigures,
+  figuresFor,
+  increaseLine,
+  initialFigures,
+  splitBillPanel,
+} from './billFigures'
 import type { FactTabPanelItem } from './factTabs'
 
 const bars: FactTabPanelItem = { kind: 'chart', spec: BARS, enlarge: false }
@@ -35,5 +41,16 @@ describe('initialFigures', () => {
     expect(initialFigures([bill, bars])).toEqual(figuresFor(90))
     expect(initialFigures([bars])).toBeUndefined()
     expect(initialFigures([bill])).toBeUndefined()
+  })
+})
+
+describe('increaseLine', () => {
+  it('says the increase for a year and a month from the same figures as the placeholders', () => {
+    expect(increaseLine(90.04)).toBe('Up $90 a year, about $7.50 a month')
+    expect(increaseLine(180)).toBe('Up $180 a year, about $15 a month')
+  })
+
+  it('says there is no increase when there is none', () => {
+    expect(increaseLine(0)).toBe('No increase')
   })
 })

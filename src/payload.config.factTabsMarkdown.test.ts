@@ -78,9 +78,9 @@ describe('a FactTabs tag', () => {
       /tabs.*(<=4|at most 4)/i,
     ],
     [
-      'a heading over 40 characters',
+      'a heading over 48 characters',
       (t: Record<string, unknown>[]) => {
-        present(t[0]).heading = 'x'.repeat(41)
+        present(t[0]).heading = 'x'.repeat(49)
       },
       /tabs\.0\.heading/,
     ],

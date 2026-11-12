@@ -90,7 +90,7 @@ describe('the round trip, with hostile text', () => {
         certainty: 'estimate',
         linkLabel: fuzzText(rand, 60),
         linkUrl: `https://example.com/${encodeURIComponent(fuzzText(rand, 30))}`,
-        heading: fuzzText(rand, 40),
+        heading: fuzzText(rand, FACT_TABS_LIMITS.heading),
         definition: fuzzText(rand, 240),
         panel: [
           {

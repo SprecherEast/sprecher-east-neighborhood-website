@@ -91,7 +91,7 @@ describe('BillShare, the City’s panel (#1020)', () => {
         x
       </BillShare>,
     )
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(screen.getByText('2026 adopted')).toBeTruthy()
     expect(screen.queryByText(/Proposed increase/)).toBeNull()
     expect(container.querySelector('rect[data-amount-hatch]')).toBeNull()

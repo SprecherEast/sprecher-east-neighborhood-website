@@ -69,7 +69,7 @@ describe('saving a Fact tabs block', () => {
     ['no tabs', { tabs: [] }],
     ['an empty heading', { tabs: [tab({ heading: '' }), tab()] }],
     ['a heading of only spaces', { tabs: [tab({ heading: ' ' }), tab()] }],
-    ['a heading over 40 characters', { tabs: [tab({ heading: 'x'.repeat(41) }), tab()] }],
+    ['a heading over 48 characters', { tabs: [tab({ heading: 'x'.repeat(49) }), tab()] }],
     ['an empty definition', { tabs: [tab({ definition: '' }), tab()] }],
     ['a definition of only spaces', { tabs: [tab({ definition: '  ' }), tab()] }],
     ['a definition over 240 characters', { tabs: [tab({ definition: 'x'.repeat(241) }), tab()] }],

@@ -23,15 +23,34 @@ const SLICES: ShareSlice[] = [
 const TOTAL = { label: 'Total', amount: '$10,000' }
 
 describe('ShareBill', () => {
-  it('draws the total, then the bar, then the receipt', () => {
-    const { container } = render(<ShareBill slices={SLICES} label="Sample bill" total={TOTAL} />)
-    const total = screen.getByText('Total')
+  it('reads like a receipt: the title on top with no amount, then the bar, the rows, and the total last (#1118)', () => {
+    const { container } = render(
+      <ShareBill slices={SLICES} label="Sample bill" title="Sample whole bill" total={TOTAL} />,
+    )
+    const title = screen.getByText('Sample whole bill')
     const bar = screen.getByRole('img', { name: 'Sample bill' })
     const list = container.querySelector('ul') as HTMLElement
+    const total = screen.getByText('Total').closest('p') as HTMLElement
     const follows = (a: Node, b: Node) =>
       Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
-    expect(follows(total, bar)).toBe(true)
+    expect(follows(title, bar)).toBe(true)
     expect(follows(bar, list)).toBe(true)
+    expect(follows(list, total)).toBe(true)
+    // No amount beside the title
+    expect(title.textContent).toBe('Sample whole bill')
+    // The total: label left, amount right, bold, under a stronger rule than the rows' lines
+    expect(total.textContent).toBe('Total$10,000')
+    expect(total.className).toContain('font-bold')
+    expect(total.className).toContain('border-t-2')
+    expect(total.className).toContain('justify-between')
+  })
+
+  it('keeps the receipt rows tight and level (#1118)', () => {
+    const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
+    const row = container.querySelector('li') as HTMLElement
+    expect(row.className).toContain('min-h-5')
+    // A name never wraps: at the narrowest width it may run into its column's blank space instead
+    expect(screen.getByText('Sample: first').className).toContain('whitespace-nowrap')
   })
 
   it('names every slice in the receipt with its percent and dollars, in the bar’s order', () => {
@@ -57,7 +76,7 @@ describe('ShareBill', () => {
     expect(flashes()).toBe(true)
   })
 
-  it('draws no total line without one, and has no accessibility violations', async () => {
+  it('draws no title or total line without them, and has no accessibility violations', async () => {
     const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
     expect(container.querySelector('p')).toBeNull()
     await expectAccessible(container)

@@ -63,17 +63,18 @@ export function ShareBarGallery() {
   )
 }
 
-/** The whole bill: the total, the bar and the receipt, wide and narrow */
+/** The whole bill: its title, the bar, the receipt and the total, wide and narrow */
 export function ShareBillGallery() {
   return (
     <GalleryEntry
       name="ShareBill"
-      description="One whole as a bill: the total, one bar of slices as wide as their shares, and a receipt that names each with its color, percent and dollars."
+      description="One whole as a bill, like a receipt: the title, one bar of slices as wide as their shares, and a receipt that names each with its color, percent and dollars, and the total as the last line."
     >
       <GalleryVariant label="wide" className="block max-w-xl">
         <ShareBill
           slices={SLICES}
           label="Sample: a whole split in four"
+          title="Sample: whole bill"
           total={{ label: 'Sample total', amount: '$10,000' }}
         />
       </GalleryVariant>
@@ -81,6 +82,7 @@ export function ShareBillGallery() {
         <ShareBill
           slices={SLICES}
           label="Sample: a whole split in four, narrow"
+          title="Sample: whole bill"
           total={{ label: 'Sample total', amount: '$10,000' }}
         />
       </GalleryVariant>

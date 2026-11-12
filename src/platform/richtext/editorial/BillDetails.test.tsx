@@ -31,11 +31,24 @@ describe('BillDetails', () => {
     )
     const rows = Array.from(container.querySelectorAll('details'))
     expect(rows.map((row) => row.querySelector('summary')?.textContent)).toEqual([
-      'Where the tax goes',
-      'How we estimate',
+      'Where the City share goes',
+      'How we estimate this',
       'Sources',
     ])
     expect(rows.every((row) => !row.hasAttribute('open'))).toBe(true)
+  })
+
+  it('holds the three rows in one card, split by divider lines, not three separate boxes (#1118)', () => {
+    const { container } = render(
+      <BillDetails where={<p>Breakdown</p>} notes={NOTES} sources={[SOURCE]} />,
+    )
+    const rows = Array.from(container.querySelectorAll('details'))
+    const card = rows[0]?.parentElement as HTMLElement
+    expect(card.className).toContain('border')
+    expect(card.className).toContain('divide-y')
+    expect(rows.every((row) => row.parentElement === card)).toBe(true)
+    // A row is no box of its own
+    expect(rows.some((row) => /(^|\s)border(\s|$)/.test(row.className))).toBe(false)
   })
 
   it('puts the notes first and the tab’s short text after them in the row on how it works', () => {

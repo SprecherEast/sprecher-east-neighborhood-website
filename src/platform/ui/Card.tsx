@@ -31,6 +31,8 @@ export const cardVariants = cva('relative min-w-0 rounded-2xl', {
       // Media cards stack an image and a `CardBody` that grows to the card's height; the corners
       // clip the image. Other cards don't clip, so focus outlines inside them show in full
       none: 'flex flex-col overflow-hidden',
+      // The tightest padding, for compact cards stacked on a phone's first screen (#1118)
+      xs: 'p-3',
       sm: 'p-4',
       md: 'p-6',
       lg: 'p-6 md:p-8',

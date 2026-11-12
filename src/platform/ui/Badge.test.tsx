@@ -120,6 +120,14 @@ describe('Badge', () => {
     expect(screen.getByText('frontend').className).not.toMatch(/bg-/)
   })
 
+  it('has a tighter xs size for a row shared with a label (#1118)', () => {
+    render(<Badge size="xs">Proposed</Badge>)
+    const badge = screen.getByText('Proposed')
+    expect(badge.className).toContain('px-2')
+    expect(badge.className).toContain('py-0.5')
+    expect(badge.className).toContain('[&_svg]:size-3')
+  })
+
   it('is small by default and has a slightly bigger size with larger words and icon (#952)', () => {
     render(
       <>

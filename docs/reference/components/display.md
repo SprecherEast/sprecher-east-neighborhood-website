@@ -11,7 +11,7 @@ Source: `src/platform/ui/Badge.tsx`
 **Variants:**
 
 - `variant`: `"category" | "on-image" | "status" | "official" | "current" | "caution" | "neutral" | "open" | "done" | "outline"`
-- `size`: `"sm" | "md"`
+- `size`: `"xs" | "sm" | "md"`
 
 | Prop        | Type              | Required | Description |
 | ----------- | ----------------- | -------- | ----------- |
@@ -62,9 +62,11 @@ How sure we are, in words and an icon (#509), so the colour is never the only cu
 
 Source: `src/platform/ui/CertaintyBadge.tsx`
 
-| Prop        | Type                                     | Required | Description |
-| ----------- | ---------------------------------------- | -------- | ----------- |
-| `certainty` | `"confirmed" \| "estimate" \| "unknown"` | yes      |             |
+| Prop        | Type                                     | Required | Description                                                                                |
+| ----------- | ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `certainty` | `"confirmed" \| "estimate" \| "unknown"` | yes      |                                                                                            |
+| `label`     | `string`                                 | no       | Words of its own in place of the certainty's, such as a year's stored note; the look stays |
+| `size`      | `"xs" \| "sm" \| "md"`                   | no       |                                                                                            |
 
 **Used by** (direct imports):
 

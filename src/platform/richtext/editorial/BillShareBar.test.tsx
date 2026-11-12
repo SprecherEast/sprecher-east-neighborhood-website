@@ -51,7 +51,7 @@ describe('the whole bill: the bar and the receipt (#1030, #1111)', () => {
       }
     }
     same()
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     same()
     await estimate('$900,000')
     same()
@@ -80,9 +80,9 @@ describe('the whole bill: the bar and the receipt (#1030, #1111)', () => {
     const { container } = render(<BillShare {...PROPS}>x</BillShare>)
     const cityPercent = () => receiptPercents(container)['City of Madison']
     const proposed = cityPercent()
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(cityPercent()).not.toBe(proposed)
-    fireEvent.click(screen.getByRole('button', { name: /2027 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2027' }))
     expect(cityPercent()).toBe(proposed)
   })
 })

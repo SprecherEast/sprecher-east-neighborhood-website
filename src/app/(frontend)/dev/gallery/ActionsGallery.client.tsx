@@ -2,11 +2,12 @@
 
 // A client component: `Button loading` adds a click guard, which a server component can't render
 import { ArrowRight, Download, Home, Plus } from 'lucide-react'
-import React from 'react'
+import React, { useState } from 'react'
 
 import { Button } from '@/platform/ui/Button'
 import { Link } from '@/platform/ui/Link'
 import { Section } from '@/platform/ui/Section'
+import { SegmentedControl } from '@/platform/ui/SegmentedControl'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 
@@ -115,6 +116,28 @@ export function ActionsGallery() {
           </Link>
         </GalleryVariant>
       </GalleryEntry>
+
+      <GalleryEntry
+        name="SegmentedControl"
+        description="A few short options joined into one 48 px control, one picked; the picked one is filled with the accent."
+      >
+        <GalleryVariant label="two options, and three" className="block space-y-4">
+          <SampleSegmented options={['2026', '2027']} />
+          <SampleSegmented options={['Day', 'Week', 'Month']} />
+        </GalleryVariant>
+      </GalleryEntry>
     </>
+  )
+}
+
+function SampleSegmented({ options }: { options: string[] }) {
+  const [selected, setSelected] = useState(options.length - 1)
+  return (
+    <SegmentedControl
+      label={`Sample: ${options.join(', ')}`}
+      options={options.map((label) => ({ key: label, label }))}
+      selected={selected}
+      onSelect={setSelected}
+    />
   )
 }

@@ -25,6 +25,13 @@ export const figuresFor = (increase: number): BillFigures => ({
   monthly: formatValue(Math.round((increase / 12) * 100) / 100, 'usd'),
 })
 
+/** The answer card's increase line, from the same figures as the placeholders (#1118) */
+export function increaseLine(increase: number): string {
+  if (increase === 0) return 'No increase'
+  const { yearly, monthly } = figuresFor(increase)
+  return `Up ${yearly} a year, about ${monthly} a month`
+}
+
 /** The text with its placeholders written out; without figures (or placeholders) it is as written */
 export function fillFigures(text: string, figures: BillFigures | undefined): string {
   if (!figures) return text

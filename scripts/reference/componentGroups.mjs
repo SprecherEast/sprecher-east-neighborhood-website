@@ -9,8 +9,8 @@ export const COMPONENT_GROUPS = [
     slug: 'actions',
     title: 'Actions',
     intro:
-      'Buttons and links. `Button` is the only thing that draws a button; `Link` only ever looks like text.',
-    components: ['Button', 'Link', 'AppLink', 'LinkButton'],
+      'Buttons and links. `Button` is the only thing that draws a button; `Link` only ever looks like text; `SegmentedControl` joins a few options into one picker.',
+    components: ['Button', 'Link', 'AppLink', 'LinkButton', 'SegmentedControl'],
   },
   {
     slug: 'form-fields',

@@ -53,6 +53,7 @@
   --color-primary-dark: var(--primary-dark);
   --color-primary-light: var(--primary-light);
   --color-accent-dark: var(--accent-dark);
+  --color-accent-strong: var(--accent-strong);
   --color-primary-fill: var(--primary-fill);
   --color-primary-fill-hover: var(--primary-fill-hover);
   --color-primary-strong: var(--primary-strong);

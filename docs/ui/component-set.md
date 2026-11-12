@@ -53,6 +53,8 @@ looks like a button, so it is one.
 `Button · secondary`. The high-impact hero and the CTA block ignore the field today and style their
 buttons by position (H2, H3, B14, B15).
 
+**`SegmentedControl`** (#1118) joins two or three short options into one small 36 px control with one border and divider lines, named by a label or a visible one; the picked option is filled with the accent and says so with `aria-pressed`, and each option is a `Button`. It draws what it is given and keeps no state. Its test covers the group, the joined look, the callback and axe; the gallery shows two and three options. `Field` places it beside its box with `aside` (a short label on the line of the field's label, the control on the box's row), and `Card` has an `xs` padding for the compact cards of the whole-bill tab.
+
 ## Form fields
 
 Components: [form fields](../reference/components/form-fields.md).
@@ -73,7 +75,7 @@ Components: [cards](../reference/components/cards.md), [display](../reference/co
 
 **`ShareBar`** (#1018, #1111) draws one whole as a flat bar of slices, each exactly as wide as its share, in the order given, in the tones of `shareTones.ts`: the City's highlighted slice in the theme's green and three grays, the lightest first (the receipt's small squares take the same table, so a bar and its receipt never differ). A slice at least 8 percent wide writes its label in it; a narrower slice leaves it to the text beside the bar. It is one SVG with a `label` for screen readers whose widths are percent attributes, never inline styles, so it needs no measuring and draws the same on the server; the caller writes the numbers beside it. Its test covers the widths, their order, the labels and axe; the gallery shows it.
 
-**`ShareBill`** (#1111) draws one whole as a bill: the total on top, one `ShareBar` made from the slices, and under it a receipt of three columns (the name with its color, the percent, the amount, the last two right-aligned on one line with fixed widths) that names every slice in the bar's own order, so no slice is told by its color alone and a block holding it never changes height when the amounts do. The total flashes the accent once each time `pulseKey` changes, unless motion is reduced. Its test covers the order, the receipt, the flash and axe; the gallery shows it wide and narrow. It replaces the pie (`SharePie`), which the whole-bill tab no longer draws.
+**`ShareBill`** (#1111, #1118) draws one whole as a bill like a receipt: its title on top with no amount, one `ShareBar` made from the slices, a receipt of three columns (the name with its color, the percent, the amount, the last two right-aligned on one line with fixed widths) that names every slice in the bar's own order, and the total as the last line (bold, under a stronger rule), so no slice is told by its color alone and a block holding it never changes height when the amounts do. The total flashes the accent once each time `pulseKey` changes, unless motion is reduced. Its test covers the order, the receipt, the flash and axe; the gallery shows it wide and narrow. It replaces the pie (`SharePie`), which the whole-bill tab no longer draws.
 
 **`AmountBar`** (#1020) draws one amount as a single bar split into parts, each exactly as wide as its share, with the title and whole amount above it and, when there is more than one part, a key with each part's dollars. A part marked `hatch` (an added amount, the proposed increase) is the same green, striped. Widths are attributes; the caller formats every amount. Its test covers the widths, the hatch, the key and axe; the gallery shows it.
 
@@ -185,7 +187,7 @@ Components: [rich text](../reference/components/rich-text.md) (`src/platform/ric
   that uses them (next point).
 - **Kept in the one place that uses them,** under the rule "add a component when a second screen
   needs it" (#163): the loading placeholder is a style inside `SiteHeader`. The FAQ accordion moved to the
-  shared `Disclosure` once `OnThisPage` needed the same `<details>` row (#610), which also has a bare `link` look for "See the smaller pieces" in a breakdown chart (#866) and a compact `row` look, the card with no vertical padding on the box, for the closed rows under a whole-bill tab (#1111). Its chevron turns only for its own box (a selector on the box's own summary, never `group-open:`, which fires for any open box around it, #967), so boxes nest, as on the Plan page.
+  shared `Disclosure` once `OnThisPage` needed the same `<details>` row (#610), which also has a bare `link` look for "See the smaller pieces" in a breakdown chart (#866) and a compact `row` look with no box of its own, for the closed rows under a whole-bill tab, which sit in one `Card` split by `divide-y` lines (#1111, #1118). Its chevron turns only for its own box (a selector on the box's own summary, never `group-open:`, which fires for any open box around it, #967), so boxes nest, as on the Plan page.
 - **Build order:** `Button` and `Link` (19 and 12 elements), then `Field` and `Form`, then `Card`,
   `Media`, `PageHeader` and `EmptyState`.
 
