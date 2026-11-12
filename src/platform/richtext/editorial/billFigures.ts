@@ -1,4 +1,4 @@
-import { computeBillShare, fillFromEarlier } from '@/platform/lib/billShare'
+import { computeBillShare, fillFromEarlier, type MillRates } from '@/platform/lib/billShare'
 import { formatValue, formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 
@@ -62,19 +62,23 @@ export function splitBillPanel(panel: FactTabPanelItem[]) {
 /**
  * The City's bar for a year and a home value, or null when the chart's columns are not these years
  * (it cannot say which year it shows). One place, so the panel and the tab's figures never differ.
+ * `position` may be between two years, with `rates` blended to match, while a switch of year counts
+ * (#1096); by default it is the year's own rates.
  */
 export function cityBarFor(
   cityBars: Stacked | undefined,
   years: BillShareYear[],
-  yearIndex: number,
+  position: number,
   home: number,
+  rates?: MillRates,
 ) {
+  const yearIndex = Math.round(position)
   const year = years[yearIndex]
   if (!cityBars || !year || cityBars.x.length !== years.length) return null
-  const { rates } = fillFromEarlier(year.rates, years[yearIndex - 1]?.rates)
+  const used = rates ?? fillFromEarlier(year.rates, years[yearIndex - 1]?.rates).rates
   const cityAmount =
-    computeBillShare(home, rates)?.parts.find((p) => p.key === 'city')?.amount ?? null
-  return toCityBar(cityBars, { column: yearIndex, cityAmount, homeRatio: home / year.averageHome })
+    computeBillShare(home, used)?.parts.find((p) => p.key === 'city')?.amount ?? null
+  return toCityBar(cityBars, { column: position, cityAmount, homeRatio: home / year.averageHome })
 }
 
 /** The figures for the City's average home in the last year: what the server writes before any typing */

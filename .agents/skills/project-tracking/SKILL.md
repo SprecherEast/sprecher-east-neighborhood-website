@@ -25,9 +25,9 @@ gh api repos/{owner}/{repo}/issues/<n>/parent -q '"#\(.number) \(.title)"'      
 gh api repos/{owner}/{repo}/issues/<n>/dependencies/blocked_by -q '.[] | "#\(.number) \(.state)"'
 ```
 
-The sprint and the size are board fields. On the owner's computer, read them from the board's
-items (§2 step 4 without `--query`, then find the issue by number in the JSON). Start only if the
-issue is **Ready**:
+The sprint is a board field. On the owner's computer, read it from the board's items (§2 step 4
+without `--query`, then find the issue by number in the JSON). The size is the issue's Effort
+field (§1a). Start only if the issue is **Ready**:
 
 - it has acceptance criteria, a milestone (an epic only for multi-part work;
   [the rule](../../../AGENTS.md#one-issue-one-pull-request)), type, area and priority labels,
@@ -37,8 +37,7 @@ issue is **Ready**:
 - it isn't labeled `needs owner`
 - no open PR already closes it (the list in §2 step 3)
 
-When the board can't be read (cloud sessions), skip the size check and say so in a comment on the
-issue. If the issue isn't Ready, groom it (§1a) or pick another one. Read its epic too, if it has one: it
+If the issue isn't Ready, groom it (§1a) or pick another one. Read its epic too, if it has one: it
 says what the issue is part of. More than one issue may be in progress only when their files
 don't overlap ([the rule](../../../docs/process/project-management.md#grooming-and-work-in-progress)),
 so every issue after the first needs the overlap check below to pass.
@@ -52,12 +51,31 @@ For each issue:
 1. Give it a plain summary, acceptance criteria, a milestone, and an epic only for multi-part work
    ([the rule](../../../AGENTS.md#one-issue-one-pull-request)), the type, area and `priority:` labels (§3), and its **Files likely touched** and
    **Must not touch** (`None` when nothing), which the overlap check in §4 reads.
-2. Set its **Size** as effort: S, M or L. If it is bigger than L, split it into sub-issues. In a
-   cloud session, which can't read the board, skip Size and say so on the issue.
+2. Set its size as the native **Effort** field: Low (S), Medium (M) or High (L). If it is bigger,
+   split it into sub-issues. Set the native **Priority** field to match the `priority:` label. Both
+   are fields on the issue, written with a repository call that works in cloud sessions too; the
+   IDs and option names are in `.github/issue-fields.json`:
+
+   ```bash
+   field=$(jq '.Effort.id' .github/issue-fields.json)
+   echo "{\"issue_field_values\":[{\"field_id\":$field,\"value\":\"Medium\"}]}" |
+     gh api -X POST repos/{owner}/{repo}/issues/<n>/issue-field-values \
+       -H 'X-GitHub-Api-Version: 2026-03-10' --input -
+   ```
+
+   `POST` adds or changes the fields it names and leaves the others. Read them back with a `GET`
+   on the same path.
+
 3. When it meets the Definition of Ready (the
    [Backlog to Ready criteria](../../../docs/process/grooming-playbook.md#board-moves-entry-and-exit-criteria)),
-   move it to **Ready**. On the owner's computer, move the
-   card as in §4. In a cloud session, comment on the issue that its card goes to Ready.
+   add the `ready` label. The planner app moves its card to **Ready**, from any session:
+
+   ```bash
+   gh api -X POST repos/{owner}/{repo}/issues/<n>/labels -f 'labels[]=ready'
+   ```
+
+   The app leaves the card in Backlog while the issue has `needs owner` or fails the issue check. To
+   park an issue, remove the label (`-X DELETE .../issues/<n>/labels/ready`).
 
 ## 2. "What's next?"
 

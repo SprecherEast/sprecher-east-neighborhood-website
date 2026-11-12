@@ -18,28 +18,43 @@ decide, claim or ask is a comment on the issue
 
 ## 1. Start of session
 
-1. **List the owner's open questions first.** Everything labeled `needs owner`, open, oldest first,
-   at most seven, one line each: number, plain title, how long it has waited. Pull requests count
-   too (the issues endpoint returns them).
+Three things, in this order, in one reply. Nothing here waits for the owner before the next step.
+
+1. **What keeps failing.** Count the checks that failed on pull requests over the last week,
+   by name:
 
    ```bash
-   gh api "repos/{owner}/{repo}/issues?labels=needs%20owner&state=open&sort=created&direction=asc&per_page=7" \
-     -q '.[] | "#\(.number)\(if .pull_request then " (PR)" else "" end) \(.title) (since \(.created_at[:10]))"'
+   since=$(date -u -d '7 days ago' +%F)
+   gh api "repos/{owner}/{repo}/actions/runs?status=failure&event=pull_request&per_page=100&created=>$since" \
+     -q '[.workflow_runs[].name] | group_by(.) | map({name: .[0], failed: length}) | sort_by(-.failed) | .[] | "\(.failed) \(.name)"'
    ```
 
-   Count them with the search API, since the list stops at seven:
+   It reads the latest hundred failures, enough to see a pattern, not an exact total. A check
+   that failed again and again is a wall the workers keep hitting: say so in one line with
+   its count, and file or find the issue that fixes its cause
+   ([watch list](../../../docs/process/watch-list.md)). Add anything else from the watch list that
+   repeated. Nothing repeated: say nothing.
+
+2. **The owner's open questions.** Everything labeled `needs owner`, open, oldest first, one line
+   each: number, plain title, how long it has waited. Pull requests count too (the issues endpoint
+   returns them); the owner-actions epic is the list itself, not a question, so epics are left out.
 
    ```bash
-   gh api "search/issues?q=repo:{owner}/{repo}+is:open+label:%22needs+owner%22&per_page=1" -q .total_count
+   gh api "repos/{owner}/{repo}/issues?labels=needs%20owner&state=open&sort=created&direction=asc&per_page=100" \
+     -q '.[] | select([.labels[].name] | index("epic") | not) | "#\(.number)\(if .pull_request then " (PR)" else "" end) \(.title) (since \(.created_at[:10]))"'
    ```
 
-   If there are more than seven, say how many wait and show the seven oldest. Stop there and let
-   the owner answer before anything else. Silence is never a yes.
+   Before showing it, [triage](../../../docs/process/project-management.md#waits-for-owner) it:
+   an item that was never his to decide loses the label with a `[DECISION]` comment. Show at most
+   seven, the oldest first, and say how many wait in all. Make sure the first one has a plain
+   question he can answer in a sentence, and ask that one. Silence is never a yes, and only the
+   work blocked by a question waits for it.
 
-2. **Then propose the next batch.** From the current milestone ([`project-tracking`](../project-tracking/SKILL.md) §2),
+3. **The next batch.** From the current milestone ([`project-tracking`](../project-tracking/SKILL.md) §2),
    keep Ready issues only (§1 there), highest priority first. Run the overlap check (§3) on the
    proposed set and drop what clashes. Offer the batch with one line each and why.
-3. Dispatch only after the owner agrees to the batch, or when he has already said to keep going.
+
+Dispatch only after the owner agrees to the batch, or when he has already said to keep going.
 
 ## 2. Groom
 
@@ -52,7 +67,9 @@ one priority); a milestone, and an epic only for multi-part work
 `Makefile`, or prose counts as undeclared, so write the folder or add the extension) or `None`; the role guides and knowledge
 notes a worker must load; and an open-questions line. Split anything bigger than L. Sizing,
 priority and sprint judgment stay with you; moves that must happen every time belong to the
-board's built-in workflows, not to you.
+board's built-in workflows and the planner app, not to you. You say an issue is Ready by adding
+the `ready` label, and set its size and priority as the Effort and Priority fields
+([`project-tracking`](../project-tracking/SKILL.md) §1a); the card follows.
 
 Check the layer first with the [decision tree](../../../docs/process/planning-model.md#which-layer),
 then the [Backlog to Ready criteria](../../../docs/process/grooming-playbook.md#board-moves-entry-and-exit-criteria).
@@ -119,9 +136,11 @@ Follow the [grooming playbook](../../../docs/process/grooming-playbook.md): the
 [sweep](../../../docs/process/grooming-playbook.md#the-sweep) and the
 [report format](../../../docs/process/grooming-playbook.md#report-format).
 
-1. **Default to a dry run.** Read, then post one report comment on the issue the owner names (ask
-   once if he named none). Change nothing else. Apply only what he approved in that run, and
-   comment each change ([modes](../../../docs/process/grooming-playbook.md#modes-dry-run-and-apply)).
+1. **Apply routine grooming; propose the rest.** What makes an issue correct and complete is
+   applied directly, with a comment on what changed. Closing, changing what an issue promises,
+   milestones and epics, and rules are proposed in a report and wait for the owner
+   ([modes](../../../docs/process/grooming-playbook.md#modes-apply-and-propose)). When he asks for
+   a report only, change nothing and post the report on the issue he names.
 2. **Read the plan from GitHub,** paging every list (100 items at most per call):
 
    ```bash
@@ -131,7 +150,7 @@ Follow the [grooming playbook](../../../docs/process/grooming-playbook.md): the
    gh api repos/{owner}/{repo}/issues/<epic>/sub_issues -q '.[] | "#\(.number) \(.state)"'
    ```
 
-3. **Apply, when approved,** with the REST calls the changes need: create or edit a milestone
+3. **Apply** with the REST calls the changes need, the proposed ones only once approved: create or edit a milestone
    (`-X POST` or `-X PATCH` on `milestones`, with `title` and `description`, and `due_on` only for
    a real date, including one the owner decides), set an issue's milestone (`-X PATCH issues/<n> -F milestone=<number>`), link a
    child ([`project-tracking`](../project-tracking/SKILL.md) §3 step 4). Comment before closing a
@@ -139,11 +158,12 @@ Follow the [grooming playbook](../../../docs/process/grooming-playbook.md): the
 4. **Retro-organization** of existing issues is the playbook's
    [procedure](../../../docs/process/grooming-playbook.md#retro-organization): a dry-run proposal of
    milestones, epics and groupings first, owner approval, then apply in the order it gives.
-5. **Sprints and native fields** (Priority, Effort, Size, iteration): read them from the board when
-   the session can reach it, and set a board field or move an iteration only from a session on the
-   owner's computer (`gh project item-edit`). Native issue fields are written with a `PUT`, which
-   this agent cannot send, so list each as a proposal ("set Priority to X on #N") for a session
-   that can. Sprint pulls and rollover follow the
-   [planning model](../../../docs/process/planning-model.md#sprint).
-6. You still never edit code, push or merge. Assigning an issue moves its card to In progress
-   (the planner app does it); where it has not, say which card moves where.
+5. **Native fields and sprints.** Priority and Effort are fields on the issue: read and write
+   them from any session ([`project-tracking`](../project-tracking/SKILL.md) §1a; the additive
+   `POST`, never the `PUT` that replaces every field). The sprint is the board's own field: read
+   it when the session can reach the board, and move an iteration only from a session on the
+   owner's computer (`gh project item-edit`); elsewhere, list the move as a proposal. Sprint pulls
+   and rollover follow the [planning model](../../../docs/process/planning-model.md#sprint).
+6. You still never edit code, push or merge. You never move a card: the `ready` label moves it
+   between Backlog and Ready, and assigning the issue moves it to In progress (the planner app
+   does both); where a card has not followed, say which card moves where.

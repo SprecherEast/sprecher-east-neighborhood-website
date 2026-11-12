@@ -11,24 +11,29 @@ items down, adds detail, order and size, until an item can be finished within on
 ready to be selected. Each column's criteria below are a Definition of Ready or Done for that move.
 
 The chief of staff never edits code, pushes or merges. It reads, writes issues and comments, and
-sets issue fields. It does not move cards itself: assigning an issue does, through the planner app, and where that
-did not happen it comments which card should move, as [how we work](project-management.md#the-board) says.
+sets issue fields and labels. It does not move cards itself: the `ready` label and assigning an
+issue do, through the planner app, and where that did not happen it comments which card should
+move, as [how we work](project-management.md#the-board) says.
 
-## Modes: dry run and apply
+## Modes: apply and propose
 
-Grooming is propose-first.
+Grooming makes an issue correct and complete without asking, and asks before it changes what the
+team has agreed to do.
 
-- **Dry run (the default).** Read everything, work out what should change, and post one report as
-  a comment. A dry run changes nothing: no label, field, parent, milestone, link, status, title,
-  body or state, and nothing is closed. The comment is the only write.
-- **Apply.** Make only the changes the owner approved in a report, item by item or by named
-  category, in that run. Approval from an earlier run does not carry over. Record each change as a
-  comment saying what changed and why, or one summary comment that lists them. Anything not
-  approved stays as it was. Afterwards run a dry run again to confirm the report is clean.
-- **Approval** comes from the owner in chat or on the issue, and the record on the issue is a
-  summary with where he said it, never his words
-  ([the record](project-management.md#the-record-on-the-issue)).
-- **Unsure which mode:** dry run.
+- **Applied directly.** What brings an issue in line with the rules already written: labels,
+  priority and size, an existing milestone, blocked-by links for dependencies named in prose, the
+  body's sections (not what it promises), the `ready` label. One comment per issue says why.
+- **Proposed, then applied once the owner agrees.** Closing anything or labeling it
+  `proposed-close` (duplicate bugs are the exception the
+  [operating model](agent-operating-model.md#4-how-an-issue-moves) allows); an issue's scope or
+  acceptance criteria; a parent; creating, renaming, splitting or re-scoping a milestone or an epic; a
+  sprint's goal; anything about a rule. The proposal is a numbered report. He approves by number
+  or category, in chat or on the issue, and only approved items are applied; approval from an
+  earlier run does not carry over. The record is a summary with where he said it, never his words.
+- **Report only.** When the owner asks for a report, or for the first pass of a
+  [retro-organization](#retro-organization): a dry run changes nothing, and the report comment is
+  the only write.
+- **Unsure whether a change is routine:** propose it.
 
 ## Board moves: entry and exit criteria
 
@@ -43,13 +48,16 @@ The Definition of Ready, spelled out:
 - The layer is right ([which layer](planning-model.md#which-layer)): small enough for one pull
   request and one sprint (INVEST: independent, estimable, small, testable), in a milestone, with an
   epic above it only for multi-part work ([the rule](../../AGENTS.md#one-issue-one-pull-request)).
-- Labels: one type, at least one area, one priority. A size on the board when it can be read.
+- Labels: one type, at least one area, one priority. A size, set as the Effort field.
 - Files likely touched and must not touch, filled in or `None`.
 - Known dependencies are blocked-by links, and nothing it is blocked by is still open.
 - It is not a duplicate of anything (the sweep checked) and carries no `needs owner` label.
 - It carries no `needs grooming` label: the [issue check](issue-and-pr-checks.md#the-issue-check)
   names each missing item, so fixing those clears it.
 - The role guides and knowledge notes a worker must load are named.
+
+When all of it holds, add the `ready` label: that is the move. The planner app sets the card to
+Ready, and refuses while the issue has `needs owner` or fails the issue check.
 
 ### Ready to In progress
 
@@ -86,8 +94,9 @@ Ready only through the Backlog to Ready criteria again.
 
 ### Park
 
-Parking is a deliberate "not now". Move the card to Backlog, take it out of the sprint, and
-comment the reason and the condition that would bring it back. A parked item whose condition will
+Parking is a deliberate "not now". Remove the `ready` label, which moves the card to Backlog,
+and comment the reason and the condition that would bring it back; taking it out of the sprint
+needs the board, so the report names it. A parked item whose condition will
 never come is obsolete: label it `proposed-close` for the owner, and never close an old idea
 yourself. Blocked work is not parked; it keeps its blocked-by link and stays where it is.
 
@@ -96,8 +105,8 @@ yourself. Blocked work is not parked; it keeps its blocked-by link and stays whe
 For each, the chief of staff checks and updates the following.
 
 - **On filing.** Layer (the decision tree), duplicates (below), the required labels, parent and
-  milestone, the issue body against the forms, and blockers. Fix what is missing in apply mode,
-  or list it in a dry run. Anything it cannot groom gets one question on the issue, not a list.
+  milestone, the issue body against the forms, and blockers. Fix what is missing, or list it in
+  a report-only run. Anything it cannot groom gets one question on the issue, not a list.
 - **On each status change.** The exit criteria of the column left and the entry criteria of the
   column entered. A move that skips them is reported; In progress also re-runs the overlap check.
 - **When work starts and when it finishes.** A progress comment appears on the issue as it
@@ -152,7 +161,7 @@ comment. Duplicate bugs may be closed as the
 
 ### Missing fields
 
-Any of: acceptance criteria, type, area, priority, size where readable, files declared, a milestone
+Any of: acceptance criteria, type, area, priority, size, files declared, a milestone
 ([the rule](../../AGENTS.md#one-issue-one-pull-request)), blocked-by
 links for dependencies named in prose.
 
@@ -170,9 +179,19 @@ fits one line, means a proposed split.
 
 - **Parent and milestone:** a child carries its epic's milestone; an epic's milestone matches an
   outcome it serves.
-- **Priority:** a blocker ranked below what it blocks; a child ranked far above its parent's need.
+- **Priority:** a blocker ranked below what it blocks; a child ranked far above its parent's need;
+  a `priority:` label and a Priority field that differ (the label wins, since the checks read it).
 - **Labels:** none that duplicate hierarchy; the `epic` marker only on parents.
 - **Dependencies:** blocked-by links instead of prose, and none that form a cycle.
+
+### Drift and repeated failures
+
+- **Drift:** work that left what was agreed: a pull request that changes files its issue did not
+  declare or delivers what its criteria do not ask for, an issue rewritten after work began, an
+  issue closed with criteria unmet. Report it on the issue; extra work becomes a new linked issue.
+- **Repeated failures:** the same check failing across pull requests, the same review finding or
+  blocker coming back. One line each with a count, and an issue for the cause
+  ([watch list](watch-list.md)).
 
 ### Milestone and epic progress
 
@@ -188,10 +207,12 @@ sub-issues. Progress numbers are read from GitHub, never recomputed from memory.
 One comment, short enough to read in a minute. Items are numbered so the owner can approve by number.
 
 ```markdown
-### [STEP] Grooming report (<dry run | apply>)
+### [STEP] Grooming report (<report only | applied>)
 
 **Scope:** <what was read: the sprint, an epic, the whole backlog>
 **Summary:** <counts per finding type>
+
+**Applied** (routine, already done): <issue> <finding type>: <what changed>, one line each
 
 **Proposed changes** (numbered; approve by number or category)
 
@@ -202,8 +223,7 @@ One comment, short enough to read in a minute. Items are numbered so the owner c
 **Could not check:** <anything unreadable, such as the board from a cloud session>
 ```
 
-In apply mode the same shape lists what was changed, with the approval it rests on, and ends with
-the result of a fresh dry run.
+A second comment lists the approved items once applied, with the approval they rest on.
 
 ## Retro-organization
 

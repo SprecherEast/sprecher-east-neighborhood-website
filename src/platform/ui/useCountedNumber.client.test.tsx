@@ -143,3 +143,29 @@ describe("the count and the total's flash", () => {
     expect(css).toContain(`animation: total-pulse ${COUNT_MS / 1000}s ease-out`)
   })
 })
+
+describe("the total's flash sits behind its text (#1095)", () => {
+  const css = readFileSync('src/platform/theme/tailwind.css', 'utf8')
+  const utility = css.slice(css.indexOf('@utility total-pulse'))
+  const keyframes = css.slice(
+    css.indexOf('@keyframes total-pulse'),
+    css.indexOf('@utility total-pulse'),
+  )
+
+  it('is a layer of its own, drawn below the row and its text', () => {
+    expect(utility).toContain('isolation: isolate')
+    expect(utility).toContain('&::before')
+    expect(utility).toContain('z-index: -1')
+    expect(utility).toContain('pointer-events: none')
+  })
+
+  it('moves the animation to that layer, so the row itself is never painted', () => {
+    const layer = utility.slice(utility.indexOf('&::before'))
+    expect(layer).toContain('animation: total-pulse')
+  })
+
+  it('starts soft enough to keep the text readable', () => {
+    const peak = Number(/var\(--accent\) (\d+)%/.exec(keyframes)?.[1])
+    expect(peak).toBeLessThanOrEqual(30)
+  })
+})
