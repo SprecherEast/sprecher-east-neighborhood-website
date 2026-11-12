@@ -48,7 +48,8 @@ export function issueProgress(issues: PlanIssue[], now: Date): IssueProgress {
   }
 }
 
-const siteDate = (date: Date) =>
+/** A date as `yyyy-mm-dd` on the site's calendar, whatever the server's clock zone */
+export const siteDate = (date: Date) =>
   new Intl.DateTimeFormat('en-CA', { timeZone: SITE_TIMEZONE }).format(date)
 
 /**
