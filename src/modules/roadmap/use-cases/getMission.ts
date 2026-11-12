@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { planActivity } from '../domain/activity'
-import { parseMissionNumber } from '../domain/paths'
+import { parseIssueNumber } from '../domain/paths'
 import { findMission } from '../domain/plan'
 import { getPlan } from './getPlan'
 
@@ -22,7 +22,7 @@ export async function getMission(number: number) {
 
 /** The same, from the address segment: a malformed one answers like an unknown number */
 export async function getMissionFromAddress(value: string) {
-  const number = parseMissionNumber(value)
+  const number = parseIssueNumber(value)
   return number === undefined ? undefined : getMission(number)
 }
 
