@@ -124,13 +124,23 @@ test.describe('fact tabs stay tidy', () => {
             minHeight: Math.min(...tabs.map((t) => box(t).height)),
             tabGap: Math.round(box(tabs[1]).left - box(tabs[0]).right),
             panelGap: Math.round(box(active).top - box(tabs[0]).bottom),
-            // The label's own lines: a range over the label has one line top
+            // The label's own lines (one line top) and its room: its left and right edges against
+            // the button's, so a label spilling sideways is seen
             lines: tabs.map((t) => {
               const label = t.querySelector('[data-fact-part="label"]')
               if (!label) throw new Error('A tab has no label')
               const range = document.createRange()
               range.selectNodeContents(label)
               return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size
+            }),
+            room: tabs.map((t) => {
+              const label = t.querySelector('[data-fact-part="label"]')
+              if (!label) throw new Error('A tab has no label')
+              const range = document.createRange()
+              range.selectNodeContents(label)
+              const text = range.getBoundingClientRect()
+              const button = box(t)
+              return Math.min(text.left - button.left, button.right - text.right)
             }),
             icons: list.querySelectorAll('svg').length,
           }
@@ -145,6 +155,10 @@ test.describe('fact tabs stay tidy', () => {
       // The space under the tabs is the space between them, not a wider, unexplained one
       expect(measured.panelGap, 'tabs to panel equals tab to tab').toBe(measured.tabGap)
       expect(measured.lines, 'every label sits on one line').toEqual(measured.lines.map(() => 1))
+      // Visible room on each side of the longest labels a post holds, inside the border
+      for (const room of measured.room) {
+        expect(room, 'a label keeps room inside its button').toBeGreaterThanOrEqual(3)
+      }
       expect(measured.icons, 'no icon on a tab').toBe(0)
     })
   }

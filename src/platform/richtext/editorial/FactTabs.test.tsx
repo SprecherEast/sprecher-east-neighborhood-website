@@ -47,7 +47,7 @@ describe('FactTabs', () => {
     expect(screen.getByRole('tab', { name: /^Your share.*\+\$90.*Confirmed/ })).toBeTruthy()
   })
 
-  it('shows the figure in the open panel beside the heading and how sure we are, so nothing is lost (#1112)', () => {
+  it('shows the figure in the open panel with the heading and how sure we are, so nothing is lost (#1112)', () => {
     const { container } = setup()
     const panels = [...container.querySelectorAll('[role="tabpanel"]')]
     expect(panels[0]?.querySelector('[data-panel-figure]')?.textContent).toBe('$477.5M')

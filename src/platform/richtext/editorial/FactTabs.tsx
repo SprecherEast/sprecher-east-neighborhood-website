@@ -95,7 +95,7 @@ function FactTabPanel({
         <Text variant="subsection" as="h3" className="hidden scripted:block">
           <FilledText tab={tabId} text={heading} />
         </Text>
-        {/* The tab's figure and how sure we are, once, beside the heading: the button shows only its
+        {/* The tab's figure and how sure we are, once, with the heading (below it on a narrow phone): the button shows only its
             label and leaves both to screen readers (#980, #1112). A whole tax bill shows them in its
             answer card instead (#1111) */}
         {!bill && (

@@ -35,14 +35,23 @@ export type TabsProps = {
 }
 
 /*
+ * The space between the tab buttons and the panel: one definition for both, small on a phone to leave the labels room.
+ */
+const TAB_GAP = 'gap-1 sm:gap-2'
+
+/*
  * How a tab looks (#1112): a plain, separate button, the same width and height as the others, with
  * its label centred on one line (the editor's label limit keeps it short enough, so nothing wraps
  * or clips). The quiet tabs have a thin border and a muted label; the selected one has the primary
  * border, a soft primary fill and a bolder label, so it is told apart by more than colour. Every
- * tab carries the one string: the selected state is a `data-[state=active]` variant of it.
+ * tab carries the one string: the selected state is a `data-[state=active]` variant of it. On a
+ * phone the gap, side padding, type size and letter spacing are as small as the theme allows, so a
+ * label of the editor's limit (bold when selected) keeps visible room at the narrowest width, 320 px;
+ * the sizes step up at 390 px and from `sm`.
  */
+
 const TAB_LOOK = [
-  'flex min-h-12 min-w-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card px-0.5 text-center text-xs font-medium whitespace-nowrap text-muted-foreground transition-colors duration-200 hover:bg-surface hover:text-foreground sm:px-2 sm:text-sm',
+  'flex min-h-12 min-w-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card px-0 text-center text-fine font-medium tracking-tighter whitespace-nowrap text-muted-foreground transition-colors duration-200 hover:bg-surface hover:text-foreground min-[390px]:text-xs min-[390px]:tracking-tight sm:px-2 sm:text-sm sm:tracking-normal',
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
   'data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:hover:bg-primary/10',
 ].join(' ')
@@ -114,11 +123,11 @@ export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }
       data-tab-names={names}
       onValueChange={choose}
       data-changed={changed || undefined}
-      className={cn(HEADER_SCROLL_MARGIN, 'group/tabs flex flex-col gap-2', className)}
+      className={cn(HEADER_SCROLL_MARGIN, 'group/tabs flex flex-col', TAB_GAP, className)}
     >
       <RadixTabs.List
         aria-label={label}
-        className="hidden auto-cols-[minmax(0,1fr)] grid-flow-col gap-2 scripted:grid"
+        className={cn('hidden auto-cols-[minmax(0,1fr)] grid-flow-col scripted:grid', TAB_GAP)}
       >
         {items.map(({ value, trigger }) => (
           <RadixTabs.Trigger key={value} value={value} className={TAB_LOOK}>

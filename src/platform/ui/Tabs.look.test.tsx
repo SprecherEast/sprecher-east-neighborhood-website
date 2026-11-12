@@ -18,7 +18,7 @@ describe('plain, equal tab buttons in one row (#1112)', () => {
       const list = screen.getByRole('tablist')
       expect(list.className).toContain('grid-flow-col')
       expect(list.className).toContain('auto-cols-[minmax(0,1fr)]')
-      expect(list.className).toContain('gap-2')
+      expect(list.className).toContain('gap-1 sm:gap-2')
       expect(screen.getAllByRole('tab')).toHaveLength(count)
       unmount()
     }
@@ -40,6 +40,23 @@ describe('plain, equal tab buttons in one row (#1112)', () => {
     setup()
     const [first, ...others] = screen.getAllByRole('tab')
     for (const tab of others) expect(tab.className).toBe(first?.className)
+  })
+
+  it('gives a label of the limit’s length room at 320 px: smallest type, tight spacing and padding, stepping up at 390 px and from sm (#1112)', () => {
+    setup()
+    const [tab] = screen.getAllByRole('tab')
+    for (const phone of ['px-0', 'text-fine', 'tracking-tighter']) {
+      expect(tab?.className.split(' ')).toContain(phone)
+    }
+    for (const larger of [
+      'min-[390px]:text-xs',
+      'min-[390px]:tracking-tight',
+      'sm:px-2',
+      'sm:text-sm',
+      'sm:tracking-normal',
+    ]) {
+      expect(tab?.className.split(' ')).toContain(larger)
+    }
   })
 
   it('is a separate rounded button with a thin border, never joined to the panel', () => {
@@ -81,7 +98,7 @@ describe('plain, equal tab buttons in one row (#1112)', () => {
   it('keeps the panel in its own border, with no outline shared with the tab', () => {
     const { container } = setup()
     const root = container.firstElementChild as HTMLElement
-    expect(root.className).toContain('gap-2')
+    expect(root.className).toContain('gap-1 sm:gap-2')
     expect(root.className).not.toContain('--tabs-')
     for (const panel of container.querySelectorAll('[role="tabpanel"]')) {
       expect(panel.className).toContain('bg-card')
