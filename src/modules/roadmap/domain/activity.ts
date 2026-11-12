@@ -102,8 +102,8 @@ const latest = (times: string[]) =>
   times.reduce<string | null>((a, t) => (a === null || Date.parse(t) > Date.parse(a) ? t : a), null)
 
 /**
- * Each mission's activity, ordered by its latest activity (most recent first; missions with
- * nothing come last, then by milestone number so ties stay put). Latest activity is the later of
+ * Each mission's activity, ordered by its latest activity (most recent first; missions whose
+ * issues carry no date come last, then by milestone number so ties stay put). Latest activity is the later of
  * an issue's close and its last change on GitHub, so an edit or a comment counts; the series
  * counts finished issues only. The first mission is the one the page features.
  */

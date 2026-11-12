@@ -188,7 +188,7 @@ describe('planActivity', () => {
     expect(result.missions.map((m) => m.milestoneNumber)).toEqual([7, 8])
   })
 
-  it('puts missions with no finished work last, in milestone order, and keeps ties stable', () => {
+  it('puts missions with no dated issue last, in milestone order, and keeps ties stable', () => {
     const same = daysAgo(2)
     const result = planActivity(
       [
