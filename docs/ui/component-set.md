@@ -81,6 +81,8 @@ Components: [cards](../reference/components/cards.md), [display](../reference/co
 
 **`ProgressBar`** (#939) shows how far along something is, as a native `<progress>` that screen readers read as a named bar (`label`), in two sizes (`sm`, `md`). The fill's width comes from the element's own value, not an inline style, and a `max` of 0 shows an empty bar. The caller always writes the numbers next to it ("3 of 8 done"), so the bar is never the only signal. Its test covers the clamping and axe; the gallery shows it.
 
+**`Sparkline`** (#1128) draws how much happened over time as a thin line with a baseline, on a scale from 0 to a `max` that tiles read side by side share, so one height always means one number. It has a text `label` listing every value for screen readers, and the caller always writes the numbers beside it. All zeros or a `max` of 0 shows the flat baseline; one value is a dot; a value above `max` stays inside the picture. Theme tokens only, no client JavaScript. Its test covers the shape, the shared scale and axe; the gallery shows it.
+
 **`MapEmbed`** (#764, #884) is a small map picture over its text, filling the width it is given: the page's Section decides how wide it is and where it sits. It opens
 a live Google map in a `Dialog`
 when a neighbor taps the picture or the "View the larger map" button. The frame is created only

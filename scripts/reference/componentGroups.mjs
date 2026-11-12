@@ -121,6 +121,7 @@ export const COMPONENT_GROUPS = [
       'BarSegment',
       'ScaledBreakdown',
       'ChartCaption',
+      'Sparkline',
     ],
   },
   {
