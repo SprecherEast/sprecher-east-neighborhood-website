@@ -6,22 +6,24 @@ import { Text } from '@/platform/ui/Text'
 
 import type { PlanStats } from '../domain/stats'
 
-const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
-
-/** The numbers at the top of the plan: what's open, what's done, and what we finished lately */
+/** The three numbers at the top of the plan: what we finished this week, what is done in all, and what is still open */
 export function PlanSummary({ stats, generatedAt }: { stats: PlanStats; generatedAt: string }) {
   const tiles = [
-    { name: 'Open', value: stats.open },
-    { name: 'Done', value: stats.done },
-    { name: 'Done this week', value: stats.doneThisWeek },
-    { name: 'Done this month', value: stats.doneThisMonth },
+    { name: 'Finished this week', value: stats.doneThisWeek },
+    { name: 'Done in all', value: stats.done },
+    { name: 'Still open', value: stats.open },
   ]
 
   return (
     <div className="space-y-3">
-      <dl className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <dl className="grid grid-cols-3 gap-3 sm:gap-4">
         {tiles.map(({ name, value }) => (
-          <Card key={name} variant="muted" padding="sm" className="flex flex-col-reverse gap-1">
+          <Card
+            key={name}
+            variant="muted"
+            padding="sm"
+            className="flex flex-col-reverse justify-end gap-1"
+          >
             <dt>
               <Text variant="label" as="span">
                 {name}
@@ -32,8 +34,7 @@ export function PlanSummary({ stats, generatedAt }: { stats: PlanStats; generate
         ))}
       </dl>
       <Text variant="small">
-        {count(stats.milestones, 'milestone', 'milestones')} · {count(stats.epics, 'epic', 'epics')}
-        , {stats.epicsDone} done. Updated {formatDateTime(generatedAt)}.
+        Straight from our working plan. Updated {formatDateTime(generatedAt)}.
       </Text>
     </div>
   )

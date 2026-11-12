@@ -22,32 +22,20 @@ const stats: PlanStats = {
 const generatedAt = '2026-11-09T18:00:00Z'
 
 describe('PlanSummary', () => {
-  it('shows each number with its name', () => {
+  it('shows the three numbers with their names', () => {
     render(<PlanSummary stats={stats} generatedAt={generatedAt} />)
     const value = (name: string) =>
       within(screen.getByText(name).closest('dt')?.parentElement as HTMLElement).getByText(/^\d+$/)
         .textContent
-
-    expect(value('Open')).toBe('12')
-    expect(value('Done')).toBe('30')
-    expect(value('Done this week')).toBe('5')
-    expect(value('Done this month')).toBe('14')
+    expect(value('Finished this week')).toBe('5')
+    expect(value('Done in all')).toBe('30')
+    expect(value('Still open')).toBe('12')
   })
 
-  it('says how much of the plan there is and when it was last read', () => {
-    render(<PlanSummary stats={stats} generatedAt={generatedAt} />)
-    expect(screen.getByText(/4 milestones · 9 epics, 2 done/)).toBeTruthy()
-    expect(screen.getByText(/Updated/)).toBeTruthy()
-  })
-
-  it('uses singular words for one', () => {
-    render(
-      <PlanSummary
-        stats={{ ...stats, milestones: 1, epics: 1, epicsDone: 0 }}
-        generatedAt={generatedAt}
-      />,
-    )
-    expect(screen.getByText(/1 milestone · 1 epic, 0 done/)).toBeTruthy()
+  it('says where the numbers come from and when they were last read, without insider words', () => {
+    const { container } = render(<PlanSummary stats={stats} generatedAt={generatedAt} />)
+    expect(screen.getByText(/Straight from our working plan\. Updated/)).toBeTruthy()
+    expect(container.textContent).not.toMatch(/milestone|epic/i)
   })
 
   it('is accessible', async () => {

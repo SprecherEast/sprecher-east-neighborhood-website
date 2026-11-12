@@ -8,16 +8,8 @@ import { Text } from '@/platform/ui/Text'
 import type { MissionActivity, PlanActivity } from '../domain/activity'
 import { issueProgress } from '../domain/stats'
 import type { PlanMilestone } from '../domain/types'
+import { activityLabel, recentWords } from './activityWords'
 import { EpicBox } from './EpicBox'
-
-const STEP_WORD = { weeks: 'week', months: 'month', years: 'year' } as const
-
-/** What the newest bucket says in words, so the picture is never the only signal */
-function recentWords(series: number[], done: number, step: PlanActivity['stepLabel']) {
-  if (done === 0) return 'Nothing finished yet'
-  const latest = series.at(-1) ?? 0
-  return latest > 0 ? `${latest} finished this ${STEP_WORD[step]}` : `Quiet this ${STEP_WORD[step]}`
-}
 
 /**
  * One mission: how much is done, the activity over time on the plan's shared scale, then its
@@ -36,7 +28,6 @@ export function MissionPage({
     mission.epics.flatMap((epic) => epic.children),
     now,
   )
-  const unit = STEP_WORD[activity.stepLabel]
 
   return (
     <div className="space-y-8">
@@ -54,7 +45,7 @@ export function MissionPage({
           values={activity.series}
           max={activity.max}
           className="h-10"
-          label={`Finished each ${unit}, oldest first: ${activity.series.join(', ')}`}
+          label={activityLabel(activity.series, activity.stepLabel)}
         />
         <Text variant="small">
           Last {activity.series.length} {activity.stepLabel}: {activity.series.join(', ')} ·{' '}
@@ -64,8 +55,8 @@ export function MissionPage({
 
       <section className="space-y-4">
         <Text variant="subsection">Projects in this mission</Text>
-        {mission.epics.map((epic) => (
-          <EpicBox key={epic.number} epic={epic} now={now} />
+        {mission.epics.map((epic, index) => (
+          <EpicBox key={epic.number} epic={epic} now={now} defaultOpen={index === 0} />
         ))}
       </section>
     </div>

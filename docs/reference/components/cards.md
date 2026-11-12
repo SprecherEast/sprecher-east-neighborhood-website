@@ -75,7 +75,7 @@ Source: `src/platform/ui/Card.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `directory`, `events`, `news`
+- Modules: `directory`, `events`, `news`, `roadmap`
 - Routes: `/dev/gallery`
 - Platform: `platform/richtext`
 
