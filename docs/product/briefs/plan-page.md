@@ -1,6 +1,6 @@
 # Plan page
 
-Status: decided by the owner; the visual design is the next step
+Status: agreed (2026-11-12)
 
 - **Purpose:** show neighbors, in the open, what the volunteers are working on and how far along each part is.
 - **Audience:** a neighbor who is curious, who wants to know if something they care about is moving, or who is thinking about helping. They arrive from a post or the home page, usually on a phone, and skim. The owner reads it too, as a view of where to push next.
@@ -12,7 +12,7 @@ Status: decided by the owner; the visual design is the next step
 
 - **Title:** "What we’re building", chosen by the owner (2026-11-11, voice session).
 - **Next step:** stays as above (the owner, 2026-11-12, voice session).
-- **Names:** the larger groups are "Missions" and the pieces under them are "Projects". They replace the insider words on the page. The owner wanted names with more edge than a classroom would use, and judged other options too vague (2026-11-12, voice session).
+- **Names:** the larger groups are "Missions" and the pieces under them are "Projects". They replace the insider words on the page. The owner chose them for being short and clear to a neighbor, after setting aside plainer and vaguer options (2026-11-12, voice session).
 - **Featured mission:** the one with the most recent work is shown large, with a short line of how much is done; the others are smaller. "Most active" means recent work, not most done overall, so the page changes as work moves.
 - **Pictures for the numbers:** each mission shows its progress as a picture (a ring or a bar), not only as a count.
 - **Everything links:** each chart piece is a link that opens that mission with its projects expanded, so a reader lands where the work is and can read what happened. Recent activity (closed, in review, new comments) is visible, which also tells the owner where to push.

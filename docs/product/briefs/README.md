@@ -22,4 +22,4 @@ Status: draft for the owner | agreed (date)
 
 ## Briefs
 
-- [Plan page](plan-page.md): draft.
+- [Plan page](plan-page.md): agreed (2026-11-12).
