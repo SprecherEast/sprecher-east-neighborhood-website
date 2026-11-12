@@ -105,12 +105,17 @@ describe('BillShare, the order of the tab and its three closed rows (#1111)', ()
     expect(screen.queryByText('City tax on an average home')).toBeNull()
   })
 
-  it('puts the whole bill in its own card, titled on the left with the total on the right (#1118)', () => {
+  it('puts the whole bill in its own card, titled on top with no amount, the total as its last row (#1118)', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     const card = screen.getByRole('region', { name: 'Your whole property tax bill' })
     expect(card.className).toContain('border')
     const title = screen.getByText('Your whole bill')
-    expect(title.closest('p')?.textContent).toMatch(/^Your whole bill\$/)
+    expect(title.textContent).toBe('Your whole bill')
+    const total = screen.getByText('Total property tax').closest('p') as HTMLElement
+    expect(total.textContent).toMatch(/^Total property tax\$\d/)
+    expect(total.className).toContain('font-bold')
+    // The last line of the card
+    expect(card.querySelector('[data-share-bill]')?.lastElementChild).toBe(total)
   })
 
   it('has no accessibility violations with every row open', async () => {

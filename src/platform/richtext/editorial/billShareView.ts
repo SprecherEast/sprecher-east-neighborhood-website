@@ -61,7 +61,7 @@ export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt
     slices,
     total:
       whole && bill.total !== null
-        ? { label: 'Your whole bill', amount: formatWholeDollars(bill.total) }
+        ? { label: 'Total property tax', amount: formatWholeDollars(bill.total) }
         : null,
     label:
       slices.length > 0

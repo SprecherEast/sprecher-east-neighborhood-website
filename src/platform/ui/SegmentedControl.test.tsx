@@ -28,14 +28,24 @@ describe('SegmentedControl', () => {
     expect(screen.getByRole('button', { name: '2026' }).getAttribute('aria-pressed')).toBe('false')
   })
 
-  it('is one joined box, 48 px tall, with the picked option filled with the accent', () => {
+  it('is one small joined box, 36 px tall, with the picked option filled with the accent', () => {
     render(<SegmentedControl label="Years" options={OPTIONS} selected={0} onSelect={() => {}} />)
     const group = screen.getByRole('group')
-    expect(group.className).toContain('h-12')
+    expect(group.className).toContain('h-9')
     expect(group.className).toContain('border')
     expect(group.className).toContain('overflow-hidden')
     expect(screen.getByRole('button', { name: '2026' }).className).toContain('bg-accent')
     expect(screen.getByRole('button', { name: '2027' }).className).not.toContain('bg-accent')
+  })
+
+  it('can be named by a visible label instead of an aria-label', () => {
+    render(
+      <>
+        <span id="years">Tax rates</span>
+        <SegmentedControl labelledBy="years" options={OPTIONS} selected={0} onSelect={() => {}} />
+      </>,
+    )
+    expect(screen.getByRole('group', { name: 'Tax rates' })).toBeTruthy()
   })
 
   it('reports the index of the option picked', () => {

@@ -32,7 +32,7 @@ export const billPost = (authorId: number): RequiredDataFromCollectionSlug<'post
         {
           ...FACT_TABS_FIXTURE.tabs[0],
           value: '+{yearly} a year',
-          heading: 'Your share: {monthly} a month',
+          heading: 'What does this mean for your property taxes?',
           panel: [
             {
               blockType: 'billShare',

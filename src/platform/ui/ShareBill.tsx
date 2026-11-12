@@ -2,6 +2,7 @@ import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
+import { Text } from './Text'
 import { ShareBar } from './ShareBar'
 import { SHARE_TONES, type ShareTone } from './shareTones'
 
@@ -18,7 +19,7 @@ export type ShareSlice = {
 }
 
 /**
- * One whole as a bill (#1111): the total on top, one bar whose slices are as wide as their shares,
+ * One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, one bar whose slices are as wide as their shares,
  * and under it a receipt that names every slice with its color, percent and dollars, in the bar's
  * own order, since both are made from the same slices. The receipt is one grid of three columns
  * with fixed widths for the percent and the amount, so each column lines up from row to row and
@@ -29,13 +30,16 @@ export type ShareSlice = {
 export function ShareBill({
   slices,
   label,
+  title,
   total,
   pulseKey,
   className,
 }: {
   slices: readonly ShareSlice[]
   label: string
-  /** What the amounts add up to */
+  /** The bill's name, at the top with no amount beside it */
+  title?: string
+  /** What the amounts add up to: the last line, as on a receipt */
   total?: { label: string; amount: string }
   /** Changes each time the total should flash once */
   pulseKey?: number
@@ -43,17 +47,10 @@ export function ShareBill({
 }) {
   return (
     <div data-share-bill className={cn('space-y-2', className)}>
-      {total && (
-        <p
-          key={pulseKey}
-          className={cn(
-            'flex min-h-6 items-center justify-between gap-x-2 font-semibold text-foreground',
-            pulseKey ? 'total-pulse' : undefined,
-          )}
-        >
-          <span>{total.label}</span>
-          <span className="tabular-nums">{total.amount}</span>
-        </p>
+      {title && (
+        <Text variant="subsection" as="p">
+          {title}
+        </Text>
       )}
       <ShareBar
         label={label}
@@ -64,7 +61,7 @@ export function ShareBill({
           label: `${slice.percent}%`,
         }))}
       />
-      <ul className="grid grid-cols-[1fr_2rem_4rem] gap-x-1.5 text-sm">
+      <ul className="grid grid-cols-[1fr_2rem_3.5rem] gap-x-1 text-sm">
         {slices.map((slice) => (
           <li
             key={slice.key}
@@ -86,6 +83,18 @@ export function ShareBill({
           </li>
         ))}
       </ul>
+      {total && (
+        <p
+          key={pulseKey}
+          className={cn(
+            'flex min-h-6 items-center justify-between gap-x-2 border-t-2 border-foreground pt-1 font-bold text-foreground',
+            pulseKey ? 'total-pulse' : undefined,
+          )}
+        >
+          <span>{total.label}</span>
+          <span className="tabular-nums">{total.amount}</span>
+        </p>
+      )}
     </div>
   )
 }

@@ -48,7 +48,7 @@ describe('BillShare', () => {
     expect(screen.getByText(/^Average home: \$481,300\./)).toBeTruthy()
     await estimate('962600')
     expect(screen.getByText(/^Your home: \$962,600\./)).toBeTruthy()
-    expect(bill().textContent).toMatch(/Your whole bill\$17,9\d\d/)
+    expect(bill().textContent).toMatch(/Total property tax\$17,9\d\d/)
     expect(screen.getByRole('status').textContent).toMatch(/about \$17,9\d\d/)
   })
 
@@ -131,7 +131,7 @@ describe('BillShare', () => {
         rect.getAttribute('data-share-slice'),
       ),
     ).toEqual(['city', 'schools', 'county', 'matc'])
-    expect(bill().firstElementChild?.textContent).toMatch(/^Your whole bill\$8,9\d\d$/)
+    expect(bill().lastElementChild?.textContent).toMatch(/^Total property tax\$8,9\d\d$/)
     // The sentence is said once, to screen readers only
     const said = screen.queryAllByText(/your whole bill is about/)
     expect(said.every((node) => node.closest('[role="status"]'))).toBe(true)
@@ -158,7 +158,7 @@ describe('BillShare, Estimate never scrolls the page (#1068)', () => {
 })
 
 describe('BillShare, the total after Estimate (#1051)', () => {
-  const total = () => screen.getByText('Your whole bill').closest('p') as HTMLElement
+  const total = () => screen.getByText('Total property tax').closest('p') as HTMLElement
 
   it('flashes the total once a new bill has been estimated, and not on load', async () => {
     render(<BillShare {...PROPS}>x</BillShare>)
@@ -184,7 +184,7 @@ describe('BillShare, a switch of year counts the amounts in half a second (#1087
       frames = []
       pending.forEach((frame) => frame(now))
     })
-  const totalText = () => screen.getByText('Your whole bill').closest('p')?.textContent ?? ''
+  const totalText = () => screen.getByText('Total property tax').closest('p')?.textContent ?? ''
 
   beforeEach(() => {
     frames = []
@@ -251,7 +251,7 @@ describe('BillShare, a switch of year counts the amounts in half a second (#1087
 
   it('flashes the total once, when the year’s count has ended', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
-    const total = () => screen.getByText('Your whole bill').closest('p') as HTMLElement
+    const total = () => screen.getByText('Total property tax').closest('p') as HTMLElement
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
     step(0)
     step(200)

@@ -32,7 +32,8 @@ export const FACT_TABS_LIMITS = {
   maxTabs: 4,
   /** A tab button's label: one centred line at phone width, four to a row (#1112) */
   label: 12,
-  heading: 40,
+  /** A tab's heading: long enough for a question such as "What does this mean for your property taxes?" */
+  heading: 48,
   definition: 240,
   minPanelBlocks: 1,
   maxPanelBlocks: 3,

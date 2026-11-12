@@ -47,6 +47,10 @@ export const fieldVariants = cva('flex min-w-0', {
  * invalid, and one focus ring when the control has keyboard focus. The control's own border,
  * background and ring are switched off, since the box draws them.
  */
+/** The look of a bar field's label, for an aside's label on the same line as it */
+export const BAR_LABEL =
+  'text-sm leading-6 font-medium whitespace-nowrap text-foreground @[20rem]:text-base'
+
 const insideBoxClasses = cn(
   'flex h-12 items-center gap-1 rounded-lg border border-input bg-background p-1.5 transition-colors duration-200',
   // The accent excludes an invalid control, so the error color wins whatever the stylesheet's order
@@ -79,9 +83,10 @@ export type FieldProps = Omit<VariantProps<typeof fieldVariants>, 'layout'> & {
    */
   actionPlacement?: 'beside' | 'inside'
   /**
-   * Something that sits on the box's row, outside it, at its end in the `bar` layout, as tall as
-   * the box (#1118): the picker of a few options that goes with the value, such as a tax year.
-   * The label stays above both. In a field narrower than 16 rem the aside stacks under the box.
+   * Something beside the box, outside it, at its end in the `bar` layout with the action inside
+   * (#1118): the picker of a few options that goes with the value, such as a tax year. Give it two
+   * children, a short label and the control: the label sits on the line of the field's own label,
+   * the control on the box's row. The field's own label may run on under the aside's label, which is right-aligned. In a field narrower than 16 rem the aside stacks under the box.
    */
   aside?: ReactNode
   /** Exactly one control */
@@ -121,7 +126,7 @@ export function Field({
       htmlFor={controlId}
       className={cn(
         'text-sm font-medium text-foreground',
-        resolvedLayout === 'bar' && 'text-sm @[16rem]:text-base',
+        resolvedLayout === 'bar' && BAR_LABEL,
         hideLabel && 'sr-only',
       )}
     >
@@ -163,26 +168,38 @@ export function Field({
           </>
         ) : resolvedLayout === 'bar' ? (
           <>
-            {labelElement}
-            {hintElement}
             {actionPlacement === 'inside' ? (
-              <div className="flex flex-col gap-2 @[16rem]:flex-row @[16rem]:items-center">
+              // The label, the box and, beside the box, the aside with a label of its own on the same
+              // line as this one: two rows of one grid; narrower than 16 rem they stack
+              <div className="grid grid-cols-1 gap-y-2 @[16rem]:grid-cols-[minmax(0,1fr)_auto] @[16rem]:gap-x-2">
+                <div className="flex flex-col gap-2">
+                  {labelElement}
+                  {hintElement}
+                </div>
                 <div
                   data-field-bar
                   data-action-inside="true"
-                  className={cn(insideBoxClasses, 'min-w-0 @[16rem]:flex-1')}
+                  className={cn(insideBoxClasses, 'min-w-0')}
                 >
                   {/* Stretched, so the control fills the box's height and its whole height is tappable */}
                   <div className="min-w-0 flex-1 self-stretch">{control}</div>
                   {action}
                 </div>
-                {aside}
+                {aside && (
+                  <div className="flex flex-col gap-2 @[16rem]:col-start-2 @[16rem]:row-span-2 @[16rem]:row-start-1 @[16rem]:grid @[16rem]:grid-rows-subgrid">
+                    {aside}
+                  </div>
+                )}
               </div>
             ) : (
-              <div data-field-bar className="flex items-stretch gap-2">
-                <div className="min-w-0 flex-1">{control}</div>
-                {action}
-              </div>
+              <>
+                {labelElement}
+                {hintElement}
+                <div data-field-bar className="flex items-stretch gap-2">
+                  <div className="min-w-0 flex-1">{control}</div>
+                  {action}
+                </div>
+              </>
             )}
             {errorElement}
           </>

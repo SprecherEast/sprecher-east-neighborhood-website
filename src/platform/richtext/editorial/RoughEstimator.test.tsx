@@ -31,7 +31,7 @@ describe('RoughEstimator', () => {
       (screen.getByRole('textbox', { name: 'Your home’s assessed value' }) as HTMLInputElement)
         .value,
     ).toBe('$500,300')
-    const group = screen.getByRole('group', { name: /tax rates/i })
+    const group = screen.getByRole('group', { name: 'Tax rates' })
     expect(group.querySelectorAll('button')).toHaveLength(2)
     expect(screen.getByRole('button', { name: '2027' }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.getByRole('button', { name: '2026' }).getAttribute('aria-pressed')).toBe('false')
@@ -125,7 +125,7 @@ describe('RoughEstimator', () => {
 
   it('draws the tax years as one joined control of the year numbers only, with no note under it (#1118)', () => {
     const { container } = render(<RoughEstimator {...PROPS} />)
-    const group = screen.getByRole('group', { name: /tax rates/i })
+    const group = screen.getByRole('group', { name: 'Tax rates' })
     expect(Array.from(group.querySelectorAll('button')).map((b) => b.textContent)).toEqual([
       '2026',
       '2027',
@@ -135,13 +135,22 @@ describe('RoughEstimator', () => {
     expect(container.querySelector('[data-switch-note]')).toBeNull()
   })
 
-  it('keeps the control on the row of the value box, as tall as the box, at every width (#1118)', () => {
+  it('keeps the control on the row of the value box, never larger than the box, under a "Tax rates" label that names it (#1118)', () => {
     render(<RoughEstimator {...PROPS} />)
     const row = screen.getByRole('textbox').closest('[data-estimator-row]') as HTMLElement
-    const group = screen.getByRole('group', { name: /tax rates/i })
+    const group = screen.getByRole('group', { name: 'Tax rates' })
     expect(row.contains(group)).toBe(true)
-    expect(row.className).not.toContain('flex-col')
-    expect(group.className).toContain('h-12')
+    expect(group.className).toContain('h-9')
+    expect(group.className).not.toContain('h-12')
+    // The visible label names the group, and sits beside the value box's own label
+    const label = screen.getByText('Tax rates')
+    expect(group.getAttribute('aria-labelledby')).toBe(label.id)
+    // It is written like the box's label (same size and weight), right-aligned over the control
+    for (const look of ['text-sm', 'font-medium', '@[20rem]:text-base', '@[16rem]:text-right']) {
+      expect(label.className).toContain(look)
+    }
+    const box = screen.getByText('Your home’s assessed value')
+    expect(box.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('has no accessibility violations', async () => {

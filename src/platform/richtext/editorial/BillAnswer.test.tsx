@@ -48,17 +48,17 @@ describe('BillAnswer', () => {
     expect(tax.compareDocumentPosition(small) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('writes the increase in the primary green, from the same figures as {yearly} and {monthly}', () => {
+  it('writes the increase in the estimator’s accent, orange, from the same figures as {yearly} and {monthly}', () => {
     render(<BillAnswer {...base} />)
     const figures = figuresFor(90)
     const line = screen.getByText(`Up ${figures.yearly} a year, about ${figures.monthly} a month`)
     expect(line.textContent).toBe('Up $90 a year, about $7.50 a month')
-    expect(line.className).toContain('text-primary-strong')
+    expect(line.className).toContain('text-accent-strong')
   })
 
   it('says there is no increase when there is none, on a line of the same kind', () => {
     render(<BillAnswer {...base} increase={0} />)
-    expect(screen.getByText('No increase').className).toContain('text-primary-strong')
+    expect(screen.getByText('No increase').className).toContain('text-accent-strong')
     expect(screen.queryByText(/Up \$/)).toBeNull()
   })
 

@@ -50,6 +50,12 @@ describe('FactTabsBlockConfig', () => {
     expect([FACT_TABS_LIMITS.minTabs, FACT_TABS_LIMITS.maxTabs]).toEqual([2, 4])
   })
 
+  it('lets a tab heading run to 48 characters, enough for a question about the reader’s property taxes (#1118)', () => {
+    expect(byName('heading')).toMatchObject({ maxLength: 48 })
+    expect(FACT_TABS_LIMITS.heading).toBe(48)
+    expect('What does this mean for your property taxes?'.length).toBeLessThanOrEqual(48)
+  })
+
   it('offers only a chart, a timeline and a whole tax bill in a panel, as the blocks themselves', () => {
     const panel = byName('panel') as unknown as { blocks: Block[] }
     expect(panel.blocks.map((b) => b.slug)).toEqual(['chart', 'timeline', 'billShare'])

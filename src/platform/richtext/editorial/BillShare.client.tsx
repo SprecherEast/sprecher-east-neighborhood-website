@@ -198,6 +198,7 @@ export function BillShare({
           <ShareBill
             slices={receipt.slices}
             label={receipt.label}
+            title="Your whole bill"
             total={receipt.total ?? undefined}
             pulseKey={pulse}
           />

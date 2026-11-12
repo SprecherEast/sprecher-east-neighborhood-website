@@ -13,7 +13,7 @@ const ROW_TITLES = ['Where the City share goes', 'How we estimate this', 'Source
 
 const estimator = (page: Page) => page.getByRole('region', { name: 'Rough Estimator' })
 const box = (page: Page) => estimator(page).locator('[data-field-bar]')
-const years = (page: Page) => estimator(page).getByRole('group', { name: 'Tax rates to use' })
+const years = (page: Page) => estimator(page).getByRole('group', { name: 'Tax rates' })
 const summary = (page: Page, title: string) =>
   page.locator('summary', { hasText: new RegExp(`^${title}$`) })
 /** A locator's box, or a failure that says it is not on the page */
@@ -34,13 +34,19 @@ for (const width of WIDTHS) {
     await expect(years(page).getByRole('button')).toHaveText(['2026', '2027'])
     const group = await boxOf(years(page))
     const field = await boxOf(box(page))
-    expect(Math.round(group.height), 'the control is as tall as the box').toBe(
-      Math.round(field.height),
+    expect(group.height, 'nothing in the row is larger than the box').toBeLessThanOrEqual(
+      field.height,
     )
-    // On a phone from 360 px the control shares the box's row; narrower, it stacks under it, whole
-    if (width >= 360)
-      expect(Math.round(group.y), 'the control is on the box’s row').toBe(Math.round(field.y))
-    else expect(group.y).toBeGreaterThan(field.y + field.height - 1)
+    // On a phone from 360 px the control shares the box's row, centred on it, and its short label is
+    // on the line of the box's label; narrower, the control stacks under the box, whole
+    if (width >= 360) {
+      expect(Math.abs(group.y + group.height / 2 - (field.y + field.height / 2))).toBeLessThan(2)
+      const [mine, theirs] = [
+        await boxOf(estimator(page).getByText('Tax rates')),
+        await boxOf(estimator(page).getByText('Your home’s assessed value')),
+      ]
+      expect(Math.round(mine.y), 'the labels share a line').toBe(Math.round(theirs.y))
+    } else expect(group.y).toBeGreaterThan(field.y + field.height - 1)
 
     // The answer card's label and badge share a row where the card has the room for both (a narrower
     // card puts the badge whole on a line of its own); either way the badge stays inside the card

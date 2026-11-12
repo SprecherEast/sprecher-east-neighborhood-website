@@ -94,17 +94,18 @@ Source: `src/platform/ui/CMSLink.tsx`
 
 ## `SegmentedControl`
 
-A few short options joined into one control, one of them picked (#1118): a switch between tax years, say. The options share one 48 px box with one border and divider lines between them, so it lines up with a 48 px box beside it; the picked one is filled with the accent and says so to screen readers (`aria-pressed`). Each option is the kit's `Button`, so choosing, focus and the 44 px tap area work as everywhere else. It draws what it is given and keeps no state of its own, so use it from a client component.
+A few short options joined into one control, one of them picked (#1118): a switch between tax years, say. The options share one small 36 px box with one border and divider lines between them; the picked one is filled with the accent and says so to screen readers (`aria-pressed`). Each option is the kit's `Button`, so choosing, focus and the 44 px tap area work as everywhere else. It draws what it is given and keeps no state of its own, so use it from a client component.
 
 Source: `src/platform/ui/SegmentedControl.tsx`
 
-| Prop        | Type                         | Required | Description                           |
-| ----------- | ---------------------------- | -------- | ------------------------------------- |
-| `label`     | `string`                     | yes      | What the group is, for screen readers |
-| `options`   | `readonly SegmentedOption[]` | yes      |                                       |
-| `selected`  | `number`                     | yes      | The index of the picked option        |
-| `onSelect`  | `(index: number) => void`    | yes      |                                       |
-| `className` | `string`                     | no       |                                       |
+| Prop         | Type                         | Required | Description                                                                                   |
+| ------------ | ---------------------------- | -------- | --------------------------------------------------------------------------------------------- |
+| `label`      | `string`                     | no       | What the group is, for screen readers; leave out when a visible label names it (`labelledBy`) |
+| `labelledBy` | `string`                     | no       | The id of the visible label that names the group                                              |
+| `options`    | `readonly SegmentedOption[]` | yes      |                                                                                               |
+| `selected`   | `number`                     | yes      | The index of the picked option                                                                |
+| `onSelect`   | `(index: number) => void`    | yes      |                                                                                               |
+| `className`  | `string`                     | no       |                                                                                               |
 
 **Used by** (direct imports):
 

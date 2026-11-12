@@ -60,6 +60,8 @@
   --primary-dark: #2e5e47;
   --primary-light: #4f9974;
   --accent-dark: #c97830;
+  /* Accent as text on the page, panels and cards (4.4:1 or more): the estimator's key figure (#1118) */
+  --accent-strong: #a35508;
   /* Fill for primary buttons: white text on it is 5.1:1 (#121), 7.5:1 on hover. */
   --primary-fill: #3d7a5e;
   --primary-fill-hover: #2e5e47;
@@ -137,6 +139,7 @@
   --primary-dark: #3d7a5e;
   --primary-light: #5fb88e;
   --accent-dark: #d48a38;
+  --accent-strong: #f5b76e;
   /* Dark --primary (#4e9b76) gives white text only 3.35:1, so buttons keep the brand fill (#121) */
   --primary-fill: #3d7a5e;
   --primary-fill-hover: #2e5e47;
