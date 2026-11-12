@@ -39,6 +39,21 @@ export const fieldVariants = cva('flex min-w-0', {
   defaultVariants: { width: 'full' },
 })
 
+/**
+ * The one box around a control and its action (`actionPlacement="inside"`): 48 px tall with the
+ * action 36 px square inside an equal 6 px inset on every side (the control fills the rest), one
+ * border that takes the accent while the action is on and the error color when the control is
+ * invalid, and one focus ring when the control has keyboard focus. The control's own border,
+ * background and ring are switched off, since the box draws them.
+ */
+const insideBoxClasses = cn(
+  'flex h-12 items-center gap-1 rounded-lg border border-input bg-background p-1.5 transition-colors duration-200',
+  // The accent excludes an invalid control, so the error color wins whatever the stylesheet's order
+  'has-[button:not(:disabled)]:not-has-[[aria-invalid=true]]:border-accent-dark has-[[aria-invalid=true]]:border-destructive-strong',
+  'has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-ring',
+  '[&_input]:h-full [&_input]:min-h-0 [&_input]:border-0 [&_input]:bg-transparent [&_input]:focus-visible:outline-none',
+)
+
 export type FieldProps = Omit<VariantProps<typeof fieldVariants>, 'layout'> & {
   label: ReactNode
   /** Keeps the label for screen readers only, where the context labels the field visually */
@@ -55,6 +70,13 @@ export type FieldProps = Omit<VariantProps<typeof fieldVariants>, 'layout'> & {
   className?: string
   /** A button shown beside the control in the `bar` layout, such as a compact Estimate button */
   action?: ReactNode
+  /**
+   * Where the `bar` layout puts the `action`: `beside` the box (the default), or `inside` it at
+   * its trailing end, like the send button of a chat box (#1110). Inside, one border and one focus
+   * ring surround the control and the action, the action has the same inset above, below and at
+   * the end, and the border takes the accent while the action is not disabled.
+   */
+  actionPlacement?: 'beside' | 'inside'
   /** Exactly one control */
   children: ReactElement
 }
@@ -70,6 +92,7 @@ export function Field({
   id,
   className,
   action,
+  actionPlacement = 'beside',
   children,
 }: FieldProps) {
   const control = Children.only(children)
@@ -134,10 +157,18 @@ export function Field({
           <>
             {labelElement}
             {hintElement}
-            <div data-field-bar className="flex items-stretch gap-2">
-              <div className="min-w-0 flex-1">{control}</div>
-              {action}
-            </div>
+            {actionPlacement === 'inside' ? (
+              <div data-field-bar data-action-inside="true" className={insideBoxClasses}>
+                {/* Stretched, so the control fills the box's height and its whole height is tappable */}
+                <div className="min-w-0 flex-1 self-stretch">{control}</div>
+                {action}
+              </div>
+            ) : (
+              <div data-field-bar className="flex items-stretch gap-2">
+                <div className="min-w-0 flex-1">{control}</div>
+                {action}
+              </div>
+            )}
             {errorElement}
           </>
         ) : (

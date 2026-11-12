@@ -10,8 +10,8 @@ Source: `src/platform/ui/Button.tsx`
 
 **Variants:**
 
-- `variant`: `"primary" | "secondary" | "accent" | "accent-outline" | "ghost" | "inverse" | "inverse-outline"`
-- `size`: `"sm" | "md" | "lg" | "icon"`
+- `variant`: `"primary" | "secondary" | "accent" | "accent-outline" | "action" | "ghost" | "inverse" | "inverse-outline"`
+- `size`: `"sm" | "md" | "lg" | "icon" | "icon-sm"`
 - `fullWidth`: `boolean | "mobile"`
 
 | Prop        | Type                                                                                                                                                                      | Required | Description                                                                                                                                                         |
@@ -39,7 +39,7 @@ Source: `src/platform/ui/Link.tsx`
 
 **Variants:**
 
-- `variant`: `"section" | "inline" | "caption" | "nav" | "muted" | "crumb" | "action"`
+- `variant`: `"section" | "inline" | "action" | "caption" | "nav" | "muted" | "crumb"`
 - `size`: `"sm" | "md"`
 
 | Prop           | Type                                                                                                                                                                      | Required | Description                                                                                                                      |

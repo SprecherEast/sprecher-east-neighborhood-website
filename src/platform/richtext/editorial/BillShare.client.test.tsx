@@ -139,7 +139,7 @@ describe('BillShare', () => {
         <p>The rest</p>
       </BillShare>,
     )
-    const estimator = screen.getByRole('heading', { name: 'Rough Estimator' })
+    const estimator = screen.getByRole('region', { name: 'Rough Estimator' })
     const pie = screen.getByRole('heading', { name: 'Your rough property tax' })
     const panel = screen.getByText('Short line')
     const follows = (a: Node, b: Node) =>
