@@ -145,10 +145,12 @@ describe('RoughEstimator', () => {
     // The visible label names the group, and sits beside the value box's own label
     const label = screen.getByText('Tax rates')
     expect(group.getAttribute('aria-labelledby')).toBe(label.id)
-    // It is written like the box's label (same size and weight), right-aligned over the control
-    for (const look of ['text-sm', 'font-medium', '@[20rem]:text-base', '@[16rem]:text-right']) {
+    // It is written like the box's label (same size and weight), centred over the control (#1121)
+    for (const look of ['text-sm', 'font-medium', '@[20rem]:text-base', 'text-center']) {
       expect(label.className).toContain(look)
     }
+    expect(label.className).not.toContain('text-right')
+    expect(group.className).toContain('@[16rem]:justify-self-center')
     const box = screen.getByText('Your home’s assessed value')
     expect(box.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })

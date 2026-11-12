@@ -2,7 +2,7 @@ import React from 'react'
 
 import { AmountBar } from '@/platform/ui/AmountBar'
 import { ProgressBar } from '@/platform/ui/ProgressBar'
-import { ShareBar } from '@/platform/ui/ShareBar'
+import { ShareBar } from '@/platform/ui/ShareBar.client'
 import { ShareBill, type ShareSlice } from '@/platform/ui/ShareBill'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
@@ -46,7 +46,7 @@ export function ShareBarGallery() {
   return (
     <GalleryEntry
       name="ShareBar"
-      description="One whole as a flat bar of slices as wide as their shares; a slice too narrow for its label leaves it to the text beside the bar."
+      description="One whole as a flat bar of slices as wide as their shares; every slice shows its percent, and a slice too narrow for it is drawn wider, the extra taken from the others."
     >
       <GalleryVariant label="four tones, one highlighted" className="block max-w-3xl">
         <ShareBar

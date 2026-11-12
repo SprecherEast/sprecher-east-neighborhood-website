@@ -31,16 +31,16 @@ const heading = (container: HTMLElement) =>
 describe('the tab figure and heading with placeholders (#1029)', () => {
   it('start with the average home’s numbers, as the server writes them', () => {
     const { container } = render(<FactTabs tabs={[tab(WORDS)]} />)
-    expect(within(button()).getByText(/\+\$90/)).toBeTruthy()
-    expect(heading(container).textContent).toBe('Your share: about $7.50 more a month')
+    expect(within(button()).getByText(/\+\$91/)).toBeTruthy()
+    expect(heading(container).textContent).toBe('Your share: about $7.58 more a month')
   })
 
   it('follow the home estimated and the year chosen', async () => {
     const { container } = render(<FactTabs tabs={[tab(WORDS)]} />)
     await estimate('$1,000,600')
-    expect(button().textContent).toContain('+$180')
-    expect(heading(container).textContent).toBe('Your share: about $15 more a month')
-    // The year chosen counts too: 2026 has no increase
+    expect(button().textContent).toContain('+$182')
+    expect(heading(container).textContent).toBe('Your share: about $15.17 more a month')
+    // The City's tax is priced from the rates: $6,934 less $6,752 in 2026 (the same home, 2026's value). The year chosen counts too: 2026 has no increase
     await act(async () => fireEvent.click(screen.getByRole('button', { name: '2026' })))
     expect(button().textContent).toContain('+$0')
   })
@@ -48,11 +48,11 @@ describe('the tab figure and heading with placeholders (#1029)', () => {
   it('are the very figures the answer card shows, for the average home and for a home estimated (#1111)', async () => {
     const { container } = render(<FactTabs tabs={[tab(WORDS)]} />)
     const answer = () => screen.getByRole('region', { name: 'Your City tax' }).textContent
-    expect(answer()).toContain('Up $90 a year, about $7.50 a month')
-    expect(heading(container).textContent).toContain('$7.50')
+    expect(answer()).toContain('Up $91 a year, about $7.58 a month')
+    expect(heading(container).textContent).toContain('$7.58')
     await estimate('$1,000,600')
-    expect(answer()).toContain('Up $180 a year, about $15 a month')
-    expect(heading(container).textContent).toContain('$15 more')
+    expect(answer()).toContain('Up $182 a year, about $15.17 a month')
+    expect(heading(container).textContent).toContain('$15.17 more')
   })
 
   it('show text without placeholders as written, and change nothing without a bill block', async () => {
@@ -90,14 +90,14 @@ describe('the tab figure and heading count with the bill (#1096)', () => {
 
   it('moves from the old figure to the new one, ending on it', async () => {
     render(<FactTabs tabs={[tab(WORDS)]} />)
-    expect(yearly()).toBe(90)
+    expect(yearly()).toBe(91)
     await estimate('$1,000,600')
     step(0)
     step(500)
     const middle = yearly()
-    expect(middle).toBeGreaterThan(90)
-    expect(middle).toBeLessThan(180)
+    expect(middle).toBeGreaterThan(91)
+    expect(middle).toBeLessThan(182)
     step(2000)
-    expect(yearly()).toBe(180)
+    expect(yearly()).toBe(182)
   })
 })

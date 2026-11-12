@@ -77,19 +77,20 @@ Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 
 ## `BillAnswer`
 
-The answer a neighbor came for (#1111, #1118), right under the Rough Estimator. Its top row has the label on the left ("City tax on an average home", or "on your home" after an estimate) and the status badge on the right. Under it the City's tax on the home last estimated in the year chosen is the biggest text on the tab, with a small "a year", then the City's increase in the estimator's accent, orange (`increaseLine`, the same figures a tab's `{yearly}` and `{monthly}` use, so they always agree) and one small sentence with the home value used and the City's share of the whole bill. The badge is the chosen year's stored note, with the "not final" look, or, when the year has none, the tab's stored certainty, so it can never disagree with the year. The increase line keeps its room when there is no figure, so the card never changes height. It draws what it is given.
+The answer a neighbor came for (#1111, #1118), right under the Rough Estimator. Its top row has the label on the left ("City tax on an average home", or "on your home" after an estimate) and the status badge on the right. Under it the City's tax on the home last estimated in the year chosen is the biggest text on the tab, with a small "a year", then the City's increase in the estimator's accent, orange (`increaseLine`, the same figures a tab's `{yearly}` and `{monthly}` use, so they always agree) and one small sentence with the home value used and the City's share of the whole bill. In an earlier year the sentence says the value is the one assumed for that year (#1121). The badge is the chosen year's stored note, with the "not final" look, or, when the year has none, the tab's stored certainty, so it can never disagree with the year. The increase line keeps its room when there is no figure, so the card never changes height. It draws what it is given.
 
 Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 
-| Prop          | Type                                     | Required | Description                                                                                      |
-| ------------- | ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------------ |
-| `tax`         | `string`                                 | yes      | The City's tax, formatted                                                                        |
-| `increase`    | `number \| null`                         | yes      | What the City's tax rises by in the year, in whole dollars; null when the tab's chart cannot say |
-| `certainty`   | `"confirmed" \| "estimate" \| "unknown"` | no       | How sure we are about the tab's fact; the badge unless the chosen year has a note                |
-| `note`        | `string`                                 | no       | The chosen year's stored note, such as "proposed"; empty for none                                |
-| `yours`       | `boolean`                                | yes      | Whether the home is one the reader estimated, not the City's average                             |
-| `home`        | `string`                                 | yes      | The home value used, formatted                                                                   |
-| `cityPercent` | `number \| null`                         | yes      | The City's whole percent of the whole bill; null while the bill is not whole                     |
+| Prop          | Type                                     | Required | Description                                                                                           |
+| ------------- | ---------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------- |
+| `tax`         | `string`                                 | yes      | The City's tax, formatted                                                                             |
+| `increase`    | `number \| null`                         | yes      | What the City's tax rises by in the year, in whole dollars; null when the tab's chart cannot say      |
+| `certainty`   | `"confirmed" \| "estimate" \| "unknown"` | no       | How sure we are about the tab's fact; the badge unless the chosen year has a note                     |
+| `note`        | `string`                                 | no       | The chosen year's stored note, such as "proposed"; empty for none                                     |
+| `yours`       | `boolean`                                | yes      | Whether the home is one the reader estimated, not the City's average                                  |
+| `home`        | `string`                                 | yes      | The home value used, formatted: for an earlier year, the value assumed for that year (#1121)          |
+| `assumedYear` | `number`                                 | no       | The earlier year the home's value is assumed for; the sentence says so. Not given for the latest year |
+| `cityPercent` | `number \| null`                         | yes      | The City's whole percent of the whole bill; null while the bill is not whole                          |
 
 **Used by** (direct imports):
 
@@ -97,7 +98,7 @@ Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 
 ## `BillDetails`
 
-The three closed rows under the whole bill (#1111, #1118), in one card split by divider lines: where the City's share goes (`where`: the City's bar and the breakdown chart, drawn for the home and year shown), how the estimate works (the notes, then the tab's short text and detail) and the sources, each source once. A row with nothing to show is left out, and a note that is not showing still takes its room, hidden from everyone, so an open row never changes height when a year is chosen. Each row is the kit's `Disclosure`, so it opens and closes without scripting and never moves what is above it.
+The three rows under the whole bill (#1111, #1118, #1121), in one card split by divider lines: where the City's share goes (`where`: the City's bar and the breakdown chart, drawn for the home and year shown), how the estimate works (the notes, then the tab's short text and detail) and the sources, each source once. The first row is open when the tab loads, with scripting off too; the other two are closed. A row with nothing to show is left out, and a note that is not showing still takes its room, hidden from everyone, so an open row never changes height when a year is chosen. Each row is the kit's `Disclosure`, so it opens and closes without scripting and never moves what is above it.
 
 Source: `src/platform/richtext/editorial/BillDetails.tsx`
 

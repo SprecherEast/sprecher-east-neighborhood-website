@@ -14,7 +14,7 @@ import { increaseLine } from './billFigures'
  * chosen is the biggest text on the tab, with a small "a year", then the City's increase in the
  * estimator's accent, orange (`increaseLine`, the same figures a tab's `{yearly}` and `{monthly}` use, so they
  * always agree) and one small sentence with the home value used and the City's share of the whole
- * bill. The badge is the chosen year's stored note, with the "not final" look, or, when the year has
+ * bill. In an earlier year the sentence says the value is the one assumed for that year (#1121). The badge is the chosen year's stored note, with the "not final" look, or, when the year has
  * none, the tab's stored certainty, so it can never disagree with the year. The increase line keeps
  * its room when there is no figure, so the card never changes height. It draws what it is given.
  */
@@ -25,6 +25,7 @@ export function BillAnswer({
   note,
   yours,
   home,
+  assumedYear,
   cityPercent,
 }: {
   /** The City's tax, formatted */
@@ -37,13 +38,19 @@ export function BillAnswer({
   note?: string
   /** Whether the home is one the reader estimated, not the City's average */
   yours: boolean
-  /** The home value used, formatted */
+  /** The home value used, formatted: for an earlier year, the value assumed for that year (#1121) */
   home: string
+  /** The earlier year the home's value is assumed for; the sentence says so. Not given for the latest year */
+  assumedYear?: number
   /** The City's whole percent of the whole bill; null while the bill is not whole */
   cityPercent: number | null
 }) {
   const noted = note ? `${note.charAt(0).toUpperCase()}${note.slice(1)}` : undefined
   const badge = noted ? 'estimate' : certainty
+  const homeSentence =
+    yours && assumedYear !== undefined
+      ? `Your home’s assumed value in ${assumedYear}: ${home}.`
+      : `${yours ? 'Your' : 'Average'} home: ${home}.`
   return (
     <Card as="section" variant="elevated" padding="xs" aria-label="Your City tax">
       <div className="space-y-1">
@@ -76,8 +83,8 @@ export function BillAnswer({
         </Text>
         <Text variant="small" as="p" className="leading-snug">
           {cityPercent === null
-            ? `${yours ? 'Your' : 'Average'} home: ${home}.`
-            : `${yours ? 'Your' : 'Average'} home: ${home}. The City is ${cityPercent}% of the whole bill.`}
+            ? homeSentence
+            : `${homeSentence} The City is ${cityPercent}% of the whole bill.`}
         </Text>
       </div>
     </Card>

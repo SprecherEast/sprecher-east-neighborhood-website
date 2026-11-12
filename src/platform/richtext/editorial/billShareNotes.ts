@@ -12,6 +12,17 @@ export const ROUGH_NOTE =
   'A rough estimate. Credits, exemptions and who owns the home change your real bill.'
 
 /**
+ * The note that says how an earlier year's home is priced (#1121): the value a reader types is the
+ * latest year's, and an earlier year's is assumed to have changed as the average home did. Null
+ * with one year, which has no earlier value to assume.
+ */
+export function assumedNote(years: readonly BillShareYear[]): string | null {
+  if (years.length < 2) return null
+  const earlier = years.slice(0, -1).map((year) => year.year)
+  return `Your home’s ${joinNames(earlier.map(String))} value is assumed to have changed as the average home’s did.`
+}
+
+/**
  * The note for a year in which a body has not set its rate, so the estimate borrows the year
  * before's. It says the City's rate for the year is proposed, not confirmed (the article is about
  * the City's tax), and never which other bodies' rates were borrowed; null for a year with nothing

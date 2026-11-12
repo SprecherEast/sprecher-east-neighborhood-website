@@ -4,25 +4,41 @@ import type { AmountBarPart } from '@/platform/ui/AmountBar'
 
 type Stacked = Extract<ChartSpec, { kind: 'stacked' }>
 
+/** `amount` in whole dollars split in proportion to the values, the last taking the rounding */
+function splitWhole(values: readonly number[], amount: number): number[] {
+  const sum = values.reduce((all, value) => all + value, 0)
+  let used = 0
+  return values.map((value, index) => {
+    const part =
+      index === values.length - 1 ? amount - used : Math.round(sum > 0 ? (value / sum) * amount : 0)
+    used += part
+    return part
+  })
+}
+
 /**
  * One column of a stacked chart (a year) as the single bar at the top of the City's panel (#1020):
- * its name, the whole amount and its parts. The parts keep the chart's own split (the same as last
- * year, the proposed increase), scaled so they add up to what the City's tax is on the home typed
- * (`cityAmount`), or by `homeRatio`, the typed home's share of the chart's average home, when the
- * City's tax is not known. A part that is nothing that year is left out, and the last part takes
- * the rounding, so the rounded parts always add up to the rounded whole. `increase` is what the
- * increase parts add up to, in whole dollars, for the tab's figure and heading (#1029). A `column`
- * between two years (a position part-way through a count, #1096) blends the two columns and names
- * the nearer year, so the bar can count from one year to the next.
+ * its name, the whole amount and its parts. The chart says which parts there are and in what
+ * order; the dollars come from the City's tax on the home (`cityAmount`, or the chart's own column
+ * scaled by `homeRatio`, the typed home's share of the chart's average home, when the City's tax is
+ * not known). `increase` is what the increase parts add up to, in whole dollars: it is given, from
+ * the two priced years (`increaseIn`, #1121), so the bar, the answer card's line and the tab's
+ * figure are one number; the other parts share the rest in the chart's proportions, the last taking
+ * the rounding, so the rounded parts always add up to the rounded whole. With no `increase` (null:
+ * the data cannot support one) no increase part is drawn and none is reported. A part that is
+ * nothing that year is left out. A `column` between two years (a position part-way through a
+ * count, #1096) blends the two columns and names the nearer year, so the bar can count from one
+ * year to the next.
  */
 export function toCityBar(
   spec: Stacked,
   {
     column,
     cityAmount,
+    increase,
     homeRatio = 1,
-  }: { column: number; cityAmount: number | null; homeRatio?: number },
-): { title: string; total: string; parts: AmountBarPart[]; increase: number } {
+  }: { column: number; cityAmount: number | null; increase: number | null; homeRatio?: number },
+): { title: string; total: string; parts: AmountBarPart[]; increase: number | null } {
   const first = Math.floor(column)
   const share = column - first
   const valueAt = (values: readonly number[]) =>
@@ -30,18 +46,29 @@ export function toCityBar(
   const shown = spec.series
     .map((series) => ({ series, value: valueAt(series.values) }))
     .filter(({ value }) => value > 0)
-  const specTotal = shown.reduce((sum, { value }) => sum + value, 0)
-  const total = cityAmount ?? specTotal * homeRatio
-  const factor = specTotal > 0 ? total / specTotal : 0
+  const kept = shown.filter(({ series }) => increase !== null || !series.increase)
+  const chartTotal = shown.reduce((sum, { value }) => sum + value, 0)
+  const total = cityAmount ?? chartTotal * homeRatio
   const whole = Math.round(total)
-  let used = 0
-  // The increase parts' rounded amounts, summed: the figure the bar itself shows (#1029)
-  let increase = 0
-  const parts = shown.map(({ series, value }, index): AmountBarPart => {
-    const last = index === shown.length - 1
-    const amount = last ? whole - used : Math.round(value * factor)
-    used += amount
-    if (series.increase) increase += Math.max(amount, 0)
+  const increases = kept.filter(({ series }) => series.increase)
+  const others = kept.filter(({ series }) => !series.increase)
+  // A chart of increases alone has nothing else to take the rest, so its increase is the whole
+  const increaseAmount =
+    increase === null || increases.length === 0
+      ? 0
+      : others.length === 0
+        ? whole
+        : Math.min(Math.max(Math.round(increase), 0), whole)
+  const amounts = new Map<string, number>()
+  const fill = (group: typeof kept, amount: number) =>
+    splitWhole(
+      group.map(({ value }) => value),
+      amount,
+    ).forEach((part, index) => amounts.set(group[index]?.series.key ?? '', part))
+  fill(increases, increaseAmount)
+  fill(others, whole - increaseAmount)
+  const parts = kept.map(({ series }): AmountBarPart => {
+    const amount = amounts.get(series.key) ?? 0
     return {
       key: series.key,
       label: series.label,
@@ -54,6 +81,6 @@ export function toCityBar(
     title: spec.x[Math.round(column)] ?? '',
     total: formatWholeDollars(total),
     parts,
-    increase,
+    increase: increase === null ? null : increaseAmount,
   }
 }

@@ -6,9 +6,9 @@ One whole drawn as a bar, a bill with a receipt or a single split amount.
 
 ## `ShareBar`
 
-One whole as a flat bar of slices (#1018, #1111), each exactly as wide as its share, in the order given, with the tones of `shareTones.ts`. It is one SVG whose widths are percent attributes, never inline styles, so it needs no measuring and draws the same on the server. A slice wide enough (`SHARE_BAR_INSIDE_MIN`) writes its label in it; every slice is named in text by the caller, so no slice is told by its color alone. The bar is one named picture for screen readers whose `label` the caller writes.
+One whole as a flat bar of slices (#1018, #1111, #1121), in the order given, with the tones of `shareTones.ts`. It is one SVG whose widths are percent attributes, never inline styles. Each slice is as wide as its share and writes its label in it, in the tone's own label color (4.5:1 on its fill). A slice too narrow for its label is drawn at the least width that fits it, the extra taken from the other slices in proportion (`widenToFit`), so every label is read; the caller's receipt keeps the exact figures. Once on the page the bar measures its labels and its own width and keeps doing so as either changes; before that, and with scripting off, it guesses the labels' width. Every slice is also named in text by the caller, so no slice is told by its color alone. The bar is one named picture for screen readers whose `label` the caller writes.
 
-Source: `src/platform/ui/ShareBar.tsx`
+Source: `src/platform/ui/ShareBar.client.tsx`
 
 | Prop        | Type                       | Required | Description                            |
 | ----------- | -------------------------- | -------- | -------------------------------------- |
@@ -23,7 +23,7 @@ Source: `src/platform/ui/ShareBar.tsx`
 
 ## `ShareBill`
 
-One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, one bar whose slices are as wide as their shares, and under it a receipt that names every slice with its color, percent and dollars, in the bar's own order, since both are made from the same slices. The receipt is one grid of three columns with fixed widths for the percent and the amount, so each column lines up from row to row and the block keeps its height when the amounts change. The total flashes the accent once each time `pulseKey` changes, unless motion is reduced. The caller writes `label`, what the bar says to screen readers.
+One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, one bar whose slices are as wide as their shares, and under it a receipt that names every slice with its color, percent and dollars, in the bar's own order, since both are made from the same slices. The highlighted slice's row has a soft primary fill and bolder text (the tone's `row`), and every row has the same side padding, so the columns stay level. The receipt is one grid of three columns with fixed widths for the percent and the amount, so each column lines up from row to row and the block keeps its height when the amounts change. The total flashes the accent once each time `pulseKey` changes, unless motion is reduced. The caller writes `label`, what the bar says to screen readers.
 
 Source: `src/platform/ui/ShareBill.tsx`
 

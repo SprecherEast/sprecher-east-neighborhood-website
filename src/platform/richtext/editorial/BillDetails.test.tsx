@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
@@ -20,7 +21,7 @@ const SOURCE = {
 }
 
 describe('BillDetails', () => {
-  it('has three rows, each a closed native details, in the order where, how, sources', () => {
+  it('has three rows, each a native details, in the order where, how, sources, the first open and the others closed (#1121)', () => {
     const { container } = render(
       <BillDetails
         where={<p>Breakdown</p>}
@@ -35,7 +36,18 @@ describe('BillDetails', () => {
       'How we estimate this',
       'Sources',
     ])
-    expect(rows.every((row) => !row.hasAttribute('open'))).toBe(true)
+    expect(rows.map((row) => row.hasAttribute('open'))).toEqual([true, false, false])
+  })
+
+  it('opens the first row in the markup itself, so it is open with scripting off too (#1121)', () => {
+    const html = renderToStaticMarkup(
+      <BillDetails where={<p>Breakdown</p>} notes={NOTES} sources={[SOURCE]} />,
+    )
+    expect(html.match(/<details[^>]*>/g)).toEqual([
+      expect.stringContaining(' open'),
+      expect.not.stringContaining(' open'),
+      expect.not.stringContaining(' open'),
+    ])
   })
 
   it('holds the three rows in one card, split by divider lines, not three separate boxes (#1118)', () => {
