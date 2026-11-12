@@ -10,8 +10,9 @@ import { EpicBox } from './EpicBox'
 import { MissionTile } from './MissionTile'
 
 /**
- * The plan as tiles: the mission with the latest activity first and larger, then the rest, each
- * opening its own page. Projects that belong to no mission follow, then a note on what is not shown.
+ * The plan as tiles: the mission with the latest activity first, all the same size, two across on
+ * a phone and three on a desktop, each opening its own page. Projects that belong to no mission
+ * follow, then a note on what is not shown.
  */
 export function PlanTiles({ plan, now }: { plan: Plan; now: Date }) {
   const empty = plan.milestones.length === 0 && plan.unscheduled.length === 0
@@ -30,8 +31,8 @@ export function PlanTiles({ plan, now }: { plan: Plan; now: Date }) {
   return (
     <div className="space-y-8">
       {activity.missions.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {activity.missions.map(({ milestoneNumber, series }, index) => {
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+          {activity.missions.map(({ milestoneNumber, series }) => {
             const mission = byNumber.get(milestoneNumber)
             return mission ? (
               <MissionTile
@@ -40,7 +41,6 @@ export function PlanTiles({ plan, now }: { plan: Plan; now: Date }) {
                 series={series}
                 max={activity.max}
                 stepLabel={activity.stepLabel}
-                featured={index === 0}
                 now={now}
               />
             ) : null

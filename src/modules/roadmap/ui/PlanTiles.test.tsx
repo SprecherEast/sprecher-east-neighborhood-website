@@ -65,11 +65,13 @@ describe('PlanTiles', () => {
     expect(names).toEqual(['Newest mission', 'Older mission', 'Quiet mission'])
   })
 
-  it('makes the first tile the larger, featured one', () => {
+  it('lays the tiles out two across on a phone and three across on a desktop, all the same size', () => {
     renderTiles()
-    const [first, second] = screen.getAllByRole('article')
-    expect(first.className).toContain('sm:col-span-2')
-    expect(second.className).not.toContain('sm:col-span-2')
+    const tiles = screen.getAllByRole('article')
+    const grid = tiles[0].parentElement as HTMLElement
+    expect(grid.className).toContain('grid-cols-2')
+    expect(grid.className).toContain('lg:grid-cols-3')
+    for (const tile of tiles) expect(tile.className).not.toContain('col-span')
   })
 
   it('opens the mission’s own page from its tile', () => {
@@ -97,10 +99,9 @@ describe('PlanTiles', () => {
     )
   })
 
-  it('writes the news in words on each tile, and the featured tile also writes its numbers', () => {
+  it('writes the news in words on each tile', () => {
     renderTiles()
-    expect(screen.getByText(/Last 3 years: .* · 1 finished this year/)).toBeTruthy()
-    expect(screen.getByText('1 finished this year')).toBeTruthy()
+    expect(screen.getAllByText('1 finished this year')).toHaveLength(2)
     expect(screen.getByText('Nothing finished yet')).toBeTruthy()
   })
 

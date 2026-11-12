@@ -31,7 +31,7 @@ const mission: PlanMilestone = {
 
 const NOW = new Date('2026-11-09T18:00:00Z')
 
-const renderFigures = (size: 'tile' | 'featured' | 'page') =>
+const renderFigures = (size: 'tile' | 'page') =>
   render(
     <MissionFigures
       mission={mission}
@@ -50,14 +50,11 @@ describe('MissionFigures', () => {
     expect(screen.getByText('1 finished this week')).toBeTruthy()
   })
 
-  it('writes the numbers behind the picture only on the bigger sizes', () => {
+  it('writes the numbers behind the picture only on the mission page', () => {
     renderFigures('tile')
     expect(screen.queryByText(/Last 3 weeks/)).toBeNull()
     cleanup()
-    renderFigures('featured')
-    expect(screen.getByText(/Last 3 weeks: 0, 2, 1 · 1 finished this week/)).toBeTruthy()
-    cleanup()
     renderFigures('page')
-    expect(screen.getByText(/Last 3 weeks: 0, 2, 1/)).toBeTruthy()
+    expect(screen.getByText(/Last 3 weeks: 0, 2, 1 · 1 finished this week/)).toBeTruthy()
   })
 })
