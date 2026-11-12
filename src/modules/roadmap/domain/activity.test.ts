@@ -161,7 +161,7 @@ describe('planActivity', () => {
     )
     expect(result.missions.map((m) => m.milestoneNumber)).toEqual([1, 2])
     expect(result.missions[0].latestAt).toBe(daysAgo(1))
-    expect(result.missions[0].series.reduce((a, b) => a + b, 0)).toBe(0) // the 40-day-old close is out of the window
+    expect(result.missions[0].series.reduce((a, b) => a + b, 0)).toBe(1) // the one close; the edit adds nothing
   })
 
   it('takes the later of the close and the last change for a finished issue', () => {
