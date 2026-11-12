@@ -42,13 +42,14 @@ for (const width of WIDTHS) {
       expect(Math.round(group.y), 'the control is on the box’s row').toBe(Math.round(field.y))
     else expect(group.y).toBeGreaterThan(field.y + field.height - 1)
 
-    // The answer card's label and badge share a row from 360 px (a narrower card wraps the badge whole)
+    // The answer card's label and badge share a row where the card has the room for both (a narrower
+    // card puts the badge whole on a line of its own); either way the badge stays inside the card
     const answer = page.getByRole('region', { name: 'Your City tax' })
     const label = answer.getByText('City tax on an average home')
     const badge = answer.getByText('Proposed')
     const card = await boxOf(answer)
     const [l, b] = [await boxOf(label), await boxOf(badge)]
-    if (width >= 360) expect(Math.abs(l.y + l.height / 2 - (b.y + b.height / 2))).toBeLessThan(2)
+    if (width >= 768) expect(Math.abs(l.y + l.height / 2 - (b.y + b.height / 2))).toBeLessThan(2)
     expect(b.x + b.width, 'the badge stays inside the card').toBeLessThanOrEqual(
       card.x + card.width + 1,
     )

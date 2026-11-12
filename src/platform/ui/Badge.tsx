@@ -20,7 +20,7 @@ import { cn } from '@/platform/lib/cn'
  * is expected later. `open` (success-strong on the success tint) and `done` (done-strong on the
  * done tint, purple) mark whether work is under way or finished, each with its own words and
  * icon (#946); `outline` is a label with no fill, so a state mark stands out beside it. Every pair
- * is one the theme contract checks. `size` is `sm` (the default) or `md`, slightly bigger words and
+ * is one the theme contract checks. `size` is `sm` (the default), `xs` (tighter padding, for a row shared with a label) or `md`, slightly bigger words and
  * icon for a mark that must stand out among small labels (#952).
  */
 const badgeVariants = cva(
@@ -42,6 +42,8 @@ const badgeVariants = cva(
         outline: 'border border-border font-normal text-muted-foreground',
       },
       size: {
+        // Tighter still, for a badge that shares a row with a label on a phone (#1118)
+        xs: 'gap-1 px-2 py-0.5 text-xs [&_svg]:size-3',
         sm: 'text-xs [&_svg]:size-3.5',
         md: 'py-1.5 text-sm [&_svg]:size-4',
       },

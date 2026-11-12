@@ -57,7 +57,7 @@ export function BillAnswer({
           </Text>
           {badge && (
             <span className="ml-auto shrink-0">
-              <CertaintyBadge certainty={badge} label={noted} />
+              <CertaintyBadge certainty={badge} label={noted} size="xs" />
             </span>
           )}
         </div>

@@ -11,7 +11,7 @@ Source: `src/platform/ui/Card.tsx`
 **Variants:**
 
 - `variant`: `"success" | "neutral" | "outline" | "accent" | "elevated" | "muted" | "tinted" | "danger"`
-- `padding`: `"sm" | "md" | "lg" | "none" | "xs"`
+- `padding`: `"xs" | "sm" | "md" | "lg" | "none"`
 - `interactive`: `boolean`
 
 | Prop        | Type              | Required | Description                                                                         |
