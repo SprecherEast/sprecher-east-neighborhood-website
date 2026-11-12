@@ -61,7 +61,17 @@ export function Sparkline({ values, max, label, className }: SparklineProps) {
         />
       ) : null}
       {points.length === 1 ? (
-        <circle cx={points[0][0]} cy={points[0][1]} r={2} className="fill-primary" />
+        <line
+          data-testid="sparkline-dot"
+          x1={points[0][0]}
+          y1={points[0][1]}
+          x2={points[0][0]}
+          y2={points[0][1]}
+          strokeWidth={5}
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+          className="stroke-primary"
+        />
       ) : null}
     </svg>
   )

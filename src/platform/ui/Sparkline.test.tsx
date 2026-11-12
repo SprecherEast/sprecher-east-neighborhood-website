@@ -52,7 +52,7 @@ describe('Sparkline', () => {
 
   it('draws one value as a single dot, and no values as the baseline alone', () => {
     const one = render(<Sparkline values={[3]} max={3} label="One" />)
-    expect(one.container.querySelector('circle')).toBeTruthy()
+    expect(one.getByTestId('sparkline-dot').getAttribute('stroke-linecap')).toBe('round')
     expect(one.container.querySelector('polyline')).toBeNull()
     const none = render(<Sparkline values={[]} max={3} label="None" />)
     expect(none.container.querySelector('line')).toBeTruthy()
