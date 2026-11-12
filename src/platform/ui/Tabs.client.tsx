@@ -1,12 +1,13 @@
 'use client'
 
 import * as RadixTabs from '@radix-ui/react-tabs'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
 import { SUBGRID_FOUR_ROWS, SUBGRID_FOUR_ROWS_EXPLICIT } from './layoutSizes'
 import { cardVariants } from './Card'
+import { HEADER_SCROLL_MARGIN } from './scrollMargin'
 import { Text, type TextProps } from './Text'
 
 export type TabsItem = {
@@ -14,6 +15,8 @@ export type TabsItem = {
   value: string
   /** What the tab shows: a word, or a small card (an icon, a label and a figure) */
   trigger: React.ReactNode
+  /** The tab's name in its link (the part after the `#`); the `value` when left out (#1097) */
+  anchor?: string
   /** The panel's name. Read under the panel when scripting is off, where the tabs are hidden */
   heading: string
   /** Server-rendered content; a chart passed here stays on the server */
@@ -98,13 +101,63 @@ export function Tabs({
 
   // The fade runs after the reader changes tab, not on the page's first paint
   const [changed, setChanged] = useState(false)
+  const [current, setCurrent] = useState(defaultValue)
+  const root = useRef<HTMLDivElement>(null)
+  // Every tab has a link of its own (#1097): the page's address plus the tab's name
+  const anchors = items.map((item) => item.anchor ?? item.value)
+  const names = anchors.join('\n')
+  const values = items.map((item) => item.value).join('\n')
+
+  // The link of a tab: its name, numbered `-2`, `-3` when an earlier tabbed block on the page has the
+  // same name, so every tab on a page has a link of its own
+  const linkOf = (anchor: string) => {
+    const roots = [...document.querySelectorAll<HTMLElement>('[data-tab-names]')]
+    const earlier = roots
+      .slice(0, root.current ? roots.indexOf(root.current) : 0)
+      .filter((other) => other.dataset.tabNames?.split('\n').includes(anchor)).length
+    return earlier > 0 ? `${anchor}-${earlier + 1}` : anchor
+  }
+
+  // A link that names a tab opens it and brings the tabs into view, on load and whenever the
+  // address changes on the page (a link, or Back); a name that is not a tab changes nothing
+  useEffect(() => {
+    const open = () => {
+      let wanted = ''
+      try {
+        wanted = decodeURIComponent(window.location.hash.slice(1))
+      } catch {
+        return
+      }
+      const list = names.split('\n')
+      const index = wanted ? list.findIndex((anchor) => linkOf(anchor) === wanted) : -1
+      const value = values.split('\n')[index]
+      if (value === undefined) return
+      setCurrent(value)
+      root.current?.scrollIntoView({ block: 'start' })
+    }
+    open()
+    window.addEventListener('hashchange', open)
+    return () => window.removeEventListener('hashchange', open)
+    // `names` and `values` stand for the items': the items themselves are new on every render
+  }, [names, values])
+
+  // Choosing a tab puts its link in the address bar to copy, replacing the entry so Back leaves the page
+  const choose = (value: string) => {
+    setChanged(true)
+    setCurrent(value)
+    const index = items.findIndex((item) => item.value === value)
+    window.history.replaceState(window.history.state, '', `#${linkOf(anchors[index] ?? value)}`)
+  }
 
   return (
     <RadixTabs.Root
-      defaultValue={defaultValue}
-      onValueChange={() => setChanged(true)}
+      ref={root}
+      value={current}
+      data-tab-names={names}
+      onValueChange={choose}
       data-changed={changed || undefined}
       className={cn(
+        HEADER_SCROLL_MARGIN,
         'group/tabs flex flex-col gap-(--tabs-gap) [--tabs-flare:var(--tabs-radius)] [--tabs-gap:0.5rem] [--tabs-radius:1rem]',
         FLARES,
         className,

@@ -14,6 +14,7 @@ import { fillFigures, initialFigures, splitBillPanel } from './billFigures'
 import { splitDefinitionAtSource } from './definitionWithSource'
 import { FactCard } from './FactCard'
 import type { FactTabProps, FactTabsProps } from './factTabs'
+import { tabAnchors } from './tabAnchors'
 import { Timeline } from './Timeline'
 
 /**
@@ -139,10 +140,13 @@ export function FactTabs({ tabs, className }: FactTabsProps & { className?: stri
   const initial = Object.fromEntries(
     tabs.map((tab, index) => [`tab-${index}`, initialFigures(tab.panel)]),
   )
+  // Each tab has a link of its own, named from its label (#1097)
+  const anchors = tabAnchors(tabs.map((tab) => tab.fact.label))
   const items: TabsItem[] = tabs.map((tab, index) => {
     const tabId = `tab-${index}`
     return {
       value: tabId,
+      anchor: anchors[index],
       trigger: <FactCard fact={tab.fact} variant="tab" tabId={tabId} />,
       // Read with scripting off, where nothing can follow a typed value: the average home's
       heading: fillFigures(tab.heading, initial[tabId]),

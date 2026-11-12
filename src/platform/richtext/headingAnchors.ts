@@ -1,6 +1,5 @@
-import { slugify } from 'payload/shared'
-
 import type { RichTextValue } from '@/platform/lib'
+import { anchorId } from '@/platform/lib/anchorId'
 
 import { lexicalRoot, type LexicalNode } from './lexicalTree'
 
@@ -16,17 +15,6 @@ const textOf = (node: LexicalNode): string =>
     : node.type === 'text'
       ? (node.text ?? '')
       : (node.children ?? []).map(textOf).join('')
-
-/** `Café & the "Big" Plan` → `cafe-the-big-plan`: accents folded to their letters, not dropped */
-const toId = (text: string): string =>
-  slugify(
-    text
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, ' '),
-  )
-    ?.replace(/-{2,}/g, '-')
-    .replace(/^-|-$/g, '') || 'section'
 
 /**
  * Every h2 and h3 of an article in reading order, with ids that are readable, unique (a repeat
@@ -44,7 +32,7 @@ export function anchorsByNode(data: RichTextValue | null | undefined): Map<objec
     if (level) {
       const text = textOf(node).replace(/\s+/g, ' ').trim()
       if (text) {
-        const base = toId(text)
+        const base = anchorId(text)
         // A repeat gets -2, -3; skip any number another heading already took ("Costs 2")
         let id = base
         let count = counts.get(base) ?? 1
