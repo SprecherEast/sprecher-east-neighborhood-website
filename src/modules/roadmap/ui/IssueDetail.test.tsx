@@ -18,6 +18,7 @@ const issue: PlanIssue = {
   description: 'We are making the plan easier to read.',
   url: 'https://github.com/example/site/issues/12',
   closedAt: null,
+  updatedAt: null,
 }
 
 describe('IssueDetail', () => {

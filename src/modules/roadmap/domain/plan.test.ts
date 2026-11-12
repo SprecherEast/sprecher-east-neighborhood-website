@@ -12,6 +12,7 @@ const issue = (number: number, over: Partial<RawIssue> = {}): RawIssue => ({
   state: 'open',
   stateReason: null,
   closedAt: null,
+  updatedAt: null,
   labels: [],
   milestoneNumber: null,
   url: `https://github.com/o/r/issues/${number}`,

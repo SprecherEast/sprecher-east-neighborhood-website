@@ -74,7 +74,7 @@ export type MissionActivity = {
   milestoneNumber: number
   /** Finished issues per step, oldest first */
   series: number[]
-  /** When the mission's latest issue was closed; null when none is */
+  /** The latest close or change of any of its issues; null when none has a date */
   latestAt: string | null
 }
 
@@ -91,36 +91,42 @@ export type PlanActivity = {
 const closedTimes = (issues: PlanIssue[]) =>
   issues.flatMap((i) => (i.state === 'done' && i.closedAt ? [i.closedAt] : []))
 
+/** Every time something happened to a mission's issues: a finished issue's close, or any issue's last change */
+const activityTimes = (issues: PlanIssue[]) => [
+  ...closedTimes(issues),
+  ...issues.flatMap((i) => (i.updatedAt ? [i.updatedAt] : [])),
+]
+
+/** The latest of some times, compared as instants and returned as it was written */
 const latest = (times: string[]) =>
-  times.reduce<string | null>((a, t) => (a === null || t > a ? t : a), null)
+  times.reduce<string | null>((a, t) => (a === null || Date.parse(t) > Date.parse(a) ? t : a), null)
 
 /**
- * Each mission's activity, ordered by its latest finished issue (most recent first; missions with
- * none come last, then by milestone number so ties stay put). Latest activity is a close today:
- * the plan reader gives no other date. The first mission is the one the page features.
+ * Each mission's activity, ordered by its latest activity (most recent first; missions with
+ * nothing come last, then by milestone number so ties stay put). Latest activity is the later of
+ * an issue's close and its last change on GitHub, so an edit or a comment counts; the series
+ * counts finished issues only. The first mission is the one the page features.
  */
 export function planActivity(milestones: PlanMilestone[], now: Date): PlanActivity {
   const perMission = milestones.map((m) => ({
     number: m.number,
-    times: closedTimes(m.epics.flatMap((epic) => epic.children)),
+    issues: m.epics.flatMap((epic) => epic.children),
   }))
   const step = pickActivityStep(
-    perMission.flatMap((m) => m.times),
+    perMission.flatMap((m) => closedTimes(m.issues)),
     now,
   )
   const missions = perMission
     .map<MissionActivity>((m) => ({
       milestoneNumber: m.number,
-      series: bucketCounts(m.times, step, now),
-      latestAt: latest(m.times),
+      series: bucketCounts(closedTimes(m.issues), step, now),
+      latestAt: latest(activityTimes(m.issues)),
     }))
     .sort((a, b) => {
-      if (a.latestAt !== b.latestAt) {
-        if (a.latestAt === null) return 1
-        if (b.latestAt === null) return -1
-        return Date.parse(b.latestAt) - Date.parse(a.latestAt)
-      }
-      return a.milestoneNumber - b.milestoneNumber
+      const byTime =
+        (b.latestAt === null ? -Infinity : Date.parse(b.latestAt)) -
+        (a.latestAt === null ? -Infinity : Date.parse(a.latestAt))
+      return Number.isNaN(byTime) || byTime === 0 ? a.milestoneNumber - b.milestoneNumber : byTime
     })
   return {
     step,

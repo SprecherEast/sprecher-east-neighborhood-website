@@ -17,6 +17,7 @@ const issue = (number: number, over: Partial<PlanIssue> = {}): PlanIssue => ({
   description: '',
   url: '',
   closedAt: null,
+  updatedAt: null,
   ...over,
 })
 const done = (number: number, closedAt: string) => issue(number, { state: 'done', closedAt })
@@ -121,6 +122,18 @@ describe('pickActivityStep', () => {
     expect(pickActivityStep(times, NOW)).toBe('year')
   })
 
+  it('needs half of the months too: two busy months of six is not enough', () => {
+    const times = ['2026-08-10', '2026-07-10'].flatMap((d) =>
+      Array.from({ length: busy }, () => `${d}T15:00:00Z`),
+    )
+    expect(pickActivityStep(times, NOW)).toBe('year')
+  })
+
+  it('goes to years when all the activity is older than the month window', () => {
+    const times = Array.from({ length: 20 }, () => '2025-09-10T15:00:00Z')
+    expect(pickActivityStep(times, NOW)).toBe('year')
+  })
+
   it('stays on weeks when there is no activity at all', () => {
     expect(pickActivityStep([], NOW)).toBe('week')
   })
@@ -138,6 +151,41 @@ describe('planActivity', () => {
     )
     expect(result.missions.map((m) => m.milestoneNumber)).toEqual([2, 3, 1])
     expect(result.missions[0].latestAt).toBe(daysAgo(1))
+  })
+
+  it('counts an edit or a new comment as activity, but not as finished work', () => {
+    const edited = issue(11, { updatedAt: daysAgo(1) })
+    const result = planActivity(
+      [milestone(1, [done(10, daysAgo(100)), edited]), milestone(2, [done(21, daysAgo(3))])],
+      NOW,
+    )
+    expect(result.missions.map((m) => m.milestoneNumber)).toEqual([1, 2])
+    expect(result.missions[0].latestAt).toBe(daysAgo(1))
+    expect(result.missions[0].series.reduce((a, b) => a + b, 0)).toBe(0) // the 40-day-old close is out of the window
+  })
+
+  it('takes the later of the close and the last change for a finished issue', () => {
+    const result = planActivity(
+      [
+        milestone(
+          1,
+          [done(10, daysAgo(5))].map((i) => ({ ...i, updatedAt: daysAgo(2) })),
+        ),
+      ],
+      NOW,
+    )
+    expect(result.missions[0].latestAt).toBe(daysAgo(2))
+  })
+
+  it('compares times as instants, so the same moment written two ways is a tie', () => {
+    const result = planActivity(
+      [
+        milestone(8, [done(81, '2026-11-08T12:00:00.000Z')]),
+        milestone(7, [done(71, '2026-11-08T12:00:00Z')]),
+      ],
+      NOW,
+    )
+    expect(result.missions.map((m) => m.milestoneNumber)).toEqual([7, 8])
   })
 
   it('puts missions with no finished work last, in milestone order, and keeps ties stable', () => {

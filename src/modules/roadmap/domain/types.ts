@@ -8,6 +8,8 @@ export type RawIssue = {
   stateReason: string | null
   /** When it was closed, as GitHub gives it; `null` while open */
   closedAt: string | null
+  /** When it was last changed on GitHub (an edit, a comment, a label, a close); `null` if GitHub gave none */
+  updatedAt: string | null
   labels: string[]
   milestoneNumber: number | null
   url: string
@@ -34,6 +36,8 @@ export type PlanIssue = {
   description: string
   url: string
   closedAt: string | null
+  /** When it was last changed on GitHub; with `closedAt` it tells a mission's latest activity */
+  updatedAt: string | null
 }
 
 export type PlanEpic = PlanIssue & { children: PlanIssue[] }
