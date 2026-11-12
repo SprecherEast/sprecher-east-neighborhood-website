@@ -170,3 +170,18 @@ Source: `src/platform/ui/chart/ChartCaption.tsx`
 **Used by** (direct imports):
 
 - Platform: `platform/ui`
+
+## `Sparkline`
+
+Source: `src/platform/ui/Sparkline.tsx`
+
+| Prop        | Type       | Required | Description                                                                       |
+| ----------- | ---------- | -------- | --------------------------------------------------------------------------------- |
+| `values`    | `number[]` | yes      |                                                                                   |
+| `max`       | `number`   | yes      | The top of the scale; share it between pictures that are read side by side        |
+| `label`     | `string`   | yes      | What it shows, with every value, for screen readers: "Finished per week: 0, 2, 5" |
+| `className` | `string`   | no       |                                                                                   |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`
