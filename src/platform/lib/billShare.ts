@@ -15,12 +15,6 @@ export const BILL_BODY_NAMES: Record<BillBody, string> = {
   matc: 'Madison College (MATC)',
 }
 
-/** The short names written on the pie's two big wedges and the bar's City slice (#1068) */
-export const BILL_BODY_CAPTIONS: Partial<Record<BillBody, string>> = {
-  city: 'City tax',
-  schools: 'School tax',
-}
-
 /** Each body's tax rate in dollars per $1,000 of assessed value (its "mill rate"); a body that has not set one is left out */
 export type MillRates = Partial<Record<BillBody, number>>
 

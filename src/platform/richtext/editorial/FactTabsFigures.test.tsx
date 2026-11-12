@@ -45,6 +45,16 @@ describe('the tab figure and heading with placeholders (#1029)', () => {
     expect(button().textContent).toContain('+$0')
   })
 
+  it('are the very figures the answer card shows, for the average home and for a home estimated (#1111)', async () => {
+    const { container } = render(<FactTabs tabs={[tab(WORDS)]} />)
+    const answer = () => screen.getByRole('region', { name: 'Your City tax' }).textContent
+    expect(answer()).toContain('Up $90 a year, $7.50 a month')
+    expect(heading(container).textContent).toContain('$7.50')
+    await estimate('$1,000,600')
+    expect(answer()).toContain('Up $180 a year, $15 a month')
+    expect(heading(container).textContent).toContain('$15 more')
+  })
+
   it('show text without placeholders as written, and change nothing without a bill block', async () => {
     const { container } = render(
       <FactTabs tabs={[tab({ value: '+$90 a year', heading: 'One average home' }, false)]} />,

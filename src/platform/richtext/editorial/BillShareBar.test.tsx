@@ -3,51 +3,51 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { BillShare } from './BillShare.client'
-import { box, city, estimate, PROPS } from './billShareFixtures'
+import { box, estimate, PROPS } from './billShareFixtures'
 
 afterEach(cleanup)
 
-describe('the share bar over the City’s panel (#1030)', () => {
-  /** Each body's whole percent, by name, read from the pie's label and from the bar's label */
-  const percents = (label: string): Record<string, number> =>
-    Object.fromEntries(
-      Array.from(
-        label.matchAll(
-          /(Madison schools|City of Madison|Dane County|Madison College \(MATC\)) (?:\$[\d,]+, )?(\d+)%/g,
-        ),
-        (m): [string, number] => [m[1] ?? '', Number(m[2])],
-      ),
-    )
-  const KEYS = {
-    schools: 'Madison schools',
-    city: 'City of Madison',
-    county: 'Dane County',
-    matc: 'Madison College (MATC)',
-  } as Record<string, string>
+const KEYS = {
+  schools: 'Madison schools',
+  city: 'City of Madison',
+  county: 'Dane County',
+  matc: 'Madison College (MATC)',
+} as Record<string, string>
 
-  it('shows the same shares as the pie, for each year and for a home estimated', async () => {
+describe('the whole bill: the bar and the receipt (#1030, #1111)', () => {
+  /** Each body's whole percent, by name, as the receipt's rows write it */
+  const receiptPercents = (container: HTMLElement): Record<string, number> =>
+    Object.fromEntries(
+      Array.from(container.querySelectorAll('[data-share-bill] li'), (li): [string, number] => {
+        const [name = '', percent = ''] = Array.from(
+          li.children,
+          (child) => child.textContent ?? '',
+        )
+        return [name, Number.parseInt(percent, 10)]
+      }),
+    )
+
+  it('draws each slice as wide as its share, the same shares the receipt writes, for each year and a home estimated', async () => {
     const { container } = render(<BillShare {...PROPS}>x</BillShare>)
     const same = () => {
-      const pie = percents(
-        screen.getByRole('img', { name: /^Your rough property tax:/ }).getAttribute('aria-label') ??
-          '',
-      )
-      const bar = percents(
-        screen
-          .getByRole('img', { name: /^Your whole property tax bill:/ })
-          .getAttribute('aria-label') ?? '',
-      )
-      expect(Object.keys(pie)).toHaveLength(4)
-      expect(bar).toEqual(pie)
-      // each slice is as wide as its exact share: within a point of the whole percent the pie states
-      const widths = Array.from(
-        container.querySelectorAll<SVGRectElement>('rect[data-share-slice]'),
-      )
-      expect(widths).toHaveLength(4)
-      for (const rect of widths) {
+      const receipt = receiptPercents(container)
+      expect(Object.keys(receipt)).toHaveLength(4)
+      const rects = Array.from(container.querySelectorAll<SVGRectElement>('rect[data-share-slice]'))
+      expect(rects).toHaveLength(4)
+      // each slice is as wide as its exact share: within a point of the whole percent written
+      for (const rect of rects) {
         const name = KEYS[rect.getAttribute('data-share-slice') ?? ''] ?? ''
         const width = Number.parseFloat(rect.getAttribute('width') ?? '0')
-        expect(Math.abs(width - (pie[name] ?? -9))).toBeLessThan(1)
+        expect(Math.abs(width - (receipt[name] ?? -9))).toBeLessThan(1)
+      }
+      // and the bar's label for screen readers says the same percents
+      const label =
+        screen
+          .getByRole('img', { name: /^Your whole property tax bill:/ })
+          .getAttribute('aria-label') ?? ''
+      for (const [name, percent] of Object.entries(receipt)) {
+        expect(label).toContain(`${name} $`)
+        expect(label).toContain(`${percent}%`)
       }
     }
     same()
@@ -57,19 +57,17 @@ describe('the share bar over the City’s panel (#1030)', () => {
     same()
   })
 
-  it('labels the City’s slice with its name and percent and joins it to the City’s panel', () => {
-    const { container } = render(
-      <BillShare {...PROPS} {...city}>
-        x
-      </BillShare>,
+  it('names every slice in the receipt, so no slice is told by its color alone', () => {
+    const { container } = render(<BillShare {...PROPS}>x</BillShare>)
+    const names = Array.from(container.querySelectorAll('[data-share-bill] li')).map(
+      (li) => li.children[0]?.textContent,
     )
-    const label = container.querySelector('svg[aria-label^="Your whole"] text tspan')
-    expect(label?.textContent).toBe('City tax')
-    expect(label?.nextElementSibling?.textContent).toMatch(/^\d+%$/)
-    expect(container.querySelector('[data-share-outline]')).not.toBeNull()
-    const bar = screen.getByRole('img', { name: /^Your whole property tax bill:/ })
-    const panel = screen.getByText('Short line')
-    expect(bar.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(names).toEqual([
+      'City of Madison',
+      'Madison schools',
+      'Dane County',
+      'Madison College (MATC)',
+    ])
   })
 
   it('keeps the bar of the last bill while the typed value is not a number', () => {
@@ -78,14 +76,9 @@ describe('the share bar over the City’s panel (#1030)', () => {
     screen.getByRole('img', { name: /^Your whole property tax bill:/ })
   })
 
-  it('changes the City’s percent on the bar with the tax year chosen (#1068)', () => {
-    render(<BillShare {...PROPS}>x</BillShare>)
-    const cityPercent = () =>
-      percents(
-        screen
-          .getByRole('img', { name: /^Your whole property tax bill:/ })
-          .getAttribute('aria-label') ?? '',
-      )['City of Madison']
+  it('changes the City’s percent with the tax year chosen (#1068)', () => {
+    const { container } = render(<BillShare {...PROPS}>x</BillShare>)
+    const cityPercent = () => receiptPercents(container)['City of Madison']
     const proposed = cityPercent()
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
     expect(cityPercent()).not.toBe(proposed)

@@ -1,3 +1,4 @@
+import type { ResolvedLink } from '@/platform/lib'
 import { fillFromEarlier } from '@/platform/lib/billShare'
 
 import type { BillShareYear } from './billShare'
@@ -31,4 +32,16 @@ export function reservedNote(years: readonly BillShareYear[]): string | null {
     if (note) return note
   }
   return null
+}
+
+/** The sources a tab lists, each once: the same link given twice (the tab's and a year's) shows once */
+export function uniqueSources(
+  sources: readonly (ResolvedLink | null | undefined)[],
+): ResolvedLink[] {
+  const seen = new Set<string>()
+  return sources.flatMap((source) => {
+    if (!source || seen.has(source.href)) return []
+    seen.add(source.href)
+    return [source]
+  })
 }

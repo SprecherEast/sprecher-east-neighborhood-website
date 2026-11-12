@@ -80,7 +80,6 @@
       "src/platform/lib/mediaLicenses.ts",
       "src/platform/lib/money.ts",
       "src/platform/lib/paging.ts",
-      "src/platform/lib/pie.ts",
       "src/platform/lib/reviewQueue.ts",
       "src/platform/lib/roles.ts",
       "src/platform/lib/slidingWindow.ts",

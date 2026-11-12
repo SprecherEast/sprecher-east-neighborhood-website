@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import type { BillShareYear } from './billShare'
-import { joinNames, reservedNote, ROUGH_NOTE, unconfirmedNote } from './billShareNotes'
+import {
+  joinNames,
+  reservedNote,
+  ROUGH_NOTE,
+  uniqueSources,
+  unconfirmedNote,
+} from './billShareNotes'
 
 const year = (y: number, rates: BillShareYear['rates']): BillShareYear => ({
   year: y,
@@ -49,5 +55,24 @@ describe('reservedNote', () => {
 
   it('is null when no year has one', () => {
     expect(reservedNote([YEARS[0] as BillShareYear])).toBeNull()
+  })
+})
+
+describe('uniqueSources', () => {
+  const a = {
+    label: 'A',
+    href: 'https://example.org/a',
+    external: true,
+    appearance: 'default' as const,
+  }
+  const b = {
+    label: 'B',
+    href: 'https://example.org/b',
+    external: true,
+    appearance: 'default' as const,
+  }
+
+  it('lists each source once, in order, leaving out the missing ones', () => {
+    expect(uniqueSources([a, null, b, { ...a, label: 'A again' }, undefined])).toEqual([a, b])
   })
 })

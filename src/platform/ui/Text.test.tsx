@@ -47,4 +47,13 @@ describe('Text', () => {
       expect(screen.getByText('Small').className).toContain(name)
     }
   })
+
+  it('has a figure style for the one big number a card is about (#1111)', () => {
+    render(<Text variant="figure">$3,467</Text>)
+
+    const figure = screen.getByText('$3,467')
+    expect(figure.tagName).toBe('P')
+    expect(figure.className).toContain('text-4xl')
+    expect(figure.className).toContain('tabular-nums')
+  })
 })

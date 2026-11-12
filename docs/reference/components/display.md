@@ -145,8 +145,8 @@ Source: `src/platform/ui/Text.tsx`
 
 **Variants:**
 
-- `variant`: `"section" | "label" | "small" | "subsection" | "overline" | "lead"`
-- `clamp`: `1 | 2 | 3`
+- `variant`: `"figure" | "section" | "label" | "small" | "subsection" | "overline" | "lead"`
+- `clamp`: `1 | 3 | 2`
 
 | Prop        | Type                                                             | Required | Description                                                                                                    |
 | ----------- | ---------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------- |

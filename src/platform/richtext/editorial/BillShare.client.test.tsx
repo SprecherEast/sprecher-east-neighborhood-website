@@ -5,11 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { BillShare } from './BillShare.client'
-import { box, city, estimate, PROPS } from './billShareFixtures'
+import { box, estimate, PROPS } from './billShareFixtures'
 
 afterEach(cleanup)
 
-const receipt = () => document.querySelector('[data-pie-legend]') as HTMLElement
+const bill = () => document.querySelector('[data-share-bill]') as HTMLElement
+/** The rows of the receipt, as text */
+const rowsOf = () => Array.from(bill().querySelectorAll('li')).map((li) => li.textContent)
 
 describe('BillShare', () => {
   it('starts on the latest year with the City’s average home for it', () => {
@@ -45,10 +47,10 @@ describe('BillShare', () => {
     fireEvent.change(box(), { target: { value: '962600' } })
     // Typing changes nothing: the numbers and the spoken sentence wait for Estimate
     expect(screen.getByRole('status').textContent).toMatch(/\$481,300/)
-    expect(receipt().textContent).toMatch(/For a home valued at \$481,300/)
+    expect(screen.getByText(/^\$481,300 home/)).toBeTruthy()
     await estimate('962600')
-    expect(receipt().textContent).toMatch(/For a home valued at \$962,600/)
-    expect(receipt().textContent).toMatch(/Total property tax\$17,9\d\d/)
+    expect(screen.getByText(/^\$962,600 home/)).toBeTruthy()
+    expect(bill().textContent).toMatch(/Total property tax\$17,9\d\d/)
     expect(screen.getByRole('status').textContent).toMatch(/about \$17,9\d\d/)
   })
 
@@ -97,11 +99,13 @@ describe('BillShare', () => {
     expect(box().value).toBe('$300,000')
   })
 
-  it('draws the whole bill as one pie of the four bodies, with the source', () => {
-    render(<BillShare {...PROPS}>x</BillShare>)
+  it('draws the whole bill as one bar of the four bodies, and no pie', () => {
+    const { container } = render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
-    const pie = screen.getByRole('img', { name: /^Your rough property tax:/ })
-    const label = pie.getAttribute('aria-label') ?? ''
+    const label =
+      screen
+        .getByRole('img', { name: /^Your whole property tax bill:/ })
+        .getAttribute('aria-label') ?? ''
     for (const name of [
       'Madison schools',
       'City of Madison',
@@ -111,41 +115,28 @@ describe('BillShare', () => {
       expect(label).toContain(name)
     }
     expect(label).toMatch(/City of Madison \$[\d,]+, 38%/)
-    expect(screen.getByRole('link', { name: /City tax detail/ })).toBeTruthy()
+    expect(screen.queryByRole('img', { name: /^Your rough property tax/ })).toBeNull()
+    expect(container.querySelector('path[data-pie-slice]')).toBeNull()
   })
 
-  it('lists the bill as a receipt: the home, the City first, then the others, then the total', () => {
-    render(<BillShare {...PROPS}>x</BillShare>)
+  it('lists the bill as a receipt in the bar’s order: the City, schools, county, college, then the total above', () => {
+    const { container } = render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
-    const rows = Array.from(receipt().querySelectorAll('li')).map((li) => li.textContent)
-    expect(receipt().firstElementChild?.textContent).toBe('For a home valued at $481,300')
-    expect(rows.map((row) => row?.replace(/[$\d,%]+/g, '').trim())).toEqual([
+    expect(rowsOf().map((row) => row?.replace(/[$\d,%]+/g, '').trim())).toEqual([
       'City of Madison',
       'Madison schools',
       'Dane County',
       'Madison College (MATC)',
     ])
-    expect(receipt().lastElementChild?.textContent).toMatch(/^Total property tax\$8,9\d\d$/)
-    // The receipt replaces the sentence above the pie: only the screen-reader status still says it
+    expect(
+      Array.from(container.querySelectorAll('rect[data-share-slice]')).map((rect) =>
+        rect.getAttribute('data-share-slice'),
+      ),
+    ).toEqual(['city', 'schools', 'county', 'matc'])
+    expect(bill().firstElementChild?.textContent).toMatch(/^Total property tax\$8,9\d\d$/)
+    // The sentence is said once, to screen readers only
     const said = screen.queryAllByText(/your whole bill is about/)
     expect(said.every((node) => node.closest('[role="status"]'))).toBe(true)
-    const label = screen.getByRole('img', { name: /^Your rough property tax:/ })
-    expect(label.getAttribute('aria-label')).toMatch(/^Your rough property tax: City of Madison/)
-  })
-
-  it('puts the pie first and the Rough Estimator after it, and the City’s panel under both', () => {
-    render(
-      <BillShare {...PROPS} {...city}>
-        <p>The rest</p>
-      </BillShare>,
-    )
-    const estimator = screen.getByRole('region', { name: 'Rough Estimator' })
-    const pie = screen.getByRole('heading', { name: 'Your rough property tax' })
-    const panel = screen.getByText('Short line')
-    const follows = (a: Node, b: Node) =>
-      a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING
-    expect(follows(pie, estimator)).toBeTruthy()
-    expect(follows(estimator, panel)).toBeTruthy()
   })
 
   it('has no accessibility violations', async () => {
@@ -166,15 +157,9 @@ describe('BillShare, Estimate never scrolls the page (#1068)', () => {
     expect(scroll).not.toHaveBeenCalled()
     expect(screen.getByRole('status').textContent).toMatch(/\$300,000/)
   })
-
-  it('draws the receipt card before the Rough Estimator, so the numbers move above the box', () => {
-    render(<BillShare {...PROPS}>x</BillShare>)
-    const card = screen.getByRole('region', { name: 'Your rough property tax' })
-    expect(card.compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-  })
 })
 
-describe('BillShare, the card and the total after Estimate (#1051)', () => {
+describe('BillShare, the total after Estimate (#1051)', () => {
   const total = () => screen.getByText('Total property tax').closest('p') as HTMLElement
 
   it('flashes the total once a new bill has been estimated, and not on load', async () => {

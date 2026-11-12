@@ -91,6 +91,7 @@ export function DisplayGallery() {
             </Text>
             <Text variant="label">label</Text>
             <Text variant="lead">lead: a larger paragraph that introduces a page.</Text>
+            <Text variant="figure">$3,467</Text>
             <Text variant="small" clamp={2} className="max-w-sm">
               small, clamped to two lines: a long summary that keeps going so the clamp has
               something to cut off after the second line on every screen size.
@@ -164,6 +165,21 @@ export function DisplayGallery() {
             </Disclosure>
             <Disclosure variant="card" summary="Is this one open?" defaultOpen>
               <Text variant="small">Yes: defaultOpen starts it open.</Text>
+            </Disclosure>
+          </div>
+        </GalleryVariant>
+        <GalleryVariant
+          label="row (compact: a closed row is only its summary tall)"
+          className="block"
+        >
+          <div className="max-w-prose space-y-2">
+            <Disclosure variant="row" summary="How the estimate works">
+              <Text variant="small">
+                A rough estimate: credits and exemptions change a real bill.
+              </Text>
+            </Disclosure>
+            <Disclosure variant="row" summary="Sources">
+              <Text variant="small">Each source is listed once.</Text>
             </Disclosure>
           </div>
         </GalleryVariant>

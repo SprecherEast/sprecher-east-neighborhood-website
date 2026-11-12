@@ -10,7 +10,7 @@ import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
 
-const VARIANTS = ['card', 'bar', 'link'] as const
+const VARIANTS = ['card', 'row', 'bar', 'link'] as const
 
 /*
  * Whether the chevron is turned, decided by the real CSS Tailwind makes from its classes (jsdom
@@ -42,6 +42,19 @@ describe('Disclosure', () => {
       expect(screen.getByText('Tuesday at 6:30.')).toBeTruthy()
     },
   )
+
+  it('has a row look: the card with no vertical padding, so a closed row is only its summary tall (#1111)', () => {
+    const { container } = render(
+      <Disclosure variant="row" summary="Sources">
+        Body
+      </Disclosure>,
+    )
+    const classes = container.querySelector('details')?.className ?? ''
+
+    expect(classes).toContain('border')
+    expect(classes).toContain('py-0')
+    expect(screen.getByText('Body').className).toContain('py-4')
+  })
 
   it('opens from the summary, and can start open', () => {
     const { container, rerender } = render(
