@@ -18,10 +18,10 @@ const STATE_LOOK = {
 } as const
 
 /** An issue's state: its words and an icon in a colour of its own, so colour is never the only signal */
-export function StateBadge({ state }: { state: PlanIssueState }) {
+export function StateBadge({ state, size = 'md' }: { state: PlanIssueState; size?: 'sm' | 'md' }) {
   const { variant, Icon } = STATE_LOOK[state]
   return (
-    <Badge variant={variant} size="md">
+    <Badge variant={variant} size={size}>
       <Icon aria-hidden="true" />
       {STATE_WORDS[state]}
     </Badge>

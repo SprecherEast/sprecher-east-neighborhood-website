@@ -2,36 +2,13 @@ import React from 'react'
 
 import { Disclosure } from '@/platform/ui/Disclosure'
 import { EmptyState } from '@/platform/ui/EmptyState'
-import { Link } from '@/platform/ui/Link'
 import { Text } from '@/platform/ui/Text'
 
-import { planIssuePath } from '../domain/paths'
 import type { Plan, PlanEpic } from '../domain/types'
 import { dueLabel } from './dueLabel'
-import { IssueList } from './IssueList'
+import { EpicBox } from './EpicBox'
 import { IssueMarkdown } from './IssueMarkdown'
 import { ProgressSummary } from './ProgressSummary'
-
-function EpicBox({ epic, now }: { epic: PlanEpic; now: Date }) {
-  return (
-    <Disclosure
-      variant="card"
-      summary={<ProgressSummary name={epic.title} level="epic" issues={epic.children} now={now} />}
-    >
-      <div className="space-y-3">
-        <Link href={planIssuePath(epic.number)} variant="inline">
-          Read about this epic
-          <span className="sr-only">: {epic.title}</span>
-        </Link>
-        {epic.children.length > 0 ? (
-          <IssueList issues={epic.children} />
-        ) : (
-          <Text variant="small">No issues to show under this epic yet.</Text>
-        )}
-      </div>
-    </Disclosure>
-  )
-}
 
 const epicIssues = (epics: PlanEpic[]) => epics.flatMap((epic) => epic.children)
 
