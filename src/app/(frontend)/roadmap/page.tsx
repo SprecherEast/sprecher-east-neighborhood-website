@@ -3,7 +3,7 @@ import type { Metadata } from 'next/types'
 import React from 'react'
 
 import { planStats } from '@/modules/roadmap'
-import { getPlan, PlanSummary, PlanTree } from '@/modules/roadmap/server'
+import { getPlan, PlanSummary, PlanTiles } from '@/modules/roadmap/server'
 import { mergeOpenGraph } from '@/platform/seo/mergeOpenGraph'
 import { NOT_INDEXED } from '@/platform/seo/notIndexed'
 import { PageHeader } from '@/platform/ui/PageHeader'
@@ -15,7 +15,7 @@ export const revalidate = 3600
 
 const title = 'Our plan'
 const description = 'The real plan, straight from GitHub and refreshed every hour.'
-const intro = `${description} Open a milestone to see its epics, and an epic to see its issues.`
+const intro = `${description} Pick a mission to see its projects, and a project to see its issues.`
 
 export default async function RoadmapPage() {
   const plan = await getPlan()
@@ -26,8 +26,10 @@ export default async function RoadmapPage() {
     <div className={PAGE_SHELL}>
       <PageHeader title="What we’re building" description={intro} />
       <div className="container max-w-3xl space-y-8">
-        {stats.epics > 0 && <PlanSummary stats={stats} generatedAt={plan.generatedAt} />}
-        <PlanTree plan={plan} now={now} />
+        {stats.open + stats.done > 0 && (
+          <PlanSummary stats={stats} generatedAt={plan.generatedAt} />
+        )}
+        <PlanTiles plan={plan} now={now} />
       </div>
     </div>
   )

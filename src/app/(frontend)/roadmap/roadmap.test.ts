@@ -15,7 +15,7 @@ vi.mock('@/modules/roadmap/server', () => ({
   listPlanIssueNumbers: vi.fn(async () => [10, 11]),
   IssueDetail: stub,
   PlanSummary: stub,
-  PlanTree: stub,
+  PlanTiles: stub,
 }))
 vi.mock('next/navigation', () => ({
   notFound: () => {

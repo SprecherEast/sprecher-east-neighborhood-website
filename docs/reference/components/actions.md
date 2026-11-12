@@ -28,7 +28,7 @@ Source: `src/platform/ui/Button.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `accounts`, `contact`, `events`, `site`, `verification`
+- Modules: `accounts`, `contact`, `events`, `roadmap`, `site`, `verification`
 - Routes: `/`, `/dev/gallery`, `/events/[slug]`
 - Platform: `platform/richtext`, `platform/ui`
 - Elsewhere: `src/app/global-error.tsx`
