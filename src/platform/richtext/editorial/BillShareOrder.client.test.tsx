@@ -5,14 +5,14 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { BillShare } from './BillShare.client'
-import { city, PROPS } from './billShareFixtures'
+import { city, estimate, PROPS } from './billShareFixtures'
 
 afterEach(cleanup)
 
 describe('BillShare, the order of the tab and its three closed rows (#1111)', () => {
   it('shows the estimate’s notes only in the row on how it works, closed until opened (#1111)', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
-    const row = screen.getByText('How we estimate').closest('details') as HTMLDetailsElement
+    const row = screen.getByText('How we estimate this').closest('details') as HTMLDetailsElement
     expect(row.open).toBe(false)
     expect(row.textContent).toMatch(/a rough estimate/i)
     expect(row.textContent).toContain('Uses 2027 rates.')
@@ -30,8 +30,8 @@ describe('BillShare, the order of the tab and its three closed rows (#1111)', ()
       screen.getByRole('region', { name: 'Rough Estimator' }),
       screen.getByRole('region', { name: 'Your City tax' }),
       screen.getByRole('region', { name: 'Your whole property tax bill' }),
-      screen.getByText('Where the tax goes'),
-      screen.getByText('How we estimate'),
+      screen.getByText('Where the City share goes'),
+      screen.getByText('How we estimate this'),
       screen.getByText('Sources'),
       screen.getByText('The rest'),
     ]
@@ -56,7 +56,7 @@ describe('BillShare, the order of the tab and its three closed rows (#1111)', ()
     expect(rows).toHaveLength(3)
     expect(rows.every((row) => !row.open)).toBe(true)
     // The tab's source and the year's source are the same link: listed once
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(screen.getAllByRole('link', { name: /City tax detail/ })).toHaveLength(1)
   })
 
@@ -68,9 +68,49 @@ describe('BillShare, the order of the tab and its three closed rows (#1111)', ()
     )
     const answer = screen.getByRole('region', { name: 'Your City tax' })
     expect(answer.textContent).toContain('$3,467')
-    expect(answer.textContent).toContain('Up $90 a year, $7.50 a month')
-    expect(answer.textContent).toContain('City 37%')
-    expect(screen.getAllByText('Estimate')).toHaveLength(1)
+    expect(answer.textContent).toContain('Up $90 a year, about $7.50 a month')
+    expect(answer.textContent).toContain(
+      'Average home: $500,300. The City is 37% of the whole bill.',
+    )
+    // The 2027 switch has a stored note, so the one badge says it, with the "not final" look
+    expect(screen.getAllByText('Proposed')).toHaveLength(1)
+    expect(screen.queryByText('Estimate')).toBeNull()
+  })
+
+  it('has the badge follow the year chosen, so it never disagrees with the year control (#1118)', () => {
+    render(
+      <BillShare {...PROPS} {...city} certainty="confirmed">
+        x
+      </BillShare>,
+    )
+    const answer = () => screen.getByRole('region', { name: 'Your City tax' })
+    expect(answer().textContent).toContain('Proposed')
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
+    // 2026 has no note: the badge is the tab's stored certainty
+    expect(answer().textContent).toContain('Confirmed')
+    expect(answer().textContent).not.toContain('Proposed')
+    fireEvent.click(screen.getByRole('button', { name: '2027' }))
+    expect(answer().textContent).toContain('Proposed')
+  })
+
+  it('labels the answer for the average home, then for the reader’s own home after an estimate (#1118)', async () => {
+    render(
+      <BillShare {...PROPS} {...city}>
+        x
+      </BillShare>,
+    )
+    expect(screen.getByText('City tax on an average home')).toBeTruthy()
+    await estimate('$1,000,600')
+    expect(screen.getByText('City tax on your home')).toBeTruthy()
+    expect(screen.queryByText('City tax on an average home')).toBeNull()
+  })
+
+  it('puts the whole bill in its own card, titled on the left with the total on the right (#1118)', () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    const card = screen.getByRole('region', { name: 'Your whole property tax bill' })
+    expect(card.className).toContain('border')
+    const title = screen.getByText('Your whole bill')
+    expect(title.closest('p')?.textContent).toMatch(/^Your whole bill\$/)
   })
 
   it('has no accessibility violations with every row open', async () => {

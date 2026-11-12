@@ -54,7 +54,7 @@ Source: `src/platform/richtext/editorial/FactTabs.tsx`
 
 ## `BillShare`
 
-The whole property-tax bill at the top of a fact tab (#1018, #1111), one column on every width, in the order a neighbor needs it: the bill block's one intro line, the Rough Estimator (the home value the reader can change, which starts at the City's average home, and the switch between tax years), the answer card (the City's tax on the home and year, its increase, how sure we are), the whole bill (the total, one bar whose slices are as wide as their shares, and the receipt naming each), then three closed rows: where the City's share goes, how the estimate works and the sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home value and year, so every amount is the City's slice of the bill. A year in which a body has not set its rate uses that body's rate from the year before, and says so in a note whose room is always kept, so the page never changes height.
+The whole property-tax bill at the top of a fact tab (#1018, #1111), one column on every width, in the order a neighbor needs it: the bill block's one intro line, the Rough Estimator (the home value the reader can change, which starts at the City's average home, and the switch between tax years), the answer card (the City's tax on the home and year, its increase, the year's status), the whole bill (its own card: the total, one bar whose slices are as wide as their shares, and the receipt naming each), then one card of three closed rows: where the City's share goes, how the estimate works and the sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home value and year, so every amount is the City's slice of the bill. A year in which a body has not set its rate uses that body's rate from the year before, and says so in a note whose room is always kept, so the page never changes height.
 
 Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 
@@ -77,16 +77,17 @@ Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 
 ## `BillAnswer`
 
-The answer a neighbor came for (#1111), right under the Rough Estimator: the City's tax on the home last estimated in the year chosen as the biggest text on the tab, the City's increase for a year and for a month under it (`figuresFor`, the same figures a tab's `{yearly}` and `{monthly}` use, so they always agree), how sure we are as one badge, and one small line with the home value used and the City's share of the whole bill. The increase line keeps its room when there is no figure, so the card never changes height. It draws what it is given.
+The answer a neighbor came for (#1111, #1118), right under the Rough Estimator. Its top row has the label on the left ("City tax on an average home", or "on your home" after an estimate) and the status badge on the right. Under it the City's tax on the home last estimated in the year chosen is the biggest text on the tab, with a small "a year", then the City's increase in the primary green (`increaseLine`, the same figures a tab's `{yearly}` and `{monthly}` use, so they always agree) and one small sentence with the home value used and the City's share of the whole bill. The badge is the chosen year's stored note, with the "not final" look, or, when the year has none, the tab's stored certainty, so it can never disagree with the year. The increase line keeps its room when there is no figure, so the card never changes height. It draws what it is given.
 
 Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 
 | Prop          | Type                                     | Required | Description                                                                                      |
 | ------------- | ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------------ |
-| `year`        | `number`                                 | yes      |                                                                                                  |
 | `tax`         | `string`                                 | yes      | The City's tax, formatted                                                                        |
 | `increase`    | `number \| null`                         | yes      | What the City's tax rises by in the year, in whole dollars; null when the tab's chart cannot say |
-| `certainty`   | `"confirmed" \| "estimate" \| "unknown"` | no       |                                                                                                  |
+| `certainty`   | `"confirmed" \| "estimate" \| "unknown"` | no       | How sure we are about the tab's fact; the badge unless the chosen year has a note                |
+| `note`        | `string`                                 | no       | The chosen year's stored note, such as "proposed"; empty for none                                |
+| `yours`       | `boolean`                                | yes      | Whether the home is one the reader estimated, not the City's average                             |
 | `home`        | `string`                                 | yes      | The home value used, formatted                                                                   |
 | `cityPercent` | `number \| null`                         | yes      | The City's whole percent of the whole bill; null while the bill is not whole                     |
 
@@ -96,7 +97,7 @@ Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 
 ## `BillDetails`
 
-The three closed rows under the whole bill (#1111): where the City's share goes (`where`: the City's bar and the breakdown chart, drawn for the home and year shown), how the estimate works (the notes, then the tab's short text and detail) and the sources, each source once. A row with nothing to show is left out, and a note that is not showing still takes its room, hidden from everyone, so an open row never changes height when a year is chosen. Each row is the kit's `Disclosure`, so it opens and closes without scripting and never moves what is above it.
+The three closed rows under the whole bill (#1111, #1118), in one card split by divider lines: where the City's share goes (`where`: the City's bar and the breakdown chart, drawn for the home and year shown), how the estimate works (the notes, then the tab's short text and detail) and the sources, each source once. A row with nothing to show is left out, and a note that is not showing still takes its room, hidden from everyone, so an open row never changes height when a year is chosen. Each row is the kit's `Disclosure`, so it opens and closes without scripting and never moves what is above it.
 
 Source: `src/platform/richtext/editorial/BillDetails.tsx`
 
@@ -113,20 +114,20 @@ Source: `src/platform/richtext/editorial/BillDetails.tsx`
 
 ## `RoughEstimator`
 
-The tool at the top of a whole-bill picture (#1022): a compact orange card, named Rough Estimator for screen readers but with no title drawn, with the home value box, one button for each tax year (a year can carry a short note under its button, such as "proposed", and every button keeps the room for one). The box has a check-mark button inside it at its end (#1110): off, flat and muted, while the typed value is not a new number, and on, accent-colored and slightly raised once it is (Enter in the box does the same), so on a phone it sits right above the keyboard (#1087). The year buttons share the row with the box where the card is wide enough and stack under it before anything wraps. It draws what it is given and keeps no state of its own.
+The tool at the top of a whole-bill picture (#1022): a compact orange card, named Rough Estimator for screen readers but with no title drawn, with the home value box and, on the same row at every width, the tax years as one joined two-option control of the year numbers, as tall as the box (#1118). The box has a check-mark button inside it at its end (#1110): off, flat and muted, while the typed value is not a new number, and on, accent-colored and slightly raised once it is (Enter in the box does the same), so on a phone it sits right above the keyboard (#1087). Nothing is drawn under the years: the answer card's badge says a year's status. It draws what it is given and keeps no state of its own.
 
 Source: `src/platform/richtext/editorial/RoughEstimator.tsx`
 
-| Prop            | Type                                                        | Required | Description                                                                                 |
-| --------------- | ----------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- |
-| `value`         | `string`                                                    | yes      | The home value box's text, as typed                                                         |
-| `onValueChange` | `(value: string) => void`                                   | yes      |                                                                                             |
-| `canEstimate`   | `boolean`                                                   | yes      | Whether the typed value is a new number to estimate: the check-mark button is off otherwise |
-| `onEstimate`    | `() => void`                                                | yes      | The reader pressed the check-mark button, or Enter in the box                               |
-| `error`         | `string`                                                    | no       | Why the box's text is no value, or nothing                                                  |
-| `options`       | `readonly { key: string; label: string; note?: string; }[]` | yes      | The tax years the reader can pick between, one button each                                  |
-| `selected`      | `number`                                                    | yes      | The index of the picked option                                                              |
-| `onSelect`      | `(index: number) => void`                                   | yes      |                                                                                             |
+| Prop            | Type                                         | Required | Description                                                                                 |
+| --------------- | -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- |
+| `value`         | `string`                                     | yes      | The home value box's text, as typed                                                         |
+| `onValueChange` | `(value: string) => void`                    | yes      |                                                                                             |
+| `canEstimate`   | `boolean`                                    | yes      | Whether the typed value is a new number to estimate: the check-mark button is off otherwise |
+| `onEstimate`    | `() => void`                                 | yes      | The reader pressed the check-mark button, or Enter in the box                               |
+| `error`         | `string`                                     | no       | Why the box's text is no value, or nothing                                                  |
+| `options`       | `readonly { key: string; label: string; }[]` | yes      | The tax years the reader can pick between: the year numbers, as one joined control          |
+| `selected`      | `number`                                     | yes      | The index of the picked option                                                              |
+| `onSelect`      | `(index: number) => void`                    | yes      |                                                                                             |
 
 **Used by** (direct imports):
 

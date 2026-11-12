@@ -169,11 +169,11 @@ export function DisplayGallery() {
           </div>
         </GalleryVariant>
         <GalleryVariant
-          label="row (compact: a closed row is only its summary tall)"
+          label="row (no box of its own: rows share one card split by lines)"
           className="block"
         >
-          <div className="max-w-prose space-y-2">
-            <Disclosure variant="row" summary="How we estimate">
+          <Card variant="elevated" padding="none" className="max-w-prose divide-y divide-border">
+            <Disclosure variant="row" summary="How we estimate this">
               <Text variant="small">
                 A rough estimate: credits and exemptions change a real bill.
               </Text>
@@ -181,7 +181,7 @@ export function DisplayGallery() {
             <Disclosure variant="row" summary="Sources">
               <Text variant="small">Each source is listed once.</Text>
             </Disclosure>
-          </div>
+          </Card>
         </GalleryVariant>
         <GalleryVariant label="nested (the arrow turns only for its own box)" className="block">
           <div className="max-w-prose">

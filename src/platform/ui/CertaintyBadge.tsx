@@ -15,12 +15,19 @@ const BADGE: Record<Certainty, { variant: BadgeProps['variant']; Icon: typeof Ch
  * How sure we are, in words and an icon (#509), so the colour is never the only cue. The key
  * facts block and a chart's caption (#639) show it the same way.
  */
-export function CertaintyBadge({ certainty }: { certainty: Certainty }) {
+export function CertaintyBadge({
+  certainty,
+  label,
+}: {
+  certainty: Certainty
+  /** Words of its own in place of the certainty's, such as a year's stored note; the look stays */
+  label?: string
+}) {
   const { variant, Icon } = BADGE[certainty]
   return (
     <Badge variant={variant}>
       <Icon aria-hidden="true" />
-      {CERTAINTY_LABELS[certainty]}
+      {label ?? CERTAINTY_LABELS[certainty]}
     </Badge>
   )
 }

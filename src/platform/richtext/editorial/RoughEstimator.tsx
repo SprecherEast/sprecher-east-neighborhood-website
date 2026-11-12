@@ -4,6 +4,7 @@ import React from 'react'
 import { Button } from '@/platform/ui/Button'
 import { Card } from '@/platform/ui/Card'
 import { Field } from '@/platform/ui/Field.client'
+import { SegmentedControl } from '@/platform/ui/SegmentedControl'
 
 export type RoughEstimatorProps = {
   /** The home value box's text, as typed */
@@ -15,8 +16,8 @@ export type RoughEstimatorProps = {
   onEstimate: () => void
   /** Why the box's text is no value, or nothing */
   error?: string
-  /** The tax years the reader can pick between, one button each */
-  options: readonly { key: string; label: string; note?: string }[]
+  /** The tax years the reader can pick between: the year numbers, as one joined control */
+  options: readonly { key: string; label: string }[]
   /** The index of the picked option */
   selected: number
   onSelect: (index: number) => void
@@ -24,14 +25,13 @@ export type RoughEstimatorProps = {
 
 /**
  * The tool at the top of a whole-bill picture (#1022): a compact orange card, named Rough
- * Estimator for screen readers but with no title drawn, with the home value box, one button for
- * each tax year (a year can carry a short note under its button, such as "proposed", and every
- * button keeps the room for one). The box has a
- * check-mark button inside it at its end (#1110): off, flat and muted, while the typed value is not
- * a new number, and on, accent-colored and slightly raised once it is (Enter in the box does the
- * same), so on a phone it sits right above the keyboard (#1087). The year buttons share the row
- * with the box where the card is wide enough and stack under it before anything wraps. It draws
- * what it is given and keeps no state of its own.
+ * Estimator for screen readers but with no title drawn, with the home value box and, on the same
+ * row at every width, the tax years as one joined two-option control of the year numbers, as tall
+ * as the box (#1118). The box has a check-mark button inside it at its end (#1110): off, flat and
+ * muted, while the typed value is not a new number, and on, accent-colored and slightly raised
+ * once it is (Enter in the box does the same), so on a phone it sits right above the keyboard
+ * (#1087). Nothing is drawn under the years: the answer card's badge says a year's status. It
+ * draws what it is given and keeps no state of its own.
  */
 export function RoughEstimator({
   value,
@@ -44,70 +44,45 @@ export function RoughEstimator({
   onSelect,
 }: RoughEstimatorProps) {
   return (
-    <Card as="section" variant="accent" padding="sm" aria-label="Rough Estimator">
-      <div>
-        <form
-          className="@container"
-          onSubmit={(event) => {
-            event.preventDefault()
-            if (canEstimate) onEstimate()
-          }}
-        >
-          <div data-estimator-row className="flex flex-col gap-4 @lg:flex-row @lg:items-start">
-            <Field
-              label="Your home’s assessed value"
-              error={error}
-              layout="bar"
-              actionPlacement="inside"
-              // One line: the year buttons below are lined up with the box by this label's height
-              className="@lg:flex-1 @lg:[&_label]:whitespace-nowrap"
-              action={
-                <Button
-                  type="submit"
-                  variant="action"
-                  size="icon-sm"
-                  aria-label="Estimate"
-                  disabled={!canEstimate}
-                  iconStart={<Check aria-hidden="true" />}
+    <Card as="section" variant="accent" padding="xs" aria-label="Rough Estimator">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (canEstimate) onEstimate()
+        }}
+      >
+        <div data-estimator-row>
+          <Field
+            label="Your home’s assessed value"
+            error={error}
+            layout="bar"
+            actionPlacement="inside"
+            action={
+              <Button
+                type="submit"
+                variant="action"
+                size="icon-sm"
+                aria-label="Estimate"
+                disabled={!canEstimate}
+                iconStart={<Check aria-hidden="true" />}
+              />
+            }
+            aside={
+              options.length > 1 && (
+                <SegmentedControl
+                  className="w-full @[16rem]:w-auto"
+                  label="Tax rates to use"
+                  options={options}
+                  selected={selected}
+                  onSelect={onSelect}
                 />
-              }
-            >
-              <Field.Money value={value} onValueChange={onValueChange} enterKeyHint="go" />
-            </Field>
-            {options.length > 1 && (
-              // From @lg the one-line label above the box is 32 px tall (24 px line, 8 px gap): the buttons start level with the box
-              <div
-                role="group"
-                aria-label="Tax rates to use"
-                className="grid grid-cols-2 gap-x-2 @lg:mt-8 @lg:flex-none"
-              >
-                {options.map((option, index) => (
-                  <div key={option.key} className="space-y-1">
-                    <Button
-                      variant={index === selected ? 'accent' : 'accent-outline'}
-                      size="lg"
-                      className="px-2 text-sm whitespace-nowrap @lg:px-4 @lg:text-base"
-                      aria-pressed={index === selected}
-                      fullWidth
-                      onClick={() => onSelect(index)}
-                    >
-                      {option.label}
-                    </Button>
-                    {options.some((other) => other.note) && (
-                      <p
-                        data-switch-note
-                        className="min-h-5 text-center text-sm text-muted-foreground"
-                      >
-                        {option.note ? `(${option.note})` : ''}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </form>
-      </div>
+              )
+            }
+          >
+            <Field.Money value={value} onValueChange={onValueChange} enterKeyHint="go" />
+          </Field>
+        </div>
+      </form>
     </Card>
   )
 }

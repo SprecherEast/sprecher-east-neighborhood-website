@@ -53,6 +53,8 @@ looks like a button, so it is one.
 `Button · secondary`. The high-impact hero and the CTA block ignore the field today and style their
 buttons by position (H2, H3, B14, B15).
 
+**`SegmentedControl`** (#1118) joins two or three short options into one 48 px control with one border and divider lines; the picked option is filled with the accent and says so with `aria-pressed`, and each option is a `Button`. It draws what it is given and keeps no state. Its test covers the group, the joined look, the callback and axe; the gallery shows two and three options. `Field` places it beside its box with `aside`, and `Card` has an `xs` padding for the compact cards of the whole-bill tab.
+
 ## Form fields
 
 Components: [form fields](../reference/components/form-fields.md).
@@ -185,7 +187,7 @@ Components: [rich text](../reference/components/rich-text.md) (`src/platform/ric
   that uses them (next point).
 - **Kept in the one place that uses them,** under the rule "add a component when a second screen
   needs it" (#163): the loading placeholder is a style inside `SiteHeader`. The FAQ accordion moved to the
-  shared `Disclosure` once `OnThisPage` needed the same `<details>` row (#610), which also has a bare `link` look for "See the smaller pieces" in a breakdown chart (#866) and a compact `row` look, the card with no vertical padding on the box, for the closed rows under a whole-bill tab (#1111). Its chevron turns only for its own box (a selector on the box's own summary, never `group-open:`, which fires for any open box around it, #967), so boxes nest, as on the Plan page.
+  shared `Disclosure` once `OnThisPage` needed the same `<details>` row (#610), which also has a bare `link` look for "See the smaller pieces" in a breakdown chart (#866) and a compact `row` look with no box of its own, for the closed rows under a whole-bill tab, which sit in one `Card` split by `divide-y` lines (#1111, #1118). Its chevron turns only for its own box (a selector on the box's own summary, never `group-open:`, which fires for any open box around it, #967), so boxes nest, as on the Plan page.
 - **Build order:** `Button` and `Link` (19 and 12 elements), then `Field` and `Form`, then `Card`,
   `Media`, `PageHeader` and `EmptyState`.
 

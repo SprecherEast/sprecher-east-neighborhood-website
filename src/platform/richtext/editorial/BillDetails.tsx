@@ -2,12 +2,13 @@ import React, { type ReactNode } from 'react'
 
 import type { ResolvedLink } from '@/platform/lib'
 import { cn } from '@/platform/lib/cn'
+import { Card } from '@/platform/ui/Card'
 import { Disclosure } from '@/platform/ui/Disclosure'
 import { Link } from '@/platform/ui/Link'
 import { Text } from '@/platform/ui/Text'
 
 /**
- * The three closed rows under the whole bill (#1111): where the City's share goes (`where`: the
+ * The three closed rows under the whole bill (#1111, #1118), in one card split by divider lines: where the City's share goes (`where`: the
  * City's bar and the breakdown chart, drawn for the home and year shown), how the estimate works
  * (the notes, then the tab's short text and detail) and the sources, each source once. A row with
  * nothing to show is left out, and a note that is not showing still takes its room, hidden from
@@ -28,13 +29,13 @@ export function BillDetails({
   sources: readonly ResolvedLink[]
 }) {
   return (
-    <div className="space-y-2">
+    <Card variant="elevated" padding="none" className="divide-y divide-border">
       {where && (
-        <Disclosure variant="row" summary="Where the tax goes" bodyClassName="space-y-6">
+        <Disclosure variant="row" summary="Where the City share goes" bodyClassName="space-y-6">
           {where}
         </Disclosure>
       )}
-      <Disclosure variant="row" summary="How we estimate" bodyClassName="space-y-3">
+      <Disclosure variant="row" summary="How we estimate this" bodyClassName="space-y-3">
         <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
           {notes.map((note) => (
             <li
@@ -63,6 +64,6 @@ export function BillDetails({
           </ul>
         </Disclosure>
       )}
-    </div>
+    </Card>
   )
 }

@@ -47,7 +47,7 @@ export function ShareBill({
         <p
           key={pulseKey}
           className={cn(
-            'flex min-h-7 items-center justify-between gap-x-2 font-semibold text-foreground',
+            'flex min-h-6 items-center justify-between gap-x-2 font-semibold text-foreground',
             pulseKey ? 'total-pulse' : undefined,
           )}
         >
@@ -68,7 +68,7 @@ export function ShareBill({
         {slices.map((slice) => (
           <li
             key={slice.key}
-            className="col-span-3 grid min-h-7 grid-cols-subgrid items-center border-t border-border py-0.5 first:border-t-0"
+            className="col-span-3 grid min-h-6 grid-cols-subgrid items-center border-t border-border py-0.5 first:border-t-0"
           >
             <span className="flex min-w-0 items-center gap-x-2">
               <span

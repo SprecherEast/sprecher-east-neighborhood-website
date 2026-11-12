@@ -41,17 +41,17 @@ describe('the tab figure and heading with placeholders (#1029)', () => {
     expect(button().textContent).toContain('+$180')
     expect(heading(container).textContent).toBe('Your share: about $15 more a month')
     // The year chosen counts too: 2026 has no increase
-    await act(async () => fireEvent.click(screen.getByRole('button', { name: /2026 rates/ })))
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: '2026' })))
     expect(button().textContent).toContain('+$0')
   })
 
   it('are the very figures the answer card shows, for the average home and for a home estimated (#1111)', async () => {
     const { container } = render(<FactTabs tabs={[tab(WORDS)]} />)
     const answer = () => screen.getByRole('region', { name: 'Your City tax' }).textContent
-    expect(answer()).toContain('Up $90 a year, $7.50 a month')
+    expect(answer()).toContain('Up $90 a year, about $7.50 a month')
     expect(heading(container).textContent).toContain('$7.50')
     await estimate('$1,000,600')
-    expect(answer()).toContain('Up $180 a year, $15 a month')
+    expect(answer()).toContain('Up $180 a year, about $15 a month')
     expect(heading(container).textContent).toContain('$15 more')
   })
 

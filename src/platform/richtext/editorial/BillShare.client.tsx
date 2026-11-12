@@ -13,6 +13,7 @@ import type { Certainty } from '@/platform/lib/certainty'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { AmountBar } from '@/platform/ui/AmountBar'
+import { Card } from '@/platform/ui/Card'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
 import { ShareBill } from '@/platform/ui/ShareBill'
 import { Text } from '@/platform/ui/Text'
@@ -59,9 +60,9 @@ export type CityPanelProps = {
  * The whole property-tax bill at the top of a fact tab (#1018, #1111), one column on every width,
  * in the order a neighbor needs it: the bill block's one intro line, the Rough Estimator (the home
  * value the reader can change, which starts at the City's average home, and the switch between tax
- * years), the answer card (the City's tax on the home and year, its increase, how sure we are), the
- * whole bill (the total, one bar whose slices are as wide as their shares, and the receipt naming
- * each), then three closed rows: where the City's share goes, how the estimate works and the
+ * years), the answer card (the City's tax on the home and year, its increase, the year's status), the
+ * whole bill (its own card: the total, one bar whose slices are as wide as their shares, and the receipt
+ * naming each), then one card of three closed rows: where the City's share goes, how the estimate works and the
  * sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home
  * value and year, so every amount is the City's slice of the bill. A year in which a body has not
  * set its rate uses that body's rate from the year before, and says so in a note whose room is
@@ -176,11 +177,7 @@ export function BillShare({
         error={
           homeValue === null ? 'Enter your home’s value as a number, like $500,000.' : undefined
         }
-        options={years.map((option) => ({
-          key: String(option.year),
-          label: option.label,
-          note: option.note,
-        }))}
+        options={years.map((option) => ({ key: String(option.year), label: String(option.year) }))}
         selected={yearIndex}
         onSelect={selectYear}
       />
@@ -188,14 +185,15 @@ export function BillShare({
         {summary}
       </p>
       <BillAnswer
-        year={year.year}
         tax={cityBar?.total ?? formatWholeDollars(cityAmount ?? 0)}
         increase={cityBar?.increase ?? null}
         certainty={certainty}
+        note={year.note}
+        yours={estimated !== null}
         home={formatWholeDollars(shown)}
         cityPercent={receipt.slices.length > 0 ? (cityPart?.percent ?? null) : null}
       />
-      <section aria-label="Your whole property tax bill">
+      <Card as="section" variant="elevated" padding="xs" aria-label="Your whole property tax bill">
         {receipt.slices.length > 0 ? (
           <ShareBill
             slices={receipt.slices}
@@ -208,7 +206,7 @@ export function BillShare({
             The whole bill can’t be shown yet.
           </Text>
         )}
-      </section>
+      </Card>
       <BillDetails
         where={where || undefined}
         notes={notes}

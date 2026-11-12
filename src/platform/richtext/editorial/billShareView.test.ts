@@ -11,7 +11,7 @@ describe('receiptFor', () => {
     const receipt = receiptFor(computeBillShare(500300, RATES), 500300)
     expect(receipt.slices.map((slice) => slice.key)).toEqual(['city', 'schools', 'county', 'matc'])
     expect(receipt.slices[0]).toMatchObject({ name: 'City of Madison', tone: 'highlight' })
-    expect(receipt.total).toEqual({ label: 'Total property tax', amount: '$9,339' })
+    expect(receipt.total).toEqual({ label: 'Your whole bill', amount: '$9,339' })
     expect(receipt.slices.map((slice) => slice.tone)).toEqual([
       'highlight',
       'light',

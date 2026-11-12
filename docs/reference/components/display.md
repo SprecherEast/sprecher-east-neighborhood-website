@@ -62,9 +62,10 @@ How sure we are, in words and an icon (#509), so the colour is never the only cu
 
 Source: `src/platform/ui/CertaintyBadge.tsx`
 
-| Prop        | Type                                     | Required | Description |
-| ----------- | ---------------------------------------- | -------- | ----------- |
-| `certainty` | `"confirmed" \| "estimate" \| "unknown"` | yes      |             |
+| Prop        | Type                                     | Required | Description                                                                                |
+| ----------- | ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `certainty` | `"confirmed" \| "estimate" \| "unknown"` | yes      |                                                                                            |
+| `label`     | `string`                                 | no       | Words of its own in place of the certainty's, such as a year's stored note; the look stays |
 
 **Used by** (direct imports):
 

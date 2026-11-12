@@ -43,7 +43,7 @@ describe('Disclosure', () => {
     },
   )
 
-  it('has a row look: the card with no vertical padding, so a closed row is only its summary tall (#1111)', () => {
+  it('has a row look with no box of its own, so rows can share one card split by divider lines (#1118)', () => {
     const { container } = render(
       <Disclosure variant="row" summary="Sources">
         Body
@@ -51,8 +51,9 @@ describe('Disclosure', () => {
     )
     const classes = container.querySelector('details')?.className ?? ''
 
-    expect(classes).toContain('border')
-    expect(classes).toContain('py-0')
+    expect(classes).not.toContain('border')
+    expect(classes).not.toContain('shadow')
+    expect(classes).toContain('px-4')
     expect(screen.getByText('Body').className).toContain('py-4')
   })
 

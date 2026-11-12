@@ -27,7 +27,8 @@ export const fieldVariants = cva('flex min-w-0', {
       inline: 'flex-row items-start gap-3',
       // The label above; under it the control and an action button side by side (a box with its
       // own Estimate or Search button); hint and error go under both
-      bar: 'flex-col gap-2',
+      // A container, so a row of box and aside can stack below a width (`@[16rem]`) before it wraps
+      bar: '@container flex-col gap-2',
     },
     // `half` shares a row in a `Form` from 640 px; below that, and outside a Form, every field
     // is full width (the Form's grid makes each cell full width unless told otherwise)
@@ -77,6 +78,12 @@ export type FieldProps = Omit<VariantProps<typeof fieldVariants>, 'layout'> & {
    * the end, and the border takes the accent while the action is not disabled.
    */
   actionPlacement?: 'beside' | 'inside'
+  /**
+   * Something that sits on the box's row, outside it, at its end in the `bar` layout, as tall as
+   * the box (#1118): the picker of a few options that goes with the value, such as a tax year.
+   * The label stays above both. In a field narrower than 16 rem the aside stacks under the box.
+   */
+  aside?: ReactNode
   /** Exactly one control */
   children: ReactElement
 }
@@ -93,6 +100,7 @@ export function Field({
   className,
   action,
   actionPlacement = 'beside',
+  aside,
   children,
 }: FieldProps) {
   const control = Children.only(children)
@@ -113,7 +121,7 @@ export function Field({
       htmlFor={controlId}
       className={cn(
         'text-sm font-medium text-foreground',
-        resolvedLayout === 'bar' && 'text-base',
+        resolvedLayout === 'bar' && 'text-sm @[16rem]:text-base',
         hideLabel && 'sr-only',
       )}
     >
@@ -158,10 +166,17 @@ export function Field({
             {labelElement}
             {hintElement}
             {actionPlacement === 'inside' ? (
-              <div data-field-bar data-action-inside="true" className={insideBoxClasses}>
-                {/* Stretched, so the control fills the box's height and its whole height is tappable */}
-                <div className="min-w-0 flex-1 self-stretch">{control}</div>
-                {action}
+              <div className="flex flex-col gap-2 @[16rem]:flex-row @[16rem]:items-center">
+                <div
+                  data-field-bar
+                  data-action-inside="true"
+                  className={cn(insideBoxClasses, 'min-w-0 @[16rem]:flex-1')}
+                >
+                  {/* Stretched, so the control fills the box's height and its whole height is tappable */}
+                  <div className="min-w-0 flex-1 self-stretch">{control}</div>
+                  {action}
+                </div>
+                {aside}
               </div>
             ) : (
               <div data-field-bar className="flex items-stretch gap-2">

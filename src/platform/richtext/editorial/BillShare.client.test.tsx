@@ -17,9 +17,7 @@ describe('BillShare', () => {
   it('starts on the latest year with the City’s average home for it', () => {
     render(<BillShare {...PROPS}>City detail</BillShare>)
     expect(box().value).toBe('$500,300')
-    expect(screen.getByRole('button', { name: /2027 rates/ }).getAttribute('aria-pressed')).toBe(
-      'true',
-    )
+    expect(screen.getByRole('button', { name: '2027' }).getAttribute('aria-pressed')).toBe('true')
     expect(screen.getByText('City detail')).toBeTruthy()
   })
 
@@ -28,9 +26,9 @@ describe('BillShare', () => {
     const note = screen.getByText(/City’s 2027 tax rate is proposed/i)
     expect(note.textContent).toBe('The City’s 2027 tax rate is proposed, not confirmed.')
     expect(note.closest('li')?.getAttribute('aria-hidden')).toBeNull()
-    expect(screen.getByText('(proposed)')).toBeTruthy()
+    expect(screen.getByText('Proposed')).toBeTruthy()
     // Last year's rates have nothing to confirm: the note keeps its room and is hidden from everyone
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     const kept = screen.getByText(/City’s 2027 tax rate is proposed/i).closest('li')
     expect(kept?.getAttribute('aria-hidden')).toBe('true')
     expect(kept?.className).toContain('invisible')
@@ -39,7 +37,7 @@ describe('BillShare', () => {
 
   it('shows the bill for the home value typed, only once Estimate is pressed', async () => {
     render(<BillShare {...PROPS}>x</BillShare>)
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(box().value).toBe('$481,300')
     const result = screen.getByRole('status')
     expect(result.textContent).toMatch(/\$481,300/)
@@ -47,17 +45,17 @@ describe('BillShare', () => {
     fireEvent.change(box(), { target: { value: '962600' } })
     // Typing changes nothing: the numbers and the spoken sentence wait for Estimate
     expect(screen.getByRole('status').textContent).toMatch(/\$481,300/)
-    expect(screen.getByText(/^\$481,300 home/)).toBeTruthy()
+    expect(screen.getByText(/^Average home: \$481,300\./)).toBeTruthy()
     await estimate('962600')
-    expect(screen.getByText(/^\$962,600 home/)).toBeTruthy()
-    expect(bill().textContent).toMatch(/Total property tax\$17,9\d\d/)
+    expect(screen.getByText(/^Your home: \$962,600\./)).toBeTruthy()
+    expect(bill().textContent).toMatch(/Your whole bill\$17,9\d\d/)
     expect(screen.getByRole('status').textContent).toMatch(/about \$17,9\d\d/)
   })
 
   it('keeps what the reader typed when the year changes', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.change(box(), { target: { value: '300000' } })
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(box().value).toBe('$300,000')
   })
 
@@ -94,14 +92,14 @@ describe('BillShare', () => {
   it('applies a rate year at once while a typed value waits for Estimate', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.change(box(), { target: { value: '300000' } })
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(screen.getByRole('status').textContent).toMatch(/\$481,300/)
     expect(box().value).toBe('$300,000')
   })
 
   it('draws the whole bill as one bar of the four bodies, and no pie', () => {
     const { container } = render(<BillShare {...PROPS}>x</BillShare>)
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     const label =
       screen
         .getByRole('img', { name: /^Your whole property tax bill:/ })
@@ -121,7 +119,7 @@ describe('BillShare', () => {
 
   it('lists the bill as a receipt in the bar’s order: the City, schools, county, college, then the total above', () => {
     const { container } = render(<BillShare {...PROPS}>x</BillShare>)
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(rowsOf().map((row) => row?.replace(/[$\d,%]+/g, '').trim())).toEqual([
       'City of Madison',
       'Madison schools',
@@ -133,7 +131,7 @@ describe('BillShare', () => {
         rect.getAttribute('data-share-slice'),
       ),
     ).toEqual(['city', 'schools', 'county', 'matc'])
-    expect(bill().firstElementChild?.textContent).toMatch(/^Total property tax\$8,9\d\d$/)
+    expect(bill().firstElementChild?.textContent).toMatch(/^Your whole bill\$8,9\d\d$/)
     // The sentence is said once, to screen readers only
     const said = screen.queryAllByText(/your whole bill is about/)
     expect(said.every((node) => node.closest('[role="status"]'))).toBe(true)
@@ -160,7 +158,7 @@ describe('BillShare, Estimate never scrolls the page (#1068)', () => {
 })
 
 describe('BillShare, the total after Estimate (#1051)', () => {
-  const total = () => screen.getByText('Total property tax').closest('p') as HTMLElement
+  const total = () => screen.getByText('Your whole bill').closest('p') as HTMLElement
 
   it('flashes the total once a new bill has been estimated, and not on load', async () => {
     render(<BillShare {...PROPS}>x</BillShare>)
@@ -171,7 +169,7 @@ describe('BillShare, the total after Estimate (#1051)', () => {
 
   it('flashes the total when a rate year changes the bill', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(total().className).toContain('total-pulse')
   })
 })
@@ -186,7 +184,7 @@ describe('BillShare, a switch of year counts the amounts in half a second (#1087
       frames = []
       pending.forEach((frame) => frame(now))
     })
-  const totalText = () => screen.getByText('Total property tax').closest('p')?.textContent ?? ''
+  const totalText = () => screen.getByText('Your whole bill').closest('p')?.textContent ?? ''
 
   beforeEach(() => {
     frames = []
@@ -203,7 +201,7 @@ describe('BillShare, a switch of year counts the amounts in half a second (#1087
   it('moves the amounts through the years’ rates, ending on the new year’s bill within half a second', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     const before = totalText()
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     step(0)
     // Not there yet: the amounts have not jumped to the other year's bill
     expect(totalText()).toBe(before)
@@ -244,7 +242,7 @@ describe('BillShare, a switch of year counts the amounts in half a second (#1087
     const amount = () => Number(totalText().replace(/\D/g, ''))
     const before = amount()
     expect(before).toBeGreaterThan(0)
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     // The year's own rates differ a little, so allow for that, but the home value's count must not restart:
     // the total stays near where it was, far from the old home's bill
     step(0)
@@ -253,8 +251,8 @@ describe('BillShare, a switch of year counts the amounts in half a second (#1087
 
   it('flashes the total once, when the year’s count has ended', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
-    const total = () => screen.getByText('Total property tax').closest('p') as HTMLElement
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    const total = () => screen.getByText('Your whole bill').closest('p') as HTMLElement
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     step(0)
     step(200)
     expect(total().className).not.toContain('total-pulse')

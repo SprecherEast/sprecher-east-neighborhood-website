@@ -113,6 +113,26 @@ describe('Field, bar layout with the action inside the box (#1110)', () => {
     expect(holder.parentElement?.className).toContain('[&_input]:h-full')
   })
 
+  it('puts an aside on the box’s row, outside the box, with the label still above both (#1118)', () => {
+    render(
+      <Field
+        label="Value"
+        layout="bar"
+        actionPlacement="inside"
+        action={<button type="button">Go</button>}
+        aside={<div data-testid="aside">Years</div>}
+      >
+        <Field.Input defaultValue="1" />
+      </Field>,
+    )
+    const box = screen.getByLabelText('Value').closest('div[data-field-bar]') as HTMLElement
+    const aside = screen.getByTestId('aside')
+    expect(box.contains(aside)).toBe(false)
+    expect(box.parentElement).toBe(aside.parentElement)
+    expect(box.parentElement?.className).toContain('flex')
+    expect(box.parentElement?.contains(screen.getByText('Value'))).toBe(false)
+  })
+
   it('has no accessibility violations', async () => {
     const { container } = render(inside(true))
     await expectAccessible(container)

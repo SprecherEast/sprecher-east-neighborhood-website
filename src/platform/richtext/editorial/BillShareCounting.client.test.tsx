@@ -45,7 +45,7 @@ describe('BillShare, every amount counts, not only the pie and the receipt (#109
       </BillShare>,
     )
     const before = cityTotal()
-    fireEvent.click(screen.getByRole('button', { name: /2026 rates/ }))
+    fireEvent.click(screen.getByRole('button', { name: '2026' }))
     step(0)
     expect(cityTotal()).toBe(before)
     step(200)
