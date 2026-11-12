@@ -49,7 +49,7 @@ describe('BillAnswer', () => {
 
   it('writes one small line with the home value and the City’s share of the whole bill', () => {
     render(<BillAnswer {...base} />)
-    expect(screen.getByText('$500,300 home · City is 38% of the bill')).toBeTruthy()
+    expect(screen.getByText('$500,300 home · City 38%')).toBeTruthy()
     cleanup()
     render(<BillAnswer {...base} cityPercent={null} />)
     expect(screen.getByText('$500,300 home')).toBeTruthy()

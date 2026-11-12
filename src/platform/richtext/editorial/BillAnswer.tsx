@@ -54,9 +54,7 @@ export function BillAnswer({
           </span>
         </Text>
         <Text variant="small" as="p">
-          {cityPercent === null
-            ? `${home} home`
-            : `${home} home · City is ${cityPercent}% of the bill`}
+          {cityPercent === null ? `${home} home` : `${home} home · City ${cityPercent}%`}
         </Text>
       </div>
     </Card>

@@ -173,7 +173,7 @@ export function DisplayGallery() {
           className="block"
         >
           <div className="max-w-prose space-y-2">
-            <Disclosure variant="row" summary="How the estimate works">
+            <Disclosure variant="row" summary="How we estimate">
               <Text variant="small">
                 A rough estimate: credits and exemptions change a real bill.
               </Text>

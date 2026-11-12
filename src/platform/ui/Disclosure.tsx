@@ -16,13 +16,18 @@ import { TOUCH_MIN_HEIGHT } from './layoutSizes'
  * look with no vertical padding on the box, so a closed row is only as tall as its summary and a few
  * of them stack compactly (#1111).
  */
+// What the two card-like looks (`card` and `row`) share: one definition each, so they cannot drift
+const CARD_BOX = cardVariants({ variant: 'elevated', padding: 'sm' })
+const CARD_SUMMARY = cn(TOUCH_MIN_HEIGHT, 'font-medium focus-visible:outline-offset-2')
+const CARD_CHEVRON = 'size-4 text-muted-foreground'
+
 const summaryVariants = cva(
   'flex cursor-pointer list-none items-center justify-between gap-3 focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden',
   {
     variants: {
       variant: {
-        card: cn(TOUCH_MIN_HEIGHT, 'font-medium focus-visible:outline-offset-2'),
-        row: cn(TOUCH_MIN_HEIGHT, 'font-medium focus-visible:outline-offset-2'),
+        card: CARD_SUMMARY,
+        row: CARD_SUMMARY,
         bar: 'min-h-[var(--section-bar-height)] px-4 text-sm font-semibold text-foreground focus-visible:-outline-offset-2 md:px-8',
         link: cn(
           TOUCH_MIN_HEIGHT,
@@ -39,8 +44,8 @@ const chevronVariants = cva(
   {
     variants: {
       variant: {
-        card: 'size-4 text-muted-foreground',
-        row: 'size-4 text-muted-foreground',
+        card: CARD_CHEVRON,
+        row: CARD_CHEVRON,
         bar: 'size-5',
         link: 'size-4',
       },
@@ -87,8 +92,8 @@ export function Disclosure({
       ref={ref}
       open={defaultOpen || undefined}
       className={cn(
-        variant === 'card' && cardVariants({ variant: 'elevated', padding: 'sm' }),
-        variant === 'row' && cn(cardVariants({ variant: 'elevated', padding: 'sm' }), 'py-0'),
+        (variant === 'card' || variant === 'row') && CARD_BOX,
+        variant === 'row' && 'py-0',
         className,
       )}
     >

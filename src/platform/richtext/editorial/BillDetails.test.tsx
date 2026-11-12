@@ -31,8 +31,8 @@ describe('BillDetails', () => {
     )
     const rows = Array.from(container.querySelectorAll('details'))
     expect(rows.map((row) => row.querySelector('summary')?.textContent)).toEqual([
-      'Where the City’s share goes',
-      'How the estimate works',
+      'Where the tax goes',
+      'How we estimate',
       'Sources',
     ])
     expect(rows.every((row) => !row.hasAttribute('open'))).toBe(true)

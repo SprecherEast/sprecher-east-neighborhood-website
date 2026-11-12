@@ -48,7 +48,7 @@ describe('FactTabs with a whole tax bill', () => {
         each.textContent?.includes('What the City would spend in 2027'),
       ),
     )
-    expect(row.textContent).toContain('How the estimate works')
+    expect(row.textContent).toContain('How we estimate')
     expect(row.open).toBe(false)
   })
 
@@ -149,7 +149,7 @@ describe('FactTabs with a whole tax bill', () => {
     const answer = present(panel.querySelector('section[aria-label="Your City tax"]'))
     expect(answer.textContent).toContain('Estimate')
     const detail = present(panel.querySelector('[data-panel-detail]'))
-    expect(detail.closest('details')?.textContent).toContain('How the estimate works')
+    expect(detail.closest('details')?.textContent).toContain('How we estimate')
     expect(panel.querySelectorAll('[data-panel-detail]')).toHaveLength(1)
   })
 })

@@ -30,11 +30,11 @@ export function BillDetails({
   return (
     <div className="space-y-2">
       {where && (
-        <Disclosure variant="row" summary="Where the City’s share goes" bodyClassName="space-y-6">
+        <Disclosure variant="row" summary="Where the tax goes" bodyClassName="space-y-6">
           {where}
         </Disclosure>
       )}
-      <Disclosure variant="row" summary="How the estimate works" bodyClassName="space-y-3">
+      <Disclosure variant="row" summary="How we estimate" bodyClassName="space-y-3">
         <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
           {notes.map((note) => (
             <li

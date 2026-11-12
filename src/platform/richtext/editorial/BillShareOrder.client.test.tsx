@@ -12,7 +12,7 @@ afterEach(cleanup)
 describe('BillShare, the order of the tab and its three closed rows (#1111)', () => {
   it('shows the estimate’s notes only in the row on how it works, closed until opened (#1111)', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
-    const row = screen.getByText('How the estimate works').closest('details') as HTMLDetailsElement
+    const row = screen.getByText('How we estimate').closest('details') as HTMLDetailsElement
     expect(row.open).toBe(false)
     expect(row.textContent).toMatch(/a rough estimate/i)
     expect(row.textContent).toContain('Uses 2027 rates.')
@@ -30,8 +30,8 @@ describe('BillShare, the order of the tab and its three closed rows (#1111)', ()
       screen.getByRole('region', { name: 'Rough Estimator' }),
       screen.getByRole('region', { name: 'Your City tax' }),
       screen.getByRole('region', { name: 'Your whole property tax bill' }),
-      screen.getByText('Where the City’s share goes'),
-      screen.getByText('How the estimate works'),
+      screen.getByText('Where the tax goes'),
+      screen.getByText('How we estimate'),
       screen.getByText('Sources'),
       screen.getByText('The rest'),
     ]
@@ -69,7 +69,7 @@ describe('BillShare, the order of the tab and its three closed rows (#1111)', ()
     const answer = screen.getByRole('region', { name: 'Your City tax' })
     expect(answer.textContent).toContain('$3,467')
     expect(answer.textContent).toContain('Up $90 a year, $7.50 a month')
-    expect(answer.textContent).toContain('City is 37% of the bill')
+    expect(answer.textContent).toContain('City 37%')
     expect(screen.getAllByText('Estimate')).toHaveLength(1)
   })
 
