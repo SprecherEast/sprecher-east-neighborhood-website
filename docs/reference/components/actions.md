@@ -94,7 +94,7 @@ Source: `src/platform/ui/CMSLink.tsx`
 
 ## `SegmentedControl`
 
-A few short options joined into one control, one of them picked (#1118): a switch between tax years, say. The options share one small 36 px box with one border and divider lines between them; the picked one is filled with the accent and says so to screen readers (`aria-pressed`). Each option is the kit's `Button`, so choosing, focus and the 44 px tap area work as everywhere else. It draws what it is given and keeps no state of its own, so use it from a client component.
+A few short options joined into one control, one of them picked (#1118): a switch between tax years, say. The options share one small 36 px box with one border and divider lines between them; the picked one is filled with the accent and says so to screen readers (`aria-pressed`). Each option is the kit's `Button`, tapped as 44 px tall though drawn 36 px (an invisible area reaching 4 px past the box, as `icon-sm` does). It draws what it is given and keeps no state of its own, so use it from a client component.
 
 Source: `src/platform/ui/SegmentedControl.tsx`
 

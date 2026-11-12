@@ -45,6 +45,12 @@ describe('ShareBill', () => {
     expect(total.className).toContain('justify-between')
   })
 
+  it('keeps the receipt rows tight and level (#1118)', () => {
+    const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
+    const row = container.querySelector('li') as HTMLElement
+    expect(row.className).toContain('min-h-5')
+  })
+
   it('names every slice in the receipt with its percent and dollars, in the bar’s order', () => {
     const { container } = render(<ShareBill slices={SLICES} label="Sample bill" total={TOTAL} />)
     const rows = Array.from(container.querySelectorAll('li')).map((li) => li.textContent)

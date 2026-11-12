@@ -48,17 +48,33 @@ for (const width of WIDTHS) {
       expect(Math.round(mine.y), 'the labels share a line').toBe(Math.round(theirs.y))
     } else expect(group.y).toBeGreaterThan(field.y + field.height - 1)
 
-    // The answer card's label and badge share a row where the card has the room for both (a narrower
-    // card puts the badge whole on a line of its own); either way the badge stays inside the card
+    // The answer card's label and badge share a row from 390 px (the 320 px card is too narrow for both
+    // and puts the badge whole on a line of its own); either way the badge stays inside the card
     const answer = page.getByRole('region', { name: 'Your City tax' })
     const label = answer.getByText('City tax on an average home')
     const badge = answer.getByText('Proposed')
     const card = await boxOf(answer)
     const [l, b] = [await boxOf(label), await boxOf(badge)]
-    if (width >= 768) expect(Math.abs(l.y + l.height / 2 - (b.y + b.height / 2))).toBeLessThan(2)
+    if (width >= 390) expect(Math.abs(l.y + l.height / 2 - (b.y + b.height / 2))).toBeLessThan(2)
     expect(b.x + b.width, 'the badge stays inside the card').toBeLessThanOrEqual(
       card.x + card.width + 1,
     )
+
+    // Each year option is tapped as 44 px tall though drawn 36 px: its invisible area reaches past the box
+    const reach = await years(page)
+      .getByRole('button')
+      .first()
+      .evaluate((el) => {
+        const after = getComputedStyle(el, '::after')
+        return { position: after.position, top: after.top, bottom: after.bottom }
+      })
+    expect(reach).toEqual({ position: 'absolute', top: '-4px', bottom: '-4px' })
+
+    // No receipt name wraps, down to 320 px
+    const rows = await page
+      .locator('[data-share-bill] li')
+      .evaluateAll((items) => items.map((li) => Math.round(li.getBoundingClientRect().height)))
+    expect(Math.max(...rows), `every receipt name is on one line: ${rows}`).toBeLessThanOrEqual(22)
 
     const sideways = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

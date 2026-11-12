@@ -193,7 +193,13 @@ export function BillShare({
         home={formatWholeDollars(shown)}
         cityPercent={receipt.slices.length > 0 ? (cityPart?.percent ?? null) : null}
       />
-      <Card as="section" variant="elevated" padding="xs" aria-label="Your whole property tax bill">
+      <Card
+        as="section"
+        variant="elevated"
+        padding="xs"
+        className="max-[24rem]:p-2"
+        aria-label="Your whole property tax bill"
+      >
         {receipt.slices.length > 0 ? (
           <ShareBill
             slices={receipt.slices}

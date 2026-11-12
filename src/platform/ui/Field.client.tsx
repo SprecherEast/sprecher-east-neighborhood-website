@@ -51,6 +51,15 @@ export const fieldVariants = cva('flex min-w-0', {
 export const BAR_LABEL =
   'text-sm leading-6 font-medium whitespace-nowrap text-foreground @[20rem]:text-base'
 
+/**
+ * How an aside's two children look (#1118), kept here with the grid that places them, so the one
+ * width at which the aside stacks under the box (16 rem of field) is written once: the aside's
+ * label is right-aligned beside the box and left-aligned when stacked, its control is as wide as
+ * the field when stacked.
+ */
+export const BAR_ASIDE_LABEL = cn(BAR_LABEL, '@[16rem]:text-right')
+export const BAR_ASIDE_CONTROL = 'w-full @[16rem]:w-auto'
+
 const insideBoxClasses = cn(
   'flex h-12 items-center gap-1 rounded-lg border border-input bg-background p-1.5 transition-colors duration-200',
   // The accent excludes an invalid control, so the error color wins whatever the stylesheet's order

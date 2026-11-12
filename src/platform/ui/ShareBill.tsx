@@ -46,7 +46,7 @@ export function ShareBill({
   className?: string
 }) {
   return (
-    <div data-share-bill className={cn('space-y-2', className)}>
+    <div data-share-bill className={cn('space-y-1.5', className)}>
       {title && (
         <Text variant="subsection" as="p">
           {title}
@@ -61,16 +61,19 @@ export function ShareBill({
           label: `${slice.percent}%`,
         }))}
       />
-      <ul className="grid grid-cols-[1fr_2rem_3.5rem] gap-x-1 text-sm">
+      <ul className="grid grid-cols-[1fr_1.75rem_2.5rem] gap-x-0.5 text-xs min-[24rem]:grid-cols-[1fr_2rem_3.5rem] min-[24rem]:gap-x-1 min-[24rem]:text-sm">
         {slices.map((slice) => (
           <li
             key={slice.key}
-            className="col-span-3 grid min-h-6 grid-cols-subgrid items-center border-t border-border py-0.5 first:border-t-0"
+            className="col-span-3 grid min-h-5 grid-cols-subgrid items-center border-t border-border first:border-t-0"
           >
-            <span className="flex min-w-0 items-center gap-x-2">
+            <span className="flex min-w-0 items-center gap-x-1 min-[24rem]:gap-x-2">
               <span
                 aria-hidden="true"
-                className={cn('inline-block size-3 shrink-0', SHARE_TONES[slice.tone].swatch)}
+                className={cn(
+                  'inline-block size-2.5 shrink-0 min-[24rem]:size-3',
+                  SHARE_TONES[slice.tone].swatch,
+                )}
               />
               <span className="text-foreground">{slice.name}</span>
             </span>

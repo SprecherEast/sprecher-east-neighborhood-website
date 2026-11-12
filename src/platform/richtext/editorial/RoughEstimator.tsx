@@ -1,10 +1,9 @@
 import { Check } from 'lucide-react'
 import React, { useId } from 'react'
 
-import { cn } from '@/platform/lib/cn'
 import { Button } from '@/platform/ui/Button'
 import { Card } from '@/platform/ui/Card'
-import { BAR_LABEL, Field } from '@/platform/ui/Field.client'
+import { BAR_ASIDE_CONTROL, BAR_ASIDE_LABEL, Field } from '@/platform/ui/Field.client'
 import { SegmentedControl } from '@/platform/ui/SegmentedControl'
 
 export type RoughEstimatorProps = {
@@ -72,11 +71,11 @@ export function RoughEstimator({
             aside={
               options.length > 1 && (
                 <>
-                  <span id={yearsLabelId} className={cn(BAR_LABEL, '@[16rem]:text-right')}>
+                  <span id={yearsLabelId} className={BAR_ASIDE_LABEL}>
                     Tax rates
                   </span>
                   <SegmentedControl
-                    className="w-full @[16rem]:w-auto"
+                    className={BAR_ASIDE_CONTROL}
                     labelledBy={yearsLabelId}
                     options={options}
                     selected={selected}

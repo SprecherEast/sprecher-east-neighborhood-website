@@ -33,7 +33,11 @@ describe('SegmentedControl', () => {
     const group = screen.getByRole('group')
     expect(group.className).toContain('h-9')
     expect(group.className).toContain('border')
-    expect(group.className).toContain('overflow-hidden')
+    // Each option is tapped as 44 px tall though drawn 36 px (the invisible area, as `icon-sm` does)
+    for (const option of screen.getAllByRole('button')) {
+      expect(option.className).toContain('after:-inset-y-1')
+      expect(option.className).toContain('relative')
+    }
     expect(screen.getByRole('button', { name: '2026' }).className).toContain('bg-accent')
     expect(screen.getByRole('button', { name: '2027' }).className).not.toContain('bg-accent')
   })
