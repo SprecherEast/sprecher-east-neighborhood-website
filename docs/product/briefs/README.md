@@ -15,6 +15,7 @@ Status: draft for the owner | agreed (date)
 - **Purpose:** what the page is for, in one sentence.
 - **Audience:** who reads it, and what they want from it.
 - **Next step:** the one thing we want them to do after reading.
+- **At a glance:** what the reader should be able to see or grasp in the first moment.
 - **Tone:** how it sounds, from the brand voice tone map.
 - **Open questions:** what the owner still has to decide.
 ```
