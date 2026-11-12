@@ -53,7 +53,7 @@ describe('Disclosure', () => {
 
     expect(classes).not.toContain('border')
     expect(classes).not.toContain('shadow')
-    expect(classes).toContain('px-4')
+    expect(classes).toContain('px-3')
     expect(screen.getByText('Body').className).toContain('py-4')
   })
 
