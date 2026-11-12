@@ -71,7 +71,8 @@ export function RoughEstimator({
               error={error}
               layout="bar"
               actionPlacement="inside"
-              className="@lg:flex-1"
+              // One line: the year buttons below are lined up with the box by this label's height
+              className="@lg:flex-1 @lg:[&_label]:whitespace-nowrap"
               action={
                 <Button
                   type="submit"
@@ -86,7 +87,7 @@ export function RoughEstimator({
               <Field.Money value={value} onValueChange={onValueChange} enterKeyHint="go" />
             </Field>
             {options.length > 1 && (
-              // From @lg the label above the box is 32 px tall (24 px line, 8 px gap): the buttons start level with the box
+              // From @lg the one-line label above the box is 32 px tall (24 px line, 8 px gap): the buttons start level with the box
               <div
                 role="group"
                 aria-label="Tax rates to use"
@@ -97,6 +98,7 @@ export function RoughEstimator({
                     <Button
                       variant={index === selected ? 'accent' : 'accent-outline'}
                       size="lg"
+                      className="px-2 text-sm whitespace-nowrap @lg:px-4 @lg:text-base"
                       aria-pressed={index === selected}
                       fullWidth
                       onClick={() => onSelect(index)}

@@ -48,7 +48,8 @@ export const fieldVariants = cva('flex min-w-0', {
  */
 const insideBoxClasses = cn(
   'flex h-12 items-center gap-1 rounded-lg border border-input bg-background p-1.5 transition-colors duration-200',
-  'has-[button:not(:disabled)]:border-accent-dark has-[[aria-invalid=true]]:border-destructive-strong',
+  // The accent excludes an invalid control, so the error color wins whatever the stylesheet's order
+  'has-[button:not(:disabled)]:not-has-[[aria-invalid=true]]:border-accent-dark has-[[aria-invalid=true]]:border-destructive-strong',
   'has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-ring',
   '[&_input]:h-full [&_input]:min-h-0 [&_input]:border-0 [&_input]:bg-transparent [&_input]:focus-visible:outline-none',
 )
@@ -158,7 +159,8 @@ export function Field({
             {hintElement}
             {actionPlacement === 'inside' ? (
               <div data-field-bar data-action-inside="true" className={insideBoxClasses}>
-                <div className="min-w-0 flex-1">{control}</div>
+                {/* Stretched, so the control fills the box's height and its whole height is tappable */}
+                <div className="min-w-0 flex-1 self-stretch">{control}</div>
                 {action}
               </div>
             ) : (

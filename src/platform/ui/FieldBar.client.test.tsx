@@ -86,9 +86,31 @@ describe('Field, bar layout with the action inside the box (#1110)', () => {
     const { rerender } = render(inside(false))
     const box = () => screen.getByLabelText('Value').closest('div[data-field-bar]') as HTMLElement
     // The rule is a `has-` variant on the box, so the class is there in both states and CSS decides
-    expect(box().className).toContain('has-[button:not(:disabled)]:border-accent-dark')
+    expect(box().className).toContain(
+      'has-[button:not(:disabled)]:not-has-[[aria-invalid=true]]:border-accent-dark',
+    )
     rerender(inside(true))
-    expect(box().className).toContain('has-[button:not(:disabled)]:border-accent-dark')
+    expect(box().className).toContain(
+      'has-[button:not(:disabled)]:not-has-[[aria-invalid=true]]:border-accent-dark',
+    )
+  })
+
+  it('never lets the accent border apply to an invalid control, so the error color wins', () => {
+    render(inside(true))
+    const box = screen.getByLabelText('Value').closest('div[data-field-bar]') as HTMLElement
+    expect(screen.getByLabelText('Value').getAttribute('aria-invalid')).toBe('true')
+    // Every accent rule excludes invalid; the error rule is the only one left for that state
+    const accent = box.className.split(' ').filter((name) => name.endsWith(':border-accent-dark'))
+    expect(accent.length).toBeGreaterThan(0)
+    for (const name of accent) expect(name).toContain('not-has-[[aria-invalid=true]]')
+    expect(box.className).toContain('has-[[aria-invalid=true]]:border-destructive-strong')
+  })
+
+  it('stretches the control so it fills the box height', () => {
+    render(inside(true))
+    const holder = screen.getByLabelText('Value').parentElement as HTMLElement
+    expect(holder.className).toContain('self-stretch')
+    expect(holder.parentElement?.className).toContain('[&_input]:h-full')
   })
 
   it('has no accessibility violations', async () => {
