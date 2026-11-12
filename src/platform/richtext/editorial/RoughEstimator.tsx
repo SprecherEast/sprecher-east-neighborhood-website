@@ -1,20 +1,21 @@
-import React, { useId, type ReactNode } from 'react'
+import { Check } from 'lucide-react'
+import React, { type ReactNode } from 'react'
 
 import { cn } from '@/platform/lib/cn'
 import { Button } from '@/platform/ui/Button'
-import { Card, CardTitle } from '@/platform/ui/Card'
+import { Card } from '@/platform/ui/Card'
 import { Field } from '@/platform/ui/Field.client'
 import { Text } from '@/platform/ui/Text'
 
 export type RoughEstimatorProps = {
-  /** One line under the title: what the estimate starts from */
+  /** One line at the top of the card: what the estimate starts from */
   intro: string
   /** The home value box's text, as typed */
   value: string
   onValueChange: (value: string) => void
-  /** Whether the typed value is a new number to estimate: the button is off otherwise */
+  /** Whether the typed value is a new number to estimate: the check-mark button is off otherwise */
   canEstimate: boolean
-  /** The reader pressed Estimate, or Enter in the box */
+  /** The reader pressed the check-mark button, or Enter in the box */
   onEstimate: () => void
   /** Why the box's text is no value, or nothing */
   error?: string
@@ -31,12 +32,15 @@ export type RoughEstimatorProps = {
 }
 
 /**
- * The tool at the top of a whole-bill picture (#1022): an orange card titled Rough Estimator, with
- * the home value box with its Estimate button, one button for each tax year side by side (a year can carry a short note
- * under its button, such as "proposed", and every button keeps the room for one), and the notes
- * that say how rough the answer is. The box has a compact Estimate button beside it, which is on
- * only while the typed value is a new number (Enter in the box does the same), so on a phone it
- * sits right above the keyboard (#1087). It draws what it is given and keeps no state of its own.
+ * The tool at the top of a whole-bill picture (#1022): a compact orange card, named Rough
+ * Estimator for screen readers but with no title drawn, with the home value box, one button for
+ * each tax year (a year can carry a short note under its button, such as "proposed", and every
+ * button keeps the room for one), and the notes that say how rough the answer is. The box has a
+ * check-mark button inside it at its end (#1110): off, flat and muted, while the typed value is not
+ * a new number, and on, accent-colored and slightly raised once it is (Enter in the box does the
+ * same), so on a phone it sits right above the keyboard (#1087). The year buttons share the row
+ * with the box where the card is wide enough and stack under it before anything wraps. It draws
+ * what it is given and keeps no state of its own.
  */
 export function RoughEstimator({
   intro,
@@ -50,59 +54,68 @@ export function RoughEstimator({
   onSelect,
   notes,
 }: RoughEstimatorProps) {
-  const titleId = useId()
   return (
-    <Card as="section" variant="accent" aria-labelledby={titleId} className="h-full">
+    <Card as="section" variant="accent" aria-label="Rough Estimator" className="h-full">
       <div className="flex h-full flex-col gap-4">
-        <div className="space-y-1">
-          <CardTitle as="h3" className="text-xl">
-            <span id={titleId}>Rough Estimator</span>
-          </CardTitle>
-          <Text variant="small">{intro}</Text>
-        </div>
+        <Text variant="small">{intro}</Text>
         <form
-          className="my-auto space-y-4"
+          className="@container my-auto"
           onSubmit={(event) => {
             event.preventDefault()
             if (canEstimate) onEstimate()
           }}
         >
-          <Field
-            label="Your home’s value:"
-            error={error}
-            layout="bar"
-            action={
-              <Button type="submit" variant="primary" size="sm" disabled={!canEstimate}>
-                Estimate
-              </Button>
-            }
-          >
-            <Field.Money value={value} onValueChange={onValueChange} enterKeyHint="go" />
-          </Field>
-          {options.length > 1 && (
-            <div role="group" aria-label="Tax rates to use" className="grid grid-cols-2 gap-x-2">
-              {options.map((option, index) => (
-                <div key={option.key} className="space-y-1">
-                  <Button
-                    variant={index === selected ? 'accent' : 'accent-outline'}
-                    aria-pressed={index === selected}
-                    fullWidth
-                    onClick={() => onSelect(index)}
-                  >
-                    {option.label}
-                  </Button>
-                  {options.some((other) => other.note) && (
-                    <p
-                      data-switch-note
-                      className="min-h-5 text-center text-sm text-muted-foreground"
+          <div data-estimator-row className="flex flex-col gap-4 @lg:flex-row @lg:items-start">
+            <Field
+              label="Your home’s assessed value"
+              error={error}
+              layout="bar"
+              actionPlacement="inside"
+              className="@lg:flex-1"
+              action={
+                <Button
+                  type="submit"
+                  variant="action"
+                  size="icon-sm"
+                  aria-label="Estimate"
+                  disabled={!canEstimate}
+                  iconStart={<Check aria-hidden="true" />}
+                />
+              }
+            >
+              <Field.Money value={value} onValueChange={onValueChange} enterKeyHint="go" />
+            </Field>
+            {options.length > 1 && (
+              // From @lg the label above the box is 32 px tall (24 px line, 8 px gap): the buttons start level with the box
+              <div
+                role="group"
+                aria-label="Tax rates to use"
+                className="grid grid-cols-2 gap-x-2 @lg:mt-8 @lg:flex-none"
+              >
+                {options.map((option, index) => (
+                  <div key={option.key} className="space-y-1">
+                    <Button
+                      variant={index === selected ? 'accent' : 'accent-outline'}
+                      size="lg"
+                      aria-pressed={index === selected}
+                      fullWidth
+                      onClick={() => onSelect(index)}
                     >
-                      {option.note ? `(${option.note})` : ''}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                      {option.label}
+                    </Button>
+                    {options.some((other) => other.note) && (
+                      <p
+                        data-switch-note
+                        className="min-h-5 text-center text-sm text-muted-foreground"
+                      >
+                        {option.note ? `(${option.note})` : ''}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </form>
         <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
           {notes.map((note) => (

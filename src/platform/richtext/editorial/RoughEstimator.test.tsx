@@ -27,12 +27,15 @@ const PROPS: RoughEstimatorProps = {
 }
 
 describe('RoughEstimator', () => {
-  it('is one card titled Rough Estimator, with the home value box and a button for each rate', () => {
+  it('is one compact card with the home value box and a button for each rate, and no title', () => {
     render(<RoughEstimator {...PROPS} />)
-    expect(screen.getByRole('heading', { name: 'Rough Estimator' })).toBeTruthy()
-    expect((screen.getByRole('textbox', { name: /home’s value/i }) as HTMLInputElement).value).toBe(
-      '$500,300',
-    )
+    expect(screen.queryByRole('heading', { name: 'Rough Estimator' })).toBeNull()
+    // The card keeps its name for screen readers
+    expect(screen.getByRole('region', { name: 'Rough Estimator' })).toBeTruthy()
+    expect(
+      (screen.getByRole('textbox', { name: 'Your home’s assessed value' }) as HTMLInputElement)
+        .value,
+    ).toBe('$500,300')
     const group = screen.getByRole('group', { name: /tax rates/i })
     expect(group.querySelectorAll('button')).toHaveLength(2)
     expect(screen.getByRole('button', { name: '2027 rates' }).getAttribute('aria-pressed')).toBe(
@@ -41,6 +44,12 @@ describe('RoughEstimator', () => {
     expect(screen.getByRole('button', { name: '2026 rates' }).getAttribute('aria-pressed')).toBe(
       'false',
     )
+  })
+
+  it('still shows the intro line and the notes it is given', () => {
+    render(<RoughEstimator {...PROPS} />)
+    expect(screen.getByText('Based on the City’s average home.')).toBeTruthy()
+    expect(screen.getByText(/every bill differs/)).toBeTruthy()
   })
 
   it('reports what the reader types, leaves, and picks', () => {
@@ -54,17 +63,48 @@ describe('RoughEstimator', () => {
     expect(onSelect).toHaveBeenCalledWith(0)
   })
 
-  it('puts a compact Estimate button beside the box, above the rate buttons (#1087)', () => {
+  it('puts a check-mark icon button inside the value box, ahead of the rate buttons (#1110)', () => {
     render(<RoughEstimator {...PROPS} />)
     const estimate = screen.getByRole('button', { name: 'Estimate' })
     const box = screen.getByRole('textbox')
-    // One line holds the box and the button, so the button is never far from where the reader types
-    expect(estimate.parentElement?.contains(box)).toBe(true)
+    // One box holds the text and the button; the button has no visible words, only the icon
+    const bar = box.closest('[data-field-bar]') as HTMLElement
+    expect(bar.getAttribute('data-action-inside')).toBe('true')
+    expect(bar.contains(estimate)).toBe(true)
+    expect(estimate.textContent).toBe('')
+    expect(estimate.querySelector('svg')).toBeTruthy()
     expect(estimate.className).not.toContain('w-full')
     for (const name of ['2026 rates', '2027 rates']) {
       const rate = screen.getByRole('button', { name })
       expect(estimate.compareDocumentPosition(rate) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     }
+  })
+
+  it('shares the row with the rate buttons where they fit and stacks them before anything wraps', () => {
+    render(<RoughEstimator {...PROPS} />)
+    const row = screen.getByRole('textbox').closest('[data-estimator-row]') as HTMLElement
+    expect(row.contains(screen.getByRole('group', { name: /tax rates/i }))).toBe(true)
+    expect(row.className).toContain('flex-col')
+    expect(row.className).toContain('@lg:flex-row')
+  })
+
+  it('is flat and muted while there is nothing new to estimate, raised and accented once there is', () => {
+    const { rerender } = render(<RoughEstimator {...PROPS} canEstimate={false} />)
+    const button = () => screen.getByRole('button', { name: 'Estimate' }) as HTMLButtonElement
+    // The `action` look draws both states from the disabled attribute: muted and flat when
+    // disabled, accent and raised when enabled, the lift only with motion allowed
+    expect(button().disabled).toBe(true)
+    for (const look of [
+      'bg-accent',
+      'disabled:bg-muted',
+      'enabled:shadow-md',
+      'motion-safe:enabled:-translate-y-px',
+    ]) {
+      expect(button().className).toContain(look)
+    }
+    expect(button().className).not.toMatch(/(^|\s)(enabled:)?-translate-y-px/)
+    rerender(<RoughEstimator {...PROPS} />)
+    expect(button().disabled).toBe(false)
   })
 
   it('turns the Estimate button off until there is a new value to estimate', () => {

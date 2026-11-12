@@ -64,7 +64,8 @@ export const BREAKDOWN: Extract<ChartSpec, { kind: 'breakdown' }> = {
 
 export const city = { cityBars: BARS, cityBreakdown: BREAKDOWN, definition: <p>Short line</p> }
 
-export const box = () => screen.getByRole('textbox', { name: /home’s value/i }) as HTMLInputElement
+export const box = () =>
+  screen.getByRole('textbox', { name: /home’s assessed value/i }) as HTMLInputElement
 
 /** Types a home value and presses Estimate, then lets the scroll and the count settle */
 export async function estimate(value: string) {

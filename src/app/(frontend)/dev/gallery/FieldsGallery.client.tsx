@@ -1,6 +1,6 @@
 'use client'
 
-import { Search } from 'lucide-react'
+import { Check, Search } from 'lucide-react'
 import React, { useState } from 'react'
 import { Controller } from 'react-hook-form'
 import { z } from 'zod'
@@ -16,6 +16,34 @@ const ERROR = 'Enter a value here.'
 function Money() {
   const [value, setValue] = useState('$500,300')
   return <Field.Money value={value} onValueChange={setValue} />
+}
+
+/** A money box with its check-mark button inside it, on only while the text differs from the last one sent */
+function ActionInside() {
+  const [value, setValue] = useState('$500,300')
+  const [sent, setSent] = useState('$500,300')
+  const ready = value !== sent
+  return (
+    <Field
+      label="Box with its action inside"
+      hint="Change the amount to wake the button"
+      layout="bar"
+      actionPlacement="inside"
+      action={
+        <Button
+          type="button"
+          variant="action"
+          size="icon-sm"
+          aria-label="Send"
+          disabled={!ready}
+          iconStart={<Check aria-hidden="true" />}
+          onClick={() => setSent(value)}
+        />
+      }
+    >
+      <Field.Money value={value} onValueChange={setValue} />
+    </Field>
+  )
 }
 
 /** Each `Field` control, without and with an error (client: `Field.Input` and the rest are its parts) */
@@ -55,6 +83,9 @@ export function FieldsGallery() {
             </Field>
           </GalleryVariant>
         ))}
+        <GalleryVariant label="layout bar, actionPlacement inside" className="block max-w-sm">
+          <ActionInside />
+        </GalleryVariant>
         <GalleryVariant label="disabled, hideLabel" className="grid w-full gap-6 sm:grid-cols-2">
           <Field label="Disabled input">
             <Field.Input disabled defaultValue="Can't change this" />

@@ -121,6 +121,7 @@ describe('Button', () => {
             'secondary',
             'accent',
             'accent-outline',
+            'action',
             'ghost',
             'inverse',
             'inverse-outline',
@@ -139,5 +140,13 @@ describe('Button', () => {
     )
 
     await expectAccessible(container)
+  })
+
+  it('draws a small icon button whose tap area is still the touch size (#1110)', () => {
+    render(<Button size="icon-sm" aria-label="Go" iconStart={<Home aria-hidden="true" />} />)
+    const button = screen.getByRole('button', { name: 'Go' })
+    // 36 px drawn, grown to 44 px around it by an invisible area, so it is easy to tap
+    expect(button.className).toContain('size-9')
+    expect(button.className).toContain('after:-inset-1')
   })
 })
