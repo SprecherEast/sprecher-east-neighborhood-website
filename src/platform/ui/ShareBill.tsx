@@ -61,7 +61,7 @@ export function ShareBill({
           label: `${slice.percent}%`,
         }))}
       />
-      <ul className="grid grid-cols-[1fr_1.75rem_2.5rem] gap-x-0.5 text-xs min-[24rem]:grid-cols-[1fr_2rem_3.5rem] min-[24rem]:gap-x-1 min-[24rem]:text-sm">
+      <ul className="grid grid-cols-[1fr_1.5rem_2.5rem] gap-x-0.5 text-xs min-[24rem]:grid-cols-[1fr_2rem_3.5rem] min-[24rem]:gap-x-1 min-[24rem]:text-sm">
         {slices.map((slice) => (
           <li
             key={slice.key}
@@ -71,11 +71,11 @@ export function ShareBill({
               <span
                 aria-hidden="true"
                 className={cn(
-                  'inline-block size-2.5 shrink-0 min-[24rem]:size-3',
+                  'inline-block size-2 shrink-0 min-[24rem]:size-3',
                   SHARE_TONES[slice.tone].swatch,
                 )}
               />
-              <span className="text-foreground">{slice.name}</span>
+              <span className="whitespace-nowrap text-foreground">{slice.name}</span>
             </span>
             <span className="text-right whitespace-nowrap text-muted-foreground tabular-nums">
               {slice.percent}%

@@ -49,6 +49,8 @@ describe('ShareBill', () => {
     const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
     const row = container.querySelector('li') as HTMLElement
     expect(row.className).toContain('min-h-5')
+    // A name never wraps: at the narrowest width it may run into its column's blank space instead
+    expect(screen.getByText('Sample: first').className).toContain('whitespace-nowrap')
   })
 
   it('names every slice in the receipt with its percent and dollars, in the bar’s order', () => {
