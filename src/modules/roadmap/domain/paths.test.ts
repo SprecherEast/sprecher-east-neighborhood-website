@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseIssueNumber, planIssuePath } from './paths'
+import { parseIssueNumber, planIssuePath, planMissionPath } from './paths'
 
 describe('parseIssueNumber', () => {
   it('reads plain digits and nothing else', () => {
@@ -12,5 +12,15 @@ describe('parseIssueNumber', () => {
 
   it('is the reverse of an issue path', () => {
     expect(parseIssueNumber(planIssuePath(7).split('/').pop() ?? '')).toBe(7)
+  })
+})
+
+describe('mission addresses', () => {
+  it('puts a mission under the plan, by its milestone number', () => {
+    expect(planMissionPath(5)).toBe('/roadmap/missions/5')
+  })
+
+  it('is read back by the same rule as an issue number', () => {
+    expect(parseIssueNumber(planMissionPath(9).split('/').pop() ?? '')).toBe(9)
   })
 })

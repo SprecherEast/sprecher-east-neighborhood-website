@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildPlan, findPlanIssue } from './plan'
+import { buildPlan, findMission, findPlanIssue } from './plan'
 import type { RawEpic, RawIssue, RawMilestone } from './types'
 
 const NOW = '2026-11-09T12:00:00Z'
@@ -173,5 +173,22 @@ describe('findPlanIssue', () => {
 
   it('finds nothing for a screened or unknown number', () => {
     expect(findPlanIssue(plan, 999)).toBeUndefined()
+  })
+})
+
+describe('findMission', () => {
+  const plan = buildPlan({
+    generatedAt: NOW,
+    milestones: [milestone(1), milestone(2)],
+    epics: [epic(10, [issue(11)], { milestoneNumber: 1 })],
+  })
+
+  it('finds a mission the plan lists, by its milestone number', () => {
+    expect(findMission(plan, 1)?.epics.map((e) => e.number)).toEqual([10])
+  })
+
+  it('finds nothing for an unknown number, or a milestone left out because nothing in it shows', () => {
+    expect(findMission(plan, 999)).toBeUndefined()
+    expect(findMission(plan, 2)).toBeUndefined()
   })
 })

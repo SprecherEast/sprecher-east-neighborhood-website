@@ -24,7 +24,7 @@ Source: `src/platform/ui/PageHeader.tsx`
 **Used by** (direct imports):
 
 - Modules: `events`
-- Routes: `/account`, `/confirm-email`, `/dev/gallery`, `/events`, `/faq`, `/forgot-password`, `/login`, `/posts`, `/posts/page/[pageNumber]`, `/reset-password`, `/resources`, `/roadmap`, `/roadmap/[number]`, `/search`, `/sign-up`, `/verify-account`
+- Routes: `/account`, `/confirm-email`, `/dev/gallery`, `/events`, `/faq`, `/forgot-password`, `/login`, `/posts`, `/posts/page/[pageNumber]`, `/reset-password`, `/resources`, `/roadmap`, `/roadmap/[number]`, `/roadmap/missions/[number]`, `/search`, `/sign-up`, `/verify-account`
 - Platform: `platform/ui`
 
 ## `EmptyState`

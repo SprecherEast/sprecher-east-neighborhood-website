@@ -184,4 +184,5 @@ Source: `src/platform/ui/Sparkline.tsx`
 
 **Used by** (direct imports):
 
+- Modules: `roadmap`
 - Routes: `/dev/gallery`

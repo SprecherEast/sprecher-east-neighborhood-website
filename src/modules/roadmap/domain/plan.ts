@@ -96,3 +96,8 @@ export function findPlanIssue(plan: Plan, number: number): PlanIssue | undefined
   }
   return undefined
 }
+
+/** A mission (milestone) the plan lists, by number; one left out of the plan has no page */
+export function findMission(plan: Plan, number: number): PlanMilestone | undefined {
+  return plan.milestones.find((m) => m.number === number)
+}

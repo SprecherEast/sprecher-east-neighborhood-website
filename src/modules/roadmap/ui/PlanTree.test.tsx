@@ -99,17 +99,17 @@ describe('PlanTree', () => {
     expect(screen.getByRole('link', { name: /Issue 10/ }).getAttribute('href')).toBe('/roadmap/10')
   })
 
-  it('says each issue’s state in words, and shows its labels', () => {
+  it('says each issue’s state in words, without the labels', () => {
     renderTree()
     expect(screen.getAllByText('Open').length).toBeGreaterThan(0)
     expect(screen.getByText('Done')).toBeTruthy()
     expect(screen.getByText('Not planned')).toBeTruthy()
-    expect(screen.getByText('bug')).toBeTruthy()
+    expect(screen.queryByText('bug')).toBeNull()
   })
 
   it('says when a finished issue was closed', () => {
     renderTree()
-    expect(screen.getByText('Closed Nov 7')).toBeTruthy()
+    expect(screen.getByText('#12 · Closed Nov 7')).toBeTruthy()
   })
 
   it('puts epics with no milestone in their own group at the end', () => {
