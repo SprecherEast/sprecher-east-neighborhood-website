@@ -16,6 +16,7 @@ const raw = {
         state: 'open' as const,
         stateReason: null,
         closedAt: null,
+        updatedAt: null,
         labels: ['epic'],
         milestoneNumber: 1,
         url: 'https://github.com/o/r/issues/10',

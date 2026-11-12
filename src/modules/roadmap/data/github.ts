@@ -20,6 +20,7 @@ type ApiIssue = {
   state: string
   state_reason?: string | null
   closed_at?: string | null
+  updated_at?: string | null
   html_url: string
   labels?: ApiLabel[]
   milestone?: { number: number } | null
@@ -40,6 +41,7 @@ export const mapIssue = (issue: ApiIssue): RawIssue => ({
   state: issue.state === 'open' ? 'open' : 'closed',
   stateReason: issue.state_reason ?? null,
   closedAt: issue.closed_at ?? null,
+  updatedAt: issue.updated_at ?? null,
   labels: (issue.labels ?? []).flatMap((l) => {
     const name = typeof l === 'string' ? l : l.name
     return name ? [name] : []

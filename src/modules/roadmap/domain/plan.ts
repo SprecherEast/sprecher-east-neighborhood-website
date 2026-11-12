@@ -21,6 +21,7 @@ const toIssue = (raw: RawIssue): PlanIssue => ({
   description: raw.body,
   url: raw.url,
   closedAt: raw.closedAt,
+  updatedAt: raw.updatedAt,
 })
 
 /** The order a reader wants: open first, soonest due date first, none last, then by number */
