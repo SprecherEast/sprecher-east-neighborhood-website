@@ -11,7 +11,7 @@ export const SMALL_TEXT = 'text-sm leading-relaxed text-muted-foreground'
  * them. A page's `h1` comes from `PageHeader` or a hero. `section` heads a part of the page,
  * `subsection` a group inside it; `overline` is the coloured eyebrow above a heading, `label` the
  * quiet uppercase name of a sidebar list or a footer column; `lead` and `small` are body text,
- * large and small.
+ * large and small; `figure` is the one big number a card is about.
  */
 const textVariants = cva('', {
   variants: {
@@ -21,6 +21,7 @@ const textVariants = cva('', {
       overline: 'text-xs font-bold tracking-widest text-primary uppercase',
       label: 'text-xs font-bold tracking-widest text-muted-foreground uppercase',
       lead: 'text-lg text-muted-foreground',
+      figure: 'text-4xl leading-none font-bold text-foreground tabular-nums',
       small: SMALL_TEXT,
     },
     clamp: { 1: 'line-clamp-1', 2: 'line-clamp-2', 3: 'line-clamp-3' },

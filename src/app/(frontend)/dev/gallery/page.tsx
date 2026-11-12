@@ -14,7 +14,7 @@ import {
   AmountBarGallery,
   ProgressGallery,
   ShareBarGallery,
-  SharePieGallery,
+  ShareBillGallery,
 } from './ProgressGallery'
 import { FieldsGallery } from './FieldsGallery.client'
 import { GALLERY_COMPONENTS } from './galleryComponents'
@@ -68,7 +68,7 @@ export default function GalleryPage() {
         <DisplayGallery />
         <ProgressGallery />
         <ShareBarGallery />
-        <SharePieGallery />
+        <ShareBillGallery />
         <AmountBarGallery />
         <TabsGallery />
         <HeadersGallery />

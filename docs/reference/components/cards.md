@@ -117,7 +117,7 @@ Source: `src/platform/ui/CardGrid.tsx`
 
 **Variants:**
 
-- `columns`: `4 | 2 | 3 | "none"`
+- `columns`: `4 | 3 | 2 | "none"`
 - `gap`: `"sm" | "md"`
 
 | Prop        | Type              | Required | Description                                      |

@@ -21,9 +21,9 @@ import { Timeline } from './Timeline'
  * What one tab opens (#980): its heading (with scripting on) with how sure we are beside it, then
  * its first picture, then the short definition, whose City term is the link to the source (a
  * "Source:" line only when the definition never says it), then the other pictures. A whole tax
- * bill (#1018) goes first and holds all of that in the panel under the City's slice, which starts
- * with the City's tax by year as one bar, then the text, then where the tax goes (both follow the
- * home value typed, #1020), and the other pictures in a softer box of their own.
+ * bill (#1018, #1111) goes first, in its own order (`BillShare`): the answer, the whole bill, then
+ * three closed rows that hold the City's charts (they follow the home value typed, #1020), the text
+ * with its detail and the sources, and the other pictures in a softer box of their own.
  */
 function FactTabPanel({
   tabId,
@@ -88,7 +88,7 @@ function FactTabPanel({
     </>
   )
   return (
-    <div className="space-y-6">
+    <div className={cn('space-y-6', bill && 'space-y-3')}>
       {/* Tabs shows its heading only with scripting off; with it on the tab is the title, so this one
           shows then, and the reader always sees the heading the editor wrote, once */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -96,13 +96,16 @@ function FactTabPanel({
           <FilledText tab={tabId} text={heading} />
         </Text>
         {/* How sure we are, once, beside the heading: the tab button leaves it to screen readers
-            (#980) */}
-        <div data-panel-certainty aria-hidden="true">
-          <CertaintyBadge certainty={fact.certainty} />
-        </div>
+            (#980). A whole tax bill shows it in its answer card instead (#1111) */}
+        {!bill && (
+          <div data-panel-certainty aria-hidden="true">
+            <CertaintyBadge certainty={fact.certainty} />
+          </div>
+        )}
       </div>
-      {/* The explanation a tab leaves out so all the tabs hold the same parts (#707) */}
-      {fact.detail && (
+      {/* The explanation a tab leaves out so all the tabs hold the same parts (#707); a whole tax
+          bill keeps it in its row on how the estimate works */}
+      {fact.detail && !bill && (
         <div data-panel-detail>
           <Text variant="small">{joinLastWords(fact.detail)}</Text>
         </div>
@@ -113,7 +116,16 @@ function FactTabPanel({
           tabId={tabId}
           cityBars={cityBars}
           cityBreakdown={cityBreakdown}
-          definition={text}
+          definition={definition && <Text variant="small">{definition}</Text>}
+          detail={
+            fact.detail && (
+              <div data-panel-detail>
+                <Text variant="small">{joinLastWords(fact.detail)}</Text>
+              </div>
+            )
+          }
+          certainty={fact.certainty}
+          source={fact.source}
         >
           {rest.length > 0 && (
             <div className="space-y-6 rounded-xl bg-surface p-4">

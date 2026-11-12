@@ -69,7 +69,7 @@ Source: `src/platform/ui/Disclosure.tsx`
 
 **Variants:**
 
-- `variant`: `"link" | "bar" | "card"`
+- `variant`: `"link" | "bar" | "card" | "row"`
 
 | Prop            | Type                                                                                                                                                                  | Required | Description                                                                          |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------ |
@@ -84,7 +84,7 @@ Source: `src/platform/ui/Disclosure.tsx`
 
 - Modules: `directory`, `roadmap`
 - Routes: `/dev/gallery`
-- Platform: `platform/ui`
+- Platform: `platform/richtext`, `platform/ui`
 
 ## `Tabs`
 

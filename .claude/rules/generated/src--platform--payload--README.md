@@ -18,7 +18,6 @@ paths:
   - 'src/platform/lib/mediaLicenses.ts'
   - 'src/platform/lib/money.ts'
   - 'src/platform/lib/paging.ts'
-  - 'src/platform/lib/pie.ts'
   - 'src/platform/lib/reviewQueue.ts'
   - 'src/platform/lib/roles.ts'
   - 'src/platform/lib/slidingWindow.ts'
@@ -52,9 +51,8 @@ The helpers every collection is built from (`src/platform/payload/`) and the hel
 - `keysetSort` and `afterCursor` order a listing by one date with the id as tie-break; `lib/cursor.ts` encodes that pair as the opaque cursor "Load more" sends back on events and news (`payload/keyset.ts`, decision 0014).
 - `emailConfirmer.ts` is the contract [verification](/src/modules/verification/README.md) provides and [contact](/src/modules/contact/README.md) uses; accounts only supplies a keeper (`keepAccountEmails`), and sign-up uses Payload's own verify, not this contract; `payload.config.ts` hands them over (decision 0008).
 - `cn` (`lib/cn.ts`) joins class names and lets a later Tailwind class win over a conflicting one; it knows `bg-hatch` is a background image beside a colour (#662) and, since #1002, that `text-fine`, the theme's finest text size, is a size, so it stays beside a text colour and replaces another size (`lib/cn.test.ts`).
-- `lib/pie.ts` is the pure geometry of the pie in the UI kit's `SharePie`: each wedge's arc from the top (12:00, clockwise), its path, and `pieLabelFits`, which decides from the wedge's width and the pie's size whether its percent, or the percent with a short caption above it (`PIE_CAPTION_AT`, the caption in the percent's own size), is written inside; every slice is named in the legend either way (#1022, #1028).
 - `lib/money.ts` writes a whole-dollar amount as the reader types it (digits grouped by commas after a dollar sign, cents cut) and finds where the caret goes after the text is regrouped, for `Field.Money` (#1035).
-- `lib/billShare.ts` is the one place a property-tax bill is worked out for the whole-bill picture of a fact tab: it reads the home value a reader types (whole dollars, `$` and commas allowed, nothing else), multiplies it by each body's rate per $1,000, gives whole percents that add up to 100 and exact shares for the bar, and takes a rate a body has not set from the year before, saying which. `BILL_BODY_CAPTIONS` holds the short names written on the City's and the schools' wedges and on the bar ("City tax", "School tax", #1068). A rate that is empty or not above zero is "not set", never zero, and a year with any rate unset has no shares of its own (#1018).
+- `lib/billShare.ts` is the one place a property-tax bill is worked out for the whole-bill picture of a fact tab: it reads the home value a reader types (whole dollars, `$` and commas allowed, nothing else), multiplies it by each body's rate per $1,000, gives whole percents that add up to 100 and exact shares for the bar, and takes a rate a body has not set from the year before, saying which. A rate that is empty or not above zero is "not set", never zero, and a year with any rate unset has no shares of its own (#1018).
 
 ## Behaviors and events
 

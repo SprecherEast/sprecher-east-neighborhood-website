@@ -2,30 +2,23 @@ import React from 'react'
 
 import { AmountBar } from '@/platform/ui/AmountBar'
 import { ProgressBar } from '@/platform/ui/ProgressBar'
-import { ShareBar, type ShareBarSlice } from '@/platform/ui/ShareBar.client'
-import { SharePie, type SharePieSlice } from '@/platform/ui/SharePie.client'
+import { ShareBar } from '@/platform/ui/ShareBar'
+import { ShareBill, type ShareSlice } from '@/platform/ui/ShareBill'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 
-const SLICES: SharePieSlice[] = [
-  { key: 'a', name: 'Sample: first', amount: '$4,650', percent: 46, share: 46.5, tone: 'light' },
+const SLICES: ShareSlice[] = [
   {
-    key: 'b',
-    name: 'Sample: second',
+    key: 'a',
+    name: 'Sample: first',
     amount: '$3,750',
     percent: 38,
     share: 37.5,
     tone: 'highlight',
   },
+  { key: 'b', name: 'Sample: second', amount: '$4,650', percent: 46, share: 46.5, tone: 'light' },
   { key: 'c', name: 'Sample: third', amount: '$1,250', percent: 13, share: 12.5, tone: 'medium' },
-  { key: 'd', name: 'Sample: fourth', amount: '$350', percent: 3, share: 3.5, tone: 'dark' },
-]
-
-const BAR_SLICES: ShareBarSlice[] = [
-  { key: 'a', share: 46.5, tone: 'strong', label: '46%' },
-  { key: 'b', share: 37.5, tone: 'highlight', label: '38%', name: 'Sample' },
-  { key: 'c', share: 12.5, tone: 'medium', label: '13%' },
-  { key: 'd', share: 3.5, tone: 'light', label: '3%' },
+  { key: 'd', name: 'Sample: fourth', amount: '$350', percent: 3, share: 3.5, tone: 'strong' },
 ]
 
 /** The progress bar: both sizes, empty and full; and the share bar */
@@ -48,47 +41,48 @@ export function ProgressGallery() {
   )
 }
 
-/** The share bar: one whole in slices, one highlighted and joined to the panel under it */
+/** The share bar: one whole in slices of four tones, a narrow slice leaving its label to the text */
 export function ShareBarGallery() {
   return (
     <GalleryEntry
       name="ShareBar"
-      description="One whole as a bar of slices as wide as their shares; the highlighted slice joins the panel under it."
+      description="One whole as a flat bar of slices as wide as their shares; a slice too narrow for its label leaves it to the text beside the bar."
     >
-      <GalleryVariant label="with a highlighted slice and a panel" className="block max-w-3xl">
-        <ShareBar slices={BAR_SLICES} label="Sample: a whole split in four">
-          <p>Sample panel under the highlighted slice.</p>
-        </ShareBar>
-      </GalleryVariant>
-      <GalleryVariant label="no highlight, no panel" className="block max-w-3xl">
+      <GalleryVariant label="four tones, one highlighted" className="block max-w-3xl">
         <ShareBar
-          slices={BAR_SLICES.map((slice) => ({
-            ...slice,
-            tone: 'light' as const,
-            name: undefined,
+          slices={SLICES.map((slice) => ({
+            key: slice.key,
+            share: slice.share,
+            tone: slice.tone,
+            label: `${slice.percent}%`,
           }))}
-          label="Sample: a whole split in four, none highlighted"
+          label="Sample: a whole split in four"
         />
       </GalleryVariant>
     </GalleryEntry>
   )
 }
 
-/** The share pie: one whole in wedges, one highlighted, at a wide and a narrow width */
-export function SharePieGallery() {
+/** The whole bill: the total, the bar and the receipt, wide and narrow */
+export function ShareBillGallery() {
   return (
     <GalleryEntry
-      name="SharePie"
-      description="One whole as a pie of wedges as big as their shares; a wedge writes what fits and the legend lists the rest."
+      name="ShareBill"
+      description="One whole as a bill: the total, one bar of slices as wide as their shares, and a receipt that names each with its color, percent and dollars."
     >
-      <GalleryVariant
-        label="wide: the thin wedge keeps its percent inside"
-        className="block max-w-xl"
-      >
-        <SharePie slices={SLICES} label="Sample: a whole split in four" />
+      <GalleryVariant label="wide" className="block max-w-xl">
+        <ShareBill
+          slices={SLICES}
+          label="Sample: a whole split in four"
+          total={{ label: 'Sample total', amount: '$10,000' }}
+        />
       </GalleryVariant>
-      <GalleryVariant label="narrow: the thin wedge moves to the legend" className="block max-w-xs">
-        <SharePie slices={SLICES} label="Sample: a whole split in four, narrow" />
+      <GalleryVariant label="narrow" className="block max-w-xs">
+        <ShareBill
+          slices={SLICES}
+          label="Sample: a whole split in four, narrow"
+          total={{ label: 'Sample total', amount: '$10,000' }}
+        />
       </GalleryVariant>
     </GalleryEntry>
   )

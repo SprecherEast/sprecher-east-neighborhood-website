@@ -35,7 +35,12 @@ const BILL_TAB = {
             note: '',
             averageHome: 481300,
             rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 },
-            source: null,
+            source: {
+              label: 'Sample: City tax detail',
+              href: 'https://example.org/tax',
+              external: true,
+              appearance: 'default' as const,
+            },
           },
           {
             year: 2027,

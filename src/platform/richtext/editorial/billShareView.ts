@@ -1,49 +1,46 @@
 import {
-  BILL_BODY_CAPTIONS,
   BILL_BODY_NAMES,
   type BillBody,
   type BillPart,
   type BillShare as Bill,
 } from '@/platform/lib/billShare'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
-import type { SharePieSlice } from '@/platform/ui/SharePie.client'
+import type { ShareSlice } from '@/platform/ui/ShareBill'
 
-/** The slices in the order the pie and the receipt show them: the City first */
+/** The slices in the order the bar and the receipt show them: the City first */
 const SLICE_ORDER: readonly BillBody[] = ['city', 'schools', 'county', 'matc']
 
-/** A wedge's tone: the City highlighted, the others three grays, the schools' the lightest */
-const TONE: Record<BillBody, SharePieSlice['tone']> = {
+/** A slice's tone: the City highlighted, the others three grays, the schools' the lightest */
+const TONE: Record<BillBody, ShareSlice['tone']> = {
   schools: 'light',
   city: 'highlight',
   county: 'medium',
-  matc: 'dark',
+  matc: 'strong',
 }
 
 export type Receipt = {
-  /** The pie's wedges and the receipt's rows, City first; none until every body has a rate */
-  slices: SharePieSlice[]
+  /** The bar's slices and the receipt's rows, City first; none until every body has a rate */
+  slices: ShareSlice[]
   /** The line under the rows, or null when the bill is not whole */
   total: { label: string; amount: string } | null
-  /** The line above the rows: the home the amounts are for, in words and then the amount */
-  heading: { lead: string; value: string } | null
-  /** What the pie shows, for screen readers */
+  /** What the bar shows, for screen readers */
   label: string
   /** The one sentence a screen reader hears when the bill changes */
   summary: string
 }
 
-const NOTHING: Receipt = { slices: [], total: null, heading: null, label: '', summary: '' }
+const NOTHING: Receipt = { slices: [], total: null, label: '', summary: '' }
 
 /**
- * What the whole-bill picture shows for a home value (#1035): the pie's slices and the receipt
- * around them, and the sentence for screen readers. Pure, so the card only draws what it is given.
+ * What the whole bill shows for a home value (#1035, #1111): the bar's slices and the receipt
+ * under it, and the sentence for screen readers. Pure, so the card only draws what it is given.
  */
 export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt {
   if (!bill || homeValue === null) return NOTHING
   const home = formatWholeDollars(homeValue)
   const part = (key: BillBody): BillPart | undefined => bill.parts.find((p) => p.key === key)
   const whole = bill.complete && bill.total !== null
-  const slices: SharePieSlice[] = bill.complete
+  const slices: ShareSlice[] = bill.complete
     ? SLICE_ORDER.flatMap((key) => {
         const found = part(key)
         return found
@@ -51,7 +48,6 @@ export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt
               {
                 key,
                 name: BILL_BODY_NAMES[key],
-                caption: BILL_BODY_CAPTIONS[key],
                 amount: formatWholeDollars(found.amount ?? 0),
                 percent: found.percent ?? 0,
                 share: found.share ?? 0,
@@ -67,10 +63,9 @@ export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt
       whole && bill.total !== null
         ? { label: 'Total property tax', amount: formatWholeDollars(bill.total) }
         : null,
-    heading: slices.length > 0 ? { lead: 'For a home valued at', value: home } : null,
     label:
       slices.length > 0
-        ? `Your rough property tax: ${slices.map((s) => `${s.name} ${s.amount}, ${s.percent}%`).join('; ')}`
+        ? `Your whole property tax bill: ${slices.map((s) => `${s.name} ${s.amount}, ${s.percent}%`).join('; ')}`
         : '',
     summary:
       whole && bill.total !== null

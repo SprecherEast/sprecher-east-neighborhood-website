@@ -12,14 +12,22 @@ import { TOUCH_MIN_HEIGHT } from './layoutSizes'
  * focus ring, so nothing outside the kit writes a raw `details` or `summary`. It works without
  * JavaScript. `card` is a question that opens to its answer, in the kit's card look; `bar` is the full-width
  * row under the site header that holds the "On this page" list on small screens; `link` is a bare
- * link-coloured row with no box, for "See the smaller pieces" inside a chart (#866).
+ * link-coloured row with no box, for "See the smaller pieces" inside a chart (#866); `row` is the card
+ * look with no vertical padding on the box, so a closed row is only as tall as its summary and a few
+ * of them stack compactly (#1111).
  */
+// What the two card-like looks (`card` and `row`) share: one definition each, so they cannot drift
+const CARD_BOX = cardVariants({ variant: 'elevated', padding: 'sm' })
+const CARD_SUMMARY = cn(TOUCH_MIN_HEIGHT, 'font-medium focus-visible:outline-offset-2')
+const CARD_CHEVRON = 'size-4 text-muted-foreground'
+
 const summaryVariants = cva(
   'flex cursor-pointer list-none items-center justify-between gap-3 focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden',
   {
     variants: {
       variant: {
-        card: cn(TOUCH_MIN_HEIGHT, 'font-medium focus-visible:outline-offset-2'),
+        card: CARD_SUMMARY,
+        row: CARD_SUMMARY,
         bar: 'min-h-[var(--section-bar-height)] px-4 text-sm font-semibold text-foreground focus-visible:-outline-offset-2 md:px-8',
         link: cn(
           TOUCH_MIN_HEIGHT,
@@ -36,7 +44,8 @@ const chevronVariants = cva(
   {
     variants: {
       variant: {
-        card: 'size-4 text-muted-foreground',
+        card: CARD_CHEVRON,
+        row: CARD_CHEVRON,
         bar: 'size-5',
         link: 'size-4',
       },
@@ -48,6 +57,7 @@ const bodyVariants = cva('', {
   variants: {
     variant: {
       card: 'mt-4 border-t border-border pt-4',
+      row: 'border-t border-border py-4',
       bar: 'border-t border-border',
       link: 'mt-1',
     },
@@ -55,7 +65,7 @@ const bodyVariants = cva('', {
 })
 
 export type DisclosureProps = {
-  variant: 'card' | 'bar' | 'link'
+  variant: 'card' | 'row' | 'bar' | 'link'
   /** The row that stays visible; clicking it opens and closes the box */
   summary: React.ReactNode
   /** Starts open; the reader opens and closes it after that */
@@ -82,7 +92,8 @@ export function Disclosure({
       ref={ref}
       open={defaultOpen || undefined}
       className={cn(
-        variant === 'card' && cardVariants({ variant: 'elevated', padding: 'sm' }),
+        (variant === 'card' || variant === 'row') && CARD_BOX,
+        variant === 'row' && 'py-0',
         className,
       )}
     >

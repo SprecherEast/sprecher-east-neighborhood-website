@@ -15,7 +15,7 @@ describe('BillShare, the City’s panel (#1020)', () => {
       Number(n.textContent?.replace(/[^0-9]/g, '')),
     )
 
-  it('starts with the City’s tax as one bar, then where it goes, then the short line, then the rest (#1068)', () => {
+  it('has the City’s tax as one bar, then where it goes, in the first row, then the short line, then the rest (#1068, #1111)', () => {
     const { container } = render(
       <BillShare {...PROPS} {...city}>
         <p>The rest</p>
@@ -28,7 +28,11 @@ describe('BillShare, the City’s panel (#1020)', () => {
       const before = order[i] as HTMLElement
       expect(before.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     })
-    expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(3)
+    // The whole bill's bar and the City's bar
+    expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(2)
+    const first = container.querySelector('details') as HTMLDetailsElement
+    expect(first.textContent).toContain('Where that City tax goes')
+    expect(first.open).toBe(false)
   })
 
   it('keeps the “See the smaller pieces” list in the City’s panel (#1068)', () => {
@@ -56,14 +60,14 @@ describe('BillShare, the City’s panel (#1020)', () => {
     expect(screen.getByText('Public Health')).toBeTruthy()
   })
 
-  it('shows the City’s part of the bill above as the bar’s whole amount, split as the chart splits it', () => {
+  it('shows the City’s part of the bill in the answer card and as the bar’s whole amount, split as the chart splits it', () => {
     render(
       <BillShare {...PROPS} {...city}>
         x
       </BillShare>,
     )
-    // 6.93 mills on $500,300, in the City's slice above and in the bar
-    expect(screen.getAllByText('$3,467').length).toBeGreaterThanOrEqual(2)
+    // 6.93 mills on $500,300, in the answer card, the receipt and the bar
+    expect(screen.getAllByText('$3,467').length).toBeGreaterThanOrEqual(3)
     expect(screen.getByText('+$90')).toBeTruthy()
   })
 
