@@ -33,7 +33,7 @@ export function BillDetails({
       {where && (
         <Disclosure
           variant="row"
-          summary="Your City tax share, estimated"
+          summary="Your City tax breakdown"
           defaultOpen
           bodyClassName="space-y-6"
         >
