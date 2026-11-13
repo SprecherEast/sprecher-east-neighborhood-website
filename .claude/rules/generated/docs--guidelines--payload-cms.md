@@ -81,6 +81,16 @@ direction (2026-11-07, text chat, recorded on #885).
 - After any content, markup or code change, check the result in a browser, in light and dark and at
   phone and desktop width, before calling it done.
 
+## Text is content too
+
+Text a visitor reads (a label, a note, a row title, a disclaimer) is a CMS field, not a string typed into
+a component or helper, because changing a sentence must not take a pull request. The owner's direction
+(2026-11-13, text session, recorded on #1162). Editors configure the reusable components with fields and
+drop-down options, never with CSS or scripts from the CMS. Code only decides when a piece of text shows
+and fills in its blanks (`{year}`); its starting text is typed once, as the field's `defaultValue`.
+Fixed wording tied to security behavior stays in the message catalog (decision 0017). The first example
+is the whole-bill block's notes and row titles (#1158).
+
 ## Heroes
 
 Hero components live in `src/modules/site/ui/`. Four types: `highImpact`, `mediumImpact`, `lowImpact`, `none`.

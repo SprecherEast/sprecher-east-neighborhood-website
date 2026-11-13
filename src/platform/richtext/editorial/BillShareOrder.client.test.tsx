@@ -36,6 +36,22 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     expect(tellUs.getAttribute('href')).toBe('/contact')
   })
 
+  it('draws the row’s title and notes from the block, so an editor can change them (#1158)', () => {
+    render(
+      <BillShare
+        {...PROPS}
+        rows={{ ...PROPS.rows, differ: 'Read this first' }}
+        notes={[{ when: 'always', text: 'Custom note for {year}.', link: null }]}
+      >
+        x
+      </BillShare>,
+    )
+    const row = screen.getByText('Read this first').closest('details') as HTMLDetailsElement
+    expect(row.textContent).toContain('Custom note for 2027.')
+    expect(row.textContent).not.toMatch(/rough estimate/i)
+    expect(screen.queryByText('Why your bill may differ')).toBeNull()
+  })
+
   it('puts the same space above the estimator as below it, from one shared value (#1142)', () => {
     render(<BillShare {...PROPS} {...city} certainty="estimate" source={PROPS.years[0]?.source} />)
     const estimator = screen.getByRole('region', { name: 'Rough Estimator' })

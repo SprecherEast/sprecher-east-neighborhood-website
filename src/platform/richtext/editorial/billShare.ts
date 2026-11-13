@@ -2,6 +2,8 @@ import type { ResolvedLink } from '@/platform/lib'
 import type { BillShareBlock } from '@/payload-types'
 import { BILL_BODIES, type MillRates } from '@/platform/lib/billShare'
 
+import { DEFAULT_BILL_NOTES, DEFAULT_BILL_ROW_TITLES } from './billShareDefaults'
+import { NOTE_CONDITIONS, type BillNote } from './billShareNotes'
 import { toEditorialLink } from './editorialLink'
 
 /** A tab shows one whole tax bill: a second would be hidden, so the editor and the tag refuse it */
@@ -10,7 +12,7 @@ export const hasTooManyBills = (blockTypes: readonly unknown[]) =>
   blockTypes.filter((type) => type === 'billShare').length > 1
 
 /** The bill split block's fields, as stored */
-export type StoredBillShare = Partial<Pick<BillShareBlock, 'intro' | 'years'>>
+export type StoredBillShare = Partial<Pick<BillShareBlock, 'intro' | 'years' | 'rows' | 'notes'>>
 
 /** One tax year, as the picture draws it */
 export type BillShareYear = {
@@ -25,8 +27,41 @@ export type BillShareYear = {
   source: ResolvedLink | null
 }
 
+/** The titles of the three rows under the bill, as the page draws them */
+export type BillRowTitles = { breakdown: string; differ: string; sources: string }
+
 /** The block's props: plain data, so it renders without a CMS (decision 0013) */
-export type BillShareProps = { intro: string; years: BillShareYear[] }
+export type BillShareProps = {
+  intro: string
+  years: BillShareYear[]
+  rows: BillRowTitles
+  notes: BillNote[]
+}
+
+/**
+ * The row titles: each one the editor's, or its starting text while the block has none of its own
+ * (a block stored before the titles became fields).
+ */
+const rowTitlesOf = (stored: StoredBillShare['rows']): BillRowTitles => ({
+  breakdown: stored?.breakdown?.trim() || DEFAULT_BILL_ROW_TITLES.breakdown,
+  differ: stored?.differ?.trim() || DEFAULT_BILL_ROW_TITLES.differ,
+  sources: stored?.sources?.trim() || DEFAULT_BILL_ROW_TITLES.sources,
+})
+
+/**
+ * The notes: the editor's list, in their order, without a note that has no text. A block that has
+ * never had a list (stored before the notes became fields) shows the starting list; one whose
+ * editor emptied it shows none.
+ */
+function notesOf(stored: StoredBillShare['notes']): BillNote[] {
+  const rows = Array.isArray(stored) ? stored : DEFAULT_BILL_NOTES
+  return rows.flatMap((row): BillNote[] => {
+    const text = row.text?.trim()
+    if (!text) return []
+    const when = NOTE_CONDITIONS.find((condition) => condition === row.showWhen) ?? 'always'
+    return [{ text, when, link: toEditorialLink(row.linkUrl, row.linkLabel) }]
+  })
+}
 
 /**
  * The stored block as the picture's props. A year without a year number, a label or an average
@@ -52,5 +87,10 @@ export function toBillShareProps(stored: StoredBillShare): BillShareProps {
       },
     ]
   })
-  return { intro: stored.intro?.trim() ?? '', years }
+  return {
+    intro: stored.intro?.trim() ?? '',
+    years,
+    rows: rowTitlesOf(stored.rows),
+    notes: notesOf(stored.notes),
+  }
 }

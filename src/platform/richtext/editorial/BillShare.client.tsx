@@ -9,7 +9,6 @@ import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { Card } from '@/platform/ui/Card'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
-import { Link } from '@/platform/ui/Link'
 import { ShareBill } from '@/platform/ui/ShareBill'
 import { Text } from '@/platform/ui/Text'
 import { COUNT_MS, YEAR_COUNT_MS, useCountedNumber } from '@/platform/ui/useCountedNumber.client'
@@ -17,17 +16,9 @@ import { COUNT_MS, YEAR_COUNT_MS, useCountedNumber } from '@/platform/ui/useCoun
 import type { BillShareProps } from './billShare'
 import { BillAnswer } from './BillAnswer'
 import { BillDetails } from './BillDetails'
-import {
-  ASSESSED_NOTE,
-  assumedNote,
-  CREDITS_NOTE,
-  joinNames,
-  reservedNote,
-  ROUGH_NOTE,
-  uniqueSources,
-  unconfirmedNote,
-} from './billShareNotes'
+import { notesFor, uniqueSources } from './billShareNotes'
 import { receiptFor } from './billShareView'
+import { NoteText } from './NoteText'
 import {
   cityTaxFor,
   figuresFor,
@@ -83,6 +74,8 @@ export const BILL_GAP = 'space-y-5'
 export function BillShare({
   intro,
   years,
+  rows,
+  notes: noteTemplates,
   tabId,
   cityBars,
   cityBreakdown,
@@ -172,37 +165,17 @@ export function BillShare({
     <ScaledBreakdown spec={cityBreakdown} factor={breakdownFactor} title="screen-reader" />
   )
 
-  // The notes always take their room, so a year with none to show never makes the row shorter
-  const assumed = assumedNote(years)
-  const kept = reservedNote(years)
-  const shownNote = unconfirmedNote(years, yearIndex)
-  const notes = [
-    { key: 'rough', text: ROUGH_NOTE, shown: true },
-    { key: 'assessed', text: ASSESSED_NOTE, shown: true },
-    { key: 'credits', text: CREDITS_NOTE, shown: true },
-    { key: 'rates', text: `Uses ${year.year} rates.`, shown: true },
-    ...(assumed ? [{ key: 'assumed', text: assumed, shown: true }] : []),
-    ...(kept ? [{ key: 'unconfirmed', text: shownNote ?? kept, shown: shownNote !== null }] : []),
-    ...(bill && !bill.complete
-      ? [
-          {
-            key: 'missing',
-            text: `${joinNames(bill.missing.map((key) => BILL_BODY_NAMES[key]))} have no rates to use, so the whole bill can’t be shown.`,
-            shown: true,
-          },
-        ]
-      : []),
-    {
-      key: 'tell-us',
-      text: (
-        <>
-          If your real bill comes out far from this, please{' '}
-          <Link href="/contact">send us a note</Link>.
-        </>
-      ),
-      shown: true,
-    },
-  ]
+  // The notes are the editor's; the page only decides which apply in the year shown. One that is
+  // not showing still takes its room, so a year with none to show never makes the row shorter
+  const notes = notesFor(noteTemplates, {
+    years,
+    yearIndex,
+    missing: bill && !bill.complete ? bill.missing.map((key) => BILL_BODY_NAMES[key]) : [],
+  }).map(({ key, text, link, shown }) => ({
+    key,
+    text: <NoteText text={text} link={link} />,
+    shown,
+  }))
 
   return (
     <div className={BILL_GAP}>
@@ -256,6 +229,7 @@ export function BillShare({
         )}
       </Card>
       <BillDetails
+        titles={rows}
         where={where || undefined}
         notes={notes}
         about={

@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { CodeBlock } from '@/platform/richtext/CodeBlock'
+import { toBillShareProps } from '@/platform/richtext/editorial/billShare'
 import { FactTabs } from '@/platform/richtext/editorial/FactTabs'
 import { toFactTabsProps } from '@/platform/richtext/editorial/factTabs'
 import { FACT_TABS_FIXTURE } from '@/platform/richtext/editorial/factTabsFixtures'
@@ -27,6 +28,7 @@ const BILL_TAB = {
     {
       kind: 'billShare' as const,
       billShare: {
+        ...toBillShareProps({}),
         intro: 'Sample: based on an average home. Change the value to see yours.',
         years: [
           {

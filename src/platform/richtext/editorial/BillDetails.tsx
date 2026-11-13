@@ -7,6 +7,8 @@ import { Disclosure } from '@/platform/ui/Disclosure'
 import { Link } from '@/platform/ui/Link'
 import { Text } from '@/platform/ui/Text'
 
+import type { BillRowTitles } from './billShare'
+
 /**
  * The three rows under the whole bill (#1111, #1118, #1121), in one card split by divider lines: where the City's share goes (`where`: the
  * breakdown chart, drawn for the home and year shown), why the real bill may differ
@@ -16,11 +18,14 @@ import { Text } from '@/platform/ui/Text'
  * `Disclosure`, so it opens and closes without scripting and never moves what is above it.
  */
 export function BillDetails({
+  titles,
   where,
   notes,
   about,
   sources,
 }: {
+  /** What each row is called, from the block */
+  titles: BillRowTitles
   where?: ReactNode
   /** The notes on why a real bill may differ; one that is not `shown` keeps its room */
   notes: readonly { key: string; text: ReactNode; shown: boolean }[]
@@ -31,16 +36,11 @@ export function BillDetails({
   return (
     <Card variant="elevated" padding="none" className="divide-y divide-border">
       {where && (
-        <Disclosure
-          variant="row"
-          summary="Your City tax breakdown"
-          defaultOpen
-          bodyClassName="space-y-6"
-        >
+        <Disclosure variant="row" summary={titles.breakdown} defaultOpen bodyClassName="space-y-6">
           {where}
         </Disclosure>
       )}
-      <Disclosure variant="row" summary="Why your bill may differ" bodyClassName="space-y-3">
+      <Disclosure variant="row" summary={titles.differ} bodyClassName="space-y-3">
         <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
           {notes.map((note) => (
             <li
@@ -55,7 +55,7 @@ export function BillDetails({
         {about}
       </Disclosure>
       {sources.length > 0 && (
-        <Disclosure variant="row" summary="Sources">
+        <Disclosure variant="row" summary={titles.sources}>
           <ul className="space-y-1">
             {sources.map((source) => (
               <li key={source.href}>

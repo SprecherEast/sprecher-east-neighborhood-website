@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { present } from '@/platform/payload/testing/present'
 
+import { toBillShareProps } from './billShare'
 import { FactTabs } from './FactTabs'
 import { toFactTabsProps } from './factTabs'
 import { FACT_TABS_FIXTURE } from './factTabsFixtures'
@@ -19,6 +20,7 @@ describe('FactTabs with a whole tax bill', () => {
     const billShare = {
       kind: 'billShare' as const,
       billShare: {
+        ...toBillShareProps({}),
         intro: 'Based on the City’s average home.',
         years: [
           {
@@ -85,6 +87,7 @@ describe('FactTabs with a whole tax bill', () => {
     const billShare = {
       kind: 'billShare' as const,
       billShare: {
+        ...toBillShareProps({}),
         intro: 'Based on the City’s average home.',
         years: [
           {
@@ -121,6 +124,7 @@ describe('FactTabs with a whole tax bill', () => {
     const billShare = {
       kind: 'billShare' as const,
       billShare: {
+        ...toBillShareProps({}),
         intro: 'Based on the City’s average home.',
         years: [
           {
