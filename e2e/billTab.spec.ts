@@ -156,6 +156,27 @@ for (const width of WIDTHS) {
     }
   })
 
+  test(`the earliest year reads "Base year" in the primary green and the card keeps its height at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto(POST)
+    const answer = page.getByRole('region', { name: 'Your City tax' })
+    const line = answer.locator('[data-answer-increase]')
+    await expect(line).toContainText('Up $')
+    const later = await boxOf(answer)
+    const accent = await line.evaluate((el) => getComputedStyle(el).color)
+    await years(page).getByRole('button', { name: '2026' }).click()
+    await expect(line).toHaveText('Base year')
+    // Wait out the half-second count of the year switch
+    await page.waitForTimeout(800)
+    const earlier = await boxOf(answer)
+    expect(earlier.height, 'the card is as tall in both years').toBeCloseTo(later.height, 0)
+    expect(await line.evaluate((el) => getComputedStyle(el).color)).not.toBe(accent)
+    await years(page).getByRole('button', { name: '2027' }).click()
+    await expect(line).toContainText('Up $')
+  })
+
   test(`the first row is open on load and the other two are closed at ${width}px`, async ({
     page,
   }) => {
