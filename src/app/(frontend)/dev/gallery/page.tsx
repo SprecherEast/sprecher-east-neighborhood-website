@@ -11,7 +11,6 @@ import { ActionsGallery } from './ActionsGallery.client'
 import { ChartGallery } from './ChartGallery'
 import { DisplayGallery } from './DisplayGallery'
 import {
-  AmountBarGallery,
   SparklineGallery,
   ProgressGallery,
   ShareBarGallery,
@@ -70,7 +69,6 @@ export default function GalleryPage() {
         <ProgressGallery />
         <ShareBarGallery />
         <ShareBillGallery />
-        <AmountBarGallery />
         <SparklineGallery />
         <TabsGallery />
         <HeadersGallery />

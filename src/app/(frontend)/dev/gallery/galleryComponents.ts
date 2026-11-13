@@ -20,7 +20,6 @@ export const GALLERY_COMPONENTS = [
   'ProgressBar',
   'ShareBar',
   'ShareBill',
-  'AmountBar',
   'Tabs',
   'PageHeader',
   'Breadcrumbs',
