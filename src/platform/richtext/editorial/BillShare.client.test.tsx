@@ -107,7 +107,7 @@ describe('BillShare', () => {
         .getByRole('img', { name: /^Your whole property tax bill:/ })
         .getAttribute('aria-label') ?? ''
     for (const name of [
-      'Madison schools',
+      'Metropolitan Schools',
       'City of Madison',
       'Dane County',
       'Madison College (MATC)',
@@ -124,7 +124,7 @@ describe('BillShare', () => {
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(rowsOf().map((row) => row?.replace(/[$\d,%]+/g, '').trim())).toEqual([
       'City of Madison',
-      'Madison schools',
+      'Metropolitan Schools',
       'Dane County',
       'Madison College (MATC)',
     ])
