@@ -9,6 +9,7 @@ import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { Card } from '@/platform/ui/Card'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
+import { Link } from '@/platform/ui/Link'
 import { ShareBill } from '@/platform/ui/ShareBill'
 import { Text } from '@/platform/ui/Text'
 import { COUNT_MS, YEAR_COUNT_MS, useCountedNumber } from '@/platform/ui/useCountedNumber.client'
@@ -17,7 +18,9 @@ import type { BillShareProps } from './billShare'
 import { BillAnswer } from './BillAnswer'
 import { BillDetails } from './BillDetails'
 import {
+  ASSESSED_NOTE,
   assumedNote,
+  CREDITS_NOTE,
   joinNames,
   reservedNote,
   ROUGH_NOTE,
@@ -175,6 +178,8 @@ export function BillShare({
   const shownNote = unconfirmedNote(years, yearIndex)
   const notes = [
     { key: 'rough', text: ROUGH_NOTE, shown: true },
+    { key: 'assessed', text: ASSESSED_NOTE, shown: true },
+    { key: 'credits', text: CREDITS_NOTE, shown: true },
     { key: 'rates', text: `Uses ${year.year} rates.`, shown: true },
     ...(assumed ? [{ key: 'assumed', text: assumed, shown: true }] : []),
     ...(kept ? [{ key: 'unconfirmed', text: shownNote ?? kept, shown: shownNote !== null }] : []),
@@ -187,6 +192,16 @@ export function BillShare({
           },
         ]
       : []),
+    {
+      key: 'tell-us',
+      text: (
+        <>
+          If your real bill comes out far from this, please{' '}
+          <Link href="/contact">send us a note</Link>.
+        </>
+      ),
+      shown: true,
+    },
   ]
 
   return (

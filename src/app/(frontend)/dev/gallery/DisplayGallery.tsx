@@ -173,7 +173,7 @@ export function DisplayGallery() {
           className="block"
         >
           <Card variant="elevated" padding="none" className="max-w-prose divide-y divide-border">
-            <Disclosure variant="row" summary="How we estimate this">
+            <Disclosure variant="row" summary="Why your bill may differ">
               <Text variant="small">
                 A rough estimate: credits and exemptions change a real bill.
               </Text>

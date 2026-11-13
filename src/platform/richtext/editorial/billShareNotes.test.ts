@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import type { BillShareYear } from './billShare'
 import {
+  ASSESSED_NOTE,
   assumedNote,
+  CREDITS_NOTE,
   joinNames,
   reservedNote,
   ROUGH_NOTE,
@@ -31,17 +33,32 @@ describe('joinNames', () => {
   })
 })
 
-describe('ROUGH_NOTE', () => {
-  it('says the estimate is rough and why a real bill differs, in one short line', () => {
+describe('the fixed notes', () => {
+  it('say it is rough and not official or tax advice, in one short line', () => {
     expect(ROUGH_NOTE).toMatch(/rough estimate/i)
-    expect(ROUGH_NOTE).toMatch(/credits|exemptions/i)
+    expect(ROUGH_NOTE).toMatch(/official/i)
+    expect(ROUGH_NOTE).toMatch(/tax advice/i)
     expect(ROUGH_NOTE.length).toBeLessThan(90)
+  })
+
+  it('say the City’s assessed value may differ from the one entered', () => {
+    expect(ASSESSED_NOTE).toMatch(/assessed value of your home may differ/i)
+    expect(ASSESSED_NOTE).toMatch(/you enter/)
+    expect(ASSESSED_NOTE.length).toBeLessThan(90)
+  })
+
+  it('name what a rough estimate cannot see, so a real bill differs', () => {
+    expect(CREDITS_NOTE).toMatch(/credits/i)
+    expect(CREDITS_NOTE).toMatch(/exemptions/i)
+    expect(CREDITS_NOTE).toMatch(/who owns the home/i)
+    expect(CREDITS_NOTE).toMatch(/type of property/i)
+    expect(CREDITS_NOTE.length).toBeLessThan(90)
   })
 })
 
 describe('unconfirmedNote', () => {
   it('says the City’s rate for the year is proposed, without naming the other bodies', () => {
-    expect(unconfirmedNote(YEARS, 1)).toBe('The City’s 2027 tax rate is proposed, not confirmed.')
+    expect(unconfirmedNote(YEARS, 1)).toBe('The City’s 2027 tax rate is proposed and may change.')
   })
 
   it('has nothing to say about a year every body has set', () => {
@@ -79,9 +96,9 @@ describe('uniqueSources', () => {
 })
 
 describe('assumedNote (#1121)', () => {
-  it('says an earlier year’s home value is assumed to have changed as the average home did', () => {
+  it('says an earlier year’s home value is assumed to have changed as much as the average home’s', () => {
     expect(assumedNote([year(2026, {}), year(2027, {})])).toBe(
-      'Your home’s 2026 value is assumed to have changed as the average home’s did.',
+      'We assume your home’s 2026 value changed as much as the average home’s.',
     )
     expect(assumedNote([year(2025, {}), year(2026, {}), year(2027, {})])).toContain('2025 and 2026')
   })

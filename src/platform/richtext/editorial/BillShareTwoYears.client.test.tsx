@@ -116,9 +116,9 @@ describe('the increase and the year switch tell one story (#1121)', () => {
         x
       </BillShare>,
     )
-    const row = screen.getByText('How we estimate this').closest('details') as HTMLElement
+    const row = screen.getByText('Why your bill may differ').closest('details') as HTMLElement
     expect(row.textContent).toContain(
-      'Your home’s 2026 value is assumed to have changed as the average home’s did.',
+      'We assume your home’s 2026 value changed as much as the average home’s.',
     )
   })
 
@@ -128,7 +128,7 @@ describe('the increase and the year switch tell one story (#1121)', () => {
         x
       </BillShare>,
     )
-    expect(screen.queryByText(/is assumed to have changed/)).toBeNull()
+    expect(screen.queryByText(/We assume your home/)).toBeNull()
   })
 
   it('falls back to the typed value, and shows no increase the data cannot support, for a year with no average home', async () => {

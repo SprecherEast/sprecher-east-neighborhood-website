@@ -223,9 +223,7 @@ test.describe('without scripting', () => {
   test('the first row is open and the other two are closed', async ({ page }) => {
     await page.goto(POST)
     const open = await page
-      .locator('summary', {
-        hasText: /^(Your City tax breakdown|How we estimate this|Sources)$/,
-      })
+      .locator('summary', { hasText: new RegExp(`^(${ROW_TITLES.join('|')})$`) })
       .evaluateAll((rows) => rows.map((row) => (row.parentElement as HTMLDetailsElement).open))
     expect(open).toEqual([true, false, false])
   })

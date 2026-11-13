@@ -24,7 +24,7 @@ describe('BillShare', () => {
   it('says the City’s rate for a year is proposed, without naming the other bodies, in a note that is always there', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     const note = screen.getByText(/City’s 2027 tax rate is proposed/i)
-    expect(note.textContent).toBe('The City’s 2027 tax rate is proposed, not confirmed.')
+    expect(note.textContent).toBe('The City’s 2027 tax rate is proposed and may change.')
     expect(note.closest('li')?.getAttribute('aria-hidden')).toBeNull()
     expect(screen.getByText('Proposed')).toBeTruthy()
     // Last year's rates have nothing to confirm: the note keeps its room and is hidden from everyone
