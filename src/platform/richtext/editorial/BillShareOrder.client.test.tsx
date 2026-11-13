@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
-import { BillShare } from './BillShare.client'
+import { BILL_GAP, BillShare } from './BillShare.client'
 import { city, estimate, PROPS } from './billShareFixtures'
 
 afterEach(cleanup)
@@ -17,6 +17,23 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     expect(row.textContent).toMatch(/a rough estimate/i)
     expect(row.textContent).toContain('Uses 2027 rates.')
     expect(screen.getAllByText(/a rough estimate/i)).toHaveLength(1)
+  })
+
+  it('puts the same space above the estimator as below it, from one shared value (#1142)', () => {
+    render(<BillShare {...PROPS} {...city} certainty="estimate" source={PROPS.years[0]?.source} />)
+    const estimator = screen.getByRole('region', { name: 'Rough Estimator' })
+    const stack = estimator.parentElement as HTMLElement
+    // The intro, the estimator and the answer card are siblings in one stack, with no margin of their own
+    expect(stack.className).toContain(BILL_GAP)
+    expect(stack.contains(screen.getByText(PROPS.intro))).toBe(true)
+    expect(screen.getByRole('region', { name: 'Your City tax' }).parentElement).toBe(stack)
+    for (const node of [
+      estimator.previousElementSibling,
+      estimator,
+      estimator.nextElementSibling,
+    ]) {
+      expect(node?.className).not.toMatch(/(^|\s)-?m[tby]-/)
+    }
   })
 
   it('draws the tab in one order: intro, the estimator, the answer, the whole bill, the three rows, the rest (#1111)', () => {

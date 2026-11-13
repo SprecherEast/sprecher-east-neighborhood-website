@@ -45,10 +45,22 @@ for (const width of WIDTHS) {
       expect(Math.abs(group.y + group.height / 2 - (field.y + field.height / 2))).toBeLessThan(2)
       const [mine, theirs] = [
         await boxOf(estimator(page).getByText('Tax rates')),
-        await boxOf(estimator(page).getByText('Your home’s assessed value')),
+        await boxOf(estimator(page).getByText('Enter your assessed value')),
       ]
       expect(Math.round(mine.y), 'the labels share a line').toBe(Math.round(theirs.y))
     } else expect(group.y).toBeGreaterThan(field.y + field.height - 1)
+
+    // The same space sits above the estimator (under the intro) as below it (above the answer card) (#1142)
+    const intro = await boxOf(estimator(page).locator('xpath=preceding-sibling::*[1]'))
+    const answerCard = await boxOf(page.getByRole('region', { name: 'Your City tax' }))
+    const gapAbove = Math.round((await boxOf(estimator(page))).y - (intro.y + intro.height))
+    const gapBelow = Math.round(
+      answerCard.y - ((await boxOf(estimator(page))).y + (await boxOf(estimator(page))).height),
+    )
+    expect(
+      Math.abs(gapAbove - gapBelow),
+      `above ${gapAbove}px, below ${gapBelow}px`,
+    ).toBeLessThanOrEqual(1)
 
     // The answer card's label and badge share a row from 390 px (the 320 px card is too narrow for both
     // and puts the badge whole on a line of its own); either way the badge stays inside the card
