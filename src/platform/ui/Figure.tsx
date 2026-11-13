@@ -38,7 +38,7 @@ const SMALL_SIZES = '(min-width: 1024px) 24rem, (min-width: 768px) 40vw, 100vw'
 const SMALL_SIZES_HALF_THEN_THIRD = '(min-width: 960px) 20rem, (min-width: 768px) 50vw, 100vw'
 
 export type FigureProps = Pick<MediaProps, 'resource' | 'src' | 'alt'> & {
-  /** Names the Enlarge button and the dialog (the picture's name when zoom is off) */
+  /** Names the expand icon and the dialog (the picture's name when zoom is off) */
   title: string
   /** The figure's number or name in its source ("Figure 2-9"), shown in a neutral badge */
   label?: string
@@ -54,14 +54,14 @@ export type FigureProps = Pick<MediaProps, 'resource' | 'src' | 'alt'> & {
   size?: FigureSize
   /** The first image the reader sees: loads early instead of lazily */
   priority?: boolean
-  /** False draws only the picture and its caption: no Enlarge button, no dialog (the article's own picture) */
+  /** False draws only the picture and its caption: no expand icon, no dialog (the article's own picture) */
   zoom?: boolean
   className?: string
 }
 
 /**
  * A picture that floats right in an article, small, with a short caption (#816). Clicking or
- * tapping it opens the large picture with its numbered key and the long caption. The key is never in
+ * tapping it, or the small expand icon over its top-right corner (#1156), opens the large picture with its numbered key and the long caption. The key is never in
  * the small view: its numbers can't be read there. Without scripting the small picture stays as it is.
  */
 export function Figure({
@@ -115,6 +115,7 @@ export function Figure({
     <figure className={cn(figureVariants({ size }), className)}>
       <Zoom
         title={title}
+        trigger="icon"
         large={picture('(min-width: 1024px) 66vw, 100vw')}
         aside={
           hasAside ? (

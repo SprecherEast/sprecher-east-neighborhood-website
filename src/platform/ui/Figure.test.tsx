@@ -68,6 +68,14 @@ describe('Figure', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
+  it('offers the enlarge control as a small icon over the picture, not a text button (#1156)', () => {
+    setup()
+    const button = screen.getByRole('button', { name: 'Enlarge: Concept for Milwaukee Street' })
+
+    expect(button.textContent?.trim()).toBe('')
+    expect(button.className).toContain('absolute')
+  })
+
   it('opens a dialog with the key and the long caption', async () => {
     setup({ longCaption: 'Source: WisDOT. We added the numbers.' })
 

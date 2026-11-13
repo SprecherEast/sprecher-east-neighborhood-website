@@ -9,7 +9,7 @@ import { FigureBlock } from './FigureBlock'
 afterEach(cleanup)
 
 describe('FigureBlock', () => {
-  it('draws the stored block as a figure with its caption and an Enlarge button', () => {
+  it('draws the stored block as a figure with its caption and its expand icon', () => {
     render(
       <FigureBlock
         blockType="figure"

@@ -178,7 +178,7 @@ Source: `src/platform/richtext/FigureBlock.tsx`
 | Prop          | Type                                                               | Required | Description                                                                                       |
 | ------------- | ------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------- |
 | `image`       | `number \| Media`                                                  | yes      | The large picture. It shows small in the article. It does not set the card or link-preview image. |
-| `title`       | `string`                                                           | yes      | What the picture shows, in a few words. It names the Enlarge button.                              |
+| `title`       | `string`                                                           | yes      | What the picture shows, in a few words. It names the small expand icon on the picture.            |
 | `label`       | `string`                                                           | no       | Its number in the source, such as "Figure 2-9". Optional.                                         |
 | `caption`     | `string`                                                           | no       | One short line under the small picture. Optional.                                                 |
 | `longCaption` | `string`                                                           | no       | Source, how it was made and conditions. Shown only when the picture is enlarged. Optional.        |

@@ -33,15 +33,21 @@ export type ZoomProps = {
   holderClassName?: string
   /** Where the Enlarge button sits; it is hidden without scripting whatever this says */
   buttonClassName?: string
+  /**
+   * What opens it: the "Enlarge" text button under the small view (default, the chart's), or only
+   * the expand icon laid over its top-right corner (a picture's, #1156). Either way the control is
+   * named "Enlarge: <title>" and a click on the small view opens it too.
+   */
+  trigger?: 'button' | 'icon'
 }
 
 /**
- * A small view the reader can enlarge (#815, from the chart's #681). "Enlarge", or a click or tap
+ * A small view the reader can enlarge (#815, from the chart's #681). "Enlarge" (or, with `trigger="icon"`, the expand icon over the view's corner, #1156), or a click or tap
  * on the small view, opens a full-screen `Dialog` (focus trap, Escape, scroll lock, focus back to
  * the button) with the large view and, beside or under it, the `aside`. The small view never shows
  * the aside: a legend's numbers can't be read small. An empty box of the same height keeps the page
  * from collapsing behind the dialog when the small view itself moves in. Without scripting the
- * button is hidden and the small view simply stays as it is.
+ * control is hidden and the small view simply stays as it is.
  */
 export function Zoom({
   title,
@@ -54,7 +60,9 @@ export function Zoom({
   className,
   holderClassName,
   buttonClassName,
+  trigger = 'button',
 }: ZoomProps) {
+  const overlay = trigger === 'icon'
   const [open, setOpen] = useState(false)
   const holder = useRef<HTMLDivElement>(null)
   const height = useRef(0)
@@ -99,16 +107,19 @@ export function Zoom({
         hideTitle
         trigger={
           <Button
-            variant="secondary"
-            size="sm"
+            variant={overlay ? 'ghost' : 'secondary'}
+            size={overlay ? 'icon' : 'sm'}
             aria-label={`Enlarge${kind ? ` ${kind}` : ''}: ${title}`}
             className={cn(
-              'hidden self-end lg:min-h-11 lg:px-4 scripted:inline-flex',
+              'hidden scripted:inline-flex',
+              overlay
+                ? 'absolute top-2 right-2 z-10 bg-scrim/60 text-on-image hover:bg-scrim/80'
+                : 'self-end lg:min-h-11 lg:px-4',
               buttonClassName,
             )}
             iconStart={<Maximize2 aria-hidden="true" />}
           >
-            Enlarge
+            {overlay ? null : 'Enlarge'}
           </Button>
         }
       >
@@ -127,7 +138,7 @@ export function Zoom({
         ref={holder}
         data-zoom-holder
         aria-hidden={open && !hasLarge ? true : undefined}
-        className={cn('w-full', holderClassName)}
+        className={cn('w-full', overlay && 'cursor-zoom-in', holderClassName)}
       >
         {open && !hasLarge ? null : children}
       </div>
