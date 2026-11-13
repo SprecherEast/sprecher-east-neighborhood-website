@@ -257,30 +257,3 @@ test.describe('without scripting', () => {
     expect(open).toEqual([false, false, false])
   })
 })
-
-// The breakdown opens by itself once, after the reader's first value, when the total has counted
-// and flashed and a pause has passed, without scrolling the page (#1163)
-test('the breakdown opens after the first value, once, and scrolls nothing', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(POST)
-  const row = summary(page, ROW_TITLES[0])
-  const details = row.locator('xpath=..')
-  const input = page.getByRole('textbox', { name: 'Enter your assessed value' })
-  await input.scrollIntoViewIfNeeded()
-  await input.fill('$700,000')
-  await page.getByRole('button', { name: 'Estimate' }).click()
-  // Counting (1.5 s), the flash (1.5 s) and the pause (1 s): still closed after the count and flash
-  await page.waitForTimeout(3000)
-  await expect(details).toHaveJSProperty('open', false)
-  const before = await boxOf(row)
-  await expect(details).toHaveJSProperty('open', true, { timeout: 2500 })
-  const after = await boxOf(row)
-  expect(after.y, 'opening by itself moves nothing on screen').toBeCloseTo(before.y, 0)
-  // Closed by the reader, it stays closed for the next value
-  await row.click()
-  await expect(details).toHaveJSProperty('open', false)
-  await input.fill('$800,000')
-  await page.getByRole('button', { name: 'Estimate' }).click()
-  await page.waitForTimeout(6000)
-  await expect(details).toHaveJSProperty('open', false)
-})

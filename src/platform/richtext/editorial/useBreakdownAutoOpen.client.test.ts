@@ -32,6 +32,10 @@ describe('useBreakdownAutoOpen (#1163, #1165)', () => {
     return { row, ...hook }
   }
 
+  it('pauses only briefly after the total, so the row opens before the reader reacts (#1170)', () => {
+    expect(OPEN_AFTER_TOTAL_MS).toBe(400)
+  })
+
   it('opens once, after the armed bill’s flash and the pause, with the fill restarted first', () => {
     const { row, result, rerender } = setup()
     act(() => result.current.arm(true))

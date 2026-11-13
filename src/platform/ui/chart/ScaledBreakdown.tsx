@@ -3,6 +3,7 @@ import React, { useId, useLayoutEffect, useRef } from 'react'
 import { toBreakdown, valuesAt } from '@/platform/lib/chart/breakdown'
 import { scaleBreakdown } from '@/platform/lib/chart/scale'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
+import { EXPAND_MS } from '@/platform/ui/motion.client'
 import { Text } from '@/platform/ui/Text'
 import { useReplayProgress } from '@/platform/ui/useReplayProgress.client'
 
@@ -39,7 +40,7 @@ export function ScaledBreakdown({
   compact?: boolean
 }) {
   const id = useId()
-  const progress = useReplayProgress(fillKey)
+  const progress = useReplayProgress(fillKey, undefined, EXPAND_MS)
   // Each new fill restarts the bars' growth in place: the chart is not drawn anew, since a rebuilt
   // chart just before its row opens makes the browser's scroll anchoring move the page (#1165)
   const figure = useRef<HTMLElement>(null)

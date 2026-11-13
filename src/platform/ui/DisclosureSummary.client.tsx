@@ -2,6 +2,7 @@
 
 import React from 'react'
 
+import { holdScrollAnchor } from './motion.client'
 import { REVEAL_PEEK_VAR } from './scrollMargin'
 
 export type DisclosureSummaryProps = {
@@ -13,6 +14,18 @@ export type DisclosureSummaryProps = {
 
 // How much of what follows the next summary row also shows, as a share of that row's height
 const PAST_NEXT_ROW = 0.5
+
+/** How long the box takes to expand, from its own style (`disclosure-expand`); 0 when it opens at once */
+function expansionMs(details: HTMLDetailsElement): number {
+  try {
+    const duration = getComputedStyle(details, '::details-content').transitionDuration
+    const first = parseFloat(duration)
+    if (!Number.isFinite(first)) return 0
+    return Math.round(first * (duration.trim().split(',')[0]?.endsWith('ms') ? 1 : 1000))
+  } catch {
+    return 0
+  }
+}
 
 /** The room to keep under an open box: none unless another box sits directly under it */
 function roomForNext(details: HTMLDetailsElement): number {
@@ -37,16 +50,26 @@ function roomForNext(details: HTMLDetailsElement): number {
 export function DisclosureSummary({ className, children, onOpening }: DisclosureSummaryProps) {
   const revealWhenOpened = (event: React.MouseEvent<HTMLElement>) => {
     const details = event.currentTarget.parentElement
-    if (!(details instanceof HTMLDetailsElement) || details.open) return
+    if (!(details instanceof HTMLDetailsElement)) return
+    // Folding or expanding takes a moment: the page must not scroll with it (#1170)
+    const wait = expansionMs(details)
+    if (wait > 0) holdScrollAnchor(wait)
+    if (details.open) return
     // The box is still closed here: the caller's update lands before it opens and paints
     onOpening?.()
-    // The box opens after this click is handled, so its new height is there on the next frame
+    // The box opens after this click is handled, so its new height is there on the next frame, or
+    // when its expansion ends (#1170), so the page scrolls to the box's full height
     requestAnimationFrame(() => {
       if (!details.open) return
-      const room = roomForNext(details)
-      if (room > 0) details.style.setProperty(REVEAL_PEEK_VAR, `${room}px`)
-      else details.style.removeProperty(REVEAL_PEEK_VAR)
-      details.scrollIntoView({ block: 'nearest' })
+      const reveal = () => {
+        if (!details.open) return
+        const room = roomForNext(details)
+        if (room > 0) details.style.setProperty(REVEAL_PEEK_VAR, `${room}px`)
+        else details.style.removeProperty(REVEAL_PEEK_VAR)
+        details.scrollIntoView({ block: 'nearest' })
+      }
+      if (wait > 0) setTimeout(reveal, wait)
+      else reveal()
     })
   }
 
