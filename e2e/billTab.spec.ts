@@ -198,7 +198,7 @@ for (const width of WIDTHS) {
     const open = await page
       .locator('details:has(> summary)')
       .filter({
-        has: page.locator('summary', { hasText: /^(Your City tax breakdown|How|Sources)/ }),
+        has: page.locator('summary', { hasText: new RegExp(`^(${ROW_TITLES.join('|')})`) }),
       })
       .evaluateAll((rows) => rows.map((row) => (row as HTMLDetailsElement).open))
     expect(open).toEqual([true, false, false])

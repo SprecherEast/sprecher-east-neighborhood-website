@@ -110,7 +110,7 @@ describe('the increase and the year switch tell one story (#1121)', () => {
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('$500,300')
   })
 
-  it('says in one plain sentence how last year’s value is assumed, in the row on how it is estimated', () => {
+  it('says in one plain sentence how last year’s value is assumed, in the row on why the bill may differ', () => {
     render(
       <BillShare {...PROPS} {...city}>
         x

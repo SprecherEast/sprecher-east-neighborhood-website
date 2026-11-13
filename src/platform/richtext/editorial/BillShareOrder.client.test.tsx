@@ -11,7 +11,7 @@ import { city, estimate, PROPS } from './billShareFixtures'
 afterEach(cleanup)
 
 describe('BillShare, the order of the tab and its three rows (#1111, #1121)', () => {
-  it('shows the estimate’s notes only in the row on how it works, closed until opened (#1111)', () => {
+  it('shows the estimate’s notes only in the row on why the bill may differ, closed until opened (#1111)', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     const row = screen
       .getByText('Why your bill may differ')

@@ -51,7 +51,7 @@ export type CityPanelProps = {
   cityBars?: Extract<ChartSpec, { kind: 'stacked' }>
   /** Where the City's tax goes, drawn again for whatever the City's tax is on the home typed */
   cityBreakdown?: Extract<ChartSpec, { kind: 'breakdown' }>
-  /** The tab's short text, in the row on how the estimate works */
+  /** The tab's short text, in the row on why the bill may differ */
   definition?: ReactNode
   /** The tab's explanation, after the short text */
   detail?: ReactNode
@@ -74,7 +74,7 @@ export const BILL_GAP = 'space-y-5'
  * value the reader can change, which starts at the City's average home, and the switch between tax
  * years), the answer card (the City's tax on the home and year, its increase, the year's status), the
  * whole bill (its own card: the total, one bar whose slices are as wide as their shares, and the receipt
- * naming each), then one card of three rows: where the City's share goes (the split alone), how the estimate works and the
+ * naming each), then one card of three rows: where the City's share goes (the split alone), why the bill may differ and the
  * sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home
  * value and year, so every amount is the City's slice of the bill. A year in which a body has not
  * set its rate uses that body's rate from the year before, and says so in a note whose room is

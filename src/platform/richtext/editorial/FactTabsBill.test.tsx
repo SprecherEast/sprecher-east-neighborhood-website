@@ -14,7 +14,7 @@ const props = toFactTabsProps(FACT_TABS_FIXTURE)
 const setup = (shown = props) => render(<FactTabs {...shown} />)
 
 describe('FactTabs with a whole tax bill', () => {
-  it('puts a whole tax bill first and holds the tab’s text in its row on how the estimate works (#1018, #1111)', () => {
+  it('puts a whole tax bill first and holds the tab’s text in its row on why the bill may differ (#1018, #1111)', () => {
     const [first] = props.tabs
     const billShare = {
       kind: 'billShare' as const,

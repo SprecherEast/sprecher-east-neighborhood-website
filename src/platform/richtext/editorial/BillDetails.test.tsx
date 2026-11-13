@@ -63,7 +63,7 @@ describe('BillDetails', () => {
     expect(rows.some((row) => /(^|\s)border(\s|$)/.test(row.className))).toBe(false)
   })
 
-  it('puts the notes first and the tab’s short text after them in the row on how it works', () => {
+  it('puts the notes first and the tab’s short text after them in the row on why the bill may differ', () => {
     render(<BillDetails notes={NOTES} about={<p>Short text</p>} sources={[]} />)
     const note = screen.getByText(/every bill differs/)
     const about = screen.getByText('Short text')

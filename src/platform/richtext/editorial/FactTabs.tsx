@@ -112,7 +112,7 @@ function FactTabPanel({
         )}
       </div>
       {/* The explanation a tab leaves out so all the tabs hold the same parts (#707); a whole tax
-          bill keeps it in its row on how the estimate works */}
+          bill keeps it in its row on why the bill may differ */}
       {fact.detail && !bill && (
         <div data-panel-detail>
           <Text variant="small">{joinLastWords(fact.detail)}</Text>
