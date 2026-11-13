@@ -71,6 +71,9 @@ export type CityPanelProps = {
  * set its rate uses that body's rate from the year before, and says so in a note whose room is
  * always kept, so the page never changes height.
  */
+/** The one space between the tab's cards: under the intro, between the estimator and the answer, and on (#1142) */
+export const BILL_GAP = 'space-y-2'
+
 export function BillShare({
   intro,
   years,
@@ -185,7 +188,7 @@ export function BillShare({
   ]
 
   return (
-    <div className="space-y-2">
+    <div className={BILL_GAP}>
       {intro && <Text variant="small">{intro}</Text>}
       <RoughEstimator
         value={text}

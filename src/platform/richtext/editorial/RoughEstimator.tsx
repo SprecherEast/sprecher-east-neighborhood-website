@@ -54,7 +54,7 @@ export function RoughEstimator({
       >
         <div data-estimator-row>
           <Field
-            label="Your home’s assessed value"
+            label="Enter your assessed value"
             error={error}
             layout="bar"
             actionPlacement="inside"
