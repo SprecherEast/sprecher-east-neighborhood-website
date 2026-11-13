@@ -98,7 +98,7 @@ Source: `src/platform/ui/RouteDialog.client.tsx`
 
 ## `Zoom`
 
-A small view the reader can enlarge (#815, from the chart's #681). "Enlarge", or a click or tap on the small view, opens a full-screen `Dialog` (focus trap, Escape, scroll lock, focus back to the button) with the large view and, beside or under it, the `aside`. The small view never shows the aside: a legend's numbers can't be read small. An empty box of the same height keeps the page from collapsing behind the dialog when the small view itself moves in. Without scripting the button is hidden and the small view simply stays as it is.
+A small view the reader can enlarge (#815, from the chart's #681). "Enlarge" (or, with `trigger="icon"`, the expand icon over the view's corner, #1156), or a click or tap on the small view, opens a full-screen `Dialog` (focus trap, Escape, scroll lock, focus back to the button) with the large view and, beside or under it, the `aside`. The small view never shows the aside: a legend's numbers can't be read small. An empty box of the same height keeps the page from collapsing behind the dialog when the small view itself moves in. Without scripting the control is hidden and the small view simply stays as it is.
 
 Source: `src/platform/ui/Zoom.client.tsx`
 
