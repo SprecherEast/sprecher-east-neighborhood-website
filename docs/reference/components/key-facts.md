@@ -62,6 +62,8 @@ Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------ |
 | `intro`         | `string`                                                                                                                                                                   | yes      |                                                                                                  |
 | `years`         | `BillShareYear[]`                                                                                                                                                          | yes      |                                                                                                  |
+| `rows`          | `BillRowTitles`                                                                                                                                                            | yes      |                                                                                                  |
+| `notes`         | `BillNote[]`                                                                                                                                                               | yes      |                                                                                                  |
 | `tabId`         | `string`                                                                                                                                                                   | no       | The tab this bill is in, so the tab's button and heading can follow it (#1029)                   |
 | `cityBars`      | `{ kind: "stacked"; orientation: "horizontal" \| "vertical"; x: string[]; series: { key: string; label: string; values: number[]; pattern?: "hatch" \| undefined; …`       | no       | A chart of the City's tax by year: the answer card takes the year's tax and its increase from it |
 | `cityBreakdown` | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …`       | no       | Where the City's tax goes, drawn again for whatever the City's tax is on the home typed          |
@@ -106,10 +108,26 @@ Source: `src/platform/richtext/editorial/BillDetails.tsx`
 
 | Prop      | Type                                                                                                                                                                       | Required | Description                                                                     |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------- |
+| `titles`  | `BillRowTitles`                                                                                                                                                            | yes      | What each row is called, from the block                                         |
 | `where`   | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       |                                                                                 |
 | `notes`   | `readonly { key: string; text: ReactNode; shown: boolean; }[]`                                                                                                             | yes      | The notes on why a real bill may differ; one that is not `shown` keeps its room |
 | `about`   | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | What follows the notes: the tab's short text and detail                         |
 | `sources` | `readonly ResolvedLink[]`                                                                                                                                                  | yes      |                                                                                 |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
+## `NoteText`
+
+A note's text with its link drawn where the editor wrote `{link}`. A blank with no link to draw (a draft Admin did not check) is left out, so readers never see it; a link with no blank to stand in is not drawn, and a second blank draws nothing (Admin refuses both on save).
+
+Source: `src/platform/richtext/editorial/NoteText.tsx`
+
+| Prop   | Type                   | Required | Description |
+| ------ | ---------------------- | -------- | ----------- |
+| `text` | `string`               | yes      |             |
+| `link` | `ResolvedLink \| null` | yes      |             |
 
 **Used by** (direct imports):
 
