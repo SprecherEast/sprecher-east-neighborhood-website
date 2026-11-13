@@ -81,6 +81,7 @@ export function ShareBill({
         {slices.map((slice) => (
           <React.Fragment key={slice.key}>
             <li
+              data-share-row={slice.key}
               className={cn(
                 'col-span-3 grid min-h-5 grid-cols-subgrid items-center border-t border-border px-1 first:border-t-0',
                 SHARE_TONES[slice.tone].row,

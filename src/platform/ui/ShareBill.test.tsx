@@ -115,6 +115,9 @@ describe('ShareBill', () => {
     expect(nested.className).toContain('pl-4')
     expect(nested.className).toContain('min-[24rem]:pl-6')
     expect(rows[2]?.textContent).toBe('Sample: second46%$4,650')
+    // Only the slices' own rows carry their key, so a list inside the nested content is never one
+    expect(container.querySelectorAll('li[data-share-row]')).toHaveLength(SLICES.length)
+    expect(nested.hasAttribute('data-share-row')).toBe(false)
   })
 
   it('nests nothing when the slice named is not in the bill (#1163)', () => {

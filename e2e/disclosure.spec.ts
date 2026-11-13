@@ -139,6 +139,8 @@ for (const width of WIDTHS) {
   }) => {
     await page.setViewportSize({ width, height: 844 })
     await page.goto(POST)
+    // The chart sits in the City's breakdown, which is closed on load (#1163)
+    await toggle(page, summary(page, ROW_TITLES[0]), true)
     const row = page.locator('summary:visible', { hasText: /^See the smaller pieces$/ }).first()
     await toFoot(page, row)
 

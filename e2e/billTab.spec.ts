@@ -97,7 +97,7 @@ for (const width of WIDTHS) {
 
     // No receipt name wraps, down to 320 px
     const rows = await page
-      .locator('[data-share-bill] li')
+      .locator('[data-share-bill] li[data-share-row]')
       .evaluateAll((items) => items.map((li) => Math.round(li.getBoundingClientRect().height)))
     expect(Math.max(...rows), `every receipt name is on one line: ${rows}`).toBeLessThanOrEqual(22)
 
@@ -144,7 +144,7 @@ for (const width of WIDTHS) {
       expect(text?.height, `${key}'s percent is on one line`).toBeLessThan(24)
     }
     // The receipt's rows keep their columns: the percents and the amounts end on the same lines
-    const ends = await page.locator('[data-share-bill] li').evaluateAll((rows) =>
+    const ends = await page.locator('[data-share-bill] li[data-share-row]').evaluateAll((rows) =>
       rows.map((row) => {
         const [, percent, amount] = Array.from(row.children).map((c) =>
           Math.round(c.getBoundingClientRect().right),
@@ -155,7 +155,7 @@ for (const width of WIDTHS) {
     expect(new Set(ends.map((end) => end.percent)).size, 'percents end level').toBe(1)
     expect(new Set(ends.map((end) => end.amount)).size, 'amounts end level').toBe(1)
     // The City's row has a fill and bolder text; the others have neither
-    const looks = await page.locator('[data-share-bill] li').evaluateAll((rows) =>
+    const looks = await page.locator('[data-share-bill] li[data-share-row]').evaluateAll((rows) =>
       rows.map((row) => {
         const style = getComputedStyle(row)
         return { fill: style.backgroundColor, weight: Number(style.fontWeight) }
@@ -207,9 +207,9 @@ for (const width of WIDTHS) {
     await page.setViewportSize({ width, height: 844 })
     await page.goto(POST)
     const bill = page.getByRole('region', { name: 'Your whole property tax bill' })
-    const cityRow = bill.locator('li', { hasText: 'City of Madison' }).first()
+    const cityRow = bill.locator('li[data-share-row="city"]')
     const row = summary(page, ROW_TITLES[0])
-    await expect(bill.locator('li').filter({ has: row })).toHaveCount(1)
+    await expect(bill.locator('[data-share-bill] > ul > li').filter({ has: row })).toHaveCount(1)
     const [name, label, rowBox, cityBox] = await Promise.all([
       boxOf(cityRow.getByText('City of Madison')),
       boxOf(row.locator('span', { hasText: ROW_TITLES[0] }).first()),
@@ -269,12 +269,13 @@ test('the breakdown opens after the first value, once, and scrolls nothing', asy
   await input.scrollIntoViewIfNeeded()
   await input.fill('$700,000')
   await page.getByRole('button', { name: 'Estimate' }).click()
-  const scrolled = await page.evaluate(() => scrollY)
-  // Counting (1.5 s), the flash (1.5 s) and the pause (2 s): still closed half way
-  await page.waitForTimeout(2500)
+  // Counting (1.5 s), the flash (1.5 s) and the pause (2 s): still closed after the count and flash
+  await page.waitForTimeout(3500)
   await expect(details).toHaveJSProperty('open', false)
-  await expect(details).toHaveJSProperty('open', true, { timeout: 5000 })
-  expect(await page.evaluate(() => scrollY), 'opening by itself scrolls nothing').toBe(scrolled)
+  const before = await boxOf(row)
+  await expect(details).toHaveJSProperty('open', true, { timeout: 3000 })
+  const after = await boxOf(row)
+  expect(after.y, 'opening by itself moves nothing on screen').toBeCloseTo(before.y, 0)
   // Closed by the reader, it stays closed for the next value
   await row.click()
   await expect(details).toHaveJSProperty('open', false)
