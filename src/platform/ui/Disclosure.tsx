@@ -113,6 +113,7 @@ export function Disclosure({
       className={cn(
         variant === 'card' && CARD_BOX,
         variant === 'row' && 'px-3',
+        variant === 'listRow' && 'disclosure-expand',
         reveal && REVEAL_SCROLL_MARGIN,
         className,
       )}

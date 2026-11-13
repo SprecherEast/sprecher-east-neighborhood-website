@@ -6,6 +6,7 @@ import {
   BILL_WIDTHS as WIDTHS,
   summaryRow as summary,
 } from './support/billRows'
+import { EXPAND_MS } from '../src/platform/ui/motion.client'
 import { expect, test } from './support/test'
 
 // An open-and-close box a reader opens is scrolled into view (#1152), on the page that has the
@@ -86,6 +87,8 @@ const toFoot = async (page: Page, row: Locator) => {
 const toggle = async (page: Page, row: Locator, open: boolean) => {
   await row.click()
   await expect(boxOfRow(row)).toHaveJSProperty('open', open)
+  // A row that expands scrolls into view when its expansion ends (#1170): the page is still, then moves
+  await page.waitForTimeout(EXPAND_MS + 150)
   await settle(page)
 }
 

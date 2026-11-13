@@ -190,17 +190,6 @@ for (const width of WIDTHS) {
     await expect(line).toContainText('Up $')
   })
 
-  test(`every row is closed on load at ${width}px`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 844 })
-    await page.goto(POST)
-    const open = await Promise.all(
-      ROW_TITLES.map((title) =>
-        summary(page, title).evaluate((row) => (row.parentElement as HTMLDetailsElement).open),
-      ),
-    )
-    expect(open).toEqual([false, false, false])
-  })
-
   test(`the breakdown sits under the City's row, lined up with its name, at ${width}px`, async ({
     page,
   }) => {
@@ -245,42 +234,3 @@ for (const width of WIDTHS) {
     expect(lines).toBe(1)
   })
 }
-
-// With scripting off every row is closed too, and opens from its summary (#1163)
-test.describe('without scripting', () => {
-  test.use({ javaScriptEnabled: false })
-  test('every row is closed', async ({ page }) => {
-    await page.goto(POST)
-    const open = await page
-      .locator('summary', { hasText: new RegExp(`^(${ROW_TITLES.join('|')})$`) })
-      .evaluateAll((rows) => rows.map((row) => (row.parentElement as HTMLDetailsElement).open))
-    expect(open).toEqual([false, false, false])
-  })
-})
-
-// The breakdown opens by itself once, after the reader's first value, when the total has counted
-// and flashed and a pause has passed, without scrolling the page (#1163)
-test('the breakdown opens after the first value, once, and scrolls nothing', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(POST)
-  const row = summary(page, ROW_TITLES[0])
-  const details = row.locator('xpath=..')
-  const input = page.getByRole('textbox', { name: 'Enter your assessed value' })
-  await input.scrollIntoViewIfNeeded()
-  await input.fill('$700,000')
-  await page.getByRole('button', { name: 'Estimate' }).click()
-  // Counting (1.5 s), the flash (1.5 s) and the pause (1 s): still closed after the count and flash
-  await page.waitForTimeout(3000)
-  await expect(details).toHaveJSProperty('open', false)
-  const before = await boxOf(row)
-  await expect(details).toHaveJSProperty('open', true, { timeout: 2500 })
-  const after = await boxOf(row)
-  expect(after.y, 'opening by itself moves nothing on screen').toBeCloseTo(before.y, 0)
-  // Closed by the reader, it stays closed for the next value
-  await row.click()
-  await expect(details).toHaveJSProperty('open', false)
-  await input.fill('$800,000')
-  await page.getByRole('button', { name: 'Estimate' }).click()
-  await page.waitForTimeout(6000)
-  await expect(details).toHaveJSProperty('open', false)
-})

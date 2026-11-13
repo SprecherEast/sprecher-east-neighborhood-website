@@ -3,6 +3,7 @@
 /* The theme: token values (the active theme), then their Tailwind mapping (#146) */
 @import '../../themes/default/theme.css';
 @import '../../platform/theme/tailwind.css';
+@import '../../platform/theme/expand.css';
 @import '../../platform/theme/decorations.css';
 
 @config '../../../tailwind.config.mjs';
