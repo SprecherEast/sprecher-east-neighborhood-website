@@ -8,7 +8,7 @@ import { box, estimate, PROPS } from './billShareFixtures'
 afterEach(cleanup)
 
 const KEYS = {
-  schools: 'Madison schools',
+  schools: 'Metropolitan Schools',
   city: 'City of Madison',
   county: 'Dane County',
   matc: 'Madison College (MATC)',
@@ -72,7 +72,7 @@ describe('the whole bill: the bar and the receipt (#1030, #1111)', () => {
     )
     expect(names).toEqual([
       'City of Madison',
-      'Madison schools',
+      'Metropolitan Schools',
       'Dane County',
       'Madison College (MATC)',
     ])

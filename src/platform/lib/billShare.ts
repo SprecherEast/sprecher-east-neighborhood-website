@@ -9,7 +9,7 @@ export type BillBody = (typeof BILL_BODIES)[number]
 
 /** What the bodies are called on the page and in the editor */
 export const BILL_BODY_NAMES: Record<BillBody, string> = {
-  schools: 'Madison schools',
+  schools: 'Metropolitan Schools',
   city: 'City of Madison',
   county: 'Dane County',
   matc: 'Madison College (MATC)',

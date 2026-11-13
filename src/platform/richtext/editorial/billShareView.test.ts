@@ -23,7 +23,7 @@ describe('receiptFor', () => {
   it('names every slice, its dollars and its percent for screen readers', () => {
     const { label } = receiptFor(computeBillShare(500300, RATES), 500300)
     expect(label).toMatch(
-      /^Your whole property tax bill: City of Madison \$3,5\d\d, \d+%; Madison schools/,
+      /^Your whole property tax bill: City of Madison \$3,5\d\d, \d+%; Metropolitan Schools/,
     )
   })
 
