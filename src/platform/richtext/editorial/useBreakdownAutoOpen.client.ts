@@ -31,7 +31,8 @@ export function useBreakdownAutoOpen(pulse: number) {
 
   const onOpening = useCallback(() => {
     openedOnce.current = true
-    // Drawn now, while the row is still closed, so nothing it holds changes once it shows
+    // Drawn now, while the row is still closed, so nothing it holds changes once it shows. `flushSync`
+    // belongs in this click handler and the timer below, never in an effect body or a render
     flushSync(() => setOpenings((count) => count + 1))
   }, [])
 

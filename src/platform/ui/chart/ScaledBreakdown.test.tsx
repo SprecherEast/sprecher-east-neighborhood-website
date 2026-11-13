@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 
@@ -61,6 +61,36 @@ describe('ScaledBreakdown', () => {
     expect(container.querySelector('.chart-reveal-x')).toBeNull()
     // Less motion (jsdom says so): the final amounts at once
     expect(amounts(container)).toEqual(['$700', '$370', '$300'])
+  })
+
+  it('restarts the bars’ growth in place for each new fill, never drawing the chart anew (#1165)', () => {
+    const calls: string[] = []
+    const animation = { cancel: () => calls.push('cancel'), play: () => calls.push('play') }
+    const getAnimations = vi.fn(() => [animation])
+    Object.defineProperty(Element.prototype, 'getAnimations', {
+      value: getAnimations,
+      configurable: true,
+    })
+    try {
+      const { container, rerender } = render(<ScaledBreakdown spec={SPEC} factor={0.5} />)
+      // No fill asked for yet: nothing restarts
+      expect(getAnimations).not.toHaveBeenCalled()
+      rerender(<ScaledBreakdown spec={SPEC} factor={0.5} fillKey={1} />)
+      const bar = container.querySelector('.chart-fill-x')
+      calls.length = 0
+      rerender(<ScaledBreakdown spec={SPEC} factor={0.5} fillKey={2} />)
+      // Each bar's animation starts over, cancel then play, on the same bar, not a new one
+      expect(calls.slice(0, 2)).toEqual(['cancel', 'play'])
+      expect(container.querySelector('.chart-fill-x')).toBe(bar)
+    } finally {
+      delete (Element.prototype as { getAnimations?: unknown }).getAnimations
+    }
+  })
+
+  it('still fills where the browser offers no animations to restart (#1165)', () => {
+    const { container, rerender } = render(<ScaledBreakdown spec={SPEC} factor={0.5} fillKey={1} />)
+    expect(() => rerender(<ScaledBreakdown spec={SPEC} factor={0.5} fillKey={2} />)).not.toThrow()
+    expect(container.querySelector('.chart-fill-x')).not.toBeNull()
   })
 
   it('draws thinner bars when compact, for a breakdown that sits inside a bill (#1163)', () => {

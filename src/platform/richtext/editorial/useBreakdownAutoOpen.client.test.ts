@@ -39,9 +39,22 @@ describe('useBreakdownAutoOpen (#1163, #1165)', () => {
     // Less motion (jsdom says so): no flash to wait out
     act(() => vi.advanceTimersByTime(OPEN_AFTER_TOTAL_MS - 1))
     expect(row.open).toBe(false)
+    // The fill is readied while the row is still closed, then the row opens: record the openings
+    // counted at the moment `open` is set
+    const order: number[] = []
+    const native = Object.getOwnPropertyDescriptor(HTMLDetailsElement.prototype, 'open')
+    Object.defineProperty(row, 'open', {
+      configurable: true,
+      get: () => native?.get?.call(row),
+      set: (value: boolean) => {
+        order.push(result.current.openings)
+        native?.set?.call(row, value)
+      },
+    })
     act(() => vi.advanceTimersByTime(1))
     expect(row.open).toBe(true)
     expect(result.current.openings).toBe(1)
+    expect(order).toEqual([1])
   })
 
   it('waits for the flash too when motion is allowed', () => {
