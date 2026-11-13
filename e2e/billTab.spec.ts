@@ -1,6 +1,11 @@
 import type { Locator, Page } from '@playwright/test'
 
-import { BILL_POST_SLUG } from './support/alignmentSlug'
+import {
+  BILL_POST_PATH as POST,
+  BILL_ROW_TITLES as ROW_TITLES,
+  BILL_WIDTHS as WIDTHS,
+  summaryRow as summary,
+} from './support/billRows'
 import { expect, test } from './support/test'
 
 // The "Your share" tab as a page draws it (#1118): the estimator's year control is one joined
@@ -9,15 +14,9 @@ import { expect, test } from './support/test'
 // percent on the bar fits inside its slice, "Tax rates" is centred over the year control, the City's
 // receipt row is highlighted and the first row is open on load (#1121).
 
-const POST = `/posts/${BILL_POST_SLUG}`
-const WIDTHS = [320, 390, 768, 1280]
-const ROW_TITLES = ['Your City tax breakdown', 'How we estimate this', 'Sources']
-
 const estimator = (page: Page) => page.getByRole('region', { name: 'Rough Estimator' })
 const box = (page: Page) => estimator(page).locator('[data-field-bar]')
 const years = (page: Page) => estimator(page).getByRole('group', { name: 'Tax rates' })
-const summary = (page: Page, title: string) =>
-  page.locator('summary', { hasText: new RegExp(`^${title}$`) })
 /** A locator's box, or a failure that says it is not on the page */
 const boxOf = async (locator: Locator) => {
   const found = await locator.boundingBox()

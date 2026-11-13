@@ -1,19 +1,20 @@
 import type { Locator, Page } from '@playwright/test'
 
-import { BILL_POST_SLUG } from './support/alignmentSlug'
+import {
+  BILL_POST_PATH as POST,
+  BILL_ROW_TITLES as ROW_TITLES,
+  BILL_WIDTHS as WIDTHS,
+  summaryRow as summary,
+} from './support/billRows'
 import { expect, test } from './support/test'
 
 // An open-and-close box a reader opens is scrolled into view (#1152), on the page that has the
 // most of them: the rows under the whole bill, and the link under the chart inside the first row.
 // The box's end shows, or its top when it is taller than the screen; nothing above it moves on the
-// page (#1118), and closing never scrolls.
+// page (#1118); a box already in view, a box open on load and a closing box never scroll.
 
-const POST = `/posts/${BILL_POST_SLUG}`
-const WIDTHS = [320, 390, 768, 1280]
-const ROW_TITLES = ['Your City tax breakdown', 'How we estimate this', 'Sources']
-
-const summary = (page: Page, title: string) =>
-  page.locator('summary', { hasText: new RegExp(`^${title}$`) })
+const scrolledTo = (page: Page) => page.evaluate(() => Math.round(scrollY))
+const boxOfRow = (row: Locator) => row.locator('xpath=..')
 /** How far down the page a locator starts, whatever the scroll */
 const onPage = (locator: Locator) =>
   locator.evaluate((el) => Math.round(el.getBoundingClientRect().top + scrollY))
@@ -54,6 +55,22 @@ const expectInView = async (details: Locator, name: string) => {
   const topWins = Math.abs(box.top - box.above) <= 1
   expect(endShows || topWins, `${name}: its end shows, or its top when it is too tall`).toBe(true)
 }
+/** Puts a closed row at the foot of the screen, so what it opens starts out of view */
+const toFoot = async (page: Page, row: Locator) => {
+  await row.evaluate((el) =>
+    window.scrollBy({
+      top: el.getBoundingClientRect().bottom - innerHeight + 4,
+      behavior: 'instant',
+    }),
+  )
+  await settle(page)
+}
+/** Clicks the row and waits for its box to be open or closed, and for the page to stop */
+const toggle = async (page: Page, row: Locator, open: boolean) => {
+  await row.click()
+  await expect(boxOfRow(row)).toHaveJSProperty('open', open)
+  await settle(page)
+}
 
 for (const width of WIDTHS) {
   test(`an opened row comes into view, and nothing above it moves on the page at ${width}px`, async ({
@@ -61,24 +78,20 @@ for (const width of WIDTHS) {
   }) => {
     await page.setViewportSize({ width, height: 844 })
     await page.goto(POST)
+    // The first row is open on load (#1121): that alone scrolls nothing
+    await expect(boxOfRow(summary(page, ROW_TITLES[0]))).toHaveJSProperty('open', true)
+    await settle(page)
+    expect(await scrolledTo(page), 'a box open on load does not scroll').toBe(0)
+
     for (const title of ROW_TITLES) {
       const row = summary(page, title)
-      const details = row.locator('xpath=..')
-      if (await details.evaluate((el) => (el as HTMLDetailsElement).open)) await row.click()
-      await expect(details).toHaveJSProperty('open', false)
-      // Put the closed row at the foot of the screen, so what it opens starts out of view
-      await row.evaluate((el) =>
-        window.scrollBy({
-          top: el.getBoundingClientRect().bottom - innerHeight + 4,
-          behavior: 'instant',
-        }),
-      )
-      await settle(page)
+      const details = boxOfRow(row)
+      if (await details.evaluate((el) => (el as HTMLDetailsElement).open))
+        await toggle(page, row, false)
+      await toFoot(page, row)
       const onPageBefore = await onPage(row)
 
-      await row.click()
-      await expect(details).toHaveJSProperty('open', true)
-      await settle(page)
+      await toggle(page, row, true)
       await expectInView(details, title)
       // The page scrolled; the row itself is where it was on the page (#1118)
       expect(await onPage(row), `${title}: nothing above the row moved`).toBeCloseTo(
@@ -86,20 +99,20 @@ for (const width of WIDTHS) {
         0,
       )
 
-      // Opening it again when it is already in view moves nothing, and closing never scrolls
-      const scrolled = await page.evaluate(() => Math.round(scrollY))
-      await row.click()
-      await expect(details).toHaveJSProperty('open', false)
-      await settle(page)
-      const afterClose = await page.evaluate(() => ({
-        y: Math.round(scrollY),
-        end: Math.round(document.documentElement.scrollHeight - innerHeight),
-      }))
-      // A shorter page can leave less to scroll: only then may the view move, to the page's end
-      if (afterClose.y !== scrolled) expect(afterClose.y, `${title}: closing`).toBe(afterClose.end)
-      await row.click()
-      await expect(details).toHaveJSProperty('open', true)
-      await settle(page)
+      // Closing never scrolls. A shorter page can leave less to scroll: only then may the view
+      // move, to the page's end
+      const opened = await scrolledTo(page)
+      await toggle(page, row, false)
+      const closed = await scrolledTo(page)
+      const end = await page.evaluate(() =>
+        Math.round(document.documentElement.scrollHeight - innerHeight),
+      )
+      if (closed !== opened) expect(closed, `${title}: closing`).toBe(end)
+
+      // Opened again from where it was just in view, it moves nothing
+      await toggle(page, row, true)
+      if (closed === opened)
+        expect(await scrolledTo(page), `${title}: already in view`).toBe(opened)
       await expectInView(details, title)
     }
   })
@@ -110,18 +123,9 @@ for (const width of WIDTHS) {
     await page.setViewportSize({ width, height: 844 })
     await page.goto(POST)
     const row = page.locator('summary:visible', { hasText: /^See the smaller pieces$/ }).first()
-    const details = row.locator('xpath=..')
-    await row.evaluate((el) =>
-      window.scrollBy({
-        top: el.getBoundingClientRect().bottom - innerHeight + 4,
-        behavior: 'instant',
-      }),
-    )
-    await settle(page)
+    await toFoot(page, row)
 
-    await row.click()
-    await expect(details).toHaveJSProperty('open', true)
-    await settle(page)
-    await expectInView(details, 'See the smaller pieces')
+    await toggle(page, row, true)
+    await expectInView(boxOfRow(row), 'See the smaller pieces')
   })
 }
