@@ -32,8 +32,8 @@ describe('BillShare, the City’s panel (#1020)', () => {
     expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(1)
     const first = container.querySelector('details') as HTMLDetailsElement
     expect(first.textContent).toContain('Our estimate.')
-    // The first row is open when the tab loads (#1121)
-    expect(first.open).toBe(true)
+    // The breakdown is closed when the tab loads, until the reader enters a value (#1163)
+    expect(first.open).toBe(false)
   })
 
   it('does not repeat the answer card in the first row: no year amount, no bar, no second visible heading (#1144)', () => {
@@ -148,6 +148,17 @@ describe('BillShare, the City’s panel (#1020)', () => {
         screen.getAllByText(`$${total.toLocaleString('en-US')}`).length,
       ).toBeGreaterThanOrEqual(2)
     }
+  })
+
+  it('keeps the breakdown, closed, when the whole bill cannot be shown (#1163)', () => {
+    const cityOnly = {
+      ...PROPS,
+      years: PROPS.years.map((year) => ({ ...year, rates: { city: year.rates.city } })),
+    }
+    render(<BillShare {...cityOnly} {...city} />)
+    expect(screen.getByText('The whole bill can’t be shown yet.')).toBeTruthy()
+    const row = screen.getByText('Your City tax breakdown').closest('details') as HTMLDetailsElement
+    expect(row.open).toBe(false)
   })
 
   it('has no first row when the tab has no breakdown chart, even with the City’s chart by year (#1144)', () => {

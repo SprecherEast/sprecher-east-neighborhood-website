@@ -51,6 +51,32 @@ describe('ScaledBreakdown', () => {
     expect(screen.getByText('70.0%')).toBeTruthy()
   })
 
+  it('fills its bars and counts its amounts each time `fillKey` changes, from the opening row (#1163)', () => {
+    const { container, rerender } = render(<ScaledBreakdown spec={SPEC} factor={0.5} />)
+    // No fill asked for: the bars keep the scroll reveal
+    expect(container.querySelector('.chart-reveal-x')).not.toBeNull()
+    expect(container.querySelector('.chart-fill-x')).toBeNull()
+    rerender(<ScaledBreakdown spec={SPEC} factor={0.5} fillKey={1} />)
+    expect(container.querySelector('.chart-fill-x')).not.toBeNull()
+    expect(container.querySelector('.chart-reveal-x')).toBeNull()
+    // Less motion (jsdom says so): the final amounts at once
+    expect(amounts(container)).toEqual(['$700', '$370', '$300'])
+  })
+
+  it('draws thinner bars when compact, for a breakdown that sits inside a bill (#1163)', () => {
+    const marks = (el: HTMLElement) =>
+      Array.from(el.querySelectorAll('[data-chart-mark]'), (mark) =>
+        mark.closest('svg')?.getAttribute('class'),
+      )
+    const { container, rerender } = render(<ScaledBreakdown spec={SPEC} factor={0.5} />)
+    expect(marks(container)).toEqual(expect.arrayContaining([expect.stringContaining('h-3.5')]))
+    rerender(<ScaledBreakdown spec={SPEC} factor={0.5} compact />)
+    const compact = marks(container)
+    expect(compact.some((c) => c?.includes('h-3.5'))).toBe(false)
+    expect(compact).toEqual(expect.arrayContaining([expect.stringContaining('h-2.5')]))
+    expect(compact).toEqual(expect.arrayContaining([expect.stringContaining('h-1.5')]))
+  })
+
   it('keeps the title, the takeaway and the caption of the chart', () => {
     render(<ScaledBreakdown spec={SPEC} factor={1} />)
     expect(screen.getByText('Where that City tax goes, estimated')).toBeTruthy()

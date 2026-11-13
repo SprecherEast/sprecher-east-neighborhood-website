@@ -12,7 +12,12 @@ export const BILL_BODY_NAMES: Record<BillBody, string> = {
   schools: 'Metropolitan Schools',
   city: 'City of Madison',
   county: 'Dane County',
-  matc: 'Madison College (MATC)',
+  matc: 'Madison College, MATC',
+}
+
+/** Shorter names for the narrowest phones, where the full one would not fit beside the amounts (#1163) */
+export const BILL_BODY_SHORT_NAMES: Partial<Record<BillBody, string>> = {
+  matc: 'Madison College',
 }
 
 /** Each body's tax rate in dollars per $1,000 of assessed value (its "mill rate"); a body that has not set one is left out */

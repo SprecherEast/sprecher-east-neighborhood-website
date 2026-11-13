@@ -3,7 +3,9 @@ import React from 'react'
 import { ProgressBar } from '@/platform/ui/ProgressBar'
 import { Sparkline } from '@/platform/ui/Sparkline'
 import { ShareBar } from '@/platform/ui/ShareBar.client'
+import { Disclosure } from '@/platform/ui/Disclosure'
 import { ShareBill, type ShareSlice } from '@/platform/ui/ShareBill'
+import { Text } from '@/platform/ui/Text'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 
@@ -76,6 +78,22 @@ export function ShareBillGallery() {
           label="Sample: a whole split in four"
           title="Sample: whole bill"
           total={{ label: 'Sample total', amount: '$10,000' }}
+        />
+      </GalleryVariant>
+      <GalleryVariant label="a row nested under the highlighted slice" className="block max-w-xl">
+        <ShareBill
+          slices={SLICES}
+          label="Sample: a whole split in four, with a nested row"
+          title="Sample: whole bill"
+          total={{ label: 'Sample total', amount: '$10,000' }}
+          nested={{
+            after: SLICES[0]?.key ?? '',
+            children: (
+              <Disclosure variant="listRow" summary="Sample: more on the first slice">
+                <Text variant="small">Sample: what the first slice pays for.</Text>
+              </Disclosure>
+            ),
+          }}
         />
       </GalleryVariant>
       <GalleryVariant label="narrow" className="block max-w-xs">

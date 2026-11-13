@@ -95,10 +95,10 @@ for (const width of WIDTHS) {
   }) => {
     await page.setViewportSize({ width, height: 844 })
     await page.goto(POST)
-    // The first row is open on load (#1121): that alone scrolls nothing
-    await expect(boxOfRow(summary(page, ROW_TITLES[0]))).toHaveJSProperty('open', true)
+    // Every row is closed on load (#1163): loading scrolls nothing
+    await expect(boxOfRow(summary(page, ROW_TITLES[0]))).toHaveJSProperty('open', false)
     await settle(page)
-    expect(await scrolledTo(page), 'a box open on load does not scroll').toBe(0)
+    expect(await scrolledTo(page), 'loading does not scroll').toBe(0)
 
     for (const title of ROW_TITLES) {
       const row = summary(page, title)
@@ -139,6 +139,8 @@ for (const width of WIDTHS) {
   }) => {
     await page.setViewportSize({ width, height: 844 })
     await page.goto(POST)
+    // The chart sits in the City's breakdown, which is closed on load (#1163)
+    await toggle(page, summary(page, ROW_TITLES[0]), true)
     const row = page.locator('summary:visible', { hasText: /^See the smaller pieces$/ }).first()
     await toFoot(page, row)
 

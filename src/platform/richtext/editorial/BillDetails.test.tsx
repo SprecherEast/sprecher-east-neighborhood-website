@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react'
-import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
@@ -28,40 +27,22 @@ const SOURCE = {
 }
 
 describe('BillDetails', () => {
-  it('has three rows, each a native details, in the order where, how, sources, the first open and the others closed (#1121)', () => {
+  it('has two rows, each a native details, in the order how, sources, both closed (#1163)', () => {
     const { container } = render(
-      <BillDetails
-        titles={TITLES}
-        where={<p>Breakdown</p>}
-        notes={NOTES}
-        about={<p>Short text</p>}
-        sources={[SOURCE]}
-      />,
+      <BillDetails titles={TITLES} notes={NOTES} about={<p>Short text</p>} sources={[SOURCE]} />,
     )
     const rows = Array.from(container.querySelectorAll('details'))
     expect(rows.map((row) => row.querySelector('summary')?.textContent)).toEqual([
-      TITLES.breakdown,
       TITLES.differ,
       TITLES.sources,
     ])
-    expect(rows.map((row) => row.hasAttribute('open'))).toEqual([true, false, false])
+    expect(rows.map((row) => row.hasAttribute('open'))).toEqual([false, false])
+    // The City's breakdown now sits in the whole bill, under the City's row (#1163)
+    expect(screen.queryByText('Your City tax breakdown')).toBeNull()
   })
 
-  it('opens the first row in the markup itself, so it is open with scripting off too (#1121)', () => {
-    const html = renderToStaticMarkup(
-      <BillDetails titles={TITLES} where={<p>Breakdown</p>} notes={NOTES} sources={[SOURCE]} />,
-    )
-    expect(html.match(/<details[^>]*>/g)).toEqual([
-      expect.stringContaining(' open'),
-      expect.not.stringContaining(' open'),
-      expect.not.stringContaining(' open'),
-    ])
-  })
-
-  it('holds the three rows in one card, split by divider lines, not three separate boxes (#1118)', () => {
-    const { container } = render(
-      <BillDetails titles={TITLES} where={<p>Breakdown</p>} notes={NOTES} sources={[SOURCE]} />,
-    )
+  it('holds the rows in one card, split by divider lines, not separate boxes (#1118)', () => {
+    const { container } = render(<BillDetails titles={TITLES} notes={NOTES} sources={[SOURCE]} />)
     const rows = Array.from(container.querySelectorAll('details'))
     const card = rows[0]?.parentElement as HTMLElement
     expect(card.className).toContain('border')
@@ -109,13 +90,7 @@ describe('BillDetails', () => {
 
   it('has no accessibility violations', async () => {
     const { container } = render(
-      <BillDetails
-        titles={TITLES}
-        where={<p>Breakdown</p>}
-        notes={NOTES}
-        about={<p>Short</p>}
-        sources={[SOURCE]}
-      />,
+      <BillDetails titles={TITLES} notes={NOTES} about={<p>Short</p>} sources={[SOURCE]} />,
     )
     await expectAccessible(container)
   })

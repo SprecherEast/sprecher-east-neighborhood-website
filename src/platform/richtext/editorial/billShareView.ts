@@ -1,5 +1,6 @@
 import {
   BILL_BODY_NAMES,
+  BILL_BODY_SHORT_NAMES,
   type BillBody,
   type BillPart,
   type BillShare as Bill,
@@ -48,6 +49,7 @@ export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt
               {
                 key,
                 name: BILL_BODY_NAMES[key],
+                shortName: BILL_BODY_SHORT_NAMES[key],
                 amount: formatWholeDollars(found.amount ?? 0),
                 percent: found.percent ?? 0,
                 share: found.share ?? 0,

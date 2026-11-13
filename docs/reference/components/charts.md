@@ -92,12 +92,14 @@ A breakdown (#866): a grid of squares worth a fixed amount each, the key beside 
 
 Source: `src/platform/ui/chart/adapters/breakdown/BreakdownChart.tsx`
 
-| Prop          | Type             | Required | Description |
-| ------------- | ---------------- | -------- | ----------- |
-| `model`       | `BreakdownModel` | yes      |             |
-| `squareValue` | `number`         | yes      |             |
-| `titleId`     | `string`         | yes      |             |
-| `descId`      | `string`         | yes      |             |
+| Prop          | Type             | Required | Description                                            |
+| ------------- | ---------------- | -------- | ------------------------------------------------------ |
+| `model`       | `BreakdownModel` | yes      |                                                        |
+| `squareValue` | `number`         | yes      |                                                        |
+| `titleId`     | `string`         | yes      |                                                        |
+| `descId`      | `string`         | yes      |                                                        |
+| `compact`     | `boolean`        | no       | Thinner bars, for a breakdown inside a bill (#1163)    |
+| `fill`        | `boolean`        | no       | Grow the bars when drawn rather than on scroll (#1163) |
 
 **Used by** (direct imports):
 
@@ -139,15 +141,17 @@ Source: `src/platform/ui/chart/adapters/visx/BarSegments.tsx`
 
 ## `ScaledBreakdown`
 
-A breakdown chart drawn in the browser with every amount multiplied by `factor` (#1020): the City's tax on the home a reader typed, split the way the budget is. It is the same figure as `Chart` draws for a breakdown (title, takeaway, the drawing, the caption) from the same drawing code, but it takes a spec that was already checked on the server and never parses it, so no spec rules (zod) and no chart library reach the browser; `ScaledBreakdown.test.tsx` guards that. Every figure is text in the drawing, so it has no separate numbers table.
+A breakdown chart drawn in the browser with every amount multiplied by `factor` (#1020): the City's tax on the home a reader typed, split the way the budget is. It is the same figure as `Chart` draws for a breakdown (title, takeaway, the drawing, the caption) from the same drawing code, but it takes a spec that was already checked on the server and never parses it, so no spec rules (zod) and no chart library reach the browser; `ScaledBreakdown.test.tsx` guards that. Every figure is text in the drawing, so it has no separate numbers table. Each time `fillKey` changes (a row that holds it opening), the bars grow and the amounts count up from nothing, while the percents stay put; `compact` draws thinner bars, for a breakdown inside a bill (#1163).
 
 Source: `src/platform/ui/chart/ScaledBreakdown.tsx`
 
-| Prop     | Type                                                                                                                                                                 | Required | Description                                                                                                                                                                                                   |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `spec`   | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …` | yes      |                                                                                                                                                                                                               |
-| `factor` | `number`                                                                                                                                                             | yes      |                                                                                                                                                                                                               |
-| `title`  | `"screen-reader" \| "visible"`                                                                                                                                       | no       | Whether the title shows: kept for screen readers only when the heading above already says it, so two headings never sit one after another (as `Chart` does with `heading`). The takeaway always shows (#1144) |
+| Prop      | Type                                                                                                                                                                 | Required | Description                                                                                                                                                                                                   |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spec`    | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …` | yes      |                                                                                                                                                                                                               |
+| `factor`  | `number`                                                                                                                                                             | yes      |                                                                                                                                                                                                               |
+| `title`   | `"screen-reader" \| "visible"`                                                                                                                                       | no       | Whether the title shows: kept for screen readers only when the heading above already says it, so two headings never sit one after another (as `Chart` does with `heading`). The takeaway always shows (#1144) |
+| `fillKey` | `number`                                                                                                                                                             | no       | Changes each time the bars should fill again; 0 keeps the reveal on scroll                                                                                                                                    |
+| `compact` | `boolean`                                                                                                                                                            | no       |                                                                                                                                                                                                               |
 
 **Used by** (direct imports):
 

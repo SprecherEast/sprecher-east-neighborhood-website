@@ -183,6 +183,18 @@ export function DisplayGallery() {
             </Disclosure>
           </Card>
         </GalleryVariant>
+        <GalleryVariant
+          label="listRow (a row inside a list, indented by the list, label sized from it)"
+          className="block"
+        >
+          <ul className="max-w-prose text-sm">
+            <li className="border-t border-border pr-1 pl-6">
+              <Disclosure variant="listRow" summary="More about this line">
+                <Text variant="small">Opens in place, under the line it explains.</Text>
+              </Disclosure>
+            </li>
+          </ul>
+        </GalleryVariant>
         <GalleryVariant label="nested (the arrow turns only for its own box)" className="block">
           <div className="max-w-prose">
             <Disclosure variant="card" summary="An open box around another" defaultOpen>

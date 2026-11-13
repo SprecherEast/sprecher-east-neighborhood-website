@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { ShareBill, type ShareSlice } from './ShareBill'
+import { ShareBill, TOTAL_PULSE_MS, type ShareSlice } from './ShareBill'
 import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
@@ -40,9 +43,18 @@ describe('ShareBill', () => {
     expect(title.textContent).toBe('Sample whole bill')
     // The total: label left, amount right, bold, under a stronger rule than the rows' lines
     expect(total.textContent).toBe('Total$10,000')
+    // The rows and the total share one grid, so a column that widens moves both; the total's
+    // amount ends at the dollar column's end, never under the percents (#1163)
+    expect(total.parentElement).toBe(list.parentElement)
+    expect(list.className).toContain('grid-cols-subgrid')
+    expect(total.className).toContain('grid-cols-subgrid')
+    const amount = total.lastElementChild as HTMLElement
+    expect(amount.className).toContain('col-start-2')
+    expect(amount.className).toContain('justify-self-end')
+    // The rows' amounts end the same way
+    expect(list.querySelector('li')?.children[1]?.className).toContain('justify-self-end')
     expect(total.className).toContain('font-bold')
     expect(total.className).toContain('border-t-2')
-    expect(total.className).toContain('justify-between')
   })
 
   it('keeps the receipt rows tight and level (#1118)', () => {
@@ -50,17 +62,39 @@ describe('ShareBill', () => {
     const row = container.querySelector('li') as HTMLElement
     expect(row.className).toContain('min-h-5')
     // A name never wraps: at the narrowest width it may run into its column's blank space instead
-    expect(screen.getByText('Sample: first').className).toContain('whitespace-nowrap')
+    expect(screen.getByText('Sample: first').className).toContain('truncate')
+  })
+
+  it('shows a short name on the narrowest phones, the full one where it fits and to screen readers (#1163)', () => {
+    const slices = SLICES.map((slice, i) =>
+      i === 3 ? { ...slice, name: 'Sample: fourth, long', shortName: 'Sample: fourth' } : slice,
+    )
+    const { container } = render(<ShareBill slices={slices} label="Sample bill" />)
+    const row = container.querySelectorAll('li[data-share-row]')[3] as HTMLElement
+    const name = row.children[0]?.lastElementChild as HTMLElement
+    // The whole name is in the page; only its tail hides below 24 rem, kept for screen readers
+    expect(name.textContent).toBe('Sample: fourth, long')
+    const tail = name.querySelector('span') as HTMLElement
+    expect(tail.textContent).toBe(', long')
+    expect(tail.className).toContain('max-[24rem]:sr-only')
+  })
+
+  it('keeps a clear gap between the dollars and the percent at every width (#1163)', () => {
+    const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
+    const grid = container.querySelector('ul')?.parentElement as HTMLElement
+    expect(grid.className).toContain('gap-x-1.5')
+    expect(grid.className).toContain('min-[24rem]:gap-x-2')
   })
 
   it('names every slice in the receipt with its percent and dollars, in the bar’s order', () => {
     const { container } = render(<ShareBill slices={SLICES} label="Sample bill" total={TOTAL} />)
     const rows = Array.from(container.querySelectorAll('li')).map((li) => li.textContent)
+    // Like the breakdown chart: the dollars, then the percent (#1163)
     expect(rows).toEqual([
-      'Sample: first38%$3,750',
-      'Sample: second46%$4,650',
-      'Sample: third13%$1,250',
-      'Sample: fourth3%$350',
+      'Sample: first$3,75038%',
+      'Sample: second$4,65046%',
+      'Sample: third$1,25013%',
+      'Sample: fourth$3503%',
     ])
     const bar = Array.from(container.querySelectorAll('rect[data-share-slice]')).map((rect) =>
       rect.getAttribute('data-share-slice'),
@@ -93,6 +127,41 @@ describe('ShareBill', () => {
     expect(flashes()).toBe(false)
     rerender(<ShareBill slices={SLICES} label="Sample bill" total={TOTAL} pulseKey={1} />)
     expect(flashes()).toBe(true)
+  })
+
+  it('nests extra content under one slice’s row, indented to the slice’s name, as one row of its own (#1163)', () => {
+    const { container } = render(
+      <ShareBill
+        slices={SLICES}
+        label="Sample bill"
+        nested={{ after: 'a', children: <p>More on the first</p> }}
+      />,
+    )
+    const rows = Array.from(container.querySelectorAll('ul > li'))
+    expect(rows).toHaveLength(SLICES.length + 1)
+    const nested = rows[1] as HTMLElement
+    expect(nested.textContent).toBe('More on the first')
+    // It spans the three columns and starts where the names start, past the colour square
+    expect(nested.className).toContain('col-span-3')
+    expect(nested.className).toContain('pl-4')
+    expect(nested.className).toContain('min-[24rem]:pl-6')
+    expect(rows[2]?.textContent).toBe('Sample: second$4,65046%')
+    // Only the slices' own rows carry their key, so a list inside the nested content is never one
+    expect(container.querySelectorAll('li[data-share-row]')).toHaveLength(SLICES.length)
+    expect(nested.hasAttribute('data-share-row')).toBe(false)
+  })
+
+  it('nests nothing when the slice named is not in the bill (#1163)', () => {
+    const { container } = render(
+      <ShareBill slices={SLICES} label="Sample bill" nested={{ after: 'z', children: 'More' }} />,
+    )
+    expect(container.querySelectorAll('ul > li')).toHaveLength(SLICES.length)
+  })
+
+  it('flashes for exactly the shared length callers wait out, the one the theme’s animation uses (#1163)', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/platform/theme/tailwind.css'), 'utf8')
+    const length = /animation:\s*total-pulse\s+([\d.]+)s/.exec(css)?.[1]
+    expect(Number(length) * 1000).toBe(TOTAL_PULSE_MS)
   })
 
   it('draws no title or total line without them, and has no accessibility violations', async () => {

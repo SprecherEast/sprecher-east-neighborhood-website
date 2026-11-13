@@ -69,16 +69,17 @@ Source: `src/platform/ui/Disclosure.tsx`
 
 **Variants:**
 
-- `variant`: `"link" | "bar" | "card" | "row"`
+- `variant`: `"link" | "bar" | "card" | "row" | "listRow"`
 
-| Prop            | Type                                                                                                                                                                  | Required | Description                                                                          |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------ |
-| `summary`       | `React.ReactNode`                                                                                                                                                     | yes      | The row that stays visible; clicking it opens and closes the box                     |
-| `defaultOpen`   | `boolean`                                                                                                                                                             | no       | Starts open; the reader opens and closes it after that                               |
-| `ref`           | `((instance: HTMLDetailsElement \| null) => void \| (() => VoidOrUndefinedOnly) \| React.DO_NOT_USE_OR_YOU_WILL_BE_FIRED_CALLBACK_REF_RETURN_VALUES[keyof React.DO_…` | no       | The `<details>` element, for closing it from the outside (`removeAttribute('open')`) |
-| `className`     | `string`                                                                                                                                                              | no       |                                                                                      |
-| `bodyClassName` | `string`                                                                                                                                                              | no       | Classes for the content under the summary, for example a height limit                |
-| `children`      | `React.ReactNode`                                                                                                                                                     | yes      |                                                                                      |
+| Prop            | Type                                                                                                                                                                  | Required | Description                                                                           |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `summary`       | `React.ReactNode`                                                                                                                                                     | yes      | The row that stays visible; clicking it opens and closes the box                      |
+| `defaultOpen`   | `boolean`                                                                                                                                                             | no       | Starts open; the reader opens and closes it after that                                |
+| `ref`           | `((instance: HTMLDetailsElement \| null) => void \| (() => VoidOrUndefinedOnly) \| React.DO_NOT_USE_OR_YOU_WILL_BE_FIRED_CALLBACK_REF_RETURN_VALUES[keyof React.DO_…` | no       | The `<details>` element, for closing it from the outside (`removeAttribute('open')`)  |
+| `className`     | `string`                                                                                                                                                              | no       |                                                                                       |
+| `bodyClassName` | `string`                                                                                                                                                              | no       | Classes for the content under the summary, for example a height limit                 |
+| `children`      | `React.ReactNode`                                                                                                                                                     | yes      |                                                                                       |
+| `onToggle`      | `(open: boolean) => void`                                                                                                                                             | no       | Told whether it is now open, each time it opens or closes, by hand or in code (#1163) |
 
 **Used by** (direct imports):
 

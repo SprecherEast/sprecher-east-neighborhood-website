@@ -40,6 +40,8 @@
   --color-chart-ramp-edge: var(--chart-ramp-edge);
   /* The finest text size, `text-fine` (#1002) */
   --text-fine: var(--type-fine);
+  /* A nested row's label, `text-list-row` (#1163): in `em`, so it follows the list it sits in */
+  --text-list-row: var(--type-list-row);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -141,6 +143,20 @@
       animation-timeline: view();
       animation-range: entry 10% entry 70%;
     }
+  }
+}
+
+/*
+ * `chart-fill-x` (#1163): the same growth as `chart-reveal-x`, but over time rather than scrolling,
+ * for bars that appear when a row opens in place: each time the element is drawn anew, the bars grow
+ * from the baseline for one second (`FILL_MS` in `useReplayProgress.client.ts`, which a test holds to
+ * it), with the counting's ease. On screen and with motion allowed only; everywhere else, full.
+ */
+@utility chart-fill-x {
+  @media screen and (prefers-reduced-motion: no-preference) {
+    transform-box: fill-box;
+    transform-origin: left center;
+    animation: chart-reveal-x 1s cubic-bezier(0.33, 1, 0.68, 1) both;
   }
 }
 

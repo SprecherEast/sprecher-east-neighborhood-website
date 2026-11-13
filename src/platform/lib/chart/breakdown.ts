@@ -123,3 +123,22 @@ export function formatSquareValue(value: number): string {
   if (value < 1_000_000) return formatValue(value, 'usd')
   return `$${Number((value / 1_000_000).toFixed(2))} million`
 }
+
+/**
+ * The model with every amount at `progress` of its value (0 to 1), rounded to the dollar, while the
+ * shares, steps and bar scale stay put: the amounts count up as the bars fill, and the percents never
+ * move (#1163). At 1 it is the model unchanged.
+ */
+export function valuesAt(model: BreakdownModel, progress: number): BreakdownModel {
+  if (progress >= 1) return model
+  const at = <T extends { value: number }>(item: T): T => ({
+    ...item,
+    value: Math.round(item.value * progress),
+  })
+  return {
+    ...model,
+    total: Math.round(model.total * progress),
+    areas: model.areas.map((area) => ({ ...at(area), shown: area.shown.map(at) })),
+    smaller: model.smaller.map(at),
+  }
+}
