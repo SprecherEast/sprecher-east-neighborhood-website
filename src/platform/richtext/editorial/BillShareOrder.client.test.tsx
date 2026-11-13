@@ -58,7 +58,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
       screen.getByRole('region', { name: 'Rough Estimator' }),
       screen.getByRole('region', { name: 'Your City tax' }),
       screen.getByRole('region', { name: 'Your whole property tax bill' }),
-      screen.getByText('Your City tax share, estimated'),
+      screen.getByText('Your City tax breakdown'),
       screen.getByText('How we estimate this'),
       screen.getByText('Sources'),
       screen.getByText('The rest'),

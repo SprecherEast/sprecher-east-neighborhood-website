@@ -32,7 +32,7 @@ describe('BillDetails', () => {
     )
     const rows = Array.from(container.querySelectorAll('details'))
     expect(rows.map((row) => row.querySelector('summary')?.textContent)).toEqual([
-      'Your City tax share, estimated',
+      'Your City tax breakdown',
       'How we estimate this',
       'Sources',
     ])

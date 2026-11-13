@@ -42,6 +42,10 @@ describe('toCityTax', () => {
     expect(tax).toEqual({ total: '$1,300', increase: 0 })
   })
 
+  it('reports 0 when an increase is given for a year whose chart column has no increase part', () => {
+    expect(toCityTax(SPEC, { column: 0, cityAmount: 1300, increase: 40 }).increase).toBe(0)
+  })
+
   it('scales the chart’s column by the home’s share of the average home when the City’s tax is not known', () => {
     const tax = toCityTax(SPEC, { column: 1, cityAmount: null, increase: null, homeRatio: 0.5 })
     expect(tax.total).toBe('$1,733')

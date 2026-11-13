@@ -11,7 +11,7 @@ import { expect, test } from './support/test'
 
 const POST = `/posts/${BILL_POST_SLUG}`
 const WIDTHS = [320, 390, 768, 1280]
-const ROW_TITLES = ['Your City tax share, estimated', 'How we estimate this', 'Sources']
+const ROW_TITLES = ['Your City tax breakdown', 'How we estimate this', 'Sources']
 
 const estimator = (page: Page) => page.getByRole('region', { name: 'Rough Estimator' })
 const box = (page: Page) => estimator(page).locator('[data-field-bar]')
@@ -199,9 +199,23 @@ for (const width of WIDTHS) {
     await page.goto(POST)
     const open = await page
       .locator('details:has(> summary)')
-      .filter({ has: page.locator('summary', { hasText: /^(Your City tax share|How|Sources)/ }) })
+      .filter({
+        has: page.locator('summary', { hasText: /^(Your City tax breakdown|How|Sources)/ }),
+      })
       .evaluateAll((rows) => rows.map((row) => (row as HTMLDetailsElement).open))
     expect(open).toEqual([true, false, false])
+  })
+
+  test(`the first row's title fits on one line at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto(POST)
+    const title = summary(page, ROW_TITLES[0]).locator('span', { hasText: ROW_TITLES[0] }).first()
+    const lines = await title.evaluate((el) => {
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      return new Set(Array.from(range.getClientRects()).map((r) => Math.round(r.top))).size
+    })
+    expect(lines).toBe(1)
   })
 
   test(`opening or closing a row keeps its title where it was on screen at ${width}px`, async ({
@@ -248,7 +262,7 @@ test.describe('without scripting', () => {
     await page.goto(POST)
     const open = await page
       .locator('summary', {
-        hasText: /^(Your City tax share, estimated|How we estimate this|Sources)$/,
+        hasText: /^(Your City tax breakdown|How we estimate this|Sources)$/,
       })
       .evaluateAll((rows) => rows.map((row) => (row.parentElement as HTMLDetailsElement).open))
     expect(open).toEqual([true, false, false])

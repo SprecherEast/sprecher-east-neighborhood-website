@@ -139,10 +139,10 @@ export function increaseIn(
 }
 
 /**
- * The City's tax and its increase for a year and a home value, or null when the chart's columns are not these years
- * (it cannot say which year it shows). `valueNow` is the home's value in the latest year, what the
- * reader typed; it is priced in the year shown (`homeInYear`). One place, so the panel and the
- * tab's figures never differ. `position` may be between two years, with `rates` blended to match,
+ * The City's tax and its increase for a year and a home value, or null when the chart's columns are
+ * not these years (it cannot say which year it shows). `valueNow` is the home's value in the
+ * latest year, what the reader typed; it is priced in the year shown (`homeInYear`). One place, so
+ * the panel and the tab's figures never differ. `position` may be between two years, with `rates` blended to match,
  * while a switch of year counts (#1096); by default it is the year's own rates.
  */
 export function cityTaxFor(
