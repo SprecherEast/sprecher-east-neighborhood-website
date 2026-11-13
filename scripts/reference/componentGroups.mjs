@@ -168,6 +168,7 @@ export const COMPONENT_GROUPS = [
       'BillShare',
       'BillAnswer',
       'BillDetails',
+      'BreakdownRow',
       'NoteText',
       'RoughEstimator',
       'BillFiguresProvider',

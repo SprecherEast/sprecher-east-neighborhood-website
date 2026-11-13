@@ -117,6 +117,23 @@ Source: `src/platform/richtext/editorial/BillDetails.tsx`
 
 - Platform: `platform/richtext`
 
+## `BreakdownRow`
+
+Where the City's tax goes, as a closed row of the whole bill under the City's own row (#1163): the split alone, with thin bars, since the answer card above already gives the City's tax and its increase and the row's title is the heading (#1144). `row` is `useBreakdownAutoOpen`'s: it opens the row once after the first estimate, and each opening fills the bars again (#1165).
+
+Source: `src/platform/richtext/editorial/BreakdownRow.tsx`
+
+| Prop     | Type                                                                                                                                                                 | Required | Description |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------- |
+| `title`  | `string`                                                                                                                                                             | yes      |             |
+| `spec`   | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …` | yes      |             |
+| `factor` | `number`                                                                                                                                                             | yes      |             |
+| `row`    | `{ rowRef: RefObject<HTMLDetailsElement \| null>; openings: number; onOpening: () => void; }`                                                                        | yes      |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
 ## `NoteText`
 
 A note's text with its link drawn where the editor wrote `{link}`. A blank with no link to draw (a draft Admin did not check) is left out, so readers never see it; a link with no blank to stand in is not drawn, and a second blank draws nothing (Admin refuses both on save).

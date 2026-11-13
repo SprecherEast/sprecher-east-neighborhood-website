@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { compile } from 'tailwindcss'
 import React from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { Disclosure } from './Disclosure'
 import { TOUCH_MIN_HEIGHT } from './layoutSizes'
@@ -73,17 +73,27 @@ describe('Disclosure', () => {
     expect(screen.getByText('Body').className).toContain('text-base')
   })
 
-  it('tells the caller when it opens or closes, by hand or in code (#1163)', () => {
-    const onToggle = vi.fn()
+  it('tells the caller just before a reader opens it, while it is still closed, and not when they close it (#1165)', () => {
+    const states: boolean[] = []
     const { container } = render(
-      <Disclosure variant="listRow" summary="More" onToggle={onToggle}>
+      <Disclosure
+        variant="listRow"
+        summary="More"
+        onOpening={() =>
+          states.push((container.querySelector('details') as HTMLDetailsElement).open)
+        }
+      >
         Body
       </Disclosure>,
     )
     const details = container.querySelector('details') as HTMLDetailsElement
+    const summary = container.querySelector('summary') as HTMLElement
+    fireEvent.click(summary)
+    // Called before the box opened, so the caller can get its content ready first
+    expect(states).toEqual([false])
     details.open = true
-    fireEvent(details, new Event('toggle'))
-    expect(onToggle).toHaveBeenCalledWith(true)
+    fireEvent.click(summary)
+    expect(states).toEqual([false])
   })
 
   it('opens from the summary, and can start open', () => {

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState, type ReactNode } from 'react'
+import React, { useState, type ReactNode } from 'react'
 
 import { BILL_BODY_NAMES, computeBillShare, parseHomeValue } from '@/platform/lib/billShare'
 import type { ResolvedLink } from '@/platform/lib'
@@ -8,16 +8,14 @@ import type { Certainty } from '@/platform/lib/certainty'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { Card } from '@/platform/ui/Card'
-import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
-import { Disclosure } from '@/platform/ui/Disclosure'
-import { prefersReducedMotion } from '@/platform/ui/motion.client'
-import { ShareBill, TOTAL_PULSE_MS } from '@/platform/ui/ShareBill'
+import { ShareBill } from '@/platform/ui/ShareBill'
 import { Text } from '@/platform/ui/Text'
-import { COUNT_MS, YEAR_COUNT_MS, useCountedNumber } from '@/platform/ui/useCountedNumber.client'
+import { COUNT_MS, YEAR_COUNT_MS } from '@/platform/ui/useCountedNumber.client'
 
 import type { BillShareProps } from './billShare'
 import { BillAnswer } from './BillAnswer'
 import { BillDetails } from './BillDetails'
+import { BreakdownRow } from './BreakdownRow'
 import { notesFor, uniqueSources } from './billShareNotes'
 import { receiptFor } from './billShareView'
 import { NoteText } from './NoteText'
@@ -32,15 +30,8 @@ import {
 import { useReportFigures } from './BillFigures.client'
 import { ratesAtPosition } from './rateBlend'
 import { RoughEstimator } from './RoughEstimator'
-
-/** The year's position is counted in whole numbers, so each year step is this many of them */
-const YEAR_STEPS = 1000
-
-/**
- * How long after the total's flash ends the City's breakdown opens by itself, the first time a
- * reader estimates their own home (#1163): long enough to take in the new total first
- */
-export const OPEN_AFTER_TOTAL_MS = 1000
+import { useBillCount } from './useBillCount.client'
+import { useBreakdownAutoOpen } from './useBreakdownAutoOpen.client'
 
 /** What the tab adds around the whole bill (#1020, #1111): the City's charts and the tab's own parts */
 export type CityPanelProps = {
@@ -74,8 +65,9 @@ export const BILL_GAP = 'space-y-5'
  * years), the answer card (the City's tax on the home and year, its increase, the year's status), the
  * whole bill (its own card: the total, one bar whose slices are as wide as their shares, and the receipt
  * naming each, with where the City's share goes (the split alone) as a closed row under the City's
- * own row, #1163), then one card of two rows: why the bill may differ and the sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home
- * value and year, so every amount is the City's slice of the bill. A year in which a body has not
+ * own row, #1163), then one card of two rows: why the bill may differ and the sources. The tab's
+ * other pictures (`children`) follow. Everything is drawn again for every home value and year, so
+ * every amount is the City's slice of the bill. A year in which a body has not
  * set its rate uses that body's rate from the year before, and says so in a note whose room is
  * always kept, so the page never changes height.
  */
@@ -103,43 +95,11 @@ export function BillShare({
   // The value last estimated, or null while the numbers are for the City's average home
   const [estimated, setEstimated] = useState<number | null>(null)
   const value = estimated ?? latest?.averageHome ?? 0
-  // Counts up each time a new bill has finished counting, so the total can flash once
-  const [pulse, setPulse] = useState(0)
-  const lastBill = useRef<string | null>(null)
-  // Every number below counts to a new value, so a change is seen, not just found
-  // (a new home value takes the long count, a switch of year the short one, #1087)
-  const [countMs, setCountMs] = useState(COUNT_MS)
-  const shownValue = useCountedNumber(value, { durationMs: countMs })
-  // The year counts too: the rates move from the old year's to the new one's, so the amounts follow
-  const yearPosition = useCountedNumber(yearIndex * YEAR_STEPS, { durationMs: YEAR_COUNT_MS })
-  // Once the count has ended on a bill that differs from the last one, the total flashes once
-  const billKey = `${yearIndex}:${value}`
-  const settled = shownValue === value && yearPosition === yearIndex * YEAR_STEPS
-  useEffect(() => {
-    if (!settled) return
-    if (lastBill.current !== null && lastBill.current !== billKey) setPulse((count) => count + 1)
-    lastBill.current = billKey
-  }, [settled, billKey])
-  // The City's breakdown starts closed and opens by itself once, after the reader's first estimate:
-  // when that bill has counted and its total has flashed, plus a pause; a year switch never opens it,
-  // and once opened, a reader who closes it keeps it closed. Setting `open` scrolls nothing (#1163)
-  const breakdownRow = useRef<HTMLDetailsElement>(null)
-  // Each opening, by hand or by itself, fills the breakdown's bars again (#1163)
-  const [openings, setOpenings] = useState(0)
-  const openAfterPulse = useRef(false)
-  const openedOnce = useRef(false)
-  useEffect(() => {
-    if (pulse === 0 || !openAfterPulse.current) return
-    const flash = prefersReducedMotion() ? 0 : TOTAL_PULSE_MS
-    const timer = setTimeout(() => {
-      openAfterPulse.current = false
-      openedOnce.current = true
-      if (breakdownRow.current) breakdownRow.current.open = true
-    }, flash + OPEN_AFTER_TOTAL_MS)
-    return () => clearTimeout(timer)
-  }, [pulse])
+  // The bill counts to each new value or year, and the total flashes once it settles (`pulse`)
+  const { shownValue, position, pulse, countWith } = useBillCount(value, yearIndex)
+  // The City's breakdown: closed on load, opened by itself once after the first estimate (#1163, #1165)
+  const breakdown = useBreakdownAutoOpen(pulse)
   const yearRates = yearRatesOf(years)
-  const position = yearPosition / YEAR_STEPS
   const rates = ratesAtPosition(yearRates, position)
   // The home as priced now: its value in the year shown, moving between the two while the year counts
   const shown = homeAtPosition(years, position, shownValue)
@@ -164,13 +124,13 @@ export function BillShare({
   // (a reader who asked for less motion gets them at once); the page never scrolls (#1068, #1111)
   const estimate = () => {
     if (homeValue === null) return
-    if (!openedOnce.current) openAfterPulse.current = true
-    setCountMs(COUNT_MS)
+    breakdown.arm(homeValue !== value)
+    countWith(COUNT_MS)
     setEstimated(homeValue)
   }
   // Choosing a year moves the amounts to its rates in half a second
   const selectYear = (index: number) => {
-    setCountMs(YEAR_COUNT_MS)
+    countWith(YEAR_COUNT_MS)
     setYearIndex(index)
   }
 
@@ -186,25 +146,13 @@ export function BillShare({
   const breakdownTotal = cityBreakdown?.areas.reduce((sum, area) => sum + area.value, 0) ?? 0
   const breakdownFactor =
     cityAmount !== null && breakdownTotal > 0 ? cityAmount / breakdownTotal : homeRatio
-  // The row opens on the split: the answer card above already gives the City's tax and its
-  // increase, and the row's own title is the heading (#1144). It is a row of the whole bill, under
-  // the City's own row, since it explains that slice (#1163)
   const where = cityBreakdown && (
-    <Disclosure
-      ref={breakdownRow}
-      variant="listRow"
-      summary={rows.breakdown}
-      bodyClassName="space-y-6"
-      onToggle={(open) => open && setOpenings((count) => count + 1)}
-    >
-      <ScaledBreakdown
-        spec={cityBreakdown}
-        factor={breakdownFactor}
-        title="screen-reader"
-        fillKey={openings}
-        compact
-      />
-    </Disclosure>
+    <BreakdownRow
+      title={rows.breakdown}
+      spec={cityBreakdown}
+      factor={breakdownFactor}
+      row={breakdown}
+    />
   )
 
   // The notes are the editor's; the page only decides which apply in the year shown. One that is

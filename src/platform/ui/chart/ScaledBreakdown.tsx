@@ -1,4 +1,4 @@
-import React, { useId } from 'react'
+import React, { useId, useLayoutEffect, useRef } from 'react'
 
 import { toBreakdown, valuesAt } from '@/platform/lib/chart/breakdown'
 import { scaleBreakdown } from '@/platform/lib/chart/scale'
@@ -40,6 +40,18 @@ export function ScaledBreakdown({
 }) {
   const id = useId()
   const progress = useReplayProgress(fillKey)
+  // Each new fill restarts the bars' growth in place: the chart is not drawn anew, since a rebuilt
+  // chart just before its row opens makes the browser's scroll anchoring move the page (#1165)
+  const figure = useRef<HTMLElement>(null)
+  useLayoutEffect(() => {
+    if (fillKey === 0) return
+    figure.current?.querySelectorAll('.chart-fill-x').forEach((bar) =>
+      bar.getAnimations?.().forEach((animation) => {
+        animation.cancel()
+        animation.play()
+      }),
+    )
+  }, [fillKey])
   const scaled = scaleBreakdown(spec, factor)
   const caption = {
     notes: [],
@@ -50,7 +62,7 @@ export function ScaledBreakdown({
   }
   return (
     <div data-chart-palette={spec.palette} className="not-prose space-y-3">
-      <figure className="space-y-4">
+      <figure ref={figure} className="space-y-4">
         <div className="space-y-1">
           <Text
             variant="subsection"
@@ -65,8 +77,6 @@ export function ScaledBreakdown({
           </Text>
         </div>
         <BreakdownChart
-          // Drawn anew each opening, so the bars' fill starts over
-          key={fillKey}
           model={valuesAt(toBreakdown(scaled), progress)}
           compact={compact}
           fill={fillKey > 0}

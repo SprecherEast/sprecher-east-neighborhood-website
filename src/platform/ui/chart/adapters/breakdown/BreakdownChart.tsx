@@ -27,6 +27,22 @@ type RowProps = {
 }
 
 /**
+ * An amount, counting while its bars fill: the final amount, hidden, keeps its room, so the row
+ * never rewraps and nothing below moves as the digits change (#1165)
+ */
+function Amount({ piece }: { piece: BreakdownPiece }) {
+  if (piece.counted === undefined) return formatMillions(piece.value)
+  return (
+    <span className="inline-grid justify-items-end">
+      <span aria-hidden="true" className="invisible col-start-1 row-start-1">
+        {formatMillions(piece.value)}
+      </span>
+      <span className="col-start-1 row-start-1">{formatMillions(piece.counted)}</span>
+    </span>
+  )
+}
+
+/**
  * How the bars are drawn: `compact` makes them thinner, for a breakdown inside a bill; `fill` grows
  * them over time when drawn (a row opening) instead of as they scroll into view (#1163)
  */
@@ -102,7 +118,9 @@ function BarRow({ piece, nested, area, scale, look }: RowProps) {
           nested ? 'font-medium' : 'font-semibold text-foreground',
         )}
       >
-        <span data-amount>{formatMillions(piece.value)}</span>
+        <span data-amount>
+          <Amount piece={piece} />
+        </span>
       </Text>
       <Text variant="small" as="span" className="text-right tabular-nums">
         {formatShare(piece.share)}
@@ -186,7 +204,7 @@ export function BreakdownChart({
                       as="span"
                       className="font-semibold text-foreground tabular-nums"
                     >
-                      {formatMillions(area.value)}
+                      <Amount piece={area} />
                     </Text>
                   </li>
                 ))}

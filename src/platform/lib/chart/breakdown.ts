@@ -14,6 +14,8 @@ export type BreakdownPiece = {
   value: number
   share: number
   step: number
+  /** The amount shown while the amounts count up; `value` still sets its room, so nothing reflows */
+  counted?: number
 }
 
 /** A piece in the list of smaller pieces: it names the area it sits in */
@@ -125,19 +127,19 @@ export function formatSquareValue(value: number): string {
 }
 
 /**
- * The model with every amount at `progress` of its value (0 to 1), rounded to the dollar, while the
- * shares, steps and bar scale stay put: the amounts count up as the bars fill, and the percents never
- * move (#1163). At 1 it is the model unchanged.
+ * The model with every amount counted to `progress` of its value (0 to 1), rounded to the dollar
+ * (`counted`), while the values, shares, steps and bar scale stay put: the amounts count up as the
+ * bars fill, the percents never move, and each amount keeps its final value's room, so nothing
+ * reflows while it counts (#1163, #1165). At 1 it is the model unchanged.
  */
 export function valuesAt(model: BreakdownModel, progress: number): BreakdownModel {
   if (progress >= 1) return model
-  const at = <T extends { value: number }>(item: T): T => ({
+  const at = <T extends BreakdownPiece>(item: T): T => ({
     ...item,
-    value: Math.round(item.value * progress),
+    counted: Math.round(item.value * progress),
   })
   return {
     ...model,
-    total: Math.round(model.total * progress),
     areas: model.areas.map((area) => ({ ...at(area), shown: area.shown.map(at) })),
     smaller: model.smaller.map(at),
   }

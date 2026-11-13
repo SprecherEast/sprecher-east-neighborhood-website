@@ -46,7 +46,8 @@ for (const width of WIDTHS) {
       if (value) {
         await page.getByRole('textbox', { name: 'Enter your assessed value' }).fill(value)
         await page.getByRole('button', { name: 'Estimate' }).click()
-        await page.waitForTimeout(3500)
+        // The new bill has finished counting once its total flashes
+        await expect(page.locator('[data-share-bill] p.total-pulse')).toHaveCount(1)
       }
       const { amounts, total } = await ends()
       // Nothing overlaps: each row's name ends before its dollars start, and the total's label before its amount
