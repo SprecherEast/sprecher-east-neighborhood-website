@@ -39,9 +39,9 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
 
   it("makes that space the rich text paragraph spacing, from the typography plugin's own value (#1142)", () => {
     const styles = createRequire(import.meta.url)('@tailwindcss/typography/src/styles.js') as {
-      DEFAULT: { css: { p: { marginTop: string } }[] }
+      DEFAULT: { css: { p?: { marginTop?: string } }[] }
     }
-    const paragraph = styles.DEFAULT.css[0]?.p.marginTop
+    const paragraph = styles.DEFAULT.css.find((rule) => rule.p?.marginTop)?.p?.marginTop
     // 1.25em of the 1rem prose text is 1.25rem, which is Tailwind's spacing step 5
     expect(paragraph).toBe('1.25em')
     expect(BILL_GAP).toBe('space-y-5')

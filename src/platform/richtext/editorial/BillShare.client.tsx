@@ -58,8 +58,12 @@ export type CityPanelProps = {
   source?: ResolvedLink | null
 }
 
-/** The one space between the tab's cards: under the intro, between the estimator and the answer, and on (#1142) */
-export const BILL_GAP = 'space-y-2'
+/**
+ * The one space between the tab's cards: under the intro, between the estimator and the answer, and on
+ * (#1142). It is the space between paragraphs of rich text: the typography plugin's 1.25em of 1rem
+ * text, which is spacing step 5 (`BillShareOrder.client.test.tsx` reads the plugin's value).
+ */
+export const BILL_GAP = 'space-y-5'
 
 /**
  * The whole property-tax bill at the top of a fact tab (#1018, #1111), one column on every width,
