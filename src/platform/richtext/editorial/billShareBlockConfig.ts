@@ -146,6 +146,7 @@ export const BillShareBlockConfig: Block = {
       type: 'array',
       labels: { singular: 'Note', plural: 'Notes' },
       maxRows: BILL_SHARE_LIMITS.notes,
+      validate: rowsBetween(0, BILL_SHARE_LIMITS.notes, 'notes'),
       defaultValue: DEFAULT_BILL_NOTES.map((note) => ({ ...note })),
       admin: {
         description:

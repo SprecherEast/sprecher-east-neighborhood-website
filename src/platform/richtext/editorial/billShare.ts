@@ -49,9 +49,10 @@ const rowTitlesOf = (stored: StoredBillShare['rows']): BillRowTitles => ({
 })
 
 /**
- * The notes: the editor's list, in their order, without a note that has no text. A block that has
- * never had a list (stored before the notes became fields) shows the starting list; one whose
- * editor emptied it shows none.
+ * The notes: the editor's list, in their order, without a note that has no text. A block with no
+ * list shows the starting list: one stored before the notes became fields, and one whose list was
+ * emptied in Admin, which does not store an empty list. Only a list written empty through the API
+ * shows none.
  */
 function notesOf(stored: StoredBillShare['notes']): BillNote[] {
   const rows = Array.isArray(stored) ? stored : DEFAULT_BILL_NOTES

@@ -22,10 +22,16 @@ describe('NoteText', () => {
     )
   })
 
-  it('shows the text as it is when the blank has no link, so words are never hidden', () => {
+  it('leaves the blank out when there is no link, so readers never see it', () => {
     const { container } = render(<NoteText text="Please {link}." link={null} />)
-    expect(container.textContent).toBe('Please {link}.')
+    expect(container.textContent).toBe('Please .')
     expect(screen.queryByRole('link')).toBeNull()
+  })
+
+  it('draws the link once when the blank is written twice', () => {
+    const { container } = render(<NoteText text="A {link} and {link}." link={LINK} />)
+    expect(container.textContent).toBe('A send us a note and .')
+    expect(screen.getAllByRole('link')).toHaveLength(1)
   })
 
   it('draws no link for a note without the blank', () => {

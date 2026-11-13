@@ -45,9 +45,14 @@ export type NoteContext = {
 
 const BLANK = /\{(\w+)\}/g
 
-/** Fills the blanks a note's condition knows about; `{link}` stays for the page to draw */
+/**
+ * Fills the blanks a note's condition knows about. `{link}` stays for the page to draw; any other
+ * blank with no value (a draft Admin did not check) is left out rather than shown to readers.
+ */
 export const fillNote = (text: string, values: Record<string, string>) =>
-  text.replace(BLANK, (blank, name: string) => values[name] ?? blank)
+  text.replace(BLANK, (blank, name: string) =>
+    Object.hasOwn(values, name) ? (values[name] ?? '') : name === 'link' ? blank : '',
+  )
 
 /** The values a note has in the year at `index`, or null when its condition does not apply there */
 function valuesIn(
@@ -122,9 +127,10 @@ type NoteSiblings = {
  * link, or whose link has no `{link}` to stand in. The reason shows under the field.
  */
 export function validateNoteBlanks(text: string, siblings: NoteSiblings): true | string {
-  const { showWhen = 'always', linkLabel, linkUrl } = siblings
+  const { linkLabel, linkUrl } = siblings
+  const showWhen = siblings.showWhen ?? 'always'
   for (const name of blanksIn(text)) {
-    const blank = NOTE_BLANKS[name]
+    const blank = Object.hasOwn(NOTE_BLANKS, name) ? NOTE_BLANKS[name] : undefined
     if (!blank || (blank.only && blank.only !== showWhen)) {
       const usable = Object.entries(NOTE_BLANKS)
         .filter(([, known]) => !known.only || known.only === showWhen)
@@ -134,7 +140,9 @@ export function validateNoteBlanks(text: string, siblings: NoteSiblings): true |
     }
   }
   const hasLink = Boolean(linkLabel?.trim() && linkUrl?.trim())
-  const hasBlank = blanksIn(text).includes('link')
+  const linkBlanks = blanksIn(text).filter((name) => name === 'link').length
+  if (linkBlanks > 1) return 'Use {link} once.'
+  const hasBlank = linkBlanks === 1
   if (hasBlank && !hasLink) return 'Add the link text and address for {link}, or take {link} out.'
   if (hasLink && !hasBlank) return 'Write {link} where the link should go in the note.'
   return true

@@ -38,10 +38,14 @@ describe('joinNames', () => {
 })
 
 describe('fillNote', () => {
-  it('fills the blanks it knows and leaves {link}, and any other blank, for the page', () => {
-    expect(fillNote('Uses {year} rates. See {link} {other}.', { year: '2027' })).toBe(
-      'Uses 2027 rates. See {link} {other}.',
+  it('fills the blanks it knows, leaves {link} for the page and leaves any other blank out', () => {
+    expect(fillNote('Uses {year} rates. See {link}{other}.', { year: '2027' })).toBe(
+      'Uses 2027 rates. See {link}.',
     )
+  })
+
+  it('never reads a name off Object (a blank like {constructor} is not a value)', () => {
+    expect(fillNote('A{constructor}B{toString}C', {})).toBe('ABC')
   })
 })
 
@@ -136,8 +140,21 @@ describe('validateNoteBlanks', () => {
     expect(validateNoteBlanks('Please {link}.', { showWhen: 'always', ...link })).toBe(true)
   })
 
-  it('treats a note with no condition as "always"', () => {
+  it('treats a note with no condition, or a null one, as "always"', () => {
     expect(validateNoteBlanks('Uses {year}.', {})).toBe(true)
+    expect(validateNoteBlanks('Uses {year}.', { showWhen: null })).toBe(true)
+  })
+
+  it('refuses names that only exist on every object, and {link} written twice', () => {
+    expect(validateNoteBlanks('{constructor}', { showWhen: 'always' })).toMatch(/can’t be used/)
+    expect(validateNoteBlanks('{toString}', { showWhen: 'always' })).toMatch(/can’t be used/)
+    expect(
+      validateNoteBlanks('A {link} B {link}.', {
+        showWhen: 'always',
+        linkLabel: 'x',
+        linkUrl: '/y',
+      }),
+    ).toBe('Use {link} once.')
   })
 })
 
