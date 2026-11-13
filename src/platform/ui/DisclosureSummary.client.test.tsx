@@ -4,7 +4,7 @@ import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { Disclosure, type DisclosureProps } from './Disclosure'
-import { REVEAL_SCROLL_MARGIN } from './scrollMargin'
+import { REVEAL_PEEK_VAR, REVEAL_SCROLL_MARGIN } from './scrollMargin'
 
 afterEach(() => {
   cleanup()
@@ -83,5 +83,71 @@ describe('Disclosure, brought into view when opened (#1152)', () => {
     expect(details.open).toBe(true)
     expect(scroll).not.toHaveBeenCalled()
     expect(details.className).not.toContain('scroll-m')
+  })
+})
+
+describe('Disclosure, showing the header of the next box when opened (#1154)', () => {
+  /* jsdom has no layout, so each box is given the place it would have on screen */
+  const place = (element: Element, top: number, bottom: number) => {
+    element.getBoundingClientRect = () => ({ top, bottom, height: bottom - top }) as DOMRect
+  }
+
+  function setUp(boxes: number) {
+    const frames: FrameRequestCallback[] = []
+    vi.stubGlobal('requestAnimationFrame', (frame: FrameRequestCallback) => frames.push(frame))
+    const { container } = render(
+      <div>
+        {Array.from({ length: boxes }, (_, index) => (
+          <Disclosure key={index} variant="row" summary={`Row ${index + 1}`}>
+            Body
+          </Disclosure>
+        ))}
+        <p>After the rows</p>
+      </div>,
+    )
+    const all = Array.from(container.querySelectorAll('details'))
+    const scrolls: string[] = []
+    for (const details of all) {
+      // What the room for the next box was at the moment the browser was asked to scroll
+      details.scrollIntoView = () => scrolls.push(details.style.getPropertyValue(REVEAL_PEEK_VAR))
+    }
+    const open = (index: number) => {
+      fireEvent.click(screen.getByText(`Row ${index + 1}`))
+      frames.splice(0).forEach((frame) => frame(0))
+    }
+    return { all, scrolls, open }
+  }
+
+  it('keeps room under the opened box for the next header row and half a row more', () => {
+    const { all, scrolls, open } = setUp(2)
+    place(all[0], 100, 600)
+    place(all[1].querySelector('summary') as Element, 601, 645)
+
+    open(0)
+
+    // From the box's end to the end of the next header (45), plus half that header (22)
+    expect(scrolls).toEqual(['67px'])
+  })
+
+  it('keeps no extra room when nothing opens under it', () => {
+    const { all, scrolls, open } = setUp(2)
+    place(all[1], 100, 600)
+
+    open(1)
+
+    expect(scrolls).toEqual([''])
+  })
+
+  it('measures again each time, so a box that lost its neighbour stops keeping room', () => {
+    const { all, scrolls, open } = setUp(2)
+    place(all[0], 100, 600)
+    place(all[1].querySelector('summary') as Element, 601, 645)
+    open(0)
+    open(0)
+    all[1].remove()
+
+    open(0)
+
+    expect(scrolls).toEqual(['67px', ''])
   })
 })
