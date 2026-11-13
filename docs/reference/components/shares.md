@@ -57,4 +57,3 @@ Source: `src/platform/ui/AmountBar.tsx`
 **Used by** (direct imports):
 
 - Routes: `/dev/gallery`
-- Platform: `platform/richtext`

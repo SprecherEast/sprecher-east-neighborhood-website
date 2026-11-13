@@ -59,6 +59,19 @@ describe('ScaledBreakdown', () => {
     expect(screen.getByRole('link', { name: /City budget/ })).toBeTruthy()
   })
 
+  it('keeps the title for screen readers only when asked, with the takeaway still shown (#1144)', async () => {
+    const squares = { ...SPEC, hideSquares: false, squareValue: 20 }
+    const { container } = render(
+      <ScaledBreakdown spec={squares} factor={1} title="screen-reader" />,
+    )
+    const title = screen.getByText('Where that City tax goes, estimated')
+    expect(title.className).toContain('sr-only')
+    expect(screen.getByText(/split like the operating budget/).closest('.sr-only')).toBeNull()
+    // The drawing of squares is still named by the title
+    expect(container.querySelector(`[aria-labelledby~="${title.id}"]`)).toBeTruthy()
+    await expectAccessible(container)
+  })
+
   it('has no accessibility violations', async () => {
     const { container } = render(<ScaledBreakdown spec={SPEC} factor={1} />)
     await expectAccessible(container)

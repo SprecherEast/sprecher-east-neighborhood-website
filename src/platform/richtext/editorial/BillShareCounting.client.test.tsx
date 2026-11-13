@@ -17,12 +17,10 @@ describe('BillShare, every amount counts, not only the pie and the receipt (#109
       frames = []
       pending.forEach((frame) => frame(now))
     })
-  // The City bar's whole amount, as its picture says it: "2027 proposed: $1,386, made up of …"
+  // The City's tax as the answer card shows it: its first dollar amount
   const cityTotal = () => {
-    const label = screen
-      .getByRole('img', { name: /(adopted|proposed): \$/ })
-      .getAttribute('aria-label')
-    return Number(/: \$([\d,]+),/.exec(label ?? '')?.[1]?.replace(/,/g, ''))
+    const answer = screen.getByRole('region', { name: 'Your City tax' }).textContent
+    return Number(/\$([\d,]+)/.exec(answer ?? '')?.[1]?.replace(/,/g, ''))
   }
   const breakdownText = () => document.body.textContent ?? ''
 
@@ -38,7 +36,7 @@ describe('BillShare, every amount counts, not only the pie and the receipt (#109
   })
   afterEach(() => vi.unstubAllGlobals())
 
-  it('counts the City bar from one year’s amount to the next, not at once', () => {
+  it('counts the City’s tax from one year’s amount to the next, not at once', () => {
     render(
       <BillShare {...PROPS} {...city}>
         x
@@ -60,7 +58,7 @@ describe('BillShare, every amount counts, not only the pie and the receipt (#109
     expect(cityTotal()).toBe(after)
   })
 
-  it('counts the City bar for a new home value over the longer time', async () => {
+  it('counts the City’s tax for a new home value over the longer time', async () => {
     render(
       <BillShare {...PROPS} {...city}>
         x

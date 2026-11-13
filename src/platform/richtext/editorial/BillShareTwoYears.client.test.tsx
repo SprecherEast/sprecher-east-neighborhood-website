@@ -43,9 +43,9 @@ describe('the increase and the year switch tell one story (#1121)', () => {
       const earlier = taxShown()
       expect(line, 'the later year shows an increase').not.toBeNull()
       expect(later - earlier).toBe(line)
-      // The bar's hatched part is the same number
+      // Back in the later year, the line says the same number
       await year('2027')
-      expect(screen.getByText(`+$${line?.toLocaleString('en-US')}`)).toBeTruthy()
+      expect(lineShown()).toBe(line)
     },
   )
 

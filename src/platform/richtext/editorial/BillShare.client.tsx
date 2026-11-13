@@ -7,7 +7,6 @@ import type { ResolvedLink } from '@/platform/lib'
 import type { Certainty } from '@/platform/lib/certainty'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
-import { AmountBar } from '@/platform/ui/AmountBar'
 import { Card } from '@/platform/ui/Card'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
 import { ShareBill } from '@/platform/ui/ShareBill'
@@ -38,7 +37,7 @@ const YEAR_STEPS = 1000
 export type CityPanelProps = {
   /** The tab this bill is in, so the tab's button and heading can follow it (#1029) */
   tabId?: string
-  /** A chart of the City's tax by year: its column for the year shown, as one bar, in the first row */
+  /** A chart of the City's tax by year: the answer card takes the year's tax and its increase from it */
   cityBars?: Extract<ChartSpec, { kind: 'stacked' }>
   /** Where the City's tax goes, drawn again for whatever the City's tax is on the home typed */
   cityBreakdown?: Extract<ChartSpec, { kind: 'breakdown' }>
@@ -58,7 +57,7 @@ export type CityPanelProps = {
  * value the reader can change, which starts at the City's average home, and the switch between tax
  * years), the answer card (the City's tax on the home and year, its increase, the year's status), the
  * whole bill (its own card: the total, one bar whose slices are as wide as their shares, and the receipt
- * naming each), then one card of three closed rows: where the City's share goes, how the estimate works and the
+ * naming each), then one card of three rows: where the City's share goes (the split alone), how the estimate works and the
  * sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home
  * value and year, so every amount is the City's slice of the bill. A year in which a body has not
  * set its rate uses that body's rate from the year before, and says so in a note whose room is
@@ -108,7 +107,7 @@ export function BillShare({
   const rates = ratesAtPosition(yearRates, position)
   // The home as priced now: its value in the year shown, moving between the two while the year counts
   const shown = homeAtPosition(years, position, shownValue)
-  // The City's bar counts with the bill: the year between two years, the home value as it counts (#1096)
+  // The City's tax counts with the bill: the year between two years, the home value as it counts (#1096)
   const cityBar = cityBarFor(cityBars, years, position, shownValue, rates)
   // The tab's button and heading count with it
   useReportFigures(
@@ -145,11 +144,10 @@ export function BillShare({
   const breakdownTotal = cityBreakdown?.areas.reduce((sum, area) => sum + area.value, 0) ?? 0
   const breakdownFactor =
     cityAmount !== null && breakdownTotal > 0 ? cityAmount / breakdownTotal : homeRatio
-  const where = (cityBar || cityBreakdown) && (
-    <>
-      {cityBar && <AmountBar title={cityBar.title} total={cityBar.total} parts={cityBar.parts} />}
-      {cityBreakdown && <ScaledBreakdown spec={cityBreakdown} factor={breakdownFactor} />}
-    </>
+  // The row opens on the split: the answer card above already gives the City's tax and its
+  // increase, and the row's own title is the heading (#1144)
+  const where = cityBreakdown && (
+    <ScaledBreakdown spec={cityBreakdown} factor={breakdownFactor} title="screen-reader" />
   )
 
   // The notes always take their room, so a year with none to show never makes the row shorter

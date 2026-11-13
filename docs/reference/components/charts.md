@@ -143,10 +143,11 @@ A breakdown chart drawn in the browser with every amount multiplied by `factor` 
 
 Source: `src/platform/ui/chart/ScaledBreakdown.tsx`
 
-| Prop     | Type                                                                                                                                                                 | Required | Description |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------- |
-| `spec`   | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …` | yes      |             |
-| `factor` | `number`                                                                                                                                                             | yes      |             |
+| Prop     | Type                                                                                                                                                                 | Required | Description                                                                                                                                                                                                   |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spec`   | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …` | yes      |                                                                                                                                                                                                               |
+| `factor` | `number`                                                                                                                                                             | yes      |                                                                                                                                                                                                               |
+| `title`  | `"screen-reader" \| "visible"`                                                                                                                                       | no       | Whether the title shows: kept for screen readers only when the heading above already says it, so two headings never sit one after another (as `Chart` does with `heading`). The takeaway always shows (#1144) |
 
 **Used by** (direct imports):
 
