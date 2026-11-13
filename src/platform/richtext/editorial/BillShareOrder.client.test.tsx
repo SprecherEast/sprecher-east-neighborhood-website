@@ -79,18 +79,21 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     expect(BILL_GAP).toBe('space-y-5')
   })
 
-  it('draws the tab in one order: intro, the estimator, the answer, the whole bill, the three rows, the rest (#1111)', () => {
+  it('draws the tab in one order: intro, the estimator, the answer, the whole bill with the breakdown under the City, the two rows, the rest (#1111, #1163)', () => {
     render(
       <BillShare {...PROPS} {...city} certainty="estimate" source={PROPS.years[0]?.source}>
         <p>The rest</p>
       </BillShare>,
     )
+    const bill = screen.getByRole('region', { name: 'Your whole property tax bill' })
+    const breakdown = screen.getByText('Your City tax breakdown')
     const order = [
       screen.getByText(PROPS.intro),
       screen.getByRole('region', { name: 'Rough Estimator' }),
       screen.getByRole('region', { name: 'Your City tax' }),
-      screen.getByRole('region', { name: 'Your whole property tax bill' }),
-      screen.getByText('Your City tax breakdown'),
+      screen.getByText('City of Madison'),
+      breakdown,
+      screen.getByText('Metropolitan Schools'),
       screen.getByText('Why your bill may differ'),
       screen.getByText('Sources'),
       screen.getByText('The rest'),
@@ -99,6 +102,10 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
       const before = order[i] as Node
       expect(before.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     })
+    // The breakdown is a row of the whole bill itself, directly under the City's row
+    expect(bill.contains(breakdown)).toBe(true)
+    const cityRow = screen.getByText('City of Madison').closest('li') as HTMLElement
+    expect(cityRow.nextElementSibling?.contains(breakdown)).toBe(true)
   })
 
   it('shows the intro once, with the estimator drawing none of its own', () => {
@@ -106,7 +113,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     expect(screen.getAllByText(PROPS.intro)).toHaveLength(1)
   })
 
-  it('opens the first row and closes the other two by default, and each source appears once (#1111, #1121)', () => {
+  it('starts with every row closed, the breakdown too, and each source appears once (#1111, #1163)', () => {
     const { container } = render(
       <BillShare {...PROPS} {...city} source={PROPS.years[0]?.source}>
         x
@@ -114,7 +121,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     )
     const rows = Array.from(container.querySelectorAll('details'))
     expect(rows).toHaveLength(3)
-    expect(rows.map((row) => row.open)).toEqual([true, false, false])
+    expect(rows.map((row) => row.open)).toEqual([false, false, false])
     // The tab's source and the year's source are the same link: listed once
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(screen.getAllByRole('link', { name: /City tax detail/ })).toHaveLength(1)

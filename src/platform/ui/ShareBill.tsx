@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { type ReactNode } from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
@@ -18,6 +18,16 @@ export type ShareSlice = {
   tone: ShareTone
 }
 
+/** How long the total's flash lasts (`total-pulse` in the theme's `tailwind.css`, which a test holds to it) */
+export const TOTAL_PULSE_MS = 1500
+
+/**
+ * A nested row starts where the slices' names start: past the row's side padding, the colour square
+ * and the gap after it (`px-1` + `size-2` + `gap-x-1`, then `size-3` + `gap-x-2` from 24 rem), and
+ * ends at the rows' own end (`px-1`)
+ */
+const NESTED_INDENT = 'pr-1 pl-4 min-[24rem]:pl-6'
+
 /**
  * One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, one bar whose slices are as wide as their shares,
  * and under it a receipt that names every slice with its color, percent and dollars, in the bar's
@@ -27,7 +37,8 @@ export type ShareSlice = {
  * with fixed widths for the percent and the amount, so each column lines up from row to row and
  * the block keeps its height when the amounts change. The total flashes the accent once each time
  * `pulseKey` changes, unless motion is reduced. The caller writes `label`, what the bar says to
- * screen readers.
+ * screen readers. `nested` puts extra content, such as an open-and-close row about one slice, as a
+ * row of its own directly under that slice's row, indented to its name (#1163).
  */
 export function ShareBill({
   slices,
@@ -35,6 +46,7 @@ export function ShareBill({
   title,
   total,
   pulseKey,
+  nested,
   className,
 }: {
   slices: readonly ShareSlice[]
@@ -45,6 +57,8 @@ export function ShareBill({
   total?: { label: string; amount: string }
   /** Changes each time the total should flash once */
   pulseKey?: number
+  /** Content shown as a row of its own under the slice whose key is `after` */
+  nested?: { after: string; children: ReactNode }
   className?: string
 }) {
   return (
@@ -65,35 +79,41 @@ export function ShareBill({
       />
       <ul className="grid grid-cols-[1fr_1.5rem_2.5rem] gap-x-0.5 text-xs min-[24rem]:grid-cols-[1fr_2rem_3.5rem] min-[24rem]:gap-x-1 min-[24rem]:text-sm">
         {slices.map((slice) => (
-          <li
-            key={slice.key}
-            className={cn(
-              'col-span-3 grid min-h-5 grid-cols-subgrid items-center border-t border-border px-1 first:border-t-0',
-              SHARE_TONES[slice.tone].row,
-            )}
-          >
-            <span className="flex min-w-0 items-center gap-x-1 min-[24rem]:gap-x-2">
-              <span
-                aria-hidden="true"
-                className={cn(
-                  'inline-block size-2 shrink-0 min-[24rem]:size-3',
-                  SHARE_TONES[slice.tone].swatch,
-                )}
-              />
-              <span className="whitespace-nowrap text-foreground">{slice.name}</span>
-            </span>
-            <span
+          <React.Fragment key={slice.key}>
+            <li
               className={cn(
-                'text-right whitespace-nowrap tabular-nums',
-                SHARE_TONES[slice.tone].row ? 'text-foreground' : 'text-muted-foreground',
+                'col-span-3 grid min-h-5 grid-cols-subgrid items-center border-t border-border px-1 first:border-t-0',
+                SHARE_TONES[slice.tone].row,
               )}
             >
-              {slice.percent}%
-            </span>
-            <span className="text-right font-semibold whitespace-nowrap text-foreground tabular-nums">
-              {slice.amount}
-            </span>
-          </li>
+              <span className="flex min-w-0 items-center gap-x-1 min-[24rem]:gap-x-2">
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'inline-block size-2 shrink-0 min-[24rem]:size-3',
+                    SHARE_TONES[slice.tone].swatch,
+                  )}
+                />
+                <span className="whitespace-nowrap text-foreground">{slice.name}</span>
+              </span>
+              <span
+                className={cn(
+                  'text-right whitespace-nowrap tabular-nums',
+                  SHARE_TONES[slice.tone].row ? 'text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {slice.percent}%
+              </span>
+              <span className="text-right font-semibold whitespace-nowrap text-foreground tabular-nums">
+                {slice.amount}
+              </span>
+            </li>
+            {nested?.after === slice.key && (
+              <li className={cn('col-span-3 border-t border-border', NESTED_INDENT)}>
+                {nested.children}
+              </li>
+            )}
+          </React.Fragment>
         ))}
       </ul>
       {total && (

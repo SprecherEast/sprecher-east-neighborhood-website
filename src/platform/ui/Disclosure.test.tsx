@@ -10,7 +10,7 @@ import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
 
-const VARIANTS = ['card', 'row', 'bar', 'link'] as const
+const VARIANTS = ['card', 'row', 'listRow', 'bar', 'link'] as const
 
 /*
  * Whether the chevron is turned, decided by the real CSS Tailwind makes from its classes (jsdom
@@ -55,6 +55,22 @@ describe('Disclosure', () => {
     expect(classes).not.toContain('shadow')
     expect(classes).toContain('px-3')
     expect(screen.getByText('Body').className).toContain('py-4')
+  })
+
+  it('has a listRow look for a row inside a list: no box or side padding, a label sized from the list (#1163)', () => {
+    const { container } = render(
+      <Disclosure variant="listRow" summary="More">
+        Body
+      </Disclosure>,
+    )
+    const details = container.querySelector('details') as HTMLElement
+    expect(details.className).not.toContain('border')
+    expect(details.className).not.toContain('px-3')
+    const summary = container.querySelector('summary') as HTMLElement
+    expect(summary.className).toContain('text-list-row')
+    expect(summary.className).toContain('font-medium')
+    // The body goes back to body text, whatever size the list around it uses
+    expect(screen.getByText('Body').className).toContain('text-base')
   })
 
   it('opens from the summary, and can start open', () => {

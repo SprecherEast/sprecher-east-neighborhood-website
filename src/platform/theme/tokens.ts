@@ -114,6 +114,11 @@ export const THEME_TOKENS = {
     meaning:
       'Finest text size (`text-fine`): the small uppercase labels beside a value, smaller than `text-xs`',
   },
+  'type-list-row': {
+    modes: 'base',
+    meaning:
+      'Label size of a row nested in a list (`text-list-row`), relative to the list: a little larger than its rows, smaller than a stand-alone row label',
+  },
 } as const satisfies Record<string, { modes: Modes; meaning: string }>
 
 export type ThemeToken = keyof typeof THEME_TOKENS

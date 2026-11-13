@@ -12,7 +12,7 @@ import { expect, test } from './support/test'
 // control on the box's row and as tall as the box, the answer card's label and badge share a row,
 // nothing sticks out sideways (an opened row coming into view is `disclosure.spec.ts`). Every
 // percent on the bar fits inside its slice, "Tax rates" is centred over the year control, the City's
-// receipt row is highlighted and the first row is open on load (#1121).
+// receipt row is highlighted with the breakdown under it, and every row is closed on load (#1121, #1163).
 
 const estimator = (page: Page) => page.getByRole('region', { name: 'Rough Estimator' })
 const box = (page: Page) => estimator(page).locator('[data-field-bar]')
@@ -190,18 +190,47 @@ for (const width of WIDTHS) {
     await expect(line).toContainText('Up $')
   })
 
-  test(`the first row is open on load and the other two are closed at ${width}px`, async ({
+  test(`every row is closed on load at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto(POST)
+    const open = await Promise.all(
+      ROW_TITLES.map((title) =>
+        summary(page, title).evaluate((row) => (row.parentElement as HTMLDetailsElement).open),
+      ),
+    )
+    expect(open).toEqual([false, false, false])
+  })
+
+  test(`the breakdown sits under the City's row, lined up with its name, at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 })
     await page.goto(POST)
-    const open = await page
-      .locator('details:has(> summary)')
-      .filter({
-        has: page.locator('summary', { hasText: new RegExp(`^(${ROW_TITLES.join('|')})`) }),
-      })
-      .evaluateAll((rows) => rows.map((row) => (row as HTMLDetailsElement).open))
-    expect(open).toEqual([true, false, false])
+    const bill = page.getByRole('region', { name: 'Your whole property tax bill' })
+    const cityRow = bill.locator('li', { hasText: 'City of Madison' }).first()
+    const row = summary(page, ROW_TITLES[0])
+    await expect(bill.locator('li').filter({ has: row })).toHaveCount(1)
+    const [name, label, rowBox, cityBox] = await Promise.all([
+      boxOf(cityRow.getByText('City of Madison')),
+      boxOf(row.locator('span', { hasText: ROW_TITLES[0] }).first()),
+      boxOf(row),
+      boxOf(cityRow),
+    ])
+    expect(
+      Math.abs(label.x - name.x),
+      'the label starts where the City’s name starts',
+    ).toBeLessThan(2)
+    expect(rowBox.y, 'directly under the City’s row').toBeCloseTo(cityBox.y + cityBox.height, -1)
+    // Its label is larger than the bill's rows and smaller than the rows in the card below
+    const size = (locator: Locator) =>
+      locator.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
+    const [mine, rows, below] = await Promise.all([
+      size(row),
+      size(cityRow.getByText('City of Madison')),
+      size(summary(page, ROW_TITLES[1])),
+    ])
+    expect(mine).toBeGreaterThan(rows)
+    expect(mine).toBeLessThan(below)
   })
 
   test(`the first row's title fits on one line at ${width}px`, async ({ page }) => {
@@ -217,14 +246,40 @@ for (const width of WIDTHS) {
   })
 }
 
-// With scripting off the first row is open too: it is in the page's own markup (#1121)
+// With scripting off every row is closed too, and opens from its summary (#1163)
 test.describe('without scripting', () => {
   test.use({ javaScriptEnabled: false })
-  test('the first row is open and the other two are closed', async ({ page }) => {
+  test('every row is closed', async ({ page }) => {
     await page.goto(POST)
     const open = await page
       .locator('summary', { hasText: new RegExp(`^(${ROW_TITLES.join('|')})$`) })
       .evaluateAll((rows) => rows.map((row) => (row.parentElement as HTMLDetailsElement).open))
-    expect(open).toEqual([true, false, false])
+    expect(open).toEqual([false, false, false])
   })
+})
+
+// The breakdown opens by itself once, after the reader's first value, when the total has counted
+// and flashed and a pause has passed, without scrolling the page (#1163)
+test('the breakdown opens after the first value, once, and scrolls nothing', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(POST)
+  const row = summary(page, ROW_TITLES[0])
+  const details = row.locator('xpath=..')
+  const input = page.getByRole('textbox', { name: 'Enter your assessed value' })
+  await input.scrollIntoViewIfNeeded()
+  await input.fill('$700,000')
+  await page.getByRole('button', { name: 'Estimate' }).click()
+  const scrolled = await page.evaluate(() => scrollY)
+  // Counting (1.5 s), the flash (1.5 s) and the pause (2 s): still closed half way
+  await page.waitForTimeout(2500)
+  await expect(details).toHaveJSProperty('open', false)
+  await expect(details).toHaveJSProperty('open', true, { timeout: 5000 })
+  expect(await page.evaluate(() => scrollY), 'opening by itself scrolls nothing').toBe(scrolled)
+  // Closed by the reader, it stays closed for the next value
+  await row.click()
+  await expect(details).toHaveJSProperty('open', false)
+  await input.fill('$800,000')
+  await page.getByRole('button', { name: 'Estimate' }).click()
+  await page.waitForTimeout(6000)
+  await expect(details).toHaveJSProperty('open', false)
 })

@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { ShareBill, type ShareSlice } from './ShareBill'
+import { ShareBill, TOTAL_PULSE_MS, type ShareSlice } from './ShareBill'
 import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
@@ -93,6 +96,38 @@ describe('ShareBill', () => {
     expect(flashes()).toBe(false)
     rerender(<ShareBill slices={SLICES} label="Sample bill" total={TOTAL} pulseKey={1} />)
     expect(flashes()).toBe(true)
+  })
+
+  it('nests extra content under one slice’s row, indented to the slice’s name, as one row of its own (#1163)', () => {
+    const { container } = render(
+      <ShareBill
+        slices={SLICES}
+        label="Sample bill"
+        nested={{ after: 'a', children: <p>More on the first</p> }}
+      />,
+    )
+    const rows = Array.from(container.querySelectorAll('ul > li'))
+    expect(rows).toHaveLength(SLICES.length + 1)
+    const nested = rows[1] as HTMLElement
+    expect(nested.textContent).toBe('More on the first')
+    // It spans the three columns and starts where the names start, past the colour square
+    expect(nested.className).toContain('col-span-3')
+    expect(nested.className).toContain('pl-4')
+    expect(nested.className).toContain('min-[24rem]:pl-6')
+    expect(rows[2]?.textContent).toBe('Sample: second46%$4,650')
+  })
+
+  it('nests nothing when the slice named is not in the bill (#1163)', () => {
+    const { container } = render(
+      <ShareBill slices={SLICES} label="Sample bill" nested={{ after: 'z', children: 'More' }} />,
+    )
+    expect(container.querySelectorAll('ul > li')).toHaveLength(SLICES.length)
+  })
+
+  it('flashes for exactly the shared length callers wait out, the one the theme’s animation uses (#1163)', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/platform/theme/tailwind.css'), 'utf8')
+    const length = /animation:\s*total-pulse\s+([\d.]+)s/.exec(css)?.[1]
+    expect(Number(length) * 1000).toBe(TOTAL_PULSE_MS)
   })
 
   it('draws no title or total line without them, and has no accessibility violations', async () => {
