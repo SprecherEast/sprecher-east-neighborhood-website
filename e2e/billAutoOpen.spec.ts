@@ -3,6 +3,7 @@ import type { Locator } from '@playwright/test'
 import {
   BILL_POST_PATH as POST,
   BILL_ROW_TITLES as ROW_TITLES,
+  BILL_WIDTHS as WIDTHS,
   summaryRow as summary,
 } from './support/billRows'
 import { expect, test } from './support/test'
@@ -59,4 +60,29 @@ test('the breakdown opens after the first value, once, and scrolls nothing', asy
   await page.getByRole('button', { name: 'Estimate' }).click()
   await page.waitForTimeout(6000)
   await expect(details).toHaveJSProperty('open', false)
+})
+
+// Every row is closed on load, at each width and with scripting off too (#1163)
+for (const width of WIDTHS) {
+  test(`every row is closed on load at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto(POST)
+    const open = await Promise.all(
+      ROW_TITLES.map((title) =>
+        summary(page, title).evaluate((row) => (row.parentElement as HTMLDetailsElement).open),
+      ),
+    )
+    expect(open).toEqual([false, false, false])
+  })
+}
+
+test.describe('without scripting', () => {
+  test.use({ javaScriptEnabled: false })
+  test('every row is closed', async ({ page }) => {
+    await page.goto(POST)
+    const open = await page
+      .locator('summary', { hasText: new RegExp(`^(${ROW_TITLES.join('|')})$`) })
+      .evaluateAll((rows) => rows.map((row) => (row.parentElement as HTMLDetailsElement).open))
+    expect(open).toEqual([false, false, false])
+  })
 })

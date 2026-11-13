@@ -163,37 +163,6 @@
 }
 
 /*
- * While a row expands or folds, `holdScrollAnchor` (`motion.client.ts`) marks the page `data-expanding`,
- * and the browser stops scrolling the page along with the growth (#1170).
- */
-html[data-expanding],
-html[data-expanding] body {
-  overflow-anchor: none;
-}
-
-/*
- * `disclosure-expand` (#1170): a native `<details>` that expands and folds over 200 ms (`EXPAND_MS` in
- * `motion.client.ts`, which a test holds to it) instead of snapping, for a row opening in place. Done
- * with the browser's own `::details-content`; one that lacks it opens at once, and so does a reader who
- * asked for less motion. What fills inside waits the same time (`chart-fill-x`'s delay).
- */
-@utility disclosure-expand {
-  @media screen and (prefers-reduced-motion: no-preference) {
-    interpolate-size: allow-keywords;
-    &::details-content {
-      height: 0;
-      overflow: clip;
-      transition:
-        height 200ms ease-out,
-        content-visibility 200ms allow-discrete;
-    }
-    &[open]::details-content {
-      height: auto;
-    }
-  }
-}
-
-/*
  * `chart-reveal-x` (#663): a bar chart's bars grow out from the baseline as they scroll into view
  * (put it on the `g` that holds one row's bars). The same conditions as `chart-reveal`: on screen,
  * motion allowed, scroll-driven animation supported; everywhere else the bars are drawn in full.

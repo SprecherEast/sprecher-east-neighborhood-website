@@ -56,7 +56,7 @@ describe('holdScrollAnchor (#1170)', () => {
   })
 
   it('has a rule in the theme that switches scroll anchoring off on the page and its body while marked', () => {
-    const css = readFileSync(resolve(process.cwd(), 'src/platform/theme/tailwind.css'), 'utf8')
+    const css = readFileSync(resolve(process.cwd(), 'src/platform/theme/expand.css'), 'utf8')
     expect(css).toMatch(/html\[data-expanding\][^{]*body[^{]*\{[^}]*overflow-anchor:\s*none/)
   })
 })

@@ -190,17 +190,6 @@ for (const width of WIDTHS) {
     await expect(line).toContainText('Up $')
   })
 
-  test(`every row is closed on load at ${width}px`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 844 })
-    await page.goto(POST)
-    const open = await Promise.all(
-      ROW_TITLES.map((title) =>
-        summary(page, title).evaluate((row) => (row.parentElement as HTMLDetailsElement).open),
-      ),
-    )
-    expect(open).toEqual([false, false, false])
-  })
-
   test(`the breakdown sits under the City's row, lined up with its name, at ${width}px`, async ({
     page,
   }) => {
@@ -245,15 +234,3 @@ for (const width of WIDTHS) {
     expect(lines).toBe(1)
   })
 }
-
-// With scripting off every row is closed too, and opens from its summary (#1163)
-test.describe('without scripting', () => {
-  test.use({ javaScriptEnabled: false })
-  test('every row is closed', async ({ page }) => {
-    await page.goto(POST)
-    const open = await page
-      .locator('summary', { hasText: new RegExp(`^(${ROW_TITLES.join('|')})$`) })
-      .evaluateAll((rows) => rows.map((row) => (row.parentElement as HTMLDetailsElement).open))
-    expect(open).toEqual([false, false, false])
-  })
-})
