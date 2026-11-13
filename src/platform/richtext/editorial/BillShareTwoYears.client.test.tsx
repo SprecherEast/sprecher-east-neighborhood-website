@@ -146,3 +146,40 @@ describe('the increase and the year switch tell one story (#1121)', () => {
     expect(screen.getByText(/^Your home’s assumed value in 2026: \$420,000\./)).toBeTruthy()
   })
 })
+
+describe('the earliest year is the base year (#1135)', () => {
+  it('says "Base year" in the primary green in the earliest year and the increase in the accent in the later one', async () => {
+    render(
+      <BillShare {...PROPS} {...city}>
+        x
+      </BillShare>,
+    )
+    const line = () => document.querySelector('[data-answer-increase]') as HTMLElement
+    expect(line().className).toContain('text-accent-strong')
+    expect(line().textContent).toMatch(/^Up \$/)
+    await year('2026')
+    expect(line().textContent).toBe('Base year')
+    expect(line().className).toContain('text-primary-strong')
+    expect(line().className).not.toContain('text-accent-strong')
+    // The sentence a screen reader hears gives the figures, with no increase
+    expect(screen.getByRole('status').textContent).not.toMatch(/increase|Up \$|Base year/i)
+    await year('2027')
+    expect(line().textContent).toMatch(/^Up \$/)
+  })
+
+  it('keeps today’s line with one stored year, where nothing is compared', () => {
+    render(
+      <BillShare {...PROPS} years={PROPS.years.slice(-1)} {...city}>
+        x
+      </BillShare>,
+    )
+    expect(screen.queryByText('Base year')).toBeNull()
+  })
+
+  it('shows no base-year line when the later year’s increase cannot be computed, so the line and the card keep today’s room', async () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    await year('2026')
+    expect(screen.queryByText('Base year')).toBeNull()
+    expect(document.querySelector('[data-answer-increase]')?.textContent).toBe('')
+  })
+})

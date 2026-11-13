@@ -16,7 +16,8 @@ import { increaseLine } from './billFigures'
  * always agree) and one small sentence with the home value used and the City's share of the whole
  * bill. In an earlier year the sentence says the value is the one assumed for that year (#1121). The badge is the chosen year's stored note, with the "not final" look, or, when the year has
  * none, the tab's stored certainty, so it can never disagree with the year. The increase line keeps
- * its room when there is no figure, so the card never changes height. It draws what it is given.
+ * its room when there is no figure, so the card never changes height. In the earliest of several
+ * years it reads "Base year" in the primary green instead, with the next year's line kept as hidden room (#1135). It draws what it is given.
  */
 export function BillAnswer({
   tax,
@@ -27,6 +28,8 @@ export function BillAnswer({
   home,
   assumedYear,
   cityPercent,
+  baseYear = false,
+  laterIncrease = null,
 }: {
   /** The City's tax, formatted */
   tax: string
@@ -44,6 +47,10 @@ export function BillAnswer({
   assumedYear?: number
   /** The City's whole percent of the whole bill; null while the bill is not whole */
   cityPercent: number | null
+  /** Whether the year is the earliest of several: the line says "Base year", the one the later year is compared with (#1135) */
+  baseYear?: boolean
+  /** In the base year: the next year's increase, whose line is kept as hidden room so the card is as tall in both years */
+  laterIncrease?: number | null
 }) {
   const noted = note ? `${note.charAt(0).toUpperCase()}${note.slice(1)}` : undefined
   const badge = noted ? 'estimate' : certainty
@@ -77,8 +84,18 @@ export function BillAnswer({
           </Text>
         </div>
         <Text variant="small" as="p" className="min-h-5 font-semibold">
-          <span data-answer-increase className="text-accent-strong">
-            {increase === null ? '' : increaseLine(increase)}
+          <span className="grid">
+            <span
+              data-answer-increase
+              className={`col-start-1 row-start-1 ${baseYear ? 'text-primary-strong' : 'text-accent-strong'}`}
+            >
+              {baseYear ? 'Base year' : increase === null ? '' : increaseLine(increase)}
+            </span>
+            {baseYear && laterIncrease !== null && (
+              <span aria-hidden className="invisible col-start-1 row-start-1">
+                {increaseLine(laterIncrease)}
+              </span>
+            )}
           </span>
         </Text>
         <Text variant="small" as="p" className="leading-snug">

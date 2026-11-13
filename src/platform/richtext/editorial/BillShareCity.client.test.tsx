@@ -105,14 +105,14 @@ describe('BillShare, the City’s panel (#1020)', () => {
     expect(screen.getByText(/Up \$36 a year/)).toBeTruthy()
   })
 
-  it('switches the answer to the other year’s amount, with no increase for last year', () => {
+  it('switches the answer to the other year’s amount, the base year (#1135)', () => {
     render(
       <BillShare {...PROPS} {...city}>
         x
       </BillShare>,
     )
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
-    expect(screen.getByText('No increase')).toBeTruthy()
+    expect(screen.getByText('Base year')).toBeTruthy()
     // 7.0139 mills on $481,300
     expect(screen.getAllByText('$3,376').length).toBeGreaterThanOrEqual(2)
   })

@@ -62,6 +62,15 @@ describe('BillAnswer', () => {
     expect(screen.queryByText(/Up \$/)).toBeNull()
   })
 
+  it('reads "Base year" in the primary green in the earliest year, in the same line (#1135)', () => {
+    const { container } = render(<BillAnswer {...base} increase={null} baseYear />)
+    const line = screen.getByText('Base year')
+    expect(line.className).toContain('text-primary-strong')
+    expect(line.className).not.toContain('text-accent-strong')
+    expect(container.querySelectorAll('[data-answer-increase]')).toHaveLength(1)
+    expect(screen.queryByText('No increase')).toBeNull()
+  })
+
   it('keeps the room of the increase line when the chart gives no increase', () => {
     const { container } = render(<BillAnswer {...base} increase={null} />)
     expect(container.querySelector('[data-answer-increase]')?.textContent).toBe('')
