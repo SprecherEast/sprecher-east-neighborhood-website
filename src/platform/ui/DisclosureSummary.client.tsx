@@ -9,17 +9,6 @@ export type DisclosureSummaryProps = {
   children: React.ReactNode
 }
 
-/*
- * The summary row of a `Disclosure` that sits in the page, and its only client code (#1152). When a reader opens the box,
- * the page scrolls just far enough to show its end; a box taller than the screen stops with this
- * row at the top instead, and a box already in view moves nothing. The browser does all three
- * (`block: 'nearest'`), measuring from the box's scroll margins (`REVEAL_SCROLL_MARGIN`). Closing
- * never scrolls, and neither does a box that is open when the page loads: only a click asks.
- *
- * A box with another directly under it keeps room for that one's summary row and a little more
- * (#1154), so the reader sees there is more to open. The room is added to the box's own bottom
- * scroll margin, so the same browser rule applies and this row still wins when not all of it fits.
- */
 // How much of what follows the next summary row also shows, as a share of that row's height
 const PAST_NEXT_ROW = 0.5
 
@@ -32,6 +21,17 @@ function roomForNext(details: HTMLDetailsElement): number {
   return Math.round(bottom - details.getBoundingClientRect().bottom + height * PAST_NEXT_ROW)
 }
 
+/*
+ * The summary row of a `Disclosure` that sits in the page, and its only client code (#1152). When a reader opens the box,
+ * the page scrolls just far enough to show its end; a box taller than the screen stops with this
+ * row at the top instead, and a box already in view moves nothing. The browser does all three
+ * (`block: 'nearest'`), measuring from the box's scroll margins (`REVEAL_SCROLL_MARGIN`). Closing
+ * never scrolls, and neither does a box that is open when the page loads: only a click asks.
+ *
+ * A box with another directly under it keeps room for that one's summary row and a little more
+ * (#1154), so the reader sees there is more to open. The room is added to the box's own bottom
+ * scroll margin, so the same browser rule applies and this row still wins when not all of it fits.
+ */
 export function DisclosureSummary({ className, children }: DisclosureSummaryProps) {
   const revealWhenOpened = (event: React.MouseEvent<HTMLElement>) => {
     const details = event.currentTarget.parentElement
