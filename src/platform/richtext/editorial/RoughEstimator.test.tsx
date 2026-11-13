@@ -28,7 +28,7 @@ describe('RoughEstimator', () => {
     // The card keeps its name for screen readers
     expect(screen.getByRole('region', { name: 'Rough Estimator' })).toBeTruthy()
     expect(
-      (screen.getByRole('textbox', { name: 'Your home’s assessed value' }) as HTMLInputElement)
+      (screen.getByRole('textbox', { name: 'Enter your assessed value' }) as HTMLInputElement)
         .value,
     ).toBe('$500,300')
     const group = screen.getByRole('group', { name: 'Tax rates' })
@@ -151,7 +151,7 @@ describe('RoughEstimator', () => {
     }
     expect(label.className).not.toContain('text-right')
     expect(group.className).toContain('@[16rem]:justify-self-center')
-    const box = screen.getByText('Your home’s assessed value')
+    const box = screen.getByText('Enter your assessed value')
     expect(box.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
