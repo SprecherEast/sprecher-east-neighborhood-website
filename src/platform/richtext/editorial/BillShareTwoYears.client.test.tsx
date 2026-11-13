@@ -175,4 +175,11 @@ describe('the earliest year is the base year (#1135)', () => {
     )
     expect(screen.queryByText('Base year')).toBeNull()
   })
+
+  it('shows no base-year line when the later year’s increase cannot be computed, so the line and the card keep today’s room', async () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    await year('2026')
+    expect(screen.queryByText('Base year')).toBeNull()
+    expect(document.querySelector('[data-answer-increase]')?.textContent).toBe('')
+  })
 })
