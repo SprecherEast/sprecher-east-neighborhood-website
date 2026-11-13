@@ -5,12 +5,15 @@ import React from 'react'
 import { cn } from '@/platform/lib/cn'
 
 import { cardVariants } from './Card'
+import { DisclosureSummary } from './DisclosureSummary.client'
 import { TOUCH_MIN_HEIGHT } from './layoutSizes'
+import { REVEAL_SCROLL_MARGIN } from './scrollMargin'
 
 /*
  * The one open-and-close box (#610): a native `<details>` with the kit's summary row, chevron and
  * focus ring, so nothing outside the kit writes a raw `details` or `summary`. It works without
- * JavaScript. `card` is a question that opens to its answer, in the kit's card look; `bar` is the full-width
+ * JavaScript; with it, a box a reader opens is scrolled into view (`DisclosureSummary`, #1152), except
+ * the `bar`, which is already pinned under the site header. `card` is a question that opens to its answer, in the kit's card look; `bar` is the full-width
  * row under the site header that holds the "On this page" list on small screens; `link` is a bare
  * link-coloured row with no box, for "See the smaller pieces" inside a chart (#866); `row` is the card
  * look with no box of its own: a few rows go in one card, split by divider lines, and a closed row is
@@ -88,16 +91,25 @@ export function Disclosure({
   bodyClassName,
   children,
 }: DisclosureProps) {
+  // The bar is pinned under the site header, so it is never scrolled to: it keeps the plain row
+  const reveal = variant !== 'bar'
+  const Summary = reveal ? DisclosureSummary : 'summary'
+
   return (
     <details
       ref={ref}
       open={defaultOpen || undefined}
-      className={cn(variant === 'card' && CARD_BOX, variant === 'row' && 'px-3', className)}
+      className={cn(
+        variant === 'card' && CARD_BOX,
+        variant === 'row' && 'px-3',
+        reveal && REVEAL_SCROLL_MARGIN,
+        className,
+      )}
     >
-      <summary className={summaryVariants({ variant })}>
+      <Summary className={summaryVariants({ variant })}>
         <span className={cn('min-w-0', variant !== 'link' && 'flex-1')}>{summary}</span>
         <ChevronDown aria-hidden="true" className={chevronVariants({ variant })} />
-      </summary>
+      </Summary>
       <div className={cn(bodyVariants({ variant }), bodyClassName)}>{children}</div>
     </details>
   )

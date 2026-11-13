@@ -86,6 +86,19 @@ Source: `src/platform/ui/Disclosure.tsx`
 - Routes: `/dev/gallery`
 - Platform: `platform/richtext`, `platform/ui`
 
+## `DisclosureSummary`
+
+Source: `src/platform/ui/DisclosureSummary.client.tsx`
+
+| Prop        | Type              | Required | Description |
+| ----------- | ----------------- | -------- | ----------- |
+| `className` | `string`          | no       |             |
+| `children`  | `React.ReactNode` | yes      |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/ui`
+
 ## `Tabs`
 
 Source: `src/platform/ui/Tabs.client.tsx`

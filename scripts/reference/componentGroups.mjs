@@ -66,7 +66,14 @@ export const COMPONENT_GROUPS = [
     title: 'Sections and page headers',
     intro:
       'Larger parts of a page: the page header, empty states, the sidebar call to action, and the expanding rows and tabs.',
-    components: ['PageHeader', 'EmptyState', 'SidebarCTA', 'Disclosure', 'Tabs'],
+    components: [
+      'PageHeader',
+      'EmptyState',
+      'SidebarCTA',
+      'Disclosure',
+      'DisclosureSummary',
+      'Tabs',
+    ],
   },
   {
     slug: 'media',
