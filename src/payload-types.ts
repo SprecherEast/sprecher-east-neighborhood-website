@@ -3154,7 +3154,7 @@ export interface FigureBlock {
    */
   image: number | Media
   /**
-   * What the picture shows, in a few words. It names the Enlarge button.
+   * What the picture shows, in a few words. It names the small expand icon on the picture.
    */
   title: string
   /**
