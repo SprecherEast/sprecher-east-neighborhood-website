@@ -143,6 +143,7 @@ export const CONTRAST_PAIRS: ReadonlyArray<readonly [text: ThemeToken, backgroun
   ['accent-strong', 'card'],
   ['primary-strong', 'background'],
   ['primary-strong', 'surface'],
+  ['primary-strong', 'card'],
   ['destructive-strong', 'background'],
   ['destructive-strong', 'surface'],
   ['destructive-strong', 'card'],
