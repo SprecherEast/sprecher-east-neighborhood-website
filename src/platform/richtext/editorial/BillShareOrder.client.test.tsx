@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { createRequire } from 'node:module'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -36,6 +37,16 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     }
   })
 
+  it("makes that space the rich text paragraph spacing, from the typography plugin's own value (#1142)", () => {
+    const styles = createRequire(import.meta.url)('@tailwindcss/typography/src/styles.js') as {
+      DEFAULT: { css: { p: { marginTop: string } }[] }
+    }
+    const paragraph = styles.DEFAULT.css[0]?.p.marginTop
+    // 1.25em of the 1rem prose text is 1.25rem, which is Tailwind's spacing step 5
+    expect(paragraph).toBe('1.25em')
+    expect(BILL_GAP).toBe('space-y-5')
+  })
+
   it('draws the tab in one order: intro, the estimator, the answer, the whole bill, the three rows, the rest (#1111)', () => {
     render(
       <BillShare {...PROPS} {...city} certainty="estimate" source={PROPS.years[0]?.source}>
@@ -47,7 +58,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
       screen.getByRole('region', { name: 'Rough Estimator' }),
       screen.getByRole('region', { name: 'Your City tax' }),
       screen.getByRole('region', { name: 'Your whole property tax bill' }),
-      screen.getByText('Where the City share goes'),
+      screen.getByText('Your City tax share, estimated'),
       screen.getByText('How we estimate this'),
       screen.getByText('Sources'),
       screen.getByText('The rest'),

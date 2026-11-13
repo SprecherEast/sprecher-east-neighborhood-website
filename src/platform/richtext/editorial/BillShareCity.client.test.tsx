@@ -156,7 +156,7 @@ describe('BillShare, the City’s panel (#1020)', () => {
         x
       </BillShare>,
     )
-    expect(screen.queryByText('Where the City share goes')).toBeNull()
+    expect(screen.queryByText('Your City tax share, estimated')).toBeNull()
     // The answer card still takes its increase from that chart
     expect(screen.getByText(/Up \$91 a year/)).toBeTruthy()
   })

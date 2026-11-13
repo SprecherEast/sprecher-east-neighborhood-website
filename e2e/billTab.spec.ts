@@ -11,7 +11,7 @@ import { expect, test } from './support/test'
 
 const POST = `/posts/${BILL_POST_SLUG}`
 const WIDTHS = [320, 390, 768, 1280]
-const ROW_TITLES = ['Where the City share goes', 'How we estimate this', 'Sources']
+const ROW_TITLES = ['Your City tax share, estimated', 'How we estimate this', 'Sources']
 
 const estimator = (page: Page) => page.getByRole('region', { name: 'Rough Estimator' })
 const box = (page: Page) => estimator(page).locator('[data-field-bar]')
@@ -57,6 +57,9 @@ for (const width of WIDTHS) {
     const gapBelow = Math.round(
       answerCard.y - ((await boxOf(estimator(page))).y + (await boxOf(estimator(page))).height),
     )
+    // ... and it is the rich text paragraph spacing, 20 px (#1142)
+    expect(Math.abs(gapAbove - 20), `above ${gapAbove}px`).toBeLessThanOrEqual(1)
+    expect(Math.abs(gapBelow - 20), `below ${gapBelow}px`).toBeLessThanOrEqual(1)
     expect(
       Math.abs(gapAbove - gapBelow),
       `above ${gapAbove}px, below ${gapBelow}px`,
@@ -244,7 +247,9 @@ test.describe('without scripting', () => {
   test('the first row is open and the other two are closed', async ({ page }) => {
     await page.goto(POST)
     const open = await page
-      .locator('summary', { hasText: /^(Where the City share goes|How we estimate this|Sources)$/ })
+      .locator('summary', {
+        hasText: /^(Your City tax share, estimated|How we estimate this|Sources)$/,
+      })
       .evaluateAll((rows) => rows.map((row) => (row.parentElement as HTMLDetailsElement).open))
     expect(open).toEqual([true, false, false])
   })
