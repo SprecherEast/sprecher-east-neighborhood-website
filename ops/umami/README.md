@@ -65,7 +65,7 @@ some headroom. A container that goes over is killed and restarted by Docker (`re
 unless-stopped`) inside its own limit, so a leak in Umami can't make the kernel pick the site's
 process. Raise a limit in `compose.yaml` if the logs show repeated restarts.
 
-**Changing the admin password.** Change it in Umami first, then the GitHub secret. Changing only the
+**Changing the admin password.** Change it in Umami first, then the GitHub secret ([where it lives](../README.md#where-the-deploy-secrets-live)). Changing only the
 secret does nothing: once the password is no longer the default, the script leaves it as it is.
 
 ## Backups

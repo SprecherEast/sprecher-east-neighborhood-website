@@ -25,6 +25,21 @@ whether it succeeds or fails, so the result can be read without opening the logs
 is public, so the scripts never print secrets or file contents. The site address they check comes
 from `NEXT_PUBLIC_SERVER_URL` in `.env.local`, and the check goes to Caddy on the server itself.
 
+## Where the deploy secrets live
+
+The secrets the deploy reads (`VPS_HOST`, `VPS_USER`, `VPS_PORT`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`
+and `UMAMI_ADMIN_PASSWORD`) are secrets of the GitHub environment `production` (Settings →
+Environments → production). That environment only runs from `main`, so a workflow on any other
+branch cannot read them (#1071). A job that names an environment still sees repository secrets, so
+they are only out of reach once the repository-level copies of the same names are deleted. Only the jobs that read them, Preflight and
+Deploy, name the environment; Build release names none and reads no secret.
+`.github/scripts/deploy-secrets-environment.test.mjs` fails when that stops being true.
+
+To change one, open the environment's page and replace its value; GitHub never shows a stored value
+again. Changing the deploy key means generating a new pair, adding the public key to the deploy
+account's `authorized_keys` on the VPS (after a dated backup of that file), setting `VPS_SSH_KEY`,
+and removing the old key line once a deploy has passed. Setting any of them is the owner's job.
+
 ## How a deploy runs
 
 CI calls the deploy once its `Type-check & Build` job passes on a push to `main`. When a redeploy is

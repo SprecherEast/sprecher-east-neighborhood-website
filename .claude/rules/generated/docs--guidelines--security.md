@@ -100,7 +100,7 @@ When fixing transitive vulnerabilities:
 - SSH key-based auth only on VPS (no password auth)
 - Caddy handles SSL/TLS automatically when domain is configured
 - PM2 runs the app as a managed process (auto-restart on crash)
-- GitHub Actions secrets store VPS credentials (never in code)
+- The VPS credentials are secrets of the GitHub environment `production`, which only runs from `main` (never in code; [where they live](/ops/README.md#where-the-deploy-secrets-live))
 - **NEVER overwrite `/etc/caddy/Caddyfile`** — always read it first, then ADD new server blocks. The automated exceptions run by every deploy, each refusing any edit that changes more than its own: `ops/caddy-limits.sh` adds an `import` line inside the site blocks that proxy to the app (#124); `ops/caddy-https.sh` adds an HSTS `import` line to the domain's HTTPS block and a `redir` line to the site blocks that serve plain HTTP (#235); `ops/install-umami.sh` adds one top-level `import` line for Umami's own site block, only after Umami's default admin password is replaced, and each deploy makes the route file it points at a closed 503 block (Caddy reloaded) unless both the Umami and database containers are running (#948)
 - Always back up before editing: `cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak`
 - Always validate before reloading: `caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy`
