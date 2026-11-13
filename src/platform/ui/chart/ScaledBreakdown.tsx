@@ -19,9 +19,16 @@ import { ChartCaption, hasCaption } from './ChartCaption'
 export function ScaledBreakdown({
   spec,
   factor,
+  title = 'visible',
 }: {
   spec: Extract<ChartSpec, { kind: 'breakdown' }>
   factor: number
+  /**
+   * Whether the title shows: kept for screen readers only when the heading above already says it,
+   * so two headings never sit one after another (as `Chart` does with `heading`). The takeaway
+   * always shows (#1144)
+   */
+  title?: 'visible' | 'screen-reader'
 }) {
   const id = useId()
   const scaled = scaleBreakdown(spec, factor)
@@ -36,7 +43,12 @@ export function ScaledBreakdown({
     <div data-chart-palette={spec.palette} className="not-prose space-y-3">
       <figure className="space-y-4">
         <div className="space-y-1">
-          <Text variant="subsection" as="p" id={`${id}-title`}>
+          <Text
+            variant="subsection"
+            as="p"
+            id={`${id}-title`}
+            className={title === 'screen-reader' ? 'sr-only' : undefined}
+          >
             {spec.title}
           </Text>
           <Text variant="small" as="p">

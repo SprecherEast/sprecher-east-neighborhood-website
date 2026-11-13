@@ -78,8 +78,8 @@ function FactTabPanel({
       )}
     </>
   )
-  // With a whole tax bill the City's panel starts with the City's tax as one bar, the short text,
-  // then where that tax goes, and both charts are drawn again for the home typed (#1020)
+  // With a whole tax bill the bill block takes both charts: the breakdown is drawn again for the
+  // home typed, and the chart by year gives the answer card its tax and increase (#1020, #1144)
   const body = (
     <>
       {!bill && rest.slice(0, 1).map(picture)}

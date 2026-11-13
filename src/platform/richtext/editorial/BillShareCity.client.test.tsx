@@ -15,25 +15,43 @@ describe('BillShare, the City’s panel (#1020)', () => {
       Number(n.textContent?.replace(/[^0-9]/g, '')),
     )
 
-  it('has the City’s tax as one bar, then where it goes, in the first row, then the short line, then the rest (#1068, #1111)', () => {
+  it('opens the first row on the takeaway and the split, then the short line, then the rest (#1068, #1111, #1144)', () => {
     const { container } = render(
       <BillShare {...PROPS} {...city}>
         <p>The rest</p>
       </BillShare>,
     )
-    const order = ['2027 proposed', 'Where that City tax goes', 'Short line', 'The rest'].map(
+    const order = ['Our estimate\\.', 'Public safety', 'Short line', 'The rest'].map(
       (text) => screen.getAllByText(new RegExp(text))[0] as HTMLElement,
     )
     order.slice(1).forEach((node, i) => {
       const before = order[i] as HTMLElement
       expect(before.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     })
-    // The whole bill's bar and the City's bar
-    expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(2)
+    // Only the whole bill's bar: the City's tax is not drawn again as a bar
+    expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(1)
     const first = container.querySelector('details') as HTMLDetailsElement
-    expect(first.textContent).toContain('Where that City tax goes')
+    expect(first.textContent).toContain('Our estimate.')
     // The first row is open when the tab loads (#1121)
     expect(first.open).toBe(true)
+  })
+
+  it('does not repeat the answer card in the first row: no year amount, no bar, no second visible heading (#1144)', () => {
+    const { container } = render(
+      <BillShare {...PROPS} {...city}>
+        x
+      </BillShare>,
+    )
+    const first = container.querySelector('details') as HTMLDetailsElement
+    for (const year of ['2026', '2027']) {
+      fireEvent.click(screen.getByRole('button', { name: year }))
+      expect(first.textContent).not.toMatch(/2027 proposed|2026 adopted|Same as 2026/)
+      expect(screen.queryByText(/Proposed increase/)).toBeNull()
+      expect(container.querySelector('[data-amount-part]')).toBeNull()
+    }
+    // The breakdown's title still names the drawing, for screen readers only
+    expect(screen.getByText('Where that City tax goes, estimated').className).toContain('sr-only')
+    expect(screen.getByText('Our estimate.').closest('.sr-only')).toBeNull()
   })
 
   it('keeps the “See the smaller pieces” list in the City’s panel (#1068)', () => {
@@ -61,19 +79,19 @@ describe('BillShare, the City’s panel (#1020)', () => {
     expect(screen.getByText('Public Health')).toBeTruthy()
   })
 
-  it('shows the City’s part of the bill in the answer card and as the bar’s whole amount, split as the chart splits it', () => {
+  it('shows the City’s part of the bill in the answer card and the receipt, with its increase', () => {
     render(
       <BillShare {...PROPS} {...city}>
         x
       </BillShare>,
     )
-    // 6.93 mills on $500,300, in the answer card, the receipt and the bar
-    expect(screen.getAllByText('$3,467').length).toBeGreaterThanOrEqual(3)
+    // 6.93 mills on $500,300, in the answer card and the receipt
+    expect(screen.getAllByText('$3,467')).toHaveLength(2)
     // The increase is the City's tax priced for both years: $3,467 less $3,376 (#1121)
-    expect(screen.getByText('+$91')).toBeTruthy()
+    expect(screen.getByText(/Up \$91 a year/)).toBeTruthy()
   })
 
-  it('redraws the bar and every breakdown amount at once for the home estimated', async () => {
+  it('redraws the answer and every breakdown amount at once for the home estimated', async () => {
     const { container } = render(
       <BillShare {...PROPS} {...city}>
         x
@@ -84,19 +102,17 @@ describe('BillShare, the City’s panel (#1020)', () => {
     await estimate('200000')
     expect(sum()).toBe(1386)
     expect(screen.getAllByText('$1,386').length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByText('+$36')).toBeTruthy()
+    expect(screen.getByText(/Up \$36 a year/)).toBeTruthy()
   })
 
-  it('switches the bar to the other year’s amount, with no increase for last year', () => {
-    const { container } = render(
+  it('switches the answer to the other year’s amount, the base year (#1135)', () => {
+    render(
       <BillShare {...PROPS} {...city}>
         x
       </BillShare>,
     )
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
-    expect(screen.getByText('2026 adopted')).toBeTruthy()
-    expect(screen.queryByText(/Proposed increase/)).toBeNull()
-    expect(container.querySelector('rect[data-amount-hatch]')).toBeNull()
+    expect(screen.getByText('Base year')).toBeTruthy()
     // 7.0139 mills on $481,300
     expect(screen.getAllByText('$3,376').length).toBeGreaterThanOrEqual(2)
   })
@@ -108,7 +124,6 @@ describe('BillShare, the City’s panel (#1020)', () => {
       </BillShare>,
     )
     fireEvent.change(box(), { target: { value: 'abc' } })
-    expect(screen.getByText('2027 proposed')).toBeTruthy()
     expect(screen.getAllByText('$3,467').length).toBeGreaterThan(0)
   })
 
@@ -135,13 +150,15 @@ describe('BillShare, the City’s panel (#1020)', () => {
     }
   })
 
-  it('draws no bar when the chart’s columns are not these years, rather than a wrong year', () => {
+  it('has no first row when the tab has no breakdown chart, even with the City’s chart by year (#1144)', () => {
     render(
-      <BillShare {...PROPS} {...city} cityBars={{ ...BARS, x: ['2027 proposed'] }}>
+      <BillShare {...PROPS} cityBars={BARS}>
         x
       </BillShare>,
     )
-    expect(screen.queryByText('2027 proposed')).toBeNull()
+    expect(screen.queryByText('Where the City share goes')).toBeNull()
+    // The answer card still takes its increase from that chart
+    expect(screen.getByText(/Up \$91 a year/)).toBeTruthy()
   })
 
   it('has no accessibility violations', async () => {

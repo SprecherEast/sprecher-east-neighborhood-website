@@ -9,7 +9,7 @@ import { Text } from '@/platform/ui/Text'
 
 /**
  * The three rows under the whole bill (#1111, #1118, #1121), in one card split by divider lines: where the City's share goes (`where`: the
- * City's bar and the breakdown chart, drawn for the home and year shown), how the estimate works
+ * breakdown chart, drawn for the home and year shown), how the estimate works
  * (the notes, then the tab's short text and detail) and the sources, each source once. The first row is open when the tab loads, with scripting off too; the other two are closed. A row with
  * nothing to show is left out, and a note that is not showing still takes its room, hidden from
  * everyone, so an open row never changes height when a year is chosen. Each row is the kit's

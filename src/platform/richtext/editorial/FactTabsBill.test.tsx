@@ -52,7 +52,7 @@ describe('FactTabs with a whole tax bill', () => {
     expect(row.open).toBe(false)
   })
 
-  it('draws the City’s stacked chart as one bar and its breakdown from the typed home, in the panel (#1020)', () => {
+  it('draws the City’s breakdown once, from the typed home, and its chart by year not at all, in the panel (#1020, #1144)', () => {
     const [first] = props.tabs
     const bars = {
       kind: 'chart' as const,
@@ -109,10 +109,10 @@ describe('FactTabs with a whole tax bill', () => {
     const tab = { ...present(first), panel: [billShare, bars, breakdown] }
     const { container } = setup({ tabs: [tab] })
     const panel = present(container.querySelector('[role="tabpanel"]'))
-    // The two charts are not drawn a second time the usual way: one bar and one breakdown
-    expect(panel.querySelectorAll('[data-amount-part]')).toHaveLength(2)
+    // Neither chart is drawn the usual way: one breakdown, and the chart by year only feeds the answer card
+    expect(panel.querySelectorAll('[data-amount-part]')).toHaveLength(0)
     expect(panel.querySelectorAll('[data-breakdown-row]')).toHaveLength(1)
-    expect(panel.textContent).toContain('2027 proposed')
+    expect(panel.textContent).not.toContain('2027 proposed')
   })
 
   it('shows how sure we are once, in the answer card, and keeps the tab’s detail in its row (#1111)', () => {
