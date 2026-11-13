@@ -2,7 +2,6 @@ import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 import {
-  formatMillions,
   formatShare,
   formatSquareValue,
   type BreakdownModel,
@@ -12,6 +11,8 @@ import { Disclosure } from '@/platform/ui/Disclosure'
 import { Text } from '@/platform/ui/Text'
 
 import { rampAt } from '../../chartPalette'
+
+import { Amount } from './Amount'
 
 /** The key's heading, also the name of its list */
 const KEY_TITLE = 'Where the money goes'
@@ -102,7 +103,9 @@ function BarRow({ piece, nested, area, scale, look }: RowProps) {
           nested ? 'font-medium' : 'font-semibold text-foreground',
         )}
       >
-        <span data-amount>{formatMillions(piece.value)}</span>
+        <span data-amount>
+          <Amount piece={piece} />
+        </span>
       </Text>
       <Text variant="small" as="span" className="text-right tabular-nums">
         {formatShare(piece.share)}
@@ -186,7 +189,7 @@ export function BreakdownChart({
                       as="span"
                       className="font-semibold text-foreground tabular-nums"
                     >
-                      {formatMillions(area.value)}
+                      <Amount piece={area} />
                     </Text>
                   </li>
                 ))}

@@ -7,6 +7,8 @@ import { REVEAL_PEEK_VAR } from './scrollMargin'
 export type DisclosureSummaryProps = {
   className?: string
   children: React.ReactNode
+  /** Called on a click that is about to open the box, before it opens (#1165) */
+  onOpening?: () => void
 }
 
 // How much of what follows the next summary row also shows, as a share of that row's height
@@ -32,10 +34,12 @@ function roomForNext(details: HTMLDetailsElement): number {
  * (#1154), so the reader sees there is more to open. The room is added to the box's own bottom
  * scroll margin, so the same browser rule applies and this row still wins when not all of it fits.
  */
-export function DisclosureSummary({ className, children }: DisclosureSummaryProps) {
+export function DisclosureSummary({ className, children, onOpening }: DisclosureSummaryProps) {
   const revealWhenOpened = (event: React.MouseEvent<HTMLElement>) => {
     const details = event.currentTarget.parentElement
     if (!(details instanceof HTMLDetailsElement) || details.open) return
+    // The box is still closed here: the caller's update lands before it opens and paints
+    onOpening?.()
     // The box opens after this click is handled, so its new height is there on the next frame
     requestAnimationFrame(() => {
       if (!details.open) return

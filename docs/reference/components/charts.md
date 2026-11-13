@@ -105,6 +105,20 @@ Source: `src/platform/ui/chart/adapters/breakdown/BreakdownChart.tsx`
 
 - Platform: `platform/ui`
 
+## `Amount`
+
+An amount, counting while its bars fill: the final amount, hidden, keeps its room, so the row never rewraps and nothing below moves as the digits change (#1165)
+
+Source: `src/platform/ui/chart/adapters/breakdown/Amount.tsx`
+
+| Prop    | Type             | Required | Description |
+| ------- | ---------------- | -------- | ----------- |
+| `piece` | `BreakdownPiece` | yes      |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/ui`
+
 ## `BarChartSvg`
 
 Horizontal bars, or stacked bars, as one `<svg role="img">` (#663). Every row shares one scale from $0 to `scaleMax`, with a few quiet tick labels. Names and values are real text beside the marks, never on them; the svg scales with its container and holds no inline style.

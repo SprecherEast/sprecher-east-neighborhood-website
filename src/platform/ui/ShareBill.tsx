@@ -127,7 +127,7 @@ export function ShareBill({
                     <SliceName name={slice.name} shortName={slice.shortName} />
                   </span>
                 </span>
-                {/* Ends at its column's end like the total, so a wide amount reaches left */}
+                {/* Ends at its column's end, like the total's amount */}
                 <span className="justify-self-end font-semibold whitespace-nowrap text-foreground tabular-nums">
                   {slice.amount}
                 </span>
@@ -160,7 +160,7 @@ export function ShareBill({
             <span className="min-w-0 truncate pl-1" title={total.label}>
               {total.label}
             </span>
-            {/* Ends where the rows' dollars end; a figure wider than its column reaches left, never under the percents */}
+            {/* Ends where the rows' dollars end: the dollar column grows to the widest amount, this one included */}
             <span className="col-start-2 justify-self-end whitespace-nowrap tabular-nums">
               {total.amount}
             </span>

@@ -124,15 +124,16 @@ describe('valuesAt (#1163)', () => {
     expect(valuesAt(model, 1)).toEqual(model)
   })
 
-  it('counts every amount from nothing while the shares, steps and bar scale stay put', () => {
+  it('counts every amount from nothing while each keeps its final value for its room (#1165)', () => {
     const start = valuesAt(model, 0)
-    expect(start.total).toBe(0)
-    expect(start.areas.every((area) => area.value === 0)).toBe(true)
-    expect(start.areas.flatMap((area) => area.shown).every((piece) => piece.value === 0)).toBe(true)
-    expect(start.smaller.every((piece) => piece.value === 0)).toBe(true)
+    const pieces = [...start.areas, ...start.areas.flatMap((area) => area.shown), ...start.smaller]
+    expect(pieces.every((piece) => piece.counted === 0)).toBe(true)
+    // The values, shares, steps and bar scale stay put, so nothing reflows while it counts
+    expect(start.areas.map((area) => area.value)).toEqual(model.areas.map((area) => area.value))
     expect(start.areas.map((area) => area.share)).toEqual(model.areas.map((area) => area.share))
     expect(start.barScale).toBe(model.barScale)
+    expect(start.total).toBe(model.total)
     const half = valuesAt(model, 0.5)
-    expect(half.areas[0]?.value).toBe(Math.round((model.areas[0]?.value ?? 0) * 0.5))
+    expect(half.areas[0]?.counted).toBe(Math.round((model.areas[0]?.value ?? 0) * 0.5))
   })
 })

@@ -85,8 +85,11 @@ export type DisclosureProps = {
   /** Classes for the content under the summary, for example a height limit */
   bodyClassName?: string
   children: React.ReactNode
-  /** Told whether it is now open, each time it opens or closes, by hand or in code (#1163) */
-  onToggle?: (open: boolean) => void
+  /**
+   * Called when a reader is about to open it, from the summary's click, while it is still closed,
+   * so the caller can get the content ready before it shows (#1165); not on the pinned `bar`
+   */
+  onOpening?: () => void
 }
 
 export function Disclosure({
@@ -97,7 +100,7 @@ export function Disclosure({
   className,
   bodyClassName,
   children,
-  onToggle,
+  onOpening,
 }: DisclosureProps) {
   // The bar is pinned under the site header, so it is never scrolled to: it keeps the plain row
   const reveal = variant !== 'bar'
@@ -107,7 +110,6 @@ export function Disclosure({
     <details
       ref={ref}
       open={defaultOpen || undefined}
-      onToggle={onToggle && ((event) => onToggle(event.currentTarget.open))}
       className={cn(
         variant === 'card' && CARD_BOX,
         variant === 'row' && 'px-3',
@@ -115,7 +117,10 @@ export function Disclosure({
         className,
       )}
     >
-      <Summary className={summaryVariants({ variant })}>
+      <Summary
+        className={summaryVariants({ variant })}
+        {...(reveal && onOpening ? { onOpening } : {})}
+      >
         <span className={cn('min-w-0', variant !== 'link' && 'flex-1')}>{summary}</span>
         <ChevronDown aria-hidden="true" className={chevronVariants({ variant })} />
       </Summary>
