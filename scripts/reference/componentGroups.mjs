@@ -124,6 +124,7 @@ export const COMPONENT_GROUPS = [
       'SquareGrid',
       'TileGrid',
       'BreakdownChart',
+      'Amount',
       'BarChartSvg',
       'BarSegment',
       'ScaledBreakdown',

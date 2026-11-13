@@ -2,7 +2,6 @@ import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 import {
-  formatMillions,
   formatShare,
   formatSquareValue,
   type BreakdownModel,
@@ -12,6 +11,8 @@ import { Disclosure } from '@/platform/ui/Disclosure'
 import { Text } from '@/platform/ui/Text'
 
 import { rampAt } from '../../chartPalette'
+
+import { Amount } from './Amount'
 
 /** The key's heading, also the name of its list */
 const KEY_TITLE = 'Where the money goes'
@@ -24,22 +25,6 @@ type RowProps = {
   area?: string
   scale: number
   look: BarLook
-}
-
-/**
- * An amount, counting while its bars fill: the final amount, hidden, keeps its room, so the row
- * never rewraps and nothing below moves as the digits change (#1165)
- */
-function Amount({ piece }: { piece: BreakdownPiece }) {
-  if (piece.counted === undefined) return formatMillions(piece.value)
-  return (
-    <span className="inline-grid justify-items-end">
-      <span aria-hidden="true" className="invisible col-start-1 row-start-1">
-        {formatMillions(piece.value)}
-      </span>
-      <span className="col-start-1 row-start-1">{formatMillions(piece.counted)}</span>
-    </span>
-  )
 }
 
 /**
