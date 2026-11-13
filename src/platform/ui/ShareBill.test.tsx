@@ -43,9 +43,12 @@ describe('ShareBill', () => {
     expect(title.textContent).toBe('Sample whole bill')
     // The total: label left, amount right, bold, under a stronger rule than the rows' lines
     expect(total.textContent).toBe('Total$10,000')
+    // The total's amount sits in the rows' dollar column, with the percent column left empty (#1163)
+    const columns = (el: Element) => /\S*grid-cols-\[[^\]]+\]/g.exec(el.className)?.[0]
+    expect(columns(total)).toBe(columns(list))
+    expect(total.lastElementChild?.className).toContain('col-start-2')
     expect(total.className).toContain('font-bold')
     expect(total.className).toContain('border-t-2')
-    expect(total.className).toContain('justify-between')
   })
 
   it('keeps the receipt rows tight and level (#1118)', () => {
@@ -56,14 +59,22 @@ describe('ShareBill', () => {
     expect(screen.getByText('Sample: first').className).toContain('whitespace-nowrap')
   })
 
+  it('keeps a clear gap between the dollars and the percent at every width (#1163)', () => {
+    const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
+    const list = container.querySelector('ul') as HTMLElement
+    expect(list.className).toContain('gap-x-2')
+    expect(list.className).toContain('min-[24rem]:gap-x-3')
+  })
+
   it('names every slice in the receipt with its percent and dollars, in the bar’s order', () => {
     const { container } = render(<ShareBill slices={SLICES} label="Sample bill" total={TOTAL} />)
     const rows = Array.from(container.querySelectorAll('li')).map((li) => li.textContent)
+    // Like the breakdown chart: the dollars, then the percent (#1163)
     expect(rows).toEqual([
-      'Sample: first38%$3,750',
-      'Sample: second46%$4,650',
-      'Sample: third13%$1,250',
-      'Sample: fourth3%$350',
+      'Sample: first$3,75038%',
+      'Sample: second$4,65046%',
+      'Sample: third$1,25013%',
+      'Sample: fourth$3503%',
     ])
     const bar = Array.from(container.querySelectorAll('rect[data-share-slice]')).map((rect) =>
       rect.getAttribute('data-share-slice'),
@@ -114,7 +125,7 @@ describe('ShareBill', () => {
     expect(nested.className).toContain('col-span-3')
     expect(nested.className).toContain('pl-4')
     expect(nested.className).toContain('min-[24rem]:pl-6')
-    expect(rows[2]?.textContent).toBe('Sample: second46%$4,650')
+    expect(rows[2]?.textContent).toBe('Sample: second$4,65046%')
     // Only the slices' own rows carry their key, so a list inside the nested content is never one
     expect(container.querySelectorAll('li[data-share-row]')).toHaveLength(SLICES.length)
     expect(nested.hasAttribute('data-share-row')).toBe(false)

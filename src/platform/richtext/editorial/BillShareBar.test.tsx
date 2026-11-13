@@ -18,13 +18,17 @@ describe('the whole bill: the bar and the receipt (#1030, #1111)', () => {
   /** Each body's whole percent, by name, as the receipt's rows write it */
   const receiptPercents = (container: HTMLElement): Record<string, number> =>
     Object.fromEntries(
-      Array.from(container.querySelectorAll('[data-share-bill] li'), (li): [string, number] => {
-        const [name = '', percent = ''] = Array.from(
-          li.children,
-          (child) => child.textContent ?? '',
-        )
-        return [name, Number.parseInt(percent, 10)]
-      }),
+      Array.from(
+        container.querySelectorAll('[data-share-bill] li[data-share-row]'),
+        (li): [string, number] => {
+          // name, dollars, percent (#1163)
+          const [name = '', , percent = ''] = Array.from(
+            li.children,
+            (child) => child.textContent ?? '',
+          )
+          return [name, Number.parseInt(percent, 10)]
+        },
+      ),
     )
 
   it('draws each slice as wide as its share (a slice too narrow for its label, wider), the same percents the receipt writes, for each year and a home estimated', async () => {

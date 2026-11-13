@@ -22,6 +22,14 @@ export type ShareSlice = {
 export const TOTAL_PULSE_MS = 1500
 
 /**
+ * The receipt's three columns, shared by its rows and its total so the amounts line up: the name,
+ * then the dollars, then the percent, as in the breakdown chart (#1163). The two number columns have
+ * fixed widths, so nothing shifts while the amounts count, and a clear gap keeps them apart.
+ */
+const RECEIPT_COLUMNS =
+  'grid grid-cols-[1fr_2.5rem_1.75rem] gap-x-2 min-[24rem]:grid-cols-[1fr_3.5rem_2.25rem] min-[24rem]:gap-x-3'
+
+/**
  * A nested row starts where the slices' names start: past the row's side padding, the colour square
  * and the gap after it (`px-1` + `size-2` + `gap-x-1`, then `size-3` + `gap-x-2` from 24 rem), and
  * ends at the rows' own end (`px-1`)
@@ -30,7 +38,7 @@ const NESTED_INDENT = 'pr-1 pl-4 min-[24rem]:pl-6'
 
 /**
  * One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, one bar whose slices are as wide as their shares,
- * and under it a receipt that names every slice with its color, percent and dollars, in the bar's
+ * and under it a receipt that names every slice with its color, dollars and percent, in the bar's
  * own order, since both are made from the same slices. The highlighted slice's row has a soft primary
  * fill and bolder text (the tone's `row`), and every row has the same side padding, so the columns
  * stay level. The receipt is one grid of three columns
@@ -77,7 +85,7 @@ export function ShareBill({
           label: `${slice.percent}%`,
         }))}
       />
-      <ul className="grid grid-cols-[1fr_1.5rem_2.5rem] gap-x-0.5 text-xs min-[24rem]:grid-cols-[1fr_2rem_3.5rem] min-[24rem]:gap-x-1 min-[24rem]:text-sm">
+      <ul className={cn(RECEIPT_COLUMNS, 'text-xs min-[24rem]:text-sm')}>
         {slices.map((slice) => (
           <React.Fragment key={slice.key}>
             <li
@@ -97,6 +105,9 @@ export function ShareBill({
                 />
                 <span className="whitespace-nowrap text-foreground">{slice.name}</span>
               </span>
+              <span className="text-right font-semibold whitespace-nowrap text-foreground tabular-nums">
+                {slice.amount}
+              </span>
               <span
                 className={cn(
                   'text-right whitespace-nowrap tabular-nums',
@@ -104,9 +115,6 @@ export function ShareBill({
                 )}
               >
                 {slice.percent}%
-              </span>
-              <span className="text-right font-semibold whitespace-nowrap text-foreground tabular-nums">
-                {slice.amount}
               </span>
             </li>
             {nested?.after === slice.key && (
@@ -121,12 +129,17 @@ export function ShareBill({
         <p
           key={pulseKey}
           className={cn(
-            'flex min-h-6 items-center justify-between gap-x-2 border-t-2 border-foreground px-1 pt-1 font-bold text-foreground',
+            RECEIPT_COLUMNS,
+            'min-h-6 items-center border-t-2 border-foreground pt-1 font-bold text-foreground',
             pulseKey ? 'total-pulse' : undefined,
           )}
         >
-          <span>{total.label}</span>
-          <span className="tabular-nums">{total.amount}</span>
+          {/* The rows' own side padding, on the label, so the total's grid lines up with theirs */}
+          <span className="pl-1 whitespace-nowrap">{total.label}</span>
+          {/* Under the rows' dollars, wider than its column if it must, never under the percents */}
+          <span className="col-start-2 text-right whitespace-nowrap tabular-nums">
+            {total.amount}
+          </span>
         </p>
       )}
     </div>
