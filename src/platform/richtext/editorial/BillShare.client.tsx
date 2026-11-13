@@ -26,7 +26,7 @@ import {
 } from './billShareNotes'
 import { receiptFor } from './billShareView'
 import {
-  cityBarFor,
+  cityTaxFor,
   figuresFor,
   homeAtPosition,
   homeInYear,
@@ -122,11 +122,11 @@ export function BillShare({
   // The home as priced now: its value in the year shown, moving between the two while the year counts
   const shown = homeAtPosition(years, position, shownValue)
   // The City's tax counts with the bill: the year between two years, the home value as it counts (#1096)
-  const cityBar = cityBarFor(cityBars, years, position, shownValue, rates)
+  const cityTax = cityTaxFor(cityBars, years, position, shownValue, rates)
   // The tab's button and heading count with it
   useReportFigures(
     tabId,
-    cityBar && cityBar.increase !== null ? figuresFor(cityBar.increase) : undefined,
+    cityTax && cityTax.increase !== null ? figuresFor(cityTax.increase) : undefined,
   )
   if (!year || !latest) return null
 
@@ -208,8 +208,8 @@ export function BillShare({
         {summary}
       </p>
       <BillAnswer
-        tax={cityBar?.total ?? formatWholeDollars(cityAmount ?? 0)}
-        increase={cityBar?.increase ?? null}
+        tax={cityTax?.total ?? formatWholeDollars(cityAmount ?? 0)}
+        increase={cityTax?.increase ?? null}
         certainty={certainty}
         note={year.note}
         yours={estimated !== null}

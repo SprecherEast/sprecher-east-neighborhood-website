@@ -127,8 +127,8 @@ export const COMPONENT_GROUPS = [
   {
     slug: 'shares',
     title: 'Shares of a whole',
-    intro: 'One whole drawn as a bar, a bill with a receipt or a single split amount.',
-    components: ['ShareBar', 'ShareBill', 'AmountBar'],
+    intro: 'One whole drawn as a bar, or as a bill with a receipt.',
+    components: ['ShareBar', 'ShareBill'],
   },
   {
     slug: 'rich-text',

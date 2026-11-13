@@ -3,7 +3,7 @@ import { formatValue, formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 
 import type { BillShareYear } from './billShare'
-import { toCityBar } from './cityBar'
+import { toCityTax } from './cityTax'
 import type { FactTabPanelItem } from './factTabs'
 
 type Stacked = Extract<ChartSpec, { kind: 'stacked' }>
@@ -11,8 +11,8 @@ type Breakdown = Extract<ChartSpec, { kind: 'breakdown' }>
 
 /**
  * The City's extra tax a year and a month for the home and year shown (#1029): what an editor's
- * `{yearly}` and `{monthly}` stand for in a tab's figure and heading. Both come from the City bar's
- * own increase, so the button, the heading and the bar always agree.
+ * `{yearly}` and `{monthly}` stand for in a tab's figure and heading. Both come from the City tax's
+ * own increase (`cityTaxFor`), so the button, the heading and the answer card always agree.
  */
 export type BillFigures = { yearly: string; monthly: string }
 
@@ -110,10 +110,10 @@ function cityTaxIn(years: readonly BillShareYear[], index: number, valueNow: num
 
 /**
  * What the City's tax rises by in a year, in whole dollars, for a home worth `valueNow` in the
- * latest year (#1121): the City's tax that year less the year before's, each as the bar and the
- * answer card show it (rounded to the dollar), for the same home at each year's value
- * (`homeInYear`). It is the one definition of the increase: the bar, the answer card's line and the
- * tab's figure all take it from here, and switching years moves the City's tax by exactly this.
+ * latest year (#1121): the City's tax that year less the year before's, each as the
+ * answer card shows it (rounded to the dollar), for the same home at each year's value
+ * (`homeInYear`). It is the one definition of the increase: the answer card's line and the
+ * tab's figure both take it from here, and switching years moves the City's tax by exactly this.
  * 0 for a year the chart shows no increase in (the first, say), never below 0, and null where the
  * data cannot support one: a year or the year before with no average home or no City rate.
  */
@@ -139,13 +139,13 @@ export function increaseIn(
 }
 
 /**
- * The City's bar for a year and a home value, or null when the chart's columns are not these years
- * (it cannot say which year it shows). `valueNow` is the home's value in the latest year, what the
- * reader typed; the bar prices it in the year shown (`homeInYear`). One place, so the panel and the
- * tab's figures never differ. `position` may be between two years, with `rates` blended to match,
+ * The City's tax and its increase for a year and a home value, or null when the chart's columns are
+ * not these years (it cannot say which year it shows). `valueNow` is the home's value in the
+ * latest year, what the reader typed; it is priced in the year shown (`homeInYear`). One place, so
+ * the panel and the tab's figures never differ. `position` may be between two years, with `rates` blended to match,
  * while a switch of year counts (#1096); by default it is the year's own rates.
  */
-export function cityBarFor(
+export function cityTaxFor(
   cityBars: Stacked | undefined,
   years: BillShareYear[],
   position: number,
@@ -159,14 +159,14 @@ export function cityBarFor(
   const used = rates ?? yearRatesOf(years)[yearIndex] ?? {}
   const cityAmount =
     computeBillShare(home, used)?.parts.find((p) => p.key === 'city')?.amount ?? null
-  // Between two years the increase counts from one year's to the other's, as the bar's column does
+  // Between two years the increase counts from one year's to the other's, as the chart's column does
   const first = Math.floor(position)
   const share = position - first
   const from = increaseIn(cityBars, years, first, valueNow)
   const to = share === 0 ? from : increaseIn(cityBars, years, first + 1, valueNow)
   const increase =
     cityAmount === null || from === null || to === null ? null : from + (to - from) * share
-  return toCityBar(cityBars, {
+  return toCityTax(cityBars, {
     column: position,
     cityAmount,
     increase,
@@ -179,6 +179,6 @@ export function initialFigures(panel: FactTabPanelItem[]): BillFigures | undefin
   const { bill, cityBars } = splitBillPanel(panel)
   const years = bill?.billShare.years ?? []
   const last = years.length - 1
-  const bar = cityBarFor(cityBars, years, last, years[last]?.averageHome ?? 0)
-  return bar && bar.increase !== null ? figuresFor(bar.increase) : undefined
+  const tax = cityTaxFor(cityBars, years, last, years[last]?.averageHome ?? 0)
+  return tax && tax.increase !== null ? figuresFor(tax.increase) : undefined
 }
