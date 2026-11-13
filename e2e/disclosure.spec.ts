@@ -11,7 +11,8 @@ import { expect, test } from './support/test'
 // An open-and-close box a reader opens is scrolled into view (#1152), on the page that has the
 // most of them: the rows under the whole bill, and the link under the chart inside the first row.
 // The box's end shows, or its top when it is taller than the screen; nothing above it moves on the
-// page (#1118); a box already in view, a box open on load and a closing box never scroll.
+// page (#1118); a box already in view, a box open on load and a closing box never scroll. A box
+// with another directly under it also shows that one's summary row (#1154).
 
 const scrolledTo = (page: Page) => page.evaluate(() => Math.round(scrollY))
 const boxOfRow = (row: Locator) => row.locator('xpath=..')
@@ -36,17 +37,24 @@ const settle = async (page: Page) => {
 /**
  * An opened box is in view (#1152): its end shows with its gap under it, or, when it is taller than
  * the screen, its top sits where its scroll margin stops it; the sticky header never covers its top.
+ * With another box directly under it, that one's summary row shows whole too, and the room kept
+ * under the opened box is more than that row (#1154); with none, only the small gap is kept.
  */
 const expectInView = async (details: Locator, name: string) => {
   const box = await details.evaluate((el) => {
     const { top, bottom } = el.getBoundingClientRect()
     const style = getComputedStyle(el)
+    const next = el.nextElementSibling
+    const nextRow =
+      next instanceof HTMLDetailsElement ? next.querySelector(':scope > summary') : null
     return {
       top,
       bottom,
       screen: innerHeight,
       above: parseFloat(style.scrollMarginTop),
       below: parseFloat(style.scrollMarginBottom),
+      gap: parseFloat(getComputedStyle(document.documentElement).fontSize),
+      nextRow: nextRow ? nextRow.getBoundingClientRect().toJSON() : null,
     }
   })
   expect(box.above, `${name}: the box clears the sticky header`).toBeGreaterThan(0)
@@ -54,6 +62,15 @@ const expectInView = async (details: Locator, name: string) => {
   const endShows = box.bottom <= box.screen - box.below + 1
   const topWins = Math.abs(box.top - box.above) <= 1
   expect(endShows || topWins, `${name}: its end shows, or its top when it is too tall`).toBe(true)
+  if (!box.nextRow) {
+    expect(box.below, `${name}: nothing under it, so only the gap is kept`).toBeCloseTo(box.gap, 0)
+    return
+  }
+  expect(box.below, `${name}: room for the next row and a little more`).toBeGreaterThan(
+    box.gap + box.nextRow.height,
+  )
+  if (endShows)
+    expect(box.nextRow.bottom, `${name}: the next row shows whole`).toBeLessThanOrEqual(box.screen)
 }
 /** Puts a closed row at the foot of the screen, so what it opens starts out of view */
 const toFoot = async (page: Page, row: Locator) => {
