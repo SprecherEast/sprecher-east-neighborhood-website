@@ -3449,6 +3449,35 @@ export interface BillShareBlock {
     linkUrl?: string | null
     id?: string | null
   }[]
+  /**
+   * What each open-and-close row is called.
+   */
+  rows: {
+    breakdown: string
+    differ: string
+    sources: string
+  }
+  /**
+   * The lines in the row on why the bill may differ, in this order. Each says when it shows; a note can use blanks the page fills in.
+   */
+  notes?:
+    | {
+        showWhen: 'always' | 'earlierYears' | 'proposedRate' | 'missingRates'
+        /**
+         * Blanks the page fills in: {year} is the year shown; {link} is the note’s link, from the link text and address; {years} is the earlier years (only with that condition); {bodies} is the bodies with no rate (only with that condition).
+         */
+        text: string
+        /**
+         * Optional, for example "send us a note".
+         */
+        linkLabel?: string | null
+        /**
+         * A site path (/events) or https:// address.
+         */
+        linkUrl?: string | null
+        id?: string | null
+      }[]
+    | null
   id?: string | null
   blockName?: string | null
   blockType: 'billShare'

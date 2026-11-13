@@ -1,7 +1,14 @@
-import type { Block, NumberField } from 'payload'
+import type { Block, NumberField, TextField, TextFieldSingleValidation } from 'payload'
 
 import { BILL_BODIES, BILL_BODY_NAMES, type BillBody } from '@/platform/lib/billShare'
 
+import { DEFAULT_BILL_NOTES, DEFAULT_BILL_ROW_TITLES } from './billShareDefaults'
+import {
+  NOTE_BLANKS_HELP,
+  NOTE_CONDITION_LABELS,
+  NOTE_CONDITIONS,
+  validateNoteBlanks,
+} from './billShareNotes'
 import { BILL_SHARE_LIMITS } from './editorialLimits'
 import { filledText } from './filledText'
 import { editorialLinkFields } from './linkFields'
@@ -15,6 +22,27 @@ const rateField = (key: BillBody): NumberField => ({
   min: 0,
   max: 100,
   admin: { width: '25%', step: 0.0001 },
+})
+
+/** A note must have words, and use only the blanks and the link its condition allows */
+const validateNote: TextFieldSingleValidation = (value, args) => {
+  const empty = filledText('Write the note.')(value, args)
+  if (empty !== true) return empty
+  return validateNoteBlanks(
+    value ?? '',
+    args.siblingData as Parameters<typeof validateNoteBlanks>[1],
+  )
+}
+
+/** A title the editor can change, that starts as the one the page used before it was a field */
+const rowTitleField = (name: string, label: string, defaultValue: string): TextField => ({
+  name,
+  type: 'text',
+  label,
+  required: true,
+  defaultValue,
+  maxLength: BILL_SHARE_LIMITS.rowTitle,
+  validate: filledText('Add the row’s title.'),
 })
 
 /**
@@ -100,6 +128,52 @@ export const BillShareBlockConfig: Block = {
           fields: BILL_BODIES.map(rateField),
         },
         editorialLinkFields({ labelExample: 'City tax detail' }),
+      ],
+    },
+    {
+      name: 'rows',
+      type: 'group',
+      label: 'Titles of the three rows under the bill',
+      admin: { description: 'What each open-and-close row is called.' },
+      fields: [
+        rowTitleField('breakdown', 'City tax breakdown', DEFAULT_BILL_ROW_TITLES.breakdown),
+        rowTitleField('differ', 'Notes on why the bill may differ', DEFAULT_BILL_ROW_TITLES.differ),
+        rowTitleField('sources', 'Sources', DEFAULT_BILL_ROW_TITLES.sources),
+      ],
+    },
+    {
+      name: 'notes',
+      type: 'array',
+      labels: { singular: 'Note', plural: 'Notes' },
+      maxRows: BILL_SHARE_LIMITS.notes,
+      validate: rowsBetween(0, BILL_SHARE_LIMITS.notes, 'notes'),
+      defaultValue: DEFAULT_BILL_NOTES.map((note) => ({ ...note })),
+      admin: {
+        description:
+          'The lines in the row on why the bill may differ, in this order. Each says when it shows; a note can use blanks the page fills in.',
+      },
+      fields: [
+        {
+          name: 'showWhen',
+          type: 'select',
+          label: 'Shows',
+          defaultValue: 'always',
+          required: true,
+          options: NOTE_CONDITIONS.map((value) => ({
+            value,
+            label: NOTE_CONDITION_LABELS[value],
+          })),
+        },
+        {
+          name: 'text',
+          type: 'text',
+          label: 'Note',
+          required: true,
+          maxLength: BILL_SHARE_LIMITS.noteText,
+          admin: { description: NOTE_BLANKS_HELP },
+          validate: validateNote,
+        },
+        editorialLinkFields({ labelExample: 'send us a note' }),
       ],
     },
   ],

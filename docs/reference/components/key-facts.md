@@ -54,7 +54,7 @@ Source: `src/platform/richtext/editorial/FactTabs.tsx`
 
 ## `BillShare`
 
-The whole property-tax bill at the top of a fact tab (#1018, #1111), one column on every width, in the order a neighbor needs it: the bill block's one intro line, the Rough Estimator (the home value the reader can change, which starts at the City's average home, and the switch between tax years), the answer card (the City's tax on the home and year, its increase, the year's status), the whole bill (its own card: the total, one bar whose slices are as wide as their shares, and the receipt naming each), then one card of three rows: where the City's share goes (the split alone), how the estimate works and the sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home value and year, so every amount is the City's slice of the bill. A year in which a body has not set its rate uses that body's rate from the year before, and says so in a note whose room is always kept, so the page never changes height.
+The whole property-tax bill at the top of a fact tab (#1018, #1111), one column on every width, in the order a neighbor needs it: the bill block's one intro line, the Rough Estimator (the home value the reader can change, which starts at the City's average home, and the switch between tax years), the answer card (the City's tax on the home and year, its increase, the year's status), the whole bill (its own card: the total, one bar whose slices are as wide as their shares, and the receipt naming each), then one card of three rows: where the City's share goes (the split alone), why the bill may differ and the sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home value and year, so every amount is the City's slice of the bill. A year in which a body has not set its rate uses that body's rate from the year before, and says so in a note whose room is always kept, so the page never changes height.
 
 Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 
@@ -62,10 +62,12 @@ Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------ |
 | `intro`         | `string`                                                                                                                                                                   | yes      |                                                                                                  |
 | `years`         | `BillShareYear[]`                                                                                                                                                          | yes      |                                                                                                  |
+| `rows`          | `BillRowTitles`                                                                                                                                                            | yes      |                                                                                                  |
+| `notes`         | `BillNote[]`                                                                                                                                                               | yes      |                                                                                                  |
 | `tabId`         | `string`                                                                                                                                                                   | no       | The tab this bill is in, so the tab's button and heading can follow it (#1029)                   |
 | `cityBars`      | `{ kind: "stacked"; orientation: "horizontal" \| "vertical"; x: string[]; series: { key: string; label: string; values: number[]; pattern?: "hatch" \| undefined; …`       | no       | A chart of the City's tax by year: the answer card takes the year's tax and its increase from it |
 | `cityBreakdown` | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …`       | no       | Where the City's tax goes, drawn again for whatever the City's tax is on the home typed          |
-| `definition`    | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The tab's short text, in the row on how the estimate works                                       |
+| `definition`    | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The tab's short text, in the row on why the bill may differ                                      |
 | `detail`        | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The tab's explanation, after the short text                                                      |
 | `certainty`     | `"confirmed" \| "estimate" \| "unknown"`                                                                                                                                   | no       | How sure we are about the tab's fact: the answer card's one badge                                |
 | `source`        | `ResolvedLink`                                                                                                                                                             | no       | The tab's own source; the sources row lists it once beside the year's                            |
@@ -100,16 +102,32 @@ Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 
 ## `BillDetails`
 
-The three rows under the whole bill (#1111, #1118, #1121), in one card split by divider lines: where the City's share goes (`where`: the breakdown chart, drawn for the home and year shown), how the estimate works (the notes, then the tab's short text and detail) and the sources, each source once. The first row is open when the tab loads, with scripting off too; the other two are closed. A row with nothing to show is left out, and a note that is not showing still takes its room, hidden from everyone, so an open row never changes height when a year is chosen. Each row is the kit's `Disclosure`, so it opens and closes without scripting and never moves what is above it.
+The three rows under the whole bill (#1111, #1118, #1121), in one card split by divider lines: where the City's share goes (`where`: the breakdown chart, drawn for the home and year shown), why the real bill may differ (the notes, then the tab's short text and detail) and the sources, each source once. The first row is open when the tab loads, with scripting off too; the other two are closed. A row with nothing to show is left out, and a note that is not showing still takes its room, hidden from everyone, so an open row never changes height when a year is chosen. Each row is the kit's `Disclosure`, so it opens and closes without scripting and never moves what is above it.
 
 Source: `src/platform/richtext/editorial/BillDetails.tsx`
 
-| Prop      | Type                                                                                                                                                                       | Required | Description                                                                  |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
-| `where`   | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       |                                                                              |
-| `notes`   | `readonly { key: string; text: ReactNode; shown: boolean; }[]`                                                                                                             | yes      | The notes on how rough the answer is; one that is not `shown` keeps its room |
-| `about`   | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | What follows the notes: the tab's short text and detail                      |
-| `sources` | `readonly ResolvedLink[]`                                                                                                                                                  | yes      |                                                                              |
+| Prop      | Type                                                                                                                                                                       | Required | Description                                                                     |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------- |
+| `titles`  | `BillRowTitles`                                                                                                                                                            | yes      | What each row is called, from the block                                         |
+| `where`   | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       |                                                                                 |
+| `notes`   | `readonly { key: string; text: ReactNode; shown: boolean; }[]`                                                                                                             | yes      | The notes on why a real bill may differ; one that is not `shown` keeps its room |
+| `about`   | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | What follows the notes: the tab's short text and detail                         |
+| `sources` | `readonly ResolvedLink[]`                                                                                                                                                  | yes      |                                                                                 |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
+## `NoteText`
+
+A note's text with its link drawn where the editor wrote `{link}`. A blank with no link to draw (a draft Admin did not check) is left out, so readers never see it; a link with no blank to stand in is not drawn, and a second blank draws nothing (Admin refuses both on save).
+
+Source: `src/platform/richtext/editorial/NoteText.tsx`
+
+| Prop   | Type                   | Required | Description |
+| ------ | ---------------------- | -------- | ----------- |
+| `text` | `string`               | yes      |             |
+| `link` | `ResolvedLink \| null` | yes      |             |
 
 **Used by** (direct imports):
 

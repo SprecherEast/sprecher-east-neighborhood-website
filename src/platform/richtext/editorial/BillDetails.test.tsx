@@ -9,6 +9,13 @@ import { BillDetails } from './BillDetails'
 
 afterEach(cleanup)
 
+// Titles that differ from the starting ones, so they can only have come from the block
+const TITLES = {
+  breakdown: 'Where it goes',
+  differ: 'Why it may differ',
+  sources: 'Where we looked',
+}
+
 const NOTES = [
   { key: 'rough', text: 'A rough estimate: every bill differs.', shown: true },
   { key: 'unconfirmed', text: '2027 rates are not confirmed.', shown: true },
@@ -24,6 +31,7 @@ describe('BillDetails', () => {
   it('has three rows, each a native details, in the order where, how, sources, the first open and the others closed (#1121)', () => {
     const { container } = render(
       <BillDetails
+        titles={TITLES}
         where={<p>Breakdown</p>}
         notes={NOTES}
         about={<p>Short text</p>}
@@ -32,16 +40,16 @@ describe('BillDetails', () => {
     )
     const rows = Array.from(container.querySelectorAll('details'))
     expect(rows.map((row) => row.querySelector('summary')?.textContent)).toEqual([
-      'Your City tax breakdown',
-      'How we estimate this',
-      'Sources',
+      TITLES.breakdown,
+      TITLES.differ,
+      TITLES.sources,
     ])
     expect(rows.map((row) => row.hasAttribute('open'))).toEqual([true, false, false])
   })
 
   it('opens the first row in the markup itself, so it is open with scripting off too (#1121)', () => {
     const html = renderToStaticMarkup(
-      <BillDetails where={<p>Breakdown</p>} notes={NOTES} sources={[SOURCE]} />,
+      <BillDetails titles={TITLES} where={<p>Breakdown</p>} notes={NOTES} sources={[SOURCE]} />,
     )
     expect(html.match(/<details[^>]*>/g)).toEqual([
       expect.stringContaining(' open'),
@@ -52,7 +60,7 @@ describe('BillDetails', () => {
 
   it('holds the three rows in one card, split by divider lines, not three separate boxes (#1118)', () => {
     const { container } = render(
-      <BillDetails where={<p>Breakdown</p>} notes={NOTES} sources={[SOURCE]} />,
+      <BillDetails titles={TITLES} where={<p>Breakdown</p>} notes={NOTES} sources={[SOURCE]} />,
     )
     const rows = Array.from(container.querySelectorAll('details'))
     const card = rows[0]?.parentElement as HTMLElement
@@ -63,33 +71,37 @@ describe('BillDetails', () => {
     expect(rows.some((row) => /(^|\s)border(\s|$)/.test(row.className))).toBe(false)
   })
 
-  it('puts the notes first and the tab’s short text after them in the row on how it works', () => {
-    render(<BillDetails notes={NOTES} about={<p>Short text</p>} sources={[]} />)
+  it('puts the notes first and the tab’s short text after them in the row on why the bill may differ', () => {
+    render(<BillDetails titles={TITLES} notes={NOTES} about={<p>Short text</p>} sources={[]} />)
     const note = screen.getByText(/every bill differs/)
     const about = screen.getByText('Short text')
     expect(note.compareDocumentPosition(about) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('leaves out the rows with nothing in them, but never the one on how it works', () => {
-    const { container } = render(<BillDetails notes={NOTES} sources={[]} />)
+    const { container } = render(<BillDetails titles={TITLES} notes={NOTES} sources={[]} />)
     expect(container.querySelectorAll('details')).toHaveLength(1)
   })
 
   it('keeps the room of a note that is not showing, hidden from everyone', () => {
     const { rerender } = render(
-      <BillDetails notes={NOTES.map((note, i) => ({ ...note, shown: i === 0 }))} sources={[]} />,
+      <BillDetails
+        titles={TITLES}
+        notes={NOTES.map((note, i) => ({ ...note, shown: i === 0 }))}
+        sources={[]}
+      />,
     )
     const hidden = screen.getByText('2027 rates are not confirmed.').closest('li')
     expect(hidden?.className).toContain('invisible')
     expect(hidden?.getAttribute('aria-hidden')).toBe('true')
-    rerender(<BillDetails notes={NOTES} sources={[]} />)
+    rerender(<BillDetails titles={TITLES} notes={NOTES} sources={[]} />)
     const shown = screen.getByText('2027 rates are not confirmed.').closest('li')
     expect(shown?.className).not.toContain('invisible')
     expect(shown?.getAttribute('aria-hidden')).toBeNull()
   })
 
   it('lists each source as a link', () => {
-    render(<BillDetails notes={NOTES} sources={[SOURCE]} />)
+    render(<BillDetails titles={TITLES} notes={NOTES} sources={[SOURCE]} />)
     expect(screen.getByRole('link', { name: /City tax detail/ }).getAttribute('href')).toBe(
       'https://example.org/tax',
     )
@@ -98,6 +110,7 @@ describe('BillDetails', () => {
   it('has no accessibility violations', async () => {
     const { container } = render(
       <BillDetails
+        titles={TITLES}
         where={<p>Breakdown</p>}
         notes={NOTES}
         about={<p>Short</p>}

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { createRequire } from 'node:module'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
@@ -11,13 +11,45 @@ import { city, estimate, PROPS } from './billShareFixtures'
 afterEach(cleanup)
 
 describe('BillShare, the order of the tab and its three rows (#1111, #1121)', () => {
-  it('shows the estimate’s notes only in the row on how it works, closed until opened (#1111)', () => {
+  it('shows the estimate’s notes only in the row on why the bill may differ, closed until opened (#1111)', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
-    const row = screen.getByText('How we estimate this').closest('details') as HTMLDetailsElement
+    const row = screen
+      .getByText('Why your bill may differ')
+      .closest('details') as HTMLDetailsElement
     expect(row.open).toBe(false)
     expect(row.textContent).toMatch(/a rough estimate/i)
     expect(row.textContent).toContain('Uses 2027 rates.')
     expect(screen.getAllByText(/a rough estimate/i)).toHaveLength(1)
+  })
+
+  it('names what can make a real bill differ, and where to tell us when it does', () => {
+    render(<BillShare {...PROPS}>x</BillShare>)
+    const row = screen
+      .getByText('Why your bill may differ')
+      .closest('details') as HTMLDetailsElement
+    expect(row.textContent).toMatch(/isn’t official or tax advice/)
+    expect(row.textContent).toMatch(/assessed value of your home may differ/)
+    expect(row.textContent).toMatch(
+      /Credits, exemptions, who owns the home and the type of property/,
+    )
+    const tellUs = within(row).getByRole('link', { name: 'send us a note' })
+    expect(tellUs.getAttribute('href')).toBe('/contact')
+  })
+
+  it('draws the row’s title and notes from the block, so an editor can change them (#1158)', () => {
+    render(
+      <BillShare
+        {...PROPS}
+        rows={{ ...PROPS.rows, differ: 'Read this first' }}
+        notes={[{ when: 'always', text: 'Custom note for {year}.', link: null }]}
+      >
+        x
+      </BillShare>,
+    )
+    const row = screen.getByText('Read this first').closest('details') as HTMLDetailsElement
+    expect(row.textContent).toContain('Custom note for 2027.')
+    expect(row.textContent).not.toMatch(/rough estimate/i)
+    expect(screen.queryByText('Why your bill may differ')).toBeNull()
   })
 
   it('puts the same space above the estimator as below it, from one shared value (#1142)', () => {
@@ -59,7 +91,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
       screen.getByRole('region', { name: 'Your City tax' }),
       screen.getByRole('region', { name: 'Your whole property tax bill' }),
       screen.getByText('Your City tax breakdown'),
-      screen.getByText('How we estimate this'),
+      screen.getByText('Why your bill may differ'),
       screen.getByText('Sources'),
       screen.getByText('The rest'),
     ]

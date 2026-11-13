@@ -16,15 +16,9 @@ import { COUNT_MS, YEAR_COUNT_MS, useCountedNumber } from '@/platform/ui/useCoun
 import type { BillShareProps } from './billShare'
 import { BillAnswer } from './BillAnswer'
 import { BillDetails } from './BillDetails'
-import {
-  assumedNote,
-  joinNames,
-  reservedNote,
-  ROUGH_NOTE,
-  uniqueSources,
-  unconfirmedNote,
-} from './billShareNotes'
+import { notesFor, uniqueSources } from './billShareNotes'
 import { receiptFor } from './billShareView'
+import { NoteText } from './NoteText'
 import {
   cityTaxFor,
   figuresFor,
@@ -48,7 +42,7 @@ export type CityPanelProps = {
   cityBars?: Extract<ChartSpec, { kind: 'stacked' }>
   /** Where the City's tax goes, drawn again for whatever the City's tax is on the home typed */
   cityBreakdown?: Extract<ChartSpec, { kind: 'breakdown' }>
-  /** The tab's short text, in the row on how the estimate works */
+  /** The tab's short text, in the row on why the bill may differ */
   definition?: ReactNode
   /** The tab's explanation, after the short text */
   detail?: ReactNode
@@ -71,7 +65,7 @@ export const BILL_GAP = 'space-y-5'
  * value the reader can change, which starts at the City's average home, and the switch between tax
  * years), the answer card (the City's tax on the home and year, its increase, the year's status), the
  * whole bill (its own card: the total, one bar whose slices are as wide as their shares, and the receipt
- * naming each), then one card of three rows: where the City's share goes (the split alone), how the estimate works and the
+ * naming each), then one card of three rows: where the City's share goes (the split alone), why the bill may differ and the
  * sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home
  * value and year, so every amount is the City's slice of the bill. A year in which a body has not
  * set its rate uses that body's rate from the year before, and says so in a note whose room is
@@ -80,6 +74,8 @@ export const BILL_GAP = 'space-y-5'
 export function BillShare({
   intro,
   years,
+  rows,
+  notes: noteTemplates,
   tabId,
   cityBars,
   cityBreakdown,
@@ -169,25 +165,17 @@ export function BillShare({
     <ScaledBreakdown spec={cityBreakdown} factor={breakdownFactor} title="screen-reader" />
   )
 
-  // The notes always take their room, so a year with none to show never makes the row shorter
-  const assumed = assumedNote(years)
-  const kept = reservedNote(years)
-  const shownNote = unconfirmedNote(years, yearIndex)
-  const notes = [
-    { key: 'rough', text: ROUGH_NOTE, shown: true },
-    { key: 'rates', text: `Uses ${year.year} rates.`, shown: true },
-    ...(assumed ? [{ key: 'assumed', text: assumed, shown: true }] : []),
-    ...(kept ? [{ key: 'unconfirmed', text: shownNote ?? kept, shown: shownNote !== null }] : []),
-    ...(bill && !bill.complete
-      ? [
-          {
-            key: 'missing',
-            text: `${joinNames(bill.missing.map((key) => BILL_BODY_NAMES[key]))} have no rates to use, so the whole bill can’t be shown.`,
-            shown: true,
-          },
-        ]
-      : []),
-  ]
+  // The notes are the editor's; the page only decides which apply in the year shown. One that is
+  // not showing still takes its room, so a year with none to show never makes the row shorter
+  const notes = notesFor(noteTemplates, {
+    years,
+    yearIndex,
+    missing: bill && !bill.complete ? bill.missing.map((key) => BILL_BODY_NAMES[key]) : [],
+  }).map(({ key, text, link, shown }) => ({
+    key,
+    text: <NoteText text={text} link={link} />,
+    shown,
+  }))
 
   return (
     <div className={BILL_GAP}>
@@ -241,6 +229,7 @@ export function BillShare({
         )}
       </Card>
       <BillDetails
+        titles={rows}
         where={where || undefined}
         notes={notes}
         about={

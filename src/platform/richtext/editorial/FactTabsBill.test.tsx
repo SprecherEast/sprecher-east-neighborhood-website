@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { present } from '@/platform/payload/testing/present'
 
+import { toBillShareProps } from './billShare'
 import { FactTabs } from './FactTabs'
 import { toFactTabsProps } from './factTabs'
 import { FACT_TABS_FIXTURE } from './factTabsFixtures'
@@ -14,11 +15,12 @@ const props = toFactTabsProps(FACT_TABS_FIXTURE)
 const setup = (shown = props) => render(<FactTabs {...shown} />)
 
 describe('FactTabs with a whole tax bill', () => {
-  it('puts a whole tax bill first and holds the tab’s text in its row on how the estimate works (#1018, #1111)', () => {
+  it('puts a whole tax bill first and holds the tab’s text in its row on why the bill may differ (#1018, #1111)', () => {
     const [first] = props.tabs
     const billShare = {
       kind: 'billShare' as const,
       billShare: {
+        ...toBillShareProps({}),
         intro: 'Based on the City’s average home.',
         years: [
           {
@@ -48,7 +50,7 @@ describe('FactTabs with a whole tax bill', () => {
         each.textContent?.includes('What the City would spend in 2027'),
       ),
     )
-    expect(row.textContent).toContain('How we estimate')
+    expect(row.textContent).toContain('Why your bill may differ')
     expect(row.open).toBe(false)
   })
 
@@ -85,6 +87,7 @@ describe('FactTabs with a whole tax bill', () => {
     const billShare = {
       kind: 'billShare' as const,
       billShare: {
+        ...toBillShareProps({}),
         intro: 'Based on the City’s average home.',
         years: [
           {
@@ -121,6 +124,7 @@ describe('FactTabs with a whole tax bill', () => {
     const billShare = {
       kind: 'billShare' as const,
       billShare: {
+        ...toBillShareProps({}),
         intro: 'Based on the City’s average home.',
         years: [
           {
@@ -149,7 +153,7 @@ describe('FactTabs with a whole tax bill', () => {
     const answer = present(panel.querySelector('section[aria-label="Your City tax"]'))
     expect(answer.textContent).toContain('Estimate')
     const detail = present(panel.querySelector('[data-panel-detail]'))
-    expect(detail.closest('details')?.textContent).toContain('How we estimate')
+    expect(detail.closest('details')?.textContent).toContain('Why your bill may differ')
     expect(panel.querySelectorAll('[data-panel-detail]')).toHaveLength(1)
   })
 })
