@@ -148,7 +148,11 @@ export function BillShare({
   // The City's part follows the home typed (the average home while the box holds no number)
   const cityPart = bill?.parts.find((p) => p.key === 'city')
   const cityAmount = cityPart?.amount ?? null
-  const baseYear = yearIndex === 0 && years.length > 1
+  // The earliest of several years is the base year, unless the next year's increase cannot be
+  // computed: then the line keeps today's behavior, so the card's room never depends on it
+  const laterIncrease =
+    yearIndex === 0 && years.length > 1 && cityBars ? increaseIn(cityBars, years, 1, value) : null
+  const baseYear = laterIncrease !== null
   const homeRatio = shown / year.averageHome
   const breakdownTotal = cityBreakdown?.areas.reduce((sum, area) => sum + area.value, 0) ?? 0
   const breakdownFactor =
@@ -207,7 +211,7 @@ export function BillShare({
         home={formatWholeDollars(shown)}
         assumedYear={yearIndex < years.length - 1 ? year.year : undefined}
         baseYear={baseYear}
-        laterIncrease={baseYear && cityBars ? increaseIn(cityBars, years, 1, value) : null}
+        laterIncrease={laterIncrease}
         cityPercent={receipt.slices.length > 0 ? (cityPart?.percent ?? null) : null}
       />
       <Card
