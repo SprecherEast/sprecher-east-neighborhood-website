@@ -26,7 +26,14 @@ import {
   unconfirmedNote,
 } from './billShareNotes'
 import { receiptFor } from './billShareView'
-import { cityBarFor, figuresFor, homeAtPosition, homeInYear, yearRatesOf } from './billFigures'
+import {
+  cityBarFor,
+  figuresFor,
+  homeAtPosition,
+  homeInYear,
+  increaseIn,
+  yearRatesOf,
+} from './billFigures'
 import { useReportFigures } from './BillFigures.client'
 import { ratesAtPosition } from './rateBlend'
 import { RoughEstimator } from './RoughEstimator'
@@ -141,6 +148,7 @@ export function BillShare({
   // The City's part follows the home typed (the average home while the box holds no number)
   const cityPart = bill?.parts.find((p) => p.key === 'city')
   const cityAmount = cityPart?.amount ?? null
+  const baseYear = yearIndex === 0 && years.length > 1
   const homeRatio = shown / year.averageHome
   const breakdownTotal = cityBreakdown?.areas.reduce((sum, area) => sum + area.value, 0) ?? 0
   const breakdownFactor =
@@ -198,6 +206,8 @@ export function BillShare({
         yours={estimated !== null}
         home={formatWholeDollars(shown)}
         assumedYear={yearIndex < years.length - 1 ? year.year : undefined}
+        baseYear={baseYear}
+        laterIncrease={baseYear && cityBars ? increaseIn(cityBars, years, 1, value) : null}
         cityPercent={receipt.slices.length > 0 ? (cityPart?.percent ?? null) : null}
       />
       <Card

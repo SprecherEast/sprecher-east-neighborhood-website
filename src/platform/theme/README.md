@@ -40,7 +40,7 @@ route is involved, so the generated reference has nothing on it.
 ## Rules and the tests that protect them
 
 - Every theme sets every token, and the default theme exists: `themes.test.ts`.
-- Text pairs pass WCAG AA (4.5:1), chart marks and control borders 3:1, in both modes, including tinted and scrim backgrounds: `themes.test.ts`.
+- Text pairs pass WCAG AA (4.5:1), chart marks and control borders 3:1, in both modes, including tinted and scrim backgrounds: `themes.test.ts`; primary-strong text on a card is one of them (#1135).
 - Theme folders and the registry match; the default theme is undecorated: `registry.test.ts`.
 - A theme that sets no options gets every default, and defaults are never mutated: `options.test.ts`.
 - The stored or system theme is set on `<html>` when nothing else did: `ThemeProvider.client.test.tsx`.
