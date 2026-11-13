@@ -59,6 +59,9 @@ export type CityPanelProps = {
   source?: ResolvedLink | null
 }
 
+/** The one space between the tab's cards: under the intro, between the estimator and the answer, and on (#1142) */
+export const BILL_GAP = 'space-y-2'
+
 /**
  * The whole property-tax bill at the top of a fact tab (#1018, #1111), one column on every width,
  * in the order a neighbor needs it: the bill block's one intro line, the Rough Estimator (the home
@@ -185,7 +188,7 @@ export function BillShare({
   ]
 
   return (
-    <div className="space-y-2">
+    <div className={BILL_GAP}>
       {intro && <Text variant="small">{intro}</Text>}
       <RoughEstimator
         value={text}
