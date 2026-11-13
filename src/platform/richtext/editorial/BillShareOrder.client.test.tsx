@@ -181,8 +181,8 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     const total = screen.getByText('Total property tax').closest('p') as HTMLElement
     expect(total.textContent).toMatch(/^Total property tax\$\d/)
     expect(total.className).toContain('font-bold')
-    // The last line of the card
-    expect(card.querySelector('[data-share-bill]')?.lastElementChild).toBe(total)
+    // The last line of the card, in the receipt's grid after its rows (#1163)
+    expect(card.querySelector('[data-share-bill] > :last-child > :last-child')).toBe(total)
   })
 
   it('has no accessibility violations with every row open', async () => {

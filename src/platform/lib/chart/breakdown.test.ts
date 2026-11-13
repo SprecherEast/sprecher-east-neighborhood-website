@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatMillions, formatShare, formatSquareValue, toBreakdown } from './breakdown'
+import { formatMillions, formatShare, formatSquareValue, toBreakdown, valuesAt } from './breakdown'
 import { FIXTURES } from './fixtures'
 import { parseChartSpec } from './spec'
 
@@ -114,5 +114,25 @@ describe('formatSquareValue', () => {
     expect(formatSquareValue(5_000_000)).toBe('$5 million')
     expect(formatSquareValue(2_500_000)).toBe('$2.5 million')
     expect(formatSquareValue(250_000)).toBe('$250,000')
+  })
+})
+
+describe('valuesAt (#1163)', () => {
+  const model = breakdownOf(spec)
+
+  it('keeps the model whole at the end of the fill', () => {
+    expect(valuesAt(model, 1)).toEqual(model)
+  })
+
+  it('counts every amount from nothing while the shares, steps and bar scale stay put', () => {
+    const start = valuesAt(model, 0)
+    expect(start.total).toBe(0)
+    expect(start.areas.every((area) => area.value === 0)).toBe(true)
+    expect(start.areas.flatMap((area) => area.shown).every((piece) => piece.value === 0)).toBe(true)
+    expect(start.smaller.every((piece) => piece.value === 0)).toBe(true)
+    expect(start.areas.map((area) => area.share)).toEqual(model.areas.map((area) => area.share))
+    expect(start.barScale).toBe(model.barScale)
+    const half = valuesAt(model, 0.5)
+    expect(half.areas[0]?.value).toBe(Math.round((model.areas[0]?.value ?? 0) * 0.5))
   })
 })

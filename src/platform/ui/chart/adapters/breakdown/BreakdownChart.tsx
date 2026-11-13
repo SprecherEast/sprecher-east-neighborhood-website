@@ -23,20 +23,34 @@ type RowProps = {
   /** "in Everything else", for a piece in the smaller list */
   area?: string
   scale: number
+  look: BarLook
 }
 
+/**
+ * How the bars are drawn: `compact` makes them thinner, for a breakdown inside a bill; `fill` grows
+ * them over time when drawn (a row opening) instead of as they scroll into view (#1163)
+ */
+type BarLook = { compact: boolean; fill: boolean }
+
 /** One bar: its length is the share times the shared scale, so a dollar is the same length in every breakdown */
-function Bar({ piece, nested, scale }: { piece: BreakdownPiece; nested: boolean; scale: number }) {
+function Bar({
+  piece,
+  nested,
+  scale,
+  look,
+}: {
+  piece: BreakdownPiece
+  nested: boolean
+  scale: number
+  look: BarLook
+}) {
   const ramp = rampAt(piece.step)
-  const radius = nested ? 4 : 7
+  const height = look.compact ? (nested ? 'h-1.5' : 'h-2.5') : nested ? 'h-2' : 'h-3.5'
+  const radius = look.compact ? (nested ? 3 : 5) : nested ? 4 : 7
   return (
-    <svg
-      aria-hidden="true"
-      focusable="false"
-      className={cn('block w-full', nested ? 'h-2' : 'h-3.5')}
-    >
+    <svg aria-hidden="true" focusable="false" className={cn('block w-full', height)}>
       <rect width="100%" height="100%" rx={radius} className="fill-muted" />
-      <g className="chart-reveal-x">
+      <g className={look.fill ? 'chart-fill-x' : 'chart-reveal-x'}>
         <rect
           data-chart-mark={piece.key}
           width={`${(piece.share * scale).toFixed(2)}%`}
@@ -51,7 +65,7 @@ function Bar({ piece, nested, scale }: { piece: BreakdownPiece; nested: boolean;
 }
 
 /** A label, a bar, the dollars and the percent: on a phone the bar drops under the label */
-function BarRow({ piece, nested, area, scale }: RowProps) {
+function BarRow({ piece, nested, area, scale, look }: RowProps) {
   const ramp = rampAt(piece.step)
   return (
     <li
@@ -78,7 +92,7 @@ function BarRow({ piece, nested, area, scale }: RowProps) {
         )}
       </span>
       <span className="order-last col-span-full row-start-2 sm:order-none sm:col-span-1 sm:col-start-2 sm:row-start-1">
-        <Bar piece={piece} nested={Boolean(nested)} scale={scale} />
+        <Bar piece={piece} nested={Boolean(nested)} scale={scale} look={look} />
       </span>
       <Text
         variant="small"
@@ -102,6 +116,10 @@ type Props = {
   squareValue: number
   titleId: string
   descId: string
+  /** Thinner bars, for a breakdown inside a bill (#1163) */
+  compact?: boolean
+  /** Grow the bars when drawn rather than on scroll (#1163) */
+  fill?: boolean
 }
 
 /**
@@ -110,8 +128,16 @@ type Props = {
  * list biggest first. Colour follows size down the page, from orange to green to gray. Only the
  * grid is an image; the key and the bars are text, so a screen reader reads every figure.
  */
-export function BreakdownChart({ model, squareValue, titleId, descId }: Props) {
+export function BreakdownChart({
+  model,
+  squareValue,
+  titleId,
+  descId,
+  compact = false,
+  fill = false,
+}: Props) {
   const { areas, smaller, barScale, showSquares } = model
+  const look = { compact, fill }
   return (
     <div className="space-y-5">
       {showSquares && (
@@ -184,9 +210,9 @@ export function BreakdownChart({ model, squareValue, titleId, descId }: Props) {
       <ul role="list">
         {areas.map((area) => (
           <React.Fragment key={area.key}>
-            <BarRow piece={area} scale={barScale} />
+            <BarRow piece={area} scale={barScale} look={look} />
             {area.shown.map((piece) => (
-              <BarRow key={piece.key} piece={piece} nested="area" scale={barScale} />
+              <BarRow key={piece.key} piece={piece} nested="area" scale={barScale} look={look} />
             ))}
           </React.Fragment>
         ))}
@@ -201,6 +227,7 @@ export function BreakdownChart({ model, squareValue, titleId, descId }: Props) {
                 nested="flat"
                 area={piece.area}
                 scale={barScale}
+                look={look}
               />
             ))}
           </ul>

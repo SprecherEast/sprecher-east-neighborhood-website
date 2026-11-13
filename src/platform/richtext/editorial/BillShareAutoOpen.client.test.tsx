@@ -91,4 +91,15 @@ describe('BillShare, the City’s breakdown opens after the reader’s first val
     wait(1)
     expect(breakdown().open).toBe(true)
   })
+  it('fills its bars each time it opens, by itself or by hand (#1163)', async () => {
+    render(<BillShare {...PROPS} {...city} />)
+    const chart = () => breakdown().querySelector('.chart-fill-x')
+    expect(chart()).toBeNull()
+    // By hand: the reader opens it
+    breakdown().open = true
+    fireEvent(breakdown(), new Event('toggle'))
+    expect(chart()).not.toBeNull()
+    // Thinner bars inside the bill
+    expect(breakdown().querySelector('svg.h-3\\.5')).toBeNull()
+  })
 })

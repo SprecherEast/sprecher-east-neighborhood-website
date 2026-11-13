@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { compile } from 'tailwindcss'
 import React from 'react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { Disclosure } from './Disclosure'
 import { TOUCH_MIN_HEIGHT } from './layoutSizes'
@@ -71,6 +71,19 @@ describe('Disclosure', () => {
     expect(summary.className).toContain('font-medium')
     // The body goes back to body text, whatever size the list around it uses
     expect(screen.getByText('Body').className).toContain('text-base')
+  })
+
+  it('tells the caller when it opens or closes, by hand or in code (#1163)', () => {
+    const onToggle = vi.fn()
+    const { container } = render(
+      <Disclosure variant="listRow" summary="More" onToggle={onToggle}>
+        Body
+      </Disclosure>,
+    )
+    const details = container.querySelector('details') as HTMLDetailsElement
+    details.open = true
+    fireEvent(details, new Event('toggle'))
+    expect(onToggle).toHaveBeenCalledWith(true)
   })
 
   it('opens from the summary, and can start open', () => {

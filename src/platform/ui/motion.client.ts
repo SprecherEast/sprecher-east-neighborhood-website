@@ -8,3 +8,6 @@ export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return true
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
+
+/** The ease every count and fill here shares: fast first, settling at the end (CSS: `cubic-bezier(0.33, 1, 0.68, 1)`) */
+export const easeOut = (t: number) => 1 - (1 - t) ** 3

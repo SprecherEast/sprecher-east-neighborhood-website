@@ -43,10 +43,16 @@ describe('ShareBill', () => {
     expect(title.textContent).toBe('Sample whole bill')
     // The total: label left, amount right, bold, under a stronger rule than the rows' lines
     expect(total.textContent).toBe('Total$10,000')
-    // The total's amount sits in the rows' dollar column, with the percent column left empty (#1163)
-    const columns = (el: Element) => /\S*grid-cols-\[[^\]]+\]/g.exec(el.className)?.[0]
-    expect(columns(total)).toBe(columns(list))
-    expect(total.lastElementChild?.className).toContain('col-start-2')
+    // The rows and the total share one grid, so a column that widens moves both; the total's
+    // amount ends at the dollar column's end, never under the percents (#1163)
+    expect(total.parentElement).toBe(list.parentElement)
+    expect(list.className).toContain('grid-cols-subgrid')
+    expect(total.className).toContain('grid-cols-subgrid')
+    const amount = total.lastElementChild as HTMLElement
+    expect(amount.className).toContain('col-start-2')
+    expect(amount.className).toContain('justify-self-end')
+    // The rows' amounts end the same way
+    expect(list.querySelector('li')?.children[1]?.className).toContain('justify-self-end')
     expect(total.className).toContain('font-bold')
     expect(total.className).toContain('border-t-2')
   })
@@ -56,14 +62,28 @@ describe('ShareBill', () => {
     const row = container.querySelector('li') as HTMLElement
     expect(row.className).toContain('min-h-5')
     // A name never wraps: at the narrowest width it may run into its column's blank space instead
-    expect(screen.getByText('Sample: first').className).toContain('whitespace-nowrap')
+    expect(screen.getByText('Sample: first').className).toContain('truncate')
+  })
+
+  it('shows a short name on the narrowest phones, the full one where it fits and to screen readers (#1163)', () => {
+    const slices = SLICES.map((slice, i) =>
+      i === 3 ? { ...slice, name: 'Sample: fourth, long', shortName: 'Sample: fourth' } : slice,
+    )
+    const { container } = render(<ShareBill slices={slices} label="Sample bill" />)
+    const row = container.querySelectorAll('li[data-share-row]')[3] as HTMLElement
+    const name = row.children[0]?.lastElementChild as HTMLElement
+    // The whole name is in the page; only its tail hides below 24 rem, kept for screen readers
+    expect(name.textContent).toBe('Sample: fourth, long')
+    const tail = name.querySelector('span') as HTMLElement
+    expect(tail.textContent).toBe(', long')
+    expect(tail.className).toContain('max-[24rem]:sr-only')
   })
 
   it('keeps a clear gap between the dollars and the percent at every width (#1163)', () => {
     const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
-    const list = container.querySelector('ul') as HTMLElement
-    expect(list.className).toContain('gap-x-2')
-    expect(list.className).toContain('min-[24rem]:gap-x-3')
+    const grid = container.querySelector('ul')?.parentElement as HTMLElement
+    expect(grid.className).toContain('gap-x-1.5')
+    expect(grid.className).toContain('min-[24rem]:gap-x-2')
   })
 
   it('names every slice in the receipt with its percent and dollars, in the bar’s order', () => {

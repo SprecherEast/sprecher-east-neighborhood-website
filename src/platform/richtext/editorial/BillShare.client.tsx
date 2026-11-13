@@ -40,7 +40,7 @@ const YEAR_STEPS = 1000
  * How long after the total's flash ends the City's breakdown opens by itself, the first time a
  * reader estimates their own home (#1163): long enough to take in the new total first
  */
-export const OPEN_AFTER_TOTAL_MS = 2000
+export const OPEN_AFTER_TOTAL_MS = 1000
 
 /** What the tab adds around the whole bill (#1020, #1111): the City's charts and the tab's own parts */
 export type CityPanelProps = {
@@ -124,6 +124,8 @@ export function BillShare({
   // when that bill has counted and its total has flashed, plus a pause; a year switch never opens it,
   // and once opened, a reader who closes it keeps it closed. Setting `open` scrolls nothing (#1163)
   const breakdownRow = useRef<HTMLDetailsElement>(null)
+  // Each opening, by hand or by itself, fills the breakdown's bars again (#1163)
+  const [openings, setOpenings] = useState(0)
   const openAfterPulse = useRef(false)
   const openedOnce = useRef(false)
   useEffect(() => {
@@ -193,8 +195,15 @@ export function BillShare({
       variant="listRow"
       summary={rows.breakdown}
       bodyClassName="space-y-6"
+      onToggle={(open) => open && setOpenings((count) => count + 1)}
     >
-      <ScaledBreakdown spec={cityBreakdown} factor={breakdownFactor} title="screen-reader" />
+      <ScaledBreakdown
+        spec={cityBreakdown}
+        factor={breakdownFactor}
+        title="screen-reader"
+        fillKey={openings}
+        compact
+      />
     </Disclosure>
   )
 

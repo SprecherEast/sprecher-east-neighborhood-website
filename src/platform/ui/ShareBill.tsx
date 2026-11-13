@@ -9,6 +9,11 @@ import { SHARE_TONES, type ShareTone } from './shareTones'
 export type ShareSlice = {
   key: string
   name: string
+  /**
+   * What the row shows on the narrowest phones, where the full name would not fit beside the amounts;
+   * the start of `name`, whose rest still reaches screen readers (#1163)
+   */
+  shortName?: string
   /** What the slice is worth, already written, such as "$3,467" */
   amount: string
   /** Its share, as the whole number written beside it */
@@ -18,16 +23,29 @@ export type ShareSlice = {
   tone: ShareTone
 }
 
+/** A slice's name: with a short form, the rest hides on the narrowest phones but stays for screen readers */
+function SliceName({ name, shortName }: { name: string; shortName?: string }) {
+  if (!shortName || !name.startsWith(shortName) || name === shortName) return name
+  return (
+    <>
+      {shortName}
+      <span className="max-[24rem]:sr-only">{name.slice(shortName.length)}</span>
+    </>
+  )
+}
+
 /** How long the total's flash lasts (`total-pulse` in the theme's `tailwind.css`, which a test holds to it) */
 export const TOTAL_PULSE_MS = 1500
 
 /**
- * The receipt's three columns, shared by its rows and its total so the amounts line up: the name,
- * then the dollars, then the percent, as in the breakdown chart (#1163). The two number columns have
- * fixed widths, so nothing shifts while the amounts count, and a clear gap keeps them apart.
+ * The receipt's one grid of three columns, which its rows and its total both take (`subgrid`), so a
+ * column that widens moves them together and the amounts always line up: the name, then the dollars,
+ * then the percent, as in the breakdown chart (#1163). The dollar column is at least wide enough for
+ * a four-digit amount and grows to the widest one, the total's included, so a large home's amounts
+ * never run into the names; the percent column is fixed, and a clear gap keeps the two apart.
  */
 const RECEIPT_COLUMNS =
-  'grid grid-cols-[1fr_2.5rem_1.75rem] gap-x-2 min-[24rem]:grid-cols-[1fr_3.5rem_2.25rem] min-[24rem]:gap-x-3'
+  'grid grid-cols-[1fr_minmax(2.5rem,auto)_1.5rem] gap-x-1.5 min-[24rem]:grid-cols-[1fr_minmax(3.5rem,auto)_2rem] min-[24rem]:gap-x-2'
 
 /**
  * A nested row starts where the slices' names start: past the row's side padding, the colour square
@@ -85,63 +103,70 @@ export function ShareBill({
           label: `${slice.percent}%`,
         }))}
       />
-      <ul className={cn(RECEIPT_COLUMNS, 'text-xs min-[24rem]:text-sm')}>
-        {slices.map((slice) => (
-          <React.Fragment key={slice.key}>
-            <li
-              data-share-row={slice.key}
-              className={cn(
-                'col-span-3 grid min-h-5 grid-cols-subgrid items-center border-t border-border px-1 first:border-t-0',
-                SHARE_TONES[slice.tone].row,
-              )}
-            >
-              <span className="flex min-w-0 items-center gap-x-1 min-[24rem]:gap-x-2">
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    'inline-block size-2 shrink-0 min-[24rem]:size-3',
-                    SHARE_TONES[slice.tone].swatch,
-                  )}
-                />
-                <span className="whitespace-nowrap text-foreground">{slice.name}</span>
-              </span>
-              <span className="text-right font-semibold whitespace-nowrap text-foreground tabular-nums">
-                {slice.amount}
-              </span>
-              <span
+      <div className={RECEIPT_COLUMNS}>
+        <ul className="col-span-3 grid grid-cols-subgrid text-xs min-[24rem]:text-sm">
+          {slices.map((slice) => (
+            <React.Fragment key={slice.key}>
+              <li
+                data-share-row={slice.key}
                 className={cn(
-                  'text-right whitespace-nowrap tabular-nums',
-                  SHARE_TONES[slice.tone].row ? 'text-foreground' : 'text-muted-foreground',
+                  'col-span-3 grid min-h-5 grid-cols-subgrid items-center border-t border-border px-1 first:border-t-0',
+                  SHARE_TONES[slice.tone].row,
                 )}
               >
-                {slice.percent}%
-              </span>
-            </li>
-            {nested?.after === slice.key && (
-              <li className={cn('col-span-3 border-t border-border', NESTED_INDENT)}>
-                {nested.children}
+                <span className="flex min-w-0 items-center gap-x-1 min-[24rem]:gap-x-2">
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'inline-block size-2 shrink-0 min-[24rem]:size-3',
+                      SHARE_TONES[slice.tone].swatch,
+                    )}
+                  />
+                  {/* Never wraps; on the narrowest phone a very large amount can cut it with an ellipsis rather than overlap */}
+                  <span className="truncate text-foreground" title={slice.name}>
+                    <SliceName name={slice.name} shortName={slice.shortName} />
+                  </span>
+                </span>
+                {/* Ends at its column's end like the total, so a wide amount reaches left */}
+                <span className="justify-self-end font-semibold whitespace-nowrap text-foreground tabular-nums">
+                  {slice.amount}
+                </span>
+                <span
+                  className={cn(
+                    'text-right whitespace-nowrap tabular-nums',
+                    SHARE_TONES[slice.tone].row ? 'text-foreground' : 'text-muted-foreground',
+                  )}
+                >
+                  {slice.percent}%
+                </span>
               </li>
+              {nested?.after === slice.key && (
+                <li className={cn('col-span-3 border-t border-border', NESTED_INDENT)}>
+                  {nested.children}
+                </li>
+              )}
+            </React.Fragment>
+          ))}
+        </ul>
+        {total && (
+          <p
+            key={pulseKey}
+            className={cn(
+              'col-span-3 mt-1.5 grid min-h-6 grid-cols-subgrid items-center border-t-2 border-foreground pt-1 text-sm font-bold text-foreground min-[24rem]:text-base',
+              pulseKey ? 'total-pulse' : undefined,
             )}
-          </React.Fragment>
-        ))}
-      </ul>
-      {total && (
-        <p
-          key={pulseKey}
-          className={cn(
-            RECEIPT_COLUMNS,
-            'min-h-6 items-center border-t-2 border-foreground pt-1 font-bold text-foreground',
-            pulseKey ? 'total-pulse' : undefined,
-          )}
-        >
-          {/* The rows' own side padding, on the label, so the total's grid lines up with theirs */}
-          <span className="pl-1 whitespace-nowrap">{total.label}</span>
-          {/* Under the rows' dollars, wider than its column if it must, never under the percents */}
-          <span className="col-start-2 text-right whitespace-nowrap tabular-nums">
-            {total.amount}
-          </span>
-        </p>
-      )}
+          >
+            {/* The rows' own side padding, on the label, so it starts where the names start */}
+            <span className="min-w-0 truncate pl-1" title={total.label}>
+              {total.label}
+            </span>
+            {/* Ends where the rows' dollars end; a figure wider than its column reaches left, never under the percents */}
+            <span className="col-start-2 justify-self-end whitespace-nowrap tabular-nums">
+              {total.amount}
+            </span>
+          </p>
+        )}
+      </div>
     </div>
   )
 }

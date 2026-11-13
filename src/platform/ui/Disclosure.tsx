@@ -85,6 +85,8 @@ export type DisclosureProps = {
   /** Classes for the content under the summary, for example a height limit */
   bodyClassName?: string
   children: React.ReactNode
+  /** Told whether it is now open, each time it opens or closes, by hand or in code (#1163) */
+  onToggle?: (open: boolean) => void
 }
 
 export function Disclosure({
@@ -95,6 +97,7 @@ export function Disclosure({
   className,
   bodyClassName,
   children,
+  onToggle,
 }: DisclosureProps) {
   // The bar is pinned under the site header, so it is never scrolled to: it keeps the plain row
   const reveal = variant !== 'bar'
@@ -104,6 +107,7 @@ export function Disclosure({
     <details
       ref={ref}
       open={defaultOpen || undefined}
+      onToggle={onToggle && ((event) => onToggle(event.currentTarget.open))}
       className={cn(
         variant === 'card' && CARD_BOX,
         variant === 'row' && 'px-3',

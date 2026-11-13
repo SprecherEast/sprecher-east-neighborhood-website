@@ -209,7 +209,7 @@ for (const width of WIDTHS) {
     const bill = page.getByRole('region', { name: 'Your whole property tax bill' })
     const cityRow = bill.locator('li[data-share-row="city"]')
     const row = summary(page, ROW_TITLES[0])
-    await expect(bill.locator('[data-share-bill] > ul > li').filter({ has: row })).toHaveCount(1)
+    await expect(bill.locator('[data-share-bill] ul > li').filter({ has: row })).toHaveCount(1)
     const [name, label, rowBox, cityBox] = await Promise.all([
       boxOf(cityRow.getByText('City of Madison')),
       boxOf(row.locator('span', { hasText: ROW_TITLES[0] }).first()),
@@ -269,11 +269,11 @@ test('the breakdown opens after the first value, once, and scrolls nothing', asy
   await input.scrollIntoViewIfNeeded()
   await input.fill('$700,000')
   await page.getByRole('button', { name: 'Estimate' }).click()
-  // Counting (1.5 s), the flash (1.5 s) and the pause (2 s): still closed after the count and flash
-  await page.waitForTimeout(3500)
+  // Counting (1.5 s), the flash (1.5 s) and the pause (1 s): still closed after the count and flash
+  await page.waitForTimeout(3000)
   await expect(details).toHaveJSProperty('open', false)
   const before = await boxOf(row)
-  await expect(details).toHaveJSProperty('open', true, { timeout: 3000 })
+  await expect(details).toHaveJSProperty('open', true, { timeout: 2500 })
   const after = await boxOf(row)
   expect(after.y, 'opening by itself moves nothing on screen').toBeCloseTo(before.y, 0)
   // Closed by the reader, it stays closed for the next value

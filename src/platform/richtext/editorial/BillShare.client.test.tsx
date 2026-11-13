@@ -110,7 +110,7 @@ describe('BillShare', () => {
       'Metropolitan Schools',
       'City of Madison',
       'Dane County',
-      'Madison College (MATC)',
+      'Madison College, MATC',
     ]) {
       expect(label).toContain(name)
     }
@@ -122,18 +122,20 @@ describe('BillShare', () => {
   it('lists the bill as a receipt in the bar’s order: the City, schools, county, college, then the total above', () => {
     const { container } = render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
-    expect(rowsOf().map((row) => row?.replace(/[$\d,%]+/g, '').trim())).toEqual([
+    expect(rowsOf().map((row) => row?.slice(0, row.indexOf('$')).trim())).toEqual([
       'City of Madison',
       'Metropolitan Schools',
       'Dane County',
-      'Madison College (MATC)',
+      'Madison College, MATC',
     ])
     expect(
       Array.from(container.querySelectorAll('rect[data-share-slice]')).map((rect) =>
         rect.getAttribute('data-share-slice'),
       ),
     ).toEqual(['city', 'schools', 'county', 'matc'])
-    expect(bill().lastElementChild?.textContent).toMatch(/^Total property tax\$8,9\d\d$/)
+    expect(bill().lastElementChild?.lastElementChild?.textContent).toMatch(
+      /^Total property tax\$8,9\d\d$/,
+    )
     // The sentence is said once, to screen readers only
     const said = screen.queryAllByText(/your whole bill is about/)
     expect(said.every((node) => node.closest('[role="status"]'))).toBe(true)

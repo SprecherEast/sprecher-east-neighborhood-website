@@ -11,7 +11,7 @@ const KEYS = {
   schools: 'Metropolitan Schools',
   city: 'City of Madison',
   county: 'Dane County',
-  matc: 'Madison College (MATC)',
+  matc: 'Madison College, MATC',
 } as Record<string, string>
 
 describe('the whole bill: the bar and the receipt (#1030, #1111)', () => {
@@ -78,7 +78,7 @@ describe('the whole bill: the bar and the receipt (#1030, #1111)', () => {
       'City of Madison',
       'Metropolitan Schools',
       'Dane County',
-      'Madison College (MATC)',
+      'Madison College, MATC',
     ])
   })
 

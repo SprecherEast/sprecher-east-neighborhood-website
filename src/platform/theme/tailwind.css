@@ -147,6 +147,20 @@
 }
 
 /*
+ * `chart-fill-x` (#1163): the same growth as `chart-reveal-x`, but over time rather than scrolling,
+ * for bars that appear when a row opens in place: each time the element is drawn anew, the bars grow
+ * from the baseline for one second (`FILL_MS` in `useReplayProgress.client.ts`, which a test holds to
+ * it), with the counting's ease. On screen and with motion allowed only; everywhere else, full.
+ */
+@utility chart-fill-x {
+  @media screen and (prefers-reduced-motion: no-preference) {
+    transform-box: fill-box;
+    transform-origin: left center;
+    animation: chart-reveal-x 1s cubic-bezier(0.33, 1, 0.68, 1) both;
+  }
+}
+
+/*
  * `chart-reveal-x` (#663): a bar chart's bars grow out from the baseline as they scroll into view
  * (put it on the `g` that holds one row's bars). The same conditions as `chart-reveal`: on screen,
  * motion allowed, scroll-driven animation supported; everywhere else the bars are drawn in full.
