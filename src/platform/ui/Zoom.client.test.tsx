@@ -45,6 +45,27 @@ describe('Zoom', () => {
     expect(enlarge().className).toContain('scripted:inline-flex')
   })
 
+  it("draws an icon-only control over the picture's top-right corner when asked (#1156)", async () => {
+    setup({ trigger: 'icon' })
+    const button = enlarge()
+
+    expect(button.textContent?.trim()).toBe('')
+    expect(button.querySelector('svg')).toBeTruthy()
+    expect(button.className).toContain('absolute')
+    expect(button.className).toContain('right-2')
+    expect(button.className).toContain('top-2')
+    expect(button.className).toContain('size-11')
+    expect(button.className).toContain('scripted:inline-flex')
+
+    await userEvent.click(button)
+    expect(within(screen.getByRole('dialog')).getByText('Large picture')).toBeTruthy()
+  })
+
+  it('keeps the text button by default, for charts (#1156)', () => {
+    setup()
+    expect(enlarge().className).not.toContain('absolute')
+  })
+
   it('opens a dialog with the large view and the key, keeping the small view in the page', async () => {
     setup()
     await userEvent.click(enlarge())

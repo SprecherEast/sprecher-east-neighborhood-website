@@ -28,7 +28,8 @@ export const FigureBlockConfig: Block = {
       required: true,
       maxLength: 80,
       admin: {
-        description: 'What the picture shows, in a few words. It names the Enlarge button.',
+        description:
+          'What the picture shows, in a few words. It names the small expand icon on the picture.',
       },
     },
     {
