@@ -76,6 +76,39 @@ describe('Field.Money', () => {
     expect(input.selectionStart).toBe(3)
   })
 
+  it('keeps the size of the number when its first digit is deleted and another typed (#1172)', async () => {
+    render(<Box start="$500,000" />)
+    const input = box()
+    // the caret sits after the 5; Backspace deletes it, then the 6 goes in its place
+    await userEvent.type(input, '{backspace}', { initialSelectionStart: 2, initialSelectionEnd: 2 })
+    expect(input.value).toBe('$00,000')
+    expect(input.selectionStart).toBe(1)
+    await userEvent.keyboard('6')
+    expect(input.value).toBe('$600,000')
+  })
+
+  it('keeps the zeros when Delete removes the first digit too', async () => {
+    render(<Box start="$500,000" />)
+    const input = box()
+    await userEvent.type(input, '{delete}6', { initialSelectionStart: 1, initialSelectionEnd: 1 })
+    expect(input.value).toBe('$600,000')
+  })
+
+  it('tidies the zeros left in front when the reader leaves the box', async () => {
+    render(<Box start="$500,000" />)
+    const input = box()
+    await userEvent.type(input, '{backspace}', { initialSelectionStart: 2, initialSelectionEnd: 2 })
+    expect(input.value).toBe('$00,000')
+    await userEvent.tab()
+    expect(input.value).toBe('$0')
+  })
+
+  it('still reads a pasted number with leading zeros as the number', () => {
+    render(<Box />)
+    fireEvent.change(box(), { target: { value: '$007' } })
+    expect(box().value).toBe('$7')
+  })
+
   it('has no accessibility violations', async () => {
     const { container } = render(<Box start="$500,300" />)
     await expectAccessible(container)
