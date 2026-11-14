@@ -3,7 +3,6 @@ import React from 'react'
 import { ProgressBar } from '@/platform/ui/ProgressBar'
 import { AreaChart } from '@/platform/ui/AreaChart'
 import { HeatMap } from '@/platform/ui/HeatMap'
-import { Sparkline } from '@/platform/ui/Sparkline'
 import { ShareBar } from '@/platform/ui/ShareBar.client'
 import { Disclosure } from '@/platform/ui/Disclosure'
 import { ShareBill, type ShareSlice } from '@/platform/ui/ShareBill'
@@ -105,28 +104,6 @@ export function ShareBillGallery() {
           title="Sample: whole bill"
           total={{ label: 'Sample total', amount: '$10,000' }}
         />
-      </GalleryVariant>
-    </GalleryEntry>
-  )
-}
-
-/** The activity line: a busy series, a quiet one and a single value, on one shared scale */
-export function SparklineGallery() {
-  return (
-    <GalleryEntry
-      name="Sparkline"
-      description="How much happened over time, as a thin line on a scale shared by the pictures read together; the numbers are always written beside it."
-    >
-      <GalleryVariant
-        label="busy, quiet and none, on one scale"
-        className="block max-w-xs space-y-3"
-      >
-        <Sparkline values={[1, 3, 2, 6, 4, 8, 5, 7]} max={8} label="Sample: busy, 1 to 8 a week" />
-        <Sparkline values={[0, 1, 0, 0, 2, 0, 1, 0]} max={8} label="Sample: quiet, 0 to 2 a week" />
-        <Sparkline values={[0, 0, 0, 0, 0, 0, 0, 0]} max={8} label="Sample: nothing finished" />
-      </GalleryVariant>
-      <GalleryVariant label="one value" className="block max-w-xs">
-        <Sparkline values={[4]} max={8} label="Sample: one value, 4" />
       </GalleryVariant>
     </GalleryEntry>
   )

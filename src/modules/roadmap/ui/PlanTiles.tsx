@@ -7,11 +7,12 @@ import { Text } from '@/platform/ui/Text'
 import { planActivity } from '../domain/activity'
 import type { Plan } from '../domain/types'
 import { EpicBox } from './EpicBox'
-import { MissionTile } from './MissionTile'
+import { MissionAccordion } from './MissionAccordion'
+import { MissionBlock } from './MissionBlock'
 
 /**
- * The plan as tiles: the mission with the latest activity first, all the same size, two across on
- * a phone and three on a desktop, each opening its own page. Projects that belong to no mission
+ * The plan as missions, the one with the latest activity first: blocks of the same size on a tablet
+ * (two across) and a desktop (three across), accordions on a phone, each linking to its own page. Projects that belong to no mission
  * follow, then a note on what is not shown.
  */
 export function PlanTiles({ plan, now }: { plan: Plan; now: Date }) {
@@ -27,25 +28,28 @@ export function PlanTiles({ plan, now }: { plan: Plan; now: Date }) {
 
   const activity = planActivity(plan.milestones, now)
   const byNumber = new Map(plan.milestones.map((mission) => [mission.number, mission]))
+  const ordered = activity.missions.flatMap(
+    ({ milestoneNumber }) => byNumber.get(milestoneNumber) ?? [],
+  )
 
   return (
     <div className="space-y-8">
       {activity.missions.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-          {activity.missions.map(({ milestoneNumber, series }) => {
-            const mission = byNumber.get(milestoneNumber)
-            return mission ? (
-              <MissionTile
-                key={milestoneNumber}
-                mission={mission}
-                series={series}
-                max={activity.max}
-                stepLabel={activity.stepLabel}
-                now={now}
-              />
-            ) : null
-          })}
-        </div>
+        <>
+          <div
+            data-plan-layout="blocks"
+            className="hidden gap-4 md:grid md:grid-cols-2 lg:grid-cols-3"
+          >
+            {ordered.map((mission) => (
+              <MissionBlock key={mission.number} mission={mission} now={now} />
+            ))}
+          </div>
+          <div data-plan-layout="accordions" className="space-y-3 md:hidden">
+            {ordered.map((mission) => (
+              <MissionAccordion key={mission.number} mission={mission} now={now} />
+            ))}
+          </div>
+        </>
       )}
 
       {plan.unscheduled.length > 0 && (
