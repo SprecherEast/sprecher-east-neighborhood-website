@@ -89,7 +89,7 @@ describe('the plan page day filter', () => {
     pressDay('Thu, Nov 12: 1')
     expect(missionNames(container)).toEqual(['Events'])
     const pill = screen.getByRole('button', { name: 'Remove Thu, Nov 12: 1 finished, 0 opened' })
-    expect(pill.textContent).toContain('Thu, Nov 12')
+    expect(pill.textContent).toContain('Nov 12')
     expect(screen.getByRole('status').textContent).toBe(
       'Showing 1 issue opened or finished on Thu, Nov 12.',
     )

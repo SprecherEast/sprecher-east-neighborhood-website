@@ -3,7 +3,7 @@
 import { Check, Circle, X } from 'lucide-react'
 import React from 'react'
 
-import { formatDayLabel } from '@/platform/lib/formatDateTime'
+import { formatDayLabel, formatDayShort } from '@/platform/lib/formatDateTime'
 import { Button } from '@/platform/ui/Button'
 import { HeatMap } from '@/platform/ui/HeatMap'
 import { PeriodNav } from '@/platform/ui/PeriodNav'
@@ -69,11 +69,12 @@ export function DayFilterMap({
                 <Button
                   variant="secondary"
                   size="sm"
+                  className="gap-1.5 px-3"
                   onClick={() => toggleTop(day)}
                   aria-label={`Remove ${formatDayLabel(day)}: ${finished} finished, ${opened} opened`}
                   iconEnd={<X aria-hidden="true" />}
                 >
-                  <span>{formatDayLabel(day)}</span>
+                  <span>{formatDayShort(day)}</span>
                   <span className="inline-flex items-center gap-1 text-done-strong tabular-nums">
                     <Check aria-hidden="true" />
                     {finished}
