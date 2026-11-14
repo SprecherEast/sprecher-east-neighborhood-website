@@ -206,3 +206,21 @@ Source: `src/platform/ui/Sparkline.tsx`
 
 - Modules: `roadmap`
 - Routes: `/dev/gallery`
+
+## `AreaChart`
+
+Source: `src/platform/ui/AreaChart.tsx`
+
+| Prop        | Type               | Required | Description                                                                                          |
+| ----------- | ------------------ | -------- | ---------------------------------------------------------------------------------------------------- |
+| `values`    | `number[]`         | yes      |                                                                                                      |
+| `days`      | `string[]`         | yes      | The same length as `values`: `yyyy-mm-dd`, oldest first, the last one today                          |
+| `label`     | `string`           | yes      | What it shows, with every value, for screen readers: "Finished per day: 0, 2, 5"                     |
+| `tone`      | `"done" \| "open"` | yes      | Done work or open work, each with a colour of its own                                                |
+| `max`       | `number`           | no       | The top of the scale; share it between pictures read side by side. Defaults to the tallest value     |
+| `fromZero`  | `boolean`          | no       | Start the scale at zero (counts per day) or at the lowest value (a running total, to show its shape) |
+| `className` | `string`           | no       |                                                                                                      |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`
