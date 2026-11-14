@@ -20,6 +20,7 @@ const toIssue = (raw: RawIssue): PlanIssue => ({
   labels: raw.labels,
   description: raw.body,
   url: raw.url,
+  createdAt: raw.createdAt,
   closedAt: raw.closedAt,
   updatedAt: raw.updatedAt,
 })

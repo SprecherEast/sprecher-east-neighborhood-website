@@ -8,6 +8,7 @@ const apiIssue = (number: number, over: Record<string, unknown> = {}) => ({
   body: null,
   state: 'open',
   state_reason: null,
+  created_at: '2026-11-02T08:00:00Z',
   closed_at: null,
   updated_at: '2026-11-10T09:00:00Z',
   html_url: `https://github.com/o/r/issues/${number}`,
@@ -32,12 +33,17 @@ describe('mapIssue', () => {
       body: '',
       state: 'open',
       stateReason: null,
+      createdAt: '2026-11-02T08:00:00Z',
       closedAt: null,
       updatedAt: '2026-11-10T09:00:00Z',
       labels: ['bug', 'epic'],
       milestoneNumber: 7,
       url: 'https://github.com/o/r/issues/5',
     })
+  })
+
+  it('has no open date when GitHub gives none', () => {
+    expect(mapIssue(apiIssue(5, { created_at: undefined })).createdAt).toBeNull()
   })
 
   it('has no milestone number when there is none', () => {

@@ -12,6 +12,7 @@ import { ChartGallery } from './ChartGallery'
 import { DisplayGallery } from './DisplayGallery'
 import {
   SparklineGallery,
+  AreaChartGallery,
   HeatMapGallery,
   ProgressGallery,
   ShareBarGallery,
@@ -71,6 +72,7 @@ export default function GalleryPage() {
         <ShareBarGallery />
         <ShareBillGallery />
         <SparklineGallery />
+        <AreaChartGallery />
         <HeatMapGallery />
         <TabsGallery />
         <HeadersGallery />
