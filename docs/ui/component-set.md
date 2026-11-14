@@ -81,6 +81,8 @@ Components: [cards](../reference/components/cards.md), [display](../reference/co
 
 **`Sparkline`** (#1128) draws how much happened over time as a thin line with a baseline, on a scale from 0 to a `max` that tiles read side by side share, so one height always means one number. It has a text `label` listing every value for screen readers, and the caller always writes the numbers beside it. All zeros or a `max` of 0 shows the flat baseline; one value is a dot; a value above `max` stays inside the picture. Theme tokens only, no client JavaScript. Its test covers the shape, the shared scale and axe; the gallery shows it.
 
+**`AreaChart`** (#1190) draws how much happened over time as a smooth curve with a soft fill, a faint baseline, three day labels (the last one "Today") and a marker on the latest value, in the done or open tone. Several read side by side share one `max`; a running total starts at its lowest value (`fromZero={false}`) so its shape shows; all zeros is the flat baseline. It has a text `label` listing every value, and the caller always writes the figure beside it. Its test covers the shared scale, the clamp, one and no values, theme tokens only and axe; the gallery shows a count per day, a running total and the open count.
+
 **`MapEmbed`** (#764, #884) is a small map picture over its text, filling the width it is given: the page's Section decides how wide it is and where it sits. It opens
 a live Google map in a `Dialog`
 when a neighbor taps the picture or the "View the larger map" button. The frame is created only
