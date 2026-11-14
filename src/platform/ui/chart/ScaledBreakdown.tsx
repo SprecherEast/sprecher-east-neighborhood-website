@@ -26,6 +26,7 @@ export function ScaledBreakdown({
   title = 'visible',
   fillKey = 0,
   compact = false,
+  hideSource = false,
 }: {
   spec: Extract<ChartSpec, { kind: 'breakdown' }>
   factor: number
@@ -38,6 +39,8 @@ export function ScaledBreakdown({
   /** Changes each time the bars should fill again; 0 keeps the reveal on scroll */
   fillKey?: number
   compact?: boolean
+  /** Leaves the as-of line and the source links out, for a page that lists them elsewhere (#1180) */
+  hideSource?: boolean
 }) {
   const id = useId()
   const progress = useReplayProgress(fillKey, undefined, EXPAND_MS)
@@ -57,8 +60,8 @@ export function ScaledBreakdown({
   const caption = {
     notes: [],
     finePrint: spec.finePrint,
-    asOf: spec.asOf,
-    sources: spec.sources,
+    asOf: hideSource ? undefined : spec.asOf,
+    sources: hideSource ? undefined : spec.sources,
     certainty: spec.certainty,
   }
   return (

@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { BILL_GAP, BillShare } from './BillShare.client'
-import { city, estimate, PROPS } from './billShareFixtures'
+import { BREAKDOWN, city, estimate, PROPS } from './billShareFixtures'
 
 afterEach(cleanup)
 
@@ -20,6 +20,27 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     expect(row.textContent).toMatch(/a rough estimate/i)
     expect(row.textContent).toContain('Uses 2027 rates.')
     expect(screen.getAllByText(/a rough estimate/i)).toHaveLength(1)
+  })
+
+  it('shows the breakdown’s date and source in the sources row, not under its bars (#1180)', () => {
+    const dated = {
+      ...BREAKDOWN,
+      asOf: 'Mayor’s proposal, October 2026',
+      sources: [{ label: '2027 Executive Operating Budget', href: 'https://example.org/budget' }],
+    }
+    render(
+      <BillShare {...PROPS} {...city} cityBreakdown={dated}>
+        x
+      </BillShare>,
+    )
+    const where = screen.getByText('Your City tax breakdown').closest('details') as HTMLElement
+    expect(within(where).queryByText('Mayor’s proposal, October 2026')).toBeNull()
+    expect(within(where).queryByRole('link', { name: /Executive Operating Budget/ })).toBeNull()
+    const sources = screen.getByText('Sources').closest('details') as HTMLElement
+    expect(within(sources).getByText('Mayor’s proposal, October 2026')).toBeTruthy()
+    expect(
+      within(sources).getAllByRole('link', { name: /Executive Operating Budget/ }),
+    ).toHaveLength(1)
   })
 
   it('names what can make a real bill differ, and where to tell us when it does', () => {

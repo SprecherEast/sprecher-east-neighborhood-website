@@ -7,7 +7,7 @@ import { Disclosure } from '@/platform/ui/Disclosure'
 /**
  * Where the City's tax goes, as a closed row of the whole bill under the City's own row (#1163):
  * the split alone, with thin bars, since the answer card above already gives the City's tax and its
- * increase and the row's title is the heading (#1144). `row` is `useBreakdownAutoOpen`'s: it opens the
+ * increase and the row's title is the heading (#1144). Its date and sources are not drawn here: the whole bill's Sources row lists them (#1180). `row` is `useBreakdownAutoOpen`'s: it opens the
  * row after each estimate that changes the bill while it is closed (#1176), and each opening fills the bars again (#1165).
  */
 export function BreakdownRow({
@@ -39,6 +39,7 @@ export function BreakdownRow({
         title="screen-reader"
         fillKey={row.openings}
         compact
+        hideSource
       />
     </Disclosure>
   )

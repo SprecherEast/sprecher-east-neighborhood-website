@@ -94,4 +94,25 @@ describe('BillDetails', () => {
     )
     await expectAccessible(container)
   })
+
+  it('puts the as-of line above the links in the sources row, and shows the row for it alone (#1180)', () => {
+    const { rerender } = render(
+      <BillDetails
+        titles={TITLES}
+        notes={NOTES}
+        sources={[SOURCE]}
+        asOf="Mayor’s proposal, 2026"
+      />,
+    )
+    const asOf = screen.getByText('Mayor’s proposal, 2026')
+    const link = screen.getByText(SOURCE.label)
+    expect(asOf.closest('details')?.querySelector('summary')?.textContent).toBe(TITLES.sources)
+    expect(asOf.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    rerender(
+      <BillDetails titles={TITLES} notes={NOTES} sources={[]} asOf="Mayor’s proposal, 2026" />,
+    )
+    expect(screen.getByText(TITLES.sources)).toBeTruthy()
+    rerender(<BillDetails titles={TITLES} notes={NOTES} sources={[]} />)
+    expect(screen.queryByText(TITLES.sources)).toBeNull()
+  })
 })

@@ -13,7 +13,7 @@ import type { BillRowTitles } from './billShare'
  * The two rows under the whole bill (#1111, #1118, #1163), in one card split by divider lines: why
  * the real bill may differ (the notes, then the tab's short text and detail) and the sources, each source
  * once, both closed when the tab loads, each titled from the block (#1158). Where the City's share goes is a row of the whole bill
- * itself, under the City's row (`BillShare`, #1163). The sources row is left out when there are none,
+ * itself, under the City's row (`BillShare`, #1163). The sources row (the as-of line of the City's breakdown, then each link) is left out when there is neither,
  * and a note that is not showing still takes its room, hidden from everyone, so an open row never
  * changes height when a year is chosen. Each row is the kit's `Disclosure`, so it opens and closes
  * without scripting and never moves what is above it.
@@ -23,6 +23,7 @@ export function BillDetails({
   notes,
   about,
   sources,
+  asOf,
 }: {
   /** What each row is called, from the block */
   titles: BillRowTitles
@@ -31,6 +32,8 @@ export function BillDetails({
   /** What follows the notes: the tab's short text and detail */
   about?: ReactNode
   sources: readonly ResolvedLink[]
+  /** When the figures are from, shown above the links (#1180) */
+  asOf?: string
 }) {
   return (
     <Card variant="elevated" padding="none" className="divide-y divide-border">
@@ -48,8 +51,9 @@ export function BillDetails({
         </ul>
         {about}
       </Disclosure>
-      {sources.length > 0 && (
-        <Disclosure variant="row" summary={titles.sources}>
+      {(sources.length > 0 || asOf) && (
+        <Disclosure variant="row" summary={titles.sources} bodyClassName="space-y-2">
+          {asOf && <Text variant="small">{asOf}</Text>}
           <ul className="space-y-1">
             {sources.map((source) => (
               <li key={source.href}>
