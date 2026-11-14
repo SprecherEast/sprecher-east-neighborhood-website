@@ -52,12 +52,12 @@ export function HeatMap({ days, values, label, variant, max, className }: HeatMa
     return (
       <div role="img" aria-label={label} className={cn('w-full', className)}>
         <div aria-hidden="true" className="space-y-1 text-center text-xs text-muted-foreground">
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid auto-cols-fr grid-flow-col gap-1">
             {days.map((day) => (
               <span key={day}>{LETTERS[mondayIndex(day)]}</span>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid auto-cols-fr grid-flow-col gap-1">
             {days.map((day, index) => (
               <span
                 key={day}
