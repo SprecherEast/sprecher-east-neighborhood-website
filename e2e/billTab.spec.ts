@@ -146,7 +146,7 @@ for (const width of WIDTHS) {
     // The receipt's rows keep their columns: the percents and the amounts end on the same lines
     const ends = await page.locator('[data-share-bill] li[data-share-row]').evaluateAll((rows) =>
       rows.map((row) => {
-        const [, amount, percent] = Array.from(row.children).map((c) =>
+        const [, percent, amount] = Array.from(row.children).map((c) =>
           Math.round(c.getBoundingClientRect().right),
         )
         return { percent, amount }

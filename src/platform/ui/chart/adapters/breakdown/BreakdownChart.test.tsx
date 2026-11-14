@@ -46,3 +46,20 @@ describe('BreakdownChart amounts while counting (#1165)', () => {
     expect(amount.textContent).toMatch(/^\$[1-9]/)
   })
 })
+
+describe('BreakdownChart rows read name, percent, then dollars flush right (#1184)', () => {
+  it('puts the percent before the dollars in every row, in the same columns on a phone and wider', () => {
+    const { container } = draw(1)
+    const rows = Array.from(container.querySelectorAll('[data-breakdown-row]'))
+    expect(rows.length).toBeGreaterThan(0)
+    for (const row of rows) {
+      const amount = row.querySelector('[data-amount]') as HTMLElement
+      const percent = amount.parentElement?.previousElementSibling as HTMLElement
+      expect(percent.textContent).toMatch(/^(<\s?)?\d+(\.\d+)?%$/)
+      // The dollars are the row's last cell, so they end at the row's right edge
+      expect(row.lastElementChild).toBe(amount.parentElement)
+      expect(row.className).toContain('grid-cols-[minmax(0,1fr)_3rem_4.5rem]')
+      expect(row.className).toContain('sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_3rem_4.5rem]')
+    }
+  })
+})

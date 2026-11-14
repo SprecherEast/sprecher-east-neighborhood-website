@@ -122,7 +122,7 @@ describe('BillShare', () => {
   it('lists the bill as a receipt in the bar’s order: the City, schools, county, college, then the total above', () => {
     const { container } = render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
-    expect(rowsOf().map((row) => row?.slice(0, row.indexOf('$')).trim())).toEqual([
+    expect(rowsOf().map((row) => row?.replace(/\d+%\$[\d,]+$/, '').trim())).toEqual([
       'City of Madison',
       'Metropolitan Schools',
       'Dane County',

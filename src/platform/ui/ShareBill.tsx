@@ -39,13 +39,15 @@ export const TOTAL_PULSE_MS = 300
 
 /**
  * The receipt's one grid of three columns, which its rows and its total both take (`subgrid`), so a
- * column that widens moves them together and the amounts always line up: the name, then the dollars,
- * then the percent, as in the breakdown chart (#1163). The dollar column is at least wide enough for
+ * column that widens moves them together and the amounts always line up: the name, then the percent,
+ * then the dollars, flush to the right edge as on a bill, and as in the breakdown chart (#1163, #1184).
+ * The dollar column is at least wide enough for
  * a four-digit amount and grows to the widest one, the total's included, so a large home's amounts
- * never run into the names; the percent column is fixed, and a clear gap keeps the two apart.
+ * never run into the names; the percent column is fixed and sits just before it, and a small gap
+ * keeps the two apart.
  */
 const RECEIPT_COLUMNS =
-  'grid grid-cols-[1fr_minmax(2.5rem,auto)_1.5rem] gap-x-1.5 min-[24rem]:grid-cols-[1fr_minmax(3.5rem,auto)_2rem] min-[24rem]:gap-x-2'
+  'grid grid-cols-[1fr_1.5rem_minmax(2.5rem,auto)] gap-x-1.5 min-[24rem]:grid-cols-[1fr_2rem_minmax(3.5rem,auto)] min-[24rem]:gap-x-2'
 
 /**
  * A nested row starts where the slices' names start: past the row's side padding, the colour square
@@ -130,10 +132,6 @@ export function ShareBill({
                     <SliceName name={slice.name} shortName={slice.shortName} />
                   </span>
                 </span>
-                {/* Ends at its column's end, like the total's amount */}
-                <span className="justify-self-end font-semibold whitespace-nowrap text-foreground tabular-nums">
-                  {slice.amount}
-                </span>
                 <span
                   className={cn(
                     'text-right whitespace-nowrap tabular-nums',
@@ -141,6 +139,10 @@ export function ShareBill({
                   )}
                 >
                   {slice.percent}%
+                </span>
+                {/* Ends at its column's end, the right edge, like the total's amount */}
+                <span className="justify-self-end font-semibold whitespace-nowrap text-foreground tabular-nums">
+                  {slice.amount}
                 </span>
               </li>
               {nested?.after === slice.key && (
@@ -163,8 +165,8 @@ export function ShareBill({
             <span className="min-w-0 truncate pl-1" title={total.label}>
               {total.label}
             </span>
-            {/* Ends where the rows' dollars end: the dollar column grows to the widest amount, this one included */}
-            <span className="col-start-2 justify-self-end whitespace-nowrap tabular-nums">
+            {/* Ends where the rows' dollars end, the right edge: the dollar column grows to the widest amount, this one included */}
+            <span className="col-start-3 justify-self-end whitespace-nowrap tabular-nums">
               {total.amount}
             </span>
           </p>
