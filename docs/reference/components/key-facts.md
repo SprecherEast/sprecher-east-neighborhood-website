@@ -119,7 +119,7 @@ Source: `src/platform/richtext/editorial/BillDetails.tsx`
 
 ## `BreakdownRow`
 
-Where the City's tax goes, as a closed row of the whole bill under the City's own row (#1163): the split alone, with thin bars, since the answer card above already gives the City's tax and its increase and the row's title is the heading (#1144). `row` is `useBreakdownAutoOpen`'s: it opens the row once after the first estimate, and each opening fills the bars again (#1165).
+Where the City's tax goes, as a closed row of the whole bill under the City's own row (#1163): the split alone, with thin bars, since the answer card above already gives the City's tax and its increase and the row's title is the heading (#1144). `row` is `useBreakdownAutoOpen`'s: it opens the row after each estimate that changes the bill while it is closed (#1176), and each opening fills the bars again (#1165).
 
 Source: `src/platform/richtext/editorial/BreakdownRow.tsx`
 
