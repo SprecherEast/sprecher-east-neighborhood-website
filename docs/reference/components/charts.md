@@ -223,6 +223,7 @@ Source: `src/platform/ui/AreaChart.tsx`
 
 **Used by** (direct imports):
 
+- Modules: `roadmap`
 - Routes: `/dev/gallery`
 
 ## `HeatMap`
@@ -240,4 +241,5 @@ Source: `src/platform/ui/HeatMap.tsx`
 
 **Used by** (direct imports):
 
+- Modules: `roadmap`
 - Routes: `/dev/gallery`

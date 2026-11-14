@@ -26,9 +26,7 @@ export default async function RoadmapPage() {
     <div className={PAGE_SHELL}>
       <PageHeader title="What we’re building" description={intro} />
       <div className="container max-w-3xl space-y-8">
-        {stats.open + stats.done > 0 && (
-          <PlanSummary stats={stats} generatedAt={plan.generatedAt} />
-        )}
+        {stats.open + stats.done > 0 && <PlanSummary plan={plan} now={now} />}
         <PlanTiles plan={plan} now={now} />
       </div>
     </div>
