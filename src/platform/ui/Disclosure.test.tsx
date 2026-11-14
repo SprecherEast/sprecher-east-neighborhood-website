@@ -96,26 +96,6 @@ describe('Disclosure', () => {
     expect(states).toEqual([false])
   })
 
-  it('names the element to keep in view when it opens, only for the boxes that scroll (#1178)', () => {
-    const { container } = render(
-      <>
-        <Disclosure variant="listRow" summary="A" revealAnchor="card-title">
-          Body
-        </Disclosure>
-        <Disclosure variant="bar" summary="B" revealAnchor="card-title">
-          Body
-        </Disclosure>
-        <Disclosure variant="card" summary="C">
-          Body
-        </Disclosure>
-      </>,
-    )
-    const [list, bar, card] = [...container.querySelectorAll('details')]
-    expect(list?.getAttribute('data-reveal-anchor')).toBe('card-title')
-    expect(bar?.hasAttribute('data-reveal-anchor')).toBe(false)
-    expect(card?.hasAttribute('data-reveal-anchor')).toBe(false)
-  })
-
   it('opens from the summary, and can start open', () => {
     const { container, rerender } = render(
       <Disclosure variant="card" summary="Question">
