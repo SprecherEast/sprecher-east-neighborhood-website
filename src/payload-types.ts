@@ -59,193 +59,195 @@ export type SupportedTimezones =
   | 'Pacific/Guam'
   | 'Pacific/Noumea'
   | 'Pacific/Auckland'
-  | 'Pacific/Fiji';
+  | 'Pacific/Fiji'
 
 export interface Config {
   auth: {
-    users: UserAuthOperations;
-    'payload-mcp-api-keys': PayloadMcpApiKeyAuthOperations;
-  };
-  blocks: {};
+    users: UserAuthOperations
+    'payload-mcp-api-keys': PayloadMcpApiKeyAuthOperations
+  }
+  blocks: {}
   collections: {
-    pages: Page;
-    posts: Post;
-    events: Event;
-    'team-members': TeamMember;
-    resources: Resource;
-    faq: Faq;
-    media: Media;
-    categories: Category;
-    users: User;
-    'email-confirmations': EmailConfirmation;
-    'agent-runs': AgentRun;
-    'agent-review-items': AgentReviewItem;
-    redirects: Redirect;
-    forms: Form;
-    'form-submissions': FormSubmission;
-    search: Search;
-    'payload-mcp-api-keys': PayloadMcpApiKey;
-    'payload-kv': PayloadKv;
-    'payload-jobs': PayloadJob;
-    'payload-folders': FolderInterface;
-    'payload-locked-documents': PayloadLockedDocument;
-    'payload-preferences': PayloadPreference;
-    'payload-migrations': PayloadMigration;
-  };
+    pages: Page
+    posts: Post
+    events: Event
+    'team-members': TeamMember
+    resources: Resource
+    faq: Faq
+    media: Media
+    categories: Category
+    users: User
+    'email-confirmations': EmailConfirmation
+    'agent-runs': AgentRun
+    'agent-review-items': AgentReviewItem
+    redirects: Redirect
+    forms: Form
+    'form-submissions': FormSubmission
+    search: Search
+    'payload-mcp-api-keys': PayloadMcpApiKey
+    'payload-kv': PayloadKv
+    'payload-jobs': PayloadJob
+    'payload-folders': FolderInterface
+    'payload-locked-documents': PayloadLockedDocument
+    'payload-preferences': PayloadPreference
+    'payload-migrations': PayloadMigration
+  }
   collectionsJoins: {
     'agent-runs': {
-      reviewItems: 'agent-review-items';
-    };
+      reviewItems: 'agent-review-items'
+    }
     'payload-folders': {
-      documentsAndFolders: 'payload-folders' | 'media';
-    };
-  };
+      documentsAndFolders: 'payload-folders' | 'media'
+    }
+  }
   collectionsSelect: {
-    pages: PagesSelect<false> | PagesSelect<true>;
-    posts: PostsSelect<false> | PostsSelect<true>;
-    events: EventsSelect<false> | EventsSelect<true>;
-    'team-members': TeamMembersSelect<false> | TeamMembersSelect<true>;
-    resources: ResourcesSelect<false> | ResourcesSelect<true>;
-    faq: FaqSelect<false> | FaqSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
-    categories: CategoriesSelect<false> | CategoriesSelect<true>;
-    users: UsersSelect<false> | UsersSelect<true>;
-    'email-confirmations': EmailConfirmationsSelect<false> | EmailConfirmationsSelect<true>;
-    'agent-runs': AgentRunsSelect<false> | AgentRunsSelect<true>;
-    'agent-review-items': AgentReviewItemsSelect<false> | AgentReviewItemsSelect<true>;
-    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
-    forms: FormsSelect<false> | FormsSelect<true>;
-    'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
-    search: SearchSelect<false> | SearchSelect<true>;
-    'payload-mcp-api-keys': PayloadMcpApiKeysSelect<false> | PayloadMcpApiKeysSelect<true>;
-    'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
-    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
-    'payload-folders': PayloadFoldersSelect<false> | PayloadFoldersSelect<true>;
-    'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
-    'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
-    'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
-  };
+    pages: PagesSelect<false> | PagesSelect<true>
+    posts: PostsSelect<false> | PostsSelect<true>
+    events: EventsSelect<false> | EventsSelect<true>
+    'team-members': TeamMembersSelect<false> | TeamMembersSelect<true>
+    resources: ResourcesSelect<false> | ResourcesSelect<true>
+    faq: FaqSelect<false> | FaqSelect<true>
+    media: MediaSelect<false> | MediaSelect<true>
+    categories: CategoriesSelect<false> | CategoriesSelect<true>
+    users: UsersSelect<false> | UsersSelect<true>
+    'email-confirmations': EmailConfirmationsSelect<false> | EmailConfirmationsSelect<true>
+    'agent-runs': AgentRunsSelect<false> | AgentRunsSelect<true>
+    'agent-review-items': AgentReviewItemsSelect<false> | AgentReviewItemsSelect<true>
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>
+    forms: FormsSelect<false> | FormsSelect<true>
+    'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>
+    search: SearchSelect<false> | SearchSelect<true>
+    'payload-mcp-api-keys': PayloadMcpApiKeysSelect<false> | PayloadMcpApiKeysSelect<true>
+    'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>
+    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>
+    'payload-folders': PayloadFoldersSelect<false> | PayloadFoldersSelect<true>
+    'payload-locked-documents':
+      | PayloadLockedDocumentsSelect<false>
+      | PayloadLockedDocumentsSelect<true>
+    'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>
+    'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>
+  }
   db: {
-    defaultIDType: number;
-  };
-  fallbackLocale: null;
+    defaultIDType: number
+  }
+  fallbackLocale: null
   globals: {
-    header: Header;
-    footer: Footer;
-    'payload-jobs-stats': PayloadJobsStat;
-  };
+    header: Header
+    footer: Footer
+    'payload-jobs-stats': PayloadJobsStat
+  }
   globalsSelect: {
-    header: HeaderSelect<false> | HeaderSelect<true>;
-    footer: FooterSelect<false> | FooterSelect<true>;
-    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
-  };
-  locale: null;
+    header: HeaderSelect<false> | HeaderSelect<true>
+    footer: FooterSelect<false> | FooterSelect<true>
+    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>
+  }
+  locale: null
   widgets: {
-    collections: CollectionsWidget;
-  };
-  user: User | PayloadMcpApiKey;
+    collections: CollectionsWidget
+  }
+  user: User | PayloadMcpApiKey
   jobs: {
     tasks: {
-      deleteExpiredContactMessages: TaskDeleteExpiredContactMessages;
-      deleteExpiredEmailConfirmations: TaskDeleteExpiredEmailConfirmations;
-      schedulePublish: TaskSchedulePublish;
+      deleteExpiredContactMessages: TaskDeleteExpiredContactMessages
+      deleteExpiredEmailConfirmations: TaskDeleteExpiredEmailConfirmations
+      schedulePublish: TaskSchedulePublish
       inline: {
-        input: unknown;
-        output: unknown;
-      };
-    };
-    workflows: unknown;
-  };
+        input: unknown
+        output: unknown
+      }
+    }
+    workflows: unknown
+  }
 }
 export interface UserAuthOperations {
   forgotPassword: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   login: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   registerFirstUser: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   unlock: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
 }
 export interface PayloadMcpApiKeyAuthOperations {
   forgotPassword: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   login: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   registerFirstUser: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   unlock: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pages".
  */
 export interface Page {
-  id: number;
+  id: number
   /**
    * Up to 60 characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.
    */
-  title: string;
+  title: string
   hero: {
-    type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact';
+    type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact'
     richText?: {
       root: {
-        type: string;
+        type: string
         children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
+          type: any
+          version: number
+          [k: string]: unknown
+        }[]
+        direction: ('ltr' | 'rtl') | null
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+        indent: number
+        version: number
+      }
+      [k: string]: unknown
+    } | null
     links?:
       | {
           link: {
-            type?: ('reference' | 'custom') | null;
-            newTab?: boolean | null;
+            type?: ('reference' | 'custom') | null
+            newTab?: boolean | null
             reference?:
               | ({
-                  relationTo: 'pages';
-                  value: number | Page;
+                  relationTo: 'pages'
+                  value: number | Page
                 } | null)
               | ({
-                  relationTo: 'posts';
-                  value: number | Post;
-                } | null);
-            url?: string | null;
-            label: string;
+                  relationTo: 'posts'
+                  value: number | Post
+                } | null)
+            url?: string | null
+            label: string
             /**
              * Choose how the link should be rendered.
              */
-            appearance?: ('default' | 'outline') | null;
-          };
-          id?: string | null;
+            appearance?: ('default' | 'outline') | null
+          }
+          id?: string | null
         }[]
-      | null;
-    media?: (number | null) | Media;
-  };
+      | null
+    media?: (number | null) | Media
+  }
   layout: (
     | CallToActionBlock
     | ContentBlock
@@ -256,40 +258,40 @@ export interface Page {
     | FormBlock
     | EventsThisWeekBlock
     | TopIssuesBlock
-  )[];
+  )[]
   meta?: {
-    title?: string | null;
+    title?: string | null
     /**
      * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
      */
-    image?: (number | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
+    image?: (number | null) | Media
+    description?: string | null
+  }
+  publishedAt?: string | null
   /**
    * An optional photo shown faded and grayed behind the whole page, under its text. Pick a wide, level photo with a quiet sky or field; the text stays readable in light and dark.
    */
-  backdrop?: (number | null) | Media;
+  backdrop?: (number | null) | Media
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
-  generateSlug?: boolean | null;
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
+  generateSlug?: boolean | null
+  slug: string
+  updatedAt: string
+  createdAt: string
+  _status?: ('draft' | 'published') | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts".
  */
 export interface Post {
-  id: number;
+  id: number
   /**
    * Up to 60 characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.
    */
-  title: string;
-  heroImage?: (number | null) | Media;
+  title: string
+  heroImage?: (number | null) | Media
   /**
    * An optional photo shown faded behind the title, edge to edge. Choose the crop for each screen size: the band is a wide, short strip, so a photo whose good part cannot fill it is not used. A size left empty uses the nearest crop that is set; all three empty keeps the plain band. Fine-tune the part shown with the focal point of each upload in Media. Never use a photo with identifiable people.
    */
@@ -297,275 +299,277 @@ export interface Post {
     /**
      * Under 768 px wide. A near-square crop reads best.
      */
-    phone?: (number | null) | Media;
+    phone?: (number | null) | Media
     /**
      * From 768 px to 959 px wide.
      */
-    tablet?: (number | null) | Media;
+    tablet?: (number | null) | Media
     /**
      * From 960 px wide: the widest, shortest strip.
      */
-    desktop?: (number | null) | Media;
-  };
+    desktop?: (number | null) | Media
+  }
   content: {
     root: {
-      type: string;
+      type: string
       children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  relatedPosts?: (number | Post)[] | null;
-  categories?: (number | Category)[] | null;
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  }
+  relatedPosts?: (number | Post)[] | null
+  categories?: (number | Category)[] | null
   meta?: {
-    title?: string | null;
+    title?: string | null
     /**
      * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
      */
-    image?: (number | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
-  authors?: (number | User)[] | null;
+    image?: (number | null) | Media
+    description?: string | null
+  }
+  publishedAt?: string | null
+  authors?: (number | User)[] | null
   populatedAuthors?:
     | {
-        id?: string | null;
-        name?: string | null;
+        id?: string | null
+        name?: string | null
       }[]
-    | null;
+    | null
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
-  generateSlug?: boolean | null;
-  slug: string;
+  generateSlug?: boolean | null
+  slug: string
   /**
    * Set on suggestions from outside sources. Empty for content staff write.
    */
-  moderationStatus?: ('suggested' | 'approved' | 'rejected') | null;
+  moderationStatus?: ('suggested' | 'approved' | 'rejected') | null
   /**
    * Who published this first, for example a city calendar.
    */
-  sourceName?: string | null;
-  sourceUrl?: string | null;
+  sourceName?: string | null
+  sourceUrl?: string | null
   /**
    * The source’s own ID; the same one can’t be stored twice.
    */
-  externalId?: string | null;
+  externalId?: string | null
   /**
    * A fingerprint of the content; it can’t be stored twice.
    */
-  contentHash?: string | null;
-  audience?: ('everyone' | 'families' | 'youth' | 'seniors' | 'volunteers' | 'association-leaders')[] | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
+  contentHash?: string | null
+  audience?:
+    | ('everyone' | 'families' | 'youth' | 'seniors' | 'volunteers' | 'association-leaders')[]
+    | null
+  updatedAt: string
+  createdAt: string
+  _status?: ('draft' | 'published') | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
-  id: number;
-  alt: string;
+  id: number
+  alt: string
   caption?: {
     root: {
-      type: string;
+      type: string
       children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  } | null
   /**
    * Who made the image, as it should be credited, for example "Jane Doe".
    */
-  credit?: string | null;
+  credit?: string | null
   /**
    * Under what terms the site may show it.
    */
-  license?: ('own' | 'permission' | 'cc-by' | 'cc-by-sa' | 'cc0' | 'other') | null;
+  license?: ('own' | 'permission' | 'cc-by' | 'cc-by-sa' | 'cc0' | 'other') | null
   /**
    * The license itself, for example https://creativecommons.org/licenses/by-sa/4.0/. Creative Commons licenses need it: the photo credit links to it.
    */
-  licenseUrl?: string | null;
+  licenseUrl?: string | null
   /**
    * Where the image came from, when it isn’t our own.
    */
-  sourceUrl?: string | null;
-  folder?: (number | null) | FolderInterface;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
+  sourceUrl?: string | null
+  folder?: (number | null) | FolderInterface
+  updatedAt: string
+  createdAt: string
+  url?: string | null
+  thumbnailURL?: string | null
+  filename?: string | null
+  mimeType?: string | null
+  filesize?: number | null
+  width?: number | null
+  height?: number | null
+  focalX?: number | null
+  focalY?: number | null
   sizes?: {
     thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
     square?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
     small?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
     medium?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
     large?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
     xlarge?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
     og?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
+  }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-folders".
  */
 export interface FolderInterface {
-  id: number;
-  name: string;
-  folder?: (number | null) | FolderInterface;
+  id: number
+  name: string
+  folder?: (number | null) | FolderInterface
   documentsAndFolders?: {
     docs?: (
       | {
-          relationTo?: 'payload-folders';
-          value: number | FolderInterface;
+          relationTo?: 'payload-folders'
+          value: number | FolderInterface
         }
       | {
-          relationTo?: 'media';
-          value: number | Media;
+          relationTo?: 'media'
+          value: number | Media
         }
-    )[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  folderType?: 'media'[] | null;
-  updatedAt: string;
-  createdAt: string;
+    )[]
+    hasNextPage?: boolean
+    totalDocs?: number
+  }
+  folderType?: 'media'[] | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories".
  */
 export interface Category {
-  id: number;
-  title: string;
+  id: number
+  title: string
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
-  generateSlug?: boolean | null;
-  slug: string;
+  generateSlug?: boolean | null
+  slug: string
   /**
    * Shown on agent suggestions in this category until an editor picks another image. A subcategory without one uses its parent’s. Use a photo we own or may use, with its credit filled in.
    */
-  defaultImage?: (number | null) | Media;
-  parent?: (number | null) | Category;
+  defaultImage?: (number | null) | Media
+  parent?: (number | null) | Category
   breadcrumbs?:
     | {
-        doc?: (number | null) | Category;
-        url?: string | null;
-        label?: string | null;
-        id?: string | null;
+        doc?: (number | null) | Category
+        url?: string | null
+        label?: string | null
+        id?: string | null
       }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
+    | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
-  id: number;
-  name?: string | null;
+  id: number
+  name?: string | null
   /**
    * Controls access level. Only admins can change roles.
    */
-  role: 'admin' | 'editor' | 'guest' | 'resident' | 'agent';
-  verificationResends?: number | null;
-  verificationResendsSince?: string | null;
-  verificationSetsPassword?: boolean | null;
-  verifiedTokenHash?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  _verified?: boolean | null;
-  _verificationToken?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
+  role: 'admin' | 'editor' | 'guest' | 'resident' | 'agent'
+  verificationResends?: number | null
+  verificationResendsSince?: string | null
+  verificationSetsPassword?: boolean | null
+  verifiedTokenHash?: string | null
+  updatedAt: string
+  createdAt: string
+  email: string
+  resetPasswordToken?: string | null
+  resetPasswordExpiration?: string | null
+  salt?: string | null
+  hash?: string | null
+  resetPasswordRequestedAt?: string | null
+  _verified?: boolean | null
+  _verificationToken?: string | null
+  loginAttempts?: number | null
+  lockUntil?: string | null
   sessions?:
     | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
+        id: string
+        createdAt?: string | null
+        expiresAt: string
       }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
+    | null
+  password?: string | null
+  collection: 'users'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -574,46 +578,46 @@ export interface User {
 export interface CallToActionBlock {
   richText?: {
     root: {
-      type: string;
+      type: string
       children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  } | null
   links?:
     | {
         link: {
-          type?: ('reference' | 'custom') | null;
-          newTab?: boolean | null;
+          type?: ('reference' | 'custom') | null
+          newTab?: boolean | null
           reference?:
             | ({
-                relationTo: 'pages';
-                value: number | Page;
+                relationTo: 'pages'
+                value: number | Page
               } | null)
             | ({
-                relationTo: 'posts';
-                value: number | Post;
-              } | null);
-          url?: string | null;
-          label: string;
+                relationTo: 'posts'
+                value: number | Post
+              } | null)
+          url?: string | null
+          label: string
           /**
            * Choose how the link should be rendered.
            */
-          appearance?: ('default' | 'outline') | null;
-        };
-        id?: string | null;
+          appearance?: ('default' | 'outline') | null
+        }
+        id?: string | null
       }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'cta';
+    | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'cta'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -622,52 +626,52 @@ export interface CallToActionBlock {
 export interface ContentBlock {
   columns?:
     | {
-        size?: ('oneThird' | 'half' | 'twoThirds' | 'full') | null;
+        size?: ('oneThird' | 'half' | 'twoThirds' | 'full') | null
         richText?: {
           root: {
-            type: string;
+            type: string
             children: {
-              type: any;
-              version: number;
-              [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        } | null;
-        enableLink?: boolean | null;
+              type: any
+              version: number
+              [k: string]: unknown
+            }[]
+            direction: ('ltr' | 'rtl') | null
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+            indent: number
+            version: number
+          }
+          [k: string]: unknown
+        } | null
+        enableLink?: boolean | null
         link?: {
-          type?: ('reference' | 'custom') | null;
-          newTab?: boolean | null;
+          type?: ('reference' | 'custom') | null
+          newTab?: boolean | null
           reference?:
             | ({
-                relationTo: 'pages';
-                value: number | Page;
+                relationTo: 'pages'
+                value: number | Page
               } | null)
             | ({
-                relationTo: 'posts';
-                value: number | Post;
-              } | null);
-          url?: string | null;
-          label: string;
+                relationTo: 'posts'
+                value: number | Post
+              } | null)
+          url?: string | null
+          label: string
           /**
            * Choose how the link should be rendered.
            */
-          appearance?: ('default' | 'outline' | 'accent') | null;
-        };
+          appearance?: ('default' | 'outline' | 'accent') | null
+        }
         /**
          * Where the link button sits in its column.
          */
-        linkAlign?: ('start' | 'end' | 'beside') | null;
-        id?: string | null;
+        linkAlign?: ('start' | 'end' | 'beside') | null
+        id?: string | null
       }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'content';
+    | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'content'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -678,32 +682,32 @@ export interface SectionBlock {
     /**
      * How much of the row this item takes on a large screen. Items that add up to more than a row move to the next one. On a phone every item is full width.
      */
-    width: 'full' | 'threeQuarters' | 'twoThirds' | 'half' | 'oneThird' | 'quarter';
-    align: 'start' | 'center' | 'end';
+    width: 'full' | 'threeQuarters' | 'twoThirds' | 'half' | 'oneThird' | 'quarter'
+    align: 'start' | 'center' | 'end'
     /**
      * Where the item sits beside a taller item in the same row.
      */
-    verticalAlign: 'top' | 'center' | 'bottom';
+    verticalAlign: 'top' | 'center' | 'bottom'
     /**
      * Where this item shows when the items stack on a phone.
      */
-    phoneOrder: 'inOrder' | 'first' | 'last';
-    content?: (ContentBlock | MediaBlock | MapBlock)[] | null;
-    id?: string | null;
-  }[];
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'section';
+    phoneOrder: 'inOrder' | 'first' | 'last'
+    content?: (ContentBlock | MediaBlock | MapBlock)[] | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'section'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "MediaBlock".
  */
 export interface MediaBlock {
-  media: number | Media;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'mediaBlock';
+  media: number | Media
+  id?: string | null
+  blockName?: string | null
+  blockType: 'mediaBlock'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -713,22 +717,22 @@ export interface MapBlock {
   /**
    * Names the map for screen readers, for example "Where Sprecher East is".
    */
-  title: string;
+  title: string
   /**
    * Says in words what the map shows: its boundaries and what touches them. Neighbors who cannot use the map read this.
    */
-  description: string;
+  description: string
   /**
    * The small picture of the map, shown on the page.
    */
-  preview: number | Media;
+  preview: number | Media
   /**
    * The live map opened by a tap. In Google Maps choose Share, then Embed a map, and paste the whole code or only its address. A shared My Maps map works too. Leave empty to show the picture only.
    */
-  embedUrl?: string | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'mapBlock';
+  embedUrl?: string | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'mapBlock'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -737,261 +741,261 @@ export interface MapBlock {
 export interface ArchiveBlock {
   introContent?: {
     root: {
-      type: string;
+      type: string
       children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  populateBy?: ('collection' | 'selection') | null;
-  relationTo?: 'posts' | null;
-  categories?: (number | Category)[] | null;
-  limit?: number | null;
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  } | null
+  populateBy?: ('collection' | 'selection') | null
+  relationTo?: 'posts' | null
+  categories?: (number | Category)[] | null
+  limit?: number | null
   selectedDocs?:
     | {
-        relationTo: 'posts';
-        value: number | Post;
+        relationTo: 'posts'
+        value: number | Post
       }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'archive';
+    | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'archive'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FormBlock".
  */
 export interface FormBlock {
-  form: number | Form;
-  enableIntro?: boolean | null;
+  form: number | Form
+  enableIntro?: boolean | null
   introContent?: {
     root: {
-      type: string;
+      type: string
       children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'formBlock';
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  } | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'formBlock'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
-  id: number;
-  title: string;
+  id: number
+  title: string
   fields?:
     | (
         | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            defaultValue?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'checkbox';
+            name: string
+            label?: string | null
+            width?: number | null
+            required?: boolean | null
+            defaultValue?: boolean | null
+            id?: string | null
+            blockName?: string | null
+            blockType: 'checkbox'
           }
         | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'country';
+            name: string
+            label?: string | null
+            width?: number | null
+            required?: boolean | null
+            id?: string | null
+            blockName?: string | null
+            blockType: 'country'
           }
         | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'email';
+            name: string
+            label?: string | null
+            width?: number | null
+            required?: boolean | null
+            id?: string | null
+            blockName?: string | null
+            blockType: 'email'
           }
         | {
             message?: {
               root: {
-                type: string;
+                type: string
                 children: {
-                  type: any;
-                  version: number;
-                  [k: string]: unknown;
-                }[];
-                direction: ('ltr' | 'rtl') | null;
-                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-                indent: number;
-                version: number;
-              };
-              [k: string]: unknown;
-            } | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'message';
+                  type: any
+                  version: number
+                  [k: string]: unknown
+                }[]
+                direction: ('ltr' | 'rtl') | null
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+                indent: number
+                version: number
+              }
+              [k: string]: unknown
+            } | null
+            id?: string | null
+            blockName?: string | null
+            blockType: 'message'
           }
         | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'number';
+            name: string
+            label?: string | null
+            width?: number | null
+            defaultValue?: number | null
+            required?: boolean | null
+            id?: string | null
+            blockName?: string | null
+            blockType: 'number'
           }
         | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            placeholder?: string | null;
+            name: string
+            label?: string | null
+            width?: number | null
+            defaultValue?: string | null
+            placeholder?: string | null
             options?:
               | {
-                  label: string;
-                  value: string;
-                  id?: string | null;
+                  label: string
+                  value: string
+                  id?: string | null
                 }[]
-              | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'select';
+              | null
+            required?: boolean | null
+            id?: string | null
+            blockName?: string | null
+            blockType: 'select'
           }
         | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'state';
+            name: string
+            label?: string | null
+            width?: number | null
+            required?: boolean | null
+            id?: string | null
+            blockName?: string | null
+            blockType: 'state'
           }
         | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'text';
+            name: string
+            label?: string | null
+            width?: number | null
+            defaultValue?: string | null
+            required?: boolean | null
+            id?: string | null
+            blockName?: string | null
+            blockType: 'text'
           }
         | {
-            name: string;
-            label?: string | null;
-            width?: number | null;
-            defaultValue?: string | null;
-            required?: boolean | null;
-            id?: string | null;
-            blockName?: string | null;
-            blockType: 'textarea';
+            name: string
+            label?: string | null
+            width?: number | null
+            defaultValue?: string | null
+            required?: boolean | null
+            id?: string | null
+            blockName?: string | null
+            blockType: 'textarea'
           }
       )[]
-    | null;
-  submitButtonLabel?: string | null;
-  confirmationType?: ('message' | 'redirect') | null;
+    | null
+  submitButtonLabel?: string | null
+  confirmationType?: ('message' | 'redirect') | null
   confirmationMessage?: {
     root: {
-      type: string;
+      type: string
       children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  } | null
   redirect?: {
-    url: string;
-  };
+    url: string
+  }
   emails?:
     | {
-        emailTo?: string | null;
-        cc?: string | null;
-        bcc?: string | null;
-        replyTo?: string | null;
-        emailFrom?: string | null;
-        subject: string;
+        emailTo?: string | null
+        cc?: string | null
+        bcc?: string | null
+        replyTo?: string | null
+        emailFrom?: string | null
+        subject: string
         message?: {
           root: {
-            type: string;
+            type: string
             children: {
-              type: any;
-              version: number;
-              [k: string]: unknown;
-            }[];
-            direction: ('ltr' | 'rtl') | null;
-            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-            indent: number;
-            version: number;
-          };
-          [k: string]: unknown;
-        } | null;
-        id?: string | null;
+              type: any
+              version: number
+              [k: string]: unknown
+            }[]
+            direction: ('ltr' | 'rtl') | null
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+            indent: number
+            version: number
+          }
+          [k: string]: unknown
+        } | null
+        id?: string | null
       }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
+    | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "EventsThisWeekBlock".
  */
 export interface EventsThisWeekBlock {
-  heading: string;
+  heading: string
   /**
    * How many days the strip shows, starting today. 7 shows today and the next six days.
    */
-  days: number;
+  days: number
   /**
    * Each row lists its events, soonest first. A row with no events in those days is hidden; when every row is empty, the strip says so and links to all events.
    */
   rows: {
-    title: string;
-    source: 'all' | 'official' | 'category';
+    title: string
+    source: 'all' | 'official' | 'category'
     /**
      * The row lists this category’s events and links to its events page.
      */
-    category?: (number | null) | Category;
-    limit: number;
-    id?: string | null;
-  }[];
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'eventsThisWeek';
+    category?: (number | null) | Category
+    limit: number
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'eventsThisWeek'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "TopIssuesBlock".
  */
 export interface TopIssuesBlock {
-  heading: string;
+  heading: string
   /**
    * The day you last checked the list. Residents see "Updated" with this date; leave it empty to show none.
    */
-  reviewedAt?: string | null;
+  reviewedAt?: string | null
   /**
    * Up to five, most important first. Drag to reorder. An issue whose post or page isn’t published is hidden.
    */
@@ -999,66 +1003,66 @@ export interface TopIssuesBlock {
     /**
      * A few words. It is the link residents tap.
      */
-    title: string;
+    title: string
     /**
      * One sentence, shown below the title.
      */
-    summary?: string | null;
+    summary?: string | null
     link?: {
-      type?: ('reference' | 'custom') | null;
-      newTab?: boolean | null;
+      type?: ('reference' | 'custom') | null
+      newTab?: boolean | null
       reference?:
         | ({
-            relationTo: 'pages';
-            value: number | Page;
+            relationTo: 'pages'
+            value: number | Page
           } | null)
         | ({
-            relationTo: 'posts';
-            value: number | Post;
-          } | null);
-      url?: string | null;
-    };
-    id?: string | null;
-  }[];
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'topIssues';
+            relationTo: 'posts'
+            value: number | Post
+          } | null)
+      url?: string | null
+    }
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'topIssues'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "events".
  */
 export interface Event {
-  id: number;
+  id: number
   /**
    * Up to 60 characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.
    */
-  title: string;
-  date: string;
-  timeStart?: string | null;
-  timeEnd?: string | null;
+  title: string
+  date: string
+  timeStart?: string | null
+  timeEnd?: string | null
   /**
    * A cancelled event stays listed and is marked as cancelled.
    */
-  cancelled?: boolean | null;
+  cancelled?: boolean | null
   /**
    * Set for a public body’s own meeting (Common Council, a city commission, the County Board).
    */
-  officialBody?: ('city' | 'county') | null;
+  officialBody?: ('city' | 'county') | null
   /**
    * The body’s own agenda page, starting with https://
    */
-  agendaUrl?: string | null;
+  agendaUrl?: string | null
   /**
    * Featured events appear prominently on the homepage
    */
-  featured?: boolean | null;
-  locationType?: ('in-person' | 'virtual' | 'hybrid') | null;
-  locationName?: string | null;
-  locationAddress?: string | null;
-  mapsUrl?: string | null;
-  registrationUrl?: string | null;
-  heroImage?: (number | null) | Media;
+  featured?: boolean | null
+  locationType?: ('in-person' | 'virtual' | 'hybrid') | null
+  locationName?: string | null
+  locationAddress?: string | null
+  mapsUrl?: string | null
+  registrationUrl?: string | null
+  heroImage?: (number | null) | Media
   /**
    * An optional photo shown faded behind the title, edge to edge. Choose the crop for each screen size: the band is a wide, short strip, so a photo whose good part cannot fill it is not used. A size left empty uses the nearest crop that is set; all three empty keeps the plain band. Fine-tune the part shown with the focal point of each upload in Media. Never use a photo with identifiable people.
    */
@@ -1066,114 +1070,116 @@ export interface Event {
     /**
      * Under 768 px wide. A near-square crop reads best.
      */
-    phone?: (number | null) | Media;
+    phone?: (number | null) | Media
     /**
      * From 768 px to 959 px wide.
      */
-    tablet?: (number | null) | Media;
+    tablet?: (number | null) | Media
     /**
      * From 960 px wide: the widest, shortest strip.
      */
-    desktop?: (number | null) | Media;
-  };
+    desktop?: (number | null) | Media
+  }
   /**
    * Short description shown in event cards
    */
-  description?: string | null;
+  description?: string | null
   content?: {
     root: {
-      type: string;
+      type: string
       children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  } | null
   meta?: {
-    title?: string | null;
+    title?: string | null
     /**
      * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
      */
-    image?: (number | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
-  categories?: (number | Category)[] | null;
+    image?: (number | null) | Media
+    description?: string | null
+  }
+  publishedAt?: string | null
+  categories?: (number | Category)[] | null
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
-  generateSlug?: boolean | null;
-  slug: string;
+  generateSlug?: boolean | null
+  slug: string
   /**
    * Set on suggestions from outside sources. Empty for content staff write.
    */
-  moderationStatus?: ('suggested' | 'approved' | 'rejected') | null;
+  moderationStatus?: ('suggested' | 'approved' | 'rejected') | null
   /**
    * Who published this first, for example a city calendar.
    */
-  sourceName?: string | null;
-  sourceUrl?: string | null;
+  sourceName?: string | null
+  sourceUrl?: string | null
   /**
    * The source’s own ID; the same one can’t be stored twice.
    */
-  externalId?: string | null;
+  externalId?: string | null
   /**
    * A fingerprint of the content; it can’t be stored twice.
    */
-  contentHash?: string | null;
-  audience?: ('everyone' | 'families' | 'youth' | 'seniors' | 'volunteers' | 'association-leaders')[] | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
+  contentHash?: string | null
+  audience?:
+    | ('everyone' | 'families' | 'youth' | 'seniors' | 'volunteers' | 'association-leaders')[]
+    | null
+  updatedAt: string
+  createdAt: string
+  _status?: ('draft' | 'published') | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "team-members".
  */
 export interface TeamMember {
-  id: number;
-  memberType: 'board-member' | 'ai-agent';
-  name: string;
-  role: string;
-  title?: string | null;
-  bio?: string | null;
-  capabilities?: string | null;
-  email?: string | null;
-  status: 'active' | 'inactive';
+  id: number
+  memberType: 'board-member' | 'ai-agent'
+  name: string
+  role: string
+  title?: string | null
+  bio?: string | null
+  capabilities?: string | null
+  email?: string | null
+  status: 'active' | 'inactive'
   /**
    * Lower numbers appear first
    */
-  order?: number | null;
-  photo?: (number | null) | Media;
-  updatedAt: string;
-  createdAt: string;
+  order?: number | null
+  photo?: (number | null) | Media
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "resources".
  */
 export interface Resource {
-  id: number;
-  title: string;
-  description?: string | null;
-  url?: string | null;
+  id: number
+  title: string
+  description?: string | null
+  url?: string | null
   /**
    * Up to three more links shown on the card, for example "Alder blog". "Visit Website" above stays the main link.
    */
   links?:
     | {
-        label: string;
-        url: string;
-        id?: string | null;
+        label: string
+        url: string
+        id?: string | null
       }[]
-    | null;
-  phone?: string | null;
+    | null
+  phone?: string | null
   category:
     | 'elected-officials'
     | 'public-safety'
@@ -1182,56 +1188,56 @@ export interface Resource {
     | 'parks'
     | 'community'
     | 'utilities'
-    | 'other';
-  photo?: (number | null) | Media;
+    | 'other'
+  photo?: (number | null) | Media
   /**
    * Required with a photo. Shown as "Photo: …", so leave out "Photo:", for example "City of Madison, Alder Sean O’Brien".
    */
-  photoCredit?: string | null;
+  photoCredit?: string | null
   /**
    * Optional: the page the photo came from. The credit links to it.
    */
-  photoSourceUrl?: string | null;
+  photoSourceUrl?: string | null
   /**
    * Lower numbers appear first within category
    */
-  order?: number | null;
-  publishedAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
+  order?: number | null
+  publishedAt?: string | null
+  updatedAt: string
+  createdAt: string
+  _status?: ('draft' | 'published') | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "faq".
  */
 export interface Faq {
-  id: number;
-  question: string;
+  id: number
+  question: string
   answer: {
     root: {
-      type: string;
+      type: string
       children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  category?: ('general' | 'membership' | 'events' | 'neighborhood') | null;
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  }
+  category?: ('general' | 'membership' | 'events' | 'neighborhood') | null
   /**
    * Lower numbers appear first
    */
-  order?: number | null;
-  publishedAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
+  order?: number | null
+  publishedAt?: string | null
+  updatedAt: string
+  createdAt: string
+  _status?: ('draft' | 'published') | null
 }
 /**
  * Addresses typed into a public form, and when they were confirmed by link. Unconfirmed ones are deleted automatically 48 hours after their last link. A confirmed one is deleted automatically 12 months after it was confirmed, unless they have an account or a message that is still kept (one from the last 12 months, or on hold). To remove an address on request sooner, delete it here.
@@ -1240,23 +1246,23 @@ export interface Faq {
  * via the `definition` "email-confirmations".
  */
 export interface EmailConfirmation {
-  id: number;
-  email: string;
+  id: number
+  email: string
   /**
    * When the link was clicked. Empty: not confirmed yet.
    */
-  confirmedAt?: string | null;
-  welcomeSentAt?: string | null;
+  confirmedAt?: string | null
+  welcomeSentAt?: string | null
   /**
    * When the latest confirmation link was sent.
    */
-  lastSentAt?: string | null;
-  tokenHash?: string | null;
-  tokenExpiresAt?: string | null;
-  sendCount?: number | null;
-  sendWindowStart?: string | null;
-  updatedAt: string;
-  createdAt: string;
+  lastSentAt?: string | null
+  tokenHash?: string | null
+  tokenExpiresAt?: string | null
+  sendCount?: number | null
+  sendWindowStart?: string | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * What each neighborhood agent run checked, suggested and asks editors to review.
@@ -1265,56 +1271,56 @@ export interface EmailConfirmation {
  * via the `definition` "agent-runs".
  */
 export interface AgentRun {
-  id: number;
+  id: number
   /**
    * Set from the API key.
    */
-  agent?: (number | null) | User;
-  runId: string;
-  agentName: string;
-  pipelineVersion: number;
-  repoCommit: string;
-  startedAt: string;
-  finishedAt?: string | null;
-  status: 'running' | 'succeeded' | 'partial' | 'failed' | 'stopped-budget' | 'disabled';
+  agent?: (number | null) | User
+  runId: string
+  agentName: string
+  pipelineVersion: number
+  repoCommit: string
+  startedAt: string
+  finishedAt?: string | null
+  status: 'running' | 'succeeded' | 'partial' | 'failed' | 'stopped-budget' | 'disabled'
   sourcesChecked?:
     | {
-        sourceId: string;
-        fetchStrategy: 'direct' | 'playwright' | 'none';
-        cursor?: string | null;
-        status: 'ok' | 'not-modified' | 'error' | 'skipped' | 'blocked';
-        error?: string | null;
-        id?: string | null;
+        sourceId: string
+        fetchStrategy: 'direct' | 'playwright' | 'none'
+        cursor?: string | null
+        status: 'ok' | 'not-modified' | 'error' | 'skipped' | 'blocked'
+        error?: string | null
+        id?: string | null
       }[]
-    | null;
+    | null
   counts?: {
-    seen?: number | null;
-    proposed?: number | null;
-    updates?: number | null;
-    rejected?: number | null;
-    duplicates?: number | null;
-    needsReview?: number | null;
-    deferred?: number | null;
-  };
-  errors?: string[] | null;
+    seen?: number | null
+    proposed?: number | null
+    updates?: number | null
+    rejected?: number | null
+    duplicates?: number | null
+    needsReview?: number | null
+    deferred?: number | null
+  }
+  errors?: string[] | null
   cost?: {
-    inputTokens?: number | null;
-    outputTokens?: number | null;
+    inputTokens?: number | null
+    outputTokens?: number | null
     /**
      * In US dollars.
      */
-    usd?: number | null;
-  };
+    usd?: number | null
+  }
   /**
    * What the agent asked an editor to look at during this run.
    */
   reviewItems?: {
-    docs?: (number | AgentReviewItem)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  updatedAt: string;
-  createdAt: string;
+    docs?: (number | AgentReviewItem)[]
+    hasNextPage?: boolean
+    totalDocs?: number
+  }
+  updatedAt: string
+  createdAt: string
 }
 /**
  * What the agents ask an editor to look at. They never changed the content.
@@ -1323,22 +1329,22 @@ export interface AgentRun {
  * via the `definition` "agent-review-items".
  */
 export interface AgentReviewItem {
-  id: number;
-  run: number | AgentRun;
-  agent?: (number | null) | User;
-  kind: 'needs-review' | 'update' | 'cancel' | 'rejected-invalid';
-  targetCollection?: ('events' | 'posts') | null;
-  targetId?: number | null;
-  externalId?: string | null;
-  summary: string;
+  id: number
+  run: number | AgentRun
+  agent?: (number | null) | User
+  kind: 'needs-review' | 'update' | 'cancel' | 'rejected-invalid'
+  targetCollection?: ('events' | 'posts') | null
+  targetId?: number | null
+  externalId?: string | null
+  summary: string
   evidence?:
     | {
-        url: string;
-        says: string;
-        retrievedAt: string;
-        id?: string | null;
+        url: string
+        says: string
+        retrievedAt: string
+        id?: string | null
       }[]
-    | null;
+    | null
   flags?:
     | (
         | 'missing-date'
@@ -1357,78 +1363,78 @@ export interface AgentReviewItem {
         | 'wrong-offset'
         | 'image-candidate'
       )[]
-    | null;
-  sourceUrl?: string | null;
-  updatedAt: string;
-  createdAt: string;
+    | null
+  sourceUrl?: string | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
-  id: number;
+  id: number
   /**
    * You will need to rebuild the website when changing this field.
    */
-  from: string;
+  from: string
   to?: {
-    type?: ('reference' | 'custom') | null;
+    type?: ('reference' | 'custom') | null
     reference?:
       | ({
-          relationTo: 'pages';
-          value: number | Page;
+          relationTo: 'pages'
+          value: number | Page
         } | null)
       | ({
-          relationTo: 'posts';
-          value: number | Post;
-        } | null);
-    url?: string | null;
-  };
-  updatedAt: string;
-  createdAt: string;
+          relationTo: 'posts'
+          value: number | Post
+        } | null)
+    url?: string | null
+  }
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "form-submissions".
  */
 export interface FormSubmission {
-  id: number;
-  form: number | Form;
+  id: number
+  form: number | Form
   submissionData?:
     | {
-        field: string;
-        value: string;
-        id?: string | null;
+        field: string
+        value: string
+        id?: string | null
       }[]
-    | null;
+    | null
   /**
    * From the form’s email field.
    */
-  senderEmail?: string | null;
+  senderEmail?: string | null
   /**
    * Ticked once the sender clicks the confirmation link we email them.
    */
-  emailConfirmed?: boolean | null;
+  emailConfirmed?: boolean | null
   heldEmails?:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
+    | null
   /**
    * Keep this message past the automatic deletion (48 hours if never confirmed, otherwise 12 months after the sender’s last message), for an active matter or a retention requirement. Untick it when that no longer applies.
    */
-  retentionHold?: boolean | null;
+  retentionHold?: boolean | null
   /**
    * Why it is kept longer.
    */
-  retentionHoldReason?: string | null;
-  updatedAt: string;
-  createdAt: string;
+  retentionHoldReason?: string | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This is a collection of automatically created search results. These results are used by the global site search and will be updated automatically as documents in the CMS are created or updated.
@@ -1437,37 +1443,37 @@ export interface FormSubmission {
  * via the `definition` "search".
  */
 export interface Search {
-  id: number;
-  title?: string | null;
-  priority?: number | null;
+  id: number
+  title?: string | null
+  priority?: number | null
   doc:
     | {
-        relationTo: 'posts';
-        value: number | Post;
+        relationTo: 'posts'
+        value: number | Post
       }
     | {
-        relationTo: 'events';
-        value: number | Event;
-      };
-  slug?: string | null;
+        relationTo: 'events'
+        value: number | Event
+      }
+  slug?: string | null
   meta?: {
-    title?: string | null;
-    description?: string | null;
-    image?: (number | null) | Media;
-  };
-  cancelled?: boolean | null;
-  sourceName?: string | null;
-  sourceUrl?: string | null;
+    title?: string | null
+    description?: string | null
+    image?: (number | null) | Media
+  }
+  cancelled?: boolean | null
+  sourceName?: string | null
+  sourceUrl?: string | null
   categories?:
     | {
-        relationTo?: string | null;
-        categoryID?: string | null;
-        title?: string | null;
-        id?: string | null;
+        relationTo?: string | null
+        categoryID?: string | null
+        title?: string | null
+        id?: string | null
       }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
+    | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * API keys control which collections, resources, tools, and prompts MCP clients can access
@@ -1476,397 +1482,408 @@ export interface Search {
  * via the `definition` "payload-mcp-api-keys".
  */
 export interface PayloadMcpApiKey {
-  id: number;
+  id: number
   /**
    * The user that the API key is associated with.
    */
-  user: number | User;
+  user: number | User
   /**
    * A useful label for the API key.
    */
-  label?: string | null;
+  label?: string | null
   /**
    * The purpose of the API key.
    */
-  description?: string | null;
+  description?: string | null
   events?: {
     /**
      * Allow clients to find events.
      */
-    find?: boolean | null;
-  };
+    find?: boolean | null
+  }
   posts?: {
     /**
      * Allow clients to find posts.
      */
-    find?: boolean | null;
-  };
+    find?: boolean | null
+  }
   categories?: {
     /**
      * Allow clients to find categories.
      */
-    find?: boolean | null;
-  };
+    find?: boolean | null
+  }
   agentRuns?: {
     /**
      * Allow clients to find agent-runs.
      */
-    find?: boolean | null;
+    find?: boolean | null
     /**
      * Allow clients to create agent-runs.
      */
-    create?: boolean | null;
+    create?: boolean | null
     /**
      * Allow clients to update agent-runs.
      */
-    update?: boolean | null;
-  };
+    update?: boolean | null
+  }
   'payload-mcp-tool'?: {
     /**
      * Suggest an event or a news post, with its card summary and one or two category slugs from the categories find. It is stored as an unpublished draft for staff to review, never published, with the first category’s default image. Answers {"status":"created","id"} or, when the same externalId or contentHash is already stored, {"status":"duplicate","id"}.
      */
-    submitSuggestion?: boolean | null;
+    submitSuggestion?: boolean | null
     /**
      * Report something for an editor on your current run: needs-review, update, cancel or rejected-invalid, with a summary, evidence and the source link. It never changes the content it points at.
      */
-    reportItem?: boolean | null;
-  };
-  updatedAt: string;
-  createdAt: string;
-  enableAPIKey?: boolean | null;
-  apiKey?: string | null;
-  apiKeyIndex?: string | null;
-  hasAPIKey?: boolean | null;
-  collection: 'payload-mcp-api-keys';
+    reportItem?: boolean | null
+  }
+  updatedAt: string
+  createdAt: string
+  enableAPIKey?: boolean | null
+  apiKey?: string | null
+  apiKeyIndex?: string | null
+  hasAPIKey?: boolean | null
+  collection: 'payload-mcp-api-keys'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
-  id: number;
-  key: string;
+  id: number
+  key: string
   data:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
+    | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-jobs".
  */
 export interface PayloadJob {
-  id: number;
+  id: number
   /**
    * Input data provided to the job
    */
   input?:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
+    | null
   taskStatus?:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
-  completedAt?: string | null;
-  totalTried?: number | null;
+    | null
+  completedAt?: string | null
+  totalTried?: number | null
   /**
    * If hasError is true this job will not be retried
    */
-  hasError?: boolean | null;
+  hasError?: boolean | null
   /**
    * If hasError is true, this is the error that caused it
    */
   error?:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
+    | null
   /**
    * Task execution log
    */
   log?:
     | {
-        executedAt: string;
-        completedAt: string;
-        taskSlug: 'inline' | 'deleteExpiredContactMessages' | 'deleteExpiredEmailConfirmations' | 'schedulePublish';
-        taskID: string;
+        executedAt: string
+        completedAt: string
+        taskSlug:
+          | 'inline'
+          | 'deleteExpiredContactMessages'
+          | 'deleteExpiredEmailConfirmations'
+          | 'schedulePublish'
+        taskID: string
         input?:
           | {
-              [k: string]: unknown;
+              [k: string]: unknown
             }
           | unknown[]
           | string
           | number
           | boolean
-          | null;
+          | null
         output?:
           | {
-              [k: string]: unknown;
+              [k: string]: unknown
             }
           | unknown[]
           | string
           | number
           | boolean
-          | null;
-        state: 'failed' | 'succeeded';
+          | null
+        state: 'failed' | 'succeeded'
         error?:
           | {
-              [k: string]: unknown;
+              [k: string]: unknown
             }
           | unknown[]
           | string
           | number
           | boolean
-          | null;
-        id?: string | null;
+          | null
+        id?: string | null
       }[]
-    | null;
-  taskSlug?: ('inline' | 'deleteExpiredContactMessages' | 'deleteExpiredEmailConfirmations' | 'schedulePublish') | null;
-  queue?: string | null;
-  waitUntil?: string | null;
-  processing?: boolean | null;
+    | null
+  taskSlug?:
+    | (
+        | 'inline'
+        | 'deleteExpiredContactMessages'
+        | 'deleteExpiredEmailConfirmations'
+        | 'schedulePublish'
+      )
+    | null
+  queue?: string | null
+  waitUntil?: string | null
+  processing?: boolean | null
   meta?:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
+    | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
-  id: number;
+  id: number
   document?:
     | ({
-        relationTo: 'pages';
-        value: number | Page;
+        relationTo: 'pages'
+        value: number | Page
       } | null)
     | ({
-        relationTo: 'posts';
-        value: number | Post;
+        relationTo: 'posts'
+        value: number | Post
       } | null)
     | ({
-        relationTo: 'events';
-        value: number | Event;
+        relationTo: 'events'
+        value: number | Event
       } | null)
     | ({
-        relationTo: 'team-members';
-        value: number | TeamMember;
+        relationTo: 'team-members'
+        value: number | TeamMember
       } | null)
     | ({
-        relationTo: 'resources';
-        value: number | Resource;
+        relationTo: 'resources'
+        value: number | Resource
       } | null)
     | ({
-        relationTo: 'faq';
-        value: number | Faq;
+        relationTo: 'faq'
+        value: number | Faq
       } | null)
     | ({
-        relationTo: 'media';
-        value: number | Media;
+        relationTo: 'media'
+        value: number | Media
       } | null)
     | ({
-        relationTo: 'categories';
-        value: number | Category;
+        relationTo: 'categories'
+        value: number | Category
       } | null)
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'users'
+        value: number | User
       } | null)
     | ({
-        relationTo: 'email-confirmations';
-        value: number | EmailConfirmation;
+        relationTo: 'email-confirmations'
+        value: number | EmailConfirmation
       } | null)
     | ({
-        relationTo: 'agent-runs';
-        value: number | AgentRun;
+        relationTo: 'agent-runs'
+        value: number | AgentRun
       } | null)
     | ({
-        relationTo: 'agent-review-items';
-        value: number | AgentReviewItem;
+        relationTo: 'agent-review-items'
+        value: number | AgentReviewItem
       } | null)
     | ({
-        relationTo: 'redirects';
-        value: number | Redirect;
+        relationTo: 'redirects'
+        value: number | Redirect
       } | null)
     | ({
-        relationTo: 'forms';
-        value: number | Form;
+        relationTo: 'forms'
+        value: number | Form
       } | null)
     | ({
-        relationTo: 'form-submissions';
-        value: number | FormSubmission;
+        relationTo: 'form-submissions'
+        value: number | FormSubmission
       } | null)
     | ({
-        relationTo: 'search';
-        value: number | Search;
+        relationTo: 'search'
+        value: number | Search
       } | null)
     | ({
-        relationTo: 'payload-mcp-api-keys';
-        value: number | PayloadMcpApiKey;
+        relationTo: 'payload-mcp-api-keys'
+        value: number | PayloadMcpApiKey
       } | null)
     | ({
-        relationTo: 'payload-folders';
-        value: number | FolderInterface;
-      } | null);
-  globalSlug?: string | null;
+        relationTo: 'payload-folders'
+        value: number | FolderInterface
+      } | null)
+  globalSlug?: string | null
   user:
     | {
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'users'
+        value: number | User
       }
     | {
-        relationTo: 'payload-mcp-api-keys';
-        value: number | PayloadMcpApiKey;
-      };
-  updatedAt: string;
-  createdAt: string;
+        relationTo: 'payload-mcp-api-keys'
+        value: number | PayloadMcpApiKey
+      }
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-preferences".
  */
 export interface PayloadPreference {
-  id: number;
+  id: number
   user:
     | {
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'users'
+        value: number | User
       }
     | {
-        relationTo: 'payload-mcp-api-keys';
-        value: number | PayloadMcpApiKey;
-      };
-  key?: string | null;
+        relationTo: 'payload-mcp-api-keys'
+        value: number | PayloadMcpApiKey
+      }
+  key?: string | null
   value?:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
+    | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-migrations".
  */
 export interface PayloadMigration {
-  id: number;
-  name?: string | null;
-  batch?: number | null;
-  updatedAt: string;
-  createdAt: string;
+  id: number
+  name?: string | null
+  batch?: number | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pages_select".
  */
 export interface PagesSelect<T extends boolean = true> {
-  title?: T;
+  title?: T
   hero?:
     | T
     | {
-        type?: T;
-        richText?: T;
+        type?: T
+        richText?: T
         links?:
           | T
           | {
               link?:
                 | T
                 | {
-                    type?: T;
-                    newTab?: T;
-                    reference?: T;
-                    url?: T;
-                    label?: T;
-                    appearance?: T;
-                  };
-              id?: T;
-            };
-        media?: T;
-      };
+                    type?: T
+                    newTab?: T
+                    reference?: T
+                    url?: T
+                    label?: T
+                    appearance?: T
+                  }
+              id?: T
+            }
+        media?: T
+      }
   layout?:
     | T
     | {
-        cta?: T | CallToActionBlockSelect<T>;
-        content?: T | ContentBlockSelect<T>;
-        section?: T | SectionBlockSelect<T>;
-        mediaBlock?: T | MediaBlockSelect<T>;
-        mapBlock?: T | MapBlockSelect<T>;
-        archive?: T | ArchiveBlockSelect<T>;
-        formBlock?: T | FormBlockSelect<T>;
-        eventsThisWeek?: T | EventsThisWeekBlockSelect<T>;
-        topIssues?: T | TopIssuesBlockSelect<T>;
-      };
+        cta?: T | CallToActionBlockSelect<T>
+        content?: T | ContentBlockSelect<T>
+        section?: T | SectionBlockSelect<T>
+        mediaBlock?: T | MediaBlockSelect<T>
+        mapBlock?: T | MapBlockSelect<T>
+        archive?: T | ArchiveBlockSelect<T>
+        formBlock?: T | FormBlockSelect<T>
+        eventsThisWeek?: T | EventsThisWeekBlockSelect<T>
+        topIssues?: T | TopIssuesBlockSelect<T>
+      }
   meta?:
     | T
     | {
-        title?: T;
-        image?: T;
-        description?: T;
-      };
-  publishedAt?: T;
-  backdrop?: T;
-  generateSlug?: T;
-  slug?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
+        title?: T
+        image?: T
+        description?: T
+      }
+  publishedAt?: T
+  backdrop?: T
+  generateSlug?: T
+  slug?: T
+  updatedAt?: T
+  createdAt?: T
+  _status?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "CallToActionBlock_select".
  */
 export interface CallToActionBlockSelect<T extends boolean = true> {
-  richText?: T;
+  richText?: T
   links?:
     | T
     | {
         link?:
           | T
           | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-              appearance?: T;
-            };
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
+              type?: T
+              newTab?: T
+              reference?: T
+              url?: T
+              label?: T
+              appearance?: T
+            }
+        id?: T
+      }
+  id?: T
+  blockName?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1876,24 +1893,24 @@ export interface ContentBlockSelect<T extends boolean = true> {
   columns?:
     | T
     | {
-        size?: T;
-        richText?: T;
-        enableLink?: T;
+        size?: T
+        richText?: T
+        enableLink?: T
         link?:
           | T
           | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-              appearance?: T;
-            };
-        linkAlign?: T;
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
+              type?: T
+              newTab?: T
+              reference?: T
+              url?: T
+              label?: T
+              appearance?: T
+            }
+        linkAlign?: T
+        id?: T
+      }
+  id?: T
+  blockName?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1903,906 +1920,906 @@ export interface SectionBlockSelect<T extends boolean = true> {
   items?:
     | T
     | {
-        width?: T;
-        align?: T;
-        verticalAlign?: T;
-        phoneOrder?: T;
+        width?: T
+        align?: T
+        verticalAlign?: T
+        phoneOrder?: T
         content?:
           | T
           | {
-              content?: T | ContentBlockSelect<T>;
-              mediaBlock?: T | MediaBlockSelect<T>;
-              mapBlock?: T | MapBlockSelect<T>;
-            };
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
+              content?: T | ContentBlockSelect<T>
+              mediaBlock?: T | MediaBlockSelect<T>
+              mapBlock?: T | MapBlockSelect<T>
+            }
+        id?: T
+      }
+  id?: T
+  blockName?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "MediaBlock_select".
  */
 export interface MediaBlockSelect<T extends boolean = true> {
-  media?: T;
-  id?: T;
-  blockName?: T;
+  media?: T
+  id?: T
+  blockName?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "MapBlock_select".
  */
 export interface MapBlockSelect<T extends boolean = true> {
-  title?: T;
-  description?: T;
-  preview?: T;
-  embedUrl?: T;
-  id?: T;
-  blockName?: T;
+  title?: T
+  description?: T
+  preview?: T
+  embedUrl?: T
+  id?: T
+  blockName?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ArchiveBlock_select".
  */
 export interface ArchiveBlockSelect<T extends boolean = true> {
-  introContent?: T;
-  populateBy?: T;
-  relationTo?: T;
-  categories?: T;
-  limit?: T;
-  selectedDocs?: T;
-  id?: T;
-  blockName?: T;
+  introContent?: T
+  populateBy?: T
+  relationTo?: T
+  categories?: T
+  limit?: T
+  selectedDocs?: T
+  id?: T
+  blockName?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FormBlock_select".
  */
 export interface FormBlockSelect<T extends boolean = true> {
-  form?: T;
-  enableIntro?: T;
-  introContent?: T;
-  id?: T;
-  blockName?: T;
+  form?: T
+  enableIntro?: T
+  introContent?: T
+  id?: T
+  blockName?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "EventsThisWeekBlock_select".
  */
 export interface EventsThisWeekBlockSelect<T extends boolean = true> {
-  heading?: T;
-  days?: T;
+  heading?: T
+  days?: T
   rows?:
     | T
     | {
-        title?: T;
-        source?: T;
-        category?: T;
-        limit?: T;
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
+        title?: T
+        source?: T
+        category?: T
+        limit?: T
+        id?: T
+      }
+  id?: T
+  blockName?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "TopIssuesBlock_select".
  */
 export interface TopIssuesBlockSelect<T extends boolean = true> {
-  heading?: T;
-  reviewedAt?: T;
+  heading?: T
+  reviewedAt?: T
   items?:
     | T
     | {
-        title?: T;
-        summary?: T;
+        title?: T
+        summary?: T
         link?:
           | T
           | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-            };
-        id?: T;
-      };
-  id?: T;
-  blockName?: T;
+              type?: T
+              newTab?: T
+              reference?: T
+              url?: T
+            }
+        id?: T
+      }
+  id?: T
+  blockName?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts_select".
  */
 export interface PostsSelect<T extends boolean = true> {
-  title?: T;
-  heroImage?: T;
+  title?: T
+  heroImage?: T
   backdrop?:
     | T
     | {
-        phone?: T;
-        tablet?: T;
-        desktop?: T;
-      };
-  content?: T;
-  relatedPosts?: T;
-  categories?: T;
+        phone?: T
+        tablet?: T
+        desktop?: T
+      }
+  content?: T
+  relatedPosts?: T
+  categories?: T
   meta?:
     | T
     | {
-        title?: T;
-        image?: T;
-        description?: T;
-      };
-  publishedAt?: T;
-  authors?: T;
+        title?: T
+        image?: T
+        description?: T
+      }
+  publishedAt?: T
+  authors?: T
   populatedAuthors?:
     | T
     | {
-        id?: T;
-        name?: T;
-      };
-  generateSlug?: T;
-  slug?: T;
-  moderationStatus?: T;
-  sourceName?: T;
-  sourceUrl?: T;
-  externalId?: T;
-  contentHash?: T;
-  audience?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
+        id?: T
+        name?: T
+      }
+  generateSlug?: T
+  slug?: T
+  moderationStatus?: T
+  sourceName?: T
+  sourceUrl?: T
+  externalId?: T
+  contentHash?: T
+  audience?: T
+  updatedAt?: T
+  createdAt?: T
+  _status?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "events_select".
  */
 export interface EventsSelect<T extends boolean = true> {
-  title?: T;
-  date?: T;
-  timeStart?: T;
-  timeEnd?: T;
-  cancelled?: T;
-  officialBody?: T;
-  agendaUrl?: T;
-  featured?: T;
-  locationType?: T;
-  locationName?: T;
-  locationAddress?: T;
-  mapsUrl?: T;
-  registrationUrl?: T;
-  heroImage?: T;
+  title?: T
+  date?: T
+  timeStart?: T
+  timeEnd?: T
+  cancelled?: T
+  officialBody?: T
+  agendaUrl?: T
+  featured?: T
+  locationType?: T
+  locationName?: T
+  locationAddress?: T
+  mapsUrl?: T
+  registrationUrl?: T
+  heroImage?: T
   backdrop?:
     | T
     | {
-        phone?: T;
-        tablet?: T;
-        desktop?: T;
-      };
-  description?: T;
-  content?: T;
+        phone?: T
+        tablet?: T
+        desktop?: T
+      }
+  description?: T
+  content?: T
   meta?:
     | T
     | {
-        title?: T;
-        image?: T;
-        description?: T;
-      };
-  publishedAt?: T;
-  categories?: T;
-  generateSlug?: T;
-  slug?: T;
-  moderationStatus?: T;
-  sourceName?: T;
-  sourceUrl?: T;
-  externalId?: T;
-  contentHash?: T;
-  audience?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
+        title?: T
+        image?: T
+        description?: T
+      }
+  publishedAt?: T
+  categories?: T
+  generateSlug?: T
+  slug?: T
+  moderationStatus?: T
+  sourceName?: T
+  sourceUrl?: T
+  externalId?: T
+  contentHash?: T
+  audience?: T
+  updatedAt?: T
+  createdAt?: T
+  _status?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "team-members_select".
  */
 export interface TeamMembersSelect<T extends boolean = true> {
-  memberType?: T;
-  name?: T;
-  role?: T;
-  title?: T;
-  bio?: T;
-  capabilities?: T;
-  email?: T;
-  status?: T;
-  order?: T;
-  photo?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  memberType?: T
+  name?: T
+  role?: T
+  title?: T
+  bio?: T
+  capabilities?: T
+  email?: T
+  status?: T
+  order?: T
+  photo?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "resources_select".
  */
 export interface ResourcesSelect<T extends boolean = true> {
-  title?: T;
-  description?: T;
-  url?: T;
+  title?: T
+  description?: T
+  url?: T
   links?:
     | T
     | {
-        label?: T;
-        url?: T;
-        id?: T;
-      };
-  phone?: T;
-  category?: T;
-  photo?: T;
-  photoCredit?: T;
-  photoSourceUrl?: T;
-  order?: T;
-  publishedAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
+        label?: T
+        url?: T
+        id?: T
+      }
+  phone?: T
+  category?: T
+  photo?: T
+  photoCredit?: T
+  photoSourceUrl?: T
+  order?: T
+  publishedAt?: T
+  updatedAt?: T
+  createdAt?: T
+  _status?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "faq_select".
  */
 export interface FaqSelect<T extends boolean = true> {
-  question?: T;
-  answer?: T;
-  category?: T;
-  order?: T;
-  publishedAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
+  question?: T
+  answer?: T
+  category?: T
+  order?: T
+  publishedAt?: T
+  updatedAt?: T
+  createdAt?: T
+  _status?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
-  caption?: T;
-  credit?: T;
-  license?: T;
-  licenseUrl?: T;
-  sourceUrl?: T;
-  folder?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
+  alt?: T
+  caption?: T
+  credit?: T
+  license?: T
+  licenseUrl?: T
+  sourceUrl?: T
+  folder?: T
+  updatedAt?: T
+  createdAt?: T
+  url?: T
+  thumbnailURL?: T
+  filename?: T
+  mimeType?: T
+  filesize?: T
+  width?: T
+  height?: T
+  focalX?: T
+  focalY?: T
   sizes?:
     | T
     | {
         thumbnail?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
         square?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
         small?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
         medium?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
         large?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
         xlarge?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
         og?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-      };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
+      }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories_select".
  */
 export interface CategoriesSelect<T extends boolean = true> {
-  title?: T;
-  generateSlug?: T;
-  slug?: T;
-  defaultImage?: T;
-  parent?: T;
+  title?: T
+  generateSlug?: T
+  slug?: T
+  defaultImage?: T
+  parent?: T
   breadcrumbs?:
     | T
     | {
-        doc?: T;
-        url?: T;
-        label?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
+        doc?: T
+        url?: T
+        label?: T
+        id?: T
+      }
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  role?: T;
-  verificationResends?: T;
-  verificationResendsSince?: T;
-  verificationSetsPassword?: T;
-  verifiedTokenHash?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  resetPasswordRequestedAt?: T;
-  _verified?: T;
-  _verificationToken?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
+  name?: T
+  role?: T
+  verificationResends?: T
+  verificationResendsSince?: T
+  verificationSetsPassword?: T
+  verifiedTokenHash?: T
+  updatedAt?: T
+  createdAt?: T
+  email?: T
+  resetPasswordToken?: T
+  resetPasswordExpiration?: T
+  salt?: T
+  hash?: T
+  resetPasswordRequestedAt?: T
+  _verified?: T
+  _verificationToken?: T
+  loginAttempts?: T
+  lockUntil?: T
   sessions?:
     | T
     | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
+        id?: T
+        createdAt?: T
+        expiresAt?: T
+      }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "email-confirmations_select".
  */
 export interface EmailConfirmationsSelect<T extends boolean = true> {
-  email?: T;
-  confirmedAt?: T;
-  welcomeSentAt?: T;
-  lastSentAt?: T;
-  tokenHash?: T;
-  tokenExpiresAt?: T;
-  sendCount?: T;
-  sendWindowStart?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  email?: T
+  confirmedAt?: T
+  welcomeSentAt?: T
+  lastSentAt?: T
+  tokenHash?: T
+  tokenExpiresAt?: T
+  sendCount?: T
+  sendWindowStart?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "agent-runs_select".
  */
 export interface AgentRunsSelect<T extends boolean = true> {
-  agent?: T;
-  runId?: T;
-  agentName?: T;
-  pipelineVersion?: T;
-  repoCommit?: T;
-  startedAt?: T;
-  finishedAt?: T;
-  status?: T;
+  agent?: T
+  runId?: T
+  agentName?: T
+  pipelineVersion?: T
+  repoCommit?: T
+  startedAt?: T
+  finishedAt?: T
+  status?: T
   sourcesChecked?:
     | T
     | {
-        sourceId?: T;
-        fetchStrategy?: T;
-        cursor?: T;
-        status?: T;
-        error?: T;
-        id?: T;
-      };
+        sourceId?: T
+        fetchStrategy?: T
+        cursor?: T
+        status?: T
+        error?: T
+        id?: T
+      }
   counts?:
     | T
     | {
-        seen?: T;
-        proposed?: T;
-        updates?: T;
-        rejected?: T;
-        duplicates?: T;
-        needsReview?: T;
-        deferred?: T;
-      };
-  errors?: T;
+        seen?: T
+        proposed?: T
+        updates?: T
+        rejected?: T
+        duplicates?: T
+        needsReview?: T
+        deferred?: T
+      }
+  errors?: T
   cost?:
     | T
     | {
-        inputTokens?: T;
-        outputTokens?: T;
-        usd?: T;
-      };
-  reviewItems?: T;
-  updatedAt?: T;
-  createdAt?: T;
+        inputTokens?: T
+        outputTokens?: T
+        usd?: T
+      }
+  reviewItems?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "agent-review-items_select".
  */
 export interface AgentReviewItemsSelect<T extends boolean = true> {
-  run?: T;
-  agent?: T;
-  kind?: T;
-  targetCollection?: T;
-  targetId?: T;
-  externalId?: T;
-  summary?: T;
+  run?: T
+  agent?: T
+  kind?: T
+  targetCollection?: T
+  targetId?: T
+  externalId?: T
+  summary?: T
   evidence?:
     | T
     | {
-        url?: T;
-        says?: T;
-        retrievedAt?: T;
-        id?: T;
-      };
-  flags?: T;
-  sourceUrl?: T;
-  updatedAt?: T;
-  createdAt?: T;
+        url?: T
+        says?: T
+        retrievedAt?: T
+        id?: T
+      }
+  flags?: T
+  sourceUrl?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects_select".
  */
 export interface RedirectsSelect<T extends boolean = true> {
-  from?: T;
+  from?: T
   to?:
     | T
     | {
-        type?: T;
-        reference?: T;
-        url?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
+        type?: T
+        reference?: T
+        url?: T
+      }
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms_select".
  */
 export interface FormsSelect<T extends boolean = true> {
-  title?: T;
+  title?: T
   fields?:
     | T
     | {
         checkbox?:
           | T
           | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              defaultValue?: T;
-              id?: T;
-              blockName?: T;
-            };
+              name?: T
+              label?: T
+              width?: T
+              required?: T
+              defaultValue?: T
+              id?: T
+              blockName?: T
+            }
         country?:
           | T
           | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
+              name?: T
+              label?: T
+              width?: T
+              required?: T
+              id?: T
+              blockName?: T
+            }
         email?:
           | T
           | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
+              name?: T
+              label?: T
+              width?: T
+              required?: T
+              id?: T
+              blockName?: T
+            }
         message?:
           | T
           | {
-              message?: T;
-              id?: T;
-              blockName?: T;
-            };
+              message?: T
+              id?: T
+              blockName?: T
+            }
         number?:
           | T
           | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
+              name?: T
+              label?: T
+              width?: T
+              defaultValue?: T
+              required?: T
+              id?: T
+              blockName?: T
+            }
         select?:
           | T
           | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              placeholder?: T;
+              name?: T
+              label?: T
+              width?: T
+              defaultValue?: T
+              placeholder?: T
               options?:
                 | T
                 | {
-                    label?: T;
-                    value?: T;
-                    id?: T;
-                  };
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
+                    label?: T
+                    value?: T
+                    id?: T
+                  }
+              required?: T
+              id?: T
+              blockName?: T
+            }
         state?:
           | T
           | {
-              name?: T;
-              label?: T;
-              width?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
+              name?: T
+              label?: T
+              width?: T
+              required?: T
+              id?: T
+              blockName?: T
+            }
         text?:
           | T
           | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
+              name?: T
+              label?: T
+              width?: T
+              defaultValue?: T
+              required?: T
+              id?: T
+              blockName?: T
+            }
         textarea?:
           | T
           | {
-              name?: T;
-              label?: T;
-              width?: T;
-              defaultValue?: T;
-              required?: T;
-              id?: T;
-              blockName?: T;
-            };
-      };
-  submitButtonLabel?: T;
-  confirmationType?: T;
-  confirmationMessage?: T;
+              name?: T
+              label?: T
+              width?: T
+              defaultValue?: T
+              required?: T
+              id?: T
+              blockName?: T
+            }
+      }
+  submitButtonLabel?: T
+  confirmationType?: T
+  confirmationMessage?: T
   redirect?:
     | T
     | {
-        url?: T;
-      };
+        url?: T
+      }
   emails?:
     | T
     | {
-        emailTo?: T;
-        cc?: T;
-        bcc?: T;
-        replyTo?: T;
-        emailFrom?: T;
-        subject?: T;
-        message?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
+        emailTo?: T
+        cc?: T
+        bcc?: T
+        replyTo?: T
+        emailFrom?: T
+        subject?: T
+        message?: T
+        id?: T
+      }
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "form-submissions_select".
  */
 export interface FormSubmissionsSelect<T extends boolean = true> {
-  form?: T;
+  form?: T
   submissionData?:
     | T
     | {
-        field?: T;
-        value?: T;
-        id?: T;
-      };
-  senderEmail?: T;
-  emailConfirmed?: T;
-  heldEmails?: T;
-  retentionHold?: T;
-  retentionHoldReason?: T;
-  updatedAt?: T;
-  createdAt?: T;
+        field?: T
+        value?: T
+        id?: T
+      }
+  senderEmail?: T
+  emailConfirmed?: T
+  heldEmails?: T
+  retentionHold?: T
+  retentionHoldReason?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "search_select".
  */
 export interface SearchSelect<T extends boolean = true> {
-  title?: T;
-  priority?: T;
-  doc?: T;
-  slug?: T;
+  title?: T
+  priority?: T
+  doc?: T
+  slug?: T
   meta?:
     | T
     | {
-        title?: T;
-        description?: T;
-        image?: T;
-      };
-  cancelled?: T;
-  sourceName?: T;
-  sourceUrl?: T;
+        title?: T
+        description?: T
+        image?: T
+      }
+  cancelled?: T
+  sourceName?: T
+  sourceUrl?: T
   categories?:
     | T
     | {
-        relationTo?: T;
-        categoryID?: T;
-        title?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
+        relationTo?: T
+        categoryID?: T
+        title?: T
+        id?: T
+      }
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-mcp-api-keys_select".
  */
 export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
-  user?: T;
-  label?: T;
-  description?: T;
+  user?: T
+  label?: T
+  description?: T
   events?:
     | T
     | {
-        find?: T;
-      };
+        find?: T
+      }
   posts?:
     | T
     | {
-        find?: T;
-      };
+        find?: T
+      }
   categories?:
     | T
     | {
-        find?: T;
-      };
+        find?: T
+      }
   agentRuns?:
     | T
     | {
-        find?: T;
-        create?: T;
-        update?: T;
-      };
+        find?: T
+        create?: T
+        update?: T
+      }
   'payload-mcp-tool'?:
     | T
     | {
-        submitSuggestion?: T;
-        reportItem?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  enableAPIKey?: T;
-  apiKey?: T;
-  apiKeyIndex?: T;
-  hasAPIKey?: T;
+        submitSuggestion?: T
+        reportItem?: T
+      }
+  updatedAt?: T
+  createdAt?: T
+  enableAPIKey?: T
+  apiKey?: T
+  apiKeyIndex?: T
+  hasAPIKey?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
-  key?: T;
-  data?: T;
+  key?: T
+  data?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-jobs_select".
  */
 export interface PayloadJobsSelect<T extends boolean = true> {
-  input?: T;
-  taskStatus?: T;
-  completedAt?: T;
-  totalTried?: T;
-  hasError?: T;
-  error?: T;
+  input?: T
+  taskStatus?: T
+  completedAt?: T
+  totalTried?: T
+  hasError?: T
+  error?: T
   log?:
     | T
     | {
-        executedAt?: T;
-        completedAt?: T;
-        taskSlug?: T;
-        taskID?: T;
-        input?: T;
-        output?: T;
-        state?: T;
-        error?: T;
-        id?: T;
-      };
-  taskSlug?: T;
-  queue?: T;
-  waitUntil?: T;
-  processing?: T;
-  meta?: T;
-  updatedAt?: T;
-  createdAt?: T;
+        executedAt?: T
+        completedAt?: T
+        taskSlug?: T
+        taskID?: T
+        input?: T
+        output?: T
+        state?: T
+        error?: T
+        id?: T
+      }
+  taskSlug?: T
+  queue?: T
+  waitUntil?: T
+  processing?: T
+  meta?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-folders_select".
  */
 export interface PayloadFoldersSelect<T extends boolean = true> {
-  name?: T;
-  folder?: T;
-  documentsAndFolders?: T;
-  folderType?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  name?: T
+  folder?: T
+  documentsAndFolders?: T
+  folderType?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents_select".
  */
 export interface PayloadLockedDocumentsSelect<T extends boolean = true> {
-  document?: T;
-  globalSlug?: T;
-  user?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  document?: T
+  globalSlug?: T
+  user?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-preferences_select".
  */
 export interface PayloadPreferencesSelect<T extends boolean = true> {
-  user?: T;
-  key?: T;
-  value?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  user?: T
+  key?: T
+  value?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-migrations_select".
  */
 export interface PayloadMigrationsSelect<T extends boolean = true> {
-  name?: T;
-  batch?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  name?: T
+  batch?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header".
  */
 export interface Header {
-  id: number;
+  id: number
   navItems?:
     | {
         link: {
-          type?: ('reference' | 'custom') | null;
-          newTab?: boolean | null;
+          type?: ('reference' | 'custom') | null
+          newTab?: boolean | null
           reference?:
             | ({
-                relationTo: 'pages';
-                value: number | Page;
+                relationTo: 'pages'
+                value: number | Page
               } | null)
             | ({
-                relationTo: 'posts';
-                value: number | Post;
-              } | null);
-          url?: string | null;
-          label: string;
-        };
-        id?: string | null;
+                relationTo: 'posts'
+                value: number | Post
+              } | null)
+          url?: string | null
+          label: string
+        }
+        id?: string | null
       }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
+    | null
+  updatedAt?: string | null
+  createdAt?: string | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "footer".
  */
 export interface Footer {
-  id: number;
+  id: number
   navItems?:
     | {
         link: {
-          type?: ('reference' | 'custom') | null;
-          newTab?: boolean | null;
+          type?: ('reference' | 'custom') | null
+          newTab?: boolean | null
           reference?:
             | ({
-                relationTo: 'pages';
-                value: number | Page;
+                relationTo: 'pages'
+                value: number | Page
               } | null)
             | ({
-                relationTo: 'posts';
-                value: number | Post;
-              } | null);
-          url?: string | null;
-          label: string;
-        };
-        id?: string | null;
+                relationTo: 'posts'
+                value: number | Post
+              } | null)
+          url?: string | null
+          label: string
+        }
+        id?: string | null
       }[]
-    | null;
+    | null
   /**
    * The neighborhood forum’s https address. The footer and every post link to it; leave it empty to hide those links.
    */
-  forumUrl?: string | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
+  forumUrl?: string | null
+  updatedAt?: string | null
+  createdAt?: string | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-jobs-stats".
  */
 export interface PayloadJobsStat {
-  id: number;
+  id: number
   stats?:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
+    | null
+  updatedAt?: string | null
+  createdAt?: string | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2815,17 +2832,17 @@ export interface HeaderSelect<T extends boolean = true> {
         link?:
           | T
           | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-            };
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
+              type?: T
+              newTab?: T
+              reference?: T
+              url?: T
+              label?: T
+            }
+        id?: T
+      }
+  updatedAt?: T
+  createdAt?: T
+  globalType?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2838,28 +2855,28 @@ export interface FooterSelect<T extends boolean = true> {
         link?:
           | T
           | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
-            };
-        id?: T;
-      };
-  forumUrl?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
+              type?: T
+              newTab?: T
+              reference?: T
+              url?: T
+              label?: T
+            }
+        id?: T
+      }
+  forumUrl?: T
+  updatedAt?: T
+  createdAt?: T
+  globalType?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-jobs-stats_select".
  */
 export interface PayloadJobsStatsSelect<T extends boolean = true> {
-  stats?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
+  stats?: T
+  updatedAt?: T
+  createdAt?: T
+  globalType?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2867,25 +2884,25 @@ export interface PayloadJobsStatsSelect<T extends boolean = true> {
  */
 export interface CollectionsWidget {
   data?: {
-    [k: string]: unknown;
-  };
-  width: 'full';
+    [k: string]: unknown
+  }
+  width: 'full'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "TaskDeleteExpiredContactMessages".
  */
 export interface TaskDeleteExpiredContactMessages {
-  input?: unknown;
-  output?: unknown;
+  input?: unknown
+  output?: unknown
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "TaskDeleteExpiredEmailConfirmations".
  */
 export interface TaskDeleteExpiredEmailConfirmations {
-  input?: unknown;
-  output?: unknown;
+  input?: unknown
+  output?: unknown
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2893,77 +2910,77 @@ export interface TaskDeleteExpiredEmailConfirmations {
  */
 export interface TaskSchedulePublish {
   input: {
-    type?: ('publish' | 'unpublish') | null;
-    locale?: string | null;
+    type?: ('publish' | 'unpublish') | null
+    locale?: string | null
     doc?:
       | ({
-          relationTo: 'pages';
-          value: number | Page;
+          relationTo: 'pages'
+          value: number | Page
         } | null)
       | ({
-          relationTo: 'posts';
-          value: number | Post;
+          relationTo: 'posts'
+          value: number | Post
         } | null)
       | ({
-          relationTo: 'events';
-          value: number | Event;
-        } | null);
-    global?: string | null;
+          relationTo: 'events'
+          value: number | Event
+        } | null)
+    global?: string | null
     user?:
       | ({
-          relationTo: 'users';
-          value: number | User;
+          relationTo: 'users'
+          value: number | User
         } | null)
       | ({
-          relationTo: 'payload-mcp-api-keys';
-          value: number | PayloadMcpApiKey;
-        } | null);
-  };
-  output?: unknown;
+          relationTo: 'payload-mcp-api-keys'
+          value: number | PayloadMcpApiKey
+        } | null)
+  }
+  output?: unknown
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "BannerBlock".
  */
 export interface BannerBlock {
-  style: 'info' | 'warning' | 'error' | 'success';
+  style: 'info' | 'warning' | 'error' | 'success'
   /**
    * Visitors can close the notice, and it stays closed on their browser. Leave off for warnings that must be read.
    */
-  dismissible?: boolean | null;
+  dismissible?: boolean | null
   /**
    * The notice disappears at this time. For a meeting, set the meeting’s start time. Leave empty to show it always.
    */
-  showUntil?: string | null;
+  showUntil?: string | null
   content: {
     root: {
-      type: string;
+      type: string
       children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'banner';
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  }
+  id?: string | null
+  blockName?: string | null
+  blockType: 'banner'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "CodeBlock".
  */
 export interface CodeBlock {
-  language?: ('typescript' | 'javascript' | 'css') | null;
-  code: string;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'code';
+  language?: ('typescript' | 'javascript' | 'css') | null
+  code: string
+  id?: string | null
+  blockName?: string | null
+  blockType: 'code'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2977,26 +2994,26 @@ export interface TimelineBlock {
     /**
      * As readers should see it: "Dec 5, 2024", "Spring 2027", "Not set".
      */
-    date: string;
-    status: 'done' | 'next' | 'conditional' | 'later';
-    title: string;
+    date: string
+    status: 'done' | 'next' | 'conditional' | 'later'
+    title: string
     /**
      * One or two plain sentences. Optional.
      */
-    description?: string | null;
+    description?: string | null
     /**
      * Optional, for example "Read the decision".
      */
-    linkLabel?: string | null;
+    linkLabel?: string | null
     /**
      * A site path (/events) or https:// address.
      */
-    linkUrl?: string | null;
-    id?: string | null;
-  }[];
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'timeline';
+    linkUrl?: string | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'timeline'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3007,24 +3024,24 @@ export interface StepsBlock {
    * In the order a reader does them. Keep headings short and alike: "Join…".
    */
   steps: {
-    heading: string;
+    heading: string
     /**
      * One or two plain sentences. Optional.
      */
-    body?: string | null;
+    body?: string | null
     /**
      * Optional, for example "Find your alder".
      */
-    linkLabel?: string | null;
+    linkLabel?: string | null
     /**
      * A site path (/events) or https:// address.
      */
-    linkUrl?: string | null;
-    id?: string | null;
-  }[];
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'steps';
+    linkUrl?: string | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'steps'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3038,15 +3055,15 @@ export interface KeyFactsBlock {
     /**
      * What it is about, as a short title: "Who pays for the ramps".
      */
-    label: string;
+    label: string
     /**
      * The big text: where it stands, or the number. "Pending", "2040s", "$10M".
      */
-    value: string;
+    value: string
     /**
      * Optional. One plain sentence that explains it: "City and State are still negotiating."
      */
-    detail?: string | null;
+    detail?: string | null
     icon:
       | 'info'
       | 'date'
@@ -3060,21 +3077,21 @@ export interface KeyFactsBlock {
       | 'walking'
       | 'biking'
       | 'noise'
-      | 'construction';
-    certainty: 'confirmed' | 'estimate' | 'unknown';
+      | 'construction'
+    certainty: 'confirmed' | 'estimate' | 'unknown'
     /**
      * Optional, for example "City budget".
      */
-    linkLabel?: string | null;
+    linkLabel?: string | null
     /**
      * A site path (/events) or https:// address.
      */
-    linkUrl?: string | null;
-    id?: string | null;
-  }[];
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'keyFacts';
+    linkUrl?: string | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'keyFacts'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3084,7 +3101,7 @@ export interface OutcomeForkBlock {
   /**
    * The open question, as a reader would ask it.
    */
-  question: string;
+  question: string
   /**
    * Two or three possible answers, each with what it would mean.
    */
@@ -3092,17 +3109,17 @@ export interface OutcomeForkBlock {
     /**
      * The answer: "If they agree".
      */
-    title: string;
-    tone: 'go' | 'stop' | 'open';
+    title: string
+    tone: 'go' | 'stop' | 'open'
     /**
      * What happens then, in one or two plain sentences.
      */
-    description: string;
-    id?: string | null;
-  }[];
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'outcomeFork';
+    description: string
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'outcomeFork'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3116,16 +3133,16 @@ export interface DiagramKeyBlock {
     /**
      * Short: "North roundabout".
      */
-    label: string;
+    label: string
     /**
      * One line: what it is or does. Optional.
      */
-    text?: string | null;
-    id?: string | null;
-  }[];
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'diagramKey';
+    text?: string | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'diagramKey'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3135,27 +3152,27 @@ export interface FigureBlock {
   /**
    * The large picture. It shows small in the article. It does not set the card or link-preview image.
    */
-  image: number | Media;
+  image: number | Media
   /**
    * What the picture shows, in a few words. It names the small expand icon on the picture.
    */
-  title: string;
+  title: string
   /**
    * Its number in the source, such as "Figure 2-9". Optional.
    */
-  label?: string | null;
+  label?: string | null
   /**
    * One short line under the small picture. Optional.
    */
-  caption?: string | null;
+  caption?: string | null
   /**
    * Source, how it was made and conditions. Shown only when the picture is enlarged. Optional.
    */
-  longCaption?: string | null;
+  longCaption?: string | null
   /**
    * How wide it is beside the text on a tablet or larger.
    */
-  size?: ('two-fifths' | 'third' | 'half') | null;
+  size?: ('two-fifths' | 'third' | 'half') | null
   /**
    * One per numbered marker on the image, in number order. Don’t type the numbers.
    */
@@ -3164,17 +3181,17 @@ export interface FigureBlock {
         /**
          * Short: "North roundabout".
          */
-        label: string;
+        label: string
         /**
          * One line: what it is or does. Optional.
          */
-        text?: string | null;
-        id?: string | null;
+        text?: string | null
+        id?: string | null
       }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'figure';
+    | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'figure'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3184,32 +3201,32 @@ export interface ChartBlock {
   /**
    * What the chart shows: "Where each $100 goes".
    */
-  title: string;
+  title: string
   /**
    * The takeaway: keep it to one short line. The chart shows small with this beside it, and readers can enlarge it. Screen readers hear it first.
    */
-  summary: string;
-  kind: 'units' | 'bar' | 'stacked' | 'breakdown';
+  summary: string
+  kind: 'units' | 'bar' | 'stacked' | 'breakdown'
   /**
    * What the numbers count.
    */
-  unit: 'usd' | 'percent' | 'mills' | 'count';
+  unit: 'usd' | 'percent' | 'mills' | 'count'
   /**
    * The colors the chart is drawn in. Leave empty for the usual ones.
    */
-  palette?: ('default' | 'warm') | null;
+  palette?: ('default' | 'warm') | null
   /**
    * When the figures are from: "Mayor’s proposal, October 2026".
    */
-  asOf?: string | null;
+  asOf?: string | null
   /**
    * Leave empty to show no label.
    */
-  certainty?: ('confirmed' | 'estimate' | 'unknown') | null;
+  certainty?: ('confirmed' | 'estimate' | 'unknown') | null
   /**
    * Optional small print under the chart: what was rounded or calculated.
    */
-  finePrint?: string | null;
+  finePrint?: string | null
   /**
    * Where the numbers come from. Up to four.
    */
@@ -3218,176 +3235,176 @@ export interface ChartBlock {
         /**
          * Optional, for example "City of Madison, 2027 budget".
          */
-        linkLabel?: string | null;
+        linkLabel?: string | null
         /**
          * A site path (/events) or https:// address.
          */
-        linkUrl?: string | null;
-        id?: string | null;
+        linkUrl?: string | null
+        id?: string | null
       }[]
-    | null;
+    | null
   /**
    * Turn this off for a simple chart that is easy to read at its normal size, such as two bars.
    */
-  enlarge?: boolean | null;
-  mode?: ('perHundred' | 'each') | null;
+  enlarge?: boolean | null
+  mode?: ('perHundred' | 'each') | null
   /**
    * What one square or tile stands for, in a sentence.
    */
-  unitNote?: string | null;
+  unitNote?: string | null
   /**
    * One grid for each group; two put them side by side, such as 2026 next to 2027. A grid shows at most six parts; a row of tiles up to twelve.
    */
   groups?:
     | {
-        label: string;
+        label: string
         /**
          * Optional: the whole the parts add up to.
          */
-        total?: number | null;
+        total?: number | null
         /**
          * Optional. Leave empty to use the label. Parts with the same key share a colour key.
          */
-        key?: string | null;
+        key?: string | null
         /**
          * The parts of this group, such as one tile or square each.
          */
         parts: {
-          label: string;
+          label: string
           /**
            * In the unit above. Never negative.
            */
-          value: number;
+          value: number
           /**
            * Optional. Leave empty to use the label. Parts with the same key share a colour key.
            */
-          key?: string | null;
+          key?: string | null
           /**
            * Stripes mark an amount that is only proposed.
            */
-          hatch?: boolean | null;
-          id?: string | null;
-        }[];
-        id?: string | null;
+          hatch?: boolean | null
+          id?: string | null
+        }[]
+        id?: string | null
       }[]
-    | null;
+    | null
   /**
    * Shows only the ranked bars, with no grid of squares and no key.
    */
-  hideSquares?: boolean | null;
+  hideSquares?: boolean | null
   /**
    * What one square stands for, in dollars: 5000000 makes each square $5 million. Pick an amount that gives 20 to 200 squares.
    */
-  squareValue?: number | null;
+  squareValue?: number | null
   /**
    * The big areas of the budget, up to seven. They are ranked by size, and the colors run from the biggest to the smallest.
    */
   areas?:
     | {
-        label: string;
+        label: string
         /**
          * In dollars.
          */
-        value: number;
+        value: number
         /**
          * Optional. Leave empty to use the label. Parts with the same key share a colour key.
          */
-        key?: string | null;
+        key?: string | null
         /**
          * Optional smaller parts of this area. Pieces marked "Shown" sit under the area; the rest go in "See the smaller pieces".
          */
         pieces?:
           | {
-              label: string;
+              label: string
               /**
                * In dollars.
                */
-              value: number;
+              value: number
               /**
                * Optional. Leave empty to use the label. Parts with the same key share a colour key.
                */
-              key?: string | null;
+              key?: string | null
               /**
                * Show this piece right under its area.
                */
-              shown?: boolean | null;
-              id?: string | null;
+              shown?: boolean | null
+              id?: string | null
             }[]
-          | null;
-        id?: string | null;
+          | null
+        id?: string | null
       }[]
-    | null;
+    | null
   /**
    * One to twelve bars, top to bottom.
    */
   bars?:
     | {
-        label: string;
+        label: string
         /**
          * In the unit above. Never negative.
          */
-        value: number;
+        value: number
         /**
          * Optional. Leave empty to use the label. Parts with the same key share a colour key.
          */
-        key?: string | null;
+        key?: string | null
         /**
          * Stripes mark an amount that is only proposed.
          */
-        hatch?: boolean | null;
-        id?: string | null;
+        hatch?: boolean | null
+        id?: string | null
       }[]
-    | null;
+    | null
   /**
    * The parts each bar splits into, such as “Borrowed” and “Other sources”.
    */
   series?:
     | {
-        label: string;
+        label: string
         /**
          * Optional. Leave empty to use the label. Parts with the same key share a colour key.
          */
-        key?: string | null;
+        key?: string | null
         /**
          * Stripes mark an amount that is only proposed.
          */
-        hatch?: boolean | null;
+        hatch?: boolean | null
         /**
          * Added on top of the first part: shown as “+$24.8M”.
          */
-        increase?: boolean | null;
-        id?: string | null;
+        increase?: boolean | null
+        id?: string | null
       }[]
-    | null;
+    | null
   /**
    * One bar per row. Give each a number for every part above, in the same order.
    */
   rows?:
     | {
-        label: string;
+        label: string
         /**
          * Optional note beside the bar. Give every bar one, or none.
          */
-        note?: string | null;
+        note?: string | null
         /**
          * One number for each part, in the order of the parts.
          */
         values?:
           | {
-              value: number;
-              id?: string | null;
+              value: number
+              id?: string | null
             }[]
-          | null;
-        id?: string | null;
+          | null
+        id?: string | null
       }[]
-    | null;
+    | null
   /**
    * Optional. The end of the scale. Charts with the same scale draw the same number the same length.
    */
-  scaleMax?: number | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'chart';
+  scaleMax?: number | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'chart'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3397,7 +3414,7 @@ export interface BillShareBlock {
   /**
    * One line above the home value box: what the estimate is based on.
    */
-  intro: string;
+  intro: string
   /**
    * 1 to 2 tax years, oldest first. Readers switch between them. Use only rates the bodies have officially set.
    */
@@ -3405,65 +3422,65 @@ export interface BillShareBlock {
     /**
      * The budget year: 2027.
      */
-    year: number;
+    year: number
     /**
      * On the switch: "2026 rates".
      */
-    label: string;
+    label: string
     /**
      * Shown in parentheses under the switch: "proposed". Leave empty once the rates are set.
      */
-    note?: string | null;
+    note?: string | null
     /**
      * The City’s average home that year, in dollars.
      */
-    averageHome: number;
-    schools?: number | null;
-    city?: number | null;
-    county?: number | null;
-    matc?: number | null;
+    averageHome: number
+    schools?: number | null
+    city?: number | null
+    county?: number | null
+    matc?: number | null
     /**
      * Optional, for example "City tax detail".
      */
-    linkLabel?: string | null;
+    linkLabel?: string | null
     /**
      * A site path (/events) or https:// address.
      */
-    linkUrl?: string | null;
-    id?: string | null;
-  }[];
+    linkUrl?: string | null
+    id?: string | null
+  }[]
   /**
    * What each open-and-close row is called.
    */
   rows: {
-    breakdown: string;
-    differ: string;
-    sources: string;
-  };
+    breakdown: string
+    differ: string
+    sources: string
+  }
   /**
    * The lines in the row on why the bill may differ, in this order. Each says when it shows; a note can use blanks the page fills in.
    */
   notes?:
     | {
-        showWhen: 'always' | 'earlierYears' | 'proposedRate' | 'missingRates';
+        showWhen: 'always' | 'earlierYears' | 'proposedRate' | 'missingRates'
         /**
          * Blanks the page fills in: {year} is the year shown; {link} is the note’s link, from the link text and address; {years} is the earlier years (only with that condition); {bodies} is the bodies with no rate (only with that condition).
          */
-        text: string;
+        text: string
         /**
          * Optional, for example "send us a note".
          */
-        linkLabel?: string | null;
+        linkLabel?: string | null
         /**
          * A site path (/events) or https:// address.
          */
-        linkUrl?: string | null;
-        id?: string | null;
+        linkUrl?: string | null
+        id?: string | null
       }[]
-    | null;
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'billShare';
+    | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'billShare'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3477,15 +3494,15 @@ export interface FactTabsBlock {
     /**
      * What it is about, as a short title: "Who pays for the ramps".
      */
-    label: string;
+    label: string
     /**
      * The big text: where it stands, or the number. "Pending", "2040s", "$10M". In a tab with a whole tax bill, write {yearly} or {monthly} for the City’s extra tax in a year or a month on the home and year the reader chose.
      */
-    value: string;
+    value: string
     /**
      * Optional. One plain sentence that explains it: "City and State are still negotiating."
      */
-    detail?: string | null;
+    detail?: string | null
     icon:
       | 'info'
       | 'date'
@@ -3499,42 +3516,41 @@ export interface FactTabsBlock {
       | 'walking'
       | 'biking'
       | 'noise'
-      | 'construction';
-    certainty: 'confirmed' | 'estimate' | 'unknown';
+      | 'construction'
+    certainty: 'confirmed' | 'estimate' | 'unknown'
     /**
      * Optional, for example "City budget".
      */
-    linkLabel?: string | null;
+    linkLabel?: string | null
     /**
      * A site path (/events) or https:// address.
      */
-    linkUrl?: string | null;
+    linkUrl?: string | null
     /**
      * The name of what this tab opens: "Big-project money". In a tab with a whole tax bill, write {yearly} or {monthly} for the City’s extra tax in a year or a month on the home and year the reader chose.
      */
-    heading: string;
+    heading: string
     /**
      * In plain words, what the key fact means and where it comes from.
      */
-    definition: string;
+    definition: string
     /**
      * 1 to 3 charts, timelines or a whole tax bill shown when the tab is open.
      */
-    panel: (ChartBlock | TimelineBlock | BillShareBlock)[];
-    id?: string | null;
-  }[];
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'factTabs';
+    panel: (ChartBlock | TimelineBlock | BillShareBlock)[]
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'factTabs'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "auth".
  */
 export interface Auth {
-  [k: string]: unknown;
+  [k: string]: unknown
 }
-
 
 declare module 'payload' {
   export interface GeneratedTypes extends Config {}
