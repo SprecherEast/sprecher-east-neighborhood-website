@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { ProgressBar } from '@/platform/ui/ProgressBar'
+import { HeatMap } from '@/platform/ui/HeatMap'
 import { Sparkline } from '@/platform/ui/Sparkline'
 import { ShareBar } from '@/platform/ui/ShareBar.client'
 import { Disclosure } from '@/platform/ui/Disclosure'
@@ -125,6 +126,55 @@ export function SparklineGallery() {
       </GalleryVariant>
       <GalleryVariant label="one value" className="block max-w-xs">
         <Sparkline values={[4]} max={8} label="Sample: one value, 4" />
+      </GalleryVariant>
+    </GalleryEntry>
+  )
+}
+
+const WEEK = [
+  '2026-11-09',
+  '2026-11-10',
+  '2026-11-11',
+  '2026-11-12',
+  '2026-11-13',
+  '2026-11-14',
+  '2026-11-15',
+]
+const FOUR_WEEKS = Array.from({ length: 26 }, (_, i) => {
+  const date = new Date(Date.UTC(2026, 9, 20 + i))
+  return date.toISOString().slice(0, 10)
+})
+
+/** The day-by-day squares: a week strip across its box and four weeks as Monday rows */
+export function HeatMapGallery() {
+  return (
+    <GalleryEntry
+      name="HeatMap"
+      description="How much happened each day, as squares: darker means more. The last day is ringed; the numbers are always written beside it."
+    >
+      <GalleryVariant label="week, full width" className="block max-w-sm">
+        <HeatMap
+          variant="week"
+          days={WEEK.slice(0, 5)}
+          values={[0, 2, 5, 1, 3]}
+          label="Sample: finished this week, 0, 2, 5, 1, 3"
+        />
+      </GalleryVariant>
+      <GalleryVariant label="week, nothing happened" className="block max-w-sm">
+        <HeatMap
+          variant="week"
+          days={WEEK.slice(0, 5)}
+          values={[0, 0, 0, 0, 0]}
+          label="Sample: nothing finished"
+        />
+      </GalleryVariant>
+      <GalleryVariant label="calendar, four weeks" className="block">
+        <HeatMap
+          variant="calendar"
+          days={FOUR_WEEKS}
+          values={FOUR_WEEKS.map((_, i) => (i * 7) % 6)}
+          label="Sample: finished each day over four weeks"
+        />
       </GalleryVariant>
     </GalleryEntry>
   )
