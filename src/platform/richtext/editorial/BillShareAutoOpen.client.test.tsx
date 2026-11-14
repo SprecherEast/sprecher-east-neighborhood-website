@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { TOTAL_PULSE_SHOWN_MS } from '@/platform/ui/ShareBill'
+import { TOTAL_PULSE_MS } from '@/platform/ui/ShareBill'
 import { COUNT_MS } from '@/platform/ui/useCountedNumber.client'
 
 import { BillShare } from './BillShare.client'
@@ -37,14 +37,14 @@ describe('BillShare, the City’s breakdown opens after the reader’s first val
     expect(breakdown().open).toBe(true)
   })
 
-  it('opens only once: closed by the reader, it stays closed for the next value', async () => {
+  it('opens again for the next new value when the reader closed it (#1176)', async () => {
     render(<BillShare {...PROPS} {...city} />)
     await estimate('$700,000')
     wait(OPEN_AFTER_TOTAL_MS)
     breakdown().open = false
     await estimate('$800,000')
-    wait(OPEN_AFTER_TOTAL_MS * 2)
-    expect(breakdown().open).toBe(false)
+    wait(OPEN_AFTER_TOTAL_MS)
+    expect(breakdown().open).toBe(true)
   })
 
   it('never opens for a switch of tax year', () => {
@@ -84,10 +84,10 @@ describe('BillShare, the City’s breakdown opens after the reader’s first val
     await estimate('$700,000')
     // The count runs: nothing is waited out until the bill has settled
     step(0)
-    wait(TOTAL_PULSE_SHOWN_MS + OPEN_AFTER_TOTAL_MS)
+    wait(TOTAL_PULSE_MS + OPEN_AFTER_TOTAL_MS)
     expect(breakdown().open).toBe(false)
     step(COUNT_MS)
-    wait(TOTAL_PULSE_SHOWN_MS + OPEN_AFTER_TOTAL_MS - 1)
+    wait(TOTAL_PULSE_MS + OPEN_AFTER_TOTAL_MS - 1)
     expect(breakdown().open).toBe(false)
     wait(1)
     expect(breakdown().open).toBe(true)
