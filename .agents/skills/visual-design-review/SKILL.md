@@ -11,6 +11,9 @@ when it is published through the CMS and no diff exists (#812). Skip it for back
 config-only, or docs-only changes. Fix every Critical and High finding before opening the PR or
 publishing the image.
 
+**Making the image:** use the [`make-illustration`](../make-illustration/SKILL.md) skill; this review is
+its last step.
+
 **Images made for the site:** review the finished file against
 [Images made for the site](../../../docs/guidelines/images.md):
 open the component that shows it to find what overlays it, preview the image at the card size on a
