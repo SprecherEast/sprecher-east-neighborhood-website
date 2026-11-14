@@ -31,6 +31,23 @@ describe('BreakdownRow (#1163, #1165)', () => {
     expect(details.querySelector('svg.h-2\\.5')).not.toBeNull()
   })
 
+  it('sets its amounts in from the right, so they end before the bodies’ amounts and are not read as parts of the sum (#1196)', () => {
+    const rowRef = createRef<HTMLDetailsElement>()
+    const { container } = render(
+      <BreakdownRow
+        title="Your City tax breakdown"
+        spec={SPEC}
+        factor={1}
+        row={{ rowRef, openings: 0, onOpening: () => {} }}
+      />,
+    )
+    const body = container.querySelector('details > div') as HTMLElement
+    expect(body.className).toContain('mr-6')
+    expect(body.className).toContain('min-[24rem]:mr-12')
+    // The summary button itself keeps its full width
+    expect(container.querySelector('summary')?.className).not.toContain('mr-')
+  })
+
   it('tells the hook before a reader opens it, and fills again for each opening', () => {
     const onOpening = vi.fn()
     const rowRef = createRef<HTMLDetailsElement>()

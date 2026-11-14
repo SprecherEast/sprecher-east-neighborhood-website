@@ -3,7 +3,6 @@ import React, { type ReactNode } from 'react'
 import { cn } from '@/platform/lib/cn'
 
 import { Text } from './Text'
-import { ShareBar } from './ShareBar.client'
 import { SHARE_TONES, type ShareTone } from './shareTones'
 
 export type ShareSlice = {
@@ -50,22 +49,45 @@ const RECEIPT_COLUMNS =
   'grid grid-cols-[1fr_1.5rem_minmax(2.5rem,auto)] gap-x-1.5 min-[24rem]:grid-cols-[1fr_2rem_minmax(3.5rem,auto)] min-[24rem]:gap-x-2'
 
 /**
- * A nested row starts where the slices' names start: past the row's side padding, the colour square
- * and the gap after it (`px-1` + `size-2` + `gap-x-1`, then `size-3` + `gap-x-2` from 24 rem), and
- * ends at the rows' own end (`px-1`)
+ * A nested row (an open-and-close row about one slice) sits under that slice's row, set in from the
+ * left and marked by a line in the slice's own color, so it reads as part of the slice and not as
+ * one more body (#1196).
  */
-const NESTED_INDENT = 'pr-1 pl-4 min-[24rem]:pl-6'
+const NESTED_INDENT =
+  'ml-1 border-l-2 border-primary-fill pr-1 pl-2 min-[24rem]:ml-4 min-[24rem]:pl-3'
 
 /**
- * One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, one bar whose slices are as wide as their shares,
- * and under it a receipt that names every slice with its color, dollars and percent, in the bar's
- * own order, since both are made from the same slices. The highlighted slice's row has a soft primary
- * fill and bolder text (the tone's `row`), and every row has the same side padding, so the columns
- * stay level. The receipt is one grid of three columns
+ * What a nested row sets on the right of its own amounts: about the width of the dollar column, so
+ * they end before the bodies' amounts and never line up with them, as a ledger sets off "of which"
+ * lines: nobody adds them to the bill. The row's button keeps its full width; only the amounts move (#1196).
+ */
+export const NESTED_AMOUNTS_INSET = 'mr-6 min-[24rem]:mr-12'
+
+/** One slice's bar: its length is its share of the largest slice's, so every bar shares one scale (#1196) */
+function SliceBar({ slice, scale }: { slice: ShareSlice; scale: number }) {
+  return (
+    <svg aria-hidden="true" focusable="false" className="col-span-3 mt-1.5 block h-2.5 w-full">
+      <rect width="100%" height="100%" rx={5} className="fill-muted" />
+      <rect
+        data-share-bar={slice.key}
+        width={`${(slice.share * scale).toFixed(2)}%`}
+        height="100%"
+        rx={5}
+        className={SHARE_TONES[slice.tone].fill}
+      />
+    </svg>
+  )
+}
+
+/**
+ * One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, then one row for every
+ * slice with its name, percent and dollars and, under them, its own bar in the slice's color, drawn like the
+ * City breakdown's (#1196). The bars share one scale, the largest slice's, and every row is built the
+ * same way, so the rows and bars sit level. The receipt is one grid of three columns
  * with fixed widths for the percent and the amount, so each column lines up from row to row and
  * the block keeps its height when the amounts change. The total flashes the accent once each time
  * `pulseKey` changes, unless motion is reduced. The caller writes `label`, what the bar says to
- * screen readers. `nested` puts extra content, such as an open-and-close row about one slice, as a
+ * screen readers (the list's name). `nested` puts extra content, such as an open-and-close row about one slice, as a
  * row of its own directly under that slice's row, indented to its name (#1163).
  */
 export function ShareBill({
@@ -92,6 +114,7 @@ export function ShareBill({
   nested?: { after: string; children: ReactNode }
   className?: string
 }) {
+  const scale = 100 / Math.max(...slices.map((slice) => slice.share), 1)
   return (
     <div data-share-bill className={cn('space-y-1.5', className)}>
       {title && (
@@ -99,56 +122,32 @@ export function ShareBill({
           {title}
         </Text>
       )}
-      <ShareBar
-        label={label}
-        slices={slices.map((slice) => ({
-          key: slice.key,
-          share: slice.share,
-          tone: slice.tone,
-          label: `${slice.percent}%`,
-        }))}
-      />
       <div className={RECEIPT_COLUMNS}>
-        <ul className="col-span-3 grid grid-cols-subgrid text-xs min-[24rem]:text-sm">
+        <ul
+          aria-label={label}
+          className="col-span-3 grid grid-cols-subgrid text-xs min-[24rem]:text-sm"
+        >
           {slices.map((slice) => (
             <React.Fragment key={slice.key}>
               <li
                 data-share-row={slice.key}
-                className={cn(
-                  'col-span-3 grid min-h-5 grid-cols-subgrid items-center border-t border-border px-1 first:border-t-0',
-                  SHARE_TONES[slice.tone].row,
-                )}
+                className="col-span-3 grid min-h-5 grid-cols-subgrid items-center px-1 pt-3 first:pt-1"
               >
-                <span className="flex min-w-0 items-center gap-x-1 min-[24rem]:gap-x-2">
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      'inline-block size-2 shrink-0 min-[24rem]:size-3',
-                      SHARE_TONES[slice.tone].swatch,
-                    )}
-                  />
-                  {/* Never wraps; on the narrowest phone a very large amount can cut it with an ellipsis rather than overlap */}
-                  <span className="truncate text-foreground" title={slice.name}>
-                    <SliceName name={slice.name} shortName={slice.shortName} />
-                  </span>
+                {/* Never wraps; on the narrowest phone a very large amount can cut it with an ellipsis rather than overlap */}
+                <span className="min-w-0 truncate text-foreground" title={slice.name}>
+                  <SliceName name={slice.name} shortName={slice.shortName} />
                 </span>
-                <span
-                  className={cn(
-                    'text-right whitespace-nowrap tabular-nums',
-                    SHARE_TONES[slice.tone].row ? 'text-foreground' : 'text-muted-foreground',
-                  )}
-                >
+                <span className="text-right whitespace-nowrap text-muted-foreground tabular-nums">
                   {slice.percent}%
                 </span>
                 {/* Ends at its column's end, the right edge, like the total's amount */}
                 <span className="justify-self-end font-semibold whitespace-nowrap text-foreground tabular-nums">
                   {slice.amount}
                 </span>
+                <SliceBar slice={slice} scale={scale} />
               </li>
               {nested?.after === slice.key && (
-                <li className={cn('col-span-3 border-t border-border', NESTED_INDENT)}>
-                  {nested.children}
-                </li>
+                <li className={cn('col-span-3 mt-2', NESTED_INDENT)}>{nested.children}</li>
               )}
             </React.Fragment>
           ))}

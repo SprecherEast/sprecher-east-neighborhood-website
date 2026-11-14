@@ -26,18 +26,18 @@ const SLICES: ShareSlice[] = [
 const TOTAL = { label: 'Total', amount: '$10,000' }
 
 describe('ShareBill', () => {
-  it('reads like a receipt: the title on top with no amount, then the bar, the rows, and the total last (#1118)', () => {
+  it('reads like a receipt: the title on top with no amount, then the rows, and the total last (#1118, #1196)', () => {
     const { container } = render(
       <ShareBill slices={SLICES} label="Sample bill" title="Sample whole bill" total={TOTAL} />,
     )
     const title = screen.getByText('Sample whole bill')
-    const bar = screen.getByRole('img', { name: 'Sample bill' })
-    const list = container.querySelector('ul') as HTMLElement
+    const list = screen.getByRole('list', { name: 'Sample bill' })
     const total = screen.getByText('Total').closest('p') as HTMLElement
     const follows = (a: Node, b: Node) =>
       Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
-    expect(follows(title, bar)).toBe(true)
-    expect(follows(bar, list)).toBe(true)
+    expect(follows(title, list)).toBe(true)
+    // No segmented bar on top: the only bars are the rows' own
+    expect(container.querySelectorAll('svg')).toHaveLength(SLICES.length)
     expect(follows(list, total)).toBe(true)
     // No amount beside the title
     expect(title.textContent).toBe('Sample whole bill')
@@ -73,7 +73,7 @@ describe('ShareBill', () => {
     )
     const { container } = render(<ShareBill slices={slices} label="Sample bill" />)
     const row = container.querySelectorAll('li[data-share-row]')[3] as HTMLElement
-    const name = row.children[0]?.lastElementChild as HTMLElement
+    const name = row.children[0] as HTMLElement
     // The whole name is in the page; only its tail hides below 24 rem, kept for screen readers
     expect(name.textContent).toBe('Sample: fourth, long')
     const tail = name.querySelector('span') as HTMLElement
@@ -98,29 +98,43 @@ describe('ShareBill', () => {
       'Sample: third13%$1,250',
       'Sample: fourth3%$350',
     ])
-    const bar = Array.from(container.querySelectorAll('rect[data-share-slice]')).map((rect) =>
-      rect.getAttribute('data-share-slice'),
+    const bars = Array.from(container.querySelectorAll('rect[data-share-bar]')).map((rect) =>
+      rect.getAttribute('data-share-bar'),
     )
-    expect(bar).toEqual(['a', 'b', 'c', 'd'])
+    expect(bars).toEqual(['a', 'b', 'c', 'd'])
   })
 
-  it('highlights the highlighted slice’s row with a soft primary fill and bolder text, and no other (#1121)', () => {
+  it('builds every row the same way: no colour square, no fill, no border of its own (#1196)', () => {
     const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
     const rows = Array.from(container.querySelectorAll('li'))
-    expect(rows[0]?.className).toContain('bg-primary/10')
-    expect(rows[0]?.className).toContain('font-semibold')
-    for (const row of rows.slice(1)) {
+    expect(container.querySelector('li span[aria-hidden="true"]')).toBeNull()
+    for (const row of rows) {
       expect(row.className).not.toContain('bg-primary')
       expect(row.className).not.toContain('font-semibold')
+      expect(row.className).not.toContain('border')
     }
-    // Every row has the same side padding, so the columns stay level
-    expect(new Set(rows.map((row) => /px-\S+/.exec(row.className)?.[0])).size).toBe(1)
+    // The first row differs only in the space above it, so every row is as tall as the others
+    const shape = (row: Element) => row.className.replace(/first:\S+|pt-\d+/g, '').trim()
+    expect(new Set(rows.map(shape)).size).toBe(1)
   })
 
-  it('writes every slice’s percent on the bar, the smallest too (#1121)', () => {
+  it('draws each slice’s bar on one scale: the largest slice fills the track, the others are in proportion (#1196)', () => {
     const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
-    const written = Array.from(container.querySelectorAll('svg text')).map((t) => t.textContent)
-    expect(written).toEqual(['38%', '46%', '13%', '3%'])
+    const width = (key: string) =>
+      Number(
+        container
+          .querySelector(`rect[data-share-bar="${key}"]`)
+          ?.getAttribute('width')
+          ?.slice(0, -1),
+      )
+    expect(width('b')).toBe(100)
+    expect(width('a')).toBeCloseTo((37.5 / 46.5) * 100, 1)
+    expect(width('c')).toBeCloseTo((12.5 / 46.5) * 100, 1)
+    expect(width('d')).toBeCloseTo((3.5 / 46.5) * 100, 1)
+    // Each bar is drawn in its own slice's tone
+    expect(container.querySelector('rect[data-share-bar="a"]')?.getAttribute('class')).toContain(
+      'fill-primary-fill',
+    )
   })
 
   it('flashes the total only once a pulse has been asked for', () => {
@@ -131,7 +145,7 @@ describe('ShareBill', () => {
     expect(flashes()).toBe(true)
   })
 
-  it('nests extra content under one slice’s row, indented to the slice’s name, as one row of its own (#1163)', () => {
+  it('nests extra content under one slice’s row, indented and marked by a line, as one row of its own (#1163, #1196)', () => {
     const { container } = render(
       <ShareBill
         slices={SLICES}
@@ -143,10 +157,14 @@ describe('ShareBill', () => {
     expect(rows).toHaveLength(SLICES.length + 1)
     const nested = rows[1] as HTMLElement
     expect(nested.textContent).toBe('More on the first')
-    // It spans the three columns and starts where the names start, past the colour square
+    // It spans the three columns, indented, with a line down its side
     expect(nested.className).toContain('col-span-3')
-    expect(nested.className).toContain('pl-4')
-    expect(nested.className).toContain('min-[24rem]:pl-6')
+    expect(nested.className).toContain('ml-1')
+    expect(nested.className).toContain('border-l-2')
+    // Its button keeps the full width on the right: only its amounts are set in, by `NESTED_AMOUNTS_INSET` (#1196)
+    // It ends where the bars end (the rows' `px-1`)
+    expect(nested.className).toContain('pr-1')
+    expect(nested.className).not.toContain('mr-')
     expect(rows[2]?.textContent).toBe('Sample: second46%$4,650')
     // Only the slices' own rows carry their key, so a list inside the nested content is never one
     expect(container.querySelectorAll('li[data-share-row]')).toHaveLength(SLICES.length)

@@ -18,9 +18,10 @@ import { REVEAL_SCROLL_MARGIN } from './scrollMargin'
  * row under the site header that holds the "On this page" list on small screens; `link` is a bare
  * link-coloured row with no box, for "See the smaller pieces" inside a chart (#866); `row` is the card
  * look with no box of its own: a few rows go in one card, split by divider lines, and a closed row is
- * only as tall as its summary (#1111, #1118); `listRow` is a row inside a list (a receipt's), with no
- * side padding, so the list's own indent places it, and a label in `text-list-row`, a little larger
- * than the list's rows; its body goes back to body text (#1163).
+ * only as tall as its summary (#1111, #1118); `listRow` is a row inside a list (a receipt's): a tinted,
+ * borderless button-like summary so it reads as clickable (#1196), with no outer padding, so the
+ * list's own indent places it, and a label in `text-list-row`, a little larger than the list's
+ * rows; its body goes back to body text with no rule above it (#1163).
  */
 // The summary row and chevron the two card-like looks (`card` and `row`) share: one definition each, so they cannot drift
 const CARD_BOX = cardVariants({ variant: 'elevated', padding: 'sm' })
@@ -35,7 +36,10 @@ const summaryVariants = cva(
         card: cn(CARD_SUMMARY, 'focus-visible:outline-offset-2'),
         // Inside a card that clips its corners, so the ring is drawn inside the row
         row: cn(CARD_SUMMARY, 'focus-visible:-outline-offset-2 max-[24rem]:text-sm'),
-        listRow: cn(CARD_SUMMARY, 'text-list-row focus-visible:-outline-offset-2'),
+        listRow: cn(
+          CARD_SUMMARY,
+          'rounded-lg bg-primary/10 px-2 text-list-row min-[24rem]:px-3 text-primary-strong focus-visible:outline-offset-2',
+        ),
         bar: 'min-h-[var(--section-bar-height)] px-4 text-sm font-semibold text-foreground focus-visible:-outline-offset-2 md:px-8',
         link: cn(
           TOUCH_MIN_HEIGHT,
@@ -54,7 +58,7 @@ const chevronVariants = cva(
       variant: {
         card: CARD_CHEVRON,
         row: CARD_CHEVRON,
-        listRow: 'size-4 text-foreground',
+        listRow: 'size-5 text-primary-strong',
         bar: 'size-5',
         link: 'size-4',
       },
@@ -67,7 +71,7 @@ const bodyVariants = cva('', {
     variant: {
       card: 'mt-4 border-t border-border pt-4',
       row: 'border-t border-border py-4',
-      listRow: 'border-t border-border py-4 text-base',
+      listRow: 'pt-3 text-base',
       bar: 'border-t border-border',
       link: 'mt-1',
     },

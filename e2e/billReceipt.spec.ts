@@ -57,11 +57,11 @@ for (const width of WIDTHS) {
         const range = document.createRange()
         const rows = [
           ...Array.from(bill.querySelectorAll('li[data-share-row]'), (li) => [
-            li.children[0]?.lastElementChild,
+            li.children[0],
             li.children[1],
           ]),
           ...Array.from(bill.querySelectorAll('li[data-share-row]'), (li) => [
-            li.children[0]?.lastElementChild,
+            li.children[0],
             li.children[2],
           ]),
           ...Array.from(bill.querySelectorAll(':scope > :last-child > p'), (p) => [

@@ -99,12 +99,12 @@ describe('BillShare', () => {
     expect(box().value).toBe('$300,000')
   })
 
-  it('draws the whole bill as one bar of the four bodies, and no pie', () => {
+  it('draws the whole bill as one row, with its own bar, for each of the four bodies, and no pie (#1196)', () => {
     const { container } = render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
     const label =
       screen
-        .getByRole('img', { name: /^Your whole property tax bill:/ })
+        .getByRole('list', { name: /^Your whole property tax bill:/ })
         .getAttribute('aria-label') ?? ''
     for (const name of [
       'Metropolitan Schools',
@@ -119,7 +119,7 @@ describe('BillShare', () => {
     expect(container.querySelector('path[data-pie-slice]')).toBeNull()
   })
 
-  it('lists the bill as a receipt in the bar’s order: the City, schools, county, college, then the total above', () => {
+  it('lists the bill as a receipt in the rows’ order: the City, schools, county, college, then the total above', () => {
     const { container } = render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(rowsOf().map((row) => row?.replace(/\d+%\$[\d,]+$/, '').trim())).toEqual([
@@ -129,8 +129,8 @@ describe('BillShare', () => {
       'Madison College, MATC',
     ])
     expect(
-      Array.from(container.querySelectorAll('rect[data-share-slice]')).map((rect) =>
-        rect.getAttribute('data-share-slice'),
+      Array.from(container.querySelectorAll('rect[data-share-bar]')).map((rect) =>
+        rect.getAttribute('data-share-bar'),
       ),
     ).toEqual(['city', 'schools', 'county', 'matc'])
     expect(bill().lastElementChild?.lastElementChild?.textContent).toMatch(

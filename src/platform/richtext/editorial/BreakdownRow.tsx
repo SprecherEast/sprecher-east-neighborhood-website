@@ -3,6 +3,7 @@ import type { RefObject } from 'react'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { ScaledBreakdown } from '@/platform/ui/chart/ScaledBreakdown'
 import { Disclosure } from '@/platform/ui/Disclosure'
+import { NESTED_AMOUNTS_INSET } from '@/platform/ui/ShareBill'
 
 /**
  * Where the City's tax goes, as a closed row of the whole bill under the City's own row (#1163):
@@ -29,7 +30,7 @@ export function BreakdownRow({
       ref={row.rowRef}
       variant="listRow"
       summary={title}
-      bodyClassName="space-y-6"
+      bodyClassName={`space-y-6 ${NESTED_AMOUNTS_INSET}`}
       onOpening={row.onOpening}
       revealAnchor={revealAnchor}
     >

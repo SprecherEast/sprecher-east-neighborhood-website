@@ -98,7 +98,9 @@ for (const width of WIDTHS) {
     // No receipt name wraps, down to 320 px
     const rows = await page
       .locator('[data-share-bill] li[data-share-row]')
-      .evaluateAll((items) => items.map((li) => Math.round(li.getBoundingClientRect().height)))
+      .evaluateAll((items) =>
+        items.map((li) => Math.round((li.children[0] as Element).getBoundingClientRect().height)),
+      )
     expect(Math.max(...rows), `every receipt name is on one line: ${rows}`).toBeLessThanOrEqual(22)
 
     const sideways = await page.evaluate(
@@ -107,45 +109,41 @@ for (const width of WIDTHS) {
     expect(sideways, 'nothing sticks out sideways').toBeLessThanOrEqual(0)
   })
 
-  test(`every percent on the bar fits inside its slice, and the City's row is highlighted at ${width}px`, async ({
+  test(`every body has its own bar on one scale, and all four rows look alike at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 })
     await page.goto(POST)
-    const bar = page.locator('[data-share-bill] svg[role="img"]')
-    await bar.scrollIntoViewIfNeeded()
-    // The bar measures its labels once it has hydrated; wait for the widths to settle
-    await page.waitForTimeout(500)
-    const slices = await bar.locator('rect[data-share-slice]').evaluateAll((rects) =>
-      rects.map((rect) => {
-        const key = rect.getAttribute('data-share-slice')
-        const slice = rect.getBoundingClientRect()
-        const label = (rect as SVGElement).ownerSVGElement?.querySelector(
-          `text[data-share-label="${key}"]`,
-        )
-        const text = label?.getBoundingClientRect()
+    const rows = page.locator('[data-share-bill] li[data-share-row]')
+    await rows.first().scrollIntoViewIfNeeded()
+    // No segmented bar on top any more, and no colour squares
+    await expect(page.locator('[data-share-bill] svg[role="img"]')).toHaveCount(0)
+    const bars = await rows.evaluateAll((items) =>
+      items.map((row) => {
+        const svg = row.querySelector('svg') as SVGElement
+        const track = svg.getBoundingClientRect()
+        const fill = (svg.querySelector('rect[data-share-bar]') as Element).getBoundingClientRect()
         return {
-          key,
-          percent: label?.textContent,
-          slice: { left: slice.left, right: slice.right },
-          text: text && { left: text.left, right: text.right, height: text.height },
+          left: Math.round(track.left),
+          right: Math.round(track.right),
+          height: Math.round(track.height),
+          fill: Math.round(fill.width),
+          rowHeight: Math.round(row.getBoundingClientRect().height),
         }
       }),
     )
-    expect(slices).toHaveLength(4)
-    for (const { key, percent, slice, text } of slices) {
-      expect(percent, `${key} shows its percent`).toMatch(/^\d+%$/)
-      expect(text?.left, `${key}'s percent starts inside its slice`).toBeGreaterThanOrEqual(
-        slice.left + 2,
-      )
-      expect(text?.right, `${key}'s percent ends inside its slice`).toBeLessThanOrEqual(
-        slice.right - 2,
-      )
-      expect(text?.height, `${key}'s percent is on one line`).toBeLessThan(24)
-    }
+    expect(bars).toHaveLength(4)
+    // Every track has the same edges and height, so no row looks squished
+    expect(new Set(bars.map((bar) => bar.left)).size, 'tracks start level').toBe(1)
+    expect(new Set(bars.map((bar) => bar.right)).size, 'tracks end level').toBe(1)
+    expect(new Set(bars.map((bar) => bar.height)).size, 'bars are as thick as each other').toBe(1)
+    // The largest slice fills its track (within a pixel), the others are shorter
+    const track =
+      (bars[0] as { right: number; left: number }).right - (bars[0] as { left: number }).left
+    expect(Math.max(...bars.map((bar) => bar.fill))).toBeGreaterThanOrEqual(track - 1)
     // The receipt's rows keep their columns: the percents and the amounts end on the same lines
-    const ends = await page.locator('[data-share-bill] li[data-share-row]').evaluateAll((rows) =>
-      rows.map((row) => {
+    const ends = await rows.evaluateAll((items) =>
+      items.map((row) => {
         const [, percent, amount] = Array.from(row.children).map((c) =>
           Math.round(c.getBoundingClientRect().right),
         )
@@ -154,18 +152,16 @@ for (const width of WIDTHS) {
     )
     expect(new Set(ends.map((end) => end.percent)).size, 'percents end level').toBe(1)
     expect(new Set(ends.map((end) => end.amount)).size, 'amounts end level').toBe(1)
-    // The City's row has a fill and bolder text; the others have neither
-    const looks = await page.locator('[data-share-bill] li[data-share-row]').evaluateAll((rows) =>
-      rows.map((row) => {
+    // The City's row has no fill or bolder text of its own: all four rows are built alike
+    const looks = await rows.evaluateAll((items) =>
+      items.map((row) => {
         const style = getComputedStyle(row)
         return { fill: style.backgroundColor, weight: Number(style.fontWeight) }
       }),
     )
-    expect(looks[0]?.fill).not.toBe('rgba(0, 0, 0, 0)')
-    expect(looks[0]?.weight).toBeGreaterThanOrEqual(600)
-    for (const other of looks.slice(1)) {
-      expect(other.fill).toBe('rgba(0, 0, 0, 0)')
-      expect(other.weight).toBeLessThan(600)
+    for (const look of looks) {
+      expect(look.fill).toBe('rgba(0, 0, 0, 0)')
+      expect(look.weight).toBeLessThan(600)
     }
   })
 
@@ -190,7 +186,7 @@ for (const width of WIDTHS) {
     await expect(line).toContainText('Up $')
   })
 
-  test(`the breakdown sits under the City's row, lined up with its name, at ${width}px`, async ({
+  test(`the breakdown sits under the City's row, set in, its amounts clear of the bodies’, at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 })
@@ -205,11 +201,19 @@ for (const width of WIDTHS) {
       boxOf(row),
       boxOf(cityRow),
     ])
-    expect(
-      Math.abs(label.x - name.x),
-      'the label starts where the City’s name starts',
-    ).toBeLessThan(2)
-    expect(rowBox.y, 'directly under the City’s row').toBeCloseTo(cityBox.y + cityBox.height, -1)
+    // Set in from the left of the City's name; the button keeps its full width
+    expect(label.x, 'the label starts to the right of the City’s name').toBeGreaterThan(name.x + 8)
+    // Opened, its amounts end before the bodies' amounts, so they are not read as parts of the sum (#1196)
+    await row.click()
+    const amount = page.locator('[data-breakdown-row] [data-amount]').first()
+    await expect(amount).toBeVisible()
+    const [inner, outer] = await Promise.all([boxOf(amount), boxOf(cityRow.locator('span').last())])
+    expect(inner.x + inner.width, 'the breakdown’s amounts end before the City’s').toBeLessThan(
+      outer.x + outer.width - 16,
+    )
+    const gap = rowBox.y - (cityBox.y + cityBox.height)
+    expect(gap, 'directly under the City’s row').toBeGreaterThanOrEqual(0)
+    expect(gap, 'directly under the City’s row').toBeLessThanOrEqual(16)
     // Its label is larger than the bill's rows and smaller than the rows in the card below
     const size = (locator: Locator) =>
       locator.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
