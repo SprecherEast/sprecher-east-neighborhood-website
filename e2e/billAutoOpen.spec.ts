@@ -18,7 +18,9 @@ const boxOf = async (locator: Locator) => {
 // The breakdown opens by itself after each new value while it is closed, when the total has counted
 // and flashed and a short pause has passed, expanding over a moment rather than snapping, without
 // scrolling the page (#1163, #1170)
-test('the breakdown opens after the first value, once, and scrolls nothing', async ({ page }) => {
+test('the breakdown opens after each new value while it is closed, and moves nothing on screen', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(POST)
   const row = summary(page, ROW_TITLES[0])

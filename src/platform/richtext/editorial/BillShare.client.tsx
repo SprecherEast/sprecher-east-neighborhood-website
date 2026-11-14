@@ -97,7 +97,7 @@ export function BillShare({
   const value = estimated ?? latest?.averageHome ?? 0
   // The bill counts to each new value or year, and the total flashes once it settles (`pulse`)
   const { shownValue, position, pulse, countWith } = useBillCount(value, yearIndex)
-  // The City's breakdown: closed on load, opened by itself once after the first estimate (#1163, #1165)
+  // The City's breakdown: closed on load, opened by itself after each estimate that changes the bill, while it is closed (#1163, #1165, #1176)
   const breakdown = useBreakdownAutoOpen(pulse)
   const yearRates = yearRatesOf(years)
   const rates = ratesAtPosition(yearRates, position)
