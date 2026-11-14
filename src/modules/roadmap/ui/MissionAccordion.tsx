@@ -33,7 +33,7 @@ export function MissionAccordion({ mission, now }: { mission: PlanMilestone; now
     >
       <div className="space-y-4">
         <WeekMap name={mission.title} issues={issues} now={now} />
-        <Link href={planMissionPath(mission.number)} variant="inline">
+        <Link href={planMissionPath(mission.number)} variant="action">
           Open this mission
           <span className="sr-only">: {mission.title}</span>
         </Link>

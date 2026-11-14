@@ -105,6 +105,17 @@ describe('PlanTiles', () => {
     expect(open.map((link) => link.getAttribute('href'))).toContain('/roadmap/missions/2')
   })
 
+  it('gives the links to a mission and to a project a 44 px target', () => {
+    const { container } = renderTiles()
+    const box = layout(container, 'accordions').querySelector('details') as HTMLElement
+    expect(within(box).getByRole('link', { name: /Open this mission/ }).className).toContain(
+      'min-h-11',
+    )
+    expect(within(box).getByRole('link', { name: /Read about this project/ }).className).toContain(
+      'min-h-11',
+    )
+  })
+
   it('says how many are done, small, on each block', () => {
     const { container } = renderTiles()
     const block = within(layout(container, 'blocks')).getAllByRole('article')[0]

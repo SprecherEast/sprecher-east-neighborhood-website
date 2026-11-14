@@ -19,7 +19,7 @@ export function EpicBox({ epic, now }: { epic: PlanEpic; now: Date }) {
     >
       <div className="space-y-3">
         <WeekMap name={epic.title} issues={epic.children} now={now} />
-        <Link href={planIssuePath(epic.number)} variant="inline">
+        <Link href={planIssuePath(epic.number)} variant="action">
           Read about this project
           <span className="sr-only">: {epic.title}</span>
         </Link>
