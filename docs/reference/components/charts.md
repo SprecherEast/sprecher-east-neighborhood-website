@@ -224,3 +224,20 @@ Source: `src/platform/ui/AreaChart.tsx`
 **Used by** (direct imports):
 
 - Routes: `/dev/gallery`
+
+## `HeatMap`
+
+Source: `src/platform/ui/HeatMap.tsx`
+
+| Prop        | Type                   | Required | Description                                                                                             |
+| ----------- | ---------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `days`      | `string[]`             | yes      | `yyyy-mm-dd`, oldest first, ending today                                                                |
+| `values`    | `number[]`             | yes      | The same length as `days`: how much happened each day                                                   |
+| `label`     | `string`               | yes      | What it shows, with every value, for screen readers: "Finished each day this week: 2, 0, 5"             |
+| `variant`   | `"week" \| "calendar"` | yes      |                                                                                                         |
+| `max`       | `number`               | no       | The value of the darkest square; share it between maps read side by side. Defaults to the largest value |
+| `className` | `string`               | no       |                                                                                                         |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`

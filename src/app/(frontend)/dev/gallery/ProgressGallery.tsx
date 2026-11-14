@@ -2,6 +2,7 @@ import React from 'react'
 
 import { ProgressBar } from '@/platform/ui/ProgressBar'
 import { AreaChart } from '@/platform/ui/AreaChart'
+import { HeatMap } from '@/platform/ui/HeatMap'
 import { Sparkline } from '@/platform/ui/Sparkline'
 import { ShareBar } from '@/platform/ui/ShareBar.client'
 import { Disclosure } from '@/platform/ui/Disclosure'
@@ -189,6 +190,46 @@ export function AreaChartGallery() {
           values={[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
           max={19}
           label="Sample: nothing finished"
+        />
+      </GalleryVariant>
+    </GalleryEntry>
+  )
+}
+
+const HEAT_WEEK = ['2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13']
+const HEAT_WEEKS = Array.from({ length: 26 }, (_, i) => {
+  return new Date(Date.UTC(2026, 9, 20 + i)).toISOString().slice(0, 10)
+})
+
+/** The day-by-day squares: a week strip across its box and four weeks as Monday rows */
+export function HeatMapGallery() {
+  return (
+    <GalleryEntry
+      name="HeatMap"
+      description="How much happened each day, as squares: darker means more. The last day is ringed; the numbers are always written beside it."
+    >
+      <GalleryVariant label="week, full width" className="block max-w-sm">
+        <HeatMap
+          variant="week"
+          days={HEAT_WEEK}
+          values={[0, 2, 5, 1, 3]}
+          label="Sample: finished this week, 0, 2, 5, 1, 3"
+        />
+      </GalleryVariant>
+      <GalleryVariant label="week, nothing happened" className="block max-w-sm">
+        <HeatMap
+          variant="week"
+          days={HEAT_WEEK}
+          values={[0, 0, 0, 0, 0]}
+          label="Sample: nothing finished"
+        />
+      </GalleryVariant>
+      <GalleryVariant label="calendar, four weeks" className="block">
+        <HeatMap
+          variant="calendar"
+          days={HEAT_WEEKS}
+          values={HEAT_WEEKS.map((_, i) => (i * 7) % 6)}
+          label="Sample: finished each day over four weeks"
         />
       </GalleryVariant>
     </GalleryEntry>

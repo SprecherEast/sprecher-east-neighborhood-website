@@ -131,6 +131,7 @@ export const COMPONENT_GROUPS = [
       'ChartCaption',
       'Sparkline',
       'AreaChart',
+      'HeatMap',
     ],
   },
   {
