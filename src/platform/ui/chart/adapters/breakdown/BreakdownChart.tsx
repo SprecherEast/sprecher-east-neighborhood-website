@@ -7,6 +7,7 @@ import {
   type BreakdownModel,
   type BreakdownPiece,
 } from '@/platform/lib/chart/breakdown'
+import { BarTrack } from '@/platform/ui/BarTrack'
 import { Disclosure } from '@/platform/ui/Disclosure'
 import { Text } from '@/platform/ui/Text'
 
@@ -49,19 +50,15 @@ function Bar({
   const height = look.compact ? (nested ? 'h-1.5' : 'h-2.5') : nested ? 'h-2' : 'h-3.5'
   const radius = look.compact ? (nested ? 3 : 5) : nested ? 4 : 7
   return (
-    <svg aria-hidden="true" focusable="false" className={cn('block w-full', height)}>
-      <rect width="100%" height="100%" rx={radius} className="fill-muted" />
-      <g className={look.fill ? 'chart-fill-x' : 'chart-reveal-x'}>
-        <rect
-          data-chart-mark={piece.key}
-          width={`${(piece.share * scale).toFixed(2)}%`}
-          height="100%"
-          rx={radius}
-          className={cn(ramp.fill, 'stroke-chart-ramp-edge')}
-          strokeWidth={2}
-        />
-      </g>
-    </svg>
+    <BarTrack
+      width={piece.share * scale}
+      radius={radius}
+      className={height}
+      fillClassName={ramp.fill}
+      mark={{ 'data-chart-mark': piece.key }}
+      reveal={look.fill ? 'chart-fill-x' : 'chart-reveal-x'}
+      edge={{ className: 'stroke-chart-ramp-edge', width: 2 }}
+    />
   )
 }
 

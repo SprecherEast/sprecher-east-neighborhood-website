@@ -14,7 +14,7 @@ const KEYS = {
   matc: 'Madison College, MATC',
 } as Record<string, string>
 
-describe('the whole bill: the bar and the receipt (#1030, #1111)', () => {
+describe('the whole bill: the rows and their bars (#1030, #1111, #1196)', () => {
   /** Each body's whole percent, by name, as the receipt's rows write it */
   const receiptPercents = (container: HTMLElement): Record<string, number> =>
     Object.fromEntries(
@@ -31,31 +31,27 @@ describe('the whole bill: the bar and the receipt (#1030, #1111)', () => {
       ),
     )
 
-  it('draws each slice as wide as its share (a slice too narrow for its label, wider), the same percents the receipt writes, for each year and a home estimated', async () => {
+  it('draws each slice’s bar in proportion to its share, on one scale, the same percents the receipt writes, for each year and a home estimated (#1196)', async () => {
     const { container } = render(<BillShare {...PROPS}>x</BillShare>)
     const same = () => {
       const receipt = receiptPercents(container)
       expect(Object.keys(receipt)).toHaveLength(4)
-      const rects = Array.from(container.querySelectorAll<SVGRectElement>('rect[data-share-slice]'))
+      const rects = Array.from(container.querySelectorAll<SVGRectElement>('rect[data-share-bar]'))
       expect(rects).toHaveLength(4)
-      // each slice is about as wide as its share: never much narrower than the whole percent written, less
-      // a point, and, when a small slice was widened to fit its label, no more than the few points
-      // taken from the others (#1121); together they fill the bar
-      let drawn = 0
+      // the largest slice fills its track and each other bar is as long as its share is of the largest's
+      const largest = Math.max(...Object.values(receipt))
+      const widths = rects.map((rect) => Number.parseFloat(rect.getAttribute('width') ?? '0'))
+      expect(Math.max(...widths)).toBeCloseTo(100, 1)
       for (const rect of rects) {
-        const name = KEYS[rect.getAttribute('data-share-slice') ?? ''] ?? ''
+        const name = KEYS[rect.getAttribute('data-share-bar') ?? ''] ?? ''
         const width = Number.parseFloat(rect.getAttribute('width') ?? '0')
-        drawn += width
-        const percent = receipt[name] ?? -9
-        // The smallest slice is widened most (to its label's room, here a guess); the big ones give a little
-        expect(width).toBeGreaterThan(percent - 10)
-        expect(width).toBeLessThan(percent + 12)
+        // the percent is rounded to a whole number, the bar is not: allow the rounding
+        expect(Math.abs(width - ((receipt[name] ?? -99) / largest) * 100)).toBeLessThan(5)
       }
-      expect(drawn).toBeCloseTo(100, 1)
-      // and the bar's label for screen readers says the same percents
+      // and the list's label for screen readers says the same percents
       const label =
         screen
-          .getByRole('img', { name: /^Your whole property tax bill:/ })
+          .getByRole('list', { name: /^Your whole property tax bill:/ })
           .getAttribute('aria-label') ?? ''
       for (const [name, percent] of Object.entries(receipt)) {
         expect(label).toContain(`${name} $`)
@@ -82,10 +78,10 @@ describe('the whole bill: the bar and the receipt (#1030, #1111)', () => {
     ])
   })
 
-  it('keeps the bar of the last bill while the typed value is not a number', () => {
+  it('keeps the rows of the last bill while the typed value is not a number', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.change(box(), { target: { value: 'abc' } })
-    screen.getByRole('img', { name: /^Your whole property tax bill:/ })
+    screen.getByRole('list', { name: /^Your whole property tax bill:/ })
   })
 
   it('changes the City’s percent with the tax year chosen (#1068)', () => {

@@ -5,6 +5,7 @@ import { AreaChart } from '@/platform/ui/AreaChart'
 import { HeatMap } from '@/platform/ui/HeatMap'
 import { ShareBar } from '@/platform/ui/ShareBar.client'
 import { Disclosure } from '@/platform/ui/Disclosure'
+import { BarTrack } from '@/platform/ui/BarTrack'
 import { ShareBill, type ShareSlice } from '@/platform/ui/ShareBill'
 import { Text } from '@/platform/ui/Text'
 
@@ -60,6 +61,30 @@ export function ShareBarGallery() {
             label: `${slice.percent}%`,
           }))}
           label="Sample: a whole split in four"
+        />
+      </GalleryVariant>
+    </GalleryEntry>
+  )
+}
+
+/** One bar on its track: the part the bill's rows and the breakdown's rows share */
+export function BarTrackGallery() {
+  return (
+    <GalleryEntry name="BarTrack" description="One bar on a muted track, as wide as its share">
+      <GalleryVariant label="Half and a full bar" className="block space-y-2">
+        <BarTrack
+          width={50}
+          radius={5}
+          className="h-2.5"
+          fillClassName="fill-primary-fill"
+          mark={{ 'data-sample-bar': 'half' }}
+        />
+        <BarTrack
+          width={100}
+          radius={5}
+          className="h-2.5"
+          fillClassName="fill-muted-foreground/45"
+          mark={{ 'data-sample-bar': 'full' }}
         />
       </GalleryVariant>
     </GalleryEntry>

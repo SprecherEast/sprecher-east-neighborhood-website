@@ -184,7 +184,7 @@ export function DisplayGallery() {
           </Card>
         </GalleryVariant>
         <GalleryVariant
-          label="listRow (a row inside a list, indented by the list, label sized from it)"
+          label="listRow (a tinted, button-like row inside a list, label sized from it)"
           className="block"
         >
           <ul className="max-w-prose text-sm">
