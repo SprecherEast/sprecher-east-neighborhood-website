@@ -130,6 +130,8 @@ export const COMPONENT_GROUPS = [
       'ScaledBreakdown',
       'ChartCaption',
       'Sparkline',
+      'AreaChart',
+      'HeatMap',
     ],
   },
   {

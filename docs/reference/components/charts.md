@@ -206,3 +206,40 @@ Source: `src/platform/ui/Sparkline.tsx`
 
 - Modules: `roadmap`
 - Routes: `/dev/gallery`
+
+## `AreaChart`
+
+Source: `src/platform/ui/AreaChart.tsx`
+
+| Prop        | Type               | Required | Description                                                                                          |
+| ----------- | ------------------ | -------- | ---------------------------------------------------------------------------------------------------- |
+| `values`    | `number[]`         | yes      |                                                                                                      |
+| `days`      | `string[]`         | yes      | The same length as `values`: `yyyy-mm-dd`, oldest first, the last one today                          |
+| `label`     | `string`           | yes      | What it shows, with every value, for screen readers: "Finished per day: 0, 2, 5"                     |
+| `tone`      | `"done" \| "open"` | yes      | Done work or open work, each with a colour of its own                                                |
+| `max`       | `number`           | no       | The top of the scale; share it between pictures read side by side. Defaults to the tallest value     |
+| `fromZero`  | `boolean`          | no       | Start the scale at zero (counts per day) or at the lowest value (a running total, to show its shape) |
+| `className` | `string`           | no       |                                                                                                      |
+
+**Used by** (direct imports):
+
+- Modules: `roadmap`
+- Routes: `/dev/gallery`
+
+## `HeatMap`
+
+Source: `src/platform/ui/HeatMap.tsx`
+
+| Prop        | Type                   | Required | Description                                                                                             |
+| ----------- | ---------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `days`      | `string[]`             | yes      | `yyyy-mm-dd`, oldest first, ending today                                                                |
+| `values`    | `number[]`             | yes      | The same length as `days`: how much happened each day                                                   |
+| `label`     | `string`               | yes      | What it shows, with every value, for screen readers: "Finished each day this week: 2, 0, 5"             |
+| `variant`   | `"week" \| "calendar"` | yes      |                                                                                                         |
+| `max`       | `number`               | no       | The value of the darkest square; share it between maps read side by side. Defaults to the largest value |
+| `className` | `string`               | no       |                                                                                                         |
+
+**Used by** (direct imports):
+
+- Modules: `roadmap`
+- Routes: `/dev/gallery`

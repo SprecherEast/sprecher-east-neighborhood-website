@@ -10,7 +10,7 @@ Source: `src/platform/ui/Badge.tsx`
 
 **Variants:**
 
-- `variant`: `"category" | "on-image" | "status" | "official" | "current" | "caution" | "neutral" | "open" | "done" | "outline"`
+- `variant`: `"done" | "open" | "category" | "on-image" | "status" | "official" | "current" | "caution" | "neutral" | "outline"`
 - `size`: `"xs" | "sm" | "md"`
 
 | Prop        | Type              | Required | Description |

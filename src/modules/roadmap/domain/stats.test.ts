@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { dueIn, issueProgress, planStats, RECENT_DAYS } from './stats'
+import { dueIn, issueProgress, planStats } from './stats'
 import type { Plan, PlanEpic, PlanIssue } from './types'
 
 const NOW = new Date('2026-11-09T12:00:00Z')
@@ -14,6 +14,7 @@ const issue = (number: number, over: Partial<PlanIssue> = {}): PlanIssue => ({
   description: '',
   url: '',
   closedAt: null,
+  createdAt: null,
   updatedAt: null,
   ...over,
 })
@@ -62,31 +63,8 @@ describe('planStats', () => {
     expect(stats.done).toBe(2)
   })
 
-  it('counts what was finished in the last 7 days', () => {
-    const stats = planStats(
-      plan({
-        unscheduled: [
-          epic(20, 'open', [
-            issue(21, { state: 'done', closedAt: daysAgo(1) }),
-            issue(22, { state: 'done', closedAt: daysAgo(RECENT_DAYS.week) }),
-            issue(23, { state: 'done', closedAt: daysAgo(10) }),
-            issue(24, { state: 'done', closedAt: daysAgo(31) }),
-            issue(25, { state: 'done', closedAt: null }),
-          ]),
-        ],
-      }),
-      NOW,
-    )
-
-    expect(stats.doneThisWeek).toBe(2)
-  })
-
   it('has zeros for an empty plan', () => {
-    expect(planStats(plan(), NOW)).toEqual({
-      open: 0,
-      done: 0,
-      doneThisWeek: 0,
-    })
+    expect(planStats(plan(), NOW)).toEqual({ open: 0, done: 0 })
   })
 })
 

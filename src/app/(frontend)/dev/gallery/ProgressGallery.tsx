@@ -1,6 +1,8 @@
 import React from 'react'
 
 import { ProgressBar } from '@/platform/ui/ProgressBar'
+import { AreaChart } from '@/platform/ui/AreaChart'
+import { HeatMap } from '@/platform/ui/HeatMap'
 import { Sparkline } from '@/platform/ui/Sparkline'
 import { ShareBar } from '@/platform/ui/ShareBar.client'
 import { Disclosure } from '@/platform/ui/Disclosure'
@@ -150,6 +152,110 @@ export function SparklineGallery() {
       </GalleryVariant>
       <GalleryVariant label="one value" className="block max-w-xs">
         <Sparkline values={[4]} max={8} label="Sample: one value, 4" />
+      </GalleryVariant>
+    </GalleryEntry>
+  )
+}
+
+const SAMPLE_DAYS = [
+  '2026-10-31',
+  '2026-11-01',
+  '2026-11-02',
+  '2026-11-03',
+  '2026-11-04',
+  '2026-11-05',
+  '2026-11-06',
+  '2026-11-07',
+  '2026-11-08',
+  '2026-11-09',
+  '2026-11-10',
+  '2026-11-11',
+  '2026-11-12',
+  '2026-11-13',
+]
+
+/** The graph for activity over time: a busy count, a running total and a quiet series, all by day */
+export function AreaChartGallery() {
+  return (
+    <GalleryEntry
+      name="AreaChart"
+      description="How much happened over time as a smooth filled curve with a day timeline and a marker on today; the figure is always written beside it."
+    >
+      <GalleryVariant label="done: a count per day, from zero" className="block max-w-sm">
+        <AreaChart
+          tone="done"
+          days={SAMPLE_DAYS}
+          values={[7, 4, 2, 6, 7, 6, 14, 19, 2, 9, 8, 17, 8, 10]}
+          label="Sample: finished per day, 2 to 19"
+        />
+      </GalleryVariant>
+      <GalleryVariant
+        label="done: a running total, from its lowest value"
+        className="block max-w-sm"
+      >
+        <AreaChart
+          tone="done"
+          fromZero={false}
+          days={SAMPLE_DAYS}
+          values={[163, 170, 174, 176, 183, 189, 195, 207, 226, 228, 237, 245, 262, 276]}
+          label="Sample: done in all, 163 to 276"
+        />
+      </GalleryVariant>
+      <GalleryVariant label="open, and nothing finished" className="block max-w-sm space-y-4">
+        <AreaChart
+          tone="open"
+          fromZero={false}
+          days={SAMPLE_DAYS}
+          values={[60, 60, 82, 102, 99, 102, 123, 131, 149, 155, 169, 175, 176, 175]}
+          label="Sample: still open, 60 to 175"
+        />
+        <AreaChart
+          tone="done"
+          days={SAMPLE_DAYS}
+          values={[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+          max={19}
+          label="Sample: nothing finished"
+        />
+      </GalleryVariant>
+    </GalleryEntry>
+  )
+}
+
+const HEAT_WEEK = ['2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13']
+const HEAT_WEEKS = Array.from({ length: 26 }, (_, i) => {
+  return new Date(Date.UTC(2026, 9, 20 + i)).toISOString().slice(0, 10)
+})
+
+/** The day-by-day squares: a week strip across its box and four weeks as Monday rows */
+export function HeatMapGallery() {
+  return (
+    <GalleryEntry
+      name="HeatMap"
+      description="How much happened each day, as squares: darker means more. The last day is ringed; the numbers are always written beside it."
+    >
+      <GalleryVariant label="week, full width" className="block max-w-sm">
+        <HeatMap
+          variant="week"
+          days={HEAT_WEEK}
+          values={[0, 2, 5, 1, 3]}
+          label="Sample: finished this week, 0, 2, 5, 1, 3"
+        />
+      </GalleryVariant>
+      <GalleryVariant label="week, nothing happened" className="block max-w-sm">
+        <HeatMap
+          variant="week"
+          days={HEAT_WEEK}
+          values={[0, 0, 0, 0, 0]}
+          label="Sample: nothing finished"
+        />
+      </GalleryVariant>
+      <GalleryVariant label="calendar, four weeks" className="block">
+        <HeatMap
+          variant="calendar"
+          days={HEAT_WEEKS}
+          values={HEAT_WEEKS.map((_, i) => (i * 7) % 6)}
+          label="Sample: finished each day over four weeks"
+        />
       </GalleryVariant>
     </GalleryEntry>
   )
