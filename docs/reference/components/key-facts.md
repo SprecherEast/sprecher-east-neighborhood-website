@@ -102,7 +102,7 @@ Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 
 ## `BillDetails`
 
-The two rows under the whole bill (#1111, #1118, #1163), in one card split by divider lines: why the real bill may differ (the notes, then the tab's short text and detail) and the sources, each source once, both closed when the tab loads, each titled from the block (#1158). Where the City's share goes is a row of the whole bill itself, under the City's row (`BillShare`, #1163). The sources row is left out when there are none, and a note that is not showing still takes its room, hidden from everyone, so an open row never changes height when a year is chosen. Each row is the kit's `Disclosure`, so it opens and closes without scripting and never moves what is above it.
+The two rows under the whole bill (#1111, #1118, #1163), in one card split by divider lines: why the real bill may differ (the notes, then the tab's short text and detail) and the sources, each source once, both closed when the tab loads, each titled from the block (#1158). Where the City's share goes is a row of the whole bill itself, under the City's row (`BillShare`, #1163). The sources row (the as-of line of the City's breakdown, then each link) is left out when there is neither, and a note that is not showing still takes its room, hidden from everyone, so an open row never changes height when a year is chosen. Each row is the kit's `Disclosure`, so it opens and closes without scripting and never moves what is above it.
 
 Source: `src/platform/richtext/editorial/BillDetails.tsx`
 
@@ -112,6 +112,7 @@ Source: `src/platform/richtext/editorial/BillDetails.tsx`
 | `notes`   | `readonly { key: string; text: ReactNode; shown: boolean; }[]`                                                                                                             | yes      | The notes on why a real bill may differ; one that is not `shown` keeps its room |
 | `about`   | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | What follows the notes: the tab's short text and detail                         |
 | `sources` | `readonly ResolvedLink[]`                                                                                                                                                  | yes      |                                                                                 |
+| `asOf`    | `string`                                                                                                                                                                   | no       | When the figures are from, shown above the links (#1180)                        |
 
 **Used by** (direct imports):
 
@@ -119,7 +120,7 @@ Source: `src/platform/richtext/editorial/BillDetails.tsx`
 
 ## `BreakdownRow`
 
-Where the City's tax goes, as a closed row of the whole bill under the City's own row (#1163): the split alone, with thin bars, since the answer card above already gives the City's tax and its increase and the row's title is the heading (#1144). `row` is `useBreakdownAutoOpen`'s: it opens the row after each estimate that changes the bill while it is closed (#1176), and each opening fills the bars again (#1165).
+Where the City's tax goes, as a closed row of the whole bill under the City's own row (#1163): the split alone, with thin bars, since the answer card above already gives the City's tax and its increase and the row's title is the heading (#1144). Its date and sources are not drawn here: the whole bill's Sources row lists them (#1180). `row` is `useBreakdownAutoOpen`'s: it opens the row after each estimate that changes the bill while it is closed (#1176), and each opening fills the bars again (#1165).
 
 Source: `src/platform/richtext/editorial/BreakdownRow.tsx`
 

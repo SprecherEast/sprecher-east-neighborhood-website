@@ -234,7 +234,17 @@ export function BillShare({
             </div>
           )
         }
-        sources={uniqueSources([source, year.source])}
+        sources={uniqueSources([
+          source,
+          year.source,
+          ...(cityBreakdown?.sources ?? []).map(({ label, href }) => ({
+            label,
+            href,
+            external: href.startsWith('http'),
+            appearance: 'default' as const,
+          })),
+        ])}
+        asOf={cityBreakdown?.asOf}
       />
       {children}
     </div>
