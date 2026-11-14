@@ -70,6 +70,7 @@ export function ShareBill({
   slices,
   label,
   title,
+  titleId,
   total,
   pulseKey,
   nested,
@@ -79,6 +80,8 @@ export function ShareBill({
   label: string
   /** The bill's name, at the top with no amount beside it */
   title?: string
+  /** An id for the title, so a row inside the bill can keep it in view when it opens (#1178) */
+  titleId?: string
   /** What the amounts add up to: the last line, as on a receipt */
   total?: { label: string; amount: string }
   /** Changes each time the total should flash once */
@@ -90,7 +93,7 @@ export function ShareBill({
   return (
     <div data-share-bill className={cn('space-y-1.5', className)}>
       {title && (
-        <Text variant="subsection" as="p">
+        <Text variant="subsection" as="p" id={titleId}>
           {title}
         </Text>
       )}

@@ -164,6 +164,18 @@ describe('ShareBill', () => {
     expect(Number(length) * 1000).toBe(TOTAL_PULSE_MS)
   })
 
+  it('gives its title an id when asked, for a row inside it to keep in view (#1178)', () => {
+    const { getByText } = render(
+      <ShareBill
+        slices={SLICES}
+        label="Sample bill"
+        title="Sample whole bill"
+        titleId="bill-title"
+      />,
+    )
+    expect(getByText('Sample whole bill').id).toBe('bill-title')
+  })
+
   it('draws no title or total line without them, and has no accessibility violations', async () => {
     const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
     expect(container.querySelector('p')).toBeNull()

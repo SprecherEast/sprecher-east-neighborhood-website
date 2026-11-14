@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 
 import { holdScrollAnchor, prefersReducedMotion } from '@/platform/ui/motion.client'
+import { revealAfterExpansion } from '@/platform/ui/reveal.client'
 import { TOTAL_PULSE_MS } from '@/platform/ui/ShareBill'
 
 /**
@@ -22,7 +23,8 @@ export const OPEN_AFTER_TOTAL_MS = 100
  *
  * `openings` counts each opening, by hand or by itself, so the breakdown's bars fill again; it moves
  * before the row opens (from the summary's click, `onOpening`, or here before `open` is set), so the
- * first frame shown is already the start of the fill. Setting `open` scrolls nothing.
+ * first frame shown is already the start of the fill. Once it has expanded the page scrolls as for a
+ * reader's own opening (`revealAfterExpansion`, #1178).
  */
 export function useBreakdownAutoOpen(pulse: number) {
   const rowRef = useRef<HTMLDetailsElement>(null)
@@ -51,6 +53,7 @@ export function useBreakdownAutoOpen(pulse: number) {
       flushSync(() => setOpenings((count) => count + 1))
       if (!prefersReducedMotion()) holdScrollAnchor()
       row.open = true
+      revealAfterExpansion(row)
     }, flash + OPEN_AFTER_TOTAL_MS)
     return () => clearTimeout(timer)
   }, [pulse])

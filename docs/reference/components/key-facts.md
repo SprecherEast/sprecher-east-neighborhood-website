@@ -124,12 +124,13 @@ Where the City's tax goes, as a closed row of the whole bill under the City's ow
 
 Source: `src/platform/richtext/editorial/BreakdownRow.tsx`
 
-| Prop     | Type                                                                                                                                                                 | Required | Description |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------- |
-| `title`  | `string`                                                                                                                                                             | yes      |             |
-| `spec`   | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …` | yes      |             |
-| `factor` | `number`                                                                                                                                                             | yes      |             |
-| `row`    | `{ rowRef: RefObject<HTMLDetailsElement \| null>; openings: number; onOpening: () => void; }`                                                                        | yes      |             |
+| Prop           | Type                                                                                                                                                                 | Required | Description                                                                   |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `title`        | `string`                                                                                                                                                             | yes      |                                                                               |
+| `spec`         | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …` | yes      |                                                                               |
+| `factor`       | `number`                                                                                                                                                             | yes      |                                                                               |
+| `revealAnchor` | `string`                                                                                                                                                             | no       | The element kept in view, under the sticky header, when the row opens (#1178) |
+| `row`          | `{ rowRef: RefObject<HTMLDetailsElement \| null>; openings: number; onOpening: () => void; }`                                                                        | yes      |                                                                               |
 
 **Used by** (direct imports):
 

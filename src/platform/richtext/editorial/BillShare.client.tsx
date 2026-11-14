@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, type ReactNode } from 'react'
+import React, { useId, useState, type ReactNode } from 'react'
 
 import { BILL_BODY_NAMES, computeBillShare, parseHomeValue } from '@/platform/lib/billShare'
 import type { ResolvedLink } from '@/platform/lib'
@@ -99,6 +99,8 @@ export function BillShare({
   const { shownValue, position, pulse, countWith } = useBillCount(value, yearIndex)
   // The City's breakdown: closed on load, opened by itself after each estimate that changes the bill, while it is closed (#1163, #1165, #1176)
   const breakdown = useBreakdownAutoOpen(pulse)
+  // The whole bill's heading stays in view, under the sticky header, when the breakdown opens (#1178)
+  const billTitleId = useId()
   const yearRates = yearRatesOf(years)
   const rates = ratesAtPosition(yearRates, position)
   // The home as priced now: its value in the year shown, moving between the two while the year counts
@@ -152,6 +154,7 @@ export function BillShare({
       spec={cityBreakdown}
       factor={breakdownFactor}
       row={breakdown}
+      revealAnchor={billTitleId}
     />
   )
 
@@ -209,6 +212,7 @@ export function BillShare({
             slices={receipt.slices}
             label={receipt.label}
             title="Your whole bill"
+            titleId={billTitleId}
             total={receipt.total ?? undefined}
             pulseKey={pulse}
             nested={where ? { after: 'city', children: where } : undefined}
