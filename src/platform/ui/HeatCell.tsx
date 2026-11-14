@@ -23,7 +23,7 @@ const HEAT_RING = 'ring-2 ring-foreground'
 const PRESSED_RING = 'ring-2 ring-foreground ring-offset-1 ring-offset-background'
 /** The check a pressed square wears, in a disc that contrasts with every shade; shape, not colour alone, says it is chosen */
 const SELECTED_MARK =
-  'pointer-events-none grid size-5 place-items-center rounded-full bg-foreground text-background [&_svg]:size-3'
+  'pointer-events-none grid size-5 place-items-center rounded-full bg-foreground text-background ring-1 ring-background [&_svg]:size-3'
 
 type HeatCellProps = {
   day: string
