@@ -19,6 +19,8 @@ const wait = (ms: number) =>
 describe('BillShare, the City’s breakdown opens after the reader’s first value (#1163)', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    // jsdom has no layout, so no scrolling either
+    Element.prototype.scrollIntoView = vi.fn()
   })
   afterEach(() => {
     cleanup()
@@ -54,14 +56,21 @@ describe('BillShare, the City’s breakdown opens after the reader’s first val
     expect(breakdown().open).toBe(false)
   })
 
-  it('never scrolls the page when it opens by itself', async () => {
-    const scroll = vi.fn()
-    Element.prototype.scrollIntoView = scroll
+  it('scrolls to keep the whole bill’s heading in view when it opens by itself (#1178)', async () => {
+    const scrollBy = vi.fn()
+    vi.stubGlobal('scrollBy', scrollBy)
     render(<BillShare {...PROPS} {...city} />)
+    const row = breakdown()
+    const heading = screen.getByText('Your whole bill')
+    expect(row.getAttribute('data-reveal-anchor')).toBe(heading.id)
+    // jsdom has no layout: the heading is 50 px down and the opened row ends far below the screen
+    heading.getBoundingClientRect = () => ({ top: 50, bottom: 80 }) as DOMRect
+    row.getBoundingClientRect = () => ({ top: 200, bottom: 3000 }) as DOMRect
     await estimate('$700,000')
     wait(OPEN_AFTER_TOTAL_MS)
-    expect(breakdown().open).toBe(true)
-    expect(scroll).not.toHaveBeenCalled()
+    expect(row.open).toBe(true)
+    // The heading may move up 50 px (no sticky header in jsdom) before it meets the top
+    expect(scrollBy).toHaveBeenCalledWith({ top: 50 })
   })
 
   it('with motion allowed, waits for the count and the total’s flash to end first', async () => {

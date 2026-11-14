@@ -6,6 +6,7 @@ import { cn } from '@/platform/lib/cn'
 
 import { cardVariants } from './Card'
 import { DisclosureSummary } from './DisclosureSummary.client'
+import { REVEAL_ANCHOR_ATTR } from './reveal.client'
 import { TOUCH_MIN_HEIGHT } from './layoutSizes'
 import { REVEAL_SCROLL_MARGIN } from './scrollMargin'
 
@@ -90,6 +91,12 @@ export type DisclosureProps = {
    * so the caller can get the content ready before it shows (#1165); not on the pinned `bar`
    */
   onOpening?: () => void
+  /**
+   * The id of an element that must stay visible, under the sticky header, when the box opens, such
+   * as the heading of the card it is in (#1178). Unset, the box's own summary row is what stays.
+   * Not on the pinned `bar`.
+   */
+  revealAnchor?: string
 }
 
 export function Disclosure({
@@ -101,6 +108,7 @@ export function Disclosure({
   bodyClassName,
   children,
   onOpening,
+  revealAnchor,
 }: DisclosureProps) {
   // The bar is pinned under the site header, so it is never scrolled to: it keeps the plain row
   const reveal = variant !== 'bar'
@@ -110,6 +118,7 @@ export function Disclosure({
     <details
       ref={ref}
       open={defaultOpen || undefined}
+      {...(reveal && revealAnchor ? { [REVEAL_ANCHOR_ATTR]: revealAnchor } : {})}
       className={cn(
         variant === 'card' && CARD_BOX,
         variant === 'row' && 'px-3',

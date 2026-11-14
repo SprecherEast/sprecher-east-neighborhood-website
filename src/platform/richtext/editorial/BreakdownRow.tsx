@@ -15,10 +15,13 @@ export function BreakdownRow({
   spec,
   factor,
   row,
+  revealAnchor,
 }: {
   title: string
   spec: Extract<ChartSpec, { kind: 'breakdown' }>
   factor: number
+  /** The element kept in view, under the sticky header, when the row opens (#1178) */
+  revealAnchor?: string
   row: { rowRef: RefObject<HTMLDetailsElement | null>; openings: number; onOpening: () => void }
 }) {
   return (
@@ -28,6 +31,7 @@ export function BreakdownRow({
       summary={title}
       bodyClassName="space-y-6"
       onOpening={row.onOpening}
+      revealAnchor={revealAnchor}
     >
       <ScaledBreakdown
         spec={spec}

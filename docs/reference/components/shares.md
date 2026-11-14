@@ -27,15 +27,16 @@ One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, o
 
 Source: `src/platform/ui/ShareBill.tsx`
 
-| Prop        | Type                                      | Required | Description                                                            |
-| ----------- | ----------------------------------------- | -------- | ---------------------------------------------------------------------- |
-| `slices`    | `readonly ShareSlice[]`                   | yes      |                                                                        |
-| `label`     | `string`                                  | yes      |                                                                        |
-| `title`     | `string`                                  | no       | The bill's name, at the top with no amount beside it                   |
-| `total`     | `{ label: string; amount: string; }`      | no       | What the amounts add up to: the last line, as on a receipt             |
-| `pulseKey`  | `number`                                  | no       | Changes each time the total should flash once                          |
-| `nested`    | `{ after: string; children: ReactNode; }` | no       | Content shown as a row of its own under the slice whose key is `after` |
-| `className` | `string`                                  | no       |                                                                        |
+| Prop        | Type                                      | Required | Description                                                                             |
+| ----------- | ----------------------------------------- | -------- | --------------------------------------------------------------------------------------- |
+| `slices`    | `readonly ShareSlice[]`                   | yes      |                                                                                         |
+| `label`     | `string`                                  | yes      |                                                                                         |
+| `title`     | `string`                                  | no       | The bill's name, at the top with no amount beside it                                    |
+| `titleId`   | `string`                                  | no       | An id for the title, so a row inside the bill can keep it in view when it opens (#1178) |
+| `total`     | `{ label: string; amount: string; }`      | no       | What the amounts add up to: the last line, as on a receipt                              |
+| `pulseKey`  | `number`                                  | no       | Changes each time the total should flash once                                           |
+| `nested`    | `{ after: string; children: ReactNode; }` | no       | Content shown as a row of its own under the slice whose key is `after`                  |
+| `className` | `string`                                  | no       |                                                                                         |
 
 **Used by** (direct imports):
 
