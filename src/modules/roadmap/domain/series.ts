@@ -67,3 +67,11 @@ export function planSeries(plan: Plan, now: Date, count: number): DaySeries {
     count,
   )
 }
+
+const WEEK_DAYS = 7
+
+/** The last seven days of finished work for a group of issues, and whether none was finished */
+export function weekActivity(issues: PlanIssue[], now: Date) {
+  const { days, finished } = groupSeries(issues, now, WEEK_DAYS)
+  return { days, finished, quiet: finished.every((count) => count === 0) }
+}

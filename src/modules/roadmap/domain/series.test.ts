@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { groupSeries, lastDays, planSeries } from './series'
+import { groupSeries, lastDays, planSeries, weekActivity } from './series'
 import type { Plan, PlanIssue } from './types'
 
 // Fri 2026-11-13, 23:30 in Chicago (UTC-6): already Saturday in UTC
@@ -127,5 +127,27 @@ describe('planSeries', () => {
       hiddenCount: 0,
     }
     expect(planSeries(plan, NOW, 2).finished).toEqual([0, 3])
+  })
+})
+
+describe('weekActivity', () => {
+  it('gives the last seven days of finished work and says it is quiet when there is none', () => {
+    const busy = weekActivity(
+      [done(1, '2026-11-13T15:00:00Z'), done(2, '2026-11-08T15:00:00Z')],
+      NOW,
+    )
+    expect(busy.days).toHaveLength(7)
+    expect(busy.days.at(-1)).toBe('2026-11-13')
+    expect(busy.finished).toEqual([0, 1, 0, 0, 0, 0, 1])
+    expect(busy.quiet).toBe(false)
+
+    const quiet = weekActivity([done(3, '2026-11-01T15:00:00Z'), issue(4)], NOW)
+    expect(quiet.finished).toEqual([0, 0, 0, 0, 0, 0, 0])
+    expect(quiet.quiet).toBe(true)
+  })
+
+  it('counts only the seven days, today included', () => {
+    expect(weekActivity([done(1, '2026-11-06T15:00:00Z')], NOW).quiet).toBe(true)
+    expect(weekActivity([done(1, '2026-11-07T15:00:00Z')], NOW).quiet).toBe(false)
   })
 })
