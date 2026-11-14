@@ -59,21 +59,21 @@ export type HeatMapProps = {
 }
 
 /**
- * The caption and a Less-to-More key built from the same shades as the squares. On one line
- * at every width. The swatches are decoration: `label` already lists every value.
+ * The caption and a Less-to-More key built from the same shades as the squares. The key stays whole and moves under the caption
+ * when the two don't fit side by side. The swatches are decoration: `label` already lists every value.
  */
 function HeatKey({ caption }: { caption: string }) {
   return (
-    <div className="flex items-center justify-between gap-2 pt-1 text-xs text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-1 text-sm text-foreground">
       <span>{caption}</span>
-      <span className="flex items-center gap-1">
+      <span className="flex shrink-0 items-center gap-1">
         <span>Less</span>
         {[NOTHING, ...SHADES].map((shade) => (
           <span
             key={shade}
             aria-hidden="true"
             data-heat-key-swatch=""
-            className={cn('size-3 rounded-sm', shade)}
+            className={cn('size-4 rounded-sm', shade)}
           />
         ))}
         <span>More</span>
