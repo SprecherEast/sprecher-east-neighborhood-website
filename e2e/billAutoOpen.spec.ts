@@ -1,5 +1,3 @@
-import type { Locator } from '@playwright/test'
-
 import {
   BILL_POST_PATH as POST,
   BILL_ROW_TITLES as ROW_TITLES,
@@ -8,17 +6,10 @@ import {
 } from './support/billRows'
 import { expect, test } from './support/test'
 
-/** A locator's box, or a failure that says it is not on the page */
-const boxOf = async (locator: Locator) => {
-  const found = await locator.boundingBox()
-  if (!found) throw new Error('The element is not on the page')
-  return found
-}
-
 // The breakdown opens by itself after each new value while it is closed, when the total has counted
-// and flashed and a short pause has passed, expanding over a moment rather than snapping, without
-// scrolling the page (#1163, #1170)
-test('the breakdown opens after each new value while it is closed, and moves nothing on screen', async ({
+// and flashed and a short pause has passed, expanding over a moment rather than snapping, then the
+// page scrolls to show it with the whole bill's heading kept under the sticky header (#1163, #1170, #1178)
+test('the breakdown opens after each new value, and keeps the whole bill’s heading in view', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -32,7 +23,6 @@ test('the breakdown opens after each new value while it is closed, and moves not
   // The count, the flash (1.5 s) and then the pause (0.1 s): still closed while the total counts (the wait after the click can run long on a busy machine)
   await page.waitForTimeout(1500)
   await expect(details).toHaveJSProperty('open', false)
-  const before = await boxOf(row)
   // From now on, note the row's height on every frame
   await details.evaluate((el) => {
     const seen: number[] = []
@@ -46,15 +36,33 @@ test('the breakdown opens after each new value while it is closed, and moves not
   await expect(details).toHaveJSProperty('open', true, { timeout: 2500 })
   // It expands over about 500 ms rather than snapping: the heights drawn while it opened include some
   // between closed and settled
-  await page.waitForTimeout(600)
+  await page.waitForTimeout(1200)
   const heights = await details.evaluate((el) => (el as HTMLElement & { seen: number[] }).seen)
   const settled = heights[heights.length - 1]
   expect(
     heights.some((height) => height > heights[0] && height < settled),
     'the row expands rather than snapping',
   ).toBe(true)
-  const after = await boxOf(row)
-  expect(after.y, 'opening by itself moves nothing on screen').toBeCloseTo(before.y, 0)
+  // Then the page has scrolled so the end shows, unless the heading would meet the sticky header first
+  const view = await details.evaluate((el) => {
+    const heading = [...document.querySelectorAll('p')].find(
+      (p) => p.textContent === 'Your whole bill',
+    )
+    const header = parseFloat(getComputedStyle(el).scrollMarginTop)
+    return {
+      header,
+      headingTop: heading?.getBoundingClientRect().top ?? -1,
+      bottom: el.getBoundingClientRect().bottom,
+      screen: innerHeight,
+    }
+  })
+  expect(view.headingTop, 'the heading is never above the sticky header').toBeGreaterThanOrEqual(
+    view.header - 1,
+  )
+  expect(
+    view.bottom <= view.screen || Math.abs(view.headingTop - view.header) <= 1,
+    'the end shows, or the heading sits just under the header',
+  ).toBe(true)
   // Closed by the reader, it opens again for the next new value (#1176)
   await row.click()
   await expect(details).toHaveJSProperty('open', false)

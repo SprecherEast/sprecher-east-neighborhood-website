@@ -2,9 +2,12 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { revealAfterExpansion } from '@/platform/ui/reveal.client'
 import { TOTAL_PULSE_MS } from '@/platform/ui/ShareBill'
 
 import { OPEN_AFTER_TOTAL_MS, useBreakdownAutoOpen } from './useBreakdownAutoOpen.client'
+
+vi.mock('@/platform/ui/reveal.client', () => ({ revealAfterExpansion: vi.fn() }))
 
 // A real <details> for the hook's row, closed
 const withRow = () => {
@@ -18,6 +21,7 @@ describe('useBreakdownAutoOpen (#1163, #1165)', () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
   })
   afterEach(() => {
+    vi.mocked(revealAfterExpansion).mockClear()
     vi.useRealTimers()
     vi.unstubAllGlobals()
     document.body.replaceChildren()
@@ -70,6 +74,20 @@ describe('useBreakdownAutoOpen (#1163, #1165)', () => {
     expect(row.open).toBe(false)
     act(() => vi.advanceTimersByTime(1))
     expect(row.open).toBe(true)
+  })
+
+  it('scrolls as for a reader’s opening once it has opened by itself, never for a row already open (#1178)', () => {
+    const { row, result, rerender } = setup()
+    act(() => result.current.arm(true))
+    rerender({ pulse: 1 })
+    act(() => vi.advanceTimersByTime(OPEN_AFTER_TOTAL_MS))
+    expect(revealAfterExpansion).toHaveBeenCalledTimes(1)
+    expect(revealAfterExpansion).toHaveBeenCalledWith(row)
+    // Open already: left as it is, nothing scrolls
+    act(() => result.current.arm(true))
+    rerender({ pulse: 2 })
+    act(() => vi.advanceTimersByTime(OPEN_AFTER_TOTAL_MS))
+    expect(revealAfterExpansion).toHaveBeenCalledTimes(1)
   })
 
   it('is not armed by an estimate that changes nothing, so a later year switch never opens it', () => {
