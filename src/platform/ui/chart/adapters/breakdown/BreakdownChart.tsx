@@ -82,7 +82,7 @@ function BarRow({ piece, nested, area, scale, look }: RowProps) {
         <Text
           variant="small"
           as="span"
-          className={cn('block max-[24rem]:text-sm', nested ? 'text-sm' : 'text-foreground')}
+          className={cn('block', nested ? 'text-sm' : 'text-foreground')}
         >
           {piece.label}
         </Text>
