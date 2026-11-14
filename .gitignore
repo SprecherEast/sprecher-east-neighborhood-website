@@ -94,3 +94,4 @@ Sprecher-East-Photo_Album/
 e2e/.data/
 test-results/
 playwright-report/
+__pycache__/
