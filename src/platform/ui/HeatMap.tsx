@@ -44,6 +44,16 @@ export type HeatMapProps = {
 }
 
 const RING = 'ring-2 ring-foreground'
+/** One calendar square; the weekday letters and the dashed days to come share its size */
+const SQUARE = 'block size-7 rounded-md sm:size-8'
+/** A calendar row: the Monday's date, then seven squares. The first column's width is set here alone */
+const CALENDAR_ROW = 'grid grid-cols-[1.75rem_repeat(7,1fr)] items-center gap-1 sm:gap-1.5'
+
+/** The date of the Monday of the week a `yyyy-mm-dd` day falls in, as a day of its month */
+function mondayOf(day: string): number {
+  const [year, month, date] = day.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, date - mondayIndex(day))).getUTCDate()
+}
 
 export function HeatMap({ days, values, label, variant, max, className }: HeatMapProps) {
   const top = max ?? Math.max(0, ...values)
@@ -75,67 +85,62 @@ export function HeatMap({ days, values, label, variant, max, className }: HeatMa
     )
   }
 
-  // calendar: pad the first week back to its Monday and the last one on to its Sunday
+  // calendar: blank cells pad the first week back to its Monday; the days after the last one in
+  // its week are still to come
   const lead = days.length > 0 ? mondayIndex(days[0]) : 0
   const cells: ({ day: string; value: number } | null)[] = [
     ...Array.from({ length: lead }, () => null),
     ...days.map((day, index) => ({ day, value: values[index] ?? 0 })),
   ]
   const trail = (DAYS_IN_WEEK - (cells.length % DAYS_IN_WEEK)) % DAYS_IN_WEEK
-  const rows = Array.from({ length: Math.ceil((cells.length + trail) / DAYS_IN_WEEK) }, (_, row) =>
-    Array.from({ length: DAYS_IN_WEEK }, (_, col) => cells[row * DAYS_IN_WEEK + col] ?? null),
+  const rows = Array.from({ length: (cells.length + trail) / DAYS_IN_WEEK }, (_, row) =>
+    Array.from({ length: DAYS_IN_WEEK }, (_, col) => cells[row * DAYS_IN_WEEK + col]),
   )
-  const mondays = rows.map((row, index) => {
-    const first = row.find((cell) => cell !== null)
-    return first ? Number(first.day.split('-')[2]) - mondayIndex(first.day) : index
-  })
 
   return (
     <div role="img" aria-label={label} className={cn('flex justify-center', className)}>
       <div aria-hidden="true" className="space-y-1 text-xs text-muted-foreground sm:space-y-1.5">
-        <div className="grid grid-cols-[1.75rem_repeat(7,1fr)] items-center gap-1 text-center sm:gap-1.5">
+        <div className={CALENDAR_ROW}>
           <span />
           {[...LETTERS].map((letter, index) => (
-            <span key={index} className="w-7 sm:w-8">
+            <span key={index} className="text-center">
               {letter}
             </span>
           ))}
         </div>
-        {rows.map((row, rowIndex) => (
-          <div
-            key={rowIndex}
-            data-heat-row=""
-            className="grid grid-cols-[1.75rem_repeat(7,1fr)] items-center gap-1 sm:gap-1.5"
-          >
-            <span className="pr-1 text-right tabular-nums">{mondays[rowIndex]}</span>
-            {row.map((cell, colIndex) => {
-              if (cell === null) {
-                const future =
-                  rowIndex === rows.length - 1 && colIndex >= row.findIndex((c) => c === null)
-                return future && days.length > 0 ? (
+        {rows.map((row, rowIndex) => {
+          const first = row.find((cell) => cell !== undefined && cell !== null)
+          return (
+            <div key={rowIndex} data-heat-row="" className={CALENDAR_ROW}>
+              <span className="pr-1 text-right tabular-nums">
+                {first ? mondayOf(first.day) : ''}
+              </span>
+              {row.map((cell, colIndex) => {
+                if (cell === undefined) {
+                  return (
+                    <span
+                      key={colIndex}
+                      data-heat-future=""
+                      className={cn(SQUARE, 'border border-dashed border-border')}
+                    />
+                  )
+                }
+                if (cell === null) return <span key={colIndex} className={SQUARE} />
+                return (
                   <span
-                    key={colIndex}
-                    data-heat-future=""
-                    className="block size-7 rounded-md border border-dashed border-border sm:size-8"
+                    key={cell.day}
+                    data-heat-cell=""
+                    className={cn(
+                      SQUARE,
+                      shadeFor(cell.value, top),
+                      cell.day === days[days.length - 1] && RING,
+                    )}
                   />
-                ) : (
-                  <span key={colIndex} className="block size-7 sm:size-8" />
                 )
-              }
-              return (
-                <span
-                  key={cell.day}
-                  data-heat-cell=""
-                  className={cn(
-                    'block size-7 rounded-md sm:size-8',
-                    shadeFor(cell.value, top),
-                    cell.day === days[days.length - 1] && RING,
-                  )}
-                />
-              )
-            })}
-          </div>
-        ))}
+              })}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

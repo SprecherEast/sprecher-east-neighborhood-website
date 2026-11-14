@@ -90,4 +90,53 @@ describe('HeatMap calendar', () => {
     )
     await expectAccessible(container)
   })
+
+  it('names a row by its real Monday across a month boundary', () => {
+    // Sun 2026-11-01 sits in the week of Mon 2026-10-26; Tue 2026-12-01 in the week of Mon 2026-11-30
+    for (const [first, monday] of [
+      ['2026-11-01', '26'],
+      ['2026-12-01', '30'],
+    ]) {
+      const { container } = render(
+        <HeatMap variant="calendar" days={[first]} values={[1]} label="x" />,
+      )
+      expect(container.querySelector('[data-heat-row]')?.firstElementChild?.textContent).toBe(
+        monday,
+      )
+      cleanup()
+    }
+  })
+
+  it('leaves the days before the first one blank and dashes only the days after the last', () => {
+    // Wed to Fri of one week: Mon and Tue are blank, Sat and Sun are still to come
+    const { container } = render(
+      <HeatMap
+        variant="calendar"
+        days={['2026-11-11', '2026-11-12', '2026-11-13']}
+        values={[1, 1, 1]}
+        label="x"
+      />,
+    )
+    expect(container.querySelectorAll('[data-heat-future]')).toHaveLength(2)
+    expect(container.querySelectorAll('[data-heat-cell]')).toHaveLength(3)
+  })
+
+  it('rings the last day', () => {
+    const { container } = render(
+      <HeatMap variant="calendar" days={days} values={days.map(() => 1)} label="x" />,
+    )
+    expect(cells(container).filter((c) => c.className.includes('ring-2'))).toEqual([
+      cells(container).at(-1),
+    ])
+  })
+})
+
+describe('HeatMap week with fewer than seven days', () => {
+  it('draws one square per day it is given', () => {
+    const { container } = render(
+      <HeatMap variant="week" days={week.slice(0, 3)} values={[1, 2, 3]} label="x" />,
+    )
+    expect(cells(container)).toHaveLength(3)
+    expect(container.textContent).toBe('MTW')
+  })
 })
