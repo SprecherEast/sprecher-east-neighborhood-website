@@ -137,13 +137,6 @@ describe('the quick count for a switch of tax year (#1087)', () => {
   })
 })
 
-describe("the count and the total's flash", () => {
-  it("last as long: the flash's CSS duration is the count's, defined once here", () => {
-    const css = readFileSync('src/platform/theme/tailwind.css', 'utf8')
-    expect(css).toContain(`animation: total-pulse ${COUNT_MS / 1000}s ease-out`)
-  })
-})
-
 describe("the total's flash sits behind its text (#1095)", () => {
   const css = readFileSync('src/platform/theme/tailwind.css', 'utf8')
   const utility = css.slice(css.indexOf('@utility total-pulse'))

@@ -116,7 +116,7 @@
       inset: 0;
       z-index: -1;
       pointer-events: none;
-      animation: total-pulse 1.5s ease-out;
+      animation: total-pulse 0.3s ease-out;
     }
   }
 }

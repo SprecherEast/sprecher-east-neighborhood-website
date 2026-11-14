@@ -20,8 +20,8 @@ test('the breakdown opens after each new value, and keeps the whole bill’s hea
   await input.scrollIntoViewIfNeeded()
   await input.fill('$700,000')
   await page.getByRole('button', { name: 'Estimate' }).click()
-  // The count, the flash (1.5 s) and then the pause (0.1 s): still closed while the total counts (the wait after the click can run long on a busy machine)
-  await page.waitForTimeout(1500)
+  // The count, the flash (0.3 s) and then the pause (0.1 s): still closed while the total counts (the wait after the click can run long on a busy machine)
+  await page.waitForTimeout(1000)
   await expect(details).toHaveJSProperty('open', false)
   // From now on, note the row's height on every frame
   await details.evaluate((el) => {

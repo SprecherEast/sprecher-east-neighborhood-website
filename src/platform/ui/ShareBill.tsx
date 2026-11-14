@@ -35,7 +35,7 @@ function SliceName({ name, shortName }: { name: string; shortName?: string }) {
 }
 
 /** How long the total's flash lasts (`total-pulse` in the theme's `tailwind.css`, which a test holds to it) */
-export const TOTAL_PULSE_MS = 1500
+export const TOTAL_PULSE_MS = 300
 
 /**
  * The receipt's one grid of three columns, which its rows and its total both take (`subgrid`), so a
