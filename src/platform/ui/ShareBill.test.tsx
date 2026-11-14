@@ -5,7 +5,7 @@ import { resolve } from 'node:path'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { ShareBill, TOTAL_PULSE_MS, type ShareSlice } from './ShareBill'
+import { ShareBill, TOTAL_PULSE_MS, TOTAL_PULSE_SHOWN_MS, type ShareSlice } from './ShareBill'
 import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
@@ -162,6 +162,23 @@ describe('ShareBill', () => {
     const css = readFileSync(resolve(process.cwd(), 'src/platform/theme/tailwind.css'), 'utf8')
     const length = /animation:\s*total-pulse\s+([\d.]+)s/.exec(css)?.[1]
     expect(Number(length) * 1000).toBe(TOTAL_PULSE_MS)
+  })
+
+  it('counts the flash as seen until its ease-out has left under 5% of the tint (#1174)', () => {
+    // total-pulse is `ease-out`: cubic-bezier(0, 0, 0.58, 1); find the tint left at the seen time
+    const bezier = (t: number, p1: number, p2: number) =>
+      3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t ** 2 * p2 + t ** 3
+    const progress = TOTAL_PULSE_SHOWN_MS / TOTAL_PULSE_MS
+    let low = 0
+    let high = 1
+    for (let i = 0; i < 40; i++) {
+      const mid = (low + high) / 2
+      if (bezier(mid, 0, 0.58) < progress) low = mid
+      else high = mid
+    }
+    const left = 1 - bezier(low, 0, 1)
+    expect(left).toBeLessThan(0.05)
+    expect(TOTAL_PULSE_SHOWN_MS).toBeLessThan(TOTAL_PULSE_MS)
   })
 
   it('draws no title or total line without them, and has no accessibility violations', async () => {

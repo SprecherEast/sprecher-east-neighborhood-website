@@ -27,7 +27,7 @@ test('the breakdown opens after the first value, once, and scrolls nothing', asy
   await input.scrollIntoViewIfNeeded()
   await input.fill('$700,000')
   await page.getByRole('button', { name: 'Estimate' }).click()
-  // The count, the flash (1.5 s) and then the pause (0.4 s): still closed while the total counts and flashes
+  // The count, the flash (seen for 1.25 s) and then the pause (0.1 s): still closed while the total counts and flashes
   await page.waitForTimeout(2500)
   await expect(details).toHaveJSProperty('open', false)
   const before = await boxOf(row)
@@ -42,7 +42,7 @@ test('the breakdown opens after the first value, once, and scrolls nothing', asy
     tick()
   })
   await expect(details).toHaveJSProperty('open', true, { timeout: 2500 })
-  // It expands over about 200 ms rather than snapping: the heights drawn while it opened include some
+  // It expands over about 350 ms rather than snapping: the heights drawn while it opened include some
   // between closed and settled
   await page.waitForTimeout(600)
   const heights = await details.evaluate((el) => (el as HTMLElement & { seen: number[] }).seen)

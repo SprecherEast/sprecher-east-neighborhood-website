@@ -13,7 +13,7 @@ html[data-expanding] body {
 }
 
 /*
- * `disclosure-expand` (#1170): a native `<details>` that expands and folds over 200 ms (`EXPAND_MS` in
+ * `disclosure-expand` (#1170): a native `<details>` that expands and folds over 350 ms (`EXPAND_MS` in
  * `motion.client.ts`, which a test holds to it) instead of snapping, for a row opening in place. Done
  * with the browser's own `::details-content`; one that lacks it opens at once, and so does a reader who
  * asked for less motion. What fills inside waits the same time (`chart-fill-x`'s delay).
@@ -25,8 +25,8 @@ html[data-expanding] body {
       height: 0;
       overflow: clip;
       transition:
-        height 200ms ease-out,
-        content-visibility 200ms allow-discrete;
+        height 350ms ease-out,
+        content-visibility 350ms allow-discrete;
     }
     &[open]::details-content {
       height: auto;

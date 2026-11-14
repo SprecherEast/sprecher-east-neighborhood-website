@@ -38,6 +38,12 @@ function SliceName({ name, shortName }: { name: string; shortName?: string }) {
 export const TOTAL_PULSE_MS = 1500
 
 /**
+ * How long the flash can be seen: its ease-out leaves under 5% of the tint by about 1.25 s, so what is
+ * left of `TOTAL_PULSE_MS` is invisible, and the breakdown's wait counts from here (#1174)
+ */
+export const TOTAL_PULSE_SHOWN_MS = 1250
+
+/**
  * The receipt's one grid of three columns, which its rows and its total both take (`subgrid`), so a
  * column that widens moves them together and the amounts always line up: the name, then the dollars,
  * then the percent, as in the breakdown chart (#1163). The dollar column is at least wide enough for
