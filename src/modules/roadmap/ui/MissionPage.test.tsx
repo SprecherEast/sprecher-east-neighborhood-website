@@ -18,6 +18,7 @@ const issue = (number: number, over: Partial<PlanIssue> = {}): PlanIssue => ({
   labels: [],
   description: '',
   closedAt: null,
+  createdAt: null,
   updatedAt: null,
   url: `https://github.com/o/r/issues/${number}`,
   ...over,

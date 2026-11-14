@@ -14,6 +14,7 @@ const issue = (number: number, state: 'open' | 'done') => ({
   labels: [],
   description: '',
   closedAt: state === 'done' ? '2026-11-07T15:00:00Z' : null,
+  createdAt: null,
   updatedAt: null,
   url: `https://github.com/o/r/issues/${number}`,
 })
