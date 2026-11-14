@@ -72,7 +72,7 @@ function BarRow({ piece, nested, area, scale, look }: RowProps) {
     <li
       data-breakdown-row={piece.key}
       className={cn(
-        'grid grid-cols-[minmax(0,1fr)_3rem_4.5rem] items-center gap-x-3 gap-y-1 py-1.5 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_3rem_4.5rem]',
+        'grid grid-cols-[minmax(0,1fr)_2.75rem_4rem] items-center gap-x-2 gap-y-1 py-1.5 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_3rem_4.5rem] sm:gap-x-3',
         nested && 'ml-1 border-l-2 pl-2.5 sm:ml-2.5 sm:pl-3.5',
         nested === 'area' && ramp.border,
         nested === 'flat' && 'border-border',
