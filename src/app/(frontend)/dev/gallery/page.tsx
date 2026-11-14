@@ -11,7 +11,6 @@ import { ActionsGallery } from './ActionsGallery.client'
 import { ChartGallery } from './ChartGallery'
 import { DisplayGallery } from './DisplayGallery'
 import {
-  SparklineGallery,
   AreaChartGallery,
   HeatMapGallery,
   ProgressGallery,
@@ -71,7 +70,6 @@ export default function GalleryPage() {
         <ProgressGallery />
         <ShareBarGallery />
         <ShareBillGallery />
-        <SparklineGallery />
         <AreaChartGallery />
         <HeatMapGallery />
         <TabsGallery />

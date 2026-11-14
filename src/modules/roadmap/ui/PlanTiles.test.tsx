@@ -59,51 +59,97 @@ const plan: Plan = {
 const renderTiles = (over: Partial<Plan> = {}) =>
   render(<PlanTiles plan={{ ...plan, ...over }} now={NOW} />)
 
+const layout = (container: HTMLElement, name: 'blocks' | 'accordions') =>
+  container.querySelector(`[data-plan-layout="${name}"]`) as HTMLElement
+
 describe('PlanTiles', () => {
-  it('shows a tile for each mission, ordered by latest activity with the newest first', () => {
-    renderTiles()
-    const names = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)
+  it('shows a block for each mission, ordered by latest activity with the newest first', () => {
+    const { container } = renderTiles()
+    const names = within(layout(container, 'blocks'))
+      .getAllByRole('heading', { level: 3 })
+      .map((h) => h.textContent)
     expect(names).toEqual(['Newest mission', 'Older mission', 'Quiet mission'])
   })
 
-  it('lays the tiles out two across on a phone and three across on a desktop, all the same size', () => {
-    renderTiles()
-    const tiles = screen.getAllByRole('article')
-    const grid = tiles[0].parentElement as HTMLElement
-    expect(grid.className).toContain('grid-cols-2')
+  it('lays the blocks out two across on a tablet and three on a desktop, all the same size, and hides them on a phone', () => {
+    const { container } = renderTiles()
+    const grid = layout(container, 'blocks')
+    expect(grid.className).toContain('hidden')
+    expect(grid.className).toContain('md:grid-cols-2')
     expect(grid.className).toContain('lg:grid-cols-3')
-    for (const tile of tiles) expect(tile.className).not.toContain('col-span')
+    for (const block of within(grid).getAllByRole('article')) {
+      expect(block.className).not.toContain('col-span')
+    }
   })
 
-  it('opens the mission’s own page from its tile', () => {
-    renderTiles()
-    expect(screen.getByRole('link', { name: 'Newest mission' }).getAttribute('href')).toBe(
-      '/roadmap/missions/2',
+  it('shows the same missions as accordions on a phone only, all closed, in the same order', () => {
+    const { container } = renderTiles()
+    const list = layout(container, 'accordions')
+    expect(list.className).toContain('md:hidden')
+    const boxes = [...list.querySelectorAll(':scope > details')] as HTMLDetailsElement[]
+    expect(boxes.map((box) => box.open)).toEqual([false, false, false])
+    expect(boxes.map((box) => box.querySelector('summary')?.textContent)).toEqual([
+      expect.stringContaining('Newest mission'),
+      expect.stringContaining('Older mission'),
+      expect.stringContaining('Quiet mission'),
+    ])
+  })
+
+  it('opens the mission’s own page from its block and from its accordion', () => {
+    const { container } = renderTiles()
+    const block = within(layout(container, 'blocks')).getByRole('link', { name: 'Newest mission' })
+    expect(block.getAttribute('href')).toBe('/roadmap/missions/2')
+    const open = within(layout(container, 'accordions')).getAllByRole('link', {
+      name: /Open this mission/,
+    })
+    expect(open.map((link) => link.getAttribute('href'))).toContain('/roadmap/missions/2')
+  })
+
+  it('gives the links to a mission and to a project a 44 px target', () => {
+    const { container } = renderTiles()
+    const box = layout(container, 'accordions').querySelector('details') as HTMLElement
+    expect(within(box).getByRole('link', { name: /Open this mission/ }).className).toContain(
+      'min-h-11',
+    )
+    expect(within(box).getByRole('link', { name: /Read about this project/ }).className).toContain(
+      'min-h-11',
     )
   })
 
-  it('says how many are done, with a named bar', () => {
-    renderTiles()
-    expect(
-      screen
-        .getByRole('progressbar', { name: 'Newest mission: 1 of 2 done' })
-        .getAttribute('value'),
-    ).toBe('1')
+  it('says how many are done, small, on each block', () => {
+    const { container } = renderTiles()
+    const block = within(layout(container, 'blocks')).getAllByRole('article')[0]
+    expect(block.textContent).toMatch(/1\s*of 2\s*done/)
   })
 
-  it('draws every tile’s activity on one scale, named with its values', () => {
-    renderTiles()
-    const labels = screen.getAllByRole('img').map((svg) => svg.getAttribute('aria-label'))
+  it('draws each mission’s week as a heat map named with its values', () => {
+    const { container } = renderTiles()
+    const labels = within(layout(container, 'blocks'))
+      .getAllByRole('img')
+      .map((img) => img.getAttribute('aria-label'))
     expect(labels).toHaveLength(3)
-    expect(labels.every((label) => label?.startsWith('Finished each year, oldest first:'))).toBe(
-      true,
-    )
+    expect(labels[0]).toBe('Newest mission, finished each day this week: 0, 0, 0, 0, 1, 0, 0')
   })
 
-  it('writes the news in words on each tile', () => {
-    renderTiles()
-    expect(screen.getAllByText('1 finished this year')).toHaveLength(2)
-    expect(screen.getByText('Nothing finished yet')).toBeTruthy()
+  it('marks a mission with nothing finished this week as quiet by shape and in words', () => {
+    const { container } = renderTiles()
+    const blocks = within(layout(container, 'blocks')).getAllByRole('article')
+    expect(within(blocks[0]).getByText('Finished something this week')).toBeTruthy()
+    expect(within(blocks[1]).getByText('Quiet this week')).toBeTruthy()
+    expect(within(blocks[2]).getByText('Quiet this week')).toBeTruthy()
+    const mark = (block: HTMLElement) => block.querySelector('svg')?.getAttribute('class')
+    expect(mark(blocks[0])).not.toBe(mark(blocks[1]))
+  })
+
+  it('opens a phone accordion to its week and its projects, each closed and opening to its own week and issues', () => {
+    const { container } = renderTiles()
+    const box = layout(container, 'accordions').querySelector('details') as HTMLDetailsElement
+    const projects = [...box.querySelectorAll('details')]
+    expect(projects).toHaveLength(1)
+    expect(projects[0].open).toBe(false)
+    expect(within(box).getAllByRole('img').length).toBe(2)
+    expect(within(projects[0]).getByText('Issue 21')).toBeTruthy()
+    expect(within(projects[0]).getByText(/Closed/)).toBeTruthy()
   })
 
   it('uses no insider words', () => {
@@ -115,7 +161,7 @@ describe('PlanTiles', () => {
     renderTiles()
     const heading = screen.getByRole('heading', { name: 'Projects not yet in a mission' })
     expect(
-      screen.getByText('Quiet mission').compareDocumentPosition(heading) &
+      screen.getAllByText('Quiet mission')[0].compareDocumentPosition(heading) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
     const group = heading.closest('section') as HTMLElement

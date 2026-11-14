@@ -48,11 +48,7 @@ const mission: PlanMilestone = {
   ],
 }
 
-type Activity = Parameters<typeof MissionPage>[0]['activity']
-const activity: Activity = { series: [0, 1, 0, 2, 0, 0, 1, 3], max: 4, stepLabel: 'weeks' }
-
-const renderPage = (over: Partial<Activity> = {}) =>
-  render(<MissionPage mission={mission} activity={{ ...activity, ...over }} now={NOW} />)
+const renderPage = () => render(<MissionPage mission={mission} now={NOW} />)
 
 describe('MissionPage', () => {
   it('starts every project box closed', () => {
@@ -70,33 +66,33 @@ describe('MissionPage', () => {
     expect(document.body.textContent).toMatch(/1\s*of 2\s*done/)
   })
 
-  it('draws the activity line with every value in its name, and writes the numbers beside it', () => {
+  it('draws the mission’s week as a heat map with every value in its name', () => {
     renderPage()
     expect(
-      screen.getByRole('img', { name: 'Finished each week, oldest first: 0, 1, 0, 2, 0, 0, 1, 3' }),
+      screen.getByRole('img', {
+        name: 'Property tax pages, finished each day this week: 0, 0, 0, 0, 1, 0, 0',
+      }),
     ).toBeTruthy()
-    expect(screen.getByText(/Last 8 weeks: 0, 1, 0, 2, 0, 0, 1, 3/)).toBeTruthy()
-    expect(screen.getByText(/3 finished this week/)).toBeTruthy()
   })
 
-  it('says it is quiet when the newest step has nothing, and when nothing is finished at all', () => {
-    renderPage({ series: [2, 0] })
-    expect(screen.getByText(/Quiet this week/)).toBeTruthy()
-    cleanup()
+  it('says it is quiet when nothing was finished this week', () => {
     render(
       <MissionPage
         mission={{ ...mission, epics: [epic(30, 'Only open', [issue(31)])] }}
-        activity={{ ...activity, series: [0, 0] }}
         now={NOW}
       />,
     )
-    expect(screen.getByText(/Nothing finished yet/)).toBeTruthy()
+    expect(screen.getByText('Quiet this week')).toBeTruthy()
   })
 
-  it('names the step in the sentence, so months read as months', () => {
-    renderPage({ series: [1, 4], stepLabel: 'months' })
-    expect(screen.getByText(/Last 2 months: 1, 4/)).toBeTruthy()
-    expect(screen.getByText(/4 finished this month/)).toBeTruthy()
+  it('gives each project its own week above its issues', () => {
+    const { container } = renderPage()
+    const box = container.querySelectorAll('details')[0]
+    expect(
+      within(box as HTMLElement).getByRole('img', {
+        name: 'Fact tabs, finished each day this week: 0, 0, 0, 0, 1, 0, 0',
+      }),
+    ).toBeTruthy()
   })
 
   it('lists each project as a box that opens, with its issues linked and the type prefix dropped', () => {
