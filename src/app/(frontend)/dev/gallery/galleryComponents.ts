@@ -18,6 +18,7 @@ export const GALLERY_COMPONENTS = [
   'EmptyState',
   'Disclosure',
   'ProgressBar',
+  'BarTrack',
   'ShareBar',
   'ShareBill',
   'Tabs',

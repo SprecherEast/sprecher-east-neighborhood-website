@@ -43,7 +43,7 @@ describe('BreakdownRow (#1163, #1165)', () => {
     )
     const body = container.querySelector('details > div') as HTMLElement
     expect(body.className).toContain('mr-6')
-    expect(body.className).toContain('min-[24rem]:mr-12')
+    expect(body.className).toContain('sm:mr-12')
     // The summary button itself keeps its full width
     expect(container.querySelector('summary')?.className).not.toContain('mr-')
   })

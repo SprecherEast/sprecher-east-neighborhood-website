@@ -2,6 +2,7 @@ import React, { type ReactNode } from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
+import { BarTrack } from './BarTrack'
 import { Text } from './Text'
 import { SHARE_TONES, type ShareTone } from './shareTones'
 
@@ -53,29 +54,25 @@ const RECEIPT_COLUMNS =
  * left and marked by a line in the slice's own color, so it reads as part of the slice and not as
  * one more body (#1196).
  */
-const NESTED_INDENT =
-  'ml-1 border-l-2 border-primary-fill pr-1 pl-2 min-[24rem]:ml-4 min-[24rem]:pl-3'
+const NESTED_INDENT = 'ml-1 border-l-2 pr-1 pl-2 sm:ml-4 sm:pl-3'
 
 /**
  * What a nested row sets on the right of its own amounts: about the width of the dollar column, so
  * they end before the bodies' amounts and never line up with them, as a ledger sets off "of which"
  * lines: nobody adds them to the bill. The row's button keeps its full width; only the amounts move (#1196).
  */
-export const NESTED_AMOUNTS_INSET = 'mr-6 min-[24rem]:mr-12'
+export const NESTED_AMOUNTS_INSET = 'mr-6 sm:mr-12'
 
 /** One slice's bar: its length is its share of the largest slice's, so every bar shares one scale (#1196) */
 function SliceBar({ slice, scale }: { slice: ShareSlice; scale: number }) {
   return (
-    <svg aria-hidden="true" focusable="false" className="col-span-3 mt-1.5 block h-2.5 w-full">
-      <rect width="100%" height="100%" rx={5} className="fill-muted" />
-      <rect
-        data-share-bar={slice.key}
-        width={`${(slice.share * scale).toFixed(2)}%`}
-        height="100%"
-        rx={5}
-        className={SHARE_TONES[slice.tone].fill}
-      />
-    </svg>
+    <BarTrack
+      width={slice.share * scale}
+      radius={5}
+      className="col-span-3 mt-1.5 h-2.5"
+      fillClassName={SHARE_TONES[slice.tone].fill}
+      mark={{ 'data-share-bar': slice.key }}
+    />
   )
 }
 
@@ -86,7 +83,7 @@ function SliceBar({ slice, scale }: { slice: ShareSlice; scale: number }) {
  * same way, so the rows and bars sit level. The receipt is one grid of three columns
  * with fixed widths for the percent and the amount, so each column lines up from row to row and
  * the block keeps its height when the amounts change. The total flashes the accent once each time
- * `pulseKey` changes, unless motion is reduced. The caller writes `label`, what the bar says to
+ * `pulseKey` changes, unless motion is reduced. The caller writes `label`, the name the list has for
  * screen readers (the list's name). `nested` puts extra content, such as an open-and-close row about one slice, as a
  * row of its own directly under that slice's row, indented to its name (#1163).
  */
@@ -147,7 +144,9 @@ export function ShareBill({
                 <SliceBar slice={slice} scale={scale} />
               </li>
               {nested?.after === slice.key && (
-                <li className={cn('col-span-3 mt-2', NESTED_INDENT)}>{nested.children}</li>
+                <li className={cn('col-span-3 mt-2', NESTED_INDENT, SHARE_TONES[slice.tone].edge)}>
+                  {nested.children}
+                </li>
               )}
             </React.Fragment>
           ))}

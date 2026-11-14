@@ -14,6 +14,7 @@ import {
   SparklineGallery,
   ProgressGallery,
   ShareBarGallery,
+  BarTrackGallery,
   ShareBillGallery,
 } from './ProgressGallery'
 import { FieldsGallery } from './FieldsGallery.client'
@@ -68,6 +69,7 @@ export default function GalleryPage() {
         <DisplayGallery />
         <ProgressGallery />
         <ShareBarGallery />
+        <BarTrackGallery />
         <ShareBillGallery />
         <SparklineGallery />
         <TabsGallery />
