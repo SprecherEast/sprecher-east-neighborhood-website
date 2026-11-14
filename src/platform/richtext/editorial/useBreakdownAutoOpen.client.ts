@@ -4,14 +4,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 
 import { holdScrollAnchor, prefersReducedMotion } from '@/platform/ui/motion.client'
-import { TOTAL_PULSE_MS } from '@/platform/ui/ShareBill'
+import { TOTAL_PULSE_SHOWN_MS } from '@/platform/ui/ShareBill'
 
 /**
- * How long after the total's flash ends the City's breakdown opens by itself, the first time a
- * reader estimates their own home (#1163): short enough that the reader has not yet reacted to
- * the new total (#1170)
+ * How long after the total's flash has faded from sight the City's breakdown opens by itself, the
+ * first time a reader estimates their own home (#1163): short enough that the reader has not yet
+ * reacted to the new total (#1170, #1174)
  */
-export const OPEN_AFTER_TOTAL_MS = 400
+export const OPEN_AFTER_TOTAL_MS = 100
 
 /**
  * The City's breakdown row under the whole bill (#1163, #1165). It starts closed and opens by
@@ -44,7 +44,7 @@ export function useBreakdownAutoOpen(pulse: number) {
 
   useEffect(() => {
     if (pulse === 0 || !armed.current) return
-    const flash = prefersReducedMotion() ? 0 : TOTAL_PULSE_MS
+    const flash = prefersReducedMotion() ? 0 : TOTAL_PULSE_SHOWN_MS
     const timer = setTimeout(() => {
       armed.current = false
       const row = rowRef.current

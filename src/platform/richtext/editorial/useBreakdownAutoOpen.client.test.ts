@@ -2,7 +2,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { TOTAL_PULSE_MS } from '@/platform/ui/ShareBill'
+import { TOTAL_PULSE_SHOWN_MS } from '@/platform/ui/ShareBill'
 
 import { OPEN_AFTER_TOTAL_MS, useBreakdownAutoOpen } from './useBreakdownAutoOpen.client'
 
@@ -33,7 +33,7 @@ describe('useBreakdownAutoOpen (#1163, #1165)', () => {
   }
 
   it('pauses only briefly after the total, so the row opens before the reader reacts (#1170)', () => {
-    expect(OPEN_AFTER_TOTAL_MS).toBe(400)
+    expect(OPEN_AFTER_TOTAL_MS).toBe(100)
   })
 
   it('opens once, after the armed bill’s flash and the pause, with the fill restarted first', () => {
@@ -66,7 +66,7 @@ describe('useBreakdownAutoOpen (#1163, #1165)', () => {
     const { row, result, rerender } = setup()
     act(() => result.current.arm(true))
     rerender({ pulse: 1 })
-    act(() => vi.advanceTimersByTime(TOTAL_PULSE_MS + OPEN_AFTER_TOTAL_MS - 1))
+    act(() => vi.advanceTimersByTime(TOTAL_PULSE_SHOWN_MS + OPEN_AFTER_TOTAL_MS - 1))
     expect(row.open).toBe(false)
     act(() => vi.advanceTimersByTime(1))
     expect(row.open).toBe(true)
