@@ -49,7 +49,7 @@ describe('BillShare', () => {
     expect(screen.getByText(/^Average home: \$481,300\./)).toBeTruthy()
     await estimate('962600')
     // 2026 prices the same home at its 2026 value: $962,600 × $481,300 / $500,300 (#1121)
-    expect(screen.getByText(/^Your home’s assumed value in 2026: \$926,043\./)).toBeTruthy()
+    expect(screen.queryByText(/home’s assumed value|^Your home:/)).toBeNull()
     expect(bill().textContent).toMatch(/Total property tax\$17,28\d/)
     expect(screen.getByRole('status').textContent).toMatch(/about \$17,28\d/)
   })
