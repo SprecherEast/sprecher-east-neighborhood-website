@@ -53,6 +53,8 @@ describe('ShareBill', () => {
     expect(amount.className).toContain('justify-self-end')
     // The rows' amounts end the same way
     expect(list.querySelector('li')?.children[2]?.className).toContain('justify-self-end')
+    // The rows keep a side padding (px-1) the total's amount must keep too, to end where theirs end (#1184)
+    expect(total.className).toContain('pr-1')
     expect(total.className).toContain('font-bold')
     expect(total.className).toContain('border-t-2')
   })

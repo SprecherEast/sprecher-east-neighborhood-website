@@ -157,7 +157,7 @@ export function ShareBill({
           <p
             key={pulseKey}
             className={cn(
-              'col-span-3 mt-1.5 grid min-h-6 grid-cols-subgrid items-center border-t-2 border-foreground pt-1 text-sm font-bold text-foreground min-[24rem]:text-base',
+              'col-span-3 mt-1.5 grid min-h-6 grid-cols-subgrid items-center border-t-2 border-foreground pt-1 pr-1 text-sm font-bold text-foreground min-[24rem]:text-base',
               pulseKey ? 'total-pulse' : undefined,
             )}
           >
@@ -165,7 +165,7 @@ export function ShareBill({
             <span className="min-w-0 truncate pl-1" title={total.label}>
               {total.label}
             </span>
-            {/* Ends where the rows' dollars end, the right edge: the dollar column grows to the widest amount, this one included */}
+            {/* Ends where the rows' dollars end, the right edge, inside the rows' own side padding (`pr-1`): the dollar column grows to the widest amount, this one included */}
             <span className="col-start-3 justify-self-end whitespace-nowrap tabular-nums">
               {total.amount}
             </span>
