@@ -195,7 +195,6 @@ export function BillShare({
         note={year.note}
         yours={estimated !== null}
         home={formatWholeDollars(shown)}
-        assumedYear={yearIndex < years.length - 1 ? year.year : undefined}
         baseYear={baseYear}
         laterIncrease={laterIncrease}
         cityPercent={receipt.slices.length > 0 ? (cityPart?.percent ?? null) : null}
