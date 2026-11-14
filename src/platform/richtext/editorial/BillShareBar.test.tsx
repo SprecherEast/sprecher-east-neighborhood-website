@@ -21,8 +21,8 @@ describe('the whole bill: the bar and the receipt (#1030, #1111)', () => {
       Array.from(
         container.querySelectorAll('[data-share-bill] li[data-share-row]'),
         (li): [string, number] => {
-          // name, dollars, percent (#1163)
-          const [name = '', , percent = ''] = Array.from(
+          // name, percent, dollars (#1184)
+          const [name = '', percent = ''] = Array.from(
             li.children,
             (child) => child.textContent ?? '',
           )

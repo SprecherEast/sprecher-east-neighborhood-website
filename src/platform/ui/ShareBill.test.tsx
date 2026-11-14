@@ -44,15 +44,17 @@ describe('ShareBill', () => {
     // The total: label left, amount right, bold, under a stronger rule than the rows' lines
     expect(total.textContent).toBe('Total$10,000')
     // The rows and the total share one grid, so a column that widens moves both; the total's
-    // amount ends at the dollar column's end, never under the percents (#1163)
+    // amount ends at the dollar column's end, the last one, never under the percents (#1163, #1184)
     expect(total.parentElement).toBe(list.parentElement)
     expect(list.className).toContain('grid-cols-subgrid')
     expect(total.className).toContain('grid-cols-subgrid')
     const amount = total.lastElementChild as HTMLElement
-    expect(amount.className).toContain('col-start-2')
+    expect(amount.className).toContain('col-start-3')
     expect(amount.className).toContain('justify-self-end')
     // The rows' amounts end the same way
-    expect(list.querySelector('li')?.children[1]?.className).toContain('justify-self-end')
+    expect(list.querySelector('li')?.children[2]?.className).toContain('justify-self-end')
+    // The rows keep a side padding (px-1) the total's amount must keep too, to end where theirs end (#1184)
+    expect(total.className).toContain('pr-1')
     expect(total.className).toContain('font-bold')
     expect(total.className).toContain('border-t-2')
   })
@@ -79,7 +81,7 @@ describe('ShareBill', () => {
     expect(tail.className).toContain('max-[24rem]:sr-only')
   })
 
-  it('keeps a clear gap between the dollars and the percent at every width (#1163)', () => {
+  it('keeps a clear gap between the percent and the dollars at every width (#1163, #1184)', () => {
     const { container } = render(<ShareBill slices={SLICES} label="Sample bill" />)
     const grid = container.querySelector('ul')?.parentElement as HTMLElement
     expect(grid.className).toContain('gap-x-1.5')
@@ -89,12 +91,12 @@ describe('ShareBill', () => {
   it('names every slice in the receipt with its percent and dollars, in the bar’s order', () => {
     const { container } = render(<ShareBill slices={SLICES} label="Sample bill" total={TOTAL} />)
     const rows = Array.from(container.querySelectorAll('li')).map((li) => li.textContent)
-    // Like the breakdown chart: the dollars, then the percent (#1163)
+    // Like a bill, and like the breakdown chart: the name, the percent, then the dollars last (#1184)
     expect(rows).toEqual([
-      'Sample: first$3,75038%',
-      'Sample: second$4,65046%',
-      'Sample: third$1,25013%',
-      'Sample: fourth$3503%',
+      'Sample: first38%$3,750',
+      'Sample: second46%$4,650',
+      'Sample: third13%$1,250',
+      'Sample: fourth3%$350',
     ])
     const bar = Array.from(container.querySelectorAll('rect[data-share-slice]')).map((rect) =>
       rect.getAttribute('data-share-slice'),
@@ -145,7 +147,7 @@ describe('ShareBill', () => {
     expect(nested.className).toContain('col-span-3')
     expect(nested.className).toContain('pl-4')
     expect(nested.className).toContain('min-[24rem]:pl-6')
-    expect(rows[2]?.textContent).toBe('Sample: second$4,65046%')
+    expect(rows[2]?.textContent).toBe('Sample: second46%$4,650')
     // Only the slices' own rows carry their key, so a list inside the nested content is never one
     expect(container.querySelectorAll('li[data-share-row]')).toHaveLength(SLICES.length)
     expect(nested.hasAttribute('data-share-row')).toBe(false)

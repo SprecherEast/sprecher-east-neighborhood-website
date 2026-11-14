@@ -65,20 +65,20 @@ function Bar({
   )
 }
 
-/** A label, a bar, the dollars and the percent: on a phone the bar drops under the label */
+/** A label, a bar, the percent and the dollars flush right, as on a bill (#1184): on a phone the bar drops under the label */
 function BarRow({ piece, nested, area, scale, look }: RowProps) {
   const ramp = rampAt(piece.step)
   return (
     <li
       data-breakdown-row={piece.key}
       className={cn(
-        'grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-3 gap-y-1 py-1.5 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_4.5rem_3rem]',
+        'grid grid-cols-[minmax(0,1fr)_2.75rem_4rem] items-center gap-x-2 gap-y-1 py-1.5 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_3rem_4.5rem] sm:gap-x-3',
         nested && 'ml-1 border-l-2 pl-2.5 sm:ml-2.5 sm:pl-3.5',
         nested === 'area' && ramp.border,
         nested === 'flat' && 'border-border',
       )}
     >
-      <span data-label className="min-w-0">
+      <span data-label className="min-w-0 wrap-break-word hyphens-auto">
         <Text
           variant="small"
           as="span"
@@ -95,6 +95,9 @@ function BarRow({ piece, nested, area, scale, look }: RowProps) {
       <span className="order-last col-span-full row-start-2 sm:order-none sm:col-span-1 sm:col-start-2 sm:row-start-1">
         <Bar piece={piece} nested={Boolean(nested)} scale={scale} look={look} />
       </span>
+      <Text variant="small" as="span" className="text-right tabular-nums">
+        {formatShare(piece.share)}
+      </Text>
       <Text
         variant="small"
         as="span"
@@ -106,9 +109,6 @@ function BarRow({ piece, nested, area, scale, look }: RowProps) {
         <span data-amount>
           <Amount piece={piece} />
         </span>
-      </Text>
-      <Text variant="small" as="span" className="text-right tabular-nums">
-        {formatShare(piece.share)}
       </Text>
     </li>
   )

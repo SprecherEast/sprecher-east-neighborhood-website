@@ -1,12 +1,13 @@
 import { BILL_POST_PATH as POST, BILL_WIDTHS as WIDTHS } from './support/billRows'
 import { expect, test } from './support/test'
 
-// The whole bill's receipt reads like the breakdown chart under it (#1163): each row's dollars, a
-// clear gap, then its percent, each column ending level from row to row, and the total's amount
-// ending under the rows' dollars, with nothing under the percents.
+// The whole bill's receipt reads like a bill and like the breakdown chart under it (#1163, #1184):
+// each row's name, its percent, a clear gap, then its dollars flush right, each column ending level
+// from row to row, and the total's amount ending under the rows' dollars, with nothing under the
+// percents.
 
 for (const width of WIDTHS) {
-  test(`each bill row reads dollars, a gap, then the percent, the total under the dollars, at ${width}px`, async ({
+  test(`each bill row reads percent, a gap, then the dollars at the right edge, the total under the dollars, at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 })
@@ -14,14 +15,14 @@ for (const width of WIDTHS) {
     const rows = page.locator('[data-share-bill] li[data-share-row]')
     const cells = await rows.evaluateAll((items) =>
       items.map((li) => {
-        const [, amount, percent] = Array.from(li.children).map((c) => c.getBoundingClientRect())
-        return { amountRight: amount.right, percentLeft: percent.left, percentRight: percent.right }
+        const [, percent, amount] = Array.from(li.children).map((c) => c.getBoundingClientRect())
+        return { amountLeft: amount.left, percentRight: percent.right, amountRight: amount.right }
       }),
     )
     for (const cell of cells) {
       expect(
-        cell.percentLeft - cell.amountRight,
-        'a clear gap before the percent',
+        cell.amountLeft - cell.percentRight,
+        'a clear gap before the dollars',
       ).toBeGreaterThanOrEqual(6)
     }
     expect(new Set(cells.map((c) => Math.round(c.amountRight))).size, 'dollars end level').toBe(1)
@@ -37,7 +38,7 @@ for (const width of WIDTHS) {
       page.locator('[data-share-bill]').evaluate((bill, fn) => {
         const right = new Function(`return ${fn}`)() as (el: Element) => number
         const amounts = Array.from(bill.querySelectorAll('li[data-share-row]'), (li) =>
-          right(li.children[1] as Element),
+          right(li.children[2] as Element),
         )
         const total = bill.querySelector(':scope > :last-child > p:last-child')
         return { amounts, total: right(total?.lastElementChild as Element) }
@@ -59,6 +60,10 @@ for (const width of WIDTHS) {
             li.children[0]?.lastElementChild,
             li.children[1],
           ]),
+          ...Array.from(bill.querySelectorAll('li[data-share-row]'), (li) => [
+            li.children[0]?.lastElementChild,
+            li.children[2],
+          ]),
           ...Array.from(bill.querySelectorAll(':scope > :last-child > p'), (p) => [
             p.children[0],
             p.children[1],
@@ -72,9 +77,10 @@ for (const width of WIDTHS) {
         }
         return Math.min(...gaps)
       })
-      expect(clear, `names never touch the amounts (${value ?? 'average'})`).toBeGreaterThanOrEqual(
-        4,
-      )
+      expect(
+        clear,
+        `names never touch the percents or the amounts (${value ?? 'average'})`,
+      ).toBeGreaterThanOrEqual(4)
       for (const amount of amounts) {
         expect(
           Math.abs(total - amount),
