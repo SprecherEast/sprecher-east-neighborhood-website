@@ -25,10 +25,10 @@ Read its README for the layout. The rules about what a good picture is live in
 4. **Panel text.** The scene ends with `panel([title lines], [bullets])`. Never shorten a line to
    fit; if the build reports a line too wide, reword the line with the owner or the scene, never
    the sizes in `settings.py`.
-5. **Check.** `python3 -m scripts.illustrations.build --check` must report no problems, and the
-   picture must keep the card's overlay corner empty (`CLEAR_ZONE` in `settings.py`).
+5. **Check.** `python3 -m scripts.illustrations.build --check` must report no problems. Look at the
+   picture at card size: the card's overlay corner (`CLEAR_ZONE` in `settings.py`) stays empty.
 6. **Review, publish, verify.** Run [`visual-design-review`](../visual-design-review/SKILL.md) on the
-   finished JPG, then upload it to the CMS with alt text that includes the panel's words, set it
+   finished JPG, then compare every panel line with the published text, upload it to the CMS with alt text that includes the panel's words, set it
    as both the item's picture and its link-preview picture, and open the live page at phone and
    desktop width.
 

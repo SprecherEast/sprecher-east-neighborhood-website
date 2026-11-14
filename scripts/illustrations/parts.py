@@ -7,7 +7,12 @@ from .settings import *
 
 SW=OUTLINE_WIDTH
 
+def sc(v):
+    """A size in the scene, multiplied by the named scene scale (unchanged at 1)."""
+    return v if SCENE_SCALE==1 else v*SCENE_SCALE
+
 def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin="#a8714f",hair="#2a1d17",hat=None,arm="down",hr=13,flip=False,cap=None):
+    s=sc(s)
     sx=-s if flip else s
     o=f'stroke="{NAVY}" stroke-width="{SW/s:.2f}" stroke-linejoin="round"'
     g=[f'<g transform="translate({x},{y}) scale({sx},{s})">']
@@ -37,6 +42,7 @@ def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin="#a8714f",hair="#2a1d17",hat=None,
     g.append('</g>'); return "".join(g)
 
 def tree(x,y,h=300,c="#6fae6c",d="#4f8e56",trunk="#6b4b3a"):
+    h=sc(h)
     r=h*.22
     return (f'<g><ellipse cx="{x}" cy="{y}" rx="{r*1.1}" ry="10" fill="#000" opacity=".1"/>'
     f'<rect x="{x-h*.025}" y="{y-h*.45}" width="{h*.05}" height="{h*.45}" fill="{trunk}" stroke="{NAVY}" stroke-width="{SW}"/>'
@@ -85,6 +91,7 @@ def panel(title_lines, bullets):
     return "".join(g)
 
 def car(x,y,body=BLUE,w=250,police=False,flip=False,suv=False):
+    w=sc(w)
     k=w/250; sx=-k if flip else k
     o=f'stroke="{NAVY}" stroke-width="{SW/k:.2f}" stroke-linejoin="round"'
     top=-92 if suv else -84
@@ -104,6 +111,7 @@ def car(x,y,body=BLUE,w=250,police=False,flip=False,suv=False):
     g.append('</g>'); return "".join(g)
 
 def dog(x,y,s=1,flip=False):
+    s=sc(s)
     sx=-s if flip else s; o=f'stroke="{NAVY}" stroke-width="{SW/s:.2f}" stroke-linejoin="round"'
     return (f'<g transform="translate({x},{y}) scale({sx},{s})"><ellipse cx="0" cy="1" rx="46" ry="6" fill="#000" opacity=".12"/>'
     f'<rect x="-30" y="-30" width="9" height="30" rx="4" fill="#b9874f" {o}/><rect x="14" y="-30" width="9" height="30" rx="4" fill="#b9874f" {o}/>'
@@ -128,6 +136,7 @@ def grass(extra=""):
             f'<rect width="{W}" height="{H}" fill="url(#lawn)"/>')
 
 def cart(x,y,color,lid,s=1,recycle=False):
+    s=sc(s)
     o=f'stroke="{NAVY}" stroke-width="{SW/s:.2f}" stroke-linejoin="round"'
     g=f'<g transform="translate({x},{y}) scale({s})"><ellipse cx="0" cy="4" rx="70" ry="9" fill="#000" opacity=".14"/>'
     g+=f'<path d="M-52,-170 L52,-170 L44,-10 L-44,-10 Z" fill="{color}" {o}/><path d="M-52,-170 L-30,-170 L-24,-10 L-44,-10 Z" fill="#fff" opacity=".12"/>'
@@ -142,6 +151,7 @@ def tape(x1,y1,x2,y2,sag=14):
 
 
 def bike(x,y,s=1,flip=False,shirt=RED,helmet=YEL,skin="#a8714f"):
+    s=sc(s)
     """A cyclist seen from the side, standing on the ground at (x, y), facing right unless flipped."""
     o=f'stroke="{NAVY}" stroke-linejoin="round" stroke-linecap="round"'
     sx=-s if flip else s

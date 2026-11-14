@@ -62,4 +62,14 @@ print(s.PANEL_W, s.TITLE_SIZE, s.BULLET_SIZE)`,
     )
     expect(r.stdout.trim()).toBe('620 66 44')
   })
+
+  it('scales everything drawn in a scene from one named setting', () => {
+    const r = run(
+      `from scripts.illustrations import settings as s, parts
+s.SCENE_SCALE = 1
+parts.SCENE_SCALE = 2
+print(parts.sc(10), parts.tree(0, 0, 100).count('scale') >= 0)`,
+    )
+    expect(r.stdout.split(' ')[0]).toBe('20')
+  })
 })

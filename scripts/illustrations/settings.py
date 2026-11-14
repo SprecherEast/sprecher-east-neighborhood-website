@@ -13,6 +13,10 @@ EXPORT_WIDTH = 1670
 PANEL_X = 945
 SCENE_WIDTH = PANEL_X
 
+# Scene scale: one multiplier for everything drawn in the scene (people, bicycles, trees, cars,
+# carts, the shelter). 1 is the approved size; the panel and the canvas never change with it.
+SCENE_SCALE = 1
+
 # Text panel
 PANEL_W = 620
 TITLE_SIZE = 66

@@ -77,7 +77,7 @@ used through the [`make-illustration`](../../.agents/skills/make-illustration/SK
     concept does not read at that size, change the concept instead of adjusting details.
 19. **Believable scale and substance.** Buildings are larger than people, and vehicles, people and
     bicycles are solid, shaped and sit on the ground in the right direction, never flat or paper
-    thin. What a road carries (lanes, turn lane, bike lane) matches the real road.
+    thin. What a place carries (a road's lanes, a building's parts) matches the real place.
 20. **Real subjects are reused exactly.** A subject with an agreed illustration keeps that exact
     outline in every picture. Anything the owner supplies (a photo, an aerial) is traced faithfully.
     When nothing is supplied, draw a sensible illustration of the subject with no invented named

@@ -20,6 +20,7 @@ def brick_lines(x,y,w,h,c,step=22,off=44):
     return "".join(out)
 
 def real_shelter(X,Y,s,snow=False,smoke=False):
+    s=sc(s)
     """Door Creek Park shelter, drawn from the owner's photo (photo coordinates, ground y=905)."""
     o=f'stroke="{NAVY}" stroke-width="{SW/s:.2f}" stroke-linejoin="round"'
     g=[f'<g transform="translate({X},{Y}) scale({s}) translate(-100,-905)">']
