@@ -2,7 +2,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { TOTAL_PULSE_SHOWN_MS } from '@/platform/ui/ShareBill'
+import { TOTAL_PULSE_MS } from '@/platform/ui/ShareBill'
 
 import { OPEN_AFTER_TOTAL_MS, useBreakdownAutoOpen } from './useBreakdownAutoOpen.client'
 
@@ -66,7 +66,7 @@ describe('useBreakdownAutoOpen (#1163, #1165)', () => {
     const { row, result, rerender } = setup()
     act(() => result.current.arm(true))
     rerender({ pulse: 1 })
-    act(() => vi.advanceTimersByTime(TOTAL_PULSE_SHOWN_MS + OPEN_AFTER_TOTAL_MS - 1))
+    act(() => vi.advanceTimersByTime(TOTAL_PULSE_MS + OPEN_AFTER_TOTAL_MS - 1))
     expect(row.open).toBe(false)
     act(() => vi.advanceTimersByTime(1))
     expect(row.open).toBe(true)
@@ -102,7 +102,7 @@ describe('useBreakdownAutoOpen (#1163, #1165)', () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 
-  it('counts a reader’s own opening as its one opening, and never opens after that', () => {
+  it('leaves an open row as it is, and opens a closed one again on every new estimate (#1176)', () => {
     const { row, result, rerender } = setup()
     // The reader opens it before estimating
     act(() => result.current.onOpening())
@@ -112,11 +112,19 @@ describe('useBreakdownAutoOpen (#1163, #1165)', () => {
     rerender({ pulse: 1 })
     act(() => vi.advanceTimersByTime(OPEN_AFTER_TOTAL_MS))
     // Already open: it stays so, and the fill is not replayed
+    expect(row.open).toBe(true)
     expect(result.current.openings).toBe(1)
+    // The reader closes it; the next new estimate opens it again, with the fill restarted
     row.open = false
     act(() => result.current.arm(true))
     rerender({ pulse: 2 })
-    act(() => vi.advanceTimersByTime(OPEN_AFTER_TOTAL_MS * 2))
+    act(() => vi.advanceTimersByTime(OPEN_AFTER_TOTAL_MS))
+    expect(row.open).toBe(true)
+    expect(result.current.openings).toBe(2)
+    // A year switch alone (a settled bill with no estimate) leaves a closed row closed
+    row.open = false
+    rerender({ pulse: 3 })
+    act(() => vi.advanceTimersByTime(OPEN_AFTER_TOTAL_MS * 3))
     expect(row.open).toBe(false)
   })
 

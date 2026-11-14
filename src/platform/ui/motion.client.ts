@@ -14,7 +14,7 @@ export function prefersReducedMotion(): boolean {
  * theme, which a test holds to it. What fills inside it waits this long, so it starts as the
  * row finishes opening.
  */
-export const EXPAND_MS = 350
+export const EXPAND_MS = 500
 
 let releaseAnchor: ReturnType<typeof setTimeout> | undefined
 
