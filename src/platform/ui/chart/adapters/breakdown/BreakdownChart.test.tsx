@@ -61,6 +61,8 @@ describe('BreakdownChart rows read name, percent, then dollars flush right (#118
       // Narrow columns on a phone, so a long one-word name never reaches its percent
       expect(row.className).toContain('grid-cols-[minmax(0,1fr)_2.75rem_4rem]')
       expect(row.className).toContain('sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_3rem_4.5rem]')
+      // A long one-word name breaks inside its own column rather than run into the percent
+      expect(row.querySelector('[data-label]')?.className).toContain('wrap-break-word')
     }
   })
 })

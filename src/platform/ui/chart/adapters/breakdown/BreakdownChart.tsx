@@ -78,7 +78,7 @@ function BarRow({ piece, nested, area, scale, look }: RowProps) {
         nested === 'flat' && 'border-border',
       )}
     >
-      <span data-label className="min-w-0">
+      <span data-label className="min-w-0 wrap-break-word hyphens-auto">
         <Text
           variant="small"
           as="span"
