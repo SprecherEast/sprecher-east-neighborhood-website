@@ -198,7 +198,8 @@ describe('HeatMap selectable', () => {
     expect(friday).toHaveProperty('disabled', true)
     expect(friday.getAttribute('aria-pressed')).toBe('true')
     expect(friday.className).toContain('ring-2')
-    expect(friday.querySelector('svg')).toBeNull()
+    expect(friday.querySelector('.lucide-slash')).toBeNull()
+    expect(friday.querySelector('[data-heat-selected]')).not.toBeNull()
     expect(screen.getByRole('button', { name: /^Thu, Nov 12: 3, not available/ })).toBeTruthy()
   })
 
