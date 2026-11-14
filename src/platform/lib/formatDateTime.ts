@@ -68,19 +68,14 @@ export const formatDateBadge = (timestamp: string): { month: string; day: string
   }
 }
 
+/** A calendar day (`yyyy-mm-dd`) in the given style. It is a day, not an instant, so no time zone moves it. */
+const formatDay = (day: string, options: Intl.DateTimeFormatOptions): string =>
+  new Date(`${day}T00:00:00.000Z`).toLocaleDateString('en-US', { ...options, timeZone: 'UTC' })
+
+/** A calendar day as "Fri, Nov 13" */
+export const formatDayLabel = (day: string): string =>
+  formatDay(day, { weekday: 'short', month: 'short', day: 'numeric' })
+
 /** A calendar day without its weekday, such as "Nov 13", for tight spaces */
 export const formatDayShort = (day: string): string =>
-  new Date(`${day}T00:00:00.000Z`).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  })
-
-/** A calendar day (`yyyy-mm-dd`) as "Fri, Nov 13". It is a day, not an instant, so no time zone moves it. */
-export const formatDayLabel = (day: string): string =>
-  new Date(`${day}T00:00:00.000Z`).toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  })
+  formatDay(day, { month: 'short', day: 'numeric' })
