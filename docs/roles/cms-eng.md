@@ -72,7 +72,7 @@ patterns are in [`payload-cms.md`](../guidelines/payload-cms.md).
 | Posts       | News articles, listed at `/posts` with detail pages                        |
 | Events      | Events, listed at `/events` with detail pages                              |
 | FAQ         | Questions and answers by category, shown at `/faq`                         |
-| Resources   | Links and contacts by category, shown at `/resources`                      |
+| Resources   | Links and contacts by category, shown at `/resources/<group>`              |
 | TeamMembers | People and their roles; the `email` field is staff-only                    |
 | Categories  | Post categories                                                            |
 | Media       | Uploads in `public/media`, with size variants and a focal point            |
