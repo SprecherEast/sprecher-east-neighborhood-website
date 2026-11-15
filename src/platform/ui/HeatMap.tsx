@@ -59,12 +59,15 @@ export type HeatMapProps = {
 }
 
 /**
- * The caption and a Less-to-More key built from the same shades as the squares. The key stays whole and moves under the caption
- * when the two don't fit side by side. The swatches are decoration: `label` already lists every value.
+ * The caption and a Less-to-More key built from the same shades as the squares. The key stays
+ * whole and moves under the caption when the two don't fit side by side. On the calendar it sits in
+ * the same grid as the rows, in the columns of the squares, so the caption starts at the first
+ * square and the key ends at the last. The swatches are decoration: `label` already lists every
+ * value.
  */
 function HeatKey({ caption }: { caption: string }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-1 text-sm text-foreground">
+    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-2 text-base text-foreground">
       <span>{caption}</span>
       <span className="flex shrink-0 items-center gap-1">
         <span>Less</span>
@@ -73,7 +76,7 @@ function HeatKey({ caption }: { caption: string }) {
             key={shade}
             aria-hidden="true"
             data-heat-key-swatch=""
-            className={cn('size-4 rounded-sm', shade)}
+            className={cn('size-4.5 rounded-sm', shade)}
           />
         ))}
         <span>More</span>
@@ -210,7 +213,14 @@ export function HeatMap({
             </div>
           )
         })}
-        {caption && <HeatKey caption={caption} />}
+        {caption && (
+          <div data-heat-key-row="" className={CALENDAR_ROW}>
+            <span />
+            <div className="col-span-7">
+              <HeatKey caption={caption} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
