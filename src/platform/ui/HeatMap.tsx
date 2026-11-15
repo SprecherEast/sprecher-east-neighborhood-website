@@ -59,15 +59,16 @@ export type HeatMapProps = {
 }
 
 /**
- * The caption and a Less-to-More key built from the same shades as the squares. The key stays
- * whole and moves under the caption when the two don't fit side by side. On the calendar it sits in
+ * The caption and a Less-to-More key built from the same shades as the squares. The text steps
+ * down on the narrowest phones and up from tablet widths so the two share one line; only below
+ * that does the whole key move under the caption. On the calendar it sits in
  * the same grid as the rows, in the columns of the squares, so the caption starts at the first
  * square and the key ends at the last. The swatches are decoration: `label` already lists every
  * value.
  */
 function HeatKey({ caption }: { caption: string }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-2 text-base text-foreground">
+    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-2 text-sm text-foreground max-[374px]:text-xs sm:text-base">
       <span>{caption}</span>
       <span className="flex shrink-0 items-center gap-1">
         <span>Less</span>
@@ -76,7 +77,7 @@ function HeatKey({ caption }: { caption: string }) {
             key={shade}
             aria-hidden="true"
             data-heat-key-swatch=""
-            className={cn('size-4.5 rounded-sm', shade)}
+            className={cn('size-3.5 rounded-sm sm:size-4.5', shade)}
           />
         ))}
         <span>More</span>
@@ -90,6 +91,8 @@ const SQUARE = 'block h-7 w-full rounded-md sm:h-8'
 /** Pressable squares are a size larger, the most seven columns and their dates fit in 320 px */
 const PRESSABLE_SQUARE = 'block h-11 w-full rounded-md sm:h-10'
 /** A calendar row: the Monday's date, then seven squares. The first column's width is set here alone */
+/** Space on the right of the whole calendar: half the date column and its gap, so the squares sit evenly beside the dates */
+const CALENDAR_INSET = 'pr-4'
 const CALENDAR_ROW = 'grid grid-cols-[1.75rem_repeat(7,1fr)] items-center gap-1 sm:gap-1.5'
 
 /** The date of the Monday of the week a `yyyy-mm-dd` day falls in, as a day of its month */
@@ -170,7 +173,10 @@ export function HeatMap({
     <div {...wrapper(label, selection)} className={cn('w-full', className)}>
       <div
         aria-hidden={selection ? undefined : 'true'}
-        className="w-full space-y-1 text-xs text-muted-foreground sm:space-y-1.5"
+        className={cn(
+          'w-full space-y-1 text-xs text-muted-foreground sm:space-y-1.5',
+          CALENDAR_INSET,
+        )}
       >
         <div aria-hidden="true" className={CALENDAR_ROW}>
           <span />
