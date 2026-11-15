@@ -95,7 +95,7 @@ How to use them:
 
 ### Buttons
 
-- Primary: `bg-primary text-white` with hover darkening
+- Primary: `bg-primary-fill text-primary-foreground`, `hover:bg-primary-fill-hover`
 - Secondary: `border-primary text-primary` with hover fill
 - Consistent padding, border-radius, font-weight across all buttons
 - Never mix button styles on the same page without clear hierarchy reason
