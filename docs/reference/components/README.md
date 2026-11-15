@@ -13,7 +13,7 @@
 | [Sections and page headers](sections.md)   | `PageHeader`, `EmptyState`, `SidebarCTA`, `Disclosure`, `DisclosureSummary`, `Tabs`                                                                                       |
 | [Media](media.md)                          | `Media`, `ImageMedia`, `VideoMedia`, `MapEmbed`, `Figure`                                                                                                                 |
 | [Feedback and overlays](feedback.md)       | `Alert`, `Dismissible`, `Toast`, `Dialog`, `RouteDialog`, `Zoom`                                                                                                          |
-| [Navigation and page tools](navigation.md) | `Breadcrumbs`, `OnThisPage`, `LoadMoreFooter`, `PeriodNav`, `JumpLinks`, `AdminBar`, `LivePreviewListener`, `VersionCheck`                                                |
+| [Navigation and page tools](navigation.md) | `Breadcrumbs`, `OnThisPage`, `LoadMoreFooter`, `PeriodNav`, `RelatedLinks`, `AdminBar`, `LivePreviewListener`, `VersionCheck`                                             |
 | [Layout and page structure](layout.md)     | `Section`, `PageBackdrop`, `BandBackdrop`, `ArticlePage`, `DetailLayout`, `JsonLd`                                                                                        |
 | [Charts](charts.md)                        | `Chart`, `ChartDataTable`, `ChartZoom`, `SquareGrid`, `TileGrid`, `BreakdownChart`, `Amount`, `BarChartSvg`, `BarSegment`, `ScaledBreakdown`, `ChartCaption`, `AreaChart` |
 | [Activity maps](activity-maps.md)          | `HeatMap`, `HeatCell`                                                                                                                                                     |

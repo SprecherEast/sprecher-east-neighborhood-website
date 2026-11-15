@@ -23,7 +23,7 @@ import { HeadersGallery } from './HeadersGallery'
 import { InteractiveGallery } from './InteractiveGallery.client'
 import { isGalleryEnabled } from './isGalleryEnabled'
 import { DismissAndZoomGallery } from './DismissAndZoomGallery'
-import { JumpLinksGallery } from './JumpLinksGallery'
+import { RelatedLinksGallery } from './RelatedLinksGallery'
 import { LayoutGallery } from './LayoutGallery'
 import { RichTextGallery } from './RichTextGallery'
 import { PeriodNavGallery } from './PeriodNavGallery.client'
@@ -75,7 +75,7 @@ export default function GalleryPage() {
         <AreaChartGallery />
         <HeatMapGallery />
         <PeriodNavGallery />
-        <JumpLinksGallery />
+        <RelatedLinksGallery />
         <TabsGallery />
         <HeadersGallery />
         <LayoutGallery />

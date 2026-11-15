@@ -117,6 +117,7 @@ for (const [title, category] of [
   ['Sample safety line', 'public-safety'],
   ['Sample tenant help', 'renting'],
   ['Sample park', 'parks'],
+  ['Sample childcare', 'childcare'],
 ] as const) {
   await payload.create({
     collection: 'resources',
