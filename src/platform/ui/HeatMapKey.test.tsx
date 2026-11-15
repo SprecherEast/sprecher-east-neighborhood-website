@@ -56,17 +56,31 @@ describe('HeatMap caption and key', () => {
     expect(screen.getByText('Less').parentElement?.className).toContain('shrink-0')
   })
 
-  it('reads at a comfortable size on a phone: larger text in the full text colour, with room above (#1233, #1240)', () => {
+  it('keeps the caption and key on one line by stepping the text down on small phones and up on tablets (#1243)', () => {
     const { container } = render(<HeatMap {...props} caption="Work done per day" />)
     const row = screen.getByText('Work done per day').parentElement as HTMLElement
-    expect(row.className).toContain('text-base')
-    expect(row.className).not.toMatch(/text-(xs|sm)/)
-    expect(row.className).toContain('pt-2')
-    expect(row.className).not.toContain('pt-1')
+    expect(row.className).toContain('text-sm')
+    expect(row.className).toContain('max-[374px]:text-xs')
+    expect(row.className).toContain('sm:text-base')
     expect(row.className).toContain('text-foreground')
     expect(row.className).not.toContain('text-muted-foreground')
-    for (const swatch of container.querySelectorAll('[data-heat-key-swatch]'))
-      expect(swatch.className).toContain('size-4.5')
+    expect(row.className).toContain('pt-2')
+    for (const swatch of container.querySelectorAll('[data-heat-key-swatch]')) {
+      expect(swatch.className).toContain('size-3.5')
+      expect(swatch.className).toContain('sm:size-4.5')
+    }
+  })
+
+  it('insets the whole calendar on the right, rows, letters, caption and key together, so the squares sit evenly beside the date column (#1243)', () => {
+    const { container } = render(<HeatMap {...props} caption="Work done per day" />)
+    const inner = (container.querySelector('[data-heat-row]') as HTMLElement).parentElement
+    expect(inner?.className).toContain('pr-4')
+    expect(inner?.contains(container.querySelector('[data-heat-key-row]'))).toBe(true)
+  })
+
+  it('leaves the week strip without the inset, since it has no date column (#1243)', () => {
+    const { container } = render(<HeatMap {...props} variant="week" caption="Work done per day" />)
+    expect(container.innerHTML).not.toContain('pr-4')
   })
 
   it('lines the calendar caption up with the first square and the key with the last, by sitting in the same grid as the rows (#1240)', () => {
