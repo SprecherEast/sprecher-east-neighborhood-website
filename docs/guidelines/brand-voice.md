@@ -30,49 +30,33 @@ what they say, without telling you what to think.
 - **We never borrow someone else's action.** The City decided it, not "we". We reported a broken
   streetlight only if someone actually did.
 - **We don't speak for every neighbor.** "Many of us walk Door Creek Park", not "we all love it".
-
-## Kind when we ask
-
-When we ask a neighbor to do something for us or for the neighborhood, we ask the way a good
-neighbor would: in polite wording, as an invitation, never as a bare order. Step-by-step
-directions (how to use a form or find a page) stay plain and exact; the kindness is in how we ask,
-not in extra words, so it stays inside the length budget.
+- **We ask kindly.** When we ask a neighbor to do something for us or the neighborhood, it is a
+  polite invitation, never a bare order. Directions (how to use a form or find a page) stay plain.
 
 ## Before you write: the brief
 
-Nothing is written or rewritten for a page, post or message until a short brief says what it is
-for. Four answers, a few lines in all:
+A page, post or message is written or rewritten from a short brief: its purpose, its audience, the
+one next step we want the reader to take, and its tone from the tone map below. Each page's brief
+is one short file in [`docs/product/briefs/`](../product/briefs/README.md), which has the template.
 
-1. **Purpose.** What is this for, in one sentence?
-2. **Audience.** Who reads it, and what do they want from it?
-3. **The next step.** The one thing we want them to do after reading.
-4. **Tone.** How it should sound while it steers them, from the tone map below.
-
-Every sentence then helps the reader get what they want or take that step; a sentence that does
-neither is cut. A page's brief is one short file in [`docs/product/briefs/`](../product/briefs/README.md),
-so the next writer, person or AI agent, starts from it instead of guessing. A rewrite starts by
-reading the brief and fixing it first if the page's job has changed. The owner asked for this
-(2026-11-11, voice session, recorded on #1103).
+Every sentence helps the reader get what they want or take that step; one that does neither is
+cut. A rewrite starts by reading the brief, and fixes it first if the page's job has changed.
 
 ## Length budget
 
-| Piece                               | Limit                                                                                                                                                                                                                                                                                           |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Headline                            | The title is never over 60 characters: publishing refuses more. Says the news, not a teaser.                                                                                                                                                                                                    |
-| Lead (first sentence)               | 25 words max. Answers "what is it, and what do I do?"                                                                                                                                                                                                                                           |
-| Card summary                        | 1 or 2 sentences, under 160 characters, no links.                                                                                                                                                                                                                                               |
-| Site message (form, error, success) | 1 or 2 sentences, 20 words ideally, 30 max.                                                                                                                                                                                                                                                     |
-| Email                               | Subject under 50 characters. Body under 120 words, one link to act.                                                                                                                                                                                                                             |
-| Event                               | The page shows what a neighbor needs on one screen without scrolling (1080p, 100% zoom): the body you write is short enough to sit beside the header and facts panel. If the layout leaves too little room, shorten the body or fix the layout. Need more? Link to a post or the official page. |
-| News post                           | Fits on one screen at 1080p and 100% zoom, with its picture. Longer? Make it an explainer.                                                                                                                                                                                                      |
-| Explainer                           | One idea per screen, each with its picture. The page may scroll; no single idea runs longer than a screen.                                                                                                                                                                                      |
-| Sentence                            | Average 15 words; split anything over 25.                                                                                                                                                                                                                                                       |
+| Piece                               | Limit                                                                                                                                                                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Headline                            | The title is never over 60 characters: publishing refuses more. Says the news, not a teaser.                                                                                                                                    |
+| Lead (first sentence)               | 25 words max. Answers "what is it, and what do I do?"                                                                                                                                                                           |
+| Card summary                        | 1 or 2 sentences, under 160 characters, no links.                                                                                                                                                                               |
+| Site message (form, error, success) | 1 or 2 sentences, 20 words ideally, 30 max.                                                                                                                                                                                     |
+| Email                               | Subject under 50 characters. Body under 120 words, one link to act.                                                                                                                                                             |
+| Event                               | What a neighbor needs fits on one screen without scrolling (1080p, 100% zoom), the body beside the header and facts panel. Too little room? Shorten the body or fix the layout. Need more? Link to a post or the official page. |
+| News post                           | Fits on one screen at 1080p and 100% zoom, with its picture. Longer? Make it an explainer.                                                                                                                                      |
+| Explainer                           | One idea per screen, each with its picture. The page may scroll; no single idea runs longer than a screen.                                                                                                                      |
+| Sentence                            | Average 15 words; split anything over 25.                                                                                                                                                                                       |
 
-The drafting prompt (`intelligence/prompts/draft.md`) and its schema carry a copy of the event and news rule because the pipeline doesn't load this file. Change them together. The owner chose the screen rule in place of word counts (2026-11-03, voice call with Claude, recorded on #535).
-
-**Say it once.** A title, label or picture that already says it needs no sentence repeating it.
-What a list, a card or a chart shows needs no intro. Say the thing once, in one short sentence, or
-leave it out.
+The drafting prompt (`intelligence/prompts/draft.md`) and its schema carry a copy of the event and news rule because the pipeline doesn't load this file. Change them together.
 
 Over budget? Cut words before facts. If the facts don't fit, split the piece.
 
