@@ -3,4 +3,4 @@
 // are in cms.ts.
 export type { FaqCategory, ResourceCategory } from './domain/categories'
 export { RESOURCE_SECTION_NOTES } from './domain/categories'
-export { toFaqSections, toResourceSections } from './domain/sections'
+export { toFaqSections, toResourceGroups } from './domain/sections'

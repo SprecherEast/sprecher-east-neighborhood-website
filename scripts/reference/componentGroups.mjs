@@ -96,6 +96,7 @@ export const COMPONENT_GROUPS = [
       'OnThisPage',
       'LoadMoreFooter',
       'PeriodNav',
+      'JumpLinks',
       'AdminBar',
       'LivePreviewListener',
       'VersionCheck',

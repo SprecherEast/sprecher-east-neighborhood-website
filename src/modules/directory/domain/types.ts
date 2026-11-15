@@ -46,3 +46,10 @@ export type CategorySection<Category extends string, Item> = {
   label: string
   items: Item[]
 }
+
+/** The resources page's groups: a heading over the category sections that belong together. */
+export type ResourceGroup<Category extends string, Item> = {
+  id: string
+  label: string
+  sections: CategorySection<Category, Item>[]
+}
