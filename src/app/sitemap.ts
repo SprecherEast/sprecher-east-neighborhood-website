@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { unstable_cache } from 'next/cache'
 
 import { ACCOUNT_PAGE_PATHS } from '@/modules/accounts'
+import { RESOURCE_GROUPS, resourceGroupHref } from '@/modules/directory'
 import { EVENTS_SITEMAP_CACHE_TAG } from '@/modules/events'
 import { listEventSlugs } from '@/modules/events/server'
 import { POSTS_SITEMAP_CACHE_TAG } from '@/modules/news'
@@ -24,7 +25,13 @@ const LIST_REFRESH_SECONDS = 600
 type Entry = { path: string; lastModified: string }
 
 // The listing pages, which aren't CMS pages, lead the sitemap
-const LISTING_PATHS = ['/search', '/posts', '/events', '/faq', '/resources']
+const LISTING_PATHS = [
+  '/search',
+  '/posts',
+  '/events',
+  '/faq',
+  ...RESOURCE_GROUPS.map(({ id }) => resourceGroupHref(id)),
+]
 
 // Pages that ask not to be indexed (#280). Their routes win over a CMS page with the same slug,
 // so such a page could only ever list the route here: it's left out

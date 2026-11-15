@@ -164,7 +164,7 @@ Components: [navigation and page tools](../reference/components/navigation.md).
 
 **`PeriodNav`** (#1218) is a title between two icon buttons that step to the period before and the one after it, such as the month a calendar shows. It holds no state: the caller gives the title, what each button is called for screen readers (`previousLabel`, `nextLabel`), what a press does, and which direction cannot go on (`previousDisabled`, `nextDisabled`). The title is announced politely when it changes. Its test covers the labels, the handlers, the disabled states, the announcement and axe; the gallery shows it.
 
-**`JumpLinks`** (#1236) is a row of links that jump to sections further down the same page, such as the groups of the resources page. Each is a `Link` of the `nav` variant to `#id`, so it works without scripting; the section's heading carries the id and `SECTION_SCROLL_MARGIN`. They wrap onto more lines rather than scrolling sideways, and nothing shows when there are no items. Its test covers the order, the targets, the list and axe; the gallery shows it.
+**`RelatedLinks`** (#1245) is a titled list of links to related pages, for a page's related content in `DetailLayout`'s `aside`: under the content on a phone, in the rail from `lg`. Each link is a `Link` of the `nav` variant, a tap tall, and nothing shows when there are no items. Its test covers the order, the targets, the heading, the list and axe; the gallery shows it.
 
 ## Layout
 

@@ -160,7 +160,7 @@ Source: `src/platform/ui/Text.tsx`
 **Used by** (direct imports):
 
 - Modules: `directory`, `events`, `news`, `roadmap`, `site`
-- Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/resources`
+- Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/resources/[group]`
 - Platform: `platform/richtext`, `platform/ui`
 
 ## `Caption`

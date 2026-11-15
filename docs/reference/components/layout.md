@@ -91,7 +91,7 @@ Source: `src/platform/ui/DetailLayout.tsx`
 
 **Used by** (direct imports):
 
-- Routes: `/dev/gallery`
+- Routes: `/dev/gallery`, `/resources/[group]`
 - Platform: `platform/ui`
 
 ## `JsonLd`

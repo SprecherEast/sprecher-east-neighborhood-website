@@ -77,21 +77,21 @@ Source: `src/platform/ui/PeriodNav.tsx`
 - Modules: `roadmap`
 - Routes: `/dev/gallery`
 
-## `JumpLinks`
+## `RelatedLinks`
 
-A row of links that jump to sections further down the same page, such as the groups of the resources page. They are plain `#id` links, so they work without scripting; the section's heading carries the id and `SECTION_SCROLL_MARGIN` so the sticky header does not cover it. The links wrap onto more lines instead of scrolling sideways. Shows nothing without items.
+A titled list of links to related pages, for the related content of a page (`DetailLayout`'s `aside`): under the content on a phone, in the rail beside it from `lg`. Each link is a tap tall. Shows nothing without items.
 
-Source: `src/platform/ui/JumpLinks.tsx`
+Source: `src/platform/ui/RelatedLinks.tsx`
 
-| Prop        | Type                  | Required | Description                                |
-| ----------- | --------------------- | -------- | ------------------------------------------ |
-| `label`     | `string`              | yes      | What the navigation is, for screen readers |
-| `items`     | `readonly JumpLink[]` | yes      |                                            |
-| `className` | `string`              | no       |                                            |
+| Prop        | Type                     | Required | Description |
+| ----------- | ------------------------ | -------- | ----------- |
+| `title`     | `string`                 | yes      |             |
+| `items`     | `readonly RelatedLink[]` | yes      |             |
+| `className` | `string`                 | no       |             |
 
 **Used by** (direct imports):
 
-- Routes: `/dev/gallery`, `/resources`
+- Routes: `/dev/gallery`, `/resources/[group]`
 
 ## `AdminBar`
 

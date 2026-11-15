@@ -25,18 +25,18 @@ plus a `team-members` collection no page reads yet. Fields, access and hooks:
 
 ## Screens
 
-| Screen    | Route        | Data comes from                                                                              |
-| --------- | ------------ | -------------------------------------------------------------------------------------------- |
-| FAQ       | `/faq`       | `faq` (`findFaqEntries`); title and intro are hardcoded in `src/app/(frontend)/faq/page.tsx` |
-| Resources | `/resources` | `resources` (`findResources`); title and intro are hardcoded in `.../resources/page.tsx`     |
+| Screen    | Route                | Data comes from                                                                                  |
+| --------- | -------------------- | ------------------------------------------------------------------------------------------------ |
+| FAQ       | `/faq`               | `faq` (`findFaqEntries`); title and intro are hardcoded in `src/app/(frontend)/faq/page.tsx`     |
+| Resources | `/resources/<group>` | `resources` (`findResources`); title and intro are hardcoded in `.../resources/[group]/page.tsx` |
 
 ## Behaviors and events
 
 - Both pages list every published entry (up to 200), grouped by category in the list's order, keeping `order` within each group; categories with no entries are left out. An entry with no category, or one no longer on the list, goes under General (FAQ) or Other (resources) (`domain/sections.ts`, `data/queries.ts`).
-- The resources page is organised into groups: Neighborhood utilities, Government, Safety and health, Housing and neighborhood, then Other. `RESOURCE_GROUPS` says which categories each holds (every category is in exactly one) and `toResourceGroups` builds them, leaving out empty groups. A group's heading is the anchor of a jump link in the row under the page header (`JumpLinks`); a group with several categories shows each category's name under it, a group with one does not repeat it (`domain/groups.ts`, `domain/sections.ts`, `resources/page.tsx`, #1236).
-- Any save or delete of an entry refreshes that collection's one page and its cache tag, drafts included; the page shows only published entries (`cms/revalidateListPage.ts`). Both pages are static and re-render every 10 minutes anyway (`revalidate = 600` in each `page.tsx`).
+- Resources sit in five groups, each its own page at `/resources/<group>` (utilities, government, safety and health, housing and renting, community and family). `RESOURCE_GROUPS` holds the categories of each (every one in exactly one; Other and unlisted ones are in Community and family); a group with no resources still has its page, with a short "being added" message. A group with several categories names each under its heading. Each page ends with related links to the other groups, an unknown address is not found, and `/resources` redirects for good to the first group; the sitemap lists each group page (`app/sitemap.ts`, `domain/groups.ts`, `resources/[group]/page.tsx`, `redirects.js`, #1245).
+- Any save or delete of an entry refreshes that collection's page (every group page for resources) and its cache tag, drafts included; the pages show only published entries (`cms/revalidateListPage.ts`). The pages are static and re-render every 10 minutes anyway (`revalidate = 600` in each `page.tsx`).
 - Resource links (`url`, each extra link, the photo source) must start with `http://` or `https://`; up to three more links, each with a required label and URL. The card also drops any link that fails the check (`domain/resourceUrl.ts`, `cms/resources.ts`, `ui/ResourceCard.tsx`).
-- A note shows under some section headings so photos don't read as an endorsement: today the Elected Officials one (`RESOURCE_SECTION_NOTES`, #393; rendered in `resources/page.tsx`).
+- A note shows under some section headings so photos don't read as an endorsement: today the Elected Officials one (`RESOURCE_SECTION_NOTES`, #393; rendered in `resources/[group]/page.tsx`).
 - FAQ entries are cards that open without JavaScript (`ui/FaqList.tsx` through the kit's `Disclosure`), and the page emits schema.org `FAQPage` data of every question (`ui/faqJsonLd.ts`).
 - Team members: stored with `order`, `status` and `photo`, but no page or query reads them (see Known gaps). Their email is readable by staff only, so the public API omits it (`cms/teamMembers.ts`, #140).
 - `publishedAt` is filled in on save when the request leaves it empty (`populatePublishedAt` in `cms/faq.ts`, `cms/resources.ts`).

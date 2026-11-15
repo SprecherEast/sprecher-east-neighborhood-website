@@ -24,7 +24,7 @@ Source: `src/platform/ui/PageHeader.tsx`
 **Used by** (direct imports):
 
 - Modules: `events`
-- Routes: `/account`, `/confirm-email`, `/dev/gallery`, `/events`, `/faq`, `/forgot-password`, `/login`, `/posts`, `/posts/page/[pageNumber]`, `/reset-password`, `/resources`, `/roadmap`, `/roadmap/[number]`, `/roadmap/missions/[number]`, `/search`, `/sign-up`, `/verify-account`
+- Routes: `/account`, `/confirm-email`, `/dev/gallery`, `/events`, `/faq`, `/forgot-password`, `/login`, `/posts`, `/posts/page/[pageNumber]`, `/reset-password`, `/resources/[group]`, `/roadmap`, `/roadmap/[number]`, `/roadmap/missions/[number]`, `/search`, `/sign-up`, `/verify-account`
 - Platform: `platform/ui`
 
 ## `EmptyState`
@@ -45,7 +45,7 @@ Source: `src/platform/ui/EmptyState.tsx`
 **Used by** (direct imports):
 
 - Modules: `events`, `news`, `roadmap`
-- Routes: `/`, `/dev/gallery`, `/faq`, `/resources`, `/search`
+- Routes: `/`, `/dev/gallery`, `/faq`, `/resources/[group]`, `/search`
 - Elsewhere: `src/app/global-error.tsx`
 
 ## `SidebarCTA`

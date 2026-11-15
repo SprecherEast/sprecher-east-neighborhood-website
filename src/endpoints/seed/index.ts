@@ -393,7 +393,7 @@ export const seed = async ({
             link: {
               type: 'custom',
               label: 'Resources',
-              url: '/resources',
+              url: '/resources/utilities',
             },
           },
           {
