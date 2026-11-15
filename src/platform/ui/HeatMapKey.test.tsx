@@ -56,15 +56,34 @@ describe('HeatMap caption and key', () => {
     expect(screen.getByText('Less').parentElement?.className).toContain('shrink-0')
   })
 
-  it('reads at a comfortable size on a phone: body-size text in the full text colour, swatches a step larger (#1233)', () => {
+  it('reads at a comfortable size on a phone: larger text in the full text colour, with room above (#1233, #1240)', () => {
     const { container } = render(<HeatMap {...props} caption="Work done per day" />)
     const row = screen.getByText('Work done per day').parentElement as HTMLElement
-    expect(row.className).toContain('text-sm')
-    expect(row.className).not.toContain('text-xs')
+    expect(row.className).toContain('text-base')
+    expect(row.className).not.toMatch(/text-(xs|sm)/)
+    expect(row.className).toContain('pt-2')
+    expect(row.className).not.toContain('pt-1')
     expect(row.className).toContain('text-foreground')
     expect(row.className).not.toContain('text-muted-foreground')
     for (const swatch of container.querySelectorAll('[data-heat-key-swatch]'))
-      expect(swatch.className).toContain('size-4')
+      expect(swatch.className).toContain('size-4.5')
+  })
+
+  it('lines the calendar caption up with the first square and the key with the last, by sitting in the same grid as the rows (#1240)', () => {
+    const { container } = render(<HeatMap {...props} caption="Work done per day" />)
+    const keyRow = container.querySelector('[data-heat-key-row]') as HTMLElement
+    const dateRow = container.querySelector('[data-heat-row]') as HTMLElement
+    expect(keyRow.className).toBe(dateRow.className)
+    expect(keyRow.children).toHaveLength(2)
+    expect(keyRow.children[0].textContent).toBe('')
+    expect(keyRow.children[1].className).toContain('col-span-7')
+    expect(keyRow.children[1].contains(screen.getByText('Work done per day'))).toBe(true)
+  })
+
+  it('lets the week strip key span the full width, since it has no date column (#1240)', () => {
+    const { container } = render(<HeatMap {...props} variant="week" caption="Work done per day" />)
+    expect(container.querySelector('[data-heat-key-row]')).toBeNull()
+    expect(screen.getByText('Work done per day')).toBeTruthy()
   })
 
   it('fills the width of its box, so the squares stretch with the graphs above', () => {
