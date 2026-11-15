@@ -23,8 +23,28 @@ const forumUrlField: Field = {
 }
 
 /**
- * The header's or the footer's global: up to six links, each a page or a custom URL. The footer
- * also keeps the forum's address.
+ * More links under a header item: they show as a submenu that opens when the item is pressed, and
+ * the item's own link then only names it (#1237).
+ */
+const subItemsField: Field = {
+  name: 'subItems',
+  type: 'array',
+  label: 'Submenu links',
+  maxRows: 8,
+  fields: [link({ appearances: false })],
+  admin: {
+    initCollapsed: true,
+    description:
+      'Optional. With links here the item opens a menu of them when pressed, and its own link is not followed.',
+    components: {
+      RowLabel: '@/modules/site/cms/NavItemRowLabel.client#NavItemRowLabel',
+    },
+  },
+}
+
+/**
+ * The header's or the footer's global: up to six links, each a page or a custom URL. The header's
+ * links can open a submenu. The footer also keeps the forum's address.
  */
 const navGlobal = (slug: 'header' | 'footer', extraFields: Field[] = []): GlobalConfig => ({
   slug,
@@ -41,6 +61,7 @@ const navGlobal = (slug: 'header' | 'footer', extraFields: Field[] = []): Global
         link({
           appearances: false,
         }),
+        ...(slug === 'header' ? [subItemsField] : []),
       ],
       maxRows: 6,
       admin: {

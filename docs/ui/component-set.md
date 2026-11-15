@@ -164,6 +164,8 @@ Components: [navigation and page tools](../reference/components/navigation.md).
 
 **`PeriodNav`** (#1218) is a title between two icon buttons that step to the period before and the one after it, such as the month a calendar shows. It holds no state: the caller gives the title, what each button is called for screen readers (`previousLabel`, `nextLabel`), what a press does, and which direction cannot go on (`previousDisabled`, `nextDisabled`). The title is announced politely when it changes. Its test covers the labels, the handlers, the disabled states, the announcement and axe; the gallery shows it.
 
+**`NavMenu`** (#1237) is a header item that opens a menu of links when pressed, never on hover. `dropdown` is a panel under the label on a wide screen; `stacked` is an accordion inside the mobile menu. It closes on Escape (focus returns to the label), a press elsewhere, focus leaving and a link. Built on a native `details`, so it works without scripts for opening. Its test covers opening, each way of closing, the current link and axe; the gallery shows both layouts.
+
 **`RelatedLinks`** (#1245) is a titled list of links to related pages, for a page's related content in `DetailLayout`'s `aside`: under the content on a phone, in the rail from `lg`. Each link is a `Link` of the `nav` variant, a tap tall, and nothing shows when there are no items. Its test covers the order, the targets, the heading, the list and axe; the gallery shows it.
 
 ## Layout

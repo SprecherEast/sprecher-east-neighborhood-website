@@ -22,6 +22,7 @@ import { post1 } from './post-1'
 import { post2 } from './post-2'
 import { post3 } from './post-3'
 import { faqItems } from './data/faq'
+import { RESOURCE_GROUPS, resourceGroupHref } from '@/modules/directory'
 import { resourceItems } from './data/resources'
 import { seedCategories } from './data/categories'
 import { eventItems } from './data/events'
@@ -393,8 +394,12 @@ export const seed = async ({
             link: {
               type: 'custom',
               label: 'Resources',
-              url: '/resources/utilities',
+              url: resourceGroupHref(RESOURCE_GROUPS[0].id),
             },
+            // The submenu: one link per group, from the same list the pages use
+            subItems: RESOURCE_GROUPS.map(({ id, label }) => ({
+              link: { type: 'custom' as const, label, url: resourceGroupHref(id) },
+            })),
           },
           {
             link: {

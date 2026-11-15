@@ -77,6 +77,25 @@ Source: `src/platform/ui/PeriodNav.tsx`
 - Modules: `roadmap`
 - Routes: `/dev/gallery`
 
+## `NavMenu`
+
+A menu item of the header that opens to more links when pressed, never on hover (#1237). It is a native `<details>`: the label is its button, so it opens and closes with Enter and Space and tells assistive tech which it is. Pressing outside it, pressing Escape (focus returns to the label), moving focus out of it and following a link all close it. `dropdown` is the desktop bar's: the links sit in a panel under the label. `stacked` is the mobile menu's: a full-width row that opens to an indented list, an accordion.
+
+Source: `src/platform/ui/NavMenu.client.tsx`
+
+| Prop         | Type                      | Required | Description                                                                              |
+| ------------ | ------------------------- | -------- | ---------------------------------------------------------------------------------------- |
+| `label`      | `string`                  | yes      |                                                                                          |
+| `items`      | `readonly NavMenuItem[]`  | yes      |                                                                                          |
+| `layout`     | `"stacked" \| "dropdown"` | no       |                                                                                          |
+| `onNavigate` | `() => void`              | no       | Called when one of the links is followed, for example to close the mobile menu around it |
+| `className`  | `string`                  | no       |                                                                                          |
+
+**Used by** (direct imports):
+
+- Modules: `site`
+- Routes: `/dev/gallery`
+
 ## `RelatedLinks`
 
 A titled list of links to related pages, for the related content of a page (`DetailLayout`'s `aside`): under the content on a phone, in the rail beside it from `lg`. Each link is a tap tall. Shows nothing without items.

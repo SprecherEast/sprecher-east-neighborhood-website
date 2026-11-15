@@ -122,6 +122,27 @@
 }
 
 /*
+ * `nav-menu-slide` (#1237): the header's submenu slides down a few pixels as it fades in when it
+ * opens. Only where the reader allows motion; otherwise it just appears.
+ */
+@keyframes nav-menu-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility nav-menu-slide {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: nav-menu-slide 0.18s ease-out;
+  }
+}
+
+/*
  * `chart-reveal` (#639): a chart's grid wipes in from the left as it scrolls into view. Only where
  * the reader allows motion and the browser supports scroll-driven animation; on screen only, because
  * a printed page never scrolls. Everywhere else, and before and after the wipe, the grid is drawn in

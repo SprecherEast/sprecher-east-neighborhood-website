@@ -224,9 +224,23 @@ export function toPageHeroProps({
  * the ones that go nowhere and the Contact page (the header has its own button) left out.
  */
 export function toHeaderNavLinks({ navItems }: Pick<Header, 'navItems'>): HeaderNavLink[] {
-  return (navItems ?? []).flatMap(({ link }) => {
+  return (navItems ?? []).flatMap(({ link, subItems }) => {
     const resolved = resolveLink(link)
     if (!resolved || isHeaderButtonPath(resolved.href)) return []
-    return [{ href: resolved.href, label: resolved.label, external: resolved.external }]
+
+    const children = (subItems ?? []).flatMap(({ link: subLink }) => {
+      const child = resolveLink(subLink)
+      return child ? [{ href: child.href, label: child.label, external: child.external }] : []
+    })
+
+    return [
+      {
+        href: resolved.href,
+        label: resolved.label,
+        external: resolved.external,
+        // With no usable submenu link the item stays a plain link
+        ...(children.length > 0 && { children }),
+      },
+    ]
   })
 }
