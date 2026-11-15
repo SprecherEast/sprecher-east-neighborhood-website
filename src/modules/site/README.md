@@ -9,6 +9,7 @@ footer, forum link and redirects have their own note, [navigation](navigation/RE
 
 - The hero's `type` picks the look: `highImpact`, `mediumImpact` or `lowImpact` become `high`, `medium` or `low`; `none` draws nothing (`data/mappers.ts`, `domain/hero.ts`).
 - Only the high hero splits its rich text: the first heading is the title (the page's `h1`), the rest is the description on the photo (`ui/PageHero.tsx`, `src/platform/richtext/splitHeadingFromBody.ts`). Medium and low draw the whole rich text as written.
+- The header's nav items map to links in `toHeaderNavLinks` (`data/mappers.ts`); an item's submenu links become its `children`, and the site navigation note describes how they open (#1237).
 - A content block's layout comes from its columns' `size` values, not from a field (`toContentLayout` in `data/mappers.ts`): one column, or only `full` ones, is `single`; four columns with none `full` is `stats`; two columns that are not both `half` is `columns`; anything else is `cards`.
 - In `cards`, a column holding only headings and no link starts a card group and becomes its title; cards before any title form an untitled group (`data/mappers.ts`, `domain/blocks.ts`).
 - The archive block stores `populateBy`, `categories`, `limit` and `selectedDocs`; the mapper copies them into `postQuery` beside its `id` and intro, and the block registry hands `postQuery` to news, which loads the posts (`data/mappers.ts`, `src/app/(frontend)/[slug]/pageBlocks.tsx`, `src/modules/news/use-cases/findArchivePosts.ts`).

@@ -94,7 +94,7 @@ export function NavMenu({
         )}
       >
         {items.map(({ href, label: text, external, current }) => (
-          <li key={href}>
+          <li key={`${href}|${text}`}>
             <Link
               href={href}
               external={external}
