@@ -27,6 +27,7 @@ import * as migration_20261107_042752_page_backdrop from './20261107_042752_page
 import * as migration_20261108_032245_section_block from './20261108_032245_section_block'
 import * as migration_20261109_204957_link_align from './20261109_204957_link_align'
 import * as migration_20261111_061547_band_backdrop from './20261111_061547_band_backdrop'
+import * as migration_20261115_034936_header_submenu from './20261115_034936_header_submenu'
 
 export const migrations = [
   {
@@ -173,5 +174,10 @@ export const migrations = [
     up: migration_20261111_061547_band_backdrop.up,
     down: migration_20261111_061547_band_backdrop.down,
     name: '20261111_061547_band_backdrop',
+  },
+  {
+    up: migration_20261115_034936_header_submenu.up,
+    down: migration_20261115_034936_header_submenu.down,
+    name: '20261115_034936_header_submenu',
   },
 ]

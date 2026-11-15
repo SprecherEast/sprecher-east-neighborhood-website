@@ -21,22 +21,32 @@
 
 ## Fields
 
-| Field                       | Type         | Required | Target or options | Notes               |
-| --------------------------- | ------------ | -------- | ----------------- | ------------------- |
-| `navItems`                  | array        | no       |                   | max rows 6          |
-| `navItems[].link`           | group        | no       |                   |                     |
-| `navItems[].link.type`      | radio        | no       | reference, custom | default reference   |
-| `navItems[].link.newTab`    | checkbox     | no       |                   |                     |
-| `navItems[].link.reference` | relationship | yes      | → pages, posts    | shown conditionally |
-| `navItems[].link.url`       | text         | yes      |                   | shown conditionally |
-| `navItems[].link.label`     | text         | yes      |                   |                     |
-| `navItems[].id`             | text         | no       |                   | hidden              |
-| `updatedAt`                 | date         | no       |                   | hidden              |
-| `createdAt`                 | date         | no       |                   | hidden              |
+| Field                                  | Type         | Required | Target or options | Notes               |
+| -------------------------------------- | ------------ | -------- | ----------------- | ------------------- |
+| `navItems`                             | array        | no       |                   | max rows 6          |
+| `navItems[].link`                      | group        | no       |                   |                     |
+| `navItems[].link.type`                 | radio        | no       | reference, custom | default reference   |
+| `navItems[].link.newTab`               | checkbox     | no       |                   |                     |
+| `navItems[].link.reference`            | relationship | yes      | → pages, posts    | shown conditionally |
+| `navItems[].link.url`                  | text         | yes      |                   | shown conditionally |
+| `navItems[].link.label`                | text         | yes      |                   |                     |
+| `navItems[].subItems`                  | array        | no       |                   | max rows 8          |
+| `navItems[].subItems[].link`           | group        | no       |                   |                     |
+| `navItems[].subItems[].link.type`      | radio        | no       | reference, custom | default reference   |
+| `navItems[].subItems[].link.newTab`    | checkbox     | no       |                   |                     |
+| `navItems[].subItems[].link.reference` | relationship | yes      | → pages, posts    | shown conditionally |
+| `navItems[].subItems[].link.url`       | text         | yes      |                   | shown conditionally |
+| `navItems[].subItems[].link.label`     | text         | yes      |                   |                     |
+| `navItems[].subItems[].id`             | text         | no       |                   | hidden              |
+| `navItems[].id`                        | text         | no       |                   | hidden              |
+| `updatedAt`                            | date         | no       |                   | hidden              |
+| `createdAt`                            | date         | no       |                   | hidden              |
 
 ### Field hooks
 
-| Field           | Phase           | Function | Defined in |
-| --------------- | --------------- | -------- | ---------- |
-| `navItems[].id` | beforeChange    | inline   | payload    |
-| `navItems[].id` | beforeDuplicate | inline   | payload    |
+| Field                      | Phase           | Function | Defined in |
+| -------------------------- | --------------- | -------- | ---------- |
+| `navItems[].subItems[].id` | beforeChange    | inline   | payload    |
+| `navItems[].subItems[].id` | beforeDuplicate | inline   | payload    |
+| `navItems[].id`            | beforeChange    | inline   | payload    |
+| `navItems[].id`            | beforeDuplicate | inline   | payload    |
