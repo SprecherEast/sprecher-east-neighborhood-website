@@ -77,6 +77,22 @@ Source: `src/platform/ui/PeriodNav.tsx`
 - Modules: `roadmap`
 - Routes: `/dev/gallery`
 
+## `JumpLinks`
+
+A row of links that jump to sections further down the same page, such as the groups of the resources page. They are plain `#id` links, so they work without scripting; the section's heading carries the id and `SECTION_SCROLL_MARGIN` so the sticky header does not cover it. The links wrap onto more lines instead of scrolling sideways. Shows nothing without items.
+
+Source: `src/platform/ui/JumpLinks.tsx`
+
+| Prop        | Type                  | Required | Description                                |
+| ----------- | --------------------- | -------- | ------------------------------------------ |
+| `label`     | `string`              | yes      | What the navigation is, for screen readers |
+| `items`     | `readonly JumpLink[]` | yes      |                                            |
+| `className` | `string`              | no       |                                            |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`, `/resources`
+
 ## `AdminBar`
 
 Source: `src/platform/ui/AdminBar.client.tsx`
