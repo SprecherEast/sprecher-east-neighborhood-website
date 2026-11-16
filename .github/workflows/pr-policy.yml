@@ -33,11 +33,11 @@ jobs:
     timeout-minutes: 5
     steps:
       # The whole tree: the knowledge check looks for each note named in docs/knowledge/map.json
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - uses: actions/github-script@v8
+      - uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
