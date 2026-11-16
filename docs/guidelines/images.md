@@ -25,8 +25,11 @@ text panel to the checks above.
 5. **Informative before it is opened.** An illustration for a post or an event carries the few facts
    a neighbor needs that the card does not already show (what it costs, who it is for, what to
    bring, how to take part, as the subject calls for) in a text panel on the right side of the
-   image, in type large enough to read at card size. Keep it to a few short lines; if the card
-   already shows everything, the panel says less, not more.
+   image, in type large enough to read at card size. It is written short: a title of a few words
+   that names the subject, then a few bullets, each one fact as a short phrase, not a sentence.
+   When something is still undecided, the last bullet says so. If the card already shows
+   everything, the panel says less, not more. The news scenes in `scripts/illustrations/scenes/`
+   are the model.
 6. **The panel matches the site's style.** Square corners and the site's muted palette, never a
    pill or a bright badge look. It sits on the right so the top-left stays clear (rule 1).
 7. **Match the real thing.** A named place, sign or building looks like it, and the scene shows
@@ -67,9 +70,10 @@ used through the [`make-illustration`](../../.agents/skills/make-illustration/SK
 15. **The panel stays large.** Its width and its type sizes are fixed named settings in the
     generator, never changed for one picture. Text that does not fit is a reason to rethink the
     scene or the panel's lines, never to shrink the type.
-16. **The panel keeps its full wording.** Every line and every bullet is kept, never trimmed,
-    shortened or renamed to fit. When the published item already has panel text, restore it from the
-    live item rather than rewording; the review checks each bullet against the published text.
+16. **A published panel keeps its wording.** How short a panel is gets decided when it is written
+    (rule 5). Once the item is published, every line and every bullet is kept, never trimmed,
+    shortened or renamed to make a picture fit. A redraw restores the text from the live item
+    rather than rewording it; the review checks each bullet against the published text.
 17. **The panel carries the facts and the scene makes the subject recognizable.** The scene does
     not repeat the panel's facts as labels.
 18. **Draw what the story needs, not a map.** Show the thing a neighbor should picture (an object,
