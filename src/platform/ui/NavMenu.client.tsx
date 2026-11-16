@@ -1,10 +1,12 @@
 'use client'
 
+import * as Popover from '@radix-ui/react-popover'
 import { ChevronDown } from 'lucide-react'
-import React, { useCallback, useEffect, useRef } from 'react'
+import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 
+import { Disclosure } from './Disclosure'
 import { Link, linkVariants } from './Link'
 
 export type NavMenuItem = {
@@ -15,102 +17,103 @@ export type NavMenuItem = {
   current?: boolean
 }
 
-/**
- * A menu item of the header that opens to more links when pressed, never on hover (#1237). It is a
- * native `<details>`: the label is its button, so it opens and closes with Enter and Space and
- * tells assistive tech which it is. Pressing outside it, pressing Escape (focus returns to the
- * label), moving focus out of it and following a link all close it.
- *
- * `dropdown` is the desktop bar's: the links sit in a panel under the label. `stacked` is the
- * mobile menu's: a full-width row that opens to an indented list, an accordion.
- */
-export function NavMenu({
-  label,
-  items,
-  layout = 'dropdown',
-  onNavigate,
-  className,
-}: {
+type NavMenuProps = {
   label: string
   items: readonly NavMenuItem[]
+  /** `dropdown` is the wide bar's panel under the label; `stacked` is the mobile menu's accordion */
   layout?: 'dropdown' | 'stacked'
   /** Called when one of the links is followed, for example to close the mobile menu around it */
   onNavigate?: () => void
-  className?: string
-}) {
-  const box = useRef<HTMLDetailsElement>(null)
-  const stacked = layout === 'stacked'
+}
+
+/** One link of the menu, the same in both layouts; extra props are passed to the link (the popover's Close adds some) */
+function NavMenuLink({
+  item,
+  onNavigate,
+  onClick,
+  ...rest
+}: { item: NavMenuItem; onNavigate?: () => void } & Omit<
+  React.ComponentProps<typeof Link>,
+  'href' | 'children'
+>) {
+  return (
+    <Link
+      {...rest}
+      href={item.href}
+      external={item.external}
+      variant="nav"
+      size="md"
+      current={item.current}
+      onClick={(event) => {
+        onClick?.(event)
+        onNavigate?.()
+      }}
+    >
+      {item.label}
+    </Link>
+  )
+}
+
+/**
+ * A menu item of the header that opens to more links when pressed, never on hover (#1237). It adds
+ * no behavior of its own: the wide bar's panel is Radix's popover (it closes on Escape, a press
+ * outside, and a followed link) and the mobile menu's accordion is the kit's `Disclosure`, whose
+ * links are plain links like every other link of that menu.
+ */
+export function NavMenu({ label, items, layout = 'dropdown', onNavigate }: NavMenuProps) {
+  if (layout === 'stacked') {
+    return (
+      <Disclosure variant="nav" summary={label}>
+        <ul>
+          {items.map((item) => (
+            <li key={`${item.href}|${item.label}`}>
+              <NavMenuLink item={item} onNavigate={onNavigate} />
+            </li>
+          ))}
+        </ul>
+      </Disclosure>
+    )
+  }
+
+  return <NavMenuDropdown label={label} items={items} onNavigate={onNavigate} />
+}
+
+function NavMenuDropdown({ label, items, onNavigate }: Omit<NavMenuProps, 'layout'>) {
   const containsCurrent = items.some(({ current }) => current)
 
-  const close = useCallback(() => {
-    box.current?.removeAttribute('open')
-  }, [])
-
-  // A press anywhere outside closes it; a listener only while it is open
-  useEffect(() => {
-    const element = box.current
-    if (!element) return
-    const onPress = (event: Event) => {
-      if (element.open && event.target instanceof Node && !element.contains(event.target)) close()
-    }
-    document.addEventListener('pointerdown', onPress)
-    return () => document.removeEventListener('pointerdown', onPress)
-  }, [close])
-
-  const onKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key !== 'Escape' || !box.current?.open) return
-    close()
-    box.current.querySelector('summary')?.focus()
-  }
-
-  const onBlur = (event: React.FocusEvent) => {
-    const next = event.relatedTarget
-    if (next instanceof Node && !box.current?.contains(next)) close()
-  }
-
   return (
-    <details ref={box} className={cn('relative', className)} onKeyDown={onKeyDown} onBlur={onBlur}>
-      <summary
+    <Popover.Root>
+      <Popover.Trigger
         data-current={containsCurrent}
         className={cn(
-          linkVariants({ variant: 'nav', size: stacked ? 'md' : 'sm' }),
-          'cursor-pointer list-none justify-between [&::-webkit-details-marker]:hidden',
-          'data-[current=true]:text-primary-strong',
-          !stacked && 'compact:px-2',
+          linkVariants({ variant: 'nav', size: 'sm' }),
+          'cursor-pointer data-[current=true]:text-primary-strong compact:px-2',
         )}
       >
         {label}
         <ChevronDown
           aria-hidden="true"
-          className="transition-transform duration-200 [details[open]>summary_&]:rotate-180"
+          className="transition-transform duration-200 [[aria-expanded=true]>&]:rotate-180"
         />
-      </summary>
-      <ul
-        className={cn(
-          'nav-menu-slide',
-          stacked
-            ? 'ml-3 border-l border-border pl-2'
-            : 'absolute top-full left-0 z-50 mt-2 min-w-60 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg',
-        )}
-      >
-        {items.map(({ href, label: text, external, current }) => (
-          <li key={`${href}|${text}`}>
-            <Link
-              href={href}
-              external={external}
-              variant="nav"
-              size="md"
-              current={current}
-              onClick={() => {
-                close()
-                onNavigate?.()
-              }}
-            >
-              {text}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </details>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          aria-label={label}
+          align="start"
+          sideOffset={8}
+          className="z-50 min-w-60 nav-menu-slide rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg"
+        >
+          <ul>
+            {items.map((item) => (
+              <li key={`${item.href}|${item.label}`}>
+                <Popover.Close asChild>
+                  <NavMenuLink item={item} onNavigate={onNavigate} />
+                </Popover.Close>
+              </li>
+            ))}
+          </ul>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   )
 }

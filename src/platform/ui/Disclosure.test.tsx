@@ -10,7 +10,7 @@ import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
 
-const VARIANTS = ['card', 'row', 'listRow', 'bar', 'link'] as const
+const VARIANTS = ['card', 'row', 'listRow', 'bar', 'link', 'nav'] as const
 
 /*
  * Whether the chevron is turned, decided by the real CSS Tailwind makes from its classes (jsdom

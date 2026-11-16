@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import type { HeaderNavLink } from '../domain/nav'
@@ -51,29 +52,33 @@ describe('HeaderNav', () => {
       ],
     }
 
-    it('is a menu opened by pressing its label, not a link of its own', () => {
-      const { container } = render(<HeaderNav links={[links[0], resources]} pathname="/" />)
+    it('is a menu opened by pressing its label, not a link of its own', async () => {
+      render(<HeaderNav links={[links[0], resources]} pathname="/" />)
 
       expect(screen.queryByRole('link', { name: 'Resources' })).toBeNull()
-      expect(container.querySelector('details summary')?.textContent).toBe('Resources')
-      expect(linkNames()).toEqual(['Events', 'Neighborhood utilities', 'Government', 'Search'])
+      expect(linkNames()).toEqual(['Events', 'Search'])
+
+      await userEvent.click(screen.getByRole('button', { name: 'Resources' }))
+      // The popover places its panel at the end of the page
+      expect(linkNames()).toEqual(['Events', 'Search', 'Neighborhood utilities', 'Government'])
     })
 
-    it('marks the submenu link for the page being read, and the menu', () => {
-      const { container } = render(
-        <HeaderNav links={[resources]} pathname="/resources/government" />,
-      )
+    it('marks the submenu link for the page being read, and the menu', async () => {
+      render(<HeaderNav links={[resources]} pathname="/resources/government" />)
+      const button = screen.getByRole('button', { name: 'Resources' })
 
+      expect(button.getAttribute('data-current')).toBe('true')
+      await userEvent.click(button)
       expect(screen.getByRole('link', { name: 'Government' }).getAttribute('aria-current')).toBe(
         'page',
       )
-      expect(container.querySelector('summary')?.getAttribute('data-current')).toBe('true')
     })
 
     it('is an accordion in the mobile menu', () => {
       const { container } = render(<HeaderNav links={[resources]} pathname="/" mobile />)
 
-      expect(container.querySelector('details ul')?.className).toContain('border-l')
+      expect(container.querySelector('details summary')?.textContent).toBe('Resources')
+      expect(linkNames()).toEqual(['Neighborhood utilities', 'Government', 'Search'])
     })
   })
 })
