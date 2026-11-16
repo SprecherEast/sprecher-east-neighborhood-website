@@ -1,25 +1,21 @@
+import { CHART_RAMP } from './chart/chartPalette'
+
 /*
  * The colors of a whole's slices, in one place so a bar and the line a nested row sets under its slice can
- * never differ (#1111, #1196): the City's slice in the theme's solid green and the others in three neutral tones,
- * the lightest first. Each tone has the bar's fill and the color of that line (`edge`).
+ * never differ (#1111, #1196, #1263). Each tone is one step of the breakdown chart's ramp, so a slice reads
+ * as the same color as the chart beside it: `rust` the darkest, then `amber`, `mint` and `green`. Each has
+ * the bar's fill and the color of that line (`edge`).
  */
+const tone = (step: number) => {
+  const { fill, border } = CHART_RAMP[step - 1]!
+  return { fill, edge: border }
+}
+
 export const SHARE_TONES = {
-  highlight: {
-    fill: 'fill-primary-fill',
-    edge: 'border-primary-fill',
-  },
-  strong: {
-    fill: 'fill-muted-foreground/45',
-    edge: 'border-muted-foreground/45',
-  },
-  medium: {
-    fill: 'fill-muted-foreground/30',
-    edge: 'border-muted-foreground/30',
-  },
-  light: {
-    fill: 'fill-muted-foreground/18',
-    edge: 'border-muted-foreground/18',
-  },
+  rust: tone(1),
+  amber: tone(2),
+  mint: tone(3),
+  green: tone(4),
 } as const
 
 export type ShareTone = keyof typeof SHARE_TONES

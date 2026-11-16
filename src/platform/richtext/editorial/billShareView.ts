@@ -11,12 +11,12 @@ import type { ShareSlice } from '@/platform/ui/ShareBill'
 /** The order of two bodies with the same share: the City first, the one a reader knows (#1202) */
 const SLICE_ORDER: readonly BillBody[] = ['city', 'schools', 'county', 'matc']
 
-/** A slice's tone: the City highlighted, the others three grays, the schools' the lightest */
+/** A slice's tone, a step of the breakdown chart's colors: the City amber, the schools dark red-orange, the County green, Madison College light green (#1263) */
 const TONE: Record<BillBody, ShareSlice['tone']> = {
-  schools: 'light',
-  city: 'highlight',
-  county: 'medium',
-  matc: 'strong',
+  schools: 'rust',
+  city: 'amber',
+  county: 'green',
+  matc: 'mint',
 }
 
 export type Receipt = {
