@@ -100,7 +100,7 @@ sources conflict, or the item is borderline. Route a change to an item already i
 ## Public interest and context
 
 How curate reads an incident, hazard or other safety item, under the standard in
-[Editorial integrity](../docs/guidelines/brand-voice.md#editorial-integrity). Such an item is
+[Editorial integrity](../docs/guidelines/editorial-integrity.md). Such an item is
 never `accept` (see "Review passes"): it is `needs-review` unless rule 4 routes it as `reject`
 (`past`) or `update`. This decides what the editor is told.
 
