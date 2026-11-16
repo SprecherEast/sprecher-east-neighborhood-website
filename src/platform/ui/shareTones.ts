@@ -1,4 +1,4 @@
-import { CHART_RAMP } from './chart/chartPalette'
+import { rampAt } from './chart/chartPalette'
 
 /*
  * The colors of a whole's slices, in one place so a bar and the line a nested row sets under its slice can
@@ -7,7 +7,7 @@ import { CHART_RAMP } from './chart/chartPalette'
  * the bar's fill and the color of that line (`edge`).
  */
 const tone = (step: number) => {
-  const { fill, border } = CHART_RAMP[step - 1]!
+  const { fill, border } = rampAt(step)
   return { fill, edge: border }
 }
 
