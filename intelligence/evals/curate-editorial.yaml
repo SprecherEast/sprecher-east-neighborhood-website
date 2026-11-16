@@ -1,7 +1,7 @@
 # Curate eval cases: editorial integrity (#1066). A safety or incident item is read for its
 # public-interest and context value, never for its effect on home values, and is never accepted:
-# an editor decides. Synthetic items; the standard is in docs/guidelines/brand-voice.md
-# ("Editorial integrity") and intelligence/coverage.md ("Public interest and context").
+# an editor decides. Synthetic items; the standard is in docs/guidelines/editorial-integrity.md
+# and intelligence/coverage.md ("Public interest and context").
 version: 1
 asOf: '2026-10-24'
 stage: curate
