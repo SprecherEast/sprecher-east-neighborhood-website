@@ -12,7 +12,7 @@ pattern is proven in production, add it here.
 **What we value:**
 
 - **Minimalism with maximum impact** — every element earns its place; if it doesn't serve the user, remove it
-- **Purposeful asymmetry** — visual weight should feel intentional, not accidental; perfect symmetry is boring, thoughtful imbalance is compelling
+- **Deliberate visual weight** — weight is intentional, never accidental; a layout that is asymmetric looks deliberate and balanced
 - **Smooth contextual flow** — each section should lead naturally to the next; the user should never wonder "why is this here?"
 - **Intuitiveness for the layman** — a resident who has never built a website should find navigation, CTAs, and content hierarchy immediately obvious
 - **Elegance over flashiness** — subtle shadows beat loud gradients; a 200ms ease-out beat a 500ms bounce; restraint is the mark of quality
@@ -23,7 +23,7 @@ pattern is proven in production, add it here.
 - Use design tokens (`src/platform/theme/tokens.ts`) for all colors
 - Respect accessibility (contrast ratios, reduced motion, focus indicators)
 - Test at 6 viewports (320, 430, 768, 1024, 1280, 1920px)
-- Beyond these constraints: **experiment freely.** Combine patterns. Invent new ones. Add subtle shadows, micro-animations, unexpected but effective layout choices. If the result is clean, intuitive, and beautiful — ship it.
+- Beyond these constraints: **experiment freely.** Combine patterns, and invent a new one when none fits the need. Add subtle shadows, micro-animations, unexpected but effective layout choices. If the result is clean, intuitive, and beautiful, and meets the [alignment baseline](../ui-ux-design.md#symmetry-and-alignment) — ship it.
 
 **When inventing something new:**
 
