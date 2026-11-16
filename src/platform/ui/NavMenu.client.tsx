@@ -26,6 +26,34 @@ type NavMenuProps = {
   onNavigate?: () => void
 }
 
+/** One link of the menu, the same in both layouts; extra props are passed to the link (the popover's Close adds some) */
+function NavMenuLink({
+  item,
+  onNavigate,
+  onClick,
+  ...rest
+}: { item: NavMenuItem; onNavigate?: () => void } & Omit<
+  React.ComponentProps<typeof Link>,
+  'href' | 'children'
+>) {
+  return (
+    <Link
+      {...rest}
+      href={item.href}
+      external={item.external}
+      variant="nav"
+      size="md"
+      current={item.current}
+      onClick={(event) => {
+        onClick?.(event)
+        onNavigate?.()
+      }}
+    >
+      {item.label}
+    </Link>
+  )
+}
+
 /**
  * A menu item of the header that opens to more links when pressed, never on hover (#1237). It adds
  * no behavior of its own: the wide bar's panel is Radix's popover (it closes on Escape, a press
@@ -39,16 +67,7 @@ export function NavMenu({ label, items, layout = 'dropdown', onNavigate }: NavMe
         <ul>
           {items.map((item) => (
             <li key={`${item.href}|${item.label}`}>
-              <Link
-                href={item.href}
-                external={item.external}
-                variant="nav"
-                size="md"
-                current={item.current}
-                onClick={onNavigate}
-              >
-                {item.label}
-              </Link>
+              <NavMenuLink item={item} onNavigate={onNavigate} />
             </li>
           ))}
         </ul>
@@ -88,16 +107,7 @@ function NavMenuDropdown({ label, items, onNavigate }: Omit<NavMenuProps, 'layou
             {items.map((item) => (
               <li key={`${item.href}|${item.label}`}>
                 <Popover.Close asChild>
-                  <Link
-                    href={item.href}
-                    external={item.external}
-                    variant="nav"
-                    size="md"
-                    current={item.current}
-                    onClick={onNavigate}
-                  >
-                    {item.label}
-                  </Link>
+                  <NavMenuLink item={item} onNavigate={onNavigate} />
                 </Popover.Close>
               </li>
             ))}
