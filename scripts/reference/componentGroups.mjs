@@ -111,6 +111,7 @@ export const COMPONENT_GROUPS = [
       'Section',
       'PageBackdrop',
       'BandBackdrop',
+      'GlassPanel',
       'ArticlePage',
       'DetailLayout',
       'JsonLd',
