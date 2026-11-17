@@ -58,7 +58,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
   const textClassName = articleColumnClass(event.content)
   return (
     <ArticlePage
-      className="pt-16 pb-24"
+      className="pb-24"
       jsonLd={eventJsonLd(event)}
       redirects={<PayloadRedirects disableNotFound url={url} />}
       draft={draft}

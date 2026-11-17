@@ -181,9 +181,11 @@ describe('ArticlePage', () => {
     })
   })
 
-  it('always leaves room under the title band', () => {
+  it('adds no space of its own between the title band and the trail: the trail keeps its own (#1279)', () => {
     renderArticle()
 
-    expect(screen.getByRole('article').querySelector('article > div')?.className).toContain('pt-8')
+    const below = screen.getByRole('article').querySelector('article > div')
+    expect(below?.className).not.toMatch(/\bp[tby]-/)
+    expect(below?.querySelector('nav')?.className).toContain('my-3')
   })
 })
