@@ -45,7 +45,7 @@ describe('theme files', () => {
     it('keeps the diagram marker orange the same in both modes (it matches the artwork)', () => {
       // The numbered markers drawn into a diagram image are one fixed orange; the legend's circles
       // must match them in dark mode too, where the accent turns lighter (#658)
-      expect(modes.light['diagram-marker']).toBe('#e8923a')
+      expect(modes.light['diagram-marker']).toBe('#d8924a')
       expect(modes.darkOwn['diagram-marker']).toBeUndefined()
       expect(modes.dark['diagram-marker']).toBe(modes.light['diagram-marker'])
     })

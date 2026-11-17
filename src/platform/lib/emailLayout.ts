@@ -5,7 +5,7 @@ export type OutgoingEmail = { subject: string; text: string; html: string }
 
 // Email clients ignore stylesheets and CSS variables, so the brand colors are inline here: the
 // light theme's primary and foreground tokens (docs/guidelines/nextjs-tailwind.md#design-tokens).
-const PRIMARY = '#3d7a5e'
+const PRIMARY = '#42755e'
 const FOREGROUND = '#1a1a1a'
 
 /** Wraps paragraphs, and an optional button link, in the plain Sprecher East email layout. */
