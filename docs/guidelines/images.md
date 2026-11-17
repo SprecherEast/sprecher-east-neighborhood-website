@@ -53,14 +53,17 @@ text panel to the checks above.
     a width typed on a page. It has no Enlarge button and opens no dialog, so the picture starts where
     the text does and is designed to stay readable at its shown size (the owner's decisions,
     2026-11-10, recorded on #1023, and 2026-11-11, recorded on #1055, Claude Code sessions).
-14. **A backdrop's visible band is chosen on purpose.** A photo behind a title band shows only a
-    wide, short strip of itself. Which strip is decided deliberately, per photo and per screen
-    size, with a crop for each, and checked at every width before it is published: each crop shows
-    the part of the photo worth seeing and gives a good feel, never whatever the band happens to
-    land on. A photo whose good part cannot fill a wide, short band is not used as a backdrop, and
-    neither is a photo showing identifiable people. The title and the category must read over it in
-    light and dark, so the photo is faded behind a theme scrim rather than adjusted per photo (the
-    owner's decisions, 2026-11-10 and 2026-11-11, Claude Code sessions, recorded on #1024).
+14. **A backdrop belongs to the whole page.** A backdrop photo runs behind the page from top to
+    bottom, faded, never confined to one band. The theme's background color lies over it as a
+    scrim: solid where text is dense, so the text reads as it would on a plain page in light and
+    in dark, and thinner where there is little or no text, which is where the photo shows. Text,
+    buttons and cards never sit straight on the photo, and the scrim comes from the theme, never
+    adjusted per photo. The crop is chosen on purpose for each screen size (phone, tablet,
+    desktop), so the part of the photo worth seeing falls where the layout leaves room and its
+    shapes and lines work with the text, buttons and blocks around it. Each crop is checked at
+    every width, in both themes, before it is published. A photo that cannot do this is not used
+    as a backdrop, and neither is a photo showing identifiable people. Where a backdrop still
+    shows only behind a title, that is older work to replace, not a pattern to copy.
 
 Summary of the owner's direction on how illustrations are made (2026-11-14, Claude Code session,
 recorded on #1027): the principles below were settled by drawing and reviewing a full set, and are
