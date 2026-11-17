@@ -20,7 +20,8 @@ export type BreadcrumbItem = {
  *
  * The trail stays on one line: a crumb too long for the space is cut with an ellipsis, the current
  * page (the last crumb) first, since it is the longest (its full text stays in the page for screen
- * readers). A first crumb that links to `/` is drawn as a home icon.
+ * readers). A first crumb that links to `/` is drawn as a home icon. The row is compact: the same
+ * small space above and below it (`my-3`, one class), and its links keep their tap size (#1279).
  */
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   const serverURL = getServerSideURL()
@@ -39,7 +40,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   return (
     <>
       <JsonLd data={jsonLd} />
-      <nav aria-label="Breadcrumb" className="mb-6 max-w-full min-w-0">
+      <nav aria-label="Breadcrumb" className="my-3 max-w-full min-w-0">
         <ol className="flex items-center gap-1 text-sm text-muted-foreground">
           {items.map((item, index) => {
             const isLast = index === items.length - 1
