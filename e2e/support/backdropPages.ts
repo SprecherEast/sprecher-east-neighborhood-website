@@ -10,6 +10,11 @@ export const BACKDROP_PAGE_SLUG = 'backdrop-page-check'
 // The worst a photo can be: a post on solid white and one on solid black, for the contrast test
 export const WHITE_POST_SLUG = 'backdrop-white-post-check'
 export const BLACK_POST_SLUG = 'backdrop-black-post-check'
+// The same worst photos behind an event and behind a page
+export const WHITE_EVENT_SLUG = 'backdrop-white-event-check'
+export const BLACK_EVENT_SLUG = 'backdrop-black-event-check'
+export const WHITE_PAGE_SLUG = 'backdrop-white-page-check'
+export const BLACK_PAGE_SLUG = 'backdrop-black-page-check'
 export const PLAIN_POST_SLUG = 'backdrop-plain-post-check'
 
 const paragraphs = (count: number) =>
@@ -44,8 +49,11 @@ export const plainPost = (): RequiredDataFromCollectionSlug<'posts'> => ({
   content,
 })
 
-export const backdropEvent = (mediaId: number): RequiredDataFromCollectionSlug<'events'> => ({
-  slug: BACKDROP_EVENT_SLUG,
+export const backdropEvent = (
+  mediaId: number,
+  slug = BACKDROP_EVENT_SLUG,
+): RequiredDataFromCollectionSlug<'events'> => ({
+  slug,
   title: 'Neighborhood walk and talk',
   _status: 'published',
   date: '2030-01-15T00:00:00.000Z',
@@ -56,8 +64,11 @@ export const backdropEvent = (mediaId: number): RequiredDataFromCollectionSlug<'
 })
 
 /** A page with a low-impact title, a text block and a photo behind the whole page */
-export const backdropPage = (mediaId: number): RequiredDataFromCollectionSlug<'pages'> => ({
-  slug: BACKDROP_PAGE_SLUG,
+export const backdropPage = (
+  mediaId: number,
+  slug = BACKDROP_PAGE_SLUG,
+): RequiredDataFromCollectionSlug<'pages'> => ({
+  slug,
   title: 'A page with a photo behind it',
   _status: 'published',
   backdrop: mediaId,

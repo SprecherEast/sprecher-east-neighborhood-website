@@ -1,8 +1,12 @@
 import {
   BACKDROP_EVENT_SLUG,
   BACKDROP_POST_SLUG,
+  BLACK_EVENT_SLUG,
+  BLACK_PAGE_SLUG,
   BLACK_POST_SLUG,
   PLAIN_POST_SLUG,
+  WHITE_EVENT_SLUG,
+  WHITE_PAGE_SLUG,
   WHITE_POST_SLUG,
 } from './support/backdropPages'
 import { expect, test } from './support/test'
@@ -26,80 +30,48 @@ const TEXT = {
   'card button': 'aside [data-glass-panel] a',
 }
 
-test.describe('text over a photo behind the page', () => {
-  for (const photo of [WHITE_POST_SLUG, BLACK_POST_SLUG]) {
-    for (const scheme of THEMES) {
-      test(`passes AA over ${photo.includes('white') ? 'white' : 'black'}, ${scheme}`, async ({
-        page,
-      }) => {
-        test.setTimeout(120_000)
-        await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
-        await page.goto(`/posts/${photo}`)
-        await page.evaluate(() => document.fonts.ready)
-        await expect(page.locator('html')).toHaveAttribute('data-theme', scheme)
-        // No colour is mid-way between the themes when it is read
-        await page.addStyleTag({ content: '*{transition:none!important}' })
-        await page.evaluate(
-          () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-        )
-        // The photo itself, not its blurred placeholder, is what the text is read against
-        await page.waitForFunction(() =>
-          [...document.querySelectorAll('[data-backdrop-parallax] img')].every(
-            (img) =>
-              (img as HTMLImageElement).complete && (img as HTMLImageElement).naturalWidth > 0,
-          ),
-        )
+// The templates measured: a post, an event, and a page (its title-only hero sits on the glow, the
+// riskiest case); `least` is how many kinds of text the template has to show
+const TEMPLATES = [
+  { name: 'post', path: 'posts', photos: [WHITE_POST_SLUG, BLACK_POST_SLUG], least: 5 },
+  { name: 'event', path: 'events', photos: [WHITE_EVENT_SLUG, BLACK_EVENT_SLUG], least: 5 },
+  { name: 'page', path: '', photos: [WHITE_PAGE_SLUG, BLACK_PAGE_SLUG], least: 3 },
+]
 
-        const worst: Record<string, number> = {}
-        for (const [name, selector] of Object.entries(TEXT)) {
-          const target = page.locator(selector).first()
-          if ((await target.count()) === 0) continue
-          // The middle of the screen, clear of the sticky site header, and still before the picture
-          await target.evaluate((e) => e.scrollIntoView({ block: 'center' }))
-          await page.waitForTimeout(200)
-          if (!(await target.isVisible())) continue
-          const ratio = await target.evaluate(async (element) => {
-            const canvasContext = (canvas: HTMLCanvasElement) => {
-              const context = canvas.getContext('2d')
-              if (!context) throw new Error('No 2D canvas')
-              return context
-            }
-            const channel = (c: number) => {
-              const s = c / 255
-              return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
-            }
-            const luminance = (r: number, g: number, b: number) =>
-              0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
-            const holder =
-              [element, ...element.querySelectorAll('*')].find((node) =>
-                [...node.childNodes].some((n) => n.nodeType === 3 && n.textContent?.trim()),
-              ) ?? element
-            const probe = canvasContext(document.createElement('canvas'))
-            probe.fillStyle = getComputedStyle(holder).color
-            probe.fillRect(0, 0, 1, 1)
-            const [tr, tg, tb] = probe.getImageData(0, 0, 1, 1).data
-            return { text: luminance(tr, tg, tb), box: element.getBoundingClientRect().toJSON() }
-          })
-          // Hide the text and read what is behind it, from a picture of the page
-          const style = await page.addStyleTag({
-            content:
-              '*{transition:none!important;color:transparent!important;-webkit-text-fill-color:transparent!important;text-decoration-color:transparent!important;text-shadow:none!important}' +
-              ' article img:not([data-backdrop-parallax] img),article svg{visibility:hidden!important}',
-          })
-          // The text is really clear before the picture is taken (a first style change can be slow)
-          await target.evaluate(
+test.describe('text over a photo behind the page', () => {
+  for (const { name: template, path, photos, least } of TEMPLATES) {
+    for (const photo of photos) {
+      for (const scheme of THEMES) {
+        test(`${template} passes AA over ${photo.includes('white') ? 'white' : 'black'}, ${scheme}`, async ({
+          page,
+        }) => {
+          test.setTimeout(120_000)
+          await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
+          await page.goto(`${path ? `/${path}` : ''}/${photo}`)
+          await page.evaluate(() => document.fonts.ready)
+          await expect(page.locator('html')).toHaveAttribute('data-theme', scheme)
+          // No colour is mid-way between the themes when it is read
+          await page.addStyleTag({ content: '*{transition:none!important}' })
+          await page.evaluate(
             () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
           )
-          await page.waitForFunction(
-            (sel) =>
-              getComputedStyle(document.querySelector(sel) ?? document.body).color ===
-              'rgba(0, 0, 0, 0)',
-            selector,
+          // The photo itself, not its blurred placeholder, is what the text is read against
+          await page.waitForFunction(() =>
+            [...document.querySelectorAll('[data-backdrop-parallax] img')].every(
+              (img) =>
+                (img as HTMLImageElement).complete && (img as HTMLImageElement).naturalWidth > 0,
+            ),
           )
-          const base64 = (await target.screenshot()).toString('base64')
-          await style.evaluate((node) => (node as HTMLElement).remove())
-          const min = await page.evaluate(
-            async ({ base64, text }) => {
+
+          const worst: Record<string, number> = {}
+          for (const [name, selector] of Object.entries(TEXT)) {
+            const target = page.locator(selector).first()
+            if ((await target.count()) === 0) continue
+            // The middle of the screen, clear of the sticky site header, and still before the picture
+            await target.evaluate((e) => e.scrollIntoView({ block: 'center' }))
+            await page.waitForTimeout(200)
+            if (!(await target.isVisible())) continue
+            const ratio = await target.evaluate(async (element) => {
               const canvasContext = (canvas: HTMLCanvasElement) => {
                 const context = canvas.getContext('2d')
                 if (!context) throw new Error('No 2D canvas')
@@ -109,40 +81,86 @@ test.describe('text over a photo behind the page', () => {
                 const s = c / 255
                 return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
               }
-              const image = new Image()
-              image.src = `data:image/png;base64,${base64}`
-              await image.decode()
-              const canvas = document.createElement('canvas')
-              canvas.width = image.width
-              canvas.height = image.height
-              const context = canvasContext(canvas)
-              context.drawImage(image, 0, 0)
-              const data = context.getImageData(0, 0, canvas.width, canvas.height).data
-              let worstRatio = 99
-              for (let i = 0; i < data.length; i += 4 * 5) {
-                const l =
-                  0.2126 * channel(data[i]) +
-                  0.7152 * channel(data[i + 1]) +
-                  0.0722 * channel(data[i + 2])
-                const ratio = (Math.max(text, l) + 0.05) / (Math.min(text, l) + 0.05)
-                if (ratio < worstRatio) worstRatio = ratio
-              }
-              return worstRatio
-            },
-            { base64, text: ratio.text },
-          )
-          worst[name] = Math.round(min * 100) / 100
-        }
+              const luminance = (r: number, g: number, b: number) =>
+                0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+              const holder =
+                [element, ...element.querySelectorAll('*')].find((node) =>
+                  [...node.childNodes].some((n) => n.nodeType === 3 && n.textContent?.trim()),
+                ) ?? element
+              const probe = canvasContext(document.createElement('canvas'))
+              probe.fillStyle = getComputedStyle(holder).color
+              probe.fillRect(0, 0, 1, 1)
+              const [tr, tg, tb] = probe.getImageData(0, 0, 1, 1).data
+              return { text: luminance(tr, tg, tb), box: element.getBoundingClientRect().toJSON() }
+            })
+            // Hide the text and read what is behind it, from a picture of the page
+            const style = await page.addStyleTag({
+              content:
+                '*{transition:none!important;color:transparent!important;-webkit-text-fill-color:transparent!important;text-decoration-color:transparent!important;text-shadow:none!important}' +
+                ' article img:not([data-backdrop-parallax] img),article svg{visibility:hidden!important}',
+            })
+            // The text is really clear before the picture is taken (a first style change can be slow)
+            await target.evaluate(
+              () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+            )
+            await page.waitForFunction(
+              (sel) =>
+                getComputedStyle(document.querySelector(sel) ?? document.body).color ===
+                'rgba(0, 0, 0, 0)',
+              selector,
+            )
+            const base64 = (await target.screenshot()).toString('base64')
+            await style.evaluate((node) => (node as HTMLElement).remove())
+            const min = await page.evaluate(
+              async ({ base64, text }) => {
+                const canvasContext = (canvas: HTMLCanvasElement) => {
+                  const context = canvas.getContext('2d')
+                  if (!context) throw new Error('No 2D canvas')
+                  return context
+                }
+                const channel = (c: number) => {
+                  const s = c / 255
+                  return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+                }
+                const image = new Image()
+                image.src = `data:image/png;base64,${base64}`
+                await image.decode()
+                const canvas = document.createElement('canvas')
+                canvas.width = image.width
+                canvas.height = image.height
+                const context = canvasContext(canvas)
+                context.drawImage(image, 0, 0)
+                const data = context.getImageData(0, 0, canvas.width, canvas.height).data
+                let worstRatio = 99
+                for (let i = 0; i < data.length; i += 4 * 5) {
+                  const l =
+                    0.2126 * channel(data[i]) +
+                    0.7152 * channel(data[i + 1]) +
+                    0.0722 * channel(data[i + 2])
+                  const ratio = (Math.max(text, l) + 0.05) / (Math.min(text, l) + 0.05)
+                  if (ratio < worstRatio) worstRatio = ratio
+                }
+                return worstRatio
+              },
+              { base64, text: ratio.text },
+            )
+            worst[name] = Math.round(min * 100) / 100
+          }
 
-        test.info().annotations.push({
-          type: 'contrast',
-          description: `${photo} ${scheme}: ${JSON.stringify(worst)}`,
+          test.info().annotations.push({
+            type: 'contrast',
+            description: `${photo} ${scheme}: ${JSON.stringify(worst)}`,
+          })
+          expect(Object.keys(worst).length, 'the page has text to measure').toBeGreaterThanOrEqual(
+            least,
+          )
+          for (const [name, value] of Object.entries(worst)) {
+            expect(value, `${name} over ${photo}, ${scheme}: ${value}:1`).toBeGreaterThanOrEqual(
+              MIN,
+            )
+          }
         })
-        expect(Object.keys(worst).length, 'the page has text to measure').toBeGreaterThan(4)
-        for (const [name, value] of Object.entries(worst)) {
-          expect(value, `${name} over ${photo}, ${scheme}: ${value}:1`).toBeGreaterThanOrEqual(MIN)
-        }
-      })
+      }
     }
   }
 })

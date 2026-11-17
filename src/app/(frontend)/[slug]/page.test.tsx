@@ -76,6 +76,8 @@ describe('/[slug]', () => {
 
     expect(container.querySelector('.text-fade')).toBeTruthy()
     expect(container.querySelector('[class*="text-shadow-glow"]')).toBeTruthy()
+    // Each line of it on a solid plate: a glow alone does not keep the text readable
+    expect(container.querySelector('[class*="text-plate"]')).toBeTruthy()
   })
 
   it('leaves a photo hero as it is: no glow on its own scrim', async () => {

@@ -39,8 +39,10 @@ type Args = {
   }>
 }
 
-// The text of a title-only hero, over the page's photo (#1268)
-const LOW_HERO_ON_PHOTO = 'on-photo:[&_:is(h1,h2,h3,p,li)]:text-shadow-glow'
+// The text of a title-only hero, over the page's photo (#1268): each line on a solid plate, with the
+// shared glow around it (a glow alone measured 1.1:1 over the worst photos)
+const LOW_HERO_ON_PHOTO =
+  '[&_:is(h1,h2,h3,p,li)]:text-plate on-photo:[&_:is(h1,h2,h3,p,li)]:text-shadow-glow'
 
 export default async function Page({ params: paramsPromise }: Args) {
   const { isEnabled: draft } = await draftMode()

@@ -13,7 +13,11 @@ import { contact } from '../src/endpoints/seed/contact-page'
 import { root, p } from '../src/endpoints/seed/helpers/lexical'
 import { alignmentPost, FIGURE_CAPTION } from './support/alignmentPage'
 import {
+  BLACK_EVENT_SLUG,
+  BLACK_PAGE_SLUG,
   BLACK_POST_SLUG,
+  WHITE_EVENT_SLUG,
+  WHITE_PAGE_SLUG,
   WHITE_POST_SLUG,
   backdropEvent,
   backdropPage,
@@ -148,6 +152,10 @@ const black = await solid('black', '#000000')
 for (const [collection, data] of [
   ['posts', backdropPost(white.id, WHITE_POST_SLUG)],
   ['posts', backdropPost(black.id, BLACK_POST_SLUG)],
+  ['events', backdropEvent(white.id, WHITE_EVENT_SLUG)],
+  ['events', backdropEvent(black.id, BLACK_EVENT_SLUG)],
+  ['pages', backdropPage(white.id, WHITE_PAGE_SLUG)],
+  ['pages', backdropPage(black.id, BLACK_PAGE_SLUG)],
   ['posts', backdropPost(photo.id)],
   ['posts', plainPost()],
   ['events', backdropEvent(photo.id)],
