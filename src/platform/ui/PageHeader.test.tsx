@@ -2,9 +2,7 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import type { ImageRef } from '@/platform/lib'
-
-import { Badge, BadgeList } from './Badge'
+import { Badge } from './Badge'
 import { DETAIL_GRID } from './layoutSizes'
 import { PageHeader } from './PageHeader'
 import { expectAccessible } from './testing/expectAccessible'
@@ -149,92 +147,29 @@ describe('PageHeader', () => {
     await expectAccessible(container)
   })
 
-  describe('band backdrop (#1024)', () => {
-    const photo = {
-      id: 7,
-      alt: 'Rooftops at dusk',
-      url: '/api/media/file/dusk.jpg',
-      width: 1920,
-      height: 640,
-      mimeType: 'image/jpeg',
-      updatedAt: '2026-11-11T00:00:00.000Z',
-      createdAt: '2026-11-11T00:00:00.000Z',
-    } as ImageRef
-    const backdrop = { phone: null, tablet: null, desktop: photo }
+  // The photo is the page's (`PageBackdrop`, #1268), no longer the band's: the band only changes
+  // its own look when it sits on one, by CSS that reads the page's `data-backdrop` mark
+  describe('on a page with a backdrop (#1268)', () => {
+    const band = () => screen.getByRole('heading', { level: 1 }).closest('[class*="bg-surface"]')
 
-    it('draws the photo inside the band, behind the title, with the scrim over it', async () => {
-      const { container } = render(
-        <main>
-          <PageHeader
-            variant="band"
-            eyebrow={<Badge>Parks</Badge>}
-            title="Park cleanup"
-            backdrop={backdrop}
-          />
-        </main>,
-      )
+    it('lets the photo show through the band: no edge line, a faint page-colour tint', () => {
+      render(<PageHeader variant="band" title="Park cleanup" />)
 
-      const title = screen.getByRole('heading', { level: 1 })
-      const band = title.closest('[class*="bg-surface"]') as HTMLElement
-      const layer = container.querySelector('[data-backdrop-size]')?.parentElement
-      expect(band.contains(layer ?? null)).toBe(true)
-      // Behind the text: the band clips it, and the text sits in a positioned box above it
-      expect(band.className).toContain('overflow-hidden')
-      expect(band.className).toContain('relative')
-      expect(title.closest('.container')?.className).toContain('relative')
-      expect(container.querySelector('[class*="bg-surface/"]')).toBeTruthy()
-      // The title keeps its own look: the foreground token, no on-image text
-      expect(title.className).toContain('text-foreground')
-      await expectAccessible(container)
+      expect(band()?.className).toContain('on-photo:border-transparent')
+      expect(band()?.className).toContain('on-photo:bg-background/26')
     })
 
-    it('keeps a badge eyebrow readable over the photo: each badge sits on a solid plate', () => {
-      render(
-        <main>
-          <PageHeader
-            variant="band"
-            eyebrow={
-              <BadgeList plated>
-                <Badge>Parks</Badge>
-              </BadgeList>
-            }
-            title="Park cleanup"
-            backdrop={backdrop}
-          />
-        </main>,
-      )
+    it('keeps the title readable with the shared glow, never a tight halo', () => {
+      render(<PageHeader variant="band" title="Park cleanup" />)
 
-      expect(screen.getByText('Parks').parentElement?.className).toContain('bg-surface')
+      expect(screen.getByRole('heading', { level: 1 }).className).toContain(
+        'on-photo:text-shadow-glow',
+      )
     })
 
-    it('is the same plain band when no photo is set', () => {
-      const plain = render(<PageHeader variant="band" title="Park cleanup" />)
-      const plainHtml = plain.container.innerHTML
-      cleanup()
-      const empty = render(
-        <PageHeader
-          variant="band"
-          title="Park cleanup"
-          backdrop={{ phone: null, tablet: null, desktop: null }}
-        />,
-      )
-      const none = render(<PageHeader variant="band" title="Park cleanup" backdrop={null} />)
-
-      expect(empty.container.innerHTML).toBe(plainHtml)
-      expect(none.container.innerHTML).toBe(plainHtml)
-      expect(plainHtml).not.toContain('<img')
-    })
-
-    it('does not make the band taller than the plain one', () => {
-      const withPhoto = render(
-        <PageHeader variant="band" title="Park cleanup" backdrop={backdrop} />,
-      )
-      const band = withPhoto.container.querySelector('[class*="bg-surface"]') as HTMLElement
-      // The photo is absolutely placed: it adds no height, and no padding or min-height is added for it
-      expect(band.className).not.toMatch(/min-h|\bpy-|\bpb-/)
-      expect(
-        withPhoto.container.querySelector('[data-backdrop-size]')?.parentElement?.className,
-      ).toContain('absolute')
+    it('takes no photo of its own', () => {
+      // @ts-expect-error The photo belongs to the page, not to the band
+      render(<PageHeader variant="band" title="Park cleanup" backdrop={null} />)
     })
   })
 

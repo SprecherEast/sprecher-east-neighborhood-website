@@ -42,6 +42,12 @@ describe('GlassPanel', () => {
     expect(panel.innerHTML).toContain('via-on-image/40')
   })
 
+  // The rail's text plates leave glass alone (#1268), so it keeps the photo behind it
+  it('marks itself, so a plate around its neighbours skips it', () => {
+    const { container } = render(<GlassPanel>Text</GlassPanel>)
+    expect(container.firstElementChild?.hasAttribute('data-glass-panel')).toBe(true)
+  })
+
   it('takes layout classes only, and keeps the glass', () => {
     const { container } = render(<GlassPanel className="mt-3">Text</GlassPanel>)
     const panel = container.firstElementChild as HTMLElement

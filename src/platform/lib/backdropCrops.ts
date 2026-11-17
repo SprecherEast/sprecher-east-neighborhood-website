@@ -1,15 +1,15 @@
 import type { ImageRef } from './content'
 
-/** The three screen sizes a title band's photo is cropped for: phone, tablet and desktop */
+/** The three screen sizes a page's backdrop photo is cropped for: phone, tablet and desktop */
 export const BACKDROP_SIZES = ['phone', 'tablet', 'desktop'] as const
 export type BackdropSize = (typeof BACKDROP_SIZES)[number]
 
 /**
- * The photo behind a post's or an event's title band (#1024), one crop per screen size. Each crop
- * is an upload of its own, so an editor chooses what the band shows at each width and fine-tunes it
- * with the upload's focal point. No crop at all is the plain band.
+ * The photo behind a whole post, event or page (#1024, #1268), one crop per screen size. Each crop
+ * is an upload of its own, so an editor chooses what the page shows at each width and fine-tunes it
+ * with the upload's focal point. No crop at all is a page with no backdrop.
  */
-export type BandBackdrop = Record<BackdropSize, ImageRef | null>
+export type BackdropCrops = Record<BackdropSize, ImageRef | null>
 
 /** What draws one photo, and the screen sizes it is shown at */
 export type BackdropSlot = { image: ImageRef; sizes: BackdropSize[] }
@@ -22,11 +22,16 @@ const PREFERENCE: Record<BackdropSize, readonly BackdropSize[]> = {
   desktop: ['desktop', 'tablet', 'phone'],
 }
 
+/** A page's one backdrop photo (`pages.backdrop`) as crops: the same photo at every size */
+export function singleBackdrop(image: ImageRef | null | undefined): BackdropCrops | null {
+  return image ? { phone: image, tablet: image, desktop: image } : null
+}
+
 /**
- * The photos to draw behind the band and where each shows. A photo several sizes use is listed
+ * The photos to draw behind the page and where each shows. A photo several sizes use is listed
  * once, so the page holds no more images than it has different crops. Empty when no crop is set.
  */
-export function resolveBandBackdrop(backdrop: BandBackdrop | null | undefined): BackdropSlot[] {
+export function resolveBackdrop(backdrop: BackdropCrops | null | undefined): BackdropSlot[] {
   if (!backdrop) return []
 
   const slots: BackdropSlot[] = []

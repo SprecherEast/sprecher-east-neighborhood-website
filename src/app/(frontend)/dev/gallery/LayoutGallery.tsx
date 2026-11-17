@@ -95,25 +95,29 @@ export function LayoutGallery() {
 
       <GalleryEntry
         name="PageBackdrop"
-        description="A faded, grayed photo behind a page's content, washed into the theme background so text stays readable (#777). Decorative; the sample photo is a blurred test image."
+        description="A photo in full colour behind a whole page, under a faint scrim of the theme background, drifting as the page scrolls (#1268). Text sits solid on it (text-plate, text-fade) and the title on a wide glow; the photo shows where there is no text. Decorative; the sample photo is a blurred test image. The frame is transformed, so the photo, fixed to the screen on a page, is fixed to the frame here."
       >
         <GalleryVariant label="with a photo" className="block">
-          <div className={FRAME}>
-            <PageBackdrop image={SAMPLE_IMAGE}>
+          <div className={`${FRAME} transform-gpu overflow-hidden`}>
+            <PageBackdrop
+              backdrop={{ phone: SAMPLE_IMAGE, tablet: SAMPLE_IMAGE, desktop: SAMPLE_IMAGE }}
+            >
               <Section as="div" spacing="md">
-                <Text variant="subsection" as="p">
-                  Text over the backdrop
+                <Text variant="subsection" as="p" className="on-photo:text-shadow-glow">
+                  A title over the backdrop
                 </Text>
-                <Text variant="small" className="mt-2">
-                  Muted text over the lightest and darkest parts of the photo.
-                </Text>
+                <div className="text-plate mt-6">
+                  <Text variant="small">
+                    A block of text on a plate: the page colour with a soft edge, from lg.
+                  </Text>
+                </div>
               </Section>
             </PageBackdrop>
           </div>
         </GalleryVariant>
         <GalleryVariant label="without a photo" className="block">
           <div className={FRAME}>
-            <PageBackdrop image={null}>
+            <PageBackdrop backdrop={null}>
               <Section as="div" spacing="md">
                 <Text variant="small">Only the content, as before.</Text>
               </Section>

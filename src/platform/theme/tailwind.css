@@ -71,8 +71,67 @@
   --text-shadow-photo:
     0 2px 4px color-mix(in srgb, var(--scrim) 80%, transparent),
     0 4px 16px color-mix(in srgb, var(--scrim) 50%, transparent);
+  /*
+   * The title on a page with a backdrop (`on-photo:text-shadow-glow`, #1268): a wide, faint glow in
+   * the page colour, four soft layers growing from about 2rem to 14rem, never a tight halo. It keeps
+   * the title readable over any photo while the photo stays visible around it.
+   */
+  --text-shadow-glow:
+    0 0 2rem color-mix(in srgb, var(--background) 65%, transparent),
+    0 0 5rem color-mix(in srgb, var(--background) 75%, transparent), 0 0 9rem var(--background),
+    0 0 14rem var(--background);
   --color-inverse: var(--inverse);
   --color-inverse-foreground: var(--inverse-foreground);
+}
+
+/*
+ * Over a page's photo (#1268, images guideline rule 14): `PageBackdrop` marks its page with
+ * `data-backdrop`, and `on-photo:` applies to anything inside it, so a class reads as "on a
+ * backdrop, do this" and a page without one is untouched.
+ */
+@custom-variant on-photo (&:where([data-backdrop] *));
+
+/*
+ * `text-plate`: a block of text sitting solid on a backdrop. The page colour fills the block and
+ * runs a little past it, `--plate-bleed` (1rem unless a place has less room), with a soft edge, so
+ * the text reads as on a plain page and the photo shows around it. From `lg` only: below it the
+ * column fills the screen, and `text-fade` takes over. Over no backdrop it changes nothing.
+ */
+@utility text-plate {
+  @media (width >= theme(--breakpoint-lg)) {
+    &:where([data-backdrop] *) {
+      position: relative;
+      isolation: isolate;
+    }
+    &:where([data-backdrop] *)::before {
+      content: '';
+      position: absolute;
+      inset: calc(var(--plate-bleed, 1rem) * -1);
+      z-index: -1;
+      border-radius: 1.5rem;
+      background: var(--background);
+      box-shadow: 0 0 calc(var(--plate-bleed, 1rem) * 1.25) calc(var(--plate-bleed, 1rem) * 0.75)
+        var(--background);
+      pointer-events: none;
+    }
+  }
+}
+
+/*
+ * `text-fade`: the whole body of text solid in the page colour, then `--plate-fade` (7rem) of
+ * empty space under it that thins out to nothing, so the photo shows again before the footer and
+ * the last line of text is never on it. For where a plate would fill the screen anyway (a phone,
+ * a page of full-width blocks). Over no backdrop it changes nothing.
+ */
+@utility text-fade {
+  &:where([data-backdrop] *) {
+    padding-bottom: var(--plate-fade, 7rem);
+    background: linear-gradient(
+      to bottom,
+      var(--background) calc(100% - var(--plate-fade, 7rem)),
+      transparent
+    );
+  }
 }
 
 /*

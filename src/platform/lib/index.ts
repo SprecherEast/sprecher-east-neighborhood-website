@@ -1,7 +1,12 @@
 // Pure helpers and shared content types, with no framework (docs/architecture/README.md).
 // A module's domain may import these and nothing else from platform/.
 export { parseClientIp } from './clientIp'
-export { resolveBandBackdrop, type BackdropSize, type BandBackdrop } from './bandBackdrop'
+export {
+  resolveBackdrop,
+  singleBackdrop,
+  type BackdropSize,
+  type BackdropCrops,
+} from './backdropCrops'
 export type { ImageRef, ResolvedLink, RichTextValue } from './content'
 export { TITLE_MAX_LENGTH } from './contentLimits'
 export { formatDuration } from './formatDuration'

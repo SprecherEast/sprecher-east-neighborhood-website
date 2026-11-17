@@ -31,8 +31,8 @@ vi.mock('@/modules/site/server', () => ({
 }))
 // The backdrop is tested on its own (PageBackdrop.test.tsx): here, what the page hands it
 vi.mock('@/platform/ui/PageBackdrop', () => ({
-  PageBackdrop: ({ image, children }: { image: unknown; children: React.ReactNode }) => {
-    site.backdrop(image)
+  PageBackdrop: ({ backdrop, children }: { backdrop: unknown; children: React.ReactNode }) => {
+    site.backdrop(backdrop)
     return <>{children}</>
   },
 }))
@@ -63,6 +63,33 @@ describe('/[slug]', () => {
     expect(site.redirects).toHaveBeenCalledWith({ disableNotFound: true, url: '/about' })
   })
 
+  // #1268: a page's blocks are anything an editor builds, so the body sits solid on the photo and
+  // fades at its foot; a title-only hero keeps the shared glow, a photo hero its own scrim
+  it('puts the blocks in a text fade, and a title-only hero on the shared glow', async () => {
+    site.getPageBySlug.mockResolvedValue({
+      slug: 'about',
+      hero: { variant: 'low', body: { root: {} } },
+      layout: [],
+    })
+
+    const { container } = render(await Page(params('about')))
+
+    expect(container.querySelector('.text-fade')).toBeTruthy()
+    expect(container.querySelector('[class*="text-shadow-glow"]')).toBeTruthy()
+  })
+
+  it('leaves a photo hero as it is: no glow on its own scrim', async () => {
+    site.getPageBySlug.mockResolvedValue({
+      slug: 'about',
+      hero: { variant: 'high', image: null },
+      layout: [],
+    })
+
+    const { container } = render(await Page(params('about')))
+
+    expect(container.querySelector('[class*="text-shadow-glow"]')).toBeNull()
+  })
+
   it('shows the home page at the root, and the starter home page before the seed', async () => {
     site.getPageBySlug.mockResolvedValue(null)
 
@@ -83,7 +110,8 @@ describe('/[slug]', () => {
     expect(site.blocks).not.toHaveBeenCalled()
   })
 
-  // #777: the page's stored photo reaches the component that draws it behind the hero and blocks
+  // #777, #1268: the page's one stored photo reaches the component that draws it behind the hero
+  // and blocks, as the same photo at every screen size
   it('hands the page’s backdrop photo to the backdrop, and its content is drawn inside', async () => {
     const backdrop = { url: '/api/media/file/dusk.jpg', alt: 'Dusk', width: 1920, height: 983 }
     site.getPageBySlug.mockResolvedValue({
@@ -95,7 +123,11 @@ describe('/[slug]', () => {
 
     render(await Page(params('get-involved')))
 
-    expect(site.backdrop).toHaveBeenCalledExactlyOnceWith(backdrop)
+    expect(site.backdrop).toHaveBeenCalledExactlyOnceWith({
+      phone: backdrop,
+      tablet: backdrop,
+      desktop: backdrop,
+    })
     expect(site.hero).toHaveBeenCalled()
     expect(site.blocks).toHaveBeenCalled()
   })

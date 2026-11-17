@@ -29,6 +29,12 @@ export type DetailLayoutProps = {
  * The rail's padding and the same negative margin give the links at its edges room for their focus
  * ring, which the rail's own scrolling would otherwise clip.
  *
+ * Over a page's photo (`PageBackdrop`, #1268) each block of the text sits solid on a soft-edged
+ * `text-plate`: the article column, the page menu, and each block of the related content except a
+ * `GlassPanel`, which keeps the photo behind it. The rail's own plates are small (`--plate-bleed`),
+ * as the rail scrolls and would clip a larger one. Below `lg`, where the column fills the screen,
+ * the page's body fades instead (`ArticlePage`).
+ *
  * The rail comes first in the markup and `order` moves the related content below the article on
  * small screens (`contents` lets the rail's parts take part in that order), so on a wide screen
  * the reading and tab order are the same as what is on the screen. The cost: on a small screen a
@@ -50,14 +56,16 @@ export function DetailLayout({ children, aside, toc, className }: DetailLayoutPr
       {hasRail && (
         <div
           data-detail-rail
-          className="max-lg:contents lg:sticky lg:top-[var(--anchor-offset)] lg:-m-1 lg:max-h-[calc(100svh-var(--anchor-offset)-1rem)] lg:self-start lg:overflow-y-auto lg:p-1"
+          className="[--plate-bleed:0.25rem] max-lg:contents lg:sticky lg:top-[var(--anchor-offset)] lg:-m-1 lg:max-h-[calc(100svh-var(--anchor-offset)-1rem)] lg:self-start lg:overflow-y-auto lg:p-1"
         >
           {toc}
           {hasAside && (
             <aside
               className={cn(
-                'mt-12 space-y-6 empty:hidden max-lg:order-3',
-                toc ? 'lg:mt-6 lg:border-t lg:border-border lg:pt-6' : 'lg:mt-0',
+                'mt-12 space-y-6 empty:hidden max-lg:order-3 [&>:not([data-glass-panel])]:text-plate',
+                toc
+                  ? 'lg:mt-6 lg:border-t lg:border-border lg:pt-6 on-photo:lg:border-transparent'
+                  : 'lg:mt-0',
               )}
             >
               {aside}
@@ -65,7 +73,7 @@ export function DetailLayout({ children, aside, toc, className }: DetailLayoutPr
           )}
         </div>
       )}
-      <div className="min-w-0 max-lg:order-2">{children}</div>
+      <div className="text-plate min-w-0 max-lg:order-2">{children}</div>
     </div>
   )
 }

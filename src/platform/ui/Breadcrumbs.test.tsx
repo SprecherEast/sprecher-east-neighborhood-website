@@ -145,4 +145,15 @@ describe('Breadcrumbs', () => {
 
     await expectAccessible(container)
   })
+
+  // On a page with a backdrop the trail sits on a soft-edged plate in the page colour (#1268)
+  it('sits on a text plate, which draws only over a backdrop', () => {
+    render(<Breadcrumbs items={ITEMS} />)
+
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    expect(nav.className).toContain('text-plate')
+    expect(nav.className).toContain('lg:w-fit')
+    // Above the article column's plate, whose soft edge reaches up to the trail
+    expect(nav.className).toContain('on-photo:z-10')
+  })
 })

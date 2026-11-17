@@ -41,5 +41,5 @@ export function postHeaderProps(post: PostDetail): PageHeaderProps {
       </BadgeList>
     ) : undefined
 
-  return { variant: 'band', eyebrow, title, backdrop }
+  return { variant: 'band', eyebrow, title }
 }

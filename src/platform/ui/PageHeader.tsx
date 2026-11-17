@@ -2,10 +2,8 @@ import { cva } from 'class-variance-authority'
 import { ArrowLeft } from 'lucide-react'
 import React from 'react'
 
-import { resolveBandBackdrop, type BandBackdrop as BandBackdropCrops } from '@/platform/lib'
 import { cn } from '@/platform/lib/cn'
 
-import { BandBackdrop } from './BandBackdrop'
 import { DETAIL_GRID, READING_WIDTH } from './layoutSizes'
 import { Link } from './Link'
 import { Text } from './Text'
@@ -39,16 +37,15 @@ type CompactHeaderProps = HeaderBase & {
 }
 
 /**
- * Heads a post or event page: the title on a short band (#1013), plain or over a faded photo
- * (#1024). The page's picture is not in the band: `FeaturedImage` shows it whole in the article.
- * Its facts are the `MetaBar` in the article column (#1002).
+ * Heads a post or event page: the title on a short band (#1013). On a page with a photo behind it
+ * (`PageBackdrop`, #1268) the band lets the photo show and the title keeps a wide soft glow, by CSS
+ * only; the band takes no photo of its own. The page's picture is not in the band: `FeaturedImage`
+ * shows it whole in the article. Its facts are the `MetaBar` in the article column (#1002).
  */
 type BandHeaderProps = HeaderBase & {
   variant: 'band'
   /** A short label above the title, or `Badge` items (in a `BadgeList plated` over a photo) */
   eyebrow?: React.ReactNode
-  /** The photo behind the band, a crop per screen size; none or empty is the plain band */
-  backdrop?: BandBackdropCrops | null
   description?: never
   backLink?: never
   children?: never
@@ -62,7 +59,7 @@ const titleVariants = cva('font-bold text-balance', {
     variant: {
       default: 'text-4xl tracking-tight text-foreground md:text-5xl',
       compact: 'text-3xl text-foreground',
-      band: 'text-2xl text-foreground sm:text-3xl lg:text-4xl',
+      band: 'text-2xl text-foreground sm:text-3xl lg:text-4xl on-photo:text-shadow-glow',
     },
   },
 })
@@ -81,6 +78,7 @@ const BAND_PADDING =
  * `band` puts the title on a short plain band, a themed surface under the site header, as posts and
  * events show it (#461, #571, #1013): the article starts on the
  * first screen, and the page's picture is shown whole in the article, never cropped behind the title.
+ * Over a page's photo it goes transparent and the title keeps its glow (#1268).
  */
 export function PageHeader(props: PageHeaderProps) {
   if (props.variant === 'compact') {
@@ -120,20 +118,13 @@ export function PageHeader(props: PageHeaderProps) {
   )
 }
 
-function BandHeader({ eyebrow, title, backdrop, className }: BandHeaderProps) {
-  const photo = resolveBandBackdrop(backdrop).length > 0
+function BandHeader({ eyebrow, title, className }: BandHeaderProps) {
   return (
     <header className={className}>
-      {/* The band slides under the sticky site header, so it reads as one block with it. A photo
-          fills it without adding to its height, and the text sits above it */}
-      <div
-        className={cn(
-          '-mt-[var(--header-height)] border-b border-border bg-surface',
-          photo && 'relative overflow-hidden',
-        )}
-      >
-        <BandBackdrop backdrop={backdrop} />
-        <div className={cn('container', BAND_PADDING, photo && 'relative', DETAIL_GRID)}>
+      {/* The band slides under the sticky site header, so it reads as one block with it. Over a
+          page's photo (`on-photo:`) it has no edge line and only a faint page-colour tint */}
+      <div className="-mt-[var(--header-height)] border-b border-border bg-surface on-photo:border-transparent on-photo:bg-background/26">
+        <div className={cn('container', BAND_PADDING, DETAIL_GRID)}>
           {/* From `lg` the title is in the article's column, the one `DetailLayout` gives the picture
               and the text, so they share a left edge (the grid is defined once, in layoutSizes) */}
           <div className="lg:col-start-2">

@@ -32,7 +32,6 @@ export const GALLERY_COMPONENTS = [
   'Alert',
   'Section',
   'PageBackdrop',
-  'BandBackdrop',
   'ArticlePage',
   'DetailLayout',
   'OnThisPage',

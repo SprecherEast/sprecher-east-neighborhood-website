@@ -3,14 +3,14 @@ import { describe, expect, it } from 'vitest'
 
 import type { Media } from '@/payload-types'
 
-import { bandBackdropField, toBandBackdrop } from './bandBackdrop'
+import { backdropField, toBackdropCrops } from './backdropField'
 import { imagesOnly } from './imagesOnly'
 
 const photo = (id: number) =>
   ({ id, alt: `Photo ${id}`, url: `/api/media/file/${id}.jpg` }) as Media
 
-describe('bandBackdropField', () => {
-  const field = bandBackdropField() as GroupField & { name: string }
+describe('backdropField', () => {
+  const field = backdropField() as GroupField & { name: string }
 
   it('is one group, `backdrop`, so a post and an event store the same shape', () => {
     expect(field.type).toBe('group')
@@ -32,7 +32,7 @@ describe('bandBackdropField', () => {
     }
   })
 
-  it('is optional: an article with none keeps the plain band', () => {
+  it('is optional: an article with none keeps a plain page', () => {
     for (const upload of field.fields as UploadField[]) {
       expect(upload.required).toBeFalsy()
     }
@@ -45,23 +45,23 @@ describe('bandBackdropField', () => {
   })
 })
 
-describe('toBandBackdrop', () => {
+describe('toBackdropCrops', () => {
   it('maps each loaded crop', () => {
     const [phone, tablet, desktop] = [photo(1), photo(2), photo(3)]
-    expect(toBandBackdrop({ phone, tablet, desktop })).toEqual({ phone, tablet, desktop })
+    expect(toBackdropCrops({ phone, tablet, desktop })).toEqual({ phone, tablet, desktop })
   })
 
   it('has no backdrop when nothing is set or nothing is loaded', () => {
-    expect(toBandBackdrop(null)).toBeNull()
-    expect(toBandBackdrop(undefined)).toBeNull()
-    expect(toBandBackdrop({ phone: null, tablet: null, desktop: null })).toBeNull()
+    expect(toBackdropCrops(null)).toBeNull()
+    expect(toBackdropCrops(undefined)).toBeNull()
+    expect(toBackdropCrops({ phone: null, tablet: null, desktop: null })).toBeNull()
     // Only ids: the field was not populated, which shows as no image
-    expect(toBandBackdrop({ phone: 1, tablet: 2, desktop: 3 })).toBeNull()
+    expect(toBackdropCrops({ phone: 1, tablet: 2, desktop: 3 })).toBeNull()
   })
 
   it('keeps a crop that is loaded beside one that is not', () => {
     const desktop = photo(3)
-    expect(toBandBackdrop({ phone: 1, desktop })).toEqual({
+    expect(toBackdropCrops({ phone: 1, desktop })).toEqual({
       phone: null,
       tablet: null,
       desktop,

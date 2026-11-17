@@ -30,6 +30,15 @@ describe('OnThisPage', () => {
     await expectAccessible(container)
   })
 
+  // In the rail, over a backdrop (#1268), the menu sits on a text plate; the phone bar is solid already
+  it('sits on a text plate in the rail', () => {
+    render(<OnThisPage sections={SECTIONS} />)
+
+    expect(screen.getByRole('navigation', { name: 'On this page' }).className).toContain(
+      'lg:text-plate',
+    )
+  })
+
   it('shows nothing for fewer than three sections', () => {
     const { container } = render(<OnThisPage sections={SECTIONS.slice(0, 2)} />)
     expect(container.innerHTML).toBe('')

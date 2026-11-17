@@ -12,6 +12,7 @@ import {
   RenderBlocks,
   toSiteHero,
 } from '@/modules/site/server'
+import { singleBackdrop } from '@/platform/lib'
 import { generateMeta } from '@/platform/seo/generateMeta'
 import { HOME_PAGE_SLUG } from '@/platform/payload/documentHref'
 import { LivePreviewListener } from '@/platform/ui/LivePreviewListener.client'
@@ -37,6 +38,9 @@ type Args = {
     slug?: string
   }>
 }
+
+// The text of a title-only hero, over the page's photo (#1268)
+const LOW_HERO_ON_PHOTO = 'on-photo:[&_:is(h1,h2,h3,p,li)]:text-shadow-glow'
 
 export default async function Page({ params: paramsPromise }: Args) {
   const { isEnabled: draft } = await draftMode()
@@ -65,9 +69,19 @@ export default async function Page({ params: paramsPromise }: Args) {
 
       {draft && <LivePreviewListener />}
 
-      <PageBackdrop image={backdrop}>
-        {hero && <PageHero {...hero} />}
-        <RenderBlocks blocks={layout} components={pageBlocks} />
+      <PageBackdrop backdrop={singleBackdrop(backdrop)}>
+        {/* A plain title and text on the page's photo keep the shared glow; a photo hero has its own
+            photo and scrim */}
+        {hero && (
+          <div className={hero.variant === 'low' ? LOW_HERO_ON_PHOTO : undefined}>
+            <PageHero {...hero} />
+          </div>
+        )}
+        {/* A page's blocks are anything an editor builds, so the whole body sits solid on the
+            photo and fades out at its foot, where the photo shows again (#1268) */}
+        <div className="text-fade">
+          <RenderBlocks blocks={layout} components={pageBlocks} />
+        </div>
       </PageBackdrop>
     </article>
   )

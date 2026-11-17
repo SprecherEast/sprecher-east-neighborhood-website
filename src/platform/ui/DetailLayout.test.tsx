@@ -87,4 +87,49 @@ describe('DetailLayout', () => {
     expect(container.querySelector('[data-detail-rail]')).toBeNull()
     expect(screen.queryByRole('complementary')).toBeNull()
   })
+
+  // Over a backdrop (#1268) each block of the rail sits on a text plate, except the glass, which
+  // keeps the photo behind it; the plates take the rail's small room, so they stay inside it
+  it('puts every block of the related content on a text plate except a glass panel', () => {
+    render(
+      <DetailLayout aside={<p>Upcoming events</p>}>
+        <p>The post</p>
+      </DetailLayout>,
+    )
+
+    const aside = screen.getByRole('complementary')
+    expect(aside.className).toContain('[&>:not([data-glass-panel])]:text-plate')
+  })
+
+  it('keeps the plates inside the rail’s small room, which scrolls and would clip them', () => {
+    const { container } = render(
+      <DetailLayout aside={<p>Upcoming events</p>}>
+        <p>The post</p>
+      </DetailLayout>,
+    )
+
+    expect(container.querySelector('[data-detail-rail]')?.className).toContain(
+      '[--plate-bleed:0.25rem]',
+    )
+  })
+
+  it('lets the divider vanish over a backdrop, where the plates already set the blocks apart', () => {
+    render(
+      <DetailLayout toc={<nav>Menu</nav>} aside={<p>Upcoming events</p>}>
+        <p>The post</p>
+      </DetailLayout>,
+    )
+
+    expect(screen.getByRole('complementary').className).toContain('on-photo:lg:border-transparent')
+  })
+
+  it('sits the article column on a text plate', () => {
+    render(
+      <DetailLayout aside={null}>
+        <p>The post</p>
+      </DetailLayout>,
+    )
+
+    expect(screen.getByText('The post').parentElement?.className).toContain('text-plate')
+  })
 })

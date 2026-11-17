@@ -73,5 +73,5 @@ export function eventHeaderProps(event: EventDetail): PageHeaderProps {
       </BadgeList>
     ) : undefined
 
-  return { variant: 'band', eyebrow, title, backdrop }
+  return { variant: 'band', eyebrow, title }
 }

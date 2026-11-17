@@ -104,7 +104,7 @@ export function OnThisPage({ sections, className }: OnThisPageProps) {
         // Phones and tablets: a bar that sticks under the site header. From lg: the top of the left
         // rail, which `DetailLayout` makes stick and scroll as one piece with the related content
         'sticky top-[var(--header-height)] z-30 -mx-4 mb-6 border-y border-border bg-background md:-mx-8 noscript:static',
-        'lg:static lg:mx-0 lg:mb-0 lg:border-0 lg:bg-transparent lg:p-0',
+        'lg:text-plate lg:static lg:mx-0 lg:mb-0 lg:border-0 lg:bg-transparent lg:p-0',
         className,
       )}
     >

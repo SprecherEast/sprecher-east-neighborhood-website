@@ -22,6 +22,8 @@ export type BreadcrumbItem = {
  * page (the last crumb) first, since it is the longest (its full text stays in the page for screen
  * readers). A first crumb that links to `/` is drawn as a home icon. The row is compact: the same
  * small space above and below it (`my-3`, one class), and its links keep their tap size (#1279).
+ * Over a page's photo (`PageBackdrop`, #1268) it sits on a soft-edged `text-plate`, as wide as the
+ * trail from `lg`, and above the article's own plate, which reaches up to the trail.
  */
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   const serverURL = getServerSideURL()
@@ -40,7 +42,10 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   return (
     <>
       <JsonLd data={jsonLd} />
-      <nav aria-label="Breadcrumb" className="my-3 max-w-full min-w-0">
+      <nav
+        aria-label="Breadcrumb"
+        className="text-plate my-3 max-w-full min-w-0 [--plate-bleed:0.5rem] lg:w-fit on-photo:z-10"
+      >
         <ol className="flex items-center gap-1 text-sm text-muted-foreground">
           {items.map((item, index) => {
             const isLast = index === items.length - 1

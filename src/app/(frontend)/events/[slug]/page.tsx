@@ -62,6 +62,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
       jsonLd={eventJsonLd(event)}
       redirects={<PayloadRedirects disableNotFound url={url} />}
       draft={draft}
+      backdrop={event.backdrop}
       image={event.image}
       header={eventHeaderProps(event)}
       // No text width: what sits under the bar (the Location panel, the notices) runs the column's
@@ -76,7 +77,12 @@ export default async function EventPage({ params: paramsPromise }: Args) {
       aside={
         <>
           <SidebarEvents events={upcomingEvents} title="Upcoming Events" />
-          <SidebarCTA heading="More events" buttonLabel="View All Events" buttonHref="/events" />
+          <SidebarCTA
+            heading="More events"
+            buttonLabel="View All Events"
+            buttonHref="/events"
+            glass={Boolean(event.backdrop)}
+          />
         </>
       }
     >

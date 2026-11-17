@@ -73,6 +73,7 @@ export default async function Post({ params: paramsPromise }: Args) {
       // Allows redirects for valid pages too
       redirects={<PayloadRedirects disableNotFound url={url} />}
       draft={draft}
+      backdrop={post.backdrop}
       image={post.heroImage}
       lead={
         lead && (
@@ -105,6 +106,7 @@ export default async function Post({ params: paramsPromise }: Args) {
             description="Know something we’re missing? Please tell us."
             buttonLabel="Get Involved"
             buttonHref="/get-involved"
+            glass={Boolean(post.backdrop)}
           />
         </>
       }

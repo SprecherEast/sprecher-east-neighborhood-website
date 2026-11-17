@@ -53,10 +53,12 @@ describe('postHeaderProps', () => {
     }
   })
 
-  it('carries the post’s backdrop to the band and plates its category over it (#1024)', () => {
+  it('plates its category over the page’s backdrop (#1024, #1268)', () => {
     const backdrop = { phone: null, tablet: null, desktop: photo }
     const props = postHeaderProps({ ...post, backdrop })
-    expect(props).toMatchObject({ variant: 'band', backdrop })
+    // The photo belongs to the page (`PageBackdrop`), not to the header
+    expect(props).toMatchObject({ variant: 'band' })
+    expect(props).not.toHaveProperty('backdrop')
 
     render(<PageHeader {...props} />)
     expect(screen.getByText('Transportation').parentElement?.className).toContain('bg-surface')
@@ -64,7 +66,7 @@ describe('postHeaderProps', () => {
 
   it('keeps the plain band, with its category pill as before, when there is no backdrop (#1024)', () => {
     const props = postHeaderProps(post)
-    expect(props).toMatchObject({ backdrop: null })
+    expect(props).not.toHaveProperty('backdrop')
 
     render(<PageHeader {...props} />)
     expect(screen.getByText('Transportation').parentElement?.className).not.toContain('bg-surface')

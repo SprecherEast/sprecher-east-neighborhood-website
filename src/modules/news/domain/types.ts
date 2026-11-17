@@ -1,4 +1,4 @@
-import type { BandBackdrop, ImageRef, RichTextValue } from '@/platform/lib'
+import type { BackdropCrops, ImageRef, RichTextValue } from '@/platform/lib'
 
 /** A category a post belongs to, as cards and the post hero name it. */
 export type PostCategory = {
@@ -38,7 +38,7 @@ export type PostSummary = {
 export type PostDetail = PostSummary & {
   heroImage: ImageRef | null
   /** The photo behind the title band, one crop per screen size; `null` keeps the plain band (#1024) */
-  backdrop: BandBackdrop | null
+  backdrop: BackdropCrops | null
   content: RichTextValue
   /** Author names, in the order editors set them */
   authors: string[]

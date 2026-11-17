@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ImageRef } from '@/platform/lib/content'
 
 import { ArticlePage } from './ArticlePage'
 import { expectAccessible } from './testing/expectAccessible'
+import { stubMatchMedia } from './testing/stubMatchMedia'
 
 // The listener talks to Payload's admin and the Next router, which a page test has no use for
 vi.mock('./LivePreviewListener.client', () => ({
@@ -13,6 +14,8 @@ vi.mock('./LivePreviewListener.client', () => ({
 }))
 
 afterEach(cleanup)
+
+beforeEach(() => stubMatchMedia())
 
 const renderArticle = (props: Partial<Parameters<typeof ArticlePage>[0]> = {}) =>
   render(
@@ -187,5 +190,64 @@ describe('ArticlePage', () => {
     const below = screen.getByRole('article').querySelector('article > div')
     expect(below?.className).not.toMatch(/\bp[tby]-/)
     expect(below?.querySelector('nav')?.className).toContain('my-3')
+  })
+
+  describe('with a photo behind the page (#1268)', () => {
+    const photo = {
+      id: 7,
+      alt: 'Rooftops at dusk',
+      url: '/api/media/file/dusk.jpg',
+      width: 1920,
+      height: 1080,
+      mimeType: 'image/jpeg',
+      updatedAt: '2026-11-17T00:00:00.000Z',
+      createdAt: '2026-11-17T00:00:00.000Z',
+    } as ImageRef
+    const backdrop = { phone: photo, tablet: photo, desktop: photo }
+
+    it('draws the photo once, behind the title, the trail, the text and the rail', async () => {
+      const { container } = renderArticle({ backdrop })
+
+      const wrapper = container.querySelector('[data-backdrop]') as HTMLElement
+      expect(wrapper).toBeTruthy()
+      expect(container.querySelectorAll('img')).toHaveLength(1)
+      for (const inside of [
+        screen.getByRole('heading', { level: 1 }),
+        screen.getByRole('navigation', { name: /breadcrumb/i }),
+        screen.getByText('The article'),
+        screen.getByRole('complementary'),
+      ]) {
+        expect(wrapper.contains(inside)).toBe(true)
+      }
+      await expectAccessible(container)
+    })
+
+    it('keeps the page’s own spacing classes on the article', () => {
+      renderArticle({ backdrop, className: 'pb-16' })
+
+      expect(screen.getByRole('article').className).toBe('pb-16')
+    })
+
+    it('fades the text to the photo below a tablet, where the plates would fill the screen', () => {
+      renderArticle({ backdrop })
+
+      const body = screen
+        .getByRole('navigation', { name: /breadcrumb/i })
+        .closest('.container')?.parentElement
+      expect(body?.className).toContain('max-lg:text-fade')
+    })
+
+    it('is the page it was when there is no photo, or none set', () => {
+      const plain = renderArticle().container.innerHTML
+      cleanup()
+      const none = renderArticle({ backdrop: null }).container.innerHTML
+      cleanup()
+      const empty = renderArticle({ backdrop: { phone: null, tablet: null, desktop: null } })
+        .container.innerHTML
+
+      expect(none).toBe(plain)
+      expect(empty).toBe(plain)
+      expect(plain).not.toContain('data-backdrop')
+    })
   })
 })

@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
+import type { BackdropCrops } from '@/platform/lib'
 import type { ImageRef } from '@/platform/lib/content'
 
 import { Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs'
@@ -9,6 +10,7 @@ import { FeaturedImage } from './FeaturedImage'
 import { JsonLd } from './JsonLd'
 import { LivePreviewListener } from './LivePreviewListener.client'
 import { MetaBar, type MetaBarAlign, type MetaBarItem } from './MetaBar'
+import { PageBackdrop } from './PageBackdrop'
 import { PageHeader, type PageHeaderProps } from './PageHeader'
 
 /*
@@ -42,6 +44,12 @@ export type ArticlePageProps = {
    * beside the first text.
    */
   lead?: React.ReactNode
+  /**
+   * The photo behind the whole page, a crop per screen size (`PageBackdrop`, #1268). It runs behind
+   * the title, the trail, the article and the rail, and each block of text sits solid on it. None,
+   * or no crop set, is a plain page.
+   */
+  backdrop?: BackdropCrops | null
   header: PageHeaderProps
   breadcrumbs: BreadcrumbItem[]
   /**
@@ -77,6 +85,7 @@ export function ArticlePage({
   draft,
   image,
   lead,
+  backdrop,
   header,
   breadcrumbs,
   byline,
@@ -95,30 +104,34 @@ export function ArticlePage({
 
       {draft && <LivePreviewListener />}
 
-      <PageHeader {...header} />
+      <PageBackdrop backdrop={backdrop}>
+        <PageHeader {...header} />
 
-      <div>
-        <div className="container">
-          <Breadcrumbs items={breadcrumbs} />
+        {/* Below `lg` the text fills the screen: it is solid and fades out at its foot, so the photo
+            shows again before the footer (`text-fade`); from `lg` each block has its own plate */}
+        <div className="max-lg:text-fade">
+          <div className="container">
+            <Breadcrumbs items={breadcrumbs} />
+          </div>
+          <DetailLayout toc={toc} aside={aside}>
+            {byline && byline.length > 0 && (
+              <MetaBar items={byline} align={bylineAlign} className={textClassName} />
+            )}
+            {image ? (
+              <div className={cn(BESIDE_PICTURE, textClassName)}>
+                {lead}
+                <FeaturedImage image={image} />
+                {children}
+              </div>
+            ) : (
+              <>
+                {lead}
+                {children}
+              </>
+            )}
+          </DetailLayout>
         </div>
-        <DetailLayout toc={toc} aside={aside}>
-          {byline && byline.length > 0 && (
-            <MetaBar items={byline} align={bylineAlign} className={textClassName} />
-          )}
-          {image ? (
-            <div className={cn(BESIDE_PICTURE, textClassName)}>
-              {lead}
-              <FeaturedImage image={image} />
-              {children}
-            </div>
-          ) : (
-            <>
-              {lead}
-              {children}
-            </>
-          )}
-        </DetailLayout>
-      </div>
+      </PageBackdrop>
     </article>
   )
 }

@@ -268,15 +268,15 @@ export const GLASS_TINT_ALPHA = 0.1
 export const GLASS_SHEEN_ALPHA = 0.15
 
 /**
- * The photo behind a post's or an event's title band (`PageHeader · band`, #1024): the photo at
- * `BAND_PHOTO_ALPHA`, then a `--surface` scrim at `BAND_SCRIM_ALPHA` over it, so the photo reaches
- * the title at `PHOTO × (1 - SCRIM)` of its own strength. `BandBackdrop` writes the same numbers as
- * its classes (`opacity-60`, `bg-surface/50`), which its test checks. The title's colour must pass
- * on the band over the lightest and the darkest a photo can be (white and black, so whatever the
- * photo), which `themes.test.ts` checks in both modes; lower the numbers only if it still does.
+ * The theme's own background colour laid over a page's backdrop photo (`PageBackdrop`, #1268), as
+ * a share of its strength, light and dark. It is faint on purpose: it only evens the photo out,
+ * where there is no text, so the photo is plainly visible there. Text never relies on it: each
+ * block of text sits on a solid plate (`text-plate`) or fade (`text-fade`) in the page colour, and
+ * the title on the glow (`text-shadow-glow`), all from `tailwind.css`. `PageBackdrop` writes these
+ * numbers as its classes (`bg-background/8 dark:bg-background/14`), which its test checks. The same
+ * numbers for every photo: the scrim is never adjusted per photo (images guideline, rule 14).
  */
-export const BAND_PHOTO_ALPHA = 0.6
-export const BAND_SCRIM_ALPHA = 0.5
+export const BACKDROP_SCRIM_ALPHA = { light: 0.08, dark: 0.14 } as const
 
 /** WCAG 2.x AA minimum for normal text. */
 export const MIN_TEXT_CONTRAST = 4.5

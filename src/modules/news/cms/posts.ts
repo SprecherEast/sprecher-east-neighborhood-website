@@ -9,7 +9,7 @@ import {
   REVIEW_QUEUE_FIELDS,
   SUGGESTIONS_FILTER,
 } from '@/platform/payload/reviewQueue'
-import { bandBackdropField } from '@/platform/payload/bandBackdrop'
+import { backdropField } from '@/platform/payload/backdropField'
 import { seoTab } from '@/platform/payload/seoTab'
 
 import { populateAuthors } from './populateAuthors'
@@ -50,7 +50,7 @@ export const Posts: CollectionConfig<'posts'> = {
               type: 'upload',
               relationTo: 'media',
             },
-            bandBackdropField(),
+            backdropField(),
             {
               name: 'content',
               type: 'richText',

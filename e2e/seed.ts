@@ -11,6 +11,7 @@ import { contactForm } from '../src/endpoints/seed/contact-form'
 import { contact } from '../src/endpoints/seed/contact-page'
 import { root, p } from '../src/endpoints/seed/helpers/lexical'
 import { alignmentPost, FIGURE_CAPTION } from './support/alignmentPage'
+import { backdropEvent, backdropPage, backdropPost, plainPost } from './support/backdropPages'
 import { billPost } from './support/billPage'
 import { EDGES_EVENT_SLUG } from './support/alignmentSlug'
 import { pictureCardsPost, pictureEvent, picturePost } from './support/featuredPicturePages'
@@ -100,6 +101,30 @@ for (const [collection, data] of [
   ['posts', picturePost(figure.id)],
   ['posts', pictureCardsPost(figure.id)],
   ['events', pictureEvent(figure.id)],
+] as const) {
+  await payload.create({
+    collection,
+    depth: 0,
+    data: data as never,
+    context,
+    overrideAccess: true, // test setup, no user
+  })
+}
+
+// A neighborhood photo behind a post, an event and a page, and a post without one (#1268)
+const photo = await payload.create({
+  collection: 'media',
+  depth: 0,
+  data: { alt: 'A path through a field at dusk' },
+  filePath: 'public/images/image-8.jpeg',
+  context,
+  overrideAccess: true, // test setup, no user
+})
+for (const [collection, data] of [
+  ['posts', backdropPost(photo.id)],
+  ['posts', plainPost()],
+  ['events', backdropEvent(photo.id)],
+  ['pages', backdropPage(photo.id)],
 ] as const) {
   await payload.create({
     collection,

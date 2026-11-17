@@ -10,7 +10,7 @@ import {
   REVIEW_QUEUE_FIELDS,
   SUGGESTIONS_FILTER,
 } from '@/platform/payload/reviewQueue'
-import { bandBackdropField } from '@/platform/payload/bandBackdrop'
+import { backdropField } from '@/platform/payload/backdropField'
 import { seoTab } from '@/platform/payload/seoTab'
 
 import { EVENT_LOCATION_TYPES } from '../domain/locationTypes'
@@ -128,7 +128,7 @@ export const Events: CollectionConfig<'events'> = {
               type: 'upload',
               relationTo: 'media',
             },
-            bandBackdropField(),
+            backdropField(),
           ],
         },
         {

@@ -21,6 +21,8 @@ export interface GlassPanelProps {
 export function GlassPanel({ children, className }: GlassPanelProps) {
   return (
     <div
+      // Marks the glass, so the rail's text plates skip it and the photo shows through (#1268)
+      data-glass-panel
       className={cn(
         'relative overflow-hidden rounded-xl border border-on-image/20 px-4 py-3 text-on-image shadow-[0_8px_32px_color-mix(in_srgb,var(--scrim)_30%,transparent),inset_0_1px_0_color-mix(in_srgb,var(--on-image)_20%,transparent)] backdrop-blur-xl md:px-5 md:py-3.5',
         className,

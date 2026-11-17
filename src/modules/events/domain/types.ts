@@ -1,4 +1,4 @@
-import type { BandBackdrop, ImageRef, RichTextValue } from '@/platform/lib'
+import type { BackdropCrops, ImageRef, RichTextValue } from '@/platform/lib'
 
 import type { EventCategoryRef } from './categories'
 import type { EventLocationType } from './locationTypes'
@@ -39,7 +39,7 @@ export type EventDetail = EventSummary & {
   agendaUrl: string | null
   content: RichTextValue | null
   /** The photo behind the title band, one crop per screen size; `null` keeps the plain band (#1024) */
-  backdrop: BandBackdrop | null
+  backdrop: BackdropCrops | null
   meta: {
     title: string | null
     description: string | null

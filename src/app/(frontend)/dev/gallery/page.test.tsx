@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as Navigation from 'next/navigation'
 
 import { NOT_INDEXED } from '@/platform/seo/notIndexed'
+import { stubMatchMedia } from '@/platform/ui/testing/stubMatchMedia'
 
 import { GALLERY_COMPONENTS } from './galleryComponents'
 import GalleryPage, { metadata } from './page'
@@ -22,6 +23,8 @@ vi.mock('@/endpoints/seed/image-hero1.webp', () => ({
 
 beforeEach(() => {
   notFound.mockClear()
+  // The backdrop sample asks for the reader's motion setting
+  stubMatchMedia()
   // jsdom has no ResizeObserver, which Radix Checkbox uses inside a form
   vi.stubGlobal(
     'ResizeObserver',
