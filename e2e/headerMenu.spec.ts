@@ -30,13 +30,18 @@ test.describe('on a wide screen', () => {
     const label = page.locator('header').getByRole('button', { name: 'Resources' })
     const link = page.getByRole('link', { name: 'Government' })
 
+    // The panel takes focus once it is open and listening for Escape and outside presses; on a
+    // slow runner the link shows before that, and an early key or press is lost (#1277)
+    const panel = page.getByRole('dialog', { name: 'Resources' })
+
     await label.click()
+    await expect(panel).toBeFocused()
     await page.keyboard.press('Escape')
     await expect(link).toBeHidden()
     await expect(label).toBeFocused()
 
     await label.click()
-    await expect(link).toBeVisible()
+    await expect(panel).toBeFocused()
     await page.mouse.click(10, 500)
     await expect(link).toBeHidden()
   })
