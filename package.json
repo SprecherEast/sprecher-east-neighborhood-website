@@ -21,6 +21,7 @@
     "duplication": "jscpd",
     "agent-context": "node scripts/agent-context.mjs",
     "filing-checklist": "node .github/scripts/filing-checklist.mjs --write",
+    "audit:prod": "node scripts/audit-prod.mjs",
     "knowledge:check": "node scripts/knowledge-check.mjs",
     "docs:generate": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs",
     "docs:check": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs --check"
@@ -107,6 +108,7 @@
     "@types/react-dom": "^19.2.7",
     "ajv": "^8.18.0",
     "axe-core": "^4.14.0",
+    "better-npm-audit": "4.2.1",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.4.2",
     "eslint-config-prettier": "^10.1.8",
