@@ -51,7 +51,7 @@ Instead of centering everything in a tall void, anchor content to the bottom-lef
 
 ### Pattern: Frosted Glass Text Panel
 
-Place hero text on a frosted glass card that sits on top of the image. Text is always legible regardless of image content.
+Place the hero's text on a frosted glass panel that sits on top of the image: the shared `GlassPanel` (#1278), which darkens itself, so its text is legible whatever the image holds. The title stays on the photo, as on the home hero.
 
 ```tsx
 <div className="relative -mt-[var(--header-height)] min-h-[var(--hero-min-height)]">
@@ -63,15 +63,17 @@ Place hero text on a frosted glass card that sits on top of the image. Text is a
   {/* Subtle overall scrim so the glass panel doesn't float in brightness */}
   <div className="absolute inset-0 bg-scrim/20" />
 
-  {/* Content in frosted glass panel */}
+  {/* Title on the photo, description in the glass panel */}
   <div className="relative z-10 container flex min-h-[var(--hero-min-height)] items-end pb-16 md:items-center md:pb-0">
-    <div className="w-full max-w-xl rounded-2xl border border-on-image/20 bg-on-image/10 p-8 shadow-2xl backdrop-blur-md md:p-12">
-      <h1 className="text-3xl leading-tight font-bold tracking-tight text-on-image md:text-4xl lg:text-5xl">
+    <div className="w-full max-w-xl">
+      <h1 className="text-3xl leading-tight font-bold tracking-tight text-on-image text-shadow-photo md:text-4xl lg:text-5xl">
         Your Neighborhood, Your Community
       </h1>
-      <p className="mt-4 text-base leading-relaxed text-on-image/90 md:text-lg">
-        Connecting residents on Madison's Far East Side since 2006.
-      </p>
+      <GlassPanel className="mt-3">
+        <p className="text-base leading-relaxed text-on-image/90 md:text-lg">
+          Connecting residents on Madison's Far East Side since 2006.
+        </p>
+      </GlassPanel>
       <div className="mt-8 flex flex-wrap gap-4">
         <a className="rounded-lg bg-primary-fill px-6 py-3 font-semibold text-primary-foreground transition hover:bg-primary-fill-hover">
           Upcoming Events
@@ -85,7 +87,7 @@ Place hero text on a frosted glass card that sits on top of the image. Text is a
 </div>
 ```
 
-**Key CSS:** `backdrop-blur-md` (12px blur) + `bg-on-image/10` (10% of the on-image colour) + `border border-on-image/20`. The blur makes the panel feel physical without hiding the image.
+**Key CSS:** none to write: the panel's blur, tint, border and darkening layer live in `GlassPanel`.
 
 **Browser support:** `backdrop-filter` is supported in all modern browsers. Safari 9–17 requires the `-webkit-backdrop-filter` prefix; Safari 18+ supports the unprefixed property. For maximum compatibility, include both in `globals.css` if targeting older Safari versions.
 
