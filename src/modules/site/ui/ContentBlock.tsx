@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { BILL_BODIES, BILL_BODY_NAMES } from '@/platform/lib/billShare'
 import { cn } from '@/platform/lib/cn'
 import { lexicalRoot } from '@/platform/richtext/lexicalTree'
 import { RichText } from '@/platform/richtext/RichText'
@@ -7,12 +8,15 @@ import { Card } from '@/platform/ui/Card'
 import { CardGrid, CardGridItem } from '@/platform/ui/CardGrid'
 import { LinkButton } from '@/platform/ui/CMSLink'
 import { Section, type SectionPlacement } from '@/platform/ui/Section'
+import { ShareStrip } from '@/platform/ui/ShareStrip'
+import { BILL_BODY_TONES } from '@/platform/ui/shareTones'
 
 import type {
   ContentBlockProps,
   ContentCardGroup,
   ContentColumn,
   ContentColumnSize,
+  ShareBarPercents,
 } from '../domain/blocks'
 import { TITLE_TEXT } from './blockStyles'
 import { COLUMN_SPAN } from './columnSpan'
@@ -56,30 +60,58 @@ function splitLeadingHeading(body: ContentColumn['body']): {
   return { lead: part(root.children.slice(0, 1)), rest: part(root.children.slice(1)) }
 }
 
-/** A column's text, then its link button, at the start of the column or at the end */
+/** A column's share bar: a thin row under the opening heading, named for screen readers */
+function ColumnShareBar({ percents }: { percents: ShareBarPercents }) {
+  return (
+    <ShareStrip
+      label="Where a property tax bill goes"
+      className="mb-3"
+      parts={BILL_BODIES.map((key) => ({
+        name: BILL_BODY_NAMES[key],
+        tone: BILL_BODY_TONES[key],
+        percent: percents[key],
+      }))}
+    />
+  )
+}
+
+/**
+ * A column's text, then its link button, at the start of the column or at the end. A share bar sits
+ * right under the opening heading; a `beside` button floats right under the heading and the text wraps
+ * around it, then runs full width: no row or column of its own (`besideFloat` is the article picture's
+ * float, #1023).
+ */
 function ColumnContent({
   body,
   link,
   linkAlign,
-}: Pick<ContentColumn, 'body' | 'link' | 'linkAlign'>) {
-  if (link && linkAlign === 'beside') {
-    // The button floats right under the heading and the text wraps around it, then runs full
-    // width: no row or column of its own (`besideFloat` is the article picture's float, #1023)
-    const { lead, rest } = splitLeadingHeading(body)
+  shareBar,
+}: Pick<ContentColumn, 'body' | 'link' | 'linkAlign' | 'shareBar'>) {
+  const beside = Boolean(link && linkAlign === 'beside')
+  if (!beside && !shareBar) {
     return (
       <>
-        {lead && <RichText data={lead} enableGutter={false} />}
-        <div className="float-right mb-2 ml-4">
-          <LinkButton link={link} />
-        </div>
-        {rest && <RichText data={rest} enableGutter={false} besideFloat />}
+        {body && <RichText data={body} enableGutter={false} />}
+        {link && (
+          <div className={cn('mt-4', linkAlign === 'end' && 'flex justify-end')}>
+            <LinkButton link={link} />
+          </div>
+        )}
       </>
     )
   }
+  const { lead, rest } = splitLeadingHeading(body)
   return (
     <>
-      {body && <RichText data={body} enableGutter={false} />}
-      {link && (
+      {lead && <RichText data={lead} enableGutter={false} />}
+      {shareBar && <ColumnShareBar percents={shareBar} />}
+      {link && beside && (
+        <div className="float-right mb-2 ml-4">
+          <LinkButton link={link} />
+        </div>
+      )}
+      {rest && <RichText data={rest} enableGutter={false} besideFloat={beside} />}
+      {link && !beside && (
         <div className={cn('mt-4', linkAlign === 'end' && 'flex justify-end')}>
           <LinkButton link={link} />
         </div>

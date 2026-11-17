@@ -7,17 +7,10 @@ import {
 } from '@/platform/lib/billShare'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ShareSlice } from '@/platform/ui/ShareBill'
+import { BILL_BODY_TONES } from '@/platform/ui/shareTones'
 
 /** The order of two bodies with the same share: the City first, the one a reader knows (#1202) */
 const SLICE_ORDER: readonly BillBody[] = ['city', 'schools', 'county', 'matc']
-
-/** A slice's tone, a step of the breakdown chart's colors: the City amber, the schools dark red-orange, the County green, Madison College light green (#1263) */
-const TONE: Record<BillBody, ShareSlice['tone']> = {
-  schools: 'rust',
-  city: 'amber',
-  county: 'green',
-  matc: 'mint',
-}
 
 export type Receipt = {
   /** The receipt's rows, the largest share first; none until every body has a rate (#1202) */
@@ -53,7 +46,7 @@ export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt
                 amount: formatWholeDollars(found.amount ?? 0),
                 percent: found.percent ?? 0,
                 share: found.share ?? 0,
-                tone: TONE[key],
+                tone: BILL_BODY_TONES[key],
               },
             ]
           : []

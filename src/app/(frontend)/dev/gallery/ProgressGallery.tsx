@@ -6,6 +6,7 @@ import { HeatMap } from '@/platform/ui/HeatMap'
 import { Disclosure } from '@/platform/ui/Disclosure'
 import { BarTrack } from '@/platform/ui/BarTrack'
 import { ShareBill, type ShareSlice } from '@/platform/ui/ShareBill'
+import { ShareStrip } from '@/platform/ui/ShareStrip'
 import { Text } from '@/platform/ui/Text'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
@@ -63,6 +64,28 @@ export function BarTrackGallery() {
           className="h-2.5"
           fillClassName="fill-muted-foreground/45"
           mark={{ 'data-sample-bar': 'full' }}
+        />
+      </GalleryVariant>
+    </GalleryEntry>
+  )
+}
+
+/** A whole as one slim row of colored segments: the thin bar a content column can show (#1266) */
+export function ShareStripGallery() {
+  return (
+    <GalleryEntry
+      name="ShareStrip"
+      description="A whole as one slim row, each part as wide as its share"
+    >
+      <GalleryVariant label="Four parts" className="block">
+        <ShareStrip
+          label="Sample"
+          parts={[
+            { name: 'First', percent: 50, tone: 'rust' },
+            { name: 'Second', percent: 30, tone: 'amber' },
+            { name: 'Third', percent: 15, tone: 'green' },
+            { name: 'Fourth', percent: 5, tone: 'mint' },
+          ]}
         />
       </GalleryVariant>
     </GalleryEntry>
