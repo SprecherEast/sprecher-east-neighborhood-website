@@ -95,12 +95,15 @@ function ColumnContent({
     <>
       {lead && <RichText data={lead} enableGutter={false} />}
       {shareBar && <ColumnShareBar percents={shareBar} />}
-      {link && beside && (
-        <div className="float-right mb-2 ml-4">
-          <LinkButton link={link} />
-        </div>
-      )}
-      {rest && <RichText data={rest} enableGutter={false} besideFloat={beside} />}
+      {/* On a phone the button sits under the text, at the end; from `sm` up it floats beside it */}
+      <div className={cn(beside && 'flex flex-col-reverse sm:block')}>
+        {link && beside && (
+          <div className="mt-3 flex justify-end sm:float-right sm:mt-0 sm:mb-2 sm:ml-4">
+            <LinkButton link={link} />
+          </div>
+        )}
+        {rest && <RichText data={rest} enableGutter={false} besideFloat={beside} />}
+      </div>
       {link && !beside && (
         <div className={cn('mt-4', linkAlign === 'end' && 'flex justify-end')}>
           <LinkButton link={link} />

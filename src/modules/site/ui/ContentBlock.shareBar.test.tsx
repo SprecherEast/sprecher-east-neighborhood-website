@@ -52,4 +52,30 @@ describe('ContentBlock share bar', () => {
     )
     expect(screen.queryByRole('img')).toBeNull()
   })
+
+  it('stacks a beside button under the text on a phone and floats it beside from sm up (#1273)', () => {
+    render(
+      <main>
+        <ContentBlock
+          layout="single"
+          columns={[
+            {
+              size: 'full',
+              body: doc(heading('h2', 'Title'), paragraph(text('Some words'))),
+              link: { href: '/x', label: 'Go', external: false, appearance: 'default' },
+              linkAlign: 'beside',
+            },
+          ]}
+        />
+      </main>,
+    )
+
+    const button = screen.getByRole('link', { name: 'Go' })
+    const row = button.parentElement as HTMLElement
+    expect(row.className).toContain('sm:float-right')
+    expect(row.className).toContain('justify-end')
+    // The group reverses on a phone, so the text shows first and the button after it
+    expect((row.parentElement as HTMLElement).className).toContain('flex-col-reverse')
+    expect((row.parentElement as HTMLElement).className).toContain('sm:block')
+  })
 })
