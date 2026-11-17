@@ -278,5 +278,12 @@ export const GLASS_SHEEN_ALPHA = 0.15
  */
 export const BACKDROP_SCRIM_ALPHA = { light: 0.08, dark: 0.14 } as const
 
+/**
+ * The page-colour tint of a title band over a page's photo (`PageHeader · band`, `on-photo:bg-background/26`),
+ * so the band reads as a soft veil, not a hole. It carries no contrast: the title sits on its own
+ * plate. `PageHeader` writes the same number as its class, which its test checks.
+ */
+export const BACKDROP_BAND_TINT_ALPHA = 0.26
+
 /** WCAG 2.x AA minimum for normal text. */
 export const MIN_TEXT_CONTRAST = 4.5

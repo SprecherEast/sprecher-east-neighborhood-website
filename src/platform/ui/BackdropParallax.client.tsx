@@ -26,9 +26,13 @@ export function BackdropParallax({ children }: { children: React.ReactNode }) {
     if (!box || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     let frame = 0
+    // The room to scroll is measured when the page's size changes, not in every frame
+    let room = 0
+    const measure = () => {
+      room = document.documentElement.scrollHeight - window.innerHeight
+    }
     const move = () => {
       frame = 0
-      const room = document.documentElement.scrollHeight - window.innerHeight
       const progress = room > 0 ? Math.min(Math.max(window.scrollY / room, 0), 1) : 0.5
       box.style.transform = `translate3d(0, ${(0.5 - progress) * 2 * DRIFT_PERCENT}%, 0)`
     }
@@ -36,10 +40,23 @@ export function BackdropParallax({ children }: { children: React.ReactNode }) {
       if (!frame) frame = requestAnimationFrame(move)
     }
 
+    const onResize = () => {
+      measure()
+      onScroll()
+    }
+
+    measure()
     move()
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onResize)
+    // Pictures and fonts that arrive late make the page taller
+    window.addEventListener('load', onResize)
     return () => {
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('orientationchange', onResize)
+      window.removeEventListener('load', onResize)
       if (frame) cancelAnimationFrame(frame)
     }
   }, [])

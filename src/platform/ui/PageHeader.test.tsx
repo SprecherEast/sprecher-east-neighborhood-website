@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { BACKDROP_BAND_TINT_ALPHA } from '@/platform/theme/tokens'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -156,7 +157,9 @@ describe('PageHeader', () => {
       render(<PageHeader variant="band" title="Park cleanup" />)
 
       expect(band()?.className).toContain('on-photo:border-transparent')
-      expect(band()?.className).toContain('on-photo:bg-background/26')
+      expect(band()?.className).toContain(
+        `on-photo:bg-background/${Math.round(BACKDROP_BAND_TINT_ALPHA * 100)}`,
+      )
     })
 
     it('keeps the title readable with the shared glow, never a tight halo', () => {

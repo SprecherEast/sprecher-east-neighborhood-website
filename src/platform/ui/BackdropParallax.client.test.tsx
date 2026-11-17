@@ -17,6 +17,8 @@ const scrollTo = (y: number, pageHeight = 3000, screenHeight = 1000) => {
   Object.defineProperty(window, 'innerHeight', { value: screenHeight, configurable: true })
   Object.defineProperty(window, 'scrollY', { value: y, configurable: true })
   act(() => {
+    // The page's size is measured when it changes, not at every scroll
+    window.dispatchEvent(new Event('resize'))
     window.dispatchEvent(new Event('scroll'))
     // The frame the scroll asked for
     frames.splice(0).forEach((callback) => callback(0))
@@ -89,6 +91,35 @@ describe('BackdropParallax', () => {
     expect(add).not.toHaveBeenCalledWith('scroll', expect.anything(), expect.anything())
   })
 
+  it('measures the page when its size changes, not in every frame', () => {
+    reduced(false)
+    const { container } = render(<BackdropParallax>{null}</BackdropParallax>)
+    scrollTo(1000)
+    let reads = 0
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      get: () => {
+        reads++
+        return 3000
+      },
+      configurable: true,
+    })
+
+    for (const y of [1100, 1200, 1300]) {
+      Object.defineProperty(window, 'scrollY', { value: y, configurable: true })
+      act(() => {
+        window.dispatchEvent(new Event('scroll'))
+        frames.splice(0).forEach((callback) => callback(0))
+      })
+    }
+    expect(reads).toBe(0)
+    expect(mover(container).style.transform).not.toBe('')
+
+    act(() => {
+      window.dispatchEvent(new Event('orientationchange'))
+    })
+    expect(reads).toBe(1)
+  })
+
   it('stops listening when the page goes away', () => {
     reduced(false)
     const remove = vi.spyOn(window, 'removeEventListener')
@@ -96,5 +127,6 @@ describe('BackdropParallax', () => {
 
     unmount()
     expect(remove).toHaveBeenCalledWith('scroll', expect.any(Function))
+    expect(remove).toHaveBeenCalledWith('resize', expect.any(Function))
   })
 })
