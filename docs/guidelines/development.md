@@ -189,5 +189,5 @@ Before adding a new package:
 
 - Check if the framework or an existing dependency already provides the capability
 - Verify the package is actively maintained (recent publish, healthy download count)
-- Run `npm audit` after installation
+- Run `npm run audit:prod` after installation
 - Prefer well-established packages over newer alternatives with smaller ecosystems

@@ -129,7 +129,7 @@ npx linkinator http://localhost:3000 --recurse
 npx lighthouse http://localhost:3000 --output json
 
 # npm security audit
-npm audit --audit-level=high --omit=dev
+npm run audit:prod
 
 # Build check
 npm run build

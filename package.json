@@ -21,7 +21,7 @@
     "duplication": "jscpd",
     "agent-context": "node scripts/agent-context.mjs",
     "filing-checklist": "node .github/scripts/filing-checklist.mjs --write",
-    "audit:prod": "better-npm-audit audit --level high --production --require-notes --require-expiry --max-expiry-days 45",
+    "audit:prod": "node scripts/audit-prod.mjs",
     "knowledge:check": "node scripts/knowledge-check.mjs",
     "docs:generate": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs",
     "docs:check": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs --check"
