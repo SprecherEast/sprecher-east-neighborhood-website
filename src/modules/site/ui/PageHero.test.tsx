@@ -46,6 +46,18 @@ describe('PageHero', () => {
     await expectAccessible(container)
   })
 
+  it('high: holds the description in the shared glass panel, with no glass classes of its own', () => {
+    const { container } = inMain(
+      <PageHero variant="high" body={body} image={image} links={links} />,
+    )
+    const panel = screen.getByText('Neighbors on the Far East Side.').closest('.backdrop-blur-xl')
+    expect(panel).toBeTruthy()
+    expect(panel?.querySelector('.bg-scrim\\/80')).toBeTruthy()
+    // The title is not on the glass
+    expect(panel?.contains(screen.getByRole('heading', { level: 1 }))).toBe(false)
+    expect(container.querySelectorAll('.backdrop-blur-xl')).toHaveLength(1)
+  })
+
   it("high: crops the photo around the upload's focal point, the centre when it has none (#1013)", () => {
     const { container, rerender } = inMain(
       <PageHero

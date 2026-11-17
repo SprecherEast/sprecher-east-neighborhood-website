@@ -53,6 +53,20 @@ Source: `src/platform/ui/BandBackdrop.tsx`
 
 - Platform: `platform/ui`
 
+## `GlassPanel`
+
+Source: `src/platform/ui/GlassPanel.tsx`
+
+| Prop        | Type              | Required | Description                                  |
+| ----------- | ----------------- | -------- | -------------------------------------------- |
+| `children`  | `React.ReactNode` | yes      |                                              |
+| `className` | `string`          | no       | Layout only (margin, width); never the glass |
+
+**Used by** (direct imports):
+
+- Modules: `site`
+- Routes: `/dev/gallery`
+
 ## `ArticlePage`
 
 Source: `src/platform/ui/ArticlePage.tsx`

@@ -184,6 +184,8 @@ main text colour and the background, and primary-coloured text takes `primary-st
 AA contrast over the photo in light and dark. With no photo it draws only its children, so a page
 without one is unchanged. Its test checks these with axe.
 
+**`GlassPanel`** (#1278) is the frosted glass of the home hero, lifted out so anything that sits on a photo can use it: a rounded box with a faint `on-image` border and tint, a soft shadow, a blur of what is behind it, a sheen from the top left and a glow along the top edge, holding `on-image` text. There is one look, the same in light and dark, and no variant for it; `className` is for layout only. It carries its own darkening layer from the `scrim` token (`bg-scrim/80`, `GLASS_SCRIM_ALPHA` in the theme contract) under the glass, so its text measures 4.5:1 or better over white, a mid shade and black in both modes, whatever is behind it; its test proves it from the theme's real colours. `PageHero` holds the home description in it.
+
 ## Rich text (`src/platform/richtext/`)
 
 Components: [rich text](../reference/components/rich-text.md) (`src/platform/richtext/`).
