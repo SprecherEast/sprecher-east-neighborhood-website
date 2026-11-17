@@ -123,7 +123,8 @@
 
 /*
  * `nav-menu-slide` (#1237): the header's submenu slides down a few pixels as it fades in when it
- * opens. Only where the reader allows motion; otherwise it just appears.
+ * opens. Only where the reader allows motion; otherwise it just appears. Use it with
+ * `data-[state=open]:` so a closing panel has no animation to wait for (#1277).
  */
 @keyframes nav-menu-slide {
   from {
