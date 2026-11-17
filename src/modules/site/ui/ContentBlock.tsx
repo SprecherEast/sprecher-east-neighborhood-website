@@ -88,19 +88,9 @@ function ColumnContent({
   shareBar,
 }: Pick<ContentColumn, 'body' | 'link' | 'linkAlign' | 'shareBar'>) {
   const beside = Boolean(link && linkAlign === 'beside')
-  if (!beside && !shareBar) {
-    return (
-      <>
-        {body && <RichText data={body} enableGutter={false} />}
-        {link && (
-          <div className={cn('mt-4', linkAlign === 'end' && 'flex justify-end')}>
-            <LinkButton link={link} />
-          </div>
-        )}
-      </>
-    )
-  }
-  const { lead, rest } = splitLeadingHeading(body)
+  // The opening heading is split off only when something sits right under it
+  const { lead, rest } =
+    beside || shareBar ? splitLeadingHeading(body) : { lead: undefined, rest: body }
   return (
     <>
       {lead && <RichText data={lead} enableGutter={false} />}
