@@ -14,7 +14,7 @@
 | [Media](media.md)                          | `Media`, `ImageMedia`, `VideoMedia`, `MapEmbed`, `Figure`                                                                                                                 |
 | [Feedback and overlays](feedback.md)       | `Alert`, `Dismissible`, `Toast`, `Dialog`, `RouteDialog`, `Zoom`                                                                                                          |
 | [Navigation and page tools](navigation.md) | `Breadcrumbs`, `OnThisPage`, `LoadMoreFooter`, `PeriodNav`, `NavMenu`, `RelatedLinks`, `AdminBar`, `LivePreviewListener`, `VersionCheck`                                  |
-| [Layout and page structure](layout.md)     | `Section`, `PageBackdrop`, `BandBackdrop`, `GlassPanel`, `ArticlePage`, `DetailLayout`, `JsonLd`                                                                          |
+| [Layout and page structure](layout.md)     | `Section`, `PageBackdrop`, `BackdropParallax`, `GlassPanel`, `ArticlePage`, `DetailLayout`, `JsonLd`                                                                      |
 | [Charts](charts.md)                        | `Chart`, `ChartDataTable`, `ChartZoom`, `SquareGrid`, `TileGrid`, `BreakdownChart`, `Amount`, `BarChartSvg`, `BarSegment`, `ScaledBreakdown`, `ChartCaption`, `AreaChart` |
 | [Activity maps](activity-maps.md)          | `HeatMap`, `HeatCell`                                                                                                                                                     |
 | [Shares of a whole](shares.md)             | `BarTrack`, `ShareBill`, `ShareStrip`                                                                                                                                     |

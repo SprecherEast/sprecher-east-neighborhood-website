@@ -59,6 +59,11 @@ test.describe('text over a photo behind the page', () => {
           await page.waitForTimeout(200)
           if (!(await target.isVisible())) continue
           const ratio = await target.evaluate(async (element) => {
+            const canvasContext = (canvas: HTMLCanvasElement) => {
+              const context = canvas.getContext('2d')
+              if (!context) throw new Error('No 2D canvas')
+              return context
+            }
             const channel = (c: number) => {
               const s = c / 255
               return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
@@ -69,7 +74,7 @@ test.describe('text over a photo behind the page', () => {
               [element, ...element.querySelectorAll('*')].find((node) =>
                 [...node.childNodes].some((n) => n.nodeType === 3 && n.textContent?.trim()),
               ) ?? element
-            const probe = document.createElement('canvas').getContext('2d')!
+            const probe = canvasContext(document.createElement('canvas'))
             probe.fillStyle = getComputedStyle(holder).color
             probe.fillRect(0, 0, 1, 1)
             const [tr, tg, tb] = probe.getImageData(0, 0, 1, 1).data
@@ -83,16 +88,23 @@ test.describe('text over a photo behind the page', () => {
           })
           // The text is really clear before the picture is taken (a first style change can be slow)
           await target.evaluate(
-            (e) => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+            () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
           )
           await page.waitForFunction(
-            (sel) => getComputedStyle(document.querySelector(sel)!).color === 'rgba(0, 0, 0, 0)',
+            (sel) =>
+              getComputedStyle(document.querySelector(sel) ?? document.body).color ===
+              'rgba(0, 0, 0, 0)',
             selector,
           )
           const base64 = (await target.screenshot()).toString('base64')
-          await style.evaluate((node) => node.remove())
+          await style.evaluate((node) => (node as HTMLElement).remove())
           const min = await page.evaluate(
             async ({ base64, text }) => {
+              const canvasContext = (canvas: HTMLCanvasElement) => {
+                const context = canvas.getContext('2d')
+                if (!context) throw new Error('No 2D canvas')
+                return context
+              }
               const channel = (c: number) => {
                 const s = c / 255
                 return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
@@ -103,7 +115,7 @@ test.describe('text over a photo behind the page', () => {
               const canvas = document.createElement('canvas')
               canvas.width = image.width
               canvas.height = image.height
-              const context = canvas.getContext('2d')!
+              const context = canvasContext(canvas)
               context.drawImage(image, 0, 0)
               const data = context.getImageData(0, 0, canvas.width, canvas.height).data
               let worstRatio = 99
@@ -122,7 +134,10 @@ test.describe('text over a photo behind the page', () => {
           worst[name] = Math.round(min * 100) / 100
         }
 
-        console.log(`contrast ${photo} ${scheme}: ${JSON.stringify(worst)}`)
+        test.info().annotations.push({
+          type: 'contrast',
+          description: `${photo} ${scheme}: ${JSON.stringify(worst)}`,
+        })
         expect(Object.keys(worst).length, 'the page has text to measure').toBeGreaterThan(4)
         for (const [name, value] of Object.entries(worst)) {
           expect(value, `${name} over ${photo}, ${scheme}: ${value}:1`).toBeGreaterThanOrEqual(MIN)

@@ -32,22 +32,23 @@ Source: `src/platform/ui/Section.tsx`
 
 Source: `src/platform/ui/PageBackdrop.tsx`
 
-| Prop       | Type              | Required | Description |
-| ---------- | ----------------- | -------- | ----------- |
-| `image`    | `Media`           | no       |             |
-| `children` | `React.ReactNode` | yes      |             |
+| Prop       | Type              | Required | Description                                      |
+| ---------- | ----------------- | -------- | ------------------------------------------------ |
+| `backdrop` | `BackdropCrops`   | no       | The crops of the photo, or none for a plain page |
+| `children` | `React.ReactNode` | yes      |                                                  |
 
 **Used by** (direct imports):
 
 - Routes: `/[slug]`, `/dev/gallery`
+- Platform: `platform/ui`
 
-## `BandBackdrop`
+## `BackdropParallax`
 
-Source: `src/platform/ui/BandBackdrop.tsx`
+Source: `src/platform/ui/BackdropParallax.client.tsx`
 
-| Prop       | Type                            | Required | Description |
-| ---------- | ------------------------------- | -------- | ----------- |
-| `backdrop` | `Backdrop \| null \| undefined` | yes      |             |
+| Prop       | Type              | Required | Description |
+| ---------- | ----------------- | -------- | ----------- |
+| `children` | `React.ReactNode` | yes      |             |
 
 **Used by** (direct imports):
 
@@ -66,6 +67,7 @@ Source: `src/platform/ui/GlassPanel.tsx`
 
 - Modules: `site`
 - Routes: `/dev/gallery`
+- Platform: `platform/ui`
 
 ## `ArticlePage`
 
@@ -78,6 +80,7 @@ Source: `src/platform/ui/ArticlePage.tsx`
 | `draft`         | `boolean`                                                                                                                                                                  | yes      | Draft mode: refresh the page when an editor saves in Admin's Live Preview (#363)                                                                                                                                                                                               |
 | `image`         | `Media`                                                                                                                                                                    | no       | The article's picture, shown whole under the metadata bar (`FeaturedImage`, #1013, #1023): full width above the text on a phone, to the right of it from a tablet, with the text beside it. The article's `RichText` takes `besideFloat`. Without a picture, nothing is drawn. |
 | `lead`          | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | What opens the article ahead of the picture: a row of cards, which runs the whole column and can't sit beside a floated picture (`splitLeadingWideBlocks`, #1023). The picture then starts beside the first text.                                                              |
+| `backdrop`      | `BackdropCrops`                                                                                                                                                            | no       | The photo behind the whole page, a crop per screen size (`PageBackdrop`, #1268). It runs behind the title, the trail, the article and the rail, and each block of text sits solid on it. None, or no crop set, is a plain page.                                                |
 | `header`        | `PageHeaderProps`                                                                                                                                                          | yes      |                                                                                                                                                                                                                                                                                |
 | `breadcrumbs`   | `BreadcrumbItem[]`                                                                                                                                                         | yes      |                                                                                                                                                                                                                                                                                |
 | `byline`        | `MetaBarItem[]`                                                                                                                                                            | no       | Facts about the article (a post's author and date; an event's when and where), drawn as the `MetaBar` at the top of the article column, above the picture and the text, over one groove line (#774, #1002).                                                                    |

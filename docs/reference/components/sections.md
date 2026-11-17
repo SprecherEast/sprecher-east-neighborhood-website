@@ -50,14 +50,17 @@ Source: `src/platform/ui/EmptyState.tsx`
 
 ## `SidebarCTA`
 
+The call to action in a page's rail: a tinted `Card`, or, on a page with a photo behind it (`glass`, #1268), the shared frosted `GlassPanel` so the photo shows through, its text in the panel's own `on-image` colour.
+
 Source: `src/platform/ui/SidebarCTA.tsx`
 
-| Prop          | Type     | Required | Description                                         |
-| ------------- | -------- | -------- | --------------------------------------------------- |
-| `heading`     | `string` | yes      |                                                     |
-| `description` | `string` | no       | Left out when the heading and button already say it |
-| `buttonLabel` | `string` | yes      |                                                     |
-| `buttonHref`  | `string` | yes      |                                                     |
+| Prop          | Type      | Required | Description                                                   |
+| ------------- | --------- | -------- | ------------------------------------------------------------- |
+| `heading`     | `string`  | yes      |                                                               |
+| `description` | `string`  | no       | Left out when the heading and button already say it           |
+| `buttonLabel` | `string`  | yes      |                                                               |
+| `buttonHref`  | `string`  | yes      |                                                               |
+| `glass`       | `boolean` | no       | The page has a backdrop photo: draw the card as glass over it |
 
 **Used by** (direct imports):
 

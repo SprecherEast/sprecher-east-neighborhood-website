@@ -60,7 +60,6 @@ A neighborhood photo in full color behind a whole page, post or event (#1268, [i
 
 ---
 
-
 ### Pattern: Faded Photo Backdrop
 
 A section background photo at very low opacity — adds warmth and context without competing with content. The photo is felt, not seen.
