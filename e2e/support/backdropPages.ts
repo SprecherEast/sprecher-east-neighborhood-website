@@ -7,6 +7,9 @@ import { heading, p, root } from '../../src/endpoints/seed/helpers/lexical'
 export const BACKDROP_POST_SLUG = 'backdrop-post-check'
 export const BACKDROP_EVENT_SLUG = 'backdrop-event-check'
 export const BACKDROP_PAGE_SLUG = 'backdrop-page-check'
+// The worst a photo can be: a post on solid white and one on solid black, for the contrast test
+export const WHITE_POST_SLUG = 'backdrop-white-post-check'
+export const BLACK_POST_SLUG = 'backdrop-black-post-check'
 export const PLAIN_POST_SLUG = 'backdrop-plain-post-check'
 
 const paragraphs = (count: number) =>
@@ -21,8 +24,11 @@ const content = root([heading('h2', 'What we are building'), ...paragraphs(12)])
 /** The three crops of one photo, which every size of the backdrop shows */
 const crops = (mediaId: number) => ({ phone: mediaId, tablet: mediaId, desktop: mediaId })
 
-export const backdropPost = (mediaId: number): RequiredDataFromCollectionSlug<'posts'> => ({
-  slug: BACKDROP_POST_SLUG,
+export const backdropPost = (
+  mediaId: number,
+  slug = BACKDROP_POST_SLUG,
+): RequiredDataFromCollectionSlug<'posts'> => ({
+  slug,
   title: 'Sprecher East Is Coming Together',
   _status: 'published',
   publishedAt: new Date().toISOString(),

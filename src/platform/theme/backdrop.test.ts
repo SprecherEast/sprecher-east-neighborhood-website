@@ -28,10 +28,11 @@ describe('the backdrop utilities', () => {
     expect(glow.match(/var\(--background\)/g)?.length).toBe(4)
   })
 
-  it('has a text plate that is page colour with a soft edge, only over a backdrop and from lg', () => {
+  it('has a text plate that is page colour with a soft edge, only over a backdrop', () => {
     const plate = block('@utility text-plate')
     expect(plate).toContain('[data-backdrop] *')
-    expect(plate).toContain('width >= theme(--breakpoint-lg)')
+    // Width is the caller's: `lg:text-plate` for a column, bare for a title
+    expect(plate).not.toContain('@media')
     expect(plate).toContain('background: var(--background)')
     expect(plate).toContain('box-shadow')
     expect(plate).toContain('var(--plate-bleed')

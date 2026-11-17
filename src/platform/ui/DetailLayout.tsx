@@ -62,7 +62,7 @@ export function DetailLayout({ children, aside, toc, className }: DetailLayoutPr
           {hasAside && (
             <aside
               className={cn(
-                'mt-12 space-y-6 empty:hidden max-lg:order-3 [&>:not([data-glass-panel])]:text-plate',
+                'mt-12 space-y-6 empty:hidden max-lg:order-3 [&>:not([data-glass-panel])]:lg:text-plate',
                 toc
                   ? 'lg:mt-6 lg:border-t lg:border-border lg:pt-6 on-photo:lg:border-transparent'
                   : 'lg:mt-0',
@@ -73,7 +73,7 @@ export function DetailLayout({ children, aside, toc, className }: DetailLayoutPr
           )}
         </div>
       )}
-      <div className="text-plate min-w-0 max-lg:order-2">{children}</div>
+      <div className="min-w-0 max-lg:order-2 lg:text-plate">{children}</div>
     </div>
   )
 }

@@ -5,7 +5,7 @@ them to the component, and hold them to [the same standards as production code](
 
 ## Hero Patterns
 
-These patterns are for the home page and landing pages. A post or event page is not a hero: it uses `PageHeader` with `variant="band"`, a short plain title band with the facts under it, and shows its picture whole in the article with `FeaturedImage`, never cropped behind the title (#1013).
+These patterns are for the home page and landing pages. A post or event page is not a hero: it uses `PageHeader` with `variant="band"`, a short title band with the facts under it (over a page's backdrop it is transparent, see [backdrops and glass](backdrops-and-glass.md#pattern-full-page-photo-backdrop)), and shows its picture whole in the article with `FeaturedImage`, never cropped behind the title (#1013).
 
 ### Pattern: Anchored Hero (Text Bottom-Left)
 

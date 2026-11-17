@@ -127,7 +127,7 @@ function BandHeader({ eyebrow, title, className }: BandHeaderProps) {
         <div className={cn('container', BAND_PADDING, DETAIL_GRID)}>
           {/* From `lg` the title is in the article's column, the one `DetailLayout` gives the picture
               and the text, so they share a left edge (the grid is defined once, in layoutSizes) */}
-          <div className="lg:col-start-2">
+          <div className="text-plate w-fit lg:col-start-2">
             <Eyebrow>{eyebrow}</Eyebrow>
             <h1 className={titleVariants({ variant: 'band' })}>{title}</h1>
           </div>

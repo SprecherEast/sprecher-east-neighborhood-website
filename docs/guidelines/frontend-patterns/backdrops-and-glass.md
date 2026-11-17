@@ -39,6 +39,28 @@ Frosted glass header that shows content scrolling beneath.
 
 ## Section Backdrop Patterns
 
+### Pattern: Full-Page Photo Backdrop
+
+A neighborhood photo in full color behind a whole page, post or event (#1268, [images rule 14](../images.md)). It is the shared `PageBackdrop`: wrap the page's content, give it the crops, and write no photo markup of your own. The photo is fixed to the screen and drifts slowly as the page scrolls (still for reduced motion), under a faint scrim of the theme background, the same for every photo. Text never sits on it: inside the backdrop, put each block of text on the theme's shared classes, which draw only there.
+
+```tsx
+<PageBackdrop backdrop={crops}>
+  <PageHeader variant="band" title="Park cleanup" />
+  <div className="max-lg:text-fade">
+    <div className="min-w-0 lg:text-plate">{/* the article's text */}</div>
+  </div>
+</PageBackdrop>
+```
+
+- `lg:text-plate`: page color with a soft edge behind a column, from `lg` (use bare `text-plate` for a block that is on a plate at every width, such as the title). Set `[--plate-bleed:0.25rem]` where the box scrolls and would clip a larger edge.
+- `text-fade`: the body solid in the page color, then 7rem of empty space that thins out so the photo shows before the footer; for phones and a page of full-width blocks.
+- `text-shadow-glow` with `on-photo:` for a title: a wide, faint glow in the page color, four soft layers from 2rem to 14rem, never a tight halo. A solid plate under the title keeps the contrast; the glow only softens its edge.
+- Anything else that sits on the photo is a `GlassPanel`, such as the `SidebarCTA` with `glass`. Never a lighter or tinted copy.
+- Never put a `relative` or `isolate` on the page's own box: the site footer is outside it and would be painted under the photo.
+
+---
+
+
 ### Pattern: Faded Photo Backdrop
 
 A section background photo at very low opacity — adds warmth and context without competing with content. The photo is felt, not seen.

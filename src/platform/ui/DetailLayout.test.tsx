@@ -98,7 +98,7 @@ describe('DetailLayout', () => {
     )
 
     const aside = screen.getByRole('complementary')
-    expect(aside.className).toContain('[&>:not([data-glass-panel])]:text-plate')
+    expect(aside.className).toContain('[&>:not([data-glass-panel])]:lg:text-plate')
   })
 
   it('keeps the plates inside the rail’s small room, which scrolls and would clip them', () => {
@@ -130,6 +130,6 @@ describe('DetailLayout', () => {
       </DetailLayout>,
     )
 
-    expect(screen.getByText('The post').parentElement?.className).toContain('text-plate')
+    expect(screen.getByText('The post').parentElement?.className).toContain('lg:text-plate')
   })
 })

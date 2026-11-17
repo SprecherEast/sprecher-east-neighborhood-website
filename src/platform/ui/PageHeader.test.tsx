@@ -167,6 +167,14 @@ describe('PageHeader', () => {
       )
     })
 
+    it('puts the title on a text plate, solid, with the glow around it', () => {
+      render(<PageHeader variant="band" title="Park cleanup" />)
+
+      const holder = screen.getByRole('heading', { level: 1 }).parentElement
+      expect(holder?.className).toContain('text-plate')
+      expect(holder?.className).toContain('w-fit')
+    })
+
     it('takes no photo of its own', () => {
       // @ts-expect-error The photo belongs to the page, not to the band
       render(<PageHeader variant="band" title="Park cleanup" backdrop={null} />)

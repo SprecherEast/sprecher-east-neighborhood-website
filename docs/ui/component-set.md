@@ -95,23 +95,9 @@ show and there is no button. Its test checks the closed and the open dialog with
 removed, since jsdom can't run axe across one), the gallery shows both states, and its props are in
 the [media page](../reference/components/media.md).
 
-**`FeaturedImage`** (#1013, #1023) is the picture of a post or an event, under the metadata bar: the whole picture at its own proportions, never cropped, loading early (it is the first image seen), with its credit under it. It is the shared `Figure` (size `half-then-third`, `zoom={false}`): full width above the text on a phone, floated right from `md` at half the column, and a third from `lg`, with the text wrapping beside it; it has no Enlarge button and opens no dialog (#1055). With no picture it draws nothing and leaves no gap. `ArticlePage` draws it in one box with the content, which contains the float so what follows a short article clears the picture; the article's `RichText` takes `besideFloat`; `ArticlePage`'s `lead` is what opens the article ahead of the picture (a row of cards, which can't sit beside it). The page header above is the `PageHeader` `band` (a themed surface, optionally over a faded photo, `BackdropCrops`; never the page's own picture). Its test checks the three sizes, the float, the early load, the missing Enlarge button, the empty case and axe; the gallery shows it beside text.
+**`FeaturedImage`** (#1013, #1023) is the picture of a post or an event, under the metadata bar: the whole picture at its own proportions, never cropped, loading early (it is the first image seen), with its credit under it. It is the shared `Figure` (size `half-then-third`, `zoom={false}`): full width above the text on a phone, floated right from `md` at half the column, and a third from `lg`, with the text wrapping beside it; it has no Enlarge button and opens no dialog (#1055). With no picture it draws nothing and leaves no gap. `ArticlePage` draws it in one box with the content, which contains the float so what follows a short article clears the picture; the article's `RichText` takes `besideFloat`; `ArticlePage`'s `lead` is what opens the article ahead of the picture (a row of cards, which can't sit beside it). The page header above is the `PageHeader` `band` (a themed surface, transparent over a page's photo, `PageBackdrop`; never the page's own picture). Its test checks the three sizes, the float, the early load, the missing Enlarge button, the empty case and axe; the gallery shows it beside text.
 
 **Title band and breadcrumb spacing** (#1279): on a post or an event the title has the same space above it (under the site header) as below it in the `PageHeader` `band`, one `--band-gap` (1.5rem) read by its top and bottom padding; the article layout adds no top space; and the `Breadcrumbs` row has the same small space above and below (`my-3`) with links that keep their tap size. The test `PageHeader.test.tsx` checks the one gap, `Breadcrumbs.test.tsx` and `ArticlePage.test.tsx` the row, and `e2e/titleSpacing.spec.ts` measures both at six widths.
-
-**`BackdropCrops`** (#1024) is the faded photo behind the title band of a post or an event
-(`PageHeader` `variant="band"`, `backdrop`). It is edge to edge inside the band, grayed
-(`grayscale-50`), faded (`opacity-60`) and washed with a `--surface` scrim (`bg-surface/50`), so the
-photo reaches the title at 30% of its strength; those two numbers are `BAND_PHOTO_ALPHA` and
-`BAND_SCRIM_ALPHA` in the theme contract, and `themes.test.ts` checks the title's colour on the band
-over a black and over a white photo, in light and dark, so contrast holds whatever the photo. A
-band's category badges sit on a solid plate (`BadgeList plated`), since a badge's tint is
-see-through. The backdrop is one crop per screen size (phone under `md`, tablet from `md`, desktop
-from `lg`), each an upload with its own focal point; a photo several sizes use is drawn once, and
-an image not shown at the screen's size is not loaded. It adds no height: it fills the band. Nothing
-set is the plain band, with identical markup. It is a decoration (hidden from assistive tech, empty
-alt) and loads lightly (`IMAGE_QUALITIES.backdrop`, `sizes="100vw"`, no early load). Its test checks
-all of this and axe; the gallery shows it in the headers entry.
 
 **`MetaBar`** (#1002, #1055) is the metadata of a post or an event, the industry's byline or meta bar: one thin
 line of small text at the top of the article's column, above the text, with a hairline between the items. The labels are
@@ -176,17 +162,9 @@ Components: [navigation and page tools](../reference/components/navigation.md).
 
 Components: [layout and page structure](../reference/components/layout.md).
 
-**`PageBackdrop`** (#777) draws an editor's photo faded and grayed behind a page, under its text. The
-photo fills the top 28 rem of the page and is washed into the theme's background at both ends, so
-it is felt rather than seen and leaves no edge; it is never placed between a title and its content.
-It is a decoration: hidden from assistive tech, empty alt, no motion, and the field takes pictures
-only (`imagesOnly`). It loads at once (`priority`), at the lighter `IMAGE_QUALITIES.backdrop`. Inside
-it, for **all of the page's content** and not only the photo's area, muted text becomes a mix of the
-main text colour and the background, and primary-coloured text takes `primary-strong`, so text keeps
-AA contrast over the photo in light and dark. With no photo it draws only its children, so a page
-without one is unchanged. Its test checks these with axe.
+**`PageBackdrop`** (#777, #1024, #1268) draws a photo in full colour behind a whole page, post or event, fixed to the screen from top to foot under a faint scrim of the theme background (`BACKDROP_SCRIM_ALPHA`: 8% light, 14% dark). It takes `backdrop`, one crop per screen size (phone under `md`, tablet from `md`, desktop from `lg`, from the `backdrop` fields of posts and events; a page's one photo through `singleBackdrop`), a size with none using the nearest; a photo several sizes use is drawn once and loads at once, several crops are lazy so only the screen's own is fetched. `BackdropParallax` (client) drifts it slowly with the scroll in one `transform`, still for reduced motion, with no layout shift. It is a decoration: hidden from assistive tech, empty alt, `imagesOnly` uploads, `IMAGE_QUALITIES.backdrop`. Inside it, for all of the page's content, muted text becomes a mix of the main text colour and the background and primary-coloured text takes `primary-strong`. It marks its box `data-backdrop`; the `on-photo:` variant, `text-plate`, `text-fade` and `text-shadow-glow` (`src/platform/theme/tailwind.css`) draw only inside it: text sits on a solid page-colour plate with a soft edge (`lg:text-plate`: the article column, page menu, breadcrumb and each rail block but a `GlassPanel`; a title's own plate) or on a fade (`text-fade`: below `lg` and a page's blocks), and the title keeps a wide faint glow. With no photo it draws only its children, so a page without one is unchanged. Its test checks these with axe; `e2e/backdrop.spec.ts` measures contrast over white and black photos.
 
-**`GlassPanel`** (#1278) is the frosted glass of the home hero, lifted out so anything that sits on a photo can use it: a rounded box with a faint `on-image` border and tint, a soft shadow, a blur of what is behind it, a sheen from the top left and a glow along the top edge, holding `on-image` text. There is one look, the same in light and dark, and no variant for it; `className` is for layout only. It carries its own darkening layer from the `scrim` token (`bg-scrim/80`, `GLASS_SCRIM_ALPHA` in the theme contract) under the glass, so its text measures 4.5:1 or better over white, a mid shade and black in both modes, whatever is behind it; its test proves it from the theme's real colours. `PageHero` holds the home description in it.
+**`GlassPanel`** (#1278) is the frosted glass of the home hero, lifted out so anything that sits on a photo can use it: a rounded box with a faint `on-image` border and tint, a soft shadow, a blur of what is behind it, a sheen from the top left and a glow along the top edge, holding `on-image` text (`data-glass-panel` marks it, so a rail's text plates skip it; `SidebarCTA` with `glass` is one over a page's photo). There is one look, the same in light and dark, and no variant for it; `className` is for layout only. It carries its own darkening layer from the `scrim` token (`bg-scrim/80`, `GLASS_SCRIM_ALPHA` in the theme contract) under the glass, so its text measures 4.5:1 or better over white, a mid shade and black in both modes, whatever is behind it; its test proves it from the theme's real colours. `PageHero` holds the home description in it.
 
 ## Rich text (`src/platform/richtext/`)
 

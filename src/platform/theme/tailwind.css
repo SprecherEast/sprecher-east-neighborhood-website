@@ -94,26 +94,25 @@
 /*
  * `text-plate`: a block of text sitting solid on a backdrop. The page colour fills the block and
  * runs a little past it, `--plate-bleed` (1rem unless a place has less room), with a soft edge, so
- * the text reads as on a plain page and the photo shows around it. From `lg` only: below it the
- * column fills the screen, and `text-fade` takes over. Over no backdrop it changes nothing.
+ * the text reads as on a plain page and the photo shows around it. Used bare it holds at every
+ * width; `lg:text-plate` only from `lg`, for a column that fills the screen below it (where
+ * `text-fade` takes over). Over no backdrop it changes nothing.
  */
 @utility text-plate {
-  @media (width >= theme(--breakpoint-lg)) {
-    &:where([data-backdrop] *) {
-      position: relative;
-      isolation: isolate;
-    }
-    &:where([data-backdrop] *)::before {
-      content: '';
-      position: absolute;
-      inset: calc(var(--plate-bleed, 1rem) * -1);
-      z-index: -1;
-      border-radius: 1.5rem;
-      background: var(--background);
-      box-shadow: 0 0 calc(var(--plate-bleed, 1rem) * 1.25) calc(var(--plate-bleed, 1rem) * 0.75)
-        var(--background);
-      pointer-events: none;
-    }
+  &:where([data-backdrop] *) {
+    position: relative;
+    isolation: isolate;
+  }
+  &:where([data-backdrop] *)::before {
+    content: '';
+    position: absolute;
+    inset: calc(var(--plate-bleed, 1rem) * -1);
+    z-index: -1;
+    border-radius: 1.5rem;
+    background: var(--background);
+    box-shadow: 0 0 calc(var(--plate-bleed, 1rem) * 1.25) calc(var(--plate-bleed, 1rem) * 0.75)
+      var(--background);
+    pointer-events: none;
   }
 }
 

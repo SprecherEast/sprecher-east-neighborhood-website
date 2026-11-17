@@ -151,8 +151,8 @@ describe('Breadcrumbs', () => {
     render(<Breadcrumbs items={ITEMS} />)
 
     const nav = screen.getByRole('navigation', { name: 'Breadcrumb' })
-    expect(nav.className).toContain('text-plate')
-    expect(nav.className).toContain('lg:w-fit')
+    expect(nav.className).toContain('lg:text-plate')
+    expect(nav.className).toContain('on-photo:lg:w-fit')
     // Above the article column's plate, whose soft edge reaches up to the trail
     expect(nav.className).toContain('on-photo:z-10')
   })

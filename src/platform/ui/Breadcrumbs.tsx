@@ -44,7 +44,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
       <JsonLd data={jsonLd} />
       <nav
         aria-label="Breadcrumb"
-        className="text-plate my-3 max-w-full min-w-0 [--plate-bleed:0.5rem] lg:w-fit on-photo:z-10"
+        className="my-3 max-w-full min-w-0 [--plate-bleed:0.5rem] lg:text-plate on-photo:z-10 on-photo:lg:w-fit"
       >
         <ol className="flex items-center gap-1 text-sm text-muted-foreground">
           {items.map((item, index) => {
