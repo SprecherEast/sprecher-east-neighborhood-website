@@ -63,10 +63,10 @@
   --accent-dark: #bb793e;
   /* Accent as text on the page, panels and cards (4.4:1 or more): the estimator's key figure (#1118) */
   --accent-strong: #955516;
-  /* Fill for primary buttons: white text on it is 5.1:1 (#121), 7.5:1 on hover. */
+  /* Fill for primary buttons: white text on it is 5.3:1 (#121), 7.8:1 on hover. */
   --primary-fill: #42755e;
   --primary-fill-hover: #325a47;
-  /* Link text that passes on surface panels too: 6.4:1 on --surface, 7.0:1 on --background */
+  /* Link text that passes on surface panels too: 6.7:1 on --surface, 7.4:1 on --background */
   --primary-strong: #325a47;
   /* Error text: --destructive is 4.1:1 on --surface and 3.9:1 on its own tint; this is 5.5:1 on
      --surface, 6.1:1 on --background and 4.8:1 or more on the error tint */
@@ -144,7 +144,7 @@
   /* Dark --primary (#559476) gives white text only 3.6:1, so buttons keep the brand fill (#121) */
   --primary-fill: #42755e;
   --primary-fill-hover: #325a47;
-  /* 6.6:1 on --surface, 7.9:1 on --background */
+  /* 6.2:1 on --surface, 7.4:1 on --background */
   --primary-strong: #67b08e;
   /* 5.8:1 on --surface, 6.1:1 on --card, 6.8:1 on --background */
   --destructive-strong: #f87171;
