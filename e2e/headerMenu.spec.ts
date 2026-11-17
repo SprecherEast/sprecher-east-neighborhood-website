@@ -42,8 +42,12 @@ test.describe('on a wide screen', () => {
 
     await label.click()
     await expect(panel).toBeFocused()
-    await page.mouse.click(10, 500)
-    await expect(link).toBeHidden()
+    // The library starts listening for presses a moment after it focuses the panel, so a press can
+    // land first on a slow runner: press again until it closes (a press on a closed menu does nothing)
+    await expect(async () => {
+      await page.mouse.click(10, 500)
+      await expect(link).toBeHidden({ timeout: 1000 })
+    }).toPass({ timeout: 15_000 })
   })
 
   test('opens with the keyboard', async ({ page }) => {
