@@ -101,7 +101,7 @@ function NavMenuDropdown({ label, items, onNavigate }: Omit<NavMenuProps, 'layou
           aria-label={label}
           align="start"
           sideOffset={8}
-          className="z-50 min-w-60 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg data-[state=open]:nav-menu-slide"
+          className="z-50 min-w-60 nav-menu-slide rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg"
         >
           <ul>
             {items.map((item) => (

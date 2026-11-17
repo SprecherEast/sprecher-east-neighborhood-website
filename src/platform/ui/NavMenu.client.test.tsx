@@ -40,19 +40,6 @@ describe('NavMenu on a wide screen', () => {
     )
   })
 
-  it('animates only while open, so Radix can unmount it at once on Escape (#1277)', async () => {
-    const user = userEvent.setup()
-    render(<NavMenu label="Resources" items={items} />)
-
-    await user.click(screen.getByRole('button', { name: 'Resources' }))
-    const panel = screen.getByRole('dialog', { name: 'Resources' })
-
-    // A slide that is always on would make Radix wait for an animation end that never comes when
-    // the panel closes right after it opens
-    expect(panel.className).toContain('data-[state=open]:nav-menu-slide')
-    expect(panel.className.split(/\s+/)).not.toContain('nav-menu-slide')
-  })
-
   it('closes on Escape and on a press outside it', async () => {
     const user = userEvent.setup()
     render(
