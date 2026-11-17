@@ -1,3 +1,5 @@
+import type { BillBody } from '@/platform/lib/billShare'
+
 import { rampAt } from './chart/chartPalette'
 
 /*
@@ -19,3 +21,11 @@ export const SHARE_TONES = {
 } as const
 
 export type ShareTone = keyof typeof SHARE_TONES
+
+/** The tone of each body of a property tax bill: the City amber, the schools dark red-orange, the County green, Madison College light green (#1263) */
+export const BILL_BODY_TONES: Record<BillBody, ShareTone> = {
+  schools: 'rust',
+  city: 'amber',
+  county: 'green',
+  matc: 'mint',
+}
