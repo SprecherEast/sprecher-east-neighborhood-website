@@ -10,6 +10,7 @@ import {
   type ChallengePurpose,
   type TakenChallenge,
 } from '../domain/passkeys'
+import { toAccountId, type AccountRelation } from './accountRelation'
 
 // The one-time challenges of passkey sign-in and adding (#1313, decision 0021). Written by the
 // server with access bypassed: no one may read or write the collection through an API.
@@ -19,7 +20,7 @@ type ChallengeRow = {
   id: number
   purpose: string
   challenge: string
-  account?: number | { id: number } | null
+  account?: AccountRelation
 }
 
 /**
@@ -52,13 +53,6 @@ export async function createChallenge({
   })
   return doc.id
 }
-
-const toAccountId = (account: ChallengeRow['account']): number | null =>
-  account === null || account === undefined
-    ? null
-    : typeof account === 'object'
-      ? account.id
-      : account
 
 /**
  * Takes the challenge once: sets `usedAt` where the identifier and purpose match, nothing used it

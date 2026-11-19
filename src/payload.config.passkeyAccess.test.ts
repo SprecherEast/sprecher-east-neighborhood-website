@@ -1,15 +1,14 @@
 import type { Payload, SanitizedConfig } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
 
+import { bootPayload, createAccount } from '@/platform/payload/testing/inMemoryPayload'
 import { restRequest } from '@/platform/payload/testing/restRequest'
-import { startPayload } from '@/platform/payload/testing/startPayload'
 
 let config: SanitizedConfig
 let payload: Payload
 
 beforeAll(async () => {
-  ;({ payload } = await startPayload('passkey-access-test-secret-0123456789'))
-  config = payload.config
+  ;({ payload, config } = await bootPayload())
 }, 60_000)
 
 type Method = Parameters<typeof restRequest>[1]
@@ -28,26 +27,17 @@ const stored = (collection: 'passkeys', id: number) =>
  * the Local API with access on.
  */
 describe('passkeys and passkey challenges', () => {
-  const password = 'passkey-access-password'
   let resident: { id: number; token: string }
   let admin: { id: number; token: string }
   let passkeyId: number
   let challengeId: number
 
-  const account = async (email: string, role: 'guest' | 'admin') => {
-    const user = await payload.create({
+  const account = async (name: string, role: 'guest' | 'admin') => {
+    const user = await createAccount(payload, role, name)
+    const { token } = await payload.login({
       collection: 'users',
-      data: { email, password, name: email, role },
-      disableVerificationEmail: true,
-      overrideAccess: true,
+      data: { email: user.email, password: `${name}-password-for-tests` },
     })
-    await payload.db.updateOne({
-      collection: 'users',
-      id: user.id,
-      data: { _verified: true },
-      returning: false,
-    })
-    const { token } = await payload.login({ collection: 'users', data: { email, password } })
     return { id: user.id, token: token ?? '' }
   }
 
@@ -71,8 +61,8 @@ describe('passkeys and passkey challenges', () => {
   })
 
   beforeAll(async () => {
-    resident = await account('passkey-resident@example.com', 'guest')
-    admin = await account('passkey-admin@example.com', 'admin')
+    resident = await account('passkey-resident', 'guest')
+    admin = await account('passkey-admin', 'admin')
     passkeyId = (
       await payload.create({
         collection: 'passkeys',

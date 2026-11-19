@@ -3,7 +3,7 @@
 # Passkeys (`passkeys`)
 
 - Kind: collection
-- Purpose: Passkeys residents added to sign in. Read and delete only, for support: a deleted passkey stops working at once, and the resident can still sign in with their password.
+- Purpose: Passkeys residents added to sign in. Read and delete only, for support: a deleted passkey stops working at once, and the resident can still sign in another way (password, Google, or forgot password).
 - Drafts: no
 - Versions: none kept
 

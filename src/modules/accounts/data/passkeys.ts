@@ -12,6 +12,7 @@ import {
   type StoredPasskey,
 } from '../domain/passkeys'
 import { USERS } from '../domain/usersCollection'
+import { toAccountId, type AccountRelation } from './accountRelation'
 
 // The saved passkeys and the per-account user handle (#1313, decision 0021). Written by the
 // server with access bypassed: create and update are refused to everyone through the API, and no
@@ -25,7 +26,7 @@ async function payloadClient(): Promise<Payload> {
 /** What a stored passkey row holds, as the database adapter returns it. */
 type PasskeyRow = {
   id: number
-  account: number | { id: number }
+  account: AccountRelation
   credentialId: string
   publicKey: string
   counter?: number | null
@@ -42,7 +43,7 @@ const toDeviceType = (value: string): PasskeyDeviceType =>
 
 const toStoredPasskey = (row: PasskeyRow): StoredPasskey => ({
   id: row.id,
-  accountId: typeof row.account === 'object' ? row.account.id : row.account,
+  accountId: toAccountId(row.account) ?? Number.NaN,
   credentialId: row.credentialId,
   publicKey: row.publicKey,
   counter: row.counter ?? 0,
@@ -155,8 +156,8 @@ export async function recordPasskeyUse(
 }
 
 /**
- * Removes the passkey, only when it belongs to this account, with one conditional DELETE, and
- * says whether one went. The caller decides who may (`decideRemovePasskey`); this keeps another
+ * Removes the passkey, only when it belongs to this account: a count says whether there is one,
+ * then the DELETE itself carries the same conditions. Says whether one went. The caller decides who may (`decideRemovePasskey`); this keeps another
  * account's passkey in place even if it is asked to remove it.
  */
 export async function deleteOwnPasskey(accountId: number, passkeyId: number): Promise<boolean> {

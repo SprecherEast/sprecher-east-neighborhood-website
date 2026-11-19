@@ -39,7 +39,7 @@ export const Passkeys: CollectionConfig = {
   admin: {
     defaultColumns: ['label', 'account', 'createdAt', 'lastUsedAt'],
     description:
-      'Passkeys residents added to sign in. Read and delete only, for support: a deleted passkey stops working at once, and the resident can still sign in with their password.',
+      'Passkeys residents added to sign in. Read and delete only, for support: a deleted passkey stops working at once, and the resident can still sign in another way (password, Google, or forgot password).',
     useAsTitle: 'label',
   },
   defaultSort: '-createdAt',

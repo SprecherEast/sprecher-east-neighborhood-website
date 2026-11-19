@@ -1,7 +1,7 @@
 import { createLocalReq, type Payload } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { startPayload } from '@/platform/payload/testing/startPayload'
+import { bootPayload, createAccount } from '@/platform/payload/testing/inMemoryPayload'
 
 import { deleteExpiredChallenges } from './passkeyRetention'
 
@@ -13,7 +13,7 @@ import { deleteExpiredChallenges } from './passkeyRetention'
 let payload: Payload
 
 beforeAll(async () => {
-  payload = (await startPayload('passkey-retention-test-secret-0123456789')).payload
+  payload = (await bootPayload()).payload
 }, 60_000)
 
 const NOW = Date.parse('2026-11-19T12:00:00.000Z')
@@ -61,16 +61,7 @@ describe('deleteExpiredChallenges', () => {
   })
 
   it('deletes nothing else: passkeys and accounts stay', async () => {
-    const user = await payload.create({
-      collection: 'users',
-      data: {
-        email: 'keeps@example.com',
-        password: 'retention-test-password',
-        role: 'guest',
-      },
-      disableVerificationEmail: true,
-      overrideAccess: true,
-    })
+    const user = await createAccount(payload, 'guest', 'keeps')
     const key = await payload.create({
       collection: 'passkeys',
       data: {

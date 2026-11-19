@@ -1,6 +1,7 @@
-import { REST_PATCH, REST_POST } from '@payloadcms/next/routes'
 import type { Payload, SanitizedConfig } from 'payload'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
+
+import { restRequest } from '@/platform/payload/testing/restRequest'
 
 /**
  * Server-only fields refuse writes from the API (#299). `hidden: true` hides a field from reads
@@ -23,23 +24,12 @@ beforeAll(async () => {
 }, 60_000)
 
 /** Sends a JSON request to Payload's REST API, as the site's `/api` route does. */
-async function rest(
+const rest = (
   method: 'POST' | 'PATCH',
   path: string[],
   body: Record<string, unknown>,
   token?: string,
-): Promise<Response> {
-  const handler = (method === 'POST' ? REST_POST : REST_PATCH)(Promise.resolve(config))
-  const request = new Request(`http://localhost:3000/api/${path.join('/')}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `JWT ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
-  })
-  return handler(request, { params: Promise.resolve({ slug: path }) })
-}
+) => restRequest(config, method, path, { body, token })
 
 const stored = (collection: 'users' | 'email-confirmations' | 'form-submissions', id: number) =>
   payload.findByID({ collection, id, depth: 0, overrideAccess: true, showHiddenFields: true })

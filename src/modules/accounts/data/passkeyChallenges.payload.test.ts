@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 
-import { startPayload } from '@/platform/payload/testing/startPayload'
+import { bootPayload } from '@/platform/payload/testing/inMemoryPayload'
 
 import { NOW as now, makeAccount, minutesAfter as minutes } from '../testing/passkeyStore'
 import type * as Challenges from './passkeyChallenges'
@@ -18,7 +18,7 @@ let payload: Payload
 let challenges: typeof Challenges
 
 beforeAll(async () => {
-  payload = (await startPayload('passkey-challenge-test-secret-0123456789')).payload
+  payload = (await bootPayload()).payload
   challenges = await import('./passkeyChallenges')
 }, 60_000)
 
@@ -108,13 +108,16 @@ describe('a challenge is taken once', () => {
     const id = await make()
     const deleteOne = vi.spyOn(payload.db, 'deleteOne')
     const find = vi.spyOn(payload, 'find')
+    const findOne = vi.spyOn(payload.db, 'findOne')
     try {
       await challenges.takeChallenge({ id, purpose: 'sign-in', now })
       expect(deleteOne).not.toHaveBeenCalled()
       expect(find).not.toHaveBeenCalled()
+      expect(findOne).not.toHaveBeenCalled()
     } finally {
       deleteOne.mockRestore()
       find.mockRestore()
+      findOne.mockRestore()
     }
   })
 })

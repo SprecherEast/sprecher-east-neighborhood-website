@@ -44,7 +44,7 @@ The six account pages, their routes and data are in the [screens reference](../.
 ## Rules and the tests that protect them
 
 - Google sign-in: the rule `domain/socialSignIn.test.ts`, the paths `use-cases/socialSignIn.test.ts`, the protocol `data/oauthProviders.test.ts`, real accounts and sessions `data/socialAccounts.payload.test.ts`, the forced role `cms/guestOnlyFromProviders.test.ts`, the routes `src/app/(frontend)/auth/[provider]/route.test.ts`, the fields no resident can set `src/payload.config.protectedFields.test.ts`.
-- Passkey store: the rules `domain/passkeys.test.ts`, real Payload (the challenge race, duplicate credential IDs, the counter, the handle, an account's delete) `data/passkeys.payload.test.ts`, the switch `data/passkeySettings.test.ts`, the retention `cms/passkeyRetention.payload.test.ts`, who may read or write `src/payload.config.protectedFields.test.ts`.
+- Passkey store: the rules `domain/passkeys.test.ts`, real Payload (the challenge race `data/passkeyChallenges.payload.test.ts`; duplicate credential IDs, the counter, the handle, an account's delete `data/passkeys.payload.test.ts`, the switch `data/passkeySettings.test.ts`, the retention `cms/passkeyRetention.payload.test.ts`, who may read or write `src/payload.config.passkeyAccess.test.ts`, the forged handle `src/payload.config.protectedFields.test.ts`.
 - Sign-up never makes an admin, Payload's first registration does: `cms/signUpFirstAccount.test.ts`, `src/payload.config.roles.test.ts`. Each guard: `cms/*.test.ts`.
 - Own password and email changes need the flags: `cms/requireCurrentPassword.test.ts`, `src/payload.config.emailChange.test.ts`.
 - Resend cap and window: `domain/verificationResends.test.ts`, `actions.signUpResend.test.ts`.

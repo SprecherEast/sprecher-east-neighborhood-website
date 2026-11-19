@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 
-import { startPayload } from '@/platform/payload/testing/startPayload'
+import { bootPayload } from '@/platform/payload/testing/inMemoryPayload'
 
 import type { NewPasskey } from '../domain/passkeys'
 import {
@@ -26,7 +26,7 @@ let challenges: typeof Challenges
 let passkeys: typeof Passkeys
 
 beforeAll(async () => {
-  payload = (await startPayload('passkey-store-test-secret-0123456789')).payload
+  payload = (await bootPayload()).payload
   challenges = await import('./passkeyChallenges')
   passkeys = await import('./passkeys')
 }, 60_000)
@@ -211,9 +211,15 @@ describe('the user handle', () => {
 
   it('is written only while empty: the update carries the emptiness in its where', async () => {
     const accountId = await makeAccount()
-    await passkeys.getOrCreateUserHandle(accountId)
     const spy = vi.spyOn(payload.db, 'updateOne')
     try {
+      await passkeys.getOrCreateUserHandle(accountId)
+      const args = spy.mock.calls[0]?.[0] as unknown as { id?: unknown; where: unknown }
+      expect(args.id).toBeUndefined()
+      expect(args.where).toEqual({
+        and: [{ id: { equals: accountId } }, { passkeyUserHandle: { exists: false } }],
+      })
+      spy.mockClear()
       await passkeys.getOrCreateUserHandle(accountId)
       expect(spy).not.toHaveBeenCalled()
     } finally {

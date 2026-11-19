@@ -1,21 +1,19 @@
 import type { Payload } from 'payload'
+
+import { createAccount } from '@/platform/payload/testing/inMemoryPayload'
+
 import type { NewPasskey } from '../domain/passkeys'
 
 // Shared setup of the passkey store's tests against real Payload on an in-memory SQLite database
-// (#1313). A test file mocks `server-only` itself, then calls `startPayload` in `beforeAll`.
+// (#1313). A test file mocks `server-only` itself, then boots Payload with
+// `bootPayload` (`src/platform/payload/testing`) in `beforeAll`.
 
 let counter = 0
 
 /** A guest account, made with access bypassed; gives its id. */
 export async function makeAccount(payload: Payload): Promise<number> {
   const n = ++counter
-  const user = await payload.create({
-    collection: 'users',
-    data: { email: `person-${n}@example.com`, password: 'passkey-test-password', role: 'guest' },
-    disableVerificationEmail: true,
-    overrideAccess: true,
-  })
-  return user.id
+  return (await createAccount(payload, 'guest', `person-${n}`)).id
 }
 
 /** A passkey to save for an account, with a credential ID no other call makes. */
