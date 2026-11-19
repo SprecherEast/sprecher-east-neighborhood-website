@@ -137,8 +137,8 @@ The background image moves slower than the scroll, creating depth. Two approache
 <section className="relative overflow-hidden py-24">
   {/* CSS parallax — uses background-image via inline style (acceptable here since the URL is dynamic) */}
   <div className="parallax-bg absolute inset-0" style={{ backgroundImage: `url(${imageUrl})` }} />
-  <div className="absolute inset-0 bg-black/40" />
-  <div className="relative z-10 container text-white">{/* Content */}</div>
+  <div className="absolute inset-0 bg-scrim/40" />
+  <div className="relative z-10 container text-on-image">{/* Content */}</div>
 </section>
 ```
 
@@ -150,8 +150,8 @@ The background image moves slower than the scroll, creating depth. Two approache
   <div className="absolute inset-0 -top-[20%] -bottom-[20%]">
     <Media fill imgClassName="object-cover" resource={media} />
   </div>
-  <div className="absolute inset-0 bg-black/40" />
-  <div className="relative z-10 container text-white">{/* Content */}</div>
+  <div className="absolute inset-0 bg-scrim/40" />
+  <div className="relative z-10 container text-on-image">{/* Content */}</div>
 </section>
 ```
 

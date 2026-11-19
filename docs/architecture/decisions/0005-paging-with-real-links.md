@@ -1,7 +1,8 @@
 # 0005: "Load more" is a real link, with offset paging for now
 
 - **Date:** 2026-10-19
-- **Status:** Accepted
+- **Status:** Accepted; the offset paging of "Load more" is superseded by
+  [0014](0014-cursor-paging-for-load-more.md)
 - **Issues and PRs:** #110, #111, #125
 
 ## Context

@@ -1,6 +1,6 @@
 ---
 name: self-review
-description: Review and clean up your own change before opening or updating a pull request — reuse of existing helpers, code quality, efficiency, the repo's guidelines, and a visual design review for UI changes — then fix what it finds. Use when a change is done and before asking for the independent review.
+description: Review and clean up your own change before opening or updating a pull request — reuse of existing helpers, code quality, efficiency, the repo's guidelines, whether the notes and docs still describe the behavior, and a visual design review for UI changes — then fix what it finds. Use when a change is done and before asking for the independent review.
 ---
 
 # self-review (pointer)

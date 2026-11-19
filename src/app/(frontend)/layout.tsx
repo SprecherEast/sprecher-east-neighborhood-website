@@ -5,6 +5,7 @@ import { Poppins } from 'next/font/google'
 import React from 'react'
 
 import { AdminBar } from '@/platform/ui/AdminBar.client'
+import { ThemeDecoration } from '@/platform/theme/ThemeDecoration'
 import { JsonLd } from '@/platform/ui/JsonLd'
 import { SiteFooter, SiteHeader } from '@/modules/site/server'
 import { AccountMenu, AccountProvider } from '@/modules/accounts/server'
@@ -12,6 +13,8 @@ import { InitTheme } from '@/platform/theme/InitTheme'
 import { Providers } from '@/platform/theme/Providers'
 import { mergeOpenGraph } from '@/platform/seo/mergeOpenGraph'
 import { organizationJsonLd } from '@/platform/seo/organizationJsonLd'
+import { LikelyHumanClicks } from '@/platform/analytics/LikelyHumanClicks.client'
+import { UmamiScript } from '@/platform/analytics/UmamiScript'
 import { VersionCheck } from '@/platform/ui/VersionCheck.client'
 import { draftMode } from 'next/headers'
 
@@ -31,11 +34,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const { isEnabled } = await draftMode()
 
   return (
-    <html className={cn(poppins.variable)} lang="en" suppressHydrationWarning>
+    // data-scroll-behavior: Next keeps page changes instant while in-page jumps glide (#574)
+    <html
+      className={cn(poppins.variable)}
+      data-scroll-behavior="smooth"
+      lang="en"
+      suppressHydrationWarning
+    >
       <head>
         <InitTheme />
-        <link href="/favicon.ico" rel="icon" sizes="32x32" />
-        <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
         <JsonLd data={organizationJsonLd()} />
       </head>
       <body>
@@ -62,7 +69,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </AccountProvider>
           <main id="main-content">{children}</main>
           <SiteFooter />
+          {/* The active theme's decorative layer, if it has one (#409) */}
+          <ThemeDecoration />
           <VersionCheck />
+          {/* Counts visits and likely-human clicks, but never a draft preview (#950, #975); the admin has its own layout */}
+          {!isEnabled && (
+            <>
+              <UmamiScript />
+              <LikelyHumanClicks />
+            </>
+          )}
         </Providers>
       </body>
     </html>
@@ -73,7 +89,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(getServerSideURL()),
   title: {
     template: '%s — Sprecher East',
-    default: 'Sprecher East — Neighborhood Association',
+    default: 'Sprecher East',
   },
   description:
     "Connecting neighbors on Madison's Far East Side. Community events, local news, and resources for the Sprecher East neighborhood.",

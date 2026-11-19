@@ -4,7 +4,8 @@ import {
   type FaqCategory,
   type ResourceCategory,
 } from './categories'
-import type { CategorySection, FaqEntry, ResourceSummary } from './types'
+import { RESOURCE_GROUPS } from './groups'
+import type { CategorySection, FaqEntry, ResourceGroup, ResourceSummary } from './types'
 
 /**
  * `items` in one section per category, in the list's order and keeping the items' order within
@@ -44,4 +45,19 @@ export function toResourceSections(
   resources: readonly ResourceSummary[],
 ): CategorySection<ResourceCategory, ResourceSummary>[] {
   return groupByCategory(resources, RESOURCE_CATEGORIES, 'other')
+}
+
+/**
+ * Resources in the page's groups, each holding its categories' sections in category order. A group
+ * with no resources is left out; a resource whose category is no longer listed is under Other.
+ */
+export function toResourceGroups(
+  resources: readonly ResourceSummary[],
+): ResourceGroup<ResourceCategory, ResourceSummary>[] {
+  const sections = toResourceSections(resources)
+
+  return RESOURCE_GROUPS.flatMap(({ id, label, categories }) => {
+    const inGroup = sections.filter(({ category }) => categories.some((one) => one === category))
+    return inGroup.length > 0 ? [{ id, label, sections: inGroup }] : []
+  })
 }

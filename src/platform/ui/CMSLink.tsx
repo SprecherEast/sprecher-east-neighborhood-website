@@ -1,41 +1,35 @@
-import { type CmsLink, resolveLink } from '@/platform/payload/resolveLink'
-import { Button } from './Button'
-import { Link } from './Link'
 import React from 'react'
 
-type CMSLinkProps = Omit<CmsLink, 'appearance'> & {
-  /** `default` and `outline` (from the CMS) draw a `Button`; none draws a text `Link` */
-  appearance?: CmsLink['appearance']
-  children?: React.ReactNode
+import type { ResolvedLink } from '@/platform/lib'
+
+import { Button } from './Button'
+
+/** The `Button` variant for each look an editor can choose: `default` primary, `outline` secondary, `accent` the orange. */
+const VARIANT = {
+  default: 'primary',
+  outline: 'secondary',
+  accent: 'accent',
+} as const satisfies Record<ResolvedLink['appearance'], 'primary' | 'secondary' | 'accent'>
+
+/** A resolved CMS link as a `Button` in the look the editor chose. */
+export function LinkButton({
+  link,
+  className,
+  children,
+}: {
+  link: ResolvedLink
   className?: string
-}
-
-/** A link field from the CMS, drawn as a `Button` or a text link. The href comes from `resolveLink`. */
-export const CMSLink: React.FC<CMSLinkProps> = ({ appearance, children, className, ...link }) => {
-  const resolved = resolveLink({
-    ...link,
-    appearance: appearance === 'outline' ? 'outline' : 'default',
-  })
-  if (!resolved) return null
-
-  if (appearance === 'default' || appearance === 'outline') {
-    return (
-      <Button
-        href={resolved.href}
-        external={resolved.external}
-        variant={resolved.appearance === 'outline' ? 'secondary' : 'primary'}
-        className={className}
-      >
-        {resolved.label}
-        {children}
-      </Button>
-    )
-  }
-
+  children?: React.ReactNode
+}) {
   return (
-    <Link href={resolved.href} external={resolved.external} className={className}>
-      {resolved.label}
+    <Button
+      href={link.href}
+      external={link.external}
+      variant={VARIANT[link.appearance]}
+      className={className}
+    >
+      {link.label}
       {children}
-    </Link>
+    </Button>
   )
 }

@@ -7,7 +7,7 @@ Technical patterns for Next.js App Router pages and Tailwind styling in this cod
 The `src/app/(frontend)/[slug]/page.tsx` pattern:
 
 1. `generateStaticParams()` — lists all pages (`listPageSlugs()` from `@/modules/site/server`), returns `{ slug }` array
-2. `Page` component — resolves slug (default `'home'`), fetches page via cached query (`getPageBySlug()`), renders `<RenderHero>` + `<RenderBlocks>`
+2. `Page` component — resolves slug (default `'home'`), fetches page via cached query (`getPageBySlug()`), renders `<PageHero>` (when the page has a hero) + `<RenderBlocks>`
 3. `generateMetadata()` — calls `generateMeta({ doc })` from `src/platform/seo/generateMeta.ts`
 
 All page queries use `cache()` from React to deduplicate fetches between Page and generateMetadata.
@@ -55,24 +55,21 @@ Fetch data through the owning module's use cases (from its `server.ts`), whose `
 **IMPORTANT**: Never use inline CSS (`style={}`) or hardcoded hex colors. All styling goes through Tailwind utility classes using design token names.
 
 - Use semantic token classes: `bg-primary`, `text-foreground`, `border-border`, `bg-surface`
-- All design tokens defined in `src/app/(frontend)/globals.css` inside `@theme {}`
+- Token names are listed in `src/platform/theme/tokens.ts`; their values are in `src/themes/default/theme.css`
+- On photos use `text-on-image` and `scrim` overlays (`from-scrim/60`); on brand bands `text-primary-foreground`; for dark chrome (admin bar, code) `bg-inverse` and `text-inverse-foreground`. Lint fails on a raw palette class (`text-white`, `bg-blue-500`) or a hex/`rgba()` colour in a class (`eslint.theme.config.mjs`, #146)
 - Dark mode uses `[data-theme='dark']` selector — tokens auto-switch, no manual dark: prefixes needed for token colors
 - Container: use the `container` class (max-width with auto margins)
+- Sizes the whole site shares (the article reading width, a short page's least height, a list page's top and bottom space, the home hero's spaces and fade) are variables in `globals.css` with their classes in `src/platform/ui/layoutSizes.ts`: import `READING_WIDTH`, `PAGE_MIN_HEIGHT`, `PAGE_SHELL` or the `HERO_*` classes, never type `48rem`, `60vh` or `14px` again (#616, #1304)
+- Chart colours are `chart-1` to `chart-6` (`bg-chart-1`, `text-chart-1`, `fill-chart-1`…). Use them in order: adjacent pairs are only clean that way. A chart can ask for the warm set (orange and gray, `chart-warm-1` to `chart-warm-6`), which meets the same contrast pairs. Colour is never the only cue: some neighbouring pairs are close for colour-blind readers (blue-yellow separation is low), so every chart also has direct labels, gaps between marks or hatching. Each passes 3:1 on `background`, `surface` and `card` in light and dark (`CHART_PAIRS`, checked by `themes.test.ts`, #659). The one exception is the breakdown chart's seven-step ramp (`chart-ramp-1` to `chart-ramp-7`, orange through green to gray, #866): its pale steps cannot reach 3:1 on a light page, so every mark carries the thin `chart-ramp-edge` outline and its amount as text. Text never sits on a colored mark: values and labels use the text tokens. Never use red or green to show up or down (neutrality rule in `brand-voice.md`)
 - Font: Poppins loaded via `next/font/google` in layout, applied as `--font-poppins` CSS variable
 
 ## Design Tokens
 
-Defined in `globals.css @theme`:
-
-| Token                      | Light     | Dark      |
-| -------------------------- | --------- | --------- |
-| `--color-primary`          | `#3d7a5e` | `#4e9b76` |
-| `--color-accent`           | `#e8923a` | `#f0a04b` |
-| `--color-background`       | `#f9f8f5` | `#0f1117` |
-| `--color-surface`          | `#f0ede6` | `#1e2130` |
-| `--color-foreground`       | `#1a1a1a` | `#e8e6e3` |
-| `--color-muted-foreground` | `#6b6b6b` | `#9ca3af` |
-| `--color-border`           | `#e2ddd6` | `#2d3040` |
+Each token is named in `src/platform/theme/tokens.ts` and valued, for light and dark, in
+`src/themes/default/theme.css`: that file is the one place the values live. Components use them
+through the Tailwind classes `src/platform/theme/tailwind.css` maps them to (`bg-primary`,
+`text-muted-foreground`). How the pieces fit is in the
+[theme note](../../src/platform/theme/README.md).
 
 ## Dates and Timezone
 
@@ -111,7 +108,7 @@ Changes that affect rendering (CSS, Tailwind classes, HTML structure, component 
 
 - `sm: 640px` — mobile → tablet transition
 - `md: 768px` — tablet starts
-- `lg: 1024px` — desktop starts
+- `lg: 960px` — desktop starts (a phone's "desktop site" mode is about 980px wide, #545)
 - `xl: 1280px` — wide desktop
 - `2xl: 1536px` — ultrawide
 

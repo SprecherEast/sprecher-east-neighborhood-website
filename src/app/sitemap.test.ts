@@ -46,7 +46,11 @@ describe('sitemap', () => {
       { url: 'https://sprechereast.example/posts', lastModified: now },
       { url: 'https://sprechereast.example/events', lastModified: now },
       { url: 'https://sprechereast.example/faq', lastModified: now },
-      { url: 'https://sprechereast.example/resources', lastModified: now },
+      { url: 'https://sprechereast.example/resources/utilities', lastModified: now },
+      { url: 'https://sprechereast.example/resources/government', lastModified: now },
+      { url: 'https://sprechereast.example/resources/safety-health', lastModified: now },
+      { url: 'https://sprechereast.example/resources/housing-renting', lastModified: now },
+      { url: 'https://sprechereast.example/resources/community-family', lastModified: now },
       { url: 'https://sprechereast.example/', lastModified: '2026-10-01T00:00:00.000Z' },
       { url: 'https://sprechereast.example/about', lastModified: '2026-10-02T00:00:00.000Z' },
       {

@@ -48,7 +48,7 @@ patterns are in [`payload-cms.md`](../guidelines/payload-cms.md).
 
 - Transactional emails: welcome, password reset, comment notifications
 - Newsletter/digest emails: weekly neighborhood updates
-- SMTP configuration via env vars (provider TBD — admin will provide credentials)
+- SMTP configuration via env vars (Mailgun in production; `src/platform/email/emailAdapter.ts`)
 - Email templates: HTML with plain text fallback, branded with Sprecher East colors
 - Unsubscribe link in every email (CAN-SPAM compliance)
 - Rate limiting on email sends
@@ -83,7 +83,7 @@ patterns are in [`payload-cms.md`](../guidelines/payload-cms.md).
 
 ### User Roles (Access Control)
 
-The three roles (`admin`, `editor`, `resident`) and what each may do are in the
+The roles (`admin`, `editor`, `guest`, `resident`, `agent`) and what each may do are in the
 [security guidelines](../guidelines/security.md#when-handling-auth-and-sessions).
 
 ### Auth Architecture

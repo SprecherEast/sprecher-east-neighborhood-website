@@ -1,0 +1,49 @@
+/*
+ * The decorations a theme can turn on (`ThemeDecoration`, #409). Purely visual layers drawn with
+ * CSS (no images, no script), in theme colours, kept faint so text stays readable. Any movement
+ * stops within 5 seconds (WCAG 2.2.2, Pause, Stop, Hide, since a decoration has no control to
+ * stop it) and doesn't start when the person asks for reduced motion.
+ */
+
+/*
+ * Six layers of flakes on tiles of unrelated sizes, at different heights in their tile, so no
+ * rows or grid show. The flakes sit on a layer taller than the screen that drifts down once as
+ * the page opens and settles: moving it with a transform is composited, so the screen isn't
+ * repainted on every frame.
+ */
+.theme-decoration-snowfall {
+  overflow: hidden;
+  opacity: 0.35;
+}
+
+.theme-decoration-snowfall::before {
+  content: '';
+  position: absolute;
+  inset: -120px 0 0;
+  background-image:
+    radial-gradient(circle at 23% 9%, var(--on-image) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 71% 64%, var(--on-image) 0 1px, transparent 2px),
+    radial-gradient(circle at 42% 37%, var(--on-image) 0 2px, transparent 3px),
+    radial-gradient(circle at 58% 81%, var(--on-image) 0 1px, transparent 2px),
+    radial-gradient(circle at 12% 52%, var(--on-image) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 87% 22%, var(--on-image) 0 1px, transparent 2px);
+  background-size:
+    211px 300px,
+    157px 150px,
+    293px 300px,
+    181px 150px,
+    241px 300px,
+    127px 300px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .theme-decoration-snowfall::before {
+    animation: theme-snowfall 5s ease-out both;
+  }
+}
+
+@keyframes theme-snowfall {
+  to {
+    transform: translateY(120px);
+  }
+}

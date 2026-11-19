@@ -17,6 +17,15 @@ import { SignInForm } from './SignInForm.client'
 
 beforeEach(() => {
   for (const fn of Object.values(mocks)) fn.mockReset()
+  // jsdom has no ResizeObserver, which Radix Checkbox uses inside a form
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  )
 })
 afterEach(cleanup)
 
@@ -39,9 +48,33 @@ describe('SignInForm', () => {
 
     await fillAndSend()
 
-    expect(mocks.signIn).toHaveBeenCalledWith({ email: 'ada@example.com', password: 'secret-pass' })
+    expect(mocks.signIn).toHaveBeenCalledWith({
+      email: 'ada@example.com',
+      password: 'secret-pass',
+      rememberMe: false,
+    })
     expect(mocks.push).toHaveBeenCalledWith('/account')
     expect(mocks.refresh).toHaveBeenCalled()
+  })
+
+  it('offers "Keep me signed in", unticked, and says how long it lasts (#587)', () => {
+    render(<SignInForm />)
+    const box = screen.getByRole('checkbox', { name: 'Keep me signed in for 7 days' })
+    expect(box.getAttribute('aria-checked')).toBe('false')
+  })
+
+  it('asks for the long sign-in when the box is ticked (#587)', async () => {
+    mocks.signIn.mockResolvedValue({ ok: true })
+    render(<SignInForm />)
+
+    await userEvent.click(screen.getByRole('checkbox', { name: /Keep me signed in/ }))
+    await fillAndSend()
+
+    expect(mocks.signIn).toHaveBeenCalledWith({
+      email: 'ada@example.com',
+      password: 'secret-pass',
+      rememberMe: true,
+    })
   })
 
   it.each([

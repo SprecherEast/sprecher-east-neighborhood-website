@@ -10,6 +10,7 @@ vi.mock('next/link', () => ({
 }))
 
 import { Link } from './Link'
+import { TOUCH_MIN_HEIGHT } from './layoutSizes'
 import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
@@ -93,5 +94,28 @@ describe('Link', () => {
     )
 
     await expectAccessible(container)
+  })
+
+  it('marks the section being read with aria-current="location" (#574)', () => {
+    const { container } = render(
+      <Link href="#money" variant="section" current="location">
+        Money
+      </Link>,
+    )
+    const link = container.querySelector('a')
+    expect(link?.getAttribute('href')).toBe('#money')
+    expect(link?.getAttribute('aria-current')).toBe('location')
+  })
+})
+
+describe('Link, muted (#741)', () => {
+  it('is as tall as a tap needs: 44 px on a phone, 36 px from lg', () => {
+    render(
+      <Link href="/events" variant="muted">
+        Events
+      </Link>,
+    )
+
+    expect(screen.getByRole('link', { name: 'Events' }).className).toContain(TOUCH_MIN_HEIGHT)
   })
 })

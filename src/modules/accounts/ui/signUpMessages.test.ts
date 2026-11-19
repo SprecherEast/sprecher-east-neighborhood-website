@@ -6,9 +6,11 @@ import { SIGN_UP_SENT, toSignUpErrorMessage, toVerifyAccountErrorMessage } from 
 
 describe('sign-up messages', () => {
   it('never says whether an account already uses the email', () => {
-    expect(SIGN_UP_SENT).toMatch(/^Check your email\. If the address can have a new account/)
-    // The same resend hint for everyone (#289), from the cap itself
-    expect(SIGN_UP_SENT).toMatch(/sign up again to get a new link\. After 3 tries, wait 3 hours\.$/)
+    expect(SIGN_UP_SENT).toBe(
+      'Almost there! Check your email for a link to finish signing up. Nothing yet? Look in spam, or try again.',
+    )
+    // The same text for everyone (#289), and no account is mentioned
+    expect(SIGN_UP_SENT).not.toMatch(/account (uses|exists)/i)
   })
 
   it('has fixed texts for every failure', () => {

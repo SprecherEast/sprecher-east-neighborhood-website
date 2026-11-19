@@ -8,20 +8,41 @@ Patterns for using existing components and maintaining content quality standards
 2. Prefer Payload layout builder blocks (configs in `src/modules/site/cms/`, components in `src/modules/site/ui/`) over custom page components for content pages
 3. Use the UI kit's primitives from `src/platform/ui/` for generic UI (`Button`, `Link`, `Field`, `Form`, etc.)
 
+## Shared components: use, configure or split
+
+The owner's standing rule (2026-11-06, text session, decided in the #728 audit review and recorded
+on #759): shared components are used everywhere, and they grow by configuration until that would
+make them do everything.
+
+1. **Use it.** Where a shared component covers the need, every page and module uses it. A
+   hand-built copy found in a file you touch is moved onto the shared one in the same PR.
+2. **Configure it.** When it doesn't quite fit, give the shared component a variant, size or
+   compound part ([`vercel-composition-patterns`](../../.agents/skills/vercel-composition-patterns/SKILL.md)),
+   never a local copy or a wrapper that overrides its classes.
+3. **Split before it bloats.** Stop configuring and create a new shared component when the change
+   would turn it into a do-everything component. Signs: a prop that switches it into another mode,
+   options only one caller uses that change its structure rather than its look, variants that
+   render different markup or roles, a file outgrowing one purpose. The new one lives in
+   `src/platform/ui/`, may compose the old one, and comes with what every shared component needs
+   ([guard rail 5](guard-rails.md#the-rules)).
+
+Which of these applies is a routine technical call: make it, and note it on the issue.
+
 ## Key Reusable Components
 
 The full list of shared components, with their variants and props, is
 [`docs/ui/component-set.md`](../ui/component-set.md), and the code is in `src/platform/ui/`. This
 table names only the ones used most.
 
-| Component | Path                                 | Usage                                                                                    |
-| --------- | ------------------------------------ | ---------------------------------------------------------------------------------------- |
-| CMSLink   | `src/platform/ui/CMSLink.tsx`        | Internal/external links with reference support                                           |
-| Media     | `src/platform/ui/Media.tsx`          | Image/video rendering with Payload media docs                                            |
-| RichText  | `src/platform/richtext/RichText.tsx` | Renders Lexical rich text content                                                        |
-| PostGrid  | `src/modules/news/ui/PostGrid.tsx`   | Grid display of posts with cards                                                         |
-| Button    | `src/platform/ui/Button.tsx`         | The one button, `cva` variants (`primary`, `secondary`, `accent`, `ghost`, `inverse`, …) |
-| JsonLd    | `src/platform/ui/JsonLd.tsx`         | Safe JSON-LD structured data (escapes XSS). Always use this.                             |
+| Component  | Path                                 | Usage                                                                                    |
+| ---------- | ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| LinkButton | `src/platform/ui/CMSLink.tsx`        | A resolved CMS link (`ResolvedLink`) as a `Button` in the look the editor chose          |
+| Media      | `src/platform/ui/Media.tsx`          | Image/video rendering with Payload media docs                                            |
+| RichText   | `src/platform/richtext/RichText.tsx` | Renders Lexical rich text content                                                        |
+| PostGrid   | `src/modules/news/ui/PostGrid.tsx`   | Grid display of posts with cards                                                         |
+| Card       | `src/platform/ui/Card.tsx`           | The one card: `elevated`, `outline`, `muted`, `tinted`; parts; `CardGrid` lays cards out |
+| Button     | `src/platform/ui/Button.tsx`         | The one button, `cva` variants (`primary`, `secondary`, `accent`, `ghost`, `inverse`, …) |
+| JsonLd     | `src/platform/ui/JsonLd.tsx`         | Safe JSON-LD structured data (escapes XSS). Always use this.                             |
 
 ## Nav Links
 
@@ -54,14 +75,14 @@ All forms must use the UI kit's primitives — never raw HTML `<input>`, `<label
 - **Form**: `src/platform/ui/Form.client.tsx` — react-hook-form with a Zod schema, the fields grid and the fixed success or error message; for forms that submit data. A plain search box can use a `<form>` with `Field`
 - **Button**: `src/platform/ui/Button.tsx` — CVA variants (`primary`, `secondary`, `ghost`, etc.)
 
-For feedback messages (errors, success), use design tokens — never hardcoded Tailwind color classes. Always include ARIA live regions so screen readers announce state changes:
+For feedback messages (errors, success), use `Alert` from `src/platform/ui/Alert.tsx`, which carries the tone's tokens, icon and ARIA live region (errors interrupt; the rest wait their turn; `live={false}` for a message that is part of the page's content). Never hand-write the box or use hardcoded Tailwind colour classes:
 
 ```tsx
-// Error — role="alert" + aria-live="assertive" for immediate announcement
-<div role="alert" aria-live="assertive" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+// Error: announced at once (role="alert")
+<Alert tone="error">Something went wrong. Please try again.</Alert>
 
-// Success — role="status" + aria-live="polite" for non-urgent announcement
-<div role="status" aria-live="polite" className="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm text-primary">
+// Success: announced politely (role="status")
+<Alert tone="success">Thanks, your message was sent.</Alert>
 ```
 
 ## Icons
@@ -80,6 +101,14 @@ import { Menu, X, Search } from 'lucide-react'
 ## Code Hygiene
 
 - Remove unused parameters from types and function signatures — don't leave dead code
-- Type component props using generated types from `@/payload-types` (regenerated automatically only under `next dev`; after a schema change run `npm run generate:types` and commit the result)
+- Type component props with plain types (the module's own types, `ImageRef`, `RichTextValue`), never `@/payload-types`: a mapper in the module's `data/` converts CMS data ([decision 0013](../architecture/decisions/0013-cms-content-through-mappers.md)). Blocks and heroes not yet moved still use the generated types (regenerated automatically only under `next dev`; after a schema change run `npm run generate:types` and commit the result)
 - Type seed data returns with `RequiredDataFromCollectionSlug<'slug'>` for compile-time safety
 - Import types with `import type` to avoid bundling runtime code
+
+## Messages
+
+What a resident reads after an action (sent, failed, expired) lives in the catalog,
+`src/platform/lib/messages/` ([decision 0017](../architecture/decisions/0017-one-message-catalog.md)),
+not inline. Write whole sentences in the [brand voice](brand-voice.md), short enough for a phone, with `{blanks}` for
+anything that varies. Never type a time: use `formatDuration()` on the real setting. The owner's
+rule (2026-11-01, recorded on #551): messages sound like a human who understands this neighborhood.

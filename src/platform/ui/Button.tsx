@@ -4,6 +4,7 @@ import { LoaderCircle } from 'lucide-react'
 import type NextLink from 'next/link'
 
 import { AppLink } from './AppLink'
+import { TOUCH_MIN_HEIGHT } from './layoutSizes'
 import type { ComponentProps, ReactNode } from 'react'
 
 /**
@@ -21,6 +22,13 @@ export const buttonVariants = cva(
         secondary:
           'border border-primary text-primary-strong hover:bg-primary/5 focus-visible:outline-ring',
         accent: 'bg-accent text-accent-foreground hover:bg-accent-dark focus-visible:outline-ring',
+        // The accent's outline twin: an inset ring, not a border, so it is as tall as `accent` (#1022)
+        'accent-outline':
+          'ring-1 ring-inset ring-accent-dark text-foreground hover:bg-accent/15 focus-visible:outline-ring',
+        // A small action that wakes up (the check-mark inside a box, #1110): flat and muted while
+        // disabled; accent-colored and lifted by a shadow while enabled, the lift only with motion allowed
+        action:
+          'bg-accent text-accent-foreground hover:bg-accent-dark focus-visible:outline-ring disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 enabled:shadow-md motion-safe:enabled:-translate-y-px motion-safe:transition-[color,background-color,box-shadow,translate]',
         ghost: 'text-foreground hover:bg-surface focus-visible:outline-ring',
         // On a brand band (a data-theme="dark" scope): white fill, or a white outline
         inverse:
@@ -30,10 +38,13 @@ export const buttonVariants = cva(
       },
       // Every size is at least 44 px tall on phones (WCAG 2.5.8); `sm` shrinks from lg up
       size: {
-        sm: 'min-h-11 px-4 text-sm lg:min-h-9 lg:px-3',
+        sm: `${TOUCH_MIN_HEIGHT} px-4 text-sm lg:px-3`,
         md: 'min-h-11 px-5 text-base',
         lg: 'min-h-12 px-8 text-base',
         icon: 'size-11 [&_svg]:size-5',
+        // Drawn 36 px, tapped as 44: the invisible area reaches 4 px past each side (inside a box)
+        'icon-sm':
+          'relative size-9 rounded-md [&_svg]:size-5 after:absolute after:-inset-1 after:content-[""]',
       },
       fullWidth: {
         true: 'w-full',

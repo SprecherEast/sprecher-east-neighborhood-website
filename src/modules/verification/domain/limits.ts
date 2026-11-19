@@ -1,3 +1,5 @@
+import { CONFIRMATION_LINK_LIFETIME_MS } from '@/platform/lib'
+
 const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR
 
@@ -8,7 +10,7 @@ const DAY = 24 * HOUR
  */
 export const CONFIRMATION_LIMITS = {
   /** How long a link works after it is sent. */
-  linkLifetimeMs: DAY,
+  linkLifetimeMs: CONFIRMATION_LINK_LIFETIME_MS,
   /** Confirmation emails per hour from one connection (client IP). */
   perConnection: 5,
   connectionWindowMs: HOUR,

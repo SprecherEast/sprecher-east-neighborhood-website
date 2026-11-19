@@ -9,7 +9,7 @@ type Principal = User | TypedUser | null
 
 /**
  * Extract role from the request user.
- * Returns 'resident' as the safe default if no role is set (e.g., pre-migration users).
+ * Returns 'guest' as the safe default if no role is set (e.g., pre-migration users).
  * A principal from another collection (an MCP API key authenticating as itself, #336) has no
  * role and counts as signed out.
  */
@@ -17,7 +17,7 @@ const getRole = (user: Principal): Role | null => {
   if (!user) return null
   if ('collection' in user && user.collection !== ACCOUNTS_COLLECTION) return null
   if (!('role' in user)) return null
-  return user.role || ROLES.resident
+  return user.role || ROLES.guest
 }
 
 /** Check if user has admin role (also used by routes that only admins may call) */

@@ -38,6 +38,29 @@ jobs:
       - name: Check Prettier formatting
         run: npx prettier --check .
 
+  # What agents load at session start stays under its token budget, and the generated rules match
+  # the guidelines they copy (#144, #737). Installs dependencies for the offline token counter.
+  agent-context:
+    name: Agent context
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check the generated rules and the session-start budget
+        run: node scripts/agent-context.mjs
+
   # ESLint skipped for docs-only changes (no JS/TS to lint)
   eslint:
     name: ESLint
@@ -73,7 +96,9 @@ jobs:
         if: steps.filter.outputs.code == 'true'
         run: npx eslint . --max-warnings=10
 
-  # Dependency audit: runs on schedule (daily) or when package files change
+  # Dependency audit: runs every step on every PR, every push to main and the daily schedule. It
+  # has no path filter: a skipped step counts as success, so a filtered audit passed without
+  # auditing (#868). The deploy waits for this job (.github/scripts/require-checks.sh).
   security:
     name: Dependency Audit
     runs-on: ubuntu-latest
@@ -83,27 +108,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect dependency changes
-        if: github.event_name != 'schedule'
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            deps:
-              - 'package.json'
-              - 'package-lock.json'
-
       - name: Setup Node.js
-        if: github.event_name == 'schedule' || steps.filter.outputs.deps == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
 
       - name: Install dependencies
-        if: github.event_name == 'schedule' || steps.filter.outputs.deps == 'true'
         run: npm ci
 
+      # Same level and scope as `npm audit --audit-level=high --omit=dev`, plus the written
+      # exceptions in .nsprc: each needs a note and an expiry within 45 days, and stops applying
+      # on its expiry date (#1285; docs/guidelines/security.md).
       - name: Audit for critical/high vulnerabilities
-        if: github.event_name == 'schedule' || steps.filter.outputs.deps == 'true'
-        run: npm audit --audit-level=high --omit=dev
+        run: npm run audit:prod

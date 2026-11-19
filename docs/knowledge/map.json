@@ -1,0 +1,108 @@
+[
+  { "note": "src/modules/events/README.md", "paths": ["src/modules/events/**"] },
+  { "note": "src/modules/contact/README.md", "paths": ["src/modules/contact/**"] },
+  { "note": "src/modules/agents/README.md", "paths": ["src/modules/agents/**"] },
+  { "note": "src/modules/verification/README.md", "paths": ["src/modules/verification/**"] },
+  { "note": "src/modules/directory/README.md", "paths": ["src/modules/directory/**"] },
+  { "note": "src/platform/theme/README.md", "paths": ["src/platform/theme/**", "src/themes/**"] },
+  {
+    "note": "src/modules/roadmap/README.md",
+    "paths": ["src/modules/roadmap/**", "src/app/(frontend)/roadmap/**"]
+  },
+  { "note": "src/modules/accounts/README.md", "paths": ["src/modules/accounts/**"] },
+  {
+    "note": "src/modules/site/navigation/README.md",
+    "paths": [
+      "src/modules/site/cms/navGlobal.ts",
+      "src/modules/site/cms/linkGroup.ts",
+      "src/modules/site/cms/NavItemRowLabel.client.tsx",
+      "src/modules/site/cms/revalidateGlobal.ts",
+      "src/modules/site/cms/revalidateRedirects.ts",
+      "src/modules/site/data/globals.ts",
+      "src/modules/site/data/redirects.ts",
+      "src/modules/site/data/documents.ts",
+      "src/modules/site/domain/nav.ts",
+      "src/modules/site/domain/forum.ts",
+      "src/modules/site/domain/cacheTags.ts",
+      "src/modules/site/ui/SiteHeader.tsx",
+      "src/modules/site/ui/SiteHeaderBar.client.tsx",
+      "src/modules/site/ui/HeaderNav.client.tsx",
+      "src/modules/site/ui/SiteFooter.tsx",
+      "src/modules/site/ui/Logo.tsx",
+      "src/modules/site/ui/ForumPrompt.tsx",
+      "src/modules/site/ui/PayloadRedirects.tsx",
+      "src/modules/site/use-cases/getForumUrl.ts",
+      "src/modules/site/use-cases/getRedirectTarget.ts"
+    ]
+  },
+  { "note": "src/platform/ui/README.md", "paths": ["src/platform/ui/**"] },
+  {
+    "note": "src/modules/site/README.md",
+    "paths": [
+      "src/modules/site/cms/pages.ts",
+      "src/modules/site/cms/hero.ts",
+      "src/modules/site/cms/layoutBlocks.ts",
+      "src/modules/site/cms/*Block.ts",
+      "src/modules/site/cms/revalidatePage.ts",
+      "src/modules/site/data/pages.ts",
+      "src/modules/site/data/mappers.ts",
+      "src/modules/site/domain/blocks.ts",
+      "src/modules/site/domain/hero.ts",
+      "src/modules/site/domain/types.ts",
+      "src/modules/site/ui/*Block.tsx",
+      "src/modules/site/ui/PageHero.tsx",
+      "src/modules/site/ui/RenderBlocks.tsx",
+      "src/modules/site/ui/testing/**",
+      "src/modules/site/use-cases/getPageBySlug.ts",
+      "src/modules/site/index.ts",
+      "src/modules/site/server.ts",
+      "src/modules/site/cms.ts"
+    ]
+  },
+  {
+    "note": "src/platform/payload/README.md",
+    "paths": [
+      "src/platform/payload/**",
+      "src/platform/lib/chart/breakdown.ts",
+      "src/platform/lib/chart/scale.ts",
+      "src/platform/lib/chart/spec.ts",
+      "src/platform/lib/billShare.ts",
+      "src/platform/lib/clientIp.ts",
+      "src/platform/lib/cn.ts",
+      "src/platform/lib/cursor.ts",
+      "src/platform/lib/emailLayout.ts",
+      "src/platform/lib/focalPoint.ts",
+      "src/platform/lib/formatDateTime.ts",
+      "src/platform/lib/formatDuration.ts",
+      "src/platform/lib/getMediaUrl.ts",
+      "src/platform/lib/index.ts",
+      "src/platform/lib/linkAddress.ts",
+      "src/platform/lib/mediaLicenses.ts",
+      "src/platform/lib/money.ts",
+      "src/platform/lib/paging.ts",
+      "src/platform/lib/reviewQueue.ts",
+      "src/platform/lib/roles.ts",
+      "src/platform/lib/slidingWindow.ts",
+      "src/platform/lib/timezone.ts",
+      "src/platform/lib/sha256.ts",
+      "src/platform/lib/emailAddress.ts",
+      "src/platform/lib/googleMapsEmbed.ts",
+      "src/platform/lib/retention.ts",
+      "src/platform/lib/linkLifetimes.ts",
+      "src/platform/lib/messages/**",
+      "src/platform/seo/**",
+      "src/platform/email/**",
+      "src/platform/turnstile/**",
+      "src/platform/analytics/**",
+      "src/platform/service/**"
+    ]
+  },
+  {
+    "note": "src/platform/richtext/README.md",
+    "paths": ["src/platform/richtext/**"]
+  },
+  {
+    "note": "src/modules/news/README.md",
+    "paths": ["src/modules/news/**"]
+  }
+]

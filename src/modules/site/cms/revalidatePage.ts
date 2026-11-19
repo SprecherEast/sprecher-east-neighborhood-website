@@ -9,6 +9,20 @@ import type { Page } from '@/payload-types'
 
 import { PAGES_SITEMAP_CACHE_TAG } from '../domain/cacheTags'
 
+/**
+ * Refreshes the page at `slug` and the pages sitemap, then the home page and every other CMS page:
+ * any of them may link to this one from a block ("top issues", a call to action, #484), and a
+ * link shows the page's current slug.
+ */
+function revalidatePageAt(slug: string) {
+  const path = documentHref('pages', slug)
+  revalidatePath(path)
+  revalidatePath('/')
+  revalidatePath('/(frontend)/[slug]', 'page')
+  expireCacheTag(PAGES_SITEMAP_CACHE_TAG)
+  return path
+}
+
 export const revalidatePage: CollectionAfterChangeHook<Page> = ({
   doc,
   previousDoc,
@@ -16,33 +30,21 @@ export const revalidatePage: CollectionAfterChangeHook<Page> = ({
 }) => {
   if (!context.disableRevalidate) {
     if (doc._status === 'published') {
-      const path = documentHref('pages', doc.slug ?? '')
-
-      payload.logger.info(`Revalidating page at path: ${path}`)
-
-      revalidatePath(path)
-      expireCacheTag(PAGES_SITEMAP_CACHE_TAG)
+      const path = revalidatePageAt(doc.slug ?? '')
+      payload.logger.info(`Revalidated page at path: ${path}`)
     }
 
     // If the page was previously published, we need to revalidate the old path
     if (previousDoc?._status === 'published' && doc._status !== 'published') {
-      const oldPath = documentHref('pages', previousDoc.slug ?? '')
-
-      payload.logger.info(`Revalidating old page at path: ${oldPath}`)
-
-      revalidatePath(oldPath)
-      expireCacheTag(PAGES_SITEMAP_CACHE_TAG)
+      const oldPath = revalidatePageAt(previousDoc.slug ?? '')
+      payload.logger.info(`Revalidated old page at path: ${oldPath}`)
     }
   }
   return doc
 }
 
 export const revalidateDelete: CollectionAfterDeleteHook<Page> = ({ doc, req: { context } }) => {
-  if (!context.disableRevalidate) {
-    const path = documentHref('pages', doc?.slug ?? '')
-    revalidatePath(path)
-    expireCacheTag(PAGES_SITEMAP_CACHE_TAG)
-  }
+  if (!context.disableRevalidate) revalidatePageAt(doc?.slug ?? '')
 
   return doc
 }

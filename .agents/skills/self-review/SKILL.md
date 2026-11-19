@@ -1,13 +1,14 @@
 ---
 name: self-review
-description: Review and clean up your own change before opening or updating a pull request — reuse of existing helpers, code quality, efficiency, the repo's guidelines, and a visual design review for UI changes — then fix what it finds. Use when a change is done and before asking for the independent review.
+description: Review and clean up your own change before opening or updating a pull request — reuse of existing helpers, code quality, efficiency, the repo's guidelines, whether the notes and docs still describe the behavior, and a visual design review for UI changes — then fix what it finds. Use when a change is done and before asking for the independent review.
 ---
 
 # Self-review before a PR
 
 The author's own pass over a change. It catches the easy things before the independent review
-([`pr-review`](../pr-review/SKILL.md)), and doesn't replace it. Fix every Critical and High finding
-before opening the PR.
+([`pr-review`](../pr-review/SKILL.md)), and doesn't replace it. Fix every finding that
+breaches the [guard rails](../../../docs/guidelines/guard-rails.md) and every Critical and High
+finding before opening the PR, then record the result in the PR's **Self-review** section.
 
 ## 1. Find the change
 
@@ -18,9 +19,9 @@ git diff HEAD            # plus anything not committed yet
 
 If there are no changes, review the files you edited in this session.
 
-## 2. Review it four ways
+## 2. Review it five ways
 
-Give each review the full diff. If your tool can run sub-agents, run the four in parallel, one
+Give each review the full diff. If your tool can run sub-agents, run the five in parallel, one
 each; otherwise do them one after another.
 
 ### Reuse
@@ -44,6 +45,12 @@ each; otherwise do them one after another.
    already exists.
 6. **Guidelines**: anything against [development](../../../docs/guidelines/development.md) or
    [security](../../../docs/guidelines/security.md).
+7. **Component API**: a shared component or one meant for reuse follows
+   [`vercel-composition-patterns`](../vercel-composition-patterns/SKILL.md) (explicit variants,
+   compound parts, no boolean-prop modes), and the diff uses, configures or splits shared
+   components as
+   [the rule](../../../docs/guidelines/components-and-content.md#shared-components-use-configure-or-split)
+   says.
 
 ### Efficiency
 
@@ -53,13 +60,34 @@ each; otherwise do them one after another.
 4. **Existence checks before acting** (TOCTOU): do the operation and handle the error instead.
 5. **Memory**: unbounded structures, missing cleanup, listener leaks.
 6. **Overly broad operations**: reading or loading everything when a part is enough.
+7. **React and Next.js**: React and Next.js code is checked against the CRITICAL and HIGH rules of
+   [`vercel-react-best-practices`](../vercel-react-best-practices/SKILL.md) (waterfalls, bundle
+   size, server-side work, data sent to client components).
+8. **Public pages stay fast:** a change to a public page, a query or what ships to the browser
+   follows [Fast by default](../../../docs/guidelines/development.md#fast-by-default-public-pages-first),
+   and a number it moves is explained in the PR.
 
 ### Visual design
 
 Only when the diff touches CSS, Tailwind classes, HTML structure, component markup or image
 treatment: follow [`visual-design-review`](../visual-design-review/SKILL.md).
 
+### Knowledge
+
+1. List what a visitor, an editor or an agent would now see or get differently
+   ([what counts](../../../docs/architecture/decisions/0019-knowledge-layer.md)): screens,
+   messages, fields, access, hooks, routes, emails, jobs, limits.
+2. For each, find the sentence in the note that describes it (`docs/knowledge/map.json` names it)
+   or in the generated page in `docs/reference/`; for a path the map doesn't list, in the doc that
+   describes it (a guideline, the setup notes, a skill). None: update it in this PR. A module with
+   no note yet needs none. Run `npm run docs:generate` for a content type (routes and components
+   once #718 lands).
+3. Nothing changed? Check the PR's `Behavior change: none` reason is true of the diff ([how to decide](../../../docs/guidelines/development.md#documentation-follows-behavior)).
+4. A change to `docs/knowledge/map.json` can drop a module from the check: say why in the PR.
+5. Run `npm run knowledge:check -- --body-file <your draft description>` on the committed diff. It applies the rule CI applies, so a missing note shows now and not after the pull request opens. Fix what it reports; a pass here is advisory and CI decides, and is not a reason to skip step 3. Compare against the pull request's real base after fetching it (`--base`), which for a pull request in a stack is the pull request below.
+6. Read the diff against each note it maps to, and flag only a claim in the note that the diff makes false, with the sentence and the line that contradicts it. Nothing to update is a valid answer: do not rewrite a note that is still true, or touch a note only because the folder changed. Beyond what steps 1 and 2 require, do not add detail the note did not carry. This read is not a CI check and does not fail the pull request on its own, but a note the diff makes false still breaches guard rail 9: fix it in this pull request.
+
 ## 3. Fix
 
-Collect the findings and fix each one. If a finding is a false positive or not worth doing, note
-it and move on. Then say briefly what you fixed, or that the change was already clean.
+Collect the findings and fix each one. Only a false positive may be noted and left. A guard-rail breach
+is never "not worth doing": fix it. Then say briefly what you fixed, or that the change was already clean.

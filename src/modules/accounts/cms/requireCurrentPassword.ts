@@ -1,6 +1,7 @@
 import { APIError, type CollectionBeforeChangeHook } from 'payload'
 
 import { CONFIRM_ON_ACCOUNT_PAGE, CURRENT_PASSWORD_CONFIRMED } from '../domain/passwordConfirmation'
+import { isOwnAccount } from './isOwnAccount'
 
 /**
  * Refuses a new password on the requester's own account unless the current password was checked
@@ -23,9 +24,10 @@ export const requireCurrentPassword: CollectionBeforeChangeHook = ({
   req: { user },
 }) => {
   if (operation !== 'update' || !data?.password) return data
-  const ownAccount =
-    user?.collection === collection.slug && String(user.id) === String(originalDoc?.id)
-  if (ownAccount && context[CURRENT_PASSWORD_CONFIRMED] !== true) {
+  if (
+    isOwnAccount(user, collection.slug, originalDoc?.id) &&
+    context[CURRENT_PASSWORD_CONFIRMED] !== true
+  ) {
     throw new APIError(CONFIRM_ON_ACCOUNT_PAGE, 403) // a fixed text, public like any 4xx
   }
   return data

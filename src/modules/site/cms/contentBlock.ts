@@ -1,13 +1,8 @@
 import type { Block, Field } from 'payload'
 
-import {
-  FixedToolbarFeature,
-  HeadingFeature,
-  InlineToolbarFeature,
-  lexicalEditor,
-} from '@payloadcms/richtext-lexical'
+import { BODY_HEADINGS, headingsEditor } from '@/platform/payload/headingsEditor'
 
-import { link } from './link'
+import { link } from '@/platform/payload/link'
 
 const columnFields: Field[] = [
   {
@@ -36,23 +31,30 @@ const columnFields: Field[] = [
   {
     name: 'richText',
     type: 'richText',
-    editor: lexicalEditor({
-      features: ({ rootFeatures }) => {
-        return [
-          ...rootFeatures,
-          HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4'] }),
-          FixedToolbarFeature(),
-          InlineToolbarFeature(),
-        ]
-      },
-    }),
+    editor: headingsEditor(BODY_HEADINGS),
     label: false,
+  },
+  {
+    name: 'shareBar',
+    type: 'group',
+    label: 'Share bar',
+    admin: {
+      description:
+        'A thin bar under the opening heading, split by percent. Shows only when all four are filled in and add up to 100.',
+    },
+    fields: [
+      { name: 'schools', type: 'number', label: 'Schools (%)', min: 0, max: 100 },
+      { name: 'city', type: 'number', label: 'City (%)', min: 0, max: 100 },
+      { name: 'county', type: 'number', label: 'County (%)', min: 0, max: 100 },
+      { name: 'matc', type: 'number', label: 'Madison College (%)', min: 0, max: 100 },
+    ],
   },
   {
     name: 'enableLink',
     type: 'checkbox',
   },
   link({
+    appearances: ['default', 'outline', 'accent'],
     overrides: {
       admin: {
         condition: (_data, siblingData) => {
@@ -61,6 +63,21 @@ const columnFields: Field[] = [
       },
     },
   }),
+  {
+    name: 'linkAlign',
+    type: 'select',
+    label: 'Link button position',
+    defaultValue: 'start',
+    options: [
+      { label: 'Start (left)', value: 'start' },
+      { label: 'End (right)', value: 'end' },
+      { label: 'Beside the text (right, the text wraps around it)', value: 'beside' },
+    ],
+    admin: {
+      description: 'Where the link button sits in its column.',
+      condition: (_data, siblingData) => Boolean(siblingData?.enableLink),
+    },
+  },
 ]
 
 export const Content: Block = {

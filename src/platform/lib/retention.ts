@@ -7,7 +7,7 @@ const HOUR = 60 * 60 * 1000
 export const RETENTION = {
   /**
    * A message, or an address, that was never confirmed is deleted this long after its link was
-   * sent. Longer than the link's own lifetime (24 hours), so a link never outlives its record.
+   * sent. Longer than the link's own lifetime (`CONFIRMATION_LINK_LIFETIME_MS`), so a link never outlives its record.
    */
   unconfirmedMs: 48 * HOUR,
   /** A confirmed sender's contact details are deleted this many months after their last message. */

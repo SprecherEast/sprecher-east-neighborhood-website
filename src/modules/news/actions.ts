@@ -1,12 +1,15 @@
 'use server'
 
-import { parsePageNumber } from '@/platform/lib'
+import { parseCursor } from '@/platform/lib'
 
-import { findPostPage } from './use-cases/findPostPage'
+import { findPostsAfter } from './data/queries'
 
-/** Next page of published posts for the /posts listing ("Load more"). */
-export async function loadPostsPage(page: unknown) {
-  const pageNumber = parsePageNumber(page)
-  if (pageNumber === null) throw new Error('Invalid page number')
-  return findPostPage(pageNumber)
+/**
+ * The next published posts for the /posts listing ("Load more"): those after `cursor`, the opaque
+ * string the previous page returned (#125).
+ */
+export async function loadMorePosts(cursor: unknown) {
+  const after = parseCursor(cursor)
+  if (after === null) throw new Error('Invalid request')
+  return findPostsAfter(after)
 }

@@ -3,6 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { RichTextValue } from '@/platform/lib'
+import { SECTION_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 
 import { RichText, type RichTextBlocks } from './RichText'
 
@@ -57,6 +58,16 @@ const internalLink = (relationTo: string, slug: string, label: string) => ({
   children: [text(label)],
 })
 
+const customLink = (url: string, label: string, newTab = false) => ({
+  type: 'link',
+  format: '',
+  indent: 0,
+  version: 3,
+  direction: 'ltr',
+  fields: { linkType: 'custom', url, newTab },
+  children: [text(label)],
+})
+
 describe('RichText', () => {
   it('renders the text of the document', () => {
     render(<RichText data={doc(paragraph(text('Welcome, neighbors')))} />)
@@ -102,6 +113,60 @@ describe('RichText', () => {
     expect(screen.getByRole('link', { name: 'about us' }).getAttribute('href')).toBe('/about')
   })
 
+  it('draws links with the shared Link, which says when one opens a new tab (#215)', () => {
+    render(
+      <RichText
+        data={doc(
+          paragraph(
+            customLink('/faq', 'the FAQ'),
+            text(' or '),
+            customLink('https://www.cityofmadison.com', 'the city', true),
+          ),
+        )}
+      />,
+    )
+
+    const faq = screen.getByRole('link', { name: 'the FAQ' })
+    expect(faq.className).toContain('text-primary-strong')
+    expect(faq.hasAttribute('target')).toBe(false)
+    const city = screen.getByRole('link', { name: 'the city, opens in a new tab' })
+    expect(city.getAttribute('target')).toBe('_blank')
+    expect(city.getAttribute('rel')).toBe('noopener noreferrer')
+  })
+
+  it('shows a link to a deleted document as plain text, not a link to the home page', () => {
+    const deleted = {
+      ...internalLink('posts', 'gone', 'an old post'),
+      fields: { linkType: 'internal', newTab: false, doc: { relationTo: 'posts', value: null } },
+    }
+    render(<RichText data={doc(paragraph(text('See '), deleted))} />)
+
+    expect(screen.queryByRole('link')).toBeNull()
+    expect(screen.getByText('See an old post').tagName).toBe('P')
+  })
+
+  it('shows a link to a document that was not loaded (only its ID) as plain text', () => {
+    const unloaded = {
+      ...internalLink('posts', 'x', 'a draft'),
+      fields: { linkType: 'internal', newTab: false, doc: { relationTo: 'posts', value: 7 } },
+    }
+    render(<RichText data={doc(paragraph(unloaded))} />)
+
+    expect(screen.queryByRole('link')).toBeNull()
+  })
+
+  it('draws an address typed into the text (an autolink) with the shared Link', () => {
+    const autolink = {
+      ...customLink('https://example.com', 'example.com'),
+      type: 'autolink',
+    }
+    render(<RichText data={doc(paragraph(autolink))} />)
+
+    const link = screen.getByRole('link', { name: 'example.com' })
+    expect(link.getAttribute('href')).toBe('https://example.com')
+    expect(link.className).toContain('text-primary-strong')
+  })
+
   it('is a centred prose column by default, and full width without the gutter', () => {
     const { container, rerender } = render(<RichText data={doc(paragraph(text('a')))} />)
     const wrapper = () => container.firstElementChild?.className ?? ''
@@ -112,5 +177,86 @@ describe('RichText', () => {
     rerender(<RichText data={doc(paragraph(text('a')))} enableGutter={false} />)
     expect(wrapper()).not.toContain('container')
     expect(wrapper()).toContain('max-w-none')
+  })
+
+  it('gives every h2 and h3 a link address with room above it, and leaves other headings alone (#573)', () => {
+    const heading = (tag: string, value: string) => ({
+      type: 'heading',
+      tag,
+      version: 1,
+      direction: 'ltr',
+      format: '',
+      indent: 0,
+      children: [text(value)],
+    })
+    render(
+      <RichText
+        data={doc(
+          heading('h2', "What's next?"),
+          heading('h2', "What's next?"),
+          heading('h4', 'Deep'),
+        )}
+      />,
+    )
+    const [first, second] = screen.getAllByRole('heading', { level: 2 })
+    expect(first?.id).toBe('whats-next')
+    expect(second?.id).toBe('whats-next-2')
+    expect(first?.classList.contains(SECTION_SCROLL_MARGIN)).toBe(true)
+    expect(screen.getByRole('heading', { level: 4 }).hasAttribute('id')).toBe(false)
+  })
+})
+
+describe('RichText beside a floated picture (#1023)', () => {
+  const rootClasses = (besideFloat?: boolean) => {
+    const { container } = render(
+      <RichText data={doc(paragraph(text('Body')))} besideFloat={besideFloat} />,
+    )
+    const classes = (container.firstElementChild as HTMLElement).className
+    cleanup()
+    return classes
+  }
+
+  it('is a box of its own by default, so a floated figure stays inside it', () => {
+    expect(rootClasses()).toContain('flow-root')
+  })
+
+  it('flows beside a picture before it, and clears it at its end, instead of staying narrow', () => {
+    const classes = rootClasses(true)
+
+    expect(classes).not.toContain('flow-root')
+    expect(classes).toContain('after:clear-both')
+  })
+})
+
+describe('RichText as a part of an article (#1023)', () => {
+  const heading = (value: string) => ({
+    type: 'heading',
+    tag: 'h2',
+    format: '',
+    indent: 0,
+    version: 1,
+    direction: 'ltr',
+    children: [text(value)],
+  })
+
+  it('takes its heading ids from the whole article, so they match the menu', () => {
+    const first = heading('Costs')
+    const second = heading('Costs')
+    const whole = doc(first, paragraph(text('One')), second)
+    const part = { root: { ...(whole as unknown as { root: object }).root, children: [second] } }
+
+    render(<RichText data={part as unknown as RichTextValue} anchorSource={whole} />)
+
+    expect(screen.getByRole('heading', { level: 2 }).id).toBe('costs-2')
+  })
+})
+
+describe('RichText, headings (#741)', () => {
+  it('balances the lines of its headings, so one never ends on a lone word', () => {
+    const { container } = render(<RichText data={doc(paragraph(text('Body')))} />)
+
+    expect((container.firstElementChild as HTMLElement).className).toContain(
+      'prose-headings:text-balance',
+    )
   })
 })

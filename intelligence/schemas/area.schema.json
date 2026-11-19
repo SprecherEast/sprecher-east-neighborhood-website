@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sprechereast.com/intelligence/schemas/area.schema.json",
+  "title": "The words code uses to tell that an item is about the area (area.yaml)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "places", "neighbors", "boundary", "highways"],
+  "$defs": {
+    "words": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9 ./-]*[a-z0-9]$", "maxLength": 60 }
+    }
+  },
+  "properties": {
+    "version": { "const": 1 },
+    "places": { "$ref": "#/$defs/words" },
+    "neighbors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "checked", "names"],
+      "properties": {
+        "source": { "type": "string", "pattern": "^https://" },
+        "checked": { "$ref": "common.schema.json#/$defs/date" },
+        "names": { "$ref": "#/$defs/words" }
+      }
+    },
+    "boundary": {
+      "description": "The City's own boundary feature for the area, which verify tests a place against. `verified` is false until someone confirms the layer and ID by hand.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "naId", "checked", "verified"],
+      "properties": {
+        "source": { "type": "string", "pattern": "^https://" },
+        "naId": { "type": "integer", "minimum": 1 },
+        "checked": { "$ref": "common.schema.json#/$defs/date" },
+        "verified": { "type": "boolean" }
+      }
+    },
+    "highways": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["names", "with"],
+        "properties": {
+          "names": { "$ref": "#/$defs/words" },
+          "with": { "$ref": "#/$defs/words" }
+        }
+      }
+    }
+  }
+}

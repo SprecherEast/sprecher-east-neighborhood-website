@@ -1,5 +1,14 @@
 import type { Block } from 'payload'
 
+import { ChartBlockConfig } from './editorial/chartBlockConfig'
+import { DiagramKeyBlockConfig } from './editorial/diagramKeyBlockConfig'
+import { FactTabsBlockConfig } from './editorial/factTabsBlockConfig'
+import { FigureBlockConfig } from './editorial/figureBlockConfig'
+import { KeyFactsBlockConfig } from './editorial/keyFactsBlockConfig'
+import { OutcomeForkBlockConfig } from './editorial/outcomeForkBlockConfig'
+import { StepsBlockConfig } from './editorial/stepsBlockConfig'
+import { TimelineBlockConfig } from './editorial/timelineBlockConfig'
+
 import {
   FixedToolbarFeature,
   InlineToolbarFeature,
@@ -23,6 +32,26 @@ export const Banner: Block = {
         { label: 'Success', value: 'success' },
       ],
       required: true,
+    },
+    {
+      name: 'dismissible',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'Close button',
+      admin: {
+        description:
+          'Visitors can close the notice, and it stays closed on their browser. Leave off for warnings that must be read.',
+      },
+    },
+    {
+      name: 'showUntil',
+      type: 'date',
+      label: 'Show until',
+      admin: {
+        date: { pickerAppearance: 'dayAndTime' },
+        description:
+          'The notice disappears at this time. For a meeting, set the meeting’s start time. Leave empty to show it always.',
+      },
     },
     {
       name: 'content',
@@ -84,5 +113,23 @@ export const MediaBlock: Block = {
   ],
 }
 
+/**
+ * Visual blocks for explainer stories (epic #506): a timeline, steps, key facts, an outcome
+ * fork, a diagram key for annotated images, a chart and fact tabs. Post and event content both offer them, in this order.
+ */
+export const EDITORIAL_BLOCKS: Block[] = [
+  TimelineBlockConfig,
+  StepsBlockConfig,
+  KeyFactsBlockConfig,
+  OutcomeForkBlockConfig,
+  DiagramKeyBlockConfig,
+  FigureBlockConfig,
+  ChartBlockConfig,
+  FactTabsBlockConfig,
+]
+
 /** The blocks a post's content may hold, in the order the editor offers them. */
-export const RICH_TEXT_BLOCKS: Block[] = [Banner, Code, MediaBlock]
+export const RICH_TEXT_BLOCKS: Block[] = [Banner, Code, MediaBlock, ...EDITORIAL_BLOCKS]
+
+/** The blocks an event's content may hold: a banner (for a notice such as a meeting), images and the visual blocks, no code. */
+export const EVENT_RICH_TEXT_BLOCKS: Block[] = [Banner, MediaBlock, ...EDITORIAL_BLOCKS]

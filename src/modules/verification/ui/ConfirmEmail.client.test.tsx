@@ -36,7 +36,7 @@ describe('ConfirmEmail', () => {
     answer(200, { outcome: 'confirmed' })
     render(
       <main>
-        <ConfirmEmail token={TOKEN} retryHref="/contact">
+        <ConfirmEmail token={TOKEN} status="pending" retryHref="/contact">
           <p>Account offer</p>
         </ConfirmEmail>
       </main>,
@@ -65,7 +65,7 @@ describe('ConfirmEmail', () => {
     answer(200, { outcome: 'confirmed', email: 'ana@example.com' })
     const Slot = () => <p>Offer for {useConfirmedEmail() ?? 'nobody'}</p>
     render(
-      <ConfirmEmail token={TOKEN} retryHref="/contact">
+      <ConfirmEmail token={TOKEN} status="pending" retryHref="/contact">
         <Slot />
       </ConfirmEmail>,
     )
@@ -77,7 +77,7 @@ describe('ConfirmEmail', () => {
     answer(200, { outcome: 'already-confirmed', email: 'a@b.co, c@d.co' })
     const Slot = () => <p>Offer for {useConfirmedEmail() ?? 'nobody'}</p>
     render(
-      <ConfirmEmail token={TOKEN} retryHref="/contact">
+      <ConfirmEmail token={TOKEN} status="pending" retryHref="/contact">
         <Slot />
       </ConfirmEmail>,
     )
@@ -88,7 +88,7 @@ describe('ConfirmEmail', () => {
   it('says a reused link is already confirmed, and shows what comes after', async () => {
     answer(200, { outcome: 'already-confirmed' })
     render(
-      <ConfirmEmail token={TOKEN} retryHref="/contact">
+      <ConfirmEmail token={TOKEN} status="pending" retryHref="/contact">
         <p>Account offer</p>
       </ConfirmEmail>,
     )
@@ -104,7 +104,7 @@ describe('ConfirmEmail', () => {
     'explains an %s link, points to the contact form and offers no button',
     async (_, status, body, text) => {
       answer(status, body)
-      render(<ConfirmEmail token={TOKEN} retryHref="/contact" />)
+      render(<ConfirmEmail token={TOKEN} status="pending" retryHref="/contact" />)
       await clickConfirm()
       const alert = await screen.findByRole('alert')
       expect(alert.textContent).toContain(text)
@@ -124,7 +124,7 @@ describe('ConfirmEmail', () => {
     ['no answer', () => fetchMock.mockRejectedValue(new TypeError('x')), 'couldn’t reach'],
   ])('lets the person try again after %s', async (_, setUp, text) => {
     setUp()
-    render(<ConfirmEmail token={TOKEN} retryHref="/contact" />)
+    render(<ConfirmEmail token={TOKEN} status="pending" retryHref="/contact" />)
     await clickConfirm()
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toContain(text)
@@ -135,7 +135,7 @@ describe('ConfirmEmail', () => {
 
   it('sends nothing while the robot check is still running, and says why (#303)', async () => {
     fakeTurnstile.tokenFor = () => null
-    render(<ConfirmEmail token={TOKEN} retryHref="/contact" />)
+    render(<ConfirmEmail token={TOKEN} status="pending" retryHref="/contact" />)
     await clickConfirm()
     expect(fetchMock).not.toHaveBeenCalled()
     expect(screen.getByRole('alert').textContent).toContain('the spam check is still running')
@@ -145,7 +145,7 @@ describe('ConfirmEmail', () => {
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ error: 'robot-check' }), { status: 400 }),
     )
-    render(<ConfirmEmail token={TOKEN} retryHref="/contact" />)
+    render(<ConfirmEmail token={TOKEN} status="pending" retryHref="/contact" />)
     await clickConfirm()
     expect((await screen.findByRole('alert')).textContent).toContain('spam check didn’t pass')
 
@@ -159,7 +159,7 @@ describe('ConfirmEmail', () => {
   it('ignores an answer that arrives after the person left the page', async () => {
     let reply: (r: Response) => void = () => {}
     fetchMock.mockReturnValue(new Promise<Response>((r) => (reply = r)))
-    const { unmount } = render(<ConfirmEmail token={TOKEN} retryHref="/contact" />)
+    const { unmount } = render(<ConfirmEmail token={TOKEN} status="pending" retryHref="/contact" />)
     await clickConfirm()
     unmount()
     window.history.replaceState(null, '', '/search?q=garden')
@@ -171,7 +171,7 @@ describe('ConfirmEmail', () => {
   it('says a link without a usable token isn’t valid, without asking the server', async () => {
     render(
       <main>
-        <ConfirmEmail token={null} retryHref="/contact" />
+        <ConfirmEmail token={null} status="invalid" retryHref="/contact" />
       </main>,
     )
     expect(screen.getByRole('alert').textContent).toContain('This link isn’t valid')
@@ -180,5 +180,45 @@ describe('ConfirmEmail', () => {
     expect(fetchMock).not.toHaveBeenCalled()
     expect(document.activeElement).toBe(document.body) // nothing steals focus on page load
     await expectAccessible(document.body)
+  })
+
+  describe('when the link was already used or is dead as the page opens (#391)', () => {
+    it('says the email is already confirmed, with no button and no account offer', async () => {
+      render(
+        <main>
+          <ConfirmEmail token={TOKEN} status="already-confirmed" retryHref="/contact">
+            <p>Account offer</p>
+          </ConfirmEmail>
+        </main>,
+      )
+      expect(screen.getByRole('status').textContent).toContain('already confirmed')
+      expect(screen.queryByRole('button')).toBeNull()
+      expect(screen.queryByRole('link', { name: 'Go to the contact form' })).toBeNull()
+      expect(screen.queryByText('Account offer')).toBeNull()
+      expect(fetchMock).not.toHaveBeenCalled()
+      // The token leaves the address bar; focus stays where the page put it
+      expect(window.location.search).toBe('')
+      expect(document.activeElement).toBe(document.body)
+      await expectAccessible(document.body)
+    })
+
+    it.each([
+      ['expired', 'This link has expired'],
+      ['invalid', 'This link isn’t valid'],
+    ] as const)(
+      'shows a %s link’s message and the contact form, with no button',
+      (status, text) => {
+        render(<ConfirmEmail token={TOKEN} status={status} retryHref="/contact" />)
+        expect(screen.getByRole('alert').textContent).toContain(text)
+        expect(screen.getByRole('link', { name: 'Go to the contact form' })).toBeTruthy()
+        expect(screen.queryByRole('button')).toBeNull()
+        expect(fetchMock).not.toHaveBeenCalled()
+      },
+    )
+
+    it('keeps the address bar as it is for a link still to confirm', () => {
+      render(<ConfirmEmail token={TOKEN} status="pending" retryHref="/contact" />)
+      expect(window.location.search).toBe(`?token=${TOKEN}`)
+    })
   })
 })

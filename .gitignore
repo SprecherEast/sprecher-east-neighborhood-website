@@ -89,3 +89,9 @@ yarn-error.log*
 /*.png
 /*.jpg
 Sprecher-East-Photo_Album/
+
+# End-to-end tests (#311): the throwaway database and caught emails, and Playwright output
+e2e/.data/
+test-results/
+playwright-report/
+__pycache__/

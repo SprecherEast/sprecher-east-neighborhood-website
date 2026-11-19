@@ -1,3 +1,9 @@
+/** One link: where it goes, what it says, and whether it leaves the site. */
+export type NavLink = { href: string; label: string; external: boolean }
+
+/** One item of the header's nav: a link, or, with `children`, a menu that opens to those links. */
+export type HeaderNavLink = NavLink & { children?: NavLink[] }
+
 /** The path of an address, without its query, fragment or trailing slashes (`/` stays `/`). */
 export function toPathname(value: string): string {
   const [pathOnly] = value.split(/[?#]/)

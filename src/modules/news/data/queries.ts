@@ -3,7 +3,8 @@ import 'server-only'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 
-import type { FeedPage } from '@/platform/lib'
+import { cursorAfterLast, type FeedMore, type FeedPage, type SortCursor } from '@/platform/lib'
+import { afterCursor, keysetSort } from '@/platform/payload/keyset'
 import { PUBLISHED } from '@/platform/payload/published'
 
 import type { PostDetail, PostSitemapEntry, PostSummary } from '../domain/types'
@@ -19,8 +20,11 @@ import {
 /** Posts per page on /posts, its numbered pages and each "Load more". */
 export const POSTS_PAGE_SIZE = 12
 
-/** One page of published posts, newest first. */
-export async function findPostPage(page: number): Promise<FeedPage<PostSummary>> {
+/** The news listing's order: newest first, the id as tie-break for equal dates (#125). */
+const ORDER = 'desc'
+
+/** One page of the news listing: page `page`, or the page after `after`. */
+async function findListingPage({ page, after }: { page?: number; after?: SortCursor }) {
   const payload = await getPayload({ config: configPromise })
 
   const result = await payload.find({
@@ -28,19 +32,44 @@ export async function findPostPage(page: number): Promise<FeedPage<PostSummary>>
     depth: 1,
     limit: POSTS_PAGE_SIZE,
     page,
-    sort: '-publishedAt',
+    sort: keysetSort('publishedAt', ORDER),
     overrideAccess: false,
-    where: PUBLISHED,
+    where: after ? { and: [PUBLISHED, afterCursor('publishedAt', ORDER, after)] } : PUBLISHED,
     select: SUMMARY_FIELDS,
   })
 
   return {
+    ...result,
     docs: result.docs.map(toPostSummary),
+    nextCursor: cursorAfterLast(result.docs, (doc) => doc.publishedAt, result.hasNextPage),
+  }
+}
+
+/** One numbered page of published posts, newest first: the first page and the no-JS pages. */
+export async function findPostPage(page: number): Promise<FeedPage<PostSummary>> {
+  const result = await findListingPage({ page })
+
+  return {
+    docs: result.docs,
     page: result.page ?? page,
     totalPages: result.totalPages,
     totalDocs: result.totalDocs,
     limit: POSTS_PAGE_SIZE,
+    nextCursor: result.nextCursor,
   }
+}
+
+/**
+ * The published posts after `cursor` ("Load more"). Asking for what comes after the last post
+ * shown, not for page n, means a post removed in between skips nothing (#125).
+ */
+export async function findPostsAfter(cursor: SortCursor): Promise<FeedMore<PostSummary>> {
+  const [result, totalDocs] = await Promise.all([
+    findListingPage({ after: cursor }),
+    countPublishedPosts(),
+  ])
+
+  return { docs: result.docs, nextCursor: result.nextCursor, totalDocs }
 }
 
 /**

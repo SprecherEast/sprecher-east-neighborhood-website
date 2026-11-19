@@ -10,13 +10,16 @@ import {
   serverOnlyFieldAccess,
 } from '@/platform/payload/roles'
 
+import { RESET_LINK_LIFETIME_MS } from '../domain/linkLifetimes'
 import { toResetPasswordEmail, toResetPasswordLink } from '../domain/resetEmail'
 import { USERS } from '../domain/usersCollection'
 import { toVerifyAccountEmail, toVerifyAccountLink } from '../domain/verifyAccountEmail'
+import { firstAccountIsAdmin } from './firstAccountIsAdmin'
 import { forgotPasswordFromSiteOnly } from './forgotPasswordFromSiteOnly'
 import { verifyEndpointFromSiteOnly } from './verifyFromSiteOnly'
 import { noPasswordSignInForAgents } from './noPasswordSignInForAgents'
 import { noResetEmailWhileUnverified } from './noResetEmailWhileUnverified'
+import { requireConfirmedEmailChange } from './requireConfirmedEmailChange'
 import { requireCurrentPassword } from './requireCurrentPassword'
 
 /** The reset email for a token Payload just made: its link opens the site's reset page. */
@@ -57,6 +60,7 @@ export const Users: CollectionConfig = {
     // instead of /admin/reset, so residents never land in the admin (#269). The link uses the
     // configured site address, never the request's Host header.
     forgotPassword: {
+      expiration: RESET_LINK_LIFETIME_MS,
       generateEmailHTML: (args) => resetEmailFor(args?.token).html,
       generateEmailSubject: (args) => resetEmailFor(args?.token).subject,
     },
@@ -69,8 +73,9 @@ export const Users: CollectionConfig = {
     },
   },
   hooks: {
-    // Your own password changes only on /account, after your current one is checked (#233)
-    beforeChange: [requireCurrentPassword],
+    // Your own password changes only on /account, after your current one is checked (#233), and
+    // your own email only through the confirm-by-link flow (#555)
+    beforeChange: [firstAccountIsAdmin, requireCurrentPassword, requireConfirmedEmailChange],
     // An agent's MCP API key is its only credential (#336)
     beforeLogin: [noPasswordSignInForAgents],
     // Forgot password only from the site's page (#282), then no reset email to an account whose
@@ -87,10 +92,13 @@ export const Users: CollectionConfig = {
       name: 'role',
       type: 'select',
       required: true,
-      defaultValue: ROLES.resident,
+      defaultValue: ROLES.guest,
       options: [
         { label: 'Admin', value: ROLES.admin },
         { label: 'Editor', value: ROLES.editor },
+        // The default: an account whose home address nobody has verified (#520)
+        { label: 'Guest', value: ROLES.guest },
+        // A verified neighbour; how an address is verified is #314
         { label: 'Resident', value: ROLES.resident },
         // Suggests events and posts through its MCP API key only; no admin panel, no password
         // sign-in (#336)
@@ -107,7 +115,7 @@ export const Users: CollectionConfig = {
       },
     },
     // How often this account's verification email was sent again, and since when (#289). Only
-    // the server reads and writes them: hidden from the API and the admin panel, and a resident's
+    // the server reads and writes them: hidden from the API and the admin panel, and a guest's
     // own update can't set them (#299).
     {
       name: 'verificationResends',
@@ -123,6 +131,16 @@ export const Users: CollectionConfig = {
       name: 'verificationSetsPassword',
       type: 'checkbox',
       defaultValue: false,
+      hidden: true,
+      access: serverOnlyFieldAccess,
+    },
+    // The hash of the link that verified this account. Payload clears its token once used, so
+    // without it a link opened again can't be told from a bad one (#391). A hash, so a database
+    // copy holds no working link; it only lets the verify page say "already confirmed".
+    {
+      name: 'verifiedTokenHash',
+      type: 'text',
+      index: true,
       hidden: true,
       access: serverOnlyFieldAccess,
     },

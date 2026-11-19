@@ -8,10 +8,13 @@ import {
   isAdminOrSelf,
 } from '@/platform/payload/roles'
 
+import { firstAccountIsAdmin } from './firstAccountIsAdmin'
 import { forgotPasswordFromSiteOnly } from './forgotPasswordFromSiteOnly'
 import { noResetEmailWhileUnverified } from './noResetEmailWhileUnverified'
 import { noPasswordSignInForAgents } from './noPasswordSignInForAgents'
+import { requireConfirmedEmailChange } from './requireConfirmedEmailChange'
 import { requireCurrentPassword } from './requireCurrentPassword'
+import { RESET_LINK_LIFETIME_MS } from '../domain/linkLifetimes'
 import { Users } from './users'
 
 describe('Users', () => {
@@ -31,6 +34,7 @@ describe('Users', () => {
     expect(Users.auth).toEqual({
       cookies: { secure: false },
       forgotPassword: {
+        expiration: RESET_LINK_LIFETIME_MS,
         generateEmailHTML: expect.any(Function),
         generateEmailSubject: expect.any(Function),
       },
@@ -68,23 +72,29 @@ describe('Users', () => {
     )
   })
 
+  it('lets a reset link work for the lifetime the forgot-password page tells people', () => {
+    const forgot = typeof Users.auth === 'object' ? Users.auth.forgotPassword : undefined
+    expect(forgot?.expiration).toBe(RESET_LINK_LIFETIME_MS)
+  })
+
   it('asks for the current password before anyone changes their own (#233), takes forgot password from the site only (#282), and sends no reset email to an unverified account (#187)', () => {
     expect(Users.hooks).toEqual({
-      beforeChange: [requireCurrentPassword],
+      beforeChange: [firstAccountIsAdmin, requireCurrentPassword, requireConfirmedEmailChange],
       beforeLogin: [noPasswordSignInForAgents],
       beforeOperation: [forgotPasswordFromSiteOnly, noResetEmailWhileUnverified],
     })
   })
 
-  it('makes new accounts residents, and only admins may set a role', () => {
+  it('makes new accounts guests, and only admins may set a role', () => {
     const role = Users.fields.find((field) => 'name' in field && field.name === 'role')
     expect(role).toMatchObject({
       type: 'select',
       required: true,
-      defaultValue: 'resident',
+      defaultValue: 'guest',
       options: [
         { label: 'Admin', value: 'admin' },
         { label: 'Editor', value: 'editor' },
+        { label: 'Guest', value: 'guest' },
         { label: 'Resident', value: 'resident' },
         { label: 'Agent', value: 'agent' },
       ],

@@ -1,13 +1,12 @@
 import type { Metadata } from 'next/types'
 
-import { ArrowLeft } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import React from 'react'
 
 import { findPostPage, listPostPageNumbers, PostsFeed } from '@/modules/news/server'
 import { parsePageNumber } from '@/platform/lib'
-import { Link } from '@/platform/ui'
-import PageClient from './page.client'
+import { PageHeader } from '@/platform/ui/PageHeader'
+import { PAGE_SHELL } from '@/platform/ui/layoutSizes'
 
 export const revalidate = 600
 
@@ -30,24 +29,12 @@ export default async function Page({ params: paramsPromise }: Args) {
   if (page > 1 && page > posts.totalPages) notFound()
 
   return (
-    <div className="pt-24 pb-24">
-      <PageClient />
-      <div className="container mb-12 md:mb-16">
-        <p className="mb-3 text-xs font-bold tracking-widest text-primary uppercase">
-          News · Page {page}
-        </p>
-        <h1 className="text-4xl font-bold tracking-tight text-balance text-foreground md:text-5xl">
-          News &amp; Updates
-        </h1>
-        <Link
-          href="/posts"
-          variant="action"
-          icon={<ArrowLeft aria-hidden="true" />}
-          className="mt-4"
-        >
-          Back to the latest news
-        </Link>
-      </div>
+    <div className={PAGE_SHELL}>
+      <PageHeader
+        eyebrow={`News · Page ${page}`}
+        title="News & Updates"
+        backLink={{ href: '/posts', label: 'Back to the latest news' }}
+      />
 
       <PostsFeed initial={posts} />
     </div>

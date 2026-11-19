@@ -25,22 +25,20 @@ export const post1: (args: PostArgs) => RequiredDataFromCollectionSlug<'posts'> 
         'Hey neighbor. I\u2019m Amine, and I live right here in the Sprecher East area on Madison\u2019s Far East Side. You probably know the feeling \u2014 you wave at the same people walking their dogs, you see the same faces at the park, but somehow we never really connect.',
       ),
       p(
-        'Sprecher East is a grassroots neighborhood initiative. No corporate backing, no government mandate, no HOA board sending you angry letters about your fence height. Just one neighbor who decided to stop waiting and start building.',
+        'Sprecher East is an unofficial neighborhood site. No corporate backing, no government mandate, no HOA board sending you angry letters about your fence height. Just one neighbor who decided to stop waiting and start building.',
       ),
       p(
         'Here\u2019s the honest truth: right now, this is mostly me and a team of AI tools. Yes, AI. I use AI agents to help research, write, build this website, and keep things organized. I\u2019m completely transparent about that because I believe trust is built on honesty, not appearances.',
       ),
       heading('h2', 'What We\u2019re Building'),
       p(
-        'A real neighborhood association that advocates for our area at City Hall. A website with events, news, and resources that actually matter to us. Community connections that go deeper than a Nextdoor post. A voice for District 16 residents who feel like the far east side gets forgotten.',
+        'A neighborhood association that speaks up for our area at City Hall, if enough neighbors want one. A website with events, news, and resources that actually matter to us. Community connections that go deeper than a Nextdoor post. A place for District 16 neighbors who feel like the far east side gets forgotten.',
       ),
       heading('h2', 'What We Need From You'),
       p(
-        'Show up \u2014 come to a meeting, say hi, bring a friend. Speak up \u2014 got a neighborhood concern? An idea? We want to hear it. Spread the word \u2014 tell your neighbors. Volunteer \u2014 even an hour a month makes a real difference.',
+        'Say hi \u2014 come to an event and bring a friend. Speak up \u2014 got a concern or an idea? Please tell us. Spread the word \u2014 tell your neighbors. And if you have a little time, we\u2019d love your help with the site.',
       ),
-      p(
-        'We\u2019re not official yet \u2014 registration with the City of Madison takes time. But the community we\u2019re building? That\u2019s already real. And it starts with you.',
-      ),
+      p('The community here is already real. It starts with you.'),
       p('Let\u2019s do this together.'),
     ]),
     heroImage: heroImage.id,

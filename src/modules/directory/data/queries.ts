@@ -16,7 +16,11 @@ export async function findFaqEntries(): Promise<FaqEntry[]> {
 
   const result = await payload.find({
     collection: 'faq',
-    depth: 0,
+    // Depth 1 fills in the pages and posts an answer links to, so its links keep their address
+    // (#227); only their slugs are read. A document the reader may not see stays an id, and the
+    // renderer shows that link as plain text.
+    depth: 1,
+    populate: { pages: { slug: true }, posts: { slug: true } },
     limit: MAX_LIST_SIZE,
     sort: 'order',
     overrideAccess: false,
@@ -33,12 +37,35 @@ export async function findResources(): Promise<ResourceSummary[]> {
 
   const result = await payload.find({
     collection: 'resources',
-    depth: 0,
+    // Depth 1 loads an official's portrait (#393), with only what the card draws it from
+    depth: 1,
+    populate: {
+      // `filename` lets Payload build `url`; `updatedAt` is the image's cache tag
+      media: {
+        alt: true,
+        url: true,
+        filename: true,
+        width: true,
+        height: true,
+        mimeType: true,
+        updatedAt: true,
+      },
+    },
     limit: MAX_LIST_SIZE,
     sort: 'order',
     overrideAccess: false,
     where: PUBLISHED,
-    select: { title: true, description: true, url: true, phone: true, category: true },
+    select: {
+      title: true,
+      description: true,
+      url: true,
+      phone: true,
+      category: true,
+      photo: true,
+      photoCredit: true,
+      photoSourceUrl: true,
+      links: true,
+    },
   })
 
   return result.docs

@@ -27,3 +27,12 @@ export const RESOURCE_CATEGORIES = [
 ] as const satisfies readonly CategoryOption[]
 
 export type ResourceCategory = (typeof RESOURCE_CATEGORIES)[number]['value']
+
+/**
+ * A line under a resource section's heading, for the sections that need one. Officials' photos
+ * next to the site could read as an endorsement (the owner's concern, 2026-10-31, #393).
+ */
+export const RESOURCE_SECTION_NOTES: Partial<Record<ResourceCategory, string>> = {
+  'elected-officials':
+    'Photos are used with each official’s permission. Listing someone here is not an endorsement.',
+}

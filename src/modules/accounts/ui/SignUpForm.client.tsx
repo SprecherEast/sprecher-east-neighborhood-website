@@ -2,10 +2,12 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 
+import { cn } from '@/platform/lib/cn'
 import { Alert } from '@/platform/ui/Alert'
 import { TurnstileWidget } from '@/platform/turnstile/TurnstileWidget.client'
 import { useRobotCheck } from '@/platform/turnstile/useRobotCheck.client'
 import { Button, Field, Form, type FormStatus, Link } from '@/platform/ui'
+import { HEADER_SCROLL_MARGIN } from '@/platform/ui/scrollMargin'
 
 import { signUp } from '../actions'
 import { signUpSchema, type SignUpInput, type SignUpValues } from '../domain/credentials'
@@ -15,7 +17,7 @@ import { NewPasswordFields } from './NewPasswordFields.client'
 import { SIGN_UP_SENT, toSignUpErrorMessage } from './signUpMessages'
 
 /**
- * Creates a resident account (#187). `email` fills in the address the confirm page sent, or is
+ * Creates a guest account (#187). `email` fills in the address the confirm page sent, or is
  * `null`; it leaves the address bar and the history as soon as the form loads. Past the robot
  * check and the limits, every sign-up gets the same answer, and the account can't sign in until
  * Payload's link is opened.
@@ -32,7 +34,10 @@ export function SignUpForm({ email }: { email: string | null }) {
     if (window.location.search) window.history.replaceState(null, '', window.location.pathname)
   }, [])
   useEffect(() => {
-    if (status === 'success') doneRef.current?.focus()
+    if (status !== 'success') return
+    doneRef.current?.focus()
+    // Clear of the sticky header (`HEADER_SCROLL_MARGIN` below), or the message's first line hides (#551)
+    doneRef.current?.scrollIntoView({ block: 'start' })
   }, [status])
 
   const fail = (failure: SignUpFailure | 'offline') => {
@@ -65,8 +70,12 @@ export function SignUpForm({ email }: { email: string | null }) {
 
   if (status === 'success') {
     return (
-      <div ref={doneRef} tabIndex={-1} className="space-y-6 outline-none">
-        <Alert variant="success">{SIGN_UP_SENT}</Alert>
+      <div
+        ref={doneRef}
+        tabIndex={-1}
+        className={cn(HEADER_SCROLL_MARGIN, 'space-y-6 outline-none')}
+      >
+        <Alert tone="success">{SIGN_UP_SENT}</Alert>
         <Link href={SIGN_IN_PATH} variant="action">
           Go to log in
         </Link>
@@ -98,13 +107,7 @@ export function SignUpForm({ email }: { email: string | null }) {
                 {...register('email')}
               />
             </Field>
-            <NewPasswordFields
-              label="Password"
-              password={register('newPassword')}
-              confirm={register('confirmPassword')}
-              passwordError={errors.newPassword?.message}
-              confirmError={errors.confirmPassword?.message}
-            />
+            <NewPasswordFields label="Password" register={register} errors={errors} />
             {robotCheck.enabled && <TurnstileWidget {...robotCheck.widgetProps} />}
             <div>
               <Button type="submit" loading={status === 'submitting'} fullWidth>

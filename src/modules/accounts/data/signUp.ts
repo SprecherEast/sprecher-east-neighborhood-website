@@ -7,14 +7,16 @@ import { getPayload } from 'payload'
 
 import { ROLES } from '@/platform/lib'
 import { getServerSideURL } from '@/platform/lib/getURL'
+import { sha256Hex } from '@/platform/lib/sha256'
 
 import type { SignUpValues, VerifyAccountValues } from '../domain/credentials'
+import { SIGN_UP_CONTEXT } from '../domain/signUpContext'
 import { USERS } from '../domain/usersCollection'
 import { takeResend } from '../domain/verificationResends'
 import { toVerifyAccountEmail, toVerifyAccountLink } from '../domain/verifyAccountEmail'
 
 /**
- * Creates a resident account with Payload's `create` operation (#187). With `auth.verify` on the
+ * Creates a guest account with Payload's `create` operation (#187). With `auth.verify` on the
  * users collection, Payload stores it unverified, with a one-time token, and emails the link
  * (`auth.verify` in `cms/users.ts`); it can't sign in until that link is opened. Throws Payload's
  * error when it refuses (400: an account already uses the email) or fails.
@@ -27,14 +29,16 @@ export async function createResidentAccount({
   const payload = await getPayload({ config: configPromise })
   await payload.create({
     collection: USERS,
-    // Built here from the parsed form only: the role is always resident, and nothing else a
+    // Built here from the parsed form only: the role is always guest, and nothing else a
     // visitor sends (such as `_verified`) can reach the account
-    data: { name, email, password: newPassword, role: ROLES.resident },
+    data: { name, email, password: newPassword, role: ROLES.guest },
     depth: 0,
     // The collection lets only admins create accounts (`create: isAdmin`), so `POST /api/users`
     // stays closed to visitors. This is the one way a visitor gets an account, and the server
     // decides everything about it but the name, email and password.
     overrideAccess: true,
+    // Always a guest, even on an empty database: only Payload's first registration makes an admin
+    context: { [SIGN_UP_CONTEXT]: true },
   })
 }
 
@@ -168,4 +172,38 @@ export async function verifyAccountToken({
 }: Pick<VerifyAccountValues, 'token'>): Promise<void> {
   const payload = await getPayload({ config: configPromise })
   await payload.verifyEmail({ collection: USERS, token })
+}
+
+/**
+ * Remembers which link verified the account (#391), as a hash, once Payload has cleared its
+ * token, so the same link opened again can say "already confirmed". Written with `db.updateOne`,
+ * like the resend: a server-only field, and no hook needs to run.
+ */
+export async function recordVerifiedToken(id: number, token: string): Promise<void> {
+  const payload = await getPayload({ config: configPromise })
+  await payload.db.updateOne({
+    collection: USERS,
+    id,
+    data: { verifiedTokenHash: sha256Hex(token) },
+    returning: false,
+  })
+}
+
+/**
+ * Whether this link already verified its account (#391): the hash `recordVerifiedToken` kept.
+ * Only a yes or no comes back, never the account.
+ */
+export async function wasVerifiedWithToken(token: string): Promise<boolean> {
+  const payload = await getPayload({ config: configPromise })
+  const { docs } = await payload.find({
+    collection: USERS,
+    where: { verifiedTokenHash: { equals: sha256Hex(token) } },
+    select: { verifiedTokenHash: true },
+    limit: 1,
+    depth: 0,
+    pagination: false,
+    // The link's token is the proof, as for Payload's own verify; only a yes or no comes back
+    overrideAccess: true,
+  })
+  return docs.length > 0
 }

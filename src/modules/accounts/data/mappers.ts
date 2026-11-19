@@ -14,13 +14,13 @@ type UserFields = {
 
 /**
  * The signed-in user as pages and actions see it: no sessions, hashes or other Payload fields.
- * No role counts as a resident, as in the access checks (`platform/payload/roles.ts`).
+ * No role counts as a guest, as in the access checks (`platform/payload/roles.ts`).
  */
 export function toCurrentUser(user: UserFields): CurrentUser {
   return {
     id: user.id,
     email: user.email,
     name: user.name || null,
-    role: user.role || ROLES.resident,
+    role: user.role || ROLES.guest,
   }
 }

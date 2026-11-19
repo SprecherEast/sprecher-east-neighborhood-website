@@ -9,4 +9,4 @@
 # No includeSubDomains and no preload: they would bind every subdomain and are hard to undo.
 # To withdraw it, set max-age=0 and keep it for at least the longest max-age used, so browsers
 # forget the rule; removing the line alone leaves them following it until it expires.
-header Strict-Transport-Security "max-age=300"
+header Strict-Transport-Security "max-age=31536000"

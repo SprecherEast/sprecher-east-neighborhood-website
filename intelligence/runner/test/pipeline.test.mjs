@@ -4,6 +4,7 @@ import { describe, it } from 'node:test'
 import { cmsOperations, docsIn, dryRunCms } from '../lib/cms.mjs'
 import { fakeAdapter } from '../lib/model.mjs'
 import { runPipeline } from '../lib/pipeline.mjs'
+import { takeTurns } from '../lib/process.mjs'
 import { robotsChecker } from '../lib/fetchSource.mjs'
 import { curation, draft, feedsHttp, verification } from './fixtures.mjs'
 import { contract } from './helpers.mjs'
@@ -63,6 +64,33 @@ const run = async ({
 }
 
 describe('a run', () => {
+  it('takes candidates in turns by source, so a small budget samples each source', () => {
+    const c = (sourceId, n) => ({ sourceId, externalId: `${sourceId}:${n}` })
+    const turns = takeTurns([c('a', 1), c('a', 2), c('a', 3), c('b', 1), c('c', 1), c('c', 2)])
+    assert.deepEqual(
+      turns.map((t) => t.externalId),
+      ['a:1', 'b:1', 'c:1', 'a:2', 'c:2', 'a:3'],
+    )
+  })
+
+  it('tells the model what the registry says about each item’s source, as the item schema allows', async () => {
+    const items = []
+    const validateItem = contract.validator('schemas/item.schema.json')
+    const ask = fakeAdapter(({ stageId, item }) => {
+      if (stageId === 'verify') items.push(structuredClone(item))
+      return stageId === 'verify' ? verification() : curation({ decision: 'reject' })
+    })
+    await run({ ask })
+    const library = items.find((i) => i.candidate.sourceId === 'mpl-pinney-events')
+    assert.deepEqual(library.source, {
+      id: 'mpl-pinney-events',
+      owner: 'Madison Public Library',
+      reliability: 'official',
+      scope: contract.registry.sources.find((s) => s.id === 'mpl-pinney-events').scope,
+    })
+    for (const item of items) assert.deepEqual(validateItem(item), [])
+  })
+
   it('suggests the accepted items, logs a valid run, and records what it handled', async () => {
     const calls = []
     const { log, cms, state } = await run({ ask: model(calls) })
@@ -84,6 +112,57 @@ describe('a run', () => {
     assert.equal(update.status, 'succeeded')
   })
 
+  describe('the promotion guard (#870)', () => {
+    /** A model that accepts the library event whatever verify found, and says verify's `overrides`. */
+    const acceptingWith = (overrides) =>
+      fakeAdapter(({ stageId, item }) => {
+        if (stageId === 'verify') return verification(overrides)
+        if (stageId === 'curate')
+          return /Silent Book Club/.test(item.candidate.title)
+            ? curation()
+            : curation({ decision: 'reject', reasons: ['Not about the area.'] })
+        return draft()
+      })
+    const reports = (cms) => cms.writes.filter((w) => w.tool === 'reportItem')
+    const suggestions = (cms) => cms.writes.filter((w) => w.tool === 'submitSuggestion')
+
+    it('reports needs-review instead of submitting an accept on a low-confidence item', async () => {
+      const { cms, log } = await run({ ask: acceptingWith({ confidence: 0.4 }) })
+      assert.equal(suggestions(cms).length, 0)
+      assert.ok(reports(cms).some((w) => /Silent Book Club/.test(w.arguments.summary)))
+      assert.ok(reports(cms).every((w) => w.arguments.kind === 'needs-review'))
+      assert.equal(log.counts.proposed, 0)
+      assert.equal(log.counts.needsReview, 1)
+    })
+
+    for (const flag of ['ambiguous-location', 'conflicting-sources', 'prompt-injection']) {
+      it(`reports needs-review instead of submitting an accept flagged ${flag}`, async () => {
+        const { cms } = await run({ ask: acceptingWith({ flags: [flag] }) })
+        assert.equal(suggestions(cms).length, 0)
+        const [report] = reports(cms)
+        assert.equal(report.arguments.kind, 'needs-review')
+        assert.deepEqual(report.arguments.flags, [flag])
+        assert.match(report.arguments.summary, /Decision: needs-review/)
+      })
+    }
+
+    it('lets a flag that is not blocking through, and a clean accept at the threshold', async () => {
+      const threshold = contract.pipeline.escalation.verifyBelowConfidence
+      const { cms } = await run({
+        ask: acceptingWith({ confidence: threshold, flags: ['image-candidate'] }),
+      })
+      assert.equal(suggestions(cms).length, 1)
+    })
+
+    it('reads the blocking flags from the pipeline settings', async () => {
+      const { cms } = await run({
+        ask: acceptingWith({ flags: ['image-candidate'] }),
+        pipeline: { promotionGuard: { blockingFlags: ['image-candidate'] } },
+      })
+      assert.equal(suggestions(cms).length, 0)
+    })
+  })
+
   it('sends nothing to the model the second time: the feeds answer 304', async () => {
     const first = await run()
     const calls = []
@@ -100,8 +179,9 @@ describe('a run', () => {
     assert.equal(log.counts.deferred, 1)
     assert.equal(log.status, 'partial')
     // The deferred item's source keeps its old ETag, so it is fetched again
+    // (the four HTML pages here have no items, so all four save theirs too, #390)
     const kept = Object.keys(state.sources)
-    assert.equal(kept.length, 3)
+    assert.equal(kept.length, 7)
   })
 
   it('logs a disabled run and fetches nothing when the kill switch is off', async () => {

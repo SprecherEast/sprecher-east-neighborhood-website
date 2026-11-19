@@ -43,7 +43,9 @@ describe('ForgotPasswordForm', () => {
       'token-0',
     )
     expect((await screen.findByRole('status')).textContent).toBe(FORGOT_PASSWORD_SENT)
-    expect(FORGOT_PASSWORD_SENT).toMatch(/^If an account uses that email/)
+    expect(FORGOT_PASSWORD_SENT).toBe(
+      'No worries, it happens! If that email has an account, a reset link is on its way. It works for an hour. Nothing yet? Check your spam.',
+    )
   })
 
   it('asks for an email before sending', async () => {

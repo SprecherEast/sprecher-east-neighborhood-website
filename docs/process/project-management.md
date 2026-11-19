@@ -6,29 +6,37 @@ is in [`AGENTS.md`](../../AGENTS.md). Where the work is heading is in the
 [roadmap](../product/roadmap.md). The [`project-tracking`](../../.agents/skills/project-tracking/SKILL.md)
 skill is the step-by-step version for agents.
 
-GitHub is the only tracker for new work. Asana is being retired (#89: export #91, cutover #93).
+How the agent team (chief of staff, workers, reviewers) works on top of this is in the
+[agent operating model](agent-operating-model.md). Which layer a piece of work belongs at, and how
+to name it, is in the [planning model](planning-model.md); when to groom, what each board move
+requires and how the sweep works is in the [grooming playbook](grooming-playbook.md).
+
+GitHub is the only tracker for new work.
+
+Changing a rule here (how the team works: sprint length, Ready or Done, the levels, the board's
+columns and fields) is a policy change, so the owner agrees first ([`AGENTS.md`](../../AGENTS.md),
+step 3). Fixing wording, links or facts isn't.
 
 ## Levels of work
 
-| Level         | Answers                                            | Size            | On GitHub                                        |
-| ------------- | -------------------------------------------------- | --------------- | ------------------------------------------------ |
-| Vision        | Why does the site exist?                           | years           | [`docs/product/vision.md`](../product/vision.md) |
-| Milestone     | What outcome do we deliver, by when?               | 1–3 months (\*) | A milestone with a due date                      |
-| Epic          | What capability is part of that outcome?           | weeks           | An issue labeled `epic`, with sub-issues         |
-| Feature, task | What does a user get? What single change ships it? | a day or a few  | A sub-issue of an epic; one PR closes it         |
-| Bug           | What's broken?                                     | S to L          | A sub-issue of the epic it belongs to            |
-
-(\*) Guidance, not a rule.
+| Level         | Answers                                            | Size                   | On GitHub                                                |
+| ------------- | -------------------------------------------------- | ---------------------- | -------------------------------------------------------- |
+| Vision        | Why does the site exist?                           | years                  | [`docs/product/vision.md`](../product/vision.md)         |
+| Milestone     | What outcome is done, and how do we know?          | several capabilities   | A milestone; a due date only for a real date             |
+| Epic          | What capability is part of that outcome?           | several related issues | An issue labeled `epic`, with sub-issues                 |
+| Feature, task | What does a user get? What single change ships it? | a day or a few         | A sub-issue of its epic, if it has one; one PR closes it |
+| Bug           | What's broken?                                     | S to L                 | A sub-issue of its epic, if it has one; one PR closes it |
 
 Rules:
 
-- **Every feature, task and bug belongs to an epic.**
-- **Every planned epic belongs to a milestone.** Unscheduled epics wait in the backlog with no
-  milestone, and so does foundation work done step by step alongside the milestones (#127).
-- **A milestone groups the work for one outcome or context, with a due date,** such as "Ready for
-  neighbors". Sprints are not milestones; they're the board's Sprint field.
-- **One PR closes one issue** (`Closes #N`). When an issue needs several PRs, each uses
-  `Part of #N` and the last one uses `Closes #N`.
+- **Every feature, task and bug sits in a milestone; an epic is optional,** for multi-part work
+  ([the rule](../../AGENTS.md#one-issue-one-pull-request)).
+- **Every epic belongs to a milestone.** Unscheduled epics, and foundation work done step by step
+  alongside the milestones (#127), sit in the catch-all Backlog milestone until they're planned.
+- **A milestone is an outcome with a done test** (the Backlog milestone is the one exception,
+  [planning model](planning-model.md#milestone)), one per issue, and has a due date only when a
+  real date exists (a date the owner decides counts). Sprints are not milestones; they're the board's Sprint field.
+- **One PR closes one issue** ([the rule](../../AGENTS.md#one-issue-one-pull-request)).
 - **Split ahead of time.** Split anything bigger than size L (3 days). An epic's features become
   sub-issues when they're planned, not all up front.
 
@@ -37,9 +45,16 @@ Rules:
 The allowed labels are in [`.github/label-policy.json`](../../.github/label-policy.json):
 
 - **Required on every issue:** exactly one type, at least one area, and one priority. The
-  `PR Policy` check enforces this for linked issues.
+  `PR Policy` check enforces this for the issue a pull request closes
+  ([the gate](issue-and-pr-checks.md#the-pull-request-gate)).
+- **The labeler adds areas and markers only.** On a pull request it sets area labels and the
+  `shared-component` marker from the changed paths (`.github/labeler.yml`), never a type: the
+  author gives the pull request the one type of the issue it closes, and a test fails if a
+  labeler rule is named after a type.
 - **Markers** (optional, with a fixed meaning):
   - `epic`: a parent issue whose sub-issues are the work.
+  - `needs grooming`: set by [the issue check](issue-and-pr-checks.md#the-issue-check) while an issue misses something
+    the Definition of Ready needs; the check removes it when nothing is missing.
   - `needs owner`: needs the owner's login or money, or his decision on a genuine product
     trade-off, a meaningful cost, a legal or privacy commitment, or a decision established best
     practice can't reasonably resolve. Agents can't do it. A choice between technically valid
@@ -47,6 +62,17 @@ The allowed labels are in [`.github/label-policy.json`](../../.github/label-poli
     `needs owner` issue is listed in the checklist of the owner-actions epic (#169); its parent
     stays the epic it belongs to. The issues that depend on it are marked **blocked by** it, so
     nobody starts them too early.
+  - `ready`: the issue meets the [Definition of Ready](#definition-of-ready). Adding it moves the
+    card to Ready and removing it parks the card in Backlog ([the board](#the-board)).
+  - `scope-creep`: work found while doing another issue. It gets its own issue, linked to the
+    original with a `[SCOPE]` comment, and the original PR does not widen.
+  - `proposed-close`: an agent thinks the issue is obsolete, or duplicates another idea. It waits
+    for the owner; an agent never closes an old idea by itself. (Duplicate bugs are the exception
+    set out in the [agent operating model](agent-operating-model.md#4-how-an-issue-moves).)
+  - `shared-component`: a "watch out" flag on a PR that changes shared code many pages use:
+    `src/platform/` (`ui/`, `richtext/`, `theme/`, `lib/`, `turnstile/`), `src/themes/`, the
+    frontend layout and `globals.css`, and the site header, nav, footer and logo. The labeler sets
+    it from the changed paths (#447); its reviewer checks every page that uses the changed code.
 
 ### Waits for owner
 
@@ -55,46 +81,146 @@ nobody decides for him, merges it, or starts anything marked blocked by it. Fixi
 findings on a waiting PR is fine, so he gets a clean one. Other work goes on, and silence is
 never a yes.
 
-When he answers, whoever acts on it quotes his words on the issue or PR (with the date and where
-he said them), then removes the `needs owner` label and carries on as he decided. He can also
+When he answers, whoever acts on it records a short summary on the issue or PR (with the date and
+where he gave it), then removes the `needs owner` label and carries on as he decided. He can also
 merge or remove the label himself.
+
+**Triage.** The queue holds only what is his: a login, money, or a decision as the label defines
+it. A fact fix, work an agent can do, or something he already parked is a mislabel. The chief of
+staff removes the label with a `[DECISION]` comment saying why, and a parked item says what would
+bring it back. A real question keeps the rule above: only his answer removes the label.
 
 How to ask him ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) step 5):
 one plain question, the options in a sentence each, a recommendation, and what happens next.
 
-Priority lives only in the `priority:` label. GitHub's issue types (Bug, Feature, Task) are
+Priority is the `priority:` label, which the checks read, and the organization's native Priority
+field (its Urgent option is not used); the two agree, and the sweep reports any that differ. Size is the
+native Effort field: Low is S, Medium is M, High is L
+([the board](#the-board)). GitHub's issue types (Bug, Feature, Task) are
 optional; the type label stays the required one because the `PR Policy` check reads labels.
+
+## The pull request gate
+
+The `PR Policy` check fails a pull request with one line per broken rule, each starting with a
+stable ID, including `PR-GROOMED`, which fails a pull request while its issue still has the
+`needs grooming` label (groom the issue, then edit the PR description to re-run). The rules and IDs
+are in [the checks page](issue-and-pr-checks.md#the-pull-request-gate).
+
+## The issue check
+
+The `Issue Policy` workflow warns, with a comment and the `needs grooming` label, when an issue
+misses something the Definition of Ready needs. The rules and IDs are in
+[the checks page](issue-and-pr-checks.md#the-issue-check).
 
 ## Sprints
 
 - **One week**, Monday to Sunday, starting 2026-10-26. A sprint is the board's **Sprint** field.
-- **Planning (Monday):** pick **Ready** items, highest priority first, enough for the week. Leave
-  room for bugs.
+- **Planning (Monday):** groom the backlog ([below](#grooming-and-work-in-progress)), then pick
+  **Ready** items, highest priority first, enough for the week. Leave room for bugs.
 - **Review (end of the week):** the "Done last 7 days" view is the report of what shipped.
 - **Retro (end of the week):** one thing to keep, one to change. A change becomes a rule (a PR to
   the right doc) or a task, never a loose note.
 
 ## The board
 
-GitHub Project "Sprecher East", owned by `boulaajaj`. The full setup is in #90. Until it exists,
-there's no Sprint or Size field: plan from the milestone.
+[GitHub Project #1 "Sprecher East"](https://github.com/orgs/SprecherEast/projects/1), owned by
+the `SprecherEast` organization and linked to this repo. It's private to the organization. It was
+built on 2026-10-21 from the spec in #90 and moved to the organization after.
 
 | Status      | Means                                                                                     |
 | ----------- | ----------------------------------------------------------------------------------------- |
 | Backlog     | Captured, not ready yet.                                                                  |
 | Ready       | Meets the Definition of Ready (below). Can go into a sprint.                              |
-| In progress | Someone (person or agent) is working on it. A PR may be open as a draft.                  |
-| In review   | The PR is open and waiting for its independent review or checks.                          |
+| In progress | Work has started (set before the first commit). More than one only with no shared files.  |
+| In review   | A PR that closes it is open, even as a draft. Linking the PR moves the issue here.        |
 | Done        | Merged: the issue closes and the item moves here on its own. `wrapped` checks any deploy. |
 
-- **Fields:** Status, Sprint, Size (S is under half a day, M is 1–2 days, L is up to 3 days),
-  plus the built-in Labels, Milestone, Parent issue and Sub-issue progress.
-- **Views:** This sprint (board), Backlog (grouped by epic), Roadmap (by milestone), and Done last
-  7 days.
-- **Access:** changing the board needs the owner's account with the `project` scope: the owner in
-  the web UI, or an agent on his computer signed in with `gh` and that scope. Agents in cloud
-  sessions can't reach a board on a personal account, so they keep issue state, labels, parents
-  and milestones right, and the board's automations do the rest.
+- **Fields:** Status and Sprint are the board's own. Priority and Effort are the organization's
+  issue fields, set on the issue; a view shows them once it includes their columns. Effort is the
+  size: Low is S (under half a day), Medium is M (1–2 days), High is L (up to 3 days). Agents no
+  longer write the board's older Size field. Plus the built-in Labels, Milestone and Parent issue.
+- **Views:** This sprint (board), Backlog (everything not Done; each epic expands to its
+  sub-issues), Roadmap (grouped by milestone, dated by Sprint), and Done last 7 days (issues closed
+  as completed, `reason:completed`).
+- **Automations:** new issues and PRs from this repo join in Backlog, and a sub-issue joins with its
+  parent. Linking a PR moves an issue to In review. Merging its PR, or closing it for any reason
+  (also as not planned), moves it to Done. Moving an item to Done by hand doesn't close the issue.
+  Closed items are archived after two weeks.
+- **Access:** the board belongs to the organization and a cloud session reaches only the
+  repository, so an agent changes the issue and the card follows: assigning claims it, the `ready`
+  label says it is groomed, and Priority and Effort are fields on the issue (IDs in
+  `.github/issue-fields.json`). Reading the board or changing it directly needs the owner's
+  account with the `project` scope: in the web UI, or `gh` on his computer. A write that fails with
+  "Resource not accessible by integration" means the session's GitHub access is read-only
+  ([start a session](start-a-session.md#check-it-works-on-the-organizations-repository)).
+- **The planner app:** a GitHub App owned by the organization can read and change the board without
+  anyone's computer, signing in with a short-lived token made from a key kept only as a repository
+  secret. The `Planner App Check` workflow, run by hand, proves it can read the board and write to
+  one throwaway issue and its card. One rule guards sprint history: work that finished in a sprint
+  keeps that sprint, and only unfinished work moves forward (GitHub has no setting that locks it,
+  so the app's code enforces it). The `Planner Board` workflow runs as the app on a native signal,
+  not on comments: a new or reopened issue joins the sprint that is running, an assigned issue
+  also becomes In progress, and the `ready` label moves a card from Backlog to Ready. A Ready card
+  returns to Backlog when the label goes, or while the issue has `needs owner` or fails
+  [the issue check](issue-and-pr-checks.md#the-issue-check) (the app runs the check's rules itself
+  when the issue changes; a manual run catches up anything it missed). A card never moves back from In progress, In review or Done. Run
+  by hand for one issue, the workflow brings that card in line with the issue as it is now.
+
+## Grooming and work in progress
+
+Summary of the owner's rule (2026-10-31, Claude Code session, text, recorded on #524): groom before
+every major change, sorting tasks by effort and priority and moving them into Ready. Once everything is
+in Ready, work one task at a time, setting each to In Progress, so the board always shows at a glance
+what's being done and what isn't. On 2026-11-04 (voice and text sessions, recorded on #685) he allowed
+parallel work when issues don't touch the same files, with no fixed number, and confirmed it on
+2026-11-06 (Claude session, text, recorded on #685 and #721); the rule below says how.
+
+- **Groom before every major change:** a new epic, a sprint, or a batch of work. Each issue gets
+  its plain summary, acceptance criteria, a milestone, and an epic only for multi-part work
+  ([the rule](../../AGENTS.md#one-issue-one-pull-request)), labels (type, area, `priority:`) and a
+  size, which is the Effort field: Low, Medium or High. Anything bigger is split. When it meets
+  the [Definition of Ready](#definition-of-ready), it gets the `ready` label and its card moves to
+  **Ready**.
+- **Work in progress has no fixed number.** What limits it is whether issues touch the same
+  files (#721). Past
+  the first, an issue starts only if its **Files likely touched** don't overlap with those of any
+  issue in progress, the two don't both touch the **shared hot spots**, and it isn't blocked by
+  any issue in progress. The dispatcher (the chief of staff, or the owner's own session until #695
+  builds it) runs that check before every claim. When in doubt, wait until one is In review or
+  Done. The highest-priority Ready item goes first.
+- **Shared hot spots** (this list is the one definition; two issues that each touch any of these
+  count as overlapping, even in different lines): anything in `src/platform/` and `src/themes/`;
+  the frontend layout, header, navigation and `globals.css`; `src/payload.config.ts`,
+  `src/payload-types.ts` and `src/migrations/`; `package.json` and the lockfile; and the process
+  files (`AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `.github/`, `docs/guidelines/`,
+  `docs/roles/`, `docs/process/`).
+- **In progress is set when work starts,** before the first commit, so the board shows it. In
+  review and Done stay automatic.
+- **Assigning the issue moves its card** to In progress, through the planner app (the Access note
+  above), from any device. An agent never moves a card by hand or by comment: it assigns the issue
+  or sets `ready`. Where that workflow is not running, a session on the owner's computer moves
+  the card, and a cloud session says on the issue which card to move.
+
+## The record on the issue
+
+Every step an agent takes leaves a comment, so the issue shows what happened without reading chat.
+A comment starts with one of these headers, so a person or a script can find it:
+
+- `### [STEP] <title>`: claimed, started, PR opened, review finished, merged.
+- `### [DECISION] <title>`: a choice and why, with the alternatives. Include the date and where
+  the owner decided, when he did, as a summary, never his words.
+- `### [QUESTION] <title>`: one plain question with options and a recommendation. If only the owner
+  can answer, add the `needs owner` label and end with `Owner needed: yes`.
+- `### [PUSHBACK] <title>`: why an agent thinks a request is weaker than the standard approach.
+- `### [SCOPE] <title>`: new work found; links the new issue, which gets `scope-creep`.
+
+**Claiming.** One dispatcher (the chief of staff, or a person) hands an issue to an agent and does
+the steps below in order, so two agents can't win the same one; a worker checks that the claim
+names its branch and doesn't claim anything itself. Agents all act through the owner's GitHub login, so the assignee can't
+show who holds an issue: the `[STEP]` comment and the **In progress** status do. In order: (1)
+check for overlap with whatever is already In progress; (2) check the issue isn't already
+claimed (not In progress, no `[STEP]` claim comment); (3) post a `[STEP]` comment naming the
+branch and assign the issue; (4) set **In progress**. Then start.
 
 ## Definition of Ready
 
@@ -102,11 +228,17 @@ An issue is **Ready** when it has:
 
 - what and why, in plain language
 - acceptance criteria someone else could check
-- a parent epic, labels (type, area, priority) and a size. When the board can't be read (cloud
-  sessions, or until #90 is done), skip Size and say so on the issue
-  ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §1)
+- **Files likely touched** and **Must not touch** filled in (write `None` when there is nothing),
+  so overlap with other work can be checked
+- a milestone, and an epic only for multi-part work
+  ([the rule](../../AGENTS.md#one-issue-one-pull-request)), labels (type, area, priority) and a
+  size, the Effort field ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §1a)
 - no open blocker: nothing it's **blocked by** is still open
 - no `needs owner` label: that work waits for the owner, not for a sprint
+- no `needs grooming` label: [the issue check](issue-and-pr-checks.md#the-issue-check) found nothing missing
+
+The criteria for each board move, including Ready, are spelled out in the
+[grooming playbook](grooming-playbook.md#board-moves-entry-and-exit-criteria).
 
 ## Definition of Done
 
@@ -114,6 +246,8 @@ An issue is **Done** when:
 
 - its PR has passed every required check and its independent review, and is merged
   ([`AGENTS.md`](../../AGENTS.md))
+- the knowledge note for the code it changed is updated, or the PR declares "no behavior change"
+  and the reviewer agreed ([decision 0019](../architecture/decisions/0019-knowledge-layer.md))
 - if the merge started a deploy, the deploy succeeded and the changed behavior was checked on
   the live site (the [`wrapped`](../../.agents/skills/wrapped/SKILL.md) skill)
 - the issue is closed with a summary of what changed. Server changes are recorded on the
@@ -130,7 +264,7 @@ An issue is **Done** when:
 
 - An issue is the brief. Its acceptance criteria are the definition of done for whoever picks it
   up, person or agent.
-- Before starting, read the issue's epic, milestone and sprint. If it isn't Ready, make it Ready
-  first or pick another issue.
+- Before starting, read the issue's epic, milestone and sprint. If it isn't Ready, groom it into
+  Ready first or pick another issue. Then set it In progress.
 - New work found along the way becomes a new issue at the right level, with a parent. Don't widen
   the current PR to cover it.

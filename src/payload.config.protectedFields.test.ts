@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest'
 /**
  * Server-only fields refuse writes from the API (#299). `hidden: true` hides a field from reads
  * only, so each one also sets field access (`serverOnlyFieldAccess`); `accessPolicy.test.ts` checks
- * the config. These tests send the writes a visitor or a resident could send, through Payload's
+ * the config. These tests send the writes a visitor or a guest could send, through Payload's
  * REST handlers and the Local API, and check what was stored. Payload runs on an in-memory SQLite
  * database: no file, no network.
  */
@@ -50,16 +50,25 @@ const FORGED_RESENDS = {
   verificationResends: 99,
   verificationResendsSince: '2020-01-01T00:00:00.000Z',
   verificationSetsPassword: true,
+  // Or plant a used-link hash, so a link would read "already confirmed" (#391)
+  verifiedTokenHash: 'f'.repeat(64),
 }
 
-describe('a resident’s own account', () => {
+describe('a guest’s own account', () => {
   let resident: { id: number; token: string }
 
   beforeAll(async () => {
-    const password = 'resident-password-for-tests'
+    const password = 'guest-password-for-tests'
+    // The first account on an empty database becomes an admin (#354); it is not the one tested
+    await payload.create({
+      collection: 'users',
+      data: { email: 'first@example.com', password, name: 'First', role: 'guest' },
+      disableVerificationEmail: true,
+      overrideAccess: true,
+    })
     const user = await payload.create({
       collection: 'users',
-      data: { email: 'resident@example.com', password, name: 'Resident', role: 'resident' },
+      data: { email: 'guest@example.com', password, name: 'Guest', role: 'guest' },
       disableVerificationEmail: true,
       overrideAccess: true,
     })
@@ -72,7 +81,7 @@ describe('a resident’s own account', () => {
     })
     const { token } = await payload.login({
       collection: 'users',
-      data: { email: 'resident@example.com', password },
+      data: { email: 'guest@example.com', password },
     })
     resident = { id: user.id, token: token ?? '' }
   })
@@ -93,6 +102,7 @@ describe('a resident’s own account', () => {
       verificationResends: 0,
       verificationResendsSince: null,
       verificationSetsPassword: false,
+      verifiedTokenHash: null,
     })
   })
 
@@ -109,6 +119,7 @@ describe('a resident’s own account', () => {
       verificationResends: 0,
       verificationResendsSince: null,
       verificationSetsPassword: false,
+      verifiedTokenHash: null,
     })
   })
 })

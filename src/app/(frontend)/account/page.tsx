@@ -2,6 +2,11 @@ import type { Metadata } from 'next'
 
 import { ChangePasswordForm, requireUser } from '@/modules/accounts/server'
 import { NOT_INDEXED } from '@/platform/seo/notIndexed'
+import { Card } from '@/platform/ui/Card'
+import { MetaList } from '@/platform/ui/MetaList'
+import { PageHeader } from '@/platform/ui/PageHeader'
+import { Section } from '@/platform/ui/Section'
+import { Text } from '@/platform/ui/Text'
 
 export const metadata: Metadata = {
   title: 'Account',
@@ -13,29 +18,27 @@ export default async function AccountPage() {
   const user = await requireUser()
 
   return (
-    <div className="container py-16">
-      <div className="mx-auto max-w-lg">
-        <h1 className="mb-8 text-3xl font-bold text-foreground">Account</h1>
+    <Section as="div" width="narrow">
+      <PageHeader variant="compact" title="Account" />
 
-        <div className="mb-8 rounded-lg border border-border bg-surface p-6">
-          <h2 className="mb-4 text-lg font-semibold text-foreground">Profile</h2>
-          <dl className="space-y-3">
-            <div>
-              <dt className="text-sm font-medium text-muted-foreground">Name</dt>
-              <dd className="text-foreground">{user.name || 'Not set'}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-muted-foreground">Email</dt>
-              <dd className="text-foreground">{user.email}</dd>
-            </div>
-          </dl>
-        </div>
+      <Card as="section" variant="muted" className="mb-8">
+        <Text variant="subsection" className="mb-4">
+          Profile
+        </Text>
+        <MetaList
+          items={[
+            { label: 'Name', value: user.name || 'Not set' },
+            { label: 'Email', value: <span className="wrap-anywhere">{user.email}</span> },
+          ]}
+        />
+      </Card>
 
-        <div className="rounded-lg border border-border bg-surface p-6">
-          <h2 className="mb-4 text-lg font-semibold text-foreground">Change Password</h2>
-          <ChangePasswordForm />
-        </div>
-      </div>
-    </div>
+      <Card as="section" variant="muted">
+        <Text variant="subsection" className="mb-4">
+          Change Password
+        </Text>
+        <ChangePasswordForm />
+      </Card>
+    </Section>
   )
 }

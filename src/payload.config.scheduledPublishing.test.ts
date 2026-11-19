@@ -30,7 +30,7 @@ beforeAll(async () => {
   const { getPayload } = await import('payload')
   const config = await (await import('@payload-config')).default
   payload = await getPayload({ config })
-  const account = async (email: string, role: 'editor' | 'resident') =>
+  const account = async (email: string, role: 'admin' | 'editor' | 'resident') =>
     (
       await payload.create({
         collection: 'users',
@@ -39,6 +39,8 @@ beforeAll(async () => {
         overrideAccess: true,
       })
     ).id
+  // The first account on an empty database becomes an admin (#354), so it is not the editor
+  await account('admin@example.com', 'admin')
   editorId = await account('editor@example.com', 'editor')
   residentId = await account('resident@example.com', 'resident')
 }, 60_000)

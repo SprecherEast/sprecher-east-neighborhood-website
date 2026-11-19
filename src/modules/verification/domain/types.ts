@@ -38,3 +38,11 @@ export type ConfirmOutcome = 'confirmed' | 'already-confirmed' | 'expired' | 'in
 export type ConfirmResult =
   | { outcome: Extract<ConfirmOutcome, 'confirmed' | 'already-confirmed'>; email: string }
   | { outcome: Extract<ConfirmOutcome, 'expired' | 'invalid'> }
+
+/**
+ * Where a link stands when its page opens (#391), read without changing anything: `pending` still
+ * needs the Confirm button; the others are final, so the page shows their message and no button.
+ */
+export type LinkStatus =
+  | 'pending'
+  | Extract<ConfirmOutcome, 'already-confirmed' | 'expired' | 'invalid'>

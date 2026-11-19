@@ -11,35 +11,21 @@ The goal: content so relevant and well-crafted that residents bookmark the site 
 
 ## Brand Voice
 
-### Tone
+The voice itself, its length limits and the checks before publishing are in the
+[brand voice guideline](../guidelines/brand-voice.md). This section is the content lead's short list.
 
-- **Warm and welcoming** — like a neighbor who actually knows your name
-- **Honest and transparent** — we're AI-assisted and unofficial, and we say so openly
-- **Practical and useful** — every piece of content must provide value, not filler
-- **Inclusive and respectful** — language that works for everyone regardless of age, background, or tech comfort
-- **Optimistic but grounded** — celebrate what's good, acknowledge what needs work, never sugarcoat
+### In short
 
-### Reading Level
-
-- Target 8th-grade reading level for all general content
-- Avoid jargon, acronyms (or explain them on first use), and bureaucratic language
-- Short paragraphs (3-4 sentences max)
-- Active voice, present tense when possible
-- Subheadings every 2-3 paragraphs for scannability
-
-### Never Say
-
-- The abbreviated acronym — always use the full name "Sprecher East"
-- "Users" — say "residents," "neighbors," or "visitors"
-- "Content" (in resident-facing copy) — say "articles," "news," "updates"
-- "Stakeholders" — say "neighbors," "community members," "local businesses"
+Warm, honest about being AI-assisted and unofficial, practical, inclusive. Everything else (tone,
+reading level, words to avoid, neutrality on money and politics) is in the brand voice guideline
+above. Don't restate it here.
 
 ## Content Types
 
 ### News Articles
 
 - Local neighborhood news, city council decisions affecting the area, infrastructure updates
-- Must include: headline, summary/excerpt, full body, relevant photo, category, tags
+- Must include: headline, summary/excerpt, full body, relevant photo, category
 - Source every claim — link to city records, meeting minutes, official announcements
 - Balance: not just government news. Mix in community stories, local business highlights, seasonal tips
 
@@ -69,7 +55,7 @@ The goal: content so relevant and well-crafted that residents bookmark the site 
 3. **Every article needs a strong headline** — clear, specific, benefit-oriented. Not "Meeting Update" but "City Approves New Park Improvements for Sprecher East Area"
 4. **Every article needs a compelling excerpt** — 1-2 sentences that make someone want to read more
 5. **Photos matter** — use relevant, high-quality photos. Self-hosted, properly licensed
-6. **Consistent categorization** — use the established category and tag system for every piece
+6. **Consistent categorization** — use the established category tree for every piece
 
 ## Editorial Calendar
 
@@ -97,7 +83,7 @@ The goal: content so relevant and well-crafted that residents bookmark the site 
 ### Admin Workflow
 
 1. Log in at `/admin`
-2. Create new Post or Page
+2. Create new Post or Page (the title is at most 60 characters, so it fits the breadcrumb trail and a phone: publishing refuses a longer one)
 3. Select hero type and fill hero fields
 4. Add content blocks (Content, Media, CTA, Form, etc.) via the layout builder
 5. Fill in SEO fields (meta title, description, OG image)
@@ -142,7 +128,7 @@ When residents comment on articles:
 - [ ] Body is well-structured with subheadings
 - [ ] All claims are sourced with links
 - [ ] Reading level is appropriate (8th grade)
-- [ ] Category and tags are set correctly
+- [ ] Category is set correctly
 - [ ] Featured image is relevant and has alt text
 - [ ] It is published, not left as a draft (Payload's draft/publish status)
 - [ ] Proofread for spelling, grammar, and tone

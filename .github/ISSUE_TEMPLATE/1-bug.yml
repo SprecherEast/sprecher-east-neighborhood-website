@@ -5,6 +5,9 @@ labels: [bug]
 body:
   - type: markdown
     attributes:
+      value: Before filing, read the [filing checklist](https://github.com/SprecherEast/sprecher-east-neighborhood-website/blob/main/docs/process/filing-checklist.md) for what the issue check looks for.
+  - type: markdown
+    attributes:
       value: Describe the problem. The fix itself goes in the pull request that closes this issue.
   - type: textarea
     id: problem
@@ -29,12 +32,34 @@ body:
       label: Proposed fix
       description: Your current idea for the fix (optional; the PR has the final version).
   - type: textarea
+    id: existing
+    attributes:
+      label: Existing work compared
+      description: What you searched (open and closed issues, the code, the docs), what you found, and why this is new work rather than part of something that exists.
+    validations:
+      required: true
+  - type: textarea
     id: acceptance
     attributes:
       label: Acceptance criteria
       description: How will we know it is fixed?
     validations:
       required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Files likely touched
+      description: The paths or areas this will edit, so two issues that overlap are not worked on at the same time. Groomers fill it in when unknown.
+  - type: textarea
+    id: avoid
+    attributes:
+      label: Must not touch
+      description: Files or areas to leave alone, such as shared code another open issue is changing.
+  - type: textarea
+    id: questions
+    attributes:
+      label: Open questions
+      description: Anything that needs an answer before or during the work. A question only the owner can answer gets the `needs owner` label.
   - type: dropdown
     id: area
     attributes:

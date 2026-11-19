@@ -16,7 +16,22 @@ describe('signInSchema', () => {
     expect(signInSchema.parse({ email: ' ada@example.com ', password: ' secret ' })).toEqual({
       email: 'ada@example.com',
       password: ' secret ',
+      rememberMe: false,
     })
+  })
+
+  it('keeps the sign-in short unless "Keep me signed in" is ticked (#587)', () => {
+    const base = { email: 'ada@example.com', password: 'secret' }
+    expect(signInSchema.parse(base).rememberMe).toBe(false)
+    expect(signInSchema.parse({ ...base, rememberMe: false }).rememberMe).toBe(false)
+    expect(signInSchema.parse({ ...base, rememberMe: true }).rememberMe).toBe(true)
+  })
+
+  it('refuses a rememberMe that is not a yes or no', () => {
+    const base = { email: 'ada@example.com', password: 'secret' }
+    for (const rememberMe of ['true', 1, null, 'yes']) {
+      expect(signInSchema.safeParse({ ...base, rememberMe }).success).toBe(false)
+    }
   })
 
   it('refuses a missing or blank email and an empty password', () => {

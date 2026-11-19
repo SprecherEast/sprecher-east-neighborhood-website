@@ -16,7 +16,7 @@ describe('noPasswordSignInForAgents', () => {
   })
 
   it('lets every other role sign in', () => {
-    for (const role of ['admin', 'editor', 'resident']) {
+    for (const role of ['admin', 'editor', 'guest', 'resident']) {
       expect(signIn(role)).toMatchObject({ role })
     }
   })

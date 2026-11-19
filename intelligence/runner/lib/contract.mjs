@@ -20,7 +20,18 @@ export function parsePrompt(text) {
 export function loadContract(dir) {
   const pipeline = readYaml(path.join(dir, 'pipeline.yaml'))
   const registry = readYaml(path.join(dir, pipeline.sources ?? 'sources.yaml'))
-  const coverage = readFileSync(path.join(dir, pipeline.coverage ?? 'coverage.md'), 'utf8')
+  const areaFile = pipeline.area ?? 'area.yaml'
+  const areaText = readFileSync(path.join(dir, areaFile), 'utf8')
+  const area = yaml.load(areaText, { schema: yaml.JSON_SCHEMA })
+  // The model stages read the area words with the policy they belong to
+  const coverage = `${readFileSync(path.join(dir, pipeline.coverage ?? 'coverage.md'), 'utf8').trimEnd()}
+
+## The area's words (${areaFile})
+
+\`\`\`yaml
+${areaText.trim()}
+\`\`\`
+`
 
   const ajv = new Ajv2020({ allErrors: true, strict: true })
   const schemas = {}
@@ -51,7 +62,10 @@ export function loadContract(dir) {
     return found
   }
 
-  return { dir, pipeline, registry, coverage, schemas, prompts, validator, stage }
+  const areaErrors = validator('schemas/area.schema.json')(area)
+  if (areaErrors.length) throw new Error(`${areaFile}: ${areaErrors.join('; ')}`)
+
+  return { dir, pipeline, registry, coverage, area, schemas, prompts, validator, stage }
 }
 
 /** The pilot sources, in rank order: only `valid` ones with a pilotRank (scout.md, "Input"). */

@@ -36,7 +36,19 @@ characters, the card text), `categories` (1–2 category slugs), `startsAt`, `en
 `allDay`, `venue`, `address`, `sourceName`, `sourceUrl`, `externalId` (`<source id>:<id>`),
 `contentHash` (sha256, lowercase hex), `audience` (the `AUDIENCES` values, each once) and `runId`
 (the `runId` of one of its own runs). The Markdown becomes the collection's `content` through
-Payload's converter (`convertMarkdownToLexical`) with that field's own editor config. For an
+Payload's converter (`convertMarkdownToLexical`) with that field's own editor config. A
+`<Chart kind="…" title="…" summary="…" unit="…" data={[…]} />` tag becomes a chart block (#640):
+its props are checked with the same `ChartSpec` rules as the editor's block, and a tag that breaks
+them refuses the whole call with the reasons (`Invalid <Chart>: …`), so the agent can fix it. The
+tag is in `intelligence/prompts/draft.md`. Every chart shows as a small thumbnail with its `summary` beside it and an Enlarge button
+(#681), so a summary is one short line, in Fact tabs especially. A simple chart that reads well at its
+normal size takes `enlarge="false"` (a Fact tab's chart takes `"enlarge":false`), which shows no
+button and no zoom cursor (#686); it is written back only when off. A `<FactTabs tabs={[…]} />` tag becomes a fact tabs block
+(#664) the same way: its tabs, with nested chart and timeline pictures as plain JSON, are checked
+with the editor's limits, the chart rules and the one link rule, and a bad one is refused with
+`Invalid <FactTabs>: …`. Payload drops the whole body when it can't find where a tag ends, so
+`submitSuggestion` counts the `<Chart` and `<FactTabs` openings against the blocks and refusals and
+refuses the call, naming the tag, when one was neither. For an
 event, `startsAt` is required (a date-time with a zone); it gives `date` and, unless `allDay`,
 `timeStart` and `timeEnd` in the site timezone (`toEventSchedule`); `venue` and `address` give
 `locationName` and `locationAddress`. The summary becomes an event's `description` or a post's
@@ -63,7 +75,7 @@ under each run); the agent reads its own, can't change or delete them, and only 
 own runs.
 
 **Size caps** (`SUGGESTION_CAPS` in `domain/suggestion.ts`; the tool refuses anything larger):
-`runId` 100, title 120, body 3,000, venue 200, address 300, source name 200, links 2,048,
+`runId` 100, title 60 (the CMS's `TITLE_MAX_LENGTH`), body 12,000 (room for a long explainer with `<Chart>` tags, #640), venue 200, address 300, source name 200, links 2,048,
 `externalId` 200, summary 1,000, 5 evidence items with `says` up to 500, 20 flags.
 
 ## Safeguards

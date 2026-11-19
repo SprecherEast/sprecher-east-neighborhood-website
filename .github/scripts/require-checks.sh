@@ -6,12 +6,18 @@
 # dependencies again, can fail on the same commit when a new advisory appears; it shouldn't
 # block a deploy of code that passed when it merged, and the next change will be audited anyway.
 #
+# The default set is the main ruleset's required checks, except the ones that cannot run on a push
+# to main: `PR Policy` runs on pull requests only (pr-policy.yml), and `End-to-end tests` are not
+# required by the ruleset yet (#868). Lint's `Prettier`, `ESLint`, `Dependency Audit` and
+# `Agent context`, and CI's `Type-check & Build` and `Knowledge sync`, all run on the push. A
+# required job that is missing or skipped never counts as passed.
+#
 # Environment: GH_TOKEN (actions: read), REPO (owner/name), SHA, and optionally REQUIRED (job
 # names, comma-separated) and TIMEOUT_SECONDS.
 set -euo pipefail
 
 : "${GH_TOKEN:?}" "${REPO:?}" "${SHA:?}"
-REQUIRED="${REQUIRED:-Type-check & Build,Prettier,ESLint,Dependency Audit}"
+REQUIRED="${REQUIRED:-Type-check & Build,Prettier,ESLint,Dependency Audit,Knowledge sync,Agent context}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-900}"
 
 IFS=',' read -r -a required <<<"$REQUIRED"

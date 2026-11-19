@@ -57,9 +57,13 @@ npx tsc --noEmit                    # zero errors
 npx eslint . --max-warnings=10
 npx prettier --check .              # fix with: npx prettier --write <files>
 npm run build                       # when code or dependencies changed
+npm run docs:check                  # the generated reference matches the code (content types; routes and components once #718 lands)
 ```
 
-Then review your own diff with [`self-review`](../self-review/SKILL.md) and fix what it finds. For
+Then review your own diff with [`self-review`](../self-review/SKILL.md) and fix what it finds.
+This is a gate, not a suggestion ([guard rails](../../../docs/guidelines/guard-rails.md), rule 6):
+don't open the PR until it has run on the final diff, and run it again after any later push. Write
+the result in the PR's **Self-review** section. For
 UI changes that includes the [`visual-design-review`](../visual-design-review/SKILL.md): every
 affected page at six widths, in light and dark themes.
 
@@ -77,10 +81,14 @@ steps 2 and 3. Never hand over dependent PRs with the merge order written in pro
 `pr.md` follows `.github/pull_request_template.md`. Fill in every section; the `PR Policy`
 check fails otherwise:
 
-- `Closes #<issue>` — links the issue and closes it on merge. Use `Part of #<issue>`
-  when more PRs will follow; the last PR uses `Closes`.
+- `Closes #<issue>` — the one issue this PR closes
+  ([one issue, one pull request](../../../AGENTS.md#one-issue-one-pull-request)).
 - **What changed**, **Why**, **How**, **How to test** (numbered steps someone else can
-  follow), **Risk & rollback**
+  follow), **Risk & rollback**, **Self-review** (one line each for reuse, quality, efficiency,
+  guidelines and visual), **Knowledge** (`Behavior change: yes` and which note, page or doc now says so,
+  or `Behavior change: none` and why in 20+ characters; what counts:
+  [0019 §6](../../../docs/architecture/decisions/0019-knowledge-layer.md). A reason that is
+  hidden markup or a stock phrase is a Blocker in the review)
 
 Open it as a draft (`--draft`) while work is incomplete.
 
@@ -110,6 +118,8 @@ Open it as a draft (`--draft`) while work is incomplete.
    change he didn't ask for, `AGENTS.md` step 3), note the head SHA and go to step 6. If it waits
    for him, label the PR `needs owner`, ask him one plain question, and stop
    ([waits for owner](../../../docs/process/project-management.md#waits-for-owner)).
+   Also re-read the description's `End-to-end exemption:` line: if it is not `none`, it must be the
+   one the review checked, because editing a description moves neither the head nor the checks.
 5. **A PR below yours changed** (stacked PRs): rebase yours onto it and push, as in
    [`stacked-prs`](../stacked-prs/SKILL.md) step 4.
 
@@ -143,6 +153,7 @@ A `409` means a merge of this PR is already running: poll it instead of starting
   [`wrapped`](../wrapped/SKILL.md): verify the merge, read the deploy's annotations, check the
   site (`https://sprechereast.com`) and the behavior that changed, and report.
 - A failed deploy is fixed or reverted through a new PR, never on the server.
+- A redeploy by hand is allowed within the limits in [`wrapped`](../wrapped/SKILL.md) step 2.
 - The issue closes automatically. `issue-fix-summary.yml` comments on it with how it was fixed.
 
 ## Server or dashboard changes (`infra`)

@@ -4,25 +4,27 @@ import { draftMode } from 'next/headers'
 import { ArrowRight } from 'lucide-react'
 import React from 'react'
 
-import { Breadcrumbs } from '@/platform/ui/Breadcrumbs'
-import { JsonLd } from '@/platform/ui/JsonLd'
-import { LivePreviewListener } from '@/platform/ui/LivePreviewListener.client'
 import { PayloadRedirects } from '@/modules/site/server'
+import { articleColumnClass } from '@/platform/richtext/articleColumn'
+import { articleToc } from '@/platform/richtext/articleToc'
 import { RichText } from '@/platform/richtext/RichText'
+import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
+import { ArticlePage } from '@/platform/ui/ArticlePage'
 import { SidebarCTA } from '@/platform/ui/SidebarCTA'
 import {
-  EventCardPreview,
-  EventHero,
+  eventByline,
+  eventHeaderProps,
   EventLocation,
   SidebarEvents,
   eventJsonLd,
   findUpcomingEvents,
+  OfficialAgenda,
   getEventBySlug,
   listEventSlugs,
 } from '@/modules/events/server'
-import { Button } from '@/platform/ui'
+import { Alert, Button } from '@/platform/ui'
 import { generateMeta } from '@/platform/seo/generateMeta'
-import PageClient from './page.client'
+import { Text } from '@/platform/ui/Text'
 
 // A scheduled publish or unpublish runs outside a request, where Next can't refresh the cache, so
 // the page also re-renders every 10 minutes (#141, decision 0011)
@@ -52,67 +54,68 @@ export default async function EventPage({ params: paramsPromise }: Args) {
   if (!event) return <PayloadRedirects url={url} />
 
   const upcomingEvents = await findUpcomingEvents({ excludeId: event.id })
-  const hasHeroImage = event.image !== null
-
+  const hasImage = event.image !== null
+  const textClassName = articleColumnClass(event.content)
   return (
-    <article className="pb-24">
-      <PageClient hasHeroImage={hasHeroImage} />
-      <JsonLd data={eventJsonLd(event)} />
-      <PayloadRedirects disableNotFound url={url} />
+    <ArticlePage
+      className="pb-24"
+      jsonLd={eventJsonLd(event)}
+      redirects={<PayloadRedirects disableNotFound url={url} />}
+      draft={draft}
+      image={event.image}
+      header={eventHeaderProps(event)}
+      // No text width: what sits under the bar (the Location panel, the notices) runs the column's
+      // full width, so the bar's groove does too
+      byline={eventByline(event)}
+      breadcrumbs={[
+        { label: 'Home', href: '/' },
+        { label: 'Community Events', href: '/events' },
+        { label: event.title },
+      ]}
+      toc={articleToc(event.content)}
+      aside={
+        <>
+          <SidebarEvents events={upcomingEvents} title="Upcoming Events" />
+          <SidebarCTA heading="More events" buttonLabel="View All Events" buttonHref="/events" />
+        </>
+      }
+    >
+      {event.cancelled && (
+        // Part of the page, read in its place, so not announced (#122)
+        <Alert tone="error" live={false} className="mb-8">
+          <p className="font-semibold">This event is cancelled.</p>
+        </Alert>
+      )}
 
-      {draft && <LivePreviewListener />}
+      <OfficialAgenda event={event} />
 
-      <EventHero event={event} />
+      <EventLocation event={event} />
 
-      {draft && <EventCardPreview event={event} />}
-
-      <div className={hasHeroImage ? 'pt-8' : 'pt-4'}>
-        <div className="container">
-          <Breadcrumbs
-            items={[
-              { label: 'Home', href: '/' },
-              { label: 'Community Events', href: '/events' },
-              { label: event.title },
-            ]}
-          />
+      {/* A cancelled event takes no registrations */}
+      {event.registrationUrl && !event.cancelled && (
+        <div className="mb-8">
+          <Button href={event.registrationUrl} external iconEnd={<ArrowRight aria-hidden="true" />}>
+            Register for This Event
+          </Button>
         </div>
-        <div className="container lg:grid lg:grid-cols-[1fr_18rem] lg:gap-8">
-          <div>
-            <EventLocation event={event} />
+      )}
 
-            {event.registrationUrl && (
-              <div className="mb-8">
-                <Button
-                  href={event.registrationUrl}
-                  external
-                  iconEnd={<ArrowRight aria-hidden="true" />}
-                >
-                  Register for This Event
-                </Button>
-              </div>
-            )}
+      {event.description && !hasImage && (
+        <Text variant="lead" className="mb-8">
+          {event.description}
+        </Text>
+      )}
 
-            {event.description && !hasHeroImage && (
-              <p className="mb-8 text-lg text-muted-foreground">{event.description}</p>
-            )}
-
-            {event.content && (
-              <RichText className="max-w-[48rem]" data={event.content} enableGutter={false} />
-            )}
-          </div>
-
-          <aside className="mt-12 space-y-6 lg:sticky lg:top-24 lg:mt-0 lg:self-start">
-            <SidebarEvents events={upcomingEvents} title="Upcoming Events" />
-            <SidebarCTA
-              heading="Stay in the Loop"
-              description="Browse all upcoming events and find ways to connect with your neighbors."
-              buttonLabel="View All Events"
-              buttonHref="/events"
-            />
-          </aside>
-        </div>
-      </div>
-    </article>
+      {event.content && (
+        <RichText
+          blocks={richTextBlocks}
+          className={textClassName}
+          data={event.content}
+          enableGutter={false}
+          besideFloat={hasImage}
+        />
+      )}
+    </ArticlePage>
   )
 }
 

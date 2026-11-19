@@ -12,15 +12,20 @@ const event: EventDetail = {
   date: '2026-11-02T00:00:00.000Z',
   timeStart: null,
   timeEnd: null,
+  cancelled: false,
+  officialBody: null,
   categories: [{ id: 1, title: 'Social' }],
   description: 'Bring a dish.',
   locationName: 'Park shelter',
+  place: { kind: 'venue', label: 'Park shelter' },
   image: null,
   locationType: 'in-person',
   locationAddress: '4605 Sprecher Rd',
   mapsHref: null,
   registrationUrl: null,
+  agendaUrl: null,
   content: null,
+  backdrop: null,
   meta: { title: null, description: null, image: null },
 }
 
@@ -45,6 +50,23 @@ describe('eventJsonLd', () => {
       },
       location: { '@type': 'Place', name: 'Park shelter', address: '4605 Sprecher Rd' },
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    })
+  })
+
+  it('tells search engines a cancelled event is cancelled, not scheduled (#122)', () => {
+    expect(eventJsonLd({ ...event, cancelled: true }).eventStatus).toBe(
+      'https://schema.org/EventCancelled',
+    )
+  })
+
+  it('names the public body as the organizer of an official meeting, with no invented URL (#122)', () => {
+    expect(eventJsonLd({ ...event, officialBody: 'city' }).organizer).toEqual({
+      '@type': 'GovernmentOrganization',
+      name: 'City of Madison',
+    })
+    expect(eventJsonLd({ ...event, officialBody: 'county' }).organizer).toEqual({
+      '@type': 'GovernmentOrganization',
+      name: 'Dane County',
     })
   })
 

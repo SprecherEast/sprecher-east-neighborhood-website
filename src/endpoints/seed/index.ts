@@ -10,17 +10,23 @@ import { contact as contactPageData } from './contact-page'
 import { home } from './home'
 import { aboutPage } from './about-page'
 import { getInvolvedPage } from './get-involved-page'
+import { privacyPage } from './privacy-page'
 import { associationPage } from './association-page'
 import { image1 } from './image-1'
 import { image2 } from './image-2'
 import { image3 } from './image-3'
 import { imageHero1 } from './image-hero-1'
+import { imagePark } from './image-park'
+import { placeholderPortrait, placeholderPortraitFile } from './placeholder-portrait'
 import { post1 } from './post-1'
 import { post2 } from './post-2'
 import { post3 } from './post-3'
 import { faqItems } from './data/faq'
+import { RESOURCE_GROUPS, resourceGroupHref } from '@/modules/directory'
 import { resourceItems } from './data/resources'
-import { eventCategories, eventItems } from './data/events'
+import { seedCategories } from './data/categories'
+import { eventItems } from './data/events'
+import { FORUM_DEFAULT_URL } from '@/modules/site'
 
 const collections: CollectionSlug[] = [
   'categories',
@@ -93,19 +99,17 @@ export const seed = async ({
 
   payload.logger.info(`— Seeding media...`)
 
-  // Try to load local images from assets/images/, fall back to remote Payload template images
-  const [image1Buffer, image2Buffer, image3Buffer, hero1Buffer] = await Promise.all([
+  // Try to load local images from public/images/, fall back to remote Payload template images
+  const [image1Buffer, image2Buffer, image3Buffer, hero1Buffer, parkBuffer] = await Promise.all([
     loadLocalImage('image-asset.jpeg', 'image/jpeg').catch(() =>
-      fetchFileByURL(
-        'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-post1.webp',
-      ),
+      fetchFileByURL(POST1_FALLBACK_URL),
     ),
     loadLocalImage('image.jpeg', 'image/jpeg').catch(() =>
       fetchFileByURL(
         'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-post2.webp',
       ),
     ),
-    loadLocalImage('East_Madison_NAs.png', 'image/png').catch(() =>
+    loadLocalImage('sprecher-east-map.png', 'image/png').catch(() =>
       fetchFileByURL(
         'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-post3.webp',
       ),
@@ -115,6 +119,9 @@ export const seed = async ({
         'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-hero1.webp',
       ),
     ),
+    loadLocalImage('parks-greenspace.jpg', 'image/jpeg').catch(() =>
+      fetchFileByURL(POST1_FALLBACK_URL),
+    ),
   ])
 
   const seedPassword = process.env.SEED_PASSWORD || crypto.randomUUID()
@@ -122,41 +129,47 @@ export const seed = async ({
     payload.logger.warn('— SEED_PASSWORD not set, using random password for demo user')
   }
 
-  const [demoAuthor, image1Doc, image2Doc, image3Doc, imageHomeDoc] = await Promise.all([
-    payload.create({
-      collection: 'users',
-      data: {
-        name: 'Sprecher East',
-        email: 'demo-author@example.com',
-        password: seedPassword,
-        role: ROLES.admin,
-        // The demo admin can sign in at once: with `auth.verify` on, Payload would otherwise
-        // store it unverified and email example.com a link (#187)
-        _verified: true,
-      },
-      disableVerificationEmail: true,
-    }),
-    payload.create({
-      collection: 'media',
-      data: image1,
-      file: image1Buffer,
-    }),
-    payload.create({
-      collection: 'media',
-      data: image2,
-      file: image2Buffer,
-    }),
-    payload.create({
-      collection: 'media',
-      data: image3,
-      file: image3Buffer,
-    }),
-    payload.create({
-      collection: 'media',
-      data: imageHero1,
-      file: hero1Buffer,
-    }),
-  ])
+  const [demoAuthor, image1Doc, image2Doc, image3Doc, imageHomeDoc, imageParkDoc] =
+    await Promise.all([
+      payload.create({
+        collection: 'users',
+        data: {
+          name: 'Sprecher East',
+          email: 'demo-author@example.com',
+          password: seedPassword,
+          role: ROLES.admin,
+          // The demo admin can sign in at once: with `auth.verify` on, Payload would otherwise
+          // store it unverified and email example.com a link (#187)
+          _verified: true,
+        },
+        disableVerificationEmail: true,
+      }),
+      payload.create({
+        collection: 'media',
+        data: image1,
+        file: image1Buffer,
+      }),
+      payload.create({
+        collection: 'media',
+        data: image2,
+        file: image2Buffer,
+      }),
+      payload.create({
+        collection: 'media',
+        data: image3,
+        file: image3Buffer,
+      }),
+      payload.create({
+        collection: 'media',
+        data: imageHero1,
+        file: hero1Buffer,
+      }),
+      payload.create({
+        collection: 'media',
+        data: imagePark,
+        file: parkBuffer,
+      }),
+    ])
 
   payload.logger.info(`— Seeding posts...`)
 
@@ -165,7 +178,7 @@ export const seed = async ({
     collection: 'posts',
     depth: 0,
     context: { disableRevalidate: true },
-    data: post1({ heroImage: imageHomeDoc, author: demoAuthor }),
+    data: post1({ heroImage: imageParkDoc, author: demoAuthor }),
   })
 
   const post2Doc = await payload.create({
@@ -217,13 +230,23 @@ export const seed = async ({
 
   payload.logger.info(`— Seeding resources...`)
 
-  for (const resource of resourceItems) {
+  const portraitDoc = await payload.create({
+    collection: 'media',
+    data: placeholderPortrait,
+    file: await placeholderPortraitFile(),
+  })
+
+  for (const { placeholderPortraitCredit, ...resource } of resourceItems) {
     await payload.create({
       collection: 'resources',
       depth: 0,
       context: { disableRevalidate: true },
       data: {
         ...resource,
+        ...(placeholderPortraitCredit && {
+          photo: portraitDoc.id,
+          photoCredit: placeholderPortraitCredit,
+        }),
         _status: 'published',
       },
     })
@@ -232,7 +255,7 @@ export const seed = async ({
   payload.logger.info(`— Seeding events...`)
 
   const categoryIds = new Map<string, number>()
-  for (const [slug, title] of Object.entries(eventCategories)) {
+  for (const [slug, title] of Object.entries(seedCategories)) {
     const category = await payload.create({
       collection: 'categories',
       depth: 0,
@@ -289,12 +312,25 @@ export const seed = async ({
 
   payload.logger.info(`— Seeding pages...`)
 
-  const [_homePage, contactPage, aboutPageDoc, getInvolvedDoc, _associationDoc] = await Promise.all(
-    [
+  // The home page's "this week" strip lists the Family category (#122)
+  const requireCategory = (ids: Map<string, number>, slug: string) => {
+    const id = ids.get(slug)
+    if (id === undefined) throw new Error(`The seed has no "${slug}" category`)
+    return id
+  }
+
+  const [_homePage, contactPage, aboutPageDoc, getInvolvedDoc, _associationDoc, _privacyDoc] =
+    await Promise.all([
       payload.create({
         collection: 'pages',
         depth: 0,
-        data: home({ heroImage: imageHomeDoc, metaImage: image1Doc }),
+        data: home({
+          heroImage: imageHomeDoc,
+          metaImage: image1Doc,
+          familyCategoryId: requireCategory(categoryIds, 'family'),
+          corridorPostId: post2Doc.id,
+          comingTogetherPostId: post1Doc.id,
+        }),
       }),
       payload.create({
         collection: 'pages',
@@ -316,8 +352,12 @@ export const seed = async ({
         depth: 0,
         data: associationPage(),
       }),
-    ],
-  )
+      payload.create({
+        collection: 'pages',
+        depth: 0,
+        data: privacyPage(),
+      }),
+    ])
 
   payload.logger.info(`— Seeding globals...`)
 
@@ -354,8 +394,12 @@ export const seed = async ({
             link: {
               type: 'custom',
               label: 'Resources',
-              url: '/resources',
+              url: resourceGroupHref(RESOURCE_GROUPS[0].id),
             },
+            // The submenu: one link per group, from the same list the pages use
+            subItems: RESOURCE_GROUPS.map(({ id, label }) => ({
+              link: { type: 'custom' as const, label, url: resourceGroupHref(id) },
+            })),
           },
           {
             link: {
@@ -383,14 +427,8 @@ export const seed = async ({
     payload.updateGlobal({
       slug: 'footer',
       data: {
+        forumUrl: FORUM_DEFAULT_URL,
         navItems: [
-          {
-            link: {
-              type: 'custom',
-              label: 'Association',
-              url: '/association',
-            },
-          },
           {
             link: {
               type: 'custom',
@@ -401,8 +439,8 @@ export const seed = async ({
           {
             link: {
               type: 'custom',
-              label: 'Admin',
-              url: '/admin',
+              label: 'Privacy',
+              url: '/privacy',
             },
           },
           {
@@ -410,7 +448,7 @@ export const seed = async ({
               type: 'custom',
               label: 'Source Code',
               newTab: true,
-              url: 'https://github.com/boulaajaj/sprecher-east-neighborhood-website',
+              url: 'https://github.com/SprecherEast/sprecher-east-neighborhood-website',
             },
           },
         ],
@@ -424,14 +462,18 @@ export const seed = async ({
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+// Remote stand-in used when a local photo is missing
+const POST1_FALLBACK_URL =
+  'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-post1.webp'
+
 /**
- * Load an image from the assets/images/ directory.
+ * Load an image from the public/images/ directory.
  * Tries multiple possible base paths (dev vs built vs VPS deploy).
  */
 async function loadLocalImage(filename: string, mimetype: string): Promise<File> {
   const possiblePaths = [
-    path.resolve(process.cwd(), 'assets/images', filename),
-    path.resolve(__dirname, '../../../../assets/images', filename),
+    path.resolve(process.cwd(), 'public/images', filename),
+    path.resolve(__dirname, '../../../../public/images', filename),
   ]
 
   for (const filePath of possiblePaths) {

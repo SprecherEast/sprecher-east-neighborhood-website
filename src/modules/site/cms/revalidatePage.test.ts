@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs'
+import path from 'node:path'
+
 import type { PayloadRequest } from 'payload'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -30,12 +33,26 @@ const afterChange = (doc: Page, previousDoc: Page, context?: Record<string, unkn
     operation: 'update',
   })
 
+// Every CMS page and the home page, which may link to the saved page from a block (#484)
+const LINKING_PAGES = [['/'], ['/(frontend)/[slug]', 'page']]
+
 describe('revalidatePage', () => {
-  it('refreshes a published page’s address and the pages sitemap', () => {
+  it('refreshes a published page’s address, every page that may link to it, and the sitemap', () => {
     afterChange(page('about', 'published'), page('about', 'draft'))
 
-    expect(next.revalidatePath).toHaveBeenCalledExactlyOnceWith('/about')
+    expect(next.revalidatePath.mock.calls).toEqual([['/about'], ...LINKING_PAGES])
     expect(next.expireCacheTag).toHaveBeenCalledExactlyOnceWith('pages-sitemap')
+  })
+
+  it('refreshes only route patterns that exist under src/app', () => {
+    afterChange(page('about', 'published'), page('about', 'draft'))
+
+    const patterns = next.revalidatePath.mock.calls.filter(([, type]) => type === 'page')
+    expect(patterns).not.toHaveLength(0)
+    for (const [pattern] of patterns) {
+      const file = path.join(process.cwd(), 'src/app', pattern, 'page.tsx')
+      expect(existsSync(file), `${pattern} has no page.tsx`).toBe(true)
+    }
   })
 
   it('refreshes the home page at the site root', () => {
@@ -47,7 +64,7 @@ describe('revalidatePage', () => {
   it('refreshes the old address when a published page goes back to draft', () => {
     afterChange(page('new', 'draft'), page('old', 'published'))
 
-    expect(next.revalidatePath).toHaveBeenCalledExactlyOnceWith('/old')
+    expect(next.revalidatePath.mock.calls).toEqual([['/old'], ...LINKING_PAGES])
     expect(next.expireCacheTag).toHaveBeenCalledExactlyOnceWith('pages-sitemap')
   })
 
@@ -76,7 +93,7 @@ describe('revalidateDelete', () => {
       context: {},
     })
 
-    expect(next.revalidatePath).toHaveBeenCalledExactlyOnceWith('/about')
+    expect(next.revalidatePath.mock.calls).toEqual([['/about'], ...LINKING_PAGES])
     expect(next.expireCacheTag).toHaveBeenCalledExactlyOnceWith('pages-sitemap')
   })
 })

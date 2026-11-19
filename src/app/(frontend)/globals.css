@@ -1,11 +1,24 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+/* The theme: token values (the active theme), then their Tailwind mapping (#146) */
+@import '../../themes/default/theme.css';
+@import '../../platform/theme/tailwind.css';
+@import '../../platform/theme/expand.css';
+@import '../../platform/theme/decorations.css';
 
 @config '../../../tailwind.config.mjs';
 
+/* `dark:` follows the site's theme toggle, not the device's setting (#225) */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* 360 px: the narrowest phone a one-line label and money box still fit (#1054). A custom variant, not a theme breakpoint, which would also cap `container` at 360 px */
+@custom-variant xs (@media (width >= 22.5rem));
 @custom-variant sm (@media (width >= theme(--breakpoint-sm)));
 @custom-variant md (@media (width >= theme(--breakpoint-md)));
 @custom-variant lg (@media (width >= theme(--breakpoint-lg)));
+/* Only the band between the new `lg` (960px) and the old one (1024px): a phone's desktop mode, a
+   small tablet. The header uses it to stay on one row; everything from 1024px up is as it was. */
+@custom-variant compact (@media (width >= theme(--breakpoint-lg)) and (width < 64rem));
 @custom-variant xl (@media (width >= theme(--breakpoint-xl)));
 @custom-variant 2xl (@media (width >= theme(--breakpoint-2xl)));
 
@@ -23,25 +36,22 @@
 
 @plugin '@tailwindcss/typography';
 
+/* The contract's token names would otherwise turn into unused classes */
+@source not '../../platform/theme/tokens.ts';
+
 @source inline('lg:col-span-4');
 @source inline('lg:col-span-6');
 @source inline('lg:col-span-8');
 @source inline('lg:col-span-12');
 @source inline('border-border');
-@source inline('hero-text-shadow');
-@source inline('hero-text-shadow-sm');
 @source inline('bg-card');
-@source inline('border-error');
-@source inline('bg-error/30');
-@source inline('border-success');
-@source inline('bg-success/30');
-@source inline('border-warning');
-@source inline('bg-warning/30');
 
 @theme {
   --breakpoint-sm: 40rem;
   --breakpoint-md: 48rem;
-  --breakpoint-lg: 64rem;
+  /* 960px, not 1024: a phone's "desktop site" mode lays the page out about 980px wide, and it must
+     get the desktop layout (#545). SiteHeaderBar.client.tsx repeats this value for matchMedia. */
+  --breakpoint-lg: 60rem;
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 86rem;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -70,7 +80,8 @@
 
   @variant lg {
     .container {
-      max-width: var(--breakpoint-lg);
+      /* The content width stays what it was (1024px) now that `lg` starts earlier (#545) */
+      max-width: 64rem;
     }
   }
 
@@ -87,148 +98,69 @@
   }
 }
 
-/* Hero text readability utilities — centralized so components stay clean */
-@layer utilities {
-  .hero-text-shadow {
-    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
-  }
-
-  .hero-text-shadow-sm {
-    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5));
-  }
-}
-
-/* Sprecher East brand tokens — light theme (default) */
-:root,
-[data-theme='light'] {
+/* Layout sizes the theme doesn't change */
+:root {
   --header-height: 4.5rem; /* ~72px — reduced from legacy 10.4rem to match actual sticky header (py-4 + logo + border) */
-  --background: #f9f8f5;
-  --foreground: #1a1a1a;
-  --card: #ffffff;
-  --card-foreground: #1a1a1a;
-  --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
-  --primary: #3d7a5e;
-  --primary-foreground: #ffffff;
-  --secondary: #f0ede6;
-  --secondary-foreground: #1a1a1a;
-  --muted: #f0ede6;
-  --muted-foreground: #6b6b6b;
-  --accent: #e8923a;
-  /* Dark text on the orange accent: white on #e8923a is 2.4:1 and fails WCAG AA; #1a1a1a is 7.1:1 */
-  --accent-foreground: #1a1a1a;
-  --destructive: #dc2626;
-  --destructive-foreground: #dc2626;
-  --border: #e2ddd6;
-  /* Form control borders: 3.4:1 on --surface, 3.8:1 on --background, 4.0:1 on --card (WCAG 1.4.11) */
-  --input: #857e74;
-  --ring: #3d7a5e;
-  --chart-1: #3d7a5e;
-  --chart-2: #e8923a;
-  --chart-3: #4f9974;
-  --chart-4: #c97830;
-  --chart-5: #2e5e47;
-  --radius: 0.625rem;
-  --success: #3d7a5e;
-  --warning: #e8923a;
-  --error: #dc2626;
-  --surface: #f0ede6;
-  --primary-dark: #2e5e47;
-  --primary-light: #4f9974;
-  --accent-dark: #c97830;
-  /* Fill for primary buttons: white text on it is 5.1:1 (#121), 7.5:1 on hover. */
-  --primary-fill: #3d7a5e;
-  --primary-fill-hover: #2e5e47;
-  /* Link text that passes on surface panels too: 6.4:1 on --surface, 7.0:1 on --background */
-  --primary-strong: #2e5e47;
-  /* Error text: --destructive is 4.1:1 on --surface and 3.9:1 on its own tint; this is 5.5:1 on
-     --surface, 6.1:1 on --background and 4.8:1 or more on the error tint */
-  --destructive-strong: #b91c1c;
+
+  /* How wide article text and the blocks around it run (#616). Classes: platform/ui/layoutSizes.ts */
+  --reading-width: 48rem;
+
+  /* How wide the left rail of a post or event page is: the page menu and the related content (#677).
+     Classes: platform/ui/layoutSizes.ts */
+  --detail-rail-width: 18rem;
+
+  /* The space an image block leaves above and below it in an article, and the smaller space a
+     legend leaves between itself and that image (#636, #658). Classes: layoutSizes.ts */
+  --figure-gap: 2rem;
+  --legend-gap: 1rem;
+
+  /* How wide a chart's drawing runs as a thumbnail in the page and enlarged in its dialog (#681).
+     20rem is the drawing's own 320-unit width at 1:1. Classes: platform/ui/layoutSizes.ts */
+  --chart-small-width: 20rem;
+  /* Stacked layout (a phone, a narrow column): the drawing fills the width up to this, so its labels stay
+     large for readers who see poorly, without growing huge on a tablet (#1206) */
+  --chart-stack-width: 28rem;
+  --chart-large-width: 40rem;
+
+  /* The least height of a short page (#616) */
+  --page-min-height: 60vh;
+
+  /* The home hero, laid out from its photo's horizon (#1304). Classes: platform/ui/layoutSizes.ts;
+     the photo's height and the horizon are worked out by `hero-geometry` in theme/tailwind.css.
+     The photo is never shorter than this, so the title and the note fit above and below the
+     horizon on a narrow screen (a taller photo is cropped at the sides) */
+  --hero-photo-min: 610px;
+  --hero-photo-min-md: 540px; /* from the md breakpoint, where the note and the buttons sit side by side */
+  --hero-photo-min-lg: 620px; /* from lg, where the title is larger and takes two lines */
+  /* The title ends this far above the horizon; the note and the buttons start this far below it */
+  --hero-sky-gap: 10px;
+  --hero-horizon-gap: 14px;
+  /* The space under the note, and the next section's lower start (the photo fades over it) */
+  --hero-bottom-space: 24px;
+  --hero-below-gap: 5px;
+  /* The photo fades over this length, the last part of it running under the next section.
+     The photo box fills the hero plus the overlap (`min-h-full`), so the fade always ends on page colour; the photo is only worked out from the horizon when it is already taller */
+  --hero-fade-length: 150px;
+  --hero-fade-overlap: 51px;
+
+  /* The "On this page" bar under the site header on phones and tablets (#574) */
+  --section-bar-height: 3rem;
+
+  /* Room a jump to an element leaves clear of the sticky header (the 1.5rem is its breathing space) */
+  --header-clearance: calc(var(--header-height) + 1.5rem);
+
+  /*
+   * How far a jump to a section (`#id`) stops short of the top: clear of the sticky header and, below
+   * `lg` (60rem), of the bar too. Headings, the menu's rail and its highlight all read it, so a
+   * change to the header or the bar is made here only (#608).
+   */
+  --anchor-offset: var(--header-clearance);
 }
 
-/* Sprecher East brand tokens — dark theme */
-[data-theme='dark'] {
-  --background: #0f1117;
-  --foreground: #e8e6e3;
-  --card: #1a1d27;
-  --card-foreground: #e8e6e3;
-  --popover: #1a1d27;
-  --popover-foreground: #e8e6e3;
-  --primary: #4e9b76;
-  --primary-foreground: #ffffff;
-  --secondary: #1e2130;
-  --secondary-foreground: #e8e6e3;
-  --muted: #1e2130;
-  --muted-foreground: #9ca3af;
-  --accent: #f0a04b;
-  --accent-foreground: #1a1a1a;
-  --destructive: #ef4444;
-  --destructive-foreground: #ef4444;
-  --border: #2d3040;
-  /* 3.3:1 on --surface, 3.9:1 on --background, 3.5:1 on --card */
-  --input: #6b7186;
-  --ring: #4e9b76;
-  --chart-1: #4e9b76;
-  --chart-2: #f0a04b;
-  --chart-3: #5fb88e;
-  --chart-4: #d48a38;
-  --chart-5: #3d7a5e;
-  --success: #4e9b76;
-  --warning: #f0a04b;
-  --error: #ef4444;
-  --surface: #1e2130;
-  --primary-dark: #3d7a5e;
-  --primary-light: #5fb88e;
-  --accent-dark: #d48a38;
-  /* Dark --primary (#4e9b76) gives white text only 3.35:1, so buttons keep the brand fill (#121) */
-  --primary-fill: #3d7a5e;
-  --primary-fill-hover: #2e5e47;
-  /* 6.6:1 on --surface, 7.9:1 on --background */
-  --primary-strong: #5fb88e;
-  /* 5.8:1 on --surface, 6.1:1 on --card, 6.8:1 on --background */
-  --destructive-strong: #f87171;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-error: var(--error);
-  --color-surface: var(--surface);
-  --color-primary-dark: var(--primary-dark);
-  --color-primary-light: var(--primary-light);
-  --color-accent-dark: var(--accent-dark);
-  --color-primary-fill: var(--primary-fill);
-  --color-primary-fill-hover: var(--primary-fill-hover);
-  --color-primary-strong: var(--primary-strong);
-  --color-destructive-strong: var(--destructive-strong);
+@media (width < 60rem) {
+  :root {
+    --anchor-offset: calc(var(--header-clearance) + var(--section-bar-height));
+  }
 }
 
 @layer base {
@@ -243,6 +175,13 @@
 /* Ensure no flash of unstyled content while theme initializes */
 html {
   opacity: initial;
+}
+
+/* Jumps to a section (#574) glide, unless the reader asked for less motion */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 /* Respect reduced-motion preferences: no hover lifts, zooms, or long transitions */

@@ -1,88 +1,211 @@
-import { cn } from '@/platform/lib/cn'
 import React from 'react'
+
+import { BILL_BODIES, BILL_BODY_NAMES } from '@/platform/lib/billShare'
+import { cn } from '@/platform/lib/cn'
+import { lexicalRoot } from '@/platform/richtext/lexicalTree'
 import { RichText } from '@/platform/richtext/RichText'
+import { Card } from '@/platform/ui/Card'
+import { CardGrid, CardGridItem } from '@/platform/ui/CardGrid'
+import { LinkButton } from '@/platform/ui/CMSLink'
+import { Section, type SectionPlacement } from '@/platform/ui/Section'
+import { ShareStrip } from '@/platform/ui/ShareStrip'
+import { BILL_BODY_TONES } from '@/platform/ui/shareTones'
 
-import type { ContentBlock as ContentBlockProps } from '@/payload-types'
+import type {
+  ContentBlockProps,
+  ContentCardGroup,
+  ContentColumn,
+  ContentColumnSize,
+  ShareBarPercents,
+} from '../domain/blocks'
+import { TITLE_TEXT } from './blockStyles'
+import { COLUMN_SPAN } from './columnSpan'
 
-import { CMSLink } from '@/platform/ui/CMSLink'
+/*
+ * Text, cards or stats from the page builder (B8–B11). The mapper picks the layout; this draws it.
+ * The rich-text sizes per layout stay as selectors until `RichText` has its `compact` variant.
+ */
 
-export const ContentBlock: React.FC<ContentBlockProps> = (props) => {
-  const { columns } = props
+/** A column's width on the 12-column grid of the single and columns layouts */
+const SPAN: Record<ContentColumnSize, string> = COLUMN_SPAN
 
-  type ColumnSize = 'full' | 'half' | 'oneThird' | 'twoThirds'
+/** A card's width in a `CardGrid`: a full card takes the row, two-thirds two of three columns */
+const CARD_SPAN: Record<ContentColumnSize, string> = {
+  full: 'col-span-full',
+  half: '',
+  oneThird: '',
+  twoThirds: 'lg:col-span-2',
+}
 
-  const colSpanClasses: Record<ColumnSize, string> = {
-    full: 'col-span-4 lg:col-span-12',
-    half: 'col-span-4 lg:col-span-6',
-    oneThird: 'col-span-4 lg:col-span-4',
-    twoThirds: 'col-span-4 lg:col-span-8',
+const SINGLE_TEXT =
+  'max-w-prose border-l-4 border-primary pl-6 md:pl-8 [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:text-foreground md:[&_h2]:text-3xl [&_p]:text-base [&_p]:leading-relaxed [&_p]:text-muted-foreground'
+const MAIN_TEXT =
+  '[&_h2]:mb-4 [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:text-foreground md:[&_h2]:text-4xl [&_p]:text-base [&_p]:leading-relaxed [&_p]:text-muted-foreground md:[&_p]:text-lg'
+const SIDE_CARD_TEXT =
+  '[&_h3]:mb-3 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-foreground [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted-foreground'
+const STAT_TEXT =
+  '[&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-foreground [&_p]:mt-1 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted-foreground'
+
+/** The column's opening heading, when it starts with one, and the rest of its text */
+function splitLeadingHeading(body: ContentColumn['body']): {
+  lead: ContentColumn['body']
+  rest: ContentColumn['body']
+} {
+  const root = lexicalRoot(body)
+  if (!body || !root?.children || root.children[0]?.type !== 'heading') {
+    return { lead: undefined, rest: body }
   }
+  const part = (nodes: typeof root.children): ContentColumn['body'] =>
+    nodes.length > 0 ? ({ ...body, root: { ...root, children: nodes } } as typeof body) : undefined
+  return { lead: part(root.children.slice(0, 1)), rest: part(root.children.slice(1)) }
+}
 
-  const colCount = columns?.length ?? 0
-  const isMultiColumn = colCount > 1 && columns?.some((col) => col?.size !== 'full')
-  const isFourColumns = colCount === 4 && columns?.every((col) => col?.size !== 'full')
-  // Two-column content layout (e.g., twoThirds + oneThird) — no card styling
-  // colCount === 2 already excludes isFourColumns (colCount === 4), so no extra guard needed
-  const isContentColumns =
-    isMultiColumn && colCount === 2 && columns?.some((col) => col?.size !== 'half')
-  // Card grid: 2+ equal columns (e.g., two half-width cols, three thirds, etc.)
-  const isCardGrid = isMultiColumn && !isFourColumns && !isContentColumns
-
+/** A column's share bar: a thin row under the opening heading, named for screen readers */
+function ColumnShareBar({ percents }: { percents: ShareBarPercents }) {
   return (
-    <div className={cn('py-8 md:py-10', (isCardGrid || isFourColumns) && 'bg-surface')}>
-      <div className="container">
-        <div
-          className={cn({
-            'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6': isFourColumns,
-            'grid grid-cols-4 gap-x-6 gap-y-6 lg:grid-cols-12 lg:gap-x-8': isCardGrid,
-            'grid grid-cols-4 gap-x-8 gap-y-8 lg:grid-cols-12 lg:gap-x-12': isContentColumns,
-            'grid grid-cols-4 gap-x-16 gap-y-8 lg:grid-cols-12': !isMultiColumn,
-          })}
-        >
-          {columns &&
-            columns.length > 0 &&
-            columns.map((col, index) => {
-              const { enableLink, link, richText, size } = col
-              // A column holding only a heading is a section title, not a card
-              const nodes = richText?.root?.children ?? []
-              const isHeadingOnly =
-                isCardGrid &&
-                !enableLink &&
-                nodes.length > 0 &&
-                nodes.every((node) => node.type === 'heading')
+    <ShareStrip
+      label="Where a property tax bill goes"
+      className="mb-3"
+      parts={BILL_BODIES.map((key) => ({
+        name: BILL_BODY_NAMES[key],
+        tone: BILL_BODY_TONES[key],
+        percent: percents[key],
+      }))}
+    />
+  )
+}
 
-              return (
-                <div
-                  className={cn({
-                    // Four-column stats grid — compact cards with icon-friendly styling
-                    'col-span-1 rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md motion-safe:hover:-translate-y-0.5 md:p-6 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-foreground [&_p]:mt-1 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted-foreground':
-                      isFourColumns,
-                    [colSpanClasses[(size as ColumnSize) ?? 'full'] ?? colSpanClasses.full]:
-                      !isFourColumns,
-                    'md:col-span-2': isCardGrid && size !== 'full' && !isHeadingOnly,
-                    'rounded-2xl border border-border bg-card p-6 shadow-md transition-all duration-200 hover:shadow-lg motion-safe:hover:-translate-y-0.5 md:p-8':
-                      isCardGrid && !isHeadingOnly,
-                    'col-span-4 lg:col-span-12 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:text-foreground md:[&_h2]:text-3xl':
-                      isHeadingOnly,
-                    // Content columns — clean text layout, no card boxes
-                    '[&_h2]:mb-4 [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:text-foreground md:[&_h2]:text-4xl [&_p]:text-base [&_p]:leading-relaxed [&_p]:text-muted-foreground md:[&_p]:text-lg':
-                      isContentColumns && index === 0,
-                    'flex flex-col justify-center rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8 [&_h3]:mb-3 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-foreground [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted-foreground':
-                      isContentColumns && index > 0,
-                    // Single full-width column — readable width with accent border
-                    'max-w-prose border-l-4 border-primary pl-6 md:pl-8 [&_h2]:mb-3 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:text-foreground md:[&_h2]:text-3xl [&_p]:text-base [&_p]:leading-relaxed [&_p]:text-muted-foreground':
-                      !isMultiColumn,
-                  })}
-                  key={index}
-                >
-                  {richText && <RichText data={richText} enableGutter={false} />}
-
-                  {enableLink && <CMSLink {...link} />}
-                </div>
-              )
-            })}
-        </div>
+/**
+ * A column's text, then its link button, at the start of the column or at the end. A share bar sits
+ * right under the opening heading; a `beside` button floats right under the heading and the text wraps
+ * around it, then runs full width: no row or column of its own (`besideFloat` is the article picture's
+ * float, #1023).
+ */
+function ColumnContent({
+  body,
+  link,
+  linkAlign,
+  shareBar,
+}: Pick<ContentColumn, 'body' | 'link' | 'linkAlign' | 'shareBar'>) {
+  const beside = Boolean(link && linkAlign === 'beside')
+  // The opening heading is split off only when something sits right under it
+  const { lead, rest } =
+    beside || shareBar ? splitLeadingHeading(body) : { lead: undefined, rest: body }
+  return (
+    <>
+      {lead && <RichText data={lead} enableGutter={false} />}
+      {shareBar && <ColumnShareBar percents={shareBar} />}
+      {/* On a phone the button sits under the text, at the end; from `sm` up it floats beside it */}
+      <div className={cn(beside && 'flex flex-col-reverse sm:block')}>
+        {link && beside && (
+          <div className="mt-3 flex justify-end sm:float-right sm:mt-0 sm:mb-2 sm:ml-4">
+            <LinkButton link={link} />
+          </div>
+        )}
+        {rest && <RichText data={rest} enableGutter={false} besideFloat={beside} />}
       </div>
-    </div>
+      {link && !beside && (
+        <div className={cn('mt-4', linkAlign === 'end' && 'flex justify-end')}>
+          <LinkButton link={link} />
+        </div>
+      )}
+    </>
+  )
+}
+
+function CardGroup({ title, cards }: ContentCardGroup) {
+  // Halves sit two to a row, beside any full cards (which take their own row); any other mix
+  // sits in thirds
+  const columns =
+    cards.length > 0 && cards.every(({ size }) => size === 'half' || size === 'full') ? 2 : 3
+  return (
+    <>
+      {title && (
+        <div className={TITLE_TEXT}>
+          <RichText data={title} enableGutter={false} />
+        </div>
+      )}
+      {cards.length > 0 && (
+        <CardGrid columns={columns}>
+          {cards.map(({ size, ...column }, index) => (
+            <CardGridItem key={index} className={CARD_SPAN[size]}>
+              <Card padding="lg">
+                <ColumnContent {...column} />
+              </Card>
+            </CardGridItem>
+          ))}
+        </CardGrid>
+      )}
+    </>
+  )
+}
+
+function Layout(props: ContentBlockProps) {
+  switch (props.layout) {
+    case 'cards':
+      return (
+        <div className="flex flex-col gap-6">
+          {props.groups.map((group, index) => (
+            <CardGroup key={index} {...group} />
+          ))}
+        </div>
+      )
+    case 'stats':
+      return (
+        <CardGrid columns={4} gap="sm">
+          {props.columns.map((column, index) => (
+            <CardGridItem key={index}>
+              <Card className={STAT_TEXT}>
+                <ColumnContent {...column} />
+              </Card>
+            </CardGridItem>
+          ))}
+        </CardGrid>
+      )
+    case 'columns':
+      return (
+        <div className="grid grid-cols-4 gap-8 lg:grid-cols-12 lg:gap-x-12">
+          {props.columns.map(({ size, ...column }, index) =>
+            // The first column is the text; the one beside it a side card
+            index === 0 ? (
+              <div key={index} className={cn(SPAN[size], MAIN_TEXT)}>
+                <ColumnContent {...column} />
+              </div>
+            ) : (
+              <Card
+                key={index}
+                padding="lg"
+                className={cn(SPAN[size], 'flex flex-col justify-center', SIDE_CARD_TEXT)}
+              >
+                <ColumnContent {...column} />
+              </Card>
+            ),
+          )}
+        </div>
+      )
+    case 'single':
+      return (
+        // Every column spans the row, so there is no column gap: twelve tracks with a gap between each
+        // would be wider than a narrow section item and push the text out over its neighbor
+        <div className="grid grid-cols-4 gap-y-8 lg:grid-cols-12">
+          {props.columns.map(({ size, ...column }, index) => (
+            <div key={index} className={cn(SPAN[size], SINGLE_TEXT)}>
+              <ColumnContent {...column} />
+            </div>
+          ))}
+        </div>
+      )
+  }
+}
+
+export function ContentBlock(props: ContentBlockProps & { placement?: SectionPlacement }) {
+  const isEmpty = props.layout === 'cards' ? props.groups.length === 0 : props.columns.length === 0
+  if (isEmpty) return null
+
+  const isBand = props.layout === 'cards' || props.layout === 'stats'
+  return (
+    <Section tone={isBand ? 'surface' : 'plain'} spacing="sm" placement={props.placement}>
+      <Layout {...props} />
+    </Section>
   )
 }

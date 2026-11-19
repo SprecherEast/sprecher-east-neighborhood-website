@@ -1,5 +1,9 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
+import { readThemeModes } from '../theme/themeFile'
 import { toEmailHtml } from './emailLayout'
 
 describe('toEmailHtml', () => {
@@ -16,5 +20,16 @@ describe('toEmailHtml', () => {
 
   it('says the site is unofficial and AI-assisted', () => {
     expect(toEmailHtml([])).toContain('an unofficial, AI-assisted neighborhood website')
+  })
+
+  it('uses the default light theme’s colours, since email clients can’t read CSS variables', () => {
+    const { light } = readThemeModes(
+      readFileSync(join(process.cwd(), 'src/themes/default/theme.css'), 'utf8'),
+    )
+    const html = toEmailHtml(['Hi'], { label: 'Go', href: 'https://example.com' })
+
+    expect(html).toContain(`background:${light.primary}`)
+    expect(html).toContain(`color:${light['primary-foreground']}`)
+    expect(html).toContain(`color:${light.foreground}`)
   })
 })

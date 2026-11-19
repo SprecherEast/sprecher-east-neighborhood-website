@@ -8,6 +8,7 @@ import { type DefaultValues, type FieldValues, type UseFormReturn, useForm } fro
 import type { z } from 'zod'
 
 import { FORM_MESSAGES } from './formMessages'
+import { HEADER_SCROLL_MARGIN } from './scrollMargin'
 
 export type FormStatus = 'idle' | 'submitting' | 'success' | 'error'
 
@@ -64,9 +65,12 @@ export function Form<Input extends FieldValues, Output>({
   const showSuccess = status === 'success' && !feedbackHidden && successMessage
   const showError = status === 'error' && !feedbackHidden
 
-  // A success often replaces what had focus (the button); move focus to the message instead
+  // A success often replaces what had focus (the button); move focus to the message instead, and
+  // scroll it clear of the sticky header (`HEADER_SCROLL_MARGIN` below), or its first line hides (#551)
   useEffect(() => {
-    if (status === 'success') successRef.current?.focus()
+    if (status !== 'success') return
+    successRef.current?.focus()
+    successRef.current?.scrollIntoView({ block: 'start' })
   }, [status])
 
   const submit = form.handleSubmit(async (values) => {
@@ -93,11 +97,11 @@ export function Form<Input extends FieldValues, Output>({
       className={cn('grid items-start gap-6 *:col-span-full sm:grid-cols-2', className)}
     >
       {showSuccess && (
-        <div ref={successRef} tabIndex={-1} className="outline-none">
-          <Alert variant="success">{successMessage}</Alert>
+        <div ref={successRef} tabIndex={-1} className={cn(HEADER_SCROLL_MARGIN, 'outline-none')}>
+          <Alert tone="success">{successMessage}</Alert>
         </div>
       )}
-      {showError && <Alert variant="error">{errorMessage}</Alert>}
+      {showError && <Alert tone="error">{errorMessage}</Alert>}
       {children(form)}
     </form>
   )

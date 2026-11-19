@@ -1,6 +1,6 @@
 ---
 name: wrapped
-description: Post-merge wrap-up, run right after you merge a PR or when someone says the PRs are merged (or "wrapped") — verify each merge, check the deploy and the live site, report server results on the linked issues, close out any Asana task, sync your local main, and report. Use after every merge; never assume a merge happened.
+description: Post-merge wrap-up, run right after you merge a PR or when someone says the PRs are merged (or "wrapped") — verify each merge, check the deploy and the live site, report server results on the linked issues, sync your local main, and report. Use after every merge; never assume a merge happened.
 ---
 
 # Wrapped: after a merge
@@ -42,22 +42,44 @@ whether anything deploys: docs-only changes, and commits older than the live one
      checks from the internet.
 3. Open https://sprechereast.com and check the behavior the PRs changed.
 
-Never re-run or start the deploy yourself (it can be started by hand: Actions → Deploy to VPS →
-Run workflow, on `main`). A failed deploy gets a new issue and is fixed or reverted through a PR.
-Never fix it on the server.
+### Starting the deploy by hand
+
+An agent may start the `Deploy to VPS` workflow by hand, on `main`, when a redeploy is needed (the
+owner's decision, #972). The limits:
+
+- It never takes the place of a required check, a review, or a fix through a pull request, and it
+  never bypasses a rule.
+- First check that no deploy is running. A merge's deploy runs inside the **CI** run, so look at
+  both workflows that can deploy, `ci.yml` and `deploy.yml`, on `main`: no run may be `in_progress`
+  or `queued`. If one is, wait for it. The deploy job's concurrency group holds one running and one
+  pending job and a newer arrival replaces the pending one, so starting during a run can drop a
+  queued deploy.
+- Start it with the REST call below, then verify it as in this step: find the run, read the
+  annotations, check the site.
+- Say on the linked issue why it was started, and which run.
+- A failed deploy gets a new issue and is fixed or reverted through a PR. Never fix it on the server.
+
+```bash
+for w in ci deploy; do for st in in_progress queued; do
+  gh api "repos/{owner}/{repo}/actions/workflows/$w.yml/runs?branch=main&status=$st" --jq .total_count
+done; done   # all four must print 0
+gh api -X POST repos/{owner}/{repo}/actions/workflows/deploy.yml/dispatches -f ref=main -F return_run_details=true
+# 200 with workflow_run_id and html_url. Without return_run_details, gh's default API version
+# answers 204 with no body and the run id must be looked up: gh run list --workflow deploy.yml
+# Watch it: gh run watch <workflow_run_id>
+```
 
 ## 3. Close the loop on the issues
 
 - The linked issues close themselves on merge, and `issue-fix-summary.yml` comments on each.
+- Read each linked issue's card history: `node .github/scripts/card-history.mjs <n>`. The planner
+  app and GitHub's own automation moved it (In progress on the claim, In review when the PR
+  linked, Done on the merge); a move by a person's login is a slip unless it is the documented fallback (the planner did not act) and the issue records it. Report it, and fix its cause
+  through the issue, not by moving the card back by hand.
 - For server changes (`infra` issues), comment what actually changed on the server, from the
   deploy annotations. Never paste secret values.
-- An issue linked with `Part of #N` stays open until its last PR merges.
-
-## 4. Asana (legacy, only if linked)
-
-If a PR body has `Asana: https://app.asana.com/0/0/<task_gid>/f`, add a completion comment with
-the PR link to that task and mark it complete
-([`asana-workflow.md`](../../../docs/guidelines/asana-workflow.md)). No link, nothing to do.
+- A parent issue or epic stays open until its sub-issues are closed and its own acceptance is
+  checked ([grooming playbook](../../../docs/process/grooming-playbook.md#in-review-to-done)).
 
 ## 5. Sync and report
 

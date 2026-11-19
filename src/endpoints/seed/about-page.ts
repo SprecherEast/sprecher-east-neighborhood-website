@@ -1,82 +1,90 @@
 import type { RequiredDataFromCollectionSlug } from 'payload'
+import { ROADMAP_PATH } from '@/modules/roadmap'
 import type { Media } from '@/payload-types'
-import { heading, root, p } from './helpers/lexical'
+import { heading, p, root } from './helpers/lexical'
 
 type AboutArgs = {
   mapImage?: Media
 }
 
-export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pages'> = (args) => {
-  const layout: RequiredDataFromCollectionSlug<'pages'>['layout'] = [
-    {
-      blockName: 'Who We Are',
-      blockType: 'content',
-      columns: [
-        {
-          richText: root([
-            heading('h2', 'Who We Are'),
-            p(
-              'Sprecher East is a grassroots neighborhood initiative serving Madison\u2019s far east side. We were established in 2006 to give residents a voice in local government, share information, and build community connections.',
-            ),
-            p(
-              'We are not a homeowners association (HOA). There are no mandatory dues, no rules about your fence height, and no one telling you what color to paint your house. Membership is completely free and open to anyone who lives within our boundaries.',
-            ),
-            p(
-              'Our neighborhood is bounded by I-94 to the north, Door Creek Park to the east, Sprecher Road to the west, and Cottage Grove Road to the south. We fall within Madison\u2019s District 16.',
-            ),
-          ]),
-          size: 'full',
-        },
-      ],
-    },
-  ]
+/** The shared "Sprecher East" Google My Maps map: the boundary, drawn by the owner (#764) */
+const SPRECHER_EAST_MAP_EMBED_URL =
+  'https://www.google.com/maps/d/embed?mid=1mbTKP1-2eN6g5YPReAaQg6J1lV2DX7g'
 
-  if (args?.mapImage) {
-    layout.push({
-      blockName: 'Neighborhood Map',
-      blockType: 'mediaBlock',
-      media: args.mapImage.id,
-    })
+/** A section item's other layout choices, at their defaults */
+const ITEM = { align: 'start', verticalAlign: 'top', phoneOrder: 'inOrder' } as const
+
+export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pages'> = (args) => {
+  const intro = {
+    blockName: 'What This Site Is',
+    blockType: 'content' as const,
+    columns: [
+      {
+        richText: root([
+          heading('h2', 'What this site is'),
+          p(
+            'This is an unofficial site for Sprecher East, the neighborhood on Madison’s far east side. We gather news, events and public notices for neighbors in one place.',
+          ),
+          p(
+            'It’s run by one neighbor, not by the City, an HOA or a registered neighborhood association, and there are no dues or membership.',
+          ),
+        ]),
+        size: 'full' as const,
+      },
+    ],
   }
+
+  // The text and the map take half each, side by side from a large screen up and stacked
+  // on a phone; an editor changes the widths, the order or the alignment in Admin (#884)
+  const layout: RequiredDataFromCollectionSlug<'pages'>['layout'] = args?.mapImage
+    ? [
+        {
+          blockName: 'Intro and Map',
+          blockType: 'section',
+          items: [
+            { ...ITEM, width: 'half', content: [intro] },
+            {
+              ...ITEM,
+              width: 'half',
+              content: [
+                {
+                  blockName: 'Neighborhood Map',
+                  blockType: 'mapBlock',
+                  title: 'Where we are',
+                  description:
+                    'Sprecher East is in Madison’s District 16. I-94 is to the north, Sprecher Road to the west, and Cottage Grove Road to the south. Door Creek Park and the Door Creek valley lie to the east. North Star is next door to the west, and Richmond Hill Homeowners lies to the southwest.',
+                  preview: args.mapImage.id,
+                  embedUrl: SPRECHER_EAST_MAP_EMBED_URL,
+                },
+              ],
+            },
+          ],
+        },
+      ]
+    : [intro]
 
   layout.push(
     {
-      blockName: 'Our Subdivisions',
+      blockName: 'How AI Helps',
       blockType: 'content',
       columns: [
         {
-          richText: root([heading('h2', 'Our Subdivisions')]),
+          richText: root([
+            heading('h2', 'How AI helps'),
+            p(
+              'AI tools help us gather public information, like city meetings, road and development projects, and local news. A neighbor reviews what we publish, and longer pieces list their sources.',
+            ),
+          ]),
           size: 'full',
-        },
-        {
-          enableLink: false,
-          richText: root([
-            heading('h3', 'Meadowlands'),
-            p(
-              'One of the earliest subdivisions in the Sprecher East area, Meadowlands features established homes and tree-lined streets.',
-            ),
-          ]),
-          size: 'oneThird',
-        },
-        {
-          enableLink: false,
-          richText: root([
-            heading('h3', 'Door Creek'),
-            p(
-              'Adjacent to Door Creek Park and the bike path, this subdivision offers easy access to green space and trails.',
-            ),
-          ]),
-          size: 'oneThird',
-        },
-        {
-          enableLink: false,
-          richText: root([
-            heading('h3', 'Reston Heights'),
-            p(
-              'The newest development in our area, Reston Heights brings modern housing and new families to the neighborhood.',
-            ),
-          ]),
-          size: 'oneThird',
+          // The same link button the live page has, the only link to the plan (#953)
+          enableLink: true,
+          linkAlign: 'end',
+          link: {
+            type: 'custom',
+            appearance: 'outline',
+            label: 'See our progress',
+            url: ROADMAP_PATH,
+          },
         },
       ],
     },
@@ -102,10 +110,8 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
         },
       ],
       richText: root([
-        heading('h3', 'Ready to Connect?'),
-        p(
-          'Whether you\u2019re a longtime resident or just moved in, we\u2019d love to hear from you.',
-        ),
+        heading('h3', 'See something wrong or missing?'),
+        p('Please tell us and we’ll fix it.'),
       ]),
     },
   )
@@ -120,7 +126,7 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
     layout,
     meta: {
       description:
-        'Learn about Sprecher East, a grassroots neighborhood initiative serving the Meadowlands, Door Creek, and Reston Heights subdivisions on Madison\u2019s far east side.',
+        'What this unofficial site is, who runs it, and where Sprecher East sits on Madison’s far east side, with a map.',
       title: 'About',
     },
     title: 'About',

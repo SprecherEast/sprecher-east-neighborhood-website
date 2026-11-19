@@ -6,7 +6,25 @@ vi.mock('@/platform/payload/expireCacheTag', () => cache)
 
 import { isAdminOrEditor } from '@/platform/payload/roles'
 
+import { FORUM_DEFAULT_URL, validateForumUrl } from '../domain/forum'
 import { Footer, Header } from './navGlobal'
+
+const fieldNamed = (global: typeof Header, name: string) =>
+  global.fields.find((field) => 'name' in field && field.name === name)
+
+describe('the forum address (#485)', () => {
+  it('is a footer field that starts with the neighborhood forum and must be https', () => {
+    expect(fieldNamed(Footer, 'forumUrl')).toMatchObject({
+      type: 'text',
+      defaultValue: FORUM_DEFAULT_URL,
+      validate: validateForumUrl,
+    })
+  })
+
+  it('is not on the header', () => {
+    expect(fieldNamed(Header, 'forumUrl')).toBeUndefined()
+  })
+})
 
 beforeEach(() => cache.expireCacheTag.mockReset())
 

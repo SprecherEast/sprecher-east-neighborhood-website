@@ -12,7 +12,7 @@ pattern is proven in production, add it here.
 **What we value:**
 
 - **Minimalism with maximum impact** — every element earns its place; if it doesn't serve the user, remove it
-- **Purposeful asymmetry** — visual weight should feel intentional, not accidental; perfect symmetry is boring, thoughtful imbalance is compelling
+- **Deliberate visual weight** — weight is intentional, never accidental; a layout that is asymmetric looks deliberate and balanced
 - **Smooth contextual flow** — each section should lead naturally to the next; the user should never wonder "why is this here?"
 - **Intuitiveness for the layman** — a resident who has never built a website should find navigation, CTAs, and content hierarchy immediately obvious
 - **Elegance over flashiness** — subtle shadows beat loud gradients; a 200ms ease-out beat a 500ms bounce; restraint is the mark of quality
@@ -20,10 +20,10 @@ pattern is proven in production, add it here.
 **Creative freedom within constraints:**
 
 - Stay within Tailwind CSS + Next.js — no external animation libraries unless justified
-- Use design tokens from `globals.css @theme {}` for all colors
+- Use design tokens (`src/platform/theme/tokens.ts`) for all colors
 - Respect accessibility (contrast ratios, reduced motion, focus indicators)
 - Test at 6 viewports (320, 430, 768, 1024, 1280, 1920px)
-- Beyond these constraints: **experiment freely.** Combine patterns. Invent new ones. Add subtle shadows, micro-animations, unexpected but effective layout choices. If the result is clean, intuitive, and beautiful — ship it.
+- Beyond these constraints: **experiment freely.** Combine patterns, and invent a new one when none fits the need. Add subtle shadows, micro-animations, unexpected but effective layout choices. If the result is clean, intuitive, and beautiful, and meets the [alignment baseline](../ui-ux-design.md#symmetry-and-alignment) — ship it.
 
 **When inventing something new:**
 
@@ -69,7 +69,7 @@ name, the snippet, and why it works.
 
 5. **Are cards missing visual differentiation?** Check if all cards look identical. Add icons, category colors, or image treatments to differentiate them.
 
-6. **Is the hover state missing or too subtle?** Every interactive element needs a visible hover state. Use `hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200` for cards, `hover:bg-primary/90` for buttons.
+6. **Is the hover state missing or too subtle?** Every interactive element needs a visible hover state. Use the `Card`'s `interactive` hover for cards (`hover:shadow-md motion-safe:hover:-translate-y-0.5 transition-all duration-200`), `hover:bg-primary-fill-hover` for buttons.
 
 7. **Does the section have a clear eyebrow → heading → body → CTA hierarchy?** If not, add an eyebrow label (`text-xs font-bold uppercase tracking-widest text-primary`) and ensure the heading is significantly larger than the body text.
 
@@ -80,7 +80,7 @@ name, the snippet, and why it works.
 | Mobile S  | 320px  | Text wrapping, touch targets (44px min), no horizontal overflow        |
 | Mobile L  | 430px  | Same as above, verify nothing breaks at slightly wider mobile          |
 | Tablet    | 768px  | Grid columns transition, image aspect ratios, nav layout               |
-| Tablet L  | 1024px | Desktop layout kicks in, spacing feels balanced                        |
+| Tablet L  | 1024px | Desktop layout in place (starts at 960px, #545)                        |
 | Desktop   | 1280px | Full layout, nothing feels too wide or too narrow                      |
 | Desktop L | 1920px | Content centered, no ultra-wide stretching, max-width constraints work |
 
@@ -97,6 +97,6 @@ These are specific implementation mistakes the designer should catch and prescri
 | Uniform cards       | All cards identical with no visual differentiation   | Add icons, images, or color accents per card                            |
 | Consecutive same-bg | Two sections with same background color              | Alternate `bg-background`/`bg-surface`, or insert a colored divider     |
 | Giant min-height    | `min-h-[80vh]` with 3 lines of content               | Reduce to `min-h-[60vh]` or use `py-24` instead                         |
-| Missing scrim       | White text on bright image with no gradient          | Add `bg-gradient-to-t from-black/60` below text area                    |
+| Missing scrim       | `text-on-image` on a bright image with no gradient   | Add `bg-gradient-to-t from-scrim/60` below text area                    |
 | Template buttons    | Generic "Learn More" or "Get Started"                | Use specific action words: "See Upcoming Events", "Join the Discussion" |
 | Orphan section      | A section with heading + one sentence + nothing else | Merge with adjacent section or add supporting content                   |

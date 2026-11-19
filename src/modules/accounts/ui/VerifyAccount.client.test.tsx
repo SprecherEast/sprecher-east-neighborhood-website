@@ -32,7 +32,7 @@ describe('VerifyAccount', () => {
     mocks.verifyAccount.mockResolvedValue({ ok: true })
     render(
       <main>
-        <VerifyAccount token={TOKEN} />
+        <VerifyAccount token={TOKEN} status="pending" />
       </main>,
     )
     await expectAccessible(document.body)
@@ -51,7 +51,7 @@ describe('VerifyAccount', () => {
 
   it('says a used or unknown link is dead, and offers to log in', async () => {
     mocks.verifyAccount.mockResolvedValue({ ok: false, failure: 'invalid-link' })
-    render(<VerifyAccount token={TOKEN} />)
+    render(<VerifyAccount token={TOKEN} status="pending" />)
     await clickConfirm()
     expect((await screen.findByRole('alert')).textContent).toMatch(/already used/)
     expect(screen.queryByRole('button')).toBeNull()
@@ -60,7 +60,7 @@ describe('VerifyAccount', () => {
 
   it('keeps the button to try again after a server error or no answer', async () => {
     mocks.verifyAccount.mockRejectedValueOnce(new TypeError('Failed to fetch'))
-    render(<VerifyAccount token={TOKEN} />)
+    render(<VerifyAccount token={TOKEN} status="pending" />)
     await clickConfirm()
     expect((await screen.findByRole('alert')).textContent).toMatch(/connection/)
     expect(screen.getByRole('button', { name: 'Confirm My Account' })).toBeTruthy()
@@ -71,7 +71,7 @@ describe('VerifyAccount', () => {
     mocks.verifyAccount.mockResolvedValueOnce({ ok: true })
     render(
       <main>
-        <VerifyAccount token={TOKEN} />
+        <VerifyAccount token={TOKEN} status="pending" />
       </main>,
     )
     await clickConfirm()
@@ -94,7 +94,7 @@ describe('VerifyAccount', () => {
 
   it('checks the chosen passwords match before sending', async () => {
     mocks.verifyAccount.mockResolvedValue({ ok: false, failure: 'needs-password' })
-    render(<VerifyAccount token={TOKEN} />)
+    render(<VerifyAccount token={TOKEN} status="pending" />)
     await clickConfirm()
     await userEvent.type(await screen.findByLabelText(/^Password/), 'correct-horse')
     await userEvent.type(screen.getByLabelText(/Confirm password/), 'other-horse')
@@ -105,7 +105,7 @@ describe('VerifyAccount', () => {
 
   it('sends nothing while the robot check is still running, and says why (#303)', async () => {
     fakeTurnstile.tokenFor = () => null
-    render(<VerifyAccount token={TOKEN} />)
+    render(<VerifyAccount token={TOKEN} status="pending" />)
     await clickConfirm()
     expect(mocks.verifyAccount).not.toHaveBeenCalled()
     expect(screen.getByRole('alert').textContent).toMatch(/spam check is still running/)
@@ -113,15 +113,46 @@ describe('VerifyAccount', () => {
 
   it('says when the robot check fails, and keeps the button to try again', async () => {
     mocks.verifyAccount.mockResolvedValue({ ok: false, failure: 'robot-check' })
-    render(<VerifyAccount token={TOKEN} />)
+    render(<VerifyAccount token={TOKEN} status="pending" />)
     await clickConfirm()
     expect((await screen.findByRole('alert')).textContent).toMatch(/spam check didn’t pass/)
     expect(screen.getByRole('button', { name: 'Confirm My Account' })).toBeTruthy()
   })
 
   it('shows a link with no token as dead, without asking the server', () => {
-    render(<VerifyAccount token={null} />)
+    render(<VerifyAccount token={null} status="invalid" />)
     expect(screen.getByRole('alert').textContent).toMatch(/isn’t valid/)
     expect(mocks.verifyAccount).not.toHaveBeenCalled()
+  })
+
+  describe('when the link was already used as the page opens (#391)', () => {
+    it('says the account is already confirmed and offers to log in, with no Confirm button', async () => {
+      render(
+        <main>
+          <VerifyAccount token={TOKEN} status="already-verified" />
+        </main>,
+      )
+      expect(screen.getByRole('status').textContent).toMatch(/already confirmed/)
+      expect(screen.queryByRole('button')).toBeNull()
+      expect(screen.getByRole('link', { name: 'Log In' }).getAttribute('href')).toBe('/login')
+      expect(mocks.verifyAccount).not.toHaveBeenCalled()
+      expect(document.activeElement).toBe(document.body)
+      await expectAccessible(document.body)
+    })
+
+    it('says a link no account holds is dead, with no Confirm button', () => {
+      render(<VerifyAccount token={TOKEN} status="invalid" />)
+      expect(screen.getByRole('alert').textContent).toMatch(/already used/)
+      expect(screen.queryByRole('button')).toBeNull()
+      expect(mocks.verifyAccount).not.toHaveBeenCalled()
+    })
+
+    it('says so too when the button finds the link already used', async () => {
+      mocks.verifyAccount.mockResolvedValue({ ok: false, failure: 'already-verified' })
+      render(<VerifyAccount token={TOKEN} status="pending" />)
+      await clickConfirm()
+      expect((await screen.findByRole('status')).textContent).toMatch(/already confirmed/)
+      expect(screen.queryByRole('button')).toBeNull()
+    })
   })
 })

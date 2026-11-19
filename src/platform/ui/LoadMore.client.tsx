@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from './Button'
 
-import type { FeedPage } from '@/platform/lib'
+import type { FeedMore, FeedPage } from '@/platform/lib'
 import { cn } from '@/platform/lib/cn'
 
 /**
@@ -15,39 +15,39 @@ const AUTO_LOAD_PAGES = 4
 
 type Status = 'idle' | 'loading' | 'error'
 
+/**
+ * A listing that starts from one numbered page and loads what follows it. Each load sends the
+ * cursor the previous one returned (the last item's sort key and id, #125), so an item removed
+ * between two loads skips nothing.
+ */
 export function useLoadMore<T extends { id: number | string }>(
   initial: FeedPage<T>,
-  load: (page: number) => Promise<FeedPage<T>>,
+  load: (cursor: string) => Promise<FeedMore<T>>,
 ) {
   const [items, setItems] = useState<T[]>(initial.docs)
-  const [page, setPage] = useState(initial.page)
-  const [totalPages, setTotalPages] = useState(initial.totalPages)
+  const [nextCursor, setNextCursor] = useState(initial.nextCursor)
   const [totalDocs, setTotalDocs] = useState(initial.totalDocs)
   const [status, setStatus] = useState<Status>('idle')
   const [pagesLoaded, setPagesLoaded] = useState(1)
   const inFlight = useRef(false)
-  // Latest loaded page and total in refs, so a stale callback (e.g. the scroll observer
-  // firing before re-render) can never request the same page twice
-  const pageRef = useRef(initial.page)
-  const totalPagesRef = useRef(initial.totalPages)
-
-  const hasMore = page < totalPages
+  // The latest cursor in a ref, so a stale callback (e.g. the scroll observer firing before
+  // re-render) can never request the same items twice
+  const cursorRef = useRef(initial.nextCursor)
 
   const loadMore = useCallback(async () => {
-    if (inFlight.current || pageRef.current >= totalPagesRef.current) return
+    const cursor = cursorRef.current
+    if (inFlight.current || cursor === null) return
     inFlight.current = true
     setStatus('loading')
     try {
-      const next = await load(pageRef.current + 1)
-      pageRef.current = next.page
-      totalPagesRef.current = next.totalPages
+      const next = await load(cursor)
+      cursorRef.current = next.nextCursor
       setItems((prev) => {
-        // Content can shift between requests (a new post is published); skip repeats.
+        // An item can come back between requests (an event moved to a later date); skip repeats.
         const seen = new Set(prev.map((item) => item.id))
         return [...prev, ...next.docs.filter((item) => !seen.has(item.id))]
       })
-      setPage(next.page)
-      setTotalPages(next.totalPages)
+      setNextCursor(next.nextCursor)
       setTotalDocs(next.totalDocs)
       setPagesLoaded((n) => n + 1)
       setStatus('idle')
@@ -60,13 +60,13 @@ export function useLoadMore<T extends { id: number | string }>(
 
   return {
     items,
-    hasMore,
+    hasMore: nextCursor !== null,
     status,
     loadMore,
     totalDocs,
     firstItemNumber: (initial.page - 1) * initial.limit + 1,
-    /** Last page loaded so far (for the no-JavaScript "next page" link). */
-    page,
+    /** The numbered page after what's loaded (for the no-JavaScript "next page" link). */
+    nextPage: initial.page + pagesLoaded,
     autoLoad: pagesLoaded < AUTO_LOAD_PAGES,
   }
 }

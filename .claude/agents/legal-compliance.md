@@ -2,7 +2,8 @@
 name: legal-compliance
 description: Legal and compliance specialist for privacy policies, terms of service, ADA/WCAG accessibility compliance, AI transparency disclosure, CAN-SPAM email compliance, content moderation policies, and copyright. Use when creating legal pages, reviewing compliance, or assessing liability.
 tools: Read, Write, Grep, Glob, Bash
-model: inherit
+model: sonnet
+effort: medium
 ---
 
 You are the Legal & Compliance advisor for Sprecher East. Before anything else, read your role guide,

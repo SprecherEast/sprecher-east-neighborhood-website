@@ -1,0 +1,61 @@
+{
+  // Finds files, exports and packages nothing uses (#445). Run: npm run knip. Plugins read
+  // Next.js, Vitest, ESLint, Prettier, lint-staged and husky by themselves; these are the
+  // entry points they can't see.
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  // An export used in its own file (a constant a test or a type also reads) is not dead code
+  "ignoreExportsUsedInFile": true,
+  // Also check what the entry files export, so a re-export nothing imports is reported
+  "includeEntryExports": true,
+  "ignoreIssues": {
+    // PM2 reads the default export on the server
+    "ecosystem.config.cjs": ["exports"],
+    // Kept on purpose: only its tests call it today (#756)
+    "src/modules/accounts/server.ts": ["exports"],
+  },
+  "workspaces": {
+    ".": {
+      "entry": [
+        // A module's entry files are its public contract (architecture rule 2)
+        "src/modules/*/{index,server,cms,actions}.ts",
+        "src/platform/*/index.ts",
+        // Run on the server, not imported: the PM2 config and the backup script (ops/*.sh)
+        "ecosystem.config.cjs",
+        "ops/*.mjs",
+        // Run by hand or by CI
+        "scripts/*.{ts,mjs}",
+        // Loaded by the PR Policy workflow (#716); their tests are found by Vitest
+        ".github/scripts/*.mjs",
+        // The knowledge eval (#715): run by hand, never in CI; its tests are found by Vitest
+        "scripts/knowledge-eval/{run,analyze}.mjs",
+        // Run by `payload run` from e2e/serve.mjs (which knip finds through playwright.config.ts)
+        "e2e/seed.ts",
+        // Imported by eslint.config.mjs
+        "eslint.*.config.mjs",
+      ],
+      "ignoreDependencies": [
+        // Loaded from CSS (globals.css `@import` and `@plugin`), which knip doesn't read
+        "@tailwindcss/typography",
+        "tw-animate-css",
+        // Installed globally on the server (ops/), not in this package
+        "pm2",
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "ops/**/*.mjs",
+        "scripts/**/*.{ts,mjs}",
+        // The end-to-end tests (#311): Playwright finds the specs from playwright.config.ts
+        "e2e/**/*.{ts,mjs}",
+      ],
+      "ignore": [
+        // Built but not shown yet (docs/ui/evidence.md); kept for the theme work
+        "src/platform/theme/ThemeSelector.client.tsx",
+      ],
+    },
+    // Its own package, with its own lockfile and tests (node --test)
+    "intelligence/runner": {
+      "entry": ["test/*.test.mjs"],
+      "project": ["**/*.mjs"],
+    },
+  },
+}

@@ -5,13 +5,16 @@ description: Keep the project's plan on GitHub. Before starting work, read the i
 
 # Project tracking
 
-The conventions are in [how we work](../../../docs/process/project-management.md), and the
-milestones and epics in the [roadmap](../../../docs/product/roadmap.md). This skill is the
-procedure. GitHub is the only source of truth: answer from it, never from memory or chat history.
+The conventions are in [how we work](../../../docs/process/project-management.md), the layers and
+how to choose one in the [planning model](../../../docs/process/planning-model.md), grooming
+triggers, board-move criteria and the sweep in the
+[grooming playbook](../../../docs/process/grooming-playbook.md), and the milestones and epics in
+the [roadmap](../../../docs/product/roadmap.md). This skill is the procedure. GitHub is the only
+source of truth: answer from it, never from memory or chat history.
 
 The commands use the REST API through `gh api`, which works in cloud sessions too (`gh issue` and
 `gh pr` subcommands use GraphQL, which some sandboxes block). In this repo, `{owner}/{repo}` is
-`boulaajaj/sprecher-east-neighborhood-website`. List calls return at most 100 items, so loop over
+`SprecherEast/sprecher-east-neighborhood-website`. List calls return at most 100 items, so loop over
 `&page=N` as in §3 when a list can be longer; `--paginate` fails in some sandboxes.
 
 ## 1. Before starting an issue
@@ -22,33 +25,72 @@ gh api repos/{owner}/{repo}/issues/<n>/parent -q '"#\(.number) \(.title)"'      
 gh api repos/{owner}/{repo}/issues/<n>/dependencies/blocked_by -q '.[] | "#\(.number) \(.state)"'
 ```
 
-The sprint and the size are board fields. On the owner's computer, read them from the board's
-items (§2 step 4 without `--query`, then find the issue by number in the JSON). Start only if the
-issue is **Ready**:
+The sprint is a board field. On the owner's computer, read it from the board's items (§2 step 4
+without `--query`, then find the issue by number in the JSON). The size is the issue's Effort
+field (§1a). Start only if the issue is **Ready**:
 
-- it has acceptance criteria, a parent, type, area and priority labels, and a size
+- it has acceptance criteria, a milestone (an epic only for multi-part work;
+  [the rule](../../../AGENTS.md#one-issue-one-pull-request)), type, area and priority labels,
+  and a size
+- **Files likely touched** and **Must not touch** are filled in (`None` when there is nothing)
 - nothing it's blocked by is still open
 - it isn't labeled `needs owner`
 - no open PR already closes it (the list in §2 step 3)
 
-When the board can't be read (cloud sessions, or until #90 is done), skip the size check and say so
-in a comment on the issue. If the issue isn't Ready, make it Ready (add what's missing) or pick
-another one. Read the parent epic too: it says what the issue is part of.
+If the issue isn't Ready, groom it (§1a) or pick another one. Read its epic too, if it has one: it
+says what the issue is part of. More than one issue may be in progress only when their files
+don't overlap ([the rule](../../../docs/process/project-management.md#grooming-and-work-in-progress)),
+so every issue after the first needs the overlap check below to pass.
+
+## 1a. Grooming
+
+Before every major change (a new epic, a sprint, a batch of work), groom the backlog
+([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-work-in-progress)).
+For each issue:
+
+1. Give it a plain summary, acceptance criteria, a milestone, and an epic only for multi-part work
+   ([the rule](../../../AGENTS.md#one-issue-one-pull-request)), the type, area and `priority:` labels (§3), and its **Files likely touched** and
+   **Must not touch** (`None` when nothing), which the overlap check in §4 reads.
+2. Set its size as the native **Effort** field: Low (S), Medium (M) or High (L). If it is bigger,
+   split it into sub-issues. Set the native **Priority** field to match the `priority:` label. Both
+   are fields on the issue, written with a repository call that works in cloud sessions too; the
+   IDs and option names are in `.github/issue-fields.json`:
+
+   ```bash
+   field=$(jq '.Effort.id' .github/issue-fields.json)
+   echo "{\"issue_field_values\":[{\"field_id\":$field,\"value\":\"Medium\"}]}" |
+     gh api -X POST repos/{owner}/{repo}/issues/<n>/issue-field-values \
+       -H 'X-GitHub-Api-Version: 2026-03-10' --input -
+   ```
+
+   `POST` adds or changes the fields it names and leaves the others. Read them back with a `GET`
+   on the same path.
+
+3. When it meets the Definition of Ready (the
+   [Backlog to Ready criteria](../../../docs/process/grooming-playbook.md#board-moves-entry-and-exit-criteria)),
+   add the `ready` label. The planner app moves its card to **Ready**, from any session:
+
+   ```bash
+   gh api -X POST repos/{owner}/{repo}/issues/<n>/labels -f 'labels[]=ready'
+   ```
+
+   The app leaves the card in Backlog while the issue has `needs owner` or fails the issue check. To
+   park an issue, remove the label (`-X DELETE .../issues/<n>/labels/ready`).
 
 ## 2. "What's next?"
 
-1. Find the current milestone, the open one with the nearest due date:
+1. Find the current milestone, the open one with the nearest due date (milestones without one sort last):
    `gh api "repos/{owner}/{repo}/milestones?state=open&sort=due_on&direction=asc" -q '.[0] | {number, title, due_on, open_issues, closed_issues}'`
 2. List its open issues:
    `gh api "repos/{owner}/{repo}/issues?milestone=<number>&state=open&per_page=100" -q '.[] | select(.pull_request | not) | "#\(.number) [\([.labels[].name] | join(", "))] \(.title)"'`
 3. Leave out:
    - epics, and anything labeled `needs owner`
    - anything with an open blocker (one `blocked_by` call per issue, as in §1)
-   - anything an open PR already closes or is part of. Those are **in progress**:
+   - anything an open PR already closes. Those are **in progress**:
 
      ```bash
      gh api "repos/{owner}/{repo}/pulls?state=open&per_page=100" \
-       -q '.[] | "PR #\(.number) → \([(.body // "") | scan("(?i)(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|part of):?\\s+#[0-9]+")] | join(", "))"'
+       -q '.[] | "PR #\(.number) → \([(.body // "") | scan("(?i)(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\\s+#[0-9]+")] | join(", "))"'
      ```
 
    Order the rest by priority label, then by the order of the epic's sub-issues
@@ -56,15 +98,18 @@ another one. Read the parent epic too: it says what the issue is part of.
 
 4. On the owner's computer, the board is the authority on what's in the sprint. Read the current
    sprint with
-   `gh project item-list <project-number> --owner boulaajaj --limit 1000 --query "sprint:@current" --format json`.
+   `gh project item-list 1 --owner SprecherEast --limit 1000 --query "sprint:@current" --format json`.
    That needs `gh` signed in with the `project` scope. Cloud sessions can't reach the board, so
    say that the answer comes from the milestone instead.
 
 ## 3. Filing new work
 
-1. **Choose the level** ([how we work](../../../docs/process/project-management.md#levels-of-work)).
-   - A new capability that takes weeks is an epic: label it `epic`.
-   - One deliverable is a feature or a task.
+1. **Choose the level** with the [decision tree](../../../docs/process/planning-model.md#which-layer)
+   and the [naming templates](../../../docs/process/planning-model.md#templates).
+   - An outcome with a done test, spanning several capabilities, is a milestone; a capability
+     grouping several related issues is an epic (label `epic`, one milestone).
+   - One deliverable that fits one sprint and one PR is an issue
+     ([the rule](../../../AGENTS.md#one-issue-one-pull-request)).
    - Something broken is a bug.
 2. **Search first** to avoid duplicates. Loop over the pages, since the repo has more than 100
    issues and PRs:
@@ -78,14 +123,18 @@ another one. Read the parent epic too: it says what the issue is part of.
    ```
 
 3. **Create it** with the issue form's sections (`### Problem`, `### Proposed fix`,
-   `### Acceptance criteria`, `### Area`, `### Priority`) in `issue.md`. `parent_issue_id` is the
+   `### Existing work compared`, `### Acceptance criteria`, `### Files likely touched`,
+   `### Must not touch`, `### Area`, `### Priority`) in `issue.md`. "Existing work compared"
+   records what step 2 found and why this is new work; the Bash hook refuses the command without
+   it, and without any other section, label or milestone the issue check asks for. Pass the body as
+   a file, as below, so the hook can read it. `parent_issue_id` is the
    epic's `id` (not its number); leave it out for a new epic.
 
    ```bash
    epic=$(gh api repos/{owner}/{repo}/issues/<epic> -q .id)
    gh api -X POST repos/{owner}/{repo}/issues -f title='<type>: <short problem statement>' \
      -F body=@issue.md -f 'labels[]=bug' -f 'labels[]=cms' -f 'labels[]=priority: medium' \
-     -F parent_issue_id=$epic -F milestone=<number>   # milestone only if it's planned
+     -F parent_issue_id=$epic -F milestone=<number>   # parent only under an epic; Backlog until planned
    ```
 
    Exactly one type, at least one area and one priority
@@ -115,7 +164,7 @@ another one. Read the parent epic too: it says what the issue is part of.
    - stop: it waits for him
      ([waits for owner](../../../docs/process/project-management.md#waits-for-owner))
 
-   Ask him on the issue, and in the chat too when he's there. Make it easy to answer:
+   Ask him on the issue under a `### [QUESTION]` header, and in the chat too when he's there. Make it easy to answer:
 
    ```markdown
    **Question:** Should volunteers sign up with a phone number as well as an email?
@@ -131,16 +180,42 @@ another one. Read the parent epic too: it says what the issue is part of.
 
 ## 4. While working
 
-- Keep the issue current: comment when something important is decided or found, and when a
-  plan changes.
-- New work found along the way becomes a new issue (§3). Don't widen the current PR.
-- On the owner's computer, move the board's **Status** (`In progress`, `In review`) with
-  `gh project item-edit`. It needs the item, project, field and option IDs: get them from
-  `gh project item-list <project-number> --owner boulaajaj --format json`,
-  `gh project field-list <project-number> --owner boulaajaj --format json` and
-  `gh project view <project-number> --owner boulaajaj --format json -q .id`. Closing an issue or
-  merging a PR moves the item to Done on its own. In cloud sessions, leave the board to its
-  automations.
+- **Claim the issue first.** The dispatcher does this (the chief of staff, or the owner's own
+  session until #695 builds it), in order; a worker started by it only checks that the claim
+  names its branch and never claims anything itself
+  ([the record on the issue](../../../docs/process/project-management.md#the-record-on-the-issue)):
+  1. Overlap check, if anything is already In progress: list it with
+     `gh project item-list 1 --owner SprecherEast --limit 1000 --format json --jq '.items[]|select(.status=="In progress")|.content.number'`
+     (`--limit` matters: the default stops at 30 items). Read each one's **Files likely touched**
+     and compare with this issue's and with the shared hot spots. A shared file or hot spot, or a
+     blocker between them, means wait.
+  2. Check it isn't already claimed: not In progress, and no `### [STEP]` claim comment. All
+     agents use the owner's login, so the assignee can't tell them apart. An agent the chief of
+     staff started has already been handed the issue; it never picks another.
+  3. Post a `### [STEP]` comment with the branch name and assign the issue
+     (`gh issue edit <n> --add-assignee <login>`), then set **In progress** (below). Only now
+     start the first commit.
+- Post a progress comment as work happens: claimed, started, PR opened, review done, merged
+  ([triggers](../../../docs/process/grooming-playbook.md#triggers)).
+- Keep the issue current with the comment headers in the record on the issue: `[DECISION]` for
+  a choice and its reason, `[QUESTION]` for what you need answered (`needs owner` if only the
+  owner can), `[PUSHBACK]` when a request looks weaker than the standard approach, `[STEP]` as
+  the work moves.
+- New work found along the way becomes a new issue (§3) with the `scope-creep` label, linked
+  with a `[SCOPE]` comment on the original. Don't widen the current PR.
+- **Set In progress when work starts, before the first commit.** On the owner's computer, move the
+  board's **Status** (`In progress`; `In review` and Done are automatic) with `gh project item-edit`. It needs the item, project, field and option IDs: get them from
+  `gh project item-list 1 --owner SprecherEast --format json`,
+  `gh project field-list 1 --owner SprecherEast --format json` and
+  `gh project view 1 --owner SprecherEast --format json -q .id`. Closing an issue or
+  merging a PR moves the item to Done on its own. Assigning the issue moves its card to In progress
+  by itself (the planner app), so a cloud session only assigns it. If that did not happen, comment
+  which card should move, and the next session on the owner's computer moves it.
+- **Read the card after each step** (claim, pull request opened, merge), not only its column:
+  `node .github/scripts/card-history.mjs <n>` lists who changed its Status and when, and exits 1
+  when a person's login did it. The board moves by itself, so a hand move is a slip unless it is
+  the fallback above (the planner did not act) and the issue records it: otherwise say so on the
+  issue and in the report, and fix the cause, never by moving the card back by hand.
 
 ## 5. Weekly report: "what got done this week?"
 

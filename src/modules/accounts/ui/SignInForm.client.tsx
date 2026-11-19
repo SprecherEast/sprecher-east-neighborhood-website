@@ -2,12 +2,15 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { Controller } from 'react-hook-form'
 
+import { formatDuration } from '@/platform/lib'
 import { Button, Field, Form, type FormStatus, Link } from '@/platform/ui'
 
 import { signIn } from '../actions'
-import { signInSchema, type SignInValues } from '../domain/credentials'
+import { signInSchema, type SignInInput } from '../domain/credentials'
 import { ACCOUNT_PATH, FORGOT_PASSWORD_PATH, SIGN_UP_PATH } from '../domain/paths'
+import { REMEMBER_ME_LIFETIME_MS } from '../domain/sessionLifetimes'
 import type { SignInFailure } from '../domain/types'
 import { toSignInErrorMessage } from './signInErrorMessage'
 
@@ -26,7 +29,7 @@ export function SignInForm() {
     setStatus('error')
   }
 
-  const logIn = async (values: SignInValues) => {
+  const logIn = async (values: SignInInput) => {
     setStatus('submitting')
     let result: Awaited<ReturnType<typeof signIn>>
     try {
@@ -46,12 +49,12 @@ export function SignInForm() {
       <Form
         aria-label="Log in"
         schema={signInSchema}
-        defaultValues={{}} // keeps an email typed or autofilled before the page loaded
+        defaultValues={{ rememberMe: false }} // sets only the box, so an email typed or autofilled before the page loaded stays
         onSubmit={logIn}
         status={status}
         errorMessage={errorMessage}
       >
-        {({ register, formState: { errors } }) => (
+        {({ control, register, formState: { errors } }) => (
           <>
             <Field label="Email" required error={errors.email?.message}>
               <Field.Input
@@ -73,6 +76,22 @@ export function SignInForm() {
                 Forgot your password?
               </Link>
             </div>
+            {/* Unticked: a shared computer stays safe unless the person chooses otherwise (#587) */}
+            <Controller
+              control={control}
+              name="rememberMe"
+              render={({ field }) => (
+                <Field label={`Keep me signed in for ${formatDuration(REMEMBER_ME_LIFETIME_MS)}`}>
+                  <Field.Checkbox
+                    name={field.name}
+                    checked={field.value === true}
+                    onCheckedChange={field.onChange}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                  />
+                </Field>
+              )}
+            />
             <div>
               <Button type="submit" loading={status === 'submitting'} fullWidth>
                 {status === 'submitting' ? 'Logging in' : 'Log In'}

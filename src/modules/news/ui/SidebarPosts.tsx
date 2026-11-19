@@ -2,6 +2,7 @@ import Link from 'next/link'
 import React from 'react'
 
 import { Media } from '@/platform/ui/Media'
+import { Text } from '@/platform/ui/Text'
 
 import type { PostSummary } from '../domain/types'
 
@@ -14,9 +15,9 @@ export const SidebarPosts: React.FC<{
 
   return (
     <div>
-      <h3 className="mb-4 text-sm font-semibold tracking-wider text-muted-foreground uppercase">
+      <Text variant="label" as="h3" className="mb-4">
         {title}
-      </h3>
+      </Text>
       <ul className="space-y-4">
         {posts.map((post) => (
           <li key={post.slug}>

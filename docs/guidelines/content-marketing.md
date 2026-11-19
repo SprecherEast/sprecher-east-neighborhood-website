@@ -1,21 +1,21 @@
 # Content Marketing & Community Research
 
-Operational instructions for the A-Content (Content & Voice) and B-Research (Research & Quality) agents. Source: `Marketing-Community-Engagement-Strategy.md` in the strategy repo.
+Operational instructions for the A-Content (Content & Voice) and B-Research (Research & Quality) agents. It lives here now; the archived strategy repo is only history.
 
 ## Weekly Blog Post Workflow
 
 The Content Agent produces at least one blog post per week (additional posts on demand as news warrants) following this cadence:
 
-| Day          | Phase                | Activities                                                                                                                        |
-| ------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Monday AM    | Source Review        | Review RSS feeds (Fri-Sun backlog), scan social media, identify 2-3 lead stories + 3-4 supporting insights, document source URLs  |
-| Monday PM    | Story Development    | Answer "why does this matter to Sprecher East?", research background, outline post structure                                      |
-| Tuesday AM   | Draft                | Write 250-450 word post. Structure: **Hook** > **Context** > **Sprecher East Angle** > **Action**. Include 2-3 source links + CTA |
-| Tuesday PM   | Review               | Self-edit for clarity, tone, accuracy. Fact-check all links and quotes. Refine headline                                           |
-| Wednesday AM | Stakeholder Review   | Share draft with 1-2 board members for feedback (if time permits)                                                                 |
-| Wednesday PM | Publish & Cross-Post | Publish via CMS, create platform-specific social versions, tag relevant accounts                                                  |
-| Thursday     | Engagement           | Respond to comments/replies, share to email list, note engagement metrics, begin next week's research                             |
-| Friday       | Metrics & Planning   | Document weekly metrics, identify what resonated, preliminary research for next post                                              |
+| Day          | Phase                | Activities                                                                                                                                                                       |
+| ------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Monday AM    | Source Review        | Review RSS feeds (Fri-Sun backlog), scan social media, identify 2-3 lead stories + 3-4 supporting insights, document source URLs                                                 |
+| Monday PM    | Story Development    | Answer "why does this matter to Sprecher East?", research background, outline post structure                                                                                     |
+| Tuesday AM   | Draft                | Write a post within the length limits in [brand voice](brand-voice.md). Structure: **Hook** > **Context** > **Sprecher East Angle** > **Action**. Include 2-3 source links + CTA |
+| Tuesday PM   | Review               | Self-edit for clarity, tone, accuracy. Fact-check all links and quotes. Refine headline                                                                                          |
+| Wednesday AM | Stakeholder Review   | Share draft with 1-2 board members for feedback (if time permits)                                                                                                                |
+| Wednesday PM | Publish & Cross-Post | Publish via CMS, create platform-specific social versions, tag relevant accounts                                                                                                 |
+| Thursday     | Engagement           | Respond to comments/replies, share to email list, note engagement metrics, begin next week's research                                                                            |
+| Friday       | Metrics & Planning   | Document weekly metrics, identify what resonated, preliminary research for next post                                                                                             |
 
 ## Blog Post Structure
 
@@ -28,7 +28,7 @@ Every post follows this template:
 
 Requirements:
 
-- 250-450 words, conversational and accessible tone
+- Within the length limits in [brand voice](brand-voice.md), conversational and accessible tone
 - 2-3 embedded links to official sources or previous posts
 - Every post ends with a call-to-action
 - Optional: photo, neighborhood map, or graphic
@@ -46,11 +46,11 @@ Repeat monthly with new stories per theme. Adjust seasonally (winter safety, spr
 
 ## Content Tone & Voice
 
-- **Tone:** Informative, optimistic, community-focused, accessible
-- **Audience:** Sprecher East residents of all ages and backgrounds
-- **Avoid:** Partisan politics, sensationalism, negativity without solutions, jargon
-- **Embrace:** Local pride, practical information, calls to action, celebration of wins
-- **Brand:** Always "Sprecher East" — never abbreviations. For AI transparency and disclosure requirements, follow the canonical guidance in [`components-and-content.md`](components-and-content.md).
+Voice, tone, reading level, length limits and neutrality are in the
+[brand voice guideline](brand-voice.md). Nothing here overrides it.
+
+- **Audience:** Sprecher East neighbors of all ages and backgrounds
+- **Brand:** Always "Sprecher East", never abbreviations. For AI transparency and disclosure requirements, follow the canonical guidance in [`components-and-content.md`](components-and-content.md).
 
 ## RSS Feeds — Research Agent Monitoring List
 
@@ -63,7 +63,7 @@ These feeds are checked by the B-Research agent during Monday source review:
 | 3   | Channel 3000 (WISC-TV)   | `https://www.channel3000.com/rss`             | Breaking news, public safety, weather              | As needed |
 | 4   | Spectrum News WI         | `https://spectrumnews1.com/wi/madison/rss`    | Local events, government announcements             | 3x/week   |
 | 5   | Dane County Gov          | `https://www.danecounty.gov/press`            | County infrastructure, health, regional            | Bi-weekly |
-| 6   | City of Madison Planning | `https://www.cityofmadison.com/dpced`         | Neighborhood plans, permits, District 17           | Bi-weekly |
+| 6   | City of Madison Planning | `https://www.cityofmadison.com/dpced`         | Neighborhood plans, permits, District 16           | Bi-weekly |
 | 7   | Madison365               | `https://madison365.com`                      | Community events, cultural happenings              | Weekly    |
 
 ## Social Media Monitoring Schedule
@@ -74,18 +74,18 @@ These feeds are checked by the B-Research agent during Monday source review:
 | Sprecher East NA page      | Facebook  | `facebook.com/SprecherEast`                                            | Daily           |
 | City of Madison            | Twitter/X | `@cityofmadison`                                                       | Daily           |
 | Madison.com                | Twitter/X | `@madison_dot_com`                                                     | Daily           |
-| District 17 Alder          | Facebook  | Search current District 17 alderperson's official page                 | 3x/week         |
+| District 16 Alder          | Web       | `https://www.cityofmadison.com/council/district16`                     | 3x/week         |
 | Madison Police             | Twitter/X | `@madisonpolice`                                                       | 3x/week         |
 | East Towne Business Groups | Facebook  | Search East Towne Business Association or similar                      | 1x/week         |
 
 ## Government Channel Monitoring
 
-| Source                        | URL                                           | Focus                                         | Frequency                    |
-| ----------------------------- | --------------------------------------------- | --------------------------------------------- | ---------------------------- |
-| City Council Agenda & Minutes | `https://www.cityofmadison.com/clerk`         | Upcoming votes, neighborhood proposals        | Every Tuesday + post-meeting |
-| City Neighborhood Directory   | `https://www.cityofmadison.com/neighborhoods` | Liaison updates, city initiatives             | Bi-weekly                    |
-| Dane County Board             | `https://www.danecounty.gov` (Board agendas)  | Regional infrastructure, county initiatives   | Bi-weekly                    |
-| Madison Schools               | `https://www.madison.k12.wi.us`               | Kennedy Elementary, O'Keefe Middle, East High | Weekly                       |
+| Source                        | URL                                           | Focus                                                                                                     | Frequency                    |
+| ----------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| City Council Agenda & Minutes | `https://www.cityofmadison.com/clerk`         | Upcoming votes, neighborhood proposals                                                                    | Every Tuesday + post-meeting |
+| City Neighborhood Directory   | `https://www.cityofmadison.com/neighborhoods` | Liaison updates, city initiatives                                                                         | Bi-weekly                    |
+| Dane County Board             | `https://www.danecounty.gov` (Board agendas)  | Regional infrastructure, county initiatives                                                               | Bi-weekly                    |
+| Madison Schools               | `https://www.madison.k12.wi.us`               | Schools by address: MMSD Find Your School (`https://webapp1.madison.k12.wi.us/webapp1/find_your_school/`) | Weekly                       |
 
 ## Success Metrics (PostHog — when configured)
 
@@ -105,6 +105,24 @@ Track these metrics to measure content effectiveness:
 - Aggregate across 12 weeks, identify top themes, adjust calendar, assess impact on neighborhood initiatives
 
 **12-week targets:** 150 unique visitors/post, 10-15 social shares+comments/post, 50% forum member increase from baseline.
+
+## Sources: every factual claim must be checkable
+
+Every factual claim on the site can be traced to a source a neighbor can open. This applies to every
+agent and person who writes content.
+
+| Needs a source                                       | Doesn't need one                     |
+| ---------------------------------------------------- | ------------------------------------ |
+| Boundaries, districts, schools, park sizes           | A welcome or a thank-you             |
+| Dates, times, votes, costs, any statistic            | Our own policies (free, no sign-up)  |
+| Any official designation or what a city body decided | Opinions clearly labeled as opinions |
+
+- Prefer the official page (City of Madison, WisDOT, Dane County) over a news story about it.
+- A longer piece links its sources in the text or ends with a short "Sources" list, and says when
+  it was last checked.
+- If a claim can't be sourced, leave it out or label it as unverified. Never publish a guess.
+- The independent reviewer checks sources before anything goes live
+  ([`pr-review`](../../.agents/skills/pr-review/SKILL.md) for code; the editor's own check for content).
 
 ## Agent Coordination
 

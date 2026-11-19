@@ -11,13 +11,26 @@ budgets:
   maxUsdPerMonth: 15
   maxMinutesPerRun: 15
   maxItemsPerSource: 50
-  maxModelItemsPerRun: 40
+  # Sampling while the sources are new (#390): a few items per run, taken in turns by source
+  maxModelItemsPerRun: 6
   maxDraftsPerRun: 10
 # Verify reruns at high effort when its confidence is below this; still below, the item goes to
 # review (README.md, "The pipeline").
 escalation:
   verifyBelowConfidence: 0.6
   to: high
+# Code-level guard on promotion (#870): whatever curate returns, an `accept` goes to the
+# `needs-review` route when verify's confidence is below `escalation.verifyBelowConfidence`
+# (after the rerun) or verify's flags include one of these. README.md, "The pipeline".
+promotionGuard:
+  blockingFlags:
+    - ambiguous-location
+    - missing-location
+    - missing-date
+    - needs-date
+    - wrong-offset
+    - conflicting-sources
+    - prompt-injection
 # The MCP tool the submit stage calls for each curate decision (prompts/submit.md).
 routes:
   accept: submitSuggestion
@@ -28,6 +41,8 @@ routes:
   duplicate: none
 sources: sources.yaml
 coverage: coverage.md
+# The words code uses to spot the area in an item's text (#390).
+area: area.yaml
 stages:
   - id: scout
     prompt: prompts/scout.md

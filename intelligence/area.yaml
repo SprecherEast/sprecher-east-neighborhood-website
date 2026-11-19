@@ -1,0 +1,55 @@
+# The words code uses to tell that an item is about the area (#390). One list for every rule that
+# matches text; coverage.md says what the area is, and the model stages get this file with it.
+# Lowercase. Each word or phrase matches whole words only ("pinney" doesn't match "pinneyville").
+# Change it only through a PR.
+version: 1
+# In or bounding the area (coverage.md, "The area" and "Tiers").
+places:
+  - sprecher
+  - door creek
+  - cottage grove road
+  - cottage grove rd
+  - district 16
+  - pinney
+  - elvehjem
+  - blooming grove
+  - reston heights
+  - owl creek
+# The immediately neighboring associations, from the City's Neighborhood Associations map layer
+# (official). Measured on 2026-10-25 with the layer's own query, buffering Sprecher East's polygon
+# (NA_ID 146): North Star touches it (within 50 m); Richmond Hill Homeowners is within 500 m.
+# Nothing else is within 800 m; at 1 km only High Crossing, which the layer marks inactive. Their major
+# events and public matters are catchment (coverage.md).
+neighbors:
+  source: https://maps.cityofmadison.com/arcgis/rest/services/Public/OPEN_DATA/MapServer/12
+  checked: '2026-10-25'
+  names:
+    - north star
+    - richmond hill
+# The City's own boundary for the neighborhood, used by verify to test an item's place (prompts/verify.md,
+# pass 2). Observed 2026-11-10 and to be re-verified: the layer is the City's Neighborhood
+# Associations layer above, and Sprecher East is the feature whose NA_ID is 146. Query the layer's
+# `query` operation with that NA_ID as the where clause and geometry returned, then test the
+# item's point or address against the polygon. No coordinates are kept here.
+boundary:
+  source: https://maps.cityofmadison.com/arcgis/rest/services/Public/OPEN_DATA/MapServer/12
+  naId: 146
+  checked: '2026-11-10'
+  verified: false
+# A highway alone names half the city. It counts only when the same item also names one of `with`:
+# an interchange or a cross street at the area's edge.
+highways:
+  - names:
+      [
+        i-94,
+        i 94,
+        i94,
+        interstate 94,
+        interstate highway 94,
+        i-90/94,
+        i-39/90/94,
+        highway 94,
+        hwy 94,
+      ]
+    # sprecher road is already a place word
+    with: [interchange, milwaukee street, milwaukee st]

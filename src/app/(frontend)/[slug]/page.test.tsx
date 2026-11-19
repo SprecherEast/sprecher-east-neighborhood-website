@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // The site module is replaced: this tests the page's wiring, not the module
@@ -9,6 +9,7 @@ const site = vi.hoisted(() => ({
   redirects: vi.fn(),
   hero: vi.fn(),
   blocks: vi.fn(),
+  backdrop: vi.fn(),
 }))
 vi.mock('next/headers', () => ({ draftMode: async () => ({ isEnabled: false }) }))
 vi.mock('@/modules/site/server', () => ({
@@ -18,18 +19,24 @@ vi.mock('@/modules/site/server', () => ({
     site.redirects(props)
     return null
   },
-  RenderHero: (props: unknown) => {
+  PageHero: (props: unknown) => {
     site.hero(props)
     return null
   },
+  toSiteHero: (hero: { type: string }) => ({ mapped: hero.type }),
   RenderBlocks: (props: unknown) => {
     site.blocks(props)
-    return null
+    return <div data-testid="blocks" />
+  },
+}))
+// The backdrop is tested on its own (PageBackdrop.test.tsx): here, what the page hands it
+vi.mock('@/platform/ui/PageBackdrop', () => ({
+  PageBackdrop: ({ image, children }: { image: unknown; children: React.ReactNode }) => {
+    site.backdrop(image)
+    return <>{children}</>
   },
 }))
 vi.mock('./pageBlocks', () => ({ pageBlocks: { marker: 'the block registry' } }))
-vi.mock('./page.client', () => ({ default: () => null }))
-
 import { homeStatic } from '@/endpoints/seed/home-static'
 
 import Page, { generateStaticParams } from './page'
@@ -41,7 +48,7 @@ const params = (slug?: string) => ({ params: Promise.resolve(slug ? { slug } : {
 
 describe('/[slug]', () => {
   it('draws the page’s hero, then its blocks with the block registry', async () => {
-    const hero = { type: 'lowImpact' }
+    const hero = { variant: 'low', body: { root: {} } }
     const layout = [{ blockType: 'content', id: 'b1' }]
     site.getPageBySlug.mockResolvedValue({ slug: 'about', hero, layout })
 
@@ -62,6 +69,8 @@ describe('/[slug]', () => {
     render(await Page(params()))
 
     expect(site.getPageBySlug).toHaveBeenCalledWith('home')
+    // Its stored hero goes through site's mapper, as a stored page's does
+    expect(site.hero).toHaveBeenCalledWith({ mapped: homeStatic.hero.type })
     expect(site.blocks).toHaveBeenCalledWith(expect.objectContaining({ blocks: homeStatic.layout }))
   })
 
@@ -72,6 +81,52 @@ describe('/[slug]', () => {
 
     expect(site.redirects).toHaveBeenCalledExactlyOnceWith({ url: '/gone' })
     expect(site.blocks).not.toHaveBeenCalled()
+  })
+
+  // #777: the page's stored photo reaches the component that draws it behind the hero and blocks
+  it('hands the page’s backdrop photo to the backdrop, and its content is drawn inside', async () => {
+    const backdrop = { url: '/api/media/file/dusk.jpg', alt: 'Dusk', width: 1920, height: 983 }
+    site.getPageBySlug.mockResolvedValue({
+      slug: 'get-involved',
+      hero: { variant: 'low', body: { root: {} } },
+      layout: [],
+      backdrop,
+    })
+
+    render(await Page(params('get-involved')))
+
+    expect(site.backdrop).toHaveBeenCalledExactlyOnceWith(backdrop)
+    expect(site.hero).toHaveBeenCalled()
+    expect(site.blocks).toHaveBeenCalled()
+  })
+
+  it('hands the backdrop none when the page has no photo, as the starter home page does', async () => {
+    site.getPageBySlug.mockResolvedValue({ slug: 'about', hero: null, layout: [], backdrop: null })
+    render(await Page(params('about')))
+    expect(site.backdrop).toHaveBeenLastCalledWith(null)
+
+    site.getPageBySlug.mockResolvedValue(null)
+    render(await Page(params()))
+    expect(site.backdrop).toHaveBeenLastCalledWith(null)
+  })
+
+  // #1304: the home hero's photo runs on under the first section and fades; the sections sit above it
+  it('draws the blocks above the hero, whose photo runs on under the first of them', async () => {
+    site.getPageBySlug.mockResolvedValue({ slug: 'home', hero: null, layout: [] })
+
+    render(await Page(params()))
+
+    const wrapper = screen.getByTestId('blocks').parentElement
+    expect(wrapper?.className).toContain('relative')
+    expect(wrapper?.className).toContain('z-10')
+  })
+
+  it('draws no hero when the page has none', async () => {
+    site.getPageBySlug.mockResolvedValue({ slug: 'about', hero: null, layout: [] })
+
+    render(await Page(params('about')))
+
+    expect(site.hero).not.toHaveBeenCalled()
   })
 })
 

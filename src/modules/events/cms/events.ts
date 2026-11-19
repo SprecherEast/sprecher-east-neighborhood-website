@@ -1,29 +1,20 @@
 import { slugField, type CollectionConfig } from 'payload'
-import {
-  FixedToolbarFeature,
-  HeadingFeature,
-  HorizontalRuleFeature,
-  InlineToolbarFeature,
-  lexicalEditor,
-} from '@payloadcms/richtext-lexical'
-import {
-  MetaDescriptionField,
-  MetaImageField,
-  MetaTitleField,
-  OverviewField,
-  PreviewField,
-} from '@payloadcms/plugin-seo/fields'
+import { draftVersions, previewAdmin, titleField } from '@/platform/payload/contentCollection'
+import { BODY_HEADINGS, articleEditor } from '@/platform/payload/headingsEditor'
 
 import { suggestibleContentAccess } from '@/platform/payload/draftContentAccess'
-import { generatePreviewPath } from '@/platform/payload/generatePreviewPath'
+import { EVENT_RICH_TEXT_BLOCKS } from '@/platform/richtext/blockConfigs'
 import { populatePublishedAt } from '@/platform/payload/populatePublishedAt'
 import {
   holdSuggestions,
   REVIEW_QUEUE_FIELDS,
   SUGGESTIONS_FILTER,
 } from '@/platform/payload/reviewQueue'
+import { bandBackdropField } from '@/platform/payload/bandBackdrop'
+import { seoTab } from '@/platform/payload/seoTab'
 
 import { EVENT_LOCATION_TYPES } from '../domain/locationTypes'
+import { officialMeetingFields } from './officialMeetingFields'
 import { revalidateDelete, revalidateEvent } from './revalidateEvent'
 
 export const Events: CollectionConfig<'events'> = {
@@ -38,6 +29,7 @@ export const Events: CollectionConfig<'events'> = {
     categories: true,
     description: true,
     locationName: true,
+    locationType: true,
     heroImage: true,
     meta: {
       title: true,
@@ -48,23 +40,11 @@ export const Events: CollectionConfig<'events'> = {
     components: { beforeListTable: [SUGGESTIONS_FILTER] },
     defaultColumns: ['title', 'date', 'categories', '_status', 'moderationStatus', 'updatedAt'],
     // The real event page from the draft, with its card on top, as for posts (#363)
-    livePreview: {
-      url: ({ data, req }) => generatePreviewPath({ slug: data?.slug, collection: 'events', req }),
-    },
-    preview: (data, { req }) =>
-      generatePreviewPath({
-        slug: typeof data?.slug === 'string' ? data.slug : undefined,
-        collection: 'events',
-        req,
-      }),
+    ...previewAdmin('events'),
     useAsTitle: 'title',
   },
   fields: [
-    {
-      name: 'title',
-      type: 'text',
-      required: true,
-    },
+    titleField(),
     {
       type: 'tabs',
       tabs: [
@@ -101,6 +81,7 @@ export const Events: CollectionConfig<'events'> = {
               defaultValue: false,
               admin: { description: 'A cancelled event stays listed and is marked as cancelled.' },
             },
+            officialMeetingFields,
             {
               name: 'featured',
               type: 'checkbox',
@@ -147,6 +128,7 @@ export const Events: CollectionConfig<'events'> = {
               type: 'upload',
               relationTo: 'media',
             },
+            bandBackdropField(),
           ],
         },
         {
@@ -160,44 +142,12 @@ export const Events: CollectionConfig<'events'> = {
             {
               name: 'content',
               type: 'richText',
-              editor: lexicalEditor({
-                features: ({ rootFeatures }) => {
-                  return [
-                    ...rootFeatures,
-                    HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4'] }),
-                    FixedToolbarFeature(),
-                    InlineToolbarFeature(),
-                    HorizontalRuleFeature(),
-                  ]
-                },
-              }),
+              editor: articleEditor(EVENT_RICH_TEXT_BLOCKS, BODY_HEADINGS),
               label: 'Full Event Description',
             },
           ],
         },
-        {
-          name: 'meta',
-          label: 'SEO',
-          fields: [
-            OverviewField({
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-              imagePath: 'meta.image',
-            }),
-            MetaTitleField({
-              hasGenerateFn: true,
-            }),
-            MetaImageField({
-              relationTo: 'media',
-            }),
-            MetaDescriptionField({}),
-            PreviewField({
-              hasGenerateFn: true,
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-            }),
-          ],
-        },
+        seoTab(),
       ],
     },
     {
@@ -224,11 +174,5 @@ export const Events: CollectionConfig<'events'> = {
     beforeChange: [holdSuggestions, populatePublishedAt],
     afterDelete: [revalidateDelete],
   },
-  versions: {
-    drafts: {
-      autosave: { interval: 100 },
-      schedulePublish: true,
-    },
-    maxPerDoc: 25,
-  },
+  versions: draftVersions(25),
 }

@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { useConfirmedEmail } from '@/platform/ui/ConfirmedEmail.client'
 import { Button, Link } from '@/platform/ui'
+import { Card } from '@/platform/ui/Card'
 
 import { SIGN_UP_PATH } from '../domain/paths'
 import { toSignUpHref } from '../domain/signUpLink'
@@ -37,9 +38,11 @@ export function AccountOffer() {
   }
 
   return (
-    <section
+    <Card
+      as="section"
+      variant="outline"
       aria-labelledby="account-offer-title"
-      className="space-y-4 rounded-2xl border border-border bg-background p-6"
+      className="space-y-4"
     >
       <h2 id="account-offer-title" className="text-xl font-bold text-foreground">
         Create a free Sprecher East account?
@@ -61,6 +64,6 @@ export function AccountOffer() {
           No, Thanks
         </Button>
       </div>
-    </section>
+    </Card>
   )
 }

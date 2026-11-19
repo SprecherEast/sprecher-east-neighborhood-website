@@ -62,10 +62,10 @@ describe('requireRole', () => {
     await expect(requireRole('admin')).rejects.toThrow('not-found')
   })
 
-  it('counts an account without a role as a resident', async () => {
+  it('counts an account without a role as a guest', async () => {
     edges.auth.mockResolvedValue(signedIn(null))
     await expect(requireRole('admin', 'editor')).rejects.toThrow('not-found')
-    expect((await requireRole('resident')).role).toBe('resident')
+    expect((await requireRole('guest')).role).toBe('guest')
   })
 
   it('sends a visitor to the sign-in page first', async () => {

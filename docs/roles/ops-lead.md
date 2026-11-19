@@ -59,7 +59,7 @@ All environment variables are listed in [`docs/project.md`](../project.md).
 
 ### Task Management
 
-- GitHub issues are the source of truth for work. Asana (workspace "Meadowlands Together", project "Sprecher East — Master Board") is legacy
+- GitHub issues are the source of truth for work
 - Tasks created with clear descriptions, acceptance criteria, and assigned agent
 - Status updates in Slack: #sprecher-east-na channel
 
