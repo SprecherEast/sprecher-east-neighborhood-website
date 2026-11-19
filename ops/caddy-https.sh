@@ -34,7 +34,7 @@ trap 'on_unexpected_error $LINENO' ERR
 APP_PORT="${APP_PORT:-3000}" # the app's port behind Caddy (ecosystem.config.cjs)
 SOURCE="$CODE_DIR/ops/caddy/hsts.caddy"
 IMPORT_LINE="import $HSTS_FILE"
-LIMITS_IMPORT_LINE="import ${LIMITS_FILE:-/etc/caddy/sprecher-east-form-limits.caddy}" # caddy-limits.sh's own line
+LIMITS_IMPORT_LINE="import $LIMITS_FILE" # caddy-limits.sh's own line
 
 url=$(site_url)
 host="${url#https://}"

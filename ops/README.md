@@ -16,9 +16,10 @@ on the VPS. Nothing here is run by hand during a normal deploy. Changes to the s
 | `restart-app.sh`    | VPS    | Reloads the app under PM2; starts it fresh, with a way back, when its start settings change. Listens on `127.0.0.1:3000` only. Deletes old sitemap files                      | #118, #267 |
 | `caddy-limits.sh`   | VPS    | Caps request bodies on the public form endpoints and `/api/mcp` at Caddy (`caddy/form-limits.caddy`)                                                                          | #124       |
 | `caddy-https.sh`    | VPS    | Sends HSTS on the domain (`caddy/hsts.caddy`), and adds a redirect to HTTPS in the plain-HTTP site blocks                                                                     | #235       |
+| `caddy-previews.sh` | VPS    | Adds one `import` line for the folder of pull request preview site blocks, and installs the preview headers (`caddy/preview-headers.caddy`); see [`previews.md`](previews.md) | #1072      |
 | `install-umami.sh`  | VPS    | Installs and updates Umami analytics in Docker, replaces its default admin password, then opens its own address (helpers: `umami-lib.sh`, `umami-caddy.sh`, `umami-admin.sh`) | #948       |
 | `backup-umami.sh`   | VPS    | Dumps Umami's Postgres database; run after the daily backup and before an Umami update                                                                                        | #948       |
-| `lib.sh`            | VPS    | Shared helpers: annotations, reading non-secret settings, checking the site through Caddy, the `current` link                                                                 |            |
+| `lib.sh`            | VPS    | Shared helpers: annotations, reading non-secret settings, checking the site through Caddy, the `current` link, and the Caddy import check, reload check and rollback          |            |
 
 The scripts print `::notice` and `::warning` lines, which appear as annotations on the deploy run
 whether it succeeds or fails, so the result can be read without opening the logs. The deploy log
@@ -81,7 +82,7 @@ or by an agent, within the limits in [`wrapped`](../.agents/skills/wrapped/SKILL
    - switches `current` to the release in one step and reloads PM2 (`restart-app.sh`)
    - checks the home page answers 200 through Caddy and `/api/version` reports the new build; if
      not, switches `current` back and reloads
-   - then installs the backup job, applies the Caddy limits and HTTPS settings, installs or
+   - then installs the backup job, applies the Caddy limits, HTTPS settings and the preview import, installs or
      updates Umami (below), and keeps the newest 3 releases
      (a release that failed is the first to go)
 

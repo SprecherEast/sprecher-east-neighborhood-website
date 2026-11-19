@@ -21,6 +21,15 @@ CADDYFILE="${CADDYFILE:-/etc/caddy/Caddyfile}"
 HSTS_FILE="${HSTS_FILE:-/etc/caddy/sprecher-east-hsts.caddy}" # a copy of ops/caddy/hsts.caddy (caddy-https.sh)
 # shellcheck disable=SC2034
 RELOAD_CADDY="${RELOAD_CADDY:-systemctl reload caddy}"
+# The request body limit file caddy-limits.sh installs; the preview site block imports it too (#959).
+# shellcheck disable=SC2034
+LIMITS_FILE="${LIMITS_FILE:-/etc/caddy/sprecher-east-form-limits.caddy}"
+# Pull request previews (#1072): the folder of per-preview site blocks the Caddyfile imports, and
+# the copy of ops/caddy/preview-headers.caddy those blocks import.
+# shellcheck disable=SC2034
+PREVIEW_CADDY_DIR="${PREVIEW_CADDY_DIR:-/etc/caddy/previews}"
+# shellcheck disable=SC2034
+PREVIEW_HEADERS_FILE="${PREVIEW_HEADERS_FILE:-/etc/caddy/sprecher-east-preview-headers.caddy}"
 
 # report "message" → notice; "WARNING: …" → warning; "ERROR: …" → error.
 report() {
@@ -162,6 +171,70 @@ drop_page_cache() { # <release dir>
   find "$app" -type f \( -name '*.html' -o -name '*.rsc' -o -name '*.meta' -o -name '*.body' \) -delete
   find "$app" -type d -name '*.segments' -prune -exec rm -rf {} +
   rm -rf "$1/.next/cache"
+}
+
+# Reloads Caddy, then gives the site time to answer. Prints what went wrong (nothing when all is
+# well), for the caller to roll back and report.
+caddy_reload_problem() { # <what the config now has> [seconds the site gets to answer, default 20]
+  if ! $RELOAD_CADDY >/dev/null 2>&1; then
+    echo "Caddy would not reload with $1"
+  elif ! wait_until_up "${2:-20}"; then
+    echo "the site stopped answering after adding $1"
+  fi
+}
+
+# True when the Caddyfile has an `import <target>` line, however it was indented, spaced or
+# commented by hand.
+caddy_import_present() { # <the path or glob that is imported>
+  awk -v want="$1" '{ sub(/#.*/, "") } $1 == "import" && $2 == want && NF == 2 { found = 1 } END { exit !found }' "$CADDYFILE" 2>/dev/null
+}
+
+# The Caddyfile plus one top-level import line (and its comment), to validate before it replaces the
+# Caddyfile. Prints it; the caller sends it to a file.
+caddy_with_import() { # <comment> <import line>
+  cat "$CADDYFILE" && printf '\n# %s\n%s\n' "$1" "$2"
+}
+
+# Installs a Caddy file the repo manages, keeping the previous copy for a rollback. Sets
+# $CADDY_FILE_BACKUP to that copy's path (empty when there was none).
+caddy_install_file() { # <source> <target>
+  CADDY_FILE_BACKUP=""
+  if [ -f "$2" ]; then
+    CADDY_FILE_BACKUP=$(mktemp "$2.previous-XXXXXX")
+    cp -p "$2" "$CADDY_FILE_BACKUP"
+  fi
+  install -m 644 "$1" "$2"
+}
+
+# Puts the previous copy back, or removes the file when there was none.
+caddy_restore_file() { # <target> <previous copy, or empty>
+  if [ -n "$2" ]; then cp -p "$2" "$1" && rm -f "$2"; else rm -f "$1"; fi
+}
+
+# After Caddy rejected a change: puts the managed file back and reports it.
+caddy_report_rejected() { # <what was rejected> <the file's name in the message> <target> <previous copy, or empty>
+  if caddy_restore_file "$3" "$4"; then
+    report "ERROR: Caddy rejected $1; nothing was changed"
+  else
+    report "ERROR: Caddy rejected $1, and the previous $2 could not be put back (copy: $4)"
+  fi
+}
+
+# Puts a Caddy change back: the Caddyfile from its backup (when one is given), the caller's own
+# files, then a reload. Prints what could not be put back, and returns 1, if anything.
+caddy_roll_back() { # <Caddyfile backup, or empty> <function that restores the caller's files: on failure it prints what it could not and returns 1>
+  local failed="" own
+  # cp reads the backup before it truncates the Caddyfile, so an unreadable backup can't empty it.
+  if [ -n "$1" ] && ! cp "$1" "$CADDYFILE"; then failed="the Caddyfile (backup: $1)"; fi
+  if ! own=$("$2"); then failed="${failed:+$failed and }$own"; fi
+  if [ -n "$failed" ]; then
+    echo "Could not put back $failed."
+    return 1
+  fi
+  if ! $RELOAD_CADDY >/dev/null 2>&1; then
+    echo "The previous files are back, but Caddy would not reload them."
+    return 1
+  fi
 }
 
 # Never print Caddy's own output: the Caddyfile could hold credentials and the deploy log is public.

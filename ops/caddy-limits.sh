@@ -22,7 +22,6 @@ on_unexpected_error() {
 }
 trap 'on_unexpected_error $LINENO' ERR
 
-LIMITS_FILE="${LIMITS_FILE:-/etc/caddy/sprecher-east-form-limits.caddy}"
 APP_PORT="${APP_PORT:-3000}"
 SOURCE="$CODE_DIR/ops/caddy/form-limits.caddy"
 IMPORT_LINE="import $LIMITS_FILE"
@@ -130,26 +129,12 @@ if [ "$added" -eq 0 ] && [ "$limits_changed" = no ]; then
   report "Caddy request body limit already in place: $limit_text"
 else
   # Install the limits file so the candidate can be validated, keeping the old one to put back.
-  if [ -f "$LIMITS_FILE" ]; then
-    limits_backup=$(mktemp "$LIMITS_FILE.previous-XXXXXX")
-    cp -p "$LIMITS_FILE" "$limits_backup"
-  fi
-  install -m 644 "$SOURCE" "$LIMITS_FILE"
-
-  restore_limits() {
-    if [ -n "$limits_backup" ]; then
-      cp -p "$limits_backup" "$LIMITS_FILE" && rm -f "$limits_backup"
-    else
-      rm -f "$LIMITS_FILE"
-    fi
-  }
+  caddy_install_file "$SOURCE" "$LIMITS_FILE"
+  limits_backup="$CADDY_FILE_BACKUP"
+  restore_limits() { caddy_restore_file "$LIMITS_FILE" "$limits_backup"; }
 
   if ! caddy_accepts "$candidate"; then
-    if restore_limits; then
-      report "ERROR: Caddy rejected the request body limit; nothing was changed"
-    else
-      report "ERROR: Caddy rejected the request body limit, and the previous limit could not be put back (copy: $limits_backup)"
-    fi
+    caddy_report_rejected "the request body limit" "limit" "$LIMITS_FILE" "$limits_backup"
     exit 1
   fi
 
@@ -161,30 +146,11 @@ else
     cp "$candidate" "$CADDYFILE" # cp onto the existing file keeps its owner and mode
   fi
 
+  restore_limits_say() { restore_limits || { echo "the limit (copy: $limits_backup)" && return 1; }; }
   # Puts the previous Caddyfile and limit back and reloads. On failure, prints what went wrong.
-  restore_all() {
-    local failed=""
-    # cp reads the backup before it truncates the Caddyfile, so an unreadable backup can't empty it.
-    if [ "$added" -gt 0 ] && ! cp "$CADDYFILE.bak-$stamp" "$CADDYFILE"; then
-      failed="the Caddyfile (backup: $CADDYFILE.bak-$stamp)"
-    fi
-    if ! restore_limits; then failed="${failed:+$failed and }the limit (copy: $limits_backup)"; fi
-    if [ -n "$failed" ]; then
-      echo "Could not put back $failed."
-      return 1
-    fi
-    if ! $RELOAD_CADDY >/dev/null 2>&1; then
-      echo "The previous files are back, but Caddy would not reload them."
-      return 1
-    fi
-  }
+  restore_all() { caddy_roll_back "$([ "$added" -gt 0 ] && echo "$CADDYFILE.bak-$stamp" || true)" restore_limits_say; }
 
-  problem=""
-  if ! $RELOAD_CADDY >/dev/null 2>&1; then
-    problem="Caddy would not reload with the request body limit"
-  elif ! wait_until_up 20; then
-    problem="the site stopped answering after adding the request body limit"
-  fi
+  problem=$(caddy_reload_problem "the request body limit")
   if [ -n "$problem" ]; then
     if detail=$(restore_all); then
       report "ERROR: $problem; the previous Caddy config is back"

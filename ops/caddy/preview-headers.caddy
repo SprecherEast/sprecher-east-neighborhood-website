@@ -1,0 +1,12 @@
+# Managed by the website repo (ops/caddy/preview-headers.caddy, #1072). ops/caddy-previews.sh copies
+# it to /etc/caddy/sprecher-east-preview-headers.caddy, and each pull request preview's site block
+# (ops/caddy/preview-site.caddy) imports it. Change it in the repo, not on the server.
+#
+# A pull request preview must never reach a search index, whatever the pull request's code does.
+# So the header is set (deferred, so it wins over any value the app sends), and /robots.txt is
+# answered, by Caddy itself. There is no Strict-Transport-Security here on purpose: previews must
+# not inherit production's HTTPS-only rule.
+header >X-Robots-Tag "noindex, nofollow"
+respond /robots.txt `User-agent: *
+Disallow: /
+` 200

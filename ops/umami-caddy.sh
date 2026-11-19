@@ -6,10 +6,7 @@
 # Needs $UMAMI_HOST. Messages never include file contents.
 
 import_line() { echo "import $UMAMI_CADDY_FILE"; }
-# True when the Caddyfile has the import line, however it was indented, spaced or commented by hand.
-umami_route_imported() {
-  awk -v want="$UMAMI_CADDY_FILE" '{ sub(/#.*/, "") } $1 == "import" && $2 == want && NF == 2 { found = 1 } END { exit !found }' "$CADDYFILE" 2>/dev/null
-}
+umami_route_imported() { caddy_import_present "$UMAMI_CADDY_FILE"; }
 
 put_back() { # <saved copy or empty>: the route file as it was
   if [ -n "$1" ]; then mv -f "$1" "$UMAMI_CADDY_FILE"; else rm -f "$UMAMI_CADDY_FILE"; fi
@@ -46,7 +43,7 @@ set_route() { # <template in ops/caddy> <yes|no: add the import line> [reload]
   if [ "$add_import" = yes ] && ! umami_route_imported; then
     changed=yes
     candidate=$(mktemp "$CADDYFILE.XXXXXX")
-    { cat "$CADDYFILE" && printf '\n# Umami analytics (ops/install-umami.sh, #948)\n%s\n' "$(import_line)"; } >"$candidate" || changed=failed
+    caddy_with_import "Umami analytics (ops/install-umami.sh, #948)" "$(import_line)" >"$candidate" || changed=failed
     # mktemp makes it root-only; Caddy runs as its own user and must keep reading the Caddyfile
     chmod --reference="$CADDYFILE" "$candidate" || changed=failed
     chown --reference="$CADDYFILE" "$candidate" 2>/dev/null || true

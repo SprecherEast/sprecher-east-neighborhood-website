@@ -1,0 +1,13 @@
+# Managed by the website repo (ops/caddy/preview-site.caddy, #1072). The preview deploy fills in the
+# placeholders and writes the result to $PREVIEW_CADDY_DIR/pr-<number>.caddy, which the Caddyfile
+# imports. Change it in the repo, not on the server.
+#
+# One pull request preview: its own address, the shared preview headers (noindex, and a robots.txt
+# that disallows everything), the same form-request size cap as production, and the preview's app on
+# a loopback port. It never imports ops/caddy/hsts.caddy: a preview must not send HSTS. Caddy gets
+# the preview's certificate by itself when this block loads.
+__PREVIEW_HOST__ {
+	import __PREVIEW_HEADERS_FILE__
+	import __LIMITS_FILE__
+	reverse_proxy 127.0.0.1:__PREVIEW_PORT__
+}
