@@ -126,7 +126,9 @@ export async function generateMetadata({ params: paramsPromise }: Args): Promise
   const { slug = '' } = await paramsPromise
   const post = await getPostBySlug(decodeURIComponent(slug))
 
-  const meta = await generateMeta({ doc: post && { slug: post.slug, meta: post.meta } })
+  const meta = await generateMeta({
+    doc: post && { slug: post.slug, title: post.title, meta: post.meta },
+  })
   if (!post) return meta
 
   return {

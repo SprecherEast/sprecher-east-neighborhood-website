@@ -123,7 +123,9 @@ export async function generateMetadata({ params: paramsPromise }: Args): Promise
   const { slug = '' } = await paramsPromise
   const event = await getEventBySlug(decodeURIComponent(slug))
 
-  const meta = await generateMeta({ doc: event && { slug: event.slug, meta: event.meta } })
+  const meta = await generateMeta({
+    doc: event && { slug: event.slug, title: event.title, meta: event.meta },
+  })
   if (!event) return meta
 
   return {

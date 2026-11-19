@@ -36,6 +36,31 @@ describe('generateMeta', () => {
     })
   })
 
+  it('falls back to the document’s own title when it has no SEO title', async () => {
+    const meta = await generateMeta({
+      doc: { slug: 'park-cleanup', title: 'Park cleanup', meta: {} },
+    })
+
+    expect(meta.title).toBe('Park cleanup')
+    expect(meta.openGraph).toMatchObject({ title: 'Park cleanup' })
+  })
+
+  it('prefers the SEO title over the document’s own title', async () => {
+    const meta = await generateMeta({
+      doc: { slug: 'a', title: 'Own title', meta: { title: 'SEO title' } },
+    })
+
+    expect(meta.title).toBe('SEO title')
+  })
+
+  it('shows the site name once when there is no title at all', async () => {
+    const meta = await generateMeta({ doc: { slug: 'a', meta: {} } })
+
+    // The layout's template would add the site name again, so the name is set as the whole title
+    expect(meta.title).toEqual({ absolute: 'Sprecher East' })
+    expect(meta.openGraph).toMatchObject({ title: 'Sprecher East' })
+  })
+
   it('points the home page at the site root', async () => {
     const meta = await generateMeta({ doc: { slug: 'home', meta: {} } })
 
@@ -45,7 +70,7 @@ describe('generateMeta', () => {
   it('falls back to the site name and the default photo', async () => {
     const meta = await generateMeta({ doc: null })
 
-    expect(meta.title).toBe('Sprecher East')
+    expect(meta.title).toEqual({ absolute: 'Sprecher East' })
     expect(meta.openGraph).toMatchObject({
       url: '/',
       description: '',
