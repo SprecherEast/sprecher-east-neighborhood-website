@@ -4,6 +4,7 @@
 @import '../../themes/default/theme.css';
 @import '../../platform/theme/tailwind.css';
 @import '../../platform/theme/expand.css';
+@import '../../platform/theme/tabs.css';
 @import '../../platform/theme/decorations.css';
 
 @config '../../../tailwind.config.mjs';

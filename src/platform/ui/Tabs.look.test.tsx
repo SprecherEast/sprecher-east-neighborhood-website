@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -64,7 +66,7 @@ describe('plain, equal tab buttons in one row (#1112)', () => {
     for (const tab of screen.getAllByRole('tab')) {
       expect(tab.className).toMatch(/(^| )rounded-lg( |$)/)
       expect(tab.className).toMatch(/(^| )border( |$)/)
-      expect(tab.className).toContain('border-border')
+      expect(tab.className).toContain('tab-quiet')
       expect(tab.className).not.toMatch(/after:|before:|rounded-b-none|border-b-0/)
     }
   })
@@ -73,16 +75,20 @@ describe('plain, equal tab buttons in one row (#1112)', () => {
     setup()
     const [tab] = screen.getAllByRole('tab')
     expect(tab?.getAttribute('aria-selected')).toBe('true')
-    expect(tab?.className).toContain('data-[state=active]:border-primary')
-    expect(tab?.className).toContain('data-[state=active]:bg-primary/10')
-    expect(tab?.className).toContain('data-[state=active]:font-semibold')
-    expect(tab?.className).toContain('font-medium')
+    expect(tab?.className).toContain('data-[state=active]:tab-selected')
+    expect(tab?.className).toContain('tab-quiet')
+    // The two looks are utilities, defined once in theme/tabs.css (#1309)
+    const css = readFileSync(join(process.cwd(), 'src/platform/theme/tabs.css'), 'utf8')
+    expect(css).toMatch(
+      /@utility tab-selected \{\s*@apply border-primary bg-primary\/10 font-semibold/,
+    )
+    expect(css).toMatch(/@utility tab-quiet \{\s*@apply border-border bg-card font-medium/)
   })
 
   it('keeps the quiet tabs quiet: muted label, a hover tint, no shadow or lift', () => {
     setup()
     const [tab] = screen.getAllByRole('tab')
-    expect(tab?.className).toContain('text-muted-foreground')
+    expect(tab?.className).toContain('tab-quiet')
     expect(tab?.className).toContain('hover:bg-surface')
     expect(tab?.className).not.toMatch(/shadow|translate/)
   })

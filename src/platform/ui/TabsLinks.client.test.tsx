@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
+import { renderToString } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Tabs, type TabsItem } from './Tabs.client'
@@ -46,11 +47,11 @@ describe('a link for every tab (#1097)', () => {
     expect(scrolled).not.toHaveBeenCalled()
   })
 
-  it('opens the tab a link names, and brings the tabs into view', () => {
+  it('opens the tab a link names; the browser has already scrolled to its target', () => {
     window.history.replaceState(null, '', '/post#tab-projects')
     setup()
     expect(selected()).toBe('Big projects')
-    expect(scrolled).toHaveBeenCalledTimes(1)
+    expect(scrolled).not.toHaveBeenCalled()
   })
 
   it('shows the first tab for a name it does not know', () => {
@@ -109,5 +110,61 @@ describe('a link for every tab (#1097)', () => {
     window.history.replaceState(null, '', '/post#tab-projects')
     twoBlocks()
     expect(states()).toEqual(['false', 'true', 'false', 'true', 'false', 'false'])
+  })
+})
+
+describe('a tab link opens its tab before the script runs (#1309)', () => {
+  it('gives every tab a link target, out of the flow, in tab order', () => {
+    const { container } = setup()
+    const targets = [...container.querySelectorAll<HTMLElement>('[data-tab-target]')]
+    expect(targets.map((target) => target.id)).toEqual(['money', 'tab-projects', 'home'])
+    expect(targets.map((target) => target.dataset.tabTarget)).toEqual(['0', '1', '2'])
+    for (const target of targets) {
+      expect(target.getAttribute('aria-hidden')).toBe('true')
+      expect(target.className).toContain('absolute')
+      expect(target.className).toContain('scroll-mt-')
+    }
+  })
+
+  it('numbers every tab button and panel, so the rules can match them to a target', () => {
+    const { container } = setup()
+    expect(screen.getAllByRole('tab').map((tab) => tab.dataset.tabIndex)).toEqual(['0', '1', '2'])
+    expect(
+      [...container.querySelectorAll<HTMLElement>('[role="tabpanel"]')].map(
+        (panel) => panel.dataset.tabIndex,
+      ),
+    ).toEqual(['0', '1', '2'])
+  })
+
+  it('leaves the rules in charge until the script has chosen the tab, then hands over', () => {
+    const { container } = setup()
+    // Effects have run by now; the server's first render has no such mark (checked below)
+    expect(container.querySelector('[data-tab-names]')?.hasAttribute('data-tabs-ready')).toBe(true)
+    expect(
+      renderToString(<Tabs label="Budget views" items={ITEMS} defaultValue="money" />),
+    ).not.toContain('data-tabs-ready')
+  })
+
+  it('does not scroll again when the browser already followed the link to its target', () => {
+    window.history.replaceState(null, '', '/post#tab-projects')
+    setup()
+    expect(selected()).toBe('Big projects')
+    expect(scrolled).not.toHaveBeenCalled()
+  })
+
+  it('scrolls when no target took the link, as for a repeated name in a later block', () => {
+    window.history.replaceState(null, '', '/post#tab-projects-2')
+    render(
+      <>
+        <Tabs label="First" items={ITEMS} defaultValue="money" />
+        <Tabs label="Second" items={ITEMS} defaultValue="money" />
+      </>,
+    )
+    const [, second] = screen.getAllByRole('tablist')
+    const chosen = within(second as HTMLElement)
+      .getAllByRole('tab')
+      .find((tab) => tab.getAttribute('aria-selected') === 'true')
+    expect(chosen?.textContent).toBe('Big projects')
+    expect(scrolled).toHaveBeenCalledTimes(1)
   })
 })

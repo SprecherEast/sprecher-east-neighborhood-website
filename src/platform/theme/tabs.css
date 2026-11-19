@@ -1,0 +1,68 @@
+/*
+ * Tabs a link has opened, before any script has run (#1309). The server cannot see the `#tab-…` part
+ * of an address, so it draws the first tab; the script that follows the link only starts once the
+ * page's code has loaded, which on a first visit over a phone connection can take many seconds. The
+ * browser, though, follows the link on its own: it scrolls to the tab's target in `Tabs.client.tsx`
+ * and marks it `:target`. These rules read that, so the tab the link names is already the one shown
+ * and selected on the first paint. Once the script is in charge (`data-tabs-ready`) they stop and
+ * the script's own choice stands, so choosing another tab by hand still works. Imported next to
+ * `tailwind.css` in `globals.css`.
+ */
+
+/* The two looks of a tab button, defined once and worn by `Tabs` and by the rules below */
+@utility tab-quiet {
+  @apply border-border bg-card font-medium text-muted-foreground;
+}
+@utility tab-selected {
+  @apply border-primary bg-primary/10 font-semibold text-foreground;
+}
+
+/*
+ * Only while scripting runs: with it off the tabs are hidden and every panel shows, stacked. The
+ * pick is by position (`data-tab-index` against `data-tab-target`), up to the four tabs a block
+ * holds, because CSS cannot compare one attribute with another.
+ */
+@media (scripting: enabled) {
+  [data-tab-names]:not([data-tabs-ready]) {
+    &:has(> [data-tab-target]:target) {
+      > [role='tabpanel'] {
+        display: none;
+      }
+      [role='tab'] {
+        @apply tab-quiet;
+      }
+    }
+    &:has(> [data-tab-target='0']:target) {
+      > [role='tabpanel'][data-tab-index='0'] {
+        display: block;
+      }
+      [role='tab'][data-tab-index='0'] {
+        @apply tab-selected;
+      }
+    }
+    &:has(> [data-tab-target='1']:target) {
+      > [role='tabpanel'][data-tab-index='1'] {
+        display: block;
+      }
+      [role='tab'][data-tab-index='1'] {
+        @apply tab-selected;
+      }
+    }
+    &:has(> [data-tab-target='2']:target) {
+      > [role='tabpanel'][data-tab-index='2'] {
+        display: block;
+      }
+      [role='tab'][data-tab-index='2'] {
+        @apply tab-selected;
+      }
+    }
+    &:has(> [data-tab-target='3']:target) {
+      > [role='tabpanel'][data-tab-index='3'] {
+        display: block;
+      }
+      [role='tab'][data-tab-index='3'] {
+        @apply tab-selected;
+      }
+    }
+  }
+}
