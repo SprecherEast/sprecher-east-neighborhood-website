@@ -173,53 +173,6 @@ drop_page_cache() { # <release dir>
   rm -rf "$1/.next/cache"
 }
 
-# How long to wait before trying `payload migrate` again after the database was busy, and how many
-# runs it gets in all (#1147). The migration's own busy timeout
-# (src/platform/payload/sqliteBusyTimeout.ts) has already waited before a run fails; this covers a
-# lock that outlasts it.
-MIGRATE_RETRY_SECONDS="${MIGRATE_RETRY_SECONDS:-5}"
-MIGRATE_ATTEMPTS=2
-
-# True when a `payload migrate` log shows a migration that started and did not finish: a
-# "Migrating: <name>" line with no "Migrated:  <name>" line. Migrations are not atomic here (the
-# site runs no database transactions), so such a migration may be half applied.
-migration_cut_off() { # <log file>
-  awk '
-    /Migrating: / { name = $0; sub(/.*Migrating: +/, "", name); started[name] = 1 }
-    /Migrated: / { name = $0; sub(/.*Migrated: +/, "", name); sub(/ \(.*/, "", name); delete started[name] }
-    END { for (name in started) exit 0; exit 1 }
-  ' "$1"
-}
-
-# Runs `payload migrate` in a release folder (#1147). Runs again, within MIGRATE_ATTEMPTS, only when
-# a run failed with SQLITE_BUSY in its output and no migration was cut off partway: the running
-# site was writing at that moment, and nothing was applied twice. Any other failure, a failure
-# after a migration began, or the last run failing, returns 1 at once, so the caller stops the
-# deploy with the live site unchanged. The output goes to a file and is printed after each run, and
-# the exit status is read from the command itself, so the result never depends on the caller's
-# `pipefail`.
-run_migrate() { # <release folder>
-  local release="$1" log attempt status
-  log=$(mktemp) || return 1
-  for ((attempt = 1; attempt <= MIGRATE_ATTEMPTS; attempt++)); do
-    status=0
-    (cd "$release" && NODE_OPTIONS=--no-deprecation node_modules/.bin/payload migrate) >"$log" 2>&1 || status=$?
-    cat "$log"
-    if [ "$status" -eq 0 ]; then
-      rm -f "$log"
-      return 0
-    fi
-    if [ "$attempt" -lt "$MIGRATE_ATTEMPTS" ] && grep -q SQLITE_BUSY "$log" && ! migration_cut_off "$log"; then
-      report "WARNING: the database was busy during the migrations; trying once more in ${MIGRATE_RETRY_SECONDS}s"
-      sleep "$MIGRATE_RETRY_SECONDS"
-    else
-      break
-    fi
-  done
-  rm -f "$log"
-  return 1
-}
-
 # Reloads Caddy, then gives the site time to answer. Prints what went wrong (nothing when all is
 # well), for the caller to roll back and report.
 caddy_reload_problem() { # <what the config now has> [seconds the site gets to answer, default 20]

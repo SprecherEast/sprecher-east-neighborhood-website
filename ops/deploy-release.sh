@@ -7,7 +7,7 @@
 #   1. check the release fits this server (Node version, public settings, native modules)
 #   2. link the shared .env.local, data/ and public/media into it
 #   3. back up the data (ops/backup.sh pre-deploy), then run the database migrations (once more
-#      if the database was busy, #1147)
+#      if the database was busy before any migration began, #1147)
 #   4. drop the pages prerendered in CI, whose database was empty: each renders from the live
 #      database on its first visit, then is cached as usual
 #   5. switch the `current` link atomically and reload the app under PM2 (ops/restart-app.sh)
@@ -22,6 +22,7 @@ umask 022
 trap '' HUP # a dropped SSH session must not stop the script between the switch and a switch back
 
 . "$(dirname "$0")/lib.sh"
+. "$(dirname "$0")/migrate-lib.sh"
 
 # The workflow sends the Umami admin password on stdin and says so with this flag (#948), so a
 # run by hand never waits for input. It goes to ops/install-umami.sh only; never an argument.

@@ -20,6 +20,7 @@ on the VPS. Nothing here is run by hand during a normal deploy. Changes to the s
 | `install-umami.sh`  | VPS    | Installs and updates Umami analytics in Docker, replaces its default admin password, then opens its own address (helpers: `umami-lib.sh`, `umami-caddy.sh`, `umami-admin.sh`) | #948       |
 | `backup-umami.sh`   | VPS    | Dumps Umami's Postgres database; run after the daily backup and before an Umami update                                                                                        | #948       |
 | `lib.sh`            | VPS    | Shared helpers: annotations, reading non-secret settings, checking the site through Caddy, the `current` link, and the Caddy import check, reload check and rollback          |            |
+| `migrate-lib.sh`    | VPS    | `run_migrate`: `payload migrate`, run once more only after `SQLITE_BUSY` before any migration began (sourced by `deploy-release.sh`)                                          | #1147      |
 
 The scripts print `::notice` and `::warning` lines, which appear as annotations on the deploy run
 whether it succeeds or fails, so the result can be read without opening the logs. The deploy log
@@ -78,9 +79,11 @@ or by an agent, within the limits in [`wrapped`](../.agents/skills/wrapped/SKILL
    - links `.env.local`, `data/` and `public/media` from `/var/www/sprecher-east` into it
    - backs up (`backup.sh pre-deploy`) and runs `payload migrate`, while the live release serves.
      The database waits up to 5 s for a lock (`SQLITE_BUSY_TIMEOUT_MS`), and if `payload migrate`
-     still fails with `SQLITE_BUSY` with no migration cut off, `run_migrate` (`lib.sh`) waits 5 s and
-     runs it once more (a cut-off migration may be half applied, so it never re-runs); any
-     other failure, or a second one, stops the deploy with the live site unchanged (#1147, #153)
+     still fails with `SQLITE_BUSY` before any migration began (no "Migrating:" line in its
+     output), `run_migrate` (`migrate-lib.sh`) waits 5 s and runs it once more. A failure once a
+     migration has begun is never retried, because the migration may be applied but not recorded
+     and would run twice; any other failure, or a second one, stops the deploy with the live site
+     unchanged (#1147, #153)
    - drops the pages prerendered in CI (their database was empty); each page renders from the
      live database on its first visit and is cached from then on
    - switches `current` to the release in one step and reloads PM2 (`restart-app.sh`)
