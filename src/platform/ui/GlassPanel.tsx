@@ -9,7 +9,8 @@ import { cn } from '@/platform/lib/cn'
  * `on-image` text.
  *
  * It carries its own darkening layer, the `scrim` token under the glass, so its text passes AA
- * wherever it sits, over a white photo too (`GLASS_SCRIM_ALPHA`, checked in its test). The blur
+ * over a very bright photo, a mid shade and black (`GLASS_SCRIM_ALPHA`, checked in its test; a pure
+ * white photo is not guaranteed, #1301). The blur
  * is on the panel itself, so it blurs what is behind, then the layer darkens it, then the sheen
  * lies on top. No flat white layer: that turned the panel gray. There is no variant for the look.
  */
