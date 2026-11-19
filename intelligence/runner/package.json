@@ -19,6 +19,6 @@
     "cheerio": "^1.2.0",
     "fast-xml-parser": "^5.11.2",
     "ical.js": "^2.2.1",
-    "js-yaml": "^4.1.1"
+    "js-yaml": "^5.5.0"
   }
 }
