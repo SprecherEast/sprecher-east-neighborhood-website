@@ -28,6 +28,23 @@ export const API_HEADERS = [
   },
 ]
 
+/**
+ * Payload adds `Critical-CH: Sec-CH-Prefers-Color-Scheme` to every route for its admin dark mode.
+ * On a visitor's first request Chrome (without the hint yet) answers a Critical-CH header by
+ * loading the page again, and the second load loses the `#fragment`, so "Estimate your tax split"
+ * opened the first tab (#1309). Only the admin needs the hint, so everywhere else the header goes.
+ */
+export const ADMIN_PATH = '/admin/:path*'
+export function criticalHintForAdminOnly(entries) {
+  const hint = []
+  const rest = entries.map((entry) => {
+    const kept = entry.headers.filter(({ key }) => key.toLowerCase() !== 'critical-ch')
+    hint.push(...entry.headers.filter(({ key }) => key.toLowerCase() === 'critical-ch'))
+    return { ...entry, headers: kept }
+  })
+  return hint.length ? [...rest, { source: ADMIN_PATH, headers: hint.slice(0, 1) }] : rest
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
@@ -96,7 +113,11 @@ function assertTurnstileKeysPaired() {
   }
 }
 
-const config = withPayload(nextConfig, { devBundleServerPackages: false })
+const payloadConfig = withPayload(nextConfig, { devBundleServerPackages: false })
+const config = {
+  ...payloadConfig,
+  headers: async () => criticalHintForAdminOnly(await payloadConfig.headers()),
+}
 
 export default function nextConfigForPhase(phase) {
   if (phase === PHASE_PRODUCTION_BUILD) assertTurnstileKeysPaired()
