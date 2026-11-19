@@ -22,6 +22,7 @@ import { noResetEmailWhileUnverified } from './noResetEmailWhileUnverified'
 import { requireConfirmedEmailChange } from './requireConfirmedEmailChange'
 import { requireCurrentPassword } from './requireCurrentPassword'
 import { guestOnlyFromProviders } from './guestOnlyFromProviders'
+import { deletePasskeysWithAccount } from './deletePasskeysWithAccount'
 
 /** The reset email for a token Payload just made: its link opens the site's reset page. */
 const resetEmailFor = (token = '') =>
@@ -83,6 +84,8 @@ export const Users: CollectionConfig = {
       requireConfirmedEmailChange,
       guestOnlyFromProviders,
     ],
+    // An account's passkeys go with it (#1313)
+    beforeDelete: [deletePasskeysWithAccount],
     // An agent's MCP API key is its only credential (#336)
     beforeLogin: [noPasswordSignInForAgents],
     // Forgot password only from the site's page (#282), then no reset email to an account whose
@@ -146,6 +149,17 @@ export const Users: CollectionConfig = {
     // account opens one account. Only the server sets it, from a checked sign-in.
     {
       name: 'googleSub',
+      type: 'text',
+      unique: true,
+      index: true,
+      hidden: true,
+      access: serverOnlyFieldAccess,
+    },
+    // The one random, opaque handle every passkey of this account is made with, never the email
+    // or the database id (#1313, decision 0021). Server-only, and written only while empty
+    // (`data/passkeys.ts`), so two adds at once keep one value.
+    {
+      name: 'passkeyUserHandle',
       type: 'text',
       unique: true,
       index: true,

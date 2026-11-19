@@ -54,6 +54,8 @@ const FORGED_RESENDS = {
   verifiedTokenHash: 'f'.repeat(64),
   // Or link someone else's Google account to sign in with it (#188)
   googleSub: 'google-subject-of-someone-else',
+  // Or take over the handle every passkey of the account is made with (#1313)
+  passkeyUserHandle: 'a-handle-chosen-by-the-resident',
 }
 
 describe('a guest’s own account', () => {
@@ -106,6 +108,7 @@ describe('a guest’s own account', () => {
       verificationSetsPassword: false,
       verifiedTokenHash: null,
       googleSub: null,
+      passkeyUserHandle: null,
     })
   })
 
@@ -124,6 +127,7 @@ describe('a guest’s own account', () => {
       verificationSetsPassword: false,
       verifiedTokenHash: null,
       googleSub: null,
+      passkeyUserHandle: null,
     })
   })
 })
