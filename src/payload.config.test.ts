@@ -3,7 +3,12 @@ import type { Block, Field, RichTextField, SanitizedConfig } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { revalidateRedirects } from '@/modules/site/cms'
-import { RICH_TEXT_BLOCKS } from '@/platform/richtext/blockConfigs'
+import {
+  EDITORIAL_BLOCKS,
+  EVENT_RICH_TEXT_BLOCKS,
+  RICH_TEXT_BLOCKS,
+} from '@/platform/richtext/blockConfigs'
+import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
 
 /**
  * Where modules meet in the CMS (docs/architecture decision 0008): checks the composed config,
@@ -80,8 +85,39 @@ describe('a post’s content', () => {
   })
 })
 
+describe('posts and events', () => {
+  // Payload's official list features, so editors can write bulleted and numbered lists (#397)
+  it.each(['posts', 'events'])('%s content offers bulleted and numbered lists', (slug) => {
+    const content = allFields(collection(slug).fields).find(
+      (field) => 'name' in field && field.name === 'content',
+    )
+    if (content?.type !== 'richText') throw new Error(`${slug} has no rich-text content`)
+
+    const features = (content.editor as LexicalRichTextAdapter).editorConfig.resolvedFeatureMap
+    expect(features.has('unorderedList')).toBe(true)
+    expect(features.has('orderedList')).toBe(true)
+  })
+
+  it('offers a banner, inline images and the editorial blocks in event content, each with a renderer', () => {
+    const content = allFields(collection('events').fields).find(
+      (field) => 'name' in field && field.name === 'content',
+    )
+    if (content?.type !== 'richText') throw new Error('Events have no rich-text content')
+
+    const slugs = editorBlocks(content).map((block) => block.slug)
+    expect(slugs).toEqual(EVENT_RICH_TEXT_BLOCKS.map((block) => block.slug))
+    expect(slugs).toEqual(['banner', 'mediaBlock', ...EDITORIAL_BLOCKS.map((block) => block.slug)])
+    for (const slug of slugs) expect(richTextBlocks).toHaveProperty(slug)
+  })
+
+  it('offers the editorial blocks in post content too', () => {
+    const slugs = RICH_TEXT_BLOCKS.map((block) => block.slug)
+    for (const block of EDITORIAL_BLOCKS) expect(slugs).toContain(block.slug)
+  })
+})
+
 describe('the Pages collection', () => {
-  it('offers the site’s blocks and then the contact form, in that order', () => {
+  it('offers the site’s blocks, then the contact form, the events strip and top issues, in that order', () => {
     const layout = allFields(collection('pages').fields).find(
       (field) => 'name' in field && field.name === 'layout',
     )
@@ -90,9 +126,13 @@ describe('the Pages collection', () => {
     expect(layout.blocks.map((block) => block.slug)).toEqual([
       'cta',
       'content',
+      'section',
       'mediaBlock',
+      'mapBlock',
       'archive',
       'formBlock',
+      'eventsThisWeek',
+      'topIssues',
     ])
   })
 })
@@ -114,8 +154,8 @@ describe('the globals', () => {
 })
 
 describe('every other rich-text field', () => {
-  // Only the post page passes block renderers to RichText; a block anywhere else would show as
-  // Payload's "unknown node" (#135)
+  // Post and event pages pass block renderers to RichText; any other field offering blocks
+  // would show Payload's "unknown node" (#135).
   it('offers no blocks', () => {
     const fields = [
       ...config.collections.flatMap((c) => richTextFields(c.fields, c.slug)),
@@ -135,6 +175,6 @@ describe('every other rich-text field', () => {
     )
 
     const withBlocks = fields.filter(({ field }) => editorBlocks(field).length > 0)
-    expect(withBlocks.map(({ path }) => path)).toEqual(['posts.content'])
+    expect(withBlocks.map(({ path }) => path)).toEqual(['posts.content', 'events.content'])
   })
 })

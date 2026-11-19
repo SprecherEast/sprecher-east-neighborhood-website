@@ -1,18 +1,17 @@
 'use client'
-import { useHeaderTheme } from '@/platform/theme/HeaderThemeProvider.client'
-import NextLink from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
-
-import type { Header } from '@/payload-types'
+import React, { type ReactNode, useCallback, useEffect, useState } from 'react'
 
 import { Button } from '@/platform/ui'
-import { Menu, X } from 'lucide-react'
-import { Logo } from './Logo'
+import { Dialog } from '@/platform/ui/Dialog.client'
+import { Menu } from 'lucide-react'
+import { LogoLink } from './Logo'
+import type { HeaderNavLink } from '../domain/nav'
 import { HeaderNav } from './HeaderNav.client'
 
 interface SiteHeaderBarProps {
-  data: Header
+  /** The nav links the editors set, already resolved */
+  links: HeaderNavLink[]
   /** The account links in the desktop bar */
   accountMenu: ReactNode
   /** The account links in the mobile menu */
@@ -20,22 +19,14 @@ interface SiteHeaderBarProps {
 }
 
 export const SiteHeaderBar: React.FC<SiteHeaderBarProps> = ({
-  data,
+  links,
   accountMenu,
   mobileAccountMenu,
 }) => {
-  /* Storing the value in a useState to avoid hydration errors */
-  const [theme, setTheme] = useState<string | null>(null)
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { headerTheme, setHeaderTheme } = useHeaderTheme()
   const pathname = usePathname()
-  const toggleRef = useRef<HTMLButtonElement>(null)
-
-  const closeMobileMenu = useCallback((restoreFocus = false) => {
-    setMobileOpen(false)
-    if (restoreFocus) toggleRef.current?.focus()
-  }, [])
+  const closeMobileMenu = useCallback(() => setMobileOpen(false), [])
 
   const closeOnLinkOrButton = useCallback(
     (event: React.MouseEvent) => {
@@ -44,16 +35,10 @@ export const SiteHeaderBar: React.FC<SiteHeaderBarProps> = ({
     [closeMobileMenu],
   )
 
+  // A new page closes the mobile menu
   useEffect(() => {
-    setHeaderTheme(null)
     setMobileOpen(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
-
-  useEffect(() => {
-    if (headerTheme !== theme) setTheme(headerTheme ?? null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [headerTheme])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10)
@@ -61,20 +46,10 @@ export const SiteHeaderBar: React.FC<SiteHeaderBarProps> = ({
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Escape closes the mobile menu and returns focus to the toggle
-  useEffect(() => {
-    if (!mobileOpen) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeMobileMenu(true)
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [mobileOpen, closeMobileMenu])
-
   // Close the mobile menu if the viewport grows past the desktop breakpoint (e.g. a tablet
   // rotated with the menu open): its close button hides there, and the scroll lock would stay
   useEffect(() => {
-    const desktop = window.matchMedia('(min-width: 64rem)') // Tailwind's lg, in rem so it tracks font size
+    const desktop = window.matchMedia('(min-width: 60rem)') // Tailwind's lg (globals.css), in rem so it tracks font size
     const onChange = (event: MediaQueryListEvent) => {
       if (event.matches) setMobileOpen(false)
     }
@@ -82,73 +57,51 @@ export const SiteHeaderBar: React.FC<SiteHeaderBarProps> = ({
     return () => desktop.removeEventListener('change', onChange)
   }, [])
 
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [mobileOpen])
-
   return (
     <header
       className={`sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-200 ${
         scrolled ? 'shadow-md' : 'shadow-sm'
       }`}
-      {...(theme ? { 'data-theme': theme } : {})}
     >
-      <div className="container flex items-center justify-between py-4">
-        <NextLink href="/" className="shrink-0">
-          <Logo loading="eager" priority="high" />
-        </NextLink>
+      <div className="container flex items-center justify-between py-4 compact:px-4!">
+        <LogoLink />
 
         {/* Desktop nav */}
-        {/* Desktop nav starts at lg: below 1024px the items don't fit and the page scrolls sideways */}
+        {/* Desktop nav starts at lg (960px): below it the items don't fit and the page scrolls sideways.
+            In the compact band (960 to 1023px) the bar is tighter (side padding, link padding, the
+            Contact gap and the account name), so a signed-in header still fits a phone's desktop
+            mode, about 980px (#545) */}
         <div className="hidden items-center gap-1 lg:flex">
-          <HeaderNav data={data} pathname={pathname} />
+          <HeaderNav links={links} pathname={pathname} />
           {accountMenu}
           <Button
             href="/contact"
             size="sm"
             aria-current={pathname === '/contact' ? 'page' : undefined}
-            className="ml-3"
+            className="ml-3 compact:ml-2"
           >
             Contact
           </Button>
         </div>
 
-        {/* Mobile hamburger */}
-        <Button
-          ref={toggleRef}
-          variant="ghost"
-          size="icon"
+        {/* The mobile menu: a full-screen sheet, with Radix's focus trap, Escape, scroll lock and
+            focus return (#437) */}
+        <Dialog
+          open={mobileOpen}
+          onOpenChange={setMobileOpen}
+          title="Menu"
+          hideTitle
+          closeLabel="Close menu"
+          start={<LogoLink onClick={closeMobileMenu} />}
           className="lg:hidden"
-          onClick={() => setMobileOpen((prev) => !prev)}
-          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-menu"
+          trigger={
+            <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu">
+              <Menu aria-hidden="true" />
+            </Button>
+          }
         >
-          {mobileOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-        </Button>
-      </div>
-
-      {/* Mobile menu overlay */}
-      {mobileOpen && (
-        <div
-          id="mobile-menu"
-          className="max-h-[calc(100dvh-var(--header-height))] overflow-y-auto border-t border-border bg-background lg:hidden"
-        >
-          <div className="container flex flex-col gap-2 py-4">
-            <HeaderNav
-              data={data}
-              pathname={pathname}
-              mobile
-              onNavigate={() => closeMobileMenu()}
-            />
+          <div id="mobile-menu" className="container flex flex-col gap-2 py-4">
+            <HeaderNav links={links} pathname={pathname} mobile onNavigate={closeMobileMenu} />
             {/* Following a link or signing out in the account links closes the menu too */}
             <div className="contents" onClick={closeOnLinkOrButton}>
               {mobileAccountMenu}
@@ -156,15 +109,15 @@ export const SiteHeaderBar: React.FC<SiteHeaderBarProps> = ({
             <Button
               href="/contact"
               fullWidth
-              onClick={() => closeMobileMenu()}
+              onClick={closeMobileMenu}
               aria-current={pathname === '/contact' ? 'page' : undefined}
               className="mt-2"
             >
               Contact
             </Button>
           </div>
-        </div>
-      )}
+        </Dialog>
+      </div>
     </header>
   )
 }

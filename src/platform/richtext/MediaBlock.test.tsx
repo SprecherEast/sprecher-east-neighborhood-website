@@ -1,0 +1,177 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+
+import type { Media } from '@/payload-types'
+
+import { Legend } from '@/platform/ui/Legend'
+import { FIGURE_GAP, LEGEND_GAP } from '@/platform/ui/layoutSizes'
+
+import { MediaBlock } from './MediaBlock'
+
+afterEach(cleanup)
+
+const STATIC_IMAGE = { src: '/map.png', width: 640, height: 480 }
+
+const caption = (value: string): Media['caption'] => ({
+  root: {
+    type: 'root',
+    format: '',
+    indent: 0,
+    version: 1,
+    direction: 'ltr',
+    children: [
+      {
+        type: 'paragraph',
+        version: 1,
+        children: [
+          {
+            type: 'text',
+            text: value,
+            format: 0,
+            detail: 0,
+            mode: 'normal',
+            style: '',
+            version: 1,
+          },
+        ],
+      },
+    ],
+  },
+})
+
+const mediaWithCaption: Media = {
+  id: 1,
+  alt: 'Concept map',
+  caption: caption('Source: WisDOT'),
+  url: '/api/media/file/map.png',
+  width: 640,
+  height: 480,
+  createdAt: '2026-10-31T00:00:00.000Z',
+  updatedAt: '2026-10-31T00:00:00.000Z',
+}
+
+/** The block's outer element: the one that owns the space around the image */
+const wrapper = (container: HTMLElement) => container.firstElementChild as HTMLElement
+
+describe('MediaBlock spacing (#541)', () => {
+  it('is its own section in the page builder: container and section padding', () => {
+    const { container } = render(
+      <MediaBlock blockType="mediaBlock" media={1} staticImage={STATIC_IMAGE} />,
+    )
+
+    expect(wrapper(container).className).toContain('container')
+    expect(wrapper(container).className).toContain('py-10')
+    expect(wrapper(container).className).toContain('md:py-14')
+    expect(container.querySelector('.not-prose')).toBeNull()
+  })
+
+  it('inline in rich text it sets one margin and opts out of the prose styles', () => {
+    const { container } = render(
+      <MediaBlock blockType="mediaBlock" media={1} staticImage={STATIC_IMAGE} placement="inline" />,
+    )
+
+    const classes = wrapper(container).className
+    // The shared gap (`--figure-gap`), which a legend under the image takes part of back (#636,
+    // #658); no stacking level, because nothing is tucked under the image any more
+    expect(classes).toContain('my-[var(--figure-gap)]')
+    expect(classes).not.toMatch(/\bz-/)
+    // No second layer of spacing: neither the section padding nor a container
+    expect(classes).not.toMatch(/\bpy-/)
+    expect(classes).not.toMatch(/\bmd:py-/)
+    expect(classes).not.toContain('container')
+    // The `prose` typography margin on <picture> is switched off for the image
+    expect(container.querySelector('picture')?.closest('.not-prose')).not.toBeNull()
+  })
+
+  it('keeps the caption in prose when inline, so only the image opts out', () => {
+    const { container } = render(
+      <MediaBlock
+        blockType="mediaBlock"
+        media={mediaWithCaption}
+        placement="inline"
+        captionClassName="mx-auto max-w-[48rem]"
+      />,
+    )
+
+    const captionText = screen.getByText('Source: WisDOT')
+    expect(captionText.closest('.not-prose')).toBeNull()
+    expect(captionText.closest('.prose')).not.toBeNull()
+    expect(container.querySelector('.container')).toBeNull()
+  })
+
+  it('does not nest a second container around the caption in the page builder', () => {
+    const { container } = render(<MediaBlock blockType="mediaBlock" media={mediaWithCaption} />)
+
+    // One container, the block's own: a nested one would indent the caption 16px each side
+    expect(container.querySelectorAll('.container')).toHaveLength(1)
+    expect(screen.getByText('Source: WisDOT').closest('.container')).toBe(wrapper(container))
+  })
+})
+
+describe('MediaBlock caption (#635)', () => {
+  it('is a figure whose figcaption is the shared small, muted caption', () => {
+    const { container } = render(<MediaBlock blockType="mediaBlock" media={mediaWithCaption} />)
+
+    expect(wrapper(container).tagName).toBe('FIGURE')
+    const figcaption = screen.getByText('Source: WisDOT').closest('figcaption')
+    expect(figcaption).not.toBeNull()
+    expect(figcaption?.parentElement).toBe(wrapper(container))
+    expect(figcaption?.className).toContain('text-muted-foreground')
+  })
+
+  it('draws the caption text small and muted, not at article size', () => {
+    render(<MediaBlock blockType="mediaBlock" media={mediaWithCaption} />)
+
+    const prose = screen.getByText('Source: WisDOT').closest('.prose') as HTMLElement
+    expect(prose.className).toContain('prose-sm')
+    expect(prose.className).toContain('--tw-prose-body:var(--color-muted-foreground)')
+  })
+
+  it('keeps the rich text in a div inside the figcaption, never a bare paragraph', () => {
+    render(<MediaBlock blockType="mediaBlock" media={mediaWithCaption} />)
+
+    const figcaption = screen.getByText('Source: WisDOT').closest('figcaption') as HTMLElement
+    expect(figcaption.querySelector(':scope > p')).toBeNull()
+    expect(figcaption.firstElementChild?.tagName).toBe('DIV')
+  })
+
+  it('draws no caption element without a caption', () => {
+    const { container } = render(<MediaBlock blockType="mediaBlock" media={1} />)
+
+    expect(container.querySelector('figcaption')).toBeNull()
+  })
+})
+
+describe('MediaBlock with a legend under it (#658)', () => {
+  const renderBoth = () =>
+    render(
+      <>
+        <MediaBlock blockType="mediaBlock" media={mediaWithCaption} placement="inline" />
+        <Legend label="Diagram key" items={[{ label: 'North roundabout', text: null }]} />
+      </>,
+    )
+
+  it('keeps the caption in the figure, above the legend, in reading order', () => {
+    const { container } = renderBoth()
+    const figure = container.querySelector('figure') as HTMLElement
+    const legend = screen.getByRole('list', { name: 'Diagram key' }).parentElement as HTMLElement
+
+    expect(figure.querySelector('figcaption')?.textContent).toBe('Source: WisDOT')
+    // The legend comes after the whole figure, so it can't sit over the caption
+    expect(figure.compareDocumentPosition(legend) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(figure.contains(legend)).toBe(false)
+  })
+
+  it('shares the figure gap: the legend takes back margin only, and nothing stacks over it', () => {
+    const { container } = renderBoth()
+    const figure = container.querySelector('figure') as HTMLElement
+    const legend = screen.getByRole('list', { name: 'Diagram key' }).parentElement as HTMLElement
+
+    expect(figure.className).toContain(FIGURE_GAP)
+    expect(legend.className).toContain(LEGEND_GAP)
+    // No z-index games: nothing is layered over the other
+    expect(figure.className).not.toMatch(/\bz-/)
+    expect(legend.className).not.toMatch(/\bz-/)
+  })
+})

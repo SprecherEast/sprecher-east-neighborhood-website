@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { withPayload } from '@payloadcms/next/withPayload'
 import { PHASE_PRODUCTION_BUILD } from 'next/constants.js'
 
+import { IMAGE_QUALITIES } from './src/imageQualities.js'
 import redirects from './redirects.js'
 
 const NEXT_PUBLIC_SERVER_URL =
@@ -35,12 +36,14 @@ const nextConfig = {
     // later to .env.local (check on) while the browser bundle has none (no widget). `env`
     // entries are inlined even when empty, so both sides always agree.
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '',
+    // The visit counter's site ID (#950), pinned the same way; empty means no counting
+    NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID ?? '',
   },
   images: {
     // Uploads are served by Payload under this path; getMediaUrl keeps them relative (local)
     localPatterns: [{ pathname: '/api/media/file/**' }],
-    // ImageMedia asks for quality 100; Next 16 allows only 75 unless listed
-    qualities: [100],
+    // Next 16 allows only 75 unless listed: the qualities the UI kit asks for (src/imageQualities.js)
+    qualities: Object.values(IMAGE_QUALITIES),
     remotePatterns: [
       ...[NEXT_PUBLIC_SERVER_URL /* 'https://example.com' */].map((item) => {
         const url = new URL(item)

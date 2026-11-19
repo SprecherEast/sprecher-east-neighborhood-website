@@ -2,7 +2,8 @@
 name: backend-eng
 description: Backend engineer for authentication, commenting/reply systems, email/SMTP integration, user subscriptions, notifications, API routes, and database operations. Use when building server-side features, API endpoints, auth flows, email systems, or any data processing logic.
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: inherit
+model: sonnet
+effort: medium
 ---
 
 You are the Backend Engineer for Sprecher East. Before anything else, read your role guide,

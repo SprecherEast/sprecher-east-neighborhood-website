@@ -1,7 +1,7 @@
 # Intelligence sources
 
 The approved sources for the neighborhood intelligence agents (#255), checked on **2026-10-24**
-for #271. The machine-readable registry is [`sources.yaml`](sources.yaml): one entry per source,
+for #271, and extended by a hand sweep on **2026-11-10** (#1001). The machine-readable registry is [`sources.yaml`](sources.yaml): one entry per source,
 with its feed URL, format, owner, scope, audiences, access limits, cadence, result and an example
 item. This page explains the results and what to fix. Change both only through a pull request.
 
@@ -29,12 +29,32 @@ Only `valid` sources are ever fetched automatically.
 | Madison365                      | RSS      | valid      | 4     |
 | Spectrum News 1 Madison         | RSS      | valid      | later |
 | Madison Parks events            | HTML     | pending    | no    |
-| District 16 alder blog          | HTML     | pending    | no    |
-| City of Madison news            | HTML     | pending    | no    |
+| District 16 alder blog          | HTML     | valid      | 7     |
+| City of Madison news            | HTML     | valid      | 8     |
+| City public information mtgs    | HTML     | valid      | 6     |
+| WisDOT I-39/90/94 meetings      | HTML     | valid      | 5     |
 | Dane County press releases      | HTML     | restricted | no    |
 | madison.com                     | RSS      | restricted | no    |
 | The Capital Times               | RSS      | invalid    | no    |
 | Channel 3000                    | HTML     | invalid    | no    |
+| Madison Police incident reports | RSS      | pending    | no    |
+| Traffic Engineering news        | HTML     | pending    | no    |
+| Road Closures open-data layer   | JSON API | pending    | no    |
+| 511 Wisconsin events API        | JSON API | pending    | no    |
+| Door Creek Park page            | HTML     | pending    | no    |
+| Greater Madison MPO events      | HTML     | pending    | no    |
+| Dane County Farmers' Market     | HTML     | pending    | no    |
+| Cottage Grove Chamber events    | HTML     | pending    | no    |
+| Henry Vilas Zoo lights          | HTML     | pending    | no    |
+| Visit Madison holiday guide     | HTML     | pending    | no    |
+| Other alders' weekly roundups   | HTML     | pending    | no    |
+| MMSD boundary review            | HTML     | pending    | no    |
+| Metro Transit public hearings   | HTML     | pending    | no    |
+| Metro Transit developer feeds   | HTML     | pending    | no    |
+| National Weather Service API    | JSON API | pending    | no    |
+| City streets holiday collection | HTML     | pending    | no    |
+| United Way volunteer listings   | HTML     | pending    | no    |
+| Goodman Community Center        | HTML     | pending    | no    |
 
 Older lists ([content-marketing guideline](../docs/guidelines/content-marketing.md)) named
 madison.com, Capital Times, Channel 3000, Dane County and the City planning page as RSS feeds. On
@@ -69,17 +89,17 @@ waits for after the pilot.
 
 ## Corrections the agents must respect
 
-**Alder district: 16, not 17.** The content-marketing guideline still says District 17 in two
-rows. The City says District 16 (Alder Sean O'Brien) covers "from South Stoughton Road to the
+**Alder district: 16, not 17.** The content-marketing guideline said District 17 in two rows
+until #339 corrected it. The City says District 16 (Alder Sean O'Brien) covers "from South Stoughton Road to the
 city's edge, and from Reston Heights to Owl Creek", while District 17 (Alder Sabrina V. Madison)
 is the northeast corner with Sandburg, East Towne Mall and Reindahl Park
 ([City of Madison, 2025-08-19](https://www.cityofmadison.com/news/2025-08-19/from-council-to-community-meet-your-eastside-and-northside-alders);
 [alder district maps, Feb 2026](https://www.cityofmadison.com/council/council-members/alder-district-maps);
 [District 16](https://www.cityofmadison.com/council/district16)). The rest of the repo already
-says District 16. Fixing the guideline is #339.
+says District 16.
 
-**Schools differ between documents.** The guideline lists Kennedy Elementary, O'Keefe Middle and
-East High; the seed resources list Elvehjem Elementary. MMSD assigns schools by address and
+**Schools differed between documents.** The guideline listed Kennedy Elementary, O'Keefe Middle
+and East High until #339 replaced the list with the MMSD lookup. MMSD assigns schools by address and
 offers a lookup, [Find Your School](https://webapp1.madison.k12.wi.us/webapp1/find_your_school/)
 ([attendance areas](https://www.madison.k12.wi.us/about/why-mmsd/attendance-area-highlights));
 it spells the middle school "O'Keeffe". No primary source in the repo shows one set of schools for
@@ -94,6 +114,27 @@ to the west and Cottage Grove Road to the south. That matches the eastern half o
 [Sprecher Neighborhood Development Plan](https://www.cityofmadison.com/dpced/planning/documents/Sprecher%20NDP_2012.pdf)
 area (I-90 to Door Creek valley, I-94 to Cottage Grove Road, bisected by Sprecher Road), which is
 partly in the Town of Blooming Grove. [coverage.md](coverage.md) holds the working definition.
+
+## The 2026-11-10 sweep (#1001)
+
+A hand sweep found the sources above marked `pending`. Each entry in `sources.yaml` records what
+was seen that day and the issue that finishes its hand check (#993 to #998). None is polled, and
+no parser exists yet: those belong to the same issues. Madison Parks events (already listed) got
+its new observation, and City Legistar (already `valid`) got a note: contract awards and
+resolutions are where a physical project's paper trail turns up.
+
+**Not checked.** The sweep read the pages, not their robots.txt files, so these entries carry no
+`robots` check, and a source that needs one (`direct-then-playwright`) can't get it until a hand
+check records it. Whether 511 Wisconsin needs a free key isn't confirmed, nor is the live address
+of the Road Closures layer (only a catalog entry was found).
+
+**Discovery only.** The Visit Madison guide is a secondary roundup: use it to find events, then
+confirm each with its organizer ([coverage](coverage.md), "Review passes").
+
+**Not readable by automation.** The public library's event search page disallows automated
+reading (keep the iCalendar source above). United Way's volunteer listings refused an automated
+read, so their terms need a hand check (#998). Nextdoor and Facebook need a login, so resident
+reports from them reach the Scout only through the owner.
 
 ## Out of scope
 
@@ -113,8 +154,13 @@ robots rules disallow automated reading (Dane County's subscription page).
   `direct-then-playwright`: public City pages, read logged out once a day, on paths robots.txt
   allows (checked 2026-10-24). A direct GET that day served both lists in the HTML, with item
   links (Parks: Bat Fest, 2026-10-24; blog: newest post 2026-10-06), so no browser was needed.
-  They move to `valid` once the collector (#272) records a parse of a real current item. City
-  news stays `pending` until a feed is found.
+  Parks stays `pending`.
+- **HTML parsers (#390, 2026-10-27):** the District 16 blog, City news, the City's public
+  information meetings and WisDOT's I-39/90/94 meetings page have no feed, so each has a parser
+  for its own list markup (`runner/lib/html.mjs`, with trimmed copies of each page in
+  `runner/test/pages/`). All four are `valid` and polled once a day; robots.txt allows each path
+  (checked 2026-10-27). City news is citywide, so only releases that name the area go on to a
+  model.
 - **Notes from the 2026-10-24 checks** (kept here, out of `sources.yaml`'s line budget): none of
   the first 8 Parks events (October 24 to 29) was at Door Creek Park or Elvehjem Sanctuary;
   Pinney's Book Discussion feed held 8 events, 5 of them from 2026-10-15 to 2026-12-15; Spectrum's

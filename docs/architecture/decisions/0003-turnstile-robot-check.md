@@ -29,5 +29,6 @@ The public contact form needs protection from bots without making residents solv
 ## Links
 
 - Cloudflare server-side validation (https://developers.cloudflare.com/turnstile/get-started/server-side-validation/)
+- Deploy gate for missing keys: #869, and the "Robot check keys in production" entry in `docs/guidelines/security.md`
 - Code: `src/platform/lib/humanCheck.ts`, `src/platform/turnstile/turnstileVerifier.ts`,
   `src/modules/contact/cms/verifyHumanSubmission.ts`

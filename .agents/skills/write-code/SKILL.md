@@ -11,22 +11,22 @@ through them. Read a reference file below only when the step needs it.
 
 ## What the owner asked for
 
-Amine, 2026-10-20 and 2026-10-21 (in the Claude Code sessions that planned #127 and this skill):
+Summary of the owner's direction (2026-10-20 and 2026-10-21, in the Claude Code sessions that
+planned #127 and this skill):
 
-- "follow the domain-driven design and bounded context, and avoid all those anti-patterns, like
-  modules referencing other modules"
-- "very easy to plug with different themes, and very easy to plug with different CMS systems. Our
-  business logic and our core things are separated."
-- "we don't want to reinvent the wheel or overengineer"
-- "very manageable, even for a human to browse and understand the structure of the website just
-  from the folder structure"
+- Follow domain-driven design and bounded contexts, and avoid anti-patterns such as modules
+  referencing other modules.
+- Make it easy to plug in different themes and CMS systems, with business logic and core code kept
+  separate.
+- Don't reinvent the wheel or overengineer.
+- Keep things manageable, so a person can understand the site's structure from its folders alone.
 - From the epics built on his requests (#127, #163): files under 250 lines, each rule
   and component written and tested once and reused, shared components instead of plain HTML
   elements.
 
-Amine, 2026-10-22 (Claude chat, #262): "check the native configuration, check the native
-features. And then if they are not there, look for the plugin that is official. If it's not there,
-look for a open source plugin [...] If none of it is there, only then we can write the code."
+Summary of the owner's direction (2026-10-22, Claude chat, #262): check native configuration and
+features first, then an official plugin, then an open-source plugin. Write code only when none of
+those exists.
 
 ## 1. Find what exists first
 
@@ -35,6 +35,10 @@ ladder: native Payload, Next.js and React features and config, official plugins,
 free open-source plugins, and only then our own code.
 Record what each step found on the issue before writing custom code. How:
 [`references/reuse.md`](references/reuse.md).
+
+Read what the knowledge layer says about it too: the module's line in
+[`docs/knowledge/index.md`](../../../docs/knowledge/index.md) and its note, and the generated page
+in `docs/reference/` of any content type you touch. Not the whole module.
 
 ## 2. Put it in the right place
 
@@ -85,15 +89,43 @@ test Payload, Next.js or styling. How: [`references/tests.md`](references/tests.
 - No abstraction before it pays: an interface only for an outside service, a second
   implementation, or a test double ([conventions](../../../docs/architecture/conventions.md#interfaces-and-adapters)).
 - A component takes props for its variants (`cva`) instead of being copied; a second use moves
-  it to `src/platform/ui/`.
+  it to `src/platform/ui/`. Use, configure or split a shared component as
+  [the rule](../../../docs/guidelines/components-and-content.md#shared-components-use-configure-or-split)
+  says.
 - Use the shared primitives (`Button`, `Field`, `Form`, `Link`, `Media`), not raw `<button>`,
   `<input>` or `<img>`.
+- Public pages first: follow
+  [Fast by default](../../../docs/guidelines/development.md#fast-by-default-public-pages-first)
+  for rendering, queries, client JavaScript and images.
+
+## Expert guidance for React and Next.js
+
+The owner asked for established engineering practice over guesswork (2026-10-26, #424). For React
+and Next.js code, also follow Vercel's official skills, vendored in this repo:
+
+- [`vercel-react-best-practices`](../vercel-react-best-practices/SKILL.md): data fetching, bundle
+  size, server components and re-renders. Apply the CRITICAL and HIGH rules to every change.
+- [`vercel-composition-patterns`](../vercel-composition-patterns/SKILL.md): component APIs.
+  Use it for every shared component: explicit variants and compound parts, not boolean props.
+- Next.js itself: the bundled docs in `node_modules/next/dist/docs/` for the version we run.
+
+This repo's rules come first where they differ, and a rule that needs a new package goes through
+the [package rules](../../../docs/guidelines/security.md#before-adding-any-new-package).
 
 ## 6. Before you hand it over
 
 ```bash
-npx tsc --noEmit && npm run lint && npm test
+npx tsc --noEmit && npm run lint && npm test && npm run knip
 ```
+
+**Documentation follows behavior** ([0019](../../../docs/architecture/decisions/0019-knowledge-layer.md)
+§6). If what a visitor, an editor or an agent gets changed (a screen, a message, a field, access, a
+hook, a route, an email, a job, a limit), update the note that describes it in this PR: the one
+`docs/knowledge/map.json` names for the path, in the section the
+[template](../../../docs/knowledge/note-template.md) names, or the generated reference. A path the
+map doesn't list: the doc that describes it (a guideline, the setup notes, a skill). A module with
+no note yet needs none. If a content type changed, run `npm run docs:generate` (routes and
+components once #718 lands). If behavior didn't change, the PR says `Behavior change: none` and why.
 
 Fix new lint warnings in the files you touched, then run [`self-review`](../self-review/SKILL.md)
 (and [`visual-design-review`](../visual-design-review/SKILL.md) when the page looks different).

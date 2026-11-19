@@ -7,14 +7,15 @@ import { homeStatic } from '@/endpoints/seed/home-static'
 import {
   getPageBySlug,
   listPageSlugs,
+  PageHero,
   PayloadRedirects,
   RenderBlocks,
-  RenderHero,
+  toSiteHero,
 } from '@/modules/site/server'
 import { generateMeta } from '@/platform/seo/generateMeta'
 import { HOME_PAGE_SLUG } from '@/platform/payload/documentHref'
 import { LivePreviewListener } from '@/platform/ui/LivePreviewListener.client'
-import PageClient from './page.client'
+import { PageBackdrop } from '@/platform/ui/PageBackdrop'
 import { pageBlocks } from './pageBlocks'
 
 // A scheduled publish or unpublish runs outside a request, where Next can't refresh the cache, so
@@ -44,25 +45,33 @@ export default async function Page({ params: paramsPromise }: Args) {
   const decodedSlug = decodeURIComponent(slug)
   const url = '/' + decodedSlug
 
-  // Remove the fallback once your website is seeded
-  const page = (await getPageBySlug(decodedSlug)) ?? (slug === HOME_PAGE_SLUG ? homeStatic : null)
+  // Remove the fallback once your website is seeded. The starter home page has no blocks.
+  const page =
+    (await getPageBySlug(decodedSlug)) ??
+    (slug === HOME_PAGE_SLUG
+      ? { ...homeStatic, hero: toSiteHero(homeStatic.hero), layout: [], backdrop: null }
+      : null)
 
   if (!page) {
     return <PayloadRedirects url={url} />
   }
 
-  const { hero, layout } = page
+  const { hero, layout, backdrop } = page
 
   return (
     <article className="pb-0">
-      <PageClient />
       {/* Allows redirects for valid pages too */}
       <PayloadRedirects disableNotFound url={url} />
 
       {draft && <LivePreviewListener />}
 
-      <RenderHero {...hero} />
-      <RenderBlocks blocks={layout} components={pageBlocks} />
+      <PageBackdrop image={backdrop}>
+        {hero && <PageHero {...hero} />}
+        {/* Above the hero: its photo runs on under the first block and fades out there (#1304) */}
+        <div className="relative z-10">
+          <RenderBlocks blocks={layout} components={pageBlocks} />
+        </div>
+      </PageBackdrop>
     </article>
   )
 }

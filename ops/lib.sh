@@ -13,6 +13,15 @@ CODE_DIR="${CODE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 # shellcheck disable=SC2034 # used by the scripts that source this file
 APP_NAME=sprecher-east # the PM2 process
 
+# The Caddy files the Caddy scripts and install-umami.sh work on, and how they reload it. One
+# definition each; the environment overrides them in tests.
+# shellcheck disable=SC2034 # used by the scripts that source this file
+CADDYFILE="${CADDYFILE:-/etc/caddy/Caddyfile}"
+# shellcheck disable=SC2034
+HSTS_FILE="${HSTS_FILE:-/etc/caddy/sprecher-east-hsts.caddy}" # a copy of ops/caddy/hsts.caddy (caddy-https.sh)
+# shellcheck disable=SC2034
+RELOAD_CADDY="${RELOAD_CADDY:-systemctl reload caddy}"
+
 # report "message" → notice; "WARNING: …" → warning; "ERROR: …" → error.
 report() {
   case "$*" in

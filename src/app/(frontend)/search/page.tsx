@@ -4,7 +4,9 @@ import React from 'react'
 
 import { parseSearchQuery } from '@/modules/news'
 import { findSearchResults, PostGrid, SearchBox } from '@/modules/news/server'
-import PageClient from './page.client'
+import { EmptyState } from '@/platform/ui/EmptyState'
+import { PageHeader } from '@/platform/ui/PageHeader'
+import { PAGE_SHELL } from '@/platform/ui/layoutSizes'
 
 type Args = {
   searchParams: Promise<{
@@ -18,22 +20,23 @@ export default async function Page({ searchParams: searchParamsPromise }: Args) 
   const results = await findSearchResults(query)
 
   return (
-    <div className="pt-24 pb-24">
-      <PageClient />
-      <div className="container mb-12 md:mb-16">
-        <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-          Search
-        </h1>
-        <div className="max-w-[50rem]">
-          <SearchBox initialQuery={query} />
-        </div>
-      </div>
+    <div className={PAGE_SHELL}>
+      <PageHeader title="Search">
+        <SearchBox initialQuery={query} />
+      </PageHeader>
 
       {results.length > 0 ? (
-        <PostGrid posts={results} />
+        <div className="container">
+          <PostGrid posts={results} headingLevel="h2" />
+        </div>
       ) : (
-        <div className="container py-12 text-center">
-          <p className="text-muted-foreground">No results found.</p>
+        <div className="container">
+          <EmptyState
+            variant="plain"
+            title="No results found."
+            // Only a search that was typed can be retried with other words
+            description={query ? 'Try different words, or check the spelling.' : undefined}
+          />
         </div>
       )}
     </div>

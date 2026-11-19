@@ -14,7 +14,7 @@ export const faqItems: FAQItem[] = [
     question: 'What is Sprecher East?',
     answer: root([
       p(
-        'Sprecher East is a grassroots neighborhood initiative on Madison\u2019s Far East Side. We represent residents of the Meadowlands, Door Creek, and Reston Heights subdivisions. Our goal is to advocate for our neighborhood, share information, and build community connections.',
+        'An unofficial site for the neighborhood on Madison’s Far East Side: Meadowlands, Door Creek and Reston Heights. We share news, events and City updates in one place.',
       ),
     ]),
     category: 'general',
@@ -23,9 +23,7 @@ export const faqItems: FAQItem[] = [
   {
     question: 'Is Sprecher East an official neighborhood association?',
     answer: root([
-      p(
-        'We are working toward official registration with the City of Madison. In the meantime, we operate as a grassroots initiative. Official registration requires a certain level of community participation, and we\u2019re building toward that.',
-      ),
+      p('No. This is an unofficial site run by one neighbor. It doesn’t speak for any association.'),
     ]),
     category: 'general',
     order: 2,
@@ -34,37 +32,43 @@ export const faqItems: FAQItem[] = [
     question: 'Is this the same as the Meadowlands HOA?',
     answer: root([
       p(
-        'No. Sprecher East is not a homeowners association (HOA). We have no mandatory dues, no rules about your property, and no enforcement power. We\u2019re a voluntary neighborhood association focused on advocacy, information sharing, and community building.',
+        'No. Sprecher East is not a homeowners association (HOA). We collect no dues, set no rules about your property and have no enforcement power.',
       ),
     ]),
     category: 'general',
     order: 3,
   },
   {
-    question: 'How do I join?',
+    question: 'Do I need to join or pay?',
     answer: root([
-      p(
-        'Membership is free and open to any resident within our boundaries (I-94 to the north, Door Creek Park to the east, Sprecher Road to the west, Cottage Grove Road to the south). There\u2019s no formal sign-up required \u2014 just show up, participate, and consider yourself a member.',
+      paragraph(
+        text(
+          'No. There’s no membership, no sign-up and no dues. Read the site, and ',
+        ),
+        linkNode('send us a note', '/contact'),
+        text(' if you’d like to share something or help.'),
       ),
     ]),
-    category: 'membership',
+    category: 'general',
     order: 4,
   },
   {
     question: 'Who runs this?',
     answer: root([
-      p(
-        'Sprecher East was founded by Amine Boulaajaj, a resident of the neighborhood. The initiative is currently led by a small team with the help of AI tools for research, writing, and website development. We\u2019re transparent about our AI-assisted approach.',
+      paragraph(
+        text('Amine Boulaajaj, a neighbor here, with AI tools doing research and drafting. The '),
+        linkNode('About page', '/about'),
+        text(' has more.'),
       ),
     ]),
     category: 'general',
     order: 5,
   },
   {
-    question: 'AI helps build this website?',
+    question: 'Does AI help build this website?',
     answer: root([
       p(
-        'Yes. We use AI agents (Claude by Anthropic) to help research, write content, build the website, and organize information. Every piece of content is reviewed by a real person before it goes live. We believe in being transparent about how we work.',
+        'Yes. We use AI tools to research, draft and organize what’s here. A neighbor reviews what gets published, and longer pieces say what they’re based on.',
       ),
     ]),
     category: 'general',
@@ -74,46 +78,36 @@ export const faqItems: FAQItem[] = [
     question: 'What can I do to help?',
     answer: root([
       p(
-        'There are many ways to get involved: attend meetings, volunteer for events or projects, spread the word to neighbors, share ideas or concerns, or help with the website. Even an hour a month makes a difference.',
+        'Tell us what you need, point out what’s wrong, share an event, or pass the site on to a neighbor. Even a minute helps.',
       ),
     ]),
-    category: 'membership',
+    category: 'general',
     order: 7,
   },
   {
     question: 'How do I report a neighborhood issue?',
     answer: root([
       paragraph(
-        text('For city services (potholes, streetlights, noise complaints), use the '),
-        linkNode('City of Madison Report a Problem', 'https://www.cityofmadison.com/reportaproblem', {
+        text('For City services (potholes, streetlights, noise), use the City’s '),
+        linkNode('Report a Problem', 'https://www.cityofmadison.com/reportaproblem/', {
           newTab: true,
         }),
-        text(
-          ' tool. For neighborhood-specific concerns, reach out to us through the contact form or attend a meeting.',
-        ),
+        text(' tool. For anything else about the neighborhood, use our '),
+        linkNode('contact form', '/contact'),
+        text('.'),
       ),
     ]),
     category: 'neighborhood',
     order: 8,
   },
   {
-    question: 'Does it cost anything to be a member?',
-    answer: root([
-      p(
-        'No. Membership is completely free. There are no dues, fees, or financial obligations. We\u2019re funded by volunteer effort, not money.',
-      ),
-    ]),
-    category: 'membership',
-    order: 9,
-  },
-  {
     question: 'How is Sprecher East different from Nextdoor?',
     answer: root([
       p(
-        'Nextdoor is a social media platform owned by a corporation. Sprecher East is a local, resident-led initiative focused specifically on our neighborhood\u2019s interests at City Hall, community events, and local resources. We\u2019re your neighbors, not an app.',
+        'Nextdoor is a social media platform owned by a corporation. Sprecher East is a neighbor-run site about our neighborhood’s news, events and City updates. We’re your neighbors, not an app.',
       ),
     ]),
     category: 'general',
-    order: 10,
+    order: 9,
   },
 ]

@@ -26,7 +26,7 @@ describe('toCurrentUser', () => {
     expect(toCurrentUser(unnamed).name).toBeNull()
   })
 
-  it('treats an account without a role as a resident, like the access checks do', () => {
-    expect(toCurrentUser({ id: 1, email: 'a@example.com', role: null }).role).toBe('resident')
+  it('treats an account without a role as a guest, like the access checks do', () => {
+    expect(toCurrentUser({ id: 1, email: 'a@example.com', role: null }).role).toBe('guest')
   })
 })

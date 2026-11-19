@@ -2,4 +2,4 @@
 npx lint-staged
 
 # Warn (non-blocking) if production deps have high/critical vulnerabilities
-npm audit --audit-level=high --omit=dev || echo "⚠ npm audit found high/critical vulnerabilities — review before pushing"
+npm run --silent audit:prod || echo "⚠ npm audit found high/critical vulnerabilities — review before pushing"

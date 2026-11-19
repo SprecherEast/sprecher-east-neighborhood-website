@@ -18,35 +18,74 @@ Slug fields use Payload's built-in `slugField()` (`import { slugField } from 'pa
 
 ## Blocks
 
-A page-builder block belongs to a module and has two parts:
+A page-builder block belongs to a module and has four parts
+([decision 0013](../architecture/decisions/0013-cms-content-through-mappers.md)):
 
 - the Payload `Block` config (`slug`, `interfaceName`, `fields`) in the module's `cms/`, for
   example `src/modules/site/cms/callToActionBlock.ts`
-- the React component receiving the block data as props, in the module's `ui/` and exported from
-  its `server.ts`, for example `src/modules/site/ui/CallToActionBlock.tsx`
+- its plain props type in the module's `domain/` (`CallToActionBlockProps`)
+- the mapper `to…Props` in the module's `data/mappers.ts`, which turns the stored block into those
+  props; the page's use case calls it for `site`'s own blocks, and the block registry for blocks
+  other modules own
+- the React component taking those props, in the module's `ui/` and exported from its
+  `server.ts`, for example `src/modules/site/ui/CallToActionBlock.tsx`
+
+Blocks built before 0013 still take the generated block type until they move.
 
 **IMPORTANT**: Adding a new block requires THREE registration steps:
 
-1. Add the block config to the Pages layout: `SITE_LAYOUT_BLOCKS` in `src/modules/site/cms/layoutBlocks.ts` for a `site` block, or the `layoutBlocks` that `src/payload.config.ts` passes to `createPagesCollection` for another module's block (the form block from `contact`)
+1. Add the block config to the Pages layout: `SITE_LAYOUT_BLOCKS` in `src/modules/site/cms/layoutBlocks.ts` for a `site` block, or the `layoutBlocks` that `src/payload.config.ts` passes to `createPagesCollection` for another module's block (the form block from `contact`, the "this week" strip from `events`, top issues from `news`)
 2. Add a `case` for its `blockType` to `renderBlock` in `src/modules/site/ui/RenderBlocks.tsx`
 3. Add the component to the block registry, `pageBlocks` in `src/app/(frontend)/[slug]/pageBlocks.tsx`
 
 Without step 1 editors can't add the block. Once the types are regenerated, a missing step 2 or 3
 fails `tsc`.
 
-Page-builder blocks: `archive`, `content`, `cta`, `formBlock`, `mediaBlock`. Blocks inside rich
-text (`src/platform/richtext/`): `banner`, `code`, `mediaBlock`.
+Page-builder blocks: `archive`, `content`, `cta`, `eventsThisWeek` (from `events`), `formBlock`
+(from `contact`), `mapBlock` (a small picture that opens a live Google map, #764), `mediaBlock`,
+`topIssues` (from `news`). Blocks inside rich text
+(`src/platform/richtext/`): `banner`, `code`, `mediaBlock`, and the visual blocks in
+`EDITORIAL_BLOCKS` (`timeline`, `steps`, `keyFacts`, `outcomeFork`, `diagramKey`, `figure`, `chart`, `factTabs`).
+A block that agents may write in Markdown has a `jsx` converter (`chart` #640 and `factTabs` #664 do):
+`export` writes one `<Chart … />` or `<FactTabs … />` tag and `import` reads it back through the same
+rules as the editor's fields. Write the props with `writeProp` from `editorialTag.ts`: Payload's tag
+reader mishandles quotes, braces and backslashes in text. Payload's Markdown converter swallows an
+error an import throws, so use `collectTagRefusals` to hear the reasons and `unreadTags` to notice a
+tag it could not close.
+
+## Layout is content
+
+Every layout choice (width, alignment, position, order, spacing, grouping) is a field that an editor,
+or an agent working through Admin, can change in the CMS, with no code change and no deploy. The owner's
+direction (2026-11-07, text chat, recorded on #885).
+
+- Build layouts from the CMS's native blocks and layout fields.
+- When a layout can't be expressed yet, add the missing field to the block. Never hard-code an
+  arrangement in a component, and never reach for a code change to move or resize something.
+- A code change for layout is the last resort, used only when no field can express it.
+- After any content, markup or code change, check the result in a browser, in light and dark and at
+  phone and desktop width, before calling it done.
+
+## Text is content too
+
+Text a visitor reads (a label, a note, a row title, a disclaimer) is a CMS field, not a string typed into
+a component or helper, because changing a sentence must not take a pull request. The owner's direction
+(2026-11-13, text session, recorded on #1162). Editors configure the reusable components with fields and
+drop-down options, never with CSS or scripts from the CMS. Code only decides when a piece of text shows
+and fills in its blanks (`{year}`); its starting text is typed once, as the field's `defaultValue`.
+Fixed wording tied to security behavior stays in the message catalog (decision 0017). The first example
+is the whole-bill block's notes and row titles (#1158).
 
 ## Heroes
 
 Hero components live in `src/modules/site/ui/`. Four types: `highImpact`, `mediumImpact`, `lowImpact`, `none`.
 
-`src/modules/site/ui/RenderHero.tsx` maps the `type` field to the correct component. Hero config fields are defined in `src/modules/site/cms/hero.ts` as a reusable field group.
+`toPageHeroProps` in `src/modules/site/data/mappers.ts` maps the `type` field and the hero's fields to `PageHeroProps` (`src/modules/site/domain/hero.ts`, [decision 0013](../architecture/decisions/0013-cms-content-through-mappers.md)), and `getPageBySlug` returns the hero mapped. Hero config fields are defined in `src/modules/site/cms/hero.ts` as a reusable field group.
 
 **Two kinds of hero components:**
 
-- **CMS heroes** (`HighImpactHero`, `MediumImpactHero`, `LowImpactHero`) — registered in the `src/modules/site/cms/hero.ts` type selector and wired through `RenderHero.tsx`. Used by Pages via the layout builder.
-- **Standalone heroes** (`PostHero` in `src/modules/news/ui/`, `EventHero` in `src/modules/events/ui/`) — used directly by their detail pages, NOT registered in the CMS hero config. These are hardcoded per-collection detail pages and don't need CMS selection.
+- **CMS heroes** (`PageHero` in `src/modules/site/ui/PageHero.tsx`, variants `high`, `medium`, `low`) — chosen with the `src/modules/site/cms/hero.ts` type selector; the page draws `PageHero` with the mapped props. Used by Pages via the layout builder.
+- **Standalone heroes** (the post and event pages' `PageHeader · image`, from `src/platform/ui/`, with props from `postHeaderProps` in `src/modules/news/ui/` and `eventHeaderProps` in `src/modules/events/ui/`) — used directly by their detail pages, NOT registered in the CMS hero config. These are hardcoded per-collection detail pages and don't need CMS selection.
 
 ## Hooks
 
@@ -66,7 +105,7 @@ Collection-specific hooks (e.g., `revalidatePage`, `revalidatePost`, `revalidate
 
 Reusable field helpers:
 
-- `src/modules/site/cms/link.ts` — `link()` creates a group field with `type` (reference/custom), `label`, `url`, `reference`, `newTab`, `appearance`
+- `src/platform/payload/link.ts` — `link()` creates a group field with `type` (reference/custom), `label`, `url`, `reference`, `newTab`, `appearance`; any module's blocks may use it (`appearances: false` leaves out `appearance`, `disableLabel: true` leaves out `label`)
 - `src/modules/site/cms/linkGroup.ts` — `linkGroup()` creates an array of link fields
 - `src/platform/payload/defaultLexical.ts` — Standard Lexical editor config with toolbar features
 

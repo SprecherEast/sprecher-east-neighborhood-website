@@ -1,7 +1,8 @@
 # 0006: Clean layers inside each module, and pluggable themes
 
 - **Date:** 2026-10-20
-- **Status:** Accepted
+- **Status:** Accepted. Point 5 (one theme per build) is superseded by
+  [0012](0012-runtime-themes.md).
 
 ## Context
 

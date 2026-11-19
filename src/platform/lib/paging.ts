@@ -6,13 +6,27 @@
 /** Highest page a client may request — a sanity bound, far above real content. */
 export const MAX_PAGE = 500
 
-/** One page of a listing: what a page renders first and what "Load more" fetches next. */
+/**
+ * One numbered page of a listing: what a page renders first. `nextCursor` is where "Load more"
+ * continues from (#125), or `null` on the last page.
+ */
 export type FeedPage<T> = {
   docs: T[]
   page: number
   totalPages: number
   totalDocs: number
   limit: number
+  nextCursor: string | null
+}
+
+/**
+ * What "Load more" fetches: the items after a cursor, the cursor after them (`null` when none
+ * are left) and how many items the whole listing has now.
+ */
+export type FeedMore<T> = {
+  docs: T[]
+  nextCursor: string | null
+  totalDocs: number
 }
 
 /** Validates a page number coming from a URL or a client request. */

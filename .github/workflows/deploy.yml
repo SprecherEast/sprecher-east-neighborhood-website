@@ -3,6 +3,9 @@ name: Deploy to VPS
 # Builds the site in GitHub Actions and ships the build to the VPS, which only migrates, switches
 # and checks (#245; steps in ops/README.md). CI calls this workflow once its "Type-check & Build"
 # job has passed on a push to main; it can also be run by hand on main to redeploy.
+# The deploy secrets (VPS_*, UMAMI_ADMIN_PASSWORD) are secrets of the `production` environment, which
+# only runs from `main`, so a workflow on any other branch can't read them (#1071). The jobs that read
+# them, Preflight and Deploy, name it; Build release names none and reads no secret.
 on:
   workflow_call:
   workflow_dispatch:
@@ -15,15 +18,17 @@ jobs:
   preflight:
     name: Preflight
     if: github.ref == 'refs/heads/main'
+    environment: production # reads the VPS_* secrets
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     outputs:
       deploy: ${{ steps.plan.outputs.deploy }}
-      release: ${{ steps.plan.outputs.release }}
+      redeploy: ${{ steps.plan.outputs.redeploy }}
       node: ${{ steps.facts.outputs.node }}
       server_url: ${{ steps.facts.outputs.server_url }}
       turnstile_site_key: ${{ steps.facts.outputs.turnstile_site_key }}
       turnstile_paired: ${{ steps.facts.outputs.turnstile_paired }}
+      umami_website_id: ${{ steps.facts.outputs.umami_website_id }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -51,22 +56,25 @@ jobs:
       - name: Read the server's Node version and public settings
         id: facts
         if: steps.checks.outputs.cancelled != 'true'
+        env:
+          ALLOW_NO_ROBOT_CHECK: ${{ vars.ALLOW_NO_ROBOT_CHECK }}
         run: |
           set -euo pipefail
           facts=$(cat ops/lib.sh ops/server-facts.sh | ssh vps 'bash -s')
           get() { sed -n "s/^$1=//p" <<<"$facts" | tail -n 1; }
           node=$(get node); url=$(get server_url); key=$(get turnstile_site_key)
+          umami=$(get umami_website_id)
           secret=$(get turnstile_secret); free_kb=$(get free_kb)
           [[ "$node" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error title=Preflight::unexpected Node version from the server"; exit 1; }
           [[ "$url" =~ ^https?://[A-Za-z0-9.-]+(:[0-9]+)?$ ]] || { echo "::error title=Preflight::NEXT_PUBLIC_SERVER_URL in .env.local is not a plain origin"; exit 1; }
           [[ "$key" =~ ^[A-Za-z0-9_-]*$ ]] || { echo "::error title=Preflight::unexpected NEXT_PUBLIC_TURNSTILE_SITE_KEY"; exit 1; }
-          if [ -n "$key" ] && [ "$secret" = yes ]; then paired=yes
-          elif [ -z "$key" ] && [ "$secret" = no ]; then paired=no
-          else echo "::error title=Preflight::only one of the two Turnstile keys is set in .env.local"; exit 1; fi
+          UMAMI_ID="$umami" bash .github/scripts/umami-id-gate.sh
+          # Both Turnstile keys, or the visible opt-out (#869); the decision is in the script.
+          SITE_KEY="$key" SECRET_SET="$secret" bash .github/scripts/robot-check-gate.sh
           [ "${free_kb:-0}" -gt 3145728 ] || { echo "::error title=Preflight::less than 3 GB free on the server"; exit 1; }
           {
-            echo "node=$node"; echo "server_url=$url"; echo "turnstile_site_key=$key"
-            echo "turnstile_paired=$paired"; echo "deployed=$(get deployed)"
+            echo "node=$node"; echo "server_url=$url"; echo "turnstile_site_key=$key"; echo "umami_website_id=$umami"
+            echo "deployed=$(get deployed)"
           } >> "$GITHUB_OUTPUT"
           echo "::notice title=Preflight::server runs Node $node; live commit $(get deployed | cut -c1-7)"
 
@@ -100,11 +108,12 @@ jobs:
 
       - name: Build
         env:
-          RELEASE_DIR: /var/www/sprecher-east/releases/${{ needs.preflight.outputs.release }}
+          RELEASE_DIR: /var/www/sprecher-east/releases/${{ needs.preflight.outputs.redeploy == 'true' && format('{0}-run{1}', github.sha, github.run_id) || github.sha }}
           SHA: ${{ github.sha }}
           NODE_VERSION: ${{ needs.preflight.outputs.node }}
           NEXT_PUBLIC_SERVER_URL: ${{ needs.preflight.outputs.server_url }}
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ needs.preflight.outputs.turnstile_site_key }}
+          NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${{ needs.preflight.outputs.umami_website_id }}
           TURNSTILE_PAIRED: ${{ needs.preflight.outputs.turnstile_paired }}
           OUT: ${{ runner.temp }}/release.tar.gz
         run: bash ops/build-release.sh
@@ -119,6 +128,7 @@ jobs:
   deploy:
     name: Deploy
     needs: [preflight, build]
+    environment: production # reads the VPS_* and UMAMI_ADMIN_PASSWORD secrets
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     concurrency:
@@ -161,9 +171,12 @@ jobs:
       - name: Upload the release
         if: steps.order.outputs.skip != 'true'
         env:
-          RELEASE: ${{ needs.preflight.outputs.release }}
+          RELEASE: ${{ needs.preflight.outputs.redeploy == 'true' && format('{0}-run{1}', github.sha, github.run_id) || github.sha }}
         run: |
           set -euo pipefail
+          # Never run the commands below with an empty or odd name: `rm -rf releases/$RELEASE`
+          # would remove every release (#382)
+          [[ "$RELEASE" =~ ^[0-9a-f]{40}(-run[0-9]+)?$ ]] || { echo "::error::bad release name '$RELEASE'"; exit 1; }
           # shellcheck disable=SC2029 # $RELEASE (a commit hash) is meant to expand here
           ssh vps "set -euo pipefail
             cd /var/www/sprecher-east && mkdir -p releases
@@ -178,22 +191,29 @@ jobs:
       - name: Put the release live
         if: steps.order.outputs.skip != 'true'
         env:
-          RELEASE: ${{ needs.preflight.outputs.release }}
+          RELEASE: ${{ needs.preflight.outputs.redeploy == 'true' && format('{0}-run{1}', github.sha, github.run_id) || github.sha }}
+          UMAMI_ADMIN_PASSWORD: ${{ secrets.UMAMI_ADMIN_PASSWORD }}
         run: |
+          [[ "$RELEASE" =~ ^[0-9a-f]{40}(-run[0-9]+)?$ ]] || { echo "::error::bad release name '$RELEASE'"; exit 1; }
+          # The Umami admin password goes over the SSH session's stdin (#948), never into a
+          # command line or file; empty while the secret isn't set, and the script then does nothing.
           # shellcheck disable=SC2029 # $RELEASE (a commit hash) is meant to expand here
-          ssh vps "bash /var/www/sprecher-east/releases/$RELEASE/ops/deploy-release.sh"
+          printf '%s' "$UMAMI_ADMIN_PASSWORD" | ssh vps "bash /var/www/sprecher-east/releases/$RELEASE/ops/deploy-release.sh --umami-password-stdin"
 
-      - name: Check that port 3000 is closed to the internet (#118)
+      - name: Check that ports 3000 and 3100 are closed to the internet (#118, #948)
         # Also after a failed deploy step: the outside view is what tells a failure apart (#338).
         if: ${{ !cancelled() && steps.order.outputs.skip != 'true' }}
         env:
           HOST: ${{ secrets.VPS_HOST }}
         run: |
-          if timeout 5 bash -c "exec 3<>/dev/tcp/$HOST/3000" 2>/dev/null; then
-            echo "::warning title=Port 3000::reachable from the internet"
-          else
-            echo "::notice title=Port 3000::not reachable from the internet"
-          fi
+          # 3000 is the app, 3100 Umami (UMAMI_PORT in ops/umami-lib.sh; ops/umami.test.mjs checks they agree)
+          for port in 3000 3100; do
+            if timeout 5 bash -c "exec 3<>/dev/tcp/$HOST/$port" 2>/dev/null; then
+              echo "::warning title=Port $port::reachable from the internet"
+            else
+              echo "::notice title=Port $port::not reachable from the internet"
+            fi
+          done
 
       # What a visitor gets, from outside the server (#235): HSTS on the domain, plain HTTP to the
       # domain and to the server's SSH address (VPS_HOST, the IP or its hostname, which the `:80`

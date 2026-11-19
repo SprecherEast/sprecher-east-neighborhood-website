@@ -22,33 +22,26 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          sparse-checkout: .github/label-policy.json
+          sparse-checkout: .github
           sparse-checkout-cone-mode: false
+          persist-credentials: false
 
       - uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
+            const { pathToFileURL } = require('url');
+            const scripts = (name) => import(pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/${name}`).href);
+            const { dropLabel, ensureLabel } = await scripts('labels.mjs');
+            const { formChoices } = await scripts('issue-form.mjs');
+            const { PRIORITY_PREFIX, labelNames } = await scripts('pr-body.mjs');
             const policy = JSON.parse(fs.readFileSync('.github/label-policy.json', 'utf8'));
             const issue = context.payload.issue;
-            const current = issue.labels.map((l) => l.name);
+            const current = labelNames(issue);
 
-            // Issue forms render answers as "### <Label>\n\n<value>". Only accept sections
-            // whose values are all valid options, so a heading typed inside a free-text
-            // answer can't spoof a dropdown.
-            const occurrences = {};
-            for (const part of (issue.body || '').split(/^###\s+/m).slice(1)) {
-              const nl = part.indexOf('\n');
-              const title = (nl === -1 ? part : part.slice(0, nl)).trim().toLowerCase();
-              const value = nl === -1 ? '' : part.slice(nl + 1).trim();
-              const values = value === '_No response_' ? [] : value.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
-              (occurrences[title] ||= []).push(values);
-            }
-            const valid = (title, allowed) =>
-              (occurrences[title] || []).filter((vals) => vals.length && vals.every((v) => allowed.includes(v)));
-            const type = valid('type', policy.types)[0]?.[0]; // Type is the first field of its forms
-            const areas = valid('area', policy.areas).at(-1) || []; // Area/Priority are the last fields
-            const priority = valid('priority', Object.keys(policy.priorities)).at(-1)?.[0];
+            // The form's answers (issue-form.mjs): only values that are all valid options count, so a
+            // heading typed inside a free-text answer can't spoof a dropdown
+            const { type, areas, priority } = formChoices(issue.body, policy);
 
             const add = new Set(areas);
             const remove = [];
@@ -57,22 +50,14 @@ jobs:
               remove.push(...current.filter((l) => policy.types.includes(l) && l !== type));
             }
             if (priority) {
-              const name = `priority: ${priority}`;
-              try {
-                await github.rest.issues.createLabel({ ...context.repo, name, color: policy.priorities[priority] });
-              } catch (e) {
-                if (e.status !== 422) throw e; // 422 = label already exists
-              }
+              const name = `${PRIORITY_PREFIX}${priority}`;
+              await ensureLabel(github, context.repo, { name, color: policy.priorities[priority] });
               add.add(name);
-              remove.push(...current.filter((l) => l.startsWith('priority: ') && l !== name));
+              remove.push(...current.filter((l) => l.startsWith(PRIORITY_PREFIX) && l !== name));
             }
 
             for (const name of remove) {
-              try {
-                await github.rest.issues.removeLabel({ ...context.repo, issue_number: issue.number, name });
-              } catch (e) {
-                if (e.status !== 404) throw e;
-              }
+              await dropLabel(github, { ...context.repo, issue_number: issue.number }, name);
             }
             if (add.size === 0) {
               core.info('No issue-form answers found; nothing to label.');
@@ -80,3 +65,15 @@ jobs:
             }
             await github.rest.issues.addLabels({ ...context.repo, issue_number: issue.number, labels: [...add] });
             core.info(`Labels applied: ${[...add].join(', ')}${remove.length ? `; removed: ${remove.join(', ')}` : ''}`);
+
+  # Checks the issue once the labels above are on it (#969): warns with one comment and the
+  # `needs grooming` label. Issue Policy also starts by itself when a person changes a label or
+  # the milestone.
+  groom:
+    name: Check the issue
+    needs: label
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/issue-policy.yml

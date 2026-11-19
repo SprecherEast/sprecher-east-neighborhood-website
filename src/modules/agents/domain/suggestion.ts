@@ -1,3 +1,5 @@
+import { TITLE_MAX_LENGTH } from '@/platform/lib'
+
 /**
  * What an agent sends with `submitSuggestion` and `reportItem` (#336), and the rules that turn a
  * suggestion into an event's or a post's fields. Pure, so the MCP tools and their tests share it.
@@ -9,8 +11,11 @@
  */
 export const SUGGESTION_CAPS = {
   runId: 100,
-  title: 120,
-  bodyMarkdown: 3_000,
+  // Payload checks a title's length when an editor publishes, not when a draft is saved (#633), so
+  // this cap is the only guard for a suggestion: a longer title would fail later, on publish
+  title: TITLE_MAX_LENGTH,
+  // Room for a long explainer with chart tags: the 2027 budget post is 4 to 5 KB (#640)
+  bodyMarkdown: 12_000,
   cardSummary: 160,
   categorySlug: 100,
   categories: 2,
@@ -59,7 +64,6 @@ export const REVIEW_FLAGS = [
 ] as const
 
 export const SUGGESTION_COLLECTIONS = ['events', 'posts'] as const
-export type SuggestionCollection = (typeof SUGGESTION_COLLECTIONS)[number]
 
 /** What an agent can report about a run, for an editor to look at. */
 export const REVIEW_ITEM_KINDS = [

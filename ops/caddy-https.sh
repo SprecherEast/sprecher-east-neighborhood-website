@@ -31,9 +31,6 @@ on_unexpected_error() {
 }
 trap 'on_unexpected_error $LINENO' ERR
 
-CADDYFILE="${CADDYFILE:-/etc/caddy/Caddyfile}"
-HSTS_FILE="${HSTS_FILE:-/etc/caddy/sprecher-east-hsts.caddy}"
-RELOAD_CADDY="${RELOAD_CADDY:-systemctl reload caddy}"
 APP_PORT="${APP_PORT:-3000}" # the app's port behind Caddy (ecosystem.config.cjs)
 SOURCE="$CODE_DIR/ops/caddy/hsts.caddy"
 IMPORT_LINE="import $HSTS_FILE"

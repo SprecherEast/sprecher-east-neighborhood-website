@@ -46,7 +46,7 @@ describe('hasAdminOrEditor', () => {
     expect(hasAdminOrEditor(null)).toBe(false)
   })
 
-  it('treats a user without a role as a resident', () => {
+  it('treats a user without a role as a guest', () => {
     expect(hasAdminOrEditor(noRole)).toBe(false)
   })
 })

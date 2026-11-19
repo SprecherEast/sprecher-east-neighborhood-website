@@ -18,9 +18,10 @@ import {
  */
 
 type Operation = 'read' | 'create' | 'update' | 'delete' | 'readVersions' | 'unlock'
-const PUBLIC = ['visitor', 'resident', 'agent'] satisfies Audience[]
-// Signed-in accounts of any non-staff role
-const RESIDENT_ONLY = ['resident', 'agent'] satisfies Audience[]
+const PUBLIC = ['visitor', 'guest', 'resident', 'agent'] satisfies Audience[]
+// Signed-in accounts of any non-staff role. Guest and resident have the same access until
+// residency checks exist (#520, #314)
+const SIGNED_IN = ['guest', 'resident', 'agent'] satisfies Audience[]
 const AGENT_ONLY = ['agent'] satisfies Audience[]
 
 /** Everything visitors and residents may do. Anything missing here must be denied. */
@@ -42,10 +43,10 @@ const ALLOWED: Record<string, Partial<Record<Operation, Audience[]>>> = {
   'form-submissions': { create: PUBLIC },
   // Payload's own: each user's admin preferences, filtered to their own rows
   'payload-preferences': {
-    read: RESIDENT_ONLY,
-    create: RESIDENT_ONLY,
-    update: RESIDENT_ONLY,
-    delete: RESIDENT_ONLY,
+    read: SIGNED_IN,
+    create: SIGNED_IN,
+    update: SIGNED_IN,
+    delete: SIGNED_IN,
   },
   // An agent's own run history (read and update return a filter on `agent`)
   'agent-runs': { read: AGENT_ONLY, create: AGENT_ONLY, update: AGENT_ONLY },
@@ -56,10 +57,10 @@ const ALLOWED: Record<string, Partial<Record<Operation, Audience[]>>> = {
   // Payload's own edit locks are staff-only (`restrictEditLocks`, #147), so not listed here
   // Payload's own, with no REST or GraphQL endpoints (`endpoints: false`)
   'payload-migrations': {
-    read: RESIDENT_ONLY,
-    create: RESIDENT_ONLY,
-    update: RESIDENT_ONLY,
-    delete: RESIDENT_ONLY,
+    read: SIGNED_IN,
+    create: SIGNED_IN,
+    update: SIGNED_IN,
+    delete: SIGNED_IN,
   },
   // Globals
   header: { read: PUBLIC },
@@ -101,7 +102,7 @@ describe('collections', () => {
       ['events', 'faq', 'pages', 'posts', 'resources'].sort(),
     )
     for (const collection of withDrafts) {
-      for (const audience of ['visitor', 'resident'] as const) {
+      for (const audience of ['visitor', 'guest', 'resident'] as const) {
         expect(await accessResult(collection.access.read, audience)).toEqual({
           _status: { equals: 'published' },
         })
@@ -149,8 +150,11 @@ describe('collections', () => {
     expect(await (events?.access.create as AccessFn)(key)).toBe(false)
   })
 
-  it('let a resident reach their own user record and nobody else’s', async () => {
+  it('let a guest or resident reach their own user record and nobody else’s', async () => {
     const users = config.collections.find((c) => c.slug === 'users')
+    expect(await allows(users?.access.update, 'guest', 6)).toBe(true)
+    expect(await allows(users?.access.update, 'guest', 99)).toBe(false)
+    expect(await allows(users?.access.read, 'guest', 6)).toBe(true)
     expect(await allows(users?.access.update, 'resident', 7)).toBe(true)
     expect(await allows(users?.access.update, 'resident', 99)).toBe(false)
     expect(await allows(users?.access.read, 'resident', 7)).toBe(true)

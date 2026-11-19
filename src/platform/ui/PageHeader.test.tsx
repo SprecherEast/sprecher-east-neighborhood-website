@@ -1,0 +1,245 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+
+import type { ImageRef } from '@/platform/lib'
+
+import { Badge, BadgeList } from './Badge'
+import { DETAIL_GRID } from './layoutSizes'
+import { PageHeader } from './PageHeader'
+import { expectAccessible } from './testing/expectAccessible'
+
+afterEach(cleanup)
+
+describe('PageHeader', () => {
+  it("draws the page's one h1 with its eyebrow and description, with no accessibility violations", async () => {
+    const { container } = render(
+      <main>
+        <PageHeader
+          eyebrow="Directory"
+          title="Neighborhood Resources"
+          description="Helpful contacts for residents."
+        />
+      </main>,
+    )
+
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Neighborhood Resources')
+    expect(screen.getByText('Directory').className).toContain('uppercase')
+    expect(screen.getByText('Helpful contacts for residents.').className).toContain('max-w-2xl')
+    await expectAccessible(container)
+  })
+
+  it('leaves out what it is not given', () => {
+    const { container } = render(<PageHeader title="Search" />)
+
+    expect(container.querySelectorAll('p')).toHaveLength(0)
+    expect(screen.queryByRole('link')).toBeNull()
+  })
+
+  it('offers a way back and holds a control under the title', () => {
+    render(
+      <PageHeader title="Past Events" backLink={{ href: '/events', label: 'Back to all events' }}>
+        <input aria-label="Search" />
+      </PageHeader>,
+    )
+
+    expect(screen.getByRole('link', { name: 'Back to all events' }).getAttribute('href')).toBe(
+      '/events',
+    )
+    expect(screen.getByRole('textbox', { name: 'Search' })).toBeTruthy()
+  })
+
+  it('draws a compact header for a form page, with no container of its own (#439)', () => {
+    const { container } = render(
+      <PageHeader variant="compact" title="Log In" description="Log in to your account." />,
+    )
+
+    const header = container.querySelector('header')
+    expect(header?.className).not.toContain('container')
+    expect(screen.getByRole('heading', { level: 1 }).className).toContain('text-3xl')
+    expect(header?.className).toContain('mb-8')
+  })
+
+  it('keeps less room under a compact header with no description', () => {
+    const { container } = render(<PageHeader variant="compact" title="Account Confirmed" />)
+
+    expect(container.querySelector('header')?.className).toContain('mb-6')
+  })
+
+  it('takes no eyebrow, way back or control in the compact variant', () => {
+    // @ts-expect-error A compact header is title and description only
+    render(<PageHeader variant="compact" title="Log In" eyebrow="Account" />)
+  })
+
+  it('heads a post or an event on a plain band with no picture or facts (#1013, #1002)', async () => {
+    const { container } = render(
+      <main>
+        <PageHeader variant="band" eyebrow={<Badge>Parks</Badge>} title="Park cleanup" />
+      </main>,
+    )
+
+    const title = screen.getByRole('heading', { level: 1 })
+    expect(title.className).toContain('text-foreground')
+    expect(title.className).not.toContain('text-on-image')
+    expect(title.className).toContain('font-bold')
+    // A themed surface from tokens, and no picture, scrim or photo credit
+    const band = title.closest('[class*="bg-surface"]')
+    expect(band).toBeTruthy()
+    expect(container.querySelector('img')).toBeNull()
+    expect(container.querySelector('[class*="scrim"]')).toBeNull()
+    // The metadata is the article's `MetaBar`, not part of the band
+    expect(container.querySelector('dl')).toBeNull()
+    expect(band?.contains(screen.getByText('Parks'))).toBe(true)
+    await expectAccessible(container)
+  })
+
+  it('puts the title on the article column, the grid `DetailLayout` uses (#1013)', () => {
+    const { container } = render(
+      <main>
+        <PageHeader variant="band" title="Park cleanup" />
+      </main>,
+    )
+
+    const titleRow = screen.getByRole('heading', { level: 1 }).parentElement?.parentElement
+    for (const token of DETAIL_GRID.split(' ')) expect(titleRow?.className).toContain(token)
+    // The article is the grid's second column, beside the rail
+    expect(titleRow?.firstElementChild?.className).toContain('lg:col-start-2')
+    expect(container.querySelector('[class*="reading-width"]')).toBeNull()
+  })
+
+  it('gives the title the same space above as below, from one value (#1279)', () => {
+    render(
+      <main>
+        <PageHeader variant="band" title="Park cleanup" />
+      </main>,
+    )
+
+    const box = screen.getByRole('heading', { level: 1 }).closest('.container')
+    const classes = box?.className ?? ''
+    // The gap is set once, and the top (under the site header's own height) and the bottom read it
+    expect(classes.match(/\[--band-gap:[^\]]+\]/g)).toHaveLength(1)
+    expect(classes).toContain('pt-[calc(var(--header-height)+var(--band-gap))]')
+    expect(classes).toContain('pb-(--band-gap)')
+    expect(classes).not.toMatch(/\bp[tb]-\d/)
+  })
+
+  it('draws a band with no eyebrow', async () => {
+    const { container } = render(
+      <main>
+        <PageHeader variant="band" title="Park cleanup" />
+      </main>,
+    )
+
+    expect(container.querySelector('dl')).toBeNull()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Park cleanup')
+    await expectAccessible(container)
+  })
+
+  it('keeps a badge eyebrow in its own look on the default header', async () => {
+    const { container } = render(
+      <main>
+        <PageHeader eyebrow={<Badge>Parks</Badge>} title="Park cleanup" />
+      </main>,
+    )
+
+    // A badge eyebrow keeps its own look: no uppercase overline around it
+    expect(screen.getByText('Parks').parentElement?.className).not.toContain('uppercase')
+    expect(container.querySelector('img')).toBeNull()
+    await expectAccessible(container)
+  })
+
+  describe('band backdrop (#1024)', () => {
+    const photo = {
+      id: 7,
+      alt: 'Rooftops at dusk',
+      url: '/api/media/file/dusk.jpg',
+      width: 1920,
+      height: 640,
+      mimeType: 'image/jpeg',
+      updatedAt: '2026-11-11T00:00:00.000Z',
+      createdAt: '2026-11-11T00:00:00.000Z',
+    } as ImageRef
+    const backdrop = { phone: null, tablet: null, desktop: photo }
+
+    it('draws the photo inside the band, behind the title, with the scrim over it', async () => {
+      const { container } = render(
+        <main>
+          <PageHeader
+            variant="band"
+            eyebrow={<Badge>Parks</Badge>}
+            title="Park cleanup"
+            backdrop={backdrop}
+          />
+        </main>,
+      )
+
+      const title = screen.getByRole('heading', { level: 1 })
+      const band = title.closest('[class*="bg-surface"]') as HTMLElement
+      const layer = container.querySelector('[data-backdrop-size]')?.parentElement
+      expect(band.contains(layer ?? null)).toBe(true)
+      // Behind the text: the band clips it, and the text sits in a positioned box above it
+      expect(band.className).toContain('overflow-hidden')
+      expect(band.className).toContain('relative')
+      expect(title.closest('.container')?.className).toContain('relative')
+      expect(container.querySelector('[class*="bg-surface/"]')).toBeTruthy()
+      // The title keeps its own look: the foreground token, no on-image text
+      expect(title.className).toContain('text-foreground')
+      await expectAccessible(container)
+    })
+
+    it('keeps a badge eyebrow readable over the photo: each badge sits on a solid plate', () => {
+      render(
+        <main>
+          <PageHeader
+            variant="band"
+            eyebrow={
+              <BadgeList plated>
+                <Badge>Parks</Badge>
+              </BadgeList>
+            }
+            title="Park cleanup"
+            backdrop={backdrop}
+          />
+        </main>,
+      )
+
+      expect(screen.getByText('Parks').parentElement?.className).toContain('bg-surface')
+    })
+
+    it('is the same plain band when no photo is set', () => {
+      const plain = render(<PageHeader variant="band" title="Park cleanup" />)
+      const plainHtml = plain.container.innerHTML
+      cleanup()
+      const empty = render(
+        <PageHeader
+          variant="band"
+          title="Park cleanup"
+          backdrop={{ phone: null, tablet: null, desktop: null }}
+        />,
+      )
+      const none = render(<PageHeader variant="band" title="Park cleanup" backdrop={null} />)
+
+      expect(empty.container.innerHTML).toBe(plainHtml)
+      expect(none.container.innerHTML).toBe(plainHtml)
+      expect(plainHtml).not.toContain('<img')
+    })
+
+    it('does not make the band taller than the plain one', () => {
+      const withPhoto = render(
+        <PageHeader variant="band" title="Park cleanup" backdrop={backdrop} />,
+      )
+      const band = withPhoto.container.querySelector('[class*="bg-surface"]') as HTMLElement
+      // The photo is absolutely placed: it adds no height, and no padding or min-height is added for it
+      expect(band.className).not.toMatch(/min-h|\bpy-|\bpb-/)
+      expect(
+        withPhoto.container.querySelector('[data-backdrop-size]')?.parentElement?.className,
+      ).toContain('absolute')
+    })
+  })
+
+  it('takes no picture, description or control on the band', () => {
+    // @ts-expect-error The band shows title and eyebrow only
+    render(<PageHeader variant="band" title="Park cleanup" description="No" />)
+  })
+})

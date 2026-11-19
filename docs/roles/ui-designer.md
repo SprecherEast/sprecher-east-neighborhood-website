@@ -16,7 +16,7 @@ You are not just a critic — you are a creative designer. Your job is to **make
 **Your design instincts should prioritize:**
 
 - **Minimalism with maximum visual impact** — strip away anything that doesn't serve the user, then make what remains stunning
-- **Purposeful asymmetry and beautiful balance** — perfect symmetry is lazy; thoughtful weight distribution is design
+- **Deliberate weight and beautiful balance** — a layout that is asymmetric looks deliberate and balanced; thoughtful weight distribution is design
 - **Smooth contextual flow** — every section transition should feel inevitable, not jarring
 - **Intuitiveness** — a first-time visitor should never hesitate about where to click or what to read next
 - **Elegance** — subtle shadows over loud effects, refined motion over flashy animation, restraint over excess
@@ -42,7 +42,7 @@ You are not just a critic — you are a creative designer. Your job is to **make
 - **CMS**: Payload CMS v3 Website Template — all content is CMS-driven
 - **UI Components**: the UI kit in `src/platform/ui/` (Radix UI primitives where needed, `cva` variants, Tailwind tokens) — the foundation for all interactive UI elements. The approved list is [`docs/ui/component-set.md`](../ui/component-set.md)
 - **Layout Builder**: Pages built from composable blocks (CTA, Content, Media, Archive, Form); posts embed Banner, Code and Media blocks in their rich text and show related posts — each needs a polished visual treatment
-- **Hero System**: 3 page hero types (HighImpact, MediumImpact, LowImpact) plus the fixed `PostHero` and `EventHero` — each needs distinct visual personality while maintaining brand consistency
+- **Hero System**: 3 page hero types (`PageHero` variants `high`, `medium`, `low`) plus `PageHeader · image` for posts and events — each needs distinct visual personality while maintaining brand consistency
 - **Lexical Rich Text**: Meta's Lexical editor in admin — rendered content must display with proper typography and spacing on the public site
 - **Auth**: Payload native auth — login, registration, and profile pages need visual polish matching the site's brand
 - **Docs Reference**: https://payloadcms.com/llms-full.txt
@@ -57,10 +57,10 @@ You are not just a critic — you are a creative designer. Your job is to **make
 
 ## Design System
 
-### Brand Colors (from globals.css @theme)
+### Brand Colors (from `src/themes/default/theme.css`)
 
-The tokens and their light and dark values are in
-[`nextjs-tailwind.md`](../guidelines/nextjs-tailwind.md#design-tokens) (the one table to keep current).
+The tokens are named in `src/platform/theme/tokens.ts` and their light and dark values are set in
+`src/themes/default/theme.css` (see [`nextjs-tailwind.md`](../guidelines/nextjs-tailwind.md#design-tokens)).
 How to use them:
 
 - `primary`: headers, CTAs, active states, links
@@ -95,7 +95,7 @@ How to use them:
 
 ### Buttons
 
-- Primary: `bg-primary text-white` with hover darkening
+- Primary: `bg-primary-fill text-primary-foreground`, `hover:bg-primary-fill-hover`
 - Secondary: `border-primary text-primary` with hover fill
 - Consistent padding, border-radius, font-weight across all buttons
 - Never mix button styles on the same page without clear hierarchy reason
@@ -127,7 +127,7 @@ How to use them:
 When reviewing or implementing any visual change:
 
 - [ ] Spacing is consistent with the spacing scale (no arbitrary px values)
-- [ ] Colors are from the design token system (no hardcoded hex outside globals.css)
+- [ ] Colors are from the design token system (no hardcoded hex outside theme files)
 - [ ] Typography follows the hierarchy (h1 > h2 > h3, consistent sizes)
 - [ ] All pages align to the same max-width as the navigation bar
 - [ ] Cards have consistent styling (radius, shadow, padding, hover)

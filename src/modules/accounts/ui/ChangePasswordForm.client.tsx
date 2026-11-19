@@ -57,12 +57,7 @@ export function ChangePasswordForm() {
               {...register('currentPassword')}
             />
           </Field>
-          <NewPasswordFields
-            password={register('newPassword')}
-            confirm={register('confirmPassword')}
-            passwordError={errors.newPassword?.message}
-            confirmError={errors.confirmPassword?.message}
-          />
+          <NewPasswordFields register={register} errors={errors} />
           <div>
             <Button type="submit" loading={status === 'submitting'}>
               {status === 'submitting' ? 'Updating' : 'Update Password'}

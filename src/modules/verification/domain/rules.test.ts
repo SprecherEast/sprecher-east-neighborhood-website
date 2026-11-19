@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { RETENTION } from '@/platform/lib'
 
 import { CONFIRMATION_LIMITS } from './limits'
-import { checkAddressLimit, checkLink, toTokenExpiry } from './rules'
+import { checkAddressLimit, checkLink, toLinkStatus, toTokenExpiry } from './rules'
 
 const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR
@@ -77,5 +77,19 @@ describe('checkLink', () => {
   it('says a link was already used once the address is confirmed, even after expiry', () => {
     const record = { confirmedAt: iso(NOW - DAY), tokenExpiresAt: iso(NOW - HOUR) }
     expect(checkLink(record, NOW)).toBe('already-confirmed')
+  })
+})
+
+describe('toLinkStatus (#391)', () => {
+  it('reads the same states as following the link, without changing anything', () => {
+    expect(toLinkStatus({ confirmedAt: null, tokenExpiresAt: iso(NOW + 1) }, NOW)).toBe('pending')
+    expect(toLinkStatus({ confirmedAt: null, tokenExpiresAt: iso(NOW) }, NOW)).toBe('expired')
+    expect(toLinkStatus({ confirmedAt: iso(NOW - DAY), tokenExpiresAt: null }, NOW)).toBe(
+      'already-confirmed',
+    )
+  })
+
+  it('says a link no record holds isn’t valid', () => {
+    expect(toLinkStatus(null, NOW)).toBe('invalid')
   })
 })

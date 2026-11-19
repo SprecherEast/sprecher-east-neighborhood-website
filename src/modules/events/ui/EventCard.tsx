@@ -1,20 +1,17 @@
-import Link from 'next/link'
 import React from 'react'
 import { MapPin, Clock, Calendar } from 'lucide-react'
 
 import { Media } from '@/platform/ui/Media'
 import { cn } from '@/platform/lib/cn'
-import { categoryPillClassName } from '@/platform/ui/categoryPill'
-import { formatDateShort, formatDateBadge, toDateTimeAttr } from '@/platform/lib/formatDateTime'
+import { Badge, BadgeList } from '@/platform/ui/Badge'
+import { Card, CardBody, CardFooter, CardMedia, CardTitle } from '@/platform/ui/Card'
+import { formatDateBadge } from '@/platform/lib/formatDateTime'
+import { DateTime } from '@/platform/ui/DateTime'
+import { MetaList, type IconMetaItem } from '@/platform/ui/MetaList'
+import { Text } from '@/platform/ui/Text'
 
 import type { EventSummary } from '../domain/types'
-
-/**
- * Stretches the title link over the whole card so the card stays clickable, while the
- * link's accessible name is just the event title (not every line of the card).
- */
-const stretchedLinkClassName =
-  'after:absolute after:inset-0 after:rounded-[inherit] after:content-[""] focus-visible:outline-none'
+import { EventTitleLabels } from './EventTitleLabels'
 
 const DateBadge: React.FC<{
   date: string
@@ -31,7 +28,7 @@ const DateBadge: React.FC<{
         className,
       )}
     >
-      <span className="text-xs leading-none font-bold text-primary uppercase">{month}</span>
+      <span className="text-xs leading-none font-bold text-primary-strong uppercase">{month}</span>
       <span
         className={cn(
           'leading-tight font-bold text-foreground',
@@ -44,12 +41,20 @@ const DateBadge: React.FC<{
   )
 }
 
+/** A place on one line, cut with an ellipsis, so cards in a row stay level (#873); the event page has it in full. */
+const PlaceLabel: React.FC<{ label: string; className?: string }> = ({ label, className }) => (
+  <Text as="span" variant="small" clamp={1} className={cn('min-w-0', className)}>
+    {label}
+  </Text>
+)
+
 export const EventCard: React.FC<{
   event: EventSummary
   compact?: boolean
-}> = ({ event, compact }) => {
-  const { slug, title, date, timeStart, timeEnd, categories, description, locationName, image } =
-    event
+  /** `h2` where no heading sits between the page's `h1` and the list; `h4` under a row's `h3` */
+  headingLevel?: 'h2' | 'h3' | 'h4'
+}> = ({ event, compact, headingLevel = 'h3' }) => {
+  const { slug, title, date, timeStart, timeEnd, categories, description, place, image } = event
 
   if (!slug) return null
 
@@ -57,26 +62,28 @@ export const EventCard: React.FC<{
 
   if (compact) {
     return (
-      <article className="group relative flex min-w-0 items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:shadow-md has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring motion-safe:hover:-translate-y-0.5">
+      <Card as="article" padding="sm" interactive className="flex items-start gap-4">
         <DateBadge date={date} className="bg-surface text-center" />
         <div className="min-w-0">
-          <time className="text-xs text-muted-foreground" dateTime={toDateTimeAttr(date)}>
-            {formatDateShort(date)}
-          </time>
-          <h3 className="truncate font-semibold text-foreground group-hover:text-primary">
-            <Link href={href} className={stretchedLinkClassName}>
-              {title}
-            </Link>
-          </h3>
+          <DateTime value={date} className="text-xs text-muted-foreground" />
+          <CardTitle as={headingLevel} href={href} className="text-base">
+            <EventTitleLabels event={event} className="mb-1.5" />
+            {/* Two lines, not one: a phone-wide card cut "Common Council Me…" to one (#122) */}
+            <span className="line-clamp-2">{title}</span>
+          </CardTitle>
+          <Text variant="small" className="mt-1 flex items-center gap-1.5 text-xs">
+            <MapPin aria-hidden="true" className="size-4 shrink-0" />
+            <PlaceLabel label={place.label} className="text-xs" />
+          </Text>
         </div>
-      </article>
+      </Card>
     )
   }
 
   return (
-    <article className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-md transition-all duration-200 hover:shadow-xl has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring motion-safe:hover:-translate-y-1">
+    <Card as="article" padding="none" interactive>
       {/* Image area with date badge overlay */}
-      <div className="relative aspect-[16/9] w-full overflow-hidden">
+      <CardMedia>
         {image ? (
           <Media
             resource={image}
@@ -93,48 +100,48 @@ export const EventCard: React.FC<{
           size="lg"
           className="absolute top-3 left-3 bg-card/95 shadow-lg backdrop-blur-sm"
         />
-      </div>
+      </CardMedia>
 
-      {/* Content area */}
-      <div className="flex flex-1 flex-col p-5 md:p-6">
-        <h3 className="mb-2 text-lg leading-snug font-semibold text-foreground group-hover:text-primary">
-          <Link href={href} className={stretchedLinkClassName}>
-            {title}
-          </Link>
-        </h3>
+      <CardBody>
+        <CardTitle as={headingLevel} href={href} className="mb-2">
+          {/* Inside the title's link, so the link reads its labels with the title (#122) */}
+          <EventTitleLabels event={event} className="mb-1.5" />
+          {title}
+        </CardTitle>
 
         {/* Date (the badge above is decorative) and time — never invent a time */}
-        <p className="mb-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
-          <Clock aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
-          <span>
-            <time dateTime={toDateTimeAttr(date)}>{formatDateShort(date)}</time>
-            {timeStart ? ` · ${timeStart}${timeEnd ? ` – ${timeEnd}` : ''}` : ''}
-          </span>
-        </p>
-
-        {locationName && (
-          <p className="mb-3 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
-            <span>{locationName}</span>
-          </p>
-        )}
+        <MetaList
+          className="mb-3 gap-1.5 text-sm text-muted-foreground"
+          items={[
+            {
+              icon: <Clock />,
+              value: (
+                <>
+                  <DateTime value={date} />
+                  {timeStart ? ` · ${timeStart}${timeEnd ? ` – ${timeEnd}` : ''}` : ''}
+                </>
+              ),
+            },
+            { icon: <MapPin />, value: <PlaceLabel label={place.label} /> } satisfies IconMetaItem,
+          ]}
+        />
 
         {description && (
-          <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+          <Text variant="small" clamp={2} className="mb-3">
             {description}
-          </p>
+          </Text>
         )}
 
         {categories.length > 0 && (
-          <div className="mt-auto flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <span key={category.id} className={categoryPillClassName}>
-                {category.title}
-              </span>
-            ))}
-          </div>
+          <CardFooter className="pt-0">
+            <BadgeList>
+              {categories.map((category) => (
+                <Badge key={category.id}>{category.title}</Badge>
+              ))}
+            </BadgeList>
+          </CardFooter>
         )}
-      </div>
-    </article>
+      </CardBody>
+    </Card>
   )
 }

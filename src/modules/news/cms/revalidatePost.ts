@@ -8,15 +8,17 @@ import { POSTS_SITEMAP_CACHE_TAG } from '../domain/cacheTags'
 
 /**
  * Refreshes every cached page that shows the post at `slug`, instead of waiting for the 10-minute
- * ISR window: its own page, /posts, its numbered no-JavaScript pages, the home page's "Recent
- * News" block, and the posts sitemap. A route pattern must name the route group: Next tags
- * cached pages with their app path, (frontend) included.
+ * ISR window: its own page, /posts, its numbered no-JavaScript pages, the home page and every
+ * CMS page (their archive and "top issues" blocks show its title and link to its slug, #484), and
+ * the posts sitemap. A route pattern must name the route group: Next tags cached pages with their
+ * app path, (frontend) included.
  */
 function revalidatePostPages(slug: string) {
   revalidatePath(`/posts/${slug}`)
   revalidatePath('/posts')
   revalidatePath('/(frontend)/posts/page/[pageNumber]', 'page')
   revalidatePath('/')
+  revalidatePath('/(frontend)/[slug]', 'page')
   expireCacheTag(POSTS_SITEMAP_CACHE_TAG)
 }
 

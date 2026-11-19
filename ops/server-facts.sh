@@ -18,6 +18,7 @@ fi
 echo "node=$(node -v)"
 echo "server_url=$(env_value NEXT_PUBLIC_SERVER_URL)"
 echo "turnstile_site_key=$(env_value NEXT_PUBLIC_TURNSTILE_SITE_KEY)"
+echo "umami_website_id=$(env_value NEXT_PUBLIC_UMAMI_WEBSITE_ID)"
 echo "turnstile_secret=$([ -n "$(env_value TURNSTILE_SECRET_KEY)" ] && echo yes || echo no)"
 echo "deployed=$deployed"
 echo "free_kb=$(df -Pk "$APP_DIR" | awk 'NR == 2 { print $4 }')"

@@ -39,7 +39,19 @@ describe('when the CMS fails', () => {
     assert.equal(log.status, 'partial')
     assert.equal(log.counts.seen, 0)
     assert.equal(Object.keys(state.seen).length, 0)
-    assert.equal(Object.keys(state.sources).length, 0)
+    // No source with items saves its fetch state; the HTML pages here have none to keep (#390)
+    const withItems = [
+      'legistar-events',
+      'mpl-pinney-events',
+      'legistar-matters',
+      'madison365-news',
+    ]
+    assert.deepEqual(
+      Object.keys(state.sources).filter((id) => withItems.includes(id)),
+      [],
+    )
+    // ...while the four HTML pages, with nothing pending, do
+    assert.equal(Object.keys(state.sources).length, 4)
     assert.ok(cms.writes.some((w) => w.tool === 'updateAgentRuns'))
   })
 
@@ -99,6 +111,26 @@ describe('when the model fails', () => {
     assert.deepEqual(Object.keys(env).sort(), ['OPENCLAW_GATEWAY_PASSWORD', 'PATH'])
   })
 
+  it('reads token counts where OpenClaw 2026.10 reports them, cached tokens as input', async () => {
+    const envelope = {
+      status: 'ok',
+      result: {
+        payloads: [{ text: '{"ok":true}' }],
+        meta: { agentMeta: { usage: { input: 3061, output: 9, cacheRead: 100 } } },
+      },
+    }
+    const ask = openclawAdapter({
+      command: [
+        process.execPath,
+        '-e',
+        `process.stdout.write(${JSON.stringify(JSON.stringify(envelope))})`,
+      ],
+    })
+    const answer = await ask({ message: 'x' })
+    assert.equal(answer.text, '{"ok":true}')
+    assert.deepEqual(answer.usage, { input: 3161, output: 9 })
+  })
+
   it('reports OpenClaw failures without its command line', async () => {
     const ask = openclawAdapter({
       command: [process.execPath, '-e', 'process.stderr.write("boom");process.exit(3)'],
@@ -131,6 +163,7 @@ describe('the per-source cap', () => {
   it('keeps a cursor source’s oldest changes and moves its cursor only past them', async () => {
     const http = async () => new Response(many)
     const result = await scoutSource(matters, {
+      area: contract.area,
       ...options,
       state: { sources: {}, seen: {} },
       http,
@@ -149,6 +182,7 @@ describe('the per-source cap', () => {
       .replace('RRULE', 'X')
       .replace('END:VEVENT', 'RRULE:FREQ=DAILY;COUNT=6\r\nEND:VEVENT')
     const result = await scoutSource(library, {
+      area: contract.area,
       ...options,
       state: { sources: {}, seen: {} },
       http: async () => new Response(ics),

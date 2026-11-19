@@ -9,14 +9,16 @@ The agents never publish. They create **suggested drafts**; an editor reads, fix
 
 ## What's here
 
-| Path                             | What it is                                                                 |
-| -------------------------------- | -------------------------------------------------------------------------- |
-| [`pipeline.yaml`](pipeline.yaml) | The settings a runtime reads first: kill switch, schedule, budgets, stages |
-| [`sources.yaml`](sources.yaml)   | Approved sources, each checked by hand ([summary](sources.md))             |
-| [`coverage.md`](coverage.md)     | The Sprecher East area and the relevance policy                            |
-| [`prompts/`](prompts/)           | One prompt per stage, each naming its input and output schema              |
-| [`schemas/`](schemas/)           | JSON Schemas for every file and every stage's output                       |
-| [`evals/`](evals/)               | Test cases per stage with the result a correct pipeline reaches            |
+| Path                             | What it is                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------ |
+| [`pipeline.yaml`](pipeline.yaml) | The settings a runtime reads first: kill switch, schedule, budgets, stages           |
+| [`sources.yaml`](sources.yaml)   | Approved sources, each checked by hand ([summary](sources.md))                       |
+| [`coverage.md`](coverage.md)     | The Sprecher East area and the relevance policy                                      |
+| [`area.yaml`](area.yaml)         | The words and boundary layer used to spot the area: places, neighbors, highway rules |
+| [`images.md`](images.md)         | How to choose a story's or event's photo: real, free, on topic, level                |
+| [`prompts/`](prompts/)           | One prompt per stage, each naming its input and output schema                        |
+| [`schemas/`](schemas/)           | JSON Schemas for every file and every stage's output                                 |
+| [`evals/`](evals/)               | Test cases per stage with the result a correct pipeline reaches                      |
 
 ## The pipeline
 
@@ -26,13 +28,23 @@ its own section (`schemas/item.schema.json`); it never changes an earlier one.
 1. **Scout** (code). Fetches the pilot sources, parses them, and builds a candidate with a stable
    `externalId` and a `contentHash`. Items already seen with the same hash stop here.
 2. **Verify** (model). Finds the real place, date and status from primary sources, sets the
-   coverage tier, and lists every unknown.
+   coverage tier, and lists every unknown. Runs the five checks in `coverage.md`, "Review
+   passes": primary source, place against the City's boundary, freshness, physical facts and
+   stage of a project.
 3. **Curate** (model). Accepts, rejects or sends to review, scores the item, and says who
    benefits and what they can do. Detects duplicates, updates and cancellations of known items.
+   It is the second read of the verify result, and proposes any accepted item's organizer or
+   publisher that isn't in `sources.yaml` as a `pending` source in its reasons (no code records
+   it yet, #1008).
 4. **Draft** (model). Writes the short suggestion, with only confirmed facts and a list of what's
    missing.
 5. **Submit** (code). Sends accepted drafts as suggestions and everything an editor must check
    as review items, through #336's MCP tools, and writes the run log.
+
+The pipeline reads an item twice: the verify checks, then curate's second read. Both are prompt
+rules. The freshness re-check right before publishing is a step for the person or AI agent who
+publishes by hand, not a pipeline stage. A safety item is never accepted by curate; that is a
+prompt rule the promotion guard doesn't enforce yet (#1007). See `coverage.md`, "Review passes".
 
 Deterministic steps come first: fetching, parsing and deduplication never use a model. The
 model handles only relevance, location ambiguity and the write-up, at medium effort, escalating to
@@ -98,10 +110,12 @@ run the same folder.
 1. Check out this repository's `main` (read-only) at the start of each run, and record its commit
    as `repoCommit` in the run log, so every suggestion can be traced to the exact prompts that made it.
 2. Read `pipeline.yaml`. If `enabled` is false, log a `disabled` run and stop.
-3. Load the schemas in `schemas/`, `sources.yaml` and `coverage.md`, and read the category tree
+3. Load the schemas in `schemas/`, `sources.yaml`, `coverage.md` and `area.yaml` (given to the
+   model with `coverage.md`), and read the category tree
    with the MCP find tool (`categories`: slug, title, parent) into each item's `taxonomy`
    (`common.schema.json#/$defs/taxonomy`), so the draft stage picks only existing categories
-   (#363).
+   (#363). Add each item's `source` from `sources.yaml` (owner, reliability, scope), so verify
+   can treat an official feed's own date, time and venue fields as the primary source.
 4. For each stage in order, give the model the stage's prompt, `coverage.md`, and the item as
    JSON; validate its answer against the stage's `output` schema. When verify's `confidence` is below
    `escalation.verifyBelowConfidence` (0.6), run verify once more at high effort. An answer that doesn't validate
@@ -157,6 +171,11 @@ documents directly.
 Routing by the curate decision (`routes` in `pipeline.yaml`): `accept` → `submitSuggestion`; `needs-review`, `update`, `cancel`
 → `reportItem`; `reject`, `duplicate` → counted only. A suggestion with missing facts or low
 confidence also gets a `needs-review` report pointing at it.
+
+Before routing, code applies `promotionGuard` (`pipeline.yaml`, #870): an `accept` becomes
+`needs-review` when verify's confidence is below `escalation.verifyBelowConfidence` after the
+rerun, or verify's flags include one of `promotionGuard.blockingFlags`, whatever the model
+answered. The threshold and the flag list each have one definition, in `pipeline.yaml`.
 
 Until #336 is live, a run writes the same calls and its run log as a digest for an editor instead.
 

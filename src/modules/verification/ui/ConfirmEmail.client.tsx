@@ -9,6 +9,7 @@ import { Button, Link } from '@/platform/ui'
 import { TurnstileWidget } from '@/platform/turnstile/TurnstileWidget.client'
 import { useRobotCheck } from '@/platform/turnstile/useRobotCheck.client'
 
+import type { LinkStatus } from '../domain/types'
 import { postConfirmation, type ConfirmAnswer } from './api'
 import { isLinkDone, isSettled, toConfirmMessage } from './confirmMessages'
 
@@ -19,20 +20,27 @@ type Answer = ConfirmAnswer | 'offline'
  * happens on page load, because mail scanners open links too, and some run the page's script
  * (#303). The button also needs the robot check (Turnstile, decision 0003) to pass, so a scanner
  * that presses it confirms nothing. `token` is `null` when the link
- * has none, or one that can't be ours. `retryHref` is where a person with a dead link can ask
- * for a new one (the contact form). `children` shows once the email is confirmed (the account
- * offer, #187), and can read the confirmed address with `useConfirmedEmail`.
+ * has none, or one that can't be ours. `status` is where the link stood when the page opened,
+ * read without changing anything (#391): a link already confirmed, expired or not valid shows its
+ * message and no button. `retryHref` is where a person with a dead link can ask for a new one
+ * (the contact form). `children` shows once the email is confirmed by this page's button (the
+ * account offer, #187), and can read the confirmed address with `useConfirmedEmail`.
  */
 export function ConfirmEmail({
   token,
+  status,
   retryHref,
   children,
 }: {
   token: string | null
+  status: LinkStatus
   retryHref: string
   children?: React.ReactNode
 }) {
-  const [answer, setAnswer] = useState<Answer | null>(token ? null : 'invalid')
+  const [answer, setAnswer] = useState<Answer | null>(() => {
+    if (!token) return 'invalid'
+    return status === 'pending' ? null : status
+  })
   const [email, setEmail] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   // Counts answers to clicks, so focus moves to the message after each one (not on page load)
@@ -50,6 +58,17 @@ export function ConfirmEmail({
       mounted.current = false
     }
   }, [])
+
+  // Whether the link was already done with when the page opened (it never changes: later answers
+  // clear the address themselves)
+  const [openedDone] = useState(() => isLinkDone(answer))
+
+  useEffect(() => {
+    // A link already done with when the page opened: keep its token out of the address bar
+    if (openedDone && window.location.search) {
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+  }, [openedDone])
 
   useEffect(() => {
     // The check finished after a press that had to wait: the reason no longer holds
@@ -94,7 +113,7 @@ export function ConfirmEmail({
     <div className="space-y-6">
       {message && (
         <div ref={messageRef} tabIndex={-1} className="space-y-3 outline-none">
-          <Alert variant={message.variant}>{message.text}</Alert>
+          <Alert tone={message.tone}>{message.text}</Alert>
           {isLinkDone(answer) && !settled && (
             <Link href={retryHref} variant="action">
               Go to the contact form
@@ -102,7 +121,7 @@ export function ConfirmEmail({
           )}
         </div>
       )}
-      {canConfirm && waitMessage && <Alert variant="error">{waitMessage}</Alert>}
+      {canConfirm && waitMessage && <Alert tone="error">{waitMessage}</Alert>}
       {canConfirm && robotCheck.enabled && <TurnstileWidget {...robotCheck.widgetProps} />}
       {canConfirm && (
         <Button
@@ -115,7 +134,10 @@ export function ConfirmEmail({
           {sending ? 'Confirming' : 'Confirm my email'}
         </Button>
       )}
-      {settled && <ConfirmedEmailContext value={email}>{children}</ConfirmedEmailContext>}
+      {/* What comes next follows a confirmation made here, not a link opened again (#391) */}
+      {settled && answers > 0 && (
+        <ConfirmedEmailContext value={email}>{children}</ConfirmedEmailContext>
+      )}
     </div>
   )
 }

@@ -47,9 +47,9 @@ A `to…` mapper in `data/` builds them from Payload documents. When generated P
   the proxy (`src/proxy.ts`), client components and scripts get no React, Payload or server-only
   code with it.
 - `server.ts` starts with `import 'server-only'` and re-exports the module's use cases (from
-  `use-cases/`) and the components pages render (from `ui/`).
+  `use-cases/`), its plain reads (straight from `data/`, #521) and the components pages render (from `ui/`).
 - `actions.ts` starts with `'use server'` and exports server actions; each one validates its
-  input and calls a use case.
+  input and calls a use case or a plain `data/` read.
 - `cms.ts` exports the area's collection and global configs, blocks and plugin options for
   `payload.config.ts`. Nothing it reaches may be server-only, because the Payload CLI loads it
   outside Next.js.

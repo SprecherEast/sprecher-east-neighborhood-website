@@ -82,7 +82,7 @@ The search order:
 
 1. **Shared utilities** (`src/platform/lib/`, `src/platform/seo/`) — URL handling, metadata, formatting, data transforms
 2. **Shared components** (`src/platform/ui/`, `src/platform/richtext/`) — UI rendering, links, media, rich text, structured data
-3. **Reusable field configs** (`src/modules/site/cms/`, and Payload's `slugField()`) — slug, link, hero field groups
+3. **Reusable field configs** (`src/platform/payload/link.ts`, `src/modules/site/cms/`, and Payload's `slugField()`) — slug, link, hero field groups
 4. **Access control helpers** (`src/platform/payload/`) — auth and permission checks
 
 If no abstraction exists for a pattern you need more than once, **create one first** as a shared utility or component, then use it everywhere. Never copy-paste logic between files.
@@ -133,11 +133,55 @@ function ChildForm() {
 }
 ```
 
+## Documentation Follows Behavior
+
+A change alters behavior when a visitor, an editor or an agent would get something different: what
+is shown, sent, stored, allowed or limited, or how a screen, field, route, job or tool works. Then
+the note or doc that describes it changes in the same pull request. When nothing like that changes,
+the pull request says so: `Behavior change: none` and a reason that is true of the diff.
+
+- Decide by what someone using the site, the CMS or the agent tools would notice, not by which
+  folder changed. A mapped folder does not by itself mean behavior changed.
+- A good reason says why nothing observable changed, not that the change is small.
+- Do not edit a note only to satisfy the check. If the note is still true, the true statement is
+  the declaration; if it is no longer true, fix the note.
+- Before opening the pull request, run the local check (`npm run knowledge:check`) and read each
+  note the diff maps to against the diff.
+- The reviewer checks the reason against the diff. A reason the diff does not support is a **Blocker**.
+
 ## Visual QA Is Mandatory for UI/UX Changes
 
 Changes that touch CSS, Tailwind classes, HTML structure, or component markup that affects rendering **must** be visually verified before committing. Use Playwright (the Playwright MCP server, or a Playwright script) to screenshot affected pages at all 6 test viewports (see [`nextjs-tailwind.md`](nextjs-tailwind.md#responsive-design--6-viewport-testing) for the full viewport table and workflow, and the [`visual-design-review`](../../.agents/skills/visual-design-review/SKILL.md) skill). Skip for backend-only, config-only, or docs-only changes.
 
+**Browser tests are due when a PR changes the UI** (the owner's rule, 2026-11-07, voice session, recorded on #868). The `End-to-end tests` job in CI decides with a file check and no model: a change to the UI kit or the rich-text renderer, the theme, styles or Tailwind config, a page or layout under `src/app/(frontend)/`, or any module's `ui/` folder counts (`uiChanges` in `scripts/ui-change.mjs`, run by `.github/scripts/e2e-gate.mjs`). So does a change to the code the suite walks through (the accounts, contact and verification modules, the Payload config, the seed files it imports) and to the tests, their workflow and the gate's own rules. Comment-only and formatting-only edits, tests and docs don't. The job always reports a result and skips only its steps, since a skipped job counts as passing. On a UI change the tests run, unless the description holds `End-to-end exemption: <reason>` (20+ characters, in "How to test"), which the independent reviewer checks against the diff like a `Behavior change: none` reason. A reviewer or author can ask for the tests on any PR with `End-to-end exemption: run`; nobody, model or person, can skip them without the written reason. About one trigger in ten may be a false alarm, which is accepted. A UI change the check missed is reported as a miss on the PR so the paths can be widened. The job is not a required check yet; making it one is the owner's ruleset step.
+
 Code that "builds without errors" but looks broken on mobile is a bug. The visual QA loop is: change → screenshot → inspect → fix → re-screenshot → commit.
+
+## Fast By Default, Public Pages First
+
+The public site should feel fast for a neighbor on a phone; the admin follows after it. Aim for
+decent, not extreme: write code the sensible way, and do not go out of your way, add complexity or
+delay a change to squeeze out more. These are principles. Budgets and automatic checks come from a
+measured baseline, start as advisory (they report, they do not block), and tighten only when
+measurements show they should.
+
+- **Render once, serve many.** A public page is static or revalidated and refreshed on save
+  through the existing revalidate hooks. Anything that forces a page to render on every request
+  (cookies, headers, search params, draft mode) needs a reason.
+- **Ask the database only for what the page shows:** `select`, a small `depth`, a `limit`, an
+  index on what is filtered or sorted, no query inside a loop, and independent reads run together.
+- **Ship less JavaScript.** Server components by default, client components as small leaves, heavy
+  and rarely used UI loaded on demand, and no large library for a small job.
+- **Images only through `Media`,** sized for where they show, with only the first visible image
+  loading early.
+- **Measure, don't guess.** A change that moves a measured number says why in the PR.
+- **A mechanical check beats judgment.** Where a free, maintained tool can fail a pull request by
+  itself, use it, and keep our own check for what no tool covers. A red check is fixed by making
+  the page lighter, or by changing its budget in the same PR with the reason. While a check is
+  advisory, a finding is read and answered in the PR, not fixed at any cost.
+
+[`vercel-react-best-practices`](../../.agents/skills/vercel-react-best-practices/SKILL.md) is the
+detailed reference for React and Next.js; this section says what is ours.
 
 ## Keep Dependencies Lean
 
@@ -145,5 +189,5 @@ Before adding a new package:
 
 - Check if the framework or an existing dependency already provides the capability
 - Verify the package is actively maintained (recent publish, healthy download count)
-- Run `npm audit` after installation
+- Run `npm run audit:prod` after installation
 - Prefer well-established packages over newer alternatives with smaller ecosystems

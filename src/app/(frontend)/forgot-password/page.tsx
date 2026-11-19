@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import { ACCOUNT_PATH } from '@/modules/accounts'
 import { ForgotPasswordForm, getCurrentUser } from '@/modules/accounts/server'
 import { NOT_INDEXED } from '@/platform/seo/notIndexed'
+import { PageHeader } from '@/platform/ui/PageHeader'
+import { Section } from '@/platform/ui/Section'
 
 export const metadata: Metadata = {
   title: 'Forgot Password',
@@ -17,14 +19,13 @@ export default async function ForgotPasswordPage() {
   if (await getCurrentUser()) redirect(ACCOUNT_PATH)
 
   return (
-    <div className="container flex min-h-[60vh] items-center py-16">
-      <div className="mx-auto w-full max-w-md">
-        <h1 className="mb-2 text-3xl font-bold text-foreground">Forgot Your Password?</h1>
-        <p className="mb-8 text-muted-foreground">
-          Enter the email you log in with. We’ll send you a link to choose a new password.
-        </p>
-        <ForgotPasswordForm />
-      </div>
-    </div>
+    <Section as="div" width="narrow" spacing="center">
+      <PageHeader
+        variant="compact"
+        title="Forgot Your Password?"
+        description="Enter the email you log in with. We’ll send you a link to choose a new password."
+      />
+      <ForgotPasswordForm />
+    </Section>
   )
 }

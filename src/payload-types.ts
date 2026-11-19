@@ -201,6 +201,9 @@ export interface PayloadMcpApiKeyAuthOperations {
  */
 export interface Page {
   id: number
+  /**
+   * Up to 60 characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.
+   */
   title: string
   hero: {
     type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact'
@@ -245,7 +248,17 @@ export interface Page {
       | null
     media?: (number | null) | Media
   }
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[]
+  layout: (
+    | CallToActionBlock
+    | ContentBlock
+    | SectionBlock
+    | MediaBlock
+    | MapBlock
+    | ArchiveBlock
+    | FormBlock
+    | EventsThisWeekBlock
+    | TopIssuesBlock
+  )[]
   meta?: {
     title?: string | null
     /**
@@ -255,6 +268,10 @@ export interface Page {
     description?: string | null
   }
   publishedAt?: string | null
+  /**
+   * An optional photo shown faded and grayed behind the whole page, under its text. Pick a wide, level photo with a quiet sky or field; the text stays readable in light and dark.
+   */
+  backdrop?: (number | null) | Media
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
@@ -270,8 +287,28 @@ export interface Page {
  */
 export interface Post {
   id: number
+  /**
+   * Up to 60 characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.
+   */
   title: string
   heroImage?: (number | null) | Media
+  /**
+   * An optional photo shown faded behind the title, edge to edge. Choose the crop for each screen size: the band is a wide, short strip, so a photo whose good part cannot fill it is not used. A size left empty uses the nearest crop that is set; all three empty keeps the plain band. Fine-tune the part shown with the focal point of each upload in Media. Never use a photo with identifiable people.
+   */
+  backdrop?: {
+    /**
+     * Under 768 px wide. A near-square crop reads best.
+     */
+    phone?: (number | null) | Media
+    /**
+     * From 768 px to 959 px wide.
+     */
+    tablet?: (number | null) | Media
+    /**
+     * From 960 px wide: the widest, shortest strip.
+     */
+    desktop?: (number | null) | Media
+  }
   content: {
     root: {
       type: string
@@ -364,6 +401,10 @@ export interface Media {
    * Under what terms the site may show it.
    */
   license?: ('own' | 'permission' | 'cc-by' | 'cc-by-sa' | 'cc0' | 'other') | null
+  /**
+   * The license itself, for example https://creativecommons.org/licenses/by-sa/4.0/. Creative Commons licenses need it: the photo credit links to it.
+   */
+  licenseUrl?: string | null
   /**
    * Where the image came from, when it isn’t our own.
    */
@@ -503,10 +544,11 @@ export interface User {
   /**
    * Controls access level. Only admins can change roles.
    */
-  role: 'admin' | 'editor' | 'resident' | 'agent'
+  role: 'admin' | 'editor' | 'guest' | 'resident' | 'agent'
   verificationResends?: number | null
   verificationResendsSince?: string | null
   verificationSetsPassword?: boolean | null
+  verifiedTokenHash?: string | null
   updatedAt: string
   createdAt: string
   email: string
@@ -600,6 +642,15 @@ export interface ContentBlock {
           }
           [k: string]: unknown
         } | null
+        /**
+         * A thin bar under the opening heading, split by percent. Shows only when all four are filled in and add up to 100.
+         */
+        shareBar?: {
+          schools?: number | null
+          city?: number | null
+          county?: number | null
+          matc?: number | null
+        }
         enableLink?: boolean | null
         link?: {
           type?: ('reference' | 'custom') | null
@@ -618,14 +669,44 @@ export interface ContentBlock {
           /**
            * Choose how the link should be rendered.
            */
-          appearance?: ('default' | 'outline') | null
+          appearance?: ('default' | 'outline' | 'accent') | null
         }
+        /**
+         * Where the link button sits in its column.
+         */
+        linkAlign?: ('start' | 'end' | 'beside') | null
         id?: string | null
       }[]
     | null
   id?: string | null
   blockName?: string | null
   blockType: 'content'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionBlock".
+ */
+export interface SectionBlock {
+  items: {
+    /**
+     * How much of the row this item takes on a large screen. Items that add up to more than a row move to the next one. On a phone every item is full width.
+     */
+    width: 'full' | 'threeQuarters' | 'twoThirds' | 'half' | 'oneThird' | 'quarter'
+    align: 'start' | 'center' | 'end'
+    /**
+     * Where the item sits beside a taller item in the same row.
+     */
+    verticalAlign: 'top' | 'center' | 'bottom'
+    /**
+     * Where this item shows when the items stack on a phone.
+     */
+    phoneOrder: 'inOrder' | 'first' | 'last'
+    content?: (ContentBlock | MediaBlock | MapBlock)[] | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'section'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -636,6 +717,31 @@ export interface MediaBlock {
   id?: string | null
   blockName?: string | null
   blockType: 'mediaBlock'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MapBlock".
+ */
+export interface MapBlock {
+  /**
+   * Names the map for screen readers, for example "Where Sprecher East is".
+   */
+  title: string
+  /**
+   * Says in words what the map shows: its boundaries and what touches them. Neighbors who cannot use the map read this.
+   */
+  description: string
+  /**
+   * The small picture of the map, shown on the page.
+   */
+  preview: number | Media
+  /**
+   * The live map opened by a tap. In Google Maps choose Share, then Embed a map, and paste the whole code or only its address. A shared My Maps map works too. Leave empty to show the picture only.
+   */
+  embedUrl?: string | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'mapBlock'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -864,10 +970,82 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "EventsThisWeekBlock".
+ */
+export interface EventsThisWeekBlock {
+  heading: string
+  /**
+   * How many days the strip shows, starting today. 7 shows today and the next six days.
+   */
+  days: number
+  /**
+   * Each row lists its events, soonest first. A row with no events in those days is hidden; when every row is empty, the strip says so and links to all events.
+   */
+  rows: {
+    title: string
+    source: 'all' | 'official' | 'category'
+    /**
+     * The row lists this category’s events and links to its events page.
+     */
+    category?: (number | null) | Category
+    limit: number
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'eventsThisWeek'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TopIssuesBlock".
+ */
+export interface TopIssuesBlock {
+  heading: string
+  /**
+   * The day you last checked the list. Residents see "Updated" with this date; leave it empty to show none.
+   */
+  reviewedAt?: string | null
+  /**
+   * Up to five, most important first. Drag to reorder. An issue whose post or page isn’t published is hidden.
+   */
+  items: {
+    /**
+     * A few words. It is the link residents tap.
+     */
+    title: string
+    /**
+     * One sentence, shown below the title.
+     */
+    summary?: string | null
+    link?: {
+      type?: ('reference' | 'custom') | null
+      newTab?: boolean | null
+      reference?:
+        | ({
+            relationTo: 'pages'
+            value: number | Page
+          } | null)
+        | ({
+            relationTo: 'posts'
+            value: number | Post
+          } | null)
+      url?: string | null
+    }
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'topIssues'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "events".
  */
 export interface Event {
   id: number
+  /**
+   * Up to 60 characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.
+   */
   title: string
   date: string
   timeStart?: string | null
@@ -876,6 +1054,14 @@ export interface Event {
    * A cancelled event stays listed and is marked as cancelled.
    */
   cancelled?: boolean | null
+  /**
+   * Set for a public body’s own meeting (Common Council, a city commission, the County Board).
+   */
+  officialBody?: ('city' | 'county') | null
+  /**
+   * The body’s own agenda page, starting with https://
+   */
+  agendaUrl?: string | null
   /**
    * Featured events appear prominently on the homepage
    */
@@ -886,6 +1072,23 @@ export interface Event {
   mapsUrl?: string | null
   registrationUrl?: string | null
   heroImage?: (number | null) | Media
+  /**
+   * An optional photo shown faded behind the title, edge to edge. Choose the crop for each screen size: the band is a wide, short strip, so a photo whose good part cannot fill it is not used. A size left empty uses the nearest crop that is set; all three empty keeps the plain band. Fine-tune the part shown with the focal point of each upload in Media. Never use a photo with identifiable people.
+   */
+  backdrop?: {
+    /**
+     * Under 768 px wide. A near-square crop reads best.
+     */
+    phone?: (number | null) | Media
+    /**
+     * From 768 px to 959 px wide.
+     */
+    tablet?: (number | null) | Media
+    /**
+     * From 960 px wide: the widest, shortest strip.
+     */
+    desktop?: (number | null) | Media
+  }
   /**
    * Short description shown in event cards
    */
@@ -975,6 +1178,16 @@ export interface Resource {
   title: string
   description?: string | null
   url?: string | null
+  /**
+   * Up to three more links shown on the card, for example "Alder blog". "Visit Website" above stays the main link.
+   */
+  links?:
+    | {
+        label: string
+        url: string
+        id?: string | null
+      }[]
+    | null
   phone?: string | null
   category:
     | 'elected-officials'
@@ -985,6 +1198,15 @@ export interface Resource {
     | 'community'
     | 'utilities'
     | 'other'
+  photo?: (number | null) | Media
+  /**
+   * Required with a photo. Shown as "Photo: …", so leave out "Photo:", for example "City of Madison, Alder Sean O’Brien".
+   */
+  photoCredit?: string | null
+  /**
+   * Optional: the page the photo came from. The credit links to it.
+   */
+  photoSourceUrl?: string | null
   /**
    * Lower numbers appear first within category
    */
@@ -1027,7 +1249,7 @@ export interface Faq {
   _status?: ('draft' | 'published') | null
 }
 /**
- * Addresses typed into a public form, and when they were confirmed by link. Unconfirmed ones are deleted automatically 48 hours after their last link. A confirmed one is deleted automatically 12 months after the person’s last message, unless they have an account or a message on hold. To remove an address on request sooner, delete it here.
+ * Addresses typed into a public form, and when they were confirmed by link. Unconfirmed ones are deleted automatically 48 hours after their last link. A confirmed one is deleted automatically 12 months after it was confirmed, unless they have an account or a message that is still kept (one from the last 12 months, or on hold). To remove an address on request sooner, delete it here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "email-confirmations".
@@ -1248,6 +1470,9 @@ export interface Search {
     description?: string | null
     image?: (number | null) | Media
   }
+  cancelled?: boolean | null
+  sourceName?: string | null
+  sourceUrl?: string | null
   categories?:
     | {
         relationTo?: string | null
@@ -1622,9 +1847,13 @@ export interface PagesSelect<T extends boolean = true> {
     | {
         cta?: T | CallToActionBlockSelect<T>
         content?: T | ContentBlockSelect<T>
+        section?: T | SectionBlockSelect<T>
         mediaBlock?: T | MediaBlockSelect<T>
+        mapBlock?: T | MapBlockSelect<T>
         archive?: T | ArchiveBlockSelect<T>
         formBlock?: T | FormBlockSelect<T>
+        eventsThisWeek?: T | EventsThisWeekBlockSelect<T>
+        topIssues?: T | TopIssuesBlockSelect<T>
       }
   meta?:
     | T
@@ -1634,6 +1863,7 @@ export interface PagesSelect<T extends boolean = true> {
         description?: T
       }
   publishedAt?: T
+  backdrop?: T
   generateSlug?: T
   slug?: T
   updatedAt?: T
@@ -1674,6 +1904,14 @@ export interface ContentBlockSelect<T extends boolean = true> {
     | {
         size?: T
         richText?: T
+        shareBar?:
+          | T
+          | {
+              schools?: T
+              city?: T
+              county?: T
+              matc?: T
+            }
         enableLink?: T
         link?:
           | T
@@ -1684,6 +1922,31 @@ export interface ContentBlockSelect<T extends boolean = true> {
               url?: T
               label?: T
               appearance?: T
+            }
+        linkAlign?: T
+        id?: T
+      }
+  id?: T
+  blockName?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionBlock_select".
+ */
+export interface SectionBlockSelect<T extends boolean = true> {
+  items?:
+    | T
+    | {
+        width?: T
+        align?: T
+        verticalAlign?: T
+        phoneOrder?: T
+        content?:
+          | T
+          | {
+              content?: T | ContentBlockSelect<T>
+              mediaBlock?: T | MediaBlockSelect<T>
+              mapBlock?: T | MapBlockSelect<T>
             }
         id?: T
       }
@@ -1696,6 +1959,18 @@ export interface ContentBlockSelect<T extends boolean = true> {
  */
 export interface MediaBlockSelect<T extends boolean = true> {
   media?: T
+  id?: T
+  blockName?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "MapBlock_select".
+ */
+export interface MapBlockSelect<T extends boolean = true> {
+  title?: T
+  description?: T
+  preview?: T
+  embedUrl?: T
   id?: T
   blockName?: T
 }
@@ -1726,11 +2001,62 @@ export interface FormBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "EventsThisWeekBlock_select".
+ */
+export interface EventsThisWeekBlockSelect<T extends boolean = true> {
+  heading?: T
+  days?: T
+  rows?:
+    | T
+    | {
+        title?: T
+        source?: T
+        category?: T
+        limit?: T
+        id?: T
+      }
+  id?: T
+  blockName?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TopIssuesBlock_select".
+ */
+export interface TopIssuesBlockSelect<T extends boolean = true> {
+  heading?: T
+  reviewedAt?: T
+  items?:
+    | T
+    | {
+        title?: T
+        summary?: T
+        link?:
+          | T
+          | {
+              type?: T
+              newTab?: T
+              reference?: T
+              url?: T
+            }
+        id?: T
+      }
+  id?: T
+  blockName?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts_select".
  */
 export interface PostsSelect<T extends boolean = true> {
   title?: T
   heroImage?: T
+  backdrop?:
+    | T
+    | {
+        phone?: T
+        tablet?: T
+        desktop?: T
+      }
   content?: T
   relatedPosts?: T
   categories?: T
@@ -1771,6 +2097,8 @@ export interface EventsSelect<T extends boolean = true> {
   timeStart?: T
   timeEnd?: T
   cancelled?: T
+  officialBody?: T
+  agendaUrl?: T
   featured?: T
   locationType?: T
   locationName?: T
@@ -1778,6 +2106,13 @@ export interface EventsSelect<T extends boolean = true> {
   mapsUrl?: T
   registrationUrl?: T
   heroImage?: T
+  backdrop?:
+    | T
+    | {
+        phone?: T
+        tablet?: T
+        desktop?: T
+      }
   description?: T
   content?: T
   meta?:
@@ -1827,8 +2162,18 @@ export interface ResourcesSelect<T extends boolean = true> {
   title?: T
   description?: T
   url?: T
+  links?:
+    | T
+    | {
+        label?: T
+        url?: T
+        id?: T
+      }
   phone?: T
   category?: T
+  photo?: T
+  photoCredit?: T
+  photoSourceUrl?: T
   order?: T
   publishedAt?: T
   updatedAt?: T
@@ -1858,6 +2203,7 @@ export interface MediaSelect<T extends boolean = true> {
   caption?: T
   credit?: T
   license?: T
+  licenseUrl?: T
   sourceUrl?: T
   folder?: T
   updatedAt?: T
@@ -1977,6 +2323,7 @@ export interface UsersSelect<T extends boolean = true> {
   verificationResends?: T
   verificationResendsSince?: T
   verificationSetsPassword?: T
+  verifiedTokenHash?: T
   updatedAt?: T
   createdAt?: T
   email?: T
@@ -2270,6 +2617,9 @@ export interface SearchSelect<T extends boolean = true> {
         description?: T
         image?: T
       }
+  cancelled?: T
+  sourceName?: T
+  sourceUrl?: T
   categories?:
     | T
     | {
@@ -2431,6 +2781,29 @@ export interface Header {
           url?: string | null
           label: string
         }
+        /**
+         * Optional. With links here the item opens a menu of them when pressed, and its own link is not followed.
+         */
+        subItems?:
+          | {
+              link: {
+                type?: ('reference' | 'custom') | null
+                newTab?: boolean | null
+                reference?:
+                  | ({
+                      relationTo: 'pages'
+                      value: number | Page
+                    } | null)
+                  | ({
+                      relationTo: 'posts'
+                      value: number | Post
+                    } | null)
+                url?: string | null
+                label: string
+              }
+              id?: string | null
+            }[]
+          | null
         id?: string | null
       }[]
     | null
@@ -2463,6 +2836,10 @@ export interface Footer {
         id?: string | null
       }[]
     | null
+  /**
+   * The neighborhood forum’s https address. The footer and every post link to it; leave it empty to hide those links.
+   */
+  forumUrl?: string | null
   updatedAt?: string | null
   createdAt?: string | null
 }
@@ -2501,6 +2878,20 @@ export interface HeaderSelect<T extends boolean = true> {
               url?: T
               label?: T
             }
+        subItems?:
+          | T
+          | {
+              link?:
+                | T
+                | {
+                    type?: T
+                    newTab?: T
+                    reference?: T
+                    url?: T
+                    label?: T
+                  }
+              id?: T
+            }
         id?: T
       }
   updatedAt?: T
@@ -2526,6 +2917,7 @@ export interface FooterSelect<T extends boolean = true> {
             }
         id?: T
       }
+  forumUrl?: T
   updatedAt?: T
   createdAt?: T
   globalType?: T
@@ -2606,6 +2998,14 @@ export interface TaskSchedulePublish {
  */
 export interface BannerBlock {
   style: 'info' | 'warning' | 'error' | 'success'
+  /**
+   * Visitors can close the notice, and it stays closed on their browser. Leave off for warnings that must be read.
+   */
+  dismissible?: boolean | null
+  /**
+   * The notice disappears at this time. For a meeting, set the meeting’s start time. Leave empty to show it always.
+   */
+  showUntil?: string | null
   content: {
     root: {
       type: string
@@ -2635,6 +3035,568 @@ export interface CodeBlock {
   id?: string | null
   blockName?: string | null
   blockType: 'code'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TimelineBlock".
+ */
+export interface TimelineBlock {
+  /**
+   * In the order they happen, oldest first. Two to twelve milestones.
+   */
+  entries: {
+    /**
+     * As readers should see it: "Dec 5, 2024", "Spring 2027", "Not set".
+     */
+    date: string
+    status: 'done' | 'next' | 'conditional' | 'later'
+    title: string
+    /**
+     * One or two plain sentences. Optional.
+     */
+    description?: string | null
+    /**
+     * Optional, for example "Read the decision".
+     */
+    linkLabel?: string | null
+    /**
+     * A site path (/events) or https:// address.
+     */
+    linkUrl?: string | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'timeline'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "StepsBlock".
+ */
+export interface StepsBlock {
+  /**
+   * In the order a reader does them. Keep headings short and alike: "Join…".
+   */
+  steps: {
+    heading: string
+    /**
+     * One or two plain sentences. Optional.
+     */
+    body?: string | null
+    /**
+     * Optional, for example "Find your alder".
+     */
+    linkLabel?: string | null
+    /**
+     * A site path (/events) or https:// address.
+     */
+    linkUrl?: string | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'steps'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "KeyFactsBlock".
+ */
+export interface KeyFactsBlock {
+  /**
+   * 2 to 6 facts. They sit side by side on wide screens.
+   */
+  facts: {
+    /**
+     * What it is about, as a short title: "Who pays for the ramps".
+     */
+    label: string
+    /**
+     * The big text: where it stands, or the number. "Pending", "2040s", "$10M".
+     */
+    value: string
+    /**
+     * Optional. One plain sentence that explains it: "City and State are still negotiating."
+     */
+    detail?: string | null
+    icon:
+      | 'info'
+      | 'date'
+      | 'time'
+      | 'money'
+      | 'taxes'
+      | 'government'
+      | 'place'
+      | 'people'
+      | 'traffic'
+      | 'walking'
+      | 'biking'
+      | 'noise'
+      | 'construction'
+    certainty: 'confirmed' | 'estimate' | 'unknown'
+    /**
+     * Optional, for example "City budget".
+     */
+    linkLabel?: string | null
+    /**
+     * A site path (/events) or https:// address.
+     */
+    linkUrl?: string | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'keyFacts'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "OutcomeForkBlock".
+ */
+export interface OutcomeForkBlock {
+  /**
+   * The open question, as a reader would ask it.
+   */
+  question: string
+  /**
+   * Two or three possible answers, each with what it would mean.
+   */
+  outcomes: {
+    /**
+     * The answer: "If they agree".
+     */
+    title: string
+    tone: 'go' | 'stop' | 'open'
+    /**
+     * What happens then, in one or two plain sentences.
+     */
+    description: string
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'outcomeFork'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DiagramKeyBlock".
+ */
+export interface DiagramKeyBlock {
+  /**
+   * One per numbered marker on the image, in number order. Don’t type the numbers.
+   */
+  items: {
+    /**
+     * Short: "North roundabout".
+     */
+    label: string
+    /**
+     * One line: what it is or does. Optional.
+     */
+    text?: string | null
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'diagramKey'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FigureBlock".
+ */
+export interface FigureBlock {
+  /**
+   * The large picture. It shows small in the article. It does not set the card or link-preview image.
+   */
+  image: number | Media
+  /**
+   * What the picture shows, in a few words. It names the small expand icon on the picture.
+   */
+  title: string
+  /**
+   * Its number in the source, such as "Figure 2-9". Optional.
+   */
+  label?: string | null
+  /**
+   * One short line under the small picture. Optional.
+   */
+  caption?: string | null
+  /**
+   * Source, how it was made and conditions. Shown only when the picture is enlarged. Optional.
+   */
+  longCaption?: string | null
+  /**
+   * How wide it is beside the text on a tablet or larger.
+   */
+  size?: ('two-fifths' | 'third' | 'half') | null
+  /**
+   * One per numbered marker on the image, in number order. Don’t type the numbers.
+   */
+  items?:
+    | {
+        /**
+         * Short: "North roundabout".
+         */
+        label: string
+        /**
+         * One line: what it is or does. Optional.
+         */
+        text?: string | null
+        id?: string | null
+      }[]
+    | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'figure'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ChartBlock".
+ */
+export interface ChartBlock {
+  /**
+   * What the chart shows: "Where each $100 goes".
+   */
+  title: string
+  /**
+   * The takeaway: keep it to one short line. The chart shows small with this beside it, and readers can enlarge it. Screen readers hear it first.
+   */
+  summary: string
+  kind: 'units' | 'bar' | 'stacked' | 'breakdown'
+  /**
+   * What the numbers count.
+   */
+  unit: 'usd' | 'percent' | 'mills' | 'count'
+  /**
+   * The colors the chart is drawn in. Leave empty for the usual ones.
+   */
+  palette?: ('default' | 'warm') | null
+  /**
+   * When the figures are from: "Mayor’s proposal, October 2026".
+   */
+  asOf?: string | null
+  /**
+   * Leave empty to show no label.
+   */
+  certainty?: ('confirmed' | 'estimate' | 'unknown') | null
+  /**
+   * Optional small print under the chart: what was rounded or calculated.
+   */
+  finePrint?: string | null
+  /**
+   * Where the numbers come from. Up to four.
+   */
+  sources?:
+    | {
+        /**
+         * Optional, for example "City of Madison, 2027 budget".
+         */
+        linkLabel?: string | null
+        /**
+         * A site path (/events) or https:// address.
+         */
+        linkUrl?: string | null
+        id?: string | null
+      }[]
+    | null
+  /**
+   * Turn this off for a simple chart that is easy to read at its normal size, such as two bars.
+   */
+  enlarge?: boolean | null
+  mode?: ('perHundred' | 'each') | null
+  /**
+   * What one square or tile stands for, in a sentence.
+   */
+  unitNote?: string | null
+  /**
+   * One grid for each group; two put them side by side, such as 2026 next to 2027. A grid shows at most six parts; a row of tiles up to twelve.
+   */
+  groups?:
+    | {
+        label: string
+        /**
+         * Optional: the whole the parts add up to.
+         */
+        total?: number | null
+        /**
+         * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+         */
+        key?: string | null
+        /**
+         * The parts of this group, such as one tile or square each.
+         */
+        parts: {
+          label: string
+          /**
+           * In the unit above. Never negative.
+           */
+          value: number
+          /**
+           * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+           */
+          key?: string | null
+          /**
+           * Stripes mark an amount that is only proposed.
+           */
+          hatch?: boolean | null
+          id?: string | null
+        }[]
+        id?: string | null
+      }[]
+    | null
+  /**
+   * Shows only the ranked bars, with no grid of squares and no key.
+   */
+  hideSquares?: boolean | null
+  /**
+   * What one square stands for, in dollars: 5000000 makes each square $5 million. Pick an amount that gives 20 to 200 squares.
+   */
+  squareValue?: number | null
+  /**
+   * The big areas of the budget, up to seven. They are ranked by size, and the colors run from the biggest to the smallest.
+   */
+  areas?:
+    | {
+        label: string
+        /**
+         * In dollars.
+         */
+        value: number
+        /**
+         * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+         */
+        key?: string | null
+        /**
+         * Optional smaller parts of this area. Pieces marked "Shown" sit under the area; the rest go in "See the smaller pieces".
+         */
+        pieces?:
+          | {
+              label: string
+              /**
+               * In dollars.
+               */
+              value: number
+              /**
+               * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+               */
+              key?: string | null
+              /**
+               * Show this piece right under its area.
+               */
+              shown?: boolean | null
+              id?: string | null
+            }[]
+          | null
+        id?: string | null
+      }[]
+    | null
+  /**
+   * One to twelve bars, top to bottom.
+   */
+  bars?:
+    | {
+        label: string
+        /**
+         * In the unit above. Never negative.
+         */
+        value: number
+        /**
+         * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+         */
+        key?: string | null
+        /**
+         * Stripes mark an amount that is only proposed.
+         */
+        hatch?: boolean | null
+        id?: string | null
+      }[]
+    | null
+  /**
+   * The parts each bar splits into, such as “Borrowed” and “Other sources”.
+   */
+  series?:
+    | {
+        label: string
+        /**
+         * Optional. Leave empty to use the label. Parts with the same key share a colour key.
+         */
+        key?: string | null
+        /**
+         * Stripes mark an amount that is only proposed.
+         */
+        hatch?: boolean | null
+        /**
+         * Added on top of the first part: shown as “+$24.8M”.
+         */
+        increase?: boolean | null
+        id?: string | null
+      }[]
+    | null
+  /**
+   * One bar per row. Give each a number for every part above, in the same order.
+   */
+  rows?:
+    | {
+        label: string
+        /**
+         * Optional note beside the bar. Give every bar one, or none.
+         */
+        note?: string | null
+        /**
+         * One number for each part, in the order of the parts.
+         */
+        values?:
+          | {
+              value: number
+              id?: string | null
+            }[]
+          | null
+        id?: string | null
+      }[]
+    | null
+  /**
+   * Optional. The end of the scale. Charts with the same scale draw the same number the same length.
+   */
+  scaleMax?: number | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'chart'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BillShareBlock".
+ */
+export interface BillShareBlock {
+  /**
+   * One line above the home value box: what the estimate is based on.
+   */
+  intro: string
+  /**
+   * 1 to 2 tax years, oldest first. Readers switch between them. Use only rates the bodies have officially set.
+   */
+  years: {
+    /**
+     * The budget year: 2027.
+     */
+    year: number
+    /**
+     * On the switch: "2026 rates".
+     */
+    label: string
+    /**
+     * Shown in parentheses under the switch: "proposed". Leave empty once the rates are set.
+     */
+    note?: string | null
+    /**
+     * The City’s average home that year, in dollars.
+     */
+    averageHome: number
+    schools?: number | null
+    city?: number | null
+    county?: number | null
+    matc?: number | null
+    /**
+     * Optional, for example "City tax detail".
+     */
+    linkLabel?: string | null
+    /**
+     * A site path (/events) or https:// address.
+     */
+    linkUrl?: string | null
+    id?: string | null
+  }[]
+  /**
+   * What each open-and-close row is called.
+   */
+  rows: {
+    breakdown: string
+    differ: string
+    sources: string
+  }
+  /**
+   * The lines in the row on why the bill may differ, in this order. Each says when it shows; a note can use blanks the page fills in.
+   */
+  notes?:
+    | {
+        showWhen: 'always' | 'earlierYears' | 'proposedRate' | 'missingRates'
+        /**
+         * Blanks the page fills in: {year} is the year shown; {link} is the note’s link, from the link text and address; {years} is the earlier years (only with that condition); {bodies} is the bodies with no rate (only with that condition).
+         */
+        text: string
+        /**
+         * Optional, for example "send us a note".
+         */
+        linkLabel?: string | null
+        /**
+         * A site path (/events) or https:// address.
+         */
+        linkUrl?: string | null
+        id?: string | null
+      }[]
+    | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'billShare'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FactTabsBlock".
+ */
+export interface FactTabsBlock {
+  /**
+   * 2 to 4 tabs. Readers see each tab's key fact as a button; it opens the heading, definition and pictures you add here.
+   */
+  tabs: {
+    /**
+     * What it is about, as a short title: "Who pays for the ramps".
+     */
+    label: string
+    /**
+     * The big text: where it stands, or the number. "Pending", "2040s", "$10M". In a tab with a whole tax bill, write {yearly} or {monthly} for the City’s extra tax in a year or a month on the home and year the reader chose.
+     */
+    value: string
+    /**
+     * Optional. One plain sentence that explains it: "City and State are still negotiating."
+     */
+    detail?: string | null
+    icon:
+      | 'info'
+      | 'date'
+      | 'time'
+      | 'money'
+      | 'taxes'
+      | 'government'
+      | 'place'
+      | 'people'
+      | 'traffic'
+      | 'walking'
+      | 'biking'
+      | 'noise'
+      | 'construction'
+    certainty: 'confirmed' | 'estimate' | 'unknown'
+    /**
+     * Optional, for example "City budget".
+     */
+    linkLabel?: string | null
+    /**
+     * A site path (/events) or https:// address.
+     */
+    linkUrl?: string | null
+    /**
+     * The name of what this tab opens: "Big-project money". In a tab with a whole tax bill, write {yearly} or {monthly} for the City’s extra tax in a year or a month on the home and year the reader chose.
+     */
+    heading: string
+    /**
+     * In plain words, what the key fact means and where it comes from.
+     */
+    definition: string
+    /**
+     * 1 to 3 charts, timelines or a whole tax bill shown when the tab is open.
+     */
+    panel: (ChartBlock | TimelineBlock | BillShareBlock)[]
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'factTabs'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

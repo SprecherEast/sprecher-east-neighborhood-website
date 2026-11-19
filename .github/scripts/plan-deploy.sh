@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Decides whether a commit of main gets deployed, and names its release (#245). Writes `deploy`
-# (true|false) and `release` to $GITHUB_OUTPUT.
+# Decides whether a commit of main gets deployed (#245). Writes `deploy` and `redeploy`
+# (true|false) to $GITHUB_OUTPUT. The release is named after the commit, plus `-run<run id>` when
+# `redeploy` is true; the jobs build that name from github.sha themselves. A job output holding
+# the commit hash is dropped whenever it happens to contain a secret's value, which emptied the
+# release name and failed the deploy (#382), so only true/false travels between jobs.
 #
 # Skipped: a commit older than the live one (deploys can finish out of order), the commit that is
 # already live, and changes that touch only files that don't run on the server: the same list the
@@ -13,11 +16,11 @@ set -euo pipefail
 : "${SHA:?}" "${GITHUB_OUTPUT:?}"
 DEPLOYED="${DEPLOYED:-}"
 EVENT="${EVENT:-push}"
-release="$SHA"
+redeploy=false
 
 decide() { # <true|false> <reason>
   echo "deploy=$1" >>"$GITHUB_OUTPUT"
-  echo "release=$release" >>"$GITHUB_OUTPUT"
+  echo "redeploy=$redeploy" >>"$GITHUB_OUTPUT"
   echo "::notice title=Deploy plan::$2"
   exit 0
 }
@@ -27,7 +30,7 @@ if [ -z "$DEPLOYED" ] || ! git cat-file -e "$DEPLOYED^{commit}" 2>/dev/null; the
 fi
 if [ "$DEPLOYED" = "$SHA" ]; then
   [ "$EVENT" = workflow_dispatch ] || decide false "${SHA:0:7} is already live"
-  release="$SHA-run${RUN_ID:?}" # the live folder is never replaced
+  redeploy=true # a new folder, <commit>-run<run id>: the live one is never replaced
   decide true "started by hand: ${SHA:0:7} is deployed again"
 fi
 if git merge-base --is-ancestor "$SHA" "$DEPLOYED"; then

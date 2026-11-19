@@ -1,4 +1,6 @@
-import { createHash, randomBytes } from 'node:crypto'
+import { randomBytes } from 'node:crypto'
+
+import { sha256Hex } from '@/platform/lib/sha256'
 
 /** 32 random bytes in base64url: 43 characters (`domain/tokenFormat.ts`), 256 bits nobody can guess. */
 const TOKEN_BYTES = 32
@@ -9,10 +11,5 @@ export function newConfirmationToken(): { token: string; tokenHash: string } {
   return { token, tokenHash: hashConfirmationToken(token) }
 }
 
-/**
- * The SHA-256 of a token, in hex. A database copy or backup holds no working link. A plain hash
- * is enough (no salt or slow hash): the token is random, not a password someone chose.
- */
-export function hashConfirmationToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex')
-}
+/** The SHA-256 of a token, in hex: the database keeps this, never a working link. */
+export const hashConfirmationToken = sha256Hex

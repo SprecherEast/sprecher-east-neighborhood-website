@@ -11,7 +11,7 @@
 #      database on its first visit, then is cached as usual
 #   5. switch the `current` link atomically and reload the app under PM2 (ops/restart-app.sh)
 #   6. check the site answers through Caddy with this release's build; if not, switch back
-#   7. refresh the backup job and the Caddy settings (request limits, HTTPS), and keep the newest
+#   7. refresh the backup job, the Caddy settings (request limits, HTTPS) and Umami analytics, and keep the newest
 #      $KEEP_RELEASES releases
 #
 # The first run moves the app from the old checkout in $APP_DIR to `current`; the checkout stays
@@ -21,6 +21,13 @@ umask 022
 trap '' HUP # a dropped SSH session must not stop the script between the switch and a switch back
 
 . "$(dirname "$0")/lib.sh"
+
+# The workflow sends the Umami admin password on stdin and says so with this flag (#948), so a
+# run by hand never waits for input. It goes to ops/install-umami.sh only; never an argument.
+umami_admin_password=""
+if [ "${1:-}" = --umami-password-stdin ]; then
+  IFS= read -r -d '' umami_admin_password || true
+fi
 
 RELEASE="$CODE_DIR"
 RELEASES="$APP_DIR/releases"
@@ -107,6 +114,8 @@ build_id=$(cat "$RELEASE/.next/BUILD_ID")
   stop "the release was built for a different NEXT_PUBLIC_SERVER_URL than .env.local has"
 [ "$(info turnstile_site_key)" = "$(env_value NEXT_PUBLIC_TURNSTILE_SITE_KEY)" ] ||
   stop "the release was built with a different Turnstile site key than .env.local has"
+[ "$(info umami_website_id)" = "$(env_value NEXT_PUBLIC_UMAMI_WEBSITE_ID)" ] ||
+  stop "the release was built with a different Umami site ID than .env.local has"
 site_key_set=$([ -n "$(env_value NEXT_PUBLIC_TURNSTILE_SITE_KEY)" ] && echo yes || echo no)
 secret_set=$([ -n "$(env_value TURNSTILE_SECRET_KEY)" ] && echo yes || echo no)
 [ "$site_key_set" = "$secret_set" ] ||
@@ -114,7 +123,7 @@ secret_set=$([ -n "$(env_value TURNSTILE_SECRET_KEY)" ] && echo yes || echo no)
 (cd "$RELEASE" && node -e 'require("sharp"); require("libsql")') >/dev/null 2>&1 ||
   stop "the release's native modules (sharp, libsql) do not load with this server's Node"
 
-# 2. Shared files. The release's own copies (the seed's JSON in data/) give way to the links.
+# 2. Shared files. The release's own data/ and public/media give way to the links.
 mkdir -p "$APP_DIR/data" "$APP_DIR/public/media"
 rm -rf "${RELEASE:?}/data" "${RELEASE:?}/public/media" "${RELEASE:?}/.env.local"
 ln -s "$APP_DIR/.env.local" "$RELEASE/.env.local"
@@ -123,6 +132,7 @@ ln -s "$APP_DIR/public/media" "$RELEASE/public/media"
 
 # 3. Back up, then migrate. The old release keeps serving during both.
 bash "$RELEASE/ops/backup.sh" pre-deploy || stop "the pre-deploy backup failed"
+export PRE_DEPLOY_BACKUP_DONE=yes # install-umami.sh needs no second one for a first install (#948)
 echo "→ Running database migrations..."
 (cd "$RELEASE" && NODE_OPTIONS=--no-deprecation node_modules/.bin/payload migrate) ||
   stop "the database migrations failed (the pre-deploy backup has the data from before)"
@@ -166,6 +176,9 @@ failed=0
 bash "$RELEASE/ops/install-cron.sh" || failed=1
 bash "$RELEASE/ops/caddy-limits.sh" || failed=1
 bash "$RELEASE/ops/caddy-https.sh" || failed=1
+# After the Caddy scripts: its block imports the HSTS file caddy-https.sh writes. A missing
+# secret or DNS name is a notice, not a failure.
+UMAMI_ADMIN_PASSWORD="$umami_admin_password" bash "$RELEASE/ops/install-umami.sh" || failed=1
 
 keep="$KEEP_RELEASES"
 [ "$keep" -ge 2 ] 2>/dev/null || keep=2

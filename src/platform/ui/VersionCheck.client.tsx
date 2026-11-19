@@ -1,7 +1,8 @@
 'use client'
 
-import { RefreshCw, X } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { Button } from './Button'
+import { Toast } from './Toast'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 const POLL_INTERVAL = 30_000 // 30 seconds
@@ -103,29 +104,17 @@ export function VersionCheck() {
   if (!updateAvailable) return null
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className={`fixed inset-x-4 bottom-6 z-50 transition-all duration-300 ease-out sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 ${
-        visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-      }`}
-    >
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 shadow-lg sm:px-5">
-        <RefreshCw className="hidden h-4 w-4 shrink-0 text-primary sm:block" aria-hidden="true" />
-        <p className="text-sm font-medium text-foreground">New version available</p>
-        <Button onClick={handleRefresh} size="sm" className="ml-auto shrink-0">
+    <Toast
+      visible={visible}
+      icon={<RefreshCw />}
+      message="New version available"
+      action={
+        <Button onClick={handleRefresh} size="sm">
           Refresh
         </Button>
-        <Button
-          onClick={handleDismiss}
-          variant="ghost"
-          size="icon"
-          className="shrink-0 text-muted-foreground hover:text-foreground"
-          aria-label="Dismiss update notification"
-        >
-          <X aria-hidden="true" />
-        </Button>
-      </div>
-    </div>
+      }
+      onDismiss={handleDismiss}
+      dismissLabel="Dismiss update notification"
+    />
   )
 }

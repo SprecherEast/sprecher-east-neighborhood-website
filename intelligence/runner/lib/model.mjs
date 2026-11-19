@@ -126,13 +126,19 @@ export function openclawAdapter({
       const payloads = envelope.payloads ?? envelope.result?.payloads ?? []
       const text = payloads.map((p) => p.text ?? '').join('\n')
       if (!text.trim()) throw new AdapterError('OpenClaw returned an empty answer')
-      // Token counts only when OpenClaw reports them; the subscription has no per-call price
-      const usage = envelope.usage ?? envelope.meta?.agentMeta?.usage ?? {}
+      // OpenClaw 2026.10 reports tokens under result.meta.agentMeta.usage; cached prompt tokens
+      // are input too. The subscription has no per-call price, so no cost is kept.
+      const usage =
+        envelope.result?.meta?.agentMeta?.usage ??
+        envelope.meta?.agentMeta?.usage ??
+        envelope.usage ??
+        {}
+      const count = (...values) => values.reduce((sum, v) => sum + (Number(v) || 0), 0)
       return {
         text,
         usage: {
-          input: Number(usage.input ?? usage.inputTokens ?? 0) || 0,
-          output: Number(usage.output ?? usage.outputTokens ?? 0) || 0,
+          input: count(usage.input ?? usage.inputTokens, usage.cacheRead),
+          output: count(usage.output ?? usage.outputTokens),
         },
       }
     } finally {

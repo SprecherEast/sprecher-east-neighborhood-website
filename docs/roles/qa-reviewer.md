@@ -21,7 +21,7 @@ Where code goes: [`docs/architecture/`](../architecture/README.md).
 - Same spacing, typography, and color usage across all pages
 - Cards, buttons, and interactive elements are styled consistently
 - No page looks visually disconnected from the rest of the site
-- Design tokens from `globals.css @theme` are used everywhere (no hardcoded colors/sizes)
+- Design tokens (`src/platform/theme/tokens.ts`) are used everywhere (no hardcoded colors/sizes)
 - Mobile layouts are clean and usable (no overflow, no tiny touch targets)
 
 ### UX Integrity
@@ -58,7 +58,7 @@ Where code goes: [`docs/architecture/`](../architecture/README.md).
 - Social login (OAuth) is not installed; if it's added, test that each provider redirects properly and creates the user account
 - Session cookies are set and cleared correctly
 - Protected routes redirect unauthenticated users to login
-- User roles (admin, editor, resident) have correct access levels
+- User roles (admin, editor, guest, resident, agent) have correct access levels
 - Admin panel at `/admin` is only accessible to admin users
 - Password reset flow works end-to-end
 
@@ -98,7 +98,8 @@ Where code goes: [`docs/architecture/`](../architecture/README.md).
 - Images are optimized (WebP preferred, proper sizing)
 - No unnecessary client-side JavaScript
 - Lazy loading on below-fold content
-- Lighthouse scores: target 90+ on all categories
+- The rules in [Fast by default](../guidelines/development.md#fast-by-default-public-pages-first)
+  hold, and the numbers come from the measured budgets, not a fixed score
 
 ## Review Process
 
@@ -128,7 +129,7 @@ npx linkinator http://localhost:3000 --recurse
 npx lighthouse http://localhost:3000 --output json
 
 # npm security audit
-npm audit --audit-level=high --omit=dev
+npm run audit:prod
 
 # Build check
 npm run build

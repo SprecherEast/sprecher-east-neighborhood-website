@@ -3,13 +3,13 @@ import 'server-only'
 import { after } from 'next/server'
 
 import type { HumanVerifier } from '@/platform/lib'
+import { runUseCase } from '@/platform/service'
 
 import { sendResetLink } from '../data/passwordReset'
 import type { ForgotPasswordValues } from '../domain/credentials'
 import { RESET_REQUEST_LIMITS } from '../domain/requestLimits'
 import type { ActionResult, ForgotPasswordFailure } from '../domain/types'
 import { createRequestGuard, type PublicRequest } from './guardPublicRequest'
-import { logServerFailure } from './logServerFailure'
 
 const guard = createRequestGuard('Password reset request', RESET_REQUEST_LIMITS)
 
@@ -28,12 +28,6 @@ export async function requestPasswordReset(
   const blocked = await guard(request, verifier)
   if (blocked) return { ok: false, failure: blocked }
 
-  after(async () => {
-    try {
-      await sendResetLink(values)
-    } catch (error) {
-      logServerFailure('Password reset request', error)
-    }
-  })
+  after(() => runUseCase('Password reset request', () => sendResetLink(values), undefined))
   return { ok: true }
 }

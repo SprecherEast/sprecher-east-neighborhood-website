@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { anyone } from '@/platform/payload/anyone'
 import { isAdmin, isAdminOrEditor, isAdminOrEditorFieldAccess } from '@/platform/payload/roles'
+import { orderField } from './orderField'
 
 export const TeamMembers: CollectionConfig<'team-members'> = {
   slug: 'team-members',
@@ -80,15 +81,7 @@ export const TeamMembers: CollectionConfig<'team-members'> = {
         position: 'sidebar',
       },
     },
-    {
-      name: 'order',
-      type: 'number',
-      defaultValue: 99,
-      admin: {
-        position: 'sidebar',
-        description: 'Lower numbers appear first',
-      },
-    },
+    orderField(),
     {
       name: 'photo',
       type: 'upload',

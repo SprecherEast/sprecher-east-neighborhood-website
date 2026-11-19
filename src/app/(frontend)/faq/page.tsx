@@ -5,6 +5,10 @@ import { JsonLd } from '@/platform/ui/JsonLd'
 import { toFaqSections } from '@/modules/directory'
 import { FaqList, faqJsonLd, findFaqEntries } from '@/modules/directory/server'
 import { mergeOpenGraph } from '@/platform/seo/mergeOpenGraph'
+import { EmptyState } from '@/platform/ui/EmptyState'
+import { PageHeader } from '@/platform/ui/PageHeader'
+import { Text } from '@/platform/ui/Text'
+import { PAGE_SHELL } from '@/platform/ui/layoutSizes'
 
 export const dynamic = 'force-static'
 export const revalidate = 600
@@ -14,30 +18,30 @@ export default async function FAQPage() {
   const sections = toFaqSections(entries)
 
   return (
-    <div className="pt-24 pb-24">
+    <div className={PAGE_SHELL}>
       <JsonLd data={faqJsonLd(entries)} />
-      <div className="container mb-12 md:mb-16">
-        <p className="mb-3 text-xs font-bold tracking-widest text-primary uppercase">FAQ</p>
-        <h1 className="mb-4 text-4xl font-bold tracking-tight text-balance text-foreground md:text-5xl">
-          Frequently Asked Questions
-        </h1>
-        <p className="max-w-2xl text-lg text-muted-foreground">
-          Common questions about Sprecher East, how it works, and how to get involved.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="FAQ"
+        title="Frequently Asked Questions"
+        description="Common questions about Sprecher East, how it works, and how to get involved."
+      />
 
       <div className="container max-w-3xl space-y-12">
         {sections.map(({ category, label, items }) => (
           <section key={category}>
-            <h2 className="mb-6 text-xl font-semibold">{label}</h2>
+            <Text variant="section" className="mb-6">
+              {label}
+            </Text>
             <FaqList items={items} />
           </section>
         ))}
 
         {sections.length === 0 && (
-          <div className="text-center">
-            <p className="text-muted-foreground">FAQ items are being added. Check back soon!</p>
-          </div>
+          <EmptyState
+            variant="plain"
+            title="FAQ items are being added."
+            description="Check back soon!"
+          />
         )}
       </div>
     </div>
@@ -46,8 +50,7 @@ export default async function FAQPage() {
 
 export function generateMetadata(): Metadata {
   const title = 'FAQ'
-  const description =
-    'Frequently asked questions about the Sprecher East Neighborhood Association in Madison, WI.'
+  const description = 'Common questions about this unofficial Sprecher East site.'
 
   return {
     title,

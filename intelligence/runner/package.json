@@ -5,7 +5,7 @@
   "description": "Runs the intelligence pipeline in ../ (#364): fetch, validate and submit in code; the model stages through a pluggable adapter (OpenClaw by default).",
   "type": "module",
   "engines": {
-    "node": ">=20.11"
+    "node": ">=20.18.1"
   },
   "bin": {
     "sprecher-east-intel": "./run.mjs"
@@ -16,6 +16,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",
     "ajv": "^8.20.0",
+    "cheerio": "^1.2.0",
     "fast-xml-parser": "^5.11.2",
     "ical.js": "^2.2.1",
     "js-yaml": "^4.1.1"

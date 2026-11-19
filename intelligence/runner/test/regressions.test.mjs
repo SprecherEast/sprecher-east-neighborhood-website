@@ -68,6 +68,7 @@ describe('fixes from the re-check', () => {
       now: atNoon('2026-10-25'),
     }
     const first = await scoutSource(library, {
+      area: contract.area,
       ...options,
       state: { sources: {}, seen: {} },
       http: async () => new Response(ics),
@@ -79,6 +80,7 @@ describe('fixes from the re-check', () => {
       ]),
     )
     const second = await scoutSource(library, {
+      area: contract.area,
       ...options,
       state: { sources: {}, seen },
       http: async () => new Response(ics),
@@ -106,6 +108,7 @@ describe('follow-up reports that fail', () => {
       state,
       http: feedsHttp(),
       robots: async () => true,
+      now: () => atNoon('2026-11-16'),
       repoCommit: 'a'.repeat(40),
     })
     assert.equal(state.pendingReports.length, 1)
@@ -120,6 +123,7 @@ describe('follow-up reports that fail', () => {
       state,
       http: feedsHttp(),
       robots: async () => true,
+      now: () => atNoon('2026-11-16'),
       repoCommit: 'a'.repeat(40),
     })
     const sent = up.writes.filter((w) => w.tool === 'reportItem')

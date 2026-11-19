@@ -55,7 +55,7 @@ Consistent spacing creates visual rhythm. Use Tailwind's spacing scale exclusive
 - `text-muted-foreground` on `bg-background` — secondary text (verify contrast!)
 - `text-foreground` on `bg-surface` — cards and elevated surfaces
 - Never place `text-muted-foreground` on `bg-surface` without verifying the combination meets 4.5:1
-- White text on `bg-primary` must meet 4.5:1 — test both light and dark mode values
+- `text-primary-foreground` on `bg-primary-fill` must meet 4.5:1 in both modes (the theme contract test checks it)
 - **Dark mode is not optional** — every color combination must be tested in both themes
 - If text is invisible or hard to read in ANY theme, it's a critical bug — fix immediately
 
@@ -98,27 +98,64 @@ Consistent spacing creates visual rhythm. Use Tailwind's spacing scale exclusive
 - Left-align the text with `max-w-prose` for comfortable reading width
 - Add visual weight to the right side: an image, illustration, or CTA card
 - Use the natural left-to-right reading flow — the eye starts left, so put content there
-- Let whitespace on the right breathe rather than forcing symmetry
+- Let whitespace on the right breathe rather than centering the text to fill it
 - For two-element layouts: text left (60-65% width), visual element right (35-40% width)
 
-The goal is **visual balance**, not visual symmetry. A left-aligned text block with a photo on the right is more engaging than the same text centered with nothing around it.
+The goal is **visual balance**, not centered text. A left-aligned text block with a photo on the right is more engaging than the same text centered with nothing around it.
+
+## Symmetry and Alignment
+
+Baseline every agent follows without being told. Summary of the owner's direction (2026-11-04, recorded on #679): symmetry, same-line layouts, and flow. Summary of his decision (2026-11-05, voice call, recorded on #679): this baseline replaces any extras beyond that direction.
+
+1. Align related elements to shared edges and baselines so nothing looks accidentally out of line.
+2. Center elements accurately within their intended container, not merely within the screen.
+3. Use consistent spacing, keeping related items closer together than unrelated groups.
+4. Keep margins and padding equal wherever the layout calls for equal insets.
+5. Preserve symmetry where intended and make asymmetry look deliberate and balanced.
+6. Repeat the same alignment, spacing and structure across similar items.
+7. Keep text, images, controls and sections proportionate to one another.
+8. Make hierarchy clear so headings, primary actions and supporting details are easy to tell apart.
+9. Provide readable contrast for text, controls and meaningful visual states.
+10. Give equivalent components consistent type, size, color, borders and interaction states.
+11. Prevent text overlapping, clipping or overflowing; make wrapping and truncation intentional.
+12. Preserve image proportions, crop thoughtfully and never obscure the important subject.
+13. Use enough white space to separate sections without creating unexplained gaps or isolated elements.
+14. Keep typography readable and consistent, with comfortable line lengths and line spacing.
+15. Inspect the finished page and fix awkward wrapping, stray items, uneven edges, collisions and accidental imbalance before calling it done.
+16. Support keyboard navigation, visible focus states, and accessible labels / screen-reader text.
+17. Make forms usable with clear labels and helpful error messages placed near the field.
+18. Keep motion subtle and purposeful, not decorative, and respect reduced-motion preferences.
+
+**On small screens** the order is the page menu at the top, then the page content, then the related content at the bottom.
 
 ## Card Design
 
-Cards are the primary content container pattern:
+Cards are the primary content container pattern. Build them with the `Card` component
+([component set](../ui/component-set.md#display)), whose variants keep today's looks (the owner's
+choice, 2026-10-26, Claude Code session, recorded on #426):
 
-- **Background**: `bg-background` (not `bg-surface` — cards should feel elevated)
-- **Border**: `border border-border` or `shadow-sm` — never both
-- **Border radius**: `rounded-2xl` for cards, `rounded-xl` for smaller elements, `rounded-lg` for buttons
-- **Hover state**: `hover:shadow-md transition-shadow duration-200` for interactive cards
-- **Padding**: `p-6` minimum, `p-8` for spacious cards
+- **Variants**: `elevated` (`bg-card`, `border border-border`, `shadow-sm`) for content cards;
+  `outline` (`bg-background` with the border) for form boxes; `muted` (`bg-surface` with the border)
+  for panels inside a page; `tinted` (`bg-primary/10`, no border) for a sidebar box; `success`,
+  `danger` and `neutral` (a tinted border and fill) for boxes that carry a tone, such as the outcomes
+  of a decision fork (#517), always paired with an icon and words
+- **Shadow only on `elevated`**: the other variants are flat. The border stays on `elevated`
+  because shadows barely show in dark mode
+- **Border radius**: `rounded-2xl` for every card variant (today's `rounded-lg` panels and compact
+  cards move to it), `rounded-xl` for smaller elements, `rounded-lg` for buttons
+- **Hover state**: one for every interactive card, the `Card`'s `interactive`:
+  `hover:shadow-md motion-safe:hover:-translate-y-0.5 transition-all duration-200`. A card that
+  isn't a link doesn't lift
+- **Padding**: the `Card`'s `padding`: `md` (`p-6`) by default, `lg` (`p-6 md:p-8`) for spacious
+  cards, `sm` (`p-4`) only for compact cards (a small event card, a stat), `none` when the card
+  starts with a full-bleed image (`CardBody` pads). Today's `p-5` cards move to `p-6`
 - **Image in card**: Full-bleed at top with `rounded-t-2xl`, or inset with `rounded-xl`
 
 ## Button Design
 
 Three tiers of visual importance:
 
-1. **Primary CTA**: `bg-primary text-primary-foreground rounded-lg px-6 py-3 font-semibold hover:bg-primary/90 transition-colors`
+1. **Primary CTA**: `bg-primary-fill text-primary-foreground rounded-lg px-6 py-3 font-semibold hover:bg-primary-fill-hover transition-colors` (or the `Button` primary variant)
 2. **Secondary CTA**: `border border-primary text-primary rounded-lg px-6 py-3 font-semibold hover:bg-primary/10 transition-colors`
 3. **Tertiary/Ghost**: `text-primary font-semibold hover:underline`
 
@@ -141,14 +178,14 @@ Three tiers of visual importance:
 
 ### Hero Sections
 
-- Full-viewport or near-full (`min-h-[60vh]` to `min-h-[80vh]`)
+- A compact hero for the home page, laid out from its photo's horizon (the title above it, the description and buttons below it, the photo fading into the page; see the site note, #1304), and a band of `min-h-[var(--page-min-height)]` for landing pages. A post or event header is not a hero: it is a short photo band, `min-h-[clamp(16rem,42svh,28rem)]`, with the title on it, so the article starts on the first screen; neither an event's when and where nor a post's author and date are on the photo: they are one metadata bar above the text and a groove line, an event's left-aligned and a post's right-aligned in small type (the owner's requests, 2026-11-02, Claude in Chrome side panel, recorded on #571, 2026-11-06, recorded on #774, and 2026-11-11, recorded on #1055)
 - Background image with dark gradient overlay (`from-foreground/70 via-foreground/50 to-transparent`)
-- White text on overlay for maximum contrast
+- `text-on-image` on a `scrim` overlay for maximum contrast (never raw `white`/`black`: themes set these)
 - Clear CTA buttons at the bottom of the hero content
 
 ### Feature/Stats Strips
 
-- Full-width colored background (`bg-primary` with white text)
+- Full-width colored background (`bg-primary-fill` with `text-primary-foreground`)
 - 3-4 items in a horizontal row (responsive: stack on mobile)
 - Short, punchy text — numbers or 2-3 word labels
 
@@ -200,6 +237,7 @@ Three tiers of visual importance:
 
 ## Common Anti-Patterns (Never Do These)
 
+- A card preview inside an article's layout, in any mode (the owner's rule, 2026-10-31, Claude in Chrome side panel, recorded on #532)
 - Empty sections with no content — hide them entirely, don't show empty boxes
 - Text that disappears in dark/light mode — always test both themes
 - Huge whitespace gaps between header and content

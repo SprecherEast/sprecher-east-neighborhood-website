@@ -35,7 +35,9 @@ const runId = text(CAPS.runId).describe('The runId of your current run in agent-
 export const submitSuggestionShape = {
   collection: z.enum(SUGGESTION_COLLECTIONS).describe('Where it goes: an event or a news post.'),
   title: text(CAPS.title),
-  bodyMarkdown: text(CAPS.bodyMarkdown).describe('The full text, in Markdown.'),
+  bodyMarkdown: text(CAPS.bodyMarkdown).describe(
+    'The full text, in Markdown. A <Chart … /> tag adds a chart; a malformed one is refused with the reason.',
+  ),
   summary: text(CAPS.cardSummary).describe(
     'The card text: one or two plain sentences, no Markdown or links.',
   ),

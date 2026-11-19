@@ -12,7 +12,9 @@ const post: PostDetail = {
   categories: [],
   description: 'Public hearings.',
   image: null,
+  source: null,
   heroImage: null,
+  backdrop: null,
   content: {
     root: { type: 'root', children: [], direction: null, format: '', indent: 0, version: 1 },
   },
@@ -53,5 +55,16 @@ describe('postJsonLd', () => {
       meta: { ...post.meta, description: null },
     })
     expect(data).toMatchObject({ datePublished: '2026-09-30T12:00:00.000Z', description: '' })
+  })
+
+  it('names the original it is based on only when the source has a link (#483)', () => {
+    const url = 'https://madison.legistar.com/Calendar.aspx'
+    expect(postJsonLd({ ...post, source: { name: 'City of Madison', url } })).toMatchObject({
+      isBasedOn: url,
+    })
+    expect(
+      postJsonLd({ ...post, source: { name: 'City of Madison', url: null } }),
+    ).not.toHaveProperty('isBasedOn')
+    expect(postJsonLd(post)).not.toHaveProperty('isBasedOn')
   })
 })

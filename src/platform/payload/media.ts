@@ -8,22 +8,18 @@ import {
 import path from 'path'
 import { fileURLToPath } from 'url'
 
+import { MEDIA_LICENSES } from '@/platform/lib/mediaLicenses'
 import { isHttpUrl } from '@/platform/lib/reviewQueue'
 import { anyone } from '@/platform/payload/anyone'
 import { isAdmin, isAdminOrEditor } from '@/platform/payload/roles'
 
-/**
- * Under what terms the site may show an image (#362). Agents never upload images; an editor
- * records this when adding one, so every photo can be credited and its use checked.
- */
-export const MEDIA_LICENSES = [
-  { value: 'own', label: 'Our own photo' },
-  { value: 'permission', label: 'Used with permission' },
-  { value: 'cc-by', label: 'CC BY' },
-  { value: 'cc-by-sa', label: 'CC BY-SA' },
-  { value: 'cc0', label: 'CC0 or public domain' },
-  { value: 'other', label: 'Other (say which in the credit)' },
-] as const
+/** An optional link field: empty, or a full http(s) link. */
+const optionalHttpUrl = (value: unknown) =>
+  value === null ||
+  value === undefined ||
+  value === '' ||
+  isHttpUrl(value) ||
+  'Enter a full http(s) link.'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -67,16 +63,22 @@ export const Media: CollectionConfig = {
       admin: { description: 'Under what terms the site may show it.' },
     },
     {
+      name: 'licenseUrl',
+      type: 'text',
+      label: 'License link',
+      maxLength: 2048,
+      validate: optionalHttpUrl,
+      admin: {
+        description:
+          'The license itself, for example https://creativecommons.org/licenses/by-sa/4.0/. Creative Commons licenses need it: the photo credit links to it.',
+      },
+    },
+    {
       name: 'sourceUrl',
       type: 'text',
       label: 'Source link',
       maxLength: 2048,
-      validate: (value: unknown) =>
-        value === null ||
-        value === undefined ||
-        value === '' ||
-        isHttpUrl(value) ||
-        'Enter a full http(s) link.',
+      validate: optionalHttpUrl,
       admin: { description: 'Where the image came from, when it isn’t our own.' },
     },
   ],

@@ -36,6 +36,30 @@ export const searchFields: Field[] = [
       },
     ],
   },
+  // Copied from the document so results can show them (#471, #492): whether an event is
+  // cancelled, and where a post's or event's news came from
+  {
+    name: 'cancelled',
+    type: 'checkbox',
+    defaultValue: false,
+    admin: {
+      readOnly: true,
+    },
+  },
+  {
+    name: 'sourceName',
+    type: 'text',
+    admin: {
+      readOnly: true,
+    },
+  },
+  {
+    name: 'sourceUrl',
+    type: 'text',
+    admin: {
+      readOnly: true,
+    },
+  },
   {
     label: 'Categories',
     name: 'categories',

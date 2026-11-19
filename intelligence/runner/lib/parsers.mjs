@@ -1,6 +1,7 @@
 import { XMLParser } from 'fast-xml-parser'
 
 import { collapse, toSourceText } from './text.mjs'
+import { parseCityArticles, parseCityEvents, parseWisdotMeetings } from './html.mjs'
 import { parseIcs } from './ics.mjs'
 import { parseClock, zonedIso } from './time.mjs'
 
@@ -132,9 +133,14 @@ export { parseIcs }
 export const PARSERS = {
   'legistar-events': parseLegistarEvents,
   'legistar-matters': parseLegistarMatters,
+  // HTML pages with no feed (#390): each page's own markup
+  'district16-blog': parseCityArticles,
+  'city-news': parseCityArticles,
+  'city-public-info-meetings': parseCityEvents,
+  'wisdot-i39-90-94': parseWisdotMeetings,
 }
 
-/** The parser for a source: by id when it has its own, else by format. HTML is not built yet. */
+/** The parser for a source: by id when it has its own, else by format. HTML needs its own. */
 export function parserFor(source) {
   if (PARSERS[source.id]) return PARSERS[source.id]
   if (source.format === 'ics') return parseIcs

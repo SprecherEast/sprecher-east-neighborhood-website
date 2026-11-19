@@ -1,7 +1,10 @@
+import type { ResolvedLink } from '@/platform/lib'
+
 import { documentHref } from './documentHref'
+import type { LinkAppearances } from './link'
 
 /**
- * The CMS link field (`src/modules/site/cms/link.ts`) as plain data for `Button` and `Link`: the one place
+ * The CMS link field (`./link.ts`) as plain data for `Button` and `Link`: the one place
  * that turns a reference or a custom URL into an `href`. Typed structurally, so any collection's
  * populated document works and an unpopulated ID resolves to nothing.
  */
@@ -10,20 +13,11 @@ export type CmsLink = {
   url?: string | null
   label?: string | null
   newTab?: boolean | null
-  appearance?: 'default' | 'outline' | null
+  appearance?: LinkAppearances | null
   reference?: {
     relationTo: string
     value: number | string | { slug?: string | null }
   } | null
-}
-
-export type ResolvedLink = {
-  href: string
-  label: string
-  /** Opens in a new tab */
-  external: boolean
-  /** The look the editor chose; the UI maps it to a `Button` variant */
-  appearance: 'default' | 'outline'
 }
 
 export function resolveLink(link: CmsLink | null | undefined): ResolvedLink | null {
@@ -36,7 +30,8 @@ export function resolveLink(link: CmsLink | null | undefined): ResolvedLink | nu
     href,
     label: link.label ?? '',
     external: Boolean(link.newTab),
-    appearance: link.appearance === 'outline' ? 'outline' : 'default',
+    appearance:
+      link.appearance === 'outline' || link.appearance === 'accent' ? link.appearance : 'default',
   }
 }
 

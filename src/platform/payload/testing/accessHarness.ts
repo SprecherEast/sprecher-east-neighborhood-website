@@ -5,10 +5,11 @@ import type { SanitizedConfig } from 'payload'
  * database, only the functions.
  */
 
-export type Audience = 'visitor' | 'resident' | 'agent'
+export type Audience = 'visitor' | 'guest' | 'resident' | 'agent'
 
 export const AUDIENCES: Record<Audience, unknown> = {
   visitor: null,
+  guest: { id: 6, role: 'guest', collection: 'users' },
   resident: { id: 7, role: 'resident', collection: 'users' },
   // An agent account, as its MCP API key acts (#336)
   agent: { id: 8, role: 'agent', collection: 'users' },

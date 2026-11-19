@@ -10,6 +10,30 @@
     "candidate": {
       "$ref": "candidate.schema.json"
     },
+    "source": {
+      "description": "What the registry (sources.yaml) says about the candidate's source, added by the runtime, never by a model.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "owner", "reliability", "scope"],
+      "properties": {
+        "id": {
+          "$ref": "candidate.schema.json#/properties/sourceId"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "reliability": {
+          "enum": ["official", "established-media", "community"]
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      }
+    },
     "taxonomy": {
       "$ref": "common.schema.json#/$defs/taxonomy"
     },

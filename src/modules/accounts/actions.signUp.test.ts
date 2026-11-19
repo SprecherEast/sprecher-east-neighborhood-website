@@ -47,27 +47,28 @@ const input = {
 }
 
 describe('signUp', () => {
-  it('creates a resident with Payload’s create, which emails the verification link', async () => {
+  it('creates a guest with Payload’s create, which emails the verification link', async () => {
     edges.create.mockResolvedValue({ id: 9 })
     expect(await signUp(input)).toEqual({ ok: true })
     expect(edges.create).toHaveBeenCalledExactlyOnceWith({
       collection: 'users',
-      data: { name: 'Ana', email: 'ana@example.com', password, role: 'resident' },
+      data: { name: 'Ana', email: 'ana@example.com', password, role: 'guest' },
       depth: 0,
       overrideAccess: true,
+      context: { signUp: true },
     })
     // No session: the account can't sign in until its email is verified
     expect(edges.signInHelper).not.toHaveBeenCalled()
   })
 
-  it('always makes a resident, whatever role or flag the caller sends', async () => {
+  it('always makes a guest, whatever role or flag the caller sends', async () => {
     for (const extra of [{ role: 'admin' }, { role: 'editor' }, { _verified: true }]) {
       expect(await signUp({ ...input, ...extra })).toEqual({ ok: false, failure: 'rejected' })
     }
     expect(edges.create).not.toHaveBeenCalled()
     edges.create.mockResolvedValue({ id: 9 })
     await signUp(input)
-    expect(edges.create.mock.calls[0]?.[0].data.role).toBe('resident')
+    expect(edges.create.mock.calls[0]?.[0].data.role).toBe('guest')
     expect(Object.keys(edges.create.mock.calls[0]?.[0].data).sort()).toEqual([
       'email',
       'name',

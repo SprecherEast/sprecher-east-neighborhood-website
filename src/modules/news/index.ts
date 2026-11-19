@@ -3,4 +3,3 @@
 // collections and search options are in cms.ts.
 export { POSTS_SITEMAP_CACHE_TAG } from './domain/cacheTags'
 export { parseSearchQuery } from './domain/search'
-export type { PostCategory, PostDetail, PostSitemapEntry, PostSummary } from './domain/types'

@@ -2,7 +2,10 @@ import { getServerSideURL } from '@/platform/lib/getURL'
 
 import type { PostDetail } from '../domain/types'
 
-/** Structured data for the post page (schema.org `Article`), for search engines. */
+/**
+ * Structured data for the post page (schema.org `Article`), for search engines. A post from an
+ * outside source names the original it's based on (`isBasedOn`, #483).
+ */
 export function postJsonLd(post: PostDetail): Record<string, unknown> {
   const siteUrl = getServerSideURL()
 
@@ -23,5 +26,6 @@ export function postJsonLd(post: PostDetail): Record<string, unknown> {
       name: 'Sprecher East',
       url: siteUrl,
     },
+    ...(post.source?.url ? { isBasedOn: post.source.url } : {}),
   }
 }

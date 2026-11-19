@@ -8,6 +8,7 @@ import {
 } from 'payload'
 
 import { SITE_TIMEZONE } from '@/platform/lib/timezone'
+import { collectTagRefusals, unreadTags } from '@/platform/richtext/editorial/editorialTag'
 
 import {
   type CategoryNode,
@@ -28,7 +29,23 @@ function toContent(req: PayloadRequest, input: SubmitSuggestionInput) {
   )
   if (!field) throw new APIError(`${input.collection} has no content field`, 500)
   const editorConfig = editorConfigFactory.fromField({ field })
-  return convertMarkdownToLexical({ editorConfig, markdown: input.bodyMarkdown })
+  // A malformed <Chart> or <FactTabs> tag is refused with its reasons, so the agent can fix it
+  const { value, refusals } = collectTagRefusals(() =>
+    convertMarkdownToLexical({ editorConfig, markdown: input.bodyMarkdown }),
+  )
+  if (refusals.length > 0) throw new APIError(refusals.join(' '), 400, null, true)
+  // A tag Payload can't find the end of is dropped with the whole body, and nothing says so
+  const unread = unreadTags(input.bodyMarkdown, value, refusals)
+  if (unread.length > 0) {
+    const which = unread.map(({ name, count }) => `${count} <${name}> tag(s)`).join(' and ')
+    throw new APIError(
+      `${which} could not be read, so nothing was stored. Check that every tag ends with /> and that a quote, brace or bracket inside text is written as \\u0022, \\u007b, \\u007d, \\u005b or \\u005d.`,
+      400,
+      null,
+      true,
+    )
+  }
+  return value
 }
 
 const idOf = (value: unknown): number | null => {

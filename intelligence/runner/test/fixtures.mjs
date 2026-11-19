@@ -121,6 +121,18 @@ export const FEEDS = {
   ]),
   'madison365-news':
     '<rss><channel><item><guid>m365-9</guid><title>Free coat drive at east side libraries</title><link>https://madison365.com/coats/</link><description>Coats for families.</description></item></channel></rss>',
+  // The HTML pages (#390), each with no items today: their parsers have their own tests
+  'district16-blog': '<main><ul class="list--unstyled cards"></ul></main>',
+  'city-news': '<main><ul class="list--unstyled"></ul></main>',
+  'city-public-info-meetings': '<main><ul class="list--items list--unstyled"></ul></main>',
+  'wisdot-i39-90-94': '<h1>News and Meetings</h1>',
+}
+
+/** The City of Madison page each HTML source reads, by path. */
+const cityPages = {
+  '/council/district16/blog': 'district16-blog',
+  '/news': 'city-news',
+  '/events/public-information-meetings': 'city-public-info-meetings',
 }
 
 /** A `fetch` double serving FEEDS by source, robots.txt allowing everything. */
@@ -130,6 +142,8 @@ export function feedsHttp(feeds = FEEDS, { etag = '"v1"' } = {}) {
       url.includes('/matters') ? feeds['legistar-matters'] : feeds['legistar-events'],
     'www.madisonpubliclibrary.org': () => feeds['mpl-pinney-events'],
     'madison365.com': () => feeds['madison365-news'],
+    'www.cityofmadison.com': (url) => feeds[cityPages[new URL(url).pathname]],
+    'www.i399094project.wisconsindot.gov': () => feeds['wisdot-i39-90-94'],
   }
   const requested = []
   const http = async (url, init = {}) => {

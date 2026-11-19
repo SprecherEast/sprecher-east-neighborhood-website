@@ -4,6 +4,7 @@ import { draftContentAccess } from '@/platform/payload/draftContentAccess'
 import { populatePublishedAt } from '@/platform/payload/populatePublishedAt'
 
 import { FAQ_CATEGORIES } from '../domain/categories'
+import { orderField } from './orderField'
 import { revalidateListPage } from './revalidateListPage'
 
 const revalidate = revalidateListPage('faq')
@@ -33,15 +34,7 @@ export const FAQ: CollectionConfig<'faq'> = {
       options: [...FAQ_CATEGORIES],
       defaultValue: 'general',
     },
-    {
-      name: 'order',
-      type: 'number',
-      defaultValue: 99,
-      admin: {
-        position: 'sidebar',
-        description: 'Lower numbers appear first',
-      },
-    },
+    orderField(),
     {
       name: 'publishedAt',
       type: 'date',

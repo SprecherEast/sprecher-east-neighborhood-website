@@ -1,0 +1,6 @@
+{
+  "GHSA-fc5q-39xc-vjpf": {
+    "notes": "picomatch ReDoS on a crafted glob pattern; no fixed release exists (4.0.7 is the newest). Only build and test tools match globs here, and no visitor input reaches a glob match. Upstream fix: https://github.com/micromatch/picomatch/pull/194. Tracked in #1285.",
+    "expiry": "2026-12-17"
+  }
+}

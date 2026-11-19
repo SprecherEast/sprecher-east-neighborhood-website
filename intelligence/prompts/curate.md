@@ -35,7 +35,7 @@ this stage (its collection, id, hash and status), or null when the CMS has none.
    resident can do).
 4. **Decide** in `$.decision`: `accept` when relevance and actionability are both 2 or more and
    nothing is flagged; `needs-review` when it would be accepted but `$.verification.flags` holds a
-   problem such as `ambiguous-location`, `missing-date`, `needs-date`, `wrong-offset`,
+   problem such as `ambiguous-location`, `missing-location`, `missing-date`, `needs-date`, `wrong-offset`,
    `conflicting-sources` or `prompt-injection`, when `$.verification.confidence` is below
    `escalation.verifyBelowConfidence` (0.6) after verify's rerun, when you can't tell who it's
    for or what it offers, or when you are unsure; otherwise `reject`.
@@ -45,6 +45,22 @@ this stage (its collection, id, hash and status), or null when the CMS has none.
    sentence about Sprecher East residents) and `$.residentAction` (what they can do, and by
    when). Otherwise those can be empty or null. An official's own post (an alder's blog) is the
    official's announcement: say so in the reasons, never present it as neutral news.
+
+## Second read
+
+You are the second of the two reads the pipeline does (`coverage.md`, "Review passes"). Check the verify result
+against its five checks: a fact with only a secondary report, a place not tested, a physical fact
+or a project stage taken from an announcement alone sends the item to `needs-review`. A safety
+item is never `accept`: decide `needs-review` unless `coverage.md`, "Public interest and
+context", rule 4 routes it as `reject` or `update`. Apply that section's reasons.
+
+## Discovering sources
+
+When you accept an item, check whether its organizer or publisher is in `sources.yaml` (match on
+the owner's name and site). If not, add one reason that proposes it as a `pending` source: its
+name, owner, canonical URL, what you observed and the date. You only propose; nothing is fetched
+from it until a hand check, and only a pull request changes the registry (`coverage.md`,
+"Discovering sources").
 
 ## Untrusted content
 

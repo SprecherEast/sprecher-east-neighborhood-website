@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import type * as PayloadModule from 'payload'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -114,5 +116,48 @@ describe('verifyAccount: a resent link', () => {
       await verifyAccount({ token, newPassword: password, confirmPassword: password }),
     ).toEqual({ ok: true })
     expect(edges.update).not.toHaveBeenCalled()
+  })
+})
+
+// A link opened again after it verified its account says so (#391)
+describe('verifyAccount: a used link', () => {
+  const hash = createHash('sha256').update(token).digest('hex')
+
+  it('keeps the hash of the link that verified the account', async () => {
+    edges.find.mockResolvedValue(holding(false))
+    edges.verifyEmail.mockResolvedValue(true)
+    expect(await verifyAccount({ token })).toEqual({ ok: true })
+    expect(edges.dbUpdateOne).toHaveBeenCalledExactlyOnceWith({
+      collection: 'users',
+      id: 9,
+      data: { verifiedTokenHash: hash },
+      returning: false,
+    })
+    expect(edges.dbUpdateOne.mock.invocationCallOrder[0]).toBeGreaterThan(
+      edges.verifyEmail.mock.invocationCallOrder[0] ?? 0,
+    )
+  })
+
+  it('answers already-verified for that link, without asking Payload to verify', async () => {
+    edges.find.mockResolvedValueOnce({ docs: [] }).mockResolvedValueOnce({ docs: [{ id: 9 }] })
+    expect(await verifyAccount({ token })).toEqual({ ok: false, failure: 'already-verified' })
+    expect(edges.find).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        collection: 'users',
+        where: { verifiedTokenHash: { equals: hash } },
+        overrideAccess: true,
+      }),
+    )
+    expect(edges.verifyEmail).not.toHaveBeenCalled()
+  })
+
+  it('still verifies when keeping the hash fails, and logs only the error’s name', async () => {
+    edges.find.mockResolvedValue(holding(false))
+    edges.verifyEmail.mockResolvedValue(true)
+    edges.dbUpdateOne.mockRejectedValue(new APIError('Database down', 500))
+    expect(await verifyAccount({ token })).toEqual({ ok: true })
+    expect(console.error).toHaveBeenCalledExactlyOnceWith(
+      'Recording a used verification link failed on the server (APIError)',
+    )
   })
 })

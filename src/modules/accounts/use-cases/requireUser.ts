@@ -6,7 +6,7 @@ import type { Role } from '@/platform/lib'
 
 import { SIGN_IN_PATH } from '../domain/paths'
 import type { CurrentUser } from '../domain/types'
-import { getCurrentUser } from './getCurrentUser'
+import { getCurrentUser } from '../data/session'
 
 /** The signed-in user. A visitor is sent to the sign-in page instead. */
 export async function requireUser(): Promise<CurrentUser> {

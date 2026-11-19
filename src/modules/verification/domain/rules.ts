@@ -1,5 +1,5 @@
 import { CONFIRMATION_LIMITS } from './limits'
-import type { ConfirmationRecord } from './types'
+import type { ConfirmationRecord, LinkStatus } from './types'
 
 type AddressWindow = Pick<ConfirmationRecord, 'sendCount' | 'sendWindowStart'>
 
@@ -36,4 +36,17 @@ export function checkLink(
   const expires = record.tokenExpiresAt ? Date.parse(record.tokenExpiresAt) : NaN
   if (!Number.isFinite(expires) || now >= expires) return 'expired'
   return 'confirm'
+}
+
+/**
+ * Where a link stands when its page opens (#391): the same rule as following it (`checkLink`),
+ * but nothing changes. `null`: no record holds the link's token.
+ */
+export function toLinkStatus(
+  record: Pick<ConfirmationRecord, 'confirmedAt' | 'tokenExpiresAt'> | null,
+  now: number,
+): LinkStatus {
+  if (!record) return 'invalid'
+  const check = checkLink(record, now)
+  return check === 'confirm' ? 'pending' : check
 }

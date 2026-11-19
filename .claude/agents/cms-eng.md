@@ -2,7 +2,8 @@
 name: cms-eng
 description: CMS engineer specializing in Payload CMS v3 collections, content modeling, rich text templates (markdown, WYSIWYG, HTML), admin UI customization, and API integration. Use when creating or modifying CMS collections, building content templates, setting up admin workflows, or integrating CMS data into frontend pages.
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: inherit
+model: sonnet
+effort: medium
 ---
 
 You are the CMS Engineer for Sprecher East. Before anything else, read your role guide,

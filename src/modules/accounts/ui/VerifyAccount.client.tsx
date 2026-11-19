@@ -11,9 +11,10 @@ import { useRobotCheck } from '@/platform/turnstile/useRobotCheck.client'
 import { verifyAccount } from '../actions'
 import { newPasswordSchema, type NewPasswordValues } from '../domain/credentials'
 import { SIGN_IN_PATH } from '../domain/paths'
-import type { VerifyAccountFailure } from '../domain/types'
+import type { VerificationLinkStatus, VerifyAccountFailure } from '../domain/types'
 import { NewPasswordFields } from './NewPasswordFields.client'
 import {
+  ACCOUNT_ALREADY_VERIFIED,
   ACCOUNT_VERIFIED,
   CHOOSE_PASSWORD_TO_VERIFY,
   toVerifyAccountErrorMessage,
@@ -31,10 +32,23 @@ type Answer = 'verified' | VerifyAccountFailure | 'offline'
  *
  * A link resent after a second sign-up answers `needs-password` (#289): the person chooses the
  * account's password here, and the same request then verifies the email.
+ *
+ * `status` is where the link stood when the page opened, read without changing anything (#391):
+ * a link that already verified its account, or one that isn't valid, shows its message and the
+ * Log In button, and no Confirm button.
  */
-export function VerifyAccount({ token: linkToken }: { token: string | null }) {
+export function VerifyAccount({
+  token: linkToken,
+  status,
+}: {
+  token: string | null
+  status: VerificationLinkStatus
+}) {
   const [token] = useState(linkToken)
-  const [answer, setAnswer] = useState<Answer | null>(token ? null : 'invalid-link')
+  const [answer, setAnswer] = useState<Answer | null>(() => {
+    if (!token || status === 'invalid') return 'invalid-link'
+    return status === 'already-verified' ? 'already-verified' : null
+  })
   const [sending, setSending] = useState(false)
   // Once a password is asked for, the form stays until the account is verified
   const [choosingPassword, setChoosingPassword] = useState(false)
@@ -78,22 +92,24 @@ export function VerifyAccount({ token: linkToken }: { token: string | null }) {
   }
 
   // A verified account or a dead link: the next step is to log in
-  const done = answer === 'verified' || answer === 'invalid-link'
+  const done = answer === 'verified' || answer === 'already-verified' || answer === 'invalid-link'
 
   return (
     <div className="space-y-6">
       {answer && (
         <div ref={messageRef} tabIndex={-1} className="outline-none">
           {answer === 'verified' ? (
-            <Alert variant="success">{ACCOUNT_VERIFIED}</Alert>
+            <Alert tone="success">{ACCOUNT_VERIFIED}</Alert>
+          ) : answer === 'already-verified' ? (
+            <Alert tone="success">{ACCOUNT_ALREADY_VERIFIED}</Alert>
           ) : answer === 'needs-password' ? (
             <p className="text-foreground">{CHOOSE_PASSWORD_TO_VERIFY}</p>
           ) : (
-            <Alert variant="error">{toVerifyAccountErrorMessage(answer)}</Alert>
+            <Alert tone="error">{toVerifyAccountErrorMessage(answer)}</Alert>
           )}
         </div>
       )}
-      {!done && waitMessage && <Alert variant="error">{waitMessage}</Alert>}
+      {!done && waitMessage && <Alert tone="error">{waitMessage}</Alert>}
       {!done && robotCheck.enabled && <TurnstileWidget {...robotCheck.widgetProps} />}
       {done ? (
         <Button href={SIGN_IN_PATH} fullWidth>
@@ -109,13 +125,7 @@ export function VerifyAccount({ token: linkToken }: { token: string | null }) {
         >
           {({ register, formState: { errors } }) => (
             <>
-              <NewPasswordFields
-                label="Password"
-                password={register('newPassword')}
-                confirm={register('confirmPassword')}
-                passwordError={errors.newPassword?.message}
-                confirmError={errors.confirmPassword?.message}
-              />
+              <NewPasswordFields label="Password" register={register} errors={errors} />
               <div>
                 <Button type="submit" loading={sending} fullWidth>
                   {sending ? 'Confirming' : 'Set Password and Confirm'}

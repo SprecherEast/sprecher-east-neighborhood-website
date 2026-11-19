@@ -1,0 +1,160 @@
+/*
+ * Default theme (decisions 0006 and 0012, #146): a value for every token in
+ * src/platform/theme/tokens.ts, for light and dark mode. Components never use these values
+ * directly; src/platform/theme/tailwind.css maps the tokens to Tailwind classes.
+ * themes.test.ts checks this file against the contract and WCAG AA contrast.
+ */
+
+/* Sprecher East brand tokens — light theme (default) */
+:root,
+[data-theme='light'] {
+  --background: #f9f8f5;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --primary: #42755e;
+  --primary-foreground: #ffffff;
+  --secondary: #f0ede6;
+  --secondary-foreground: #1a1a1a;
+  --muted: #f0ede6;
+  --muted-foreground: #6b6b6b;
+  --accent: #d8924a;
+  /* Dark text on the orange accent: white on #d8924a is 2.6:1 and fails WCAG AA; #1a1a1a is 6.7:1 */
+  --accent-foreground: #1a1a1a;
+  --destructive: #dc2626;
+  --destructive-foreground: #dc2626;
+  --border: #e2ddd6;
+  /* Form control borders: 3.4:1 on --surface, 3.8:1 on --background, 4.0:1 on --card (WCAG 1.4.11) */
+  --input: #857e74;
+  --ring: #42755e;
+  --chart-1: #14805a;
+  --chart-2: #2b6cc4;
+  --chart-3: #c4581c;
+  --chart-4: #6a55c9;
+  --chart-5: #8f6a00;
+  --chart-6: #b4457e;
+  --chart-warm-1: #b34700;
+  --chart-warm-2: #6b6b6b;
+  --chart-warm-3: #d4631a;
+  --chart-warm-4: #858585;
+  --chart-warm-5: #3f3f3f;
+  --chart-warm-6: #a2653a;
+  --chart-ramp-1: #b75b20;
+  --chart-ramp-2: #de9c3a;
+  --chart-ramp-3: #b8d7a5;
+  --chart-ramp-4: #48966b;
+  --chart-ramp-5: #f4f2ee;
+  --chart-ramp-6: #8c9096;
+  --chart-ramp-7: #c3c6ca;
+  --chart-ramp-edge: rgb(35 32 29 / 0.16);
+  --radius: 0.625rem;
+  --type-fine: 0.625rem;
+  --type-list-row: 1.08em;
+  --success: #42755e;
+  --done: #7c4dcc;
+  --warning: #e8923a;
+  --info: #2f6fb3;
+  --error: #dc2626;
+  --surface: #f0ede6;
+  --primary-dark: #325a47;
+  --primary-light: #569274;
+  --accent-dark: #bb793e;
+  /* Accent as text on the page, panels and cards (4.4:1 or more): the estimator's key figure (#1118) */
+  --accent-strong: #955516;
+  /* Fill for primary buttons: white text on it is 5.3:1 (#121), 7.8:1 on hover. */
+  --primary-fill: #42755e;
+  --primary-fill-hover: #325a47;
+  /* Link text that passes on surface panels too: 6.7:1 on --surface, 7.4:1 on --background */
+  --primary-strong: #325a47;
+  /* Error text: --destructive is 4.1:1 on --surface and 3.9:1 on its own tint; this is 5.5:1 on
+     --surface, 6.1:1 on --background and 4.8:1 or more on the error tint */
+  --destructive-strong: #b91c1c;
+  /* Warning text: 5.4:1 or more on the warning tint, on --surface too */
+  --warning-strong: #8a4a0e;
+  /* Information text: 6:1 or more on the info tint, on --surface too */
+  --info-strong: #1d4f8c;
+  /* Success and done text that pass on their tints and on --surface */
+  --success-strong: #2a523f;
+  --done-strong: #5b34a8;
+  /* Text and overlays on photos: the same in both modes, as the photo doesn't change */
+  --on-image: #ffffff;
+  --scrim: #000000;
+  /* The orange drawn into diagram images, so a legend's circles match them. Light mode only: the
+     photo doesn't change in dark mode, so neither does this */
+  --diagram-marker: #d8924a;
+  /* Dark chrome on any page (admin bar, code blocks) */
+  --inverse: #000000;
+  --inverse-foreground: #ffffff;
+}
+
+/* Sprecher East brand tokens — dark theme */
+[data-theme='dark'] {
+  --background: #0f1117;
+  --foreground: #e8e6e3;
+  --card: #1a1d27;
+  --card-foreground: #e8e6e3;
+  --popover: #1a1d27;
+  --popover-foreground: #e8e6e3;
+  --primary: #559476;
+  --primary-foreground: #ffffff;
+  --secondary: #1e2130;
+  --secondary-foreground: #e8e6e3;
+  --muted: #1e2130;
+  --muted-foreground: #9ca3af;
+  --accent: #e1a05a;
+  --accent-foreground: #1a1a1a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ef4444;
+  --border: #2d3040;
+  /* 3.3:1 on --surface, 3.9:1 on --background, 3.5:1 on --card */
+  --input: #6b7186;
+  --ring: #559476;
+  --chart-1: #2f9e74;
+  --chart-2: #4a8ad8;
+  --chart-3: #d0692c;
+  --chart-4: #8a7be0;
+  --chart-5: #b48f12;
+  --chart-6: #d0679d;
+  --chart-warm-1: #f08a3c;
+  --chart-warm-2: #a3a3a3;
+  --chart-warm-3: #d9742a;
+  --chart-warm-4: #7f7f7f;
+  --chart-warm-5: #d0d0d0;
+  --chart-warm-6: #ffb27a;
+  --chart-ramp-1: #b75b20;
+  --chart-ramp-2: #de9c3a;
+  --chart-ramp-3: #b8d7a5;
+  --chart-ramp-4: #48966b;
+  --chart-ramp-5: #f4f2ee;
+  --chart-ramp-6: #8c9096;
+  --chart-ramp-7: #c3c6ca;
+  --chart-ramp-edge: rgb(255 255 255 / 0.12);
+  --success: #559476;
+  --done: #a98bf0;
+  --warning: #f0a04b;
+  --info: #5a9bde;
+  --error: #ef4444;
+  --surface: #1e2130;
+  --primary-dark: #42755e;
+  --primary-light: #67b08e;
+  --accent-dark: #c68946;
+  --accent-strong: #e9b67a;
+  /* Dark --primary (#559476) gives white text only 3.6:1, so buttons keep the brand fill (#121) */
+  --primary-fill: #42755e;
+  --primary-fill-hover: #325a47;
+  /* 6.2:1 on --surface, 7.4:1 on --background */
+  --primary-strong: #67b08e;
+  /* 5.8:1 on --surface, 6.1:1 on --card, 6.8:1 on --background */
+  --destructive-strong: #f87171;
+  --warning-strong: #f5b76e;
+  --info-strong: #8fbdf0;
+  --success-strong: #95cab0;
+  --done-strong: #c9b5f7;
+  --on-image: #ffffff;
+  --scrim: #000000;
+  /* Dark chrome on any page (admin bar, code blocks) */
+  --inverse: #000000;
+  --inverse-foreground: #ffffff;
+}

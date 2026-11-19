@@ -5,7 +5,7 @@ export const beforeSyncWithSearch: BeforeSync = async ({ req, originalDoc, searc
     doc: { relationTo: collection },
   } = searchDoc
 
-  const { slug, id, categories, title, meta } = originalDoc
+  const { slug, id, categories, title, meta, cancelled, sourceName, sourceUrl } = originalDoc
 
   const modifiedDoc: DocToSync = {
     ...searchDoc,
@@ -16,6 +16,10 @@ export const beforeSyncWithSearch: BeforeSync = async ({ req, originalDoc, searc
       image: meta?.image?.id || meta?.image,
       description: meta?.description,
     },
+    // Events have `cancelled`, posts don't (#471); both may name a source (#123, #492)
+    cancelled: cancelled === true,
+    sourceName: sourceName ?? null,
+    sourceUrl: sourceUrl ?? null,
     categories: [],
   }
 

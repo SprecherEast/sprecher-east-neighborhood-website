@@ -35,7 +35,7 @@ export type ReviewQueueData = {
 export type FieldProblem = { path: 'sourceName' | 'sourceUrl'; message: string }
 
 /** True for an absolute http or https URL. */
-export function isHttpUrl(value: unknown): boolean {
+export function isHttpUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false
   try {
     const { protocol } = new URL(value)

@@ -51,7 +51,7 @@ export const AdminBar: React.FC<{
 
   return (
     <div
-      className={cn(baseClass, 'bg-black py-2 text-white', {
+      className={cn(baseClass, 'bg-inverse py-2 text-inverse-foreground', {
         block: show,
         hidden: !show,
       })}
@@ -59,11 +59,11 @@ export const AdminBar: React.FC<{
       <div className="container">
         <PayloadAdminBar
           {...adminBarProps}
-          className="py-2 text-white"
+          className="py-2 text-inverse-foreground"
           classNames={{
-            controls: 'font-medium text-white',
-            logo: 'text-white',
-            user: 'text-white',
+            controls: 'font-medium text-inverse-foreground',
+            logo: 'text-inverse-foreground',
+            user: 'text-inverse-foreground',
           }}
           cmsURL={getClientSideURL()}
           collectionSlug={collection}
@@ -79,6 +79,7 @@ export const AdminBar: React.FC<{
               router.refresh()
             })
           }}
+          // Payload's bar sets its own inline styles; this prop is the only way to undo them
           style={{
             backgroundColor: 'transparent',
             padding: 0,

@@ -29,10 +29,23 @@ cases:
     input:
       sourceId: mpl-pinney-events
       title: Family Storytime
+      sourceText: Stories, songs and rhymes for families. Every Thursday.
       startsAt: 2026-10-29T10:30:00-05:00
       locationText: Pinney Library
+    expected: { decision: reject, coverage: catchment, route: none }
+    why: >-
+      A routine weekly program the library's calendar already lists (coverage.md, rule 4; the
+      owner, 2026-10-25: pick the best, link the library's calendar, don't copy it).
+  - id: catchment-pinney-one-off-talk
+    stage: curate
+    input:
+      sourceId: mpl-pinney-events
+      title: "Author talk: the history of Madison's east side"
+      sourceText: A local historian talks about the farms and neighborhoods of the far east side.
+      startsAt: 2026-11-12T18:30:00-06:00
+      locationText: Pinney Library - Community Room A
     expected: { decision: accept, coverage: catchment, route: submitSuggestion }
-    why: Free, nearest library branch, families with young kids.
+    why: A one-off talk about the neighborhood at the nearest branch is the library's best.
   - id: catchment-cottage-grove-road-hearing
     stage: curate
     input:
@@ -164,8 +177,6 @@ cases:
       title: Listening session with Alder O'Brien
       startsAt: 2026-11-12T18:00:00-06:00
       locationText: Pinney Library
-    given:
-      sources: [{ id: district16-blog, result: valid, pilotRank: 5, cadence: daily }]
     expected: { decision: accept, coverage: catchment, route: submitSuggestion }
     graders:
       - check: model

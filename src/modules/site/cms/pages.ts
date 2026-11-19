@@ -1,16 +1,11 @@
 import type { Block, CollectionConfig } from 'payload'
+import { draftVersions, previewAdmin, titleField } from '@/platform/payload/contentCollection'
 import { slugField } from 'payload'
-import {
-  MetaDescriptionField,
-  MetaImageField,
-  MetaTitleField,
-  OverviewField,
-  PreviewField,
-} from '@payloadcms/plugin-seo/fields'
 
 import { populatePublishedAt } from '@/platform/payload/populatePublishedAt'
 import { draftContentAccess } from '@/platform/payload/draftContentAccess'
-import { generatePreviewPath } from '@/platform/payload/generatePreviewPath'
+import { imagesOnly } from '@/platform/payload/imagesOnly'
+import { seoTab } from '@/platform/payload/seoTab'
 
 import { hero } from './hero'
 import { revalidateDelete, revalidatePage } from './revalidatePage'
@@ -35,28 +30,11 @@ export const createPagesCollection = ({
   },
   admin: {
     defaultColumns: ['title', 'slug', 'updatedAt'],
-    livePreview: {
-      url: ({ data, req }) =>
-        generatePreviewPath({
-          slug: data?.slug,
-          collection: 'pages',
-          req,
-        }),
-    },
-    preview: (data, { req }) =>
-      generatePreviewPath({
-        slug: typeof data?.slug === 'string' ? data.slug : null,
-        collection: 'pages',
-        req,
-      }),
+    ...previewAdmin('pages'),
     useAsTitle: 'title',
   },
   fields: [
-    {
-      name: 'title',
-      type: 'text',
-      required: true,
-    },
+    titleField(),
     {
       type: 'tabs',
       tabs: [
@@ -78,39 +56,24 @@ export const createPagesCollection = ({
           ],
           label: 'Content',
         },
-        {
-          name: 'meta',
-          label: 'SEO',
-          fields: [
-            OverviewField({
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-              imagePath: 'meta.image',
-            }),
-            MetaTitleField({
-              hasGenerateFn: true,
-            }),
-            MetaImageField({
-              relationTo: 'media',
-            }),
-
-            MetaDescriptionField({}),
-            PreviewField({
-              // if the `generateUrl` function is configured
-              hasGenerateFn: true,
-
-              // field paths to match the target field for data
-              titlePath: 'meta.title',
-              descriptionPath: 'meta.description',
-            }),
-          ],
-        },
+        seoTab(),
       ],
     },
     {
       name: 'publishedAt',
       type: 'date',
       admin: {
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'backdrop',
+      type: 'upload',
+      relationTo: 'media',
+      filterOptions: imagesOnly,
+      admin: {
+        description:
+          'An optional photo shown faded and grayed behind the whole page, under its text. Pick a wide, level photo with a quiet sky or field; the text stays readable in light and dark.',
         position: 'sidebar',
       },
     },
@@ -121,13 +84,5 @@ export const createPagesCollection = ({
     beforeChange: [populatePublishedAt],
     afterDelete: [revalidateDelete],
   },
-  versions: {
-    drafts: {
-      autosave: {
-        interval: 100, // We set this interval for optimal live preview
-      },
-      schedulePublish: true,
-    },
-    maxPerDoc: 50,
-  },
+  versions: draftVersions(50),
 })

@@ -15,7 +15,8 @@ const getImageURL = (image?: Media | Config['db']['defaultIDType'] | null) => {
   return toAbsoluteURL('/images/photo.jpeg')
 }
 
-type DocWithMeta = Partial<Page> | Partial<Post> | Partial<Event>
+/** What the metadata reads from a page, post or event; a page's layout may already be mapped */
+type DocWithMeta = Partial<Pick<Page | Post | Event, 'meta' | 'slug'>>
 
 export const generateMeta = async (args: { doc: DocWithMeta | null }): Promise<Metadata> => {
   const { doc } = args

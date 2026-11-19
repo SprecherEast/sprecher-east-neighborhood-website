@@ -12,3 +12,13 @@ export type RichTextValue = DefaultTypedEditorState
 
 /** An uploaded image, as the media collection stores it. */
 export type ImageRef = Media
+
+/** A CMS link resolved to where it goes, for `Button` and `Link` (`resolveLink()` builds it). */
+export type ResolvedLink = {
+  href: string
+  label: string
+  /** Opens in a new tab */
+  external: boolean
+  /** The look the editor chose; the UI maps it to a `Button` variant */
+  appearance: 'default' | 'outline' | 'accent'
+}

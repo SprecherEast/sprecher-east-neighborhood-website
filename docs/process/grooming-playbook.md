@@ -1,0 +1,248 @@
+# Grooming playbook
+
+How the chief of staff keeps the plan clean: what must be true for each board move, when to
+groom, how the sweep finds problems, and how to reorganize work that was never organized. The
+layers and naming are in the [planning model](planning-model.md); the columns and fields are in
+[how we work](project-management.md#the-board). The chief of staff's commands are in its
+[skill](../../.agents/skills/chief-of-staff/SKILL.md). This page holds principles only.
+
+Grooming follows the Scrum Guide's product backlog refinement: an ongoing activity that breaks
+items down, adds detail, order and size, until an item can be finished within one sprint and is
+ready to be selected. Each column's criteria below are a Definition of Ready or Done for that move.
+
+The chief of staff never edits code, pushes or merges. It reads, writes issues and comments, and
+sets issue fields and labels. It does not move cards itself: the `ready` label and assigning an
+issue do, through the planner app, and where that did not happen it comments which card should
+move, as [how we work](project-management.md#the-board) says.
+
+## Modes: apply and propose
+
+Grooming makes an issue correct and complete without asking, and asks before it changes what the
+team has agreed to do.
+
+- **Applied directly.** What brings an issue in line with the rules already written: labels,
+  priority and size, an existing milestone, blocked-by links for dependencies named in prose, the
+  body's sections (not what it promises), the `ready` label. One comment per issue says why.
+- **Proposed, then applied once the owner agrees.** Closing anything or labeling it
+  `proposed-close` (duplicate bugs are the exception the
+  [operating model](agent-operating-model.md#4-how-an-issue-moves) allows); an issue's scope or
+  acceptance criteria; a parent; creating, renaming, splitting or re-scoping a milestone or an epic; a
+  sprint's goal; anything about a rule. The proposal is a numbered report. He approves by number
+  or category, in chat or on the issue, and only approved items are applied; approval from an
+  earlier run does not carry over. The record is a summary with where he said it, never his words.
+- **Report only.** When the owner asks for a report, or for the first pass of a
+  [retro-organization](#retro-organization): a dry run changes nothing, and the report comment is
+  the only write.
+- **Unsure whether a change is routine:** propose it.
+
+## Board moves: entry and exit criteria
+
+A card moves only when its criteria hold. The chief of staff checks them and writes what it found
+as a comment when it blocks a move.
+
+### Backlog to Ready
+
+The Definition of Ready, spelled out:
+
+- A plain summary, then details, then acceptance criteria someone else can check.
+- The layer is right ([which layer](planning-model.md#which-layer)): small enough for one pull
+  request and one sprint (INVEST: independent, estimable, small, testable), in a milestone, with an
+  epic above it only for multi-part work ([the rule](../../AGENTS.md#one-issue-one-pull-request)).
+- Labels: one type, at least one area, one priority. A size, set as the Effort field.
+- Files likely touched and must not touch, filled in or `None`.
+- Known dependencies are blocked-by links, and nothing it is blocked by is still open.
+- It is not a duplicate of anything (the sweep checked) and carries no `needs owner` label.
+- It carries no `needs grooming` label: the [issue check](issue-and-pr-checks.md#the-issue-check)
+  names each missing item, so fixing those clears it.
+- The role guides and knowledge notes a worker must load are named.
+
+When all of it holds, add the `ready` label: that is the move. The planner app sets the card to
+Ready, and refuses while the issue has `needs owner` or fails the issue check.
+
+### Ready to In progress
+
+- It is in the current sprint, or the dispatcher pulls it in with a comment saying why.
+- The overlap check passes against everything In progress, and no open pull request already closes it.
+- It is not claimed: no claim comment and not In progress.
+- A claim comment names the branch, the issue is assigned, and the status is set, in that order,
+  before the first commit ([claiming](project-management.md#the-record-on-the-issue)).
+
+### In progress to In review
+
+- A pull request that closes the issue is open, with the template filled in, tests written first,
+  and the self-review recorded.
+- Each acceptance criterion maps to something in the pull request, and anything beyond scope is a
+  new linked issue instead.
+- A progress comment says the pull request is open and what remains.
+
+### In review to Done
+
+- Required checks pass on the current head, the independent review says it is ready, and no
+  conversation is open ([`AGENTS.md`](../../AGENTS.md#the-only-way-code-reaches-main-and-production)).
+- The knowledge note is updated or behavior change is declared absent, and any deploy is verified
+  ([`wrapped`](../../.agents/skills/wrapped/SKILL.md)).
+- The issue is closed with a summary. Then its parent (the epic, or an issue under it) is
+  checked: if that was the last open child, the parent's own acceptance is tested before it
+  closes, and the milestone's progress and done test are looked at.
+
+### Reopen
+
+Reopen the original when its own acceptance criteria were not met. When they were met and the
+behavior later broke, file a new bug linked to the original. A reopened issue goes to Backlog,
+keeps its parent and milestone, and gets a comment saying which criterion failed; it returns to
+Ready only through the Backlog to Ready criteria again.
+
+### Park
+
+Parking is a deliberate "not now". Remove the `ready` label, which moves the card to Backlog,
+and comment the reason and the condition that would bring it back; taking it out of the sprint
+needs the board, so the report names it. A parked item whose condition will
+never come is obsolete: label it `proposed-close` for the owner, and never close an old idea
+yourself. Blocked work is not parked; it keeps its blocked-by link and stays where it is.
+
+## Triggers
+
+For each, the chief of staff checks and updates the following.
+
+- **On filing.** Layer (the decision tree), duplicates (below), the required labels, parent and
+  milestone, the issue body against the forms, and blockers. Fix what is missing, or list it in
+  a report-only run. Anything it cannot groom gets one question on the issue, not a list.
+- **On each status change.** The exit criteria of the column left and the entry criteria of the
+  column entered. A move that skips them is reported; In progress also re-runs the overlap check.
+- **When work starts and when it finishes.** A progress comment appears on the issue as it
+  happens: claimed, started, pull request opened, review done, merged. If a transition has no
+  comment, the chief of staff adds one that states only what it observed.
+- **At sprint start.** Run the sweep first. Then pull Ready work by priority, name the sprint goal
+  in one sentence, leave room for bugs, check dependency order and overlap, and report what was
+  pulled and what was left out.
+- **At sprint end.** Apply the rollover rule in the
+  [planning model](planning-model.md#sprint) to everything not Done. Report what shipped grouped
+  by epic, epic and milestone progress, items carried over twice, and retro items that need a
+  rule or a task.
+- **A frequent sweep,** at least as often as work moves, and always before planning. It is the
+  only trigger that looks at the whole backlog rather than one issue.
+
+## The sweep
+
+The sweep reads every open issue, the milestones, and the open pull requests. Its milestone
+checks skip the Backlog milestone, the one catch-all with no done test
+([planning model](planning-model.md#milestone)).
+
+### Duplicates
+
+Compare each issue with the others on several signals; one signal alone is not enough:
+
+- **Title:** normalized word overlap, ignoring the type prefix and common words.
+- **Body:** the problem sentence and the acceptance criteria, which say what "done" is.
+- **Files:** the same files likely touched or the same hot spots. This is the weakest signal,
+  because different work touches the same places.
+- **Context:** the same parent, area labels, linked pull requests, or the same reporter.
+
+Treat it as a candidate when two signals agree, one of them title or acceptance criteria, then read
+both in full before judging. Same outcome: duplicate. Overlapping but different: keep both, narrow
+each one's scope, and link them. One contains the other: make the smaller a sub-issue of the larger.
+
+What to do with a duplicate: pick the survivor (the one with more history, linked pull requests or
+better grooming), copy anything unique to it in a comment, comment on the duplicate naming the
+survivor and why, then close it with the closing reason GitHub offers for duplicates where the
+interface or API has one, otherwise as not planned. Never close silently, and never before the
+comment. Duplicate bugs may be closed as the
+[operating model](agent-operating-model.md#4-how-an-issue-moves) allows; any other duplicate gets
+`proposed-close` and waits for the owner.
+
+### Stale and orphans
+
+- **Stale:** an open item with no activity for several sprints, not blocked and not waiting for
+  the owner; an In progress item with no claim, no progress comment and no pull request; a Ready
+  item that never gets pulled. Ask on the issue what changed; if it is obsolete, `proposed-close`.
+- **Orphans:** an issue with no milestone ([the rule](../../AGENTS.md#one-issue-one-pull-request)); an epic with no children; an open
+  child of a closed parent; an open epic whose children are all closed; a milestone with nothing
+  open that has not been closed; an open issue in a closed milestone.
+
+### Missing fields
+
+Any of: acceptance criteria, type, area, priority, size, files declared, a milestone
+([the rule](../../AGENTS.md#one-issue-one-pull-request)), blocked-by
+links for dependencies named in prose.
+
+### Wrong layer
+
+An epic with one child or one pull request of work; an issue larger than the size cap or needing
+several pull requests; a milestone with no done test or named for an activity; a sprint-shaped
+milestone; an epic titled as a task. Propose the right layer and how to get there.
+
+For each open milestone, also ask whether it can still be taken in at a glance
+([planning model](planning-model.md#milestone)): too many open issues, or a goal that no longer
+fits one line, means a proposed split.
+
+### Consistency fixes
+
+- **Parent and milestone:** a child carries its epic's milestone; an epic's milestone matches an
+  outcome it serves.
+- **Priority:** a blocker ranked below what it blocks; a child ranked far above its parent's need;
+  a `priority:` label and a Priority field that differ (the label wins, since the checks read it).
+- **Labels:** none that duplicate hierarchy; the `epic` marker only on parents.
+- **Dependencies:** blocked-by links instead of prose, and none that form a cycle.
+
+### Drift and repeated failures
+
+- **Drift:** work that left what was agreed: a pull request that changes files its issue did not
+  declare or delivers what its criteria do not ask for, an issue rewritten after work began, an
+  issue closed with criteria unmet. Report it on the issue; extra work becomes a new linked issue.
+- **Repeated failures:** the same check failing across pull requests, the same review finding or
+  blocker coming back. One line each with a count, and an issue for the cause
+  ([watch list](watch-list.md)).
+
+### Milestone and epic progress
+
+A milestone's description and done test still match its scope, and a stale one gets proposed
+wording, recorded with a dated comment once approved ([planning model](planning-model.md#milestone)); open work under a milestone whose due date has
+passed is reported with a proposal (re-scope or a new date with a reason), never moved silently;
+as a dated milestone nears, its open items are flagged and their priority raised in the daily sweep;
+an epic whose children are all closed has its acceptance checked; the epic's list matches its
+sub-issues. Progress numbers are read from GitHub, never recomputed from memory.
+
+## Report format
+
+One comment, short enough to read in a minute. Items are numbered so the owner can approve by number.
+
+```markdown
+### [STEP] Grooming report (<report only | applied>)
+
+**Scope:** <what was read: the sprint, an epic, the whole backlog>
+**Summary:** <counts per finding type>
+
+**Applied** (routine, already done): <issue> <finding type>: <what changed>, one line each
+
+**Proposed changes** (numbered; approve by number or category)
+
+1. <issue> <finding type>: <what is wrong> -> <proposed change> (<why>)
+
+**Questions for the owner:** <at most a few, one line each, or none>
+**Not changed:** <anything seen and deliberately left alone, with the reason>
+**Could not check:** <anything unreadable, such as the board from a cloud session>
+```
+
+A second comment lists the approved items once applied, with the approval they rest on.
+
+## Retro-organization
+
+For existing work that was never organized into milestones and epics. Propose first, apply after
+approval.
+
+1. **Inventory** every issue, open and closed, with labels, parent, milestone, linked pull
+   requests and declared files. Page through the lists fully.
+2. **Cluster** by capability, using the duplicate signals plus parent links and shared area. Then
+   group the clusters by outcome: which several capabilities together make something with one done
+   test.
+3. **Report** as a dry-run proposal: each proposed milestone with the full description from the
+   [templates](planning-model.md#templates); each proposed epic with its children; issues with
+   no fitting milestone yet, with where each would go ([the rule](../../AGENTS.md#one-issue-one-pull-request));
+   duplicates and stale items from the sweep; and anything ambiguous as a question. Closed issues may be grouped into milestones and epics too, so a
+   milestone's progress shows what already shipped.
+4. **Owner approves** per item or per milestone, and may edit titles and boundaries.
+5. **Apply in order:** milestones, then epics, then parent links, then milestone assignment on the
+   epics and their children, then priority and label fixes. Comment on each issue it touched,
+   once, and keep a list of what changed.
+6. **Verify** with a fresh dry run: no orphans left (an issue with no milestone), milestone counts match the
+   approved list, no child outside its parent's milestone.

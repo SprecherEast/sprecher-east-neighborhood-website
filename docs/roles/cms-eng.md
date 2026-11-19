@@ -23,7 +23,7 @@ The installed plugins are listed in [`docs/project.md`](../project.md#payload-cm
 This project is built on the official Payload CMS v3 Website Template. Key patterns:
 
 - **Layout Builder**: Pages use the `layout` blocks field for flexible content layout; posts embed blocks (Banner, Code, Media) in their rich text. Each block has its own schema and React component.
-- **Hero System**: 3 hero types (HighImpact, MediumImpact, LowImpact) or none, chosen per page. Posts and events use their own fixed heroes (`PostHero`, `EventHero`).
+- **Hero System**: 3 hero types (`PageHero` variants `high`, `medium`, `low`) or none, chosen per page. Posts and events use `PageHeader` (`image` with a photo, `default` without).
 - **Live Preview**: Real-time content preview in admin panel via `window.postMessage`. Supports mobile/tablet/desktop breakpoints.
 - **Draft Preview**: Unpublished content can be previewed via draft routes before publishing.
 - **Scheduled Publishing**: Jobs queue enables `waitUntil` for future publish dates.
@@ -66,17 +66,17 @@ patterns are in [`payload-cms.md`](../guidelines/payload-cms.md).
 
 ## Collections
 
-| Collection  | What it holds                                                   |
-| ----------- | --------------------------------------------------------------- |
-| Pages       | CMS pages built from blocks (`/` and `/[slug]`)                 |
-| Posts       | News articles, listed at `/posts` with detail pages             |
-| Events      | Events, listed at `/events` with detail pages                   |
-| FAQ         | Questions and answers by category, shown at `/faq`              |
-| Resources   | Links and contacts by category, shown at `/resources`           |
-| TeamMembers | People and their roles; the `email` field is staff-only         |
-| Categories  | Post categories                                                 |
-| Media       | Uploads in `public/media`, with size variants and a focal point |
-| Users       | Accounts with the roles `admin`, `editor` and `resident`        |
+| Collection  | What it holds                                                              |
+| ----------- | -------------------------------------------------------------------------- |
+| Pages       | CMS pages built from blocks (`/` and `/[slug]`)                            |
+| Posts       | News articles, listed at `/posts` with detail pages                        |
+| Events      | Events, listed at `/events` with detail pages                              |
+| FAQ         | Questions and answers by category, shown at `/faq`                         |
+| Resources   | Links and contacts by category, shown at `/resources/<group>`              |
+| TeamMembers | People and their roles; the `email` field is staff-only                    |
+| Categories  | Post categories                                                            |
+| Media       | Uploads in `public/media`, with size variants and a focal point            |
+| Users       | Accounts with the roles `admin`, `editor`, `guest`, `resident` and `agent` |
 
 The exact fields are in [`docs/architecture/data-model.md`](../architecture/data-model.md) and the
 collection configs in each module's `cms/` folder (`src/modules/<area>/cms/`; Media in
@@ -123,4 +123,4 @@ Payload v3 rich text should support:
 
 - Primary admin: provided at task time, never stored in the repo
 - Roles and what each may do: [`security.md`](../guidelines/security.md#when-handling-auth-and-sessions)
-  (`admin`, `editor`, `resident`)
+  (`admin`, `editor`, `guest`, `resident`, `agent`)

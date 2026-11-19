@@ -3,6 +3,7 @@ import { type VariantProps, cva } from 'class-variance-authority'
 import type NextLink from 'next/link'
 
 import { AppLink } from './AppLink'
+import { TOUCH_MIN_HEIGHT } from './layoutSizes'
 import type { ComponentProps, ReactNode } from 'react'
 
 /**
@@ -22,13 +23,27 @@ export const linkVariants = cva(
         // Hover and current use primary-strong: plain primary is 4.33:1 on the secondary fill
         nav: 'inline-flex items-center gap-2 rounded-md font-medium text-foreground hover:bg-secondary hover:text-primary-strong aria-[current=page]:text-primary-strong',
         // Footer and other quiet lists
-        muted:
+        muted: cn(
+          TOUCH_MIN_HEIGHT,
           'inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary-strong aria-[current=page]:text-primary-strong',
+        ),
+        // A photo credit or caption: small, quiet, still underlined so it reads as a link (#405)
+        caption: 'text-muted-foreground underline underline-offset-2 hover:text-primary-strong',
+        // One step of a breadcrumb trail (`Breadcrumbs`): a quiet pill, 44 px tall on a phone and 36 px from `lg`
+        crumb: cn(
+          TOUCH_MIN_HEIGHT,
+          'inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground hover:bg-secondary hover:text-primary-strong',
+        ),
         // A single follow-up next to content: "Visit website", "Back to all events"
         // 44 px tall: it stands alone, so it's a touch target (WCAG 2.5.8). primary-strong because
         // it often sits on a surface panel, where plain primary is 4.33:1
         action:
           'inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary-strong underline-offset-4 hover:underline',
+        // An entry in an article's "On this page" menu; the section being read is `current="location"`
+        section: cn(
+          TOUCH_MIN_HEIGHT,
+          'flex items-center rounded-md border-l-2 border-transparent px-3 py-2 text-sm leading-snug text-muted-foreground hover:bg-secondary hover:text-primary-strong aria-[current=location]:border-primary-strong aria-[current=location]:font-semibold aria-[current=location]:text-primary-strong',
+        ),
       },
       // For `nav`: `sm` sits in the desktop bar, `md` is a full-width row in the mobile menu
       size: {
@@ -55,8 +70,11 @@ export type LinkProps = Omit<ComponentProps<typeof NextLink>, 'href' | 'classNam
     className?: string
     /** Opens in a new tab and tells screen readers so */
     external?: boolean
-    /** This link is the page being shown: `aria-current="page"` and the active look */
-    current?: boolean
+    /**
+     * This link is the page being shown (`true`: `aria-current="page"`) or the section being read
+     * (`'location'`), with the active look
+     */
+    current?: boolean | 'location'
     icon?: ReactNode
     iconPosition?: 'start' | 'end'
     /** Shows only the icon; the text stays for screen readers */
@@ -79,7 +97,7 @@ export function Link({
     <AppLink
       {...rest}
       {...(external && { target: '_blank', rel: 'noopener noreferrer' })}
-      aria-current={current ? 'page' : undefined}
+      aria-current={current === 'location' ? 'location' : current ? 'page' : undefined}
       className={cn(linkVariants({ variant, size }), iconOnly && 'p-2 [&_svg]:size-5', className)}
     >
       {iconPosition === 'start' && icon}

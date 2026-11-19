@@ -53,7 +53,10 @@ For feature/stat strips. More visually engaging than text-only cards.
 ```tsx
 <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
   {stats.map((stat) => (
-    <div key={stat.label} className="rounded-2xl border border-border bg-card p-6 text-center">
+    <div
+      key={stat.label}
+      className="rounded-2xl border border-border bg-card p-6 text-center shadow-sm"
+    >
       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
         <stat.icon className="h-6 w-6 text-primary" />
       </div>
@@ -96,19 +99,21 @@ More visually interesting than a flat gradient.
   data-theme="dark"
 >
   {/* Subtle texture overlay — uses Tailwind arbitrary values, no inline styles */}
-  <div className="absolute inset-0 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:24px_24px] opacity-10" />
+  <div className="absolute inset-0 [background-image:radial-gradient(circle_at_1px_1px,var(--primary-foreground)_1px,transparent_0)] [background-size:24px_24px] opacity-10" />
 
   <div className="relative container">
     <div className="mx-auto max-w-2xl text-center">
-      <h2 className="text-3xl font-bold text-white md:text-4xl">Join Your Neighbors</h2>
-      <p className="mt-4 text-lg text-white/85">
+      <h2 className="text-3xl font-bold text-primary-foreground md:text-4xl">
+        Join Your Neighbors
+      </h2>
+      <p className="mt-4 text-lg text-primary-foreground/85">
         Whether you've lived here for years or just moved in, there's a place for you.
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-4">
-        <a className="rounded-lg bg-white px-6 py-3 font-semibold text-primary transition hover:bg-white/90">
+        <a className="rounded-lg bg-primary-foreground px-6 py-3 font-semibold text-primary transition hover:bg-primary-foreground/90">
           Get Involved
         </a>
-        <a className="rounded-lg border-2 border-white/70 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
+        <a className="rounded-lg border-2 border-primary-foreground/70 px-6 py-3 font-semibold text-primary-foreground transition hover:bg-primary-foreground/10">
           Contact Us
         </a>
       </div>
@@ -129,7 +134,7 @@ For CTAs that want more visual impact than a solid color.
     <Image src={bgUrl} alt="" fill className="object-cover" />
   </div>
   <div className="absolute inset-0 bg-primary/85" />
-  <div className="relative container text-center text-white">{/* CTA content */}</div>
+  <div className="relative container text-center text-primary-foreground">{/* CTA content */}</div>
 </section>
 ```
 

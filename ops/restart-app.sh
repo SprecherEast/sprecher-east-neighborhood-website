@@ -16,7 +16,6 @@ trap '' HUP # a dropped SSH session must not stop the script between a change an
 . "$(dirname "$0")/lib.sh"
 
 NAME="$APP_NAME"
-CADDYFILE="${CADDYFILE:-/etc/caddy/Caddyfile}"
 DEADLINE_SECONDS="${DEADLINE_SECONDS:-90}"
 EXPECT_BUILD_ID="${EXPECT_BUILD_ID:-}"
 cd "$CODE_DIR"

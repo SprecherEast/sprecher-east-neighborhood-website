@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Category, Media, Post, Search } from '@/payload-types'
 
 import {
+  type SEARCH_RESULT_FIELDS,
   toCategoryIds,
   toPickedPosts,
   toPostDetail,
@@ -59,6 +60,7 @@ describe('toPostSummary', () => {
       ],
       description: 'Public hearings.',
       image,
+      source: null,
     })
   })
 
@@ -72,6 +74,7 @@ describe('toPostSummary', () => {
       categories: [],
       description: null,
       image: null,
+      source: null,
     })
   })
 
@@ -103,6 +106,17 @@ describe('toPostDetail', () => {
       updatedAt: '2026-10-02T12:00:00.000Z',
       meta: { title: 'Hearings', description: 'Public hearings.', image },
     })
+  })
+
+  it('maps the title band backdrop, one crop per screen size, and none when no crop is loaded (#1024)', () => {
+    const crop = { id: 11, alt: 'Field', url: '/api/media/file/field.jpg' } as Media
+    expect(toPostDetail({ ...doc, backdrop: { desktop: crop, phone: 12 } }).backdrop).toEqual({
+      phone: null,
+      tablet: null,
+      desktop: crop,
+    })
+    expect(toPostDetail(doc).backdrop).toBeNull()
+    expect(toPostDetail({ ...doc, backdrop: { phone: 12 } }).backdrop).toBeNull()
   })
 
   it('keeps only the related posts the reader may see, in the editor’s order', () => {
@@ -149,7 +163,7 @@ describe('toPickedPosts', () => {
 })
 
 describe('toSearchResult', () => {
-  const hit: Pick<Search, 'id' | 'doc' | 'title' | 'slug' | 'categories' | 'meta'> = {
+  const hit: Pick<Search, 'id' | keyof typeof SEARCH_RESULT_FIELDS> = {
     id: 12,
     doc: { relationTo: 'posts', value: 7 },
     title: 'Road study hearings',
@@ -174,6 +188,8 @@ describe('toSearchResult', () => {
       ],
       description: 'Public hearings.',
       image,
+      source: null,
+      cancelled: false,
     })
   })
 
@@ -196,6 +212,23 @@ describe('toSearchResult', () => {
       categories: [],
       description: null,
       image: null,
+      source: null,
+      cancelled: false,
     })
+  })
+
+  it('marks a cancelled event, as its own card does (#471)', () => {
+    const event = { ...hit, doc: { relationTo: 'events' as const, value: 3 }, cancelled: true }
+    expect(toSearchResult(event)?.cancelled).toBe(true)
+  })
+
+  it('shows the source the entry copied, linking only an http(s) address (#492)', () => {
+    expect(
+      toSearchResult({ ...hit, sourceName: 'WisDOT', sourceUrl: 'https://wisconsindot.gov/' })
+        ?.source,
+    ).toEqual({ name: 'WisDOT', url: 'https://wisconsindot.gov/' })
+    expect(
+      toSearchResult({ ...hit, sourceName: 'WisDOT', sourceUrl: 'javascript:alert(1)' })?.source,
+    ).toEqual({ name: 'WisDOT', url: null })
   })
 })

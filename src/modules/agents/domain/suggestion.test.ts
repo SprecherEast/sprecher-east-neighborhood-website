@@ -1,13 +1,28 @@
 import { describe, expect, it } from 'vitest'
 
+import { TITLE_MAX_LENGTH } from '@/platform/lib'
+
 import {
   type CategoryNode,
   pickDefaultImage,
+  SUGGESTION_CAPS,
   toEventSchedule,
   toSuggestionSlug,
 } from './suggestion'
 
 const CHICAGO = 'America/Chicago'
+
+describe('SUGGESTION_CAPS', () => {
+  it('lets a suggested title be no longer than the CMS saves (#633)', () => {
+    // A longer one would pass the tool's check and only fail later, when an editor publishes it
+    expect(SUGGESTION_CAPS.title).toBe(TITLE_MAX_LENGTH)
+  })
+
+  it('lets a body hold a long explainer with charts: 12,000 characters (#640)', () => {
+    // The 2027 budget post's Markdown is 4 to 5 KB with its chart tags
+    expect(SUGGESTION_CAPS.bodyMarkdown).toBe(12_000)
+  })
+})
 
 describe('toEventSchedule', () => {
   it('turns a start and end into the day and times in the site timezone', () => {

@@ -4,9 +4,8 @@
 
 ## Single Source of Truth
 
-- **Strategy docs (private):** GitHub: `boulaajaj/sprecher-east-strategy` (PRIVATE)
-- **Website code (public):** This repo → GitHub: `boulaajaj/sprecher-east-neighborhood-website` (PUBLIC)
-- **Asana role tags:** All tasks use `[R#-Role]` prefix — see `Asana-Task-Reference.md` in strategy repo
+- **Strategy docs (private, archived):** GitHub: `boulaajaj/sprecher-east-strategy`, read-only history since #538
+- **Website code (public):** This repo → GitHub: `SprecherEast/sprecher-east-neighborhood-website` (PUBLIC)
 
 ## Project Summary
 
@@ -84,17 +83,15 @@ src/
   payload/collections/        Payload CMS schemas
     Events.ts, Posts.ts, BoardMembers.ts, Users.ts, Media.ts
 payload.config.ts             Payload config (SQLite, collections, admin)
-scripts/seed.ts               One-time: imports data/*.json into Payload DB
 data/
-  events.json, posts.json, board.json, site.json   (source of truth until seeded)
-  payload.db, auth.db         (SQLite — gitignored, created at runtime)
-public/images/               (must copy from assets/images — see setup)
+  payload.db                  (SQLite — gitignored, created at runtime)
+public/images/               Photos, also read by the demo seed (src/endpoints/seed)
 ```
 
 ## Design Tokens (src/app/globals.css @theme block)
 
-- `--color-primary: #3d7a5e` → `bg-primary`, `text-primary`, `border-primary`
-- `--color-accent: #e8923a` → `bg-accent`, `text-accent`
+- `--color-primary: #42755e` → `bg-primary`, `text-primary`, `border-primary`
+- `--color-accent: #d8924a` → `bg-accent`, `text-accent`
 - `--color-background: #f9f8f5` → `bg-background`
 - `--color-surface: #f0ede6` → `bg-surface`
 - `--color-foreground: #1a1a1a` → `text-foreground`
@@ -147,7 +144,6 @@ Association page at `/association` (footer link, not in main nav)
 - **npm installs**: Always use `--legacy-peer-deps` for Payload packages (peer dep conflicts)
 - **`graphql` package**: Must install separately — `@payloadcms/graphql` doesn't bundle it
 - **`npx payload run` fails on Node v24**: `payload/dist/bin/loadEnv.js` incompatible. Use direct node scripts instead.
-- **Asana REST API**: Use `$ASANA_PAT` (user env var) with `curl` instead of MCP tools. Supports comments, subtasks, attachments. On Windows, pass JSON via temp file to avoid escaping issues.
 - **MCP tools limitation**: Slack MCP tools only work in the main conversation, NOT in spawned subagents
 - **Write tool requires prior Read**: Always read a file before writing it
 

@@ -7,36 +7,26 @@ them to the component, and hold them to [the same standards as production code](
 
 ### Pattern: Glass Card
 
-A frosted glass card for overlays, modals, or floating content.
+A frosted glass panel for text that sits on a photo or a busy backdrop. It is the shared
+`GlassPanel` (`src/platform/ui/GlassPanel.tsx`, #1278): the home hero's glass, one look in light and
+dark, with no variants. It darkens itself with a `scrim` layer, so its `on-image` text keeps 4.5:1
+or better over a very bright photo, a mid gray and black (not a pure white photo, #1301). Never write glass classes again, and never add a lighter, darker or
+tinted version: a look the panel lacks is a change to the panel.
 
 ```tsx
-<div className="rounded-2xl border border-white/20 bg-white/10 p-6 shadow-xl backdrop-blur-md">
-  {/* Card content */}
-</div>
+<GlassPanel className="mt-3">
+  <p className="text-base leading-relaxed text-on-image/90">Card content</p>
+</GlassPanel>
 ```
 
-**Dark variant (on dark backgrounds):**
-
-```tsx
-<div className="rounded-2xl border border-white/10 bg-black/20 p-6 shadow-xl backdrop-blur-md">
-  {/* Card content */}
-</div>
-```
-
-**Colored variant (brand tint):**
-
-```tsx
-<div className="rounded-2xl border border-primary/20 bg-primary/10 p-6 shadow-xl backdrop-blur-md">
-  {/* Card content */}
-</div>
-```
+---
 
 ### Pattern: Glass Navigation Bar
 
 Frosted glass header that shows content scrolling beneath.
 
 ```tsx
-<header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-background/80 backdrop-blur-lg">
+<header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
   <nav className="container flex h-[var(--header-height)] items-center justify-between">
     {/* Nav content */}
   </nav>
@@ -83,7 +73,7 @@ A full-bleed section where a photo is visible but tinted with the brand color. M
   </div>
   {/* Brand tint — photo visible but color-matched to the site */}
   <div className="absolute inset-0 bg-primary/80" />
-  <div className="relative z-10 container text-white">{/* Content */}</div>
+  <div className="relative z-10 container text-on-image">{/* Content */}</div>
 </section>
 ```
 
@@ -95,33 +85,13 @@ A full-bleed section where a photo is visible but tinted with the brand color. M
 
 ---
 
-## Section Backdrop Photo Guide
+## Section Backdrop Photos
 
-Placeholder photos to use per section until real neighborhood photos are available. Source from Unsplash (free, no attribution required for web use). Store in `public/images/backdrops/`.
-
-| Section            | Photo Subject                                   | Mood                              | File Name                 |
-| ------------------ | ----------------------------------------------- | --------------------------------- | ------------------------- |
-| Hero               | Aerial suburban neighborhood, green trees       | Warm, welcoming, expansive        | `hero-neighborhood.jpg`   |
-| About              | Tree-lined residential street                   | Calm, established, inviting       | `about-street.jpg`        |
-| Parks & Recreation | Green park with walking path or playground      | Active, natural, family-friendly  | `parks-greenspace.jpg`    |
-| Community          | Diverse group of neighbors at outdoor gathering | Connected, joyful, inclusive      | `community-gathering.jpg` |
-| Housing            | Suburban homes with yards, warm light           | Stable, comfortable, aspirational | `housing-homes.jpg`       |
-| News/Updates       | Coffee table with newspaper, morning light      | Informed, local, current          | `news-morning.jpg`        |
-| Get Involved / CTA | Hands together or group volunteering            | Active, united, purposeful        | `cta-volunteers.jpg`      |
-| Events             | Outdoor festival or farmers market              | Lively, seasonal, fun             | `events-market.jpg`       |
-| Resources          | Library, books, or community center interior    | Helpful, organized, accessible    | `resources-library.jpg`   |
-
-**Downloading:** Use Unsplash Source URLs for development. For production, download and self-host to avoid external dependencies:
-
-```bash
-# Example: download a neighborhood photo from Unsplash
-curl -L "https://unsplash.com/photos/{photo-id}/download?w=1920" -o public/images/backdrops/hero-neighborhood.jpg
-```
+The site ships no stock backdrop photos. A section backdrop is a real neighborhood photo uploaded to
+the media library, never a file in `public/images/`. Photos must be level and well presented.
 
 **Photo treatment rules:**
 
-- Always download at 1920px width (matches largest viewport)
-- Compress with quality 80 — backdrops don't need sharpness since they're displayed at low opacity
 - Use `object-cover` so photos fill their container without distortion
+- Export at 1920px wide, quality 80: backdrops are shown at low opacity and don't need sharpness
 - All backdrop images get `alt=""` (decorative, not informational)
-- When real neighborhood photos replace placeholders, keep the same file names so no code changes are needed

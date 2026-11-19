@@ -2,12 +2,14 @@
 
 import React, { useState } from 'react'
 
+import { formatDuration, message } from '@/platform/lib'
 import { TurnstileWidget } from '@/platform/turnstile/TurnstileWidget.client'
 import { useRobotCheck } from '@/platform/turnstile/useRobotCheck.client'
 import { Button, Field, Form, type FormStatus, Link } from '@/platform/ui'
 
 import { forgotPassword } from '../actions'
 import { forgotPasswordSchema, type ForgotPasswordValues } from '../domain/credentials'
+import { RESET_LINK_LIFETIME_MS } from '../domain/linkLifetimes'
 import { SIGN_IN_PATH } from '../domain/paths'
 import type { ForgotPasswordFailure } from '../domain/types'
 import { toForgotPasswordErrorMessage } from './resetErrorMessages'
@@ -16,8 +18,9 @@ import { toForgotPasswordErrorMessage } from './resetErrorMessages'
  * Asks for a reset link (#269). The answer never says whether an account uses the email: the
  * same text shows for every request (docs/guidelines/security.md).
  */
-export const FORGOT_PASSWORD_SENT =
-  'If an account uses that email, we’ve sent it a link to choose a new password. The link works for one hour. Check your spam folder if it doesn’t arrive in a few minutes.'
+export const FORGOT_PASSWORD_SENT = message('accounts.forgotPassword.sent', {
+  linkLifetime: formatDuration(RESET_LINK_LIFETIME_MS),
+})
 
 /** The form on /forgot-password. */
 export function ForgotPasswordForm() {

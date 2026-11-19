@@ -50,7 +50,7 @@ neighborhood better, in any way, big or small.
 - **Factual and fair.**
   - Sourced and inclusive, and it avoids partisan politics.
   - Problems are named honestly, with something the reader can do about them (see the
-    [brand voice](../brand-voice-guidelines.md)).
+    [brand voice](../guidelines/brand-voice.md)).
 - **Safe with people's information.**
   - No real personal data in the code.
   - A submitted photo is public only after an editor approves it, with the photographer's
@@ -64,7 +64,7 @@ neighborhood better, in any way, big or small.
 ## Not in scope yet
 
 - **Acting as an official body.** Sprecher East isn't a government body or a registered nonprofit,
-  and the site never presents itself as one ([brand voice](../brand-voice-guidelines.md)).
+  and the site never presents itself as one ([brand voice](../guidelines/brand-voice.md)).
 - **A comment system on the site.** Discussions link to the forum instead (#161).
 - **Anything nobody has asked for.** New ideas start as GitHub issues and earn a place on the
   [roadmap](roadmap.md).

@@ -73,8 +73,6 @@ cases:
       otherSources:
         - sourceId: district16-blog
           body: '<article><h2>District 16 listening session</h2><p>November 12, 6:00 PM, Pinney Library</p></article>'
-    given:
-      sources: [{ id: district16-blog, result: valid, pilotRank: 5, cadence: daily }]
     expected: { fetchStrategy: direct, runStatus: ok, candidateCount: 1 }
     graders:
       - { check: contains, field: '$.alsoReportedBy[].sourceId', value: district16-blog }
@@ -94,8 +92,6 @@ cases:
           status: 200
           contentType: text/html
           body: '<article><h2>Week of November 2nd</h2><time datetime="2026-11-02">November 2, 2026</time></article>'
-    given:
-      sources: [{ id: district16-blog, result: valid, pilotRank: 5, cadence: daily }]
     expected: { fetchStrategy: playwright, runStatus: ok, candidateCount: 1 }
     why: A page with no text where posts should be is a JavaScript shell, a fallback trigger.
   - id: scout-server-error-retry

@@ -41,9 +41,14 @@ export async function createAccount(
     disableVerificationEmail: true,
     overrideAccess: true,
   })
-  // Verified, as opening the emailed link would, so the account can sign in
-  await payload.db.updateOne({ collection: 'users', id: user.id, data: { _verified: true } })
-  return { ...user, collection: 'users' }
+  // Verified, as opening the emailed link would, so the account can sign in. The first account on
+  // an empty database becomes an admin whatever role it is given (#354), so the role is set again.
+  await payload.db.updateOne({
+    collection: 'users',
+    id: user.id,
+    data: { _verified: true, role },
+  })
+  return { ...user, role, collection: 'users' }
 }
 
 /** A one-paragraph rich text, as the editor saves it. */

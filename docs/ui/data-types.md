@@ -14,7 +14,7 @@ own types (`EventSummary`, `PostSummary`), and rich text and images travel as `R
 | Data type                | Payload field type                                     | Shown today (examples)                                                                     | Show with                                                                                                              | Edit with (public forms)               |
 | ------------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | Short text               | `text`                                                 | titles, names, place names, labels                                                         | `Text`, card titles, `MetaList`                                                                                        | `Field · text`                         |
-| Long text                | `textarea`                                             | card summaries, event summary, resource description                                        | `Text · muted` (clamped), `Text · lead`                                                                                | `Field · textarea`                     |
+| Long text                | `textarea`                                             | card summaries, event summary, resource description                                        | `Text · small` (clamped), `Text · lead`                                                                                | `Field · textarea`                     |
 | Email address            | `email`; auth email on `users`                         | account profile (`users.email`); `team-members.email` is never public                      | `MetaList · stacked`                                                                                                   | `Field · email`                        |
 | Password                 | auth password on `users`                               | never shown                                                                                | —                                                                                                                      | `Field · password`                     |
 | Number                   | `number`                                               | none on the public site (`order`, `limit` only sort and size lists)                        | `Text`                                                                                                                 | `Field · number`                       |
@@ -37,15 +37,18 @@ own types (`EventSummary`, `PostSummary`), and rich text and images travel as `R
 
 ## Blocks and the component for each
 
-| Block (`blockType`) | Where it can go        | Component · variant                                      |
-| ------------------- | ---------------------- | -------------------------------------------------------- |
-| `content`           | page layout            | `ContentBlock` · `single`, `columns`, `cards` or `stats` |
-| `cta`               | page layout, rich text | `CallToActionBlock` · default                            |
-| `mediaBlock`        | page layout, rich text | `Media · framed`                                         |
-| `archive`           | page layout            | `ArchiveBlock` · default                                 |
-| `formBlock`         | page layout            | `FormBlock` · default                                    |
-| `banner`            | rich text              | `Alert` · `{style}`                                      |
-| `code`              | rich text              | `CodeBlock` · default                                    |
+| Block (`blockType`) | Where it can go        | Component · variant                                                                                |
+| ------------------- | ---------------------- | -------------------------------------------------------------------------------------------------- |
+| `content`           | page layout            | `ContentBlock` · `single`, `columns`, `cards` or `stats`                                           |
+| `cta`               | page layout, rich text | `CallToActionBlock` · default                                                                      |
+| `mediaBlock`        | page layout, rich text | `Media · framed`                                                                                   |
+| `archive`           | page layout            | `ArchiveBlock` · default                                                                           |
+| `formBlock`         | page layout            | `FormBlock` · default                                                                              |
+| `eventsThisWeek`    | page layout            | `EventsThisWeek` · default                                                                         |
+| `topIssues`         | page layout            | `TopIssuesBlock` · default                                                                         |
+| `banner`            | rich text              | `Alert` · `{style}`, `Dismissible` when `dismissible` is on (`showUntil` hides it after that time) |
+| `figure`            | rich text              | `Figure` (small picture floated right; `Zoom` dialog with the long caption and the numbered key)   |
+| `code`              | rich text              | `CodeBlock` · default                                                                              |
 
 ## Form-builder fields
 

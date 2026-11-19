@@ -49,22 +49,23 @@ grows should split its top level "into domain oriented modules which are interna
 
 | Module         | Owns                                                                                   | Payload collections and globals                                     | Routes                                                                                     |
 | -------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `events`       | Event listings, the "upcoming" rule, event types, calendar (Phase 2)                   | `events`                                                            | `/events`, `/events/[slug]`, sitemap entries                                               |
-| `news`         | Posts, categories, authors, search, related and recent posts                           | `posts`, `categories`, `search`                                     | `/posts`, `/posts/[slug]`, `/search`, sitemap entries                                      |
+| `events`       | Event listings, the "upcoming" rule, event types, the "this week" block, calendar      | `events`                                                            | `/events`, `/events/category/[category]`, `/events/[slug]`, sitemap entries, a CMS block   |
+| `news`         | Posts, categories, authors, search, related and recent posts, the "top issues" block   | `posts`, `categories`, `search`                                     | `/posts`, `/posts/[slug]`, `/search`, sitemap entries, a CMS block                         |
 | `contact`      | Public form safeguards, the robot check, form-email rules                              | `forms`, `form-submissions` (plugin)                                | the form block on CMS pages                                                                |
 | `accounts`     | Who is signed in, sign-up and verification, sign-in and password flows, the role field | `users`                                                             | `/login`, `/account`, `/forgot-password`, `/reset-password`, `/sign-up`, `/verify-account` |
-| `directory`    | FAQ, local resources, team members                                                     | `faq`, `resources`, `team-members`                                  | `/faq`, `/resources`                                                                       |
+| `directory`    | FAQ, local resources, team members                                                     | `faq`, `resources`, `team-members`                                  | `/faq`, `/resources/<group>`                                                               |
 | `site`         | CMS pages, page-builder blocks, heroes, header, footer, redirects                      | `pages`, `redirects`, globals `header`, `footer`                    | `/[slug]`, home, sitemap entries                                                           |
 | `agents`       | Agent access over MCP (keys, limits, what the model sees), the agents' run history     | `agent-runs`, `agent-review-items`, `payload-mcp-api-keys` (plugin) | `/api/mcp` (plugin)                                                                        |
 | `verification` | Confirming an email by link: the token, its expiry, the limits, the emails             | `email-confirmations`                                               | `/confirm-email`                                                                           |
+| `roadmap`      | The public plan: milestones, epics and issues read from GitHub, what is screened out   | (none: reads GitHub over REST)                                      | `/roadmap`, `/roadmap/[number]`                                                            |
 | `comments`     | Resident comments (future)                                                             | (future)                                                            | (future)                                                                                   |
 
 `src/platform/` holds what every module uses, and imports no module:
 
-- `lib/`: pure helpers for dates, text, URLs and shared content types; no framework, so the domain
-  may use them.
+- `lib/`: pure helpers for dates, text, URLs, the message catalog and shared content types; no
+  framework, so the domain may use them.
 - `payload/`: role checks and access functions (every module uses them), the `media` uploads
-  collection, the default rich-text editor (`defaultLexical`), the `populatePublishedAt` hook and
+  collection, the CMS link field (`link()`, used by site's and news's blocks) and `resolveLink()`, the default rich-text editor (`defaultLexical`), the `populatePublishedAt` hook and
   the admin dashboard components. Plugin setup is composed in `payload.config.ts`, because each
   module brings its own options. Also the retention queue and schedule (`retentionJobs.ts`) that
   the contact and verification modules' retention tasks share (#274), and the job runners the app
@@ -72,14 +73,17 @@ grows should split its top level "into domain oriented modules which are interna
 - `ui/`: primitives (`Button`, `Input`, `Media`, `Link`) with their variants, and
   `ConfirmedEmailContext`: the address the confirm page just confirmed, which `verification`
   provides to the slot `accounts` fills with its account offer (#187).
-- `theme/`: light and dark mode (the theme providers, `InitTheme`, `ThemeSelector`); the token
-  contract (`tokens.ts`) and the Tailwind mapping join them with #146.
+- `theme/`: light and dark mode (the theme providers, `InitTheme`, `ThemeSelector`), the token
+  contract (`tokens.ts`) and its Tailwind mapping (#146), and the theme options (#409): what a theme
+  sets beyond tokens (`options.ts`, with defaults), the registry of themes and the active one
+  (`registry.ts`), and the decoration slot the layout renders (`ThemeDecoration`,
+  `decorations.css`), as [decision 0012](decisions/0012-runtime-themes.md) sets out.
 - `richtext/`: the `RichText` renderer and the blocks that can sit inside rich text (banner, code
   and media; only a post's content offers them). Pages reuse the media block from here.
   `richTextToPlainText` turns rich text into plain text (Payload's converter) for JSON-LD.
 - `turnstile/`: the robot check (decision 0003), the widget and the server verifier, used by the
   contact form and sign-up; its interface `HumanVerifier` is in `lib/`.
-- `email/` and `seo/`.
+- `service/` (runs a failing-safe server call and logs it, #521), `email/` and `seo/`.
 
 Routes that serve no single area (`/api/version`, draft preview under `/next/`, the seed route)
 belong to `platform`; `app/(payload)/` is Payload's generated admin and API. `app/sitemap.ts`
@@ -91,11 +95,11 @@ modules' slug lists.
 ```text
 src/modules/events/
   index.ts      types and pure rules only: safe for the proxy, client components and scripts
-  server.ts     server-only entry: re-exports use cases and the components pages render
-  actions.ts    server actions ("Load more"); each validates its input and calls a use case
+  server.ts     server-only entry: re-exports use cases, plain `data/` reads and the components pages render
+  actions.ts    server actions ("Load more"); each validates its input and calls a use case or a plain `data/` read
   cms.ts        Payload entry: collection and global configs, blocks, plugin setup for this area
   domain/       types (DTOs included) and rules in plain TypeScript; unit-tested
-  use-cases/    findUpcomingEvents: check who is asking, load through data/, apply rules, return DTOs
+  use-cases/    findUpcomingEvents: who is asking, load, apply rules, return DTOs; none for a plain read
   data/         Local API queries; map documents to the domain's types
   cms/          collection config, fields, hooks, plugin options, admin components (RowLabel)
   ui/           React components, headless hooks (useEventFilters), and a browser client for
@@ -118,13 +122,13 @@ The site's core idea (what an event is, which categories it can have, who may se
 TypeScript in the middle. Payload, Next.js, outside services and the look sit around it, so each
 can be upgraded or replaced without rewriting the core.
 
-| Layer        | Where                                         | Holds                                                                     |
-| ------------ | --------------------------------------------- | ------------------------------------------------------------------------- |
-| Domain       | `domain/`                                     | Types (DTOs included), rules and calculations. Uses only `platform/lib/`. |
-| Application  | `use-cases/`, `actions.ts`                    | Use cases: check who is asking, load, apply domain rules, return DTOs.    |
-| Adapters     | `data/`, `cms/`, `platform/payload/`, clients | Payload queries and configs, Cloudflare, SMTP.                            |
-| Presentation | `app/`, `ui/`, `platform/ui/`                 | Pages and components that render DTOs. No business rules.                 |
-| Theme        | `src/themes/default/`                         | Token values: colors, fonts, radius, shadows.                             |
+| Layer        | Where                                         | Holds                                                                            |
+| ------------ | --------------------------------------------- | -------------------------------------------------------------------------------- |
+| Domain       | `domain/`                                     | Types (DTOs included), rules and calculations. Uses only `platform/lib/`.        |
+| Application  | `use-cases/`, `actions.ts`                    | Use cases: who is asking, load, domain rules, return DTOs (not for plain reads). |
+| Adapters     | `data/`, `cms/`, `platform/payload/`, clients | Payload queries and configs, Cloudflare, SMTP.                                   |
+| Presentation | `app/`, `ui/`, `platform/ui/`                 | Pages and components that render DTOs. No business rules.                        |
+| Theme        | `src/themes/default/`                         | Token values: colors, fonts, radius, shadows.                                    |
 
 One deliberate shortcut: use cases call `data/` functions directly, not through an interface,
 because Payload's Local API is already that abstraction ([0002](decisions/0002-no-repository-layer.md)).
@@ -159,13 +163,14 @@ What this buys:
    the form block from `contact` to `site`'s Pages collection factory. `platform/` imports no
    module.
 4. **Server-only code stays out of the CMS config.** `data/`, `use-cases/` and `server.ts` start
-   with `import 'server-only'`, and only `use-cases/` and `actions.ts` import `data/`. `cms/` and
-   `cms.ts` never reach anything server-only: the Payload CLI (migrations, seed) loads every hook
-   outside Next.js, where `server-only` throws. Hooks use the `req.payload` they are given.
-5. **Client components** get DTOs as props and never import `data/`, `use-cases/` or `server.ts`.
-   To change something they call a server action (sign-up, sign-in, sign-out and passwords in `accounts`),
-   or one of Payload's own REST endpoints through the owning module's browser client (`ui/api.ts`:
-   form submissions in `contact`, where the robot check runs).
+   with `import 'server-only'`. Only `use-cases/`, `actions.ts`, `server.ts` (plain reads only,
+   checked in review) and server components in `ui/` import `data/`. `cms/` and `cms.ts` never
+   reach anything server-only: the Payload CLI loads every hook outside Next.js, where
+   `server-only` throws. Hooks use the `req.payload` they are given.
+5. **Client code in `ui/`** (`*.client.*`, `use*.ts` hooks, `ui/api.ts`) gets DTOs as props and
+   never imports `data/`, `use-cases/` or `server.ts`. To change something it calls a server
+   action (`accounts`: sign-up, sign-in, passwords) or a Payload REST endpoint through the
+   module's browser client (`contact`'s form, with the robot check).
 6. **Payload at the edges.** Runtime imports of `payload`, `@payloadcms/*` or `@payload-config`
    are allowed only in `data/`, `cms/`, `platform/` and `payload.config.ts`. `import type` is
    allowed anywhere. The generated `app/(payload)/` (including the admin import map, which loads
@@ -178,8 +183,8 @@ What this buys:
    either a named `Pick<>` of the generated type or a hand-written type in `domain/` that mirrors
    those fields; prefer the hand-written one. It keeps `@/payload-types` out of the domain and is
    still checked, because the `select`-narrowed result must be assignable to it, so a field that
-   drifts fails `tsc`. Code that renders CMS content as authored (page-builder blocks, heroes,
-   `RichText`, `Media`) takes the generated types, because its shape is the CMS's.
+   drifts fails `tsc`. Blocks and heroes take plain props too: a `to…Props` mapper in `data/` builds
+   them, and `RichText` and `Media` take `RichTextValue` and `ImageRef` ([0013](decisions/0013-cms-content-through-mappers.md)).
 9. **No colors in components.** Semantic token classes only: `text-primary-foreground` on
    `bg-primary`, never `text-white`; no palette classes, hex values or inline styles. Text and
    overlays on photos will use `on-image` and `scrim` tokens (#146); until then `white` and `black`
@@ -199,19 +204,20 @@ the theme test (#146). Vitest aliases
 
 ## Where does it go?
 
-| You are adding…                                                | Put it in                                                                                                |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| A business rule (the event categories, `isEventScope`)         | the module's `domain/`, with a unit test                                                                 |
-| A use case other code calls (list, submit, publish)            | the module's `use-cases/`, exported from `server.ts`; a server action in `actions.ts` calls it           |
-| A database read or write                                       | the module's `data/`, called only from `use-cases/` or `actions.ts`; in a hook, `req.payload`            |
-| A color, font, corner radius or shadow                         | a token in `platform/theme/tokens.ts`, with its value in `src/themes/default/`                           |
-| A button size, card style or other UI variant                  | the primitive in `platform/ui/` (its `cva` variants), not in the feature component                       |
-| A collection, field, Payload hook or plugin option             | the module's `cms/`, exported from `cms.ts` and registered in `payload.config.ts`                        |
-| A component used by one module                                 | the module's `ui/`                                                                                       |
-| A component or helper used by two or more modules              | `src/platform/` (move it there on the second use)                                                        |
-| A page or URL                                                  | `src/app/`, as a thin file that calls a module                                                           |
-| Code where two modules meet                                    | `src/app/` (a page, layout or the block registry) or `payload.config.ts`, never inside a module          |
-| An outside service (Cloudflare, Mailgun, a city calendar feed) | an interface in the module, an adapter beside it ([conventions](conventions.md#interfaces-and-adapters)) |
+| You are adding…                                                       | Put it in                                                                                                    |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| A business rule (the event categories, `isEventScope`)                | the module's `domain/`, with a unit test                                                                     |
+| A use case other code calls (list, submit, publish)                   | the module's `use-cases/`, exported from `server.ts`; a server action calls it. A plain read has none        |
+| A database read or write                                              | the module's `data/`, called from `use-cases/`, `actions.ts`, `server.ts`, server `ui/`; hook: `req.payload` |
+| A color, font, corner radius or shadow                                | a token in `platform/theme/tokens.ts`, with its value in `src/themes/default/`                               |
+| A seasonal ornament or other per-theme behaviour tokens can't express | an option in `platform/theme/options.ts` (with a default), set per theme in `platform/theme/registry.ts`     |
+| A button size, card style or other UI variant                         | the primitive in `platform/ui/` (its `cva` variants), not in the feature component                           |
+| A collection, field, Payload hook or plugin option                    | the module's `cms/`, exported from `cms.ts` and registered in `payload.config.ts`                            |
+| A component used by one module                                        | the module's `ui/`                                                                                           |
+| A component or helper used by two or more modules                     | `src/platform/` (move it there on the second use)                                                            |
+| A page or URL                                                         | `src/app/`, as a thin file that calls a module                                                               |
+| Code where two modules meet                                           | `src/app/` (a page, layout or the block registry) or `payload.config.ts`, never inside a module              |
+| An outside service (Cloudflare, Mailgun, a city calendar feed)        | an interface in the module, an adapter beside it ([conventions](conventions.md#interfaces-and-adapters))     |
 
 A rule the site only ever applies as a query filter, like the events upcoming rule (`inScope` in
 `src/modules/events/data/scope.ts`), may live only in `data/`, as the function that builds the

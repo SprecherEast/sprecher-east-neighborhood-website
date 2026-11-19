@@ -7,6 +7,9 @@ type ResourceItem = {
   phone?: string
   category: ResourceCategory
   order: number
+  links?: { label: string; url: string }[]
+  /** Shows the seed's placeholder portrait (never a real photo), with this credit (#393) */
+  placeholderPortraitCredit?: string
 }
 
 export const resourceItems: ResourceItem[] = [
@@ -19,6 +22,8 @@ export const resourceItems: ResourceItem[] = [
     phone: '(608) 572-7560',
     category: 'elected-officials',
     order: 1,
+    links: [{ label: 'Alder blog', url: 'https://www.cityofmadison.com/council/district16/blog' }],
+    placeholderPortraitCredit: 'Placeholder image, not the alder',
   },
   {
     title: 'Mayor Satya Rhodes-Conway',
@@ -29,9 +34,10 @@ export const resourceItems: ResourceItem[] = [
     order: 2,
   },
   {
-    title: 'Dane County Board \u2014 District 37',
-    description: 'Dane County Board supervisor for our area.',
-    url: 'https://board.countyofdane.com/',
+    title: 'Dane County Supervisor Goodwill Obieze \u2014 District 16',
+    description:
+      'Dane County Board supervisor for the Sprecher East area. County district numbers are separate from Madison\u2019s alder districts, so this is not the same office as the alder.',
+    url: 'https://board.danecounty.gov/Supervisors/Detail/16',
     category: 'elected-officials',
     order: 3,
   },
@@ -49,7 +55,7 @@ export const resourceItems: ResourceItem[] = [
     description:
       'East District police station serving the Sprecher East area. For non-emergency reports and community policing.',
     url: 'https://www.cityofmadison.com/police/east',
-    phone: '(608) 245-3600',
+    phone: '(608) 266-4887',
     category: 'public-safety',
     order: 1,
   },
@@ -79,9 +85,10 @@ export const resourceItems: ResourceItem[] = [
   // Childcare & Education
   {
     title: 'Elvehjem Elementary School',
-    description: 'Public elementary school serving the Sprecher East neighborhood.',
+    description:
+      'Public elementary school near Sprecher East. MMSD assigns schools by address: check yours with Find Your School on madison.k12.wi.us.',
     url: 'https://elvehjem.mmsd.org/',
-    phone: '(608) 204-6800',
+    phone: '(608) 204-1400',
     category: 'childcare',
     order: 1,
   },
@@ -192,7 +199,7 @@ export const resourceItems: ResourceItem[] = [
   {
     title: 'Streets Division \u2014 Recycling & Trash',
     description:
-      'Curbside collection schedules, recycling guidelines, and large item pickup for Madison residents.',
+      'Curbside collection schedules, recycling guidelines, and large item pickup for Madison neighbors.',
     url: 'https://www.cityofmadison.com/streets/recycling/',
     phone: '(608) 246-4532',
     category: 'utilities',

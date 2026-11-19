@@ -1,0 +1,59 @@
+# Umami analytics and its database (#948). ops/install-umami.sh copies this file to
+# /var/www/umami/compose.yaml on every deploy and writes the settings it reads, in
+# /var/www/umami/.env (root only, never in the repository): the published port, the database
+# password, APP_SECRET and the two-factor key. Change this file in the repository, not on the server.
+#
+# Umami is published on 127.0.0.1 only and the database is not published at all; Caddy
+# (ops/caddy/umami.caddy) is the only public way in.
+# Based on the Docker Compose file in Umami's repository and https://docs.umami.is/docs/install.
+name: umami
+
+services:
+  umami:
+    # Pinned, never `latest`: a new version is a one-line pull request (tags: ghcr.io/umami-software/umami).
+    image: ghcr.io/umami-software/umami:3.4.1
+    ports:
+      - '127.0.0.1:${UMAMI_PORT}:3000'
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD}@db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET}
+      TWO_FACTOR_ENCRYPTION_KEY: ${UMAMI_TWO_FACTOR_KEY}
+      DISABLE_TELEMETRY: '1'
+      DISABLE_UPDATES: '1'
+      # Umami takes a visitor's address from the first of several headers it finds (true-client-ip,
+      # x-real-ip, ...), and Caddy passes those through. Naming the one header Caddy sets itself
+      # means a visitor can't fake it (src/lib/ip.ts in Umami 3.4.1; docs.umami.is, environment variables).
+      CLIENT_IP_HEADER: x-forwarded-for
+      # MCP_ENABLED stays off (its default) until the Claude connection is set up (#951).
+    depends_on:
+      db:
+        condition: service_healthy
+    # A hard cap, so a leak in Umami is killed (and restarted) inside its container, never by the
+    # kernel picking the site's Node process (ops/umami/README.md says how it was chosen).
+    mem_limit: 768m
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://localhost:3000/api/heartbeat']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD}
+    mem_limit: 512m
+    volumes:
+      - umami-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  umami-db-data:

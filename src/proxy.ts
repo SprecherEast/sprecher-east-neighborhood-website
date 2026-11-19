@@ -1,15 +1,21 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { FORGOT_PASSWORD_PATH, VERIFY_ACCOUNT_PATH } from '@/modules/accounts'
-import { isEventScope } from '@/modules/events'
+import { isCategorySlug, isEventScope } from '@/modules/events'
 import { parsePageNumber } from '@/platform/lib'
 import { ADMIN_FORGOT_PATH, ADMIN_VERIFY_PREFIX } from '@/platform/payload/adminRoutes'
+
+/** `<scope>/<n>`: a valid event scope and page number. */
+const isEventListTail = ([scope, page, ...rest]: string[]) =>
+  rest.length === 0 && isEventScope(scope) && parsePageNumber(page) !== null
 
 /**
  * Answers 404 for malformed paging URLs (`/posts/page/zz`, `/events/list/x/1`) before Next
  * renders them. The pages would 404 too, but only after caching the result on disk, so a client
  * requesting many junk URLs could grow the page cache without limit (#119). Valid formats are a
  * bounded set (page 1 to MAX_PAGE, two event scopes), so the cache stays bounded on these routes.
+ * A category filter (`/events/category/<slug>`, and its list pages, #122) must have a slug's shape;
+ * whether the category exists is the page's question, as it is for an event's slug.
  */
 export function isValidPagingPath(pathname: string): boolean {
   const segments = pathname.split('/').filter(Boolean)
@@ -19,11 +25,24 @@ export function isValidPagingPath(pathname: string): boolean {
     return segments.length === 3 && parsePageNumber(segments[2]) !== null
   }
   if (segments[0] === 'events' && segments[1] === 'list') {
-    return (
-      segments.length === 4 && isEventScope(segments[2]) && parsePageNumber(segments[3]) !== null
-    )
+    return isEventListTail(segments.slice(2))
+  }
+  if (segments[0] === 'events' && segments[1] === 'category') {
+    if (!isCategorySlug(segments[2])) return false
+    return segments.length === 3 || (segments[3] === 'list' && isEventListTail(segments.slice(4)))
   }
   return true
+}
+
+/**
+ * `/events?category=<slug>` is the filter written as a query (#122): it goes to the category's
+ * own page, which is cached like /events, while /events itself stays static. A value without a
+ * slug's shape is not found.
+ */
+function redirectCategoryQuery(request: NextRequest): NextResponse {
+  const slug = request.nextUrl.searchParams.get('category')
+  if (!isCategorySlug(slug)) return new NextResponse('Not found', { status: 404 })
+  return NextResponse.redirect(new URL(`/events/category/${slug}`, request.url))
 }
 
 export function proxy(request: NextRequest): NextResponse {
@@ -41,17 +60,27 @@ export function proxy(request: NextRequest): NextResponse {
     target.searchParams.set('token', pathname.slice(ADMIN_VERIFY_PREFIX.length))
     return NextResponse.redirect(target)
   }
+  // The matcher sends /events here only with a `category` query; checked again so that widening
+  // the matcher can never turn the plain page into a 404
+  if (pathname === '/events') {
+    return request.nextUrl.searchParams.has('category')
+      ? redirectCategoryQuery(request)
+      : NextResponse.next()
+  }
   if (isValidPagingPath(pathname)) return NextResponse.next()
   return new NextResponse('Not found', { status: 404 })
 }
 
 // `:path+` needs at least one segment after the prefix, so slug pages like `/posts/page` never
-// reach the proxy. Next reads the matcher statically, so the admin pages' paths are written out;
+// reach the proxy. /events reaches it only with a `category` query, so the plain page stays as
+// fast as before. Next reads the matcher statically, so the admin pages' paths are written out;
 // tests check they are still `ADMIN_FORGOT_PATH` (#292) and `ADMIN_VERIFY_PREFIX` (#303).
 export const config = {
   matcher: [
     '/posts/page/:path+',
     '/events/list/:path+',
+    '/events/category/:path+',
+    { source: '/events', has: [{ type: 'query', key: 'category' }] },
     '/admin/forgot',
     '/admin/users/verify/:path+',
   ],

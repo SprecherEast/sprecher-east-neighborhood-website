@@ -1,0 +1,70 @@
+import { describe, expect, it, vi } from 'vitest'
+
+import { NOT_INDEXED } from '@/platform/seo/notIndexed'
+
+const stub = () => null
+const getPlanIssue = vi.fn()
+const planIssueMetadata = vi.fn(async (value: string) => ({
+  title: `Issue ${value}`,
+  robots: NOT_INDEXED,
+}))
+vi.mock('@/modules/roadmap/server', () => ({
+  getPlan: vi.fn(),
+  getPlanIssueFromAddress: (value: string) => getPlanIssue(value),
+  planIssueMetadata: (value: string) => planIssueMetadata(value),
+  listPlanIssueNumbers: vi.fn(async () => [10, 11]),
+  IssueDetail: stub,
+  PlanSummary: stub,
+  PlanTiles: stub,
+}))
+vi.mock('next/navigation', () => ({
+  notFound: () => {
+    throw new Error('NEXT_NOT_FOUND')
+  },
+}))
+
+describe('the plan pages', () => {
+  it('/roadmap asks not to be indexed or followed', async () => {
+    const { metadata } = await import('./page')
+    expect(metadata.robots).toEqual(NOT_INDEXED)
+  })
+
+  it('an issue page and the dialog it opens in return the same metadata, from one function', async () => {
+    const args = { params: Promise.resolve({ number: '11' }) }
+    const page = await import('./[number]/page')
+    const dialog = await import('./@modal/(.)[number]/page')
+    const fromPage = await page.generateMetadata(args)
+    const fromDialog = await dialog.generateMetadata(args)
+    expect(fromDialog).toEqual(fromPage)
+    expect(fromPage).toEqual({ title: 'Issue 11', robots: NOT_INDEXED })
+    expect(planIssueMetadata).toHaveBeenCalledWith('11')
+  })
+
+  it('an issue page answers 404 for a screened, unknown or malformed number', async () => {
+    getPlanIssue.mockResolvedValue(undefined)
+    const { default: IssuePage } = await import('./[number]/page')
+    await expect(IssuePage({ params: Promise.resolve({ number: '999' }) })).rejects.toThrow(
+      'NEXT_NOT_FOUND',
+    )
+    await expect(IssuePage({ params: Promise.resolve({ number: 'abc' }) })).rejects.toThrow(
+      'NEXT_NOT_FOUND',
+    )
+  })
+
+  it('builds a page for every issue the plan shows', async () => {
+    const { generateStaticParams } = await import('./[number]/page')
+    expect(await generateStaticParams()).toEqual([{ number: '10' }, { number: '11' }])
+  })
+
+  it('the dialog an issue opens in is named for it, and a screened or unknown number answers 404 there too', async () => {
+    const { default: IssueDialog } = await import('./@modal/(.)[number]/page')
+    getPlanIssue.mockResolvedValue({ number: 11, title: 'Add a page' })
+    const dialog = await IssueDialog({ params: Promise.resolve({ number: '11' }) })
+    expect(dialog.props.title).toBe('Add a page')
+
+    getPlanIssue.mockResolvedValue(undefined)
+    await expect(IssueDialog({ params: Promise.resolve({ number: '999' }) })).rejects.toThrow(
+      'NEXT_NOT_FOUND',
+    )
+  })
+})
