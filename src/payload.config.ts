@@ -38,6 +38,7 @@ import {
 } from '@/modules/verification/cms'
 import { Media } from '@/platform/payload/media'
 import { defaultLexical } from '@/platform/payload/defaultLexical'
+import { SQLITE_BUSY_TIMEOUT_MS } from '@/platform/payload/sqliteBusyTimeout'
 import {
   isAdmin,
   isAdminBoolean,
@@ -177,6 +178,7 @@ export default buildConfig({
   },
   editor: defaultLexical,
   db: sqliteAdapter({
+    busyTimeout: SQLITE_BUSY_TIMEOUT_MS,
     client: {
       url: process.env.DATABASE_URI ?? 'file:./data/payload.db',
     },

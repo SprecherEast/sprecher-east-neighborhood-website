@@ -173,6 +173,34 @@ drop_page_cache() { # <release dir>
   rm -rf "$1/.next/cache"
 }
 
+# How long to wait before trying `payload migrate` once more after the database was busy (#1147).
+# The migration's own busy timeout (src/platform/payload/sqliteBusyTimeout.ts) has already waited
+# before the first try fails; this covers a lock that outlasts it.
+MIGRATE_RETRY_SECONDS="${MIGRATE_RETRY_SECONDS:-5}"
+
+# Runs `payload migrate` in a release folder (#1147). One retry, only when the first try failed
+# with SQLITE_BUSY in its output: the running site was writing at that moment, and the same
+# migration passes a moment later. Any other failure, or a second failure, returns 1 at once, so
+# the caller stops the deploy with the live site unchanged. The output is shown as it comes.
+run_migrate() { # <release folder>
+  local release="$1" log attempt
+  log=$(mktemp) || return 1
+  for attempt in 1 2; do
+    if (cd "$release" && NODE_OPTIONS=--no-deprecation node_modules/.bin/payload migrate) 2>&1 | tee "$log"; then
+      rm -f "$log"
+      return 0
+    fi
+    if [ "$attempt" = 1 ] && grep -q SQLITE_BUSY "$log"; then
+      report "WARNING: the database was busy during the migrations; trying once more in ${MIGRATE_RETRY_SECONDS}s"
+      sleep "$MIGRATE_RETRY_SECONDS"
+    else
+      break
+    fi
+  done
+  rm -f "$log"
+  return 1
+}
+
 # Reloads Caddy, then gives the site time to answer. Prints what went wrong (nothing when all is
 # well), for the caller to roll back and report.
 caddy_reload_problem() { # <what the config now has> [seconds the site gets to answer, default 20]
