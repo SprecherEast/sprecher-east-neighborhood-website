@@ -16,21 +16,58 @@ export const SESSION_REMINDER = [
 /** The issues endpoint of a repository, as `gh api` is given it */
 const ISSUES_ENDPOINT = /^\/?repos\/[^/]+\/[^/]+\/issues$/
 
-/** The flags of each gh command that take a value, so the value is not mistaken for a word */
-const API_VALUE_FLAGS = [
-  ...['-X', '--method', '-H', '--header', '-f', '--raw-field', '-F', '--field', '--input'],
-  ...['-q', '--jq', '-t', '--template', '--hostname', '--cache', '-p', '--preview'],
-]
-const CREATE_VALUE_FLAGS = [
-  ...['-t', '--title', '-b', '--body', '-F', '--body-file', '-l', '--label', '-m', '--milestone'],
-  ...['-a', '--assignee', '-p', '--project', '-T', '--template', '-R', '--repo', '--recover'],
-]
+// What each flag of a gh command does, one table per command: the issue field it sets, `field` and
+// `rawField` (a `key=value` of `gh api`, `-F` reading `@file`), `input`, `method`, or `ignored`.
+// The flags that take a value are the table's keys, so a value is never mistaken for a word.
+const API_FLAGS = {
+  '-f': 'rawField',
+  '--raw-field': 'rawField',
+  '-F': 'field',
+  '--field': 'field',
+  '--input': 'input',
+  '-X': 'method',
+  '--method': 'method',
+  ...Object.fromEntries(
+    [
+      '-H',
+      '--header',
+      '-q',
+      '--jq',
+      '-t',
+      '--template',
+      '--hostname',
+      '--cache',
+      '-p',
+      '--preview',
+    ].map((flag) => [flag, 'ignored']),
+  ),
+}
+const CREATE_FLAGS = {
+  '-t': 'title',
+  '--title': 'title',
+  '-b': 'body',
+  '--body': 'body',
+  '-F': 'bodyFile',
+  '--body-file': 'bodyFile',
+  '-l': 'labels',
+  '--label': 'labels',
+  '-m': 'milestone',
+  '--milestone': 'milestone',
+  ...Object.fromEntries(
+    ['-a', '--assignee', '-p', '--project', '-T', '--template', '-R', '--repo', '--recover'].map(
+      (flag) => [flag, 'ignored'],
+    ),
+  ),
+}
+
+/** The issue fields a `gh api` key sets */
+const API_KEYS = { title: 'title', body: 'body', 'labels[]': 'labels', milestone: 'milestone' }
 
 /**
- * Splits a gh command's words into its flags (`[name, value]`, value null for a switch) and its
- * other words. Reads `--flag value`, `--flag=value`, `-f value` and `-fvalue`.
+ * Splits a gh command's words into what its flags do (`[kind, value]`, from `table`) and its other
+ * words. Reads `--flag value`, `--flag=value`, `-f value` and `-fvalue`; a switch has no kind.
  */
-function parseFlags(words, valueFlags) {
+function parseFlags(words, table) {
   const flags = []
   const rest = []
   for (let i = 0; i < words.length; i++) {
@@ -38,10 +75,10 @@ function parseFlags(words, valueFlags) {
     const equals = word.startsWith('--') ? word.indexOf('=') : -1
     const name = equals > 0 ? word.slice(0, equals) : word
     const short = !word.startsWith('--') && word.length > 2 ? word.slice(0, 2) : null
-    if (valueFlags.includes(name)) {
-      flags.push([name, equals > 0 ? word.slice(equals + 1) : (words[++i] ?? '')])
-    } else if (short && valueFlags.includes(short)) flags.push([short, word.slice(2)])
-    else if (word.startsWith('-') && word.length > 1) flags.push([name, null])
+    if (name in table)
+      flags.push([table[name], equals > 0 ? word.slice(equals + 1) : (words[++i] ?? ''), name])
+    else if (short && short in table) flags.push([table[short], word.slice(2), short])
+    else if (word.startsWith('-') && word.length > 1) flags.push([null, null, name])
     else rest.push(word)
   }
   return { flags, rest }
@@ -59,83 +96,72 @@ function emptyRequest(how) {
   return { title: '', body: '', labels: [], milestone: null, unreadable: null, how }
 }
 
-/** Reads the file `file` into the request's body, or marks the body unreadable */
-function readBody(request, file, readFile) {
-  if (/[$`]|^~/.test(file)) request.unreadable = 'path'
-  else
-    try {
-      request.body = readFile(file)
-    } catch {
-      request.unreadable = 'path'
-    }
-}
-
 /** A body that is wholly a shell expansion (`$(cat f)`): its text is not in the command */
 const isExpansion = (value) => /^\s*(\$|`)/.test(value)
 
-/** Sets a field of the request from `key` and `value`; `raw` is `-f`, which never reads a file */
-function setField(request, key, value, raw, readFile) {
-  if (key === 'labels[]') request.labels.push(value)
-  else if (key === 'title') request.title = value
-  else if (key === 'milestone') request.milestone = value
-  else if (key === 'body') {
-    if (!raw && value.startsWith('@')) readBody(request, value.slice(1), readFile)
-    else if (isExpansion(value)) request.unreadable = 'expansion'
+/** Sets one issue field of the request; `bodyFile` is read from disk, and `-` is standard input */
+function setField(request, field, value, readFile) {
+  if (field === 'labels')
+    request.labels.push(
+      ...value
+        .split(',')
+        .map((l) => l.trim())
+        .filter(Boolean),
+    )
+  else if (field === 'title' || field === 'milestone') request[field] = value
+  else if (field === 'body') {
+    if (isExpansion(value)) request.unreadable = 'expansion'
     else request.body = value
+  } else if (field === 'bodyFile') {
+    if (value === '-') request.unreadable = 'input'
+    else if (/[$`]|^~/.test(value)) request.unreadable = 'path'
+    else
+      try {
+        request.body = readFile(value)
+      } catch {
+        request.unreadable = 'path'
+      }
   }
 }
 
-const FIELD_FLAGS = { '-f': true, '--raw-field': true, '-F': false, '--field': false }
-
 /** The issue a `gh api` call posts, or null when it is not a POST to the issues endpoint */
 function apiRequest(words, readFile) {
-  const { flags, rest } = parseFlags(words.slice(2), API_VALUE_FLAGS)
+  const { flags, rest } = parseFlags(words.slice(2), API_FLAGS)
   const endpoint = (rest[0] ?? '').replace(/^https?:\/\/[^/]+/, '').split('?')[0]
   if (!ISSUES_ENDPOINT.test(endpoint)) return null
-  const verb = flags.findLast(([name]) => name === '-X' || name === '--method')?.[1]
-  const sent = flags.filter(([name]) => name in FIELD_FLAGS || name === '--input')
+  const verb = flags.findLast(([kind]) => kind === 'method')?.[1]
+  const sent = flags.filter(([kind]) => ['field', 'rawField', 'input'].includes(kind))
   if (verb ? verb.toUpperCase() !== 'POST' : !sent.length) return null
   const request = emptyRequest('api')
-  for (const [name, value] of sent) {
-    if (name === '--input') {
+  for (const [kind, value] of sent) {
+    if (kind === 'input') {
       try {
         const json = JSON.parse(readFile(value))
-        Object.assign(request, { title: json.title ?? '', body: json.body ?? '' })
-        request.labels.push(...(json.labels ?? []).map((label) => label?.name ?? label))
-        request.milestone = json.milestone ?? null
+        for (const field of ['title', 'body', 'milestone'])
+          if (json[field] != null) setField(request, field, String(json[field]), readFile)
+        for (const label of json.labels ?? [])
+          setField(request, 'labels', label?.name ?? label, readFile)
       } catch {
         request.unreadable = value === '-' ? 'input' : 'path'
       }
-    } else {
-      const at = value.indexOf('=')
-      if (at > 0)
-        setField(request, value.slice(0, at), value.slice(at + 1), FIELD_FLAGS[name], readFile)
+      continue
     }
+    const at = value.indexOf('=')
+    const field = API_KEYS[value.slice(0, at)]
+    const text = value.slice(at + 1)
+    if (at > 0 && field === 'body' && kind === 'field' && text.startsWith('@'))
+      setField(request, 'bodyFile', text.slice(1), readFile)
+    else if (at > 0 && field) setField(request, field, text, readFile)
   }
   return request
 }
 
 /** The issue a `gh issue create` call makes */
 function createRequest(words, readFile) {
-  const { flags } = parseFlags(words.slice(3), CREATE_VALUE_FLAGS)
+  const { flags } = parseFlags(words.slice(3), CREATE_FLAGS)
+  if (flags.some(([, , name]) => ['-w', '--web', '-e', '--editor'].includes(name))) return null
   const request = emptyRequest('create')
-  for (const [name, value] of flags) {
-    if (name === '-t' || name === '--title') request.title = value
-    else if (name === '-b' || name === '--body') {
-      if (isExpansion(value)) request.unreadable = 'expansion'
-      else request.body = value
-    } else if (name === '-F' || name === '--body-file') readBody(request, value, readFile)
-    else if (name === '-l' || name === '--label')
-      request.labels.push(
-        ...value
-          .split(',')
-          .map((label) => label.trim())
-          .filter(Boolean),
-      )
-    else if (name === '-m' || name === '--milestone') request.milestone = value
-  }
-  if (flags.some(([name, value]) => name === '--body-file' && value === '-'))
-    request.unreadable = 'input'
+  for (const [kind, value] of flags) setField(request, kind, value, readFile)
   return request
 }
 

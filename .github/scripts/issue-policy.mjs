@@ -31,6 +31,16 @@ const SUMMARY_MIN_LENGTH = 20
 const DUPLICATE_HEADINGS = ['existing work compared', 'duplicate check']
 const DUPLICATE_MIN_LENGTH = 40
 
+/** How many characters the sections under any of `headings` hold, spaces left out */
+const sectionLength = (sections, headings) =>
+  headings
+    .map((name) => sections[name] ?? '')
+    .join('')
+    .replace(/\s/g, '').length
+
+const DUPLICATES_FIX =
+  'Search the open and closed issues first, then add an "Existing work compared" section: what you compared and why this is new work.'
+
 /** The one-line fix for each rule ID of the issue check, for the filing checklist (#971). */
 export const ISSUE_RULE_FIXES = {
   'ISSUE-TYPE': 'Give the issue exactly one type label.',
@@ -43,8 +53,7 @@ export const ISSUE_RULE_FIXES = {
   'ISSUE-FILES':
     'Fill in "Files likely touched" and "Must not touch" (write `None` when there is nothing).',
   'ISSUE-MILESTONE': 'Set a milestone (Backlog until planned); an epic is optional.',
-  'ISSUE-DUPLICATES':
-    'Search the open and closed issues first, then add an "Existing work compared" section: what you compared and why this is new work (asked when an issue is created, not of older ones).',
+  'ISSUE-DUPLICATES': `${DUPLICATES_FIX} (Asked when an issue is created, not of older ones.)`,
 }
 
 /**
@@ -75,8 +84,7 @@ export function issueProblems(issue, policy, { filing = false } = {}) {
       ruleMessage('ISSUE-PRIORITY', 'Give the issue one priority label (high, medium or low).'),
     )
 
-  const summary = SUMMARY_HEADINGS.map((name) => sections[name] ?? '').join('')
-  if (summary.replace(/\s/g, '').length < SUMMARY_MIN_LENGTH)
+  if (sectionLength(sections, SUMMARY_HEADINGS) < SUMMARY_MIN_LENGTH)
     problems.push(
       ruleMessage(
         'ISSUE-SUMMARY',
@@ -104,14 +112,8 @@ export function issueProblems(issue, policy, { filing = false } = {}) {
   if (!gaps.hasMilestone)
     problems.push(ruleMessage('ISSUE-MILESTONE', 'Set a milestone (Backlog until it is planned).'))
 
-  const compared = DUPLICATE_HEADINGS.map((name) => sections[name] ?? '').join('')
-  if (filing && compared.replace(/\s/g, '').length < DUPLICATE_MIN_LENGTH)
-    problems.push(
-      ruleMessage(
-        'ISSUE-DUPLICATES',
-        'Search the open and closed issues first, then add an "Existing work compared" section: what you compared and why this is new work.',
-      ),
-    )
+  if (filing && sectionLength(sections, DUPLICATE_HEADINGS) < DUPLICATE_MIN_LENGTH)
+    problems.push(ruleMessage('ISSUE-DUPLICATES', DUPLICATES_FIX))
 
   return problems
 }

@@ -194,6 +194,13 @@ describe('filingCheck: forms a complete filing can take', () => {
       expect(check(command, ok), command).toContain('absolute file')
   })
 
+  it('lets the browser and editor forms through, and names standard input for -F -', () => {
+    expect(check('gh issue create --web')).toBeNull()
+    expect(check('gh issue create -e -t T')).toBeNull()
+    expect(check('gh issue create -F -')).toContain('standard input')
+    expect(check('gh api repos/o/r/issues -F body=@-')).toContain('standard input')
+  })
+
   it('tells gh issue create to use --body-file, and gh api -F body=@', () => {
     expect(check('gh issue create --body-file -')).toContain('--body-file <absolute file>')
     expect(check('gh api repos/o/r/issues --input -')).toContain('--input <absolute file>')
