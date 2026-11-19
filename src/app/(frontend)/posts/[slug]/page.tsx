@@ -68,7 +68,7 @@ export default async function Post({ params: paramsPromise }: Args) {
 
   return (
     <ArticlePage
-      className="pt-16 pb-16"
+      className="pb-16"
       jsonLd={postJsonLd(post)}
       // Allows redirects for valid pages too
       redirects={<PayloadRedirects disableNotFound url={url} />}

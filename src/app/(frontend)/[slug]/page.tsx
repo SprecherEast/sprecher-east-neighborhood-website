@@ -67,7 +67,10 @@ export default async function Page({ params: paramsPromise }: Args) {
 
       <PageBackdrop image={backdrop}>
         {hero && <PageHero {...hero} />}
-        <RenderBlocks blocks={layout} components={pageBlocks} />
+        {/* Above the hero: its photo runs on under the first block and fades out there (#1304) */}
+        <div className="relative z-10">
+          <RenderBlocks blocks={layout} components={pageBlocks} />
+        </div>
       </PageBackdrop>
     </article>
   )

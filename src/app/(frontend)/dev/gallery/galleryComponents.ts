@@ -10,6 +10,7 @@ export const GALLERY_COMPONENTS = [
   'Form',
   'Badge',
   'Card',
+  'GlassPanel',
   'CardGrid',
   'Text',
   'MetaList',

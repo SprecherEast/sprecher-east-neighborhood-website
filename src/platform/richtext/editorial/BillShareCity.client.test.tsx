@@ -113,7 +113,7 @@ describe('BillShare, the City’s panel (#1020)', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(screen.getByText('Base year')).toBeTruthy()
-    // 7.0139 mills on $481,300
+    // 7.0141 mills on $481,300
     expect(screen.getAllByText('$3,376').length).toBeGreaterThanOrEqual(2)
   })
 

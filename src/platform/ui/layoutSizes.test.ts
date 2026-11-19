@@ -7,7 +7,14 @@ import {
   CHART_LARGE_WIDTH,
   CHART_SMALL_WIDTH,
   FIGURE_GAP,
-  HERO_MIN_HEIGHT,
+  HERO_BELOW_GAP,
+  HERO_BOTTOM_SPACE,
+  HERO_FADE_LENGTH,
+  HERO_HORIZON_GAP,
+  HERO_PHOTO_HEIGHT,
+  HERO_PHOTO_LAYER_BOTTOM,
+  HERO_SKY_GAP,
+  HERO_SKY_HEIGHT,
   LEGEND_GAP,
   PAGE_MIN_HEIGHT,
   PAGE_SHELL,
@@ -26,7 +33,16 @@ describe('layout sizes', () => {
     expect(PAGE_SHELL).toBe('py-24')
     expect(READING_WIDTH_LG).toBe('lg:max-w-[var(--reading-width)]')
     expect(PAGE_MIN_HEIGHT).toBe('min-h-[var(--page-min-height)]')
-    expect(HERO_MIN_HEIGHT).toBe('min-h-[var(--hero-min-height)]')
+    expect(HERO_PHOTO_HEIGHT).toBe('h-[var(--hero-photo-h)] min-h-full')
+    expect(HERO_SKY_HEIGHT).toBe(
+      'min-h-[max(0px,calc(var(--hero-horizon)_-_var(--header-height)))]',
+    )
+    expect(HERO_SKY_GAP).toBe('pb-[var(--hero-sky-gap)]')
+    expect(HERO_HORIZON_GAP).toBe('mt-[var(--hero-horizon-gap)]')
+    expect(HERO_BOTTOM_SPACE).toBe('pb-[var(--hero-bottom-space)]')
+    expect(HERO_BELOW_GAP).toBe('mb-[var(--hero-below-gap)]')
+    expect(HERO_PHOTO_LAYER_BOTTOM).toBe('bottom-[calc(var(--hero-fade-overlap)*-1)]')
+    expect(HERO_FADE_LENGTH).toBe('h-[var(--hero-fade-length)]')
     expect(CHART_SMALL_WIDTH).toBe(
       'max-w-[var(--chart-stack-width)] @2xl/chart:max-w-[var(--chart-small-width)]',
     )
@@ -54,7 +70,15 @@ describe('layout sizes', () => {
     for (const name of [
       '--reading-width',
       '--page-min-height',
-      '--hero-min-height',
+      '--hero-photo-min',
+      '--hero-photo-min-md',
+      '--hero-photo-min-lg',
+      '--hero-sky-gap',
+      '--hero-horizon-gap',
+      '--hero-bottom-space',
+      '--hero-below-gap',
+      '--hero-fade-length',
+      '--hero-fade-overlap',
       '--figure-gap',
       '--legend-gap',
       '--chart-small-width',

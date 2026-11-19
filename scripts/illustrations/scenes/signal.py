@@ -17,6 +17,9 @@ HALF=ROAD+BIKE         # half the road width, bike lanes included
 WALK=HALF+34           # outer edge of the sidewalk
 WHITE="#f4f6fa"
 SLOPE=B/A              # screen slope of a road running along an axis
+# Trees as (ground x, ground y, height), far to near. The grass corner is x < -WALK, y > WALK:
+# everything else is a road or its sidewalk, so a spot there is checked by the illustration test.
+TREE_SPOTS=((-WALK-72,WALK+28,110),(-WALK-30,WALK+30,125),(-WALK-28,WALK+72,105))
 
 def r(x,y,w,h,swap,**kw):
     """A rectangle in ground-plane units; swap=True draws it on the crossing road."""
@@ -161,9 +164,10 @@ def mast(px,py,ex,ey,xs,axis,lit,z=300):
 
 def scene_intersection():
     b=ground()
-    # trees on the far side of the upper-left road
-    for (sx,sy,h) in ((60,560,150),(150,610,150),(215,556,130),(40,640,120)):
-        b+=tree(sx,sy,h,c="#7fb877",d="#5a9a60")
+    # trees stand in the grass corner, set back from the sidewalk so none stands on a road
+    for gx,gy,h in TREE_SPOTS:
+        sx,sy=P(gx,gy)
+        b+=tree(round(sx),round(sy),h,c="#7fb877",d="#5a9a60")
     # far mast: faces +x, hangs over the lanes of traffic heading -x
     b+=mast(HALF+30,-HALF-30,HALF+30,12,[-LANE*2,-LANE,0],"x",["g","g","g"])
     # pedestrians crossing and a cyclist on the far sidewalk

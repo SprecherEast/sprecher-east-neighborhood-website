@@ -35,6 +35,21 @@ const columnFields: Field[] = [
     label: false,
   },
   {
+    name: 'shareBar',
+    type: 'group',
+    label: 'Share bar',
+    admin: {
+      description:
+        'A thin bar under the opening heading, split by percent. Shows only when all four are filled in and add up to 100.',
+    },
+    fields: [
+      { name: 'schools', type: 'number', label: 'Schools (%)', min: 0, max: 100 },
+      { name: 'city', type: 'number', label: 'City (%)', min: 0, max: 100 },
+      { name: 'county', type: 'number', label: 'County (%)', min: 0, max: 100 },
+      { name: 'matc', type: 'number', label: 'Madison College (%)', min: 0, max: 100 },
+    ],
+  },
+  {
     name: 'enableLink',
     type: 'checkbox',
   },

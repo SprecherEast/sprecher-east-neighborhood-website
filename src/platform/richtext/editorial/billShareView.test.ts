@@ -4,20 +4,15 @@ import { computeBillShare } from '@/platform/lib/billShare'
 
 import { receiptFor } from './billShareView'
 
-const RATES = { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 }
+const RATES = { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0141 }
 
 describe('receiptFor', () => {
   it('lists the bodies from the largest share to the smallest, with whole-dollar amounts and each body’s own tone (#1202)', () => {
     const receipt = receiptFor(computeBillShare(500300, RATES), 500300)
     expect(receipt.slices.map((slice) => slice.key)).toEqual(['schools', 'city', 'county', 'matc'])
-    expect(receipt.slices[1]).toMatchObject({ name: 'City of Madison', tone: 'highlight' })
+    expect(receipt.slices[1]).toMatchObject({ name: 'City of Madison', tone: 'amber' })
     expect(receipt.total).toEqual({ label: 'Total property tax', amount: '$9,339' })
-    expect(receipt.slices.map((slice) => slice.tone)).toEqual([
-      'light',
-      'highlight',
-      'medium',
-      'strong',
-    ])
+    expect(receipt.slices.map((slice) => slice.tone)).toEqual(['rust', 'amber', 'green', 'mint'])
   })
 
   it('follows the amounts: a bigger City rate puts the City first, and equal shares keep City, schools, county, Madison College (#1202)', () => {

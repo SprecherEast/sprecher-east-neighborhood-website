@@ -46,3 +46,20 @@ Source: `src/platform/ui/ShareBill.tsx`
 
 - Routes: `/dev/gallery`
 - Platform: `platform/richtext`
+
+## `ShareStrip`
+
+A whole as one slim row of colored segments, each as wide as its share and in its tone (the same colors as the bill's bars, #1266). It carries no numbers of its own: one label tells screen readers every part and its percent. The caller sets any spacing through `className`.
+
+Source: `src/platform/ui/ShareStrip.tsx`
+
+| Prop        | Type                        | Required | Description                                            |
+| ----------- | --------------------------- | -------- | ------------------------------------------------------ |
+| `parts`     | `readonly ShareStripPart[]` | yes      |                                                        |
+| `label`     | `string`                    | yes      | What the row shows, which the spoken label starts with |
+| `className` | `string`                    | no       |                                                        |
+
+**Used by** (direct imports):
+
+- Modules: `site`
+- Routes: `/dev/gallery`

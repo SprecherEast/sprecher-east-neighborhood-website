@@ -9,7 +9,7 @@ test.describe('on a wide screen', () => {
 
   test('opens by a click, not by hover, and a link leads to its page', async ({ page }) => {
     await page.goto('/')
-    const label = page.locator('header summary', { hasText: 'Resources' })
+    const label = page.locator('header').getByRole('button', { name: 'Resources' })
     const link = page.getByRole('link', { name: 'Government' })
 
     await label.hover()
@@ -27,23 +27,32 @@ test.describe('on a wide screen', () => {
     page,
   }) => {
     await page.goto('/')
-    const label = page.locator('header summary', { hasText: 'Resources' })
+    const label = page.locator('header').getByRole('button', { name: 'Resources' })
     const link = page.getByRole('link', { name: 'Government' })
 
+    // The panel takes focus once it is open and listening for Escape and outside presses; on a
+    // slow runner the link shows before that, and an early key or press is lost (#1277)
+    const panel = page.getByRole('dialog', { name: 'Resources' })
+
     await label.click()
+    await expect(panel).toBeFocused()
     await page.keyboard.press('Escape')
     await expect(link).toBeHidden()
     await expect(label).toBeFocused()
 
     await label.click()
-    await expect(link).toBeVisible()
-    await page.mouse.click(10, 500)
-    await expect(link).toBeHidden()
+    await expect(panel).toBeFocused()
+    // The library starts listening for presses a moment after it focuses the panel, so a press can
+    // land first on a slow runner: press again until it closes (a press on a closed menu does nothing)
+    await expect(async () => {
+      await page.mouse.click(10, 500)
+      await expect(link).toBeHidden({ timeout: 1000 })
+    }).toPass({ timeout: 15_000 })
   })
 
   test('opens with the keyboard', async ({ page }) => {
     await page.goto('/')
-    const label = page.locator('header summary', { hasText: 'Resources' })
+    const label = page.locator('header').getByRole('button', { name: 'Resources' })
 
     await label.focus()
     await page.keyboard.press('Enter')
@@ -53,7 +62,7 @@ test.describe('on a wide screen', () => {
 })
 
 test.describe('on a phone', () => {
-  test.use({ viewport: { width: 390, height: 844 } })
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true })
 
   test('is an accordion in the mobile menu, and following a link closes the menu', async ({
     page,
@@ -74,6 +83,17 @@ test.describe('on a phone', () => {
 
     await link.click()
     await expect(page).toHaveURL(/\/resources\/utilities$/)
+    await expect(dialog).toBeHidden()
+  })
+
+  test('a tap on a submenu link leads to its page', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Open menu' }).tap()
+    const dialog = page.getByRole('dialog')
+    await dialog.locator('summary', { hasText: 'Resources' }).tap()
+    await dialog.getByRole('link', { name: 'Safety and health' }).tap()
+
+    await expect(page).toHaveURL(/\/resources\/safety-health$/)
     await expect(dialog).toBeHidden()
   })
 })

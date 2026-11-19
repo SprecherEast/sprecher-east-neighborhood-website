@@ -17,11 +17,11 @@ const SLICES: ShareSlice[] = [
     amount: '$3,750',
     percent: 38,
     share: 37.5,
-    tone: 'highlight',
+    tone: 'amber',
   },
-  { key: 'b', name: 'Sample: second', amount: '$4,650', percent: 46, share: 46.5, tone: 'light' },
-  { key: 'c', name: 'Sample: third', amount: '$1,250', percent: 13, share: 12.5, tone: 'medium' },
-  { key: 'd', name: 'Sample: fourth', amount: '$350', percent: 3, share: 3.5, tone: 'strong' },
+  { key: 'b', name: 'Sample: second', amount: '$4,650', percent: 46, share: 46.5, tone: 'rust' },
+  { key: 'c', name: 'Sample: third', amount: '$1,250', percent: 13, share: 12.5, tone: 'green' },
+  { key: 'd', name: 'Sample: fourth', amount: '$350', percent: 3, share: 3.5, tone: 'mint' },
 ]
 const TOTAL = { label: 'Total', amount: '$10,000' }
 
@@ -133,7 +133,7 @@ describe('ShareBill', () => {
     expect(width('d')).toBeCloseTo((3.5 / 46.5) * 100, 1)
     // Each bar is drawn in its own slice's tone
     expect(container.querySelector('rect[data-share-bar="a"]')?.getAttribute('class')).toContain(
-      'fill-primary-fill',
+      'fill-chart-ramp-2',
     )
   })
 

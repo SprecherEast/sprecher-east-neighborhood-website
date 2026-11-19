@@ -14,7 +14,7 @@ const year = (extra: Record<string, unknown> = {}) => ({
   schools: 8.6814,
   county: 2.3564,
   matc: 0.6153,
-  city: 7.0139,
+  city: 7.0141,
   linkLabel: 'City tax detail',
   linkUrl: 'https://example.org/tax',
   ...extra,
@@ -29,7 +29,7 @@ describe('toBillShareProps', () => {
       year: 2026,
       label: '2026 rates',
       averageHome: 481300,
-      rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 },
+      rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0141 },
       source: { label: 'City tax detail', href: 'https://example.org/tax' },
     })
   })
