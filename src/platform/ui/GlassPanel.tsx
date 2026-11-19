@@ -27,11 +27,11 @@ export function GlassPanel({ children, className }: GlassPanelProps) {
         className,
       )}
     >
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-scrim/65" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-scrim/55" />
       {/* A faint sheen from the top left, and a glow along the top edge */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-on-image/8 via-transparent to-transparent"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-on-image/6 via-transparent to-transparent"
       />
       <div
         aria-hidden="true"
