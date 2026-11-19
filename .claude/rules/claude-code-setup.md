@@ -44,7 +44,12 @@ Claude Code.
   Claude Code can delegate to. Those files only hold Claude Code settings; edit the guide. The
   `worker` agent does each issue; the role agents stay for direct use until #695 moves the guides
   into skills. A headless `-p` run in the project also starts as the chief of staff; no workflow does.
-- **Hooks** (#446, in `.claude/settings.json`, scripts and tests in `.claude/hooks/`): after each
+- **Hooks** (#446, in `.claude/settings.json`, scripts and tests in `.claude/hooks/`): at session
+  start, `session-start.mjs` shows the short process reminder (#1300). Before a Bash command that
+  creates an issue (`gh issue create`, or a `gh api` POST to the issues endpoint), the issue rules
+  and the duplicate-search record are checked and the command refused when it would fail
+  ([the rules](../../docs/process/issue-and-pr-checks.md#where-the-rules-run-before-the-check-does)).
+  After each
   Edit or Write, the file is formatted with Prettier and checked with ESLint in the checkout or
   worktree that holds it, and an error comes back to fix at once. If the file is one a knowledge
   note describes (`docs/knowledge/map.json`) and that note has no change compared with `main`, a

@@ -123,8 +123,11 @@ For each issue:
    ```
 
 3. **Create it** with the issue form's sections (`### Problem`, `### Proposed fix`,
-   `### Acceptance criteria`, `### Files likely touched`, `### Must not touch`,
-   `### Area`, `### Priority`) in `issue.md`. `parent_issue_id` is the
+   `### Existing work compared`, `### Acceptance criteria`, `### Files likely touched`,
+   `### Must not touch`, `### Area`, `### Priority`) in `issue.md`. "Existing work compared"
+   records what step 2 found and why this is new work; the Bash hook refuses the command without
+   it, and without any other section, label or milestone the issue check asks for. Pass the body as
+   a file, as below, so the hook can read it. `parent_issue_id` is the
    epic's `id` (not its number); leave it out for a new epic.
 
    ```bash
@@ -208,6 +211,10 @@ For each issue:
   merging a PR moves the item to Done on its own. Assigning the issue moves its card to In progress
   by itself (the planner app), so a cloud session only assigns it. If that did not happen, comment
   which card should move, and the next session on the owner's computer moves it.
+- **Read the card after each step** (claim, pull request opened, merge), not only its column:
+  `node .github/scripts/card-history.mjs <n>` lists who changed its Status and when, and exits 1
+  when a person's login did it. The board's rules say it moves by itself, so a hand move is a slip:
+  say so on the issue and in the report, and fix the cause, never by moving the card back by hand.
 
 ## 5. Weekly report: "what got done this week?"
 

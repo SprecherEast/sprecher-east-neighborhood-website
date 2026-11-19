@@ -26,6 +26,7 @@ a tool that never reads it still meets them. How they work is in
 - `ISSUE-CRITERIA`: Add an "Acceptance criteria" section with at least one `- [ ]` checkbox that has text.
 - `ISSUE-FILES`: Fill in "Files likely touched" and "Must not touch" (write `None` when there is nothing).
 - `ISSUE-MILESTONE`: Set a milestone (Backlog until planned); an epic is optional.
+- `ISSUE-DUPLICATES`: Search the open and closed issues first, then add an "Existing work compared" section: what you compared and why this is new work (asked when an issue is created, not of older ones).
 
 ## Before you open a pull request
 
