@@ -10,7 +10,7 @@ Source: `src/platform/ui/Badge.tsx`
 
 **Variants:**
 
-- `variant`: `"done" | "open" | "category" | "on-image" | "status" | "official" | "current" | "caution" | "neutral" | "outline"`
+- `variant`: `"done" | "open" | "category" | "status" | "official" | "current" | "caution" | "neutral" | "outline"`
 - `size`: `"xs" | "sm" | "md"`
 
 | Prop        | Type              | Required | Description |
@@ -43,14 +43,13 @@ Source: `src/platform/ui/Badge.tsx`
 
 ## `CancelledBadge`
 
-The "Cancelled" label of a cancelled event (#122), wherever the event shows. The word says it, so screen readers read it with the title and colour is never the only signal. `on-image` is the label on the event's photo, on its own scrim.
+The "Cancelled" label of a cancelled event (#122), wherever the event shows. The word says it, so screen readers read it with the title and colour is never the only signal.
 
 Source: `src/platform/ui/CancelledBadge.tsx`
 
-| Prop        | Type                     | Required | Description |
-| ----------- | ------------------------ | -------- | ----------- |
-| `variant`   | `"on-image" \| "status"` | no       |             |
-| `className` | `string`                 | no       |             |
+| Prop        | Type     | Required | Description |
+| ----------- | -------- | -------- | ----------- |
+| `className` | `string` | no       |             |
 
 **Used by** (direct imports):
 
@@ -111,10 +110,6 @@ Source: `src/platform/ui/DateTime.tsx`
 ## `MetaList`
 
 Source: `src/platform/ui/MetaList.tsx`
-
-**Variants:**
-
-- `variant`: `"inline" | "stacked" | "on-image"`
 
 | Prop        | Type                                   | Required | Description                                                            |
 | ----------- | -------------------------------------- | -------- | ---------------------------------------------------------------------- |

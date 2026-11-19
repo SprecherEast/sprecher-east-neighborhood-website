@@ -28,7 +28,6 @@ import {
 const CARD_VARIANTS = ['elevated', 'outline', 'muted', 'tinted'] as const
 const CARD_TONES = ['success', 'danger', 'neutral'] as const
 const CARD_PADDINGS = ['sm', 'md', 'lg'] as const
-const META_VARIANTS = ['inline', 'stacked'] as const
 
 /** Small pieces that show content: badges, cards, text, facts, dates and empty states */
 export function DisplayGallery() {
@@ -103,20 +102,9 @@ export function DisplayGallery() {
       </GalleryEntry>
 
       <GalleryEntry name="MetaList">
-        {META_VARIANTS.map((variant) => (
-          <GalleryVariant
-            key={variant}
-            label={variant}
-            className="grid w-full gap-6 sm:grid-cols-2"
-          >
-            <MetaList variant={variant} items={SAMPLE_FACTS} />
-            <MetaList variant={variant} items={SAMPLE_ICON_FACTS} />
-          </GalleryVariant>
-        ))}
-        <GalleryVariant label="on-image">
-          <div className="w-full rounded-2xl bg-scrim p-6">
-            <MetaList variant="on-image" items={SAMPLE_FACTS} />
-          </div>
+        <GalleryVariant label="labelled, with icons" className="grid w-full gap-6 sm:grid-cols-2">
+          <MetaList items={SAMPLE_FACTS} />
+          <MetaList items={SAMPLE_ICON_FACTS} />
         </GalleryVariant>
       </GalleryEntry>
 

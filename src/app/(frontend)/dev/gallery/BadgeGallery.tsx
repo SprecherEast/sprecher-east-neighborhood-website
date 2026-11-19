@@ -25,11 +25,6 @@ export function BadgeGallery() {
           <Badge variant="category">Community meeting</Badge>
         </BadgeList>
       </GalleryVariant>
-      <GalleryVariant label="on-image (on the photo of PageHeader · image)">
-        <div className="rounded-2xl bg-scrim p-6">
-          <Badge variant="on-image">Events</Badge>
-        </div>
-      </GalleryVariant>
       <GalleryVariant label="CertaintyBadge: confirmed, estimate, unknown (key facts, chart captions)">
         <BadgeList>
           {CERTAINTIES.map((certainty) => (

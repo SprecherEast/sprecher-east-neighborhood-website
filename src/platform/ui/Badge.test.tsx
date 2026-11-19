@@ -16,13 +16,6 @@ describe('Badge', () => {
     expect(badge.className).toContain('bg-primary/10')
   })
 
-  it('sits on its own scrim over a photo', () => {
-    render(<Badge variant="on-image">Meeting</Badge>)
-
-    expect(screen.getByText('Meeting').className).toContain('text-on-image')
-    expect(screen.getByText('Meeting').className).toContain('bg-scrim/60')
-  })
-
   it('marks a state in destructive-strong on the destructive tint, with an optional icon (#122)', async () => {
     const { container } = render(
       <Badge variant="status">
