@@ -179,12 +179,7 @@ else
     fi
   }
 
-  problem=""
-  if ! $RELOAD_CADDY >/dev/null 2>&1; then
-    problem="Caddy would not reload with the request body limit"
-  elif ! wait_until_up 20; then
-    problem="the site stopped answering after adding the request body limit"
-  fi
+  problem=$(caddy_reload_problem "the request body limit")
   if [ -n "$problem" ]; then
     if detail=$(restore_all); then
       report "ERROR: $problem; the previous Caddy config is back"

@@ -114,12 +114,7 @@ restore_all() {
   fi
 }
 
-problem=""
-if ! $RELOAD_CADDY >/dev/null 2>&1; then
-  problem="Caddy would not reload with the pull request preview import"
-elif ! wait_until_up "${UP_WAIT_AFTER:-20}"; then
-  problem="the site stopped answering after adding the pull request preview import"
-fi
+problem=$(caddy_reload_problem "the pull request preview import" "${UP_WAIT_AFTER:-20}")
 if [ -n "$problem" ]; then
   if detail=$(restore_all); then
     report "ERROR: $problem; the previous Caddy config is back"

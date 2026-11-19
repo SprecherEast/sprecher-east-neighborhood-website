@@ -170,6 +170,16 @@ drop_page_cache() { # <release dir>
   rm -rf "$1/.next/cache"
 }
 
+# Reloads Caddy, then gives the site time to answer. Prints what went wrong (nothing when all is
+# well), for the caller to roll back and report.
+caddy_reload_problem() { # <what the config now has> [seconds the site gets to answer, default 20]
+  if ! $RELOAD_CADDY >/dev/null 2>&1; then
+    echo "Caddy would not reload with $1"
+  elif ! wait_until_up "${2:-20}"; then
+    echo "the site stopped answering after adding $1"
+  fi
+}
+
 # Never print Caddy's own output: the Caddyfile could hold credentials and the deploy log is public.
 caddy_accepts() { caddy validate --config "$1" --adapter caddyfile >/dev/null 2>&1; }
 caddy_version() {
