@@ -6,7 +6,8 @@
 # previous release keeps serving. The steps:
 #   1. check the release fits this server (Node version, public settings, native modules)
 #   2. link the shared .env.local, data/ and public/media into it
-#   3. back up the data (ops/backup.sh pre-deploy), then run the database migrations
+#   3. back up the data (ops/backup.sh pre-deploy), then run the database migrations (once more
+#      if the database was busy before any migration began, #1147)
 #   4. drop the pages prerendered in CI, whose database was empty: each renders from the live
 #      database on its first visit, then is cached as usual
 #   5. switch the `current` link atomically and reload the app under PM2 (ops/restart-app.sh)
@@ -21,6 +22,7 @@ umask 022
 trap '' HUP # a dropped SSH session must not stop the script between the switch and a switch back
 
 . "$(dirname "$0")/lib.sh"
+. "$(dirname "$0")/migrate-lib.sh"
 
 # The workflow sends the Umami admin password on stdin and says so with this flag (#948), so a
 # run by hand never waits for input. It goes to ops/install-umami.sh only; never an argument.
@@ -134,7 +136,7 @@ ln -s "$APP_DIR/public/media" "$RELEASE/public/media"
 bash "$RELEASE/ops/backup.sh" pre-deploy || stop "the pre-deploy backup failed"
 export PRE_DEPLOY_BACKUP_DONE=yes # install-umami.sh needs no second one for a first install (#948)
 echo "→ Running database migrations..."
-(cd "$RELEASE" && NODE_OPTIONS=--no-deprecation node_modules/.bin/payload migrate) ||
+run_migrate "$RELEASE" ||
   stop "the database migrations failed (the pre-deploy backup has the data from before)"
 
 # 4. Pages prerendered in CI came from an empty database.

@@ -82,7 +82,7 @@ export function setUpUmamiHarness() {
       .readdirSync(OPS)
       .filter(
         (n) =>
-          /^(lib|umami-[a-z]+)\.sh$/.test(n) ||
+          /^(lib|migrate-lib|umami-[a-z]+)\.sh$/.test(n) ||
           n === 'install-umami.sh' ||
           n === 'backup-umami.sh' ||
           n === 'deploy-release.sh',
