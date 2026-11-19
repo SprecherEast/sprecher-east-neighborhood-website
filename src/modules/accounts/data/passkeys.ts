@@ -157,8 +157,9 @@ export async function recordPasskeyUse(
 
 /**
  * Removes the passkey, only when it belongs to this account: a count says whether there is one,
- * then the DELETE itself carries the same conditions. Says whether one went. The caller decides who may (`decideRemovePasskey`); this keeps another
- * account's passkey in place even if it is asked to remove it.
+ * then the DELETE itself carries the same conditions. Says whether one went. The caller decides
+ * who may (`decideRemovePasskey`); this keeps another account's passkey in place even if it is
+ * asked to remove it.
  */
 export async function deleteOwnPasskey(accountId: number, passkeyId: number): Promise<boolean> {
   const payload = await payloadClient()

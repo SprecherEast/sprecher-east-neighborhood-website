@@ -7,8 +7,8 @@ import { USERS } from '../domain/usersCollection'
 
 /**
  * The one-time challenges passkey sign-in and adding use (#1313, decision 0021). A challenge is
- * taken once, by one conditional update that sets `usedAt` (`data/passkeyChallenges.ts`), and expired rows
- * are deleted by the retention task. No one reads or writes it through an API, admins included:
+ * taken once, by one conditional update that sets `usedAt` (`data/passkeyChallenges.ts`), and
+ * expired rows are deleted by the retention task. No one reads or writes it through an API, admins included:
  * the challenge is the secret a stolen answer would need.
  */
 export const PasskeyChallenges: CollectionConfig = {

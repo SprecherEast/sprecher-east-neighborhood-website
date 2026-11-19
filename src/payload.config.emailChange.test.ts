@@ -6,6 +6,7 @@ import {
   bootPayload,
   createAccount,
   type Account,
+  signIn,
 } from '@/platform/payload/testing/inMemoryPayload'
 
 /**
@@ -29,13 +30,7 @@ beforeAll(async () => {
   admin = await createAccount(payload, 'admin', 'admin')
 }, 60_000)
 
-const tokenFor = async (account: Account) =>
-  (
-    await payload.login({
-      collection: 'users',
-      data: { email: account.email, password: `${account.name}-password-for-tests` },
-    })
-  ).token ?? ''
+const tokenFor = (account: Account) => signIn(payload, account)
 
 const storedEmail = async (id: number) =>
   (await payload.findByID({ collection: 'users', id, depth: 0, overrideAccess: true })).email

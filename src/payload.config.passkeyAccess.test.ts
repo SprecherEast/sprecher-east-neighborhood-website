@@ -1,7 +1,7 @@
 import type { Payload, SanitizedConfig } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { bootPayload, createAccount } from '@/platform/payload/testing/inMemoryPayload'
+import { bootPayload, createAccount, signIn } from '@/platform/payload/testing/inMemoryPayload'
 import { restRequest } from '@/platform/payload/testing/restRequest'
 
 let config: SanitizedConfig
@@ -34,11 +34,7 @@ describe('passkeys and passkey challenges', () => {
 
   const account = async (name: string, role: 'guest' | 'admin') => {
     const user = await createAccount(payload, role, name)
-    const { token } = await payload.login({
-      collection: 'users',
-      data: { email: user.email, password: `${name}-password-for-tests` },
-    })
-    return { id: user.id, token: token ?? '' }
+    return { id: user.id, token: await signIn(payload, user) }
   }
 
   const newPasskey = (credentialId: string) => ({

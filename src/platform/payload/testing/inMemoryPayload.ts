@@ -29,6 +29,9 @@ export async function bootPayload(
 
 export type Account = User & { collection: 'users' }
 
+/** The password `createAccount` gives the account called `name`, and `signIn` signs in with. */
+export const testPassword = (name: string) => `${name}-password-for-tests`
+
 /** An account with this role, its name also its email's local part and password prefix. */
 export async function createAccount(
   payload: Payload,
@@ -37,7 +40,7 @@ export async function createAccount(
 ): Promise<Account> {
   const user = await payload.create({
     collection: 'users',
-    data: { email: `${name}@example.com`, password: `${name}-password-for-tests`, name, role },
+    data: { email: `${name}@example.com`, password: testPassword(name), name, role },
     disableVerificationEmail: true,
     overrideAccess: true,
   })
@@ -49,6 +52,15 @@ export async function createAccount(
     data: { _verified: true, role },
   })
   return { ...user, role, collection: 'users' }
+}
+
+/** Signs an account `createAccount` made in, and gives its token for the `Authorization` header. */
+export async function signIn(payload: Payload, account: Account): Promise<string> {
+  const { token } = await payload.login({
+    collection: 'users',
+    data: { email: account.email, password: testPassword(account.name ?? '') },
+  })
+  return token ?? ''
 }
 
 /** A one-paragraph rich text, as the editor saves it. */

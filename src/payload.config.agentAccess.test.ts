@@ -8,6 +8,7 @@ import {
   createAccount,
   NO_REVALIDATE,
   paragraph,
+  testPassword,
 } from '@/platform/payload/testing/inMemoryPayload'
 import { createMcpKey, mcpClient } from '@/platform/payload/testing/mcpRequest'
 
@@ -173,7 +174,7 @@ describe('an agent account outside MCP', () => {
   })
 
   it('can’t sign in with a password', async () => {
-    const data = { email: 'scout@example.com', password: 'scout-password-for-tests' }
+    const data = { email: agent.email, password: testPassword('scout') }
     await expect(payload.login({ collection: 'users', data })).rejects.toThrow()
   })
 })
