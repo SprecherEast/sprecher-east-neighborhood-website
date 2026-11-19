@@ -176,6 +176,8 @@ failed=0
 bash "$RELEASE/ops/install-cron.sh" || failed=1
 bash "$RELEASE/ops/caddy-limits.sh" || failed=1
 bash "$RELEASE/ops/caddy-https.sh" || failed=1
+# Pull request previews: one import line for the preview folder (#1072). Does nothing with no previews.
+bash "$RELEASE/ops/caddy-previews.sh" || failed=1
 # After the Caddy scripts: its block imports the HSTS file caddy-https.sh writes. A missing
 # secret or DNS name is a notice, not a failure.
 UMAMI_ADMIN_PASSWORD="$umami_admin_password" bash "$RELEASE/ops/install-umami.sh" || failed=1

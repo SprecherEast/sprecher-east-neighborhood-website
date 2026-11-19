@@ -21,6 +21,12 @@ CADDYFILE="${CADDYFILE:-/etc/caddy/Caddyfile}"
 HSTS_FILE="${HSTS_FILE:-/etc/caddy/sprecher-east-hsts.caddy}" # a copy of ops/caddy/hsts.caddy (caddy-https.sh)
 # shellcheck disable=SC2034
 RELOAD_CADDY="${RELOAD_CADDY:-systemctl reload caddy}"
+# Pull request previews (#1072): the folder of per-preview site blocks the Caddyfile imports, and
+# the copy of ops/caddy/preview-headers.caddy those blocks import.
+# shellcheck disable=SC2034
+PREVIEW_CADDY_DIR="${PREVIEW_CADDY_DIR:-/etc/caddy/previews}"
+# shellcheck disable=SC2034
+PREVIEW_HEADERS_FILE="${PREVIEW_HEADERS_FILE:-/etc/caddy/sprecher-east-preview-headers.caddy}"
 
 # report "message" → notice; "WARNING: …" → warning; "ERROR: …" → error.
 report() {

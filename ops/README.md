@@ -16,6 +16,7 @@ on the VPS. Nothing here is run by hand during a normal deploy. Changes to the s
 | `restart-app.sh`    | VPS    | Reloads the app under PM2; starts it fresh, with a way back, when its start settings change. Listens on `127.0.0.1:3000` only. Deletes old sitemap files                      | #118, #267 |
 | `caddy-limits.sh`   | VPS    | Caps request bodies on the public form endpoints and `/api/mcp` at Caddy (`caddy/form-limits.caddy`)                                                                          | #124       |
 | `caddy-https.sh`    | VPS    | Sends HSTS on the domain (`caddy/hsts.caddy`), and adds a redirect to HTTPS in the plain-HTTP site blocks                                                                     | #235       |
+| `caddy-previews.sh` | VPS    | Adds one `import` line for the folder of pull request preview site blocks, and installs the preview headers (`caddy/preview-headers.caddy`)                                   | #1072      |
 | `install-umami.sh`  | VPS    | Installs and updates Umami analytics in Docker, replaces its default admin password, then opens its own address (helpers: `umami-lib.sh`, `umami-caddy.sh`, `umami-admin.sh`) | #948       |
 | `backup-umami.sh`   | VPS    | Dumps Umami's Postgres database; run after the daily backup and before an Umami update                                                                                        | #948       |
 | `lib.sh`            | VPS    | Shared helpers: annotations, reading non-secret settings, checking the site through Caddy, the `current` link                                                                 |            |
@@ -81,7 +82,7 @@ or by an agent, within the limits in [`wrapped`](../.agents/skills/wrapped/SKILL
    - switches `current` to the release in one step and reloads PM2 (`restart-app.sh`)
    - checks the home page answers 200 through Caddy and `/api/version` reports the new build; if
      not, switches `current` back and reloads
-   - then installs the backup job, applies the Caddy limits and HTTPS settings, installs or
+   - then installs the backup job, applies the Caddy limits, HTTPS settings and the preview import, installs or
      updates Umami (below), and keeps the newest 3 releases
      (a release that failed is the first to go)
 
@@ -148,6 +149,39 @@ To change the limit, edit `caddy/form-limits.caddy` in a pull request. To remove
 pull request that added it (#152), then on the server delete the `import` lines and run
 `caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy`. Removing the lines
 without the revert doesn't last: the next deploy adds them back.
+
+## Pull request previews: the Caddy base
+
+Each pull request preview gets its own address, `pr-<number>.dev.sprechereast.com` (#1070). This is
+the part that prepares Caddy; the deploy that writes one block per preview comes later (#1075).
+
+- **DNS.** One wildcard A record, `*.dev`, in the Porkbun zone for `sprechereast.com`, pointing at
+  the production server. It needs no API key. Undo: delete the record. `dev.sprechereast.com`
+  itself doesn't resolve.
+- **The import line.** `caddy-previews.sh` adds `import /etc/caddy/previews/*.caddy` to the
+  Caddyfile (backed up first, validated, rolled back if Caddy won't reload or the site stops
+  answering). The folder is empty until a preview exists, which Caddy accepts. Every production
+  deploy runs it, and it adds the line once. Undo: revert the pull request, then delete the line
+  and `systemctl reload caddy`. The folder and headers file paths are defined once, in `lib.sh`.
+- **Headers.** `caddy/preview-headers.caddy` sends `X-Robots-Tag: noindex, nofollow` and answers
+  `/robots.txt` with `Disallow: /` from Caddy itself. `caddy/preview-site.caddy` is the template for
+  one preview's block: the headers, the form limits, and the app on a loopback port. Neither sends
+  HSTS: production's rule has no `includeSubDomains`, and a test fails if that changes or a
+  preview block imports the HSTS file.
+- **Unknown names.** No on-demand TLS and no wildcard certificate, so HTTPS to a `*.dev` name with
+  no block gets no certificate and no page; plain HTTP falls to the `:80` catch-all.
+- **Certificate budget.** Caddy orders one certificate per preview name when its block loads
+  (Let's Encrypt, then ZeroSSL). Let's Encrypt allows 50 new certificates per registered domain
+  per 7 days, shared with production's own names, and 5 per identical set of names
+  ([limits](https://letsencrypt.org/docs/rate-limits/)); renewals don't count. The repository
+  opens far more than 50 pull requests a week, so only a pull request that changes how pages look,
+  or that carries the label asking for a preview, gets one (owner's decision, 2026-11-19, #1072).
+  A redeploy of the same pull request reuses its certificate, and teardown never deletes Caddy's
+  certificate storage, so a reopened pull request is not a new order.
+- **Check on the server** (once, after the first deploy with this script): load one sample block by
+  hand, confirm its responses carry `X-Robots-Tag` and no `Strict-Transport-Security` and that
+  `/robots.txt` disallows everything, remove it, and confirm HTTPS to an unknown `*.dev` name serves
+  nothing.
 
 ## Caddy HTTPS: HSTS and the IP redirect
 
