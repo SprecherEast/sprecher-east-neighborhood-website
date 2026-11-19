@@ -4,7 +4,7 @@ import { computeBillShare } from '@/platform/lib/billShare'
 
 import { receiptFor } from './billShareView'
 
-const RATES = { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 }
+const RATES = { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0141 }
 
 describe('receiptFor', () => {
   it('lists the bodies from the largest share to the smallest, with whole-dollar amounts and each body’s own tone (#1202)', () => {

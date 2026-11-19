@@ -17,7 +17,7 @@ export const PROPS: BillShareProps = {
       label: '2026 rates',
       note: '',
       averageHome: 481300,
-      rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 },
+      rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0141 },
       source: {
         label: 'City tax detail',
         href: 'https://example.org/tax',
