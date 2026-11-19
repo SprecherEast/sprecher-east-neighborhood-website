@@ -60,7 +60,7 @@ describe('factTabsToJsx and importFactTabsTag', () => {
           schools: 8.6814,
           county: 2.3564,
           matc: 0.6153,
-          city: 7.0139,
+          city: 7.0141,
           linkLabel: 'City tax detail',
           linkUrl: 'https://example.org/tax',
         },
