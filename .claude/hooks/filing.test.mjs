@@ -206,6 +206,18 @@ describe('filingCheck: forms a complete filing can take', () => {
     expect(check('gh api repos/o/r/issues/ -f title=T')).toContain('ISSUE-')
   })
 
+  it('treats gh issue new as create, and leaves --help alone', () => {
+    expect(check('gh issue new -t T -b x')).toContain('ISSUE-')
+    expect(check('gh issue create --help')).toBeNull()
+    expect(check('gh issue new -h')).toBeNull()
+  })
+
+  it('names invalid JSON for --input', () => {
+    expect(check('gh api repos/o/r/issues --input /tmp/i.json', { '/tmp/i.json': '{' })).toContain(
+      'not valid JSON',
+    )
+  })
+
   it('reads one file argument the same way everywhere: --input gets the path and stdin checks', () => {
     expect(check('gh api repos/o/r/issues --input ~/i.json')).toContain('absolute file')
     expect(check('gh api repos/o/r/issues --input $F')).toContain('absolute file')

@@ -61,6 +61,9 @@ const CREATE_FLAGS = {
 }
 
 /** The fields of an issue, as `POST /issues` names them (`gh api` writes `labels[]` for `labels`) */
+/** The names `gh issue` answers to for creating an issue */
+const CREATE_NAMES = ['create', 'new']
+
 const ISSUE_FIELDS = ['title', 'body', 'labels', 'milestone']
 
 /**
@@ -159,7 +162,7 @@ function apiRequest(words, readFile) {
               readFile,
             )
       } catch {
-        request.unreadable = 'path'
+        request.unreadable = 'json'
       }
       continue
     }
@@ -175,7 +178,7 @@ function apiRequest(words, readFile) {
 
 /** The issue a `gh issue create` call makes: `--web` opens the form, `--editor` is not visible */
 function createRequest(flags, readFile) {
-  if (flags.some(([, , name]) => ['-w', '--web'].includes(name))) return null
+  if (flags.some(([, , name]) => ['-w', '--web', '-h', '--help'].includes(name))) return null
   const request = emptyRequest('create')
   if (flags.some(([, , name]) => ['-e', '--editor'].includes(name))) request.unreadable = 'editor'
   for (const [kind, value] of flags) setField(request, kind, value, readFile)
@@ -195,12 +198,11 @@ export function filingRequests(command, readFile = () => '') {
     const words = ghWords(all)
     if (!words) continue
     const issue = words[1] === 'issue' ? parseFlags(words.slice(2), CREATE_FLAGS) : null
-    const request =
-      issue?.rest[0] === 'create'
-        ? createRequest(issue.flags, readFile)
-        : words[1] === 'api'
-          ? apiRequest(words, readFile)
-          : null
+    const request = CREATE_NAMES.includes(issue?.rest[0])
+      ? createRequest(issue.flags, readFile)
+      : words[1] === 'api'
+        ? apiRequest(words, readFile)
+        : null
     if (request) requests.push(request)
   }
   return requests
@@ -218,9 +220,11 @@ function unreadableReason(request) {
       ? 'the body is a shell expansion, so its text is not in the command'
       : request.unreadable === 'input'
         ? 'the body is on standard input'
-        : request.unreadable === 'editor'
-          ? 'the body would be written in an editor, which the hook cannot see'
-          : 'the file could not be read (a path with `$` or `~`, or not found from the session directory)'
+        : request.unreadable === 'json'
+          ? 'the --input file is not valid JSON'
+          : request.unreadable === 'editor'
+            ? 'the body would be written in an editor, which the hook cannot see'
+            : 'the file could not be read (a path with `$` or `~`, or not found from the session directory)'
   return `Filing: ${why}. Write the issue to a file first and pass ${PASS[request.how]}, so it can be checked against docs/process/filing-checklist.md.`
 }
 

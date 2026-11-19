@@ -84,7 +84,7 @@ The issue check only warns after the issue exists, so a session meets the same r
 - **At session start,** a Claude Code hook (`.claude/hooks/session-start.mjs`) shows the short process
   reminder: read the filing checklist, search for duplicates, claim by assigning, never move a card
   by hand, read the card afterwards.
-- **At filing,** the Bash hook (`.claude/hooks/filing.mjs`) refuses `gh issue create` and a `gh api`
+- **At filing,** the Bash hook (`.claude/hooks/filing.mjs`) refuses `gh issue create` (or its alias `gh issue new`) and a `gh api`
   POST to the issues endpoint when the issue would fail the rules above plus `ISSUE-DUPLICATES`. It
   reads the body from `-f body=`, `-F body=@file`, `--body-file` or `--input <file>`; a body on
   standard input, a shell expansion (`"$(cat f)"`) or a path with `$` or `~` can't be read, so it is
