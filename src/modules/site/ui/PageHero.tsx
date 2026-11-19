@@ -12,7 +12,18 @@ import { Media } from '@/platform/ui/Media'
 import { Section } from '@/platform/ui/Section'
 
 import type { PageHeroProps } from '../domain/hero'
-import { HERO_MIN_HEIGHT, READING_WIDTH } from '@/platform/ui/layoutSizes'
+import { heroPhotoVars } from '../domain/heroGeometry'
+import {
+  HERO_BELOW_GAP,
+  HERO_BOTTOM_SPACE,
+  HERO_FADE_LENGTH,
+  HERO_HORIZON_GAP,
+  HERO_PHOTO_HEIGHT,
+  HERO_PHOTO_LAYER_BOTTOM,
+  HERO_SKY_GAP,
+  HERO_SKY_HEIGHT,
+  READING_WIDTH,
+} from '@/platform/ui/layoutSizes'
 
 type PhotoHeroProps = Extract<PageHeroProps, { variant: 'high' | 'medium' }>
 
@@ -28,52 +39,75 @@ export function PageHero(props: PageHeroProps) {
   }
 }
 
-/** Home's hero: the title and a glass-panel description over the photo, buttons beside them */
+/**
+ * Home's hero: the title in the sky above the photo's horizon, then the glass-panel description and
+ * the buttons just below it (#1304). The photo is at the top, its focal point marks the horizon
+ * (`heroPhotoVars`), and it fades into the page over the first part of the next section.
+ */
 function HighHero({ body: richText, image, links }: PhotoHeroProps) {
   // The title and the description come from the same rich text without repeating it in the DOM
   // (two copies meant two <h1> elements on the home page)
   const { heading, body } = splitHeadingFromBody(richText)
 
   return (
-    <div className="relative -mt-[var(--header-height)]">
-      {/* The photo stays vivid at the top and darkens at the bottom, where the text is */}
-      <div aria-hidden="true" className="absolute inset-0 select-none">
-        {image && <Media fill atFocalPoint imgClassName="object-cover" priority resource={image} />}
+    <div
+      className={cn('hero-geometry relative -mt-[var(--header-height)]', HERO_BELOW_GAP)}
+      style={heroPhotoVars(image) as React.CSSProperties}
+    >
+      {/* The photo runs on past the hero, under the next section, and fades into the page */}
+      <div
+        aria-hidden="true"
+        className={cn(
+          'pointer-events-none absolute inset-x-0 top-0 overflow-hidden select-none',
+          HERO_PHOTO_LAYER_BOTTOM,
+        )}
+      >
+        <div className={cn('relative', HERO_PHOTO_HEIGHT)}>
+          {image && (
+            <Media fill atFocalPoint imgClassName="object-cover" priority resource={image} />
+          )}
+        </div>
+
+        {/* The scrim darkens the left, where the text is, and fades out with the photo */}
+        <div className="absolute inset-0 bg-gradient-to-r from-scrim/60 via-scrim/30 to-transparent" />
+
+        <div className={cn('absolute inset-x-0 bottom-0 hero-fade', HERO_FADE_LENGTH)} />
       </div>
 
-      {/* The scrim darkens the bottom left, where the text is anchored */}
-      <div className="absolute inset-0 bg-gradient-to-r from-scrim/60 via-scrim/30 to-transparent" />
-
-      <div
-        className={cn(
-          'relative z-10 container flex',
-          HERO_MIN_HEIGHT,
-          'items-end pt-[var(--header-height)] pb-16 md:pb-20',
-        )}
-        data-theme="dark"
-      >
-        <div className="flex w-full flex-col gap-8 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-2xl">
-            {heading && (
+      <div className="relative z-10 container pt-[var(--header-height)]" data-theme="dark">
+        {/* The sky: the title ends just above the horizon */}
+        <div className={cn('flex items-end', HERO_SKY_HEIGHT, HERO_SKY_GAP)}>
+          {heading && (
+            <div className="max-w-2xl">
               <RichText
                 className="mb-0 [&_h1]:text-3xl [&_h1]:leading-tight [&_h1]:font-bold [&_h1]:tracking-tight [&_h1]:text-balance [&_h1]:text-on-image [&_h1]:text-shadow-photo sm:[&_h1]:text-4xl lg:[&_h1]:text-5xl"
                 data={heading}
                 enableGutter={false}
               />
-            )}
-            {body && (
-              <GlassPanel className="mt-3">
-                <RichText
-                  className="mb-0 [&_a]:text-on-image [&_a:focus-visible]:outline-on-image [&_p]:mt-0 [&_p]:mb-0 [&_p]:text-base [&_p]:leading-relaxed [&_p]:text-on-image/90 md:[&_p]:text-lg [&_strong]:text-on-image"
-                  data={body}
-                  enableGutter={false}
-                />
-              </GlassPanel>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
+
+        {/* Below the horizon: the description and the buttons start level */}
+        <div
+          className={cn(
+            'flex flex-col gap-6 md:flex-row md:items-start md:justify-between',
+            HERO_HORIZON_GAP,
+            HERO_BOTTOM_SPACE,
+          )}
+        >
+          {body && (
+            <GlassPanel className="max-w-2xl">
+              <RichText
+                className="mb-0 [&_a]:text-on-image [&_a:focus-visible]:outline-on-image [&_p]:mt-0 [&_p]:mb-0 [&_p]:text-base [&_p]:leading-relaxed [&_p]:text-on-image/90 md:[&_p]:text-lg [&_strong]:text-on-image"
+                data={body}
+                enableGutter={false}
+              />
+            </GlassPanel>
+          )}
 
           {links.length > 0 && (
-            <ul className="flex shrink-0 flex-col gap-3 sm:flex-row md:w-60 md:flex-col md:pb-2">
+            <ul className="flex shrink-0 flex-col gap-3 sm:flex-row md:ml-auto md:w-60 md:flex-col">
               {links.map((link, i) => (
                 <li key={i}>
                   {/* By position, as the design asks: the first is the main action */}
@@ -93,9 +127,6 @@ function HighHero({ body: richText, image, links }: PhotoHeroProps) {
           )}
         </div>
       </div>
-
-      {/* The bottom fades into the page */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-b from-transparent to-background" />
     </div>
   )
 }

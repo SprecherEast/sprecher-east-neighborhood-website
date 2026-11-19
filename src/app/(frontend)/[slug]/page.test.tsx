@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // The site module is replaced: this tests the page's wiring, not the module
@@ -26,7 +26,7 @@ vi.mock('@/modules/site/server', () => ({
   toSiteHero: (hero: { type: string }) => ({ mapped: hero.type }),
   RenderBlocks: (props: unknown) => {
     site.blocks(props)
-    return null
+    return <div data-testid="blocks" />
   },
 }))
 // The backdrop is tested on its own (PageBackdrop.test.tsx): here, what the page hands it
@@ -108,6 +108,17 @@ describe('/[slug]', () => {
     site.getPageBySlug.mockResolvedValue(null)
     render(await Page(params()))
     expect(site.backdrop).toHaveBeenLastCalledWith(null)
+  })
+
+  // #1304: the home hero's photo runs on under the first section and fades; the sections sit above it
+  it('draws the blocks above the hero, whose photo runs on under the first of them', async () => {
+    site.getPageBySlug.mockResolvedValue({ slug: 'home', hero: null, layout: [] })
+
+    render(await Page(params()))
+
+    const wrapper = screen.getByTestId('blocks').parentElement
+    expect(wrapper?.className).toContain('relative')
+    expect(wrapper?.className).toContain('z-10')
   })
 
   it('draws no hero when the page has none', async () => {

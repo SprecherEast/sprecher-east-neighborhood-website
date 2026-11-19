@@ -48,6 +48,8 @@ footer, forum link and redirects have their own note, [navigation](/src/modules/
 - Before a `home` page exists, `/` draws a starter page with its hero and no blocks (`src/app/(frontend)/[slug]/page.tsx`, `toSiteHero`).
 - The high hero's photo crops around the upload's focal point set in Admin (the centre when none is set), through `Media`'s `atFocalPoint` (`ui/PageHero.tsx`, `src/platform/lib/focalPoint.ts`, #1013). Post and event pages are not CMS heroes: they head with the plain `PageHeader` title band and show their picture whole in the article, so the picture band with a crop remains only on CMS pages' heroes (`src/platform/ui/PageHeader.tsx`, `FeaturedImage.tsx`).
 - The high hero's description sits in the shared `GlassPanel` (`ui/PageHero.tsx`, `src/platform/ui/GlassPanel.tsx`, #1278), which darkens itself, so the description reads over any photo. The title stays on the photo.
+- The high hero is laid out from its photo's horizon, the line where the trees end and the sky begins, which the upload's focal point marks (set the point's height on that line in Admin). The photo sits at the top; the title ends 10 px above the horizon, and the description and the buttons start 14 px below it, level with each other from `md`. The hero is only as tall as that needs. The photo then runs on 51 px under the next section and fades into the page along an eased curve over 150 px, so the next section sits 5 px lower and its text stays on the page colour. A photo with no focal point has its horizon in the middle; a hero with no photo has none, and the title sits under the header (`ui/PageHero.tsx`, `domain/heroGeometry.ts`, `src/platform/theme/tailwind.css`, #1304).
+- A page's blocks are drawn above its hero, because the hero's photo runs on under the first block (`src/app/(frontend)/[slug]/page.tsx`).
 - A hero draws nothing when its type is `none`, or when it has no text, image or links; a low hero needs text. A low hero never draws links or an image (`toPageHeroProps`, `domain/hero.ts`).
 - Site's own blocks reach `ui/` as plain props, other modules' as stored (0013, `data/mappers.ts`). A block type the mapper or `RenderBlocks` doesn't know draws nothing, and a new type without a case fails `tsc` (`ui/RenderBlocks.tsx`).
 - Hero links and call-to-action links: the first is the main action, the others secondary, by position, whatever look the editor picked (`ui/PageHero.tsx` high, `ui/CallToActionBlock.tsx`); the medium hero keeps the editor's look. The call to action is a brand-colored band with white text and white buttons.
@@ -67,7 +69,7 @@ footer, forum link and redirects have their own note, [navigation](/src/modules/
 ## Rules and the tests that protect them
 
 - The layout follows the column sizes, titles start groups: `data/mappers.test.ts`, `ui/ContentBlock.test.tsx`.
-- Hero props per look, empty heroes draw nothing: `data/mappers.pageHero.test.ts`, `ui/PageHero.test.tsx`.
+- Hero props per look, empty heroes draw nothing: `data/mappers.pageHero.test.ts`, `ui/PageHero.test.tsx`, `domain/heroGeometry.test.ts`.
 - Only a Google map embed address is stored or drawn: `cms/mapBlock.test.ts`, `data/mapBlockMapper.test.ts`, `ui/MapBlock.test.tsx`.
 - A save or delete refreshes the right routes and tags: `cms/revalidatePage.test.ts`, `cms/pages.test.ts`.
 - Blocks draw in order by type, unknown types are skipped: `ui/RenderBlocks.test.tsx`.
