@@ -7,29 +7,19 @@ them to the component, and hold them to [the same standards as production code](
 
 ### Pattern: Glass Card
 
-A frosted glass card for overlays, modals, or floating content.
+A frosted glass panel for text that sits on a photo or a busy backdrop. It is the shared
+`GlassPanel` (`src/platform/ui/GlassPanel.tsx`, #1278): the home hero's glass, one look in light and
+dark, with no variants. It darkens itself with a `scrim` layer, so its `on-image` text keeps 4.5:1
+or better over a very bright photo, a mid gray and black (not a pure white photo, #1301). Never write glass classes again, and never add a lighter, darker or
+tinted version: a look the panel lacks is a change to the panel.
 
 ```tsx
-<div className="rounded-2xl border border-on-image/20 bg-on-image/10 p-6 shadow-xl backdrop-blur-md">
-  {/* Card content */}
-</div>
+<GlassPanel className="mt-3">
+  <p className="text-base leading-relaxed text-on-image/90">Card content</p>
+</GlassPanel>
 ```
 
-**Dark variant (on dark backgrounds):**
-
-```tsx
-<div className="rounded-2xl border border-on-image/10 bg-scrim/20 p-6 shadow-xl backdrop-blur-md">
-  {/* Card content */}
-</div>
-```
-
-**Colored variant (brand tint):**
-
-```tsx
-<div className="rounded-2xl border border-primary/20 bg-primary/10 p-6 shadow-xl backdrop-blur-md">
-  {/* Card content */}
-</div>
-```
+---
 
 ### Pattern: Glass Navigation Bar
 

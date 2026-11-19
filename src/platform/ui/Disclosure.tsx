@@ -5,6 +5,7 @@ import React from 'react'
 import { cn } from '@/platform/lib/cn'
 
 import { cardVariants } from './Card'
+import { linkVariants } from './Link'
 import { DisclosureSummary } from './DisclosureSummary.client'
 import { REVEAL_ANCHOR_ATTR } from './reveal.client'
 import { TOUCH_MIN_HEIGHT } from './layoutSizes'
@@ -21,7 +22,7 @@ import { REVEAL_SCROLL_MARGIN } from './scrollMargin'
  * only as tall as its summary (#1111, #1118); `listRow` is a row inside a list (a receipt's): a tinted,
  * borderless button-like summary so it reads as clickable (#1196), with no outer padding, so the
  * list's own indent places it, and a label in `text-list-row`, a little larger than the list's
- * rows; its body goes back to body text with no rule above it (#1163).
+ * rows; its body goes back to body text with no rule above it (#1163). `nav` is a row of the mobile menu, looking like the menu's links, with its links indented under it (#1237).
  */
 // The summary row and chevron the two card-like looks (`card` and `row`) share: one definition each, so they cannot drift
 const CARD_BOX = cardVariants({ variant: 'elevated', padding: 'sm' })
@@ -45,6 +46,8 @@ const summaryVariants = cva(
           TOUCH_MIN_HEIGHT,
           'justify-start text-sm font-semibold text-primary-strong focus-visible:outline-offset-2',
         ),
+        // A row of the mobile menu, looking like its links
+        nav: linkVariants({ variant: 'nav', size: 'md' }),
       },
     },
   },
@@ -61,6 +64,7 @@ const chevronVariants = cva(
         listRow: 'size-5 text-primary-strong',
         bar: 'size-5',
         link: 'size-4',
+        nav: 'size-5',
       },
     },
   },
@@ -74,12 +78,14 @@ const bodyVariants = cva('', {
       listRow: 'pt-3 text-base',
       bar: 'border-t border-border',
       link: 'mt-1',
+      // The links under it, indented with a rule down their left side
+      nav: 'ml-3 border-l border-border pl-2',
     },
   },
 })
 
 export type DisclosureProps = {
-  variant: 'card' | 'row' | 'listRow' | 'bar' | 'link'
+  variant: 'card' | 'row' | 'listRow' | 'bar' | 'link' | 'nav'
   /** The row that stays visible; clicking it opens and closes the box */
   summary: React.ReactNode
   /** Starts open; the reader opens and closes it after that */
@@ -114,8 +120,8 @@ export function Disclosure({
   onOpening,
   revealAnchor,
 }: DisclosureProps) {
-  // The bar is pinned under the site header, so it is never scrolled to: it keeps the plain row
-  const reveal = variant !== 'bar'
+  // The bar is pinned under the site header, and the nav row sits in the menu sheet: neither is scrolled to, they keep the plain row
+  const reveal = variant !== 'bar' && variant !== 'nav'
   const Summary = reveal ? DisclosureSummary : 'summary'
 
   return (
@@ -126,7 +132,7 @@ export function Disclosure({
       className={cn(
         variant === 'card' && CARD_BOX,
         variant === 'row' && 'px-3',
-        variant === 'listRow' && 'disclosure-expand',
+        (variant === 'listRow' || variant === 'nav') && 'disclosure-expand',
         reveal && REVEAL_SCROLL_MARGIN,
         className,
       )}

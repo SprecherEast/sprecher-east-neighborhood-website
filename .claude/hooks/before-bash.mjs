@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
+import { filingCheck } from './filing.mjs'
 import { git, readInput, repoRoot } from './io.mjs'
 import { GENERATED_TYPES, inspect } from './rules.mjs'
 
@@ -24,6 +25,21 @@ const found = inspect(command)
 if (found.reason) block(found.reason)
 
 const cwd = input.cwd || process.cwd()
+
+// An issue created from the command line must pass the issue rules first (#1300)
+if (/\bgh\b/.test(command)) {
+  try {
+    const root = repoRoot(cwd) ?? cwd
+    const policy = JSON.parse(readFileSync(path.join(root, '.github/label-policy.json'), 'utf8'))
+    const filing = filingCheck(command, {
+      policy,
+      readFile: (file) => readFileSync(path.resolve(cwd, file), 'utf8'),
+    })
+    if (filing) block(filing)
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error
+  }
+}
 
 if (found.barePush && git(cwd, 'branch', '--show-current') === 'main') {
   block('AGENTS.md: never push to main; work on a branch and open a pull request.')

@@ -33,3 +33,23 @@ describe('toContentBlockProps link position', () => {
     expect(columns.map((c) => c.linkAlign)).toEqual(['beside'])
   })
 })
+
+describe('toContentBlockProps share bar (#1266)', () => {
+  const bar = { schools: 50, city: 30, county: 15, matc: 5 }
+
+  it('passes on four percents that add up to 100', () => {
+    const props = toContentBlockProps({ columns: [column({ shareBar: bar })] })
+    const columns = 'columns' in props ? props.columns : []
+    expect(columns[0].shareBar).toEqual(bar)
+  })
+
+  it.each([
+    ['one is missing', { ...bar, matc: null }],
+    ['they do not add up', { ...bar, matc: 9 }],
+    ['none is set', {}],
+  ])('leaves the bar out when %s', (_why, shareBar) => {
+    const props = toContentBlockProps({ columns: [column({ shareBar })] })
+    const columns = 'columns' in props ? props.columns : []
+    expect(columns[0].shareBar).toBeUndefined()
+  })
+})

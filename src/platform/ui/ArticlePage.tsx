@@ -61,7 +61,7 @@ export type ArticlePageProps = {
   toc?: React.ReactNode
   /** The related content: related items, a call to action */
   aside: React.ReactNode
-  /** The article's top and bottom space, which a post and an event set differently */
+  /** The article's bottom space, which a post and an event set differently; it has no top space, the title band sets its own (#1279) */
   className?: string
   children: React.ReactNode
 }
@@ -97,7 +97,7 @@ export function ArticlePage({
 
       <PageHeader {...header} />
 
-      <div className="pt-8">
+      <div>
         <div className="container">
           <Breadcrumbs items={breadcrumbs} />
         </div>

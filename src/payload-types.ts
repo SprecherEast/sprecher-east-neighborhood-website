@@ -642,6 +642,15 @@ export interface ContentBlock {
           }
           [k: string]: unknown
         } | null
+        /**
+         * A thin bar under the opening heading, split by percent. Shows only when all four are filled in and add up to 100.
+         */
+        shareBar?: {
+          schools?: number | null
+          city?: number | null
+          county?: number | null
+          matc?: number | null
+        }
         enableLink?: boolean | null
         link?: {
           type?: ('reference' | 'custom') | null
@@ -1895,6 +1904,14 @@ export interface ContentBlockSelect<T extends boolean = true> {
     | {
         size?: T
         richText?: T
+        shareBar?:
+          | T
+          | {
+              schools?: T
+              city?: T
+              county?: T
+              matc?: T
+            }
         enableLink?: T
         link?:
           | T

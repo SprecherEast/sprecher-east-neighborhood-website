@@ -29,8 +29,34 @@ export const PAGE_SHELL = 'py-24'
 /** The least height of a short page or empty state, so it sits in the middle of the screen */
 export const PAGE_MIN_HEIGHT = 'min-h-[var(--page-min-height)]'
 
-/** The least height of a page's hero band */
-export const HERO_MIN_HEIGHT = 'min-h-[var(--hero-min-height)]'
+/**
+ * The home hero is laid out from its photo's horizon (#1304): its geometry (`hero-geometry` in
+ * theme/tailwind.css) turns the photo's ratio and focal point into `--hero-photo-h` and
+ * `--hero-horizon`, and the spaces and the fade are variables in globals.css.
+ */
+
+/**
+ * The photo's box: as tall as the photo at full width and never under the least height, and it
+ * also fills the layer it sits in (the hero and the fade's overlap), so a long description or an
+ * unset focal point can't leave the photo ending in an edge inside the fade. Then the photo only
+ * grows, cropped at the sides.
+ */
+export const HERO_PHOTO_HEIGHT = 'h-[var(--hero-photo-h)] min-h-full'
+
+/** The sky above the horizon, from under the site header: the title sits at its bottom edge */
+export const HERO_SKY_HEIGHT = 'min-h-[max(0px,calc(var(--hero-horizon)_-_var(--header-height)))]'
+
+/** The title's distance above the horizon, and the note's and buttons' distance below it */
+export const HERO_SKY_GAP = 'pb-[var(--hero-sky-gap)]'
+export const HERO_HORIZON_GAP = 'mt-[var(--hero-horizon-gap)]'
+
+/** The space under the note and the buttons, then the next section, which starts a little lower */
+export const HERO_BOTTOM_SPACE = 'pb-[var(--hero-bottom-space)]'
+export const HERO_BELOW_GAP = 'mb-[var(--hero-below-gap)]'
+
+/** The photo runs on under the next section by the fade's overlap, and the fade is this long */
+export const HERO_PHOTO_LAYER_BOTTOM = 'bottom-[calc(var(--hero-fade-overlap)*-1)]'
+export const HERO_FADE_LENGTH = 'h-[var(--hero-fade-length)]'
 
 /**
  * The least height and width of something you tap: 44 px on a phone (WCAG 2.5.8), a compact 36 px

@@ -122,9 +122,26 @@
   --chart-stack-width: 28rem;
   --chart-large-width: 40rem;
 
-  /* The least height of a short page, and of a hero band (#616) */
+  /* The least height of a short page (#616) */
   --page-min-height: 60vh;
-  --hero-min-height: 80vh;
+
+  /* The home hero, laid out from its photo's horizon (#1304). Classes: platform/ui/layoutSizes.ts;
+     the photo's height and the horizon are worked out by `hero-geometry` in theme/tailwind.css.
+     The photo is never shorter than this, so the title and the note fit above and below the
+     horizon on a narrow screen (a taller photo is cropped at the sides) */
+  --hero-photo-min: 610px;
+  --hero-photo-min-md: 540px; /* from the md breakpoint, where the note and the buttons sit side by side */
+  --hero-photo-min-lg: 620px; /* from lg, where the title is larger and takes two lines */
+  /* The title ends this far above the horizon; the note and the buttons start this far below it */
+  --hero-sky-gap: 10px;
+  --hero-horizon-gap: 14px;
+  /* The space under the note, and the next section's lower start (the photo fades over it) */
+  --hero-bottom-space: 24px;
+  --hero-below-gap: 5px;
+  /* The photo fades over this length, the last part of it running under the next section.
+     The photo box fills the hero plus the overlap (`min-h-full`), so the fade always ends on page colour; the photo is only worked out from the horizon when it is already taller */
+  --hero-fade-length: 150px;
+  --hero-fade-overlap: 51px;
 
   /* The "On this page" bar under the site header on phones and tablets (#574) */
   --section-bar-height: 3rem;

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -13,97 +13,62 @@ const items = [
   { href: '/resources/government', label: 'Government', current: true },
 ]
 
-const details = (container: HTMLElement) => container.querySelector('details') as HTMLDetailsElement
+const hrefs = () => screen.getAllByRole('link').map((a) => a.getAttribute('href'))
 
-describe('NavMenu', () => {
-  it('starts closed, with the label as its button and the links inside', () => {
-    const { container } = render(<NavMenu label="Resources" items={items} />)
+describe('NavMenu on a wide screen', () => {
+  it('starts closed, with the label as its button', () => {
+    render(<NavMenu label="Resources" items={items} />)
 
-    expect(details(container).open).toBe(false)
-    expect(screen.getByText('Resources').closest('summary')).toBeTruthy()
-    expect(Array.from(container.querySelectorAll('a')).map((a) => a.getAttribute('href'))).toEqual([
-      '/resources/utilities',
-      '/resources/government',
-    ])
+    expect(screen.getByRole('button', { name: 'Resources' }).getAttribute('aria-expanded')).toBe(
+      'false',
+    )
+    expect(screen.queryByRole('link')).toBeNull()
   })
 
-  it('opens and closes on a click of its label, never on hover', async () => {
+  it('opens on a click, never on hover, and shows its links', async () => {
     const user = userEvent.setup()
-    const { container } = render(<NavMenu label="Resources" items={items} />)
-    const label = screen.getByText('Resources')
+    render(<NavMenu label="Resources" items={items} />)
+    const button = screen.getByRole('button', { name: 'Resources' })
 
-    await user.hover(label)
-    expect(details(container).open).toBe(false)
+    await user.hover(button)
+    expect(screen.queryByRole('link')).toBeNull()
 
-    await user.click(label)
-    expect(details(container).open).toBe(true)
-
-    await user.click(label)
-    expect(details(container).open).toBe(false)
+    await user.click(button)
+    expect(hrefs()).toEqual(['/resources/utilities', '/resources/government'])
+    expect(screen.getByRole('link', { name: 'Government' }).getAttribute('aria-current')).toBe(
+      'page',
+    )
   })
 
-  it('closes on Escape and gives focus back to its label', async () => {
+  it('closes on Escape and on a press outside it', async () => {
     const user = userEvent.setup()
-    const { container } = render(<NavMenu label="Resources" items={items} />)
-    await user.click(screen.getByText('Resources'))
-
-    await user.keyboard('{Escape}')
-
-    expect(details(container).open).toBe(false)
-    expect(document.activeElement).toBe(container.querySelector('summary'))
-  })
-
-  it('closes on a press outside it, and stays open on one inside', async () => {
-    const user = userEvent.setup()
-    const { container } = render(
+    render(
       <>
         <NavMenu label="Resources" items={items} />
         <p>Elsewhere</p>
       </>,
     )
-    await user.click(screen.getByText('Resources'))
+    const button = screen.getByRole('button', { name: 'Resources' })
 
-    fireEvent.pointerDown(screen.getByText('Neighborhood utilities'))
-    expect(details(container).open).toBe(true)
+    await user.click(button)
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('link')).toBeNull()
 
-    fireEvent.pointerDown(screen.getByText('Elsewhere'))
-    expect(details(container).open).toBe(false)
+    await user.click(button)
+    await user.click(screen.getByText('Elsewhere'))
+    expect(screen.queryByRole('link')).toBeNull()
   })
 
-  it('closes when focus moves out of it by keyboard', async () => {
-    const user = userEvent.setup()
-    const { container } = render(
-      <>
-        <NavMenu label="Resources" items={items} />
-        <button type="button">Next</button>
-      </>,
-    )
-    await user.click(screen.getByText('Resources'))
-
-    screen.getByText('Next').focus()
-
-    expect(details(container).open).toBe(false)
-  })
-
-  it('closes and tells the caller when a link is followed', async () => {
+  it('closes when a link is followed, and tells the caller', async () => {
     const user = userEvent.setup()
     const onNavigate = vi.fn()
-    const { container } = render(
-      <NavMenu label="Resources" items={items} onNavigate={onNavigate} />,
-    )
-    await user.click(screen.getByText('Resources'))
+    render(<NavMenu label="Resources" items={items} onNavigate={onNavigate} />)
 
-    await user.click(screen.getByText('Government'))
+    await user.click(screen.getByRole('button', { name: 'Resources' }))
+    await user.click(screen.getByRole('link', { name: 'Neighborhood utilities' }))
 
-    expect(onNavigate).toHaveBeenCalledOnce()
-    expect(details(container).open).toBe(false)
-  })
-
-  it('marks the current page link, and the label when the page is inside the menu', () => {
-    const { container } = render(<NavMenu label="Resources" items={items} />)
-
-    expect(screen.getByText('Government').closest('a')?.getAttribute('aria-current')).toBe('page')
-    expect(container.querySelector('summary')?.getAttribute('data-current')).toBe('true')
+    expect(onNavigate).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('has no accessibility violations, closed or open', async () => {
@@ -111,7 +76,38 @@ describe('NavMenu', () => {
     const { container } = render(<NavMenu label="Resources" items={items} />)
     await expectAccessible(container)
 
+    await user.click(screen.getByRole('button', { name: 'Resources' }))
+    await expectAccessible(document.body)
+  })
+})
+
+describe('NavMenu stacked, in the mobile menu', () => {
+  it('is an expandable row whose links are plain links', async () => {
+    const user = userEvent.setup()
+    const { container } = render(<NavMenu label="Resources" items={items} layout="stacked" />)
+    const box = container.querySelector('details') as HTMLDetailsElement
+
+    expect(box.open).toBe(false)
     await user.click(screen.getByText('Resources'))
+    expect(box.open).toBe(true)
+    expect(hrefs()).toEqual(['/resources/utilities', '/resources/government'])
+  })
+
+  it('tells the caller when a link is followed, and does nothing else to the box', async () => {
+    const user = userEvent.setup()
+    const onNavigate = vi.fn()
+    const { container } = render(
+      <NavMenu label="Resources" items={items} layout="stacked" onNavigate={onNavigate} />,
+    )
+    await user.click(screen.getByText('Resources'))
+    await user.click(screen.getByRole('link', { name: 'Government' }))
+
+    expect(onNavigate).toHaveBeenCalledTimes(1)
+    expect((container.querySelector('details') as HTMLDetailsElement).open).toBe(true)
+  })
+
+  it('has no accessibility violations', async () => {
+    const { container } = render(<NavMenu label="Resources" items={items} layout="stacked" />)
     await expectAccessible(container)
   })
 })

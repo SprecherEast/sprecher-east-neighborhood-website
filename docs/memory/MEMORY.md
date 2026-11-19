@@ -90,8 +90,8 @@ public/images/               Photos, also read by the demo seed (src/endpoints/s
 
 ## Design Tokens (src/app/globals.css @theme block)
 
-- `--color-primary: #3d7a5e` → `bg-primary`, `text-primary`, `border-primary`
-- `--color-accent: #e8923a` → `bg-accent`, `text-accent`
+- `--color-primary: #42755e` → `bg-primary`, `text-primary`, `border-primary`
+- `--color-accent: #d8924a` → `bg-accent`, `text-accent`
 - `--color-background: #f9f8f5` → `bg-background`
 - `--color-surface: #f0ede6` → `bg-surface`
 - `--color-foreground: #1a1a1a` → `text-foreground`

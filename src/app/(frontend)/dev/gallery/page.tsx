@@ -15,6 +15,7 @@ import {
   HeatMapGallery,
   ProgressGallery,
   BarTrackGallery,
+  ShareStripGallery,
   ShareBillGallery,
 } from './ProgressGallery'
 import { FieldsGallery } from './FieldsGallery.client'
@@ -72,6 +73,7 @@ export default function GalleryPage() {
         <DisplayGallery />
         <ProgressGallery />
         <BarTrackGallery />
+        <ShareStripGallery />
         <ShareBillGallery />
         <AreaChartGallery />
         <HeatMapGallery />

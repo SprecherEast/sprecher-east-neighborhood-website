@@ -63,6 +63,17 @@ print(s.PANEL_W, s.TITLE_SIZE, s.BULLET_SIZE)`,
     expect(r.stdout.trim()).toBe('620 66 44')
   })
 
+  it('stands every tree of the signal scene on the grass, off both roads and their sidewalks', () => {
+    const r = run(
+      `import json
+from scripts.illustrations.scenes import signal as s
+spots = [(x, y) for x, y, _ in s.TREE_SPOTS]
+print(json.dumps([[x, y] for x, y in spots if not (x < -s.WALK and y > s.WALK)]))`,
+    )
+    expect(r.stderr).toBe('')
+    expect(JSON.parse(r.stdout)).toEqual([])
+  })
+
   it('scales everything drawn in a scene from one named setting', () => {
     const r = run(
       `from scripts.illustrations import settings as s, parts

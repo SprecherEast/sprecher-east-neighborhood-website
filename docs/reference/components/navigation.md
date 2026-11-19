@@ -79,17 +79,16 @@ Source: `src/platform/ui/PeriodNav.tsx`
 
 ## `NavMenu`
 
-A menu item of the header that opens to more links when pressed, never on hover (#1237). It is a native `<details>`: the label is its button, so it opens and closes with Enter and Space and tells assistive tech which it is. Pressing outside it, pressing Escape (focus returns to the label), moving focus out of it and following a link all close it. `dropdown` is the desktop bar's: the links sit in a panel under the label. `stacked` is the mobile menu's: a full-width row that opens to an indented list, an accordion.
+A menu item of the header that opens to more links when pressed, never on hover (#1237). It adds no behavior of its own: the wide bar's panel is Radix's popover (it closes on Escape, a press outside, and a followed link) and the mobile menu's accordion is the kit's `Disclosure`, whose links are plain links like every other link of that menu.
 
 Source: `src/platform/ui/NavMenu.client.tsx`
 
-| Prop         | Type                      | Required | Description                                                                              |
-| ------------ | ------------------------- | -------- | ---------------------------------------------------------------------------------------- |
-| `label`      | `string`                  | yes      |                                                                                          |
-| `items`      | `readonly NavMenuItem[]`  | yes      |                                                                                          |
-| `layout`     | `"stacked" \| "dropdown"` | no       |                                                                                          |
-| `onNavigate` | `() => void`              | no       | Called when one of the links is followed, for example to close the mobile menu around it |
-| `className`  | `string`                  | no       |                                                                                          |
+| Prop         | Type                      | Required | Description                                                                                  |
+| ------------ | ------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| `label`      | `string`                  | yes      |                                                                                              |
+| `items`      | `readonly NavMenuItem[]`  | yes      |                                                                                              |
+| `layout`     | `"stacked" \| "dropdown"` | no       | `dropdown` is the wide bar's panel under the label; `stacked` is the mobile menu's accordion |
+| `onNavigate` | `() => void`              | no       | Called when one of the links is followed, for example to close the mobile menu around it     |
 
 **Used by** (direct imports):
 

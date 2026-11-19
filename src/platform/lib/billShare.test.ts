@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { computeBillShare, fillFromEarlier, parseHomeValue, type MillRates } from './billShare'
 
-const ALL: MillRates = { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 }
+const ALL: MillRates = { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0141 }
 
 describe('parseHomeValue', () => {
   it.each([
@@ -40,7 +40,7 @@ describe('computeBillShare', () => {
     const bill = computeBillShare(500000, ALL)
     const shares = bill.parts.map((p) => p.share ?? 0)
     expect(shares.reduce((a, b) => a + b, 0)).toBeCloseTo(100, 6)
-    expect(shares[1]).toBeCloseTo((7.0139 / 18.667) * 100, 3)
+    expect(shares[1]).toBeCloseTo((7.0141 / 18.667) * 100, 3)
   })
 
   it('scales the amounts with the home’s value but not the shares', () => {

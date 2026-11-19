@@ -117,5 +117,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Same level and scope as `npm audit --audit-level=high --omit=dev`, plus the written
+      # exceptions in .nsprc: each needs a note and an expiry within 45 days, and stops applying
+      # on its expiry date (#1285; docs/guidelines/security.md).
       - name: Audit for critical/high vulnerabilities
-        run: npm audit --audit-level=high --omit=dev
+        run: npm run audit:prod
