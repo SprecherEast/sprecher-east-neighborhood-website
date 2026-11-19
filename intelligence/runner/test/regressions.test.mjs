@@ -108,6 +108,7 @@ describe('follow-up reports that fail', () => {
       state,
       http: feedsHttp(),
       robots: async () => true,
+      now: () => atNoon('2026-11-16'),
       repoCommit: 'a'.repeat(40),
     })
     assert.equal(state.pendingReports.length, 1)
@@ -122,6 +123,7 @@ describe('follow-up reports that fail', () => {
       state,
       http: feedsHttp(),
       robots: async () => true,
+      now: () => atNoon('2026-11-16'),
       repoCommit: 'a'.repeat(40),
     })
     const sent = up.writes.filter((w) => w.tool === 'reportItem')
