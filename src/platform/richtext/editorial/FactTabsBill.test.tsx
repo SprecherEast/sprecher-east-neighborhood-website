@@ -28,7 +28,7 @@ describe('FactTabs with a whole tax bill', () => {
             label: '2026 rates',
             note: '',
             averageHome: 481300,
-            rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 },
+            rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0141 },
             source: null,
           },
         ],
@@ -37,19 +37,16 @@ describe('FactTabs with a whole tax bill', () => {
     const shown = { tabs: [{ ...present(first), panel: [...present(first).panel, billShare] }] }
     const { container } = setup(shown)
     const panel = present(container.querySelector('[role="tabpanel"]'))
-    present(panel.querySelector('svg[role="img"][aria-label^="Your whole property tax bill"]'))
+    const bill = present(panel.querySelector('ul[aria-label^="Your whole property tax bill"]'))
     expect(panel.querySelector('path[data-pie-slice]')).toBeNull()
     expect(panel.textContent).toContain('Based on the City’s average home.')
     // The tab's own text sits in the panel after the whole bill, inside its closed row
-    const text = panel.textContent ?? ''
-    expect(text.indexOf('Your whole property tax bill')).toBeLessThan(
-      text.indexOf('What the City would spend in 2027'),
-    )
     const row = present(
       Array.from(panel.querySelectorAll('details')).find((each) =>
         each.textContent?.includes('What the City would spend in 2027'),
       ),
     )
+    expect(bill.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(row.textContent).toContain('Why your bill may differ')
     expect(row.open).toBe(false)
   })
@@ -132,7 +129,7 @@ describe('FactTabs with a whole tax bill', () => {
             label: '2026 rates',
             note: '',
             averageHome: 481300,
-            rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 },
+            rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0141 },
             source: null,
           },
         ],

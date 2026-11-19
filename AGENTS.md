@@ -136,23 +136,23 @@ Procedures are [Agent Skills](https://agentskills.io): a folder in `.agents/skil
 `SKILL.md` that starts with a `name` and a `description`. Codex loads them from there, Claude Code
 through the pointers in `.claude/skills/`, and a human reads them as plain Markdown.
 
-| Skill                                                                  | Use it when                                                                |
-| ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| [`change-workflow`](.agents/skills/change-workflow/SKILL.md)           | Before any change: issue, branch, PR, review, checks, merge.               |
-| [`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)                   | A PR depends on another open PR, or a PR in a stack has to change.         |
-| [`write-code`](.agents/skills/write-code/SKILL.md)                     | Writing, moving or reviewing code: where it goes, reuse, tests, the rules. |
-| [`self-review`](.agents/skills/self-review/SKILL.md)                   | A change is done: review your own diff before opening or updating the PR.  |
-| [`visual-design-review`](.agents/skills/visual-design-review/SKILL.md) | The change affects how pages look, or you make an image for the site.      |
-| [`pr-review`](.agents/skills/pr-review/SKILL.md)                       | You are the independent reviewer of a PR you didn't write.                 |
-| [`wrapped`](.agents/skills/wrapped/SKILL.md)                           | After a merge: verify it, check the deploy, close the loop, report.        |
-| [`project-tracking`](.agents/skills/project-tracking/SKILL.md)         | Picking up, filing or reporting work: epics, milestones, sprint, blockers. |
-| [`chief-of-staff`](.agents/skills/chief-of-staff/SKILL.md)             | You are the chief of staff: open questions, grooming, overlap, briefs.     |
+| Skill                                                                  | Use it when                                                       |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [`change-workflow`](.agents/skills/change-workflow/SKILL.md)           | Before any change: issue to merge.                                |
+| [`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)                   | A PR depends on another open PR, or one in a stack changes.       |
+| [`write-code`](.agents/skills/write-code/SKILL.md)                     | Writing or moving code: where it goes, reuse, tests.              |
+| [`self-review`](.agents/skills/self-review/SKILL.md)                   | A change is done: review your own diff before the PR.             |
+| [`visual-design-review`](.agents/skills/visual-design-review/SKILL.md) | The change affects how pages look, or an image.                   |
+| [`make-illustration`](.agents/skills/make-illustration/SKILL.md)       | You make a post or event picture.                                 |
+| [`pr-review`](.agents/skills/pr-review/SKILL.md)                       | You review a PR you didn't write.                                 |
+| [`wrapped`](.agents/skills/wrapped/SKILL.md)                           | After a merge: verify, check the deploy, report.                  |
+| [`project-tracking`](.agents/skills/project-tracking/SKILL.md)         | Picking up, filing or reporting work: epics, sprint, blockers.    |
+| [`chief-of-staff`](.agents/skills/chief-of-staff/SKILL.md)             | You are the chief of staff: questions, grooming, overlap, briefs. |
 
-Two skills come from Vercel, unchanged (MIT, source in each `SOURCE.md`, #424):
+Two skills come unchanged from Vercel (MIT, `SOURCE.md` in each, #424):
 [`vercel-react-best-practices`](.agents/skills/vercel-react-best-practices/SKILL.md) for React and
 Next.js performance, and [`vercel-composition-patterns`](.agents/skills/vercel-composition-patterns/SKILL.md)
-for component APIs. `write-code` and the reviews apply them; this repo's own rules come first
-where they differ.
+for component APIs. `write-code` and the reviews apply them; this repo's rules come first.
 
 ## Where knowledge lives
 

@@ -23,6 +23,7 @@ import type {
   ContentBlockProps,
   ContentCardGroup,
   ContentColumn,
+  ShareBarPercents,
   ContentLayout,
   MapBlockProps,
   SectionBlockProps,
@@ -75,17 +76,35 @@ function isTitleOnly({ enableLink, richText }: StoredColumn): boolean {
   return !enableLink && nodes.length > 0 && nodes.every((node) => node.type === 'heading')
 }
 
+/** The share bar's percents, when all four are set and add up to 100; otherwise none (#1266) */
+function toShareBar(stored: StoredColumn['shareBar']): ShareBarPercents | undefined {
+  const { schools, city, county, matc } = stored ?? {}
+  if (
+    typeof schools !== 'number' ||
+    typeof city !== 'number' ||
+    typeof county !== 'number' ||
+    typeof matc !== 'number'
+  )
+    return undefined
+  return Math.round(schools + city + county + matc) === 100
+    ? { schools, city, county, matc }
+    : undefined
+}
+
 function toContentColumn({
   size,
   richText,
+  shareBar,
   enableLink,
   link,
   linkAlign,
 }: StoredColumn): ContentColumn {
   const resolved = enableLink ? resolveLink(link) : null
+  const bar = toShareBar(shareBar)
   return {
     size: size ?? 'full',
     ...(richText && { body: richText }),
+    ...(bar && { shareBar: bar }),
     ...(resolved && { link: resolved }),
     ...(resolved && (linkAlign === 'end' || linkAlign === 'beside') && { linkAlign }),
   }
@@ -224,9 +243,23 @@ export function toPageHeroProps({
  * the ones that go nowhere and the Contact page (the header has its own button) left out.
  */
 export function toHeaderNavLinks({ navItems }: Pick<Header, 'navItems'>): HeaderNavLink[] {
-  return (navItems ?? []).flatMap(({ link }) => {
+  return (navItems ?? []).flatMap(({ link, subItems }) => {
     const resolved = resolveLink(link)
     if (!resolved || isHeaderButtonPath(resolved.href)) return []
-    return [{ href: resolved.href, label: resolved.label, external: resolved.external }]
+
+    const children = (subItems ?? []).flatMap(({ link: subLink }) => {
+      const child = resolveLink(subLink)
+      return child ? [{ href: child.href, label: child.label, external: child.external }] : []
+    })
+
+    return [
+      {
+        href: resolved.href,
+        label: resolved.label,
+        external: resolved.external,
+        // With no usable submenu link the item stays a plain link
+        ...(children.length > 0 && { children }),
+      },
+    ]
   })
 }

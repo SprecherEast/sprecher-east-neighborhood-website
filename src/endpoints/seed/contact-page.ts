@@ -39,7 +39,7 @@ export const contact: (args: ContactArgs) => RequiredDataFromCollectionSlug<'pag
                 text('Check out our '),
                 linkNode('FAQ', '/faq'),
                 text(' for answers to common questions, or visit our '),
-                linkNode('Resources', '/resources'),
+                linkNode('Resources', '/resources/utilities'),
                 text(' page for local contacts and services.'),
               ),
             ]),

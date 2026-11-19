@@ -154,7 +154,8 @@ describe('Chart', () => {
     it('gives the drawing the small width and marks it as the click target', () => {
       const { container } = render(<Chart spec={spec} />)
       const drawing = container.querySelector('[data-chart-drawing]') as HTMLElement
-      expect(drawing.className).toContain('max-w-[var(--chart-small-width)]')
+      expect(drawing.className).toContain('max-w-[var(--chart-stack-width)]')
+      expect(drawing.className).toContain('@2xl/chart:max-w-[var(--chart-small-width)]')
       expect(drawing.querySelector('svg[role="img"]')).toBeTruthy()
     })
 
@@ -165,7 +166,9 @@ describe('Chart', () => {
       const has = (root: ParentNode, token: string) =>
         classesOf(root).some((classes) => classes.split(' ').includes(token))
       const [largeToken] = CHART_LARGE_WIDTH.split(' ')
-      expect(has(container, CHART_SMALL_WIDTH)).toBe(true)
+      const [smallToken] = CHART_SMALL_WIDTH.split(' ')
+      expect(has(container, smallToken)).toBe(true)
+      expect(has(container, '@2xl/chart:max-w-[var(--chart-small-width)]')).toBe(true)
       expect(has(container, largeToken)).toBe(false)
 
       await userEvent.click(enlarge(spec.title) as HTMLElement)
@@ -190,7 +193,7 @@ describe('Chart', () => {
 
     it('sets no small width on the text adapter’s words', () => {
       const { container } = render(<Chart spec={spec} adapter={textAdapter} />)
-      expect(container.querySelector(`[class~="${CHART_SMALL_WIDTH}"]`)).toBeNull()
+      expect(container.querySelector(`[class~="${CHART_SMALL_WIDTH.split(' ')[0]}"]`)).toBeNull()
     })
 
     it('keeps one drawing, one table and unique ids when enlarged, all real text', async () => {

@@ -263,7 +263,7 @@ describe('FactTabs enlarge choice (#686)', () => {
     expect(within(panel()).getAllByRole('button', { name: /Enlarge chart/ })).toHaveLength(1)
     expect(off?.closest('[data-zoom-holder]')).toBeNull()
     expect(on?.closest('[data-zoom-holder]')).not.toBeNull()
-    expect(off?.className).toContain('max-w-[var(--chart-small-width)]')
+    expect(off?.className).toContain('max-w-[var(--chart-stack-width)]')
     expect(off?.className).toBe(on?.className)
   })
 

@@ -129,7 +129,7 @@ Source: `src/platform/ui/CardGrid.tsx`
 **Used by** (direct imports):
 
 - Modules: `events`, `news`, `site`
-- Routes: `/dev/gallery`, `/resources`
+- Routes: `/dev/gallery`, `/resources/[group]`
 - Platform: `platform/richtext`
 
 ## `CardGridItem`
@@ -147,5 +147,5 @@ Source: `src/platform/ui/CardGrid.tsx`
 **Used by** (direct imports):
 
 - Modules: `events`, `news`, `site`
-- Routes: `/dev/gallery`, `/resources`
+- Routes: `/dev/gallery`, `/resources/[group]`
 - Platform: `platform/richtext`

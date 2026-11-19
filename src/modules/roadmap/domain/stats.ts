@@ -10,7 +10,6 @@ const DAY_MS = 86_400_000
 export type PlanStats = {
   open: number
   done: number
-  doneThisWeek: number
 }
 
 const doneWithin = (issues: PlanIssue[], days: number, now: Date) =>
@@ -58,18 +57,13 @@ export function dueIn(dueOn: string, now: Date): number {
 }
 
 /**
- * The numbers at the top of the page: counts of the issues the plan shows (so screened ones are
- * never in them). An issue decided against
- * is in neither the open nor the done count.
+ * How many issues the plan shows, open and done (screened ones are never in them). An issue
+ * decided against is in neither count.
  */
 export function planStats(plan: Plan, now: Date): PlanStats {
   const epics = [...plan.milestones.flatMap((m) => m.epics), ...plan.unscheduled]
   const issues = epics.flatMap((epic) => epic.children)
-  const { open, done, doneThisWeek } = issueProgress(issues, now)
+  const { open, done } = issueProgress(issues, now)
 
-  return {
-    open,
-    done,
-    doneThisWeek,
-  }
+  return { open, done }
 }

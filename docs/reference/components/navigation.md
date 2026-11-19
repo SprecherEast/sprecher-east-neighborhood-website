@@ -57,6 +57,60 @@ Source: `src/platform/ui/LoadMore.client.tsx`
 - Modules: `events`, `news`
 - Routes: `/dev/gallery`
 
+## `PeriodNav`
+
+Source: `src/platform/ui/PeriodNav.tsx`
+
+| Prop               | Type         | Required | Description                                                          |
+| ------------------ | ------------ | -------- | -------------------------------------------------------------------- |
+| `title`            | `string`     | yes      |                                                                      |
+| `previousLabel`    | `string`     | yes      | What assistive technology calls each button, such as "Earlier month" |
+| `nextLabel`        | `string`     | yes      |                                                                      |
+| `onPrevious`       | `() => void` | yes      |                                                                      |
+| `onNext`           | `() => void` | yes      |                                                                      |
+| `previousDisabled` | `boolean`    | no       | A direction that cannot go any further                               |
+| `nextDisabled`     | `boolean`    | no       |                                                                      |
+| `className`        | `string`     | no       |                                                                      |
+
+**Used by** (direct imports):
+
+- Modules: `roadmap`
+- Routes: `/dev/gallery`
+
+## `NavMenu`
+
+A menu item of the header that opens to more links when pressed, never on hover (#1237). It adds no behavior of its own: the wide bar's panel is Radix's popover (it closes on Escape, a press outside, and a followed link) and the mobile menu's accordion is the kit's `Disclosure`, whose links are plain links like every other link of that menu.
+
+Source: `src/platform/ui/NavMenu.client.tsx`
+
+| Prop         | Type                      | Required | Description                                                                                  |
+| ------------ | ------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| `label`      | `string`                  | yes      |                                                                                              |
+| `items`      | `readonly NavMenuItem[]`  | yes      |                                                                                              |
+| `layout`     | `"stacked" \| "dropdown"` | no       | `dropdown` is the wide bar's panel under the label; `stacked` is the mobile menu's accordion |
+| `onNavigate` | `() => void`              | no       | Called when one of the links is followed, for example to close the mobile menu around it     |
+
+**Used by** (direct imports):
+
+- Modules: `site`
+- Routes: `/dev/gallery`
+
+## `RelatedLinks`
+
+A titled list of links to related pages, for the related content of a page (`DetailLayout`'s `aside`): under the content on a phone, in the rail beside it from `lg`. Each link is a tap tall. Shows nothing without items.
+
+Source: `src/platform/ui/RelatedLinks.tsx`
+
+| Prop        | Type                     | Required | Description |
+| ----------- | ------------------------ | -------- | ----------- |
+| `title`     | `string`                 | yes      |             |
+| `items`     | `readonly RelatedLink[]` | yes      |             |
+| `className` | `string`                 | no       |             |
+
+**Used by** (direct imports):
+
+- Routes: `/dev/gallery`, `/resources/[group]`
+
 ## `AdminBar`
 
 Source: `src/platform/ui/AdminBar.client.tsx`

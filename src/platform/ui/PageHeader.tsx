@@ -69,6 +69,12 @@ const titleVariants = cva('font-bold text-balance', {
 
 const EYEBROW_CLASS = 'mb-3'
 
+// The band's space above and below its title is one value, so the two can't drift apart (#1279):
+// the title sits that far under the site header, and that far above the band's lower edge. The band
+// slides under the header, so the top padding is the header's height plus the gap.
+const BAND_PADDING =
+  '[--band-gap:calc(var(--spacing)*6)] pt-[calc(var(--header-height)+var(--band-gap))] pb-(--band-gap)'
+
 /*
  * The top of a page (#430, docs/ui/component-set.md). `default` heads a list page: eyebrow, title,
  * description, an optional way back and control, left-aligned. `compact` is the small header of a form page, inside the page's own column.
@@ -127,13 +133,7 @@ function BandHeader({ eyebrow, title, backdrop, className }: BandHeaderProps) {
         )}
       >
         <BandBackdrop backdrop={backdrop} />
-        <div
-          className={cn(
-            'container pt-[var(--header-height)] pb-6',
-            photo && 'relative',
-            DETAIL_GRID,
-          )}
-        >
+        <div className={cn('container', BAND_PADDING, photo && 'relative', DETAIL_GRID)}>
           {/* From `lg` the title is in the article's column, the one `DetailLayout` gives the picture
               and the text, so they share a left edge (the grid is defined once, in layoutSizes) */}
           <div className="lg:col-start-2">

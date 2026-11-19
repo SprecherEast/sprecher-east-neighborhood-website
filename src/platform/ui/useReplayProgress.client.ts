@@ -11,9 +11,9 @@ export const FILL_MS = 1000
  * The progress of a fill, from 0 to 1, that replays each time `run` changes (#1163): a row that
  * opens grows its bars and counts its amounts up from nothing with it. It starts at 1, so the first
  * paint and a page without scripting show the final figures, and it stays at 1 for a reader who asked
- * for less motion.
+ * for less motion. `delayMs` holds it at nothing first, for a row still expanding (#1170).
  */
-export function useReplayProgress(run: number, durationMs = FILL_MS): number {
+export function useReplayProgress(run: number, durationMs = FILL_MS, delayMs = 0): number {
   const [state, setState] = useState({ run, progress: 1 })
   if (state.run !== run) {
     // Adjusting state while rendering: a new run starts from nothing, unless motion is reduced
@@ -26,16 +26,17 @@ export function useReplayProgress(run: number, durationMs = FILL_MS): number {
     let start: number | null = null
     let frame = 0
     const tick = (time: number) => {
-      start ??= time
+      start ??= time + delayMs
       const elapsed = Math.min((time - start) / durationMs, 1)
-      setState({ run, progress: elapsed >= 1 ? 1 : easeOut(elapsed) })
+      // Still waiting: nothing to draw yet, only the next frame to ask for
+      if (elapsed > 0) setState({ run, progress: elapsed >= 1 ? 1 : easeOut(elapsed) })
       if (elapsed < 1) frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
     // Starts once per run: the ticks themselves change progress
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [run, durationMs])
+  }, [run, durationMs, delayMs])
 
   return state.run === run ? state.progress : prefersReducedMotion() ? 1 : 0
 }

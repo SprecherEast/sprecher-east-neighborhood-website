@@ -19,7 +19,7 @@ paths:
 
 1. Check the package on npm — look at weekly downloads, last publish date, and maintainer count
 2. Prefer packages that are widely used (>1M weekly downloads) and actively maintained (<6 months since last publish)
-3. Run `npm audit` after every `npm install` — if new vulnerabilities appear, fix them before committing
+3. Run `npm run audit:prod` after every `npm install` — if new vulnerabilities appear, fix them before committing
 4. Avoid packages with known CVEs. If a CVE exists, check if a patched version is available first
 5. Prefer built-in Node.js/Next.js features over third-party packages when possible (fewer deps = smaller attack surface)
 
@@ -85,8 +85,8 @@ paths:
 Four layers of protection against vulnerable dependencies:
 
 1. **Agent rules** (during development): Check packages before installing, run audit after install, fix before committing
-2. **Pre-commit hook** (local): `npm audit --audit-level=high --omit=dev` warns if production deps have high/critical vulnerabilities
-3. **CI pipeline** (PR gate): `npm audit --audit-level=high --omit=dev` blocks merging if any high/critical production vulnerabilities are found
+2. **Pre-commit hook** (local): `npm run audit:prod` (below) warns if production deps have high/critical vulnerabilities
+3. **CI pipeline** (PR gate): `npm run audit:prod` blocks merging if any high/critical production vulnerabilities are found; it is `npm audit --audit-level=high --omit=dev` run through `better-npm-audit`, so it also reads the written exceptions in `.nsprc`
 4. **Dependabot** (ongoing): Weekly scans with grouped PRs — patches batched together, majors get individual PRs
 
 When fixing transitive vulnerabilities:
@@ -94,13 +94,14 @@ When fixing transitive vulnerabilities:
 - Use `overrides` in package.json scoped to the parent package (not global overrides)
 - Dismiss unfixable alerts with a clear comment explaining why (e.g., dev-only, no upstream fix available)
 - Document any overrides in PR description so reviewers understand the tradeoff
+- When no fixed release exists and no override can help, the one allowed way past the gate is an entry in `.nsprc` keyed by the advisory ID (`GHSA-...`) with `notes` (what it is, why it does not reach visitors, link to the upstream fix) and an `expiry` date. `audit:prod` fails an entry without notes or expiry, or with an expiry more than 45 days out, and an entry stops applying on its expiry date, so the gate goes red again and forces a re-check. Aim for about 30 days. Each entry has an open issue that says how to remove it. A new entry, or a later expiry on an existing one, needs the owner's decision recorded on that issue. `.nsprc` is the only exceptions file: `audit:prod` fails if `.nsprc.js` or `.nsprc.cjs` exists, because better-npm-audit reads those first and they could compute an expiry at run time. Never lower the level, skip the job or list a whole module
 
 ## Infrastructure Security
 
 - SSH key-based auth only on VPS (no password auth)
 - Caddy handles SSL/TLS automatically when domain is configured
 - PM2 runs the app as a managed process (auto-restart on crash)
-- GitHub Actions secrets store VPS credentials (never in code)
+- The VPS credentials are secrets of the GitHub environment `production`, which only runs from `main` (never in code; [where they live](/ops/README.md#where-the-deploy-secrets-live))
 - **NEVER overwrite `/etc/caddy/Caddyfile`** — always read it first, then ADD new server blocks. The automated exceptions run by every deploy, each refusing any edit that changes more than its own: `ops/caddy-limits.sh` adds an `import` line inside the site blocks that proxy to the app (#124); `ops/caddy-https.sh` adds an HSTS `import` line to the domain's HTTPS block and a `redir` line to the site blocks that serve plain HTTP (#235); `ops/install-umami.sh` adds one top-level `import` line for Umami's own site block, only after Umami's default admin password is replaced, and each deploy makes the route file it points at a closed 503 block (Caddy reloaded) unless both the Umami and database containers are running (#948)
 - Always back up before editing: `cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak`
 - Always validate before reloading: `caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy`

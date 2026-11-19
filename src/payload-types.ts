@@ -642,6 +642,15 @@ export interface ContentBlock {
           }
           [k: string]: unknown
         } | null
+        /**
+         * A thin bar under the opening heading, split by percent. Shows only when all four are filled in and add up to 100.
+         */
+        shareBar?: {
+          schools?: number | null
+          city?: number | null
+          county?: number | null
+          matc?: number | null
+        }
         enableLink?: boolean | null
         link?: {
           type?: ('reference' | 'custom') | null
@@ -1895,6 +1904,14 @@ export interface ContentBlockSelect<T extends boolean = true> {
     | {
         size?: T
         richText?: T
+        shareBar?:
+          | T
+          | {
+              schools?: T
+              city?: T
+              county?: T
+              matc?: T
+            }
         enableLink?: T
         link?:
           | T
@@ -2764,6 +2781,29 @@ export interface Header {
           url?: string | null
           label: string
         }
+        /**
+         * Optional. With links here the item opens a menu of them when pressed, and its own link is not followed.
+         */
+        subItems?:
+          | {
+              link: {
+                type?: ('reference' | 'custom') | null
+                newTab?: boolean | null
+                reference?:
+                  | ({
+                      relationTo: 'pages'
+                      value: number | Page
+                    } | null)
+                  | ({
+                      relationTo: 'posts'
+                      value: number | Post
+                    } | null)
+                url?: string | null
+                label: string
+              }
+              id?: string | null
+            }[]
+          | null
         id?: string | null
       }[]
     | null
@@ -2837,6 +2877,20 @@ export interface HeaderSelect<T extends boolean = true> {
               reference?: T
               url?: T
               label?: T
+            }
+        subItems?:
+          | T
+          | {
+              link?:
+                | T
+                | {
+                    type?: T
+                    newTab?: T
+                    reference?: T
+                    url?: T
+                    label?: T
+                  }
+              id?: T
             }
         id?: T
       }

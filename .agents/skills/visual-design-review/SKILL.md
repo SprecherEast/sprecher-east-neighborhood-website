@@ -11,6 +11,9 @@ when it is published through the CMS and no diff exists (#812). Skip it for back
 config-only, or docs-only changes. Fix every Critical and High finding before opening the PR or
 publishing the image.
 
+**Making the image:** use the [`make-illustration`](../make-illustration/SKILL.md) skill; this review is
+its last step.
+
 **Images made for the site:** review the finished file against
 [Images made for the site](../../../docs/guidelines/images.md):
 open the component that shows it to find what overlays it, preview the image at the card size on a
@@ -78,7 +81,7 @@ If no pattern fits, write a new one, test it at all six widths, and add it to th
 prescribing it.
 
 Use design tokens (`src/platform/theme/tokens.ts`) in every fix, and name them. Never hardcode a
-color; the one exception is `rgba(0,0,0,…)` for image scrims and shadows, where no token fits.
+color: scrims and shadows on photos use the `scrim` token, and the theme lint rejects a color value.
 
 End with an **implementation plan**: findings grouped into tasks, with the affected files, the
 tokens, and a rough effort for each, plus any pattern worth adding to the design system.

@@ -21,7 +21,12 @@ export type ContentColumn = {
    * it right of the text, its bottom level with the text's last line.
    */
   linkAlign?: 'end' | 'beside'
+  /** The shares of the property tax bill, in percent, drawn as a thin bar under the opening heading */
+  shareBar?: ShareBarPercents
 }
+
+/** The four bodies a property tax bill splits between, as the editor entered them (each 0 to 100) */
+export type ShareBarPercents = { schools: number; city: number; county: number; matc: number }
 
 /** Cards under an optional section title: a column holding only a heading starts a group */
 export type ContentCardGroup = {

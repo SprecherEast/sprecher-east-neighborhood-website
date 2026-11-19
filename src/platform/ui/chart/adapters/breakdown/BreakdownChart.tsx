@@ -2,16 +2,18 @@ import React from 'react'
 
 import { cn } from '@/platform/lib/cn'
 import {
-  formatMillions,
   formatShare,
   formatSquareValue,
   type BreakdownModel,
   type BreakdownPiece,
 } from '@/platform/lib/chart/breakdown'
+import { BarTrack } from '@/platform/ui/BarTrack'
 import { Disclosure } from '@/platform/ui/Disclosure'
 import { Text } from '@/platform/ui/Text'
 
 import { rampAt } from '../../chartPalette'
+
+import { Amount } from './Amount'
 
 /** The key's heading, also the name of its list */
 const KEY_TITLE = 'Where the money goes'
@@ -48,36 +50,32 @@ function Bar({
   const height = look.compact ? (nested ? 'h-1.5' : 'h-2.5') : nested ? 'h-2' : 'h-3.5'
   const radius = look.compact ? (nested ? 3 : 5) : nested ? 4 : 7
   return (
-    <svg aria-hidden="true" focusable="false" className={cn('block w-full', height)}>
-      <rect width="100%" height="100%" rx={radius} className="fill-muted" />
-      <g className={look.fill ? 'chart-fill-x' : 'chart-reveal-x'}>
-        <rect
-          data-chart-mark={piece.key}
-          width={`${(piece.share * scale).toFixed(2)}%`}
-          height="100%"
-          rx={radius}
-          className={cn(ramp.fill, 'stroke-chart-ramp-edge')}
-          strokeWidth={2}
-        />
-      </g>
-    </svg>
+    <BarTrack
+      width={piece.share * scale}
+      radius={radius}
+      className={height}
+      fillClassName={ramp.fill}
+      mark={{ 'data-chart-mark': piece.key }}
+      reveal={look.fill ? 'chart-fill-x' : 'chart-reveal-x'}
+      edge={{ className: 'stroke-chart-ramp-edge', width: 2 }}
+    />
   )
 }
 
-/** A label, a bar, the dollars and the percent: on a phone the bar drops under the label */
+/** A label, a bar, the percent and the dollars flush right, as on a bill (#1184): on a phone the bar drops under the label */
 function BarRow({ piece, nested, area, scale, look }: RowProps) {
   const ramp = rampAt(piece.step)
   return (
     <li
       data-breakdown-row={piece.key}
       className={cn(
-        'grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-3 gap-y-1 py-1.5 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_4.5rem_3rem]',
+        'grid grid-cols-[minmax(0,1fr)_2.75rem_4rem] items-center gap-x-2 gap-y-1 py-1.5 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_3rem_4.5rem] sm:gap-x-3',
         nested && 'ml-1 border-l-2 pl-2.5 sm:ml-2.5 sm:pl-3.5',
         nested === 'area' && ramp.border,
         nested === 'flat' && 'border-border',
       )}
     >
-      <span data-label className="min-w-0">
+      <span data-label className="min-w-0 wrap-break-word hyphens-auto">
         <Text
           variant="small"
           as="span"
@@ -94,6 +92,9 @@ function BarRow({ piece, nested, area, scale, look }: RowProps) {
       <span className="order-last col-span-full row-start-2 sm:order-none sm:col-span-1 sm:col-start-2 sm:row-start-1">
         <Bar piece={piece} nested={Boolean(nested)} scale={scale} look={look} />
       </span>
+      <Text variant="small" as="span" className="text-right tabular-nums">
+        {formatShare(piece.share)}
+      </Text>
       <Text
         variant="small"
         as="span"
@@ -102,10 +103,9 @@ function BarRow({ piece, nested, area, scale, look }: RowProps) {
           nested ? 'font-medium' : 'font-semibold text-foreground',
         )}
       >
-        <span data-amount>{formatMillions(piece.value)}</span>
-      </Text>
-      <Text variant="small" as="span" className="text-right tabular-nums">
-        {formatShare(piece.share)}
+        <span data-amount>
+          <Amount piece={piece} />
+        </span>
       </Text>
     </li>
   )
@@ -186,7 +186,7 @@ export function BreakdownChart({
                       as="span"
                       className="font-semibold text-foreground tabular-nums"
                     >
-                      {formatMillions(area.value)}
+                      <Amount piece={area} />
                     </Text>
                   </li>
                 ))}

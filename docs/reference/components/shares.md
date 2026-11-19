@@ -4,17 +4,21 @@
 
 One whole drawn as a bar, or as a bill with a receipt.
 
-## `ShareBar`
+## `BarTrack`
 
-One whole as a flat bar of slices (#1018, #1111, #1121), in the order given, with the tones of `shareTones.ts`. It is one SVG whose widths are percent attributes, never inline styles. Each slice is as wide as its share and writes its label in it, in the tone's own label color (4.5:1 on its fill). A slice too narrow for its label is drawn at the least width that fits it, the extra taken from the other slices in proportion (`widenToFit`), so every label is read; the caller's receipt keeps the exact figures. Once on the page the bar measures its labels and its own width and keeps doing so as either changes; before that, and with scripting off, it guesses the labels' width. Every slice is also named in text by the caller, so no slice is told by its color alone. The bar is one named picture for screen readers whose `label` the caller writes.
+One bar on its track: a muted rounded track and, on it, a fill as wide as `width` (a percent, 0 to 100), the way the bill's rows and the breakdown's rows both draw it (#1196). The caller sets the height through `className` and says what the mark is through `mark` (a `data-*` attribute tests and scripts find it by). `reveal` is a class that animates the fill when drawn; `edge` outlines it.
 
-Source: `src/platform/ui/ShareBar.client.tsx`
+Source: `src/platform/ui/BarTrack.tsx`
 
-| Prop        | Type                       | Required | Description                            |
-| ----------- | -------------------------- | -------- | -------------------------------------- |
-| `slices`    | `readonly ShareBarSlice[]` | yes      |                                        |
-| `label`     | `string`                   | yes      | What the bar shows, for screen readers |
-| `className` | `string`                   | no       |                                        |
+| Prop            | Type                                    | Required | Description                                           |
+| --------------- | --------------------------------------- | -------- | ----------------------------------------------------- |
+| `width`         | `number`                                | yes      |                                                       |
+| `radius`        | `number`                                | yes      |                                                       |
+| `className`     | `string`                                | no       | The svg's classes: its height, and any spacing        |
+| `fillClassName` | `string`                                | yes      | The fill's color: a `fill-*` class from a theme token |
+| `mark`          | `Record<`data-${string}`, string>`      | yes      |                                                       |
+| `reveal`        | `string`                                | no       |                                                       |
+| `edge`          | `{ className: string; width: number; }` | no       | The classes and width of an outline around the fill   |
 
 **Used by** (direct imports):
 
@@ -23,21 +27,39 @@ Source: `src/platform/ui/ShareBar.client.tsx`
 
 ## `ShareBill`
 
-One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, one bar whose slices are as wide as their shares, and under it a receipt that names every slice with its color, dollars and percent, in the bar's own order, since both are made from the same slices. The highlighted slice's row has a soft primary fill and bolder text (the tone's `row`), and every row has the same side padding, so the columns stay level. The receipt is one grid of three columns with fixed widths for the percent and the amount, so each column lines up from row to row and the block keeps its height when the amounts change. The total flashes the accent once each time `pulseKey` changes, unless motion is reduced. The caller writes `label`, what the bar says to screen readers. `nested` puts extra content, such as an open-and-close row about one slice, as a row of its own directly under that slice's row, indented to its name (#1163).
+One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, then one row for every slice with its name, percent and dollars and, under them, its own bar in the slice's color, drawn like the City breakdown's (#1196). The bars share one scale, the largest slice's, and every row is built the same way, so the rows and bars sit level. The receipt is one grid of three columns with fixed widths for the percent and the amount, so each column lines up from row to row and the block keeps its height when the amounts change. The total flashes the accent once each time `pulseKey` changes, unless motion is reduced. The caller writes `label`, the name the list has for screen readers (the list's name). `nested` puts extra content, such as an open-and-close row about one slice, as a row of its own directly under that slice's row, indented to its name (#1163).
 
 Source: `src/platform/ui/ShareBill.tsx`
 
-| Prop        | Type                                      | Required | Description                                                            |
-| ----------- | ----------------------------------------- | -------- | ---------------------------------------------------------------------- |
-| `slices`    | `readonly ShareSlice[]`                   | yes      |                                                                        |
-| `label`     | `string`                                  | yes      |                                                                        |
-| `title`     | `string`                                  | no       | The bill's name, at the top with no amount beside it                   |
-| `total`     | `{ label: string; amount: string; }`      | no       | What the amounts add up to: the last line, as on a receipt             |
-| `pulseKey`  | `number`                                  | no       | Changes each time the total should flash once                          |
-| `nested`    | `{ after: string; children: ReactNode; }` | no       | Content shown as a row of its own under the slice whose key is `after` |
-| `className` | `string`                                  | no       |                                                                        |
+| Prop        | Type                                      | Required | Description                                                                             |
+| ----------- | ----------------------------------------- | -------- | --------------------------------------------------------------------------------------- |
+| `slices`    | `readonly ShareSlice[]`                   | yes      |                                                                                         |
+| `label`     | `string`                                  | yes      |                                                                                         |
+| `title`     | `string`                                  | no       | The bill's name, at the top with no amount beside it                                    |
+| `titleId`   | `string`                                  | no       | An id for the title, so a row inside the bill can keep it in view when it opens (#1178) |
+| `total`     | `{ label: string; amount: string; }`      | no       | What the amounts add up to: the last line, as on a receipt                              |
+| `pulseKey`  | `number`                                  | no       | Changes each time the total should flash once                                           |
+| `nested`    | `{ after: string; children: ReactNode; }` | no       | Content shown as a row of its own under the slice whose key is `after`                  |
+| `className` | `string`                                  | no       |                                                                                         |
 
 **Used by** (direct imports):
 
 - Routes: `/dev/gallery`
 - Platform: `platform/richtext`
+
+## `ShareStrip`
+
+A whole as one slim row of colored segments, each as wide as its share and in its tone (the same colors as the bill's bars, #1266). It carries no numbers of its own: one label tells screen readers every part and its percent. The caller sets any spacing through `className`.
+
+Source: `src/platform/ui/ShareStrip.tsx`
+
+| Prop        | Type                        | Required | Description                                            |
+| ----------- | --------------------------- | -------- | ------------------------------------------------------ |
+| `parts`     | `readonly ShareStripPart[]` | yes      |                                                        |
+| `label`     | `string`                    | yes      | What the row shows, which the spoken label starts with |
+| `className` | `string`                    | no       |                                                        |
+
+**Used by** (direct imports):
+
+- Modules: `site`
+- Routes: `/dev/gallery`

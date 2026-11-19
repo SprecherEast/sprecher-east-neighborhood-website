@@ -4,30 +4,29 @@ import type { BarModel, BarSegment } from './barModel'
 
 /*
  * Where everything goes in the drawing, in SVG units (#663). The svg scales with its container, so
- * these are proportions; the width is small on purpose, so the text stays legible on a phone: on a
- * 320px screen the drawing is shown at about 0.9 of its size. `Chart` sets how wide it runs: 1:1 as
+ * these are proportions; the width is small on purpose and the type large for it, so the text stays
+ * easy to read on a phone for people who see poorly: on a 320px screen the drawing is shown at about
+ * 0.9 of its size, which still leaves the names and values near 16px. `Chart` sets how wide it runs: 1:1 as
  * a thumbnail (20rem) and twice that enlarged (#681).
  */
 export const VIEW_WIDTH = 320
 export const SEGMENT_GAP = 2
-export const BAR_HEIGHT = 12
-export const BAR_RADIUS = 4
-export const FONT_SIZE = 13
-export const SMALL_FONT_SIZE = 12
+export const BAR_HEIGHT = 20
+export const BAR_RADIUS = 5
+export const FONT_SIZE = 18
+export const SMALL_FONT_SIZE = 16
 /** Poppins is wide: about this much of its size per character, to place labels without measuring */
 const CHAR_WIDTH = 0.6
 export const PAD_X = 4
 /** Baselines inside a row: its name and total, the first line of value labels, and each line after */
-export const HEAD_BASELINE = 12
-export const BAR_TOP = 20
-const LABEL_OFFSET = BAR_HEIGHT + 14
-export const LINE_HEIGHT = 13
-const ROW_GAP = 14
-const AXIS_GAP = 8
-const AXIS_HEIGHT = 18
+export const HEAD_BASELINE = 18
+export const BAR_TOP = 30
+const LABEL_OFFSET = BAR_HEIGHT + 20
+export const LINE_HEIGHT = 22
+const ROW_GAP = 22
 const LABEL_SPACING = 4
 /** How far the scale's lines reach above and below a bar: short ticks, never through text */
-export const GRID_OVERHANG = 4
+export const GRID_OVERHANG = 5
 
 export type PlacedSegment = {
   key: string
@@ -64,7 +63,6 @@ export type BarLayout = {
   plotWidth: number
   rows: PlacedRow[]
   ticks: number[]
-  axisY: number
   /** Bottom of the rows */
   gridBottom: number
   height: number
@@ -180,7 +178,7 @@ export function layoutBars(model: BarModel): BarLayout {
       y,
       segments,
       labels,
-      noteY: labelsBottom + 15,
+      noteY: labelsBottom + 3 + SMALL_FONT_SIZE,
       height,
     }
     y += height + ROW_GAP
@@ -192,8 +190,7 @@ export function layoutBars(model: BarModel): BarLayout {
     plotWidth,
     rows,
     ticks: [0, model.scaleMax / 2, model.scaleMax],
-    axisY: gridBottom + AXIS_GAP,
     gridBottom,
-    height: gridBottom + AXIS_GAP + AXIS_HEIGHT,
+    height: gridBottom + GRID_OVERHANG,
   }
 }

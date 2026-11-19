@@ -3,7 +3,7 @@ import type { Metadata } from 'next/types'
 import React from 'react'
 
 import { planStats } from '@/modules/roadmap'
-import { getPlan, PlanSummary, PlanTiles } from '@/modules/roadmap/server'
+import { getPlan, PlanFilterProvider, PlanSummary, PlanTiles } from '@/modules/roadmap/server'
 import { mergeOpenGraph } from '@/platform/seo/mergeOpenGraph'
 import { NOT_INDEXED } from '@/platform/seo/notIndexed'
 import { PageHeader } from '@/platform/ui/PageHeader'
@@ -26,10 +26,10 @@ export default async function RoadmapPage() {
     <div className={PAGE_SHELL}>
       <PageHeader title="What we’re building" description={intro} />
       <div className="container max-w-3xl space-y-8">
-        {stats.open + stats.done > 0 && (
-          <PlanSummary stats={stats} generatedAt={plan.generatedAt} />
-        )}
-        <PlanTiles plan={plan} now={now} />
+        <PlanFilterProvider plan={plan}>
+          {stats.open + stats.done > 0 && <PlanSummary plan={plan} now={now} />}
+          <PlanTiles plan={plan} now={now} />
+        </PlanFilterProvider>
       </div>
     </div>
   )

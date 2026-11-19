@@ -108,6 +108,22 @@ describe('PageHeader', () => {
     expect(container.querySelector('[class*="reading-width"]')).toBeNull()
   })
 
+  it('gives the title the same space above as below, from one value (#1279)', () => {
+    render(
+      <main>
+        <PageHeader variant="band" title="Park cleanup" />
+      </main>,
+    )
+
+    const box = screen.getByRole('heading', { level: 1 }).closest('.container')
+    const classes = box?.className ?? ''
+    // The gap is set once, and the top (under the site header's own height) and the bottom read it
+    expect(classes.match(/\[--band-gap:[^\]]+\]/g)).toHaveLength(1)
+    expect(classes).toContain('pt-[calc(var(--header-height)+var(--band-gap))]')
+    expect(classes).toContain('pb-(--band-gap)')
+    expect(classes).not.toMatch(/\bp[tb]-\d/)
+  })
+
   it('draws a band with no eyebrow', async () => {
     const { container } = render(
       <main>

@@ -110,5 +110,44 @@ for (const [collection, data] of [
   })
 }
 
+// Resources across the page's groups, for the resources page test (#1236)
+for (const [title, category] of [
+  ['Sample utility', 'utilities'],
+  ['Sample official', 'elected-officials'],
+  ['Sample safety line', 'public-safety'],
+  ['Sample tenant help', 'renting'],
+  ['Sample park', 'parks'],
+  ['Sample childcare', 'childcare'],
+] as const) {
+  await payload.create({
+    collection: 'resources',
+    depth: 0,
+    data: { title, category, _status: 'published' },
+    context,
+    overrideAccess: true, // test setup, no user
+  })
+}
+
+// The header's Resources menu opens to the five groups (#1237)
+await payload.updateGlobal({
+  slug: 'header',
+  depth: 0,
+  context,
+  data: {
+    navItems: [
+      {
+        link: { type: 'custom', label: 'Resources', url: '/resources/utilities' },
+        subItems: [
+          {
+            link: { type: 'custom', label: 'Neighborhood utilities', url: '/resources/utilities' },
+          },
+          { link: { type: 'custom', label: 'Government', url: '/resources/government' } },
+          { link: { type: 'custom', label: 'Safety and health', url: '/resources/safety-health' } },
+        ],
+      },
+    ],
+  },
+})
+
 payload.logger.info('e2e: seeded the contact form and page, the alignment post and an event')
 process.exit(0)

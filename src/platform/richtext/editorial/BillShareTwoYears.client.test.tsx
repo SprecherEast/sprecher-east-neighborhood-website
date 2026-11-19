@@ -83,10 +83,10 @@ describe('the increase and the year switch tell one story (#1121)', () => {
       </BillShare>,
     )
     await estimate('420000')
-    expect(screen.getByText(/^Your home: \$420,000\./)).toBeTruthy()
+    expect(screen.queryByText(/^Your home:/)).toBeNull()
     await year('2026')
-    // $420,000 × $481,300 / $500,300 = $404,050 (to the dollar)
-    expect(screen.getByText(/^Your home’s assumed value in 2026: \$404,050\./)).toBeTruthy()
+    // $420,000 × $481,300 / $500,300 = $404,050 (to the dollar), priced below; no sentence says it
+    expect(screen.queryByText(/assumed value/)).toBeNull()
     const priced = computeBillShare(404049.5702578453, PROPS.years[0]?.rates ?? {})
     expect(screen.getByText('Total property tax').parentElement?.textContent).toContain(
       `$${Math.round(priced.total ?? 0).toLocaleString('en-US')}`,
@@ -96,7 +96,7 @@ describe('the increase and the year switch tell one story (#1121)', () => {
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('$420,000')
     // And back: the later year uses the typed value itself
     await year('2027')
-    expect(screen.getByText(/^Your home: \$420,000\./)).toBeTruthy()
+    expect(screen.queryByText(/^Your home:/)).toBeNull()
   })
 
   it('keeps the average home as it is in each year, and the box on the latest year’s average', async () => {
@@ -143,7 +143,7 @@ describe('the increase and the year switch tell one story (#1121)', () => {
     expect(answer()).not.toMatch(/Up \$/)
     await estimate('420000')
     await year('2026')
-    expect(screen.getByText(/^Your home’s assumed value in 2026: \$420,000\./)).toBeTruthy()
+    expect(screen.queryByText(/assumed value/)).toBeNull()
   })
 })
 

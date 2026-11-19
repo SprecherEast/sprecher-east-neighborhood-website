@@ -66,6 +66,17 @@ describe('Breadcrumbs', () => {
     expect(home.className).toContain('min-h-11')
   })
 
+  it('is compact, with the same small space above and below the trail, and links that keep their tap size (#1279)', () => {
+    render(<Breadcrumbs items={ITEMS} />)
+
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' })
+    // One class for both sides, so they cannot drift apart
+    expect(nav.className).toContain('my-3')
+    expect(nav.className).not.toMatch(/\b(mb|mt|pt|pb)-/)
+    // The link is the shared crumb, which brings the 44 px (36 px from `lg`) tap size
+    expect(trail().getByRole('link', { name: 'Events' }).className).toContain('min-h-11')
+  })
+
   it('separates crumbs with hidden chevrons, not slash characters', () => {
     const { container } = render(<Breadcrumbs items={ITEMS} />)
 

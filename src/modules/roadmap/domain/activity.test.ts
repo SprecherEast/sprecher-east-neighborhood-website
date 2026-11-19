@@ -17,6 +17,7 @@ const issue = (number: number, over: Partial<PlanIssue> = {}): PlanIssue => ({
   description: '',
   url: '',
   closedAt: null,
+  createdAt: null,
   updatedAt: null,
   ...over,
 })

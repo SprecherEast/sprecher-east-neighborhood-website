@@ -3,8 +3,6 @@ import { PatternLines } from '@visx/pattern'
 import { Line } from '@visx/shape'
 import React from 'react'
 
-import { formatValue } from '@/platform/lib/chart/format'
-
 import type { ChartRenderContext } from '../../chartAdapter'
 
 import {
@@ -92,8 +90,8 @@ function RowView({ row, gridX, palette, patternId }: RowProps) {
 
 /**
  * Horizontal bars, or stacked bars, as one `<svg role="img">` (#663). Every row shares one scale
- * from $0 to `scaleMax`, with a few quiet tick labels. Names and values are real text beside the
- * marks, never on them; the svg scales with its container and holds no inline style.
+ * from $0 to `scaleMax`, shown by short ticks at each bar and no axis labels (every bar prints its own
+ * value, #1206). Names and values are real text beside the marks, never on them; the svg scales with its container and holds no inline style.
  */
 export function BarChartSvg({ model, titleId, descId, palette }: Props) {
   const layout = layoutBars(model)
@@ -120,18 +118,6 @@ export function BarChartSvg({ model, titleId, descId, palette }: Props) {
       <Group left={PAD_X}>
         {layout.rows.map((row) => (
           <RowView key={row.y} row={row} gridX={gridX} palette={palette} patternId={patternId} />
-        ))}
-        {layout.ticks.map((tick, i) => (
-          <text
-            key={tick}
-            x={layout.scale(tick)}
-            y={layout.axisY + SMALL_FONT_SIZE}
-            textAnchor={i === 0 ? 'start' : i === layout.ticks.length - 1 ? 'end' : 'middle'}
-            fontSize={SMALL_FONT_SIZE}
-            className="fill-muted-foreground"
-          >
-            {formatValue(tick, model.unit, { compact: true })}
-          </text>
         ))}
       </Group>
     </svg>

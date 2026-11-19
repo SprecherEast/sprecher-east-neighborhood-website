@@ -353,3 +353,27 @@ describe('groomingPlan', () => {
     ).toBe('create')
   })
 })
+
+describe('ISSUE-DUPLICATES (filing)', () => {
+  const withRecord = `${GROOMED_BODY}
+### Existing work compared
+
+Searched open and closed issues for the same goal; none covers it, the closest only reports it.
+`
+  it('is not asked of an issue that is only checked, so older issues stay groomed', () => {
+    expect(issueProblems(groomed(), policy).join('\n')).not.toContain('ISSUE-DUPLICATES')
+  })
+
+  it('is asked at filing: the record of the duplicate search must be there', () => {
+    const missing = issueProblems(groomed(), policy, { filing: true }).join('\n')
+    expect(missing).toContain('ISSUE-DUPLICATES')
+    expect(issueProblems(groomed({ body: withRecord }), policy, { filing: true })).toEqual([])
+  })
+
+  it('takes the heading "Duplicate check" too, and not a few words', () => {
+    const body = `${GROOMED_BODY}\n### Duplicate check\n\nNone found.\n`
+    expect(issueProblems(groomed({ body }), policy, { filing: true }).join('')).toContain(
+      'ISSUE-DUPLICATES',
+    )
+  })
+})

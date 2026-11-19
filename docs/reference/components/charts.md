@@ -105,9 +105,23 @@ Source: `src/platform/ui/chart/adapters/breakdown/BreakdownChart.tsx`
 
 - Platform: `platform/ui`
 
+## `Amount`
+
+An amount, counting while its bars fill: the final amount, hidden, keeps its room, so the row never rewraps and nothing below moves as the digits change (#1165)
+
+Source: `src/platform/ui/chart/adapters/breakdown/Amount.tsx`
+
+| Prop    | Type             | Required | Description |
+| ------- | ---------------- | -------- | ----------- |
+| `piece` | `BreakdownPiece` | yes      |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/ui`
+
 ## `BarChartSvg`
 
-Horizontal bars, or stacked bars, as one `<svg role="img">` (#663). Every row shares one scale from $0 to `scaleMax`, with a few quiet tick labels. Names and values are real text beside the marks, never on them; the svg scales with its container and holds no inline style.
+Horizontal bars, or stacked bars, as one `<svg role="img">` (#663). Every row shares one scale from $0 to `scaleMax`, shown by short ticks at each bar and no axis labels (every bar prints its own value, #1206). Names and values are real text beside the marks, never on them; the svg scales with its container and holds no inline style.
 
 Source: `src/platform/ui/chart/adapters/visx/BarChartSvg.tsx`
 
@@ -145,13 +159,14 @@ A breakdown chart drawn in the browser with every amount multiplied by `factor` 
 
 Source: `src/platform/ui/chart/ScaledBreakdown.tsx`
 
-| Prop      | Type                                                                                                                                                                 | Required | Description                                                                                                                                                                                                   |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `spec`    | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …` | yes      |                                                                                                                                                                                                               |
-| `factor`  | `number`                                                                                                                                                             | yes      |                                                                                                                                                                                                               |
-| `title`   | `"screen-reader" \| "visible"`                                                                                                                                       | no       | Whether the title shows: kept for screen readers only when the heading above already says it, so two headings never sit one after another (as `Chart` does with `heading`). The takeaway always shows (#1144) |
-| `fillKey` | `number`                                                                                                                                                             | no       | Changes each time the bars should fill again; 0 keeps the reveal on scroll                                                                                                                                    |
-| `compact` | `boolean`                                                                                                                                                            | no       |                                                                                                                                                                                                               |
+| Prop         | Type                                                                                                                                                                 | Required | Description                                                                                                                                                                                                   |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spec`       | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …` | yes      |                                                                                                                                                                                                               |
+| `factor`     | `number`                                                                                                                                                             | yes      |                                                                                                                                                                                                               |
+| `title`      | `"screen-reader" \| "visible"`                                                                                                                                       | no       | Whether the title shows: kept for screen readers only when the heading above already says it, so two headings never sit one after another (as `Chart` does with `heading`). The takeaway always shows (#1144) |
+| `fillKey`    | `number`                                                                                                                                                             | no       | Changes each time the bars should fill again; 0 keeps the reveal on scroll                                                                                                                                    |
+| `compact`    | `boolean`                                                                                                                                                            | no       |                                                                                                                                                                                                               |
+| `hideSource` | `boolean`                                                                                                                                                            | no       | Leaves the as-of line and the source links out, for a page that lists them elsewhere (#1180)                                                                                                                  |
 
 **Used by** (direct imports):
 
@@ -176,16 +191,19 @@ Source: `src/platform/ui/chart/ChartCaption.tsx`
 
 - Platform: `platform/ui`
 
-## `Sparkline`
+## `AreaChart`
 
-Source: `src/platform/ui/Sparkline.tsx`
+Source: `src/platform/ui/AreaChart.tsx`
 
-| Prop        | Type       | Required | Description                                                                       |
-| ----------- | ---------- | -------- | --------------------------------------------------------------------------------- |
-| `values`    | `number[]` | yes      |                                                                                   |
-| `max`       | `number`   | yes      | The top of the scale; share it between pictures that are read side by side        |
-| `label`     | `string`   | yes      | What it shows, with every value, for screen readers: "Finished per week: 0, 2, 5" |
-| `className` | `string`   | no       |                                                                                   |
+| Prop        | Type               | Required | Description                                                                                          |
+| ----------- | ------------------ | -------- | ---------------------------------------------------------------------------------------------------- |
+| `values`    | `number[]`         | yes      |                                                                                                      |
+| `days`      | `string[]`         | yes      | The same length as `values`: `yyyy-mm-dd`, oldest first, the last one today                          |
+| `label`     | `string`           | yes      | What it shows, with every value, for screen readers: "Finished per day: 0, 2, 5"                     |
+| `tone`      | `"done" \| "open"` | yes      | Done work or open work, each with a colour of its own                                                |
+| `max`       | `number`           | no       | The top of the scale; share it between pictures read side by side. Defaults to the tallest value     |
+| `fromZero`  | `boolean`          | no       | Start the scale at zero (counts per day) or at the lowest value (a running total, to show its shape) |
+| `className` | `string`           | no       |                                                                                                      |
 
 **Used by** (direct imports):
 

@@ -6,6 +6,7 @@ import {
   BILL_WIDTHS as WIDTHS,
   summaryRow as summary,
 } from './support/billRows'
+import { EXPAND_MS } from '../src/platform/ui/motion.client'
 import { expect, test } from './support/test'
 
 // An open-and-close box a reader opens is scrolled into view (#1152), on the page that has the
@@ -37,18 +38,22 @@ const settle = async (page: Page) => {
 /**
  * An opened box is in view (#1152): its end shows with its gap under it, or, when it is taller than
  * the screen, its top sits where its scroll margin stops it; the sticky header never covers its top.
+ * A box that names an anchor (#1178) is held to the anchor instead: it, not the box's top, is what
+ * the header never covers and what sits at the header when the end does not fit.
  * With another box directly under it, that one's summary row shows whole too, and the room kept
  * under the opened box is more than that row (#1154); with none, only the small gap is kept.
  */
 const expectInView = async (details: Locator, name: string) => {
   const box = await details.evaluate((el) => {
     const { top, bottom } = el.getBoundingClientRect()
+    const anchorId = el.getAttribute('data-reveal-anchor')
+    const anchor = anchorId ? document.getElementById(anchorId) : null
     const style = getComputedStyle(el)
     const next = el.nextElementSibling
     const nextRow =
       next instanceof HTMLDetailsElement ? next.querySelector(':scope > summary') : null
     return {
-      top,
+      top: anchor ? anchor.getBoundingClientRect().top : top,
       bottom,
       screen: innerHeight,
       above: parseFloat(style.scrollMarginTop),
@@ -86,6 +91,8 @@ const toFoot = async (page: Page, row: Locator) => {
 const toggle = async (page: Page, row: Locator, open: boolean) => {
   await row.click()
   await expect(boxOfRow(row)).toHaveJSProperty('open', open)
+  // A row that expands scrolls into view when its expansion ends (#1170): the page is still, then moves
+  await page.waitForTimeout(EXPAND_MS + 150)
   await settle(page)
 }
 

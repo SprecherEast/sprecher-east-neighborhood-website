@@ -11,9 +11,11 @@ import { ActionsGallery } from './ActionsGallery.client'
 import { ChartGallery } from './ChartGallery'
 import { DisplayGallery } from './DisplayGallery'
 import {
-  SparklineGallery,
+  AreaChartGallery,
+  HeatMapGallery,
   ProgressGallery,
-  ShareBarGallery,
+  BarTrackGallery,
+  ShareStripGallery,
   ShareBillGallery,
 } from './ProgressGallery'
 import { FieldsGallery } from './FieldsGallery.client'
@@ -22,8 +24,11 @@ import { HeadersGallery } from './HeadersGallery'
 import { InteractiveGallery } from './InteractiveGallery.client'
 import { isGalleryEnabled } from './isGalleryEnabled'
 import { DismissAndZoomGallery } from './DismissAndZoomGallery'
+import { NavMenuGallery } from './NavMenuGallery'
+import { RelatedLinksGallery } from './RelatedLinksGallery'
 import { LayoutGallery } from './LayoutGallery'
 import { RichTextGallery } from './RichTextGallery'
+import { PeriodNavGallery } from './PeriodNavGallery.client'
 import { TabsGallery } from './TabsGallery'
 
 export const metadata: Metadata = {
@@ -67,9 +72,14 @@ export default function GalleryPage() {
         <FieldsGallery />
         <DisplayGallery />
         <ProgressGallery />
-        <ShareBarGallery />
+        <BarTrackGallery />
+        <ShareStripGallery />
         <ShareBillGallery />
-        <SparklineGallery />
+        <AreaChartGallery />
+        <HeatMapGallery />
+        <PeriodNavGallery />
+        <NavMenuGallery />
+        <RelatedLinksGallery />
         <TabsGallery />
         <HeadersGallery />
         <LayoutGallery />

@@ -12,6 +12,7 @@ const issue = (number: number, over: Partial<RawIssue> = {}): RawIssue => ({
   state: 'open',
   stateReason: null,
   closedAt: null,
+  createdAt: null,
   updatedAt: null,
   labels: [],
   milestoneNumber: null,

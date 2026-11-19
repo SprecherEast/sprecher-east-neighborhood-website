@@ -7,6 +7,8 @@ export type RawIssue = {
   /** GitHub's reason for a closed issue; `not_planned` means "we decided not to" */
   stateReason: string | null
   /** When it was closed, as GitHub gives it; `null` while open */
+  /** When it was opened, as GitHub gives it; `null` if GitHub gave none */
+  createdAt: string | null
   closedAt: string | null
   /** When it was last changed on GitHub (an edit, a comment, a label, a close); `null` if GitHub gave none */
   updatedAt: string | null
@@ -35,6 +37,8 @@ export type PlanIssue = {
   labels: string[]
   description: string
   url: string
+  /** When it was opened; with `closedAt` it gives how many were open on each day */
+  createdAt: string | null
   closedAt: string | null
   /** When it was last changed on GitHub; with `closedAt` it tells a mission's latest activity */
   updatedAt: string | null

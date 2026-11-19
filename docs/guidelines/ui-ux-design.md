@@ -98,14 +98,14 @@ Consistent spacing creates visual rhythm. Use Tailwind's spacing scale exclusive
 - Left-align the text with `max-w-prose` for comfortable reading width
 - Add visual weight to the right side: an image, illustration, or CTA card
 - Use the natural left-to-right reading flow — the eye starts left, so put content there
-- Let whitespace on the right breathe rather than forcing symmetry
+- Let whitespace on the right breathe rather than centering the text to fill it
 - For two-element layouts: text left (60-65% width), visual element right (35-40% width)
 
-The goal is **visual balance**, not visual symmetry. A left-aligned text block with a photo on the right is more engaging than the same text centered with nothing around it.
+The goal is **visual balance**, not centered text. A left-aligned text block with a photo on the right is more engaging than the same text centered with nothing around it.
 
 ## Symmetry and Alignment
 
-Baseline every agent follows without being told. Summary of the owner's direction (2026-11-04, recorded on #679): symmetry, same-line layouts, and flow. Summary of his decision (2026-11-05, voice call, recorded on #679): this baseline replaces any extras beyond that direction. About that baseline; the section above is about centred text.
+Baseline every agent follows without being told. Summary of the owner's direction (2026-11-04, recorded on #679): symmetry, same-line layouts, and flow. Summary of his decision (2026-11-05, voice call, recorded on #679): this baseline replaces any extras beyond that direction.
 
 1. Align related elements to shared edges and baselines so nothing looks accidentally out of line.
 2. Center elements accurately within their intended container, not merely within the screen.
@@ -178,7 +178,7 @@ Three tiers of visual importance:
 
 ### Hero Sections
 
-- Full-viewport or near-full (`min-h-[60vh]` to `min-h-[80vh]`) for the home page and landing pages. A post or event header is not a hero: it is a short photo band, `min-h-[clamp(16rem,42svh,28rem)]`, with the title on it, so the article starts on the first screen; neither an event's when and where nor a post's author and date are on the photo: they are one metadata bar above the text and a groove line, an event's left-aligned and a post's right-aligned in small type (the owner's requests, 2026-11-02, Claude in Chrome side panel, recorded on #571, 2026-11-06, recorded on #774, and 2026-11-11, recorded on #1055)
+- A compact hero for the home page, laid out from its photo's horizon (the title above it, the description and buttons below it, the photo fading into the page; see the site note, #1304), and a band of `min-h-[var(--page-min-height)]` for landing pages. A post or event header is not a hero: it is a short photo band, `min-h-[clamp(16rem,42svh,28rem)]`, with the title on it, so the article starts on the first screen; neither an event's when and where nor a post's author and date are on the photo: they are one metadata bar above the text and a groove line, an event's left-aligned and a post's right-aligned in small type (the owner's requests, 2026-11-02, Claude in Chrome side panel, recorded on #571, 2026-11-06, recorded on #774, and 2026-11-11, recorded on #1055)
 - Background image with dark gradient overlay (`from-foreground/70 via-foreground/50 to-transparent`)
 - `text-on-image` on a `scrim` overlay for maximum contrast (never raw `white`/`black`: themes set these)
 - Clear CTA buttons at the bottom of the hero content

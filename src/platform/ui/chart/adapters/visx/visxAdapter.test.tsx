@@ -106,10 +106,13 @@ describe('visxAdapter', () => {
     expect(lines.every((l) => (l?.length ?? 0) <= 43)).toBe(true)
   })
 
-  it('labels a few ticks on the shared scale: $0, $250M, $500M', () => {
+  it('draws the shared scale as ticks at each bar, with no axis labels (#1206)', () => {
     const { container } = draw(FIXTURES.bars)
     const texts = [...container.querySelectorAll('text')].map((t) => t.textContent)
-    expect(texts).toEqual(expect.arrayContaining(['$0', '$250M', '$500M']))
+    expect(texts).not.toContain('$0')
+    expect(texts).not.toContain('$250M')
+    expect(texts).not.toContain('$500M')
+    expect(container.querySelectorAll('line').length).toBeGreaterThan(0)
   })
 
   it('draws bars to the same scale when two charts share a scaleMax', () => {

@@ -1,23 +1,15 @@
 import 'server-only'
 
-import { planActivity } from '../domain/activity'
 import { parseIssueNumber } from '../domain/paths'
 import { findMission } from '../domain/plan'
 import { getPlan } from './getPlan'
 
-/** A mission the public plan lists, with its activity on the plan's shared scale, or `undefined` */
+/** A mission the public plan lists, with the time it was read at, or `undefined` */
 export async function getMission(number: number) {
   const plan = await getPlan()
   const mission = findMission(plan, number)
   if (!mission) return undefined
-  const now = new Date()
-  const activity = planActivity(plan.milestones, now)
-  const mine = activity.missions.find((m) => m.milestoneNumber === number)
-  return {
-    mission,
-    now,
-    activity: { series: mine?.series ?? [], max: activity.max, stepLabel: activity.stepLabel },
-  }
+  return { mission, now: new Date() }
 }
 
 /** The same, from the address segment: a malformed one answers like an unknown number */

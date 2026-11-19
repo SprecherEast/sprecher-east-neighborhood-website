@@ -10,7 +10,7 @@ Source: `src/platform/ui/Badge.tsx`
 
 **Variants:**
 
-- `variant`: `"category" | "on-image" | "status" | "official" | "current" | "caution" | "neutral" | "open" | "done" | "outline"`
+- `variant`: `"done" | "open" | "category" | "on-image" | "status" | "official" | "current" | "caution" | "neutral" | "outline"`
 - `size`: `"xs" | "sm" | "md"`
 
 | Prop        | Type              | Required | Description |
@@ -160,7 +160,7 @@ Source: `src/platform/ui/Text.tsx`
 **Used by** (direct imports):
 
 - Modules: `directory`, `events`, `news`, `roadmap`, `site`
-- Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/resources`
+- Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/resources/[group]`
 - Platform: `platform/richtext`, `platform/ui`
 
 ## `Caption`

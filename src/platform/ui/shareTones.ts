@@ -1,36 +1,31 @@
+import type { BillBody } from '@/platform/lib/billShare'
+
+import { rampAt } from './chart/chartPalette'
+
 /*
- * The colors of a whole's slices, in one place so a bar and the receipt under it can never differ
- * (#1111): the City's slice in the theme's solid green and the others in three neutral tones, the lightest first.
- * Each tone has the bar's fill, the receipt's small square, the color of the percent written on the
- * slice (#1121: at least 4.5:1 on that fill in both modes, which `shareTones.test.ts` checks from
- * the theme file) and the look of its receipt row: the highlighted one has a soft primary fill and
- * bolder text, so it is not told by color alone.
+ * The colors of a whole's slices, in one place so a bar and the line a nested row sets under its slice can
+ * never differ (#1111, #1196, #1263). Each tone is one step of the breakdown chart's ramp, so a slice reads
+ * as the same color as the chart beside it: `rust` the darkest, then `amber`, `mint` and `green`. Each has
+ * the bar's fill and the color of that line (`edge`).
  */
+const tone = (step: number) => {
+  const { fill, border } = rampAt(step)
+  return { fill, edge: border }
+}
+
 export const SHARE_TONES = {
-  highlight: {
-    fill: 'fill-primary-fill',
-    swatch: 'bg-primary-fill',
-    label: 'fill-primary-foreground',
-    row: 'rounded-sm bg-primary/10 font-semibold',
-  },
-  strong: {
-    fill: 'fill-muted-foreground/45',
-    swatch: 'bg-muted-foreground/45',
-    label: 'fill-foreground',
-    row: '',
-  },
-  medium: {
-    fill: 'fill-muted-foreground/30',
-    swatch: 'bg-muted-foreground/30',
-    label: 'fill-foreground',
-    row: '',
-  },
-  light: {
-    fill: 'fill-muted-foreground/18',
-    swatch: 'bg-muted-foreground/18',
-    label: 'fill-foreground',
-    row: '',
-  },
+  rust: tone(1),
+  amber: tone(2),
+  mint: tone(3),
+  green: tone(4),
 } as const
 
 export type ShareTone = keyof typeof SHARE_TONES
+
+/** The tone of each body of a property tax bill: the City amber, the schools dark red-orange, the County green, Madison College light green (#1263) */
+export const BILL_BODY_TONES: Record<BillBody, ShareTone> = {
+  schools: 'rust',
+  city: 'amber',
+  county: 'green',
+  matc: 'mint',
+}

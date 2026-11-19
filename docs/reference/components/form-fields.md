@@ -132,7 +132,7 @@ Source: `src/platform/ui/FieldInput.client.tsx`
 
 ## `FieldMoney`
 
-A whole-dollar box (#1035): the reader types digits and the box shows them grouped by commas after a dollar sign, as they go; cents are cut. The caret stays after the digit the reader just typed or deleted, even when commas appear before it. Place it inside a `Field`.
+A whole-dollar box (#1035): the reader types digits and the box shows them grouped by commas after a dollar sign, as they go; cents are cut. The caret stays after the digit the reader just typed or deleted, even when commas appear before it. Deleting a number's first digit keeps the zeros left in front until the reader leaves the box, so the digit typed next replaces it and the number keeps its size (#1172). Place it inside a `Field`.
 
 Source: `src/platform/ui/FieldMoney.client.tsx`
 

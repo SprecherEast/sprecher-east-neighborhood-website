@@ -19,6 +19,7 @@ type ApiIssue = {
   body?: string | null
   state: string
   state_reason?: string | null
+  created_at?: string | null
   closed_at?: string | null
   updated_at?: string | null
   html_url: string
@@ -40,6 +41,7 @@ export const mapIssue = (issue: ApiIssue): RawIssue => ({
   body: issue.body ?? '',
   state: issue.state === 'open' ? 'open' : 'closed',
   stateReason: issue.state_reason ?? null,
+  createdAt: issue.created_at ?? null,
   closedAt: issue.closed_at ?? null,
   updatedAt: issue.updated_at ?? null,
   labels: (issue.labels ?? []).flatMap((l) => {

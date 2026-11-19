@@ -38,7 +38,7 @@ export default async function MissionRoute(args: Args) {
         backLink={{ href: ROADMAP_PATH, label: 'What we’re building' }}
       />
       <div className="container max-w-3xl">
-        <MissionPage mission={found.mission} activity={found.activity} now={found.now} />
+        <MissionPage mission={found.mission} now={found.now} />
       </div>
     </div>
   )

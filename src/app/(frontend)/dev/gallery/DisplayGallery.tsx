@@ -14,6 +14,7 @@ import { MetaList } from '@/platform/ui/MetaList'
 import { Text } from '@/platform/ui/Text'
 
 import { BadgeGallery } from './BadgeGallery'
+import { GlassGallery } from './GlassGallery'
 import { MetaBarGallery } from './MetaBarGallery'
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 import {
@@ -35,6 +36,7 @@ export function DisplayGallery() {
     <>
       <BadgeGallery />
       <MetaBarGallery />
+      <GlassGallery />
 
       <GalleryEntry name="Card" description="A box with parts; looks are variants.">
         <GalleryVariant label="variant" className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -184,7 +186,7 @@ export function DisplayGallery() {
           </Card>
         </GalleryVariant>
         <GalleryVariant
-          label="listRow (a row inside a list, indented by the list, label sized from it)"
+          label="listRow (a tinted, button-like row inside a list, label sized from it)"
           className="block"
         >
           <ul className="max-w-prose text-sm">

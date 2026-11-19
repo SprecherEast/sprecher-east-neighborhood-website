@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 
@@ -63,6 +63,36 @@ describe('ScaledBreakdown', () => {
     expect(amounts(container)).toEqual(['$700', '$370', '$300'])
   })
 
+  it('restarts the bars’ growth in place for each new fill, never drawing the chart anew (#1165)', () => {
+    const calls: string[] = []
+    const animation = { cancel: () => calls.push('cancel'), play: () => calls.push('play') }
+    const getAnimations = vi.fn(() => [animation])
+    Object.defineProperty(Element.prototype, 'getAnimations', {
+      value: getAnimations,
+      configurable: true,
+    })
+    try {
+      const { container, rerender } = render(<ScaledBreakdown spec={SPEC} factor={0.5} />)
+      // No fill asked for yet: nothing restarts
+      expect(getAnimations).not.toHaveBeenCalled()
+      rerender(<ScaledBreakdown spec={SPEC} factor={0.5} fillKey={1} />)
+      const bar = container.querySelector('.chart-fill-x')
+      calls.length = 0
+      rerender(<ScaledBreakdown spec={SPEC} factor={0.5} fillKey={2} />)
+      // Each bar's animation starts over, cancel then play, on the same bar, not a new one
+      expect(calls.slice(0, 2)).toEqual(['cancel', 'play'])
+      expect(container.querySelector('.chart-fill-x')).toBe(bar)
+    } finally {
+      delete (Element.prototype as { getAnimations?: unknown }).getAnimations
+    }
+  })
+
+  it('still fills where the browser offers no animations to restart (#1165)', () => {
+    const { container, rerender } = render(<ScaledBreakdown spec={SPEC} factor={0.5} fillKey={1} />)
+    expect(() => rerender(<ScaledBreakdown spec={SPEC} factor={0.5} fillKey={2} />)).not.toThrow()
+    expect(container.querySelector('.chart-fill-x')).not.toBeNull()
+  })
+
   it('draws thinner bars when compact, for a breakdown that sits inside a bill (#1163)', () => {
     const marks = (el: HTMLElement) =>
       Array.from(el.querySelectorAll('[data-chart-mark]'), (mark) =>
@@ -83,6 +113,16 @@ describe('ScaledBreakdown', () => {
     expect(screen.getByText(/split like the operating budget/)).toBeTruthy()
     expect(screen.getByText('Mayor’s proposal, 2026')).toBeTruthy()
     expect(screen.getByRole('link', { name: /City budget/ })).toBeTruthy()
+  })
+
+  it('leaves the as-of line and the source links out when the page shows them elsewhere (#1180)', () => {
+    const certain = { ...SPEC, certainty: 'estimate' as const, finePrint: 'Rounded.' }
+    render(<ScaledBreakdown spec={certain} factor={1} hideSource />)
+    expect(screen.queryByText('Mayor’s proposal, 2026')).toBeNull()
+    expect(screen.queryByRole('link', { name: /City budget/ })).toBeNull()
+    // The badge and the fine print stay under the bars
+    expect(screen.getByText('Rounded.')).toBeTruthy()
+    expect(screen.getByText('Estimate')).toBeTruthy()
   })
 
   it('keeps the title for screen readers only when asked, with the takeaway still shown (#1144)', async () => {

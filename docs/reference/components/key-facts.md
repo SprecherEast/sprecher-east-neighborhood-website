@@ -79,7 +79,7 @@ Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 
 ## `BillAnswer`
 
-The answer a neighbor came for (#1111, #1118), right under the Rough Estimator. Its top row has the label on the left ("City tax on an average home", or "on your home" after an estimate) and the status badge on the right. Under it the City's tax on the home last estimated in the year chosen is the biggest text on the tab, with a small "a year", then the City's increase in the estimator's accent, orange (`increaseLine`, the same figures a tab's `{yearly}` and `{monthly}` use, so they always agree) and one small sentence with the home value used and the City's share of the whole bill. In an earlier year the sentence says the value is the one assumed for that year (#1121). The badge is the chosen year's stored note, with the "not final" look, or, when the year has none, the tab's stored certainty, so it can never disagree with the year. The increase line keeps its room when there is no figure, so the card never changes height. In the earliest of several years it reads "Base year" in the primary green instead, with the next year's line kept as hidden room (#1135). It draws what it is given.
+The answer a neighbor came for (#1111, #1118), right under the Rough Estimator. Its top row has the label on the left ("City tax on an average home", or "on your home" after an estimate) and the status badge on the right. Under it the City's tax on the home last estimated in the year chosen is the biggest text on the tab, with a small "a year", then the City's increase in the estimator's accent, orange (`increaseLine`, the same figures a tab's `{yearly}` and `{monthly}` use, so they always agree) and, while the card shows the City's average home, one small sentence with that home's value and the City's share of the whole bill. After an estimate the sentence is left out: it would only repeat the value the reader typed and a share the whole bill shows (#1183). The badge is the chosen year's stored note, with the "not final" look, or, when the year has none, the tab's stored certainty, so it can never disagree with the year. The increase line keeps its room when there is no figure, so the card never changes height. In the earliest of several years it reads "Base year" in the primary green instead, with the next year's line kept as hidden room (#1135). It draws what it is given.
 
 Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 
@@ -90,8 +90,7 @@ Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 | `certainty`     | `"confirmed" \| "estimate" \| "unknown"` | no       | How sure we are about the tab's fact; the badge unless the chosen year has a note                                       |
 | `note`          | `string`                                 | no       | The chosen year's stored note, such as "proposed"; empty for none                                                       |
 | `yours`         | `boolean`                                | yes      | Whether the home is one the reader estimated, not the City's average                                                    |
-| `home`          | `string`                                 | yes      | The home value used, formatted: for an earlier year, the value assumed for that year (#1121)                            |
-| `assumedYear`   | `number`                                 | no       | The earlier year the home's value is assumed for; the sentence says so. Not given for the latest year                   |
+| `home`          | `string`                                 | yes      | The average home's value, formatted; only shown while `yours` is false                                                  |
 | `cityPercent`   | `number \| null`                         | yes      | The City's whole percent of the whole bill; null while the bill is not whole                                            |
 | `baseYear`      | `boolean`                                | no       | Whether the year is the earliest of several: the line says "Base year", the one the later year is compared with (#1135) |
 | `laterIncrease` | `number`                                 | no       | In the base year: the next year's increase, whose line is kept as hidden room so the card is as tall in both years      |
@@ -102,7 +101,7 @@ Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 
 ## `BillDetails`
 
-The two rows under the whole bill (#1111, #1118, #1163), in one card split by divider lines: why the real bill may differ (the notes, then the tab's short text and detail) and the sources, each source once, both closed when the tab loads, each titled from the block (#1158). Where the City's share goes is a row of the whole bill itself, under the City's row (`BillShare`, #1163). The sources row is left out when there are none, and a note that is not showing still takes its room, hidden from everyone, so an open row never changes height when a year is chosen. Each row is the kit's `Disclosure`, so it opens and closes without scripting and never moves what is above it.
+The two rows under the whole bill (#1111, #1118, #1163), in one card split by divider lines: why the real bill may differ (the notes, then the tab's short text and detail) and the sources, each source once, both closed when the tab loads, each titled from the block (#1158). Where the City's share goes is a row of the whole bill itself, under the City's row (`BillShare`, #1163). The sources row (the as-of line of the City's breakdown, then each link) is left out when there is neither, and a note that is not showing still takes its room, hidden from everyone, so an open row never changes height when a year is chosen. Each row is the kit's `Disclosure`, so it opens and closes without scripting and never moves what is above it.
 
 Source: `src/platform/richtext/editorial/BillDetails.tsx`
 
@@ -112,6 +111,25 @@ Source: `src/platform/richtext/editorial/BillDetails.tsx`
 | `notes`   | `readonly { key: string; text: ReactNode; shown: boolean; }[]`                                                                                                             | yes      | The notes on why a real bill may differ; one that is not `shown` keeps its room |
 | `about`   | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | What follows the notes: the tab's short text and detail                         |
 | `sources` | `readonly ResolvedLink[]`                                                                                                                                                  | yes      |                                                                                 |
+| `asOf`    | `string`                                                                                                                                                                   | no       | When the figures are from, shown above the links (#1180)                        |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
+## `BreakdownRow`
+
+Where the City's tax goes, as a closed row of the whole bill under the City's own row (#1163): the split alone, with thin bars, since the answer card above already gives the City's tax and its increase and the row's title is the heading (#1144). Its date and sources are not drawn here: the whole bill's Sources row lists them (#1180). `row` is `useBreakdownAutoOpen`'s: it opens the row after each estimate that changes the bill while it is closed (#1176), and each opening fills the bars again (#1165).
+
+Source: `src/platform/richtext/editorial/BreakdownRow.tsx`
+
+| Prop           | Type                                                                                                                                                                 | Required | Description                                                                   |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `title`        | `string`                                                                                                                                                             | yes      |                                                                               |
+| `spec`         | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …` | yes      |                                                                               |
+| `factor`       | `number`                                                                                                                                                             | yes      |                                                                               |
+| `revealAnchor` | `string`                                                                                                                                                             | no       | The element kept in view, under the sticky header, when the row opens (#1178) |
+| `row`          | `{ rowRef: RefObject<HTMLDetailsElement \| null>; openings: number; onOpening: () => void; }`                                                                        | yes      |                                                                               |
 
 **Used by** (direct imports):
 

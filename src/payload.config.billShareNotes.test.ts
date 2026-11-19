@@ -22,7 +22,7 @@ const YEAR = {
   schools: 8.6814,
   county: 2.3564,
   matc: 0.6153,
-  city: 7.0139,
+  city: 7.0141,
 }
 const bill = (extra: Record<string, unknown> = {}) => ({
   blockType: 'billShare',

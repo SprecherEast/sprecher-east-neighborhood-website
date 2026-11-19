@@ -4,13 +4,18 @@ import { revalidatePath } from 'next/cache'
 import { expireCacheTag } from '@/platform/payload/expireCacheTag'
 
 /**
- * Hooks that refresh the one page listing a collection (`/faq`, `/resources`, and the cache tag of
- * the same name) after any save or delete. Drafts refresh it too, which costs one render: the
+ * Hooks that refresh the one page listing a collection (`/faq`, the group pages under
+ * `/resources`, and the cache tag of the same name) after any save or delete. Drafts refresh it too, which costs one render: the
  * page shows only published entries.
  */
 export function revalidateListPage(page: 'faq' | 'resources') {
   const refresh = () => {
-    revalidatePath(`/${page}`)
+    if (page === 'resources') {
+      // Listed on one page per group (#1245)
+      revalidatePath('/resources/[group]', 'page')
+    } else {
+      revalidatePath(`/${page}`)
+    }
     expireCacheTag(page)
   }
 

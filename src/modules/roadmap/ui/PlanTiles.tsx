@@ -5,13 +5,13 @@ import { EmptyState } from '@/platform/ui/EmptyState'
 import { Text } from '@/platform/ui/Text'
 
 import { planActivity } from '../domain/activity'
+import { leanPlan } from '../domain/filterPlan'
 import type { Plan } from '../domain/types'
-import { EpicBox } from './EpicBox'
-import { MissionTile } from './MissionTile'
+import { PlanMissions } from './PlanMissions.client'
 
 /**
- * The plan as tiles: the mission with the latest activity first, all the same size, two across on
- * a phone and three on a desktop, each opening its own page. Projects that belong to no mission
+ * The plan as missions, the one with the latest activity first: blocks of the same size on a tablet
+ * (two across) and a desktop (three across), accordions on a phone, each linking to its own page. Projects that belong to no mission
  * follow, then a note on what is not shown.
  */
 export function PlanTiles({ plan, now }: { plan: Plan; now: Date }) {
@@ -25,37 +25,13 @@ export function PlanTiles({ plan, now }: { plan: Plan; now: Date }) {
     )
   }
 
-  const activity = planActivity(plan.milestones, now)
-  const byNumber = new Map(plan.milestones.map((mission) => [mission.number, mission]))
+  const order = planActivity(plan.milestones, now).missions.map(
+    ({ milestoneNumber }) => milestoneNumber,
+  )
 
   return (
     <div className="space-y-8">
-      {activity.missions.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-          {activity.missions.map(({ milestoneNumber, series }) => {
-            const mission = byNumber.get(milestoneNumber)
-            return mission ? (
-              <MissionTile
-                key={milestoneNumber}
-                mission={mission}
-                series={series}
-                max={activity.max}
-                stepLabel={activity.stepLabel}
-                now={now}
-              />
-            ) : null
-          })}
-        </div>
-      )}
-
-      {plan.unscheduled.length > 0 && (
-        <section className="space-y-4">
-          <Text variant="subsection">Projects not yet in a mission</Text>
-          {plan.unscheduled.map((epic) => (
-            <EpicBox key={epic.number} epic={epic} now={now} />
-          ))}
-        </section>
-      )}
+      <PlanMissions plan={leanPlan(plan)} order={order} now={now} />
 
       <div className="flex flex-wrap items-center gap-3">
         <Text variant="small">Missing something?</Text>

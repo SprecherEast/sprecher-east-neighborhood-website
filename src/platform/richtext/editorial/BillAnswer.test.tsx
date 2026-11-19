@@ -92,34 +92,20 @@ describe('BillAnswer', () => {
     expect(container.textContent).not.toContain('(')
   })
 
-  it('writes one small sentence with the home value and the City’s share, in both forms', () => {
+  it('writes one small sentence with the average home and the City’s share', () => {
     render(<BillAnswer {...base} />)
     expect(
       screen.getByText('Average home: $500,300. The City is 37% of the whole bill.'),
-    ).toBeTruthy()
-    cleanup()
-    render(<BillAnswer {...base} yours home="$1,000,600" cityPercent={38} />)
-    expect(
-      screen.getByText('Your home: $1,000,600. The City is 38% of the whole bill.'),
     ).toBeTruthy()
     cleanup()
     render(<BillAnswer {...base} cityPercent={null} />)
     expect(screen.getByText('Average home: $500,300.')).toBeTruthy()
   })
 
-  it('says the value is the one assumed for an earlier year, only after an estimate (#1121)', () => {
-    render(<BillAnswer {...base} yours home="$404,050" assumedYear={2026} />)
-    expect(
-      screen.getByText(
-        'Your home’s assumed value in 2026: $404,050. The City is 37% of the whole bill.',
-      ),
-    ).toBeTruthy()
-    cleanup()
-    // The City's average home in that year is its own figure, not an assumption
-    render(<BillAnswer {...base} home="$481,300" assumedYear={2026} />)
-    expect(
-      screen.getByText('Average home: $481,300. The City is 37% of the whole bill.'),
-    ).toBeTruthy()
+  it('writes no sentence once the reader has entered a home value, which they just typed (#1183)', () => {
+    const { container } = render(<BillAnswer {...base} yours home="$1,000,600" cityPercent={38} />)
+    expect(container.textContent).not.toMatch(/home:|assumed value|of the whole bill/)
+    expect(screen.getByText('City tax on your home')).toBeTruthy()
   })
 
   it('has no accessibility violations', async () => {

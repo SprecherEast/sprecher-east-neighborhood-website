@@ -13,8 +13,9 @@ import { increaseLine } from './billFigures'
  * the status badge on the right. Under it the City's tax on the home last estimated in the year
  * chosen is the biggest text on the tab, with a small "a year", then the City's increase in the
  * estimator's accent, orange (`increaseLine`, the same figures a tab's `{yearly}` and `{monthly}` use, so they
- * always agree) and one small sentence with the home value used and the City's share of the whole
- * bill. In an earlier year the sentence says the value is the one assumed for that year (#1121). The badge is the chosen year's stored note, with the "not final" look, or, when the year has
+ * always agree) and, while the card shows the City's average home, one small sentence with that
+ * home's value and the City's share of the whole bill. After an estimate the sentence is left out:
+ * it would only repeat the value the reader typed and a share the whole bill shows (#1183). The badge is the chosen year's stored note, with the "not final" look, or, when the year has
  * none, the tab's stored certainty, so it can never disagree with the year. The increase line keeps
  * its room when there is no figure, so the card never changes height. In the earliest of several
  * years it reads "Base year" in the primary green instead, with the next year's line kept as hidden room (#1135). It draws what it is given.
@@ -26,7 +27,6 @@ export function BillAnswer({
   note,
   yours,
   home,
-  assumedYear,
   cityPercent,
   baseYear = false,
   laterIncrease = null,
@@ -41,10 +41,8 @@ export function BillAnswer({
   note?: string
   /** Whether the home is one the reader estimated, not the City's average */
   yours: boolean
-  /** The home value used, formatted: for an earlier year, the value assumed for that year (#1121) */
+  /** The average home's value, formatted; only shown while `yours` is false */
   home: string
-  /** The earlier year the home's value is assumed for; the sentence says so. Not given for the latest year */
-  assumedYear?: number
   /** The City's whole percent of the whole bill; null while the bill is not whole */
   cityPercent: number | null
   /** Whether the year is the earliest of several: the line says "Base year", the one the later year is compared with (#1135) */
@@ -54,10 +52,7 @@ export function BillAnswer({
 }) {
   const noted = note ? `${note.charAt(0).toUpperCase()}${note.slice(1)}` : undefined
   const badge = noted ? 'estimate' : certainty
-  const homeSentence =
-    yours && assumedYear !== undefined
-      ? `Your home’s assumed value in ${assumedYear}: ${home}.`
-      : `${yours ? 'Your' : 'Average'} home: ${home}.`
+  const homeSentence = `Average home: ${home}.`
   return (
     <Card as="section" variant="elevated" padding="xs" aria-label="Your City tax">
       <div className="space-y-1">
@@ -98,11 +93,13 @@ export function BillAnswer({
             )}
           </span>
         </Text>
-        <Text variant="small" as="p" className="leading-snug">
-          {cityPercent === null
-            ? homeSentence
-            : `${homeSentence} The City is ${cityPercent}% of the whole bill.`}
-        </Text>
+        {!yours && (
+          <Text variant="small" as="p" className="leading-snug">
+            {cityPercent === null
+              ? homeSentence
+              : `${homeSentence} The City is ${cityPercent}% of the whole bill.`}
+          </Text>
+        )}
       </div>
     </Card>
   )

@@ -4,26 +4,29 @@ import { computeBillShare } from '@/platform/lib/billShare'
 
 import { receiptFor } from './billShareView'
 
-const RATES = { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0139 }
+const RATES = { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0141 }
 
 describe('receiptFor', () => {
-  it('lists the City first, then schools, County and Madison College, with whole-dollar amounts', () => {
+  it('lists the bodies from the largest share to the smallest, with whole-dollar amounts and each body’s own tone (#1202)', () => {
     const receipt = receiptFor(computeBillShare(500300, RATES), 500300)
-    expect(receipt.slices.map((slice) => slice.key)).toEqual(['city', 'schools', 'county', 'matc'])
-    expect(receipt.slices[0]).toMatchObject({ name: 'City of Madison', tone: 'highlight' })
+    expect(receipt.slices.map((slice) => slice.key)).toEqual(['schools', 'city', 'county', 'matc'])
+    expect(receipt.slices[1]).toMatchObject({ name: 'City of Madison', tone: 'amber' })
     expect(receipt.total).toEqual({ label: 'Total property tax', amount: '$9,339' })
-    expect(receipt.slices.map((slice) => slice.tone)).toEqual([
-      'highlight',
-      'light',
-      'medium',
-      'strong',
-    ])
+    expect(receipt.slices.map((slice) => slice.tone)).toEqual(['rust', 'amber', 'green', 'mint'])
+  })
+
+  it('follows the amounts: a bigger City rate puts the City first, and equal shares keep City, schools, county, Madison College (#1202)', () => {
+    const bigCity = receiptFor(computeBillShare(500300, { ...RATES, city: 12 }), 500300)
+    expect(bigCity.slices.map((slice) => slice.key)).toEqual(['city', 'schools', 'county', 'matc'])
+    const equal = { schools: 5, county: 5, matc: 5, city: 5 }
+    const tied = receiptFor(computeBillShare(500300, equal), 500300)
+    expect(tied.slices.map((slice) => slice.key)).toEqual(['city', 'schools', 'county', 'matc'])
   })
 
   it('names every slice, its dollars and its percent for screen readers', () => {
     const { label } = receiptFor(computeBillShare(500300, RATES), 500300)
     expect(label).toMatch(
-      /^Your whole property tax bill: City of Madison \$3,5\d\d, \d+%; Metropolitan Schools/,
+      /^Your whole property tax bill: Metropolitan Schools \$\d,\d{3}, \d+%; City of Madison \$3,5\d\d, /,
     )
   })
 

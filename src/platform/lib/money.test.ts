@@ -24,6 +24,22 @@ describe('formatMoneyTyping', () => {
   })
 })
 
+describe('formatMoneyTyping while the reader deletes (#1172)', () => {
+  it.each([
+    ['$00,000', '$00,000'],
+    ['$005', '$005'],
+    ['$0', '$0'],
+    ['', ''],
+    ['$1,250,000', '$1,250,000'],
+  ])('keeps the zeros left in front: %j is written %j', (typed, written) => {
+    expect(formatMoneyTyping(typed, { keepLeadingZeros: true })).toBe(written)
+  })
+
+  it('still drops them when told nothing, so a pasted 007 is $7', () => {
+    expect(formatMoneyTyping('007')).toBe('$7')
+  })
+})
+
 describe('caretAfterDigits', () => {
   it('puts the caret after the same number of digits it followed before', () => {
     // typed a 5 in the middle of "$1,2|00" → "$1,25|00" → "$12,500" keeps it after the 5

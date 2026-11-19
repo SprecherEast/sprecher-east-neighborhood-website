@@ -35,6 +35,13 @@ body:
     validations:
       required: true
   - type: textarea
+    id: existing
+    attributes:
+      label: Existing work compared
+      description: What you searched (open and closed issues, the code, the docs), what you found, and why this is new work rather than part of something that exists.
+    validations:
+      required: true
+  - type: textarea
     id: acceptance
     attributes:
       label: Acceptance criteria

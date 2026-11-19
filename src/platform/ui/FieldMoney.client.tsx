@@ -7,6 +7,8 @@ import { caretAfterDigits, formatMoneyTyping } from '@/platform/lib/money'
 
 import { FieldInput } from './FieldInput.client'
 
+const digitCount = (text: string) => text.replace(/\D/g, '').length
+
 export type FieldMoneyProps = Omit<
   ComponentProps<typeof FieldInput>,
   'type' | 'value' | 'onChange' | 'inputMode'
@@ -20,7 +22,9 @@ export type FieldMoneyProps = Omit<
 /**
  * A whole-dollar box (#1035): the reader types digits and the box shows them grouped by commas
  * after a dollar sign, as they go; cents are cut. The caret stays after the digit the reader just
- * typed or deleted, even when commas appear before it. Place it inside a `Field`.
+ * typed or deleted, even when commas appear before it. Deleting a number's first digit keeps the
+ * zeros left in front until the reader leaves the box, so the digit typed next replaces it and the
+ * number keeps its size (#1172). Place it inside a `Field`.
  */
 export function FieldMoney({ value, onValueChange, ref, ...rest }: FieldMoneyProps) {
   const own = useRef<HTMLInputElement | null>(null)
@@ -37,8 +41,9 @@ export function FieldMoney({ value, onValueChange, ref, ...rest }: FieldMoneyPro
 
   const change = (event: ChangeEvent<HTMLInputElement>) => {
     const { value: typed, selectionStart } = event.target
-    const before = typed.slice(0, selectionStart ?? typed.length).replace(/\D/g, '').length
-    const written = formatMoneyTyping(typed)
+    const before = digitCount(typed.slice(0, selectionStart ?? typed.length))
+    const deleting = digitCount(typed) < digitCount(value)
+    const written = formatMoneyTyping(typed, { keepLeadingZeros: deleting })
     if (written === value) {
       // Nothing changes, so React draws nothing and the browser would send the caret to the end
       // (a refused letter, a comma removed by Backspace): put it back once React has reset the box
@@ -66,6 +71,12 @@ export function FieldMoney({ value, onValueChange, ref, ...rest }: FieldMoneyPro
       autoComplete="off"
       value={value}
       onChange={change}
+      onBlur={(event) => {
+        // Leaving the box tidies the zeros that deleting kept in front
+        const tidy = formatMoneyTyping(value)
+        if (tidy !== value) onValueChange(tidy)
+        rest.onBlur?.(event)
+      }}
     />
   )
 }

@@ -53,6 +53,20 @@ Source: `src/platform/ui/BandBackdrop.tsx`
 
 - Platform: `platform/ui`
 
+## `GlassPanel`
+
+Source: `src/platform/ui/GlassPanel.tsx`
+
+| Prop        | Type              | Required | Description                                  |
+| ----------- | ----------------- | -------- | -------------------------------------------- |
+| `children`  | `React.ReactNode` | yes      |                                              |
+| `className` | `string`          | no       | Layout only (margin, width); never the glass |
+
+**Used by** (direct imports):
+
+- Modules: `site`
+- Routes: `/dev/gallery`
+
 ## `ArticlePage`
 
 Source: `src/platform/ui/ArticlePage.tsx`
@@ -71,7 +85,7 @@ Source: `src/platform/ui/ArticlePage.tsx`
 | `textClassName` | `string`                                                                                                                                                                   | no       | The width class the page gives the article's text (`articleColumnClass`). The metadata bar takes it too, so a text-only article's line ends where the text does, not past it (#774).                                                                                           |
 | `toc`           | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The "On this page" menu, when the article has headings to list                                                                                                                                                                                                                 |
 | `aside`         | `React.ReactNode`                                                                                                                                                          | yes      | The related content: related items, a call to action                                                                                                                                                                                                                           |
-| `className`     | `string`                                                                                                                                                                   | no       | The article's top and bottom space, which a post and an event set differently                                                                                                                                                                                                  |
+| `className`     | `string`                                                                                                                                                                   | no       | The article's bottom space, which a post and an event set differently; it has no top space, the title band sets its own (#1279)                                                                                                                                                |
 | `children`      | `React.ReactNode`                                                                                                                                                          | yes      |                                                                                                                                                                                                                                                                                |
 
 **Used by** (direct imports):
@@ -91,7 +105,7 @@ Source: `src/platform/ui/DetailLayout.tsx`
 
 **Used by** (direct imports):
 
-- Routes: `/dev/gallery`
+- Routes: `/dev/gallery`, `/resources/[group]`
 - Platform: `platform/ui`
 
 ## `JsonLd`

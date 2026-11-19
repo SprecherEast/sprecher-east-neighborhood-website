@@ -3,6 +3,7 @@
 import React from 'react'
 
 import { Link } from '@/platform/ui'
+import { NavMenu } from '@/platform/ui/NavMenu.client'
 import { SearchIcon } from 'lucide-react'
 
 import { type HeaderNavLink, isActivePath } from '../domain/nav'
@@ -19,20 +20,33 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ links, pathname, mobile, o
 
   return (
     <nav aria-label="Main" className={mobile ? 'flex flex-col gap-1' : 'flex items-center gap-1'}>
-      {links.map((link, i) => (
-        <Link
-          key={i}
-          href={link.href}
-          external={link.external}
-          variant="nav"
-          size={size}
-          current={isActivePath(pathname, link.href)}
-          className={mobile ? undefined : 'compact:px-2'}
-          onClick={onNavigate}
-        >
-          {link.label}
-        </Link>
-      ))}
+      {links.map((link, i) =>
+        link.children ? (
+          <NavMenu
+            key={i}
+            label={link.label}
+            layout={mobile ? 'stacked' : 'dropdown'}
+            items={link.children.map((child) => ({
+              ...child,
+              current: isActivePath(pathname, child.href),
+            }))}
+            onNavigate={onNavigate}
+          />
+        ) : (
+          <Link
+            key={i}
+            href={link.href}
+            external={link.external}
+            variant="nav"
+            size={size}
+            current={isActivePath(pathname, link.href)}
+            className={mobile ? undefined : 'compact:px-2'}
+            onClick={onNavigate}
+          >
+            {link.label}
+          </Link>
+        ),
+      )}
       <Link
         href="/search"
         variant="nav"

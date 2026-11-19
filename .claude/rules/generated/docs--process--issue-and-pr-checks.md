@@ -65,12 +65,37 @@ comment opener that is never closed hides everything after it, from the opener t
 text, even inside a code span or a code block. A code block is no cover, so leave the opener out
 and describe it in words; otherwise the later answers or sections count as missing.
 
-| ID                | The rule                                                                               |
-| ----------------- | -------------------------------------------------------------------------------------- |
-| `ISSUE-TYPE`      | Exactly one type label.                                                                |
-| `ISSUE-AREA`      | At least one area label.                                                               |
-| `ISSUE-PRIORITY`  | Exactly one priority label.                                                            |
-| `ISSUE-SUMMARY`   | A plain-language summary section (the forms call it Problem).                          |
-| `ISSUE-CRITERIA`  | Acceptance criteria with at least one checkbox that has text.                          |
-| `ISSUE-FILES`     | "Files likely touched" and "Must not touch" filled in, or `None`.                      |
-| `ISSUE-MILESTONE` | A milestone (Backlog until planned). An epic is optional, so there is no parent check. |
+| ID                 | The rule                                                                                                                                                                |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ISSUE-TYPE`       | Exactly one type label.                                                                                                                                                 |
+| `ISSUE-AREA`       | At least one area label.                                                                                                                                                |
+| `ISSUE-PRIORITY`   | Exactly one priority label.                                                                                                                                             |
+| `ISSUE-SUMMARY`    | A plain-language summary section (the forms call it Problem).                                                                                                           |
+| `ISSUE-CRITERIA`   | Acceptance criteria with at least one checkbox that has text.                                                                                                           |
+| `ISSUE-FILES`      | "Files likely touched" and "Must not touch" filled in, or `None`.                                                                                                       |
+| `ISSUE-MILESTONE`  | A milestone (Backlog until planned). An epic is optional, so there is no parent check.                                                                                  |
+| `ISSUE-DUPLICATES` | An "Existing work compared" section (or "Duplicate check"): what was searched and why this is new work. Asked only when a session creates the issue, not of older ones. |
+
+## Where the rules run before the check does
+
+The issue check only warns after the issue exists, so a session meets the same rules earlier
+([#1300](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1300)):
+
+- **At session start,** a Claude Code hook (`.claude/hooks/session-start.mjs`) shows the short process
+  reminder: read the filing checklist, search for duplicates, claim by assigning, never move a card
+  by hand, read the card afterwards.
+- **At filing,** the Bash hook (`.claude/hooks/filing.mjs`) refuses `gh issue create` (or its alias `gh issue new`) and a `gh api`
+  POST to the issues endpoint when the issue would fail the rules above plus `ISSUE-DUPLICATES`. It
+  reads the body from `-f body=`, `-F body=@file`, `--body-file` or `--input <file>`; a body on
+  standard input, a shell expansion (`"$(cat f)"`) or a path with `$` or `~` can't be read, so it is
+  refused with how to pass the file (use an absolute path). A body that
+  starts with `$` or a backtick is read as an expansion, so write it to a file. `--web` opens the
+  browser form, which asks for the sections itself, so it is not checked; `--editor` is refused,
+  as the hook cannot see what is typed there. Labels, comments, sub-issues and fields on an
+  existing issue are untouched. Only this hook enforces `ISSUE-DUPLICATES`: the issue check does not ask it
+  of existing issues, and an issue filed through the API never sees the forms. Other tools get that
+  rule from the issue forms, which ask for "Existing work compared", and from the filing checklist.
+- **After a claim, a pull request and a merge,** `node .github/scripts/card-history.mjs <issue>`
+  lists who changed the card's status and exits 1 on a change made by a person's login; the board moves
+  by itself ([how](/docs/process/project-management.md#the-board)), so that is expected only for the documented
+  fallback, which the issue records.

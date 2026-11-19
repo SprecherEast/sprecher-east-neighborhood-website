@@ -28,8 +28,8 @@ describe('BillShare, the City’s panel (#1020)', () => {
       const before = order[i] as HTMLElement
       expect(before.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     })
-    // Only the whole bill's bar: the City's tax is not drawn again as a bar
-    expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(1)
+    // The whole bill has no segmented bar any more: no image of its own, its rows carry the bars (#1196)
+    expect(container.querySelectorAll('svg[role="img"]')).toHaveLength(0)
     const first = container.querySelector('details') as HTMLDetailsElement
     expect(first.textContent).toContain('Our estimate.')
     // The breakdown is closed when the tab loads, until the reader enters a value (#1163)
@@ -113,7 +113,7 @@ describe('BillShare, the City’s panel (#1020)', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
     expect(screen.getByText('Base year')).toBeTruthy()
-    // 7.0139 mills on $481,300
+    // 7.0141 mills on $481,300
     expect(screen.getAllByText('$3,376').length).toBeGreaterThanOrEqual(2)
   })
 

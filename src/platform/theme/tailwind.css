@@ -116,8 +116,29 @@
       inset: 0;
       z-index: -1;
       pointer-events: none;
-      animation: total-pulse 1.5s ease-out;
+      animation: total-pulse 0.3s ease-out;
     }
+  }
+}
+
+/*
+ * `nav-menu-slide` (#1237): the header's submenu slides down a few pixels as it fades in when it
+ * opens. Only where the reader allows motion; otherwise it just appears.
+ */
+@keyframes nav-menu-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility nav-menu-slide {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: nav-menu-slide 0.18s ease-out;
   }
 }
 
@@ -150,13 +171,15 @@
  * `chart-fill-x` (#1163): the same growth as `chart-reveal-x`, but over time rather than scrolling,
  * for bars that appear when a row opens in place: each time the element is drawn anew, the bars grow
  * from the baseline for one second (`FILL_MS` in `useReplayProgress.client.ts`, which a test holds to
- * it), with the counting's ease. On screen and with motion allowed only; everywhere else, full.
+ * it) after a 500 ms wait for the row to expand (`EXPAND_MS`), with the counting's ease. On screen
+ * and with motion allowed only; everywhere else, full.
  */
 @utility chart-fill-x {
   @media screen and (prefers-reduced-motion: no-preference) {
     transform-box: fill-box;
     transform-origin: left center;
     animation: chart-reveal-x 1s cubic-bezier(0.33, 1, 0.68, 1) both;
+    animation-delay: 500ms;
   }
 }
 
@@ -218,4 +241,50 @@
     --chart-5: var(--chart-warm-5);
     --chart-6: var(--chart-warm-6);
   }
+}
+
+/*
+ * `hero-geometry` (#1304): the home hero's measures, worked out from its photo. The hero sets
+ * `--hero-aspect` and `--hero-focal-y` (`heroPhotoVars`), and this gives its parts the photo box's
+ * height, the photo at full width but never under the least height, and the horizon, the focal
+ * point's height in that box. The hero is a size container, so `cqw` is its own width and the
+ * photo's height follows the screen. From `md` the note and the buttons sit side by side, so the
+ * least height is a little lower, and from `lg` the larger title takes two lines, so it is higher again. The variables are read by the hero's children, where `cqw` is
+ * worked out.
+ */
+@utility hero-geometry {
+  container-type: inline-size;
+  --hero-photo-h: max(calc(100cqw / var(--hero-aspect)), var(--hero-photo-min));
+  --hero-horizon: calc(var(--hero-focal-y) * var(--hero-photo-h));
+
+  @media (width >= 48rem) {
+    --hero-photo-h: max(calc(100cqw / var(--hero-aspect)), var(--hero-photo-min-md));
+  }
+
+  @media (width >= 64rem) {
+    --hero-photo-h: max(calc(100cqw / var(--hero-aspect)), var(--hero-photo-min-lg));
+  }
+}
+
+/*
+ * `hero-fade` (#1304): the photo fades into the page colour along an eased curve (smoothstep), so
+ * there is no sudden start or stop: each stop is the page colour at the curve's strength, from
+ * clear at the top to solid at the bottom. A plain two-colour gradient starts and stops with a
+ * visible edge.
+ */
+@utility hero-fade {
+  background-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--color-background) 2.8%, transparent) 10%,
+    color-mix(in srgb, var(--color-background) 10.4%, transparent) 20%,
+    color-mix(in srgb, var(--color-background) 21.6%, transparent) 30%,
+    color-mix(in srgb, var(--color-background) 35.2%, transparent) 40%,
+    color-mix(in srgb, var(--color-background) 50%, transparent) 50%,
+    color-mix(in srgb, var(--color-background) 64.8%, transparent) 60%,
+    color-mix(in srgb, var(--color-background) 78.4%, transparent) 70%,
+    color-mix(in srgb, var(--color-background) 89.6%, transparent) 80%,
+    color-mix(in srgb, var(--color-background) 97.2%, transparent) 90%,
+    var(--color-background) 100%
+  );
 }
