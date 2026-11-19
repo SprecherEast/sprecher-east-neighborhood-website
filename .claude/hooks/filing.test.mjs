@@ -194,11 +194,21 @@ describe('filingCheck: forms a complete filing can take', () => {
       expect(check(command, ok), command).toContain('absolute file')
   })
 
-  it('lets the browser and editor forms through, and names standard input for -F -', () => {
+  it('lets the browser form through, refuses the editor, and names standard input for -F -', () => {
     expect(check('gh issue create --web')).toBeNull()
-    expect(check('gh issue create -e -t T')).toBeNull()
+    expect(check('gh issue create -e -t T')).toContain('--body-file <absolute file>')
     expect(check('gh issue create -F -')).toContain('standard input')
     expect(check('gh api repos/o/r/issues -F body=@-')).toContain('standard input')
+  })
+
+  it('sees a filing with a flag before the subcommand and a trailing slash', () => {
+    expect(check('gh issue -R o/r create -t T -b x')).toContain('ISSUE-')
+    expect(check('gh api repos/o/r/issues/ -f title=T')).toContain('ISSUE-')
+  })
+
+  it('reads one file argument the same way everywhere: --input gets the path and stdin checks', () => {
+    expect(check('gh api repos/o/r/issues --input ~/i.json')).toContain('absolute file')
+    expect(check('gh api repos/o/r/issues --input $F')).toContain('absolute file')
   })
 
   it('tells gh issue create to use --body-file, and gh api -F body=@', () => {

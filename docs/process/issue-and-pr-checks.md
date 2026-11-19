@@ -79,8 +79,9 @@ The issue check only warns after the issue exists, so a session meets the same r
   reads the body from `-f body=`, `-F body=@file`, `--body-file` or `--input <file>`; a body on
   standard input, a shell expansion (`"$(cat f)"`) or a path with `$` or `~` can't be read, so it is
   refused with how to pass the file (use an absolute path). A body that
-  starts with `$` or a backtick is read as an expansion, so write it to a file. `--web` and
-  `--editor` open the form, which asks for the sections itself, so they are not checked. Labels, comments, sub-issues and fields on an
+  starts with `$` or a backtick is read as an expansion, so write it to a file. `--web` opens the
+  browser form, which asks for the sections itself, so it is not checked; `--editor` is refused,
+  as the hook cannot see what is typed there. Labels, comments, sub-issues and fields on an
   existing issue are untouched. Only this hook enforces `ISSUE-DUPLICATES`: the issue check does not ask it
   of existing issues, and an issue filed through the API never sees the forms. Other tools get that
   rule from the issue forms, which ask for "Existing work compared", and from the filing checklist.

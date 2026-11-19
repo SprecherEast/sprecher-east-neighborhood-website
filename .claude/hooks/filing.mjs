@@ -14,7 +14,7 @@ export const SESSION_REMINDER = [
 ].join('\n')
 
 /** The issues endpoint of a repository, as `gh api` is given it */
-const ISSUES_ENDPOINT = /^\/?repos\/[^/]+\/[^/]+\/issues$/
+const ISSUES_ENDPOINT = /^\/?repos\/[^/]+\/[^/]+\/issues\/?$/
 
 // What each flag of a gh command does, one table per command: the issue field it sets, `field` and
 // `rawField` (a `key=value` of `gh api`, `-F` reading `@file`), `input`, `method`, or `ignored`.
@@ -60,8 +60,8 @@ const CREATE_FLAGS = {
   ),
 }
 
-/** The issue fields a `gh api` key sets */
-const API_KEYS = { title: 'title', body: 'body', 'labels[]': 'labels', milestone: 'milestone' }
+/** The fields of an issue, as `POST /issues` names them (`gh api` writes `labels[]` for `labels`) */
+const ISSUE_FIELDS = ['title', 'body', 'labels', 'milestone']
 
 /**
  * Splits a gh command's words into what its flags do (`[kind, value]`, from `table`) and its other
@@ -99,7 +99,23 @@ function emptyRequest(how) {
 /** A body that is wholly a shell expansion (`$(cat f)`): its text is not in the command */
 const isExpansion = (value) => /^\s*(\$|`)/.test(value)
 
-/** Sets one issue field of the request; `bodyFile` is read from disk, and `-` is standard input */
+/** Reads a file argument's text, or marks the request unreadable and returns null */
+function readText(request, file, readFile) {
+  if (file === '-') request.unreadable = 'input'
+  else if (/[$`]|^~/.test(file)) request.unreadable = 'path'
+  else
+    try {
+      return readFile(file)
+    } catch {
+      request.unreadable = 'path'
+    }
+  return null
+}
+
+/**
+ * Sets one issue field of the request. `body` is text typed in the command (a shell expansion
+ * there is not its text), `bodyFile` is read from disk, `bodyText` is text already read.
+ */
 function setField(request, field, value, readFile) {
   if (field === 'labels')
     request.labels.push(
@@ -108,19 +124,14 @@ function setField(request, field, value, readFile) {
         .map((l) => l.trim())
         .filter(Boolean),
     )
-  else if (field === 'title' || field === 'milestone') request[field] = value
+  else if (field === 'title' || field === 'milestone' || field === 'bodyText')
+    request[field === 'bodyText' ? 'body' : field] = value
   else if (field === 'body') {
     if (isExpansion(value)) request.unreadable = 'expansion'
     else request.body = value
   } else if (field === 'bodyFile') {
-    if (value === '-') request.unreadable = 'input'
-    else if (/[$`]|^~/.test(value)) request.unreadable = 'path'
-    else
-      try {
-        request.body = readFile(value)
-      } catch {
-        request.unreadable = 'path'
-      }
+    const text = readText(request, value, readFile)
+    if (text != null) request.body = text
   }
 }
 
@@ -135,32 +146,38 @@ function apiRequest(words, readFile) {
   const request = emptyRequest('api')
   for (const [kind, value] of sent) {
     if (kind === 'input') {
+      const text = readText(request, value, readFile)
+      if (text == null) continue
       try {
-        const json = JSON.parse(readFile(value))
-        for (const field of ['title', 'body', 'milestone'])
-          if (json[field] != null) setField(request, field, String(json[field]), readFile)
-        for (const label of json.labels ?? [])
-          setField(request, 'labels', label?.name ?? label, readFile)
+        const json = JSON.parse(text)
+        for (const field of ISSUE_FIELDS)
+          for (const item of [].concat(json[field] ?? []))
+            setField(
+              request,
+              field === 'body' ? 'bodyText' : field,
+              String(item?.name ?? item),
+              readFile,
+            )
       } catch {
-        request.unreadable = value === '-' ? 'input' : 'path'
+        request.unreadable = 'path'
       }
       continue
     }
     const at = value.indexOf('=')
-    const field = API_KEYS[value.slice(0, at)]
+    const field = value.slice(0, at).replace(/\[\]$/, '')
     const text = value.slice(at + 1)
     if (at > 0 && field === 'body' && kind === 'field' && text.startsWith('@'))
       setField(request, 'bodyFile', text.slice(1), readFile)
-    else if (at > 0 && field) setField(request, field, text, readFile)
+    else if (at > 0 && ISSUE_FIELDS.includes(field)) setField(request, field, text, readFile)
   }
   return request
 }
 
-/** The issue a `gh issue create` call makes */
-function createRequest(words, readFile) {
-  const { flags } = parseFlags(words.slice(3), CREATE_FLAGS)
-  if (flags.some(([, , name]) => ['-w', '--web', '-e', '--editor'].includes(name))) return null
+/** The issue a `gh issue create` call makes: `--web` opens the form, `--editor` is not visible */
+function createRequest(flags, readFile) {
+  if (flags.some(([, , name]) => ['-w', '--web'].includes(name))) return null
   const request = emptyRequest('create')
+  if (flags.some(([, , name]) => ['-e', '--editor'].includes(name))) request.unreadable = 'editor'
   for (const [kind, value] of flags) setField(request, kind, value, readFile)
   return request
 }
@@ -177,9 +194,10 @@ export function filingRequests(command, readFile = () => '') {
   for (const all of parseCommands(command)) {
     const words = ghWords(all)
     if (!words) continue
+    const issue = words[1] === 'issue' ? parseFlags(words.slice(2), CREATE_FLAGS) : null
     const request =
-      words[1] === 'issue' && words[2] === 'create'
-        ? createRequest(words, readFile)
+      issue?.rest[0] === 'create'
+        ? createRequest(issue.flags, readFile)
         : words[1] === 'api'
           ? apiRequest(words, readFile)
           : null
@@ -200,7 +218,9 @@ function unreadableReason(request) {
       ? 'the body is a shell expansion, so its text is not in the command'
       : request.unreadable === 'input'
         ? 'the body is on standard input'
-        : 'the file could not be read (a path with `$` or `~`, or not found from the session directory)'
+        : request.unreadable === 'editor'
+          ? 'the body would be written in an editor, which the hook cannot see'
+          : 'the file could not be read (a path with `$` or `~`, or not found from the session directory)'
   return `Filing: ${why}. Write the issue to a file first and pass ${PASS[request.how]}, so it can be checked against docs/process/filing-checklist.md.`
 }
 
