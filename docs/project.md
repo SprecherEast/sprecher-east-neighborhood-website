@@ -178,6 +178,7 @@ npm run dev                         # → http://localhost:3000
 | `GITHUB_READ_TOKEN`, `ROADMAP_GITHUB_REPO`                                                | Plan page (optional): a read-only GitHub token lifts the 60 reads an hour limit; the repo to read (`owner/name`, default this one)           |
 | `SEED_PASSWORD`                                                                           | Seed only: the demo user's password (random when unset)                                                                                      |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                                                | Google sign-in (#188); on only when both are set                                                                                             |
+| `PASSKEYS_ENABLED`                                                                        | Passkeys (#1313, decision 0021): on only when exactly `true`; off by default. Needs an https `NEXT_PUBLIC_SERVER_URL` on a domain name       |
 
 System-level env vars (not in .env.local):
 | Var | Purpose |

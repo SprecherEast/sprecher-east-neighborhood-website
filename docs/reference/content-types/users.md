@@ -27,6 +27,7 @@
 | beforeChange    | `requireCurrentPassword`      | `src/modules/accounts/cms/requireCurrentPassword.ts`      |
 | beforeChange    | `requireConfirmedEmailChange` | `src/modules/accounts/cms/requireConfirmedEmailChange.ts` |
 | beforeChange    | `guestOnlyFromProviders`      | `src/modules/accounts/cms/guestOnlyFromProviders.ts`      |
+| beforeDelete    | `deletePasskeysWithAccount`   | `src/modules/accounts/cms/deletePasskeysWithAccount.ts`   |
 | beforeLogin     | `noPasswordSignInForAgents`   | `src/modules/accounts/cms/noPasswordSignInForAgents.ts`   |
 
 ## Custom endpoints
@@ -59,6 +60,7 @@
 | `verificationResendsSince` | date     | no       |                                       | hidden; access create, read, update: nobody (always denies)                                   |
 | `verificationSetsPassword` | checkbox | no       |                                       | hidden; default false; access create, read, update: nobody (always denies)                    |
 | `googleSub`                | text     | no       |                                       | hidden; unique; indexed; access create, read, update: nobody (always denies)                  |
+| `passkeyUserHandle`        | text     | no       |                                       | hidden; unique; indexed; access create, read, update: nobody (always denies)                  |
 | `verifiedTokenHash`        | text     | no       |                                       | hidden; indexed; access create, read, update: nobody (always denies)                          |
 | `updatedAt`                | date     | no       |                                       | hidden; indexed                                                                               |
 | `createdAt`                | date     | no       |                                       | hidden; indexed                                                                               |
@@ -82,5 +84,6 @@
 | Field                | Phase           | Function                      | Defined in |
 | -------------------- | --------------- | ----------------------------- | ---------- |
 | `googleSub`          | beforeDuplicate | `unique`                      | payload    |
+| `passkeyUserHandle`  | beforeDuplicate | `unique`                      | payload    |
 | `email`              | beforeChange    | inline                        | payload    |
 | `_verificationToken` | beforeChange    | `autoRemoveVerificationToken` | payload    |
