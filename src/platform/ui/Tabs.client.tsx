@@ -47,13 +47,15 @@ const TAB_GAP = 'gap-1 sm:gap-2'
  * tab carries the one string: the selected state is a `data-[state=active]` variant of it. On a
  * phone the gap, side padding, type size and letter spacing are as small as the theme allows, so a
  * label of the editor's limit (bold when selected) keeps visible room at the narrowest width, 320 px;
- * the sizes step up at 390 px and from `sm`.
+ * the sizes step up at 390 px and from `sm`. The quiet and selected looks are the `tab-quiet` and
+ * `tab-selected` utilities (theme/tabs.css), so the rules that show a tab before the script runs
+ * (#1309) wear exactly the same look.
  */
 
 const TAB_LOOK = [
-  'flex min-h-12 min-w-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card px-0 text-center text-fine font-medium tracking-tighter whitespace-nowrap text-muted-foreground transition-colors duration-200 hover:bg-surface hover:text-foreground min-[390px]:text-xs min-[390px]:tracking-tight sm:px-2 sm:text-sm sm:tracking-normal',
+  'tab-quiet flex min-h-12 min-w-0 cursor-pointer items-center justify-center rounded-lg border px-0 text-center text-fine tracking-tighter whitespace-nowrap transition-colors duration-200 hover:bg-surface hover:text-foreground min-[390px]:text-xs min-[390px]:tracking-tight sm:px-2 sm:text-sm sm:tracking-normal',
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
-  'data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:hover:bg-primary/10',
+  'data-[state=active]:tab-selected data-[state=active]:hover:bg-primary/10',
 ].join(' ')
 
 /*
@@ -69,6 +71,9 @@ export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }
   // The fade runs after the reader changes tab, not on the page's first paint
   const [changed, setChanged] = useState(false)
   const [current, setCurrent] = useState(defaultValue)
+  // Set once the script has chosen the tab; until then the server's HTML and CSS show the tab the
+  // link names (#1309, theme/tabs.css)
+  const [ready, setReady] = useState(false)
   const root = useRef<HTMLDivElement>(null)
   // Every tab has a link of its own (#1097): the page's address plus the tab's name
   const anchors = items.map((item) => item.anchor ?? item.value)
@@ -86,7 +91,10 @@ export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }
   }
 
   // A link that names a tab opens it and brings the tabs into view, on load and whenever the
-  // address changes on the page (a link, or Back); a name that is not a tab changes nothing
+  // address changes on the page (a link, or Back); a name that is not a tab changes nothing. A
+  // link the browser itself followed already brought the tabs into view (their target is the
+  // `:target`), so the script does not scroll again, which would pull a reader back who had
+  // moved on while the page loaded (#1309)
   useEffect(() => {
     const open = () => {
       let wanted = ''
@@ -100,9 +108,12 @@ export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }
       const value = values.split('\n')[index]
       if (value === undefined) return
       setCurrent(value)
-      root.current?.scrollIntoView({ block: 'start' })
+      if (!root.current?.querySelector('[data-tab-target]:target')) {
+        root.current?.scrollIntoView({ block: 'start' })
+      }
     }
     open()
+    setReady(true)
     window.addEventListener('hashchange', open)
     return () => window.removeEventListener('hashchange', open)
     // `names` and `values` stand for the items': the items themselves are new on every render
@@ -121,24 +132,38 @@ export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }
       ref={root}
       value={current}
       data-tab-names={names}
+      data-tabs-ready={ready || undefined}
       onValueChange={choose}
       data-changed={changed || undefined}
-      className={cn(HEADER_SCROLL_MARGIN, 'group/tabs flex flex-col', TAB_GAP, className)}
+      className={cn(HEADER_SCROLL_MARGIN, 'group/tabs relative flex flex-col', TAB_GAP, className)}
     >
+      {/* The link targets (#1309): the browser follows a link that names a tab to its target on its
+          own, before any script, scrolling to the top of the tabs and, with theme/tabs.css, showing
+          the tab. Out of the flow, so they take no room and no gap */}
+      {anchors.map((anchor, index) => (
+        <span
+          key={anchor}
+          id={anchor}
+          data-tab-target={index}
+          aria-hidden="true"
+          className={cn(HEADER_SCROLL_MARGIN, 'pointer-events-none absolute top-0 left-0 size-0')}
+        />
+      ))}
       <RadixTabs.List
         aria-label={label}
         className={cn('hidden auto-cols-[minmax(0,1fr)] grid-flow-col scripted:grid', TAB_GAP)}
       >
-        {items.map(({ value, trigger }) => (
-          <RadixTabs.Trigger key={value} value={value} className={TAB_LOOK}>
+        {items.map(({ value, trigger }, index) => (
+          <RadixTabs.Trigger key={value} value={value} data-tab-index={index} className={TAB_LOOK}>
             {trigger}
           </RadixTabs.Trigger>
         ))}
       </RadixTabs.List>
-      {items.map(({ value, heading, panel }) => (
+      {items.map(({ value, heading, panel }, index) => (
         <RadixTabs.Content
           key={value}
           value={value}
+          data-tab-index={index}
           forceMount
           className={cn(
             cardVariants({ variant: 'elevated', padding: 'sm' }),

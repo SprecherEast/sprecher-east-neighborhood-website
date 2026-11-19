@@ -78,7 +78,7 @@ describe('FactTabs', () => {
     setup()
     const [tab] = screen.getAllByRole('tab')
     expect(tab?.className).toMatch(/min-h-12/)
-    expect(tab?.className).toMatch(/data-\[state=active\]:border-primary/)
+    expect(tab?.className).toMatch(/data-\[state=active\]:tab-selected/)
     expect(tab?.className).toMatch(/focus-visible:outline-2/)
   })
 
