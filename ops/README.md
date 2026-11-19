@@ -78,7 +78,8 @@ or by an agent, within the limits in [`wrapped`](../.agents/skills/wrapped/SKILL
    - links `.env.local`, `data/` and `public/media` from `/var/www/sprecher-east` into it
    - backs up (`backup.sh pre-deploy`) and runs `payload migrate`, while the live release serves.
      The database waits up to 5 s for a lock (`SQLITE_BUSY_TIMEOUT_MS`), and if `payload migrate`
-     still fails with `SQLITE_BUSY`, `run_migrate` (`lib.sh`) waits 5 s and tries once more; any
+     still fails with `SQLITE_BUSY` with no migration cut off, `run_migrate` (`lib.sh`) waits 5 s and
+     runs it once more (a cut-off migration may be half applied, so it never re-runs); any
      other failure, or a second one, stops the deploy with the live site unchanged (#1147, #153)
    - drops the pages prerendered in CI (their database was empty); each page renders from the
      live database on its first visit and is cached from then on
