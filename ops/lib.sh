@@ -21,6 +21,9 @@ CADDYFILE="${CADDYFILE:-/etc/caddy/Caddyfile}"
 HSTS_FILE="${HSTS_FILE:-/etc/caddy/sprecher-east-hsts.caddy}" # a copy of ops/caddy/hsts.caddy (caddy-https.sh)
 # shellcheck disable=SC2034
 RELOAD_CADDY="${RELOAD_CADDY:-systemctl reload caddy}"
+# The request body limit file caddy-limits.sh installs; the preview site block imports it too (#959).
+# shellcheck disable=SC2034
+LIMITS_FILE="${LIMITS_FILE:-/etc/caddy/sprecher-east-form-limits.caddy}"
 # Pull request previews (#1072): the folder of per-preview site blocks the Caddyfile imports, and
 # the copy of ops/caddy/preview-headers.caddy those blocks import.
 # shellcheck disable=SC2034
@@ -177,6 +180,29 @@ caddy_reload_problem() { # <what the config now has> [seconds the site gets to a
     echo "Caddy would not reload with $1"
   elif ! wait_until_up "${2:-20}"; then
     echo "the site stopped answering after adding $1"
+  fi
+}
+
+# True when the Caddyfile has a top-level `import <target>` line, however it was indented, spaced
+# or commented by hand.
+caddy_import_present() { # <the path or glob that is imported>
+  awk -v want="$1" '{ sub(/#.*/, "") } $1 == "import" && $2 == want && NF == 2 { found = 1 } END { exit !found }' "$CADDYFILE" 2>/dev/null
+}
+
+# Puts a Caddy change back: the Caddyfile from its backup (when one is given), the caller's own
+# files, then a reload. Prints what could not be put back, and returns 1, if anything.
+caddy_roll_back() { # <Caddyfile backup, or empty> <function that restores the caller's files: on failure it prints what it could not and returns 1>
+  local failed="" own
+  # cp reads the backup before it truncates the Caddyfile, so an unreadable backup can't empty it.
+  if [ -n "$1" ] && ! cp "$1" "$CADDYFILE"; then failed="the Caddyfile (backup: $1)"; fi
+  if ! own=$("$2"); then failed="${failed:+$failed and }$own"; fi
+  if [ -n "$failed" ]; then
+    echo "Could not put back $failed."
+    return 1
+  fi
+  if ! $RELOAD_CADDY >/dev/null 2>&1; then
+    echo "The previous files are back, but Caddy would not reload them."
+    return 1
   fi
 }
 

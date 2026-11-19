@@ -31,6 +31,7 @@ beforeEach(() => {
     write(p('code/ops/caddy', f), fs.readFileSync(path.join(OPS, 'caddy', f)))
   write(p('app/.env.local'), 'NEXT_PUBLIC_SERVER_URL=https://sprechereast.com\n')
   write(p('caddy/Caddyfile'), SITE)
+  write(p('caddy/sprecher-east-form-limits.caddy'), '# the form limits\n')
   fs.writeFileSync(p('log'), '')
   // `caddy validate` fails for a config that has the word in STUB_CADDY_REJECTS, and a reload
   // after it fails when STUB_RELOAD_FAILS is set; both only while the new import is in place.
@@ -39,7 +40,13 @@ beforeEach(() => {
     [
       '[ "$1" = validate ] || exit 0',
       'echo "validate $(basename "$3")" >> "$STUB_LOG"',
-      '[ -z "$STUB_CADDY_REJECTS" ] || ! grep -q "$STUB_CADDY_REJECTS" "$3"',
+      '[ -z "$STUB_KEEP_VALIDATED" ] || cat "$3" >> "$STUB_KEEP_VALIDATED"',
+      '[ -z "$STUB_CADDY_REJECTS" ] && exit 0',
+      'grep -q "$STUB_CADDY_REJECTS" "$3" && exit 1',
+      // a file the config imports by name (not a glob) counts as part of it
+      'for f in $(sed -n "s/^[[:space:]]*import[[:space:]]\\{1,\\}\\([^[:space:]*]*\\)$/\\1/p" "$3"); do',
+      '  [ ! -f "$f" ] || ! grep -q "$STUB_CADDY_REJECTS" "$f" || exit 1',
+      'done',
     ].join('\n'),
   )
   // The home page answers 200 unless STUB_STATUS says otherwise; after the reload STUB_DOWN_AFTER
@@ -165,10 +172,51 @@ describe('caddy-previews.sh: it never leaves Caddy worse off', () => {
     expect(fs.existsSync(p('caddy/sprecher-east-preview-headers.caddy'))).toBe(false)
   })
 
-  it('puts everything back when the site stops answering after the reload', async () => {
-    const { code, out } = await run('caddy-previews.sh', { STUB_DOWN_AFTER: '1' })
+  it('puts everything back, and reloads Caddy again, when the site stops answering after the reload', async () => {
+    const { code, out, log } = await run('caddy-previews.sh', { STUB_DOWN_AFTER: '1' })
     expect(code).toBe(1)
     expect(out).toContain('stopped answering')
+    expect(caddyfile()).toBe(SITE)
+    expect(log.match(/^reload$/gm)).toHaveLength(2) // the change, and the rollback that makes Caddy load the old files
+  })
+
+  it('puts the previous headers file back, not just removes one, when Caddy will not reload', async () => {
+    write(p('caddy/sprecher-east-preview-headers.caddy'), '# the earlier headers\n')
+    write(p('caddy/Caddyfile'), `${SITE}\n${IMPORT(previewDir())}\n`) // the line is there, only the headers differ
+    const { code } = await run('caddy-previews.sh', { STUB_RELOAD_FAILS: '1' })
+    // The stub fails a reload only while the Caddyfile has the import; here it always has, so it fails.
+    expect(code).toBe(1)
+    expect(fs.readFileSync(p('caddy/sprecher-east-preview-headers.caddy'), 'utf8')).toBe(
+      '# the earlier headers\n',
+    )
+  })
+
+  it('rejects a broken headers snippet before any reload, and keeps the one that works', async () => {
+    await run('caddy-previews.sh')
+    const working = fs.readFileSync(p('caddy/sprecher-east-preview-headers.caddy'), 'utf8')
+    write(p('code/ops/caddy/preview-headers.caddy'), 'garbage {{{\n')
+    fs.writeFileSync(p('log'), '')
+    const { code, out, log } = await run('caddy-previews.sh', { STUB_CADDY_REJECTS: 'garbage' })
+    expect(code).toBe(1)
+    expect(out).toContain('Caddy rejected the pull request preview headers')
+    expect(fs.readFileSync(p('caddy/sprecher-east-preview-headers.caddy'), 'utf8')).toBe(working)
+    expect(log).not.toContain('reload')
+  })
+
+  it('validates a sample preview block made from the template, with the headers and the form limits', async () => {
+    await run('caddy-previews.sh', { STUB_KEEP_VALIDATED: p('validated') })
+    const seen = fs.readFileSync(p('validated'), 'utf8')
+    expect(seen).toContain('http://preview-check.invalid {')
+    expect(seen).toContain(`import ${p('caddy/sprecher-east-preview-headers.caddy')}`)
+    expect(seen).toContain(`import ${p('caddy/sprecher-east-form-limits.caddy')}`)
+    expect(seen).not.toMatch(/__[A-Z_]+__/) // every placeholder was filled in
+  })
+
+  it('does nothing, with a warning, when the form limits are not in place yet', async () => {
+    fs.rmSync(p('caddy/sprecher-east-form-limits.caddy'))
+    const { code, out } = await run('caddy-previews.sh')
+    expect(code).toBe(0)
+    expect(out).toContain('WARNING')
     expect(caddyfile()).toBe(SITE)
   })
 
@@ -209,13 +257,27 @@ describe('the other Caddy script is unaffected by the new line', () => {
   })
 })
 
+describe('caddy-limits.sh still rolls back as before, now through the shared helper', () => {
+  it('puts the Caddyfile and the limit back, and says so, when Caddy will not reload', async () => {
+    const withLine = `${SITE}\n${IMPORT(previewDir())}\n`
+    write(p('caddy/Caddyfile'), withLine)
+    fs.rmSync(p('caddy/sprecher-east-form-limits.caddy')) // a first install of the limit
+    const { code, out } = await run('caddy-limits.sh', { STUB_RELOAD_FAILS: '1' })
+    expect(code).toBe(1)
+    expect(out).toContain('Caddy would not reload with the request body limit')
+    expect(out).toContain('The previous files are back, but Caddy would not reload them.')
+    expect(caddyfile()).toBe(withLine)
+    expect(fs.existsSync(p('caddy/sprecher-east-form-limits.caddy'))).toBe(false)
+  })
+})
+
 describe('the preview headers snippet and site block template', () => {
   const read = (f) => fs.readFileSync(path.join(OPS, 'caddy', f), 'utf8')
   const code = (text) => text.replace(/^\s*#.*$/gm, '') // the files' comments mention what they leave out
 
   it('sets noindex, nofollow and answers /robots.txt with a blanket disallow', () => {
     const headers = code(read('preview-headers.caddy'))
-    expect(headers).toContain('header X-Robots-Tag "noindex, nofollow"')
+    expect(headers).toContain('header >X-Robots-Tag "noindex, nofollow"')
     expect(headers).toMatch(/respond \/robots\.txt `User-agent: \*\nDisallow: \/\n` 200/)
   })
 

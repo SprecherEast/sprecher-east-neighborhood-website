@@ -6,10 +6,7 @@
 # Needs $UMAMI_HOST. Messages never include file contents.
 
 import_line() { echo "import $UMAMI_CADDY_FILE"; }
-# True when the Caddyfile has the import line, however it was indented, spaced or commented by hand.
-umami_route_imported() {
-  awk -v want="$UMAMI_CADDY_FILE" '{ sub(/#.*/, "") } $1 == "import" && $2 == want && NF == 2 { found = 1 } END { exit !found }' "$CADDYFILE" 2>/dev/null
-}
+umami_route_imported() { caddy_import_present "$UMAMI_CADDY_FILE"; }
 
 put_back() { # <saved copy or empty>: the route file as it was
   if [ -n "$1" ]; then mv -f "$1" "$UMAMI_CADDY_FILE"; else rm -f "$UMAMI_CADDY_FILE"; fi

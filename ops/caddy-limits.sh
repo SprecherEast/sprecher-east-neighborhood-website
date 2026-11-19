@@ -22,7 +22,6 @@ on_unexpected_error() {
 }
 trap 'on_unexpected_error $LINENO' ERR
 
-LIMITS_FILE="${LIMITS_FILE:-/etc/caddy/sprecher-east-form-limits.caddy}"
 APP_PORT="${APP_PORT:-3000}"
 SOURCE="$CODE_DIR/ops/caddy/form-limits.caddy"
 IMPORT_LINE="import $LIMITS_FILE"
@@ -161,23 +160,9 @@ else
     cp "$candidate" "$CADDYFILE" # cp onto the existing file keeps its owner and mode
   fi
 
+  restore_limits_say() { restore_limits || { echo "the limit (copy: $limits_backup)" && return 1; }; }
   # Puts the previous Caddyfile and limit back and reloads. On failure, prints what went wrong.
-  restore_all() {
-    local failed=""
-    # cp reads the backup before it truncates the Caddyfile, so an unreadable backup can't empty it.
-    if [ "$added" -gt 0 ] && ! cp "$CADDYFILE.bak-$stamp" "$CADDYFILE"; then
-      failed="the Caddyfile (backup: $CADDYFILE.bak-$stamp)"
-    fi
-    if ! restore_limits; then failed="${failed:+$failed and }the limit (copy: $limits_backup)"; fi
-    if [ -n "$failed" ]; then
-      echo "Could not put back $failed."
-      return 1
-    fi
-    if ! $RELOAD_CADDY >/dev/null 2>&1; then
-      echo "The previous files are back, but Caddy would not reload them."
-      return 1
-    fi
-  }
+  restore_all() { caddy_roll_back "$([ "$added" -gt 0 ] && echo "$CADDYFILE.bak-$stamp" || true)" restore_limits_say; }
 
   problem=$(caddy_reload_problem "the request body limit")
   if [ -n "$problem" ]; then

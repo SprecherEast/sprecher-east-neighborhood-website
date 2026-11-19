@@ -5,9 +5,12 @@
 # https://caddyserver.com/docs/caddyfile/directives/import). Writing one block per preview is the
 # preview deploy's job.
 #
-# The Caddyfile only gains the import line, after a dated backup and a `caddy validate`. If Caddy
-# won't reload, or the site stops answering, the previous files come back. Running it again
-# changes nothing. Every deploy runs it, so the line comes back unless this script is removed.
+# Nothing is reloaded before Caddy accepts the new Caddyfile together with a sample preview block
+# made from ops/caddy/preview-site.caddy, so a broken snippet is caught here, at every deploy,
+# not when the first preview needs it. The Caddyfile only gains the import line, after a dated
+# backup. If Caddy won't reload, or the site stops answering, the previous files come back. Running
+# it again changes nothing. Every deploy runs it, so the line comes back unless this script is
+# removed from the repo.
 set -Eeuo pipefail
 umask 077
 trap '' HUP # a dropped SSH session must not stop the script between a change and its rollback
@@ -21,21 +24,23 @@ on_unexpected_error() {
 }
 trap 'on_unexpected_error $LINENO' ERR
 
-SOURCE="$CODE_DIR/ops/caddy/preview-headers.caddy"
-IMPORT_LINE="import $PREVIEW_CADDY_DIR/*.caddy"
+HEADERS_SOURCE="$CODE_DIR/ops/caddy/preview-headers.caddy"
+SITE_TEMPLATE="$CODE_DIR/ops/caddy/preview-site.caddy"
+IMPORT_TARGET="$PREVIEW_CADDY_DIR/*.caddy"
 
 if ! command -v caddy >/dev/null || [ ! -f "$CADDYFILE" ]; then
   report "WARNING: Caddy or $CADDYFILE not found, so pull request previews were not prepared"
   exit 0
 fi
 
-# True when the Caddyfile has the import line, however it was indented, spaced or commented by hand.
-import_present() {
-  awk -v want="$PREVIEW_CADDY_DIR/*.caddy" '{ sub(/#.*/, "") } $1 == "import" && $2 == want && NF == 2 { found = 1 } END { exit !found }' "$CADDYFILE"
-}
-
 if ! caddy_accepts "$CADDYFILE"; then
   report "WARNING: the current Caddyfile does not validate in the deploy shell, so it was left alone"
+  exit 0
+fi
+
+# A preview block imports the form limits, which caddy-limits.sh installs earlier in the deploy.
+if [ ! -f "$LIMITS_FILE" ]; then
+  report "WARNING: $LIMITS_FILE not found (ops/caddy-limits.sh installs it), so pull request previews were not prepared"
   exit 0
 fi
 
@@ -46,34 +51,48 @@ if ! wait_until_up "${UP_WAIT:-90}"; then
   exit 0
 fi
 
-stamp=$(date -u +%Y%m%dT%H%M%SZ)
-candidate="$CADDYFILE.sprecher-east-new"
-headers_backup=""
-trap 'rm -f "$candidate"' EXIT
-
 add_line=no
-import_present || add_line=yes
+caddy_import_present "$IMPORT_TARGET" || add_line=yes
 headers_changed=no
-cmp -s "$SOURCE" "$PREVIEW_HEADERS_FILE" 2>/dev/null || headers_changed=yes
-
-install -d -m 755 "$PREVIEW_CADDY_DIR"
+cmp -s "$HEADERS_SOURCE" "$PREVIEW_HEADERS_FILE" 2>/dev/null || headers_changed=yes
 
 if [ "$add_line" = no ] && [ "$headers_changed" = no ]; then
+  install -d -m 755 "$PREVIEW_CADDY_DIR"
   report "Pull request previews already prepared: $PREVIEW_CADDY_DIR is imported, Caddy $(caddy_version)"
   exit 0
 fi
 
-# The Caddyfile must end with a newline before the line is added, and gains nothing else.
-if [ "$add_line" = yes ]; then
-  { sed -e '$a\' "$CADDYFILE" && printf '\n# Pull request previews (ops/caddy-previews.sh, #1072)\n%s\n' "$IMPORT_LINE"; } >"$candidate"
-fi
+what="the pull request preview headers"
+[ "$add_line" = no ] || what="the pull request preview import"
 
-# Install the snippet first so the candidate can be validated with it, keeping the old one.
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+candidate="$CADDYFILE.sprecher-east-previews-new"
+sample="$CADDYFILE.sprecher-east-previews-check"
+headers_backup=""
+trap 'rm -f "$candidate" "$sample"' EXIT
+
+install -d -m 755 "$PREVIEW_CADDY_DIR"
+
+# The new Caddyfile: the old one, ending with a newline, plus the import line and its comment.
+cp "$CADDYFILE" "$candidate"
+if [ "$add_line" = yes ]; then
+  { sed -e '$a\' "$CADDYFILE" && printf '\n# Pull request previews (ops/caddy-previews.sh, #1072)\nimport %s\n' "$IMPORT_TARGET"; } >"$candidate"
+fi
+# What Caddy is asked to validate: that, plus one sample preview block (HTTP only, so no
+# certificate is involved), which imports the headers file and the form limits as a real one does.
+{
+  cat "$candidate"
+  printf '\n'
+  sed -e 's|__PREVIEW_HOST__|http://preview-check.invalid|' -e 's|__PREVIEW_PORT__|3999|' \
+    -e "s|__PREVIEW_HEADERS_FILE__|$PREVIEW_HEADERS_FILE|" -e "s|__LIMITS_FILE__|$LIMITS_FILE|" "$SITE_TEMPLATE"
+} >"$sample"
+
+# Install the snippet first, so the validation below sees it; the old one is kept to put back.
 if [ -f "$PREVIEW_HEADERS_FILE" ]; then
   headers_backup=$(mktemp "$PREVIEW_HEADERS_FILE.previous-XXXXXX")
   cp -p "$PREVIEW_HEADERS_FILE" "$headers_backup"
 fi
-install -m 644 "$SOURCE" "$PREVIEW_HEADERS_FILE"
+install -m 644 "$HEADERS_SOURCE" "$PREVIEW_HEADERS_FILE"
 
 restore_headers() {
   if [ -n "$headers_backup" ]; then
@@ -82,12 +101,13 @@ restore_headers() {
     rm -f "$PREVIEW_HEADERS_FILE"
   fi
 }
+restore_headers_say() { restore_headers || { echo "the headers file (copy: $headers_backup)" && return 1; }; }
 
-if [ "$add_line" = yes ] && ! caddy_accepts "$candidate"; then
+if ! caddy_accepts "$sample"; then
   if restore_headers; then
-    report "ERROR: Caddy rejected the pull request preview import; nothing was changed"
+    report "ERROR: Caddy rejected $what; nothing was changed"
   else
-    report "ERROR: Caddy rejected the pull request preview import, and the previous headers file could not be put back (copy: $headers_backup)"
+    report "ERROR: Caddy rejected $what, and the previous headers file could not be put back (copy: $headers_backup)"
   fi
   exit 1
 fi
@@ -97,26 +117,12 @@ if [ "$add_line" = yes ]; then
   cp "$candidate" "$CADDYFILE" # cp onto the existing file keeps its owner and mode
 fi
 
-restore_all() {
-  local failed=""
-  # cp reads the backup before it truncates the Caddyfile, so an unreadable backup can't empty it.
-  if [ "$add_line" = yes ] && ! cp "$CADDYFILE.bak-previews-$stamp" "$CADDYFILE"; then
-    failed="the Caddyfile (backup: $CADDYFILE.bak-previews-$stamp)"
-  fi
-  if ! restore_headers; then failed="${failed:+$failed and }the headers file (copy: $headers_backup)"; fi
-  if [ -n "$failed" ]; then
-    echo "Could not put back $failed."
-    return 1
-  fi
-  if ! $RELOAD_CADDY >/dev/null 2>&1; then
-    echo "The previous files are back, but Caddy would not reload them."
-    return 1
-  fi
-}
+# Puts the previous Caddyfile and headers file back and reloads. On failure, prints what went wrong.
+roll_back() { caddy_roll_back "$([ "$add_line" = yes ] && echo "$CADDYFILE.bak-previews-$stamp" || true)" restore_headers_say; }
 
-problem=$(caddy_reload_problem "the pull request preview import" "${UP_WAIT_AFTER:-20}")
+problem=$(caddy_reload_problem "$what" "${UP_WAIT_AFTER:-20}")
 if [ -n "$problem" ]; then
-  if detail=$(restore_all); then
+  if detail=$(roll_back); then
     report "ERROR: $problem; the previous Caddy config is back"
   else
     report "ERROR: $problem. $detail"
