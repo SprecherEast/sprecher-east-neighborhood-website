@@ -6,8 +6,8 @@ import { cn } from '@/platform/lib/cn'
 /*
  * A short label, such as a post's or an event's category (#418). `category` is the pill on cards
  * and plain pages: primary-strong on the primary tint, which the theme contract checks at 4.5:1
- * on the page, a surface and a card (the plain primary text it had was 3.9 to 4.5:1). `on-image`
- * sits on a photo, on a scrim of its own (60%), so it passes even over white (`SCRIM_PAIRS`).
+ * on the page, a surface and a card (the plain primary text it had was 3.9 to 4.5:1). Over a photo,
+ * `BadgeList plated` sets each badge on a solid plate instead.
  * `status` marks a state the reader must not miss, such as a cancelled event (#122):
  * destructive-strong on the destructive tint, which the contract checks like `Alert`'s error tone
  * (`TINTED_PAIRS`). Its words say the state, and an icon may go before them, so colour is never
@@ -29,8 +29,6 @@ const badgeVariants = cva(
     variants: {
       variant: {
         category: 'bg-primary/10 text-primary-strong',
-        'on-image':
-          'border border-on-image/30 bg-scrim/60 tracking-wide text-on-image uppercase backdrop-blur-sm',
         status:
           'border border-destructive/30 bg-destructive/10 font-semibold text-destructive-strong',
         official: 'border border-primary/30 bg-primary/10 font-semibold text-primary-strong',
