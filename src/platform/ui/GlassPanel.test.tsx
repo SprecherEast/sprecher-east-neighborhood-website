@@ -13,6 +13,8 @@ import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
 
+const BRIGHT_PHOTO = '#d0d0d0'
+
 const modes = readThemeModes(
   readFileSync(join(process.cwd(), 'src/themes/default/theme.css'), 'utf8'),
 )
@@ -35,7 +37,7 @@ describe('GlassPanel', () => {
     }
     // A flat white layer over the dark one is what made the panel read as gray (#1292)
     expect(panel.innerHTML).not.toMatch(/(?<![-\w])bg-on-image\//)
-    expect(panel.innerHTML).toContain('from-on-image/8 via-transparent to-transparent')
+    expect(panel.innerHTML).toContain('from-on-image/6 via-transparent to-transparent')
     expect(panel.innerHTML).toContain('via-on-image/40')
   })
 
@@ -48,9 +50,9 @@ describe('GlassPanel', () => {
 
   it('draws its darkening layer from the scrim token, at the strength the contrast test uses', () => {
     const { container } = render(<GlassPanel>Text</GlassPanel>)
-    const layer = container.querySelector('.bg-scrim\\/65')
+    const layer = container.querySelector('.bg-scrim\\/55')
     expect(layer).toBeTruthy()
-    expect(GLASS_SCRIM_ALPHA).toBe(0.65)
+    expect(GLASS_SCRIM_ALPHA).toBe(0.55)
     expect(container.innerHTML).toContain(`from-on-image/${GLASS_SHEEN_ALPHA * 100}`)
   })
 
@@ -60,10 +62,13 @@ describe('GlassPanel', () => {
   })
 
   it.each(['light', 'dark'] as const)(
-    'keeps its text at 4.5:1 or better over white, a mid shade and black in %s mode',
+    'keeps its text at 4.5:1 or better over a very bright photo, a mid shade and black in %s mode',
     (mode) => {
       const { 'on-image': onImage, scrim } = modes[mode]
-      for (const behind of ['#ffffff', '#808080', '#000000']) {
+      // The brightest photo the glass is guaranteed over: lighter than anything behind the home hero's
+      // note (measured 2026-11-18, the lightest spot after the blur is about #cfcfcf). A pure white
+      // photo is no longer guaranteed (#1301).
+      for (const behind of [BRIGHT_PHOTO, '#808080', '#000000']) {
         // The layer, then the sheen at its strongest: the lightest the glass gets
         let glass = mixOver(scrim, behind, GLASS_SCRIM_ALPHA)
         glass = mixOver(onImage, glass, GLASS_SHEEN_ALPHA)
@@ -80,7 +85,7 @@ describe('GlassPanel', () => {
   )
 
   it('would fail without the layer, so the check means something', () => {
-    const glass = mixOver(modes.light['on-image'], '#ffffff', GLASS_SHEEN_ALPHA)
+    const glass = mixOver(modes.light['on-image'], BRIGHT_PHOTO, GLASS_SHEEN_ALPHA)
     expect(contrastRatio(modes.light['on-image'], glass)).toBeLessThan(MIN_TEXT_CONTRAST)
   })
 

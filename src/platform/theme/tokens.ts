@@ -256,16 +256,18 @@ export const SCRIM_PAIRS = [
 ] as const
 
 /**
- * The darkening layer under `GlassPanel`'s glass (`bg-scrim/65`), so its `on-image` text passes
- * wherever the panel sits. There is no white tint over it: a flat white layer lifted the dark one
- * to gray, so the panel read as gray plastic, not glass (#1292). Over a white photo the text (at
- * 90%, as the hero sets it) on the layer and the sheen at its strongest (`GLASS_SHEEN_ALPHA`)
- * measures about 5:1, while 0.55 falls to 3.6:1.
+ * The darkening layer under `GlassPanel`'s glass (`bg-scrim/55`), so its `on-image` text passes over
+ * the photos it sits on. There is no white tint over it: a flat white layer lifted the dark one to
+ * gray, so the panel read as gray plastic, not glass (#1292). It was 65% at first; the owner asked
+ * for clearer glass (#1301), and 55% is as clear as it gets while the text keeps 4.5:1: measured
+ * on the real home photo behind the panel at four widths, with the real blur, the worst spot is
+ * 4.9:1, while 50% fell to 4.3:1 on a wide screen. The guarantee is over a very bright photo
+ * (`#d0d0d0`, in the test), not a pure white one, which would need the heavier layer.
  * `GlassPanel` writes the same numbers as its classes, which its test checks, in both modes.
  */
-export const GLASS_SCRIM_ALPHA = 0.65
-/** The strongest part of the glass's sheen from the top left (`from-on-image/8`) */
-export const GLASS_SHEEN_ALPHA = 0.08
+export const GLASS_SCRIM_ALPHA = 0.55
+/** The strongest part of the glass's sheen from the top left (`from-on-image/6`) */
+export const GLASS_SHEEN_ALPHA = 0.06
 
 /**
  * The photo behind a post's or an event's title band (`PageHeader · band`, #1024): the photo at

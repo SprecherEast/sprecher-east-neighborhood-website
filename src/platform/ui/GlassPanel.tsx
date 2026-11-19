@@ -9,7 +9,8 @@ import { cn } from '@/platform/lib/cn'
  * `on-image` text.
  *
  * It carries its own darkening layer, the `scrim` token under the glass, so its text passes AA
- * wherever it sits, over a white photo too (`GLASS_SCRIM_ALPHA`, checked in its test). The blur
+ * over a very bright photo, a mid shade and black (`GLASS_SCRIM_ALPHA`, checked in its test; a pure
+ * white photo is not guaranteed, #1301). The blur
  * is on the panel itself, so it blurs what is behind, then the layer darkens it, then the sheen
  * lies on top. No flat white layer: that turned the panel gray. There is no variant for the look.
  */
@@ -27,11 +28,11 @@ export function GlassPanel({ children, className }: GlassPanelProps) {
         className,
       )}
     >
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-scrim/65" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-scrim/55" />
       {/* A faint sheen from the top left, and a glow along the top edge */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-on-image/8 via-transparent to-transparent"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-on-image/6 via-transparent to-transparent"
       />
       <div
         aria-hidden="true"

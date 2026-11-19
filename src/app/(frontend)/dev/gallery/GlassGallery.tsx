@@ -11,16 +11,15 @@ import { SAMPLE_IMAGE } from './sampleData'
 const BACKDROPS = [
   { label: 'light photo', photo: true, wash: 'bg-on-image/70' },
   { label: 'dark photo', photo: true, wash: 'bg-scrim/60' },
-  { label: 'plain light', photo: false, wash: 'bg-on-image' },
   { label: 'plain dark', photo: false, wash: 'bg-scrim' },
 ] as const
 
-/** The shared glass panel over a light photo, a dark photo, plain light and plain dark */
+/** The shared glass panel over a light photo, a dark photo and plain dark (a pure white backdrop is not guaranteed, #1301) */
 export function GlassGallery() {
   return (
     <GalleryEntry
       name="GlassPanel"
-      description="One frosted-glass look, in light and dark. It darkens itself, so its text reads on any backdrop."
+      description="One frosted-glass look, in light and dark. It darkens itself, so its text reads over a very bright photo, a mid gray and black."
     >
       <GalleryVariant label="backdrop" className="grid w-full gap-6 sm:grid-cols-2">
         {BACKDROPS.map(({ label, photo, wash }) => (

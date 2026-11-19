@@ -10,7 +10,7 @@ them to the component, and hold them to [the same standards as production code](
 A frosted glass panel for text that sits on a photo or a busy backdrop. It is the shared
 `GlassPanel` (`src/platform/ui/GlassPanel.tsx`, #1278): the home hero's glass, one look in light and
 dark, with no variants. It darkens itself with a `scrim` layer, so its `on-image` text keeps 4.5:1
-or better on any backdrop. Never write glass classes again, and never add a lighter, darker or
+or better over a very bright photo, a mid gray and black (not a pure white photo, #1301). Never write glass classes again, and never add a lighter, darker or
 tinted version: a look the panel lacks is a change to the panel.
 
 ```tsx
