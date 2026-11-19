@@ -3,8 +3,8 @@
 - **Date:** 2026-11-19
 - **Status:** Proposed (becomes Accepted when the independent review says so)
 - **Issues and PRs:** #1312 (this record), under the epic #313; the steps #1313 to #1318 follow it.
-  The sign-in model is the Google sign-in record (decision 0020, PR #505), which this record
-  references and does not repeat.
+  The sign-in model is the Google sign-in record (PR #505, to become 0020 on `main`), which this
+  record references and does not repeat.
 
 ## Context
 
@@ -13,9 +13,8 @@ typing a password. Passkeys can't be phished and need no outside provider. Summa
 direction (2026-11-19, Claude session, voice then confirmed in text; recorded on #313):
 
 - Passkeys come after Google sign-in, and reuse the session code that adds.
-- Choose by the owner's bar: well established, well maintained, no known vulnerabilities; our own
-  small layer beats a small dependency that only half fits.
-- Our own thin, tested layer on `@simplewebauthn`, in the accounts module.
+- The bar is well established, well maintained, no known vulnerabilities; our own small layer
+  beats a small dependency that only half fits: a thin, tested layer on `@simplewebauthn`.
 - Adding a passkey asks for a recent sign-in within a few minutes, the way large providers do,
   with no forced password.
 - The steps stay low priority and ship switched off until the owner turns them on.
@@ -30,13 +29,11 @@ residency (#314) or replace email recovery.
 Taken on 2026-11-19 from the npm registry, the advisory database and each project's repository;
 the table with the figures is on #313. Counts go stale, so only the verdicts are kept here.
 
-- **Native:** Payload has no passkeys and Next.js ships no authentication. Payload's key-value
-  store was checked for challenges and does not fit (see Challenges).
-- **Official plugins:** no `@payloadcms/*` passkey package.
-- **A small Payload plugin wrapping Better Auth:** keeps Payload's login screen, but is young, has
-  one maintainer and little use. Fails the bar; a reference only.
-- **`payload-auth-plugin`:** brings its own password fields (#261). Fails the bar for passkeys alone.
-- **`payload-authjs`:** passkeys exist only in an unmerged pull request.
+- **Native and official:** Payload has no passkeys, Next.js ships no authentication, and there is
+  no `@payloadcms/*` passkey package. Payload's key-value store doesn't fit challenges (below).
+- **Community Payload plugins:** a small one wrapping Better Auth is young, with one maintainer
+  and little use; `payload-auth-plugin` brings its own password fields (#261); `payload-authjs`
+  has passkeys only in an unmerged pull request. None meets the bar.
 - **Better Auth with its passkey plugin:** well used, but a second auth system with its own tables
   and sessions, and it wraps SimpleWebAuthn anyway. Its passkey plugin had a fixed advisory that
   let a signed-in user delete another person's passkey, so that case is a test here.
@@ -58,34 +55,41 @@ fits without a second auth system or an unreleased change.
   public key, counter, transports, device type, backed-up flag). The domain and use cases never
   import the library. The browser package is used only in the sign-in and account screens'
   client code, behind a small helper, so a swap touches two files.
-- Cryptography, attestation and assertion checks (signature, origin, relying party ID, flags,
-  counter) stay in the library. We never parse authenticator data ourselves.
+- Cryptography and the response checks stay in the library: signature, challenge, origin, relying
+  party ID, user verification and the counter's direction. We never parse authenticator data.
+  Ours, because the library never sees an account: the challenge's single use, the user-handle
+  and credential-owner match, the account's state, the cap and the refusal of a framed answer.
+- The adapter sets `residentKey` and `userVerification` to `required` itself (the library
+  defaults to `preferred`), and a test asserts the options. It returns success only when the
+  library says `verified === true`; any other result and every exception is the one fixed
+  failure.
 - Both are added in #1314 after the security guideline's package checks and `npm run audit:prod`.
+  Versions are pinned exactly, and `npm audit signatures` is part of the check (both ship
+  provenance). Their own dependencies sit under caret ranges held only by the lockfile.
 
 ### Relying party
 
 - The relying party ID is the host of the configured site address (`getServerSideURL()`), and the
-  expected origin is that address exactly. Neither comes from the request's Host or Origin
-  header, the same rule as email links (accounts note). A request that arrives on another host
-  fails the library's origin check instead of being trusted.
+  expected origin is that address exactly: one value, never a list or a pattern, and no
+  related-origins file is published. Neither comes from the request's Host or Origin header, the
+  same rule as email links (accounts note).
 - That gives the live domain in production, `localhost` in development and, in a preview, the
-  preview's own address (see Previews). A passkey is bound by the browser to its ID, so one made in
-  one place never works in another.
-- WebAuthn only runs in a secure context. The feature refuses to start when the configured address
-  is neither HTTPS nor `localhost`.
-- The rule is pure code in `domain/passkeys.ts` and tested; the adapter receives the two values.
+  preview's own configured address (see Previews). A browser lets a page on a subdomain ask for a
+  parent domain's ID, so what keeps a passkey from working across places is our exact origin check.
+- The feature refuses to start unless the host is a domain name (WebAuthn takes no IP address).
+  Production requires HTTPS, so a missing site address, which falls back to `localhost`, turns the
+  feature off. Development may use `localhost`.
 
 ### Kind of passkey
 
 - **Discoverable credentials** required, so the resident doesn't type an email first.
-- **User verification required:** the screen lock or biometric on the device; the library is told
-  to require it too, so a response without it fails.
+- **User verification required** (the device's screen lock), and the library is told to require it
+  too.
 - **No attestation** (`none`): we don't need to know the device model, and asking for more adds
   privacy cost and certificate trust to maintain.
 - Sign-in offers a button and, where the browser supports it, the passkey in the email field's
   autofill. Email and password stay on the same page.
-- Registration lists the account's existing credential IDs as excluded, so a device can't be added
-  twice.
+- Registration excludes the account's existing credential IDs, so a device isn't added twice.
 
 ### Challenges
 
@@ -94,28 +98,42 @@ fits without a second auth system or an unreleased change.
   in), expiry, and the account for an add. Short expiry, a named constant.
 - **Tied to the browser** by a signed cookie that carries only the row's identifier, built with
   `domain/signedValue.ts` under its own purpose key, so it never reads as another cookie or as a
-  Payload token. HttpOnly, SameSite=Lax, Secure in production, the challenge's lifetime.
-  A challenge copied to another browser fails because that browser has no cookie.
-- **Taken once:** one conditional delete matching the identifier, the purpose and an unexpired
-  time, which returns the row it removed. Zero rows means the answer is refused. A replay, or two
-  tries at once, can therefore succeed at most once; a test against real Payload proves the race
-  (#1313). It is the pattern record 0009 uses for confirmation links (one conditional update).
-- **Expired rows** are removed by a task on the existing retention queue (decision 0010).
+  Payload token. Named with the `__Host-` prefix (Secure, `Path=/`, no `Domain`), so a preview
+  subdomain can't plant or replace it; HttpOnly, SameSite=Strict, the challenge's lifetime. A
+  challenge copied to another browser fails because that browser has no cookie.
+- **Taken once** by the adapter's `updateOne` with a `where`, which puts the condition into the
+  UPDATE itself: it sets `usedAt` where the identifier and purpose match, `usedAt` is empty and the
+  expiry is in the future. Success only when a row comes back, so a replay, or two tries at once,
+  succeed at most once, and it is taken before verifying, so a failed answer still uses it up. The pattern is `markConfirmed` in `src/modules/verification/cms/store.ts`.
+  `payload.db.deleteOne` and the Local API's `delete` with a `where` read the row first and then
+  delete by id, so both requests get it: they don't qualify. A test against real Payload runs the
+  race (#1313).
+- **Used and expired rows** are removed by a task on the existing retention queue (decision 0010).
 - **Why not Payload's key-value store:** checked against Payload 3.91.0 (`package.json`), its
   database adapter stores `key` and `data` and nothing else, so no expiry, and its interface is
   `get`, `set`, `delete`, `has`, `keys` and `clear`. A get followed by a delete is two steps, so
-  two requests can both read the challenge before either deletes it. Neither need is met.
+  two requests can both read the challenge before either deletes it, as with `deleteOne` above.
+  Neither need is met.
 
 ### What a stored passkey holds
 
 - Credential ID (unique, indexed), public key, signature counter, transports, device type, backed-up
   flag, a label, when added, when last used, and the owning account.
+- **User handle:** one random, opaque value per account, stored server-only and reused for every
+  passkey the account adds; never the email or the database id. The `userName` shown in the
+  passkey manager is the label. At sign-in we find the credential by its ID and require the
+  answer's user handle to equal its owner's handle, or the one fixed failure follows.
+- **Registration only inserts.** A credential ID already stored on any account refuses the add
+  with the fixed failure; a save is never an upsert, so no one can replace another's key.
 - No biometric data ever reaches us: the device checks it locally. The public key can't sign.
 - Every field is server-only (`serverOnlyFieldAccess`), with no REST or GraphQL access for
-  residents. A resident sees their own list through the module's use cases. Admins can see and
-  delete passkeys for support. Deleting an account deletes its passkeys with a hook on `users`.
-- The counter is updated on every use; the library refuses a counter that goes back once an
-  authenticator reports one (many synced passkeys always report zero, which is allowed).
+  residents. A resident sees their own list through the module's use cases. Create and update are
+  refused for everyone, admins included; admins read and delete for support only; they have no
+  access to `passkey-challenges`. Only server code through the data layer writes. Deleting an
+  account deletes its passkeys with a hook on `users`.
+- The library refuses a counter that doesn't go up once either value is nonzero (synced passkeys
+  that always report zero are allowed). The stored counter is written conditionally, only when the
+  new value is higher, so two sign-ins at once can't lower it.
 
 ### Who may do what
 
@@ -123,7 +141,9 @@ fits without a second auth system or an unreleased change.
   session, never from the input; a passkey identifier from the browser is parsed again and
   accepted only when it belongs to that account. Removing another account's passkey is refused and
   leaves it in place.
-- **Adding needs a recent sign-in:** the session must be no older than
+- **Adding needs a recent sign-in,** and verifying the add requires the challenge row's account to
+  equal the session's account and the session to still be recent at that moment, so the
+  challenge's lifetime can't stretch the window: the session must be no older than
   `RECENT_SIGN_IN_WINDOW_MS`, a named constant in the accounts module's domain (a few minutes), so
   its number is set in code and not repeated here. An older session is asked to sign in again
   first, with whichever way the account has: a password sign-in, Google, or a passkey. This is not
@@ -142,8 +162,11 @@ fits without a second auth system or an unreleased change.
 
 ### Sign-in
 
-- Locked (#140), unverified and agent (#336) accounts are refused, as in decision 0020. The check
-  runs after the library has verified the answer, on the account the credential belongs to.
+- Locked (#140), unverified and agent (#336) accounts are refused, as in the Google sign-in
+  record. The check runs after the library has verified the answer, on the credential's owner.
+- Any answer with `crossOrigin: true` is refused: the library checks the top origin only when the
+  browser sends it, and not every browser does. `/login` and `/account` also send
+  `frame-ancestors 'none'`, since we never expect to be framed.
 - **No account enumeration.** An unknown credential, a bad signature, a replayed or expired
   challenge, a wrong origin and a refused account all give the one fixed failure, in the message
   catalog, the way password sign-in answers wrong credentials. Because credentials are
@@ -154,7 +177,7 @@ fits without a second auth system or an unreleased change.
   `data/rememberedSession.ts`, as password sign-in does. A passkey sign-in starts a new session, so
   it counts as a recent sign-in.
 - Unlike providers, a passkey sign-in is a same-site request from our own page, so the continue
-  page decision 0020 needs for the cross-site return isn't needed and the CSRF check is unaffected.
+  page the Google record needs for the cross-site return isn't needed and the CSRF check is unaffected.
 - The counter and last-used time are updated after a good answer.
 
 ### Limits
@@ -182,36 +205,45 @@ saved passkeys stay stored and unused.
 
 ### Previews
 
-A preview takes the address it is served from as its configured site address, so its relying party
-ID and origin are its own. Passkeys made there work only there, and production's never work in a
-preview. A preview with no usable address (not HTTPS) leaves the feature off. Using the live
-passkeys in a preview is out of scope (#1079).
+A preview's relying party ID and origin come from its own configured site address, never from the
+host a request names. Passkeys made there work only there, and production's never work in a
+preview, because production's expected origin is exactly one value. A preview with no usable
+address leaves the feature off. Using the live passkeys in a preview is out of scope (#1079).
 
 ## Consequences
 
-- **Easier:** a resident signs in with one touch; nothing phishable is stored; no outside provider,
-  keys or cost. Payload's session means the lockout, `/admin` and sign-out work as before.
-- **Harder:** two collections, a migration, two packages and our own code to keep. The WebAuthn
-  details stay in the library, which we track.
+- **Logging:** only an error code or a fixed reason is logged, never the browser's answer, the
+  challenge, the cookie, a public key or an email: the library's messages carry the challenge and
+  origin.
+- **Easier:** one-touch sign-in, nothing phishable stored, no outside provider; Payload's session
+  keeps the lockout, `/admin` and sign-out as before. **Harder:** two collections, a migration, two
+  packages and our own code to keep.
+- **Residual risk.** Someone in the middle of a password sign-in gets a new session, so the
+  recent-sign-in check can't stop them adding a passkey, and that passkey then renews itself, since
+  a passkey sign-in counts as recent. The control is the notification email: it names the passkey's
+  label and the time, and holds no sign-in link. Removing a passkey doesn't end the sessions it
+  started; forgot password does (Payload's reset empties the sessions). Asking for a recent
+  sign-in before a remove too is open for the owner, who decided the step only for adding.
 - **Single-maintainer risk.** `@simplewebauthn` has one npm maintainer, as did every candidate and
-  `openid-client` in decision 0020. If it is abandoned or compromised:
+  `openid-client` in the Google sign-in record. If it is abandoned or compromised:
   - the adapter is the only importer of the server package, with a small port of our own types, so
     another WebAuthn library is a rewrite of that one file, behind the same tests;
   - the stored shape is the standard one (credential ID, COSE public key, counter, transports), so
     saved passkeys survive a swap;
-  - versions are pinned, `npm run audit:prod` and Dependabot watch it, and a bad release can be
-    held back or the switch turned off.
-- **Cost of a mistake:** a bug here could sign in the wrong account. Hence the top review level,
-  tests first (replay, wrong origin, locked and agent accounts, removing another's passkey, a
-  session too old) and the real-Payload and end-to-end tests (#1313, #1315, #1317).
+  - versions are pinned, `npm run audit:prod` and `npm audit signatures` watch it, a Dependabot
+    bump of these two packages gets the top-level review rather than a routine merge, and a bad
+    release can be held back or the switch turned off.
+- **Cost of a mistake:** a bug could sign in the wrong account, hence the top review level and
+  tests first (#1313, #1315, #1317).
 
 ## Links
 
 - Epic #313 (comparison and sign-off in its comments), steps #1313 (storage, rules), #1314 (add),
   #1315 (sign in), #1316 (see and remove), #1317 (end to end), #1318 (turn on)
-- Decision 0020 (Google sign-in, PR #505), 0009 (one conditional update), 0010 (retention)
+- The Google sign-in record (PR #505, to become 0020), 0010 (retention);
+  `src/modules/verification/cms/store.ts` (`markConfirmed`)
 - WebAuthn Level 3: https://www.w3.org/TR/webauthn-3/ (relying party ID, challenge, user
   verification, attestation)
 - SimpleWebAuthn: https://simplewebauthn.dev/docs/ and https://github.com/MasterKale/SimpleWebAuthn
 - Payload 3.91.0 read in `node_modules/payload`: `kv/index.d.ts`, `kv/adapters/DatabaseKVAdapter.js`,
-  `auth/sessions.js`, `auth/operations/refresh.js`
+  `auth/sessions.js`, `auth/operations/refresh.js`; `@payloadcms/drizzle` `deleteOne.js`
