@@ -5,12 +5,7 @@ import { join } from 'node:path'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import {
-  GLASS_SCRIM_ALPHA,
-  GLASS_SHEEN_ALPHA,
-  GLASS_TINT_ALPHA,
-  MIN_TEXT_CONTRAST,
-} from '@/platform/theme/tokens'
+import { GLASS_SCRIM_ALPHA, GLASS_SHEEN_ALPHA, MIN_TEXT_CONTRAST } from '@/platform/theme/tokens'
 import { contrastRatio, mixOver, readThemeModes } from '@/platform/theme/themeFile'
 
 import { GlassPanel } from './GlassPanel'
@@ -23,7 +18,7 @@ const modes = readThemeModes(
 )
 
 describe('GlassPanel', () => {
-  it('holds its content in the hero glass: radius, border, blur, tint, sheen and edge glow', () => {
+  it('holds its content in the hero glass: radius, border, blur, sheen and edge glow, with no white wash', () => {
     const { container } = render(<GlassPanel>Unofficial site</GlassPanel>)
     const panel = container.firstElementChild as HTMLElement
 
@@ -32,13 +27,15 @@ describe('GlassPanel', () => {
       'rounded-xl',
       'border-on-image/20',
       'backdrop-blur-xl',
+      'backdrop-saturate-150',
       'text-on-image',
       'overflow-hidden',
     ]) {
       expect(panel.className).toContain(glass)
     }
-    expect(panel.innerHTML).toContain('bg-on-image/10')
-    expect(panel.innerHTML).toContain('from-on-image/15 via-transparent to-on-image/5')
+    // A flat white layer over the dark one is what made the panel read as gray (#1292)
+    expect(panel.innerHTML).not.toMatch(/(?<![-\w])bg-on-image\//)
+    expect(panel.innerHTML).toContain('from-on-image/8 via-transparent to-transparent')
     expect(panel.innerHTML).toContain('via-on-image/40')
   })
 
@@ -51,10 +48,9 @@ describe('GlassPanel', () => {
 
   it('draws its darkening layer from the scrim token, at the strength the contrast test uses', () => {
     const { container } = render(<GlassPanel>Text</GlassPanel>)
-    const layer = container.querySelector('.bg-scrim\\/80')
+    const layer = container.querySelector('.bg-scrim\\/65')
     expect(layer).toBeTruthy()
-    expect(GLASS_SCRIM_ALPHA).toBe(0.8)
-    expect(container.innerHTML).toContain(`bg-on-image/${GLASS_TINT_ALPHA * 100}`)
+    expect(GLASS_SCRIM_ALPHA).toBe(0.65)
     expect(container.innerHTML).toContain(`from-on-image/${GLASS_SHEEN_ALPHA * 100}`)
   })
 
@@ -68,9 +64,8 @@ describe('GlassPanel', () => {
     (mode) => {
       const { 'on-image': onImage, scrim } = modes[mode]
       for (const behind of ['#ffffff', '#808080', '#000000']) {
-        // The layer, then the tint, then the sheen at its strongest: the lightest the glass gets
+        // The layer, then the sheen at its strongest: the lightest the glass gets
         let glass = mixOver(scrim, behind, GLASS_SCRIM_ALPHA)
-        glass = mixOver(onImage, glass, GLASS_TINT_ALPHA)
         glass = mixOver(onImage, glass, GLASS_SHEEN_ALPHA)
         // Full text, and the 90% text the hero sets
         for (const text of [onImage, mixOver(onImage, glass, 0.9)]) {
@@ -85,11 +80,7 @@ describe('GlassPanel', () => {
   )
 
   it('would fail without the layer, so the check means something', () => {
-    const glass = mixOver(
-      modes.light['on-image'],
-      mixOver(modes.light['on-image'], '#ffffff', 0.1),
-      0.15,
-    )
+    const glass = mixOver(modes.light['on-image'], '#ffffff', GLASS_SHEEN_ALPHA)
     expect(contrastRatio(modes.light['on-image'], glass)).toBeLessThan(MIN_TEXT_CONTRAST)
   })
 
