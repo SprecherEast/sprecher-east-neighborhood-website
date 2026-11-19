@@ -3,4 +3,4 @@
 // collection is in cms.ts.
 export { EVENTS_SITEMAP_CACHE_TAG } from './domain/cacheTags'
 export { eventListTitle, isCategorySlug } from './domain/filters'
-export { isEventScope } from './domain/scope'
+export { isEventScope, isPastEvent } from './domain/scope'

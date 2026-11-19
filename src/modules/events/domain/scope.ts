@@ -18,3 +18,11 @@ export const EVENT_SCOPE_ORDER: Record<EventScope, SortOrder> = {
   upcoming: 'asc',
   past: 'desc',
 }
+
+/**
+ * Whether one event is past: dated before `today` (both day-only, midnight UTC, `today` from
+ * `startOfToday()`). The same rule as `past` in `inScope` (data/scope.ts), for an event in hand.
+ */
+export function isPastEvent(date: string, today: string): boolean {
+  return date < today
+}
