@@ -52,7 +52,7 @@ describe('PageHero', () => {
     )
     const panel = screen.getByText('Neighbors on the Far East Side.').closest('.backdrop-blur-xl')
     expect(panel).toBeTruthy()
-    expect(panel?.querySelector('.bg-scrim\\/80')).toBeTruthy()
+    expect(panel?.querySelector('.bg-scrim\\/65')).toBeTruthy()
     // The title is not on the glass
     expect(panel?.contains(screen.getByRole('heading', { level: 1 }))).toBe(false)
     expect(container.querySelectorAll('.backdrop-blur-xl')).toHaveLength(1)

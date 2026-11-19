@@ -256,16 +256,16 @@ export const SCRIM_PAIRS = [
 ] as const
 
 /**
- * The darkening layer under `GlassPanel`'s glass (`bg-scrim/80`), so its `on-image` text passes
- * wherever the panel sits. 0.8 is the lowest round value that holds: over a white photo the text
- * (at 90%, as the hero sets it) on the layer, the glass tint (`GLASS_TINT_ALPHA`) and the sheen at
- * its strongest (`GLASS_SHEEN_ALPHA`) measures 5.2:1 or better, while 0.7 falls to 4.0:1.
+ * The darkening layer under `GlassPanel`'s glass (`bg-scrim/65`), so its `on-image` text passes
+ * wherever the panel sits. There is no white tint over it: a flat white layer lifted the dark one
+ * to gray, so the panel read as gray plastic, not glass (#1292). Over a white photo the text (at
+ * 90%, as the hero sets it) on the layer and the sheen at its strongest (`GLASS_SHEEN_ALPHA`)
+ * measures about 5:1, while 0.55 falls to 3.6:1.
  * `GlassPanel` writes the same numbers as its classes, which its test checks, in both modes.
  */
-export const GLASS_SCRIM_ALPHA = 0.8
-/** The glass's white tint (`bg-on-image/10`) and the strongest part of its sheen (`from-on-image/15`) */
-export const GLASS_TINT_ALPHA = 0.1
-export const GLASS_SHEEN_ALPHA = 0.15
+export const GLASS_SCRIM_ALPHA = 0.65
+/** The strongest part of the glass's sheen from the top left (`from-on-image/8`) */
+export const GLASS_SHEEN_ALPHA = 0.08
 
 /**
  * The photo behind a post's or an event's title band (`PageHeader · band`, #1024): the photo at
