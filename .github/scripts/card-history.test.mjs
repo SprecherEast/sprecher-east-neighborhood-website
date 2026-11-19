@@ -24,19 +24,23 @@ describe('cardMoves', () => {
 
 describe('cardVerdict', () => {
   it('passes when only bots moved the card', () => {
-    const verdict = cardVerdict([
-      move('github-project-automation[bot]', 'Bot', '2026-01-01T00:00:01Z'),
-      move('sprecher-east-planner[bot]', 'Bot', '2026-01-01T00:00:02Z'),
-    ])
+    const verdict = cardVerdict(
+      cardMoves([
+        move('github-project-automation[bot]', 'Bot', '2026-01-01T00:00:01Z'),
+        move('sprecher-east-planner[bot]', 'Bot', '2026-01-01T00:00:02Z'),
+      ]),
+    )
     expect(verdict.ok).toBe(true)
     expect(verdict.byHand).toEqual([])
   })
 
   it('flags a move made by a person or a session using a person login', () => {
-    const verdict = cardVerdict([
-      move('github-project-automation[bot]', 'Bot', '2026-01-01T00:00:01Z'),
-      move('boulaajaj', 'User', '2026-01-01T00:00:02Z'),
-    ])
+    const verdict = cardVerdict(
+      cardMoves([
+        move('github-project-automation[bot]', 'Bot', '2026-01-01T00:00:01Z'),
+        move('boulaajaj', 'User', '2026-01-01T00:00:02Z'),
+      ]),
+    )
     expect(verdict.ok).toBe(false)
     expect(verdict.byHand).toEqual([{ at: '2026-01-01T00:00:02Z', actor: 'boulaajaj' }])
   })

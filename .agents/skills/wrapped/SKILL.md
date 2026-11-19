@@ -74,7 +74,7 @@ gh api -X POST repos/{owner}/{repo}/actions/workflows/deploy.yml/dispatches -f r
 - The linked issues close themselves on merge, and `issue-fix-summary.yml` comments on each.
 - Read each linked issue's card history: `node .github/scripts/card-history.mjs <n>`. The planner
   app and GitHub's own automation moved it (In progress on the claim, In review when the PR
-  linked, Done on the merge); a move by a person's login is a slip. Report it, and fix its cause
+  linked, Done on the merge); a move by a person's login is a slip unless it is the documented fallback (the planner did not act) and the issue records it. Report it, and fix its cause
   through the issue, not by moving the card back by hand.
 - For server changes (`infra` issues), comment what actually changed on the server, from the
   deploy annotations. Never paste secret values.

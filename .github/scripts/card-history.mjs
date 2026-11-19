@@ -22,9 +22,7 @@ export function cardMoves(events) {
 }
 
 /** Whether every move was the board's own; `byHand` lists the ones made by a person's login */
-export function cardVerdict(events) {
-  const moves =
-    Array.isArray(events) && events.every((e) => 'bot' in e) ? events : cardMoves(events)
+export function cardVerdict(moves) {
   const byHand = moves.filter((move) => !move.bot).map(({ at, actor }) => ({ at, actor }))
   return { ok: byHand.length === 0, moves, byHand }
 }
@@ -40,11 +38,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     ['api', '--paginate', '--slurp', `repos/{owner}/{repo}/issues/${number}/timeline`],
     { encoding: 'utf8' },
   )
-  const { ok, moves, byHand } = cardVerdict(JSON.parse(output).flat())
+  const { ok, moves, byHand } = cardVerdict(cardMoves(JSON.parse(output).flat()))
   for (const move of moves) console.log(`${move.at}  ${move.actor}${move.bot ? '' : '  (by hand)'}`)
   if (!moves.length) console.log('The card has not moved.')
   if (!ok) {
-    console.error(`${byHand.length} status change(s) made by hand: the board moves by itself.`)
+    console.error(
+      `${byHand.length} status change(s) made with a person's login. The board moves by itself; that is expected only for the documented fallback (project-management.md, grooming), which the issue records.`,
+    )
     process.exit(1)
   }
 }

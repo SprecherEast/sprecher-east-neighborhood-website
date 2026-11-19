@@ -213,8 +213,9 @@ For each issue:
   which card should move, and the next session on the owner's computer moves it.
 - **Read the card after each step** (claim, pull request opened, merge), not only its column:
   `node .github/scripts/card-history.mjs <n>` lists who changed its Status and when, and exits 1
-  when a person's login did it. The board's rules say it moves by itself, so a hand move is a slip:
-  say so on the issue and in the report, and fix the cause, never by moving the card back by hand.
+  when a person's login did it. The board moves by itself, so a hand move is a slip unless it is
+  the fallback above (the planner did not act) and the issue records it: otherwise say so on the
+  issue and in the report, and fix the cause, never by moving the card back by hand.
 
 ## 5. Weekly report: "what got done this week?"
 

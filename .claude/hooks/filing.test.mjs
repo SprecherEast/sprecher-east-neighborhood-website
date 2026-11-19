@@ -131,7 +131,7 @@ describe('filingCheck', () => {
 
   it('refuses a body it cannot read, saying how to pass one', () => {
     expect(check(create(), {})).toContain('-F body=@')
-    expect(check('gh api repos/o/r/issues --input -')).toContain('--input <file>')
+    expect(check('gh api repos/o/r/issues --input -')).toContain('--input <absolute file>')
   })
 
   it('does not touch commands that are not filings', () => {
@@ -142,6 +142,61 @@ describe('filingCheck', () => {
   it('lets an epic through without the issue sections', () => {
     const epic = `gh api repos/o/r/issues -f title=T -f body=Epic -f 'labels[]=epic' -F milestone=1`
     expect(check(epic)).toBeNull()
+  })
+})
+
+describe('filingCheck: forms a complete filing can take', () => {
+  const ok = { '/tmp/b.md': GOOD_BODY }
+  const flags = `-f 'labels[]=process' -f 'labels[]=ci' -f 'labels[]=priority: high'`
+
+  it('reads --flag=value and attached short-flag values', () => {
+    expect(
+      check(
+        `gh issue create --title=T --body-file=/tmp/b.md --label=process,ci --label='priority: high' --milestone=Backlog`,
+        ok,
+      ),
+    ).toBeNull()
+    expect(
+      check(`gh api repos/o/r/issues -ftitle=T -F body=@/tmp/b.md ${flags} -Fmilestone=1`, ok),
+    ).toBeNull()
+    expect(
+      check('gh api repos/o/r/issues --input=/tmp/i.json', {
+        '/tmp/i.json': JSON.stringify({
+          body: GOOD_BODY,
+          labels: ['process', 'ci', 'priority: high'],
+          milestone: 1,
+        }),
+      }),
+    ).toBeNull()
+  })
+
+  it('does not take a read for a filing, however the method is written', () => {
+    for (const method of ['-X GET', '-XGET', '--method=GET', '--method GET'])
+      expect(check(`gh api ${method} repos/o/r/issues -f state=all`), method).toBeNull()
+  })
+
+  it('sees a full URL, a query string, a variable prefix, env and a path to gh', () => {
+    for (const prefix of ['', 'GH_REPO=o/r ', 'env ', 'command ', '/usr/bin/'])
+      expect(
+        check(`${prefix}gh api https://api.github.com/repos/o/r/issues -f title=T`),
+        prefix,
+      ).toContain('ISSUE-')
+    expect(check('gh api "repos/o/r/issues?x=1" -f title=T')).toContain('ISSUE-')
+  })
+
+  it('refuses a body that is a shell expansion or a path with one, saying how to pass it', () => {
+    for (const command of [
+      'gh issue create -b "$(cat /tmp/b.md)" -t T',
+      'gh api repos/o/r/issues -f body="$(cat /tmp/b.md)"',
+      'gh api repos/o/r/issues -F body=@$F',
+      'gh api repos/o/r/issues -F body=@~/b.md',
+    ])
+      expect(check(command, ok), command).toContain('absolute file')
+  })
+
+  it('tells gh issue create to use --body-file, and gh api -F body=@', () => {
+    expect(check('gh issue create --body-file -')).toContain('--body-file <absolute file>')
+    expect(check('gh api repos/o/r/issues --input -')).toContain('--input <absolute file>')
   })
 })
 

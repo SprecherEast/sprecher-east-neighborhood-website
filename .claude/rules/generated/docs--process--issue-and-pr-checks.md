@@ -87,9 +87,12 @@ The issue check only warns after the issue exists, so a session meets the same r
 - **At filing,** the Bash hook (`.claude/hooks/filing.mjs`) refuses `gh issue create` and a `gh api`
   POST to the issues endpoint when the issue would fail the rules above plus `ISSUE-DUPLICATES`. It
   reads the body from `-f body=`, `-F body=@file`, `--body-file` or `--input <file>`; a body on
-  standard input can't be read, so it is refused. Labels, comments, sub-issues and fields on an
-  existing issue are untouched. Other tools get the same rules from the issue forms, which now ask
-  for "Existing work compared", and from this check.
+  standard input, a shell expansion (`"$(cat f)"`) or a path with `$` or `~` can't be read, so it is
+  refused with how to pass the file (use an absolute path). Labels, comments, sub-issues and fields on an
+  existing issue are untouched. Only this hook enforces `ISSUE-DUPLICATES`: the issue check does not ask it
+  of existing issues, and an issue filed through the API never sees the forms. Other tools get that
+  rule from the issue forms, which ask for "Existing work compared", and from the filing checklist.
 - **After a claim, a pull request and a merge,** `node .github/scripts/card-history.mjs <issue>`
   lists who changed the card's status and exits 1 on a change made by a person's login, since the
-  board moves by itself ([how](/docs/process/project-management.md#the-board)).
+  board moves by itself ([how](/docs/process/project-management.md#the-board)), except the documented fallback,
+  which the issue records.
