@@ -45,6 +45,7 @@ import {
   isAdminOrEditorBoolean,
 } from '@/platform/payload/roles'
 import { getServerSideURL } from '@/platform/lib/getURL'
+import { SITE_NAME } from '@/platform/seo/siteName'
 import { emailAdapterFromEnv } from '@/platform/email/emailAdapter'
 import { restrictEditLocks } from '@/platform/payload/restrictEditLocks'
 import { restrictJobStats } from '@/platform/payload/restrictJobStats'
@@ -65,7 +66,7 @@ const confirmationRetentionTask = createConfirmationRetentionTask({
 })
 
 const generateTitle: GenerateTitle<Post | Page | Event> = ({ doc }) => {
-  return doc?.title || 'Sprecher East'
+  return doc?.title || SITE_NAME
 }
 
 const generateURL: GenerateURL<Post | Page | Event> = ({ doc, collectionConfig }) => {

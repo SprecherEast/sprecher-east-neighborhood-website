@@ -13,6 +13,7 @@ import { InitTheme } from '@/platform/theme/InitTheme'
 import { Providers } from '@/platform/theme/Providers'
 import { mergeOpenGraph } from '@/platform/seo/mergeOpenGraph'
 import { organizationJsonLd } from '@/platform/seo/organizationJsonLd'
+import { SITE_NAME } from '@/platform/seo/siteName'
 import { LikelyHumanClicks } from '@/platform/analytics/LikelyHumanClicks.client'
 import { UmamiScript } from '@/platform/analytics/UmamiScript'
 import { VersionCheck } from '@/platform/ui/VersionCheck.client'
@@ -88,8 +89,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 export const metadata: Metadata = {
   metadataBase: new URL(getServerSideURL()),
   title: {
-    template: '%s — Sprecher East',
-    default: 'Sprecher East',
+    template: `%s — ${SITE_NAME}`,
+    default: SITE_NAME,
   },
   description:
     "Connecting neighbors on Madison's Far East Side. Community events, local news, and resources for the Sprecher East neighborhood.",
