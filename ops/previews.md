@@ -39,3 +39,9 @@ caddy`. The folder and headers file paths are defined once, in `lib.sh`.
   `Strict-Transport-Security` and that `/robots.txt` disallows everything, remove it, and confirm
   HTTPS to an unknown `*.dev` name serves nothing and plain HTTP redirects to the production domain.
   Record the results on #1072.
+- **Blocks come from `main`.** The preview deploy builds every block from `main`'s copy of
+  `caddy/preview-site.caddy` and `caddy/preview-headers.caddy`, never from the pull request's own
+  files: a pull request could otherwise drop the noindex header or add any directive to production's
+  Caddy.
+- **Caddy version.** The deferred header (`header >X-Robots-Tag`) needs Caddy 2.7 or later. On an
+  older server the sample check rejects it and the deploy fails with nothing changed.

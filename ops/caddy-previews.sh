@@ -73,10 +73,11 @@ trap 'rm -f "$candidate" "$sample"' EXIT
 
 install -d -m 755 "$PREVIEW_CADDY_DIR"
 
-# The new Caddyfile: the old one, ending with a newline, plus the import line and its comment.
-cp "$CADDYFILE" "$candidate"
+# The new Caddyfile: the old one, plus the import line and its comment.
 if [ "$add_line" = yes ]; then
-  { sed -e '$a\' "$CADDYFILE" && printf '\n# Pull request previews (ops/caddy-previews.sh, #1072)\nimport %s\n' "$IMPORT_TARGET"; } >"$candidate"
+  caddy_with_import "Pull request previews (ops/caddy-previews.sh, #1072)" "import $IMPORT_TARGET" >"$candidate"
+else
+  cp "$CADDYFILE" "$candidate"
 fi
 # What Caddy is asked to validate: that, plus one sample preview block (HTTP only, so no
 # certificate is involved), which imports the headers file and the form limits as a real one does.
@@ -88,27 +89,13 @@ fi
 } >"$sample"
 
 # Install the snippet first, so the validation below sees it; the old one is kept to put back.
-if [ -f "$PREVIEW_HEADERS_FILE" ]; then
-  headers_backup=$(mktemp "$PREVIEW_HEADERS_FILE.previous-XXXXXX")
-  cp -p "$PREVIEW_HEADERS_FILE" "$headers_backup"
-fi
-install -m 644 "$HEADERS_SOURCE" "$PREVIEW_HEADERS_FILE"
-
-restore_headers() {
-  if [ -n "$headers_backup" ]; then
-    cp -p "$headers_backup" "$PREVIEW_HEADERS_FILE" && rm -f "$headers_backup"
-  else
-    rm -f "$PREVIEW_HEADERS_FILE"
-  fi
-}
+caddy_install_file "$HEADERS_SOURCE" "$PREVIEW_HEADERS_FILE"
+headers_backup="$CADDY_FILE_BACKUP"
+restore_headers() { caddy_restore_file "$PREVIEW_HEADERS_FILE" "$headers_backup"; }
 restore_headers_say() { restore_headers || { echo "the headers file (copy: $headers_backup)" && return 1; }; }
 
 if ! caddy_accepts "$sample"; then
-  if restore_headers; then
-    report "ERROR: Caddy rejected $what; nothing was changed"
-  else
-    report "ERROR: Caddy rejected $what, and the previous headers file could not be put back (copy: $headers_backup)"
-  fi
+  caddy_report_rejected "$what" "headers file" "$PREVIEW_HEADERS_FILE" "$headers_backup"
   exit 1
 fi
 

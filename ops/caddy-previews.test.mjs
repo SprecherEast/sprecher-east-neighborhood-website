@@ -60,6 +60,11 @@ beforeEach(() => {
       'esac',
     ].join('\n'),
   )
+  // Copying a backup over the Caddyfile (the rollback) fails when STUB_CP_RESTORE_FAILS is set.
+  stub(
+    'cp',
+    'case "$1" in *bak-previews-*) [ -z "$STUB_CP_RESTORE_FAILS" ] || exit 1 ;; esac; exec /bin/cp "$@"',
+  )
   stub(
     'reload-caddy',
     'echo reload >> "$STUB_LOG"; [ -z "$STUB_RELOAD_FAILS" ] || ! grep -q "previews/" "$CADDYFILE"',
@@ -178,6 +183,16 @@ describe('caddy-previews.sh: it never leaves Caddy worse off', () => {
     expect(out).toContain('stopped answering')
     expect(caddyfile()).toBe(SITE)
     expect(log.match(/^reload$/gm)).toHaveLength(2) // the change, and the rollback that makes Caddy load the old files
+  })
+
+  it('says what it could not put back, and where its backup is, when the rollback itself fails', async () => {
+    const { code, out } = await run('caddy-previews.sh', {
+      STUB_DOWN_AFTER: '1',
+      STUB_CP_RESTORE_FAILS: '1',
+    })
+    expect(code).toBe(1)
+    expect(out).toContain('Could not put back the Caddyfile (backup:')
+    expect(out).toContain('Caddyfile.bak-previews-')
   })
 
   it('puts the previous headers file back, not just removes one, when Caddy will not reload', async () => {

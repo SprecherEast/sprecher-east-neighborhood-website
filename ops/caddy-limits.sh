@@ -129,26 +129,12 @@ if [ "$added" -eq 0 ] && [ "$limits_changed" = no ]; then
   report "Caddy request body limit already in place: $limit_text"
 else
   # Install the limits file so the candidate can be validated, keeping the old one to put back.
-  if [ -f "$LIMITS_FILE" ]; then
-    limits_backup=$(mktemp "$LIMITS_FILE.previous-XXXXXX")
-    cp -p "$LIMITS_FILE" "$limits_backup"
-  fi
-  install -m 644 "$SOURCE" "$LIMITS_FILE"
-
-  restore_limits() {
-    if [ -n "$limits_backup" ]; then
-      cp -p "$limits_backup" "$LIMITS_FILE" && rm -f "$limits_backup"
-    else
-      rm -f "$LIMITS_FILE"
-    fi
-  }
+  caddy_install_file "$SOURCE" "$LIMITS_FILE"
+  limits_backup="$CADDY_FILE_BACKUP"
+  restore_limits() { caddy_restore_file "$LIMITS_FILE" "$limits_backup"; }
 
   if ! caddy_accepts "$candidate"; then
-    if restore_limits; then
-      report "ERROR: Caddy rejected the request body limit; nothing was changed"
-    else
-      report "ERROR: Caddy rejected the request body limit, and the previous limit could not be put back (copy: $limits_backup)"
-    fi
+    caddy_report_rejected "the request body limit" "limit" "$LIMITS_FILE" "$limits_backup"
     exit 1
   fi
 

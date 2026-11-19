@@ -43,7 +43,7 @@ set_route() { # <template in ops/caddy> <yes|no: add the import line> [reload]
   if [ "$add_import" = yes ] && ! umami_route_imported; then
     changed=yes
     candidate=$(mktemp "$CADDYFILE.XXXXXX")
-    { cat "$CADDYFILE" && printf '\n# Umami analytics (ops/install-umami.sh, #948)\n%s\n' "$(import_line)"; } >"$candidate" || changed=failed
+    caddy_with_import "Umami analytics (ops/install-umami.sh, #948)" "$(import_line)" >"$candidate" || changed=failed
     # mktemp makes it root-only; Caddy runs as its own user and must keep reading the Caddyfile
     chmod --reference="$CADDYFILE" "$candidate" || changed=failed
     chown --reference="$CADDYFILE" "$candidate" 2>/dev/null || true

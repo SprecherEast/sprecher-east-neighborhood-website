@@ -183,10 +183,41 @@ caddy_reload_problem() { # <what the config now has> [seconds the site gets to a
   fi
 }
 
-# True when the Caddyfile has a top-level `import <target>` line, however it was indented, spaced
-# or commented by hand.
+# True when the Caddyfile has an `import <target>` line, however it was indented, spaced or
+# commented by hand.
 caddy_import_present() { # <the path or glob that is imported>
   awk -v want="$1" '{ sub(/#.*/, "") } $1 == "import" && $2 == want && NF == 2 { found = 1 } END { exit !found }' "$CADDYFILE" 2>/dev/null
+}
+
+# The Caddyfile plus one top-level import line (and its comment), to validate before it replaces the
+# Caddyfile. Prints it; the caller sends it to a file.
+caddy_with_import() { # <comment> <import line>
+  cat "$CADDYFILE" && printf '\n# %s\n%s\n' "$1" "$2"
+}
+
+# Installs a Caddy file the repo manages, keeping the previous copy for a rollback. Sets
+# $CADDY_FILE_BACKUP to that copy's path (empty when there was none).
+caddy_install_file() { # <source> <target>
+  CADDY_FILE_BACKUP=""
+  if [ -f "$2" ]; then
+    CADDY_FILE_BACKUP=$(mktemp "$2.previous-XXXXXX")
+    cp -p "$2" "$CADDY_FILE_BACKUP"
+  fi
+  install -m 644 "$1" "$2"
+}
+
+# Puts the previous copy back, or removes the file when there was none.
+caddy_restore_file() { # <target> <previous copy, or empty>
+  if [ -n "$2" ]; then cp -p "$2" "$1" && rm -f "$2"; else rm -f "$1"; fi
+}
+
+# After Caddy rejected a change: puts the managed file back and reports it.
+caddy_report_rejected() { # <what was rejected> <the file's name in the message> <target> <previous copy, or empty>
+  if caddy_restore_file "$3" "$4"; then
+    report "ERROR: Caddy rejected $1; nothing was changed"
+  else
+    report "ERROR: Caddy rejected $1, and the previous $2 could not be put back (copy: $4)"
+  fi
 }
 
 # Puts a Caddy change back: the Caddyfile from its backup (when one is given), the caller's own
