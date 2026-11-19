@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
-import yaml from 'js-yaml'
+import * as yaml from 'js-yaml'
 
 // Everything a run reads from intelligence/ (README.md, "How a runtime loads it", step 3): the
 // pipeline settings, the source registry, the coverage policy, the stage prompts and the JSON
