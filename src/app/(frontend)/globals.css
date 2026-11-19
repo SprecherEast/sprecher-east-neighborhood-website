@@ -139,7 +139,7 @@
   --hero-bottom-space: 24px;
   --hero-below-gap: 5px;
   /* The photo fades over this length, the last part of it running under the next section.
-     The photo box is always taller than the hero plus the overlap, so the fade ends on page colour */
+     The photo box fills the hero plus the overlap (`min-h-full`), so the fade always ends on page colour; the photo is only worked out from the horizon when it is already taller */
   --hero-fade-length: 150px;
   --hero-fade-overlap: 51px;
 

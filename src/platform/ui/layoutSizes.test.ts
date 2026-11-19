@@ -33,7 +33,7 @@ describe('layout sizes', () => {
     expect(PAGE_SHELL).toBe('py-24')
     expect(READING_WIDTH_LG).toBe('lg:max-w-[var(--reading-width)]')
     expect(PAGE_MIN_HEIGHT).toBe('min-h-[var(--page-min-height)]')
-    expect(HERO_PHOTO_HEIGHT).toBe('h-[var(--hero-photo-h)]')
+    expect(HERO_PHOTO_HEIGHT).toBe('h-[var(--hero-photo-h)] min-h-full')
     expect(HERO_SKY_HEIGHT).toBe(
       'min-h-[max(0px,calc(var(--hero-horizon)_-_var(--header-height)))]',
     )

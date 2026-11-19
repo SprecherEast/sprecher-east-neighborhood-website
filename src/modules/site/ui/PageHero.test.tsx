@@ -120,6 +120,8 @@ describe('PageHero', () => {
     // Nothing in it takes a click: the next section's links sit under the overlap
     expect(layer.className).toContain('pointer-events-none')
     expect(layer.querySelector('.h-\\[var\\(--hero-photo-h\\)\\] img')).toBeTruthy()
+    // It also fills the layer, so a tall hero can't leave the photo ending inside the fade
+    expect(layer.querySelector('.min-h-full')).toBeTruthy()
     const fade = layer.querySelector('.hero-fade') as HTMLElement
     expect(fade.className).toContain('bottom-0')
     expect(fade.className).toContain('h-[var(--hero-fade-length)]')

@@ -35,8 +35,13 @@ export const PAGE_MIN_HEIGHT = 'min-h-[var(--page-min-height)]'
  * `--hero-horizon`, and the spaces and the fade are variables in globals.css.
  */
 
-/** The photo's box: as tall as the photo at full width, and never under `--hero-photo-min` */
-export const HERO_PHOTO_HEIGHT = 'h-[var(--hero-photo-h)]'
+/**
+ * The photo's box: as tall as the photo at full width and never under the least height, and it
+ * also fills the layer it sits in (the hero and the fade's overlap), so a long description or an
+ * unset focal point can't leave the photo ending in an edge inside the fade. Then the photo only
+ * grows, cropped at the sides.
+ */
+export const HERO_PHOTO_HEIGHT = 'h-[var(--hero-photo-h)] min-h-full'
 
 /** The sky above the horizon, from under the site header: the title sits at its bottom edge */
 export const HERO_SKY_HEIGHT = 'min-h-[max(0px,calc(var(--hero-horizon)_-_var(--header-height)))]'
