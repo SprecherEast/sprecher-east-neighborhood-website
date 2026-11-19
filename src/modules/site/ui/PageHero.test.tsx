@@ -77,6 +77,63 @@ describe('PageHero', () => {
     expect(container.querySelector('img')?.style.objectPosition).toBe('50% 50%')
   })
 
+  it("high: is laid out from the photo's horizon, taken from its ratio and focal point (#1304)", () => {
+    const { container } = inMain(
+      <PageHero variant="high" body={body} image={{ ...image, focalY: 32.6 }} links={links} />,
+    )
+    const hero = container.querySelector('main > div') as HTMLElement
+    expect(hero.className).toContain('hero-geometry')
+    expect(hero.style.getPropertyValue('--hero-aspect')).toBe('1.7778')
+    expect(hero.style.getPropertyValue('--hero-focal-y')).toBe('0.326')
+    // The next section starts a little lower than the hero's edge
+    expect(hero.className).toContain('mb-[var(--hero-below-gap)]')
+  })
+
+  it('high: puts the title in the sky, then the note and the buttons below the horizon', () => {
+    inMain(<PageHero variant="high" body={body} image={image} links={links} />)
+    const title = screen.getByRole('heading', { level: 1 })
+    const sky = title.closest('[class*="--hero-horizon"]') as HTMLElement
+    expect(sky.className).toContain('items-end')
+    expect(sky.className).toContain('pb-[var(--hero-sky-gap)]')
+
+    const below = screen
+      .getByText('Neighbors on the Far East Side.')
+      .closest('.mt-\\[var\\(--hero-horizon-gap\\)\\]')
+    expect(below).toBeTruthy()
+    // The title comes first, and the buttons are level with the note, not under it, from md
+    expect(
+      sky.compareDocumentPosition(below as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(below?.className).toContain('md:items-start')
+    expect(below?.contains(screen.getByRole('link', { name: 'Upcoming Events' }))).toBe(true)
+    expect(below?.contains(title)).toBe(false)
+  })
+
+  it('high: keeps the photo at the top, runs it on under the next section and fades it out (#1304)', () => {
+    const { container } = inMain(
+      <PageHero variant="high" body={body} image={image} links={links} />,
+    )
+    const layer = container.querySelector('[aria-hidden="true"]') as HTMLElement
+    expect(layer.className).toContain('top-0')
+    expect(layer.className).toContain('bottom-[calc(var(--hero-fade-overlap)*-1)]')
+    expect(layer.className).toContain('overflow-hidden')
+    // Nothing in it takes a click: the next section's links sit under the overlap
+    expect(layer.className).toContain('pointer-events-none')
+    expect(layer.querySelector('.h-\\[var\\(--hero-photo-h\\)\\] img')).toBeTruthy()
+    const fade = layer.querySelector('.hero-fade') as HTMLElement
+    expect(fade.className).toContain('bottom-0')
+    expect(fade.className).toContain('h-[var(--hero-fade-length)]')
+    // The darkening behind the text fades with the photo, so no edge shows where the hero ends
+    expect(layer.contains(layer.querySelector('.bg-gradient-to-r'))).toBe(true)
+    expect(container.querySelectorAll('.hero-fade')).toHaveLength(1)
+  })
+
+  it('high: has no horizon without a photo, so the title sits right under the header', () => {
+    const { container } = inMain(<PageHero variant="high" body={body} links={links} />)
+    const hero = container.querySelector('main > div') as HTMLElement
+    expect(hero.style.getPropertyValue('--hero-focal-y')).toBe('0')
+  })
+
   it('high: draws no button list without links', () => {
     inMain(<PageHero variant="high" body={body} links={[]} />)
 

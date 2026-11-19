@@ -12,7 +12,7 @@ These patterns are for the home page and landing pages. A post or event page is 
 Instead of centering everything in a tall void, anchor content to the bottom-left. Creates visual weight and a natural reading entry point.
 
 ```tsx
-<div className="relative -mt-[var(--header-height)] min-h-[var(--hero-min-height)]">
+<div className="relative -mt-[var(--header-height)] min-h-[var(--page-min-height)]">
   {/* Background image */}
   <div className="absolute inset-0">
     <Media fill imgClassName="object-cover" priority resource={media} />
@@ -22,7 +22,7 @@ Instead of centering everything in a tall void, anchor content to the bottom-lef
   <div className="absolute inset-0 bg-gradient-to-t from-scrim/70 via-scrim/30 to-transparent" />
 
   {/* Content anchored to bottom-left */}
-  <div className="relative z-10 container flex min-h-[var(--hero-min-height)] items-end pb-16 md:pb-20">
+  <div className="relative z-10 container flex min-h-[var(--page-min-height)] items-end pb-16 md:pb-20">
     <div className="max-w-2xl">
       <h1 className="text-4xl leading-tight font-bold tracking-tight text-on-image md:text-5xl lg:text-6xl">
         Your Neighborhood, Your Community
@@ -49,12 +49,22 @@ Instead of centering everything in a tall void, anchor content to the bottom-lef
 
 ---
 
+### Pattern: Horizon-Anchored Hero (the home hero)
+
+Where the photo has a clear horizon, lay the text out from it instead of from the bottom of a tall band: the title in the sky just above the horizon, the description and the buttons just below it, the photo at the top and fading into the page. Do not copy it: it is `PageHero` (the high look), built from `hero-geometry` and `hero-fade` (`src/platform/theme/tailwind.css`), `heroPhotoVars` (`src/modules/site/domain/heroGeometry.ts`) and the `HERO_*` sizes (`layoutSizes.ts`).
+
+- The upload's focal point height is the horizon: an editor sets it on the tree line in Admin, so a new photo needs no code.
+- The photo box is never shorter than `--hero-photo-min`, so the title and the note fit above and below the horizon on a phone.
+- The fade is eased (smoothstep), about 150 px, the last part of it under the next section; the blocks are drawn above the hero for that (`relative z-10` in `[slug]/page.tsx`).
+
+---
+
 ### Pattern: Frosted Glass Text Panel
 
 Place the hero's text on a frosted glass panel that sits on top of the image: the shared `GlassPanel` (#1278), which darkens itself, so its text is legible whatever the image holds. The title stays on the photo, as on the home hero.
 
 ```tsx
-<div className="relative -mt-[var(--header-height)] min-h-[var(--hero-min-height)]">
+<div className="relative -mt-[var(--header-height)] min-h-[var(--page-min-height)]">
   {/* Background image — stays vivid */}
   <div className="absolute inset-0">
     <Media fill imgClassName="object-cover" priority resource={media} />
@@ -64,7 +74,7 @@ Place the hero's text on a frosted glass panel that sits on top of the image: th
   <div className="absolute inset-0 bg-scrim/20" />
 
   {/* Title on the photo, description in the glass panel */}
-  <div className="relative z-10 container flex min-h-[var(--hero-min-height)] items-end pb-16 md:items-center md:pb-0">
+  <div className="relative z-10 container flex min-h-[var(--page-min-height)] items-end pb-16 md:items-center md:pb-0">
     <div className="w-full max-w-xl">
       <h1 className="text-3xl leading-tight font-bold tracking-tight text-on-image text-shadow-photo md:text-4xl lg:text-5xl">
         Your Neighborhood, Your Community
