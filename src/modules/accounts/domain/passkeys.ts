@@ -2,6 +2,7 @@
 // party, the switch, the challenge's lifetime and the label. Pure: no Payload, no Next.js and no
 // WebAuthn library, which never sees an account.
 
+import { isRecentSignIn } from './signInSession'
 import { canSignInTo, type SocialAccount } from './socialSignIn'
 
 /** The collection that holds the saved passkeys. */
@@ -17,12 +18,6 @@ export type ChallengePurpose = (typeof CHALLENGE_PURPOSES)[number]
 
 /** How long a challenge may be answered: a few minutes, as the person's device prompt takes. */
 export const CHALLENGE_TTL_MS = 5 * 60 * 1000
-
-/**
- * How recent the session's sign-in must be to add a passkey. The session's own start time counts,
- * so "keep me signed in" doesn't make an old session look new.
- */
-export const RECENT_SIGN_IN_WINDOW_MS = 5 * 60 * 1000
 
 /** The most passkeys one account may have. */
 export const MAX_PASSKEYS_PER_ACCOUNT = 10
@@ -180,8 +175,7 @@ export function decideAddPasskey({
   now: Date
 }): { ok: true } | { ok: false; reason: AddPasskeyRefusal } {
   if (accountId === null) return { ok: false, reason: 'signed-out' }
-  const age = signedInAt ? now.getTime() - signedInAt.getTime() : Number.NaN
-  if (!(age >= 0 && age <= RECENT_SIGN_IN_WINDOW_MS)) return { ok: false, reason: 'sign-in-again' }
+  if (!isRecentSignIn(signedInAt, now)) return { ok: false, reason: 'sign-in-again' }
   if (existingCount >= MAX_PASSKEYS_PER_ACCOUNT) return { ok: false, reason: 'cap' }
   return { ok: true }
 }

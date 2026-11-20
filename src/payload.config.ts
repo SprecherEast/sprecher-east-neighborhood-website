@@ -18,6 +18,8 @@ import {
   PasskeyChallenges,
   passkeyChallengeRetentionTask,
   Passkeys,
+  SocialLinkRequests,
+  socialLinkRetentionTask,
   Users,
 } from '@/modules/accounts/cms'
 import { AgentReviewItems, AgentRuns, mcpOptions } from '@/modules/agents/cms'
@@ -203,6 +205,7 @@ export default buildConfig({
     Users,
     Passkeys,
     PasskeyChallenges,
+    SocialLinkRequests,
     EmailConfirmations,
     AgentRuns,
     AgentReviewItems,
@@ -233,7 +236,12 @@ export default buildConfig({
     // queue and cancel scheduled publishes from Admin; only admins may run the queue by hand.
     access: { cancel: isAdminOrEditorBoolean, queue: isAdminOrEditorBoolean, run: isAdminBoolean },
     // The owner's retention rules (#274), scheduled every hour
-    tasks: [contactRetentionTask, confirmationRetentionTask, passkeyChallengeRetentionTask],
+    tasks: [
+      contactRetentionTask,
+      confirmationRetentionTask,
+      passkeyChallengeRetentionTask,
+      socialLinkRetentionTask,
+    ],
     // Runs the retention queue (#274) and scheduled publishing (#141) inside the app's one PM2
     // process: no separate worker
     autoRun: JOB_RUNNERS,

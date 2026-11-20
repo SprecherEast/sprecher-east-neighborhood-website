@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { MAX_PASSKEYS_PER_ACCOUNT, RECENT_SIGN_IN_WINDOW_MS } from '../domain/passkeys'
+import { MAX_PASSKEYS_PER_ACCOUNT } from '../domain/passkeys'
+import { RECENT_SIGN_IN_WINDOW_MS } from '../domain/signInSession'
 import {
   answer,
   data,

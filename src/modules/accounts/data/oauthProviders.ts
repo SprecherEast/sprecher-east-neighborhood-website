@@ -58,10 +58,17 @@ function configFor(provider: SocialProvider): Promise<client.Configuration> {
   return pending
 }
 
-/** The values a new sign-in checks on its way back, kept in the flow cookie. */
-export function newSocialFlow(provider: SocialProvider): SocialFlow {
+/**
+ * The values a new sign-in checks on its way back, kept in the flow cookie. `linkAccountId` is the
+ * signed-in account a flow connects Google to (#1338), or null for a sign-in.
+ */
+export function newSocialFlow(
+  provider: SocialProvider,
+  linkAccountId: number | null = null,
+): SocialFlow {
   return {
     provider,
+    linkAccountId,
     state: client.randomState(),
     codeVerifier: client.randomPKCECodeVerifier(),
     nonce: client.randomNonce(),

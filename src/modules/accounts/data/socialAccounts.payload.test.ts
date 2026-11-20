@@ -111,10 +111,57 @@ describe('finding accounts', () => {
   })
 })
 
+describe('linking a Google identity to an account (#1338)', () => {
+  const newAccount = async () => data.createVerifiedAccount(profile())
+  // An account that has no Google id, as one made with an email and password
+  const passwordAccount = async () => {
+    const user = await payload.create({
+      collection: 'users',
+      data: { email: `pw-${Math.random()}@example.com`, password: 'link-test-password-1', role: 'guest' },
+      disableVerificationEmail: true,
+      overrideAccess: true,
+    })
+    return user.id
+  }
+
+  it('writes the link while the account has none, and says so', async () => {
+    const id = await passwordAccount()
+    expect(await data.hasLinkedSubject(id, 'google')).toBe(false)
+    expect(await data.linkSubject(id, 'google', 'g-link-1')).toBe(true)
+    expect(await data.hasLinkedSubject(id, 'google')).toBe(true)
+    expect((await data.findAccountBySubject('google', 'g-link-1'))?.id).toBe(id)
+  })
+
+  it('never replaces a link the account already has', async () => {
+    const id = await passwordAccount()
+    expect(await data.linkSubject(id, 'google', 'g-link-2')).toBe(true)
+    expect(await data.linkSubject(id, 'google', 'g-link-3')).toBe(false)
+    expect((await stored(id)).googleSub).toBe('g-link-2')
+  })
+
+  it('refuses a Google identity that is on another account, with nothing changed and no throw', async () => {
+    const owner = await newAccount()
+    const ownerSub = (await stored(owner)).googleSub as string
+    const other = await passwordAccount()
+    expect(await data.linkSubject(other, 'google', ownerSub)).toBe(false)
+    expect(await data.hasLinkedSubject(other, 'google')).toBe(false)
+    expect((await stored(owner)).googleSub).toBe(ownerSub)
+  })
+
+  it('lets two links at once keep one', async () => {
+    const id = await passwordAccount()
+    const results = await Promise.all([
+      data.linkSubject(id, 'google', 'g-race-a'),
+      data.linkSubject(id, 'google', 'g-race-b'),
+    ])
+    expect(results.filter(Boolean)).toHaveLength(1)
+  })
+})
+
 describe('the signed flow cookie', () => {
   it('give back a flow once, and refuse one that was changed', async () => {
     const now = new Date()
-    const flow = { provider: 'google' as const, state: 's', codeVerifier: 'v', nonce: 'n' }
+    const flow = { provider: 'google' as const, state: 's', codeVerifier: 'v', nonce: 'n', linkAccountId: null }
     await data.saveSocialFlow(flow, now)
     expect(cookieJar.get('sprecher-east-social-flow')).toMatchObject({
       path: '/',

@@ -84,12 +84,7 @@ export type SocialAccount = {
  * Why a sign-in with a provider didn't open an account. Fixed codes only: the page shows a fixed
  * message for each, never the provider's error.
  */
-export type SocialSignInFailure =
-  | 'failed'
-  | 'no-email'
-  | 'email-in-use'
-  | 'unavailable'
-  | 'too-many'
+export type SocialSignInFailure = 'failed' | 'no-email' | 'unavailable' | 'too-many'
 
 /** What to do with a provider's answer. */
 export type SocialDecision =
@@ -97,6 +92,12 @@ export type SocialDecision =
   | { kind: 'sign-in'; accountId: number }
   /** A verified email no account uses: a new guest account, already verified */
   | { kind: 'create-verified' }
+  /**
+   * A Google-verified email an account already uses: Google alone signs in to nothing, so the
+   * person is asked for that account's password once (#1338, decision 0020). Whatever state the
+   * account is in, the password step is the only place that says no, with one fixed failure.
+   */
+  | { kind: 'ask-password' }
   | { kind: 'refuse'; failure: SocialSignInFailure }
 
 /** Roles a provider may sign in to. An agent's only credential is its MCP key (#336). */
@@ -115,8 +116,9 @@ export function canSignInTo(account: SocialAccount, now: Date): boolean {
  * The rule for a provider's answer (decision 0020):
  * - The identity is the provider plus its subject. A returning person is found by it, and
  *   nothing on the account changes.
- * - An account is never linked by its email: an email an account already uses is refused, and so
- *   is an email the provider didn't verify.
+ * - An account is never linked by its email alone: an email an account already uses leads to the
+ *   password step (`ask-password`), and nothing is linked or signed in until that password
+ *   checks out. An email the provider didn't verify is refused.
  * - A locked account, an unverified one, or an agent can't be signed in to.
  */
 export function decideSocialSignIn({
@@ -138,7 +140,7 @@ export function decideSocialSignIn({
   if (!profile.email) return { kind: 'refuse', failure: 'no-email' }
 
   if (!profile.emailVerified) return { kind: 'refuse', failure: 'failed' }
-  return byEmail ? { kind: 'refuse', failure: 'email-in-use' } : { kind: 'create-verified' }
+  return byEmail ? { kind: 'ask-password' } : { kind: 'create-verified' }
 }
 
 /** A name a provider gave, trimmed and kept to the length a form allows, or null. */

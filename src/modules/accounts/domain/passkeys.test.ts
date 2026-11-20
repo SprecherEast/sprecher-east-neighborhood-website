@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import {
   CHALLENGE_TTL_MS,
   MAX_PASSKEYS_PER_ACCOUNT,
-  RECENT_SIGN_IN_WINDOW_MS,
   decideAddPasskey,
   decideRemovePasskey,
   decideUsePasskey,
@@ -11,6 +10,7 @@ import {
   toChallengeExpiry,
   toRelyingParty,
 } from './passkeys'
+import { RECENT_SIGN_IN_WINDOW_MS } from './signInSession'
 
 const now = new Date('2026-11-19T12:00:00.000Z')
 const ago = (ms: number) => new Date(now.getTime() - ms)

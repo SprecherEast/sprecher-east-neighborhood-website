@@ -25,31 +25,31 @@
 
 ## Fields
 
-| Field               | Type     | Required | Target or options                                                                                                      | Notes                    |
-| ------------------- | -------- | -------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `input`             | json     | no       |                                                                                                                        |                          |
-| `taskStatus`        | json     | no       |                                                                                                                        | read only                |
-| `completedAt`       | date     | no       |                                                                                                                        | indexed                  |
-| `totalTried`        | number   | no       |                                                                                                                        | indexed; default 0       |
-| `hasError`          | checkbox | no       |                                                                                                                        | indexed; default false   |
-| `error`             | json     | no       |                                                                                                                        | shown conditionally      |
-| `log`               | array    | no       |                                                                                                                        |                          |
-| `log[].executedAt`  | date     | yes      |                                                                                                                        |                          |
-| `log[].completedAt` | date     | yes      |                                                                                                                        |                          |
-| `log[].taskSlug`    | select   | yes      | inline, deleteExpiredContactMessages, deleteExpiredEmailConfirmations, deleteExpiredPasskeyChallenges, schedulePublish |                          |
-| `log[].taskID`      | text     | yes      |                                                                                                                        |                          |
-| `log[].input`       | json     | no       |                                                                                                                        |                          |
-| `log[].output`      | json     | no       |                                                                                                                        |                          |
-| `log[].state`       | radio    | yes      | failed, succeeded                                                                                                      |                          |
-| `log[].error`       | json     | yes      |                                                                                                                        | shown conditionally      |
-| `log[].id`          | text     | no       |                                                                                                                        | hidden                   |
-| `taskSlug`          | select   | no       | inline, deleteExpiredContactMessages, deleteExpiredEmailConfirmations, deleteExpiredPasskeyChallenges, schedulePublish | indexed                  |
-| `queue`             | text     | no       |                                                                                                                        | indexed; default default |
-| `waitUntil`         | date     | no       |                                                                                                                        | indexed                  |
-| `processing`        | checkbox | no       |                                                                                                                        | indexed; default false   |
-| `meta`              | json     | no       |                                                                                                                        |                          |
-| `updatedAt`         | date     | no       |                                                                                                                        | hidden; indexed          |
-| `createdAt`         | date     | no       |                                                                                                                        | hidden; indexed          |
+| Field               | Type     | Required | Target or options                                                                                                                                       | Notes                    |
+| ------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `input`             | json     | no       |                                                                                                                                                         |                          |
+| `taskStatus`        | json     | no       |                                                                                                                                                         | read only                |
+| `completedAt`       | date     | no       |                                                                                                                                                         | indexed                  |
+| `totalTried`        | number   | no       |                                                                                                                                                         | indexed; default 0       |
+| `hasError`          | checkbox | no       |                                                                                                                                                         | indexed; default false   |
+| `error`             | json     | no       |                                                                                                                                                         | shown conditionally      |
+| `log`               | array    | no       |                                                                                                                                                         |                          |
+| `log[].executedAt`  | date     | yes      |                                                                                                                                                         |                          |
+| `log[].completedAt` | date     | yes      |                                                                                                                                                         |                          |
+| `log[].taskSlug`    | select   | yes      | inline, deleteExpiredContactMessages, deleteExpiredEmailConfirmations, deleteExpiredPasskeyChallenges, deleteExpiredSocialLinkRequests, schedulePublish |                          |
+| `log[].taskID`      | text     | yes      |                                                                                                                                                         |                          |
+| `log[].input`       | json     | no       |                                                                                                                                                         |                          |
+| `log[].output`      | json     | no       |                                                                                                                                                         |                          |
+| `log[].state`       | radio    | yes      | failed, succeeded                                                                                                                                       |                          |
+| `log[].error`       | json     | yes      |                                                                                                                                                         | shown conditionally      |
+| `log[].id`          | text     | no       |                                                                                                                                                         | hidden                   |
+| `taskSlug`          | select   | no       | inline, deleteExpiredContactMessages, deleteExpiredEmailConfirmations, deleteExpiredPasskeyChallenges, deleteExpiredSocialLinkRequests, schedulePublish | indexed                  |
+| `queue`             | text     | no       |                                                                                                                                                         | indexed; default default |
+| `waitUntil`         | date     | no       |                                                                                                                                                         | indexed                  |
+| `processing`        | checkbox | no       |                                                                                                                                                         | indexed; default false   |
+| `meta`              | json     | no       |                                                                                                                                                         |                          |
+| `updatedAt`         | date     | no       |                                                                                                                                                         | hidden; indexed          |
+| `createdAt`         | date     | no       |                                                                                                                                                         | hidden; indexed          |
 
 ### Field hooks
 

@@ -9,18 +9,17 @@ import {
 } from '@/platform/payload/testing/inMemoryPayload'
 
 import type { PasskeyCreationOptions } from '../domain/addPasskey'
-import { MAX_PASSKEYS_PER_ACCOUNT, RECENT_SIGN_IN_WINDOW_MS } from '../domain/passkeys'
+import { MAX_PASSKEYS_PER_ACCOUNT } from '../domain/passkeys'
+import { RECENT_SIGN_IN_WINDOW_MS } from '../domain/signInSession'
 import { newPasskey } from '../testing/passkeyStore'
 import { softwareRegistration } from '../testing/softwareAuthenticator'
 import type * as Flow from './addPasskey'
 
 /**
  * Adding a passkey end to end (#1314, decision 0021), with real Payload on in-memory SQLite and the
- * real WebAuthn library, answered by a software authenticator: the options, the stored challenge,
- * the browser's cookie, the checks and the saved passkey. A real device can't be driven here.
- * Only Next's request APIs are replaced, and `after()` runs its work at once.
+ * real WebAuthn library, answered by a software authenticator (a real device can't be driven here):
+ * options, stored challenge, cookie, checks and saved passkey. Only Next's request APIs are replaced.
  */
-
 vi.mock('server-only', () => ({}))
 const request = vi.hoisted(() => ({
   headers: new Headers(),
@@ -32,8 +31,7 @@ vi.mock('next/headers', () => ({
   cookies: async () => ({
     get: (name: string) => (request.jar.has(name) ? { value: request.jar.get(name) } : undefined),
     set: (name: string, value: string, options: { maxAge?: number } = {}) => {
-      if (options.maxAge === 0) request.jar.delete(name)
-      else request.jar.set(name, value)
+      void (options.maxAge === 0 ? request.jar.delete(name) : request.jar.set(name, value))
     },
   }),
 }))

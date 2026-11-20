@@ -1,7 +1,6 @@
 'use client'
 
 import { KeyRound } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
 import { message } from '@/platform/lib'
@@ -9,10 +8,10 @@ import { Alert, Button, Field, Form, type FormStatus } from '@/platform/ui'
 import { Card } from '@/platform/ui/Card'
 import { Text } from '@/platform/ui/Text'
 
-import { addPasskey, getPasskeyOptions, signOut } from '../actions'
+import { addPasskey, getPasskeyOptions } from '../actions'
 import { passkeyLabelSchema } from '../domain/addPasskey'
 import { PASSKEY_LABEL_MAX_LENGTH } from '../domain/passkeys'
-import { SIGN_IN_PATH } from '../domain/paths'
+import { LogInAgainButton } from './LogInAgainButton.client'
 import { createPasskey, passkeysSupported } from './passkeyBrowser'
 import { toAddPasskeyNotice, type AddPasskeyOutcome, type PasskeyNotice } from './passkeyMessages'
 
@@ -46,7 +45,6 @@ async function addAPasskey(label: string): Promise<AddPasskeyOutcome> {
  * and opens the log in page; signing in lands back on the account page.
  */
 export function AddPasskey() {
-  const router = useRouter()
   const [supported, setSupported] = useState(false)
   const [status, setStatus] = useState<FormStatus>('idle')
   const [errorMessage, setErrorMessage] = useState('')
@@ -69,16 +67,6 @@ export function AddPasskey() {
     setNotice(result.tone === 'info' || result.tone === 'warning' ? result : null)
     setErrorMessage(result.tone === 'error' ? result.text : '')
     setStatus(result.tone === 'success' ? 'success' : result.tone === 'error' ? 'error' : 'idle')
-  }
-
-  const logInAgain = async () => {
-    try {
-      await signOut()
-    } catch {
-      return show('offline')
-    }
-    router.push(SIGN_IN_PATH)
-    router.refresh()
   }
 
   return (
@@ -115,13 +103,7 @@ export function AddPasskey() {
               />
             </Field>
             {notice && <Alert tone={notice.tone}>{notice.text}</Alert>}
-            {notice?.logInAgain && (
-              <div>
-                <Button variant="secondary" fullWidth="mobile" onClick={logInAgain}>
-                  Log in again
-                </Button>
-              </div>
-            )}
+            {notice?.logInAgain && <LogInAgainButton onFailed={() => show('offline')} />}
             <div>
               <Button
                 type="submit"

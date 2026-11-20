@@ -30,10 +30,14 @@ describe('SocialSignIn', () => {
   })
 
   it('shows a fixed message for a known outcome, and nothing for anything else', () => {
-    render(<SocialSignIn providers={[]} result="email-in-use" />)
+    render(<SocialSignIn providers={[]} result="unavailable" />)
     expect(screen.getByRole('alert').textContent).toContain(
-      'You already have an account with this email',
+      'We couldn’t sign you in to this account',
     )
+    cleanup()
+    // The old "use your password" refusal is gone: the password step replaced it
+    const { container: old } = render(<SocialSignIn providers={[]} result="email-in-use" />)
+    expect(old.innerHTML).toBe('')
     cleanup()
     const { container } = render(<SocialSignIn providers={[]} result="<script>" />)
     expect(container.innerHTML).toBe('')

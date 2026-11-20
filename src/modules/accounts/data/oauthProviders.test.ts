@@ -24,7 +24,7 @@ vi.mock('openid-client', async (importActual) => {
 
 const { authorizationUrl, finishAuthorization, newSocialFlow } = await import('./oauthProviders')
 
-const googleFlow = { provider: 'google' as const, state: 's', codeVerifier: 'v', nonce: 'n' }
+const googleFlow = { provider: 'google' as const, state: 's', codeVerifier: 'v', nonce: 'n', linkAccountId: null }
 const callback = new URL('https://sprechereast.com/auth/google/callback?code=c&state=s')
 
 beforeEach(() => {
