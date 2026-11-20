@@ -26,6 +26,8 @@ export const ACCOUNTS_MESSAGES = {
   'accounts.passkey.removeFailed': 'We couldn’t remove that passkey. Please try again.',
   'accounts.passkey.removeSignInAgain':
     'To keep your account safe, please log in again first. Then you can remove a passkey.',
+  // The line between the quick ways in and the email and password form (#1365)
+  'accounts.login.otherWay': 'Or use your email and password',
   // Logging in with one on /login (#1315). The verb is the log in page's own: "Log In", "Log in".
   'accounts.passkey.loginButton': 'Log in with a passkey',
   'accounts.passkey.loginFailed':

@@ -145,20 +145,20 @@ describe('SignInForm with passkeys (#1315)', () => {
     )
   })
 
-  it('offers the passkey button under "Log In", and the passkey in the email field’s autofill, when on', async () => {
+  it('offers the passkey button first, above the form, and the passkey in the email field’s autofill, when on (#1365)', async () => {
     render(
       <main>
         <SignInForm passkeys />
       </main>,
     )
     const passkey = await screen.findByRole('button', { name: 'Log in with a passkey' })
+    const email = screen.getByRole('textbox', { name: /Email/ })
     const logIn = screen.getByRole('button', { name: 'Log In' })
-    // Under the button that sends the form, and not a way of sending it
-    expect(logIn.compareDocumentPosition(passkey) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    // The quick way in comes first, so keyboard and screen reader order follow the page
+    expect(passkey.compareDocumentPosition(email) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(passkey.compareDocumentPosition(logIn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(passkey.getAttribute('type')).toBe('button')
-    expect(screen.getByRole('textbox', { name: /Email/ }).getAttribute('autocomplete')).toBe(
-      'username webauthn',
-    )
+    expect(email.getAttribute('autocomplete')).toBe('username webauthn')
     await expectAccessible(document.body)
   })
 
@@ -174,5 +174,46 @@ describe('SignInForm with passkeys (#1315)', () => {
     render(<SignInForm passkeys />)
     await userEvent.click(await screen.findByRole('button', { name: 'Log in with a passkey' }))
     expect(mocks.signIn).not.toHaveBeenCalled()
+  })
+})
+
+describe('SignInForm: the quick ways in (#1365)', () => {
+  const google = <button type="button">Continue with Google</button>
+
+  it('puts the passkey, then Google, then one divider line, then the form', async () => {
+    render(
+      <main>
+        <SignInForm passkeys social={google} />
+      </main>,
+    )
+    const passkey = await screen.findByRole('button', { name: 'Log in with a passkey' })
+    const googleButton = screen.getByRole('button', { name: 'Continue with Google' })
+    const divider = screen.getByText('Or use your email and password')
+    const email = screen.getByRole('textbox', { name: /Email/ })
+    const before = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+
+    expect(before(passkey, googleButton)).toBe(true)
+    expect(before(googleButton, divider)).toBe(true)
+    expect(before(divider, email)).toBe(true)
+    expect(screen.getAllByText('Or use your email and password')).toHaveLength(1)
+    await expectAccessible(document.body)
+  })
+
+  it('shows Google alone, with the divider, when passkeys are off', () => {
+    render(<SignInForm social={google} />)
+
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeTruthy()
+    expect(screen.getByText('Or use your email and password')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /passkey/ })).toBeNull()
+  })
+
+  it('hides the group and its divider when it holds nothing, so no empty line is left', () => {
+    const { container } = render(<SignInForm />)
+    const list = container.querySelector('[data-sign-in-methods]')
+
+    expect(list?.childElementCount).toBe(0)
+    // The group's own class hides it (and the divider with it) while the list is empty
+    expect(list?.parentElement?.className).toContain('has-[>[data-sign-in-methods]:empty]:hidden')
   })
 })

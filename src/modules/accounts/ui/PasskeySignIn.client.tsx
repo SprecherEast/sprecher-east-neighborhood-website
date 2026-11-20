@@ -8,6 +8,7 @@ import { Alert, Button } from '@/platform/ui'
 
 import { getPasskeyLoginOptions, logInWithPasskey } from '../actions'
 import { ACCOUNT_PATH } from '../domain/paths'
+import { PasskeyButtonRoom } from './PasskeyButtonRoom'
 import { getPasskey, passkeyAutofillSupported, passkeysSupported } from './passkeyBrowser'
 import {
   PASSKEY_LOGIN_LABEL,
@@ -42,8 +43,8 @@ async function logInWithAPasskey(
 }
 
 /**
- * "Log in with a passkey" on /login (#1315, decision 0021), under the email and password form,
- * whose "Keep me signed in" box it honors. The server decides whether it is on (the form only
+ * "Log in with a passkey" on /login (#1315, decision 0021), the first of the quick ways in above
+ * the email and password form (#1365), whose "Keep me signed in" box it honors. The server decides whether it is on (the form only
  * renders this when it is); this also waits for the browser to say it can use a passkey, and until
  * then, and when it can't, shows nothing. Where the browser can offer a passkey in the email
  * field's autofill list, one request waits there from the start; pressing the button replaces it.
@@ -52,7 +53,8 @@ async function logInWithAPasskey(
  */
 export function PasskeySignIn({ rememberMe }: { rememberMe: boolean }) {
   const router = useRouter()
-  const [supported, setSupported] = useState(false)
+  // `null` while the browser is being asked
+  const [supported, setSupported] = useState<boolean | null>(null)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<Notice | null>(null)
   const rememberRef = useRef(rememberMe)
@@ -80,8 +82,10 @@ export function PasskeySignIn({ rememberMe }: { rememberMe: boolean }) {
   useEffect(() => {
     let current = true
     void (async () => {
-      if (!(await passkeysSupported()) || !current) return
-      setSupported(true)
+      const can = await passkeysSupported()
+      if (!current) return
+      setSupported(can)
+      if (!can) return
       if (await passkeyAutofillSupported()) void run(true)
     })()
     return () => {
@@ -91,7 +95,10 @@ export function PasskeySignIn({ rememberMe }: { rememberMe: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (!supported) return null
+  if (supported === false) return null
+  // The group above the form shows at the top, so what the browser answers must not move the page:
+  // until it does, the real button's room is held, unseen and out of reach (`invisible`)
+  if (supported === null) return <PasskeyButtonRoom />
 
   return (
     <div className="space-y-3">

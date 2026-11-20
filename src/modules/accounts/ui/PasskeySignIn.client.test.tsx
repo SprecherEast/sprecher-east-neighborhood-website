@@ -55,9 +55,22 @@ describe('PasskeySignIn: when it shows', () => {
   it('shows nothing if the browser can’t use a passkey, and no prompt is ever started', async () => {
     mocks.passkeysSupported.mockResolvedValue(false)
     const { container } = render(<PasskeySignIn rememberMe={false} />)
-    await waitFor(() => expect(mocks.passkeysSupported).toHaveBeenCalled())
-    expect(container.innerHTML).toBe('')
+    await waitFor(() => expect(container.innerHTML).toBe(''))
     expect(mocks.getPasskeyLoginOptions).not.toHaveBeenCalled()
+  })
+
+  it('holds the button’s room, unseen and out of reach, while the browser is asked, so the page below does not jump (#1365)', async () => {
+    let answer: (supported: boolean) => void = () => {}
+    mocks.passkeysSupported.mockReturnValue(new Promise<boolean>((resolve) => (answer = resolve)))
+    const { container } = render(<PasskeySignIn rememberMe={false} />)
+
+    // Same size as the real button (it is the real button), but invisible: not focusable, not read
+    expect(container.querySelector('.invisible')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Log in with a passkey' })).toBeNull()
+
+    answer(true)
+    expect(await screen.findByRole('button', { name: 'Log in with a passkey' })).toBeTruthy()
+    expect(container.querySelector('.invisible')).toBeNull()
   })
 
   it('shows one button, with the verb the rest of the log in page uses, and is accessible', async () => {

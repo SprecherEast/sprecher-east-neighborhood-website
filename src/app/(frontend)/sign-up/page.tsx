@@ -23,7 +23,7 @@ type Props = { searchParams: Promise<{ email?: string | string[] }> }
 /**
  * Where a visitor creates an account (#187), with the email filled in when the confirm page's
  * "Yes" sent them. Nothing is created until the form is sent. Google sign-in sits above
- * the form when it's on (#188).
+ * the form, under one divider line, when it's on (#188, #1365).
  */
 export default async function SignUpPage({ searchParams }: Props) {
   // Signed in: there is already an account
@@ -38,8 +38,10 @@ export default async function SignUpPage({ searchParams }: Props) {
         description="A free account for Sprecher East. We’ll send you an email to confirm it before you log in."
       />
       <div className="space-y-6">
-        <SocialSignIn providers={getEnabledSocialProviders()} />
-        <SignUpForm email={parseEmailAddress(email)} />
+        <SignUpForm
+          email={parseEmailAddress(email)}
+          social={<SocialSignIn providers={getEnabledSocialProviders()} />}
+        />
       </div>
     </Section>
   )

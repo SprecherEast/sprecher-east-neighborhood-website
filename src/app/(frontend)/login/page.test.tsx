@@ -14,10 +14,13 @@ vi.mock('@/modules/accounts/server', () => ({
   getCurrentUser: mocks.getCurrentUser,
   arePasskeysOn: mocks.arePasskeysOn,
   getEnabledSocialProviders: () => [],
-  SignInForm: ({ passkeys }: { passkeys?: boolean }) => (
-    <form aria-label="Log in" data-passkeys={String(passkeys)} />
+  SignInForm: ({ passkeys, social }: { passkeys?: boolean; social?: React.ReactNode }) => (
+    <form aria-label="Log in" data-passkeys={String(passkeys)}>
+      {social}
+    </form>
   ),
-  SocialSignIn: ({ result }: { result?: unknown }) => (
+  SocialSignIn: () => <p data-testid="buttons">Google button</p>,
+  SocialSignInMessage: ({ result }: { result?: unknown }) => (
     <p data-testid="social">{String(result ?? '')}</p>
   ),
 }))
@@ -50,6 +53,12 @@ describe('/login', () => {
     mocks.getCurrentUser.mockResolvedValue(null)
     render(await LoginPage(page({ social: 'failed' })))
     expect(screen.getByTestId('social').textContent).toBe('failed')
+  })
+
+  it('hands the form the provider buttons, to sit with the passkey above the fields (#1365)', async () => {
+    mocks.getCurrentUser.mockResolvedValue(null)
+    render(await LoginPage(page()))
+    expect(screen.getByRole('form', { name: 'Log in' }).textContent).toContain('Google button')
   })
 
   it('offers a passkey only while the switch is on (#1315)', async () => {

@@ -158,6 +158,21 @@ Source: `src/platform/ui/Text.tsx`
 - Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/resources/[group]`
 - Platform: `platform/richtext`, `platform/ui`
 
+## `TextDivider`
+
+A short line of words between two groups, with a rule on each side, such as "Or use your email and password" between the quick ways to log in and the form (#1365). The rules are decoration: screen readers read only the words.
+
+Source: `src/platform/ui/TextDivider.tsx`
+
+| Prop       | Type              | Required | Description |
+| ---------- | ----------------- | -------- | ----------- |
+| `children` | `React.ReactNode` | yes      |             |
+
+**Used by** (direct imports):
+
+- Modules: `accounts`
+- Routes: `/dev/gallery`
+
 ## `Caption`
 
 Small print under a figure. The fine print is a native `small` element after the caption: it is the element HTML has for small print, and it needs nothing else from the page.

@@ -6,6 +6,8 @@ export const GALLERY_COMPONENTS = [
   'Button',
   'Link',
   'SegmentedControl',
+  'BrandLogo',
+  'TextDivider',
   'Field',
   'Form',
   'Badge',
