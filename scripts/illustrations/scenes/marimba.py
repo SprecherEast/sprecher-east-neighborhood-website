@@ -1,6 +1,6 @@
-"""Live marimba at Pinney Library, in three versions of the player for the owner to choose from:
-A from behind, B in profile from the instrument's end, C in three-quarter view from the front-left.
-Each version is a camera, the player's stance and where the listeners sit; the parts are shared."""
+"""Live marimba at Pinney Library: the player in three-quarter view from the front-left, at a
+marimba drawn in perspective, with seven listeners. A camera, the player's stance and where the
+listeners sit; the parts are shared (marimba_parts.py)."""
 from ..parts import *
 from .marimba_parts import *
 
@@ -20,25 +20,16 @@ LISTENERS=(
     ("floor",.58,dict(skin=SKIN_LIGHT,shirt=GREEN,pants="#2b3556",hair="#5a3a22",hr=16,long_hair=True)),
 )
 
-VERSIONS={
-    "a":dict(cam=((-1.2,-4.0,3.8),(1.25,1.1,.4),1250,470,520),
-             player=dict(facing=90,lean=.07,spread=.36,heads=(bar_top(2,.4),bar_top(11,.45))),
-             seats=((-.5,2.3),(-.4,1.6),(.5,2.6),(1.4,2.7),(2.3,2.8),(3.45,1.7),(3.3,.7))),
-    "b":dict(cam=((-3.1,.75,2.7),(1.3,.3,.55),1150,470,500),
-             player=dict(facing=90,lean=.13,spread=.5,heads=(bar_top(3,.45),bar_top(7,.5))),
-             seats=((3.6,1.3),(3.05,1.1),(3.55,.35),(3.3,-1.55),(3.1,2.2),(2.5,-1.45),(2.3,1.8)),
-             notes=((430,150,1.0,-8,False),(600,140,1.1,6,False),(790,200,1.2,8,True))),
-    "c":dict(cam=((-2.0,4.4,3.6),(1.25,0,.5),1250,520,520),
+VIEW=dict(cam=((-2.0,4.4,3.6),(1.25,0,.5),1250,520,520),
              player=dict(facing=75,lean=.03,spread=.3,heads=(bar_top(4,.35),bar_top(8,.35))),
-             seats=((3.25,.9),(2.85,1.35),(3.4,-.15),(3.1,-1.15),(2.2,-1.75),(2.55,1.85),(3.05,2.3))),
-}
+             seats=((3.25,.9),(2.85,1.35),(3.4,-.15),(3.1,-1.15),(2.2,-1.75),(2.55,1.85),(3.05,2.3)))
 
 def place(cam,kind,s_adult,look,xw,yw):
     x,y=cam.pr((xw,yw,0)); s=cam.k((xw,yw,0))*1.72/203*s_adult
     return person(x,y,s,**look) if kind=="stand" else sitter(x,y,s,pose=kind,**look)
 
-def scene(v):
-    V=VERSIONS[v]; cam=Camera(*V["cam"]); wall_line=350
+def scene_marimba():
+    V=VIEW; cam=Camera(*V["cam"]); wall_line=350
     b=(f'<defs><linearGradient id="bar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e09a5f"/><stop offset="1" stop-color="#b8693a"/></linearGradient>'
        f'<linearGradient id="tube" x1="0" x2="1"><stop offset="0" stop-color="#a7b0bf"/><stop offset=".45" stop-color="#e3e8ef"/><stop offset="1" stop-color="#8c96a8"/></linearGradient></defs>'
        f'<rect width="{W}" height="{H}" fill="{WALL}"/><rect x="0" y="{wall_line}" width="{W}" height="{H-wall_line}" fill="{FLOOR}" {O}/>')
@@ -55,7 +46,3 @@ def scene(v):
     if front: b+=fig[0]+marimba(cam)+fig[1]
     else: b+=marimba(cam)+fig
     return b+panel(*PANEL)
-
-def scene_marimba_a(): return scene("a")
-def scene_marimba_b(): return scene("b")
-def scene_marimba_c(): return scene("c")
