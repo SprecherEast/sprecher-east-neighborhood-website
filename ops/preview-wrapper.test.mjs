@@ -35,6 +35,29 @@ sys.stdout.buffer.write(buf.getvalue())`
     maxBuffer: 1 << 26,
   })
 }
+/**
+ * A .tar.gz (PAX format) of GNU sparse members that hold no data but claim these real sizes: tar lists the
+ * claimed size, and a size near 2^63 would wrap a signed 64-bit sum.
+ */
+async function sparseArchive(sizes) {
+  const script = `
+import io, sys, tarfile, json
+sizes = json.loads(sys.argv[1])
+buf = io.BytesIO()
+with tarfile.open(fileobj=buf, mode="w:gz", format=tarfile.PAX_FORMAT) as t:
+    for i, size in enumerate(sizes):
+        info = tarfile.TarInfo("GNUSparseFile.0/member%d" % i)
+        data = b"0\\n".ljust(512, b"\\0")
+        info.size = len(data)
+        info.pax_headers = {"GNU.sparse.major": "1", "GNU.sparse.minor": "0",
+                            "GNU.sparse.name": "member%d" % i, "GNU.sparse.realsize": str(size)}
+        t.addfile(info, io.BytesIO(data))
+sys.stdout.buffer.write(buf.getvalue())`
+  const child = await import('node:child_process')
+  return child.execFileSync('python3', ['-I', '-c', script, JSON.stringify(sizes.map(String))], {
+    maxBuffer: 1 << 26,
+  })
+}
 const goodArchive = () =>
   archive([
     { name: '.release-info', data: `sha=${COMMIT}\n` },
@@ -154,7 +177,7 @@ describe('preview-wrapper.sh: the actions', () => {
     expect(log()).not.toContain('HOSTILE')
   })
 
-  it('deploy runs the isolation check from main’s copy, after the deploy script, and keeps a preview that passes', async () => {
+  it('deploy runs the isolation check from main’s copy before and after the deploy script, and keeps a preview that passes', async () => {
     await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
     fs.writeFileSync(
       p('access/ops/deploy-release.sh'),
@@ -162,14 +185,55 @@ describe('preview-wrapper.sh: the actions', () => {
     )
     const { code } = await wrapper(`deploy 7 ${COMMIT}`)
     expect(code).toBe(0)
-    const lines = log().split('\n')
-    expect(lines.indexOf('deploy-script')).toBeGreaterThanOrEqual(0)
-    expect(lines.indexOf(`isolation-check ${p('access/ops/preview-isolation-check.sh')}`)).toBe(
-      lines.indexOf('deploy-script') + 1,
-    )
+    const check = `isolation-check ${p('access/ops/preview-isolation-check.sh')}`
+    expect(
+      log()
+        .split('\n')
+        .filter(Boolean)
+        .filter((l) => l === 'deploy-script' || l === check),
+    ).toEqual([check, 'deploy-script', check])
     expect(fs.existsSync(release())).toBe(true)
     expect(fs.existsSync(p('caddy/previews/pr-7.caddy'))).toBe(true)
     expect(log()).not.toContain('pm2 delete')
+  })
+
+  it('deploy starts nothing when the isolation check fails first: no block, no deploy script, the preview comes down', async () => {
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    fs.writeFileSync(
+      p('access/ops/deploy-release.sh'),
+      '#!/usr/bin/env bash\necho "deploy-script" >> "$STUB_LOG"\n',
+    )
+    const { code, out } = await wrapper(`deploy 7 ${COMMIT}`, {
+      env: { STUB_ISOLATION_FAILS: '1' },
+    })
+    expect(code).toBe(2)
+    expect(out).toContain('the isolation check failed, so the preview was taken down')
+    expect(log()).not.toContain('deploy-script')
+    expect(log().match(/^isolation-check /gm)).toHaveLength(1)
+    // the only call to sudo is the one that removes a block (the preview never had one)
+    expect(sudoLines()).toEqual([`sudo -n ${p('access/ops/preview-caddy.sh')} 7`])
+    expect(fs.existsSync(p('caddy/previews/pr-7.caddy'))).toBe(false)
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false)
+  })
+
+  it('deploy checks again after a deploy script that fails, and keeps that script’s failure', async () => {
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    fs.writeFileSync(p('access/ops/deploy-release.sh'), '#!/usr/bin/env bash\nexit 3\n')
+    const failed = await wrapper(`deploy 7 ${COMMIT}`)
+    expect(failed.code).toBe(3)
+    expect(log().match(/^isolation-check /gm)).toHaveLength(2)
+    expect(fs.existsSync(release())).toBe(true) // a failed deploy leaves the preview as it was
+  })
+
+  it('deploy takes the preview down when the check passes before and fails after a failed deploy', async () => {
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    fs.writeFileSync(p('access/ops/deploy-release.sh'), '#!/usr/bin/env bash\nexit 3\n')
+    const { code, out } = await wrapper(`deploy 7 ${COMMIT}`, {
+      env: { STUB_ISOLATION_PASSES: '1' },
+    })
+    expect(code).toBe(2)
+    expect(out).toContain('the isolation check failed, so the preview was taken down')
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false)
   })
 
   it('deploy takes the preview down and fails when the isolation check fails', async () => {
@@ -193,11 +257,8 @@ describe('preview-wrapper.sh: the actions', () => {
   it('deploy still says why it failed when removing the Caddy block fails too', async () => {
     await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
     fs.writeFileSync(p('access/ops/deploy-release.sh'), '#!/usr/bin/env bash\nexit 0\n')
-    // sudo works for the block before the deploy and fails the second time, when the preview comes down
-    stub(
-      'sudo',
-      'if [ -f "$STUB_LOG.second" ]; then exit 1; fi; touch "$STUB_LOG.second"; [ "$1" = -n ] && shift; exec "$@"',
-    )
+    // removing the block (the one sudo call on this path) fails
+    stub('sudo', 'exit 1')
     const { code, out } = await wrapper(`deploy 7 ${COMMIT}`, {
       env: { STUB_ISOLATION_FAILS: '1' },
     })
@@ -451,6 +512,41 @@ describe('preview-wrapper.sh: a hostile release archive', () => {
       env: { PREVIEW_UNPACK_MAX_BYTES: '5000' },
     })
     expect(exact.code).toBe(0)
+  })
+
+  it('refuses sizes that would wrap a 64-bit sum: a sparse member claiming 2^62 bytes, twice, in a tiny archive', async () => {
+    const sparse = await sparseArchive([2n ** 62n, 2n ** 62n])
+    expect(sparse.length).toBeLessThan(5000)
+    const { code, out } = await wrapper(`upload 7 ${COMMIT}`, { input: sparse })
+    expect(code).toBe(2)
+    expect(out).toContain('unpacks to more than is allowed')
+    expect(fs.existsSync(release())).toBe(false)
+  })
+
+  it('refuses at the first member that passes the limit, and a size with more digits than the limit', async () => {
+    const big = await sparseArchive([5000n, 5000n])
+    const over = await wrapper(`upload 7 ${COMMIT}`, {
+      input: big,
+      env: { PREVIEW_UNPACK_MAX_BYTES: '9999' },
+    })
+    expect(over.code).toBe(2)
+    expect(over.out).toContain('unpacks to more than is allowed')
+    const digits = await wrapper(`upload 8 ${COMMIT}`, {
+      input: await sparseArchive([10n ** 12n]),
+      env: { PREVIEW_UNPACK_MAX_BYTES: '999999' },
+    })
+    expect(digits.code).toBe(2)
+    expect(digits.out).toContain('unpacks to more than is allowed')
+  })
+
+  it('refuses the largest size tar will list after a small one, which would wrap the running sum negative', async () => {
+    // tar itself refuses a claimed size over 2^63 - 1; this one plus 1000 bytes is over it
+    const { code, out } = await wrapper(`upload 7 ${COMMIT}`, {
+      input: await sparseArchive([1000n, 2n ** 63n - 1n]),
+    })
+    expect(code).toBe(2)
+    expect(out).toContain('unpacks to more than is allowed')
+    expect(fs.existsSync(release())).toBe(false)
   })
 
   it('counts every member: a small archive of many files over the limit is refused', async () => {

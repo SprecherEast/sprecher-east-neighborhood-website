@@ -42,6 +42,7 @@ beforeEach(() => {
   write(p('backups/daily/x.tar.gz'), SECRET, 0o000)
   write(p('umami/.env'), `PASSWORD=${SECRET}\n`, 0o000)
   write(p('pm2/logs/app.log'), SECRET, 0o000)
+  write(p('pmlogs/sprecher-east-out.log'), SECRET, 0o000)
   write(p('caddy/.local/share/caddy/pki/key.pem'), SECRET, 0o000)
   for (const d of [
     'prod',
@@ -55,6 +56,7 @@ beforeEach(() => {
     'umami',
     'pm2',
     'pm2/logs',
+    'pmlogs',
     'caddy',
     'caddy/.local',
     'caddy/.local/share',
@@ -77,6 +79,7 @@ const check = (env = {}) => {
     BACKUP_ROOT: p('backups'),
     UMAMI_DIR: p('umami'),
     PRODUCTION_PM2_HOME: p('pm2'),
+    PRODUCTION_PM2_LOG_DIR: p('pmlogs'),
     CADDY_STORAGE_DIR: p('caddy'),
     CADDY_ADMIN_PORT: '1', // nothing listens on port 1
     ...env,
@@ -110,8 +113,14 @@ describe('preview-isolation-check.sh: when nothing is reachable', () => {
   })
 
   it('does not count a file it can see but not read', async () => {
-    open('backups')
-    open('backups/daily') // listable, but the file in it is 600 and not the account's
+    for (const d of [
+      'caddy',
+      'caddy/.local',
+      'caddy/.local/share',
+      'caddy/.local/share/caddy',
+      'caddy/.local/share/caddy/pki',
+    ])
+      open(d) // listable, but the file in it has no access (a folder the guards leave alone)
     expect((await check()).code).toBe(0)
   })
 
@@ -166,7 +175,8 @@ describe('preview-isolation-check.sh: a folder with a readable file anywhere in 
   )
   folderCase('the backups', 'backups', 'backups/daily/x.tar.gz')
   folderCase('Umami’s folder', 'umami', 'umami/.env')
-  folderCase('production’s PM2 logs', 'pm2', 'pm2/logs/app.log')
+  folderCase('production’s PM2 state', 'pm2', 'pm2/logs/app.log')
+  folderCase('production’s PM2 logs (/var/log/pm2)', 'pmlogs', 'pmlogs/sprecher-east-out.log')
   folderCase('Caddy’s certificate storage', 'caddy', 'caddy/.local/share/caddy/pki/key.pem')
 
   it('finds a file eight levels down, and the production database folder on its own', async () => {
@@ -198,6 +208,34 @@ describe('preview-isolation-check.sh: a folder with a readable file anywhere in 
     fs.symlinkSync(p('backups'), p('linked'))
     const { out } = await check({ BACKUP_ROOT: p('linked') })
     expect(out).toContain(`can read files in ${p('linked')}`)
+  })
+})
+
+describe('preview-isolation-check.sh: a closed folder the account can enter but not list', () => {
+  const enterable = (folder) =>
+    it(`fails for ${folder}, though a file in it can be found only by its name`, async () => {
+      fs.chmodSync(p(folder), 0o311) // no read bit for anyone
+      const { code, out } = await check()
+      expect(code).toBe(1)
+      expect(out).toContain(`the preview account can enter ${p(folder)}`)
+      expect(out).not.toContain(SECRET)
+    })
+  enterable('prod')
+  enterable('backups')
+  enterable('umami')
+  enterable('pmlogs')
+
+  it('does not say so for PM2’s state or Caddy’s storage, which the guards leave alone', async () => {
+    fs.chmodSync(p('pm2'), 0o311)
+    fs.chmodSync(p('caddy'), 0o311)
+    expect((await check()).code).toBe(0)
+  })
+
+  it('ignores a closed folder that is a file or missing', async () => {
+    execFileSync('chmod', ['-R', 'u+rwx', p('umami')])
+    fs.rmSync(p('umami'), { recursive: true })
+    write(p('umami'), 'x', 0o000)
+    expect((await check()).code).toBe(0)
   })
 })
 
@@ -269,7 +307,8 @@ describe('preview-isolation-check.sh: what it reports', () => {
       const { out } = await check({ CADDY_ADMIN_PORT: String(server.port) })
       expect(out).toContain(`can read ${p('umami/.env')}`)
       expect(out).toContain("Caddy's admin endpoint")
-      expect(out).toContain('the isolation check failed (2 problems)')
+      expect(out).toContain(`the preview account can enter ${p('umami')}`)
+      expect(out).toContain('the isolation check failed (3 problems)')
     } finally {
       await server.close()
     }

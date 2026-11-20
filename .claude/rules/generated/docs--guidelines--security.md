@@ -117,7 +117,7 @@ A pull request preview (#1070) runs code nobody has reviewed yet, beside product
 no real secret or service key of its own, and it deploys and runs under one restricted account, not
 production's ([`ops/previews.md`](/ops/previews.md)). Previews are kept off production by the
 account's reach, not by trust in the code: what that account can and can't touch is below, and the
-isolation check proves it after every preview deploy. What holds now:
+isolation check proves it before and after every preview deploy. What holds now:
 
 - **Its own secrets, no real keys** (#1344): `ops/preview-settings.sh` writes each preview's
   `.env.local` (mode 600) with `PAYLOAD_SECRET` and `PREVIEW_SECRET` made at random on the server,
@@ -160,10 +160,13 @@ isolation check proves it after every preview deploy. What holds now:
   of a separate runtime user is recorded on #1345 (2026-11-20).
 
 - **A preview can't read production** (#1346): `ops/preview-host-guards.sh`, run as root by the
-  production deploy, takes "others" access off production's folder, the backups and Umami's folder (the
+  production deploy, takes "others" access off production's folder, the backups, Umami's folder and PM2's log folder (the
   production deploy writes with `umask` 022, so what it writes is readable by every account, and a closed
-  folder is what keeps it out; the guard changes only a real root-owned folder with only root-owned entries
-  and says the old mode), so the account can't enter them. A later named deploy account for production
+  folder is what keeps it out). It closes a folder only after checking that it is a real root-owned folder
+  with only root-owned entries, that Caddy's live configuration names no path in it, and that no process
+  that isn't root's has it open; otherwise it changes nothing and warns. What is assumed, not proven: no
+  other non-root service opens a file there by name now and then. It says the old mode; a closed
+  folder can't be entered by the account. A later named deploy account for production
   (#1306) needs group access to them.
 - **A preview can't reach Caddy's admin endpoint** (#1346): the endpoint on `localhost:2019` accepts any local
   process and replaces the whole config, so an owner-match firewall rule (`iptables` and `ip6tables`,
@@ -175,8 +178,8 @@ isolation check proves it after every preview deploy. What holds now:
 - **A preview can't schedule jobs that outlive it** (#1346): the account is in `/etc/cron.deny` and
   `/etc/at.deny`. A process a preview starts and detaches still survives `teardown`, which stops only PM2's
   process; that is not covered.
-- **The isolation check** (`ops/preview-isolation-check.sh`, #1346) runs as the account after every preview
-  deploy, and again in the installer before a key line is written. It fails when the account can open
+- **The isolation check** (`ops/preview-isolation-check.sh`, #1346) runs as the account before a preview's deploy
+  starts (a failure starts nothing) and after it, and again in the installer before a key line is written. It fails when the account can open
   production's settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to the
   admin endpoint. A failing check takes the preview down and fails the deploy, and no key line is written
   (an earlier one is removed) until the guards and the check pass. It prints which place was reachable and

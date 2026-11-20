@@ -51,7 +51,11 @@ PREVIEW_UNPACK_MAX_BYTES="${PREVIEW_UNPACK_MAX_BYTES:-3221225472}"
 # Production's private places and Caddy's admin port: what the preview account must not reach (#1346,
 # ops/preview-isolation-check.sh proves it after every preview deploy; ops/preview-host-guards.sh makes it so).
 BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/sprecher-east}"
-PRODUCTION_PM2_HOME="${PRODUCTION_PM2_HOME:-/root/.pm2}" # production's PM2 state and logs
+PRODUCTION_PM2_HOME="${PRODUCTION_PM2_HOME:-/root/.pm2}" # production's PM2 state
+# Where PM2 writes production's logs (sprecher-east-out.log and -error.log). ecosystem.config.cjs falls
+# back to the same folder when PM2_LOG_DIR is not set, and a test ties the two. A preview's logs go in its
+# own folder instead, so production's can be closed to the preview account.
+PRODUCTION_PM2_LOG_DIR="${PRODUCTION_PM2_LOG_DIR:-/var/log/pm2}"
 CADDY_STORAGE_DIR="${CADDY_STORAGE_DIR:-/var/lib/caddy}" # Caddy's data: certificates and their private keys
 CADDY_ADMIN_PORT="${CADDY_ADMIN_PORT:-2019}"             # Caddy's admin endpoint, on localhost
 # Ports no preview may take: production's app and Umami (a test ties both to their own files).
@@ -65,6 +69,7 @@ if [ -z "$PREVIEW_NUMBER" ]; then
   APP_PORT="${APP_PORT:-3000}"
   KEEP_RELEASES="${KEEP_RELEASES:-3}"
   CADDY_SITE_FILE="" # lib.sh points it at the Caddyfile, which holds production's site block
+  PM2_LOG_DIR="$PRODUCTION_PM2_LOG_DIR"
 else
   # A pull request number: no sign, no leading zero, no blanks, at most six digits. The value is
   # never printed: the deploy log is public.
@@ -112,6 +117,7 @@ else
   KEEP_RELEASES="${KEEP_RELEASES:-2}"
   SITE_URL="https://pr-$PREVIEW_NUMBER.$PREVIEW_DOMAIN" # what the health check asks for
   CADDY_SITE_FILE="${PREVIEW_CADDY_DIR%/}/pr-$PREVIEW_NUMBER.caddy"
+  PM2_LOG_DIR="$APP_DIR"
 fi
 
 # What step 2 of a deploy links into each release, and what env_value reads.
@@ -120,12 +126,13 @@ DATA_DIR="$APP_DIR/data"
 MEDIA_DIR="$APP_DIR/public/media"
 
 # Child scripts (restart-app.sh, rollback.sh) and PM2 (ecosystem.config.cjs) read the same values.
-export APP_DIR APP_NAME APP_PORT PREVIEW_NUMBER PREVIEW_ROOT PREVIEW_DOMAIN PREVIEW_CADDY_DIR
+export APP_DIR APP_NAME APP_PORT PM2_LOG_DIR PREVIEW_NUMBER PREVIEW_ROOT PREVIEW_DOMAIN PREVIEW_CADDY_DIR
 export PREVIEW_PORT_MIN PREVIEW_PORT_MAX
 
 is_preview() { [ -n "$PREVIEW_NUMBER" ]; }
 
-# True when nothing on this machine listens on the port. A connection that is refused means free.
-port_is_free() { # <port>
-  ! (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null
+# True when nothing on this machine listens on the port (on <host>, default 127.0.0.1). A connection that
+# is refused means free.
+port_is_free() { # <port> [host]
+  ! (exec 3<>"/dev/tcp/${2:-127.0.0.1}/$1") 2>/dev/null
 }

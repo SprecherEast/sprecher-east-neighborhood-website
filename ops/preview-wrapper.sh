@@ -77,6 +77,15 @@ take_down() {
   sudo_caddy "$number"
 }
 
+# Proof, as this account, that it can't reach production (#1346). When it can, the preview comes down and
+# the request fails, so unreviewed code never stays up (or starts) beside production.
+isolated_or_down() {
+  if ! bash "$here/preview-isolation-check.sh"; then
+    take_down || true
+    refuse "the isolation check failed, so the preview was taken down"
+  fi
+}
+
 case "$action" in
   facts)
     echo "node=$(node -v)"
@@ -116,8 +125,10 @@ case "$action" in
     listing=$(tar -tzf "$archive") || refuse "the archive is not a readable .tar.gz"
     ! grep -Eq '(^|/)\.\.(/|$)|^/' <<<"$listing" || refuse "the archive has a path that leaves the release"
     # What it unpacks to, from its listing, before anything is written (#1346).
-    unpacked=$(unpacked_bytes "$archive") || refuse "the archive's listing can't be measured"
-    [ "$unpacked" -le "$PREVIEW_UNPACK_MAX_BYTES" ] || refuse "the archive unpacks to more than is allowed"
+    measured=0
+    unpacked_bytes "$archive" "$PREVIEW_UNPACK_MAX_BYTES" >/dev/null || measured=$?
+    [ "$measured" != 2 ] || refuse "the archive unpacks to more than is allowed"
+    [ "$measured" = 0 ] || refuse "the archive's listing can't be measured"
     mkdir "$incoming"
     tar --no-same-owner --no-same-permissions -xzf "$archive" -C "$incoming" || refuse "the archive did not unpack"
     links_stay_inside "$incoming" || refuse "the release has a link that leads outside it"
@@ -128,16 +139,17 @@ case "$action" in
   deploy)
     release="$APP_DIR/releases/$commit"
     [ -d "$release" ] && [ ! -L "$release" ] || refuse "that release was not uploaded"
+    # Before anything of the release runs: a guard can lapse between production deploys (a firewall reload
+    # drops a rule, a mode is put back), and unreviewed code must not start with that reach.
+    isolated_or_down
     # The block first: deploy-release.sh stops when it is missing. Both scripts below are main's.
     sudo_caddy "$number"
     export PREVIEW_NUMBER CODE_DIR="$release"
-    bash "$here/deploy-release.sh"
-    # Proof, as this account and with the preview running, that it can't reach production (#1346). When it
-    # can, the preview comes down again and the deploy fails, so unreviewed code never stays up beside it.
-    if ! bash "$here/preview-isolation-check.sh"; then
-      take_down || true
-      refuse "the isolation check failed, so the preview was taken down"
-    fi
+    deployed=0
+    bash "$here/deploy-release.sh" || deployed=$?
+    # Again with the preview running, and also when the deploy failed, so a failed deploy is checked too.
+    isolated_or_down
+    exit "$deployed"
     ;;
 
   teardown)

@@ -42,6 +42,7 @@ const SYSTEM_TOOLS = [
   'sort',
   'touch',
   'tee',
+  'ls',
 ]
 
 let dir = ''
@@ -72,7 +73,7 @@ beforeEach(async () => {
   fs.writeFileSync(p('log'), '')
   fs.mkdirSync(p('state'))
   for (const f of FILES) write(p('ops', f), fs.readFileSync(path.join(OPS, f)), 0o755)
-  for (const d of ['prod', 'backups', 'umami']) fs.mkdirSync(p(d), { mode: 0o755 })
+  for (const d of ['prod', 'backups', 'umami', 'pmlogs']) fs.mkdirSync(p(d), { mode: 0o755 })
   fs.chmodSync(p('backups'), 0o700)
   write(p('prod/.env.local'), 'x', 0o600)
   admin = await listen()
@@ -83,6 +84,13 @@ beforeEach(async () => {
     'id',
     'if [ "$1 $2" = "-u sprecher-preview" ]; then [ -z "$STUB_NO_ACCOUNT" ] || exit 1; echo "${STUB_ACCOUNT_UID:-998}"; else exec /usr/bin/id "$@"; fi',
   )
+  // caddy adapt prints STUB_CADDY_JSON (a config that names no folder of ours by default); STUB_CADDY_FAILS=1 fails
+  stub(
+    'caddy',
+    '[ -z "$STUB_CADDY_FAILS" ] || exit 1; [ -z "$STUB_CADDY_EMPTY" ] || exit 0; echo "${STUB_CADDY_JSON:-{\\"apps\\":{\\"http\\":{}}}}"',
+  )
+  fs.mkdirSync(p('proc'))
+  write(p('Caddyfile'), 'example.test {}\n')
   // iptables/ip6tables keep their rules in state/<tool>.rules: -C finds one, -I adds it
   for (const t of ['iptables', 'ip6tables'])
     stub(
@@ -127,6 +135,9 @@ const run = (args = [], env = {}, { without = [] } = {}) => {
       BACKUP_ROOT: p('backups'),
       UMAMI_DIR: p('umami'),
       PREVIEW_ACCESS_DIR: p('installed'),
+      CADDYFILE: p('Caddyfile'),
+      PROC_DIR: p('proc'),
+      PRODUCTION_PM2_LOG_DIR: p('pmlogs'),
       CRON_ALLOW_FILE: p('etc/cron.allow'),
       CRON_DENY_FILE: p('etc/cron.deny'),
       AT_ALLOW_FILE: p('etc/at.allow'),
@@ -208,6 +219,111 @@ describe('preview-host-guards.sh: production’s private folders', () => {
     expect(out).not.toContain('WARNING')
   })
 
+  it('closes PM2’s log folder too, since production’s logs are readable by every account', async () => {
+    const { code, out } = await run()
+    expect(code).toBe(0)
+    expect(mode('pmlogs')).toBe('750')
+    expect(out).toContain(`${p('pmlogs')}: mode 755 -> 750`)
+  })
+
+  it('changes nothing for a link at a guarded path that points nowhere, and says so', async () => {
+    fs.rmSync(p('umami'), { recursive: true })
+    fs.symlinkSync(p('nowhere'), p('umami'))
+    const { code, out } = await run()
+    expect(code).toBe(3)
+    expect(out).toContain(`${p('umami')} is a link or not a folder`)
+  })
+
+  describe('before it closes a folder it proves nothing else needs it', () => {
+    // a process the way /proc shows it: a status line with the uid, a working folder, open files
+    const process = (pid, uid, { cwd, fds = [] } = {}) => {
+      fs.mkdirSync(p('proc', pid, 'fd'), { recursive: true })
+      fs.writeFileSync(p('proc', pid, 'status'), `Name:\tx\nUid:\t${uid}\t${uid}\t${uid}\t${uid}\n`)
+      fs.symlinkSync(cwd ?? '/', p('proc', pid, 'cwd'))
+      fds.forEach((f, i) => fs.symlinkSync(f, p('proc', pid, 'fd', String(i + 3))))
+    }
+
+    it('leaves a folder alone, warns and exits 3 when Caddy’s configuration names a path in it', async () => {
+      const json = JSON.stringify({ root: `${p('prod')}/public` })
+      const { code, out } = await run([], { STUB_CADDY_JSON: json })
+      expect(code).toBe(3)
+      expect(mode('prod')).toBe('755')
+      expect(out).toContain(`${p('prod')} is not closed: Caddy's configuration names a path in it`)
+      expect(mode('umami')).toBe('750') // the others are not held back
+    })
+
+    it('leaves a folder alone when Caddy’s configuration names the folder itself', async () => {
+      const { code } = await run([], { STUB_CADDY_JSON: JSON.stringify({ root: p('prod') }) })
+      expect(code).toBe(3)
+      expect(mode('prod')).toBe('755')
+    })
+
+    it('leaves a folder alone when a process that is not root has exactly that folder as its working folder', async () => {
+      process('4244', UID + 1, { cwd: p('prod') })
+      expect((await run()).code).toBe(3)
+      expect(mode('prod')).toBe('755')
+    })
+
+    it('goes by the user a process acts as, not the one it started as', async () => {
+      fs.mkdirSync(p('proc/4245/fd'), { recursive: true })
+      fs.writeFileSync(p('proc/4245/status'), `Uid:\t${UID}\t${UID + 1}\t${UID}\t${UID}\n`)
+      fs.symlinkSync(p('prod'), p('proc/4245/cwd'))
+      expect((await run()).code).toBe(3)
+      expect(mode('prod')).toBe('755')
+    })
+
+    it('does not mistake a longer name that starts with the same letters for the folder', async () => {
+      const { code } = await run([], {
+        STUB_CADDY_JSON: JSON.stringify({ root: `${p('prod')}-other/x` }),
+      })
+      expect(code).toBe(0)
+      expect(mode('prod')).toBe('750')
+    })
+
+    it('leaves every folder alone when the Caddyfile cannot be read by caddy, since what it serves is unknown', async () => {
+      const { code, out } = await run([], { STUB_CADDY_FAILS: '1' })
+      expect(code).toBe(3)
+      expect(mode('prod')).toBe('755')
+      expect(mode('umami')).toBe('755')
+      expect(out).toContain('caddy adapt could not read the live Caddyfile')
+    })
+
+    it('leaves a folder alone when caddy prints nothing', async () => {
+      const { code } = await run([], { STUB_CADDY_EMPTY: '1' })
+      expect(code).toBe(3)
+      expect(mode('prod')).toBe('755')
+    })
+
+    it('leaves a folder alone when a process that is not root has it as its working folder', async () => {
+      process('4242', UID + 1, { cwd: p('prod/public') })
+      const { code, out } = await run()
+      expect(code).toBe(3)
+      expect(mode('prod')).toBe('755')
+      expect(out).toContain("a process that isn't root's (pid 4242) has it open")
+      expect(mode('umami')).toBe('750')
+    })
+
+    it('leaves a folder alone when a process that is not root has a file in it open', async () => {
+      process('4243', UID + 1, { fds: [p('pmlogs/sprecher-east-out.log')] })
+      const { code } = await run()
+      expect(code).toBe(3)
+      expect(mode('pmlogs')).toBe('755')
+      expect(mode('prod')).toBe('750')
+    })
+
+    it('closes the folder when only root’s processes have it open', async () => {
+      process('1', UID, { cwd: p('prod'), fds: [p('prod/data/x')] })
+      const { code } = await run()
+      expect(code).toBe(0)
+      expect(mode('prod')).toBe('750')
+    })
+
+    it('ignores processes elsewhere', async () => {
+      process('7', UID + 1, { cwd: '/tmp', fds: [`${p('prod')}-other/x`] })
+      expect((await run()).code).toBe(0)
+    })
+  })
+
   it('says when a mode could not be changed', async () => {
     stub('chmod', 'exit 1')
     const { code, out } = await run()
@@ -224,6 +340,35 @@ describe('preview-host-guards.sh: cron and at', () => {
     expect(mode('etc/cron.deny')).toBe('644')
     expect(fs.existsSync(p('etc/at.deny'))).toBe(false)
     expect(out).toContain('cron: sprecher-preview added to')
+  })
+
+  it('makes cron.deny readable by everyone even when the caller’s umask is strict', async () => {
+    const { code } = await runCommand(
+      '/bin/bash',
+      ['-c', `umask 077; exec /bin/bash ${p('ops/preview-host-guards.sh')}`],
+      {
+        env: {
+          PATH: p('bin'),
+          STUB_LOG: p('log'),
+          STUB_STATE: p('state'),
+          PREVIEW_ACCESS_ROOT_UID: String(UID),
+          PRODUCTION_DIR_FOR_TESTS: p('prod'),
+          BACKUP_ROOT: p('backups'),
+          UMAMI_DIR: p('umami'),
+          PRODUCTION_PM2_LOG_DIR: p('pmlogs'),
+          CADDYFILE: p('Caddyfile'),
+          PROC_DIR: p('proc'),
+          CRON_ALLOW_FILE: p('etc/cron.allow'),
+          CRON_DENY_FILE: p('etc/cron.deny'),
+          AT_ALLOW_FILE: p('etc/at.allow'),
+          AT_DENY_FILE: p('etc/at.deny'),
+          PREVIEW_FIREWALL_UNIT: p('etc/firewall.service'),
+          CADDY_ADMIN_PORT: String(admin.port),
+        },
+      },
+    )
+    expect(code).toBe(0)
+    expect(mode('etc/cron.deny')).toBe('644')
   })
 
   it('adds the account to the deny files that exist, on a line of its own, keeping a dated copy', async () => {

@@ -3,10 +3,14 @@
 # ops/install-preview-access.sh on every production deploy, and once at boot by a systemd unit it installs
 # (argument `boot`: only the firewall rule). It does three things, and each makes no change on any doubt,
 # says so as a warning and leaves the others to go on:
-#   1. production's private folders (its app folder, the backups, Umami's folder) lose their access for
-#      "others": the production deploy runs with umask 022, so what it writes is readable by every account.
-#      A folder is changed only when it is a real folder owned by root with only root-owned entries in it,
-#      so an app that runs as another user is never locked out. The old mode is in the annotation.
+#   1. production's private folders (its app folder, the backups, Umami's folder, PM2's log folder) lose
+#      their access for "others": the production deploy runs with umask 022, so what it writes (the logs
+#      too, under PM2) is readable by every account. A folder is closed only when all of this is true,
+#      and otherwise left as it is, with a warning: it is a real folder, it and what is directly in it are
+#      owned by root, Caddy's live configuration (`caddy adapt` of the Caddyfile) names no path in it, and
+#      no process that isn't root's has it as its working folder or an open file in it. What this can't
+#      see: a non-root service that opens a file there by name only from time to time. The old mode is in
+#      the annotation, with the undo.
 #   2. the account goes into /etc/cron.deny and /etc/at.deny, so a preview can't schedule a job that outlives
 #      its teardown. at.deny is never created (when neither at file exists only root may use at, and a new
 #      at.deny would open it to everyone else).
@@ -23,6 +27,7 @@ here=$(dirname "$0")
 
 ROOT_UID="${PREVIEW_ACCESS_ROOT_UID:-0}"
 production="${PRODUCTION_DIR_FOR_TESTS:-$PRODUCTION_DIR}" # a test points it at a stand-in folder
+PROC_DIR="${PROC_DIR:-/proc}"
 CRON_ALLOW="${CRON_ALLOW_FILE:-/etc/cron.allow}"
 CRON_DENY="${CRON_DENY_FILE:-/etc/cron.deny}"
 AT_ALLOW="${AT_ALLOW_FILE:-/etc/at.allow}"
@@ -60,12 +65,29 @@ fi
 
 # ---- 1. Production's private folders. ----
 
-for dir in "$production" "$BACKUP_ROOT" "$UMAMI_DIR"; do
+# Prints why a folder is needed by something that isn't root, or nothing when nothing says so.
+folder_needed() { # <folder>
+  local adapted proc uid ref target
+  adapted=$(caddy adapt --config "$CADDYFILE" --adapter caddyfile 2>/dev/null) && [[ "$adapted" == *[![:space:]]* ]] || { echo "caddy adapt could not read the live Caddyfile, so what Caddy serves or writes is unknown"; return; }
+  if [[ "$adapted" == *"$1"/* || "$adapted" == *"$1\""* ]]; then echo "Caddy's configuration names a path in it"; return; fi
+  for proc in "$PROC_DIR"/[0-9]*; do
+    uid=$(awk '/^Uid:/ { print $3 }' "$proc/status" 2>/dev/null)
+    [ -n "$uid" ] && [ "$uid" != "$ROOT_UID" ] || continue
+    for ref in "$proc/cwd" "$proc"/fd/*; do
+      target=$(readlink "$ref" 2>/dev/null) || continue
+      case "$target" in "$1" | "$1"/*) echo "a process that isn't root's (pid ${proc##*/}) has it open"; return ;; esac
+    done
+  done
+}
+
+for dir in "$production" "$BACKUP_ROOT" "$UMAMI_DIR" "$PRODUCTION_PM2_LOG_DIR"; do
   [ -e "$dir" ] || [ -L "$dir" ] || continue # not installed here: nothing to protect
   if [ -L "$dir" ] || [ ! -d "$dir" ]; then
     warn "$dir is a link or not a folder"
   elif [ -n "$(find "$dir" -maxdepth 1 ! -uid "$ROOT_UID" -print -quit)" ]; then # the folder itself, or an entry in it
-    warn "$dir or something directly in it is not owned by root, so its app may need the access"
+    warn "$dir or something directly in it is not owned by root, so something else may need the access"
+  elif [ -n "$(folder_needed "$dir")" ]; then
+    warn "$dir is not closed: $(folder_needed "$dir")"
   else
     mode=$(stat -c %a "$dir")
     if ((8#$mode & 8#007)); then
@@ -124,7 +146,7 @@ firewall() {
   uid=$(id -u "$PREVIEW_USER" 2>/dev/null) && [[ "$uid" =~ ^[1-9][0-9]*$ ]] || { warn "the account $PREVIEW_USER does not exist"; return; }
   # Only when Caddy's admin endpoint is where the rule looks. If root can't connect, it is elsewhere (or
   # Caddy is down) and a rule here would protect nothing and could not be checked.
-  (exec 3<>"/dev/tcp/127.0.0.1/$CADDY_ADMIN_PORT") 2>/dev/null || { warn "Caddy's admin endpoint does not answer on 127.0.0.1 port $CADDY_ADMIN_PORT"; return; }
+  ! port_is_free "$CADDY_ADMIN_PORT" || { warn "Caddy's admin endpoint does not answer on 127.0.0.1 port $CADDY_ADMIN_PORT"; return; }
   [ ! -L "$UNIT_FILE" ] || { warn "$UNIT_FILE is a link"; return; }
   [ ! -e "$UNIT_FILE" ] || grep -qF "$MARKER" "$UNIT_FILE" || { warn "$UNIT_FILE exists and this script did not write it"; return; }
   unit_text="# $MARKER. Changes here are overwritten on deploy.

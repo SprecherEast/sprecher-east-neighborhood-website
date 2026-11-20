@@ -86,6 +86,34 @@ describe('production, with no environment named', () => {
     expect(app.error_file).toBe('/var/log/pm2/sprecher-east-error.log')
   })
 
+  it('writes its PM2 logs where environment.sh says, and a hand start with nothing set agrees (#1346)', () => {
+    const defined = printed({}, 'echo "$PRODUCTION_PM2_LOG_DIR"').trim()
+    expect(defined).toBe('/var/log/pm2')
+    expect(printed({}, 'echo "$PM2_LOG_DIR"').trim()).toBe(defined)
+    // started by hand, with no environment at all
+    const bare = JSON.parse(
+      execFileSync('node', ['-e', APP_OF], { env: { PATH: process.env.PATH }, encoding: 'utf8' }),
+    )
+    expect(bare.out_file).toBe(`${defined}/sprecher-east-out.log`)
+    expect(bare.error_file).toBe(`${defined}/sprecher-east-error.log`)
+  })
+
+  it('port_is_free can ask about another host, and says a listening one is not free', async () => {
+    const net = await import('node:net')
+    const server = net.createServer((s) => s.end())
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
+    const port = String(server.address().port)
+    try {
+      const ask = (args) => run({}, `port_is_free ${args}`).status
+      expect(ask(port)).toBe(1)
+      expect(ask(`${port} 127.0.0.1`)).toBe(1)
+      // a host nothing listens on: free (127.0.0.2 reaches the machine, not this server's address)
+      expect(ask(`${port} 127.0.0.2`)).toBe(0)
+    } finally {
+      await new Promise((resolve) => server.close(resolve))
+    }
+  })
+
   it('still lets a test (or the server) move the folder, port and Caddyfile', () => {
     const v = values({ APP_DIR: '/tmp/app', APP_PORT: '3999', KEEP_RELEASES: '5' })
     expect(v).toMatchObject({
@@ -127,7 +155,15 @@ describe('a pull request preview', () => {
     expect(app.env.PORT).toBeGreaterThanOrEqual(min)
     expect(app.env.PORT).toBeLessThanOrEqual(max)
     expect(app.args).toBe('start -H 127.0.0.1')
-    expect(app.out_file).toBe('/var/log/pm2/sprecher-east-pr-42-out.log')
+    expect(app.out_file).toBe('/var/www/sprecher-east-previews/pr-42/sprecher-east-pr-42-out.log')
+    expect(app.error_file).toBe(
+      '/var/www/sprecher-east-previews/pr-42/sprecher-east-pr-42-error.log',
+    )
+  })
+
+  it('keeps its logs in its own folder, never in production’s log folder (#1346)', () => {
+    expect(printed(env, 'echo "$PM2_LOG_DIR"').trim()).toBe('/var/www/sprecher-east-previews/pr-42')
+    expect(printed(env, 'echo "$PRODUCTION_PM2_LOG_DIR"').trim()).toBe('/var/log/pm2')
   })
 
   it('takes nothing from a caller that names production’s values', () => {

@@ -8,7 +8,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
  * a preview has its own `PAYLOAD_SECRET` (`ops/preview-settings.sh`), and Payload checks the token's
  * signature against it. Real Payload on in-memory SQLite, standing for the preview; the token is the
  * one the account's real sign-in gives, signed again under the secret production would use. The
- * cookie's host-only scope (no `Domain`, so a browser never sends production's cookie to a preview
+ * rule that a preview never takes production's secret is tested in `ops/preview-settings.test.mjs`; this
+ * file shows what the other secret does to a token. The cookie's host-only scope (no `Domain`, so a browser never sends production's cookie to a preview
  * address) is checked in `authCookies.payload.test.ts`.
  */
 
@@ -67,8 +68,26 @@ describe('a production sign-in token on a preview', () => {
     expect(await whoIs(resignWith(payload.secret, token ?? ''))).toBe('ada@example.com')
     // production's key is another secret's hash: the same claims are refused
     const productionKey = createHash('sha256').update(PRODUCTION_SECRET).digest('hex').slice(0, 32)
-    expect(productionKey).not.toBe(payload.secret)
     expect(await whoIs(resignWith(productionKey, token ?? ''))).toBeNull()
+  })
+
+  it('signs no one in when it arrives as the payload-token cookie either', async () => {
+    const { token } = await payload.login({
+      collection: 'users',
+      data: { email: 'ada@example.com', password: PASSWORD },
+    })
+    const viaCookie = async (value: string) => {
+      const { user } = await payload.auth({
+        headers: new Headers({
+          cookie: `${payload.config.cookiePrefix}-token=${value}`,
+          'Sec-Fetch-Site': 'same-origin', // the cookie only counts from our own pages (the CSRF list)
+        }),
+      })
+      return user && 'email' in user ? user.email : null
+    }
+    expect(await viaCookie(resignWith(payload.secret, token ?? ''))).toBe('ada@example.com')
+    const productionKey = createHash('sha256').update(PRODUCTION_SECRET).digest('hex').slice(0, 32)
+    expect(await viaCookie(resignWith(productionKey, token ?? ''))).toBeNull()
   })
 
   it('is never sent by a browser to a preview address: the sign-in cookie sets no Domain', () => {

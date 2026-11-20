@@ -9,6 +9,8 @@ if ([APP_NAME, APP_PORT, APP_DIR].some(Boolean) && ![APP_NAME, APP_PORT, APP_DIR
 const name = APP_NAME || 'sprecher-east'
 const port = Number(APP_PORT || 3000)
 const appDir = APP_DIR || '/var/www/sprecher-east'
+// ops/environment.sh sets this: production's /var/log/pm2, or a preview's own folder (#1346)
+const logDir = process.env.PM2_LOG_DIR || '/var/log/pm2'
 
 /** @type {import('pm2').ProcessDescription} */
 module.exports = {
@@ -32,8 +34,8 @@ module.exports = {
       max_restarts: 10,
       restart_delay: 3000,
       // Logs
-      out_file: `/var/log/pm2/${name}-out.log`,
-      error_file: `/var/log/pm2/${name}-error.log`,
+      out_file: `${logDir}/${name}-out.log`,
+      error_file: `${logDir}/${name}-error.log`,
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
     },
   ],
