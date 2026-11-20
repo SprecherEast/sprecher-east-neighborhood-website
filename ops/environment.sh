@@ -22,6 +22,11 @@ PREVIEW_CADDY_DIR="${PREVIEW_CADDY_DIR:-/etc/caddy/previews}"
 # (3100, UMAMI_PORT in umami-lib.sh). The deploy workflow's port check reads these two values too.
 PREVIEW_PORT_MIN="${PREVIEW_PORT_MIN:-3200}"
 PREVIEW_PORT_MAX="${PREVIEW_PORT_MAX:-3999}"
+# What a preview's settings use in place of real third-party keys (#1344): Cloudflare's published
+# always-pass Turnstile test keys (https://developers.cloudflare.com/turnstile/troubleshooting/testing/).
+# The build for a preview uses the site key; ops/preview-settings.sh writes both.
+PREVIEW_TURNSTILE_SITE_KEY="1x00000000000000000000AA"
+PREVIEW_TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA"
 # Ports no preview may take: production's app and Umami (a test ties both to their own files).
 RESERVED_PORTS="3000 3100"
 

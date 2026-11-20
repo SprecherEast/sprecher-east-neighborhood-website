@@ -9,6 +9,7 @@ import {
   HOUSEKEEPING,
   PREVIEW_URL,
   PROD_URL,
+  TEST_SITE_KEY,
   setUpEnvironmentHarness,
 } from './environment-harness.mjs'
 
@@ -19,9 +20,9 @@ const production = () => {
   makeRelease(release, PROD_URL)
   return deploy(release)
 }
-const preview = (env = {}, number = '7') => {
+const preview = (env = {}, number = '7', built = TEST_SITE_KEY) => {
   const release = p(`previews/pr-${number}/releases/r1`)
-  makeRelease(release, PREVIEW_URL)
+  makeRelease(release, PREVIEW_URL, built)
   return deploy(release, { PREVIEW_NUMBER: number, ...env })
 }
 const curlUrls = () =>
@@ -44,6 +45,10 @@ describe('deploy-release.sh with no environment named', () => {
     expect(fs.readlinkSync(p('app/releases/r1/data'))).toBe(p('app/data'))
     expect(fs.readlinkSync(p('app/releases/r1/public/media'))).toBe(p('app/public/media'))
     expect(fs.readlinkSync(p('app/current'))).toBe('releases/r1')
+    expect(fs.readFileSync(p('app/.env.local'), 'utf8')).toBe(
+      `NEXT_PUBLIC_SERVER_URL=${PROD_URL}\n`,
+    )
+    expect(fs.existsSync(p('previews/pr-7/.env.local'))).toBe(false) // no preview settings are made
   })
 
   it('keeps the newest three releases', async () => {
@@ -90,12 +95,33 @@ describe('deploy-release.sh for a preview', () => {
     expect(fs.readdirSync(p('previews/pr-7/releases')).sort()).toEqual(['o3', 'r1'])
   })
 
+  it('makes the preview’s own settings first, keeps them on a redeploy, and prints no secret', async () => {
+    const { out } = await preview()
+    const settings = p('previews/pr-7/.env.local')
+    const first = fs.readFileSync(settings, 'utf8')
+    expect(out).toContain('preview 7 has its own settings file')
+    for (const secret of first.match(/[0-9a-f]{64}/g)) expect(out).not.toContain(secret)
+    await preview()
+    expect(fs.readFileSync(settings, 'utf8')).toBe(first)
+    expect(fs.readFileSync(p('app/.env.local'), 'utf8')).toBe(
+      `NEXT_PUBLIC_SERVER_URL=${PROD_URL}\n`,
+    )
+  })
+
   it('still runs the settings gates against the preview’s own settings', async () => {
-    fs.appendFileSync(p('previews/pr-7/.env.local'), 'NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4AAAA\n')
-    const { code, out } = await preview()
+    const { code, out } = await preview({}, '7', '0x4AAAA') // built with a key the settings don’t hold
     expect(code).toBe(1)
     expect(out).toContain('Turnstile site key')
     expect(log()).not.toContain('pm2 start')
+  })
+
+  it('stops, changing nothing, when the kept settings are not a preview’s', async () => {
+    fs.mkdirSync(p('previews/pr-7'), { recursive: true })
+    fs.writeFileSync(p('previews/pr-7/.env.local'), 'SMTP_HOST=mail.example.test\n')
+    const { code, out } = await preview()
+    expect(code).toBe(1)
+    expect(out).toContain("the preview's settings are not in order")
+    expect(log()).not.toContain('pm2')
   })
 
   it('stops before changing anything when its Caddy block is not in place', async () => {

@@ -113,6 +113,10 @@ case "$RELEASE" in
 esac
 [ -f "$RELEASE/.release-info" ] && [ -f "$RELEASE/.next/BUILD_ID" ] && [ -x "$RELEASE/node_modules/.bin/next" ] ||
   stop "the release is incomplete (no .release-info, build or node_modules)"
+if is_preview; then
+  # The preview's own throwaway settings (ops/preview-settings.sh, #1344); production's are never touched.
+  bash "$RELEASE/ops/preview-settings.sh" || stop "the preview's settings are not in order"
+fi
 [ -f "$ENV_FILE" ] || stop "$ENV_FILE not found"
 if is_preview; then
   [ -f "$CADDY_SITE_FILE" ] || stop "the preview's Caddy block $CADDY_SITE_FILE is not in place"

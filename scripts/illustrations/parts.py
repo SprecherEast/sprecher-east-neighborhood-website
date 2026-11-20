@@ -12,6 +12,15 @@ def sc(v):
     """A size in the scene, multiplied by the named scene scale (unchanged at 1)."""
     return v if SCENE_SCALE==1 else v*SCENE_SCALE
 
+LOWERED=[]  # the drawn scene of the picture being built, as the badge check needs it on its own
+
+def lowered(content, k=None):
+    """The drawn scene of an event picture, scaled by EVENT_SCENE_SCALE about the bottom right corner
+    of the scene so it sits low and clear of the date badge. Backdrops are drawn outside it, full size."""
+    k = EVENT_SCENE_SCALE if k is None else k
+    LOWERED.append((content, k))
+    return f'<g transform="translate({SCENE_WIDTH*(1-k):g},{H*(1-k):g}) scale({k:g})">{content}</g>'
+
 def person_torso(shirt,o,hem=-96,shade=True):
     """The shirt of a person facing us, in person() units; hem is where it ends at the waist."""
     g=f'<path d="M-23,-166 Q0,-175 23,-166 L20,{hem} Q0,{hem+6} -20,{hem} Z" fill="{shirt}" {o}/>'

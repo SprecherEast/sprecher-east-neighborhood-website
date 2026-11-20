@@ -31,6 +31,7 @@ trap '' HUP
 here=$(dirname "$0")
 . "$here/lib.sh"
 . "$here/umami-lib.sh"
+. "$here/secret-lib.sh"
 . "$here/umami-caddy.sh"
 . "$here/umami-admin.sh"
 
@@ -160,8 +161,7 @@ saved() { sed -n "s/^$1=//p" "$env_file" 2>/dev/null | tail -n 1 || true; }
 secret_or_new() { # <name>
   local value
   value=$(saved "$1")
-  [[ "$value" =~ ^[0-9a-f]{64}$ ]] || value=$(openssl rand -hex 32 2>/dev/null || true)
-  [[ "$value" =~ ^[0-9a-f]{64}$ ]] || return 1
+  is_secret "$value" || value=$(new_secret) || return 1
   printf '%s' "$value"
 }
 db_password=$(secret_or_new UMAMI_DB_PASSWORD) && app_secret=$(secret_or_new UMAMI_APP_SECRET) &&
