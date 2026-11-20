@@ -5,7 +5,6 @@ export {
   ACCOUNT_PAGE_PATHS,
   ACCOUNT_PATH,
   FORGOT_PASSWORD_PATH,
-  SIGN_IN_PATH,
   VERIFY_ACCOUNT_PATH,
 } from './domain/paths'
 export { parseLinkToken } from './domain/linkToken'
