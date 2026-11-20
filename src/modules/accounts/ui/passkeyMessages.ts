@@ -33,7 +33,7 @@ const notice = (tone: PasskeyNotice['tone'], text: string, logInAgain = false): 
 export function toAddPasskeyNotice(outcome: AddPasskeyOutcome): PasskeyNotice {
   switch (outcome) {
     case 'added':
-      return notice('success', message('accounts.passkey.added'))
+      return notice('success', message('accounts.passkey.added', { button: PASSKEY_LOGIN_LABEL }))
     case 'cancelled':
       return notice('info', message('accounts.passkey.cancelled'))
     case 'sign-in-again':

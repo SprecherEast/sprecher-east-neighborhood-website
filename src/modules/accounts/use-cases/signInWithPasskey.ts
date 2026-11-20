@@ -30,7 +30,7 @@ const FAILED = { ok: false, failure: 'failed' } as const
 
 /**
  * Step one: the options for the browser to ask for a passkey with. The per-connection and the
- * site-wide limits come first; then the library's options are made, their challenge stored and
+ * per-connection limit comes first; then the library's options are made, their challenge stored and
  * tied to this browser by a signed cookie. They name no account. `ip` is the connection's address,
  * for the limit only.
  */

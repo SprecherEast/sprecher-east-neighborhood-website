@@ -82,18 +82,17 @@ export const PASSKEY_OPTIONS_PER_ACCOUNT_LIMITS: RequestLimits = {
 }
 
 /**
- * Asking for the options to sign in with a passkey (#1315, decision 0021), per connection and
- * site-wide. Each request stores one challenge row, which the hourly retention run removes, so the
- * site-wide count bounds what anyone can store. No robot check: the answer needs a real
- * authenticator holding a registered key, so guessing gains nothing, and the limits only keep
- * challenge requests from piling up. The trade-off the decision accepts: a script can fill the
- * site-wide count and switch passkey sign-in off for an hour, which leaves the email and password
- * and Google ways in as they were. Generous per connection, since the login page asks once as it
- * opens (for the email field's autofill) and once more for the button.
+ * Asking for the options to sign in with a passkey (#1315, decision 0021), counted per connection.
+ * There is no site-wide limit, on purpose: anyone can ask, so a cap a script can fill would switch
+ * passkey sign-in off for every neighbor (the same reason as `SOCIAL_SIGN_IN_LIMITS` and
+ * `PASSKEY_OPTIONS_LIMITS`). Each request stores one challenge row, which expires after five
+ * minutes and goes in the hourly retention run, so storage stays bounded without a count. No robot
+ * check: the answer needs a real authenticator holding a registered key, so guessing gains
+ * nothing. Generous per connection, since the login page asks once as it opens (for the email
+ * field's autofill) and once more for the button.
  */
 export const PASSKEY_SIGN_IN_LIMITS: RequestLimits = {
   windowMs: HOUR,
   perConnection: 30,
-  siteWide: 600,
   trackedConnections: 2000,
 }

@@ -8,7 +8,7 @@ export const ACCOUNTS_MESSAGES = {
   // The add-a-passkey card on /account (#1314)
   'accounts.passkey.lead':
     'Log in with your phone’s or computer’s screen lock instead of a password.',
-  'accounts.passkey.added': 'Passkey added. Next time, choose Log in with a passkey.',
+  'accounts.passkey.added': 'Passkey added. Next time, choose {button}.',
   'accounts.passkey.cancelled': 'No passkey was added. You can try again any time.',
   'accounts.passkey.failed': 'We couldn’t add that passkey. Please try again.',
   'accounts.passkey.signInAgain':

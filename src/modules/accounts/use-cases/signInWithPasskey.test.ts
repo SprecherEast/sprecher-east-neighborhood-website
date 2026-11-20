@@ -96,18 +96,13 @@ describe('startPasskeySignIn', () => {
     expect((await startPasskeySignIn('10.0.0.2')).ok).toBe(true)
   })
 
-  it('stores nothing past the site-wide limit, from any connection', async () => {
-    vi.resetModules()
-    const { startPasskeySignIn: fresh } = await import('./signInWithPasskey')
-    const { siteWide, perConnection } = PASSKEY_SIGN_IN_LIMITS
-    // Fewer than the per-connection limit from each address, so only the site-wide count can refuse
-    for (let n = 0; n < (siteWide as number); n++) {
-      const connection = Math.floor(n / (perConnection - 1))
-      expect((await fresh(`172.16.${connection >> 8}.${connection & 255}`)).ok).toBe(true)
+  it('has no site-wide count: many connections each within their own limit are all served', async () => {
+    expect(PASSKEY_SIGN_IN_LIMITS).not.toHaveProperty('siteWide')
+    for (let connection = 0; connection < 700; connection++) {
+      expect((await startPasskeySignIn(`172.16.${connection >> 8}.${connection & 255}`)).ok).toBe(
+        true,
+      )
     }
-    data.createChallenge.mockClear()
-    expect(await fresh('192.0.2.1')).toEqual({ ok: false, failure: 'too-many' })
-    expect(data.createChallenge).not.toHaveBeenCalled()
   })
 })
 

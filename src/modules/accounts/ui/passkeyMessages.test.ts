@@ -65,9 +65,10 @@ describe('toPasskeyLoginNotice', () => {
     )
   })
 
-  it('uses the same verb as the rest of the log in page, and as the card that adds a passkey', () => {
-    expect(PASSKEY_LOGIN_LABEL).toBe('Log in with a passkey')
-    expect(toAddPasskeyNotice('added').text).toContain(PASSKEY_LOGIN_LABEL)
+  it('names the button once: the added message takes its label from the one definition', () => {
+    expect(toAddPasskeyNotice('added').text).toBe(
+      `Passkey added. Next time, choose ${PASSKEY_LOGIN_LABEL}.`,
+    )
   })
 })
 

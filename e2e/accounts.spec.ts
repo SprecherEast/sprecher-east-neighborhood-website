@@ -36,7 +36,7 @@ async function logIn(page: Page, email: string, password: string) {
   const form = page.getByRole('form', { name: 'Log in' })
   await form.getByLabel('Email').fill(email)
   await form.getByLabel('Password').fill(password)
-  await form.getByRole('button', { name: 'Log In' }).click()
+  await form.getByRole('button', { name: 'Log In', exact: true }).click()
 }
 
 /** Signs up and confirms by the emailed link: a resident with a working account. */
