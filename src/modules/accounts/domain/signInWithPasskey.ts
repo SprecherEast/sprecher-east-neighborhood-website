@@ -63,4 +63,3 @@ export const passkeySignInSchema = z.strictObject({
 })
 
 export type PasskeySignInValues = z.output<typeof passkeySignInSchema>
-export type PasskeySignInInput = z.input<typeof passkeySignInSchema>
