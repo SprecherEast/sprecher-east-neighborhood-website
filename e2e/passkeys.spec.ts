@@ -251,7 +251,7 @@ test.describe('passkey screens: keyboard and accessibility', () => {
     await signOut(page, resident)
 
     // /login: the passkey button is named for what it does, and axe finds nothing
-    const button = await passkeyButton(page)
+    await passkeyButton(page)
     await expectAccessible(page)
 
     // Log in by keyboard: email, password, then Enter on the form
@@ -292,6 +292,5 @@ test.describe('passkey screens: keyboard and accessibility', () => {
     await tabTo(page, page.getByRole('button', { name: LOG_IN_WITH_A_PASSKEY }))
     await page.keyboard.press('Enter')
     await expect(page).toHaveURL(/\/account/)
-    expect(button).toBeDefined()
   })
 })
