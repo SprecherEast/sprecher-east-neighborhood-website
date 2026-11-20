@@ -26,7 +26,9 @@ Read its README for the layout. The rules about what a good picture is live in
    fit; if the build reports a line too wide, reword the line with the owner or the scene, never
    the sizes in `settings.py`.
 5. **Check.** `python3 -m scripts.illustrations.build --check` must report no problems. Look at the
-   picture at card size: the card's overlay corner (`CLEAR_ZONE` in `settings.py`) stays empty.
+   picture at card size. An event picture keeps the corner its card overlays with the date badge
+   (`CLEAR_ZONE` and `EVENT_SCENES` in `settings.py`) empty; a post picture has no such corner and
+   uses the whole canvas.
 6. **Review, publish, verify.** Run [`visual-design-review`](../visual-design-review/SKILL.md) on the
    finished JPG, then compare every panel line with the published text, upload it to the CMS with alt text that includes the panel's words, set it
    as both the item's picture and its link-preview picture, and open the live page at phone and

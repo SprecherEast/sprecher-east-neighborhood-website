@@ -35,6 +35,7 @@ PANEL_MAX_HEIGHT = H - 80
 # top, right, bottom, with a little to spare.
 CLEAR_ZONE = (0, 0, 420, 420)
 # The pictures of events: nothing of the drawn scene may reach into CLEAR_ZONE (build.py checks).
+# Posts have no badge, so their scenes are not listed here and use the whole canvas.
 EVENT_SCENES = ("marimba", "workshop")
 # How an event's scene is drawn so it clears the badge: scaled by this, anchored at the bottom
 # right corner of the scene, which moves it down and to the right, away from the badge.
