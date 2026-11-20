@@ -21,8 +21,13 @@ put_back() { # <saved copy or empty>: the route file as it was
 set_route() { # <template in ops/caddy> <yes|no: add the import line> [reload] [unlocked: go on without the lock]
   local template="$CODE_DIR/ops/caddy/$1" add_import="$2" force="${3:-}" lock="${4:-lock}" stamp new old="" candidate="" changed=no
   if ! command -v caddy >/dev/null || [ ! -f "$CADDYFILE" ]; then return 3; fi
-  # one change to Caddy at a time (caddy-lock-lib.sh); closing the address is always safe, so it never waits
-  take_caddy_lock || [ "$lock" = unlocked ] || return 4
+  # One change to Caddy at a time (caddy-lock-lib.sh). Closing the address is always safe, so it asks for
+  # the lock once, without waiting, and goes on without it when another change holds it.
+  if [ "$lock" = unlocked ]; then
+    CADDY_LOCK_WAIT=0 take_caddy_lock || true
+  else
+    take_caddy_lock || return 4
+  fi
   stamp=$(date -u +%Y%m%dT%H%M%SZ)
   new=$(mktemp "$UMAMI_CADDY_FILE.XXXXXX")
   # set -e does not apply here (the callers test the result), so each step that matters is checked.
@@ -103,7 +108,7 @@ open_route() {
   case "$status" in
     0) return 0 ;;
     3) report "WARNING: Caddy or $CADDYFILE not found, so Umami's public address was not opened" ;;
-    4) report "WARNING: the Umami block could not be put in place (Caddy did not accept it, or a file could not be written), so the public address was left as it was" ;;
+    4) report "WARNING: the Umami block could not be put in place (Caddy did not accept it, a file could not be written, or another change to Caddy was running), so the public address was left as it was" ;;
     5)
       report "ERROR: Caddy would not reload with the Umami block; the Caddy files were put back"
       exit 1
