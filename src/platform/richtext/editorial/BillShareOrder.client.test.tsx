@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
-import { BILL_GAP, BillShare } from './BillShare.client'
+import { BILL_GAP, BILL_PAIR, BillShare } from './BillShare.client'
 import { BREAKDOWN, city, estimate, PROPS } from './billShareFixtures'
 
 afterEach(cleanup)
@@ -80,11 +80,16 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     // The intro, the estimator and the answer card are siblings in one stack, with no margin of their own
     expect(stack.className).toContain(BILL_GAP)
     expect(stack.contains(screen.getByText(PROPS.intro))).toBe(true)
-    expect(screen.getByRole('region', { name: 'Your City tax' }).parentElement).toBe(stack)
+    // The answer card sits in a pair with the rates panel, which is the stack's child (#1351)
+    const pair = screen.getByRole('region', { name: 'Your City tax' }).parentElement as HTMLElement
+    expect(pair.parentElement).toBe(stack)
+    expect(pair.className).toBe(BILL_PAIR)
+    expect(BILL_PAIR).toContain(`gap-${BILL_GAP.replace('space-y-', '')}`)
     for (const node of [
       estimator.previousElementSibling,
       estimator,
       estimator.nextElementSibling,
+      pair,
     ]) {
       expect(node?.className).not.toMatch(/(^|\s)-?m[tby]-/)
     }
@@ -112,8 +117,9 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
       screen.getByText(PROPS.intro),
       screen.getByRole('region', { name: 'Rough Estimator' }),
       screen.getByRole('region', { name: 'Your City tax' }),
-      screen.getByText('Metropolitan Schools'),
-      screen.getByText('City of Madison'),
+      screen.getByRole('region', { name: PROPS.rates.title }),
+      within(bill).getByText('Metropolitan Schools'),
+      within(bill).getByText('City of Madison'),
       breakdown,
       screen.getByText('Why your bill may differ'),
       screen.getByText('Sources'),
@@ -125,7 +131,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     })
     // The breakdown is a row of the whole bill itself, directly under the City's row
     expect(bill.contains(breakdown)).toBe(true)
-    const cityRow = screen.getByText('City of Madison').closest('li') as HTMLElement
+    const cityRow = within(bill).getByText('City of Madison').closest('li') as HTMLElement
     expect(cityRow.nextElementSibling?.contains(breakdown)).toBe(true)
   })
 

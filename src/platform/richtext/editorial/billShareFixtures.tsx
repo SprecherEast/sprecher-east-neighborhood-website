@@ -5,11 +5,12 @@ import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { toBillShareProps, type BillShareProps } from './billShare'
 
 /** The title and notes a block that holds none of its own gets */
-const { rows, notes } = toBillShareProps({})
+const { rows, notes, rates } = toBillShareProps({})
 
 export const PROPS: BillShareProps = {
   rows,
   notes,
+  rates,
   intro: 'Based on the City’s average home. Change the value to see yours.',
   years: [
     {

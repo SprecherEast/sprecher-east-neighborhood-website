@@ -24,7 +24,7 @@ export type ShareSlice = {
 }
 
 /** A slice's name: with a short form, the rest hides on the narrowest phones but stays for screen readers */
-function SliceName({ name, shortName }: { name: string; shortName?: string }) {
+export function SliceName({ name, shortName }: { name: string; shortName?: string }) {
   if (!shortName || !name.startsWith(shortName) || name === shortName) return name
   return (
     <>
@@ -35,7 +35,7 @@ function SliceName({ name, shortName }: { name: string; shortName?: string }) {
 }
 
 /** How long the total's flash lasts (`total-pulse` in the theme's `tailwind.css`, which a test holds to it) */
-export const TOTAL_PULSE_MS = 300
+export const TOTAL_PULSE_MS = 1000
 
 /**
  * The receipt's one grid of three columns, which its rows and its total both take (`subgrid`), so a

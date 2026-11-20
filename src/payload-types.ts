@@ -3655,6 +3655,16 @@ export interface BillShareBlock {
     sources: string
   }
   /**
+   * The small panel beside the City’s tax that lists each body’s rate and the year it is from.
+   */
+  rates: {
+    title: string
+    /**
+     * Shown in a year that uses an earlier year’s rate for some body. {year} is the year shown. Leave empty for no note.
+     */
+    note?: string | null
+  }
+  /**
    * The lines in the row on why the bill may differ, in this order. Each says when it shows; a note can use blanks the page fills in.
    */
   notes?:
