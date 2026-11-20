@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
 import { message } from '@/platform/lib'
-import { Alert, Button, Field } from '@/platform/ui'
+import { Alert, Button, Field, Form, type FormStatus } from '@/platform/ui'
 import { Card } from '@/platform/ui/Card'
 import { Text } from '@/platform/ui/Text'
 
 import { addPasskey, getPasskeyOptions, signOut } from '../actions'
+import { passkeyLabelSchema } from '../domain/addPasskey'
 import { PASSKEY_LABEL_MAX_LENGTH } from '../domain/passkeys'
 import { SIGN_IN_PATH } from '../domain/paths'
 import { createPasskey, passkeysSupported } from './passkeyBrowser'
@@ -36,17 +37,19 @@ async function addAPasskey(label: string): Promise<AddPasskeyOutcome> {
 }
 
 /**
- * The "Passkeys" card on /account (#1314, decision 0021): a name field and "Add a passkey". The
- * server decides whether the card is on (the page only renders this when it is); this also waits
- * for the browser to say it can make a passkey, and until then, and when it can't, shows nothing.
- * The account comes from the session, not a prop. An old sign-in is asked to log in again, which
- * ends this session and opens the log in page; signing in lands back on the account page.
+ * The "Passkeys" card on /account (#1314, decision 0021), on the kit's `Form`: an optional name and
+ * "Add a passkey". The server decides whether the card is on (the page only renders this when it
+ * is); this also waits for the browser to say it can make a passkey, and until then, and when it
+ * can't, shows nothing. The account comes from the session, not a prop. Success and errors are the
+ * form's own messages; a closed prompt, a device that already has one, the cap and an old sign-in
+ * are notices that aren't errors. An old sign-in is asked to log in again, which ends this session
+ * and opens the log in page; signing in lands back on the account page.
  */
 export function AddPasskey() {
   const router = useRouter()
   const [supported, setSupported] = useState(false)
-  const [label, setLabel] = useState('')
-  const [working, setWorking] = useState(false)
+  const [status, setStatus] = useState<FormStatus>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
   const [notice, setNotice] = useState<PasskeyNotice | null>(null)
 
   useEffect(() => {
@@ -61,20 +64,18 @@ export function AddPasskey() {
 
   if (!supported) return null
 
-  const add = async () => {
-    setWorking(true)
-    setNotice(null)
-    const outcome = await addAPasskey(label)
-    if (outcome === 'added') setLabel('')
-    setNotice(toAddPasskeyNotice(outcome))
-    setWorking(false)
+  const show = (outcome: AddPasskeyOutcome) => {
+    const result = toAddPasskeyNotice(outcome)
+    setNotice(result.tone === 'info' || result.tone === 'warning' ? result : null)
+    setErrorMessage(result.tone === 'error' ? result.text : '')
+    setStatus(result.tone === 'success' ? 'success' : result.tone === 'error' ? 'error' : 'idle')
   }
 
   const logInAgain = async () => {
     try {
       await signOut()
     } catch {
-      return setNotice(toAddPasskeyNotice('offline'))
+      return show('offline')
     }
     router.push(SIGN_IN_PATH)
     router.refresh()
@@ -85,42 +86,55 @@ export function AddPasskey() {
       <Text variant="subsection" id={HEADING_ID} className="mb-4">
         Passkeys
       </Text>
-      <form
-        className="space-y-4"
-        noValidate
-        onSubmit={(event) => {
-          event.preventDefault()
-          if (!working) void add()
+      <Form
+        aria-label="Add a passkey"
+        schema={passkeyLabelSchema}
+        onSubmit={async ({ label }, form) => {
+          setStatus('submitting')
+          setNotice(null)
+          const outcome = await addAPasskey(label)
+          if (outcome === 'added') form.reset()
+          show(outcome)
         }}
+        status={status}
+        successMessage={toAddPasskeyNotice('added').text}
+        errorMessage={errorMessage}
       >
-        <Text variant="small">{message('accounts.passkey.lead')}</Text>
-        <Field label="Passkey name" hint="Optional. It helps you tell your passkeys apart.">
-          <Field.Input
-            autoComplete="off"
-            maxLength={PASSKEY_LABEL_MAX_LENGTH}
-            value={label}
-            onChange={(event) => setLabel(event.target.value)}
-          />
-        </Field>
-        <div>
-          <Button
-            type="submit"
-            fullWidth="mobile"
-            loading={working}
-            iconStart={<KeyRound aria-hidden />}
-          >
-            Add a passkey
-          </Button>
-        </div>
-        {notice && <Alert tone={notice.tone}>{notice.text}</Alert>}
-        {notice?.logInAgain && (
-          <div>
-            <Button variant="secondary" fullWidth="mobile" onClick={logInAgain}>
-              Log in again
-            </Button>
-          </div>
+        {({ register, formState: { errors } }) => (
+          <>
+            <Text variant="small">{message('accounts.passkey.lead')}</Text>
+            <Field
+              label="Passkey name"
+              hint="Optional. It helps you tell your passkeys apart."
+              error={errors.label?.message}
+            >
+              <Field.Input
+                autoComplete="off"
+                maxLength={PASSKEY_LABEL_MAX_LENGTH}
+                {...register('label', { onChange: () => setNotice(null) })}
+              />
+            </Field>
+            {notice && <Alert tone={notice.tone}>{notice.text}</Alert>}
+            {notice?.logInAgain && (
+              <div>
+                <Button variant="secondary" fullWidth="mobile" onClick={logInAgain}>
+                  Log in again
+                </Button>
+              </div>
+            )}
+            <div>
+              <Button
+                type="submit"
+                fullWidth="mobile"
+                loading={status === 'submitting'}
+                iconStart={<KeyRound aria-hidden />}
+              >
+                Add a passkey
+              </Button>
+            </div>
+          </>
         )}
-      </form>
+      </Form>
     </Card>
   )
 }

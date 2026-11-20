@@ -7,8 +7,8 @@ export const ACCOUNTS_MESSAGES = {
     'No worries, it happens! If that email has an account, a reset link is on its way. It works for {linkLifetime}. Nothing yet? Check your spam.',
   // The add-a-passkey card on /account (#1314)
   'accounts.passkey.lead':
-    'Sign in with your phone’s or computer’s screen lock instead of a password.',
-  'accounts.passkey.added': 'Passkey added. Next time, choose Sign in with a passkey.',
+    'Log in with your phone’s or computer’s screen lock instead of a password.',
+  'accounts.passkey.added': 'Passkey added. Next time, choose Log in with a passkey.',
   'accounts.passkey.cancelled': 'No passkey was added. You can try again any time.',
   'accounts.passkey.failed': 'We couldn’t add that passkey. Please try again.',
   'accounts.passkey.signInAgain':

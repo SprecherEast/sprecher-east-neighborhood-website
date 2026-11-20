@@ -18,7 +18,7 @@ import type {
 } from '../domain/addPasskey'
 import { toPasskeyAddedEmail } from '../domain/passkeyEmail'
 import { decideAddPasskey, DEFAULT_PASSKEY_LABEL, toPasskeyLabel } from '../domain/passkeys'
-import { PASSKEY_OPTIONS_LIMITS } from '../domain/requestLimits'
+import { PASSKEY_OPTIONS_LIMITS, PASSKEY_OPTIONS_PER_ACCOUNT_LIMITS } from '../domain/requestLimits'
 import type { ActionResult } from '../domain/types'
 import { createRequestGuard, NO_ROBOT_CHECK } from './guardPublicRequest'
 
@@ -27,7 +27,9 @@ import { createRequestGuard, NO_ROBOT_CHECK } from './guardPublicRequest'
 // reason that isn't "sign in again", "too many" or "the most passkeys" is one `failed`, and the
 // WebAuthn library is reached only through `data/webauthn.ts`.
 
-const optionsGuard = createRequestGuard('Passkey options', PASSKEY_OPTIONS_LIMITS)
+const connectionGuard = createRequestGuard('Passkey options', PASSKEY_OPTIONS_LIMITS)
+// The guard counts per key and calls it `ip`: here the key is the session's account
+const accountGuard = createRequestGuard('Passkey options', PASSKEY_OPTIONS_PER_ACCOUNT_LIMITS)
 
 const FAILED = { ok: false, failure: 'failed' } as const
 
@@ -56,7 +58,7 @@ async function refusal(
 
 /**
  * Step one: the options for the browser to make a passkey with. The session must be a recent
- * sign-in, and the account under the cap; then the per-connection and site-wide limits; then the
+ * sign-in, and the account under the cap; then the per-connection and per-account limits; then the
  * library's options are made, their challenge stored for this account and tied to this browser
  * by a signed cookie. `ip` is the connection's address, for the limit only.
  */
@@ -71,7 +73,9 @@ async function start(ip: string | null): Promise<StartAddPasskeyResult> {
   const now = new Date()
   const refused = await refusal(session, now)
   if (refused || !session) return { ok: false, failure: refused ?? 'sign-in-again' }
-  const blocked = await optionsGuard({ token: null, ip }, NO_ROBOT_CHECK)
+  const blocked =
+    (await connectionGuard({ token: null, ip }, NO_ROBOT_CHECK)) ??
+    (await accountGuard({ token: null, ip: `account:${session.accountId}` }, NO_ROBOT_CHECK))
   if (blocked) return { ok: false, failure: 'too-many' }
 
   const { options, challenge } = await makeRegistrationOptions({
@@ -95,8 +99,8 @@ async function start(ip: string | null): Promise<StartAddPasskeyResult> {
 
 /**
  * Step two: checks the browser's answer and saves the passkey on the session's account. The
- * challenge is taken once from this browser's cookie before anything else, so any failed answer
- * uses it up. The challenge must belong to the session's account, and the session must still be
+ * challenge is taken once from this browser's cookie before anything else, so any failed answer,
+ * and an old sign-in, uses it up. The challenge must belong to the session's account, and the session must still be
  * a recent sign-in now, so the challenge's lifetime can't stretch the window. The cap is counted
  * again right before saving, since two adds at the same moment can both pass the first count.
  * A good add sends the account's address a note, after the passkey is stored.
@@ -119,13 +123,13 @@ async function finish({
   const relyingParty = getPasskeyRelyingParty()
   if (!relyingParty) return FAILED
   const now = new Date()
+  // The browser's challenge is used up first, whatever else is wrong, so no copy of it stays usable
   const challengeId = await takeChallengeCookie(now)
+  const challenge =
+    challengeId === null ? null : await takeChallenge({ id: challengeId, purpose: 'add', now })
   const session = await getSignInSession()
   const early = await refusal(session, now)
   if (early || !session) return { ok: false, failure: early ?? 'sign-in-again' }
-  if (challengeId === null) return FAILED
-
-  const challenge = await takeChallenge({ id: challengeId, purpose: 'add', now })
   if (!challenge || challenge.accountId !== session.accountId) return FAILED
 
   const verified = await verifyNewPasskey({

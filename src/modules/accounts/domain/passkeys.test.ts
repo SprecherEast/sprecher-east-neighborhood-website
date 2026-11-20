@@ -9,6 +9,7 @@ import {
   decideAddPasskey,
   decideRemovePasskey,
   decideUsePasskey,
+  isAllowedPasskeyLabel,
   isPasskeySwitchOn,
   toChallengeExpiry,
   toPasskeyLabel,
@@ -107,6 +108,34 @@ describe('toPasskeyLabel', () => {
 
   it('drops control characters', () => {
     expect(toPasskeyLabel('Phone\u0000\u0007 one')).toBe('Phone one')
+  })
+
+  it('keeps letters, numbers, spaces and basic punctuation, in any language', () => {
+    for (const label of [
+      'My phone',
+      'Ada’s laptop',
+      'Work (2nd) key',
+      'Téléphone',
+      'Phone_2, blue',
+    ]) {
+      expect(toPasskeyLabel(label)).toBe(label)
+    }
+  })
+
+  it.each([
+    ['a web address', 'sprecher-east-help.com to undo this', 'sprecher-east-help com to undo this'],
+    ['an email address', 'you@help.example', 'you help example'],
+    ['a link', 'https://help.example/undo', 'https help example undo'],
+    ['www', 'www help', 'www help'],
+    ['markup', '<b>Phone</b> & "co"', 'b Phone b co'],
+  ])('neutralises %s, so the email can never carry a link or an address', (_name, raw, label) => {
+    const clean = toPasskeyLabel(raw)
+    expect(clean).toBe(label)
+    expect(clean).not.toMatch(/[./:@<>&"]/)
+  })
+
+  it('falls back to the default when nothing allowed is left', () => {
+    expect(toPasskeyLabel('...@@//')).toBe(DEFAULT_PASSKEY_LABEL)
   })
 
   it('keeps it to the length the list has room for', () => {
@@ -234,5 +263,25 @@ describe('decideUsePasskey: who may sign in with one', () => {
   it('lets an account whose lock has passed sign in', () => {
     const past = { ...owner, lockedUntil: new Date(now.getTime() - 1) }
     expect(decideUsePasskey({ ...base, owner: past })).toEqual({ ok: true, accountId: 7 })
+  })
+})
+
+describe('isAllowedPasskeyLabel: what a neighbor may type', () => {
+  it.each(['', 'My phone', 'Ada’s laptop', 'Téléphone 2'])('accepts %j', (label) => {
+    expect(isAllowedPasskeyLabel(label)).toBe(true)
+  })
+
+  it.each([
+    'a.b',
+    'you@help.example',
+    'https://x',
+    'www help.com',
+    'a/b',
+    'a:b',
+    '<b>',
+    'Phone\u0007',
+    'x'.repeat(PASSKEY_LABEL_MAX_LENGTH + 1),
+  ])('refuses %j', (label) => {
+    expect(isAllowedPasskeyLabel(label)).toBe(false)
   })
 })

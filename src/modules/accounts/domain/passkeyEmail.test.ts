@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { toPasskeyAddedEmail } from './passkeyEmail'
+import { toPasskeyLabel } from './passkeys'
 
 const at = new Date('2026-11-19T23:05:00.000Z')
 
@@ -31,5 +32,20 @@ describe('toPasskeyAddedEmail', () => {
     expect(tricky.subject).toBe(email.subject)
     expect(tricky.html).not.toContain('<b>Phone</b>')
     expect(tricky.html).toContain('&lt;b&gt;Phone&lt;/b&gt;')
+  })
+
+  it.each([
+    'sprecher-east-help.com to undo this',
+    'you@help.example',
+    'https://help.example/undo',
+    'www.help.example',
+    'help.example',
+  ])('has no link or address, whatever label the neighbor typed (%s)', (typed) => {
+    const note = toPasskeyAddedEmail({ label: toPasskeyLabel(typed), at })
+    for (const part of [note.text, note.html]) {
+      expect(part).not.toMatch(/https?:|www\.|href=|@|\b[a-z0-9-]+\.(com|org|net|example|io)\b/i)
+    }
+    expect(note.text).toContain('Its name: “')
+    expect(note.text).toContain('Nov 19, 2026, 5:05 PM CST')
   })
 })

@@ -4,6 +4,8 @@
 
 import { z } from 'zod'
 
+import { isAllowedPasskeyLabel } from './passkeys'
+
 /** The cookie that ties a challenge to the browser that asked for it. `__Host-` in production. */
 export const PASSKEY_CHALLENGE_COOKIE = 'sprecher-east-passkey-challenge'
 
@@ -75,11 +77,25 @@ export const registrationAnswerSchema = z.object({
 
 export type RegistrationAnswer = z.output<typeof registrationAnswerSchema>
 
+/**
+ * The name a neighbor may give a passkey, optional: letters, numbers and spaces and a few marks,
+ * up to the label length (`isAllowedPasskeyLabel`). One rule for the card's form in the browser
+ * and the action, which checks again.
+ */
+export const passkeyLabelField = z
+  .string()
+  .refine(
+    isAllowedPasskeyLabel,
+    'Please use only letters, numbers and spaces, up to 60 characters.',
+  )
+
+/** The card's form: just the name. */
+export const passkeyLabelSchema = z.strictObject({ label: passkeyLabelField })
+
 /** What the finishing action takes: the answer and the name the resident chose, if any. */
 export const addPasskeySchema = z.strictObject({
   answer: registrationAnswerSchema,
-  // Cut to its real length by `toPasskeyLabel`; this only bounds what a caller can send
-  label: z.string().max(200).optional(),
+  label: passkeyLabelField.optional(),
 })
 
 export type AddPasskeyInput = z.output<typeof addPasskeySchema>

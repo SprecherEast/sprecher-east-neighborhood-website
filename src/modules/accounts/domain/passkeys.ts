@@ -103,13 +103,28 @@ export function isPasskeySwitchOn(env: Record<string, string | undefined>): bool
 /** When a challenge made at `now` stops working. */
 export const toChallengeExpiry = (now: Date): Date => new Date(now.getTime() + CHALLENGE_TTL_MS)
 
-const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f-\u009f]/g
+/**
+ * What a label may hold: letters and numbers in any language, spaces, apostrophes, hyphens,
+ * underscores, commas and round brackets. No dot, colon, slash, `@` or angle bracket, so a label
+ * can never read as a link or an address: it goes into the email that warns about a passkey
+ * added with a stolen password (decision 0021), where mail apps turn such text into links.
+ */
+const ALLOWED_LABEL_CHARACTERS = /^[\p{L}\p{N}\p{M} '’_,()-]*$/u
+const DISALLOWED_LABEL_CHARACTER = /[^\p{L}\p{N}\p{M} '’_,()-]/gu
 
-/** The label shown to the resident: trimmed, one line, kept short; the default when none. */
+/** Whether a typed label is within the rule, and short enough, as it is. Empty is allowed. */
+export const isAllowedPasskeyLabel = (raw: string): boolean =>
+  raw.length <= PASSKEY_LABEL_MAX_LENGTH && ALLOWED_LABEL_CHARACTERS.test(raw)
+
+/**
+ * The label shown to the resident and put in the email: one line, kept short, only the allowed
+ * characters (any other becomes a space, so `help.example` reads as `help example`); the default
+ * when none is left.
+ */
 export function toPasskeyLabel(raw: unknown): string {
   if (typeof raw !== 'string') return DEFAULT_PASSKEY_LABEL
   const label = raw
-    .replace(CONTROL_CHARACTERS, ' ')
+    .replace(DISALLOWED_LABEL_CHARACTER, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, PASSKEY_LABEL_MAX_LENGTH)

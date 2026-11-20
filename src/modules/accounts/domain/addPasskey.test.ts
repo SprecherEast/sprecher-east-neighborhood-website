@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   addPasskeySchema,
+  passkeyLabelSchema,
   registrationAnswerSchema,
   toChallengeId,
   type RegistrationAnswer,
@@ -68,6 +69,7 @@ describe('addPasskeySchema', () => {
     expect(addPasskeySchema.safeParse({ answer, label: 'My phone' }).success).toBe(true)
     expect(addPasskeySchema.safeParse({ answer, accountId: 7 }).success).toBe(false)
     expect(addPasskeySchema.safeParse({ answer, label: 'x'.repeat(500) }).success).toBe(false)
+    expect(addPasskeySchema.safeParse({ answer, label: 'you@help.example' }).success).toBe(false)
     expect(addPasskeySchema.safeParse({ label: 'My phone' }).success).toBe(false)
   })
 })
@@ -81,6 +83,22 @@ describe('toChallengeId', () => {
     'refuses %j',
     (data) => {
       expect(toChallengeId(data)).toBeNull()
+    },
+  )
+})
+
+describe('passkeyLabelSchema', () => {
+  it('takes a name made of letters, numbers and spaces, or none', () => {
+    expect(passkeyLabelSchema.safeParse({ label: '' }).success).toBe(true)
+    expect(passkeyLabelSchema.safeParse({ label: 'Ada’s phone 2' }).success).toBe(true)
+  })
+
+  it.each(['help.example', 'you@help.example', 'https://help', 'a/b', 'x'.repeat(61)])(
+    'refuses %j with a kind message',
+    (label) => {
+      const result = passkeyLabelSchema.safeParse({ label })
+      expect(result.success).toBe(false)
+      expect(JSON.stringify(result.error?.issues)).toContain('Please use only letters')
     },
   )
 })

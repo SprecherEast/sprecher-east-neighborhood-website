@@ -235,10 +235,18 @@ describe('a recent sign-in', () => {
     await signInAs(ada)
     const options = await start()
     const count = (await passkeysOf(ada)).length
+    const cookie = cookieNow() ?? ''
     await ageSession(ada, RECENT_SIGN_IN_WINDOW_MS + 60_000)
     expect(await flow.finishAddPasskey({ answer: answerTo(options) })).toEqual({
       ok: false,
       failure: 'sign-in-again',
+    })
+    // The challenge was used up too: a copy of the cookie, with a fresh sign-in, adds nothing
+    await signInAs(ada)
+    request.jar.set(COOKIE, cookie)
+    expect(await flow.finishAddPasskey({ answer: answerTo(options) })).toEqual({
+      ok: false,
+      failure: 'failed',
     })
     expect(await passkeysOf(ada)).toHaveLength(count)
   })

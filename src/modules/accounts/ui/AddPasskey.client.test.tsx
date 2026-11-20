@@ -62,9 +62,7 @@ describe('AddPasskey: when it shows', () => {
     await shown()
     expect(screen.getByRole('heading', { name: 'Passkeys' })).toBeTruthy()
     expect(
-      screen.getByText(
-        'Sign in with your phone’s or computer’s screen lock instead of a password.',
-      ),
+      screen.getByText('Log in with your phone’s or computer’s screen lock instead of a password.'),
     ).toBeTruthy()
     const name = screen.getByLabelText<HTMLInputElement>(/^Passkey name/)
     expect(name.maxLength).toBe(60)
@@ -81,7 +79,7 @@ describe('AddPasskey: adding one', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Add a passkey' }))
 
     const status = await screen.findByRole('status')
-    expect(status.textContent).toContain('Passkey added. Next time, choose Sign in with a passkey.')
+    expect(status.textContent).toContain('Passkey added. Next time, choose Log in with a passkey.')
     expect(mocks.createPasskey).toHaveBeenCalledExactlyOnceWith(options)
     expect(mocks.addPasskey).toHaveBeenCalledExactlyOnceWith({ answer, label: 'My phone' })
     expect(screen.getByLabelText<HTMLInputElement>(/^Passkey name/).value).toBe('')
@@ -93,6 +91,15 @@ describe('AddPasskey: adding one', () => {
     await userEvent.type(screen.getByLabelText(/^Passkey name/), 'Laptop{Enter}')
     await screen.findByRole('status')
     expect(mocks.addPasskey).toHaveBeenCalledExactlyOnceWith({ answer, label: 'Laptop' })
+  })
+
+  it('asks kindly for another name, and sends nothing, when the name looks like a link or address', async () => {
+    await shown()
+    await userEvent.type(screen.getByLabelText(/^Passkey name/), 'you@help.example')
+    await userEvent.click(screen.getByRole('button', { name: 'Add a passkey' }))
+    expect(await screen.findByText(/^Please use only letters, numbers and spaces/)).toBeTruthy()
+    expect(mocks.getPasskeyOptions).not.toHaveBeenCalled()
+    await expectAccessible(document.body)
   })
 
   it('keeps the button busy while it works, so a second tap adds nothing', async () => {

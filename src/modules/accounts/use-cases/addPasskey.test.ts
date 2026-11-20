@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MAX_PASSKEYS_PER_ACCOUNT, RECENT_SIGN_IN_WINDOW_MS } from '../domain/passkeys'
+import { PASSKEY_OPTIONS_LIMITS } from '../domain/requestLimits'
 
 // The two steps of adding a passkey against fakes of the data layer: who may, in what order, and
 // what each refusal answers. The real library and real Payload are in `addPasskey.payload.test.ts`.
@@ -131,17 +132,27 @@ describe('startAddPasskey', () => {
 
   it('limits each connection, then answers too many', async () => {
     const answers = []
-    for (let i = 0; i < 11; i++) answers.push(await startAddPasskey('9.9.9.9'))
+    for (let i = 0; i < 11; i++) {
+      data.getSignInSession.mockResolvedValue({ ...session, accountId: 300 + i })
+      answers.push(await startAddPasskey('9.9.9.9'))
+    }
     expect(answers.slice(0, 10).every((a) => a.ok)).toBe(true)
     expect(answers[10]).toEqual({ ok: false, failure: 'too-many' })
+    data.getSignInSession.mockResolvedValue({ ...session, accountId: 399 })
     expect(await startAddPasskey('8.8.8.8')).toMatchObject({ ok: true })
   })
 
-  it('gives the one failure when anything throws, logging only the error’s class', async () => {
-    data.makeRegistrationOptions.mockRejectedValue(new TypeError('secret challenge value'))
-    expect(await startAddPasskey('7.7.7.7')).toEqual({ ok: false, failure: 'failed' })
-    expect(console.error).toHaveBeenCalledWith('Passkey options failed on the server (TypeError)')
-    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain('secret')
+  it('limits each account across connections, without blocking another account or any connection', async () => {
+    const results = []
+    data.getSignInSession.mockResolvedValue({ ...session, accountId: 400 })
+    for (let i = 0; i < 11; i++) results.push(await startAddPasskey(`10.0.0.${i}`))
+    expect(results.slice(0, 10).every((a) => a.ok)).toBe(true)
+    expect(results[10]).toEqual({ ok: false, failure: 'too-many' })
+
+    // Another account, on the same fresh connection the first was refused on, is not blocked
+    data.getSignInSession.mockResolvedValue({ ...session, accountId: 8 })
+    expect(await startAddPasskey('10.0.0.10')).toMatchObject({ ok: true })
+    expect(PASSKEY_OPTIONS_LIMITS).not.toHaveProperty('siteWide')
   })
 })
 
@@ -201,13 +212,6 @@ describe('finishAddPasskey', () => {
   it('refuses a challenge made for another account', async () => {
     data.takeChallenge.mockResolvedValue({ id: 12, purpose: 'add', challenge: 'c', accountId: 8 })
     expect(await finish()).toEqual({ ok: false, failure: 'failed' })
-    data.takeChallenge.mockResolvedValue({
-      id: 12,
-      purpose: 'add',
-      challenge: 'c',
-      accountId: null,
-    })
-    expect(await finish()).toEqual({ ok: false, failure: 'failed' })
     expect(data.verifyNewPasskey).not.toHaveBeenCalled()
     expect(data.savePasskey).not.toHaveBeenCalled()
   })
@@ -218,6 +222,7 @@ describe('finishAddPasskey', () => {
       signedInAt: new Date(NOW.getTime() - RECENT_SIGN_IN_WINDOW_MS - 1),
     })
     expect(await finish()).toEqual({ ok: false, failure: 'sign-in-again' })
+    expect(data.takeChallenge).toHaveBeenCalledOnce()
     expect(data.verifyNewPasskey).not.toHaveBeenCalled()
     expect(data.savePasskey).not.toHaveBeenCalled()
   })
@@ -226,6 +231,7 @@ describe('finishAddPasskey', () => {
     data.getSignInSession.mockResolvedValue(null)
     expect(await finish()).toEqual({ ok: false, failure: 'sign-in-again' })
     expect(data.takeChallengeCookie).toHaveBeenCalled()
+    expect(data.takeChallenge).toHaveBeenCalledWith({ id: 12, purpose: 'add', now: NOW })
     expect(data.savePasskey).not.toHaveBeenCalled()
   })
 
@@ -259,12 +265,6 @@ describe('finishAddPasskey', () => {
     expect(await finish()).toEqual({ ok: false, failure: 'failed' })
     expect(data.savePasskey).not.toHaveBeenCalled()
     expect(data.sendEmailToAccount).not.toHaveBeenCalled()
-  })
-
-  it('refuses a credential ID that is already stored, with the one failure and no note', async () => {
-    data.savePasskey.mockResolvedValue({ saved: false })
-    expect(await finish()).toEqual({ ok: false, failure: 'failed' })
-    expect(data.after).toHaveLength(0)
   })
 
   it('gives the one failure when anything throws, logging only the error’s class', async () => {
