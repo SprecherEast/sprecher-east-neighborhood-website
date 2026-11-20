@@ -4,7 +4,7 @@
 
 import { z } from 'zod'
 
-import { isAllowedPasskeyLabel } from './passkeys'
+import { isAllowedPasskeyLabel, PASSKEY_LABEL_MAX_LENGTH } from './passkeys'
 
 /** The cookie that ties a challenge to the browser that asked for it. `__Host-` in production. */
 export const PASSKEY_CHALLENGE_COOKIE = 'sprecher-east-passkey-challenge'
@@ -86,7 +86,7 @@ export const passkeyLabelField = z
   .string()
   .refine(
     isAllowedPasskeyLabel,
-    'Please use only letters, numbers and spaces, up to 60 characters.',
+    `Please use only letters, numbers and spaces, up to ${PASSKEY_LABEL_MAX_LENGTH} characters.`,
   )
 
 /** The card's form: just the name. */

@@ -68,6 +68,11 @@ describe('toPasskeyLabel', () => {
     expect(toPasskeyLabel('...@@//')).toBe(DEFAULT_PASSKEY_LABEL)
   })
 
+  it('cuts by whole characters, never through a pair', () => {
+    const label = toPasskeyLabel('a'.repeat(PASSKEY_LABEL_MAX_LENGTH - 1) + '\u{20000}\u{20000}')
+    expect(label).toBe('a'.repeat(PASSKEY_LABEL_MAX_LENGTH - 1) + '\u{20000}')
+  })
+
   it('keeps it to the length the list has room for', () => {
     const label = toPasskeyLabel('x'.repeat(500))
     expect(label).toHaveLength(PASSKEY_LABEL_MAX_LENGTH)
@@ -87,6 +92,9 @@ describe('isAllowedPasskeyLabel: what a neighbor may type', () => {
     'मेरा फ़ोन',
     'هاتفي',
     'Cafe\u0301',
+    'ကြွေး',
+    'ስልክ ፪',
+    '二〇二六',
   ])('accepts %j', (label) => {
     expect(isAllowedPasskeyLabel(label)).toBe(true)
   })
@@ -107,6 +115,12 @@ describe('isAllowedPasskeyLabel: what a neighbor may type', () => {
     'help\u034Fcom',
     'a\u0338b',
     'a\u0301\u0302\u0303\u0304\u0305',
+    'a\u{10781}b',
+    'Ⅻ'.repeat(21),
+    'a\uFE0Fb',
+    '1\u20E3',
+    'a\u20DDb',
+    'e\u0301'.repeat(30) + 'x',
     'x'.repeat(PASSKEY_LABEL_MAX_LENGTH + 1),
   ])('refuses %j', (label) => {
     expect(isAllowedPasskeyLabel(label)).toBe(false)
