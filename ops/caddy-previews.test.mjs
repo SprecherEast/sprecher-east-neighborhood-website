@@ -326,7 +326,12 @@ describe('one change to Caddy at a time (#1345)', () => {
     '%s waits for the shared lock and, when it does not come, changes nothing',
     async (script) => {
       const before = caddyfile()
-      const holder = spawn('flock', ['-x', p('caddy/.sprecher-east-caddy.lock'), 'sleep', '5'])
+      const holder = spawn('bash', [
+        '-c',
+        'exec flock -x "$1" sleep 5',
+        'holder',
+        p('caddy/.sprecher-east-caddy.lock'),
+      ])
       await new Promise((resolve) => setTimeout(resolve, 300))
       const { code, out } = await run(script, { CADDY_LOCK_WAIT: '1' })
       holder.kill()
