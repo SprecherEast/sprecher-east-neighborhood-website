@@ -18,9 +18,16 @@ put_back() { # <saved copy or empty>: the route file as it was
 # Caddyfile), 4 (Caddy did not accept it or a file could not be written; nothing changed), 5 (Caddy
 # would not reload; put back as it was) or 6 (would not reload, and the Caddyfile could not be put
 # back from its backup; the route file was kept so the import line still resolves).
-set_route() { # <template in ops/caddy> <yes|no: add the import line> [reload]
-  local template="$CODE_DIR/ops/caddy/$1" add_import="$2" force="${3:-}" stamp new old="" candidate="" changed=no
+set_route() { # <template in ops/caddy> <yes|no: add the import line> [reload] [unlocked: go on without the lock]
+  local template="$CODE_DIR/ops/caddy/$1" add_import="$2" force="${3:-}" lock="${4:-lock}" stamp new old="" candidate="" changed=no
   if ! command -v caddy >/dev/null || [ ! -f "$CADDYFILE" ]; then return 3; fi
+  # One change to Caddy at a time (caddy-lock-lib.sh). Closing the address is always safe, so it asks for
+  # the lock once, without waiting, and goes on without it when another change holds it.
+  if [ "$lock" = unlocked ]; then
+    CADDY_LOCK_WAIT=0 take_caddy_lock || true
+  else
+    take_caddy_lock || return 4
+  fi
   stamp=$(date -u +%Y%m%dT%H%M%SZ)
   new=$(mktemp "$UMAMI_CADDY_FILE.XXXXXX")
   # set -e does not apply here (the callers test the result), so each step that matters is checked.
@@ -86,7 +93,7 @@ set_route() { # <template in ops/caddy> <yes|no: add the import line> [reload]
 close_route() {
   [ -f "$UMAMI_CADDY_FILE" ] || umami_route_imported || return 0
   local status=0
-  set_route umami-closed.caddy no reload || status=$?
+  set_route umami-closed.caddy no reload unlocked || status=$?
   case "$status" in 0 | 3) return 0 ;; *) return 1 ;; esac
 }
 
@@ -101,7 +108,7 @@ open_route() {
   case "$status" in
     0) return 0 ;;
     3) report "WARNING: Caddy or $CADDYFILE not found, so Umami's public address was not opened" ;;
-    4) report "WARNING: the Umami block could not be put in place (Caddy did not accept it, or a file could not be written), so the public address was left as it was" ;;
+    4) report "WARNING: the Umami block could not be put in place (Caddy did not accept it, a file could not be written, or another change to Caddy was running), so the public address was left as it was" ;;
     5)
       report "ERROR: Caddy would not reload with the Umami block; the Caddy files were put back"
       exit 1

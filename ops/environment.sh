@@ -27,6 +27,24 @@ PREVIEW_PORT_MAX="${PREVIEW_PORT_MAX:-3999}"
 # The build for a preview uses the site key; ops/preview-settings.sh writes both.
 PREVIEW_TURNSTILE_SITE_KEY="1x00000000000000000000AA"
 PREVIEW_TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA"
+# The restricted account previews run under and deploy through (#1345, ops/previews.md). Its home is
+# root-owned, so a preview app running as it can't add a key or replace the forced command. The
+# production deploy copies the scripts the account may run to PREVIEW_ACCESS_DIR, root-owned, from
+# main (ops/install-preview-access.sh); a preview deploy never writes there.
+PREVIEW_USER="${PREVIEW_USER:-sprecher-preview}"
+PREVIEW_HOME="${PREVIEW_HOME:-/home/sprecher-preview}"
+PREVIEW_ACCESS_DIR="${PREVIEW_ACCESS_DIR:-/usr/local/lib/sprecher-east-preview}"
+PREVIEW_UPLOAD_MAX_BYTES="${PREVIEW_UPLOAD_MAX_BYTES:-1073741824}" # the most one release archive may hold
+# The most previews that may exist at once (folders, and Caddy blocks). Each block orders a certificate,
+# and Let's Encrypt's weekly budget is shared with production's (ops/previews.md, "Certificate budget").
+PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-10}"
+# What a pull request number and a commit look like. Every script that takes one from outside checks it
+# against these (preview-access-lib.sh), so a hostile value never reaches a path, a command or a file.
+PREVIEW_NUMBER_PATTERN='^[1-9][0-9]{0,5}$'
+# The PATH the root script (preview-caddy.sh) runs with, and the `secure_path` of its sudo rule. The script
+# writes the same value as a literal, before anything runs (a test keeps the two equal).
+ROOT_SECURE_PATH="${ROOT_SECURE_PATH:-/usr/sbin:/usr/bin:/sbin:/bin}"
+PREVIEW_COMMIT_PATTERN='^[0-9a-f]{40}$'
 # Ports no preview may take: production's app and Umami (a test ties both to their own files).
 RESERVED_PORTS="3000 3100"
 
@@ -41,7 +59,7 @@ if [ -z "$PREVIEW_NUMBER" ]; then
 else
   # A pull request number: no sign, no leading zero, no blanks, at most six digits. The value is
   # never printed: the deploy log is public.
-  [[ "$PREVIEW_NUMBER" =~ ^[1-9][0-9]{0,5}$ ]] || {
+  [[ "$PREVIEW_NUMBER" =~ $PREVIEW_NUMBER_PATTERN ]] || {
     echo "::error title=Server::PREVIEW_NUMBER is not a pull request number"
     exit 1
   }
@@ -60,6 +78,10 @@ else
   }
   [[ "$PREVIEW_DOMAIN" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$ ]] || {
     echo "::error title=Server::PREVIEW_DOMAIN is not a host name"
+    exit 1
+  }
+  [[ "$PREVIEW_MAX_COUNT" =~ ^[1-9][0-9]{0,2}$ ]] || {
+    echo "::error title=Server::PREVIEW_MAX_COUNT is not a number from 1 to 999"
     exit 1
   }
   # Two ports (no sign, no leading zero, at most 65535), lowest first, with no reserved port between.

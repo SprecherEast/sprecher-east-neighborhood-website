@@ -30,6 +30,7 @@ trap '' HUP
 
 here=$(dirname "$0")
 . "$here/lib.sh"
+. "$here/caddy-lock-lib.sh"
 . "$here/umami-lib.sh"
 . "$here/secret-lib.sh"
 . "$here/umami-caddy.sh"

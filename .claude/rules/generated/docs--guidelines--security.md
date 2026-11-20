@@ -109,14 +109,18 @@ When fixing transitive vulnerabilities:
 - Always back up before editing: `cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak`
 - Always validate before reloading: `caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy`
 - Live domains (`sprechereast.com`, `www.sprechereast.com`) must NEVER be removed from the Caddyfile
+- `ops/preview-caddy.sh` writes only files in the previews folder (`/etc/caddy/previews/`), never the Caddyfile (#1345)
 
 ## Pull request previews
 
 A pull request preview (#1070) runs code nobody has reviewed yet, beside production. It starts with
-no real secret or service key of its own, and the restricted account and isolation check that keep
-it from reaching production's files are still to come (#1345, #1346). Until then a preview runs
-under production's account, and the settings script runs from the PR's own release
-([`ops/previews.md`](/ops/previews.md)). What holds now:
+no real secret or service key of its own, and it deploys and runs under one restricted account, not
+production's ([`ops/previews.md`](/ops/previews.md)). **No preview may run as that account until
+#1346 is done.** Until then it can reach Caddy's admin endpoint on `localhost:2019`, which accepts any
+local process and replaces the whole config, and any production file the production deploy leaves
+readable (its `umask` is 022). The isolation check that proves it can't, and the protection of the admin
+endpoint, are #1346. The installer enforces the wait: it writes no key line until the release holds
+`ops/preview-isolation-check.sh`, so nothing can deploy as the account. What holds now:
 
 - **Its own secrets, no real keys** (#1344): `ops/preview-settings.sh` writes each preview's
   `.env.local` (mode 600) with `PAYLOAD_SECRET` and `PREVIEW_SECRET` made at random on the server,
@@ -131,7 +135,34 @@ under production's account, and the settings script runs from the PR's own relea
   screenshots. Noindex headers and a disallow-all `robots.txt` are required instead
   ([`ops/previews.md`](/ops/previews.md)).
 
-This section grows with the restricted deploy account (#1345) and the isolation check (#1346).
+- **One restricted account** (#1345): the previews' folders, PM2 state and apps belong to one Unix
+  account with no password and no other group, whose home, `.ssh` and `authorized_keys` are root-owned,
+  so a preview can't add a key or replace the forced command. Its key line is `restrict` plus a forced
+  command: a root-owned wrapper, installed from `main` by the production deploy only
+  (`ops/install-preview-access.sh`; a preview deploy never writes it), that runs only `facts`, `list`,
+  `upload`, `deploy` and `teardown`. Every request word is checked against a fixed pattern (a number of up
+  to six digits, a 40-digit lowercase hex commit) before it reaches a path or a command, nothing is
+  passed to a shell, and a refusal never repeats the request, because the deploy log is public. An
+  uploaded release may hold no path or link that leaves it. The deploy runs `main`'s copy of the deploy
+  scripts on the release, never the release's own.
+- **Caddy is changed only by a root script the account reaches through one sudo rule** (#1345):
+  `ops/preview-caddy.sh` takes one pull request number (the rule matches 1 to 6 digits, and the script
+  checks again, and refuses an environment that tries to redirect it), builds the block from `main`'s
+  copies of the two templates, has Caddy validate it before it enters the previews folder, moves it in
+  atomically, validates the whole config, reloads, and puts the previous block back on any failure. It
+  never reads a file from a preview, runs with a fixed PATH (and the rule sets `secure_path`), takes the
+  lock every Caddy-changing script shares, and refuses a new block beyond a fixed number of previews
+  (each block orders a certificate from a budget production shares).
+- **The installer changes nothing on doubt** (#1345): a different account of that name, a link or foreign
+  owner on a path it uses, a file it did not write, an sshd that would not take the key line, or a tool the
+  account can't run stops it with a warning. It backs up every file it replaces, checks as the account that
+  the wrapper works, refuses anything else and that the account can't write its home, and writes the key
+  line last. The key's public half is committed (`ops/preview-deploy-key.pub`); its private half is the only
+  secret of the GitHub environment `preview`, and no preview or teardown job names `production`. The owner
+  decided the account, the wrapper and the environment (2026-11-11, recorded on #1074); one account instead
+  of a separate runtime user is recorded on #1345 (2026-11-20).
+
+This section grows with the isolation check and the Caddy admin protection (#1346).
 
 ## Agents and the rules that bind them
 

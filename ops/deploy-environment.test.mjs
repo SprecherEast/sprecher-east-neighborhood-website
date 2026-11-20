@@ -13,7 +13,7 @@ import {
   setUpEnvironmentHarness,
 } from './environment-harness.mjs'
 
-const { p, log, makeRelease, deploy } = setUpEnvironmentHarness()
+const { p, log, makeRelease, runScript, deploy } = setUpEnvironmentHarness()
 
 const production = () => {
   const release = p('app/releases/r1')
@@ -106,6 +106,23 @@ describe('deploy-release.sh for a preview', () => {
     expect(fs.readFileSync(p('app/.env.local'), 'utf8')).toBe(
       `NEXT_PUBLIC_SERVER_URL=${PROD_URL}\n`,
     )
+  })
+
+  it('runs the settings and restart scripts of the folder it runs from, never the release’s own (#1345)', async () => {
+    // The restricted account runs main's copy of the scripts on a pull request's release.
+    makeRelease(p('trusted'), PREVIEW_URL, TEST_SITE_KEY)
+    const release = p('previews/pr-7/releases/r1')
+    makeRelease(release, PREVIEW_URL, TEST_SITE_KEY)
+    for (const f of ['preview-settings.sh', 'restart-app.sh'])
+      fs.writeFileSync(`${release}/ops/${f}`, 'echo HOSTILE >> "$STUB_LOG"; exit 1\n')
+    const { code, out } = await runScript(p('trusted'), 'deploy-release.sh', {
+      CODE_DIR: release,
+      PREVIEW_NUMBER: '7',
+    })
+    expect(code, out).toBe(0)
+    expect(log()).not.toContain('HOSTILE')
+    expect(fs.existsSync(p('previews/pr-7/.env.local'))).toBe(true) // main's settings script ran
+    expect(log()).toContain('pm2 start')
   })
 
   it('still runs the settings gates against the preview’s own settings', async () => {

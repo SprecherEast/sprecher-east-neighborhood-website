@@ -16,6 +16,7 @@ umask 077
 trap '' HUP # a dropped SSH session must not stop the script between a change and its rollback
 
 . "$(dirname "$0")/lib.sh"
+. "$(dirname "$0")/caddy-lock-lib.sh"
 
 on_unexpected_error() {
   [ "$BASH_SUBSHELL" -eq 0 ] || return 0
@@ -32,6 +33,12 @@ if ! command -v caddy >/dev/null || [ ! -f "$CADDYFILE" ]; then
   report "WARNING: Caddy or $CADDYFILE not found, so pull request previews were not prepared"
   exit 0
 fi
+
+# One change to Caddy at a time, with the preview account's block script too (caddy-lock-lib.sh).
+take_caddy_lock || {
+  report "WARNING: another change to Caddy is running, so pull request previews were not prepared"
+  exit 0
+}
 
 if ! caddy_accepts "$CADDYFILE"; then
   report "WARNING: the current Caddyfile does not validate in the deploy shell, so it was left alone"

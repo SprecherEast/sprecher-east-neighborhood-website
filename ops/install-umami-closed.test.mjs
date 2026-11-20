@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process'
 import fs from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
@@ -5,6 +6,14 @@ import { describe, expect, it } from 'vitest'
 import { setUpUmamiHarness } from './umami-harness.mjs'
 
 const h = setUpUmamiHarness()
+
+const holdLock = () =>
+  spawn('bash', [
+    '-c',
+    'exec flock -x "$1" sleep 40',
+    'holder',
+    h.p('caddy/.sprecher-east-caddy.lock'),
+  ])
 
 const closed = () => {
   expect(h.route()).toContain('respond "Unavailable" 503')
@@ -33,6 +42,37 @@ describe('install-umami.sh: never public with the default password', () => {
     expect(code).toBe(1)
     expect(out).toContain('Umami stays closed to the public')
     closed()
+  })
+
+  it('closes the address at once even while another change to Caddy holds the lock', async () => {
+    await h.install()
+    h.state.admin = 'umami'
+    h.state.ignoreChange = true
+    const holder = holdLock()
+    await new Promise((r) => setTimeout(r, 300))
+    try {
+      const started = Date.now()
+      const { out } = await h.install() // the default wait for the lock, 300 seconds, is not shortened
+      expect(Date.now() - started).toBeLessThan(15000)
+      expect(out).toContain('Umami stays closed to the public')
+      closed()
+    } finally {
+      holder.kill()
+    }
+  }, 30000)
+
+  it('does not open the address while another change to Caddy holds the lock', async () => {
+    const holder = holdLock()
+    await new Promise((r) => setTimeout(r, 300))
+    try {
+      const { out } = await h.install({ CADDY_LOCK_WAIT: '1' })
+      expect(out).toContain('another change to Caddy was running')
+      expect(fs.existsSync(h.p('caddy/sprecher-east-umami.caddy'))).toBe(false)
+      expect(h.caddyfile()).not.toContain('sprecher-east-umami.caddy')
+      expect(fs.readFileSync(h.p('log'), 'utf8')).not.toContain('reload')
+    } finally {
+      holder.kill()
+    }
   })
 
   it('leaves it closed when Umami never answers', async () => {
