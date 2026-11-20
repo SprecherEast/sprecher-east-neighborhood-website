@@ -181,6 +181,7 @@ export const COMPONENT_GROUPS = [
       'SectionTabs',
       'BillShare',
       'BillAnswer',
+      'RatesPanel',
       'BillDetails',
       'BreakdownRow',
       'NoteText',

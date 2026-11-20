@@ -63,4 +63,5 @@ export const BILL_SHARE_LIMITS = {
   rowTitle: 40,
   notes: 10,
   noteText: 200,
+  ratesNote: 160,
 } as const

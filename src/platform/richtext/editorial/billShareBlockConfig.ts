@@ -2,7 +2,11 @@ import type { Block, NumberField, TextField, TextFieldSingleValidation } from 'p
 
 import { BILL_BODIES, BILL_BODY_NAMES, type BillBody } from '@/platform/lib/billShare'
 
-import { DEFAULT_BILL_NOTES, DEFAULT_BILL_ROW_TITLES } from './billShareDefaults'
+import {
+  DEFAULT_BILL_NOTES,
+  DEFAULT_BILL_RATES,
+  DEFAULT_BILL_ROW_TITLES,
+} from './billShareDefaults'
 import {
   NOTE_BLANKS_HELP,
   NOTE_CONDITION_LABELS,
@@ -33,6 +37,10 @@ const validateNote: TextFieldSingleValidation = (value, args) => {
     args.siblingData as Parameters<typeof validateNoteBlanks>[1],
   )
 }
+
+/** The rates note may be empty, and may use {year} only: no other blank, and no link to put in one */
+const validateRatesNote: TextFieldSingleValidation = (value) =>
+  validateNoteBlanks(value ?? '', { showWhen: 'always' })
 
 /** A title the editor can change, that starts as the one the page used before it was a field */
 const rowTitleField = (name: string, label: string, defaultValue: string): TextField => ({
@@ -139,6 +147,30 @@ export const BillShareBlockConfig: Block = {
         rowTitleField('breakdown', 'City tax breakdown', DEFAULT_BILL_ROW_TITLES.breakdown),
         rowTitleField('differ', 'Notes on why the bill may differ', DEFAULT_BILL_ROW_TITLES.differ),
         rowTitleField('sources', 'Sources', DEFAULT_BILL_ROW_TITLES.sources),
+      ],
+    },
+    {
+      name: 'rates',
+      type: 'group',
+      label: 'Rates panel',
+      admin: {
+        description:
+          'The small panel beside the City’s tax that lists each body’s rate and the year it is from.',
+      },
+      fields: [
+        rowTitleField('title', 'Panel title', DEFAULT_BILL_RATES.title),
+        {
+          name: 'note',
+          type: 'text',
+          label: 'Note under the panel',
+          maxLength: BILL_SHARE_LIMITS.ratesNote,
+          defaultValue: DEFAULT_BILL_RATES.note,
+          validate: validateRatesNote,
+          admin: {
+            description:
+              'Shown in a year that uses an earlier year’s rate for some body. {year} is the year shown. Leave empty for no note.',
+          },
+        },
       ],
     },
     {

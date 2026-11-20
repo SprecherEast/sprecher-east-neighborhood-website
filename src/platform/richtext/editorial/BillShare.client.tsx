@@ -14,6 +14,7 @@ import { COUNT_MS, YEAR_COUNT_MS } from '@/platform/ui/useCountedNumber.client'
 
 import type { BillShareProps } from './billShare'
 import { BillAnswer } from './BillAnswer'
+import { rateLinesFor, ratesNoteFor } from './billRates'
 import { BillDetails } from './BillDetails'
 import { BreakdownRow } from './BreakdownRow'
 import { notesFor, uniqueSources } from './billShareNotes'
@@ -29,6 +30,7 @@ import {
 } from './billFigures'
 import { useReportFigures } from './BillFigures.client'
 import { ratesAtPosition } from './rateBlend'
+import { RatesPanel } from './RatesPanel'
 import { RoughEstimator } from './RoughEstimator'
 import { useBillCount } from './useBillCount.client'
 import { useBreakdownAutoOpen } from './useBreakdownAutoOpen.client'
@@ -59,6 +61,13 @@ export type CityPanelProps = {
 export const BILL_GAP = 'space-y-5'
 
 /**
+ * The answer card and the rates panel (#1351): one under the other on a phone, side by side from a
+ * tablet, as tall as each other, with the same space between them as `BILL_GAP` puts between the
+ * cards (`BillShareOrder.client.test.tsx` holds the two steps equal).
+ */
+export const BILL_PAIR = 'grid items-stretch gap-5 md:grid-cols-2'
+
+/**
  * The whole property-tax bill at the top of a fact tab (#1018, #1111), one column on every width,
  * in the order a neighbor needs it: the bill block's one intro line, the Rough Estimator (the home
  * value the reader can change, which starts at the City's average home, and the switch between tax
@@ -76,6 +85,7 @@ export function BillShare({
   years,
   rows,
   notes: noteTemplates,
+  rates: ratesText,
   tabId,
   cityBars,
   cityBreakdown,
@@ -188,17 +198,24 @@ export function BillShare({
       <p role="status" className="sr-only">
         {summary}
       </p>
-      <BillAnswer
-        tax={cityTax?.total ?? formatWholeDollars(cityAmount ?? 0)}
-        increase={cityTax?.increase ?? null}
-        certainty={certainty}
-        note={year.note}
-        yours={estimated !== null}
-        home={formatWholeDollars(shown)}
-        baseYear={baseYear}
-        laterIncrease={laterIncrease}
-        cityPercent={receipt.slices.length > 0 ? (cityPart?.percent ?? null) : null}
-      />
+      <div className={BILL_PAIR}>
+        <BillAnswer
+          tax={cityTax?.total ?? formatWholeDollars(cityAmount ?? 0)}
+          increase={cityTax?.increase ?? null}
+          certainty={certainty}
+          note={year.note}
+          yours={estimated !== null}
+          home={formatWholeDollars(shown)}
+          baseYear={baseYear}
+          laterIncrease={laterIncrease}
+          cityPercent={receipt.slices.length > 0 ? (cityPart?.percent ?? null) : null}
+        />
+        <RatesPanel
+          title={ratesText.title}
+          lines={rateLinesFor(years, yearIndex)}
+          note={ratesNoteFor(years, yearIndex, ratesText.note)}
+        />
+      </div>
       <Card
         as="section"
         variant="elevated"
