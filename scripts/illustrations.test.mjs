@@ -4,6 +4,19 @@ import { describe, expect, it } from 'vitest'
 // The illustration generator is Python (scripts/illustrations/). These tests run it the way the
 // skill and CI do, and pin the rule that every picture has a full, fitting text panel.
 
+// The pixel check needs rsvg-convert and Pillow, as the font measure needs Poppins; CI has neither.
+const canRender =
+  spawnSync(
+    'python3',
+    [
+      '-c',
+      'from scripts.illustrations.build import can_render as c; raise SystemExit(0 if c() else 1)',
+    ],
+    {
+      cwd: process.cwd(),
+    },
+  ).status === 0
+
 const run = (code) => spawnSync('python3', ['-c', code], { encoding: 'utf8', cwd: process.cwd() })
 
 const FIND = `
@@ -107,7 +120,7 @@ print(json.dumps([s.CLEAR_ZONE, list(s.EVENT_SCENES), b.build(list(s.EVENT_SCENE
     expect(problems).toEqual([])
   })
 
-  it('fails an event picture that draws inside the date badge corner', () => {
+  it.skipIf(!canRender)('fails an event picture that draws inside the date badge corner', () => {
     const r = run(
       FIND +
         `
