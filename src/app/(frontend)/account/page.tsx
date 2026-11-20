@@ -7,6 +7,7 @@ import {
   ConnectGoogle,
   getGoogleConnection,
   getOwnPasskeys,
+  PasskeyOffer,
   PasskeysCard,
   requireUser,
 } from '@/modules/accounts/server'
@@ -37,6 +38,10 @@ export default async function AccountPage({ searchParams }: Props) {
       <PageHeader variant="compact" title="Account" />
 
       <div className="space-y-8">
+        {/* Right after a log in with a password or Google: only while passkeys are on, and the offer
+            itself waits for a browser that can make one and respects a "Not now" (#1364) */}
+        {passkeys && <PasskeyOffer eligible={passkeys.length === 0} />}
+
         <Card as="section" variant="muted">
           <Text variant="subsection" className="mb-4">
             Profile

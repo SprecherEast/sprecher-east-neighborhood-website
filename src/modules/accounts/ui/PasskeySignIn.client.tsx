@@ -77,7 +77,7 @@ export function PasskeySignIn({ rememberMe }: { rememberMe: boolean }) {
       return
     }
     setBusy(false)
-    setNotice(toPasskeyLoginNotice(outcome))
+    setNotice(toPasskeyLoginNotice(outcome, { pressed: !autofill }))
   }
 
   useEffect(() => {

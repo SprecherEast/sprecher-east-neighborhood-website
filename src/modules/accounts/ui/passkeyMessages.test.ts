@@ -46,8 +46,26 @@ describe('toAddPasskeyNotice', () => {
 const LOGIN_OUTCOMES: PasskeyLoginOutcome[] = ['cancelled', 'too-many', 'offline', 'failed']
 
 describe('toPasskeyLoginNotice', () => {
-  it('says nothing when the person closed the prompt: the page stays as it was', () => {
+  it('says nothing when a prompt nobody asked for ends: the page stays as it was', () => {
     expect(toPasskeyLoginNotice('cancelled')).toBeNull()
+  })
+
+  it('after the button, explains in plain words and gives the way forward, claiming neither “none saved” nor “closed” (#1364)', () => {
+    const notice = toPasskeyLoginNotice('cancelled', { pressed: true })
+    expect(notice?.tone).toBe('info')
+    expect(notice?.text).toBe(
+      'No passkey was used. If you haven’t added one yet, log in below as usual, then add one from your account page.',
+    )
+    expect(notice?.text.split(/\s+/).length).toBeLessThanOrEqual(30)
+    expect(notice?.text).not.toMatch(/\b(I|me|my)\b/)
+  })
+
+  it('keeps every other outcome the same whether or not the button was pressed', () => {
+    for (const outcome of ['too-many', 'offline', 'failed'] as const) {
+      expect(toPasskeyLoginNotice(outcome, { pressed: true })).toEqual(
+        toPasskeyLoginNotice(outcome),
+      )
+    }
   })
 
   it.each(LOGIN_OUTCOMES.filter((outcome) => outcome !== 'cancelled'))(

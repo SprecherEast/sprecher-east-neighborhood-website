@@ -81,13 +81,18 @@ export type PasskeyLoginOutcome = PasskeySignInFailure | 'cancelled' | 'offline'
 /**
  * The fixed message for each way logging in with a passkey can fail, never the server's or the
  * browser's own text: both can carry details a neighbor shouldn't read, and none may say whether an
- * account exists. A closed prompt isn't an error: it gets no message (null), and the page stays
- * as it was.
+ * account exists. A prompt that ended with no passkey is not an error, and the browser says the
+ * same whether none was saved or the box was closed, so after the button was pressed (`pressed`) it
+ * gets one plain note with the way forward, claiming neither (#1364); one nobody asked for (the
+ * email field's autofill) gets no message (null), and the page stays as it was.
  */
 export function toPasskeyLoginNotice(
   outcome: PasskeyLoginOutcome,
+  { pressed = false }: { pressed?: boolean } = {},
 ): Pick<PasskeyNotice, 'tone' | 'text'> | null {
-  if (outcome === 'cancelled') return null
+  if (outcome === 'cancelled') {
+    return pressed ? { tone: 'info', text: message('accounts.passkey.noneFound') } : null
+  }
   if (outcome === 'too-many') return { tone: 'error', text: GUARD_MESSAGES['too-many'] }
   if (outcome === 'offline') return { tone: 'error', text: FORM_MESSAGES.offline }
   // `failed`, and any code this build doesn't know: one fixed message, never the server's text
