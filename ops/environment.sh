@@ -44,8 +44,9 @@ else
   # resolves `//`, `.`, `..` and symlinks (the folder need not exist yet).
   if [[ "$PREVIEW_ROOT" == /* ]]; then
     PREVIEW_ROOT=$(realpath -m -- "$PREVIEW_ROOT")
+    production_real=$(realpath -m -- "$PRODUCTION_DIR")
     case "$PREVIEW_ROOT" in
-      / | "$(realpath -m -- "$PRODUCTION_DIR")" | "$(realpath -m -- "$PRODUCTION_DIR")"/*) PREVIEW_ROOT="" ;;
+      / | "$production_real" | "$production_real"/*) PREVIEW_ROOT="" ;;
     esac
   fi
   [[ "$PREVIEW_ROOT" == /* ]] || {

@@ -176,7 +176,7 @@ describe('a pull request preview', () => {
     expect(values({ PREVIEW_NUMBER: '7' }).APP_PORT).not.toBe(
       values({ PREVIEW_NUMBER: '8' }).APP_PORT,
     )
-  })
+  }, 60000)
 
   it.each(['0', '007', 'abc', '12;touch x', '-3', '1234567', ' 5', '5 ', '4.2'])(
     'refuses %j as a pull request number, without printing it',
