@@ -9,6 +9,7 @@ import { BrandLogo } from '@/platform/ui/BrandLogo'
 import { getPasskeyLoginOptions, logInWithPasskey } from '../actions'
 import { ACCOUNT_PATH } from '../domain/paths'
 import { PasskeyButtonRoom } from './PasskeyButtonRoom'
+import { PasskeyButtonStack } from './PasskeyButtonStack'
 import { getPasskey, passkeyAutofillSupported, passkeysSupported } from './passkeyBrowser'
 import {
   PASSKEY_LOGIN_LABEL,
@@ -101,9 +102,7 @@ export function PasskeySignIn({ rememberMe }: { rememberMe: boolean }) {
   if (supported === null) return <PasskeyButtonRoom />
 
   return (
-    // A flex column, not a block: a block would add a line box around the button, and the 32 px icon
-    // makes it a pixel taller than the room held for it, so the page would jump when it shows
-    <div className="flex flex-col gap-3">
+    <PasskeyButtonStack>
       {notice && <Alert tone={notice.tone}>{notice.text}</Alert>}
       <Button
         type="button"
@@ -115,6 +114,6 @@ export function PasskeySignIn({ rememberMe }: { rememberMe: boolean }) {
       >
         {PASSKEY_LOGIN_LABEL}
       </Button>
-    </div>
+    </PasskeyButtonStack>
   )
 }

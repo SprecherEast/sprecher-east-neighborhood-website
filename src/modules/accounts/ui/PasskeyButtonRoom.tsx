@@ -2,6 +2,7 @@ import React from 'react'
 
 import { Button } from '@/platform/ui/Button'
 
+import { PasskeyButtonStack } from './PasskeyButtonStack'
 import { PASSKEY_LOGIN_LABEL } from './passkeyMessages'
 
 /**
@@ -13,11 +14,10 @@ import { PASSKEY_LOGIN_LABEL } from './passkeyMessages'
  */
 export function PasskeyButtonRoom() {
   return (
-    // The same wrapper as the real button's, so the two are the same height to the pixel
-    <div className="flex flex-col gap-3">
+    <PasskeyButtonStack>
       <Button type="button" variant="secondary" fullWidth className="invisible" aria-hidden>
         {PASSKEY_LOGIN_LABEL}
       </Button>
-    </div>
+    </PasskeyButtonStack>
   )
 }
