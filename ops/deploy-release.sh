@@ -153,7 +153,7 @@ if ! is_preview; then # a preview's data is a copy of content, nothing to back u
 fi
 echo "→ Running database migrations..."
 run_migrate "$RELEASE" ||
-  stop "the database migrations failed (the pre-deploy backup has the data from before)"
+  stop "the database migrations failed$(is_preview || echo " (the pre-deploy backup has the data from before)")"
 
 # 4. Pages prerendered in CI came from an empty database.
 drop_page_cache "$RELEASE"

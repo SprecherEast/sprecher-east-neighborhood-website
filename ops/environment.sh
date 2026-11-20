@@ -22,6 +22,8 @@ PREVIEW_CADDY_DIR="${PREVIEW_CADDY_DIR:-/etc/caddy/previews}"
 # (3100, UMAMI_PORT in umami-lib.sh). The deploy workflow's port check reads these two values too.
 PREVIEW_PORT_MIN="${PREVIEW_PORT_MIN:-3200}"
 PREVIEW_PORT_MAX="${PREVIEW_PORT_MAX:-3999}"
+# Ports no preview may take: production's app and Umami (a test ties both to their own files).
+RESERVED_PORTS="3000 3100"
 
 PREVIEW_NUMBER="${PREVIEW_NUMBER:-}"
 if [ -z "$PREVIEW_NUMBER" ]; then
@@ -38,10 +40,14 @@ else
     echo "::error title=Server::PREVIEW_NUMBER is not a pull request number"
     exit 1
   }
-  # An absolute folder that is neither production's, nor inside it, nor reached through `..`.
-  case "$PREVIEW_ROOT" in
-    / | "$PRODUCTION_DIR" | "$PRODUCTION_DIR"/* | */.. | */../*) PREVIEW_ROOT="" ;;
-  esac
+  # An absolute folder that is neither production's nor inside it, compared after `realpath -m`
+  # resolves `//`, `.`, `..` and symlinks (the folder need not exist yet).
+  if [[ "$PREVIEW_ROOT" == /* ]]; then
+    PREVIEW_ROOT=$(realpath -m -- "$PREVIEW_ROOT")
+    case "$PREVIEW_ROOT" in
+      / | "$(realpath -m -- "$PRODUCTION_DIR")" | "$(realpath -m -- "$PRODUCTION_DIR")"/*) PREVIEW_ROOT="" ;;
+    esac
+  fi
   [[ "$PREVIEW_ROOT" == /* ]] || {
     echo "::error title=Server::PREVIEW_ROOT must be a folder outside production's"
     exit 1
@@ -50,11 +56,18 @@ else
     echo "::error title=Server::PREVIEW_DOMAIN is not a host name"
     exit 1
   }
-  [[ "$PREVIEW_PORT_MIN" =~ ^[0-9]+$ && "$PREVIEW_PORT_MAX" =~ ^[0-9]+$ ]] &&
-    [ "$PREVIEW_PORT_MIN" -le "$PREVIEW_PORT_MAX" ] || {
-    echo "::error title=Server::the preview port range is not two numbers, lowest first"
+  # Two ports (no sign, no leading zero, at most 65535), lowest first, with no reserved port between.
+  [[ "$PREVIEW_PORT_MIN" =~ ^[1-9][0-9]{0,4}$ && "$PREVIEW_PORT_MAX" =~ ^[1-9][0-9]{0,4}$ ]] &&
+    [ "$PREVIEW_PORT_MAX" -le 65535 ] && [ "$PREVIEW_PORT_MIN" -le "$PREVIEW_PORT_MAX" ] || {
+    echo "::error title=Server::the preview port range is not two ports, lowest first"
     exit 1
   }
+  for reserved in $RESERVED_PORTS; do
+    if [ "$reserved" -ge "$PREVIEW_PORT_MIN" ] && [ "$reserved" -le "$PREVIEW_PORT_MAX" ]; then
+      echo "::error title=Server::the preview port range includes a port that is not for previews"
+      exit 1
+    fi
+  done
   ENVIRONMENT="preview-$PREVIEW_NUMBER"
   APP_DIR="${PREVIEW_ROOT%/}/pr-$PREVIEW_NUMBER"
   APP_NAME="sprecher-east-pr-$PREVIEW_NUMBER"

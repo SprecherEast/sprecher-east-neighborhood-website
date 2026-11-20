@@ -2,6 +2,7 @@
 // preview when PREVIEW_NUMBER is. Every value is read through ops/lib.sh the way the scripts do.
 import { execFileSync, spawnSync } from 'node:child_process'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
@@ -199,13 +200,94 @@ describe('a pull request preview', () => {
     },
   )
 
-  it.each([PRODUCTION, `${PRODUCTION}/`, `${PRODUCTION}/previews`, 'previews', '/'])(
+  it.each([
+    PRODUCTION,
+    `${PRODUCTION}/`,
+    `${PRODUCTION}/previews`,
+    'previews',
+    '/',
+    '/var/www//sprecher-east',
+    '/var/www/./sprecher-east',
+    '//var/www/sprecher-east/x',
+    '/var/www/other/../sprecher-east/x',
+  ])(
     'refuses %j as the preview root, so a preview can never sit in production’s folder',
     (root) => {
       const r = run({ PREVIEW_NUMBER: '42', PREVIEW_ROOT: root }, 'echo reached')
       expect(r.status).not.toBe(0)
       expect(r.stdout).not.toContain('reached')
       expect(r.stdout).toContain('::error title=Server::')
+    },
+  )
+})
+
+describe('a preview root that reaches production through a link', () => {
+  it('is refused, even when production’s folder does not exist here', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'root-'))
+    try {
+      fs.symlinkSync(PRODUCTION, path.join(dir, 'link'))
+      const r = run({ PREVIEW_NUMBER: '42', PREVIEW_ROOT: path.join(dir, 'link') }, 'echo reached')
+      expect(r.status).not.toBe(0)
+      expect(r.stdout).not.toContain('reached')
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('and an untidy root outside production is cleaned up before use', () => {
+    expect(values({ PREVIEW_NUMBER: '42', PREVIEW_ROOT: '/srv//previews/./x/' }).APP_DIR).toBe(
+      '/srv/previews/x/pr-42',
+    )
+  })
+})
+
+describe('the preview port range', () => {
+  it.each([
+    ['03200', '3999'],
+    ['3200', '03999'],
+    ['3200', '65536'],
+    ['0', '3999'],
+    ['3999', '3200'],
+    ['2900', '3100'],
+    ['3000', '3500'],
+    ['3100', '3500'],
+    ['2000', '4000'],
+    ['3200', 'abc'],
+  ])('refuses %s to %s, without computing a port from it', (min, max) => {
+    const r = run(
+      { PREVIEW_NUMBER: '7', PREVIEW_PORT_MIN: min, PREVIEW_PORT_MAX: max },
+      'echo reached',
+    )
+    expect(r.status).not.toBe(0)
+    expect(r.stdout).not.toContain('reached')
+    expect(r.stdout).toContain('::error title=Server::the preview port')
+  })
+
+  it('keeps production’s and Umami’s ports out, as their own files have them', () => {
+    const reserved = printed({}, 'echo $RESERVED_PORTS').trim().split(' ').map(Number)
+    expect(reserved).toContain(umamiPort())
+    expect(reserved).toContain(pm2App().env.PORT)
+  })
+})
+
+describe('ecosystem.config.cjs', () => {
+  it('has, with nothing set, the values environment.sh gives production', () => {
+    const v = values()
+    const app = pm2App()
+    expect(app.name).toBe(v.APP_NAME)
+    expect(String(app.env.PORT)).toBe(v.APP_PORT)
+    expect(app.cwd).toBe(`${v.APP_DIR}/current`)
+  })
+
+  it.each([{ APP_NAME: 'x' }, { APP_PORT: '3300' }, { APP_DIR: '/tmp/x' }])(
+    'refuses a start with only some of its values set (%j)',
+    (env) => {
+      const r = spawnSync('node', ['-e', `require(${JSON.stringify(ECOSYSTEM)})`], {
+        env: { PATH: process.env.PATH, ...env },
+        encoding: 'utf8',
+      })
+      expect(r.status).not.toBe(0)
+      expect(r.stderr).toContain('must be set together')
     },
   )
 })

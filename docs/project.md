@@ -43,7 +43,7 @@ It is an unofficial, AI-assisted initiative (ground rules in [`AGENTS.md`](../AG
 - **Deploy path**: /var/www/sprecher-east: the shared `.env.local`, `data/` and `public/media`,
   one folder per build in `releases/`, and `current`, the link to the live one (#245)
 - **Process manager**: PM2 (process `sprecher-east`, config `ecosystem.config.cjs`; a pull request
-  preview runs as `sprecher-east-pr-<number>` on its own port, [`ops/previews.md`](/ops/previews.md));
+  preview runs as `sprecher-east-pr-<number>` on its own port, [`ops/previews.md`](../ops/previews.md));
   Next listens on `127.0.0.1:3000` only (#118), so visitors reach it through Caddy
 - **Web server**: Caddy (HTTPS on 443 and HTTP on 80, reverse proxy → `127.0.0.1:3000`); request
   body limit on the form endpoints (#124)

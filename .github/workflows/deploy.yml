@@ -200,31 +200,27 @@ jobs:
           # shellcheck disable=SC2029 # $RELEASE (a commit hash) is meant to expand here
           printf '%s' "$UMAMI_ADMIN_PASSWORD" | ssh vps "bash /var/www/sprecher-east/releases/$RELEASE/ops/deploy-release.sh --umami-password-stdin"
 
-      - name: Check that ports 3000 and 3100 are closed to the internet (#118, #948)
+      - name: Check that the app, Umami and preview ports are closed to the internet (#118, #948, #1073)
         # Also after a failed deploy step: the outside view is what tells a failure apart (#338).
         if: ${{ !cancelled() && steps.order.outputs.skip != 'true' }}
         env:
           HOST: ${{ secrets.VPS_HOST }}
         run: |
+          reachable() { timeout 5 bash -c "exec 3<>/dev/tcp/$HOST/$1" 2>/dev/null; }
+          export HOST
+          export -f reachable
           # 3000 is the app, 3100 Umami (UMAMI_PORT in ops/umami-lib.sh; ops/umami.test.mjs checks they agree)
           for port in 3000 3100; do
-            if timeout 5 bash -c "exec 3<>/dev/tcp/$HOST/$port" 2>/dev/null; then
+            if reachable "$port"; then
               echo "::warning title=Port $port::reachable from the internet"
             else
               echo "::notice title=Port $port::not reachable from the internet"
             fi
           done
-
-      - name: Check that the pull request preview ports are closed to the internet (#1073)
-        if: ${{ !cancelled() && steps.order.outputs.skip != 'true' }}
-        env:
-          HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          # The range is defined once, in ops/environment.sh, with production's and Umami's ports outside it
+          # The preview range is defined once, in ops/environment.sh, with those two ports outside it
           . ops/environment.sh
           open=$(seq "$PREVIEW_PORT_MIN" "$PREVIEW_PORT_MAX" |
-            { xargs -P 200 -I{} bash -c 'timeout 2 bash -c "exec 3<>/dev/tcp/$0/{}" 2>/dev/null && echo {}' "$HOST" || true; } |
-            sort -n | tr '\n' ' ')
+            { xargs -P 200 -I{} bash -c 'reachable {} && echo {}' || true; } | sort -n | tr '\n' ' ')
           if [ -n "$open" ]; then
             echo "::warning title=Preview ports::reachable from the internet: $open"
           else

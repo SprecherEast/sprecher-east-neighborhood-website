@@ -14,7 +14,7 @@ later (#1075). Back to the [server scripts](README.md).
   Caddy won't reload or the site stops answering. The folder is empty until a preview exists, which
   Caddy accepts. Every production deploy runs it, and it adds the line once. Undo: revert the pull
   request, delete the line, then `caddy validate --config /etc/caddy/Caddyfile && systemctl reload
-caddy`. The folder and headers file paths are defined once, in `lib.sh`.
+caddy`. The folder path is defined once, in `environment.sh`; the headers file path, in `lib.sh`.
 - **Every file in the folder is production's config.** Caddy loads each `*.caddy` file there with
   the rest of the Caddyfile, so one invalid file makes every later reload fail, and stops Caddy from
   starting after a restart. The preview deploy (#1075) must validate a block, with the headers and
@@ -52,8 +52,11 @@ caddy`. The folder and headers file paths are defined once, in `lib.sh`.
   Caddy block `pr-<number>.caddy` in the previews folder, and the address the health check asks
   for. The deploy workflow sends `environment.sh` ahead of `lib.sh` wherever it sends `lib.sh`
   over SSH, and `ecosystem.config.cjs` reads the same values (production's when none is set).
-  A preview takes none of its values from the caller; a number that isn't a pull request number,
-  or a preview folder inside production's, stops the script.
+  A preview's folder, process, port, address and Caddy block come only from its number, never from
+  a caller's `APP_DIR`, `APP_NAME`, `APP_PORT`, `SITE_URL` or `CADDY_SITE_FILE`; the root, domain,
+  port range and number of releases kept can be set. A number that isn't a pull request number, a
+  root that resolves (symlinks and `..` included) into production's folder, or a port range that
+  holds production's or Umami's port stops the script.
 - **Preview ports.** One range, 3200 to 3999 (`PREVIEW_PORT_MIN` and `PREVIEW_PORT_MAX`), outside
   production's 3000 and Umami's 3100; a preview's port is 3200 plus its number modulo 800, so a
   preview keeps its port on every redeploy. A new preview stops when its port is in use, which can
