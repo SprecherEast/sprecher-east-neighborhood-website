@@ -25,7 +25,7 @@ const previewDir = () => p('caddy/previews')
 
 beforeEach(() => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'previews-'))
-  for (const f of ['lib.sh', 'caddy-previews.sh', 'caddy-limits.sh'])
+  for (const f of ['lib.sh', 'environment.sh', 'caddy-previews.sh', 'caddy-limits.sh'])
     write(p('code/ops', f), fs.readFileSync(path.join(OPS, f)))
   for (const f of ['preview-headers.caddy', 'preview-site.caddy', 'form-limits.caddy'])
     write(p('code/ops/caddy', f), fs.readFileSync(path.join(OPS, 'caddy', f)))

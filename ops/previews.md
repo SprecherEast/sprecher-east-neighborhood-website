@@ -14,7 +14,7 @@ later (#1075). Back to the [server scripts](README.md).
   Caddy won't reload or the site stops answering. The folder is empty until a preview exists, which
   Caddy accepts. Every production deploy runs it, and it adds the line once. Undo: revert the pull
   request, delete the line, then `caddy validate --config /etc/caddy/Caddyfile && systemctl reload
-caddy`. The folder and headers file paths are defined once, in `lib.sh`.
+caddy`. The folder path is defined once, in `environment.sh`; the headers file path, in `lib.sh`.
 - **Every file in the folder is production's config.** Caddy loads each `*.caddy` file there with
   the rest of the Caddyfile, so one invalid file makes every later reload fail, and stops Caddy from
   starting after a restart. The preview deploy (#1075) must validate a block, with the headers and
@@ -45,3 +45,26 @@ caddy`. The folder and headers file paths are defined once, in `lib.sh`.
   Caddy.
 - **Caddy version.** The deferred header (`header >X-Robots-Tag`) needs Caddy 2.7 or later. On an
   older server the sample check rejects it and the deploy fails with nothing changed.
+- **Environments** (#1073). Every script acts on production unless `PREVIEW_NUMBER` names a pull
+  request, and `environment.sh` is the one place that says what differs: a preview has its own
+  folder under `/var/www/sprecher-east-previews/pr-<number>` (settings, data, media and releases,
+  never inside production's folder), PM2 process `sprecher-east-pr-<number>`, a loopback port,
+  Caddy block `pr-<number>.caddy` in the previews folder, and the address the health check asks
+  for. The deploy workflow sends `environment.sh` ahead of `lib.sh` wherever it sends `lib.sh`
+  over SSH, and `ecosystem.config.cjs` reads the same values (production's when none is set).
+  A preview's folder, process, port, address and Caddy block come only from its number, never from
+  a caller's `APP_DIR`, `APP_NAME`, `APP_PORT`, `SITE_URL` or `CADDY_SITE_FILE`; the root, domain,
+  port range and number of releases kept can be set. A number that isn't a pull request number, a
+  root that resolves (symlinks and `..` included) into production's folder, or a port range that
+  holds production's or Umami's port stops the script.
+- **Preview ports.** One range, 3200 to 3999 (`PREVIEW_PORT_MIN` and `PREVIEW_PORT_MAX`), outside
+  production's 3000 and Umami's 3100; a preview's port is 3200 plus its number modulo 800, so a
+  preview keeps its port on every redeploy. A new preview stops when its port is in use, which can
+  only happen between two open pull requests 800 numbers apart. A preview PM2 still lists
+  (stopped, say) skips that check, so it keeps its port. The deploy workflow's port check
+  reads the range from the same file.
+- **What a preview deploy skips.** The pre-deploy backup, the backup job, the production Caddy
+  scripts and the Umami install; it keeps the settings checks, the migrations and the health
+  check, and the newest 2 releases (production keeps 3). It stops before changing anything when
+  its Caddy block isn't in place, and takes a first deploy that never answered down again.
+  Undo: revert the pull request; with no environment named, nothing on the server changes.

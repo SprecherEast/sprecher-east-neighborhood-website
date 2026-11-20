@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # Prints what the deploy needs to know about the server before it builds (#245), as key=value
-# lines. Not run from a file on the server: the deploy workflow sends ops/lib.sh followed by this
+# lines. Not run from a file on the server: the deploy workflow sends ops/environment.sh and ops/lib.sh, then this
 # script to `bash -s` over SSH, so it always runs the version being deployed.
 #
 # Only public values: the Node version, the NEXT_PUBLIC_* settings that are built into the
