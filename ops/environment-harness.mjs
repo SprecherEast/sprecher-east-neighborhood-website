@@ -12,6 +12,7 @@ import { OPS, write } from './umami-harness.mjs'
 
 export const PROD_URL = 'https://sprechereast.com'
 export const PREVIEW_URL = 'https://pr-7.dev.sprechereast.com'
+export const TEST_SITE_KEY = '1x00000000000000000000AA' // what a preview's settings and build use
 export const HOUSEKEEPING = [
   'install-cron',
   'caddy-limits',
@@ -30,13 +31,14 @@ export function setUpEnvironmentHarness() {
   const log = () => fs.readFileSync(p('log'), 'utf8')
 
   /** A release folder with the real scripts, a fake build and logging stand-ins for the rest. */
-  function makeRelease(release, url) {
+  function makeRelease(release, url, turnstile = '') {
     for (const f of [
       'deploy-release.sh',
       'restart-app.sh',
       'lib.sh',
       'environment.sh',
       'migrate-lib.sh',
+      'preview-settings.sh',
     ])
       write(path.join(release, 'ops', f), fs.readFileSync(path.join(OPS, f)))
     write(
@@ -47,7 +49,7 @@ export function setUpEnvironmentHarness() {
       write(path.join(release, 'ops', `${f}.sh`), `echo "${f}.sh $*" >> "$STUB_LOG"\n`)
     write(
       path.join(release, '.release-info'),
-      `node=${process.version}\nserver_url=${url}\nturnstile_site_key=\n`,
+      `node=${process.version}\nserver_url=${url}\nturnstile_site_key=${turnstile}\n`,
     )
     write(path.join(release, '.next/BUILD_ID'), 'build\n')
     fs.mkdirSync(path.join(release, 'public'), { recursive: true }) // committed with the code
@@ -79,7 +81,6 @@ export function setUpEnvironmentHarness() {
       'esac',
     ])
     write(p('app/.env.local'), `NEXT_PUBLIC_SERVER_URL=${PROD_URL}\n`)
-    write(p('previews/pr-7/.env.local'), `NEXT_PUBLIC_SERVER_URL=${PREVIEW_URL}\n`)
     write(p('caddy/previews/pr-7.caddy'), '# a block\n')
   })
   afterEach(() => fs.rmSync(dir, { recursive: true, force: true }))
