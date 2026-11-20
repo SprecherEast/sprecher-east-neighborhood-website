@@ -32,7 +32,7 @@ export async function getOwnPasskeys(accountId: number): Promise<PasskeyListItem
 /**
  * Removes one of the session's account's passkeys. The session must be a recent sign-in and the
  * passkey must be the account's; then the delete carries the account in its own conditions too,
- * so a second request at the same moment finds nothing. A good removal sends the account's address
+ * so the passkey is deleted once. Two requests at the same moment may both answer ok and both send a note; that has no security effect. A good removal sends the account's address
  * the label and time, with no link, after the passkey is gone. Removing the last passkey is
  * allowed: email and password, and forgot password, remain, and no account is made from a passkey.
  */

@@ -33,6 +33,11 @@ async function removeOne(passkeyId: number): Promise<RemovePasskeyOutcome> {
   }
 }
 
+/** A passkey's name as the list and the confirmation show it: bold, and wrapping inside its box. */
+function PasskeyName({ label }: { label: string }) {
+  return <p className="font-semibold wrap-anywhere text-foreground">{label}</p>
+}
+
 type RemoveDialogProps = {
   passkey: PasskeyListItem
   open: boolean
@@ -66,7 +71,7 @@ function RemoveDialog({ passkey, open, removing, onOpenChange, onConfirm }: Remo
       }
     >
       <div className="space-y-4 p-6">
-        <p className="font-semibold wrap-anywhere text-foreground">{passkey.label}</p>
+        <PasskeyName label={passkey.label} />
         <Text variant="small">{message('accounts.passkey.removeConfirm')}</Text>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
           <Button variant="secondary" loading={removing} onClick={onConfirm}>
@@ -141,7 +146,7 @@ export function PasskeyList({ passkeys }: Props) {
               className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0 space-y-2">
-                <p className="font-semibold wrap-anywhere text-foreground">{passkey.label}</p>
+                <PasskeyName label={passkey.label} />
                 <MetaList
                   items={[
                     { label: 'Added', value: <DateTime value={passkey.addedAt} /> },

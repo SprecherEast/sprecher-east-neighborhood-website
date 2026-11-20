@@ -98,7 +98,7 @@ describe('removePasskey', () => {
     expect(data.after).toHaveLength(0)
   })
 
-  it('sends no note when the delete finds nothing, such as a second click at once', async () => {
+  it('sends no note when the delete finds nothing, such as a second click after the first went through', async () => {
     data.deleteOwnPasskey.mockResolvedValue(false)
     expect(await removePasskey({ passkeyId: 12 })).toEqual({ ok: false, failure: 'failed' })
     expect(data.after).toHaveLength(0)

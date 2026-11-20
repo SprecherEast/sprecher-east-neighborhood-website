@@ -20,7 +20,8 @@ export const ACCOUNTS_MESSAGES = {
   'accounts.passkey.lostDevice':
     'Lost a device? Choose “Forgot your password?” on the log in page to get back in, then remove its passkey here.',
   'accounts.passkey.removeTitle': 'Remove this passkey?',
-  'accounts.passkey.removeConfirm': 'You can still log in with your email and password.',
+  'accounts.passkey.removeConfirm':
+    'You can still log in another way, or choose “Forgot your password?”.',
   'accounts.passkey.removed': 'Passkey removed.',
   'accounts.passkey.removeFailed': 'We couldn’t remove that passkey. Please try again.',
   'accounts.passkey.removeSignInAgain':

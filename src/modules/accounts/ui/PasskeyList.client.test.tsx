@@ -88,7 +88,9 @@ describe('PasskeyList: confirming', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Remove this passkey?' })
     expect(within(dialog).getByText('My phone')).toBeTruthy()
     expect(
-      within(dialog).getByText('You can still log in with your email and password.'),
+      within(dialog).getByText(
+        'You can still log in another way, or choose “Forgot your password?”.',
+      ),
     ).toBeTruthy()
     expect(dialog.contains(document.activeElement)).toBe(true)
     expect(mocks.removePasskey).not.toHaveBeenCalled()

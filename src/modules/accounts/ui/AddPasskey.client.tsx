@@ -36,8 +36,8 @@ async function addAPasskey(label: string): Promise<AddPasskeyOutcome> {
 /**
  * The add-a-passkey part of the "Passkeys" card on /account (#1314, decision 0021), under the
  * list (`PasskeysCard`), on the kit's `Form`: an optional name and "Add a passkey". The server
- * decides whether the card is on (the page only renders it when it is); this also waits for the browser to say it can make a passkey, and until then, and when it
- * can't, shows nothing. The account comes from the session, not a prop. Success and errors are the
+ * decides whether the card is on (the page only renders it when it is); this also waits for the
+ * browser to say it can make a passkey, and until then, and when it can't, shows nothing. The account comes from the session, not a prop. Success and errors are the
  * form's own messages; a closed prompt, a device that already has one, the cap and an old sign-in
  * are notices that aren't errors. An old sign-in is asked to log in again, which ends this session
  * and opens the log in page; signing in lands back on the account page.
