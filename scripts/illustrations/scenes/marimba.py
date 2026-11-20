@@ -3,6 +3,7 @@ marimba drawn in perspective, with seven listeners. A camera, the player's stanc
 listeners sit; the parts are shared (marimba_parts.py)."""
 from ..parts import *
 from .marimba_parts import *
+from .marimba_room import *
 
 PANEL=(["Live marimba"],["Starts at 11 a.m.","Rooms A and B","Monthly series","Older kids to adults"])
 WALL="#6f8fb8"; FLOOR="#d4b48a"

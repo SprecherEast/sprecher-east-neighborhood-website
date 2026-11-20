@@ -6,12 +6,32 @@ import math
 from .settings import *
 
 SW=OUTLINE_WIDTH
+O=f'stroke="{NAVY}" stroke-width="{SW}" stroke-linejoin="round"'  # the outline every shape shares at full scale
 
 def sc(v):
     """A size in the scene, multiplied by the named scene scale (unchanged at 1)."""
     return v if SCENE_SCALE==1 else v*SCENE_SCALE
 
-def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin="#a8714f",hair="#2a1d17",hat=None,arm="down",hr=13,flip=False,cap=None):
+def person_torso(shirt,o,hem=-96,shade=True):
+    """The shirt of a person facing us, in person() units; hem is where it ends at the waist."""
+    g=f'<path d="M-23,-166 Q0,-175 23,-166 L20,{hem} Q0,{hem+6} -20,{hem} Z" fill="{shirt}" {o}/>'
+    if shade: g+=f'<path d="M3,-170 Q14,-170 23,-166 L20,{hem} Q10,{hem+3} 3,{hem+3} Z" fill="#000" opacity=".12"/>'
+    return g
+
+def person_head(skin,hair,hr,o,hat=None,cap=None):
+    """Neck, head and hair (or a hat) of a person facing us, in person() units."""
+    g=[]
+    g.append(f'<rect x="-6" y="-182" width="12" height="14" fill="{skin}" {o}/>')
+    g.append(f'<circle cx="0" cy="-190" r="{hr}" fill="{skin}" {o}/>')
+    if hat=="beanie":
+        g.append(f'<path d="M{-hr-1},-192 Q0,{-190-hr-12} {hr+1},-192 Z" fill="{cap or RED}" {o}/><rect x="{-hr-2}" y="-196" width="{2*hr+4}" height="7" rx="3" fill="{cap or RED}" {o}/><circle cx="0" cy="{-190-hr-10}" r="4" fill="{cap or RED}" {o}/>')
+    elif hat=="police":
+        g.append(f'<path d="M{-hr-2},-197 Q0,{-190-hr-14} {hr+2},-197 L{hr+2},-192 L{-hr-2},-192 Z" fill="{NAVY}" {o}/><rect x="{-hr-4}" y="-194" width="{2*hr+14}" height="5" rx="2" fill="#111827" {o}/>')
+    else:
+        g.append(f'<path d="M{-hr},-191 Q{-hr+1},{-190-hr-3} 0,{-190-hr-3} Q{hr+1},{-190-hr-3} {hr},-191 Q{hr-3},-198 0,-197 Q{-hr+3},-198 {-hr},-191 Z" fill="{hair}" {o}/>')
+    return "".join(g)
+
+def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin=SKIN_DARK,hair="#2a1d17",hat=None,arm="down",hr=13,flip=False,cap=None):
     """A standing person at (x, y). arm: "down", "wave", "pad", or "none" when the scene draws the arms itself."""
     s=sc(s)
     sx=-s if flip else s
@@ -24,22 +44,14 @@ def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin="#a8714f",hair="#2a1d17",hat=None,
         g.append(f'<path d="M-24,-160 L-30,-104" stroke="{shirt}" stroke-width="12" stroke-linecap="round"/><circle cx="-30" cy="-98" r="6" fill="{skin}" {o}/>')
     elif arm!="none":
         g.append(f'<rect x="-36" y="-165" width="12" height="68" rx="6" fill="{shirt}" {o}/><circle cx="-30" cy="-95" r="6" fill="{skin}" {o}/>')
-    g.append(f'<path d="M-23,-166 Q0,-175 23,-166 L20,-96 Q0,-90 -20,-96 Z" fill="{shirt}" {o}/>')
-    g.append(f'<path d="M3,-170 Q14,-170 23,-166 L20,-96 Q10,-93 3,-93 Z" fill="#000" opacity=".12"/>')
+    g.append(person_torso(shirt,o))
     if arm=="wave":
         g.append(f'<path d="M24,-160 L44,-206" stroke="{NAVY}" stroke-width="15" stroke-linecap="round"/><path d="M24,-160 L44,-206" stroke="{shirt}" stroke-width="10.5" stroke-linecap="round"/><circle cx="46" cy="-211" r="6.5" fill="{skin}" {o}/>')
     elif arm=="pad":
         g.append(f'<path d="M24,-160 L36,-128 L12,-120" stroke="{NAVY}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M24,-160 L36,-128 L12,-120" stroke="{shirt}" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="2" y="-146" width="20" height="26" rx="2" fill="#f5ede1" {o}/><circle cx="12" cy="-120" r="6" fill="{skin}" {o}/>')
     elif arm!="none":
         g.append(f'<rect x="24" y="-165" width="12" height="68" rx="6" fill="{shirt}" {o}/><circle cx="30" cy="-95" r="6" fill="{skin}" {o}/>')
-    g.append(f'<rect x="-6" y="-182" width="12" height="14" fill="{skin}" {o}/>')
-    g.append(f'<circle cx="0" cy="-190" r="{hr}" fill="{skin}" {o}/>')
-    if hat=="beanie":
-        g.append(f'<path d="M{-hr-1},-192 Q0,{-190-hr-12} {hr+1},-192 Z" fill="{cap or RED}" {o}/><rect x="{-hr-2}" y="-196" width="{2*hr+4}" height="7" rx="3" fill="{cap or RED}" {o}/><circle cx="0" cy="{-190-hr-10}" r="4" fill="{cap or RED}" {o}/>')
-    elif hat=="police":
-        g.append(f'<path d="M{-hr-2},-197 Q0,{-190-hr-14} {hr+2},-197 L{hr+2},-192 L{-hr-2},-192 Z" fill="{NAVY}" {o}/><rect x="{-hr-4}" y="-194" width="{2*hr+14}" height="5" rx="2" fill="#111827" {o}/>')
-    else:
-        g.append(f'<path d="M{-hr},-191 Q{-hr+1},{-190-hr-3} 0,{-190-hr-3} Q{hr+1},{-190-hr-3} {hr},-191 Q{hr-3},-198 0,-197 Q{-hr+3},-198 {-hr},-191 Z" fill="{hair}" {o}/>')
+    g.append(person_head(skin,hair,hr,o,hat,cap))
     g.append('</g>'); return "".join(g)
 
 def tree(x,y,h=300,c="#6fae6c",d="#4f8e56",trunk="#6b4b3a"):
@@ -151,7 +163,7 @@ def tape(x1,y1,x2,y2,sag=14):
     return f'<path d="M{x1},{y1} Q{mx},{my} {x2},{y2} L{x2},{y2+24} Q{mx},{my+24} {x1},{y1+24} Z" fill="url(#tape)" stroke="{NAVY}" stroke-width="{SW}" stroke-linejoin="round"/>'
 
 
-def bike(x,y,s=1,flip=False,shirt=RED,helmet=YEL,skin="#a8714f"):
+def bike(x,y,s=1,flip=False,shirt=RED,helmet=YEL,skin=SKIN_DARK):
     s=sc(s)
     """A cyclist seen from the side, standing on the ground at (x, y), facing right unless flipped."""
     o=f'stroke="{NAVY}" stroke-linejoin="round" stroke-linecap="round"'

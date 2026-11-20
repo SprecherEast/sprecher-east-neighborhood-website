@@ -1,7 +1,6 @@
 from ..parts import *
 
 PANEL=(["Grant idea","workshop"],["Starts at 6 p.m.","Sign up ahead","Share your idea","Feedback from staff"])
-O=f'stroke="{NAVY}" stroke-width="{SW}" stroke-linejoin="round"'
 GLOW="#fff3b8"
 
 # Sketch symbols for a neighborhood project idea, drawn as line work: used on the notepad and around the bulb.
@@ -58,7 +57,7 @@ def notepad(x,y):
     """A notepad with the idea sketched as a plan: a path past a tree and a bench."""
     return (f'<g transform="translate({x},{y}) rotate(-5)"><rect width="240" height="150" rx="6" fill="#fff" {O}/>'
             f'<rect width="240" height="28" rx="6" fill="{RED}" {O}/>'
-            f'<path d="M18,136 Q70,128 108,100 Q146,72 222,62" fill="none" stroke="#a8714f" stroke-width="5" stroke-linecap="round" stroke-dasharray="10 9"/></g>'
+            f'<path d="M18,136 Q70,128 108,100 Q146,72 222,62" fill="none" stroke="{BROWN}" stroke-width="5" stroke-linecap="round" stroke-dasharray="10 9"/></g>'
             +sk_tree(x+56,y+98,1)+sk_bench(x+180,y+118,.85))
 
 def scene_workshop():

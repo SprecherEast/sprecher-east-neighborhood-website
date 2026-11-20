@@ -1,7 +1,6 @@
 from ..parts import *
 
 PANEL=(["Winter","parking"],["Nov. 15 to Mar. 15","1 to 7 a.m.","Odd date: odd side","Even date: even side"])
-O=f'stroke="{NAVY}" stroke-width="{SW}" stroke-linejoin="round"'
 
 def calendar(x,y,n,s=1):
     """A small calendar page for one date."""
