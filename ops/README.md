@@ -4,26 +4,30 @@ Scripts the deploy workflow (`.github/workflows/deploy.yml`) runs on the GitHub 
 on the VPS. Nothing here is run by hand during a normal deploy. Changes to the server still follow
 `AGENTS.md`: an `infra` issue first, then a pull request.
 
-| Script                | Where  | What it does                                                                                                                                                                                                                                  | Issue      |
-| --------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `server-facts.sh`     | VPS    | Prints the server's Node version, its public `NEXT_PUBLIC_*` settings and the live commit, for the build                                                                                                                                      | #245       |
-| `build-release.sh`    | runner | Builds a release in the folder it will run from on the server, with the server's Node and settings, and packs it                                                                                                                              | #245       |
-| `deploy-release.sh`   | VPS    | Checks the release, links the shared files, backs up, migrates (once more after a busy database, #1147), switches `current`, checks the site and switches back if it fails                                                                    | #245       |
-| `rollback.sh`         | VPS    | By hand: puts an earlier release back live                                                                                                                                                                                                    | #245       |
-| `backup.sh`           | VPS    | Archives the database, uploaded media and `.env.local`; keeps 7 daily, 5 weekly, 5 pre-deploy                                                                                                                                                 | #148       |
-| `backup-db.mjs`       | VPS    | Copies the live SQLite database with `VACUUM INTO` and checks the copy                                                                                                                                                                        | #148       |
-| `install-cron.sh`     | VPS    | Installs the daily backup job (08:15 UTC) in `/etc/cron.d/sprecher-east-backup`                                                                                                                                                               | #148       |
-| `restart-app.sh`      | VPS    | Reloads the app under PM2; starts it fresh, with a way back, when its start settings change. Listens on its own loopback port only (3000 for production). Deletes old sitemap files                                                           | #118, #267 |
-| `caddy-limits.sh`     | VPS    | Caps request bodies on the public form endpoints and `/api/mcp` at Caddy (`caddy/form-limits.caddy`)                                                                                                                                          | #124       |
-| `caddy-https.sh`      | VPS    | Sends HSTS on the domain (`caddy/hsts.caddy`), and adds a redirect to HTTPS in the plain-HTTP site blocks                                                                                                                                     | #235       |
-| `caddy-previews.sh`   | VPS    | Adds one `import` line for the folder of pull request preview site blocks, and installs the preview headers (`caddy/preview-headers.caddy`); see [`previews.md`](previews.md)                                                                 | #1072      |
-| `install-umami.sh`    | VPS    | Installs and updates Umami analytics in Docker, replaces its default admin password, then opens its own address (helpers: `umami-lib.sh`, `umami-caddy.sh`, `umami-admin.sh`, `secret-lib.sh`)                                                | #948       |
-| `backup-umami.sh`     | VPS    | Dumps Umami's Postgres database; run after the daily backup and before an Umami update                                                                                                                                                        | #948       |
-| `environment.sh`      | VPS    | Defines once what differs between production and a pull request preview (folder, PM2 process, port, settings, data and media, Caddy block, site address); see [`previews.md`](previews.md)                                                    | #1073      |
-| `preview-settings.sh` | VPS    | Writes a pull request preview's own `.env.local` at its first deploy: random secrets, Cloudflare's Turnstile test keys, no mail, analytics or outside keys; kept on redeploys, never copied from production; see [`previews.md`](previews.md) | #1344      |
-| `lib.sh`              | VPS    | Shared helpers: annotations, reading non-secret settings, checking the site through Caddy, the `current` link, and the Caddy import check, reload check and rollback                                                                          |            |
-| `secret-lib.sh`       | VPS    | Makes one random secret (`openssl rand -hex 32`) and checks its shape, so no script writes an empty or short one; used by `install-umami.sh` and `preview-settings.sh`                                                                        | #1344      |
-| `migrate-lib.sh`      | VPS    | `run_migrate`: `payload migrate`, run once more only after `SQLITE_BUSY` before any migration began (sourced by `deploy-release.sh`)                                                                                                          | #1147      |
+| Script                      | Where  | What it does                                                                                                                                                                                                                                  | Issue      |
+| --------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `server-facts.sh`           | VPS    | Prints the server's Node version, its public `NEXT_PUBLIC_*` settings and the live commit, for the build                                                                                                                                      | #245       |
+| `build-release.sh`          | runner | Builds a release in the folder it will run from on the server, with the server's Node and settings, and packs it                                                                                                                              | #245       |
+| `deploy-release.sh`         | VPS    | Checks the release, links the shared files, backs up, migrates (once more after a busy database, #1147), switches `current`, checks the site and switches back if it fails                                                                    | #245       |
+| `rollback.sh`               | VPS    | By hand: puts an earlier release back live                                                                                                                                                                                                    | #245       |
+| `backup.sh`                 | VPS    | Archives the database, uploaded media and `.env.local`; keeps 7 daily, 5 weekly, 5 pre-deploy                                                                                                                                                 | #148       |
+| `backup-db.mjs`             | VPS    | Copies the live SQLite database with `VACUUM INTO` and checks the copy                                                                                                                                                                        | #148       |
+| `install-cron.sh`           | VPS    | Installs the daily backup job (08:15 UTC) in `/etc/cron.d/sprecher-east-backup`                                                                                                                                                               | #148       |
+| `restart-app.sh`            | VPS    | Reloads the app under PM2; starts it fresh, with a way back, when its start settings change. Listens on its own loopback port only (3000 for production). Deletes old sitemap files                                                           | #118, #267 |
+| `caddy-limits.sh`           | VPS    | Caps request bodies on the public form endpoints and `/api/mcp` at Caddy (`caddy/form-limits.caddy`)                                                                                                                                          | #124       |
+| `caddy-https.sh`            | VPS    | Sends HSTS on the domain (`caddy/hsts.caddy`), and adds a redirect to HTTPS in the plain-HTTP site blocks                                                                                                                                     | #235       |
+| `caddy-previews.sh`         | VPS    | Adds one `import` line for the folder of pull request preview site blocks, and installs the preview headers (`caddy/preview-headers.caddy`); see [`previews.md`](previews.md)                                                                 | #1072      |
+| `install-umami.sh`          | VPS    | Installs and updates Umami analytics in Docker, replaces its default admin password, then opens its own address (helpers: `umami-lib.sh`, `umami-caddy.sh`, `umami-admin.sh`, `secret-lib.sh`)                                                | #948       |
+| `backup-umami.sh`           | VPS    | Dumps Umami's Postgres database; run after the daily backup and before an Umami update                                                                                                                                                        | #948       |
+| `environment.sh`            | VPS    | Defines once what differs between production and a pull request preview (folder, PM2 process, port, settings, data and media, Caddy block, site address); see [`previews.md`](previews.md)                                                    | #1073      |
+| `preview-settings.sh`       | VPS    | Writes a pull request preview's own `.env.local` at its first deploy: random secrets, Cloudflare's Turnstile test keys, no mail, analytics or outside keys; kept on redeploys, never copied from production; see [`previews.md`](previews.md) | #1344      |
+| `install-preview-access.sh` | VPS    | Production deploy only: makes the restricted preview account, its root-owned copy of main's preview scripts, one sudo rule and the key line; changes nothing on any doubt; see [Pull request preview account](#pull-request-preview-account)  | #1345      |
+| `preview-wrapper.sh`        | VPS    | The preview key's forced command: only `facts`, `list`, `upload`, `deploy` and `teardown`, every value checked, nothing passed to a shell                                                                                                     | #1345      |
+| `preview-caddy.sh`          | VPS    | Run as root through one sudo rule with a pull request number: writes or removes that preview's Caddy block from main's templates, validated, atomic, reloaded or rolled back                                                                  | #1345      |
+| `preview-access-lib.sh`     | VPS    | `refuse`, the number and commit checks and the check that an unpacked release links nowhere outside itself; used by the three scripts above                                                                                                   | #1345      |
+| `lib.sh`                    | VPS    | Shared helpers: annotations, reading non-secret settings, checking the site through Caddy, the `current` link, and the Caddy import check, reload check and rollback                                                                          |            |
+| `secret-lib.sh`             | VPS    | Makes one random secret (`openssl rand -hex 32`) and checks its shape, so no script writes an empty or short one; used by `install-umami.sh` and `preview-settings.sh`                                                                        | #1344      |
+| `migrate-lib.sh`            | VPS    | `run_migrate`: `payload migrate`, run once more only after `SQLITE_BUSY` before any migration began (sourced by `deploy-release.sh`)                                                                                                          | #1147      |
 
 The scripts print `::notice` and `::warning` lines, which appear as annotations on the deploy run
 whether it succeeds or fails, so the result can be read without opening the logs. The deploy log
@@ -92,12 +96,59 @@ or by an agent, within the limits in [`wrapped`](../.agents/skills/wrapped/SKILL
    - switches `current` to the release in one step and reloads PM2 (`restart-app.sh`)
    - checks the home page answers 200 through Caddy and `/api/version` reports the new build; if
      not, switches `current` back and reloads
-   - then installs the backup job, applies the Caddy limits, HTTPS settings and the preview import, installs or
-     updates Umami (below), and keeps the newest 3 releases
+   - then installs the backup job, applies the Caddy limits, HTTPS settings and the preview import, installs the
+     preview account (below), installs or updates Umami (below), and keeps the newest 3 releases
      (a release that failed is the first to go)
 
 Until the switch, a failure stops the deploy and the live release keeps serving. The reload is the
 only moment the site is unavailable: the few seconds Next takes to start.
+
+## Pull request preview account
+
+A pull request preview runs unreviewed code, so its deploy gets its own way in, not production's (#1345,
+part 2 of #1074; the owner's decision of 2026-11-11 is recorded on #1074). The production deploy runs
+`install-preview-access.sh` from `main`; a preview deploy never does.
+
+- **One account** (`PREVIEW_USER`, default `sprecher-preview`, defined in `environment.sh`) owns the
+  previews root (`/var/www/sprecher-east-previews`, with PM2's state in `.pm2`) and runs the preview apps.
+  It has no password and no other group. Its **home, `.ssh` and `authorized_keys` are root-owned**, so a
+  preview app running as it can't add a key or replace the forced command.
+- **The key line** is `restrict,command="<wrapper>" ssh-ed25519 <key>`: no shell, port forwarding, agent
+  or terminal, and the wrapper as the only command. The public half is `ops/preview-deploy-key.pub`
+  (public, so it is committed); its private half is the only secret of the GitHub environment `preview`.
+  With no key file the file holds no key. Removing the file revokes the key at the next deploy.
+- **The wrapper** (`preview-wrapper.sh`, in `/usr/local/lib/sprecher-east-preview/ops/`, root-owned) reads the
+  request from `SSH_ORIGINAL_COMMAND`. One line, one of `facts`, `list`, `upload <number> <commit>` (the
+  `.tar.gz` release on stdin, at most 1 GiB, no path or link that leaves the release), `deploy <number> <commit>`
+  or `teardown <number>`. A number is `^[1-9][0-9]{0,5}$`, a commit 40 lowercase hex digits
+  (`environment.sh`); anything else is refused with a fixed message that never repeats the request.
+  `deploy` runs main's copy of `deploy-release.sh` (and its settings and restart scripts) on the uploaded
+  release, never a script from the release.
+- **Caddy** is never written by the account. One sudo rule (`/etc/sudoers.d/sprecher-east-preview`) lets it run
+  `preview-caddy.sh` and nothing else, with a number of 1 to 6 digits matched by sudo itself and checked
+  again by the script. The script builds the block from main's copies of `caddy/preview-site.caddy` and
+  `preview-headers.caddy`, has Caddy validate it before it is moved into `/etc/caddy/previews/` (under a name the
+  folder's import does not match), moves it in with one rename, validates the whole config, reloads, and on
+  any failure puts the previous block back and reloads again. A preview with no folder gets its block removed.
+- **The installer** changes nothing, and says why in a warning, when anything is unexpected: not root, a
+  different account of that name, a link or foreign owner on any path it uses, a sudo rule or key file it
+  did not write, an sshd that would not take the key line, a node or pm2 other accounts can't run. It
+  replaces only files that differ, after copying each to `<file>.bak-preview-access-<UTC time>`, checks the
+  account really can run the wrapper, is refused anything else and can't write its home, and puts the sudo
+  rule back if a check fails. The key line goes in last. Its annotation lists what changed and the key's
+  fingerprint.
+- **Read the result** in the deploy's annotations: `Preview access installed` (with the list) or `already in
+place`, or `WARNING: preview access was not installed: <reason>; nothing was changed`.
+- **Check on the server** (once, after the first deploy with a key file; carried to the issue): from a
+  machine with the private key, `ssh <account>@<server> facts` answers, while `ssh ... id`, `ssh ... sh`,
+  a port forward (`-L`) and `facts; id` are refused; `sudo -l -U sprecher-preview` lists only the Caddy script.
+  Record the results on #1345.
+- **Not here:** the isolation check and the protection of Caddy's admin endpoint (#1346), and the workflow
+  that calls the wrapper (#1075). Until #1346, the account's isolation from production's files rests on
+  file permissions alone and is not yet proven by a check.
+
+Undo: revert the pull request, then delete the key line, `/etc/sudoers.d/sprecher-east-preview` and
+`/usr/local/lib/sprecher-east-preview`, and `userdel` the account.
 
 ## Releases
 

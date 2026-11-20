@@ -18,6 +18,7 @@ export const HOUSEKEEPING = [
   'caddy-limits',
   'caddy-https',
   'caddy-previews',
+  'install-preview-access',
   'install-umami',
 ]
 const CONFIG_OF = `const a = require(require("path").resolve(process.argv[1])).apps[0]; console.log(JSON.stringify([a.name, a.env.PORT, a.cwd]))`

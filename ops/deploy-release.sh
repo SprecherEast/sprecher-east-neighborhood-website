@@ -12,7 +12,7 @@
 #      database on its first visit, then is cached as usual
 #   5. switch the `current` link atomically and reload the app under PM2 (ops/restart-app.sh)
 #   6. check the site answers through Caddy with this release's build; if not, switch back
-#   7. refresh the backup job, the Caddy settings (request limits, HTTPS) and Umami analytics, and keep the newest
+#   7. refresh the backup job, the Caddy settings (request limits, HTTPS), the preview account and Umami analytics, and keep the newest
 #      $KEEP_RELEASES releases (a preview does only the last of these)
 #
 # It acts on production, or on one pull request preview when PREVIEW_NUMBER is set: the folder, PM2
@@ -35,6 +35,10 @@ if [ "${1:-}" = --umami-password-stdin ]; then
 fi
 
 RELEASE="$CODE_DIR"
+# The scripts this one runs on the release's behalf come from the folder it runs from: the release's
+# own ops/ for production, and for a preview deploy the root-owned copy made from main
+# (ops/preview-wrapper.sh, #1345), never the pull request's files.
+OPS_DIR=$(dirname "$0")
 RELEASES="$APP_DIR/releases"
 CURRENT="$APP_DIR/current"
 UP_SECONDS="${UP_SECONDS:-90}" # how long the app may take to answer after a reload
@@ -115,7 +119,7 @@ esac
   stop "the release is incomplete (no .release-info, build or node_modules)"
 if is_preview; then
   # The preview's own throwaway settings (ops/preview-settings.sh, #1344); production's are never touched.
-  bash "$RELEASE/ops/preview-settings.sh" || stop "the preview's settings are not in order"
+  bash "$OPS_DIR/preview-settings.sh" || stop "the preview's settings are not in order"
 fi
 [ -f "$ENV_FILE" ] || stop "$ENV_FILE not found"
 if is_preview; then
@@ -175,7 +179,7 @@ point_current_at "releases/$name"
 switched=yes
 
 restart_status=0
-EXPECT_BUILD_ID="$build_id" bash "$RELEASE/ops/restart-app.sh" || restart_status=$?
+EXPECT_BUILD_ID="$build_id" bash "$OPS_DIR/restart-app.sh" || restart_status=$?
 [ "$restart_status" -eq 0 ] || switch_back "the app did not start on release $name"
 
 # 6. The site must answer with this release's build.
@@ -201,6 +205,8 @@ if ! is_preview; then # these change production's backup job, Caddyfile and anal
   bash "$RELEASE/ops/caddy-https.sh" || failed=1
   # Pull request previews: one import line for the preview folder (#1072). Does nothing with no previews.
   bash "$RELEASE/ops/caddy-previews.sh" || failed=1
+  # The restricted account, wrapper and sudo rule for preview deploys (#1345). Changes nothing on any doubt.
+  bash "$RELEASE/ops/install-preview-access.sh" || failed=1
   # After the Caddy scripts: its block imports the HSTS file caddy-https.sh writes. A missing
   # secret or DNS name is a notice, not a failure.
   UMAMI_ADMIN_PASSWORD="$umami_admin_password" bash "$RELEASE/ops/install-umami.sh" || failed=1

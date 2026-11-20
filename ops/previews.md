@@ -78,5 +78,10 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   secret on one line and generated, nothing added or changed); anything else stops the deploy,
   naming the problem and never a value. A link at the preview's folder or file is refused before
   anything is read or changed. The build for a preview must
-  use the same Turnstile site key, or the deploy's settings gate refuses it. Until the restricted
-  deploy account (#1345) exists, the script runs from the release being deployed, not from `main`.
+  use the same Turnstile site key, or the deploy's settings gate refuses it. The restricted preview
+  account's deploy runs this script from main's root-owned copy, never from the release (#1345).
+- **The restricted account** (#1345). Previews deploy and run as one account whose home is root-owned,
+  reached by a key that can run only the wrapper's five actions, with one sudo rule for the Caddy block
+  script. What it is, what it may do and how to check it: [`README.md`](README.md#pull-request-preview-account).
+  `environment.sh` holds its names (`PREVIEW_USER`, `PREVIEW_HOME`, `PREVIEW_ACCESS_DIR`), the
+  upload limit and the number and commit patterns, so no script writes its own.
