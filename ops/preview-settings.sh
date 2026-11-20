@@ -50,11 +50,12 @@ kept_secret() {
 }
 
 if [ -f "$ENV_FILE" ]; then
-  chmod 600 "$ENV_FILE"
   payload=$(kept_secret PAYLOAD_SECRET) && preview=$(kept_secret PREVIEW_SECRET) ||
     fail "the kept settings file's secrets are missing, repeated or not generated ones (delete the file to start over)"
   render_settings "$payload" "$preview" | cmp -s - "$ENV_FILE" ||
     fail "the kept settings file is not what this script writes (delete the file to start over)"
+  # Only a file that passed the check is changed: a refused file (even a hard link) keeps its mode.
+  chmod 600 "$ENV_FILE"
   report "preview $PREVIEW_NUMBER keeps its settings file"
   exit 0
 fi

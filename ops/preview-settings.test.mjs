@@ -251,5 +251,15 @@ describe('links to production', () => {
     const r = run()
     expect(r.status).not.toBe(0)
     expect(fs.readdirSync(p('production'))).toEqual(['.env.local'])
+    expect(fs.statSync(p('production', '.env.local')).mode & 0o777).toBe(0o640)
+    expect(fs.readFileSync(p('production', '.env.local'), 'utf8')).toBe('PAYLOAD_SECRET=real\n')
+  })
+
+  it('refuses a hard link to production’s file without changing its mode', () => {
+    const target = productionFile()
+    fs.mkdirSync(path.dirname(settingsOf()), { recursive: true })
+    fs.linkSync(target, settingsOf())
+    expect(run().status).not.toBe(0)
+    expect(fs.statSync(target).mode & 0o777).toBe(0o640)
   })
 })
