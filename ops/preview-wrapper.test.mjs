@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 
 import { COMMIT, runCommand, setUpPreviewAccessHarness } from './preview-access-harness.mjs'
 
-const { p, log, wrapper, baseEnv } = setUpPreviewAccessHarness()
+const { p, stub, log, wrapper, baseEnv } = setUpPreviewAccessHarness()
 
 /** A .tar.gz made by Python's tarfile, so a member can have any name or type. */
 async function archive(members) {
@@ -70,6 +70,27 @@ describe('preview-wrapper.sh: the actions', () => {
       `preview=12 commit=none`,
       `preview=7 commit=${COMMIT}`,
     ])
+  })
+
+  it('list does not report a regular file named like a preview', async () => {
+    fs.mkdirSync(p('previews/pr-7'))
+    fs.writeFileSync(p('previews/pr-8'), 'x')
+    const { code, out } = await wrapper('list')
+    expect(code).toBe(0)
+    expect(out.trim()).toBe('preview=7 commit=none')
+  })
+
+  it('starts with an absolute shebang and runs on its own with the locale fixed, whatever the caller sets', async () => {
+    expect(fs.readFileSync(p('access/ops/preview-wrapper.sh'), 'utf8').split('\n')[0]).toBe(
+      '#!/bin/bash',
+    )
+    // the tools see the locale through this stand-in, which sits first in the account's tool folders
+    stub('df', 'echo "locale=$LC_ALL" >> "$STUB_LOG"; exec /bin/df "$@"')
+    const { code } = await runCommand(p('access/ops/preview-wrapper.sh'), [], {
+      env: baseEnv({ SSH_ORIGINAL_COMMAND: 'facts', LC_ALL: 'de_DE.UTF-8' }),
+    })
+    expect(code).toBe(0)
+    expect(log()).toContain('locale=C\n')
   })
 
   it('upload unpacks the archive into the preview’s releases folder and leaves nothing else', async () => {

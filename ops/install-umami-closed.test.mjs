@@ -1,4 +1,6 @@
+import { spawn } from 'node:child_process'
 import fs from 'node:fs'
+import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
@@ -33,6 +35,26 @@ describe('install-umami.sh: never public with the default password', () => {
     expect(code).toBe(1)
     expect(out).toContain('Umami stays closed to the public')
     closed()
+  })
+
+  it('closes the address even while another change to Caddy holds the lock', async () => {
+    await h.install()
+    h.state.admin = 'umami'
+    h.state.ignoreChange = true
+    const holder = spawn('bash', [
+      '-c',
+      'exec flock -x "$1" sleep 20',
+      'holder',
+      path.join(h.dir, 'caddy/.sprecher-east-caddy.lock'),
+    ])
+    await new Promise((r) => setTimeout(r, 300))
+    try {
+      const { out } = await h.install({ CADDY_LOCK_WAIT: '1' })
+      expect(out).toContain('Umami stays closed to the public')
+      closed()
+    } finally {
+      holder.kill()
+    }
   })
 
   it('leaves it closed when Umami never answers', async () => {

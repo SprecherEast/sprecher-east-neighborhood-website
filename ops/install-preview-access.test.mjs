@@ -85,6 +85,12 @@ beforeEach(() => {
     'case "$*" in *.new-*) [ -z "$STUB_CHMOD_FAILS" ] || exit 1 ;; esac; exec /bin/chmod "$@"',
   )
   stub('mv', 'case "$*" in *.new-*) [ -z "$STUB_MV_FAILS" ] || exit 1 ;; esac; exec /bin/mv "$@"')
+  // a file being made (named <file>.new-…) whose path holds STUB_MKTEMP_DIR is made as a folder, so a
+  // write into it fails after the name was found
+  stub(
+    'mktemp',
+    'case "$*" in *"${STUB_MKTEMP_DIR:-@@none@@}"*.new-*) d=$(/usr/bin/mktemp -u "$1"); mkdir "$d"; echo "$d"; exit 0 ;; esac; exec /usr/bin/mktemp "$@"',
+  )
   stub('pm2', 'exit 0')
   stub('caddy', 'exit 0')
   stub('systemctl', 'exit 0')
@@ -118,7 +124,7 @@ beforeEach(() => {
 })
 afterEach(() => fs.rmSync(dir, { recursive: true, force: true }))
 
-const run = (env = {}, { removeTools = [] } = {}) => {
+const run = (env = {}, { removeTools = [], cwd } = {}) => {
   for (const tool of removeTools) fs.rmSync(p('bin', tool))
   return runCommand('bash', [p('code/ops/install-preview-access.sh')], {
     env: {
@@ -136,6 +142,7 @@ const run = (env = {}, { removeTools = [] } = {}) => {
       ROOT_SECURE_PATH: `${p('bin')}:/usr/bin:/bin`,
       ...env,
     },
+    cwd,
   })
 }
 /** Everything the run could have changed, as relative paths (backups and temp files included). */
@@ -631,6 +638,17 @@ describe('install-preview-access.sh: what it checks about sudo and sshd as well'
       .join('\n')
     await untouched({ STUB_SSHD: settings }, [], reason)
   })
+  it('judges AcceptEnv * as the name it is, not as the files in the current folder', async () => {
+    fs.mkdirSync(p('cwd'))
+    fs.writeFileSync(p('cwd/LANG'), '')
+    const settings = GOOD_SSHD.split('\n')
+      .filter((l) => !l.startsWith('acceptenv '))
+      .concat('acceptenv *')
+      .join('\n')
+    const { out } = await run({ STUB_SSHD: settings }, { cwd: p('cwd') })
+    expect(out).toContain('AcceptEnv takes *')
+    expect(out).not.toContain('Preview access installed')
+  })
   it('accepts AcceptEnv of LANG and LC_ variables only', async () => {
     const { out } = await run({ STUB_SSHD: `${GOOD_SSHD}\nacceptenv LC_ALL` })
     expect(out).toContain('Preview access installed')
@@ -726,25 +744,6 @@ describe('install-preview-access.sh: files and modes', () => {
     expect(mode('sudoers.d/sprecher-east-preview')).toBe('440')
     expect(mode('proot')).toBe('750')
   })
-
-  it('makes each file root-owned before it is moved into place', async () => {
-    await run()
-    const owners = log()
-      .split('\n')
-      .filter((l) => l.startsWith('chown root:root'))
-    for (const target of [
-      p('installed/ops/preview-wrapper.sh'),
-      p('installed/ops/preview-caddy.sh'),
-      p('installed/ops/caddy/preview-site.caddy'),
-      p('installed/tools-path'),
-      p('sudoers.d/sprecher-east-preview'),
-      `${HOME()}/.ssh/authorized_keys`,
-    ])
-      expect(
-        owners.some((l) => l.startsWith(`chown root:root ${target}.new-`)),
-        target,
-      ).toBe(true)
-  })
 })
 
 describe('install-preview-access.sh: a step that fails is a failure, not a silent skip', () => {
@@ -756,6 +755,32 @@ describe('install-preview-access.sh: a step that fails is a failure, not a silen
     expect(code).toBe(1)
     expect(out).toContain('could not write')
     expect(read('installed/ops/preview-caddy.sh')).toBe(before)
+  })
+
+  it.each([
+    ['a script', 'preview-wrapper.sh', 'installed/ops/preview-wrapper.sh'],
+    ['the sudo rule', 'sudoers.d', 'sudoers.d/sprecher-east-preview'],
+    ['the key line', '.ssh/authorized_keys', 'home/sprecher-preview/.ssh/authorized_keys'],
+  ])(
+    '%s that cannot be written stops the run and puts nothing in its place',
+    async (_, hit, file) => {
+      const { code, out } = await run({ STUB_MKTEMP_DIR: hit })
+      expect(code).toBe(1)
+      expect(out).toContain('could not write')
+      expect(fs.existsSync(p(file))).toBe(false)
+    },
+  )
+
+  it('a rule that cannot be written leaves the one in place', async () => {
+    await run()
+    const rule = read('sudoers.d/sprecher-east-preview')
+    const { code, out } = await run({
+      PREVIEW_ACCESS_DIR: p('installed2'),
+      STUB_MKTEMP_DIR: 'sudoers.d',
+    })
+    expect(code).toBe(1)
+    expect(out).toContain('could not write')
+    expect(read('sudoers.d/sprecher-east-preview')).toBe(rule)
   })
 
   it('a failing account creation says so, and writes nothing', async () => {

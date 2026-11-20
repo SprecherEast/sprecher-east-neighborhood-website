@@ -148,9 +148,11 @@ case " $(sshd_value denyusers) " in *" $PREVIEW_USER "*) doubt "sshd's DenyUsers
 # command change what the forced command sees or runs.
 [ "$(sshd_value usepam)" = yes ] || doubt "sshd has UsePAM off, and it refuses key sign-in to an account with no password"
 [ "$(sshd_value permituserenvironment)" = no ] || doubt "sshd allows PermitUserEnvironment"
+set -f # a value such as * is a name to judge, not a pattern for the files in this folder
 for accepted in $(sshd_value acceptenv); do
   [[ "$accepted" == LANG || "$accepted" == LC_* ]] || doubt "sshd's AcceptEnv takes $accepted from the client"
 done
+set +f
 [ "$(sshd_value authorizedkeyscommand)" = none ] || doubt "sshd has an AuthorizedKeysCommand"
 [ "$(sshd_value forcecommand)" = none ] || doubt "sshd has a ForceCommand for the account"
 
@@ -206,14 +208,13 @@ sudoers_text=$(
 put_file() { # <path> <mode> <source file or - for $text> [text]
   local path="$1" mode="$2" tmp
   tmp=$(mktemp "$path.new-XXXXXX") # if it failed, the write below fails too
-  if [ "$3" = - ]; then printf '%s\n' "$4" >"$tmp" || return 2; else cat "$3" >"$tmp" || return 2; fi
+  if [ "$3" = - ]; then printf '%s\n' "$4" >"$tmp" || { rm -f "$tmp"; return 2; }; else cat "$3" >"$tmp" || { rm -f "$tmp"; return 2; }; fi
   if cmp -s "$tmp" "$path" 2>/dev/null; then
     rm -f "$tmp"
     return 1
   fi
-  # a step that fails leaves no half-made file behind
+  # a step that fails leaves no half-made file behind (mktemp, run as root, makes it root-owned)
   chmod "$mode" "$tmp" || { rm -f "$tmp"; return 2; }
-  chown "$ROOT_OWNER:$ROOT_OWNER" "$tmp" || { rm -f "$tmp"; return 2; }
   if [ -e "$path" ]; then cp -p "$path" "$path.bak-preview-access-$stamp" || { rm -f "$tmp"; return 2; }; fi
   mv -f "$tmp" "$path" || { rm -f "$tmp"; return 2; }
 }
