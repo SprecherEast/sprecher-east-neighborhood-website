@@ -29,6 +29,19 @@ export const API_HEADERS = [
 ]
 
 /**
+ * Pages that are never shown inside another site's frame (decision 0021): `frame-ancestors 'none'`,
+ * the modern form of `X-Frame-Options: DENY`. A passkey is made on a page the person sees, and a
+ * framed page could be made to look like something else. The sign-in page joins this list when it
+ * gets passkeys. The app sends no other `Content-Security-Policy` and none of its own headers
+ * come from a proxy, so this is the one place; Payload adds none for these paths.
+ */
+export const NO_FRAMING_PATHS = ['/account']
+export const NO_FRAMING_HEADERS = NO_FRAMING_PATHS.map((source) => ({
+  source,
+  headers: [{ key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }],
+}))
+
+/**
  * Payload adds `Critical-CH: Sec-CH-Prefers-Color-Scheme` to every route for its admin dark mode.
  * On a visitor's first request Chrome (without the hint yet) answers a Critical-CH header by
  * loading the page again, and the second load loses the `#fragment`, so "Estimate your tax split"
@@ -86,7 +99,7 @@ const nextConfig = {
   logging: { serverFunctions: false },
   reactStrictMode: true,
   redirects,
-  headers: async () => API_HEADERS,
+  headers: async () => [...API_HEADERS, ...NO_FRAMING_HEADERS],
   // CI type-checks every PR with `tsc --noEmit` (the required "Type-check & Build" check), so
   // `next build` skips its own type check. On the 1-CPU server that step took over 8 minutes and
   // pushed the deploy past its time limit (#246)

@@ -5,4 +5,14 @@ export const ACCOUNTS_MESSAGES = {
     'Almost there! Check your email for a link to finish signing up. Nothing yet? Look in spam, or try again.',
   'accounts.forgotPassword.sent':
     'No worries, it happens! If that email has an account, a reset link is on its way. It works for {linkLifetime}. Nothing yet? Check your spam.',
+  // The add-a-passkey card on /account (#1314)
+  'accounts.passkey.lead':
+    'Sign in with your phone’s or computer’s screen lock instead of a password.',
+  'accounts.passkey.added': 'Passkey added. Next time, choose Sign in with a passkey.',
+  'accounts.passkey.cancelled': 'No passkey was added. You can try again any time.',
+  'accounts.passkey.failed': 'We couldn’t add that passkey. Please try again.',
+  'accounts.passkey.signInAgain':
+    'To keep your account safe, please log in again first. Then you can add a passkey.',
+  'accounts.passkey.cap': 'You have as many passkeys as we can keep. Remove one to add another.',
+  'accounts.passkey.alreadyHere': 'This device already has a passkey for your account.',
 } as const

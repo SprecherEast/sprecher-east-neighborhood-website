@@ -9,6 +9,7 @@ import { headers } from 'next/headers'
 import { parseClientIp } from '@/platform/lib'
 import { TurnstileVerifier } from '@/platform/turnstile/turnstileVerifier'
 
+import { addPasskeySchema } from './domain/addPasskey'
 import {
   forgotPasswordSchema,
   passwordChangeSchema,
@@ -17,6 +18,7 @@ import {
   signUpSchema,
   verifyAccountSchema,
 } from './domain/credentials'
+import type { AddPasskeyFailure, StartAddPasskeyResult } from './domain/addPasskey'
 import type {
   AccountSummary,
   ActionResult,
@@ -28,6 +30,7 @@ import type {
   VerifyAccountFailure,
 } from './domain/types'
 import { endSession } from './data/session'
+import { finishAddPasskey, startAddPasskey } from './use-cases/addPasskey'
 import { changeOwnPassword } from './use-cases/changeOwnPassword'
 import { getAccountSummary } from './use-cases/getAccountSummary'
 import type { PublicRequest } from './use-cases/guardPublicRequest'
@@ -66,6 +69,25 @@ export async function changePassword(input: unknown): Promise<ActionResult<Passw
   const parsed = passwordChangeSchema.safeParse(input)
   if (!parsed.success) return { ok: false, failure: 'rejected' }
   return changeOwnPassword(parsed.data)
+}
+
+/**
+ * Asks for the options to add a passkey to the signed-in account (#1314). Takes no input: the
+ * account comes from the session, which must be a recent sign-in. Fixed failure codes only.
+ */
+export async function getPasskeyOptions(): Promise<StartAddPasskeyResult> {
+  return startAddPasskey(parseClientIp(await headers()))
+}
+
+/**
+ * Adds the passkey the browser made, to the signed-in account only (#1314). The input is the
+ * browser's answer and an optional label, parsed again; there is no way to name an account.
+ * Input that doesn't parse is the same one failure as any other refusal.
+ */
+export async function addPasskey(input: unknown): Promise<ActionResult<AddPasskeyFailure>> {
+  const parsed = addPasskeySchema.safeParse(input)
+  if (!parsed.success) return { ok: false, failure: 'failed' }
+  return finishAddPasskey(parsed.data)
 }
 
 /**

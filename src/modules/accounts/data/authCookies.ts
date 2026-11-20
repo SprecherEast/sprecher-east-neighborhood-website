@@ -4,6 +4,7 @@ import configPromise from '@payload-config'
 import { cookies } from 'next/headers'
 import { generatePayloadCookie, getPayload } from 'payload'
 
+import { purposeKey } from '../domain/signedValue'
 import { hostCookieName } from '../domain/socialCookies'
 import { USERS } from '../domain/usersCollection'
 
@@ -46,14 +47,15 @@ export async function setPayloadAuthCookie(token: string, tokenExpiration?: numb
 /**
  * A short-lived cookie that belongs to one browser and one flow, such as a sign-in's checks. Where
  * the auth cookie is Secure (production), it is `__Host-` prefixed too: Secure, `Path=/`, no
- * `Domain`, so a page on a sibling subdomain can't plant its own copy. HttpOnly and SameSite=Lax,
- * because a provider's return is a cross-site top-level GET.
+ * `Domain`, so a page on a sibling subdomain can't plant its own copy. HttpOnly, and SameSite=Lax
+ * unless `sameSite` says otherwise: a provider's return is a cross-site top-level GET, but a
+ * cookie only our own pages send back (a passkey's challenge) is `strict`.
  */
-export async function hostCookie(base: string) {
+export async function hostCookie(base: string, sameSite: 'lax' | 'strict' = 'lax') {
   const { auth } = await authConfig()
   const secure = auth.cookies.secure === true
   const name = hostCookieName(base, secure)
-  const options = { httpOnly: true, path: '/', sameSite: 'lax', secure } as const
+  const options = { httpOnly: true, path: '/', sameSite, secure } as const
   return {
     name,
     read: async () => (await cookies()).get(name)?.value,
@@ -62,4 +64,13 @@ export async function hostCookie(base: string) {
     // Set to expire, not `delete`: a browser refuses a `__Host-` cookie sent without `Secure`
     clear: async () => (await cookies()).set(name, '', { ...options, maxAge: 0 }),
   }
+}
+
+/**
+ * The key a signed value for one purpose is made with (`domain/signedValue.ts`), derived from
+ * Payload's secret, so a value signed for one purpose never reads as another.
+ */
+export async function signingKeyFor(purpose: string): Promise<Buffer> {
+  const { payload } = await authConfig()
+  return purposeKey(payload.secret, purpose)
 }

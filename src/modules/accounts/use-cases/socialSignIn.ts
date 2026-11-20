@@ -24,7 +24,7 @@ import {
   type SocialProvider,
   type SocialSignInFailure,
 } from '../domain/socialSignIn'
-import { createRequestGuard } from './guardPublicRequest'
+import { createRequestGuard, NO_ROBOT_CHECK } from './guardPublicRequest'
 
 // Sign in with Google (#188, decision 0020). The routes in src/app/(frontend)/auth/
 // call these two, and redirect wherever they answer.
@@ -36,10 +36,6 @@ const toLogin = (result: SocialSignInFailure) => `${SIGN_IN_PATH}?${SOCIAL_RESUL
 // stands in for it.
 const signInGuard = createRequestGuard('Provider sign-in', SOCIAL_SIGN_IN_LIMITS)
 const newAccountGuard = createRequestGuard('Provider sign-up', SIGN_UP_LIMITS)
-const NO_ROBOT_CHECK = {
-  isEnabled: () => false,
-  verify: async () => ({ ok: true as const }),
-}
 
 /** The providers whose keys are set: the log-in and sign-up pages show a button for each. */
 export function getEnabledSocialProviders(): SocialProvider[] {

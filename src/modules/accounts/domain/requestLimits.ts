@@ -58,3 +58,16 @@ export const RESET_REQUEST_LIMITS: RequestLimits = {
   siteWide: 30,
   trackedConnections: 2000,
 }
+
+/**
+ * Asking for the options to add a passkey (#1314): each one stores a challenge. Only a signed-in
+ * account with a recent sign-in gets this far (the caller checks the session first), so a
+ * site-wide cap can't be filled by a stranger, and no robot check is needed. More generous than
+ * sign-up, since a neighbor may need a few tries on a phone and no email is sent.
+ */
+export const PASSKEY_OPTIONS_LIMITS: RequestLimits = {
+  windowMs: HOUR,
+  perConnection: 10,
+  siteWide: 60,
+  trackedConnections: 2000,
+}
