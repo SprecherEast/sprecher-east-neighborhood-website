@@ -13,8 +13,10 @@ text panel to the checks above.
 
 1. **Keep clear what the layout draws over the image.** Find the component that overlays it (a date
    badge, a title, a gradient) and leave that area empty; put text where the overlay isn't. Read the
-   component for the position, don't assume. For an event or post card the date badge sits in the
-   top-left corner, so that corner stays empty.
+   component for the position, don't assume. Only the event card overlays a date badge, in the
+   top-left corner, so an event picture keeps that corner empty. A post card puts nothing over its
+   picture, so a post picture uses the whole canvas and leaves no space unused for a badge it
+   doesn't have.
 2. **Legible at the size it is shown.** Look at it at the card size on a phone, not only full size.
    Text that can't be read there is removed or made larger; labels never collide or hide each other.
 3. **Say each thing once.** No text that repeats the title, the card's own text or the date badge,
@@ -31,7 +33,8 @@ text panel to the checks above.
    everything, the panel says less, not more. The news scenes in `scripts/illustrations/scenes/`
    are the model.
 6. **The panel matches the site's style.** Square corners and the site's muted palette, never a
-   pill or a bright badge look. It sits on the right so the top-left stays clear (rule 1).
+   pill or a bright badge look. It sits on the right, which also keeps an event picture's top-left
+   clear (rule 1).
 7. **Match the real thing.** A named place, sign or building looks like it, and the scene shows
    details that fit the real place and subject, not a generic scene. It stays inside one setting
    and doesn't mix unrelated ones.
@@ -91,5 +94,5 @@ used through the [`make-illustration`](../../.agents/skills/make-illustration/SK
     landmark; do not stop to ask for a photo. Mockups come first, and a look is agreed before the
     finals are made.
 21. **An approved picture stays as approved.** A later request changes only what was asked.
-22. **Finish check at card size.** Look at every final at the size the card shows it, with the
-    corner the card overlays empty, before it is published.
+22. **Finish check at card size.** Look at every final at the size the card shows it, with
+    whatever its own card overlays left empty (an event's badge corner), before it is published.
