@@ -3,7 +3,7 @@
 // endpoint on IPv4 and IPv6, pass when none is reachable, and report every failure without printing a
 // file's content. The tests use real file modes and real sockets. The check runs as an unprivileged user:
 // the test's own, or `nobody` when the tests run as root (which reads everything).
-import { spawn } from 'node:child_process'
+import { execFileSync, spawn } from 'node:child_process'
 import fs from 'node:fs'
 import net from 'node:net'
 import os from 'node:os'
@@ -26,20 +26,23 @@ let dir = ''
 const p = (...parts) => path.join(dir, ...parts)
 const open = (...parts) => fs.chmodSync(p(...parts), 0o755)
 
-/** A tree shaped like the server's, all private (700 and 600), so the account can reach none of it. */
+/**
+ * A tree shaped like the server's, all private (mode 000), so the account can reach none of it, even when
+ * it is the user that made the files (as it is when the tests don't run as root).
+ */
 beforeEach(() => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'isolation-'))
   fs.chmodSync(dir, 0o755)
   for (const f of CHECK_FILES) write(p('ops', f), fs.readFileSync(path.join(OPS, f)), 0o755)
   fs.chmodSync(p('ops'), 0o755)
-  write(p('prod/.env.local'), `KEY=${SECRET}\n`, 0o600)
-  write(p('prod/data/payload.db'), SECRET, 0o600)
-  write(p('prod/public/media/a.jpg'), SECRET, 0o600)
-  write(p('prod/releases/abc/server.js'), SECRET, 0o600)
-  write(p('backups/daily/x.tar.gz'), SECRET, 0o600)
-  write(p('umami/.env'), `PASSWORD=${SECRET}\n`, 0o600)
-  write(p('pm2/logs/app.log'), SECRET, 0o600)
-  write(p('caddy/.local/share/caddy/pki/key.pem'), SECRET, 0o600)
+  write(p('prod/.env.local'), `KEY=${SECRET}\n`, 0o000)
+  write(p('prod/data/payload.db'), SECRET, 0o000)
+  write(p('prod/public/media/a.jpg'), SECRET, 0o000)
+  write(p('prod/releases/abc/server.js'), SECRET, 0o000)
+  write(p('backups/daily/x.tar.gz'), SECRET, 0o000)
+  write(p('umami/.env'), `PASSWORD=${SECRET}\n`, 0o000)
+  write(p('pm2/logs/app.log'), SECRET, 0o000)
+  write(p('caddy/.local/share/caddy/pki/key.pem'), SECRET, 0o000)
   for (const d of [
     'prod',
     'prod/data',
@@ -57,10 +60,14 @@ beforeEach(() => {
     'caddy/.local/share',
     'caddy/.local/share/caddy',
     'caddy/.local/share/caddy/pki',
-  ])
-    fs.chmodSync(p(d), 0o700)
+  ].reverse())
+    fs.chmodSync(p(d), 0o000)
 })
-afterEach(() => fs.rmSync(dir, { recursive: true, force: true }))
+afterEach(() => {
+  // folders with no access can't be entered to delete what is in them
+  execFileSync('chmod', ['-R', 'u+rwx', dir])
+  fs.rmSync(dir, { recursive: true, force: true })
+})
 
 /** Runs the check as an unprivileged user, with the stand-in tree and a port nothing listens on. */
 const check = (env = {}) => {
@@ -109,16 +116,18 @@ describe('preview-isolation-check.sh: when nothing is reachable', () => {
   })
 
   it('treats a path that does not exist as safe', async () => {
-    fs.rmSync(p('umami'), { recursive: true })
-    fs.rmSync(p('pm2'), { recursive: true })
+    for (const folder of ['umami', 'pm2']) {
+      execFileSync('chmod', ['-R', 'u+rwx', p(folder)]) // a folder with no access can't be deleted
+      fs.rmSync(p(folder), { recursive: true })
+    }
     expect((await check()).code).toBe(0)
   })
 })
 
 describe('preview-isolation-check.sh: a production file the account can open', () => {
-  // The folder can be entered but not listed (711), so only the known file name finds it.
+  // The folder can be entered but not listed (311: no read bit for anyone), so only the known file name finds it.
   const knownFile = async (folder, file, shown) => {
-    fs.chmodSync(p(folder), 0o711)
+    fs.chmodSync(p(folder), 0o311)
     fs.chmodSync(p(file), 0o644)
     const { code, out } = await check()
     expect(code).toBe(1)
@@ -127,7 +136,7 @@ describe('preview-isolation-check.sh: a production file the account can open', (
   }
   it('the settings file (.env.local)', () => knownFile('prod', 'prod/.env.local'))
   it('the database', async () => {
-    fs.chmodSync(p('prod'), 0o711)
+    fs.chmodSync(p('prod'), 0o311)
     return knownFile('prod/data', 'prod/data/payload.db')
   })
   it('Umami’s settings', () => knownFile('umami', 'umami/.env'))
@@ -161,6 +170,7 @@ describe('preview-isolation-check.sh: a folder with a readable file anywhere in 
   folderCase('Caddy’s certificate storage', 'caddy', 'caddy/.local/share/caddy/pki/key.pem')
 
   it('finds a file eight levels down, and the production database folder on its own', async () => {
+    open('backups') // so that the deep folders can be made
     write(p('backups/a/b/c/d/e/f/g/deep'), SECRET, 0o644)
     for (const d of [
       'backups',
@@ -175,7 +185,7 @@ describe('preview-isolation-check.sh: a folder with a readable file anywhere in 
       open(d)
     expect((await check()).out).toContain(`can read files in ${p('backups')}`)
     // production's folder can be entered but not listed; its database folder is open
-    fs.chmodSync(p('prod'), 0o711)
+    fs.chmodSync(p('prod'), 0o311)
     open('prod/data')
     fs.chmodSync(p('prod/data/payload.db'), 0o644)
     expect((await check()).out).toContain(`can read files in ${p('prod/data')}`)
@@ -254,7 +264,7 @@ describe('preview-isolation-check.sh: what it reports', () => {
   it('reports every failure, not only the first', async () => {
     const server = await listen('127.0.0.1')
     try {
-      fs.chmodSync(p('umami'), 0o711)
+      fs.chmodSync(p('umami'), 0o311)
       fs.chmodSync(p('umami/.env'), 0o644)
       const { out } = await check({ CADDY_ADMIN_PORT: String(server.port) })
       expect(out).toContain(`can read ${p('umami/.env')}`)
