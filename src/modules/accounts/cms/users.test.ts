@@ -15,6 +15,7 @@ import { noPasswordSignInForAgents } from './noPasswordSignInForAgents'
 import { requireConfirmedEmailChange } from './requireConfirmedEmailChange'
 import { requireCurrentPassword } from './requireCurrentPassword'
 import { RESET_LINK_LIFETIME_MS } from '../domain/linkLifetimes'
+import { guestOnlyFromProviders } from './guestOnlyFromProviders'
 import { Users } from './users'
 
 describe('Users', () => {
@@ -79,7 +80,12 @@ describe('Users', () => {
 
   it('asks for the current password before anyone changes their own (#233), takes forgot password from the site only (#282), and sends no reset email to an unverified account (#187)', () => {
     expect(Users.hooks).toEqual({
-      beforeChange: [firstAccountIsAdmin, requireCurrentPassword, requireConfirmedEmailChange],
+      beforeChange: [
+        firstAccountIsAdmin,
+        requireCurrentPassword,
+        requireConfirmedEmailChange,
+        guestOnlyFromProviders,
+      ],
       beforeLogin: [noPasswordSignInForAgents],
       beforeOperation: [forgotPasswordFromSiteOnly, noResetEmailWhileUnverified],
     })

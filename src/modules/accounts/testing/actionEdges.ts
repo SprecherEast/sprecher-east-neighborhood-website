@@ -29,6 +29,9 @@ export const edges = {
   /** `login` from `@payloadcms/next/auth`: Payload's sign-in, which also sets the cookie */
   signInHelper: vi.fn(),
   deleteCookie: vi.fn(),
+  /** A cookie the request sent: none unless a test says so */
+  getCookie: vi.fn(),
+  setCookie: vi.fn(),
 }
 
 /** Payload's defaults for a collection with `auth: true` */
@@ -62,7 +65,7 @@ export const requestHeaders = new Headers({ cookie: 'payload-token=abc' })
 
 export const nextHeadersWithEdges = () => ({
   headers: async () => requestHeaders,
-  cookies: async () => ({ delete: edges.deleteCookie }),
+  cookies: async () => ({ get: edges.getCookie, set: edges.setCookie, delete: edges.deleteCookie }),
 })
 
 export const nextAuthWithEdges = () => ({ login: edges.signInHelper })

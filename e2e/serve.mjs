@@ -41,6 +41,9 @@ const env = {
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: '',
   TURNSTILE_SECRET_KEY: '',
   TURNSTILE_ALLOWED_HOSTNAMES: '',
+  // Google sign-in off: a provider needs the network (#188)
+  GOOGLE_CLIENT_ID: '',
+  GOOGLE_CLIENT_SECRET: '',
   SITE_TIMEZONE: 'America/Chicago',
   NEXT_TELEMETRY_DISABLED: '1',
 }

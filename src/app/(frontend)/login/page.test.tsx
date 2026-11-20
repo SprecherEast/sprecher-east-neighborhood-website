@@ -11,11 +11,17 @@ const mocks = vi.hoisted(() => ({
 }))
 vi.mock('@/modules/accounts/server', () => ({
   getCurrentUser: mocks.getCurrentUser,
+  getEnabledSocialProviders: () => [],
   SignInForm: () => <form aria-label="Log in" />,
+  SocialSignIn: ({ result }: { result?: unknown }) => (
+    <p data-testid="social">{String(result ?? '')}</p>
+  ),
 }))
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }))
 
 import LoginPage from './page'
+
+const page = (query: Record<string, string> = {}) => ({ searchParams: Promise.resolve(query) })
 
 beforeEach(() => {
   mocks.redirect.mockClear()
@@ -25,13 +31,19 @@ afterEach(cleanup)
 describe('/login', () => {
   it('sends a signed-in user to their account', async () => {
     mocks.getCurrentUser.mockResolvedValue({ id: 7, email: 'a@example.com', name: null })
-    await expect(LoginPage()).rejects.toThrow('NEXT_REDIRECT /account')
+    await expect(LoginPage(page())).rejects.toThrow('NEXT_REDIRECT /account')
   })
 
   it('shows a visitor the sign-in form', async () => {
     mocks.getCurrentUser.mockResolvedValue(null)
-    render(await LoginPage())
+    render(await LoginPage(page()))
     expect(screen.getByRole('form', { name: 'Log in' })).toBeTruthy()
     expect(mocks.redirect).not.toHaveBeenCalled()
+  })
+
+  it('passes a provider sign-in outcome to the provider buttons', async () => {
+    mocks.getCurrentUser.mockResolvedValue(null)
+    render(await LoginPage(page({ social: 'failed' })))
+    expect(screen.getByTestId('social').textContent).toBe('failed')
   })
 })

@@ -2,7 +2,12 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { ACCOUNT_PATH } from '@/modules/accounts'
-import { getCurrentUser, SignUpForm } from '@/modules/accounts/server'
+import {
+  getCurrentUser,
+  getEnabledSocialProviders,
+  SignUpForm,
+  SocialSignIn,
+} from '@/modules/accounts/server'
 import { parseEmailAddress } from '@/platform/lib'
 import { privateAddressMetadata } from '@/platform/seo/privateAddress'
 import { PageHeader } from '@/platform/ui/PageHeader'
@@ -17,7 +22,8 @@ type Props = { searchParams: Promise<{ email?: string | string[] }> }
 
 /**
  * Where a visitor creates an account (#187), with the email filled in when the confirm page's
- * "Yes" sent them. Nothing is created until the form is sent.
+ * "Yes" sent them. Nothing is created until the form is sent. Google sign-in sits above
+ * the form when it's on (#188).
  */
 export default async function SignUpPage({ searchParams }: Props) {
   // Signed in: there is already an account
@@ -31,7 +37,10 @@ export default async function SignUpPage({ searchParams }: Props) {
         title="Create an Account"
         description="A free account for Sprecher East. We’ll send you an email to confirm it before you log in."
       />
-      <SignUpForm email={parseEmailAddress(email)} />
+      <div className="space-y-6">
+        <SocialSignIn providers={getEnabledSocialProviders()} />
+        <SignUpForm email={parseEmailAddress(email)} />
+      </div>
     </Section>
   )
 }
