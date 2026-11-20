@@ -2,6 +2,7 @@ import { message } from '@/platform/lib'
 import { FORM_MESSAGES } from '@/platform/ui'
 
 import type { AddPasskeyFailure } from '../domain/addPasskey'
+import type { RemovePasskeyFailure } from '../domain/removePasskey'
 import type { PasskeySignInFailure } from '../domain/signInWithPasskey'
 import { GUARD_MESSAGES } from './guardMessages'
 
@@ -48,6 +49,26 @@ export function toAddPasskeyNotice(outcome: AddPasskeyOutcome): PasskeyNotice {
       return notice('error', FORM_MESSAGES.offline)
     case 'failed':
       return notice('error', message('accounts.passkey.failed'))
+  }
+}
+
+/** How removing a passkey ended, for the message above the list. */
+export type RemovePasskeyOutcome = RemovePasskeyFailure | 'removed' | 'offline'
+
+/**
+ * The fixed message for each way removing a passkey can end, never the server's own text. An old
+ * sign-in is asked to log in again, like adding one.
+ */
+export function toRemovePasskeyNotice(outcome: RemovePasskeyOutcome): PasskeyNotice {
+  switch (outcome) {
+    case 'removed':
+      return notice('success', message('accounts.passkey.removed'))
+    case 'sign-in-again':
+      return notice('warning', message('accounts.passkey.removeSignInAgain'), true)
+    case 'offline':
+      return notice('error', FORM_MESSAGES.offline)
+    case 'failed':
+      return notice('error', message('accounts.passkey.removeFailed'))
   }
 }
 

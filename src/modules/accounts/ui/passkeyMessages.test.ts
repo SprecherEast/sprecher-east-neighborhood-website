@@ -4,8 +4,10 @@ import {
   PASSKEY_LOGIN_LABEL,
   toAddPasskeyNotice,
   toPasskeyLoginNotice,
+  toRemovePasskeyNotice,
   type AddPasskeyOutcome,
   type PasskeyLoginOutcome,
+  type RemovePasskeyOutcome,
 } from './passkeyMessages'
 
 const OUTCOMES: AddPasskeyOutcome[] = [
@@ -76,5 +78,34 @@ describe('toPasskeyLoginNotice with a code it does not know', () => {
   it('shows the one fixed failure, never the code', () => {
     const notice = toPasskeyLoginNotice('no such account' as PasskeyLoginOutcome)
     expect(notice?.text).toBe(toPasskeyLoginNotice('failed')?.text)
+  })
+})
+
+describe('toRemovePasskeyNotice', () => {
+  const REMOVE_OUTCOMES: RemovePasskeyOutcome[] = ['removed', 'sign-in-again', 'offline', 'failed']
+
+  it.each(REMOVE_OUTCOMES)('has a short, fixed message for %s', (outcome) => {
+    const { text } = toRemovePasskeyNotice(outcome)
+    expect(text.length).toBeGreaterThan(10)
+    expect(text.split(/\s+/).length).toBeLessThanOrEqual(30)
+    expect(text).not.toMatch(/\b(I|me|my)\b/)
+  })
+
+  it('says it is removed, as a success', () => {
+    expect(toRemovePasskeyNotice('removed')).toEqual({
+      tone: 'success',
+      text: 'Passkey removed.',
+      logInAgain: false,
+    })
+  })
+
+  it('offers to log in again only for an old sign-in', () => {
+    expect(toRemovePasskeyNotice('sign-in-again')).toMatchObject({
+      tone: 'warning',
+      logInAgain: true,
+    })
+    for (const outcome of ['removed', 'offline', 'failed'] as const) {
+      expect(toRemovePasskeyNotice(outcome).logInAgain).toBe(false)
+    }
   })
 })

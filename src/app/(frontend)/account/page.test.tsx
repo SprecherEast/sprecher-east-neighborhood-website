@@ -8,6 +8,7 @@ const accounts = vi.hoisted(() => ({
   getCurrentUser: vi.fn(),
   arePasskeysOn: vi.fn(),
   getGoogleConnection: vi.fn(),
+  getOwnPasskeys: vi.fn(),
 }))
 vi.mock('@/modules/accounts/server', () => ({
   requireUser: accounts.requireUser,
@@ -17,7 +18,10 @@ vi.mock('@/modules/accounts/server', () => ({
   ConnectGoogle: ({ connection, result }: { connection: string; result?: unknown }) => (
     <section aria-label="Google" data-connection={connection} data-result={String(result)} />
   ),
-  AddPasskey: () => <section aria-label="Passkeys" />,
+  getOwnPasskeys: accounts.getOwnPasskeys,
+  PasskeysCard: ({ passkeys }: { passkeys: unknown[] }) => (
+    <section aria-label="Passkeys" data-count={passkeys.length} />
+  ),
   ChangePasswordForm: () => <form aria-label="Change password" />,
 }))
 
@@ -25,6 +29,8 @@ import AccountPage from './page'
 
 afterEach(cleanup)
 beforeEach(() => {
+  accounts.getOwnPasskeys.mockReset().mockResolvedValue([])
+  accounts.arePasskeysOn.mockReset().mockReturnValue(false)
   accounts.getGoogleConnection.mockResolvedValue('off')
   searchParams = Promise.resolve({})
 })
@@ -54,19 +60,24 @@ describe('/account', () => {
     expect(screen.getByRole('form', { name: 'Change password' })).toBeTruthy()
   })
 
-  it('hides the passkey card entirely while the switch is off', async () => {
+  it('hides the passkey card entirely while the switch is off, and reads no passkeys', async () => {
     signedIn()
     accounts.arePasskeysOn.mockReturnValue(false)
     render(await AccountPage({ searchParams }))
     expect(screen.queryByRole('region', { name: 'Passkeys' })).toBeNull()
+    expect(accounts.getOwnPasskeys).not.toHaveBeenCalled()
     expect(screen.getByRole('form', { name: 'Change password' })).toBeTruthy()
   })
 
   it('shows the passkey card after the password form once the switch is on', async () => {
     signedIn()
     accounts.arePasskeysOn.mockReturnValue(true)
+    accounts.getOwnPasskeys.mockResolvedValue([{ id: 1 }, { id: 2 }])
     render(await AccountPage({ searchParams }))
     const card = screen.getByRole('region', { name: 'Passkeys' })
+    // The list is the session's own account's, read by the id requireUser answered with
+    expect(accounts.getOwnPasskeys).toHaveBeenCalledExactlyOnceWith(7)
+    expect(card.getAttribute('data-count')).toBe('2')
     const password = screen.getByRole('form', { name: 'Change password' })
     expect(password.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })

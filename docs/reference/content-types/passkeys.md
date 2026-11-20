@@ -19,7 +19,9 @@
 
 ## Hooks
 
-None.
+| Phase       | Function             | Defined in                                       |
+| ----------- | -------------------- | ------------------------------------------------ |
+| afterDelete | `passkeyRemovedNote` | `src/modules/accounts/cms/passkeyRemovedNote.ts` |
 
 ## Fields
 

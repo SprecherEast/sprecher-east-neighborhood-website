@@ -148,25 +148,68 @@ describe('decideAddPasskey: who may add one', () => {
 })
 
 describe('decideRemovePasskey: who may remove one', () => {
-  it('lets an account remove its own passkey', () => {
-    expect(decideRemovePasskey({ accountId: 7, passkeyOwnerId: 7 })).toEqual({ ok: true })
+  const base = { accountId: 7, passkeyOwnerId: 7, signedInAt: ago(60_000), now }
+
+  it('lets an account with a recent sign-in remove its own passkey', () => {
+    expect(decideRemovePasskey(base)).toEqual({ ok: true })
   })
 
   it('refuses another account’s passkey', () => {
-    expect(decideRemovePasskey({ accountId: 7, passkeyOwnerId: 8 })).toEqual({ ok: false })
-  })
-
-  it('refuses nobody signed in', () => {
-    expect(decideRemovePasskey({ accountId: null, passkeyOwnerId: 8 })).toEqual({ ok: false })
+    expect(decideRemovePasskey({ ...base, passkeyOwnerId: 8 })).toEqual({
+      ok: false,
+      reason: 'not-yours',
+    })
   })
 
   it('refuses a passkey nobody owns', () => {
-    expect(decideRemovePasskey({ accountId: 7, passkeyOwnerId: null })).toEqual({ ok: false })
+    expect(decideRemovePasskey({ ...base, passkeyOwnerId: null })).toEqual({
+      ok: false,
+      reason: 'not-yours',
+    })
+  })
+
+  it('refuses nobody signed in, before looking at the passkey', () => {
+    expect(decideRemovePasskey({ ...base, accountId: null })).toEqual({
+      ok: false,
+      reason: 'signed-out',
+    })
+  })
+
+  it('asks for a new sign-in when the session is older than the window, at the same edge as adding', () => {
+    const edge = { ...base, signedInAt: ago(RECENT_SIGN_IN_WINDOW_MS) }
+    expect(decideRemovePasskey(edge)).toEqual({ ok: true })
+    expect(decideRemovePasskey({ ...edge, signedInAt: ago(RECENT_SIGN_IN_WINDOW_MS + 1) })).toEqual(
+      {
+        ok: false,
+        reason: 'sign-in-again',
+      },
+    )
+  })
+
+  it.each([
+    ['unknown', null],
+    ['in the future', new Date(now.getTime() + 1000)],
+    ['unreadable', new Date(Number.NaN)],
+  ])('counts a sign-in time that is %s as not recent', (_name, signedInAt) => {
+    expect(decideRemovePasskey({ ...base, signedInAt })).toEqual({
+      ok: false,
+      reason: 'sign-in-again',
+    })
+  })
+
+  it('asks a stranger’s old session to sign in again before saying anything about the passkey', () => {
+    expect(
+      decideRemovePasskey({
+        ...base,
+        passkeyOwnerId: 8,
+        signedInAt: ago(RECENT_SIGN_IN_WINDOW_MS + 1),
+      }),
+    ).toEqual({ ok: false, reason: 'sign-in-again' })
   })
 
   it('allows removing the last one: email and password always remain', () => {
     // The rule takes no count: there is no case in which the last passkey is kept
-    expect(decideRemovePasskey({ accountId: 7, passkeyOwnerId: 7 })).toEqual({ ok: true })
+    expect(decideRemovePasskey(base)).toEqual({ ok: true })
   })
 })
 

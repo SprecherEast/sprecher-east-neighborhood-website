@@ -43,8 +43,16 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
+// The page puts the form inside the "Passkeys" card, a labelled section
+const renderCard = () =>
+  render(
+    <section aria-label="Passkeys">
+      <AddPasskey />
+    </section>,
+  )
+
 const shown = async () => {
-  render(<AddPasskey />)
+  renderCard()
   return screen.findByRole('button', { name: 'Add a passkey' })
 }
 const add = async () => userEvent.click(await shown())
@@ -55,12 +63,10 @@ describe('AddPasskey: when it shows', () => {
     const { container } = render(<AddPasskey />)
     await waitFor(() => expect(mocks.passkeysSupported).toHaveBeenCalled())
     expect(container.innerHTML).toBe('')
-    expect(screen.queryByText('Passkeys')).toBeNull()
   })
 
   it('shows the card with its lead, a name field and the button, and is accessible', async () => {
     await shown()
-    expect(screen.getByRole('heading', { name: 'Passkeys' })).toBeTruthy()
     expect(
       screen.getByText('Log in with your phone’s or computer’s screen lock instead of a password.'),
     ).toBeTruthy()
@@ -82,6 +88,8 @@ describe('AddPasskey: adding one', () => {
     expect(status.textContent).toContain('Passkey added. Next time, choose Log in with a passkey.')
     expect(mocks.createPasskey).toHaveBeenCalledExactlyOnceWith(options)
     expect(mocks.addPasskey).toHaveBeenCalledExactlyOnceWith({ answer, label: 'My phone' })
+    // The list above is the server page's: it refreshes to show the new passkey
+    expect(mocks.refresh).toHaveBeenCalledOnce()
     expect(screen.getByLabelText<HTMLInputElement>(/^Passkey name/).value).toBe('')
     await expectAccessible(document.body)
   })
