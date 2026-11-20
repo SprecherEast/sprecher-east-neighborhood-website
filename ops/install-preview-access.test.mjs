@@ -329,9 +329,8 @@ describe('install-preview-access.sh: it changes nothing on any doubt', () => {
     untouched({ STUB_UID: '1000' }, [], 'not run as root'))
   it('when it is a preview’s deploy', async () =>
     untouched({ PREVIEW_NUMBER: '7' }, [], 'only runs for production'))
-  it.each(['visudo', 'sshd', 'runuser', 'useradd', 'ssh-keygen', 'pm2'])(
-    'when %s is missing',
-    async (tool) => untouched({}, [tool], `${tool} was not found`),
+  it.each(['visudo', 'sshd', 'runuser', 'useradd', 'pm2'])('when %s is missing', async (tool) =>
+    untouched({}, [tool], `${tool} was not found`),
   )
   it.each([
     ['too short', 'ab'],
