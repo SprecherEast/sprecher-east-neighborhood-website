@@ -104,27 +104,47 @@ export function isPasskeySwitchOn(env: Record<string, string | undefined>): bool
 export const toChallengeExpiry = (now: Date): Date => new Date(now.getTime() + CHALLENGE_TTL_MS)
 
 /**
- * What a label may hold: letters and numbers in any language, spaces, apostrophes, hyphens,
- * underscores, commas and round brackets. No dot, colon, slash, `@` or angle bracket, so a label
- * can never read as a link or an address: it goes into the email that warns about a passkey
- * added with a stolen password (decision 0021), where mail apps turn such text into links.
+ * What a label may hold, after Unicode compatibility folding (NFKC, so a fullwidth or boxed
+ * character is read as the plain one it imitates): letters, decimal digits and combining marks in
+ * any language, spaces, apostrophes, hyphens, underscores, commas and round brackets. No dot,
+ * colon, slash, `@` or angle bracket, so a label can't carry a clickable link or address: it goes
+ * into the email that warns about a passkey added with a stolen password (decision 0021), where
+ * mail apps turn such text into links. Look-alike letters in another script are still letters.
+ * Left out as look-alikes or invisible: the spacing modifier letters (except the okina and the
+ * modifier apostrophe), the overlay and joiner marks, variation selectors, enclosing marks, and
+ * more than three marks in a row.
  */
-const ALLOWED_LABEL_CHARACTERS = /^[\p{L}\p{N}\p{M} '’_,()-]*$/u
-const DISALLOWED_LABEL_CHARACTER = /[^\p{L}\p{N}\p{M} '’_,()-]/gu
+const LABEL_CHARACTERS = String.raw`\p{L}\p{Nd}\p{M} '’_,()-`
+const LABEL_LOOK_ALIKES = String.raw`\u02B0-\u02BA\u02BD-\u02FF\u0334-\u0338\u034F\uFE00-\uFE0F\p{Me}`
+const ONE_LABEL_CHARACTER = `(?![${LABEL_LOOK_ALIKES}])[${LABEL_CHARACTERS}]`
+const ALLOWED_LABEL = new RegExp(`^(?:${ONE_LABEL_CHARACTER})*$`, 'u')
+const OTHER_LABEL_CHARACTER = new RegExp(`(?!${ONE_LABEL_CHARACTER})[\\s\\S]`, 'gu')
+const MARKS_IN_A_ROW = 3
+const TOO_MANY_MARKS = new RegExp(String.raw`\p{M}{${MARKS_IN_A_ROW + 1}}`, 'u')
+const MARKS_BEYOND_THE_LIMIT = new RegExp(String.raw`(\p{M}{${MARKS_IN_A_ROW}})\p{M}+`, 'gu')
 
 /** Whether a typed label is within the rule, and short enough, as it is. Empty is allowed. */
-export const isAllowedPasskeyLabel = (raw: string): boolean =>
-  raw.length <= PASSKEY_LABEL_MAX_LENGTH && ALLOWED_LABEL_CHARACTERS.test(raw)
+export function isAllowedPasskeyLabel(raw: string): boolean {
+  if (raw.length > PASSKEY_LABEL_MAX_LENGTH) return false
+  const folded = raw.normalize('NFKC')
+  return (
+    folded.length <= PASSKEY_LABEL_MAX_LENGTH &&
+    ALLOWED_LABEL.test(folded) &&
+    !TOO_MANY_MARKS.test(folded)
+  )
+}
 
 /**
- * The label shown to the resident and put in the email: one line, kept short, only the allowed
- * characters (any other becomes a space, so `help.example` reads as `help example`); the default
- * when none is left.
+ * The label shown to the resident and put in the email: one line, kept short, folded (NFKC), only
+ * the allowed characters (any other becomes a space, so `help.example` reads as `help example`);
+ * the default when none is left.
  */
 export function toPasskeyLabel(raw: unknown): string {
   if (typeof raw !== 'string') return DEFAULT_PASSKEY_LABEL
   const label = raw
-    .replace(DISALLOWED_LABEL_CHARACTER, ' ')
+    .normalize('NFKC')
+    .replace(OTHER_LABEL_CHARACTER, ' ')
+    .replace(MARKS_BEYOND_THE_LIMIT, '$1')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, PASSKEY_LABEL_MAX_LENGTH)

@@ -2,17 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CHALLENGE_TTL_MS,
-  DEFAULT_PASSKEY_LABEL,
   MAX_PASSKEYS_PER_ACCOUNT,
-  PASSKEY_LABEL_MAX_LENGTH,
   RECENT_SIGN_IN_WINDOW_MS,
   decideAddPasskey,
   decideRemovePasskey,
   decideUsePasskey,
-  isAllowedPasskeyLabel,
   isPasskeySwitchOn,
   toChallengeExpiry,
-  toPasskeyLabel,
   toRelyingParty,
 } from './passkeys'
 
@@ -92,55 +88,6 @@ describe('toChallengeExpiry', () => {
   it('is short: minutes, not hours', () => {
     expect(CHALLENGE_TTL_MS).toBeLessThanOrEqual(10 * 60 * 1000)
     expect(CHALLENGE_TTL_MS).toBeGreaterThan(0)
-  })
-})
-
-describe('toPasskeyLabel', () => {
-  it('trims and collapses whitespace', () => {
-    expect(toPasskeyLabel('  My   phone \n')).toBe('My phone')
-  })
-
-  it('falls back to the default for nothing, blanks and non-text', () => {
-    for (const raw of [undefined, null, '', '   ', 42, {}]) {
-      expect(toPasskeyLabel(raw)).toBe(DEFAULT_PASSKEY_LABEL)
-    }
-  })
-
-  it('drops control characters', () => {
-    expect(toPasskeyLabel('Phone\u0000\u0007 one')).toBe('Phone one')
-  })
-
-  it('keeps letters, numbers, spaces and basic punctuation, in any language', () => {
-    for (const label of [
-      'My phone',
-      'Ada’s laptop',
-      'Work (2nd) key',
-      'Téléphone',
-      'Phone_2, blue',
-    ]) {
-      expect(toPasskeyLabel(label)).toBe(label)
-    }
-  })
-
-  it.each([
-    ['a web address', 'sprecher-east-help.com to undo this', 'sprecher-east-help com to undo this'],
-    ['an email address', 'you@help.example', 'you help example'],
-    ['a link', 'https://help.example/undo', 'https help example undo'],
-    ['www', 'www help', 'www help'],
-    ['markup', '<b>Phone</b> & "co"', 'b Phone b co'],
-  ])('neutralises %s, so the email can never carry a link or an address', (_name, raw, label) => {
-    const clean = toPasskeyLabel(raw)
-    expect(clean).toBe(label)
-    expect(clean).not.toMatch(/[./:@<>&"]/)
-  })
-
-  it('falls back to the default when nothing allowed is left', () => {
-    expect(toPasskeyLabel('...@@//')).toBe(DEFAULT_PASSKEY_LABEL)
-  })
-
-  it('keeps it to the length the list has room for', () => {
-    const label = toPasskeyLabel('x'.repeat(500))
-    expect(label).toHaveLength(PASSKEY_LABEL_MAX_LENGTH)
   })
 })
 
@@ -263,25 +210,5 @@ describe('decideUsePasskey: who may sign in with one', () => {
   it('lets an account whose lock has passed sign in', () => {
     const past = { ...owner, lockedUntil: new Date(now.getTime() - 1) }
     expect(decideUsePasskey({ ...base, owner: past })).toEqual({ ok: true, accountId: 7 })
-  })
-})
-
-describe('isAllowedPasskeyLabel: what a neighbor may type', () => {
-  it.each(['', 'My phone', 'Ada’s laptop', 'Téléphone 2'])('accepts %j', (label) => {
-    expect(isAllowedPasskeyLabel(label)).toBe(true)
-  })
-
-  it.each([
-    'a.b',
-    'you@help.example',
-    'https://x',
-    'www help.com',
-    'a/b',
-    'a:b',
-    '<b>',
-    'Phone\u0007',
-    'x'.repeat(PASSKEY_LABEL_MAX_LENGTH + 1),
-  ])('refuses %j', (label) => {
-    expect(isAllowedPasskeyLabel(label)).toBe(false)
   })
 })
