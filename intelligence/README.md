@@ -81,10 +81,12 @@ when the source wasn't polled. The digest shows how often the fallback runs.
 
 **Hard nos.** No logins, CAPTCHAs or paywalls (madison.com's redirect to `tollbit.madison.com`),
 no path robots.txt disallows (Dane County's press subscription page), no social networks, and no
-source that isn't `valid` or `pending` in `sources.yaml`. The check refuses
+source the daily runner polls that isn't `valid` or `pending` in `sources.yaml` (the hand-run
+scout may read other public pages, trusting them by tier). The check refuses
 `direct-then-playwright` on any source without an `allowed` robots.txt result, on a source that
 isn't HTML, or on one that is `restricted` or `invalid`. Agents summarize facts and never
-republish articles.
+republish articles. Reading a page and trusting it are
+separate: see [Trust](sources.md#trust-reach-is-not-trust).
 
 **Where Playwright runs.** In the agent runtime's scout step only. Never in the website, its
 build or its CI: CI checks the files in this folder, including the direct path's rules and the
