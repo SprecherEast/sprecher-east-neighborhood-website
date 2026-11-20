@@ -3,19 +3,20 @@ import path from 'node:path'
 
 import { expect } from '@playwright/test'
 
-import { E2E } from './settings.mjs'
+import { currentServer } from './server'
 
 /** One email the site sent, as the SMTP catcher in serve.mjs stored it. */
 export type CaughtEmail = { to: string[]; subject: string; text: string; html: string }
 
-const mailDir = path.join(process.cwd(), E2E.dataDir, 'mail')
+const mailDir = () => path.join(process.cwd(), currentServer().dataDir, 'mail')
 
 /** Every email sent to an address so far, oldest first. */
 export function emailsTo(address: string): CaughtEmail[] {
   const to = address.toLowerCase()
-  return readdirSync(mailDir)
+  const dir = mailDir()
+  return readdirSync(dir)
     .sort()
-    .map((file) => JSON.parse(readFileSync(path.join(mailDir, file), 'utf8')) as CaughtEmail)
+    .map((file) => JSON.parse(readFileSync(path.join(dir, file), 'utf8')) as CaughtEmail)
     .filter((email) => email.to.includes(to))
 }
 
@@ -29,12 +30,13 @@ export async function nthEmailTo(address: string, nth = 1): Promise<CaughtEmail>
 
 /** The site link in an email that goes to a path, as a path the test can open. */
 export function linkTo(email: CaughtEmail, pathname: string): string {
+  const { baseURL } = currentServer()
   const links = [
     ...email.html.matchAll(/href="([^"]+)"/g),
     ...email.text.matchAll(/(https?:\/\/\S+)/g),
   ]
     .map((match) => (match[1] ?? '').replaceAll('&amp;', '&'))
-    .filter((href) => href.startsWith(E2E.baseURL))
+    .filter((href) => href.startsWith(baseURL))
     .map((href) => new URL(href))
     .filter((url) => url.pathname === pathname)
   const [url] = links

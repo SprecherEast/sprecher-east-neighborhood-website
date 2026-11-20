@@ -13,7 +13,12 @@ import { SMTPServer } from 'smtp-server'
 import { E2E } from './support/settings.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const dataDir = path.join(root, E2E.dataDir)
+// `node e2e/serve.mjs passkeys` starts the second server (#1317): `next dev` with the passkey
+// switch on, on its own port with its own database and mailbox. Without the argument, the
+// production build with the switch off, as the site runs it.
+const passkeys = process.argv[2] === 'passkeys'
+const target = passkeys ? E2E.passkeys : E2E
+const dataDir = path.join(root, target.dataDir)
 
 rmSync(dataDir, { recursive: true, force: true })
 mkdirSync(path.join(dataDir, 'mail'), { recursive: true })
@@ -22,16 +27,18 @@ mkdirSync(path.join(dataDir, 'mail'), { recursive: true })
 // from a developer's .env.local (Next keeps a value that's already set, even an empty one)
 // E2E_DEV=1 runs `next dev` instead of a production build: for writing tests on a machine that
 // can't build (next/font fetches Poppins from Google Fonts at build time). CI always builds.
-const dev = Boolean(process.env.E2E_DEV)
+const dev = passkeys || Boolean(process.env.E2E_DEV)
 const env = {
   ...process.env,
   NODE_ENV: dev ? 'development' : 'production',
-  DATABASE_URI: `file:./${E2E.dataDir}/e2e.db`,
+  DATABASE_URI: `file:./${target.dataDir}/e2e.db`,
   PAYLOAD_SECRET: 'e2e-only-secret-not-used-anywhere-else-0123456789',
   PREVIEW_SECRET: 'e2e-only-preview-secret',
-  NEXT_PUBLIC_SERVER_URL: E2E.baseURL,
+  NEXT_PUBLIC_SERVER_URL: target.baseURL,
+  // Passkeys are on only where the relying party can be localhost over http (development)
+  PASSKEYS_ENABLED: passkeys ? 'true' : '',
   SMTP_HOST: '127.0.0.1',
-  SMTP_PORT: String(E2E.smtpPort),
+  SMTP_PORT: String(target.smtpPort),
   SMTP_USER: '',
   SMTP_PASS: '',
   SMTP_FROM_ADDRESS: 'no-reply@example.com',
@@ -77,7 +84,7 @@ const smtp = new SMTPServer({
       .catch(done)
   },
 })
-smtp.listen(E2E.smtpPort, '127.0.0.1')
+smtp.listen(target.smtpPort, '127.0.0.1')
 
 const run = (args) => {
   const result = spawnSync('npx', args, { cwd: root, env, stdio: 'inherit' })
@@ -93,7 +100,7 @@ if (!dev) run(['payload', 'migrate'])
 run(['payload', 'run', 'e2e/seed.ts'])
 if (!dev) run(['next', 'build'])
 
-const server = spawn('npx', ['next', dev ? 'dev' : 'start', '-p', String(E2E.port)], {
+const server = spawn('npx', ['next', dev ? 'dev' : 'start', '-p', String(target.port)], {
   cwd: root,
   env,
   stdio: 'inherit',
