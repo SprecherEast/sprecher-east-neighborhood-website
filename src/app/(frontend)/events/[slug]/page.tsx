@@ -4,7 +4,9 @@ import { draftMode } from 'next/headers'
 import { ArrowRight } from 'lucide-react'
 import React from 'react'
 
+import { isPastEvent } from '@/modules/events'
 import { PayloadRedirects } from '@/modules/site/server'
+import { startOfToday } from '@/platform/lib/timezone'
 import { articleColumnClass } from '@/platform/richtext/articleColumn'
 import { articleToc } from '@/platform/richtext/articleToc'
 import { RichText } from '@/platform/richtext/RichText'
@@ -55,6 +57,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
 
   const upcomingEvents = await findUpcomingEvents({ excludeId: event.id })
   const hasImage = event.image !== null
+  const past = isPastEvent(event.date, startOfToday())
   const textClassName = articleColumnClass(event.content)
   return (
     <ArticlePage
@@ -87,12 +90,18 @@ export default async function EventPage({ params: paramsPromise }: Args) {
         </Alert>
       )}
 
+      {past && !event.cancelled && (
+        <Alert tone="info" live={false} className="mb-8">
+          <p className="font-semibold">This event has passed.</p>
+        </Alert>
+      )}
+
       <OfficialAgenda event={event} />
 
       <EventLocation event={event} />
 
-      {/* A cancelled event takes no registrations */}
-      {event.registrationUrl && !event.cancelled && (
+      {/* A cancelled or past event takes no registrations (#1012) */}
+      {event.registrationUrl && !event.cancelled && !past && (
         <div className="mb-8">
           <Button href={event.registrationUrl} external iconEnd={<ArrowRight aria-hidden="true" />}>
             Register for This Event

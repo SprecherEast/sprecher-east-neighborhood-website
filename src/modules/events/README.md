@@ -21,6 +21,7 @@ for CMS pages. Fields, access and hooks: [events content type](../../../docs/ref
 - Upcoming lists run soonest first, 12 a page; past lists newest first, 9 a page (`domain/scope.ts`, `data/queries.ts`).
 - "Load more" asks for what follows the last item by cursor, not by page number (`data/queries.ts`, decision 0014); its action only accepts a known scope, a valid cursor and an existing category slug (`actions.ts`).
 - Only published events show. Cancelled ones stay listed, counted and openable, marked cancelled; their page drops the register button (`data/listing.ts`, `events/[slug]/page.tsx`).
+- A past event's page (dated before today, the same rule as the Past list, `isPastEvent` in `domain/scope.ts`) has no register button and says "This event has passed."; a cancelled one says only that it is cancelled. An upcoming event is unchanged (`events/[slug]/page.tsx`, #1012).
 - An event with `officialBody` is an official meeting: labelled wherever it shows, with the body's `https://` agenda link on its page, and the body as organizer in structured data (`domain/officialMeetings.ts`, `ui/OfficialAgenda.tsx`, `ui/eventJsonLd.ts`).
 - Category filters are pages, not query strings; the proxy sends `/events?category=x` to the page and 404s malformed slugs (`src/proxy.ts`, decision 0015).
 - The "this week" strip: a row is `all`, `official` or one category; window of 1 to 31 days (default 7) from today; at most 4 rows, 1 to 6 events each; empty rows are hidden, and with none left it shows a message (`domain/thisWeek.ts`, `data/thisWeek.ts`).
@@ -49,6 +50,7 @@ for CMS pages. Fields, access and hooks: [events content type](../../../docs/ref
 - Upcoming ends at midnight in Madison, not UTC: `data/scope.test.ts`.
 - Cursor paging skips and repeats nothing when events change: `data/queries.keyset.test.ts`.
 - Cancelled events stay in listings, counts, "Load more" and the sidebar: `use-cases/cancelledEvents.test.ts`.
+- A past event has no register button; today's does: `domain/scope.test.ts`, `src/app/(frontend)/events/[slug]/page.test.tsx`.
 - The "this week" window and rows: `domain/thisWeek.test.ts`, `use-cases/findEventsThisWeek.test.ts`, `data/mappers.thisWeek.test.ts`.
 - Every event shows a venue, "Online" or "Location to be confirmed": `domain/place.test.ts`, `data/mappers.test.ts`, `ui/EventCard.test.tsx`, `ui/eventHeader.test.tsx`.
 - Agenda links must be `https://`: `domain/officialMeetings.test.ts`.
