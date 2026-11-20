@@ -117,7 +117,7 @@ Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 
 ## `RatesPanel`
 
-The rates the bill is worked out from (#1351), beside the answer card: one line per body with its name and the year its rate is from on the left, and its rate as a percent with the same rate in dollars per $1,000 of value on the right. The City's line is highlighted, since the tab is about the City's tax. Every line is built the same way and as tall as the others, so the lines sit level in every year and the panel never changes height; a body with no rate keeps its line, with a dash for each figure. The note under the lines (the editor's wording) says why a rate is from an earlier year; where it does not apply it keeps its room, hidden from everyone. It draws what it is given.
+The rates the bill is worked out from (#1351), beside the answer card: one line per body with its name and the year its rate is from on the left, and its rate as a percent with the same rate in dollars per $1,000 of value on the right. The City's line is highlighted, since the tab is about the City's tax. Every line is built the same way and as tall as the others, so the lines sit level in every year and the panel never changes height; a body with no rate keeps its line, with "No rate yet" in place of the figures. The note under the lines (the editor's wording) says why a rate is from an earlier year; where it does not apply it keeps its room, hidden from everyone. It draws what it is given.
 
 Source: `src/platform/richtext/editorial/RatesPanel.tsx`
 

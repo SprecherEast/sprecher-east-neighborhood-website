@@ -47,6 +47,21 @@ Source: `src/platform/ui/ShareBill.tsx`
 - Routes: `/dev/gallery`
 - Platform: `platform/richtext`
 
+## `SliceName`
+
+A slice's name: with a short form, the rest hides on the narrowest phones but stays for screen readers
+
+Source: `src/platform/ui/ShareBill.tsx`
+
+| Prop        | Type     | Required | Description |
+| ----------- | -------- | -------- | ----------- |
+| `name`      | `string` | yes      |             |
+| `shortName` | `string` | no       |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
 ## `ShareStrip`
 
 A whole as one slim row of colored segments, each as wide as its share and in its tone (the same colors as the bill's bars, #1266). It carries no numbers of its own: one label tells screen readers every part and its percent. The caller sets any spacing through `className`.

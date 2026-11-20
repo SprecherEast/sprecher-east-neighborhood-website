@@ -39,8 +39,10 @@ const validateNote: TextFieldSingleValidation = (value, args) => {
 }
 
 /** The rates note may be empty, and may use {year} only: no other blank, and no link to put in one */
-const validateRatesNote: TextFieldSingleValidation = (value) =>
-  validateNoteBlanks(value ?? '', { showWhen: 'always' })
+export const validateRatesNote: TextFieldSingleValidation = (value) =>
+  (value ?? '').includes('{link}')
+    ? '{link} can’t be used in this note. Use {year}.'
+    : validateNoteBlanks(value ?? '', { showWhen: 'always' })
 
 /** A title the editor can change, that starts as the one the page used before it was a field */
 const rowTitleField = (name: string, label: string, defaultValue: string): TextField => ({
