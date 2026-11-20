@@ -109,6 +109,29 @@ When fixing transitive vulnerabilities:
 - Always validate before reloading: `caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy`
 - Live domains (`sprechereast.com`, `www.sprechereast.com`) must NEVER be removed from the Caddyfile
 
+## Pull request previews
+
+A pull request preview (#1070) runs code nobody has reviewed yet, beside production. It starts with
+no real secret or service key of its own, and the restricted account and isolation check that keep
+it from reaching production's files are still to come (#1345, #1346). Until then a preview runs
+under production's account, and the settings script runs from the PR's own release
+([`ops/previews.md`](/ops/previews.md)). What holds now:
+
+- **Its own secrets, no real keys** (#1344): `ops/preview-settings.sh` writes each preview's
+  `.env.local` (mode 600) with `PAYLOAD_SECRET` and `PREVIEW_SECRET` made at random on the server,
+  Cloudflare's published Turnstile test keys, no `SMTP_HOST` (email is logged, never sent), and no
+  analytics ID, GitHub token or outside sign-in key. Production's settings are never read or copied,
+  and a production sign-in token is worth nothing on a preview. A preview's sign-in cookie sets no
+  `Domain`, so production's is never sent to it. The owner decided this (2026-11-11, recorded on
+  #1074).
+- **Never printed:** the deploy log is public, so no generated secret appears in it.
+- **No basic auth on previews:** they hold only code already public in this repository and content
+  already published, and a password would block opening the link on a phone and AI agents taking
+  screenshots. Noindex headers and a disallow-all `robots.txt` are required instead
+  ([`ops/previews.md`](/ops/previews.md)).
+
+This section grows with the restricted deploy account (#1345) and the isolation check (#1346).
+
 ## Agents and the rules that bind them
 
 - **Agents never change their own guardrails.** `AGENTS.md`, the tool adapters, `.agents/`,

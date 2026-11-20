@@ -60,6 +60,7 @@ describe.each([
 
   it('checks NEXT_PUBLIC_SERVER_URL against the app’s own port only where that is its address', async () => {
     const url = `http://localhost:${port}`
+    fs.mkdirSync(p(preview ? 'previews/pr-7' : 'app'), { recursive: true })
     fs.writeFileSync(
       p(preview ? 'previews/pr-7/.env.local' : 'app/.env.local'),
       `NEXT_PUBLIC_SERVER_URL=${url}\n`,

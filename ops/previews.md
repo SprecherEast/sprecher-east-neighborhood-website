@@ -68,3 +68,15 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   check, and the newest 2 releases (production keeps 3). It stops before changing anything when
   its Caddy block isn't in place, and takes a first deploy that never answered down again.
   Undo: revert the pull request; with no environment named, nothing on the server changes.
+- **A preview's settings** (#1344). `preview-settings.sh` writes `<preview folder>/.env.local` at the
+  first deploy, from the number alone: its own address, `PAYLOAD_SECRET` and `PREVIEW_SECRET` made
+  at random on the server (so a production sign-in token is worth nothing on a preview), Cloudflare's
+  published always-pass Turnstile test keys (`environment.sh`), a placeholder `CONTACT_NOTIFY_EMAIL`,
+  and no `SMTP_HOST` (email is logged, never sent), analytics ID, GitHub token or outside sign-in
+  key. The file is mode 600, never copied from production, and kept on every later deploy so a
+  redeploy doesn't sign anyone out. A kept file must match exactly what the script writes (each
+  secret on one line and generated, nothing added or changed); anything else stops the deploy,
+  naming the problem and never a value. A link at the preview's folder or file is refused before
+  anything is read or changed. The build for a preview must
+  use the same Turnstile site key, or the deploy's settings gate refuses it. Until the restricted
+  deploy account (#1345) exists, the script runs from the release being deployed, not from `main`.
