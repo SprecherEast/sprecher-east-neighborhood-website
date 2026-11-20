@@ -104,6 +104,17 @@ describe('Legend', () => {
       expect(list).not.toContain('sm:grid-cols-2')
     })
 
+    it('keeps its entries together and centred when a taller neighbour stretches it, a small gap apart', () => {
+      const { container } = render(<Legend columns="fit" items={ITEMS} />)
+      const list = container.querySelector('ol')?.className
+      expect(list).toContain('h-full')
+      expect(list).toContain('content-center')
+      // Never `content-between`: that spreads the entries apart by however much room there is
+      expect(list).not.toContain('content-between')
+      expect(list).toContain('gap-y-6')
+      expect(list).toContain('lg:gap-y-8')
+    })
+
     it('leaves the other column choices to the screen', () => {
       const { container } = render(<Legend items={ITEMS} />)
       expect(container.firstElementChild?.className).not.toContain('@container')

@@ -72,8 +72,8 @@ describe('PanelFigureBlock (#1333)', () => {
       <PanelFigureBlock blockType="figure" image={image} title="Concept" size="two-fifths" />,
     )
     const classes = (container.firstElementChild as HTMLElement).className
-    expect(classes).toContain('md:w-1/2')
-    expect(classes).toContain('lg:w-1/3')
+    expect(classes).toContain('md:w-[var(--picture-width-md)]')
+    expect(classes).toContain('lg:w-[var(--picture-width-lg)]')
     expect(classes).not.toContain('md:w-2/5')
   })
 

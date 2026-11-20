@@ -53,8 +53,8 @@ describe('FeaturedImage (#1013, #1023, #1055)', () => {
     const classes = (container.firstElementChild as HTMLElement).className.split(' ')
 
     expect(classes).toContain('w-full')
-    expect(classes).toContain('md:w-1/2')
-    expect(classes).toContain('lg:w-1/3')
+    expect(classes).toContain('md:w-[var(--picture-width-md)]')
+    expect(classes).toContain('lg:w-[var(--picture-width-lg)]')
     // To the right from a tablet up; below that it is a block above the text
     expect(classes).toContain('md:float-right')
     expect(classes).not.toContain('float-right')

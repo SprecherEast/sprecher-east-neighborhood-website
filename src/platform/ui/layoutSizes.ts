@@ -70,6 +70,16 @@ export const TOUCH_MIN_WIDTH = 'min-w-11 lg:min-w-9'
 export const FIGURE_GAP = 'my-[var(--figure-gap)]'
 
 /**
+ * The article picture's width (`FeaturedImage`, a figure of size `half-then-third`): half the
+ * column on a tablet, a third from `lg` (#1023). A row that sets a block beside such a picture
+ * (a section tab's key, #1333) takes the picture's column from the same two variables, so the
+ * two never disagree.
+ */
+export const PICTURE_WIDTH = 'md:w-[var(--picture-width-md)] lg:w-[var(--picture-width-lg)]'
+export const PICTURE_ROW_COLUMNS =
+  'md:grid-cols-[minmax(0,1fr)_var(--picture-width-md)] lg:grid-cols-[minmax(0,1fr)_var(--picture-width-lg)]'
+
+/**
  * A legend sits under the image block above it (#636, #658) with a small gap, `--legend-gap`
  * (1rem), instead of the full `--figure-gap`. It only takes back blank margin, so it never covers
  * the image or its caption.
