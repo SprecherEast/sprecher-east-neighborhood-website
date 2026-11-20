@@ -7,7 +7,7 @@ from .police import scene_police
 from .street_days import scene_trash, scene_leaves
 from .winter import scene_winter
 from .parking import scene_parking
-from .marimba import scene_marimba
+from .marimba import scene_marimba_a, scene_marimba_b, scene_marimba_c
 from .workshop import scene_workshop
 
 SCENES = {
@@ -19,6 +19,8 @@ SCENES = {
     "leaves": scene_leaves,
     "winter": scene_winter,
     "parking": scene_parking,
-    "marimba": scene_marimba,
+    "marimba_a": scene_marimba_a,
+    "marimba_b": scene_marimba_b,
+    "marimba_c": scene_marimba_c,
     "workshop": scene_workshop,
 }
