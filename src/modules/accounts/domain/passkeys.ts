@@ -103,18 +103,61 @@ export function isPasskeySwitchOn(env: Record<string, string | undefined>): bool
 /** When a challenge made at `now` stops working. */
 export const toChallengeExpiry = (now: Date): Date => new Date(now.getTime() + CHALLENGE_TTL_MS)
 
-const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f-\u009f]/g
+/**
+ * What a label may hold, after Unicode compatibility folding (NFKC, so a fullwidth or boxed
+ * character is read as the plain one it imitates): letters, numbers and combining marks in
+ * any language, spaces, apostrophes, hyphens, underscores, commas and round brackets. No dot,
+ * colon, slash, `@` or angle bracket, so a label can't carry a clickable link or address: it goes
+ * into the email that warns about a passkey added with a stolen password (decision 0021), where
+ * mail apps turn such text into links. Look-alike letters in another script are still letters.
+ * Left out as look-alikes or invisible: the spacing modifier letters (except the okina and the
+ * modifier apostrophe), the overlay and joiner marks, variation selectors, enclosing marks, and
+ * more than three nonspacing marks in a row.
+ */
+const LABEL_CHARACTERS = String.raw`\p{L}\p{N}\p{M} '’_,()-`
+const LABEL_LOOK_ALIKES = String.raw`\u02B0-\u02BA\u02BD-\u02FF\u0334-\u0338\u034F\uFE00-\uFE0F\p{Me}`
+const ONE_LABEL_CHARACTER = `(?![${LABEL_LOOK_ALIKES}])[${LABEL_CHARACTERS}]`
+const ALLOWED_LABEL = new RegExp(`^(?:${ONE_LABEL_CHARACTER})*$`, 'u')
+const OTHER_LABEL_CHARACTER = new RegExp(`(?!${ONE_LABEL_CHARACTER})[\\s\\S]`, 'gu')
+const MARKS_IN_A_ROW = 3
+const TOO_MANY_MARKS = new RegExp(String.raw`\p{Mn}{${MARKS_IN_A_ROW + 1}}`, 'u')
+const MARKS_BEYOND_THE_LIMIT = new RegExp(String.raw`(\p{Mn}{${MARKS_IN_A_ROW}})\p{Mn}+`, 'gu')
 
-/** The label shown to the resident: trimmed, one line, kept short; the default when none. */
+/** Whether a typed label is within the rule, and short enough, as it is. Empty is allowed. */
+export function isAllowedPasskeyLabel(raw: string): boolean {
+  if (raw.length > PASSKEY_LABEL_MAX_LENGTH) return false
+  const folded = raw.normalize('NFKC')
+  return (
+    folded.length <= PASSKEY_LABEL_MAX_LENGTH &&
+    ALLOWED_LABEL.test(folded) &&
+    !TOO_MANY_MARKS.test(folded)
+  )
+}
+
+/** Whole characters while the total stays within the length the list counts (UTF-16 units). */
+function cutToLength(label: string): string {
+  let kept = ''
+  for (const character of label) {
+    if (kept.length + character.length > PASSKEY_LABEL_MAX_LENGTH) break
+    kept += character
+  }
+  return kept.trim()
+}
+
+/**
+ * The label shown to the resident and put in the email: one line, kept short, folded (NFKC), only
+ * the allowed characters (any other becomes a space, so `help.example` reads as `help example`);
+ * the default when none is left.
+ */
 export function toPasskeyLabel(raw: unknown): string {
   if (typeof raw !== 'string') return DEFAULT_PASSKEY_LABEL
   const label = raw
-    .replace(CONTROL_CHARACTERS, ' ')
+    .normalize('NFKC')
+    .replace(OTHER_LABEL_CHARACTER, ' ')
+    .replace(MARKS_BEYOND_THE_LIMIT, '$1')
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, PASSKEY_LABEL_MAX_LENGTH)
-    .trim()
-  return label || DEFAULT_PASSKEY_LABEL
+  return cutToLength(label) || DEFAULT_PASSKEY_LABEL
 }
 
 /** Why an account may not add a passkey now. */

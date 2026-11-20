@@ -85,4 +85,32 @@ describe('hostCookie', () => {
       path: '/',
     })
   })
+
+  it('is SameSite=Strict when asked, for a cookie only our own pages send back', async () => {
+    const cookie = await cookies.hostCookie('sprecher-east-passkey-challenge', 'strict')
+    expect(cookie.name).toBe('__Host-sprecher-east-passkey-challenge')
+    await cookie.set('v', 300)
+    expect(jar.get('__Host-sprecher-east-passkey-challenge')).toMatchObject({
+      secure: true,
+      path: '/',
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 300,
+    })
+    await cookie.clear()
+    expect(jar.get('__Host-sprecher-east-passkey-challenge')).toMatchObject({
+      sameSite: 'strict',
+      maxAge: 0,
+    })
+  })
+})
+
+describe('signingKeyFor', () => {
+  it('gives each purpose its own key, never Payload’s secret itself', async () => {
+    const flow = await cookies.signingKeyFor('social-flow')
+    const challenge = await cookies.signingKeyFor('passkey-challenge')
+    expect(flow.equals(challenge)).toBe(false)
+    expect(flow.equals(await cookies.signingKeyFor('social-flow'))).toBe(true)
+    expect(flow.equals(Buffer.from(payload.secret))).toBe(false)
+  })
 })

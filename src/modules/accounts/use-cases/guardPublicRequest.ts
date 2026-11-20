@@ -11,6 +11,15 @@ export type PublicRequest = { token: string | null; ip: string | null }
 export type GuardFailure = 'robot-check' | 'too-many'
 
 /**
+ * For a guard whose requests need no robot check: the sign-in with a provider, where the provider
+ * stands in for it, and asking for a passkey's options, which only a signed-in account can do.
+ */
+export const NO_ROBOT_CHECK: HumanVerifier = {
+  isEnabled: () => false,
+  verify: async () => ({ ok: true }),
+}
+
+/**
  * The checks every public account form that sends email runs first, none of which depends on the
  * email: the per-connection limit, then the robot check (the same Turnstile check as the contact
  * form, decision 0003), then the site-wide limit. Answers the failure, or null to go ahead.

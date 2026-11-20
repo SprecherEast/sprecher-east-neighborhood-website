@@ -16,6 +16,7 @@ import type { User } from '@/payload-types'
 
 import type { PasswordChangeValues, SignInValues } from '../domain/credentials'
 import { CURRENT_PASSWORD_CONFIRMED } from '../domain/passwordConfirmation'
+import { sessionStartedAt } from '../domain/signInSession'
 import type { CurrentUser } from '../domain/types'
 import { USERS } from '../domain/usersCollection'
 import { isRefusal } from './failures'
@@ -44,6 +45,27 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const user = await getSessionPayloadUser()
   return user ? toCurrentUser(user) : null
 })
+
+/** The signed-in account behind this request and when its session was started. */
+export type SignInSession = { accountId: number; email: string; signedInAt: Date | null }
+
+/**
+ * The signed-in account and when this session began, or null when nobody is signed in (#1314,
+ * decision 0021). Payload stores each sign-in as a session with its own `createdAt` and names it
+ * in the token (`_sid`); a refresh only moves the session's end, so the time is when the person
+ * really signed in. A missing session, token without an id or unreadable time gives a null
+ * `signedInAt`, which counts as not recent. Not cached: a step-up check must see this moment.
+ */
+export async function getSignInSession(): Promise<SignInSession | null> {
+  const user = await getSessionPayloadUser()
+  if (!user) return null
+  const sessionId = (user as { _sid?: unknown })._sid
+  return {
+    accountId: user.id,
+    email: user.email,
+    signedInAt: sessionStartedAt(user.sessions, sessionId),
+  }
+}
 
 /**
  * Signs in with Payload's own Next.js helper (`login` from `@payloadcms/next/auth`): it runs

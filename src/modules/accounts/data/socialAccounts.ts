@@ -23,9 +23,9 @@ import {
   type SocialProfile,
   type SocialProvider,
 } from '../domain/socialSignIn'
-import { purposeKey, readSignedValue, signValue } from '../domain/signedValue'
+import { readSignedValue, signValue } from '../domain/signedValue'
 import { USERS } from '../domain/usersCollection'
-import { hostCookie, setPayloadAuthCookie } from './authCookies'
+import { hostCookie, setPayloadAuthCookie, signingKeyFor } from './authCookies'
 
 // The account side of a sign-in with a provider (#188, decision 0020): finding and creating accounts,
 // starting Payload's own session, and the signed flow cookie.
@@ -135,16 +135,11 @@ export async function startSessionFor(accountId: number): Promise<void> {
   await setPayloadAuthCookie(token)
 }
 
-// The signed flow cookie, with its own key derived from Payload's secret
-
-async function keyFor(purpose: string): Promise<Buffer> {
-  const payload = await payloadClient()
-  return purposeKey(payload.secret, purpose)
-}
+// The signed flow cookie, with its own key derived from Payload's secret (`signingKeyFor`)
 
 /** Keeps a new sign-in's checks in this browser for the callback. */
 export async function saveSocialFlow(flow: SocialFlow, now: Date): Promise<void> {
-  const value = signValue(flow, await keyFor('social-flow'), now, SOCIAL_FLOW_TTL_MS)
+  const value = signValue(flow, await signingKeyFor('social-flow'), now, SOCIAL_FLOW_TTL_MS)
   await (await hostCookie(SOCIAL_FLOW_COOKIE)).set(value, SOCIAL_FLOW_TTL_MS / 1000)
 }
 
@@ -153,5 +148,5 @@ export async function takeSocialFlow(now: Date): Promise<SocialFlow | null> {
   const cookie = await hostCookie(SOCIAL_FLOW_COOKIE)
   const value = await cookie.read()
   await cookie.clear()
-  return toSocialFlow(readSignedValue(value, await keyFor('social-flow'), now))
+  return toSocialFlow(readSignedValue(value, await signingKeyFor('social-flow'), now))
 }

@@ -58,3 +58,25 @@ export const RESET_REQUEST_LIMITS: RequestLimits = {
   siteWide: 30,
   trackedConnections: 2000,
 }
+
+/**
+ * Asking for the options to add a passkey (#1314), counted per connection and, in
+ * `PASSKEY_OPTIONS_PER_ACCOUNT_LIMITS`, per account. There is no site-wide limit, on purpose: any
+ * verified account with a fresh sign-in can ask, so a site-wide cap could be filled by a few
+ * accounts and would switch adding a passkey off for every neighbor (the same reason as
+ * `SOCIAL_SIGN_IN_LIMITS`). Each request stores one challenge row, so the per-account count bounds
+ * what one account can store. No robot check: only a signed-in account gets this far. More
+ * generous than sign-up, since a neighbor may need a few tries on a phone and no email is sent.
+ */
+export const PASSKEY_OPTIONS_LIMITS: RequestLimits = {
+  windowMs: HOUR,
+  perConnection: 10,
+  trackedConnections: 2000,
+}
+
+/** One account's options requests an hour, however many connections it uses. */
+export const PASSKEY_OPTIONS_PER_ACCOUNT_LIMITS: RequestLimits = {
+  windowMs: HOUR,
+  perConnection: 10,
+  trackedConnections: 2000,
+}

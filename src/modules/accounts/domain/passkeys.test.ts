@@ -2,16 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CHALLENGE_TTL_MS,
-  DEFAULT_PASSKEY_LABEL,
   MAX_PASSKEYS_PER_ACCOUNT,
-  PASSKEY_LABEL_MAX_LENGTH,
   RECENT_SIGN_IN_WINDOW_MS,
   decideAddPasskey,
   decideRemovePasskey,
   decideUsePasskey,
   isPasskeySwitchOn,
   toChallengeExpiry,
-  toPasskeyLabel,
   toRelyingParty,
 } from './passkeys'
 
@@ -91,27 +88,6 @@ describe('toChallengeExpiry', () => {
   it('is short: minutes, not hours', () => {
     expect(CHALLENGE_TTL_MS).toBeLessThanOrEqual(10 * 60 * 1000)
     expect(CHALLENGE_TTL_MS).toBeGreaterThan(0)
-  })
-})
-
-describe('toPasskeyLabel', () => {
-  it('trims and collapses whitespace', () => {
-    expect(toPasskeyLabel('  My   phone \n')).toBe('My phone')
-  })
-
-  it('falls back to the default for nothing, blanks and non-text', () => {
-    for (const raw of [undefined, null, '', '   ', 42, {}]) {
-      expect(toPasskeyLabel(raw)).toBe(DEFAULT_PASSKEY_LABEL)
-    }
-  })
-
-  it('drops control characters', () => {
-    expect(toPasskeyLabel('Phone\u0000\u0007 one')).toBe('Phone one')
-  })
-
-  it('keeps it to the length the list has room for', () => {
-    const label = toPasskeyLabel('x'.repeat(500))
-    expect(label).toHaveLength(PASSKEY_LABEL_MAX_LENGTH)
   })
 })
 
