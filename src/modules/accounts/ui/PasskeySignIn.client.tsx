@@ -101,7 +101,9 @@ export function PasskeySignIn({ rememberMe }: { rememberMe: boolean }) {
   if (supported === null) return <PasskeyButtonRoom />
 
   return (
-    <div className="space-y-3">
+    // A flex column, not a block: a block would add a line box around the button, and the 32 px icon
+    // makes it a pixel taller than the room held for it, so the page would jump when it shows
+    <div className="flex flex-col gap-3">
       {notice && <Alert tone={notice.tone}>{notice.text}</Alert>}
       <Button
         type="button"

@@ -116,10 +116,9 @@ Source: `src/platform/ui/SegmentedControl.tsx`
 
 Source: `src/platform/ui/BrandLogo.tsx`
 
-| Prop        | Type                    | Required | Description |
-| ----------- | ----------------------- | -------- | ----------- |
-| `brand`     | `"google" \| "passkey"` | yes      |             |
-| `className` | `string`                | no       |             |
+| Prop    | Type                    | Required | Description |
+| ------- | ----------------------- | -------- | ----------- |
+| `brand` | `"google" \| "passkey"` | yes      |             |
 
 **Used by** (direct imports):
 

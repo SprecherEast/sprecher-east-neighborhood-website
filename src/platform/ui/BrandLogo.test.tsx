@@ -16,10 +16,11 @@ describe('BrandLogo', () => {
     expect(image?.getAttribute('src')).toBe('/brand/google-g.png')
     expect(image?.getAttribute('width')).toBe('200')
     expect(image?.getAttribute('height')).toBe('204')
+    expect(image?.className).toContain('h-5')
     expect(image?.className).toContain('w-auto')
   })
 
-  it('draws the FIDO passkey icon file as supplied, square, no larger than the “G” (#1365)', () => {
+  it('draws the FIDO passkey icon file as supplied, square, at the 32 px FIDO’s guidelines need, while the “G” stays 20 px (#1365)', () => {
     const { container } = render(<BrandLogo brand="passkey" />)
     const image = container.querySelector('img')
 
@@ -27,7 +28,7 @@ describe('BrandLogo', () => {
     // The file's own 150 by 150 proportions, kept by height with the width following
     expect(image?.getAttribute('width')).toBe('150')
     expect(image?.getAttribute('height')).toBe('150')
-    expect(image?.className).toContain('h-5')
+    expect(image?.className).toContain('h-8')
     expect(image?.className).toContain('w-auto')
     expect(image?.className).not.toMatch(/\b(rounded|object-cover|object-fill|scale|rotate)/)
   })
@@ -54,6 +55,17 @@ describe('BrandLogo', () => {
 
     expect(container.querySelector('img')?.getAttribute('alt')).toBe('')
     await expectAccessible(container)
+  })
+
+  it('takes no class from a caller: a logo can’t be tinted or resized from outside', () => {
+    const { container } = render(
+      // @ts-expect-error: `className` is not a prop
+      <BrandLogo brand="google" className="h-12 text-red-500" />,
+    )
+    const classes = container.querySelector('img')?.className ?? ''
+
+    expect(classes).not.toContain('text-red-500')
+    expect(classes).not.toContain('h-12')
   })
 
   it('never takes a colour, filter or stroke, which brand rules forbid', () => {

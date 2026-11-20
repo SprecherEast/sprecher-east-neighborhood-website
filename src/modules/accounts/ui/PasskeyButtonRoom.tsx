@@ -13,8 +13,11 @@ import { PASSKEY_LOGIN_LABEL } from './passkeyMessages'
  */
 export function PasskeyButtonRoom() {
   return (
-    <Button type="button" variant="secondary" fullWidth className="invisible" aria-hidden>
-      {PASSKEY_LOGIN_LABEL}
-    </Button>
+    // The same wrapper as the real button's, so the two are the same height to the pixel
+    <div className="flex flex-col gap-3">
+      <Button type="button" variant="secondary" fullWidth className="invisible" aria-hidden>
+        {PASSKEY_LOGIN_LABEL}
+      </Button>
+    </div>
   )
 }
