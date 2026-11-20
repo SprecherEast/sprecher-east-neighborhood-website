@@ -9,6 +9,7 @@ import {
 
 import { PASSKEY_LABEL_MAX_LENGTH, PASSKEYS } from '../domain/passkeys'
 import { USERS } from '../domain/usersCollection'
+import { passkeyRemovedNote } from './passkeyRemovedNote'
 
 /**
  * What an admin sees for support: nothing writes it through an API, and only admins read it.
@@ -26,7 +27,8 @@ const supportView = {
  * admins included, and an admin reads and deletes for support only. A resident never reads this
  * collection through the API; they see their own list through the module's use cases. The
  * credential ID is unique, so a save can only insert, and the owning account's delete removes
- * its passkeys (`deletePasskeysWithAccount`).
+ * its passkeys (`deletePasskeysWithAccount`). An admin's delete sends the account a note
+ * (`passkeyRemovedNote`, #1316).
  */
 export const Passkeys: CollectionConfig = {
   slug: PASSKEYS,
@@ -42,6 +44,7 @@ export const Passkeys: CollectionConfig = {
       'Passkeys residents added to sign in. Read and delete only, for support: a deleted passkey stops working at once, and the resident can still sign in another way (password, Google, or forgot password).',
     useAsTitle: 'label',
   },
+  hooks: { afterDelete: [passkeyRemovedNote] },
   defaultSort: '-createdAt',
   disableDuplicate: true,
   fields: [

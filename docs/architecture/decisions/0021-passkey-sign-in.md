@@ -163,8 +163,13 @@ fits without a second auth system or an unreleased change.
   not recent. The same check serves any later action that wants a recent sign-in.
 - **Cap:** `MAX_PASSKEYS_PER_ACCOUNT`, a named constant. **Removing the last passkey is always
   allowed.**
+- **Removing needs a recent sign-in too** (#1316, decided as a routine technical choice: the same
+  shared rule and "Log in again" button as adding, and the way large providers do), so a thief in a
+  stolen session can't remove the passkey that lets the owner back in. A passkey that doesn't
+  exist and one on another account give the same refusal.
 - Add and remove each send a short email to the account's address, with what to do if it wasn't
-  them (forgot password, then remove the passkey).
+  them (forgot password, then remove the passkey). A remove by an admin in `/admin` sends the same
+  note through a hook; deleting a whole account sends none.
 
 ### Sign-in
 
@@ -233,8 +238,8 @@ address leaves the feature off. Using the live passkeys in a preview is out of s
   recent-sign-in check can't stop them adding a passkey, and that passkey then renews itself, since
   a passkey sign-in counts as recent. The control is the notification email: it names the passkey's
   label and the time, and holds no sign-in link. Removing a passkey doesn't end the sessions it
-  started; forgot password does (Payload's reset empties the sessions). Asking for a recent
-  sign-in before a remove too is open for the owner, who decided the step only for adding.
+  started; forgot password does (Payload's reset empties the sessions). Removing asks for a
+  recent sign-in too (#1316).
 - **Single-maintainer risk.** `@simplewebauthn` has one npm maintainer, as did every candidate and
   `openid-client` in the Google sign-in record. If it is abandoned or compromised:
   - the adapter is the only importer of the server package, with a small port of our own types, so

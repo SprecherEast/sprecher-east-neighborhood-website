@@ -15,6 +15,16 @@ export const ACCOUNTS_MESSAGES = {
     'To keep your account safe, please log in again first. Then you can add a passkey.',
   'accounts.passkey.cap': 'You have as many passkeys as we can keep. Remove one to add another.',
   'accounts.passkey.alreadyHere': 'This device already has a passkey for your account.',
+  // Seeing and removing them on /account (#1316)
+  'accounts.passkey.none': 'No passkeys yet.',
+  'accounts.passkey.lostDevice':
+    'Lost a device? Choose “Forgot your password?” on the log in page to get back in, then remove its passkey here.',
+  'accounts.passkey.removeTitle': 'Remove this passkey?',
+  'accounts.passkey.removeConfirm': 'You can still log in with your email and password.',
+  'accounts.passkey.removed': 'Passkey removed.',
+  'accounts.passkey.removeFailed': 'We couldn’t remove that passkey. Please try again.',
+  'accounts.passkey.removeSignInAgain':
+    'To keep your account safe, please log in again first. Then you can remove a passkey.',
   // Logging in with one on /login (#1315). The verb is the log in page's own: "Log In", "Log in".
   'accounts.passkey.loginButton': 'Log in with a passkey',
   'accounts.passkey.loginFailed':

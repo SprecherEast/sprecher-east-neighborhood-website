@@ -104,7 +104,7 @@ Source: `src/platform/ui/DateTime.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `events`, `news`
+- Modules: `accounts`, `events`, `news`
 - Routes: `/dev/gallery`
 
 ## `MetaList`
@@ -118,7 +118,7 @@ Source: `src/platform/ui/MetaList.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `events`, `site`
+- Modules: `accounts`, `events`, `site`
 - Routes: `/account`, `/dev/gallery`
 
 ## `MetaBar`

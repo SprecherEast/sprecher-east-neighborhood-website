@@ -180,18 +180,32 @@ export function decideAddPasskey({
   return { ok: true }
 }
 
+/** Why an account may not remove a passkey now. */
+export type RemovePasskeyRefusal = 'signed-out' | 'sign-in-again' | 'not-yours'
+
 /**
- * Who may remove a passkey: the account that owns it, and no one else. Removing the last one is
- * always allowed, so there is no count here: email and password, and forgot password, remain.
+ * Who may remove a passkey: the signed-in account (the caller takes it from the session, never
+ * from input) whose session started within `RECENT_SIGN_IN_WINDOW_MS`, and only a passkey that
+ * account owns. The same recent-sign-in rule as adding (#1316): a thief in a stolen session
+ * can't remove the passkey that would let its owner back in. An unknown, unreadable or future
+ * sign-in time counts as not recent. Removing the last one is always allowed, so there is no
+ * count here: email and password, and forgot password, remain.
  */
 export function decideRemovePasskey({
   accountId,
   passkeyOwnerId,
+  signedInAt,
+  now,
 }: {
   accountId: number | null
   passkeyOwnerId: number | null
-}): { ok: boolean } {
-  return { ok: accountId !== null && accountId === passkeyOwnerId }
+  signedInAt: Date | null
+  now: Date
+}): { ok: true } | { ok: false; reason: RemovePasskeyRefusal } {
+  if (accountId === null) return { ok: false, reason: 'signed-out' }
+  if (!isRecentSignIn(signedInAt, now)) return { ok: false, reason: 'sign-in-again' }
+  if (passkeyOwnerId !== accountId) return { ok: false, reason: 'not-yours' }
+  return { ok: true }
 }
 
 /**

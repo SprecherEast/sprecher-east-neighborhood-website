@@ -20,6 +20,7 @@ import {
   verifyAccountSchema,
 } from './domain/credentials'
 import type { AddPasskeyFailure, StartAddPasskeyResult } from './domain/addPasskey'
+import { removePasskeySchema, type RemovePasskeyFailure } from './domain/removePasskey'
 import {
   passkeySignInSchema,
   type PasskeySignInFailure,
@@ -37,6 +38,7 @@ import type {
 } from './domain/types'
 import { endSession } from './data/session'
 import { finishAddPasskey, startAddPasskey } from './use-cases/addPasskey'
+import { removePasskey as removeOwnPasskey } from './use-cases/removePasskey'
 import { changeOwnPassword } from './use-cases/changeOwnPassword'
 import { connectGoogleWithPassword } from './use-cases/connectGoogle'
 import { getAccountSummary } from './use-cases/getAccountSummary'
@@ -96,6 +98,18 @@ export async function addPasskey(input: unknown): Promise<ActionResult<AddPasske
   const parsed = addPasskeySchema.safeParse(input)
   if (!parsed.success) return { ok: false, failure: 'failed' }
   return finishAddPasskey(parsed.data)
+}
+
+/**
+ * Removes one of the signed-in account's own passkeys (#1316). The input is the passkey's id only,
+ * parsed again; there is no way to name an account, and another account's passkey is refused like
+ * a missing one. The session must be a recent sign-in. Input that doesn't parse is the one
+ * `failed`.
+ */
+export async function removePasskey(input: unknown): Promise<ActionResult<RemovePasskeyFailure>> {
+  const parsed = removePasskeySchema.safeParse(input)
+  if (!parsed.success) return { ok: false, failure: 'failed' }
+  return removeOwnPasskey(parsed.data)
 }
 
 /**

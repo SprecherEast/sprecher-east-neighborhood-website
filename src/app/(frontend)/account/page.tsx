@@ -2,11 +2,12 @@ import type { Metadata } from 'next'
 
 import { SOCIAL_RESULT_PARAM } from '@/modules/accounts'
 import {
-  AddPasskey,
   arePasskeysOn,
   ChangePasswordForm,
   ConnectGoogle,
   getGoogleConnection,
+  getOwnPasskeys,
+  PasskeysCard,
   requireUser,
 } from '@/modules/accounts/server'
 import { NOT_INDEXED } from '@/platform/seo/notIndexed'
@@ -27,6 +28,8 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 export default async function AccountPage({ searchParams }: Props) {
   const user = await requireUser()
   const googleConnection = await getGoogleConnection(user.id)
+  // Only while the switch is on: the list is read for the session's own account
+  const passkeys = arePasskeysOn() ? await getOwnPasskeys(user.id) : null
   const result = (await searchParams)[SOCIAL_RESULT_PARAM]
 
   return (
@@ -58,8 +61,8 @@ export default async function AccountPage({ searchParams }: Props) {
           <ConnectGoogle connection={googleConnection} result={result} />
         )}
 
-        {/* Only when the server switch is on; the card also waits for a browser that can make one */}
-        {arePasskeysOn() && <AddPasskey />}
+        {/* Only when the server switch is on; the add form also waits for a browser that can make one */}
+        {passkeys && <PasskeysCard passkeys={passkeys} />}
       </div>
     </Section>
   )

@@ -1,5 +1,6 @@
 import { type OutgoingEmail, toEmailHtml } from '@/platform/lib'
-import { SITE_TIMEZONE } from '@/platform/lib/timezone'
+
+import { toEmailWhen } from './emailWhen'
 
 /**
  * The note sent to an account's own address when Google is connected to it (#1338, decision
@@ -9,15 +10,7 @@ import { SITE_TIMEZONE } from '@/platform/lib/timezone'
  * in it, so there is nothing to escape; the subject is fixed.
  */
 export function toGoogleConnectedEmail({ at }: { at: Date }): OutgoingEmail {
-  const when = at.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone: SITE_TIMEZONE,
-    timeZoneName: 'short',
-  })
+  const when = toEmailWhen(at)
   const intro = `Google was connected to your Sprecher East account on ${when}.`
   const same = 'If that was you, there’s nothing more to do.'
   const outro =

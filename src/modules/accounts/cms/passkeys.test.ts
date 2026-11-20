@@ -9,6 +9,7 @@ import {
 } from '@/platform/payload/roles'
 
 import { Passkeys } from './passkeys'
+import { passkeyRemovedNote } from './passkeyRemovedNote'
 
 const named = (fields: Field[]) =>
   fields.filter((f): f is Field & { name: string } => 'name' in f && typeof f.name === 'string')
@@ -73,9 +74,9 @@ describe('Passkeys collection (decision 0021)', () => {
     }
   })
 
-  it('has no hooks and no versions: deleting is a plain delete', () => {
+  it('has one hook, the note after an admin’s delete, and no versions', () => {
     const collection: CollectionConfig = Passkeys
-    expect(collection.hooks).toBeUndefined()
+    expect(collection.hooks).toEqual({ afterDelete: [passkeyRemovedNote] })
     expect(collection.versions).toBeUndefined()
   })
 })

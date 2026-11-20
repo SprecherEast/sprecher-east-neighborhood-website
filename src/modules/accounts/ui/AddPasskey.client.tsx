@@ -1,11 +1,11 @@
 'use client'
 
 import { KeyRound } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
 import { message } from '@/platform/lib'
 import { Alert, Button, Field, Form, type FormStatus } from '@/platform/ui'
-import { Card } from '@/platform/ui/Card'
 import { Text } from '@/platform/ui/Text'
 
 import { addPasskey, getPasskeyOptions } from '../actions'
@@ -14,8 +14,6 @@ import { PASSKEY_LABEL_MAX_LENGTH } from '../domain/passkeys'
 import { LogInAgainButton } from './LogInAgainButton.client'
 import { createPasskey, passkeysSupported } from './passkeyBrowser'
 import { toAddPasskeyNotice, type AddPasskeyOutcome, type PasskeyNotice } from './passkeyMessages'
-
-const HEADING_ID = 'passkeys-heading'
 
 /**
  * Asks for the options, shows the browser's own prompt, then sends its answer. Every way it can
@@ -36,15 +34,16 @@ async function addAPasskey(label: string): Promise<AddPasskeyOutcome> {
 }
 
 /**
- * The "Passkeys" card on /account (#1314, decision 0021), on the kit's `Form`: an optional name and
- * "Add a passkey". The server decides whether the card is on (the page only renders this when it
- * is); this also waits for the browser to say it can make a passkey, and until then, and when it
+ * The add-a-passkey part of the "Passkeys" card on /account (#1314, decision 0021), under the
+ * list (`PasskeysCard`), on the kit's `Form`: an optional name and "Add a passkey". The server
+ * decides whether the card is on (the page only renders it when it is); this also waits for the browser to say it can make a passkey, and until then, and when it
  * can't, shows nothing. The account comes from the session, not a prop. Success and errors are the
  * form's own messages; a closed prompt, a device that already has one, the cap and an old sign-in
  * are notices that aren't errors. An old sign-in is asked to log in again, which ends this session
  * and opens the log in page; signing in lands back on the account page.
  */
 export function AddPasskey() {
+  const router = useRouter()
   const [supported, setSupported] = useState(false)
   const [status, setStatus] = useState<FormStatus>('idle')
   const [errorMessage, setErrorMessage] = useState('')
@@ -70,10 +69,7 @@ export function AddPasskey() {
   }
 
   return (
-    <Card as="section" variant="muted" aria-labelledby={HEADING_ID}>
-      <Text variant="subsection" id={HEADING_ID} className="mb-4">
-        Passkeys
-      </Text>
+    <div className="mt-6 border-t border-border pt-6">
       <Form
         aria-label="Add a passkey"
         schema={passkeyLabelSchema}
@@ -81,7 +77,11 @@ export function AddPasskey() {
           setStatus('submitting')
           setNotice(null)
           const outcome = await addAPasskey(label)
-          if (outcome === 'added') form.reset()
+          if (outcome === 'added') {
+            form.reset()
+            // The list above is the server page's: it shows the new passkey after a refresh
+            router.refresh()
+          }
           show(outcome)
         }}
         status={status}
@@ -117,6 +117,6 @@ export function AddPasskey() {
           </>
         )}
       </Form>
-    </Card>
+    </div>
   )
 }

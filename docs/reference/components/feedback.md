@@ -78,7 +78,7 @@ Source: `src/platform/ui/Dialog.client.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `site`
+- Modules: `accounts`, `site`
 - Routes: `/dev/gallery`
 - Platform: `platform/ui`
 

@@ -106,6 +106,16 @@ export async function findPasskeyByCredentialId(
   return row ? toStoredPasskey(row) : null
 }
 
+/** The passkey with this id, on whichever account, or null. */
+export async function findPasskeyById(id: number): Promise<StoredPasskey | null> {
+  const payload = await payloadClient()
+  const row = (await payload.db.findOne({
+    collection: PASSKEYS,
+    where: { id: { equals: id } },
+  })) as PasskeyRow | null
+  return row ? toStoredPasskey(row) : null
+}
+
 /** An account's passkeys, oldest first. */
 export async function listPasskeys(accountId: number): Promise<StoredPasskey[]> {
   const payload = await payloadClient()
