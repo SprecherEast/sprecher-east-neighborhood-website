@@ -171,4 +171,85 @@ describe('what it refuses', () => {
     expect(r.stdout + r.stderr).not.toContain(s.PAYLOAD_SECRET)
     expect(r.stdout + r.stderr).not.toContain(s.PREVIEW_SECRET)
   })
+
+  it('stops, writing no file, when openssl fails', () => {
+    const bin = p('bin')
+    fs.mkdirSync(bin)
+    fs.writeFileSync(path.join(bin, 'openssl'), '#!/bin/sh\nexit 1\n', { mode: 0o755 })
+    const r = run('7', { PATH: `${bin}:${process.env.PATH}` })
+    expect(r.status).not.toBe(0)
+    expect(r.stdout + r.stderr).toContain('::error title=Server::')
+    expect(fs.existsSync(settingsOf())).toBe(false)
+  })
+})
+
+describe('a kept file must be exactly what the script writes', () => {
+  const kept = () => {
+    run()
+    return fs.readFileSync(settingsOf(), 'utf8')
+  }
+  const hex = 'a'.repeat(64)
+  it.each([
+    ['a colon-style extra setting', (t) => `${t}SMTP_HOST: smtp.example.test\n`],
+    ['a byte-order mark before a line', (t) => `﻿SMTP_HOST=x\n${t}`],
+    ['a no-break space before a line', (t) => `${t} SMTP_HOST=x\n`],
+    [
+      'a lone carriage return in a line',
+      (t) => t.replace('preview@example.com', 'a@b.c\rSMTP_HOST=x'),
+    ],
+    [
+      'decoy secrets inside a quoted value',
+      (t) =>
+        t.replace(
+          'CONTACT_NOTIFY_EMAIL=preview@example.com',
+          `CONTACT_NOTIFY_EMAIL="x\nPAYLOAD_SECRET=${hex}\nTURNSTILE_SECRET_KEY=${SECRET_KEY}\n`,
+        ),
+    ],
+    [
+      'production’s database',
+      (t) => t.replace('file:./data/payload.db', 'file:/var/www/sprecher-east/data/payload.db'),
+    ],
+    ['a real contact address', (t) => t.replace('preview@example.com', 'board@example.org')],
+    ['a repeated secret line', (t) => `${t}PAYLOAD_SECRET=${hex}\n`],
+  ])('stops on %s', (_name, change) => {
+    fs.writeFileSync(settingsOf(), change(kept()))
+    const r = run()
+    expect(r.status).not.toBe(0)
+    expect(r.stdout + r.stderr).toContain('::error title=Server::')
+    expect(r.stdout + r.stderr).not.toMatch(/smtp\.example\.test|board@example\.org|a{64}/)
+  })
+
+  it('accepts its own file unchanged', () => {
+    const before = kept()
+    expect(run().status).toBe(0)
+    expect(fs.readFileSync(settingsOf(), 'utf8')).toBe(before)
+  })
+})
+
+describe('links to production', () => {
+  const productionFile = () => {
+    const file = p('production', '.env.local')
+    fs.mkdirSync(path.dirname(file), { recursive: true })
+    fs.writeFileSync(file, 'PAYLOAD_SECRET=real\n', { mode: 0o640 })
+    return file
+  }
+
+  it('refuses a settings file that links elsewhere, and leaves the target alone', () => {
+    const target = productionFile()
+    fs.mkdirSync(path.dirname(settingsOf()), { recursive: true })
+    fs.symlinkSync(target, settingsOf())
+    const r = run()
+    expect(r.status).not.toBe(0)
+    expect(fs.statSync(target).mode & 0o777).toBe(0o640)
+    expect(fs.readFileSync(target, 'utf8')).toBe('PAYLOAD_SECRET=real\n')
+  })
+
+  it('refuses a preview folder that links elsewhere, and writes nothing into it', () => {
+    productionFile()
+    fs.mkdirSync(p('previews'), { recursive: true })
+    fs.symlinkSync(p('production'), p('previews', 'pr-7'))
+    const r = run()
+    expect(r.status).not.toBe(0)
+    expect(fs.readdirSync(p('production'))).toEqual(['.env.local'])
+  })
 })

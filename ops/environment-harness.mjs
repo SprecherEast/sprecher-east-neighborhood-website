@@ -39,6 +39,7 @@ export function setUpEnvironmentHarness() {
       'environment.sh',
       'migrate-lib.sh',
       'preview-settings.sh',
+      'secret-lib.sh',
     ])
       write(path.join(release, 'ops', f), fs.readFileSync(path.join(OPS, f)))
     write(

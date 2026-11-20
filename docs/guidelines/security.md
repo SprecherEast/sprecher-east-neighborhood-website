@@ -98,8 +98,11 @@ When fixing transitive vulnerabilities:
 
 ## Pull request previews
 
-A pull request preview (#1070) runs code nobody has reviewed yet, beside production. It is set up so
-that nothing it runs can reach production's secrets or a real service:
+A pull request preview (#1070) runs code nobody has reviewed yet, beside production. It starts with
+no real secret or service key of its own, and the restricted account and isolation check that keep
+it from reaching production's files are still to come (#1345, #1346). Until then a preview runs
+under production's account, and the settings script runs from the PR's own release
+([`ops/previews.md`](../../ops/previews.md)). What holds now:
 
 - **Its own secrets, no real keys** (#1344): `ops/preview-settings.sh` writes each preview's
   `.env.local` (mode 600) with `PAYLOAD_SECRET` and `PREVIEW_SECRET` made at random on the server,
@@ -114,8 +117,7 @@ that nothing it runs can reach production's secrets or a real service:
   screenshots. Noindex headers and a disallow-all `robots.txt` are required instead
   ([`ops/previews.md`](../../ops/previews.md)).
 
-The restricted deploy account and the isolation check are still to come (#1345, #1346); this section
-grows with them.
+This section grows with the restricted deploy account (#1345) and the isolation check (#1346).
 
 ## Agents and the rules that bind them
 
