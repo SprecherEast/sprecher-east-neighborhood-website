@@ -8,7 +8,8 @@ import { Card } from '@/platform/ui/Card'
 import { Text } from '@/platform/ui/Text'
 
 import { socialLinkPath } from '../domain/googleLink'
-import { parseLinkResult } from './googleLinkMessages'
+import { LINK_RESULT_NOTICES, parseLinkResult } from './googleLinkMessages'
+import { LogInAgainButton } from './LogInAgainButton.client'
 
 const HEADING_ID = 'google-heading'
 
@@ -28,15 +29,19 @@ type Props = {
  */
 export function ConnectGoogle({ connection, result }: Props) {
   const notice = parseLinkResult(result)
+  // "Linked" is only true of an account that has Google: a crafted address must not say so
+  const shown =
+    notice && !(notice === LINK_RESULT_NOTICES.linked && connection !== 'connected') ? notice : null
   return (
     <Card as="section" variant="muted" aria-labelledby={HEADING_ID}>
       <Text variant="subsection" id={HEADING_ID} className="mb-4">
         Google
       </Text>
       <div className="space-y-4">
-        {notice && <Alert tone={notice.tone}>{notice.text}</Alert>}
+        {shown && <Alert tone={shown.tone}>{shown.text}</Alert>}
+        {shown?.logInAgain && <LogInAgainButton />}
         {connection === 'connected' ? (
-          !notice && <Alert tone="success">{message('accounts.google.connected')}</Alert>
+          !shown && <Alert tone="success">{message('accounts.google.connected')}</Alert>
         ) : (
           <>
             <Text variant="small">{message('accounts.google.connectLead')}</Text>

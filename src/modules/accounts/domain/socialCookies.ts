@@ -43,11 +43,11 @@ const isAccountId = (value: unknown): value is number =>
 export const SOCIAL_LINK_KEY_PURPOSE = 'social-link'
 
 /**
- * The pending-link cookie (#1338): the same cookie as the flow, set again once Google's answer
- * is checked and an account already uses its verified email. It carries only the stored record's
- * row (`pid`), never the Google id or the email, and is signed under `SOCIAL_LINK_KEY_PURPOSE`.
+ * The pending record a signed cookie's data names, or null when it isn't one (#1338). The cookie
+ * is the flow's own, set again once Google's answer is checked and an account already uses its
+ * verified email. It carries only the stored record's row (`pid`), never the Google id or the
+ * email, and is signed under `SOCIAL_LINK_KEY_PURPOSE`.
  */
-/** The pending record a signed cookie's data names, or null when it isn't one. */
 export function toPendingLinkId(data: Record<string, unknown> | null): number | null {
   return data && isAccountId(data.pid) ? data.pid : null
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { connectGoogleSchema, decideFinishLink, decideStartLink } from './googleLink'
-import { RECENT_SIGN_IN_WINDOW_MS } from './passkeys'
+import { RECENT_SIGN_IN_WINDOW_MS } from './signInSession'
 
 const now = new Date('2026-11-20T12:00:00Z')
 const ago = (ms: number) => new Date(now.getTime() - ms)
@@ -30,7 +30,14 @@ describe('decideStartLink', () => {
 describe('decideFinishLink', () => {
   const session = { accountId: 7, signedInAt: ago(60_000) }
   const finish = (over: Partial<Parameters<typeof decideFinishLink>[0]> = {}) =>
-    decideFinishLink({ flowAccountId: 7, session, linkedAccountId: null, now, ...over })
+    decideFinishLink({
+      flowAccountId: 7,
+      session,
+      linkedAccountId: null,
+      emailVerified: true,
+      now,
+      ...over,
+    })
 
   it('links to the account that started the flow, while the sign-in is still recent', () => {
     expect(finish()).toEqual({ kind: 'link' })
@@ -46,6 +53,10 @@ describe('decideFinishLink', () => {
 
   it('refuses a callback whose flow belongs to another account than the session', () => {
     expect(finish({ flowAccountId: 8 })).toEqual({ kind: 'refuse', result: 'failed' })
+  })
+
+  it('refuses a Google email Google didn’t verify, the same rule as signing in', () => {
+    expect(finish({ emailVerified: false })).toEqual({ kind: 'refuse', result: 'failed' })
   })
 
   it('refuses a Google identity that is already on any account, this one included', () => {

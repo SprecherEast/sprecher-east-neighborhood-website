@@ -12,7 +12,9 @@ describe('toGoogleConnectedEmail', () => {
 
   it('tells the person what to do if it wasn’t them, with no link or address to sign in', () => {
     expect(email.text).toMatch(/Forgot your password\?/)
-    expect(email.text).toMatch(/disconnect Google/)
+    expect(email.text).toMatch(/change your password/)
+    expect(email.text).toMatch(/contact form/)
+    expect(email.text).not.toMatch(/disconnect/i)
     for (const part of [email.subject, email.text, email.html]) {
       expect(part).not.toMatch(/https?:|www\.|href=|@/i)
     }

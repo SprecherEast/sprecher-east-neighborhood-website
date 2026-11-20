@@ -21,7 +21,7 @@ export const ACCOUNTS_MESSAGES = {
     'We couldn’t log you in with that passkey. Try again, or use your email and password.',
   // Connecting Google to an account with a password (#1338). The verb "Connect" is the card's own.
   'accounts.google.connectLead':
-    'Connect Google, and you can log in with it. We’ll ask for your password once, to be sure it’s you.',
+    'Connect Google to log in with it. This works right after you log in; if it’s been a while, we’ll ask you to log in again.',
   'accounts.google.connected':
     'Google is connected. You can log in with Google or with your password.',
   'accounts.google.passwordLead':

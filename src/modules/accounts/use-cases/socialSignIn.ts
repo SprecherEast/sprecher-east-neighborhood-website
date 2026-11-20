@@ -96,13 +96,14 @@ export async function finishSocialSignIn(
   search: string,
   ip: string | null,
 ): Promise<string> {
-  // Per connection only, before anything is read or sent to the provider
-  if (await signInGuard({ token: null, ip }, NO_ROBOT_CHECK)) return toLogin('too-many')
   const now = new Date()
+  // The cookie is read and cleared first so a refusal goes back to the page that started the
+  // flow; the per-connection limit still comes before anything is sent to the provider
   const flow = await takeSocialFlow(now)
+  const link = typeof flow?.linkAccountId === 'number'
+  if (await signInGuard({ token: null, ip }, NO_ROBOT_CHECK)) return failureTo(link, 'too-many')
   // No flow, or one for another provider: this browser didn't start this sign-in
   if (!flow || flow.provider !== provider) return toLogin('failed')
-  const link = flow.linkAccountId !== null
 
   let profile: SocialProfile
   try {

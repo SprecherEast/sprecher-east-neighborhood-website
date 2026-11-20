@@ -99,6 +99,7 @@ export async function finishGoogleLink(
       flowAccountId,
       session: session && { accountId: session.accountId, signedInAt: session.signedInAt },
       linkedAccountId: linked?.id ?? null,
+      emailVerified: profile.emailVerified,
       now,
     })
     if (decision.kind === 'refuse' || !session)

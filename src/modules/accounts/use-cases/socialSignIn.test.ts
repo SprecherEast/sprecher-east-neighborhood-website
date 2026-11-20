@@ -252,6 +252,14 @@ describe('finishSocialSignIn', () => {
     expect(data.finishAuthorization).not.toHaveBeenCalled()
   })
 
+  it('sends a link flow stopped by the limit back to the account page, with no call to the provider', async () => {
+    data.takeSocialFlow.mockResolvedValue({ ...flow, linkAccountId: 7 })
+    for (let i = 0; i < 30; i++) await finish('10.7.7.8')
+    data.finishAuthorization.mockClear()
+    expect(await finish('10.7.7.8')).toBe('/account?social=too-many')
+    expect(data.finishAuthorization).not.toHaveBeenCalled()
+  })
+
   it('spends nothing shared by callbacks that carry no flow', async () => {
     data.takeSocialFlow.mockResolvedValue(null)
     // Callbacks with no flow cost nothing outbound, and there is no shared budget to use up

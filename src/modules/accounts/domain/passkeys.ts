@@ -2,6 +2,7 @@
 // party, the switch, the challenge's lifetime and the label. Pure: no Payload, no Next.js and no
 // WebAuthn library, which never sees an account.
 
+import { isRecentSignIn } from './signInSession'
 import { canSignInTo, type SocialAccount } from './socialSignIn'
 
 /** The collection that holds the saved passkeys. */
@@ -17,22 +18,6 @@ export type ChallengePurpose = (typeof CHALLENGE_PURPOSES)[number]
 
 /** How long a challenge may be answered: a few minutes, as the person's device prompt takes. */
 export const CHALLENGE_TTL_MS = 5 * 60 * 1000
-
-/**
- * How recent the session's sign-in must be to add a passkey. The session's own start time counts,
- * so "keep me signed in" doesn't make an old session look new.
- */
-export const RECENT_SIGN_IN_WINDOW_MS = 5 * 60 * 1000
-
-/**
- * Whether a session that began at `signedInAt` still counts as a recent sign-in: the one rule for
- * every step that asks the person to have signed in lately (adding a passkey, connecting Google,
- * #1338). An unknown, unreadable or future time counts as not recent.
- */
-export function isRecentSignIn(signedInAt: Date | null, now: Date): boolean {
-  const age = signedInAt ? now.getTime() - signedInAt.getTime() : Number.NaN
-  return age >= 0 && age <= RECENT_SIGN_IN_WINDOW_MS
-}
 
 /** The most passkeys one account may have. */
 export const MAX_PASSKEYS_PER_ACCOUNT = 10

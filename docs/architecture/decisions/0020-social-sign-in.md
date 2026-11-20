@@ -151,14 +151,15 @@ collection closed to every API, is purged hourly.
 starts the same flow, bound to the session's account (`linkAccountId`, inside the signed flow
 cookie). The session must be a recent sign-in, by the rule adding a passkey uses
 (`isRecentSignIn`, five minutes from the session's own start), checked when the flow starts and
-again when it finishes. At the callback the account comes from the session, must be the one that
+again when it finishes. At the callback Google must have verified the email (the rule of
+`decideSocialSignIn`), the account comes from the session, must be the one that
 started the flow, and the Google identity must be on no account; otherwise nothing changes and
 `/account` shows a fixed message.
 
 **Afterwards** the Google button signs that neighbor in to the same account, `/account` says
 Google is connected, and a note goes to the account's address with the time and no link
-(`toGoogleConnectedEmail`), like the passkey note. There is no way to disconnect yet; the note
-says to set a new password and tell us. `/auth/google/connect` sends `frame-ancestors 'none'`
+(`toGoogleConnectedEmail`), like the passkey note. There is no way to disconnect yet (#1353); the note
+says to change the password and tell us through the contact form. `/auth/google/connect` sends `frame-ancestors 'none'`
 like `/login` and `/account`.
 
 **Owner trade-off kept short:** a wrong password uses up the record, so a typo means one more

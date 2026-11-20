@@ -21,7 +21,7 @@ export function toGoogleConnectedEmail({ at }: { at: Date }): OutgoingEmail {
   const intro = `Google was connected to your Sprecher East account on ${when}.`
   const same = 'If that was you, there’s nothing more to do.'
   const outro =
-    'If it wasn’t you, choose “Forgot your password?” on the log in page to set a new password, then tell us on the contact page so we can disconnect Google.'
+    'If it wasn’t you, choose “Forgot your password?” on the log in page to change your password, then tell us through the contact form.'
   return {
     subject: 'Google was connected to your account',
     text: `${intro}\n\n${same}\n\n${outro}\n`,

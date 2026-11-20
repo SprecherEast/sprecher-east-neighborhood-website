@@ -9,7 +9,7 @@
 import { z } from 'zod'
 
 import { MAX_PASSWORD_LENGTH } from './credentials'
-import { isRecentSignIn } from './passkeys'
+import { isRecentSignIn } from './signInSession'
 
 /** How long Google's checked answer waits for the password: the flow's own ten minutes. */
 export const PENDING_LINK_TTL_MS = 10 * 60 * 1000
@@ -68,23 +68,29 @@ export type FinishLinkDecision =
  * Whether Google's checked answer may be attached, asked again when the flow comes back (the
  * session may be gone or old by then). The account is the session's, and it must be the one that
  * started the flow, so a callback can't attach Google to another session's account. A Google
- * identity already on any account is refused. `linkedAccountId` is who has this subject now.
+ * identity already on any account is refused, and so is one whose email Google didn't verify:
+ * both ways of connecting obey the rule of `decideSocialSignIn`. `linkedAccountId` is who has this subject now.
  */
 export function decideFinishLink({
   flowAccountId,
   session,
   linkedAccountId,
+  emailVerified,
   now,
 }: {
   flowAccountId: number
   session: { accountId: number; signedInAt: Date | null } | null
   linkedAccountId: number | null
+  /** Whether Google says it confirmed the email: the same rule as signing in with Google */
+  emailVerified: boolean
   now: Date
 }): FinishLinkDecision {
   if (!session || !isRecentSignIn(session.signedInAt, now)) {
     return { kind: 'refuse', result: 'sign-in-again' }
   }
-  if (session.accountId !== flowAccountId) return { kind: 'refuse', result: 'failed' }
+  if (session.accountId !== flowAccountId || !emailVerified) {
+    return { kind: 'refuse', result: 'failed' }
+  }
   if (linkedAccountId !== null) return { kind: 'refuse', result: 'taken' }
   return { kind: 'link' }
 }

@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
+
+vi.mock('../actions', () => ({ signOut: vi.fn() }))
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }))
 
 import { ConnectGoogle } from './ConnectGoogle'
 import { LINK_RESULT_NOTICES, parseLinkResult } from './googleLinkMessages'
@@ -22,7 +25,8 @@ describe('ConnectGoogle', () => {
     const form = button.closest('form')
     expect(form?.getAttribute('action')).toBe('/auth/google/link')
     expect(form?.getAttribute('method')).toBe('get')
-    expect(screen.getByText(/We’ll ask for your password once/)).toBeTruthy()
+    expect(screen.getByText(/This works right after you log in/)).toBeTruthy()
+    expect(document.body.textContent).not.toMatch(/ask for your password/)
     await expectAccessible(container)
   })
 
@@ -49,6 +53,16 @@ describe('ConnectGoogle', () => {
     cleanup()
     render(<ConnectGoogle connection="available" result="sign-in-again" />)
     expect(screen.getByRole('status').textContent).toContain('please log in again first')
+    // Not a dead end: the same "Log in again" the passkey card has
+    expect(screen.getByRole('button', { name: 'Log in again' })).toBeTruthy()
+    cleanup()
+    render(<ConnectGoogle connection="available" result="taken" />)
+    expect(screen.queryByRole('button', { name: 'Log in again' })).toBeNull()
+    cleanup()
+    // A crafted address can't say Google is connected when it isn't
+    render(<ConnectGoogle connection="available" result="linked" />)
+    expect(screen.queryByText(/Google is connected/)).toBeNull()
+    expect(screen.getByRole('button', { name: 'Connect Google' })).toBeTruthy()
     cleanup()
     const { container } = render(<ConnectGoogle connection="available" result="<script>" />)
     expect(container.querySelector('[role=alert],[role=status]')).toBeNull()
