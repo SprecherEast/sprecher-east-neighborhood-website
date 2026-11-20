@@ -78,6 +78,9 @@ It is an unofficial, AI-assisted initiative (ground rules in [`AGENTS.md`](/AGEN
   `releases/<commit>`, and the VPS backs up, migrates, switches `current`, reloads PM2 and checks
   the site, switching back if it doesn't answer (#245). Rollback by hand: `ops/rollback.sh`.
   The server scripts are in [`ops/`](/ops/README.md)
+- **Branches**: GitHub deletes a pull request's branch when the pull request merges (the repository
+  setting "Automatically delete head branches", #1358). Turn it off by setting `delete_branch_on_merge`
+  to false in the repository settings
 - **Caddy config**: `/etc/caddy/Caddyfile`. Rules for editing it (never overwrite, back up,
   validate) are in [`guidelines/security.md`](/docs/guidelines/security.md#infrastructure-security)
 - **Live domains**: `sprechereast.com` (HTTPS), `www.sprechereast.com` (redirects to it). The
