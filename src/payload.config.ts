@@ -12,7 +12,14 @@ import { buildConfig, type Plugin } from 'payload'
 import { fileURLToPath } from 'url'
 
 import type { Event, Page, Post } from '@/payload-types'
-import { keepAccountEmails, noVerifyMutation, Users } from '@/modules/accounts/cms'
+import {
+  keepAccountEmails,
+  noVerifyMutation,
+  PasskeyChallenges,
+  passkeyChallengeRetentionTask,
+  Passkeys,
+  Users,
+} from '@/modules/accounts/cms'
 import { AgentReviewItems, AgentRuns, mcpOptions } from '@/modules/agents/cms'
 import {
   contactRetentionTask,
@@ -38,6 +45,7 @@ import {
 } from '@/modules/verification/cms'
 import { Media } from '@/platform/payload/media'
 import { defaultLexical } from '@/platform/payload/defaultLexical'
+import { SQLITE_BUSY_TIMEOUT_MS } from '@/platform/payload/sqliteBusyTimeout'
 import {
   isAdmin,
   isAdminBoolean,
@@ -45,6 +53,7 @@ import {
   isAdminOrEditorBoolean,
 } from '@/platform/payload/roles'
 import { getServerSideURL } from '@/platform/lib/getURL'
+import { SITE_NAME } from '@/platform/seo/siteName'
 import { emailAdapterFromEnv } from '@/platform/email/emailAdapter'
 import { restrictEditLocks } from '@/platform/payload/restrictEditLocks'
 import { restrictJobStats } from '@/platform/payload/restrictJobStats'
@@ -65,7 +74,7 @@ const confirmationRetentionTask = createConfirmationRetentionTask({
 })
 
 const generateTitle: GenerateTitle<Post | Page | Event> = ({ doc }) => {
-  return doc?.title || 'Sprecher East'
+  return doc?.title || SITE_NAME
 }
 
 const generateURL: GenerateURL<Post | Page | Event> = ({ doc, collectionConfig }) => {
@@ -177,6 +186,7 @@ export default buildConfig({
   },
   editor: defaultLexical,
   db: sqliteAdapter({
+    busyTimeout: SQLITE_BUSY_TIMEOUT_MS,
     client: {
       url: process.env.DATABASE_URI ?? 'file:./data/payload.db',
     },
@@ -191,6 +201,8 @@ export default buildConfig({
     Media,
     Categories,
     Users,
+    Passkeys,
+    PasskeyChallenges,
     EmailConfirmations,
     AgentRuns,
     AgentReviewItems,
@@ -221,7 +233,7 @@ export default buildConfig({
     // queue and cancel scheduled publishes from Admin; only admins may run the queue by hand.
     access: { cancel: isAdminOrEditorBoolean, queue: isAdminOrEditorBoolean, run: isAdminBoolean },
     // The owner's retention rules (#274), scheduled every hour
-    tasks: [contactRetentionTask, confirmationRetentionTask],
+    tasks: [contactRetentionTask, confirmationRetentionTask, passkeyChallengeRetentionTask],
     // Runs the retention queue (#274) and scheduled publishing (#141) inside the app's one PM2
     // process: no separate worker
     autoRun: JOB_RUNNERS,

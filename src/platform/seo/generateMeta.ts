@@ -4,6 +4,7 @@ import type { Media, Page, Post, Event, Config } from '@/payload-types'
 
 import { mergeOpenGraph } from './mergeOpenGraph'
 import { toAbsoluteURL } from '@/platform/lib/getURL'
+import { SITE_NAME } from './siteName'
 import { documentHref } from '@/platform/payload/documentHref'
 
 const getImageURL = (image?: Media | Config['db']['defaultIDType'] | null) => {
@@ -16,7 +17,7 @@ const getImageURL = (image?: Media | Config['db']['defaultIDType'] | null) => {
 }
 
 /** What the metadata reads from a page, post or event; a page's layout may already be mapped */
-type DocWithMeta = Partial<Pick<Page | Post | Event, 'meta' | 'slug'>>
+type DocWithMeta = Partial<Pick<Page | Post | Event, 'meta' | 'slug' | 'title'>>
 
 export const generateMeta = async (args: { doc: DocWithMeta | null }): Promise<Metadata> => {
   const { doc } = args
@@ -25,7 +26,10 @@ export const generateMeta = async (args: { doc: DocWithMeta | null }): Promise<M
 
   const ogImage = getImageURL(meta?.image)
 
-  const title = meta?.title || 'Sprecher East'
+  // The SEO title, else the document's own title. The layout's template adds the site name after
+  // either; with neither, the name alone is the whole title, so it shows once, not twice.
+  const ownTitle = meta?.title || doc?.title
+  const title = ownTitle || SITE_NAME
 
   return {
     description: meta?.description,
@@ -41,6 +45,6 @@ export const generateMeta = async (args: { doc: DocWithMeta | null }): Promise<M
       title,
       url: typeof doc?.slug === 'string' ? documentHref('pages', doc.slug) : '/',
     }),
-    title,
+    title: ownTitle || { absolute: SITE_NAME },
   }
 }

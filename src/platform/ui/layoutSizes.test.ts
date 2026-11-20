@@ -18,6 +18,8 @@ import {
   LEGEND_GAP,
   PAGE_MIN_HEIGHT,
   PAGE_SHELL,
+  PICTURE_ROW_COLUMNS,
+  PICTURE_WIDTH,
   READING_WIDTH,
   SHARED_ROWS_SPACE_4,
   SUBGRID_FOUR_ROWS,
@@ -51,6 +53,12 @@ describe('layout sizes', () => {
     expect(LEGEND_GAP).toBe('-mt-[calc(var(--figure-gap)_-_var(--legend-gap))]')
   })
 
+  it('give the article picture and the row beside it the same two widths (#1333)', () => {
+    expect(PICTURE_WIDTH).toBe('md:w-[var(--picture-width-md)] lg:w-[var(--picture-width-lg)]')
+    expect(PICTURE_ROW_COLUMNS).toContain('md:grid-cols-[minmax(0,1fr)_var(--picture-width-md)]')
+    expect(PICTURE_ROW_COLUMNS).toContain('lg:grid-cols-[minmax(0,1fr)_var(--picture-width-lg)]')
+  })
+
   it('share their rows by subgrid: one count in both classes, one fewer for the facts (#678)', () => {
     const rows = 4
     expect(SUBGRID_FOUR_ROWS).toContain(`row-span-${rows} `)
@@ -81,6 +89,8 @@ describe('layout sizes', () => {
       '--hero-fade-overlap',
       '--figure-gap',
       '--legend-gap',
+      '--picture-width-md',
+      '--picture-width-lg',
       '--chart-small-width',
       '--chart-stack-width',
       '--chart-large-width',

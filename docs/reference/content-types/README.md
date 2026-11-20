@@ -18,6 +18,8 @@ One page for every collection and global in the loaded Payload config, plugins i
 | [`header`](header.md)                                     | global     |                                                                                          | no     |
 | [`media`](media.md)                                       | collection |                                                                                          | no     |
 | [`pages`](pages.md)                                       | collection |                                                                                          | yes    |
+| [`passkey-challenges`](passkey-challenges.md)             | collection |                                                                                          | no     |
+| [`passkeys`](passkeys.md)                                 | collection | Passkeys residents added to sign in.                                                     | no     |
 | [`payload-folders`](payload-folders.md)                   | collection |                                                                                          | no     |
 | [`payload-jobs`](payload-jobs.md)                         | collection |                                                                                          | no     |
 | [`payload-jobs-stats`](payload-jobs-stats.md)             | global     |                                                                                          | no     |

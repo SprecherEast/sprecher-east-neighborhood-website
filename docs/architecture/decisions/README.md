@@ -25,6 +25,7 @@ that supersedes the old one; don't edit history.
 | [0017](0017-one-message-catalog.md)                          | One message catalog in code; durations come from the settings   | 2026-11-01 | Accepted                             |
 | [0018](0018-charts-behind-our-own-port.md)                   | Charts behind our own port; HTML for square grids, visx for SVG | 2026-11-04 | Accepted                             |
 | [0019](0019-knowledge-layer.md)                              | Short notes and generated reference, kept in sync by CI         | 2026-11-06 | Accepted                             |
+| [0020](0020-social-sign-in.md)                               | Google sign-in through our routes and `openid-client`           | 2026-10-27 | Proposed                             |
 | [0021](0021-passkey-sign-in.md)                              | Passkey sign-in on our own thin layer over `@simplewebauthn`    | 2026-11-19 | Proposed                             |
 
 Template for a new record: **Context** (the problem and the forces), **Decision**, **Consequences**

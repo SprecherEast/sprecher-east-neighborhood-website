@@ -5,18 +5,11 @@ import { Badge } from './Badge'
 
 /**
  * The "Cancelled" label of a cancelled event (#122), wherever the event shows. The word says it,
- * so screen readers read it with the title and colour is never the only signal. `on-image` is
- * the label on the event's photo, on its own scrim.
+ * so screen readers read it with the title and colour is never the only signal.
  */
-export function CancelledBadge({
-  variant = 'status',
-  className,
-}: {
-  variant?: 'status' | 'on-image'
-  className?: string
-}) {
+export function CancelledBadge({ className }: { className?: string }) {
   return (
-    <Badge variant={variant} className={className}>
+    <Badge variant="status" className={className}>
       <CircleX aria-hidden="true" />
       Cancelled
     </Badge>

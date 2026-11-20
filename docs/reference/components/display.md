@@ -10,7 +10,7 @@ Source: `src/platform/ui/Badge.tsx`
 
 **Variants:**
 
-- `variant`: `"done" | "open" | "category" | "on-image" | "status" | "official" | "current" | "caution" | "neutral" | "outline"`
+- `variant`: `"done" | "open" | "category" | "status" | "official" | "current" | "caution" | "neutral" | "outline"`
 - `size`: `"xs" | "sm" | "md"`
 
 | Prop        | Type              | Required | Description |
@@ -43,14 +43,13 @@ Source: `src/platform/ui/Badge.tsx`
 
 ## `CancelledBadge`
 
-The "Cancelled" label of a cancelled event (#122), wherever the event shows. The word says it, so screen readers read it with the title and colour is never the only signal. `on-image` is the label on the event's photo, on its own scrim.
+The "Cancelled" label of a cancelled event (#122), wherever the event shows. The word says it, so screen readers read it with the title and colour is never the only signal.
 
 Source: `src/platform/ui/CancelledBadge.tsx`
 
-| Prop        | Type                     | Required | Description |
-| ----------- | ------------------------ | -------- | ----------- |
-| `variant`   | `"on-image" \| "status"` | no       |             |
-| `className` | `string`                 | no       |             |
+| Prop        | Type     | Required | Description |
+| ----------- | -------- | -------- | ----------- |
+| `className` | `string` | no       |             |
 
 **Used by** (direct imports):
 
@@ -112,10 +111,6 @@ Source: `src/platform/ui/DateTime.tsx`
 
 Source: `src/platform/ui/MetaList.tsx`
 
-**Variants:**
-
-- `variant`: `"inline" | "stacked" | "on-image"`
-
 | Prop        | Type                                   | Required | Description                                                            |
 | ----------- | -------------------------------------- | -------- | ---------------------------------------------------------------------- |
 | `items`     | `LabelledMetaItem[] \| IconMetaItem[]` | yes      | All labelled or none: a list mixes no kinds, so its markup stays valid |
@@ -159,7 +154,7 @@ Source: `src/platform/ui/Text.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `directory`, `events`, `news`, `roadmap`, `site`
+- Modules: `accounts`, `directory`, `events`, `news`, `roadmap`, `site`
 - Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/resources/[group]`
 - Platform: `platform/richtext`, `platform/ui`
 
@@ -192,14 +187,14 @@ The legend under an annotated image or a chart (#636, from the diagram key of #5
 
 Source: `src/platform/ui/Legend.tsx`
 
-| Prop        | Type                                 | Required | Description                                                                                                                                                         |
-| ----------- | ------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label`     | `string`                             | no       | What assistive technology calls the list, such as "Diagram key"; "Legend" by default                                                                                |
-| `attach`    | `"none" \| "panel"`                  | no       | `panel` (the default) is a full-width box under the image block above it; `none` is a plain list, such as under a chart.                                            |
-| `columns`   | `"auto" \| "one"`                    | no       | `auto` (the default) puts the items in two columns from `sm`; `one` keeps one column, for a legend in a narrow column such as the text beside a small chart (#681). |
-| `className` | `string`                             | no       |                                                                                                                                                                     |
-| `marker`    | `"number" \| "swatch"`               | no       | Numbered orange circles with white numbers, for an annotated image; the default The chart colour (and pattern) of each item, for a chart                            |
-| `items`     | `LegendItem[] \| LegendSwatchItem[]` | yes      |                                                                                                                                                                     |
+| Prop        | Type                                 | Required | Description                                                                                                                                                                                                                                                                                                                            |
+| ----------- | ------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`     | `string`                             | no       | What assistive technology calls the list, such as "Diagram key"; "Legend" by default                                                                                                                                                                                                                                                   |
+| `attach`    | `"none" \| "panel"`                  | no       | `panel` (the default) is a full-width box under the image block above it; `none` is a plain list, such as under a chart.                                                                                                                                                                                                               |
+| `columns`   | `"auto" \| "one" \| "fit"`           | no       | `auto` (the default) puts the items in two columns from `sm`; `one` keeps one column, for a legend in a narrow column such as the text beside a small chart (#681). `fit` asks the legend's own width instead of the screen's: two columns once it is wide enough, one when it sits in a narrow room beside a floated picture (#1333). |
+| `className` | `string`                             | no       |                                                                                                                                                                                                                                                                                                                                        |
+| `marker`    | `"number" \| "swatch"`               | no       | Numbered orange circles with white numbers, for an annotated image; the default The chart colour (and pattern) of each item, for a chart                                                                                                                                                                                               |
+| `items`     | `LegendItem[] \| LegendSwatchItem[]` | yes      |                                                                                                                                                                                                                                                                                                                                        |
 
 **Used by** (direct imports):
 

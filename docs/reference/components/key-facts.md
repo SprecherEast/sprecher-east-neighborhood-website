@@ -52,6 +52,21 @@ Source: `src/platform/richtext/editorial/FactTabs.tsx`
 - Routes: `/dev/gallery`
 - Platform: `platform/richtext`
 
+## `SectionTabs`
+
+An article split into tabs of ordinary content (#1333): the shared `Tabs` (equal label-only buttons in one row, the content directly under them in the same column, every panel on the server so with scripting off they read one after another under their labels). The content of a tab arrives drawn, so this knows nothing of rich text. It clears any floated picture before it, so the buttons and what they open stay in one column under an introduction and its picture. It is not `not-prose`: the content of a tab is article text, and Tailwind's typography skips everything under a `not-prose` ancestor, even a nested `prose`.
+
+Source: `src/platform/richtext/editorial/SectionTabs.tsx`
+
+| Prop        | Type               | Required | Description |
+| ----------- | ------------------ | -------- | ----------- |
+| `tabs`      | `SectionTabView[]` | yes      |             |
+| `className` | `string`           | no       |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
 ## `BillShare`
 
 The whole property-tax bill at the top of a fact tab (#1018, #1111), one column on every width, in the order a neighbor needs it: the bill block's one intro line, the Rough Estimator (the home value the reader can change, which starts at the City's average home, and the switch between tax years), the answer card (the City's tax on the home and year, its increase, the year's status), the whole bill (its own card: the total, one bar whose slices are as wide as their shares, and the receipt naming each, with where the City's share goes (the split alone) as a closed row under the City's own row, #1163), then one card of two rows: why the bill may differ and the sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home value and year, so every amount is the City's slice of the bill. A year in which a body has not set its rate uses that body's rate from the year before, and says so in a note whose room is always kept, so the page never changes height.

@@ -10,7 +10,7 @@ never publish and never change existing content. Fields, access and hooks:
 ## How the pieces link
 
 - A suggestion's categories are found by slug; an unknown slug is refused, never created. Its image is the first category's `defaultImage` (a field of news's `categories`), else the nearest parent's, else the next category's, else none (`cms/tools/submitSuggestion.ts`, `domain/suggestion.ts`).
-- The Markdown body becomes the collection's own rich text; `<Chart>` and `<FactTabs>` tags are read by the editorial converters, and a malformed or unreadable tag refuses the call and stores nothing (`cms/tools/submitSuggestion.ts`, `src/platform/richtext/editorial/*Markdown.ts`, `editorialTag.ts`).
+- The Markdown body becomes the collection's own rich text; `<Chart>`, `<FactTabs>` and `<SectionTabs>` tags are read by the editorial converters, and a malformed or unreadable tag refuses the call and stores nothing (`cms/tools/submitSuggestion.ts`, `src/platform/richtext/editorial/*Markdown.ts`, `editorialTag.ts`).
 - Card text: a post's `summary` fills its search-engine description (`meta.description`) only; an event's fills its description. The share image of a post is the category's default image, which is also the hero image of both (`cms/tools/submitSuggestion.ts`).
 - An event's day and times come from `startsAt`, `endsAt` and `allDay` in the site timezone; an end on another day is dropped (`domain/suggestion.ts`).
 - `externalId` and `contentHash` are unique on events and posts, so one item is never stored twice; the slug ends with the start of the hash (`src/platform/payload/reviewQueue.ts`, `domain/suggestion.ts`).
@@ -45,7 +45,7 @@ never publish and never change existing content. Fields, access and hooks:
 - The tools' schemas and the agents' contract give the same verdicts: `cms/tools/schemas.contract.test.ts`.
 - Tools store held drafts, answer duplicates and keep concurrent reports: `src/payload.config.agentTools.test.ts`.
 - Keys, limits, run isolation and write-once identity: `src/payload.config.agentAccess.test.ts`, `src/payload.config.agentProbes.test.ts`.
-- Chart and fact-tab tags in suggestions: `src/payload.config.chartSuggestion.test.ts`, `src/payload.config.factTabsSuggestion.test.ts`.
+- Chart, fact-tab and section-tab tags in suggestions: `src/payload.config.chartSuggestion.test.ts`, `src/payload.config.factTabsSuggestion.test.ts`, `src/payload.config.sectionTabsSuggestion.test.ts`.
 - The access migration rolls back and applies again: `src/payload.config.agentMigration.test.ts`.
 
 ## Boundaries

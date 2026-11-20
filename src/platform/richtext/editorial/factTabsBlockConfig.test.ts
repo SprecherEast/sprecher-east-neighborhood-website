@@ -30,7 +30,9 @@ describe('FactTabsBlockConfig', () => {
 
   it('is offered in posts and events, after the other visual blocks', () => {
     const slugs = (blocks: Block[]) => blocks.map((b) => b.slug)
-    expect(slugs(EDITORIAL_BLOCKS).at(-1)).toBe('factTabs')
+    expect(slugs(EDITORIAL_BLOCKS).indexOf('factTabs')).toBeGreaterThan(
+      slugs(EDITORIAL_BLOCKS).indexOf('chart'),
+    )
     expect(slugs(RICH_TEXT_BLOCKS)).toContain('factTabs')
     expect(slugs(EVENT_RICH_TEXT_BLOCKS)).toContain('factTabs')
     expect(FactTabsBlockConfig.interfaceName).toBe('FactTabsBlock')

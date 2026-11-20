@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
 }))
 vi.mock('@/modules/accounts/server', () => ({
   getCurrentUser: mocks.getCurrentUser,
+  getEnabledSocialProviders: () => [],
+  SocialSignIn: () => null,
   SignUpForm: ({ email }: { email: string | null }) => <p>email: {String(email)}</p>,
 }))
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }))

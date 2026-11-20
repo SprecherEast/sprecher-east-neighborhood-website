@@ -8,7 +8,7 @@ on the VPS. Nothing here is run by hand during a normal deploy. Changes to the s
 | ------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
 | `server-facts.sh`   | VPS    | Prints the server's Node version, its public `NEXT_PUBLIC_*` settings and the live commit, for the build                                                                                   | #245       |
 | `build-release.sh`  | runner | Builds a release in the folder it will run from on the server, with the server's Node and settings, and packs it                                                                           | #245       |
-| `deploy-release.sh` | VPS    | Checks the release, links the shared files, backs up, migrates, switches `current`, checks the site and switches back if it fails                                                          | #245       |
+| `deploy-release.sh` | VPS    | Checks the release, links the shared files, backs up, migrates (once more after a busy database, #1147), switches `current`, checks the site and switches back if it fails                 | #245       |
 | `rollback.sh`       | VPS    | By hand: puts an earlier release back live                                                                                                                                                 | #245       |
 | `backup.sh`         | VPS    | Archives the database, uploaded media and `.env.local`; keeps 7 daily, 5 weekly, 5 pre-deploy                                                                                              | #148       |
 | `backup-db.mjs`     | VPS    | Copies the live SQLite database with `VACUUM INTO` and checks the copy                                                                                                                     | #148       |
@@ -21,6 +21,7 @@ on the VPS. Nothing here is run by hand during a normal deploy. Changes to the s
 | `backup-umami.sh`   | VPS    | Dumps Umami's Postgres database; run after the daily backup and before an Umami update                                                                                                     | #948       |
 | `environment.sh`    | VPS    | Defines once what differs between production and a pull request preview (folder, PM2 process, port, settings, data and media, Caddy block, site address); see [`previews.md`](previews.md) | #1073      |
 | `lib.sh`            | VPS    | Shared helpers: annotations, reading non-secret settings, checking the site through Caddy, the `current` link, and the Caddy import check, reload check and rollback                       |            |
+| `migrate-lib.sh`    | VPS    | `run_migrate`: `payload migrate`, run once more only after `SQLITE_BUSY` before any migration began (sourced by `deploy-release.sh`)                                                       | #1147      |
 
 The scripts print `::notice` and `::warning` lines, which appear as annotations on the deploy run
 whether it succeeds or fails, so the result can be read without opening the logs. The deploy log
@@ -77,7 +78,13 @@ or by an agent, within the limits in [`wrapped`](../.agents/skills/wrapped/SKILL
    - checks the release was built with this server's Node and settings, and that its native
      modules load
    - links `.env.local`, `data/` and `public/media` from `/var/www/sprecher-east` into it
-   - backs up (`backup.sh pre-deploy`) and runs `payload migrate`, while the live release serves
+   - backs up (`backup.sh pre-deploy`) and runs `payload migrate`, while the live release serves.
+     The database waits up to 5 s for a lock (`SQLITE_BUSY_TIMEOUT_MS`), and if `payload migrate`
+     still fails with `SQLITE_BUSY` before any migration began (no "Migrating:" line in its
+     output), `run_migrate` (`migrate-lib.sh`) waits 5 s and runs it once more. A failure once a
+     migration has begun is never retried, because the migration may be applied but not recorded
+     and would run twice; any other failure, or a second one, stops the deploy with the live site
+     unchanged (#1147, #153)
    - drops the pages prerendered in CI (their database was empty); each page renders from the
      live database on its first visit and is cached from then on
    - switches `current` to the release in one step and reloads PM2 (`restart-app.sh`)

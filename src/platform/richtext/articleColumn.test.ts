@@ -21,9 +21,12 @@ describe('hasWideBlocks', () => {
     )
   })
 
-  it.each(['factTabs', 'keyFacts', 'outcomeFork'])('is true for a %s block', (blockType) => {
-    expect(hasWideBlocks(doc(paragraph, block(blockType)))).toBe(true)
-  })
+  it.each(['factTabs', 'sectionTabs', 'keyFacts', 'outcomeFork'])(
+    'is true for a %s block',
+    (blockType) => {
+      expect(hasWideBlocks(doc(paragraph, block(blockType)))).toBe(true)
+    },
+  )
 
   it('finds a wide block nested inside another node', () => {
     expect(hasWideBlocks(doc({ type: 'quote', children: [block('factTabs')] }))).toBe(true)
@@ -47,6 +50,11 @@ describe('articleColumnClass', () => {
 })
 
 describe('splitLeadingWideBlocks (#1023)', () => {
+  it('takes section tabs an article opens with, like any other card row (#1333)', () => {
+    const { lead } = splitLeadingWideBlocks(doc(block('sectionTabs'), paragraph))
+    expect(lead).not.toBeNull()
+  })
+
   const heading = { type: 'heading', tag: 'h2', children: [{ type: 'text', text: 'Facts' }] }
   const kinds = (value: unknown) =>
     ((value as { root: { children: { type: string }[] } }).root.children ?? []).map((n) => n.type)

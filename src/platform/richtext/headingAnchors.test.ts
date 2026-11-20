@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { RichTextValue } from '@/platform/lib'
 
-import { headingAnchors } from './headingAnchors'
+import { anchorsByNode, headingAnchors } from './headingAnchors'
 
 const text = (value: string) => ({ type: 'text', text: value, version: 1 })
 const heading = (tag: string, ...children: unknown[]) => ({
@@ -96,6 +96,46 @@ describe('headingAnchors', () => {
     expect(headingAnchors(doc(block, heading('h2', text('Real'))))).toEqual([
       { id: 'real', text: 'Real', level: 2 },
     ])
+  })
+
+  describe('inside section tabs (#1333)', () => {
+    const tabs = (...panels: unknown[][]) => ({
+      type: 'block',
+      version: 1,
+      fields: {
+        blockType: 'sectionTabs',
+        tabs: panels.map((children, index) => ({
+          label: `Tab ${index}`,
+          panel: { root: { type: 'root', version: 1, children } },
+        })),
+      },
+    })
+
+    it('lists the headings in every tab, in reading order, with the article’s own', () => {
+      const value = doc(
+        heading('h2', text('Before')),
+        tabs([heading('h3', text('One'))], [heading('h3', text('Two')), heading('h4', text('No'))]),
+        heading('h2', text('After')),
+      )
+      expect(headingAnchors(value)).toEqual([
+        { id: 'before', text: 'Before', level: 2 },
+        { id: 'one', text: 'One', level: 3 },
+        { id: 'two', text: 'Two', level: 3 },
+        { id: 'after', text: 'After', level: 2 },
+      ])
+    })
+
+    it('numbers a heading that repeats across the article and a tab, and keeps the node’s id', () => {
+      const inTab = heading('h3', text('Costs'))
+      const value = doc(heading('h2', text('Costs')), tabs([inTab]))
+      const anchors = anchorsByNode(value)
+      expect(anchors.get(inTab)?.id).toBe('costs-2')
+    })
+
+    it('is not troubled by a tab with no content', () => {
+      const broken = { type: 'block', fields: { blockType: 'sectionTabs', tabs: [{ label: 'x' }] } }
+      expect(headingAnchors(doc(broken, heading('h2', text('Real'))))).toHaveLength(1)
+    })
   })
 
   it('returns nothing for no content', () => {

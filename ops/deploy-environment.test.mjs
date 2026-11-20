@@ -30,7 +30,13 @@ const log = () => fs.readFileSync(p('log'), 'utf8')
 
 /** A release folder with the real scripts, a fake build and logging stand-ins for the rest. */
 function makeRelease(release, url) {
-  for (const f of ['deploy-release.sh', 'restart-app.sh', 'lib.sh', 'environment.sh'])
+  for (const f of [
+    'deploy-release.sh',
+    'restart-app.sh',
+    'lib.sh',
+    'environment.sh',
+    'migrate-lib.sh',
+  ])
     write(path.join(release, 'ops', f), fs.readFileSync(path.join(OPS, f)))
   write(
     path.join(release, 'ecosystem.config.cjs'),

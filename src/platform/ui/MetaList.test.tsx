@@ -12,7 +12,6 @@ describe('MetaList', () => {
   it('is a description list when its items have labels (#432)', async () => {
     const { container } = render(
       <MetaList
-        variant="on-image"
         items={[
           { label: 'Date', value: 'Tue, Mar 3, 2026' },
           { label: 'Format', value: 'In person' },
@@ -37,11 +36,5 @@ describe('MetaList', () => {
   it('takes labelled or icon items, never both in one list', () => {
     // @ts-expect-error A mixed list would be a <dl> with an item that has no <dt>
     render(<MetaList items={[{ label: 'Date', value: 'Mar 3' }, { value: 'Madison, WI' }]} />)
-  })
-
-  it('writes inline labels as "Label: value"', () => {
-    render(<MetaList variant="inline" items={[{ label: 'Time', value: '6 PM' }]} />)
-
-    expect(screen.getByText('Time').className).toContain('after:content-[":"]')
   })
 })

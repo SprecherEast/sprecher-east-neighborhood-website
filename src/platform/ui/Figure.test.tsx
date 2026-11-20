@@ -55,8 +55,8 @@ describe('Figure', () => {
     const { container } = setup({ size: 'half-then-third' })
     const classes = (container.firstElementChild as HTMLElement).className
 
-    expect(classes).toContain('md:w-1/2')
-    expect(classes).toContain('lg:w-1/3')
+    expect(classes).toContain('md:w-[var(--picture-width-md)]')
+    expect(classes).toContain('lg:w-[var(--picture-width-lg)]')
   })
 
   it('draws the picture and its caption with no Enlarge button or dialog when zoom is off (#1055)', async () => {

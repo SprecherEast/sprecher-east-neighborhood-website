@@ -115,6 +115,12 @@
   --figure-gap: 2rem;
   --legend-gap: 1rem;
 
+  /* How wide the article's picture is, as a share of the text column: on a tablet, then from the
+     `lg` breakpoint (#1023, #1333). The picture and a section tab's picture row both read these.
+     Classes: platform/ui/layoutSizes.ts */
+  --picture-width-md: 50%;
+  --picture-width-lg: 33.333%;
+
   /* How wide a chart's drawing runs as a thumbnail in the page and enlarged in its dialog (#681).
      20rem is the drawing's own 320-unit width at 1:1. Classes: platform/ui/layoutSizes.ts */
   --chart-small-width: 20rem;

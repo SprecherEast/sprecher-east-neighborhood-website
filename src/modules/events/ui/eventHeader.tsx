@@ -59,11 +59,9 @@ export function eventHeaderProps(event: EventDetail): PageHeaderProps {
   const eyebrow =
     cancelled || officialBody || categories.length > 0 ? (
       <BadgeList plated={Boolean(backdrop)}>
-        {cancelled && <CancelledBadge variant="status" />}
+        {cancelled && <CancelledBadge />}
         {officialBody && (
-          <OfficialMeetingBadge variant="official">
-            {formatOfficialBody(officialBody)} meeting
-          </OfficialMeetingBadge>
+          <OfficialMeetingBadge>{formatOfficialBody(officialBody)} meeting</OfficialMeetingBadge>
         )}
         {categories.map((category) => (
           <Badge key={category.id} variant="category">

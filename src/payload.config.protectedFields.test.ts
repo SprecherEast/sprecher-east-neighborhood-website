@@ -1,6 +1,7 @@
-import { REST_PATCH, REST_POST } from '@payloadcms/next/routes'
 import type { Payload, SanitizedConfig } from 'payload'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
+
+import { restRequest } from '@/platform/payload/testing/restRequest'
 
 /**
  * Server-only fields refuse writes from the API (#299). `hidden: true` hides a field from reads
@@ -23,35 +24,28 @@ beforeAll(async () => {
 }, 60_000)
 
 /** Sends a JSON request to Payload's REST API, as the site's `/api` route does. */
-async function rest(
+const rest = (
   method: 'POST' | 'PATCH',
   path: string[],
   body: Record<string, unknown>,
   token?: string,
-): Promise<Response> {
-  const handler = (method === 'POST' ? REST_POST : REST_PATCH)(Promise.resolve(config))
-  const request = new Request(`http://localhost:3000/api/${path.join('/')}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `JWT ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
-  })
-  return handler(request, { params: Promise.resolve({ slug: path }) })
-}
+) => restRequest(config, method, path, { body, token })
 
 const stored = (collection: 'users' | 'email-confirmations' | 'form-submissions', id: number) =>
   payload.findByID({ collection, id, depth: 0, overrideAccess: true, showHiddenFields: true })
 
-// What a resident might try on their own account: reset the resend limit, or skip choosing a
-// password on a resent link (#289)
+// What a resident might try on their own account: reset the resend limit, skip choosing a
+// password on a resent link (#289), or link a Google account (#188)
 const FORGED_RESENDS = {
   verificationResends: 99,
   verificationResendsSince: '2020-01-01T00:00:00.000Z',
   verificationSetsPassword: true,
   // Or plant a used-link hash, so a link would read "already confirmed" (#391)
   verifiedTokenHash: 'f'.repeat(64),
+  // Or link someone else's Google account to sign in with it (#188)
+  googleSub: 'google-subject-of-someone-else',
+  // Or take over the handle every passkey of the account is made with (#1313)
+  passkeyUserHandle: 'a-handle-chosen-by-the-resident',
 }
 
 describe('a guest’s own account', () => {
@@ -103,6 +97,8 @@ describe('a guest’s own account', () => {
       verificationResendsSince: null,
       verificationSetsPassword: false,
       verifiedTokenHash: null,
+      googleSub: null,
+      passkeyUserHandle: null,
     })
   })
 
@@ -120,6 +116,8 @@ describe('a guest’s own account', () => {
       verificationResendsSince: null,
       verificationSetsPassword: false,
       verifiedTokenHash: null,
+      googleSub: null,
+      passkeyUserHandle: null,
     })
   })
 })

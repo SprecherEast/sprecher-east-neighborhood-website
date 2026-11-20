@@ -173,12 +173,29 @@ describe('collections', () => {
     expect(hidden?.map((f) => ('name' in f ? f.name : ''))).toContain('tokenHash')
   })
 
+  it('let admins read and delete passkeys only, and no one touch their challenges (#1313)', async () => {
+    const find = (slug: string) => config.collections.find((c) => c.slug === slug)
+    const admin = { req: { user: { id: 1, role: 'admin', collection: 'users' } } }
+    const operations = ['read', 'create', 'update', 'delete'] as const
+    for (const operation of operations) {
+      const passkeys = find('passkeys')?.access[operation] as AccessFn
+      expect(await passkeys(admin), `passkeys.${operation}`).toBe(
+        operation === 'read' || operation === 'delete',
+      )
+      const challenges = find('passkey-challenges')?.access[operation] as AccessFn
+      expect(await challenges(admin), `passkey-challenges.${operation}`).toBe(false)
+    }
+  })
+
   it('have no collection missing from the policy review', () => {
     const reviewed = new Set([
       ...Object.keys(ALLOWED),
       'users',
       'redirects',
       'email-confirmations',
+      // Server-only: no resident reaches either (#1313)
+      'passkeys',
+      'passkey-challenges',
       'payload-kv',
     ])
     const unreviewed = config.collections
@@ -233,6 +250,7 @@ describe('jobs', () => {
     expect(scheduled.sort()).toEqual([
       'deleteExpiredContactMessages',
       'deleteExpiredEmailConfirmations',
+      'deleteExpiredPasskeyChallenges',
     ])
     // The every-minute runner only runs what editors scheduled: no task schedules itself there
     const scheduleQueues = (config.jobs.tasks ?? []).flatMap((task) => task.schedule ?? [])

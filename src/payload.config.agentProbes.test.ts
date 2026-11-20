@@ -6,6 +6,7 @@ import {
   type Account,
   bootPayload,
   createAccount,
+  signIn,
 } from '@/platform/payload/testing/inMemoryPayload'
 import { createMcpKey, mcpClient } from '@/platform/payload/testing/mcpRequest'
 
@@ -183,8 +184,7 @@ describe('an agent key over MCP', () => {
 describe('a resident', () => {
   it('reaches no runs, review items or keys, and can’t make a key or use MCP', async () => {
     const resident = await createAccount(payload, 'resident', 'rita')
-    const data = { email: 'rita@example.com', password: 'rita-password-for-tests' }
-    const { token } = await payload.login({ collection: 'users', data })
+    const token = await signIn(payload, resident)
     const asResident = { Authorization: `JWT ${token}` }
     for (const path of ['agent-runs', 'agent-review-items', 'payload-mcp-api-keys']) {
       expect((await rest('GET', path, asResident)).status).toBe(403)

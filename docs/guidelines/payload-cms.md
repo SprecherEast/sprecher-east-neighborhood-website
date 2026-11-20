@@ -45,9 +45,9 @@ Page-builder blocks: `archive`, `content`, `cta`, `eventsThisWeek` (from `events
 (from `contact`), `mapBlock` (a small picture that opens a live Google map, #764), `mediaBlock`,
 `topIssues` (from `news`). Blocks inside rich text
 (`src/platform/richtext/`): `banner`, `code`, `mediaBlock`, and the visual blocks in
-`EDITORIAL_BLOCKS` (`timeline`, `steps`, `keyFacts`, `outcomeFork`, `diagramKey`, `figure`, `chart`, `factTabs`).
-A block that agents may write in Markdown has a `jsx` converter (`chart` #640 and `factTabs` #664 do):
-`export` writes one `<Chart … />` or `<FactTabs … />` tag and `import` reads it back through the same
+`EDITORIAL_BLOCKS` (`timeline`, `steps`, `keyFacts`, `outcomeFork`, `diagramKey`, `figure`, `chart`, `factTabs`, `sectionTabs`).
+A block that agents may write in Markdown has a `jsx` converter (`chart` #640, `factTabs` #664 and `sectionTabs` #1333 do):
+`export` writes one `<Chart … />` or `<FactTabs … />` tag (`<SectionTabs>` holds its tabs' content as Markdown) and `import` reads it back through the same
 rules as the editor's fields. Write the props with `writeProp` from `editorialTag.ts`: Payload's tag
 reader mishandles quotes, braces and backslashes in text. Payload's Markdown converter swallows an
 error an import throws, so use `collectTagRefusals` to hear the reasons and `unreadTags` to notice a

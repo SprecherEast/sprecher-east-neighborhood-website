@@ -6,6 +6,7 @@ import {
   bootPayload,
   createAccount,
   NO_REVALIDATE,
+  signIn,
 } from '@/platform/payload/testing/inMemoryPayload'
 
 /**
@@ -46,12 +47,7 @@ const stored = () =>
 
 beforeAll(async () => {
   ;({ payload, config } = await bootPayload())
-  await createAccount(payload, 'resident', 'resident')
-  const { token } = await payload.login({
-    collection: 'users',
-    data: { email: 'resident@example.com', password: 'resident-password-for-tests' },
-  })
-  residentToken = token ?? ''
+  residentToken = await signIn(payload, await createAccount(payload, 'resident', 'resident'))
 }, 60_000)
 
 describe('a resident publishing an event', () => {

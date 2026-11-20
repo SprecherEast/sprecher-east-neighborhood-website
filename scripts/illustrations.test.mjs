@@ -74,6 +74,16 @@ print(json.dumps([[x, y] for x, y in spots if not (x < -s.WALK and y > s.WALK)])
     expect(JSON.parse(r.stdout)).toEqual([])
   })
 
+  it('draws a person without arms when the scene draws its own', () => {
+    const r = run(
+      `from scripts.illustrations import parts
+arms = lambda svg: sum(svg.count(f'<rect x="{x}" y="-165"') for x in (-36, 24))
+print(arms(parts.person(0, 0)), arms(parts.person(0, 0, arm="none")), 'circle cx="0" cy="-190"' in parts.person(0, 0, arm="none"))`,
+    )
+    expect(r.stderr).toBe('')
+    expect(r.stdout.trim()).toBe('2 0 True')
+  })
+
   it('scales everything drawn in a scene from one named setting', () => {
     const r = run(
       `from scripts.illustrations import settings as s, parts

@@ -6,6 +6,7 @@ import {
   isAdminFieldAccess,
   isAdminOrEditorBoolean,
   isAdminOrSelf,
+  serverOnlyFieldAccess,
 } from '@/platform/payload/roles'
 
 import { firstAccountIsAdmin } from './firstAccountIsAdmin'
@@ -15,6 +16,8 @@ import { noPasswordSignInForAgents } from './noPasswordSignInForAgents'
 import { requireConfirmedEmailChange } from './requireConfirmedEmailChange'
 import { requireCurrentPassword } from './requireCurrentPassword'
 import { RESET_LINK_LIFETIME_MS } from '../domain/linkLifetimes'
+import { guestOnlyFromProviders } from './guestOnlyFromProviders'
+import { deletePasskeysWithAccount } from './deletePasskeysWithAccount'
 import { Users } from './users'
 
 describe('Users', () => {
@@ -79,9 +82,26 @@ describe('Users', () => {
 
   it('asks for the current password before anyone changes their own (#233), takes forgot password from the site only (#282), and sends no reset email to an unverified account (#187)', () => {
     expect(Users.hooks).toEqual({
-      beforeChange: [firstAccountIsAdmin, requireCurrentPassword, requireConfirmedEmailChange],
+      beforeChange: [
+        firstAccountIsAdmin,
+        requireCurrentPassword,
+        requireConfirmedEmailChange,
+        guestOnlyFromProviders,
+      ],
+      beforeDelete: [deletePasskeysWithAccount],
       beforeLogin: [noPasswordSignInForAgents],
       beforeOperation: [forgotPasswordFromSiteOnly, noResetEmailWhileUnverified],
+    })
+  })
+
+  it('keeps the passkey user handle server-only and unique (#1313)', () => {
+    const handle = Users.fields.find((f) => 'name' in f && f.name === 'passkeyUserHandle')
+    expect(handle).toMatchObject({
+      type: 'text',
+      unique: true,
+      index: true,
+      hidden: true,
+      access: serverOnlyFieldAccess,
     })
   })
 

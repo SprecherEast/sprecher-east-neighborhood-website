@@ -11,8 +11,10 @@ export type RequestLimits = {
   /**
    * Requests per window, site-wide, counted only once they pass the robot check, so blocked
    * attempts can't use it up. It bounds the email sent even if X-Forwarded-For is spoofed (#118).
+   * Left out, nothing is counted site-wide: use that where the request is free to make, such as
+   * the sign-in with a provider (a site-wide cap anyone can fill would switch it off for all).
    */
-  readonly siteWide: number
+  readonly siteWide?: number
   /** Bounded memory: past this many connections, the oldest tracked one is forgotten. */
   readonly trackedConnections: number
 }
@@ -31,6 +33,22 @@ export const SIGN_UP_LIMITS: RequestLimits = {
 }
 
 /**
+ * Starting and finishing a sign-in with a provider (#188), counted per connection, on both routes
+ * alike. There is no site-wide limit and no robot check, on purpose: a site-wide cap that anyone
+ * can fill (a script can fetch a valid flow cookie from `/auth/google` and replay it for its ten
+ * minutes, since the server keeps no record of it) would switch Google sign-in off for every
+ * neighbor. What remains: a botnet can still make many requests, each limited per connection, and
+ * each costs at most one outbound call to the provider. A new account also counts against
+ * `SIGN_UP_LIMITS`. More generous than sign-up, since a neighbor may try again or share a
+ * connection and no email is sent.
+ */
+export const SOCIAL_SIGN_IN_LIMITS: RequestLimits = {
+  windowMs: HOUR,
+  perConnection: 30,
+  trackedConnections: 2000,
+}
+
+/**
  * Forgot password (#282): each request can send a reset email. Payload also sends at most one
  * per account every 15 seconds.
  */
@@ -38,5 +56,27 @@ export const RESET_REQUEST_LIMITS: RequestLimits = {
   windowMs: HOUR,
   perConnection: 5,
   siteWide: 30,
+  trackedConnections: 2000,
+}
+
+/**
+ * Asking for the options to add a passkey (#1314), counted per connection and, in
+ * `PASSKEY_OPTIONS_PER_ACCOUNT_LIMITS`, per account. There is no site-wide limit, on purpose: any
+ * verified account with a fresh sign-in can ask, so a site-wide cap could be filled by a few
+ * accounts and would switch adding a passkey off for every neighbor (the same reason as
+ * `SOCIAL_SIGN_IN_LIMITS`). Each request stores one challenge row, so the per-account count bounds
+ * what one account can store. No robot check: only a signed-in account gets this far. More
+ * generous than sign-up, since a neighbor may need a few tries on a phone and no email is sent.
+ */
+export const PASSKEY_OPTIONS_LIMITS: RequestLimits = {
+  windowMs: HOUR,
+  perConnection: 10,
+  trackedConnections: 2000,
+}
+
+/** One account's options requests an hour, however many connections it uses. */
+export const PASSKEY_OPTIONS_PER_ACCOUNT_LIMITS: RequestLimits = {
+  windowMs: HOUR,
+  perConnection: 10,
   trackedConnections: 2000,
 }
