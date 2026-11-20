@@ -12,8 +12,13 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/modules/accounts/server', () => ({
   getCurrentUser: mocks.getCurrentUser,
   getEnabledSocialProviders: () => [],
-  SocialSignIn: () => null,
-  SignUpForm: ({ email }: { email: string | null }) => <p>email: {String(email)}</p>,
+  SocialSignIn: () => <span>Google button</span>,
+  SignUpForm: ({ email, social }: { email: string | null; social?: React.ReactNode }) => (
+    <p>
+      email: {String(email)}
+      {social}
+    </p>
+  ),
 }))
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }))
 
@@ -40,6 +45,11 @@ describe('/sign-up', () => {
     await open(' Ana@Example.com ')
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Create an Account')
     expect(screen.getByText('email: ana@example.com')).toBeTruthy()
+  })
+
+  it('hands the form the Google button, to sit above the fields (#1365)', async () => {
+    await open()
+    expect(screen.getByText('Google button')).toBeTruthy()
   })
 
   it.each([[undefined], ['not an email'], [['a@example.com', 'b@example.com']]])(

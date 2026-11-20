@@ -8,6 +8,7 @@ import { PageHeader } from '@/platform/ui/PageHeader'
 import { Text } from '@/platform/ui/Text'
 
 import { ActionsGallery } from './ActionsGallery.client'
+import { BrandLogoGallery } from './BrandLogoGallery'
 import { ChartGallery } from './ChartGallery'
 import { DisplayGallery } from './DisplayGallery'
 import {
@@ -69,6 +70,7 @@ export default function GalleryPage() {
           </ul>
         </nav>
         <ActionsGallery />
+        <BrandLogoGallery />
         <FieldsGallery />
         <DisplayGallery />
         <ProgressGallery />

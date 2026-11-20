@@ -53,6 +53,8 @@ looks like a button, so it is one.
 `Button · secondary`. The high-impact hero and the CTA block ignore the field today and style their
 buttons by position (H2, H3, B14, B15).
 
+**`BrandLogo`** (#1365) is the mark of a way to sign in, placed as a `Button`'s `iconStart`: Google's own full-colour "G", kept exactly as Google supplies it, and the FIDO passkey icon. A brand's rules forbid recolouring, tinting, stretching, outlining or shading its mark, so a logo takes no colour, filter or shadow from the theme and is the one place literal logo colours are allowed (they are in the file, not in a class); light and dark use the same file. It takes no `className`, so it can't be tinted or resized from outside. It is drawn at a set height with its width following (20 px for the "G", 32 px for the passkey icon, the minimum FIDO's guidelines set), both inside the button's 44 px, so the proportions never change, and as decoration (empty `alt`): the button's words, such as "Continue with Google", name it. A button holding one is `secondary` and full width, so the ways in line up. Its test covers the file, the proportions, the empty `alt`, no colour classes and axe; the gallery shows it on its button in both themes.
+
 **`SegmentedControl`** (#1118) joins two or three short options into one small 36 px control with one border and divider lines, named by a label or a visible one; the picked option is filled with the accent and says so with `aria-pressed`, and each option is a `Button`. It draws what it is given and keeps no state. Its test covers the group, the joined look, the callback and axe; the gallery shows two and three options. `Field` places it beside its box with `aside` (a short label on the line of the field's label, the control on the box's row), and `Card` has an `xs` padding for the compact cards of the whole-bill tab.
 
 ## Form fields
@@ -68,6 +70,8 @@ no control repeats that wiring. Each control works with a controlled value or re
 ## Display
 
 Components: [cards](../reference/components/cards.md), [display](../reference/components/display.md), [sections and page headers](../reference/components/sections.md) and [media](../reference/components/media.md).
+
+**`TextDivider`** (#1365) is a short line of words between two groups, with a rule on each side, such as "Or use your email and password" between the quick ways to log in and the form. The rules are decoration; screen readers read only the words, and colours are theme tokens. Its test covers the words, the hidden rules, tokens only and axe; the gallery shows it.
 
 **`Badge`** (#952) has two sizes (`size`: `sm`, the default, and `md`, slightly bigger words and icon), set with the variant. A mark that must stand out among small labels, such as a state mark on the plan, uses `md`; labels stay `default`. Its test covers both sizes and the plan's state mark; the gallery shows `md`.
 

@@ -26,10 +26,14 @@ export const ACCOUNTS_MESSAGES = {
   'accounts.passkey.removeFailed': 'We couldn’t remove that passkey. Please try again.',
   'accounts.passkey.removeSignInAgain':
     'To keep your account safe, please log in again first. Then you can remove a passkey.',
+  // The line between the quick ways in and the email and password form (#1365)
+  'accounts.login.otherWay': 'Or use your email and password',
   // Logging in with one on /login (#1315). The verb is the log in page's own: "Log In", "Log in".
   'accounts.passkey.loginButton': 'Log in with a passkey',
   'accounts.passkey.loginFailed':
     'We couldn’t log you in with that passkey. Try again, or use your email and password.',
+  // Fine print at the foot of /login while passkeys are on: FIDO's icon terms ask for the owner's name (#1365)
+  'accounts.passkey.iconCredit': 'The passkey icon is a trademark of FIDO Alliance, Inc.',
   // Connecting Google to an account with a password (#1338). The verb "Connect" is the card's own.
   'accounts.google.connectLead':
     'Connect Google to log in with it. This works right after you log in; if it’s been a while, we’ll ask you to log in again.',

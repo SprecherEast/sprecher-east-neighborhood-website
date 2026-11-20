@@ -14,10 +14,13 @@ vi.mock('@/modules/accounts/server', () => ({
   getCurrentUser: mocks.getCurrentUser,
   arePasskeysOn: mocks.arePasskeysOn,
   getEnabledSocialProviders: () => [],
-  SignInForm: ({ passkeys }: { passkeys?: boolean }) => (
-    <form aria-label="Log in" data-passkeys={String(passkeys)} />
+  SignInForm: ({ passkeys, social }: { passkeys?: boolean; social?: React.ReactNode }) => (
+    <form aria-label="Log in" data-passkeys={String(passkeys)}>
+      {social}
+    </form>
   ),
-  SocialSignIn: ({ result }: { result?: unknown }) => (
+  SocialSignIn: () => <p data-testid="buttons">Google button</p>,
+  SocialSignInMessage: ({ result }: { result?: unknown }) => (
     <p data-testid="social">{String(result ?? '')}</p>
   ),
 }))
@@ -52,6 +55,12 @@ describe('/login', () => {
     expect(screen.getByTestId('social').textContent).toBe('failed')
   })
 
+  it('hands the form the provider buttons, to sit with the passkey above the fields (#1365)', async () => {
+    mocks.getCurrentUser.mockResolvedValue(null)
+    render(await LoginPage(page()))
+    expect(screen.getByRole('form', { name: 'Log in' }).textContent).toContain('Google button')
+  })
+
   it('offers a passkey only while the switch is on (#1315)', async () => {
     mocks.getCurrentUser.mockResolvedValue(null)
     render(await LoginPage(page()))
@@ -61,5 +70,17 @@ describe('/login', () => {
     mocks.arePasskeysOn.mockReturnValue(true)
     render(await LoginPage(page()))
     expect(screen.getByRole('form', { name: 'Log in' }).getAttribute('data-passkeys')).toBe('true')
+  })
+
+  it('credits the passkey icon to its owner, only while passkeys are on (#1365)', async () => {
+    const credit = 'The passkey icon is a trademark of FIDO Alliance, Inc.'
+    mocks.getCurrentUser.mockResolvedValue(null)
+    render(await LoginPage(page()))
+    expect(screen.queryByText(credit)).toBeNull()
+    cleanup()
+
+    mocks.arePasskeysOn.mockReturnValue(true)
+    render(await LoginPage(page()))
+    expect(screen.getByText(credit)).toBeTruthy()
   })
 })

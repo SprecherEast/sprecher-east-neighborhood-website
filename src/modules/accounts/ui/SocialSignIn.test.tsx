@@ -5,12 +5,12 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { continuePage } from './continuePage'
-import { SocialSignIn } from './SocialSignIn'
+import { SocialSignIn, SocialSignInMessage } from './SocialSignIn'
 
 afterEach(cleanup)
 
 describe('SocialSignIn', () => {
-  it('shows nothing when no provider is on and no sign-in came back', () => {
+  it('shows nothing when no provider is on', () => {
     const { container } = render(<SocialSignIn providers={[]} />)
     expect(container.innerHTML).toBe('')
   })
@@ -29,20 +29,38 @@ describe('SocialSignIn', () => {
     await expectAccessible(container)
   })
 
+  it('puts Google’s own “G” before the words, as decoration, and keeps the button’s name (#1365)', () => {
+    render(<SocialSignIn providers={['google']} />)
+    const google = screen.getByRole('button', { name: 'Continue with Google' })
+    const logo = google.querySelector('img')
+
+    expect(logo?.getAttribute('src')).toBe('/brand/google-g.png')
+    expect(logo?.getAttribute('alt')).toBe('')
+    // Full width like the other quick ways, so the buttons line up
+    expect(google.className).toMatch(/w-full/)
+  })
+})
+
+describe('SocialSignInMessage', () => {
+  it('shows nothing when no sign-in came back', () => {
+    const { container } = render(<SocialSignInMessage />)
+    expect(container.innerHTML).toBe('')
+  })
+
   it('shows a fixed message for a known outcome, and nothing for anything else', () => {
-    render(<SocialSignIn providers={[]} result="unavailable" />)
+    render(<SocialSignInMessage result="unavailable" />)
     expect(screen.getByRole('alert').textContent).toContain(
       'We couldn’t sign you in to this account',
     )
     cleanup()
     // The old "use your password" refusal is gone: the password step replaced it
-    const { container: old } = render(<SocialSignIn providers={[]} result="email-in-use" />)
+    const { container: old } = render(<SocialSignInMessage result="email-in-use" />)
     expect(old.innerHTML).toBe('')
     cleanup()
-    const { container } = render(<SocialSignIn providers={[]} result="<script>" />)
+    const { container } = render(<SocialSignInMessage result="<script>" />)
     expect(container.innerHTML).toBe('')
     cleanup()
-    render(<SocialSignIn providers={[]} result="toString" />)
+    render(<SocialSignInMessage result="toString" />)
     expect(screen.queryByRole('alert')).toBeNull()
   })
 })

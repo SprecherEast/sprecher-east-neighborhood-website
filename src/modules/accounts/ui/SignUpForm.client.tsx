@@ -14,15 +14,17 @@ import { signUpSchema, type SignUpInput, type SignUpValues } from '../domain/cre
 import { SIGN_IN_PATH } from '../domain/paths'
 import type { SignUpFailure } from '../domain/types'
 import { NewPasswordFields } from './NewPasswordFields.client'
+import { SignInMethods } from './SignInMethods'
 import { SIGN_UP_SENT, toSignUpErrorMessage } from './signUpMessages'
 
 /**
  * Creates a guest account (#187). `email` fills in the address the confirm page sent, or is
  * `null`; it leaves the address bar and the history as soon as the form loads. Past the robot
  * check and the limits, every sign-up gets the same answer, and the account can't sign in until
- * Payload's link is opened.
+ * Payload's link is opened. `social` (the page's "Continue with Google") sits above the form
+ * under one divider line, the quick way first (#1365).
  */
-export function SignUpForm({ email }: { email: string | null }) {
+export function SignUpForm({ email, social }: { email: string | null; social?: React.ReactNode }) {
   const [status, setStatus] = useState<FormStatus>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const doneRef = useRef<HTMLDivElement>(null)
@@ -84,7 +86,8 @@ export function SignUpForm({ email }: { email: string | null }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
+      <SignInMethods>{social}</SignInMethods>
       <Form<SignUpInput, SignUpValues>
         aria-label="Create an account"
         schema={signUpSchema}

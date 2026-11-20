@@ -95,3 +95,30 @@ describe('SignUpForm', () => {
     expect(screen.getByRole('link', { name: 'Log in' }).getAttribute('href')).toBe('/login')
   })
 })
+
+describe('SignUpForm: the quick way in (#1365)', () => {
+  it('puts Google above the form, with one divider line between them', async () => {
+    render(
+      <main>
+        <SignUpForm email={null} social={<button type="button">Continue with Google</button>} />
+      </main>,
+    )
+    const google = screen.getByRole('button', { name: 'Continue with Google' })
+    const divider = screen.getByText('Or use your email and password')
+    const name = screen.getByRole('textbox', { name: /Name/ })
+    const before = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+
+    expect(before(google, divider)).toBe(true)
+    expect(before(divider, name)).toBe(true)
+    await expectAccessible(document.body)
+  })
+
+  it('leaves no group or divider showing when there is no quick way', () => {
+    const { container } = render(<SignUpForm email={null} />)
+    const list = container.querySelector('[data-sign-in-methods]')
+
+    expect(list?.childElementCount).toBe(0)
+    expect(list?.parentElement?.className).toContain('has-[>[data-sign-in-methods]:empty]:hidden')
+  })
+})
