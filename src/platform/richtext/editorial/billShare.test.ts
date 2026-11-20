@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { toBillShareProps, type StoredBillShare } from './billShare'
-import { DEFAULT_BILL_NOTES, DEFAULT_BILL_ROW_TITLES } from './billShareDefaults'
+import {
+  DEFAULT_BILL_NOTES,
+  DEFAULT_BILL_RATES,
+  DEFAULT_BILL_ROW_TITLES,
+} from './billShareDefaults'
 import { NOTE_CONDITIONS } from './billShareNotes'
 
 const stored = (years: Record<string, unknown>[], intro = 'Based on the City’s average home.') =>
@@ -129,5 +133,25 @@ describe('toBillShareProps: the row titles and notes are the block’s (#1158)',
     expect(new Set(DEFAULT_BILL_NOTES.map((note) => note.showWhen))).toEqual(
       new Set(NOTE_CONDITIONS),
     )
+  })
+})
+
+describe('toBillShareProps: the rates panel’s text is the block’s (#1351)', () => {
+  const block = (rates: unknown) => ({ ...stored([year()]), rates }) as unknown as StoredBillShare
+
+  it('reads the editor’s title and note', () => {
+    expect(toBillShareProps(block({ title: 'Rates', note: 'Wait for {year}.' })).rates).toEqual({
+      title: 'Rates',
+      note: 'Wait for {year}.',
+    })
+  })
+
+  it('starts a block stored before the fields with the starting title and note', () => {
+    expect(toBillShareProps(stored([year()])).rates).toEqual(DEFAULT_BILL_RATES)
+  })
+
+  it('keeps a note the editor emptied empty, and gives a blank title its starting one', () => {
+    const { rates } = toBillShareProps(block({ title: '  ', note: '' }))
+    expect(rates).toEqual({ title: DEFAULT_BILL_RATES.title, note: '' })
   })
 })

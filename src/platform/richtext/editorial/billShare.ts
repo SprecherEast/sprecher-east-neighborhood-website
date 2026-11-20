@@ -2,7 +2,11 @@ import type { ResolvedLink } from '@/platform/lib'
 import type { BillShareBlock } from '@/payload-types'
 import { BILL_BODIES, type MillRates } from '@/platform/lib/billShare'
 
-import { DEFAULT_BILL_NOTES, DEFAULT_BILL_ROW_TITLES } from './billShareDefaults'
+import {
+  DEFAULT_BILL_NOTES,
+  DEFAULT_BILL_RATES,
+  DEFAULT_BILL_ROW_TITLES,
+} from './billShareDefaults'
 import { NOTE_CONDITIONS, type BillNote } from './billShareNotes'
 import { toEditorialLink } from './editorialLink'
 
@@ -12,7 +16,9 @@ export const hasTooManyBills = (blockTypes: readonly unknown[]) =>
   blockTypes.filter((type) => type === 'billShare').length > 1
 
 /** The bill split block's fields, as stored */
-export type StoredBillShare = Partial<Pick<BillShareBlock, 'intro' | 'years' | 'rows' | 'notes'>>
+export type StoredBillShare = Partial<
+  Pick<BillShareBlock, 'intro' | 'years' | 'rows' | 'notes' | 'rates'>
+>
 
 /** One tax year, as the picture draws it */
 export type BillShareYear = {
@@ -30,12 +36,16 @@ export type BillShareYear = {
 /** The titles of the three rows under the bill, as the page draws them */
 export type BillRowTitles = { breakdown: string; differ: string; sources: string }
 
+/** The rates panel's title and the note under it; the note is empty when the editor wrote none */
+export type BillRatesText = { title: string; note: string }
+
 /** The block's props: plain data, so it renders without a CMS (decision 0013) */
 export type BillShareProps = {
   intro: string
   years: BillShareYear[]
   rows: BillRowTitles
   notes: BillNote[]
+  rates: BillRatesText
 }
 
 /**
@@ -46,6 +56,16 @@ const rowTitlesOf = (stored: StoredBillShare['rows']): BillRowTitles => ({
   breakdown: stored?.breakdown?.trim() || DEFAULT_BILL_ROW_TITLES.breakdown,
   differ: stored?.differ?.trim() || DEFAULT_BILL_ROW_TITLES.differ,
   sources: stored?.sources?.trim() || DEFAULT_BILL_ROW_TITLES.sources,
+})
+
+/**
+ * The rates panel's text: the title, or its starting one while the block has none of its own, and
+ * the note, which a block stored before the field existed shows as the starting note. A note the
+ * editor emptied stays empty: the panel then has no note.
+ */
+const ratesOf = (stored: StoredBillShare['rates']): BillRatesText => ({
+  title: stored?.title?.trim() || DEFAULT_BILL_RATES.title,
+  note: typeof stored?.note === 'string' ? stored.note.trim() : DEFAULT_BILL_RATES.note,
 })
 
 /**
@@ -93,5 +113,6 @@ export function toBillShareProps(stored: StoredBillShare): BillShareProps {
     years,
     rows: rowTitlesOf(stored.rows),
     notes: notesOf(stored.notes),
+    rates: ratesOf(stored.rates),
   }
 }
