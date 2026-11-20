@@ -2,6 +2,7 @@ from ..parts import *
 
 PANEL=(["Grant idea","workshop"],["Starts at 6 p.m.","Sign up ahead","Share your idea","Feedback from staff"])
 GLOW="#fff3b8"
+DESK_Y=690  # where the desk meets the wall, before the scene is lowered
 
 # Sketch symbols for a neighborhood project idea, drawn as line work: used on the notepad and around the bulb.
 def sk_tree(x,y,s=1,w=5):
@@ -62,19 +63,20 @@ def notepad(x,y):
 
 def scene_workshop():
     """An online workshop: a laptop with neighbors on a video call, a lit idea above it, the idea sketched on a notepad."""
+    floor=H-(H-DESK_Y)*EVENT_SCENE_SCALE  # the desk edge sits where the lowered scene puts it
     b=f'<rect width="{W}" height="{H}" fill="#e9f0f3"/>'
-    b+=f'<rect x="0" y="690" width="{W}" height="{H-690}" fill="#d4b48a" {O}/>'
-    b+=bulb(470,132)
-    b+=sk_tree(318,170,1.25)+sk_bench(624,150,1.1)
-    b+=f'<g fill="{YEL}"><circle cx="372" cy="142" r="5"/><circle cx="356" cy="152" r="4"/><circle cx="562" cy="140" r="5"/><circle cx="580" cy="146" r="4"/></g>'
-    b+=f'<ellipse cx="460" cy="712" rx="380" ry="18" fill="#000" opacity=".16"/>'
-    b+=f'<rect x="120" y="238" width="680" height="420" rx="18" fill="#2b3556" {O}/><rect x="140" y="258" width="640" height="380" rx="6" fill="#eef3f7"/>'
+    b+=f'<rect x="0" y="{floor:g}" width="{W}" height="{H-floor:g}" fill="#d4b48a" {O}/>'
+    c=bulb(470,132)
+    c+=sk_tree(318,170,1.25)+sk_bench(624,150,1.1)
+    c+=f'<g fill="{YEL}"><circle cx="372" cy="142" r="5"/><circle cx="356" cy="152" r="4"/><circle cx="562" cy="140" r="5"/><circle cx="580" cy="146" r="4"/></g>'
+    c+=f'<ellipse cx="460" cy="712" rx="380" ry="18" fill="#000" opacity=".16"/>'
+    c+=f'<rect x="120" y="238" width="680" height="420" rx="18" fill="#2b3556" {O}/><rect x="140" y="258" width="640" height="380" rx="6" fill="#eef3f7"/>'
     people=(("#bcd9e8","#4f8fc0",SKIN_LIGHTEST,"#5a3a22","short","wave"),("#f6e3b0",RED,SKIN_LIGHT,"#5a3a22","long",None),("#d6e8d1",GREEN,SKIN_DARKEST,"#1f1a17","curly",None),
             ("#f0d6cf",YEL,SKIN_DARK,"#3d2a1f","bald","sketch"),("#c9d3ea","#6f8fb8",SKIN_LIGHTEST,TAN,"bun",None),("#e3dcc8","#2b3556",SKIN_MID,"#2a1d17","glasses",None))
     for i,p in enumerate(people):
         r,k=divmod(i,3)
-        b+=tile(i,148+k*210,266+r*186,204,178,*p)
-    b+=f'<path d="M80,658 L840,658 L806,704 L114,704 Z" fill="#c6cdd9" {O}/><rect x="392" y="658" width="136" height="12" rx="5" fill="#8c96a8" {O}/>'
-    b+=notepad(596,722)
-    b+=f'<g transform="translate(250,846) rotate(-8)"><rect width="190" height="16" rx="4" fill="{YEL}" {O}/><path d="M190,0 L220,8 L190,16 Z" fill="#f0d6b0" {O}/></g>'
-    return b+panel(*PANEL)
+        c+=tile(i,148+k*210,266+r*186,204,178,*p)
+    c+=f'<path d="M80,658 L840,658 L806,704 L114,704 Z" fill="#c6cdd9" {O}/><rect x="392" y="658" width="136" height="12" rx="5" fill="#8c96a8" {O}/>'
+    c+=notepad(596,722)
+    c+=f'<g transform="translate(250,846) rotate(-8)"><rect width="190" height="16" rx="4" fill="{YEL}" {O}/><path d="M190,0 L220,8 L190,16 Z" fill="#f0d6b0" {O}/></g>'
+    return b+lowered(c)+panel(*PANEL)

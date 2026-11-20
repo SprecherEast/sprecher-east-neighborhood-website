@@ -93,4 +93,40 @@ print(parts.sc(10), parts.tree(0, 0, 100).count('scale') >= 0)`,
     )
     expect(r.stdout.split(' ')[0]).toBe('20')
   })
+  it('keeps the date badge corner of an event picture empty, as the real badge measures', () => {
+    const r = run(
+      `import json
+from scripts.illustrations import build as b, settings as s
+print(json.dumps([s.CLEAR_ZONE, list(s.EVENT_SCENES), b.build(list(s.EVENT_SCENES))[1]]))`,
+    )
+    expect(r.stderr).toBe('')
+    const [zone, scenes, problems] = JSON.parse(r.stdout)
+    expect(zone[2]).toBeGreaterThanOrEqual(420)
+    expect(zone[3]).toBeGreaterThanOrEqual(420)
+    expect(scenes).toEqual(expect.arrayContaining(['marimba', 'workshop']))
+    expect(problems).toEqual([])
+  })
+
+  it('fails an event picture that draws inside the date badge corner', () => {
+    const r = run(
+      FIND +
+        `
+b.SCENES['crowded'] = lambda: parts.lowered('<rect x="0" y="0" width="300" height="300" fill="#f00"/>', 1) + parts.panel(['Title'], ['One'])
+_, problems = b.build(['crowded'], event_scenes=['crowded'])
+print(json.dumps(problems))`,
+    )
+    expect(r.stderr).toBe('')
+    expect(JSON.parse(r.stdout).join(' ')).toMatch(
+      /crowded: drawing reaches into the date badge corner/,
+    )
+  })
+
+  it('moves the drawn scene down and in by one named scale, anchored at the scene corner', () => {
+    const r = run(
+      `from scripts.illustrations import settings as s, parts
+svg = parts.lowered('<rect/>')
+print(s.EVENT_SCENE_SCALE < 1, 'scale(' + str(s.EVENT_SCENE_SCALE) + ')' in svg)`,
+    )
+    expect(r.stdout.trim()).toBe('True True')
+  })
 })
