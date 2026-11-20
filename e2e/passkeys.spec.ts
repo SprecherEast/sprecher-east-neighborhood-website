@@ -1,4 +1,4 @@
-import type { Browser, Locator, Page } from '@playwright/test'
+import type { Browser, Page } from '@playwright/test'
 
 import {
   chooseNewPassword,
@@ -10,6 +10,7 @@ import {
 import { expectHeaderSignedIn } from './support/header'
 import { emailsTo } from './support/mailbox'
 import { addVirtualDevice, dismissPasskeyPrompts } from './support/passkeys'
+import { LOG_IN_WITH_A_PASSKEY, passkeyButton, tabTo } from './support/passkeyPages'
 import { expect, expectAccessible, newPassword, test } from './support/test'
 
 // The passkey flows (#1317), as a resident goes through them on a phone and on a desktop, with
@@ -17,13 +18,12 @@ import { expect, expectAccessible, newPassword, test } from './support/test'
 // second server (`node e2e/serve.mjs passkeys`: `next dev` with the passkey switch on), because the
 // production build on http://localhost can't have the switch on (decision 0021).
 //
-// Each test signs up its own resident: 7 sign-ups and 1 reset request per project, 14 and 2 a run,
-// beside the 4 sign-ups the accounts flows use on the same server. Its site-wide limit is 20 sign-ups
+// Each test signs up its own resident: 6 sign-ups and 1 reset request per project, 12 and 2 a run,
+// beside the 4 sign-ups the accounts flows and the 2 the offer's spec (`passkeyOffer.spec.ts`) use on the
+// same server. Its site-wide limit is 20 sign-ups
 // an hour (`requestLimits.ts`): a new test here that signs up needs room under it.
 
-const LOG_IN_WITH_A_PASSKEY = 'Log in with a passkey'
 const NO_PASSKEY_USED = 'No passkey was used. If you haven’t added one yet, log in below as usual'
-const OFFER_TITLE = 'Log in faster next time'
 const COULDNT_LOG_IN = 'We couldn’t log you in with that passkey'
 const TWO_HOURS_S = 2 * 60 * 60
 const A_WEEK_S = 7 * 24 * 60 * 60
@@ -45,14 +45,6 @@ async function signOut(page: Page, resident: Resident) {
   const header = await expectHeaderSignedIn(page, resident.name)
   await header.getByRole('button', { name: 'Sign Out' }).click()
   await expect(page).toHaveURL('/')
-}
-
-/** The passkey button on /login, once the page has asked the browser whether it can use one. */
-async function passkeyButton(page: Page) {
-  await page.goto('/login')
-  const button = page.getByRole('button', { name: LOG_IN_WITH_A_PASSKEY })
-  await expect(button).toBeVisible()
-  return button
 }
 
 /** Adds a passkey from /account, signed in, and waits for the page to list it. */
@@ -89,15 +81,6 @@ async function removePasskey(page: Page, name: string) {
   await dialog.getByRole('button', { name: 'Remove passkey', exact: true }).click()
   await expect(page.getByText('Passkey removed.')).toBeVisible()
   await expect(page.getByText('No passkeys yet.')).toBeVisible()
-}
-
-/** Presses Tab until the element has focus, as a keyboard user does; fails if it never does. */
-async function tabTo(page: Page, target: Locator) {
-  for (let presses = 0; presses < 80; presses++) {
-    await page.keyboard.press('Tab')
-    if (await target.evaluate((element) => element === document.activeElement)) return
-  }
-  throw new Error('The keyboard never reached the element')
 }
 
 /** A second browser, with nothing from the first: no sign-in, and its own device without passkeys. */
@@ -184,54 +167,6 @@ test.describe('passkeys', () => {
     await logIn(page, resident.email, resident.password)
     await expect(page).toHaveURL(/\/account/)
     await expectHeaderSignedIn(page, resident.name)
-  })
-
-  test('after a log in, the offer sets up a passkey, “Not now” is remembered, and nothing is offered once one exists', async ({
-    page,
-  }) => {
-    // A device with no passkey: pressing the button finds none, and the page says what to do (#1364)
-    const device = await addVirtualDevice(page)
-    await (await passkeyButton(page)).click()
-    await expect(page.getByRole('main').getByRole('status')).toContainText(NO_PASSKEY_USED)
-    await expect(page.getByRole('main').getByRole('alert')).toHaveCount(0)
-    await expectAccessible(page)
-
-    // Logging in with the password lands on /account with the offer on top
-    const resident = await newResident(page)
-    await logIn(page, resident.email, resident.password)
-    await expect(page).toHaveURL(/\/account/)
-    const offer = page.getByRole('region', { name: OFFER_TITLE })
-    await expect(offer).toBeVisible()
-    await expectAccessible(page)
-
-    // "Not now" hides it, and it stays hidden on the next visit
-    await tabTo(page, offer.getByRole('button', { name: 'Set up a passkey' }))
-    await page.keyboard.press('Tab')
-    await expect(offer.getByRole('button', { name: 'Not now' })).toBeFocused()
-    await page.keyboard.press('Enter')
-    await expect(offer).toHaveCount(0)
-    await expect(page.getByText('No problem. You can add a passkey any time')).toBeVisible()
-    await page.reload()
-    await expect(page.getByRole('form', { name: 'Add a passkey' })).toBeVisible()
-    await expect(offer).toHaveCount(0)
-
-    // Once the time is up, it is offered again; accepting adds the passkey, with the browser's prompt
-    await page.evaluate(() => localStorage.removeItem('passkey-offer-snoozed-until'))
-    await page.reload()
-    await expect(offer).toBeVisible()
-    await offer.getByRole('button', { name: 'Set up a passkey' }).click()
-    await expect(
-      page.getByText('Passkey added. Next time, choose Log in with a passkey.'),
-    ).toBeVisible()
-    expect(await device.passkeys()).toHaveLength(1)
-    await expect(
-      page.getByRole('region', { name: 'Passkeys' }).getByText('Not used yet'),
-    ).toBeVisible()
-
-    // With a passkey, no offer on the next visit
-    await page.reload()
-    await expect(page.getByRole('form', { name: 'Add a passkey' })).toBeVisible()
-    await expect(page.getByText(OFFER_TITLE)).toHaveCount(0)
   })
 
   test('a removed passkey no longer signs in', async ({ page }) => {
