@@ -67,6 +67,15 @@ mkdir -p "$HOME"
 sudo_caddy() { # <number>
   sudo -n "$PREVIEW_ACCESS_DIR/ops/preview-caddy.sh" "$1"
 }
+# Stops the preview and deletes its folder and Caddy block. APP_DIR is <preview root>/pr-<number>, from the
+# number alone (environment.sh), and was checked above not to be a link. A caller that adds `|| true` runs
+# every step even after one failed (`set -e` is off inside a function called that way).
+take_down() {
+  pm2 delete "$APP_NAME" >/dev/null 2>&1 || true
+  pm2 save --force >/dev/null 2>&1 || true
+  rm -rf -- "${APP_DIR:?}"
+  sudo_caddy "$number"
+}
 
 case "$action" in
   facts)
@@ -106,6 +115,9 @@ case "$action" in
     # No member may be an absolute path or climb out with `..`.
     listing=$(tar -tzf "$archive") || refuse "the archive is not a readable .tar.gz"
     ! grep -Eq '(^|/)\.\.(/|$)|^/' <<<"$listing" || refuse "the archive has a path that leaves the release"
+    # What it unpacks to, from its listing, before anything is written (#1346).
+    unpacked=$(unpacked_bytes "$archive") || refuse "the archive's listing can't be measured"
+    [ "$unpacked" -le "$PREVIEW_UNPACK_MAX_BYTES" ] || refuse "the archive unpacks to more than is allowed"
     mkdir "$incoming"
     tar --no-same-owner --no-same-permissions -xzf "$archive" -C "$incoming" || refuse "the archive did not unpack"
     links_stay_inside "$incoming" || refuse "the release has a link that leads outside it"
@@ -120,15 +132,16 @@ case "$action" in
     sudo_caddy "$number"
     export PREVIEW_NUMBER CODE_DIR="$release"
     bash "$here/deploy-release.sh"
+    # Proof, as this account and with the preview running, that it can't reach production (#1346). When it
+    # can, the preview comes down again and the deploy fails, so unreviewed code never stays up beside it.
+    if ! bash "$here/preview-isolation-check.sh"; then
+      take_down || true
+      refuse "the isolation check failed, so the preview was taken down"
+    fi
     ;;
 
   teardown)
-    pm2 delete "$APP_NAME" >/dev/null 2>&1 || true
-    pm2 save --force >/dev/null 2>&1 || true
-    # APP_DIR is <preview root>/pr-<number>, from the number alone (environment.sh), and was checked
-    # above not to be a link.
-    rm -rf -- "${APP_DIR:?}"
-    sudo_caddy "$number"
+    take_down
     echo "::notice title=Preview::preview $number: taken down"
     ;;
 esac

@@ -45,6 +45,15 @@ PREVIEW_NUMBER_PATTERN='^[1-9][0-9]{0,5}$'
 # writes the same value as a literal, before anything runs (a test keeps the two equal).
 ROOT_SECURE_PATH="${ROOT_SECURE_PATH:-/usr/sbin:/usr/bin:/sbin:/bin}"
 PREVIEW_COMMIT_PATTERN='^[0-9a-f]{40}$'
+# The most a release archive may unpack to, added up from the sizes its listing gives (#1346). The
+# upload limit above bounds only the compressed size, and a 1 GiB .tar.gz can unpack to many times that.
+PREVIEW_UNPACK_MAX_BYTES="${PREVIEW_UNPACK_MAX_BYTES:-3221225472}"
+# Production's private places and Caddy's admin port: what the preview account must not reach (#1346,
+# ops/preview-isolation-check.sh proves it after every preview deploy; ops/preview-host-guards.sh makes it so).
+BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/sprecher-east}"
+PRODUCTION_PM2_HOME="${PRODUCTION_PM2_HOME:-/root/.pm2}" # production's PM2 state and logs
+CADDY_STORAGE_DIR="${CADDY_STORAGE_DIR:-/var/lib/caddy}" # Caddy's data: certificates and their private keys
+CADDY_ADMIN_PORT="${CADDY_ADMIN_PORT:-2019}"             # Caddy's admin endpoint, on localhost
 # Ports no preview may take: production's app and Umami (a test ties both to their own files).
 RESERVED_PORTS="3000 3100"
 

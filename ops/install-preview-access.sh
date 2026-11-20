@@ -14,9 +14,10 @@
 #      forwarding, agent, X11 or terminal) and the wrapper as the forced command. The key is the
 #      public half in ops/preview-deploy-key.pub, which is not a secret; the private half is the
 #      only secret of the GitHub environment `preview`. No key file means no key line, and neither
-#      does a release without ops/preview-isolation-check.sh (#1346): until the isolation check
-#      exists, a preview must not run as the account, which could reach production's files and
-#      Caddy's admin endpoint.
+#      does a failed guard or isolation check (#1346): ops/preview-host-guards.sh makes the account's
+#      reach smaller (production's folders, cron and at, Caddy's admin endpoint), then
+#      ops/preview-isolation-check.sh runs as the account, and only when both pass is a key line
+#      written. A key line from an earlier run is taken out again when they stop passing.
 #
 # It changes NOTHING when anything is unexpected: a different account, a path that is a link or
 # owned by someone else, a file this script did not write, a sshd that would not accept the key, a
@@ -38,9 +39,8 @@ ROOT_UID="${PREVIEW_ACCESS_ROOT_UID:-0}" # root's id; a test run by someone else
 ROOT_OWNER=root
 MARKER="Managed by ops/install-preview-access.sh (#1345)"
 # main's files the account may run, copied into PREVIEW_ACCESS_DIR/ops/ (the caddy/ ones into caddy/)
-SCRIPTS="preview-wrapper.sh preview-caddy.sh preview-access-lib.sh preview-settings.sh secret-lib.sh deploy-release.sh restart-app.sh migrate-lib.sh caddy-lock-lib.sh lib.sh environment.sh"
+SCRIPTS="preview-wrapper.sh preview-caddy.sh preview-access-lib.sh preview-isolation-check.sh preview-host-guards.sh umami-lib.sh preview-settings.sh secret-lib.sh deploy-release.sh restart-app.sh migrate-lib.sh caddy-lock-lib.sh lib.sh environment.sh"
 CADDY_FILES="preview-site.caddy preview-headers.caddy"
-ISOLATION_CHECK="${PREVIEW_ISOLATION_CHECK:-$CODE_DIR/ops/preview-isolation-check.sh}" # #1346 adds it
 WRAPPER="$PREVIEW_ACCESS_DIR/ops/preview-wrapper.sh"
 CADDY_SCRIPT="$PREVIEW_ACCESS_DIR/ops/preview-caddy.sh"
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
@@ -175,18 +175,10 @@ if [ -f "$PUBLIC_KEY_FILE" ]; then
   [ -n "$fingerprint" ] || doubt "ssh-keygen would not read the preview key"
   read -r key_type key_blob _ <<<"$line"
   key_line="restrict,command=\"$WRAPPER\" $key_type $key_blob sprecher-east-preview-deploy"
-  # Until the isolation check exists (#1346), a preview must not run as the account: it could reach
-  # production's files and Caddy's admin endpoint. No key line is written, so nothing can deploy.
-  if [ ! -f "$ISOLATION_CHECK" ]; then
-    key_line=""
-    key_note="no key allowed: ops/preview-isolation-check.sh (#1346) is not in this release, and a preview must not run as the account without it"
-  fi
 fi
 
 # ---- What the files should hold. ----
 
-keys_text=$(printf '# %s. Changes here are overwritten on deploy.\n' "$MARKER")
-[ -z "$key_line" ] || keys_text+=$'\n'"$key_line"
 
 sudo_args=""
 digits="[1-9]"
@@ -295,6 +287,21 @@ for path in "$PREVIEW_HOME" "$PREVIEW_HOME/.ssh" "$PREVIEW_HOME/.ssh/authorized_
 done
 sudo_list=$(sudo -l -U "$PREVIEW_USER" 2>/dev/null || true)
 case "$sudo_list" in *"$CADDY_SCRIPT"*) ;; *) fail_after_change "sudo does not list the Caddy script for the account" ;; esac
+
+# What the account can reach (#1346). The guards make it smaller, then the isolation check proves it, run
+# as the account with the guards in place. Both print their own annotations, never a file's content. A key
+# line is written only when both pass, and an old one is taken out when they stop passing (keys_text is
+# rebuilt every run). Without a key file they still run, so the deploy's annotations show the result.
+guards_status=0
+bash "$here/preview-host-guards.sh" || guards_status=$?
+isolation_status=0
+(cd / && as_preview bash "$PREVIEW_ACCESS_DIR/ops/preview-isolation-check.sh") || isolation_status=$?
+if [ -n "$key_line" ] && { [ "$guards_status" != 0 ] || [ "$isolation_status" != 0 ]; }; then
+  key_line=""
+  key_note="no key allowed: the host guards or the isolation check did not pass (above), so a preview must not run as the account"
+fi
+keys_text=$(printf '# %s. Changes here are overwritten on deploy.\n' "$MARKER")
+[ -z "$key_line" ] || keys_text+=$'\n'"$key_line"
 
 # The key line goes in last.
 if install_file "$PREVIEW_HOME/.ssh/authorized_keys" 644 - "$keys_text"; then

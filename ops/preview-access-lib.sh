@@ -40,3 +40,19 @@ links_stay_inside() { # <folder>
     case "$resolved" in "$root"/*) ;; *) return 1 ;; esac
   done < <(find "$1" -type l -print0 | xargs -0 -r realpath -m -z --)
 }
+
+# Prints what an archive unpacks to: the sizes of every member in its listing, added up (#1346). GNU tar
+# can't cap the unpacked size itself, and the sizes in the headers are what it writes. The listing uses
+# numeric owners, so an owner name with a space can't shift the size field. Returns 1, printing nothing,
+# when the archive can't be listed, has no members or a line isn't a plain member line (a name with a
+# newline makes one that isn't): an archive that can't be measured is never unpacked.
+unpacked_bytes() { # <archive>
+  local listing line total=0 pattern
+  pattern='^[-dlhbcps][-rwxsStT]{9}[+.]? [0-9]+/[0-9]+ +([0-9]+)(,[0-9]+)? '
+  listing=$(tar --numeric-owner -tvzf "$1" 2>/dev/null) || return 1
+  while IFS= read -r line; do
+    [[ "$line" =~ $pattern ]] || return 1
+    total=$((total + 10#${BASH_REMATCH[1]}))
+  done <<<"$listing"
+  echo "$total"
+}

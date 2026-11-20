@@ -16,6 +16,9 @@ export const SCRIPTS = [
   'preview-wrapper.sh',
   'preview-caddy.sh',
   'preview-access-lib.sh',
+  'preview-isolation-check.sh',
+  'preview-host-guards.sh',
+  'umami-lib.sh',
   'preview-settings.sh',
   'secret-lib.sh',
   'deploy-release.sh',
@@ -62,6 +65,13 @@ export function setUpPreviewAccessHarness() {
     )
     for (const f of CADDY_FILES)
       write(p('access/ops/caddy', f), fs.readFileSync(path.join(OPS, 'caddy', f)))
+    // The isolation check has its own tests (preview-isolation-check.test.mjs); here it is a stand-in
+    // that logs that it ran and fails when STUB_ISOLATION_FAILS is set.
+    write(
+      p('access/ops/preview-isolation-check.sh'),
+      '#!/bin/bash\necho "isolation-check $0" >> "$STUB_LOG"\n[ -z "${STUB_ISOLATION_FAILS-}" ]\n',
+      0o755,
+    )
     write(p('access/tools-path'), `${p('bin')}\n`)
     // Caddy's side.
     write(

@@ -16,7 +16,6 @@ here=$(dirname "$0")
 . "$here/umami-lib.sh"
 
 KIND="${1:-daily}"
-BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/sprecher-east}"
 
 case "$KIND" in
   daily) keep=7 ;;

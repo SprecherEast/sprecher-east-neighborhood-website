@@ -52,7 +52,16 @@ beforeEach(() => {
   for (const f of CADDY_FILES)
     write(p('code/ops/caddy', f), fs.readFileSync(path.join(OPS, 'caddy', f)))
   write(p('code/ops/preview-deploy-key.pub'), `${KEY}\n`)
-  write(p('code/ops/preview-isolation-check.sh'), '# #1346 adds the real one\n')
+  // The host guards and the isolation check have their own test files; here they are stand-ins that
+  // log how they were run and answer with the status the test sets (0 when it sets none).
+  write(
+    p('code/ops/preview-host-guards.sh'),
+    'echo "guards $PREVIEW_ACCESS_DIR" >> "$STUB_LOG"\nexit "${STUB_GUARDS_STATUS:-0}"\n',
+  )
+  write(
+    p('code/ops/preview-isolation-check.sh'),
+    'echo "isolation-check $0 cwd:$(pwd) key-present:$([ -e "$PREVIEW_HOME/.ssh/authorized_keys" ] && echo yes || echo no)" >> "$STUB_LOG"\nexit "${STUB_ISOLATION_STATUS:-0}"\n',
+  )
   write(p('sudoers'), `@includedir ${p('sudoers.d')}\n`)
   fs.mkdirSync(p('sudoers.d'))
   // Tools the script checks for and runs. The account exists once `useradd` has run.
@@ -183,7 +192,7 @@ describe('install-preview-access.sh: a first install', () => {
     )
     // the copies of main's scripts
     for (const f of SCRIPTS) {
-      expect(read('installed/ops', f)).toBe(fs.readFileSync(path.join(OPS, f), 'utf8'))
+      expect(read('installed/ops', f)).toBe(read('code/ops', f))
       expect(mode('installed/ops', f)).toBe('755')
     }
     for (const f of CADDY_FILES)
@@ -564,31 +573,66 @@ describe('install-preview-access.sh: a failed check after the first change puts 
   })
 })
 
-describe('install-preview-access.sh: the key line waits for the isolation check', () => {
-  it('writes no key line while ops/preview-isolation-check.sh is not in the release, and says why', async () => {
+describe('install-preview-access.sh: the key line waits for the host guards and the isolation check', () => {
+  const keysFile = () => read('home/sprecher-preview/.ssh/authorized_keys')
+  const hasKey = () => /ssh-ed25519|restrict/.test(keysFile())
+
+  it('runs the guards, then the isolation check as the account from the root-owned copy, before a key line exists', async () => {
+    const { code } = await run()
+    expect(code).toBe(0)
+    const lines = log().split('\n')
+    const guards = lines.findIndex((l) => l.startsWith('guards '))
+    const check = lines.findIndex((l) => l.startsWith('runuser bash '))
+    expect(guards).toBeGreaterThanOrEqual(0)
+    expect(check).toBeGreaterThan(guards)
+    // the installed copy ran, as the account, from /, and no key line was there yet
+    expect(lines[check]).toContain(p('installed/ops/preview-isolation-check.sh'))
+    expect(log()).toContain(
+      `isolation-check ${p('installed/ops/preview-isolation-check.sh')} cwd:/ key-present:no`,
+    )
+    expect(hasKey()).toBe(true)
+  })
+
+  it('writes no key line when the isolation check fails, and says so, but still installs the rest', async () => {
+    const { code, out } = await run({ STUB_ISOLATION_STATUS: '1' })
+    expect(code).toBe(0)
+    expect(hasKey()).toBe(false)
+    expect(out).toContain('no key allowed: the host guards or the isolation check did not pass')
+    expect(out).not.toContain('SHA256:')
+    expect(fs.existsSync(p('sudoers.d/sprecher-east-preview'))).toBe(true)
+  })
+
+  it('writes no key line when a host guard did not apply, even though the isolation check passes', async () => {
+    const { code, out } = await run({ STUB_GUARDS_STATUS: '3' })
+    expect(code).toBe(0)
+    expect(hasKey()).toBe(false)
+    expect(out).toContain('no key allowed')
+  })
+
+  it('takes a key line from an earlier run out again when the check stops passing, keeping a dated copy', async () => {
+    await run()
+    expect(hasKey()).toBe(true)
+    const { code } = await run({ STUB_ISOLATION_STATUS: '1' })
+    expect(code).toBe(0)
+    expect(hasKey()).toBe(false)
+    const copies = fs.readdirSync(`${HOME()}/.ssh`).filter((f) => f.includes('bak-preview-access'))
+    expect(copies).toHaveLength(1)
+  })
+
+  it('still runs both when there is no key file, so the deploy annotations show the result', async () => {
+    fs.rmSync(p('code/ops/preview-deploy-key.pub'))
+    await run()
+    expect(log()).toContain('guards ')
+    expect(log()).toContain('isolation-check ')
+    expect(hasKey()).toBe(false)
+  })
+
+  it('changes nothing when the release has no isolation check to install', async () => {
     fs.rmSync(p('code/ops/preview-isolation-check.sh'))
     const { code, out } = await run()
     expect(code).toBe(0)
-    expect(read('home/sprecher-preview/.ssh/authorized_keys')).not.toMatch(/ssh-ed25519|restrict/)
-    expect(out).toContain('preview-isolation-check.sh (#1346) is not in this release')
-    expect(out).not.toContain('SHA256:')
-  })
-
-  it('writes the key line once the release has it', async () => {
-    fs.rmSync(p('code/ops/preview-isolation-check.sh'))
-    await run()
-    write(p('code/ops/preview-isolation-check.sh'), '# there now\n')
-    const { code } = await run()
-    expect(code).toBe(0)
-    expect(read('home/sprecher-preview/.ssh/authorized_keys')).toContain('restrict,command=')
-  })
-
-  it('says the same when it has nothing to change', async () => {
-    fs.rmSync(p('code/ops/preview-isolation-check.sh'))
-    await run()
-    const { out } = await run()
-    expect(out).toContain('already in place')
-    expect(out).toContain('preview-isolation-check.sh (#1346) is not in this release')
+    expect(out).toContain('ops/preview-isolation-check.sh is missing from this release')
+    expect(fs.existsSync(HOME())).toBe(false)
   })
 })
 

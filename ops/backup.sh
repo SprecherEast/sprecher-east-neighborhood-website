@@ -13,7 +13,6 @@ set -euo pipefail
 . "$(dirname "$0")/lib.sh"
 
 KIND="${1:-daily}"
-BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/sprecher-east}"
 SPARE_KB=$((1024 * 1024)) # keep at least 1 GB free after the archive is written
 
 case "$KIND" in

@@ -102,12 +102,9 @@ When fixing transitive vulnerabilities:
 
 A pull request preview (#1070) runs code nobody has reviewed yet, beside production. It starts with
 no real secret or service key of its own, and it deploys and runs under one restricted account, not
-production's ([`ops/previews.md`](../../ops/previews.md)). **No preview may run as that account until
-#1346 is done.** Until then it can reach Caddy's admin endpoint on `localhost:2019`, which accepts any
-local process and replaces the whole config, and any production file the production deploy leaves
-readable (its `umask` is 022). The isolation check that proves it can't, and the protection of the admin
-endpoint, are #1346. The installer enforces the wait: it writes no key line until the release holds
-`ops/preview-isolation-check.sh`, so nothing can deploy as the account. What holds now:
+production's ([`ops/previews.md`](../../ops/previews.md)). Previews are kept off production by the
+account's reach, not by trust in the code: what that account can and can't touch is below, and the
+isolation check proves it after every preview deploy. What holds now:
 
 - **Its own secrets, no real keys** (#1344): `ops/preview-settings.sh` writes each preview's
   `.env.local` (mode 600) with `PAYLOAD_SECRET` and `PREVIEW_SECRET` made at random on the server,
@@ -143,13 +140,42 @@ endpoint, are #1346. The installer enforces the wait: it writes no key line unti
 - **The installer changes nothing on doubt** (#1345): a different account of that name, a link or foreign
   owner on a path it uses, a file it did not write, an sshd that would not take the key line, or a tool the
   account can't run stops it with a warning. It backs up every file it replaces, checks as the account that
-  the wrapper works, refuses anything else and that the account can't write its home, and writes the key
-  line last. The key's public half is committed (`ops/preview-deploy-key.pub`); its private half is the only
+  the wrapper works, refuses anything else and that the account can't write its home, runs the host guards
+  and the isolation check (#1346), and writes the key line last, only when both pass. The key's public half is committed (`ops/preview-deploy-key.pub`); its private half is the only
   secret of the GitHub environment `preview`, and no preview or teardown job names `production`. The owner
   decided the account, the wrapper and the environment (2026-11-11, recorded on #1074); one account instead
   of a separate runtime user is recorded on #1345 (2026-11-20).
 
-This section grows with the isolation check and the Caddy admin protection (#1346).
+- **A preview can't read production** (#1346): `ops/preview-host-guards.sh`, run as root by the
+  production deploy, takes "others" access off production's folder, the backups and Umami's folder (the
+  production deploy writes with `umask` 022, so what it writes is readable by every account, and a closed
+  folder is what keeps it out; the guard changes only a real root-owned folder with only root-owned entries
+  and says the old mode), so the account can't enter them. A later named deploy account for production
+  (#1306) needs group access to them.
+- **A preview can't reach Caddy's admin endpoint** (#1346): the endpoint on `localhost:2019` accepts any local
+  process and replaces the whole config, so an owner-match firewall rule (`iptables` and `ip6tables`,
+  `OUTPUT`, the account's user id, that port, `REJECT`) refuses the account's connections, and a systemd unit
+  puts it back at boot. The rule is made only when root can reach the endpoint at that port. The other choice,
+  a unix socket for the endpoint, was not taken: it changes what `caddy reload` and every script that talks to
+  Caddy find, which can't be proven safe here or checked on the server before it could take the site down (the
+  decision is on #1346). Caddy's own storage (certificates and keys) is unreadable to the account too.
+- **A preview can't schedule jobs that outlive it** (#1346): the account is in `/etc/cron.deny` and
+  `/etc/at.deny`. A process a preview starts and detaches still survives `teardown`, which stops only PM2's
+  process; that is not covered.
+- **The isolation check** (`ops/preview-isolation-check.sh`, #1346) runs as the account after every preview
+  deploy, and again in the installer before a key line is written. It fails when the account can open
+  production's settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to the
+  admin endpoint. A failing check takes the preview down and fails the deploy, and no key line is written
+  (an earlier one is removed) until the guards and the check pass. It prints which place was reachable and
+  never a file's content.
+- **An upload is limited by what it unpacks to** (#1346), not only by its size: the wrapper adds up the sizes
+  in the archive's listing before it unpacks anything, and refuses more than 3 GiB or a listing it can't
+  measure.
+- **A production sign-in cookie signs no one in on a preview** (#1344, #1346): the cookie sets no `Domain`, so
+  the browser never sends it to a preview address, and a preview's `PAYLOAD_SECRET` differs from
+  production's, so a token copied across is refused (`src/modules/accounts/` tests and
+  `ops/preview-settings.test.mjs`).
+- **Previews have no basic auth** (the owner's decision, 2026-11-11, recorded on #1074): see above.
 
 ## Agents and the rules that bind them
 

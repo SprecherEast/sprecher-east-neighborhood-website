@@ -20,12 +20,13 @@ with tarfile.open(fileobj=buf, mode="w:gz") as t:
         info = tarfile.TarInfo(m["name"])
         info.mode = m.get("mode", 0o644)
         info.uid = m.get("uid", 0)
+        info.uname = m.get("uname", "root")
         if m.get("link"):
             info.type = tarfile.SYMTYPE
             info.linkname = m["link"]
             t.addfile(info)
         else:
-            data = m.get("data", "x").encode()
+            data = (m["fill"] * m["repeat"] if "repeat" in m else m.get("data", "x")).encode()
             info.size = len(data)
             t.addfile(info, io.BytesIO(data))
 sys.stdout.buffer.write(buf.getvalue())`
@@ -141,6 +142,7 @@ describe('preview-wrapper.sh: the actions', () => {
       { name: 'ops/deploy-release.sh', data: 'echo HOSTILE-DEPLOY >> "$STUB_LOG"\n' },
       { name: 'ops/preview-caddy.sh', data: 'echo HOSTILE-CADDY >> "$STUB_LOG"\n' },
       { name: 'ops/preview-settings.sh', data: 'echo HOSTILE-SETTINGS >> "$STUB_LOG"\n' },
+      { name: 'ops/preview-isolation-check.sh', data: 'echo HOSTILE-CHECK >> "$STUB_LOG"\n' },
     ])
     await wrapper(`upload 7 ${COMMIT}`, { input: hostile })
     fs.writeFileSync(
@@ -150,6 +152,85 @@ describe('preview-wrapper.sh: the actions', () => {
     await wrapper(`deploy 7 ${COMMIT}`)
     expect(log()).toContain('main deploy')
     expect(log()).not.toContain('HOSTILE')
+  })
+
+  it('deploy runs the isolation check from main’s copy, after the deploy script, and keeps a preview that passes', async () => {
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    fs.writeFileSync(
+      p('access/ops/deploy-release.sh'),
+      '#!/usr/bin/env bash\necho "deploy-script" >> "$STUB_LOG"\n',
+    )
+    const { code } = await wrapper(`deploy 7 ${COMMIT}`)
+    expect(code).toBe(0)
+    const lines = log().split('\n')
+    expect(lines.indexOf('deploy-script')).toBeGreaterThanOrEqual(0)
+    expect(lines.indexOf(`isolation-check ${p('access/ops/preview-isolation-check.sh')}`)).toBe(
+      lines.indexOf('deploy-script') + 1,
+    )
+    expect(fs.existsSync(release())).toBe(true)
+    expect(fs.existsSync(p('caddy/previews/pr-7.caddy'))).toBe(true)
+    expect(log()).not.toContain('pm2 delete')
+  })
+
+  it('deploy takes the preview down and fails when the isolation check fails', async () => {
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    await wrapper(`upload 8 ${COMMIT}`, { input: await goodArchive() })
+    fs.writeFileSync(p('caddy/previews/pr-8.caddy'), '# block 8\n')
+    fs.writeFileSync(p('access/ops/deploy-release.sh'), '#!/usr/bin/env bash\nexit 0\n')
+    const { code, out } = await wrapper(`deploy 7 ${COMMIT}`, {
+      env: { STUB_ISOLATION_FAILS: '1' },
+    })
+    expect(code).toBe(2)
+    expect(out).toContain('the isolation check failed, so the preview was taken down')
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false) // folder gone
+    expect(fs.existsSync(p('caddy/previews/pr-7.caddy'))).toBe(false) // block gone
+    expect(log()).toContain('pm2 delete sprecher-east-pr-7') // process stopped
+    expect(fs.existsSync(release('8'))).toBe(true) // another preview untouched
+    expect(fs.existsSync(p('caddy/previews/pr-8.caddy'))).toBe(true)
+    expect(out).not.toContain(COMMIT)
+  })
+
+  it('deploy still says why it failed when removing the Caddy block fails too', async () => {
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    fs.writeFileSync(p('access/ops/deploy-release.sh'), '#!/usr/bin/env bash\nexit 0\n')
+    // sudo works for the block before the deploy and fails the second time, when the preview comes down
+    stub(
+      'sudo',
+      'if [ -f "$STUB_LOG.second" ]; then exit 1; fi; touch "$STUB_LOG.second"; [ "$1" = -n ] && shift; exec "$@"',
+    )
+    const { code, out } = await wrapper(`deploy 7 ${COMMIT}`, {
+      env: { STUB_ISOLATION_FAILS: '1' },
+    })
+    expect(code).toBe(2)
+    expect(out).toContain('the isolation check failed, so the preview was taken down')
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false)
+  })
+
+  it('deploy takes the preview down when main’s isolation check is missing, rather than trusting it', async () => {
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    fs.writeFileSync(p('access/ops/deploy-release.sh'), '#!/usr/bin/env bash\nexit 0\n')
+    fs.rmSync(p('access/ops/preview-isolation-check.sh'))
+    const { code } = await wrapper(`deploy 7 ${COMMIT}`)
+    expect(code).toBe(2)
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false)
+  })
+
+  it('deploy still removes the Caddy block and folder when stopping the process fails', async () => {
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    fs.writeFileSync(p('access/ops/deploy-release.sh'), '#!/usr/bin/env bash\nexit 0\n')
+    stub('pm2', 'echo "pm2 $*" >> "$STUB_LOG"; exit 1')
+    const { code } = await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_ISOLATION_FAILS: '1' } })
+    expect(code).toBe(2)
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false)
+    expect(fs.existsSync(p('caddy/previews/pr-7.caddy'))).toBe(false)
+  })
+
+  it('teardown goes on when the process is already gone', async () => {
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    stub('pm2', 'echo "pm2 $*" >> "$STUB_LOG"; exit 1')
+    const { code } = await wrapper('teardown 7')
+    expect(code).toBe(0)
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false)
   })
 
   it('deploy refuses a release that was never uploaded, and asks Caddy for nothing', async () => {
@@ -354,6 +435,101 @@ describe('preview-wrapper.sh: a hostile release archive', () => {
     expect(fits.code).toBe(0)
     fs.rmSync(p('previews/pr-7'), { recursive: true })
     await refused(null, big.subarray(0, 40))
+  })
+
+  it('refuses an archive that unpacks to more than the limit, and writes nothing', async () => {
+    const big = await archive([{ name: 'big', data: 'y'.repeat(5000) }])
+    const over = await wrapper(`upload 7 ${COMMIT}`, {
+      input: big,
+      env: { PREVIEW_UNPACK_MAX_BYTES: '4999' },
+    })
+    expect(over.code).toBe(2)
+    expect(over.out).toContain('unpacks to more than is allowed')
+    expect(fs.readdirSync(p('previews/pr-7/releases'))).toEqual([]) // nothing unpacked, nothing left
+    const exact = await wrapper(`upload 7 ${COMMIT}`, {
+      input: big,
+      env: { PREVIEW_UNPACK_MAX_BYTES: '5000' },
+    })
+    expect(exact.code).toBe(0)
+  })
+
+  it('counts every member: a small archive of many files over the limit is refused', async () => {
+    const many = await archive(
+      Array.from({ length: 20 }, (_, i) => ({ name: `f${i}`, data: 'z'.repeat(100) })),
+    )
+    const { code } = await wrapper(`upload 7 ${COMMIT}`, {
+      input: many,
+      env: { PREVIEW_UNPACK_MAX_BYTES: '1999' },
+    })
+    expect(code).toBe(2)
+  })
+
+  it('refuses a highly compressed archive by its unpacked size, though it is tiny to upload', async () => {
+    const bomb = await archive([{ name: 'zeros', fill: '0', repeat: 4_000_000 }])
+    expect(bomb.length).toBeLessThan(20_000)
+    const { code, out } = await wrapper(`upload 7 ${COMMIT}`, {
+      input: bomb,
+      env: { PREVIEW_UNPACK_MAX_BYTES: '1000000' },
+    })
+    expect(code).toBe(2)
+    expect(out).toContain('unpacks to more than is allowed')
+  })
+
+  it('measures an archive whose owner name has a space, by numeric owner', async () => {
+    const odd = await archive([{ name: 'file', data: 'y'.repeat(100), uname: 'two words' }])
+    const { code } = await wrapper(`upload 7 ${COMMIT}`, { input: odd })
+    expect(code).toBe(0)
+    const over = await wrapper(`upload 8 ${COMMIT}`, {
+      input: odd,
+      env: { PREVIEW_UNPACK_MAX_BYTES: '99' },
+    })
+    expect(over.code).toBe(2)
+  })
+
+  it('measures a member name with a newline by tar’s escaped listing, and unpacks it', async () => {
+    const tricky = await archive([{ name: 'a\nb', data: 'y' }])
+    const { code } = await wrapper(`upload 7 ${COMMIT}`, { input: tricky })
+    expect(code).toBe(0)
+  })
+
+  it('refuses an archive whose measuring listing fails part way, though the first listing worked', async () => {
+    // a listing that starts well (one small member) and then fails, as a cut-off archive would
+    stub(
+      'tar',
+      'case "$1" in --numeric-owner) echo "-rw-r--r-- 0/0 10 2026-01-01 00:00 a"; exit 1 ;; *) exec /usr/bin/tar "$@" ;; esac',
+    )
+    const { code, out } = await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    expect(code).toBe(2)
+    expect(out).toContain("can't be measured")
+  })
+
+  it('refuses an archive with no members', async () => {
+    const { code } = await wrapper(`upload 7 ${COMMIT}`, { input: await archive([]) })
+    expect(code).toBe(2)
+  })
+
+  it('refuses an archive whose listing has a line that is not a member line, and adds up the ones that are', async () => {
+    const real = await goodArchive()
+    const listing = (lines) =>
+      stub(
+        'tar',
+        `case "$1" in --numeric-owner) printf '%s\\n' ${lines} ;; *) exec /usr/bin/tar "$@" ;; esac`,
+      )
+    listing("'-rw-r--r-- 0/0 1500 2026-01-01 00:00 a' 'not a member line'")
+    const odd = await wrapper(`upload 7 ${COMMIT}`, { input: real })
+    expect(odd.code).toBe(2)
+    expect(odd.out).toContain("can't be measured")
+    listing("'-rw-r--r-- 0/0 1500 2026-01-01 00:00 a' '-rw-r--r-- 0/0 600 2026-01-01 00:00 b'")
+    const small = await wrapper(`upload 7 ${COMMIT}`, {
+      input: real,
+      env: { PREVIEW_UNPACK_MAX_BYTES: '2099' },
+    })
+    expect(small.code).toBe(2)
+    const fits = await wrapper(`upload 7 ${COMMIT}`, {
+      input: real,
+      env: { PREVIEW_UNPACK_MAX_BYTES: '2100' },
+    })
+    expect(fits.code).toBe(0)
   })
 
   it('writes nothing through a link at the preview’s folder or at releases', async () => {
