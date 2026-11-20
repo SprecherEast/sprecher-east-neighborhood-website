@@ -136,6 +136,27 @@ reading (keep the iCalendar source above). United Way's volunteer listings refus
 read, so their terms need a hand check (#998). Nextdoor and Facebook need a login, so resident
 reports from them reach the Scout only through the owner.
 
+## Trust: reach is not trust
+
+Two questions are kept apart. **Reach** is whether an agent may read a page: any public page the
+scout finds may be read, logged out and with robots.txt honored, never past a login, paywall or
+bot gateway, and never on a social network ([README](README.md), "Hard nos"). **Trust** is what a
+page may prove once it is read. The scout decides trust after reading, from the page itself, not
+from a list of approved sites. The daily runner is unchanged: it still polls only `valid` entries
+in `sources.yaml`.
+
+| Tier      | What qualifies                                                 | What it may prove                                                                                                                   |
+| --------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Official  | A government body's own domain, speaking for itself            | A fact on its own, as `official` in the registry                                                                                    |
+| Organizer | The organizer's own site or page for its own event or service  | Its own details; cost, date and sign-up still need an official or a second source when the organizer is not the host body           |
+| Secondary | Everything else: media, aggregators, listings, a post about it | Nothing alone. A fact needs a second source from a higher tier, or it is left out or attributed to that report (`unverified-claim`) |
+
+Judge the page, not the name: an address that looks official but is not the body's own domain is
+secondary, and a tracking or per-recipient link is never a source to publish (use the page it
+leads to). When two tiers disagree, the higher tier wins and the difference is reported. A source
+the scout trusts as official or organizer for one fact is not thereby `valid` for polling: that
+still takes the hand check above.
+
 ## Out of scope
 
 Nextdoor, Facebook groups and pages, X and other social or login-gated sources are not collected

@@ -136,7 +136,8 @@ create suggested drafts.
 The five checks, which verify runs on every item:
 
 1. **Primary source.** Every fact in an item is confirmed on the organizer's or the official
-   body's own page. A date, time or number found only in one secondary report is left out, or
+   body's own page. Which pages count, and what a secondary page may prove, is in
+   [sources.md](sources.md#trust-reach-is-not-trust). A date, time or number found only in one secondary report is left out, or
    attributed to that report (`unverified-claim`, and `missing-date` when it is the date).
 2. **Place.** Test the item's location against the City's own boundary for the neighborhood
    (`boundary` in `area.yaml`, the City's Neighborhood Associations layer; the test is not built
