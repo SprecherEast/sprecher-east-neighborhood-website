@@ -134,6 +134,16 @@ export function isAllowedPasskeyLabel(raw: string): boolean {
   )
 }
 
+/** Whole characters while the total stays within the length the list counts (UTF-16 units). */
+function cutToLength(label: string): string {
+  let kept = ''
+  for (const character of label) {
+    if (kept.length + character.length > PASSKEY_LABEL_MAX_LENGTH) break
+    kept += character
+  }
+  return kept.trim()
+}
+
 /**
  * The label shown to the resident and put in the email: one line, kept short, folded (NFKC), only
  * the allowed characters (any other becomes a space, so `help.example` reads as `help example`);
@@ -147,8 +157,7 @@ export function toPasskeyLabel(raw: unknown): string {
     .replace(MARKS_BEYOND_THE_LIMIT, '$1')
     .replace(/\s+/g, ' ')
     .trim()
-  const cut = Array.from(label).slice(0, PASSKEY_LABEL_MAX_LENGTH).join('').trim()
-  return cut || DEFAULT_PASSKEY_LABEL
+  return cutToLength(label) || DEFAULT_PASSKEY_LABEL
 }
 
 /** Why an account may not add a passkey now. */

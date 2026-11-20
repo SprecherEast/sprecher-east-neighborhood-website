@@ -7,6 +7,23 @@ import {
   toPasskeyLabel,
 } from './passkeys'
 
+const ACCEPTED_LABELS = [
+  '',
+  'My phone',
+  'Ada’s laptop',
+  'Téléphone 2',
+  'Кухня',
+  'ʻOhana',
+  'ケータイ',
+  'নমস্কার',
+  'मेरा फ़ोन',
+  'هاتفي',
+  'Cafe\u0301',
+  'ကြွေး',
+  'ስልክ ፪',
+  '二〇二六',
+]
+
 describe('toPasskeyLabel', () => {
   it('trims and collapses whitespace', () => {
     expect(toPasskeyLabel('  My   phone \n')).toBe('My phone')
@@ -68,9 +85,20 @@ describe('toPasskeyLabel', () => {
     expect(toPasskeyLabel('...@@//')).toBe(DEFAULT_PASSKEY_LABEL)
   })
 
-  it('cuts by whole characters, never through a pair', () => {
+  it('cuts by whole characters, never through a pair, within the length the list counts', () => {
     const label = toPasskeyLabel('a'.repeat(PASSKEY_LABEL_MAX_LENGTH - 1) + '\u{20000}\u{20000}')
-    expect(label).toBe('a'.repeat(PASSKEY_LABEL_MAX_LENGTH - 1) + '\u{20000}')
+    expect(label).toBe('a'.repeat(PASSKEY_LABEL_MAX_LENGTH - 1))
+    const pairs = toPasskeyLabel('\u{20000}'.repeat(PASSKEY_LABEL_MAX_LENGTH))
+    expect(pairs.length).toBeLessThanOrEqual(PASSKEY_LABEL_MAX_LENGTH)
+    expect(pairs).toBe('\u{20000}'.repeat(PASSKEY_LABEL_MAX_LENGTH / 2))
+  })
+
+  it.each(ACCEPTED_LABELS)('leaves the accepted name %j as it is, folded', (label) => {
+    expect(toPasskeyLabel(label)).toBe(label.normalize('NFKC') || DEFAULT_PASSKEY_LABEL)
+  })
+
+  it('keeps every letter of a name ending in a spacing mark', () => {
+    expect(toPasskeyLabel('ကြွေး')).toBe('ကြွေး')
   })
 
   it('keeps it to the length the list has room for', () => {
@@ -80,22 +108,7 @@ describe('toPasskeyLabel', () => {
 })
 
 describe('isAllowedPasskeyLabel: what a neighbor may type', () => {
-  it.each([
-    '',
-    'My phone',
-    'Ada’s laptop',
-    'Téléphone 2',
-    'Кухня',
-    'ʻOhana',
-    'ケータイ',
-    'নমস্কার',
-    'मेरा फ़ोन',
-    'هاتفي',
-    'Cafe\u0301',
-    'ကြွေး',
-    'ስልክ ፪',
-    '二〇二六',
-  ])('accepts %j', (label) => {
+  it.each(ACCEPTED_LABELS)('accepts %j', (label) => {
     expect(isAllowedPasskeyLabel(label)).toBe(true)
   })
 
