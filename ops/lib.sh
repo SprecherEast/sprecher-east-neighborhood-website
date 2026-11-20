@@ -5,13 +5,16 @@
 # become annotations on the deploy run, on success and on failure alike, so the result can be
 # read without opening the logs. The deploy log is public: never print secrets or file contents.
 
+# Which environment the scripts act on (#1073): production unless PREVIEW_NUMBER names a pull request
+# preview. It sets APP_DIR, APP_NAME (the PM2 process), APP_PORT, ENV_FILE, DATA_DIR, MEDIA_DIR,
+# SITE_URL (previews), CADDY_SITE_FILE and KEEP_RELEASES, once, for every script. The deploy
+# workflow sends environment.sh ahead of this file, where it can't be sourced.
+[ -n "${ENVIRONMENT_LOADED:-}" ] || . "$(dirname "${BASH_SOURCE[0]}")/environment.sh"
+
 # APP_DIR holds what outlives a release: .env.local, data/ (the database), public/media (uploads),
 # releases/ and the `current` link to the live release (#245). CODE_DIR is the release (or
 # checkout) these scripts came from, with its build, node_modules and ecosystem.config.cjs.
-APP_DIR="${APP_DIR:-/var/www/sprecher-east}"
 CODE_DIR="${CODE_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-# shellcheck disable=SC2034 # used by the scripts that source this file
-APP_NAME=sprecher-east # the PM2 process
 
 # The Caddy files the Caddy scripts and install-umami.sh work on, and how they reload it. One
 # definition each; the environment overrides them in tests.
@@ -24,10 +27,11 @@ RELOAD_CADDY="${RELOAD_CADDY:-systemctl reload caddy}"
 # The request body limit file caddy-limits.sh installs; the preview site block imports it too (#959).
 # shellcheck disable=SC2034
 LIMITS_FILE="${LIMITS_FILE:-/etc/caddy/sprecher-east-form-limits.caddy}"
-# Pull request previews (#1072): the folder of per-preview site blocks the Caddyfile imports, and
-# the copy of ops/caddy/preview-headers.caddy those blocks import.
+# Where this environment's site block lives: production's is the Caddyfile itself, a preview's is
+# its own file in PREVIEW_CADDY_DIR (environment.sh).
 # shellcheck disable=SC2034
-PREVIEW_CADDY_DIR="${PREVIEW_CADDY_DIR:-/etc/caddy/previews}"
+CADDY_SITE_FILE="${CADDY_SITE_FILE:-$CADDYFILE}"
+# Pull request previews (#1072): the copy of ops/caddy/preview-headers.caddy the preview blocks import.
 # shellcheck disable=SC2034
 PREVIEW_HEADERS_FILE="${PREVIEW_HEADERS_FILE:-/etc/caddy/sprecher-east-preview-headers.caddy}"
 
@@ -55,8 +59,8 @@ report_lines() { # <level> <title>
 # ` # comment` removed). Prints nothing if unset.
 # Only for non-secret settings: the value must never be printed.
 env_value() {
-  [ -r "$APP_DIR/.env.local" ] || return 0
-  sed -n -E "s/^[[:space:]]*(export[[:space:]]+)?$1[[:space:]]*=[[:space:]]*//p" "$APP_DIR/.env.local" |
+  [ -r "$ENV_FILE" ] || return 0
+  sed -n -E "s/^[[:space:]]*(export[[:space:]]+)?$1[[:space:]]*=[[:space:]]*//p" "$ENV_FILE" |
     tail -n 1 | tr -d "\r" | sed -E 's/[[:space:]]+#.*$//; s/[[:space:]]*$//' | tr -d "\"'"
 }
 

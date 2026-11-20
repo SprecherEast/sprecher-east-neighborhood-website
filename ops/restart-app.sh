@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Restarts the site under PM2 with the settings in ecosystem.config.cjs (#118, #245).
 #
-# Next listens on 127.0.0.1:3000 only, so visitors reach it through Caddy and nowhere else.
+# Next listens on 127.0.0.1:$APP_PORT only (3000 for production; ops/environment.sh), so visitors reach it
+# through Caddy and nowhere else.
 # When the start settings PM2 has stored (arguments and working folder) differ from
 # ecosystem.config.cjs, the app is started fresh: the site is checked through Caddy before and
 # after, and the previous settings come back if it stops answering. That happens on the first run
@@ -87,26 +88,26 @@ if [ "$stored_args" = "$wanted_args" ] && [ "$stored_cwd" = "$wanted_cwd" ]; the
 fi
 
 # Binding to 127.0.0.1 is only safe if Caddy reaches the app through loopback, and if the app's
-# own public address (used for absolute links and images) doesn't point at port 3000.
+# own public address (used for absolute links and images) doesn't point at the app's port.
 if [[ "$wanted_args" == *"-H 127.0.0.1"* ]]; then
-  upstreams=$({ grep -hoE '^[[:space:]]*reverse_proxy[[:space:]]+[^{]*' "$CADDYFILE" 2>/dev/null || true; } |
-    tr -s '[:space:]' '\n' | { grep -E ':3000$' || true; } | sort -u | tr '\n' ' ')
+  upstreams=$({ grep -hoE '^[[:space:]]*reverse_proxy[[:space:]]+[^{]*' "$CADDY_SITE_FILE" 2>/dev/null || true; } |
+    tr -s '[:space:]' '\n' | { grep -E ":$APP_PORT\$" || true; } | sort -u | tr '\n' ' ')
   loopback_only=yes
   [ -n "$upstreams" ] || loopback_only=no
   for upstream in $upstreams; do
     case "${upstream#http://}" in
-      localhost:3000 | 127.0.0.1:3000 | :3000) ;;
+      "localhost:$APP_PORT" | "127.0.0.1:$APP_PORT" | ":$APP_PORT") ;;
       *) loopback_only=no ;;
     esac
   done
   if [ "$loopback_only" != yes ]; then
     reload
-    report "WARNING: Caddy's upstreams for port 3000 (${upstreams:-none found}) are not all loopback, so the start settings were left as they were"
+    report "WARNING: Caddy's upstreams for port $APP_PORT (${upstreams:-none found}) are not all loopback, so the start settings were left as they were"
     exit 0
   fi
-  if [[ "$(site_url)" == *:3000 ]]; then
+  if [[ "$(site_url)" == *":$APP_PORT" ]]; then
     reload
-    report "WARNING: NEXT_PUBLIC_SERVER_URL points at port 3000, so the start settings were left as they were"
+    report "WARNING: NEXT_PUBLIC_SERVER_URL points at port $APP_PORT, so the start settings were left as they were"
     exit 0
   fi
 fi

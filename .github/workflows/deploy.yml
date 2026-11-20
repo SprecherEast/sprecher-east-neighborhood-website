@@ -60,7 +60,7 @@ jobs:
           ALLOW_NO_ROBOT_CHECK: ${{ vars.ALLOW_NO_ROBOT_CHECK }}
         run: |
           set -euo pipefail
-          facts=$(cat ops/lib.sh ops/server-facts.sh | ssh vps 'bash -s')
+          facts=$(cat ops/environment.sh ops/lib.sh ops/server-facts.sh | ssh vps 'bash -s')
           get() { sed -n "s/^$1=//p" <<<"$facts" | tail -n 1; }
           node=$(get node); url=$(get server_url); key=$(get turnstile_site_key)
           umami=$(get umami_website_id)
@@ -160,7 +160,7 @@ jobs:
           SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          live=$(cat ops/lib.sh ops/server-facts.sh | ssh vps 'bash -s' | sed -n 's/^deployed=//p')
+          live=$(cat ops/environment.sh ops/lib.sh ops/server-facts.sh | ssh vps 'bash -s' | sed -n 's/^deployed=//p')
           if [ -n "$live" ] && [ "$live" != "$SHA" ] && git merge-base --is-ancestor "$SHA" "$live" 2>/dev/null; then
             echo "::notice title=Deploy::${live:0:7}, newer than ${SHA:0:7}, is already live; nothing to do"
             echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -214,6 +214,22 @@ jobs:
               echo "::notice title=Port $port::not reachable from the internet"
             fi
           done
+
+      - name: Check that the pull request preview ports are closed to the internet (#1073)
+        if: ${{ !cancelled() && steps.order.outputs.skip != 'true' }}
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          # The range is defined once, in ops/environment.sh, with production's and Umami's ports outside it
+          . ops/environment.sh
+          open=$(seq "$PREVIEW_PORT_MIN" "$PREVIEW_PORT_MAX" |
+            { xargs -P 200 -I{} bash -c 'timeout 2 bash -c "exec 3<>/dev/tcp/$0/{}" 2>/dev/null && echo {}' "$HOST" || true; } |
+            sort -n | tr '\n' ' ')
+          if [ -n "$open" ]; then
+            echo "::warning title=Preview ports::reachable from the internet: $open"
+          else
+            echo "::notice title=Preview ports::$PREVIEW_PORT_MIN-$PREVIEW_PORT_MAX not reachable from the internet"
+          fi
 
       # What a visitor gets, from outside the server (#235): HSTS on the domain, plain HTTP to the
       # domain and to the server's SSH address (VPS_HOST, the IP or its hostname, which the `:80`

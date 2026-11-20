@@ -6,13 +6,16 @@
 # previous release keeps serving. The steps:
 #   1. check the release fits this server (Node version, public settings, native modules)
 #   2. link the shared .env.local, data/ and public/media into it
-#   3. back up the data (ops/backup.sh pre-deploy), then run the database migrations
+#   3. back up the data (ops/backup.sh pre-deploy; not for a preview), then run the database migrations
 #   4. drop the pages prerendered in CI, whose database was empty: each renders from the live
 #      database on its first visit, then is cached as usual
 #   5. switch the `current` link atomically and reload the app under PM2 (ops/restart-app.sh)
 #   6. check the site answers through Caddy with this release's build; if not, switch back
 #   7. refresh the backup job, the Caddy settings (request limits, HTTPS) and Umami analytics, and keep the newest
-#      $KEEP_RELEASES releases
+#      $KEEP_RELEASES releases (a preview does only the last of these)
+#
+# It acts on production, or on one pull request preview when PREVIEW_NUMBER is set: the folder, PM2
+# process, port, settings, data, media, Caddy block and site address come from ops/environment.sh (#1073).
 #
 # The first run moves the app from the old checkout in $APP_DIR to `current`; the checkout stays
 # untouched as the way back (ops/README.md, "Releases").
@@ -32,7 +35,6 @@ fi
 RELEASE="$CODE_DIR"
 RELEASES="$APP_DIR/releases"
 CURRENT="$APP_DIR/current"
-KEEP_RELEASES="${KEEP_RELEASES:-3}"
 UP_SECONDS="${UP_SECONDS:-90}" # how long the app may take to answer after a reload
 name=$(basename "$RELEASE")
 
@@ -76,6 +78,12 @@ switch_back() { # <reason>
     else
       report "ERROR: $reason; switched back to $(basename "$previous"), but the site does not answer; see ops/README.md (Roll back)"
     fi
+  elif is_preview; then
+    # A new preview has no old checkout to go back to: take it down, so nothing half-working stays.
+    pm2 delete "$APP_NAME" >/dev/null 2>&1 || true
+    pm2 save --force >/dev/null 2>&1 || true
+    rm -f "$CURRENT"
+    report "ERROR: $reason; the preview was not put live"
   else
     # First run. restart-app.sh puts PM2's previous settings back if the new release never
     # answered; if it did answer and a later check failed, PM2 still runs from `current`, so
@@ -103,7 +111,13 @@ case "$RELEASE" in
 esac
 [ -f "$RELEASE/.release-info" ] && [ -f "$RELEASE/.next/BUILD_ID" ] && [ -x "$RELEASE/node_modules/.bin/next" ] ||
   stop "the release is incomplete (no .release-info, build or node_modules)"
-[ -f "$APP_DIR/.env.local" ] || stop "$APP_DIR/.env.local not found"
+[ -f "$ENV_FILE" ] || stop "$ENV_FILE not found"
+if is_preview; then
+  [ -f "$CADDY_SITE_FILE" ] || stop "the preview's Caddy block $CADDY_SITE_FILE is not in place"
+  # A preview already running keeps its port; a new one must find it free.
+  pm2 describe "$APP_NAME" >/dev/null 2>&1 || port_is_free "$APP_PORT" ||
+    stop "port $APP_PORT is already in use"
+fi
 if [ -e "$CURRENT" ] && [ ! -L "$CURRENT" ]; then stop "$CURRENT exists but is not a link"; fi
 build_id=$(cat "$RELEASE/.next/BUILD_ID")
 
@@ -124,15 +138,17 @@ secret_set=$([ -n "$(env_value TURNSTILE_SECRET_KEY)" ] && echo yes || echo no)
   stop "the release's native modules (sharp, libsql) do not load with this server's Node"
 
 # 2. Shared files. The release's own data/ and public/media give way to the links.
-mkdir -p "$APP_DIR/data" "$APP_DIR/public/media"
+mkdir -p "$DATA_DIR" "$MEDIA_DIR"
 rm -rf "${RELEASE:?}/data" "${RELEASE:?}/public/media" "${RELEASE:?}/.env.local"
-ln -s "$APP_DIR/.env.local" "$RELEASE/.env.local"
-ln -s "$APP_DIR/data" "$RELEASE/data"
-ln -s "$APP_DIR/public/media" "$RELEASE/public/media"
+ln -s "$ENV_FILE" "$RELEASE/.env.local"
+ln -s "$DATA_DIR" "$RELEASE/data"
+ln -s "$MEDIA_DIR" "$RELEASE/public/media"
 
 # 3. Back up, then migrate. The old release keeps serving during both.
-bash "$RELEASE/ops/backup.sh" pre-deploy || stop "the pre-deploy backup failed"
-export PRE_DEPLOY_BACKUP_DONE=yes # install-umami.sh needs no second one for a first install (#948)
+if ! is_preview; then # a preview's data is a copy of content, nothing to back up
+  bash "$RELEASE/ops/backup.sh" pre-deploy || stop "the pre-deploy backup failed"
+  export PRE_DEPLOY_BACKUP_DONE=yes # install-umami.sh needs no second one for a first install (#948)
+fi
 echo "→ Running database migrations..."
 (cd "$RELEASE" && NODE_OPTIONS=--no-deprecation node_modules/.bin/payload migrate) ||
   stop "the database migrations failed (the pre-deploy backup has the data from before)"
@@ -143,7 +159,7 @@ drop_page_cache "$RELEASE"
 # 5. Switch and reload.
 if [ -L "$CURRENT" ]; then
   previous=$(readlink "$CURRENT")
-else
+elif ! is_preview; then
   legacy_args=$(pm2_stored args)
   legacy_cwd=$(pm2_stored cwd)
   [ -n "$legacy_cwd" ] || legacy_cwd="$APP_DIR"
@@ -169,18 +185,20 @@ fi
 trap - ERR
 [ -z "$legacy_config" ] || rm -f "$legacy_config"
 set +e # from here on, a failure is reported but never touches the live release
-report "release $name is live (build $build_id)"
+report "release $name is live (build $build_id)${PREVIEW_NUMBER:+, preview $PREVIEW_NUMBER}"
 
 # 7. Housekeeping. Each script reports its own result; a failure turns the deploy red.
 failed=0
-bash "$RELEASE/ops/install-cron.sh" || failed=1
-bash "$RELEASE/ops/caddy-limits.sh" || failed=1
-bash "$RELEASE/ops/caddy-https.sh" || failed=1
-# Pull request previews: one import line for the preview folder (#1072). Does nothing with no previews.
-bash "$RELEASE/ops/caddy-previews.sh" || failed=1
-# After the Caddy scripts: its block imports the HSTS file caddy-https.sh writes. A missing
-# secret or DNS name is a notice, not a failure.
-UMAMI_ADMIN_PASSWORD="$umami_admin_password" bash "$RELEASE/ops/install-umami.sh" || failed=1
+if ! is_preview; then # these change production's backup job, Caddyfile and analytics
+  bash "$RELEASE/ops/install-cron.sh" || failed=1
+  bash "$RELEASE/ops/caddy-limits.sh" || failed=1
+  bash "$RELEASE/ops/caddy-https.sh" || failed=1
+  # Pull request previews: one import line for the preview folder (#1072). Does nothing with no previews.
+  bash "$RELEASE/ops/caddy-previews.sh" || failed=1
+  # After the Caddy scripts: its block imports the HSTS file caddy-https.sh writes. A missing
+  # secret or DNS name is a notice, not a failure.
+  UMAMI_ADMIN_PASSWORD="$umami_admin_password" bash "$RELEASE/ops/install-umami.sh" || failed=1
+fi
 
 keep="$KEEP_RELEASES"
 [ "$keep" -ge 2 ] 2>/dev/null || keep=2
