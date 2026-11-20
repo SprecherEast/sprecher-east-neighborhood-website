@@ -29,8 +29,16 @@ BULLET_INDENT = 48      # bullet text starts this far in from the panel's left e
 GLYPH_EM = 0.53         # fallback glyph width in em when the font cannot be measured
 PANEL_MAX_HEIGHT = H - 80
 
-# The card overlays a date badge here on events: keep it empty in every picture.
-CLEAR_ZONE = (0, 0, 230, 170)
+# The card overlays a date badge on an event's picture, top left. Measured on the live events page
+# at desktop width (the narrowest card, so the largest share of the picture): 12 px in from each
+# edge and 64 px square, about 26% of the width and 45% of the height. In canvas pixels, left,
+# top, right, bottom, with a little to spare.
+CLEAR_ZONE = (0, 0, 420, 420)
+# The pictures of events: nothing of the drawn scene may reach into CLEAR_ZONE (build.py checks).
+EVENT_SCENES = ("marimba", "workshop")
+# How an event's scene is drawn so it clears the badge: scaled by this, anchored at the bottom
+# right corner of the scene, which moves it down and to the right, away from the badge.
+EVENT_SCENE_SCALE = 0.72
 
 # Line work
 OUTLINE_WIDTH = 3

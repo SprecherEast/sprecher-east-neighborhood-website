@@ -7,7 +7,7 @@
 
 Exit code 1 when a check fails, so a test and CI can rely on it.
 """
-import argparse, json, subprocess, sys
+import argparse, json, shutil, subprocess, sys
 from pathlib import Path
 
 from . import parts
@@ -52,13 +52,43 @@ def check_panel(name, panels):
     return problems
 
 
-def build(names):
+def can_render():
+    """True when the pixel check can run: rsvg-convert and Pillow are installed."""
+    try:
+        import PIL  # noqa: F401
+    except ImportError:
+        return False
+    return shutil.which("rsvg-convert") is not None
+
+
+def check_clear_zone(name, lowered):
+    """The drawn scene of an event picture must leave the date badge corner empty: draw it alone on
+    a transparent page and look for any ink inside CLEAR_ZONE."""
+    if not lowered:
+        return [f"{name}: an event picture must draw its scene through parts.lowered()"]
+    if not can_render():
+        return []  # like the font measure, the pixel look needs the tools; CI has neither
+    from io import BytesIO
+    from PIL import Image
+    shapes = "".join(f'<g transform="translate({SCENE_WIDTH*(1-k):g},{H*(1-k):g}) scale({k:g})">{c}</g>' for c, k in lowered)
+    svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}">{shapes}</svg>'
+    png = subprocess.run(["rsvg-convert", "-w", str(W)], input=svg.encode(), capture_output=True, check=True).stdout
+    alpha = Image.open(BytesIO(png)).convert("RGBA").getchannel("A").crop(CLEAR_ZONE)
+    if alpha.getextrema()[1] > 8:
+        return [f"{name}: drawing reaches into the date badge corner {CLEAR_ZONE}"]
+    return []
+
+
+def build(names, event_scenes=EVENT_SCENES):
     out, problems = {}, []
     for name in names:
         parts.PANELS.clear()
+        parts.LOWERED.clear()
         body = SCENES[name]()
         out[name] = wrap(body)
         problems += check_panel(name, list(parts.PANELS))
+        if name in event_scenes:
+            problems += check_clear_zone(name, list(parts.LOWERED))
     return out, problems
 
 
