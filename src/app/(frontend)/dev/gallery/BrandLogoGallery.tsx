@@ -26,6 +26,18 @@ export function BrandLogoGallery() {
             </Button>
           </div>
         </GalleryVariant>
+        <GalleryVariant label="passkey, on the same button (the icon keeps its own white square)">
+          <div className="max-w-sm">
+            <Button
+              type="button"
+              variant="secondary"
+              fullWidth
+              iconStart={<BrandLogo brand="passkey" />}
+            >
+              Log in with a passkey
+            </Button>
+          </div>
+        </GalleryVariant>
       </GalleryEntry>
       <GalleryEntry name="TextDivider">
         <GalleryVariant label="between the quick ways in and a form">

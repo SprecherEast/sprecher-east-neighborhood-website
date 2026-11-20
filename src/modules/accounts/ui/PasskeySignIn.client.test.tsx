@@ -76,6 +76,10 @@ describe('PasskeySignIn: when it shows', () => {
   it('shows one button, with the verb the rest of the log in page uses, and is accessible', async () => {
     const button = await shown()
     expect(button.getAttribute('type')).toBe('button')
+    // The FIDO passkey icon, as supplied, and only as decoration (#1365)
+    const icon = button.querySelector('img')
+    expect(icon?.getAttribute('src')).toBe('/brand/fido-passkey-icon.png')
+    expect(icon?.getAttribute('alt')).toBe('')
     // Full width, and the kit's own 44 px tall button
     expect(button.className).toMatch(/w-full/)
     await expectAccessible(document.body)

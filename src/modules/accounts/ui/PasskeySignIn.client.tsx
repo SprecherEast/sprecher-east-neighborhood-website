@@ -1,10 +1,10 @@
 'use client'
 
-import { KeyRound } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useRef, useState } from 'react'
 
 import { Alert, Button } from '@/platform/ui'
+import { BrandLogo } from '@/platform/ui/BrandLogo'
 
 import { getPasskeyLoginOptions, logInWithPasskey } from '../actions'
 import { ACCOUNT_PATH } from '../domain/paths'
@@ -108,7 +108,7 @@ export function PasskeySignIn({ rememberMe }: { rememberMe: boolean }) {
         variant="secondary"
         fullWidth
         loading={busy}
-        iconStart={<KeyRound aria-hidden />}
+        iconStart={<BrandLogo brand="passkey" />}
         onClick={() => void run(false)}
       >
         {PASSKEY_LOGIN_LABEL}

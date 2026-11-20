@@ -32,6 +32,8 @@ export const ACCOUNTS_MESSAGES = {
   'accounts.passkey.loginButton': 'Log in with a passkey',
   'accounts.passkey.loginFailed':
     'We couldn’t log you in with that passkey. Try again, or use your email and password.',
+  // Fine print at the foot of /login while passkeys are on: FIDO's icon terms ask for the owner's name (#1365)
+  'accounts.passkey.iconCredit': 'The passkey icon is a trademark of FIDO Alliance, Inc.',
   // Connecting Google to an account with a password (#1338). The verb "Connect" is the card's own.
   'accounts.google.connectLead':
     'Connect Google to log in with it. This works right after you log in; if it’s been a while, we’ll ask you to log in again.',

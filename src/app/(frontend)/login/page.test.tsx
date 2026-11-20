@@ -71,4 +71,16 @@ describe('/login', () => {
     render(await LoginPage(page()))
     expect(screen.getByRole('form', { name: 'Log in' }).getAttribute('data-passkeys')).toBe('true')
   })
+
+  it('credits the passkey icon to its owner, only while passkeys are on (#1365)', async () => {
+    const credit = 'The passkey icon is a trademark of FIDO Alliance, Inc.'
+    mocks.getCurrentUser.mockResolvedValue(null)
+    render(await LoginPage(page()))
+    expect(screen.queryByText(credit)).toBeNull()
+    cleanup()
+
+    mocks.arePasskeysOn.mockReturnValue(true)
+    render(await LoginPage(page()))
+    expect(screen.getByText(credit)).toBeTruthy()
+  })
 })

@@ -12,11 +12,18 @@ import { cn } from '@/platform/lib/cn'
  * - `google`: Google's own "G" in its standard colours, from its
  *   [branding guidelines](https://developers.google.com/identity/branding-guidelines).
  *
+ * - `passkey`: the FIDO Alliance's passkey icon, as it supplies it: a black person and an amber key
+ *   on its own opaque white square. It is shown in a square the same height as the "G", never
+ *   cropped, rounded, recoloured or stretched, in light and dark alike. FIDO's rules ask for 3:1
+ *   contrast and free space around the icon; the white square holds both, and the file's own white
+ *   margin is the free space. The page shows its credit line (`accounts.passkey.iconCredit`).
+ *
  * The file is served as it is (`unoptimized`), so it is never re-encoded. The logo is decoration:
  * the button's words name it ("Continue with Google").
  */
 const LOGOS = {
   google: { src: '/brand/google-g.png', width: 200, height: 204 },
+  passkey: { src: '/brand/fido-passkey-icon.png', width: 150, height: 150 },
 } as const
 
 export type Brand = keyof typeof LOGOS

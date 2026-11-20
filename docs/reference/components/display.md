@@ -155,7 +155,7 @@ Source: `src/platform/ui/Text.tsx`
 **Used by** (direct imports):
 
 - Modules: `accounts`, `directory`, `events`, `news`, `roadmap`, `site`
-- Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/resources/[group]`
+- Routes: `/account`, `/dev/gallery`, `/events/[slug]`, `/faq`, `/login`, `/resources/[group]`
 - Platform: `platform/richtext`, `platform/ui`
 
 ## `TextDivider`

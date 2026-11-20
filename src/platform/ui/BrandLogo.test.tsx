@@ -19,6 +19,19 @@ describe('BrandLogo', () => {
     expect(image?.className).toContain('w-auto')
   })
 
+  it('draws the FIDO passkey icon file as supplied, square, no larger than the “G” (#1365)', () => {
+    const { container } = render(<BrandLogo brand="passkey" />)
+    const image = container.querySelector('img')
+
+    expect(image?.getAttribute('src')).toBe('/brand/fido-passkey-icon.png')
+    // The file's own 150 by 150 proportions, kept by height with the width following
+    expect(image?.getAttribute('width')).toBe('150')
+    expect(image?.getAttribute('height')).toBe('150')
+    expect(image?.className).toContain('h-5')
+    expect(image?.className).toContain('w-auto')
+    expect(image?.className).not.toMatch(/\b(rounded|object-cover|object-fill|scale|rotate)/)
+  })
+
   it('is decoration: the button’s words name it, so it has no name of its own', async () => {
     const { container } = render(
       <button type="button">
@@ -31,10 +44,26 @@ describe('BrandLogo', () => {
     await expectAccessible(container)
   })
 
-  it('never takes a colour, filter or stroke, which brand rules forbid', () => {
-    const { container } = render(<BrandLogo brand="google" />)
-    const classes = container.querySelector('img')?.className ?? ''
+  it('keeps the passkey icon decorative too, named by “Log in with a passkey”', async () => {
+    const { container } = render(
+      <button type="button">
+        <BrandLogo brand="passkey" />
+        Log in with a passkey
+      </button>,
+    )
 
-    expect(classes).not.toMatch(/\b(text|fill|stroke|grayscale|opacity|brightness|invert|filter)-/)
+    expect(container.querySelector('img')?.getAttribute('alt')).toBe('')
+    await expectAccessible(container)
+  })
+
+  it('never takes a colour, filter or stroke, which brand rules forbid', () => {
+    for (const brand of ['google', 'passkey'] as const) {
+      const { container } = render(<BrandLogo brand={brand} />)
+      const classes = container.querySelector('img')?.className ?? ''
+
+      expect(classes).not.toMatch(
+        /\b(text|fill|stroke|grayscale|opacity|brightness|invert|filter|shadow|ring|border)-/,
+      )
+    }
   })
 })
