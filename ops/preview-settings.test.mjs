@@ -262,4 +262,12 @@ describe('links to production', () => {
     expect(run().status).not.toBe(0)
     expect(fs.statSync(target).mode & 0o777).toBe(0o640)
   })
+
+  it('refuses a preview folder that links to an empty folder, and writes nothing into it', () => {
+    fs.mkdirSync(p('elsewhere'))
+    fs.mkdirSync(p('previews'), { recursive: true })
+    fs.symlinkSync(p('elsewhere'), p('previews', 'pr-7'))
+    expect(run().status).not.toBe(0)
+    expect(fs.readdirSync(p('elsewhere'))).toEqual([])
+  })
 })
