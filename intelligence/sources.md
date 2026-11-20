@@ -148,12 +148,14 @@ in `sources.yaml`.
 | Tier      | What qualifies                                                 | What it may prove                                                                                                                   |
 | --------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | Official  | A government body's own domain, speaking for itself            | A fact on its own, as `official` in the registry                                                                                    |
-| Organizer | The organizer's own site or page for its own event or service  | Its own details; cost, date and sign-up still need an official or a second source when the organizer is not the host body           |
+| Organizer | The organizer's own site or page for its own event or service  | Its own details (what it is, when, where); a fact about a venue or host body it does not speak for needs that body's page           |
 | Secondary | Everything else: media, aggregators, listings, a post about it | Nothing alone. A fact needs a second source from a higher tier, or it is left out or attributed to that report (`unverified-claim`) |
 
 Judge the page, not the name: an address that looks official but is not the body's own domain is
 secondary, and a tracking or per-recipient link is never a source to publish (use the page it
-leads to). When two tiers disagree, the higher tier wins and the difference is reported. A source
+leads to). When two tiers disagree, the higher tier wins and the difference is reported. The tiers map onto the registry's `reliability`: official is `official`; an organizer's page is
+`community` unless the organizer is a government body or established outlet; a secondary page is
+`established-media` at best. A source
 the scout trusts as official or organizer for one fact is not thereby `valid` for polling: that
 still takes the hand check above.
 

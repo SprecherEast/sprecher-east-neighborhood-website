@@ -81,7 +81,8 @@ when the source wasn't polled. The digest shows how often the fallback runs.
 
 **Hard nos.** No logins, CAPTCHAs or paywalls (madison.com's redirect to `tollbit.madison.com`),
 no path robots.txt disallows (Dane County's press subscription page), no social networks, and no
-source that isn't `valid` or `pending` in `sources.yaml`. The check refuses
+source the daily runner polls that isn't `valid` or `pending` in `sources.yaml` (the hand-run
+scout may read other public pages, trusting them by tier). The check refuses
 `direct-then-playwright` on any source without an `allowed` robots.txt result, on a source that
 isn't HTML, or on one that is `restricted` or `invalid`. Agents summarize facts and never
 republish articles. Reading a page and trusting it are
