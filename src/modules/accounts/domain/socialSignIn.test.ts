@@ -78,12 +78,11 @@ describe('decideSocialSignIn', () => {
     expect(decide(google(), null)).toEqual({ kind: 'create-verified' })
   })
 
-  it('never links Google to an account by its email', () => {
-    expect(decide(google(), null, account())).toEqual({ kind: 'refuse', failure: 'email-in-use' })
-    expect(decide(google(), null, account({ verified: false }))).toEqual({
-      kind: 'refuse',
-      failure: 'email-in-use',
-    })
+  it('never links Google to an account by its email: it asks for the password instead', () => {
+    // Whatever state the account is in, so the answer reveals nothing the verified email didn't
+    for (const over of [{}, { verified: false }, { role: 'agent' }]) {
+      expect(decide(google(), null, account(over))).toEqual({ kind: 'ask-password' })
+    }
   })
 
   it('refuses a Google email Google hasn’t verified', () => {

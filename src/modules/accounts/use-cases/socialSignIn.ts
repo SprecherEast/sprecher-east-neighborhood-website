@@ -12,6 +12,8 @@ import {
   saveSocialFlow,
   takeSocialFlow,
 } from '../data/socialAccounts'
+import { createPendingLink, savePendingLinkCookie } from '../data/socialLinkRequests'
+import { connectGooglePath } from '../domain/googleLink'
 import { ACCOUNT_PATH, SIGN_IN_PATH } from '../domain/paths'
 import { SIGN_UP_LIMITS, SOCIAL_SIGN_IN_LIMITS } from '../domain/requestLimits'
 import {
@@ -24,10 +26,12 @@ import {
   type SocialProvider,
   type SocialSignInFailure,
 } from '../domain/socialSignIn'
+import { beginGoogleLink, finishGoogleLink, toAccount } from './connectGoogle'
 import { createRequestGuard, NO_ROBOT_CHECK } from './guardPublicRequest'
 
 // Sign in with Google (#188, decision 0020). The routes in src/app/(frontend)/auth/
-// call these two, and redirect wherever they answer.
+// call these two, and redirect wherever they answer. Connecting Google to an existing account is
+// in `connectGoogle.ts` (#1338).
 
 const toLogin = (result: SocialSignInFailure) => `${SIGN_IN_PATH}?${SOCIAL_RESULT_PARAM}=${result}`
 
@@ -43,23 +47,40 @@ export function getEnabledSocialProviders(): SocialProvider[] {
 }
 
 /**
+ * Where a failure goes: `/login` for a sign-in, the account page for a flow that connects Google
+ * to the signed-in account (#1338).
+ */
+const failureTo = (link: boolean, failure: 'failed' | 'too-many') =>
+  link ? toAccount(failure) : toLogin(failure)
+
+/**
  * Starts a sign-in: keeps its checks in this browser and answers where to send the person.
- * Answers `/login` with a fixed message when the provider is off or can't be reached.
+ * Answers `/login` with a fixed message when the provider is off or can't be reached. With `link`
+ * (a signed-in neighbor connecting Google from `/account`, #1338) the session must be a recent
+ * sign-in, the flow is bound to its account, and failures go back to the account page.
  */
 export async function startSocialSignIn(
   provider: SocialProvider,
   ip: string | null,
+  { link = false }: { link?: boolean } = {},
 ): Promise<string> {
-  if (!providerKeys(provider, process.env)) return toLogin('failed')
-  if (await signInGuard({ token: null, ip }, NO_ROBOT_CHECK)) return toLogin('too-many')
+  if (!providerKeys(provider, process.env)) return failureTo(link, 'failed')
+  if (await signInGuard({ token: null, ip }, NO_ROBOT_CHECK)) return failureTo(link, 'too-many')
   try {
-    const flow = newSocialFlow(provider)
+    const now = new Date()
+    let linkAccountId: number | null = null
+    if (link) {
+      const begun = await beginGoogleLink(provider, now)
+      if (!begun.ok) return begun.to
+      linkAccountId = begun.accountId
+    }
+    const flow = newSocialFlow(provider, linkAccountId)
     const url = await authorizationUrl(flow, redirectUri(provider))
-    await saveSocialFlow(flow, new Date())
+    await saveSocialFlow(flow, now)
     return url.href
   } catch (error) {
     logServerFailure(`${provider} sign-in start`, error)
-    return toLogin('failed')
+    return failureTo(link, 'failed')
   }
 }
 
@@ -81,6 +102,7 @@ export async function finishSocialSignIn(
   const flow = await takeSocialFlow(now)
   // No flow, or one for another provider: this browser didn't start this sign-in
   if (!flow || flow.provider !== provider) return toLogin('failed')
+  const link = flow.linkAccountId !== null
 
   let profile: SocialProfile
   try {
@@ -89,8 +111,9 @@ export async function finishSocialSignIn(
   } catch (error) {
     // Includes the person pressing Cancel at the provider: an `error` answer fails the checks
     logServerFailure(`${provider} sign-in`, error)
-    return toLogin('failed')
+    return failureTo(link, 'failed')
   }
+  if (flow.linkAccountId !== null) return finishGoogleLink(flow.linkAccountId, profile, now)
 
   try {
     const bySubject = await findAccountBySubject(provider, profile.subject)
@@ -107,6 +130,14 @@ export async function finishSocialSignIn(
         return ACCOUNT_PATH
       case 'refuse':
         return toLogin(decision.failure)
+      case 'ask-password': {
+        // Google proved the email, not the password: keep what it said here, tied to this
+        // browser, and ask for the account's password once. Nothing is linked or signed in yet.
+        const email = profile.email
+        if (!email) return toLogin('failed')
+        await savePendingLinkCookie(await createPendingLink({ ...profile, email }, now), now)
+        return connectGooglePath(provider)
+      }
       case 'create-verified':
         if (await newAccountGuard({ token: null, ip }, NO_ROBOT_CHECK)) return toLogin('too-many')
         await startSessionFor(await createVerifiedAccount(profile))

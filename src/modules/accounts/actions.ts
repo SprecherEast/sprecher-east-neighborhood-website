@@ -10,6 +10,7 @@ import { parseClientIp } from '@/platform/lib'
 import { TurnstileVerifier } from '@/platform/turnstile/turnstileVerifier'
 
 import { addPasskeySchema } from './domain/addPasskey'
+import { connectGoogleSchema, type ConnectGoogleFailure } from './domain/googleLink'
 import {
   forgotPasswordSchema,
   passwordChangeSchema,
@@ -37,6 +38,7 @@ import type {
 import { endSession } from './data/session'
 import { finishAddPasskey, startAddPasskey } from './use-cases/addPasskey'
 import { changeOwnPassword } from './use-cases/changeOwnPassword'
+import { connectGoogleWithPassword } from './use-cases/connectGoogle'
 import { getAccountSummary } from './use-cases/getAccountSummary'
 import type { PublicRequest } from './use-cases/guardPublicRequest'
 import { requestPasswordReset } from './use-cases/requestPasswordReset'
@@ -116,6 +118,18 @@ export async function logInWithPasskey(
   const parsed = passkeySignInSchema.safeParse(input)
   if (!parsed.success) return { ok: false, failure: 'failed' }
   return finishPasskeySignIn(parsed.data)
+}
+
+/**
+ * Connects Google to the account whose email Google verified, once its password checks out, and
+ * signs in (#1338). The input is the password only, parsed again: no account or email can be
+ * named. Input that doesn't parse is the same one failure as any other refusal, so none says
+ * whether an account exists.
+ */
+export async function connectGoogle(input: unknown): Promise<ActionResult<ConnectGoogleFailure>> {
+  const parsed = connectGoogleSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, failure: 'failed' }
+  return connectGoogleWithPassword(parsed.data, parseClientIp(await headers()))
 }
 
 /**

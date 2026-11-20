@@ -187,6 +187,14 @@ describe('collections', () => {
     }
   })
 
+  it('let no one touch the pending Google links, admins included (#1338)', async () => {
+    const links = config.collections.find((c) => c.slug === 'social-link-requests')
+    const admin = { req: { user: { id: 1, role: 'admin', collection: 'users' } } }
+    for (const operation of ['read', 'create', 'update', 'delete'] as const) {
+      expect(await (links?.access[operation] as AccessFn)(admin), operation).toBe(false)
+    }
+  })
+
   it('have no collection missing from the policy review', () => {
     const reviewed = new Set([
       ...Object.keys(ALLOWED),
@@ -196,6 +204,8 @@ describe('collections', () => {
       // Server-only: no resident reaches either (#1313)
       'passkeys',
       'passkey-challenges',
+      // Server-only: what Google said while a neighbor enters a password (#1338)
+      'social-link-requests',
       'payload-kv',
     ])
     const unreviewed = config.collections
@@ -251,6 +261,7 @@ describe('jobs', () => {
       'deleteExpiredContactMessages',
       'deleteExpiredEmailConfirmations',
       'deleteExpiredPasskeyChallenges',
+      'deleteExpiredSocialLinkRequests',
     ])
     // The every-minute runner only runs what editors scheduled: no task schedules itself there
     const scheduleQueues = (config.jobs.tasks ?? []).flatMap((task) => task.schedule ?? [])

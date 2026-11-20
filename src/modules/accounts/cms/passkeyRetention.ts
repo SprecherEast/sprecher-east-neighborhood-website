@@ -3,6 +3,7 @@ import type { PayloadRequest, TaskConfig } from 'payload'
 import { RETENTION_SCHEDULE, withoutPersonalData } from '@/platform/payload/retentionJobs'
 
 import { PASSKEY_CHALLENGES } from '../domain/passkeys'
+import { deleteExpiredRows } from './expiredRows'
 
 /**
  * Deletes the challenges past their expiry, with one conditional DELETE, and says how many. A
@@ -13,11 +14,7 @@ export async function deleteExpiredChallenges(
   req: PayloadRequest,
   now = Date.now(),
 ): Promise<number> {
-  const where = { expiresAt: { less_than: new Date(now).toISOString() } }
-  const { totalDocs } = await req.payload.db.count({ collection: PASSKEY_CHALLENGES, where, req })
-  if (totalDocs === 0) return 0
-  await req.payload.db.deleteMany({ collection: PASSKEY_CHALLENGES, where, req })
-  return totalDocs
+  return deleteExpiredRows(req, PASSKEY_CHALLENGES, now)
 }
 
 /** The task's slug in Payload's jobs queue. */

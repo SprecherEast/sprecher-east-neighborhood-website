@@ -1,9 +1,10 @@
 # 0020: Sign in with Google through our own routes and `openid-client`
 
-- **Date:** 2026-10-27, revised 2026-11-19 for Google only
+- **Date:** 2026-10-27, revised 2026-11-19 for Google only, and 2026-11-20 for connecting Google to
+  an existing account (#1338)
 - **Status:** Proposed (becomes Accepted when the owner confirms the approach, see Context)
 - **Issues and PRs:** #188 and PR #505 (the build), #312 (the owner's Google app), #309 and #908
-  (epics); the evaluation and its two reviews are on PR #261, which proposed this as record 0010
+  (epics), #1338 (connecting Google to an account that has a password); the evaluation and its two reviews are on PR #261, which proposed this as record 0010
   (that number was taken since). The first version of this record took 0016, also taken since.
 
 ## Context
@@ -77,12 +78,13 @@ confirmed this approach, so the record stays Proposed until he does.
   person is found by it, and nothing on the account changes.
 - **The subject column is unique**, so one provider account opens one account, even after a race.
   It is hidden and server-only (`serverOnlyFieldAccess`, #299).
-- **No account is linked by its email.** Linking an existing account from `/account`, while
-  signed in, is later work.
+- **No account is linked by its email alone.** An account with a password is connected only
+  after that password checks out, or from its own signed-in session
+  ([below](#connecting-google-to-an-account-that-has-a-password-1338)).
 - **Google** is refused unless `email_verified` is exactly `true`. A new address gets a `guest`
-  account created verified, with no verification email; an address an account already uses is
-  refused, and the person is told to log in with their password or use "Forgot your password?".
-  Google confirmed the email, so only its owner reads that.
+  account created verified, with no verification email; an address an account already uses leads
+  to a page that asks for that account's password once (`ask-password`). Google confirmed the
+  email, so only its owner reaches that page.
 - **Refused accounts:** a locked account (#140), an unverified one and an agent (#336) are never
   signed in to. The callback doesn't run Payload's `beforeLogin` and `afterLogin` hooks; the only
   one, `noPasswordSignInForAgents`, is checked by the rule itself.
@@ -120,6 +122,48 @@ the sign-up limits. The owner can ask for a robot check or a site-wide cap later
 trade-off on #188).
 
 **Costs:** one dependency (`openid-client`, with `jose` and `oauth4webapi`) and our code to keep.
+
+## Connecting Google to an account that has a password (#1338)
+
+The owner asked (2026-11-20, voice call with Claude Code, recorded on #1338) to connect at sign-in
+with a one-time password step, so no hidden page is needed, and to keep a button on `/account` as
+a second way. Google alone still never signs in to an existing account. Two ways, one write
+(`linkSubject`: a conditional UPDATE that sets `googleSub` only while it is empty, on a unique
+column, so one Google identity is on one account even after a race).
+
+**At sign-in.** When the verified email belongs to an account, the callback does not refuse. It
+stores what Google said, the subject and the verified email, in the `social-link-requests`
+collection and sets the flow's own cookie again (`__Host-` prefixed in production, SameSite=Lax,
+ten minutes, signed under its own key) holding only that record's row. It then sends the person to
+`/auth/google/connect`, which asks for the account's password once and shows no email. The
+record is taken once by one conditional update before anything else, on every try, so a wrong
+password, a replay, a copied cookie or another browser's all fail, and a new try asks Google again.
+The password goes through Payload's own `login`, as the sign-in form does: a wrong one counts
+towards the lockout (#140), and a locked, unverified or agent account is refused. The account is
+the one whose email Google verified, read from the record, never from input. Only then is the
+link written and the session started (`startSessionFor`, as for Google and passkeys). Every
+refusal is one fixed failure, so no answer says which check refused or whether an account exists;
+the step reveals nothing the Google-verified email didn't already imply to its owner. The
+password step counts per connection (`SOCIAL_SIGN_IN_LIMITS`, its own counter). The record, in a
+collection closed to every API, is purged hourly.
+
+**From the account page.** A signed-in neighbor chooses "Connect Google": `/auth/google/link`
+starts the same flow, bound to the session's account (`linkAccountId`, inside the signed flow
+cookie). The session must be a recent sign-in, by the rule adding a passkey uses
+(`isRecentSignIn`, five minutes from the session's own start), checked when the flow starts and
+again when it finishes. At the callback the account comes from the session, must be the one that
+started the flow, and the Google identity must be on no account; otherwise nothing changes and
+`/account` shows a fixed message.
+
+**Afterwards** the Google button signs that neighbor in to the same account, `/account` says
+Google is connected, and a note goes to the account's address with the time and no link
+(`toGoogleConnectedEmail`), like the passkey note. There is no way to disconnect yet; the note
+says to set a new password and tell us. `/auth/google/connect` sends `frame-ancestors 'none'`
+like `/login` and `/account`.
+
+**Owner trade-off kept short:** a wrong password uses up the record, so a typo means one more
+click on "Continue with Google". It bounds guessing to one try per round trip to Google, on top
+of the lockout.
 
 ## Owner steps
 

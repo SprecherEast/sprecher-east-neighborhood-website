@@ -10,7 +10,6 @@ import {
   getPayload,
   jwtSign,
   logoutOperation,
-  type Payload,
 } from 'payload'
 import { addSessionToUser } from 'payload/shared'
 import { cache } from 'react'
@@ -171,7 +170,7 @@ export async function setOwnPassword({
   const user = await getSessionPayloadUser()
   if (!user) return 'signed-out'
   const payload = await getPayload({ config: configPromise })
-  if (!(await isOwnPassword(payload, user, currentPassword))) return 'wrong-password'
+  if (!(await isPasswordFor(user.email, currentPassword))) return 'wrong-password'
   await payload.update({
     collection: USERS,
     id: user.id,
@@ -186,21 +185,19 @@ export async function setOwnPassword({
 }
 
 /**
- * Checks a password against the session's own account with Payload's `login` operation, as
- * `POST /api/users/login` runs it, so a wrong one counts towards the lockout. The email is the
- * session's, never the caller's. Its token is dropped and no cookie is set. The session it
- * records ends when the password changes, or expires if the update then fails (nobody holds its
- * token). Throws when Payload fails rather than refuses.
+ * Checks a password against the account with this email, with Payload's `login` operation as
+ * `POST /api/users/login` runs it: a wrong one counts towards the lockout (#140), and a locked,
+ * unverified or agent account is refused. The email is the caller's to choose carefully: a
+ * session's own, or the one Google verified, never one the person typed beside the password. Its
+ * token is dropped and no cookie is set. The session it records expires, or ends when the
+ * password changes (nobody holds its token). Throws when Payload fails rather than refuses.
  */
-async function isOwnPassword(
-  payload: Payload,
-  user: SessionAccount,
-  password: string,
-): Promise<boolean> {
+export async function isPasswordFor(email: string, password: string): Promise<boolean> {
+  const payload = await getPayload({ config: configPromise })
   try {
     await payload.login({
       collection: USERS,
-      data: { email: user.email, password },
+      data: { email, password },
       overrideAccess: false,
     })
     return true

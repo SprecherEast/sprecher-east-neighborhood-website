@@ -79,6 +79,7 @@ export interface Config {
     users: User
     passkeys: Passkey
     'passkey-challenges': PasskeyChallenge
+    'social-link-requests': SocialLinkRequest
     'email-confirmations': EmailConfirmation
     'agent-runs': AgentRun
     'agent-review-items': AgentReviewItem
@@ -114,6 +115,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>
     passkeys: PasskeysSelect<false> | PasskeysSelect<true>
     'passkey-challenges': PasskeyChallengesSelect<false> | PasskeyChallengesSelect<true>
+    'social-link-requests': SocialLinkRequestsSelect<false> | SocialLinkRequestsSelect<true>
     'email-confirmations': EmailConfirmationsSelect<false> | EmailConfirmationsSelect<true>
     'agent-runs': AgentRunsSelect<false> | AgentRunsSelect<true>
     'agent-review-items': AgentReviewItemsSelect<false> | AgentReviewItemsSelect<true>
@@ -155,6 +157,7 @@ export interface Config {
       deleteExpiredContactMessages: TaskDeleteExpiredContactMessages
       deleteExpiredEmailConfirmations: TaskDeleteExpiredEmailConfirmations
       deleteExpiredPasskeyChallenges: TaskDeleteExpiredPasskeyChallenges
+      deleteExpiredSocialLinkRequests: TaskDeleteExpiredSocialLinkRequests
       schedulePublish: TaskSchedulePublish
       inline: {
         input: unknown
@@ -1256,7 +1259,7 @@ export interface Faq {
   _status?: ('draft' | 'published') | null
 }
 /**
- * Passkeys residents added to sign in. Read and delete only, for support: a deleted passkey stops working at once, and the resident can still sign in with their password.
+ * Passkeys residents added to sign in. Read and delete only, for support: a deleted passkey stops working at once, and the resident can still sign in another way (password, Google, or forgot password).
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "passkeys".
@@ -1294,6 +1297,20 @@ export interface PasskeyChallenge {
   expiresAt: string
   usedAt?: string | null
   account?: (number | null) | User
+  updatedAt: string
+  createdAt: string
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-link-requests".
+ */
+export interface SocialLinkRequest {
+  id: number
+  provider: 'google'
+  subject: string
+  email: string
+  expiresAt: string
+  usedAt?: string | null
   updatedAt: string
   createdAt: string
 }
@@ -1677,6 +1694,7 @@ export interface PayloadJob {
           | 'deleteExpiredContactMessages'
           | 'deleteExpiredEmailConfirmations'
           | 'deleteExpiredPasskeyChallenges'
+          | 'deleteExpiredSocialLinkRequests'
           | 'schedulePublish'
         taskID: string
         input?:
@@ -1716,6 +1734,7 @@ export interface PayloadJob {
         | 'deleteExpiredContactMessages'
         | 'deleteExpiredEmailConfirmations'
         | 'deleteExpiredPasskeyChallenges'
+        | 'deleteExpiredSocialLinkRequests'
         | 'schedulePublish'
       )
     | null
@@ -1784,6 +1803,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'passkey-challenges'
         value: number | PasskeyChallenge
+      } | null)
+    | ({
+        relationTo: 'social-link-requests'
+        value: number | SocialLinkRequest
       } | null)
     | ({
         relationTo: 'email-confirmations'
@@ -2437,6 +2460,19 @@ export interface PasskeyChallengesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-link-requests_select".
+ */
+export interface SocialLinkRequestsSelect<T extends boolean = true> {
+  provider?: T
+  subject?: T
+  email?: T
+  expiresAt?: T
+  usedAt?: T
+  updatedAt?: T
+  createdAt?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "email-confirmations_select".
  */
 export interface EmailConfirmationsSelect<T extends boolean = true> {
@@ -3054,6 +3090,14 @@ export interface TaskDeleteExpiredEmailConfirmations {
  * via the `definition` "TaskDeleteExpiredPasskeyChallenges".
  */
 export interface TaskDeleteExpiredPasskeyChallenges {
+  input?: unknown
+  output?: unknown
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskDeleteExpiredSocialLinkRequests".
+ */
+export interface TaskDeleteExpiredSocialLinkRequests {
   input?: unknown
   output?: unknown
 }

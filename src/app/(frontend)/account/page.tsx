@@ -1,9 +1,12 @@
 import type { Metadata } from 'next'
 
+import { SOCIAL_RESULT_PARAM } from '@/modules/accounts'
 import {
   AddPasskey,
   arePasskeysOn,
   ChangePasswordForm,
+  ConnectGoogle,
+  getGoogleConnection,
   requireUser,
 } from '@/modules/accounts/server'
 import { NOT_INDEXED } from '@/platform/seo/notIndexed'
@@ -19,8 +22,12 @@ export const metadata: Metadata = {
   robots: NOT_INDEXED,
 }
 
-export default async function AccountPage() {
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
+
+export default async function AccountPage({ searchParams }: Props) {
   const user = await requireUser()
+  const googleConnection = await getGoogleConnection(user.id)
+  const result = (await searchParams)[SOCIAL_RESULT_PARAM]
 
   return (
     <Section as="div" width="narrow">
@@ -45,6 +52,11 @@ export default async function AccountPage() {
           </Text>
           <ChangePasswordForm />
         </Card>
+
+        {/* Only while Google is on: a button to connect it, or the line that it is (#1338) */}
+        {googleConnection !== 'off' && (
+          <ConnectGoogle connection={googleConnection} result={result} />
+        )}
 
         {/* Only when the server switch is on; the card also waits for a browser that can make one */}
         {arePasskeysOn() && <AddPasskey />}

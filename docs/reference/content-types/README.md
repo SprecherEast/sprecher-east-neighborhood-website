@@ -32,5 +32,6 @@ One page for every collection and global in the loaded Payload config, plugins i
 | [`redirects`](redirects.md)                               | collection |                                                                                          | no     |
 | [`resources`](resources.md)                               | collection |                                                                                          | yes    |
 | [`search`](search.md)                                     | collection | This is a collection of automatically created search results.                            | no     |
+| [`social-link-requests`](social-link-requests.md)         | collection |                                                                                          | no     |
 | [`team-members`](team-members.md)                         | collection |                                                                                          | no     |
 | [`users`](users.md)                                       | collection |                                                                                          | no     |

@@ -86,6 +86,48 @@ export async function findAccountByEmail(email: string): Promise<SocialAccount |
   return row ? toSocialAccount(row) : null
 }
 
+/** Whether this account already has an identity from the provider linked. */
+export async function hasLinkedSubject(
+  accountId: number,
+  provider: SocialProvider,
+): Promise<boolean> {
+  const payload = await payloadClient()
+  const { totalDocs } = await payload.db.count({
+    collection: USERS,
+    where: {
+      and: [{ id: { equals: accountId } }, { [SOCIAL_SUBJECT_FIELDS[provider]]: { exists: true } }],
+    },
+  })
+  return totalDocs > 0
+}
+
+/**
+ * Links the provider's identity to the account, only while the account has none: one conditional
+ * UPDATE, so two links at once keep one (#1338, decision 0020). The subject column is unique, so
+ * an identity already on any account is refused by the database even if two accounts race for
+ * it. True when this call wrote the link. The caller has already checked who may link.
+ */
+export async function linkSubject(
+  accountId: number,
+  provider: SocialProvider,
+  subject: string,
+): Promise<boolean> {
+  const payload = await payloadClient()
+  const field = SOCIAL_SUBJECT_FIELDS[provider]
+  try {
+    const written = await payload.db.updateOne({
+      collection: USERS,
+      where: { and: [{ id: { equals: accountId } }, { [field]: { exists: false } }] },
+      data: { [field]: subject, updatedAt: new Date().toISOString() },
+    })
+    return written !== null
+  } catch (error) {
+    // The unique column refusing a subject another account holds is an answer, not a failure
+    if (await findAccountBySubject(provider, subject)) return false
+    throw error
+  }
+}
+
 /**
  * A new guest account for a sign-in, already verified, since Google verified the email:
  * Payload sends no verification email. The role is forced to guest by the collection too.

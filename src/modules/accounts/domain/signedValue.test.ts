@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { purposeKey, readSignedValue, signValue } from './signedValue'
-import { hostCookieName, toSocialFlow } from './socialCookies'
+import { hostCookieName, toPendingLinkId, toSocialFlow } from './socialCookies'
 
 const now = new Date('2026-10-27T12:00:00Z')
 const later = (ms: number) => new Date(now.getTime() + ms)
@@ -45,9 +45,26 @@ describe('hostCookieName', () => {
 describe('the flow cookie', () => {
   it('reads a flow only with every check in it', () => {
     const flow = { provider: 'google', state: 's', codeVerifier: 'v', nonce: 'n' }
-    expect(toSocialFlow(flow)).toEqual(flow)
+    expect(toSocialFlow(flow)).toEqual({ ...flow, linkAccountId: null })
     expect(toSocialFlow({ ...flow, provider: 'apple' })).toBeNull()
     expect(toSocialFlow({ ...flow, state: 1 })).toBeNull()
     expect(toSocialFlow(null)).toBeNull()
+  })
+
+  it('keeps the account a link flow was started from, and only a real account id', () => {
+    const flow = { provider: 'google', state: 's', codeVerifier: 'v', nonce: 'n' }
+    expect(toSocialFlow({ ...flow, linkAccountId: 7 })?.linkAccountId).toBe(7)
+    expect(toSocialFlow({ ...flow, linkAccountId: null })?.linkAccountId).toBeNull()
+    for (const bad of ['7', 0, -1, 1.5, {}]) {
+      expect(toSocialFlow({ ...flow, linkAccountId: bad })).toBeNull()
+    }
+  })
+
+  it('reads a pending link only as a row id, so a flow never reads as one and the other way round', () => {
+    expect(toPendingLinkId({ pid: 12 })).toBe(12)
+    for (const bad of [{ pid: '12' }, { pid: 0 }, { pid: 1.5 }, { state: 's' }, null]) {
+      expect(toPendingLinkId(bad)).toBeNull()
+    }
+    expect(toSocialFlow({ pid: 12 })).toBeNull()
   })
 })

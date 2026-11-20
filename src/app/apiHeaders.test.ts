@@ -56,16 +56,16 @@ const sentFor = async (pathname: string) => {
     .flatMap(({ headers }) => headers)
 }
 
-describe('no framing of the account and log in pages (decision 0021)', () => {
-  it('lists both pages, and sends frame-ancestors none for each listed path', () => {
-    expect(NO_FRAMING_PATHS).toEqual(['/account', '/login'])
+describe('no framing of the account, log in and connect Google pages (decisions 0020, 0021)', () => {
+  it('lists the pages, and sends frame-ancestors none for each listed path', () => {
+    expect(NO_FRAMING_PATHS).toEqual(['/account', '/login', '/auth/:provider/connect'])
     for (const { source, headers } of NO_FRAMING_HEADERS) {
       expect(NO_FRAMING_PATHS).toContain(source)
       expect(headers).toEqual([{ key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }])
     }
   })
 
-  it.each(['/account', '/login'])(
+  it.each(['/account', '/login', '/auth/google/connect'])(
     'reaches %s in the config Next reads, once, the same way',
     async (pathname) => {
       const csp = (await sentFor(pathname)).filter((h) => h.key === 'Content-Security-Policy')

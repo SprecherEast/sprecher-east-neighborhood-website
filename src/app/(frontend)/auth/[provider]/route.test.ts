@@ -23,6 +23,7 @@ vi.mock('next/headers', () => ({
 }))
 
 import { GET as callback } from './callback/route'
+import { GET as link } from './link/route'
 import { GET as start } from './route'
 
 const params = (provider: string) => ({ params: Promise.resolve({ provider }) })
@@ -52,7 +53,48 @@ describe('/auth/[provider]', () => {
   })
 })
 
+describe('/auth/[provider]/link', () => {
+  it('starts the flow as a link from the session, so the module binds it to the account', async () => {
+    mocks.startSocialSignIn.mockResolvedValue('https://accounts.google.com/auth')
+    await expect(
+      link(new Request('https://sprechereast.com/auth/google/link'), params('google')),
+    ).rejects.toThrow('NEXT_REDIRECT https://accounts.google.com/auth')
+    expect(mocks.startSocialSignIn).toHaveBeenCalledWith('google', '203.0.113.9', { link: true })
+  })
+
+  it('answers 404 for a provider the site doesn’t know', async () => {
+    await expect(
+      link(new Request('https://sprechereast.com/auth/apple/link'), params('apple')),
+    ).rejects.toThrow('NEXT_NOT_FOUND')
+    expect(mocks.startSocialSignIn).not.toHaveBeenCalled()
+  })
+
+  it('takes no account from the address: a plain start never binds one', async () => {
+    mocks.startSocialSignIn.mockResolvedValue('https://accounts.google.com/auth')
+    await expect(
+      start(new Request('https://sprechereast.com/auth/google?link=1&account=9'), params('google')),
+    ).rejects.toThrow()
+    expect(mocks.startSocialSignIn).toHaveBeenCalledWith('google', '203.0.113.9')
+  })
+})
+
 describe('/auth/[provider]/callback', () => {
+  it('sends a connect that ended back to the account page with a plain redirect', async () => {
+    mocks.finishSocialSignIn.mockResolvedValue('/account?social=linked')
+    await expect(callback(callbackRequest('?code=c&state=s'), params('google'))).rejects.toThrow(
+      'NEXT_REDIRECT /account?social=linked',
+    )
+    expect(mocks.continuePage).not.toHaveBeenCalled()
+  })
+
+  it('sends the password step with a plain redirect, signed in to nothing', async () => {
+    mocks.finishSocialSignIn.mockResolvedValue('/auth/google/connect')
+    await expect(callback(callbackRequest('?code=c&state=s'), params('google'))).rejects.toThrow(
+      'NEXT_REDIRECT /auth/google/connect',
+    )
+    expect(mocks.continuePage).not.toHaveBeenCalled()
+  })
+
   it('hands the answer and the connection to the module, and moves a signed-in person on', async () => {
     mocks.finishSocialSignIn.mockResolvedValue('/account')
     const response = await callback(callbackRequest('?code=c&state=s'), params('google'))

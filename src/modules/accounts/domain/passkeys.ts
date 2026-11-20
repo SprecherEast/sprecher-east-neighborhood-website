@@ -24,6 +24,16 @@ export const CHALLENGE_TTL_MS = 5 * 60 * 1000
  */
 export const RECENT_SIGN_IN_WINDOW_MS = 5 * 60 * 1000
 
+/**
+ * Whether a session that began at `signedInAt` still counts as a recent sign-in: the one rule for
+ * every step that asks the person to have signed in lately (adding a passkey, connecting Google,
+ * #1338). An unknown, unreadable or future time counts as not recent.
+ */
+export function isRecentSignIn(signedInAt: Date | null, now: Date): boolean {
+  const age = signedInAt ? now.getTime() - signedInAt.getTime() : Number.NaN
+  return age >= 0 && age <= RECENT_SIGN_IN_WINDOW_MS
+}
+
 /** The most passkeys one account may have. */
 export const MAX_PASSKEYS_PER_ACCOUNT = 10
 
@@ -180,8 +190,7 @@ export function decideAddPasskey({
   now: Date
 }): { ok: true } | { ok: false; reason: AddPasskeyRefusal } {
   if (accountId === null) return { ok: false, reason: 'signed-out' }
-  const age = signedInAt ? now.getTime() - signedInAt.getTime() : Number.NaN
-  if (!(age >= 0 && age <= RECENT_SIGN_IN_WINDOW_MS)) return { ok: false, reason: 'sign-in-again' }
+  if (!isRecentSignIn(signedInAt, now)) return { ok: false, reason: 'sign-in-again' }
   if (existingCount >= MAX_PASSKEYS_PER_ACCOUNT) return { ok: false, reason: 'cap' }
   return { ok: true }
 }
