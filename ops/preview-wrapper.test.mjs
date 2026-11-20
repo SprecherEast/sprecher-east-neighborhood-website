@@ -5,9 +5,9 @@ import fs from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import { COMMIT, setUpPreviewAccessHarness } from './preview-access-harness.mjs'
+import { COMMIT, runCommand, setUpPreviewAccessHarness } from './preview-access-harness.mjs'
 
-const { p, log, wrapper } = setUpPreviewAccessHarness()
+const { p, log, wrapper, baseEnv } = setUpPreviewAccessHarness()
 
 /** A .tar.gz made by Python's tarfile, so a member can have any name or type. */
 async function archive(members) {
@@ -18,6 +18,8 @@ buf = io.BytesIO()
 with tarfile.open(fileobj=buf, mode="w:gz") as t:
     for m in members:
         info = tarfile.TarInfo(m["name"])
+        info.mode = m.get("mode", 0o644)
+        info.uid = m.get("uid", 0)
         if m.get("link"):
             info.type = tarfile.SYMTYPE
             info.linkname = m["link"]
@@ -149,6 +151,7 @@ describe('preview-wrapper.sh: the actions', () => {
     expect(fs.existsSync(p('caddy/previews/pr-7.caddy'))).toBe(false)
     expect(fs.existsSync(p('caddy/previews/pr-8.caddy'))).toBe(true)
     expect(log()).toContain('pm2 delete sprecher-east-pr-7')
+    expect(log()).toContain('pm2 save --force')
     expect(sudoLines()).toEqual([`sudo -n ${p('access/ops/preview-caddy.sh')} 7`])
   })
 
@@ -265,12 +268,12 @@ describe('preview-wrapper.sh: it refuses everything else', () => {
 })
 
 describe('preview-wrapper.sh: a hostile release archive', () => {
-  const refused = async (members, input) => {
+  const refused = async (members, input, reason = 'refused') => {
     const { code, out } = await wrapper(`upload 7 ${COMMIT}`, {
       input: input ?? (await archive(members)),
     })
     expect(code).toBe(2)
-    expect(out).toContain('refused')
+    expect(out).toContain(reason)
     expect(fs.existsSync(release())).toBe(false)
     expect(fs.readdirSync(p('previews/pr-7/releases'))).toEqual([]) // no half-unpacked leftovers
   }
@@ -285,8 +288,15 @@ describe('preview-wrapper.sh: a hostile release archive', () => {
     ],
     ['a link that climbs out', [{ name: 'public', link: '../../../../etc' }]],
     ['a link to production’s folder', [{ name: 'data', link: '/var/www/sprecher-east/data' }]],
-  ])('refuses %s', async (_, members) => {
-    await refused(members)
+  ])('refuses %s', async (name, members) => {
+    // a path is refused by the wrapper's own check before tar runs; a link after it is unpacked
+    await refused(
+      members,
+      undefined,
+      name.startsWith('a path') || name === 'an absolute path'
+        ? 'path that leaves the release'
+        : 'refused',
+    )
   })
 
   it('refuses a file written through a link in the same archive', async () => {
@@ -346,5 +356,99 @@ describe('preview-wrapper.sh: a hostile release archive', () => {
     expect(code).toBe(2)
     expect(fs.readFileSync(p('victim/keep'), 'utf8')).toBe('x')
     expect(sudoLines()).toEqual([])
+  })
+})
+
+describe('preview-wrapper.sh: how it unpacks', () => {
+  const modeOf = (file) => (fs.statSync(file).mode & 0o7777).toString(8)
+
+  it('keeps no setuid bit or owner from the archive, and nothing readable by others (umask 027)', async () => {
+    const input = await archive([
+      { name: 'suid', data: 'x', mode: 0o4777, uid: 12345 },
+      { name: 'plain', data: 'x', mode: 0o666 },
+    ])
+    const { code } = await wrapper(`upload 7 ${COMMIT}`, { input })
+    expect(code).toBe(0)
+    expect(modeOf(`${release()}/suid`)).toBe('750')
+    expect(modeOf(`${release()}/plain`)).toBe('640')
+    expect(modeOf(release())).toBe('750')
+    expect(fs.statSync(`${release()}/suid`).uid).toBe(process.getuid())
+  })
+
+  it('reads at most the limit from stdin: an endless stream does not fill the disk', async () => {
+    // `ulimit -f` kills a process that writes a file over 4 KiB, so a wrapper that wrote everything it read dies
+    const script = 'ulimit -f 4; yes | head -c 3000000 | /bin/bash "$0"'
+    const { code, out } = await runCommand(
+      '/bin/bash',
+      ['-c', script, p('access/ops/preview-wrapper.sh')],
+      {
+        env: baseEnv({
+          SSH_ORIGINAL_COMMAND: `upload 7 ${COMMIT}`,
+          PREVIEW_UPLOAD_MAX_BYTES: '1000',
+        }),
+      },
+    )
+    expect(code).toBe(2)
+    expect(out).toContain('too big')
+  })
+
+  it('refuses a release folder that is a link, and asks Caddy for nothing', async () => {
+    fs.mkdirSync(p('victim'))
+    fs.mkdirSync(p('previews/pr-7/releases'), { recursive: true })
+    fs.symlinkSync(p('victim'), release())
+    const { code } = await wrapper(`deploy 7 ${COMMIT}`)
+    expect(code).toBe(2)
+    expect(sudoLines()).toEqual([])
+  })
+
+  it('allows only so many previews: a new one is refused beyond the maximum, an existing one is not', async () => {
+    fs.mkdirSync(p('previews/pr-1'))
+    fs.mkdirSync(p('previews/pr-2'))
+    const env = { PREVIEW_MAX_COUNT: '2' }
+    const refused = await wrapper(`upload 3 ${COMMIT}`, { input: await goodArchive(), env })
+    expect(refused.code).toBe(2)
+    expect(refused.out).toContain('as many previews as are allowed')
+    expect(fs.existsSync(p('previews/pr-3'))).toBe(false)
+    const existing = await wrapper(`upload 2 ${COMMIT}`, { input: await goodArchive(), env })
+    expect(existing.code).toBe(0)
+  })
+})
+
+describe('preview-wrapper.sh: its tools come from fixed folders', () => {
+  it.each([
+    ['relative', 'bin'],
+    ['with a semicolon', '/bin;id'],
+    ['with a space', '/bin /tmp'],
+    ['empty', ''],
+  ])('refuses a tools path file that is %s', async (_, content) => {
+    fs.writeFileSync(p('access/tools-path'), `${content}\n`)
+    const { code, out } = await wrapper('facts')
+    expect(code).toBe(2)
+    expect(out).toContain('tools path file')
+  })
+
+  it('never runs a program planted on the caller’s PATH, for any action', async () => {
+    const names =
+      'df find tar stat mkdir rm mv grep awk readlink dirname cat head sudo pm2 node id bash env realpath xargs wc'.split(
+        ' ',
+      )
+    fs.mkdirSync(p('evil'))
+    for (const name of names)
+      fs.writeFileSync(p('evil', name), `#!/bin/sh\necho ${name} >> "${p('planted')}"\n`, {
+        mode: 0o755,
+      })
+    const env = { PATH: `${p('evil')}:${p('bin')}:/usr/bin:/bin` }
+    fs.writeFileSync(p('access/ops/deploy-release.sh'), '#!/usr/bin/env bash\ntrue\n')
+    for (const [request, input] of [
+      ['facts'],
+      ['list'],
+      [`upload 7 ${COMMIT}`, await goodArchive()],
+      [`deploy 7 ${COMMIT}`],
+      ['teardown 7'],
+    ]) {
+      const { code, out } = await wrapper(request, { input, env })
+      expect(code, `${request}: ${out}`).toBe(0)
+    }
+    expect(fs.existsSync(p('planted')) ? fs.readFileSync(p('planted'), 'utf8') : '').toBe('')
   })
 })

@@ -25,7 +25,13 @@ const previewDir = () => p('caddy/previews')
 
 beforeEach(() => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'previews-'))
-  for (const f of ['lib.sh', 'environment.sh', 'caddy-previews.sh', 'caddy-limits.sh'])
+  for (const f of [
+    'lib.sh',
+    'environment.sh',
+    'caddy-lock-lib.sh',
+    'caddy-previews.sh',
+    'caddy-limits.sh',
+  ])
     write(p('code/ops', f), fs.readFileSync(path.join(OPS, f)))
   for (const f of ['preview-headers.caddy', 'preview-site.caddy', 'form-limits.caddy'])
     write(p('code/ops/caddy', f), fs.readFileSync(path.join(OPS, 'caddy', f)))
@@ -313,4 +319,42 @@ describe('the preview headers snippet and site block template', () => {
   it('leaves production HSTS without includeSubDomains, so it cannot bind a preview name', () => {
     expect(code(read('hsts.caddy'))).not.toMatch(/includeSubDomains/i)
   })
+})
+
+describe('one change to Caddy at a time (#1345)', () => {
+  it.each(['caddy-previews.sh', 'caddy-limits.sh'])(
+    '%s waits for the shared lock and, when it does not come, changes nothing',
+    async (script) => {
+      const before = caddyfile()
+      const holder = spawn('flock', ['-x', p('caddy/.sprecher-east-caddy.lock'), 'sleep', '5'])
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      const { code, out } = await run(script, { CADDY_LOCK_WAIT: '1' })
+      holder.kill()
+      expect(code).toBe(0)
+      expect(out).toContain('another change to Caddy is running')
+      expect(caddyfile()).toBe(before)
+      expect(fs.readFileSync(p('log'), 'utf8')).not.toContain('reload')
+    },
+  )
+
+  // caddy-https.sh and the Umami route change have no stand-ins here: check they take the lock before
+  // their first change (a line of code that reloads Caddy, writes a Caddy file or copies one).
+  it.each(['caddy-https.sh', 'umami-caddy.sh', 'preview-caddy.sh'])(
+    '%s takes the lock before it changes anything',
+    (script) => {
+      const lines = fs.readFileSync(path.join(OPS, script), 'utf8').split('\n')
+      const all = lines.filter((l) => !l.trim().startsWith('#'))
+      const start = Math.max(
+        0,
+        all.findIndex((l) => l.startsWith('set_route()')),
+      ) // the Umami helpers before it only undo
+      const code = all.slice(start)
+      const lock = code.findIndex((l) => l.includes('take_caddy_lock'))
+      const change = code.findIndex((l) =>
+        /\$RELOAD_CADDY|caddy_install_file|\bmv -f\b|\binstall -m\b|safe_copy|\bcp "\$/.test(l),
+      )
+      expect(lock).toBeGreaterThan(-1)
+      expect(lock).toBeLessThan(change)
+    },
+  )
 })

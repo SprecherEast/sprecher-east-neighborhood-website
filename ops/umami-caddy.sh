@@ -21,6 +21,7 @@ put_back() { # <saved copy or empty>: the route file as it was
 set_route() { # <template in ops/caddy> <yes|no: add the import line> [reload]
   local template="$CODE_DIR/ops/caddy/$1" add_import="$2" force="${3:-}" stamp new old="" candidate="" changed=no
   if ! command -v caddy >/dev/null || [ ! -f "$CADDYFILE" ]; then return 3; fi
+  take_caddy_lock || return 4 # one change to Caddy at a time (caddy-lock-lib.sh)
   stamp=$(date -u +%Y%m%dT%H%M%SZ)
   new=$(mktemp "$UMAMI_CADDY_FILE.XXXXXX")
   # set -e does not apply here (the callers test the result), so each step that matters is checked.

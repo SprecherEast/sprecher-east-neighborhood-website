@@ -1,10 +1,13 @@
 // ops/preview-caddy.sh (#1345): the one script the restricted preview account may run as root, with
 // one pull request number. Each guard has a test that fails without it. `caddy`, `sudo` and the Caddy
 // reload are stand-ins (ops/preview-access-harness.mjs); real Caddy is checked on the server.
+import { spawn } from 'node:child_process'
 import fs from 'node:fs'
+import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
+import { OPS } from './umami-harness.mjs'
 import { runCommand, setUpPreviewAccessHarness } from './preview-access-harness.mjs'
 
 const { p, log, caddyScript } = setUpPreviewAccessHarness()
@@ -58,7 +61,7 @@ describe('preview-caddy.sh: the block comes from main', () => {
     const { code, out } = await caddyScript(['7'])
     expect(code).toBe(2)
     expect(out).toContain('not main')
-    expect(folderEntries()).toEqual(['.preview-caddy.lock'])
+    expect(folderEntries()).toEqual([])
   })
 
   it('refuses a file path with characters a Caddy block could not hold safely', async () => {
@@ -69,7 +72,7 @@ describe('preview-caddy.sh: the block comes from main', () => {
     })
     expect(code).toBe(2)
     expect(out).toContain('characters')
-    expect(folderEntries()).toEqual(['.preview-caddy.lock'])
+    expect(folderEntries()).toEqual([])
   })
 
   it('refuses a template that leaves a placeholder unfilled', async () => {
@@ -77,7 +80,7 @@ describe('preview-caddy.sh: the block comes from main', () => {
     fs.appendFileSync(p('access/ops/caddy/preview-site.caddy'), '# __PREVIEW_NOPE__\n')
     const { code } = await caddyScript(['7'])
     expect(code).toBe(2)
-    expect(folderEntries()).toEqual(['.preview-caddy.lock'])
+    expect(folderEntries()).toEqual([])
   })
 
   it('refuses when the Caddyfile does not import the previews folder', async () => {
@@ -89,7 +92,7 @@ describe('preview-caddy.sh: the block comes from main', () => {
     const { code, out } = await caddyScript(['7'])
     expect(code).toBe(2)
     expect(out).toContain('does not import')
-    expect(folderEntries()).toEqual(['.preview-caddy.lock'])
+    expect(folderEntries()).toEqual([])
   })
 
   it('does nothing, and does not reload, when the block is already as it should be', async () => {
@@ -164,19 +167,33 @@ describe('preview-caddy.sh: it takes one pull request number and nothing else', 
     expect(folderEntries()).toEqual([])
   })
 
-  it.each([
-    'RELOAD_CADDY',
-    'CADDYFILE',
-    'PREVIEW_CADDY_DIR',
+  // Every variable environment.sh or lib.sh reads from the caller that could redirect the script.
+  const REFUSED_AS_ROOT = [
     'PREVIEW_ROOT',
-    'LIMITS_FILE',
+    'PREVIEW_DOMAIN',
+    'PREVIEW_CADDY_DIR',
+    'PREVIEW_PORT_MIN',
+    'PREVIEW_PORT_MAX',
+    'PREVIEW_MAX_COUNT',
     'PREVIEW_ACCESS_DIR',
     'PREVIEW_HEADERS_FILE',
-    'PREVIEW_PORT_MIN',
-    'APP_DIR',
+    'LIMITS_FILE',
+    'CADDYFILE',
+    'CADDY_LOCK_FILE',
+    'CADDY_LOCK_WAIT',
+    'RELOAD_CADDY',
     'CODE_DIR',
-    'PREVIEW_NUMBER',
-  ])('run as root, refuses %s from the environment', async (name) => {
+  ]
+  it('keeps its list of refused variables equal to the one these tests cover', () => {
+    const text = fs.readFileSync(path.join(OPS, 'preview-caddy.sh'), 'utf8')
+    const list = text
+      .match(/for name in ([^;]+); do/)[1]
+      .replaceAll('\\\n', ' ')
+      .split(/\s+/)
+      .filter(Boolean)
+    expect(list.sort()).toEqual([...REFUSED_AS_ROOT].sort())
+  })
+  it.each(REFUSED_AS_ROOT)('run as root, refuses %s from the environment', async (name) => {
     makePreview()
     const env = {
       PATH: `${p('bin')}:${process.env.PATH}`,
@@ -184,9 +201,55 @@ describe('preview-caddy.sh: it takes one pull request number and nothing else', 
       STUB_UID: '0',
       [name]: '/tmp/x',
     }
-    const { code, out } = await runCommand('bash', [p('access/ops/preview-caddy.sh'), '7'], { env })
+    const { code, out } = await runCommand('/bin/bash', [p('access/ops/preview-caddy.sh'), '7'], {
+      env,
+    })
     expect(code).toBe(2)
     expect(out).toContain(`sets ${name}`)
+  })
+})
+
+describe('preview-caddy.sh: it runs as root on its own PATH (the caller’s is never used)', () => {
+  const text = fs.readFileSync(path.join(OPS, 'preview-caddy.sh'), 'utf8')
+
+  it('starts with an absolute shebang in privileged mode and sets PATH and locale before anything runs', () => {
+    expect(text.split('\n')[0]).toBe('#!/bin/bash -p')
+    const code = text.split('\n').filter((l) => l && !l.startsWith('#'))
+    expect(code.slice(0, 5)).toEqual([
+      'SECURE_PATH=/usr/sbin:/usr/bin:/sbin:/bin',
+      'PATH=$SECURE_PATH',
+      'export PATH',
+      'LC_ALL=C',
+      'export LC_ALL',
+    ])
+  })
+
+  it('uses the PATH environment.sh names for sudo’s secure_path', () => {
+    const env = fs.readFileSync(path.join(OPS, 'environment.sh'), 'utf8')
+    expect(env).toContain('ROOT_SECURE_PATH="${ROOT_SECURE_PATH:-/usr/sbin:/usr/bin:/sbin:/bin}"')
+  })
+
+  it('never runs a program planted on the caller’s PATH, for any tool it uses', async () => {
+    makePreview()
+    const names =
+      'id realpath dirname readlink basename caddy flock find mktemp cat cmp rm mv cp chmod date sed awk grep wc systemctl bash env cut sort head tail tr'.split(
+        ' ',
+      )
+    fs.mkdirSync(p('evil'))
+    for (const name of names)
+      fs.writeFileSync(p('evil', name), `#!/bin/sh\necho ${name} >> "${p('planted')}"\n`, {
+        mode: 0o755,
+      })
+    // the real script, with a state that makes it refuse late: it has used most of its tools by then
+    for (const preview of ['7', undefined]) {
+      const env = { PATH: `${p('evil')}:/usr/bin:/bin`, HOME: '/nonexistent' }
+      if (preview) env.PREVIEW_NUMBER = preview // the caller tries to make environment.sh run a program too
+      const { out } = await runCommand('/bin/bash', [path.join(OPS, 'preview-caddy.sh'), '7'], {
+        env,
+      })
+      expect(out).toContain('refused')
+    }
+    expect(fs.existsSync(p('planted')) ? fs.readFileSync(p('planted'), 'utf8') : '').toBe('')
   })
 })
 
@@ -196,7 +259,7 @@ describe('preview-caddy.sh: Caddy is never left worse off', () => {
     const { code, out } = await caddyScript(['7'], { STUB_CADDY_REJECTS: 'pr-7.dev' })
     expect(code).toBe(2)
     expect(out).toContain('Caddy rejected the block')
-    expect(folderEntries()).toEqual(['.preview-caddy.lock'])
+    expect(folderEntries()).toEqual([])
     expect(reloads()).toBe(0)
   })
 
@@ -216,7 +279,7 @@ describe('preview-caddy.sh: Caddy is never left worse off', () => {
     expect(code).toBe(1)
     expect(out).toContain('previous block is back')
     expect(block()).toBe('# old block\n')
-    expect(folderEntries()).toEqual(['.preview-caddy.lock', 'pr-7.caddy'])
+    expect(folderEntries()).toEqual(['pr-7.caddy'])
   })
 
   it('a reload that fails puts the previous block back and reloads again', async () => {
@@ -233,7 +296,7 @@ describe('preview-caddy.sh: Caddy is never left worse off', () => {
     makePreview()
     const { code } = await caddyScript(['7'], { STUB_RELOAD_FAILS: 'pr-7.dev' })
     expect(code).toBe(1)
-    expect(folderEntries()).toEqual(['.preview-caddy.lock'])
+    expect(folderEntries()).toEqual([])
     expect(reloads()).toBe(2)
   })
 
@@ -242,7 +305,7 @@ describe('preview-caddy.sh: Caddy is never left worse off', () => {
     const { code, out } = await caddyScript(['7'], { STUB_CADDY_REJECTS: 'sprechereast.com' })
     expect(code).toBe(2)
     expect(out).toContain('does not validate')
-    expect(folderEntries()).toEqual(['.preview-caddy.lock'])
+    expect(folderEntries()).toEqual([])
   })
 })
 
@@ -254,7 +317,7 @@ describe('preview-caddy.sh: a preview that is gone loses its block', () => {
     const { code, out } = await caddyScript(['7'])
     expect(code).toBe(0)
     expect(out).toContain('removed')
-    expect(folderEntries()).toEqual(['.preview-caddy.lock'])
+    expect(folderEntries()).toEqual([])
   })
 
   it('puts the block back when Caddy will not reload without it', async () => {
@@ -268,12 +331,19 @@ describe('preview-caddy.sh: a preview that is gone loses its block', () => {
     expect(block()).toBe('# the block\n')
   })
 
+  it('says so, and reloads nothing, when there was no block to remove', async () => {
+    const { code, out } = await caddyScript(['7'])
+    expect(code).toBe(0)
+    expect(out).toContain('has no Caddy block')
+    expect(reloads()).toBe(0)
+  })
+
   it('does not touch another preview’s block', async () => {
     makePreview('8')
     await caddyScript(['8'])
     const { code } = await caddyScript(['7'])
     expect(code).toBe(0)
-    expect(folderEntries()).toEqual(['.preview-caddy.lock', 'pr-8.caddy'])
+    expect(folderEntries()).toEqual(['pr-8.caddy'])
   })
 
   it('treats a link at the preview’s folder as no folder, never following it', async () => {
@@ -282,6 +352,127 @@ describe('preview-caddy.sh: a preview that is gone loses its block', () => {
     fs.writeFileSync(p('caddy/previews/pr-7.caddy'), '# the block\n')
     const { code } = await caddyScript(['7'])
     expect(code).toBe(0)
-    expect(folderEntries()).toEqual(['.preview-caddy.lock']) // removed, not (re)written
+    expect(folderEntries()).toEqual([]) // removed, not (re)written
+  })
+})
+
+describe('preview-caddy.sh: what it checks before it writes', () => {
+  const refusedWith = async (reason, env) => {
+    makePreview()
+    const { code, out } = await caddyScript(['7'], env)
+    expect(code).toBe(2)
+    expect(out).toContain(reason)
+    expect(folderEntries()).toEqual([])
+    expect(reloads()).toBe(0)
+  }
+
+  it('refuses a missing previews folder', () =>
+    refusedWith('previews folder is missing', { PREVIEW_CADDY_DIR: p('caddy/none') }))
+  it('refuses a previews folder that is a link', async () => {
+    fs.symlinkSync(p('caddy/previews'), p('caddy/linked'))
+    await refusedWith('previews folder is a link', { PREVIEW_CADDY_DIR: p('caddy/linked') })
+  })
+  it('refuses a missing Caddyfile', () =>
+    refusedWith('Caddyfile is missing', { CADDYFILE: p('caddy/none.caddyfile') }))
+  it('refuses when main’s block template is missing', async () => {
+    fs.rmSync(p('access/ops/caddy/preview-site.caddy'))
+    await refusedWith('template is missing')
+  })
+  it('refuses when main’s headers copy is missing', async () => {
+    fs.rmSync(p('access/ops/caddy/preview-headers.caddy'))
+    await refusedWith('template is missing')
+  })
+  it('refuses when the form limits file is missing', () =>
+    refusedWith('form limits file is missing', { LIMITS_FILE: p('caddy/none-limits.caddy') }))
+
+  it('writes the block readable by Caddy’s own user (mode 644, not the 600 of a temporary file)', async () => {
+    makePreview()
+    await caddyScript(['7'])
+    expect((fs.statSync(p('caddy/previews/pr-7.caddy')).mode & 0o777).toString(8)).toBe('644')
+  })
+})
+
+describe('preview-caddy.sh: one change to Caddy at a time', () => {
+  it('waits for the shared lock, and refuses when it does not come, changing nothing', async () => {
+    makePreview()
+    const holder = spawn('flock', ['-x', p('caddy/.sprecher-east-caddy.lock'), 'sleep', '5'])
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    const { code, out } = await caddyScript(['7'], { CADDY_LOCK_WAIT: '1' })
+    holder.kill()
+    expect(code).toBe(2)
+    expect(out).toContain('another change to Caddy is running')
+    expect(folderEntries()).toEqual([])
+    expect(reloads()).toBe(0)
+  })
+
+  it('two runs at once do not overlap: the second starts when the first has reloaded', async () => {
+    makePreview()
+    makePreview('8')
+    fs.writeFileSync(
+      p('bin/reload-caddy'),
+      '#!/usr/bin/env bash\necho "reload-start" >> "$STUB_LOG"; sleep 1; echo "reload-end" >> "$STUB_LOG"\n',
+      { mode: 0o755 },
+    )
+    const results = await Promise.all([caddyScript(['7']), caddyScript(['8'])])
+    expect(results.map((r) => r.code)).toEqual([0, 0])
+    const marks = log()
+      .split('\n')
+      .filter((l) => l.startsWith('reload-'))
+    expect(marks).toEqual(['reload-start', 'reload-end', 'reload-start', 'reload-end'])
+  })
+})
+
+describe('preview-caddy.sh: only so many previews', () => {
+  const blocks = (n) => {
+    for (let i = 1; i <= n; i++) fs.writeFileSync(p(`caddy/previews/pr-${i}.caddy`), '# a block\n')
+  }
+
+  it('refuses a new block beyond the maximum, changing nothing', async () => {
+    makePreview('3')
+    blocks(2)
+    const { code, out } = await caddyScript(['3'], { PREVIEW_MAX_COUNT: '2' })
+    expect(code).toBe(2)
+    expect(out).toContain('as many previews as are allowed')
+    expect(folderEntries()).toEqual(['pr-1.caddy', 'pr-2.caddy'])
+    expect(reloads()).toBe(0)
+  })
+
+  it('still updates an existing block when the maximum is reached', async () => {
+    makePreview('2')
+    blocks(2)
+    const { code } = await caddyScript(['2'], { PREVIEW_MAX_COUNT: '2' })
+    expect(code).toBe(0)
+    expect(fs.readFileSync(p('caddy/previews/pr-2.caddy'), 'utf8')).toContain(
+      'pr-2.dev.sprechereast.com',
+    )
+  })
+
+  it('allows one more below the maximum, and removals at any count', async () => {
+    makePreview('3')
+    blocks(2)
+    expect((await caddyScript(['3'], { PREVIEW_MAX_COUNT: '3' })).code).toBe(0)
+    expect((await caddyScript(['1'], { PREVIEW_MAX_COUNT: '1' })).code).toBe(0) // folder gone: a removal
+    expect(folderEntries()).toEqual(['pr-2.caddy', 'pr-3.caddy'])
+  })
+
+  it('counts only previews’ blocks, and the default is ten', async () => {
+    const env = fs.readFileSync(path.join(OPS, 'environment.sh'), 'utf8')
+    expect(env).toContain('PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-10}"')
+    makePreview('3')
+    fs.writeFileSync(p('caddy/previews/other.caddy'), '# not a preview\n')
+    blocks(1)
+    expect((await caddyScript(['3'], { PREVIEW_MAX_COUNT: '2' })).code).toBe(0)
+  })
+})
+
+describe('preview-caddy.sh: removing a block checks the whole config too', () => {
+  it('puts the block back when Caddy would not accept the config without it', async () => {
+    makePreview()
+    await caddyScript(['7'])
+    fs.rmSync(p('previews/pr-7'), { recursive: true })
+    const { code, out } = await caddyScript(['7'], { STUB_WHOLE_NEEDS: 'pr-7.caddy' })
+    expect(code).toBe(1)
+    expect(out).toContain('the block is back')
+    expect(block()).toContain('pr-7.dev.sprechereast.com')
   })
 })

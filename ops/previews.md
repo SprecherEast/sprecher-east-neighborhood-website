@@ -84,4 +84,4 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   reached by a key that can run only the wrapper's five actions, with one sudo rule for the Caddy block
   script. What it is, what it may do and how to check it: [`README.md`](README.md#pull-request-preview-account).
   `environment.sh` holds its names (`PREVIEW_USER`, `PREVIEW_HOME`, `PREVIEW_ACCESS_DIR`), the
-  upload limit and the number and commit patterns, so no script writes its own.
+  upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, 10) and the number and commit patterns, so no script writes its own.

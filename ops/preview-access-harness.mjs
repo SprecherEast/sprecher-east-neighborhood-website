@@ -21,6 +21,7 @@ export const SCRIPTS = [
   'deploy-release.sh',
   'restart-app.sh',
   'migrate-lib.sh',
+  'caddy-lock-lib.sh',
   'lib.sh',
   'environment.sh',
 ]
@@ -51,6 +52,14 @@ export function setUpPreviewAccessHarness() {
     fs.writeFileSync(p('log'), '')
     // The root-owned copy of main's scripts, as the installer makes it.
     for (const f of SCRIPTS) write(p('access/ops', f), fs.readFileSync(path.join(OPS, f)), 0o755)
+    // The root script fixes its own PATH. A test run puts its stand-ins (caddy, id) first in it; a test
+    // that the real value is the secure one runs the unmodified script.
+    const rootScript = fs.readFileSync(path.join(OPS, 'preview-caddy.sh'), 'utf8')
+    write(
+      p('access/ops/preview-caddy.sh'),
+      rootScript.replace(/^SECURE_PATH=/m, `SECURE_PATH=${p('bin')}:`),
+      0o755,
+    )
     for (const f of CADDY_FILES)
       write(p('access/ops/caddy', f), fs.readFileSync(path.join(OPS, 'caddy', f)))
     write(p('access/tools-path'), `${p('bin')}\n`)
@@ -68,6 +77,7 @@ export function setUpPreviewAccessHarness() {
     // sudo -n <command…>: runs it, and records that it was asked to.
     stub('sudo', 'echo "sudo $*" >> "$STUB_LOG"; [ "$1" = -n ] && shift; exec "$@"')
     stub('pm2', 'echo "pm2 $*" >> "$STUB_LOG"')
+    stub('node', `exec ${process.execPath} "$@"`)
     // `caddy validate --config <file> --adapter caddyfile` fails for a file with STUB_CADDY_REJECTS in
     // it, or (for the Caddyfile) for an imported previews block that has it.
     stub(
@@ -78,6 +88,8 @@ export function setUpPreviewAccessHarness() {
         // what Caddy's glob would already pick up while a candidate block is being checked
         '[ "$(basename "$3")" = Caddyfile ] || echo "visible-blocks $(ls "$STUB_PREVIEW_DIR"/*.caddy 2>/dev/null | wc -l)" >> "$STUB_LOG"',
         // a config that is fine alone but not with this block in the folder
+        // a config that is fine only while this block is still in the folder
+        '[ -z "$STUB_WHOLE_NEEDS" ] || [ "$(basename "$3")" != Caddyfile ] || [ -f "$STUB_PREVIEW_DIR/$STUB_WHOLE_NEEDS" ] || exit 1',
         '[ -z "$STUB_WHOLE_REJECTS" ] || [ "$(basename "$3")" != Caddyfile ] || ! cat "$STUB_PREVIEW_DIR"/*.caddy 2>/dev/null | grep -q "$STUB_WHOLE_REJECTS" || exit 1',
         '[ -z "$STUB_CADDY_REJECTS" ] && exit 0',
         'grep -q "$STUB_CADDY_REJECTS" "$3" && exit 1',
@@ -113,14 +125,14 @@ export function setUpPreviewAccessHarness() {
 
   /** Runs the installed wrapper the way sshd does: the request in SSH_ORIGINAL_COMMAND, stdin the archive. */
   const wrapper = (request, { input, env } = {}) =>
-    runCommand('bash', [p('access/ops/preview-wrapper.sh')], {
+    runCommand('/bin/bash', [p('access/ops/preview-wrapper.sh')], {
       env: baseEnv({ ...(request === undefined ? {} : { SSH_ORIGINAL_COMMAND: request }), ...env }),
       input,
     })
 
   /** Runs the installed Caddy script with exactly these arguments. */
   const caddyScript = (args, env) =>
-    runCommand('bash', [p('access/ops/preview-caddy.sh'), ...args], { env: baseEnv(env) })
+    runCommand('/bin/bash', [p('access/ops/preview-caddy.sh'), ...args], { env: baseEnv(env) })
 
   return { p, stub, log, baseEnv, wrapper, caddyScript }
 }

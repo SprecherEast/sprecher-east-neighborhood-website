@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # The only thing the pull request preview deploy key can run (#1345). The key's line in
 # authorized_keys is `restrict,command="<this file>" <key>`, so whatever the client asks for arrives
 # here as SSH_ORIGINAL_COMMAND, and a shell, a port forward or any other command never starts.
@@ -17,22 +17,25 @@
 # they match ^[1-9][0-9]{0,5}$ and ^[0-9a-f]{40}$ (ops/environment.sh). A refused request prints a
 # fixed text, never the request. The Caddy block is written by ops/preview-caddy.sh through one narrow
 # sudo rule; this script never touches Caddy's files.
+# The tools it runs come from fixed folders, never from the caller's PATH (and an absolute shebang): the
+# folders the installer found for node and pm2 (a root-owned file), then the system's.
+PATH=/usr/local/bin:/usr/bin:/bin
+export PATH
+LC_ALL=C
+export LC_ALL
 set -euo pipefail
 umask 027
-IFS=$' \t\n'
 
-here=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+here=$(cd "${BASH_SOURCE[0]%/*}" && pwd -P)
 # shellcheck source=preview-access-lib.sh
 . "$here/preview-access-lib.sh"
 reset_environment "$here"
 
-# The tools' folders (node, pm2) the installer found, recorded in a root-owned file.
-tools_path=""
 if [ -f "$here/../tools-path" ]; then
-  tools_path=$(head -n 1 "$here/../tools-path")
+  IFS= read -r tools_path <"$here/../tools-path" || true
   [[ "$tools_path" =~ ^/[A-Za-z0-9_./:@+-]*$ ]] || refuse "the tools path file is not valid"
+  PATH="$tools_path:$PATH"
 fi
-export PATH="${tools_path:+$tools_path:}/usr/local/bin:/usr/bin:/bin"
 
 request="${SSH_ORIGINAL_COMMAND-}"
 [ -n "$request" ] || refuse "only the preview actions are allowed (no shell)"
@@ -43,12 +46,9 @@ read -r action number commit <<<"$request"
 
 case "$action" in
   facts | list) [ -z "$number" ] || refuse "$action takes no argument" ;;
-  upload | deploy)
-    valid_preview_number "$number" || refuse "not a pull request number"
-    valid_commit "$commit" || refuse "not a commit"
-    ;;
+  upload | deploy) valid_commit "$commit" || refuse "not a commit" ;; # the number is checked by use_preview
   teardown)
-    valid_preview_number "$number" || refuse "not a pull request number"
+    [ -n "$number" ] || refuse "teardown needs a number"
     [ -z "$commit" ] || refuse "teardown takes only a number"
     ;;
   *) refuse "not a preview action" ;;
@@ -88,6 +88,10 @@ case "$action" in
     ;;
 
   upload)
+    if [ ! -d "$APP_DIR" ]; then # a new preview: not beyond the allowed number
+      count=$(find "$PREVIEW_ROOT" -maxdepth 1 -type d -name 'pr-*' | wc -l)
+      [ "$count" -lt "$PREVIEW_MAX_COUNT" ] || refuse "there are already as many previews as are allowed"
+    fi
     [ ! -L "$APP_DIR/releases" ] || refuse "releases is a link"
     mkdir -p "$APP_DIR/releases"
     [ "$(readlink "$APP_DIR/current" 2>/dev/null || true)" != "releases/$commit" ] ||

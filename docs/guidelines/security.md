@@ -101,9 +101,12 @@ When fixing transitive vulnerabilities:
 
 A pull request preview (#1070) runs code nobody has reviewed yet, beside production. It starts with
 no real secret or service key of its own, and it deploys and runs under one restricted account, not
-production's ([`ops/previews.md`](../../ops/previews.md)). The isolation check that proves it can't
-reach production's files, and the protection of Caddy's admin endpoint, are still to come (#1346); until
-then the account's separation rests on file permissions alone. What holds now:
+production's ([`ops/previews.md`](../../ops/previews.md)). **No preview may run as that account until
+#1346 is done.** Until then it can reach Caddy's admin endpoint on `localhost:2019`, which accepts any
+local process and replaces the whole config, and any production file the production deploy leaves
+readable (its `umask` is 022). The isolation check that proves it can't, and the protection of the admin
+endpoint, are #1346. The installer enforces the wait: it writes no key line until the release holds
+`ops/preview-isolation-check.sh`, so nothing can deploy as the account. What holds now:
 
 - **Its own secrets, no real keys** (#1344): `ops/preview-settings.sh` writes each preview's
   `.env.local` (mode 600) with `PAYLOAD_SECRET` and `PREVIEW_SECRET` made at random on the server,
@@ -133,7 +136,9 @@ then the account's separation rests on file permissions alone. What holds now:
   checks again, and refuses an environment that tries to redirect it), builds the block from `main`'s
   copies of the two templates, has Caddy validate it before it enters the previews folder, moves it in
   atomically, validates the whole config, reloads, and puts the previous block back on any failure. It
-  never reads a file from a preview.
+  never reads a file from a preview, runs with a fixed PATH (and the rule sets `secure_path`), takes the
+  lock every Caddy-changing script shares, and refuses a new block beyond a fixed number of previews
+  (each block orders a certificate from a budget production shares).
 - **The installer changes nothing on doubt** (#1345): a different account of that name, a link or foreign
   owner on a path it uses, a file it did not write, an sshd that would not take the key line, or a tool the
   account can't run stops it with a warning. It backs up every file it replaces, checks as the account that

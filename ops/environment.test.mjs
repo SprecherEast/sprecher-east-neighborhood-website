@@ -270,6 +270,24 @@ describe('the preview port range', () => {
   })
 })
 
+describe('the most previews at once (#1345)', () => {
+  it('is ten by default, and only a number from 1 to 999 is taken', () => {
+    expect(printed({}, 'echo $PREVIEW_MAX_COUNT').trim()).toBe('10')
+    expect(
+      printed({ PREVIEW_NUMBER: '7', PREVIEW_MAX_COUNT: '999' }, 'echo $PREVIEW_MAX_COUNT').trim(),
+    ).toBe('999')
+    for (const bad of ['0', '01', '1000', '-1', 'abc', '5 6', '']) {
+      const r = run({ PREVIEW_NUMBER: '7', PREVIEW_MAX_COUNT: bad }, 'echo reached')
+      // an empty value falls back to the default, every other bad one stops the script
+      if (bad === '') expect(r.stdout.trim()).toBe('reached')
+      else {
+        expect(r.status, bad).not.toBe(0)
+        expect(r.stdout).toContain('::error title=Server::PREVIEW_MAX_COUNT')
+      }
+    }
+  })
+})
+
 describe('ecosystem.config.cjs', () => {
   it('has, with nothing set, the values environment.sh gives production', () => {
     const v = values()

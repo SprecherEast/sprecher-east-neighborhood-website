@@ -13,16 +13,18 @@
 #   5. the account's authorized_keys line, last, once the rest works: `restrict` (no shell, port
 #      forwarding, agent, X11 or terminal) and the wrapper as the forced command. The key is the
 #      public half in ops/preview-deploy-key.pub, which is not a secret; the private half is the
-#      only secret of the GitHub environment `preview`. No key file means no key line.
+#      only secret of the GitHub environment `preview`. No key file means no key line, and neither
+#      does a release without ops/preview-isolation-check.sh (#1346): until the isolation check
+#      exists, a preview must not run as the account, which could reach production's files and
+#      Caddy's admin endpoint.
 #
 # It changes NOTHING when anything is unexpected: a different account, a path that is a link or
 # owned by someone else, a file this script did not write, a sshd that would not accept the key, a
 # tool the account can't run. It says so as a warning. Every file it replaces is first copied to
 # <file>.bak-preview-access-<UTC time>. It prints what it did as annotations and never a secret: the
 # only key material it handles is public. If a step after the first change fails, it puts the sudo
-# rule and the key line back and says so. Running it again changes nothing.
+# rule back, writes no key line and says so. Running it again changes nothing.
 set -Eeuo pipefail
-umask 022
 trap '' HUP
 
 here=$(dirname "$0")
@@ -36,8 +38,9 @@ ROOT_UID="${PREVIEW_ACCESS_ROOT_UID:-0}" # root's id; a test run by someone else
 ROOT_OWNER=root
 MARKER="Managed by ops/install-preview-access.sh (#1345)"
 # main's files the account may run, copied into PREVIEW_ACCESS_DIR/ops/ (the caddy/ ones into caddy/)
-SCRIPTS="preview-wrapper.sh preview-caddy.sh preview-access-lib.sh preview-settings.sh secret-lib.sh deploy-release.sh restart-app.sh migrate-lib.sh lib.sh environment.sh"
+SCRIPTS="preview-wrapper.sh preview-caddy.sh preview-access-lib.sh preview-settings.sh secret-lib.sh deploy-release.sh restart-app.sh migrate-lib.sh caddy-lock-lib.sh lib.sh environment.sh"
 CADDY_FILES="preview-site.caddy preview-headers.caddy"
+ISOLATION_CHECK="${PREVIEW_ISOLATION_CHECK:-$CODE_DIR/ops/preview-isolation-check.sh}" # #1346 adds it
 WRAPPER="$PREVIEW_ACCESS_DIR/ops/preview-wrapper.sh"
 CADDY_SCRIPT="$PREVIEW_ACCESS_DIR/ops/preview-caddy.sh"
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
@@ -135,15 +138,32 @@ done
 # sshd must take the key line as written, for this account.
 sshd_settings=$(sshd -T -C "user=$PREVIEW_USER,host=localhost,addr=127.0.0.1" 2>/dev/null) ||
   doubt "sshd would not print its settings for the account"
-sshd_value() { awk -v k="$1" 'tolower($1) == k { sub(/^[^ ]+ /, ""); print; exit }' <<<"$sshd_settings"; }
+sshd_value() { awk -v k="$1" 'tolower($1) == k { sub(/^[^ ]+ /, ""); print }' <<<"$sshd_settings"; } # every line of the setting
 [ "$(sshd_value pubkeyauthentication)" = yes ] || doubt "sshd does not allow public key sign-in"
 case " $(sshd_value authorizedkeysfile) " in *" .ssh/authorized_keys "* | *" %h/.ssh/authorized_keys "*) ;; *) doubt "sshd reads other authorized_keys files" ;; esac
 [ -z "$(sshd_value allowgroups)" ] || doubt "sshd has AllowGroups, which this script can't judge"
 [ -z "$(sshd_value allowusers)" ] || case " $(sshd_value allowusers) " in *" $PREVIEW_USER "*) ;; *) doubt "sshd's AllowUsers leaves out $PREVIEW_USER" ;; esac
 case " $(sshd_value denyusers) " in *" $PREVIEW_USER "*) doubt "sshd's DenyUsers names $PREVIEW_USER" ;; esac
+# The account has no password (locked), which sshd takes only with PAM; nothing may let the client or a
+# command change what the forced command sees or runs.
+[ "$(sshd_value usepam)" = yes ] || doubt "sshd has UsePAM off, and it refuses key sign-in to an account with no password"
+[ "$(sshd_value permituserenvironment)" = no ] || doubt "sshd allows PermitUserEnvironment"
+for accepted in $(sshd_value acceptenv); do
+  [[ "$accepted" == LANG || "$accepted" == LC_* ]] || doubt "sshd's AcceptEnv takes $accepted from the client"
+done
+[ "$(sshd_value authorizedkeyscommand)" = none ] || doubt "sshd has an AuthorizedKeysCommand"
+[ "$(sshd_value forcecommand)" = none ] || doubt "sshd has a ForceCommand for the account"
+
+# The root script runs with a fixed PATH (ROOT_SECURE_PATH, also sudo's secure_path for it): the tools it
+# calls must be in it.
+[[ "$ROOT_SECURE_PATH" =~ ^/[A-Za-z0-9_./:@+-]*$ ]] || doubt "the root script's PATH has characters it should not"
+for tool in caddy systemctl flock; do
+  (PATH="$ROOT_SECURE_PATH" command -v "$tool" >/dev/null 2>&1) || doubt "$tool is not in $ROOT_SECURE_PATH, the PATH the Caddy script runs with"
+done
 
 # The public key: one ed25519 line, nothing before the type (no options, so it can't loosen `restrict`).
 key_line=""
+key_note="no preview key file: no key allowed"
 fingerprint=""
 if [ -f "$PUBLIC_KEY_FILE" ]; then
   line=$(cat "$PUBLIC_KEY_FILE")
@@ -153,6 +173,12 @@ if [ -f "$PUBLIC_KEY_FILE" ]; then
   [ -n "$fingerprint" ] || doubt "ssh-keygen would not read the preview key"
   read -r key_type key_blob _ <<<"$line"
   key_line="restrict,command=\"$WRAPPER\" $key_type $key_blob sprecher-east-preview-deploy"
+  # Until the isolation check exists (#1346), a preview must not run as the account: it could reach
+  # production's files and Caddy's admin endpoint. No key line is written, so nothing can deploy.
+  if [ ! -f "$ISOLATION_CHECK" ]; then
+    key_line=""
+    key_note="no key allowed: ops/preview-isolation-check.sh (#1346) is not in this release, and a preview must not run as the account without it"
+  fi
 fi
 
 # ---- What the files should hold. ----
@@ -169,45 +195,52 @@ done
 sudoers_text=$(
   printf '# %s. Changes here are overwritten on deploy.\n' "$MARKER"
   printf '# The preview account may run main'"'"'s Caddy script with a pull request number, and nothing else.\n'
-  printf 'Defaults!%s env_reset, !setenv\n' "$CADDY_SCRIPT"
+  printf 'Defaults!%s env_reset, !setenv, secure_path="%s"\n' "$CADDY_SCRIPT" "$ROOT_SECURE_PATH"
   printf '%s ALL=(root) NOPASSWD: %s\n' "$PREVIEW_USER" "$sudo_args"
 )
 
 # Writes <text> to <path> (mode, owner root) when it differs, keeping a dated copy of the old one.
-# The new file is complete before it replaces the old one in a single rename.
+# The new file is complete before it replaces the old one in a single rename. Returns 0 when it changed
+# the file, 1 when it was already right and 2 when a step failed (it runs inside an `if`, where `set -e`
+# does not apply, so each step says so itself).
 put_file() { # <path> <mode> <source file or - for $text> [text]
   local path="$1" mode="$2" tmp
-  tmp=$(mktemp "$path.new-XXXXXX")
-  if [ "$3" = - ]; then printf '%s\n' "$4" >"$tmp"; else cat "$3" >"$tmp"; fi
+  tmp=$(mktemp "$path.new-XXXXXX") # if it failed, the write below fails too
+  if [ "$3" = - ]; then printf '%s\n' "$4" >"$tmp" || return 2; else cat "$3" >"$tmp" || return 2; fi
   if cmp -s "$tmp" "$path" 2>/dev/null; then
     rm -f "$tmp"
     return 1
   fi
-  chmod "$mode" "$tmp"
-  chown "$ROOT_OWNER:$ROOT_OWNER" "$tmp"
-  [ ! -e "$path" ] || cp -p "$path" "$path.bak-preview-access-$stamp"
-  mv -f "$tmp" "$path"
+  # a step that fails leaves no half-made file behind
+  chmod "$mode" "$tmp" || { rm -f "$tmp"; return 2; }
+  chown "$ROOT_OWNER:$ROOT_OWNER" "$tmp" || { rm -f "$tmp"; return 2; }
+  if [ -e "$path" ]; then cp -p "$path" "$path.bak-preview-access-$stamp" || { rm -f "$tmp"; return 2; }; fi
+  mv -f "$tmp" "$path" || { rm -f "$tmp"; return 2; }
+}
+# put_file, ending the run (and putting back what it changed) when a step failed. Returns 0 or 1.
+install_file() { # as put_file
+  local status=0
+  put_file "$@" || status=$?
+  [ "$status" != 2 ] || fail_after_change "could not write $1"
+  return "$status"
 }
 
-# What this run changed, so a failure can put the sudo rule and the key line back.
+# What this run changed, so a failure can put the sudo rule back (the key line goes in last, after which
+# nothing can fail).
 restore() { # <path>
   if [ -e "$1.bak-preview-access-$stamp" ]; then mv -f "$1.bak-preview-access-$stamp" "$1"; else rm -f "$1"; fi
 }
-roll_back_access() {
-  [ "${sudoers_changed:-no}" = no ] || restore "$SUDOERS_FILE"
-  [ "${keys_changed:-no}" = no ] || restore "$PREVIEW_HOME/.ssh/authorized_keys"
-}
 fail_after_change() { # <what went wrong>
   trap - ERR
-  roll_back_access
-  report "ERROR: preview access: $1; the sudo rule and the key line from this run were put back"
+  [ "${sudoers_changed:-no}" = no ] || restore "$SUDOERS_FILE"
+  report "ERROR: preview access: $1; the sudo rule from this run was put back and no key line was written"
   exit 1
 }
 trap 'fail_after_change "the installer failed unexpectedly at line $LINENO"' ERR
 
 # ---- Changes. ----
 
-sudoers_changed=no keys_changed=no
+sudoers_changed=no
 
 if [ "$user_exists" = no ]; then
   useradd --system --user-group --no-create-home --home-dir "$PREVIEW_HOME" --shell /bin/bash "$PREVIEW_USER"
@@ -228,12 +261,12 @@ fi
 
 copied=0
 for f in $SCRIPTS; do
-  if put_file "$PREVIEW_ACCESS_DIR/ops/$f" 755 "$CODE_DIR/ops/$f"; then copied=$((copied + 1)); fi
+  if install_file "$PREVIEW_ACCESS_DIR/ops/$f" 755 "$CODE_DIR/ops/$f"; then copied=$((copied + 1)); fi
 done
 for f in $CADDY_FILES; do
-  if put_file "$PREVIEW_ACCESS_DIR/ops/caddy/$f" 644 "$CODE_DIR/ops/caddy/$f"; then copied=$((copied + 1)); fi
+  if install_file "$PREVIEW_ACCESS_DIR/ops/caddy/$f" 644 "$CODE_DIR/ops/caddy/$f"; then copied=$((copied + 1)); fi
 done
-if put_file "$PREVIEW_ACCESS_DIR/tools-path" 644 - "$tools"; then copied=$((copied + 1)); fi
+if install_file "$PREVIEW_ACCESS_DIR/tools-path" 644 - "$tools"; then copied=$((copied + 1)); fi
 [ "$copied" = 0 ] || changes+=("$copied root-owned script files updated in $PREVIEW_ACCESS_DIR")
 
 # The sudo rule, checked by visudo before it is in place.
@@ -244,7 +277,7 @@ if ! visudo -cf "$sudoers_candidate" >/dev/null 2>&1; then
   fail_after_change "visudo rejected the sudo rule"
 fi
 rm -f "$sudoers_candidate"
-if put_file "$SUDOERS_FILE" 440 - "$sudoers_text"; then
+if install_file "$SUDOERS_FILE" 440 - "$sudoers_text"; then
   sudoers_changed=yes
   changes+=("sudo rule for the Caddy script installed")
 fi
@@ -263,18 +296,19 @@ sudo_list=$(sudo -l -U "$PREVIEW_USER" 2>/dev/null || true)
 case "$sudo_list" in *"$CADDY_SCRIPT"*) ;; *) fail_after_change "sudo does not list the Caddy script for the account" ;; esac
 
 # The key line goes in last.
-if put_file "$PREVIEW_HOME/.ssh/authorized_keys" 644 - "$keys_text"; then
-  keys_changed=yes
-  if [ -n "$fingerprint" ]; then
+if install_file "$PREVIEW_HOME/.ssh/authorized_keys" 644 - "$keys_text"; then
+  if [ -n "$key_line" ]; then
     changes+=("key $fingerprint allowed, restricted to the wrapper")
   else
-    changes+=("no preview key file: no key allowed")
+    changes+=("$key_note")
   fi
 fi
 
 trap - ERR
 if [ "${#changes[@]}" = 0 ]; then
-  report "Preview access already in place: account $PREVIEW_USER, wrapper in $PREVIEW_ACCESS_DIR${fingerprint:+, key $fingerprint}"
+  key_state="$key_note"
+  [ -z "$key_line" ] || key_state="key $fingerprint"
+  report "Preview access already in place: account $PREVIEW_USER, wrapper in $PREVIEW_ACCESS_DIR, $key_state"
 else
   printf '%s\n' "Preview access installed (backups of replaced files: <file>.bak-preview-access-$stamp):" "${changes[@]/#/- }" |
     report_lines notice Server

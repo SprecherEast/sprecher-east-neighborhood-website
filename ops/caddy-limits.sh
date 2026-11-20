@@ -13,6 +13,7 @@ umask 077
 trap '' HUP # a dropped SSH session must not stop the script between a change and its rollback
 
 . "$(dirname "$0")/lib.sh"
+. "$(dirname "$0")/caddy-lock-lib.sh"
 
 # Any other failure still ends with an annotation (once, from the main shell).
 on_unexpected_error() {
@@ -30,6 +31,12 @@ if ! command -v caddy >/dev/null || [ ! -f "$CADDYFILE" ]; then
   report "WARNING: Caddy or $CADDYFILE not found, so no request body limit was added"
   exit 0
 fi
+
+# One change to Caddy at a time, with the preview account's block script too (caddy-lock-lib.sh).
+take_caddy_lock || {
+  report "WARNING: another change to Caddy is running, so no request body limit was added"
+  exit 0
+}
 
 # Status code for a POST of the given body (read from stdin) to the form endpoint, through Caddy.
 post_status() {

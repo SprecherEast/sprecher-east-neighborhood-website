@@ -24,6 +24,12 @@ const GOOD_SSHD = [
   'pubkeyauthentication yes',
   'authorizedkeysfile .ssh/authorized_keys .ssh/authorized_keys2',
   'passwordauthentication no',
+  'usepam yes',
+  'permituserenvironment no',
+  'acceptenv LANG',
+  'acceptenv LC_*',
+  'authorizedkeyscommand none',
+  'forcecommand none',
 ].join('\n')
 const NODE_DIR = path.dirname(process.execPath)
 
@@ -46,10 +52,10 @@ beforeEach(() => {
   for (const f of CADDY_FILES)
     write(p('code/ops/caddy', f), fs.readFileSync(path.join(OPS, 'caddy', f)))
   write(p('code/ops/preview-deploy-key.pub'), `${KEY}\n`)
+  write(p('code/ops/preview-isolation-check.sh'), '# #1346 adds the real one\n')
   write(p('sudoers'), `@includedir ${p('sudoers.d')}\n`)
   fs.mkdirSync(p('sudoers.d'))
   // Tools the script checks for and runs. The account exists once `useradd` has run.
-  stub('useradd', 'echo "useradd $*" >> "$STUB_LOG"; touch "$STUB_STATE/user"')
   stub(
     'getent',
     '[ -f "$STUB_STATE/user" ] || exit 2; echo "${STUB_PASSWD:-sprecher-preview:x:998:998::$PREVIEW_HOME:/bin/bash}"',
@@ -60,7 +66,7 @@ beforeEach(() => {
       'case "$*" in',
       '  "-u") echo "${STUB_UID:-0}" ;;',
       '  "-un") echo "${STUB_DEPLOY_USER:-root}" ;;',
-      `  "-u sprecher-preview") echo ${UID} ;;`,
+      `  "-u sprecher-preview") echo "\${STUB_PREVIEW_UID:-${UID}}" ;;`,
       '  "-Gn sprecher-preview") echo "${STUB_GROUPS:-sprecher-preview}" ;;',
       '  *) exec /usr/bin/id "$@" ;;',
       'esac',
@@ -73,7 +79,24 @@ beforeEach(() => {
     '[ -z "$STUB_KEYGEN_FAILS" ] || exit 1; echo "256 SHA256:TestFingerprint1234 comment (ED25519)"',
   )
   stub('chown', 'echo "chown $*" >> "$STUB_LOG"')
+  // a file being made (named <file>.new-…) cannot get its mode, or be moved into place, when asked
+  stub(
+    'chmod',
+    'case "$*" in *.new-*) [ -z "$STUB_CHMOD_FAILS" ] || exit 1 ;; esac; exec /bin/chmod "$@"',
+  )
+  stub('mv', 'case "$*" in *.new-*) [ -z "$STUB_MV_FAILS" ] || exit 1 ;; esac; exec /bin/mv "$@"')
   stub('pm2', 'exit 0')
+  stub('caddy', 'exit 0')
+  stub('systemctl', 'exit 0')
+  // the dated copy of a replaced file fails to be made when STUB_CP_FAILS is set
+  stub(
+    'cp',
+    'case "$*" in *bak-preview-access*) [ -z "$STUB_CP_FAILS" ] || exit 1 ;; esac; exec /bin/cp "$@"',
+  )
+  stub(
+    'useradd',
+    'echo "useradd $*" >> "$STUB_LOG"; [ -z "$STUB_USERADD_FAILS" ] || exit 1; touch "$STUB_STATE/user"',
+  )
   stub('node', `exec ${process.execPath} "$@"`)
   // runuser -u <user> -- <command…>: the command runs as this test; `test -w` answers as the account.
   stub(
@@ -82,7 +105,8 @@ beforeEach(() => {
       'shift 3',
       'echo "runuser $* | key-present:$([ -e "$PREVIEW_HOME/.ssh/authorized_keys" ] && echo yes || echo no)" >> "$STUB_LOG"',
       '[ -z "$STUB_RUNUSER_FAILS" ] || exit 1',
-      'if [ "$1" = test ]; then [ -n "$STUB_CAN_WRITE" ]; exit; fi',
+      // `test -w <path>` answers as the account: it can write the paths ending in STUB_CAN_WRITE ("all": every one)
+      'if [ "$1" = test ]; then [ -n "$STUB_CAN_WRITE" ] && { [ "$STUB_CAN_WRITE" = all ] || [[ "$3" == *"$STUB_CAN_WRITE" ]]; }; exit; fi',
       'exec "$@"',
     ].join('\n'),
   )
@@ -109,6 +133,7 @@ const run = (env = {}, { removeTools = [] } = {}) => {
       SUDOERS_FILE: p('sudoers.d/sprecher-east-preview'),
       SUDOERS_MAIN: p('sudoers'),
       PREVIEW_ACCESS_ROOT_UID: UID,
+      ROOT_SECURE_PATH: `${p('bin')}:/usr/bin:/bin`,
       ...env,
     },
   })
@@ -170,7 +195,9 @@ describe('install-preview-access.sh: a first install', () => {
     const rule = read('sudoers.d/sprecher-east-preview')
     const script = p('installed/ops/preview-caddy.sh')
     expect(mode('sudoers.d/sprecher-east-preview')).toBe('440')
-    expect(rule).toContain(`Defaults!${script} env_reset, !setenv`)
+    expect(rule).toContain(
+      `Defaults!${script} env_reset, !setenv, secure_path="${p('bin')}:/usr/bin:/bin"`,
+    )
     const line = rule.split('\n').find((l) => l.startsWith('sprecher-preview '))
     expect(line).toBe(
       `sprecher-preview ALL=(root) NOPASSWD: ${[1, 2, 3, 4, 5, 6]
@@ -432,6 +459,15 @@ describe('install-preview-access.sh: it changes nothing on any doubt', () => {
       fs.symlinkSync(p('elsewhere'), p('proot'))
       await untouched({}, [], 'is a link or not a folder')
     })
+    it('the previews root exists, the account exists, and another account owns the folder', async () => {
+      fs.writeFileSync(p('state/user'), '')
+      fs.mkdirSync(p('proot'))
+      await untouched(
+        { STUB_PREVIEW_UID: String(Number(UID) + 1) },
+        [],
+        'not owned by sprecher-preview',
+      )
+    })
     it('the previews root exists and is not the account’s', async () => {
       fs.mkdirSync(p('proot'))
       await untouched({}, [], 'not owned by sprecher-preview')
@@ -505,7 +541,7 @@ describe('install-preview-access.sh: a failed check after the first change puts 
   it('when the account cannot run the wrapper', async () =>
     rolledBack({ STUB_RUNUSER_FAILS: '1' }, 'could not run the wrapper'))
   it('when the account can write to its home or key line', async () =>
-    rolledBack({ STUB_CAN_WRITE: '1' }, 'can write to'))
+    rolledBack({ STUB_CAN_WRITE: 'all' }, 'can write to'))
   it('when sudo does not list the Caddy script for the account', async () =>
     rolledBack({ STUB_SUDO_LISTS_NOTHING: '1' }, 'does not list'))
   it('when the wrapper does not answer facts', async () => {
@@ -519,11 +555,246 @@ describe('install-preview-access.sh: a failed check after the first change puts 
     fs.writeFileSync(p('code/ops/preview-wrapper.sh'), '#!/usr/bin/env bash\necho node=v1\n')
     await rolledBack({}, 'not one of its actions')
   })
-  it('and restores the sudo rule that was there before', async () => {
+})
+
+describe('install-preview-access.sh: the key line waits for the isolation check', () => {
+  it('writes no key line while ops/preview-isolation-check.sh is not in the release, and says why', async () => {
+    fs.rmSync(p('code/ops/preview-isolation-check.sh'))
+    const { code, out } = await run()
+    expect(code).toBe(0)
+    expect(read('home/sprecher-preview/.ssh/authorized_keys')).not.toMatch(/ssh-ed25519|restrict/)
+    expect(out).toContain('preview-isolation-check.sh (#1346) is not in this release')
+    expect(out).not.toContain('SHA256:')
+  })
+
+  it('writes the key line once the release has it', async () => {
+    fs.rmSync(p('code/ops/preview-isolation-check.sh'))
+    await run()
+    write(p('code/ops/preview-isolation-check.sh'), '# there now\n')
+    const { code } = await run()
+    expect(code).toBe(0)
+    expect(read('home/sprecher-preview/.ssh/authorized_keys')).toContain('restrict,command=')
+  })
+
+  it('says the same when it has nothing to change', async () => {
+    fs.rmSync(p('code/ops/preview-isolation-check.sh'))
+    await run()
+    const { out } = await run()
+    expect(out).toContain('already in place')
+    expect(out).toContain('preview-isolation-check.sh (#1346) is not in this release')
+  })
+})
+
+describe('install-preview-access.sh: what it checks about sudo and sshd as well', () => {
+  const only = (dirName, tools) => {
+    fs.mkdirSync(p(dirName), { recursive: true })
+    for (const t of tools)
+      fs.symlinkSync(`/usr/bin/${t === 'caddy' || t === 'systemctl' ? 'true' : t}`, p(dirName, t))
+    return p(dirName)
+  }
+  it.each(['caddy', 'systemctl', 'flock'])(
+    'doubts when %s is not in the root script’s PATH',
+    async (missing) => {
+      const dirPath = only(
+        'rootpath',
+        ['caddy', 'systemctl', 'flock'].filter((t) => t !== missing),
+      )
+      await untouched({ ROOT_SECURE_PATH: dirPath }, [], `${missing} is not in`)
+    },
+  )
+  it('doubts when the root script’s PATH has odd characters', async () =>
+    untouched({ ROOT_SECURE_PATH: '/usr/bin:/bin /tmp' }, [], 'PATH has characters'))
+
+  // [what is wrong, the setting to take out of the good ones, the line to put in its place, the reason]
+  it.each([
+    ['UsePAM is off', 'usepam', 'usepam no', 'UsePAM'],
+    ['UsePAM is missing', 'usepam', '', 'UsePAM'],
+    [
+      'user environment files are allowed',
+      'permituserenvironment',
+      'permituserenvironment yes',
+      'PermitUserEnvironment',
+    ],
+    ['PermitUserEnvironment is missing', 'permituserenvironment', '', 'PermitUserEnvironment'],
+    ['the client may set other variables', '', 'acceptenv BASH_ENV', 'AcceptEnv takes BASH_ENV'],
+    [
+      'an authorized keys command is set',
+      'authorizedkeyscommand',
+      'authorizedkeyscommand /usr/bin/lookup',
+      'AuthorizedKeysCommand',
+    ],
+    ['a forced command is set', 'forcecommand', 'forcecommand /bin/false', 'ForceCommand'],
+  ])('doubts when %s', async (_, remove, line, reason) => {
+    const settings = GOOD_SSHD.split('\n')
+      .filter((l) => !remove || !l.startsWith(`${remove} `))
+      .concat(line ? [line] : [])
+      .join('\n')
+    await untouched({ STUB_SSHD: settings }, [], reason)
+  })
+  it('accepts AcceptEnv of LANG and LC_ variables only', async () => {
+    const { out } = await run({ STUB_SSHD: `${GOOD_SSHD}\nacceptenv LC_ALL` })
+    expect(out).toContain('Preview access installed')
+  })
+})
+
+describe('install-preview-access.sh: more doubts', () => {
+  it.each([
+    ['equal to production’s folder', { PREVIEW_ROOT: '/var/www/sprecher-east' }],
+    ['equal to the account’s home', () => ({ PREVIEW_ROOT: HOME() })],
+  ])('when the previews root is %s', async (_, env) =>
+    untouched(typeof env === 'function' ? env() : env, [], "production's or the account's home"),
+  )
+  it('when home is a file, not a folder', async () => {
+    fs.mkdirSync(p('home'))
+    fs.writeFileSync(HOME(), 'x')
+    await untouched({}, [], 'is not what it should be')
+  })
+  it('when authorized_keys is a folder', async () => {
+    fs.mkdirSync(`${HOME()}/.ssh/authorized_keys`, { recursive: true })
+    await untouched({}, [], 'is not what it should be')
+  })
+  it('when authorized_keys is a link to nowhere', async () => {
+    fs.mkdirSync(`${HOME()}/.ssh`, { recursive: true })
+    fs.symlinkSync(p('nowhere'), `${HOME()}/.ssh/authorized_keys`)
+    await untouched({}, [], 'is a link')
+  })
+  it.each(['ops', 'ops/caddy'])('when installed/%s can be written by others', async (sub) => {
+    fs.mkdirSync(p('installed', sub), { recursive: true })
+    fs.chmodSync(p('installed'), 0o755)
+    fs.chmodSync(p('installed', sub), 0o775)
+    await untouched({}, [], 'can be written by others')
+  })
+  it('when the sudo rule file is not root’s', async () => {
+    fs.writeFileSync(
+      p('sudoers.d/sprecher-east-preview'),
+      '# Managed by ops/install-preview-access.sh (#1345)\n',
+    )
+    await untouched({ PREVIEW_ACCESS_ROOT_UID: String(Number(UID) + 1) }, [], 'not owned by root')
+  })
+  it('when the sudoers folder does not exist', async () => {
+    await untouched(
+      { SUDOERS_FILE: p('no-such-folder/sprecher-east-preview') },
+      [],
+      'does not exist',
+    )
+  })
+  it('when a Caddy template is missing from the release', async () => {
+    fs.rmSync(p('code/ops/caddy/preview-site.caddy'))
+    await untouched({}, [], 'ops/caddy/preview-site.caddy is missing')
+  })
+  it('when the folder of node has characters it should not', async () => {
+    const odd = p('odd dir')
+    for (const t of ['node', 'pm2']) write(`${odd}/${t}`, '#!/bin/sh\nexit 0\n', 0o755)
+    fs.chmodSync(odd, 0o755)
+    await untouched(
+      { PATH: `${odd}:${p('bin')}:${NODE_DIR}:/usr/bin:/bin` },
+      [],
+      'characters it should not',
+    )
+  })
+})
+
+describe('install-preview-access.sh: files and modes', () => {
+  it('sets every mode itself, whatever the caller’s umask', async () => {
+    const { code } = await runCommand(
+      'bash',
+      ['-c', 'umask 077; exec bash "$0"', p('code/ops/install-preview-access.sh')],
+      {
+        env: {
+          PATH: `${p('bin')}:${NODE_DIR}:/usr/bin:/bin`,
+          STUB_LOG: p('log'),
+          STUB_STATE: p('state'),
+          STUB_SSHD: GOOD_SSHD,
+          CODE_DIR: p('code'),
+          PREVIEW_HOME: HOME(),
+          PREVIEW_ROOT: p('proot'),
+          PREVIEW_ACCESS_DIR: p('installed'),
+          SUDOERS_FILE: p('sudoers.d/sprecher-east-preview'),
+          SUDOERS_MAIN: p('sudoers'),
+          PREVIEW_ACCESS_ROOT_UID: UID,
+          ROOT_SECURE_PATH: `${p('bin')}:/usr/bin:/bin`,
+        },
+      },
+    )
+    expect(code).toBe(0)
+    expect(mode('home/sprecher-preview')).toBe('755')
+    expect(mode('home/sprecher-preview/.ssh')).toBe('755')
+    expect(mode('home/sprecher-preview/.ssh/authorized_keys')).toBe('644')
+    expect(mode('installed/ops/preview-caddy.sh')).toBe('755')
+    expect(mode('installed/ops/caddy/preview-site.caddy')).toBe('644')
+    expect(mode('installed/tools-path')).toBe('644')
+    expect(mode('sudoers.d/sprecher-east-preview')).toBe('440')
+    expect(mode('proot')).toBe('750')
+  })
+
+  it('makes each file root-owned before it is moved into place', async () => {
+    await run()
+    const owners = log()
+      .split('\n')
+      .filter((l) => l.startsWith('chown root:root'))
+    for (const target of [
+      p('installed/ops/preview-wrapper.sh'),
+      p('installed/ops/preview-caddy.sh'),
+      p('installed/ops/caddy/preview-site.caddy'),
+      p('installed/tools-path'),
+      p('sudoers.d/sprecher-east-preview'),
+      `${HOME()}/.ssh/authorized_keys`,
+    ])
+      expect(
+        owners.some((l) => l.startsWith(`chown root:root ${target}.new-`)),
+        target,
+      ).toBe(true)
+  })
+})
+
+describe('install-preview-access.sh: a step that fails is a failure, not a silent skip', () => {
+  it('a dated copy that cannot be made stops the run and leaves the file as it was', async () => {
+    await run()
+    fs.appendFileSync(p('code/ops/preview-caddy.sh'), '# next\n')
+    const before = read('installed/ops/preview-caddy.sh')
+    const { code, out } = await run({ STUB_CP_FAILS: '1' })
+    expect(code).toBe(1)
+    expect(out).toContain('could not write')
+    expect(read('installed/ops/preview-caddy.sh')).toBe(before)
+  })
+
+  it('a failing account creation says so, and writes nothing', async () => {
+    const { code, out } = await run({ STUB_USERADD_FAILS: '1' })
+    expect(code).toBe(1)
+    expect(out).toContain('ERROR: preview access')
+    expect(out).toContain('unexpectedly')
+    expect(fs.existsSync(p('sudoers.d/sprecher-east-preview'))).toBe(false)
+  })
+
+  it.each([['STUB_CHMOD_FAILS'], ['STUB_MV_FAILS']])(
+    '%s stops the run and leaves no half-made file',
+    async (flag) => {
+      const { code, out } = await run({ [flag]: '1' })
+      expect(code).toBe(1)
+      expect(out).toContain('could not write')
+      expect(
+        tree('home', 'installed', 'proot', 'sudoers.d').filter((f) => f.includes('.new-')),
+      ).toEqual([])
+    },
+  )
+
+  it.each([
+    ['home', ''],
+    ['.ssh', '/.ssh'],
+    ['authorized_keys', '/.ssh/authorized_keys'],
+  ])('a run where the account can write %s fails, and writes no key line', async (_, suffix) => {
+    await run() // the files exist now
+    fs.appendFileSync(p('code/ops/preview-caddy.sh'), '# next\n')
+    const { code, out } = await run({ STUB_CAN_WRITE: `sprecher-preview${suffix}` })
+    expect(code).toBe(1)
+    expect(out).toContain(`can write to ${HOME()}${suffix}`)
+  })
+
+  it('puts back the sudo rule that was there before when a later check fails', async () => {
     await run()
     const before = read('sudoers.d/sprecher-east-preview')
-    fs.appendFileSync(p('code/ops/preview-caddy.sh'), '# next\n')
-    const { code } = await run({ STUB_CAN_WRITE: '1' })
+    // a different folder for the scripts changes the rule's text, so this run replaces it
+    const { code } = await run({ PREVIEW_ACCESS_DIR: p('installed2'), STUB_CAN_WRITE: 'all' })
     expect(code).toBe(1)
     expect(read('sudoers.d/sprecher-east-preview')).toBe(before)
   })
