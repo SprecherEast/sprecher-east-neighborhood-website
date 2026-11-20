@@ -96,6 +96,28 @@ describe('the section tabs block in an article (#1333)', () => {
     expect(container.querySelector('ol')?.className).toContain('@xl:grid-cols-2')
   })
 
+  it('lays a picture and the block right after it out as one row, and leaves other panels alone', () => {
+    const blockOf = (blockType: string, extra: object = {}) => ({
+      type: 'block',
+      version: 2,
+      fields: { blockType, ...extra },
+    })
+    const figure = blockOf('figure', { title: 'Plan', size: 'third' })
+    const key = blockOf('diagramKey', { items: [{ label: 'North roundabout' }] })
+    const withPanels = doc(
+      blockOf('sectionTabs', {
+        tabs: [
+          { label: 'The plan', panel: doc(paragraph('Intro'), figure, key) },
+          { label: 'Text', panel: doc(figure, paragraph('Beside'), key) },
+        ],
+      }),
+    )
+    const { container } = render(<RichText data={withPanels} blocks={richTextBlocks} />)
+    const [row, text] = [...container.querySelectorAll('[role="tabpanel"] > div')]
+    expect(row?.className).toContain('md:grid')
+    expect(text?.className).not.toContain('md:grid')
+  })
+
   it('has no accessibility violations', async () => {
     const { container } = render(<RichText data={article} blocks={richTextBlocks} />)
     await expectAccessible(container)

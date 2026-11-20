@@ -67,7 +67,9 @@ const SWATCH_COLOUR: Record<LegendSlot, string> = {
 const LIST_CLASSES = {
   auto: 'grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2',
   one: 'grid grid-cols-1 gap-y-3',
-  fit: 'grid grid-cols-1 gap-x-6 gap-y-3 @xl:grid-cols-2',
+  // `h-full content-between`: in a box stretched to a taller neighbour the entries spread down it,
+  // the first at the top padding and the last at the bottom's
+  fit: 'grid h-full grid-cols-1 content-between gap-x-6 gap-y-3 @xl:grid-cols-2',
 }
 
 /**

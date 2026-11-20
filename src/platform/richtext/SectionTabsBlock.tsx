@@ -1,10 +1,11 @@
 import React from 'react'
 
 import type { RichTextValue } from '@/platform/lib'
+import { cn } from '@/platform/lib/cn'
 import type { SectionTabsBlock as StoredSectionTabs } from '@/payload-types'
 
 import { SectionTabs } from './editorial/SectionTabs'
-import { toSectionTabsProps } from './editorial/sectionTabs'
+import { pairsFigureWithBlock, toSectionTabsProps } from './editorial/sectionTabs'
 import { RichText, type RichTextBlocks } from './RichText'
 
 /*
@@ -16,6 +17,16 @@ import { RichText, type RichTextBlocks } from './RichText'
  */
 const PANEL_CONTENT =
   '[&>:first-child]:mt-0 [&>:last-child]:mb-0 md:[&>:not(p,h3,h4,ul,ol,figure)]:flow-root'
+
+/*
+ * A picture directly followed by a block (`pairsFigureWithBlock`) is one row of two columns, the
+ * block on the left and the picture on the right at the article picture's width (half on a tablet,
+ * a third from `lg`), as tall as each other: a key then fills its box down to the picture's
+ * caption, and a picture never leaves blank room beside a shorter block. Everything else in the
+ * panel takes the full width above or below the row.
+ */
+const PANEL_FIGURE_ROW =
+  'md:grid md:grid-flow-dense md:grid-cols-[minmax(0,1fr)_50%] md:gap-x-6 lg:grid-cols-[minmax(0,1fr)_33.333%] md:[&>*]:col-span-full md:[&>figure]:col-span-1 md:[&>figure]:col-start-2 md:[&>figure]:ml-0 md:[&>figure]:w-full md:[&>figure+*]:col-span-1 md:[&>figure+*]:col-start-1'
 
 /**
  * The editor's "Section tabs" block (#1333): each tab's content is rich text of its own, drawn by
@@ -45,7 +56,7 @@ export function SectionTabsBlock({
             blocks={blocks}
             anchorSource={anchorSource ?? panel}
             enableGutter={false}
-            className={PANEL_CONTENT}
+            className={cn(PANEL_CONTENT, pairsFigureWithBlock(panel) && PANEL_FIGURE_ROW)}
           />
         ),
       }))}
