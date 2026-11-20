@@ -7,4 +7,14 @@ export const E2E = {
   dataDir: 'e2e/.data',
   // The contact form's owner notification goes here (seed.ts)
   ownerEmail: 'owner@example.com',
+  // The second server, for the passkey flows (#1317): `next dev` with the passkey switch on,
+  // because the production build on http://localhost can't have it on (decision 0021's
+  // relying-party rule refuses localhost in production). Its own port, database and mailbox, so
+  // both servers run at once without sharing anything
+  passkeys: {
+    port: 3997,
+    baseURL: 'http://localhost:3997',
+    smtpPort: 2527,
+    dataDir: 'e2e/.data-passkeys',
+  },
 }

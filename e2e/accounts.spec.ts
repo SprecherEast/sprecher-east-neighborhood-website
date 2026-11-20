@@ -1,5 +1,4 @@
-import type { Page } from '@playwright/test'
-
+import { chooseNewPassword, logIn, newResident, requestReset, signUp } from './support/account'
 import { expireResetLink } from './support/db'
 import { expectHeaderSignedIn, expectHeaderSignedOut } from './support/header'
 import { emailsTo, linkTo, nthEmailTo } from './support/mailbox'
@@ -16,58 +15,6 @@ import { expect, expectAccessible, newEmail, newPassword, test } from './support
 //
 // Not covered here: an expired sign-up link (Payload's verification tokens don't expire), the robot
 // check (it's off, so the tests need no network), and changing a password on /account.
-
-type Resident = { name: string; email: string; password: string }
-
-async function signUp(page: Page, { name, email, password }: Resident) {
-  await page.goto('/sign-up')
-  const form = page.getByRole('form', { name: 'Create an account' })
-  await form.getByLabel('Name').fill(name)
-  await form.getByLabel('Email').fill(email)
-  await form.getByRole('textbox', { name: 'Password (required)', exact: true }).fill(password)
-  await form
-    .getByRole('textbox', { name: 'Confirm password (required)', exact: true })
-    .fill(password)
-  await form.getByRole('button', { name: 'Create Account' }).click()
-}
-
-async function logIn(page: Page, email: string, password: string) {
-  await page.goto('/login')
-  const form = page.getByRole('form', { name: 'Log in' })
-  await form.getByLabel('Email').fill(email)
-  await form.getByLabel('Password').fill(password)
-  await form.getByRole('button', { name: 'Log In', exact: true }).click()
-}
-
-/** Signs up and confirms by the emailed link: a resident with a working account. */
-async function newResident(page: Page) {
-  const resident = { name: 'Ana Resident', email: newEmail('ana'), password: newPassword() }
-  await signUp(page, resident)
-  const verify = linkTo(await nthEmailTo(resident.email), '/verify-account')
-  await page.goto(verify)
-  await page.getByRole('button', { name: 'Confirm My Account' }).click()
-  await expect(page.getByRole('status')).toContainText(/confirmed|verified/i)
-  return resident
-}
-
-/** Asks for a reset link and answers the path of the link the email brings. */
-async function requestReset(page: Page, email: string, nth: number) {
-  await page.goto('/forgot-password')
-  const form = page.getByRole('form', { name: 'Reset password' })
-  await form.getByLabel('Email').fill(email)
-  await form.getByRole('button', { name: 'Send Reset Link' }).click()
-  await expect(page.getByRole('status')).toContainText('If that email has an account')
-  return linkTo(await nthEmailTo(email, nth), '/reset-password')
-}
-
-async function chooseNewPassword(page: Page, password: string) {
-  const choose = page.getByRole('form', { name: 'Choose a new password' })
-  await choose.getByRole('textbox', { name: 'New password (required)', exact: true }).fill(password)
-  await choose
-    .getByRole('textbox', { name: 'Confirm new password (required)', exact: true })
-    .fill(password)
-  await choose.getByRole('button', { name: 'Set New Password' }).click()
-}
 
 test.describe('sign up, confirm and sign in', () => {
   test('a new resident signs up, confirms by email and signs in', async ({ page }) => {
