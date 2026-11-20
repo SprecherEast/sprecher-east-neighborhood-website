@@ -70,8 +70,8 @@ def scene_workshop():
     b+=f'<g fill="{YEL}"><circle cx="372" cy="142" r="5"/><circle cx="356" cy="152" r="4"/><circle cx="562" cy="140" r="5"/><circle cx="580" cy="146" r="4"/></g>'
     b+=f'<ellipse cx="460" cy="712" rx="380" ry="18" fill="#000" opacity=".16"/>'
     b+=f'<rect x="120" y="238" width="680" height="420" rx="18" fill="#2b3556" {O}/><rect x="140" y="258" width="640" height="380" rx="6" fill="#eef3f7"/>'
-    people=(("#bcd9e8","#4f8fc0","#a8714f","#2a1d17","short","wave"),("#f6e3b0",RED,"#d09a73","#5a3a22","long",None),("#d6e8d1",GREEN,"#8d5a3b","#1f1a17","curly",None),
-            ("#f0d6cf",YEL,"#b9825c","#3d2a1f","bald","sketch"),("#c9d3ea","#6f8fb8","#d09a73","#8a5a2b","bun",None),("#e3dcc8","#2b3556","#a8714f","#2a1d17","glasses",None))
+    people=(("#bcd9e8","#4f8fc0",SKIN_LIGHTEST,"#5a3a22","short","wave"),("#f6e3b0",RED,SKIN_LIGHT,"#5a3a22","long",None),("#d6e8d1",GREEN,SKIN_DARKEST,"#1f1a17","curly",None),
+            ("#f0d6cf",YEL,SKIN_DARK,"#3d2a1f","bald","sketch"),("#c9d3ea","#6f8fb8",SKIN_LIGHTEST,TAN,"bun",None),("#e3dcc8","#2b3556",SKIN_MID,"#2a1d17","glasses",None))
     for i,p in enumerate(people):
         r,k=divmod(i,3)
         b+=tile(i,148+k*210,266+r*186,204,178,*p)

@@ -40,3 +40,6 @@ NAVY = "#1f2a44"; MINT = "#e6f0e6"; HILL1 = "#d6e8d1"; HILL2 = "#c6ddc0"
 GROUND = "#cfe3c9"; GROUND2 = "#bcd6b4"
 CREAM = "#f5ede1"; GREEN = "#2f7a3f"; RED = "#d9532f"; BLUE = "#4f8fc0"
 TAN = "#d9b27c"; YEL = "#f2b632"; GLASS = "#bcd9e8"
+
+# Skin tones for people, lightest first. A crowd mixes the lighter and the darker ones about evenly.
+SKIN_LIGHTEST = "#f0d6b0"; SKIN_LIGHT = "#d09a73"; SKIN_MID = "#b9825c"; SKIN_DARK = "#a8714f"; SKIN_DARKEST = "#8d5a3b"
