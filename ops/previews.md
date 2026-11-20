@@ -60,7 +60,8 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
 - **Preview ports.** One range, 3200 to 3999 (`PREVIEW_PORT_MIN` and `PREVIEW_PORT_MAX`), outside
   production's 3000 and Umami's 3100; a preview's port is 3200 plus its number modulo 800, so a
   preview keeps its port on every redeploy. A new preview stops when its port is in use, which can
-  only happen between two open pull requests 800 numbers apart. The deploy workflow's port check
+  only happen between two open pull requests 800 numbers apart. A preview PM2 still lists
+  (stopped, say) skips that check, so it keeps its port. The deploy workflow's port check
   reads the range from the same file.
 - **What a preview deploy skips.** The pre-deploy backup, the backup job, the production Caddy
   scripts and the Umami install; it keeps the settings checks, the migrations and the health
