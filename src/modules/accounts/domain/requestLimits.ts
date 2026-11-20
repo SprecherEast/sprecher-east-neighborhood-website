@@ -80,3 +80,19 @@ export const PASSKEY_OPTIONS_PER_ACCOUNT_LIMITS: RequestLimits = {
   perConnection: 10,
   trackedConnections: 2000,
 }
+
+/**
+ * Asking for the options to sign in with a passkey (#1315, decision 0021), counted per connection.
+ * There is no site-wide limit, on purpose: anyone can ask, so a cap a script can fill would switch
+ * passkey sign-in off for every neighbor (the same reason as `SOCIAL_SIGN_IN_LIMITS` and
+ * `PASSKEY_OPTIONS_LIMITS`). Each request stores one challenge row, which expires after five
+ * minutes and goes in the hourly retention run, so storage stays bounded without a count. No robot
+ * check: the answer needs a real authenticator holding a registered key, so guessing gains
+ * nothing. Generous per connection, since the login page asks once as it opens (for the email
+ * field's autofill) and once more for the button.
+ */
+export const PASSKEY_SIGN_IN_LIMITS: RequestLimits = {
+  windowMs: HOUR,
+  perConnection: 30,
+  trackedConnections: 2000,
+}

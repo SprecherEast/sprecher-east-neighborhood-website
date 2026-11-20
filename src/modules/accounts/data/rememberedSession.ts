@@ -34,7 +34,7 @@ function readClaims(token: string): Record<string, unknown> & { id: number | str
  *   revokes it) and the longer expiry;
  * - the auth cookie, with the same name, scope and flags as Payload's, and the longer expiry.
  *
- * Call it only after Payload accepted the password, with the token that sign-in made. The session
+ * Call it only once the person was checked (Payload accepted the password, or the passkey was verified and the account may sign in), with the token that sign-in made. The session
  * is extended first: if a later step throws, the browser still holds the short token and the
  * server holds a session that outlives it, which is harmless.
  */

@@ -20,11 +20,11 @@ vi.mock('../data/oauthProviders', () => ({
   authorizationUrl: data.authorizationUrl,
   finishAuthorization: data.finishAuthorization,
 }))
+vi.mock('../data/session', () => ({ startSessionFor: data.startSessionFor }))
 vi.mock('../data/socialAccounts', () => ({
   findAccountBySubject: data.findAccountBySubject,
   findAccountByEmail: data.findAccountByEmail,
   createVerifiedAccount: data.createVerifiedAccount,
-  startSessionFor: data.startSessionFor,
   saveSocialFlow: data.saveSocialFlow,
   takeSocialFlow: data.takeSocialFlow,
 }))

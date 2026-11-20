@@ -56,19 +56,33 @@ const sentFor = async (pathname: string) => {
     .flatMap(({ headers }) => headers)
 }
 
-describe('no framing of the account page (decision 0021)', () => {
-  it('lists the account page, and sends frame-ancestors none for each listed path', () => {
-    expect(NO_FRAMING_PATHS).toContain('/account')
+describe('no framing of the account and log in pages (decision 0021)', () => {
+  it('lists both pages, and sends frame-ancestors none for each listed path', () => {
+    expect(NO_FRAMING_PATHS).toEqual(['/account', '/login'])
     for (const { source, headers } of NO_FRAMING_HEADERS) {
       expect(NO_FRAMING_PATHS).toContain(source)
       expect(headers).toEqual([{ key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }])
     }
   })
 
-  it('reaches /account in the config Next reads, once, and no other page or API route', async () => {
-    const csp = (await sentFor('/account')).filter((h) => h.key === 'Content-Security-Policy')
-    expect(csp).toEqual([{ key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }])
-    for (const pathname of ['/', '/events', '/login', '/account-help', '/api/users', '/admin']) {
+  it.each(['/account', '/login'])(
+    'reaches %s in the config Next reads, once, the same way',
+    async (pathname) => {
+      const csp = (await sentFor(pathname)).filter((h) => h.key === 'Content-Security-Policy')
+      expect(csp).toEqual([{ key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }])
+    },
+  )
+
+  it('reaches no other page or API route', async () => {
+    for (const pathname of [
+      '/',
+      '/events',
+      '/sign-up',
+      '/login-help',
+      '/account-help',
+      '/api/users',
+      '/admin',
+    ]) {
       const sent = (await sentFor(pathname)).filter((h) => h.key === 'Content-Security-Policy')
       expect(sent, pathname).toEqual([])
     }

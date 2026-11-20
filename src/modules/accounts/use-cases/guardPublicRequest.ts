@@ -12,7 +12,8 @@ export type GuardFailure = 'robot-check' | 'too-many'
 
 /**
  * For a guard whose requests need no robot check: the sign-in with a provider, where the provider
- * stands in for it, and asking for a passkey's options, which only a signed-in account can do.
+ * stands in for it; asking for a passkey's options to add one, which only a signed-in account can
+ * do; and asking for them to sign in, where only a real authenticator's answer counts.
  */
 export const NO_ROBOT_CHECK: HumanVerifier = {
   isEnabled: () => false,

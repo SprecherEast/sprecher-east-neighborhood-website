@@ -111,23 +111,6 @@ describe('finding accounts', () => {
   })
 })
 
-describe('startSessionFor', () => {
-  it('sets Payload’s own auth cookie, which Payload’s auth accepts as that account', async () => {
-    const id = await data.createVerifiedAccount(profile())
-    await data.startSessionFor(id)
-    const cookie = cookieJar.get('payload-token')
-    expect(cookie).toMatchObject({ httpOnly: true, path: '/', sameSite: 'lax' })
-    const { user } = await payload.auth({
-      // As a browser sends it on the site itself: Payload checks where a cookie request comes from
-      headers: new Headers({
-        cookie: `payload-token=${cookie?.value}`,
-        'sec-fetch-site': 'same-origin',
-      }),
-    })
-    expect(user).toMatchObject({ id, collection: 'users' })
-  })
-})
-
 describe('the signed flow cookie', () => {
   it('give back a flow once, and refuse one that was changed', async () => {
     const now = new Date()

@@ -10,7 +10,7 @@ import { USERS } from '../domain/usersCollection'
 
 // The cookies the accounts module sets by hand, with their flags in one place: they come from the
 // users collection's `auth.cookies` (`cms/users.ts`), so a change there reaches every sign-in
-// path (password, "Keep me signed in", Google, and the passkeys of decision 0021 later).
+// path (password, "Keep me signed in", Google, and a passkey, decision 0021).
 
 async function authConfig() {
   const payload = await getPayload({ config: configPromise })

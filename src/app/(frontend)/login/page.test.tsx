@@ -5,14 +5,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 // The accounts module is replaced: this tests the page's wiring, not the module
 const mocks = vi.hoisted(() => ({
   getCurrentUser: vi.fn(),
+  arePasskeysOn: vi.fn(),
   redirect: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT ${path}`)
   }),
 }))
 vi.mock('@/modules/accounts/server', () => ({
   getCurrentUser: mocks.getCurrentUser,
+  arePasskeysOn: mocks.arePasskeysOn,
   getEnabledSocialProviders: () => [],
-  SignInForm: () => <form aria-label="Log in" />,
+  SignInForm: ({ passkeys }: { passkeys?: boolean }) => (
+    <form aria-label="Log in" data-passkeys={String(passkeys)} />
+  ),
   SocialSignIn: ({ result }: { result?: unknown }) => (
     <p data-testid="social">{String(result ?? '')}</p>
   ),
@@ -25,6 +29,7 @@ const page = (query: Record<string, string> = {}) => ({ searchParams: Promise.re
 
 beforeEach(() => {
   mocks.redirect.mockClear()
+  mocks.arePasskeysOn.mockReset().mockReturnValue(false)
 })
 afterEach(cleanup)
 
@@ -45,5 +50,16 @@ describe('/login', () => {
     mocks.getCurrentUser.mockResolvedValue(null)
     render(await LoginPage(page({ social: 'failed' })))
     expect(screen.getByTestId('social').textContent).toBe('failed')
+  })
+
+  it('offers a passkey only while the switch is on (#1315)', async () => {
+    mocks.getCurrentUser.mockResolvedValue(null)
+    render(await LoginPage(page()))
+    expect(screen.getByRole('form', { name: 'Log in' }).getAttribute('data-passkeys')).toBe('false')
+    cleanup()
+
+    mocks.arePasskeysOn.mockReturnValue(true)
+    render(await LoginPage(page()))
+    expect(screen.getByRole('form', { name: 'Log in' }).getAttribute('data-passkeys')).toBe('true')
   })
 })

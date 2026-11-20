@@ -182,9 +182,14 @@ fits without a second auth system or an unreleased change.
 
 ### Limits
 
-- Asking for a challenge is limited per connection and site-wide, reusing `createRequestGuard`
-  (`use-cases/guardPublicRequest.ts`) and `SlidingWindowCounter`, with their own counters and
-  named limits. Past the count the answer is a fixed message.
+- Asking for a challenge is limited per connection only, reusing `createRequestGuard`
+  (`use-cases/guardPublicRequest.ts`) and `SlidingWindowCounter`, with its own counter and named
+  limit. Past the count the answer is a fixed message. There is no site-wide count: anyone can ask,
+  so a cap a script could fill would switch passkey sign-in off for every neighbor, the reason
+  Google sign-in (#188) and adding a passkey (#1314) have none either. Each request stores one
+  challenge row, which expires after five minutes and is removed by the hourly retention run, so
+  storage stays bounded. (Changed in #1315 from "per connection and site-wide", a routine
+  technical choice by the orchestrator, 2026-11-20; the record is still Proposed.)
 - No robot check: the answer needs a real authenticator holding a registered key, so guessing
   gains nothing; the limits only keep challenge requests from piling up.
 

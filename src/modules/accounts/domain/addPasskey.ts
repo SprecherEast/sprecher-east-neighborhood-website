@@ -4,6 +4,7 @@
 
 import { z } from 'zod'
 
+import { answerEnvelope, text } from './passkeyAnswerFields'
 import { isAllowedPasskeyLabel, PASSKEY_LABEL_MAX_LENGTH } from './passkeys'
 
 /** The cookie that ties a challenge to the browser that asked for it. `__Host-` in production. */
@@ -48,23 +49,13 @@ export type StartAddPasskeyResult =
   | { ok: true; options: PasskeyCreationOptions }
   | { ok: false; failure: AddPasskeyFailure }
 
-const text = (max: number) => z.string().min(1).max(max)
-
 /**
  * The browser's answer to the options (`RegistrationResponseJSON`). Parsed again on the server
  * because anyone can call an action directly. Sizes are far above a real answer's, and a field a
  * browser adds later is dropped rather than refused, so a new browser can still add a passkey.
  */
 export const registrationAnswerSchema = z.object({
-  id: text(1024),
-  rawId: text(1024),
-  type: z.literal('public-key'),
-  // Some browsers send null for none: read as absent
-  authenticatorAttachment: z.preprocess(
-    (value) => value ?? undefined,
-    z.enum(['platform', 'cross-platform']).optional(),
-  ),
-  clientExtensionResults: z.record(z.string(), z.unknown()).default({}),
+  ...answerEnvelope,
   response: z.object({
     clientDataJSON: text(4096),
     attestationObject: text(16_384),

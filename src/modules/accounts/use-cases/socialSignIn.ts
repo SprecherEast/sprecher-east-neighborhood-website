@@ -4,12 +4,12 @@ import { getServerSideURL } from '@/platform/lib/getURL'
 import { logServerFailure } from '@/platform/service'
 
 import { authorizationUrl, finishAuthorization, newSocialFlow } from '../data/oauthProviders'
+import { startSessionFor } from '../data/session'
 import {
   createVerifiedAccount,
   findAccountByEmail,
   findAccountBySubject,
   saveSocialFlow,
-  startSessionFor,
   takeSocialFlow,
 } from '../data/socialAccounts'
 import { ACCOUNT_PATH, SIGN_IN_PATH } from '../domain/paths'
