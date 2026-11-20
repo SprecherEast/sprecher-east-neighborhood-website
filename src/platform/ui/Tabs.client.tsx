@@ -74,6 +74,9 @@ export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }
   // Set once the script has chosen the tab; until then the server's HTML and CSS show the tab the
   // link names (#1309, theme/tabs.css)
   const [ready, setReady] = useState(false)
+  // The id of something inside a panel that a link named while another tab was open (#1333): shown
+  // once its tab is, then scrolled to
+  const [reveal, setReveal] = useState<string | null>(null)
   const root = useRef<HTMLDivElement>(null)
   // Every tab has a link of its own (#1097): the page's address plus the tab's name
   const anchors = items.map((item) => item.anchor ?? item.value)
@@ -106,7 +109,19 @@ export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }
       const list = names.split('\n')
       const index = wanted ? list.findIndex((anchor) => linkOf(anchor) === wanted) : -1
       const value = values.split('\n')[index]
-      if (value === undefined) return
+      if (value === undefined) {
+        // Not a tab, but maybe something inside one (a heading the page menu links to): open its tab
+        // and bring it into view once it shows. Inside the open tab, the browser has done it already
+        const target = wanted ? document.getElementById(wanted) : null
+        const panel = root.current?.contains(target)
+          ? target?.closest<HTMLElement>('[role="tabpanel"][data-tab-index]')
+          : null
+        const inside = values.split('\n')[Number(panel?.dataset.tabIndex)]
+        if (!panel || inside === undefined || panel.dataset.state === 'active') return
+        setCurrent(inside)
+        setReveal(wanted)
+        return
+      }
       setCurrent(value)
       if (!root.current?.querySelector('[data-tab-target]:target')) {
         root.current?.scrollIntoView({ block: 'start' })
@@ -118,6 +133,12 @@ export function Tabs({ label, items, defaultValue, headingAs = 'h3', className }
     return () => window.removeEventListener('hashchange', open)
     // `names` and `values` stand for the items': the items themselves are new on every render
   }, [names, values])
+
+  useEffect(() => {
+    if (reveal === null) return
+    document.getElementById(reveal)?.scrollIntoView({ block: 'start' })
+    setReveal(null)
+  }, [reveal, current])
 
   // Choosing a tab puts its link in the address bar to copy, replacing the entry so Back leaves the page
   const choose = (value: string) => {

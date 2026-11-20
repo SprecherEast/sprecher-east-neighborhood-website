@@ -8,6 +8,7 @@ import {
   EVENT_RICH_TEXT_BLOCKS,
   RICH_TEXT_BLOCKS,
 } from '@/platform/richtext/blockConfigs'
+import { SECTION_PANEL_BLOCKS } from '@/platform/richtext/editorial/sectionTabsBlockConfig'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
 
 /**
@@ -175,6 +176,24 @@ describe('every other rich-text field', () => {
     )
 
     const withBlocks = fields.filter(({ field }) => editorBlocks(field).length > 0)
-    expect(withBlocks.map(({ path }) => path)).toEqual(['posts.content', 'events.content'])
+    // The only others are the content of a section tab inside those two (#1333), checked below
+    expect(withBlocks.map(({ path }) => path)).toEqual([
+      'posts.content',
+      'posts.content.sectionTabs.tabs.panel',
+      'events.content',
+      'events.content.sectionTabs.tabs.panel',
+    ])
+  })
+
+  it('offers a section tab’s content the article’s blocks, each with a renderer, but never tabs again (#1333)', () => {
+    const fields = config.collections.flatMap((c) => richTextFields(c.fields, c.slug))
+    const panels = fields.filter(({ path }) => path.endsWith('sectionTabs.tabs.panel'))
+    expect(panels).toHaveLength(2)
+    for (const { field } of panels) {
+      const slugs = editorBlocks(field).map((block) => block.slug)
+      expect(slugs).toEqual(SECTION_PANEL_BLOCKS.map((block) => block.slug))
+      expect(slugs).not.toContain('sectionTabs')
+      for (const slug of slugs) expect(richTextBlocks).toHaveProperty(slug)
+    }
   })
 })

@@ -6,7 +6,7 @@ import { cn } from '@/platform/lib/cn'
 import { Badge } from './Badge'
 import { Caption } from './Caption'
 import { Legend, type LegendItem } from './Legend'
-import { FIGURE_GAP } from './layoutSizes'
+import { FIGURE_GAP, PICTURE_WIDTH } from './layoutSizes'
 import { Media } from './Media'
 import type { MediaProps } from './mediaProps'
 import { Zoom } from './Zoom.client'
@@ -24,7 +24,7 @@ const figureVariants = cva(
         'two-fifths': 'md:w-2/5',
         half: 'md:w-1/2',
         // The article's picture (`FeaturedImage`): half the column on a tablet, a third from `lg`
-        'half-then-third': 'md:w-1/2 lg:w-1/3',
+        'half-then-third': PICTURE_WIDTH,
       },
     },
     defaultVariants: { size: 'two-fifths' },

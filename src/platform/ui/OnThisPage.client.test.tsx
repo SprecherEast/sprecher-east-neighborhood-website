@@ -146,4 +146,32 @@ describe('OnThisPage highlight', () => {
     document.querySelectorAll('h2, h3').forEach((el) => el.remove())
     vi.restoreAllMocks()
   })
+
+  it('passes over a heading in a tab that is not open, which has no place on the page (#1333)', () => {
+    const heading = (id: string, top: number, parent: HTMLElement = document.body) => {
+      const el = document.createElement('h3')
+      el.id = id
+      el.getBoundingClientRect = () => ({ top }) as DOMRect
+      parent.append(el)
+      return el
+    }
+    heading('short-version', -300)
+    heading('who-gains', 100)
+    // A hidden element reports a top of 0, which would read as "above the line"
+    const closed = document.createElement('div')
+    closed.setAttribute('role', 'tabpanel')
+    closed.setAttribute('data-state', 'inactive')
+    document.body.append(closed)
+    heading('money', 0, closed)
+    const real = window.getComputedStyle.bind(window)
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el) =>
+      el.tagName === 'H3' ? ({ scrollMarginTop: '96px' } as CSSStyleDeclaration) : real(el),
+    )
+
+    render(<OnThisPage sections={SECTIONS} />)
+
+    expect(document.querySelector('nav a[aria-current="location"]')?.textContent).toBe('Who gains')
+    document.querySelectorAll('h3, [role="tabpanel"]').forEach((el) => el.remove())
+    vi.restoreAllMocks()
+  })
 })

@@ -1,4 +1,7 @@
+import type { SerializedBlockNode } from '@payloadcms/richtext-lexical'
 import React from 'react'
+
+import type { SectionTabsBlock as SectionTabsFields } from '@/payload-types'
 
 import { BannerBlock } from './BannerBlock'
 import { CodeBlock } from './CodeBlock'
@@ -15,11 +18,40 @@ import { Steps } from './editorial/Steps'
 import { toStepsProps } from './editorial/steps'
 import { Timeline } from './editorial/Timeline'
 import { toTimelineProps } from './editorial/timeline'
-import { FigureBlock } from './FigureBlock'
+import { FigureBlock, PanelFigureBlock } from './FigureBlock'
 import { MediaBlock } from './MediaBlock'
-import type { RichTextBlocks } from './RichText'
+import type { BlockExtras, RichTextBlocks } from './RichText'
+import { SectionTabsBlock } from './SectionTabsBlock'
 import { Chart } from '@/platform/ui/chart/Chart'
 import { READING_WIDTH } from '@/platform/ui/layoutSizes'
+
+type SectionTabsNode = SerializedBlockNode<SectionTabsFields>
+
+/**
+ * Section tabs (#1333) draw each tab's content with these same renderers, except that a figure
+ * follows the article's picture sizes. Declared as a function with its return type so it can name
+ * `richTextBlocks`, which holds it, without the type circling back on itself.
+ */
+function renderSectionTabs({
+  node,
+  anchorSource,
+}: { node: SectionTabsNode } & BlockExtras): React.ReactElement {
+  return (
+    <SectionTabsBlock
+      {...node.fields}
+      className="col-start-2"
+      blocks={{
+        ...richTextBlocks,
+        figure: ({ node: figure }) => <PanelFigureBlock {...figure.fields} />,
+        // Beside a floated picture its room is narrow: it asks its own width for its columns
+        diagramKey: ({ node: key }) => (
+          <DiagramKey columns="fit" {...toDiagramKeyProps(key.fields)} />
+        ),
+      }}
+      anchorSource={anchorSource}
+    />
+  )
+}
 
 /**
  * Renderers for the blocks in `RICH_TEXT_BLOCKS`, for `RichText`'s `blocks` prop.
@@ -56,6 +88,7 @@ export const richTextBlocks = {
     }
   },
   factTabs: ({ node }) => <FactTabs className="col-start-2" {...toFactTabsProps(node.fields)} />,
+  sectionTabs: renderSectionTabs,
   outcomeFork: ({ node }) => (
     <OutcomeFork className="col-start-2" {...toOutcomeForkProps(node.fields)} />
   ),

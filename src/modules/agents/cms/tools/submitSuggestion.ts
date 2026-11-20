@@ -29,7 +29,7 @@ function toContent(req: PayloadRequest, input: SubmitSuggestionInput) {
   )
   if (!field) throw new APIError(`${input.collection} has no content field`, 500)
   const editorConfig = editorConfigFactory.fromField({ field })
-  // A malformed <Chart> or <FactTabs> tag is refused with its reasons, so the agent can fix it
+  // A malformed <Chart>, <FactTabs> or <SectionTabs> tag is refused with its reasons, so the agent can fix it
   const { value, refusals } = collectTagRefusals(() =>
     convertMarkdownToLexical({ editorConfig, markdown: input.bodyMarkdown }),
   )
@@ -39,7 +39,7 @@ function toContent(req: PayloadRequest, input: SubmitSuggestionInput) {
   if (unread.length > 0) {
     const which = unread.map(({ name, count }) => `${count} <${name}> tag(s)`).join(' and ')
     throw new APIError(
-      `${which} could not be read, so nothing was stored. Check that every tag ends with /> and that a quote, brace or bracket inside text is written as \\u0022, \\u007b, \\u007d, \\u005b or \\u005d.`,
+      `${which} could not be read, so nothing was stored. Check that every tag ends with /> (a <SectionTabs> ends with </SectionTabs>) and that a quote, brace or bracket inside text is written as \\u0022, \\u007b, \\u007d, \\u005b or \\u005d.`,
       400,
       null,
       true,

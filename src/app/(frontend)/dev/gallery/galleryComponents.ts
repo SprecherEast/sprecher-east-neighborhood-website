@@ -46,4 +46,5 @@ export const GALLERY_COMPONENTS = [
   'CodeBlock',
   'KeyFacts',
   'FactTabs',
+  'SectionTabs',
 ] as const

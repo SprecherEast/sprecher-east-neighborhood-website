@@ -165,6 +165,8 @@ export const COMPONENT_GROUPS = [
       'OutcomeFork',
       'DiagramKey',
       'FigureBlock',
+      'PanelFigureBlock',
+      'SectionTabsBlock',
     ],
   },
   {
@@ -176,6 +178,7 @@ export const COMPONENT_GROUPS = [
       'KeyFacts',
       'FactCard',
       'FactTabs',
+      'SectionTabs',
       'BillShare',
       'BillAnswer',
       'BillDetails',

@@ -7,6 +7,7 @@ import type {
 } from '@payloadcms/richtext-lexical'
 import type {
   JSXConverter,
+  JSXConverterArgs,
   JSXConverters,
   JSXConvertersFunction,
 } from '@payloadcms/richtext-lexical/react'
@@ -27,6 +28,7 @@ import type {
   KeyFactsBlock,
   MediaBlock,
   OutcomeForkBlock,
+  SectionTabsBlock,
   StepsBlock,
   TimelineBlock,
 } from '@/payload-types'
@@ -46,6 +48,7 @@ export type RichTextBlockNode = SerializedBlockNode<
   | DiagramKeyBlock
   | ChartBlock
   | FactTabsBlock
+  | SectionTabsBlock
   | FigureBlock
 >
 
@@ -56,7 +59,25 @@ type NodeTypes = DefaultNodeTypes | RichTextBlockNode
  * (post and event pages pass `richTextBlocks`), so this file imports no block, and a block can render
  * rich text of its own without an import cycle (#135).
  */
-export type RichTextBlocks = NonNullable<JSXConverters<NodeTypes>['blocks']>
+type BlockConverters = NonNullable<JSXConverters<NodeTypes>['blocks']>
+
+/**
+ * What a block renderer is given besides Payload's arguments: the whole article this text belongs
+ * to (`RichText`'s `anchorSource`), so a block that holds rich text of its own, such as section
+ * tabs (#1333), draws its headings with the ids of the article's menu. Left out when a renderer is
+ * called outside `RichText`.
+ */
+export type BlockExtras = { anchorSource?: RichTextValue }
+
+type BlockArgs = JSXConverterArgs<SerializedBlockNode>
+
+type WithExtras<Converter> = Converter extends (args: infer Args) => infer Result
+  ? (args: Args & BlockExtras) => Result
+  : never
+
+export type RichTextBlocks = {
+  [slug in keyof BlockConverters]?: WithExtras<NonNullable<BlockConverters[slug]>>
+}
 
 /**
  * Where a rich-text link goes: a site address for a page or post, or the URL the editor typed.
@@ -95,14 +116,18 @@ const linkConverters: {
 }
 
 const withBlocks =
-  (blocks: RichTextBlocks): JSXConvertersFunction<NodeTypes> =>
+  (blocks: RichTextBlocks, anchorSource: RichTextValue): JSXConvertersFunction<NodeTypes> =>
   ({ defaultConverters }) => ({
     ...defaultConverters,
     ...linkConverters,
-    blocks,
+    blocks: Object.fromEntries(
+      (
+        Object.entries(blocks) as [string, (args: BlockArgs & BlockExtras) => React.ReactNode][]
+      ).map(([slug, render]) => [slug, (args: BlockArgs) => render({ ...args, anchorSource })]),
+    ),
   })
 
-const NO_BLOCKS = withBlocks({})
+const NO_BLOCKS = withBlocks({}, {} as RichTextValue)
 
 const HEADING_TAGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
 
@@ -166,7 +191,7 @@ export function RichText(props: Props) {
   return (
     <ConvertRichText
       converters={withHeadingIds(
-        blocks ? withBlocks(blocks) : NO_BLOCKS,
+        blocks ? withBlocks(blocks, anchorSource ?? props.data) : NO_BLOCKS,
         anchorsByNode(anchorSource ?? props.data),
       )}
       className={cn(

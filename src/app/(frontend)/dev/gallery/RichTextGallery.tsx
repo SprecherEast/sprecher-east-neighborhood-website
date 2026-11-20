@@ -11,6 +11,7 @@ import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
 import { READING_WIDTH } from '@/platform/ui/layoutSizes'
 
 import { SAMPLE_BLOCKS_POST } from './blocksPostSample'
+import { SAMPLE_SECTION_TABS_POST } from './sectionTabsSample'
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 import { SAMPLE_CODE, SAMPLE_KEY_FACTS, SAMPLE_RICH_TEXT, UNEVEN_KEY_FACTS } from './sampleData'
 
@@ -195,6 +196,18 @@ export function RichTextGallery() {
               )
               .reverse()}
           />
+        </GalleryVariant>
+      </GalleryEntry>
+
+      <GalleryEntry
+        name="SectionTabs"
+        description="An article split into tabs of ordinary content: the same equal tab buttons as the fact tabs, and under them the content of the open tab, text and the article's blocks, in the same column. With scripting off every tab shows one after another under its label. A heading inside a tab is in the page menu, and a link to it opens its tab."
+      >
+        <GalleryVariant
+          label="three tabs under an introduction: key facts, a timeline and steps"
+          className="block"
+        >
+          <RichText data={SAMPLE_SECTION_TABS_POST} blocks={richTextBlocks} enableGutter={false} />
         </GalleryVariant>
       </GalleryEntry>
     </>

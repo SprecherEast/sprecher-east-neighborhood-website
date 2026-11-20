@@ -10,14 +10,14 @@ Rich text as the editor saved it, with links to pages and posts resolved to site
 
 Source: `src/platform/richtext/RichText.tsx`
 
-| Prop           | Type                                                                                                                                                               | Required | Description                                                                                                                                                                                                                                                                           |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data`         | `RichTextValue`                                                                                                                                                    | yes      |                                                                                                                                                                                                                                                                                       |
-| `blocks`       | `{ banner?: JSXConverter<SerializedBlockNode<BannerBlock>>; code?: JSXConverter<SerializedBlockNode<CodeBlockProps>>; figure?: JSXConverter<SerializedBlockNode<…` | no       | Renderers for the blocks this field may hold. Pass them for any field whose editor has a blocks feature: Payload draws a block with no renderer as "unknown node". Today post and event content have blocks (`payload.config.test.ts` checks every rich-text field).                  |
-| `enableGutter` | `boolean`                                                                                                                                                          | no       |                                                                                                                                                                                                                                                                                       |
-| `enableProse`  | `boolean`                                                                                                                                                          | no       |                                                                                                                                                                                                                                                                                       |
-| `besideFloat`  | `boolean`                                                                                                                                                          | no       | A picture floats right just before this text (the article's `FeaturedImage`, #1023): the text flows beside it, line by line, instead of forming a box that stays narrow all the way down, and what follows the text clears the picture. A figure inside the text is still kept in it. |
-| `anchorSource` | `RichTextValue`                                                                                                                                                    | no       | The whole article, when `data` is only a part of it (the text after an opening card row): heading ids and the "On this page" menu then come from the whole, so they match. `data`'s nodes must be the same objects as the whole's (`splitLeadingWideBlocks`).                         |
+| Prop           | Type             | Required | Description                                                                                                                                                                                                                                                                           |
+| -------------- | ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`         | `RichTextValue`  | yes      |                                                                                                                                                                                                                                                                                       |
+| `blocks`       | `RichTextBlocks` | no       | Renderers for the blocks this field may hold. Pass them for any field whose editor has a blocks feature: Payload draws a block with no renderer as "unknown node". Today post and event content have blocks (`payload.config.test.ts` checks every rich-text field).                  |
+| `enableGutter` | `boolean`        | no       |                                                                                                                                                                                                                                                                                       |
+| `enableProse`  | `boolean`        | no       |                                                                                                                                                                                                                                                                                       |
+| `besideFloat`  | `boolean`        | no       | A picture floats right just before this text (the article's `FeaturedImage`, #1023): the text flows beside it, line by line, instead of forming a box that stays narrow all the way down, and what follows the text clears the picture. A figure inside the text is still kept in it. |
+| `anchorSource` | `RichTextValue`  | no       | The whole article, when `data` is only a part of it (the text after an opening card row): heading ids and the "On this page" menu then come from the whole, so they match. `data`'s nodes must be the same objects as the whole's (`splitLeadingWideBlocks`).                         |
 
 279 more props from package types (HTML attributes and the like) are not listed.
 
@@ -160,10 +160,11 @@ The legend under an annotated image (#515): the editor's "Diagram key" block, dr
 
 Source: `src/platform/richtext/editorial/DiagramKey.tsx`
 
-| Prop        | Type               | Required | Description |
-| ----------- | ------------------ | -------- | ----------- |
-| `items`     | `DiagramKeyItem[]` | yes      |             |
-| `className` | `string`           | no       |             |
+| Prop        | Type                       | Required | Description |
+| ----------- | -------------------------- | -------- | ----------- |
+| `items`     | `DiagramKeyItem[]`         | yes      |             |
+| `columns`   | `"auto" \| "one" \| "fit"` | no       |             |
+| `className` | `string`                   | no       |             |
 
 **Used by** (direct imports):
 
@@ -188,6 +189,50 @@ Source: `src/platform/richtext/FigureBlock.tsx`
 | `blockName`   | `string`                                                           | no       |                                                                                                   |
 | `blockType`   | `"figure"`                                                         | yes      |                                                                                                   |
 | `className`   | `string`                                                           | no       |                                                                                                   |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
+## `PanelFigureBlock`
+
+A figure inside a section tab (#1333) follows the article's own picture sizes: full width on a phone, half the content on a tablet, a third from a wide screen, whatever the block's width choice says. It offers Enlarge only when it has something more to show (a key or a long caption), since enlarging a picture that adds nothing is a click to the same picture.
+
+Source: `src/platform/richtext/FigureBlock.tsx`
+
+| Prop          | Type                                                               | Required | Description                                                                                       |
+| ------------- | ------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------- |
+| `image`       | `number \| Media`                                                  | yes      | The large picture. It shows small in the article. It does not set the card or link-preview image. |
+| `title`       | `string`                                                           | yes      | What the picture shows, in a few words. It names the small expand icon on the picture.            |
+| `label`       | `string`                                                           | no       | Its number in the source, such as "Figure 2-9". Optional.                                         |
+| `caption`     | `string`                                                           | no       | One short line under the small picture. Optional.                                                 |
+| `longCaption` | `string`                                                           | no       | Source, how it was made and conditions. Shown only when the picture is enlarged. Optional.        |
+| `size`        | `"two-fifths" \| "third" \| "half"`                                | no       | How wide it is beside the text on a tablet or larger.                                             |
+| `items`       | `{ label: string; text?: string \| null; id?: string \| null; }[]` | no       | One per numbered marker on the image, in number order. Don’t type the numbers.                    |
+| `id`          | `string`                                                           | no       |                                                                                                   |
+| `blockName`   | `string`                                                           | no       |                                                                                                   |
+| `blockType`   | `"figure"`                                                         | yes      |                                                                                                   |
+| `className`   | `string`                                                           | no       |                                                                                                   |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
+## `SectionTabsBlock`
+
+The editor's "Section tabs" block (#1333): each tab's content is rich text of its own, drawn by `RichText` with the same block renderers as the article (passed in, so this imports no block, #135) and the article's heading ids (`anchorSource`), so the page menu's links reach a heading in any tab.
+
+Source: `src/platform/richtext/SectionTabsBlock.tsx`
+
+| Prop           | Type                                                                                                                                                                 | Required | Description                                                                                                                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tabs`         | `{ label: string; panel: { root: { type: string; children: { type: any; version: number; [k: string]: unknown; }[]; direction: ("ltr" \| "rtl") \| null; format: "…` | no       | 2 to 4 tabs. Readers see each label as a button; it opens the content you write here, directly under the buttons. Put the introduction and the top picture above the block, not in a tab. |
+| `id`           | `string`                                                                                                                                                             | no       |                                                                                                                                                                                           |
+| `blockName`    | `string`                                                                                                                                                             | no       |                                                                                                                                                                                           |
+| `blockType`    | `"sectionTabs"`                                                                                                                                                      | no       |                                                                                                                                                                                           |
+| `className`    | `string`                                                                                                                                                             | no       |                                                                                                                                                                                           |
+| `blocks`       | `RichTextBlocks`                                                                                                                                                     | yes      |                                                                                                                                                                                           |
+| `anchorSource` | `RichTextValue`                                                                                                                                                      | no       |                                                                                                                                                                                           |
 
 **Used by** (direct imports):
 
