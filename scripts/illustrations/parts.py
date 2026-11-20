@@ -12,6 +12,7 @@ def sc(v):
     return v if SCENE_SCALE==1 else v*SCENE_SCALE
 
 def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin="#a8714f",hair="#2a1d17",hat=None,arm="down",hr=13,flip=False,cap=None):
+    """A standing person at (x, y). arm: "down", "wave", "pad", or "none" when the scene draws the arms itself."""
     s=sc(s)
     sx=-s if flip else s
     o=f'stroke="{NAVY}" stroke-width="{SW/s:.2f}" stroke-linejoin="round"'
@@ -21,7 +22,7 @@ def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin="#a8714f",hair="#2a1d17",hat=None,
     g.append(f'<ellipse cx="-11" cy="-4" rx="12" ry="5.5" fill="#2b2b36" {o}/><ellipse cx="11" cy="-4" rx="12" ry="5.5" fill="#2b2b36" {o}/>')
     if arm=="wave":
         g.append(f'<path d="M-24,-160 L-30,-104" stroke="{shirt}" stroke-width="12" stroke-linecap="round"/><circle cx="-30" cy="-98" r="6" fill="{skin}" {o}/>')
-    else:
+    elif arm!="none":
         g.append(f'<rect x="-36" y="-165" width="12" height="68" rx="6" fill="{shirt}" {o}/><circle cx="-30" cy="-95" r="6" fill="{skin}" {o}/>')
     g.append(f'<path d="M-23,-166 Q0,-175 23,-166 L20,-96 Q0,-90 -20,-96 Z" fill="{shirt}" {o}/>')
     g.append(f'<path d="M3,-170 Q14,-170 23,-166 L20,-96 Q10,-93 3,-93 Z" fill="#000" opacity=".12"/>')
@@ -29,7 +30,7 @@ def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin="#a8714f",hair="#2a1d17",hat=None,
         g.append(f'<path d="M24,-160 L44,-206" stroke="{NAVY}" stroke-width="15" stroke-linecap="round"/><path d="M24,-160 L44,-206" stroke="{shirt}" stroke-width="10.5" stroke-linecap="round"/><circle cx="46" cy="-211" r="6.5" fill="{skin}" {o}/>')
     elif arm=="pad":
         g.append(f'<path d="M24,-160 L36,-128 L12,-120" stroke="{NAVY}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M24,-160 L36,-128 L12,-120" stroke="{shirt}" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="2" y="-146" width="20" height="26" rx="2" fill="#f5ede1" {o}/><circle cx="12" cy="-120" r="6" fill="{skin}" {o}/>')
-    else:
+    elif arm!="none":
         g.append(f'<rect x="24" y="-165" width="12" height="68" rx="6" fill="{shirt}" {o}/><circle cx="30" cy="-95" r="6" fill="{skin}" {o}/>')
     g.append(f'<rect x="-6" y="-182" width="12" height="14" fill="{skin}" {o}/>')
     g.append(f'<circle cx="0" cy="-190" r="{hr}" fill="{skin}" {o}/>')
