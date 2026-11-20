@@ -34,6 +34,11 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
+// The one test that renders the whole gallery (every shared component, in jsdom) takes 2 to 6 s
+// alone, depending on machine load, so it can pass or fail against the 5 s default (#1146). Only
+// this test gets the longer limit; the default is not raised for the rest.
+const RENDER_WHOLE_GALLERY_TIMEOUT = 30_000
+
 describe('/dev/gallery (#466)', () => {
   it.each(['production', 'test'])('is a 404 when NODE_ENV is %s', (env) => {
     vi.stubEnv('NODE_ENV', env)
@@ -45,14 +50,23 @@ describe('/dev/gallery (#466)', () => {
     expect(metadata.robots).toEqual(NOT_INDEXED)
   })
 
-  it('shows a heading for every component under next dev', () => {
-    vi.stubEnv('NODE_ENV', 'development')
-    render(GalleryPage())
+  it(
+    'shows a heading for every component under next dev',
+    () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      render(GalleryPage())
 
-    expect(notFound).not.toHaveBeenCalled()
-    for (const name of GALLERY_COMPONENTS) {
-      const heading = screen.getByRole('heading', { level: 2, name })
-      expect(heading.id).toBe(`gallery-${name.toLowerCase()}`)
-    }
-  })
+      expect(notFound).not.toHaveBeenCalled()
+      // One role query for every level-2 heading. A role-and-name query per component walks the
+      // whole gallery each time (44 walks, about half the test's time, which timed out on CI, #1146)
+      const headings = screen.getAllByRole('heading', { level: 2 })
+      for (const name of GALLERY_COMPONENTS) {
+        // an entry's heading is plain text, so its name is its text; exactly one heading per name
+        const matches = headings.filter((heading) => heading.textContent?.trim() === name)
+        expect(matches, `heading "${name}"`).toHaveLength(1)
+        expect(matches[0]?.id).toBe(`gallery-${name.toLowerCase()}`)
+      }
+    },
+    RENDER_WHOLE_GALLERY_TIMEOUT,
+  )
 })
