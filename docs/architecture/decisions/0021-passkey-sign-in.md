@@ -108,7 +108,9 @@ fits without a second auth system or an unreleased change.
   `payload.db.deleteOne` and the Local API's `delete` with a `where` read the row first and then
   delete by id, so both requests get it: they don't qualify. A test against real Payload runs the
   race (#1313).
-- **Used and expired rows** are removed by a task on the existing retention queue (decision 0010).
+- **Expired rows** are removed by an hourly task on the existing retention queue (decision 0010).
+  It deletes only rows past their expiry, and a used challenge expires minutes later, so it goes
+  with them; a challenge still open is never touched.
 - **Why not Payload's key-value store:** checked against Payload 3.91.0 (`package.json`), its
   database adapter stores `key` and `data` and nothing else, so no expiry, and its interface is
   `get`, `set`, `delete`, `has`, `keys` and `clear`. A get followed by a delete is two steps, so
@@ -126,10 +128,14 @@ fits without a second auth system or an unreleased change.
 - **Registration only inserts.** A credential ID already stored on any account refuses the add
   with the fixed failure; a save is never an upsert, so no one can replace another's key.
 - No biometric data ever reaches us: the device checks it locally. The public key can't sign.
-- Every field is server-only (`serverOnlyFieldAccess`), with no REST or GraphQL access for
-  residents. A resident sees their own list through the module's use cases. Create and update are
-  refused for everyone, admins included; admins read and delete for support only; they have no
-  access to `passkey-challenges`. Only server code through the data layer writes. Deleting an
+- **Access, field by field.** The key material (credential ID and public key) is server-only
+  (`serverOnlyFieldAccess`): no one reads it through any API, admins included, and only the
+  sign-in check reads it on the server. The other fields (account, counter, transports, device
+  type, backed-up flag, label, last used) are never written through an API, and admins can read
+  them, which is the support view. No REST or GraphQL access for residents; a resident sees their
+  own list through the module's use cases. Create and update are refused for everyone, admins
+  included; admins read and delete for support only; they have no access to `passkey-challenges`,
+  where every field is server-only. Only server code through the data layer writes. Deleting an
   account deletes its passkeys with a hook on `users`.
 - The library refuses a counter that doesn't go up once either value is nonzero (synced passkeys
   that always report zero are allowed). The stored counter is written conditionally, only when the
