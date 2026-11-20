@@ -30,12 +30,12 @@ export const API_HEADERS = [
 
 /**
  * Pages that are never shown inside another site's frame (decision 0021): `frame-ancestors 'none'`,
- * the modern form of `X-Frame-Options: DENY`. A passkey is made on a page the person sees, and a
- * framed page could be made to look like something else. The sign-in page joins this list when it
- * gets passkeys. The app sends no other `Content-Security-Policy` and none of its own headers
+ * the modern form of `X-Frame-Options: DENY`. A passkey is made, and used to log in, on a page the
+ * person sees, and a framed page could be made to look like something else. The account page and
+ * the log in page, the two screens that make or use a passkey. The app sends no other `Content-Security-Policy` and none of its own headers
  * come from a proxy, so this is the one place; Payload adds none for these paths.
  */
-export const NO_FRAMING_PATHS = ['/account']
+export const NO_FRAMING_PATHS = ['/account', '/login']
 export const NO_FRAMING_HEADERS = NO_FRAMING_PATHS.map((source) => ({
   source,
   headers: [{ key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }],

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 
 import { ACCOUNT_PATH, SOCIAL_RESULT_PARAM } from '@/modules/accounts'
 import {
+  arePasskeysOn,
   getCurrentUser,
   getEnabledSocialProviders,
   SignInForm,
@@ -22,7 +23,7 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 
 /**
  * Where a visitor logs in: with Google when they're on (#188), or the email and
- * password form. A provider sign-in that didn't open an account comes back here with
+ * password form, which also offers a passkey while the switch is on (#1315). A provider sign-in that didn't open an account comes back here with
  * `?social=<outcome>`, and the page shows its fixed message.
  */
 export default async function LoginPage({ searchParams }: Props) {
@@ -39,7 +40,7 @@ export default async function LoginPage({ searchParams }: Props) {
       />
       <div className="space-y-6">
         <SocialSignIn providers={getEnabledSocialProviders()} result={result} />
-        <SignInForm />
+        <SignInForm passkeys={arePasskeysOn()} />
       </div>
     </Section>
   )

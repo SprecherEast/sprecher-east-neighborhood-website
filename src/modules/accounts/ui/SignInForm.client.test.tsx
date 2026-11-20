@@ -13,6 +13,16 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mocks.push, refresh: mocks.refresh }),
 }))
 
+// The passkey button is tested on its own (`PasskeySignIn.client.test.tsx`); here it only shows
+// what the form hands it
+vi.mock('./PasskeySignIn.client', () => ({
+  PasskeySignIn: ({ rememberMe }: { rememberMe: boolean }) => (
+    <button type="button" data-remember={String(rememberMe)}>
+      Log in with a passkey
+    </button>
+  ),
+}))
+
 import { SignInForm } from './SignInForm.client'
 
 beforeEach(() => {
@@ -123,5 +133,46 @@ describe('SignInForm', () => {
     expect(email.value).toBe('early@example.com')
     act(() => root.unmount())
     container.remove()
+  })
+})
+
+describe('SignInForm with passkeys (#1315)', () => {
+  it('shows nothing about passkeys, and the email field as it was, when the switch is off', () => {
+    render(<SignInForm />)
+    expect(screen.queryByRole('button', { name: /passkey/ })).toBeNull()
+    expect(screen.getByRole('textbox', { name: /Email/ }).getAttribute('autocomplete')).toBe(
+      'email',
+    )
+  })
+
+  it('offers the passkey button under "Log In", and the passkey in the email field’s autofill, when on', async () => {
+    render(
+      <main>
+        <SignInForm passkeys />
+      </main>,
+    )
+    const passkey = await screen.findByRole('button', { name: 'Log in with a passkey' })
+    const logIn = screen.getByRole('button', { name: 'Log In' })
+    // Under the button that sends the form, and not a way of sending it
+    expect(logIn.compareDocumentPosition(passkey) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(passkey.getAttribute('type')).toBe('button')
+    expect(screen.getByRole('textbox', { name: /Email/ }).getAttribute('autocomplete')).toBe(
+      'username webauthn',
+    )
+    await expectAccessible(document.body)
+  })
+
+  it('tells the button whether "Keep me signed in" is ticked', async () => {
+    render(<SignInForm passkeys />)
+    const passkey = await screen.findByRole('button', { name: 'Log in with a passkey' })
+    expect(passkey.getAttribute('data-remember')).toBe('false')
+    await userEvent.click(screen.getByRole('checkbox', { name: /Keep me signed in/ }))
+    expect(passkey.getAttribute('data-remember')).toBe('true')
+  })
+
+  it('does not send the password form when the passkey button is pressed', async () => {
+    render(<SignInForm passkeys />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Log in with a passkey' }))
+    expect(mocks.signIn).not.toHaveBeenCalled()
   })
 })

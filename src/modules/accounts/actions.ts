@@ -19,6 +19,11 @@ import {
   verifyAccountSchema,
 } from './domain/credentials'
 import type { AddPasskeyFailure, StartAddPasskeyResult } from './domain/addPasskey'
+import {
+  passkeySignInSchema,
+  type PasskeySignInFailure,
+  type StartPasskeySignInResult,
+} from './domain/signInWithPasskey'
 import type {
   AccountSummary,
   ActionResult,
@@ -37,6 +42,7 @@ import type { PublicRequest } from './use-cases/guardPublicRequest'
 import { requestPasswordReset } from './use-cases/requestPasswordReset'
 import { resetPasswordFromLink } from './use-cases/resetPasswordFromLink'
 import { signInWithPassword } from './use-cases/signInWithPassword'
+import { finishPasskeySignIn, startPasskeySignIn } from './use-cases/signInWithPasskey'
 import { signUpResident } from './use-cases/signUpResident'
 import { verifyAccountFromLink } from './use-cases/verifyAccountFromLink'
 
@@ -88,6 +94,28 @@ export async function addPasskey(input: unknown): Promise<ActionResult<AddPasske
   const parsed = addPasskeySchema.safeParse(input)
   if (!parsed.success) return { ok: false, failure: 'failed' }
   return finishAddPasskey(parsed.data)
+}
+
+/**
+ * Asks for the options to log in with a passkey (#1315). Takes no input and names no account: the
+ * passkeys are discoverable, so the device offers its own. Fixed failure codes only.
+ */
+export async function getPasskeyLoginOptions(): Promise<StartPasskeySignInResult> {
+  return startPasskeySignIn(parseClientIp(await headers()))
+}
+
+/**
+ * Logs in with the passkey the browser answered with (#1315). The input is the browser's answer
+ * and the "Keep me signed in" box, parsed again; there is no way to name an account. Input that
+ * doesn't parse is the same one failure as any other refusal, so none says whether an account
+ * exists.
+ */
+export async function logInWithPasskey(
+  input: unknown,
+): Promise<ActionResult<PasskeySignInFailure>> {
+  const parsed = passkeySignInSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, failure: 'failed' }
+  return finishPasskeySignIn(parsed.data)
 }
 
 /**

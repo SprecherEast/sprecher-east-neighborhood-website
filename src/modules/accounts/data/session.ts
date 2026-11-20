@@ -6,10 +6,13 @@ import { cookies, headers } from 'next/headers'
 import {
   createLocalReq,
   generateExpiredPayloadCookie,
+  getFieldsToSign,
   getPayload,
+  jwtSign,
   logoutOperation,
   type Payload,
 } from 'payload'
+import { addSessionToUser } from 'payload/shared'
 import { cache } from 'react'
 
 import type { User } from '@/payload-types'
@@ -19,6 +22,7 @@ import { CURRENT_PASSWORD_CONFIRMED } from '../domain/passwordConfirmation'
 import { sessionStartedAt } from '../domain/signInSession'
 import type { CurrentUser } from '../domain/types'
 import { USERS } from '../domain/usersCollection'
+import { setPayloadAuthCookie } from './authCookies'
 import { isRefusal } from './failures'
 import { toCurrentUser } from './mappers'
 import { keepSignedIn } from './rememberedSession'
@@ -81,6 +85,43 @@ export async function startSession({ email, password, rememberMe }: SignInValues
   // the person asked to be long
   if (!token) throw new Error('Payload returned no sign-in token')
   await keepSignedIn(token)
+}
+
+/**
+ * Signs this browser in to an account, as Payload's `login` operation does once a password
+ * matched: a new session on the account, the token Payload signs for it, and Payload's own auth
+ * cookie, set by the shared helper with the collection's settings (Secure in production, #234).
+ * The way in that isn't a password (Google, #188; a passkey, #1315) calls this once it has checked
+ * the person and that the account isn't locked, unverified or an agent. `rememberMe` ("Keep me
+ * signed in") then makes the session last a week instead of two hours, as for a password (#587).
+ * Throws when the account is gone or Payload fails.
+ */
+export async function startSessionFor(
+  accountId: number,
+  { rememberMe = false }: { rememberMe?: boolean } = {},
+): Promise<void> {
+  const payload = await getPayload({ config: configPromise })
+  const users = payload.collections[USERS].config
+  // The stored row, as Payload's login reads it, so the new session is added to its sessions
+  const row = await payload.db.findOne<User>({
+    collection: USERS,
+    where: { id: { equals: accountId } },
+  })
+  if (!row) throw new Error('The account to sign in to is gone')
+  const user = { ...row, collection: 'users' as const }
+  const { sid } = await addSessionToUser({
+    collectionConfig: users,
+    payload,
+    req: await createLocalReq({}, payload),
+    user,
+  })
+  const { token } = await jwtSign({
+    fieldsToSign: getFieldsToSign({ collectionConfig: users, email: user.email, sid, user }),
+    secret: payload.secret,
+    tokenExpiration: users.auth.tokenExpiration,
+  })
+  await setPayloadAuthCookie(token)
+  if (rememberMe) await keepSignedIn(token)
 }
 
 /**
