@@ -1,7 +1,7 @@
 import type { RichTextValue } from '@/platform/lib'
 import { anchorId } from '@/platform/lib/anchorId'
 
-import { lexicalRoot, type LexicalNode } from './lexicalTree'
+import { lexicalRoot, nodesWithin, type LexicalNode } from './lexicalTree'
 
 /** A section heading in an article: its link address, words and level (#573) */
 export type HeadingAnchor = { id: string; text: string; level: 2 | 3 }
@@ -19,7 +19,8 @@ const textOf = (node: LexicalNode): string =>
 /**
  * Every h2 and h3 of an article in reading order, with ids that are readable, unique (a repeat
  * gets `-2`, `-3`) and the same on every render. Headings inside editorial blocks render from their
- * own fields, not from this document, so they are not sections and get no anchor. The article's
+ * own fields, not from this document, so they are not sections and get no anchor; the exception is
+ * the content of a section tabs block (#1333), which is rich text of the article's own. The article's
  * renderer and its "On this page" menu both call this, so their ids always match.
  */
 export function anchorsByNode(data: RichTextValue | null | undefined): Map<object, HeadingAnchor> {
@@ -42,7 +43,7 @@ export function anchorsByNode(data: RichTextValue | null | undefined): Map<objec
         anchors.set(node, { id, text, level })
       }
     }
-    node.children?.forEach(walk)
+    nodesWithin(node).forEach(walk)
   }
 
   const root = lexicalRoot(data)

@@ -3600,6 +3600,43 @@ export interface FactTabsBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SectionTabsBlock".
+ */
+export interface SectionTabsBlock {
+  /**
+   * 2 to 4 tabs. Readers see each label as a button; it opens the content you write here, directly under the buttons. Put the introduction and the top picture above the block, not in a tab.
+   */
+  tabs: {
+    /**
+     * One short word or two on the button: "The plan".
+     */
+    label: string
+    /**
+     * What the tab opens: text, pictures and the blocks an article uses. Without scripts every tab shows one after another.
+     */
+    panel: {
+      root: {
+        type: string
+        children: {
+          type: any
+          version: number
+          [k: string]: unknown
+        }[]
+        direction: ('ltr' | 'rtl') | null
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+        indent: number
+        version: number
+      }
+      [k: string]: unknown
+    }
+    id?: string | null
+  }[]
+  id?: string | null
+  blockName?: string | null
+  blockType: 'sectionTabs'
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "auth".
  */
 export interface Auth {

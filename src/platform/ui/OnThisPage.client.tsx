@@ -28,7 +28,9 @@ function useCurrentSection(ids: string[]): string | null {
       // while keeping its id, and a saved element would then be detached
       const elements = ids.flatMap((id) => {
         const element = document.getElementById(id)
-        return element ? [element] : []
+        // A heading in a tab that is not open is hidden and reports no place on the page (#1333)
+        const closed = element?.closest('[role="tabpanel"][data-state="inactive"]')
+        return element && !closed ? [element] : []
       })
       if (elements.length === 0) return
       // The line is where a jump lands (the heading's own scroll margin, set from

@@ -6,6 +6,7 @@ import { FactTabsBlockConfig } from './editorial/factTabsBlockConfig'
 import { FigureBlockConfig } from './editorial/figureBlockConfig'
 import { KeyFactsBlockConfig } from './editorial/keyFactsBlockConfig'
 import { OutcomeForkBlockConfig } from './editorial/outcomeForkBlockConfig'
+import { SectionTabsBlockConfig } from './editorial/sectionTabsBlockConfig'
 import { StepsBlockConfig } from './editorial/stepsBlockConfig'
 import { TimelineBlockConfig } from './editorial/timelineBlockConfig'
 
@@ -126,6 +127,7 @@ export const EDITORIAL_BLOCKS: Block[] = [
   FigureBlockConfig,
   ChartBlockConfig,
   FactTabsBlockConfig,
+  SectionTabsBlockConfig,
 ]
 
 /** The blocks a post's content may hold, in the order the editor offers them. */

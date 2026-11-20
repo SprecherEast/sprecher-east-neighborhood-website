@@ -39,6 +39,20 @@ export const FACT_TABS_LIMITS = {
   maxPanelBlocks: 3,
 } as const
 
+/**
+ * The section tabs block (#1333): an article split into tabs of ordinary content. Each tab is a
+ * short label on a button and a panel of the article's own text and blocks.
+ */
+export const SECTION_TABS_LIMITS = {
+  minTabs: 2,
+  maxTabs: 4,
+  /**
+   * One centred line in a button, four to a row. Two characters more than a fact tab's label, so
+   * "Who it affects" fits; measured at 320 px (selected, bold) it is 63 of 67 px wide.
+   */
+  label: 14,
+} as const
+
 /** The bill split block (#1018): one set of rates per tax year, the latest last */
 export const BILL_SHARE_LIMITS = {
   minYears: 1,

@@ -32,9 +32,11 @@ type LegendCommon = {
   attach?: 'panel' | 'none'
   /**
    * `auto` (the default) puts the items in two columns from `sm`; `one` keeps one column, for a
-   * legend in a narrow column such as the text beside a small chart (#681).
+   * legend in a narrow column such as the text beside a small chart (#681). `fit` asks the legend's
+   * own width instead of the screen's: two columns once it is wide enough, one when it sits in a
+   * narrow room beside a floated picture (#1333).
    */
-  columns?: 'auto' | 'one'
+  columns?: 'auto' | 'one' | 'fit'
   className?: string
 }
 
@@ -65,6 +67,7 @@ const SWATCH_COLOUR: Record<LegendSlot, string> = {
 const LIST_CLASSES = {
   auto: 'grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2',
   one: 'grid grid-cols-1 gap-y-3',
+  fit: 'grid grid-cols-1 gap-x-6 gap-y-3 @xl:grid-cols-2',
 }
 
 /**
@@ -105,6 +108,7 @@ export function Legend(props: LegendProps) {
     <div
       className={cn(
         'not-prose',
+        columns === 'fit' && '@container',
         attach === 'panel' && [
           'mb-10 rounded-2xl border border-border bg-surface p-4 shadow-sm md:p-6',
           LEGEND_GAP,

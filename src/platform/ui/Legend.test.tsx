@@ -94,6 +94,22 @@ describe('Legend', () => {
     })
   })
 
+  describe('columns that fit the legend’s own width (#1333)', () => {
+    it('asks its own width for the second column, not the screen’s', () => {
+      const { container } = render(<Legend columns="fit" items={ITEMS} />)
+      expect(container.firstElementChild?.className).toContain('@container')
+      const list = container.querySelector('ol')?.className
+      expect(list).toContain('grid-cols-1')
+      expect(list).toContain('@xl:grid-cols-2')
+      expect(list).not.toContain('sm:grid-cols-2')
+    })
+
+    it('leaves the other column choices to the screen', () => {
+      const { container } = render(<Legend items={ITEMS} />)
+      expect(container.firstElementChild?.className).not.toContain('@container')
+    })
+  })
+
   describe('colour swatches under a chart (#662)', () => {
     const SWATCHES = [
       { label: 'Borrowed', text: '$179.8M', slot: 1 as const },

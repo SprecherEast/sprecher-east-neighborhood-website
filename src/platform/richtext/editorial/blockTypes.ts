@@ -4,5 +4,6 @@
  * them. A leaf module, so a config and the code that reads it can both import it without a cycle.
  */
 export const FACT_TABS_BLOCK_TYPE = 'factTabs'
+export const SECTION_TABS_BLOCK_TYPE = 'sectionTabs'
 export const KEY_FACTS_BLOCK_TYPE = 'keyFacts'
 export const OUTCOME_FORK_BLOCK_TYPE = 'outcomeFork'
