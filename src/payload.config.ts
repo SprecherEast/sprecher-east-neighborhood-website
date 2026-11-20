@@ -12,7 +12,14 @@ import { buildConfig, type Plugin } from 'payload'
 import { fileURLToPath } from 'url'
 
 import type { Event, Page, Post } from '@/payload-types'
-import { keepAccountEmails, noVerifyMutation, Users } from '@/modules/accounts/cms'
+import {
+  keepAccountEmails,
+  noVerifyMutation,
+  PasskeyChallenges,
+  passkeyChallengeRetentionTask,
+  Passkeys,
+  Users,
+} from '@/modules/accounts/cms'
 import { AgentReviewItems, AgentRuns, mcpOptions } from '@/modules/agents/cms'
 import {
   contactRetentionTask,
@@ -194,6 +201,8 @@ export default buildConfig({
     Media,
     Categories,
     Users,
+    Passkeys,
+    PasskeyChallenges,
     EmailConfirmations,
     AgentRuns,
     AgentReviewItems,
@@ -224,7 +233,7 @@ export default buildConfig({
     // queue and cancel scheduled publishes from Admin; only admins may run the queue by hand.
     access: { cancel: isAdminOrEditorBoolean, queue: isAdminOrEditorBoolean, run: isAdminBoolean },
     // The owner's retention rules (#274), scheduled every hour
-    tasks: [contactRetentionTask, confirmationRetentionTask],
+    tasks: [contactRetentionTask, confirmationRetentionTask, passkeyChallengeRetentionTask],
     // Runs the retention queue (#274) and scheduled publishing (#141) inside the app's one PM2
     // process: no separate worker
     autoRun: JOB_RUNNERS,

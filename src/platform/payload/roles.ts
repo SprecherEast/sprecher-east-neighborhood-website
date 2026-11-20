@@ -35,6 +35,12 @@ export const hasAgent = (user: Principal): boolean => getRole(user) === ROLES.ag
 /** Admin only — full access to everything */
 export const isAdmin: Access = ({ req: { user } }) => hasAdmin(user)
 
+/**
+ * No one, admins included, through any API. For a collection only the server writes or reads: the
+ * server uses the Local API with `overrideAccess: true` or the database adapter, which skip it.
+ */
+export const isNoOne: Access = () => false
+
 /** Admin or editor — content management access */
 export const isAdminOrEditor: Access = ({ req: { user } }) => hasAdminOrEditor(user)
 

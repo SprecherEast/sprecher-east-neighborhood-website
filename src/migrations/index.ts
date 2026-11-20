@@ -30,6 +30,7 @@ import * as migration_20261111_061547_band_backdrop from './20261111_061547_band
 import * as migration_20261115_034936_header_submenu from './20261115_034936_header_submenu'
 import * as migration_20261117_012340_share_bar from './20261117_012340_share_bar'
 import * as migration_20261119_203801_social_sign_in from './20261119_203801_social_sign_in'
+import * as migration_20261119_224613_passkeys from './20261119_224613_passkeys'
 
 export const migrations = [
   {
@@ -191,5 +192,10 @@ export const migrations = [
     up: migration_20261119_203801_social_sign_in.up,
     down: migration_20261119_203801_social_sign_in.down,
     name: '20261119_203801_social_sign_in',
+  },
+  {
+    up: migration_20261119_224613_passkeys.up,
+    down: migration_20261119_224613_passkeys.down,
+    name: '20261119_224613_passkeys',
   },
 ]

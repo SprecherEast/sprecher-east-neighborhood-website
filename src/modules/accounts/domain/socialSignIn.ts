@@ -103,6 +103,15 @@ export type SocialDecision =
 const SIGN_IN_ROLES = new Set(['admin', 'editor', 'guest', 'resident'])
 
 /**
+ * Whether an account may be signed in to at all, by any way but its password: not locked (#140),
+ * verified, and not an agent. Passkey sign-in (decision 0021) asks the same.
+ */
+export function canSignInTo(account: SocialAccount, now: Date): boolean {
+  const locked = account.lockedUntil !== null && account.lockedUntil > now
+  return !locked && account.verified && SIGN_IN_ROLES.has(account.role)
+}
+
+/**
  * The rule for a provider's answer (decision 0020):
  * - The identity is the provider plus its subject. A returning person is found by it, and
  *   nothing on the account changes.
@@ -122,11 +131,9 @@ export function decideSocialSignIn({
   now: Date
 }): SocialDecision {
   if (bySubject) {
-    const locked = bySubject.lockedUntil !== null && bySubject.lockedUntil > now
-    if (locked || !bySubject.verified || !SIGN_IN_ROLES.has(bySubject.role)) {
-      return { kind: 'refuse', failure: 'unavailable' }
-    }
-    return { kind: 'sign-in', accountId: bySubject.id }
+    return canSignInTo(bySubject, now)
+      ? { kind: 'sign-in', accountId: bySubject.id }
+      : { kind: 'refuse', failure: 'unavailable' }
   }
   if (!profile.email) return { kind: 'refuse', failure: 'no-email' }
 

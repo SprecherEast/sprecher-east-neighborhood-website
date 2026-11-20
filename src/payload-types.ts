@@ -77,6 +77,8 @@ export interface Config {
     media: Media
     categories: Category
     users: User
+    passkeys: Passkey
+    'passkey-challenges': PasskeyChallenge
     'email-confirmations': EmailConfirmation
     'agent-runs': AgentRun
     'agent-review-items': AgentReviewItem
@@ -110,6 +112,8 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>
     categories: CategoriesSelect<false> | CategoriesSelect<true>
     users: UsersSelect<false> | UsersSelect<true>
+    passkeys: PasskeysSelect<false> | PasskeysSelect<true>
+    'passkey-challenges': PasskeyChallengesSelect<false> | PasskeyChallengesSelect<true>
     'email-confirmations': EmailConfirmationsSelect<false> | EmailConfirmationsSelect<true>
     'agent-runs': AgentRunsSelect<false> | AgentRunsSelect<true>
     'agent-review-items': AgentReviewItemsSelect<false> | AgentReviewItemsSelect<true>
@@ -150,6 +154,7 @@ export interface Config {
     tasks: {
       deleteExpiredContactMessages: TaskDeleteExpiredContactMessages
       deleteExpiredEmailConfirmations: TaskDeleteExpiredEmailConfirmations
+      deleteExpiredPasskeyChallenges: TaskDeleteExpiredPasskeyChallenges
       schedulePublish: TaskSchedulePublish
       inline: {
         input: unknown
@@ -549,6 +554,7 @@ export interface User {
   verificationResendsSince?: string | null
   verificationSetsPassword?: boolean | null
   googleSub?: string | null
+  passkeyUserHandle?: string | null
   verifiedTokenHash?: string | null
   updatedAt: string
   createdAt: string
@@ -1250,6 +1256,48 @@ export interface Faq {
   _status?: ('draft' | 'published') | null
 }
 /**
+ * Passkeys residents added to sign in. Read and delete only, for support: a deleted passkey stops working at once, and the resident can still sign in with their password.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "passkeys".
+ */
+export interface Passkey {
+  id: number
+  account: number | User
+  credentialId: string
+  publicKey: string
+  counter: number
+  transports?:
+    | {
+        [k: string]: unknown
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null
+  deviceType: 'singleDevice' | 'multiDevice'
+  backedUp?: boolean | null
+  label: string
+  lastUsedAt?: string | null
+  updatedAt: string
+  createdAt: string
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "passkey-challenges".
+ */
+export interface PasskeyChallenge {
+  id: number
+  purpose: 'add' | 'sign-in'
+  challenge: string
+  expiresAt: string
+  usedAt?: string | null
+  account?: (number | null) | User
+  updatedAt: string
+  createdAt: string
+}
+/**
  * Addresses typed into a public form, and when they were confirmed by link. Unconfirmed ones are deleted automatically 48 hours after their last link. A confirmed one is deleted automatically 12 months after it was confirmed, unless they have an account or a message that is still kept (one from the last 12 months, or on hold). To remove an address on request sooner, delete it here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1628,6 +1676,7 @@ export interface PayloadJob {
           | 'inline'
           | 'deleteExpiredContactMessages'
           | 'deleteExpiredEmailConfirmations'
+          | 'deleteExpiredPasskeyChallenges'
           | 'schedulePublish'
         taskID: string
         input?:
@@ -1666,6 +1715,7 @@ export interface PayloadJob {
         | 'inline'
         | 'deleteExpiredContactMessages'
         | 'deleteExpiredEmailConfirmations'
+        | 'deleteExpiredPasskeyChallenges'
         | 'schedulePublish'
       )
     | null
@@ -1726,6 +1776,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users'
         value: number | User
+      } | null)
+    | ({
+        relationTo: 'passkeys'
+        value: number | Passkey
+      } | null)
+    | ({
+        relationTo: 'passkey-challenges'
+        value: number | PasskeyChallenge
       } | null)
     | ({
         relationTo: 'email-confirmations'
@@ -2325,6 +2383,7 @@ export interface UsersSelect<T extends boolean = true> {
   verificationResendsSince?: T
   verificationSetsPassword?: T
   googleSub?: T
+  passkeyUserHandle?: T
   verifiedTokenHash?: T
   updatedAt?: T
   createdAt?: T
@@ -2345,6 +2404,36 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T
         expiresAt?: T
       }
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "passkeys_select".
+ */
+export interface PasskeysSelect<T extends boolean = true> {
+  account?: T
+  credentialId?: T
+  publicKey?: T
+  counter?: T
+  transports?: T
+  deviceType?: T
+  backedUp?: T
+  label?: T
+  lastUsedAt?: T
+  updatedAt?: T
+  createdAt?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "passkey-challenges_select".
+ */
+export interface PasskeyChallengesSelect<T extends boolean = true> {
+  purpose?: T
+  challenge?: T
+  expiresAt?: T
+  usedAt?: T
+  account?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2957,6 +3046,14 @@ export interface TaskDeleteExpiredContactMessages {
  * via the `definition` "TaskDeleteExpiredEmailConfirmations".
  */
 export interface TaskDeleteExpiredEmailConfirmations {
+  input?: unknown
+  output?: unknown
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskDeleteExpiredPasskeyChallenges".
+ */
+export interface TaskDeleteExpiredPasskeyChallenges {
   input?: unknown
   output?: unknown
 }

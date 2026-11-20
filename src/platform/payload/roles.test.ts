@@ -11,6 +11,7 @@ import {
   isAdminOrEditorBoolean,
   isAdminOrEditorFieldAccess,
   isAdminOrSelf,
+  isNoOne,
   isStaffOrAgent,
   isStaffRole,
 } from './roles'
@@ -69,6 +70,12 @@ describe('collection access', () => {
   it('isAdminOrEditorBoolean gives the same answers as a plain boolean', () => {
     expect(isAdminOrEditorBoolean(args(editor))).toBe(true)
     expect(isAdminOrEditorBoolean(args(resident))).toBe(false)
+  })
+})
+
+describe('isNoOne', () => {
+  it('refuses everyone, admins and signed-out visitors included', () => {
+    for (const who of [admin, editor, resident, null]) expect(isNoOne(args(who))).toBe(false)
   })
 })
 
