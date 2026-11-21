@@ -36,7 +36,7 @@ here=$(cd "${BASH_SOURCE[0]%/*}" && pwd -P)
 # Run as root, this script trusts nothing from its caller's environment.
 refuse_environment_as_root PREVIEW_ROOT PREVIEW_DOMAIN PREVIEW_CADDY_DIR PREVIEW_PORT_MIN PREVIEW_PORT_MAX \
   PREVIEW_MAX_COUNT PREVIEW_ACCESS_DIR PREVIEW_HEADERS_FILE LIMITS_FILE CADDYFILE CADDY_LOCK_FILE \
-  CADDY_LOCK_WAIT RELOAD_CADDY CODE_DIR
+  CADDY_LOCK_WAIT RELOAD_CADDY CODE_DIR PREVIEW_ACCESS_ROOT_UID
 
 [ "$#" -eq 1 ] || refuse "one pull request number is required"
 reset_environment "$here"

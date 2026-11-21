@@ -3,6 +3,7 @@
 // change nothing on any doubt, and put the sudo rule and key line back if a check after the first
 // change fails. `useradd`, `sshd`, `runuser`, `sudo`, `visudo` and `chown` are stand-ins; the real
 // ones are checked on the server (ops/README.md, "Pull request preview account").
+import { execFileSync, spawn } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -146,6 +147,7 @@ const run = (env = {}, { removeTools = [], cwd } = {}) => {
       PREVIEW_ROOT: p('proot'),
       PREVIEW_ACCESS_DIR: p('installed'),
       PREVIEW_COPY_TMP: p('copytmp'),
+      CADDY_LOCK_FILE: p('caddy.lock'),
       SUDOERS_FILE: p('sudoers.d/sprecher-east-preview'),
       SUDOERS_MAIN: p('sudoers'),
       PREVIEW_ACCESS_ROOT_UID: UID,
@@ -701,6 +703,99 @@ describe('install-preview-access.sh: the snapshot folder and the content copy sc
     expect(code).toBe(1)
     expect(out).toContain('does not list the content copy script')
     expect(tree('sudoers.d')).toEqual(before)
+  })
+})
+
+describe('install-preview-access.sh: what the content copy script needs from the host (#1397)', () => {
+  it('changes nothing when node can be written by others, since the copy script runs it as root', async () => {
+    const before = tree('home', 'installed', 'proot', 'sudoers.d')
+    fs.chmodSync(p('bin/node'), 0o775)
+    const { code, out } = await run()
+    expect(code).toBe(0)
+    expect(out).toContain('node is not owned by root and writable only by root')
+    expect(tree('home', 'installed', 'proot', 'sudoers.d')).toEqual(before)
+  })
+
+  it('changes nothing when node is not root’s', async () => {
+    await untouched(
+      { PREVIEW_ACCESS_ROOT_UID: String(Number(UID) + 1) },
+      [],
+      'node is not owned by root',
+    )
+  })
+
+  it.each(['timeout', 'awk', 'grep', 'env', 'mkdir', 'rm', 'cat', 'dirname', 'id'])(
+    'changes nothing when %s is not in the PATH the root scripts run with',
+    async (tool) => {
+      // a PATH folder with every tool the root scripts use except this one
+      fs.mkdirSync(p('rootbin'))
+      for (const name of ['caddy', 'systemctl', 'chown'])
+        fs.symlinkSync(p('bin', name), p('rootbin', name))
+      for (const name of [
+        'flock',
+        'stat',
+        'find',
+        'df',
+        'cp',
+        'ln',
+        'mktemp',
+        'chmod',
+        'readlink',
+        'openssl',
+        'getent',
+        'realpath',
+        'awk',
+        'grep',
+        'env',
+        'id',
+        'mkdir',
+        'rm',
+        'cat',
+        'dirname',
+        'timeout',
+      ].filter((name) => name !== tool))
+        fs.symlinkSync(execFileSync('which', [name]).toString().trim(), p('rootbin', name))
+      await untouched({ ROOT_SECURE_PATH: p('rootbin') }, [], `${tool} is not in`)
+    },
+  )
+
+  describe('leftovers of a content copy that was killed', () => {
+    const leftovers = () => {
+      write(`${p('copytmp')}/run.OLD/snapshot.db`, 'SECRET')
+      fs.chmodSync(p('copytmp/run.OLD'), 0o700)
+      write(`${p('proot')}/pr-3/.copy-media/a.jpg`, 'x')
+    }
+
+    it('sweeps an old snapshot folder and a staging folder that is still root’s, and says how many', async () => {
+      await run()
+      leftovers()
+      const { code, out } = await run()
+      expect(code).toBe(0)
+      expect(out).toContain('2 leftovers of a content copy removed')
+      expect(fs.existsSync(p('copytmp/run.OLD'))).toBe(false)
+      expect(fs.existsSync(p('proot/pr-3/.copy-media'))).toBe(false)
+      expect(fs.existsSync(p('proot/pr-3'))).toBe(true)
+    })
+
+    it('says nothing, and removes nothing else, when there are none', async () => {
+      await run()
+      write(`${p('proot')}/pr-3/public/media/a.jpg`, 'x')
+      const { out } = await run()
+      expect(out).not.toContain('leftovers')
+      expect(fs.existsSync(p('proot/pr-3/public/media/a.jpg'))).toBe(true)
+    })
+
+    it('leaves them and warns when the Caddy lock is held, since a copy may be running', async () => {
+      await run()
+      leftovers()
+      const holder = spawn('bash', ['-c', `exec 9>>${p('caddy.lock')}; flock 9; sleep 8`])
+      await new Promise((r) => setTimeout(r, 300))
+      const { code, out } = await run({ CADDY_LOCK_WAIT: '1' })
+      holder.kill()
+      expect(code).toBe(0)
+      expect(out).toContain('leftovers could not be swept')
+      expect(fs.existsSync(p('copytmp/run.OLD'))).toBe(true)
+    })
   })
 })
 

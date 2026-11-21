@@ -11,9 +11,13 @@
 #      leaves a folder that the next run removes first. The preview account can't read that folder
 #      (ops/preview-isolation-check.sh proves it).
 #   2. It runs the export, `e2e/previewCopyExport.ts`, with `payload run` from production's current release
-#      (main's code, never the pull request's), on the snapshot, with a minimal environment: a throwaway
-#      secret, no SMTP_HOST (so nothing could be mailed), no production setting that is not needed. The
-#      snapshot is deleted as soon as the export ends.
+#      (main's code, never the pull request's), on the snapshot, with a minimal environment (a throwaway secret,
+#      an empty SMTP_HOST) and from the run's own folder, which holds no settings file: `payload run` loads
+#      settings files from its working folder and the folders above it, and this one sits under a root-only
+#      folder in /var/lib, so none of production's settings reaches the export. The
+#      scripts and the TypeScript settings still come from the release (absolute path, TSX_TSCONFIG_PATH). It
+#      ends after PREVIEW_COPY_SECONDS, so the lock is never held for long. The snapshot is deleted as soon as the
+#      export ends.
 #   3. For each media file the export lists (the original and each size), it makes a hard link, or a copy when
 #      a link would be unsafe, inside the preview's staging folder (`<preview folder>/.copy-media`, made empty
 #      by the wrapper). A hard link keeps production's owner and mode, so the preview can read the file and
@@ -53,7 +57,7 @@ here=$(cd "${BASH_SOURCE[0]%/*}" && pwd -P)
 # Run as root, this script trusts nothing from its caller's environment.
 refuse_environment_as_root PREVIEW_ROOT PREVIEW_DOMAIN PREVIEW_CADDY_DIR PREVIEW_PORT_MIN PREVIEW_PORT_MAX \
   PREVIEW_MAX_COUNT PREVIEW_ACCESS_DIR PREVIEW_USER PREVIEW_FREE_FLOOR_KB PREVIEW_COPY_TMP \
-  PREVIEW_COPY_MAX_BYTES PREVIEW_ACCESS_ROOT_UID PRODUCTION_DIR_FOR_TESTS CADDYFILE CADDY_LOCK_FILE \
+  PREVIEW_COPY_MAX_BYTES PREVIEW_COPY_SECONDS PREVIEW_ACCESS_ROOT_UID PRODUCTION_DIR_FOR_TESTS CADDYFILE CADDY_LOCK_FILE \
   CADDY_LOCK_WAIT CODE_DIR APP_DIR
 
 [ "$#" -eq 1 ] || refuse "one pull request number is required"
@@ -64,7 +68,6 @@ use_preview "$1" "$here"
 # shellcheck source=caddy-lock-lib.sh
 . "$here/caddy-lock-lib.sh"
 
-ROOT_UID="${PREVIEW_ACCESS_ROOT_UID:-0}" # root's id; a test run by someone else sets its own
 production="${PRODUCTION_DIR_FOR_TESTS:-$PRODUCTION_DIR}"
 # Only a plain letter, digit, dot, bracket, plus, comma, at, equals, tilde, space or dash is linked (and never
 # first), so a name can't read as an option, a path or a control character.
@@ -84,37 +87,17 @@ done
 
 # ---- What must be in place, before anything is made. ----
 
-owner_and_mode() { stat -c '%u %a' -- "$1"; }
-# True for a file, and the folder it is in, that root owns and nobody else can write: only such a node is run.
-trusted_tool() { # <path>
-  local real
-  real=$(readlink -f -- "$1") || return 1
-  [ -f "$real" ] && [ -x "$real" ] || return 1
-  local part
-  for part in "$real" "$(dirname "$real")" "$(dirname "$1")"; do
-    read -r owner mode <<<"$(owner_and_mode "$part")"
-    [ "$owner" = "$ROOT_UID" ] && (((8#$mode & 8#022) == 0)) || return 1
-  done
-}
-
 node=""
 tools=""
 if [ -f "$here/../tools-path" ]; then
   IFS= read -r tools <"$here/../tools-path" || true
   [[ "$tools" =~ ^/[A-Za-z0-9_./:@+-]*$ ]] || fail "the tools path file is not valid"
 fi
-IFS=: read -ra tool_dirs <<<"$tools"
-for dir in "${tool_dirs[@]}" /usr/bin; do
-  if trusted_tool "$dir/node"; then
-    node="$dir/node"
-    break
-  fi
-done
-[ -n "$node" ] || fail "node was not found where only root can write"
+node=$(trusted_node "$tools") || fail "node was not found where only root can write"
 node_dir=${node%/*}
 
 [ -d "$PREVIEW_COPY_TMP" ] && [ ! -L "$PREVIEW_COPY_TMP" ] || fail "the snapshot folder is missing (the installer makes it)"
-[ "$(owner_and_mode "$PREVIEW_COPY_TMP")" = "$ROOT_UID 700" ] || fail "the snapshot folder is not private to root"
+[ "$(stat -c '%u %a' -- "$PREVIEW_COPY_TMP")" = "$ROOT_UID 700" ] || fail "the snapshot folder is not private to root"
 
 entry=$(getent passwd "$PREVIEW_USER") || fail "the preview account does not exist"
 IFS=: read -r _ _ preview_uid preview_gid _ <<<"$entry"
@@ -125,7 +108,7 @@ production_real=$(realpath -m -- "$production")
 [ -L "$production/current" ] || fail "production has no current release"
 release=$(readlink -f -- "$production/current")
 case "$release" in "$production_real/releases/"?*) ;; *) fail "production's current release is not in its releases folder" ;; esac
-[ -d "$release" ] && [ -f "$release/e2e/previewCopyExport.ts" ] && [ -f "$release/node_modules/.bin/payload" ] &&
+[ -d "$release" ] && [ -f "$release/e2e/previewCopyExport.ts" ] && [ -f "$release/node_modules/.bin/payload" ] && [ -f "$release/tsconfig.json" ] &&
   [ -f "$release/ops/backup-db.mjs" ] || fail "production's current release does not have the content export"
 database="$production/data/payload.db"
 [ -f "$database" ] && [ ! -L "$database" ] || fail "production's database was not found"
@@ -157,14 +140,12 @@ trap 'exit 130' HUP INT TERM
 find "$PREVIEW_COPY_TMP" -mindepth 1 -maxdepth 1 -name 'run.*' -exec rm -rf -- {} +
 
 db_bytes=$(stat -c %s -- "$database")
-free_kb=$(df -Pk "$PREVIEW_COPY_TMP" | awk 'NR == 2 { print $4 }')
-[[ "$free_kb" =~ ^[0-9]+$ ]] || fail "the free disk could not be read"
 # The snapshot and the export's file, which is smaller than the database, on top of production's floor.
-[ $((free_kb - (2 * db_bytes + 1023) / 1024)) -gt "$PREVIEW_FREE_FLOOR_KB" ] ||
+enough_disk "$PREVIEW_COPY_TMP" $((2 * db_bytes)) ||
   fail "there is not enough free disk to take the snapshot and keep production's floor"
 
 work=$(mktemp -d "$PREVIEW_COPY_TMP/run.XXXXXX")
-mkdir "$work/home" "$work/tmp"
+mkdir "$work/home" "$work/tmp" "$work/cwd"
 
 "$node" "$release/ops/backup-db.mjs" "$database" "$work/snapshot.db" </dev/null >/dev/null 2>&1 ||
   fail "the snapshot of production's database could not be made"
@@ -174,13 +155,15 @@ mkdir "$work/home" "$work/tmp"
 secret=$(new_secret) || fail "could not make a throwaway secret"
 export_status=0
 (
-  cd "$release"
-  # Nothing but what the export needs: no production setting reaches it from this script's environment, and
-  # SMTP_HOST is empty so an email adapter is never built, whatever production's own settings file holds.
-  exec env -i PATH="$node_dir:$SECURE_PATH" HOME="$work/home" TMPDIR="$work/tmp" LC_ALL=C \
+  # A folder with no settings file: `payload run` loads them from its working directory (and its parents), so
+  # production's, which the release links to, is never read. The script, its imports and the TypeScript settings
+  # are the release's, by absolute path. A run over PREVIEW_COPY_SECONDS ends there, with the lock freed.
+  cd "$work/cwd"
+  exec timeout "$PREVIEW_COPY_SECONDS" env -i PATH="$node_dir:$SECURE_PATH" HOME="$work/home" TMPDIR="$work/tmp" LC_ALL=C \
     NODE_ENV=production NODE_OPTIONS=--no-deprecation DATABASE_URI="file:$work/snapshot.db" \
     PAYLOAD_SECRET="$secret" PREVIEW_COPY_FILE="$work/copy.json" SMTP_HOST= \
-    "$node" node_modules/.bin/payload run e2e/previewCopyExport.ts
+    TSX_TSCONFIG_PATH="$release/tsconfig.json" \
+    "$node" "$release/node_modules/.bin/payload" run "$release/e2e/previewCopyExport.ts"
 ) </dev/null >"$work/export.log" 2>&1 || export_status=$?
 # Only the export's own lines (numbers, or one fixed sentence): the rest of its output is dropped, since the
 # log is public and Payload or the database can put a value in an error.
@@ -228,28 +211,25 @@ if [ "${#names[@]}" -gt 0 ]; then
   chmod 755 "$media_path"
   media_taken=yes
   [ -z "$(find "$media_path/" -mindepth 1 -print -quit)" ] || fail "the preview's staging folder for media is not empty"
-  stage_free_kb=$(df -Pk "$media_path/" | awk 'NR == 2 { print $4 }')
-  [[ "$stage_free_kb" =~ ^[0-9]+$ ]] || fail "the free disk could not be read"
-  copied_kb=0
+  copied_bytes=0
   for name in "${names[@]}"; do
     source_file="$media_source/$name"
     if [[ ! "$name" =~ $NAME_PATTERN ]] || [ ! -f "$source_file" ] || [ -L "$source_file" ]; then
       left_out=$((left_out + 1))
       continue
     fi
-    read -r owner mode size <<<"$(stat -c '%u %a %s' -- "$source_file")"
+    read -r mode size <<<"$(stat -c '%a %s' -- "$source_file")"
     # A link keeps production's owner and mode: so only a file the preview can read and no one but root can write.
-    if [ "$owner" = "$ROOT_UID" ] && (((8#$mode & 8#022) == 0 && (8#$mode & 8#004) != 0)) &&
+    if root_only_writable "$source_file" && (((8#$mode & 8#004) != 0)) &&
       ln -- "$source_file" "$media_path/$name" 2>/dev/null; then
       linked=$((linked + 1))
       continue
     fi
-    size_kb=$(((size + 1023) / 1024))
-    [ $((stage_free_kb - copied_kb - size_kb)) -gt "$PREVIEW_FREE_FLOOR_KB" ] ||
+    enough_disk "$media_path/" $((copied_bytes + size)) ||
       fail "there is not enough free disk to copy the media and keep production's floor"
     cp -- "$source_file" "$media_path/$name"
     chmod 644 "$media_path/$name"
-    copied_kb=$((copied_kb + size_kb))
+    copied_bytes=$((copied_bytes + size))
     copied=$((copied + 1))
   done
   # Back to the preview account, the files in it still root's: readable, not writable, removable.

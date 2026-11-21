@@ -17,6 +17,7 @@ const FILES = [
   'preview-host-guards.sh',
   'lib.sh',
   'umami-lib.sh',
+  'preview-access-lib.sh',
   'environment.sh',
   'caddy-lock-lib.sh',
 ]

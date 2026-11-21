@@ -84,6 +84,8 @@ sudo_caddy() { # <number>
 # database is rebuilt on every deploy: changes made while testing a preview are lost on the next push.
 copy_content() {
   local file_new="$COPY_FILE.new"
+  # Room for the largest file the root step may hand over, above production's floor
+  enough_disk "$PREVIEW_ROOT" "$PREVIEW_COPY_MAX_BYTES" || refuse "$no_disk"
   rm -rf -- "$COPY_MEDIA_DIR" "$COPY_FILE" "$file_new"
   mkdir "$COPY_MEDIA_DIR"
   local status=0
@@ -108,15 +110,8 @@ take_down() {
   sudo_caddy "$number"
 }
 
-# True when <bytes> more on the previews' disk still leaves production's floor of free space (#1076). The one
-# floor is PREVIEW_FREE_FLOOR_KB (environment.sh), the number the production deploy's preflight requires.
+# What the previews' disk refuses (the rule itself is enough_disk, preview-access-lib.sh).
 no_disk="there is not enough free disk to put this preview up and keep production's floor"
-enough_disk() { # <bytes about to be written>
-  local free_kb
-  free_kb=$(df -Pk "$PREVIEW_ROOT" | awk 'NR == 2 { print $4 }')
-  [[ "$free_kb" =~ ^[0-9]+$ ]] || return 1
-  [ $((free_kb - ($1 + 1023) / 1024)) -gt "$PREVIEW_FREE_FLOOR_KB" ]
-}
 
 # PM2's processes that belong to a preview, one `<name> <online|stopped>` line each. `pm2 jlist` prints one line of
 # JSON, which may follow lines of PM2's own notices. The name's prefix comes from environment.sh, and bash checks
@@ -211,7 +206,7 @@ case "$action" in
     [ "$(readlink "$APP_DIR/current" 2>/dev/null || true)" != "releases/$commit" ] ||
       refuse "that release is live; not replacing it"
     # Before reading anything: room for the largest archive that may be sent, above production's floor (#1076).
-    enough_disk "$PREVIEW_UPLOAD_MAX_BYTES" || refuse "$no_disk"
+    enough_disk "$PREVIEW_ROOT" "$PREVIEW_UPLOAD_MAX_BYTES" || refuse "$no_disk"
     rm -rf "$archive" "$incoming" "$APP_DIR/releases/$commit"
     # One byte over the limit tells a too-big archive from one that fits exactly.
     head -c "$((PREVIEW_UPLOAD_MAX_BYTES + 1))" >"$archive"
@@ -226,7 +221,7 @@ case "$action" in
     [ "$measured" != 2 ] || refuse "the archive unpacks to more than is allowed"
     [ "$measured" = 0 ] || refuse "the archive's listing can't be measured"
     # At its peak the folder holds the archive and what it unpacks to: that must leave production's floor free.
-    enough_disk "$((archive_bytes + unpacked))" || refuse "$no_disk"
+    enough_disk "$PREVIEW_ROOT" "$((archive_bytes + unpacked))" || refuse "$no_disk"
     mkdir "$incoming"
     tar --no-same-owner --no-same-permissions -xzf "$archive" -C "$incoming" || refuse "the archive did not unpack"
     links_stay_inside "$incoming" || refuse "the release has a link that leads outside it"

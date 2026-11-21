@@ -68,6 +68,9 @@ PREVIEW_COMMIT_PATTERN='^[0-9a-f]{40}$'
 # deleted when the step ends. The most the export's file may be, in bytes, is the step's own limit.
 PREVIEW_COPY_TMP="${PREVIEW_COPY_TMP:-/var/lib/sprecher-east-preview-copy}"
 PREVIEW_COPY_MAX_BYTES="${PREVIEW_COPY_MAX_BYTES:-134217728}"
+# How long the export may run, in seconds: the root step holds the Caddy lock that production's own scripts wait
+# for (300 s), so it must end well inside that.
+PREVIEW_COPY_SECONDS="${PREVIEW_COPY_SECONDS:-240}"
 # The most a release archive may unpack to, added up from the sizes its listing gives (#1346). The
 # upload limit above bounds only the compressed size, and a 1 GiB .tar.gz can unpack to many times that.
 PREVIEW_UNPACK_MAX_BYTES="${PREVIEW_UNPACK_MAX_BYTES:-3221225472}"

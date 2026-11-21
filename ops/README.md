@@ -155,7 +155,8 @@ part 2 of #1074; the owner's decision of 2026-11-11 is recorded on #1074). The p
 - **Production's content** reaches a preview through a second root script (#1397): the same sudo rule file lets the
   account run `preview-copy.sh` too, with a number of 1 to 6 digits and nothing else. It works as the Caddy script
   does (fixed PATH, privileged mode, the shared lock, no environment from the caller) and keeps its snapshot in a
-  folder only root can enter (`PREVIEW_COPY_TMP`, made by the installer, mode 700), deleted when the script ends.
+  folder only root can enter (`PREVIEW_COPY_TMP`, made by the installer, mode 700), deleted when the script ends
+  (the installer also sweeps what a killed run left). The export is time-limited (`PREVIEW_COPY_SECONDS`).
   What it does and why: [`previews.md`](previews.md#production-content-in-a-preview-1397).
 - **Caddy** is never written by the account. One sudo rule (`/etc/sudoers.d/sprecher-east-preview`) lets it run
   `preview-caddy.sh` (and the content copy script above) and nothing else, with a number of 1 to 6 digits matched by sudo itself and checked

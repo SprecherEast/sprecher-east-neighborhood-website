@@ -183,6 +183,7 @@ describe('preview-caddy.sh: it takes one pull request number and nothing else', 
     'CADDY_LOCK_WAIT',
     'RELOAD_CADDY',
     'CODE_DIR',
+    'PREVIEW_ACCESS_ROOT_UID',
   ]
   it('keeps its list of refused variables equal to the one these tests cover', () => {
     const text = fs.readFileSync(path.join(OPS, 'preview-caddy.sh'), 'utf8')

@@ -255,10 +255,17 @@ the snapshot (2026-11-11, recorded on #1077).
   folder inside `PREVIEW_COPY_TMP` (`/var/lib/sprecher-east-preview-copy`, root-only, mode 700, made by the installer),
   runs the export from **production's current release** (`main`'s code; `payload run e2e/previewCopyExport.ts`, with
   `NODE_ENV=production` and an empty environment but a throwaway secret and an empty `SMTP_HOST`, so nothing could
-  be mailed; production's own settings file in that release is still read by the framework's loader, as it is by the app,
-  since this is `main`'s code run as root), and deletes the snapshot as soon as the export ends. A trap deletes
+  be mailed). It runs from a folder of its own under the snapshot folder, because `payload run` loads settings files
+  from its working folder and the ones above it: with an absolute script path and the release's TypeScript settings
+  (`TSX_TSCONFIG_PATH`), no settings file of production's is read, and a test shows none is found and no production
+  secret reaches the export (decided on #1397). The export ends after `PREVIEW_COPY_SECONDS` (240), so the shared lock
+  is held for less than production's own 300-second wait. The snapshot is deleted as soon as the export ends. A trap deletes
   the folder at the end of every run, success or failure, and a run that was killed leaves a folder the next run
-  removes first. The snapshot is never in the preview's reach: the account can't enter its parent, which the
+  removes first; so does the installer, with a staging folder a killed run left as root's, which the account can't
+  remove (under the lock, so no copy is running; it warns and leaves them when the lock is held). The root step finds
+  `node` only in a folder, and as a file, that only root can write (the installer checks the same, so a host that
+  would fail it is told at install time); it checks the folder and file, not every ancestor, which are root's on a
+  server set up as ours is. The snapshot is never in the preview's reach: the account can't enter its parent, which the
   isolation check proves.
 - **The file** is the export's output, printed on the script's standard output; the wrapper writes it as the preview
   account (`<preview folder>/.preview-copy.json`, mode 600), so root never writes a path the account can swap. The import

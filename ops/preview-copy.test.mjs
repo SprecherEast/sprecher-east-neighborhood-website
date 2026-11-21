@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest'
 import { OPS, write } from './umami-harness.mjs'
 import { setUpPreviewAccessHarness } from './preview-access-harness.mjs'
 
-const { p, log, baseEnv } = setUpPreviewAccessHarness()
+const { p, stub, log, baseEnv } = setUpPreviewAccessHarness()
 const UID = String(process.getuid())
 // The preview account: the test's own user, or `nobody` when the tests run as root (root's id is never a preview's).
 const PREVIEW_USER = process.getuid() === 0 ? 'nobody' : os.userInfo().username
@@ -27,6 +27,9 @@ function buildProduction() {
   const release = p('prod/releases/r1')
   write(p('prod/data/payload.db'), SECRET_DB)
   write(p('prod/releases/r1/e2e/previewCopyExport.ts'), '// export\n')
+  write(p('prod/releases/r1/tsconfig.json'), '{}\n')
+  // production's settings file: \`payload run\` loads one from its working folder (and the folders above it)
+  write(p('prod/releases/r1/.env.local'), 'PRODUCTION_ONLY=' + SECRET_ENV + '\n')
   // The backup script: copies the database, like VACUUM INTO, and says what it ran from.
   write(
     p('prod/releases/r1/ops/backup-db.mjs'),
@@ -47,9 +50,12 @@ const snapshot = e.DATABASE_URI.replace('file:', '')
 fs.appendFileSync(e.STUB_LOG, ['payload', process.argv.slice(2).join(' '), 'cwd=' + process.cwd(),
   'snapshot=' + (fs.existsSync(snapshot) ? fs.readFileSync(snapshot, 'utf8') : 'missing'),
   'smtp=[' + (e.SMTP_HOST ?? 'unset') + ']', 'secret=' + (e.PAYLOAD_SECRET === 'PROD-SECRET' ? 'production' : 'other'),
-  'prodenv=' + (e.PRODUCTION_ONLY ?? 'unset'), 'node_env=' + e.NODE_ENV,
+  'prodenv=' + (e.PRODUCTION_ONLY ?? 'unset'),
+  'dotenv=' + (['.env', '.env.local', '../.env.local', '../../.env.local'].some((f) => fs.existsSync(require('node:path').join(process.cwd(), f))) ? 'found' : 'none'),
+  'tsconfig=' + e.TSX_TSCONFIG_PATH, 'node_env=' + e.NODE_ENV,
   'workmode=' + (fs.statSync(require('node:path').dirname(snapshot)).mode & 0o777).toString(8)].join(' ') + '\\n')
-if (e.STUB_EXPORT_FAILS) {
+if (e.STUB_EXPORT_HANGS) setTimeout(() => {}, 60000)
+else if (e.STUB_EXPORT_FAILS) {
   console.error('${SECRET_TEXT} ${SECRET_DB} secret@example.com')
   console.log('${SECRET_TEXT} secret@example.com')
   process.exit(1)
@@ -182,20 +188,36 @@ describe('preview-copy.sh: the snapshot', () => {
     await copy()
     const text = log()
     expect(text).toContain('backup true')
-    expect(text).toContain(
-      `payload run e2e/previewCopyExport.ts cwd=${fs.realpathSync(p('prod/releases/r1'))}`,
-    )
+    const release = fs.realpathSync(p('prod/releases/r1'))
+    // an absolute script path, run from a folder of its own, so no settings file of production's is found
+    expect(text).toContain(`payload run ${release}/e2e/previewCopyExport.ts cwd=`)
+    expect(text).not.toContain(`cwd=${release}`)
+    expect(text).toContain(`tsconfig=${release}/tsconfig.json`)
     expect(text).toContain(`snapshot=${SECRET_DB}`)
     expect(text).toContain('workmode=700')
     expect(text).toContain('node_env=production')
   })
 
-  it('runs the export with no mail setting and none of production’s settings or secrets', async () => {
+  it('runs the export with no mail setting, no settings file of production’s and none of its secrets', async () => {
     prepare()
     await copy()
     expect(log()).toContain('smtp=[]')
     expect(log()).toContain('secret=other')
     expect(log()).toContain('prodenv=unset')
+    // \`payload run\` loads a settings file from its working folder and the ones above: there is none there
+    expect(log()).toContain('dotenv=none')
+    expect(log()).not.toContain(SECRET_ENV)
+  })
+
+  it('stops the export that runs past its time limit, and says so with a fixed text', async () => {
+    prepare()
+    const { code, stderr } = await copy(['7'], {
+      STUB_EXPORT_HANGS: '1',
+      PREVIEW_COPY_SECONDS: '1',
+    })
+    expect(code).toBe(1)
+    expect(stderr).toContain('the export failed')
+    expect(entries(p('copytmp'))).toEqual([])
   })
 
   it('leaves the snapshot folder empty after a success', async () => {
@@ -232,10 +254,15 @@ describe('preview-copy.sh: the snapshot', () => {
 
   it('removes the snapshot as soon as the export ends: the media step runs without it', async () => {
     prepare()
-    // a media step that fails leaves nothing, and the export saw the snapshot while it ran
-    await copy()
+    // the media step's \`ln\` records whether any snapshot file is left the moment it runs
+    stub(
+      'ln',
+      `echo "ln: snapshot files left $(find ${p('copytmp')} -name 'snapshot.db*' | wc -l)" >> ${p('log')}\nexec /usr/bin/ln "$@"`,
+    )
+    expect((await copy()).code).toBe(0)
     expect(log()).toContain(`snapshot=${SECRET_DB}`)
-    expect(entries(p('copytmp'))).toEqual([])
+    expect(log()).toContain('ln: snapshot files left 0')
+    expect(log()).not.toMatch(/ln: snapshot files left [1-9]/)
   })
 
   it('stops when the snapshot folder is not private to root, is a link, or is missing', async () => {
@@ -498,6 +525,7 @@ describe('preview-copy.sh: one number, one at a time, as root', () => {
     'PREVIEW_FREE_FLOOR_KB',
     'PREVIEW_COPY_TMP',
     'PREVIEW_COPY_MAX_BYTES',
+    'PREVIEW_COPY_SECONDS',
     'PREVIEW_ACCESS_ROOT_UID',
     'PRODUCTION_DIR_FOR_TESTS',
     'CADDYFILE',

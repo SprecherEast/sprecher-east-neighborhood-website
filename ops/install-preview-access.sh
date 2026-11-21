@@ -33,11 +33,11 @@ trap '' HUP
 here=$(dirname "$0")
 . "$here/lib.sh"
 . "$here/preview-access-lib.sh"
+. "$here/caddy-lock-lib.sh"
 
 SUDOERS_FILE="${SUDOERS_FILE:-/etc/sudoers.d/sprecher-east-preview}"
 SUDOERS_MAIN="${SUDOERS_MAIN:-/etc/sudoers}"
 PUBLIC_KEY_FILE="${PREVIEW_PUBLIC_KEY_FILE:-$CODE_DIR/ops/preview-deploy-key.pub}"
-ROOT_UID="${PREVIEW_ACCESS_ROOT_UID:-0}" # root's id; a test run by someone else sets its own
 ROOT_OWNER=root
 MARKER="Managed by ops/install-preview-access.sh (#1345)"
 # main's files the account may run, copied into PREVIEW_ACCESS_DIR/ops/ (the caddy/ ones into caddy/)
@@ -57,7 +57,6 @@ doubt() { # <reason>
 
 # Prints the owner's user id, then the mode, of a path.
 owner_uid() { stat -c %u -- "$1"; }
-unsafe_mode() { (("8#$(stat -c %a -- "$1")" & 8#022)); } # writable by group or others
 
 # A folder or file that exists must be what it should be: not a link, root-owned, not writable by others.
 check_root_owned() { # <path> <d|f>
@@ -65,7 +64,7 @@ check_root_owned() { # <path> <d|f>
   [ ! -L "$1" ] || doubt "$1 is a link"
   [ "-$2" = "-$([ -d "$1" ] && echo d || echo f)" ] || doubt "$1 is not what it should be"
   [ "$(owner_uid "$1")" = "$ROOT_UID" ] || doubt "$1 is not owned by root"
-  ! unsafe_mode "$1" || doubt "$1 can be written by others"
+  root_only_writable "$1" || doubt "$1 can be written by others"
 }
 
 # A file this script wrote: it holds the marker. Anything else there is somebody's own.
@@ -142,6 +141,9 @@ for tool in node pm2; do
   case ":$tools:" in *":$dir:"*) ;; *) tools="${tools:+$tools:}$dir" ;; esac
 done
 [[ "$tools" =~ ^/[A-Za-z0-9_./:@+-]*$ ]] || doubt "the folder of node or pm2 has characters it should not"
+# The root script (preview-copy.sh) runs node as root and finds it the same way (trusted_node), so one it would
+# refuse is caught here, not at a preview's deploy.
+trusted_node "$tools" >/dev/null || doubt "node is not owned by root and writable only by root, which the content copy script needs"
 
 # sshd must take the key line as written, for this account.
 sshd_settings=$(sshd -T -C "user=$PREVIEW_USER,host=localhost,addr=127.0.0.1" 2>/dev/null) ||
@@ -167,7 +169,7 @@ set +f
 # The root script runs with a fixed PATH (ROOT_SECURE_PATH, also sudo's secure_path for it): the tools it
 # calls must be in it.
 [[ "$ROOT_SECURE_PATH" =~ ^/[A-Za-z0-9_./:@+-]*$ ]] || doubt "the root script's PATH has characters it should not"
-for tool in caddy systemctl flock stat find df cp ln mktemp chown chmod readlink openssl getent realpath; do
+for tool in caddy systemctl flock stat find df cp ln mktemp chown chmod readlink openssl getent realpath awk grep env id mkdir rm cat dirname timeout; do
   (PATH="$ROOT_SECURE_PATH" command -v "$tool" >/dev/null 2>&1) || doubt "$tool is not in $ROOT_SECURE_PATH, the PATH the root scripts run with"
 done
 
@@ -266,6 +268,28 @@ if [ ! -d "$PREVIEW_COPY_TMP" ]; then
   chown "$ROOT_OWNER:$ROOT_OWNER" "$PREVIEW_COPY_TMP"
   changes+=("$PREVIEW_COPY_TMP made, root-only")
 fi
+# What a killed or interrupted content copy leaves: a snapshot folder (also after a reboot), or a media staging
+# folder still root's, which the preview account can't remove. Under the lock the copy runs under, so none is
+# running; in a subshell, so the lock is let go before the guards below take it.
+leftovers=$(
+  take_caddy_lock || {
+    echo "not-swept"
+    exit 0
+  }
+  n=0
+  while IFS= read -r -d '' leftover; do
+    rm -rf -- "$leftover" && n=$((n + 1))
+  done < <(
+    find "$PREVIEW_COPY_TMP" -mindepth 1 -maxdepth 1 -name 'run.*' -print0
+    [ ! -d "$PREVIEW_ROOT" ] || find "$PREVIEW_ROOT" -mindepth 2 -maxdepth 2 -name .copy-media -type d -uid "$ROOT_UID" -print0
+  )
+  echo "$n"
+)
+case "$leftovers" in
+  0) ;;
+  not-swept) report "WARNING: preview access: the content copy's leftovers could not be swept, since the Caddy lock was held" ;;
+  *) changes+=("$leftovers leftovers of a content copy removed") ;;
+esac
 if [ ! -d "$PREVIEW_ROOT" ]; then
   install -d -m 750 "$PREVIEW_ROOT"
   chown "$PREVIEW_USER:$PREVIEW_USER" "$PREVIEW_ROOT"

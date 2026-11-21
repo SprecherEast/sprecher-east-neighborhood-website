@@ -183,9 +183,10 @@ isolation check proves it before and after every preview deploy. What holds now:
   through a second narrow sudo rule (a number of 1 to 6 digits, the same fixed PATH, `secure_path`, privileged mode,
   refused environment and shared lock as the Caddy script). Under the lock it makes a snapshot of production's database
   with `ops/backup-db.mjs` in a folder only root can enter (`PREVIEW_COPY_TMP`, mode 700, made by the installer, which
-  changes nothing if it exists with another mode or owner), runs the export from production's current release with an
-  empty environment (a throwaway secret, no `SMTP_HOST`), and deletes the snapshot at once and again by a trap on every
-  exit; a killed run's folder is removed by the next. The preview gets only the export's file, which the wrapper writes
+  changes nothing if it exists with another mode or owner), runs the export from production's current release with a
+  minimal environment (a throwaway secret, no `SMTP_HOST`) and from a folder with no settings file, so none of
+  production's settings or secrets reaches it, within a time limit (`PREVIEW_COPY_SECONDS`), and deletes the snapshot at
+  once and again by a trap on every exit; a killed run's folder is removed by the next run and by the installer. The preview gets only the export's file, which the wrapper writes
   as the account from the script's standard output (root writes no path the account could swap), and hard links to the
   media files the export lists. The staging folder is opened once and judged by what the open file is (real path, type,
   owner), made root's while it is filled, and every link is made inside that open folder, so a link or a swapped folder

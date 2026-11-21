@@ -420,6 +420,17 @@ describe('preview-wrapper.sh: production’s published content (#1397)', () => {
     expect(fs.existsSync(folder('.copy-media'))).toBe(false)
   })
 
+  it('checks the room for the copy file against production’s floor before it asks the root script', async () => {
+    await live()
+    const { code, out } = await wrapper(`deploy 7 ${COMMIT}`, {
+      env: { PREVIEW_FREE_FLOOR_KB: '9999999999' },
+    })
+    expect(code).not.toBe(0)
+    expect(out).toContain('not enough free disk')
+    expect(log()).not.toContain('copy-script')
+    expect(log()).not.toContain('deploy-script')
+  })
+
   it('removes the copy file and the staging folder after the deploy, also when the deploy script fails', async () => {
     await live()
     const { code } = await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_DEPLOY_FAILS: '1' } })
