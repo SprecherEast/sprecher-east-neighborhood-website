@@ -91,9 +91,10 @@ describe('preview-wrapper.sh: the actions', () => {
     fs.symlinkSync(p('previews/pr-12'), p('previews/pr-99'))
     const { code, out } = await wrapper('list')
     expect(code).toBe(0)
-    expect(out.trim().split('\n').sort()).toEqual([
-      `preview=12 commit=none`,
+    const lines = out.trim().split('\n')
+    expect(lines.map((l) => l.split(' idle=')[0])).toEqual([
       `preview=7 commit=${COMMIT}`,
+      `preview=12 commit=none`,
     ])
   })
 
@@ -102,7 +103,7 @@ describe('preview-wrapper.sh: the actions', () => {
     fs.writeFileSync(p('previews/pr-8'), 'x')
     const { code, out } = await wrapper('list')
     expect(code).toBe(0)
-    expect(out.trim()).toBe('preview=7 commit=none')
+    expect(out.trim()).toMatch(/^preview=7 commit=none idle=\d+ folder=yes block=no process=none$/)
   })
 
   it('starts with an absolute shebang and runs on its own with the locale fixed, whatever the caller sets', async () => {
@@ -587,7 +588,8 @@ describe('preview-wrapper.sh: a hostile release archive', () => {
     expect(code).toBe(2)
     expect(out).toContain(reason)
     expect(fs.existsSync(release())).toBe(false)
-    expect(fs.readdirSync(p('previews/pr-7/releases'))).toEqual([]) // no half-unpacked leftovers
+    // no half-unpacked leftovers, and a new preview that got no release leaves no empty folder to hold a place
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false)
   }
 
   it.each([
@@ -655,7 +657,7 @@ describe('preview-wrapper.sh: a hostile release archive', () => {
     })
     expect(over.code).toBe(2)
     expect(over.out).toContain('unpacks to more than is allowed')
-    expect(fs.readdirSync(p('previews/pr-7/releases'))).toEqual([]) // nothing unpacked, nothing left
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false) // nothing unpacked, nothing left
     const exact = await wrapper(`upload 7 ${COMMIT}`, {
       input: big,
       env: { PREVIEW_UNPACK_MAX_BYTES: '5000' },

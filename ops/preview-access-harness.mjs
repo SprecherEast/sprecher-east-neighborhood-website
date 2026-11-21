@@ -138,6 +138,9 @@ export function setUpPreviewAccessHarness() {
     CADDYFILE: p('caddy/Caddyfile'),
     RELOAD_CADDY: p('bin/reload-caddy'),
     PM2_HOME: p('previews/.pm2'),
+    // Not production's cap or floor: those have their own tests (a test sets what it checks).
+    PREVIEW_MAX_COUNT: '50',
+    PREVIEW_FREE_FLOOR_KB: '1',
     ...extra,
   })
 

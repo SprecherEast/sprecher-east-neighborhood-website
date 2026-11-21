@@ -321,9 +321,9 @@ describe('the preview port range', () => {
   })
 })
 
-describe('the most previews at once (#1345)', () => {
-  it('is ten by default, and only a number from 1 to 999 is taken', () => {
-    expect(printed({}, 'echo $PREVIEW_MAX_COUNT').trim()).toBe('10')
+describe('the most previews at once (#1345, #1076)', () => {
+  it('is one by default until the server is measured, and only a number from 1 to 999 is taken', () => {
+    expect(printed({}, 'echo $PREVIEW_MAX_COUNT').trim()).toBe('1')
     expect(
       printed({ PREVIEW_NUMBER: '7', PREVIEW_MAX_COUNT: '999' }, 'echo $PREVIEW_MAX_COUNT').trim(),
     ).toBe('999')
@@ -336,6 +336,19 @@ describe('the most previews at once (#1345)', () => {
         expect(r.stdout).toContain('::error title=Server::PREVIEW_MAX_COUNT')
       }
     }
+  })
+})
+
+describe('the disk floor and the idle limit of a preview (#1076)', () => {
+  it('have defaults, and only numbers are taken', () => {
+    expect(printed({}, 'echo $PREVIEW_FREE_FLOOR_KB').trim()).toBe('3145728')
+    expect(printed({}, 'echo $PREVIEW_IDLE_DAYS').trim()).toBe('7')
+    for (const name of ['PREVIEW_FREE_FLOOR_KB', 'PREVIEW_IDLE_DAYS'])
+      for (const bad of ['0', '01', '-1', 'abc', '5 6', '$(id)', '12345678901']) {
+        const r = run({ PREVIEW_NUMBER: '7', [name]: bad }, 'echo reached')
+        expect(r.status, `${name}=${bad}`).not.toBe(0)
+        expect(r.stdout).toContain(`::error title=Server::${name}`)
+      }
   })
 })
 

@@ -13,8 +13,8 @@ import { describe, expect, it } from 'vitest'
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
 const WORKFLOWS = path.join(ROOT, '.github', 'workflows')
 const ENVIRONMENT = 'preview'
-const KEY_JOBS = ['facts', 'deploy'] // the jobs that hold the preview key
-const OTHER_JOBS = ['gate', 'build', 'report']
+const KEY_JOBS = ['facts', 'deploy', 'teardown'] // the jobs that hold the preview key
+const OTHER_JOBS = ['gate', 'build', 'report', 'removed']
 // The environment's secrets, listed in ops/previews.md. The key line is the only secret among them.
 const SECRET_NAMES = [
   'PREVIEW_SSH_HOST',
@@ -48,8 +48,14 @@ describe('the preview workflow’s trigger', () => {
     expect(codeOf('preview.yml')).not.toMatch(/pull_request_target|workflow_run|workflow_call/)
   })
 
-  it('reacts to a push and to the label being added, and to nothing else', () => {
-    expect(workflow.on.pull_request.types).toEqual(['opened', 'synchronize', 'reopened', 'labeled'])
+  it('reacts to a push, to the label being added and to the pull request closing, and to nothing else', () => {
+    expect(workflow.on.pull_request.types).toEqual([
+      'opened',
+      'synchronize',
+      'reopened',
+      'labeled',
+      'closed',
+    ])
   })
 
   it('has no workflow-level cancellation, which would cancel a deploy in the middle of its ssh session', () => {
@@ -85,12 +91,131 @@ describe('the preview workflow’s trigger', () => {
     expect(jobs.report.if).toContain("needs.deploy.result != 'cancelled'")
   })
 
-  it('skips the gate for a label other than `preview`', () => {
+  it('skips the gate for a label other than `preview`, and for a closed pull request', () => {
     expect(jobs.gate.if).toContain("github.event.label.name == 'preview'")
+    expect(jobs.gate.if).toContain("github.event.action != 'closed'")
   })
 
   it('has a read-only token by default', () => {
     expect(workflow.permissions).toEqual({ contents: 'read' })
+  })
+})
+
+describe('teardown when the pull request closes (#1076)', () => {
+  it('runs only on a closed pull request of this repository that is not Dependabot’s', () => {
+    const condition = jobs.teardown.if.replace(/\s+/g, ' ')
+    expect(condition).toContain("github.event.action == 'closed'")
+    expect(condition).toContain(
+      'github.event.pull_request.head.repo.full_name == github.repository',
+    )
+    expect(condition).toContain("!= 'dependabot[bot]'")
+  })
+
+  it('waits for, or replaces, a deploy of the same pull request: the same group, never cancelling one', () => {
+    const c = jobs.teardown.concurrency
+    expect(c.group).toBe(jobs.deploy.concurrency.group)
+    expect(c['cancel-in-progress']).toBe(false)
+  })
+
+  it('names only the `preview` environment and runs the wrapper’s teardown through the script', () => {
+    expect(jobs.teardown.environment).toBe(ENVIRONMENT)
+    const run = steps('teardown').find((s) => s.id === 'teardown').run
+    expect(run).toBe('bash .github/scripts/preview-teardown.sh')
+    expect(steps('teardown').find((s) => s.id === 'teardown').env).toEqual({
+      NUMBER: '${{ github.event.pull_request.number }}',
+    })
+  })
+
+  it('edits only a comment the preview already has, with a write token that does nothing else', () => {
+    expect(jobs.removed.needs).toBe('teardown')
+    expect(jobs.removed.if).toContain("needs.teardown.outputs.removed == 'yes'")
+    expect(jobs.removed.permissions).toEqual({ contents: 'read', 'pull-requests': 'write' })
+    expect(JSON.stringify(jobs.removed)).toContain('if (!existing) return')
+  })
+
+  it('the other jobs do not run for a closed pull request: the gate skips, and they wait for it', () => {
+    for (const id of ['facts', 'build', 'deploy', 'report'])
+      expect(jobs[id].needs).toContain('gate')
+    expect(jobs.report.if).toContain("needs.gate.outputs.build == 'true'")
+  })
+})
+
+describe('the shared gate for the preview key (#1076)', () => {
+  const action = yaml.load(
+    fs.readFileSync(path.join(ROOT, '.github/actions/preview-ssh/action.yml'), 'utf8'),
+  )
+  const sweepJob = yaml.load(read('preview-sweep.yml')).jobs.sweep
+
+  it('checks all four connection values, so a missing known-hosts line can never be accepted on first sight', () => {
+    const check = action.runs.steps.find((s) => s.id === 'values')
+    expect(Object.keys(check.env).sort()).toEqual(['HOST', 'KEY', 'KNOWN_HOSTS', 'USER_NAME'])
+    for (const name of Object.keys(check.env)) expect(check.run).toContain(`"$${name}"`)
+    expect(action.inputs['known-hosts'].required).toBe(true)
+  })
+
+  it('sets up ssh only when every value is there, and says so in its output', () => {
+    const ssh = action.runs.steps.find((s) => s.uses === './.github/actions/vps-ssh')
+    expect(ssh.if).toBe("steps.values.outputs.ready == 'true'")
+    expect(action.outputs.ready.value).toBe('${{ steps.values.outputs.ready }}')
+  })
+
+  it.each([
+    ['facts', jobs.facts],
+    ['teardown', jobs.teardown],
+    ['the sweep', sweepJob],
+  ])('is the only way %s sets up ssh, passing all five secrets', (_name, job) => {
+    const uses = job.steps.filter((s) => String(s.uses ?? '').includes('actions/'))
+    expect(uses.some((s) => s.uses === './.github/actions/vps-ssh')).toBe(false)
+    const gate = job.steps.find((s) => s.uses === './.github/actions/preview-ssh')
+    expect(Object.keys(gate.with).sort()).toEqual(['host', 'key', 'known-hosts', 'port', 'user'])
+  })
+})
+
+describe('the nightly sweep', () => {
+  const sweep = yaml.load(read('preview-sweep.yml'))
+  const job = sweep.jobs.sweep
+
+  it('runs on a schedule and by hand, and on a pull request never', () => {
+    expect(Object.keys(sweep.on).sort()).toEqual(['schedule', 'workflow_dispatch'])
+    expect(sweep.on.schedule).toHaveLength(1)
+    expect(codeOf('preview-sweep.yml')).not.toMatch(/pull_request|workflow_run|workflow_call/)
+  })
+
+  it('names only the `preview` environment, reads its secrets only, and calls no other workflow', () => {
+    expect(job.environment).toBe(ENVIRONMENT)
+    expect(Object.keys(sweep.jobs)).toEqual(['sweep'])
+    expect([...new Set(secretsRead(job))].sort()).toEqual([...SECRET_NAMES].sort())
+    expect(codeOf('preview-sweep.yml')).not.toMatch(/environment:\s*['"]?production|VPS_/i)
+    expect(job.uses).toBeUndefined()
+  })
+
+  it('checks out the default branch’s scripts and runs the sweep script only', () => {
+    const checkout = job.steps.find((s) => String(s.uses ?? '').startsWith('actions/checkout@'))
+    expect(checkout.with.ref).toBe('${{ github.event.repository.default_branch }}')
+    expect(checkout.with['persist-credentials']).toBe(false)
+    const runs = job.steps.map((s) => s.run).filter((run) => run?.startsWith('bash '))
+    expect(runs).toEqual(['bash .github/scripts/preview-sweep.sh'])
+  })
+
+  it('does nothing, and does not fail, while the environment lacks a connection value: it uses the shared gate', () => {
+    const gate = job.steps.find((s) => s.uses === './.github/actions/preview-ssh')
+    expect(gate.id).toBe('ssh')
+    const run = job.steps.find((s) => s.run?.startsWith('bash '))
+    expect(run.if).toBe("steps.ssh.outputs.ready == 'true'")
+  })
+
+  it('can read pull requests and write nothing', () => {
+    expect(sweep.permissions).toEqual({ contents: 'read' })
+    expect(job.permissions).toEqual({ contents: 'read', 'pull-requests': 'read' })
+  })
+
+  it('is one at a time and never cancelled in the middle of its ssh calls', () => {
+    expect(sweep.concurrency['cancel-in-progress']).toBe(false)
+  })
+
+  it('is not a required check', () => {
+    const required = fs.readFileSync(path.join(ROOT, '.github/scripts/require-checks.sh'), 'utf8')
+    expect(required).not.toContain(job.name)
   })
 })
 
@@ -129,7 +254,7 @@ describe('the jobs that hold the preview key', () => {
         [...r.matchAll(/bash (\.github\/scripts\/\S+)/g)].map((m) => m[1]),
       )
       for (const script of scripts) {
-        expect(script).toMatch(/^\.github\/scripts\/preview-(facts|deploy)\.sh$/)
+        expect(script).toMatch(/^\.github\/scripts\/preview-(facts|deploy|teardown)\.sh$/)
         expect(fs.existsSync(path.join(ROOT, script))).toBe(true)
       }
     },
@@ -149,9 +274,11 @@ describe('the jobs that hold the preview key', () => {
     for (const name of SECRET_NAMES) expect(doc).toContain(name)
   })
 
-  it('ask the server only through the vps-ssh action, with the preview key and no other credential', () => {
+  it('ask the server only through the shared gate (or vps-ssh once it has passed), with the preview key and no other credential', () => {
     for (const id of KEY_JOBS) {
-      const ssh = steps(id).find((s) => s.uses === './.github/actions/vps-ssh')
+      const ssh = steps(id).find((s) =>
+        ['./.github/actions/preview-ssh', './.github/actions/vps-ssh'].includes(s.uses),
+      )
       expect(ssh, id).toBeDefined()
       expect(JSON.stringify(ssh.with)).not.toMatch(/VPS_/)
     }

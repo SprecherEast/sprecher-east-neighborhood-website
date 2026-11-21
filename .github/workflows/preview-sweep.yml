@@ -1,0 +1,55 @@
+name: Pull request preview sweep
+
+# Every night, removes the pull request previews that should not be on the server (#1076, epic #1070; the design
+# is in ops/previews.md): those whose pull request is not open, leftovers of one (a Caddy block or a PM2 process
+# with no folder), and those nobody deployed for PREVIEW_IDLE_DAYS (ops/environment.sh). It goes through the
+# restricted preview account's wrapper only and says what it removed in the job summary. Not a required check.
+#
+# `schedule` runs the default branch's copy of this file; `workflow_dispatch` (write access needed) runs the
+# copy of the branch it is given, which could reach the `preview` environment's key: the server is the boundary
+# (the key runs only the wrapper's actions, ops/previews.md), as for preview-sign-in.yml.
+# No job names `production`, none calls another workflow, and the read token cannot write anything.
+
+on:
+  schedule:
+    - cron: '17 7 * * *' # 07:17 UTC, after midnight in Madison, off the hour to avoid the queue's busiest minute
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pull-request-preview-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    name: Sweep pull request previews
+    environment: preview # the preview key and connection values
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read # the list of open pull requests, and nothing else
+    steps:
+      # the default branch's scripts, never another branch's (this job holds the key)
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      # Without every connection value there is nothing to sweep (previews are unavailable): no failure to report.
+      - uses: ./.github/actions/preview-ssh
+        id: ssh
+        with:
+          host: ${{ secrets.PREVIEW_SSH_HOST }}
+          user: ${{ secrets.PREVIEW_SSH_USER }}
+          port: ${{ secrets.PREVIEW_SSH_PORT || '22' }}
+          key: ${{ secrets.PREVIEW_SSH_KEY }}
+          known-hosts: ${{ secrets.PREVIEW_SSH_KNOWN_HOSTS }}
+
+      - name: Remove what should not be there, through the wrapper
+        if: steps.ssh.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/preview-sweep.sh

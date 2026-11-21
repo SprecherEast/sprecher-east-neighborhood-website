@@ -40,9 +40,19 @@ PREVIEW_USER="${PREVIEW_USER:-sprecher-preview}"
 PREVIEW_HOME="${PREVIEW_HOME:-/home/sprecher-preview}"
 PREVIEW_ACCESS_DIR="${PREVIEW_ACCESS_DIR:-/usr/local/lib/sprecher-east-preview}"
 PREVIEW_UPLOAD_MAX_BYTES="${PREVIEW_UPLOAD_MAX_BYTES:-1073741824}" # the most one release archive may hold
-# The most previews that may exist at once (folders, and Caddy blocks). Each block orders a certificate,
-# and Let's Encrypt's weekly budget is shared with production's (ops/previews.md, "Certificate budget").
-PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-10}"
+# The most previews that may exist at once (folders, and Caddy blocks): the cap, defined here and nowhere
+# else (#1076). The preview workflow reads it from this file, the wrapper and the Caddy script enforce it on
+# the server. It is also bounded by the certificate budget: each block orders a certificate from a weekly
+# budget production shares (ops/previews.md, "Certificate budget"). One until the server's memory and disk
+# are measured with a preview running (ops/previews.md, "The cap"): raise it in one line, here, afterwards.
+PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-1}"
+# The free disk space a preview may never take the server below, in KiB: production's own floor. The production
+# deploy's preflight refuses to start with less than this (a test keeps this equal to the number in
+# .github/workflows/deploy.yml), so a preview that left less would stop the next production deploy.
+PREVIEW_FREE_FLOOR_KB="${PREVIEW_FREE_FLOOR_KB:-3145728}"
+# A preview that nobody has deployed for this many days is removed by the nightly sweep (#1076); the next push
+# or a re-run of its deploy brings it back (the certificate is kept, so that is not a new order).
+PREVIEW_IDLE_DAYS="${PREVIEW_IDLE_DAYS:-7}"
 # How long a preview's health check waits for the app to answer through Caddy (production's is 90 s): its first
 # deploy also waits for Caddy to order the preview's certificate (#1075).
 PREVIEW_UP_SECONDS="${PREVIEW_UP_SECONDS:-180}"
@@ -104,6 +114,14 @@ else
   }
   [[ "$PREVIEW_MAX_COUNT" =~ ^[1-9][0-9]{0,2}$ ]] || {
     echo "::error title=Server::PREVIEW_MAX_COUNT is not a number from 1 to 999"
+    exit 1
+  }
+  [[ "$PREVIEW_FREE_FLOOR_KB" =~ ^[1-9][0-9]{0,9}$ ]] || {
+    echo "::error title=Server::PREVIEW_FREE_FLOOR_KB is not a number of KiB"
+    exit 1
+  }
+  [[ "$PREVIEW_IDLE_DAYS" =~ ^[1-9][0-9]{0,2}$ ]] || {
+    echo "::error title=Server::PREVIEW_IDLE_DAYS is not a number of days from 1 to 999"
     exit 1
   }
   # Two ports (no sign, no leading zero, at most 65535), lowest first, with no reserved port between.
