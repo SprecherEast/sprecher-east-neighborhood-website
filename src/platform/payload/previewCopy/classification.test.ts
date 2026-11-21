@@ -2,6 +2,7 @@ import type { SanitizedConfig } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { loadConfig } from '../testing/accessHarness'
+import { configOf, entry, field } from '../testing/previewCopyFixtures'
 import { findClassificationProblems } from '../testing/previewCopyGate'
 import { copiedSlugs, PREVIEW_COPY, previewCopyEntry } from './classification'
 
@@ -63,18 +64,8 @@ describe('the real config', () => {
 })
 
 describe('the gate', () => {
-  const field = (name: string, extra: object = {}) => ({ name, type: 'text', ...extra })
-  const open = () => true
-  const config = (fields: unknown[], extra: object = {}) => ({
-    collections: [{ slug: 'things', fields, access: { read: open }, ...extra }],
-    globals: [],
-  })
-  const entry = (keep: string[], clear: string[] = [], reads: 'all' | 'published' = 'all') => ({
-    things: { copy: 'copied' as const, reason: 'A test collection.', keep, clear, reads },
-  })
-
   it('fails on a collection with no class, and on a class with no collection', async () => {
-    expect(await findClassificationProblems(config([field('a')]), {})).toEqual([
+    expect(await findClassificationProblems(configOf([field('a')]), {})).toEqual([
       'things: not classified (add it to PREVIEW_COPY)',
     ])
     expect(
@@ -87,7 +78,7 @@ describe('the gate', () => {
 
   it('fails on a new field nobody decided on', async () => {
     const problems = await findClassificationProblems(
-      config([field('a'), field('b')]),
+      configOf([field('a'), field('b')]),
       entry(['a']),
     )
     expect(problems).toEqual(['things.b: new field, decide keep or clear'])
@@ -98,7 +89,9 @@ describe('the gate', () => {
       { type: 'row', fields: [field('a')] },
       { type: 'tabs', tabs: [{ fields: [field('b')] }, { name: 'meta', fields: [field('c')] }] },
     ]
-    expect(await findClassificationProblems(config(fields), entry(['a', 'b', 'meta']))).toEqual([])
+    expect(await findClassificationProblems(configOf(fields), entry(['a', 'b', 'meta']))).toEqual(
+      [],
+    )
   })
 
   it('fails on a kept email field, however deeply nested, and passes once cleared', async () => {
@@ -106,16 +99,18 @@ describe('the gate', () => {
       field('a'),
       { name: 'contact', type: 'group', fields: [{ name: 'x', type: 'email' }] },
     ]
-    expect(await findClassificationProblems(config(fields), entry(['a', 'contact']))).toEqual([
+    expect(await findClassificationProblems(configOf(fields), entry(['a', 'contact']))).toEqual([
       'things.contact: kept, but it holds an email field (x); it must be cleared',
     ])
-    expect(await findClassificationProblems(config(fields), entry(['a'], ['contact']))).toEqual([])
+    expect(await findClassificationProblems(configOf(fields), entry(['a'], ['contact']))).toEqual(
+      [],
+    )
   })
 
   it('fails on a field named like an email, and on a hidden one', async () => {
     const fields = [field('replyToEmail'), field('token', { hidden: true })]
     expect(
-      await findClassificationProblems(config(fields), entry(['replyToEmail', 'token'])),
+      await findClassificationProblems(configOf(fields), entry(['replyToEmail', 'token'])),
     ).toEqual([
       'things.replyToEmail: kept, but it holds an email field (replyToEmail); it must be cleared',
       'things.token: kept, but it has a hidden field (token); it must be cleared',
@@ -130,18 +125,21 @@ describe('the gate', () => {
       field('note', { access: { read: staff } }),
       field('open', { access: { read: open } }),
     ]
-    expect(await findClassificationProblems(config(fields), entry(['note', 'open']))).toEqual([
+    expect(await findClassificationProblems(configOf(fields), entry(['note', 'open']))).toEqual([
       'things.note: kept, but it has a staff-only read field (note); it must be cleared',
     ])
   })
 
   it('fails on a copied collection with drafts that does not read published only', async () => {
     const drafts = { versions: { drafts: true } }
-    expect(await findClassificationProblems(config([field('a')], drafts), entry(['a']))).toEqual([
+    expect(await findClassificationProblems(configOf([field('a')], drafts), entry(['a']))).toEqual([
       'things: has drafts, so it must read the published version only',
     ])
     expect(
-      await findClassificationProblems(config([field('a')], drafts), entry(['a'], [], 'published')),
+      await findClassificationProblems(
+        configOf([field('a')], drafts),
+        entry(['a'], [], 'published'),
+      ),
     ).toEqual([])
   })
 
@@ -150,84 +148,21 @@ describe('the gate', () => {
       req.user?.role === 'admin'
     expect(
       await findClassificationProblems(
-        config([field('a')], { access: { read: adminOnly } }),
+        configOf([field('a')], { access: { read: adminOnly } }),
         entry(['a']),
       ),
     ).toEqual(['things: copied, but a visitor may not read it on the site'])
     expect(
-      await findClassificationProblems(config([field('a')], { access: {} }), entry(['a'])),
+      await findClassificationProblems(configOf([field('a')], { access: {} }), entry(['a'])),
     ).toEqual(['things: copied, but a visitor may not read it on the site'])
   })
 
   it('judges a field by what a visitor sees, so a field open to residents only is private', async () => {
     const residents = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
     const fields = [field('perk', { access: { read: residents } })]
-    expect(await findClassificationProblems(config(fields), entry(['perk']))).toEqual([
+    expect(await findClassificationProblems(configOf(fields), entry(['perk']))).toEqual([
       'things.perk: kept, but it has a staff-only read field (perk); it must be cleared',
     ])
-  })
-
-  describe('inside a rich-text editor', () => {
-    const richText = (blocks: unknown[], linkTargets: string[] = ['things']) => ({
-      name: 'body',
-      type: 'richText',
-      editor: {
-        editorConfig: {
-          resolvedFeatureMap: new Map([
-            ['blocks', { sanitizedServerFeatureProps: { blocks } }],
-            ['link', { sanitizedServerFeatureProps: { enabledCollections: linkTargets } }],
-          ]),
-        },
-      },
-    })
-    const withUsers = (fields: unknown[]) => ({
-      collections: [
-        ...config(fields).collections,
-        { slug: 'users', fields: [], access: { read: () => false } },
-      ],
-      globals: [],
-    })
-    const users = { users: { copy: 'excluded' as const, reason: 'Accounts, never copied.' } }
-
-    it('fails on an email field or a link to accounts inside an editor block', async () => {
-      const block = {
-        slug: 'contactCard',
-        fields: [
-          { name: 'contactEmail', type: 'email' },
-          { name: 'who', type: 'relationship', relationTo: 'users' },
-        ],
-      }
-      expect(
-        await findClassificationProblems(withUsers([richText([block])]), {
-          ...entry(['body']),
-          ...users,
-        }),
-      ).toEqual([
-        'things.body: kept, but it holds an email field (contactEmail); it must be cleared',
-        'things.body: kept, but it points at users, which is not copied',
-      ])
-    })
-
-    it('passes a clean editor block, and finds a nested block inside a block', async () => {
-      const clean = { slug: 'note', fields: [field('text')] }
-      expect(
-        await findClassificationProblems(config([richText([clean])]), entry(['body'])),
-      ).toEqual([])
-      const inner = richText([{ slug: 'secret', fields: [{ name: 'a', type: 'email' }] }])
-      const outer = { slug: 'wrapper', fields: [inner] }
-      expect(
-        await findClassificationProblems(config([richText([outer])]), entry(['body'])),
-      ).toEqual(['things.body: kept, but it holds an email field (a); it must be cleared'])
-    })
-
-    it('fails on a link feature that can point at a collection that is not copied', async () => {
-      expect(
-        await findClassificationProblems(withUsers([richText([], ['things', 'users'])]), {
-          ...entry(['body']),
-          ...users,
-        }),
-      ).toEqual(['things.body: kept, but it points at users, which is not copied'])
-    })
   })
 
   it('fails on a kept link to a collection that is not copied', async () => {
@@ -237,8 +172,8 @@ describe('the gate', () => {
       users: { copy: 'excluded' as const, reason: 'Accounts, never copied.' },
     }
     const withUsers = {
-      ...config(fields),
-      collections: [...config(fields).collections, { slug: 'users', fields: [] }],
+      ...configOf(fields),
+      collections: [...configOf(fields).collections, { slug: 'users', fields: [] }],
     }
     expect(await findClassificationProblems(withUsers, classification)).toEqual([
       'things.owner: kept, but it points at users, which is not copied',
@@ -255,7 +190,7 @@ describe('the gate', () => {
         reads: 'all' as const,
       },
     }
-    expect(await findClassificationProblems(config([field('a')]), bad)).toEqual([
+    expect(await findClassificationProblems(configOf([field('a')]), bad)).toEqual([
       'things: needs a reason',
       'things.gone: listed, but not a field any more',
     ])

@@ -26,17 +26,35 @@ function editorFeatureProps(field: { editor?: unknown }, feature: string): unkno
   return editor?.editorConfig?.resolvedFeatureMap?.get(feature)?.sanitizedServerFeatureProps
 }
 
-/** The blocks a rich-text field's editor offers (block and inline block), or none. */
+/** The block-level blocks a rich-text field's editor offers, or none. */
 export function editorBlocks(field: { editor?: unknown }): Block[] {
-  const blocks = editorFeatureProps(field, 'blocks') as { blocks?: Block[] } | undefined
-  const inline = editorFeatureProps(field, 'inlineBlocks') as { blocks?: Block[] } | undefined
-  return [...(blocks?.blocks ?? []), ...(inline?.blocks ?? [])]
+  const props = editorFeatureProps(field, 'blocks') as { blocks?: Block[] } | undefined
+  return props?.blocks ?? []
 }
 
-/** The collections a rich-text field's link feature may point at. */
-export function editorLinkTargets(field: { editor?: unknown }): string[] {
-  const link = editorFeatureProps(field, 'link') as { enabledCollections?: string[] } | undefined
-  return link?.enabledCollections ?? []
+/** The inline blocks: the same `blocks` feature carries both lists. */
+export function editorInlineBlocks(field: { editor?: unknown }): Block[] {
+  const props = editorFeatureProps(field, 'blocks') as { inlineBlocks?: Block[] } | undefined
+  return props?.inlineBlocks ?? []
+}
+
+/**
+ * The collections a rich-text editor can point a stored link or relationship at. A link
+ * feature with no `enabledCollections` allows every collection (Payload's default), so that
+ * counts as all of `allSlugs`, less its `disabledCollections`.
+ */
+export function editorTargets(field: { editor?: unknown }, allSlugs: readonly string[]): string[] {
+  const link = editorFeatureProps(field, 'link') as
+    | { enabledCollections?: string[]; disabledCollections?: string[] }
+    | undefined
+  const relationship = editorFeatureProps(field, 'relationship') as
+    | { enabledCollectionSlugs?: string[] }
+    | undefined
+  const linked = link
+    ? (link.enabledCollections ??
+      allSlugs.filter((slug) => !(link.disabledCollections ?? []).includes(slug)))
+    : []
+  return [...linked, ...(relationship?.enabledCollectionSlugs ?? [])]
 }
 
 /** The fields, tabs and blocks directly inside one node, and a rich-text field's editor blocks. */
@@ -44,7 +62,9 @@ export const fieldChildren = (node: FieldNode): FieldNode[] => [
   ...(node.fields ?? []),
   ...(node.tabs ?? []),
   ...(node.blocks ?? []),
-  ...(node.type === 'richText' ? (editorBlocks(node) as unknown as FieldNode[]) : []),
+  ...(node.type === 'richText'
+    ? ([...editorBlocks(node), ...editorInlineBlocks(node)] as unknown as FieldNode[])
+    : []),
 ]
 
 /** Every field below `node`, however deeply nested. */

@@ -5,7 +5,7 @@ import {
   UPLOAD_FIELDS,
 } from '../previewCopy/classification'
 import { allows } from './accessHarness'
-import { editorLinkTargets, type FieldNode, fieldDescendants, topLevelFields } from './configFields'
+import { editorTargets, type FieldNode, fieldDescendants, topLevelFields } from './configFields'
 
 /**
  * The gate behind the preview copy allowlist (#1395): compares the Payload config with the
@@ -44,9 +44,9 @@ async function privacyReason(top: Node): Promise<string | null> {
 }
 
 /** The collections a field points at: a relationship, or a rich-text editor's links. */
-const targets = (field: Node): string[] => [
+const targets = (field: Node, allSlugs: readonly string[]): string[] => [
   ...(field.relationTo === undefined ? [] : [field.relationTo].flat()),
-  ...(field.type === 'richText' ? editorLinkTargets(field) : []),
+  ...(field.type === 'richText' ? editorTargets(field, allSlugs) : []),
 ]
 
 export async function findClassificationProblems(
@@ -56,6 +56,7 @@ export async function findClassificationProblems(
   const problems: string[] = []
   const owners = [...config.collections, ...config.globals]
   const slugs = new Set(owners.map((o) => o.slug))
+  const allSlugs = [...slugs]
 
   for (const slug of Object.keys(classification)) {
     if (!slugs.has(slug)) problems.push(`${slug}: classified, but not in the config any more`)
@@ -106,11 +107,10 @@ export async function findClassificationProblems(
       const why = await privacyReason(top)
       if (why) problems.push(`${owner.slug}.${name}: kept, but it ${why}; it must be cleared`)
       for (const field of [top, ...fieldDescendants(top)]) {
-        for (const target of targets(field)) {
-          if (classification[target]?.copy !== 'copied') {
-            problems.push(
-              `${owner.slug}.${name}: kept, but it points at ${target}, which is not copied`,
-            )
+        for (const target of targets(field, allSlugs)) {
+          const problem = `${owner.slug}.${name}: kept, but it points at ${target}, which is not copied`
+          if (classification[target]?.copy !== 'copied' && !problems.includes(problem)) {
+            problems.push(problem)
           }
         }
       }
