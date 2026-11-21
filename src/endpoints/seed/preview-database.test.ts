@@ -30,8 +30,8 @@ const accounts = () =>
   })
 
 describe('seedPreviewDatabase', () => {
-  it.each([{}, { PREVIEW_NUMBER: '' }, { PREVIEW_NUMBER: '7; id' }])(
-    'refuses to run without a pull request number (production’s database), and makes nothing (%j)',
+  it.each([{}, { PREVIEW_NUMBER: '' }])(
+    'refuses to run without a pull request number (a hand run against production), and makes nothing (%j)',
     async (env) => {
       await expect(seedPreviewDatabase(payload, env)).rejects.toThrow('only for a pull request')
       expect((await accounts()).totalDocs).toBe(0)

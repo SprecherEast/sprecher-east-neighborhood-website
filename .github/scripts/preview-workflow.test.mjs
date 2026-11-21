@@ -71,8 +71,18 @@ describe('the preview workflow’s trigger', () => {
     expect(c['cancel-in-progress']).toBe(false)
     expect(c.group).toContain('github.event.pull_request.number')
     expect(c.group).not.toContain('github.run_id')
-    for (const id of ['facts', 'report'])
-      expect(jobs[id].concurrency?.['cancel-in-progress']).not.toBe(true)
+    // distinct from the groups that cancel, or a newer build would cancel this deploy
+    const name = (group) => group.split('${{')[0] // the fixed part, before the pull request's number
+    expect(name(c.group)).not.toBe(name(jobs.build.concurrency.group))
+    expect(name(c.group)).not.toBe(name(jobs.gate.concurrency.group))
+    expect(jobs.facts.concurrency).toBeUndefined()
+  })
+
+  it('report is one at a time per pull request, never cancelled, and skipped for a superseded run', () => {
+    expect(jobs.report.concurrency['cancel-in-progress']).toBe(false)
+    expect(jobs.report.concurrency.group).toContain('github.event.pull_request.number')
+    expect(jobs.report.if).toContain("needs.build.result != 'cancelled'")
+    expect(jobs.report.if).toContain("needs.deploy.result != 'cancelled'")
   })
 
   it('skips the gate for a label other than `preview`', () => {

@@ -200,7 +200,12 @@ jobs:
   report:
     name: Pull request preview comment
     needs: [gate, facts, build, deploy]
-    if: ${{ !cancelled() && needs.gate.outputs.build == 'true' }}
+    # Not for a run that a newer push superseded (its build or deploy was cancelled): the newer run reports.
+    if: ${{ !cancelled() && needs.gate.outputs.build == 'true' && needs.build.result != 'cancelled' && needs.deploy.result != 'cancelled' }}
+    # One report at a time per pull request, none cancelled, so two runs can't each create the comment.
+    concurrency:
+      group: pull-request-preview-report-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:

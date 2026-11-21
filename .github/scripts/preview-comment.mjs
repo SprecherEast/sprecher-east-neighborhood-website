@@ -3,6 +3,9 @@
 // (actions/github-script). The text is built from a fixed list of states plus values checked here (a
 // number, a commit, a link made from them), so no log line, request text or secret can reach it.
 
+// Kept equal to ops/environment.sh's PREVIEW_NUMBER_PATTERN and PREVIEW_COMMIT_PATTERN by a test.
+export const NUMBER_PATTERN = /^[1-9][0-9]{0,5}$/
+export const COMMIT_PATTERN = /^[0-9a-f]{40}$/
 export const MARKER = '<!-- pull-request-preview -->'
 const BOT = 'github-actions[bot]'
 
@@ -48,18 +51,16 @@ export function previewState({ available, buildResult, deployResult }) {
 /** The comment's text. Throws on a value that isn't what it should be: better no comment than a wrong one. */
 export function commentBody({ state, number, sha, url, time, runUrl }) {
   if (!Object.hasOwn(STATES, state)) throw new Error('unknown state')
-  if (!/^[1-9][0-9]{0,5}$/.test(String(number))) throw new Error('not a pull request number')
-  if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error('not a commit')
+  if (!NUMBER_PATTERN.test(String(number))) throw new Error('not a pull request number')
+  if (!COMMIT_PATTERN.test(sha)) throw new Error('not a commit')
   if (!/^https:\/\/[a-z0-9.-]+\/[\w.-]+\/[\w.-]+\/actions\/runs\/[0-9]+$/.test(runUrl))
     throw new Error('not a run link')
   if (!/^\d{4}-\d\d-\d\d \d\d:\d\d UTC$/.test(time)) throw new Error('not a time')
   const [headline, rest] = STATES[state]
   let sentence = `**${headline}**${rest ? ` ${rest}` : ''}`
   if (state === 'live') {
-    if (
-      !/^https:\/\/pr-[1-9][0-9]{0,5}\.[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(url) ||
-      !url.startsWith(`https://pr-${number}.`)
-    )
+    // `number` was checked above, so it is digits only and the address needs no pattern of its own
+    if (!new RegExp(`^https://pr-${number}\\.[a-z0-9-]+(\\.[a-z0-9-]+)+$`).test(url))
       throw new Error('not the preview address')
     sentence += ` ${url}`
   }

@@ -143,6 +143,17 @@ describe('preview-deploy.sh', () => {
     expect(r.log).toBe('ssh list\n')
   })
 
+  it('does not take another pull request live at the same commit for its own', () => {
+    const r = deploy({ STUB_LIST: `preview=9 commit=${SHA}\n`, PREVIEWS_AT_ONCE: '2' })
+    expect(r.log).toContain(`ssh upload 7 ${SHA}`)
+  })
+
+  it('reports an already-live preview as live even when another preview is up (before the limit)', () => {
+    const r = deploy({ STUB_LIST: `preview=3 commit=${'b'.repeat(40)}\npreview=7 commit=${SHA}\n` })
+    expect(r.written).toMatch(/result=live\n$/)
+    expect(r.log).toBe('ssh list\n')
+  })
+
   it('still deploys when the live commit is another one', () => {
     const r = deploy({ STUB_LIST: `preview=7 commit=${'b'.repeat(40)}\n` })
     expect(r.log).toContain(`ssh upload 7 ${SHA}`)

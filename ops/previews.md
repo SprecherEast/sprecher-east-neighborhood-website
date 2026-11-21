@@ -122,8 +122,9 @@ required check: a failed preview never blocks a merge or the production deploy.
   leave the wrapper's checks unrun, and the deploy script has no lock, so two deploys of one preview could
   overlap. A newer deploy waits its turn (`preview.yml`'s job-level group per pull request) and replaces only a
   deploy still waiting. The wrapper itself does not ignore a dropped connection; a dropped runner can still
-  leave a deploy half-run (deploy-release.sh ignores hangups, a broken pipe is not covered), which the next
-  deploy or `teardown` of that number repairs. A label other than `preview` never cancels anything. Re-running
+  leave a deploy half-run (deploy-release.sh ignores hangups, a broken pipe is not covered), which only a deploy of
+  a new commit or `teardown` of that number repairs (a re-run at the same commit finds it already live and checks
+  nothing). A label other than `preview` never cancels anything. Re-running
   a run, reopening, or re-adding the label at a commit that is already live reports it live without uploading.
 - **What is built.** The pull request's head commit, not its merge with `main`.
 - **The key.** The `preview` GitHub environment holds only the restricted account's connection values and
@@ -174,8 +175,9 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   check pass, so "no key line" shows from outside as a refused sign-in. It is reported once and **never
   retried**.
 - **A pull request opened before this was merged** has no `e2e/previewSeed.ts`, so its preview deploy stops with
-  "the preview's database could not be prepared" until it is rebased on `main`. The seed also refuses to run unless
-  the deploy named a pull request number, so it can never touch production's database.
+  "the preview's database could not be prepared" until it is rebased on `main`. The seed also refuses to run without a pull request number, a second check against an honest mistake such
+  as running it by hand: it lives in the release's own code, so it is no boundary. Production is kept out by the
+  `is_preview` gate in `main`'s `deploy-release.sh` and by the preview account's isolation.
 - **Not covered.** A detached process a preview starts survives `teardown`, which stops only PM2's process
   (the account can't schedule jobs: cron and at are denied). Removal when the pull request closes, the nightly
   sweep and the real cap are later issues on #1070.

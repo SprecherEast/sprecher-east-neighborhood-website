@@ -1,7 +1,13 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 import { describe, expect, it } from 'vitest'
 
 import {
+  COMMIT_PATTERN,
   MARKER,
+  NUMBER_PATTERN,
   commentBody,
   findStickyComment,
   previewState,
@@ -126,5 +132,18 @@ describe('findStickyComment', () => {
 describe('utcMinutes', () => {
   it('writes the time to the minute in UTC', () => {
     expect(utcMinutes(new Date('2026-11-20T21:10:42.000Z'))).toBe('2026-11-20 21:10 UTC')
+  })
+})
+
+describe('the patterns it checks with', () => {
+  const environment = fs.readFileSync(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'ops', 'environment.sh'),
+    'utf8',
+  )
+  const defined = (name) => new RegExp(`^${name}='([^']+)'`, 'm').exec(environment)?.[1]
+
+  it('are the ones ops/environment.sh defines, which the server and the wrapper check with', () => {
+    expect(NUMBER_PATTERN.source).toBe(defined('PREVIEW_NUMBER_PATTERN'))
+    expect(COMMIT_PATTERN.source).toBe(defined('PREVIEW_COMMIT_PATTERN'))
   })
 })

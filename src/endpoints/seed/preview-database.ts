@@ -20,8 +20,11 @@ export async function seedPreviewDatabase(
   payload: Payload,
   env: Record<string, string | undefined> = process.env,
 ): Promise<PreviewSeedResult> {
-  // Defence in depth: the deploy sets PREVIEW_NUMBER only for a preview, so this never runs against production's database.
-  if (!/^[1-9][0-9]{0,5}$/.test(env.PREVIEW_NUMBER ?? '')) {
+  // A second check against an honest mistake, such as running the seed by hand against production: the deploy
+  // sets PREVIEW_NUMBER (already validated by ops/environment.sh) only for a preview. It lives in the release's own
+  // code, so it is no boundary: production is kept out by the `is_preview` gate in main's deploy-release.sh and by
+  // the preview account's isolation.
+  if (!env.PREVIEW_NUMBER) {
     throw new Error('the preview seed runs only for a pull request preview')
   }
   const { totalDocs } = await payload.count({ collection: 'users', overrideAccess: true })
