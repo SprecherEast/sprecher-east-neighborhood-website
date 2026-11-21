@@ -39,6 +39,8 @@ test.describe('sign up, confirm and sign in', () => {
     await logIn(page, resident.email, resident.password)
     await expect(page).toHaveURL(/\/account/)
     await expect(page.getByText(resident.email)).toBeVisible()
+    // The passkey switch is off here: no offer to add one (#1364)
+    await expect(page.getByText('Log in faster next time')).toHaveCount(0)
   })
 
   test('a confirmation link opened again says the account is already confirmed', async ({

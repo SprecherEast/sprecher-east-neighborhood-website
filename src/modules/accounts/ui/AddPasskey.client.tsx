@@ -8,30 +8,12 @@ import { message } from '@/platform/lib'
 import { Alert, Button, Field, Form, type FormStatus } from '@/platform/ui'
 import { Text } from '@/platform/ui/Text'
 
-import { addPasskey, getPasskeyOptions } from '../actions'
 import { passkeyLabelSchema } from '../domain/addPasskey'
 import { PASSKEY_LABEL_MAX_LENGTH } from '../domain/passkeys'
 import { LogInAgainButton } from './LogInAgainButton.client'
-import { createPasskey, passkeysSupported } from './passkeyBrowser'
+import { addAPasskey } from './addAPasskey'
+import { passkeysSupported } from './passkeyBrowser'
 import { toAddPasskeyNotice, type AddPasskeyOutcome, type PasskeyNotice } from './passkeyMessages'
-
-/**
- * Asks for the options, shows the browser's own prompt, then sends its answer. Every way it can
- * end is one outcome; nothing the server or the browser says is passed on as text. A request that
- * gets no answer is `offline`.
- */
-async function addAPasskey(label: string): Promise<AddPasskeyOutcome> {
-  try {
-    const started = await getPasskeyOptions()
-    if (!started.ok) return started.failure
-    const made = await createPasskey(started.options)
-    if (!made.ok) return made.reason
-    const finished = await addPasskey({ answer: made.answer, label })
-    return finished.ok ? 'added' : finished.failure
-  } catch {
-    return 'offline'
-  }
-}
 
 /**
  * The add-a-passkey part of the "Passkeys" card on /account (#1314, decision 0021), under the

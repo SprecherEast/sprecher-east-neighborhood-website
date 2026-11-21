@@ -22,6 +22,9 @@ vi.mock('@/modules/accounts/server', () => ({
   PasskeysCard: ({ passkeys }: { passkeys: unknown[] }) => (
     <section aria-label="Passkeys" data-count={passkeys.length} />
   ),
+  PasskeyOffer: ({ eligible }: { eligible: boolean }) => (
+    <section aria-label="Passkey offer" data-eligible={String(eligible)} />
+  ),
   ChangePasswordForm: () => <form aria-label="Change password" />,
 }))
 
@@ -65,6 +68,7 @@ describe('/account', () => {
     accounts.arePasskeysOn.mockReturnValue(false)
     render(await AccountPage({ searchParams }))
     expect(screen.queryByRole('region', { name: 'Passkeys' })).toBeNull()
+    expect(screen.queryByRole('region', { name: 'Passkey offer' })).toBeNull()
     expect(accounts.getOwnPasskeys).not.toHaveBeenCalled()
     expect(screen.getByRole('form', { name: 'Change password' })).toBeTruthy()
   })
@@ -80,6 +84,26 @@ describe('/account', () => {
     expect(card.getAttribute('data-count')).toBe('2')
     const password = screen.getByRole('form', { name: 'Change password' })
     expect(password.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('offers a passkey at the top, only to an account with none (#1364)', async () => {
+    signedIn()
+    accounts.arePasskeysOn.mockReturnValue(true)
+    accounts.getOwnPasskeys.mockResolvedValue([])
+    render(await AccountPage({ searchParams }))
+    const offer = screen.getByRole('region', { name: 'Passkey offer' })
+    expect(offer.getAttribute('data-eligible')).toBe('true')
+    // Above everything else, so it is seen right after a log in
+    expect(
+      screen.getByText('Profile').compareDocumentPosition(offer) & Node.DOCUMENT_POSITION_PRECEDING,
+    ).toBeTruthy()
+    cleanup()
+
+    accounts.getOwnPasskeys.mockResolvedValue([{ id: 1 }])
+    render(await AccountPage({ searchParams }))
+    expect(
+      screen.getByRole('region', { name: 'Passkey offer' }).getAttribute('data-eligible'),
+    ).toBe('false')
   })
 
   it('hides the Google card while Google is off', async () => {

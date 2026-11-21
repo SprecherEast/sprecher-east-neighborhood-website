@@ -34,6 +34,17 @@ export const ACCOUNTS_MESSAGES = {
     'We couldn’t log you in with that passkey. Try again, or use your email and password.',
   // Fine print at the foot of /login while passkeys are on: FIDO's icon terms ask for the owner's name (#1365)
   'accounts.passkey.iconCredit': 'The passkey icon is a trademark of FIDO Alliance, Inc.',
+  // The button was pressed and no passkey came of it (#1364). The browser says the same for "none
+  // saved" and "closed the box", so this claims neither: what happened, then the way forward.
+  'accounts.passkey.noneFound':
+    'No passkey was used. If you haven’t added one yet, log in below as usual, then add one from your account page.',
+  // The offer to add a passkey right after logging in (#1364)
+  'accounts.passkeyOffer.title': 'Log in faster next time',
+  'accounts.passkeyOffer.lead':
+    'Set up a passkey on this device, then log in with your fingerprint, face or screen lock instead of a password.',
+  'accounts.passkeyOffer.add': 'Set up a passkey',
+  'accounts.passkeyOffer.notNow': 'Not now',
+  'accounts.passkeyOffer.snoozed': 'No problem. You can add a passkey any time in the card below.',
   // Connecting Google to an account with a password (#1338). The verb "Connect" is the card's own.
   'accounts.google.connectLead':
     'Connect Google to log in with it. This works right after you log in; if it’s been a while, we’ll ask you to log in again.',

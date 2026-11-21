@@ -7,9 +7,9 @@ const DESKTOP = { ...devices['Desktop Chrome'], viewport: { width: 1280, height:
 
 // What the second server walks (#1317): the passkey flows, and the account flows that the passkey
 // switch changes (the log in page and the lockout). Its site-wide sign-up
-// limit (20 an hour) is why it isn't the whole accounts spec: the passkey tests use 12, these 4
-const PASSKEY_SERVER_TESTS = ['passkeys.spec.ts', 'accounts.spec.ts']
-const PASSKEY_SERVER_ACCOUNT_FLOWS = /passkeys\.spec|accounts\.spec\.ts sign in /
+// limit (20 an hour) is why it isn't the whole accounts spec: the passkey tests use 12, the offer's 2, these 4
+const PASSKEY_SERVER_TESTS = ['passkeys.spec.ts', 'passkeyOffer.spec.ts', 'accounts.spec.ts']
+const PASSKEY_SERVER_ACCOUNT_FLOWS = /passkeys\.spec|passkeyOffer\.spec|accounts\.spec\.ts sign in /
 
 /**
  * End-to-end tests (#311): each account and contact flow, as a resident uses it, on a phone and
@@ -34,8 +34,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'phone', use: PHONE, testIgnore: '**/passkeys.spec.ts' },
-    { name: 'desktop', use: DESKTOP, testIgnore: '**/passkeys.spec.ts' },
+    { name: 'phone', use: PHONE, testIgnore: '**/passkey*.spec.ts' },
+    { name: 'desktop', use: DESKTOP, testIgnore: '**/passkey*.spec.ts' },
     {
       name: 'passkeys-phone',
       use: { ...PHONE, baseURL: E2E.passkeys.baseURL },

@@ -102,15 +102,22 @@ describe('PasskeySignIn: logging in', () => {
     expect(mocks.logInWithPasskey).toHaveBeenCalledWith({ answer, rememberMe: true })
   })
 
-  it('says nothing when the prompt is closed, and the button works again', async () => {
+  it('explains in plain words when the prompt ends with no passkey, with the way forward, and the button works again (#1364)', async () => {
     mocks.getPasskey.mockResolvedValueOnce({ ok: false, reason: 'cancelled' })
     await press()
     await waitFor(() => expect(mocks.getPasskey).toHaveBeenCalled())
+    expect((await screen.findByRole('status')).textContent).toContain(
+      'No passkey was used. If you haven’t added one yet, log in below as usual, then add one from your account page.',
+    )
+    // The group stays: the button is still there to try again
+    expect(screen.getByRole('button', { name: 'Log in with a passkey' })).toBeTruthy()
     expect(screen.queryByRole('alert')).toBeNull()
     expect(mocks.logInWithPasskey).not.toHaveBeenCalled()
     expect(mocks.push).not.toHaveBeenCalled()
     await userEvent.click(screen.getByRole('button', { name: 'Log in with a passkey' }))
     await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/account'))
+    // The note went away with the new try
+    expect(screen.queryByRole('status')).toBeNull()
   })
 
   it.each([
