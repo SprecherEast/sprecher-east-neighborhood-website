@@ -1,7 +1,8 @@
 import type { CollectionSlug, Payload } from 'payload'
 
 import { PREVIEW_COPY, SYSTEM_FIELDS, UPLOAD_FIELDS } from './classification'
-import type { BlockDef } from './references'
+import type { CopiedDocument } from './file'
+import { type BlockDef, type KeepReference, walkReferences } from './references'
 
 /** What the export and the import read from the running config, written once (#1396). */
 
@@ -29,4 +30,33 @@ export function allowedFields(slug: string, schema: Schema): Set<string> {
   const entry = PREVIEW_COPY[slug]
   if (entry?.copy !== 'copied') throw new Error(`Preview copy: "${slug}" is not copied`)
   return new Set([...entry.keep, ...SYSTEM_FIELDS, ...(schema.upload ? UPLOAD_FIELDS : [])])
+}
+
+/** Keeps only the allowed keys of a document, and counts the ones left out. */
+export function cutToFields(
+  doc: Record<string, unknown>,
+  allowed: ReadonlySet<string>,
+): { doc: CopiedDocument; skipped: number } {
+  const out: Record<string, unknown> = {}
+  let skipped = 0
+  for (const key of Object.keys(doc)) {
+    if (allowed.has(key)) out[key] = doc[key]
+    else skipped += 1
+  }
+  return { doc: out as CopiedDocument, skipped }
+}
+
+/** A copy of the document without the references `keep` refuses, read by this build's own fields. */
+export function walkDocument(
+  payload: Payload,
+  slug: string,
+  data: Record<string, unknown>,
+  keep: KeepReference,
+) {
+  return walkReferences({
+    fields: schemaOf(payload, slug).config.fields as never,
+    data,
+    blocks: blockLookup(payload),
+    keep,
+  })
 }

@@ -2,8 +2,8 @@ import type { CollectionSlug, GlobalSlug, Payload } from 'payload'
 
 import { SYSTEM_FIELDS, UPLOAD_FIELDS } from './classification'
 import type { PreviewCopyFile } from './file'
-import { namedFields, type Reference, walkReferences } from './references'
-import { allowedFields, blockLookup, schemaOf } from './schema'
+import { namedFields, type Reference } from './references'
+import { allowedFields, cutToFields, schemaOf, walkDocument } from './schema'
 
 /**
  * The half of the preview copy that the pull request's own code runs, after its migrations
@@ -27,7 +27,6 @@ export async function importPreviewCopy(
   file: PreviewCopyFile,
 ): Promise<ImportCounts> {
   const counts: ImportCounts = { created: {}, skippedFields: 0 }
-  const blocks = blockLookup(payload)
   const configOf = (slug: string) => schemaOf(payload, slug).config
 
   /** Only fields this build has and its classification keeps; anything else is counted and dropped. */
@@ -42,16 +41,12 @@ export async function importPreviewCopy(
     )
   }
   const trim = (doc: Doc, allowed: Set<string>): Doc => {
-    const out: Doc = {}
-    for (const key of Object.keys(doc)) {
-      if (allowed.has(key)) out[key] = doc[key]
-      else counts.skippedFields += 1
-    }
-    return out
+    const { doc: kept, skipped } = cutToFields(doc, allowed)
+    counts.skippedFields += skipped
+    return kept
   }
-
   const walk = (slug: string, data: Doc, keep: (reference: Reference) => boolean) =>
-    walkReferences({ fields: configOf(slug).fields as never, data, blocks, keep }).data
+    walkDocument(payload, slug, data, keep).data
 
   // Which documents exist so far: a reference to one that does not exist yet waits for a second pass
   const created = new Set<string>()
@@ -89,7 +84,8 @@ export async function importPreviewCopy(
     await payload.db.updateOne({
       collection: slug as CollectionSlug,
       id: doc.id as string | number,
-      data: doc as never,
+      // Walked again: a reference to something the file lacks is still left out
+      data: walk(slug, doc, (reference) => created.has(key(reference))) as never,
     })
   }
 

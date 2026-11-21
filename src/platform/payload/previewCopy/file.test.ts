@@ -40,9 +40,32 @@ describe('parsePreviewCopyFile', () => {
   })
 
   it('refuses a media file name that could leave the folder', () => {
-    for (const name of ['../x.jpg', 'a/b.jpg', 'a\\b.jpg', '.hidden', '', 'a\u0000.jpg', 5, null]) {
+    for (const name of [
+      '../x.jpg',
+      'a/b.jpg',
+      'a\\b.jpg',
+      '.hidden',
+      '',
+      'a\u0000.jpg',
+      '-rf',
+      5,
+      null,
+    ]) {
       expect(() => parse({ ...valid, mediaFiles: [name] }), String(name)).toThrow(/unsafe/)
     }
+  })
+})
+
+describe("a media record's own file names", () => {
+  it('are checked as the list is: the file and each size', () => {
+    const media = (record: unknown) => parse({ ...valid, collections: { media: [record] } })
+    expect(() => media({ id: 1, filename: '../x.jpg' })).toThrow(/unsafe/)
+    expect(() =>
+      media({ id: 1, filename: 'a.jpg', sizes: { thumb: { filename: 'b/c.jpg' } } }),
+    ).toThrow(/unsafe/)
+    expect(() =>
+      media({ id: 1, filename: 'a.jpg', sizes: { thumb: { filename: null } } }),
+    ).not.toThrow()
   })
 })
 

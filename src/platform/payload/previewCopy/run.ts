@@ -1,6 +1,6 @@
 import { chmod, readFile, writeFile } from 'node:fs/promises'
 
-import type { Payload } from 'payload'
+import { getPayload, type Payload, type SanitizedConfig } from 'payload'
 
 import { exportPreviewCopy, type ExportCounts } from './exportContent'
 import { parsePreviewCopyFile } from './file'
@@ -24,6 +24,16 @@ const numbers = (counts: Record<string, number>) =>
   Object.entries(counts)
     .map(([name, count]) => `${name} ${count}`)
     .join(', ')
+
+/**
+ * Opens Payload with its own logger off: a connection or query failure logs its message before our
+ * fixed line, and the message could hold a value. Needs no change to the site's config.
+ */
+export async function openQuietly(config: Promise<SanitizedConfig> | SanitizedConfig) {
+  // The type asks for every pino option though pino fills in the rest; `enabled: false` is all it reads
+  const logger = { options: { enabled: false } } as SanitizedConfig['logger']
+  return getPayload({ config: { ...(await config), logger } })
+}
 
 /** Writes the file for the import: private to its owner, and never over a file that exists. */
 export async function exportToFile(

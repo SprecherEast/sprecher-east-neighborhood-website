@@ -119,6 +119,19 @@ export async function seedAndExport() {
     ...as,
   })
   ids.post = post.id
+  // A second published post by the same author: the byline must not make rows collide
+  const second = await production.create({
+    collection: 'posts',
+    data: {
+      title: 'Second by the same author',
+      slug: 'second-post',
+      authors: [admin.id],
+      content: paragraph('s'),
+      ...published,
+    },
+    ...as,
+  })
+  ids.second = second.id
   await production.update({
     collection: 'posts',
     id: post.id,

@@ -5,17 +5,16 @@
  * content to `PREVIEW_COPY_FILE`, a new file private to its owner. It prints numbers only, and one
  * fixed line on a failure: the log is public. The pull request's own code never runs this.
  */
-import { getPayload } from 'payload'
-
 import config from '../src/payload.config'
 import {
   copyFilePath,
   exportToFile,
+  openQuietly,
   runPreviewCopyStep,
 } from '../src/platform/payload/previewCopy/run'
 
 const code = await runPreviewCopyStep('export', async () => {
   const path = copyFilePath()
-  return exportToFile(await getPayload({ config }), path)
+  return exportToFile(await openQuietly(config), path)
 })
 process.exit(code)

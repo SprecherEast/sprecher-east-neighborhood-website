@@ -1,6 +1,10 @@
 import type { Block } from 'payload'
 
-import { editorBlocks } from '../previewCopy/editorBlocks'
+import {
+  editorBlocks,
+  type Feature as EditorFeature,
+  type FeatureMap as EditorFeatureMap,
+} from '../previewCopy/editorBlocks'
 import type { FieldNode } from './configFields'
 
 /**
@@ -11,11 +15,8 @@ import type { FieldNode } from './configFields'
  * closed list below is reported, whatever its schema map says.
  */
 
-type Feature = {
-  generateSchemaMap?: (args: Record<string, unknown>) => Map<string, FieldNode> | undefined
-  sanitizedServerFeatureProps?: unknown
-}
-type FeatureMap = Map<string, Feature | undefined>
+type Feature = EditorFeature<FieldNode>
+type FeatureMap = EditorFeatureMap<FieldNode>
 
 /** Rich-text features that store nothing beyond plain text and formatting. */
 const PLAIN_FEATURES = new Set([

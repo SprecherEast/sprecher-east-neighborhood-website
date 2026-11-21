@@ -5,17 +5,16 @@
  * email, cache refresh or search side effect), then rebuilds the search index through the plugin.
  * It prints numbers only, and one fixed line on a failure: the log is public.
  */
-import { getPayload } from 'payload'
-
 import config from '../src/payload.config'
 import {
   copyFilePath,
   importFromFile,
+  openQuietly,
   runPreviewCopyStep,
 } from '../src/platform/payload/previewCopy/run'
 
 const code = await runPreviewCopyStep('import', async () => {
   const path = copyFilePath()
-  return importFromFile(await getPayload({ config }), path)
+  return importFromFile(await openQuietly(config), path)
 })
 process.exit(code)

@@ -54,14 +54,14 @@ describe('the import', () => {
       ...as,
     })
     expect(child.parent).toBe(ids.parent)
-    expect(imported.created.posts).toBe(2)
+    expect(imported.created.posts).toBe(3)
   })
 
   it('leaves accounts, submissions, drafts and version tables empty', async () => {
     for (const collection of ['users', 'form-submissions', 'payload-mcp-api-keys'] as const) {
       expect((await preview.count({ collection, ...as })).totalDocs, collection).toBe(0)
     }
-    expect((await preview.count({ collection: 'posts', ...as })).totalDocs).toBe(2)
+    expect((await preview.count({ collection: 'posts', ...as })).totalDocs).toBe(3)
     const versions = await preview.countVersions({ collection: 'posts', ...as })
     expect(versions.totalDocs).toBe(0)
     expect(
@@ -77,14 +77,18 @@ describe('the import', () => {
 
   it('shows the published posts to a visitor, and the copied header', async () => {
     const visible = await preview.find({ collection: 'posts', depth: 0, overrideAccess: false })
-    expect(visible.docs).toHaveLength(2)
+    expect(visible.docs).toHaveLength(3)
     const header = await preview.findGlobal({ slug: 'header', depth: 0 })
     expect(header.navItems).toHaveLength(2)
   })
 
   it('indexes the copied posts for search through the plugin', async () => {
     const entries = await preview.find({ collection: 'search', depth: 0, ...as })
-    expect(entries.docs.map((d) => d.title).sort()).toEqual(['Published title', 'Related'])
+    expect(entries.docs.map((d) => d.title).sort()).toEqual([
+      'Published title',
+      'Related',
+      'Second by the same author',
+    ])
   })
 
   it('writes a document that points at one later in the file', async () => {
@@ -113,6 +117,24 @@ describe('the import', () => {
       ...as,
     })
     expect(post.relatedPosts).toEqual([related?.id])
+  })
+
+  it('leaves out, in the second pass too, a reference to a document the file lacks', async () => {
+    const odd = JSON.parse(text()) as PreviewCopyFile
+    const [related, main] = ['related', 'main-post'].map((slug) =>
+      odd.collections.posts?.find((p) => p.slug === slug),
+    )
+    // The first post points ahead (a second pass) and also at something that is not in the file
+    if (related && main) related.relatedPosts = [main.id, 999_999]
+    const target = await freshPayload(config, 'preview-copy-target-4')
+    await importPreviewCopy(target, parsePreviewCopyFile(JSON.stringify(odd)))
+    const post = await target.findByID({
+      collection: 'posts',
+      id: related?.id as number,
+      depth: 0,
+      ...as,
+    })
+    expect(post.relatedPosts).toEqual([main?.id])
   })
 
   it('counts a field this build no longer has instead of failing', async () => {

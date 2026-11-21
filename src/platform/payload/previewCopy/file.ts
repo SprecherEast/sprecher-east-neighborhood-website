@@ -1,4 +1,5 @@
 import { copiedSlugs } from './classification'
+import { isObject } from './references'
 
 /**
  * The one file between the export (run from `main`'s code on a snapshot) and the import (run by
@@ -21,9 +22,6 @@ export type PreviewCopyFile = {
   mediaFiles: string[]
 }
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
-
 /**
  * A name inside the media folder and nothing else: no path, no parent segment, no control
  * character. The server step links these files, so a name must not be able to leave the folder.
@@ -34,8 +32,25 @@ export function isSafeFileName(name: unknown): name is string {
     name.length > 0 &&
     name.length <= 255 &&
     !name.startsWith('.') &&
+    // A leading dash would read as an option to a command that links the file
+    !name.startsWith('-') &&
     !/[/\\\u0000-\u001f\u007f]/.test(name)
   )
+}
+
+/** The file names one media record points at: the file itself and each size; any unsafe one throws. */
+export function mediaFileNames(doc: Record<string, unknown>): string[] {
+  const sizes = isObject(doc.sizes) ? doc.sizes : {}
+  const found = [
+    doc.filename,
+    ...Object.values(sizes).map((size) => isObject(size) && size.filename),
+  ]
+  return found.flatMap((name) => {
+    if (name === null || name === undefined || name === false) return []
+    if (!isSafeFileName(name))
+      throw new Error('Preview copy: a media record has an unsafe file name')
+    return [name]
+  })
 }
 
 /** Reads the file's text. Throws a plain message, never the content, when anything is off. */
@@ -70,5 +85,7 @@ export function parsePreviewCopyFile(text: string): PreviewCopyFile {
   }
   if (!mediaFiles.every(isSafeFileName))
     throw new Error('Preview copy file: unsafe media file name')
+  // A preview that deletes a media record unlinks its file names, so each record's own must be safe too
+  for (const doc of Array.isArray(collections.media) ? collections.media : []) mediaFileNames(doc)
   return value as unknown as PreviewCopyFile
 }

@@ -60,7 +60,7 @@ const PLAIN_NODES = new Set([
   'horizontalrule',
 ])
 
-const isObject = (value: unknown): value is Json =>
+export const isObject = (value: unknown): value is Json =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 const isId = (value: unknown): value is string | number =>
   typeof value === 'string' || typeof value === 'number'

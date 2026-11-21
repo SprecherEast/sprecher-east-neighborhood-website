@@ -27,6 +27,16 @@ const posts = () => file.collections.posts ?? []
 const text = () => JSON.stringify(file)
 
 describe('the export', () => {
+  it('keeps each byline name but no user id, and gives each row an id of its own', () => {
+    const rows = posts().flatMap(
+      (p) => (p.populatedAuthors as { id: unknown; name: unknown }[]) ?? [],
+    )
+    expect(rows.length).toBeGreaterThan(1)
+    expect(rows.every((row) => typeof row.name === 'string' && row.name.length > 0)).toBe(true)
+    expect(rows.every((row) => typeof row.id === 'string' && row.id.includes('-'))).toBe(true)
+    expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length)
+  })
+
   it('drops a property a collection hook adds on read', () => {
     expect(text()).not.toContain('hook-added-value')
     expect(posts().every((p) => !('leaked' in p))).toBe(true)
@@ -50,7 +60,7 @@ describe('the export', () => {
       posts()
         .map((p) => p.title)
         .sort(),
-    ).toEqual(['Published title', 'Related'])
+    ).toEqual(['Published title', 'Related', 'Second by the same author'])
     expect(text()).not.toContain('Draft edit title')
     expect(text()).not.toContain('Never published')
   })

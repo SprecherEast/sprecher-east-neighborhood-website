@@ -3,12 +3,13 @@ import type { CollectionSlug, GlobalSlug, Payload } from 'payload'
 import { copiedSlugs, PREVIEW_COPY } from './classification'
 import {
   type CopiedDocument,
-  isSafeFileName,
+  mediaFileNames,
   PREVIEW_COPY_FORMAT,
   type PreviewCopyFile,
 } from './file'
-import { type Reference, walkReferences } from './references'
-import { allowedFields, blockLookup, schemaOf } from './schema'
+import type { Reference } from './references'
+import { reshape } from './reshape'
+import { allowedFields, cutToFields, schemaOf, walkDocument } from './schema'
 
 /**
  * The privileged half of the preview copy (#1396, part of #1077): reads a production snapshot and
@@ -34,12 +35,6 @@ export type ExportCounts = {
 /** What the export reads as a visitor does. No `user`: a user is what would widen it. */
 const AS_VISITOR = { overrideAccess: false, depth: 0, draft: false } as const
 
-function pick(doc: Record<string, unknown>, allowed: ReadonlySet<string>): CopiedDocument {
-  const out: Record<string, unknown> = {}
-  for (const key of Object.keys(doc)) if (allowed.has(key)) out[key] = doc[key]
-  return out as CopiedDocument
-}
-
 export async function exportPreviewCopy(
   payload: Payload,
 ): Promise<{ file: PreviewCopyFile; counts: ExportCounts }> {
@@ -61,7 +56,7 @@ export async function exportPreviewCopy(
     const allowed = allowedFields(slug, config)
     if (isGlobal) {
       const doc = await payload.findGlobal({ slug: slug as GlobalSlug, ...AS_VISITOR })
-      globals[slug] = pick(doc as unknown as Record<string, unknown>, allowed)
+      globals[slug] = cutToFields(doc as unknown as Record<string, unknown>, allowed).doc
       continue
     }
     documents[slug] = []
@@ -74,15 +69,16 @@ export async function exportPreviewCopy(
         sort: 'id',
       })
       for (const doc of result.docs) {
-        documents[slug].push(pick(doc as unknown as Record<string, unknown>, allowed))
+        documents[slug].push(
+          reshape(slug, cutToFields(doc as unknown as Record<string, unknown>, allowed).doc),
+        )
       }
       if (!result.hasNextPage) break
     }
   }
 
-  const blocks = blockLookup(payload)
   const walk = (slug: string, data: Record<string, unknown>, keep: (r: Reference) => boolean) =>
-    walkReferences({ fields: configOf(slug).config.fields as never, data, blocks, keep })
+    walkDocument(payload, slug, data, keep)
 
   // First pass: which media do the copied documents point at?
   const wanted = new Set<string>()
@@ -110,7 +106,9 @@ export async function exportPreviewCopy(
         sort: 'id',
       })
       for (const doc of result.docs) {
-        documents[MEDIA].push(pick(doc as unknown as Record<string, unknown>, allowed))
+        documents[MEDIA].push(
+          reshape(MEDIA, cutToFields(doc as unknown as Record<string, unknown>, allowed).doc),
+        )
       }
     }
   }
@@ -139,7 +137,7 @@ export async function exportPreviewCopy(
     format: PREVIEW_COPY_FORMAT,
     collections: documents,
     globals,
-    mediaFiles: mediaFileNames(documents[MEDIA] ?? []),
+    mediaFiles: allMediaFileNames(documents[MEDIA] ?? []),
   }
   const counts = {
     documents: Object.fromEntries(Object.entries(documents).map(([s, d]) => [s, d.length])),
@@ -149,20 +147,5 @@ export async function exportPreviewCopy(
 }
 
 /** The file names of each picture and its sizes, sorted, refusing any that could leave the folder. */
-function mediaFileNames(media: CopiedDocument[]): string[] {
-  const names = new Set<string>()
-  for (const doc of media) {
-    const sizes = typeof doc.sizes === 'object' && doc.sizes !== null ? doc.sizes : {}
-    const found = [
-      doc.filename,
-      ...Object.values(sizes).map((size) => (size as { filename?: unknown })?.filename),
-    ]
-    for (const name of found) {
-      if (name === null || name === undefined) continue
-      if (!isSafeFileName(name))
-        throw new Error('Preview copy: a media record has an unsafe file name')
-      names.add(name)
-    }
-  }
-  return [...names].sort()
-}
+const allMediaFileNames = (media: CopiedDocument[]): string[] =>
+  [...new Set(media.flatMap(mediaFileNames))].sort()
