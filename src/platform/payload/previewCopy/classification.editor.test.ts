@@ -153,6 +153,28 @@ describe('failing closed', () => {
     )
   })
 
+  it('fails on a container that lacks the list the walker reads, even one with a known type', async () => {
+    const typed = feature(
+      {},
+      { 'x.fields': { type: 'group', name: 'card', flattenedFields: [emailField] } },
+    )
+    expect(await gate(configOf([lexical({ blocks: typed })]))).toEqual(
+      cannotRead('group field "card" has no fields'),
+    )
+    const renamed = { name: 'body', type: 'group', flattenedFields: [emailField] }
+    expect(await gate(configOf([renamed]))).toEqual(cannotRead('group field "body" has no fields'))
+    const noTabs = { name: 'body', type: 'blocks', blocksList: [] }
+    expect(await gate(configOf([noTabs]))).toEqual(cannotRead('blocks field "body" has no blocks'))
+  })
+
+  it('reports a null value with the intended message, not a stack trace', async () => {
+    const group = { name: 'body', type: 'group', fields: [null] }
+    expect(await gate(configOf([group]))).toEqual(cannotRead('a value that is not an object'))
+    expect(await gate(configOf([lexical({ blocks: feature({}, { x: null as never }) })]))).toEqual(
+      cannotRead('a value that is not an object'),
+    )
+  })
+
   it('knows the checklist feature, and counts a join field as pointing at its collection', async () => {
     expect(
       await gate(configOf([lexical({ bold: plainFeature(), checklist: plainFeature() })])),

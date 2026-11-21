@@ -147,6 +147,24 @@ export function createFieldWalker(config: WalkConfig) {
     return found
   }
 
+  /** The list each container type must carry for the walker to see what is inside it. */
+  const containerList = (node: FieldNode): { ok: boolean; need: string } | null => {
+    const list = (value: unknown) => Array.isArray(value)
+    switch (node.type) {
+      case 'group':
+      case 'array':
+      case 'collapsible':
+      case 'row':
+        return { ok: list(node.fields), need: 'fields' }
+      case 'tabs':
+        return { ok: list(node.tabs), need: 'tabs' }
+      case 'blocks':
+        return { ok: list(node.blocks) || list(node.blockReferences), need: 'blocks' }
+      default:
+        return null
+    }
+  }
+
   /** The fields, tabs and blocks directly inside one node, and what a rich-text editor stores. */
   const children = (node: FieldNode): FieldNode[] => {
     if (typeof node !== 'object' || node === null) {
@@ -162,12 +180,20 @@ export function createFieldWalker(config: WalkConfig) {
     if (node.type !== undefined && !KNOWN_TYPES.has(node.type)) {
       report(`unknown field type "${node.type}"${node.name ? ` (${node.name})` : ''}`)
     }
+    const container = containerList(node)
+    if (container && !container.ok) {
+      report(`${node.type} field "${node.name ?? ''}" has no ${container.need}`)
+    }
     return [
       ...(node.fields ?? []),
       ...(node.tabs ?? []),
       ...[...(node.blocks ?? []), ...(node.blockReferences ?? [])].flatMap(resolveBlock),
       ...(node.type === 'richText' ? editorChildren(node) : []),
-    ]
+    ].filter((child) => {
+      const isObject = typeof child === 'object' && child !== null
+      if (!isObject) report('a value that is not an object')
+      return isObject
+    })
   }
 
   /** Every field below `node`, however deeply nested. */
@@ -180,6 +206,10 @@ export function createFieldWalker(config: WalkConfig) {
    */
   const topLevelFields = (fields: FieldNode[]): FieldNode[] =>
     fields.flatMap((field) => {
+      if (typeof field !== 'object' || field === null) {
+        report('a value that is not an object')
+        return []
+      }
       if (field.name) return [field]
       if (field.type !== undefined && !LAYOUT_TYPES.has(field.type)) {
         report(`unnamed field of type "${field.type}" is not a layout container`)
