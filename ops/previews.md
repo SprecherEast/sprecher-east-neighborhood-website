@@ -216,7 +216,7 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   release was put back where there was one), **taken down** (the isolation check failed before or after the
   deploy: a failed check before it takes down a preview already running under that number, so the comment
   says so), not started because the cap is reached (the comment names the cap and the pull requests that hold the
-  places), not started because the server lacks the free disk, **removed** (the pull request closed), not started
+  places; when the list can't be read again after a cap race it names only the cap), not started because the server lacks the free disk, **removed** (the pull request closed), not started
   because the build is too big, build failed, or **previews unavailable**. Unavailable means the environment doesn't hold the key yet, or the server
   doesn't take it: the production deploy writes the key's line only when the host guards and the isolation
   check pass, so "no key line" shows from outside as a refused sign-in. It is reported once and **never
@@ -282,7 +282,7 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   certificate. If either list fails the sweep removes nothing. The job summary lists what was removed and why.
   The token it has reads pull requests and writes nothing. It is not serialized with a deploy of the same
   number, so it reads that number's line again just before each removal and applies its rule afresh: a preview
-  deployed meanwhile is left alone (the window is the milliseconds between that read and `teardown`). Every
+  deployed meanwhile is left alone (the window that remains is a whole upload and deploy of a preview whose `current` link is still the old one, which can still be torn down in the middle; a later change could make `teardown` take the upload's lock, see #1405). Every
   line of the list is checked before the first removal, and the summary is written even when the sweep stops.
 - **After a reboot** (decided, #1076; carried from #1345): previews are **not** started again, so production starts
   alone on a small machine. PM2's startup and resurrect would bring every preview back at once and, with Caddy's

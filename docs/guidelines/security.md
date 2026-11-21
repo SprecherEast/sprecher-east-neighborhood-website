@@ -195,7 +195,7 @@ isolation check proves it before and after every preview deploy. What holds now:
   sign-in hand-out) checks out the default branch's scripts, never the pull request's or its base's (a stacked pull request's base is
   another unreviewed branch), and the server facts, the removal and the sweep set up `ssh` through one shared gate
   (`.github/actions/preview-ssh`) that refuses to start unless all four connection values, the pinned host key
-  included, are present (the deploy runs only after the facts passed). The deploy lists the build's archive, send it to the server on stdin and never unpack or run it, and no job names `production` or calls a privileged workflow, because the
+  included, are present (the deploy runs only after the facts passed). The deploy lists the build's archive, sends it to the server on stdin and never unpacks or runs it, and no job names `production` or calls a privileged workflow, because the
   wrapper's deploy prints values from the release into the public log. A same-repository pull request's
   workflow file is its own copy, so a dishonest change could read the key: the server is the boundary, since
   the key can run only the wrapper's six actions. The deploy goes through the wrapper only, checks the

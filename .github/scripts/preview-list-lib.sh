@@ -34,25 +34,7 @@ list_is_valid() { # <listing>
   done <<<"$1"
 }
 
-# True when the listing has anything for this number: a folder, a block or a process.
-list_holds() { # <number> <listing>
-  local line
-  while IFS= read -r line; do
-    parse_list_line "$line" && [ "$LIST_NUMBER" = "$1" ] && return 0
-  done <<<"$2"
-  return 1
-}
-
-# True when the listing has a folder for this number: a place under the cap, which the server counts by folder.
-list_has_folder() { # <number> <listing>
-  local line
-  while IFS= read -r line; do
-    parse_list_line "$line" && [ "$LIST_NUMBER" = "$1" ] && [ "$LIST_FOLDER" = yes ] && return 0
-  done <<<"$2"
-  return 1
-}
-
-# Prints the line of this number, or nothing.
+# Prints the line of this number, or nothing. The one loop over a listing.
 list_line_of() { # <number> <listing>
   local line
   while IFS= read -r line; do
@@ -62,4 +44,16 @@ list_line_of() { # <number> <listing>
     fi
   done <<<"$2"
   return 0
+}
+
+# True when the listing has anything for this number: a folder, a block or a process.
+list_holds() { # <number> <listing>
+  [ -n "$(list_line_of "$1" "$2")" ]
+}
+
+# True when the listing has a folder for this number: a place under the cap, which the server counts by folder.
+list_has_folder() { # <number> <listing>
+  local line
+  line=$(list_line_of "$1" "$2")
+  [ -n "$line" ] && parse_list_line "$line" && [ "$LIST_FOLDER" = yes ]
 }
