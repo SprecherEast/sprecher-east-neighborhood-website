@@ -4,7 +4,17 @@ import { FIXTURES } from '@/platform/lib/chart/fixtures'
 import { parseChartSpec } from '@/platform/lib/chart/spec'
 
 import { toBarModel } from './barModel'
-import { SEGMENT_GAP, VIEW_WIDTH, layoutBars, placeLabels, wrapText } from './barLayout'
+import {
+  FONT_SIZE,
+  MIN_TEXT_PX,
+  SEGMENT_GAP,
+  SMALLEST_DRAWING_PX,
+  SMALL_FONT_SIZE,
+  VIEW_WIDTH,
+  layoutBars,
+  placeLabels,
+  wrapText,
+} from './barLayout'
 
 const layout = (spec: unknown) => layoutBars(toBarModel(parseChartSpec(spec)))
 
@@ -144,5 +154,13 @@ describe('placeLabels', () => {
   it('right-aligns a label that would run past the edge', () => {
     const [placed] = placeLabels([item(290, 300, '+$24.8M')], 300)
     expect(placed).toMatchObject({ anchor: 'end', x: 300 })
+  })
+})
+
+describe('text size on the smallest phone', () => {
+  it('shows names, values and notes at 16px or more when the drawing is as narrow as it gets', () => {
+    const scale = SMALLEST_DRAWING_PX / VIEW_WIDTH
+    expect(FONT_SIZE * scale).toBeGreaterThanOrEqual(MIN_TEXT_PX)
+    expect(SMALL_FONT_SIZE * scale).toBeGreaterThanOrEqual(MIN_TEXT_PX)
   })
 })

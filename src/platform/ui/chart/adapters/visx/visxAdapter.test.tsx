@@ -90,9 +90,10 @@ describe('visxAdapter', () => {
 
   it('prints a note under each row', () => {
     const { container } = draw(FIXTURES.borrowed)
-    const texts = [...container.querySelectorAll('text')].map((t) => t.textContent)
-    expect(texts).toContain('$60 of every $100 is borrowed')
-    expect(texts).toContain('$66 of every $100 is borrowed')
+    // a note may wrap onto more lines at the larger size (#1211): read the words, not the lines
+    const text = [...container.querySelectorAll('text')].map((t) => t.textContent).join(' ')
+    expect(text).toContain('$60 of every $100 is borrowed')
+    expect(text).toContain('$66 of every $100 is borrowed')
   })
 
   it('wraps a long note into lines that stay inside the drawing', () => {
