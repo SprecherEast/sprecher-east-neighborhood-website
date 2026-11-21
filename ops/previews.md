@@ -161,13 +161,24 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   previous release when it fails). Before sending anything it checks the archive's size
   against the upload limit and what it unpacks to against `PREVIEW_UNPACK_MAX_BYTES` (3 GiB); the wrapper
   checks both again.
-- **The first database** (`e2e/previewSeed.ts`, run by `payload run` from `deploy-release.sh` after the
-  migrations and before the switch): a new SQLite database built from the migrations, with one admin account
-  whose password is random and is never stored, logged or shown, because the first account registered on an
-  empty `users` collection becomes an admin (#354) and a preview anyone can open must never have it empty. So
-  `/admin` shows a sign-in form, nobody can sign in, and no email is made. It does nothing when an account
-  exists, so a redeploy changes nothing. The demo seed stays off in production builds (`isSeedEnabled`). The
-  copy of published content, and how anyone signs in, are #1077.
+- **The first database and its test accounts** (`e2e/previewSeed.ts`, run by `payload run` from
+  `deploy-release.sh` after the migrations and before the switch; #1075, #1393): a new SQLite database built
+  from the migrations, with one verified test account per role that signs in with a password: `admin`,
+  `editor`, `resident` and `guest` (`preview-<role>@example.com`; `agent` is left out: it has no password
+  sign-in and a preview never gets an API key). The first account registered on an empty `users` collection
+  becomes an admin (#354), so a preview anyone can open is never reachable with it empty. **The passwords** are
+  random, per account and per deploy, made by `ops/preview-accounts.sh` (`main`'s copy, never the pull
+  request's) into `<preview folder>/.preview-accounts`, mode 600, outside `data/` and the release; the seed
+  reads that file, named by `PREVIEW_ACCOUNTS_FILE`, and refuses one that is not a private file of its own
+  user. Nothing puts a password in an environment variable, an argument, a log line or a comment, and the
+  deploy log says only that they were made. No email is made. Every deploy gives each existing account its new
+  password, role and verified state and unlocks it, which also ends its sessions, so a redeploy signs everyone
+  out and the old passwords fail; any other account (a neighbor who signed up in the preview) is left alone.
+  The seed refuses to run outside a preview, and the demo seed stays off in production builds
+  (`isSeedEnabled`). Production's accounts and settings are never read or copied. The role list is one
+  constant, `PREVIEW_ACCOUNT_ROLES` in `src/endpoints/seed/preview-accounts.ts`, and `environment.sh` names the
+  same roles for the script, with a test keeping the two equal. How the owner or an AI agent gets the
+  passwords is #1394; the copy of published content is #1077.
 - **What a result looks like.** The comment says one of: live (with the link), deploy failed (the previous
   release was put back where there was one), **taken down** (the isolation check failed before or after the
   deploy: a failed check before it takes down a preview already running under that number, so the comment
@@ -177,8 +188,8 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   doesn't take it: the production deploy writes the key's line only when the host guards and the isolation
   check pass, so "no key line" shows from outside as a refused sign-in. It is reported once and **never
   retried**.
-- **A pull request opened before this was merged** has no `e2e/previewSeed.ts`, so its preview deploy stops with
-  "the preview's database could not be prepared" until it is rebased on `main`. The seed also refuses to run without a pull request number, a second check against an honest mistake such
+- **A pull request opened before this was merged** has no `e2e/previewSeed.ts` that reads the passwords file, so its
+  preview deploy stops with "the preview's database could not be prepared" until it is rebased on `main`. The seed also refuses to run without a pull request number, a second check against an honest mistake such
   as running it by hand: it lives in the release's own code, so it is no boundary. Production is kept out by the
   `is_preview` gate in `main`'s `deploy-release.sh` and by the preview account's isolation.
 - **Not covered.** A detached process a preview starts survives `teardown`, which stops only PM2's process

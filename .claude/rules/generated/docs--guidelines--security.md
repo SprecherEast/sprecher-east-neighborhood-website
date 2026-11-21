@@ -126,7 +126,7 @@ isolation check proves it before and after every preview deploy. What holds now:
   and a production sign-in token is worth nothing on a preview. A preview's sign-in cookie sets no
   `Domain`, so production's is never sent to it. The owner decided this (2026-11-11, recorded on
   #1074).
-- **Never printed:** the deploy log is public, so no generated secret appears in it.
+- **Never printed:** the deploy log is public, so no generated secret or test account password appears in it.
 - **No basic auth on previews:** they hold only code already public in this repository and content
   already published, and a password would block opening the link on a phone and AI agents taking
   screenshots. Noindex headers and a disallow-all `robots.txt` are required instead
@@ -213,10 +213,18 @@ isolation check proves it before and after every preview deploy. What holds now:
   preview down, and when the host guards withhold the key (no key line written) reports previews unavailable
   once and never retries. The one comment holds fixed texts, a link and a short commit, never a log line or a
   secret (`.github/scripts/preview-workflow.test.mjs` and `preview-comment.test.mjs`).
-- **A preview's first database has an account nobody can sign in to** (#1075): the first account on an empty
-  `users` collection becomes an admin (#354), so a preview is seeded (`e2e/previewSeed.ts`, before it is
-  switched on) with one `example.com` admin whose password is random and never stored, logged or shown, and no
-  verification email. How anyone signs in to a preview is #1077.
+- **A preview has a throwaway test account per role** (#1075, #1393; the owner's decision of 2026-11-20 is
+  recorded on #1077): the first account on an empty `users` collection becomes an admin (#354), so a preview is
+  seeded (`e2e/previewSeed.ts`, before it is switched on) with one verified `example.com` account for each role
+  that signs in with a password (`admin`, `editor`, `resident`, `guest`; `agent` has no password sign-in and a
+  preview never gets an API key), and no verification email. The passwords are random, made on the server by
+  `main`'s `ops/preview-accounts.sh` (never by the pull request's code, which only reads them), on every deploy,
+  into one file in the preview's own folder (mode 600, outside `data/` and the release). They are never printed,
+  logged, put in an argument, an environment variable or a comment, and no production account or password is
+  ever copied. A redeploy makes new ones and ends every session, so the old ones stop working. The code a
+  preview runs is unreviewed and can read its own file, which opens only that preview's throwaway accounts: it
+  could already make any account in its own database. Production's accounts and settings are never touched.
+  How the passwords reach the owner or an AI agent is #1394.
 - **Previews have no basic auth** (the owner's decision, 2026-11-11, recorded on #1074): see above.
 
 ## Agents and the rules that bind them

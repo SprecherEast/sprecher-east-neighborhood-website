@@ -8,7 +8,7 @@
 #   2. link the shared .env.local, data/ and public/media into it
 #   3. back up the data (ops/backup.sh pre-deploy; not for a preview), then run the database migrations
 #      (once more if the database was busy before any migration began, #1147)
-#      (a preview also makes its first database's one account, e2e/previewSeed.ts, #1075)
+#      (a preview also makes its test accounts, one per role with new random passwords, #1075, #1393)
 #   4. drop the pages prerendered in CI, whose database was empty: each renders from the live
 #      database on its first visit, then is cached as usual
 #   5. switch the `current` link atomically and reload the app under PM2 (ops/restart-app.sh)
@@ -164,14 +164,18 @@ echo "→ Running database migrations..."
 run_migrate "$RELEASE" ||
   stop "the database migrations failed$(is_preview || echo " (the pre-deploy backup has the data from before)")"
 
-# 3b. A preview's first database (#1075): one admin account nobody can sign in to, so the first account
-# registered on an empty database never becomes the preview's admin (#354). It does nothing once any account
-# exists. It runs the release's own code, as the app will (payload run needs NODE_ENV=production here: left
+# 3b. A preview's test accounts (#1075, #1393): one verified account per role, so the first account
+# registered on an empty database never becomes the preview's admin (#354) and the owner can sign in as each
+# role. The passwords are made here, by this script's own folder (main's copy for a preview), into one private
+# file in the preview's folder (ops/preview-accounts.sh), new on every deploy; nothing prints them or puts
+# them in an argument or an environment variable, only the file's path. Then the release's own code gives
+# each account its password, as the app will run (payload run needs NODE_ENV=production here: left
 # unset, Payload pushes its development schema over the migrations), after the migrations and before the
 # switch, so a preview that anyone can reach is never reachable with an empty `users` collection.
 if is_preview; then
-  echo "→ Preparing the preview's database..."
-  (cd "$RELEASE" && NODE_ENV=production NODE_OPTIONS=--no-deprecation node_modules/.bin/payload run e2e/previewSeed.ts) ||
+  echo "→ Preparing the preview's test accounts..."
+  bash "$OPS_DIR/preview-accounts.sh" || stop "the preview's account passwords could not be made"
+  (cd "$RELEASE" && PREVIEW_ACCOUNTS_FILE="$ACCOUNTS_FILE" NODE_ENV=production NODE_OPTIONS=--no-deprecation node_modules/.bin/payload run e2e/previewSeed.ts) ||
     stop "the preview's database could not be prepared"
 fi
 

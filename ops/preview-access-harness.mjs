@@ -20,6 +20,7 @@ export const SCRIPTS = [
   'preview-host-guards.sh',
   'umami-lib.sh',
   'preview-settings.sh',
+  'preview-accounts.sh',
   'secret-lib.sh',
   'deploy-release.sh',
   'restart-app.sh',
