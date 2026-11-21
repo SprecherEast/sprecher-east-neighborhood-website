@@ -11,6 +11,7 @@
 #   upload <number> <commit>   a release archive (.tar.gz) on stdin, unpacked into the preview's folder
 #   deploy <number> <commit>   puts that uploaded release live (Caddy block, then ops/deploy-release.sh)
 #   teardown <number>          stops the preview, deletes its folder and its Caddy block
+#   credentials <number>       prints the preview's test sign-in (#1394), only when the seed applied exactly it
 #
 # Every word is checked against a fixed pattern before anything uses it, and no word is ever passed to
 # a shell or `eval`: the number and the commit become one path component and one argument each, after
@@ -29,6 +30,8 @@ umask 027
 here=$(cd "${BASH_SOURCE[0]%/*}" && pwd -P)
 # shellcheck source=preview-access-lib.sh
 . "$here/preview-access-lib.sh"
+# shellcheck source=secret-lib.sh
+. "$here/secret-lib.sh" # the one definition of a generated secret's shape (is_secret)
 reset_environment "$here"
 
 if [ -f "$here/../tools-path" ]; then
@@ -50,6 +53,10 @@ case "$action" in
   teardown)
     [ -n "$number" ] || refuse "teardown needs a number"
     [ -z "$commit" ] || refuse "teardown takes only a number"
+    ;;
+  credentials)
+    [ -n "$number" ] || refuse "credentials needs a number"
+    [ -z "$commit" ] || refuse "credentials takes only a number"
     ;;
   *) refuse "not a preview action" ;;
 esac
@@ -155,5 +162,36 @@ case "$action" in
   teardown)
     take_down
     echo "::notice title=Preview::preview $number: taken down"
+    ;;
+
+  credentials)
+    # The test accounts' passwords (ops/preview-accounts.sh), for the requester to seal and read (#1394). Handed
+    # out only when the seed confirmed this exact file: `.preview-accounts.applied` holds the file's SHA-256,
+    # written by the seed after it gave every account its password. After a failed seed, or on a branch whose
+    # seed ignores the file, the file holds passwords that match no account, so none are served. The file is
+    # read once and its text is what is checked and what is printed. Nothing here logs it; the caller
+    # (.github/scripts/preview-credentials.sh) seals it before anything reaches a public log.
+    [ -d "$APP_DIR" ] || refuse "there is no such preview"
+    applied="$ACCOUNTS_FILE.applied"
+    none="the preview has no test sign-in to hand out (not made, or the last deploy did not finish it)"
+    [ -f "$ACCOUNTS_FILE" ] && [ ! -L "$ACCOUNTS_FILE" ] && [ -f "$applied" ] && [ ! -L "$applied" ] || refuse "$none"
+    [ "$(stat -c %a "$ACCOUNTS_FILE")" = 600 ] || refuse "$none"
+    content=$(cat -- "$ACCOUNTS_FILE"; printf x) || refuse "$none"
+    content=${content%x}
+    marker=""
+    IFS= read -r marker <"$applied" || true
+    digest=$(printf '%s' "$content" | sha256sum)
+    [ "${digest%% *}" = "$marker" ] || refuse "$none"
+    # Exactly what ops/preview-accounts.sh writes: for each role, in order, one `<role>=<secret>` line (the shape
+    # is secret-lib.sh's `is_secret`), and a newline after the last one. Anything else is not handed out.
+    rest=$content
+    for role in $PREVIEW_ACCOUNT_ROLES; do
+      line=${rest%%$'\n'*}
+      [ "$line" != "$rest" ] || refuse "$none" # no newline: a missing line, or no newline at the end
+      rest=${rest#*$'\n'}
+      [ "${line%%=*}" = "$role" ] && is_secret "${line#*=}" || refuse "$none"
+    done
+    [ -z "$rest" ] || refuse "$none"
+    printf '%s' "$content"
     ;;
 esac

@@ -81,7 +81,7 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   use the same Turnstile site key, or the deploy's settings gate refuses it. The restricted preview
   account's deploy runs this script from main's root-owned copy, never from the release (#1345).
 - **The restricted account** (#1345). Previews deploy and run as one account whose home is root-owned,
-  reached by a key that can run only the wrapper's five actions, with one sudo rule for the Caddy block
+  reached by a key that can run only the wrapper's six actions, with one sudo rule for the Caddy block
   script. What it is, what it may do and how to check it: [`README.md`](README.md#pull-request-preview-account).
   `environment.sh` holds its names (`PREVIEW_USER`, `PREVIEW_HOME`, `PREVIEW_ACCESS_DIR`), the
   upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, 10) and the number and commit patterns, so no script writes its own.
@@ -142,7 +142,7 @@ required check: a failed preview never blocks a merge or the production deploy.
   or its base (a stacked pull request's base is another unreviewed branch), and only list the build's archive and
   send it to the server on stdin: nothing on the runner unpacks or runs it. On a
   same-repository pull request this workflow file is the pull request's own copy, so a dishonest change
-  could read the environment's key; the server is the boundary. The key can run only the wrapper's five
+  could read the environment's key; the server is the boundary. The key can run only the wrapper's six
   actions, and a failed isolation check takes the preview down (above). `.github/scripts/preview-workflow.test.mjs`
   fails when an honest change moves the key next to the build.
 - **Setting the key up.** The key pair is done (#1385); repeat this only for a new key. The public half is committed as `ops/preview-deploy-key.pub` and the private half is the `PREVIEW_SSH_KEY` secret. GitHub's environment and secret calls need a token that can write secrets, which an
@@ -174,12 +174,44 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   deploy log says only that they were made. No email is made. Every deploy gives each existing account its new
   password, role and verified state and unlocks it, which also ends its sessions, so a redeploy signs these four
   accounts out and their old passwords fail; any other account (a neighbor who signed up in the preview) is left alone.
-  A failure prints one fixed line, never Payload's or the database's error (`runPreviewSeed`; the deploy log is
-  public). The seed refuses to run outside a preview, and the demo seed stays off in production builds
+  The seed's own failure prints one fixed line, never its error (`runPreviewSeed`; the deploy log is public);
+  Payload's start-up errors (a database it cannot open) still print and hold no password, because passwords reach
+  Payload only in the seed. When every account has its password the seed writes `.preview-accounts.applied`,
+  the file's SHA-256 (mode 600), which is what lets the passwords be handed out
+  ([below](#the-workflow-1075)). The seed refuses to run outside a preview, and the demo seed stays off in production builds
   (`isSeedEnabled`). Production's accounts and settings are never read or copied. The role list is one
   constant, `PREVIEW_ACCOUNT_ROLES` in `src/endpoints/seed/preview-accounts.ts`, and `environment.sh` names the
   same roles for the script, with a test keeping the two equal. How the owner or an AI agent gets the
-  passwords is #1394; the copy of published content is #1077.
+  passwords is [below](#the-workflow-1075); the copy of published content is #1077.
+- **Handing out the test sign-in** (#1394). The repository is public, so a password may not appear in a log,
+  a comment or an artifact. The owner's decision (2026-11-20, #1077): the AI agent signs in through the browser
+  for him, so a password travels only if he asks, and then privately. How it is obtained without a public
+  trace: **sealed to the requester.**
+  1. The wrapper's sixth action, `credentials <number>`, prints the preview's `.preview-accounts`, and only when
+     `.preview-accounts.applied` holds that exact file's SHA-256 (the seed wrote it after giving every account its
+     password), the file is private (mode 600, not a link) and has, in order, one `<role>=<secret>` line per role (`is_secret` in `secret-lib.sh`) and a newline at the end. Otherwise
+     it refuses with a fixed text (`there is no such preview`, or `the preview has no test sign-in to hand out`):
+     after a failed seed, or on a branch whose seed ignores the file, the passwords match no account and are
+     never served. A missing preview, a bad number and extra words are refused like any other request.
+  2. The workflow `.github/workflows/preview-sign-in.yml` runs on `workflow_dispatch` only (write access
+     needed), never on `pull_request`, and is not a required check. It names the `preview` environment, checks
+     out the default branch's scripts and runs `.github/scripts/preview-credentials.sh` with the pull request's
+     number and the requester's one-time **public** key (RSA, 3072 bits or more, PEM, as one line of base64),
+     which the script reads from the dispatch event's inputs and not from a step's `env:` (the runner echoes
+     that in the public log, so a private key sent by mistake would show). The script asks `credentials`, masks the plaintext (`::add-mask::`) before anything else, seals it with
+     RSA-OAEP and SHA-256 (`openssl pkeyutl`, no new dependency; a 4096-bit key is advised) and prints only the
+     ciphertext between `sealed-sign-in-begin` and `sealed-sign-in-end`.
+  3. The requester makes a key pair for each request in their own sandbox, dispatches, reads the ciphertext from the
+     run's log through the REST API, opens it locally and deletes the key. The plaintext never leaves their
+     machine. The steps for agents are in [`docs/process/preview-sign-in.md`](../docs/process/preview-sign-in.md).
+  - **Weighed and not chosen:** reading the file over SSH as the owner (the key's private half exists only as the
+    environment secret, and a second key would widen the account's reach); a password or one-time link in a
+    comment or artifact (public); a fixed or derived password (defeats "random per preview"); `age` or GPG
+    instead of `openssl` (a new tool on the runner for no gain).
+  - **Honest limit:** a dispatch runs the workflow file of the branch it is given, so someone with write access
+    could dispatch a branch that prints the plaintext. They could already change the preview's code, which holds
+    the same throwaway accounts on a copy of public content, so this adds no reach; the environment's secrets
+    and the restricted account are the boundary.
 - **What a result looks like.** The comment says one of: live (with the link), deploy failed (the previous
   release was put back where there was one), **taken down** (the isolation check failed before or after the
   deploy: a failed check before it takes down a preview already running under that number, so the comment
@@ -191,10 +223,11 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   retried**.
 - **A pull request opened before this was merged** has an older `e2e/previewSeed.ts`, which ignores the passwords
   file: its deploy still succeeds and leaves one admin nobody can sign in to, and `.preview-accounts` holds four
-  passwords that match no account until the branch is rebased on `main`. Whatever hands the passwords out
-  (#1394) must not hand those out. Only a branch with no `e2e/previewSeed.ts` at all stops, with "the preview's
-  database could not be prepared". A seed that fails after the script made the file leaves the same mismatch:
-  the deploy stops and the previous release keeps running, and the next deploy makes a matching set. The seed also refuses to run without a pull request number, a second check against an honest mistake such
+  passwords that match no account until the branch is rebased on `main`. The hand-out refuses those (no
+  `.preview-accounts.applied`, or one that does not match the file). Only a branch with no `e2e/previewSeed.ts` at all stops, with "the preview's
+  database could not be prepared". A seed that fails after the script made the file leaves the same mismatch,
+  and the hand-out refuses it the same way: the deploy stops and the previous release keeps running, and the
+  next deploy makes a matching set (until then no sign-in can be handed out for that preview). The seed also refuses to run without a pull request number, a second check against an honest mistake such
   as running it by hand: it lives in the release's own code, so it is no boundary. Production is kept out by the
   `is_preview` gate in `main`'s `deploy-release.sh` and by the preview account's isolation.
 - **Not covered.** A detached process a preview starts survives `teardown`, which stops only PM2's process

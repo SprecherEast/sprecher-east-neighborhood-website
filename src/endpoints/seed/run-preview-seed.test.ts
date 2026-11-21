@@ -18,11 +18,55 @@ describe('runPreviewSeed', () => {
       readPasswords: () => passwords as never,
       getLogger: async () => log,
       seed: async () => ({ created: 4, refreshed: 0 }),
+      markApplied: () => {},
     })
     expect(code).toBe(0)
     expect(log.info).toHaveBeenCalledOnce()
     expect(String(log.info.mock.calls[0][0])).toContain('4 test accounts made')
     expect(log.error).not.toHaveBeenCalled()
+  })
+
+  it('confirms the passwords as applied only after the seed finished, and never when it failed', async () => {
+    const order: string[] = []
+    await runPreviewSeed({
+      readPasswords: () => passwords as never,
+      getLogger: async () => logger(),
+      seed: async () => {
+        order.push('seed')
+        return { created: 0, refreshed: 4 }
+      },
+      markApplied: () => void order.push('mark'),
+    })
+    expect(order).toEqual(['seed', 'mark'])
+
+    const marked = vi.fn()
+    const code = await runPreviewSeed({
+      readPasswords: () => passwords as never,
+      getLogger: async () => logger(),
+      seed: async () => {
+        throw new Error('half done')
+      },
+      markApplied: marked,
+      fallbackLog: { error: () => {} },
+    })
+    expect(code).toBe(1)
+    expect(marked).not.toHaveBeenCalled()
+  })
+
+  it('fails with the fixed line when the confirmation cannot be written', async () => {
+    const log = logger()
+    const code = await runPreviewSeed({
+      readPasswords: () => passwords as never,
+      getLogger: async () => log,
+      seed: async () => ({ created: 4, refreshed: 0 }),
+      markApplied: () => {
+        throw new Error(`EACCES ${'c'.repeat(64)}`)
+      },
+    })
+    expect(code).toBe(1)
+    const all = log.error.mock.calls.flat().map(String).join('\n')
+    expect(all).toContain('the test accounts could not be made')
+    expect(all).not.toContain('EACCES')
   })
 
   it.each(['reading the file', 'opening Payload', 'seeding'])(
@@ -46,6 +90,7 @@ describe('runPreviewSeed', () => {
         seed: async () => {
           throw leak
         },
+        markApplied: () => {},
         fallbackLog: console,
       })
       out.mockRestore()

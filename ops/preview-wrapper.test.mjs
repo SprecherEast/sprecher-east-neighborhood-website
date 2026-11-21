@@ -1,6 +1,7 @@
 // ops/preview-wrapper.sh (#1345): the forced command of the preview deploy key. It must run the
-// five actions and refuse everything else, with every value checked before use. Each guard has a
+// six actions and refuse everything else, with every value checked before use. Each guard has a
 // test that fails without it. Real sshd and `restrict` are checked on the server.
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
@@ -337,6 +338,142 @@ describe('preview-wrapper.sh: the actions', () => {
   })
 })
 
+describe('preview-wrapper.sh: credentials (#1394)', () => {
+  const ROLES = ['admin', 'editor', 'resident', 'guest']
+  const text = () => ROLES.map((r, i) => `${r}=${String(i + 1).repeat(64)}\n`).join('')
+  const digest = (t) => crypto.createHash('sha256').update(t).digest('hex')
+  const FIXED = 'no test sign-in to hand out'
+
+  /** A preview folder with the passwords file the deploy script writes and, unless told not to, the seed's marker. */
+  function previewWith({ body = text(), marker = digest(body), mode = 0o600 } = {}) {
+    fs.mkdirSync(p('previews/pr-7'), { recursive: true })
+    fs.writeFileSync(p('previews/pr-7/.preview-accounts'), body, { mode })
+    fs.chmodSync(p('previews/pr-7/.preview-accounts'), mode)
+    if (marker !== null)
+      fs.writeFileSync(p('previews/pr-7/.preview-accounts.applied'), `${marker}\n`)
+  }
+
+  it('prints the file exactly, once the seed confirmed it, and runs nothing else', async () => {
+    previewWith()
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(0)
+    expect(out).toBe(text())
+    expect(log()).toBe('')
+  })
+
+  it('says nothing about another preview’s passwords', async () => {
+    previewWith()
+    fs.mkdirSync(p('previews/pr-8'))
+    const { code, out } = await wrapper('credentials 8')
+    expect(code).toBe(2)
+    expect(out).not.toContain('1'.repeat(64))
+  })
+
+  it('refuses a preview that does not exist, with a fixed text and nothing created', async () => {
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).toContain('there is no such preview')
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false)
+  })
+
+  it('refuses a preview whose first deploy has not made the file', async () => {
+    fs.mkdirSync(p('previews/pr-7'))
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).toContain(FIXED)
+  })
+
+  it('does not hand out passwords the seed never applied (no marker: an older branch, or a failed seed)', async () => {
+    previewWith({ marker: null })
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).toContain(FIXED)
+    expect(out).not.toContain('1'.repeat(64))
+  })
+
+  it('does not hand out a file that changed after the seed confirmed another one', async () => {
+    previewWith({ marker: digest(text().replace('1', '9')) })
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).not.toContain('1'.repeat(64))
+  })
+
+  it.each([0o644, 0o640, 0o604])(
+    'does not hand out a file others can open (mode %o)',
+    async (mode) => {
+      previewWith({ mode })
+      const { code, out } = await wrapper('credentials 7')
+      expect(code).toBe(2)
+      expect(out).not.toContain('1'.repeat(64))
+    },
+  )
+
+  it.each([
+    ['an extra line', (t) => `${t}root=${'f'.repeat(64)}\n`],
+    ['a short password', (t) => t.replace('1'.repeat(64), '1'.repeat(8))],
+    ['a stray line', (t) => `${t}::notice::x\n`],
+    ['an empty file', () => ''],
+    ['empty passwords', () => ROLES.map((r) => `${r}=\n`).join('')],
+    [
+      'the roles out of order',
+      () =>
+        ROLES.toReversed()
+          .map((r) => `${r}=${'1'.repeat(64)}\n`)
+          .join(''),
+    ],
+    ['a role twice', () => `${text()}${text()}`],
+    ['no newline at the end', (t) => t.slice(0, -1)],
+    ['a blank line', (t) => `\n${t}`],
+    ['upper-case hex', (t) => t.replace('1'.repeat(64), 'A'.repeat(64))],
+  ])('does not hand out a file that is not what the deploy writes (%s)', async (_, change) => {
+    const body = change(text())
+    previewWith({ body })
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).not.toContain('f'.repeat(64))
+    expect(out).not.toContain('::notice::x')
+  })
+
+  it('never follows a link at the passwords file or the marker', async () => {
+    previewWith()
+    fs.writeFileSync(p('secret-elsewhere'), text(), { mode: 0o600 })
+    fs.rmSync(p('previews/pr-7/.preview-accounts'))
+    fs.symlinkSync(p('secret-elsewhere'), p('previews/pr-7/.preview-accounts'))
+    const first = await wrapper('credentials 7')
+    expect(first.code).toBe(2)
+    expect(first.out).not.toContain('1'.repeat(64))
+
+    previewWith()
+    fs.rmSync(p('previews/pr-7/.preview-accounts.applied'))
+    fs.writeFileSync(p('elsewhere-marker'), `${digest(text())}\n`)
+    fs.symlinkSync(p('elsewhere-marker'), p('previews/pr-7/.preview-accounts.applied'))
+    const second = await wrapper('credentials 7')
+    expect(second.code).toBe(2)
+    expect(second.out).not.toContain('1'.repeat(64))
+  })
+
+  it('refuses a preview folder that is a link', async () => {
+    previewWith()
+    fs.renameSync(p('previews/pr-7'), p('real-folder'))
+    fs.symlinkSync(p('real-folder'), p('previews/pr-7'))
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).not.toContain('1'.repeat(64))
+  })
+
+  it('takes nothing from the caller’s environment about which file to read', async () => {
+    previewWith()
+    fs.mkdirSync(p('victim/pr-7'), { recursive: true })
+    fs.writeFileSync(p('victim/pr-7/.preview-accounts'), `admin=${'e'.repeat(64)}\n`, {
+      mode: 0o600,
+    })
+    const { out } = await wrapper('credentials 7', {
+      env: { ACCOUNTS_FILE: p('victim/pr-7/.preview-accounts'), APP_DIR: p('victim/pr-7') },
+    })
+    expect(out).toBe(text())
+  })
+})
+
 describe('preview-wrapper.sh: it refuses everything else', () => {
   const short = 'a'.repeat(39)
   const requests = [
@@ -398,6 +535,18 @@ describe('preview-wrapper.sh: it refuses everything else', () => {
     'teardown *',
     'teardown ../7',
     'teardown 7/../../x',
+    'credentials',
+    'credentials 0',
+    'credentials 07',
+    'credentials 1234567',
+    'credentials -7',
+    'credentials ../7',
+    'credentials 7;id',
+    'credentials 7\nid',
+    'credentials $(id)',
+    `credentials 7 ${COMMIT}`,
+    'credentials 7 7',
+    'credentials 7 extra',
     '--help',
     '-v',
     '--',
@@ -722,7 +871,7 @@ describe('preview-wrapper.sh: its tools come from fixed folders', () => {
 
   it('never runs a program planted on the caller’s PATH, for any action', async () => {
     const names =
-      'df find tar stat mkdir rm mv grep awk readlink dirname cat head sudo pm2 node id bash env realpath xargs wc'.split(
+      'df find tar stat mkdir rm mv grep awk readlink dirname cat head sudo pm2 node id bash env realpath xargs wc sha256sum'.split(
         ' ',
       )
     fs.mkdirSync(p('evil'))
@@ -742,6 +891,18 @@ describe('preview-wrapper.sh: its tools come from fixed folders', () => {
       const { code, out } = await wrapper(request, { input, env })
       expect(code, `${request}: ${out}`).toBe(0)
     }
+    // credentials, with a confirmed file in place
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive(), env })
+    const body = ['admin', 'editor', 'resident', 'guest']
+      .map((r) => `${r}=${'1'.repeat(64)}\n`)
+      .join('')
+    fs.writeFileSync(p('previews/pr-7/.preview-accounts'), body, { mode: 0o600 })
+    fs.writeFileSync(
+      p('previews/pr-7/.preview-accounts.applied'),
+      `${crypto.createHash('sha256').update(body).digest('hex')}\n`,
+    )
+    const creds = await wrapper('credentials 7', { env })
+    expect(creds.out).toBe(body)
     expect(fs.existsSync(p('planted')) ? fs.readFileSync(p('planted'), 'utf8') : '').toBe('')
   })
 })
