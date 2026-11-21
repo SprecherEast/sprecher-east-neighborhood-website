@@ -75,6 +75,17 @@ describe('useOnFirstView (#1413)', () => {
     expect(onView).toHaveBeenCalledTimes(1)
   })
 
+  it('runs once even where React mounts the element twice and the browser cannot tell', () => {
+    vi.stubGlobal('IntersectionObserver', undefined)
+    const onView = vi.fn()
+    render(
+      <React.StrictMode>
+        <Probe onView={onView} />
+      </React.StrictMode>,
+    )
+    expect(onView).toHaveBeenCalledTimes(1)
+  })
+
   it('stops watching when the element goes away before it was seen', () => {
     const made = stubObserver()
     const onView = vi.fn()

@@ -264,7 +264,8 @@ for (const width of WIDTHS) {
     await accept.click()
     await value.fill('$800,000')
     await page.getByRole('button', { name: 'Estimate' }).click()
-    await page.waitForTimeout(800)
+    // Both showings are spent: give a late one time to appear, then it is still not there
+    await page.waitForTimeout(1500)
     await expect(accept).toHaveCount(0)
   })
 }

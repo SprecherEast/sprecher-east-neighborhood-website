@@ -12,6 +12,7 @@ import { useEffect, useRef, type RefObject } from 'react'
 export function useOnFirstView<T extends Element>(onView: () => void): RefObject<T | null> {
   const ref = useRef<T | null>(null)
   const latest = useRef(onView)
+  const ran = useRef(false)
   useEffect(() => {
     latest.current = onView
   })
@@ -20,7 +21,11 @@ export function useOnFirstView<T extends Element>(onView: () => void): RefObject
     const element = ref.current
     if (!element) return
     if (typeof IntersectionObserver === 'undefined') {
-      latest.current()
+      // Once only, even where React runs the effect twice (development)
+      if (!ran.current) {
+        ran.current = true
+        latest.current()
+      }
       return
     }
     const observer = new IntersectionObserver(
