@@ -122,6 +122,45 @@
 }
 
 /*
+ * `toast-motion` (#1377): a toast slides up a little as it fades in, and down as it fades out
+ * (Radix keeps it on screen until the exit finishes). Only where the reader allows motion;
+ * otherwise it just appears and goes.
+ */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+}
+
+@utility toast-motion {
+  @media (prefers-reduced-motion: no-preference) {
+    &[data-state='open'] {
+      animation: toast-in 300ms ease-out;
+    }
+
+    &[data-state='closed'] {
+      animation: toast-out 300ms ease-in forwards;
+    }
+  }
+}
+
+/*
  * `nav-menu-slide` (#1237): the header's submenu slides down a few pixels as it fades in when it
  * opens. Only where the reader allows motion; otherwise it just appears.
  */

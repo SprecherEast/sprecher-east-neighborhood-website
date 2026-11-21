@@ -3,11 +3,12 @@
 import { RefreshCw } from 'lucide-react'
 import React, { useState } from 'react'
 
+import type { AlertTone } from '@/platform/ui/Alert'
 import { Button } from '@/platform/ui/Button'
 import { Dialog } from '@/platform/ui/Dialog.client'
 import { LoadMoreFooter } from '@/platform/ui/LoadMore.client'
 import { MapEmbed } from '@/platform/ui/MapEmbed.client'
-import { Toast } from '@/platform/ui/Toast'
+import { Toast, type ToastProps } from '@/platform/ui/Toast.client'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
 
@@ -46,10 +47,40 @@ export function InteractiveGallery() {
 
       <GalleryEntry
         name="Toast"
-        description="Fixed to the bottom of the screen on the site; held in a frame here."
+        description="Four tones, three endings (fade, close, accept), at the bottom of the screen or over a panel's top edge; held in a frame here."
       >
-        <GalleryVariant label="tone info, with an action" className="block">
-          <SampleToast />
+        <GalleryVariant label="neutral, with an action, on the screen" className="block">
+          <SampleToast
+            message="A new version of the site is available."
+            icon={<RefreshCw />}
+            action={
+              <Button size="sm" variant="secondary">
+                Refresh
+              </Button>
+            }
+          />
+        </GalleryVariant>
+        <GalleryVariant label="each tone, closes with its button" className="block space-y-4">
+          {TONES.map((tone) => (
+            <SampleToast key={tone} tone={tone} ending="close" message={`A ${tone} notice.`} />
+          ))}
+        </GalleryVariant>
+        <GalleryVariant label="over a panel, fades after 5 seconds" className="block">
+          <SampleToast
+            tone="info"
+            placement="panel"
+            message="This fades by itself; hover or focus keeps it."
+          />
+        </GalleryVariant>
+        <GalleryVariant label="over a panel, stays until accepted" className="block">
+          <SampleToast
+            tone="warning"
+            placement="panel"
+            ending="accept"
+            acceptLabel="Got it"
+            title="Please read"
+            message="Only the accept button closes this one."
+          />
         </GalleryVariant>
       </GalleryEntry>
 
@@ -84,23 +115,15 @@ function SampleDialog() {
   )
 }
 
-function SampleToast() {
+const TONES: AlertTone[] = ['info', 'success', 'warning', 'error']
+
+function SampleToast(props: Omit<ToastProps, 'onDismiss' | 'visible'>) {
   const [visible, setVisible] = useState(true)
   return (
     <>
       {/* Paint containment makes the frame the fixed toast's containing block */}
       <div className="relative h-32 overflow-hidden rounded-2xl border border-border bg-surface contain-paint">
-        <Toast
-          message="A new version of the site is available."
-          icon={<RefreshCw />}
-          action={
-            <Button size="sm" variant="secondary">
-              Refresh
-            </Button>
-          }
-          visible={visible}
-          onDismiss={() => setVisible(false)}
-        />
+        <Toast {...props} visible={visible} onDismiss={() => setVisible(false)} />
       </div>
       {!visible && (
         <Button className="mt-4" variant="ghost" onClick={() => setVisible(true)}>

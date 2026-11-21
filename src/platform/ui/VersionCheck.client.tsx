@@ -2,7 +2,7 @@
 
 import { RefreshCw } from 'lucide-react'
 import { Button } from './Button'
-import { Toast } from './Toast'
+import { Toast } from './Toast.client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 const POLL_INTERVAL = 30_000 // 30 seconds
@@ -108,6 +108,8 @@ export function VersionCheck() {
       visible={visible}
       icon={<RefreshCw />}
       message="New version available"
+      // It stays until the reader closes it or refreshes: a reader who looked away must still see it
+      ending="close"
       action={
         <Button onClick={handleRefresh} size="sm">
           Refresh
