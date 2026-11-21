@@ -13,6 +13,7 @@ import {
   NOTE_CONDITIONS,
   validateNoteBlanks,
 } from './billShareNotes'
+import { billToastsField, validateToastMessage } from './billToastFields'
 import { BILL_SHARE_LIMITS } from './editorialLimits'
 import { filledText } from './filledText'
 import { editorialLinkFields } from './linkFields'
@@ -37,12 +38,6 @@ const validateNote: TextFieldSingleValidation = (value, args) => {
     args.siblingData as Parameters<typeof validateNoteBlanks>[1],
   )
 }
-
-/** The rates note may be empty, and may use {year} only: no other blank, and no link to put in one */
-export const validateRatesNote: TextFieldSingleValidation = (value) =>
-  (value ?? '').includes('{link}')
-    ? '{link} can’t be used in this note. Use {year}.'
-    : validateNoteBlanks(value ?? '', { showWhen: 'always' })
 
 /** A title the editor can change, that starts as the one the page used before it was a field */
 const rowTitleField = (name: string, label: string, defaultValue: string): TextField => ({
@@ -167,7 +162,7 @@ export const BillShareBlockConfig: Block = {
           label: 'Note under the panel',
           maxLength: BILL_SHARE_LIMITS.ratesNote,
           defaultValue: DEFAULT_BILL_RATES.note,
-          validate: validateRatesNote,
+          validate: validateToastMessage,
           admin: {
             description:
               'Shown in a year that uses an earlier year’s rate for some body. {year} is the year shown. Leave empty for no note.',
@@ -175,6 +170,7 @@ export const BillShareBlockConfig: Block = {
         },
       ],
     },
+    billToastsField,
     {
       name: 'notes',
       type: 'array',

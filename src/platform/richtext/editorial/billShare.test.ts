@@ -155,3 +155,23 @@ describe('toBillShareProps: the rates panel’s text is the block’s (#1351)', 
     expect(rates).toEqual({ title: DEFAULT_BILL_RATES.title, note: '' })
   })
 })
+
+describe('toBillShareProps: the toasts are the block’s (#1379)', () => {
+  it('hands the page every toast, by id, from the editor’s rows', () => {
+    const props = toBillShareProps({
+      ...stored([year()]),
+      toasts: [
+        { toast: 'ratesCarried', tone: 'warning', ending: 'close', message: 'Wait for {year}.' },
+      ],
+    } as unknown as StoredBillShare)
+    expect(props.toasts.ratesCarried).toMatchObject({ tone: 'warning', ending: 'close' })
+    // Its row is not in the list the editor kept: it is off
+    expect(props.toasts.ratesOwn).toBeNull()
+  })
+
+  it('starts a block stored before the toasts were fields with the starting ones', () => {
+    const { toasts } = toBillShareProps(stored([year()]))
+    expect(toasts.ratesCarried?.message).toContain('{year}')
+    expect(toasts.ratesOwn?.ending).toBe('accept')
+  })
+})

@@ -3665,6 +3665,27 @@ export interface BillShareBlock {
     note?: string | null
   }
   /**
+   * The small notices that pop up over a panel. Each one is shown by the page when it applies; here you set what it says and how it ends. Empty a message to turn that toast off.
+   */
+  toasts?:
+    | {
+        toast: 'ratesCarried' | 'ratesOwn'
+        /**
+         * Information is blue, success green, warning amber, error red.
+         */
+        tone: 'info' | 'success' | 'warning' | 'error'
+        ending: 'fade' | 'close' | 'accept'
+        fadeSeconds?: number | null
+        acceptLabel?: string | null
+        title?: string | null
+        /**
+         * {year} is the year shown. Leave empty to turn this toast off.
+         */
+        message?: string | null
+        id?: string | null
+      }[]
+    | null
+  /**
    * The lines in the row on why the bill may differ, in this order. Each says when it shows; a note can use blanks the page fills in.
    */
   notes?:
