@@ -124,13 +124,18 @@ prepare_caddy_proof() {
     caddy_doubt="another change to Caddy is running (its lock could not be taken), so nothing is closed now"
   else
     caddy_env=("HOME=$CADDY_STORAGE_DIR" "PATH=$PATH")
+    # Only plain KEY=value entries are taken: systemd strips quotes and keeps spaces in a value, and
+    # splitting that here could give Caddy another value than the service has, so anything else is a doubt.
+    plain='^[A-Za-z_][A-Za-z0-9_]*=[A-Za-z0-9_./:@%+,=-]*$'
     for pair in $(systemctl show -p Environment --value caddy 2>/dev/null); do
-      [[ "$pair" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] && caddy_env+=("$pair")
+      if [[ "$pair" =~ $plain ]]; then caddy_env+=("$pair"); else caddy_doubt="the unit's Environment has an entry that is not a plain KEY=value"; fi
     done
     for file in $(systemctl show -p EnvironmentFiles --value caddy 2>/dev/null | sed 's/ (ignore_errors=[a-z]*)//g'); do
-      while IFS= read -r line; do
-        [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] && caddy_env+=("$line")
-      done <"${file#-}" 2>/dev/null
+      [ -r "${file#-}" ] || { [ "${file#-}" = "$file" ] || continue; caddy_doubt="the unit's EnvironmentFile $file can't be read"; continue; }
+      while IFS= read -r line || [ -n "$line" ]; do
+        [[ "$line" =~ ^[[:space:]]*([#\;].*)?$ ]] && continue # blank or comment
+        if [[ "$line" =~ $plain ]]; then caddy_env+=("$line"); else caddy_doubt="the unit's EnvironmentFile $file has an entry that is not a plain KEY=value"; fi
+      done <"${file#-}"
     done
     caddy_reference=$(caddy_adapted root)
     if [ -z "$caddy_reference" ]; then
@@ -150,7 +155,8 @@ caddy_validates() {
 }
 # `validate` alone is not enough: a glob that matches nothing, as when Caddy's user can't open the folder,
 # is only a warning to it, so what it reads is compared too.
-caddy_reads() { caddy_validates && [ "$(caddy_adapted user)" = "$caddy_reference" ]; }
+# Returns 1 when validate fails, 2 when what Caddy reads differs.
+caddy_reads() { caddy_validates || return 1; [ "$(caddy_adapted user)" = "$caddy_reference" ] || return 2; }
 
 closed_now=() # "<folder> <old mode>", closed in this run and not yet proven safe
 caddy_proven=yes
@@ -186,7 +192,9 @@ for dir in "$production" "$BACKUP_ROOT" "$UMAMI_DIR" "$PRODUCTION_PM2_LOG_DIR"; 
 done
 
 if [ "${#closed_now[@]}" != 0 ]; then
-  if caddy_reads; then
+  caddy_reads
+  caddy_failed=$?
+  if [ "$caddy_failed" = 0 ]; then
     caddy_proven=yes
     for entry in "${closed_now[@]}"; do
       changes+=("${entry% *}: mode ${entry##* } -> $(stat -c %a "${entry% *}") (undo: chmod ${entry##* } ${entry% *})")
@@ -195,7 +203,9 @@ if [ "${#closed_now[@]}" != 0 ]; then
     restore_modes
     caddy_proven=yes
     if [ "${#restore_failed[@]}" = 0 ]; then restored="so every mode changed in this run was put back"; else restored="and these modes could not be put back: ${restore_failed[*]}"; fi
-    warn "closing the folders changed what Caddy reads, as its own user, from the Caddyfile (an import, a glob, a link or the Caddyfile itself is in a closed folder), $restored"
+    if [ "$caddy_failed" = 1 ]; then why="made caddy validate fail as its own user (an imported file, a log or certificate file, or the Caddyfile itself is in a closed folder)"
+    else why="changed what Caddy reads, as its own user, from the Caddyfile (a glob or link into a closed folder matches nothing without an error)"; fi
+    warn "closing the folders $why, $restored"
   fi
 fi
 

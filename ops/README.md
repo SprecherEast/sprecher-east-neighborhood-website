@@ -181,14 +181,17 @@ was taken down`. Its paths and the admin port are defined once, in `environment.
     filter; the warning names the first file found, and a search that can't read everything is a doubt); and no
     process that isn't root's (by its effective user, from `/proc/*/status`) has it as its working folder or an
     open file in it (`/proc/*/cwd`, `/proc/*/fd`). **Then Caddy is the proof of what it reads from the Caddyfile:** from `/`, with a clean environment plus
-    the unit's own (`Environment=` and `EnvironmentFile=` of `caddy`, so `{$VAR}` placeholders resolve as in the
-    service), `caddy adapt` is run as Caddy's service user (`systemctl show -p User caddy`, then `runuser -u`) and
+    the unit's own (`Environment=` and `EnvironmentFile=` of `caddy`; only plain `KEY=value` entries are taken,
+    and an entry with quotes, spaces or anything else is a doubt, because systemd reads those differently and a
+    wrong value would make root and Caddy's user resolve a placeholder to the same wrong path), `caddy adapt` is run as Caddy's service user (`systemctl show -p User caddy`, then `runuser -u`) and
     must give exactly what root's `adapt` gives, before the change (otherwise nothing is closed) and again after
     every folder is closed; `caddy validate` as that user must pass both times (certificate and log files).
     Comparing output matters: a glob over a folder Caddy's user can't open matches nothing without an error, so
-    `validate` alone would pass while files vanish from the configuration. Imports of any form (links, relative
-    paths, globs, nested files, placeholders, the Caddy folder itself) change the output or fail, so they are
-    caught. When the second run differs or fails, every mode changed in that run is put back (a mode that can't
+    `validate` alone would pass while files vanish from the configuration. The import forms tested are
+    a link beside the Caddyfile, a linked folder, relative paths, globs (also relative and nested), nested files,
+    a placeholder and the Caddy folder itself inside a closed folder; a file Caddy's user can't read makes
+    `validate` fail, and a glob over a folder it can't open changes the output (the warning says which step
+    failed). Other forms are assumed to behave the same, not proven. When the second run differs or fails, every mode changed in that run is put back (a mode that can't
     be is named in the warning), and the modes are also put back if the script is stopped before the second run
     is done. Each old mode is logged before its folder is closed. The whole window is under Caddy's lock (the one
     the Caddy scripts share), so no preview reload runs inside it; if the lock can't be taken, or Caddy's user

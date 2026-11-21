@@ -166,7 +166,7 @@ isolation check proves it before and after every preview deploy. What holds now:
   with only root-owned entries, that Caddy's live configuration and the files in the Caddyfile's folder and the
   previews' folder (backups included) name no path in it, and that no process that isn't root's has it open;
   otherwise it changes nothing and warns. Then Caddy is the proof: `caddy adapt` as Caddy's service user, from `/`
-  with the unit's environment, must give what root's gives, before and after the change (and `caddy validate`
+  with the unit's environment (plain `KEY=value` entries only; anything else is a doubt), must give what root's gives, before and after the change (and `caddy validate`
   must pass), so an import, glob or link into a closed folder shows as a difference; a glob over a folder
   Caddy can't open matches nothing without an error, which is why output is compared. If it differs after,
   every mode is put back; if Caddy's user can't be found or is root, or Caddy's lock is held, nothing is

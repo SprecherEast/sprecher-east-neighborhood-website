@@ -175,7 +175,7 @@ beforeEach(async () => {
       'case "$1" in',
       '  show) case "$3" in',
       '    User) echo "${STUB_CADDY_SERVICE_USER-caddy}" ;;',
-      '    Environment) echo "STUB_STATE=$STUB_STATE" ;;',
+      '    Environment) echo "STUB_STATE=$STUB_STATE $STUB_UNIT_ENVIRONMENT" ;;',
       '    EnvironmentFiles) echo "$STUB_STATE/unit.env (ignore_errors=no)" ;;',
       '  esac ;;',
       '  is-enabled) [ -e "$STUB_STATE/enabled" ] ;;',
@@ -208,7 +208,10 @@ const run = (args = [], env = {}, { without = [], umask } = {}) => {
       .map((k) => `export ${k}=${quote(env[k])}\n`)
       .join(''),
   )
-  fs.writeFileSync(p('state/unit.env'), env.SNIPS ? `SNIPS=${env.SNIPS}\n` : '')
+  fs.writeFileSync(
+    p('state/unit.env'),
+    (env.SNIPS ? `SNIPS=${env.SNIPS}\n` : '') + (env.UNIT_ENV_TEXT ?? ''),
+  )
   const script = p('ops/preview-host-guards.sh')
   const command = umask
     ? ['-c', 'umask "$0"; exec /bin/bash "$@"', umask, script, ...args]
@@ -514,12 +517,21 @@ describe('preview-host-guards.sh: production’s private folders', () => {
         write(p('caddy/Caddyfile'), 'import {$SNIPS}/x.caddy\n', 0o644)
       },
     }
+    // which step catches each: a file Caddy's user can't read fails validate; a glob over a folder it can't
+    // open matches nothing without an error, so only the difference in what it reads shows it
+    const DIFFERS = 'changed what Caddy reads'
+    const FAILS = 'made caddy validate fail'
+    const catchedBy = {
+      'a glob in a nested import': DIFFERS,
+      'a relative glob': DIFFERS,
+      'a linked folder in the Caddy folder': DIFFERS,
+    }
     it.each(Object.keys(world))('puts every mode back and warns for %s', async (name) => {
       world[name]()
       fs.chmodSync(p('umami'), 0o755)
       const { code, out } = await run([], { SNIPS: p('prod') })
       expect(code).toBe(3)
-      expect(out).toContain('changed what Caddy reads')
+      expect(out).toContain(catchedBy[name] ?? FAILS)
       expect(out).toContain('put back')
       for (const d of ['prod', 'umami', 'pmlogs']) expect(mode(d)).toBe('755')
       expect(out).not.toContain('mode 755 -> 750')
@@ -571,9 +583,13 @@ describe('preview-host-guards.sh: production’s private folders', () => {
     }
     it('puts back exactly the old modes when the proof fails', async () => {
       otherModes()
-      world['a relative glob']()
-      const { code } = await run()
+      // reads fine at 2751 (a direct file needs only x on the folder) and fails once the folder is closed
+      world['a relative import that climbs out of the Caddy folder']()
+      const { code, out } = await run()
       expect(code).toBe(3)
+      expect(out).toContain(`closing ${p('prod')} (old mode 2751; undo: chmod 2751 ${p('prod')})`)
+      expect(out).toContain(`closing ${p('umami')} (old mode 711; undo: chmod 711 ${p('umami')})`)
+      expect(out).toContain('made caddy validate fail')
       expect(fullMode('prod')).toBe('2751')
       expect(fullMode('umami')).toBe('711')
     })
@@ -587,6 +603,32 @@ describe('preview-host-guards.sh: production’s private folders', () => {
       await run()
       expect(fullMode('prod')).toBe('2751')
       expect(fullMode('umami')).toBe('711')
+    })
+
+    // systemd strips quotes and keeps spaces in a value; anything but a plain KEY=value is not read, and
+    // so nothing is closed (a wrong value would make root and Caddy's user match the same wrong glob)
+    it.each([
+      ['a quoted value in the unit’s Environment', { STUB_UNIT_ENVIRONMENT: 'SNIPS="/srv/x"' }],
+      ['a value with a space in the unit’s Environment', { STUB_UNIT_ENVIRONMENT: 'SNIPS="a b"' }],
+      ['a quoted value in the unit’s EnvironmentFile', { UNIT_ENV_TEXT: 'SNIPS="/srv/x"\n' }],
+      [
+        'a line that is not KEY=value in the EnvironmentFile',
+        { UNIT_ENV_TEXT: 'export SNIPS=/srv\n' },
+      ],
+    ])('closes nothing for %s', async (_what, env) => {
+      const { code, out } = await run([], env)
+      expect(code).toBe(3)
+      expect(out).toContain('not a plain KEY=value')
+      expect(mode('prod')).toBe('755')
+    })
+
+    it('reads plain entries, comments and blank lines in the unit’s environment', async () => {
+      const { code } = await run([], {
+        STUB_UNIT_ENVIRONMENT: 'A=1 B=/x/y',
+        UNIT_ENV_TEXT: '# a comment\n\n; another\nC=2\n',
+      })
+      expect(code).toBe(0)
+      expect(mode('prod')).toBe('750')
     })
 
     it('says which modes it could not put back', async () => {
