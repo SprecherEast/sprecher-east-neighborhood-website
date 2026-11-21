@@ -276,8 +276,18 @@ describe('preview-isolation-check.sh: pictures a preview shares with production 
     fs.chmodSync(p('shared'), 0o755)
   }
 
-  it('passes for a link the account can read and not change, and for a picture the preview made itself', async () => {
-    shared('a.jpg', { mode: 0o644, owner: 0 })
+  // Root's ownership of the shared file can only be made by a test that runs as root
+  it.skipIf(process.getuid() !== 0)(
+    'passes for a link the account can read and not change',
+    async () => {
+      shared('a.jpg', { mode: 0o644, owner: 0 })
+      expect((await check()).code).toBe(0)
+    },
+  )
+
+  it('passes for a picture the preview made itself (one link, its own)', async () => {
+    fs.mkdirSync(media(), { recursive: true })
+    for (const d of ['proot', 'proot/pr-7', 'proot/pr-7/public', 'proot/pr-7/public/media']) open(d)
     write(media('own.jpg'), 'MADE IN THE PREVIEW', 0o644)
     if (process.getuid() === 0) fs.chownSync(media('own.jpg'), accountUid(), accountUid())
     expect((await check()).code).toBe(0)
