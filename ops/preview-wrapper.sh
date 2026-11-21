@@ -10,7 +10,8 @@
 #   list                       every preview, or leftover of one, found anywhere: its commit, how long ago it was
 #                              last deployed, and whether its folder, Caddy block and PM2 process exist (#1076)
 #   upload <number> <commit>   a release archive (.tar.gz) on stdin, unpacked into the preview's folder
-#   deploy <number> <commit>   puts that uploaded release live (Caddy block, then ops/deploy-release.sh)
+#   deploy <number> <commit>   puts that uploaded release live (Caddy block, a fresh copy of production's published
+#                              content, then ops/deploy-release.sh; the preview's database is rebuilt every time, #1397)
 #   teardown <number>          stops the preview, deletes its folder and its Caddy block; a second run, or one for a
 #                              number with only leftovers (a block, a process), succeeds too
 #   credentials <number>       prints the preview's test sign-in (#1394), only when the seed applied exactly it
@@ -75,6 +76,27 @@ export HOME="$PREVIEW_ROOT/.home"
 mkdir -p "$HOME"
 sudo_caddy() { # <number>
   sudo -n "$PREVIEW_ACCESS_DIR/ops/preview-caddy.sh" "$1"
+}
+# Production's published content for this preview (#1397, ops/preview-copy.sh): the root step makes the snapshot,
+# runs main's export and links the media the export lists into an empty staging folder; its standard output is the
+# export's file, which this account writes (so root never writes a path this account can swap). Only when it all
+# succeeded is the preview's old database and media replaced, so a failed copy leaves the preview as it was. The
+# database is rebuilt on every deploy: changes made while testing a preview are lost on the next push.
+copy_content() {
+  local file_new="$COPY_FILE.new"
+  rm -rf -- "$COPY_MEDIA_DIR" "$COPY_FILE" "$file_new"
+  mkdir "$COPY_MEDIA_DIR"
+  local status=0
+  # Its standard error carries only numbers and fixed texts, and goes to the log; the file is never printed.
+  (umask 077 && sudo -n "$PREVIEW_ACCESS_DIR/ops/preview-copy.sh" "$number" >"$file_new") || status=$?
+  if [ "$status" != 0 ] || [ ! -s "$file_new" ]; then
+    rm -rf -- "$COPY_MEDIA_DIR" "$file_new"
+    refuse "the content copy failed, so the preview was not changed"
+  fi
+  rm -rf -- "$DATA_DIR" "$MEDIA_DIR"
+  mkdir -p "$APP_DIR/public"
+  mv -T "$COPY_MEDIA_DIR" "$MEDIA_DIR"
+  mv -T "$file_new" "$COPY_FILE"
 }
 # Stops the preview and deletes its folder and Caddy block. APP_DIR is <preview root>/pr-<number>, from the
 # number alone (environment.sh), and was checked above not to be a link. A caller that adds `|| true` runs
@@ -221,9 +243,12 @@ case "$action" in
     isolated_or_down
     # The block first: deploy-release.sh stops when it is missing. Both scripts below are main's.
     sudo_caddy "$number"
+    copy_content
     export PREVIEW_NUMBER CODE_DIR="$release"
     deployed=0
     bash "$here/deploy-release.sh" || deployed=$?
+    # The import deletes its file; whatever is left (a failed deploy) goes now.
+    rm -rf -- "$COPY_FILE" "$COPY_MEDIA_DIR"
     # Again with the preview running, and also when the deploy failed, so a failed deploy is checked too.
     isolated_or_down
     exit "$deployed"

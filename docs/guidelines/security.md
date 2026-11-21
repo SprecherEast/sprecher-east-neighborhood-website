@@ -174,10 +174,28 @@ isolation check proves it before and after every preview deploy. What holds now:
   process; that is not covered.
 - **The isolation check** (`ops/preview-isolation-check.sh`, #1346) runs as the account before a preview's deploy
   starts (a failure starts nothing and takes down a preview already running under that number) and after it, and again in the installer before a key line is written. It fails when the account can open
-  production's settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to the
-  admin endpoint. A failing check takes the preview down and fails the deploy, and no key line is written
+  production's settings, database, media, backups, Umami files, PM2 logs, Caddy's storage or the content copy's
+  snapshot folder, change in place a picture its preview shares with production, or connect to the admin endpoint. A failing check takes the preview down and fails the deploy, and no key line is written
   (an earlier one is removed) until the guards and the check pass. It prints which place was reachable and
   never a file's content.
+- **Production's published content reaches a preview only through a root script, and never as a snapshot**
+  (#1397; the owner's decisions of 2026-11-11 are recorded on #1077): the account may run `ops/preview-copy.sh`
+  through a second narrow sudo rule (a number of 1 to 6 digits, the same fixed PATH, `secure_path`, privileged mode,
+  refused environment and shared lock as the Caddy script). Under the lock it makes a snapshot of production's database
+  with `ops/backup-db.mjs` in a folder only root can enter (`PREVIEW_COPY_TMP`, mode 700, made by the installer, which
+  changes nothing if it exists with another mode or owner), runs the export from production's current release with an
+  empty environment (a throwaway secret, no `SMTP_HOST`), and deletes the snapshot at once and again by a trap on every
+  exit; a killed run's folder is removed by the next. The preview gets only the export's file, which the wrapper writes
+  as the account from the script's standard output (root writes no path the account could swap), and hard links to the
+  media files the export lists. The staging folder is opened once and judged by what the open file is (real path, type,
+  owner), made root's while it is filled, and every link is made inside that open folder, so a link or a swapped folder
+  is refused, never followed. A link is made only for a regular, root-owned file that others can read and none can
+  write, so the preview can read it and not change it in place, and deleting it removes only the preview's name (Payload
+  deletes a file before it writes a new one, so a replacement never touches production's inode); anything else is
+  copied. The import is the pull request's own code, which reads only the file, writes no mail, account, session, API
+  key or submission, and runs on a database rebuilt every deploy. The root step prints numbers and fixed texts only, and
+  neither the snapshot, the file nor a password ever reaches the public log. The isolation check proves the account
+  can't enter the snapshot folder and can't change in place a picture it shares with production.
 - **An upload is limited by what it unpacks to** (#1346), not only by its size: the wrapper adds up the sizes
   in the archive's listing before it unpacks anything, and refuses more than 3 GiB or a listing it can't
   measure.
@@ -211,8 +229,8 @@ isolation check proves it before and after every preview deploy. What holds now:
   `main`'s `ops/preview-accounts.sh` (never by the pull request's code, which only reads them), on every deploy,
   into one file in the preview's own folder (mode 600, outside `data/` and the release). They are never printed,
   logged, put in an argument, an environment variable or a comment, and no production account or password is
-  ever copied. A redeploy makes new ones for these four accounts and ends their sessions (anything else made in
-  the preview's database stays until it is rebuilt, #1397). The code a preview runs is unreviewed, and one
+  ever copied. A redeploy makes new ones for these four accounts and ends their sessions, and rebuilds the
+  preview's database, so anything else made in it is gone (#1397). The code a preview runs is unreviewed, and one
   Unix account runs every preview (#1345), so it can read the passwords file of every running preview, not
   only its own. That opens only previews' throwaway accounts, whose databases and settings (`.env.local`) that
   code can already reach. Production's accounts and settings are never touched.

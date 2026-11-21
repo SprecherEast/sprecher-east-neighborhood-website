@@ -63,6 +63,11 @@ PREVIEW_NUMBER_PATTERN='^[1-9][0-9]{0,5}$'
 # writes the same value as a literal, before anything runs (a test keeps the two equal).
 ROOT_SECURE_PATH="${ROOT_SECURE_PATH:-/usr/sbin:/usr/bin:/sbin:/bin}"
 PREVIEW_COMMIT_PATTERN='^[0-9a-f]{40}$'
+# Where the root step of a preview's content copy (ops/preview-copy.sh, #1397) keeps its snapshot while it runs:
+# a root-only folder the installer makes (mode 700), which the preview account can't enter. The snapshot is
+# deleted when the step ends. The most the export's file may be, in bytes, is the step's own limit.
+PREVIEW_COPY_TMP="${PREVIEW_COPY_TMP:-/var/lib/sprecher-east-preview-copy}"
+PREVIEW_COPY_MAX_BYTES="${PREVIEW_COPY_MAX_BYTES:-134217728}"
 # The most a release archive may unpack to, added up from the sizes its listing gives (#1346). The
 # upload limit above bounds only the compressed size, and a 1 GiB .tar.gz can unpack to many times that.
 PREVIEW_UNPACK_MAX_BYTES="${PREVIEW_UNPACK_MAX_BYTES:-3221225472}"
@@ -152,6 +157,11 @@ DATA_DIR="$APP_DIR/data"
 MEDIA_DIR="$APP_DIR/public/media"
 # A preview's test-account passwords (#1393): one private file in its own folder, outside data/ and the release.
 ACCOUNTS_FILE="$APP_DIR/.preview-accounts"
+# A preview's content copy (#1397): the export's file, which the wrapper writes before the deploy and the import
+# reads and deletes, and the empty folder the root step fills with links to production's media, which the wrapper
+# then moves to MEDIA_DIR. Both sit in the preview's folder, outside data/ and the release.
+COPY_FILE="$APP_DIR/.preview-copy.json"
+COPY_MEDIA_DIR="$APP_DIR/.copy-media"
 
 # Child scripts (restart-app.sh, rollback.sh) and PM2 (ecosystem.config.cjs) read the same values.
 export APP_DIR APP_NAME APP_PORT PM2_LOG_DIR PREVIEW_NUMBER PREVIEW_ROOT PREVIEW_DOMAIN PREVIEW_CADDY_DIR

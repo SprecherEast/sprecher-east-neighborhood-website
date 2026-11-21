@@ -187,7 +187,7 @@ describe('preview-caddy.sh: it takes one pull request number and nothing else', 
   it('keeps its list of refused variables equal to the one these tests cover', () => {
     const text = fs.readFileSync(path.join(OPS, 'preview-caddy.sh'), 'utf8')
     const list = text
-      .match(/for name in ([^;]+); do/)[1]
+      .match(/refuse_environment_as_root ([\s\S]+?)\n\n/)[1]
       .replaceAll('\\\n', ' ')
       .split(/\s+/)
       .filter(Boolean)

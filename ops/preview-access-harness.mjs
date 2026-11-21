@@ -15,6 +15,7 @@ export const COMMIT = 'a'.repeat(40)
 export const SCRIPTS = [
   'preview-wrapper.sh',
   'preview-caddy.sh',
+  'preview-copy.sh',
   'preview-access-lib.sh',
   'preview-isolation-check.sh',
   'preview-host-guards.sh',
@@ -62,6 +63,13 @@ export function setUpPreviewAccessHarness() {
     write(
       p('access/ops/preview-caddy.sh'),
       rootScript.replace(/^SECURE_PATH=/m, `SECURE_PATH=${p('bin')}:`),
+      0o755,
+    )
+    // The copy script is a root script too, with its own fixed PATH.
+    const copyScript = fs.readFileSync(path.join(OPS, 'preview-copy.sh'), 'utf8')
+    write(
+      p('access/ops/preview-copy.sh'),
+      copyScript.replace(/^SECURE_PATH=/m, `SECURE_PATH=${p('bin')}:`),
       0o755,
     )
     for (const f of CADDY_FILES)

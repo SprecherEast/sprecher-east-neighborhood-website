@@ -12,6 +12,16 @@ refuse() { # <fixed reason>
   exit 2
 }
 
+# A root script trusts nothing from its caller's environment. sudo resets it (the rule says so); when run as root
+# and one of these names is set anyway, stop rather than act on it.
+refuse_environment_as_root() { # <names of variables that could redirect the script>
+  [ "$(id -u)" = 0 ] || return 0
+  local name
+  for name in "$@"; do
+    [ -z "${!name+x}" ] || refuse "the environment sets $name"
+  done
+}
+
 # Loads environment.sh in its production form, which defines the patterns and defaults the checks
 # below use. A script that acts on one preview calls use_preview next, which switches to that
 # preview's names (folder, PM2 process, port, address, Caddy block), all derived from its number.

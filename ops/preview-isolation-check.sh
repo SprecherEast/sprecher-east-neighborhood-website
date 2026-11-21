@@ -9,6 +9,10 @@
 #   - enter a folder ops/preview-host-guards.sh closes (production's, the backups, Umami's, the PM2 logs'),
 #     even when it can't list it, because a file in such a folder is found only by its name; for PM2's state
 #     and Caddy's storage, which the guards leave alone, this proves only that no file there is readable;
+#   - enter or read the folder the content copy keeps its snapshot of production's database in while it runs
+#     (PREVIEW_COPY_TMP, root-only, #1397), or change in place a picture its own folder shares with production
+#     (a hard link made by ops/preview-copy.sh: it must be neither owned by nor writable by the account, so a
+#     preview that edits or replaces a picture can't alter production's file; deleting one removes only its link);
 #   - connect to Caddy's admin endpoint on localhost, over IPv4 or IPv6, which accepts any local process
 #     and replaces the whole config.
 # It reports every failure, not only the first, and never a file's content: the deploy log is public. A
@@ -29,7 +33,7 @@ reset_environment "$here"
 
 production="${PRODUCTION_DIR_FOR_TESTS:-$PRODUCTION_DIR}" # a test points it at a stand-in tree
 files=("$production/.env.local" "$production/data/payload.db" "$UMAMI_DIR/.env")
-closed=("$production" "$BACKUP_ROOT" "$UMAMI_DIR" "$PRODUCTION_PM2_LOG_DIR")
+closed=("$production" "$BACKUP_ROOT" "$UMAMI_DIR" "$PRODUCTION_PM2_LOG_DIR" "$PREVIEW_COPY_TMP")
 folders=("${closed[@]}" "$production/data" "$production/public/media" "$PRODUCTION_PM2_HOME" "$CADDY_STORAGE_DIR")
 
 failures=0
@@ -48,6 +52,15 @@ for folder in "${folders[@]}"; do
 done
 for folder in "${closed[@]}"; do
   if [ -d "$folder" ] && [ -x "$folder" ]; then fail "the preview account can enter $folder"; fi
+done
+# A picture a preview shares with production (link count above one) must not be the account's to change in
+# place: root's, and not writable by it. A picture the preview made itself has one link and is its own.
+account=$(id -un)
+for folder in "$PREVIEW_ROOT"/pr-*/public/media; do
+  [ -d "$folder" ] && [ ! -L "$folder" ] || continue
+  if [ -n "$(find -H "$folder" -maxdepth 1 -type f -links +1 \( -writable -o -user "$account" \) -print -quit 2>/dev/null)" ]; then
+    fail "the preview account can change a picture its preview shares with production, in $folder"
+  fi
 done
 for host in 127.0.0.1 ::1; do
   # port_is_free (environment.sh) answers 1 when a connection is made, 0 when it is refused. The timeout is

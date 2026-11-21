@@ -20,9 +20,12 @@ const production = () => {
   makeRelease(release, PROD_URL)
   return deploy(release)
 }
-const preview = (env = {}, number = '7', built = TEST_SITE_KEY) => {
+const COPY_TEXT = '{"format":1,"collections":{},"globals":{},"mediaFiles":[]}'
+const preview = (env = {}, number = '7', built = TEST_SITE_KEY, { copyFile = true } = {}) => {
   const release = p(`previews/pr-${number}/releases/r1`)
   makeRelease(release, PREVIEW_URL, built)
+  // The file the wrapper makes before this script runs (ops/preview-wrapper.sh, #1397)
+  if (copyFile) fs.writeFileSync(p(`previews/pr-${number}/.preview-copy.json`), COPY_TEXT)
   return deploy(release, { PREVIEW_NUMBER: number, ...env })
 }
 const curlUrls = () =>
@@ -63,6 +66,56 @@ describe('deploy-release.sh with no environment named', () => {
   })
 })
 
+describe('deploy-release.sh for a preview: production’s published content (#1397)', () => {
+  const lines = () => log().split('\n')
+  const at = (needle) => lines().findIndex((l) => l.includes(needle))
+
+  it('imports the copy file with the release’s own code, after the migrations, before the test accounts and the switch', async () => {
+    const { code, out } = await preview()
+    expect(code, out).toBe(0)
+    const release = fs.realpathSync(p('previews/pr-7/releases/r1'))
+    expect(lines()[at('payload run e2e/previewCopyImport.ts')]).toBe(
+      `payload run e2e/previewCopyImport.ts in ${release} NODE_ENV=production PREVIEW_COPY_FILE=${p('previews/pr-7/.preview-copy.json')}`,
+    )
+    expect(at('previewCopyImport')).toBeGreaterThan(at('payload migrate'))
+    expect(at('payload run e2e/previewSeed.ts')).toBeGreaterThan(at('previewCopyImport'))
+    expect(at('pm2 start')).toBeGreaterThan(at('previewCopyImport'))
+    expect(out).toContain("Importing production's published content")
+  })
+
+  it('prints none of the file’s text, and deletes the file once it is imported', async () => {
+    const { out } = await preview()
+    expect(out).not.toContain(COPY_TEXT)
+    expect(fs.existsSync(p('previews/pr-7/.preview-copy.json'))).toBe(false)
+  })
+
+  it('stops, with nothing switched, when the content could not be imported, and still deletes the file', async () => {
+    const { code, out } = await preview({ STUB_IMPORT_FAIL: '1' })
+    expect(code).toBe(1)
+    expect(out).toContain("the preview's content could not be imported")
+    expect(log()).not.toContain('previewSeed')
+    expect(log()).not.toContain('pm2 start')
+    expect(fs.existsSync(p('previews/pr-7/.preview-copy.json'))).toBe(false)
+  })
+
+  it('stops, with nothing run, when the copy file is missing or is a link', async () => {
+    const missing = await preview({}, '7', TEST_SITE_KEY, { copyFile: false })
+    expect(missing.code).toBe(1)
+    expect(missing.out).toContain("the preview's content copy is missing")
+    expect(log()).not.toContain('previewCopyImport')
+    fs.writeFileSync(p('elsewhere'), COPY_TEXT)
+    fs.symlinkSync(p('elsewhere'), p('previews/pr-7/.preview-copy.json'))
+    const linked = await preview({}, '7', TEST_SITE_KEY, { copyFile: false })
+    expect(linked.code).toBe(1)
+    expect(log()).not.toContain('previewCopyImport')
+  })
+
+  it('does nothing of the kind for production', async () => {
+    await production()
+    expect(log()).not.toContain('previewCopyImport')
+  })
+})
+
 describe('deploy-release.sh for a preview', () => {
   it('uses its own folder, process, port, settings, data, media and site, and never production’s', async () => {
     const { code, out } = await preview()
@@ -90,11 +143,11 @@ describe('deploy-release.sh for a preview', () => {
     const at = (needle) => lines.findIndex((l) => l.includes(needle))
     const release = fs.realpathSync(p('previews/pr-7/releases/r1'))
     expect(at('payload migrate')).toBeGreaterThanOrEqual(0)
-    expect(lines[at('payload run')]).toBe(
+    expect(lines[at('payload run e2e/previewSeed.ts')]).toBe(
       `payload run e2e/previewSeed.ts in ${release} NODE_ENV=production PREVIEW_ACCOUNTS_FILE=${p('previews/pr-7/.preview-accounts')}`,
     )
-    expect(at('payload run')).toBeGreaterThan(at('payload migrate'))
-    expect(at('pm2 start')).toBeGreaterThan(at('payload run'))
+    expect(at('payload run e2e/previewSeed.ts')).toBeGreaterThan(at('payload migrate'))
+    expect(at('pm2 start')).toBeGreaterThan(at('payload run e2e/previewSeed.ts'))
     expect(out).toContain("Preparing the preview's test accounts")
   })
 
@@ -131,7 +184,7 @@ describe('deploy-release.sh for a preview', () => {
     const { code, out } = await preview()
     expect(code).toBe(1)
     expect(out).toContain("the preview's account passwords could not be made")
-    expect(log()).not.toContain('payload run')
+    expect(log()).not.toContain('previewSeed')
     expect(log()).not.toContain('pm2 start')
   })
 
@@ -177,6 +230,7 @@ describe('deploy-release.sh for a preview', () => {
     makeRelease(release, PREVIEW_URL, TEST_SITE_KEY)
     for (const f of ['preview-settings.sh', 'preview-accounts.sh', 'restart-app.sh'])
       fs.writeFileSync(`${release}/ops/${f}`, 'echo HOSTILE >> "$STUB_LOG"; exit 1\n')
+    fs.writeFileSync(p('previews/pr-7/.preview-copy.json'), COPY_TEXT)
     const { code, out } = await runScript(p('trusted'), 'deploy-release.sh', {
       CODE_DIR: release,
       PREVIEW_NUMBER: '7',
