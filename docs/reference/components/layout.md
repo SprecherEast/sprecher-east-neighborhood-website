@@ -10,8 +10,8 @@ Source: `src/platform/ui/Section.tsx`
 
 **Variants:**
 
-- `spacing`: `"sm" | "md" | "lg" | "center" | "none"`
 - `tone`: `"plain" | "surface" | "brand"`
+- `spacing`: `"sm" | "md" | "lg" | "center" | "none"`
 
 | Prop              | Type                            | Required | Description                                                                           |
 | ----------------- | ------------------------------- | -------- | ------------------------------------------------------------------------------------- |

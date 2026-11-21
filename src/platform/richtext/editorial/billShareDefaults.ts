@@ -1,3 +1,4 @@
+import type { BillToastDefinition, BillToastId } from './billToasts'
 import type { NoteCondition } from './billShareNotes'
 
 /**
@@ -20,6 +21,31 @@ export const DEFAULT_BILL_RATES = {
   title: 'Rates in use',
   note: 'The other {year} rates come out in January, so for now we use the year before’s.',
 } as const
+
+/**
+ * The starting toasts of a whole-bill block (#1379): what each says and how it ends. The code asks
+ * for one by its id; the editor changes any of it in Admin, and empties a message to turn that
+ * toast off. `{year}` is the year shown. The rates toasts say which year's rates the bill uses, so
+ * they wait for the reader to accept them: what the bill is based on is not small print.
+ */
+export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
+  ratesCarried: {
+    tone: 'info',
+    title: '',
+    message: 'The other {year} rates come out in January, so for now we use the year before’s.',
+    ending: 'accept',
+    fadeSeconds: 5,
+    acceptLabel: 'Got it',
+  },
+  ratesOwn: {
+    tone: 'info',
+    title: '',
+    message: 'All four rates are the {year} rates.',
+    ending: 'accept',
+    fadeSeconds: 5,
+    acceptLabel: 'Got it',
+  },
+}
 
 type DefaultNote = {
   showWhen: NoteCondition

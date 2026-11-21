@@ -8,6 +8,7 @@ import {
   DEFAULT_BILL_ROW_TITLES,
 } from './billShareDefaults'
 import { NOTE_CONDITIONS, type BillNote } from './billShareNotes'
+import { toastsOf, type BillToast, type BillToastId } from './billToasts'
 import { toEditorialLink } from './editorialLink'
 
 /** A tab shows one whole tax bill: a second would be hidden, so the editor and the tag refuse it */
@@ -17,7 +18,7 @@ export const hasTooManyBills = (blockTypes: readonly unknown[]) =>
 
 /** The bill split block's fields, as stored */
 export type StoredBillShare = Partial<
-  Pick<BillShareBlock, 'intro' | 'years' | 'rows' | 'notes' | 'rates'>
+  Pick<BillShareBlock, 'intro' | 'years' | 'rows' | 'notes' | 'rates' | 'toasts'>
 >
 
 /** One tax year, as the picture draws it */
@@ -46,6 +47,8 @@ export type BillShareProps = {
   rows: BillRowTitles
   notes: BillNote[]
   rates: BillRatesText
+  /** The toasts the page can show, by id; null where the editor turned one off (#1379) */
+  toasts: Record<BillToastId, BillToast | null>
 }
 
 /**
@@ -114,5 +117,6 @@ export function toBillShareProps(stored: StoredBillShare): BillShareProps {
     rows: rowTitlesOf(stored.rows),
     notes: notesOf(stored.notes),
     rates: ratesOf(stored.rates),
+    toasts: toastsOf(stored.toasts),
   }
 }
