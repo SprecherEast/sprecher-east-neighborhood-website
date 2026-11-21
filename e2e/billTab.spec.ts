@@ -63,14 +63,19 @@ for (const width of WIDTHS) {
       `above ${gapAbove}px, below ${gapBelow}px`,
     ).toBeLessThanOrEqual(1)
 
-    // The answer card's label and badge share a row from 390 px (the 320 px card is too narrow for both
-    // and puts the badge whole on a line of its own); either way the badge stays inside the card
+    // The answer card's label (as large as the whole-bill title) and badge share a row where both fit
+    // and otherwise the badge sits whole on a line of its own under the label, never beside a wrapped
+    // label; either way the badge stays inside the card
     const answer = page.getByRole('region', { name: 'Your City tax' })
     const label = answer.getByText('City tax on an average home')
     const badge = answer.getByText('Proposed')
     const card = await boxOf(answer)
     const [l, b] = [await boxOf(label), await boxOf(badge)]
-    if (width >= 390) expect(Math.abs(l.y + l.height / 2 - (b.y + b.height / 2))).toBeLessThan(2)
+    const sharesRow = b.y < l.y + l.height - 1
+    if (sharesRow) expect(Math.abs(l.y + l.height / 2 - (b.y + b.height / 2))).toBeLessThan(2)
+    else
+      expect(b.y, 'the badge is whole under the label').toBeGreaterThanOrEqual(l.y + l.height - 1)
+    expect(l.height, 'the label is on one line').toBeLessThan(40)
     expect(b.x + b.width, 'the badge stays inside the card').toBeLessThanOrEqual(
       card.x + card.width + 1,
     )
