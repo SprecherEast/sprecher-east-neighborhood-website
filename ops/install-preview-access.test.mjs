@@ -724,7 +724,7 @@ describe('install-preview-access.sh: what the content copy script needs from the
     )
   })
 
-  it.each(['timeout', 'awk', 'grep', 'env', 'mkdir', 'rm', 'cat', 'dirname', 'id'])(
+  it.each(['timeout', 'awk', 'grep', 'env', 'mkdir', 'rm', 'cat', 'dirname', 'id', 'wc', 'mv'])(
     'changes nothing when %s is not in the PATH the root scripts run with',
     async (tool) => {
       // a PATH folder with every tool the root scripts use except this one
@@ -753,6 +753,8 @@ describe('install-preview-access.sh: what the content copy script needs from the
         'cat',
         'dirname',
         'timeout',
+        'wc',
+        'mv',
       ].filter((name) => name !== tool))
         fs.symlinkSync(execFileSync('which', [name]).toString().trim(), p('rootbin', name))
       await untouched({ ROOT_SECURE_PATH: p('rootbin') }, [], `${tool} is not in`)
@@ -775,6 +777,18 @@ describe('install-preview-access.sh: what the content copy script needs from the
       expect(fs.existsSync(p('copytmp/run.OLD'))).toBe(false)
       expect(fs.existsSync(p('proot/pr-3/.copy-media'))).toBe(false)
       expect(fs.existsSync(p('proot/pr-3'))).toBe(true)
+    })
+
+    it('never follows a preview folder that is a link, so it removes nothing outside the previews', async () => {
+      await run()
+      write(`${p('elsewhere')}/.copy-media/keep.txt`, 'x')
+      fs.symlinkSync(p('elsewhere'), p('proot/pr-4'))
+      write(`${p('proot')}/pr-3/.copy-media/a.jpg`, 'x')
+      const { code, out } = await run()
+      expect(code).toBe(0)
+      expect(out).toContain('1 leftovers of a content copy removed')
+      expect(fs.existsSync(p('elsewhere/.copy-media/keep.txt'))).toBe(true)
+      expect(fs.existsSync(p('proot/pr-3/.copy-media'))).toBe(false)
     })
 
     it('says nothing, and removes nothing else, when there are none', async () => {

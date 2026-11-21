@@ -169,7 +169,7 @@ set +f
 # The root script runs with a fixed PATH (ROOT_SECURE_PATH, also sudo's secure_path for it): the tools it
 # calls must be in it.
 [[ "$ROOT_SECURE_PATH" =~ ^/[A-Za-z0-9_./:@+-]*$ ]] || doubt "the root script's PATH has characters it should not"
-for tool in caddy systemctl flock stat find df cp ln mktemp chown chmod readlink openssl getent realpath awk grep env id mkdir rm cat dirname timeout; do
+for tool in caddy systemctl flock stat find df cp ln mktemp chown chmod readlink openssl getent realpath awk grep env id mkdir rm cat dirname timeout wc mv; do
   (PATH="$ROOT_SECURE_PATH" command -v "$tool" >/dev/null 2>&1) || doubt "$tool is not in $ROOT_SECURE_PATH, the PATH the root scripts run with"
 done
 
@@ -277,12 +277,14 @@ leftovers=$(
     exit 0
   }
   n=0
-  while IFS= read -r -d '' leftover; do
-    rm -rf -- "$leftover" && n=$((n + 1))
-  done < <(
-    find "$PREVIEW_COPY_TMP" -mindepth 1 -maxdepth 1 -name 'run.*' -print0
-    [ ! -d "$PREVIEW_ROOT" ] || find "$PREVIEW_ROOT" -mindepth 2 -maxdepth 2 -name .copy-media -type d -uid "$ROOT_UID" -print0
-  )
+  # The snapshot folder is root's alone. A staging folder is in a folder the account owns, which it could swap
+  # for a link between finding and removing: -execdir removes it relative to the folder find itself holds open.
+  # Counted first: a folder the account swaps meanwhile only makes the count high, never removes anything else.
+  find_staging() { [ ! -d "$PREVIEW_ROOT" ] || find "$PREVIEW_ROOT" -mindepth 2 -maxdepth 2 -name .copy-media -type d -uid "$ROOT_UID" "$@"; }
+  n=$(find_staging -print | wc -l)
+  n=$((n + $(find "$PREVIEW_COPY_TMP" -mindepth 1 -maxdepth 1 -name 'run.*' -print | wc -l)))
+  find "$PREVIEW_COPY_TMP" -mindepth 1 -maxdepth 1 -name 'run.*' -exec rm -rf -- {} + || true
+  find_staging -execdir rm -rf -- {} + || true
   echo "$n"
 )
 case "$leftovers" in

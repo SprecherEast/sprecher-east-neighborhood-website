@@ -258,8 +258,9 @@ the snapshot (2026-11-11, recorded on #1077).
   be mailed). It runs from a folder of its own under the snapshot folder, because `payload run` loads settings files
   from its working folder and the ones above it: with an absolute script path and the release's TypeScript settings
   (`TSX_TSCONFIG_PATH`), no settings file of production's is read, and a test shows none is found and no production
-  secret reaches the export (decided on #1397). The export ends after `PREVIEW_COPY_SECONDS` (240), so the shared lock
-  is held for less than production's own 300-second wait. The snapshot is deleted as soon as the export ends. A trap deletes
+  secret reaches the export (decided on #1397). The export is bounded: it ends after `PREVIEW_COPY_SECONDS` (240),
+  and is killed 10 seconds later if it ignores the stop, so the export cannot hold the shared lock past that (the
+  rest of the step is short). The snapshot is deleted as soon as the export ends. A trap deletes
   the folder at the end of every run, success or failure, and a run that was killed leaves a folder the next run
   removes first; so does the installer, with a staging folder a killed run left as root's, which the account can't
   remove (under the lock, so no copy is running; it warns and leaves them when the lock is held). The root step finds
@@ -345,6 +346,9 @@ the snapshot (2026-11-11, recorded on #1077).
   text the workflow turns into the comment "not started", when free disk afterwards would not stay above the
   production deploy's floor. It counts the archive and the release it unpacks to, not what the deploy writes
   afterwards (the database, a media copy); the measurement step records that figure and a margin is added then.
+  A content copy has its own checks: before the root step the wrapper refuses when `PREVIEW_COPY_MAX_BYTES` (the
+  largest copy file) would not leave the floor, after the archive is unpacked; the root step checks the snapshot
+  (twice the database) and each media copy against the floor, re-reading free space each time.
 - **The nightly sweep** (`preview-sweep.yml`, 07:17 UTC, and by hand with `workflow_dispatch`, in environment
   `preview`) reads the server's `list` first and the open pull requests after, so a preview created in between is
   never taken for a stray, and removes through `teardown` each preview whose pull request is not open, each

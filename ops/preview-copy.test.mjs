@@ -54,7 +54,8 @@ fs.appendFileSync(e.STUB_LOG, ['payload', process.argv.slice(2).join(' '), 'cwd=
   'dotenv=' + (['.env', '.env.local', '../.env.local', '../../.env.local'].some((f) => fs.existsSync(require('node:path').join(process.cwd(), f))) ? 'found' : 'none'),
   'tsconfig=' + e.TSX_TSCONFIG_PATH, 'node_env=' + e.NODE_ENV,
   'workmode=' + (fs.statSync(require('node:path').dirname(snapshot)).mode & 0o777).toString(8)].join(' ') + '\\n')
-if (e.STUB_EXPORT_HANGS) setTimeout(() => {}, 60000)
+if (e.STUB_EXPORT_DEAF) { process.on('SIGTERM', () => {}); setTimeout(() => {}, 60000) }
+else if (e.STUB_EXPORT_HANGS) setTimeout(() => {}, 60000)
 else if (e.STUB_EXPORT_FAILS) {
   console.error('${SECRET_TEXT} ${SECRET_DB} secret@example.com')
   console.log('${SECRET_TEXT} secret@example.com')
@@ -208,6 +209,15 @@ describe('preview-copy.sh: the snapshot', () => {
     expect(log()).toContain('dotenv=none')
     expect(log()).not.toContain(SECRET_ENV)
   })
+
+  it('kills an export that ignores the stop signal, so it cannot hold the lock past its limit', async () => {
+    prepare()
+    const started = Date.now()
+    const { code } = await copy(['7'], { STUB_EXPORT_DEAF: '1', PREVIEW_COPY_SECONDS: '1' })
+    expect(code).toBe(1)
+    expect(Date.now() - started).toBeLessThan(30000)
+    expect(entries(p('copytmp'))).toEqual([])
+  }, 40000)
 
   it('stops the export that runs past its time limit, and says so with a fixed text', async () => {
     prepare()

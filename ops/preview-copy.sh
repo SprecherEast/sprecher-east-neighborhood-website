@@ -159,7 +159,7 @@ export_status=0
   # production's, which the release links to, is never read. The script, its imports and the TypeScript settings
   # are the release's, by absolute path. A run over PREVIEW_COPY_SECONDS ends there, with the lock freed.
   cd "$work/cwd"
-  exec timeout "$PREVIEW_COPY_SECONDS" env -i PATH="$node_dir:$SECURE_PATH" HOME="$work/home" TMPDIR="$work/tmp" LC_ALL=C \
+  exec timeout -k 10 "$PREVIEW_COPY_SECONDS" env -i PATH="$node_dir:$SECURE_PATH" HOME="$work/home" TMPDIR="$work/tmp" LC_ALL=C \
     NODE_ENV=production NODE_OPTIONS=--no-deprecation DATABASE_URI="file:$work/snapshot.db" \
     PAYLOAD_SECRET="$secret" PREVIEW_COPY_FILE="$work/copy.json" SMTP_HOST= \
     TSX_TSCONFIG_PATH="$release/tsconfig.json" \
@@ -211,7 +211,6 @@ if [ "${#names[@]}" -gt 0 ]; then
   chmod 755 "$media_path"
   media_taken=yes
   [ -z "$(find "$media_path/" -mindepth 1 -print -quit)" ] || fail "the preview's staging folder for media is not empty"
-  copied_bytes=0
   for name in "${names[@]}"; do
     source_file="$media_source/$name"
     if [[ ! "$name" =~ $NAME_PATTERN ]] || [ ! -f "$source_file" ] || [ -L "$source_file" ]; then
@@ -225,11 +224,10 @@ if [ "${#names[@]}" -gt 0 ]; then
       linked=$((linked + 1))
       continue
     fi
-    enough_disk "$media_path/" $((copied_bytes + size)) ||
+    enough_disk "$media_path/" "$size" ||
       fail "there is not enough free disk to copy the media and keep production's floor"
     cp -- "$source_file" "$media_path/$name"
     chmod 644 "$media_path/$name"
-    copied_bytes=$((copied_bytes + size))
     copied=$((copied + 1))
   done
   # Back to the preview account, the files in it still root's: readable, not writable, removable.

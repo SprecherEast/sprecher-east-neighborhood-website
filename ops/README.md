@@ -257,7 +257,8 @@ was taken down`. Its paths and the admin port are defined once, in `environment.
 - **Disk floor** (#1076). Before it reads an archive the wrapper checks that the largest archive allowed would
   leave more than `PREVIEW_FREE_FLOOR_KB` free on the previews' disk (3 GiB, the floor the production deploy's
   preflight requires), and after measuring it that the archive and what it unpacks to would too. Otherwise it
-  refuses with a fixed text, for a new preview and for a redeploy alike.
+  refuses with a fixed text, for a new preview and for a redeploy alike. A deploy also refuses, before it asks the
+  root step for the content copy, when `PREVIEW_COPY_MAX_BYTES` more would not leave the floor.
 - **`list` and `teardown`** (#1076). `list` prints one line per pull request number found anywhere, the folder,
   the Caddy block or the PM2 process (`preview=<n> commit=<sha|none> idle=<seconds> folder=<yes|no>
 block=<yes|no> process=<online|stopped|none>`; `idle` is the age of the `current` link, the folder's when
