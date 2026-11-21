@@ -4,31 +4,33 @@ Scripts the deploy workflow (`.github/workflows/deploy.yml`) runs on the GitHub 
 on the VPS. Nothing here is run by hand during a normal deploy. Changes to the server still follow
 `AGENTS.md`: an `infra` issue first, then a pull request.
 
-| Script                      | Where  | What it does                                                                                                                                                                                                                                                                                                                                                   | Issue      |
-| --------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `server-facts.sh`           | VPS    | Prints the server's Node version, its public `NEXT_PUBLIC_*` settings and the live commit, for the build                                                                                                                                                                                                                                                       | #245       |
-| `build-release.sh`          | runner | Builds a release in the folder it will run from on the server, with the server's Node and settings, and packs it                                                                                                                                                                                                                                               | #245       |
-| `deploy-release.sh`         | VPS    | Checks the release, links the shared files, backs up, migrates (once more after a busy database, #1147), switches `current`, checks the site and switches back if it fails                                                                                                                                                                                     | #245       |
-| `rollback.sh`               | VPS    | By hand: puts an earlier release back live                                                                                                                                                                                                                                                                                                                     | #245       |
-| `backup.sh`                 | VPS    | Archives the database, uploaded media and `.env.local`; keeps 7 daily, 5 weekly, 5 pre-deploy                                                                                                                                                                                                                                                                  | #148       |
-| `backup-db.mjs`             | VPS    | Copies the live SQLite database with `VACUUM INTO` and checks the copy                                                                                                                                                                                                                                                                                         | #148       |
-| `install-cron.sh`           | VPS    | Installs the daily backup job (08:15 UTC) in `/etc/cron.d/sprecher-east-backup`                                                                                                                                                                                                                                                                                | #148       |
-| `restart-app.sh`            | VPS    | Reloads the app under PM2; starts it fresh, with a way back, when its start settings change. Listens on its own loopback port only (3000 for production). Deletes old sitemap files                                                                                                                                                                            | #118, #267 |
-| `caddy-limits.sh`           | VPS    | Caps request bodies on the public form endpoints and `/api/mcp` at Caddy (`caddy/form-limits.caddy`)                                                                                                                                                                                                                                                           | #124       |
-| `caddy-https.sh`            | VPS    | Sends HSTS on the domain (`caddy/hsts.caddy`), and adds a redirect to HTTPS in the plain-HTTP site blocks                                                                                                                                                                                                                                                      | #235       |
-| `caddy-previews.sh`         | VPS    | Adds one `import` line for the folder of pull request preview site blocks, and installs the preview headers (`caddy/preview-headers.caddy`); see [`previews.md`](previews.md)                                                                                                                                                                                  | #1072      |
-| `install-umami.sh`          | VPS    | Installs and updates Umami analytics in Docker, replaces its default admin password, then opens its own address (helpers: `umami-lib.sh`, `umami-caddy.sh`, `umami-admin.sh`, `secret-lib.sh`)                                                                                                                                                                 | #948       |
-| `backup-umami.sh`           | VPS    | Dumps Umami's Postgres database; run after the daily backup and before an Umami update                                                                                                                                                                                                                                                                         | #948       |
-| `environment.sh`            | VPS    | Defines once what differs between production and a pull request preview (folder, PM2 process, port, settings, data and media, Caddy block, site address); see [`previews.md`](previews.md)                                                                                                                                                                     | #1073      |
-| `preview-settings.sh`       | VPS    | Writes a pull request preview's own `.env.local` at its first deploy: random secrets, Cloudflare's Turnstile test keys, no mail, analytics or outside keys; kept on redeploys, never copied from production; see [`previews.md`](previews.md)                                                                                                                  | #1344      |
-| `install-preview-access.sh` | VPS    | Production deploy only: makes the restricted preview account, its root-owned copy of main's preview scripts, one sudo rule and the key line; changes nothing on any doubt; see [Pull request preview account](#pull-request-preview-account)                                                                                                                   | #1345      |
-| `preview-wrapper.sh`        | VPS    | The preview key's forced command: only `facts`, `list`, `upload`, `deploy` and `teardown`, every value checked, nothing passed to a shell                                                                                                                                                                                                                      | #1345      |
-| `preview-caddy.sh`          | VPS    | Run as root through one sudo rule with a pull request number: writes or removes that preview's Caddy block from main's templates, validated, atomic, reloaded or rolled back                                                                                                                                                                                   | #1345      |
-| `caddy-lock-lib.sh`         | VPS    | `take_caddy_lock`: one lock, beside the Caddyfile, taken by every script that changes Caddy (`caddy-limits.sh`, `caddy-https.sh`, `caddy-previews.sh`, the Umami route change, `preview-caddy.sh`), so none reloads Caddy in the middle of another's change; closing Umami's address asks for it once, without waiting, and goes on without it when it is held | #1345      |
-| `preview-access-lib.sh`     | VPS    | `refuse`, the number and commit checks and the check that an unpacked release links nowhere outside itself; used by the three scripts above                                                                                                                                                                                                                    | #1345      |
-| `lib.sh`                    | VPS    | Shared helpers: annotations, reading non-secret settings, checking the site through Caddy, the `current` link, and the Caddy import check, reload check and rollback                                                                                                                                                                                           |            |
-| `secret-lib.sh`             | VPS    | Makes one random secret (`openssl rand -hex 32`) and checks its shape, so no script writes an empty or short one; used by `install-umami.sh` and `preview-settings.sh`                                                                                                                                                                                         | #1344      |
-| `migrate-lib.sh`            | VPS    | `run_migrate`: `payload migrate`, run once more only after `SQLITE_BUSY` before any migration began (sourced by `deploy-release.sh`)                                                                                                                                                                                                                           | #1147      |
+| Script                       | Where  | What it does                                                                                                                                                                                                                                                                                                                                                   | Issue      |
+| ---------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `server-facts.sh`            | VPS    | Prints the server's Node version, its public `NEXT_PUBLIC_*` settings and the live commit, for the build                                                                                                                                                                                                                                                       | #245       |
+| `build-release.sh`           | runner | Builds a release in the folder it will run from on the server, with the server's Node and settings, and packs it                                                                                                                                                                                                                                               | #245       |
+| `deploy-release.sh`          | VPS    | Checks the release, links the shared files, backs up, migrates (once more after a busy database, #1147), switches `current`, checks the site and switches back if it fails                                                                                                                                                                                     | #245       |
+| `rollback.sh`                | VPS    | By hand: puts an earlier release back live                                                                                                                                                                                                                                                                                                                     | #245       |
+| `backup.sh`                  | VPS    | Archives the database, uploaded media and `.env.local`; keeps 7 daily, 5 weekly, 5 pre-deploy                                                                                                                                                                                                                                                                  | #148       |
+| `backup-db.mjs`              | VPS    | Copies the live SQLite database with `VACUUM INTO` and checks the copy                                                                                                                                                                                                                                                                                         | #148       |
+| `install-cron.sh`            | VPS    | Installs the daily backup job (08:15 UTC) in `/etc/cron.d/sprecher-east-backup`                                                                                                                                                                                                                                                                                | #148       |
+| `restart-app.sh`             | VPS    | Reloads the app under PM2; starts it fresh, with a way back, when its start settings change. Listens on its own loopback port only (3000 for production). Deletes old sitemap files                                                                                                                                                                            | #118, #267 |
+| `caddy-limits.sh`            | VPS    | Caps request bodies on the public form endpoints and `/api/mcp` at Caddy (`caddy/form-limits.caddy`)                                                                                                                                                                                                                                                           | #124       |
+| `caddy-https.sh`             | VPS    | Sends HSTS on the domain (`caddy/hsts.caddy`), and adds a redirect to HTTPS in the plain-HTTP site blocks                                                                                                                                                                                                                                                      | #235       |
+| `caddy-previews.sh`          | VPS    | Adds one `import` line for the folder of pull request preview site blocks, and installs the preview headers (`caddy/preview-headers.caddy`); see [`previews.md`](previews.md)                                                                                                                                                                                  | #1072      |
+| `install-umami.sh`           | VPS    | Installs and updates Umami analytics in Docker, replaces its default admin password, then opens its own address (helpers: `umami-lib.sh`, `umami-caddy.sh`, `umami-admin.sh`, `secret-lib.sh`)                                                                                                                                                                 | #948       |
+| `backup-umami.sh`            | VPS    | Dumps Umami's Postgres database; run after the daily backup and before an Umami update                                                                                                                                                                                                                                                                         | #948       |
+| `environment.sh`             | VPS    | Defines once what differs between production and a pull request preview (folder, PM2 process, port, settings, data and media, Caddy block, site address); see [`previews.md`](previews.md)                                                                                                                                                                     | #1073      |
+| `preview-settings.sh`        | VPS    | Writes a pull request preview's own `.env.local` at its first deploy: random secrets, Cloudflare's Turnstile test keys, no mail, analytics or outside keys; kept on redeploys, never copied from production; see [`previews.md`](previews.md)                                                                                                                  | #1344      |
+| `install-preview-access.sh`  | VPS    | Production deploy only: makes the restricted preview account, its root-owned copy of main's preview scripts, one sudo rule and the key line; changes nothing on any doubt; see [Pull request preview account](#pull-request-preview-account)                                                                                                                   | #1345      |
+| `preview-wrapper.sh`         | VPS    | The preview key's forced command: only `facts`, `list`, `upload`, `deploy` and `teardown`, every value checked, nothing passed to a shell                                                                                                                                                                                                                      | #1345      |
+| `preview-caddy.sh`           | VPS    | Run as root through one sudo rule with a pull request number: writes or removes that preview's Caddy block from main's templates, validated, atomic, reloaded or rolled back                                                                                                                                                                                   | #1345      |
+| `preview-isolation-check.sh` | VPS    | Run as the preview account before and after every preview deploy (and before the key line is written): fails when it can open production's settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to Caddy's admin endpoint; the wrapper then takes the preview down                                                         | #1346      |
+| `preview-host-guards.sh`     | VPS    | Production deploy only, as root: takes "others" access off production's folders, adds the account to `cron.deny` and `at.deny`, and refuses its connections to Caddy's admin port with an owner-match firewall rule that a boot unit restores; changes nothing on any doubt; see [Pull request preview account](#pull-request-preview-account)                 | #1346      |
+| `caddy-lock-lib.sh`          | VPS    | `take_caddy_lock`: one lock, beside the Caddyfile, taken by every script that changes Caddy (`caddy-limits.sh`, `caddy-https.sh`, `caddy-previews.sh`, the Umami route change, `preview-caddy.sh`), so none reloads Caddy in the middle of another's change; closing Umami's address asks for it once, without waiting, and goes on without it when it is held | #1345      |
+| `preview-access-lib.sh`      | VPS    | `refuse`, the number and commit checks, the check that an unpacked release links nowhere outside itself and the unpacked size of an archive; used by the scripts above                                                                                                                                                                                         | #1345      |
+| `lib.sh`                     | VPS    | Shared helpers: annotations, reading non-secret settings, checking the site through Caddy, the `current` link, and the Caddy import check, reload check and rollback                                                                                                                                                                                           |            |
+| `secret-lib.sh`              | VPS    | Makes one random secret (`openssl rand -hex 32`) and checks its shape, so no script writes an empty or short one; used by `install-umami.sh` and `preview-settings.sh`                                                                                                                                                                                         | #1344      |
+| `migrate-lib.sh`             | VPS    | `run_migrate`: `payload migrate`, run once more only after `SQLITE_BUSY` before any migration began (sourced by `deploy-release.sh`)                                                                                                                                                                                                                           | #1147      |
 
 The scripts print `::notice` and `::warning` lines, which appear as annotations on the deploy run
 whether it succeeds or fails, so the result can be read without opening the logs. The deploy log
@@ -145,8 +147,11 @@ part 2 of #1074; the owner's decision of 2026-11-11 is recorded on #1074). The p
   replaces only files that differ, after copying each to `<file>.bak-preview-access-<UTC time>`, checks the
   account really can run the wrapper, is refused anything else and can't write its home, and puts the sudo
   rule back if a check fails (a step that fails, such as a dated copy that can't be made, is a failure, never
-  skipped). The key line goes in last, and **only when the release holds `ops/preview-isolation-check.sh`**
-  (#1346): until then no key line is written, so nothing can deploy as the account. Its annotation lists what
+  skipped). The key line goes in last, and **only when the host guards and the isolation check below both
+  pass** (#1346): before it, the installer runs `preview-host-guards.sh`, then the installed
+  `preview-isolation-check.sh` as the account (from `/`). When either fails, no key line is written, and one
+  left by an earlier run is taken out (the old file is kept as a dated copy). Both run even when there is no
+  key file, so the first deploy's annotations show what the account can reach. Its annotation lists what
   changed and the key's fingerprint, or why there is no key.
 - **Read the result** in the deploy's annotations: `Preview access installed` (with the list) or `already in
 place`, or `WARNING: preview access was not installed: <reason>; nothing was changed`.
@@ -154,17 +159,82 @@ place`, or `WARNING: preview access was not installed: <reason>; nothing was cha
   machine with the private key, `ssh <account>@<server> facts` answers, while `ssh ... id`, `ssh ... sh`,
   a port forward (`-L`) and `facts; id` are refused; `sudo -l -U sprecher-preview` lists only the Caddy script.
   Record the results on #1345.
-- **No preview may run as the account until #1346 is done.** Until the isolation check exists, the account
-  can reach Caddy's admin endpoint on `localhost:2019`, which accepts any local process and replaces the whole
-  config (it could point `sprechereast.com` anywhere), and production's files that the production deploy
-  leaves readable (its `umask` is 022, so the database and media are probably readable by others). Nothing
-  here protects against that, which is why the installer writes no key line until the check is in the
-  release. The workflow that calls the wrapper is #1075; #1346 owns the isolation check, the admin
-  endpoint's protection, `cron.deny` and `at.deny` for the account (a preview could otherwise schedule
-  jobs that outlive its teardown) and a limit on what an archive may unpack to.
+- **The isolation check** (`preview-isolation-check.sh`, #1346) runs as the account: in the wrapper's `deploy`
+  before anything is started (a failure refuses the deploy, starts nothing and takes down a preview already running under that number: its process, folder and Caddy block) and again after it, and in the installer before a key line. It fails when the account can enter a folder that should be closed (production's, the backups, Umami's, PM2's
+  logs), or open a production file:
+  `.env.local`, the database, Umami's `.env`, or any file at all (to eight levels) in production's folder, its
+  data and media, the backups, Umami's folder, production's PM2 state and logs, or Caddy's data and certificate
+  storage (`CADDY_STORAGE_DIR`); or can connect to `localhost` on Caddy's admin port over IPv4 or IPv6. It
+  reports every failure and never a file's content. When the wrapper's check fails after the deploy, the preview is stopped, its
+  folder and Caddy block are removed, and the deploy fails with `the isolation check failed, so the preview
+was taken down`. Its paths and the admin port are defined once, in `environment.sh`.
+- **The host guards** (`preview-host-guards.sh`, run as root by the installer, #1346) make that true, and each
+  makes no change on any doubt (a warning says why, and then no key line is written):
+  - **Production's folders.** Production's folder, the backups, Umami's folder and PM2's log folder
+    (`PRODUCTION_PM2_LOG_DIR`, `/var/log/pm2`) lose "others" access (`chmod o-rwx`; the annotation gives the old
+    mode and the undo). The production deploy runs with `umask 022` so what it writes, PM2's logs included, is readable by every account; with the folder closed, the account can't enter it. A folder is
+    closed only after the script has checked, and changes nothing with a warning (and no key line) when any of
+    it fails: it is a real folder (not a link, and a link that points nowhere counts as one); it and what is
+    directly in it are owned by root; `caddy adapt` of the live Caddyfile (read the way `caddy-https.sh` reads
+    it) succeeds and names no path in it; no file in the Caddyfile's folder (backups such as `Caddyfile.bak-*`
+    and subfolders included) or the previews' folder names the folder's path (a text search, a cheap first
+    filter; the warning names the first file found, and a search that can't read everything is a doubt); and no
+    process that isn't root's (by its effective user, from `/proc/*/status`) has it as its working folder or an
+    open file in it (`/proc/*/cwd`, `/proc/*/fd`). **Then Caddy is the proof of what it reads from the Caddyfile:** from `/`, with a clean environment plus
+    the unit's own (`Environment=` and `EnvironmentFile=` of `caddy`; only plain `KEY=value` entries are taken,
+    and an entry with quotes, spaces or anything else is a doubt, because systemd reads those differently and a
+    wrong value would make root and Caddy's user resolve a placeholder to the same wrong path; the first reason is the one reported. An `EnvironmentFile=` the unit marks optional with `-` (`systemctl show` prints `ignore_errors=yes`) is skipped when it is missing, as systemd does; a required one that is missing, or any file that can't be read, is a doubt. `PassEnvironment=`, `DefaultEnvironment=` and `systemctl set-environment` are not read), `caddy adapt` is run as Caddy's service user (`systemctl show -p User caddy`, then `runuser -u`) and
+    must give exactly what root's `adapt` gives, before the change (otherwise nothing is closed) and again after
+    every folder is closed; `caddy validate` as that user must pass both times (certificate and log files).
+    Comparing output matters: a glob over a folder Caddy's user can't open matches nothing without an error, so
+    `validate` alone would pass while files vanish from the configuration. The import forms tested are
+    a link beside the Caddyfile, a linked folder, relative paths, globs (also relative and nested), nested files,
+    a placeholder and the Caddy folder itself inside a closed folder; a file Caddy's user can't read makes
+    `validate` fail, and a glob over a folder it can't open changes the output (the warning says which step
+    failed). Other forms are assumed to behave the same, not proven. When the second run differs or fails, every mode changed in that run is put back (a mode that can't
+    be is named in the warning), and the modes are also put back if the script is stopped before the second run
+    is done. Each old mode is logged before its folder is closed. The whole window is under Caddy's lock (the one
+    the Caddy scripts share), so no preview reload runs inside it; if the lock can't be taken, or Caddy's user
+    can't be found, is root, or `runuser` is missing, no folder is closed. Why close, check, undo rather than
+    check first: the files Caddy's parser opens can't be listed beforehand. **Assumed, not proven:** what Caddy
+    opens only while it serves (`validate` opens some of that, not all), that no other non-root service opens a
+    file there by name only now and then, and that the real `caddy` and `runuser` behave as the tests' stand-ins
+    do: the equality of `adapt` is proven against the stand-ins and is verified on the first production deploy;
+    the annotation's undo is the way back. A later named deploy account for production (#1306) must be given group
+    access to these folders.
+  - **cron and at.** The account is added to `/etc/cron.deny` (made if missing) and `/etc/at.deny` (never
+    made: with no at file only root may use `at`, and a new `at.deny` would open it to everyone), with a dated
+    copy. It stops when the account is in `cron.allow` or `at.allow`, and checks the result against how cron
+    and at read those files.
+  - **Caddy's admin endpoint.** An owner-match rule in `iptables` and `ip6tables` (`OUTPUT`, first, `-o lo`,
+    TCP, the admin port, the account's user id, `REJECT --reject-with tcp-reset`, comment
+    `sprecher-east-preview-caddy-admin`) refuses the account's connections to `localhost`. It is made only
+    when root can reach the endpoint on `127.0.0.1` at that port (so it protects something and can be
+    checked) and the account exists. A unit, `sprecher-east-preview-firewall.service` (marked, with a dated
+    copy of a changed file), runs `preview-host-guards.sh boot` at boot to put the rule back; the next deploy
+    enables it if it is not. Why a firewall rule and not a unix socket: the decision on #1346.
+- **Read the guards' result** in the annotations: `Preview host guards (...)` with the list of changes,
+  `already in place`, or `WARNING: preview host guard not applied: <reason>`; then `Preview isolation` notices
+  or errors. **Check on the server** (once, after the first deploy with the guards): `iptables -S OUTPUT` and
+  `ip6tables -S OUTPUT` show the rule first; `systemctl is-enabled sprecher-east-preview-firewall`; as the
+  account, `curl -m 3 localhost:2019` is refused while as root it answers, and `systemctl reload caddy` still
+  works. Record the results on #1346.
+- **An upload's unpacked size** is limited, as well as its compressed size: the wrapper adds up the sizes in the
+  archive's listing before it unpacks anything and refuses more than `PREVIEW_UNPACK_MAX_BYTES` (3 GiB), a size
+  with more digits than the limit (so a huge sparse-file size can't wrap the sum) and an archive whose listing it
+  can't measure. A 1 GiB `.tar.gz` could otherwise fill production's disk.
+- **Not covered:** a process a preview starts and detaches survives `teardown`, which stops only PM2's
+  process; the account's own folder has no disk quota beyond the limits above and `PREVIEW_MAX_COUNT` (a
+  running preview can write without limit); and a running preview app, which has the account's user id, can
+  swap an archive between the wrapper's measuring and unpacking it (the size is measured from the file, not
+  from what is unpacked). Previews write their PM2 logs into their own folder (`PM2_LOG_DIR`), not
+  `/var/log/pm2`.
+  The workflow that calls the wrapper is #1075.
 
 Undo: revert the pull request, then delete the key line, `/etc/sudoers.d/sprecher-east-preview` and
-`/usr/local/lib/sprecher-east-preview`, and `userdel` the account.
+`/usr/local/lib/sprecher-east-preview`, and `userdel` the account. For the guards: `iptables -D OUTPUT` and
+`ip6tables -D OUTPUT` with the rule's arguments (as `-S` lists them), `systemctl disable` and delete the unit,
+the account's line in `cron.deny` and `at.deny`, and `chmod` back to the modes the annotation gave.
 
 ## Releases
 

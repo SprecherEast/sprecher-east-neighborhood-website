@@ -85,3 +85,13 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   script. What it is, what it may do and how to check it: [`README.md`](README.md#pull-request-preview-account).
   `environment.sh` holds its names (`PREVIEW_USER`, `PREVIEW_HOME`, `PREVIEW_ACCESS_DIR`), the
   upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, 10) and the number and commit patterns, so no script writes its own.
+- **What the account can't reach** (#1346). `preview-isolation-check.sh` runs as the account before and after every
+  preview deploy and fails the deploy (before: nothing starts, and a preview already running under that number is taken down; after: the preview is taken down) when the account can open production's
+  settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to Caddy's admin
+  endpoint on localhost. `preview-host-guards.sh` makes that so: production's folders closed to "others",
+  the account in `cron.deny` and `at.deny`, and an owner-match firewall rule on the admin port. An upload
+  is also limited by what it unpacks to (`PREVIEW_UNPACK_MAX_BYTES`, 3 GiB). Details, the unix socket
+  alternative and why it wasn't chosen, and the check to run on the server:
+  [`README.md`](README.md#pull-request-preview-account).
+- **No basic auth.** A preview holds only public code and published content, a password would block opening
+  the link on a phone and AI agents taking screenshots, and the noindex headers above stay required.
