@@ -40,6 +40,16 @@ describe('server-only fields', () => {
     { id: 1, role: 'admin', collection: 'users' },
   ]
 
+  it('read every field and editor feature, and fail on one the walker does not know', () => {
+    const walker = createFieldWalker(config)
+    for (const owner of [...config.collections, ...config.globals]) {
+      for (const field of owner.fields as Node[]) {
+        walker.descendants(field)
+      }
+    }
+    expect(walker.drainProblems()).toEqual([])
+  })
+
   // Payload's own: an API key's lookup hash, which its `setAPIKeyIndex` hook always recomputes
   // from the key. Only admins reach the keys collection at all (#336)
   const PAYLOAD_DERIVED = ['payload-mcp-api-keys.apiKeyIndex']

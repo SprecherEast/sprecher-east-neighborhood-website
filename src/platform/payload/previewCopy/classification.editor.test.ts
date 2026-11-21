@@ -142,6 +142,25 @@ describe('failing closed', () => {
     )
   })
 
+  it('fails on a schema-map value of a shape it does not know, or that is not an object', async () => {
+    const renamed = feature({}, { 'x.fields': { flattenedFields: [emailField] } })
+    expect(await gate(configOf([lexical({ blocks: renamed })]))).toEqual(
+      cannotRead('a value of an unknown shape (flattenedFields)'),
+    )
+    const odd = feature({}, { x: 'text' as never })
+    expect(await gate(configOf([lexical({ blocks: odd })]))).toEqual(
+      cannotRead('a value that is not an object'),
+    )
+  })
+
+  it('knows the checklist feature, and counts a join field as pointing at its collection', async () => {
+    expect(
+      await gate(configOf([lexical({ bold: plainFeature(), checklist: plainFeature() })])),
+    ).toEqual([])
+    const join = { name: 'body', type: 'join', collection: 'users', on: 'x' }
+    expect(await gate(withUsers([join]))).toEqual([USERS])
+  })
+
   it('fails on a feature that lists collections in a shape it does not know', async () => {
     const odd = feature({ enabledCollections: { pages: true } })
     expect(await gate(withUsers([lexical({ link: odd })]))).toEqual([

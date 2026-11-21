@@ -15,6 +15,8 @@ export type FieldNode = {
   type?: string
   hidden?: boolean
   relationTo?: string | string[]
+  /** A join field's collection: virtual, but still something a kept field points at. */
+  collection?: string | string[]
   access?: { read?: unknown; create?: unknown; update?: unknown }
   fields?: FieldNode[]
   tabs?: FieldNode[]
@@ -60,7 +62,7 @@ const LAYOUT_TYPES = new Set(['row', 'collapsible', 'tabs', 'ui'])
 const PLAIN_FEATURES = new Set([
   'align',
   'bold',
-  'checkList',
+  'checklist',
   'heading',
   'horizontalRule',
   'indent',
@@ -147,6 +149,16 @@ export function createFieldWalker(config: WalkConfig) {
 
   /** The fields, tabs and blocks directly inside one node, and what a rich-text editor stores. */
   const children = (node: FieldNode): FieldNode[] => {
+    if (typeof node !== 'object' || node === null) {
+      report('a value that is not an object')
+      return []
+    }
+    const hasParts = [node.fields, node.tabs, node.blocks, node.blockReferences].some(
+      (part) => part !== undefined,
+    )
+    if (node.type === undefined && !hasParts) {
+      report(`a value of an unknown shape (${Object.keys(node).join(', ') || 'empty'})`)
+    }
     if (node.type !== undefined && !KNOWN_TYPES.has(node.type)) {
       report(`unknown field type "${node.type}"${node.name ? ` (${node.name})` : ''}`)
     }
@@ -190,7 +202,7 @@ export function createFieldWalker(config: WalkConfig) {
 
   /** Collections a field points at: a relationship, or what a rich-text editor can link, relate or embed. */
   const targets = (node: FieldNode): string[] => {
-    const own = node.relationTo === undefined ? [] : [node.relationTo].flat()
+    const own = [node.relationTo ?? [], node.collection ?? []].flat()
     if (node.type !== 'richText') return own
     const props = (key: string) =>
       (featureMap(node)?.get(key)?.sanitizedServerFeatureProps ?? {}) as Record<string, unknown>

@@ -30,7 +30,8 @@ const looksLikeEmail = (field: Node) => field.type === 'email' || /e-?mail/i.tes
  */
 async function staffOnly(field: Node): Promise<boolean> {
   if (!field.access?.read) return false
-  return (await accessResult(field.access.read, 'visitor')) === false
+  // Payload hides a field on any falsy answer, not only `false`
+  return !(await accessResult(field.access.read, 'visitor'))
 }
 
 /** Why a top-level field is not clearly public, or null when it is. */

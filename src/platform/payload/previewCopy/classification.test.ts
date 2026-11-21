@@ -177,6 +177,13 @@ describe('the gate', () => {
     ).toEqual(['things: a visitor reads the published version only, so reads must say so'])
   })
 
+  it('counts any falsy read answer as private, as Payload does', async () => {
+    const fields = [field('note', { access: { read: () => null } })]
+    expect(await findClassificationProblems(configOf(fields), entry(['note']))).toEqual([
+      'things.note: kept, but it has a staff-only read field (note); it must be cleared',
+    ])
+  })
+
   it('judges a field by what a visitor sees, so a field open to residents only is private', async () => {
     const residents = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
     const fields = [field('perk', { access: { read: residents } })]
