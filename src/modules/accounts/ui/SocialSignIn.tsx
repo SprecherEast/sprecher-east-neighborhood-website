@@ -5,6 +5,7 @@ import { BrandLogo } from '@/platform/ui/BrandLogo'
 import { Button } from '@/platform/ui/Button'
 
 import { SOCIAL_PROVIDER_NAMES, socialStartPath, type SocialProvider } from '../domain/socialSignIn'
+import { SIGN_IN_BUTTON_SIZE } from './signInButton'
 import { parseSocialResult, SOCIAL_SIGN_IN_MESSAGES } from './socialSignInMessages'
 
 /**
@@ -30,6 +31,7 @@ export function SocialSignIn({ providers }: { providers: SocialProvider[] }) {
         type="submit"
         variant="secondary"
         fullWidth
+        size={SIGN_IN_BUTTON_SIZE}
         iconStart={<BrandLogo brand={provider} />}
       >
         Continue with {SOCIAL_PROVIDER_NAMES[provider]}

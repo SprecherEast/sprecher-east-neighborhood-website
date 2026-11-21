@@ -2,7 +2,7 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { BrandLogo, LOGO_SLOT_HEIGHT } from './BrandLogo'
+import { BrandLogo, LOGO_HEIGHT } from './BrandLogo'
 import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
@@ -16,11 +16,11 @@ describe('BrandLogo', () => {
     expect(image?.getAttribute('src')).toBe('/brand/google-g.png')
     expect(image?.getAttribute('width')).toBe('200')
     expect(image?.getAttribute('height')).toBe('204')
-    expect(image?.className).toContain('h-5')
+    expect(image?.className).toContain('h-8')
     expect(image?.className).toContain('w-auto')
   })
 
-  it('draws the FIDO passkey tile file trimmed to its rounded corners, 32 px tall, while the “G” stays 20 px (#1372)', () => {
+  it('draws the FIDO passkey tile file trimmed to its rounded corners, 32 px tall (#1372)', () => {
     const { container } = render(<BrandLogo brand="passkey" />)
     const image = container.querySelector('img')
 
@@ -33,18 +33,18 @@ describe('BrandLogo', () => {
     expect(image?.className).not.toMatch(/\b(rounded|object-cover|object-fill|scale|rotate)/)
   })
 
-  it('seats both logos in one slot, so they sit the same distance from the button’s top and bottom (#1372)', () => {
+  it('draws both logos at the one shared height, 32 px, so they get the same space in a button (#1375)', () => {
     for (const brand of ['google', 'passkey'] as const) {
       const { container } = render(<BrandLogo brand={brand} />)
-      const slot = container.firstElementChild
+      const image = container.firstElementChild
 
-      expect(slot?.tagName).toBe('SPAN')
-      expect(slot?.className).toContain(LOGO_SLOT_HEIGHT)
-      expect(slot?.className).toContain('items-center')
-      expect(slot?.querySelector('img')).not.toBeNull()
+      // The image itself is the logo: no wrapper to seat it, since both are the same height
+      expect(image?.tagName).toBe('IMG')
+      expect(image?.className).toContain(LOGO_HEIGHT)
+      expect(image?.className).toContain('w-auto')
       cleanup()
     }
-    expect(LOGO_SLOT_HEIGHT).toBe('h-8')
+    expect(LOGO_HEIGHT).toBe('h-8')
   })
 
   it('draws the tile’s file with transparent corners, so no white shows on a dark page (#1372)', async () => {

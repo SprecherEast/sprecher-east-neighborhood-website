@@ -2,6 +2,7 @@ import React from 'react'
 
 import { Button } from '@/platform/ui/Button'
 
+import { SIGN_IN_BUTTON_SIZE } from './signInButton'
 import { PasskeyButtonStack } from './PasskeyButtonStack'
 import { PASSKEY_LOGIN_LABEL } from './passkeyMessages'
 
@@ -15,7 +16,14 @@ import { PASSKEY_LOGIN_LABEL } from './passkeyMessages'
 export function PasskeyButtonRoom() {
   return (
     <PasskeyButtonStack>
-      <Button type="button" variant="secondary" fullWidth className="invisible" aria-hidden>
+      <Button
+        type="button"
+        variant="secondary"
+        fullWidth
+        size={SIGN_IN_BUTTON_SIZE}
+        className="invisible"
+        aria-hidden
+      >
         {PASSKEY_LOGIN_LABEL}
       </Button>
     </PasskeyButtonStack>

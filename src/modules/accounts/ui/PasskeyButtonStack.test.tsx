@@ -25,4 +25,9 @@ describe('PasskeyButtonStack', () => {
     const real = render(<PasskeyButtonStack>{null}</PasskeyButtonStack>).container.firstElementChild
     expect(room?.className).toBe(real?.className)
   })
+
+  it('holds a room as tall as the real button: both are the kit’s `lg` size (#1375)', () => {
+    const { container } = render(<PasskeyButtonRoom />)
+    expect(container.querySelector('button')?.className).toMatch(/min-h-12/)
+  })
 })

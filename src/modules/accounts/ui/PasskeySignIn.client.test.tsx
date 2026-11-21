@@ -80,8 +80,9 @@ describe('PasskeySignIn: when it shows', () => {
     const icon = button.querySelector('img')
     expect(icon?.getAttribute('src')).toBe('/brand/fido-passkey-icon-tile.png')
     expect(icon?.getAttribute('alt')).toBe('')
-    // Full width, and the kit's own 44 px tall button
+    // Full width, and the kit's own `lg` button, 48 px tall (#1375)
     expect(button.className).toMatch(/w-full/)
+    expect(button.className).toMatch(/min-h-12/)
     await expectAccessible(document.body)
   })
 })

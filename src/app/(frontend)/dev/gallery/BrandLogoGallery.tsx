@@ -14,24 +14,26 @@ export function BrandLogoGallery() {
         name="BrandLogo"
         description="Each mark is kept exactly as its owner supplies it: no recolour, filter or shadow, in light or dark."
       >
-        <GalleryVariant label="google, on a secondary full-width button">
+        <GalleryVariant label="google, on a secondary full-width `lg` button (48 px: the 32 px logo has 8 px above and below)">
           <div className="max-w-sm">
             <Button
               type="button"
               variant="secondary"
               fullWidth
+              size="lg"
               iconStart={<BrandLogo brand="google" />}
             >
               Continue with Google
             </Button>
           </div>
         </GalleryVariant>
-        <GalleryVariant label="passkey, on the same button (its amber tile has transparent rounded corners, the same in light and dark)">
+        <GalleryVariant label="passkey, on the same button, so the pair matches (its amber tile has transparent rounded corners, the same in light and dark)">
           <div className="max-w-sm">
             <Button
               type="button"
               variant="secondary"
               fullWidth
+              size="lg"
               iconStart={<BrandLogo brand="passkey" />}
             >
               Log in with a passkey
@@ -46,6 +48,7 @@ export function BrandLogoGallery() {
               type="button"
               variant="secondary"
               fullWidth
+              size="lg"
               iconStart={<BrandLogo brand="google" />}
             >
               Continue with Google
