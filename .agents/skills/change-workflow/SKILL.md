@@ -92,6 +92,22 @@ check fails otherwise:
 
 Open it as a draft (`--draft`) while work is incomplete.
 
+**Pull request preview.** A pull request that changes how pages look can have a pull request
+preview, a copy of the site at its own address
+([`ops/previews.md`](../../../ops/previews.md#the-workflow-1075)). It is built only when the pull
+request carries the `preview` label, which you add once the owner says yes to one for this change
+(a certificate from a weekly budget is spent on each). Docs and tooling-only changes get none.
+
+- **A change to how pages look:** ask the owner in the chat whether he wants a pull request
+  preview; on yes, add the label. After each push, wait for the comment the workflow keeps on the
+  pull request, and check it names the current head commit. Then post the link in the chat with a
+  one-line description of what to look at, and wait for his feedback before merging.
+- **Any other change:** the link is optional.
+- **No pull request preview** (a fork, docs or tooling only, no label, the cap reached, a failed
+  build): say which in the chat instead. A removed or failed one is never a reason to skip the
+  checks.
+- Sign-in on a pull request preview: [`preview-sign-in`](../../../docs/process/preview-sign-in.md).
+
 ## 5. Review and checks
 
 1. **Get an independent review.** Start a separate reviewer (a different agent session or a
@@ -118,6 +134,8 @@ Open it as a draft (`--draft`) while work is incomplete.
    change he didn't ask for, `AGENTS.md` step 3), note the head SHA and go to step 6. If it waits
    for him, label the PR `needs owner`, ask him one plain question, and stop
    ([waits for owner](../../../docs/process/project-management.md#waits-for-owner)).
+   A change to how pages look that has a pull request preview also waits for the owner's feedback
+   on it (step 4); apply what he asks, or record why not, before you go on.
    Also re-read the description's `End-to-end exemption:` line: if it is not `none`, it must be the
    one the review checked, because editing a description moves neither the head nor the checks.
 5. **A PR below yours changed** (stacked PRs): rebase yours onto it and push, as in
@@ -154,6 +172,7 @@ A `409` means a merge of this PR is already running: poll it instead of starting
   site (`https://sprechereast.com`) and the behavior that changed, and report.
 - A failed deploy is fixed or reverted through a new PR, never on the server.
 - A redeploy by hand is allowed within the limits in [`wrapped`](../wrapped/SKILL.md) step 2.
+- Once the pull request is merged, its pull request preview is removed; `wrapped` confirms it.
 - The issue closes automatically. `issue-fix-summary.yml` comments on it with how it was fixed.
 
 ## Server or dashboard changes (`infra`)

@@ -30,6 +30,10 @@ New custom code: link the issue comment with what each step of the ladder found
 
 1.
 
+<!-- Pull request preview: where there is one, put its link here (the comment the workflow keeps on this pull request has it); where there is none (docs or tooling only), leave it out. -->
+
+Pull request preview:
+
 <!-- Browser tests (#868): CI runs "End-to-end tests" when this PR changes the UI (the UI kit, styles
 or theme, pages and layouts, a module's ui/ folder; comment-only and formatting-only edits, tests
 and docs don't count). If they truly are not needed, replace "none" with the reason, 20+ characters;
