@@ -38,6 +38,9 @@ PREVIEW_UPLOAD_MAX_BYTES="${PREVIEW_UPLOAD_MAX_BYTES:-1073741824}" # the most on
 # The most previews that may exist at once (folders, and Caddy blocks). Each block orders a certificate,
 # and Let's Encrypt's weekly budget is shared with production's (ops/previews.md, "Certificate budget").
 PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-10}"
+# How long a preview's health check waits for the app to answer through Caddy (production's is 90 s): its first
+# deploy also waits for Caddy to order the preview's certificate (#1075).
+PREVIEW_UP_SECONDS="${PREVIEW_UP_SECONDS:-180}"
 # What a pull request number and a commit look like. Every script that takes one from outside checks it
 # against these (preview-access-lib.sh), so a hostile value never reaches a path, a command or a file.
 PREVIEW_NUMBER_PATTERN='^[1-9][0-9]{0,5}$'

@@ -339,6 +339,27 @@ describe('ops/preview-deploy-key.pub: the committed public key (#1385)', () => {
   })
 })
 
+describe('install-preview-access.sh: what it always says about the key and the checks (#1075)', () => {
+  it('says the key state and both checks on a first run, with and without a key file', async () => {
+    const first = await run()
+    expect(first.out).toMatch(
+      /Preview access: key SHA256:\S+ allowed; host guards passed; isolation check passed/,
+    )
+    fs.rmSync(p('code/ops/preview-deploy-key.pub'))
+    const second = await run()
+    expect(second.out).toContain(
+      'Preview access: no preview key file: no key allowed; host guards passed; isolation check passed',
+    )
+  })
+
+  it('says it again when nothing changed, so a quiet run still shows the state', async () => {
+    await run()
+    const again = await run()
+    expect(again.out).toContain('already in place')
+    expect(again.out).toMatch(/Preview access: key SHA256:\S+ allowed; host guards passed/)
+  })
+})
+
 describe('install-preview-access.sh: running it again', () => {
   it('changes nothing and says so', async () => {
     await run()

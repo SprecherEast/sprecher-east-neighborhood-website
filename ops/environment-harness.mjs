@@ -58,7 +58,7 @@ export function setUpEnvironmentHarness() {
     write(path.join(release, 'node_modules/.bin/next'), '#!/bin/sh\n', 0o755)
     write(
       path.join(release, 'node_modules/.bin/payload'),
-      `#!/bin/sh\necho "payload $* in $(pwd -P)" >> "$STUB_LOG"\n`,
+      `#!/bin/sh\necho "payload $* in $(pwd -P) NODE_ENV=\${NODE_ENV-unset}" >> "$STUB_LOG"\n[ "$1" != run ] || [ -z "$STUB_PAYLOAD_RUN_FAIL" ] || exit 1\n`,
       0o755,
     )
   }

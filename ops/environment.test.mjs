@@ -60,6 +60,21 @@ const range = () => {
   return { min, max }
 }
 
+describe('how long a preview’s health check waits (#1075)', () => {
+  it('is longer than production’s 90 seconds, so the first certificate has time to be ordered', () => {
+    const wait = Number(printed({}, 'echo $PREVIEW_UP_SECONDS').trim())
+    expect(wait).toBeGreaterThan(90)
+    const deploy = fs.readFileSync(path.join(OPS, 'deploy-release.sh'), 'utf8')
+    expect(deploy).toContain(
+      'UP_SECONDS="${UP_SECONDS:-$(is_preview && echo "$PREVIEW_UP_SECONDS" || echo 90)}"',
+    )
+  })
+
+  it('can be set by the caller, like every limit here', () => {
+    expect(printed({ PREVIEW_UP_SECONDS: '240' }, 'echo $PREVIEW_UP_SECONDS').trim()).toBe('240')
+  })
+})
+
 describe('production, with no environment named', () => {
   it('uses production’s folder, process name, port, settings, data and media', () => {
     expect(values()).toEqual({

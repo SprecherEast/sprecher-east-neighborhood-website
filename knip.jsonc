@@ -30,6 +30,8 @@
         "scripts/knowledge-eval/{run,analyze}.mjs",
         // Run by `payload run` from e2e/serve.mjs (which knip finds through playwright.config.ts)
         "e2e/seed.ts",
+        // Run by `payload run` from ops/deploy-release.sh on the server, for a preview's first database (#1075)
+        "e2e/previewSeed.ts",
         // Imported by eslint.config.mjs
         "eslint.*.config.mjs",
       ],

@@ -170,6 +170,11 @@ caddy_reads() { caddy_validates || return 1; [ "$(caddy_adapted user)" = "$caddy
 
 closed_now=() # "<folder> <old mode>", closed in this run and not yet proven safe
 caddy_proven=yes
+# What the deploy's annotations say at the end, every run (the first production run's output showed neither
+# the state of each folder nor whether Caddy's own check ran, #1075): each guarded folder's state, and Caddy's
+# check. A folder not closed because of a doubt has its own warning above.
+states=()
+caddy_note="not needed: no guarded folder was open to others"
 # Puts the old modes back, and says which could not be. Also runs when the script stops before the proof is
 # done, however it stops (bash runs the EXIT trap on a fatal signal too).
 restore_modes() {
@@ -182,7 +187,7 @@ restore_modes() {
 trap restore_modes EXIT
 
 for dir in "$production" "$BACKUP_ROOT" "$UMAMI_DIR" "$PRODUCTION_PM2_LOG_DIR"; do
-  [ -e "$dir" ] || [ -L "$dir" ] || continue # not installed here: nothing to protect
+  [ -e "$dir" ] || [ -L "$dir" ] || { states+=("$dir: not there"); continue; } # not installed here: nothing to protect
   if [ -L "$dir" ] || [ ! -d "$dir" ]; then
     warn "$dir is a link or not a folder"
   elif [ -n "$(find "$dir" -maxdepth 1 ! -uid "$ROOT_UID" -print -quit)" ]; then # the folder itself, or an entry in it
@@ -191,9 +196,13 @@ for dir in "$production" "$BACKUP_ROOT" "$UMAMI_DIR" "$PRODUCTION_PM2_LOG_DIR"; 
     warn "$dir is not closed: $reason"
   else
     mode=$(stat -c %a "$dir")
-    ((8#$mode & 8#007)) || continue
+    ((8#$mode & 8#007)) || { states+=("$dir: already closed (mode $mode)"); continue; }
     [ -n "$caddy_prepared" ] || prepare_caddy_proof
-    if [ -n "$caddy_doubt" ]; then warn "$dir is not closed: $caddy_doubt"; continue; fi
+    if [ -n "$caddy_doubt" ]; then
+      warn "$dir is not closed: $caddy_doubt"
+      caddy_note="not run: $caddy_doubt"
+      continue
+    fi
     caddy_proven=no
     report "Preview host guards: closing $dir (old mode $mode; undo: chmod $mode $dir)"
     chmod o-rwx "$dir" || { warn "chmod failed on $dir"; continue; }
@@ -208,9 +217,13 @@ if [ "${#closed_now[@]}" != 0 ]; then
     caddy_proven=yes
     for entry in "${closed_now[@]}"; do
       changes+=("${entry% *}: mode ${entry##* } -> $(stat -c %a "${entry% *}") (undo: chmod ${entry##* } ${entry% *})")
+      states+=("${entry% *}: closed now (was ${entry##* })")
     done
+    caddy_note="ran as $caddy_user, before and after: validate passed and it read the Caddyfile as root does"
   else
     restore_modes
+    for entry in "${closed_now[@]}"; do states+=("${entry% *}: left as it was"); done
+    caddy_note="ran as $caddy_user and FAILED, so every mode was put back"
     caddy_proven=yes
     if [ "${#restore_failed[@]}" = 0 ]; then restored="so every mode changed in this run was put back"; else restored="and these modes could not be put back: ${restore_failed[*]}"; fi
     if [ "$caddy_failed" = 1 ]; then why="made caddy validate fail as its own user (an imported file, a log or certificate file, or the Caddyfile itself is in a closed folder)"
@@ -302,6 +315,7 @@ WantedBy=multi-user.target"
 }
 firewall
 
+report "Preview host guards: ${states[*]:+$(IFS=';'; echo "${states[*]}")}${states[*]:+ | }Caddy's own check: $caddy_note"
 if [ "${#changes[@]}" = 0 ]; then
   [ "$status" != 0 ] || report "Preview host guards already in place: production's folders, cron and at, Caddy's admin endpoint"
 else
