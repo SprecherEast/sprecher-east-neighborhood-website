@@ -318,6 +318,27 @@ describe('install-preview-access.sh: a first install', () => {
   })
 })
 
+describe('ops/preview-deploy-key.pub: the committed public key (#1385)', () => {
+  const committed = () => fs.readFileSync(path.join(OPS, 'preview-deploy-key.pub'), 'utf8')
+
+  it('is one ed25519 public key line with a trailing newline and nothing before the type', () => {
+    expect(committed()).toMatch(/^ssh-ed25519 AAAAC3NzaC1lZDI1NTE5[A-Za-z0-9+/]{48} \S+\n$/)
+    expect(committed().trim().split('\n')).toHaveLength(1)
+  })
+
+  it('passes the installer’s own validation: the real file becomes the restricted key line', async () => {
+    write(p('code/ops/preview-deploy-key.pub'), committed())
+    const { code, out } = await run()
+    expect(code).toBe(0)
+    expect(out).not.toContain('not a plain ed25519 public key')
+    const [, blob] = committed().trim().split(' ')
+    const keys = read('home/sprecher-preview/.ssh/authorized_keys').trim().split('\n')
+    expect(keys[1]).toBe(
+      `restrict,command="${WRAPPER()}" ssh-ed25519 ${blob} sprecher-east-preview-deploy`,
+    )
+  })
+})
+
 describe('install-preview-access.sh: what it always says about the key and the checks (#1075)', () => {
   it('says the key state and both checks on a first run, with and without a key file', async () => {
     const first = await run()

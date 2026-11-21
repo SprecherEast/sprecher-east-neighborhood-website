@@ -140,7 +140,7 @@ part 2 of #1074; the owner's decision of 2026-11-11 is recorded on #1074). The p
   preview app running as it can't add a key or replace the forced command.
 - **The key line** is `restrict,command="<wrapper>" ssh-ed25519 <key>`: no shell, port forwarding, agent
   or terminal, and the wrapper as the only command. The public half is `ops/preview-deploy-key.pub`
-  (public, so it is committed); its private half is the only secret of the GitHub environment `preview`.
+  (public, so it is committed, #1385); its private half is the only secret of the GitHub environment `preview`.
   With no key file the file holds no key. Removing the file revokes the key at the next deploy.
 - **The wrapper** (`preview-wrapper.sh`, in `/usr/local/lib/sprecher-east-preview/ops/`, root-owned) reads the
   request from `SSH_ORIGINAL_COMMAND`. One line, one of `facts`, `list`, `upload <number> <commit>` (the

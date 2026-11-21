@@ -85,6 +85,9 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   script. What it is, what it may do and how to check it: [`README.md`](README.md#pull-request-preview-account).
   `environment.sh` holds its names (`PREVIEW_USER`, `PREVIEW_HOME`, `PREVIEW_ACCESS_DIR`), the
   upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, 10) and the number and commit patterns, so no script writes its own.
+- **The key is in place** (#1385). The public half is committed as `ops/preview-deploy-key.pub`; the private half is the
+  `PREVIEW_SSH_KEY` secret of the GitHub environment `preview`, and nowhere else. The production deploy writes the key's
+  line only when the host guards and the isolation check pass; its log says which.
 - **What the account can't reach** (#1346). `preview-isolation-check.sh` runs as the account before and after every
   preview deploy and fails the deploy (before: nothing starts, and a preview already running under that number is taken down; after: the preview is taken down) when the account can open production's
   settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to Caddy's admin
@@ -142,7 +145,7 @@ required check: a failed preview never blocks a merge or the production deploy.
   could read the environment's key; the server is the boundary. The key can run only the wrapper's five
   actions, and a failed isolation check takes the preview down (above). `.github/scripts/preview-workflow.test.mjs`
   fails when an honest change moves the key next to the build.
-- **Setting the key up** (once; GitHub's environment and secret calls need a token that can write secrets, which an
+- **Setting the key up** (once; done for the key pair: the public half is committed as `ops/preview-deploy-key.pub` (#1385) and the private half is the `PREVIEW_SSH_KEY` secret, so what follows is the recipe to repeat it, for a new key; GitHub's environment and secret calls need a token that can write secrets, which an
   AI agent's cloud session may not have). On a trusted machine: `ssh-keygen -t ed25519 -N '' -C
 sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/preview-deploy-key.pub` through a
   pull request (the production deploy then writes the key's line, but only when the host guards and the isolation
