@@ -105,15 +105,20 @@ export function Toast({
       >
         <div
           className={cn(
-            'flex items-start gap-3 border px-4 py-3',
-            tone ? ALERT_TONE_CLASSES[tone] : 'rounded-xl border-border text-foreground',
-            tone && 'rounded-xl',
+            'flex gap-3 rounded-xl border px-4 py-3',
+            // The neutral look is the one the update notice has always had; a tone is the Alert's
+            tone
+              ? cn(ALERT_TONE_CLASSES[tone], 'items-start')
+              : 'items-center border-border bg-background text-foreground sm:px-5',
           )}
         >
           {(icon || Icon) && (
             <span
               aria-hidden="true"
-              className={cn('mt-0.5 shrink-0 [&_svg]:size-4', !tone && 'text-primary')}
+              className={cn(
+                'shrink-0 [&_svg]:size-4',
+                tone ? 'mt-0.5' : 'hidden text-primary sm:block',
+              )}
             >
               {icon ?? (Icon && <Icon />)}
             </span>
@@ -122,8 +127,8 @@ export function Toast({
             {title && (
               <ToastPrimitive.Title className="font-semibold">{title}</ToastPrimitive.Title>
             )}
-            <ToastPrimitive.Description className="font-medium">
-              {message}
+            <ToastPrimitive.Description asChild>
+              <p className={cn('font-medium', !tone && 'text-foreground')}>{message}</p>
             </ToastPrimitive.Description>
           </div>
           {action && <div className="shrink-0 self-center">{action}</div>}
@@ -145,7 +150,12 @@ export function Toast({
               <Button
                 variant="ghost"
                 size="icon"
-                className="shrink-0 self-center text-current hover:text-current"
+                className={cn(
+                  'shrink-0 self-center',
+                  tone
+                    ? 'text-current hover:text-current'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
                 aria-label={dismissLabel}
                 onClick={() => {
                   reason.current = 'close'

@@ -144,6 +144,40 @@ describe('Toast', () => {
     })
   })
 
+  describe('swiping', () => {
+    // jsdom has no PointerEvent or pointer capture: give the events the coordinates Radix reads
+    beforeEach(() => {
+      Object.assign(HTMLElement.prototype, {
+        setPointerCapture: () => {},
+        releasePointerCapture: () => {},
+        hasPointerCapture: () => true,
+      })
+    })
+    const swipeDown = (element: HTMLElement) => {
+      const move = (type: 'pointerDown' | 'pointerMove' | 'pointerUp', y: number) =>
+        fireEvent[type](element, { clientX: 0, clientY: y, button: 0, pointerId: 1 })
+      act(() => {
+        move('pointerDown', 0)
+        move('pointerMove', 80)
+        move('pointerUp', 80)
+      })
+    }
+
+    it('closes a toast that is not waiting for an accept', () => {
+      const onDismiss = vi.fn()
+      render(<Toast message="Heads up" ending="close" onDismiss={onDismiss} />)
+      swipeDown(toast())
+      expect(onDismiss).toHaveBeenCalledWith('close')
+    })
+
+    it('does not count as accepting one that is', () => {
+      const onDismiss = vi.fn()
+      render(<Toast message="Please read" ending="accept" onDismiss={onDismiss} />)
+      swipeDown(toast())
+      expect(onDismiss).not.toHaveBeenCalled()
+    })
+  })
+
   describe('placement', () => {
     it('sits at the bottom of the screen by default, as it always has', () => {
       render(<Toast message="Saved" onDismiss={() => {}} />)

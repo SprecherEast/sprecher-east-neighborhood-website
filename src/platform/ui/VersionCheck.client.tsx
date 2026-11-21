@@ -108,6 +108,8 @@ export function VersionCheck() {
       visible={visible}
       icon={<RefreshCw />}
       message="New version available"
+      // It stays until the reader closes it or refreshes: a reader who looked away must still see it
+      ending="close"
       action={
         <Button onClick={handleRefresh} size="sm">
           Refresh
