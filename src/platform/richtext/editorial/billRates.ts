@@ -3,6 +3,7 @@ import {
   BILL_BODY_NAMES,
   BILL_BODY_SHORT_NAMES,
   type BillBody,
+  type MillRates,
 } from '@/platform/lib/billShare'
 
 import type { BillShareYear } from './billShare'
@@ -31,16 +32,24 @@ const validRate = (rate: number | undefined): rate is number =>
  * The rates the bill uses in the year at `index`, one line per body in the bill's order. It follows
  * the same rule as the bill (`fillFromEarlier`): a body with no rate of its own that year uses the
  * year before's, and the line says whose year it is. A body with no rate in either keeps its line,
- * with no figures, so the panel is as tall in every year.
+ * with no figures, so the panel is as tall in every year. While the year counts (#1370), `shown` holds
+ * the rates the bill is using at that moment: the figures are written from them, and the year and
+ * "carried" labels stay the year chosen's.
  */
-export function rateLinesFor(years: readonly BillShareYear[], index: number): RateLine[] {
+export function rateLinesFor(
+  years: readonly BillShareYear[],
+  index: number,
+  shown?: MillRates,
+): RateLine[] {
   const year = years[index]
   const earlier = years[index - 1]
   return BILL_BODIES.map((key): RateLine => {
     const own = year?.rates[key]
     const before = earlier?.rates[key]
     const carried = !validRate(own) && validRate(before)
-    const rate = validRate(own) ? own : carried ? before : null
+    const settled = validRate(own) ? own : carried ? before : null
+    const counting = shown?.[key]
+    const rate = settled !== null && validRate(counting) ? counting : settled
     return {
       key,
       name: BILL_BODY_NAMES[key],

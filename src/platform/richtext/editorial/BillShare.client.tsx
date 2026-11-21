@@ -212,7 +212,7 @@ export function BillShare({
         />
         <RatesPanel
           title={ratesText.title}
-          lines={rateLinesFor(years, yearIndex)}
+          lines={rateLinesFor(years, yearIndex, rates)}
           note={ratesNoteFor(years, yearIndex, ratesText.note)}
         />
       </div>

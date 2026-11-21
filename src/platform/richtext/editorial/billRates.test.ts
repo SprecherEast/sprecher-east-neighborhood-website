@@ -69,3 +69,27 @@ describe('ratesNoteFor', () => {
     expect(ratesNoteFor(years, 1, '')).toBeNull()
   })
 })
+
+describe('rateLinesFor with the rates counting between years (#1370)', () => {
+  it('writes the figures from the rates it is given, and keeps the year and carried labels of the year shown', () => {
+    const lines = rateLinesFor(years, 1, { city: 7.0, county: 2.5 })
+    expect(lines.find((line) => line.key === 'city')).toMatchObject({
+      percent: '0.700%',
+      perThousand: '$7.00',
+      year: 2027,
+      carried: false,
+    })
+    expect(lines.find((line) => line.key === 'county')).toMatchObject({
+      perThousand: '$2.50',
+      year: 2026,
+      carried: true,
+    })
+  })
+
+  it('uses the year’s own rate for a body missing from the rates given, and gives no figures to a body with none', () => {
+    const lines = rateLinesFor(years, 1, {})
+    expect(lines.find((line) => line.key === 'city')?.perThousand).toBe('$6.93')
+    const none = rateLinesFor([{ ...second, rates: { city: 6.93 } }], 0, { schools: 9 })
+    expect(none.find((line) => line.key === 'schools')?.percent).toBeNull()
+  })
+})
