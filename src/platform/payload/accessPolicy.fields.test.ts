@@ -8,6 +8,7 @@ import {
   AUDIENCES,
   loadConfig,
 } from './testing/accessHarness'
+import { type FieldNode, fieldChildren } from './testing/configFields'
 
 /**
  * Field-level access across the whole config (#140, #299): hidden fields refuse writes, and
@@ -22,21 +23,13 @@ beforeAll(async () => {
 }, 60_000)
 
 describe('server-only fields', () => {
-  type Node = {
-    name?: string
-    hidden?: boolean
-    access?: Partial<Record<'create' | 'update', unknown>>
-    fields?: Node[]
-    tabs?: Node[]
-    blocks?: Node[]
-  }
+  type Node = FieldNode
 
   /** Every field below `fields`, nested ones included, as [path, field]. */
   const allFields = (fields: Node[], path: string): [string, Node][] =>
     fields.flatMap((field) => {
       const here = field.name ? `${path}.${field.name}` : path
-      const children = [...(field.fields ?? []), ...(field.tabs ?? []), ...(field.blocks ?? [])]
-      return [[here, field] as [string, Node], ...allFields(children, here)]
+      return [[here, field] as [string, Node], ...allFields(fieldChildren(field), here)]
     })
 
   const STAFF = [
