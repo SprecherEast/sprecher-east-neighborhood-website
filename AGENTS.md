@@ -53,7 +53,7 @@ rules, with the owner's direction and what enforces each, are in
 ## The only way code reaches `main` and production
 
 Merging to `main` deploys to production automatically (`.github/workflows/deploy.yml`). So every
-change, however small, follows these five steps:
+change follows these five steps:
 
 1. **Issue first,** created with a form in `.github/ISSUE_TEMPLATE/`, with the problem (or goal) and
    acceptance criteria. Labels, from `.github/label-policy.json` (the forms apply them):
@@ -89,8 +89,7 @@ change, however small, follows these five steps:
    conversation is open. A review of an earlier head still counts only when the head changed because
    a PR below it merged (or `main` moved) and the PR's own diff is unchanged; if a PR below changed
    after the review, this PR needs a new review even when its own diff didn't change; it can be
-   short, checking it against what changed below. The owner doesn't need to be involved, but he
-   can merge, hold or revert anything.
+   short, checking it against what changed below. The owner can merge, hold or revert anything, and a visual change with a pull request preview waits for his feedback.
    A PR labeled `needs owner`, or whose issue is, waits for his answer. A stack merges one layer at
    a time from the bottom, waiting for each layer's checks on its rebased head and, if the merge
    started a deploy, for the deploy to succeed
