@@ -38,6 +38,8 @@ describe('SocialSignIn', () => {
     expect(logo?.getAttribute('alt')).toBe('')
     // Full width like the other quick ways, so the buttons line up
     expect(google.className).toMatch(/w-full/)
+    // The kit's `lg` button, 48 px tall, like the passkey button (#1375)
+    expect(google.className).toMatch(/min-h-12/)
   })
 })
 

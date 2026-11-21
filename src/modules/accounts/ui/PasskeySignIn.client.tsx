@@ -10,6 +10,7 @@ import { getPasskeyLoginOptions, logInWithPasskey } from '../actions'
 import { ACCOUNT_PATH } from '../domain/paths'
 import { PasskeyButtonRoom } from './PasskeyButtonRoom'
 import { PasskeyButtonStack } from './PasskeyButtonStack'
+import { SIGN_IN_BUTTON_SIZE } from './signInButton'
 import { getPasskey, passkeyAutofillSupported, passkeysSupported } from './passkeyBrowser'
 import {
   PASSKEY_LOGIN_LABEL,
@@ -108,6 +109,7 @@ export function PasskeySignIn({ rememberMe }: { rememberMe: boolean }) {
         type="button"
         variant="secondary"
         fullWidth
+        size={SIGN_IN_BUTTON_SIZE}
         loading={busy}
         iconStart={<BrandLogo brand="passkey" />}
         onClick={() => void run(false)}
