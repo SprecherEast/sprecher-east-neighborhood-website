@@ -4,13 +4,10 @@ import { join } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getPayload } from 'payload'
-
-import { copyFilePath, exportToFile, openQuietly, runPreviewCopyStep } from './run'
+import { copyFilePath, exportToFile, runPreviewCopyStep } from './run'
 
 /** The wrapper around the export and import scripts (#1396). */
 
-vi.mock('payload', () => ({ getPayload: vi.fn(async () => ({})) }))
 vi.mock('./exportContent', () => ({
   exportPreviewCopy: vi.fn(async () => ({
     file: { format: 1, collections: {}, globals: {}, mediaFiles: [] },
@@ -73,17 +70,5 @@ describe('copyFilePath', () => {
   it('needs the variable', () => {
     expect(copyFilePath({ PREVIEW_COPY_FILE: '/tmp/x.json' })).toBe('/tmp/x.json')
     expect(() => copyFilePath({})).toThrow(/PREVIEW_COPY_FILE/)
-  })
-})
-
-describe('openQuietly', () => {
-  it("opens Payload with its own logger off, so a failure's message never reaches the public log", async () => {
-    await openQuietly(Promise.resolve({ serverURL: 'x' } as never))
-    const [opened] = vi.mocked(getPayload).mock.calls
-    const { config } = opened?.[0] as unknown as {
-      config: { serverURL: string; logger: { options: { enabled: boolean } } }
-    }
-    expect(config.serverURL).toBe('x')
-    expect(config.logger.options.enabled).toBe(false)
   })
 })

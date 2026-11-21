@@ -26,13 +26,17 @@ const numbers = (counts: Record<string, number>) =>
     .join(', ')
 
 /**
- * Opens Payload with its own logger off: a connection or query failure logs its message before our
- * fixed line, and the message could hold a value. Needs no change to the site's config.
+ * Opens Payload with its own logger silent: a connection or query failure logs its message (a
+ * path, a stack) before our fixed line, and the log is public. Needs no change to the site's config.
+ * `level: 'silent'` is what works: Payload turns `enabled: false` back on.
  */
-export async function openQuietly(config: Promise<SanitizedConfig> | SanitizedConfig) {
-  // The type asks for every pino option though pino fills in the rest; `enabled: false` is all it reads
-  const logger = { options: { enabled: false } } as SanitizedConfig['logger']
-  return getPayload({ config: { ...(await config), logger } })
+export async function openQuietly(
+  config: Promise<SanitizedConfig> | SanitizedConfig,
+  key?: string,
+) {
+  // The type asks for every pino option though pino fills in the rest; the level is all it reads
+  const logger = { options: { level: 'silent' } } as SanitizedConfig['logger']
+  return getPayload({ config: { ...(await config), logger }, key })
 }
 
 /** Writes the file for the import: private to its owner, and never over a file that exists. */
