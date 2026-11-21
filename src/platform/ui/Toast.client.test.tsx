@@ -184,11 +184,25 @@ describe('Toast', () => {
       expect(screen.getByRole('list').className).toContain('fixed')
     })
 
-    it('can sit over the top edge of the panel it is in, not fixed to the screen', () => {
+    it('can sit inside the panel it is in, not fixed to the screen', () => {
       render(<Toast message="Saved" placement="panel" onDismiss={() => {}} />)
       const viewport = screen.getByRole('list')
       expect(viewport.className).toContain('absolute')
       expect(viewport.className).not.toContain('fixed')
+    })
+
+    it('stays under the site header when the page scrolls, unless it is fixed to the screen (#1392)', () => {
+      // The sticky header is z-50: a toast in the page sits below it, one on the screen above the page
+      for (const placement of ['panel', 'above'] as const) {
+        const { unmount } = render(
+          <Toast message="Saved" placement={placement} onDismiss={() => {}} />,
+        )
+        expect(screen.getByRole('list').className).toContain('z-10')
+        expect(screen.getByRole('list').className).not.toContain('z-50')
+        unmount()
+      }
+      render(<Toast message="Saved" onDismiss={() => {}} />)
+      expect(screen.getByRole('list').className).toContain('z-50')
     })
 
     it('can sit directly above the container it is in, touching its top edge', () => {

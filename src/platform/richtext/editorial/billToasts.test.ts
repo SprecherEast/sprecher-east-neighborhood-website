@@ -14,7 +14,8 @@ describe('toastsOf (#1379)', () => {
       ending: 'accept',
       acceptLabel: 'Got it',
     })
-    expect(toasts.ratesOwn?.message).toBe(DEFAULT_BILL_TOASTS.ratesOwn.message)
+    // A year whose rates are all its own starts with no notice (#1392)
+    expect(toasts.ratesOwn).toBeNull()
   })
 
   it('uses what the editor wrote for a toast, and the seconds as milliseconds', () => {
@@ -84,9 +85,7 @@ describe('toastsOf (#1379)', () => {
 
   it('keeps the note the rates panel had, as the carried-rates toast, in a block that never saved its toasts (#1380)', () => {
     expect(toastsOf(undefined, 'Wait for {year}.').ratesCarried?.message).toBe('Wait for {year}.')
-    expect(toastsOf(undefined, 'Wait for {year}.').ratesOwn?.message).toBe(
-      DEFAULT_BILL_TOASTS.ratesOwn.message,
-    )
+    expect(toastsOf(undefined, 'Wait for {year}.').ratesOwn).toBeNull()
   })
 
   it('turns the carried-rates toast off when the editor had emptied that note, and ignores it once the toasts are saved', () => {
