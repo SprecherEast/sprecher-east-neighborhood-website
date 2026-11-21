@@ -63,4 +63,4 @@ if [ "$failures" != 0 ]; then
   echo "::error title=Preview isolation::the isolation check failed ($failures problems): this preview must not run beside production"
   exit 1
 fi
-echo "::notice title=Preview isolation::the preview account can't read production's files or reach Caddy's admin endpoint"
+echo "::notice title=Preview isolation::Preview isolation: the preview account can't read production's files or reach Caddy's admin endpoint"

@@ -257,6 +257,28 @@ describe('preview-host-guards.sh: production’s private folders', () => {
     expect(out).not.toContain(`${p('backups')}: mode`)
   })
 
+  it('always says each folder’s state and whether Caddy’s own check ran, so the output holds the proof (#1075)', async () => {
+    fs.rmSync(p('umami'), { recursive: true })
+    const first = await run()
+    expect(first.out).toContain(`${p('prod')}: closed now (was 755)`)
+    expect(first.out).toContain(`${p('backups')}: already closed (mode 700)`)
+    expect(first.out).toContain(`${p('umami')}: not there`)
+    expect(first.out).toContain(
+      "Caddy's own check: ran as caddy, before and after: validate passed and it read the Caddyfile as root does",
+    )
+    const second = await run()
+    expect(second.out).toContain(`${p('prod')}: already closed (mode 750)`)
+    expect(second.out).toContain(
+      "Caddy's own check: not needed: no guarded folder was open to others",
+    )
+    expect(second.out).toContain('already in place') // the older line stays
+  })
+
+  it('says when Caddy’s own check did not run, and why, when it is in doubt', async () => {
+    const { out } = await run([], { STUB_NO_CADDY_USER: '1' })
+    expect(out).toContain("Caddy's own check: not run:")
+  })
+
   it('keeps what the group had, and takes only what others had', async () => {
     fs.chmodSync(p('prod'), 0o775)
     await run()

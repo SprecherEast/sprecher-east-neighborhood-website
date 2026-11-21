@@ -73,6 +73,10 @@ The allowed labels are in [`.github/label-policy.json`](../../.github/label-poli
     `src/platform/` (`ui/`, `richtext/`, `theme/`, `lib/`, `turnstile/`), `src/themes/`, the
     frontend layout and `globals.css`, and the site header, nav, footer and logo. The labeler sets
     it from the changed paths (#447); its reviewer checks every page that uses the changed code.
+  - `preview`: builds a pull request preview, a temporary copy of the site at
+    `pr-<number>.dev.sprechereast.com` (#1070). Only this label starts one (each preview orders a
+    certificate from a weekly budget production shares); the AI agent that made a visual change asks the
+    owner, and adds the label once he says yes. Never on a fork or Dependabot pull request.
 
 ### Waits for owner
 

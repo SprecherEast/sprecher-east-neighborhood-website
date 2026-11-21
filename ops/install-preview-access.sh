@@ -313,8 +313,13 @@ if install_file "$PREVIEW_HOME/.ssh/authorized_keys" 644 - "$keys_text"; then
 fi
 
 trap - ERR
+# One line on every run, whether or not anything changed, so the deploy's output always says whether a key
+# is allowed and what the two checks said (the first production run printed neither, #1075).
+key_state="$key_note"
+[ -z "$key_line" ] || key_state="key $fingerprint allowed"
+passed() { [ "$1" = 0 ] && echo passed || echo "did not pass (status $1)"; }
+report "Preview access: $key_state; host guards $(passed "$guards_status"); isolation check $(passed "$isolation_status")"
 if [ "${#changes[@]}" = 0 ]; then
-  key_state="$key_note"
   [ -z "$key_line" ] || key_state="key $fingerprint"
   report "Preview access already in place: account $PREVIEW_USER, wrapper in $PREVIEW_ACCESS_DIR, $key_state"
 else
