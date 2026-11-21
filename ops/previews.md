@@ -83,6 +83,9 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
 - **The restricted account** (#1345). Previews deploy and run as one account whose home is root-owned,
   reached by a key that can run only the wrapper's five actions, with one sudo rule for the Caddy block
   script. What it is, what it may do and how to check it: [`README.md`](README.md#pull-request-preview-account).
+- **The key is in place** (#1385). The public half is committed as `ops/preview-deploy-key.pub`; the private half is the
+  `PREVIEW_SSH_KEY` secret of the GitHub environment `preview`, and nowhere else. The production deploy writes the key's
+  line only when the host guards and the isolation check pass; its log says which.
   `environment.sh` holds its names (`PREVIEW_USER`, `PREVIEW_HOME`, `PREVIEW_ACCESS_DIR`), the
   upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, 10) and the number and commit patterns, so no script writes its own.
 - **What the account can't reach** (#1346). `preview-isolation-check.sh` runs as the account before and after every
