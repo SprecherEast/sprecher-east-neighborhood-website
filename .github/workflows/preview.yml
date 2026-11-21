@@ -13,8 +13,9 @@ name: Pull request preview
 #
 # Three kinds of job, so the key never sits beside code nobody has reviewed:
 #   gate, build   no environment, no secret; build runs the pull request's npm install scripts
-#   facts, deploy the `preview` environment (the key); they check out main's scripts, never the pull
-#                 request's, and never run, unpack or read the build: it only goes to the server on stdin
+#   facts, deploy the `preview` environment (the key); they check out the default branch's scripts,
+#                 never the pull request's or its base's (a stacked pull request's base is another unreviewed
+#                 branch), and never unpack or run the build: it is listed, and sent to the server on stdin
 #   report        a write token for the pull request comment, and nothing else
 # No job names `production`, and none calls a privileged workflow: the wrapper's deploy prints values from
 # the release into this public log.
@@ -26,17 +27,15 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  # One group per pull request, so a newer push replaces a deploy in progress (the server-side deploy
-  # ignores hangups, so a cancelled run never leaves a half switch). A label other than `preview` only
-  # skips the gate, and gets a group of its own so it never cancels a deploy.
-  group: pull-request-preview-${{ github.event.pull_request.number }}${{ github.event.action == 'labeled' && github.event.label.name != 'preview' && format('-other-label-{0}', github.run_id) || '' }}
-  cancel-in-progress: true
-
 jobs:
   gate:
     name: Pull request preview gate
     if: github.event.action != 'labeled' || github.event.label.name == 'preview'
+    # A newer push replaces an older run's gate; a label other than `preview` only skips it and gets a group
+    # of its own, so it never cancels anything.
+    concurrency:
+      group: pull-request-preview-gate-${{ github.event.pull_request.number }}${{ github.event.action == 'labeled' && github.event.label.name != 'preview' && format('-other-label-{0}', github.run_id) || '' }}
+      cancel-in-progress: true
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
@@ -69,10 +68,11 @@ jobs:
       available: ${{ steps.facts.outputs.available }}
       node: ${{ steps.facts.outputs.node }}
     steps:
-      # main's scripts, never the pull request's (this job holds the key)
+      # the default branch's scripts, never the pull request's or its base's: a stacked pull request's base is
+      # another unreviewed branch (this job holds the key)
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
 
       - name: Check the environment holds the connection values
@@ -108,6 +108,9 @@ jobs:
     name: Build preview
     needs: [gate, facts]
     if: needs.facts.outputs.available == 'yes'
+    concurrency:
+      group: pull-request-preview-build-${{ github.event.pull_request.number }}${{ github.event.action == 'labeled' && github.event.label.name != 'preview' && format('-other-label-{0}', github.run_id) || '' }}
+      cancel-in-progress: true
     runs-on: ubuntu-24.04 # the server runs Ubuntu 24.04 too
     timeout-minutes: 30
     # No environment and no secret in this job: it runs the pull request's npm install scripts.
@@ -151,6 +154,12 @@ jobs:
     name: Deploy preview
     needs: [gate, facts, build]
     if: needs.build.result == 'success'
+    # Never cancelled: a cancel in the middle of the deploy over ssh could leave the wrapper's checks unrun or two
+    # deploys of one preview overlapping (the deploy script has no lock). A newer push's deploy waits its turn,
+    # and replaces only a deploy that is still waiting.
+    concurrency:
+      group: pull-request-preview-deploy-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
     environment: preview # the preview key and connection values
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -158,10 +167,11 @@ jobs:
       result: ${{ steps.deploy.outputs.result }}
       url: ${{ steps.deploy.outputs.url }}
     steps:
-      # main's scripts, never the pull request's (this job holds the key)
+      # the default branch's scripts, never the pull request's or its base's: a stacked pull request's base is
+      # another unreviewed branch (this job holds the key)
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
 
       # The build is only a file to send: it is never unpacked or run here.
@@ -199,7 +209,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.event.repository.default_branch }}
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
           persist-credentials: false

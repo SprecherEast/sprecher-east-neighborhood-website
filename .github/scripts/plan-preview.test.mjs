@@ -86,8 +86,8 @@ describe('plan-preview.sh', () => {
     expect(r.written).toBe('build=true\n')
   })
 
-  it('compares a pull request against its own base, not against main as it is now', () => {
-    const base = git('rev-parse', 'main')
+  it('compares a pull request against the commit it branched from, not against main as it is now', () => {
+    // main moves on with code after the branch is made; base.sha is main's tip then, not an ancestor of the head
     git('checkout', '-q', '-b', 'feature')
     fs.writeFileSync(path.join(repo, 'notes.md'), 'docs only\n')
     git('add', '-A')
@@ -95,9 +95,10 @@ describe('plan-preview.sh', () => {
     const head = git('rev-parse', 'HEAD')
     git('checkout', '-q', 'main')
     fs.mkdirSync(path.join(repo, 'src'))
-    fs.writeFileSync(path.join(repo, 'src/new.ts'), 'export {}\n') // main moved on with code
+    fs.writeFileSync(path.join(repo, 'src/new.ts'), 'export {}\n')
     git('add', '-A')
     git('commit', '-q', '-m', 'code on main')
+    const base = git('rev-parse', 'main')
     const r = spawnSync('bash', [PREVIEW], {
       cwd: repo,
       encoding: 'utf8',

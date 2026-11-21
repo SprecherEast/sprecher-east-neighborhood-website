@@ -10,6 +10,7 @@ import { PREVIEW_ADMIN_EMAIL, seedPreviewDatabase } from './preview-database'
  */
 
 let payload: Payload
+const PREVIEW = { PREVIEW_NUMBER: '7' }
 
 beforeAll(async () => {
   vi.stubEnv('DATABASE_URI', 'file::memory:')
@@ -29,10 +30,18 @@ const accounts = () =>
   })
 
 describe('seedPreviewDatabase', () => {
+  it.each([{}, { PREVIEW_NUMBER: '' }, { PREVIEW_NUMBER: '7; id' }])(
+    'refuses to run without a pull request number (production’s database), and makes nothing (%j)',
+    async (env) => {
+      await expect(seedPreviewDatabase(payload, env)).rejects.toThrow('only for a pull request')
+      expect((await accounts()).totalDocs).toBe(0)
+    },
+  )
+
   it('makes one admin account on an empty database, and only once', async () => {
     expect((await accounts()).totalDocs).toBe(0)
-    const send = vi.spyOn(payload, 'sendEmail') // a verification email would carry a link in
-    expect(await seedPreviewDatabase(payload)).toBe('seeded')
+    const send = vi.spyOn(payload.email, 'sendEmail') // Payload's verification mail goes through this one
+    expect(await seedPreviewDatabase(payload, PREVIEW)).toBe('seeded')
     expect(send).not.toHaveBeenCalled()
     const { docs } = await accounts()
     expect(docs).toHaveLength(1)
@@ -42,14 +51,23 @@ describe('seedPreviewDatabase', () => {
 
   it('leaves a database that has accounts as it is, so a redeploy changes nothing', async () => {
     const before = (await accounts()).docs[0]
-    expect(await seedPreviewDatabase(payload)).toBe('kept')
+    expect(await seedPreviewDatabase(payload, PREVIEW)).toBe('kept')
     const { docs, totalDocs } = await accounts()
     expect(totalDocs).toBe(1)
     expect(docs[0].updatedAt).toBe(before.updatedAt)
   })
 
-  it('gives the account a password nobody knows: not guessable, and not what a seed would hard-code', async () => {
-    for (const guess of ['password', 'admin', 'preview', 'preview-admin', 'changeme']) {
+  it('gives the account a password nobody knows: it can’t sign in with a guess even once verified', async () => {
+    const [account] = (await accounts()).docs
+    expect(account._verified).toBe(false) // nobody can sign in until it is verified
+    // Verified, as opening an emailed link would: only the password guards the account now
+    await payload.db.updateOne({
+      collection: 'users',
+      id: account.id,
+      data: { _verified: true },
+      returning: false,
+    })
+    for (const guess of ['password', 'admin', 'preview', 'preview-admin', 'changeme', '']) {
       await expect(
         payload.login({
           collection: 'users',

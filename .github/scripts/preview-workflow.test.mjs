@@ -52,10 +52,30 @@ describe('the preview workflow’s trigger', () => {
     expect(workflow.on.pull_request.types).toEqual(['opened', 'synchronize', 'reopened', 'labeled'])
   })
 
-  it('has one group per pull request, replacing a deploy in progress, and a label other than `preview` never cancels one', () => {
-    expect(workflow.concurrency['cancel-in-progress']).toBe(true)
-    expect(workflow.concurrency.group).toContain('github.event.pull_request.number')
-    expect(workflow.concurrency.group).toContain('github.run_id') // the unique group of another label
+  it('has no workflow-level cancellation, which would cancel a deploy in the middle of its ssh session', () => {
+    expect(workflow.concurrency).toBeUndefined()
+  })
+
+  it.each(['gate', 'build'])(
+    '%s is replaced by a newer push, and a label other than `preview` never cancels it',
+    (id) => {
+      const c = jobs[id].concurrency
+      expect(c['cancel-in-progress']).toBe(true)
+      expect(c.group).toContain('github.event.pull_request.number')
+      expect(c.group).toContain('github.run_id') // the unique group of another label
+    },
+  )
+
+  it('deploy has one group per pull request and is never cancelled: a newer deploy waits its turn', () => {
+    const c = jobs.deploy.concurrency
+    expect(c['cancel-in-progress']).toBe(false)
+    expect(c.group).toContain('github.event.pull_request.number')
+    expect(c.group).not.toContain('github.run_id')
+    for (const id of ['facts', 'report'])
+      expect(jobs[id].concurrency?.['cancel-in-progress']).not.toBe(true)
+  })
+
+  it('skips the gate for a label other than `preview`', () => {
     expect(jobs.gate.if).toContain("github.event.label.name == 'preview'")
   })
 
@@ -72,15 +92,20 @@ describe('the jobs that hold the preview key', () => {
     expect(codeOf('preview.yml')).not.toMatch(/environment:\s*['"]?production/i)
   })
 
-  it.each(KEY_JOBS)('%s checks out main’s scripts, never the pull request’s code', (id) => {
-    expect(checkouts(id).length).toBeGreaterThan(0)
-    for (const c of checkouts(id)) {
-      expect(c.with.ref).toBe('${{ github.event.pull_request.base.sha }}')
-      expect(c.with['persist-credentials']).toBe(false)
-    }
-    // The commit's name (hex) is passed to the deploy script; a branch name or the merge ref never is
-    expect(JSON.stringify(jobs[id])).not.toMatch(/head_ref|head\.ref|merge_commit|pull\/\$/)
-  })
+  it.each(KEY_JOBS)(
+    '%s checks out the default branch’s scripts, never the pull request’s code or its base’s (a stacked pull request’s base is another branch)',
+    (id) => {
+      expect(checkouts(id).length).toBeGreaterThan(0)
+      for (const c of checkouts(id)) {
+        expect(c.with.ref).toBe('${{ github.event.repository.default_branch }}')
+        expect(c.with['persist-credentials']).toBe(false)
+      }
+      // The commit's name (hex) is passed to the deploy script; a branch name or the merge ref never is
+      expect(JSON.stringify(jobs[id])).not.toMatch(
+        /head_ref|head\.ref|merge_commit|base\.sha|base\.ref|pull\/\$/,
+      )
+    },
+  )
 
   it.each(KEY_JOBS)(
     '%s runs only the preview scripts and builds, installs or unpacks nothing',
@@ -153,7 +178,7 @@ describe('the jobs that run unreviewed code, or write to the pull request', () =
     expect(jobs.report.permissions).toEqual({ contents: 'read', 'pull-requests': 'write' })
     for (const id of ['gate', 'facts', 'build', 'deploy'])
       expect(jobs[id].permissions).toBeUndefined()
-    expect(checkouts('report')[0].with.ref).toBe('${{ github.event.pull_request.base.sha }}')
+    expect(checkouts('report')[0].with.ref).toBe('${{ github.event.repository.default_branch }}')
   })
 
   it('the gate runs on every event, and the rest wait for it', () => {

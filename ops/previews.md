@@ -117,8 +117,14 @@ required check: a failed preview never blocks a merge or the production deploy.
 - **Jobs.** `gate` (no secrets) → `facts` (reads the server's Node version as the preview account) →
   `build` (no environment, no secret; the same `ops/build-release.sh` as production, with the preview's
   address as the public site address and the Turnstile test site key, from `environment.sh`) → `deploy` →
-  `report` (the comment; a write token for the pull request and nothing else). A push replaces a deploy in
-  progress (one concurrency group per pull request; a label other than `preview` never cancels one).
+  `report` (the comment; a write token for the pull request and nothing else). A push cancels an older
+  run's gate and build, but **never a deploy in progress**: cancelling in the middle of the deploy over ssh could
+  leave the wrapper's checks unrun, and the deploy script has no lock, so two deploys of one preview could
+  overlap. A newer deploy waits its turn (`preview.yml`'s job-level group per pull request) and replaces only a
+  deploy still waiting. The wrapper itself does not ignore a dropped connection; a dropped runner can still
+  leave a deploy half-run (deploy-release.sh ignores hangups, a broken pipe is not covered), which the next
+  deploy or `teardown` of that number repairs. A label other than `preview` never cancels anything. Re-running
+  a run, reopening, or re-adding the label at a commit that is already live reports it live without uploading.
 - **What is built.** The pull request's head commit, not its merge with `main`.
 - **The key.** The `preview` GitHub environment holds only the restricted account's connection values and
   its private key: `PREVIEW_SSH_HOST`, `PREVIEW_SSH_USER`, `PREVIEW_SSH_PORT` (optional, default 22),
@@ -128,8 +134,9 @@ required check: a failed preview never blocks a merge or the production deploy.
   never printed or committed. Only `facts` and `deploy` name the environment. No job names `production`,
   and none calls a privileged workflow: the deploy prints release values into this public log.
 - **Where the key never meets unreviewed code.** `build` runs the pull request's install scripts with no
-  key. `facts` and `deploy` check out `main`'s scripts (the pull request's base), never the pull request's,
-  and only send the build to the server on stdin: nothing on the runner unpacks, reads or runs it. On a
+  key. `facts`, `deploy` and `report` check out the repository's default branch, never the pull request's
+  or its base (a stacked pull request's base is another unreviewed branch), and only list the build's archive and
+  send it to the server on stdin: nothing on the runner unpacks or runs it. On a
   same-repository pull request this workflow file is the pull request's own copy, so a dishonest change
   could read the environment's key; the server is the boundary. The key can run only the wrapper's five
   actions, and a failed isolation check takes the preview down (above). `.github/scripts/preview-workflow.test.mjs`
@@ -138,7 +145,7 @@ required check: a failed preview never blocks a merge or the production deploy.
   AI agent's cloud session may not have). On a trusted machine: `ssh-keygen -t ed25519 -N '' -C
 sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/preview-deploy-key.pub` through a
   pull request (the production deploy then writes the key's line, but only when the host guards and the isolation
-  check pass); in the repository's Settings → Environments, create `preview` and add the five secrets above
+  check pass); in the repository's Settings → Environments, create `preview` (with no deployment-branch restriction to `main`: a run on a pull request's ref would be rejected and fail instead of reporting "unavailable") and add the five secrets above
   (`PREVIEW_SSH_KEY` is the whole private file; `PREVIEW_SSH_KNOWN_HOSTS` is `ssh-keyscan -t ed25519 <host>`'s
   line; `PREVIEW_SSH_USER` is `sprecher-preview`); delete the private file. Or through the API: `PUT
 /repos/{owner}/{repo}/environments/preview`, then `gh secret set <NAME> --env preview`. Until all is in place the
@@ -166,6 +173,9 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   doesn't take it: the production deploy writes the key's line only when the host guards and the isolation
   check pass, so "no key line" shows from outside as a refused sign-in. It is reported once and **never
   retried**.
+- **A pull request opened before this was merged** has no `e2e/previewSeed.ts`, so its preview deploy stops with
+  "the preview's database could not be prepared" until it is rebased on `main`. The seed also refuses to run unless
+  the deploy named a pull request number, so it can never touch production's database.
 - **Not covered.** A detached process a preview starts survives `teardown`, which stops only PM2's process
   (the account can't schedule jobs: cron and at are denied). Removal when the pull request closes, the nightly
   sweep and the real cap are later issues on #1070.

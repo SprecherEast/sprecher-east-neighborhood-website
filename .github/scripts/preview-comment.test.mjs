@@ -36,10 +36,16 @@ describe('commentBody', () => {
     ['unreadable', 'could not be measured'],
     ['build-failed', 'The build failed.'],
     ['unavailable', 'Previews are unavailable.'],
+    ['check-failed', 'check of the preview server failed'],
   ])('says what happened for %s, with no link to a preview that isn’t there', (state, words) => {
     const text = commentBody({ ...base, state })
     expect(text).toContain(words)
     expect(text).not.toContain('dev.sprechereast.com')
+  })
+
+  it('names an inherited property as an unknown state, not as a crash further on', () => {
+    expect(() => commentBody({ ...base, state: 'constructor' })).toThrow('unknown state')
+    expect(previewState({ available: 'yes', deployResult: 'constructor' })).toBe('failed')
   })
 
   it.each([
@@ -52,6 +58,16 @@ describe('commentBody', () => {
       'a preview address of another pull request',
       { state: 'live', url: 'https://pr-8.dev.sprechereast.com' },
     ],
+    [
+      'a live preview address with Markdown in it',
+      { state: 'live', url: 'https://pr-7.x/](https://evil.example)' },
+    ],
+    [
+      'a live preview address with a path',
+      { state: 'live', url: 'https://pr-7.dev.sprechereast.com/x' },
+    ],
+    ['a live preview address with no domain', { state: 'live', url: 'https://pr-7.' }],
+    ['a state that is an inherited property name', { state: 'constructor' }],
     ['a live preview with a link to another site', { state: 'live', url: 'https://example.com' }],
   ])('refuses %s', (_name, change) => {
     expect(() =>
@@ -74,13 +90,17 @@ describe('previewState', () => {
     expect(previewState({ available: 'yes', buildResult: 'failure' })).toBe('build-failed')
   })
 
-  it('does not call a skipped build a failed one: the step before it failed', () => {
-    expect(previewState({ available: '', buildResult: 'skipped' })).toBe('failed')
+  it('says the check failed, not that a deploy failed, when the server check failed for another reason', () => {
+    expect(previewState({ available: '', buildResult: 'skipped' })).toBe('check-failed')
+    expect(commentBody({ ...base, state: 'check-failed' })).toContain('nothing was built')
+    expect(commentBody({ ...base, state: 'check-failed' })).not.toContain('put it back')
   })
 
   it('treats anything else, or a result it doesn’t know, as a failed deploy', () => {
     expect(previewState({ available: 'yes', buildResult: 'success' })).toBe('failed')
-    expect(previewState({ deployResult: 'rm -rf /', buildResult: 'success' })).toBe('failed')
+    expect(
+      previewState({ available: 'yes', deployResult: 'rm -rf /', buildResult: 'success' }),
+    ).toBe('failed')
   })
 })
 

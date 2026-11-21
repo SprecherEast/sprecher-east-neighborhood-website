@@ -122,7 +122,9 @@ with no secret, a deploy through the wrapper, and one comment on the pull reques
 | `e2e/previewSeed.ts`                  | VPS    | A preview's first database: one admin account nobody can sign in to; run by `deploy-release.sh` after the migrations, before the switch     |
 
 The `preview` environment, its key and what happens when either is missing, the jobs that hold the key and the
-ones that don't, and what is not covered: [`previews.md`](previews.md#the-workflow-1075). To read what a
+ones that don't, and what is not covered: [`previews.md`](previews.md#the-workflow-1075). The production deploy's guards and installer also print, on every run, one `Preview host guards: <each folder's
+state> | Caddy's own check: <ran as … or not needed or not run: why>` line and one `Preview access: <key state>; host
+guards …; isolation check …` line, so the log always shows whether a key is allowed and what the checks said. To read what a
 preview deploy did, open the workflow run: the wrapper and the scripts print annotations and no secret. GitHub
 shows at most ten notice annotations per step, so the full text is in the step's log.
 

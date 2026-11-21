@@ -136,6 +136,18 @@ describe('preview-deploy.sh', () => {
     expect(r.written).toMatch(/result=live\n$/)
   })
 
+  it('reports a preview that is already live at this commit as live, without uploading or deploying', () => {
+    const r = deploy({ STUB_LIST: `preview=7 commit=${SHA}\n`, STUB_EXIT_UPLOAD: '2' })
+    expect(r.code).toBe(0)
+    expect(r.written).toBe('url=https://pr-7.dev.sprechereast.com\nresult=live\n')
+    expect(r.log).toBe('ssh list\n')
+  })
+
+  it('still deploys when the live commit is another one', () => {
+    const r = deploy({ STUB_LIST: `preview=7 commit=${'b'.repeat(40)}\n` })
+    expect(r.log).toContain(`ssh upload 7 ${SHA}`)
+  })
+
   it('refuses a second preview while another is up, and says so without failing', () => {
     const r = deploy({ STUB_LIST: `preview=3 commit=${'b'.repeat(40)}\npreview=9 commit=none\n` })
     expect(r.code).toBe(0)

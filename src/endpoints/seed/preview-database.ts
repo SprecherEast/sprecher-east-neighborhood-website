@@ -16,7 +16,14 @@ export type PreviewSeedResult = 'seeded' | 'kept'
 
 /** Makes the admin account when the database has no account at all; changes nothing otherwise, so it is
  * safe to run on every deploy of the same preview. */
-export async function seedPreviewDatabase(payload: Payload): Promise<PreviewSeedResult> {
+export async function seedPreviewDatabase(
+  payload: Payload,
+  env: Record<string, string | undefined> = process.env,
+): Promise<PreviewSeedResult> {
+  // Defence in depth: the deploy sets PREVIEW_NUMBER only for a preview, so this never runs against production's database.
+  if (!/^[1-9][0-9]{0,5}$/.test(env.PREVIEW_NUMBER ?? '')) {
+    throw new Error('the preview seed runs only for a pull request preview')
+  }
   const { totalDocs } = await payload.count({ collection: 'users', overrideAccess: true })
   if (totalDocs > 0) return 'kept'
   await payload.create({

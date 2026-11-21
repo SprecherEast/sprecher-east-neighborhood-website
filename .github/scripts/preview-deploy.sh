@@ -63,10 +63,22 @@ unpacked_bytes "$ARCHIVE" "$PREVIEW_UNPACK_MAX_BYTES" >/dev/null || measured=$?
 listing=$(ssh -o ConnectTimeout=30 -o ConnectionAttempts=1 vps list) ||
   finish failed 1 "the server did not list its previews"
 others=0
+already_live=no
 while read -r line; do
   [[ "$line" =~ ^preview=([0-9]+)\ commit= ]] || continue
   [ "${BASH_REMATCH[1]}" = "$NUMBER" ] || others=$((others + 1))
+  [ "$line" != "preview=$NUMBER commit=$SHA" ] || already_live=yes
 done <<<"$listing"
+
+# The address, from the same file the server reads (a pull request's number alone decides it).
+preview_url() { (PREVIEW_NUMBER="$NUMBER" && . "$OPS_DIR/environment.sh" && echo "$SITE_URL"); }
+
+# A re-run, a reopened pull request or the label added again at the commit that is live: the wrapper refuses
+# to upload the live release, and nothing needs deploying, so it is live as it is.
+if [ "$already_live" = yes ]; then
+  echo "url=$(preview_url)" >>"$GITHUB_OUTPUT"
+  finish live 0 "preview $NUMBER is already live at commit ${SHA:0:7}; nothing was sent"
+fi
 if [ "$others" -ge "$PREVIEWS_AT_ONCE" ]; then
   finish limit 0 "another preview is up and only $PREVIEWS_AT_ONCE is allowed at once for now; this one was not started"
 fi
@@ -80,9 +92,7 @@ status=0
 ssh vps "deploy $NUMBER $SHA" >"$log" 2>&1 || status=$?
 cat "$log"
 if [ "$status" -eq 0 ]; then
-  # The address, from the same file the server reads (a pull request's number alone decides it).
-  url=$(PREVIEW_NUMBER="$NUMBER" && . "$OPS_DIR/environment.sh" && echo "$SITE_URL")
-  echo "url=$url" >>"$GITHUB_OUTPUT"
+  echo "url=$(preview_url)" >>"$GITHUB_OUTPUT"
   finish live 0 "preview $NUMBER is live at commit ${SHA:0:7}"
 fi
 # The wrapper's own fixed text, not the log: it says a failed check took the preview down.

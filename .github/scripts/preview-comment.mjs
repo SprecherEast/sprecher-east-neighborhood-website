@@ -23,6 +23,10 @@ const STATES = {
     'The build is bigger than a preview may be, as sent or once unpacked.',
   ],
   unreadable: ['Not started.', 'The build’s archive could not be measured, so it was not sent.'],
+  'check-failed': [
+    'Not started.',
+    'The check of the preview server failed (the log says how), so nothing was built.',
+  ],
   'build-failed': ['The build failed.', 'Nothing was deployed. The workflow run has the log.'],
   unavailable: [
     'Previews are unavailable.',
@@ -34,15 +38,16 @@ const STATES = {
  * `available` is the facts job's output, `buildResult` the build job's result and `deployResult` the
  * deploy script's output (empty when it never got to write one). */
 export function previewState({ available, buildResult, deployResult }) {
-  if (deployResult && deployResult in STATES) return deployResult
+  if (deployResult && Object.hasOwn(STATES, deployResult)) return deployResult
   if (available === 'no') return 'unavailable'
+  if (available !== 'yes') return 'check-failed'
   if (buildResult === 'failure') return 'build-failed'
   return 'failed'
 }
 
 /** The comment's text. Throws on a value that isn't what it should be: better no comment than a wrong one. */
 export function commentBody({ state, number, sha, url, time, runUrl }) {
-  if (!(state in STATES)) throw new Error('unknown state')
+  if (!Object.hasOwn(STATES, state)) throw new Error('unknown state')
   if (!/^[1-9][0-9]{0,5}$/.test(String(number))) throw new Error('not a pull request number')
   if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error('not a commit')
   if (!/^https:\/\/[a-z0-9.-]+\/[\w.-]+\/[\w.-]+\/actions\/runs\/[0-9]+$/.test(runUrl))
@@ -52,7 +57,7 @@ export function commentBody({ state, number, sha, url, time, runUrl }) {
   let sentence = `**${headline}**${rest ? ` ${rest}` : ''}`
   if (state === 'live') {
     if (
-      !/^https:\/\/pr-[1-9][0-9]{0,5}\.[a-z0-9.-]+$/.test(url) ||
+      !/^https:\/\/pr-[1-9][0-9]{0,5}\.[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(url) ||
       !url.startsWith(`https://pr-${number}.`)
     )
       throw new Error('not the preview address')

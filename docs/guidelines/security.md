@@ -191,8 +191,8 @@ isolation check proves it before and after every preview deploy. What holds now:
   weekly budget production shares). A fork or Dependabot run gets no secrets and a read-only token, so it
   gets no preview. The build job runs the pull request's install scripts with no environment and no secret.
   The two jobs that hold the preview key (the GitHub environment `preview`, which holds only that key and its
-  connection values) check out `main`'s scripts, never the pull request's, send the build to the server on
-  stdin and never unpack or run it, and no job names `production` or calls a privileged workflow, because the
+  connection values) check out the default branch's scripts, never the pull request's or its base's (a stacked pull request's base is
+  another unreviewed branch), list the build's archive, send it to the server on stdin and never unpack or run it, and no job names `production` or calls a privileged workflow, because the
   wrapper's deploy prints values from the release into the public log. A same-repository pull request's
   workflow file is its own copy, so a dishonest change could read the key: the server is the boundary, since
   the key can run only the wrapper's five actions. The deploy goes through the wrapper only, checks the
