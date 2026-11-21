@@ -198,7 +198,10 @@ its "End-to-end gate" summary in the job log for the decision and the files that
 - **Data and deploy:** database migrations, `.env.local` changes on the server, and the
   rollback plan are all spelled out in the PR.
 - **UI changes:** check visually at mobile and desktop widths, in both themes. Check
-  accessibility (labels, contrast, focus).
+  accessibility (labels, contrast, focus). When the pull request has a pull request preview, open
+  it, check that its comment names the head commit you are reviewing (a different one is stale:
+  say so and review locally), and walk the changed pages there; sign-in is in
+  [`preview-sign-in`](../../../docs/process/preview-sign-in.md). With none, check locally.
 - **`shared-component` label:** the change reaches every page that uses the changed code. Find
   those pages (grep the component or helper's imports) and check each one, not only the pages the
   PR names. Say in the review which pages you checked.

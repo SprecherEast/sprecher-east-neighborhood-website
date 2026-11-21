@@ -1,0 +1,66 @@
+name: Preview sign-in
+
+# Hands a pull request preview's test sign-in to the one who asks, sealed to their one-time public key, so no
+# password is ever in a public place (#1394, epic #1070, #1077; the design and its limits are in
+# ops/previews.md). Run by hand (or by an AI agent) with `workflow_dispatch`, which needs write access to the
+# repository. It runs on dispatch only: never on `pull_request`, and it is not a required check.
+#
+# The job asks the wrapper's `credentials` action, seals the answer with RSA-OAEP and prints only the
+# ciphertext (.github/scripts/preview-credentials.sh); the requester reads it from the run log through the REST
+# API and opens it with the private key, which never leaves their own machine.
+#
+# Honest limit: a dispatch runs this file from the branch it is given, so someone with write access could
+# dispatch a branch whose copy prints the plaintext. That reach already exists (they could change the
+# preview's own code, which holds the same throwaway accounts); the boundary is the restricted account's key
+# and the environment's secrets (ops/previews.md). The script checked out below is always the default branch's.
+
+on:
+  workflow_dispatch:
+    inputs:
+      number:
+        description: The pull request's number (its preview must be live)
+        required: true
+        type: string
+      public_key_base64:
+        description: A one-time RSA public key (3072 bits or more) as PEM, encoded as one line of base64
+        required: true
+        type: string
+
+run-name: Preview sign-in for pull request ${{ inputs.number }}
+
+permissions:
+  contents: read
+
+# One at a time, and never cancelled halfway through the ssh call.
+concurrency:
+  group: preview-sign-in
+  cancel-in-progress: false
+
+jobs:
+  seal:
+    name: Seal the preview's test sign-in
+    environment: preview # the preview key and connection values
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      # the default branch's scripts, never the branch this run was started from (this job holds the key)
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - uses: ./.github/actions/vps-ssh
+        with:
+          host: ${{ secrets.PREVIEW_SSH_HOST }}
+          user: ${{ secrets.PREVIEW_SSH_USER }}
+          port: ${{ secrets.PREVIEW_SSH_PORT || '22' }}
+          key: ${{ secrets.PREVIEW_SSH_KEY }}
+          known-hosts: ${{ secrets.PREVIEW_SSH_KNOWN_HOSTS }}
+
+      # The number reaches the script as an environment variable. The public key is read by the script from the
+      # dispatch event's inputs, never from `env:`: the runner echoes a step's env in the public log, so a private
+      # key sent by mistake would be shown there before the script could refuse it.
+      - name: Seal the sign-in to the public key
+        env:
+          NUMBER: ${{ inputs.number }}
+        run: bash .github/scripts/preview-credentials.sh

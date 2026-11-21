@@ -12,6 +12,61 @@ refuse() { # <fixed reason>
   exit 2
 }
 
+# Root's user id; a test run by someone else sets its own.
+ROOT_UID="${PREVIEW_ACCESS_ROOT_UID:-0}"
+
+# True when <bytes> more in <folder>'s filesystem still leaves production's floor of free space (PREVIEW_FREE_FLOOR_KB,
+# environment.sh: the number the production deploy's preflight requires). The one definition of that rule (#1076, #1397).
+enough_disk() { # <folder> <bytes about to be written>
+  local free_kb
+  free_kb=$(df -Pk "$1" | awk 'NR == 2 { print $4 }')
+  [[ "$free_kb" =~ ^[0-9]+$ ]] || return 1
+  [ $((free_kb - ($2 + 1023) / 1024)) -gt "$PREVIEW_FREE_FLOOR_KB" ]
+}
+
+# True when <path> is root's and nobody else can write it (not group, not others): the one definition of "root's,
+# and only root can change it", used by the installer, the host guards and the root scripts.
+root_only_writable() { # <path>
+  local owner mode
+  read -r owner mode <<<"$(stat -c '%u %a' -- "$1")" || return 1
+  [ "$owner" = "$ROOT_UID" ] && (((8#$mode & 8#022) == 0))
+}
+
+# True for a program root may run on a caller's say-so: the file, where a link leads, and the folders holding
+# either are root's and only root can write them.
+trusted_tool() { # <path>
+  local real part
+  real=$(readlink -f -- "$1") || return 1
+  [ -f "$real" ] && [ -x "$real" ] || return 1
+  for part in "$real" "$(dirname "$real")" "$(dirname "$1")"; do
+    root_only_writable "$part" || return 1
+  done
+}
+
+# Prints the first node found in <colon-separated folders> or /usr/bin that passes trusted_tool, the same lookup
+# for the installer and the root step, so a node the root step would refuse is caught when it is installed.
+trusted_node() { # <colon-separated folders>
+  local dirs dir
+  IFS=: read -ra dirs <<<"$1"
+  for dir in "${dirs[@]}" /usr/bin; do
+    if [ -n "$dir" ] && trusted_tool "$dir/node"; then
+      printf '%s' "$dir/node"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# A root script trusts nothing from its caller's environment. sudo resets it (the rule says so); when run as root
+# and one of these names is set anyway, stop rather than act on it.
+refuse_environment_as_root() { # <names of variables that could redirect the script>
+  [ "$(id -u)" = 0 ] || return 0
+  local name
+  for name in "$@"; do
+    [ -z "${!name+x}" ] || refuse "the environment sets $name"
+  done
+}
+
 # Loads environment.sh in its production form, which defines the patterns and defaults the checks
 # below use. A script that acts on one preview calls use_preview next, which switches to that
 # preview's names (folder, PM2 process, port, address, Caddy block), all derived from its number.

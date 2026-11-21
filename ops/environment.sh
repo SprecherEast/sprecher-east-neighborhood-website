@@ -27,6 +27,11 @@ PREVIEW_PORT_MAX="${PREVIEW_PORT_MAX:-3999}"
 # The build for a preview uses the site key; ops/preview-settings.sh writes both.
 PREVIEW_TURNSTILE_SITE_KEY="1x00000000000000000000AA"
 PREVIEW_TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA"
+# The roles that get a test account in a preview, in the order they are made (admin first: the first account
+# on an empty database becomes an admin). `agent` has no password sign-in, so it has none. Defined here for
+# ops/preview-accounts.sh, and kept equal to PREVIEW_ACCOUNT_ROLES in src/endpoints/seed/preview-accounts.ts by
+# a test (#1393). Never taken from the caller.
+PREVIEW_ACCOUNT_ROLES="admin editor resident guest"
 # The restricted account previews run under and deploy through (#1345, ops/previews.md). Its home is
 # root-owned, so a preview app running as it can't add a key or replace the forced command. The
 # production deploy copies the scripts the account may run to PREVIEW_ACCESS_DIR, root-owned, from
@@ -35,9 +40,19 @@ PREVIEW_USER="${PREVIEW_USER:-sprecher-preview}"
 PREVIEW_HOME="${PREVIEW_HOME:-/home/sprecher-preview}"
 PREVIEW_ACCESS_DIR="${PREVIEW_ACCESS_DIR:-/usr/local/lib/sprecher-east-preview}"
 PREVIEW_UPLOAD_MAX_BYTES="${PREVIEW_UPLOAD_MAX_BYTES:-1073741824}" # the most one release archive may hold
-# The most previews that may exist at once (folders, and Caddy blocks). Each block orders a certificate,
-# and Let's Encrypt's weekly budget is shared with production's (ops/previews.md, "Certificate budget").
-PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-10}"
+# The most previews that may exist at once (folders, and Caddy blocks): the cap, defined here and nowhere
+# else (#1076). The preview workflow reads it from this file, the wrapper and the Caddy script enforce it on
+# the server. It is also bounded by the certificate budget: each block orders a certificate from a weekly
+# budget production shares (ops/previews.md, "Certificate budget"). One until the server's memory and disk
+# are measured with a preview running (ops/previews.md, "The cap"): raise it in one line, here, afterwards.
+PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-1}"
+# The free disk space a preview may never take the server below, in KiB: production's own floor. The production
+# deploy's preflight refuses to start with less than this (a test keeps this equal to the number in
+# .github/workflows/deploy.yml), so a preview that left less would stop the next production deploy.
+PREVIEW_FREE_FLOOR_KB="${PREVIEW_FREE_FLOOR_KB:-3145728}"
+# A preview that nobody has deployed for this many days is removed by the nightly sweep (#1076); the next push
+# or a re-run of its deploy brings it back (the certificate is kept, so that is not a new order).
+PREVIEW_IDLE_DAYS="${PREVIEW_IDLE_DAYS:-7}"
 # How long a preview's health check waits for the app to answer through Caddy (production's is 90 s): its first
 # deploy also waits for Caddy to order the preview's certificate (#1075).
 PREVIEW_UP_SECONDS="${PREVIEW_UP_SECONDS:-180}"
@@ -48,6 +63,14 @@ PREVIEW_NUMBER_PATTERN='^[1-9][0-9]{0,5}$'
 # writes the same value as a literal, before anything runs (a test keeps the two equal).
 ROOT_SECURE_PATH="${ROOT_SECURE_PATH:-/usr/sbin:/usr/bin:/sbin:/bin}"
 PREVIEW_COMMIT_PATTERN='^[0-9a-f]{40}$'
+# Where the root step of a preview's content copy (ops/preview-copy.sh, #1397) keeps its snapshot while it runs:
+# a root-only folder the installer makes (mode 700), which the preview account can't enter. The snapshot is
+# deleted when the step ends. The most the export's file may be, in bytes, is the step's own limit.
+PREVIEW_COPY_TMP="${PREVIEW_COPY_TMP:-/var/lib/sprecher-east-preview-copy}"
+PREVIEW_COPY_MAX_BYTES="${PREVIEW_COPY_MAX_BYTES:-134217728}"
+# How long the export may run, in seconds: the root step holds the Caddy lock that production's own scripts wait
+# for (300 s), so it must end well inside that.
+PREVIEW_COPY_SECONDS="${PREVIEW_COPY_SECONDS:-240}"
 # The most a release archive may unpack to, added up from the sizes its listing gives (#1346). The
 # upload limit above bounds only the compressed size, and a 1 GiB .tar.gz can unpack to many times that.
 PREVIEW_UNPACK_MAX_BYTES="${PREVIEW_UNPACK_MAX_BYTES:-3221225472}"
@@ -101,6 +124,14 @@ else
     echo "::error title=Server::PREVIEW_MAX_COUNT is not a number from 1 to 999"
     exit 1
   }
+  [[ "$PREVIEW_FREE_FLOOR_KB" =~ ^[1-9][0-9]{0,9}$ ]] || {
+    echo "::error title=Server::PREVIEW_FREE_FLOOR_KB is not a number of KiB"
+    exit 1
+  }
+  [[ "$PREVIEW_IDLE_DAYS" =~ ^[1-9][0-9]{0,2}$ ]] || {
+    echo "::error title=Server::PREVIEW_IDLE_DAYS is not a number of days from 1 to 999"
+    exit 1
+  }
   # Two ports (no sign, no leading zero, at most 65535), lowest first, with no reserved port between.
   [[ "$PREVIEW_PORT_MIN" =~ ^[1-9][0-9]{0,4}$ && "$PREVIEW_PORT_MAX" =~ ^[1-9][0-9]{0,4}$ ]] &&
     [ "$PREVIEW_PORT_MAX" -le 65535 ] && [ "$PREVIEW_PORT_MIN" -le "$PREVIEW_PORT_MAX" ] || {
@@ -127,6 +158,13 @@ fi
 ENV_FILE="$APP_DIR/.env.local"
 DATA_DIR="$APP_DIR/data"
 MEDIA_DIR="$APP_DIR/public/media"
+# A preview's test-account passwords (#1393): one private file in its own folder, outside data/ and the release.
+ACCOUNTS_FILE="$APP_DIR/.preview-accounts"
+# A preview's content copy (#1397): the export's file, which the wrapper writes before the deploy and the import
+# reads and deletes, and the empty folder the root step fills with links to production's media, which the wrapper
+# then moves to MEDIA_DIR. Both sit in the preview's folder, outside data/ and the release.
+COPY_FILE="$APP_DIR/.preview-copy.json"
+COPY_MEDIA_DIR="$APP_DIR/.copy-media"
 
 # Child scripts (restart-app.sh, rollback.sh) and PM2 (ecosystem.config.cjs) read the same values.
 export APP_DIR APP_NAME APP_PORT PM2_LOG_DIR PREVIEW_NUMBER PREVIEW_ROOT PREVIEW_DOMAIN PREVIEW_CADDY_DIR

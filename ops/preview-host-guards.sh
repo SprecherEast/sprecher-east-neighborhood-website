@@ -31,10 +31,10 @@
 set -uo pipefail
 here=$(dirname "$0")
 . "$here/lib.sh"
+. "$here/preview-access-lib.sh" # ROOT_UID and root_only_writable
 . "$here/umami-lib.sh"
 . "$here/caddy-lock-lib.sh"
 
-ROOT_UID="${PREVIEW_ACCESS_ROOT_UID:-0}"
 production="${PRODUCTION_DIR_FOR_TESTS:-$PRODUCTION_DIR}" # a test points it at a stand-in folder
 PROC_DIR="${PROC_DIR:-/proc}"
 CRON_ALLOW="${CRON_ALLOW_FILE:-/etc/cron.allow}"
@@ -242,7 +242,7 @@ deny_scheduler() { # <name> <deny file> <create: yes|no>
   local file="$2"
   if [ -L "$file" ] || { [ -e "$file" ] && [ ! -f "$file" ]; }; then warn "$file is a link or not a file"; return; fi
   if [ -e "$file" ]; then
-    if [ "$(stat -c %u "$file")" != "$ROOT_UID" ] || ((8#$(stat -c %a "$file") & 8#022)); then
+    if ! root_only_writable "$file"; then
       warn "$file is not root-owned or can be written by others"
       return
     fi

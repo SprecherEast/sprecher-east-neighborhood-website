@@ -15,11 +15,13 @@ export const COMMIT = 'a'.repeat(40)
 export const SCRIPTS = [
   'preview-wrapper.sh',
   'preview-caddy.sh',
+  'preview-copy.sh',
   'preview-access-lib.sh',
   'preview-isolation-check.sh',
   'preview-host-guards.sh',
   'umami-lib.sh',
   'preview-settings.sh',
+  'preview-accounts.sh',
   'secret-lib.sh',
   'deploy-release.sh',
   'restart-app.sh',
@@ -61,6 +63,13 @@ export function setUpPreviewAccessHarness() {
     write(
       p('access/ops/preview-caddy.sh'),
       rootScript.replace(/^SECURE_PATH=/m, `SECURE_PATH=${p('bin')}:`),
+      0o755,
+    )
+    // The copy script is a root script too, with its own fixed PATH.
+    const copyScript = fs.readFileSync(path.join(OPS, 'preview-copy.sh'), 'utf8')
+    write(
+      p('access/ops/preview-copy.sh'),
+      copyScript.replace(/^SECURE_PATH=/m, `SECURE_PATH=${p('bin')}:`),
       0o755,
     )
     for (const f of CADDY_FILES)
@@ -137,6 +146,9 @@ export function setUpPreviewAccessHarness() {
     CADDYFILE: p('caddy/Caddyfile'),
     RELOAD_CADDY: p('bin/reload-caddy'),
     PM2_HOME: p('previews/.pm2'),
+    // Not production's cap or floor: those have their own tests (a test sets what it checks).
+    PREVIEW_MAX_COUNT: '50',
+    PREVIEW_FREE_FLOOR_KB: '1',
     ...extra,
   })
 

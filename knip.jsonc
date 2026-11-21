@@ -7,6 +7,8 @@
   "ignoreExportsUsedInFile": true,
   // Also check what the entry files export, so a re-export nothing imports is reported
   "includeEntryExports": true,
+  // The system's own tools that a test runs (openssl makes and opens the keys the preview sign-in is sealed with, #1394; flock holds the lock and mkfifo makes the pipe the content copy's tests check, #1397)
+  "ignoreBinaries": ["openssl", "flock", "mkfifo"],
   "ignoreIssues": {
     // PM2 reads the default export on the server
     "ecosystem.config.cjs": ["exports"],
@@ -32,6 +34,8 @@
         "e2e/seed.ts",
         // Run by `payload run` from ops/deploy-release.sh on the server, for a preview's first database (#1075)
         "e2e/previewSeed.ts",
+        // Run by `payload run`, the export from production's release and the import from a preview's own tree (#1396)
+        "e2e/previewCopy{Export,Import}.ts",
         // Imported by eslint.config.mjs
         "eslint.*.config.mjs",
       ],

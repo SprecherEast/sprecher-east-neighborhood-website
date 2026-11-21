@@ -26,7 +26,10 @@ layout system, and never redesigns the site from scratch.
 
 ## 1. Screenshot
 
-1. Start the dev server if it isn't running: `npm run dev` (http://localhost:3000).
+1. Where to look: when the pull request has a pull request preview whose comment names its
+   current head commit, screenshot that address (its sign-in:
+   [`preview-sign-in`](../../../docs/process/preview-sign-in.md)). Otherwise start the dev server
+   if it isn't running: `npm run dev` (http://localhost:3000).
 2. Screenshot every affected page with Playwright (the Playwright MCP server, or a Playwright
    script) at the six widths in the
    [viewport table](../../../docs/guidelines/nextjs-tailwind.md#responsive-design--6-viewport-testing)

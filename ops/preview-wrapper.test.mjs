@@ -1,13 +1,37 @@
 // ops/preview-wrapper.sh (#1345): the forced command of the preview deploy key. It must run the
-// five actions and refuse everything else, with every value checked before use. Each guard has a
+// six actions and refuse everything else, with every value checked before use. Each guard has a
 // test that fails without it. Real sshd and `restrict` are checked on the server.
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 
+import { write } from './umami-harness.mjs'
+
 import { describe, expect, it } from 'vitest'
+
+import { beforeEach } from 'vitest'
 
 import { COMMIT, runCommand, setUpPreviewAccessHarness } from './preview-access-harness.mjs'
 
 const { p, stub, log, wrapper, baseEnv } = setUpPreviewAccessHarness()
+
+const COPY_TEXT =
+  '{"format":1,"collections":{"posts":[{"id":1,"title":"SECRET-POST-TEXT"}]},"globals":{},"mediaFiles":["a.jpg"]}'
+// The root copy script (ops/preview-copy.sh) has its own tests; here it is a stand-in that logs how it was run,
+// fills the staging folder like the real one and prints the export's file on standard output.
+beforeEach(() => {
+  fs.writeFileSync(
+    p('access/ops/preview-copy.sh'),
+    [
+      '#!/usr/bin/env bash',
+      'echo "copy-script $* stdout-is-file:$([ "$(stat -L -c %F /proc/$$/fd/1)" = "regular empty file" ] && echo yes || echo no)" >> "$STUB_LOG"',
+      '[ -z "${STUB_COPY_FAILS-}" ] || { echo "the content copy step failed" >&2; exit 1; }',
+      '[ -n "${STUB_COPY_EMPTY-}" ] || { echo LINKED > "$PREVIEW_ROOT/pr-$1/.copy-media/a.jpg"; chmod 444 "$PREVIEW_ROOT/pr-$1/.copy-media/a.jpg"; }',
+      `[ -n "\${STUB_COPY_EMPTY-}" ] || printf '%s' '${COPY_TEXT}'`,
+      '',
+    ].join('\n'),
+    { mode: 0o755 },
+  )
+})
 
 /** A .tar.gz made by Python's tarfile, so a member can have any name or type. */
 async function archive(members) {
@@ -90,9 +114,10 @@ describe('preview-wrapper.sh: the actions', () => {
     fs.symlinkSync(p('previews/pr-12'), p('previews/pr-99'))
     const { code, out } = await wrapper('list')
     expect(code).toBe(0)
-    expect(out.trim().split('\n').sort()).toEqual([
-      `preview=12 commit=none`,
+    const lines = out.trim().split('\n')
+    expect(lines.map((l) => l.split(' idle=')[0])).toEqual([
       `preview=7 commit=${COMMIT}`,
+      `preview=12 commit=none`,
     ])
   })
 
@@ -101,7 +126,7 @@ describe('preview-wrapper.sh: the actions', () => {
     fs.writeFileSync(p('previews/pr-8'), 'x')
     const { code, out } = await wrapper('list')
     expect(code).toBe(0)
-    expect(out.trim()).toBe('preview=7 commit=none')
+    expect(out.trim()).toMatch(/^preview=7 commit=none idle=\d+ folder=yes block=no process=none$/)
   })
 
   it('starts with an absolute shebang and runs on its own with the locale fixed, whatever the caller sets', async () => {
@@ -152,7 +177,10 @@ describe('preview-wrapper.sh: the actions', () => {
     )
     const { code } = await wrapper(`deploy 7 ${COMMIT}`)
     expect(code).toBe(0)
-    expect(sudoLines()).toEqual([`sudo -n ${p('access/ops/preview-caddy.sh')} 7`])
+    expect(sudoLines()).toEqual([
+      `sudo -n ${p('access/ops/preview-caddy.sh')} 7`,
+      `sudo -n ${p('access/ops/preview-copy.sh')} 7`,
+    ])
     expect(fs.readFileSync(p('caddy/previews/pr-7.caddy'), 'utf8')).toContain(
       'pr-7.dev.sprechereast.com',
     )
@@ -337,6 +365,268 @@ describe('preview-wrapper.sh: the actions', () => {
   })
 })
 
+describe('preview-wrapper.sh: production’s published content (#1397)', () => {
+  const live = async () => {
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    // what the deploy script sees when it runs: the copy file, the media and no old database
+    fs.writeFileSync(
+      p('access/ops/deploy-release.sh'),
+      [
+        '#!/usr/bin/env bash',
+        'echo "deploy-script file:$(cat "$APP_DIR/.preview-copy.json" 2>/dev/null | head -c 12) media:$(ls "$APP_DIR/public/media" 2>/dev/null | paste -sd,) data:$(ls "$APP_DIR/data" 2>/dev/null | paste -sd,)" >> "$STUB_LOG"',
+        'echo "file-mode:$(stat -c %a "$APP_DIR/.preview-copy.json")" >> "$STUB_LOG"',
+        '[ -z "${STUB_DEPLOY_FAILS-}" ] || exit 3',
+        '',
+      ].join('\n'),
+    )
+  }
+  const folder = (...parts) => p('previews/pr-7', ...parts)
+
+  it('asks the root script with the number alone, after the Caddy block and the first isolation check, before the deploy script', async () => {
+    await live()
+    const { code } = await wrapper(`deploy 7 ${COMMIT}`)
+    expect(code).toBe(0)
+    const order = log()
+      .split('\n')
+      .filter((l) => /^(isolation-check|sudo|copy-script|deploy-script)/.test(l))
+      .map((l) => l.split(' ').slice(0, 3).join(' '))
+    expect(order).toEqual([
+      `isolation-check ${p('access/ops/preview-isolation-check.sh')}`,
+      `sudo -n ${p('access/ops/preview-caddy.sh')}`,
+      `sudo -n ${p('access/ops/preview-copy.sh')}`,
+      'copy-script 7 stdout-is-file:yes',
+      'deploy-script file:{"format":1, media:a.jpg',
+      `isolation-check ${p('access/ops/preview-isolation-check.sh')}`,
+    ])
+  })
+
+  it('writes the export’s file itself, as the preview account, private, so root writes no path in the preview’s folder', async () => {
+    await live()
+    await wrapper(`deploy 7 ${COMMIT}`)
+    expect(log()).toContain('stdout-is-file:yes')
+    expect(log()).toContain('file-mode:600')
+  })
+
+  it('rebuilds the database and the media on every deploy: the old ones are gone, the staged links are in place', async () => {
+    await live()
+    fs.mkdirSync(folder('data'), { recursive: true })
+    fs.writeFileSync(folder('data/payload.db'), 'OLD DATABASE')
+    fs.mkdirSync(folder('public/media'), { recursive: true })
+    fs.writeFileSync(folder('public/media/uploaded-in-preview.jpg'), 'OLD')
+    await wrapper(`deploy 7 ${COMMIT}`)
+    expect(log()).toContain('deploy-script file:{"format":1, media:a.jpg data:\n')
+    expect(fs.readdirSync(folder('public/media'))).toEqual(['a.jpg'])
+    expect(fs.existsSync(folder('data/payload.db'))).toBe(false)
+    expect(fs.existsSync(folder('.copy-media'))).toBe(false)
+  })
+
+  it('checks the room for the copy file against production’s floor before it asks the root script', async () => {
+    await live()
+    const { code, out } = await wrapper(`deploy 7 ${COMMIT}`, {
+      env: { PREVIEW_FREE_FLOOR_KB: '9999999999' },
+    })
+    expect(code).not.toBe(0)
+    expect(out).toContain('not enough free disk')
+    expect(log()).not.toContain('copy-script')
+    expect(log()).not.toContain('deploy-script')
+  })
+
+  it('removes the copy file and the staging folder after the deploy, also when the deploy script fails', async () => {
+    await live()
+    const { code } = await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_DEPLOY_FAILS: '1' } })
+    expect(code).toBe(3)
+    expect(fs.existsSync(folder('.preview-copy.json'))).toBe(false)
+    expect(fs.existsSync(folder('.copy-media'))).toBe(false)
+  })
+
+  it('changes nothing when the root script fails: the old database and media stay, no deploy script runs', async () => {
+    await live()
+    fs.mkdirSync(folder('data'), { recursive: true })
+    fs.writeFileSync(folder('data/payload.db'), 'OLD DATABASE')
+    fs.mkdirSync(folder('public/media'), { recursive: true })
+    fs.writeFileSync(folder('public/media/old.jpg'), 'OLD')
+    const { code, out } = await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_COPY_FAILS: '1' } })
+    expect(code).toBe(2)
+    expect(out).toContain('the content copy failed, so the preview was not changed')
+    expect(log()).not.toContain('deploy-script')
+    expect(fs.readFileSync(folder('data/payload.db'), 'utf8')).toBe('OLD DATABASE')
+    expect(fs.readdirSync(folder('public/media'))).toEqual(['old.jpg'])
+    expect(fs.existsSync(folder('.copy-media'))).toBe(false)
+    expect(fs.existsSync(folder('.preview-copy.json'))).toBe(false)
+  })
+
+  it('treats a root script that printed nothing as a failure', async () => {
+    await live()
+    const { code } = await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_COPY_EMPTY: '1' } })
+    expect(code).toBe(2)
+    expect(log()).not.toContain('deploy-script')
+  })
+
+  it('never prints the export’s file', async () => {
+    await live()
+    const { out } = await wrapper(`deploy 7 ${COMMIT}`)
+    expect(out).not.toContain('SECRET-POST-TEXT')
+    const failed = await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_DEPLOY_FAILS: '1' } })
+    expect(failed.out).not.toContain('SECRET-POST-TEXT')
+  })
+
+  it('does not run the root script when the first isolation check fails', async () => {
+    await live()
+    await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_ISOLATION_FAILS: '1' } })
+    expect(log()).not.toContain('copy-script')
+  })
+
+  it('teardown removes the preview’s linked media and its passwords file, and leaves production’s file as it was', async () => {
+    await live()
+    write(p('prod/public/media/a.jpg'), 'PRODUCTION PICTURE')
+    fs.mkdirSync(folder('public/media'), { recursive: true })
+    fs.linkSync(p('prod/public/media/a.jpg'), folder('public/media/a.jpg'))
+    fs.writeFileSync(folder('.preview-accounts'), 'admin=x\n', { mode: 0o600 })
+    fs.writeFileSync(folder('.preview-accounts.applied'), 'x')
+    const { code } = await wrapper('teardown 7')
+    expect(code).toBe(0)
+    expect(fs.existsSync(folder())).toBe(false)
+    expect(fs.readFileSync(p('prod/public/media/a.jpg'), 'utf8')).toBe('PRODUCTION PICTURE')
+    expect(fs.statSync(p('prod/public/media/a.jpg')).nlink).toBe(1)
+  })
+})
+
+describe('preview-wrapper.sh: credentials (#1394)', () => {
+  const ROLES = ['admin', 'editor', 'resident', 'guest']
+  const text = () => ROLES.map((r, i) => `${r}=${String(i + 1).repeat(64)}\n`).join('')
+  const digest = (t) => crypto.createHash('sha256').update(t).digest('hex')
+  const FIXED = 'no test sign-in to hand out'
+
+  /** A preview folder with the passwords file the deploy script writes and, unless told not to, the seed's marker. */
+  function previewWith({ body = text(), marker = digest(body), mode = 0o600 } = {}) {
+    fs.mkdirSync(p('previews/pr-7'), { recursive: true })
+    fs.writeFileSync(p('previews/pr-7/.preview-accounts'), body, { mode })
+    fs.chmodSync(p('previews/pr-7/.preview-accounts'), mode)
+    if (marker !== null)
+      fs.writeFileSync(p('previews/pr-7/.preview-accounts.applied'), `${marker}\n`)
+  }
+
+  it('prints the file exactly, once the seed confirmed it, and runs nothing else', async () => {
+    previewWith()
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(0)
+    expect(out).toBe(text())
+    expect(log()).toBe('')
+  })
+
+  it('says nothing about another preview’s passwords', async () => {
+    previewWith()
+    fs.mkdirSync(p('previews/pr-8'))
+    const { code, out } = await wrapper('credentials 8')
+    expect(code).toBe(2)
+    expect(out).not.toContain('1'.repeat(64))
+  })
+
+  it('refuses a preview that does not exist, with a fixed text and nothing created', async () => {
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).toContain('there is no such preview')
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false)
+  })
+
+  it('refuses a preview whose first deploy has not made the file', async () => {
+    fs.mkdirSync(p('previews/pr-7'))
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).toContain(FIXED)
+  })
+
+  it('does not hand out passwords the seed never applied (no marker: an older branch, or a failed seed)', async () => {
+    previewWith({ marker: null })
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).toContain(FIXED)
+    expect(out).not.toContain('1'.repeat(64))
+  })
+
+  it('does not hand out a file that changed after the seed confirmed another one', async () => {
+    previewWith({ marker: digest(text().replace('1', '9')) })
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).not.toContain('1'.repeat(64))
+  })
+
+  it.each([0o644, 0o640, 0o604])(
+    'does not hand out a file others can open (mode %o)',
+    async (mode) => {
+      previewWith({ mode })
+      const { code, out } = await wrapper('credentials 7')
+      expect(code).toBe(2)
+      expect(out).not.toContain('1'.repeat(64))
+    },
+  )
+
+  it.each([
+    ['an extra line', (t) => `${t}root=${'f'.repeat(64)}\n`],
+    ['a short password', (t) => t.replace('1'.repeat(64), '1'.repeat(8))],
+    ['a stray line', (t) => `${t}::notice::x\n`],
+    ['an empty file', () => ''],
+    ['empty passwords', () => ROLES.map((r) => `${r}=\n`).join('')],
+    [
+      'the roles out of order',
+      () =>
+        ROLES.toReversed()
+          .map((r) => `${r}=${'1'.repeat(64)}\n`)
+          .join(''),
+    ],
+    ['a role twice', () => `${text()}${text()}`],
+    ['no newline at the end', (t) => t.slice(0, -1)],
+    ['a blank line', (t) => `\n${t}`],
+    ['upper-case hex', (t) => t.replace('1'.repeat(64), 'A'.repeat(64))],
+  ])('does not hand out a file that is not what the deploy writes (%s)', async (_, change) => {
+    const body = change(text())
+    previewWith({ body })
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).not.toContain('f'.repeat(64))
+    expect(out).not.toContain('::notice::x')
+  })
+
+  it('never follows a link at the passwords file or the marker', async () => {
+    previewWith()
+    fs.writeFileSync(p('secret-elsewhere'), text(), { mode: 0o600 })
+    fs.rmSync(p('previews/pr-7/.preview-accounts'))
+    fs.symlinkSync(p('secret-elsewhere'), p('previews/pr-7/.preview-accounts'))
+    const first = await wrapper('credentials 7')
+    expect(first.code).toBe(2)
+    expect(first.out).not.toContain('1'.repeat(64))
+
+    previewWith()
+    fs.rmSync(p('previews/pr-7/.preview-accounts.applied'))
+    fs.writeFileSync(p('elsewhere-marker'), `${digest(text())}\n`)
+    fs.symlinkSync(p('elsewhere-marker'), p('previews/pr-7/.preview-accounts.applied'))
+    const second = await wrapper('credentials 7')
+    expect(second.code).toBe(2)
+    expect(second.out).not.toContain('1'.repeat(64))
+  })
+
+  it('refuses a preview folder that is a link', async () => {
+    previewWith()
+    fs.renameSync(p('previews/pr-7'), p('real-folder'))
+    fs.symlinkSync(p('real-folder'), p('previews/pr-7'))
+    const { code, out } = await wrapper('credentials 7')
+    expect(code).toBe(2)
+    expect(out).not.toContain('1'.repeat(64))
+  })
+
+  it('takes nothing from the caller’s environment about which file to read', async () => {
+    previewWith()
+    fs.mkdirSync(p('victim/pr-7'), { recursive: true })
+    fs.writeFileSync(p('victim/pr-7/.preview-accounts'), `admin=${'e'.repeat(64)}\n`, {
+      mode: 0o600,
+    })
+    const { out } = await wrapper('credentials 7', {
+      env: { ACCOUNTS_FILE: p('victim/pr-7/.preview-accounts'), APP_DIR: p('victim/pr-7') },
+    })
+    expect(out).toBe(text())
+  })
+})
+
 describe('preview-wrapper.sh: it refuses everything else', () => {
   const short = 'a'.repeat(39)
   const requests = [
@@ -398,6 +688,18 @@ describe('preview-wrapper.sh: it refuses everything else', () => {
     'teardown *',
     'teardown ../7',
     'teardown 7/../../x',
+    'credentials',
+    'credentials 0',
+    'credentials 07',
+    'credentials 1234567',
+    'credentials -7',
+    'credentials ../7',
+    'credentials 7;id',
+    'credentials 7\nid',
+    'credentials $(id)',
+    `credentials 7 ${COMMIT}`,
+    'credentials 7 7',
+    'credentials 7 extra',
     '--help',
     '-v',
     '--',
@@ -438,7 +740,8 @@ describe('preview-wrapper.sh: a hostile release archive', () => {
     expect(code).toBe(2)
     expect(out).toContain(reason)
     expect(fs.existsSync(release())).toBe(false)
-    expect(fs.readdirSync(p('previews/pr-7/releases'))).toEqual([]) // no half-unpacked leftovers
+    // no half-unpacked leftovers, and a new preview that got no release leaves no empty folder to hold a place
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false)
   }
 
   it.each([
@@ -506,7 +809,7 @@ describe('preview-wrapper.sh: a hostile release archive', () => {
     })
     expect(over.code).toBe(2)
     expect(over.out).toContain('unpacks to more than is allowed')
-    expect(fs.readdirSync(p('previews/pr-7/releases'))).toEqual([]) // nothing unpacked, nothing left
+    expect(fs.existsSync(p('previews/pr-7'))).toBe(false) // nothing unpacked, nothing left
     const exact = await wrapper(`upload 7 ${COMMIT}`, {
       input: big,
       env: { PREVIEW_UNPACK_MAX_BYTES: '5000' },
@@ -722,7 +1025,7 @@ describe('preview-wrapper.sh: its tools come from fixed folders', () => {
 
   it('never runs a program planted on the caller’s PATH, for any action', async () => {
     const names =
-      'df find tar stat mkdir rm mv grep awk readlink dirname cat head sudo pm2 node id bash env realpath xargs wc'.split(
+      'df find tar stat mkdir rm mv grep awk readlink dirname cat head sudo pm2 node id bash env realpath xargs wc sha256sum'.split(
         ' ',
       )
     fs.mkdirSync(p('evil'))
@@ -742,6 +1045,18 @@ describe('preview-wrapper.sh: its tools come from fixed folders', () => {
       const { code, out } = await wrapper(request, { input, env })
       expect(code, `${request}: ${out}`).toBe(0)
     }
+    // credentials, with a confirmed file in place
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive(), env })
+    const body = ['admin', 'editor', 'resident', 'guest']
+      .map((r) => `${r}=${'1'.repeat(64)}\n`)
+      .join('')
+    fs.writeFileSync(p('previews/pr-7/.preview-accounts'), body, { mode: 0o600 })
+    fs.writeFileSync(
+      p('previews/pr-7/.preview-accounts.applied'),
+      `${crypto.createHash('sha256').update(body).digest('hex')}\n`,
+    )
+    const creds = await wrapper('credentials 7', { env })
+    expect(creds.out).toBe(body)
     expect(fs.existsSync(p('planted')) ? fs.readFileSync(p('planted'), 'utf8') : '').toBe('')
   })
 })

@@ -113,7 +113,7 @@ isolation check proves it before and after every preview deploy. What holds now:
   and a production sign-in token is worth nothing on a preview. A preview's sign-in cookie sets no
   `Domain`, so production's is never sent to it. The owner decided this (2026-11-11, recorded on
   #1074).
-- **Never printed:** the deploy log is public, so no generated secret appears in it.
+- **Never printed:** the deploy log is public, so no generated secret or test account password appears in it.
 - **No basic auth on previews:** they hold only code already public in this repository and content
   already published, and a password would block opening the link on a phone and AI agents taking
   screenshots. Noindex headers and a disallow-all `robots.txt` are required instead
@@ -174,10 +174,29 @@ isolation check proves it before and after every preview deploy. What holds now:
   process; that is not covered.
 - **The isolation check** (`ops/preview-isolation-check.sh`, #1346) runs as the account before a preview's deploy
   starts (a failure starts nothing and takes down a preview already running under that number) and after it, and again in the installer before a key line is written. It fails when the account can open
-  production's settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to the
-  admin endpoint. A failing check takes the preview down and fails the deploy, and no key line is written
+  production's settings, database, media, backups, Umami files, PM2 logs, Caddy's storage or the content copy's
+  snapshot folder, change in place a picture its preview shares with production, or connect to the admin endpoint. A failing check takes the preview down and fails the deploy, and no key line is written
   (an earlier one is removed) until the guards and the check pass. It prints which place was reachable and
   never a file's content.
+- **Production's published content reaches a preview only through a root script, and never as a snapshot**
+  (#1397; the owner's decisions of 2026-11-11 are recorded on #1077): the account may run `ops/preview-copy.sh`
+  through a second narrow sudo rule (a number of 1 to 6 digits, the same fixed PATH, `secure_path`, privileged mode,
+  refused environment and shared lock as the Caddy script). Under the lock it makes a snapshot of production's database
+  with `ops/backup-db.mjs` in a folder only root can enter (`PREVIEW_COPY_TMP`, mode 700, made by the installer, which
+  changes nothing if it exists with another mode or owner), runs the export from production's current release with a
+  minimal environment (a throwaway secret, no `SMTP_HOST`) and from a folder with no settings file, so none of
+  production's settings or secrets reaches it, within a time limit (`PREVIEW_COPY_SECONDS`), and deletes the snapshot at
+  once and again by a trap on every exit; a killed run's folder is removed by the next run and by the installer. The preview gets only the export's file, which the wrapper writes
+  as the account from the script's standard output (root writes no path the account could swap), and hard links to the
+  media files the export lists. The staging folder is opened once and judged by what the open file is (real path, type,
+  owner), made root's while it is filled, and every link is made inside that open folder, so a link or a swapped folder
+  is refused, never followed. A link is made only for a regular, root-owned file that others can read and none can
+  write, so the preview can read it and not change it in place, and deleting it removes only the preview's name (Payload
+  deletes a file before it writes a new one, so a replacement never touches production's inode); anything else is
+  copied. The import is the pull request's own code, which reads only the file, writes no mail, account, session, API
+  key or submission, and runs on a database rebuilt every deploy. The root step prints numbers and fixed texts only, and
+  neither the snapshot, the file nor a password ever reaches the public log. The isolation check proves the account
+  can't enter the snapshot folder and can't change in place a picture it shares with production.
 - **An upload is limited by what it unpacks to** (#1346), not only by its size: the wrapper adds up the sizes
   in the archive's listing before it unpacks anything, and refuses more than 3 GiB or a listing it can't
   measure.
@@ -190,20 +209,39 @@ isolation check proves it before and after every preview deploy. What holds now:
   label (the owner's decision, 2026-11-20, recorded on #1070 and #1075; each preview orders a certificate from a
   weekly budget production shares). A fork or Dependabot run gets no secrets and a read-only token, so it
   gets no preview. The build job runs the pull request's install scripts with no environment and no secret.
-  The two jobs that hold the preview key (the GitHub environment `preview`, which holds only that key and its
-  connection values) check out the default branch's scripts, never the pull request's or its base's (a stacked pull request's base is
-  another unreviewed branch), list the build's archive, send it to the server on stdin and never unpack or run it, and no job names `production` or calls a privileged workflow, because the
+  Every job that holds the preview key (the GitHub environment `preview`, which holds only that key and its
+  connection values: server facts, deploy, removal when a pull request closes (#1076), the nightly sweep and the
+  sign-in hand-out) checks out the default branch's scripts, never the pull request's or its base's (a stacked pull request's base is
+  another unreviewed branch), and the server facts, the removal and the sweep set up `ssh` through one shared gate
+  (`.github/actions/preview-ssh`) that refuses to start unless all four connection values, the pinned host key
+  included, are present (the deploy runs only after the facts passed). The deploy lists the build's archive, sends it to the server on stdin and never unpacks or runs it, and no job names `production` or calls a privileged workflow, because the
   wrapper's deploy prints values from the release into the public log. A same-repository pull request's
   workflow file is its own copy, so a dishonest change could read the key: the server is the boundary, since
-  the key can run only the wrapper's five actions. The deploy goes through the wrapper only, checks the
+  the key can run only the wrapper's six actions. The deploy goes through the wrapper only, checks the
   archive's size and what it unpacks to before upload, reports "taken down" when the isolation check took a
   preview down, and when the host guards withhold the key (no key line written) reports previews unavailable
   once and never retries. The one comment holds fixed texts, a link and a short commit, never a log line or a
   secret (`.github/scripts/preview-workflow.test.mjs` and `preview-comment.test.mjs`).
-- **A preview's first database has an account nobody can sign in to** (#1075): the first account on an empty
-  `users` collection becomes an admin (#354), so a preview is seeded (`e2e/previewSeed.ts`, before it is
-  switched on) with one `example.com` admin whose password is random and never stored, logged or shown, and no
-  verification email. How anyone signs in to a preview is #1077.
+- **A preview has a throwaway test account per role** (#1075, #1393; the owner's decision of 2026-11-20 is
+  recorded on #1077): the first account on an empty `users` collection becomes an admin (#354), so a preview is
+  seeded (`e2e/previewSeed.ts`, before it is switched on) with one verified `example.com` account for each role
+  that signs in with a password (`admin`, `editor`, `resident`, `guest`; `agent` has no password sign-in and a
+  preview never gets an API key), and no verification email. The passwords are random, made on the server by
+  `main`'s `ops/preview-accounts.sh` (never by the pull request's code, which only reads them), on every deploy,
+  into one file in the preview's own folder (mode 600, outside `data/` and the release). They are never printed,
+  logged, put in an argument, an environment variable or a comment, and no production account or password is
+  ever copied. A redeploy makes new ones for these four accounts and ends their sessions, and rebuilds the
+  preview's database, so anything else made in it is gone (#1397). The code a preview runs is unreviewed, and one
+  Unix account runs every preview (#1345), so it can read the passwords file of every running preview, not
+  only its own. That opens only previews' throwaway accounts, whose databases and settings (`.env.local`) that
+  code can already reach. Production's accounts and settings are never touched.
+- **A preview's sign-in is handed out sealed, never in the clear** (#1394): the wrapper's `credentials` action
+  prints the passwords file only after the seed confirmed it (`.preview-accounts.applied`), and the
+  `preview-sign-in` workflow (dispatch only, never `pull_request`, not required) seals it to the requester's
+  one-time public key with `openssl` (RSA-OAEP, SHA-256) and prints only the ciphertext, after masking the
+  plaintext. A password is never pasted into a chat, an issue, a pull request, a log or an artifact. A dispatch
+  runs the workflow file of the branch it is given, so write access can print the plaintext; the boundary is the
+  restricted account and the environment's secrets ([`ops/previews.md`](../../ops/previews.md)).
 - **Previews have no basic auth** (the owner's decision, 2026-11-11, recorded on #1074): see above.
 
 ## Agents and the rules that bind them

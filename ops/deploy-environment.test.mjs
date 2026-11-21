@@ -20,9 +20,12 @@ const production = () => {
   makeRelease(release, PROD_URL)
   return deploy(release)
 }
-const preview = (env = {}, number = '7', built = TEST_SITE_KEY) => {
+const COPY_TEXT = '{"format":1,"collections":{},"globals":{},"mediaFiles":[]}'
+const preview = (env = {}, number = '7', built = TEST_SITE_KEY, { copyFile = true } = {}) => {
   const release = p(`previews/pr-${number}/releases/r1`)
   makeRelease(release, PREVIEW_URL, built)
+  // The file the wrapper makes before this script runs (ops/preview-wrapper.sh, #1397)
+  if (copyFile) fs.writeFileSync(p(`previews/pr-${number}/.preview-copy.json`), COPY_TEXT)
   return deploy(release, { PREVIEW_NUMBER: number, ...env })
 }
 const curlUrls = () =>
@@ -50,6 +53,7 @@ describe('deploy-release.sh with no environment named', () => {
     )
     expect(fs.existsSync(p('previews/pr-7/.env.local'))).toBe(false) // no preview settings are made
     expect(log()).not.toContain('payload run') // no preview database is prepared
+    expect(fs.existsSync(p('previews/pr-7/.preview-accounts'))).toBe(false) // and no test accounts' passwords
   })
 
   it('keeps the newest three releases', async () => {
@@ -59,6 +63,56 @@ describe('deploy-release.sh with no environment named', () => {
     }
     await production()
     expect(fs.readdirSync(p('app/releases')).sort()).toEqual(['o2', 'o3', 'r1'])
+  })
+})
+
+describe('deploy-release.sh for a preview: production’s published content (#1397)', () => {
+  const lines = () => log().split('\n')
+  const at = (needle) => lines().findIndex((l) => l.includes(needle))
+
+  it('imports the copy file with the release’s own code, after the migrations, before the test accounts and the switch', async () => {
+    const { code, out } = await preview()
+    expect(code, out).toBe(0)
+    const release = fs.realpathSync(p('previews/pr-7/releases/r1'))
+    expect(lines()[at('payload run e2e/previewCopyImport.ts')]).toBe(
+      `payload run e2e/previewCopyImport.ts in ${release} NODE_ENV=production PREVIEW_COPY_FILE=${p('previews/pr-7/.preview-copy.json')}`,
+    )
+    expect(at('previewCopyImport')).toBeGreaterThan(at('payload migrate'))
+    expect(at('payload run e2e/previewSeed.ts')).toBeGreaterThan(at('previewCopyImport'))
+    expect(at('pm2 start')).toBeGreaterThan(at('previewCopyImport'))
+    expect(out).toContain("Importing production's published content")
+  })
+
+  it('prints none of the file’s text, and deletes the file once it is imported', async () => {
+    const { out } = await preview()
+    expect(out).not.toContain(COPY_TEXT)
+    expect(fs.existsSync(p('previews/pr-7/.preview-copy.json'))).toBe(false)
+  })
+
+  it('stops, with nothing switched, when the content could not be imported, and still deletes the file', async () => {
+    const { code, out } = await preview({ STUB_IMPORT_FAIL: '1' })
+    expect(code).toBe(1)
+    expect(out).toContain("the preview's content could not be imported")
+    expect(log()).not.toContain('previewSeed')
+    expect(log()).not.toContain('pm2 start')
+    expect(fs.existsSync(p('previews/pr-7/.preview-copy.json'))).toBe(false)
+  })
+
+  it('stops, with nothing run, when the copy file is missing or is a link', async () => {
+    const missing = await preview({}, '7', TEST_SITE_KEY, { copyFile: false })
+    expect(missing.code).toBe(1)
+    expect(missing.out).toContain("the preview's content copy is missing")
+    expect(log()).not.toContain('previewCopyImport')
+    fs.writeFileSync(p('elsewhere'), COPY_TEXT)
+    fs.symlinkSync(p('elsewhere'), p('previews/pr-7/.preview-copy.json'))
+    const linked = await preview({}, '7', TEST_SITE_KEY, { copyFile: false })
+    expect(linked.code).toBe(1)
+    expect(log()).not.toContain('previewCopyImport')
+  })
+
+  it('does nothing of the kind for production', async () => {
+    await production()
+    expect(log()).not.toContain('previewCopyImport')
   })
 })
 
@@ -89,12 +143,49 @@ describe('deploy-release.sh for a preview', () => {
     const at = (needle) => lines.findIndex((l) => l.includes(needle))
     const release = fs.realpathSync(p('previews/pr-7/releases/r1'))
     expect(at('payload migrate')).toBeGreaterThanOrEqual(0)
-    expect(lines[at('payload run')]).toBe(
-      `payload run e2e/previewSeed.ts in ${release} NODE_ENV=production`,
+    expect(lines[at('payload run e2e/previewSeed.ts')]).toBe(
+      `payload run e2e/previewSeed.ts in ${release} NODE_ENV=production PREVIEW_ACCOUNTS_FILE=${p('previews/pr-7/.preview-accounts')}`,
     )
-    expect(at('payload run')).toBeGreaterThan(at('payload migrate'))
-    expect(at('pm2 start')).toBeGreaterThan(at('payload run'))
-    expect(out).toContain("Preparing the preview's database")
+    expect(at('payload run e2e/previewSeed.ts')).toBeGreaterThan(at('payload migrate'))
+    expect(at('pm2 start')).toBeGreaterThan(at('payload run e2e/previewSeed.ts'))
+    expect(out).toContain("Preparing the preview's test accounts")
+  })
+
+  it('makes the account passwords before the seed, names only their file to it, and prints none (#1393)', async () => {
+    const { code, out } = await preview()
+    expect(code, out).toBe(0)
+    const file = p('previews/pr-7/.preview-accounts')
+    const passwords = fs.readFileSync(file, 'utf8').match(/[0-9a-f]{64}/g)
+    expect(passwords).toHaveLength(4)
+    expect(fs.statSync(file).mode & 0o777).toBe(0o600)
+    expect(log()).toContain(`PREVIEW_ACCOUNTS_FILE=${file}`) // the seed is told where, not what
+    // Nothing the deploy printed, ran or logged holds a password: not its output, not a command, the seed's
+    // whole environment (the stub logs it) or the settings
+    const everything = out + log() + fs.readFileSync(p('previews/pr-7/.env.local'), 'utf8')
+    for (const password of passwords) expect(everything).not.toContain(password)
+    expect(fs.readdirSync(p('previews/pr-7/releases/r1')).join()).not.toContain('accounts')
+    expect(fs.existsSync(p('previews/pr-7/data/.preview-accounts'))).toBe(false)
+    expect(fs.existsSync(p('app/.preview-accounts'))).toBe(false) // production's folder is untouched
+  })
+
+  it('makes new passwords on a redeploy of the same preview (#1393)', async () => {
+    await preview()
+    const first = fs.readFileSync(p('previews/pr-7/.preview-accounts'), 'utf8')
+    await preview()
+    const second = fs.readFileSync(p('previews/pr-7/.preview-accounts'), 'utf8')
+    expect(second).not.toBe(first)
+    for (const password of first.match(/[0-9a-f]{64}/g)) expect(second).not.toContain(password)
+  })
+
+  it('stops, with nothing switched, when the passwords can’t be made, and never runs the seed (#1393)', async () => {
+    fs.mkdirSync(p('previews/pr-7'), { recursive: true })
+    fs.mkdirSync(p('elsewhere'))
+    fs.symlinkSync(p('elsewhere/x'), p('previews/pr-7/.preview-accounts'))
+    const { code, out } = await preview()
+    expect(code).toBe(1)
+    expect(out).toContain("the preview's account passwords could not be made")
+    expect(log()).not.toContain('previewSeed')
+    expect(log()).not.toContain('pm2 start')
   })
 
   it('stops, with nothing switched, when the first database can’t be prepared, so no preview is reachable with none (#1075)', async () => {
@@ -137,8 +228,9 @@ describe('deploy-release.sh for a preview', () => {
     makeRelease(p('trusted'), PREVIEW_URL, TEST_SITE_KEY)
     const release = p('previews/pr-7/releases/r1')
     makeRelease(release, PREVIEW_URL, TEST_SITE_KEY)
-    for (const f of ['preview-settings.sh', 'restart-app.sh'])
+    for (const f of ['preview-settings.sh', 'preview-accounts.sh', 'restart-app.sh'])
       fs.writeFileSync(`${release}/ops/${f}`, 'echo HOSTILE >> "$STUB_LOG"; exit 1\n')
+    fs.writeFileSync(p('previews/pr-7/.preview-copy.json'), COPY_TEXT)
     const { code, out } = await runScript(p('trusted'), 'deploy-release.sh', {
       CODE_DIR: release,
       PREVIEW_NUMBER: '7',
