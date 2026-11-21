@@ -30,19 +30,55 @@ describe('BillShare, the rates panel (#1351)', () => {
     expect(within(lineOf('Metropolitan Schools')).getByText('2026 rate')).toBeTruthy()
   })
 
-  it('follows the year chosen, and says in 2027 that the other rates come in January', async () => {
+  it('follows the year chosen, and labels every line with the year its rate is from', async () => {
     render(
       <BillShare {...PROPS} {...city}>
         x
       </BillShare>,
     )
-    const note = () => within(panel()).getByText(/come out in January/)
-    expect(note().className).not.toContain('invisible')
     await choose('2026')
     expect(within(lineOf('City of Madison')).getByText('2026 rate')).toBeTruthy()
     expect(within(lineOf('City of Madison')).getByText('$7.01 per $1,000')).toBeTruthy()
-    // Not shown in 2026, but its room is kept so the panel keeps its height
-    expect(note().className).toContain('invisible')
+    expect(within(panel()).getAllByText('2026 rate')).toHaveLength(4)
+  })
+
+  it('shows no toast on load, and no hidden note taking room', () => {
+    render(
+      <BillShare {...PROPS} {...city}>
+        x
+      </BillShare>,
+    )
+    expect(within(panel()).queryByText(/come out in January/)).toBeNull()
+    expect(within(panel()).queryByText(/All four rates/)).toBeNull()
+  })
+
+  it('shows the year’s toast over the panel each time the year is switched, until it is accepted (#1380)', async () => {
+    render(
+      <BillShare {...PROPS} {...city}>
+        x
+      </BillShare>,
+    )
+    await choose('2026')
+    expect(within(panel()).getByText('All four rates are the 2026 rates.')).toBeTruthy()
+    // Switching again replaces it with the new year's wording
+    await choose('2027')
+    expect(within(panel()).queryByText('All four rates are the 2026 rates.')).toBeNull()
+    expect(within(panel()).getByText(/The other 2027 rates come out in January/)).toBeTruthy()
+    // Accepting it is the only way out, and the next switch shows it again
+    await act(async () => fireEvent.click(within(panel()).getByRole('button', { name: 'Got it' })))
+    expect(within(panel()).queryByText(/The other 2027 rates come out in January/)).toBeNull()
+    await choose('2026')
+    expect(within(panel()).getByText('All four rates are the 2026 rates.')).toBeTruthy()
+  })
+
+  it('shows none when the editor turned the year’s toast off', async () => {
+    render(
+      <BillShare {...PROPS} {...city} toasts={{ ...PROPS.toasts, ratesOwn: null }}>
+        x
+      </BillShare>,
+    )
+    await choose('2026')
+    expect(within(panel()).queryByText(/All four rates/)).toBeNull()
   })
 
   it('sits beside the answer card in the tab’s order: after the answer, before the whole bill', () => {

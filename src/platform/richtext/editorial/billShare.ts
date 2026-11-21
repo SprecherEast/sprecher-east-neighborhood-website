@@ -37,8 +37,8 @@ export type BillShareYear = {
 /** The titles of the three rows under the bill, as the page draws them */
 export type BillRowTitles = { breakdown: string; differ: string; sources: string }
 
-/** The rates panel's title and the note under it; the note is empty when the editor wrote none */
-export type BillRatesText = { title: string; note: string }
+/** The rates panel's title */
+export type BillRatesText = { title: string }
 
 /** The block's props: plain data, so it renders without a CMS (decision 0013) */
 export type BillShareProps = {
@@ -61,14 +61,9 @@ const rowTitlesOf = (stored: StoredBillShare['rows']): BillRowTitles => ({
   sources: stored?.sources?.trim() || DEFAULT_BILL_ROW_TITLES.sources,
 })
 
-/**
- * The rates panel's text: the title, or its starting one while the block has none of its own, and
- * the note, which a block stored before the field existed shows as the starting note. A note the
- * editor emptied stays empty: the panel then has no note.
- */
+/** The rates panel's title, or its starting one while the block has none of its own */
 const ratesOf = (stored: StoredBillShare['rates']): BillRatesText => ({
   title: stored?.title?.trim() || DEFAULT_BILL_RATES.title,
-  note: typeof stored?.note === 'string' ? stored.note.trim() : DEFAULT_BILL_RATES.note,
 })
 
 /**
@@ -117,6 +112,7 @@ export function toBillShareProps(stored: StoredBillShare): BillShareProps {
     rows: rowTitlesOf(stored.rows),
     notes: notesOf(stored.notes),
     rates: ratesOf(stored.rates),
-    toasts: toastsOf(stored.toasts),
+    // The note the rates panel held before the toasts: a block that never saved its toasts keeps saying it
+    toasts: toastsOf(stored.toasts, (stored.rates as { note?: unknown } | null | undefined)?.note),
   }
 }

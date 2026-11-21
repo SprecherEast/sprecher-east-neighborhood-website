@@ -69,7 +69,7 @@ Source: `src/platform/richtext/editorial/SectionTabs.tsx`
 
 ## `BillShare`
 
-The whole property-tax bill at the top of a fact tab (#1018, #1111), one column on every width, in the order a neighbor needs it: the bill block's one intro line, the Rough Estimator (the home value the reader can change, which starts at the City's average home, and the switch between tax years), the answer card (the City's tax on the home and year, its increase, the year's status), the whole bill (its own card: the total, one bar whose slices are as wide as their shares, and the receipt naming each, with where the City's share goes (the split alone) as a closed row under the City's own row, #1163), then one card of two rows: why the bill may differ and the sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home value and year, so every amount is the City's slice of the bill. A year in which a body has not set its rate uses that body's rate from the year before, and says so in a note whose room is always kept, so the page never changes height.
+The whole property-tax bill at the top of a fact tab (#1018, #1111), one column on every width, in the order a neighbor needs it: the bill block's one intro line, the Rough Estimator (the home value the reader can change, which starts at the City's average home, and the switch between tax years), the answer card (the City's tax on the home and year, its increase, the year's status), the whole bill (its own card: the total, one bar whose slices are as wide as their shares, and the receipt naming each, with where the City's share goes (the split alone) as a closed row under the City's own row, #1163), then one card of two rows: why the bill may differ and the sources. The tab's other pictures (`children`) follow. Everything is drawn again for every home value and year, so every amount is the City's slice of the bill. A year in which a body has not set its rate uses that body's rate from the year before, and says so on its line in the rates panel and in a toast over it, so the page never changes height.
 
 Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 
@@ -118,15 +118,15 @@ Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 
 ## `RatesPanel`
 
-The rates the bill is worked out from (#1351), beside the answer card: one line per body with its name and the year its rate is from on the left, and its rate as a percent with the same rate in dollars per $1,000 of value on the right. The City's line is highlighted, since the tab is about the City's tax. Every line is built the same way and as tall as the others, so the lines sit level in every year and the panel never changes height; a body with no rate keeps its line, with "No rate yet" in place of the figures. The note under the lines (the editor's wording) says why a rate is from an earlier year; where it does not apply it keeps its room, hidden from everyone. It draws what it is given.
+The rates the bill is worked out from (#1351), beside the answer card: one line per body with its name and the year its rate is from on the left, and its rate as a percent with the same rate in dollars per $1,000 of value on the right. The City's line is highlighted, since the tab is about the City's tax. Every line is built the same way and as tall as the others, so the lines sit level in every year and the panel never changes height; a body with no rate keeps its line, with "No rate yet" in place of the figures. The year each rate is from is on every line, so the panel never depends on the toast (`toast`, #1380) that says why: the page puts it over the panel's top edge (the card is its positioned container), where it covers a sliver and takes no room, so the panel is as tall in every year. It draws what it is given.
 
 Source: `src/platform/richtext/editorial/RatesPanel.tsx`
 
-| Prop    | Type                                        | Required | Description |
-| ------- | ------------------------------------------- | -------- | ----------- |
-| `title` | `string`                                    | yes      |             |
-| `lines` | `readonly RateLine[]`                       | yes      |             |
-| `note`  | `{ text: string; shown: boolean; } \| null` | yes      |             |
+| Prop    | Type                                                                                                                                                                       | Required | Description                                                                    |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------ |
+| `title` | `string`                                                                                                                                                                   | yes      |                                                                                |
+| `lines` | `readonly RateLine[]`                                                                                                                                                      | yes      |                                                                                |
+| `toast` | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | A `Toast` placed over the panel's top edge, or any toast the page shows for it |
 
 **Used by** (direct imports):
 

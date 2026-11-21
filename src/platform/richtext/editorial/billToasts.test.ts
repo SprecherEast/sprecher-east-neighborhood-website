@@ -34,6 +34,7 @@ describe('toastsOf (#1379)', () => {
       ending: 'fade',
       durationMs: 8000,
       acceptLabel: 'OK',
+      placement: 'panel',
     })
   })
 
@@ -63,5 +64,28 @@ describe('toastsOf (#1379)', () => {
   it('ignores a row for a toast the code does not know', () => {
     const toasts = toastsOf([{ toast: 'mystery', message: 'Hi' }])
     expect(Object.keys(toasts).sort()).toEqual(['ratesCarried', 'ratesOwn'])
+  })
+
+  it('puts a toast over its panel unless the editor set it at the bottom of the screen, and falls back to the panel', () => {
+    const toasts = toastsOf([
+      { toast: 'ratesCarried', message: 'Hi', placement: 'screen' },
+      { toast: 'ratesOwn', message: 'Hi', placement: 'sideways' },
+    ])
+    expect(toasts.ratesCarried?.placement).toBe('screen')
+    expect(toasts.ratesOwn?.placement).toBe('panel')
+    expect(toastsOf(undefined).ratesCarried?.placement).toBe('panel')
+  })
+
+  it('keeps the note the rates panel had, as the carried-rates toast, in a block that never saved its toasts (#1380)', () => {
+    expect(toastsOf(undefined, 'Wait for {year}.').ratesCarried?.message).toBe('Wait for {year}.')
+    expect(toastsOf(undefined, 'Wait for {year}.').ratesOwn?.message).toBe(
+      DEFAULT_BILL_TOASTS.ratesOwn.message,
+    )
+  })
+
+  it('turns the carried-rates toast off when the editor had emptied that note, and ignores it once the toasts are saved', () => {
+    expect(toastsOf(undefined, '  ').ratesCarried).toBeNull()
+    const saved = toastsOf([{ toast: 'ratesCarried', message: 'Saved words' }], 'Old note')
+    expect(saved.ratesCarried?.message).toBe('Saved words')
   })
 })

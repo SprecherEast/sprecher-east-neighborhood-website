@@ -10,11 +10,12 @@ import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { Card } from '@/platform/ui/Card'
 import { ShareBill } from '@/platform/ui/ShareBill'
 import { Text } from '@/platform/ui/Text'
+import { Toast } from '@/platform/ui/Toast.client'
 import { COUNT_MS, YEAR_COUNT_MS } from '@/platform/ui/useCountedNumber.client'
 
 import type { BillShareProps } from './billShare'
 import { BillAnswer } from './BillAnswer'
-import { rateLinesFor, ratesNoteFor } from './billRates'
+import { rateLinesFor, yearToastFor } from './billRates'
 import { BillDetails } from './BillDetails'
 import { BreakdownRow } from './BreakdownRow'
 import { notesFor, uniqueSources } from './billShareNotes'
@@ -77,8 +78,7 @@ export const BILL_PAIR = 'grid items-stretch gap-5 md:grid-cols-2'
  * own row, #1163), then one card of two rows: why the bill may differ and the sources. The tab's
  * other pictures (`children`) follow. Everything is drawn again for every home value and year, so
  * every amount is the City's slice of the bill. A year in which a body has not
- * set its rate uses that body's rate from the year before, and says so in a note whose room is
- * always kept, so the page never changes height.
+ * set its rate uses that body's rate from the year before, and says so on its line in the rates panel and in a toast over it, so the page never changes height.
  */
 export function BillShare({
   intro,
@@ -86,6 +86,7 @@ export function BillShare({
   rows,
   notes: noteTemplates,
   rates: ratesText,
+  toasts,
   tabId,
   cityBars,
   cityBreakdown,
@@ -96,6 +97,9 @@ export function BillShare({
   children,
 }: BillShareProps & CityPanelProps & { children?: ReactNode }) {
   const [yearIndex, setYearIndex] = useState(Math.max(years.length - 1, 0))
+  // The year's toast shows each time the reader switches the year, never on load: `key` is a new
+  // one per switch, so a toast the reader has not accepted yet is replaced by the new year's
+  const [yearToast, setYearToast] = useState<{ key: number; open: boolean } | null>(null)
   const year = years[yearIndex]
   // The box holds the home's value in the latest year, the one a reader knows (#1121); an earlier
   // year prices the same home at its earlier value (`homeInYear`)
@@ -142,9 +146,14 @@ export function BillShare({
   }
   // Choosing a year moves the amounts to its rates in half a second
   const selectYear = (index: number) => {
+    if (index === yearIndex) return
     countWith(YEAR_COUNT_MS)
     setYearIndex(index)
+    setYearToast((previous) => ({ key: (previous?.key ?? 0) + 1, open: true }))
   }
+
+  // What the year's toast says, in the editor's words for that year (none when the editor turned it off)
+  const toastFor = yearToast ? yearToastFor(years, yearIndex, toasts) : null
 
   // The City's part follows the home typed (the average home while the box holds no number)
   const cityPart = bill?.parts.find((p) => p.key === 'city')
@@ -213,7 +222,23 @@ export function BillShare({
         <RatesPanel
           title={ratesText.title}
           lines={rateLinesFor(years, yearIndex, rates)}
-          note={ratesNoteFor(years, yearIndex, ratesText.note)}
+          toast={
+            yearToast &&
+            toastFor && (
+              <Toast
+                key={yearToast.key}
+                visible={yearToast.open}
+                tone={toastFor.toast.tone}
+                title={toastFor.toast.title || undefined}
+                message={toastFor.message}
+                ending={toastFor.toast.ending}
+                durationMs={toastFor.toast.durationMs}
+                acceptLabel={toastFor.toast.acceptLabel}
+                placement={toastFor.toast.placement}
+                onDismiss={() => setYearToast({ ...yearToast, open: false })}
+              />
+            )
+          }
         />
       </div>
       <Card

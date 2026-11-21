@@ -63,7 +63,6 @@ export const BILL_SHARE_LIMITS = {
   rowTitle: 40,
   notes: 10,
   noteText: 200,
-  ratesNote: 160,
   toastTitle: 40,
   toastMessage: 160,
   toastAcceptLabel: 24,

@@ -66,6 +66,17 @@ export const billToastsField: ArrayField = {
       admin: { width: '50%' },
     },
     {
+      name: 'placement',
+      type: 'select',
+      label: 'Shown',
+      required: true,
+      defaultValue: 'panel',
+      options: [
+        { value: 'panel', label: 'Over the top of the panel' },
+        { value: 'screen', label: 'At the bottom of the screen' },
+      ],
+    },
+    {
       name: 'fadeSeconds',
       type: 'number',
       label: 'Seconds before it fades',

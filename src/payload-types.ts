@@ -3655,14 +3655,10 @@ export interface BillShareBlock {
     sources: string
   }
   /**
-   * The small panel beside the City’s tax that lists each body’s rate and the year it is from.
+   * The small panel beside the City’s tax that lists each body’s rate and the year it is from. The notice about which year’s rates are in use is a toast, below.
    */
   rates: {
     title: string
-    /**
-     * Shown in a year that uses an earlier year’s rate for some body. {year} is the year shown. Leave empty for no note.
-     */
-    note?: string | null
   }
   /**
    * The small notices that pop up over a panel. Each one is shown by the page when it applies; here you set what it says and how it ends. Empty a message to turn that toast off.
@@ -3675,6 +3671,7 @@ export interface BillShareBlock {
          */
         tone: 'info' | 'success' | 'warning' | 'error'
         ending: 'fade' | 'close' | 'accept'
+        placement: 'panel' | 'screen'
         fadeSeconds?: number | null
         acceptLabel?: string | null
         title?: string | null

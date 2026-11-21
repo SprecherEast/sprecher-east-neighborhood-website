@@ -139,20 +139,24 @@ describe('toBillShareProps: the row titles and notes are the block’s (#1158)',
 describe('toBillShareProps: the rates panel’s text is the block’s (#1351)', () => {
   const block = (rates: unknown) => ({ ...stored([year()]), rates }) as unknown as StoredBillShare
 
-  it('reads the editor’s title and note', () => {
-    expect(toBillShareProps(block({ title: 'Rates', note: 'Wait for {year}.' })).rates).toEqual({
-      title: 'Rates',
-      note: 'Wait for {year}.',
-    })
+  it('reads the editor’s title', () => {
+    expect(toBillShareProps(block({ title: 'Rates' })).rates).toEqual({ title: 'Rates' })
   })
 
-  it('starts a block stored before the fields with the starting title and note', () => {
+  it('starts a block stored before the fields with the starting title', () => {
     expect(toBillShareProps(stored([year()])).rates).toEqual(DEFAULT_BILL_RATES)
   })
 
-  it('keeps a note the editor emptied empty, and gives a blank title its starting one', () => {
-    const { rates } = toBillShareProps(block({ title: '  ', note: '' }))
-    expect(rates).toEqual({ title: DEFAULT_BILL_RATES.title, note: '' })
+  it('gives a blank title its starting one', () => {
+    expect(toBillShareProps(block({ title: '  ' })).rates).toEqual(DEFAULT_BILL_RATES)
+  })
+
+  it('says a stored note in the carried-rates toast, and an emptied one turns that toast off (#1380)', () => {
+    expect(
+      toBillShareProps(block({ title: 'Rates', note: 'Wait for {year}.' })).toasts.ratesCarried
+        ?.message,
+    ).toBe('Wait for {year}.')
+    expect(toBillShareProps(block({ title: 'Rates', note: '' })).toasts.ratesCarried).toBeNull()
   })
 })
 

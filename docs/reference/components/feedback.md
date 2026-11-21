@@ -64,7 +64,7 @@ Source: `src/platform/ui/Toast.client.tsx`
 **Used by** (direct imports):
 
 - Routes: `/dev/gallery`
-- Platform: `platform/ui`
+- Platform: `platform/richtext`, `platform/ui`
 
 ## `Dialog`
 

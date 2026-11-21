@@ -20,6 +20,8 @@ export const BILL_TOAST_TONES = [
   'error',
 ] as const satisfies readonly AlertTone[]
 export const BILL_TOAST_ENDINGS = ['fade', 'close', 'accept'] as const
+/** Where a toast sits: over the top edge of its panel, or at the bottom of the screen */
+export const BILL_TOAST_PLACEMENTS = ['panel', 'screen'] as const
 
 /** One toast as the editor wrote it: its wording and how it ends */
 export type BillToastDefinition = {
@@ -29,6 +31,7 @@ export type BillToastDefinition = {
   /** What it says, with `{year}` blanks; empty turns the toast off */
   message: string
   ending: (typeof BILL_TOAST_ENDINGS)[number]
+  placement: (typeof BILL_TOAST_PLACEMENTS)[number]
   /** How long a fading toast stays, in seconds */
   fadeSeconds: number
   /** What the accept button says */
@@ -45,6 +48,7 @@ type StoredToastRow = {
   title?: string | null
   message?: string | null
   ending?: string | null
+  placement?: string | null
   fadeSeconds?: number | null
   acceptLabel?: string | null
 }
@@ -68,12 +72,19 @@ const heldTo = (seconds: unknown, fallback: number): number =>
  * the block has no list of its own (one stored before the toasts became fields). A toast with no
  * message, or no row in a list the editor kept, is off (null). A row's kind, ending, time or button
  * label that a stored block should not hold falls back to a sensible one, so a toast never breaks
- * the bill.
+ * the bill. A block that never saved a list but holds the note the rates panel had before the
+ * toasts (`legacyNote`) says that note in the carried-rates toast, and an emptied note turns it off.
  */
-export function toastsOf(stored: StoredBillToasts): Record<BillToastId, BillToast | null> {
-  const rows: readonly StoredToastRow[] = Array.isArray(stored)
-    ? stored
-    : BILL_TOAST_IDS.map((toast) => ({ toast, ...DEFAULT_BILL_TOASTS[toast] }))
+export function toastsOf(
+  stored: StoredBillToasts,
+  legacyNote?: unknown,
+): Record<BillToastId, BillToast | null> {
+  const starting = BILL_TOAST_IDS.map((toast) => ({
+    toast,
+    ...DEFAULT_BILL_TOASTS[toast],
+    ...(toast === 'ratesCarried' && typeof legacyNote === 'string' ? { message: legacyNote } : {}),
+  }))
+  const rows: readonly StoredToastRow[] = Array.isArray(stored) ? stored : starting
   const toasts = {} as Record<BillToastId, BillToast | null>
   for (const id of BILL_TOAST_IDS) {
     const row = rows.find((candidate) => candidate.toast === id)
@@ -86,6 +97,7 @@ export function toastsOf(stored: StoredBillToasts): Record<BillToastId, BillToas
             title: row.title?.trim() ?? '',
             message,
             ending: isIn(BILL_TOAST_ENDINGS, row.ending) ? row.ending : 'accept',
+            placement: isIn(BILL_TOAST_PLACEMENTS, row.placement) ? row.placement : 'panel',
             durationMs: heldTo(row.fadeSeconds, fallback.fadeSeconds) * 1000,
             acceptLabel: row.acceptLabel?.trim() || fallback.acceptLabel,
           }

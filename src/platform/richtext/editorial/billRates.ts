@@ -8,6 +8,7 @@ import {
 
 import type { BillShareYear } from './billShare'
 import { fillNote } from './billShareNotes'
+import type { BillToast, BillToastId } from './billToasts'
 
 /** One body's line in the rates panel: the rate it has in the year shown, and the year that rate is from */
 export type RateLine = {
@@ -63,21 +64,21 @@ export function rateLinesFor(
 }
 
 /**
- * The note under the rates panel, the editor's wording with `{year}` filled in, for the first year
- * that carries a rate over from the one before. It shows in that year and any other that does; in
- * a year that carries none it keeps its room, hidden, so the panel is as tall in every year (the
- * same rule as the notes in `notesFor`). Null when no year carries a rate, or the editor wrote no
- * note.
+ * The toast for the year at `index` (#1380): the carried-rates one in a year that uses an earlier
+ * year's rate for some body, the own-rates one in a year where every body has its own, each with
+ * `{year}` filled in as the year shown. Null where the editor turned that toast off, or the year
+ * does not exist.
  */
-export function ratesNoteFor(
+export function yearToastFor(
   years: readonly BillShareYear[],
-  yearIndex: number,
-  template: string,
-): { text: string; shown: boolean } | null {
-  if (!template.trim()) return null
-  const carries = (index: number) => rateLinesFor(years, index).some((line) => line.carried)
-  const first = years.findIndex((_, index) => carries(index))
-  const year = years[first]
+  index: number,
+  toasts: Record<BillToastId, BillToast | null>,
+): { toast: BillToast; message: string } | null {
+  const year = years[index]
   if (!year) return null
-  return { text: fillNote(template, { year: String(year.year) }), shown: carries(yearIndex) }
+  const id: BillToastId = rateLinesFor(years, index).some((line) => line.carried)
+    ? 'ratesCarried'
+    : 'ratesOwn'
+  const toast = toasts[id]
+  return toast ? { toast, message: fillNote(toast.message, { year: String(year.year) }) } : null
 }
