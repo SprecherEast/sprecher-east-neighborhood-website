@@ -23,6 +23,27 @@ const base = {
   runUrl: RUN,
 }
 
+describe('commentBody at the cap', () => {
+  it('names the cap and the pull requests that hold the places', () => {
+    const one = commentBody({ ...base, state: 'limit', cap: '1', holders: '12' })
+    expect(one).toContain('**Not started.** Only one preview runs at a time, and #12 holds it.')
+    const many = commentBody({ ...base, state: 'limit', cap: '3', holders: '4,9,12' })
+    expect(many).toContain('Only 3 previews run at a time, and #4, #9, #12 hold the places.')
+    expect(many).not.toContain('dev.sprechereast.com')
+  })
+
+  it.each([
+    ['no cap', { cap: undefined, holders: '4' }],
+    ['a cap that is not a number', { cap: '1; id', holders: '4' }],
+    ['holders with Markdown', { cap: '1', holders: '4](https://evil.example)' }],
+    ['holders with a leading zero', { cap: '1', holders: '04' }],
+    ['holders that are empty', { cap: '1', holders: '' }],
+    ['a trailing comma', { cap: '1', holders: '4,' }],
+  ])('refuses %s', (_name, change) => {
+    expect(() => commentBody({ ...base, state: 'limit', ...change })).toThrow()
+  })
+})
+
 describe('commentBody', () => {
   it('holds the marker, the link, the short commit, the time and the run, for a live preview', () => {
     const text = commentBody({ ...base, state: 'live', url: 'https://pr-7.dev.sprechereast.com' })
@@ -37,7 +58,8 @@ describe('commentBody', () => {
   it.each([
     ['failed', 'The preview did not go live.'],
     ['taken-down', 'Taken down.'],
-    ['limit', 'Another preview is up'],
+    ['disk-low', 'free disk this preview needs'],
+    ['removed', 'its preview was taken down'],
     ['too-big', 'bigger than a preview may be'],
     ['unreadable', 'could not be measured'],
     ['build-failed', 'The build failed.'],

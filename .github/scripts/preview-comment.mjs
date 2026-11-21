@@ -6,6 +6,8 @@
 // Kept equal to ops/environment.sh's PREVIEW_NUMBER_PATTERN and PREVIEW_COMMIT_PATTERN by a test.
 export const NUMBER_PATTERN = /^[1-9][0-9]{0,5}$/
 export const COMMIT_PATTERN = /^[0-9a-f]{40}$/
+const CAP_PATTERN = /^[1-9][0-9]{0,2}$/
+const HOLDERS_PATTERN = /^[1-9][0-9]{0,5}(,[1-9][0-9]{0,5})*$/
 export const MARKER = '<!-- pull-request-preview -->'
 const BOT = 'github-actions[bot]'
 
@@ -20,7 +22,16 @@ const STATES = {
     'Taken down.',
     'The server’s isolation check failed, so this preview was stopped and removed. The workflow run has the log.',
   ],
-  limit: ['Not started.', 'Another preview is up, and only one runs at a time for now.'],
+  // `limit` gets the cap and the pull requests that hold the places (see `limitSentence`).
+  limit: ['Not started.', ''],
+  'disk-low': [
+    'Not started.',
+    'The server does not have the free disk this preview needs without going below what production keeps free. It starts when a push or a re-run finds room.',
+  ],
+  removed: [
+    'Removed.',
+    'This pull request is closed, so its preview was taken down. A reopened pull request gets a new preview.',
+  ],
   'too-big': [
     'Not started.',
     'The build is bigger than a preview may be, as sent or once unpacked.',
@@ -48,8 +59,20 @@ export function previewState({ available, buildResult, deployResult }) {
   return 'failed'
 }
 
+/** What `limit` says: the cap, and which pull requests hold the places. Both are checked, being a job's output. */
+function limitSentence(cap, holders) {
+  if (!CAP_PATTERN.test(String(cap)) || !HOLDERS_PATTERN.test(String(holders)))
+    throw new Error('not a cap and the pull requests that hold it')
+  const places = Number(cap) === 1 ? 'one preview runs' : `${cap} previews run`
+  const list = String(holders)
+    .split(',')
+    .map((n) => `#${n}`)
+    .join(', ')
+  return `Only ${places} at a time, and ${list} ${list.includes(',') ? 'hold' : 'holds'} ${Number(cap) === 1 ? 'it' : 'the places'}. This one starts when a place frees up and a push or a re-run asks again.`
+}
+
 /** The comment's text. Throws on a value that isn't what it should be: better no comment than a wrong one. */
-export function commentBody({ state, number, sha, url, time, runUrl }) {
+export function commentBody({ state, number, sha, url, time, runUrl, cap, holders }) {
   if (!Object.hasOwn(STATES, state)) throw new Error('unknown state')
   if (!NUMBER_PATTERN.test(String(number))) throw new Error('not a pull request number')
   if (!COMMIT_PATTERN.test(sha)) throw new Error('not a commit')
@@ -58,6 +81,7 @@ export function commentBody({ state, number, sha, url, time, runUrl }) {
   if (!/^\d{4}-\d\d-\d\d \d\d:\d\d UTC$/.test(time)) throw new Error('not a time')
   const [headline, rest] = STATES[state]
   let sentence = `**${headline}**${rest ? ` ${rest}` : ''}`
+  if (state === 'limit') sentence = `**${headline}** ${limitSentence(cap, holders)}`
   if (state === 'live') {
     // `number` was checked above, so it is digits only and the address needs no pattern of its own
     if (!new RegExp(`^https://pr-${number}\\.[a-z0-9-]+(\\.[a-z0-9-]+)+$`).test(url))

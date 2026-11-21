@@ -2,27 +2,30 @@ name: Pull request preview
 
 # Builds a pull request that carries the `preview` label and puts it live at
 # https://pr-<number>.dev.sprechereast.com, with one comment on the pull request that holds the link
-# (#1075, epic #1070; the design and its limits are in ops/previews.md). Not a required check: a failed
+# (#1075, epic #1070; the design and its limits are in ops/previews.md), and takes the preview down when the
+# pull request closes, merged or not (#1076). The nightly sweep is preview-sweep.yml. Not a required check: a failed
 # preview never blocks a merge or the production deploy.
 #
 # `pull_request`, never `pull_request_target`, which would run with the base repository's secrets. A
 # pull request from a fork or from Dependabot gets no secrets and a read-only token, so the gate ends
 # green with a note saying why. For a same-repository pull request this file is the pull request's own
 # copy, so what holds the line is the server: the `preview` environment holds only the restricted preview
-# account's key, which can run the wrapper's five actions and nothing else (ops/previews.md).
+# account's key, which can run the wrapper's six actions and nothing else (ops/previews.md).
 #
 # Three kinds of job, so the key never sits beside code nobody has reviewed:
 #   gate, build   no environment, no secret; build runs the pull request's npm install scripts
-#   facts, deploy the `preview` environment (the key); they check out the default branch's scripts,
+#   facts, deploy, teardown
+#                 the `preview` environment (the key); they check out the default branch's scripts,
 #                 never the pull request's or its base's (a stacked pull request's base is another unreviewed
 #                 branch), and never unpack or run the build: it is listed, and sent to the server on stdin
-#   report        a write token for the pull request comment, and nothing else
+#   report, removed
+#                 a write token for the pull request comment, and nothing else
 # No job names `production`, and none calls a privileged workflow: the wrapper's deploy prints values from
 # the release into this public log.
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened, labeled, closed]
 
 permissions:
   contents: read
@@ -30,7 +33,8 @@ permissions:
 jobs:
   gate:
     name: Pull request preview gate
-    if: github.event.action != 'labeled' || github.event.label.name == 'preview'
+    # (a closed pull request builds nothing: the `teardown` job takes its preview down)
+    if: github.event.action != 'closed' && (github.event.action != 'labeled' || github.event.label.name == 'preview')
     # A newer push replaces an older run's gate; a label other than `preview` only skips it and gets a group
     # of its own, so it never cancels anything.
     concurrency:
@@ -166,6 +170,8 @@ jobs:
     outputs:
       result: ${{ steps.deploy.outputs.result }}
       url: ${{ steps.deploy.outputs.url }}
+      cap: ${{ steps.deploy.outputs.cap }}
+      holders: ${{ steps.deploy.outputs.holders }}
     steps:
       # the default branch's scripts, never the pull request's or its base's: a stacked pull request's base is
       # another unreviewed branch (this job holds the key)
@@ -194,7 +200,6 @@ jobs:
           NUMBER: ${{ github.event.pull_request.number }}
           SHA: ${{ github.event.pull_request.head.sha }}
           ARCHIVE: ${{ runner.temp }}/release.tar.gz
-          PREVIEWS_AT_ONCE: '1' # temporary, until the cap work on #1070 lands
         run: bash .github/scripts/preview-deploy.sh
 
   report:
@@ -225,6 +230,8 @@ jobs:
           BUILD_RESULT: ${{ needs.build.result }}
           DEPLOY_RESULT: ${{ needs.deploy.outputs.result }}
           DEPLOY_URL: ${{ needs.deploy.outputs.url }}
+          CAP: ${{ needs.deploy.outputs.cap }}
+          HOLDERS: ${{ needs.deploy.outputs.holders }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         with:
           script: |
@@ -243,6 +250,8 @@ jobs:
               number,
               sha: process.env.HEAD_SHA,
               url: process.env.DEPLOY_URL,
+              cap: process.env.CAP,
+              holders: process.env.HOLDERS,
               time: utcMinutes(new Date()),
               runUrl: `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             });
@@ -258,3 +267,100 @@ jobs:
               await github.rest.issues.createComment({ ...context.repo, issue_number: number, body });
             }
             core.notice(`Pull request preview: ${state}`);
+
+  # When the pull request closes, merged or not: the preview is taken down (#1076). For a pull request closed by
+  # merging, the run's ref is the base branch; this job names only `preview`, as the others do. Only a pull request
+  # of this repository can have had a preview (a fork's or Dependabot's run gets no secrets).
+  teardown:
+    name: Remove preview
+    if: >-
+      github.event.action == 'closed'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && github.event.pull_request.user.login != 'dependabot[bot]'
+    # The same group as this pull request's deploy, never cancelled: a deploy in progress finishes first, and a
+    # deploy still waiting is replaced by this removal, so a closed pull request is not put live after it.
+    concurrency:
+      group: pull-request-preview-deploy-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    environment: preview # the preview key and connection values
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      removed: ${{ steps.teardown.outputs.removed }}
+    steps:
+      # the default branch's scripts, never the pull request's or its base's (this job holds the key)
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      # Without the environment's key there is nothing to remove (previews are unavailable), and no failure to report.
+      - name: Check the environment holds the key
+        id: values
+        env:
+          KEY: ${{ secrets.PREVIEW_SSH_KEY }}
+        run: echo "set=$([ -n "$KEY" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - uses: ./.github/actions/vps-ssh
+        if: steps.values.outputs.set == 'true'
+        with:
+          host: ${{ secrets.PREVIEW_SSH_HOST }}
+          user: ${{ secrets.PREVIEW_SSH_USER }}
+          port: ${{ secrets.PREVIEW_SSH_PORT || '22' }}
+          key: ${{ secrets.PREVIEW_SSH_KEY }}
+          known-hosts: ${{ secrets.PREVIEW_SSH_KNOWN_HOSTS }}
+
+      - name: Take the preview down, through the wrapper
+        id: teardown
+        if: steps.values.outputs.set == 'true'
+        env:
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: bash .github/scripts/preview-teardown.sh
+
+  removed:
+    name: Pull request preview comment (removed)
+    needs: teardown
+    if: needs.teardown.outputs.removed == 'yes'
+    concurrency:
+      group: pull-request-preview-report-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write # the one comment, and nothing else
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      # Only the comment the preview already has is edited: a pull request that never had one gets none.
+      - uses: actions/github-script@v9
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        with:
+          script: |
+            const { pathToFileURL } = require('url');
+            const { commentBody, findStickyComment, utcMinutes } = await import(
+              pathToFileURL(`${process.env.GITHUB_WORKSPACE}/.github/scripts/preview-comment.mjs`).href
+            );
+            const number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo,
+              issue_number: number,
+              per_page: 100,
+            });
+            const existing = findStickyComment(comments);
+            if (!existing) return;
+            const body = commentBody({
+              state: 'removed',
+              number,
+              sha: process.env.HEAD_SHA,
+              time: utcMinutes(new Date()),
+              runUrl: `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+            await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+            core.notice('Pull request preview: removed');

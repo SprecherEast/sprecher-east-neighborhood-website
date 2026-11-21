@@ -7,10 +7,12 @@
 #
 # Actions (one line, words separated by single spaces):
 #   facts                      public facts about the server, for the build (Node version, free disk)
-#   list                       the previews that exist, each with the commit that is live
+#   list                       every preview, or leftover of one, found anywhere: its commit, how long ago it was
+#                              last deployed, and whether its folder, Caddy block and PM2 process exist (#1076)
 #   upload <number> <commit>   a release archive (.tar.gz) on stdin, unpacked into the preview's folder
 #   deploy <number> <commit>   puts that uploaded release live (Caddy block, then ops/deploy-release.sh)
-#   teardown <number>          stops the preview, deletes its folder and its Caddy block
+#   teardown <number>          stops the preview, deletes its folder and its Caddy block; a second run, or one for a
+#                              number with only leftovers (a block, a process), succeeds too
 #   credentials <number>       prints the preview's test sign-in (#1394), only when the seed applied exactly it
 #
 # Every word is checked against a fixed pattern before anything uses it, and no word is ever passed to
@@ -84,6 +86,36 @@ take_down() {
   sudo_caddy "$number"
 }
 
+# True when <bytes> more on the previews' disk still leaves production's floor of free space (#1076). The one
+# floor is PREVIEW_FREE_FLOOR_KB (environment.sh), the number the production deploy's preflight requires.
+no_disk="there is not enough free disk to put this preview up and keep production's floor"
+enough_disk() { # <bytes about to be written>
+  local free_kb
+  free_kb=$(df -Pk "$PREVIEW_ROOT" | awk 'NR == 2 { print $4 }')
+  [[ "$free_kb" =~ ^[0-9]+$ ]] || return 1
+  [ $((free_kb - ($1 + 1023) / 1024)) -gt "$PREVIEW_FREE_FLOOR_KB" ]
+}
+
+# PM2's processes that belong to a preview, one `<name> <online|stopped>` line each. `pm2 jlist` prints one line of
+# JSON, which may follow lines of PM2's own notices. The name's prefix comes from environment.sh, and bash checks
+# the number behind it: nothing PM2 prints reaches a path or a command otherwise.
+process_states() { # <name prefix>
+  pm2 jlist 2>/dev/null | node -e '
+    const lines = require("fs").readFileSync(0, "utf8").split("\n").reverse();
+    for (const line of lines) {
+      if (!line.startsWith("[")) continue;
+      let list;
+      try { list = JSON.parse(line); } catch { continue; }
+      if (!Array.isArray(list)) continue;
+      for (const p of list) {
+        const name = String(p && p.name);
+        if (name.startsWith(process.argv[1]) && /^[A-Za-z0-9_-]+$/.test(name))
+          console.log(name + " " + (p.pm2_env && p.pm2_env.status === "online" ? "online" : "stopped"));
+      }
+      break;
+    }' "$1" || true
+}
+
 # Proof, as this account, that it can't reach production (#1346). When it can, the preview comes down and
 # the request fails, so unreviewed code never stays up (or starts) beside production.
 isolated_or_down() {
@@ -101,45 +133,83 @@ case "$action" in
     ;;
 
   list)
+    # Everything that exists for a pull request number, wherever it is found (the folder, the Caddy block, the PM2
+    # process), so the nightly sweep sees a leftover that has no folder too (#1076). One line per number, lowest
+    # first. `idle` is the seconds since the live release was switched in (the folder's age when none is).
+    now=$(date +%s)
+    prefix=${APP_NAME%"$PREVIEW_NUMBER"}
+    declare -A has_folder=() has_block=() process=()
     for folder in "$PREVIEW_ROOT"/pr-*; do
       [ -d "$folder" ] && [ ! -L "$folder" ] || continue
       id=${folder##*/pr-}
-      valid_preview_number "$id" || continue
+      ! valid_preview_number "$id" || has_folder[$id]=yes
+    done
+    for file in "$PREVIEW_CADDY_DIR"/pr-*.caddy; do
+      [ -f "$file" ] && [ ! -L "$file" ] || continue
+      id=${file##*/pr-}
+      id=${id%.caddy}
+      ! valid_preview_number "$id" || has_block[$id]=yes
+    done
+    while read -r name state; do
+      id=${name#"$prefix"}
+      ! valid_preview_number "$id" || process[$id]=$state
+    done < <(process_states "$prefix")
+    ids=$(printf '%s\n' "${!has_folder[@]}" "${!has_block[@]}" "${!process[@]}" | sed -n '/^[0-9][0-9]*$/p' | sort -nu)
+    for id in $ids; do
+      folder="$PREVIEW_ROOT/pr-$id"
       live=$(readlink "$folder/current" 2>/dev/null || true)
       live=${live#releases/}
       valid_commit "$live" || live=none
-      echo "preview=$id commit=$live"
+      changed=$(stat -c %Y -- "$folder/current" 2>/dev/null || stat -c %Y -- "$folder" 2>/dev/null || echo "$now")
+      idle=$((now - changed))
+      [ "$idle" -ge 0 ] || idle=0
+      echo "preview=$id commit=$live idle=$idle folder=${has_folder[$id]:-no} block=${has_block[$id]:-no} process=${process[$id]:-none}"
     done
     ;;
 
   upload)
-    if [ ! -d "$APP_DIR" ]; then # a new preview: not beyond the allowed number
-      count=$(find "$PREVIEW_ROOT" -maxdepth 1 -type d -name 'pr-*' | wc -l)
-      [ "$count" -lt "$PREVIEW_MAX_COUNT" ] || refuse "there are already as many previews as are allowed"
-    fi
-    [ ! -L "$APP_DIR/releases" ] || refuse "releases is a link"
-    mkdir -p "$APP_DIR/releases"
-    [ "$(readlink "$APP_DIR/current" 2>/dev/null || true)" != "releases/$commit" ] ||
-      refuse "that release is live; not replacing it"
+    # The cap and the creation of the folder are one step under a lock, so two previews that start together
+    # can't both take the last place. The lock is dropped before the archive is read, which can be slow.
+    created=no
+    [ -d "$APP_DIR" ] || created=yes
+    (
+      flock 8
+      if [ "$created" = yes ]; then # a new preview: not beyond the cap
+        count=$(find "$PREVIEW_ROOT" -maxdepth 1 -type d -name 'pr-*' | wc -l)
+        [ "$count" -lt "$PREVIEW_MAX_COUNT" ] || refuse "there are already as many previews as are allowed"
+      fi
+      [ ! -L "$APP_DIR/releases" ] || refuse "releases is a link"
+      mkdir -p "$APP_DIR/releases"
+    ) 8>"$PREVIEW_ROOT/.cap-lock"
+    uploaded=no
     archive="$APP_DIR/releases/.incoming-$commit.tar.gz"
     incoming="$APP_DIR/releases/.incoming-$commit"
-    trap 'rm -rf "$archive" "$incoming"' EXIT
+    # A new preview that did not get its release leaves no empty folder behind: it would hold a place under the cap.
+    trap 'rm -rf "$archive" "$incoming"; [ "$created" != yes ] || [ "$uploaded" = yes ] || rm -rf -- "${APP_DIR:?}"' EXIT
+    [ "$(readlink "$APP_DIR/current" 2>/dev/null || true)" != "releases/$commit" ] ||
+      refuse "that release is live; not replacing it"
+    # Before reading anything: room for the largest archive that may be sent, above production's floor (#1076).
+    enough_disk "$PREVIEW_UPLOAD_MAX_BYTES" || refuse "$no_disk"
     rm -rf "$archive" "$incoming" "$APP_DIR/releases/$commit"
     # One byte over the limit tells a too-big archive from one that fits exactly.
     head -c "$((PREVIEW_UPLOAD_MAX_BYTES + 1))" >"$archive"
-    [ "$(stat -c %s "$archive")" -le "$PREVIEW_UPLOAD_MAX_BYTES" ] || refuse "the archive is too big"
+    archive_bytes=$(stat -c %s "$archive")
+    [ "$archive_bytes" -le "$PREVIEW_UPLOAD_MAX_BYTES" ] || refuse "the archive is too big"
     # No member may be an absolute path or climb out with `..`.
     listing=$(tar -tzf "$archive") || refuse "the archive is not a readable .tar.gz"
     ! grep -Eq '(^|/)\.\.(/|$)|^/' <<<"$listing" || refuse "the archive has a path that leaves the release"
     # What it unpacks to, from its listing, before anything is written (#1346).
     measured=0
-    unpacked_bytes "$archive" "$PREVIEW_UNPACK_MAX_BYTES" >/dev/null || measured=$?
+    unpacked=$(unpacked_bytes "$archive" "$PREVIEW_UNPACK_MAX_BYTES") || measured=$?
     [ "$measured" != 2 ] || refuse "the archive unpacks to more than is allowed"
     [ "$measured" = 0 ] || refuse "the archive's listing can't be measured"
+    # At its peak the folder holds the archive and what it unpacks to: that must leave production's floor free.
+    enough_disk "$((archive_bytes + unpacked))" || refuse "$no_disk"
     mkdir "$incoming"
     tar --no-same-owner --no-same-permissions -xzf "$archive" -C "$incoming" || refuse "the archive did not unpack"
     links_stay_inside "$incoming" || refuse "the release has a link that leads outside it"
     mv -T "$incoming" "$APP_DIR/releases/$commit"
+    uploaded=yes
     echo "::notice title=Preview::preview $number: release uploaded"
     ;;
 

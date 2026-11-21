@@ -23,7 +23,7 @@ on the VPS. Nothing here is run by hand during a normal deploy. Changes to the s
 | `preview-settings.sh`        | VPS    | Writes a pull request preview's own `.env.local` at its first deploy: random secrets, Cloudflare's Turnstile test keys, no mail, analytics or outside keys; kept on redeploys, never copied from production; see [`previews.md`](previews.md)                                                                                                                  | #1344      |
 | `preview-accounts.sh`        | VPS    | Makes a pull request preview's test account passwords on every deploy: one random password per role (`admin`, `editor`, `resident`, `guest`) in a private file (mode 600) in its folder, never printed; the seed reads it; see [`previews.md`](previews.md)                                                                                                    | #1393      |
 | `install-preview-access.sh`  | VPS    | Production deploy only: makes the restricted preview account, its root-owned copy of main's preview scripts, one sudo rule and the key line; changes nothing on any doubt; see [Pull request preview account](#pull-request-preview-account)                                                                                                                   | #1345      |
-| `preview-wrapper.sh`         | VPS    | The preview key's forced command: only `facts`, `list`, `upload`, `deploy` and `teardown`, every value checked, nothing passed to a shell                                                                                                                                                                                                                      | #1345      |
+| `preview-wrapper.sh`         | VPS    | The preview key's forced command: only `facts`, `list`, `upload`, `deploy`, `teardown` and `credentials`, every value checked, nothing passed to a shell                                                                                                                                                                                                       | #1345      |
 | `preview-caddy.sh`           | VPS    | Run as root through one sudo rule with a pull request number: writes or removes that preview's Caddy block from main's templates, validated, atomic, reloaded or rolled back                                                                                                                                                                                   | #1345      |
 | `preview-isolation-check.sh` | VPS    | Run as the preview account before and after every preview deploy (and before the key line is written): fails when it can open production's settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to Caddy's admin endpoint; the wrapper then takes the preview down                                                         | #1346      |
 | `preview-host-guards.sh`     | VPS    | Production deploy only, as root: takes "others" access off production's folders, adds the account to `cron.deny` and `at.deny`, and refuses its connections to Caddy's admin port with an owner-match firewall rule that a boot unit restores; changes nothing on any doubt; see [Pull request preview account](#pull-request-preview-account)                 | #1346      |
@@ -159,9 +159,11 @@ part 2 of #1074; the owner's decision of 2026-11-11 is recorded on #1074). The p
   validate it before it is moved into `/etc/caddy/previews/` (under a name the folder's import does not
   match), moves it in with one rename, validates the whole config, reloads, and on any failure puts the
   previous block back and reloads again. A preview with no folder gets its block removed. It takes the shared
-  Caddy lock first (`caddy-lock-lib.sh`), and refuses a new block beyond `PREVIEW_MAX_COUNT` (10), because
-  each block orders a certificate from a budget production shares; the wrapper refuses a new preview folder
-  beyond the same number.
+  Caddy lock first (`caddy-lock-lib.sh`), and refuses a new block beyond `PREVIEW_MAX_COUNT` (the cap, one for
+  now: [the cap](previews.md#removal-the-cap-and-the-sweep-1076)), because each block orders a certificate from a
+  budget production shares; the wrapper refuses a new preview folder beyond the same number, under a lock so two
+  starting together can't both take the last place, and removes the empty folder of a new preview whose upload
+  failed.
 - **The installer** changes nothing, and says why in a warning, when anything is unexpected: not root, a
   different account of that name, a link or foreign owner on any path it uses, a sudo rule or key file it
   did not write, an sshd that would not take the key line (public keys off, other key files, `AllowGroups`,
@@ -243,6 +245,15 @@ was taken down`. Its paths and the admin port are defined once, in `environment.
   `ip6tables -S OUTPUT` show the rule first; `systemctl is-enabled sprecher-east-preview-firewall`; as the
   account, `curl -m 3 localhost:2019` is refused while as root it answers, and `systemctl reload caddy` still
   works. Record the results on #1346.
+- **Disk floor** (#1076). Before it reads an archive the wrapper checks that the largest archive allowed would
+  leave more than `PREVIEW_FREE_FLOOR_KB` free on the previews' disk (3 GiB, the floor the production deploy's
+  preflight requires), and after measuring it that the archive and what it unpacks to would too. Otherwise it
+  refuses with a fixed text, for a new preview and for a redeploy alike.
+- **`list` and `teardown`** (#1076). `list` prints one line per pull request number found anywhere, the folder,
+  the Caddy block or the PM2 process (`preview=<n> commit=<sha|none> idle=<seconds> folder=<yes|no>
+block=<yes|no> process=<online|stopped|none>`; `idle` is the age of the `current` link, the folder's when
+  there is none), so a leftover with no folder is seen. `teardown <number>` succeeds again when there is nothing
+  to remove, and also removes a block or a process that has no folder.
 - **An upload's unpacked size** is limited, as well as its compressed size: the wrapper adds up the sizes in the
   archive's listing before it unpacks anything and refuses more than `PREVIEW_UNPACK_MAX_BYTES` (3 GiB), a size
   with more digits than the limit (so a huge sparse-file size can't wrap the sum) and an archive whose listing it

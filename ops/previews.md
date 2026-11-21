@@ -84,7 +84,7 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   reached by a key that can run only the wrapper's six actions, with one sudo rule for the Caddy block
   script. What it is, what it may do and how to check it: [`README.md`](README.md#pull-request-preview-account).
   `environment.sh` holds its names (`PREVIEW_USER`, `PREVIEW_HOME`, `PREVIEW_ACCESS_DIR`), the
-  upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, 10) and the number and commit patterns, so no script writes its own.
+  upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, the cap, one for now), the disk floor (`PREVIEW_FREE_FLOOR_KB`), the idle limit (`PREVIEW_IDLE_DAYS`) and the number and commit patterns, so no script writes its own.
 - **The key is in place** (#1385). The public half is committed as `ops/preview-deploy-key.pub`; the private half is the
   `PREVIEW_SSH_KEY` secret of the GitHub environment `preview`, and nowhere else. The production deploy writes the key's
   line only when the host guards and the isolation check pass; its log says which.
@@ -215,9 +215,9 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
 - **What a result looks like.** The comment says one of: live (with the link), deploy failed (the previous
   release was put back where there was one), **taken down** (the isolation check failed before or after the
   deploy: a failed check before it takes down a preview already running under that number, so the comment
-  says so), not started because another preview is up (the temporary limit of one at a time, until the cap work
-  on #1070 lands: `PREVIEWS_AT_ONCE` in the workflow), not started because the build is too big, build failed,
-  or **previews unavailable**. Unavailable means the environment doesn't hold the key yet, or the server
+  says so), not started because the cap is reached (the comment names the cap and the pull requests that hold the
+  places), not started because the server lacks the free disk, **removed** (the pull request closed), not started
+  because the build is too big, build failed, or **previews unavailable**. Unavailable means the environment doesn't hold the key yet, or the server
   doesn't take it: the production deploy writes the key's line only when the host guards and the isolation
   check pass, so "no key line" shows from outside as a refused sign-in. It is reported once and **never
   retried**.
@@ -231,7 +231,53 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   as running it by hand: it lives in the release's own code, so it is no boundary. Production is kept out by the
   `is_preview` gate in `main`'s `deploy-release.sh` and by the preview account's isolation.
 - **Not covered.** A detached process a preview starts survives `teardown`, which stops only PM2's process
-  (the account can't schedule jobs: cron and at are denied). Removal when the pull request closes, the nightly
-  sweep and the real cap are later issues on #1070.
-- **Undo.** Delete or disable `preview.yml`; production is untouched. Remove a running preview with the wrapper's
-  `teardown`.
+  (the account can't schedule jobs: cron and at are denied).
+
+## Removal, the cap and the sweep (#1076)
+
+- **Removal when the pull request closes**, merged or not (`preview.yml`, job `teardown`, in environment
+  `preview`; for a merge the run's ref is the base branch and the job still names only `preview`). It is in the
+  same concurrency group as that pull request's deploy and never cancels one: a deploy in progress finishes
+  first, and a deploy still waiting is replaced by the removal. `.github/scripts/preview-teardown.sh` asks the
+  wrapper's `list`, and only when the number is there asks `teardown`, then `list` again to prove it is gone. The
+  wrapper stops the PM2 process, deletes the folder (releases, database, media, data and settings file are all
+  inside it) and removes the Caddy block, then validates and reloads Caddy; each step succeeds when its item is
+  already gone, so a second run succeeds too. The order is the wrapper's (process, folder, block) because
+  `preview-caddy.sh` removes a block when the folder is gone. **Caddy's certificate storage is never touched**,
+  so a reopened pull request reuses its certificate. A job edits the sticky comment, only when one exists, to
+  say the preview was removed. A fork's or Dependabot's pull request never had a preview and is skipped. A
+  deploy still queued behind a removal in another run could put a closed pull request live again: the nightly
+  sweep removes it, because its pull request is not open.
+- **The cap** is `PREVIEW_MAX_COUNT` in `ops/environment.sh`, defined once. The workflow's check
+  (`preview-deploy.sh`), the wrapper (a new folder, under a lock) and the Caddy script (a new block) all read it.
+  It replaces the workflow's temporary one-preview limit and has the same value, **one, until it is measured**:
+  with production and Umami running, one preview's memory at rest and during a short click-through, free
+  memory and swap, and the disk one preview uses (release, database, media), taking #924's figures where they
+  exist. The cap is the number that keeps production's memory headroom, the deploy's 3 GiB free-disk floor and
+  the backup reserve intact; then it is raised in that one line. Those measurements need the server and are not
+  made by this change (recorded on #1076).
+- **At the cap: refuse** (decided, #1076). The sticky comment names the cap and the pull requests that hold the
+  places, and the preview starts on a later push or re-run once a place is free. Replacing the preview pushed
+  least recently was weighed and not chosen: it would take down a preview someone may be reviewing, to give a
+  place to a pull request that may have none to review, and with closing and the sweep freeing places on their
+  own the refusal is the less surprising of the two. A preview that already holds a place is redeployed even at
+  the cap.
+- **The disk guard** is the wrapper's (README, "Disk floor"): a new preview or a redeploy is refused, with a fixed
+  text the workflow turns into the comment "not started", when free disk afterwards would not stay above the
+  production deploy's floor.
+- **The nightly sweep** (`preview-sweep.yml`, 07:17 UTC, and by hand with `workflow_dispatch`, in environment
+  `preview`) reads the server's `list` first and the open pull requests after, so a preview created in between is
+  never taken for a stray, and removes through `teardown` each preview whose pull request is not open, each
+  leftover with no folder (a Caddy block or a PM2 process only), and each preview nobody deployed for
+  `PREVIEW_IDLE_DAYS` (7). The next push or a re-run of the deploy brings an idle one back, with its stored
+  certificate. If either list fails the sweep removes nothing. The job summary lists what was removed and why.
+  The token it has reads pull requests and writes nothing.
+- **After a reboot** (decided, #1076; carried from #1345): previews are **not** started again, so production starts
+  alone on a small machine. PM2's startup and resurrect would bring every preview back at once and, with Caddy's
+  blocks still in place, spend the memory the cap is meant to protect right when production is starting. The
+  sweep's summary lists a preview whose process is stopped and leaves it (an idle one is removed by the rules
+  above); the next push or a re-run of its deploy starts it. To be checked once on the server after the cap is
+  measured: reboot, see production answer and the previews stopped, push to one and see it come back.
+
+- **Undo.** Delete or disable `preview.yml` and `preview-sweep.yml`; production is untouched. Remove a running preview with the wrapper's
+  `teardown`; reverting the removal and sweep leaves previews until `teardown` is run by hand.

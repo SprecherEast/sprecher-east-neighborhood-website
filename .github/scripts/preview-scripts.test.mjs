@@ -29,7 +29,11 @@ echo "ssh $request" >> "$STUB_LOG"
 if [ "$action" = upload ]; then wc -c >> "$STUB_LOG"; fi
 case "$action" in
   facts) echo "$STUB_FACTS" ;;
-  list) printf '%s' "$STUB_LIST" ;;
+  list)
+    # after a teardown the server's answer can change (STUB_LIST_AFTER), as it does once the preview is gone
+    if grep -q '^ssh upload' "$STUB_LOG" && [ -n "\${STUB_LIST_AFTER_UPLOAD+x}" ]; then printf '%s' "$STUB_LIST_AFTER_UPLOAD"
+    elif grep -q '^ssh teardown' "$STUB_LOG" && [ -n "\${STUB_LIST_AFTER+x}" ]; then printf '%s' "$STUB_LIST_AFTER"; else printf '%s' "$STUB_LIST"; fi ;;
+  upload) printf '%s' "$STUB_UPLOAD_TEXT" ;;
   deploy) printf '%s' "$STUB_DEPLOY_TEXT" ;;
 esac
 code_var="STUB_EXIT_$(echo "$action" | tr a-z A-Z)"
@@ -144,7 +148,7 @@ describe('preview-deploy.sh', () => {
   })
 
   it('does not take another pull request live at the same commit for its own', () => {
-    const r = deploy({ STUB_LIST: `preview=9 commit=${SHA}\n`, PREVIEWS_AT_ONCE: '2' })
+    const r = deploy({ STUB_LIST: `preview=9 commit=${SHA}\n`, PREVIEW_MAX_COUNT: '2' })
     expect(r.log).toContain(`ssh upload 7 ${SHA}`)
   })
 
@@ -159,17 +163,53 @@ describe('preview-deploy.sh', () => {
     expect(r.log).toContain(`ssh upload 7 ${SHA}`)
   })
 
-  it('refuses a second preview while another is up, and says so without failing', () => {
-    const r = deploy({ STUB_LIST: `preview=3 commit=${'b'.repeat(40)}\npreview=9 commit=none\n` })
+  it('refuses a new preview at the cap, naming the cap and who holds the places, without failing', () => {
+    const r = deploy({
+      STUB_LIST: `preview=3 commit=${'b'.repeat(40)} idle=5 folder=yes block=yes process=online\npreview=9 commit=none idle=5 folder=yes block=no process=none\n`,
+      PREVIEW_MAX_COUNT: '2',
+    })
     expect(r.code).toBe(0)
-    expect(r.written).toBe('result=limit\n')
+    expect(r.written).toBe('cap=2\nholders=3,9\nresult=limit\n')
     expect(r.log).not.toContain('upload')
     expect(r.log).not.toContain('deploy')
   })
 
+  it('redeploys a preview that already holds a place, even with the cap reached', () => {
+    const r = deploy({
+      STUB_LIST: `preview=3 commit=${'b'.repeat(40)}\npreview=7 commit=${'c'.repeat(40)}\n`,
+      PREVIEW_MAX_COUNT: '1',
+    })
+    expect(r.written).toMatch(/result=live\n$/)
+    expect(r.log).toContain(`ssh upload 7 ${SHA}`)
+  })
+
+  it('says so, without failing, when the server refuses for the cap after a race', () => {
+    const r = deploy({
+      STUB_EXIT_UPLOAD: '2',
+      STUB_UPLOAD_TEXT:
+        '::error title=Preview access::refused: there are already as many previews as are allowed\n',
+      STUB_LIST_AFTER_UPLOAD: `preview=9 commit=none idle=1 folder=yes block=no process=none\n`,
+    })
+    expect(r.code).toBe(0)
+    expect(r.written).toBe('cap=1\nholders=9\nresult=limit\n')
+    expect(r.log).not.toContain('ssh deploy')
+  })
+
+  it('says so, without failing, when the server refuses for the disk floor', () => {
+    const r = deploy({
+      STUB_EXIT_UPLOAD: '2',
+      STUB_UPLOAD_TEXT:
+        "::error title=Preview access::refused: there is not enough free disk to put this preview up and keep production's floor\n",
+    })
+    expect(r.code).toBe(0)
+    expect(r.written).toBe('result=disk-low\n')
+    expect(r.out).toContain('not enough free disk')
+    expect(r.log).not.toContain('ssh deploy')
+  })
+
   it('lets as many start as the limit says', () => {
     const r = deploy({
-      PREVIEWS_AT_ONCE: '2',
+      PREVIEW_MAX_COUNT: '2',
       STUB_LIST: `preview=3 commit=${'b'.repeat(40)}\n`,
     })
     expect(r.written).toMatch(/result=live\n$/)
@@ -232,7 +272,7 @@ describe('preview-deploy.sh', () => {
     expect(r.log).toBe('')
   })
 
-  it('never calls the deploy script directly: only the wrapper’s five words are used', () => {
+  it('never calls the deploy script directly: only the wrapper’s actions are used', () => {
     const text = fs
       .readFileSync(path.join(SCRIPTS, 'preview-deploy.sh'), 'utf8')
       .split('\n')
@@ -241,5 +281,181 @@ describe('preview-deploy.sh', () => {
     expect(text).not.toMatch(/deploy-release\.sh/)
     const words = [...text.matchAll(/ssh (?:-o \S+ )*vps "?(\w+)/g)].map((m) => m[1])
     expect(new Set(words)).toEqual(new Set(['list', 'upload', 'deploy']))
+  })
+})
+
+describe('preview-teardown.sh (#1076)', () => {
+  const live = `preview=7 commit=${SHA} idle=5 folder=yes block=yes process=online\n`
+  const teardown = (env = {}) =>
+    run('preview-teardown.sh', { NUMBER: '7', STUB_LIST: live, STUB_LIST_AFTER: '', ...env })
+
+  it('removes a preview through the wrapper’s teardown, checks it is gone, and says so', () => {
+    const r = teardown()
+    expect(r.code, r.out).toBe(0)
+    expect(r.written).toBe('removed=yes\n')
+    expect(r.log.split('\n').filter(Boolean)).toEqual(['ssh list', 'ssh teardown 7', 'ssh list'])
+  })
+
+  it('asks for no removal when the pull request never had a preview (no Caddy lock, no reload)', () => {
+    const r = teardown({ STUB_LIST: `preview=8 commit=${SHA}\n` })
+    expect(r.code).toBe(0)
+    expect(r.written).toBe('removed=no\n')
+    expect(r.log).toBe('ssh list\n')
+  })
+
+  it('does not take a longer number for this one', () => {
+    const r = teardown({ STUB_LIST: `preview=77 commit=${SHA}\npreview=17 commit=${SHA}\n` })
+    expect(r.written).toBe('removed=no\n')
+  })
+
+  it('removes a leftover that has only a block or a process', () => {
+    const r = teardown({
+      STUB_LIST: 'preview=7 commit=none idle=0 folder=no block=yes process=none\n',
+    })
+    expect(r.written).toBe('removed=yes\n')
+  })
+
+  it('fails, and says so, when the removal fails or something stays', () => {
+    expect(teardown({ STUB_EXIT_TEARDOWN: '2' }).code).toBe(1)
+    const left = teardown({ STUB_LIST_AFTER: live })
+    expect(left.code).toBe(1)
+    expect(left.written).toBe('')
+  })
+
+  it('fails when the server does not list its previews', () => {
+    const r = teardown({ STUB_EXIT_LIST: '2' })
+    expect(r.code).toBe(1)
+    expect(r.log).not.toContain('teardown')
+  })
+
+  it.each(['-7', '07', '7; id', '', '1234567'])(
+    'refuses the number %j, and asks the server nothing',
+    (number) => {
+      const r = teardown({ NUMBER: number })
+      expect(r.code).toBe(1)
+      expect(r.log).toBe('')
+    },
+  )
+})
+
+describe('preview-sweep.sh (#1076)', () => {
+  const day = 86400
+  const line = (
+    n,
+    { commit = SHA, idle = 60, folder = 'yes', block = 'yes', process = 'online' } = {},
+  ) =>
+    `preview=${n} commit=${commit} idle=${idle} folder=${folder} block=${block} process=${process}\n`
+  /** `gh` that answers the open pull requests from STUB_OPEN (or fails), and logs that it was asked. */
+  const writeGh = () =>
+    fs.writeFileSync(
+      p('bin/gh'),
+      `#!/usr/bin/env bash
+echo "gh $*" >> "$STUB_LOG"
+[ -z "\${STUB_GH_FAILS-}" ] || exit 1
+printf '%s' "$STUB_OPEN"
+`,
+      { mode: 0o755 },
+    )
+  const sweep = (env = {}) => {
+    writeGh()
+    const summary = p('summary')
+    fs.writeFileSync(summary, '')
+    const r = run('preview-sweep.sh', {
+      GITHUB_REPOSITORY: 'Org/site',
+      GITHUB_STEP_SUMMARY: summary,
+      STUB_OPEN: '',
+      STUB_LIST: '',
+      ...env,
+    })
+    return {
+      ...r,
+      summary: fs.readFileSync(summary, 'utf8'),
+      asked: r.log.split('\n').filter(Boolean),
+    }
+  }
+
+  it('removes previews whose pull request is closed, with the reason, and keeps the open ones', () => {
+    const r = sweep({ STUB_LIST: line(3) + line(7), STUB_OPEN: '7\n' })
+    expect(r.code, r.out).toBe(0)
+    expect(r.asked.filter((l) => l.startsWith('ssh teardown'))).toEqual(['ssh teardown 3'])
+    expect(r.summary).toContain('Removed 1, kept 1, failed 0.')
+    expect(r.summary).toContain('| #3 | removed | its pull request is not open |')
+  })
+
+  it('removes a planted stray: a folder, a block and a process that match no open pull request', () => {
+    const r = sweep({
+      STUB_LIST:
+        line(40, { folder: 'no', block: 'yes', process: 'none' }) +
+        line(41, { folder: 'no', block: 'no', process: 'online' }) +
+        line(42, { block: 'no', process: 'none' }),
+      STUB_OPEN: '7\n',
+    })
+    expect(r.asked.filter((l) => l.startsWith('ssh teardown'))).toEqual([
+      'ssh teardown 40',
+      'ssh teardown 41',
+      'ssh teardown 42',
+    ])
+    for (const n of [40, 41, 42]) expect(r.summary).toContain(`| #${n} | removed |`)
+  })
+
+  it('removes a leftover with no folder even when its pull request is open', () => {
+    const r = sweep({ STUB_LIST: line(7, { folder: 'no' }), STUB_OPEN: '7\n' })
+    expect(r.asked).toContain('ssh teardown 7')
+    expect(r.summary).toContain('left over without its folder')
+  })
+
+  it('removes a preview nobody deployed for longer than the idle limit, and keeps one inside it', () => {
+    const r = sweep({
+      STUB_LIST: line(7, { idle: 7 * day + 1 }) + line(8, { idle: 7 * day }),
+      STUB_OPEN: '7\n8\n',
+    })
+    expect(r.asked.filter((l) => l.startsWith('ssh teardown'))).toEqual(['ssh teardown 7'])
+    expect(r.summary).toContain('not deployed for more than 7 days')
+  })
+
+  it('lists a stopped preview and removes nothing for it', () => {
+    const r = sweep({ STUB_LIST: line(7, { process: 'stopped' }), STUB_OPEN: '7\n' })
+    expect(r.asked.some((l) => l.startsWith('ssh teardown'))).toBe(false)
+    expect(r.summary).toContain('Stopped, not removed')
+    expect(r.summary).toContain('#7')
+  })
+
+  it('reads the server first and the open pull requests after, so a new preview is never a stray', () => {
+    const r = sweep({ STUB_LIST: line(7), STUB_OPEN: '7\n' })
+    expect(r.asked[0]).toBe('ssh list')
+    expect(r.asked[1]).toMatch(/^gh api --paginate repos\/Org\/site\/pulls\?state=open/)
+  })
+
+  it('removes nothing, and fails, when either list can’t be read', () => {
+    const noServer = sweep({ STUB_LIST: line(3), STUB_EXIT_LIST: '2' })
+    expect(noServer.code).toBe(1)
+    const noGithub = sweep({ STUB_LIST: line(3), STUB_GH_FAILS: '1' })
+    expect(noGithub.code).toBe(1)
+    for (const r of [noServer, noGithub])
+      expect(r.asked.some((l) => l.includes('teardown'))).toBe(false)
+  })
+
+  it('removes nothing when a list has a line or a number it does not know', () => {
+    const odd = sweep({ STUB_LIST: 'preview=3; id commit=none\n' })
+    expect(odd.code).toBe(1)
+    const oddOpen = sweep({ STUB_LIST: line(3), STUB_OPEN: 'x\n' })
+    expect(oddOpen.code).toBe(1)
+    for (const r of [odd, oddOpen]) expect(r.asked.some((l) => l.includes('teardown'))).toBe(false)
+  })
+
+  it('tries every removal and fails after, naming the one that failed', () => {
+    const r = sweep({ STUB_LIST: line(3) + line(4), STUB_EXIT_TEARDOWN: '2' })
+    expect(r.code).toBe(1)
+    expect(r.asked.filter((l) => l.startsWith('ssh teardown'))).toEqual([
+      'ssh teardown 3',
+      'ssh teardown 4',
+    ])
+    expect(r.summary).toContain('failed 2')
+  })
+
+  it('does nothing, and says so, when the server holds no preview', () => {
+    const r = sweep({ STUB_OPEN: '7\n' })
+    expect(r.code).toBe(0)
+    expect(r.summary).toContain('Removed 0, kept 0, failed 0.')
   })
 })
