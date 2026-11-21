@@ -173,7 +173,7 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   user. Nothing puts a password in an environment variable, an argument, a log line or a comment, and the
   deploy log says only that they were made. No email is made. Every deploy gives each existing account its new
   password, role and verified state and unlocks it, which also ends its sessions, so a redeploy signs these four
-  accounts out and their old passwords fail; any other account (a neighbor who signed up in the preview) is left alone.
+  accounts out and their old passwords fail; the database is rebuilt on every deploy ([below](#production-content-in-a-preview-1397)), so any other account made while testing is gone with it.
   The seed's own failure prints one fixed line, never its error (`runPreviewSeed`; the deploy log is public);
   Payload's start-up errors (a database it cannot open) still print and hold no password, because passwords reach
   Payload only in the seed. When every account has its password the seed writes `.preview-accounts.applied`,
@@ -182,7 +182,8 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   (`isSeedEnabled`). Production's accounts and settings are never read or copied. The role list is one
   constant, `PREVIEW_ACCOUNT_ROLES` in `src/endpoints/seed/preview-accounts.ts`, and `environment.sh` names the
   same roles for the script, with a test keeping the two equal. How the owner or an AI agent gets the
-  passwords is [below](#the-workflow-1075); the copy of published content is #1077.
+  passwords is [below](#the-workflow-1075); the content copy that fills the database first is
+  [below](#production-content-in-a-preview-1397).
 - **Handing out the test sign-in** (#1394). The repository is public, so a password may not appear in a log,
   a comment or an artifact. The owner's decision (2026-11-20, #1077): the AI agent signs in through the browser
   for him, so a password travels only if he asks, and then privately. How it is obtained without a public
@@ -233,6 +234,77 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
 - **Not covered.** A detached process a preview starts survives `teardown`, which stops only PM2's process
   (the account can't schedule jobs: cron and at are denied).
 
+## Production content in a preview (#1397)
+
+Every preview deploy loads production's published content, so a change is judged on real pages, posts, events and
+pictures (part of #1077; what is copied is `src/platform/payload/previewCopy/classification.ts`). The owner decided
+the snapshot is deleted right after, media is copied only for copied documents, and the preview account never reads
+the snapshot (2026-11-11, recorded on #1077).
+
+- **Rebuilt on every deploy** (decided on #1397). The wrapper's `deploy` removes the preview's database and media, then
+  `deploy-release.sh` builds a fresh SQLite file from the pull request's migrations, imports the content
+  (`e2e/previewCopyImport.ts`, the pull request's own code, which reads only the export's file), and then
+  `previewSeed.ts` makes the test accounts. Changes made while testing a preview, uploads included, are lost on the next
+  push. A copy that fails changes nothing: the old database and media are replaced only after the root step succeeded. A
+  deploy that fails after that point leaves the preview's running release on its new, rebuilt database (empty or
+  half imported), so redeploy it; the isolation check still holds.
+- **The root step** (`preview-copy.sh`) is `preview-caddy.sh`'s sibling: one sudo rule per script, a number of 1 to 6
+  digits, a fixed PATH, bash's privileged mode, no caller environment, the shared Caddy lock (one at a time with
+  production's scripts and every other preview step; the temporary one-preview cap stays). Under the lock it makes a
+  snapshot with production's own `ops/backup-db.mjs` (`VACUUM INTO`, a consistent copy while the site runs) into a new
+  folder inside `PREVIEW_COPY_TMP` (`/var/lib/sprecher-east-preview-copy`, root-only, mode 700, made by the installer),
+  runs the export from **production's current release** (`main`'s code; `payload run e2e/previewCopyExport.ts`, with
+  `NODE_ENV=production` and an empty environment but a throwaway secret and an empty `SMTP_HOST`, so nothing could
+  be mailed). It runs from a folder of its own under the snapshot folder, because `payload run` loads settings files
+  from its working folder and the ones above it: with an absolute script path and the release's TypeScript settings
+  (`TSX_TSCONFIG_PATH`), no settings file of production's is read, and a test shows none is found and no production
+  secret reaches the export (decided on #1397). The export is bounded: it ends after `PREVIEW_COPY_SECONDS` (240),
+  and is killed 10 seconds later if it ignores the stop, so the export cannot hold the shared lock past that (the
+  rest of the step is short). The snapshot is deleted as soon as the export ends. A trap deletes
+  the folder at the end of every run, success or failure, and a run that was killed leaves a folder the next run
+  removes first; so does the installer, with a staging folder a killed run left as root's, which the account can't
+  remove (under the lock, so no copy is running; it warns and leaves them when the lock is held). The root step finds
+  `node` only in a folder, and as a file, that only root can write (the installer checks the same, so a host that
+  would fail it is told at install time); it checks the folder and file, not every ancestor, which are root's on a
+  server set up as ours is. The snapshot is never in the preview's reach: the account can't enter its parent, which the
+  isolation check proves.
+- **The file** is the export's output, printed on the script's standard output; the wrapper writes it as the preview
+  account (`<preview folder>/.preview-copy.json`, mode 600), so root never writes a path the account can swap. The import
+  deletes it, and the wrapper removes it again after the deploy, success or not.
+- **Media** (decided on #1397): only the files the export lists (the original and each size), as **hard links** to
+  production's files, made by the root step into an empty staging folder (`.copy-media`) that the wrapper moves to
+  `public/media` after a successful copy. A link shares production's inode, owner and mode, so the preview reads the
+  file and can't change it in place, and deleting a link removes only the preview's name. Ubuntu's `protected_hardlinks`
+  stops an unprivileged account linking a file it doesn't own, so only root can make them. A file is linked only when
+  it is a regular file (never a link), root's, readable by all and writable by no one else; anything else, and a file
+  on another filesystem, is copied (still root's and not writable), counted against the disk floor, which a copy that
+  would cross refuses. A name that is not a plain file name is left out, counted. **Does Payload rewrite a media file in
+  place?** Read in Payload 3.91 (`collections/operations/utilities/update.js`, `uploads/`): replacing a file or saving a
+  crop first deletes the old files (`unlink`, so only the link goes) and then writes the new ones as new files, so a
+  replacement works in a preview and never reaches production's inode. The one write onto an existing name is a draft
+  saved over a published document, which skips the delete; that write fails with permission denied on a link, the
+  accepted outcome. Deleting a record unlinks its names. The isolation check proves the rest: a picture its folder
+  shares with production (link count above one) is neither the account's nor writable by it.
+- **The root step opens nothing by a path the account could swap.** The staging folder is opened once; its real path,
+  type and owner are read from the open file; it is made root's while it is filled (the account can add nothing), and
+  every name is made inside that open folder. A link or a swapped folder is refused, never followed, and the folder goes
+  back to the account, its files still root's, when it is done (and, emptied, when it fails).
+- **No mail** (decided on #1397): a preview has no `SMTP_HOST` (#1344), the export runs with none, and the import writes
+  through the adapter's `create` with no hook, so no email, cache refresh or search entry; a test proves the import and
+  the search rebuild send none (`previewCopy/import.test.ts`).
+- **No content, name or password in the log.** The root step's standard error holds numbers (media linked, copied, left
+  out) and fixed texts; the export's and the backup's own output is dropped except its summary line; the import prints
+  numbers or one fixed line. The file and the snapshot are never printed. Tests assert that no secret text reaches
+  either stream (`ops/preview-copy.test.mjs`, `ops/preview-wrapper.test.mjs`).
+- **Teardown and the sweep remove everything** (#1076): the folder holds the linked media, the test accounts' file and
+  any copy file, so `teardown` deletes all of it, and only the preview's links (a test shows production's file and its
+  link count unchanged).
+- **Before the first run on the server:** the production deploy installs the script, the sudo rule and the folder
+  through `install-preview-access.sh`, so merging this is the whole rollout; a preview built before it has no import
+  script and fails its deploy until it is rebased on `main`. Rolling back is reverting the pull request: the next
+  production deploy puts the rule and scripts back, and previews return to seed-only. The snapshot folder is left,
+  empty.
+
 ## Removal, the cap and the sweep (#1076)
 
 - **Removal when the pull request closes**, merged or not (`preview.yml`, job `teardown`, in environment
@@ -241,7 +313,7 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   first, and a deploy still waiting is replaced by the removal. `.github/scripts/preview-teardown.sh` asks the
   wrapper's `list`, and only when the number is there asks `teardown`, then `list` again to prove it is gone. The
   wrapper stops the PM2 process, deletes the folder (releases, database, media, data and settings file are all
-  inside it) and removes the Caddy block, then validates and reloads Caddy; each step succeeds when its item is
+  inside it, with the linked media and the passwords file) and removes the Caddy block, then validates and reloads Caddy; each step succeeds when its item is
   already gone, so a second run succeeds too. The order is the wrapper's (process, folder, block) because
   `preview-caddy.sh` removes a block when the folder is gone. **Caddy's certificate storage is never touched**,
   so a reopened pull request reuses its certificate. A job edits the sticky comment, only when one exists, to
@@ -274,6 +346,9 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   text the workflow turns into the comment "not started", when free disk afterwards would not stay above the
   production deploy's floor. It counts the archive and the release it unpacks to, not what the deploy writes
   afterwards (the database, a media copy); the measurement step records that figure and a margin is added then.
+  A content copy has its own checks: before the root step the wrapper refuses when `PREVIEW_COPY_MAX_BYTES` (the
+  largest copy file) would not leave the floor, after the archive is unpacked; the root step checks the snapshot
+  (twice the database) and each media copy against the floor, re-reading free space each time.
 - **The nightly sweep** (`preview-sweep.yml`, 07:17 UTC, and by hand with `workflow_dispatch`, in environment
   `preview`) reads the server's `list` first and the open pull requests after, so a preview created in between is
   never taken for a stray, and removes through `teardown` each preview whose pull request is not open, each

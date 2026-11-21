@@ -4,11 +4,34 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 
+import { write } from './umami-harness.mjs'
+
 import { describe, expect, it } from 'vitest'
+
+import { beforeEach } from 'vitest'
 
 import { COMMIT, runCommand, setUpPreviewAccessHarness } from './preview-access-harness.mjs'
 
 const { p, stub, log, wrapper, baseEnv } = setUpPreviewAccessHarness()
+
+const COPY_TEXT =
+  '{"format":1,"collections":{"posts":[{"id":1,"title":"SECRET-POST-TEXT"}]},"globals":{},"mediaFiles":["a.jpg"]}'
+// The root copy script (ops/preview-copy.sh) has its own tests; here it is a stand-in that logs how it was run,
+// fills the staging folder like the real one and prints the export's file on standard output.
+beforeEach(() => {
+  fs.writeFileSync(
+    p('access/ops/preview-copy.sh'),
+    [
+      '#!/usr/bin/env bash',
+      'echo "copy-script $* stdout-is-file:$([ "$(stat -L -c %F /proc/$$/fd/1)" = "regular empty file" ] && echo yes || echo no)" >> "$STUB_LOG"',
+      '[ -z "${STUB_COPY_FAILS-}" ] || { echo "the content copy step failed" >&2; exit 1; }',
+      '[ -n "${STUB_COPY_EMPTY-}" ] || { echo LINKED > "$PREVIEW_ROOT/pr-$1/.copy-media/a.jpg"; chmod 444 "$PREVIEW_ROOT/pr-$1/.copy-media/a.jpg"; }',
+      `[ -n "\${STUB_COPY_EMPTY-}" ] || printf '%s' '${COPY_TEXT}'`,
+      '',
+    ].join('\n'),
+    { mode: 0o755 },
+  )
+})
 
 /** A .tar.gz made by Python's tarfile, so a member can have any name or type. */
 async function archive(members) {
@@ -154,7 +177,10 @@ describe('preview-wrapper.sh: the actions', () => {
     )
     const { code } = await wrapper(`deploy 7 ${COMMIT}`)
     expect(code).toBe(0)
-    expect(sudoLines()).toEqual([`sudo -n ${p('access/ops/preview-caddy.sh')} 7`])
+    expect(sudoLines()).toEqual([
+      `sudo -n ${p('access/ops/preview-caddy.sh')} 7`,
+      `sudo -n ${p('access/ops/preview-copy.sh')} 7`,
+    ])
     expect(fs.readFileSync(p('caddy/previews/pr-7.caddy'), 'utf8')).toContain(
       'pr-7.dev.sprechereast.com',
     )
@@ -336,6 +362,132 @@ describe('preview-wrapper.sh: the actions', () => {
     expect(fs.existsSync(p('previews/pr-7'))).toBe(false)
     expect(log()).toContain('pm2 delete sprecher-east-pr-7')
     expect(log()).not.toContain('pm2 delete sprecher-east\n')
+  })
+})
+
+describe('preview-wrapper.sh: production’s published content (#1397)', () => {
+  const live = async () => {
+    await wrapper(`upload 7 ${COMMIT}`, { input: await goodArchive() })
+    // what the deploy script sees when it runs: the copy file, the media and no old database
+    fs.writeFileSync(
+      p('access/ops/deploy-release.sh'),
+      [
+        '#!/usr/bin/env bash',
+        'echo "deploy-script file:$(cat "$APP_DIR/.preview-copy.json" 2>/dev/null | head -c 12) media:$(ls "$APP_DIR/public/media" 2>/dev/null | paste -sd,) data:$(ls "$APP_DIR/data" 2>/dev/null | paste -sd,)" >> "$STUB_LOG"',
+        'echo "file-mode:$(stat -c %a "$APP_DIR/.preview-copy.json")" >> "$STUB_LOG"',
+        '[ -z "${STUB_DEPLOY_FAILS-}" ] || exit 3',
+        '',
+      ].join('\n'),
+    )
+  }
+  const folder = (...parts) => p('previews/pr-7', ...parts)
+
+  it('asks the root script with the number alone, after the Caddy block and the first isolation check, before the deploy script', async () => {
+    await live()
+    const { code } = await wrapper(`deploy 7 ${COMMIT}`)
+    expect(code).toBe(0)
+    const order = log()
+      .split('\n')
+      .filter((l) => /^(isolation-check|sudo|copy-script|deploy-script)/.test(l))
+      .map((l) => l.split(' ').slice(0, 3).join(' '))
+    expect(order).toEqual([
+      `isolation-check ${p('access/ops/preview-isolation-check.sh')}`,
+      `sudo -n ${p('access/ops/preview-caddy.sh')}`,
+      `sudo -n ${p('access/ops/preview-copy.sh')}`,
+      'copy-script 7 stdout-is-file:yes',
+      'deploy-script file:{"format":1, media:a.jpg',
+      `isolation-check ${p('access/ops/preview-isolation-check.sh')}`,
+    ])
+  })
+
+  it('writes the export’s file itself, as the preview account, private, so root writes no path in the preview’s folder', async () => {
+    await live()
+    await wrapper(`deploy 7 ${COMMIT}`)
+    expect(log()).toContain('stdout-is-file:yes')
+    expect(log()).toContain('file-mode:600')
+  })
+
+  it('rebuilds the database and the media on every deploy: the old ones are gone, the staged links are in place', async () => {
+    await live()
+    fs.mkdirSync(folder('data'), { recursive: true })
+    fs.writeFileSync(folder('data/payload.db'), 'OLD DATABASE')
+    fs.mkdirSync(folder('public/media'), { recursive: true })
+    fs.writeFileSync(folder('public/media/uploaded-in-preview.jpg'), 'OLD')
+    await wrapper(`deploy 7 ${COMMIT}`)
+    expect(log()).toContain('deploy-script file:{"format":1, media:a.jpg data:\n')
+    expect(fs.readdirSync(folder('public/media'))).toEqual(['a.jpg'])
+    expect(fs.existsSync(folder('data/payload.db'))).toBe(false)
+    expect(fs.existsSync(folder('.copy-media'))).toBe(false)
+  })
+
+  it('checks the room for the copy file against production’s floor before it asks the root script', async () => {
+    await live()
+    const { code, out } = await wrapper(`deploy 7 ${COMMIT}`, {
+      env: { PREVIEW_FREE_FLOOR_KB: '9999999999' },
+    })
+    expect(code).not.toBe(0)
+    expect(out).toContain('not enough free disk')
+    expect(log()).not.toContain('copy-script')
+    expect(log()).not.toContain('deploy-script')
+  })
+
+  it('removes the copy file and the staging folder after the deploy, also when the deploy script fails', async () => {
+    await live()
+    const { code } = await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_DEPLOY_FAILS: '1' } })
+    expect(code).toBe(3)
+    expect(fs.existsSync(folder('.preview-copy.json'))).toBe(false)
+    expect(fs.existsSync(folder('.copy-media'))).toBe(false)
+  })
+
+  it('changes nothing when the root script fails: the old database and media stay, no deploy script runs', async () => {
+    await live()
+    fs.mkdirSync(folder('data'), { recursive: true })
+    fs.writeFileSync(folder('data/payload.db'), 'OLD DATABASE')
+    fs.mkdirSync(folder('public/media'), { recursive: true })
+    fs.writeFileSync(folder('public/media/old.jpg'), 'OLD')
+    const { code, out } = await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_COPY_FAILS: '1' } })
+    expect(code).toBe(2)
+    expect(out).toContain('the content copy failed, so the preview was not changed')
+    expect(log()).not.toContain('deploy-script')
+    expect(fs.readFileSync(folder('data/payload.db'), 'utf8')).toBe('OLD DATABASE')
+    expect(fs.readdirSync(folder('public/media'))).toEqual(['old.jpg'])
+    expect(fs.existsSync(folder('.copy-media'))).toBe(false)
+    expect(fs.existsSync(folder('.preview-copy.json'))).toBe(false)
+  })
+
+  it('treats a root script that printed nothing as a failure', async () => {
+    await live()
+    const { code } = await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_COPY_EMPTY: '1' } })
+    expect(code).toBe(2)
+    expect(log()).not.toContain('deploy-script')
+  })
+
+  it('never prints the export’s file', async () => {
+    await live()
+    const { out } = await wrapper(`deploy 7 ${COMMIT}`)
+    expect(out).not.toContain('SECRET-POST-TEXT')
+    const failed = await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_DEPLOY_FAILS: '1' } })
+    expect(failed.out).not.toContain('SECRET-POST-TEXT')
+  })
+
+  it('does not run the root script when the first isolation check fails', async () => {
+    await live()
+    await wrapper(`deploy 7 ${COMMIT}`, { env: { STUB_ISOLATION_FAILS: '1' } })
+    expect(log()).not.toContain('copy-script')
+  })
+
+  it('teardown removes the preview’s linked media and its passwords file, and leaves production’s file as it was', async () => {
+    await live()
+    write(p('prod/public/media/a.jpg'), 'PRODUCTION PICTURE')
+    fs.mkdirSync(folder('public/media'), { recursive: true })
+    fs.linkSync(p('prod/public/media/a.jpg'), folder('public/media/a.jpg'))
+    fs.writeFileSync(folder('.preview-accounts'), 'admin=x\n', { mode: 0o600 })
+    fs.writeFileSync(folder('.preview-accounts.applied'), 'x')
+    const { code } = await wrapper('teardown 7')
+    expect(code).toBe(0)
+    expect(fs.existsSync(folder())).toBe(false)
+    expect(fs.readFileSync(p('prod/public/media/a.jpg'), 'utf8')).toBe('PRODUCTION PICTURE')
+    expect(fs.statSync(p('prod/public/media/a.jpg')).nlink).toBe(1)
   })
 })
 

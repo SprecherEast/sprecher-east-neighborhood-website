@@ -44,6 +44,7 @@ beforeEach(() => {
   write(p('pm2/logs/app.log'), SECRET, 0o000)
   write(p('pmlogs/sprecher-east-out.log'), SECRET, 0o000)
   write(p('caddy/.local/share/caddy/pki/key.pem'), SECRET, 0o000)
+  write(p('copytmp/run.AbC123/snapshot.db'), SECRET, 0o000)
   for (const d of [
     'prod',
     'prod/data',
@@ -62,6 +63,8 @@ beforeEach(() => {
     'caddy/.local/share',
     'caddy/.local/share/caddy',
     'caddy/.local/share/caddy/pki',
+    'copytmp',
+    'copytmp/run.AbC123',
   ].reverse())
     fs.chmodSync(p(d), 0o000)
 })
@@ -81,6 +84,8 @@ const check = (env = {}) => {
     PRODUCTION_PM2_HOME: p('pm2'),
     PRODUCTION_PM2_LOG_DIR: p('pmlogs'),
     CADDY_STORAGE_DIR: p('caddy'),
+    PREVIEW_COPY_TMP: p('copytmp'),
+    PREVIEW_ROOT: p('proot'),
     CADDY_ADMIN_PORT: '1', // nothing listens on port 1
     ...env,
   }
@@ -177,6 +182,11 @@ describe('preview-isolation-check.sh: a folder with a readable file anywhere in 
   folderCase('Umami’s folder', 'umami', 'umami/.env')
   folderCase('production’s PM2 state', 'pm2', 'pm2/logs/app.log')
   folderCase('production’s PM2 logs (/var/log/pm2)', 'pmlogs', 'pmlogs/sprecher-east-out.log')
+  folderCase(
+    'the snapshot folder of the content copy (#1397)',
+    'copytmp',
+    'copytmp/run.AbC123/snapshot.db',
+  )
   folderCase('Caddy’s certificate storage', 'caddy', 'caddy/.local/share/caddy/pki/key.pem')
 
   it('finds a file eight levels down, and the production database folder on its own', async () => {
@@ -224,6 +234,7 @@ describe('preview-isolation-check.sh: a closed folder the account can enter but 
   enterable('backups')
   enterable('umami')
   enterable('pmlogs')
+  enterable('copytmp')
 
   it('does not say so for PM2’s state or Caddy’s storage, which the guards leave alone', async () => {
     fs.chmodSync(p('pm2'), 0o311)
@@ -244,6 +255,59 @@ describe('preview-isolation-check.sh: a closed folder the account can enter but 
     ['nothing', null],
   ])('ignores a closed folder that is %s', async (_what, fileMode) => {
     replaceUmami(fileMode)
+    expect((await check()).code).toBe(0)
+  })
+})
+
+describe('preview-isolation-check.sh: pictures a preview shares with production (#1397)', () => {
+  // As the content copy leaves them: a hard link to production's file, so it keeps production's owner and mode.
+  // The test's own user stands in for root, so "the account's" is whoever the check runs as: nobody (65534)
+  // when the tests run as root, or the test's own user.
+  const media = (...parts) => p('proot/pr-7/public/media', ...parts)
+  const accountUid = () => (process.getuid() === 0 ? 65534 : process.getuid())
+  const shared = (name, { mode, owner }) => {
+    write(p('shared', name), 'PRODUCTION PICTURE', mode)
+    fs.chmodSync(p('shared', name), mode) // the umask would have taken a bit off
+    fs.mkdirSync(media(), { recursive: true })
+    fs.chmodSync(p('proot'), 0o755)
+    for (const d of ['proot/pr-7', 'proot/pr-7/public', 'proot/pr-7/public/media']) open(d)
+    fs.linkSync(p('shared', name), media(name))
+    if (owner !== undefined && process.getuid() === 0) fs.chownSync(p('shared', name), owner, owner)
+    fs.chmodSync(p('shared'), 0o755)
+  }
+
+  // Root's ownership of the shared file can only be made by a test that runs as root
+  it.skipIf(process.getuid() !== 0)(
+    'passes for a link the account can read and not change',
+    async () => {
+      shared('a.jpg', { mode: 0o644, owner: 0 })
+      expect((await check()).code).toBe(0)
+    },
+  )
+
+  it('passes for a picture the preview made itself (one link, its own)', async () => {
+    fs.mkdirSync(media(), { recursive: true })
+    for (const d of ['proot', 'proot/pr-7', 'proot/pr-7/public', 'proot/pr-7/public/media']) open(d)
+    write(media('own.jpg'), 'MADE IN THE PREVIEW', 0o644)
+    if (process.getuid() === 0) fs.chownSync(media('own.jpg'), accountUid(), accountUid())
+    expect((await check()).code).toBe(0)
+  })
+
+  it('fails for a link the account could write to', async () => {
+    shared('a.jpg', { mode: 0o666 })
+    const { code, out } = await check()
+    expect(code).toBe(1)
+    expect(out).toContain(`can change a picture its preview shares with production, in ${media()}`)
+    expect(out).not.toContain('a.jpg')
+    expect(out).not.toContain('PRODUCTION PICTURE')
+  })
+
+  it.skipIf(process.getuid() !== 0)('fails for a link the account owns', async () => {
+    shared('a.jpg', { mode: 0o644, owner: accountUid() })
+    expect((await check()).code).toBe(1)
+  })
+
+  it('passes with no preview folders at all', async () => {
     expect((await check()).code).toBe(0)
   })
 })

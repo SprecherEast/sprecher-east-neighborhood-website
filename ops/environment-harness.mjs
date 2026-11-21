@@ -59,7 +59,20 @@ export function setUpEnvironmentHarness() {
     write(path.join(release, 'node_modules/.bin/next'), '#!/bin/sh\n', 0o755)
     write(
       path.join(release, 'node_modules/.bin/payload'),
-      `#!/bin/sh\necho "payload $* in $(pwd -P) NODE_ENV=\${NODE_ENV-unset}\${PREVIEW_ACCOUNTS_FILE:+ PREVIEW_ACCOUNTS_FILE=$PREVIEW_ACCOUNTS_FILE}" >> "$STUB_LOG"\n[ "$1" != run ] || { echo "env of payload run:"; env; } >> "$STUB_LOG"\n[ "$1" != run ] || [ -z "$STUB_PAYLOAD_RUN_FAIL" ] || exit 1\n[ "$1" != run ] || [ -f "$PREVIEW_ACCOUNTS_FILE" ] || exit 1\n`,
+      [
+        '#!/bin/sh',
+        'echo "payload $* in $(pwd -P) NODE_ENV=${NODE_ENV-unset}${PREVIEW_ACCOUNTS_FILE:+ PREVIEW_ACCOUNTS_FILE=$PREVIEW_ACCOUNTS_FILE}${PREVIEW_COPY_FILE:+ PREVIEW_COPY_FILE=$PREVIEW_COPY_FILE}" >> "$STUB_LOG"',
+        '[ "$1" != run ] || { echo "env of payload run:"; env; } >> "$STUB_LOG"',
+        // The content import (#1397): reads the file the wrapper made, and fails on request
+        'if [ "$2" = e2e/previewCopyImport.ts ]; then',
+        '  [ -z "$STUB_IMPORT_FAIL" ] && [ -f "$PREVIEW_COPY_FILE" ] || exit 1',
+        '  echo "import saw: $(cat "$PREVIEW_COPY_FILE")" >> "$STUB_LOG"',
+        '  exit 0',
+        'fi',
+        '[ "$1" != run ] || [ -z "$STUB_PAYLOAD_RUN_FAIL" ] || exit 1',
+        '[ "$1" != run ] || [ -f "$PREVIEW_ACCOUNTS_FILE" ] || exit 1',
+        '',
+      ].join('\n'),
       0o755,
     )
   }

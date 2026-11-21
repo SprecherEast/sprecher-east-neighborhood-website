@@ -8,8 +8,10 @@
 #   2. PREVIEW_ROOT, owned by that account: the previews' folders, PM2 state and logs;
 #   3. PREVIEW_ACCESS_DIR, root-owned: main's copy of the scripts the account may run (the wrapper,
 #      the Caddy script, the deploy scripts they use, the two Caddy templates);
-#   4. a sudo rule that lets the account run the Caddy script, and only it, with a pull request number
-#      (1 to 6 digits, matched by sudoers itself; the script checks it again);
+#   4. a sudo rule that lets the account run two scripts, and only them, each with a pull request number
+#      (1 to 6 digits, matched by sudoers itself; the scripts check it again): the Caddy script and the content
+#      copy script (#1397), which makes a snapshot of production's database in PREVIEW_COPY_TMP, a root-only
+#      folder (mode 700) this script makes, so the preview account can't enter it;
 #   5. the account's authorized_keys line, last, once the rest works: `restrict` (no shell, port
 #      forwarding, agent, X11 or terminal) and the wrapper as the forced command. The key is the
 #      public half in ops/preview-deploy-key.pub, which is not a secret; the private half is the
@@ -31,18 +33,19 @@ trap '' HUP
 here=$(dirname "$0")
 . "$here/lib.sh"
 . "$here/preview-access-lib.sh"
+. "$here/caddy-lock-lib.sh"
 
 SUDOERS_FILE="${SUDOERS_FILE:-/etc/sudoers.d/sprecher-east-preview}"
 SUDOERS_MAIN="${SUDOERS_MAIN:-/etc/sudoers}"
 PUBLIC_KEY_FILE="${PREVIEW_PUBLIC_KEY_FILE:-$CODE_DIR/ops/preview-deploy-key.pub}"
-ROOT_UID="${PREVIEW_ACCESS_ROOT_UID:-0}" # root's id; a test run by someone else sets its own
 ROOT_OWNER=root
 MARKER="Managed by ops/install-preview-access.sh (#1345)"
 # main's files the account may run, copied into PREVIEW_ACCESS_DIR/ops/ (the caddy/ ones into caddy/)
-SCRIPTS="preview-wrapper.sh preview-caddy.sh preview-access-lib.sh preview-isolation-check.sh preview-host-guards.sh umami-lib.sh preview-settings.sh preview-accounts.sh secret-lib.sh deploy-release.sh restart-app.sh migrate-lib.sh caddy-lock-lib.sh lib.sh environment.sh"
+SCRIPTS="preview-wrapper.sh preview-caddy.sh preview-copy.sh preview-access-lib.sh preview-isolation-check.sh preview-host-guards.sh umami-lib.sh preview-settings.sh preview-accounts.sh secret-lib.sh deploy-release.sh restart-app.sh migrate-lib.sh caddy-lock-lib.sh lib.sh environment.sh"
 CADDY_FILES="preview-site.caddy preview-headers.caddy"
 WRAPPER="$PREVIEW_ACCESS_DIR/ops/preview-wrapper.sh"
 CADDY_SCRIPT="$PREVIEW_ACCESS_DIR/ops/preview-caddy.sh"
+COPY_SCRIPT="$PREVIEW_ACCESS_DIR/ops/preview-copy.sh"
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
 changes=()
 
@@ -54,7 +57,6 @@ doubt() { # <reason>
 
 # Prints the owner's user id, then the mode, of a path.
 owner_uid() { stat -c %u -- "$1"; }
-unsafe_mode() { (("8#$(stat -c %a -- "$1")" & 8#022)); } # writable by group or others
 
 # A folder or file that exists must be what it should be: not a link, root-owned, not writable by others.
 check_root_owned() { # <path> <d|f>
@@ -62,7 +64,7 @@ check_root_owned() { # <path> <d|f>
   [ ! -L "$1" ] || doubt "$1 is a link"
   [ "-$2" = "-$([ -d "$1" ] && echo d || echo f)" ] || doubt "$1 is not what it should be"
   [ "$(owner_uid "$1")" = "$ROOT_UID" ] || doubt "$1 is not owned by root"
-  ! unsafe_mode "$1" || doubt "$1 can be written by others"
+  root_only_writable "$1" || doubt "$1 can be written by others"
 }
 
 # A file this script wrote: it holds the marker. Anything else there is somebody's own.
@@ -89,10 +91,12 @@ for tool in useradd getent visudo sshd runuser sudo node pm2 tar flock stat inst
 done
 [[ "$PREVIEW_USER" =~ ^[a-z][a-z0-9-]{2,30}$ ]] || doubt "the account name is not a plain lowercase name"
 [ "$PREVIEW_USER" != "$(id -un)" ] || doubt "the preview account would be the deploy account"
-for path in "$PREVIEW_HOME" "$PREVIEW_ROOT" "$PREVIEW_ACCESS_DIR"; do
+for path in "$PREVIEW_HOME" "$PREVIEW_ROOT" "$PREVIEW_ACCESS_DIR" "$PREVIEW_COPY_TMP"; do
   [[ "$path" =~ ^/[A-Za-z0-9_./-]+$ ]] && [[ "$path" != *..* ]] || doubt "a folder path has characters it should not"
 done
 case "$PREVIEW_ROOT" in "$PRODUCTION_DIR" | "$PRODUCTION_DIR"/* | "$PREVIEW_HOME" | "$PREVIEW_HOME"/*) doubt "the previews root is production's or the account's home" ;; esac
+# The snapshot folder must not be a place the preview account owns or reaches.
+case "$PREVIEW_COPY_TMP" in "$PRODUCTION_DIR" | "$PRODUCTION_DIR"/* | "$PREVIEW_HOME" | "$PREVIEW_HOME"/* | "$PREVIEW_ROOT" | "$PREVIEW_ROOT"/* | "$PREVIEW_ACCESS_DIR" | "$PREVIEW_ACCESS_DIR"/*) doubt "the snapshot folder is inside production's, the previews', the account's or the scripts' folder" ;; esac
 
 # The account, when it exists, is exactly the one this script would make.
 user_exists=no
@@ -114,6 +118,9 @@ check_root_owned "$PREVIEW_HOME/.ssh" d
 check_root_owned "$PREVIEW_HOME/.ssh/authorized_keys" f
 check_ours "$PREVIEW_HOME/.ssh/authorized_keys"
 check_root_owned "$PREVIEW_ACCESS_DIR" d
+# The snapshot folder, when it exists, is root's and closed to everyone else (the account can't enter it).
+check_root_owned "$PREVIEW_COPY_TMP" d
+[ ! -d "$PREVIEW_COPY_TMP" ] || [ "$(stat -c %a -- "$PREVIEW_COPY_TMP")" = 700 ] || doubt "$PREVIEW_COPY_TMP is not closed to everyone but root (mode 700)"
 for sub in ops ops/caddy; do check_root_owned "$PREVIEW_ACCESS_DIR/$sub" d; done
 check_root_owned "$SUDOERS_FILE" f
 check_ours "$SUDOERS_FILE"
@@ -134,6 +141,9 @@ for tool in node pm2; do
   case ":$tools:" in *":$dir:"*) ;; *) tools="${tools:+$tools:}$dir" ;; esac
 done
 [[ "$tools" =~ ^/[A-Za-z0-9_./:@+-]*$ ]] || doubt "the folder of node or pm2 has characters it should not"
+# The root script (preview-copy.sh) runs node as root and finds it the same way (trusted_node), so one it would
+# refuse is caught here, not at a preview's deploy.
+trusted_node "$tools" >/dev/null || doubt "node is not owned by root and writable only by root, which the content copy script needs"
 
 # sshd must take the key line as written, for this account.
 sshd_settings=$(sshd -T -C "user=$PREVIEW_USER,host=localhost,addr=127.0.0.1" 2>/dev/null) ||
@@ -159,8 +169,8 @@ set +f
 # The root script runs with a fixed PATH (ROOT_SECURE_PATH, also sudo's secure_path for it): the tools it
 # calls must be in it.
 [[ "$ROOT_SECURE_PATH" =~ ^/[A-Za-z0-9_./:@+-]*$ ]] || doubt "the root script's PATH has characters it should not"
-for tool in caddy systemctl flock; do
-  (PATH="$ROOT_SECURE_PATH" command -v "$tool" >/dev/null 2>&1) || doubt "$tool is not in $ROOT_SECURE_PATH, the PATH the Caddy script runs with"
+for tool in caddy systemctl flock stat find df cp ln mktemp chown chmod readlink openssl getent realpath awk grep env id mkdir rm cat dirname timeout wc mv; do
+  (PATH="$ROOT_SECURE_PATH" command -v "$tool" >/dev/null 2>&1) || doubt "$tool is not in $ROOT_SECURE_PATH, the PATH the root scripts run with"
 done
 
 # The public key: one ed25519 line, nothing before the type (no options, so it can't loosen `restrict`).
@@ -180,17 +190,24 @@ fi
 # ---- What the files should hold. ----
 
 
-sudo_args=""
-digits="[1-9]"
-for _ in 1 2 3 4 5 6; do
-  sudo_args+="${sudo_args:+, }$CADDY_SCRIPT $digits"
-  digits+="[0-9]"
-done
+# The arguments sudo allows for <script>: a pull request number of 1 to 6 digits, matched by sudoers itself.
+sudo_args_for() { # <script>
+  local args="" digits="[1-9]" _
+  for _ in 1 2 3 4 5 6; do
+    args+="${args:+, }$1 $digits"
+    digits+="[0-9]"
+  done
+  printf '%s' "$args"
+}
 sudoers_text=$(
   printf '# %s. Changes here are overwritten on deploy.\n' "$MARKER"
-  printf '# The preview account may run main'"'"'s Caddy script with a pull request number, and nothing else.\n'
-  printf 'Defaults!%s env_reset, !setenv, secure_path="%s"\n' "$CADDY_SCRIPT" "$ROOT_SECURE_PATH"
-  printf '%s ALL=(root) NOPASSWD: %s\n' "$PREVIEW_USER" "$sudo_args"
+  printf '# The preview account may run main'"'"'s Caddy script and content copy script, each with a pull request number, and nothing else.\n'
+  for script in "$CADDY_SCRIPT" "$COPY_SCRIPT"; do
+    printf 'Defaults!%s env_reset, !setenv, secure_path="%s"\n' "$script" "$ROOT_SECURE_PATH"
+  done
+  for script in "$CADDY_SCRIPT" "$COPY_SCRIPT"; do
+    printf '%s ALL=(root) NOPASSWD: %s\n' "$PREVIEW_USER" "$(sudo_args_for "$script")"
+  done
 )
 
 # Writes <text> to <path> (mode, owner root) when it differs, keeping a dated copy of the old one.
@@ -246,6 +263,35 @@ for dir in "$PREVIEW_HOME" "$PREVIEW_HOME/.ssh" "$PREVIEW_ACCESS_DIR" "$PREVIEW_
     changes+=("$dir made, root-owned")
   fi
 done
+if [ ! -d "$PREVIEW_COPY_TMP" ]; then
+  install -d -m 700 "$PREVIEW_COPY_TMP"
+  chown "$ROOT_OWNER:$ROOT_OWNER" "$PREVIEW_COPY_TMP"
+  changes+=("$PREVIEW_COPY_TMP made, root-only")
+fi
+# What a killed or interrupted content copy leaves: a snapshot folder (also after a reboot), or a media staging
+# folder still root's, which the preview account can't remove. Under the lock the copy runs under, so none is
+# running; in a subshell, so the lock is let go before the guards below take it.
+leftovers=$(
+  take_caddy_lock || {
+    echo "not-swept"
+    exit 0
+  }
+  n=0
+  # The snapshot folder is root's alone. A staging folder is in a folder the account owns, which it could swap
+  # for a link between finding and removing: -execdir removes it relative to the folder find itself holds open.
+  # Counted first: a folder the account swaps meanwhile only makes the count high, never removes anything else.
+  find_staging() { [ ! -d "$PREVIEW_ROOT" ] || find "$PREVIEW_ROOT" -mindepth 2 -maxdepth 2 -name .copy-media -type d -uid "$ROOT_UID" "$@"; }
+  n=$(find_staging -print | wc -l)
+  n=$((n + $(find "$PREVIEW_COPY_TMP" -mindepth 1 -maxdepth 1 -name 'run.*' -print | wc -l)))
+  find "$PREVIEW_COPY_TMP" -mindepth 1 -maxdepth 1 -name 'run.*' -exec rm -rf -- {} + || true
+  find_staging -execdir rm -rf -- {} + || true
+  echo "$n"
+)
+case "$leftovers" in
+  0) ;;
+  not-swept) report "WARNING: preview access: the content copy's leftovers could not be swept, since the Caddy lock was held" ;;
+  *) changes+=("$leftovers leftovers of a content copy removed") ;;
+esac
 if [ ! -d "$PREVIEW_ROOT" ]; then
   install -d -m 750 "$PREVIEW_ROOT"
   chown "$PREVIEW_USER:$PREVIEW_USER" "$PREVIEW_ROOT"
@@ -272,7 +318,7 @@ fi
 rm -f "$sudoers_candidate"
 if install_file "$SUDOERS_FILE" 440 - "$sudoers_text"; then
   sudoers_changed=yes
-  changes+=("sudo rule for the Caddy script installed")
+  changes+=("sudo rule for the Caddy and content copy scripts installed")
 fi
 
 # What the account can do, run as the account.
@@ -287,6 +333,7 @@ for path in "$PREVIEW_HOME" "$PREVIEW_HOME/.ssh" "$PREVIEW_HOME/.ssh/authorized_
 done
 sudo_list=$(sudo -l -U "$PREVIEW_USER" 2>/dev/null || true)
 case "$sudo_list" in *"$CADDY_SCRIPT"*) ;; *) fail_after_change "sudo does not list the Caddy script for the account" ;; esac
+case "$sudo_list" in *"$COPY_SCRIPT"*) ;; *) fail_after_change "sudo does not list the content copy script for the account" ;; esac
 
 # What the account can reach (#1346). The guards make it smaller, then the isolation check proves it, run
 # as the account with the guards in place. Both print their own annotations, never a file's content. A key

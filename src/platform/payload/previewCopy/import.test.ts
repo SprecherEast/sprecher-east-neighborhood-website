@@ -1,5 +1,5 @@
 import type { Payload } from 'payload'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 
 import {
   asStaff as as,
@@ -144,5 +144,23 @@ describe('the import', () => {
     const result = await importPreviewCopy(target, parsePreviewCopyFile(JSON.stringify(stale)))
     expect(result.skippedFields).toBe(1)
     expect(result.created.faq).toBe(1)
+  })
+})
+
+describe('the import sends no mail (#1397)', () => {
+  it('sends nothing while it writes the documents and rebuilds the search index', async () => {
+    const target = await freshPayload(config, 'preview-copy-no-mail')
+    // Both ways a hook or a job could send one: through Payload's adapter and through the plugin's own call
+    const sent = vi.spyOn(target, 'sendEmail').mockResolvedValue(undefined)
+    const adapter = vi.spyOn(target.email, 'sendEmail').mockResolvedValue(undefined)
+    await importPreviewCopy(target, parsePreviewCopyFile(text()))
+    await reindexSearch(target)
+    expect(sent).not.toHaveBeenCalled()
+    expect(adapter).not.toHaveBeenCalled()
+    // and nothing is waiting to send one: no confirmation held, no submission, no job queued
+    for (const collection of ['email-confirmations', 'form-submissions', 'payload-jobs'] as const) {
+      const { totalDocs } = await target.find({ collection, limit: 1, depth: 0, ...as })
+      expect(totalDocs, collection).toBe(0)
+    }
   })
 })

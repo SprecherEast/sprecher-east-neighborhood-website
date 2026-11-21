@@ -10,7 +10,8 @@
 #   list                       every preview, or leftover of one, found anywhere: its commit, how long ago it was
 #                              last deployed, and whether its folder, Caddy block and PM2 process exist (#1076)
 #   upload <number> <commit>   a release archive (.tar.gz) on stdin, unpacked into the preview's folder
-#   deploy <number> <commit>   puts that uploaded release live (Caddy block, then ops/deploy-release.sh)
+#   deploy <number> <commit>   puts that uploaded release live (Caddy block, a fresh copy of production's published
+#                              content, then ops/deploy-release.sh; the preview's database is rebuilt every time, #1397)
 #   teardown <number>          stops the preview, deletes its folder and its Caddy block; a second run, or one for a
 #                              number with only leftovers (a block, a process), succeeds too
 #   credentials <number>       prints the preview's test sign-in (#1394), only when the seed applied exactly it
@@ -76,6 +77,29 @@ mkdir -p "$HOME"
 sudo_caddy() { # <number>
   sudo -n "$PREVIEW_ACCESS_DIR/ops/preview-caddy.sh" "$1"
 }
+# Production's published content for this preview (#1397, ops/preview-copy.sh): the root step makes the snapshot,
+# runs main's export and links the media the export lists into an empty staging folder; its standard output is the
+# export's file, which this account writes (so root never writes a path this account can swap). Only when it all
+# succeeded is the preview's old database and media replaced, so a failed copy leaves the preview as it was. The
+# database is rebuilt on every deploy: changes made while testing a preview are lost on the next push.
+copy_content() {
+  local file_new="$COPY_FILE.new"
+  # Room for the largest file the root step may hand over, above production's floor
+  enough_disk "$PREVIEW_ROOT" "$PREVIEW_COPY_MAX_BYTES" || refuse "$no_disk"
+  rm -rf -- "$COPY_MEDIA_DIR" "$COPY_FILE" "$file_new"
+  mkdir "$COPY_MEDIA_DIR"
+  local status=0
+  # Its standard error carries only numbers and fixed texts, and goes to the log; the file is never printed.
+  (umask 077 && sudo -n "$PREVIEW_ACCESS_DIR/ops/preview-copy.sh" "$number" >"$file_new") || status=$?
+  if [ "$status" != 0 ] || [ ! -s "$file_new" ]; then
+    rm -rf -- "$COPY_MEDIA_DIR" "$file_new"
+    refuse "the content copy failed, so the preview was not changed"
+  fi
+  rm -rf -- "$DATA_DIR" "$MEDIA_DIR"
+  mkdir -p "$APP_DIR/public"
+  mv -T "$COPY_MEDIA_DIR" "$MEDIA_DIR"
+  mv -T "$file_new" "$COPY_FILE"
+}
 # Stops the preview and deletes its folder and Caddy block. APP_DIR is <preview root>/pr-<number>, from the
 # number alone (environment.sh), and was checked above not to be a link. A caller that adds `|| true` runs
 # every step even after one failed (`set -e` is off inside a function called that way).
@@ -86,15 +110,8 @@ take_down() {
   sudo_caddy "$number"
 }
 
-# True when <bytes> more on the previews' disk still leaves production's floor of free space (#1076). The one
-# floor is PREVIEW_FREE_FLOOR_KB (environment.sh), the number the production deploy's preflight requires.
+# What the previews' disk refuses (the rule itself is enough_disk, preview-access-lib.sh).
 no_disk="there is not enough free disk to put this preview up and keep production's floor"
-enough_disk() { # <bytes about to be written>
-  local free_kb
-  free_kb=$(df -Pk "$PREVIEW_ROOT" | awk 'NR == 2 { print $4 }')
-  [[ "$free_kb" =~ ^[0-9]+$ ]] || return 1
-  [ $((free_kb - ($1 + 1023) / 1024)) -gt "$PREVIEW_FREE_FLOOR_KB" ]
-}
 
 # PM2's processes that belong to a preview, one `<name> <online|stopped>` line each. `pm2 jlist` prints one line of
 # JSON, which may follow lines of PM2's own notices. The name's prefix comes from environment.sh, and bash checks
@@ -189,7 +206,7 @@ case "$action" in
     [ "$(readlink "$APP_DIR/current" 2>/dev/null || true)" != "releases/$commit" ] ||
       refuse "that release is live; not replacing it"
     # Before reading anything: room for the largest archive that may be sent, above production's floor (#1076).
-    enough_disk "$PREVIEW_UPLOAD_MAX_BYTES" || refuse "$no_disk"
+    enough_disk "$PREVIEW_ROOT" "$PREVIEW_UPLOAD_MAX_BYTES" || refuse "$no_disk"
     rm -rf "$archive" "$incoming" "$APP_DIR/releases/$commit"
     # One byte over the limit tells a too-big archive from one that fits exactly.
     head -c "$((PREVIEW_UPLOAD_MAX_BYTES + 1))" >"$archive"
@@ -204,7 +221,7 @@ case "$action" in
     [ "$measured" != 2 ] || refuse "the archive unpacks to more than is allowed"
     [ "$measured" = 0 ] || refuse "the archive's listing can't be measured"
     # At its peak the folder holds the archive and what it unpacks to: that must leave production's floor free.
-    enough_disk "$((archive_bytes + unpacked))" || refuse "$no_disk"
+    enough_disk "$PREVIEW_ROOT" "$((archive_bytes + unpacked))" || refuse "$no_disk"
     mkdir "$incoming"
     tar --no-same-owner --no-same-permissions -xzf "$archive" -C "$incoming" || refuse "the archive did not unpack"
     links_stay_inside "$incoming" || refuse "the release has a link that leads outside it"
@@ -221,9 +238,12 @@ case "$action" in
     isolated_or_down
     # The block first: deploy-release.sh stops when it is missing. Both scripts below are main's.
     sudo_caddy "$number"
+    copy_content
     export PREVIEW_NUMBER CODE_DIR="$release"
     deployed=0
     bash "$here/deploy-release.sh" || deployed=$?
+    # The import deletes its file; whatever is left (a failed deploy) goes now.
+    rm -rf -- "$COPY_FILE" "$COPY_MEDIA_DIR"
     # Again with the preview running, and also when the deploy failed, so a failed deploy is checked too.
     isolated_or_down
     exit "$deployed"
