@@ -98,8 +98,10 @@ export function BillShare({
   children,
 }: BillShareProps & CityPanelProps & { children?: ReactNode }) {
   const [yearIndex, setYearIndex] = useState(Math.max(years.length - 1, 0))
-  // The year's toast shows each time the reader switches the year, never on load: `key` is a new
-  // one per switch, so a toast the reader has not accepted yet is replaced by the new year's
+  // The year's toast (the warning that some rates are an earlier year's) shows when the rates panel
+  // first comes into view, on each estimate and on a switch to the year only if it has not shown yet;
+  // never more than the editor's limit in a visit. `key` is a new one per showing, so a toast the
+  // reader has not accepted yet is replaced (#1413)
   const toastsShown = useRef<Partial<Record<BillToastId, number>>>({})
   const [yearToast, setYearToast] = useState<{ key: number; open: boolean } | null>(null)
   const year = years[yearIndex]
@@ -145,21 +147,26 @@ export function BillShare({
     breakdown.arm(homeValue !== value)
     countWith(COUNT_MS)
     setEstimated(homeValue)
+    showToast(yearIndex, false)
+  }
+  // Shows the toast for the year at `index` if there is one and the visit's limit is not spent;
+  // `onlyIfNew` holds it back once it has shown. Returns whether it showed
+  function showToast(index: number, onlyIfNew: boolean): boolean {
+    const next = yearToastFor(years, index, toasts)
+    if (!next) return false
+    const times = toastsShown.current[next.id] ?? 0
+    if (times >= next.toast.showsPerVisit || (onlyIfNew && times > 0)) return false
+    toastsShown.current[next.id] = times + 1
+    setYearToast((previous) => ({ key: (previous?.key ?? 0) + 1, open: true }))
+    return true
   }
   // Choosing a year moves the amounts to its rates in half a second
   const selectYear = (index: number) => {
     if (index === yearIndex) return
     countWith(YEAR_COUNT_MS)
     setYearIndex(index)
-    // Each toast shows only as often as the editor allows in one visit, so it is not a nag
-    const next = yearToastFor(years, index, toasts)
-    const times = next ? (toastsShown.current[next.id] ?? 0) : 0
-    if (next && times < next.toast.showsPerVisit) {
-      toastsShown.current[next.id] = times + 1
-      setYearToast((previous) => ({ key: (previous?.key ?? 0) + 1, open: true }))
-    } else {
-      setYearToast(null)
-    }
+    // A toast is for the year it was shown in, so one left from the other year goes
+    if (!showToast(index, true)) setYearToast(null)
   }
 
   // What the year's toast says, in the editor's words for that year (none when the editor turned it off)
@@ -232,6 +239,7 @@ export function BillShare({
         <RatesPanel
           title={ratesText.title}
           lines={rateLinesFor(years, yearIndex, rates)}
+          onView={() => showToast(yearIndex, false)}
           toast={
             yearToast &&
             toastFor && (

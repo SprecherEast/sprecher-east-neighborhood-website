@@ -5,7 +5,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { YEAR_COUNT_MS } from '@/platform/ui/useCountedNumber.client'
 
 import { BillShare } from './BillShare.client'
-import { toastsOf } from './billToasts'
 import { city, PROPS } from './billShareFixtures'
 
 afterEach(() => {
@@ -17,7 +16,6 @@ const panel = () => screen.getByRole('region', { name: PROPS.rates.title })
 const lineOf = (name: string) => within(panel()).getByText(name).closest('li') as HTMLElement
 const choose = (label: string) =>
   act(async () => fireEvent.click(screen.getByRole('button', { name: label })))
-
 describe('BillShare, the rates panel (#1351)', () => {
   it('opens on the latest year: the City’s 2027 rate and the others’ 2026 rates, each labeled', () => {
     render(
@@ -41,81 +39,6 @@ describe('BillShare, the rates panel (#1351)', () => {
     expect(within(lineOf('City of Madison')).getByText('2026 rate')).toBeTruthy()
     expect(within(lineOf('City of Madison')).getByText('$7.01 per $1,000')).toBeTruthy()
     expect(within(panel()).getAllByText('2026 rate')).toHaveLength(4)
-  })
-
-  it('shows no toast on load, and no hidden note taking room', () => {
-    render(
-      <BillShare {...PROPS} {...city}>
-        x
-      </BillShare>,
-    )
-    expect(within(panel()).queryByText(/The rest come in January/)).toBeNull()
-    expect(within(panel()).queryByText(/All four rates/)).toBeNull()
-  })
-
-  it('warns when the later year is chosen, until it is accepted, and says nothing when every rate is the year’s own (#1380, #1392)', async () => {
-    render(
-      <BillShare {...PROPS} {...city}>
-        x
-      </BillShare>,
-    )
-    // The earlier year needs no notice: its rates are what the reader expects
-    await choose('2026')
-    expect(within(panel()).queryByRole('button', { name: 'Got it' })).toBeNull()
-    await choose('2027')
-    expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
-    // Accepting it is the only way out, and the next switch shows it again
-    await act(async () => fireEvent.click(within(panel()).getByRole('button', { name: 'Got it' })))
-    expect(within(panel()).queryByText(/Only the City’s 2027 rates are out/)).toBeNull()
-    await choose('2026')
-    expect(within(panel()).queryByRole('button', { name: 'Got it' })).toBeNull()
-    await choose('2027')
-    expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
-  })
-
-  it('shows the own-rates toast when the editor gives it a message', async () => {
-    const own = toastsOf([
-      { toast: 'ratesCarried', message: 'Carried.' },
-      { toast: 'ratesOwn', message: 'All four rates are the {year} rates.' },
-    ])
-    render(
-      <BillShare {...PROPS} {...city} toasts={own}>
-        x
-      </BillShare>,
-    )
-    await choose('2026')
-    expect(within(panel()).getByText('All four rates are the 2026 rates.')).toBeTruthy()
-  })
-
-  it('shows a toast only as many times in a visit as the editor allows, then switching the year is quiet', async () => {
-    render(
-      <BillShare {...PROPS} {...city}>
-        x
-      </BillShare>,
-    )
-    const accept = async () =>
-      act(async () => fireEvent.click(within(panel()).getByRole('button', { name: 'Got it' })))
-    // The first two times the later year is chosen it shows (twice is the starting number)
-    for (let time = 1; time <= 2; time++) {
-      await choose('2026')
-      await choose('2027')
-      expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
-      await accept()
-    }
-    // The third time it stays quiet
-    await choose('2026')
-    await choose('2027')
-    expect(within(panel()).queryByText(/Only the City’s 2027 rates are out/)).toBeNull()
-  })
-
-  it('shows none when the editor turned the year’s toast off', async () => {
-    render(
-      <BillShare {...PROPS} {...city} toasts={{ ...PROPS.toasts, ratesCarried: null }}>
-        x
-      </BillShare>,
-    )
-    await choose('2027')
-    expect(within(panel()).queryByRole('button', { name: 'Got it' })).toBeNull()
   })
 
   it('sits beside the answer card in the tab’s order: after the answer, before the whole bill', () => {

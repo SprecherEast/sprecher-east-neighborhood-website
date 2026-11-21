@@ -34,7 +34,7 @@ export type BillToastDefinition = {
   placement: (typeof BILL_TOAST_PLACEMENTS)[number]
   /** How long a fading toast stays, in seconds */
   fadeSeconds: number
-  /** How many times a reader sees it in one visit; after that the year switch is quiet */
+  /** How many times a reader sees it in one visit; after that it stays quiet (#1413) */
   showsPerVisit: number
   /** What the accept button says */
   acceptLabel: string
