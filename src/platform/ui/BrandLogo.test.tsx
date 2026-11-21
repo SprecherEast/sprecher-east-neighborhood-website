@@ -2,7 +2,7 @@
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { BrandLogo } from './BrandLogo'
+import { BrandLogo, LOGO_SLOT_HEIGHT } from './BrandLogo'
 import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
@@ -20,17 +20,41 @@ describe('BrandLogo', () => {
     expect(image?.className).toContain('w-auto')
   })
 
-  it('draws the FIDO passkey icon file as supplied, square, at the 32 px FIDO’s guidelines need, while the “G” stays 20 px (#1365)', () => {
+  it('draws the FIDO passkey tile file trimmed to its rounded corners, 32 px tall, while the “G” stays 20 px (#1372)', () => {
     const { container } = render(<BrandLogo brand="passkey" />)
     const image = container.querySelector('img')
 
-    expect(image?.getAttribute('src')).toBe('/brand/fido-passkey-icon.png')
-    // The file's own 150 by 150 proportions, kept by height with the width following
-    expect(image?.getAttribute('width')).toBe('150')
-    expect(image?.getAttribute('height')).toBe('150')
+    // The tile's own proportions (105 by 106, no white margin), kept by height with the width following
+    expect(image?.getAttribute('src')).toBe('/brand/fido-passkey-icon-tile.png')
+    expect(image?.getAttribute('width')).toBe('105')
+    expect(image?.getAttribute('height')).toBe('106')
     expect(image?.className).toContain('h-8')
     expect(image?.className).toContain('w-auto')
     expect(image?.className).not.toMatch(/\b(rounded|object-cover|object-fill|scale|rotate)/)
+  })
+
+  it('seats both logos in one slot, so they sit the same distance from the button’s top and bottom (#1372)', () => {
+    for (const brand of ['google', 'passkey'] as const) {
+      const { container } = render(<BrandLogo brand={brand} />)
+      const slot = container.firstElementChild
+
+      expect(slot?.tagName).toBe('SPAN')
+      expect(slot?.className).toContain(LOGO_SLOT_HEIGHT)
+      expect(slot?.className).toContain('items-center')
+      expect(slot?.querySelector('img')).not.toBeNull()
+      cleanup()
+    }
+    expect(LOGO_SLOT_HEIGHT).toBe('h-8')
+  })
+
+  it('draws the tile’s file with transparent corners, so no white shows on a dark page (#1372)', async () => {
+    const { readFile } = await import('node:fs/promises')
+    const png = await readFile('public/brand/fido-passkey-icon-tile.png')
+
+    // PNG header: width, height, bit depth 8, colour type 6 (RGBA)
+    expect(png.readUInt32BE(16)).toBe(105)
+    expect(png.readUInt32BE(20)).toBe(106)
+    expect(png[25]).toBe(6)
   })
 
   it('is decoration: the button’s words name it, so it has no name of its own', async () => {
