@@ -26,7 +26,7 @@ export function BrandLogoGallery() {
             </Button>
           </div>
         </GalleryVariant>
-        <GalleryVariant label="passkey, on the same button (the icon keeps its own white square)">
+        <GalleryVariant label="passkey, on the same button (its amber tile has transparent rounded corners, the same in light and dark)">
           <div className="max-w-sm">
             <Button
               type="button"

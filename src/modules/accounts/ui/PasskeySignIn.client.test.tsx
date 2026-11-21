@@ -78,7 +78,7 @@ describe('PasskeySignIn: when it shows', () => {
     expect(button.getAttribute('type')).toBe('button')
     // The FIDO passkey icon, as supplied, and only as decoration (#1365)
     const icon = button.querySelector('img')
-    expect(icon?.getAttribute('src')).toBe('/brand/fido-passkey-icon.png')
+    expect(icon?.getAttribute('src')).toBe('/brand/fido-passkey-icon-tile.png')
     expect(icon?.getAttribute('alt')).toBe('')
     // Full width, and the kit's own 44 px tall button
     expect(button.className).toMatch(/w-full/)
