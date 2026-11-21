@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   PREVIEW_ACCOUNT_ROLES,
@@ -103,6 +103,19 @@ describe('readPreviewPasswords', () => {
     }
     expect(message).toContain('private')
     for (const password of Object.values(passwords)) expect(message).not.toContain(password)
+  })
+
+  it('refuses a private file that belongs to another user', () => {
+    write(fileText(good()))
+    fs.chmodSync(file(), 0o600)
+    const me = process.getuid?.() ?? 0
+    const spy = vi.spyOn(process, 'getuid').mockReturnValue(me + 1)
+    try {
+      expect(() => readPreviewPasswords(file())).toThrow('private file')
+    } finally {
+      spy.mockRestore()
+    }
+    expect(Object.keys(readPreviewPasswords(file()))).toHaveLength(4) // and its own user reads it
   })
 
   it('refuses a link, even to a private file', () => {

@@ -59,7 +59,7 @@ export function setUpEnvironmentHarness() {
     write(path.join(release, 'node_modules/.bin/next'), '#!/bin/sh\n', 0o755)
     write(
       path.join(release, 'node_modules/.bin/payload'),
-      `#!/bin/sh\necho "payload $* in $(pwd -P) NODE_ENV=\${NODE_ENV-unset}\${PREVIEW_ACCOUNTS_FILE:+ PREVIEW_ACCOUNTS_FILE=$PREVIEW_ACCOUNTS_FILE}" >> "$STUB_LOG"\n[ "$1" != run ] || [ -z "$STUB_PAYLOAD_RUN_FAIL" ] || exit 1\n[ "$1" != run ] || [ -f "$PREVIEW_ACCOUNTS_FILE" ] || exit 1\n`,
+      `#!/bin/sh\necho "payload $* in $(pwd -P) NODE_ENV=\${NODE_ENV-unset}\${PREVIEW_ACCOUNTS_FILE:+ PREVIEW_ACCOUNTS_FILE=$PREVIEW_ACCOUNTS_FILE}" >> "$STUB_LOG"\n[ "$1" != run ] || { echo "env of payload run:"; env; } >> "$STUB_LOG"\n[ "$1" != run ] || [ -z "$STUB_PAYLOAD_RUN_FAIL" ] || exit 1\n[ "$1" != run ] || [ -f "$PREVIEW_ACCOUNTS_FILE" ] || exit 1\n`,
       0o755,
     )
   }

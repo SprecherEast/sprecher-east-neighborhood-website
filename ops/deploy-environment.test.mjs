@@ -106,7 +106,8 @@ describe('deploy-release.sh for a preview', () => {
     expect(passwords).toHaveLength(4)
     expect(fs.statSync(file).mode & 0o777).toBe(0o600)
     expect(log()).toContain(`PREVIEW_ACCOUNTS_FILE=${file}`) // the seed is told where, not what
-    // Nothing the deploy printed, ran or logged holds a password: not its output, not a command or its settings
+    // Nothing the deploy printed, ran or logged holds a password: not its output, not a command, the seed's
+    // whole environment (the stub logs it) or the settings
     const everything = out + log() + fs.readFileSync(p('previews/pr-7/.env.local'), 'utf8')
     for (const password of passwords) expect(everything).not.toContain(password)
     expect(fs.readdirSync(p('previews/pr-7/releases/r1')).join()).not.toContain('accounts')

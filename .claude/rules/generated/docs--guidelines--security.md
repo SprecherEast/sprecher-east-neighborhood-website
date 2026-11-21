@@ -221,9 +221,11 @@ isolation check proves it before and after every preview deploy. What holds now:
   `main`'s `ops/preview-accounts.sh` (never by the pull request's code, which only reads them), on every deploy,
   into one file in the preview's own folder (mode 600, outside `data/` and the release). They are never printed,
   logged, put in an argument, an environment variable or a comment, and no production account or password is
-  ever copied. A redeploy makes new ones and ends every session, so the old ones stop working. The code a
-  preview runs is unreviewed and can read its own file, which opens only that preview's throwaway accounts: it
-  could already make any account in its own database. Production's accounts and settings are never touched.
+  ever copied. A redeploy makes new ones for these four accounts and ends their sessions (anything else made in
+  the preview's database stays until it is rebuilt, #1397). The code a preview runs is unreviewed, and one
+  Unix account runs every preview (#1345), so it can read the passwords file of every running preview, not
+  only its own. That opens only previews' throwaway accounts, whose databases and settings (`.env.local`) that
+  code can already reach. Production's accounts and settings are never touched.
   How the passwords reach the owner or an AI agent is #1394.
 - **Previews have no basic auth** (the owner's decision, 2026-11-11, recorded on #1074): see above.
 

@@ -124,6 +124,14 @@ describe('a preview’s account passwords', () => {
     expect(fs.readFileSync(p('elsewhere/target'), 'utf8')).toBe('keep')
   })
 
+  it('refuses a folder where the file belongs, and moves nothing into it', () => {
+    fs.mkdirSync(fileOf(), { recursive: true })
+    const r = run()
+    expect(r.status).not.toBe(0)
+    expect(fs.readdirSync(fileOf())).toEqual([]) // not moved into it
+    expect(fs.readdirSync(p('previews/pr-7')).filter((f) => f.startsWith('.accounts.'))).toEqual([])
+  })
+
   it('stops, writing nothing, when it can’t make a random value', () => {
     const bin = p('bin')
     fs.mkdirSync(bin)

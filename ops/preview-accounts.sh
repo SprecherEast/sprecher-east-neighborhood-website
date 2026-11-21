@@ -26,6 +26,8 @@ is_preview || fail "PREVIEW_NUMBER names no pull request preview"
   fail "the accounts file is not the preview's own"
 # A link could lead to production's folder or file, and mv would follow or replace it.
 [ ! -L "$APP_DIR" ] && [ ! -L "$ACCOUNTS_FILE" ] || fail "the preview's folder or accounts file is a link"
+# A folder at the file's name would take the file into itself (a plain `mv`); `mv -T` below refuses that too.
+[ ! -d "$ACCOUNTS_FILE" ] || fail "the accounts file's name is taken by a folder"
 
 # Every password first, so a failure writes nothing and the kept file is never half new.
 lines=""
@@ -39,6 +41,6 @@ tmp=$(umask 077 && mktemp "$APP_DIR/.accounts.XXXXXX")
 trap 'rm -f "$tmp"' EXIT
 printf '%s' "$lines" >"$tmp"
 chmod 600 "$tmp"
-mv "$tmp" "$ACCOUNTS_FILE"
+mv -T "$tmp" "$ACCOUNTS_FILE" # -T: never into a folder (or a link to one) that appeared at the name
 trap - EXIT
 report "preview $PREVIEW_NUMBER has new test account passwords for $PREVIEW_ACCOUNT_ROLES (not shown; in a private file in its folder)"

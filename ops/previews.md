@@ -172,9 +172,10 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   reads that file, named by `PREVIEW_ACCOUNTS_FILE`, and refuses one that is not a private file of its own
   user. Nothing puts a password in an environment variable, an argument, a log line or a comment, and the
   deploy log says only that they were made. No email is made. Every deploy gives each existing account its new
-  password, role and verified state and unlocks it, which also ends its sessions, so a redeploy signs everyone
-  out and the old passwords fail; any other account (a neighbor who signed up in the preview) is left alone.
-  The seed refuses to run outside a preview, and the demo seed stays off in production builds
+  password, role and verified state and unlocks it, which also ends its sessions, so a redeploy signs these four
+  accounts out and their old passwords fail; any other account (a neighbor who signed up in the preview) is left alone.
+  A failure prints one fixed line, never Payload's or the database's error (`runPreviewSeed`; the deploy log is
+  public). The seed refuses to run outside a preview, and the demo seed stays off in production builds
   (`isSeedEnabled`). Production's accounts and settings are never read or copied. The role list is one
   constant, `PREVIEW_ACCOUNT_ROLES` in `src/endpoints/seed/preview-accounts.ts`, and `environment.sh` names the
   same roles for the script, with a test keeping the two equal. How the owner or an AI agent gets the
@@ -188,8 +189,12 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   doesn't take it: the production deploy writes the key's line only when the host guards and the isolation
   check pass, so "no key line" shows from outside as a refused sign-in. It is reported once and **never
   retried**.
-- **A pull request opened before this was merged** has no `e2e/previewSeed.ts` that reads the passwords file, so its
-  preview deploy stops with "the preview's database could not be prepared" until it is rebased on `main`. The seed also refuses to run without a pull request number, a second check against an honest mistake such
+- **A pull request opened before this was merged** has an older `e2e/previewSeed.ts`, which ignores the passwords
+  file: its deploy still succeeds and leaves one admin nobody can sign in to, and `.preview-accounts` holds four
+  passwords that match no account until the branch is rebased on `main`. Whatever hands the passwords out
+  (#1394) must not hand those out. Only a branch with no `e2e/previewSeed.ts` at all stops, with "the preview's
+  database could not be prepared". A seed that fails after the script made the file leaves the same mismatch:
+  the deploy stops and the previous release keeps running, and the next deploy makes a matching set. The seed also refuses to run without a pull request number, a second check against an honest mistake such
   as running it by hand: it lives in the release's own code, so it is no boundary. Production is kept out by the
   `is_preview` gate in `main`'s `deploy-release.sh` and by the preview account's isolation.
 - **Not covered.** A detached process a preview starts survives `teardown`, which stops only PM2's process
