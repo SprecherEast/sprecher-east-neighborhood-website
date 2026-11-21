@@ -4,8 +4,8 @@ import {
   SYSTEM_FIELDS,
   UPLOAD_FIELDS,
 } from '../previewCopy/classification'
-import { allows, type Audience } from './accessHarness'
-import { type FieldNode, fieldDescendants } from './configFields'
+import { allows } from './accessHarness'
+import { editorLinkTargets, type FieldNode, fieldDescendants, topLevelFields } from './configFields'
 
 /**
  * The gate behind the preview copy allowlist (#1395): compares the Payload config with the
@@ -14,30 +14,23 @@ import { type FieldNode, fieldDescendants } from './configFields'
  */
 
 type Node = FieldNode
-type Owner = { slug: string; fields: unknown[]; versions?: unknown; upload?: unknown }
-
-/**
- * The names an editor sees at the top of the document: layout-only containers (rows, unnamed
- * tabs, collapsibles) are looked through, a named group or tab counts once.
- */
-export function topLevelFields(fields: Node[]): Node[] {
-  return fields.flatMap((field) => {
-    if (field.name) return [field]
-    return topLevelFields([...(field.fields ?? []), ...(field.tabs ?? [])])
-  })
+type Owner = {
+  slug: string
+  fields: unknown[]
+  versions?: unknown
+  upload?: unknown
+  access?: { read?: unknown }
 }
 
 const looksLikeEmail = (field: Node) => field.type === 'email' || /e-?mail/i.test(field.name ?? '')
 
-const PUBLIC: Audience[] = ['visitor', 'guest', 'resident', 'agent']
-
-/** True when no visitor, guest, resident or agent may read the field. */
+/**
+ * True when a visitor may not read the field. A preview's database is as open as its code, so
+ * the test is what an anonymous visitor sees, never what a signed-in role sees.
+ */
 async function staffOnly(field: Node): Promise<boolean> {
   if (!field.access?.read) return false
-  for (const audience of PUBLIC) {
-    if (await allows(field.access.read, audience, undefined)) return false
-  }
-  return true
+  return !(await allows(field.access.read, 'visitor', undefined))
 }
 
 /** Why a top-level field is not clearly public, or null when it is. */
@@ -50,8 +43,11 @@ async function privacyReason(top: Node): Promise<string | null> {
   return null
 }
 
-const targets = (field: Node): string[] =>
-  field.relationTo === undefined ? [] : [field.relationTo].flat()
+/** The collections a field points at: a relationship, or a rich-text editor's links. */
+const targets = (field: Node): string[] => [
+  ...(field.relationTo === undefined ? [] : [field.relationTo].flat()),
+  ...(field.type === 'richText' ? editorLinkTargets(field) : []),
+]
 
 export async function findClassificationProblems(
   config: { collections: Owner[]; globals: Owner[] },
@@ -72,6 +68,11 @@ export async function findClassificationProblems(
     }
     if (entry.reason.trim().length < 10) problems.push(`${owner.slug}: needs a reason`)
     if (entry.copy !== 'copied') continue
+
+    // Copied documents are readable by anyone in a preview, so the collection must be public
+    if (!(await allows(owner.access?.read, 'visitor'))) {
+      problems.push(`${owner.slug}: copied, but a visitor may not read it on the site`)
+    }
 
     const hasDrafts =
       typeof owner.versions === 'object' &&

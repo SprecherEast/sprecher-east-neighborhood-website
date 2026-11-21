@@ -64,8 +64,9 @@ describe('the real config', () => {
 
 describe('the gate', () => {
   const field = (name: string, extra: object = {}) => ({ name, type: 'text', ...extra })
+  const open = () => true
   const config = (fields: unknown[], extra: object = {}) => ({
-    collections: [{ slug: 'things', fields, ...extra }],
+    collections: [{ slug: 'things', fields, access: { read: open }, ...extra }],
     globals: [],
   })
   const entry = (keep: string[], clear: string[] = [], reads: 'all' | 'published' = 'all') => ({
@@ -142,6 +143,91 @@ describe('the gate', () => {
     expect(
       await findClassificationProblems(config([field('a')], drafts), entry(['a'], [], 'published')),
     ).toEqual([])
+  })
+
+  it('fails on a copied collection a visitor may not read, such as an admin-only one', async () => {
+    const adminOnly = ({ req }: { req: { user?: { role?: string } | null } }) =>
+      req.user?.role === 'admin'
+    expect(
+      await findClassificationProblems(
+        config([field('a')], { access: { read: adminOnly } }),
+        entry(['a']),
+      ),
+    ).toEqual(['things: copied, but a visitor may not read it on the site'])
+    expect(
+      await findClassificationProblems(config([field('a')], { access: {} }), entry(['a'])),
+    ).toEqual(['things: copied, but a visitor may not read it on the site'])
+  })
+
+  it('judges a field by what a visitor sees, so a field open to residents only is private', async () => {
+    const residents = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
+    const fields = [field('perk', { access: { read: residents } })]
+    expect(await findClassificationProblems(config(fields), entry(['perk']))).toEqual([
+      'things.perk: kept, but it has a staff-only read field (perk); it must be cleared',
+    ])
+  })
+
+  describe('inside a rich-text editor', () => {
+    const richText = (blocks: unknown[], linkTargets: string[] = ['things']) => ({
+      name: 'body',
+      type: 'richText',
+      editor: {
+        editorConfig: {
+          resolvedFeatureMap: new Map([
+            ['blocks', { sanitizedServerFeatureProps: { blocks } }],
+            ['link', { sanitizedServerFeatureProps: { enabledCollections: linkTargets } }],
+          ]),
+        },
+      },
+    })
+    const withUsers = (fields: unknown[]) => ({
+      collections: [
+        ...config(fields).collections,
+        { slug: 'users', fields: [], access: { read: () => false } },
+      ],
+      globals: [],
+    })
+    const users = { users: { copy: 'excluded' as const, reason: 'Accounts, never copied.' } }
+
+    it('fails on an email field or a link to accounts inside an editor block', async () => {
+      const block = {
+        slug: 'contactCard',
+        fields: [
+          { name: 'contactEmail', type: 'email' },
+          { name: 'who', type: 'relationship', relationTo: 'users' },
+        ],
+      }
+      expect(
+        await findClassificationProblems(withUsers([richText([block])]), {
+          ...entry(['body']),
+          ...users,
+        }),
+      ).toEqual([
+        'things.body: kept, but it holds an email field (contactEmail); it must be cleared',
+        'things.body: kept, but it points at users, which is not copied',
+      ])
+    })
+
+    it('passes a clean editor block, and finds a nested block inside a block', async () => {
+      const clean = { slug: 'note', fields: [field('text')] }
+      expect(
+        await findClassificationProblems(config([richText([clean])]), entry(['body'])),
+      ).toEqual([])
+      const inner = richText([{ slug: 'secret', fields: [{ name: 'a', type: 'email' }] }])
+      const outer = { slug: 'wrapper', fields: [inner] }
+      expect(
+        await findClassificationProblems(config([richText([outer])]), entry(['body'])),
+      ).toEqual(['things.body: kept, but it holds an email field (a); it must be cleared'])
+    })
+
+    it('fails on a link feature that can point at a collection that is not copied', async () => {
+      expect(
+        await findClassificationProblems(withUsers([richText([], ['things', 'users'])]), {
+          ...entry(['body']),
+          ...users,
+        }),
+      ).toEqual(['things.body: kept, but it points at users, which is not copied'])
+    })
   })
 
   it('fails on a kept link to a collection that is not copied', async () => {

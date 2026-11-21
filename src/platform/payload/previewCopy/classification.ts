@@ -37,7 +37,10 @@ export type PreviewCopyEntry =
       keep: readonly string[]
       /** Top-level fields present in the schema and deliberately left empty in the copy. */
       clear: readonly string[]
-      /** `published`: only what a visitor sees is read. `all`: the collection has no drafts. */
+      /**
+       * `published`: only what a visitor sees is read. `all`: the collection has no drafts. Either
+       * way, main documents only: version tables (`_versions`) are never copied.
+       */
       reads: 'published' | 'all'
     }
   /** A derived index, built again from the copied documents (search). */
@@ -158,7 +161,7 @@ export const PREVIEW_COPY: Readonly<Record<string, PreviewCopyEntry>> = {
     'publishedAt',
   ]),
   media: copied(
-    'The pictures that copied documents point at; the file itself is linked by the server step.',
+    'Only the pictures that copied documents point at (the export follows those references, not every record); the file itself is linked by the server step.',
     ['alt', 'caption', 'credit', 'license', 'licenseUrl', 'sourceUrl'],
     // Admin folders are not copied (below), so the link is left empty
     { clear: ['folder'], reads: 'all' },

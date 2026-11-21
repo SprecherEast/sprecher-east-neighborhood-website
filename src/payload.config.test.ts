@@ -1,5 +1,5 @@
 import type { LexicalRichTextAdapter } from '@payloadcms/richtext-lexical'
-import type { Block, Field, RichTextField, SanitizedConfig } from 'payload'
+import type { Field, RichTextField, SanitizedConfig } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { revalidateRedirects } from '@/modules/site/cms'
@@ -8,6 +8,7 @@ import {
   EVENT_RICH_TEXT_BLOCKS,
   RICH_TEXT_BLOCKS,
 } from '@/platform/richtext/blockConfigs'
+import { editorBlocks } from '@/platform/payload/testing/configFields'
 import { SECTION_PANEL_BLOCKS } from '@/platform/richtext/editorial/sectionTabsBlockConfig'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
 
@@ -37,14 +38,6 @@ const collection = (slug: string) => {
   const found = config.collections.find((c) => c.slug === slug)
   if (!found) throw new Error(`No ${slug} collection`)
   return found
-}
-
-/** The blocks a rich-text field's editor offers, or none. */
-function editorBlocks(field: RichTextField): Block[] {
-  // The sanitized field carries the Lexical adapter, which knows its features
-  const editor = field.editor as LexicalRichTextAdapter
-  const props = editor.editorConfig.resolvedFeatureMap.get('blocks')?.sanitizedServerFeatureProps
-  return (props as { blocks?: Block[] } | undefined)?.blocks ?? []
 }
 
 /**
