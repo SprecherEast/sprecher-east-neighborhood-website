@@ -6,7 +6,7 @@ import { computeBillShare } from '@/platform/lib/billShare'
 import { present } from '@/platform/payload/testing/present'
 
 import { BillShare } from './BillShare.client'
-import { BARS, estimate, PROPS, city } from './billShareFixtures'
+import { BARS, billSummary, estimate, PROPS, city } from './billShareFixtures'
 import { homeInYear, increaseIn, yearRatesOf } from './billFigures'
 
 afterEach(cleanup)
@@ -162,7 +162,7 @@ describe('the earliest year is the base year (#1135)', () => {
     expect(line().className).toContain('text-primary-strong')
     expect(line().className).not.toContain('text-accent-strong')
     // The sentence a screen reader hears gives the figures, with no increase
-    expect(screen.getByRole('status').textContent).not.toMatch(/increase|Up \$|Base year/i)
+    expect(billSummary().textContent).not.toMatch(/increase|Up \$|Base year/i)
     await year('2027')
     expect(line().textContent).toMatch(/^Up \$/)
   })

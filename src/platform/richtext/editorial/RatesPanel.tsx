@@ -1,4 +1,4 @@
-import React, { useId } from 'react'
+import React, { type ReactNode, useId } from 'react'
 
 import { cn } from '@/platform/lib/cn'
 import { Card } from '@/platform/ui/Card'
@@ -13,18 +13,20 @@ import type { RateLine } from './billRates'
  * dollars per $1,000 of value on the right. The City's line is highlighted, since the tab is about
  * the City's tax. Every line is built the same way and as tall as the others, so the lines sit level
  * in every year and the panel never changes height; a body with no rate keeps its line, with
- * "No rate yet" in place of the figures. The note under the lines (the editor's wording) says why a rate is from an
- * earlier year; where it does not apply it keeps its room, hidden from everyone. It draws what it is
- * given.
+ * "No rate yet" in place of the figures. The year each rate is from is on every line, so the panel
+ * never depends on the toast (`toast`, #1380) that says why: the page puts it over the panel's top
+ * edge (the card is its positioned container), where it covers a sliver and takes no room, so the
+ * panel is as tall in every year. It draws what it is given.
  */
 export function RatesPanel({
   title,
   lines,
-  note,
+  toast,
 }: {
   title: string
   lines: readonly RateLine[]
-  note: { text: string; shown: boolean } | null
+  /** A `Toast` placed over the panel's top edge, or any toast the page shows for it */
+  toast?: ReactNode
 }) {
   const titleId = useId()
   return (
@@ -75,18 +77,8 @@ export function RatesPanel({
             </li>
           ))}
         </ul>
-        {note && (
-          <div aria-hidden={note.shown ? undefined : true}>
-            <Text
-              variant="small"
-              as="p"
-              className={cn('text-xs leading-snug', !note.shown && 'invisible')}
-            >
-              {note.text}
-            </Text>
-          </div>
-        )}
       </div>
+      {toast}
     </Card>
   )
 }

@@ -81,3 +81,7 @@ export async function estimate(value: string) {
     fireEvent.click(screen.getByRole('button', { name: 'Estimate' }))
   })
 }
+
+/** The sentence a screen reader hears for the bill: the block's own status line, not a toast's announcement */
+export const billSummary = () =>
+  screen.getAllByRole('status').find((element) => element.tagName === 'P') as HTMLElement

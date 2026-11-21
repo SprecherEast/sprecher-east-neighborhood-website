@@ -190,6 +190,13 @@ describe('Toast', () => {
       expect(viewport.className).toContain('absolute')
       expect(viewport.className).not.toContain('fixed')
     })
+
+    it('can sit directly above the container it is in, touching its top edge', () => {
+      render(<Toast message="Saved" placement="above" onDismiss={() => {}} />)
+      const viewport = screen.getByRole('list')
+      expect(viewport.className).toContain('bottom-full')
+      expect(viewport.className).not.toContain('fixed')
+    })
   })
 
   describe('motion', () => {

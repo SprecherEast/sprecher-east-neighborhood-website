@@ -57,11 +57,7 @@ export function BillAnswer({
     <Card as="section" variant="elevated" padding="xs" aria-label="Your City tax">
       <div className="space-y-1">
         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-          <Text
-            variant="small"
-            as="p"
-            className="text-xs font-semibold whitespace-nowrap text-foreground"
-          >
+          <Text variant="subsection" as="p">
             {yours ? 'City tax on your home' : 'City tax on an average home'}
           </Text>
           {badge && (

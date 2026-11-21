@@ -63,14 +63,18 @@ for (const width of WIDTHS) {
       `above ${gapAbove}px, below ${gapBelow}px`,
     ).toBeLessThanOrEqual(1)
 
-    // The answer card's label and badge share a row from 390 px (the 320 px card is too narrow for both
-    // and puts the badge whole on a line of its own); either way the badge stays inside the card
+    // The answer card's label (as large as the whole-bill title) and badge share a row where both fit
+    // and otherwise the badge sits whole on a line of its own under the label, never beside a wrapped
+    // label; either way the badge stays inside the card
     const answer = page.getByRole('region', { name: 'Your City tax' })
     const label = answer.getByText('City tax on an average home')
     const badge = answer.getByText('Proposed')
     const card = await boxOf(answer)
     const [l, b] = [await boxOf(label), await boxOf(badge)]
-    if (width >= 390) expect(Math.abs(l.y + l.height / 2 - (b.y + b.height / 2))).toBeLessThan(2)
+    const sharesRow = b.y < l.y + l.height - 1
+    if (sharesRow) expect(Math.abs(l.y + l.height / 2 - (b.y + b.height / 2))).toBeLessThan(2)
+    else
+      expect(b.y, 'the badge is whole under the label').toBeGreaterThanOrEqual(l.y + l.height - 1)
     expect(b.x + b.width, 'the badge stays inside the card').toBeLessThanOrEqual(
       card.x + card.width + 1,
     )
@@ -182,6 +186,9 @@ for (const width of WIDTHS) {
     const earlier = await boxOf(answer)
     expect(earlier.height, 'the card is as tall in both years').toBeCloseTo(later.height, 0)
     expect(await line.evaluate((el) => getComputedStyle(el).color)).not.toBe(accent)
+    // The year's toast sits above the rates panel, over part of the year control from a tablet up,
+    // and stays until accepted (#1380), so the reader accepts it before choosing again
+    await page.getByRole('button', { name: 'Got it' }).click()
     await years(page).getByRole('button', { name: '2027' }).click()
     await expect(line).toContainText('Up $')
   })

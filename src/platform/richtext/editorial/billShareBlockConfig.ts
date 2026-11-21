@@ -13,7 +13,7 @@ import {
   NOTE_CONDITIONS,
   validateNoteBlanks,
 } from './billShareNotes'
-import { billToastsField, validateToastMessage } from './billToastFields'
+import { billToastsField } from './billToastFields'
 import { BILL_SHARE_LIMITS } from './editorialLimits'
 import { filledText } from './filledText'
 import { editorialLinkFields } from './linkFields'
@@ -152,23 +152,9 @@ export const BillShareBlockConfig: Block = {
       label: 'Rates panel',
       admin: {
         description:
-          'The small panel beside the City’s tax that lists each body’s rate and the year it is from.',
+          'The small panel beside the City’s tax that lists each body’s rate and the year it is from. The notice about which year’s rates are in use is a toast, below.',
       },
-      fields: [
-        rowTitleField('title', 'Panel title', DEFAULT_BILL_RATES.title),
-        {
-          name: 'note',
-          type: 'text',
-          label: 'Note under the panel',
-          maxLength: BILL_SHARE_LIMITS.ratesNote,
-          defaultValue: DEFAULT_BILL_RATES.note,
-          validate: validateToastMessage,
-          admin: {
-            description:
-              'Shown in a year that uses an earlier year’s rate for some body. {year} is the year shown. Leave empty for no note.',
-          },
-        },
-      ],
+      fields: [rowTitleField('title', 'Panel title', DEFAULT_BILL_RATES.title)],
     },
     billToastsField,
     {

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { BillShare } from './BillShare.client'
-import { box, estimate, PROPS } from './billShareFixtures'
+import { billSummary, box, estimate, PROPS } from './billShareFixtures'
 
 afterEach(cleanup)
 
@@ -40,18 +40,18 @@ describe('BillShare', () => {
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
     // The box holds the home's value in the latest year, whichever year is shown (#1121)
     expect(box().value).toBe('$500,300')
-    const result = screen.getByRole('status')
+    const result = billSummary()
     expect(result.textContent).toMatch(/\$481,300/)
     expect(result.textContent).toMatch(/about \$8,9\d\d/)
     fireEvent.change(box(), { target: { value: '962600' } })
     // Typing changes nothing: the numbers and the spoken sentence wait for Estimate
-    expect(screen.getByRole('status').textContent).toMatch(/\$481,300/)
+    expect(billSummary().textContent).toMatch(/\$481,300/)
     expect(screen.getByText(/^Average home: \$481,300\./)).toBeTruthy()
     await estimate('962600')
     // 2026 prices the same home at its 2026 value: $962,600 × $481,300 / $500,300 (#1121)
     expect(screen.queryByText(/home’s assumed value|^Your home:/)).toBeNull()
     expect(bill().textContent).toMatch(/Total property tax\$17,28\d/)
-    expect(screen.getByRole('status').textContent).toMatch(/about \$17,28\d/)
+    expect(billSummary().textContent).toMatch(/about \$17,28\d/)
   })
 
   it('keeps what the reader typed when the year changes', () => {
@@ -68,7 +68,7 @@ describe('BillShare', () => {
     expect((screen.getByRole('button', { name: 'Estimate' }) as HTMLButtonElement).disabled).toBe(
       true,
     )
-    expect(screen.getByRole('status').textContent).toMatch(/\$500,300/)
+    expect(billSummary().textContent).toMatch(/\$500,300/)
   })
 
   it('turns Estimate on only for a valid value that differs from the one shown', async () => {
@@ -79,7 +79,7 @@ describe('BillShare', () => {
     expect(button().disabled).toBe(false)
     await estimate('300000')
     expect(button().disabled).toBe(true)
-    expect(screen.getByRole('status').textContent).toMatch(/\$300,000/)
+    expect(billSummary().textContent).toMatch(/\$300,000/)
   })
 
   it('estimates when Enter submits the box', async () => {
@@ -88,14 +88,14 @@ describe('BillShare', () => {
     await act(async () => {
       fireEvent.submit(box().closest('form') as HTMLFormElement)
     })
-    expect(screen.getByRole('status').textContent).toMatch(/\$400,000/)
+    expect(billSummary().textContent).toMatch(/\$400,000/)
   })
 
   it('applies a rate year at once while a typed value waits for Estimate', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     fireEvent.change(box(), { target: { value: '300000' } })
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
-    expect(screen.getByRole('status').textContent).toMatch(/\$481,300/)
+    expect(billSummary().textContent).toMatch(/\$481,300/)
     expect(box().value).toBe('$300,000')
   })
 
@@ -157,7 +157,7 @@ describe('BillShare, Estimate never scrolls the page (#1068)', () => {
     render(<BillShare {...PROPS}>x</BillShare>)
     await estimate('300000')
     expect(scroll).not.toHaveBeenCalled()
-    expect(screen.getByRole('status').textContent).toMatch(/\$300,000/)
+    expect(billSummary().textContent).toMatch(/\$300,000/)
   })
 })
 
@@ -217,7 +217,7 @@ describe('BillShare, a switch of year counts the amounts in half a second (#1087
     // And it stays: a settled count, so no further change
     step(1000)
     expect(totalText()).toBe(after)
-    expect(screen.getByRole('status').textContent).toMatch(/\$481,300/)
+    expect(billSummary().textContent).toMatch(/\$481,300/)
   })
 
   it('counts a new home value over the longer time, not half a second', async () => {

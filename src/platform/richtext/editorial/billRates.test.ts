@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import type { BillShareYear } from './billShare'
 import { PROPS } from './billShareFixtures'
-import { rateLinesFor, ratesNoteFor } from './billRates'
+import { rateLinesFor, yearToastFor } from './billRates'
+import { toastsOf } from './billToasts'
 
 const { years } = PROPS
 const [first, second] = years as [BillShareYear, BillShareYear]
@@ -47,26 +48,25 @@ describe('rateLinesFor', () => {
   })
 })
 
-describe('ratesNoteFor', () => {
-  const template = 'The other {year} rates come out in January.'
+describe('yearToastFor (#1380)', () => {
+  const toasts = toastsOf(undefined)
 
-  it('shows the note in a year that carries a rate over, with that year filled in', () => {
-    expect(ratesNoteFor(years, 1, template)).toEqual({
-      text: 'The other 2027 rates come out in January.',
-      shown: true,
-    })
+  it('says in a year that carries a rate over that the others’ rates are the year before’s, with the year filled in', () => {
+    const shown = yearToastFor(years, 1, toasts)
+    expect(shown?.toast).toBe(toasts.ratesCarried)
+    expect(shown?.message).toBe('Only the City’s 2027 rates are out. The rest come in January.')
   })
 
-  it('keeps the note’s room, hidden, in a year that carries nothing, worded for the year that does', () => {
-    expect(ratesNoteFor(years, 0, template)).toEqual({
-      text: 'The other 2027 rates come out in January.',
-      shown: false,
-    })
+  it('says in a year where every rate is its own that they are, with that year filled in', () => {
+    const shown = yearToastFor(years, 0, toasts)
+    expect(shown?.toast).toBe(toasts.ratesOwn)
+    expect(shown?.message).toBe('All four rates are the 2026 rates.')
   })
 
-  it('has no note at all when no year carries a rate over, or the editor wrote none', () => {
-    expect(ratesNoteFor([first], 0, template)).toBeNull()
-    expect(ratesNoteFor(years, 1, '')).toBeNull()
+  it('has no toast for a year that does not exist, or one the editor turned off', () => {
+    expect(yearToastFor(years, 5, toasts)).toBeNull()
+    const off = toastsOf([{ toast: 'ratesOwn', message: '  ' }])
+    expect(yearToastFor(years, 0, off)).toBeNull()
   })
 })
 
