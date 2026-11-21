@@ -27,6 +27,11 @@ PREVIEW_PORT_MAX="${PREVIEW_PORT_MAX:-3999}"
 # The build for a preview uses the site key; ops/preview-settings.sh writes both.
 PREVIEW_TURNSTILE_SITE_KEY="1x00000000000000000000AA"
 PREVIEW_TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA"
+# The roles that get a test account in a preview, in the order they are made (admin first: the first account
+# on an empty database becomes an admin). `agent` has no password sign-in, so it has none. Defined here for
+# ops/preview-accounts.sh, and kept equal to PREVIEW_ACCOUNT_ROLES in src/endpoints/seed/preview-accounts.ts by
+# a test (#1393). Never taken from the caller.
+PREVIEW_ACCOUNT_ROLES="admin editor resident guest"
 # The restricted account previews run under and deploy through (#1345, ops/previews.md). Its home is
 # root-owned, so a preview app running as it can't add a key or replace the forced command. The
 # production deploy copies the scripts the account may run to PREVIEW_ACCESS_DIR, root-owned, from
@@ -127,6 +132,8 @@ fi
 ENV_FILE="$APP_DIR/.env.local"
 DATA_DIR="$APP_DIR/data"
 MEDIA_DIR="$APP_DIR/public/media"
+# A preview's test-account passwords (#1393): one private file in its own folder, outside data/ and the release.
+ACCOUNTS_FILE="$APP_DIR/.preview-accounts"
 
 # Child scripts (restart-app.sh, rollback.sh) and PM2 (ecosystem.config.cjs) read the same values.
 export APP_DIR APP_NAME APP_PORT PM2_LOG_DIR PREVIEW_NUMBER PREVIEW_ROOT PREVIEW_DOMAIN PREVIEW_CADDY_DIR

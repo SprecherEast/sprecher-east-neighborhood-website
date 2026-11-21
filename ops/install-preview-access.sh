@@ -39,7 +39,7 @@ ROOT_UID="${PREVIEW_ACCESS_ROOT_UID:-0}" # root's id; a test run by someone else
 ROOT_OWNER=root
 MARKER="Managed by ops/install-preview-access.sh (#1345)"
 # main's files the account may run, copied into PREVIEW_ACCESS_DIR/ops/ (the caddy/ ones into caddy/)
-SCRIPTS="preview-wrapper.sh preview-caddy.sh preview-access-lib.sh preview-isolation-check.sh preview-host-guards.sh umami-lib.sh preview-settings.sh secret-lib.sh deploy-release.sh restart-app.sh migrate-lib.sh caddy-lock-lib.sh lib.sh environment.sh"
+SCRIPTS="preview-wrapper.sh preview-caddy.sh preview-access-lib.sh preview-isolation-check.sh preview-host-guards.sh umami-lib.sh preview-settings.sh preview-accounts.sh secret-lib.sh deploy-release.sh restart-app.sh migrate-lib.sh caddy-lock-lib.sh lib.sh environment.sh"
 CADDY_FILES="preview-site.caddy preview-headers.caddy"
 WRAPPER="$PREVIEW_ACCESS_DIR/ops/preview-wrapper.sh"
 CADDY_SCRIPT="$PREVIEW_ACCESS_DIR/ops/preview-caddy.sh"
