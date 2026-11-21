@@ -237,6 +237,13 @@ describe('preview-isolation-check.sh: a closed folder the account can enter but 
     write(p('umami'), 'x', 0o000)
     expect((await check()).code).toBe(0)
   })
+
+  it('does not call a file the account can execute but not read a folder it can enter', async () => {
+    execFileSync('chmod', ['-R', 'u+rwx', p('umami')])
+    fs.rmSync(p('umami'), { recursive: true })
+    write(p('umami'), 'x', 0o111)
+    expect((await check()).code).toBe(0)
+  })
 })
 
 describe('preview-isolation-check.sh: Caddy’s admin endpoint', () => {

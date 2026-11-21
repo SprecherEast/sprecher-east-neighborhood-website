@@ -46,7 +46,7 @@ links_stay_inside() { # <folder>
 # numeric owners, so an owner name with a space can't shift the size field. A size can be claimed without
 # data (a PAX sparse member lists its real size, up to 2^63), and shell arithmetic wraps around at 2^63, so
 # a size with more digits than the limit is refused at once and the running total is checked against the
-# limit after every member: no sum is ever larger than twice the limit. Returns 1, printing nothing, when
+# limit after every member, so the sum stays far below 2^63. Returns 1, printing nothing, when
 # the archive can't be listed, has no members or a line isn't a plain member line (a name with a newline
 # makes one that isn't), and 2 when it is over the limit: an archive that can't be measured, or is too big,
 # is never unpacked.

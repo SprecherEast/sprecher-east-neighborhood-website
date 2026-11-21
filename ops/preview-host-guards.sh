@@ -7,7 +7,8 @@
 #      their access for "others": the production deploy runs with umask 022, so what it writes (the logs
 #      too, under PM2) is readable by every account. A folder is closed only when all of this is true,
 #      and otherwise left as it is, with a warning: it is a real folder, it and what is directly in it are
-#      owned by root, Caddy's live configuration (`caddy adapt` of the Caddyfile) names no path in it, and
+#      owned by root, Caddy's live configuration (`caddy adapt` of the Caddyfile, and the Caddyfile and the files
+#      beside it, for what an import names) names no path in it, and
 #      no process that isn't root's has it as its working folder or an open file in it. What this can't
 #      see: a non-root service that opens a file there by name only from time to time. The old mode is in
 #      the annotation, with the undo.
@@ -67,9 +68,16 @@ fi
 
 # Prints why a folder is needed by something that isn't root, or nothing when nothing says so.
 folder_needed() { # <folder>
-  local adapted proc uid ref target
+  local adapted proc uid ref target pattern
   adapted=$(caddy adapt --config "$CADDYFILE" --adapter caddyfile 2>/dev/null) && [[ "$adapted" == *[![:space:]]* ]] || { echo "caddy adapt could not read the live Caddyfile, so what Caddy serves or writes is unknown"; return; }
   if [[ "$adapted" == *"$1"/* || "$adapted" == *"$1\""* ]]; then echo "Caddy's configuration names a path in it"; return; fi
+  # `caddy adapt` pastes an imported file's text in place, so the path of an import is not in what it prints:
+  # the Caddyfile and every file beside it (the previews' blocks too) are read for the path as well.
+  pattern=$(printf '%s' "$1" | sed 's/[][\\.*^$+?(){}|]/\\&/g')
+  if [ -n "$(grep -rlEs -e "$pattern([^A-Za-z0-9_.-]|\$)" -- "$CADDYFILE" "${CADDYFILE%/*}" "$PREVIEW_CADDY_DIR")" ]; then
+    echo "a file of Caddy's own configuration names a path in it (an import, say)"
+    return
+  fi
   for proc in "$PROC_DIR"/[0-9]*; do
     uid=$(awk '/^Uid:/ { print $3 }' "$proc/status" 2>/dev/null)
     [ -n "$uid" ] && [ "$uid" != "$ROOT_UID" ] || continue
@@ -86,8 +94,8 @@ for dir in "$production" "$BACKUP_ROOT" "$UMAMI_DIR" "$PRODUCTION_PM2_LOG_DIR"; 
     warn "$dir is a link or not a folder"
   elif [ -n "$(find "$dir" -maxdepth 1 ! -uid "$ROOT_UID" -print -quit)" ]; then # the folder itself, or an entry in it
     warn "$dir or something directly in it is not owned by root, so something else may need the access"
-  elif [ -n "$(folder_needed "$dir")" ]; then
-    warn "$dir is not closed: $(folder_needed "$dir")"
+  elif reason=$(folder_needed "$dir"); [ -n "$reason" ]; then
+    warn "$dir is not closed: $reason"
   else
     mode=$(stat -c %a "$dir")
     if ((8#$mode & 8#007)); then

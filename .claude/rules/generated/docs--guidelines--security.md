@@ -163,7 +163,7 @@ isolation check proves it before and after every preview deploy. What holds now:
   production deploy, takes "others" access off production's folder, the backups, Umami's folder and PM2's log folder (the
   production deploy writes with `umask` 022, so what it writes is readable by every account, and a closed
   folder is what keeps it out). It closes a folder only after checking that it is a real root-owned folder
-  with only root-owned entries, that Caddy's live configuration names no path in it, and that no process
+  with only root-owned entries, that Caddy's live configuration, the Caddyfile and the files beside it (an import's path shows only there) name no path in it, and that no process
   that isn't root's has it open; otherwise it changes nothing and warns. What is assumed, not proven: no
   other non-root service opens a file there by name now and then. It says the old mode; a closed
   folder can't be entered by the account. A later named deploy account for production
@@ -179,7 +179,7 @@ isolation check proves it before and after every preview deploy. What holds now:
   `/etc/at.deny`. A process a preview starts and detaches still survives `teardown`, which stops only PM2's
   process; that is not covered.
 - **The isolation check** (`ops/preview-isolation-check.sh`, #1346) runs as the account before a preview's deploy
-  starts (a failure starts nothing) and after it, and again in the installer before a key line is written. It fails when the account can open
+  starts (a failure starts nothing and takes down a preview already running under that number) and after it, and again in the installer before a key line is written. It fails when the account can open
   production's settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to the
   admin endpoint. A failing check takes the preview down and fails the deploy, and no key line is written
   (an earlier one is removed) until the guards and the check pass. It prints which place was reachable and

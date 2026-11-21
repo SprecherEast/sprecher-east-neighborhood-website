@@ -90,7 +90,7 @@ beforeEach(async () => {
     '[ -z "$STUB_CADDY_FAILS" ] || exit 1; [ -z "$STUB_CADDY_EMPTY" ] || exit 0; echo "${STUB_CADDY_JSON:-{\\"apps\\":{\\"http\\":{}}}}"',
   )
   fs.mkdirSync(p('proc'))
-  write(p('Caddyfile'), 'example.test {}\n')
+  write(p('caddy/Caddyfile'), 'example.test {}\n')
   // iptables/ip6tables keep their rules in state/<tool>.rules: -C finds one, -I adds it
   for (const t of ['iptables', 'ip6tables'])
     stub(
@@ -123,9 +123,14 @@ afterEach(async () => {
   fs.rmSync(dir, { recursive: true, force: true })
 })
 
-const run = (args = [], env = {}, { without = [] } = {}) => {
+// `umask` runs the script under that umask, the way a caller with a strict one would
+const run = (args = [], env = {}, { without = [], umask } = {}) => {
   for (const t of without) fs.rmSync(p('bin', t))
-  return runCommand('/bin/bash', [p('ops/preview-host-guards.sh'), ...args], {
+  const script = p('ops/preview-host-guards.sh')
+  const command = umask
+    ? ['-c', 'umask "$0"; exec /bin/bash "$@"', umask, script, ...args]
+    : [script, ...args]
+  return runCommand('/bin/bash', command, {
     env: {
       PATH: p('bin'),
       STUB_LOG: p('log'),
@@ -135,7 +140,8 @@ const run = (args = [], env = {}, { without = [] } = {}) => {
       BACKUP_ROOT: p('backups'),
       UMAMI_DIR: p('umami'),
       PREVIEW_ACCESS_DIR: p('installed'),
-      CADDYFILE: p('Caddyfile'),
+      CADDYFILE: p('caddy/Caddyfile'),
+      PREVIEW_CADDY_DIR: p('caddy/previews'),
       PROC_DIR: p('proc'),
       PRODUCTION_PM2_LOG_DIR: p('pmlogs'),
       CRON_ALLOW_FILE: p('etc/cron.allow'),
@@ -272,6 +278,43 @@ describe('preview-host-guards.sh: production’s private folders', () => {
       expect(mode('prod')).toBe('755')
     })
 
+    // `caddy adapt` pastes an import's text in place, so the path of an imported file is only in the files
+    it('leaves a folder alone when the Caddyfile imports a file from it', async () => {
+      write(p('caddy/Caddyfile'), `import ${p('prod')}/ops/caddy/x.caddy\n`)
+      const { code, out } = await run()
+      expect(code).toBe(3)
+      expect(mode('prod')).toBe('755')
+      expect(out).toContain(
+        `${p('prod')} is not closed: a file of Caddy's own configuration names a path in it`,
+      )
+      expect(mode('umami')).toBe('750')
+    })
+
+    it('leaves a folder alone when another file beside the Caddyfile names a path in it', async () => {
+      write(p('caddy/snippet.caddy'), `import ${p('pmlogs')}/x\n`)
+      expect((await run()).code).toBe(3)
+      expect(mode('pmlogs')).toBe('755')
+    })
+
+    it('leaves a folder alone when a preview’s block, kept elsewhere, names a path in it', async () => {
+      write(p('blocks/pr-7.caddy'), `import ${p('umami')}\n`)
+      expect((await run([], { PREVIEW_CADDY_DIR: p('blocks') })).code).toBe(3)
+      expect(mode('umami')).toBe('755')
+    })
+
+    it('reads a dot in the folder’s name as a dot, not as any character', async () => {
+      fs.mkdirSync(p('pr.d'), { mode: 0o755 })
+      write(p('caddy/Caddyfile'), `import ${p('prXd')}/x\n`)
+      expect((await run([], { PRODUCTION_DIR_FOR_TESTS: p('pr.d') })).code).toBe(0)
+      expect(mode('pr.d')).toBe('750')
+    })
+
+    it('does not mistake a longer folder name in the Caddyfile for the folder', async () => {
+      write(p('caddy/Caddyfile'), `import ${p('prod')}-other/x ${p('prod')}.old\n`)
+      expect((await run()).code).toBe(0)
+      expect(mode('prod')).toBe('750')
+    })
+
     it('does not mistake a longer name that starts with the same letters for the folder', async () => {
       const { code } = await run([], {
         STUB_CADDY_JSON: JSON.stringify({ root: `${p('prod')}-other/x` }),
@@ -343,30 +386,7 @@ describe('preview-host-guards.sh: cron and at', () => {
   })
 
   it('makes cron.deny readable by everyone even when the caller’s umask is strict', async () => {
-    const { code } = await runCommand(
-      '/bin/bash',
-      ['-c', `umask 077; exec /bin/bash ${p('ops/preview-host-guards.sh')}`],
-      {
-        env: {
-          PATH: p('bin'),
-          STUB_LOG: p('log'),
-          STUB_STATE: p('state'),
-          PREVIEW_ACCESS_ROOT_UID: String(UID),
-          PRODUCTION_DIR_FOR_TESTS: p('prod'),
-          BACKUP_ROOT: p('backups'),
-          UMAMI_DIR: p('umami'),
-          PRODUCTION_PM2_LOG_DIR: p('pmlogs'),
-          CADDYFILE: p('Caddyfile'),
-          PROC_DIR: p('proc'),
-          CRON_ALLOW_FILE: p('etc/cron.allow'),
-          CRON_DENY_FILE: p('etc/cron.deny'),
-          AT_ALLOW_FILE: p('etc/at.allow'),
-          AT_DENY_FILE: p('etc/at.deny'),
-          PREVIEW_FIREWALL_UNIT: p('etc/firewall.service'),
-          CADDY_ADMIN_PORT: String(admin.port),
-        },
-      },
-    )
+    const { code } = await run([], {}, { umask: '077' })
     expect(code).toBe(0)
     expect(mode('etc/cron.deny')).toBe('644')
   })

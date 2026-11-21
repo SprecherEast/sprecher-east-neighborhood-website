@@ -27,11 +27,27 @@ const resignWith = (key: string, token: string) => {
   const body = `${base64Url(JSON.stringify(partOf(token, 0)))}.${base64Url(JSON.stringify(partOf(token, 1)))}`
   return `${body}.${base64Url(createHmac('sha256', key).update(body).digest())}`
 }
-/** The email of the account a token signs in, or null when it signs no one in. */
-const whoIs = async (token: string) => {
-  const { user } = await payload.auth({ headers: new Headers({ authorization: `JWT ${token}` }) })
+/** The email of the account these request headers sign in, or null when they sign no one in. */
+const whoIs = async (headers: Record<string, string>) => {
+  const { user } = await payload.auth({ headers: new Headers(headers) })
   return user && 'email' in user ? user.email : null
 }
+/** A real token of the account, from its real sign-in. */
+const loginToken = async () =>
+  (
+    await payload.login({
+      collection: 'users',
+      data: { email: 'ada@example.com', password: PASSWORD },
+    })
+  ).token ?? ''
+/** The key a production server would sign with: the hash of its own secret. */
+const productionKey = createHash('sha256').update(PRODUCTION_SECRET).digest('hex').slice(0, 32)
+/** How the token arrives: as the sign-in header, or as the cookie a browser sends from our own pages. */
+const asHeader = (token: string) => ({ authorization: `JWT ${token}` })
+const asCookie = (token: string) => ({
+  cookie: `${payload.config.cookiePrefix}-token=${token}`,
+  'Sec-Fetch-Site': 'same-origin', // the cookie only counts from our own pages (the CSRF list)
+})
 
 beforeAll(async () => {
   vi.stubEnv('DATABASE_URI', 'file::memory:')
@@ -59,35 +75,15 @@ beforeAll(async () => {
 afterAll(() => vi.unstubAllEnvs())
 
 describe('a production sign-in token on a preview', () => {
-  it('signs no one in, though its header and claims are the account’s own and valid', async () => {
-    const { token } = await payload.login({
-      collection: 'users',
-      data: { email: 'ada@example.com', password: PASSWORD },
-    })
+  it.each([
+    ['as the sign-in header', asHeader],
+    ['as the payload-token cookie', asCookie],
+  ])('signs no one in, though its header and claims are the account’s own and valid, %s', async (_how, via) => {
+    const token = await loginToken()
     // the control: the same header and claims, signed under this server's own key, are accepted
-    expect(await whoIs(resignWith(payload.secret, token ?? ''))).toBe('ada@example.com')
+    expect(await whoIs(via(resignWith(payload.secret, token)))).toBe('ada@example.com')
     // production's key is another secret's hash: the same claims are refused
-    const productionKey = createHash('sha256').update(PRODUCTION_SECRET).digest('hex').slice(0, 32)
-    expect(await whoIs(resignWith(productionKey, token ?? ''))).toBeNull()
-  })
-
-  it('signs no one in when it arrives as the payload-token cookie either', async () => {
-    const { token } = await payload.login({
-      collection: 'users',
-      data: { email: 'ada@example.com', password: PASSWORD },
-    })
-    const viaCookie = async (value: string) => {
-      const { user } = await payload.auth({
-        headers: new Headers({
-          cookie: `${payload.config.cookiePrefix}-token=${value}`,
-          'Sec-Fetch-Site': 'same-origin', // the cookie only counts from our own pages (the CSRF list)
-        }),
-      })
-      return user && 'email' in user ? user.email : null
-    }
-    expect(await viaCookie(resignWith(payload.secret, token ?? ''))).toBe('ada@example.com')
-    const productionKey = createHash('sha256').update(PRODUCTION_SECRET).digest('hex').slice(0, 32)
-    expect(await viaCookie(resignWith(productionKey, token ?? ''))).toBeNull()
+    expect(await whoIs(via(resignWith(productionKey, token)))).toBeNull()
   })
 
   it('is never sent by a browser to a preview address: the sign-in cookie sets no Domain', () => {

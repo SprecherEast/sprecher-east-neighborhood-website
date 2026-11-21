@@ -86,7 +86,7 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   `environment.sh` holds its names (`PREVIEW_USER`, `PREVIEW_HOME`, `PREVIEW_ACCESS_DIR`), the
   upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, 10) and the number and commit patterns, so no script writes its own.
 - **What the account can't reach** (#1346). `preview-isolation-check.sh` runs as the account before and after every
-  preview deploy and fails the deploy (before: nothing starts; after: the preview is taken down) when the account can open production's
+  preview deploy and fails the deploy (before: nothing starts, and a preview already running under that number is taken down; after: the preview is taken down) when the account can open production's
   settings, database, media, backups, Umami files, PM2 logs or Caddy's storage, or connect to Caddy's admin
   endpoint on localhost. `preview-host-guards.sh` makes that so: production's folders closed to "others",
   the account in `cron.deny` and `at.deny`, and an owner-match firewall rule on the admin port. An upload

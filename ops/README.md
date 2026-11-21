@@ -160,7 +160,7 @@ place`, or `WARNING: preview access was not installed: <reason>; nothing was cha
   a port forward (`-L`) and `facts; id` are refused; `sudo -l -U sprecher-preview` lists only the Caddy script.
   Record the results on #1345.
 - **The isolation check** (`preview-isolation-check.sh`, #1346) runs as the account: in the wrapper's `deploy`
-  before anything is started (a failure refuses the deploy and starts nothing) and again after it, and in the installer before a key line. It fails when the account can enter a folder that should be closed (production's, the backups, Umami's, PM2's
+  before anything is started (a failure refuses the deploy, starts nothing and takes down a preview already running under that number: its process, folder and Caddy block) and again after it, and in the installer before a key line. It fails when the account can enter a folder that should be closed (production's, the backups, Umami's, PM2's
   logs), or open a production file:
   `.env.local`, the database, Umami's `.env`, or any file at all (to eight levels) in production's folder, its
   data and media, the backups, Umami's folder, production's PM2 state and logs, or Caddy's data and certificate
@@ -176,7 +176,7 @@ was taken down`. Its paths and the admin port are defined once, in `environment.
     closed only after the script has checked, and changes nothing with a warning (and no key line) when any of
     it fails: it is a real folder (not a link, and a link that points nowhere counts as one); it and what is
     directly in it are owned by root; `caddy adapt` of the live Caddyfile (read the way `caddy-https.sh` reads
-    it) succeeds and names no path in it; and no process that isn't root's (by its effective user, from
+    it) succeeds and names no path in it, and neither does the Caddyfile or any file beside it or in the previews' folder (`caddy adapt` pastes an import's text in place, so an import of a file from the folder shows only there); and no process that isn't root's (by its effective user, from
     `/proc/*/status`) has it as its working folder or an open file in it (`/proc/*/cwd`, `/proc/*/fd`). It is
     assumed, not proven, that no other non-root service opens a file there by name only now and then; the
     annotation's undo is the way back. A later named deploy account for production (#1306) must be given group
