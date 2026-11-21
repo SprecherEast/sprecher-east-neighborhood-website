@@ -44,7 +44,10 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 key="$work/public.pem"
 printf '%s' "$PUBLIC_KEY_B64" | base64 -d >"$key" 2>/dev/null || fail "the public key is not valid base64"
-# `-pubin` refuses a private key, which must never be sent here at all.
+# A private key must never be sent here at all, and some openssl versions read the public half of one with
+# `-pubin`: so the file must be a PEM public key and nothing else, checked before openssl reads it.
+[ "$(head -n 1 "$key")" = "-----BEGIN PUBLIC KEY-----" ] && ! grep -q 'PRIVATE' "$key" ||
+  fail "the key must be a PEM public key (BEGIN PUBLIC KEY); never send a private key"
 details=$(openssl pkey -pubin -in "$key" -noout -text 2>/dev/null) || fail "that is not a public key in PEM form"
 [[ "$details" =~ ^Public-Key:\ \(([0-9]+)\ bit\) ]] && [[ "$details" == *Modulus:* ]] || fail "the public key must be an RSA key"
 bits=${BASH_REMATCH[1]}
