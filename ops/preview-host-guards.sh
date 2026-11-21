@@ -10,8 +10,8 @@
 #      owned by root, Caddy's live configuration (`caddy adapt` of the Caddyfile, and a text search of the
 #      Caddyfile and the files beside it, as a cheap first filter) names no path in it, and no process that
 #      isn't root's has it as its working folder or an open file in it. Then Caddy itself is the proof of
-#      what it reads from the Caddyfile: `caddy adapt` as Caddy's service user (from /, with the unit's
-#      environment) must give what root's gives, before the change and again after all of them, and
+#      what it reads from the Caddyfile: `caddy adapt` as Caddy's service user (from /, with HOME, PATH and the
+#      unit's Environment= and EnvironmentFile=) must give what root's gives, before the change and again after all of them, and
 #      `caddy validate` must pass (certificates, logs). A glob over a folder Caddy's user can't open matches
 #      nothing without an error, so only the output's equality shows it. When the second run differs or
 #      fails, every mode changed in this run is put back, also when the script is stopped half way. When
@@ -103,13 +103,15 @@ folder_needed() { # <folder>
 
 # Caddy's own proof, as its service user: what Caddy reads from the Caddyfile (`caddy adapt`, which pastes
 # every import in) must be the same after the change as root reads it before, and `caddy validate` must pass
-# (certificates, logs). Both run from / with a clean environment plus the unit's own, as the service does.
+# (certificates, logs). Both run from / with a clean environment: HOME, PATH and what the unit's Environment= and
+# EnvironmentFile= set (not PassEnvironment= or what `systemctl set-environment` gave).
 # Sets caddy_user, caddy_bin and caddy_reference, or caddy_doubt.
 caddy_doubt=
 caddy_prepared=
 caddy_env=()
+doubt() { [ -n "$caddy_doubt" ] || caddy_doubt="$1"; } # the first reason is kept
 prepare_caddy_proof() {
-  local uid pair file line
+  local uid pair pairs entry file line
   caddy_prepared=yes
   caddy_user=$(systemctl show -p User --value caddy 2>/dev/null)
   uid=$(id -u "$caddy_user" 2>/dev/null)
@@ -123,25 +125,33 @@ prepare_caddy_proof() {
   elif ! take_caddy_lock; then
     caddy_doubt="another change to Caddy is running (its lock could not be taken), so nothing is closed now"
   else
+    # What the service's environment is: HOME and PATH, and the unit's Environment= and EnvironmentFile=
+    # (PassEnvironment=, DefaultEnvironment= and `systemctl set-environment` are not read). Only plain
+    # KEY=value entries are taken: systemd strips quotes and keeps spaces in a value, and splitting that here
+    # could give Caddy another value than the service has, so anything else is a doubt (the first one is kept).
     caddy_env=("HOME=$CADDY_STORAGE_DIR" "PATH=$PATH")
-    # Only plain KEY=value entries are taken: systemd strips quotes and keeps spaces in a value, and
-    # splitting that here could give Caddy another value than the service has, so anything else is a doubt.
     plain='^[A-Za-z_][A-Za-z0-9_]*=[A-Za-z0-9_./:@%+,=-]*$'
-    for pair in $(systemctl show -p Environment --value caddy 2>/dev/null); do
-      if [[ "$pair" =~ $plain ]]; then caddy_env+=("$pair"); else caddy_doubt="the unit's Environment has an entry that is not a plain KEY=value"; fi
+    read -ra pairs <<<"$(systemctl show -p Environment --value caddy 2>/dev/null)" # no glob expansion
+    for pair in "${pairs[@]}"; do
+      if [[ "$pair" =~ $plain ]]; then caddy_env+=("$pair"); else doubt "the unit's Environment has an entry that is not a plain KEY=value"; fi
     done
-    for file in $(systemctl show -p EnvironmentFiles --value caddy 2>/dev/null | sed 's/ (ignore_errors=[a-z]*)//g'); do
-      [ -r "${file#-}" ] || { [ "${file#-}" = "$file" ] || continue; caddy_doubt="the unit's EnvironmentFile $file can't be read"; continue; }
+    # `systemctl show` prints each file as "<path> (ignore_errors=yes|no)": yes is a file with a `-` in the unit,
+    # which systemd skips when it is missing; any other file that can't be read is a doubt.
+    while IFS= read -r entry; do
+      [ -n "$entry" ] || continue
+      file=${entry% (ignore_errors=*}
+      if [ ! -e "$file" ] && [ "$entry" = "$file (ignore_errors=yes)" ]; then continue; fi
+      if [ ! -r "$file" ]; then doubt "the unit's EnvironmentFile $file can't be read"; continue; fi
       while IFS= read -r line || [ -n "$line" ]; do
         [[ "$line" =~ ^[[:space:]]*([#\;].*)?$ ]] && continue # blank or comment
-        if [[ "$line" =~ $plain ]]; then caddy_env+=("$line"); else caddy_doubt="the unit's EnvironmentFile $file has an entry that is not a plain KEY=value"; fi
-      done <"${file#-}"
-    done
+        if [[ "$line" =~ $plain ]]; then caddy_env+=("$line"); else doubt "the unit's EnvironmentFile $file has an entry that is not a plain KEY=value"; fi
+      done <"$file"
+    done < <(systemctl show -p EnvironmentFiles --value caddy 2>/dev/null | grep -oE '[^ ]+ \(ignore_errors=(yes|no)\)')
     caddy_reference=$(caddy_adapted root)
     if [ -z "$caddy_reference" ]; then
-      caddy_doubt="caddy adapt could not read the Caddyfile with the service's environment"
+      doubt "caddy adapt could not read the Caddyfile with the service's environment"
     elif ! caddy_reads; then
-      caddy_doubt="caddy as $caddy_user does not read the Caddyfile as root does even before any change, so it can't prove anything after"
+      doubt "caddy as $caddy_user does not read the Caddyfile as root does even before any change, so it can't prove anything after"
     fi
   fi
 }

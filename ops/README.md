@@ -183,7 +183,7 @@ was taken down`. Its paths and the admin port are defined once, in `environment.
     open file in it (`/proc/*/cwd`, `/proc/*/fd`). **Then Caddy is the proof of what it reads from the Caddyfile:** from `/`, with a clean environment plus
     the unit's own (`Environment=` and `EnvironmentFile=` of `caddy`; only plain `KEY=value` entries are taken,
     and an entry with quotes, spaces or anything else is a doubt, because systemd reads those differently and a
-    wrong value would make root and Caddy's user resolve a placeholder to the same wrong path), `caddy adapt` is run as Caddy's service user (`systemctl show -p User caddy`, then `runuser -u`) and
+    wrong value would make root and Caddy's user resolve a placeholder to the same wrong path; the first reason is the one reported. An `EnvironmentFile=` the unit marks optional with `-` (`systemctl show` prints `ignore_errors=yes`) is skipped when it is missing, as systemd does; a required one that is missing, or any file that can't be read, is a doubt. `PassEnvironment=`, `DefaultEnvironment=` and `systemctl set-environment` are not read), `caddy adapt` is run as Caddy's service user (`systemctl show -p User caddy`, then `runuser -u`) and
     must give exactly what root's `adapt` gives, before the change (otherwise nothing is closed) and again after
     every folder is closed; `caddy validate` as that user must pass both times (certificate and log files).
     Comparing output matters: a glob over a folder Caddy's user can't open matches nothing without an error, so

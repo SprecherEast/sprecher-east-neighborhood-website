@@ -176,7 +176,7 @@ beforeEach(async () => {
       '  show) case "$3" in',
       '    User) echo "${STUB_CADDY_SERVICE_USER-caddy}" ;;',
       '    Environment) echo "STUB_STATE=$STUB_STATE $STUB_UNIT_ENVIRONMENT" ;;',
-      '    EnvironmentFiles) echo "$STUB_STATE/unit.env (ignore_errors=no)" ;;',
+      '    EnvironmentFiles) echo "${STUB_UNIT_ENV_FILES-$STUB_STATE/unit.env (ignore_errors=no)}" ;;',
       '  esac ;;',
       '  is-enabled) [ -e "$STUB_STATE/enabled" ] ;;',
       '  enable) [ "$STUB_SYSTEMCTL_FAILS" != 1 ] && touch "$STUB_STATE/enabled" ;;',
@@ -198,7 +198,7 @@ const CADDY_SWITCHES = [
   'STUB_CADDY_VALIDATE_FAILS',
 ]
 // `umask` runs the script under that umask, the way a caller with a strict one would
-const run = (args = [], env = {}, { without = [], umask } = {}) => {
+const run = (args = [], env = {}, { without = [], umask, cwd } = {}) => {
   for (const t of without) fs.rmSync(p('bin', t))
   // the switches the caddy stand-in reads, and the placeholders the service's unit would set
   const quote = (v) => `'${String(v).replaceAll("'", "'\\''")}'`
@@ -217,6 +217,7 @@ const run = (args = [], env = {}, { without = [], umask } = {}) => {
     ? ['-c', 'umask "$0"; exec /bin/bash "$@"', umask, script, ...args]
     : [script, ...args]
   return runCommand('/bin/bash', command, {
+    cwd,
     env: {
       PATH: p('bin'),
       STUB_LOG: p('log'),
@@ -610,6 +611,8 @@ describe('preview-host-guards.sh: production’s private folders', () => {
     it.each([
       ['a quoted value in the unit’s Environment', { STUB_UNIT_ENVIRONMENT: 'SNIPS="/srv/x"' }],
       ['a value with a space in the unit’s Environment', { STUB_UNIT_ENVIRONMENT: 'SNIPS="a b"' }],
+      ['a value with a space as systemd prints it', { STUB_UNIT_ENVIRONMENT: '"SNIPS=a b"' }],
+      ['a last line without a newline in the EnvironmentFile', { UNIT_ENV_TEXT: 'SNIPS="x"' }],
       ['a quoted value in the unit’s EnvironmentFile', { UNIT_ENV_TEXT: 'SNIPS="/srv/x"\n' }],
       [
         'a line that is not KEY=value in the EnvironmentFile',
@@ -620,6 +623,59 @@ describe('preview-host-guards.sh: production’s private folders', () => {
       expect(code).toBe(3)
       expect(out).toContain('not a plain KEY=value')
       expect(mode('prod')).toBe('755')
+    })
+
+    it('keeps the reason for the first doubt about the environment', async () => {
+      // the proof's environment lacks OTHER (it is only in the deploy's), so a later step would report that
+      // Caddy can't read the Caddyfile instead
+      fs.mkdirSync(p('opt'), { mode: 0o755 })
+      write(p('opt/x.caddy'), 'x\n', 0o644)
+      write(p('caddy/Caddyfile'), 'import {$OTHER}/x.caddy\n', 0o644)
+      const { out } = await run([], { OTHER: p('opt'), STUB_UNIT_ENVIRONMENT: 'SNIPS="/x"' })
+      expect(out).toContain('not a plain KEY=value')
+      expect(out).not.toContain('could not read the Caddyfile')
+    })
+
+    it('does not expand a glob in a value against the working folder', async () => {
+      fs.mkdirSync(p('cwd'))
+      write(p('cwd/A=evil'), 'x')
+      const { code, out } = await run([], { STUB_UNIT_ENVIRONMENT: 'A=*' }, { cwd: p('cwd') })
+      expect(code).toBe(3)
+      expect(out).toContain('not a plain KEY=value')
+    })
+
+    // `systemctl show` prints "<path> (ignore_errors=yes|no)": yes is a file the unit gave with a `-`
+    const missing = () => p('state/no-such.env')
+    it('skips an optional EnvironmentFile that is missing, as systemd does', async () => {
+      const { code } = await run([], { STUB_UNIT_ENV_FILES: `${missing()} (ignore_errors=yes)` })
+      expect(code).toBe(0)
+      expect(mode('prod')).toBe('750')
+    })
+
+    it('closes nothing, and says why, when a required EnvironmentFile is missing', async () => {
+      const { code, out } = await run([], {
+        STUB_UNIT_ENV_FILES: `${missing()} (ignore_errors=no)`,
+      })
+      expect(code).toBe(3)
+      expect(out).toContain(`the unit's EnvironmentFile ${missing()} can't be read`)
+      expect(mode('prod')).toBe('755')
+    })
+
+    it('closes nothing when an EnvironmentFile that is there can’t be read, optional or not', async (ctx) => {
+      if (UID === 0) ctx.skip() // root reads everything
+      write(p('state/private.env'), 'A=1\n', 0o000)
+      const { code, out } = await run([], {
+        STUB_UNIT_ENV_FILES: `${p('state/private.env')} (ignore_errors=yes)`,
+      })
+      expect(code).toBe(3)
+      expect(out).toContain("can't be read")
+    })
+
+    it('reads every file of several, optional ones that are there included', async () => {
+      write(p('state/second.env'), 'SNIPS="/x"\n')
+      const files = `${missing()} (ignore_errors=yes) ${p('state/second.env')} (ignore_errors=yes)`
+      const { out } = await run([], { STUB_UNIT_ENV_FILES: files })
+      expect(out).toContain(`${p('state/second.env')} has an entry that is not a plain KEY=value`)
     })
 
     it('reads plain entries, comments and blank lines in the unit’s environment', async () => {
@@ -673,6 +729,18 @@ describe('preview-host-guards.sh: production’s private folders', () => {
         lines.filter((l) => l.includes('cwd=/ leaked=unset home=/var/lib/caddy')),
       ).toHaveLength(5)
       expect(lines.filter((l) => l.includes('cwd=/ leaked=yes'))).toHaveLength(0)
+    })
+
+    it('closes nothing when Caddy’s user already reads the Caddyfile differently from root, before any change', async () => {
+      // a glob over a folder only the owner can open: root's reading finds the file, Caddy's user's does not
+      fs.mkdirSync(p('priv'), { mode: 0o750 })
+      write(p('priv/a.caddy'), 'x\n', 0o644)
+      write(p('caddy/Caddyfile'), `import ${p('priv')}/*.caddy\n`, 0o644)
+      const { code, out } = await run()
+      expect(code).toBe(3)
+      expect(out).toContain('even before any change')
+      expect(out).not.toContain('closing')
+      expect(mode('prod')).toBe('755')
     })
 
     it.each([
