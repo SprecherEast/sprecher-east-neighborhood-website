@@ -79,7 +79,8 @@ describe('copyFilePath', () => {
 describe('openQuietly', () => {
   it("opens Payload with its own logger off, so a failure's message never reaches the public log", async () => {
     await openQuietly(Promise.resolve({ serverURL: 'x' } as never))
-    const { config } = vi.mocked(getPayload).mock.calls[0]![0] as never as {
+    const [opened] = vi.mocked(getPayload).mock.calls
+    const { config } = opened?.[0] as unknown as {
       config: { serverURL: string; logger: { options: { enabled: boolean } } }
     }
     expect(config.serverURL).toBe('x')
