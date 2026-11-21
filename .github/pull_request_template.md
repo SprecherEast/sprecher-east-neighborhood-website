@@ -30,7 +30,7 @@ New custom code: link the issue comment with what each step of the ladder found
 
 1.
 
-<!-- Pull request preview: where there is one, put its link here (the comment the workflow keeps on this pull request has it); where there is none (docs or tooling only), leave it out. -->
+<!-- Pull request preview: where there is one, put its link here (the comment the workflow keeps on this pull request has it); where there is none (docs or tooling only), write `none` and why. -->
 
 Pull request preview:
 

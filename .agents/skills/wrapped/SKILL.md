@@ -72,7 +72,7 @@ gh api -X POST repos/{owner}/{repo}/actions/workflows/deploy.yml/dispatches -f r
 ## 3. Close the loop on the issues
 
 - If a merged pull request had a pull request preview, open its comment and confirm it says the
-  preview was removed. If not, report it on the issue (the nightly sweep removes it).
+  pull request preview was removed. If not, report it on the issue (the nightly sweep removes it).
 - The linked issues close themselves on merge, and `issue-fix-summary.yml` comments on each.
 - Read each linked issue's card history: `node .github/scripts/card-history.mjs <n>`. The planner
   app and GitHub's own automation moved it (In progress on the claim, In review when the PR

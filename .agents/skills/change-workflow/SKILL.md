@@ -135,7 +135,7 @@ request carries the `preview` label, which you add once the owner says yes to on
    for him, label the PR `needs owner`, ask him one plain question, and stop
    ([waits for owner](../../../docs/process/project-management.md#waits-for-owner)).
    A change to how pages look that has a pull request preview also waits for the owner's feedback
-   on it (step 4); apply what he asks, or record why not, before you go on.
+   on it (step 4); with no `preview` label there is none, and nothing waits; apply what he asks, or record why not, before you go on.
    Also re-read the description's `End-to-end exemption:` line: if it is not `none`, it must be the
    one the review checked, because editing a description moves neither the head nor the checks.
 5. **A PR below yours changed** (stacked PRs): rebase yours onto it and push, as in

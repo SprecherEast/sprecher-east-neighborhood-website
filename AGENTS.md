@@ -89,8 +89,7 @@ change follows these five steps:
    conversation is open. A review of an earlier head still counts only when the head changed because
    a PR below it merged (or `main` moved) and the PR's own diff is unchanged; if a PR below changed
    after the review, this PR needs a new review even when its own diff didn't change; it can be
-   short, checking it against what changed below. He can merge, hold or revert anything; a visual change waits
-   for his feedback on its pull request preview.
+   short, checking it against what changed below. The owner can merge, hold or revert anything, and a visual change with a pull request preview waits for his feedback.
    A PR labeled `needs owner`, or whose issue is, waits for his answer. A stack merges one layer at
    a time from the bottom, waiting for each layer's checks on its rebased head and, if the merge
    started a deploy, for the deploy to succeed
