@@ -13,13 +13,17 @@ export const DEFAULT_BILL_ROW_TITLES = {
   sources: 'Sources',
 } as const
 
+/** The sentence for a year that uses an earlier year's rates: the panel's note and the toast both start from it */
+const CARRIED_RATES_WORDING =
+  'The other {year} rates come out in January, so for now we use the year before’s.'
+
 /**
  * The rates panel's starting title and the note under it (#1351). The note shows in a year that
  * uses an earlier year's rate for some body; `{year}` is the year shown.
  */
 export const DEFAULT_BILL_RATES = {
   title: 'Rates in use',
-  note: 'The other {year} rates come out in January, so for now we use the year before’s.',
+  note: CARRIED_RATES_WORDING,
 } as const
 
 /**
@@ -32,7 +36,7 @@ export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
   ratesCarried: {
     tone: 'info',
     title: '',
-    message: 'The other {year} rates come out in January, so for now we use the year before’s.',
+    message: CARRIED_RATES_WORDING,
     ending: 'accept',
     fadeSeconds: 5,
     acceptLabel: 'Got it',
