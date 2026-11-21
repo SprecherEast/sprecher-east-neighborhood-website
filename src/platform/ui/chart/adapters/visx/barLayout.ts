@@ -6,15 +6,19 @@ import type { BarModel, BarSegment } from './barModel'
  * Where everything goes in the drawing, in SVG units (#663). The svg scales with its container, so
  * these are proportions; the width is small on purpose and the type large for it, so the text stays
  * easy to read on a phone for people who see poorly: on a 320px screen the drawing is shown at about
- * 0.9 of its size, which still leaves the names and values near 16px. `Chart` sets how wide it runs: 1:1 as
- * a thumbnail (20rem) and twice that enlarged (#681).
+ * 0.9 of its size, so every size here is at least `MIN_TEXT_PX` at that width (#1211). `Chart` sets
+ * how wide it runs: 1:1 as a thumbnail (20rem) and twice that enlarged (#681).
  */
+/** The smallest readable text, in screen pixels */
+export const MIN_TEXT_PX = 16
+/** The drawing's width on a 320px screen, after the page's side margins */
+export const SMALLEST_DRAWING_PX = 288
 export const VIEW_WIDTH = 320
 export const SEGMENT_GAP = 2
 export const BAR_HEIGHT = 20
 export const BAR_RADIUS = 5
 export const FONT_SIZE = 18
-export const SMALL_FONT_SIZE = 16
+export const SMALL_FONT_SIZE = 18
 /** Poppins is wide: about this much of its size per character, to place labels without measuring */
 const CHAR_WIDTH = 0.6
 export const PAD_X = 4
