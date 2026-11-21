@@ -57,9 +57,10 @@ jobs:
           key: ${{ secrets.PREVIEW_SSH_KEY }}
           known-hosts: ${{ secrets.PREVIEW_SSH_KNOWN_HOSTS }}
 
-      # The inputs reach the script as environment variables, never inside the command text.
+      # The number reaches the script as an environment variable. The public key is read by the script from the
+      # dispatch event's inputs, never from `env:`: the runner echoes a step's env in the public log, so a private
+      # key sent by mistake would be shown there before the script could refuse it.
       - name: Seal the sign-in to the public key
         env:
           NUMBER: ${{ inputs.number }}
-          PUBLIC_KEY_B64: ${{ inputs.public_key_base64 }}
         run: bash .github/scripts/preview-credentials.sh

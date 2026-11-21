@@ -233,7 +233,6 @@ isolation check proves it before and after every preview deploy. What holds now:
   plaintext. A password is never pasted into a chat, an issue, a pull request, a log or an artifact. A dispatch
   runs the workflow file of the branch it is given, so write access can print the plaintext; the boundary is the
   restricted account and the environment's secrets ([`ops/previews.md`](/ops/previews.md)).
-  How the passwords reach the owner or an AI agent is #1394.
 - **Previews have no basic auth** (the owner's decision, 2026-11-11, recorded on #1074): see above.
 
 ## Agents and the rules that bind them

@@ -59,15 +59,22 @@ describe('the preview sign-in workflow', () => {
     expect(code).not.toMatch(/secrets\.VPS_|UMAMI_ADMIN_PASSWORD/)
   })
 
-  it('runs only the sealing script, with the inputs as environment variables and never in the command text', () => {
+  it('runs only the sealing script, with the number as an environment variable and nothing in the command text', () => {
     const runs = steps.filter((s) => s.run)
     expect(runs.map((s) => s.run.trim())).toEqual(['bash .github/scripts/preview-credentials.sh'])
     for (const s of runs) expect(s.run).not.toContain('${{')
-    expect(runs[0].env).toEqual({
-      NUMBER: '${{ inputs.number }}',
-      PUBLIC_KEY_B64: '${{ inputs.public_key_base64 }}',
-    })
+    expect(runs[0].env).toEqual({ NUMBER: '${{ inputs.number }}' })
     expect(fs.existsSync(path.join(ROOT, '.github/scripts/preview-credentials.sh'))).toBe(true)
+  })
+
+  it('never puts the public key in a step’s env or command, which the runner echoes in the public log', () => {
+    expect(code.match(/public_key_base64/g)).toHaveLength(1) // only where the input is declared
+    expect(code).not.toMatch(/PUBLIC_KEY|inputs\.public_key/)
+    const script = fs.readFileSync(
+      path.join(ROOT, '.github/scripts/preview-credentials.sh'),
+      'utf8',
+    )
+    expect(script).toContain('GITHUB_EVENT_PATH')
   })
 
   it('gives the sign-in no way out but the sealed log line: no artifact, comment, output or summary', () => {

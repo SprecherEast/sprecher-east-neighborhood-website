@@ -52,7 +52,6 @@ beforeEach(() => {
     p('bin/ssh'),
     `#!/usr/bin/env bash
 echo "ssh \${@: -1}" >> "$STUB_LOG"
-[ -z "\${STUB_REFUSAL-}" ] || echo "$STUB_REFUSAL" >&2
 printf '%s' "\${STUB_CREDENTIALS-}"
 exit "\${STUB_EXIT:-0}"
 `,
@@ -61,7 +60,17 @@ exit "\${STUB_EXIT:-0}"
 })
 afterEach(() => fs.rmSync(dir, { recursive: true, force: true }))
 
+/** The dispatch event, as the runner writes it: the inputs only reach the script here. */
+function writeEvent(publicKey) {
+  fs.writeFileSync(
+    p('event.json'),
+    JSON.stringify({ inputs: { number: '7', public_key_base64: publicKey } }),
+  )
+}
+
 function run(env = {}) {
+  const { PUBLIC_KEY_B64: key = ownKey.publicB64, ...rest } = env
+  writeEvent(key)
   const r = spawnSync('bash', [path.join(SCRIPTS, 'preview-credentials.sh')], {
     encoding: 'utf8',
     env: {
@@ -70,8 +79,8 @@ function run(env = {}) {
       STUB_CREDENTIALS: PLAIN,
       OPS_DIR: OPS,
       NUMBER: '7',
-      PUBLIC_KEY_B64: ownKey.publicB64,
-      ...env,
+      GITHUB_EVENT_PATH: p('event.json'),
+      ...rest,
     },
   })
   const out = r.stdout + r.stderr
@@ -149,15 +158,38 @@ describe('preview-credentials.sh', () => {
     )
   })
 
-  it('shows the wrapper’s fixed refusal and fails, sealing nothing', () => {
-    const r = run({
-      STUB_EXIT: '2',
-      STUB_CREDENTIALS: '',
-      STUB_REFUSAL: 'refused: there is no such preview',
-    })
+  it('shows the wrapper’s fixed refusal (printed on stdout, as the real wrapper does) and fails, sealing nothing', () => {
+    const refusal = '::error title=Preview access::refused: there is no such preview'
+    const r = run({ STUB_EXIT: '2', STUB_CREDENTIALS: refusal })
     expect(r.code).toBe(1)
-    expect(r.out).toContain('there is no such preview')
+    expect(r.out).toContain(refusal)
     expect(r.out).not.toContain('sealed-sign-in-begin')
+  })
+
+  it('shows every refusal text the wrapper has for this action', () => {
+    const wrapper = fs.readFileSync(path.join(OPS, 'preview-wrapper.sh'), 'utf8')
+    const texts = [
+      ...wrapper.matchAll(
+        /(?:refuse "|none=")(there is no such preview|the preview has no test sign-in[^"]*|credentials [^"]*)"/g,
+      ),
+    ].map((m) => m[1])
+    expect(texts.length).toBeGreaterThanOrEqual(3)
+    for (const text of texts) {
+      const refusal = `::error title=Preview access::refused: ${text}`
+      expect(run({ STUB_EXIT: '2', STUB_CREDENTIALS: refusal }).out).toContain(refusal)
+    }
+  })
+
+  it.each([
+    ['more than one line', `::error title=Preview access::refused: no\nadmin=${'a'.repeat(64)}`],
+    ['not the wrapper’s form', `admin=${'a'.repeat(64)}`],
+    ['a workflow command', '::add-mask::x'],
+    ['a refusal with a value in it', `::error title=Preview access::refused: ${'a'.repeat(64)}`],
+  ])('prints nothing the server returned on a failure when it is %s', (_, text) => {
+    const r = run({ STUB_EXIT: '2', STUB_CREDENTIALS: text })
+    expect(r.code).toBe(1)
+    expect(visible(r.out)).not.toContain('a'.repeat(64))
+    expect(visible(r.out)).not.toContain('::add-mask::x')
   })
 
   it('fails when the server hands out nothing', () => {

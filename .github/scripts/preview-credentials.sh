@@ -7,18 +7,21 @@
 # SHA-256, plain `openssl`), and prints only the ciphertext. Only the holder of the private half can read it.
 #
 # The plaintext is also masked (`::add-mask::`, per line and per password) before anything else could print it,
-# so a later mistake shows `***`. Nothing here turns tracing on, and a failure prints a fixed text: not the
-# plaintext, not the key, not openssl's or ssh's own words.
+# so a later mistake shows `***`. Nothing here turns tracing on, and a failure prints fixed texts: not the
+# plaintext, not the key, not openssl's own words. ssh's own diagnostics (a refused connection) are left on the
+# log; they hold no secret. The wrapper's refusal is shown only when it has the wrapper's fixed one-line form.
 #
-# Environment: NUMBER (the pull request's number), PUBLIC_KEY_B64 (the requester's public key in PEM, as one
-# line of base64) and optionally OPS_DIR (main's ops folder, default ops).
+# The requester's public key (PEM, as one line of base64) is read from the dispatch event's inputs, never from
+# a step's `env:`, which the runner echoes in the public log: a private key sent by mistake is then not shown.
+# Environment: NUMBER (the pull request's number), GITHUB_EVENT_PATH (the dispatch event) and optionally
+# OPS_DIR (main's ops folder, default ops).
 # Opening the result, on the requester's machine:
 #   <the log line> | base64 -d | openssl pkeyutl -decrypt -inkey private.pem \
 #     -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256
 set -euo pipefail
 set +x
 
-: "${NUMBER:?}" "${PUBLIC_KEY_B64:?}"
+: "${NUMBER:?}" "${GITHUB_EVENT_PATH:?}"
 OPS_DIR="${OPS_DIR:-ops}"
 # shellcheck source=../../ops/environment.sh
 . "$OPS_DIR/environment.sh"
@@ -37,6 +40,8 @@ fail() {
 }
 
 valid_preview_number "$NUMBER" || fail "not a pull request number"
+PUBLIC_KEY_B64=$(jq -r '.inputs.public_key_base64 // empty' "$GITHUB_EVENT_PATH" 2>/dev/null) ||
+  fail "the dispatch's inputs could not be read"
 [[ "$PUBLIC_KEY_B64" =~ ^[A-Za-z0-9+/]+=*$ ]] && [ "${#PUBLIC_KEY_B64}" -le 4000 ] ||
   fail "the public key must be one line of base64 (the PEM file, encoded)"
 
@@ -54,9 +59,16 @@ bits=${BASH_REMATCH[1]}
 { [ "$bits" -ge "$MIN_KEY_BITS" ] && [ "$bits" -le "$MAX_KEY_BITS" ]; } ||
   fail "the RSA key must be between $MIN_KEY_BITS and $MAX_KEY_BITS bits"
 
-# The wrapper's own refusal text (fixed, from ops/preview-wrapper.sh) is shown by ssh's error output.
-plain=$(ssh -o ConnectTimeout=30 -o ConnectionAttempts=1 vps "credentials $NUMBER") ||
-  fail "the server did not hand out the sign-in (the line above says why)"
+# On a refusal the wrapper prints its fixed one-line reason on stdout (`refuse`, ops/preview-access-lib.sh). That
+# line is shown, and only when it has exactly that form; whatever else came back is never printed.
+status=0
+plain=$(ssh -o ConnectTimeout=30 -o ConnectionAttempts=1 vps "credentials $NUMBER") || status=$?
+if [ "$status" -ne 0 ]; then
+  # Short plain words only, so no 64-character value can pass for a reason.
+  refusal='^::error title=Preview access::refused: [a-z(),.-]{1,14}( [a-z(),.-]{1,14})*$'
+  [[ "$plain" =~ $refusal ]] && echo "$plain"
+  fail "the server did not hand out the sign-in"
+fi
 [ -n "$plain" ] || fail "the server handed out nothing"
 
 # Masked first, before anything else runs: each line, and the password after its `=`.

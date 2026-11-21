@@ -413,6 +413,18 @@ describe('preview-wrapper.sh: credentials (#1394)', () => {
     ['a short password', (t) => t.replace('1'.repeat(64), '1'.repeat(8))],
     ['a stray line', (t) => `${t}::notice::x\n`],
     ['an empty file', () => ''],
+    ['empty passwords', () => ROLES.map((r) => `${r}=\n`).join('')],
+    [
+      'the roles out of order',
+      () =>
+        ROLES.toReversed()
+          .map((r) => `${r}=${'1'.repeat(64)}\n`)
+          .join(''),
+    ],
+    ['a role twice', () => `${text()}${text()}`],
+    ['no newline at the end', (t) => t.slice(0, -1)],
+    ['a blank line', (t) => `\n${t}`],
+    ['upper-case hex', (t) => t.replace('1'.repeat(64), 'A'.repeat(64))],
   ])('does not hand out a file that is not what the deploy writes (%s)', async (_, change) => {
     const body = change(text())
     previewWith({ body })

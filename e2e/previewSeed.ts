@@ -15,19 +15,24 @@ import { getPayload } from 'payload'
 import config from '../src/payload.config'
 import {
   markPreviewPasswordsApplied,
-  readPreviewPasswords,
+  parsePreviewPasswords,
+  readPreviewPasswordsText,
 } from '../src/endpoints/seed/preview-accounts'
 import { seedPreviewDatabase } from '../src/endpoints/seed/preview-database'
 import { runPreviewSeed } from '../src/endpoints/seed/run-preview-seed'
 
+let text = '' // the passwords file's text, read once: the seed uses it and the marker confirms exactly it
 let payload: Awaited<ReturnType<typeof getPayload>>
 const code = await runPreviewSeed({
-  readPasswords: () => readPreviewPasswords(process.env.PREVIEW_ACCOUNTS_FILE),
+  readPasswords: () => {
+    text = readPreviewPasswordsText(process.env.PREVIEW_ACCOUNTS_FILE)
+    return parsePreviewPasswords(text)
+  },
   getLogger: async () => {
     payload = await getPayload({ config })
     return payload.logger
   },
   seed: (passwords) => seedPreviewDatabase(payload, passwords),
-  markApplied: () => markPreviewPasswordsApplied(process.env.PREVIEW_ACCOUNTS_FILE),
+  markApplied: () => markPreviewPasswordsApplied(process.env.PREVIEW_ACCOUNTS_FILE, text),
 })
 process.exit(code)

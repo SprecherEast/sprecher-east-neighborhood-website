@@ -14,7 +14,7 @@ import {
  * keep the role they are given.
  *
  * The passwords come from the deploy script's private file (`ops/preview-accounts.sh`, read by
- * `readPreviewPasswords`), never from here and never from production. They are new on every deploy: an
+ * `readPreviewPasswordsText`), never from here and never from production. They are new on every deploy: an
  * account that exists gets the new password (which also ends its sessions), is put back to its role,
  * verified and unlocked. Accounts are made verified and no verification email is made. Nothing here logs
  * or returns a password.

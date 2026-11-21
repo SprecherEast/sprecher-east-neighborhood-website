@@ -189,15 +189,16 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   trace: **sealed to the requester.**
   1. The wrapper's sixth action, `credentials <number>`, prints the preview's `.preview-accounts`, and only when
      `.preview-accounts.applied` holds that exact file's SHA-256 (the seed wrote it after giving every account its
-     password), the file is private (mode 600, not a link) and has one `role=password` line per role. Otherwise
+     password), the file is private (mode 600, not a link) and has, in order, one `<role>=<secret>` line per role (`is_secret` in `secret-lib.sh`) and a newline at the end. Otherwise
      it refuses with a fixed text (`there is no such preview`, or `the preview has no test sign-in to hand out`):
      after a failed seed, or on a branch whose seed ignores the file, the passwords match no account and are
      never served. A missing preview, a bad number and extra words are refused like any other request.
   2. The workflow `.github/workflows/preview-sign-in.yml` runs on `workflow_dispatch` only (write access
      needed), never on `pull_request`, and is not a required check. It names the `preview` environment, checks
      out the default branch's scripts and runs `.github/scripts/preview-credentials.sh` with the pull request's
-     number and the requester's one-time **public** key (RSA, 3072 bits or more, PEM, as one line of base64).
-     The script asks `credentials`, masks the plaintext (`::add-mask::`) before anything else, seals it with
+     number and the requester's one-time **public** key (RSA, 3072 bits or more, PEM, as one line of base64),
+     which the script reads from the dispatch event's inputs and not from a step's `env:` (the runner echoes
+     that in the public log, so a private key sent by mistake would show). The script asks `credentials`, masks the plaintext (`::add-mask::`) before anything else, seals it with
      RSA-OAEP and SHA-256 (`openssl pkeyutl`, no new dependency; a 4096-bit key is advised) and prints only the
      ciphertext between `sealed-sign-in-begin` and `sealed-sign-in-end`.
   3. The requester makes a key pair for each request in their own sandbox, dispatches, reads the ciphertext from the

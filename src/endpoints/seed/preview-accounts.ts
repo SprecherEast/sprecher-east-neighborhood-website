@@ -49,9 +49,12 @@ export function parsePreviewPasswords(text: string): PreviewPasswords {
   return found as PreviewPasswords
 }
 
-/** Opens the file the deploy script wrote and returns its text. Refuses a link, a file that is not the
- * running user's own, and one that others can open: the passwords are only for this process. */
-function readPrivateText(file: string | undefined): string {
+/**
+ * Opens the file the deploy script wrote (`PREVIEW_ACCOUNTS_FILE`) and returns its text, read once: the seed
+ * parses it and the marker below hashes this same text. Refuses a link, a file that is not the running
+ * user's own, and one that others can open: the passwords are only for this process.
+ */
+export function readPreviewPasswordsText(file: string | undefined): string {
   if (!file) throw new Error('PREVIEW_ACCOUNTS_FILE names no file')
   // One open, then every check on that same file: no gap between the check and the read, and a link is refused.
   const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW)
@@ -66,20 +69,16 @@ function readPrivateText(file: string | undefined): string {
   }
 }
 
-/** Reads the file the deploy script wrote (`PREVIEW_ACCOUNTS_FILE`), as one password per role. */
-export function readPreviewPasswords(file: string | undefined): PreviewPasswords {
-  return parsePreviewPasswords(readPrivateText(file))
-}
-
 /**
- * Confirms, after every account has its password, which file was applied: writes the file's SHA-256 to
- * `<file>.applied` (mode 600, moved into place whole). The restricted account's `credentials` action
- * (`ops/preview-wrapper.sh`, #1394) hands the file out only when it matches, so passwords that match no
- * account are never served: after a failed seed, or on a branch whose seed never reads the file. A digest
- * of random passwords reveals none of them, and it is never printed.
+ * Confirms, after every account has its password, which passwords were applied: writes the SHA-256 of
+ * `text`, the very text the seed used (the file is not read again), to `<file>.applied` (mode 600, moved
+ * into place whole). The restricted account's `credentials` action (`ops/preview-wrapper.sh`, #1394) hands
+ * the file out only when it matches, so passwords that match no account are never served: after a failed
+ * seed, or on a branch whose seed never reads the file. A digest of random passwords reveals none of
+ * them, and it is never printed.
  */
-export function markPreviewPasswordsApplied(file: string | undefined): void {
-  const text = readPrivateText(file)
+export function markPreviewPasswordsApplied(file: string | undefined, text: string): void {
+  if (!file) throw new Error('PREVIEW_ACCOUNTS_FILE names no file')
   parsePreviewPasswords(text) // only what the deploy writes is confirmed
   const marker = `${file}.applied`
   const temporary = `${marker}.${process.pid}.tmp`

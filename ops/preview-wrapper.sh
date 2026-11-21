@@ -30,6 +30,8 @@ umask 027
 here=$(cd "${BASH_SOURCE[0]%/*}" && pwd -P)
 # shellcheck source=preview-access-lib.sh
 . "$here/preview-access-lib.sh"
+# shellcheck source=secret-lib.sh
+. "$here/secret-lib.sh" # the one definition of a generated secret's shape (is_secret)
 reset_environment "$here"
 
 if [ -f "$here/../tools-path" ]; then
@@ -180,12 +182,16 @@ case "$action" in
     IFS= read -r marker <"$applied" || true
     digest=$(printf '%s' "$content" | sha256sum)
     [ "${digest%% *}" = "$marker" ] || refuse "$none"
-    # Exactly what the script writes: one `role=64 hex characters` line for each role, in order. Anything else
-    # is not handed out.
-    expected=""
-    for role in $PREVIEW_ACCOUNT_ROLES; do expected+="$role="; expected+=$'\n'; done
-    shape=$(printf '%s' "$content" | sed -E 's/^([a-z]+)=[0-9a-f]{64}$/\1=/'; printf x)
-    [ "${shape%x}" = "$expected" ] || refuse "$none"
+    # Exactly what ops/preview-accounts.sh writes: for each role, in order, one `<role>=<secret>` line (the shape
+    # is secret-lib.sh's `is_secret`), and a newline after the last one. Anything else is not handed out.
+    rest=$content
+    for role in $PREVIEW_ACCOUNT_ROLES; do
+      line=${rest%%$'\n'*}
+      [ "$line" != "$rest" ] || refuse "$none" # no newline: a missing line, or no newline at the end
+      rest=${rest#*$'\n'}
+      [ "${line%%=*}" = "$role" ] && is_secret "${line#*=}" || refuse "$none"
+    done
+    [ -z "$rest" ] || refuse "$none"
     printf '%s' "$content"
     ;;
 esac

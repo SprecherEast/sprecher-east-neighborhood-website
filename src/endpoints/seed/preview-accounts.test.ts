@@ -10,7 +10,7 @@ import {
   parsePreviewPasswords,
   previewAccountEmail,
   markPreviewPasswordsApplied,
-  readPreviewPasswords,
+  readPreviewPasswordsText,
 } from './preview-accounts'
 
 /**
@@ -19,6 +19,8 @@ import {
  * and this code reads. No value may ever reach an error message: a deploy log is public.
  */
 
+const readPreviewPasswords = (file: string | undefined) =>
+  parsePreviewPasswords(readPreviewPasswordsText(file))
 const secret = () => randomBytes(32).toString('hex')
 const fileText = (passwords: Record<string, string>) =>
   Object.entries(passwords)
@@ -128,60 +130,60 @@ describe('readPreviewPasswords', () => {
 
 describe('markPreviewPasswordsApplied', () => {
   let dir = ''
-  const file = () => path.join(dir, 'accounts')
-  const marker = () => `${file()}.applied`
+  const marker = () => path.join(dir, 'accounts.applied')
   beforeEach(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'preview-applied-'))
   })
   afterEach(() => fs.rmSync(dir, { recursive: true, force: true }))
-  const write = (text: string) => {
-    fs.writeFileSync(file(), text, { mode: 0o600 })
-    fs.chmodSync(file(), 0o600)
-  }
 
-  it('records the file’s SHA-256, in a private file next to it, which is what ops/preview-wrapper.sh compares', () => {
+  it('records the SHA-256 of the text it is given, in a private file next to the passwords file, which is what ops/preview-wrapper.sh compares', () => {
     const text = fileText(good())
-    write(text)
-    markPreviewPasswordsApplied(file())
+    markPreviewPasswordsApplied(path.join(dir, 'accounts'), text)
     expect(fs.readFileSync(marker(), 'utf8')).toBe(
       `${createHash('sha256').update(text).digest('hex')}\n`,
     )
     expect(fs.statSync(marker()).mode & 0o777).toBe(0o600)
   })
 
+  it('confirms the text the seed used even if the file changed since: the file is not read again', () => {
+    const used = fileText(good())
+    fs.writeFileSync(path.join(dir, 'accounts'), fileText(good()), { mode: 0o600 })
+    markPreviewPasswordsApplied(path.join(dir, 'accounts'), used)
+    expect(fs.readFileSync(marker(), 'utf8')).toBe(
+      `${createHash('sha256').update(used).digest('hex')}\n`,
+    )
+  })
+
   it('holds no password', () => {
     const passwords = good()
-    write(fileText(passwords))
-    markPreviewPasswordsApplied(file())
+    markPreviewPasswordsApplied(path.join(dir, 'accounts'), fileText(passwords))
     for (const password of Object.values(passwords)) {
       expect(fs.readFileSync(marker(), 'utf8')).not.toContain(password)
     }
   })
 
   it('replaces an older marker, so a new file is never confirmed by the last deploy’s mark', () => {
-    write(fileText(good()))
-    markPreviewPasswordsApplied(file())
+    markPreviewPasswordsApplied(path.join(dir, 'accounts'), fileText(good()))
     const first = fs.readFileSync(marker(), 'utf8')
-    write(fileText(good()))
-    markPreviewPasswordsApplied(file())
+    markPreviewPasswordsApplied(path.join(dir, 'accounts'), fileText(good()))
     expect(fs.readFileSync(marker(), 'utf8')).not.toBe(first)
   })
 
-  it('refuses a file that is not private or not what the deploy writes, and writes no marker', () => {
-    write('not the file\n')
-    expect(() => markPreviewPasswordsApplied(file())).toThrow()
-    write(fileText(good()))
-    fs.chmodSync(file(), 0o644)
-    expect(() => markPreviewPasswordsApplied(file())).toThrow('private')
+  it('refuses text that is not what the deploy writes, and writes no marker', () => {
+    expect(() =>
+      markPreviewPasswordsApplied(path.join(dir, 'accounts'), 'not the file\n'),
+    ).toThrow()
+    expect(() => markPreviewPasswordsApplied(undefined, fileText(good()))).toThrow(
+      'PREVIEW_ACCOUNTS_FILE',
+    )
     expect(fs.existsSync(marker())).toBe(false)
   })
 
-  it('refuses a link at the marker’s name instead of writing through it', () => {
-    write(fileText(good()))
+  it('replaces a link at the marker’s name instead of writing through it', () => {
     const elsewhere = path.join(dir, 'elsewhere')
     fs.writeFileSync(elsewhere, 'untouched')
     fs.symlinkSync(elsewhere, marker())
-    markPreviewPasswordsApplied(file())
+    markPreviewPasswordsApplied(path.join(dir, 'accounts'), fileText(good()))
     expect(fs.readFileSync(elsewhere, 'utf8')).toBe('untouched')
     expect(fs.lstatSync(marker()).isSymbolicLink()).toBe(false)
   })
