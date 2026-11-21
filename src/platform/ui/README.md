@@ -72,6 +72,7 @@ their props, and which values they share with the CSS. Props, variants and where
 - Chart libraries stay in the adapters: `chart/chartLibraries.lint.test.ts`; the browser never gets a library or the spec rules through the zoom: `chart/ChartZoom.imports.test.ts`.
 - Chart colours, the six-part limit and the seven-step ramp: `chart/chartPalette.test.ts`; the breakdown: `chart/adapters/breakdown/breakdownAdapter.test.tsx`.
 - A `Toast` sits at the bottom of the screen, directly above its nearest `relative` container, or inside that container, a little in from its top edge and smaller (`placement`); its tone icon is larger on a phone. In the page (`above`, `panel`) it sits under the sticky site header when the page scrolls; at the bottom of the screen it is above everything (#1392). How it ends (fade, close or accept) and when a page shows it are the page's choice.
+- `useOnFirstView` runs a callback once, the first time its element is a quarter in view, and at once on mount where the browser cannot tell, so what a reader must see is never held back (#1413).
 - Each component's behavior and accessibility: its `*.test.tsx` beside it (`Button`, `Link`, `Field.client`, `LoadMore.client`, `MapEmbed.client`, `AdminBar.client`, `OnThisPage.client`, `Dialog.client`, `Toast.client`, `ProgressBar`, `RouteDialog.client` and others).
 
 ## Boundaries

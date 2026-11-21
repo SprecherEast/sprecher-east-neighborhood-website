@@ -243,4 +243,29 @@ for (const width of WIDTHS) {
     })
     expect(lines).toBe(1)
   })
+
+  test(`the warning shows once the rates panel is in view, and a calculation in the later year shows it again, at most twice, at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto(POST)
+    const accept = page.getByRole('button', { name: 'Got it' })
+    // It comes with the rates panel (#1413): at once where the panel is already in view, else after a scroll
+    // the City's line is the one marked in the rates panel
+    await page.locator('[data-city]').scrollIntoViewIfNeeded()
+    await expect(accept).toBeVisible()
+    await accept.click()
+    await expect(accept).toHaveCount(0)
+    // An estimate in the later year, the one that opens, shows it a second and last time
+    const value = page.getByRole('textbox', { name: 'Enter your assessed value' })
+    await value.fill('$750,000')
+    await page.getByRole('button', { name: 'Estimate' }).click()
+    await expect(accept).toBeVisible()
+    await accept.click()
+    await value.fill('$800,000')
+    await page.getByRole('button', { name: 'Estimate' }).click()
+    // Both showings are spent: give a late one time to appear, then it is still not there
+    await page.waitForTimeout(1500)
+    await expect(accept).toHaveCount(0)
+  })
 }

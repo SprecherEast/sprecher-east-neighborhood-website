@@ -21,7 +21,7 @@ describe('BillShare, the City’s panel (#1020)', () => {
         <p>The rest</p>
       </BillShare>,
     )
-    const order = ['Our estimate\\.', 'Public safety', 'Short line', 'The rest'].map(
+    const order = ['Our estimate\\.', 'Public safety', 'Short line', '^The rest$'].map(
       (text) => screen.getAllByText(new RegExp(text))[0] as HTMLElement,
     )
     order.slice(1).forEach((node, i) => {
