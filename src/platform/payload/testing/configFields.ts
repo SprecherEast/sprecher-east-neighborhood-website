@@ -1,5 +1,7 @@
 import type { Block } from 'payload'
 
+import { createEditorReader } from './configEditor'
+
 /**
  * Walking the fields of a Payload config object, for the tests that read it with no database
  * (#140, #299, #1395).
@@ -24,12 +26,6 @@ export type FieldNode = {
   blockReferences?: (FieldNode | string)[]
   editor?: unknown
 }
-
-type Feature = {
-  generateSchemaMap?: (args: Record<string, unknown>) => Map<string, FieldNode> | undefined
-  sanitizedServerFeatureProps?: unknown
-}
-type FeatureMap = Map<string, Feature | undefined>
 
 /** Every field type Payload offers; any other is unknown to the walker. */
 const KNOWN_TYPES = new Set([
@@ -58,41 +54,35 @@ const KNOWN_TYPES = new Set([
 ])
 /** Layout-only containers: no name, so their children sit at the level above. */
 const LAYOUT_TYPES = new Set(['row', 'collapsible', 'tabs', 'ui'])
-/** Rich-text features that store nothing beyond plain text and formatting. */
-const PLAIN_FEATURES = new Set([
-  'align',
-  'bold',
-  'checklist',
-  'heading',
-  'horizontalRule',
-  'indent',
-  'inlineCode',
-  'italic',
-  'orderedList',
-  'paragraph',
-  'strikethrough',
-  'subscript',
-  'superscript',
-  'toolbarFixed',
-  'toolbarInline',
-  'underline',
-  'unorderedList',
-  'blockquote',
-])
 
 type WalkConfig = {
   collections: { slug: string; upload?: unknown }[]
   blocks?: Block[]
 }
 
-const isSlugList = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((item) => typeof item === 'string')
+/** The list each container type must carry for the walker to see what is inside it. */
+function missingList(node: FieldNode): string | null {
+  const list = (value: unknown) => Array.isArray(value)
+  switch (node.type) {
+    case 'group':
+    case 'array':
+    case 'collapsible':
+    case 'row':
+      return list(node.fields) ? null : 'fields'
+    case 'tabs':
+      return list(node.tabs) ? null : 'tabs'
+    case 'blocks':
+      return list(node.blocks) || list(node.blockReferences) ? null : 'blocks'
+    default:
+      return null
+  }
+}
 
-/** The block-level blocks a rich-text field's editor lists, as written (a slug is a reference). */
-export function editorBlocks(field: { editor?: unknown }): Block[] {
-  const editor = field.editor as { editorConfig?: { resolvedFeatureMap?: FeatureMap } } | undefined
-  const props = editor?.editorConfig?.resolvedFeatureMap?.get('blocks')?.sanitizedServerFeatureProps
-  return (props as { blocks?: Block[] } | undefined)?.blocks ?? []
+/** The property a field type needs to say what it points at, or null. */
+const TARGET_PROPERTY: Record<string, 'relationTo' | 'collection'> = {
+  relationship: 'relationTo',
+  upload: 'relationTo',
+  join: 'collection',
 }
 
 export function createFieldWalker(config: WalkConfig) {
@@ -100,14 +90,7 @@ export function createFieldWalker(config: WalkConfig) {
   const report = (message: string) => {
     if (!problems.includes(message)) problems.push(message)
   }
-  const slugs = config.collections.map((c) => c.slug)
-  const uploads = config.collections.filter((c) => c.upload).map((c) => c.slug)
-
-  const featureMap = (node: FieldNode): FeatureMap | null => {
-    const editor = node.editor as { editorConfig?: { resolvedFeatureMap?: FeatureMap } } | undefined
-    const map = editor?.editorConfig?.resolvedFeatureMap
-    return map instanceof Map ? map : null
-  }
+  const editor = createEditorReader(config, report)
 
   const resolveBlock = (block: FieldNode | string): FieldNode[] => {
     if (typeof block !== 'string') return [block]
@@ -117,83 +100,35 @@ export function createFieldWalker(config: WalkConfig) {
     return []
   }
 
-  /** What a rich-text field's editor stores, from each feature's own schema map. */
-  const editorChildren = (node: FieldNode): FieldNode[] => {
-    const features = featureMap(node)
-    if (!features) {
-      report(`rich-text field "${node.name}" has an editor the walker does not know`)
-      return []
-    }
-    const found: FieldNode[] = []
-    for (const [key, feature] of features) {
-      if (typeof feature?.generateSchemaMap === 'function') {
-        try {
-          const schemas = feature.generateSchemaMap({
-            config,
-            field: node,
-            i18n: {},
-            props: feature.sanitizedServerFeatureProps,
-            schemaMap: new Map(),
-            schemaPath: node.name ?? '',
-          })
-          found.push(...(schemas ? [...schemas.values()] : []))
-        } catch {
-          report(`rich-text feature "${key}" could not be read`)
-        }
-      } else if (!PLAIN_FEATURES.has(key) && !['link', 'relationship', 'upload'].includes(key)) {
-        report(`unknown rich-text feature "${key}"`)
-      }
-    }
-    return found
-  }
-
-  /** The list each container type must carry for the walker to see what is inside it. */
-  const containerList = (node: FieldNode): { ok: boolean; need: string } | null => {
-    const list = (value: unknown) => Array.isArray(value)
-    switch (node.type) {
-      case 'group':
-      case 'array':
-      case 'collapsible':
-      case 'row':
-        return { ok: list(node.fields), need: 'fields' }
-      case 'tabs':
-        return { ok: list(node.tabs), need: 'tabs' }
-      case 'blocks':
-        return { ok: list(node.blocks) || list(node.blockReferences), need: 'blocks' }
-      default:
-        return null
-    }
-  }
-
-  /** The fields, tabs and blocks directly inside one node, and what a rich-text editor stores. */
-  const children = (node: FieldNode): FieldNode[] => {
-    if (typeof node !== 'object' || node === null) {
-      report('a value that is not an object')
-      return []
-    }
-    const hasParts = [node.fields, node.tabs, node.blocks, node.blockReferences].some(
-      (part) => part !== undefined,
-    )
-    if (node.type === undefined && !hasParts) {
+  /** Reports a node of a shape the walker cannot read: a bad type, or a container without its list. */
+  const checkShape = (node: FieldNode) => {
+    const parts = [node.fields, node.tabs, node.blocks, node.blockReferences]
+    if (node.type === undefined && !parts.some((part) => Array.isArray(part))) {
       report(`a value of an unknown shape (${Object.keys(node).join(', ') || 'empty'})`)
     }
     if (node.type !== undefined && !KNOWN_TYPES.has(node.type)) {
       report(`unknown field type "${node.type}"${node.name ? ` (${node.name})` : ''}`)
     }
-    const container = containerList(node)
-    if (container && !container.ok) {
-      report(`${node.type} field "${node.name ?? ''}" has no ${container.need}`)
-    }
+    const missing = missingList(node)
+    if (missing) report(`${node.type} field "${node.name ?? ''}" has no ${missing}`)
+  }
+
+  const isObject = (value: unknown): value is FieldNode => {
+    if (typeof value === 'object' && value !== null) return true
+    report('a value that is not an object')
+    return false
+  }
+
+  /** The fields, tabs and blocks directly inside one node, and what a rich-text editor stores. */
+  const children = (node: FieldNode): FieldNode[] => {
+    if (!isObject(node)) return []
+    checkShape(node)
     return [
       ...(node.fields ?? []),
       ...(node.tabs ?? []),
       ...[...(node.blocks ?? []), ...(node.blockReferences ?? [])].flatMap(resolveBlock),
-      ...(node.type === 'richText' ? editorChildren(node) : []),
-    ].filter((child) => {
-      const isObject = typeof child === 'object' && child !== null
-      if (!isObject) report('a value that is not an object')
-      return isObject
-    })
+      ...(node.type === 'richText' ? editor.children(node) : []),
+    ].filter(isObject)
   }
 
   /** Every field below `node`, however deeply nested. */
@@ -205,51 +140,23 @@ export function createFieldWalker(config: WalkConfig) {
    * tabs, collapsibles) are looked through, a named group or tab counts once.
    */
   const topLevelFields = (fields: FieldNode[]): FieldNode[] =>
-    fields.flatMap((field) => {
-      if (typeof field !== 'object' || field === null) {
-        report('a value that is not an object')
-        return []
-      }
+    fields.filter(isObject).flatMap((field) => {
       if (field.name) return [field]
+      checkShape(field)
       if (field.type !== undefined && !LAYOUT_TYPES.has(field.type)) {
         report(`unnamed field of type "${field.type}" is not a layout container`)
       }
       return topLevelFields([...(field.fields ?? []), ...(field.tabs ?? [])])
     })
 
-  /** Slugs from a feature's collection list, or every slug (less `disabled`) when it sets none. */
-  const slugList = (key: string, value: unknown, all: string[], disabled?: unknown) => {
-    if (value !== undefined && !isSlugList(value)) {
-      report(`rich-text feature "${key}" lists collections in a shape the walker does not know`)
-      return all
-    }
-    if (disabled !== undefined && !isSlugList(disabled)) {
-      report(`rich-text feature "${key}" lists collections in a shape the walker does not know`)
-      return all
-    }
-    return value ?? all.filter((slug) => !(disabled ?? []).includes(slug))
-  }
-
-  /** Collections a field points at: a relationship, or what a rich-text editor can link, relate or embed. */
+  /** Collections a field points at; a pointer field that names none is reported, never ignored. */
   const targets = (node: FieldNode): string[] => {
-    const own = [node.relationTo ?? [], node.collection ?? []].flat()
-    if (node.type !== 'richText') return own
-    const props = (key: string) =>
-      (featureMap(node)?.get(key)?.sanitizedServerFeatureProps ?? {}) as Record<string, unknown>
-    const features = featureMap(node)
-    const found: string[] = [...own]
-    if (features?.has('link')) {
-      const p = props('link')
-      found.push(...slugList('link', p.enabledCollections, slugs, p.disabledCollections))
+    const property = node.type === undefined ? undefined : TARGET_PROPERTY[node.type]
+    if (property && node[property] === undefined) {
+      report(`${node.type} field "${node.name ?? ''}" has no ${property}`)
     }
-    if (features?.has('relationship')) {
-      found.push(...slugList('relationship', props('relationship').enabledCollectionSlugs, slugs))
-    }
-    if (features?.has('upload')) {
-      const p = props('upload')
-      found.push(...slugList('upload', p.enabledCollections, uploads, p.disabledCollections))
-    }
-    return found
+    const own = property ? [node[property] ?? []].flat() : []
+    return node.type === 'richText' ? [...own, ...editor.targets(node)] : own
   }
 
   return {

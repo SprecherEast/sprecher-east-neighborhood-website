@@ -8,7 +8,7 @@ import {
   EVENT_RICH_TEXT_BLOCKS,
   RICH_TEXT_BLOCKS,
 } from '@/platform/richtext/blockConfigs'
-import { editorBlocks } from '@/platform/payload/testing/configFields'
+import { editorBlocks } from '@/platform/payload/testing/configEditor'
 import { SECTION_PANEL_BLOCKS } from '@/platform/richtext/editorial/sectionTabsBlockConfig'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
 

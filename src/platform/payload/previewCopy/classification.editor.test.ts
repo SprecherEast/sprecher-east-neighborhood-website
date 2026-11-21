@@ -120,6 +120,7 @@ describe('failing closed', () => {
   it('fails on an unnamed container it does not know, which could hold a field', async () => {
     const hidden = { type: 'hologram', fields: [field('a')] }
     expect(await findClassificationProblems(configOf([hidden]), entry(['a']))).toEqual([
+      'things: the gate cannot read its fields (unknown field type "hologram")',
       'things: the gate cannot read its fields (unnamed field of type "hologram" is not a layout container)',
     ])
   })
@@ -163,8 +164,39 @@ describe('failing closed', () => {
     )
     const renamed = { name: 'body', type: 'group', flattenedFields: [emailField] }
     expect(await gate(configOf([renamed]))).toEqual(cannotRead('group field "body" has no fields'))
-    const noTabs = { name: 'body', type: 'blocks', blocksList: [] }
-    expect(await gate(configOf([noTabs]))).toEqual(cannotRead('blocks field "body" has no blocks'))
+    const noTabs = { name: 'body', type: 'group', fields: [{ type: 'tabs', tabList: [] }] }
+    expect(await gate(configOf([noTabs]))).toEqual(cannotRead('tabs field "" has no tabs'))
+    const noRow = { type: 'row', fieldList: [field('a')] }
+    expect(await findClassificationProblems(configOf([noRow]), entry([]))).toEqual([
+      'things: the gate cannot read its fields (row field "" has no fields)',
+    ])
+    const nullFields = { name: 'body', type: 'group', fields: null, flattenedFields: [emailField] }
+    expect(await gate(configOf([nullFields]))).toEqual(
+      cannotRead('group field "body" has no fields'),
+    )
+    const noBlocks = { name: 'body', type: 'blocks', blocksList: [] }
+    expect(await gate(configOf([noBlocks]))).toEqual(
+      cannotRead('blocks field "body" has no blocks'),
+    )
+  })
+
+  it('fails on an unknown rich-text feature however its schema map answers', async () => {
+    const mention = { sanitizedServerFeatureProps: {}, generateSchemaMap: () => null as never }
+    expect(await gate(withUsers([lexical({ userMention: mention })]))).toEqual(
+      cannotRead('unknown rich-text feature "userMention"'),
+    )
+  })
+
+  it('fails on a pointer field that names no collection', async () => {
+    const pointer = (type: string, extra: object = {}) =>
+      configOf([{ name: 'body', type, ...extra }])
+    expect(await gate(pointer('relationship'))).toEqual(
+      cannotRead('relationship field "body" has no relationTo'),
+    )
+    expect(await gate(pointer('upload'))).toEqual(
+      cannotRead('upload field "body" has no relationTo'),
+    )
+    expect(await gate(pointer('join'))).toEqual(cannotRead('join field "body" has no collection'))
   })
 
   it('reports a null value with the intended message, not a stack trace', async () => {
