@@ -1,135 +1,154 @@
 import { describe, expect, it } from 'vitest'
 
-import { configOf, entry, field } from '../testing/previewCopyFixtures'
+import {
+  accountsOnly,
+  blocksFeature,
+  configOf,
+  entry,
+  feature,
+  field,
+  lexical,
+  plainFeature,
+  withUsers,
+} from '../testing/previewCopyFixtures'
 import { findClassificationProblems } from '../testing/previewCopyGate'
 
-/** The preview copy gate looking inside rich-text editors (#1395). */
+/** The preview copy gate looking inside rich-text editors, blocks and block references (#1395). */
+
+const emailField = { name: 'contactEmail', type: 'email' }
+const toUsers = { name: 'who', type: 'relationship', relationTo: 'users' }
+const EMAIL = 'things.body: kept, but it holds an email field (contactEmail); it must be cleared'
+const USERS = 'things.body: kept, but it points at users, which is not copied'
+const gate = (config: ReturnType<typeof configOf>) =>
+  findClassificationProblems(config, {
+    ...entry(['body']),
+    ...(config.collections.some((c) => c.slug === 'users') ? accountsOnly : {}),
+  })
 
 describe('inside a rich-text editor', () => {
-  // The real shape: one `blocks` feature carries both lists; a feature that is off is absent
-  const richText = (
-    blocks: unknown[],
-    linkTargets: string[] | null = ['things'],
-    extra: [string, unknown][] = [],
-    inlineBlocks: unknown[] = [],
-  ) => ({
-    name: 'body',
-    type: 'richText',
-    editor: {
-      editorConfig: {
-        resolvedFeatureMap: new Map<string, unknown>([
-          ['blocks', { sanitizedServerFeatureProps: { blocks, inlineBlocks } }],
-          [
-            'link',
-            { sanitizedServerFeatureProps: { enabledCollections: linkTargets ?? undefined } },
-          ],
-          ...extra.map(
-            ([key, props]) => [key, { sanitizedServerFeatureProps: props }] as [string, unknown],
-          ),
-        ]),
-      },
-    },
-  })
-  const withUsers = (fields: unknown[]) => ({
-    collections: [
-      ...configOf(fields).collections,
-      { slug: 'users', fields: [], access: { read: () => false } },
-    ],
-    globals: [],
-  })
-  const users = { users: { copy: 'excluded' as const, reason: 'Accounts, never copied.' } }
+  const card = { slug: 'contactCard', fields: [emailField, toUsers] }
 
-  it('fails on an email field or a link to accounts inside an editor block', async () => {
-    const block = {
-      slug: 'contactCard',
-      fields: [
-        { name: 'contactEmail', type: 'email' },
-        { name: 'who', type: 'relationship', relationTo: 'users' },
-      ],
-    }
-    expect(
-      await findClassificationProblems(withUsers([richText([block])]), {
-        ...entry(['body']),
-        ...users,
-      }),
-    ).toEqual([
-      'things.body: kept, but it holds an email field (contactEmail); it must be cleared',
-      'things.body: kept, but it points at users, which is not copied',
+  it('fails on an email field or a link to accounts inside a block or an inline block', async () => {
+    expect(await gate(withUsers([lexical({ blocks: blocksFeature([card]) })]))).toEqual([
+      EMAIL,
+      USERS,
     ])
+    expect(
+      await gate(withUsers([lexical({ blocks: blocksFeature([], [card] as never) })])),
+    ).toEqual([EMAIL, USERS])
   })
 
-  it('passes a clean editor block, and finds a nested block inside a block', async () => {
+  it('passes a clean block, and finds a block inside a block and rich text inside a block', async () => {
     const clean = { slug: 'note', fields: [field('text')] }
+    expect(await gate(configOf([lexical({ blocks: blocksFeature([clean]) })]))).toEqual([])
+    const inner = { name: 'parts', type: 'blocks', blocks: [{ slug: 's', fields: [emailField] }] }
     expect(
-      await findClassificationProblems(configOf([richText([clean])]), entry(['body'])),
-    ).toEqual([])
-    const inner = richText([{ slug: 'secret', fields: [{ name: 'a', type: 'email' }] }])
-    const outer = { slug: 'wrapper', fields: [inner] }
+      await gate(configOf([lexical({ blocks: blocksFeature([{ slug: 'w', fields: [inner] }]) })])),
+    ).toEqual([EMAIL])
+    const linking = lexical({ link: feature({ enabledCollections: ['users'] }) }, 'inner')
     expect(
-      await findClassificationProblems(configOf([richText([outer])]), entry(['body'])),
-    ).toEqual(['things.body: kept, but it holds an email field (a); it must be cleared'])
+      await gate(
+        withUsers([lexical({ blocks: blocksFeature([{ slug: 'w', fields: [linking] }]) })]),
+      ),
+    ).toEqual([USERS])
   })
 
-  it('fails on an email field or a link to accounts inside an inline block', async () => {
-    const inline = {
-      slug: 'contactChip',
-      fields: [
-        { name: 'contactEmail', type: 'email' },
-        { name: 'who', type: 'relationship', relationTo: 'users' },
-      ],
-    }
-    expect(
-      await findClassificationProblems(withUsers([richText([], ['things'], [], [inline])]), {
-        ...entry(['body']),
-        ...users,
-      }),
-    ).toEqual([
-      'things.body: kept, but it holds an email field (contactEmail); it must be cleared',
-      'things.body: kept, but it points at users, which is not copied',
-    ])
+  it('walks what the link and upload features store, through their own schema maps', async () => {
+    const linkFields = { fields: [emailField, toUsers] }
+    const link = feature({ enabledCollections: ['things'] }, { fields: linkFields })
+    expect(await gate(withUsers([lexical({ link })]))).toEqual([EMAIL, USERS])
+    const upload = feature({ enabledCollections: ['things'] }, { 'things.fields': linkFields })
+    expect(await gate(withUsers([lexical({ upload })]))).toEqual([EMAIL, USERS])
   })
 
-  it('treats a link feature with no enabled collections as every collection', async () => {
-    const everything = withUsers([richText([], null)])
-    expect(await findClassificationProblems(everything, { ...entry(['body']), ...users })).toEqual([
-      'things.body: kept, but it points at users, which is not copied',
-    ])
-    const field = richText([], null, [])
-    const feature = field.editor.editorConfig.resolvedFeatureMap.get('link') as {
-      sanitizedServerFeatureProps: object
-    }
-    feature.sanitizedServerFeatureProps = { disabledCollections: ['users'] }
-    expect(
-      await findClassificationProblems(withUsers([field]), { ...entry(['body']), ...users }),
-    ).toEqual([])
-  })
-
-  it('fails on a relationship feature that can point at a collection that is not copied', async () => {
-    const field = richText(
-      [],
-      ['things'],
-      [['relationship', { enabledCollectionSlugs: ['users'] }]],
-    )
-    expect(
-      await findClassificationProblems(withUsers([field]), { ...entry(['body']), ...users }),
-    ).toEqual(['things.body: kept, but it points at users, which is not copied'])
+  it('counts every collection a link, relationship or upload feature may point at', async () => {
+    // A link with no list allows every collection (Payload's default), less the disabled ones
+    expect(await gate(withUsers([lexical({ link: feature({}) })]))).toEqual([USERS])
+    const disabled = feature({ disabledCollections: ['users'] })
+    expect(await gate(withUsers([lexical({ link: disabled })]))).toEqual([])
+    const enabled = feature({ enabledCollections: ['things', 'users'] })
+    expect(await gate(withUsers([lexical({ link: enabled })]))).toEqual([USERS])
+    const relation = feature({ enabledCollectionSlugs: ['users'] })
+    expect(await gate(withUsers([lexical({ relationship: relation })]))).toEqual([USERS])
+    const upload = feature({ enabledCollections: ['users'] })
+    expect(await gate(withUsers([lexical({ upload })]))).toEqual([USERS])
   })
 
   it('lists a problem once however many fields repeat it', async () => {
-    const twice = withUsers([
-      { name: 'wrap', type: 'group', fields: [richText([], ['users']), richText([], ['users'])] },
+    const link = (name: string) =>
+      lexical({ link: feature({ enabledCollections: ['users'] }) }, name)
+    const twice = withUsers([{ name: 'wrap', type: 'group', fields: [link('a'), link('b')] }])
+    expect(
+      await findClassificationProblems(twice, { ...entry(['wrap']), ...accountsOnly }),
+    ).toEqual(['things.wrap: kept, but it points at users, which is not copied'])
+  })
+})
+
+describe('block references', () => {
+  const shared = { slug: 'zzContact', fields: [emailField, toUsers] }
+  const byReference = (slug: string) => ({
+    name: 'body',
+    type: 'blocks',
+    blocks: [],
+    blockReferences: [slug],
+  })
+
+  it('walks a block a `blocks` field uses by slug', async () => {
+    expect(await gate(withUsers([byReference('zzContact')], [shared]))).toEqual([EMAIL, USERS])
+  })
+
+  it('fails on a reference to a block that is not in the config', async () => {
+    expect(await gate(configOf([byReference('missing')]))).toEqual([
+      'things.body: kept, but the gate cannot read it (block reference "missing" is not in the config\'s blocks)',
     ])
-    expect(await findClassificationProblems(twice, { ...entry(['wrap']), ...users })).toEqual([
-      'things.wrap: kept, but it points at users, which is not copied',
+  })
+})
+
+describe('failing closed', () => {
+  const cannotRead = (why: string) => [`things.body: kept, but the gate cannot read it (${why})`]
+
+  it('fails on a field type it does not know, however deep', async () => {
+    const odd = { name: 'x', type: 'hologram' }
+    const group = {
+      name: 'body',
+      type: 'group',
+      fields: [{ name: 'in', type: 'row', fields: [odd] }],
+    }
+    expect(await gate(configOf([group]))).toEqual(cannotRead('unknown field type "hologram" (x)'))
+  })
+
+  it('fails on an unnamed container it does not know, which could hold a field', async () => {
+    const hidden = { type: 'hologram', fields: [field('a')] }
+    expect(await findClassificationProblems(configOf([hidden]), entry(['a']))).toEqual([
+      'things: the gate cannot read its fields (unnamed field of type "hologram" is not a layout container)',
     ])
   })
 
-  it('fails on a link feature that can point at a collection that is not copied', async () => {
+  it('fails on a rich-text feature it does not know, one that cannot be read, and an unknown editor', async () => {
     expect(
-      await findClassificationProblems(withUsers([richText([], ['things', 'users'])]), {
-        ...entry(['body']),
-        ...users,
-      }),
-    ).toEqual(['things.body: kept, but it points at users, which is not copied'])
+      await gate(configOf([lexical({ bold: plainFeature(), newThing: plainFeature() })])),
+    ).toEqual(cannotRead('unknown rich-text feature "newThing"'))
+    const broken = {
+      sanitizedServerFeatureProps: {},
+      generateSchemaMap: () => {
+        throw new Error('shape changed')
+      },
+    }
+    expect(await gate(configOf([lexical({ blocks: broken })]))).toEqual(
+      cannotRead('rich-text feature "blocks" could not be read'),
+    )
+    expect(await gate(configOf([{ name: 'body', type: 'richText', editor: {} }]))).toEqual(
+      cannotRead('rich-text field "body" has an editor the walker does not know'),
+    )
+  })
+
+  it('fails on a feature that lists collections in a shape it does not know', async () => {
+    const odd = feature({ enabledCollections: { pages: true } })
+    expect(await gate(withUsers([lexical({ link: odd })]))).toEqual([
+      USERS,
+      ...cannotRead(
+        'rich-text feature "link" lists collections in a shape the walker does not know',
+      ),
+    ])
   })
 })

@@ -8,7 +8,7 @@ import {
   AUDIENCES,
   loadConfig,
 } from './testing/accessHarness'
-import { type FieldNode, fieldChildren } from './testing/configFields'
+import { createFieldWalker, type FieldNode } from './testing/configFields'
 
 /**
  * Field-level access across the whole config (#140, #299): hidden fields refuse writes, and
@@ -29,7 +29,10 @@ describe('server-only fields', () => {
   const allFields = (fields: Node[], path: string): [string, Node][] =>
     fields.flatMap((field) => {
       const here = field.name ? `${path}.${field.name}` : path
-      return [[here, field] as [string, Node], ...allFields(fieldChildren(field), here)]
+      return [
+        [here, field] as [string, Node],
+        ...allFields(createFieldWalker(config).children(field), here),
+      ]
     })
 
   const STAFF = [

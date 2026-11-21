@@ -157,6 +157,26 @@ describe('the gate', () => {
     ).toEqual(['things: copied, but a visitor may not read it on the site'])
   })
 
+  it('fails when a visitor’s read is a filter the entry does not read through', async () => {
+    const active = ({ req }: { req: { user?: unknown } }) =>
+      req.user ? true : { status: { equals: 'active' } }
+    expect(
+      await findClassificationProblems(
+        configOf([field('a')], { access: { read: active } }),
+        entry(['a']),
+      ),
+    ).toEqual([
+      "things: a visitor's read is filtered by something other than published, so a copy of every row would show rows a visitor never sees",
+    ])
+    const published = () => ({ _status: { equals: 'published' } })
+    expect(
+      await findClassificationProblems(
+        configOf([field('a')], { access: { read: published } }),
+        entry(['a']),
+      ),
+    ).toEqual(['things: a visitor reads the published version only, so reads must say so'])
+  })
+
   it('judges a field by what a visitor sees, so a field open to residents only is private', async () => {
     const residents = ({ req }: { req: { user?: unknown } }) => Boolean(req.user)
     const fields = [field('perk', { access: { read: residents } })]
