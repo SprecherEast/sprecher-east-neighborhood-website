@@ -70,10 +70,10 @@ export const billToastsField: ArrayField = {
       type: 'select',
       label: 'Shown',
       required: true,
-      defaultValue: 'above',
+      defaultValue: 'panel',
       options: [
+        { value: 'panel', label: 'Inside the panel, near its top' },
         { value: 'above', label: 'Directly above the panel' },
-        { value: 'panel', label: 'Over the top of the panel' },
         { value: 'screen', label: 'At the bottom of the screen' },
       ],
     },

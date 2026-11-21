@@ -8,7 +8,7 @@ describe('toastsOf (#1379)', () => {
     const toasts = toastsOf(undefined)
     expect(toasts.ratesCarried).toMatchObject({
       tone: 'warning',
-      placement: 'above',
+      placement: 'panel',
       showsPerVisit: 2,
       message: DEFAULT_BILL_TOASTS.ratesCarried.message,
       ending: 'accept',
@@ -36,7 +36,7 @@ describe('toastsOf (#1379)', () => {
       ending: 'fade',
       durationMs: 8000,
       acceptLabel: 'OK',
-      placement: 'above',
+      placement: 'panel',
       showsPerVisit: 2,
     })
   })
@@ -69,17 +69,17 @@ describe('toastsOf (#1379)', () => {
     expect(Object.keys(toasts).sort()).toEqual(['ratesCarried', 'ratesOwn'])
   })
 
-  it('puts a toast directly above its panel unless the editor set it elsewhere, and falls back to above', () => {
+  it('puts a toast inside its panel unless the editor set it elsewhere, and falls back to the panel', () => {
     const toasts = toastsOf([
       { toast: 'ratesCarried', message: 'Hi', placement: 'screen' },
       { toast: 'ratesOwn', message: 'Hi', placement: 'sideways' },
     ])
     expect(toasts.ratesCarried?.placement).toBe('screen')
-    expect(toasts.ratesOwn?.placement).toBe('above')
-    expect(toastsOf(undefined).ratesCarried?.placement).toBe('above')
+    expect(toasts.ratesOwn?.placement).toBe('panel')
+    expect(toastsOf(undefined).ratesCarried?.placement).toBe('panel')
     expect(
-      toastsOf([{ toast: 'ratesOwn', message: 'Hi', placement: 'panel' }]).ratesOwn?.placement,
-    ).toBe('panel')
+      toastsOf([{ toast: 'ratesOwn', message: 'Hi', placement: 'above' }]).ratesOwn?.placement,
+    ).toBe('above')
   })
 
   it('keeps the note the rates panel had, as the carried-rates toast, in a block that never saved its toasts (#1380)', () => {

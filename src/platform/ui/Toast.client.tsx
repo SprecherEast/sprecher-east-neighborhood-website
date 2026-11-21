@@ -45,15 +45,15 @@ export type ToastProps = {
   visible?: boolean
   /**
    * Where it sits: `screen` at the bottom of the screen; `above` directly above the nearest
-   * positioned (`relative`) container, touching its top edge; `panel` over that container's top
-   * edge, covering the first lines of it.
+   * positioned (`relative`) container, touching its top edge; `panel` inside that container, a
+   * little in from its top edge and smaller, so it reads as a note on the panel.
    */
   placement?: 'screen' | 'above' | 'panel'
 }
 
 const PLACEMENT_CLASSES = {
   above: 'absolute inset-x-0 bottom-full mb-2',
-  panel: 'absolute inset-x-2 top-2',
+  panel: 'absolute inset-x-3 top-3',
   screen: 'fixed inset-x-4 bottom-6 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2',
 } as const
 
@@ -84,6 +84,8 @@ export function Toast({
   const Icon = tone ? ALERT_ICONS[tone] : null
   const mustAccept = ending === 'accept'
   const panel = placement !== 'screen'
+  // Inside a panel it is smaller, so it sits as a note on it rather than a banner across it
+  const compact = placement === 'panel'
 
   return (
     <ToastPrimitive.Provider
@@ -112,7 +114,8 @@ export function Toast({
       >
         <div
           className={cn(
-            'flex gap-3 rounded-xl border px-4 py-3',
+            'flex rounded-xl border',
+            compact ? 'gap-2 px-3 py-2' : 'gap-3 px-4 py-3',
             // The neutral look is the one the update notice has always had; a tone is the Alert's
             tone
               ? cn(ALERT_TONE_CLASSES[tone], 'items-start')
@@ -124,14 +127,16 @@ export function Toast({
               aria-hidden="true"
               className={cn(
                 // Larger on a phone, where the small one cannot be told apart
-                'shrink-0 [&_svg]:size-6 sm:[&_svg]:size-4',
+                compact
+                  ? 'shrink-0 [&_svg]:size-5 sm:[&_svg]:size-4'
+                  : 'shrink-0 [&_svg]:size-6 sm:[&_svg]:size-4',
                 tone ? 'mt-0.5' : 'hidden text-primary sm:block',
               )}
             >
               {icon ?? (Icon && <Icon />)}
             </span>
           )}
-          <div className="min-w-0 flex-1 text-sm">
+          <div className={cn('min-w-0 flex-1', compact ? 'text-xs sm:text-sm' : 'text-sm')}>
             {title && (
               <ToastPrimitive.Title className="font-semibold">{title}</ToastPrimitive.Title>
             )}

@@ -108,7 +108,7 @@ export function toastsOf(
             title: row.title?.trim() ?? '',
             message,
             ending: isIn(BILL_TOAST_ENDINGS, row.ending) ? row.ending : 'accept',
-            placement: isIn(BILL_TOAST_PLACEMENTS, row.placement) ? row.placement : 'above',
+            placement: isIn(BILL_TOAST_PLACEMENTS, row.placement) ? row.placement : 'panel',
             durationMs: heldTo(row.fadeSeconds, fallback.fadeSeconds) * 1000,
             showsPerVisit: countHeldTo(row.showsPerVisit, fallback.showsPerVisit),
             acceptLabel: row.acceptLabel?.trim() || fallback.acceptLabel,

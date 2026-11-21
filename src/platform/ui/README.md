@@ -71,7 +71,7 @@ their props, and which values they share with the CSS. Props, variants and where
 - The registry's order and the text fallback: `chart/chartRegistry.test.ts`; every adapter's markup (no `style`, no colour literals, real text, axe): `chart/chartAdapter.contract.test.tsx`.
 - Chart libraries stay in the adapters: `chart/chartLibraries.lint.test.ts`; the browser never gets a library or the spec rules through the zoom: `chart/ChartZoom.imports.test.ts`.
 - Chart colours, the six-part limit and the seven-step ramp: `chart/chartPalette.test.ts`; the breakdown: `chart/adapters/breakdown/breakdownAdapter.test.tsx`.
-- A `Toast` sits at the bottom of the screen, directly above its nearest `relative` container, or over that container's top edge (`placement`); its tone icon is larger on a phone. How it ends (fade, close or accept) and when a page shows it are the page's choice.
+- A `Toast` sits at the bottom of the screen, directly above its nearest `relative` container, or inside that container, a little in from its top edge and smaller (`placement`); its tone icon is larger on a phone. How it ends (fade, close or accept) and when a page shows it are the page's choice.
 - Each component's behavior and accessibility: its `*.test.tsx` beside it (`Button`, `Link`, `Field.client`, `LoadMore.client`, `MapEmbed.client`, `AdminBar.client`, `OnThisPage.client`, `Dialog.client`, `Toast.client`, `ProgressBar`, `RouteDialog.client` and others).
 
 ## Boundaries
