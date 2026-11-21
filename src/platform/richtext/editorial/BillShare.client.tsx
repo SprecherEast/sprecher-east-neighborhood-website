@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useId, useState, type ReactNode } from 'react'
+import React, { useId, useRef, useState, type ReactNode } from 'react'
 
 import { BILL_BODY_NAMES, computeBillShare, parseHomeValue } from '@/platform/lib/billShare'
 import type { ResolvedLink } from '@/platform/lib'
@@ -16,6 +16,7 @@ import { COUNT_MS, YEAR_COUNT_MS } from '@/platform/ui/useCountedNumber.client'
 import type { BillShareProps } from './billShare'
 import { BillAnswer } from './BillAnswer'
 import { rateLinesFor, yearToastFor } from './billRates'
+import type { BillToastId } from './billToasts'
 import { BillDetails } from './BillDetails'
 import { BreakdownRow } from './BreakdownRow'
 import { notesFor, uniqueSources } from './billShareNotes'
@@ -99,6 +100,7 @@ export function BillShare({
   const [yearIndex, setYearIndex] = useState(Math.max(years.length - 1, 0))
   // The year's toast shows each time the reader switches the year, never on load: `key` is a new
   // one per switch, so a toast the reader has not accepted yet is replaced by the new year's
+  const toastsShown = useRef<Partial<Record<BillToastId, number>>>({})
   const [yearToast, setYearToast] = useState<{ key: number; open: boolean } | null>(null)
   const year = years[yearIndex]
   // The box holds the home's value in the latest year, the one a reader knows (#1121); an earlier
@@ -149,7 +151,15 @@ export function BillShare({
     if (index === yearIndex) return
     countWith(YEAR_COUNT_MS)
     setYearIndex(index)
-    setYearToast((previous) => ({ key: (previous?.key ?? 0) + 1, open: true }))
+    // Each toast shows only as often as the editor allows in one visit, so it is not a nag
+    const next = yearToastFor(years, index, toasts)
+    const times = next ? (toastsShown.current[next.id] ?? 0) : 0
+    if (next && times < next.toast.showsPerVisit) {
+      toastsShown.current[next.id] = times + 1
+      setYearToast((previous) => ({ key: (previous?.key ?? 0) + 1, open: true }))
+    } else {
+      setYearToast(null)
+    }
   }
 
   // What the year's toast says, in the editor's words for that year (none when the editor turned it off)

@@ -73,12 +73,12 @@ export function yearToastFor(
   years: readonly BillShareYear[],
   index: number,
   toasts: Record<BillToastId, BillToast | null>,
-): { toast: BillToast; message: string } | null {
+): { id: BillToastId; toast: BillToast; message: string } | null {
   const year = years[index]
   if (!year) return null
   const id: BillToastId = rateLinesFor(years, index).some((line) => line.carried)
     ? 'ratesCarried'
     : 'ratesOwn'
   const toast = toasts[id]
-  return toast ? { toast, message: fillNote(toast.message, { year: String(year.year) }) } : null
+  return toast ? { id, toast, message: fillNote(toast.message, { year: String(year.year) }) } : null
 }

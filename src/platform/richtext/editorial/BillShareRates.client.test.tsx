@@ -48,7 +48,7 @@ describe('BillShare, the rates panel (#1351)', () => {
         x
       </BillShare>,
     )
-    expect(within(panel()).queryByText(/come out in January/)).toBeNull()
+    expect(within(panel()).queryByText(/The rest come in January/)).toBeNull()
     expect(within(panel()).queryByText(/All four rates/)).toBeNull()
   })
 
@@ -63,12 +63,34 @@ describe('BillShare, the rates panel (#1351)', () => {
     // Switching again replaces it with the new year's wording
     await choose('2027')
     expect(within(panel()).queryByText('All four rates are the 2026 rates.')).toBeNull()
-    expect(within(panel()).getByText(/The other 2027 rates come out in January/)).toBeTruthy()
+    expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
     // Accepting it is the only way out, and the next switch shows it again
     await act(async () => fireEvent.click(within(panel()).getByRole('button', { name: 'Got it' })))
-    expect(within(panel()).queryByText(/The other 2027 rates come out in January/)).toBeNull()
+    expect(within(panel()).queryByText(/Only the City’s 2027 rates are out/)).toBeNull()
     await choose('2026')
     expect(within(panel()).getByText('All four rates are the 2026 rates.')).toBeTruthy()
+  })
+
+  it('shows a toast only as many times in a visit as the editor allows, then switching the year is quiet', async () => {
+    render(
+      <BillShare {...PROPS} {...city}>
+        x
+      </BillShare>,
+    )
+    const accept = async () =>
+      act(async () => fireEvent.click(within(panel()).getByRole('button', { name: 'Got it' })))
+    // The first two times the later year is chosen it shows (twice is the starting number)
+    for (let time = 1; time <= 2; time++) {
+      await choose('2026')
+      if (time === 1) await accept()
+      await choose('2027')
+      expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
+      await accept()
+    }
+    // The third time it stays quiet
+    await choose('2026')
+    await choose('2027')
+    expect(within(panel()).queryByText(/Only the City’s 2027 rates are out/)).toBeNull()
   })
 
   it('shows none when the editor turned the year’s toast off', async () => {

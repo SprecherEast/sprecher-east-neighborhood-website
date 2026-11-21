@@ -20,8 +20,8 @@ export const BILL_TOAST_TONES = [
   'error',
 ] as const satisfies readonly AlertTone[]
 export const BILL_TOAST_ENDINGS = ['fade', 'close', 'accept'] as const
-/** Where a toast sits: over the top edge of its panel, or at the bottom of the screen */
-export const BILL_TOAST_PLACEMENTS = ['panel', 'screen'] as const
+/** Where a toast sits: directly above its panel, over the panel's top edge, or at the bottom of the screen */
+export const BILL_TOAST_PLACEMENTS = ['above', 'panel', 'screen'] as const
 
 /** One toast as the editor wrote it: its wording and how it ends */
 export type BillToastDefinition = {
@@ -34,6 +34,8 @@ export type BillToastDefinition = {
   placement: (typeof BILL_TOAST_PLACEMENTS)[number]
   /** How long a fading toast stays, in seconds */
   fadeSeconds: number
+  /** How many times a reader sees it in one visit; after that the year switch is quiet */
+  showsPerVisit: number
   /** What the accept button says */
   acceptLabel: string
 }
@@ -50,6 +52,7 @@ type StoredToastRow = {
   ending?: string | null
   placement?: string | null
   fadeSeconds?: number | null
+  showsPerVisit?: number | null
   acceptLabel?: string | null
 }
 
@@ -64,6 +67,14 @@ const heldTo = (seconds: unknown, fallback: number): number =>
     ? Math.min(
         Math.max(Math.round(seconds), BILL_SHARE_LIMITS.toastMinSeconds),
         BILL_SHARE_LIMITS.toastMaxSeconds,
+      )
+    : fallback
+
+const countHeldTo = (count: unknown, fallback: number): number =>
+  typeof count === 'number' && Number.isFinite(count)
+    ? Math.min(
+        Math.max(Math.round(count), BILL_SHARE_LIMITS.toastMinShows),
+        BILL_SHARE_LIMITS.toastMaxShows,
       )
     : fallback
 
@@ -97,8 +108,9 @@ export function toastsOf(
             title: row.title?.trim() ?? '',
             message,
             ending: isIn(BILL_TOAST_ENDINGS, row.ending) ? row.ending : 'accept',
-            placement: isIn(BILL_TOAST_PLACEMENTS, row.placement) ? row.placement : 'panel',
+            placement: isIn(BILL_TOAST_PLACEMENTS, row.placement) ? row.placement : 'above',
             durationMs: heldTo(row.fadeSeconds, fallback.fadeSeconds) * 1000,
+            showsPerVisit: countHeldTo(row.showsPerVisit, fallback.showsPerVisit),
             acceptLabel: row.acceptLabel?.trim() || fallback.acceptLabel,
           }
         : null

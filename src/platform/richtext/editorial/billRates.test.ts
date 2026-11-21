@@ -54,9 +54,7 @@ describe('yearToastFor (#1380)', () => {
   it('says in a year that carries a rate over that the others’ rates are the year before’s, with the year filled in', () => {
     const shown = yearToastFor(years, 1, toasts)
     expect(shown?.toast).toBe(toasts.ratesCarried)
-    expect(shown?.message).toBe(
-      'The other 2027 rates come out in January, so for now we use the year before’s.',
-    )
+    expect(shown?.message).toBe('Only the City’s 2027 rates are out. The rest come in January.')
   })
 
   it('says in a year where every rate is its own that they are, with that year filled in', () => {

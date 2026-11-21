@@ -3671,7 +3671,11 @@ export interface BillShareBlock {
          */
         tone: 'info' | 'success' | 'warning' | 'error'
         ending: 'fade' | 'close' | 'accept'
-        placement: 'panel' | 'screen'
+        placement: 'above' | 'panel' | 'screen'
+        /**
+         * After this many, switching the year no longer shows it, until the page is reloaded.
+         */
+        showsPerVisit: number
         fadeSeconds?: number | null
         acceptLabel?: string | null
         title?: string | null

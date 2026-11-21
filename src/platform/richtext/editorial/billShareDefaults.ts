@@ -26,11 +26,12 @@ export const DEFAULT_BILL_RATES = {
  */
 export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
   ratesCarried: {
-    tone: 'info',
+    tone: 'warning',
     title: '',
-    message: 'The other {year} rates come out in January, so for now we use the year before’s.',
+    message: 'Only the City’s {year} rates are out. The rest come in January.',
     ending: 'accept',
-    placement: 'panel',
+    placement: 'above',
+    showsPerVisit: 2,
     fadeSeconds: 5,
     acceptLabel: 'Got it',
   },
@@ -39,7 +40,8 @@ export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
     title: '',
     message: 'All four rates are the {year} rates.',
     ending: 'accept',
-    placement: 'panel',
+    placement: 'above',
+    showsPerVisit: 2,
     fadeSeconds: 5,
     acceptLabel: 'Got it',
   },

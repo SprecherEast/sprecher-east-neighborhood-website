@@ -70,11 +70,26 @@ export const billToastsField: ArrayField = {
       type: 'select',
       label: 'Shown',
       required: true,
-      defaultValue: 'panel',
+      defaultValue: 'above',
       options: [
+        { value: 'above', label: 'Directly above the panel' },
         { value: 'panel', label: 'Over the top of the panel' },
         { value: 'screen', label: 'At the bottom of the screen' },
       ],
+    },
+    {
+      name: 'showsPerVisit',
+      type: 'number',
+      label: 'Times shown in one visit',
+      required: true,
+      defaultValue: 2,
+      min: BILL_SHARE_LIMITS.toastMinShows,
+      max: BILL_SHARE_LIMITS.toastMaxShows,
+      admin: {
+        description:
+          'After this many, switching the year no longer shows it, until the page is reloaded.',
+        step: 1,
+      },
     },
     {
       name: 'fadeSeconds',

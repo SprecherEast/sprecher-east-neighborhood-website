@@ -44,11 +44,18 @@ export type ToastProps = {
   /** False while it slides out, before the caller removes it */
   visible?: boolean
   /**
-   * Where it sits: `screen` at the bottom of the screen; `panel` over the top edge of the nearest
-   * positioned (`relative`) container, covering only a sliver of it.
+   * Where it sits: `screen` at the bottom of the screen; `above` directly above the nearest
+   * positioned (`relative`) container, touching its top edge; `panel` over that container's top
+   * edge, covering the first lines of it.
    */
-  placement?: 'screen' | 'panel'
+  placement?: 'screen' | 'above' | 'panel'
 }
+
+const PLACEMENT_CLASSES = {
+  above: 'absolute inset-x-0 bottom-full mb-2',
+  panel: 'absolute inset-x-2 top-2',
+  screen: 'fixed inset-x-4 bottom-6 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2',
+} as const
 
 /*
  * A short notice (#434, #1377), such as "New version available". It is built on Radix Toast,
@@ -76,7 +83,7 @@ export function Toast({
   const reason = useRef<ToastCloseReason>('fade')
   const Icon = tone ? ALERT_ICONS[tone] : null
   const mustAccept = ending === 'accept'
-  const panel = placement === 'panel'
+  const panel = placement !== 'screen'
 
   return (
     <ToastPrimitive.Provider
@@ -116,7 +123,8 @@ export function Toast({
             <span
               aria-hidden="true"
               className={cn(
-                'shrink-0 [&_svg]:size-4',
+                // Larger on a phone, where the small one cannot be told apart
+                'shrink-0 [&_svg]:size-6 sm:[&_svg]:size-4',
                 tone ? 'mt-0.5' : 'hidden text-primary sm:block',
               )}
             >
@@ -170,12 +178,7 @@ export function Toast({
       <ToastPrimitive.Viewport
         // One shortcut for the whole screen, not one per toast
         hotkey={panel ? [] : ['F8']}
-        className={cn(
-          'z-50 m-0 list-none p-0',
-          panel
-            ? 'absolute inset-x-2 top-2'
-            : 'fixed inset-x-4 bottom-6 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2',
-        )}
+        className={cn('z-50 m-0 list-none p-0', PLACEMENT_CLASSES[placement])}
       />
     </ToastPrimitive.Provider>
   )

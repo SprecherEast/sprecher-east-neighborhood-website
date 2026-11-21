@@ -66,6 +66,8 @@ export const BILL_SHARE_LIMITS = {
   toastTitle: 40,
   toastMessage: 160,
   toastAcceptLabel: 24,
+  toastMinShows: 1,
+  toastMaxShows: 10,
   toastMinSeconds: 1,
   toastMaxSeconds: 60,
 } as const

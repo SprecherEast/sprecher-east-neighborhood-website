@@ -7,7 +7,9 @@ describe('toastsOf (#1379)', () => {
   it('gives every toast its starting wording while the block has none of its own', () => {
     const toasts = toastsOf(undefined)
     expect(toasts.ratesCarried).toMatchObject({
-      tone: 'info',
+      tone: 'warning',
+      placement: 'above',
+      showsPerVisit: 2,
       message: DEFAULT_BILL_TOASTS.ratesCarried.message,
       ending: 'accept',
       acceptLabel: 'Got it',
@@ -34,7 +36,8 @@ describe('toastsOf (#1379)', () => {
       ending: 'fade',
       durationMs: 8000,
       acceptLabel: 'OK',
-      placement: 'panel',
+      placement: 'above',
+      showsPerVisit: 2,
     })
   })
 
@@ -66,14 +69,17 @@ describe('toastsOf (#1379)', () => {
     expect(Object.keys(toasts).sort()).toEqual(['ratesCarried', 'ratesOwn'])
   })
 
-  it('puts a toast over its panel unless the editor set it at the bottom of the screen, and falls back to the panel', () => {
+  it('puts a toast directly above its panel unless the editor set it elsewhere, and falls back to above', () => {
     const toasts = toastsOf([
       { toast: 'ratesCarried', message: 'Hi', placement: 'screen' },
       { toast: 'ratesOwn', message: 'Hi', placement: 'sideways' },
     ])
     expect(toasts.ratesCarried?.placement).toBe('screen')
-    expect(toasts.ratesOwn?.placement).toBe('panel')
-    expect(toastsOf(undefined).ratesCarried?.placement).toBe('panel')
+    expect(toasts.ratesOwn?.placement).toBe('above')
+    expect(toastsOf(undefined).ratesCarried?.placement).toBe('above')
+    expect(
+      toastsOf([{ toast: 'ratesOwn', message: 'Hi', placement: 'panel' }]).ratesOwn?.placement,
+    ).toBe('panel')
   })
 
   it('keeps the note the rates panel had, as the carried-rates toast, in a block that never saved its toasts (#1380)', () => {
@@ -87,5 +93,15 @@ describe('toastsOf (#1379)', () => {
     expect(toastsOf(undefined, '  ').ratesCarried).toBeNull()
     const saved = toastsOf([{ toast: 'ratesCarried', message: 'Saved words' }], 'Old note')
     expect(saved.ratesCarried?.message).toBe('Saved words')
+  })
+
+  it('holds how many times a toast shows in a visit to 1 to 10, and falls back to the starting two', () => {
+    const shows = (value: unknown) =>
+      toastsOf([{ toast: 'ratesOwn', message: 'Hi', showsPerVisit: value as number }]).ratesOwn
+        ?.showsPerVisit
+    expect(shows(3)).toBe(3)
+    expect(shows(0)).toBe(1)
+    expect(shows(99)).toBe(10)
+    expect(shows(undefined)).toBe(2)
   })
 })
