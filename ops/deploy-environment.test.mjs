@@ -49,6 +49,7 @@ describe('deploy-release.sh with no environment named', () => {
       `NEXT_PUBLIC_SERVER_URL=${PROD_URL}\n`,
     )
     expect(fs.existsSync(p('previews/pr-7/.env.local'))).toBe(false) // no preview settings are made
+    expect(log()).not.toContain('payload run') // no preview database is prepared
   })
 
   it('keeps the newest three releases', async () => {
@@ -79,6 +80,29 @@ describe('deploy-release.sh for a preview', () => {
     expect(new Set(curlUrls().map((u) => new URL(u).origin))).toEqual(new Set([PREVIEW_URL]))
     expect(fs.readdirSync(p('app'))).toEqual(['.env.local']) // production's folder is untouched
     expect(log()).not.toContain('--only sprecher-east\n')
+  })
+
+  it('prepares the first database after the migrations and before the switch, as the app will run (#1075)', async () => {
+    const { code, out } = await preview()
+    expect(code, out).toBe(0)
+    const lines = log().split('\n')
+    const at = (needle) => lines.findIndex((l) => l.includes(needle))
+    const release = fs.realpathSync(p('previews/pr-7/releases/r1'))
+    expect(at('payload migrate')).toBeGreaterThanOrEqual(0)
+    expect(lines[at('payload run')]).toBe(
+      `payload run e2e/previewSeed.ts in ${release} NODE_ENV=production`,
+    )
+    expect(at('payload run')).toBeGreaterThan(at('payload migrate'))
+    expect(at('pm2 start')).toBeGreaterThan(at('payload run'))
+    expect(out).toContain("Preparing the preview's database")
+  })
+
+  it('stops, with nothing switched, when the first database can’t be prepared, so no preview is reachable with none (#1075)', async () => {
+    const { code, out } = await preview({ STUB_PAYLOAD_RUN_FAIL: '1' })
+    expect(code).toBe(1)
+    expect(out).toContain("the preview's database could not be prepared")
+    expect(log()).not.toContain('pm2 start')
+    expect(fs.existsSync(p('previews/pr-7/current'))).toBe(false)
   })
 
   it('skips the backups, the production Caddy scripts, the cron install and the Umami install', async () => {

@@ -106,6 +106,26 @@ or by an agent, within the limits in [`wrapped`](../.agents/skills/wrapped/SKILL
 Until the switch, a failure stops the deploy and the live release keeps serving. The reload is the
 only moment the site is unavailable: the few seconds Next takes to start.
 
+## Pull request preview flow
+
+A pull request with the `preview` label (and a change that reaches the server) gets a preview from
+`.github/workflows/preview.yml` (#1075): a gate, the server's Node version through the preview account, a build
+with no secret, a deploy through the wrapper, and one comment on the pull request that is edited in place
+(the link, the short commit, the time, whether it worked). The steps run these scripts, each with its test:
+
+| Script                                | Where  | What it does                                                                                                                                |
+| ------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.github/scripts/plan-preview.sh`     | runner | The gate: same-repository, not Dependabot, a change that reaches the server (`deploy-paths.sh`, also read by `plan-deploy.sh`), the label   |
+| `.github/scripts/preview-facts.sh`    | runner | Asks the wrapper's `facts`; no key, or a server that refuses it, means "previews unavailable", once, without a retry                        |
+| `.github/scripts/preview-deploy.sh`   | runner | Checks the archive's sizes, the temporary one-at-a-time limit, then the wrapper's `upload` and `deploy`; reports live, taken down or failed |
+| `.github/scripts/preview-comment.mjs` | runner | The one comment: fixed texts and checked values, found by a hidden marker and edited in place                                               |
+| `e2e/previewSeed.ts`                  | VPS    | A preview's first database: one admin account nobody can sign in to; run by `deploy-release.sh` after the migrations, before the switch     |
+
+The `preview` environment, its key and what happens when either is missing, the jobs that hold the key and the
+ones that don't, and what is not covered: [`previews.md`](previews.md#the-workflow-1075). To read what a
+preview deploy did, open the workflow run: the wrapper and the scripts print annotations and no secret. GitHub
+shows at most ten notice annotations per step, so the full text is in the step's log.
+
 ## Pull request preview account
 
 A pull request preview runs unreviewed code, so its deploy gets its own way in, not production's (#1345,

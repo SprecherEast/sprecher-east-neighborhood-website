@@ -198,6 +198,25 @@ isolation check proves it before and after every preview deploy. What holds now:
   the browser never sends it to a preview address, and a preview's `PAYLOAD_SECRET` differs from
   production's, so a token copied across is refused (`src/modules/accounts/` tests and
   `ops/preview-settings.test.mjs`).
+- **The workflow keeps the key away from unreviewed code** (#1075): `.github/workflows/preview.yml` runs on
+  `pull_request`, never `pull_request_target`, and builds only a pull request that carries the `preview`
+  label (the owner's decision, 2026-11-20, recorded on #1070 and #1075; each preview orders a certificate from a
+  weekly budget production shares). A fork or Dependabot run gets no secrets and a read-only token, so it
+  gets no preview. The build job runs the pull request's install scripts with no environment and no secret.
+  The two jobs that hold the preview key (the GitHub environment `preview`, which holds only that key and its
+  connection values) check out `main`'s scripts, never the pull request's, send the build to the server on
+  stdin and never unpack or run it, and no job names `production` or calls a privileged workflow, because the
+  wrapper's deploy prints values from the release into the public log. A same-repository pull request's
+  workflow file is its own copy, so a dishonest change could read the key: the server is the boundary, since
+  the key can run only the wrapper's five actions. The deploy goes through the wrapper only, checks the
+  archive's size and what it unpacks to before upload, reports "taken down" when the isolation check took a
+  preview down, and when the host guards withhold the key (no key line written) reports previews unavailable
+  once and never retries. The one comment holds fixed texts, a link and a short commit, never a log line or a
+  secret (`.github/scripts/preview-workflow.test.mjs` and `preview-comment.test.mjs`).
+- **A preview's first database has an account nobody can sign in to** (#1075): the first account on an empty
+  `users` collection becomes an admin (#354), so a preview is seeded (`e2e/previewSeed.ts`, before it is
+  switched on) with one `example.com` admin whose password is random and never stored, logged or shown, and no
+  verification email. How anyone signs in to a preview is #1077.
 - **Previews have no basic auth** (the owner's decision, 2026-11-11, recorded on #1074): see above.
 
 ## Agents and the rules that bind them

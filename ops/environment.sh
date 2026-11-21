@@ -40,6 +40,9 @@ PREVIEW_UPLOAD_MAX_BYTES="${PREVIEW_UPLOAD_MAX_BYTES:-1073741824}" # the most on
 PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-10}"
 # What a pull request number and a commit look like. Every script that takes one from outside checks it
 # against these (preview-access-lib.sh), so a hostile value never reaches a path, a command or a file.
+# How long a preview's health check waits for the app to answer through Caddy (production's is 90 s): its first
+# deploy also waits for Caddy to order the preview's certificate (#1075).
+PREVIEW_UP_SECONDS="${PREVIEW_UP_SECONDS:-180}"
 PREVIEW_NUMBER_PATTERN='^[1-9][0-9]{0,5}$'
 # The PATH the root script (preview-caddy.sh) runs with, and the `secure_path` of its sudo rule. The script
 # writes the same value as a literal, before anything runs (a test keeps the two equal).

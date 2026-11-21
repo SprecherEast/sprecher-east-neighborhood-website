@@ -7,11 +7,14 @@
 #
 # Skipped: a commit older than the live one (deploys can finish out of order), the commit that is
 # already live, and changes that touch only files that don't run on the server: the same list the
-# deploy's old push filter ignored. A run started by hand deploys whatever it changed, including
+# deploy's old push filter ignored (deploy-paths.sh, which the pull request preview gate reads too). A run started by hand deploys whatever it changed, including
 # the live commit again (after a change to a NEXT_PUBLIC_* setting, say), as a new release folder.
 #
 # Environment: SHA, DEPLOYED (the live commit, may be empty), EVENT, RUN_ID, GITHUB_OUTPUT.
 set -euo pipefail
+
+# shellcheck source=deploy-paths.sh
+. "$(dirname "$0")/deploy-paths.sh"
 
 : "${SHA:?}" "${GITHUB_OUTPUT:?}"
 DEPLOYED="${DEPLOYED:-}"
@@ -39,9 +42,8 @@ fi
 [ "$EVENT" != workflow_dispatch ] || decide true "started by hand: ${SHA:0:7} is deployed"
 
 while IFS= read -r file; do
-  case "$file" in
-    *.md | .claude/* | .agents/* | .github/* | .env.local.example | docs/* | LICENSE) ;;
-    *) decide true "${file} changed since ${DEPLOYED:0:7}, so ${SHA:0:7} is deployed" ;;
-  esac
+  if deploys_for_file "$file"; then
+    decide true "${file} changed since ${DEPLOYED:0:7}, so ${SHA:0:7} is deployed"
+  fi
 done < <(git diff --name-only "$DEPLOYED" "$SHA")
 decide false "only docs and repo tooling changed since ${DEPLOYED:0:7}, so nothing is deployed"
