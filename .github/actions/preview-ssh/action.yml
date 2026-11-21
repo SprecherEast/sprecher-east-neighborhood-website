@@ -1,0 +1,52 @@
+name: SSH to the preview server
+description: >-
+  The one gate for every job that holds the `preview` environment's key (#1076): checks that all four
+  connection values are present, and only then sets up `ssh vps` with the host key pinned. Without every
+  value `ready` is false and nothing is set up, so a missing known-hosts line can never fall back to trusting
+  the first host key seen (which `vps-ssh` does when it is given none). The caller passes the environment's
+  secrets as inputs (a composite action can't read them) and runs its later steps only when `ready` is true.
+
+inputs:
+  host:
+    required: true
+  user:
+    required: true
+  port:
+    required: false
+    default: '22'
+  key:
+    required: true
+  known-hosts:
+    required: true
+
+outputs:
+  ready:
+    description: 'true when every value is present and `ssh vps` is set up, false otherwise'
+    value: ${{ steps.values.outputs.ready }}
+
+runs:
+  using: composite
+  steps:
+    - name: Check the environment holds every connection value
+      id: values
+      shell: bash
+      env:
+        HOST: ${{ inputs.host }}
+        USER_NAME: ${{ inputs.user }}
+        KEY: ${{ inputs.key }}
+        KNOWN_HOSTS: ${{ inputs.known-hosts }}
+      run: |
+        if [ -n "$HOST" ] && [ -n "$USER_NAME" ] && [ -n "$KEY" ] && [ -n "$KNOWN_HOSTS" ]; then
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - uses: ./.github/actions/vps-ssh
+      if: steps.values.outputs.ready == 'true'
+      with:
+        host: ${{ inputs.host }}
+        user: ${{ inputs.user }}
+        port: ${{ inputs.port }}
+        key: ${{ inputs.key }}
+        known-hosts: ${{ inputs.known-hosts }}

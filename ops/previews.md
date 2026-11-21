@@ -246,8 +246,10 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   `preview-caddy.sh` removes a block when the folder is gone. **Caddy's certificate storage is never touched**,
   so a reopened pull request reuses its certificate. A job edits the sticky comment, only when one exists, to
   say the preview was removed. A fork's or Dependabot's pull request never had a preview and is skipped. A
-  deploy still queued behind a removal in another run could put a closed pull request live again: the nightly
-  sweep removes it, because its pull request is not open.
+  deploy can still put a closed pull request live again, by two routes: a build that started before the close
+  can reach its deploy after the removal ran, and a removal still waiting in the group is cancelled by a deploy
+  that enters the group after it (GitHub keeps one waiting job per group). The nightly sweep removes it, because
+  its pull request is not open.
 - **The cap** is `PREVIEW_MAX_COUNT` in `ops/environment.sh`, defined once. The workflow's check
   (`preview-deploy.sh`), the wrapper (a new folder, under a lock) and the Caddy script (a new block) all read it.
   It replaces the workflow's temporary one-preview limit and has the same value, **one, until it is measured**:
@@ -262,22 +264,34 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   place to a pull request that may have none to review, and with closing and the sweep freeing places on their
   own the refusal is the less surprising of the two. A preview that already holds a place is redeployed even at
   the cap.
+- **One gate, one list reader.** The jobs that hold the key (server facts, removal, sweep) set up `ssh vps`
+  through `.github/actions/preview-ssh`, which checks all four connection values, the pinned host key included,
+  and otherwise does nothing; the runner scripts read the wrapper's `list` only through
+  `.github/scripts/preview-list-lib.sh` (the call, the strict line pattern, "does it hold this number"). The
+  deploy counts places by folder, as the server's cap does. An older wrapper's `list` (no fields) is refused by
+  all three, so nothing is removed or started until the new wrapper is installed.
 - **The disk guard** is the wrapper's (README, "Disk floor"): a new preview or a redeploy is refused, with a fixed
   text the workflow turns into the comment "not started", when free disk afterwards would not stay above the
-  production deploy's floor.
+  production deploy's floor. It counts the archive and the release it unpacks to, not what the deploy writes
+  afterwards (the database, a media copy); the measurement step records that figure and a margin is added then.
 - **The nightly sweep** (`preview-sweep.yml`, 07:17 UTC, and by hand with `workflow_dispatch`, in environment
   `preview`) reads the server's `list` first and the open pull requests after, so a preview created in between is
   never taken for a stray, and removes through `teardown` each preview whose pull request is not open, each
   leftover with no folder (a Caddy block or a PM2 process only), and each preview nobody deployed for
   `PREVIEW_IDLE_DAYS` (7). The next push or a re-run of the deploy brings an idle one back, with its stored
   certificate. If either list fails the sweep removes nothing. The job summary lists what was removed and why.
-  The token it has reads pull requests and writes nothing.
+  The token it has reads pull requests and writes nothing. It is not serialized with a deploy of the same
+  number, so it reads that number's line again just before each removal and applies its rule afresh: a preview
+  deployed meanwhile is left alone (the window is the milliseconds between that read and `teardown`). Every
+  line of the list is checked before the first removal, and the summary is written even when the sweep stops.
 - **After a reboot** (decided, #1076; carried from #1345): previews are **not** started again, so production starts
   alone on a small machine. PM2's startup and resurrect would bring every preview back at once and, with Caddy's
   blocks still in place, spend the memory the cap is meant to protect right when production is starting. The
   sweep's summary lists a preview whose process is stopped and leaves it (an idle one is removed by the rules
   above); the next push or a re-run of its deploy starts it. To be checked once on the server after the cap is
-  measured: reboot, see production answer and the previews stopped, push to one and see it come back.
+  measured: reboot, see production answer and the previews stopped, see that the first `list` (a closed pull
+  request's removal, or the sweep) starts the preview account's PM2 daemon and brings no preview back, push to
+  one and see it come back.
 
 - **Undo.** Delete or disable `preview.yml` and `preview-sweep.yml`; production is untouched. Remove a running preview with the wrapper's
   `teardown`; reverting the removal and sweep leaves previews until `teardown` is run by hand.

@@ -38,15 +38,9 @@ jobs:
           ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
 
-      # Without the environment's key there is nothing to remove (previews are unavailable), and no failure to report.
-      - name: Check the environment holds the key
-        id: values
-        env:
-          KEY: ${{ secrets.PREVIEW_SSH_KEY }}
-        run: echo "set=$([ -n "$KEY" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-
-      - uses: ./.github/actions/vps-ssh
-        if: steps.values.outputs.set == 'true'
+      # Without every connection value there is nothing to sweep (previews are unavailable): no failure to report.
+      - uses: ./.github/actions/preview-ssh
+        id: ssh
         with:
           host: ${{ secrets.PREVIEW_SSH_HOST }}
           user: ${{ secrets.PREVIEW_SSH_USER }}
@@ -55,7 +49,7 @@ jobs:
           known-hosts: ${{ secrets.PREVIEW_SSH_KNOWN_HOSTS }}
 
       - name: Remove what should not be there, through the wrapper
-        if: steps.values.outputs.set == 'true'
+        if: steps.ssh.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash .github/scripts/preview-sweep.sh

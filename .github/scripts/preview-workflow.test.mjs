@@ -140,6 +140,37 @@ describe('teardown when the pull request closes (#1076)', () => {
   })
 })
 
+describe('the shared gate for the preview key (#1076)', () => {
+  const action = yaml.load(
+    fs.readFileSync(path.join(ROOT, '.github/actions/preview-ssh/action.yml'), 'utf8'),
+  )
+  const sweepJob = yaml.load(read('preview-sweep.yml')).jobs.sweep
+
+  it('checks all four connection values, so a missing known-hosts line can never be accepted on first sight', () => {
+    const check = action.runs.steps.find((s) => s.id === 'values')
+    expect(Object.keys(check.env).sort()).toEqual(['HOST', 'KEY', 'KNOWN_HOSTS', 'USER_NAME'])
+    for (const name of Object.keys(check.env)) expect(check.run).toContain(`"$${name}"`)
+    expect(action.inputs['known-hosts'].required).toBe(true)
+  })
+
+  it('sets up ssh only when every value is there, and says so in its output', () => {
+    const ssh = action.runs.steps.find((s) => s.uses === './.github/actions/vps-ssh')
+    expect(ssh.if).toBe("steps.values.outputs.ready == 'true'")
+    expect(action.outputs.ready.value).toBe('${{ steps.values.outputs.ready }}')
+  })
+
+  it.each([
+    ['facts', jobs.facts],
+    ['teardown', jobs.teardown],
+    ['the sweep', sweepJob],
+  ])('is the only way %s sets up ssh, passing all five secrets', (_name, job) => {
+    const uses = job.steps.filter((s) => String(s.uses ?? '').includes('actions/'))
+    expect(uses.some((s) => s.uses === './.github/actions/vps-ssh')).toBe(false)
+    const gate = job.steps.find((s) => s.uses === './.github/actions/preview-ssh')
+    expect(Object.keys(gate.with).sort()).toEqual(['host', 'key', 'known-hosts', 'port', 'user'])
+  })
+})
+
 describe('the nightly sweep', () => {
   const sweep = yaml.load(read('preview-sweep.yml'))
   const job = sweep.jobs.sweep
@@ -166,17 +197,11 @@ describe('the nightly sweep', () => {
     expect(runs).toEqual(['bash .github/scripts/preview-sweep.sh'])
   })
 
-  it.each([
-    ['the sweep', () => job.steps],
-    ['the teardown', () => steps('teardown')],
-  ])('%s does nothing, and does not fail, while the environment holds no key', (_name, get) => {
-    const all = get()
-    const check = all.find((s) => s.id === 'values')
-    expect(check.env).toEqual({ KEY: '${{ secrets.PREVIEW_SSH_KEY }}' })
-    for (const step of all.filter(
-      (s) => s.uses === './.github/actions/vps-ssh' || s.run?.startsWith('bash '),
-    ))
-      expect(step.if).toBe("steps.values.outputs.set == 'true'")
+  it('does nothing, and does not fail, while the environment lacks a connection value: it uses the shared gate', () => {
+    const gate = job.steps.find((s) => s.uses === './.github/actions/preview-ssh')
+    expect(gate.id).toBe('ssh')
+    const run = job.steps.find((s) => s.run?.startsWith('bash '))
+    expect(run.if).toBe("steps.ssh.outputs.ready == 'true'")
   })
 
   it('can read pull requests and write nothing', () => {
@@ -249,9 +274,11 @@ describe('the jobs that hold the preview key', () => {
     for (const name of SECRET_NAMES) expect(doc).toContain(name)
   })
 
-  it('ask the server only through the vps-ssh action, with the preview key and no other credential', () => {
+  it('ask the server only through the shared gate (or vps-ssh once it has passed), with the preview key and no other credential', () => {
     for (const id of KEY_JOBS) {
-      const ssh = steps(id).find((s) => s.uses === './.github/actions/vps-ssh')
+      const ssh = steps(id).find((s) =>
+        ['./.github/actions/preview-ssh', './.github/actions/vps-ssh'].includes(s.uses),
+      )
       expect(ssh, id).toBeDefined()
       expect(JSON.stringify(ssh.with)).not.toMatch(/VPS_/)
     }

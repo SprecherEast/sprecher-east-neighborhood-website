@@ -32,12 +32,19 @@ describe('commentBody at the cap', () => {
     expect(many).not.toContain('dev.sprechereast.com')
   })
 
+  it('says so without naming anyone when the holders are not known', () => {
+    for (const holders of ['', undefined]) {
+      const text = commentBody({ ...base, state: 'limit', cap: '1', holders })
+      expect(text).toContain('**Not started.** Only one preview runs at a time, and it is taken.')
+      expect(text).not.toMatch(/#\d/)
+    }
+  })
+
   it.each([
     ['no cap', { cap: undefined, holders: '4' }],
     ['a cap that is not a number', { cap: '1; id', holders: '4' }],
     ['holders with Markdown', { cap: '1', holders: '4](https://evil.example)' }],
     ['holders with a leading zero', { cap: '1', holders: '04' }],
-    ['holders that are empty', { cap: '1', holders: '' }],
     ['a trailing comma', { cap: '1', holders: '4,' }],
   ])('refuses %s', (_name, change) => {
     expect(() => commentBody({ ...base, state: 'limit', ...change })).toThrow()

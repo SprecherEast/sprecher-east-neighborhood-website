@@ -59,16 +59,22 @@ export function previewState({ available, buildResult, deployResult }) {
   return 'failed'
 }
 
-/** What `limit` says: the cap, and which pull requests hold the places. Both are checked, being a job's output. */
+/** What `limit` says: the cap, and which pull requests hold the places when that is known. Both are checked, being a
+ * job's output. With no holders (the server's list could not be read again after a race) the sentence names none. */
 function limitSentence(cap, holders) {
-  if (!CAP_PATTERN.test(String(cap)) || !HOLDERS_PATTERN.test(String(holders)))
+  const named = holders !== undefined && holders !== null && String(holders) !== ''
+  if (!CAP_PATTERN.test(String(cap)) || (named && !HOLDERS_PATTERN.test(String(holders))))
     throw new Error('not a cap and the pull requests that hold it')
-  const places = Number(cap) === 1 ? 'one preview runs' : `${cap} previews run`
+  const one = Number(cap) === 1
+  const places = one ? 'one preview runs' : `${cap} previews run`
+  const when = 'This one starts when a place frees up and a push or a re-run asks again.'
+  if (!named)
+    return `Only ${places} at a time, and ${one ? 'it is' : 'the places are'} taken. ${when}`
   const list = String(holders)
     .split(',')
     .map((n) => `#${n}`)
     .join(', ')
-  return `Only ${places} at a time, and ${list} ${list.includes(',') ? 'hold' : 'holds'} ${Number(cap) === 1 ? 'it' : 'the places'}. This one starts when a place frees up and a push or a re-run asks again.`
+  return `Only ${places} at a time, and ${list} ${list.includes(',') ? 'hold' : 'holds'} ${one ? 'it' : 'the places'}. ${when}`
 }
 
 /** The comment's text. Throws on a value that isn't what it should be: better no comment than a wrong one. */

@@ -31,6 +31,8 @@ OPS_DIR="${OPS_DIR:-ops}"
 . "$OPS_DIR/environment.sh"
 # shellcheck source=../../ops/preview-access-lib.sh
 . "$OPS_DIR/preview-access-lib.sh"
+# shellcheck source=preview-list-lib.sh
+. "${BASH_SOURCE[0]%/*}/preview-list-lib.sh"
 
 finish() { # <result> <exit code> <message>
   echo "result=$1" >>"$GITHUB_OUTPUT"
@@ -61,22 +63,24 @@ unpacked_bytes "$ARCHIVE" "$PREVIEW_UNPACK_MAX_BYTES" >/dev/null || measured=$?
 [ "$measured" = 0 ] || finish unreadable 1 "the release archive's listing can't be measured"
 
 # The cap: a new preview is not started while as many as the cap allows are up (the server refuses too).
-listing=$(ssh -o ConnectTimeout=30 -o ConnectionAttempts=1 vps list) ||
-  finish failed 1 "the server did not list its previews"
-others=0
-holders=""
-already_live=no
-read_listing() { # the other previews (a count and their numbers) and whether this commit is live, from $listing
+listing=$(preview_list) || finish failed 1 "the server did not list its previews"
+# The other previews that hold a place, and whether this commit is live. The server counts a place by its folder
+# (the wrapper's cap), so a leftover with only a block or a process is not one.
+read_listing() { # from $listing
   others=0
   holders=""
   already_live=no
-  while read -r line; do
-    [[ "$line" =~ ^preview=([0-9]+)\ commit= ]] || continue
-    if [ "${BASH_REMATCH[1]}" != "$NUMBER" ]; then
+  list_is_valid "$listing" || finish failed 1 "the server's list is in a form this script does not know"
+  local line
+  while IFS= read -r line; do
+    parse_list_line "$line" || continue
+    if [ "$LIST_NUMBER" != "$NUMBER" ]; then
+      [ "$LIST_FOLDER" = yes ] || continue
       others=$((others + 1))
-      holders="${holders:+$holders,}${BASH_REMATCH[1]}"
+      holders="${holders:+$holders,}$LIST_NUMBER"
+    elif [ "$LIST_COMMIT" = "$SHA" ]; then
+      already_live=yes
     fi
-    [[ "$line" != "preview=$NUMBER commit=$SHA" && "$line" != "preview=$NUMBER commit=$SHA "* ]] || already_live=yes
   done <<<"$listing"
 }
 read_listing
@@ -99,9 +103,8 @@ if [ "$already_live" = yes ]; then
   echo "url=$(preview_url)" >>"$GITHUB_OUTPUT"
   finish live 0 "preview $NUMBER is already live at commit ${SHA:0:7}; nothing was sent"
 fi
-# A preview that already has a place is only redeployed; a new one needs a free place (a `list` line for this
-# number counts as having one, and `others` leaves it out).
-if [ "$others" -ge "$PREVIEW_MAX_COUNT" ] && ! grep -q "^preview=$NUMBER " <<<"$listing"; then
+# A preview that already has a place (its folder) is only redeployed; a new one needs a free place.
+if [ "$others" -ge "$PREVIEW_MAX_COUNT" ] && ! list_has_folder "$NUMBER" "$listing"; then
   at_the_cap
 fi
 
@@ -116,7 +119,7 @@ if ! ssh vps "upload $NUMBER $SHA" <"$ARCHIVE" >"$upload_log" 2>&1; then
   fi
   # Two previews started together and the other took the last place after this one's `list`.
   if grep -qF 'as many previews as are allowed' "$upload_log"; then
-    listing=$(ssh -o ConnectTimeout=30 -o ConnectionAttempts=1 vps list) && read_listing || true
+    if listing=$(preview_list) && list_is_valid "$listing"; then read_listing; else holders=""; fi
     at_the_cap
   fi
   finish failed 1 "the release could not be uploaded"

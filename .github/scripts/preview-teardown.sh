@@ -20,20 +20,23 @@ OPS_DIR="${OPS_DIR:-ops}"
 . "$OPS_DIR/environment.sh"
 # shellcheck source=../../ops/preview-access-lib.sh
 . "$OPS_DIR/preview-access-lib.sh"
+# shellcheck source=preview-list-lib.sh
+. "${BASH_SOURCE[0]%/*}/preview-list-lib.sh"
 
 valid_preview_number "$NUMBER" || {
   echo "::error title=Pull request preview::not a pull request number"
   exit 1
 }
 
-holds_number() { grep -q "^preview=$NUMBER " <<<"$1"; }
-list_previews() { ssh -o ConnectTimeout=30 -o ConnectionAttempts=1 vps list; }
-
-listing=$(list_previews) || {
-  echo "::error title=Pull request preview::the server did not list its previews"
-  exit 1
+read_list() { # <what failed>
+  listing=$(preview_list) && list_is_valid "$listing" || {
+    echo "::error title=Pull request preview::$1"
+    exit 1
+  }
 }
-if ! holds_number "$listing"; then
+
+read_list "the server did not list its previews"
+if ! list_holds "$NUMBER" "$listing"; then
   echo "removed=no" >>"$GITHUB_OUTPUT"
   echo "::notice title=Pull request preview::preview $NUMBER does not exist; nothing to remove"
   exit 0
@@ -43,11 +46,8 @@ ssh vps "teardown $NUMBER" || {
   echo "::error title=Pull request preview::the preview could not be removed"
   exit 1
 }
-listing=$(list_previews) || {
-  echo "::error title=Pull request preview::the server did not list its previews after the removal"
-  exit 1
-}
-if holds_number "$listing"; then
+read_list "the server did not list its previews after the removal"
+if list_holds "$NUMBER" "$listing"; then
   echo "::error title=Pull request preview::something of the preview is still on the server"
   exit 1
 fi
