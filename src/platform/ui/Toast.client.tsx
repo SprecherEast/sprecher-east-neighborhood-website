@@ -52,9 +52,9 @@ export type ToastProps = {
 }
 
 const PLACEMENT_CLASSES = {
-  above: 'absolute inset-x-0 bottom-full mb-2',
-  panel: 'absolute inset-x-3 top-3',
-  screen: 'fixed inset-x-4 bottom-6 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2',
+  above: 'absolute inset-x-0 bottom-full z-10 mb-2',
+  panel: 'absolute inset-x-3 top-3 z-10',
+  screen: 'fixed z-50 inset-x-4 bottom-6 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2',
 } as const
 
 /*
@@ -183,7 +183,7 @@ export function Toast({
       <ToastPrimitive.Viewport
         // One shortcut for the whole screen, not one per toast
         hotkey={panel ? [] : ['F8']}
-        className={cn('z-50 m-0 list-none p-0', PLACEMENT_CLASSES[placement])}
+        className={cn('m-0 list-none p-0', PLACEMENT_CLASSES[placement])}
       />
     </ToastPrimitive.Provider>
   )
