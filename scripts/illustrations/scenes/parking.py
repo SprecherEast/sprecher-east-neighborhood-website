@@ -4,11 +4,15 @@ PANEL=(["Winter","parking"],["Nov. 15 to Mar. 15","1 to 7 a.m.","Odd date: odd s
 
 ROAD_W=270; STEP=310; X0=15; TOP=345; BOTTOM=890; LIFT=-55
 SNOW="#ffffff"; SNOW_SHADE="#d5e4f0"
+MONTH="DEC"          # the month on every calendar page: any winter night shows the rule
+PLOW_SCALE=1.15      # the plow truck next to the cars
+# snow heaped on the plow blade: x, y, radius
+BLADE_SNOW=((-34,-4,16),(-12,-10,20),(14,-8,19),(36,-2,15),(0,-20,14))
 
-def calendar(x,y,n,s=1,month="DEC"):
+def calendar(x,y,n,s=1):
     """A small calendar page for one date."""
     return (f'<g transform="translate({x},{y}) scale({s})"><rect width="150" height="160" rx="10" fill="#fff" {O}/><rect width="150" height="42" rx="10" fill="{RED}" {O}/>'
-            f'<text x="75" y="32" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="26" fill="#fff">{month}</text>'
+            f'<text x="75" y="32" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="26" fill="#fff">{MONTH}</text>'
             f'<text x="75" y="136" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="82" fill="{NAVY}">{n}</text></g>')
 
 def car_from_above(x,y,col):
@@ -28,11 +32,11 @@ def snow_bank(xe,y0,y1,r0,r1,inward):
     g+="".join(f'<path d="M{cx-r*.55:.1f},{cy+r*.35:.1f} Q{cx:.1f},{cy+r*.95:.1f} {cx+r*.55:.1f},{cy+r*.35:.1f}" fill="none" stroke="{SNOW_SHADE}" stroke-width="5" stroke-linecap="round"/>' for cx,cy,r in lumps)
     return g
 
-def plow_from_above(cx,cy,up=True,s=1.15):
+def plow_from_above(cx,cy,up=True):
     """A snowplow truck seen from above, blade at the front. (cx, cy) is the middle of the blade's front edge;
     the truck drives up the page when up, down when not. Snow heaps on the blade."""
     k=1 if up else -1
-    g=f'<g transform="translate({cx},{cy}) scale({s},{k*s})">'
+    g=f'<g transform="translate({cx},{cy}) scale({PLOW_SCALE},{k*PLOW_SCALE})">'
     # wheels, then body, so the wheels tuck under the truck
     for wx in (-45,31):
         for wy in (50,110):
@@ -46,9 +50,9 @@ def plow_from_above(cx,cy,up=True,s=1.15):
     g+=f'<path d="M-56,26 L-50,0 L50,0 L56,26 Z" fill="#e89a1f" {O}/>'
     g+=f'<path d="M-50,0 L50,0 L52,8 L-52,8 Z" fill="#fff" opacity=".35"/>'
     # snow heaped on the blade
-    for sx,sy,r in ((-34,-4,16),(-12,-10,20),(14,-8,19),(36,-2,15),(0,-20,14)):
+    for sx,sy,r in BLADE_SNOW:
         g+=f'<circle cx="{sx}" cy="{sy}" r="{r}" fill="{SNOW}" stroke="{NAVY}" stroke-width="{SW}"/>'
-    for sx,sy,r in ((-34,-4,16),(-12,-10,20),(14,-8,19),(36,-2,15),(0,-20,14)):
+    for sx,sy,r in BLADE_SNOW:
         g+=f'<circle cx="{sx}" cy="{sy}" r="{r-SW/2-.5:.1f}" fill="{SNOW}"/>'
     return g+'</g>'
 
