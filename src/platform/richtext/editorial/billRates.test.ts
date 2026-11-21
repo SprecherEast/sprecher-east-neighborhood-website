@@ -57,9 +57,13 @@ describe('yearToastFor (#1380)', () => {
     expect(shown?.message).toBe('Only the City’s 2027 rates are out. The rest come in January.')
   })
 
-  it('says in a year where every rate is its own that they are, with that year filled in', () => {
-    const shown = yearToastFor(years, 0, toasts)
-    expect(shown?.toast).toBe(toasts.ratesOwn)
+  it('says nothing in a year where every rate is its own, unless the editor wrote a message for it (#1392)', () => {
+    expect(yearToastFor(years, 0, toasts)).toBeNull()
+    const written = toastsOf([
+      { toast: 'ratesOwn', message: 'All four rates are the {year} rates.' },
+    ])
+    const shown = yearToastFor(years, 0, written)
+    expect(shown?.toast).toBe(written.ratesOwn)
     expect(shown?.message).toBe('All four rates are the 2026 rates.')
   })
 

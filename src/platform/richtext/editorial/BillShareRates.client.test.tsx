@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { YEAR_COUNT_MS } from '@/platform/ui/useCountedNumber.client'
 
 import { BillShare } from './BillShare.client'
+import { toastsOf } from './billToasts'
 import { city, PROPS } from './billShareFixtures'
 
 afterEach(() => {
@@ -52,21 +53,36 @@ describe('BillShare, the rates panel (#1351)', () => {
     expect(within(panel()).queryByText(/All four rates/)).toBeNull()
   })
 
-  it('shows the year’s toast over the panel each time the year is switched, until it is accepted (#1380)', async () => {
+  it('warns when the later year is chosen, until it is accepted, and says nothing when every rate is the year’s own (#1380, #1392)', async () => {
     render(
       <BillShare {...PROPS} {...city}>
         x
       </BillShare>,
     )
+    // The earlier year needs no notice: its rates are what the reader expects
     await choose('2026')
-    expect(within(panel()).getByText('All four rates are the 2026 rates.')).toBeTruthy()
-    // Switching again replaces it with the new year's wording
+    expect(within(panel()).queryByRole('button', { name: 'Got it' })).toBeNull()
     await choose('2027')
-    expect(within(panel()).queryByText('All four rates are the 2026 rates.')).toBeNull()
     expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
     // Accepting it is the only way out, and the next switch shows it again
     await act(async () => fireEvent.click(within(panel()).getByRole('button', { name: 'Got it' })))
     expect(within(panel()).queryByText(/Only the City’s 2027 rates are out/)).toBeNull()
+    await choose('2026')
+    expect(within(panel()).queryByRole('button', { name: 'Got it' })).toBeNull()
+    await choose('2027')
+    expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
+  })
+
+  it('shows the own-rates toast when the editor gives it a message', async () => {
+    const own = toastsOf([
+      { toast: 'ratesCarried', message: 'Carried.' },
+      { toast: 'ratesOwn', message: 'All four rates are the {year} rates.' },
+    ])
+    render(
+      <BillShare {...PROPS} {...city} toasts={own}>
+        x
+      </BillShare>,
+    )
     await choose('2026')
     expect(within(panel()).getByText('All four rates are the 2026 rates.')).toBeTruthy()
   })
@@ -82,7 +98,6 @@ describe('BillShare, the rates panel (#1351)', () => {
     // The first two times the later year is chosen it shows (twice is the starting number)
     for (let time = 1; time <= 2; time++) {
       await choose('2026')
-      if (time === 1) await accept()
       await choose('2027')
       expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
       await accept()
@@ -95,12 +110,12 @@ describe('BillShare, the rates panel (#1351)', () => {
 
   it('shows none when the editor turned the year’s toast off', async () => {
     render(
-      <BillShare {...PROPS} {...city} toasts={{ ...PROPS.toasts, ratesOwn: null }}>
+      <BillShare {...PROPS} {...city} toasts={{ ...PROPS.toasts, ratesCarried: null }}>
         x
       </BillShare>,
     )
-    await choose('2026')
-    expect(within(panel()).queryByText(/All four rates/)).toBeNull()
+    await choose('2027')
+    expect(within(panel()).queryByRole('button', { name: 'Got it' })).toBeNull()
   })
 
   it('sits beside the answer card in the tab’s order: after the answer, before the whole bill', () => {

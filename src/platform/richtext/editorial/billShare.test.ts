@@ -176,6 +176,6 @@ describe('toBillShareProps: the toasts are the block’s (#1379)', () => {
   it('starts a block stored before the toasts were fields with the starting ones', () => {
     const { toasts } = toBillShareProps(stored([year()]))
     expect(toasts.ratesCarried?.message).toContain('{year}')
-    expect(toasts.ratesOwn?.ending).toBe('accept')
+    expect(toasts.ratesOwn).toBeNull()
   })
 })

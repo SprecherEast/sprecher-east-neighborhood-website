@@ -186,9 +186,8 @@ for (const width of WIDTHS) {
     const earlier = await boxOf(answer)
     expect(earlier.height, 'the card is as tall in both years').toBeCloseTo(later.height, 0)
     expect(await line.evaluate((el) => getComputedStyle(el).color)).not.toBe(accent)
-    // The year's toast sits above the rates panel, over part of the year control from a tablet up,
-    // and stays until accepted (#1380), so the reader accepts it before choosing again
-    await page.getByRole('button', { name: 'Got it' }).click()
+    // The earlier year shows no toast, so the year control is free to choose again (#1392)
+    await expect(page.getByRole('button', { name: 'Got it' })).toHaveCount(0)
     await years(page).getByRole('button', { name: '2027' }).click()
     await expect(line).toContainText('Up $')
   })

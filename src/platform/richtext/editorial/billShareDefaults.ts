@@ -23,6 +23,8 @@ export const DEFAULT_BILL_RATES = {
  * for one by its id; the editor changes any of it in Admin, and empties a message to turn that
  * toast off. `{year}` is the year shown. The rates toasts say which year's rates the bill uses, so
  * they wait for the reader to accept them: what the bill is based on is not small print.
+ * The own-rates toast starts with no message, so it is off: a year whose rates are all its own needs
+ * no notice, and an editor who wants one writes its message (#1392).
  */
 export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
   ratesCarried: {
@@ -38,7 +40,7 @@ export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
   ratesOwn: {
     tone: 'info',
     title: '',
-    message: 'All four rates are the {year} rates.',
+    message: '',
     ending: 'accept',
     placement: 'panel',
     showsPerVisit: 2,
