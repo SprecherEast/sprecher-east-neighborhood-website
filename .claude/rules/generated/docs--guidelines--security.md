@@ -165,11 +165,14 @@ isolation check proves it before and after every preview deploy. What holds now:
   folder is what keeps it out). It closes a folder only after checking that it is a real root-owned folder
   with only root-owned entries, that Caddy's live configuration and the files in the Caddyfile's folder and the
   previews' folder (backups included) name no path in it, and that no process that isn't root's has it open;
-  otherwise it changes nothing and warns. Then Caddy is the proof: `caddy validate` of the Caddyfile, run as
-  Caddy's service user before and after the change, covers every form of import (links, relative paths,
-  nested files); if it fails after, every mode is put back, and if Caddy's user can't be found or is root,
-  nothing is closed. What is assumed, not proven: what Caddy opens only while it serves, and that no other
-  non-root service opens a file there by name now and then. It says the old mode; a closed
+  otherwise it changes nothing and warns. Then Caddy is the proof: `caddy adapt` as Caddy's service user, from `/`
+  with the unit's environment, must give what root's gives, before and after the change (and `caddy validate`
+  must pass), so an import, glob or link into a closed folder shows as a difference; a glob over a folder
+  Caddy can't open matches nothing without an error, which is why output is compared. If it differs after,
+  every mode is put back; if Caddy's user can't be found or is root, or Caddy's lock is held, nothing is
+  closed. What is assumed, not proven: what Caddy opens only while it serves, that no other non-root service
+  opens a file there by name now and then, and that real Caddy behaves as the tests' stand-ins (verified on
+  the first production deploy). It says the old mode; a closed
   folder can't be entered by the account. A later named deploy account for production
   (#1306) needs group access to them.
 - **A preview can't reach Caddy's admin endpoint** (#1346): the endpoint on `localhost:2019` accepts any local

@@ -10,13 +10,15 @@
 #      owned by root, Caddy's live configuration (`caddy adapt` of the Caddyfile, and a text search of the
 #      Caddyfile and the files beside it, as a cheap first filter) names no path in it, and no process that
 #      isn't root's has it as its working folder or an open file in it. Then Caddy itself is the proof of
-#      the rest: `caddy validate` of the Caddyfile is run as Caddy's service user before the change (it must
-#      pass, or the guard can't tell) and after all the changes (every import form, link and relative path
-#      included, is read by Caddy's own parser with Caddy's own permissions); when it fails after, every
-#      mode changed in this run is put back, also when the script is stopped half way. When Caddy's user can't
-#      be found, is root, or `runuser` is missing, nothing is closed. What this can't see: a non-root service
-#      that opens a file there by name only from time to time, and what Caddy opens only when it runs
-#      (the sites it serves). The old mode is in the annotation, with the undo.
+#      what it reads from the Caddyfile: `caddy adapt` as Caddy's service user (from /, with the unit's
+#      environment) must give what root's gives, before the change and again after all of them, and
+#      `caddy validate` must pass (certificates, logs). A glob over a folder Caddy's user can't open matches
+#      nothing without an error, so only the output's equality shows it. When the second run differs or
+#      fails, every mode changed in this run is put back, also when the script is stopped half way. When
+#      Caddy's user can't be found, is root, `runuser` is missing, or Caddy's lock is held, nothing is closed.
+#      The window is under Caddy's lock, so no preview reload runs in it. What this can't see: a non-root
+#      service that opens a file there by name only from time to time, and what Caddy opens only when it
+#      runs (the sites it serves). The old mode is logged before each change, and in the annotation.
 #   2. the account goes into /etc/cron.deny and /etc/at.deny, so a preview can't schedule a job that outlives
 #      its teardown. at.deny is never created (when neither at file exists only root may use at, and a new
 #      at.deny would open it to everyone else).
@@ -30,6 +32,7 @@ set -uo pipefail
 here=$(dirname "$0")
 . "$here/lib.sh"
 . "$here/umami-lib.sh"
+. "$here/caddy-lock-lib.sh"
 
 ROOT_UID="${PREVIEW_ACCESS_ROOT_UID:-0}"
 production="${PRODUCTION_DIR_FOR_TESTS:-$PRODUCTION_DIR}" # a test points it at a stand-in folder
@@ -98,37 +101,67 @@ folder_needed() { # <folder>
   done
 }
 
-# Caddy's own proof, as its service user. Sets caddy_as (the command prefix) and caddy_bin, or says why not.
-caddy_as=()
+# Caddy's own proof, as its service user: what Caddy reads from the Caddyfile (`caddy adapt`, which pastes
+# every import in) must be the same after the change as root reads it before, and `caddy validate` must pass
+# (certificates, logs). Both run from / with a clean environment plus the unit's own, as the service does.
+# Sets caddy_user, caddy_bin and caddy_reference, or caddy_doubt.
 caddy_doubt=
 caddy_prepared=
+caddy_env=()
 prepare_caddy_proof() {
-  local user uid
+  local uid pair file line
   caddy_prepared=yes
-  user=$(systemctl show -p User --value caddy 2>/dev/null)
-  uid=$(id -u "$user" 2>/dev/null)
+  caddy_user=$(systemctl show -p User --value caddy 2>/dev/null)
+  uid=$(id -u "$caddy_user" 2>/dev/null)
   caddy_bin=$(command -v caddy)
-  if [ -z "$user" ] || ! [[ "$uid" =~ ^[0-9]+$ ]]; then
+  if [ -z "$caddy_user" ] || ! [[ "$uid" =~ ^[0-9]+$ ]]; then
     caddy_doubt="Caddy's service user could not be found"
   elif [ "$uid" = "$ROOT_UID" ]; then
     caddy_doubt="Caddy runs as root, so its reading of the folders can't be proven"
   elif ! command -v runuser >/dev/null || [ -z "$caddy_bin" ]; then
     caddy_doubt="runuser or caddy is missing, so Caddy can't be run as its own user"
+  elif ! take_caddy_lock; then
+    caddy_doubt="another change to Caddy is running (its lock could not be taken), so nothing is closed now"
   else
-    caddy_as=(timeout 60 runuser -u "$user" -- "$caddy_bin")
-    caddy_reads || caddy_doubt="caddy validate as $user fails before any change, so it can't prove anything after"
+    caddy_env=("HOME=$CADDY_STORAGE_DIR" "PATH=$PATH")
+    for pair in $(systemctl show -p Environment --value caddy 2>/dev/null); do
+      [[ "$pair" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] && caddy_env+=("$pair")
+    done
+    for file in $(systemctl show -p EnvironmentFiles --value caddy 2>/dev/null | sed 's/ (ignore_errors=[a-z]*)//g'); do
+      while IFS= read -r line; do
+        [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] && caddy_env+=("$line")
+      done <"${file#-}" 2>/dev/null
+    done
+    caddy_reference=$(caddy_adapted root)
+    if [ -z "$caddy_reference" ]; then
+      caddy_doubt="caddy adapt could not read the Caddyfile with the service's environment"
+    elif ! caddy_reads; then
+      caddy_doubt="caddy as $caddy_user does not read the Caddyfile as root does even before any change, so it can't prove anything after"
+    fi
   fi
 }
-caddy_reads() { "${caddy_as[@]}" validate --config "$CADDYFILE" --adapter caddyfile >/dev/null 2>&1; }
+caddy_adapted() { # <root|user>: what Caddy reads from the Caddyfile
+  local as=()
+  [ "$1" = root ] || as=(timeout 60 runuser -u "$caddy_user" --)
+  (cd / && "${as[@]}" env -i "${caddy_env[@]}" "$caddy_bin" adapt --config "$CADDYFILE" --adapter caddyfile 2>/dev/null)
+}
+caddy_validates() {
+  (cd / && timeout 60 runuser -u "$caddy_user" -- env -i "${caddy_env[@]}" "$caddy_bin" validate --config "$CADDYFILE" --adapter caddyfile) >/dev/null 2>&1
+}
+# `validate` alone is not enough: a glob that matches nothing, as when Caddy's user can't open the folder,
+# is only a warning to it, so what it reads is compared too.
+caddy_reads() { caddy_validates && [ "$(caddy_adapted user)" = "$caddy_reference" ]; }
 
 closed_now=() # "<folder> <old mode>", closed in this run and not yet proven safe
 caddy_proven=yes
-# A mode put back when the script stops before the proof is done, however it stops (bash runs the EXIT trap
-# on a fatal signal too).
+# Puts the old modes back, and says which could not be. Also runs when the script stops before the proof is
+# done, however it stops (bash runs the EXIT trap on a fatal signal too).
 restore_modes() {
   local entry
+  restore_failed=()
   [ "$caddy_proven" = yes ] && return
-  for entry in "${closed_now[@]}"; do chmod "${entry##* }" "${entry% *}"; done
+  for entry in "${closed_now[@]}"; do chmod "${entry##* }" "${entry% *}" || restore_failed+=("${entry% *} (old mode ${entry##* })"); done
+  [ "${#restore_failed[@]}" = 0 ] || report "WARNING: preview host guards: these modes could not be put back: ${restore_failed[*]}"
 }
 trap restore_modes EXIT
 
@@ -146,6 +179,7 @@ for dir in "$production" "$BACKUP_ROOT" "$UMAMI_DIR" "$PRODUCTION_PM2_LOG_DIR"; 
     [ -n "$caddy_prepared" ] || prepare_caddy_proof
     if [ -n "$caddy_doubt" ]; then warn "$dir is not closed: $caddy_doubt"; continue; fi
     caddy_proven=no
+    report "Preview host guards: closing $dir (old mode $mode; undo: chmod $mode $dir)"
     chmod o-rwx "$dir" || { warn "chmod failed on $dir"; continue; }
     closed_now+=("$dir $mode")
   fi
@@ -160,7 +194,8 @@ if [ "${#closed_now[@]}" != 0 ]; then
   else
     restore_modes
     caddy_proven=yes
-    warn "closing the folders made caddy validate fail as Caddy's own user (an imported file, a link or the Caddyfile itself is in a closed folder), so every mode changed in this run was put back"
+    if [ "${#restore_failed[@]}" = 0 ]; then restored="so every mode changed in this run was put back"; else restored="and these modes could not be put back: ${restore_failed[*]}"; fi
+    warn "closing the folders changed what Caddy reads, as its own user, from the Caddyfile (an import, a glob, a link or the Caddyfile itself is in a closed folder), $restored"
   fi
 fi
 

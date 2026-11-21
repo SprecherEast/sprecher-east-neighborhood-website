@@ -231,20 +231,19 @@ describe('preview-isolation-check.sh: a closed folder the account can enter but 
     expect((await check()).code).toBe(0)
   })
 
-  // a closed folder's path that is a file, whether or not the account could execute it, is not a folder it can enter
+  // Umami's folder replaced by nothing, or by a file with this mode (null: nothing)
+  const replaceUmami = (fileMode) => {
+    execFileSync('chmod', ['-R', 'u+rwx', p('umami')])
+    fs.rmSync(p('umami'), { recursive: true })
+    if (fileMode !== null) write(p('umami'), 'x', fileMode)
+  }
+  // a closed folder's path that is a file (whether or not the account could execute it) or is missing is not a folder it can enter
   it.each([
-    ['one it can neither read nor run', 0o000],
-    ['one it can run but not read', 0o111],
-  ])('ignores a closed folder that is a file: %s', async (_what, fileMode) => {
-    execFileSync('chmod', ['-R', 'u+rwx', p('umami')])
-    fs.rmSync(p('umami'), { recursive: true })
-    write(p('umami'), 'x', fileMode)
-    expect((await check()).code).toBe(0)
-  })
-
-  it('ignores a closed folder that is missing', async () => {
-    execFileSync('chmod', ['-R', 'u+rwx', p('umami')])
-    fs.rmSync(p('umami'), { recursive: true })
+    ['a file it can neither read nor run', 0o000],
+    ['a file it can run but not read', 0o111],
+    ['nothing', null],
+  ])('ignores a closed folder that is %s', async (_what, fileMode) => {
+    replaceUmami(fileMode)
     expect((await check()).code).toBe(0)
   })
 })
