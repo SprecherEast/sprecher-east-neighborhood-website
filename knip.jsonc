@@ -7,6 +7,8 @@
   "ignoreExportsUsedInFile": true,
   // Also check what the entry files export, so a re-export nothing imports is reported
   "includeEntryExports": true,
+  // The system's own tools that a test runs (openssl makes and opens the keys the preview sign-in is sealed with, #1394)
+  "ignoreBinaries": ["openssl"],
   "ignoreIssues": {
     // PM2 reads the default export on the server
     "ecosystem.config.cjs": ["exports"],
