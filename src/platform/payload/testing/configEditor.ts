@@ -1,5 +1,6 @@
 import type { Block } from 'payload'
 
+import { editorBlocks } from '../previewCopy/editorBlocks'
 import type { FieldNode } from './configFields'
 
 /**
@@ -55,12 +56,7 @@ const featureMap = (node: FieldNode): FeatureMap | null => {
   return map instanceof Map ? map : null
 }
 
-/** The block-level blocks a rich-text field's editor lists, as written (a slug is a reference). */
-export function editorBlocks(field: { editor?: unknown }): Block[] {
-  const editor = field.editor as { editorConfig?: { resolvedFeatureMap?: FeatureMap } } | undefined
-  const props = editor?.editorConfig?.resolvedFeatureMap?.get('blocks')?.sanitizedServerFeatureProps
-  return (props as { blocks?: Block[] } | undefined)?.blocks ?? []
-}
+export { editorBlocks }
 
 export function createEditorReader(config: EditorConfig, report: (message: string) => void) {
   const slugs = config.collections.map((c) => c.slug)

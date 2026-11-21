@@ -32,6 +32,8 @@
         "e2e/seed.ts",
         // Run by `payload run` from ops/deploy-release.sh on the server, for a preview's first database (#1075)
         "e2e/previewSeed.ts",
+        // Run by `payload run`, the export from production's release and the import from a preview's own tree (#1396)
+        "e2e/previewCopy{Export,Import}.ts",
         // Imported by eslint.config.mjs
         "eslint.*.config.mjs",
       ],
