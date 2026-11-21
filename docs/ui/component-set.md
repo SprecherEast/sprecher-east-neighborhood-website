@@ -166,6 +166,8 @@ gallery shows it.
 
 `Alert` has four tones: `info` is blue (`info` and `info-strong` theme tokens, #818), `success` green, `warning` amber and `error` red. Each is a 10% tint with its `-strong` text, checked at 4.5:1 in light and dark, and each has its own icon, so colour is never the only cue.
 
+**`Toast`** (#434, #1377) is a short notice, built on Radix Toast (`@radix-ui/react-toast`), which times the fade, waits while the reader points at it or has focus in it, announces it (politely, an error assertively) and handles Escape and swiping. It takes the Alert's four tones, their colours and their icons (`ALERT_TONE_CLASSES`, `ALERT_ICONS`, defined once in `Alert`); with no tone it keeps the neutral look. Its `ending` says how it goes: `fade` closes by itself after `durationMs` (5 seconds unless told otherwise) and also has a close button, `close` stays until the reader closes it, and `accept` stays until the reader presses its accept button (`acceptLabel`), the only way out, since Escape and a swipe are held back, for a notice the reader must have read. `onDismiss` says how it went (`fade`, `close` or `accept`) and the caller stops showing it. `placement` is `screen` (the bottom of the screen, as before) or `panel` (over the top edge of the nearest `relative` container, covering only a sliver). It slides in and out with the theme's `toast-motion`, which a reader who asked for less movement never gets. Its test covers the tones, each ending, the pause, the announcements, the placements and axe; the gallery shows each.
+
 ## Navigation
 
 Components: [navigation and page tools](../reference/components/navigation.md).

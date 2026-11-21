@@ -2,7 +2,7 @@
 
 import { RefreshCw } from 'lucide-react'
 import { Button } from './Button'
-import { Toast } from './Toast'
+import { Toast } from './Toast.client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 const POLL_INTERVAL = 30_000 // 30 seconds

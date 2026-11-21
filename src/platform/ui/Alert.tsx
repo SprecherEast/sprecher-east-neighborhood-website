@@ -10,20 +10,22 @@ import { cn } from '@/platform/lib/cn'
  * card (`TINTED_PAIRS` in `src/platform/theme/tokens.ts`). The icon says the tone too, so it
  * isn't told by colour alone.
  */
-const alertVariants = cva('flex gap-3 rounded-md border p-3 text-sm', {
-  variants: {
-    tone: {
-      info: 'border-info/30 bg-info/10 text-info-strong',
-      success: 'border-primary/30 bg-primary/10 text-primary-strong',
-      warning: 'border-warning/30 bg-warning/10 text-warning-strong',
-      error: 'border-destructive/30 bg-destructive/10 text-destructive-strong',
-    },
-  },
-})
-
 export type AlertTone = 'info' | 'success' | 'warning' | 'error'
 
-const ICONS: Record<AlertTone, LucideIcon> = {
+/** The colours of each tone, for the other notices that share them (the toast) */
+export const ALERT_TONE_CLASSES: Record<AlertTone, string> = {
+  info: 'border-info/30 bg-info/10 text-info-strong',
+  success: 'border-primary/30 bg-primary/10 text-primary-strong',
+  warning: 'border-warning/30 bg-warning/10 text-warning-strong',
+  error: 'border-destructive/30 bg-destructive/10 text-destructive-strong',
+}
+
+const alertVariants = cva('flex gap-3 rounded-md border p-3 text-sm', {
+  variants: { tone: ALERT_TONE_CLASSES },
+})
+
+/** The icon of each tone: it says the tone too, so colour is never the only cue */
+export const ALERT_ICONS: Record<AlertTone, LucideIcon> = {
   info: Info,
   success: CircleCheck,
   warning: TriangleAlert,
@@ -45,7 +47,7 @@ export interface AlertProps {
 }
 
 export function Alert({ tone, title, live = true, className, children }: AlertProps) {
-  const Icon = ICONS[tone]
+  const Icon = ALERT_ICONS[tone]
   const announce = live
     ? tone === 'error'
       ? ({ role: 'alert', 'aria-live': 'assertive' } as const)
