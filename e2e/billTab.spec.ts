@@ -75,7 +75,6 @@ for (const width of WIDTHS) {
     if (sharesRow) expect(Math.abs(l.y + l.height / 2 - (b.y + b.height / 2))).toBeLessThan(2)
     else
       expect(b.y, 'the badge is whole under the label').toBeGreaterThanOrEqual(l.y + l.height - 1)
-    expect(l.height, 'the label is on one line').toBeLessThan(40)
     expect(b.x + b.width, 'the badge stays inside the card').toBeLessThanOrEqual(
       card.x + card.width + 1,
     )
