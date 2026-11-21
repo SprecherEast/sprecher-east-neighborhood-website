@@ -208,7 +208,7 @@ isolation check proves it before and after every preview deploy. What holds now:
   another unreviewed branch), list the build's archive, send it to the server on stdin and never unpack or run it, and no job names `production` or calls a privileged workflow, because the
   wrapper's deploy prints values from the release into the public log. A same-repository pull request's
   workflow file is its own copy, so a dishonest change could read the key: the server is the boundary, since
-  the key can run only the wrapper's five actions. The deploy goes through the wrapper only, checks the
+  the key can run only the wrapper's six actions. The deploy goes through the wrapper only, checks the
   archive's size and what it unpacks to before upload, reports "taken down" when the isolation check took a
   preview down, and when the host guards withhold the key (no key line written) reports previews unavailable
   once and never retries. The one comment holds fixed texts, a link and a short commit, never a log line or a
@@ -226,6 +226,13 @@ isolation check proves it before and after every preview deploy. What holds now:
   Unix account runs every preview (#1345), so it can read the passwords file of every running preview, not
   only its own. That opens only previews' throwaway accounts, whose databases and settings (`.env.local`) that
   code can already reach. Production's accounts and settings are never touched.
+- **A preview's sign-in is handed out sealed, never in the clear** (#1394): the wrapper's `credentials` action
+  prints the passwords file only after the seed confirmed it (`.preview-accounts.applied`), and the
+  `preview-sign-in` workflow (dispatch only, never `pull_request`, not required) seals it to the requester's
+  one-time public key with `openssl` (RSA-OAEP, SHA-256) and prints only the ciphertext, after masking the
+  plaintext. A password is never pasted into a chat, an issue, a pull request, a log or an artifact. A dispatch
+  runs the workflow file of the branch it is given, so write access can print the plaintext; the boundary is the
+  restricted account and the environment's secrets ([`ops/previews.md`](/ops/previews.md)).
   How the passwords reach the owner or an AI agent is #1394.
 - **Previews have no basic auth** (the owner's decision, 2026-11-11, recorded on #1074): see above.
 

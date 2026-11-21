@@ -145,8 +145,9 @@ part 2 of #1074; the owner's decision of 2026-11-11 is recorded on #1074). The p
   With no key file the file holds no key. Removing the file revokes the key at the next deploy.
 - **The wrapper** (`preview-wrapper.sh`, in `/usr/local/lib/sprecher-east-preview/ops/`, root-owned) reads the
   request from `SSH_ORIGINAL_COMMAND`. One line, one of `facts`, `list`, `upload <number> <commit>` (the
-  `.tar.gz` release on stdin, at most 1 GiB, no path or link that leaves the release), `deploy <number> <commit>`
-  or `teardown <number>`. A number is `^[1-9][0-9]{0,5}$`, a commit 40 lowercase hex digits
+  `.tar.gz` release on stdin, at most 1 GiB, no path or link that leaves the release), `deploy <number> <commit>`,
+  `teardown <number>` or `credentials <number>` (the preview's test sign-in, only once the seed confirmed it;
+  #1394, [handing it out](previews.md#the-workflow-1075)). A number is `^[1-9][0-9]{0,5}$`, a commit 40 lowercase hex digits
   (`environment.sh`); anything else is refused with a fixed message that never repeats the request.
   `deploy` runs main's copy of `deploy-release.sh` (and its settings and restart scripts) on the uploaded
   release, never a script from the release.

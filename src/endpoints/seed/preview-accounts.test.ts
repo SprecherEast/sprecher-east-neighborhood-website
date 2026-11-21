@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -9,6 +9,7 @@ import {
   PREVIEW_ACCOUNT_ROLES,
   parsePreviewPasswords,
   previewAccountEmail,
+  markPreviewPasswordsApplied,
   readPreviewPasswords,
 } from './preview-accounts'
 
@@ -122,5 +123,66 @@ describe('readPreviewPasswords', () => {
     write(fileText(good()))
     fs.symlinkSync(file(), path.join(dir, 'link'))
     expect(() => readPreviewPasswords(path.join(dir, 'link'))).toThrow()
+  })
+})
+
+describe('markPreviewPasswordsApplied', () => {
+  let dir = ''
+  const file = () => path.join(dir, 'accounts')
+  const marker = () => `${file()}.applied`
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'preview-applied-'))
+  })
+  afterEach(() => fs.rmSync(dir, { recursive: true, force: true }))
+  const write = (text: string) => {
+    fs.writeFileSync(file(), text, { mode: 0o600 })
+    fs.chmodSync(file(), 0o600)
+  }
+
+  it('records the file’s SHA-256, in a private file next to it, which is what ops/preview-wrapper.sh compares', () => {
+    const text = fileText(good())
+    write(text)
+    markPreviewPasswordsApplied(file())
+    expect(fs.readFileSync(marker(), 'utf8')).toBe(
+      `${createHash('sha256').update(text).digest('hex')}\n`,
+    )
+    expect(fs.statSync(marker()).mode & 0o777).toBe(0o600)
+  })
+
+  it('holds no password', () => {
+    const passwords = good()
+    write(fileText(passwords))
+    markPreviewPasswordsApplied(file())
+    for (const password of Object.values(passwords)) {
+      expect(fs.readFileSync(marker(), 'utf8')).not.toContain(password)
+    }
+  })
+
+  it('replaces an older marker, so a new file is never confirmed by the last deploy’s mark', () => {
+    write(fileText(good()))
+    markPreviewPasswordsApplied(file())
+    const first = fs.readFileSync(marker(), 'utf8')
+    write(fileText(good()))
+    markPreviewPasswordsApplied(file())
+    expect(fs.readFileSync(marker(), 'utf8')).not.toBe(first)
+  })
+
+  it('refuses a file that is not private or not what the deploy writes, and writes no marker', () => {
+    write('not the file\n')
+    expect(() => markPreviewPasswordsApplied(file())).toThrow()
+    write(fileText(good()))
+    fs.chmodSync(file(), 0o644)
+    expect(() => markPreviewPasswordsApplied(file())).toThrow('private')
+    expect(fs.existsSync(marker())).toBe(false)
+  })
+
+  it('refuses a link at the marker’s name instead of writing through it', () => {
+    write(fileText(good()))
+    const elsewhere = path.join(dir, 'elsewhere')
+    fs.writeFileSync(elsewhere, 'untouched')
+    fs.symlinkSync(elsewhere, marker())
+    markPreviewPasswordsApplied(file())
+    expect(fs.readFileSync(elsewhere, 'utf8')).toBe('untouched')
+    expect(fs.lstatSync(marker()).isSymbolicLink()).toBe(false)
   })
 })
