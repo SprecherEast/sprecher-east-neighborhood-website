@@ -7,11 +7,16 @@
 #      their access for "others": the production deploy runs with umask 022, so what it writes (the logs
 #      too, under PM2) is readable by every account. A folder is closed only when all of this is true,
 #      and otherwise left as it is, with a warning: it is a real folder, it and what is directly in it are
-#      owned by root, Caddy's live configuration (`caddy adapt` of the Caddyfile, and the Caddyfile and the files
-#      beside it, for what an import names) names no path in it, and
-#      no process that isn't root's has it as its working folder or an open file in it. What this can't
-#      see: a non-root service that opens a file there by name only from time to time. The old mode is in
-#      the annotation, with the undo.
+#      owned by root, Caddy's live configuration (`caddy adapt` of the Caddyfile, and a text search of the
+#      Caddyfile and the files beside it, as a cheap first filter) names no path in it, and no process that
+#      isn't root's has it as its working folder or an open file in it. Then Caddy itself is the proof of
+#      the rest: `caddy validate` of the Caddyfile is run as Caddy's service user before the change (it must
+#      pass, or the guard can't tell) and after all the changes (every import form, link and relative path
+#      included, is read by Caddy's own parser with Caddy's own permissions); when it fails after, every
+#      mode changed in this run is put back, also when the script is stopped half way. When Caddy's user can't
+#      be found, is root, or `runuser` is missing, nothing is closed. What this can't see: a non-root service
+#      that opens a file there by name only from time to time, and what Caddy opens only when it runs
+#      (the sites it serves). The old mode is in the annotation, with the undo.
 #   2. the account goes into /etc/cron.deny and /etc/at.deny, so a preview can't schedule a job that outlives
 #      its teardown. at.deny is never created (when neither at file exists only root may use at, and a new
 #      at.deny would open it to everyone else).
@@ -68,16 +73,21 @@ fi
 
 # Prints why a folder is needed by something that isn't root, or nothing when nothing says so.
 folder_needed() { # <folder>
-  local adapted proc uid ref target pattern
+  local adapted proc uid ref target pattern found scan
   adapted=$(caddy adapt --config "$CADDYFILE" --adapter caddyfile 2>/dev/null) && [[ "$adapted" == *[![:space:]]* ]] || { echo "caddy adapt could not read the live Caddyfile, so what Caddy serves or writes is unknown"; return; }
   if [[ "$adapted" == *"$1"/* || "$adapted" == *"$1\""* ]]; then echo "Caddy's configuration names a path in it"; return; fi
   # `caddy adapt` pastes an imported file's text in place, so the path of an import is not in what it prints:
-  # the Caddyfile and every file beside it (the previews' blocks too) are read for the path as well.
+  # the Caddyfile and every file beside it (the previews' blocks too) are read for the path as well. This is
+  # a first filter; Caddy's own reading, after the change, is the proof (see below). grep: 0 found, 1 clean.
   pattern=$(printf '%s' "$1" | sed 's/[][\\.*^$+?(){}|]/\\&/g')
-  if [ -n "$(grep -rlEs -e "$pattern([^A-Za-z0-9_.-]|\$)" -- "$CADDYFILE" "${CADDYFILE%/*}" "$PREVIEW_CADDY_DIR")" ]; then
-    echo "a file of Caddy's own configuration names a path in it (an import, say)"
-    return
-  fi
+  scan=("$CADDYFILE" "${CADDYFILE%/*}")
+  [ ! -d "$PREVIEW_CADDY_DIR" ] || scan+=("$PREVIEW_CADDY_DIR")
+  found=$(grep -rlEs -e "$pattern([^A-Za-z0-9_.-]|\$)" -- "${scan[@]}")
+  case $? in
+    0) echo "${found%%$'\n'*} (Caddy's own configuration, backups included) names a path in it"; return ;;
+    1) ;;
+    *) echo "the Caddyfile and the files beside it could not all be read"; return ;;
+  esac
   for proc in "$PROC_DIR"/[0-9]*; do
     uid=$(awk '/^Uid:/ { print $3 }' "$proc/status" 2>/dev/null)
     [ -n "$uid" ] && [ "$uid" != "$ROOT_UID" ] || continue
@@ -87,6 +97,40 @@ folder_needed() { # <folder>
     done
   done
 }
+
+# Caddy's own proof, as its service user. Sets caddy_as (the command prefix) and caddy_bin, or says why not.
+caddy_as=()
+caddy_doubt=
+caddy_prepared=
+prepare_caddy_proof() {
+  local user uid
+  caddy_prepared=yes
+  user=$(systemctl show -p User --value caddy 2>/dev/null)
+  uid=$(id -u "$user" 2>/dev/null)
+  caddy_bin=$(command -v caddy)
+  if [ -z "$user" ] || ! [[ "$uid" =~ ^[0-9]+$ ]]; then
+    caddy_doubt="Caddy's service user could not be found"
+  elif [ "$uid" = "$ROOT_UID" ]; then
+    caddy_doubt="Caddy runs as root, so its reading of the folders can't be proven"
+  elif ! command -v runuser >/dev/null || [ -z "$caddy_bin" ]; then
+    caddy_doubt="runuser or caddy is missing, so Caddy can't be run as its own user"
+  else
+    caddy_as=(timeout 60 runuser -u "$user" -- "$caddy_bin")
+    caddy_reads || caddy_doubt="caddy validate as $user fails before any change, so it can't prove anything after"
+  fi
+}
+caddy_reads() { "${caddy_as[@]}" validate --config "$CADDYFILE" --adapter caddyfile >/dev/null 2>&1; }
+
+closed_now=() # "<folder> <old mode>", closed in this run and not yet proven safe
+caddy_proven=yes
+# A mode put back when the script stops before the proof is done, however it stops (bash runs the EXIT trap
+# on a fatal signal too).
+restore_modes() {
+  local entry
+  [ "$caddy_proven" = yes ] && return
+  for entry in "${closed_now[@]}"; do chmod "${entry##* }" "${entry% *}"; done
+}
+trap restore_modes EXIT
 
 for dir in "$production" "$BACKUP_ROOT" "$UMAMI_DIR" "$PRODUCTION_PM2_LOG_DIR"; do
   [ -e "$dir" ] || [ -L "$dir" ] || continue # not installed here: nothing to protect
@@ -98,12 +142,27 @@ for dir in "$production" "$BACKUP_ROOT" "$UMAMI_DIR" "$PRODUCTION_PM2_LOG_DIR"; 
     warn "$dir is not closed: $reason"
   else
     mode=$(stat -c %a "$dir")
-    if ((8#$mode & 8#007)); then
-      chmod o-rwx "$dir" || { warn "chmod failed on $dir"; continue; }
-      changes+=("$dir: mode $mode -> $(stat -c %a "$dir") (undo: chmod $mode $dir)")
-    fi
+    ((8#$mode & 8#007)) || continue
+    [ -n "$caddy_prepared" ] || prepare_caddy_proof
+    if [ -n "$caddy_doubt" ]; then warn "$dir is not closed: $caddy_doubt"; continue; fi
+    caddy_proven=no
+    chmod o-rwx "$dir" || { warn "chmod failed on $dir"; continue; }
+    closed_now+=("$dir $mode")
   fi
 done
+
+if [ "${#closed_now[@]}" != 0 ]; then
+  if caddy_reads; then
+    caddy_proven=yes
+    for entry in "${closed_now[@]}"; do
+      changes+=("${entry% *}: mode ${entry##* } -> $(stat -c %a "${entry% *}") (undo: chmod ${entry##* } ${entry% *})")
+    done
+  else
+    restore_modes
+    caddy_proven=yes
+    warn "closing the folders made caddy validate fail as Caddy's own user (an imported file, a link or the Caddyfile itself is in a closed folder), so every mode changed in this run was put back"
+  fi
+fi
 
 # ---- 2. cron and at. ----
 

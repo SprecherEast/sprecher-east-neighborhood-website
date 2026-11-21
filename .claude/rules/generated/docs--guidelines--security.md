@@ -163,9 +163,13 @@ isolation check proves it before and after every preview deploy. What holds now:
   production deploy, takes "others" access off production's folder, the backups, Umami's folder and PM2's log folder (the
   production deploy writes with `umask` 022, so what it writes is readable by every account, and a closed
   folder is what keeps it out). It closes a folder only after checking that it is a real root-owned folder
-  with only root-owned entries, that Caddy's live configuration, the Caddyfile and the files beside it (an import's path shows only there) name no path in it, and that no process
-  that isn't root's has it open; otherwise it changes nothing and warns. What is assumed, not proven: no
-  other non-root service opens a file there by name now and then. It says the old mode; a closed
+  with only root-owned entries, that Caddy's live configuration and the files in the Caddyfile's folder and the
+  previews' folder (backups included) name no path in it, and that no process that isn't root's has it open;
+  otherwise it changes nothing and warns. Then Caddy is the proof: `caddy validate` of the Caddyfile, run as
+  Caddy's service user before and after the change, covers every form of import (links, relative paths,
+  nested files); if it fails after, every mode is put back, and if Caddy's user can't be found or is root,
+  nothing is closed. What is assumed, not proven: what Caddy opens only while it serves, and that no other
+  non-root service opens a file there by name now and then. It says the old mode; a closed
   folder can't be entered by the account. A later named deploy account for production
   (#1306) needs group access to them.
 - **A preview can't reach Caddy's admin endpoint** (#1346): the endpoint on `localhost:2019` accepts any local

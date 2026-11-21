@@ -231,17 +231,20 @@ describe('preview-isolation-check.sh: a closed folder the account can enter but 
     expect((await check()).code).toBe(0)
   })
 
-  it('ignores a closed folder that is a file or missing', async () => {
+  // a closed folder's path that is a file, whether or not the account could execute it, is not a folder it can enter
+  it.each([
+    ['one it can neither read nor run', 0o000],
+    ['one it can run but not read', 0o111],
+  ])('ignores a closed folder that is a file: %s', async (_what, fileMode) => {
     execFileSync('chmod', ['-R', 'u+rwx', p('umami')])
     fs.rmSync(p('umami'), { recursive: true })
-    write(p('umami'), 'x', 0o000)
+    write(p('umami'), 'x', fileMode)
     expect((await check()).code).toBe(0)
   })
 
-  it('does not call a file the account can execute but not read a folder it can enter', async () => {
+  it('ignores a closed folder that is missing', async () => {
     execFileSync('chmod', ['-R', 'u+rwx', p('umami')])
     fs.rmSync(p('umami'), { recursive: true })
-    write(p('umami'), 'x', 0o111)
     expect((await check()).code).toBe(0)
   })
 })

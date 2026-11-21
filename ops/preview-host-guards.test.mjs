@@ -43,6 +43,7 @@ const SYSTEM_TOOLS = [
   'touch',
   'tee',
   'ls',
+  'timeout',
 ]
 
 let dir = ''
@@ -82,15 +83,48 @@ beforeEach(async () => {
   for (const t of SYSTEM_TOOLS) fs.symlinkSync(`/usr/bin/${t}`, p('bin', t))
   stub(
     'id',
-    'if [ "$1 $2" = "-u sprecher-preview" ]; then [ -z "$STUB_NO_ACCOUNT" ] || exit 1; echo "${STUB_ACCOUNT_UID:-998}"; else exec /usr/bin/id "$@"; fi',
+    [
+      'if [ "$1 $2" = "-u sprecher-preview" ]; then [ -z "$STUB_NO_ACCOUNT" ] || exit 1; echo "${STUB_ACCOUNT_UID:-998}"',
+      'elif [ "$1 $2" = "-u caddy" ]; then [ -z "$STUB_NO_CADDY_USER" ] || exit 1; echo "${STUB_CADDY_UID:-997}"',
+      'else exec /usr/bin/id "$@"; fi',
+    ].join('\n'),
   )
-  // caddy adapt prints STUB_CADDY_JSON (a config that names no folder of ours by default); STUB_CADDY_FAILS=1 fails
+  // `caddy adapt` prints STUB_CADDY_JSON (a config that names no folder of ours by default); STUB_CADDY_FAILS=1
+  // fails it. `caddy validate --config F` reads F and, as Caddy does, every file an `import` names (relative
+  // to the importing file, a glob, `{$VAR}` from the environment, links followed), and fails on a file the
+  // "caddy" user couldn't read: one with a closed folder (no x for others) above it, or no r for others.
+  // STUB_CADDY_VALIDATE_FAILS=1 fails it whatever it reads. `runuser -u <user> -- cmd` runs cmd and logs the call.
   stub(
     'caddy',
-    '[ -z "$STUB_CADDY_FAILS" ] || exit 1; [ -z "$STUB_CADDY_EMPTY" ] || exit 0; echo "${STUB_CADDY_JSON:-{\\"apps\\":{\\"http\\":{}}}}"',
+    [
+      'others_read() { # <path>: links followed, every folder above needs x and the file r, for others',
+      '  local f d; f=$(realpath -m "$1") || return 1',
+      '  [ -f "$f" ] && (( 8#$(stat -c %a "$f") & 4 )) || return 1',
+      '  d=$(dirname "$f"); while [ "$d" != / ]; do (( 8#$(stat -c %a "$d") & 1 )) || return 1; d=$(dirname "$d"); done',
+      '}',
+      'read_config() { # <file>',
+      '  local file="$1" line target match',
+      '  others_read "$file" || exit 1',
+      '  while IFS= read -r line; do',
+      '    [[ "$line" =~ ^[[:space:]]*import[[:space:]]+([^[:space:]]+) ]] || continue',
+      '    target=${BASH_REMATCH[1]}',
+      '    while [[ "$target" =~ \\{\\$([A-Za-z_]+)\\} ]]; do target=${target/"${BASH_REMATCH[0]}"/${!BASH_REMATCH[1]-}}; done',
+      '    [[ "$target" = /* ]] || target="$(dirname "$file")/$target"',
+      '    for match in $target; do [ -f "$match" ] || continue; read_config "$match"; done',
+      '  done < "$file"',
+      '}',
+      'if [ "$1" = validate ]; then',
+      '  [ -z "$STUB_CADDY_VALIDATE_FAILS" ] || exit 1',
+      '  read_config "$3"; exit',
+      'fi',
+      '[ -z "$STUB_CADDY_FAILS" ] || exit 1; [ -z "$STUB_CADDY_EMPTY" ] || exit 0',
+      'echo "${STUB_CADDY_JSON:-{\\"apps\\":{\\"http\\":{}}}}"',
+    ].join('\n'),
   )
+  stub('runuser', 'echo "runuser $*" >> "$STUB_LOG"; shift 3; exec "$@"')
   fs.mkdirSync(p('proc'))
-  write(p('caddy/Caddyfile'), 'example.test {}\n')
+  fs.mkdirSync(p('caddy'), { mode: 0o755 })
+  write(p('caddy/Caddyfile'), 'example.test {}\n', 0o644)
   // iptables/ip6tables keep their rules in state/<tool>.rules: -C finds one, -I adds it
   for (const t of ['iptables', 'ip6tables'])
     stub(
@@ -111,6 +145,7 @@ beforeEach(async () => {
     [
       'echo "systemctl $*" >> "$STUB_LOG"',
       'case "$1" in',
+      '  show) echo "${STUB_CADDY_SERVICE_USER-caddy}" ;;',
       '  is-enabled) [ -e "$STUB_STATE/enabled" ] ;;',
       '  enable) [ "$STUB_SYSTEMCTL_FAILS" != 1 ] && touch "$STUB_STATE/enabled" ;;',
       '  daemon-reload) [ "$STUB_SYSTEMCTL_FAILS" != reload ] ;;',
@@ -285,7 +320,7 @@ describe('preview-host-guards.sh: production’s private folders', () => {
       expect(code).toBe(3)
       expect(mode('prod')).toBe('755')
       expect(out).toContain(
-        `${p('prod')} is not closed: a file of Caddy's own configuration names a path in it`,
+        `${p('prod')} is not closed: ${p('caddy/Caddyfile')} (Caddy's own configuration, backups included) names a path in it`,
       )
       expect(mode('umami')).toBe('750')
     })
@@ -307,6 +342,22 @@ describe('preview-host-guards.sh: production’s private folders', () => {
       write(p('caddy/Caddyfile'), `import ${p('prXd')}/x\n`)
       expect((await run([], { PRODUCTION_DIR_FOR_TESTS: p('pr.d') })).code).toBe(0)
       expect(mode('pr.d')).toBe('750')
+    })
+
+    it('counts a backup of the Caddyfile beside it, and says which file', async () => {
+      write(p('caddy/Caddyfile.bak-20261101'), `# was ${p('pmlogs')}\n`)
+      const { code, out } = await run()
+      expect(code).toBe(3)
+      expect(out).toContain(`${p('caddy/Caddyfile.bak-20261101')} (Caddy's own configuration`)
+      expect(mode('pmlogs')).toBe('755')
+    })
+
+    it('treats a read error in the search as doubt and closes nothing', async () => {
+      stub('grep', 'case "$*" in *-rlEs*) exit 2 ;; esac; exec /usr/bin/grep "$@"')
+      const { code, out } = await run()
+      expect(code).toBe(3)
+      expect(out).toContain('could not all be read')
+      expect(mode('prod')).toBe('755')
     })
 
     it('does not mistake a longer folder name in the Caddyfile for the folder', async () => {
@@ -364,6 +415,95 @@ describe('preview-host-guards.sh: production’s private folders', () => {
     it('ignores processes elsewhere', async () => {
       process('7', UID + 1, { cwd: '/tmp', fds: [`${p('prod')}-other/x`] })
       expect((await run()).code).toBe(0)
+    })
+  })
+
+  describe('Caddy itself is the proof that it can still read its configuration', () => {
+    // each form of import puts a file Caddy reads inside a closed folder, where no text search finds its path
+    const world = {
+      'a link beside the Caddyfile': () => {
+        write(p('prod/x.caddy'), 'x\n', 0o644)
+        fs.mkdirSync(p('caddy/conf.d'))
+        fs.symlinkSync(p('prod/x.caddy'), p('caddy/conf.d/site.caddy'))
+        write(p('caddy/Caddyfile'), 'import conf.d/*.caddy\n', 0o644)
+      },
+      'a linked folder in the Caddy folder': () => {
+        fs.mkdirSync(p('prod/snips'), { mode: 0o755 })
+        write(p('prod/snips/a.caddy'), 'x\n', 0o644)
+        fs.symlinkSync(p('prod/snips'), p('caddy/linked'))
+        write(p('caddy/Caddyfile'), 'import linked/*.caddy\n', 0o644)
+      },
+      'a relative import that climbs out of the Caddy folder': () => {
+        write(p('prod/x.caddy'), 'x\n', 0o644)
+        write(p('caddy/Caddyfile'), 'import ../prod/x.caddy\n', 0o644)
+      },
+      'a nested import from a file outside the folders searched': () => {
+        write(p('prod/x.caddy'), 'x\n', 0o644)
+        fs.mkdirSync(p('opt'), { mode: 0o755 })
+        write(p('opt/snips.caddy'), `import ${p('prod/x.caddy')}\n`, 0o644)
+        write(p('caddy/Caddyfile'), `import ${p('opt/snips.caddy')}\n`, 0o644)
+      },
+      'a placeholder in an import': () => {
+        write(p('prod/x.caddy'), 'x\n', 0o644)
+        write(p('caddy/Caddyfile'), 'import {$SNIPS}/x.caddy\n', 0o644)
+      },
+    }
+    it.each(Object.keys(world))('puts every mode back and warns for %s', async (name) => {
+      world[name]()
+      fs.chmodSync(p('umami'), 0o755)
+      const { code, out } = await run([], { SNIPS: p('prod') })
+      expect(code).toBe(3)
+      expect(out).toContain("made caddy validate fail as Caddy's own user")
+      expect(out).toContain('put back')
+      for (const d of ['prod', 'umami', 'pmlogs']) expect(mode(d)).toBe('755')
+      expect(out).not.toContain('mode 755 -> 750')
+    })
+
+    it('puts the modes back when the Caddy folder itself is inside a closed folder', async () => {
+      fs.mkdirSync(p('prod/caddyconf'), { mode: 0o755 })
+      write(p('prod/caddyconf/Caddyfile'), 'example.test {}\n', 0o644)
+      const { code } = await run([], { CADDYFILE: p('prod/caddyconf/Caddyfile') })
+      expect(code).toBe(3)
+      expect(mode('prod')).toBe('755')
+    })
+
+    it("runs Caddy's own check as its service user, before and after the change", async () => {
+      await run()
+      const calls = log()
+        .split('\n')
+        .filter((l) => l.startsWith('runuser'))
+      expect(calls).toHaveLength(2)
+      expect(calls[0]).toContain('runuser -u caddy -- ')
+      expect(calls[0]).toContain(`validate --config ${p('caddy/Caddyfile')} --adapter caddyfile`)
+    })
+
+    it('puts the modes back when the script is stopped before the proof is done', async () => {
+      // the second run of Caddy's check (after the change) kills the script, two levels up
+      stub(
+        'runuser',
+        'echo "runuser $*" >> "$STUB_LOG"; n=$(wc -l < "$STUB_STATE/runs" 2>/dev/null); echo x >> "$STUB_STATE/runs"; [ "${n:-0}" = 0 ] || { kill -TERM "$(awk \'{ print $4 }\' /proc/$PPID/stat)"; sleep 5; }; shift 3; exec "$@"',
+      )
+      const { code } = await run()
+      expect(code).not.toBe(0)
+      expect(mode('prod')).toBe('755')
+      expect(mode('pmlogs')).toBe('755')
+    })
+
+    it.each([
+      ["Caddy's service has no user", { STUB_CADDY_SERVICE_USER: '' }, {}],
+      ["Caddy's user does not exist", { STUB_NO_CADDY_USER: '1' }, {}],
+      ["Caddy's user is root", { STUB_CADDY_UID: String(UID) }, {}],
+      ['runuser is missing', {}, { without: ['runuser'] }, 'runuser or caddy is missing'],
+      [
+        'Caddy fails to read its own configuration even before the change',
+        { STUB_CADDY_VALIDATE_FAILS: '1' },
+        {},
+      ],
+    ])('closes nothing when %s', async (_why, env, options, reason) => {
+      const { code, out } = await run([], env, options)
+      expect(code).toBe(3)
+      expect(out).toContain(reason ?? 'is not closed')
+      for (const d of ['prod', 'pmlogs']) expect(mode(d)).toBe('755')
     })
   })
 

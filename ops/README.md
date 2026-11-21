@@ -176,9 +176,20 @@ was taken down`. Its paths and the admin port are defined once, in `environment.
     closed only after the script has checked, and changes nothing with a warning (and no key line) when any of
     it fails: it is a real folder (not a link, and a link that points nowhere counts as one); it and what is
     directly in it are owned by root; `caddy adapt` of the live Caddyfile (read the way `caddy-https.sh` reads
-    it) succeeds and names no path in it, and neither does the Caddyfile or any file beside it or in the previews' folder (`caddy adapt` pastes an import's text in place, so an import of a file from the folder shows only there); and no process that isn't root's (by its effective user, from
-    `/proc/*/status`) has it as its working folder or an open file in it (`/proc/*/cwd`, `/proc/*/fd`). It is
-    assumed, not proven, that no other non-root service opens a file there by name only now and then; the
+    it) succeeds and names no path in it; no file in the Caddyfile's folder (backups such as `Caddyfile.bak-*`
+    and subfolders included) or the previews' folder names the folder's path (a text search, a cheap first
+    filter; the warning names the first file found, and a search that can't read everything is a doubt); and no
+    process that isn't root's (by its effective user, from `/proc/*/status`) has it as its working folder or an
+    open file in it (`/proc/*/cwd`, `/proc/*/fd`). **Then Caddy is the proof of what it reads at a reload or
+    start:** `caddy validate` of the Caddyfile is run as Caddy's service user (`systemctl show -p User caddy`,
+    then `runuser -u`) before the change, where it must pass, and again after every folder is closed; every
+    import form (links, relative paths, nested imports, placeholders, the Caddy folder itself) is read by
+    Caddy's own parser with Caddy's own permissions. When the second run fails, every mode changed in that run
+    is put back and the guard warns; the modes are also put back if the script is stopped before the second run
+    is done. When Caddy's user can't be found, is root, or `runuser` is missing, no folder is closed. Why
+    close-then-check-then-undo: the files Caddy opens can't be listed beforehand. **Assumed, not proven:**
+    what Caddy opens only while it serves (the sites' own files and logs; `validate` opens some of them but not
+    every one), and that no other non-root service opens a file there by name only now and then; the
     annotation's undo is the way back. A later named deploy account for production (#1306) must be given group
     access to these folders.
   - **cron and at.** The account is added to `/etc/cron.deny` (made if missing) and `/etc/at.deny` (never
