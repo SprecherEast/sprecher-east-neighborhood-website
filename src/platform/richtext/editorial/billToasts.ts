@@ -80,6 +80,13 @@ type StoredToastRow = {
 /** The toasts as stored on the block (its rows are a `StoredToastRow`) */
 export type StoredBillToasts = BillShareBlock['toasts'] | readonly StoredToastRow[]
 
+/** The toasts a press of an Estimate button opens, added after blocks were saved with a list (#1417) */
+const ADDED_AFTER_LISTS: ReadonlySet<BillToastId> = new Set([
+  'aboutAnswer',
+  'aboutRates',
+  'aboutBill',
+])
+
 const isIn = <T extends string>(list: readonly T[], value: unknown): value is T =>
   list.includes(value as T)
 
@@ -111,19 +118,23 @@ export function toastsOf(
   const rows: readonly StoredToastRow[] = Array.isArray(stored) ? stored : starting
   const toasts = {} as Record<BillToastId, BillToast | null>
   for (const id of BILL_TOAST_IDS) {
-    const row = rows.find((candidate) => candidate.toast === id)
+    const row: StoredToastRow | undefined = rows.find((candidate) => candidate.toast === id)
     const fallback = DEFAULT_BILL_TOASTS[id]
-    const message = row?.message?.trim()
+    // An Estimate-button toast was added after blocks were saved: a saved list with no row for it
+    // has not been edited for it, so it starts as the default; one the editor emptied stays off
+    const source =
+      row ?? (ADDED_AFTER_LISTS.has(id) ? starting.find((s) => s.toast === id) : undefined)
+    const message = source?.message?.trim()
     toasts[id] =
-      row && message
+      source && message
         ? {
-            tone: isIn(BILL_TOAST_TONES, row.tone) ? row.tone : 'info',
-            title: row.title?.trim() ?? '',
+            tone: isIn(BILL_TOAST_TONES, source.tone) ? source.tone : 'info',
+            title: source.title?.trim() ?? '',
             message,
-            ending: isIn(BILL_TOAST_ENDINGS, row.ending) ? row.ending : 'accept',
-            placement: isIn(BILL_TOAST_PLACEMENTS, row.placement) ? row.placement : 'panel',
-            durationMs: heldTo(row.fadeSeconds, fallback.fadeSeconds) * 1000,
-            acceptLabel: row.acceptLabel?.trim() || fallback.acceptLabel,
+            ending: isIn(BILL_TOAST_ENDINGS, source.ending) ? source.ending : 'accept',
+            placement: isIn(BILL_TOAST_PLACEMENTS, source.placement) ? source.placement : 'panel',
+            durationMs: heldTo(source.fadeSeconds, fallback.fadeSeconds) * 1000,
+            acceptLabel: source.acceptLabel?.trim() || fallback.acceptLabel,
           }
         : null
   }

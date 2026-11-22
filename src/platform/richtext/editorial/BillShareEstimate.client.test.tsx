@@ -142,4 +142,26 @@ describe('BillShare, the Estimate button on each panel (#1417)', () => {
     expect(within(rates('2026 rates')).queryByRole('button')).toBeNull()
     expect(within(rates('2026 rates')).queryByText('Estimate')).toBeNull()
   })
+
+  it('works for a block saved before these notices existed: its list holds only the rates warning and no year has a note', async () => {
+    stubView()
+    page({
+      toasts: toastsOf([
+        {
+          toast: 'ratesCarried',
+          tone: 'warning',
+          ending: 'accept',
+          message: 'Only {year} is out.',
+        },
+      ]),
+      years: PROPS.years.map((year) => ({ ...year, note: '' })),
+    })
+    for (const card of [answer(), rates('2027 city rate'), bill()])
+      expect(within(card).getByRole('button', { name: 'Estimate, what this means' })).toBeTruthy()
+    await press(answer(), 'Estimate, what this means')
+    expect(within(answer()).getByText(/average Madison home/)).toBeTruthy()
+    await choose('2026')
+    expect(within(rates('2026 rates')).queryByRole('button')).toBeNull()
+    expect(within(bill()).getByRole('button', { name: 'Estimate, what this means' })).toBeTruthy()
+  })
 })

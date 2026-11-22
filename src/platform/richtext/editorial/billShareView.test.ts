@@ -57,13 +57,18 @@ describe('receiptFor', () => {
 
 describe('ratesBadgeFor (#1417)', () => {
   it('is the Estimate tag for a year with a note, whatever the note says', () => {
-    expect(ratesBadgeFor('proposed')).toEqual(ESTIMATE_BADGE)
+    expect(ratesBadgeFor('proposed', false)).toEqual(ESTIMATE_BADGE)
     expect(ESTIMATE_BADGE).toEqual({ certainty: 'estimate' })
   })
 
-  it('shows nothing for a year with no note: its rates are final, so there is nothing to flag', () => {
-    expect(ratesBadgeFor('')).toBeNull()
-    expect(ratesBadgeFor('  ')).toBeNull()
-    expect(ratesBadgeFor(undefined)).toBeNull()
+  it('is the Estimate tag for a year that uses an earlier year’s rate for some body, note or none', () => {
+    expect(ratesBadgeFor('', true)).toEqual(ESTIMATE_BADGE)
+    expect(ratesBadgeFor(undefined, true)).toEqual(ESTIMATE_BADGE)
+  })
+
+  it('shows nothing for a year with no note and every rate its own: nothing to flag', () => {
+    expect(ratesBadgeFor('', false)).toBeNull()
+    expect(ratesBadgeFor('  ', false)).toBeNull()
+    expect(ratesBadgeFor(undefined, false)).toBeNull()
   })
 })

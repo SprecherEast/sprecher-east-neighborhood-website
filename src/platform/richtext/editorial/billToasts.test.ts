@@ -49,6 +49,19 @@ describe('toastsOf (#1379)', () => {
     expect(toasts.ratesCarried).toBeNull()
   })
 
+  it('gives an Estimate-button toast its starting wording when a saved list never had its row (a block saved before it existed)', () => {
+    const saved = toastsOf([
+      { toast: 'ratesCarried', tone: 'warning', ending: 'accept', message: 'Carried.' },
+    ])
+    expect(saved.aboutAnswer?.message).toMatch(/average Madison home/)
+    expect(saved.aboutBill?.message).toMatch(/state credits/)
+    expect(saved.aboutRates?.message).toBeTruthy()
+    // a row the editor kept but emptied is still off
+    const emptied = toastsOf([{ toast: 'aboutBill', message: ' ' }])
+    expect(emptied.aboutBill).toBeNull()
+    expect(emptied.aboutAnswer).not.toBeNull()
+  })
+
   it('falls back to a kind, an ending, a time and a button label that make sense', () => {
     const toasts = toastsOf([
       { toast: 'ratesOwn', tone: 'loud', ending: 'sometimes', message: 'Hi', fadeSeconds: 500 },

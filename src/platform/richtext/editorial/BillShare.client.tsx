@@ -151,8 +151,11 @@ export function BillShare({
     toastsOn.clear()
   }
 
-  // The Estimate button: on the City tax card and the whole bill in every year, on the rates panel only for a year with a note
-  const ratesBadge = ratesBadgeFor(year.note)
+  // The Estimate button: on the City tax card and the whole bill in every year, on the rates panel only for a year with a note or carried-over rates
+  const ratesBadge = ratesBadgeFor(
+    year.note,
+    rateLinesFor(years, yearIndex).some((line) => line.carried),
+  )
   const press = (place: BillToastPlace) =>
     toastsOn.canTell(place) ? () => toastsOn.tell(place) : undefined
   const toastOver = (place: BillToastPlace) => (

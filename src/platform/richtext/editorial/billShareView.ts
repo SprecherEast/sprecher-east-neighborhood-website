@@ -79,11 +79,12 @@ export type StatusBadge = { certainty: Certainty; label?: string }
 export const ESTIMATE_BADGE: StatusBadge = { certainty: 'estimate' }
 
 /**
- * The rates panel's Estimate tag (#1111, #1417): there only for a year with a stored note
- * ("Proposed"), whose rates are not all final; a year without one has the City's own final rates,
- * nothing to flag. The City tax card and the whole bill always show the tag, so they take
+ * The rates panel's Estimate tag (#1111, #1417): there only for a year whose rates are not all
+ * final, that is, one with a stored note ("Proposed") or one that uses an earlier year's rate for
+ * some body (`carried`, which a block saved with no note still has); a year with the City's own
+ * final rates has nothing to flag. The City tax card and the whole bill always show the tag, so they take
  * `ESTIMATE_BADGE` directly.
  */
-export function ratesBadgeFor(note: string | undefined): StatusBadge | null {
-  return note?.trim() ? ESTIMATE_BADGE : null
+export function ratesBadgeFor(note: string | undefined, carried: boolean): StatusBadge | null {
+  return carried || note?.trim() ? ESTIMATE_BADGE : null
 }
