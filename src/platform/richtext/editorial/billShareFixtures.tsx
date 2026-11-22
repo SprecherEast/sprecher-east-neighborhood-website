@@ -1,4 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react'
+import { vi } from 'vitest'
 
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 
@@ -71,6 +72,9 @@ export const BREAKDOWN: Extract<ChartSpec, { kind: 'breakdown' }> = {
 
 export const city = { cityBars: BARS, cityBreakdown: BREAKDOWN, definition: <p>Short line</p> }
 
+/** The rates panel's name, which follows the year shown: "2027 city rate" or "2026 rates" (#1417) */
+export const RATES_PANEL = /^\d{4} (city rate|rates)$/
+
 export const box = () =>
   screen.getByRole('textbox', { name: 'Enter your assessed value' }) as HTMLInputElement
 
@@ -85,3 +89,34 @@ export async function estimate(value: string) {
 /** The sentence a screen reader hears for the bill: the block's own status line, not a toast's announcement */
 export const billSummary = () =>
   screen.getAllByRole('status').find((element) => element.tagName === 'P') as HTMLElement
+
+/** A stand-in for the browser's view detection: tests decide when the panel comes into view */
+export function stubView() {
+  const watching: ((entries: IntersectionObserverEntry[]) => void)[] = []
+  vi.stubGlobal(
+    'IntersectionObserver',
+    class {
+      private callback: IntersectionObserverCallback
+      private watch = (entries: IntersectionObserverEntry[]) =>
+        this.callback(entries, this as unknown as IntersectionObserver)
+      constructor(callback: IntersectionObserverCallback) {
+        this.callback = callback
+      }
+      observe() {
+        watching.push(this.watch)
+      }
+      disconnect() {
+        const at = watching.indexOf(this.watch)
+        if (at >= 0) watching.splice(at, 1)
+      }
+    },
+  )
+  return {
+    watching: () => watching.length,
+    enter: () =>
+      act(async () => {
+        for (const watch of [...watching])
+          watch([{ isIntersecting: true } as IntersectionObserverEntry])
+      }),
+  }
+}

@@ -8,9 +8,11 @@ import {
   DEFAULT_BILL_ROW_TITLES,
 } from './billShareDefaults'
 import {
+  blanksHelp,
   NOTE_BLANKS_HELP,
   NOTE_CONDITION_LABELS,
   NOTE_CONDITIONS,
+  TITLE_BLANKS,
   validateNoteBlanks,
 } from './billShareNotes'
 import { billToastsField } from './billToastFields'
@@ -48,6 +50,27 @@ const rowTitleField = (name: string, label: string, defaultValue: string): TextF
   defaultValue,
   maxLength: BILL_SHARE_LIMITS.rowTitle,
   validate: filledText('Add the row’s title.'),
+})
+
+/** A panel title: it may use `{year}`, the year shown, and no blank the page cannot fill (#1417) */
+const ratesTitleField = (
+  name: string,
+  label: string,
+  description: string,
+  { defaultValue, required }: { defaultValue: string; required: boolean },
+): TextField => ({
+  name,
+  type: 'text',
+  label,
+  defaultValue,
+  maxLength: BILL_SHARE_LIMITS.rowTitle,
+  admin: { description },
+  validate: (value, args) => {
+    const empty = required ? filledText('Add the panel’s title.')(value, args) : true
+    return empty !== true
+      ? empty
+      : validateNoteBlanks(value ?? '', { showWhen: 'always' }, TITLE_BLANKS)
+  },
 })
 
 /**
@@ -152,9 +175,22 @@ export const BillShareBlockConfig: Block = {
       label: 'Rates panel',
       admin: {
         description:
-          'The small panel beside the City’s tax that lists each body’s rate and the year it is from. The notice about which year’s rates are in use is a toast, below.',
+          'The small panel beside the City’s tax that lists each body’s rate and the year it is from. The notice about which year’s rates are in use, and what each Estimate button says, are toasts, below.',
       },
-      fields: [rowTitleField('title', 'Panel title', DEFAULT_BILL_RATES.title)],
+      fields: [
+        ratesTitleField(
+          'title',
+          'Panel title',
+          `${blanksHelp(TITLE_BLANKS)} Used when every rate is the year’s own.`,
+          { defaultValue: DEFAULT_BILL_RATES.title, required: true },
+        ),
+        ratesTitleField(
+          'carriedTitle',
+          'Panel title when other rates are carried over',
+          `${blanksHelp(TITLE_BLANKS)} Used when some rates are an earlier year’s. Leave empty to use the starting title.`,
+          { defaultValue: DEFAULT_BILL_RATES.carriedTitle, required: false },
+        ),
+      ],
     },
     billToastsField,
     {

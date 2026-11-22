@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
@@ -69,5 +69,35 @@ describe('RatesPanel', () => {
       <RatesPanel title="Rates used" lines={rateLinesFor(PROPS.years, 1)} />,
     )
     await expectAccessible(container)
+  })
+
+  it('has the Estimate button on the title’s line, once it has something to say, and presses it', () => {
+    const onBadgePress = vi.fn()
+    render(
+      <RatesPanel
+        title="2027 city rate"
+        lines={rateLinesFor(PROPS.years, 1)}
+        badge={{ certainty: 'estimate', label: 'Proposed' }}
+        onBadgePress={onBadgePress}
+      />,
+    )
+    const heading = screen.getByRole('heading', { name: '2027 city rate' })
+    const button = screen.getByRole('button', { name: 'Proposed, what this means' })
+    // Same row: the title and the button share one parent, the button on the right
+    expect(button.closest('div')).toBe(heading.parentElement)
+    expect(heading.parentElement?.className).toContain('justify-between')
+    fireEvent.click(button)
+    expect(onBadgePress).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows the tag as a plain label when nothing opens, and no tag when there is none', () => {
+    const lines = rateLinesFor(PROPS.years, 1)
+    const { rerender } = render(
+      <RatesPanel title="Rates" lines={lines} badge={{ certainty: 'estimate' }} />,
+    )
+    expect(screen.getByText('Estimate')).toBeTruthy()
+    expect(screen.queryByRole('button')).toBeNull()
+    rerender(<RatesPanel title="Rates" lines={lines} />)
+    expect(screen.queryByText('Estimate')).toBeNull()
   })
 })

@@ -37,8 +37,8 @@ export type BillShareYear = {
 /** The titles of the three rows under the bill, as the page draws them */
 export type BillRowTitles = { breakdown: string; differ: string; sources: string }
 
-/** The rates panel's title */
-export type BillRatesText = { title: string }
+/** The rates panel's titles: for a year of its own rates, and for one that carries earlier rates over (#1417); `{year}` is the year shown */
+export type BillRatesText = { title: string; carriedTitle: string }
 
 /** The block's props: plain data, so it renders without a CMS (decision 0013) */
 export type BillShareProps = {
@@ -64,6 +64,7 @@ const rowTitlesOf = (stored: StoredBillShare['rows']): BillRowTitles => ({
 /** The rates panel's title, or its starting one while the block has none of its own */
 const ratesOf = (stored: StoredBillShare['rates']): BillRatesText => ({
   title: stored?.title?.trim() || DEFAULT_BILL_RATES.title,
+  carriedTitle: stored?.carriedTitle?.trim() || DEFAULT_BILL_RATES.carriedTitle,
 })
 
 /**

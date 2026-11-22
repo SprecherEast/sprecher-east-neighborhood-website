@@ -51,7 +51,7 @@ Source: `src/platform/ui/Toast.client.tsx`
 | `title`        | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | A short heading above the message                                                                                                                                                                                                                                                     |
 | `tone`         | `AlertTone`                                                                                                                                                                | no       | The kind of notice: the Alert's colours and its own icon. None keeps the neutral look                                                                                                                                                                                                 |
 | `icon`         | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | A decorative Lucide icon in place of the tone's own                                                                                                                                                                                                                                   |
-| `ending`       | `"accept" \| "fade" \| "close"`                                                                                                                                            | no       | How it ends: `fade` closes by itself after `durationMs` (the reader can close it sooner), `close` stays until the reader closes it, `accept` stays until the reader presses the accept button, which is the only way out (not Escape, not a swipe): for a notice they must have read. |
+| `ending`       | `"fade" \| "close" \| "accept"`                                                                                                                                            | no       | How it ends: `fade` closes by itself after `durationMs` (the reader can close it sooner), `close` stays until the reader closes it, `accept` stays until the reader presses the accept button, which is the only way out (not Escape, not a swipe): for a notice they must have read. |
 | `durationMs`   | `number`                                                                                                                                                                   | no       | How long a fading toast stays, in milliseconds                                                                                                                                                                                                                                        |
 | `acceptLabel`  | `string`                                                                                                                                                                   | no       | What the accept button says (the `accept` ending)                                                                                                                                                                                                                                     |
 | `onAccept`     | `() => void`                                                                                                                                                               | no       | Called when the reader accepts, before `onDismiss('accept')`                                                                                                                                                                                                                          |
@@ -65,6 +65,21 @@ Source: `src/platform/ui/Toast.client.tsx`
 
 - Routes: `/dev/gallery`
 - Platform: `platform/richtext`, `platform/ui`
+
+## `BillToastSlot`
+
+The toast on show over a panel, drawn the way the editor set it, or nothing (#1380, #1417)
+
+Source: `src/platform/richtext/editorial/BillToastSlot.client.tsx`
+
+| Prop        | Type                                 | Required | Description |
+| ----------- | ------------------------------------ | -------- | ----------- |
+| `shown`     | `ShownToast \| null`                 | yes      |             |
+| `onDismiss` | `(reason: ToastCloseReason) => void` | yes      |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
 
 ## `Dialog`
 

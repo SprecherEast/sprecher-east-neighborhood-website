@@ -4,14 +4,38 @@ import type { AlertTone } from '@/platform/ui/Alert'
 import { DEFAULT_BILL_TOASTS } from './billShareDefaults'
 import { BILL_SHARE_LIMITS } from './editorialLimits'
 
-/** The toasts the whole-bill block can show: the code asks for one by its id (#1379) */
-export const BILL_TOAST_IDS = ['ratesCarried', 'ratesOwn'] as const
+/**
+ * The toasts the whole-bill block can show: the code asks for one by its id (#1379). The first two
+ * are the rates warnings the page shows by itself; the `about` ones open when the reader presses the
+ * Estimate button on a panel (#1417).
+ */
+export const BILL_TOAST_IDS = [
+  'ratesCarried',
+  'ratesOwn',
+  'aboutAnswer',
+  'aboutRates',
+  'aboutBill',
+] as const
 export type BillToastId = (typeof BILL_TOAST_IDS)[number]
 
 export const BILL_TOAST_LABELS: Record<BillToastId, string> = {
   ratesCarried: 'Rates from an earlier year are in use',
   ratesOwn: 'Every rate is the year’s own',
+  aboutAnswer: 'The reader presses Estimate on the City tax card',
+  aboutRates:
+    'The reader presses Estimate on the rates panel, when no rates warning is set for the year',
+  aboutBill: 'The reader presses Estimate on the whole bill',
 }
+
+/** The panel a toast opens over, where each draws its own toast inside itself */
+export const BILL_TOAST_PLACES = {
+  ratesCarried: 'rates',
+  ratesOwn: 'rates',
+  aboutRates: 'rates',
+  aboutAnswer: 'answer',
+  aboutBill: 'bill',
+} as const satisfies Record<BillToastId, string>
+export type BillToastPlace = (typeof BILL_TOAST_PLACES)[BillToastId]
 
 export const BILL_TOAST_TONES = [
   'info',
@@ -34,8 +58,6 @@ export type BillToastDefinition = {
   placement: (typeof BILL_TOAST_PLACEMENTS)[number]
   /** How long a fading toast stays, in seconds */
   fadeSeconds: number
-  /** How many times a reader sees it in one visit; after that it stays quiet (#1413) */
-  showsPerVisit: number
   /** What the accept button says */
   acceptLabel: string
 }
@@ -52,12 +74,18 @@ type StoredToastRow = {
   ending?: string | null
   placement?: string | null
   fadeSeconds?: number | null
-  showsPerVisit?: number | null
   acceptLabel?: string | null
 }
 
 /** The toasts as stored on the block (its rows are a `StoredToastRow`) */
 export type StoredBillToasts = BillShareBlock['toasts'] | readonly StoredToastRow[]
+
+/** The toasts a press of an Estimate button opens, added after blocks were saved with a list (#1417) */
+const ADDED_AFTER_LISTS: ReadonlySet<BillToastId> = new Set([
+  'aboutAnswer',
+  'aboutRates',
+  'aboutBill',
+])
 
 const isIn = <T extends string>(list: readonly T[], value: unknown): value is T =>
   list.includes(value as T)
@@ -67,14 +95,6 @@ const heldTo = (seconds: unknown, fallback: number): number =>
     ? Math.min(
         Math.max(Math.round(seconds), BILL_SHARE_LIMITS.toastMinSeconds),
         BILL_SHARE_LIMITS.toastMaxSeconds,
-      )
-    : fallback
-
-const countHeldTo = (count: unknown, fallback: number): number =>
-  typeof count === 'number' && Number.isFinite(count)
-    ? Math.min(
-        Math.max(Math.round(count), BILL_SHARE_LIMITS.toastMinShows),
-        BILL_SHARE_LIMITS.toastMaxShows,
       )
     : fallback
 
@@ -98,20 +118,23 @@ export function toastsOf(
   const rows: readonly StoredToastRow[] = Array.isArray(stored) ? stored : starting
   const toasts = {} as Record<BillToastId, BillToast | null>
   for (const id of BILL_TOAST_IDS) {
-    const row = rows.find((candidate) => candidate.toast === id)
+    const row: StoredToastRow | undefined = rows.find((candidate) => candidate.toast === id)
     const fallback = DEFAULT_BILL_TOASTS[id]
-    const message = row?.message?.trim()
+    // An Estimate-button toast was added after blocks were saved: a saved list with no row for it
+    // has not been edited for it, so it starts as the default; one the editor emptied stays off
+    const source =
+      row ?? (ADDED_AFTER_LISTS.has(id) ? starting.find((s) => s.toast === id) : undefined)
+    const message = source?.message?.trim()
     toasts[id] =
-      row && message
+      source && message
         ? {
-            tone: isIn(BILL_TOAST_TONES, row.tone) ? row.tone : 'info',
-            title: row.title?.trim() ?? '',
+            tone: isIn(BILL_TOAST_TONES, source.tone) ? source.tone : 'info',
+            title: source.title?.trim() ?? '',
             message,
-            ending: isIn(BILL_TOAST_ENDINGS, row.ending) ? row.ending : 'accept',
-            placement: isIn(BILL_TOAST_PLACEMENTS, row.placement) ? row.placement : 'panel',
-            durationMs: heldTo(row.fadeSeconds, fallback.fadeSeconds) * 1000,
-            showsPerVisit: countHeldTo(row.showsPerVisit, fallback.showsPerVisit),
-            acceptLabel: row.acceptLabel?.trim() || fallback.acceptLabel,
+            ending: isIn(BILL_TOAST_ENDINGS, source.ending) ? source.ending : 'accept',
+            placement: isIn(BILL_TOAST_PLACEMENTS, source.placement) ? source.placement : 'panel',
+            durationMs: heldTo(source.fadeSeconds, fallback.fadeSeconds) * 1000,
+            acceptLabel: source.acceptLabel?.trim() || fallback.acceptLabel,
           }
         : null
   }

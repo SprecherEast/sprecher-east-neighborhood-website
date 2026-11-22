@@ -14,6 +14,7 @@ import { Badge, BadgeList } from '@/platform/ui/Badge'
 import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 
 import { GalleryEntry, GalleryVariant } from './GalleryEntry'
+import { PressableBadgeDemo } from './PressableBadgeDemo.client'
 
 /** Every variant and size of the badge, and the badges built on it */
 export function BadgeGallery() {
@@ -31,6 +32,9 @@ export function BadgeGallery() {
             <CertaintyBadge key={certainty} certainty={certainty} />
           ))}
         </BadgeList>
+      </GalleryVariant>
+      <GalleryVariant label="CertaintyBadge with onPress: a button that says why (#1417)">
+        <PressableBadgeDemo />
       </GalleryVariant>
       <GalleryVariant label="size md, with open and done (a state mark on the plan, #952)">
         <BadgeList>

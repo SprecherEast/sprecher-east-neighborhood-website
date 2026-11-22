@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { BILL_GAP, BILL_PAIR, BillShare } from './BillShare.client'
-import { BREAKDOWN, city, estimate, PROPS } from './billShareFixtures'
+import { BREAKDOWN, city, estimate, PROPS, RATES_PANEL } from './billShareFixtures'
 
 afterEach(cleanup)
 
@@ -74,7 +74,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
   })
 
   it('puts the same space above the estimator as below it, from one shared value (#1142)', () => {
-    render(<BillShare {...PROPS} {...city} certainty="estimate" source={PROPS.years[0]?.source} />)
+    render(<BillShare {...PROPS} {...city} source={PROPS.years[0]?.source} />)
     const estimator = screen.getByRole('region', { name: 'Rough Estimator' })
     const stack = estimator.parentElement as HTMLElement
     // The intro, the estimator and the answer card are siblings in one stack, with no margin of their own
@@ -107,7 +107,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
 
   it('draws the tab in one order: intro, the estimator, the answer, the whole bill with the breakdown under the City, the two rows, the rest (#1111, #1163)', () => {
     render(
-      <BillShare {...PROPS} {...city} certainty="estimate" source={PROPS.years[0]?.source}>
+      <BillShare {...PROPS} {...city} source={PROPS.years[0]?.source}>
         <p>The rest</p>
       </BillShare>,
     )
@@ -117,7 +117,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
       screen.getByText(PROPS.intro),
       screen.getByRole('region', { name: 'Rough Estimator' }),
       screen.getByRole('region', { name: 'Your City tax' }),
-      screen.getByRole('region', { name: PROPS.rates.title }),
+      screen.getByRole('region', { name: RATES_PANEL }),
       within(bill).getByText('Metropolitan Schools'),
       within(bill).getByText('City of Madison'),
       breakdown,
@@ -156,7 +156,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
 
   it('answers with the City’s tax, its increase and how sure we are, once', () => {
     render(
-      <BillShare {...PROPS} {...city} certainty="estimate">
+      <BillShare {...PROPS} {...city}>
         x
       </BillShare>,
     )
@@ -166,25 +166,29 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     expect(answer.textContent).toContain(
       'Average home: $500,300. The City is 37% of the whole bill.',
     )
-    // The 2027 switch has a stored note, so the one badge says it, with the "not final" look
-    expect(screen.getAllByText('Proposed')).toHaveLength(1)
-    expect(screen.queryByText('Estimate')).toBeNull()
+    // The 2027 switch has a stored note, so the Estimate tag shows, with the "not final" look: on the
+    // answer card, the rates panel and the whole bill, which show the one tag alike (#1417)
+    expect(screen.getAllByText('Estimate')).toHaveLength(3)
   })
 
   it('has the badge follow the year chosen, so it never disagrees with the year control (#1118)', () => {
     render(
-      <BillShare {...PROPS} {...city} certainty="confirmed">
+      <BillShare {...PROPS} {...city}>
         x
       </BillShare>,
     )
     const answer = () => screen.getByRole('region', { name: 'Your City tax' })
-    expect(answer().textContent).toContain('Proposed')
+    const rates = () => screen.getByRole('region', { name: /^\d{4} (city rate|rates)$/ })
+    const bill = () => screen.getByRole('region', { name: 'Your whole property tax bill' })
+    expect(rates().textContent).toContain('Estimate')
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
-    // 2026 has no note: the badge is the tab's stored certainty
-    expect(answer().textContent).toContain('Confirmed')
-    expect(answer().textContent).not.toContain('Proposed')
+    // 2026 has no note: its rates are the City's own, so the rates panel shows no tag, while the City tax
+    // card and the whole bill keep theirs, since they only know the average home
+    expect(rates().textContent).not.toContain('Estimate')
+    expect(answer().textContent).toContain('Estimate')
+    expect(bill().textContent).toContain('Estimate')
     fireEvent.click(screen.getByRole('button', { name: '2027' }))
-    expect(answer().textContent).toContain('Proposed')
+    expect(rates().textContent).toContain('Estimate')
   })
 
   it('labels the answer for the average home, then for the reader’s own home after an estimate (#1118)', async () => {
@@ -214,7 +218,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
 
   it('has no accessibility violations with every row open', async () => {
     const { container } = render(
-      <BillShare {...PROPS} {...city} certainty="estimate" source={PROPS.years[0]?.source}>
+      <BillShare {...PROPS} {...city} source={PROPS.years[0]?.source}>
         x
       </BillShare>,
     )

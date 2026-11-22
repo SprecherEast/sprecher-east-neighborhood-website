@@ -3655,32 +3655,35 @@ export interface BillShareBlock {
     sources: string
   }
   /**
-   * The small panel beside the City’s tax that lists each body’s rate and the year it is from. The notice about which year’s rates are in use is a toast, below.
+   * The small panel beside the City’s tax that lists each body’s rate and the year it is from. The notice about which year’s rates are in use, and what each Estimate button says, are toasts, below.
    */
-  rates: {
-    title: string
+  rates?: {
+    /**
+     * Blanks the page fills in: {year} is the year shown. Used when every rate is the year’s own.
+     */
+    title?: string | null
+    /**
+     * Blanks the page fills in: {year} is the year shown. Used when some rates are an earlier year’s. Leave empty to use the starting title.
+     */
+    carriedTitle?: string | null
   }
   /**
    * The small notices that pop up over a panel. Each one is shown by the page when it applies; here you set what it says and how it ends. Empty a message to turn that toast off.
    */
   toasts?:
     | {
-        toast: 'ratesCarried' | 'ratesOwn'
+        toast: 'ratesCarried' | 'ratesOwn' | 'aboutAnswer' | 'aboutRates' | 'aboutBill'
         /**
          * Information is blue, success green, warning amber, error red.
          */
         tone: 'info' | 'success' | 'warning' | 'error'
         ending: 'fade' | 'close' | 'accept'
-        placement: 'above' | 'panel' | 'screen'
-        /**
-         * After this many, switching the year no longer shows it, until the page is reloaded.
-         */
-        showsPerVisit: number
+        placement: 'panel' | 'above' | 'screen'
         fadeSeconds?: number | null
         acceptLabel?: string | null
         title?: string | null
         /**
-         * {year} is the year shown. Leave empty to turn this toast off.
+         * Blanks the page fills in: {year} is the year shown; {carried} is the year the rates that stand in for the missing ones are from. Leave empty to turn this toast off.
          */
         message?: string | null
         id?: string | null

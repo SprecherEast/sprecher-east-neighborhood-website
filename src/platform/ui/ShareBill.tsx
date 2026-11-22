@@ -52,9 +52,10 @@ const RECEIPT_COLUMNS =
 /**
  * A nested row (an open-and-close row about one slice) sits under that slice's row, set in from the
  * left and marked by a line in the slice's own color, so it reads as part of the slice and not as
- * one more body (#1196).
+ * one more body (#1196). Under 24 rem it is set in less, so the row's title keeps its one line.
  */
-const NESTED_INDENT = 'ml-1 border-l-2 pr-1 pl-2 sm:ml-4 sm:pl-3'
+const NESTED_INDENT =
+  'ml-0.5 border-l-2 pr-0 pl-1.5 min-[24rem]:ml-1 min-[24rem]:pr-1 min-[24rem]:pl-2 sm:ml-4 sm:pl-3'
 
 /**
  * What a nested row sets on the right of its own amounts: about the width of the dollar column, so
@@ -77,6 +78,15 @@ function SliceBar({ slice, scale }: { slice: ShareSlice; scale: number }) {
 }
 
 /**
+ * The title line of a whole-bill panel (#1417): the title on the left and the status badge at the
+ * end of the same line. A title too long to share the line with the badge keeps the line to itself
+ * and the badge follows under it at the start, so there is never a gap or a badge squeezed to the
+ * right of a title broken into short lines. The answer card and the rates panel use these too.
+ */
+export const PANEL_TITLE_ROW = 'flex flex-wrap items-center justify-between gap-x-2 gap-y-1'
+export const PANEL_TITLE_ASIDE = 'shrink-0'
+
+/**
  * One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, then one row for every
  * slice with its name, percent and dollars and, under them, its own bar in the slice's color, drawn like the
  * City breakdown's (#1196). The bars share one scale, the largest slice's, and every row is built the
@@ -92,6 +102,7 @@ export function ShareBill({
   label,
   title,
   titleId,
+  titleAside,
   total,
   pulseKey,
   nested,
@@ -103,6 +114,8 @@ export function ShareBill({
   title?: string
   /** An id for the title, so a row inside the bill can keep it in view when it opens (#1178) */
   titleId?: string
+  /** Shown at the end of the title's line, such as a button that says why the bill is an estimate (#1417) */
+  titleAside?: ReactNode
   /** What the amounts add up to: the last line, as on a receipt */
   total?: { label: string; amount: string }
   /** Changes each time the total should flash once */
@@ -115,9 +128,12 @@ export function ShareBill({
   return (
     <div data-share-bill className={cn('space-y-1.5', className)}>
       {title && (
-        <Text variant="subsection" as="p" id={titleId}>
-          {title}
-        </Text>
+        <div className={PANEL_TITLE_ROW}>
+          <Text variant="subsection" as="p" id={titleId}>
+            {title}
+          </Text>
+          {titleAside && <span className={PANEL_TITLE_ASIDE}>{titleAside}</span>}
+        </div>
       )}
       <div className={RECEIPT_COLUMNS}>
         <ul

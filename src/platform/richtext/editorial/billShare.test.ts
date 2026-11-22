@@ -140,7 +140,18 @@ describe('toBillShareProps: the rates panel’s text is the block’s (#1351)', 
   const block = (rates: unknown) => ({ ...stored([year()]), rates }) as unknown as StoredBillShare
 
   it('reads the editor’s title', () => {
-    expect(toBillShareProps(block({ title: 'Rates' })).rates).toEqual({ title: 'Rates' })
+    expect(toBillShareProps(block({ title: 'Rates' })).rates).toEqual({
+      title: 'Rates',
+      carriedTitle: DEFAULT_BILL_RATES.carriedTitle,
+    })
+  })
+
+  it('reads the title for a year that carries rates over, and starts without one', () => {
+    expect(
+      toBillShareProps(block({ title: 'Rates', carriedTitle: 'City rate {year}' })).rates
+        .carriedTitle,
+    ).toBe('City rate {year}')
+    expect(toBillShareProps(block({ title: 'Rates' })).rates.carriedTitle).toBe('{year} city rate')
   })
 
   it('starts a block stored before the fields with the starting title', () => {
@@ -148,7 +159,9 @@ describe('toBillShareProps: the rates panel’s text is the block’s (#1351)', 
   })
 
   it('gives a blank title its starting one', () => {
-    expect(toBillShareProps(block({ title: '  ' })).rates).toEqual(DEFAULT_BILL_RATES)
+    expect(toBillShareProps(block({ title: '  ', carriedTitle: ' ' })).rates).toEqual(
+      DEFAULT_BILL_RATES,
+    )
   })
 
   it('says a stored note in the carried-rates toast, and an emptied one turns that toast off (#1380)', () => {
