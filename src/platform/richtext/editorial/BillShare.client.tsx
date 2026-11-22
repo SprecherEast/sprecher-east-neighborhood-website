@@ -19,9 +19,9 @@ import type { BillToastPlace } from './billToasts'
 import { BillDetails } from './BillDetails'
 import { BreakdownRow } from './BreakdownRow'
 import { notesFor, uniqueSources } from './billShareNotes'
-import { receiptFor, statusBadgeFor } from './billShareView'
+import { ESTIMATE_BADGE, ratesBadgeFor, receiptFor } from './billShareView'
 import { NoteText } from './NoteText'
-import { BadgeRoom, StatusBadgeButton } from './PanelHeader'
+import { StatusBadgeButton } from './PanelHeader'
 import {
   cityTaxFor,
   figuresFor,
@@ -151,10 +151,8 @@ export function BillShare({
     toastsOn.clear()
   }
 
-  // The Estimate button on a panel: a button where there is something to say, else the plain label
-  const badge = statusBadgeFor(year.note)
-  // The badge another year has: a year without one keeps its room unseen on the whole bill, so its card keeps its height
-  const roomBadge = statusBadgeFor(years.find((other) => other.note)?.note)
+  // The Estimate button: on the City tax card and the whole bill in every year, on the rates panel only for a year with a note
+  const ratesBadge = ratesBadgeFor(year.note)
   const press = (place: BillToastPlace) =>
     toastsOn.canTell(place) ? () => toastsOn.tell(place) : undefined
   const toastOver = (place: BillToastPlace) => (
@@ -217,12 +215,10 @@ export function BillShare({
         <BillAnswer
           tax={cityTax?.total ?? formatWholeDollars(cityAmount ?? 0)}
           increase={cityTax?.increase ?? null}
-          note={year.note}
           yours={estimated !== null}
           home={formatWholeDollars(shown)}
           baseYear={baseYear}
           laterIncrease={laterIncrease}
-          laterNote={baseYear ? years[1]?.note : undefined}
           cityPercent={receipt.slices.length > 0 ? (cityPart?.percent ?? null) : null}
           onBadgePress={press('answer')}
           toast={toastOver('answer')}
@@ -230,7 +226,7 @@ export function BillShare({
         <RatesPanel
           title={ratesTitleFor(years, yearIndex, ratesText)}
           lines={rateLinesFor(years, yearIndex, rates)}
-          badge={badge}
+          badge={ratesBadge}
           onBadgePress={press('rates')}
           toast={toastOver('rates')}
         />
@@ -245,13 +241,7 @@ export function BillShare({
             total={receipt.total ?? undefined}
             pulseKey={pulse}
             nested={where ? { after: 'city', children: where } : undefined}
-            titleAside={
-              badge ? (
-                <StatusBadgeButton badge={badge} onPress={press('bill')} />
-              ) : (
-                roomBadge && <BadgeRoom badge={roomBadge} />
-              )
-            }
+            titleAside={<StatusBadgeButton badge={ESTIMATE_BADGE} onPress={press('bill')} />}
           />
         ) : (
           <>

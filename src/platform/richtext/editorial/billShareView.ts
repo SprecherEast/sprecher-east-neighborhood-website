@@ -75,14 +75,15 @@ export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt
 /** The status badge a panel shows: the year's own words, with the "not final" look */
 export type StatusBadge = { certainty: Certainty; label?: string }
 
+/** The Estimate tag, one for every panel it shows on (#1417) */
+export const ESTIMATE_BADGE: StatusBadge = { certainty: 'estimate' }
+
 /**
- * The tab's status badge (#1111, #1417): the chosen year's stored note ("Proposed") with the
- * "not final" look, and none for a year without a note, since its rates are the City's own and
- * final, nothing to flag. Every panel that shows it calls this, so they can never disagree.
+ * The rates panel's Estimate tag (#1111, #1417): there only for a year with a stored note
+ * ("Proposed"), whose rates are not all final; a year without one has the City's own final rates,
+ * nothing to flag. The City tax card and the whole bill always show the tag, so they take
+ * `ESTIMATE_BADGE` directly.
  */
-export function statusBadgeFor(note: string | undefined): StatusBadge | null {
-  const label = note?.trim()
-  return label
-    ? { certainty: 'estimate', label: `${label.charAt(0).toUpperCase()}${label.slice(1)}` }
-    : null
+export function ratesBadgeFor(note: string | undefined): StatusBadge | null {
+  return note?.trim() ? ESTIMATE_BADGE : null
 }

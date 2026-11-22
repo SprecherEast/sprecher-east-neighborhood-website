@@ -166,10 +166,9 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     expect(answer.textContent).toContain(
       'Average home: $500,300. The City is 37% of the whole bill.',
     )
-    // The 2027 switch has a stored note, so the status badge says it, with the "not final" look: on the
-    // answer card, the rates panel and the whole bill, which show the one badge alike (#1417)
-    expect(screen.getAllByText('Proposed')).toHaveLength(3)
-    expect(screen.queryByText('Estimate')).toBeNull()
+    // The 2027 switch has a stored note, so the Estimate tag shows, with the "not final" look: on the
+    // answer card, the rates panel and the whole bill, which show the one tag alike (#1417)
+    expect(screen.getAllByText('Estimate')).toHaveLength(3)
   })
 
   it('has the badge follow the year chosen, so it never disagrees with the year control (#1118)', () => {
@@ -179,18 +178,17 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
       </BillShare>,
     )
     const answer = () => screen.getByRole('region', { name: 'Your City tax' })
-    expect(answer().textContent).toContain('Proposed')
+    const rates = () => screen.getByRole('region', { name: /^\d{4} (city rate|rates)$/ })
+    const bill = () => screen.getByRole('region', { name: 'Your whole property tax bill' })
+    expect(rates().textContent).toContain('Estimate')
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
-    // 2026 has no note: its rates are final, so the card shows no badge at all
-    // Its room stays, unseen and hidden from screen readers, so the card keeps its height
-    expect(within(answer()).queryByText('Proposed')).not.toBeNull()
-    expect(within(answer()).queryByText('Proposed')?.closest('[aria-hidden="true"]')).not.toBeNull()
-    expect(within(answer()).queryByRole('button', { name: /what this means$/ })).toBeNull()
-    // The whole bill keeps the tag's room too, unseen, so it is as tall in both years
-    const bill = screen.getByRole('region', { name: 'Your whole property tax bill' })
-    expect(within(bill).getByText('Proposed').closest('[aria-hidden="true"]')).not.toBeNull()
+    // 2026 has no note: its rates are the City's own, so the rates panel shows no tag, while the City tax
+    // card and the whole bill keep theirs, since they only know the average home
+    expect(rates().textContent).not.toContain('Estimate')
+    expect(answer().textContent).toContain('Estimate')
+    expect(bill().textContent).toContain('Estimate')
     fireEvent.click(screen.getByRole('button', { name: '2027' }))
-    expect(answer().textContent).toContain('Proposed')
+    expect(rates().textContent).toContain('Estimate')
   })
 
   it('labels the answer for the average home, then for the reader’s own home after an estimate (#1118)', async () => {

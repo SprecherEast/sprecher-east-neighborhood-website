@@ -26,7 +26,7 @@ describe('BillShare', () => {
     const note = screen.getByText(/City’s 2027 tax rate is proposed/i)
     expect(note.textContent).toBe('The City’s 2027 tax rate is proposed and may change.')
     expect(note.closest('li')?.getAttribute('aria-hidden')).toBeNull()
-    expect(screen.getAllByText('Proposed').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Estimate').length).toBeGreaterThan(0)
     // Last year's rates have nothing to confirm: the note keeps its room and is hidden from everyone
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
     const kept = screen.getByText(/City’s 2027 tax rate is proposed/i).closest('li')

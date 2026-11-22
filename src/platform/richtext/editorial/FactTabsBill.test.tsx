@@ -148,7 +148,7 @@ describe('FactTabs with a whole tax bill', () => {
     const panel = present(container.querySelector('[role="tabpanel"]'))
     expect(panel.querySelector('[data-panel-certainty]')).toBeNull()
     const answer = present(panel.querySelector('section[aria-label="Your City tax"]'))
-    expect(answer.textContent).toContain('Proposed')
+    expect(answer.textContent).toContain('Estimate')
     const detail = present(panel.querySelector('[data-panel-detail]'))
     expect(detail.closest('details')?.textContent).toContain('Why your bill may differ')
     expect(panel.querySelectorAll('[data-panel-detail]')).toHaveLength(1)

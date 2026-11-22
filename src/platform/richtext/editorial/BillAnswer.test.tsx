@@ -12,7 +12,6 @@ afterEach(cleanup)
 const base = {
   tax: '$3,467',
   increase: 90,
-  note: '',
   yours: false,
   home: '$500,300',
   cityPercent: 37,
@@ -29,12 +28,12 @@ describe('BillAnswer', () => {
   })
 
   it('puts the badge on the right of the same row as the label', () => {
-    render(<BillAnswer {...base} note="proposed" />)
+    render(<BillAnswer {...base} />)
     const row = screen.getByText('City tax on an average home').parentElement as HTMLElement
     expect(row.className).toContain('justify-between')
-    expect(row.textContent).toContain('Proposed')
+    expect(row.textContent).toContain('Estimate')
     const label = screen.getByText('City tax on an average home')
-    const badge = screen.getByText('Proposed')
+    const badge = screen.getByText('Estimate')
     expect(label.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
@@ -75,25 +74,11 @@ describe('BillAnswer', () => {
     expect(container.querySelector('[data-answer-increase]')?.textContent).toBe('')
   })
 
-  it('keeps the next year’s badge room unseen while this year has no note (#1417)', () => {
-    const { container } = render(<BillAnswer {...base} baseYear laterNote="proposed" />)
-    expect(screen.queryByRole('button')).toBeNull()
-    expect(screen.getByText('Proposed').closest('[aria-hidden="true"]')).not.toBeNull()
-    expect(container.querySelectorAll('[aria-hidden="true"].invisible').length).toBeGreaterThan(0)
-  })
-
-  it('shows no badge when the year has no note: its rates are final (#1417)', () => {
-    render(<BillAnswer {...base} />)
-    expect(screen.queryByText('Estimate')).toBeNull()
-    expect(screen.queryByText('Proposed')).toBeNull()
-  })
-
-  it('shows the year’s stored note as the badge, capitalized, with the "not final" look', () => {
-    const { container } = render(<BillAnswer {...base} note="proposed" />)
-    const badge = screen.getByText('Proposed')
-    expect(badge.className).toContain('text-warning-strong')
-    expect(screen.queryByText('Confirmed')).toBeNull()
-    expect(container.textContent).not.toContain('(')
+  it('shows the Estimate tag in every year, with the "not final" look, since the card only knows the average home (#1417)', () => {
+    const { rerender } = render(<BillAnswer {...base} />)
+    expect(screen.getByText('Estimate').className).toContain('text-warning-strong')
+    rerender(<BillAnswer {...base} baseYear increase={null} />)
+    expect(screen.getByText('Estimate')).toBeTruthy()
   })
 
   it('writes one small sentence with the average home and the City’s share', () => {
@@ -113,7 +98,7 @@ describe('BillAnswer', () => {
   })
 
   it('has no accessibility violations', async () => {
-    const { container } = render(<BillAnswer {...base} note="proposed" />)
+    const { container } = render(<BillAnswer {...base} />)
     await expectAccessible(container)
   })
 })

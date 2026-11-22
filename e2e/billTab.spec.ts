@@ -68,7 +68,7 @@ for (const width of WIDTHS) {
     // label; either way the badge stays inside the card
     const answer = page.getByRole('region', { name: 'Your City tax' })
     const label = answer.getByText('City tax on an average home')
-    const badge = answer.getByText('Proposed')
+    const badge = answer.getByRole('button', { name: /what this means$/ })
     const card = await boxOf(answer)
     const [l, b] = [await boxOf(label), await boxOf(badge)]
     const sharesRow = b.y < l.y + l.height - 1

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { computeBillShare } from '@/platform/lib/billShare'
 
-import { receiptFor, statusBadgeFor } from './billShareView'
+import { ESTIMATE_BADGE, ratesBadgeFor, receiptFor } from './billShareView'
 
 const RATES = { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0141 }
 
@@ -55,14 +55,15 @@ describe('receiptFor', () => {
   })
 })
 
-describe('statusBadgeFor (#1417)', () => {
-  it('uses the year’s note, capitalized, with the not-final look', () => {
-    expect(statusBadgeFor('proposed')).toEqual({ certainty: 'estimate', label: 'Proposed' })
+describe('ratesBadgeFor (#1417)', () => {
+  it('is the Estimate tag for a year with a note, whatever the note says', () => {
+    expect(ratesBadgeFor('proposed')).toEqual(ESTIMATE_BADGE)
+    expect(ESTIMATE_BADGE).toEqual({ certainty: 'estimate' })
   })
 
   it('shows nothing for a year with no note: its rates are final, so there is nothing to flag', () => {
-    expect(statusBadgeFor('')).toBeNull()
-    expect(statusBadgeFor('  ')).toBeNull()
-    expect(statusBadgeFor(undefined)).toBeNull()
+    expect(ratesBadgeFor('')).toBeNull()
+    expect(ratesBadgeFor('  ')).toBeNull()
+    expect(ratesBadgeFor(undefined)).toBeNull()
   })
 })

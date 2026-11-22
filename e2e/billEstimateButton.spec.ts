@@ -104,7 +104,7 @@ for (const width of WIDTHS) {
     await expect(accept).toHaveCount(0)
   })
 
-  test(`a year with the City's own final rates shows no Estimate tag at ${width}px (#1417)`, async ({
+  test(`a year with the City's own final rates drops the rates panel's Estimate tag only, at ${width}px (#1417)`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 })
@@ -112,14 +112,16 @@ for (const width of WIDTHS) {
     const tags = page.getByRole('button', { name: /what this means$/ })
     await expect(tags).toHaveCount(3)
     await page.getByRole('button', { name: '2026', exact: true }).click()
-    await expect(tags).toHaveCount(0)
-    // The answer card keeps the tag's room unseen, so the card is as tall as in 2027
-    await expect(page.getByText('Proposed', { exact: true }).locator('visible=true')).toHaveCount(0)
+    // The City tax card and the whole bill only know the average home, so they keep theirs
+    await expect(tags).toHaveCount(2)
+    await expect(page.getByRole('region', { name: '2026 rates' }).getByRole('button')).toHaveCount(
+      0,
+    )
     await page.getByRole('button', { name: '2027', exact: true }).click()
     await expect(tags).toHaveCount(3)
   })
 
-  test(`the answer card and the whole bill are as tall in a year without a tag as in one with it, at ${width}px (#1417)`, async ({
+  test(`the answer card and the whole bill keep their height when the year changes, at ${width}px (#1417)`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 })

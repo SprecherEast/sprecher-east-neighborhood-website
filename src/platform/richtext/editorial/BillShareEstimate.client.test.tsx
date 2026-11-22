@@ -60,7 +60,7 @@ describe('BillShare, the Estimate button on each panel (#1417)', () => {
     stubView()
     page()
     const panel = rates('2027 city rate')
-    await press(panel, 'Proposed, what this means')
+    await press(panel, 'Estimate, what this means')
     expect(
       within(panel).getByText(
         'These are the City’s 2027 rates. The others aren’t out yet, so we’re using 2026’s.',
@@ -77,16 +77,16 @@ describe('BillShare, the Estimate button on each panel (#1417)', () => {
     })
     await choose('2026')
     const panel = rates('2026 rates')
-    await press(panel, 'Proposed, what this means')
+    await press(panel, 'Estimate, what this means')
     expect(within(panel).getByText(/These are the 2026 rates we used/)).toBeTruthy()
   })
 
   it('opens the answer card’s and the whole bill’s warnings inside their own cards, one at a time', async () => {
     stubView()
     page()
-    await press(answer(), 'Proposed, what this means')
+    await press(answer(), 'Estimate, what this means')
     expect(within(answer()).getByText(/This is the City’s share of your bill/)).toBeTruthy()
-    await press(bill(), 'Proposed, what this means')
+    await press(bill(), 'Estimate, what this means')
     expect(within(bill()).getByText(/It’s an estimate/)).toBeTruthy()
     // Only one is open: the answer card's gave way
     expect(within(answer()).queryByRole('button', { name: 'Got it' })).toBeNull()
@@ -97,7 +97,7 @@ describe('BillShare, the Estimate button on each panel (#1417)', () => {
     page()
     const panel = rates('2027 city rate')
     for (let times = 0; times < 4; times += 1) {
-      await press(panel, 'Proposed, what this means')
+      await press(panel, 'Estimate, what this means')
       expect(within(panel).getByRole('button', { name: 'Got it' })).toBeTruthy()
       await accept(panel)
     }
@@ -106,7 +106,7 @@ describe('BillShare, the Estimate button on each panel (#1417)', () => {
   it('goes away when the year changes, since it was about the year it was opened in', async () => {
     stubView()
     page()
-    await press(answer(), 'Proposed, what this means')
+    await press(answer(), 'Estimate, what this means')
     await choose('2026')
     expect(screen.queryByRole('button', { name: 'Got it' })).toBeNull()
   })
@@ -115,17 +115,27 @@ describe('BillShare, the Estimate button on each panel (#1417)', () => {
     stubView()
     page({ toasts: { ...toastsOf(undefined), aboutAnswer: null } })
     expect(within(answer()).queryByRole('button')).toBeNull()
-    expect(within(answer()).getByText('Proposed')).toBeTruthy()
+    expect(within(answer()).getByText('Estimate')).toBeTruthy()
     expect(within(bill()).getByRole('button', { name: /what this means$/ })).toBeTruthy()
   })
 
   it('gives focus back to the button that opened a warning when the reader accepts it', async () => {
     stubView()
     page()
-    const button = within(answer()).getByRole('button', { name: 'Proposed, what this means' })
+    const button = within(answer()).getByRole('button', { name: 'Estimate, what this means' })
     button.focus()
     await act(async () => fireEvent.click(button))
     await accept(answer())
     expect(document.activeElement).toBe(button)
+  })
+
+  it('shows the tag on the City tax card and the whole bill in every year, and on the rates panel only for a year with a note', async () => {
+    stubView()
+    page()
+    await choose('2026')
+    for (const card of [answer(), bill()])
+      expect(within(card).getByRole('button', { name: 'Estimate, what this means' })).toBeTruthy()
+    expect(within(rates('2026 rates')).queryByRole('button')).toBeNull()
+    expect(within(rates('2026 rates')).queryByText('Estimate')).toBeNull()
   })
 })

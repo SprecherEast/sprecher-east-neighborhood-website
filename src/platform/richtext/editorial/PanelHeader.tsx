@@ -18,15 +18,6 @@ export function StatusBadgeButton({
   )
 }
 
-/** An unseen copy of a badge, keeping its room while the year has none, so the panel keeps its height (#1417) */
-export function BadgeRoom({ badge }: { badge: StatusBadge }) {
-  return (
-    <span aria-hidden className={`${PANEL_TITLE_ASIDE} invisible`}>
-      <StatusBadgeButton badge={badge} />
-    </span>
-  )
-}
-
 /**
  * The top line of a whole-bill panel (#1417): its title on the left and, when it has one, the status
  * badge at the end of the same line, level with the title's first line; a title too long to share
@@ -35,13 +26,10 @@ export function BadgeRoom({ badge }: { badge: StatusBadge }) {
  */
 export function PanelHeader({
   badge,
-  room,
   onBadgePress,
   children,
 }: {
   badge?: StatusBadge | null
-  /** A badge the panel will have in another year: while there is none, its room is kept so the panel keeps its height */
-  room?: StatusBadge | null
   onBadgePress?: () => void
   /** The title */
   children: ReactNode
@@ -54,7 +42,6 @@ export function PanelHeader({
           <StatusBadgeButton badge={badge} onPress={onBadgePress} />
         </span>
       )}
-      {!badge && room && <BadgeRoom badge={room} />}
     </div>
   )
 }
