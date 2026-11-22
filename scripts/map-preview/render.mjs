@@ -12,7 +12,7 @@ import {
 export const COLORS = {
   land: '#eef0ec',
   neighbor: '#dfe4df',
-  park: '#cfe2c5',
+  park: '#a9d6a0',
   boundaryFill: '#6cc3ad',
   boundaryLine: '#1d5a49',
   roadCasing: '#c4cac4',
@@ -29,7 +29,7 @@ export const COLORS = {
 
 const FONT = "Poppins, 'Helvetica Neue', Arial, sans-serif"
 /** Poppins SemiBold runs wide; this is a safe upper bound of its average glyph width, in em */
-const GLYPH_EM = 0.68
+const GLYPH_EM = 0.58
 
 /** Road classes from the City file: 1 interstate, 3 arterial, 4 collector, 5 local, 6 ramp */
 const ROAD_STYLE = {
@@ -80,33 +80,39 @@ export function buildLabels(data) {
     ['I 94 (EB)', 'I 94 (WB)', 'I 39-90 (WB)', 'I 39-90 (EB)'],
     -89.2535,
   )
-  const [parkX, parkY] = project([-89.2503, 43.0985])
-  const [notchX, notchY] = project([-89.2535, 43.09])
+  const [parkX, parkY] = project([-89.251, 43.0995])
   const [starX, starY] = project([-89.2763, 43.0935])
   const [hillX, hillY] = project([-89.2742, 43.0815])
-  const [siteX, siteY] = project([-89.2597, 43.0945])
+  const [siteX, siteY] = project([-89.2582, 43.0958])
 
   const defs = [
-    { id: 'site', kind: 'site', lines: [SPRECHER_EAST], size: 46, x: siteX, y: siteY },
-    { id: 'i94', kind: 'road', lines: ['I-94'], size: 30, ...interstate, angle: 0 },
-    { id: 'sprecher', kind: 'road', lines: ['Sprecher Rd'], size: 30, ...sprecher, angle: -90 },
-    { id: 'cottage', kind: 'road', lines: ['Cottage Grove Rd'], size: 30, ...cottage, angle: 0 },
-    { id: 'park', kind: 'area', lines: ['Door Creek', 'Park'], size: 28, x: parkX, y: parkY },
+    { id: 'site', kind: 'site', lines: [SPRECHER_EAST], size: 50, x: siteX, y: siteY },
+    { id: 'i94', kind: 'road', lines: ['I-94'], size: 48, ...interstate, angle: 0 },
     {
-      id: 'parkSouth',
-      kind: 'area',
-      lines: ['Door Creek Park'],
-      size: 22,
-      x: notchX,
-      y: notchY,
+      id: 'sprecher',
+      kind: 'road',
+      lines: ['Sprecher Rd'],
+      size: 48,
+      ...sprecher,
+      y: 270,
       angle: -90,
     },
-    { id: 'northStar', kind: 'area', lines: ['North Star'], size: 36, x: starX, y: starY },
+    {
+      id: 'cottage',
+      kind: 'road',
+      lines: ['Cottage Grove Rd'],
+      size: 48,
+      ...cottage,
+      x: 275,
+      angle: 0,
+    },
+    { id: 'park', kind: 'area', lines: ['Door', 'Creek', 'Park'], size: 46, x: parkX, y: parkY },
+    { id: 'northStar', kind: 'area', lines: ['North Star'], size: 48, x: starX, y: starY },
     {
       id: 'richmond',
       kind: 'area',
       lines: ['Richmond Hill', 'Homeowners'],
-      size: 32,
+      size: 46,
       x: hillX,
       y: hillY,
     },
@@ -199,7 +205,10 @@ export function buildSvg(data) {
       (n) => `<path d="${polygonPath(n.geometry)}" fill="${COLORS.neighbor}" fill-rule="evenodd"/>`,
     )
     .join('')
-  const parks = data.parks
+  // Only the park the page talks about is drawn, over the boundary's tint, so its two parts (inside
+  // and the strip the boundary leaves out) read as one green shape under one name
+  const park = data.parks
+    .filter((p) => p.name === 'Door Creek Park')
     .map((p) => `<path d="${polygonPath(p.geometry)}" fill="${COLORS.park}" fill-rule="evenodd"/>`)
     .join('')
   const boundary = pathOf(data.boundary, { close: true })
@@ -207,10 +216,11 @@ export function buildSvg(data) {
     `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">` +
     `<rect width="${WIDTH}" height="${HEIGHT}" fill="${COLORS.land}"/>` +
     neighbors +
-    parks +
     roadLines(data.roads, 'casing') +
     roadLines(data.roads, 'fill') +
-    `<path d="${boundary}" fill="${COLORS.boundaryFill}" fill-opacity="0.45" stroke="${COLORS.boundaryLine}" stroke-width="7" stroke-linejoin="round"/>` +
+    `<path d="${boundary}" fill="${COLORS.boundaryFill}" fill-opacity="0.45"/>` +
+    park +
+    `<path d="${boundary}" fill="none" stroke="${COLORS.boundaryLine}" stroke-width="7" stroke-linejoin="round"/>` +
     buildLabels(data).map(labelSvg).join('') +
     scaleBar() +
     `</svg>`

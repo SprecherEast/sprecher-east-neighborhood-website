@@ -26,6 +26,8 @@
         "ops/*.mjs",
         // Run by hand or by CI
         "scripts/*.{ts,mjs}",
+        // The About page map picture generator (#1419): run by hand
+        "scripts/map-preview/build.mjs",
         // Loaded by the PR Policy workflow (#716); their tests are found by Vitest
         ".github/scripts/*.mjs",
         // The knowledge eval (#715): run by hand, never in CI; its tests are found by Vitest

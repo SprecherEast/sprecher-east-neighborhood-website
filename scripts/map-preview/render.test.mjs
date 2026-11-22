@@ -51,9 +51,9 @@ describe('About page map picture (#1419)', () => {
     )
   })
 
-  it('keeps every label legible at the size the page shows (about 640 px wide)', () => {
-    const scale = 640 / WIDTH
-    for (const label of labels) expect(label.size * scale, label.id).toBeGreaterThanOrEqual(8.5)
+  it('keeps every label legible at the narrowest width the page shows the picture (288 px, a phone at 320)', () => {
+    const scale = 288 / WIDTH
+    for (const label of labels) expect(label.size * scale, label.id).toBeGreaterThanOrEqual(8)
   })
 
   it('draws the live My Maps boundary, a closed 15-sided shape', () => {
