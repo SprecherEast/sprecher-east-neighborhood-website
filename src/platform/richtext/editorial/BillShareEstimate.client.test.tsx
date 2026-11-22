@@ -85,9 +85,13 @@ describe('BillShare, the Estimate button on each panel (#1417)', () => {
     stubView()
     page()
     await press(answer(), 'Estimate, what this means')
-    expect(within(answer()).getByText(/This is the City’s share of your bill/)).toBeTruthy()
+    expect(
+      within(answer()).getByText(/The City’s part of the average Madison home’s bill/),
+    ).toBeTruthy()
     await press(bill(), 'Estimate, what this means')
-    expect(within(bill()).getByText(/It’s an estimate/)).toBeTruthy()
+    expect(
+      within(bill()).getByText(/state credits, exemptions, and special assessments/),
+    ).toBeTruthy()
     // Only one is open: the answer card's gave way
     expect(within(answer()).queryByRole('button', { name: 'Got it' })).toBeNull()
   })

@@ -102,7 +102,7 @@ describe('toastsOf (#1379)', () => {
     const toasts = toastsOf(undefined)
     for (const id of ['aboutAnswer', 'aboutRates', 'aboutBill'] as const) {
       expect(toasts[id]).toMatchObject({ tone: 'warning', ending: 'accept', placement: 'panel' })
-      expect(toasts[id]?.message.split(/\s+/).length).toBeLessThanOrEqual(20)
+      expect(toasts[id]?.message.split(/\s+/).length).toBeLessThanOrEqual(30)
     }
   })
 

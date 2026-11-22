@@ -56,7 +56,7 @@ export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
     tone: 'warning',
     title: '',
     message:
-      'This is the City’s share of your bill, from its {year} rate. It’s an estimate, not a bill.',
+      'The City’s part of the average Madison home’s bill, or your value, at the {year} rate. Your real bill follows your home’s assessed value and any exemptions.',
     ending: 'accept',
     placement: 'panel',
     fadeSeconds: 5,
@@ -74,7 +74,8 @@ export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
   aboutBill: {
     tone: 'warning',
     title: '',
-    message: 'This adds up every body’s share. It’s an estimate, so your real bill may differ.',
+    message:
+      'Each body’s share for the average home, or your value. Your real bill reflects state credits, exemptions, and special assessments such as street or sewer work.',
     ending: 'accept',
     placement: 'panel',
     fadeSeconds: 5,
