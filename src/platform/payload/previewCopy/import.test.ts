@@ -137,6 +137,28 @@ describe('the import', () => {
     expect(post.relatedPosts).toEqual([main?.id])
   })
 
+  it('writes each copied picture with relative addresses, whatever address the file has (#1420)', async () => {
+    const absolute = JSON.parse(text()) as PreviewCopyFile
+    const record = absolute.collections.media?.[0]
+    if (!record) throw new Error('the seed has no media')
+    const origin = 'http://localhost:3000'
+    record.url = `${origin}/api/media/file/${record.filename}`
+    record.thumbnailURL = `${origin}/api/media/file/${record.filename}?t=1`
+    record.sizes = { thumbnail: { url: `${origin}/api/media/file/small.jpg`, width: 3, height: 2 } }
+    const target = await freshPayload(config, 'preview-copy-target-5')
+    await importPreviewCopy(target, parsePreviewCopyFile(JSON.stringify(absolute)))
+    // The stored row: a read computes `url` from the site address, so it would hide what was written
+    const row = (await target.db.findOne({
+      collection: 'media',
+      where: { id: { equals: record.id } },
+    })) as unknown as Record<string, unknown> & { sizes: { thumbnail: { url: string } } }
+    expect(row.url).toBe(`/api/media/file/${record.filename}`)
+    expect(row.thumbnailURL).toBe(`/api/media/file/${record.filename}?t=1`)
+    expect(row.sizes.thumbnail.url).toBe('/api/media/file/small.jpg')
+    const stored = await target.db.find({ collection: 'media', limit: 50 })
+    expect(JSON.stringify(stored.docs)).not.toContain('localhost')
+  })
+
   it('counts a field this build no longer has instead of failing', async () => {
     const stale = JSON.parse(text()) as PreviewCopyFile
     stale.collections.faq = [{ id: 40, question: 'Q?', answer: paragraph('A'), removedField: 'x' }]

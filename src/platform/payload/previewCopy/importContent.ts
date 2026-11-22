@@ -3,6 +3,7 @@ import type { CollectionSlug, GlobalSlug, Payload } from 'payload'
 import { SYSTEM_FIELDS, UPLOAD_FIELDS } from './classification'
 import type { PreviewCopyFile } from './file'
 import { namedFields, type Reference } from './references'
+import { relativeMediaUrls } from './relativeMediaUrls'
 import { allowedFields, cutToFields, schemaOf, walkDocument } from './schema'
 
 /**
@@ -11,8 +12,9 @@ import { allowedFields, cutToFields, schemaOf, walkDocument } from './schema'
  * through the database adapter's `create`, which runs no hook: no email, no cache refresh, no
  * search entry. Ids are kept so relationships still point at the same documents.
  *
- * A field the pull request's schema no longer has, or its classification does not keep, is left
- * out and counted. The counts are numbers only, safe for a public comment.
+ * A picture record's addresses are made relative (`relativeMediaUrls`), since the export wrote
+ * them for localhost. A field the pull request's schema no longer has, or its classification does
+ * not keep, is left out and counted. The counts are numbers only, safe for a public comment.
  */
 
 export type ImportCounts = {
@@ -61,7 +63,9 @@ export async function importPreviewCopy(
     const allowed = supported(slug)
     counts.created[slug] = 0
     for (const raw of docs) {
-      const doc = trim(raw, allowed)
+      const trimmed = trim(raw, allowed)
+      // A picture's addresses must work on the preview's own address, not the export's (#1420)
+      const doc = slug === 'media' ? relativeMediaUrls(trimmed) : trimmed
       let waits = false
       const first = walk(slug, doc, (reference) => {
         const exists = created.has(key(reference)) || key(reference) === `${slug}:${doc.id}`
