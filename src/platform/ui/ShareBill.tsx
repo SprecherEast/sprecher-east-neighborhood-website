@@ -52,9 +52,10 @@ const RECEIPT_COLUMNS =
 /**
  * A nested row (an open-and-close row about one slice) sits under that slice's row, set in from the
  * left and marked by a line in the slice's own color, so it reads as part of the slice and not as
- * one more body (#1196).
+ * one more body (#1196). Under 24 rem it is set in less, so the row's title keeps its one line.
  */
-const NESTED_INDENT = 'ml-1 border-l-2 pr-1 pl-2 sm:ml-4 sm:pl-3'
+const NESTED_INDENT =
+  'ml-0.5 border-l-2 pr-0 pl-1.5 min-[24rem]:ml-1 min-[24rem]:pr-1 min-[24rem]:pl-2 sm:ml-4 sm:pl-3'
 
 /**
  * What a nested row sets on the right of its own amounts: about the width of the dollar column, so
