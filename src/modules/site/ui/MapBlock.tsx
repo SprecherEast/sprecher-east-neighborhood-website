@@ -11,7 +11,8 @@ import { TITLE_TEXT } from './blockStyles'
 /*
  * The map block (#764): the heading, the picture of the map, then the text under it. It fills the
  * width it is given, so where it sits and how wide it is come from the section that holds it
- * (#884), not from this component. A tap on the picture or the button under the text opens the
+ * (#884), not from this component. Inside, the picture sits beside the text when the block is wide
+ * and above it when narrow (`MapEmbed`, #1419); the text is body text like the other blocks'. A tap on the picture or the button under the text opens the
  * live Google map (`MapEmbed`); with no address the picture and text stand alone.
  */
 export function MapBlock({
@@ -33,7 +34,7 @@ export function MapBlock({
           actionLabel="View the larger map"
           preview={preview ? <Media resource={preview} imgClassName="h-auto w-full" /> : null}
         >
-          <Text variant="lead" className="max-w-prose text-base leading-relaxed md:text-lg">
+          <Text variant="lead" className="max-w-prose text-base leading-relaxed">
             {description}
           </Text>
         </MapEmbed>

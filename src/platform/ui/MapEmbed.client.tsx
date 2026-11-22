@@ -23,10 +23,21 @@ export type MapEmbedProps = {
   className?: string
 }
 
+/*
+ * The layout reads the width this component is given, not the screen's (a container query), so the
+ * same block is right in a narrow column and across a full row with no setting for an editor to
+ * choose. Narrow: the picture, then the text. From 48rem: the text left (5 of 8 columns, 62.5%) and
+ * the picture right (3 of 8, 37.5%), the text-and-picture ratio of the design guideline (#1419).
+ */
+const LAYOUT = 'grid gap-6 @3xl:grid-cols-8 @3xl:items-center @3xl:gap-x-12'
+const PICTURE = '@3xl:order-2 @3xl:col-span-3'
+const TEXT = 'space-y-4 @3xl:order-1 @3xl:col-span-5'
+
 /**
  * A map picture with its text under it, and a live Google map in a dialog when a neighbor taps
  * either button (#764, docs/ui/component-set.md). It fills the width it is given: the section it
- * sits in decides how wide and where it goes (#884). The frame is created only once the dialog is
+ * sits in decides how wide and where it goes (#884), and the picture sits beside the text when that
+ * width allows (#1419). The frame is created only once the dialog is
  * open, so the page asks Google for nothing until then. A missing or unsafe address leaves the
  * picture and the text, with no button.
  */
@@ -51,32 +62,34 @@ export function MapEmbed({
   }, [open])
 
   return (
-    <div className={cn('space-y-4', className)}>
-      <div>
-        {src ? (
-          <Button
-            variant="ghost"
-            aria-label={actionLabel}
-            onClick={openFrom}
-            className="block h-auto min-h-0 w-full overflow-hidden rounded-xl border border-border p-0 hover:opacity-90"
-          >
-            {preview}
-          </Button>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-border">{preview}</div>
-        )}
-      </div>
-      <div className="space-y-4">
-        {children}
-        {src && (
-          <Button
-            variant="secondary"
-            iconStart={<Maximize2 aria-hidden="true" />}
-            onClick={openFrom}
-          >
-            {actionLabel}
-          </Button>
-        )}
+    <div className={cn('@container', className)}>
+      <div className={LAYOUT}>
+        <div className={PICTURE}>
+          {src ? (
+            <Button
+              variant="ghost"
+              aria-label={actionLabel}
+              onClick={openFrom}
+              className="block h-auto min-h-0 w-full overflow-hidden rounded-xl border border-border p-0 hover:opacity-90"
+            >
+              {preview}
+            </Button>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-border">{preview}</div>
+          )}
+        </div>
+        <div className={TEXT}>
+          {children}
+          {src && (
+            <Button
+              variant="secondary"
+              iconStart={<Maximize2 aria-hidden="true" />}
+              onClick={openFrom}
+            >
+              {actionLabel}
+            </Button>
+          )}
+        </div>
       </div>
       {src && (
         <Dialog open={open} onOpenChange={setOpen} title={title}>

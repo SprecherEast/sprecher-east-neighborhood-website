@@ -1,0 +1,14 @@
+{
+  "$comment": "Where data/madison-map.json comes from. Checked 2026-11-21. City of Madison open data is public.",
+  "boundary": {
+    "name": "Sprecher East, Google My Maps",
+    "url": "https://www.google.com/maps/d/kml?mid=1mbTKP1-2eN6g5YPReAaQg6J1lV2DX7g&forcekml=1"
+  },
+  "layers": {
+    "neighborhoods": "https://maps.cityofmadison.com/arcgis/rest/services/Public/OPEN_DATA/MapServer/12",
+    "parks": "https://maps.cityofmadison.com/arcgis/rest/services/Public/OPEN_DATA/MapServer/24",
+    "roads": "https://maps.cityofmadison.com/arcgis/rest/services/Public/OPEN_DATA_ENGR/MapServer/1"
+  },
+  "query": "/query?where=1%3D1&outFields=*&geometry=-89.2900,43.0750,-89.2250,43.1120&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson",
+  "trimmed": "Coordinates rounded to 5 decimals; alleys left out; only the neighbors and parks that touch the area."
+}
