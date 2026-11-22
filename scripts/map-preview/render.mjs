@@ -40,9 +40,12 @@ const ROAD_STYLE = {
   5: { width: 5, casing: 8 },
 }
 
-const SPRECHER_EAST = 'Sprecher East'
+export const SPRECHER_EAST = 'Sprecher East'
+/** Every label is this size on the 1600 px picture: 12 px on a 288 px wide phone picture, the site's smallest type */
+const LABEL_SIZE = 68
+const SCALE_METERS = 500
 /** Neighbors drawn as shapes; each one has a label */
-const LABELED_NEIGHBORS = ['North Star', 'Richmond Hill Homeowners']
+export const LABELED_NEIGHBORS = ['North Star']
 
 function textWidth(lines, size) {
   return Math.max(...lines.map((line) => line.length)) * size * GLYPH_EM
@@ -80,53 +83,66 @@ export function buildLabels(data) {
     ['I 94 (EB)', 'I 94 (WB)', 'I 39-90 (WB)', 'I 39-90 (EB)'],
     -89.2535,
   )
-  const [parkX, parkY] = project([-89.251, 43.0995])
-  const [starX, starY] = project([-89.2763, 43.0935])
-  const [hillX, hillY] = project([-89.2742, 43.0815])
-  const [siteX, siteY] = project([-89.2582, 43.0958])
+  const [parkX, parkY] = project([-89.2508, 43.0994])
+  const [starX, starY] = project([-89.272, 43.0935])
+  const [siteX, siteY] = project([-89.2575, 43.0947])
+  const scaleLength = SCALE_METERS * pixelsPerMeter()
 
   const defs = [
-    { id: 'site', kind: 'site', lines: [SPRECHER_EAST], size: 50, x: siteX, y: siteY },
-    { id: 'i94', kind: 'road', lines: ['I-94'], size: 48, ...interstate, angle: 0 },
+    { id: 'site', kind: 'site', lines: [SPRECHER_EAST], size: LABEL_SIZE, x: siteX, y: siteY },
+    { id: 'i94', kind: 'road', lines: ['I-94'], size: LABEL_SIZE, ...interstate, angle: 0 },
     {
       id: 'sprecher',
       kind: 'road',
       lines: ['Sprecher Rd'],
-      size: 48,
+      size: LABEL_SIZE,
       ...sprecher,
-      y: 270,
+      y: 310,
       angle: -90,
     },
     {
       id: 'cottage',
       kind: 'road',
       lines: ['Cottage Grove Rd'],
-      size: 48,
+      size: LABEL_SIZE,
       ...cottage,
-      x: 275,
+      x: 700,
       angle: 0,
     },
-    { id: 'park', kind: 'area', lines: ['Door', 'Creek', 'Park'], size: 46, x: parkX, y: parkY },
-    { id: 'northStar', kind: 'area', lines: ['North Star'], size: 48, x: starX, y: starY },
     {
-      id: 'richmond',
+      id: 'park',
       kind: 'area',
-      lines: ['Richmond Hill', 'Homeowners'],
-      size: 46,
-      x: hillX,
-      y: hillY,
+      lines: ['Door', 'Creek', 'Park'],
+      size: LABEL_SIZE,
+      x: parkX,
+      y: parkY,
+    },
+    { id: 'northStar', kind: 'area', lines: ['North Star'], size: LABEL_SIZE, x: starX, y: starY },
+    {
+      id: 'scale',
+      kind: 'scale',
+      lines: [`${SCALE_METERS} m`],
+      size: LABEL_SIZE,
+      barLength: scaleLength,
     },
   ]
   return defs.map((label) => {
     const pad = label.kind === 'road' ? 14 : 6
-    const width = textWidth(label.lines, label.size) + pad * 2
+    const width =
+      textWidth(label.lines, label.size) +
+      pad * 2 +
+      (label.kind === 'scale' ? label.barLength + 44 : 0)
     const height = label.lines.length * label.size * 1.25 + pad * 2
+    // The scale label sits in the bottom-right corner, 40 px from the edges
+    const place =
+      label.kind === 'scale' ? { x: WIDTH - 40 - width / 2, y: HEIGHT - 40 - height / 2 } : {}
     return {
       ...label,
+      ...place,
       angle: label.angle ?? 0,
       width,
       height,
-      box: labelBox({ ...label, width, height }),
+      box: labelBox({ ...label, ...place, width, height }),
     }
   })
 }
@@ -146,6 +162,15 @@ function labelSvg(label) {
     : ''
   const text = (fill, extra = '') =>
     `<text font-family="${FONT}" font-weight="600" font-size="${size}" text-anchor="middle" dominant-baseline="central" fill="${fill}"${extra}>${tspans}</text>`
+  if (kind === 'scale') {
+    const { width: w, height: h, barLength } = label
+    const left = x - w / 2 + 14
+    const base = y + h / 2 - 22
+    const bar = `<path d="M${left.toFixed(1)} ${(base - 20).toFixed(1)}V${base.toFixed(1)}H${(left + barLength).toFixed(1)}V${(base - 20).toFixed(1)}" fill="none" stroke="${COLORS.labelText}" stroke-width="5"/>`
+    const box = `<rect x="${(x - w / 2).toFixed(1)}" y="${(y - h / 2).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="14" fill="${COLORS.pill}" fill-opacity="0.92"/>`
+    const caption = `<text x="${(left + barLength + 20).toFixed(1)}" y="${y.toFixed(1)}" font-family="${FONT}" font-weight="600" font-size="${size}" dominant-baseline="central" fill="${COLORS.labelText}">${lines[0]}</text>`
+    return `<g>${box}${bar}${caption}</g>`
+  }
   if (kind === 'site' || kind === 'road') {
     const { width: w, height: h } = label
     const shape =
@@ -161,20 +186,6 @@ function labelSvg(label) {
     ` stroke="${COLORS.pill}" stroke-width="7" stroke-linejoin="round"`,
   )
   return `<g${rotate}>${halo}${text(COLORS.labelMuted)}</g>`
-}
-
-function scaleBar() {
-  const meters = 500
-  const length = meters * pixelsPerMeter()
-  const x = WIDTH - 56 - length - 130
-  const y = HEIGHT - 56
-  return (
-    `<g font-family="${FONT}" font-weight="600" font-size="26" fill="${COLORS.labelText}">` +
-    `<rect x="${x - 16}" y="${y - 52}" width="${(length + 130).toFixed(0)}" height="84" rx="14" fill="${COLORS.pill}" fill-opacity="0.9"/>` +
-    `<path d="M${x} ${y - 12}V${y}H${(x + length).toFixed(1)}V${y - 12}" fill="none" stroke="${COLORS.labelText}" stroke-width="4"/>` +
-    `<text x="${(x + length + 16).toFixed(1)}" y="${y}" dominant-baseline="central">${meters} m</text>` +
-    `</g>`
-  )
 }
 
 function roadLines(roads, key) {
@@ -222,7 +233,6 @@ export function buildSvg(data) {
     park +
     `<path d="${boundary}" fill="none" stroke="${COLORS.boundaryLine}" stroke-width="7" stroke-linejoin="round"/>` +
     buildLabels(data).map(labelSvg).join('') +
-    scaleBar() +
     `</svg>`
   )
 }

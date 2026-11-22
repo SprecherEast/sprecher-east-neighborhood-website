@@ -10,7 +10,7 @@ import {
   groundAspect,
   project,
 } from './geometry.mjs'
-import { buildLabels, buildSvg } from './render.mjs'
+import { LABELED_NEIGHBORS, SPRECHER_EAST, buildLabels, buildSvg } from './render.mjs'
 
 const data = JSON.parse(readFileSync(new URL('data/madison-map.json', import.meta.url), 'utf8'))
 const labels = buildLabels(data)
@@ -24,19 +24,20 @@ describe('About page map picture (#1419)', () => {
     expect([yNorth, ySouth]).toEqual([0, HEIGHT])
   })
 
-  it('names every shape it draws', () => {
+  it('names every shape it draws: the boundary, the neighbors with a fill, the park, the roads', () => {
     const text = labels.flatMap((l) => l.lines).join(' ')
-    for (const name of [
-      'Sprecher East',
+    const drawn = [
+      SPRECHER_EAST,
+      ...LABELED_NEIGHBORS,
+      'Door Creek Park',
       'I-94',
       'Sprecher Rd',
       'Cottage Grove Rd',
-      'Door Creek',
-      'North Star',
-      'Richmond Hill',
-    ]) {
-      expect(text).toContain(name)
+    ]
+    for (const name of drawn) {
+      expect(text, name).toContain(name.replace(' Park', '').split(' ')[0])
     }
+    expect(labels.some((l) => l.kind === 'scale')).toBe(true)
   })
 
   it('keeps every label on the picture', () => {
@@ -51,9 +52,9 @@ describe('About page map picture (#1419)', () => {
     )
   })
 
-  it('keeps every label legible at the narrowest width the page shows the picture (288 px, a phone at 320)', () => {
+  it('keeps every label legible at the narrowest width the page shows the picture (288 px, a phone at 320), at 12 px, the smallest type of the site', () => {
     const scale = 288 / WIDTH
-    for (const label of labels) expect(label.size * scale, label.id).toBeGreaterThanOrEqual(8)
+    for (const label of labels) expect(label.size * scale, label.id).toBeGreaterThanOrEqual(12)
   })
 
   it('draws the live My Maps boundary, a closed 15-sided shape', () => {

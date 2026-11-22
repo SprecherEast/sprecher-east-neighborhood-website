@@ -4,8 +4,8 @@
 export const WIDTH = 1600
 export const HEIGHT = 1200
 
-/** The ground shown: west, south, east, north in degrees. Roughly 4.4 km by 3.3 km, centred on the boundary. */
-export const EXTENT = { west: -89.2846, south: 43.0785, east: -89.23, north: 43.1085 }
+/** The ground shown: west, south, east, north in degrees. Roughly 3.4 km by 2.6 km, centred on the boundary, close enough that labels stay readable on a phone. */
+export const EXTENT = { west: -89.2783, south: 43.083, east: -89.2364, north: 43.106 }
 
 const METERS_PER_DEGREE_LAT = 111_200
 
