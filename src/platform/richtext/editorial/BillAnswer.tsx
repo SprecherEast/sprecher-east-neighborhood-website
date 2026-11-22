@@ -1,12 +1,12 @@
 import React, { type ReactNode } from 'react'
 
 import type { Certainty } from '@/platform/lib/certainty'
-import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { Card } from '@/platform/ui/Card'
 import { Text } from '@/platform/ui/Text'
 
 import { increaseLine } from './billFigures'
 import { statusBadgeFor } from './billShareView'
+import { PanelHeader } from './PanelHeader'
 
 /**
  * The answer a neighbor came for (#1111, #1118), right under the Rough Estimator. Its top row has
@@ -62,21 +62,11 @@ export function BillAnswer({
   return (
     <Card as="section" variant="elevated" padding="xs" aria-label="Your City tax">
       <div className="space-y-1">
-        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <PanelHeader badge={badge} onBadgePress={onBadgePress}>
           <Text variant="subsection" as="p">
             {yours ? 'City tax on your home' : 'City tax on an average home'}
           </Text>
-          {badge && (
-            <span className="ml-auto shrink-0">
-              <CertaintyBadge
-                certainty={badge.certainty}
-                label={badge.label}
-                size="xs"
-                onPress={onBadgePress}
-              />
-            </span>
-          )}
-        </div>
+        </PanelHeader>
         <div className="flex items-baseline gap-1.5">
           <Text variant="figure" as="span">
             {tax}

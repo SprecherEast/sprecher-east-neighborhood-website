@@ -2,13 +2,13 @@ import React, { type ReactNode, useId } from 'react'
 
 import { cn } from '@/platform/lib/cn'
 import { Card } from '@/platform/ui/Card'
-import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { SliceName } from '@/platform/ui/ShareBill'
 import { Text } from '@/platform/ui/Text'
 import { useOnFirstView } from '@/platform/ui/useOnFirstView.client'
 
 import type { RateLine } from './billRates'
 import type { StatusBadge } from './billShareView'
+import { PanelHeader } from './PanelHeader'
 
 /**
  * The rates the bill is worked out from (#1351), beside the answer card: one line per body with its
@@ -47,7 +47,7 @@ export function RatesPanel({
   return (
     <Card as="section" variant="elevated" padding="xs" aria-labelledby={titleId}>
       <div ref={watched} className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <PanelHeader badge={badge} onBadgePress={onBadgePress}>
           <Text
             variant="small"
             as="h3"
@@ -56,17 +56,7 @@ export function RatesPanel({
           >
             {title}
           </Text>
-          {badge && (
-            <span className="ml-auto shrink-0">
-              <CertaintyBadge
-                certainty={badge.certainty}
-                label={badge.label}
-                size="xs"
-                onPress={onBadgePress}
-              />
-            </span>
-          )}
-        </div>
+        </PanelHeader>
         <ul className="space-y-1">
           {lines.map((line) => (
             <li

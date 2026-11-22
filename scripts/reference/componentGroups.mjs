@@ -178,20 +178,24 @@ export const COMPONENT_GROUPS = [
     title: 'Key facts and fact tabs',
     intro:
       'Key facts as cards, and the fact tabs that open charts, timelines and the whole tax bill (`src/platform/richtext/editorial/`).',
+    components: ['KeyFacts', 'FactCard', 'FactTabs', 'SectionTabs', 'FilledText'],
+  },
+  {
+    slug: 'whole-bill',
+    title: 'The whole tax bill',
+    intro:
+      'The parts of the whole-bill block a fact tab opens with: the estimator, the answer card, the rates panel and the rows under the bill (`src/platform/richtext/editorial/`).',
     components: [
-      'KeyFacts',
-      'FactCard',
-      'FactTabs',
-      'SectionTabs',
       'BillShare',
       'BillAnswer',
       'RatesPanel',
+      'PanelHeader',
+      'StatusBadgeButton',
       'BillDetails',
       'BreakdownRow',
       'NoteText',
       'RoughEstimator',
       'BillFiguresProvider',
-      'FilledText',
     ],
   },
 ]

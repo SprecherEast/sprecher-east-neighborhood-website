@@ -8,7 +8,6 @@ import type { Certainty } from '@/platform/lib/certainty'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { Card } from '@/platform/ui/Card'
-import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { ShareBill } from '@/platform/ui/ShareBill'
 import { Text } from '@/platform/ui/Text'
 import { COUNT_MS, YEAR_COUNT_MS } from '@/platform/ui/useCountedNumber.client'
@@ -23,6 +22,7 @@ import { BreakdownRow } from './BreakdownRow'
 import { notesFor, uniqueSources } from './billShareNotes'
 import { receiptFor, statusBadgeFor } from './billShareView'
 import { NoteText } from './NoteText'
+import { StatusBadgeButton } from './PanelHeader'
 import {
   cityTaxFor,
   figuresFor,
@@ -257,16 +257,7 @@ export function BillShare({
             total={receipt.total ?? undefined}
             pulseKey={pulse}
             nested={where ? { after: 'city', children: where } : undefined}
-            titleAside={
-              badge && (
-                <CertaintyBadge
-                  certainty={badge.certainty}
-                  label={badge.label}
-                  size="xs"
-                  onPress={press('bill')}
-                />
-              )
-            }
+            titleAside={badge && <StatusBadgeButton badge={badge} onPress={press('bill')} />}
           />
         ) : (
           <>
