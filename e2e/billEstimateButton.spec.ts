@@ -118,4 +118,22 @@ for (const width of WIDTHS) {
     await page.getByRole('button', { name: '2027', exact: true }).click()
     await expect(tags).toHaveCount(3)
   })
+
+  test(`the answer card and the whole bill are as tall in a year without a tag as in one with it, at ${width}px (#1417)`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto(POST)
+    const cards = [
+      page.getByRole('region', { name: 'Your City tax' }),
+      page.getByRole('region', { name: 'Your whole property tax bill' }),
+    ]
+    const heights = async () => Promise.all(cards.map(async (card) => (await boxOf(card)).height))
+    const [laterAnswer, laterBill] = await heights()
+    await page.getByRole('button', { name: '2026', exact: true }).click()
+    await page.waitForTimeout(800)
+    const [earlierAnswer, earlierBill] = await heights()
+    expect(earlierAnswer, 'the answer card keeps its height').toBeCloseTo(laterAnswer ?? 0, 0)
+    expect(earlierBill, 'the whole bill keeps its height').toBeCloseTo(laterBill ?? 0, 0)
+  })
 }

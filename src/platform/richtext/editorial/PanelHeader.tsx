@@ -18,10 +18,19 @@ export function StatusBadgeButton({
   )
 }
 
+/** An unseen copy of a badge, keeping its room while the year has none, so the panel keeps its height (#1417) */
+export function BadgeRoom({ badge }: { badge: StatusBadge }) {
+  return (
+    <span aria-hidden className={`${PANEL_TITLE_ASIDE} invisible`}>
+      <StatusBadgeButton badge={badge} />
+    </span>
+  )
+}
+
 /**
  * The top line of a whole-bill panel (#1417): its title on the left and, when it has one, the status
- * badge at the end of the same line, level with the title's first line, so a long title wraps in
- * its own column instead of pushing the badge under it. The answer card, the rates panel and the
+ * badge at the end of the same line, level with the title's first line; a title too long to share
+ * the line puts the badge under it, at its start. The answer card, the rates panel and the
  * whole bill share the line (`PANEL_TITLE_ROW`), so they can never differ.
  */
 export function PanelHeader({
@@ -45,11 +54,7 @@ export function PanelHeader({
           <StatusBadgeButton badge={badge} onPress={onBadgePress} />
         </span>
       )}
-      {!badge && room && (
-        <span aria-hidden className={`${PANEL_TITLE_ASIDE} invisible`}>
-          <StatusBadgeButton badge={room} />
-        </span>
-      )}
+      {!badge && room && <BadgeRoom badge={room} />}
     </div>
   )
 }

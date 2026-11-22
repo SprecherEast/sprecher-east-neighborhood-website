@@ -75,6 +75,13 @@ describe('BillAnswer', () => {
     expect(container.querySelector('[data-answer-increase]')?.textContent).toBe('')
   })
 
+  it('keeps the next year’s badge room unseen while this year has no note (#1417)', () => {
+    const { container } = render(<BillAnswer {...base} baseYear laterNote="proposed" />)
+    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.getByText('Proposed').closest('[aria-hidden="true"]')).not.toBeNull()
+    expect(container.querySelectorAll('[aria-hidden="true"].invisible').length).toBeGreaterThan(0)
+  })
+
   it('shows no badge when the year has no note: its rates are final (#1417)', () => {
     render(<BillAnswer {...base} />)
     expect(screen.queryByText('Estimate')).toBeNull()

@@ -35,6 +35,25 @@ describe('PanelHeader (#1417)', () => {
     expect(screen.getByText('Estimate')).toBeTruthy()
     expect(screen.queryByRole('button')).toBeNull()
   })
+
+  it('keeps a hidden, unfocusable copy of a later year’s badge while it has none of its own', () => {
+    const room = { certainty: 'estimate' as const, label: 'Proposed' }
+    const { rerender, container } = render(
+      <PanelHeader room={room}>
+        <h3>Title</h3>
+      </PanelHeader>,
+    )
+    const hidden = screen.getByText('Proposed').closest('[aria-hidden="true"]')
+    expect(hidden?.className).toContain('invisible')
+    expect(container.querySelector('button')).toBeNull()
+    rerender(
+      <PanelHeader room={room} badge={{ certainty: 'estimate', label: 'Proposed' }}>
+        <h3>Title</h3>
+      </PanelHeader>,
+    )
+    expect(screen.getAllByText('Proposed')).toHaveLength(1)
+    expect(container.querySelector('[aria-hidden="true"].invisible')).toBeNull()
+  })
 })
 
 describe('StatusBadgeButton', () => {

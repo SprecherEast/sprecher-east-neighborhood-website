@@ -21,7 +21,7 @@ import { BreakdownRow } from './BreakdownRow'
 import { notesFor, uniqueSources } from './billShareNotes'
 import { receiptFor, statusBadgeFor } from './billShareView'
 import { NoteText } from './NoteText'
-import { StatusBadgeButton } from './PanelHeader'
+import { BadgeRoom, StatusBadgeButton } from './PanelHeader'
 import {
   cityTaxFor,
   figuresFor,
@@ -153,6 +153,8 @@ export function BillShare({
 
   // The Estimate button on a panel: a button where there is something to say, else the plain label
   const badge = statusBadgeFor(year.note)
+  // The badge another year has: a year without one keeps its room unseen on the whole bill, so its card keeps its height
+  const roomBadge = statusBadgeFor(years.find((other) => other.note)?.note)
   const press = (place: BillToastPlace) =>
     toastsOn.canTell(place) ? () => toastsOn.tell(place) : undefined
   const toastOver = (place: BillToastPlace) => (
@@ -243,7 +245,13 @@ export function BillShare({
             total={receipt.total ?? undefined}
             pulseKey={pulse}
             nested={where ? { after: 'city', children: where } : undefined}
-            titleAside={badge && <StatusBadgeButton badge={badge} onPress={press('bill')} />}
+            titleAside={
+              badge ? (
+                <StatusBadgeButton badge={badge} onPress={press('bill')} />
+              ) : (
+                roomBadge && <BadgeRoom badge={roomBadge} />
+              )
+            }
           />
         ) : (
           <>
