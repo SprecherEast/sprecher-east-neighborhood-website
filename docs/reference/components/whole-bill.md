@@ -74,7 +74,7 @@ Source: `src/platform/richtext/editorial/RatesPanel.tsx`
 
 ## `PanelHeader`
 
-The top line of a whole-bill panel (#1417): its title on the left and, when it has one, the status badge at the end of the same line, level with the title's first line, so a long title wraps in its own column instead of pushing the badge under it. The answer card, the rates panel and the whole bill share the line (`PANEL_TITLE_ROW`), so they can never differ.
+The top line of a whole-bill panel (#1417): its title on the left and, when it has one, the status badge at the end of the same line, level with the title's first line; a title too long to share the line puts the badge under it, at its start. The answer card, the rates panel and the whole bill share the line (`PANEL_TITLE_ROW`), so they can never differ.
 
 Source: `src/platform/richtext/editorial/PanelHeader.tsx`
 
@@ -99,6 +99,20 @@ Source: `src/platform/richtext/editorial/PanelHeader.tsx`
 | --------- | ------------- | -------- | ----------- |
 | `badge`   | `StatusBadge` | yes      |             |
 | `onPress` | `() => void`  | no       |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
+## `BadgeRoom`
+
+An unseen copy of a badge, keeping its room while the year has none, so the panel keeps its height (#1417)
+
+Source: `src/platform/richtext/editorial/PanelHeader.tsx`
+
+| Prop    | Type          | Required | Description |
+| ------- | ------------- | -------- | ----------- |
+| `badge` | `StatusBadge` | yes      |             |
 
 **Used by** (direct imports):
 

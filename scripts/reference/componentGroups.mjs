@@ -191,6 +191,7 @@ export const COMPONENT_GROUPS = [
       'RatesPanel',
       'PanelHeader',
       'StatusBadgeButton',
+      'BadgeRoom',
       'BillDetails',
       'BreakdownRow',
       'NoteText',
