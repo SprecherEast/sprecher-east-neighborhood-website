@@ -145,7 +145,7 @@ required check: a failed preview never blocks a merge or the production deploy.
   could read the environment's key; the server is the boundary. The key can run only the wrapper's six
   actions, and a failed isolation check takes the preview down (above). `.github/scripts/preview-workflow.test.mjs`
   fails when an honest change moves the key next to the build.
-- **Setting the key up.** The key pair is done (#1385); repeat this only for a new key. The public half is committed as `ops/preview-deploy-key.pub` and the private half is the `PREVIEW_SSH_KEY` secret. GitHub's environment and secret calls need a token that can write secrets, which an
+- **Setting the key up.** The key pair is done (#1385); repeat this only for a new key, such as when the private half is lost (#1415): the new public half replaces the old line on the next production deploy, and the `preview` environment and its secrets are made again. The public half is committed as `ops/preview-deploy-key.pub` and the private half is the `PREVIEW_SSH_KEY` secret. GitHub's environment and secret calls need a token that can write secrets, which an
   AI agent's cloud session may not have. On a trusted machine: `ssh-keygen -t ed25519 -N '' -C
 sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/preview-deploy-key.pub` through a
   pull request (the production deploy then writes the key's line, but only when the host guards and the isolation
