@@ -66,6 +66,21 @@ Source: `src/platform/ui/Toast.client.tsx`
 - Routes: `/dev/gallery`
 - Platform: `platform/richtext`, `platform/ui`
 
+## `BillToastSlot`
+
+The toast on show over a panel, drawn the way the editor set it, or nothing (#1380, #1417)
+
+Source: `src/platform/richtext/editorial/BillToastSlot.client.tsx`
+
+| Prop        | Type                 | Required | Description |
+| ----------- | -------------------- | -------- | ----------- |
+| `shown`     | `ShownToast \| null` | yes      |             |
+| `onDismiss` | `() => void`         | yes      |             |
+
+**Used by** (direct imports):
+
+- Platform: `platform/richtext`
+
 ## `Dialog`
 
 Source: `src/platform/ui/Dialog.client.tsx`

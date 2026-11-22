@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { BillShare } from './BillShare.client'
-import { city, PROPS } from './billShareFixtures'
+import { city, PROPS, stubView, RATES_PANEL } from './billShareFixtures'
 import { toastsOf } from './billToasts'
 
 afterEach(() => {
@@ -11,7 +11,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-const panel = () => screen.getByRole('region', { name: PROPS.rates.title })
+const panel = () => screen.getByRole('region', { name: RATES_PANEL })
 const choose = (label: string) =>
   act(async () => fireEvent.click(screen.getByRole('button', { name: label })))
 const accept = () =>
@@ -25,37 +25,6 @@ const calculate = async (value: string) => {
   })
 }
 
-/** A stand-in for the browser's view detection: tests decide when the panel comes into view */
-function stubView() {
-  const watching: ((entries: IntersectionObserverEntry[]) => void)[] = []
-  vi.stubGlobal(
-    'IntersectionObserver',
-    class {
-      private callback: IntersectionObserverCallback
-      private watch = (entries: IntersectionObserverEntry[]) =>
-        this.callback(entries, this as unknown as IntersectionObserver)
-      constructor(callback: IntersectionObserverCallback) {
-        this.callback = callback
-      }
-      observe() {
-        watching.push(this.watch)
-      }
-      disconnect() {
-        const at = watching.indexOf(this.watch)
-        if (at >= 0) watching.splice(at, 1)
-      }
-    },
-  )
-  return {
-    watching: () => watching.length,
-    enter: () =>
-      act(async () => {
-        for (const watch of [...watching])
-          watch([{ isIntersecting: true } as IntersectionObserverEntry])
-      }),
-  }
-}
-
 describe('BillShare, the rates panel toast (#1380, #1392, #1413)', () => {
   it('shows no toast and no hidden note taking room until the panel is in view (#1413)', () => {
     const view = stubView()
@@ -64,7 +33,7 @@ describe('BillShare, the rates panel toast (#1380, #1392, #1413)', () => {
         x
       </BillShare>,
     )
-    expect(within(panel()).queryByText(/The rest come in January/)).toBeNull()
+    expect(within(panel()).queryByText(/The others aren’t out yet/)).toBeNull()
     expect(within(panel()).queryByRole('button', { name: 'Got it' })).toBeNull()
     expect(view.watching()).toBe(1)
   })
@@ -77,7 +46,7 @@ describe('BillShare, the rates panel toast (#1380, #1392, #1413)', () => {
       </BillShare>,
     )
     await view.enter()
-    expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
+    expect(within(panel()).getByText(/These are the City’s 2027 rates/)).toBeTruthy()
     // The reader accepts it; it was one showing of the two
     await act(async () => fireEvent.click(within(panel()).getByRole('button', { name: 'Got it' })))
     expect(within(panel()).queryByRole('button', { name: 'Got it' })).toBeNull()
@@ -93,7 +62,7 @@ describe('BillShare, the rates panel toast (#1380, #1392, #1413)', () => {
     await view.enter()
     await accept()
     await calculate('750000')
-    expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
+    expect(within(panel()).getByText(/These are the City’s 2027 rates/)).toBeTruthy()
     await accept()
     // Two showings are spent: a further calculation or a switch back and forth stays quiet
     await calculate('800000')
@@ -126,14 +95,14 @@ describe('BillShare, the rates panel toast (#1380, #1392, #1413)', () => {
     )
     await choose('2026')
     await choose('2027')
-    expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
+    expect(within(panel()).getByText(/These are the City’s 2027 rates/)).toBeTruthy()
     await accept()
     await choose('2026')
     await choose('2027')
     expect(within(panel()).queryByRole('button', { name: 'Got it' })).toBeNull()
     // The panel coming into view later is the second and last showing
     await view.enter()
-    expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
+    expect(within(panel()).getByText(/These are the City’s 2027 rates/)).toBeTruthy()
     expect(view.watching()).toBe(0)
   })
 
@@ -144,7 +113,7 @@ describe('BillShare, the rates panel toast (#1380, #1392, #1413)', () => {
         x
       </BillShare>,
     )
-    expect(within(panel()).getByText(/Only the City’s 2027 rates are out/)).toBeTruthy()
+    expect(within(panel()).getByText(/These are the City’s 2027 rates/)).toBeTruthy()
   })
 
   it('shows the own-rates toast when the editor gives it a message', async () => {

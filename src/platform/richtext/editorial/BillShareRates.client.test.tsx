@@ -5,14 +5,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { YEAR_COUNT_MS } from '@/platform/ui/useCountedNumber.client'
 
 import { BillShare } from './BillShare.client'
-import { city, PROPS } from './billShareFixtures'
+import { city, PROPS, RATES_PANEL } from './billShareFixtures'
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
 
-const panel = () => screen.getByRole('region', { name: PROPS.rates.title })
+const panel = () => screen.getByRole('region', { name: RATES_PANEL })
 const lineOf = (name: string) => within(panel()).getByText(name).closest('li') as HTMLElement
 const choose = (label: string) =>
   act(async () => fireEvent.click(screen.getByRole('button', { name: label })))

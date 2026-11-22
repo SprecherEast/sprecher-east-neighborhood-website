@@ -201,4 +201,19 @@ describe('ShareBill', () => {
     expect(container.querySelector('p')).toBeNull()
     await expectAccessible(container)
   })
+
+  it('puts what it is given at the end of the title’s line, such as a button that says why it is an estimate', () => {
+    render(
+      <ShareBill
+        slices={SLICES}
+        label="Sample bill"
+        title="Sample whole bill"
+        titleAside={<button type="button">Why</button>}
+      />,
+    )
+    const button = screen.getByRole('button', { name: 'Why' })
+    const line = screen.getByText('Sample whole bill').parentElement
+    expect(button.closest('div')).toBe(line)
+    expect(line?.className).toContain('justify-between')
+  })
 })

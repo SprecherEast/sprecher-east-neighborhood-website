@@ -67,7 +67,13 @@ describe('toastsOf (#1379)', () => {
 
   it('ignores a row for a toast the code does not know', () => {
     const toasts = toastsOf([{ toast: 'mystery', message: 'Hi' }])
-    expect(Object.keys(toasts).sort()).toEqual(['ratesCarried', 'ratesOwn'])
+    expect(Object.keys(toasts).sort()).toEqual([
+      'aboutAnswer',
+      'aboutBill',
+      'aboutRates',
+      'ratesCarried',
+      'ratesOwn',
+    ])
   })
 
   it('puts a toast inside its panel unless the editor set it elsewhere, and falls back to the panel', () => {
@@ -102,5 +108,17 @@ describe('toastsOf (#1379)', () => {
     expect(shows(0)).toBe(1)
     expect(shows(99)).toBe(10)
     expect(shows(undefined)).toBe(2)
+  })
+
+  it('starts with a warning for each panel’s Estimate button, each short and each inside its own panel', () => {
+    const toasts = toastsOf(undefined)
+    for (const id of ['aboutAnswer', 'aboutRates', 'aboutBill'] as const) {
+      expect(toasts[id]).toMatchObject({ tone: 'warning', ending: 'accept', placement: 'panel' })
+      expect(toasts[id]?.message.split(/\s+/).length).toBeLessThanOrEqual(20)
+    }
+  })
+
+  it('says in the starting carried-rates warning which year’s rates stand in for the missing ones', () => {
+    expect(toastsOf(undefined).ratesCarried?.message).toContain('{carried}')
   })
 })

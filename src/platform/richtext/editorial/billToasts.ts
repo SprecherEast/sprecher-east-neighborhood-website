@@ -4,14 +4,37 @@ import type { AlertTone } from '@/platform/ui/Alert'
 import { DEFAULT_BILL_TOASTS } from './billShareDefaults'
 import { BILL_SHARE_LIMITS } from './editorialLimits'
 
-/** The toasts the whole-bill block can show: the code asks for one by its id (#1379) */
-export const BILL_TOAST_IDS = ['ratesCarried', 'ratesOwn'] as const
+/**
+ * The toasts the whole-bill block can show: the code asks for one by its id (#1379). The first two
+ * are the rates warnings the page shows by itself; the `about` ones open when the reader presses the
+ * Estimate button on a panel (#1417).
+ */
+export const BILL_TOAST_IDS = [
+  'ratesCarried',
+  'ratesOwn',
+  'aboutAnswer',
+  'aboutRates',
+  'aboutBill',
+] as const
 export type BillToastId = (typeof BILL_TOAST_IDS)[number]
 
 export const BILL_TOAST_LABELS: Record<BillToastId, string> = {
   ratesCarried: 'Rates from an earlier year are in use',
   ratesOwn: 'Every rate is the year’s own',
+  aboutAnswer: 'The reader presses Estimate on the City tax card',
+  aboutRates: 'The reader presses Estimate on the rates panel, every rate the year’s own',
+  aboutBill: 'The reader presses Estimate on the whole bill',
 }
+
+/** The panel a toast opens over, where each draws its own toast inside itself */
+export const BILL_TOAST_PLACES = {
+  ratesCarried: 'rates',
+  ratesOwn: 'rates',
+  aboutRates: 'rates',
+  aboutAnswer: 'answer',
+  aboutBill: 'bill',
+} as const satisfies Record<BillToastId, string>
+export type BillToastPlace = (typeof BILL_TOAST_PLACES)[BillToastId]
 
 export const BILL_TOAST_TONES = [
   'info',

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useId, useRef, useState, type ReactNode } from 'react'
+import React, { useId, useState, type ReactNode } from 'react'
 
 import { BILL_BODY_NAMES, computeBillShare, parseHomeValue } from '@/platform/lib/billShare'
 import type { ResolvedLink } from '@/platform/lib'
@@ -8,19 +8,20 @@ import type { Certainty } from '@/platform/lib/certainty'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { Card } from '@/platform/ui/Card'
+import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { ShareBill } from '@/platform/ui/ShareBill'
 import { Text } from '@/platform/ui/Text'
-import { Toast } from '@/platform/ui/Toast.client'
 import { COUNT_MS, YEAR_COUNT_MS } from '@/platform/ui/useCountedNumber.client'
 
 import type { BillShareProps } from './billShare'
 import { BillAnswer } from './BillAnswer'
-import { rateLinesFor, yearToastFor } from './billRates'
-import type { BillToastId } from './billToasts'
+import { rateLinesFor, ratesTitleFor } from './billRates'
+import { BillToastSlot } from './BillToastSlot.client'
+import type { BillToastPlace } from './billToasts'
 import { BillDetails } from './BillDetails'
 import { BreakdownRow } from './BreakdownRow'
 import { notesFor, uniqueSources } from './billShareNotes'
-import { receiptFor } from './billShareView'
+import { receiptFor, statusBadgeFor } from './billShareView'
 import { NoteText } from './NoteText'
 import {
   cityTaxFor,
@@ -35,6 +36,7 @@ import { ratesAtPosition } from './rateBlend'
 import { RatesPanel } from './RatesPanel'
 import { RoughEstimator } from './RoughEstimator'
 import { useBillCount } from './useBillCount.client'
+import { useBillToasts } from './useBillToasts.client'
 import { useBreakdownAutoOpen } from './useBreakdownAutoOpen.client'
 
 /** What the tab adds around the whole bill (#1020, #1111): the City's charts and the tab's own parts */
@@ -98,12 +100,10 @@ export function BillShare({
   children,
 }: BillShareProps & CityPanelProps & { children?: ReactNode }) {
   const [yearIndex, setYearIndex] = useState(Math.max(years.length - 1, 0))
-  // The year's toast (the warning that some rates are an earlier year's) shows when the rates panel
-  // first comes into view, on each estimate and on a switch to the year only if it has not shown yet;
-  // never more than the editor's limit in a visit. `key` is a new one per showing, so a toast the
-  // reader has not accepted yet is replaced (#1413)
-  const toastsShown = useRef<Partial<Record<BillToastId, number>>>({})
-  const [yearToast, setYearToast] = useState<{ key: number; open: boolean } | null>(null)
+  // The toast on show: the rates warning by itself (when the panel first comes into view, on each
+  // estimate, on a switch to the year only if it has not shown yet, never more than the editor's limit
+  // in a visit, #1413), and a panel's Estimate button's own (#1417)
+  const toastsOn = useBillToasts(years, yearIndex, toasts)
   const year = years[yearIndex]
   // The box holds the home's value in the latest year, the one a reader knows (#1121); an earlier
   // year prices the same home at its earlier value (`homeInYear`)
@@ -147,18 +147,7 @@ export function BillShare({
     breakdown.arm(homeValue !== value)
     countWith(COUNT_MS)
     setEstimated(homeValue)
-    showToast(yearIndex, false)
-  }
-  // Shows the toast for the year at `index` if there is one and the visit's limit is not spent;
-  // `onlyIfNew` holds it back once it has shown. Returns whether it showed
-  function showToast(index: number, onlyIfNew: boolean): boolean {
-    const next = yearToastFor(years, index, toasts)
-    if (!next) return false
-    const times = toastsShown.current[next.id] ?? 0
-    if (times >= next.toast.showsPerVisit || (onlyIfNew && times > 0)) return false
-    toastsShown.current[next.id] = times + 1
-    setYearToast((previous) => ({ key: (previous?.key ?? 0) + 1, open: true }))
-    return true
+    toastsOn.showForYear(yearIndex, false)
   }
   // Choosing a year moves the amounts to its rates in half a second
   const selectYear = (index: number) => {
@@ -166,11 +155,16 @@ export function BillShare({
     countWith(YEAR_COUNT_MS)
     setYearIndex(index)
     // A toast is for the year it was shown in, so one left from the other year goes
-    if (!showToast(index, true)) setYearToast(null)
+    if (!toastsOn.showForYear(index, true)) toastsOn.clear()
   }
 
-  // What the year's toast says, in the editor's words for that year (none when the editor turned it off)
-  const toastFor = yearToast ? yearToastFor(years, yearIndex, toasts) : null
+  // The Estimate button on a panel: a button where there is something to say, else the plain label
+  const badge = statusBadgeFor(certainty, year.note)
+  const press = (place: BillToastPlace) =>
+    toastsOn.canTell(place) ? () => toastsOn.tell(place) : undefined
+  const toastOver = (place: BillToastPlace) => (
+    <BillToastSlot shown={toastsOn.shownFor(place)} onDismiss={toastsOn.dismiss} />
+  )
 
   // The City's part follows the home typed (the average home while the box holds no number)
   const cityPart = bill?.parts.find((p) => p.key === 'city')
@@ -235,28 +229,16 @@ export function BillShare({
           baseYear={baseYear}
           laterIncrease={laterIncrease}
           cityPercent={receipt.slices.length > 0 ? (cityPart?.percent ?? null) : null}
+          onBadgePress={press('answer')}
+          toast={toastOver('answer')}
         />
         <RatesPanel
-          title={ratesText.title}
+          title={ratesTitleFor(years, yearIndex, ratesText)}
           lines={rateLinesFor(years, yearIndex, rates)}
-          onView={() => showToast(yearIndex, false)}
-          toast={
-            yearToast &&
-            toastFor && (
-              <Toast
-                key={yearToast.key}
-                visible={yearToast.open}
-                tone={toastFor.toast.tone}
-                title={toastFor.toast.title || undefined}
-                message={toastFor.message}
-                ending={toastFor.toast.ending}
-                durationMs={toastFor.toast.durationMs}
-                acceptLabel={toastFor.toast.acceptLabel}
-                placement={toastFor.toast.placement}
-                onDismiss={() => setYearToast({ ...yearToast, open: false })}
-              />
-            )
-          }
+          onView={() => toastsOn.showForYear(yearIndex, false)}
+          badge={badge}
+          onBadgePress={press('rates')}
+          toast={toastOver('rates')}
         />
       </div>
       <Card
@@ -275,6 +257,16 @@ export function BillShare({
             total={receipt.total ?? undefined}
             pulseKey={pulse}
             nested={where ? { after: 'city', children: where } : undefined}
+            titleAside={
+              badge && (
+                <CertaintyBadge
+                  certainty={badge.certainty}
+                  label={badge.label}
+                  size="xs"
+                  onPress={press('bill')}
+                />
+              )
+            }
           />
         ) : (
           <>
@@ -285,6 +277,7 @@ export function BillShare({
             {where}
           </>
         )}
+        {toastOver('bill')}
       </Card>
       <BillDetails
         titles={rows}

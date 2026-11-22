@@ -44,12 +44,8 @@ export const COMPONENT_GROUPS = [
   {
     slug: 'display',
     title: 'Display',
-    intro: 'Badges, text, dates and the other parts that show content.',
+    intro: 'Text, dates and the other parts that show content.',
     components: [
-      'Badge',
-      'BadgeList',
-      'CancelledBadge',
-      'CertaintyBadge',
       'ProgressBar',
       'DateTime',
       'MetaList',
@@ -61,6 +57,13 @@ export const COMPONENT_GROUPS = [
       'ImageCredit',
       'FeaturedImage',
     ],
+  },
+  {
+    slug: 'badges',
+    title: 'Badges',
+    intro:
+      'Short labels, some of them buttons (`onPress`): a category, a cancelled event, how sure we are.',
+    components: ['Badge', 'BadgeList', 'CancelledBadge', 'CertaintyBadge'],
   },
   {
     slug: 'sections',
@@ -86,7 +89,7 @@ export const COMPONENT_GROUPS = [
     slug: 'feedback',
     title: 'Feedback and overlays',
     intro: 'Messages, toasts and dialogs.',
-    components: ['Alert', 'Dismissible', 'Toast', 'Dialog', 'RouteDialog', 'Zoom'],
+    components: ['Alert', 'Dismissible', 'Toast', 'BillToastSlot', 'Dialog', 'RouteDialog', 'Zoom'],
   },
   {
     slug: 'navigation',

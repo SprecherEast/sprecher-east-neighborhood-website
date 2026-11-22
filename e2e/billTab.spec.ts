@@ -259,13 +259,40 @@ for (const width of WIDTHS) {
     // An estimate in the later year, the one that opens, shows it a second and last time
     const value = page.getByRole('textbox', { name: 'Enter your assessed value' })
     await value.fill('$750,000')
-    await page.getByRole('button', { name: 'Estimate' }).click()
+    await page.getByRole('button', { name: 'Estimate', exact: true }).click()
     await expect(accept).toBeVisible()
     await accept.click()
     await value.fill('$800,000')
-    await page.getByRole('button', { name: 'Estimate' }).click()
+    await page.getByRole('button', { name: 'Estimate', exact: true }).click()
     // Both showings are spent: give a late one time to appear, then it is still not there
     await page.waitForTimeout(1500)
+    await expect(accept).toHaveCount(0)
+  })
+
+  test(`the Estimate button sits on the rates panel's title line and says why, at ${width}px (#1417)`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto(POST)
+    const panel = page.getByRole('region', { name: /^\d{4} (city rate|rates)$/ })
+    await panel.scrollIntoViewIfNeeded()
+    // The warning that comes by itself is accepted first, so what opens next is the reader's own press
+    const accept = panel.getByRole('button', { name: 'Got it' })
+    await expect(accept).toBeVisible()
+    await accept.click()
+    await expect(accept).toHaveCount(0)
+    const heading = panel.getByRole('heading')
+    const button = panel.getByRole('button', { name: /what this means$/ })
+    const [h, b, p] = [await boxOf(heading), await boxOf(button), await boxOf(panel)]
+    expect(Math.abs(b.y + b.height / 2 - (h.y + h.height / 2)), 'on the title’s line').toBeLessThan(
+      b.height,
+    )
+    expect(b.x, 'to the right of the title').toBeGreaterThan(h.x + h.width - 1)
+    expect(b.x + b.width, 'inside the panel').toBeLessThanOrEqual(p.x + p.width + 1)
+    await button.click()
+    await expect(panel.getByRole('button', { name: 'Got it' })).toBeVisible()
+    await expect(panel.getByText(/using 2026’s/)).toBeVisible()
+    await panel.getByRole('button', { name: 'Got it' }).click()
     await expect(accept).toHaveCount(0)
   })
 }

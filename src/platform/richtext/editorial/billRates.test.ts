@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { BillShareYear } from './billShare'
 import { PROPS } from './billShareFixtures'
-import { rateLinesFor, yearToastFor } from './billRates'
+import { rateLinesFor, ratesTitleFor, toastFor, yearToastFor } from './billRates'
 import { toastsOf } from './billToasts'
 
 const { years } = PROPS
@@ -54,7 +54,9 @@ describe('yearToastFor (#1380)', () => {
   it('says in a year that carries a rate over that the others’ rates are the year before’s, with the year filled in', () => {
     const shown = yearToastFor(years, 1, toasts)
     expect(shown?.toast).toBe(toasts.ratesCarried)
-    expect(shown?.message).toBe('Only the City’s 2027 rates are out. The rest come in January.')
+    expect(shown?.message).toBe(
+      'These are the City’s 2027 rates. The others aren’t out yet, so we’re using 2026’s.',
+    )
   })
 
   it('says nothing in a year where every rate is its own, unless the editor wrote a message for it (#1392)', () => {
@@ -95,5 +97,45 @@ describe('rateLinesFor with the rates counting between years (#1370)', () => {
     expect(lines.find((line) => line.key === 'city')?.perThousand).toBe('$6.93')
     const none = rateLinesFor([{ ...second, rates: { city: 6.93 } }], 0, { schools: 9 })
     expect(none.find((line) => line.key === 'schools')?.percent).toBeNull()
+  })
+})
+
+describe('toastFor', () => {
+  const toasts = toastsOf(undefined)
+
+  it('fills the year shown and the earlier year whose rates stand in for the missing ones', () => {
+    const shown = toastFor('ratesCarried', years, 1, toasts)
+    expect(shown?.message).toContain('2027')
+    expect(shown?.message).toContain('2026’s')
+  })
+
+  it('fills the year shown in a panel’s own warning', () => {
+    expect(toastFor('aboutAnswer', years, 1, toasts)?.message).toContain('2027')
+    expect(toastFor('aboutBill', years, 0, toasts)?.message).not.toContain('{')
+  })
+
+  it('has none for a year that does not exist, or a toast the editor turned off', () => {
+    expect(toastFor('aboutRates', years, 9, toasts)).toBeNull()
+    expect(toastFor('ratesOwn', years, 0, toasts)).toBeNull()
+  })
+
+  it('names the earlier year once when several bodies’ rates are from it', () => {
+    const message = toastFor('ratesCarried', years, 1, toasts)?.message ?? ''
+    expect(message.match(/2026/g)).toHaveLength(1)
+  })
+})
+
+describe('ratesTitleFor', () => {
+  const text = { title: '{year} rates', carriedTitle: '{year} city rate' }
+
+  it('says it is the City’s rate when the other rates are an earlier year’s, and the year’s rates when all are its own', () => {
+    expect(ratesTitleFor(years, 1, text)).toBe('2027 city rate')
+    expect(ratesTitleFor(years, 0, text)).toBe('2026 rates')
+  })
+
+  it('shows the editor’s title as written when it has no blank', () => {
+    expect(ratesTitleFor(years, 0, { title: 'Rates in use', carriedTitle: 'City rate' })).toBe(
+      'Rates in use',
+    )
   })
 })

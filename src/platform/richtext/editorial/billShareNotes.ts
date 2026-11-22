@@ -26,6 +26,7 @@ export const NOTE_BLANKS: Record<string, { meaning: string; only?: NoteCondition
   year: { meaning: 'the year shown' },
   link: { meaning: 'the note’s link, from the link text and address' },
   years: { meaning: 'the earlier years', only: 'earlierYears' },
+  carried: { meaning: 'the year the rates that stand in for the missing ones are from' },
   bodies: { meaning: 'the bodies with no rate', only: 'missingRates' },
 }
 

@@ -45,6 +45,9 @@ describe('the toasts list (#1379)', () => {
     expect(toastsField()?.defaultValue).toEqual([
       { toast: 'ratesCarried', ...DEFAULT_BILL_TOASTS.ratesCarried },
       { toast: 'ratesOwn', ...DEFAULT_BILL_TOASTS.ratesOwn },
+      { toast: 'aboutAnswer', ...DEFAULT_BILL_TOASTS.aboutAnswer },
+      { toast: 'aboutRates', ...DEFAULT_BILL_TOASTS.aboutRates },
+      { toast: 'aboutBill', ...DEFAULT_BILL_TOASTS.aboutBill },
     ])
   })
 })

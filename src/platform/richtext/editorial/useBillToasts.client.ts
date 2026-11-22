@@ -1,0 +1,88 @@
+'use client'
+
+import { useRef, useState } from 'react'
+
+import type { BillShareYear } from './billShare'
+import { toastFor, yearToastFor } from './billRates'
+import {
+  BILL_TOAST_PLACES,
+  type BillToast,
+  type BillToastId,
+  type BillToastPlace,
+} from './billToasts'
+
+/** A toast on show: a new `key` for each showing, so one not yet accepted is replaced by the next */
+type OnShow = { key: number; open: boolean; id: BillToastId }
+
+/** What a panel draws for the toast on show: the editor's toast and its words, with the blanks filled */
+export type ShownToast = { key: number; open: boolean; toast: BillToast; message: string }
+
+/**
+ * Which toast is on show over which panel (#1413, #1417). The rates warning shows by itself, at
+ * most the editor's times-per-visit count in a visit (`showForYear`); a panel's Estimate button
+ * opens its own toast whenever the reader presses it (`tell`), which never counts toward that limit.
+ * Only one toast is on show at a time, over its own panel. A toast is for the year it was opened
+ * in, so `shownFor` gives nothing once the year has moved on.
+ */
+export function useBillToasts(
+  years: readonly BillShareYear[],
+  yearIndex: number,
+  toasts: Record<BillToastId, BillToast | null>,
+) {
+  const timesShown = useRef<Partial<Record<BillToastId, number>>>({})
+  const [onShow, setOnShow] = useState<OnShow | null>(null)
+  const open = (id: BillToastId) =>
+    setOnShow((previous) => ({ key: (previous?.key ?? 0) + 1, open: true, id }))
+
+  /**
+   * Shows the rates warning for the year at `index` if there is one and the visit's limit is not
+   * spent; `onlyIfNew` holds it back once it has shown. Returns whether it showed.
+   */
+  const showForYear = (index: number, onlyIfNew: boolean): boolean => {
+    const next = yearToastFor(years, index, toasts)
+    if (!next) return false
+    const times = timesShown.current[next.id] ?? 0
+    if (times >= next.toast.showsPerVisit || (onlyIfNew && times > 0)) return false
+    timesShown.current[next.id] = times + 1
+    open(next.id)
+    return true
+  }
+
+  /** The toast a press on a panel's Estimate button opens: the rates panel's is the year's own warning, else its general one */
+  const idFor = (place: BillToastPlace): BillToastId =>
+    place === 'rates'
+      ? (yearToastFor(years, yearIndex, toasts)?.id ?? 'aboutRates')
+      : place === 'answer'
+        ? 'aboutAnswer'
+        : 'aboutBill'
+
+  /** Whether a press on a panel's Estimate button has something to say; the editor may have emptied it */
+  const canTell = (place: BillToastPlace): boolean =>
+    toastFor(idFor(place), years, yearIndex, toasts) !== null
+
+  const tell = (place: BillToastPlace) => {
+    if (canTell(place)) open(idFor(place))
+  }
+
+  const shownFor = (place: BillToastPlace): ShownToast | null => {
+    if (!onShow || BILL_TOAST_PLACES[onShow.id] !== place) return null
+    // The year's own rates warning is the year it was shown in; a switch leaves it behind
+    const isYearToast = onShow.id === 'ratesCarried' || onShow.id === 'ratesOwn'
+    if (isYearToast && yearToastFor(years, yearIndex, toasts)?.id !== onShow.id) return null
+    const found = toastFor(onShow.id, years, yearIndex, toasts)
+    return found
+      ? { key: onShow.key, open: onShow.open, toast: found.toast, message: found.message }
+      : null
+  }
+
+  return {
+    showForYear,
+    tell,
+    canTell,
+    shownFor,
+    /** The reader accepted or closed it: it slides out, then is gone */
+    dismiss: () => setOnShow((previous) => previous && { ...previous, open: false }),
+    /** The year changed: a toast about the year it was opened in goes */
+    clear: () => setOnShow(null),
+  }
+}

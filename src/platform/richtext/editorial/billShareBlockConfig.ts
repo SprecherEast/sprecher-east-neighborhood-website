@@ -50,6 +50,20 @@ const rowTitleField = (name: string, label: string, defaultValue: string): TextF
   validate: filledText('Add the row’s title.'),
 })
 
+/** A panel title: it may use `{year}`, the year shown, and no blank the page cannot fill (#1417) */
+const ratesTitleField = (name: string, label: string, description: string): TextField => ({
+  name,
+  type: 'text',
+  label,
+  defaultValue: name === 'title' ? DEFAULT_BILL_RATES.title : DEFAULT_BILL_RATES.carriedTitle,
+  maxLength: BILL_SHARE_LIMITS.rowTitle,
+  admin: { description },
+  validate: (value, args) => {
+    const empty = name === 'title' ? filledText('Add the panel’s title.')(value, args) : true
+    return empty !== true ? empty : validateNoteBlanks(value ?? '', { showWhen: 'always' })
+  },
+})
+
 /**
  * The whole property-tax bill (#1018), shown at the top of a fact tab: a home value the reader can
  * change, the bill split among the four bodies as one proportional bar, and the rest of the tab
@@ -152,9 +166,20 @@ export const BillShareBlockConfig: Block = {
       label: 'Rates panel',
       admin: {
         description:
-          'The small panel beside the City’s tax that lists each body’s rate and the year it is from. The notice about which year’s rates are in use is a toast, below.',
+          'The small panel beside the City’s tax that lists each body’s rate and the year it is from. The notice about which year’s rates are in use, and what each Estimate button says, are toasts, below.',
       },
-      fields: [rowTitleField('title', 'Panel title', DEFAULT_BILL_RATES.title)],
+      fields: [
+        ratesTitleField(
+          'title',
+          'Panel title',
+          '{year} is the year shown. Used when every rate is the year’s own.',
+        ),
+        ratesTitleField(
+          'carriedTitle',
+          'Panel title when other rates are carried over',
+          '{year} is the year shown. Used when some rates are an earlier year’s. Leave empty to use the starting title.',
+        ),
+      ],
     },
     billToastsField,
     {

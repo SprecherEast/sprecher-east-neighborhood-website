@@ -5,6 +5,7 @@ import {
   type BillPart,
   type BillShare as Bill,
 } from '@/platform/lib/billShare'
+import type { Certainty } from '@/platform/lib/certainty'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ShareSlice } from '@/platform/ui/ShareBill'
 import { BILL_BODY_TONES } from '@/platform/ui/shareTones'
@@ -69,4 +70,21 @@ export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt
         ? `If your home is worth ${home}, your whole bill is about ${formatWholeDollars(bill.total)}.`
         : `The City’s part of a ${home} home’s bill would be about ${formatWholeDollars(part('city')?.amount ?? 0)}.`,
   }
+}
+
+/** The status badge a panel shows: how sure we are, in the year's own words when it has them */
+export type StatusBadge = { certainty: Certainty; label?: string }
+
+/**
+ * The tab's status badge (#1111, #1417): the chosen year's stored note ("Proposed") with the
+ * "estimate" look, or, when the year has none, the tab's certainty; none when it has neither. Every
+ * panel that shows it calls this, so they can never disagree.
+ */
+export function statusBadgeFor(
+  certainty: Certainty | undefined,
+  note: string | undefined,
+): StatusBadge | null {
+  if (note)
+    return { certainty: 'estimate', label: `${note.charAt(0).toUpperCase()}${note.slice(1)}` }
+  return certainty ? { certainty } : null
 }

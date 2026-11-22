@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { type ReactNode } from 'react'
 
 import type { Certainty } from '@/platform/lib/certainty'
 import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
@@ -6,6 +6,7 @@ import { Card } from '@/platform/ui/Card'
 import { Text } from '@/platform/ui/Text'
 
 import { increaseLine } from './billFigures'
+import { statusBadgeFor } from './billShareView'
 
 /**
  * The answer a neighbor came for (#1111, #1118), right under the Rough Estimator. Its top row has
@@ -30,6 +31,8 @@ export function BillAnswer({
   cityPercent,
   baseYear = false,
   laterIncrease = null,
+  onBadgePress,
+  toast,
 }: {
   /** The City's tax, formatted */
   tax: string
@@ -49,9 +52,12 @@ export function BillAnswer({
   baseYear?: boolean
   /** In the base year: the next year's increase, whose line is kept as hidden room so the card is as tall in both years */
   laterIncrease?: number | null
+  /** Makes the badge a button that says why the figures are an estimate (#1417) */
+  onBadgePress?: () => void
+  /** A `Toast` placed inside the card, or any toast the page shows for it */
+  toast?: ReactNode
 }) {
-  const noted = note ? `${note.charAt(0).toUpperCase()}${note.slice(1)}` : undefined
-  const badge = noted ? 'estimate' : certainty
+  const badge = statusBadgeFor(certainty, note)
   const homeSentence = `Average home: ${home}.`
   return (
     <Card as="section" variant="elevated" padding="xs" aria-label="Your City tax">
@@ -62,7 +68,12 @@ export function BillAnswer({
           </Text>
           {badge && (
             <span className="ml-auto shrink-0">
-              <CertaintyBadge certainty={badge} label={noted} size="xs" />
+              <CertaintyBadge
+                certainty={badge.certainty}
+                label={badge.label}
+                size="xs"
+                onPress={onBadgePress}
+              />
             </span>
           )}
         </div>
@@ -97,6 +108,7 @@ export function BillAnswer({
           </Text>
         )}
       </div>
+      {toast}
     </Card>
   )
 }

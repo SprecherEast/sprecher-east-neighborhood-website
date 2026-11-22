@@ -3655,25 +3655,32 @@ export interface BillShareBlock {
     sources: string
   }
   /**
-   * The small panel beside the City’s tax that lists each body’s rate and the year it is from. The notice about which year’s rates are in use is a toast, below.
+   * The small panel beside the City’s tax that lists each body’s rate and the year it is from. The notice about which year’s rates are in use, and what each Estimate button says, are toasts, below.
    */
-  rates: {
-    title: string
+  rates?: {
+    /**
+     * {year} is the year shown. Used when every rate is the year’s own.
+     */
+    title?: string | null
+    /**
+     * {year} is the year shown. Used when some rates are an earlier year’s. Leave empty to use the starting title.
+     */
+    carriedTitle?: string | null
   }
   /**
    * The small notices that pop up over a panel. Each one is shown by the page when it applies; here you set what it says and how it ends. Empty a message to turn that toast off.
    */
   toasts?:
     | {
-        toast: 'ratesCarried' | 'ratesOwn'
+        toast: 'ratesCarried' | 'ratesOwn' | 'aboutAnswer' | 'aboutRates' | 'aboutBill'
         /**
          * Information is blue, success green, warning amber, error red.
          */
         tone: 'info' | 'success' | 'warning' | 'error'
         ending: 'fade' | 'close' | 'accept'
-        placement: 'above' | 'panel' | 'screen'
+        placement: 'panel' | 'above' | 'screen'
         /**
-         * After this many, switching the year no longer shows it, until the page is reloaded.
+         * The most times it shows in one visit, across the panel coming into view, an estimate and a year switch; after that it stays quiet until the page is reloaded.
          */
         showsPerVisit: number
         fadeSeconds?: number | null
@@ -3693,7 +3700,7 @@ export interface BillShareBlock {
     | {
         showWhen: 'always' | 'earlierYears' | 'proposedRate' | 'missingRates'
         /**
-         * Blanks the page fills in: {year} is the year shown; {link} is the note’s link, from the link text and address; {years} is the earlier years (only with that condition); {bodies} is the bodies with no rate (only with that condition).
+         * Blanks the page fills in: {year} is the year shown; {link} is the note’s link, from the link text and address; {years} is the earlier years (only with that condition); {carried} is the year the rates that stand in for the missing ones are from; {bodies} is the bodies with no rate (only with that condition).
          */
         text: string
         /**

@@ -13,23 +13,28 @@ const BADGE: Record<Certainty, { variant: BadgeProps['variant']; Icon: typeof Ch
 
 /**
  * How sure we are, in words and an icon (#509), so the colour is never the only cue. The key
- * facts block and a chart's caption (#639) show it the same way.
+ * facts block and a chart's caption (#639) show it the same way. Given `onPress` it is a button
+ * that says why (#1417): its words, then what it does for a screen reader.
  */
 export function CertaintyBadge({
   certainty,
   label,
   size,
+  onPress,
 }: {
   certainty: Certainty
   /** Words of its own in place of the certainty's, such as a year's stored note; the look stays */
   label?: string
   size?: BadgeProps['size']
+  /** Makes it a button, such as one that opens the reason it is an estimate */
+  onPress?: () => void
 }) {
   const { variant, Icon } = BADGE[certainty]
   return (
-    <Badge variant={variant} size={size}>
+    <Badge variant={variant} size={size} onPress={onPress}>
       <Icon aria-hidden="true" />
       {label ?? CERTAINTY_LABELS[certainty]}
+      {onPress && <span className="sr-only">, what this means</span>}
     </Badge>
   )
 }

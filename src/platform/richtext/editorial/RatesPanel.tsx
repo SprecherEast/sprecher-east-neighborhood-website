@@ -2,11 +2,13 @@ import React, { type ReactNode, useId } from 'react'
 
 import { cn } from '@/platform/lib/cn'
 import { Card } from '@/platform/ui/Card'
+import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
 import { SliceName } from '@/platform/ui/ShareBill'
 import { Text } from '@/platform/ui/Text'
 import { useOnFirstView } from '@/platform/ui/useOnFirstView.client'
 
 import type { RateLine } from './billRates'
+import type { StatusBadge } from './billShareView'
 
 /**
  * The rates the bill is worked out from (#1351), beside the answer card: one line per body with its
@@ -18,13 +20,16 @@ import type { RateLine } from './billRates'
  * never depends on the toast (`toast`, #1380) that says why: the page puts it over the panel's top
  * edge (the card is its positioned container), where it covers a sliver and takes no room, so the
  * panel is as tall in every year. It draws what it is given, and tells the page once, the first
- * time it is in view (`onView`, #1413), so the page can show the toast then.
+ * time it is in view (`onView`, #1413), so the page can show the toast then. Its status badge sits
+ * at the end of the title's line, a button when it has something to say (#1417).
  */
 export function RatesPanel({
   title,
   lines,
   toast,
   onView,
+  badge,
+  onBadgePress,
 }: {
   title: string
   lines: readonly RateLine[]
@@ -32,20 +37,36 @@ export function RatesPanel({
   toast?: ReactNode
   /** Called once, the first time the panel is in view */
   onView?: () => void
+  /** The status badge, at the end of the title's line (#1417) */
+  badge?: StatusBadge | null
+  /** Makes the badge a button that says why the rates are an estimate */
+  onBadgePress?: () => void
 }) {
   const titleId = useId()
   const watched = useOnFirstView<HTMLDivElement>(() => onView?.())
   return (
     <Card as="section" variant="elevated" padding="xs" aria-labelledby={titleId}>
       <div ref={watched} className="space-y-2">
-        <Text
-          variant="small"
-          as="h3"
-          id={titleId}
-          className="text-xs font-semibold text-foreground"
-        >
-          {title}
-        </Text>
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <Text
+            variant="small"
+            as="h3"
+            id={titleId}
+            className="text-xs font-semibold text-foreground"
+          >
+            {title}
+          </Text>
+          {badge && (
+            <span className="ml-auto shrink-0">
+              <CertaintyBadge
+                certainty={badge.certainty}
+                label={badge.label}
+                size="xs"
+                onPress={onBadgePress}
+              />
+            </span>
+          )}
+        </div>
         <ul className="space-y-1">
           {lines.map((line) => (
             <li

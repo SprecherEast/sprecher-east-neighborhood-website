@@ -13,9 +13,13 @@ export const DEFAULT_BILL_ROW_TITLES = {
   sources: 'Sources',
 } as const
 
-/** The rates panel's starting title (#1351) */
+/**
+ * The rates panel's starting titles (#1351, #1417): the year's rates when every rate is its own, and
+ * the City's rate in a year that carries the other bodies' rates over from an earlier year.
+ */
 export const DEFAULT_BILL_RATES = {
-  title: 'Rates in use',
+  title: '{year} rates',
+  carriedTitle: '{year} city rate',
 } as const
 
 /**
@@ -24,13 +28,16 @@ export const DEFAULT_BILL_RATES = {
  * toast off. `{year}` is the year shown. The rates toasts say which year's rates the bill uses, so
  * they wait for the reader to accept them: what the bill is based on is not small print.
  * The own-rates toast starts with no message, so it is off: a year whose rates are all its own needs
- * no notice, and an editor who wants one writes its message (#1392).
+ * no notice, and an editor who wants one writes its message (#1392). The `about` toasts open only
+ * when the reader presses a panel's Estimate button (#1417), so they never count toward the limit
+ * of times a visit shows the rates warnings.
  */
 export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
   ratesCarried: {
     tone: 'warning',
     title: '',
-    message: 'Only the City’s {year} rates are out. The rest come in January.',
+    message:
+      'These are the City’s {year} rates. The others aren’t out yet, so we’re using {carried}’s.',
     ending: 'accept',
     placement: 'panel',
     showsPerVisit: 2,
@@ -41,6 +48,37 @@ export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
     tone: 'info',
     title: '',
     message: '',
+    ending: 'accept',
+    placement: 'panel',
+    showsPerVisit: 2,
+    fadeSeconds: 5,
+    acceptLabel: 'Got it',
+  },
+  aboutAnswer: {
+    tone: 'warning',
+    title: '',
+    message:
+      'This is the City’s share of your bill, from its {year} rate. It’s an estimate, not a bill.',
+    ending: 'accept',
+    placement: 'panel',
+    showsPerVisit: 2,
+    fadeSeconds: 5,
+    acceptLabel: 'Got it',
+  },
+  aboutRates: {
+    tone: 'warning',
+    title: '',
+    message: 'These are the {year} rates we used. Your real bill may differ.',
+    ending: 'accept',
+    placement: 'panel',
+    showsPerVisit: 2,
+    fadeSeconds: 5,
+    acceptLabel: 'Got it',
+  },
+  aboutBill: {
+    tone: 'warning',
+    title: '',
+    message: 'This adds up every body’s share. It’s an estimate, so your real bill may differ.',
     ending: 'accept',
     placement: 'panel',
     showsPerVisit: 2,

@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { expectAccessible } from '@/platform/ui/testing/expectAccessible'
 
 import { BILL_GAP, BILL_PAIR, BillShare } from './BillShare.client'
-import { BREAKDOWN, city, estimate, PROPS } from './billShareFixtures'
+import { BREAKDOWN, city, estimate, PROPS, RATES_PANEL } from './billShareFixtures'
 
 afterEach(cleanup)
 
@@ -117,7 +117,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
       screen.getByText(PROPS.intro),
       screen.getByRole('region', { name: 'Rough Estimator' }),
       screen.getByRole('region', { name: 'Your City tax' }),
-      screen.getByRole('region', { name: PROPS.rates.title }),
+      screen.getByRole('region', { name: RATES_PANEL }),
       within(bill).getByText('Metropolitan Schools'),
       within(bill).getByText('City of Madison'),
       breakdown,
@@ -166,8 +166,9 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
     expect(answer.textContent).toContain(
       'Average home: $500,300. The City is 37% of the whole bill.',
     )
-    // The 2027 switch has a stored note, so the one badge says it, with the "not final" look
-    expect(screen.getAllByText('Proposed')).toHaveLength(1)
+    // The 2027 switch has a stored note, so the status badge says it, with the "not final" look: on the
+    // answer card, the rates panel and the whole bill, which show the one badge alike (#1417)
+    expect(screen.getAllByText('Proposed')).toHaveLength(3)
     expect(screen.queryByText('Estimate')).toBeNull()
   })
 

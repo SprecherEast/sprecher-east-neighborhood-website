@@ -92,6 +92,7 @@ export function ShareBill({
   label,
   title,
   titleId,
+  titleAside,
   total,
   pulseKey,
   nested,
@@ -103,6 +104,8 @@ export function ShareBill({
   title?: string
   /** An id for the title, so a row inside the bill can keep it in view when it opens (#1178) */
   titleId?: string
+  /** Shown at the end of the title's line, such as a button that says why the bill is an estimate (#1417) */
+  titleAside?: ReactNode
   /** What the amounts add up to: the last line, as on a receipt */
   total?: { label: string; amount: string }
   /** Changes each time the total should flash once */
@@ -115,9 +118,12 @@ export function ShareBill({
   return (
     <div data-share-bill className={cn('space-y-1.5', className)}>
       {title && (
-        <Text variant="subsection" as="p" id={titleId}>
-          {title}
-        </Text>
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <Text variant="subsection" as="p" id={titleId}>
+            {title}
+          </Text>
+          {titleAside && <span className="ml-auto shrink-0">{titleAside}</span>}
+        </div>
       )}
       <div className={RECEIPT_COLUMNS}>
         <ul
