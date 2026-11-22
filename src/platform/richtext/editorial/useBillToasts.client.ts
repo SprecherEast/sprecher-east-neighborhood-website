@@ -20,38 +20,22 @@ type OnShow = { key: number; open: boolean; id: BillToastId }
 export type ShownToast = { key: number; open: boolean; toast: BillToast; message: string }
 
 /**
- * Which toast is on show over which panel (#1413, #1417). The rates warning shows by itself, at
- * most the editor's times-per-visit count in a visit (`showForYear`); a panel's Estimate button
- * opens its own toast whenever the reader presses it (`tell`), which never counts toward that limit.
- * Only one toast is on show at a time, over its own panel. A toast is for the year it was opened
- * in, so `shownFor` gives nothing once the year has moved on.
+ * Which toast is on show over which panel (#1417). A toast opens only when the reader presses a
+ * panel's Estimate button (`tell`), as often as they press it: nothing opens by itself, on load, on
+ * scrolling, on an estimate or on a year switch. Only one toast is on show at a time, over its own
+ * panel. A toast is for the year it was opened in, so `shownFor` gives nothing once the year has
+ * moved on.
  */
 export function useBillToasts(
   years: readonly BillShareYear[],
   yearIndex: number,
   toasts: Record<BillToastId, BillToast | null>,
 ) {
-  const timesShown = useRef<Partial<Record<BillToastId, number>>>({})
   const [onShow, setOnShow] = useState<OnShow | null>(null)
   // The button the reader pressed to open a toast, so focus can go back to it when they close it
   const opener = useRef<HTMLElement | null>(null)
   const open = (id: BillToastId) =>
     setOnShow((previous) => ({ key: (previous?.key ?? 0) + 1, open: true, id }))
-
-  /**
-   * Shows the rates warning for the year at `index` if there is one and the visit's limit is not
-   * spent; `onlyIfNew` holds it back once it has shown. Returns whether it showed.
-   */
-  const showForYear = (index: number, onlyIfNew: boolean): boolean => {
-    const next = yearToastFor(years, index, toasts)
-    if (!next) return false
-    const times = timesShown.current[next.id] ?? 0
-    if (times >= next.toast.showsPerVisit || (onlyIfNew && times > 0)) return false
-    timesShown.current[next.id] = times + 1
-    opener.current = null
-    open(next.id)
-    return true
-  }
 
   /** The toast a press on a panel's Estimate button opens: the rates panel's is the year's own warning, else its general one */
   const idFor = (place: BillToastPlace): BillToastId =>
@@ -84,7 +68,6 @@ export function useBillToasts(
   }
 
   return {
-    showForYear,
     tell,
     canTell,
     shownFor,

@@ -78,20 +78,6 @@ export const billToastsField: ArrayField = {
       ],
     },
     {
-      name: 'showsPerVisit',
-      type: 'number',
-      label: 'Times shown in one visit',
-      required: true,
-      defaultValue: 2,
-      min: BILL_SHARE_LIMITS.toastMinShows,
-      max: BILL_SHARE_LIMITS.toastMaxShows,
-      admin: {
-        description:
-          'The most times it shows in one visit, across the panel coming into view, an estimate and a year switch; after that it stays quiet until the page is reloaded.',
-        step: 1,
-      },
-    },
-    {
       name: 'fadeSeconds',
       type: 'number',
       label: 'Seconds before it fades',

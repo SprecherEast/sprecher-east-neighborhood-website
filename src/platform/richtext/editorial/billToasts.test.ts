@@ -9,7 +9,6 @@ describe('toastsOf (#1379)', () => {
     expect(toasts.ratesCarried).toMatchObject({
       tone: 'warning',
       placement: 'panel',
-      showsPerVisit: 2,
       message: DEFAULT_BILL_TOASTS.ratesCarried.message,
       ending: 'accept',
       acceptLabel: 'Got it',
@@ -38,7 +37,6 @@ describe('toastsOf (#1379)', () => {
       durationMs: 8000,
       acceptLabel: 'OK',
       placement: 'panel',
-      showsPerVisit: 2,
     })
   })
 
@@ -98,16 +96,6 @@ describe('toastsOf (#1379)', () => {
     expect(toastsOf(undefined, '  ').ratesCarried).toBeNull()
     const saved = toastsOf([{ toast: 'ratesCarried', message: 'Saved words' }], 'Old note')
     expect(saved.ratesCarried?.message).toBe('Saved words')
-  })
-
-  it('holds how many times a toast shows in a visit to 1 to 10, and falls back to the starting two', () => {
-    const shows = (value: unknown) =>
-      toastsOf([{ toast: 'ratesOwn', message: 'Hi', showsPerVisit: value as number }]).ratesOwn
-        ?.showsPerVisit
-    expect(shows(3)).toBe(3)
-    expect(shows(0)).toBe(1)
-    expect(shows(99)).toBe(10)
-    expect(shows(undefined)).toBe(2)
   })
 
   it('starts with a warning for each panel’s Estimate button, each short and each inside its own panel', () => {

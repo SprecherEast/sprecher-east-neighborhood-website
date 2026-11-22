@@ -81,7 +81,7 @@ export const BILL_PAIR = 'grid items-stretch gap-5 md:grid-cols-2'
  * own row, #1163), then one card of two rows: why the bill may differ and the sources. The tab's
  * other pictures (`children`) follow. Everything is drawn again for every home value and year, so
  * every amount is the City's slice of the bill. A year in which a body has not
- * set its rate uses that body's rate from the year before, and says so on its line in the rates panel and in a toast over it, so the page never changes height.
+ * set its rate uses that body's rate from the year before, and says so on its line in the rates panel and in the toast its Estimate button opens, so the page never changes height.
  */
 export function BillShare({
   intro,
@@ -100,9 +100,7 @@ export function BillShare({
   children,
 }: BillShareProps & CityPanelProps & { children?: ReactNode }) {
   const [yearIndex, setYearIndex] = useState(Math.max(years.length - 1, 0))
-  // The toast on show: the rates warning by itself (when the panel first comes into view, on each
-  // estimate, on a switch to the year only if it has not shown yet, never more than the editor's limit
-  // in a visit, #1413), and a panel's Estimate button's own (#1417)
+  // The toast on show: only the one a panel's Estimate button opened, never one by itself (#1417)
   const toastsOn = useBillToasts(years, yearIndex, toasts)
   const year = years[yearIndex]
   // The box holds the home's value in the latest year, the one a reader knows (#1121); an earlier
@@ -147,7 +145,6 @@ export function BillShare({
     breakdown.arm(homeValue !== value)
     countWith(COUNT_MS)
     setEstimated(homeValue)
-    toastsOn.showForYear(yearIndex, false)
   }
   // Choosing a year moves the amounts to its rates in half a second
   const selectYear = (index: number) => {
@@ -155,7 +152,7 @@ export function BillShare({
     countWith(YEAR_COUNT_MS)
     setYearIndex(index)
     // A toast is for the year it was shown in, so one left from the other year goes
-    if (!toastsOn.showForYear(index, true)) toastsOn.clear()
+    toastsOn.clear()
   }
 
   // The Estimate button on a panel: a button where there is something to say, else the plain label
@@ -235,7 +232,6 @@ export function BillShare({
         <RatesPanel
           title={ratesTitleFor(years, yearIndex, ratesText)}
           lines={rateLinesFor(years, yearIndex, rates)}
-          onView={() => toastsOn.showForYear(yearIndex, false)}
           badge={badge}
           onBadgePress={press('rates')}
           toast={toastOver('rates')}

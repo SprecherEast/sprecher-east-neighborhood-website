@@ -3659,11 +3659,11 @@ export interface BillShareBlock {
    */
   rates?: {
     /**
-     * {year} is the year shown. Used when every rate is the year’s own.
+     * Blanks the page fills in: {year} is the year shown. Used when every rate is the year’s own.
      */
     title?: string | null
     /**
-     * {year} is the year shown. Used when some rates are an earlier year’s. Leave empty to use the starting title.
+     * Blanks the page fills in: {year} is the year shown. Used when some rates are an earlier year’s. Leave empty to use the starting title.
      */
     carriedTitle?: string | null
   }
@@ -3679,15 +3679,11 @@ export interface BillShareBlock {
         tone: 'info' | 'success' | 'warning' | 'error'
         ending: 'fade' | 'close' | 'accept'
         placement: 'panel' | 'above' | 'screen'
-        /**
-         * The most times it shows in one visit, across the panel coming into view, an estimate and a year switch; after that it stays quiet until the page is reloaded.
-         */
-        showsPerVisit: number
         fadeSeconds?: number | null
         acceptLabel?: string | null
         title?: string | null
         /**
-         * {year} is the year shown. Leave empty to turn this toast off.
+         * Blanks the page fills in: {year} is the year shown; {carried} is the year the rates that stand in for the missing ones are from. Leave empty to turn this toast off.
          */
         message?: string | null
         id?: string | null
@@ -3700,7 +3696,7 @@ export interface BillShareBlock {
     | {
         showWhen: 'always' | 'earlierYears' | 'proposedRate' | 'missingRates'
         /**
-         * Blanks the page fills in: {year} is the year shown; {link} is the note’s link, from the link text and address; {years} is the earlier years (only with that condition); {carried} is the year the rates that stand in for the missing ones are from; {bodies} is the bodies with no rate (only with that condition).
+         * Blanks the page fills in: {year} is the year shown; {link} is the note’s link, from the link text and address; {years} is the earlier years (only with that condition); {bodies} is the bodies with no rate (only with that condition).
          */
         text: string
         /**

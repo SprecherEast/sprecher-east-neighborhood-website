@@ -36,6 +36,19 @@ describe('BillShare, the Estimate button on each panel (#1417)', () => {
     expect(rates('2026 rates')).toBeTruthy()
   })
 
+  it('draws the three panel titles in one header style (#1417)', () => {
+    stubView()
+    page()
+    const titles = [
+      within(answer()).getByText('City tax on an average home'),
+      rates('2027 city rate').querySelector('h3'),
+      within(bill()).getByText('Your whole bill'),
+    ]
+    const looks = titles.map((title) => title?.className)
+    expect(looks[0]).toContain('text-lg')
+    expect(new Set(looks).size).toBe(1)
+  })
+
   it('has the button on the rates panel’s title line, the answer card and the whole bill', () => {
     stubView()
     page()
@@ -77,19 +90,15 @@ describe('BillShare, the Estimate button on each panel (#1417)', () => {
     expect(within(answer()).queryByRole('button', { name: 'Got it' })).toBeNull()
   })
 
-  it('does not count a tap toward the visit’s limit of automatic warnings, and does not spend it either', async () => {
-    const view = stubView()
+  it('opens as often as the reader presses, with no limit', async () => {
+    stubView()
     page()
     const panel = rates('2027 city rate')
-    // Two taps, both shown
-    await press(panel, 'Proposed, what this means')
-    await accept(panel)
-    await press(panel, 'Proposed, what this means')
-    expect(within(panel).getByRole('button', { name: 'Got it' })).toBeTruthy()
-    await accept(panel)
-    // The automatic warning still has both of its showings
-    await view.enter()
-    expect(within(panel).getByRole('button', { name: 'Got it' })).toBeTruthy()
+    for (let times = 0; times < 4; times += 1) {
+      await press(panel, 'Proposed, what this means')
+      expect(within(panel).getByRole('button', { name: 'Got it' })).toBeTruthy()
+      await accept(panel)
+    }
   })
 
   it('goes away when the year changes, since it was about the year it was opened in', async () => {

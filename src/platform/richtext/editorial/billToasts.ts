@@ -58,8 +58,6 @@ export type BillToastDefinition = {
   placement: (typeof BILL_TOAST_PLACEMENTS)[number]
   /** How long a fading toast stays, in seconds */
   fadeSeconds: number
-  /** How many times a reader sees it in one visit; after that it stays quiet (#1413) */
-  showsPerVisit: number
   /** What the accept button says */
   acceptLabel: string
 }
@@ -76,7 +74,6 @@ type StoredToastRow = {
   ending?: string | null
   placement?: string | null
   fadeSeconds?: number | null
-  showsPerVisit?: number | null
   acceptLabel?: string | null
 }
 
@@ -91,14 +88,6 @@ const heldTo = (seconds: unknown, fallback: number): number =>
     ? Math.min(
         Math.max(Math.round(seconds), BILL_SHARE_LIMITS.toastMinSeconds),
         BILL_SHARE_LIMITS.toastMaxSeconds,
-      )
-    : fallback
-
-const countHeldTo = (count: unknown, fallback: number): number =>
-  typeof count === 'number' && Number.isFinite(count)
-    ? Math.min(
-        Math.max(Math.round(count), BILL_SHARE_LIMITS.toastMinShows),
-        BILL_SHARE_LIMITS.toastMaxShows,
       )
     : fallback
 
@@ -134,7 +123,6 @@ export function toastsOf(
             ending: isIn(BILL_TOAST_ENDINGS, row.ending) ? row.ending : 'accept',
             placement: isIn(BILL_TOAST_PLACEMENTS, row.placement) ? row.placement : 'panel',
             durationMs: heldTo(row.fadeSeconds, fallback.fadeSeconds) * 1000,
-            showsPerVisit: countHeldTo(row.showsPerVisit, fallback.showsPerVisit),
             acceptLabel: row.acceptLabel?.trim() || fallback.acceptLabel,
           }
         : null
