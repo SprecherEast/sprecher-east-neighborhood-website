@@ -23,7 +23,7 @@ import { cn } from '@/platform/lib/cn'
  * is one the theme contract checks. `size` is `sm` (the default), `xs` (tighter padding, for a row shared with a label) or `md`, slightly bigger words and
  * icon for a mark that must stand out among small labels (#952). Given `onPress`, it is a `button`
  * instead of a label (#1417): the same look with a shadow of 3 px or less, a one-pixel lift on hover
- * (not for a reader who asked for less movement), a focus ring and a tap area a little past its box.
+ * (not for a reader who asked for less movement), a focus ring and a tap area at least 44 px tall.
  */
 const badgeVariants = cva(
   'inline-flex max-w-full items-center gap-1 rounded-full px-3 py-1 font-medium [overflow-wrap:anywhere] [&_svg]:shrink-0',
@@ -54,7 +54,7 @@ const badgeVariants = cva(
 
 /** What a badge that can be pressed adds to its look, so it shows it is a button */
 const PRESSABLE =
-  'relative cursor-pointer shadow-sm transition-[box-shadow,translate] hover:shadow-md motion-safe:hover:-translate-y-px motion-safe:active:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring after:absolute after:-inset-1.5 after:content-[""]'
+  'relative cursor-pointer shadow-sm transition-[box-shadow,translate] motion-safe:hover:-translate-y-px motion-safe:active:translate-y-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring after:absolute after:-inset-x-2 after:-inset-y-3 after:content-[""]'
 
 export type BadgeProps = VariantProps<typeof badgeVariants> & {
   className?: string

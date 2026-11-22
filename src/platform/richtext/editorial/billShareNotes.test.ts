@@ -116,6 +116,12 @@ describe('notesFor (#1158): the words are the editor’s, the code decides which
 describe('validateNoteBlanks', () => {
   const link = { linkLabel: 'send a note', linkUrl: '/contact' }
 
+  it('keeps {carried} out of a note, since only a toast can fill it (#1417)', () => {
+    expect(validateNoteBlanks('Using {carried}.', { showWhen: 'always' })).toMatch(
+      /\{carried\} can’t be used/,
+    )
+  })
+
   it('accepts a note with no blanks, or the ones its condition allows', () => {
     expect(validateNoteBlanks('Plain words.', { showWhen: 'always' })).toBe(true)
     expect(validateNoteBlanks('Uses {year} rates.', { showWhen: 'always' })).toBe(true)

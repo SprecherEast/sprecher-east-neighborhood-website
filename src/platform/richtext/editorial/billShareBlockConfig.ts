@@ -8,9 +8,11 @@ import {
   DEFAULT_BILL_ROW_TITLES,
 } from './billShareDefaults'
 import {
+  blanksHelp,
   NOTE_BLANKS_HELP,
   NOTE_CONDITION_LABELS,
   NOTE_CONDITIONS,
+  TITLE_BLANKS,
   validateNoteBlanks,
 } from './billShareNotes'
 import { billToastsField } from './billToastFields'
@@ -51,16 +53,23 @@ const rowTitleField = (name: string, label: string, defaultValue: string): TextF
 })
 
 /** A panel title: it may use `{year}`, the year shown, and no blank the page cannot fill (#1417) */
-const ratesTitleField = (name: string, label: string, description: string): TextField => ({
+const ratesTitleField = (
+  name: string,
+  label: string,
+  description: string,
+  { defaultValue, required }: { defaultValue: string; required: boolean },
+): TextField => ({
   name,
   type: 'text',
   label,
-  defaultValue: name === 'title' ? DEFAULT_BILL_RATES.title : DEFAULT_BILL_RATES.carriedTitle,
+  defaultValue,
   maxLength: BILL_SHARE_LIMITS.rowTitle,
   admin: { description },
   validate: (value, args) => {
-    const empty = name === 'title' ? filledText('Add the panel’s title.')(value, args) : true
-    return empty !== true ? empty : validateNoteBlanks(value ?? '', { showWhen: 'always' })
+    const empty = required ? filledText('Add the panel’s title.')(value, args) : true
+    return empty !== true
+      ? empty
+      : validateNoteBlanks(value ?? '', { showWhen: 'always' }, TITLE_BLANKS)
   },
 })
 
@@ -172,12 +181,14 @@ export const BillShareBlockConfig: Block = {
         ratesTitleField(
           'title',
           'Panel title',
-          '{year} is the year shown. Used when every rate is the year’s own.',
+          `${blanksHelp(TITLE_BLANKS)} Used when every rate is the year’s own.`,
+          { defaultValue: DEFAULT_BILL_RATES.title, required: true },
         ),
         ratesTitleField(
           'carriedTitle',
           'Panel title when other rates are carried over',
-          '{year} is the year shown. Used when some rates are an earlier year’s. Leave empty to use the starting title.',
+          `${blanksHelp(TITLE_BLANKS)} Used when some rates are an earlier year’s. Leave empty to use the starting title.`,
+          { defaultValue: DEFAULT_BILL_RATES.carriedTitle, required: false },
         ),
       ],
     },

@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-import { Toast } from '@/platform/ui/Toast.client'
+import { Toast, type ToastCloseReason } from '@/platform/ui/Toast.client'
 
 import type { ShownToast } from './useBillToasts.client'
 
@@ -12,7 +12,7 @@ export function BillToastSlot({
   onDismiss,
 }: {
   shown: ShownToast | null
-  onDismiss: () => void
+  onDismiss: (reason: ToastCloseReason) => void
 }) {
   if (!shown) return null
   const { toast } = shown

@@ -44,5 +44,8 @@ describe('CertaintyBadge', () => {
     expect(button.className).toContain('shadow-sm')
     expect(button.className).toContain('cursor-pointer')
     expect(button.className).toContain('motion-safe:hover:-translate-y-px')
+    // The shadow stays small, also on hover, and the tap area reaches 44 px (the guideline)
+    expect(button.className).not.toContain('shadow-md')
+    expect(button.className).toContain('after:-inset-y-3')
   })
 })

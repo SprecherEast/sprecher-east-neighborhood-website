@@ -1,16 +1,16 @@
 import type { ArrayField, TextFieldSingleValidation } from 'payload'
 
 import { DEFAULT_BILL_TOASTS } from './billShareDefaults'
-import { validateNoteBlanks } from './billShareNotes'
+import { blanksHelp, TOAST_BLANKS, validateNoteBlanks } from './billShareNotes'
 import { BILL_TOAST_IDS, BILL_TOAST_LABELS, BILL_TOAST_TONES } from './billToasts'
 import { BILL_SHARE_LIMITS } from './editorialLimits'
 import { rowsBetween } from './rowCount'
 
-/** A message may be empty, and may use {year} only: no other blank, and no link to put in one */
+/** A message may be empty, and may use {year} and {carried}: no other blank, and no link to put in one */
 export const validateToastMessage: TextFieldSingleValidation = (value) =>
   (value ?? '').includes('{link}')
-    ? '{link} can’t be used in this message. Use {year}.'
-    : validateNoteBlanks(value ?? '', { showWhen: 'always' })
+    ? '{link} can’t be used in this message. Use {year} or {carried}.'
+    : validateNoteBlanks(value ?? '', { showWhen: 'always' }, TOAST_BLANKS)
 
 /** Each toast is set once: a second row for the same toast would never be shown */
 export const validateToastRows = (value: unknown, args: { event?: unknown }): true | string => {
@@ -121,7 +121,7 @@ export const billToastsField: ArrayField = {
       maxLength: BILL_SHARE_LIMITS.toastMessage,
       validate: validateToastMessage,
       admin: {
-        description: '{year} is the year shown. Leave empty to turn this toast off.',
+        description: `${blanksHelp(TOAST_BLANKS)} Leave empty to turn this toast off.`,
       },
     },
   ],

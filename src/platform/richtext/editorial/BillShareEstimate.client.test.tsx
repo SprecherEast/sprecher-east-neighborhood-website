@@ -107,4 +107,14 @@ describe('BillShare, the Estimate button on each panel (#1417)', () => {
     expect(within(answer()).getByText('Proposed')).toBeTruthy()
     expect(within(bill()).getByRole('button', { name: /what this means$/ })).toBeTruthy()
   })
+
+  it('gives focus back to the button that opened a warning when the reader accepts it', async () => {
+    stubView()
+    page()
+    const button = within(answer()).getByRole('button', { name: 'Proposed, what this means' })
+    button.focus()
+    await act(async () => fireEvent.click(button))
+    await accept(answer())
+    expect(document.activeElement).toBe(button)
+  })
 })

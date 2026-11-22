@@ -16,11 +16,16 @@ describe('a toast message’s check (#1351, #1379)', () => {
     expect(check('')).toBe(true)
     expect(check('Rates come in January.')).toBe(true)
     expect(check('The other {year} rates come in January.')).toBe(true)
+    // {carried} is the year the stand-in rates are from, which only a toast can say (#1417)
+    expect(check('We’re using {carried}’s.')).toBe(true)
   })
 
   it('refuses a blank this note can’t fill, saying which one is allowed', () => {
     expect(check('Missing: {bodies}.')).toMatch(/\{bodies\} can’t be used/)
-    expect(check('See {link}.')).toBe('{link} can’t be used in this message. Use {year}.')
+    expect(check('See {link}.')).toBe(
+      '{link} can’t be used in this message. Use {year} or {carried}.',
+    )
+    expect(check('Missing: {bodies}.')).toMatch(/Use \{year\}, \{carried\}/)
   })
 })
 

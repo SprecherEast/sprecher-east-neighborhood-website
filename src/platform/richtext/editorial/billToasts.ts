@@ -22,7 +22,8 @@ export const BILL_TOAST_LABELS: Record<BillToastId, string> = {
   ratesCarried: 'Rates from an earlier year are in use',
   ratesOwn: 'Every rate is the year’s own',
   aboutAnswer: 'The reader presses Estimate on the City tax card',
-  aboutRates: 'The reader presses Estimate on the rates panel, every rate the year’s own',
+  aboutRates:
+    'The reader presses Estimate on the rates panel, when no rates warning is set for the year',
   aboutBill: 'The reader presses Estimate on the whole bill',
 }
 

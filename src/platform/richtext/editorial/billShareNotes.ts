@@ -21,14 +21,27 @@ export const NOTE_CONDITION_LABELS: Record<NoteCondition, string> = {
   missingRates: 'When a rate is missing, so the whole bill can’t be shown',
 }
 
-/** The blanks an editor may write in a note: what each one becomes, and for which conditions */
-export const NOTE_BLANKS: Record<string, { meaning: string; only?: NoteCondition }> = {
-  year: { meaning: 'the year shown' },
+/** A set of blanks an editor may write in a piece of text: what each becomes, and for which conditions */
+type Blanks = Record<string, { meaning: string; only?: NoteCondition }>
+
+const YEAR_BLANK = { meaning: 'the year shown' }
+
+/** The blanks an editor may write in a note */
+export const NOTE_BLANKS: Blanks = {
+  year: YEAR_BLANK,
   link: { meaning: 'the note’s link, from the link text and address' },
   years: { meaning: 'the earlier years', only: 'earlierYears' },
-  carried: { meaning: 'the year the rates that stand in for the missing ones are from' },
   bodies: { meaning: 'the bodies with no rate', only: 'missingRates' },
 }
+
+/** The blanks a toast's message may use (#1417): the year shown, and the year the stand-in rates are from */
+export const TOAST_BLANKS: Blanks = {
+  year: YEAR_BLANK,
+  carried: { meaning: 'the year the rates that stand in for the missing ones are from' },
+}
+
+/** The one blank a panel's title may use */
+export const TITLE_BLANKS: Blanks = { year: YEAR_BLANK }
 
 /** A note, as the picture draws it: plain data, so it renders without a CMS (decision 0013) */
 export type BillNote = { text: string; when: NoteCondition; link: ResolvedLink | null }
@@ -127,13 +140,17 @@ type NoteSiblings = {
  * Refuses a note whose blanks the editor cannot use with its condition, whose `{link}` has no
  * link, or whose link has no `{link}` to stand in. The reason shows under the field.
  */
-export function validateNoteBlanks(text: string, siblings: NoteSiblings): true | string {
+export function validateNoteBlanks(
+  text: string,
+  siblings: NoteSiblings,
+  known: Blanks = NOTE_BLANKS,
+): true | string {
   const { linkLabel, linkUrl } = siblings
   const showWhen = siblings.showWhen ?? 'always'
   for (const name of blanksIn(text)) {
-    const blank = Object.hasOwn(NOTE_BLANKS, name) ? NOTE_BLANKS[name] : undefined
+    const blank = Object.hasOwn(known, name) ? known[name] : undefined
     if (!blank || (blank.only && blank.only !== showWhen)) {
-      const usable = Object.entries(NOTE_BLANKS)
+      const usable = Object.entries(known)
         .filter(([, known]) => !known.only || known.only === showWhen)
         .map(([known]) => `{${known}}`)
         .join(', ')
@@ -150,9 +167,12 @@ export function validateNoteBlanks(text: string, siblings: NoteSiblings): true |
 }
 
 /** The explanation shown under a note's text in Admin */
-export const NOTE_BLANKS_HELP = `Blanks the page fills in: ${Object.entries(NOTE_BLANKS)
-  .map(
-    ([name, { meaning, only }]) =>
-      `{${name}} is ${meaning}${only ? ' (only with that condition)' : ''}`,
-  )
-  .join('; ')}.`
+export const blanksHelp = (known: Blanks) =>
+  `Blanks the page fills in: ${Object.entries(known)
+    .map(
+      ([name, { meaning, only }]) =>
+        `{${name}} is ${meaning}${only ? ' (only with that condition)' : ''}`,
+    )
+    .join('; ')}.`
+
+export const NOTE_BLANKS_HELP = blanksHelp(NOTE_BLANKS)

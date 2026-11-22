@@ -2,6 +2,8 @@
 
 import { useRef, useState } from 'react'
 
+import type { ToastCloseReason } from '@/platform/ui/Toast.client'
+
 import type { BillShareYear } from './billShare'
 import { toastFor, yearToastFor } from './billRates'
 import {
@@ -31,6 +33,8 @@ export function useBillToasts(
 ) {
   const timesShown = useRef<Partial<Record<BillToastId, number>>>({})
   const [onShow, setOnShow] = useState<OnShow | null>(null)
+  // The button the reader pressed to open a toast, so focus can go back to it when they close it
+  const opener = useRef<HTMLElement | null>(null)
   const open = (id: BillToastId) =>
     setOnShow((previous) => ({ key: (previous?.key ?? 0) + 1, open: true, id }))
 
@@ -44,6 +48,7 @@ export function useBillToasts(
     const times = timesShown.current[next.id] ?? 0
     if (times >= next.toast.showsPerVisit || (onlyIfNew && times > 0)) return false
     timesShown.current[next.id] = times + 1
+    opener.current = null
     open(next.id)
     return true
   }
@@ -61,7 +66,10 @@ export function useBillToasts(
     toastFor(idFor(place), years, yearIndex, toasts) !== null
 
   const tell = (place: BillToastPlace) => {
-    if (canTell(place)) open(idFor(place))
+    if (!canTell(place)) return
+    const pressed = document.activeElement
+    opener.current = pressed instanceof HTMLElement && pressed !== document.body ? pressed : null
+    open(idFor(place))
   }
 
   const shownFor = (place: BillToastPlace): ShownToast | null => {
@@ -80,8 +88,12 @@ export function useBillToasts(
     tell,
     canTell,
     shownFor,
-    /** The reader accepted or closed it: it slides out, then is gone */
-    dismiss: () => setOnShow((previous) => previous && { ...previous, open: false }),
+    /** It slides out, then is gone; when the reader closed it, focus goes back to the button that opened it */
+    dismiss: (reason: ToastCloseReason) => {
+      setOnShow((previous) => previous && { ...previous, open: false })
+      if (reason !== 'fade') opener.current?.focus()
+      opener.current = null
+    },
     /** The year changed: a toast about the year it was opened in goes */
     clear: () => setOnShow(null),
   }
