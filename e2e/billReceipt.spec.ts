@@ -46,7 +46,7 @@ for (const width of WIDTHS) {
     for (const value of [null, '$2,500,000']) {
       if (value) {
         await page.getByRole('textbox', { name: 'Enter your assessed value' }).fill(value)
-        await page.getByRole('button', { name: 'Estimate' }).click()
+        await page.getByRole('button', { name: 'Estimate', exact: true }).click()
         // The new bill has finished counting once its total flashes
         await expect(page.locator('[data-share-bill] p.total-pulse')).toHaveCount(1)
       }

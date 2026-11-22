@@ -19,7 +19,7 @@ test('the breakdown opens after each new value, and keeps the whole bill’s hea
   const input = page.getByRole('textbox', { name: 'Enter your assessed value' })
   await input.scrollIntoViewIfNeeded()
   await input.fill('$700,000')
-  await page.getByRole('button', { name: 'Estimate' }).click()
+  await page.getByRole('button', { name: 'Estimate', exact: true }).click()
   // The count, the flash (0.3 s) and then the pause (0.1 s): still closed while the total counts (the wait after the click can run long on a busy machine)
   await page.waitForTimeout(1000)
   await expect(details).toHaveJSProperty('open', false)
@@ -67,7 +67,7 @@ test('the breakdown opens after each new value, and keeps the whole bill’s hea
   await row.click()
   await expect(details).toHaveJSProperty('open', false)
   await input.fill('$800,000')
-  await page.getByRole('button', { name: 'Estimate' }).click()
+  await page.getByRole('button', { name: 'Estimate', exact: true }).click()
   await expect(details).toHaveJSProperty('open', true, { timeout: 6000 })
 })
 
