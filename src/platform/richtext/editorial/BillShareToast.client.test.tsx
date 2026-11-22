@@ -86,7 +86,12 @@ describe('BillShare, toasts open only from the Estimate button (#1380, #1392, #1
       { toast: 'ratesOwn', message: 'All four rates are the {year} rates.' },
     ])
     render(
-      <BillShare {...PROPS} {...city} certainty="estimate" toasts={own}>
+      <BillShare
+        {...PROPS}
+        {...city}
+        years={PROPS.years.map((year, at) => (at === 0 ? { ...year, note: 'proposed' } : year))}
+        toasts={own}
+      >
         x
       </BillShare>,
     )
@@ -102,7 +107,6 @@ describe('BillShare, toasts open only from the Estimate button (#1380, #1392, #1
       <BillShare
         {...PROPS}
         {...city}
-        certainty="estimate"
         toasts={{ ...PROPS.toasts, ratesCarried: null, aboutRates: null }}
       >
         x

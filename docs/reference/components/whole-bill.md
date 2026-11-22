@@ -23,7 +23,6 @@ Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 | `cityBreakdown` | `{ kind: "breakdown"; areas: { key: string; label: string; value: number; pieces?: { key: string; label: string; value: number; shown?: true \| undefined; }[] \| …`       | no       | Where the City's tax goes, drawn again for whatever the City's tax is on the home typed          |
 | `definition`    | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The tab's short text, in the row on why the bill may differ                                      |
 | `detail`        | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | The tab's explanation, after the short text                                                      |
-| `certainty`     | `"confirmed" \| "estimate" \| "unknown"`                                                                                                                                   | no       | How sure we are about the tab's fact: the answer card's one badge                                |
 | `source`        | `ResolvedLink`                                                                                                                                                             | no       | The tab's own source; the sources row lists it once beside the year's                            |
 | `children`      | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       |                                                                                                  |
 
@@ -33,7 +32,7 @@ Source: `src/platform/richtext/editorial/BillShare.client.tsx`
 
 ## `BillAnswer`
 
-The answer a neighbor came for (#1111, #1118), right under the Rough Estimator. Its top row has the label on the left ("City tax on an average home", or "on your home" after an estimate) and the status badge on the right. Under it the City's tax on the home last estimated in the year chosen is the biggest text on the tab, with a small "a year", then the City's increase in the estimator's accent, orange (`increaseLine`, the same figures a tab's `{yearly}` and `{monthly}` use, so they always agree) and, while the card shows the City's average home, one small sentence with that home's value and the City's share of the whole bill. After an estimate the sentence is left out: it would only repeat the value the reader typed and a share the whole bill shows (#1183). The badge is the chosen year's stored note, with the "not final" look, or, when the year has none, the tab's stored certainty, so it can never disagree with the year. The increase line keeps its room when there is no figure, so the card never changes height. In the earliest of several years it reads "Base year" in the primary green instead, with the next year's line kept as hidden room (#1135). It draws what it is given.
+The answer a neighbor came for (#1111, #1118), right under the Rough Estimator. Its top row has the label on the left ("City tax on an average home", or "on your home" after an estimate) and the status badge on the right. Under it the City's tax on the home last estimated in the year chosen is the biggest text on the tab, with a small "a year", then the City's increase in the estimator's accent, orange (`increaseLine`, the same figures a tab's `{yearly}` and `{monthly}` use, so they always agree) and, while the card shows the City's average home, one small sentence with that home's value and the City's share of the whole bill. After an estimate the sentence is left out: it would only repeat the value the reader typed and a share the whole bill shows (#1183). The badge is the chosen year's stored note, with the "not final" look, and a year without a note has no badge, since its rates are final, so it can never disagree with the year. The increase line keeps its room when there is no figure, so the card never changes height. In the earliest of several years it reads "Base year" in the primary green instead, with the next year's line kept as hidden room (#1135). It draws what it is given.
 
 Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 
@@ -41,13 +40,13 @@ Source: `src/platform/richtext/editorial/BillAnswer.tsx`
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `tax`           | `string`                                                                                                                                                                   | yes      | The City's tax, formatted                                                                                               |
 | `increase`      | `number \| null`                                                                                                                                                           | yes      | What the City's tax rises by in the year, in whole dollars; null when the tab's chart cannot say                        |
-| `certainty`     | `"confirmed" \| "estimate" \| "unknown"`                                                                                                                                   | no       | How sure we are about the tab's fact; the badge unless the chosen year has a note                                       |
 | `note`          | `string`                                                                                                                                                                   | no       | The chosen year's stored note, such as "proposed"; empty for none                                                       |
 | `yours`         | `boolean`                                                                                                                                                                  | yes      | Whether the home is one the reader estimated, not the City's average                                                    |
 | `home`          | `string`                                                                                                                                                                   | yes      | The average home's value, formatted; only shown while `yours` is false                                                  |
 | `cityPercent`   | `number \| null`                                                                                                                                                           | yes      | The City's whole percent of the whole bill; null while the bill is not whole                                            |
 | `baseYear`      | `boolean`                                                                                                                                                                  | no       | Whether the year is the earliest of several: the line says "Base year", the one the later year is compared with (#1135) |
 | `laterIncrease` | `number`                                                                                                                                                                   | no       | In the base year: the next year's increase, whose line is kept as hidden room so the card is as tall in both years      |
+| `laterNote`     | `string`                                                                                                                                                                   | no       | The note of the year the increase line looks ahead to: its badge's room is kept while this year has none                |
 | `onBadgePress`  | `() => void`                                                                                                                                                               | no       | Makes the badge a button that says why the figures are an estimate (#1417)                                              |
 | `toast`         | `string \| number \| bigint \| boolean \| React.ReactElement<unknown, string \| React.JSXElementConstructor<any>> \| Iterable<React.ReactNode> \| React.ReactPortal \| P…` | no       | A `Toast` placed inside the card, or any toast the page shows for it                                                    |
 
@@ -75,15 +74,16 @@ Source: `src/platform/richtext/editorial/RatesPanel.tsx`
 
 ## `PanelHeader`
 
-The top line of a whole-bill panel (#1417): its title on the left and, when it has one, the status badge at the end of the same line; a panel too narrow for both puts the badge whole on a line of its own under the title. The answer card and the rates panel share it, so they can never differ.
+The top line of a whole-bill panel (#1417): its title on the left and, when it has one, the status badge at the end of the same line, level with the title's first line, so a long title wraps in its own column instead of pushing the badge under it. The answer card, the rates panel and the whole bill share the line (`PANEL_TITLE_ROW`), so they can never differ.
 
 Source: `src/platform/richtext/editorial/PanelHeader.tsx`
 
-| Prop           | Type              | Required | Description |
-| -------------- | ----------------- | -------- | ----------- |
-| `badge`        | `StatusBadge`     | no       |             |
-| `onBadgePress` | `() => void`      | no       |             |
-| `children`     | `React.ReactNode` | yes      | The title   |
+| Prop           | Type              | Required | Description                                                                                                      |
+| -------------- | ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
+| `badge`        | `StatusBadge`     | no       |                                                                                                                  |
+| `room`         | `StatusBadge`     | no       | A badge the panel will have in another year: while there is none, its room is kept so the panel keeps its height |
+| `onBadgePress` | `() => void`      | no       |                                                                                                                  |
+| `children`     | `React.ReactNode` | yes      | The title                                                                                                        |
 
 **Used by** (direct imports):
 

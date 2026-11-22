@@ -1,6 +1,7 @@
 import React, { type ReactNode } from 'react'
 
 import { CertaintyBadge } from '@/platform/ui/CertaintyBadge'
+import { PANEL_TITLE_ASIDE, PANEL_TITLE_ROW } from '@/platform/ui/ShareBill'
 
 import type { StatusBadge } from './billShareView'
 
@@ -19,25 +20,34 @@ export function StatusBadgeButton({
 
 /**
  * The top line of a whole-bill panel (#1417): its title on the left and, when it has one, the status
- * badge at the end of the same line; a panel too narrow for both puts the badge whole on a line of
- * its own under the title. The answer card and the rates panel share it, so they can never differ.
+ * badge at the end of the same line, level with the title's first line, so a long title wraps in
+ * its own column instead of pushing the badge under it. The answer card, the rates panel and the
+ * whole bill share the line (`PANEL_TITLE_ROW`), so they can never differ.
  */
 export function PanelHeader({
   badge,
+  room,
   onBadgePress,
   children,
 }: {
   badge?: StatusBadge | null
+  /** A badge the panel will have in another year: while there is none, its room is kept so the panel keeps its height */
+  room?: StatusBadge | null
   onBadgePress?: () => void
   /** The title */
   children: ReactNode
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+    <div className={PANEL_TITLE_ROW}>
       {children}
       {badge && (
-        <span className="ml-auto shrink-0">
+        <span className={PANEL_TITLE_ASIDE}>
           <StatusBadgeButton badge={badge} onPress={onBadgePress} />
+        </span>
+      )}
+      {!badge && room && (
+        <span aria-hidden className={`${PANEL_TITLE_ASIDE} invisible`}>
+          <StatusBadgeButton badge={room} />
         </span>
       )}
     </div>

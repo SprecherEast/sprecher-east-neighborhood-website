@@ -74,7 +74,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
   })
 
   it('puts the same space above the estimator as below it, from one shared value (#1142)', () => {
-    render(<BillShare {...PROPS} {...city} certainty="estimate" source={PROPS.years[0]?.source} />)
+    render(<BillShare {...PROPS} {...city} source={PROPS.years[0]?.source} />)
     const estimator = screen.getByRole('region', { name: 'Rough Estimator' })
     const stack = estimator.parentElement as HTMLElement
     // The intro, the estimator and the answer card are siblings in one stack, with no margin of their own
@@ -107,7 +107,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
 
   it('draws the tab in one order: intro, the estimator, the answer, the whole bill with the breakdown under the City, the two rows, the rest (#1111, #1163)', () => {
     render(
-      <BillShare {...PROPS} {...city} certainty="estimate" source={PROPS.years[0]?.source}>
+      <BillShare {...PROPS} {...city} source={PROPS.years[0]?.source}>
         <p>The rest</p>
       </BillShare>,
     )
@@ -156,7 +156,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
 
   it('answers with the City’s tax, its increase and how sure we are, once', () => {
     render(
-      <BillShare {...PROPS} {...city} certainty="estimate">
+      <BillShare {...PROPS} {...city}>
         x
       </BillShare>,
     )
@@ -174,16 +174,18 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
 
   it('has the badge follow the year chosen, so it never disagrees with the year control (#1118)', () => {
     render(
-      <BillShare {...PROPS} {...city} certainty="confirmed">
+      <BillShare {...PROPS} {...city}>
         x
       </BillShare>,
     )
     const answer = () => screen.getByRole('region', { name: 'Your City tax' })
     expect(answer().textContent).toContain('Proposed')
     fireEvent.click(screen.getByRole('button', { name: '2026' }))
-    // 2026 has no note: the badge is the tab's stored certainty
-    expect(answer().textContent).toContain('Confirmed')
-    expect(answer().textContent).not.toContain('Proposed')
+    // 2026 has no note: its rates are final, so the card shows no badge at all
+    // Its room stays, unseen and hidden from screen readers, so the card keeps its height
+    expect(within(answer()).queryByText('Proposed')).not.toBeNull()
+    expect(within(answer()).queryByText('Proposed')?.closest('[aria-hidden="true"]')).not.toBeNull()
+    expect(within(answer()).queryByRole('button', { name: /what this means$/ })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: '2027' }))
     expect(answer().textContent).toContain('Proposed')
   })
@@ -215,7 +217,7 @@ describe('BillShare, the order of the tab and its three rows (#1111, #1121)', ()
 
   it('has no accessibility violations with every row open', async () => {
     const { container } = render(
-      <BillShare {...PROPS} {...city} certainty="estimate" source={PROPS.years[0]?.source}>
+      <BillShare {...PROPS} {...city} source={PROPS.years[0]?.source}>
         x
       </BillShare>,
     )

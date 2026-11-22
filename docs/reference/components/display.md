@@ -75,7 +75,7 @@ Source: `src/platform/ui/Text.tsx`
 **Variants:**
 
 - `variant`: `"figure" | "section" | "label" | "small" | "subsection" | "overline" | "lead"`
-- `clamp`: `1 | 3 | 2`
+- `clamp`: `1 | 2 | 3`
 
 | Prop        | Type                                                             | Required | Description                                                                                                    |
 | ----------- | ---------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------- |

@@ -22,7 +22,7 @@ const choose = (label: string) =>
 
 const page = (props: Partial<Parameters<typeof BillShare>[0]> = {}) =>
   render(
-    <BillShare {...PROPS} {...city} certainty="estimate" {...props}>
+    <BillShare {...PROPS} {...city} {...props}>
       x
     </BillShare>,
   )
@@ -72,10 +72,12 @@ describe('BillShare, the Estimate button on each panel (#1417)', () => {
 
   it('says its own short thing in a year where every rate is the year’s own', async () => {
     stubView()
-    page()
+    page({
+      years: PROPS.years.map((year, at) => (at === 0 ? { ...year, note: 'proposed' } : year)),
+    })
     await choose('2026')
     const panel = rates('2026 rates')
-    await press(panel, 'Estimate, what this means')
+    await press(panel, 'Proposed, what this means')
     expect(within(panel).getByText(/These are the 2026 rates we used/)).toBeTruthy()
   })
 

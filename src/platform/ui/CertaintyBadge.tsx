@@ -1,4 +1,4 @@
-import { Check, CircleDashed, HelpCircle } from 'lucide-react'
+import { Check, CircleDashed, HelpCircle, Info } from 'lucide-react'
 import React from 'react'
 
 import { CERTAINTY_LABELS, type Certainty } from '@/platform/lib/certainty'
@@ -34,7 +34,13 @@ export function CertaintyBadge({
     <Badge variant={variant} size={size} onPress={onPress}>
       <Icon aria-hidden="true" />
       {label ?? CERTAINTY_LABELS[certainty]}
-      {onPress && <span className="sr-only">, what this means</span>}
+      {onPress && (
+        <>
+          {/* The sign that it opens something, so a reader knows before pressing it */}
+          <Info aria-hidden="true" />
+          <span className="sr-only">, what this means</span>
+        </>
+      )}
     </Badge>
   )
 }

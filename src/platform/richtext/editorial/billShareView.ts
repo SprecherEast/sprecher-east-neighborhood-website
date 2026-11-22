@@ -72,19 +72,17 @@ export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt
   }
 }
 
-/** The status badge a panel shows: how sure we are, in the year's own words when it has them */
+/** The status badge a panel shows: the year's own words, with the "not final" look */
 export type StatusBadge = { certainty: Certainty; label?: string }
 
 /**
  * The tab's status badge (#1111, #1417): the chosen year's stored note ("Proposed") with the
- * "estimate" look, or, when the year has none, the tab's certainty; none when it has neither. Every
- * panel that shows it calls this, so they can never disagree.
+ * "not final" look, and none for a year without a note, since its rates are the City's own and
+ * final, nothing to flag. Every panel that shows it calls this, so they can never disagree.
  */
-export function statusBadgeFor(
-  certainty: Certainty | undefined,
-  note: string | undefined,
-): StatusBadge | null {
-  if (note)
-    return { certainty: 'estimate', label: `${note.charAt(0).toUpperCase()}${note.slice(1)}` }
-  return certainty ? { certainty } : null
+export function statusBadgeFor(note: string | undefined): StatusBadge | null {
+  const label = note?.trim()
+  return label
+    ? { certainty: 'estimate', label: `${label.charAt(0).toUpperCase()}${label.slice(1)}` }
+    : null
 }

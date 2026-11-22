@@ -12,7 +12,6 @@ afterEach(cleanup)
 const base = {
   tax: '$3,467',
   increase: 90,
-  certainty: 'confirmed' as const,
   note: '',
   yours: false,
   home: '$500,300',
@@ -30,12 +29,12 @@ describe('BillAnswer', () => {
   })
 
   it('puts the badge on the right of the same row as the label', () => {
-    render(<BillAnswer {...base} />)
+    render(<BillAnswer {...base} note="proposed" />)
     const row = screen.getByText('City tax on an average home').parentElement as HTMLElement
     expect(row.className).toContain('justify-between')
-    expect(row.textContent).toContain('Confirmed')
+    expect(row.textContent).toContain('Proposed')
     const label = screen.getByText('City tax on an average home')
-    const badge = screen.getByText('Confirmed')
+    const badge = screen.getByText('Proposed')
     expect(label.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
@@ -76,12 +75,10 @@ describe('BillAnswer', () => {
     expect(container.querySelector('[data-answer-increase]')?.textContent).toBe('')
   })
 
-  it('shows the stored certainty as the one badge when the year has no note', () => {
-    render(<BillAnswer {...base} certainty="estimate" />)
-    expect(screen.getAllByText('Estimate')).toHaveLength(1)
-    cleanup()
+  it('shows no badge when the year has no note: its rates are final (#1417)', () => {
     render(<BillAnswer {...base} />)
-    expect(screen.getAllByText('Confirmed')).toHaveLength(1)
+    expect(screen.queryByText('Estimate')).toBeNull()
+    expect(screen.queryByText('Proposed')).toBeNull()
   })
 
   it('shows the year’s stored note as the badge, capitalized, with the "not final" look', () => {

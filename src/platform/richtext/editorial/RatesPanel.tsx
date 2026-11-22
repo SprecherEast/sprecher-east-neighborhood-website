@@ -53,7 +53,7 @@ export function RatesPanel({
               key={line.key}
               data-city={line.key === 'city' ? '' : undefined}
               className={cn(
-                'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1',
+                'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1 max-[24rem]:gap-x-2 max-[24rem]:px-1',
                 line.key === 'city' && 'bg-accent/10',
               )}
             >

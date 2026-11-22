@@ -4,7 +4,6 @@ import React, { useId, useState, type ReactNode } from 'react'
 
 import { BILL_BODY_NAMES, computeBillShare, parseHomeValue } from '@/platform/lib/billShare'
 import type { ResolvedLink } from '@/platform/lib'
-import type { Certainty } from '@/platform/lib/certainty'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ChartSpec } from '@/platform/lib/chart/spec'
 import { Card } from '@/platform/ui/Card'
@@ -51,8 +50,6 @@ export type CityPanelProps = {
   definition?: ReactNode
   /** The tab's explanation, after the short text */
   detail?: ReactNode
-  /** How sure we are about the tab's fact: the answer card's one badge */
-  certainty?: Certainty
   /** The tab's own source; the sources row lists it once beside the year's */
   source?: ResolvedLink | null
 }
@@ -95,7 +92,6 @@ export function BillShare({
   cityBreakdown,
   definition,
   detail,
-  certainty,
   source,
   children,
 }: BillShareProps & CityPanelProps & { children?: ReactNode }) {
@@ -156,7 +152,7 @@ export function BillShare({
   }
 
   // The Estimate button on a panel: a button where there is something to say, else the plain label
-  const badge = statusBadgeFor(certainty, year.note)
+  const badge = statusBadgeFor(year.note)
   const press = (place: BillToastPlace) =>
     toastsOn.canTell(place) ? () => toastsOn.tell(place) : undefined
   const toastOver = (place: BillToastPlace) => (
@@ -219,12 +215,12 @@ export function BillShare({
         <BillAnswer
           tax={cityTax?.total ?? formatWholeDollars(cityAmount ?? 0)}
           increase={cityTax?.increase ?? null}
-          certainty={certainty}
           note={year.note}
           yours={estimated !== null}
           home={formatWholeDollars(shown)}
           baseYear={baseYear}
           laterIncrease={laterIncrease}
+          laterNote={baseYear ? years[1]?.note : undefined}
           cityPercent={receipt.slices.length > 0 ? (cityPart?.percent ?? null) : null}
           onBadgePress={press('answer')}
           toast={toastOver('answer')}
@@ -237,13 +233,7 @@ export function BillShare({
           toast={toastOver('rates')}
         />
       </div>
-      <Card
-        as="section"
-        variant="elevated"
-        padding="xs"
-        className="max-[24rem]:p-2"
-        aria-label="Your whole property tax bill"
-      >
+      <Card as="section" variant="elevated" padding="xs" aria-label="Your whole property tax bill">
         {receipt.slices.length > 0 ? (
           <ShareBill
             slices={receipt.slices}

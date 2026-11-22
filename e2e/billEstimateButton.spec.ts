@@ -85,15 +85,37 @@ for (const width of WIDTHS) {
     const heading = panel.getByRole('heading')
     const button = panel.getByRole('button', { name: /what this means$/ })
     const [h, b, p] = [await boxOf(heading), await boxOf(button), await boxOf(panel)]
-    expect(Math.abs(b.y + b.height / 2 - (h.y + h.height / 2)), 'on the title’s line').toBeLessThan(
-      b.height,
-    )
-    expect(b.x, 'to the right of the title').toBeGreaterThan(h.x + h.width - 1)
+    // On the title's line at its end where they fit, else the badge follows under the title, at its start
+    const beside = b.x > h.x + h.width - 1
+    if (beside) {
+      expect(
+        Math.abs(b.y + b.height / 2 - (h.y + h.height / 2)),
+        'level with the title',
+      ).toBeLessThan(b.height)
+    } else {
+      expect(b.y, 'under the title').toBeGreaterThan(h.y + h.height - 1)
+      expect(Math.abs(b.x - h.x), 'at the title’s start').toBeLessThan(2)
+    }
     expect(b.x + b.width, 'inside the panel').toBeLessThanOrEqual(p.x + p.width + 1)
     await button.click()
     await expect(panel.getByRole('button', { name: 'Got it' })).toBeVisible()
     await expect(panel.getByText(/using 2026’s/)).toBeVisible()
     await panel.getByRole('button', { name: 'Got it' }).click()
     await expect(accept).toHaveCount(0)
+  })
+
+  test(`a year with the City's own final rates shows no Estimate tag at ${width}px (#1417)`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto(POST)
+    const tags = page.getByRole('button', { name: /what this means$/ })
+    await expect(tags).toHaveCount(3)
+    await page.getByRole('button', { name: '2026', exact: true }).click()
+    await expect(tags).toHaveCount(0)
+    // The answer card keeps the tag's room unseen, so the card is as tall as in 2027
+    await expect(page.getByText('Proposed', { exact: true }).locator('visible=true')).toHaveCount(0)
+    await page.getByRole('button', { name: '2027', exact: true }).click()
+    await expect(tags).toHaveCount(3)
   })
 }

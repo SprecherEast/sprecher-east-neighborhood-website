@@ -77,6 +77,15 @@ function SliceBar({ slice, scale }: { slice: ShareSlice; scale: number }) {
 }
 
 /**
+ * The title line of a whole-bill panel (#1417): the title on the left and the status badge at the
+ * end of the same line. A title too long to share the line with the badge keeps the line to itself
+ * and the badge follows under it at the start, so there is never a gap or a badge squeezed to the
+ * right of a title broken into short lines. The answer card and the rates panel use these too.
+ */
+export const PANEL_TITLE_ROW = 'flex flex-wrap items-center justify-between gap-x-2 gap-y-1'
+export const PANEL_TITLE_ASIDE = 'shrink-0'
+
+/**
  * One whole as a bill (#1111, #1118), laid out like a receipt: its title on top, then one row for every
  * slice with its name, percent and dollars and, under them, its own bar in the slice's color, drawn like the
  * City breakdown's (#1196). The bars share one scale, the largest slice's, and every row is built the
@@ -118,11 +127,11 @@ export function ShareBill({
   return (
     <div data-share-bill className={cn('space-y-1.5', className)}>
       {title && (
-        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <div className={PANEL_TITLE_ROW}>
           <Text variant="subsection" as="p" id={titleId}>
             {title}
           </Text>
-          {titleAside && <span className="ml-auto shrink-0">{titleAside}</span>}
+          {titleAside && <span className={PANEL_TITLE_ASIDE}>{titleAside}</span>}
         </div>
       )}
       <div className={RECEIPT_COLUMNS}>

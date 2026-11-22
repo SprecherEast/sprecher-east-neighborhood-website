@@ -56,15 +56,13 @@ describe('receiptFor', () => {
 })
 
 describe('statusBadgeFor (#1417)', () => {
-  it('uses the year’s note, capitalized, with the estimate look, over the tab’s certainty', () => {
-    expect(statusBadgeFor('confirmed', 'proposed')).toEqual({
-      certainty: 'estimate',
-      label: 'Proposed',
-    })
+  it('uses the year’s note, capitalized, with the not-final look', () => {
+    expect(statusBadgeFor('proposed')).toEqual({ certainty: 'estimate', label: 'Proposed' })
   })
 
-  it('uses the tab’s certainty when the year has no note, and nothing when there is neither', () => {
-    expect(statusBadgeFor('estimate', '')).toEqual({ certainty: 'estimate' })
-    expect(statusBadgeFor(undefined, undefined)).toBeNull()
+  it('shows nothing for a year with no note: its rates are final, so there is nothing to flag', () => {
+    expect(statusBadgeFor('')).toBeNull()
+    expect(statusBadgeFor('  ')).toBeNull()
+    expect(statusBadgeFor(undefined)).toBeNull()
   })
 })
