@@ -18,7 +18,7 @@ decide, claim or ask is a comment on the issue
 
 ## 1. Start of session
 
-Three things, in this order, in one reply. Nothing here waits for the owner before the next step.
+Four things, in this order, in one reply. Nothing here waits for the owner before the next step.
 
 1. **What keeps failing.** Count the checks that failed on pull requests over the last week,
    by name:
@@ -54,6 +54,9 @@ Three things, in this order, in one reply. Nothing here waits for the owner befo
    in the order the [flow](../../../docs/process/planning-model.md#flow) section gives for the active
    milestones. Run the overlap check (§3) on the
    proposed set and drop what clashes. Offer the batch with one line each and why.
+
+4. **Weekly review due?** Check as [When one is due](../../../docs/process/weekly-review.md#when-one-is-due)
+   says; when none was posted in the last seven days, offer one in one line.
 
 Dispatch only after the owner agrees to the batch, or when he has already said to keep going.
 

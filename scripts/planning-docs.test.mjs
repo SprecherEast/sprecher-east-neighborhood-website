@@ -169,6 +169,48 @@ describe('continuous flow', () => {
     )
   })
 
+  it('states the Kanban position once, in the planning model, and the weekly review links to it', () => {
+    const holders = (pattern) =>
+      [...new Set([...SPRINT_FREE, REVIEW])].filter((file) =>
+        pattern.test(read(file).replace(/\s+/g, ' ')),
+      )
+    expect(holders(/track neither/i)).toEqual([MODEL])
+    expect(holders(/no fixed meeting cadence/i)).toEqual([MODEL])
+    expect(
+      links(REVIEW).filter((link) => link.target === MODEL && link.anchor === 'flow'),
+    ).not.toHaveLength(0)
+  })
+
+  it('has a weekly review trigger at the start of a chief of staff session, defined once', () => {
+    const skill = read('.agents/skills/chief-of-staff/SKILL.md')
+    const start = skill.slice(skill.indexOf('## 1. Start of session'), skill.indexOf('## 2. Groom'))
+    expect(start).toMatch(/weekly review/i)
+    expect(start).not.toMatch(/Three things/)
+    expect(start).toMatch(/weekly-review\.md#/)
+    expect(read(REVIEW)).toMatch(/issues\/comments\?since=/)
+    expect(skill).not.toMatch(/issues\/comments\?since=/)
+  })
+
+  it('links from workflows and scripts into docs headings that exist', () => {
+    const files = [
+      ...fs.readdirSync(path.join(root, '.github/workflows')).map((n) => `.github/workflows/${n}`),
+      ...fs
+        .readdirSync(path.join(root, '.github/scripts'))
+        .filter((n) => n.endsWith('.mjs') && !n.includes('.test.'))
+        .map((n) => `.github/scripts/${n}`),
+      ...fs
+        .readdirSync(path.join(root, 'scripts'))
+        .filter((n) => n.endsWith('.mjs') && !n.includes('.test.'))
+        .map((n) => `scripts/${n}`),
+    ]
+    for (const file of files) {
+      for (const [, target, anchor] of read(file).matchAll(/(docs\/[\w/.-]+\.md)#([\w-]+)/g)) {
+        expect(fs.existsSync(path.join(root, target)), `${file} -> ${target}`).toBe(true)
+        expect(anchors(target), `${file} -> ${target}#${anchor}`).toContain(anchor)
+      }
+    }
+  })
+
   it('keeps how-we-work under the length limit', () => {
     expect(read(RULE).split('\n').length).toBeLessThan(250)
   })

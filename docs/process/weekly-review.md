@@ -5,8 +5,7 @@ improvement does not wait for the end of a time box: once a week, and whenever t
 chief of staff looks back over the last seven days and decides what to change. It is kept apart
 from the board and reads GitHub only, so any session can run it and nothing depends on a chat.
 
-The Kanban Guide sets no fixed meeting cadence, so the weekly rhythm is our choice, not the
-guide's. A finding is evidence from GitHub, never a recollection or an estimate.
+A finding is evidence from GitHub, never a recollection or an estimate.
 
 ## How to run it
 
@@ -22,21 +21,32 @@ since=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-7d
    [`project-tracking` §5](../../.agents/skills/project-tracking/SKILL.md#5-weekly-report-what-got-done-this-week);
    its output is grouped by milestone, and the same section gives each open milestone's counts.
 2. **Checks that failed repeatedly.** Failed runs on pull requests, counted by workflow name, as in
-   the [start of a session](../../.agents/skills/chief-of-staff/SKILL.md#1-start-of-session). A
+   the [start of a session](../../.agents/skills/chief-of-staff/SKILL.md#1-start-of-session), but
+   read every page (`&page=N`) until a run is older than the window, not only the latest hundred. A
    check that failed again and again is a wall the workers keep hitting: find its cause.
-3. **Review findings that came back.** For each pull request merged in the window, read the
-   review (`pulls/<n>/reviews`, `pulls/<n>/comments`, `issues/<n>/comments`) for blockers and the
+3. **Review findings that came back.** List the pull requests merged in the window:
+
+   ```bash
+   gh api "search/issues?q=repo:{owner}/{repo}+is:pr+is:merged+merged:>=${since%%T*}&per_page=100" -q '.items[].number'
+   ```
+
+   Then, for each, read the review (`pulls/<n>/reviews`, `pulls/<n>/comments`, `issues/<n>/comments`) for blockers and the
    kind of finding. The same kind on several pull requests means a rule, a test or a template is
    missing or unclear.
+
 4. **Friction the workers noted.** Read the `### [STEP]` comments on the issues that shipped
    (`issues/<n>/comments`, header match): what failed, what took longer than it should, what
    they would automate ([roles](../roles/README.md#weekly-review-every-role)).
-5. **Where the owner had to step in.** Issues that got `needs owner` in the window, with how long
-   each waited, from the events, and the `[DECISION]` comments that record a decision of his:
+5. **Where the owner had to step in.** Issues that had `needs owner` in the window, and how long
+   each waited, and the `[DECISION]` comments that record a decision of his. Read each candidate's
+   own events, not the repository's whole event list; the wait is the time from the `labeled` event
+   to the next `unlabeled` one (to now, while it is still open):
 
    ```bash
-   gh api --paginate "repos/{owner}/{repo}/issues/events?per_page=100" \
-     -q ".[] | select(.event == \"labeled\" and .label.name == \"needs owner\" and .created_at >= \"$since\") | \"#\\(.issue.number)\""
+   for n in $(gh api --paginate "repos/{owner}/{repo}/issues?state=all&since=$since&per_page=100" -q '.[].number'); do
+     gh api "repos/{owner}/{repo}/issues/$n/events?per_page=100" \
+       -q "[.[] | select(.label.name == \"needs owner\") | \"\\(.event) \\(.created_at)\"] | if length > 0 then \"#$n \\(join(\", \"))\" else empty end"
+   done
    ```
 
    A step that needed him and did not have to is a rule to write or a tool to add.
@@ -54,18 +64,28 @@ Say so in the report instead of estimating:
   the same on an issue, except where a record says otherwise
   ([card history](../../.agents/skills/project-tracking/SKILL.md#4-while-working)).
 - **Reverts and reopenings by a person,** for the same reason.
-- **The Kanban Guide's flow metrics and service level expectation.** We track neither; the review
-  reads what shipped and what stalled instead.
+- **What the [planning model](planning-model.md#flow) says we do not track** (the Kanban Guide's
+  measures); say so in the report instead of improvising a number.
 - **A list cut off at a page limit** is a sample, so the report says it is not a total.
 
 ## The report
 
 One comment, short enough to read in a minute, with the header `### [STEP] Weekly review`. It goes
-on the issue the owner names; with none named, on the open issue that holds the previous review,
-or in the chat. The chief of staff finds the last one by searching comments for that header, and
-at the start of a session offers a new one when none is under seven days old. It holds: what
-shipped by milestone, what failed repeatedly, what came back from review, the friction noted, where
-the owner stepped in, what to automate, and what could not be measured. Each finding that needs a
-change becomes an issue, filed and groomed like any other
+on the issue the owner names; with none named, in the chat. It holds: what shipped by milestone,
+what failed repeatedly, what came back from review, the friction noted, where the owner stepped in,
+what to automate, and what could not be measured. Each finding that needs a change becomes an
+issue, filed and groomed like any other
 ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §3); a change to a rule is a
 policy change and waits for the owner ([`AGENTS.md`](../../AGENTS.md), step 3).
+
+## When one is due
+
+At the start of a chief of staff session, look for the last review: comments written in the last
+seven days whose body starts with the header (`since` set as above).
+
+```bash
+gh api --paginate "repos/{owner}/{repo}/issues/comments?since=$since&per_page=100" \
+  -q '.[] | select(.body | startswith("### [STEP] Weekly review")) | .html_url'
+```
+
+None found means one is due: offer it. A review also runs whenever the owner asks.

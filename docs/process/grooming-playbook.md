@@ -61,7 +61,7 @@ Ready, and refuses while the issue has `needs owner` or fails the issue check.
 
 ### Ready to In progress
 
-- It is the highest-priority Ready work within the active milestones, or the dispatcher says why
+- It is the highest-priority Ready work within the [active milestones](planning-model.md#flow), or the dispatcher says why
   it takes another.
 - The overlap check passes against everything In progress, and no open pull request already closes it.
 - It is not claimed: no claim comment and not In progress.
