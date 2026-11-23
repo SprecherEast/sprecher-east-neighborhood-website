@@ -24,7 +24,7 @@ import {
   TruncatedError,
   withRemoteBranch,
 } from './planner-facts.mjs'
-import { settleCards } from './planner-status.mjs'
+import { decideChanges, settleCards } from './planner-status.mjs'
 
 const PAGE_SIZE = 40
 
@@ -45,11 +45,11 @@ export function readOnlyRun(run) {
 }
 
 /** One board item as `{ key, number, title, current, facts }`, or null for what is not an open issue. */
-export function cardFromNode(item, policy) {
+export function cardFromNode(item, policy, appSlug) {
   const issue = item?.content
   if (!issue) throw new Error('Could not read a card, so the report is incomplete.')
   if (issue.__typename !== 'Issue' || issue.state !== 'OPEN') return null
-  return { ...factsFromIssue(issue, policy), current: item.status?.name ?? 'No status' }
+  return { ...factsFromIssue(issue, policy, appSlug), current: item.status?.name ?? null }
 }
 
 /**
@@ -59,14 +59,22 @@ export function cardFromNode(item, policy) {
 export function buildReport(cards) {
   const results = settleCards(cards)
   return cards
-    .map((card) => ({
-      number: card.number,
-      title: card.title,
-      current: card.current,
-      ...results.get(card.key),
-    }))
+    .map((card) => {
+      const result = results.get(card.key)
+      const change = decideChanges({
+        result,
+        item: { status: card.current },
+        action: 'edited',
+        plannerSet: card.facts.plannerSet,
+      })
+      const move = change.status ? 'moves' : change.held ? 'held' : null
+      return { number: card.number, title: card.title, current: card.current, ...result, move }
+    })
     .filter((row) => row.current !== row.status || row.flags.length > 0)
 }
+
+/** What the next event for the card would do: set it, hold a backward move for the owner, or nothing. */
+const NEXT_EVENT = { moves: 'would move', held: 'held for confirmation', none: 'none' }
 
 /** The markdown shown on screen and in the job summary. */
 export function renderTable(rows, total, unreadable = []) {
@@ -77,14 +85,14 @@ export function renderTable(rows, total, unreadable = []) {
   if (rows.length === 0) return `${head}\n\nEvery card read agrees with the rule.\n${missed}`
   const lines = rows.map(
     (row) =>
-      `| #${row.number} ${cell(row.title)} | ${row.current} | ${row.status} | ${cell(row.reason)} | ${cell(row.flags.join(' '))} |`,
+      `| #${row.number} ${cell(row.title)} | ${row.current ?? 'No status'} | ${row.status} | ${NEXT_EVENT[row.move ?? 'none']} | ${cell(row.reason)} | ${cell(row.flags.join(' '))} |`,
   )
   return (
     [
       `${head} ${rows.length} differ or carry a flag.`,
       '',
-      '| Issue | Card says | Rule says | Reason | Flags |',
-      '| --- | --- | --- | --- | --- |',
+      '| Issue | Card says | Rule says | Next event | Reason | Flags |',
+      '| --- | --- | --- | --- | --- | --- |',
       ...lines,
       '',
     ].join('\n') + missed
@@ -110,7 +118,7 @@ function withoutParentsOfSkipped(cards, skipped, unreadable) {
   return rest
 }
 
-function readCards(run, { ORG, PROJECT }, policy) {
+function readCards(run, { ORG, PROJECT, PLANNER_APP_SLUG }, policy) {
   const cards = []
   const unreadable = []
   const skipped = new Set()
@@ -122,7 +130,7 @@ function readCards(run, { ORG, PROJECT }, policy) {
     if (!items) throw new Error('Could not read the board.')
     for (const item of items.nodes) {
       try {
-        const card = cardFromNode(item, policy)
+        const card = cardFromNode(item, policy, PLANNER_APP_SLUG)
         if (card) cards.push(card)
       } catch (error) {
         // One cut-off card is listed and skipped; any other failure stops the run
@@ -156,10 +164,15 @@ export function main({ run, env, policy, log, appendSummary }) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { ORG = DEFAULT_ORG, PROJECT = DEFAULT_PROJECT, GITHUB_STEP_SUMMARY } = process.env
+  const {
+    ORG = DEFAULT_ORG,
+    PROJECT = DEFAULT_PROJECT,
+    PLANNER_APP_SLUG,
+    GITHUB_STEP_SUMMARY,
+  } = process.env
   process.exitCode = main({
     run: runGh,
-    env: { ORG, PROJECT },
+    env: { ORG, PROJECT, PLANNER_APP_SLUG },
     policy: readPolicy(),
     log: (text) => console.log(text),
     appendSummary: (text) => {

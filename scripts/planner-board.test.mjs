@@ -115,7 +115,7 @@ function world({ issues, cards = {}, branches = [] }) {
       writes.push({
         kind: args[args.indexOf('-X') + 1],
         path: args.find((arg) => arg.startsWith('repos/')),
-        body: args.at(-1),
+        body: args.at(-1).replace(/^body=/, ''),
       })
       return '{}'
     }

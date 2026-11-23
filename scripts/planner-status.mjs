@@ -18,7 +18,7 @@
  */
 
 import { isEpic } from '../.github/scripts/issue-policy.mjs'
-import { STATUS } from './planner-config.mjs'
+import { STATUS, STATUS_ORDER } from './planner-config.mjs'
 import { OWNER_LABEL, READY_LABEL, readyBlockers } from './planner-ready.mjs'
 
 export const FLAGS = {
@@ -52,11 +52,15 @@ export function issueOfBranch(name) {
   return match ? Number(match[1]) : null
 }
 
-/** How work on the issue shows, in the order the reasons are given, or null when it has not started. */
+/**
+ * How work on the issue shows, in the order the reasons are given, or null when it has not started.
+ * The reasons are fixed sentences: they are written to the issue, so nothing read from a comment or
+ * a branch name goes into one.
+ */
 function startedBy(facts) {
-  if (facts.claimBranch) return `the claim names branch ${facts.claimBranch}`
+  if (facts.claimBranch) return 'a claim comment names a branch'
   if (facts.pullRequests > 0) return 'a pull request closes it or says it does'
-  if (facts.remoteBranch) return `branch ${facts.remoteBranch} exists on the remote`
+  if (facts.remoteBranch) return 'a branch of the claim naming pattern exists on the remote'
   return null
 }
 
@@ -163,4 +167,23 @@ export function settleCards(cards) {
   cards.filter((card) => !isEpic(card.facts)).forEach(work)
   for (let round = 0; round <= epics.length; round += 1) epics.forEach(work)
   return results
+}
+
+/** Whether a move goes to an earlier column. A card with no status is before every column. */
+export function isBackwards(from, to) {
+  const [fromIndex, toIndex] = [STATUS_ORDER.indexOf(from), STATUS_ORDER.indexOf(to)]
+  return fromIndex >= 0 && toIndex >= 0 && toIndex < fromIndex
+}
+
+/**
+ * What to do to a card: `{ status }` to set it, `{ held }` for a backward move that waits for the
+ * owner, `{}` for nothing. An event never moves a card backwards unless the planner itself set the
+ * card's current status (`plannerSet`); a manual run (`sync`) for the issue is the owner confirming
+ * the move, so it applies any.
+ */
+export function decideChanges({ result, item, action, plannerSet = null }) {
+  if (result.status === item.status) return {}
+  const held =
+    isBackwards(item.status, result.status) && action !== 'sync' && plannerSet !== item.status
+  return held ? { held: result.status } : { status: result.status }
 }

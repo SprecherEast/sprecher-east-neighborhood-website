@@ -50,27 +50,31 @@ When an event concerns an issue (opened, reopened, assigned, labeled, unlabeled,
 milestoned or demilestoned), the `Planner Board` workflow's move job reads that issue's facts,
 works out the status the rule gives, and sets the card to it if it differs. For an epic it also
 reads the open sub-issues that are on the board, so the epic follows them. Only the card of the
-issue the event concerns is written.
+issue the event concerns is written. A card with no status gets one.
 
-- **The reason.** A move to Backlog, Ready or In progress writes the new status and the rule's
-  reason sentence in one "Board status" comment on the issue, found again by a hidden marker and a
-  bot author, and edited in place on every later move. The text is fixed sentences and the branch
-  name; it never quotes anyone, and it is written before the card moves. A move to In review or Done, which GitHub's own board workflows
-  make, leaves none.
+- **Whose words count.** The repository is public, so only a comment or pull request written by the
+  owner, a member or a collaborator counts as a claim or as work on the issue.
+- **Backward moves wait for the owner.** An event applies a forward move, but never moves a card to
+  an earlier column unless the planner itself set the card's current status (its comment records
+  it). It holds the move and says so in the comment; a manual run for that one issue applies it, and
+  that run is how the owner confirms a card.
+- **The reason.** Every move the planner makes, and every held move, is written first in one "Board
+  status" comment on the issue, found again by a hidden marker and the app's own login, and edited in
+  place. It says what the rule gives and why, so it stays true if the edit then fails or the card
+  later moves on. It is built from fixed sentences: nothing read from an issue, a comment or a pull
+  request, not even a branch name, goes into it.
 - **What it writes.** The Status field and that comment. No label, no assignee, no other card.
 - **Catching up.** Label changes made by other workflows start no run, and a run can read an issue a
   moment early; the next event, or a manual run for the issue, brings the card in line. A card
   that differs only because it was never visited is not swept: it moves when an event or a manual run
-  concerns it.
+  concerns it. A manual run for a closed issue puts it Done and puts its card back on the board if
+  it was archived.
+- **Too long to read.** An issue with more than a hundred comments, cross-references or sub-issues
+  cannot be read in full, so every run for it ends red and writes nothing; the report lists it.
 - **App Check.** `Planner App Check` writes to the test issue and its card, never to a real one.
 
-### Where GitHub's own workflows meet the rule
-
-- **Item reopened.** GitHub's built-in board workflow of that name, when it is on, sets a status of its own when an
-  issue is reopened; the rule wins. The planner applies the rule on the `reopened` event, and when
-  the built-in one runs last, a manual run for the issue puts the card right.
-- **Stack layers.** An open pull request on an upper stack layer that closes the issue counts as In
-  review, like any other.
+GitHub's built-in "Item reopened" board workflow, when it is on, sets a status of its own when an
+issue is reopened. Whichever runs last holds until the next event or a manual run for the issue.
 
 ## The report run
 

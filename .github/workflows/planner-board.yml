@@ -32,11 +32,11 @@ on:
 permissions:
   contents: read
 
-# Work runs (opened, reopened, assigned) queue apart from the others, so the labels a form adds
-# cannot push a waiting work run out of the queue (GitHub keeps one waiting run per group). The
-# others read the issue as it is, so the last one to run is enough.
+# One run at a time per issue, so two runs never post two "Board status" comments. Every run reads
+# the issue as it is, so when several wait (GitHub keeps one waiting run per group) the last one is
+# enough.
 concurrency:
-  group: planner-board-${{ inputs.report && 'report' || github.event.issue.number || inputs.issue }}-${{ contains(fromJSON('["opened","reopened","assigned"]'), github.event.action) && 'work' || 'state' }}
+  group: planner-board-${{ inputs.report && 'report' || github.event.issue.number || inputs.issue }}
   cancel-in-progress: false
 
 jobs:
@@ -73,6 +73,7 @@ jobs:
           REPO: ${{ github.repository }}
           ISSUE: ${{ github.event.issue.number || inputs.issue }}
           ACTION: ${{ github.event.action || 'sync' }}
+          PLANNER_APP_SLUG: ${{ steps.app.outputs.app-slug }}
         run: node scripts/planner-board.mjs
 
   report:
@@ -97,4 +98,5 @@ jobs:
       - name: Print the cards that differ from the rule
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
+          PLANNER_APP_SLUG: ${{ steps.app.outputs.app-slug }}
         run: node scripts/planner-report.mjs

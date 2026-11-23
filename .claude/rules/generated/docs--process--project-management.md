@@ -133,8 +133,8 @@ built on 2026-10-21 from the spec in #90 and moved to the organization after.
   (also as not planned), moves it to Done. Moving an item to Done by hand doesn't close the issue.
   Closed items are archived after two weeks.
 - **Access:** the board belongs to the organization and a cloud session reaches only the
-  repository, so an agent changes the issue and the card follows: a claim comment and then assigning claim
-  it, the `ready` label says it is groomed, and Priority and Effort are fields on the issue (IDs in
+  repository, so an agent changes the issue and the card follows: claiming it (see
+  [grooming](#grooming-and-work-in-progress)), the `ready` label says it is groomed, and Priority and Effort are fields on the issue (IDs in
   `.github/issue-fields.json`). Reading the board or changing it directly needs the owner's
   account with the `project` scope: in the web UI, or `gh` on his computer. A write that fails with
   "Resource not accessible by integration" means the session's GitHub access is read-only
@@ -144,8 +144,8 @@ built on 2026-10-21 from the spec in #90 and moved to the organization after.
   `Planner App Check`, run by hand, proves it can read the board and write to one test issue and its card.
   `Planner Board` runs as the app on a native signal, not on comments. When an event concerns an
   issue, it sets that issue's card, and only that card, to what [the status rule](/docs/process/board-status-rule.md)
-  says, and for a move GitHub's own workflows don't make it keeps the reason in one "Board status"
-  comment on the issue, edited in place. It writes the Status field and that comment only. Run by
+  says, keeping the reason in one "Board status" comment on the issue, edited in place; a move to an
+  earlier column waits for the owner. It writes the Status field and that comment only. Run by
   hand for one issue, it catches up anything an event missed.
 - **The status rule:** [one tested rule](/docs/process/board-status-rule.md) decides every card, in the app's moves
   and in the **report** run, started by hand, which only lists where open cards differ.

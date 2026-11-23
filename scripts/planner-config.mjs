@@ -19,3 +19,13 @@ export const STATUS = Object.freeze({
 /** The name of the board's Status field, and the one query fragment that reads a card's value of it. */
 export const STATUS_FIELD = 'Status'
 export const CARD_STATUS_FRAGMENT = `status:fieldValueByName(name:"${STATUS_FIELD}"){... on ProjectV2ItemFieldSingleSelectValue{name}}`
+
+/** The columns from first to last; "backwards" means to an earlier one. */
+export const STATUS_ORDER = Object.freeze(Object.values(STATUS))
+
+/**
+ * Whose comments and pull requests count as work on an issue (GitHub's author association): the
+ * people who can write to this repository. The repository is public, so anyone else may comment or
+ * open a pull request, and neither may start work or move a card.
+ */
+export const TRUSTED_ASSOCIATIONS = Object.freeze(new Set(['OWNER', 'MEMBER', 'COLLABORATOR']))

@@ -6,7 +6,15 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import { boardStatus, claimBranch, FLAGS, issueOfBranch, settleCards } from './planner-status.mjs'
+import {
+  boardStatus,
+  claimBranch,
+  decideChanges,
+  FLAGS,
+  isBackwards,
+  issueOfBranch,
+  settleCards,
+} from './planner-status.mjs'
 
 const facts = (over = {}) => ({
   state: 'open',
@@ -192,11 +200,7 @@ describe('boardStatus: started work shows in three ways', () => {
   it.each([
     ['a claim comment names a branch', { claimBranch: 'agent/worker/1-x' }, /claim comment/],
     ['a pull request in any state closes it or says it does', { pullRequests: 1 }, /pull request/],
-    [
-      'a claim-named branch exists on the remote',
-      { remoteBranch: 'agent/worker/1-y' },
-      'agent/worker/1-y',
-    ],
+    ['a claim-named branch exists on the remote', { remoteBranch: 'agent/worker/1-y' }, /remote/],
   ])('is In progress when assigned and %s', (_name, over, reason) => {
     const result = boardStatus(facts({ ...assigned, ...over }))
     expect(result.status).toBe('In progress')

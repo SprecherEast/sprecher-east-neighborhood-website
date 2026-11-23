@@ -8,7 +8,8 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 
 import { linkedIssues } from '../.github/scripts/pr-body.mjs'
-import { POLICY_URL } from './planner-config.mjs'
+import { findStatusComment, plannerSetStatus } from './planner-comment.mjs'
+import { POLICY_URL, TRUSTED_ASSOCIATIONS } from './planner-config.mjs'
 import { issueCheckProblems } from './planner-ready.mjs'
 import { claimBranch, issueOfBranch } from './planner-status.mjs'
 
@@ -41,9 +42,9 @@ export function graphqlArgs(query, strings = {}, numbers = {}) {
 export const ISSUE_FIELDS = `number title body state repository{nameWithOwner}
       milestone{title} author{login __typename}
       labels(first:50){totalCount nodes{name}} assignees(first:10){totalCount nodes{login}}
-      comments(last:100){totalCount nodes{body}}
-      closedByPullRequestsReferences(first:50,includeClosedPrs:true){totalCount nodes{number state merged mergedAt repository{nameWithOwner}}}
-      timelineItems(first:100,itemTypes:[CROSS_REFERENCED_EVENT,REOPENED_EVENT]){totalCount nodes{__typename ... on ReopenedEvent{createdAt} ... on CrossReferencedEvent{source{__typename ... on PullRequest{number state merged mergedAt body repository{nameWithOwner}}}}}}
+      comments(last:100){totalCount nodes{databaseId body authorAssociation author{login __typename}}}
+      closedByPullRequestsReferences(first:50,includeClosedPrs:true){totalCount nodes{number state merged mergedAt authorAssociation repository{nameWithOwner}}}
+      timelineItems(first:100,itemTypes:[CROSS_REFERENCED_EVENT,REOPENED_EVENT]){totalCount nodes{__typename ... on ReopenedEvent{createdAt} ... on CrossReferencedEvent{source{__typename ... on PullRequest{number state merged mergedAt authorAssociation body repository{nameWithOwner}}}}}}
       parent{number state} subIssues(first:100){totalCount nodes{number state repository{nameWithOwner} projectItems(first:10){nodes{project{number owner{... on Organization{login}}}}}}}`
 
 /** An issue has more entries in a list than one read returns, so its facts would be partial. */
@@ -65,6 +66,9 @@ const nodesOf = (connection, list, issue) => {
   return nodes
 }
 
+/** Whether a comment or pull request was written by someone who can write to the repository. */
+const byRepositoryPeople = (node) => TRUSTED_ASSOCIATIONS.has(node?.authorAssociation)
+
 const pullRequestKey = (pr) => issueKey(repositoryOf(pr), pr.number)
 
 /**
@@ -79,12 +83,15 @@ function pullRequestsOf(issue, closing, events) {
     .map((event) => event.source)
     .filter(
       (pr) =>
+        byRepositoryPeople(pr) &&
         typeof pr?.body === 'string' &&
         here &&
         repositoryOf(pr) === here &&
         linkedIssues(pr.body).closes.includes(issue.number),
     )
-  return new Map([...declared, ...closing].map((pr) => [pullRequestKey(pr), pr]))
+  return new Map(
+    [...declared, ...closing.filter(byRepositoryPeople)].map((pr) => [pullRequestKey(pr), pr]),
+  )
 }
 
 /**
@@ -102,9 +109,11 @@ function mergedThatSettle(pulls, events) {
 
 /**
  * An issue node as `{ key, repository, number, title, facts }`. `facts.remoteBranch` starts null;
- * `withRemoteBranch` fills it from the branches read for the repository.
+ * `withRemoteBranch` fills it from the branches read for the repository. Only a comment or pull
+ * request written by someone who can write to the repository counts. `appSlug` is the planner app's
+ * name, used to find its own comment (`statusComment`) and the status it last set (`plannerSet`).
  */
-export function factsFromIssue(issue, policy) {
+export function factsFromIssue(issue, policy, appSlug) {
   const read = (list) => nodesOf(issue[list], list, issue)
   const labels = read('labels').map((entry) => entry.name)
   const forCheck = {
@@ -115,6 +124,16 @@ export function factsFromIssue(issue, policy) {
     milestone: issue.milestone,
     user: { login: issue.author?.login, type: issue.author?.__typename },
   }
+  const comments = read('comments')
+  const statusComment = findStatusComment(
+    comments.map((entry) => ({
+      id: entry.databaseId,
+      type: entry.author?.__typename,
+      login: entry.author?.login,
+      body: entry.body,
+    })),
+    appSlug,
+  )
   const closing = read('closedByPullRequestsReferences')
   const events = read('timelineItems')
   const pulls = pullRequestsOf(issue, closing, events)
@@ -129,7 +148,9 @@ export function factsFromIssue(issue, policy) {
       labels,
       assignees: read('assignees').map((entry) => entry.login),
       problems: issueCheckProblems(forCheck, policy),
-      claimBranch: claimBranch(read('comments')),
+      claimBranch: claimBranch(comments.filter(byRepositoryPeople)),
+      statusComment: statusComment && { id: statusComment.id, body: statusComment.body },
+      plannerSet: plannerSetStatus(statusComment?.body),
       remoteBranch: null,
       // GitHub's own list, plus a same-repository pull request whose description closes the issue
       // (an upper stack layer); a plain mention is never either
