@@ -14,6 +14,7 @@ const facts = (over = {}) => ({
   claimBranch: null,
   openPullRequests: 0,
   mergedPullRequests: 0,
+  pullRequests: 0,
   children: [],
   parent: null,
   ...over,
@@ -105,6 +106,11 @@ describe('boardStatus: epics follow their children', () => {
 })
 
 describe('boardStatus: flags (reported, never acted on)', () => {
+  it('says what the never-started flag means: a pull request that closes it or says it does', () => {
+    expect(FLAGS.neverStarted).toMatch(/no pull request closes this issue or says it does/)
+    expect(FLAGS.neverStarted).not.toMatch(/no pull request exists/)
+  })
+
   it('flags an issue assigned but never started', () => {
     const result = boardStatus(facts({ assignees: ['a'] }))
     expect(result.flags).toContain(FLAGS.neverStarted)
@@ -112,14 +118,12 @@ describe('boardStatus: flags (reported, never acted on)', () => {
 
   it('does not flag an assigned issue that has a claim or a pull request', () => {
     expect(boardStatus(facts({ assignees: ['a'], claimBranch: 'x/y' })).flags).toEqual([])
-    expect(boardStatus(facts({ assignees: ['a'], openPullRequests: 1 })).flags).toEqual([])
-    expect(boardStatus(facts({ assignees: ['a'], mergedPullRequests: 1 })).flags).not.toContain(
-      FLAGS.neverStarted,
-    )
+    expect(boardStatus(facts({ assignees: ['a'], pullRequests: 1 })).flags).toEqual([])
   })
 
-  it('does not call an issue never started when a closed pull request exists', () => {
-    const result = boardStatus(facts({ assignees: ['a'], closedPullRequests: 1 }))
+  it('counts any pull request that closes or declares it closes the issue as a start', () => {
+    // open, merged, closed, or merged and then reopened: all are `pullRequests`
+    const result = boardStatus(facts({ assignees: ['a'], pullRequests: 1, mergedPullRequests: 0 }))
     expect(result.flags).not.toContain(FLAGS.neverStarted)
   })
 

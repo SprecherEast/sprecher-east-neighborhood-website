@@ -10,7 +10,7 @@ their checks are in [`sources.md`](sources.md). Change this file only through a 
 Road to the west, Cottage Grove Road to the south, and Door Creek Park and the Door Creek valley to
 the east. That is how the site describes it (`src/endpoints/seed/about-page.ts`), and it matches
 the eastern half of the City's planning area for the
-[Sprecher Neighborhood Development Plan](https://www.cityofmadison.com/dpced/planning/documents/Sprecher%20NDP_2012.pdf):
+[Sprecher Neighborhood Development Plan](https://www.cityofmadison.com/dpced/planning/documents/plans-projects/neighborhood-development-plans/Sprecher_NDP.pdf):
 "bounded by Interstate Highway 90 on the west, Cottage Grove Road on the south", "Interstate
 Highway 94 on the north" and "the Door Creek valley on the east", which "Sprecher Road bisects".
 
@@ -36,6 +36,19 @@ Facts to keep straight:
   and from Reston Heights to Owl Creek"
   ([City of Madison](https://www.cityofmadison.com/news/2025-08-19/from-council-to-community-meet-your-eastside-and-northside-alders)).
   "In District 16" alone doesn't make an item local.
+
+## Planning background
+
+[`background.md`](background.md) summarizes the City's Sprecher Neighborhood Development Plan
+(adopted January 1998, last amended March 2012), with a page for every fact. Read it before
+judging whether a development, road, park or school item fits what was planned. Three rules:
+
+- The plan says what was **expected**, never what exists. Approved or planned is not built (Verification, check 5,
+  stage of a project, below); only an item the note marks `[confirmed]` is current.
+- The plan's area is larger than the core area: it spans both sides of Sprecher Road, to I-90. A
+  place named in the plan, such as the town center near North Star Drive, still gets its tier by
+  address, not by the plan.
+- Never state a figure from the plan as today's. Say "the plan expected" with its year.
 
 ## Tiers
 

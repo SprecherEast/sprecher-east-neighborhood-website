@@ -9,8 +9,15 @@ import { execFileSync } from 'node:child_process'
 import { appendFileSync, readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
+import { cell } from './content-types/render.mjs'
+import { linkedIssues } from '../.github/scripts/pr-body.mjs'
 import { isEpic, issueProblems, skipReason } from '../.github/scripts/issue-policy.mjs'
-import { ORG as DEFAULT_ORG, POLICY_URL, PROJECT as DEFAULT_PROJECT } from './planner-config.mjs'
+import {
+  ORG as DEFAULT_ORG,
+  POLICY_URL,
+  PROJECT as DEFAULT_PROJECT,
+  STATUS,
+} from './planner-config.mjs'
 import { boardStatus, claimBranch } from './planner-status.mjs'
 
 const PAGE_SIZE = 40
@@ -22,7 +29,7 @@ export const QUERY = `query($org:String!,$n:Int!,$cursor:String){organization(lo
       milestone{title} author{login __typename}
       labels(first:50){totalCount nodes{name}} assignees(first:10){totalCount nodes{login}}
       comments(last:100){totalCount nodes{body}}
-      closedByPullRequestsReferences(first:50,includeClosedPrs:true){totalCount nodes{number state merged mergedAt}}
+      closedByPullRequestsReferences(first:50,includeClosedPrs:true){totalCount nodes{number state merged mergedAt repository{nameWithOwner}}}
       timelineItems(first:100,itemTypes:[CROSS_REFERENCED_EVENT,REOPENED_EVENT]){totalCount nodes{__typename ... on ReopenedEvent{createdAt} ... on CrossReferencedEvent{source{__typename ... on PullRequest{number merged mergedAt body repository{nameWithOwner}}}}}}
       parent{number state} subIssues(first:100){totalCount nodes{number state}}}}}}}}}`
 
@@ -56,34 +63,39 @@ const nodesOf = (connection, list, number) => {
   return nodes
 }
 
-/** Whether a pull request body has a closing keyword for this issue (GitHub's list of them). */
-const closesIssue = (body, number) =>
-  new RegExp(`\\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\\s*:?\\s+#${number}(?!\\d)`, 'i').test(
-    body ?? '',
-  )
+const pullRequestKey = (pr) => `${pr.repository?.nameWithOwner}#${pr.number}`
 
 /**
- * Merged pull requests that declared they settle the issue: GitHub lists it in their closing
- * references, or (a stacked upper layer, which GitHub does not link) a pull request in this
- * repository carries a closing keyword for it. A plain mention never counts, and a merge the issue
- * was reopened after is left out, because a person chose that.
+ * The pull requests that show work on the issue, keyed by repository and number: the ones GitHub
+ * lists as closing it, and the ones in this repository whose description closes it (an upper
+ * layer of a stack, which GitHub does not link). The description is read by the repository's one
+ * parser, `linkedIssues`, so a keyword inside a comment does not count. A plain mention never does.
  */
-function mergedThatSettle(issue, closing, events) {
-  const reopenedAt = events
-    .filter((event) => event.__typename === 'ReopenedEvent')
-    .map((event) => Date.parse(event.createdAt))
-  const stays = (mergedAt) => !reopenedAt.some((at) => at > Date.parse(mergedAt))
+function pullRequestsOf(issue, closing, events) {
+  const here = issue.repository?.nameWithOwner
   const declared = events
     .map((event) => event.source)
     .filter(
       (pr) =>
-        pr?.merged &&
-        pr.repository?.nameWithOwner === issue.repository?.nameWithOwner &&
-        closesIssue(pr.body, issue.number),
+        typeof pr?.body === 'string' &&
+        here &&
+        pr.repository?.nameWithOwner === here &&
+        linkedIssues(pr.body).closes.includes(issue.number),
     )
-  const byNumber = new Map(declared.map((pr) => [pr.number, pr]))
-  for (const pr of closing) if (pr.merged) byNumber.set(pr.number, pr)
-  return [...byNumber.values()].filter((pr) => stays(pr.mergedAt)).length
+  return new Map([...declared, ...closing].map((pr) => [pullRequestKey(pr), pr]))
+}
+
+/**
+ * Merged pull requests that declared they settle the issue, for the merged flag. A merge the issue
+ * was reopened after is left out, because a person chose that.
+ */
+function mergedThatSettle(pulls, events) {
+  const reopenedAt = events
+    .filter((event) => event.__typename === 'ReopenedEvent')
+    .map((event) => Date.parse(event.createdAt))
+  return [...pulls.values()].filter(
+    (pr) => pr.merged && !reopenedAt.some((at) => at > Date.parse(pr.mergedAt)),
+  ).length
 }
 
 /** One board item as `{ number, title, current, facts }`, or null for what is not an open issue. */
@@ -103,7 +115,7 @@ export function cardFromNode(item, policy) {
   }
   const closing = read('closedByPullRequestsReferences')
   const events = read('timelineItems')
-  const mergedPullRequests = mergedThatSettle(issue, closing, events)
+  const pulls = pullRequestsOf(issue, closing, events)
   return {
     number: issue.number,
     title: issue.title,
@@ -116,8 +128,8 @@ export function cardFromNode(item, policy) {
       claimBranch: claimBranch(read('comments')),
       // Only what GitHub lists as closing the issue is In review; a plain mention never is
       openPullRequests: closing.filter((pr) => pr.state === 'OPEN' && !pr.merged).length,
-      mergedPullRequests,
-      closedPullRequests: closing.filter((pr) => pr.state === 'CLOSED' && !pr.merged).length,
+      mergedPullRequests: mergedThatSettle(pulls, events),
+      pullRequests: pulls.size,
       subIssues: read('subIssues').map(({ number, state }) => ({
         number,
         state: state.toLowerCase(),
@@ -140,7 +152,8 @@ export function buildReport(cards) {
   const results = new Map()
   const work = (card) => {
     const children = card.facts.subIssues.map((child) => ({
-      status: child.state === 'closed' ? 'Done' : (statuses.get(child.number) ?? 'Backlog'),
+      status:
+        child.state === 'closed' ? STATUS.done : (statuses.get(child.number) ?? STATUS.backlog),
     }))
     const result = boardStatus({ ...card.facts, children })
     statuses.set(card.number, result.status)
@@ -158,8 +171,6 @@ export function buildReport(cards) {
     }))
     .filter((row) => row.current !== row.status || row.flags.length > 0)
 }
-
-const cell = (text) => String(text).replace(/\|/g, '\\|').replace(/\s+/g, ' ')
 
 /** The markdown shown on screen and in the job summary. */
 export function renderTable(rows, total, unreadable = []) {
