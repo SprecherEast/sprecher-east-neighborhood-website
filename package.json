@@ -58,7 +58,7 @@
     "clsx": "^2.1.1",
     "cross-env": "^10.1.0",
     "graphql": "^16.13.1",
-    "lucide-react": "^0.576.0",
+    "lucide-react": "^1.77.0",
     "markdown-to-jsx": "^9.10.6",
     "next": "^16.4.6",
     "openid-client": "6.9.0",
