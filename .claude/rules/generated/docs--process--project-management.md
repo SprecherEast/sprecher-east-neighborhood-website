@@ -170,18 +170,18 @@ built on 2026-10-21 from the spec in #90 and moved to the organization after.
   account with the `project` scope: in the web UI, or `gh` on his computer. A write that fails with
   "Resource not accessible by integration" means the session's GitHub access is read-only
   ([start a session](/docs/process/start-a-session.md#check-it-works-on-the-organizations-repository)).
-- **The planner app:** a GitHub App owned by the organization can read and change the board without
-  anyone's computer, signing in with a short-lived token made from a key kept only as a repository
-  secret. The `Planner App Check` workflow, run by hand, proves it can read the board and write to
-  one throwaway issue and its card. One rule guards sprint history: work that finished in a sprint
-  keeps that sprint, and only unfinished work moves forward (GitHub has no setting that locks it,
-  so the app's code enforces it). The `Planner Board` workflow runs as the app on a native signal,
-  not on comments: a new or reopened issue joins the sprint that is running, an assigned issue
-  also becomes In progress, and the `ready` label moves a card from Backlog to Ready. A Ready card
-  returns to Backlog when the label goes, or while the issue has `needs owner` or fails
-  [the issue check](/docs/process/issue-and-pr-checks.md#the-issue-check) (the app runs the check's rules itself
-  when the issue changes; a manual run catches up anything it missed). A card never moves back from In progress, In review or Done. Run
-  by hand for one issue, the workflow brings that card in line with the issue as it is now.
+- **The planner app:** a GitHub App owned by the organization reads and changes the board without
+  anyone's computer, using a short-lived token made from a key kept only as a repository secret.
+  `Planner App Check`, run by hand, proves it can read the board and write to one test issue.
+  Finished work keeps its sprint and only unfinished work moves forward (GitHub has no setting for
+  it, so the app's code enforces it). `Planner Board` runs as the app on a native signal, not on
+  comments: a new or reopened issue joins the sprint that is running, an assigned issue also
+  becomes In progress, and the `ready` label moves a card from Backlog to Ready. A Ready card returns to Backlog when the label goes, or
+  while the issue has `needs owner` or fails [the issue check](/docs/process/issue-and-pr-checks.md#the-issue-check)
+  (the app runs the check's rules itself). A card never moves back from In progress, In review or
+  Done. Run by hand for one issue, it brings that card in line with the issue as it is now.
+- **The status rule (report only):** [one tested rule](/docs/process/board-status-rule.md) says what each card
+  should be; the `Planner Board` **report** run, started by hand, only lists where cards differ.
 
 ## Grooming and work in progress
 
