@@ -191,6 +191,21 @@ describe('continuous flow', () => {
     expect(skill).not.toMatch(/issues\/comments\?since=/)
   })
 
+  it('gives the weekly review report a home on GitHub that the due check reads', () => {
+    const review = read(REVIEW).replace(/\s+/g, ' ')
+    const report = review.slice(
+      review.indexOf('## The report'),
+      review.indexOf('## When one is due'),
+    )
+    expect(report).toMatch(/comment on the open issue that holds the previous review/)
+    expect(report).toMatch(/standing `process` issue/)
+    expect(report).toMatch(/the GitHub comment is what counts/)
+    expect(report).not.toMatch(/with none named, in the chat/)
+    const due = review.slice(review.indexOf('## When one is due'))
+    expect(due).toMatch(/where the report is posted/)
+    expect(due).toMatch(/issues\/comments\?since=/)
+  })
+
   it('links from workflows and scripts into docs headings that exist', () => {
     const files = [
       ...fs.readdirSync(path.join(root, '.github/workflows')).map((n) => `.github/workflows/${n}`),

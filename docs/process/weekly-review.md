@@ -22,12 +22,12 @@ since=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-7d
    its output is grouped by milestone, and the same section gives each open milestone's counts.
 2. **Checks that failed repeatedly.** Failed runs on pull requests, counted by workflow name, as in
    the [start of a session](../../.agents/skills/chief-of-staff/SKILL.md#1-start-of-session), but
-   read every page (`&page=N`) until a run is older than the window, not only the latest hundred. A
+   read every page (`&page=N`) until one comes back short, not only the latest hundred. A
    check that failed again and again is a wall the workers keep hitting: find its cause.
 3. **Review findings that came back.** List the pull requests merged in the window:
 
    ```bash
-   gh api "search/issues?q=repo:{owner}/{repo}+is:pr+is:merged+merged:>=${since%%T*}&per_page=100" -q '.items[].number'
+   gh api --paginate "search/issues?q=repo:{owner}/{repo}+is:pr+is:merged+merged:>=${since%%T*}&per_page=100" -q '.items[].number'
    ```
 
    Then, for each, read the review (`pulls/<n>/reviews`, `pulls/<n>/comments`, `issues/<n>/comments`) for blockers and the
@@ -40,11 +40,13 @@ since=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-7d
 5. **Where the owner had to step in.** Issues that had `needs owner` in the window, and how long
    each waited, and the `[DECISION]` comments that record a decision of his. Read each candidate's
    own events, not the repository's whole event list; the wait is the time from the `labeled` event
-   to the next `unlabeled` one (to now, while it is still open):
+   to the next `unlabeled` one (to now, while it is still open). Candidates are the issues updated
+   since the window plus every open one labeled `needs owner`, which may have waited untouched:
 
    ```bash
-   for n in $(gh api --paginate "repos/{owner}/{repo}/issues?state=all&since=$since&per_page=100" -q '.[].number'); do
-     gh api "repos/{owner}/{repo}/issues/$n/events?per_page=100" \
+   for n in $( (gh api --paginate "repos/{owner}/{repo}/issues?state=all&since=$since&per_page=100" -q '.[].number'; \
+                gh api --paginate "repos/{owner}/{repo}/issues?labels=needs%20owner&state=open&per_page=100" -q '.[].number') | sort -un); do
+     gh api --paginate "repos/{owner}/{repo}/issues/$n/events?per_page=100" \
        -q "[.[] | select(.label.name == \"needs owner\") | \"\\(.event) \\(.created_at)\"] | if length > 0 then \"#$n \\(join(\", \"))\" else empty end"
    done
    ```
@@ -70,8 +72,11 @@ Say so in the report instead of estimating:
 
 ## The report
 
-One comment, short enough to read in a minute, with the header `### [STEP] Weekly review`. It goes
-on the issue the owner names; with none named, in the chat. It holds: what shipped by milestone,
+One comment, short enough to read in a minute, with the header `### [STEP] Weekly review`. It is
+posted as a comment on the open issue that holds the previous review, or on the issue the owner
+names. When none exists, post it on the standing `process` issue filed for this purpose: find it
+by its form (a task of type `process`) and its title, "Weekly review", among open issues, and file
+it once if absent. It may also be shown in chat, but the GitHub comment is what counts. It holds: what shipped by milestone,
 what failed repeatedly, what came back from review, the friction noted, where the owner stepped in,
 what to automate, and what could not be measured. Each finding that needs a change becomes an
 issue, filed and groomed like any other
@@ -80,8 +85,9 @@ policy change and waits for the owner ([`AGENTS.md`](../../AGENTS.md), step 3).
 
 ## When one is due
 
-At the start of a chief of staff session, look for the last review: comments written in the last
-seven days whose body starts with the header (`since` set as above).
+At the start of a chief of staff session, look for the last review where the report is posted:
+issue comments written in the last seven days whose body starts with the header (`since` set as
+above).
 
 ```bash
 gh api --paginate "repos/{owner}/{repo}/issues/comments?since=$since&per_page=100" \
