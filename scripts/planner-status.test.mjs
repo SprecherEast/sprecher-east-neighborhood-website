@@ -118,6 +118,11 @@ describe('boardStatus: flags (reported, never acted on)', () => {
     )
   })
 
+  it('does not call an issue never started when a closed pull request exists', () => {
+    const result = boardStatus(facts({ assignees: ['a'], closedPullRequests: 1 }))
+    expect(result.flags).not.toContain(FLAGS.neverStarted)
+  })
+
   it('flags a merged pull request on an issue that is still open', () => {
     expect(boardStatus(facts({ mergedPullRequests: 1 })).flags).toContain(FLAGS.mergedStillOpen)
     expect(boardStatus(facts({ state: 'closed', mergedPullRequests: 1 })).flags).toEqual([])

@@ -5,7 +5,14 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { buildReport, cardFromNode, main, readOnlyRun, renderTable } from './planner-report.mjs'
+import {
+  buildReport,
+  cardFromNode,
+  main,
+  readOnlyRun,
+  renderTable,
+  TruncatedError,
+} from './planner-report.mjs'
 
 const policy = {
   types: ['bug', 'enhancement'],
@@ -46,8 +53,10 @@ describe('cardFromNode', () => {
         {
           assignees: { nodes: [{ login: 'a' }] },
           comments: { nodes: [{ body: '### [STEP] Claimed\n\nBranch: `agent/x`' }] },
-          closedByPullRequestsReferences: { nodes: [{ state: 'OPEN', merged: false }] },
-          timelineItems: { nodes: [{ source: { merged: true } }, { source: {} }] },
+          closedByPullRequestsReferences: { nodes: [{ number: 3, state: 'OPEN', merged: false }] },
+          timelineItems: {
+            nodes: [{ source: { number: 4, state: 'MERGED', merged: true } }, { source: {} }],
+          },
         },
       ),
       policy,
@@ -69,6 +78,37 @@ describe('cardFromNode', () => {
   it('runs the issue check on the issue, so a failing one is not Ready', () => {
     const card = cardFromNode(node({}, { body: 'no sections', labels: labels('ready') }), policy)
     expect(card.facts.problems.length).toBeGreaterThan(0)
+  })
+
+  it('counts a pull request once when it is in both lists, and counts closed ones', () => {
+    const card = cardFromNode(
+      node(
+        {},
+        {
+          closedByPullRequestsReferences: {
+            nodes: [
+              { number: 5, state: 'MERGED', merged: true },
+              { number: 6, state: 'CLOSED', merged: false },
+            ],
+          },
+          timelineItems: { nodes: [{ source: { number: 5, merged: true } }] },
+        },
+      ),
+      policy,
+    )
+    expect(card.facts).toMatchObject({ mergedPullRequests: 1, closedPullRequests: 1 })
+  })
+
+  it.each([
+    'labels',
+    'assignees',
+    'comments',
+    'closedByPullRequestsReferences',
+    'timelineItems',
+    'subIssues',
+  ])('refuses a card whose %s list is cut off, so no flag comes from a partial read', (list) => {
+    const cut = { totalCount: 101, nodes: [] }
+    expect(() => cardFromNode(node({}, { [list]: cut }), policy)).toThrow(TruncatedError)
   })
 
   it('throws when the card cannot be read', () => {
@@ -116,6 +156,19 @@ describe('buildReport', () => {
       card(11, 'In progress', { assignees: ['a'], claimBranch: 'x/y' }),
     ])
     expect(rows).toEqual([expect.objectContaining({ number: 10, status: 'In progress' })])
+  })
+
+  it('works out an epic under an epic before its parent, whatever the order', () => {
+    const rows = buildReport([
+      card(10, 'Backlog', { labels: ['epic'], subIssues: [{ number: 20, state: 'open' }] }),
+      card(20, 'Backlog', { labels: ['epic'], subIssues: [{ number: 21, state: 'open' }] }),
+      card(21, 'Backlog', { assignees: ['a'], claimBranch: 'x/y' }),
+    ])
+    expect(rows.map((row) => [row.number, row.status])).toEqual([
+      [10, 'In progress'],
+      [20, 'In progress'],
+      [21, 'In progress'],
+    ])
   })
 
   it('treats closed children as Done and flags an epic whose children are all closed', () => {
@@ -183,19 +236,22 @@ describe('main: reads everything, writes nothing', () => {
     })
     expect(code).toBe(0)
     expect(calls).toHaveLength(2)
+    expect(calls[0].join(' ')).not.toContain('cursor=')
+    expect(calls[1]).toContain('cursor=c1')
     expect(out.join('\n')).toContain('#1')
     expect(out.some((line) => line.startsWith('SUMMARY:'))).toBe(true)
   })
 
   it('issues no write of any kind: only read queries go out', () => {
     const calls = []
-    main({
+    const code = main({
       run: run(calls, [page([node({ status: { name: 'Ready' } })])]),
       env,
       policy,
       log: () => {},
       appendSummary: () => {},
     })
+    expect(code).toBe(0)
     expect(calls.length).toBeGreaterThan(0)
     for (const args of calls) {
       expect(args.slice(0, 2)).toEqual(['api', 'graphql'])
@@ -217,6 +273,30 @@ describe('main: reads everything, writes nothing', () => {
       appendSummary: () => {},
     })
     expect(unreadable).toBe(1)
+  })
+
+  it('lists the cards it could not read in full, reports the rest and exits 1', () => {
+    const out = []
+    const code = main({
+      run: run(
+        [],
+        [
+          page([
+            node({}, { number: 7, comments: { totalCount: 500, nodes: [] } }),
+            node({ status: { name: 'In progress' } }, { number: 8 }),
+          ]),
+        ],
+      ),
+      env,
+      policy,
+      log: (text) => out.push(text),
+      appendSummary: (text) => out.push(text),
+    })
+    const text = out.join('\n')
+    expect(code).toBe(1)
+    expect(text).toContain('#8')
+    expect(text).toMatch(/#7.*cut off|not read in full/i)
+    expect(text).not.toMatch(/never started/i)
   })
 
   it('does not write the summary when it could not read everything', () => {

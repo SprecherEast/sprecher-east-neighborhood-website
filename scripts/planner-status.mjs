@@ -15,8 +15,7 @@
  */
 
 import { READY_LABEL, readyBlockers } from './planner-board.mjs'
-
-const EPIC_LABEL = 'epic'
+import { isEpic } from './planner-config.mjs'
 
 export const FLAGS = {
   neverStarted:
@@ -51,16 +50,21 @@ function epicStatus({ children }) {
   }
 }
 
-function flagsFor(facts, isEpic) {
+function flagsFor(facts, epic) {
   const flags = []
   const { assignees, claimBranch: branch, openPullRequests, mergedPullRequests } = facts
   if (facts.state !== 'open') return flags
-  if (!isEpic && assignees.length > 0 && !branch && openPullRequests + mergedPullRequests === 0) {
+  if (
+    !epic &&
+    assignees.length > 0 &&
+    !branch &&
+    openPullRequests + mergedPullRequests + (facts.closedPullRequests ?? 0) === 0
+  ) {
     flags.push(FLAGS.neverStarted)
   }
   if (mergedPullRequests > 0) flags.push(FLAGS.mergedStillOpen)
   if (
-    isEpic &&
+    epic &&
     facts.children.length > 0 &&
     facts.children.every((child) => child.status === 'Done')
   ) {
@@ -79,19 +83,20 @@ function flagsFor(facts, isEpic) {
  * @param {string|null} facts.claimBranch  from `claimBranch(comments)`
  * @param {number} facts.openPullRequests  open pull requests that close the issue
  * @param {number} facts.mergedPullRequests  merged pull requests that referenced it
+ * @param {number} [facts.closedPullRequests]  closed, unmerged pull requests that referenced it
  * @param {{status: string}[]} facts.children  an epic's children, each with the status the rule gives
  * @param {{state: string}|null} facts.parent
  * @returns {{status: string, reason: string, flags: string[]}}
  */
 export function boardStatus(facts) {
-  const isEpic = facts.labels.includes(EPIC_LABEL)
-  const flags = flagsFor(facts, isEpic)
+  const epic = isEpic(facts.labels)
+  const flags = flagsFor(facts, epic)
   const done = (status, reason) => ({ status, reason, flags })
   if (facts.state === 'closed') return done('Done', 'The issue is closed.')
   if (facts.openPullRequests > 0) {
     return done('In review', 'An open pull request closes this issue.')
   }
-  if (isEpic) {
+  if (epic) {
     const { status, reason } = epicStatus(facts)
     return done(status, reason)
   }
