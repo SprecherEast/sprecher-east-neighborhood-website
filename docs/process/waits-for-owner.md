@@ -1,0 +1,21 @@
+# Waits for owner
+
+The rule for an issue or pull request that needs the owner's answer, from the `needs owner` label
+in [how we work](project-management.md#labels).
+
+**Waits for owner** means: that issue or PR is on hold until the owner answers. Until then,
+nobody decides for him, merges it, or starts anything marked blocked by it. Fixing review
+findings on a waiting PR is fine, so he gets a clean one. Other work goes on, and silence is
+never a yes.
+
+When he answers, whoever acts on it records a short summary on the issue or PR (with the date and
+where he gave it), then removes the `needs owner` label and carries on as he decided. He can also
+merge or remove the label himself.
+
+**Triage.** The queue holds only what is his: a login, money, or a decision as the label defines
+it. A fact fix, work an agent can do, or something he already parked is a mislabel. The chief of
+staff removes the label with a `[DECISION]` comment saying why, and a parked item says what would
+bring it back. A real question keeps the rule above: only his answer removes the label.
+
+How to ask him ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) step 5):
+one plain question, the options in a sentence each, a recommendation, and what happens next.

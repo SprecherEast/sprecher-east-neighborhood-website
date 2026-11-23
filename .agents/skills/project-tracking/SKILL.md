@@ -1,6 +1,6 @@
 ---
 name: project-tracking
-description: Keep the project's plan on GitHub. Before starting work, read the issue's epic, milestone, sprint and blockers; when filing new work, put it at the right level with labels, parent, milestone and dependencies; answer "what's next?" and "what got done this week?" from GitHub, not from memory. Use when picking up, filing or reporting work.
+description: Keep the project's plan on GitHub. Before starting work, read the issue's epic, milestone, blockers and latest handoff comment; when filing new work, put it at the right level with labels, parent, milestone and dependencies; answer "what's next?" and "what got done this week?" from GitHub, not from memory. Use when picking up, filing or reporting work.
 ---
 
 # Project tracking
@@ -25,9 +25,9 @@ gh api repos/{owner}/{repo}/issues/<n>/parent -q '"#\(.number) \(.title)"'      
 gh api repos/{owner}/{repo}/issues/<n>/dependencies/blocked_by -q '.[] | "#\(.number) \(.state)"'
 ```
 
-The sprint is a board field. On the owner's computer, read it from the board's items (§2 step 4
-without `--query`, then find the issue by number in the JSON). The size is the issue's Effort
-field (§1a). Start only if the issue is **Ready**:
+Read its latest `### [STEP]` comment first: it says what is done and what is left
+([session handoff](../../../docs/process/project-management.md#session-handoff)). The size is the
+issue's Effort field (§1a). Start only if the issue is **Ready**:
 
 - it has acceptance criteria, a milestone (an epic only for multi-part work;
   [the rule](../../../AGENTS.md#one-issue-one-pull-request)), type, area and priority labels,
@@ -44,7 +44,7 @@ so every issue after the first needs the overlap check below to pass.
 
 ## 1a. Grooming
 
-Before every major change (a new epic, a sprint, a batch of work), groom the backlog
+Before every major change (a new epic or a batch of work), groom the backlog
 ([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-work-in-progress)).
 For each issue:
 
@@ -79,9 +79,10 @@ For each issue:
 
 ## 2. "What's next?"
 
-1. Find the current milestone, the open one with the nearest due date (milestones without one sort last):
-   `gh api "repos/{owner}/{repo}/milestones?state=open&sort=due_on&direction=asc" -q '.[0] | {number, title, due_on, open_issues, closed_issues}'`
-2. List its open issues:
+1. Find the active milestones, as the [flow](../../../docs/process/planning-model.md#flow) section
+   defines them:
+   `gh api "repos/{owner}/{repo}/milestones?state=open&sort=due_on&direction=asc" -q '.[] | {number, title, due_on, open_issues, closed_issues}'`
+2. List the open issues of each milestone, in that order:
    `gh api "repos/{owner}/{repo}/issues?milestone=<number>&state=open&per_page=100" -q '.[] | select(.pull_request | not) | "#\(.number) [\([.labels[].name] | join(", "))] \(.title)"'`
 3. Leave out:
    - epics, and anything labeled `needs owner`
@@ -96,19 +97,13 @@ For each issue:
    Order the rest by priority label, then by the order of the epic's sub-issues
    (`gh api repos/{owner}/{repo}/issues/<epic>/sub_issues`).
 
-4. On the owner's computer, the board is the authority on what's in the sprint. Read the current
-   sprint with
-   `gh project item-list 1 --owner SprecherEast --limit 1000 --query "sprint:@current" --format json`.
-   That needs `gh` signed in with the `project` scope. Cloud sessions can't reach the board, so
-   say that the answer comes from the milestone instead.
-
 ## 3. Filing new work
 
 1. **Choose the level** with the [decision tree](../../../docs/process/planning-model.md#which-layer)
    and the [naming templates](../../../docs/process/planning-model.md#templates).
    - An outcome with a done test, spanning several capabilities, is a milestone; a capability
      grouping several related issues is an epic (label `epic`, one milestone).
-   - One deliverable that fits one sprint and one PR is an issue
+   - One deliverable that fits one PR is an issue
      ([the rule](../../../AGENTS.md#one-issue-one-pull-request)).
    - Something broken is a bug.
 2. **Search first** to avoid duplicates. Loop over the pages, since the repo has more than 100
@@ -162,7 +157,7 @@ For each issue:
    - add it to the checklist in the owner-actions epic (#169); its parent stays its own epic
    - mark the issues that depend on it as blocked by it
    - stop: it waits for him
-     ([waits for owner](../../../docs/process/project-management.md#waits-for-owner))
+     ([waits for owner](../../../docs/process/waits-for-owner.md))
 
    Ask him on the issue under a `### [QUESTION]` header, and in the chat too when he's there. Make it easy to answer:
 
@@ -221,19 +216,22 @@ For each issue:
 
 ```bash
 since=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-7d +%Y-%m-%dT%H:%M:%SZ)
-gh api "repos/{owner}/{repo}/issues?state=closed&since=$since&per_page=100" \
-  -q ".[] | select(.pull_request | not) | select(.state_reason == \"completed\") | select(.closed_at >= \"$since\") | \"#\\(.number) \\(.title)\""
+gh api --paginate "repos/{owner}/{repo}/issues?state=closed&since=$since&per_page=100" \
+  -q ".[] | select(.pull_request | not) | select(.state_reason == \"completed\") | select(.closed_at >= \"$since\") | \"\\(.milestone.title // \"no milestone\")\\t#\\(.number) \\(.title)\""
 gh api "repos/{owner}/{repo}/milestones?state=open" -q '.[] | "\(.title): \(.closed_issues) done, \(.open_issues) open, due \(.due_on)"'
 gh api "repos/{owner}/{repo}/issues?labels=needs%20owner&state=open&per_page=100" -q '.[] | "#\(.number) \(.title)"'
 ```
 
 `since` filters by last update, so the `closed_at` check keeps only the issues closed in the
-window, and `state_reason` drops duplicates and won't-fix. Report:
+window, `state_reason` drops duplicates and won't-fix, `select(.pull_request | not)` drops pull
+requests (the endpoint returns both), and `--paginate` reads every page (where it fails, loop over `&page=N` as in §3). This is the one place
+this query lives; the [weekly review](../../../docs/process/weekly-review.md) reuses it. Report:
 
-- what shipped (closed issues, grouped by epic: one `/parent` call per issue, as in §1)
+- what shipped (closed issues, grouped by milestone as printed, or by epic: one `/parent` call per issue, as in §1)
 - what's in progress (the open-PR list in §2 step 3)
 - what's Ready next (§2)
 - what's waiting on the owner (the `needs owner` list)
 - milestone progress
 
-Keep it short. It's for reading in a minute.
+Keep it short. It's for reading in a minute. The retrospective is the separate
+[weekly review](../../../docs/process/weekly-review.md).

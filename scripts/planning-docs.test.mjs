@@ -44,7 +44,7 @@ const links = (file) =>
     anchor: match[2],
   }))
 
-describe.each([MODEL, PLAYBOOK])('%s', (file) => {
+describe.each([MODEL, PLAYBOOK, 'docs/process/weekly-review.md'])('%s', (file) => {
   const text = read(file)
 
   it('stays under 250 lines', () => {
@@ -71,7 +71,7 @@ describe('the planning model', () => {
     'Milestone',
     'Epic',
     'Issue and sub-issue',
-    'Sprint',
+    'Flow',
     'Labels and fields',
     'Dependencies',
     'Which layer?',
@@ -94,15 +94,162 @@ describe('the planning model', () => {
       'docs.github.com/en/issues/using-labels-and-milestones-to-track-work/about-milestones',
       'docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/adding-sub-issues',
       'docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-issue-dependencies',
-      'docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iteration-fields',
       'docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/managing-issue-fields-in-your-organization',
       'docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/managing-issue-types-in-an-organization',
       'atlassian.com/agile/project-management/epics-stories-themes',
       'scrumguides.org/scrum-guide.html',
+      'kanbanguides.org',
       'INVEST',
     ]) {
       expect(sources, url).toContain(url)
     }
+  })
+})
+
+describe('continuous flow', () => {
+  const REVIEW = 'docs/process/weekly-review.md'
+  const RULE = 'docs/process/project-management.md'
+  const markdown = (dir) =>
+    fs
+      .readdirSync(path.join(root, dir))
+      .filter((name) => name.endsWith('.md'))
+      .map((name) => `${dir}/${name}`)
+  /** Vendored skills are third-party; their "iterations" are loops in JavaScript. */
+  const ownSkills = fs
+    .readdirSync(path.join(root, '.agents/skills'))
+    .filter((name) => !name.startsWith('vercel-'))
+    .map((name) => `.agents/skills/${name}/SKILL.md`)
+  const SPRINT_FREE = [
+    'AGENTS.md',
+    ...markdown('docs/process'),
+    ...markdown('docs/roles'),
+    ...markdown('.claude/agents'),
+    ...ownSkills,
+    '.claude/skills/project-tracking/SKILL.md',
+    'docs/product/roadmap.md',
+  ]
+
+  it('keeps sprints out of the process docs, skills, role guides and AGENTS.md, except the note that they were dropped', () => {
+    expect(SPRINT_FREE.length).toBeGreaterThan(30)
+    for (const file of SPRINT_FREE) {
+      const lines = read(file)
+        .split('\n')
+        .filter((line) => /sprint|iteration/i.test(line))
+        .filter((line) => !/dropped sprints/i.test(line))
+      expect(lines, file).toEqual([])
+    }
+  })
+
+  it('has the weekly review, which reads GitHub by REST and says what it cannot measure', () => {
+    const text = read(REVIEW)
+    expect(text).toMatch(/gh api/)
+    expect(text).toMatch(/cannot measure/i)
+    expect(text).toMatch(/token/i)
+    expect(text, 'it reads the friction notes in [STEP] comments').toMatch(/\[STEP\]/)
+  })
+
+  it('links the weekly review from the chief of staff skill', () => {
+    expect(links('.agents/skills/chief-of-staff/SKILL.md').map((link) => link.target)).toContain(
+      REVIEW,
+    )
+  })
+
+  it('keeps the closed-issues query in one place, with paging and without pull requests', () => {
+    const holders = [...new Set([...SPRINT_FREE, REVIEW])].filter((file) =>
+      read(file).includes('state=closed&since'),
+    )
+    expect(holders).toEqual(['.agents/skills/project-tracking/SKILL.md'])
+    const query = read(holders[0])
+      .split('\n')
+      .filter((line) => /state=closed&since/.test(line))
+    expect(query.join('\n')).toMatch(/--paginate/)
+    expect(read(holders[0])).toMatch(/select\(\.pull_request \| not\)/)
+    expect(links(REVIEW).map((link) => link.target)).toContain(
+      '.agents/skills/project-tracking/SKILL.md',
+    )
+  })
+
+  it('states the Kanban position once, in the planning model, and the weekly review links to it', () => {
+    const holders = (pattern) =>
+      [...new Set([...SPRINT_FREE, REVIEW])].filter((file) =>
+        pattern.test(read(file).replace(/\s+/g, ' ')),
+      )
+    expect(holders(/track neither/i)).toEqual([MODEL])
+    expect(holders(/no fixed meeting cadence/i)).toEqual([MODEL])
+    expect(
+      links(REVIEW).filter((link) => link.target === MODEL && link.anchor === 'flow'),
+    ).not.toHaveLength(0)
+  })
+
+  it('has a weekly review trigger at the start of a chief of staff session, defined once', () => {
+    const skill = read('.agents/skills/chief-of-staff/SKILL.md')
+    const start = skill.slice(skill.indexOf('## 1. Start of session'), skill.indexOf('## 2. Groom'))
+    expect(start).toMatch(/weekly review/i)
+    expect(start).not.toMatch(/Three things/)
+    expect(start).toMatch(/weekly-review\.md#/)
+    expect(read(REVIEW)).toMatch(/issues\/comments\?since=/)
+    expect(skill).not.toMatch(/issues\/comments\?since=/)
+  })
+
+  it('gives the weekly review report a home on GitHub that the due check reads', () => {
+    const review = read(REVIEW).replace(/\s+/g, ' ')
+    const report = review.slice(
+      review.indexOf('## The report'),
+      review.indexOf('## When one is due'),
+    )
+    expect(report).toMatch(/comment on the open issue that holds the previous review/)
+    expect(report).toMatch(/standing `process` issue/)
+    expect(report).toMatch(/the GitHub comment is what counts/)
+    expect(report).not.toMatch(/with none named, in the chat/)
+    const due = review.slice(review.indexOf('## When one is due'))
+    expect(due).toMatch(/where the report is posted/)
+    expect(due).toMatch(/issues\/comments\?since=/)
+  })
+
+  it('links from workflows and scripts into docs headings that exist', () => {
+    const files = [
+      ...fs.readdirSync(path.join(root, '.github/workflows')).map((n) => `.github/workflows/${n}`),
+      ...fs
+        .readdirSync(path.join(root, '.github/scripts'))
+        .filter((n) => n.endsWith('.mjs') && !n.includes('.test.'))
+        .map((n) => `.github/scripts/${n}`),
+      ...fs
+        .readdirSync(path.join(root, 'scripts'))
+        .filter((n) => n.endsWith('.mjs') && !n.includes('.test.'))
+        .map((n) => `scripts/${n}`),
+    ]
+    for (const file of files) {
+      for (const [, target, anchor] of read(file).matchAll(/(docs\/[\w/.-]+\.md)#([\w-]+)/g)) {
+        expect(fs.existsSync(path.join(root, target)), `${file} -> ${target}`).toBe(true)
+        expect(anchors(target), `${file} -> ${target}#${anchor}`).toContain(anchor)
+      }
+    }
+  })
+
+  it('keeps how-we-work under the length limit', () => {
+    expect(read(RULE).split('\n').length).toBeLessThan(250)
+  })
+
+  it('writes the session handoff rule once, and the worker and chief of staff point to it', () => {
+    expect(anchors(RULE)).toContain('session-handoff')
+    for (const file of ['docs/roles/worker.md', '.agents/skills/chief-of-staff/SKILL.md']) {
+      const found = links(file).filter((link) => link.target === RULE)
+      expect(
+        found.map((link) => link.anchor),
+        file,
+      ).toContain('session-handoff')
+    }
+  })
+
+  it('has a handoff a session on another device can continue from', () => {
+    const text = read(RULE)
+    const rule = text.slice(
+      text.indexOf('## Session handoff'),
+      text.indexOf('## Definition of Ready'),
+    )
+    expect(rule, 'commit and push first').toMatch(/commit(s)? and push(es)?/i)
+    expect(rule, 'the claim form claimBranch reads').toMatch(/Branch: `/)
+    expect(rule, 'when nothing was posted').toMatch(/posted nothing/i)
   })
 })
 
