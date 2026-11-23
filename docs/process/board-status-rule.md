@@ -55,7 +55,7 @@ issue the event concerns is written.
 - **The reason.** A move to Backlog, Ready or In progress writes the new status and the rule's
   reason sentence in one "Board status" comment on the issue, found again by a hidden marker and a
   bot author, and edited in place on every later move. The text is fixed sentences and the branch
-  name; it never quotes anyone. A move to In review or Done, which GitHub's own board workflows
+  name; it never quotes anyone, and it is written before the card moves. A move to In review or Done, which GitHub's own board workflows
   make, leaves none.
 - **What it writes.** The Status field and that comment. No label, no assignee, no other card.
 - **Catching up.** Label changes made by other workflows start no run, and a run can read an issue a

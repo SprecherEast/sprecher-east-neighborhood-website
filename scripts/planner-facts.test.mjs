@@ -102,7 +102,13 @@ describe('factsFromIssue', () => {
     }
     const card = factsFromIssue(issue({ subIssues: { nodes: [sub] } }), policy)
     expect(card.facts.subIssues).toEqual([
-      { key: 'o/r#2', number: 2, state: 'open', projects: [{ owner: 'o', number: 1 }] },
+      {
+        key: 'o/r#2',
+        repository: 'o/r',
+        number: 2,
+        state: 'open',
+        projects: [{ owner: 'o', number: 1 }],
+      },
     ])
   })
 

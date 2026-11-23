@@ -377,6 +377,12 @@ describe('an event moves the card by the rule', () => {
 describe('the reason on the issue', () => {
   const claimed = { 5: node(5, { assignees: owner, comments: claim() }) }
 
+  it('writes the reason before the card moves, so no card moves without one', () => {
+    const w = world({ issues: claimed, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    expect(w.writes.map((entry) => entry.kind)).toEqual(['POST', 'edit'])
+  })
+
   it('edits the one Board status comment in place on a later move', () => {
     const old = { id: 77, type: 'Bot', body: `${BOARD_STATUS_MARKER}\nold text` }
     const w = world({ issues: claimed, cards: { 5: STATUS.ready }, comments: { 5: [old] } })

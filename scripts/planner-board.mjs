@@ -175,6 +175,11 @@ export function moveCard({ run, env, policy, log = console.log }) {
     .organization.projectV2
   const option = board.status.options.find((entry) => entry.name === changes.status)
   if (!option) throw new Error(`The board has no "${changes.status}" status.`)
+  // The reason comes first: a card never moves without one, and a failed move is retried by the
+  // next event, which writes the same comment again
+  if (needsComment(changes.status)) {
+    writeComment(run, REPO, ISSUE, boardStatusComment({ from: item.status, result }))
+  }
   run([
     'project',
     'item-edit',
@@ -187,9 +192,6 @@ export function moveCard({ run, env, policy, log = console.log }) {
     '--single-select-option-id',
     option.id,
   ])
-  if (needsComment(changes.status)) {
-    writeComment(run, REPO, ISSUE, boardStatusComment({ from: item.status, result }))
-  }
   return changes
 }
 

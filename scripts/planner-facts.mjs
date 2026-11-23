@@ -12,6 +12,9 @@ import { POLICY_URL } from './planner-config.mjs'
 import { issueCheckProblems } from './planner-ready.mjs'
 import { claimBranch, issueOfBranch } from './planner-status.mjs'
 
+/** The `owner/name` of the repository a GraphQL node belongs to. */
+const repositoryOf = (node) => node?.repository?.nameWithOwner
+
 /** Runs `gh`, signed in as whoever the workflow made, and returns its answer as text. */
 export const runGh = (args) =>
   execFileSync('gh', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).trim()
@@ -56,13 +59,13 @@ const nodesOf = (connection, list, issue) => {
   if ((connection?.totalCount ?? nodes.length) > nodes.length) {
     throw new TruncatedError(
       `#${issue.number}: its ${list} list is cut off, so it was not read in full.`,
-      issueKey(issue.repository?.nameWithOwner, issue.number),
+      issueKey(repositoryOf(issue), issue.number),
     )
   }
   return nodes
 }
 
-const pullRequestKey = (pr) => issueKey(pr.repository?.nameWithOwner, pr.number)
+const pullRequestKey = (pr) => issueKey(repositoryOf(pr), pr.number)
 
 /**
  * The pull requests that show work on the issue, keyed by repository and number: the ones GitHub
@@ -71,14 +74,14 @@ const pullRequestKey = (pr) => issueKey(pr.repository?.nameWithOwner, pr.number)
  * parser, `linkedIssues`, so a keyword inside a comment does not count. A plain mention never does.
  */
 function pullRequestsOf(issue, closing, events) {
-  const here = issue.repository?.nameWithOwner
+  const here = repositoryOf(issue)
   const declared = events
     .map((event) => event.source)
     .filter(
       (pr) =>
         typeof pr?.body === 'string' &&
         here &&
-        pr.repository?.nameWithOwner === here &&
+        repositoryOf(pr) === here &&
         linkedIssues(pr.body).closes.includes(issue.number),
     )
   return new Map([...declared, ...closing].map((pr) => [pullRequestKey(pr), pr]))
@@ -115,7 +118,7 @@ export function factsFromIssue(issue, policy) {
   const closing = read('closedByPullRequestsReferences')
   const events = read('timelineItems')
   const pulls = pullRequestsOf(issue, closing, events)
-  const repository = issue.repository?.nameWithOwner
+  const repository = repositoryOf(issue)
   return {
     key: issueKey(repository, issue.number),
     repository,
@@ -135,7 +138,8 @@ export function factsFromIssue(issue, policy) {
       mergedPullRequests: mergedThatSettle(pulls, events),
       pullRequests: pulls.size,
       subIssues: read('subIssues').map((child) => ({
-        key: issueKey(child.repository?.nameWithOwner, child.number),
+        key: issueKey(repositoryOf(child), child.number),
+        repository: repositoryOf(child),
         number: child.number,
         state: child.state.toLowerCase(),
         projects: (child.projectItems?.nodes ?? []).map(({ project }) => ({
