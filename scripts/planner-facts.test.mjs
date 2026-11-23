@@ -5,7 +5,8 @@
 import { parse } from 'graphql'
 import { describe, expect, it } from 'vitest'
 
-import { STATUS_FIELD } from './planner-config.mjs'
+import { STATUS_FIELD, TRUSTED_ASSOCIATIONS } from './planner-config.mjs'
+import { BOARD_STATUS_MARKER } from './planner-comment.mjs'
 import {
   factsFromIssue,
   graphqlArgs,
@@ -42,6 +43,7 @@ const pull = (over = {}) => ({
   number: 9,
   state: 'OPEN',
   merged: false,
+  authorAssociation: 'OWNER',
   body: 'See #1',
   repository: { nameWithOwner: 'o/r' },
   ...over,
@@ -68,7 +70,15 @@ describe('factsFromIssue', () => {
 
   it('counts an open pull request that closes the issue as In review, also an upper stack layer', () => {
     const closing = {
-      nodes: [{ number: 5, state: 'OPEN', merged: false, repository: { nameWithOwner: 'o/r' } }],
+      nodes: [
+        {
+          number: 5,
+          state: 'OPEN',
+          merged: false,
+          authorAssociation: 'OWNER',
+          repository: { nameWithOwner: 'o/r' },
+        },
+      ],
     }
     expect(
       factsFromIssue(issue({ closedByPullRequestsReferences: closing }), policy).facts
@@ -189,5 +199,82 @@ describe('graphqlArgs', () => {
 describe('the Status field', () => {
   it('is named once', () => {
     expect(STATUS_FIELD).toBe('Status')
+  })
+})
+
+describe('whose words count (a public repository)', () => {
+  const comment = (body, authorAssociation) => ({
+    databaseId: 1,
+    body,
+    authorAssociation,
+    author: { login: 'x', __typename: 'User' },
+  })
+  const claim = '### [STEP] Claimed\n\nBranch: `agent/worker/1-x`'
+
+  it('defines the people who count once: owner, member, collaborator', () => {
+    expect([...TRUSTED_ASSOCIATIONS].sort()).toEqual(['COLLABORATOR', 'MEMBER', 'OWNER'])
+  })
+
+  it('takes a claim comment only from one of them', () => {
+    const read = (association) =>
+      factsFromIssue(issue({ comments: { nodes: [comment(claim, association)] } }), policy).facts
+        .claimBranch
+    for (const association of ['OWNER', 'MEMBER', 'COLLABORATOR']) {
+      expect(read(association), association).toBe('agent/worker/1-x')
+    }
+    for (const association of ['NONE', 'CONTRIBUTOR', 'FIRST_TIME_CONTRIBUTOR', undefined]) {
+      expect(read(association), String(association)).toBeNull()
+    }
+  })
+
+  it('counts a pull request GitHub links, or one that says it closes the issue, only from one of them', () => {
+    const outsider = { authorAssociation: 'FIRST_TIME_CONTRIBUTOR' }
+    const closing = {
+      nodes: [
+        {
+          number: 5,
+          state: 'OPEN',
+          merged: false,
+          repository: { nameWithOwner: 'o/r' },
+          ...outsider,
+        },
+      ],
+    }
+    const declared = { nodes: [crossRef(pull({ number: 6, body: 'Closes #1', ...outsider }))] }
+    const card = factsFromIssue(
+      issue({ closedByPullRequestsReferences: closing, timelineItems: declared }),
+      policy,
+    )
+    expect(card.facts).toMatchObject({ openPullRequests: 0, pullRequests: 0 })
+    expect(boardStatus(card.facts).status).toBe('Backlog')
+  })
+})
+
+describe('the planner comment on an issue', () => {
+  const botComment = (body) => ({
+    databaseId: 42,
+    body,
+    authorAssociation: 'NONE',
+    author: { login: 'planner', __typename: 'Bot' },
+  })
+
+  it('is found for the app slug, with the status the planner last set', () => {
+    const body = `${BOARD_STATUS_MARKER}\n<!-- planner:set=Ready -->\ntext`
+    const card = factsFromIssue(
+      issue({ comments: { nodes: [botComment(body)] } }),
+      policy,
+      'planner',
+    )
+    expect(card.facts.statusComment).toEqual({ id: 42, body })
+    expect(card.facts.plannerSet).toBe('Ready')
+  })
+
+  it('is not found without the slug, or for another app', () => {
+    const body = `${BOARD_STATUS_MARKER}\ntext`
+    const read = (slug) =>
+      factsFromIssue(issue({ comments: { nodes: [botComment(body)] } }), policy, slug).facts
+    expect(read(undefined).statusComment).toBeNull()
+    expect(read('someone-else').statusComment).toBeNull()
+    expect(read(undefined).plannerSet).toBeNull()
   })
 })

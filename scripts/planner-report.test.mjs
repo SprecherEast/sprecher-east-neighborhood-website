@@ -56,8 +56,14 @@ describe('cardFromNode', () => {
         {},
         {
           assignees: { nodes: [{ login: 'a' }] },
-          comments: { nodes: [{ body: '### [STEP] Claimed\n\nBranch: `agent/x`' }] },
-          closedByPullRequestsReferences: { nodes: [{ number: 3, state: 'OPEN', merged: false }] },
+          comments: {
+            nodes: [
+              { body: '### [STEP] Claimed\n\nBranch: `agent/x`', authorAssociation: 'OWNER' },
+            ],
+          },
+          closedByPullRequestsReferences: {
+            nodes: [{ number: 3, state: 'OPEN', merged: false, authorAssociation: 'OWNER' }],
+          },
           timelineItems: { nodes: [{ source: {} }] },
         },
       ),
@@ -87,6 +93,7 @@ describe('cardFromNode', () => {
     number: 9,
     state: 'OPEN',
     merged: false,
+    authorAssociation: 'OWNER',
     body: 'See #1',
     repository: { nameWithOwner: 'o/r' },
   }
@@ -100,9 +107,15 @@ describe('cardFromNode', () => {
   it('counts open, merged and closed pull requests from the closing references only', () => {
     const closing = {
       nodes: [
-        { number: 5, state: 'MERGED', merged: true, mergedAt: '2026-11-01T00:00:00Z' },
-        { number: 6, state: 'CLOSED', merged: false },
-        { number: 7, state: 'OPEN', merged: false },
+        {
+          number: 5,
+          state: 'MERGED',
+          merged: true,
+          authorAssociation: 'OWNER',
+          mergedAt: '2026-11-01T00:00:00Z',
+        },
+        { number: 6, state: 'CLOSED', merged: false, authorAssociation: 'OWNER' },
+        { number: 7, state: 'OPEN', merged: false, authorAssociation: 'OWNER' },
       ],
     }
     const card = cardFromNode(node({}, { closedByPullRequestsReferences: closing }), policy)
@@ -145,7 +158,15 @@ describe('cardFromNode', () => {
   it('still counts a pull request as started after a reopen, in every state', () => {
     const reopened = { __typename: 'ReopenedEvent', createdAt: '2026-11-05T00:00:00Z' }
     const closing = {
-      nodes: [{ number: 5, state: 'MERGED', merged: true, mergedAt: '2026-11-01T00:00:00Z' }],
+      nodes: [
+        {
+          number: 5,
+          state: 'MERGED',
+          merged: true,
+          authorAssociation: 'OWNER',
+          mergedAt: '2026-11-01T00:00:00Z',
+        },
+      ],
     }
     const upperLayer = { ...mention, number: 12, body: 'Closes #1' }
     const events = { nodes: [crossRef(upperLayer), reopened] }
@@ -171,6 +192,7 @@ describe('cardFromNode', () => {
           number: 9,
           state: 'MERGED',
           merged: true,
+          authorAssociation: 'OWNER',
           mergedAt: '2026-01-01T00:00:00Z',
           repository: { nameWithOwner: 'x/y' },
         },
@@ -280,6 +302,22 @@ describe('buildReport', () => {
     ])
   })
 
+  it('says for each differing card what the next event would do: move it, or hold it for the owner', () => {
+    const rows = buildReport([
+      card(1, 'Ready'), // the rule says Backlog: backwards, not set by the planner
+      card(2, 'Ready', { plannerSet: 'Ready' }), // backwards, but the planner set it
+      card(3, 'Backlog', { labels: ['ready'] }), // forward
+      card(4, 'Backlog', { assignees: ['a'] }), // flag only, no move
+    ])
+    const moves = Object.fromEntries(rows.map((row) => [row.number, row.move]))
+    expect(moves).toEqual({ 1: 'held', 2: 'moves', 3: 'moves', 4: null })
+  })
+
+  it('treats a card with no status as differing, and an event would set it', () => {
+    const [row] = buildReport([card(1, null)])
+    expect(row).toMatchObject({ current: null, status: 'Backlog', move: 'moves' })
+  })
+
   it('counts a sub-issue that is not on the board as Backlog, and keys by repository', () => {
     const rows = buildReport([
       card(10, 'In progress', { labels: ['epic'], subIssues: [sub(99), sub(11, 'open', 'x/y')] }),
@@ -317,6 +355,43 @@ describe('renderTable', () => {
     expect(text).toContain('f1')
     expect(text).toContain('A \\| B')
     expect(text).toMatch(/5 open cards/)
+  })
+
+  it('shows the next event for each card and names a missing status', () => {
+    const rows = [
+      {
+        number: 1,
+        title: 'A',
+        current: null,
+        status: 'Backlog',
+        reason: 'r',
+        flags: [],
+        move: 'moves',
+      },
+      {
+        number: 2,
+        title: 'B',
+        current: 'Ready',
+        status: 'Backlog',
+        reason: 'r',
+        flags: [],
+        move: 'held',
+      },
+      {
+        number: 3,
+        title: 'C',
+        current: 'Backlog',
+        status: 'Backlog',
+        reason: 'r',
+        flags: ['f'],
+        move: null,
+      },
+    ]
+    const text = renderTable(rows, 3)
+    expect(text).toContain('Next event')
+    expect(text).toMatch(/#1 A \| No status \| Backlog \| would move/)
+    expect(text).toMatch(/#2 B \| Ready \| Backlog \| held for confirmation/)
+    expect(text).toMatch(/#3 C \| Backlog \| Backlog \| none/)
   })
 
   it('says so when every card agrees', () => {
@@ -384,6 +459,29 @@ describe('main: reads everything, writes nothing', () => {
     expect(code).toBe(0)
     expect(out.join('\n')).toMatch(/#3[^\n]*Backlog[^\n]*In progress/)
     expect(out.join('\n')).not.toMatch(/never started/i)
+  })
+
+  it('reads the planner comment of the app named in the environment, so a held move shows as held', () => {
+    const out = []
+    const comments = {
+      nodes: [
+        {
+          databaseId: 5,
+          body: '<!-- planner:board-status -->\n<!-- planner:set=In progress -->',
+          authorAssociation: 'NONE',
+          author: { login: 'planner', __typename: 'Bot' },
+        },
+      ],
+    }
+    const code = main({
+      run: run([], [page([node({ status: { name: 'In progress' } }, { comments })])]),
+      env: { ...env, PLANNER_APP_SLUG: 'planner' },
+      policy,
+      log: (text) => out.push(text),
+      appendSummary: () => {},
+    })
+    expect(code).toBe(0)
+    expect(out.join('\n')).toMatch(/#1[^\n]*In progress[^\n]*Backlog[^\n]*would move/)
   })
 
   it('issues no write of any kind: only read queries go out', () => {
@@ -501,6 +599,13 @@ describe('readOnlyRun', () => {
 })
 
 describe('QUERY', () => {
+  it('asks who wrote each comment and pull request, so only the repository people count', () => {
+    expect(QUERY).toMatch(/comments\([^)]*\)\{totalCount nodes\{[^}]*authorAssociation/)
+    expect(QUERY).toMatch(/comments\([^)]*\)\{totalCount nodes\{[^}]*databaseId/)
+    expect(QUERY).toMatch(/closedByPullRequestsReferences[^]*?authorAssociation/)
+    expect(QUERY).toMatch(/PullRequest\{number state merged mergedAt authorAssociation/)
+  })
+
   it('parses as GraphQL', () => {
     expect(() => parse(QUERY)).not.toThrow()
   })

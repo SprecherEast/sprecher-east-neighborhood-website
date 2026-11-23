@@ -50,3 +50,17 @@ describe('the Planner Board workflow', () => {
     expect(workflow).toContain('/.github/label-policy.json')
   })
 })
+
+describe('one run at a time for an issue', () => {
+  it('puts every run for one issue in one concurrency group, so two runs never post two comments', () => {
+    const group = workflow.match(/concurrency:\n {2}group: (.*)\n/)[1]
+    expect(group).not.toMatch(/work|state/)
+    expect(group).toContain('github.event.issue.number')
+  })
+
+  it('tells both jobs the app name, so the planner finds its own comment and no other', () => {
+    expect(
+      workflow.match(/PLANNER_APP_SLUG: \$\{\{ steps\.app\.outputs\.app-slug \}\}/g),
+    ).toHaveLength(2)
+  })
+})

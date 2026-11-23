@@ -70,7 +70,8 @@ describe('boardStatus: the five rows', () => {
   it('3. assigned with a claim naming a branch is In progress, however quiet', () => {
     const result = boardStatus(facts({ assignees: ['a'], claimBranch: 'agent/x' }))
     expect(result.status).toBe('In progress')
-    expect(result.reason).toContain('agent/x')
+    expect(result.reason).toMatch(/claim comment names a branch/)
+    expect(result.reason, 'the branch name is text from a comment').not.toContain('agent/x')
   })
 
   it('3. a claim comment without an assignee, or an assignee without a claim, is not a claim', () => {
@@ -189,7 +190,7 @@ describe('boardStatus: started work shows in three ways', () => {
   const assigned = { assignees: ['a'] }
 
   it.each([
-    ['a claim comment names a branch', { claimBranch: 'agent/worker/1-x' }, 'agent/worker/1-x'],
+    ['a claim comment names a branch', { claimBranch: 'agent/worker/1-x' }, /claim comment/],
     ['a pull request in any state closes it or says it does', { pullRequests: 1 }, /pull request/],
     [
       'a claim-named branch exists on the remote',
@@ -200,6 +201,7 @@ describe('boardStatus: started work shows in three ways', () => {
     const result = boardStatus(facts({ ...assigned, ...over }))
     expect(result.status).toBe('In progress')
     expect(result.reason).toMatch(reason)
+    expect(result.reason).not.toMatch(/agent\//)
     expect(result.flags).toEqual([])
   })
 
@@ -290,5 +292,47 @@ describe('settleCards', () => {
       card('o/r#10', { labels: ['epic'], subIssues: [child('o/r#11', 'closed')] }),
     ])
     expect(settled.get('o/r#10').flags.join(' ')).toMatch(/every child/i)
+  })
+})
+
+describe('isBackwards', () => {
+  it('follows the column order: Backlog, Ready, In progress, In review, Done', () => {
+    expect(isBackwards('Ready', 'Backlog')).toBe(true)
+    expect(isBackwards('Done', 'In progress')).toBe(true)
+    expect(isBackwards('In review', 'In progress')).toBe(true)
+    expect(isBackwards('Backlog', 'Ready')).toBe(false)
+    expect(isBackwards('In progress', 'In progress')).toBe(false)
+  })
+
+  it('counts a card with no status as before every column', () => {
+    expect(isBackwards(null, 'Backlog')).toBe(false)
+  })
+})
+
+describe('decideChanges: an event never moves a card backwards on its own', () => {
+  const result = (status) => ({ status, reason: 'why', flags: [] })
+  const decide = (to, from, over = {}) =>
+    decideChanges({ result: result(to), item: { status: from }, action: 'edited', ...over })
+
+  it('changes nothing when the card already says what the rule gives', () => {
+    expect(decide('Ready', 'Ready')).toEqual({})
+  })
+
+  it('applies a forward move on an event', () => {
+    expect(decide('In progress', 'Ready')).toEqual({ status: 'In progress' })
+    expect(decide('Backlog', null)).toEqual({ status: 'Backlog' })
+  })
+
+  it('holds a backward move for the owner when the planner did not set the card', () => {
+    expect(decide('Backlog', 'In progress')).toEqual({ held: 'Backlog' })
+    expect(decide('Backlog', 'In progress', { plannerSet: 'Ready' })).toEqual({ held: 'Backlog' })
+  })
+
+  it('moves back a card whose current status the planner itself set', () => {
+    expect(decide('Backlog', 'Ready', { plannerSet: 'Ready' })).toEqual({ status: 'Backlog' })
+  })
+
+  it('applies the held move on a manual run for the issue, which is the owner confirming it', () => {
+    expect(decide('Backlog', 'In progress', { action: 'sync' })).toEqual({ status: 'Backlog' })
   })
 })

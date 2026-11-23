@@ -8,14 +8,8 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import * as board from './planner-board.mjs'
-import {
-  BOARD_STATUS_MARKER,
-  boardStatusComment,
-  decideChanges,
-  findStatusComment,
-  moveCard,
-  needsComment,
-} from './planner-board.mjs'
+import { moveCard } from './planner-board.mjs'
+import { BOARD_STATUS_MARKER } from './planner-comment.mjs'
 import { CARD_STATUS_FRAGMENT, ORG, PROJECT, STATUS } from './planner-config.mjs'
 import { OWNER_LABEL, READY_LABEL, readyBlockers } from './planner-ready.mjs'
 import { QUERY } from './planner-report.mjs'
@@ -79,61 +73,8 @@ describe('the names the app and the agents rely on', () => {
   })
 })
 
-describe('decideChanges', () => {
-  const result = (status) => ({ status, reason: 'why', flags: [] })
-
-  it('sets the card to the status the rule gives', () => {
-    expect(
-      decideChanges({ result: result(STATUS.inProgress), item: { status: STATUS.ready } }),
-    ).toEqual({
-      status: STATUS.inProgress,
-    })
-  })
-
-  it('changes nothing when the card already says it', () => {
-    expect(decideChanges({ result: result(STATUS.ready), item: { status: STATUS.ready } })).toEqual(
-      {},
-    )
-  })
-
-  it('sets and reads no field other than the status', () => {
-    const changes = decideChanges({ result: result(STATUS.done), item: { status: STATUS.backlog } })
-    expect(Object.keys(changes)).toEqual(['status'])
-  })
-})
-
-describe('the Board status comment', () => {
-  const result = { status: STATUS.inProgress, reason: 'It is assigned.', flags: ['A flag.'] }
-
-  it('carries a hidden marker, the new status, the old one, the reason and the flags', () => {
-    const body = boardStatusComment({ from: STATUS.ready, result })
-    expect(body.startsWith(BOARD_STATUS_MARKER)).toBe(true)
-    expect(body).toContain('Board status: In progress')
-    expect(body).toContain('Ready')
-    expect(body).toContain('It is assigned.')
-    expect(body).toContain('A flag.')
-  })
-
-  it('is written only for statuses GitHub does not set itself', () => {
-    expect([STATUS.backlog, STATUS.ready, STATUS.inProgress].map(needsComment)).toEqual([
-      true,
-      true,
-      true,
-    ])
-    expect([STATUS.inReview, STATUS.done].map(needsComment)).toEqual([false, false])
-  })
-
-  it('is found again by its marker, and only when a bot wrote it', () => {
-    const mine = { id: 7, type: 'Bot', body: `${BOARD_STATUS_MARKER}\nold` }
-    const forged = { id: 3, type: 'User', body: `${BOARD_STATUS_MARKER}\nfake` }
-    const other = { id: 4, type: 'Bot', body: 'something else' }
-    expect(findStatusComment([forged, other, mine])).toEqual(mine)
-    expect(findStatusComment([forged, other])).toBeNull()
-  })
-})
-
 /** A small GitHub: the issues it holds, the cards on the board, and a record of every write. */
-function world({ issues, cards = {}, branches = [], comments = {} }) {
+function world({ issues, cards = {}, branches = [] }) {
   const writes = []
   const reads = []
   const options = Object.values(STATUS).map((name, index) => ({ id: `opt${index}`, name }))
@@ -170,10 +111,6 @@ function world({ issues, cards = {}, branches = [], comments = {} }) {
       reads.push(`issue ${number}`)
       return JSON.stringify({ data: { repository: { issue: issues[number] ?? null } } })
     }
-    if (args[0] === 'api' && args.at(-2) === '--jq') {
-      const number = Number(args.find((arg) => arg.includes('/issues/')).split('/')[4])
-      return (comments[number] ?? []).map((entry) => JSON.stringify(entry)).join('\n')
-    }
     if (args[0] === 'api' && args.includes('-X')) {
       writes.push({
         kind: args[args.indexOf('-X') + 1],
@@ -206,37 +143,53 @@ const node = (number, over = {}) => ({
   subIssues: { nodes: [] },
   ...over,
 })
+const person = (body, authorAssociation = 'OWNER') => ({
+  databaseId: 1,
+  body,
+  authorAssociation,
+  author: { login: 'someone', __typename: 'User' },
+})
 const claim = (branch = 'agent/worker/5-x') => ({
-  nodes: [{ body: `### [STEP] Claimed\n\n**Branch:** \`${branch}\`.` }],
+  nodes: [person(`### [STEP] Claimed\n\n**Branch:** \`${branch}\`.`)],
+})
+/** The planner's own comment on an issue, as GitHub returns it; `set` is the status it last set. */
+const plannerComment = (set, id = 77, login = 'planner') => ({
+  databaseId: id,
+  body: `${BOARD_STATUS_MARKER}\n${set ? `<!-- planner:set=${set} -->\n` : ''}old text`,
+  authorAssociation: 'NONE',
+  author: { login, __typename: 'Bot' },
 })
 const owner = { nodes: [{ login: 'someone' }] }
+const readyLabels = {
+  nodes: [{ name: 'enhancement' }, { name: 'ci' }, { name: 'priority: low' }, { name: 'ready' }],
+}
 const env = (number, action = 'assigned') => ({
   REPO: 'o/r',
   ISSUE: String(number),
   ACTION: action,
   ORG,
   PROJECT,
+  PLANNER_APP_SLUG: 'planner',
 })
 const go = (w, number, action) =>
   moveCard({ run: w.run, env: env(number, action), policy, log: () => {} })
 const editsOf = (w) => w.writes.filter((entry) => entry.kind === 'edit')
+const commentsOf = (w) => w.writes.filter((entry) => entry.kind !== 'edit')
 const optionFor = (status) => `opt${Object.values(STATUS).indexOf(status)}`
+const claimed = (over = {}) => node(5, { assignees: owner, comments: claim(), ...over })
 
 describe('an event moves the card by the rule', () => {
   it('sets the card to the rule status and writes the reason on the issue', () => {
-    const w = world({
-      issues: { 5: node(5, { assignees: owner, comments: claim() }) },
-      cards: { 5: STATUS.ready },
-    })
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.ready } })
     go(w, 5, 'assigned')
     expect(editsOf(w)).toEqual([
       { kind: 'edit', item: 'item5', option: optionFor(STATUS.inProgress) },
     ])
-    const posts = w.writes.filter((entry) => entry.kind === 'POST')
+    const posts = commentsOf(w)
     expect(posts).toHaveLength(1)
-    expect(posts[0].path).toBe('repos/o/r/issues/5/comments')
+    expect(posts[0]).toMatchObject({ kind: 'POST', path: 'repos/o/r/issues/5/comments' })
     expect(posts[0].body).toContain(BOARD_STATUS_MARKER)
-    expect(posts[0].body).toContain('agent/worker/5-x')
+    expect(posts[0].body).toContain('<!-- planner:set=In progress -->')
   })
 
   it.each([
@@ -250,29 +203,18 @@ describe('an event moves the card by the rule', () => {
     'demilestoned',
     'sync',
   ])('leaves a claimed issue In progress after a %s event, however quiet it is', (action) => {
-    const w = world({
-      issues: { 5: node(5, { assignees: owner, comments: claim() }) },
-      cards: { 5: STATUS.inProgress },
-    })
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.inProgress } })
     go(w, 5, action)
     expect(w.writes).toEqual([])
   })
 
-  it('catches up a card the rule says is Ready, and one that lost its label', () => {
-    const ready = {
-      nodes: [
-        { name: 'enhancement' },
-        { name: 'ci' },
-        { name: 'priority: low' },
-        { name: 'ready' },
-      ],
-    }
-    const w = world({ issues: { 5: node(5, { labels: ready }) }, cards: { 5: STATUS.backlog } })
+  it('moves a Backlog card forward to Ready on a label event', () => {
+    const w = world({
+      issues: { 5: node(5, { labels: readyLabels }) },
+      cards: { 5: STATUS.backlog },
+    })
     go(w, 5, 'labeled')
     expect(editsOf(w)[0].option).toBe(optionFor(STATUS.ready))
-    const w2 = world({ issues: { 5: node(5) }, cards: { 5: STATUS.ready } })
-    go(w2, 5, 'unlabeled')
-    expect(editsOf(w2)[0].option).toBe(optionFor(STATUS.backlog))
   })
 
   it('treats a pull request that closes the issue, and a remote branch, as work started', () => {
@@ -283,6 +225,7 @@ describe('an event moves the card by the rule', () => {
           state: 'MERGED',
           merged: true,
           mergedAt: '2026-01-01T00:00:00Z',
+          authorAssociation: 'OWNER',
           repository: { nameWithOwner: 'o/r' },
         },
       ],
@@ -309,26 +252,16 @@ describe('an event moves the card by the rule', () => {
   })
 
   it('moves only the card of the issue the event concerns, children are only read', () => {
+    const onBoard = { nodes: [{ project: { number: Number(PROJECT), owner: { login: ORG } } }] }
+    const sub = (number, projectItems) => ({
+      number,
+      state: 'OPEN',
+      repository: { nameWithOwner: 'o/r' },
+      projectItems,
+    })
     const epic = node(5, {
       labels: { nodes: [{ name: 'epic' }] },
-      subIssues: {
-        nodes: [
-          {
-            number: 6,
-            state: 'OPEN',
-            repository: { nameWithOwner: 'o/r' },
-            projectItems: {
-              nodes: [{ project: { number: Number(PROJECT), owner: { login: ORG } } }],
-            },
-          },
-          {
-            number: 7,
-            state: 'OPEN',
-            repository: { nameWithOwner: 'o/r' },
-            projectItems: { nodes: [] },
-          },
-        ],
-      },
+      subIssues: { nodes: [sub(6, onBoard), sub(7, { nodes: [] })] },
     })
     const w = world({
       issues: {
@@ -342,11 +275,7 @@ describe('an event moves the card by the rule', () => {
     expect(editsOf(w)).toEqual([
       { kind: 'edit', item: 'item5', option: optionFor(STATUS.inProgress) },
     ])
-    expect(
-      w.writes.every(
-        (entry) => entry.kind === 'edit' || entry.path === 'repos/o/r/issues/5/comments',
-      ),
-    ).toBe(true)
+    expect(commentsOf(w).every((entry) => entry.path === 'repos/o/r/issues/5/comments')).toBe(true)
     expect(w.reads).toContain('issue 6')
     expect(w.reads, 'a sub-issue that is not on the board is not read').not.toContain('issue 7')
   })
@@ -367,41 +296,114 @@ describe('an event moves the card by the rule', () => {
     expect(w.writes).toEqual([])
   })
 
-  it('refuses an issue that is not a number', () => {
+  it('puts a closed issue Done on a manual run, which also brings its card back onto the board', () => {
+    const w = world({
+      issues: { 5: node(5, { state: 'CLOSED' }) },
+      cards: { 5: STATUS.inProgress },
+    })
+    go(w, 5, 'sync')
+    expect(editsOf(w)[0].option).toBe(optionFor(STATUS.done))
+  })
+
+  it('refuses an issue that is not a number, and a run without the app name', () => {
     expect(() => moveCard({ run: () => '', env: { ...env(5), ISSUE: '5; rm' }, policy })).toThrow(
       /number/,
     )
+    const bad = { ...env(5), PLANNER_APP_SLUG: '' }
+    expect(() => moveCard({ run: () => '', env: bad, policy })).toThrow(/app/i)
+  })
+
+  it('sets a card that has no status, as the report shows it', () => {
+    const w = world({ issues: { 5: node(5) }, cards: {} })
+    go(w, 5, 'opened')
+    expect(editsOf(w)[0].option).toBe(optionFor(STATUS.backlog))
+  })
+})
+
+describe('an event never moves a card backwards on its own', () => {
+  const lost = () => node(5) // the rule says Backlog
+
+  it('holds a backward move for the owner and says so on the issue', () => {
+    const w = world({ issues: { 5: lost() }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'edited')
+    expect(editsOf(w)).toEqual([])
+    expect(commentsOf(w)).toHaveLength(1)
+    expect(commentsOf(w)[0].body).toMatch(/held for the owner's confirmation/i)
+  })
+
+  it('writes no second comment when the held move was already written', () => {
+    const w = world({ issues: { 5: lost() }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'edited')
+    const body = commentsOf(w)[0].body
+    const again = world({
+      issues: { 5: node(5, { comments: { nodes: [{ ...plannerComment(null), body }] } }) },
+      cards: { 5: STATUS.inProgress },
+    })
+    go(again, 5, 'edited')
+    expect(again.writes).toEqual([])
+  })
+
+  it('moves a card back when the planner itself set its current status', () => {
+    const issue = node(5, { comments: { nodes: [plannerComment(STATUS.ready)] } })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'unlabeled')
+    expect(editsOf(w)[0].option).toBe(optionFor(STATUS.backlog))
+  })
+
+  it('applies a held move on a manual run for the issue, which is the owner confirming it', () => {
+    const w = world({ issues: { 5: lost() }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'sync')
+    expect(editsOf(w)[0].option).toBe(optionFor(STATUS.backlog))
+  })
+
+  it('still applies a forward move on an event', () => {
+    const w = world({
+      issues: { 5: node(5, { labels: readyLabels }) },
+      cards: { 5: STATUS.backlog },
+    })
+    go(w, 5, 'labeled')
+    expect(editsOf(w)).toHaveLength(1)
   })
 })
 
 describe('the reason on the issue', () => {
-  const claimed = { 5: node(5, { assignees: owner, comments: claim() }) }
-
   it('writes the reason before the card moves, so no card moves without one', () => {
-    const w = world({ issues: claimed, cards: { 5: STATUS.ready } })
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.ready } })
     go(w, 5, 'assigned')
     expect(w.writes.map((entry) => entry.kind)).toEqual(['POST', 'edit'])
   })
 
   it('edits the one Board status comment in place on a later move', () => {
-    const old = { id: 77, type: 'Bot', body: `${BOARD_STATUS_MARKER}\nold text` }
-    const w = world({ issues: claimed, cards: { 5: STATUS.ready }, comments: { 5: [old] } })
+    const issue = claimed({ comments: { nodes: [...claim().nodes, plannerComment(null)] } })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
     go(w, 5, 'assigned')
-    const writes = w.writes.filter((entry) => entry.kind !== 'edit')
-    expect(writes).toHaveLength(1)
-    expect(writes[0]).toMatchObject({ kind: 'PATCH', path: 'repos/o/r/issues/comments/77' })
+    expect(commentsOf(w)).toHaveLength(1)
+    expect(commentsOf(w)[0]).toMatchObject({ kind: 'PATCH', path: 'repos/o/r/issues/comments/77' })
   })
 
-  it('does not take over a look-alike comment written by a person', () => {
-    const forged = { id: 78, type: 'User', body: `${BOARD_STATUS_MARKER}\nfake` }
-    const w = world({ issues: claimed, cards: { 5: STATUS.ready }, comments: { 5: [forged] } })
+  it('does not take over a look-alike comment from a person or from another app', () => {
+    const body = `${BOARD_STATUS_MARKER}\nfake`
+    const look = [
+      { ...person(body), databaseId: 78 },
+      { ...plannerComment(null, 79, 'github-actions'), body },
+    ]
+    const issue = claimed({ comments: { nodes: [...claim().nodes, ...look] } })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
     go(w, 5, 'assigned')
-    expect(w.writes.filter((entry) => entry.kind === 'POST')).toHaveLength(1)
+    expect(commentsOf(w).map((entry) => entry.kind)).toEqual(['POST'])
   })
 
-  it('writes none when GitHub sets the status itself, In review and Done', () => {
+  it("writes the reason for the planner's own moves to In review and Done too", () => {
     const closing = {
-      nodes: [{ number: 8, state: 'OPEN', merged: false, repository: { nameWithOwner: 'o/r' } }],
+      nodes: [
+        {
+          number: 8,
+          state: 'OPEN',
+          merged: false,
+          authorAssociation: 'OWNER',
+          repository: { nameWithOwner: 'o/r' },
+        },
+      ],
     }
     const review = world({
       issues: { 5: node(5, { closedByPullRequestsReferences: closing }) },
@@ -409,42 +411,90 @@ describe('the reason on the issue', () => {
     })
     go(review, 5, 'sync')
     expect(editsOf(review)[0].option).toBe(optionFor(STATUS.inReview))
-    expect(review.writes.filter((entry) => entry.kind !== 'edit')).toEqual([])
+    expect(commentsOf(review)).toHaveLength(1)
     const done = world({
       issues: { 5: node(5, { state: 'CLOSED' }) },
       cards: { 5: STATUS.inProgress },
     })
     go(done, 5, 'sync')
     expect(editsOf(done)[0].option).toBe(optionFor(STATUS.done))
-    expect(done.writes.filter((entry) => entry.kind !== 'edit')).toEqual([])
+    expect(commentsOf(done)).toHaveLength(1)
   })
 
-  it('never quotes what a person wrote on the issue, only the fixed reason and the branch name', () => {
-    const talk = { body: 'The owner says: ship the SECRET-PLAN soon' }
-    const withTalk = { nodes: [talk, ...claim().nodes] }
-    const w = world({
-      issues: { 5: node(5, { assignees: owner, comments: withTalk }) },
-      cards: { 5: STATUS.ready },
+  it('is built from fixed sentences: no value read from GitHub text appears in it', () => {
+    const issue = node(5, {
+      title: 'TITLE-SENTINEL',
+      assignees: owner,
+      labels: { nodes: [{ name: 'needs owner' }, { name: 'LABEL-SENTINEL' }] },
+      milestone: { title: 'MILESTONE-SENTINEL' },
+      comments: {
+        nodes: [
+          person('talk: SECRET-SENTINEL www.evil.example'),
+          ...claim('agent/worker/5-BRANCH-SENTINEL').nodes,
+        ],
+      },
     })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
     go(w, 5, 'assigned')
-    const post = w.writes.find((entry) => entry.kind === 'POST')
-    expect(post.body).not.toContain('SECRET-PLAN')
+    const body = commentsOf(w)[0].body
+    expect(body).not.toMatch(/SENTINEL|evil|agent\/worker/)
+    const remote = world({
+      issues: { 5: node(5, { assignees: owner }) },
+      cards: { 5: STATUS.ready },
+      branches: ['agent/worker/5-REMOTE-SENTINEL'],
+    })
+    go(remote, 5, 'assigned')
+    expect(commentsOf(remote)[0].body).not.toMatch(/SENTINEL|agent\/worker/)
+  })
+
+  it('says what the rule gives and why, so it stays true if the edit fails', () => {
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    const body = commentsOf(w)[0].body
+    expect(body).not.toMatch(/moved this card/i)
+    expect(body).toContain('In progress')
   })
 
   it('shows a flag in the comment without acting on it', () => {
-    const w = world({
-      issues: {
-        5: node(5, {
-          assignees: owner,
-          comments: claim(),
-          labels: { nodes: [{ name: 'enhancement' }, { name: 'needs owner' }] },
-        }),
-      },
-      cards: { 5: STATUS.ready },
-    })
+    const labels = { nodes: [{ name: 'enhancement' }, { name: 'needs owner' }] }
+    const w = world({ issues: { 5: claimed({ labels }) }, cards: { 5: STATUS.ready } })
     go(w, 5, 'assigned')
     expect(editsOf(w)).toHaveLength(1)
-    expect(w.writes.find((entry) => entry.kind === 'POST').body).toMatch(/owner/i)
+    expect(commentsOf(w)[0].body).toMatch(/owner/i)
+  })
+})
+
+describe('whose words start work', () => {
+  it('does not start work on a claim comment from an outside author', () => {
+    const outsider = {
+      nodes: [person('### [STEP] Claimed\n\nBranch: `agent/worker/5-x`', 'NONE')],
+    }
+    const w = world({
+      issues: { 5: node(5, { assignees: owner, comments: outsider }) },
+      cards: { 5: STATUS.backlog },
+    })
+    go(w, 5, 'assigned')
+    expect(w.writes).toEqual([])
+  })
+
+  it('does not count a pull request from an outside fork as started work or In review', () => {
+    const fork = {
+      nodes: [
+        {
+          number: 8,
+          state: 'OPEN',
+          merged: false,
+          authorAssociation: 'FIRST_TIME_CONTRIBUTOR',
+          repository: { nameWithOwner: 'o/r' },
+        },
+      ],
+    }
+    const w = world({
+      issues: { 5: node(5, { assignees: owner, closedByPullRequestsReferences: fork }) },
+      cards: { 5: STATUS.backlog },
+    })
+    go(w, 5, 'sync')
+    expect(w.writes).toEqual([])
   })
 })
 
@@ -456,10 +506,7 @@ describe('flags are only reported', () => {
   })
 
   it('writes nothing but the card status and the one comment, on any path', () => {
-    const w = world({
-      issues: { 5: node(5, { assignees: owner, comments: claim() }) },
-      cards: { 5: STATUS.ready },
-    })
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.ready } })
     go(w, 5, 'assigned')
     for (const entry of w.writes) {
       const ok =
