@@ -58,6 +58,19 @@ describe('one run at a time for an issue', () => {
     expect(group).toContain('github.event.issue.number')
   })
 
+  it('gives a manual run its own group, so an event for the same issue never cancels the owner confirming a card', () => {
+    const group = workflow.match(/concurrency:\n {2}group: (.*)\n/)[1]
+    expect(group).toMatch(/workflow_dispatch[^}]*-manual/)
+    expect(workflow).toMatch(/cancel-in-progress: false/)
+  })
+
+  it('describes what the job writes now: a comment on every move and every held move, and held backward moves', () => {
+    const header = workflow.slice(0, workflow.indexOf('\non:'))
+    expect(header).toMatch(/every move/i)
+    expect(header).toMatch(/held/i)
+    expect(header).not.toMatch(/do not make/i)
+  })
+
   it('tells both jobs the app name, so the planner finds its own comment and no other', () => {
     expect(
       workflow.match(/PLANNER_APP_SLUG: \$\{\{ steps\.app\.outputs\.app-slug \}\}/g),

@@ -74,7 +74,7 @@ describe('the names the app and the agents rely on', () => {
 })
 
 /** A small GitHub: the issues it holds, the cards on the board, and a record of every write. */
-function world({ issues, cards = {}, branches = [] }) {
+function world({ issues, cards = {}, branches = [], listed = {} }) {
   const writes = []
   const reads = []
   const options = Object.values(STATUS).map((name, index) => ({ id: `opt${index}`, name }))
@@ -110,6 +110,10 @@ function world({ issues, cards = {}, branches = [] }) {
       const number = Number(text.match(/number=(\d+)/)[1])
       reads.push(`issue ${number}`)
       return JSON.stringify({ data: { repository: { issue: issues[number] ?? null } } })
+    }
+    if (args[0] === 'api' && args.includes('--paginate')) {
+      const number = Number(args.find((arg) => arg.startsWith('repos/')).split('/')[4])
+      return (listed[number] ?? []).map((entry) => JSON.stringify(entry)).join('\n')
     }
     if (args[0] === 'api' && args.includes('-X')) {
       writes.push({
@@ -464,6 +468,78 @@ describe('the reason on the issue', () => {
   })
 })
 
+describe('the held comment stays true', () => {
+  it('reads as what the planner found then, so it is still true once the rule agrees with the card', () => {
+    const w = world({ issues: { 5: node(5) }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'edited')
+    const held = commentsOf(w)[0].body
+    expect(held).toContain('When the planner last looked')
+    // later the card is in the rule's own status: nothing is written, and the old comment stands
+    const later = world({
+      issues: { 5: node(5, { comments: { nodes: [{ ...plannerComment(null), body: held }] } }) },
+      cards: { 5: STATUS.backlog },
+    })
+    go(later, 5, 'edited')
+    expect(later.writes).toEqual([])
+    expect(held).not.toMatch(/is held|puts this card|nothing was moved/i)
+  })
+
+  it('says a card with no status had none', () => {
+    const w = world({ issues: { 5: node(5) }, cards: {} })
+    go(w, 5, 'opened')
+    expect(commentsOf(w)[0].body).toContain('had no status')
+  })
+
+  it('holds no GitHub text either: not the held sentence, not the held-back reason', () => {
+    const issue = node(5, {
+      title: 'TITLE-SENTINEL',
+      body: 'BODY-SENTINEL',
+      labels: { nodes: [{ name: 'ready' }, { name: 'needs owner' }, { name: 'LABEL-SENTINEL' }] },
+      milestone: { title: 'MILESTONE-SENTINEL' },
+      author: { login: 'AUTHOR-SENTINEL', __typename: 'User' },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'edited')
+    expect(editsOf(w)).toEqual([])
+    expect(commentsOf(w)).toHaveLength(1)
+    expect(commentsOf(w)[0].body).not.toMatch(/SENTINEL/)
+  })
+})
+
+describe('two runs at once', () => {
+  it('leaves one Board status comment: the oldest stays, a duplicate is removed', () => {
+    const mine = (id) => ({
+      id,
+      type: 'Bot',
+      login: 'planner[bot]',
+      body: `${BOARD_STATUS_MARKER}\nx`,
+    })
+    const w = world({
+      issues: { 5: claimed() },
+      cards: { 5: STATUS.ready },
+      listed: { 5: [mine(11), mine(10)] },
+    })
+    go(w, 5, 'assigned')
+    const kinds = commentsOf(w).map((entry) => [entry.kind, entry.path.split('/').pop()])
+    expect(kinds).toEqual([
+      ['POST', 'comments'],
+      ['DELETE', '11'],
+    ])
+  })
+
+  it('deletes nothing when only one exists, or when the extra one is not the planner own', () => {
+    const w = world({
+      issues: { 5: claimed() },
+      cards: { 5: STATUS.ready },
+      listed: {
+        5: [{ id: 3, type: 'User', login: 'x', body: `${BOARD_STATUS_MARKER}\nfake` }],
+      },
+    })
+    go(w, 5, 'assigned')
+    expect(commentsOf(w).map((entry) => entry.kind)).toEqual(['POST'])
+  })
+})
+
 describe('whose words start work', () => {
   it('does not start work on a claim comment from an outside author', () => {
     const outsider = {
@@ -511,7 +587,7 @@ describe('flags are only reported', () => {
     for (const entry of w.writes) {
       const ok =
         entry.kind === 'edit' ||
-        (['POST', 'PATCH'].includes(entry.kind) && /\/comments(\/\d+)?$/.test(entry.path))
+        (['POST', 'PATCH', 'DELETE'].includes(entry.kind) && /\/comments(\/\d+)?$/.test(entry.path))
       expect(ok, JSON.stringify(entry)).toBe(true)
     }
   })

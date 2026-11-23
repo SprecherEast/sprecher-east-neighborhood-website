@@ -40,9 +40,25 @@ describe('boardStatusComment', () => {
       held: true,
       set: 'Ready',
     })
-    expect(held).toMatch(/held for the owner's confirmation/i)
-    expect(held).toMatch(/nothing was moved/i)
+    expect(held).toMatch(/held the move for the owner's confirmation/i)
+    expect(held).toMatch(/moved nothing/i)
     expect(plannerSetStatus(held)).toBe('Ready')
+  })
+
+  it('frames a held move as what the planner found then, so it stays true when the rule later agrees with the card', () => {
+    const held = boardStatusComment({
+      from: 'In progress',
+      result: { ...result, status: 'Backlog' },
+      held: true,
+    })
+    expect(held).toContain('When the planner last looked')
+    expect(held).not.toMatch(/puts this card|nothing was moved|is held/i)
+  })
+
+  it('says a card with no status had none', () => {
+    const body = boardStatusComment({ from: null, result })
+    expect(body).toContain('had no status')
+    expect(body).not.toMatch(/null|undefined|no status\./i)
   })
 
   it('records no status when the planner set none yet and the move is held', () => {

@@ -9,6 +9,7 @@ import { STATUS_FIELD, TRUSTED_ASSOCIATIONS } from './planner-config.mjs'
 import { BOARD_STATUS_MARKER } from './planner-comment.mjs'
 import {
   factsFromIssue,
+  isRepositoryWork,
   graphqlArgs,
   ISSUE_FIELDS,
   issueKey,
@@ -276,5 +277,73 @@ describe('the planner comment on an issue', () => {
     expect(read(undefined).statusComment).toBeNull()
     expect(read('someone-else').statusComment).toBeNull()
     expect(read(undefined).plannerSet).toBeNull()
+  })
+})
+
+describe('isRepositoryWork: the one test of whose pull request counts', () => {
+  const here = 'o/r'
+  const pr = (over = {}) => ({
+    authorAssociation: 'OWNER',
+    repository: { nameWithOwner: 'o/r' },
+    ...over,
+  })
+
+  it('accepts a pull request of this repository written by one of its people', () => {
+    for (const authorAssociation of ['OWNER', 'MEMBER', 'COLLABORATOR']) {
+      expect(isRepositoryWork(pr({ authorAssociation }), here)).toBe(true)
+    }
+  })
+
+  it('refuses another repository, whoever wrote it: the association is relative to that repository', () => {
+    expect(isRepositoryWork(pr({ repository: { nameWithOwner: 'attacker/x' } }), here)).toBe(false)
+  })
+
+  it('fails closed when the repository, the association or the pull request is missing', () => {
+    expect(isRepositoryWork(pr({ repository: undefined }), here)).toBe(false)
+    expect(isRepositoryWork(pr({ repository: {} }), here)).toBe(false)
+    expect(isRepositoryWork(pr({ authorAssociation: undefined }), here)).toBe(false)
+    expect(isRepositoryWork(pr({ authorAssociation: 'NONE' }), here)).toBe(false)
+    expect(isRepositoryWork(undefined, here)).toBe(false)
+    expect(isRepositoryWork(pr(), undefined)).toBe(false)
+  })
+})
+
+describe('a pull request of another repository is neither started, In review nor merged', () => {
+  const foreign = (state, merged = false) => ({
+    nodes: [
+      {
+        number: 5,
+        state,
+        merged,
+        mergedAt: '2026-11-01T00:00:00Z',
+        authorAssociation: 'OWNER',
+        repository: { nameWithOwner: 'attacker/x' },
+      },
+    ],
+  })
+  const from = (list, extra = {}) =>
+    factsFromIssue(issue({ closedByPullRequestsReferences: list, ...extra }), policy).facts
+
+  it.each([
+    ['open', 'OPEN', false],
+    ['closed', 'CLOSED', false],
+    ['merged', 'MERGED', true],
+  ])('gives nothing for a %s one linked by GitHub', (_name, state, merged) => {
+    expect(from(foreign(state, merged))).toMatchObject({
+      openPullRequests: 0,
+      pullRequests: 0,
+      mergedPullRequests: 0,
+    })
+  })
+
+  it('gives neither In review nor In progress through the rule', () => {
+    const open = from(foreign('OPEN'))
+    expect(boardStatus({ ...open, assignees: ['a'] }).status).toBe('Backlog')
+    expect(boardStatus({ ...open, assignees: ['a'] }).flags).toEqual([expect.any(String)])
+  })
+
+  it('also refuses a linked pull request with no repository', () => {
+    const nodes = [{ number: 5, state: 'OPEN', merged: false, authorAssociation: 'OWNER' }]
+    expect(from({ nodes }).openPullRequests).toBe(0)
   })
 })

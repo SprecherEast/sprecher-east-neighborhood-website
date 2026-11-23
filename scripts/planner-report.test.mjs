@@ -62,7 +62,15 @@ describe('cardFromNode', () => {
             ],
           },
           closedByPullRequestsReferences: {
-            nodes: [{ number: 3, state: 'OPEN', merged: false, authorAssociation: 'OWNER' }],
+            nodes: [
+              {
+                number: 3,
+                state: 'OPEN',
+                merged: false,
+                authorAssociation: 'OWNER',
+                repository: { nameWithOwner: 'o/r' },
+              },
+            ],
           },
           timelineItems: { nodes: [{ source: {} }] },
         },
@@ -112,10 +120,23 @@ describe('cardFromNode', () => {
           state: 'MERGED',
           merged: true,
           authorAssociation: 'OWNER',
+          repository: { nameWithOwner: 'o/r' },
           mergedAt: '2026-11-01T00:00:00Z',
         },
-        { number: 6, state: 'CLOSED', merged: false, authorAssociation: 'OWNER' },
-        { number: 7, state: 'OPEN', merged: false, authorAssociation: 'OWNER' },
+        {
+          number: 6,
+          state: 'CLOSED',
+          merged: false,
+          authorAssociation: 'OWNER',
+          repository: { nameWithOwner: 'o/r' },
+        },
+        {
+          number: 7,
+          state: 'OPEN',
+          merged: false,
+          authorAssociation: 'OWNER',
+          repository: { nameWithOwner: 'o/r' },
+        },
       ],
     }
     const card = cardFromNode(node({}, { closedByPullRequestsReferences: closing }), policy)
@@ -178,7 +199,7 @@ describe('cardFromNode', () => {
     expect(card.facts).toMatchObject({ mergedPullRequests: 0, pullRequests: 2 })
   })
 
-  it('keys pull requests by repository and number', () => {
+  it('keys pull requests by repository and number, and drops those of another repository', () => {
     const merged = {
       ...mention,
       state: 'MERGED',
@@ -205,7 +226,8 @@ describe('cardFromNode', () => {
       ),
       policy,
     )
-    expect(card.facts.pullRequests).toBe(2)
+    // the other repository's pull request, with the same number, is not this issue's work
+    expect(card.facts.pullRequests).toBe(1)
   })
 
   it('leaves out a merge that the issue was reopened after', () => {
