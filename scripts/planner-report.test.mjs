@@ -3,6 +3,7 @@
  * with the rule in `planner-status.mjs` and prints the differences. Test first, and one test
  * proves it issues no write of any kind.
  */
+import { parse } from 'graphql'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -14,6 +15,7 @@ import {
   QUERY,
   TruncatedError,
 } from './planner-report.mjs'
+import { boardStatus } from './planner-status.mjs'
 
 const policy = {
   types: ['bug', 'enhancement'],
@@ -28,6 +30,7 @@ const node = (over = {}, content = {}) => ({
     __typename: 'Issue',
     number: 1,
     title: 'One',
+    repository: { nameWithOwner: 'o/r' },
     body: GOOD_BODY,
     state: 'OPEN',
     milestone: { title: 'Backlog' },
@@ -55,9 +58,7 @@ describe('cardFromNode', () => {
           assignees: { nodes: [{ login: 'a' }] },
           comments: { nodes: [{ body: '### [STEP] Claimed\n\nBranch: `agent/x`' }] },
           closedByPullRequestsReferences: { nodes: [{ number: 3, state: 'OPEN', merged: false }] },
-          timelineItems: {
-            nodes: [{ source: { number: 4, state: 'MERGED', merged: true } }, { source: {} }],
-          },
+          timelineItems: { nodes: [{ source: {} }] },
         },
       ),
       policy,
@@ -68,7 +69,7 @@ describe('cardFromNode', () => {
       assignees: ['a'],
       claimBranch: 'agent/x',
       openPullRequests: 1,
-      mergedPullRequests: 1,
+      mergedPullRequests: 0,
       problems: [],
     })
     expect(cardFromNode(node({}, { state: 'CLOSED' }), policy)).toBeNull()
@@ -81,23 +82,70 @@ describe('cardFromNode', () => {
     expect(card.facts.problems.length).toBeGreaterThan(0)
   })
 
-  it('counts a pull request once when it is in both lists, and counts closed ones', () => {
-    const card = cardFromNode(
-      node(
-        {},
-        {
-          closedByPullRequestsReferences: {
-            nodes: [
-              { number: 5, state: 'MERGED', merged: true },
-              { number: 6, state: 'CLOSED', merged: false },
-            ],
-          },
-          timelineItems: { nodes: [{ source: { number: 5, merged: true } }] },
-        },
-      ),
-      policy,
-    )
-    expect(card.facts).toMatchObject({ mergedPullRequests: 1, closedPullRequests: 1 })
+  const crossRef = (source) => ({ __typename: 'CrossReferencedEvent', source })
+  const mention = {
+    number: 9,
+    state: 'OPEN',
+    merged: false,
+    body: 'See #1',
+    repository: { nameWithOwner: 'o/r' },
+  }
+
+  it('is not In review because an open pull request merely mentions the issue', () => {
+    const card = cardFromNode(node({}, { timelineItems: { nodes: [crossRef(mention)] } }), policy)
+    expect(card.facts.openPullRequests).toBe(0)
+    expect(boardStatus(card.facts).status).not.toBe('In review')
+  })
+
+  it('counts open, merged and closed pull requests from the closing references only', () => {
+    const closing = {
+      nodes: [
+        { number: 5, state: 'MERGED', merged: true, mergedAt: '2026-11-01T00:00:00Z' },
+        { number: 6, state: 'CLOSED', merged: false },
+        { number: 7, state: 'OPEN', merged: false },
+      ],
+    }
+    const card = cardFromNode(node({}, { closedByPullRequestsReferences: closing }), policy)
+    expect(card.facts).toMatchObject({
+      openPullRequests: 1,
+      mergedPullRequests: 1,
+      closedPullRequests: 1,
+    })
+  })
+
+  it('does not count a merged pull request that only mentions the issue', () => {
+    const merged = { ...mention, state: 'MERGED', merged: true, mergedAt: '2026-11-01T00:00:00Z' }
+    const card = cardFromNode(node({}, { timelineItems: { nodes: [crossRef(merged)] } }), policy)
+    expect(card.facts.mergedPullRequests).toBe(0)
+  })
+
+  it('counts a merged pull request in this repository whose body has a closing keyword for it', () => {
+    const merged = {
+      ...mention,
+      state: 'MERGED',
+      merged: true,
+      mergedAt: '2026-11-01T00:00:00Z',
+      body: 'Fixes #1 and more',
+    }
+    const other = { ...merged, number: 10, body: 'Closes #12' }
+    const elsewhere = { ...merged, number: 11, repository: { nameWithOwner: 'x/y' } }
+    const nodes = [merged, other, elsewhere].map(crossRef)
+    const card = cardFromNode(node({}, { timelineItems: { nodes } }), policy)
+    expect(card.facts.mergedPullRequests).toBe(1)
+  })
+
+  it('leaves out a merge that the issue was reopened after', () => {
+    const merged = { ...mention, state: 'MERGED', merged: true, body: 'Closes #1' }
+    const reopened = { __typename: 'ReopenedEvent', createdAt: '2026-11-05T00:00:00Z' }
+    const at = (mergedAt) => ({
+      timelineItems: { nodes: [crossRef({ ...merged, mergedAt }), reopened] },
+    })
+    expect(
+      cardFromNode(node({}, at('2026-11-01T00:00:00Z')), policy).facts.mergedPullRequests,
+    ).toBe(0)
+    expect(
+      cardFromNode(node({}, at('2026-11-09T00:00:00Z')), policy).facts.mergedPullRequests,
+    ).toBe(1)
   })
 
   it.each([
@@ -300,6 +348,29 @@ describe('main: reads everything, writes nothing', () => {
     expect(text).not.toMatch(/never started/i)
   })
 
+  it('also leaves out an epic whose child could not be read in full', () => {
+    const out = []
+    const epicSubs = { totalCount: 1, nodes: [{ number: 7, state: 'OPEN' }] }
+    const code = main({
+      run: run(
+        [],
+        [
+          page([
+            node({}, { number: 7, comments: { totalCount: 500, nodes: [] } }),
+            node({}, { number: 9, labels: labels('epic'), subIssues: epicSubs }),
+          ]),
+        ],
+      ),
+      env,
+      policy,
+      log: (text) => out.push(text),
+      appendSummary: () => {},
+    })
+    expect(code).toBe(1)
+    expect(out.join('\n')).toMatch(/#9.*child/i)
+    expect(out.join('\n')).not.toContain('| #9 ')
+  })
+
   it('does not write the summary when it could not read everything', () => {
     const written = []
     main({
@@ -332,11 +403,14 @@ describe('readOnlyRun', () => {
 })
 
 describe('QUERY', () => {
-  it('has balanced braces and parentheses, so GraphQL can parse it', () => {
-    const count = (char) => QUERY.split(char).length - 1
-    expect(count('{')).toBe(count('}'))
-    expect(count('(')).toBe(count(')'))
-    expect(count('[')).toBe(count(']'))
+  it('parses as GraphQL', () => {
+    expect(() => parse(QUERY)).not.toThrow()
+  })
+
+  it('asks what the rule needs of pull requests', () => {
+    expect(QUERY).toContain('REOPENED_EVENT')
+    expect(QUERY).toMatch(/mergedAt/)
+    expect(QUERY).toMatch(/nameWithOwner/)
   })
 
   it('asks totalCount for every list the rule reads, so a cut-off list is seen', () => {
