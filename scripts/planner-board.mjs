@@ -89,14 +89,30 @@ function loadCards({ run, policy, repository, number, project, appSlug }) {
   return cards.map((card) => withRemoteBranch(card, branches))
 }
 
-/** Writes the issue's one Board status comment: edits the planner's own, or posts the first. */
-function writeComment(run, { repository, number, body, existing, appSlug }) {
-  if (existing?.body === body) return
+/**
+ * Writes the issue's one Board status comment: edits the planner's own, or posts the first. Returns
+ * the comment as it now stands, so a later write of the same run edits that one.
+ */
+function writeComment(run, { repository, number, body, existing }) {
+  if (existing?.body === body) return existing
   const base = `repos/${repository}/issues`
-  if (existing)
-    return run(['api', '-X', 'PATCH', `${base}/comments/${existing.id}`, '-f', `body=${body}`])
-  run(['api', '-X', 'POST', `${base}/${number}/comments`, '-f', `body=${body}`])
-  // A manual run has its own queue, so it can race an event run and both post: keep the oldest
+  if (existing) {
+    run(['api', '-X', 'PATCH', `${base}/comments/${existing.id}`, '-f', `body=${body}`])
+    return { ...existing, body }
+  }
+  const posted = JSON.parse(
+    run(['api', '-X', 'POST', `${base}/${number}/comments`, '-f', `body=${body}`]),
+  )
+  return { id: posted.id, body, posted: true }
+}
+
+/**
+ * A manual run has its own queue, so it can race an event run and both post: keep the oldest of the
+ * planner's own marked comments on this issue, give it the final text and delete the others. A
+ * delete that fails (the other run removed it first) is not an error: a duplicate does no harm.
+ */
+function removeDuplicates(run, { repository, number, body, appSlug }) {
+  const base = `repos/${repository}/issues`
   const lines = run(['api', '--paginate', `${base}/${number}/comments`, '--jq', MY_COMMENTS])
   const mine = lines
     .split('\n')
@@ -106,7 +122,13 @@ function writeComment(run, { repository, number, body, existing, appSlug }) {
     .sort((a, b) => a.id - b.id)
   if (mine.length < 2) return
   run(['api', '-X', 'PATCH', `${base}/comments/${mine[0].id}`, '-f', `body=${body}`])
-  for (const extra of mine.slice(1)) run(['api', '-X', 'DELETE', `${base}/comments/${extra.id}`])
+  for (const extra of mine.slice(1)) {
+    try {
+      run(['api', '-X', 'DELETE', `${base}/comments/${extra.id}`])
+    } catch {
+      // already removed by the other run
+    }
+  }
 }
 
 /** Brings the card of the one issue the event concerns in line with the rule; returns what it did. */
@@ -155,16 +177,24 @@ export function moveCard({ run, env, policy, log = console.log }) {
   const item = { status: data.node.status?.name ?? null }
   const changes = decideChanges({ result, item, action: ACTION, plannerSet: root.facts.plannerSet })
   log(`#${ISSUE} ${ACTION}: ${JSON.stringify(changes)}`)
-  const write = (options) =>
+  const write = (options, existing = root.facts.statusComment) =>
     writeComment(run, {
       repository: REPO,
       number: ISSUE,
       body: boardStatusComment({ from: item.status, result, ...options }),
-      existing: root.facts.statusComment,
+      existing,
+    })
+  const settle = (written, options) =>
+    written.posted &&
+    removeDuplicates(run, {
+      repository: REPO,
+      number: ISSUE,
+      body: boardStatusComment({ from: item.status, result, ...options }),
       appSlug,
     })
   if (changes.held) {
-    write({ held: true, set: root.facts.plannerSet })
+    const options = { held: true, set: root.facts.plannerSet }
+    settle(write(options), options)
     return changes
   }
   if (!changes.status) return changes
@@ -173,9 +203,10 @@ export function moveCard({ run, env, policy, log = console.log }) {
     .organization.projectV2
   const option = board.status.options.find((entry) => entry.name === changes.status)
   if (!option) throw new Error(`The board has no "${changes.status}" status.`)
-  // The reason comes first: a card never moves without one. It says what the rule gives and why,
-  // so it stays true if the edit fails, and the next event writes it again
-  write({})
+  // The reason comes first: a card never moves without one. It keeps the previous record of what
+  // the planner set, so a failed edit leaves the planner holding more, never less
+  const kept = { set: root.facts.plannerSet }
+  const first = write(kept)
   run([
     'project',
     'item-edit',
@@ -188,6 +219,9 @@ export function moveCard({ run, env, policy, log = console.log }) {
     '--single-select-option-id',
     option.id,
   ])
+  // Only now is the new status really the planner's own: record it in the same comment
+  const final = { set: changes.status }
+  settle(write(final, first), final)
   return changes
 }
 

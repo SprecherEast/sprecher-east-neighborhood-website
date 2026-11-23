@@ -74,7 +74,14 @@ describe('the names the app and the agents rely on', () => {
 })
 
 /** A small GitHub: the issues it holds, the cards on the board, and a record of every write. */
-function world({ issues, cards = {}, branches = [], listed = {} }) {
+function world({
+  issues,
+  cards = {},
+  branches = [],
+  listed = {},
+  failEdit = false,
+  failDelete = false,
+}) {
   const writes = []
   const reads = []
   const options = Object.values(STATUS).map((name, index) => ({ id: `opt${index}`, name }))
@@ -87,6 +94,7 @@ function world({ issues, cards = {}, branches = [], listed = {} }) {
       return JSON.stringify({ id: `item${number}` })
     }
     if (args[0] === 'project' && args[1] === 'item-edit') {
+      if (failEdit) throw new Error('item-edit failed')
       writes.push({ kind: 'edit', item: args[args.indexOf('--id') + 1], option: args.at(-1) })
       return ''
     }
@@ -116,12 +124,14 @@ function world({ issues, cards = {}, branches = [], listed = {} }) {
       return (listed[number] ?? []).map((entry) => JSON.stringify(entry)).join('\n')
     }
     if (args[0] === 'api' && args.includes('-X')) {
+      const kind = args[args.indexOf('-X') + 1]
+      if (kind === 'DELETE' && failDelete) throw new Error('HTTP 404')
       writes.push({
-        kind: args[args.indexOf('-X') + 1],
+        kind,
         path: args.find((arg) => arg.startsWith('repos/')),
         body: args.at(-1).replace(/^body=/, ''),
       })
-      return '{}'
+      return kind === 'POST' ? '{"id":900}' : '{}'
     }
     throw new Error(`unexpected call: ${text}`)
   }
@@ -190,10 +200,11 @@ describe('an event moves the card by the rule', () => {
       { kind: 'edit', item: 'item5', option: optionFor(STATUS.inProgress) },
     ])
     const posts = commentsOf(w)
-    expect(posts).toHaveLength(1)
+    expect(posts.map((entry) => entry.kind)).toEqual(['POST', 'PATCH'])
     expect(posts[0]).toMatchObject({ kind: 'POST', path: 'repos/o/r/issues/5/comments' })
     expect(posts[0].body).toContain(BOARD_STATUS_MARKER)
-    expect(posts[0].body).toContain('<!-- planner:set=In progress -->')
+    expect(posts[0].body).not.toContain('planner:set')
+    expect(posts[1].body).toContain('<!-- planner:set=In progress -->')
   })
 
   it.each([
@@ -279,7 +290,9 @@ describe('an event moves the card by the rule', () => {
     expect(editsOf(w)).toEqual([
       { kind: 'edit', item: 'item5', option: optionFor(STATUS.inProgress) },
     ])
-    expect(commentsOf(w).every((entry) => entry.path === 'repos/o/r/issues/5/comments')).toBe(true)
+    expect(
+      commentsOf(w).every((entry) => /issues\/(5\/comments|comments\/\d+)$/.test(entry.path)),
+    ).toBe(true)
     expect(w.reads).toContain('issue 6')
     expect(w.reads, 'a sub-issue that is not on the board is not read').not.toContain('issue 7')
   })
@@ -374,15 +387,17 @@ describe('the reason on the issue', () => {
   it('writes the reason before the card moves, so no card moves without one', () => {
     const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.ready } })
     go(w, 5, 'assigned')
-    expect(w.writes.map((entry) => entry.kind)).toEqual(['POST', 'edit'])
+    expect(w.writes.map((entry) => entry.kind)).toEqual(['POST', 'edit', 'PATCH'])
   })
 
   it('edits the one Board status comment in place on a later move', () => {
     const issue = claimed({ comments: { nodes: [...claim().nodes, plannerComment(null)] } })
     const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
     go(w, 5, 'assigned')
-    expect(commentsOf(w)).toHaveLength(1)
-    expect(commentsOf(w)[0]).toMatchObject({ kind: 'PATCH', path: 'repos/o/r/issues/comments/77' })
+    expect(commentsOf(w).map((entry) => [entry.kind, entry.path])).toEqual([
+      ['PATCH', 'repos/o/r/issues/comments/77'],
+      ['PATCH', 'repos/o/r/issues/comments/77'],
+    ])
   })
 
   it('does not take over a look-alike comment from a person or from another app', () => {
@@ -394,7 +409,7 @@ describe('the reason on the issue', () => {
     const issue = claimed({ comments: { nodes: [...claim().nodes, ...look] } })
     const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
     go(w, 5, 'assigned')
-    expect(commentsOf(w).map((entry) => entry.kind)).toEqual(['POST'])
+    expect(commentsOf(w).map((entry) => entry.kind)).toEqual(['POST', 'PATCH'])
   })
 
   it("writes the reason for the planner's own moves to In review and Done too", () => {
@@ -415,14 +430,14 @@ describe('the reason on the issue', () => {
     })
     go(review, 5, 'sync')
     expect(editsOf(review)[0].option).toBe(optionFor(STATUS.inReview))
-    expect(commentsOf(review)).toHaveLength(1)
+    expect(commentsOf(review)).toHaveLength(2)
     const done = world({
       issues: { 5: node(5, { state: 'CLOSED' }) },
       cards: { 5: STATUS.inProgress },
     })
     go(done, 5, 'sync')
     expect(editsOf(done)[0].option).toBe(optionFor(STATUS.done))
-    expect(commentsOf(done)).toHaveLength(1)
+    expect(commentsOf(done)).toHaveLength(2)
   })
 
   it('is built from fixed sentences: no value read from GitHub text appears in it', () => {
@@ -523,9 +538,27 @@ describe('two runs at once', () => {
     const kinds = commentsOf(w).map((entry) => [entry.kind, entry.path.split('/').pop()])
     expect(kinds).toEqual([
       ['POST', 'comments'],
+      ['PATCH', '900'],
       ['PATCH', '10'],
       ['DELETE', '11'],
     ])
+  })
+
+  it('still moves the card when the extra comment is already gone (the delete fails)', () => {
+    const mine = (id) => ({
+      id,
+      type: 'Bot',
+      login: 'planner[bot]',
+      body: `${BOARD_STATUS_MARKER}\nx`,
+    })
+    const w = world({
+      issues: { 5: claimed() },
+      cards: { 5: STATUS.ready },
+      listed: { 5: [mine(10), mine(11)] },
+      failDelete: true,
+    })
+    expect(() => go(w, 5, 'assigned')).not.toThrow()
+    expect(editsOf(w)).toHaveLength(1)
   })
 
   it('deletes nothing when only one exists, or when the extra one is not the planner own', () => {
@@ -537,7 +570,48 @@ describe('two runs at once', () => {
       },
     })
     go(w, 5, 'assigned')
-    expect(commentsOf(w).map((entry) => entry.kind)).toEqual(['POST'])
+    expect(commentsOf(w).map((entry) => entry.kind)).toEqual(['POST', 'PATCH'])
+  })
+})
+
+describe('the record of what the planner set', () => {
+  const recordOf = (entry) => entry.body.match(/planner:set=([^ ]+(?: [^ ]+)*?) -->/)?.[1]
+
+  it('keeps the previous record while the card is written, and records the new status only after', () => {
+    const issue = claimed({
+      comments: { nodes: [...claim().nodes, plannerComment(STATUS.backlog)] },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready } })
+    go(w, 5, 'assigned')
+    expect(w.writes.map((entry) => entry.kind)).toEqual(['PATCH', 'edit', 'PATCH'])
+    expect(recordOf(w.writes[0])).toBe(STATUS.backlog)
+    expect(recordOf(w.writes[2])).toBe(STATUS.inProgress)
+  })
+
+  it('leaves the record unchanged when the card write fails', () => {
+    const issue = claimed({
+      comments: { nodes: [...claim().nodes, plannerComment(STATUS.backlog)] },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready }, failEdit: true })
+    expect(() => go(w, 5, 'assigned')).toThrow(/item-edit failed/)
+    expect(commentsOf(w).map(recordOf)).toEqual([STATUS.backlog])
+  })
+
+  it('records nothing for a first move whose card write fails', () => {
+    const w = world({ issues: { 5: claimed() }, cards: { 5: STATUS.ready }, failEdit: true })
+    expect(() => go(w, 5, 'assigned')).toThrow()
+    expect(commentsOf(w).map(recordOf)).toEqual([undefined])
+  })
+
+  it('holds a backward move for a card at a status the record names but the planner never set', () => {
+    // the record says In review, the card was left in Backlog by a failed write, then a person set In review
+    const issue = node(5, {
+      assignees: owner,
+      comments: { nodes: [plannerComment(STATUS.backlog)] },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'edited')
+    expect(editsOf(w)).toEqual([])
   })
 })
 

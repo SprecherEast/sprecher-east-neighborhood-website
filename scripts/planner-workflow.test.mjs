@@ -71,6 +71,12 @@ describe('one run at a time for an issue', () => {
     expect(header).not.toMatch(/do not make/i)
   })
 
+  it('says the job deletes its own extra comment, and only that', () => {
+    const header = workflow.slice(0, workflow.indexOf('\non:'))
+    expect(header).toMatch(/deletes only its own marked/i)
+    expect(header).toMatch(/keeping the oldest/i)
+  })
+
   it('tells both jobs the app name, so the planner finds its own comment and no other', () => {
     expect(
       workflow.match(/PLANNER_APP_SLUG: \$\{\{ steps\.app\.outputs\.app-slug \}\}/g),

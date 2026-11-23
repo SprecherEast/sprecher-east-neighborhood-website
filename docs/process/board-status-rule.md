@@ -56,19 +56,24 @@ issue the event concerns is written. A card with no status gets one.
   member or a collaborator counts as a claim, and only a pull request in the same repository as the
   issue, written by one of them, counts as work on it. A pull request from another repository never
   counts, even if it says it closes the issue, and a missing repository or author role counts for
-  nothing.
+  nothing. Who reopened an issue is not checked (GitHub gives no role for it): it can hide only the
+  merged-but-still-open flag, never a status.
 - **Backward moves wait for the owner.** An event applies a forward move, but never moves a card to
-  an earlier column unless the planner itself set the card's current status (its comment records
-  it). It holds the move and says so in the comment; a manual run for that one issue applies it, and
+  an earlier column unless its comment records that the planner set the card's current status. The
+  record is written only after the card write succeeds, so a failed write leaves the older record
+  and the planner holds more, never less; a person can still set the same status by hand and have
+  it counted as the planner's, which is accepted. It holds the move and says so in the comment; a manual run for that one issue applies it, and
   that run is how the owner confirms a card.
 - **The reason.** Every move the planner makes, and every held move, is written first in one "Board
   status" comment on the issue, found again by a hidden marker and the app's own login, and edited in
   place. It says what the planner saw when it last looked (the card was in a column, or had no status),
   what the rule gives and why, and for a held move that it moved nothing, so it stays true if the
   edit then fails or the card later moves on. A manual run has its own queue, so an event for the same
-  issue never replaces it; if two runs race and both post, the extra comment is removed. It is built from fixed sentences: nothing read from an issue, a comment or a pull
+  issue never replaces it; if two runs race and both post, the oldest comment stays and the planner deletes the others. It is built from fixed sentences: nothing read from an issue, a comment or a pull
   request, not even a branch name, goes into it.
-- **What it writes.** The Status field and that comment. No label, no assignee, no other card.
+- **What it writes.** The Status field and that comment, and it deletes only its own marked
+  "Board status" comments on the issue being processed after a race, keeping the oldest. No label,
+  no assignee, no other card, no comment of a person or another app.
 - **Catching up.** Label changes made by other workflows start no run, and a run can read an issue a
   moment early; the next event, or a manual run for the issue, brings the card in line. A card
   that differs only because it was never visited is not swept: it moves when an event or a manual run

@@ -12,7 +12,8 @@ name: Planner Board
 # line with the rule. It checks out and runs only the repository's own code. Issue text is untrusted:
 # it goes only through the pure rule functions, and the issue number is checked to be digits before it
 # is used; neither reaches a shell. What each job may write: "Move the card" writes the Status field
-# and the one comment (issues: write, organization projects: write); "Report where the board
+# and the one comment, and deletes only its own marked "Board status" comments on the issue being
+# processed after a race, keeping the oldest (issues: write, organization projects: write); "Report where the board
 # differs" (#1425) reads every open card, prints the ones that differ from the rule in the job
 # summary, has no schedule and holds read access only.
 
