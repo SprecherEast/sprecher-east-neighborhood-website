@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       issue:
-        description: Issue number to bring in line with its labels and assignee (leave empty to run the report instead)
+        description: Issue number to bring in line with its labels and assignee (not needed for the report)
         required: false
         type: string
       report:
@@ -40,7 +40,7 @@ concurrency:
 jobs:
   board:
     name: Move the card
-    if: ${{ !inputs.report }}
+    if: ${{ !inputs.report && (github.event_name != 'workflow_dispatch' || inputs.issue != '') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

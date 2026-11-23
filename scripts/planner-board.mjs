@@ -18,6 +18,7 @@ import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 import { issueProblems, skipReason } from '../.github/scripts/issue-policy.mjs'
+import { ORG as DEFAULT_ORG, POLICY_URL, PROJECT as DEFAULT_PROJECT } from './planner-config.mjs'
 
 /** Events that put the issue's card on the board even when the issue is already closed. */
 const CARD_ACTIONS = new Set(['opened', 'reopened', 'assigned'])
@@ -86,15 +87,13 @@ function boardFields(org, number) {
   return data.organization.projectV2
 }
 
-const POLICY = new URL('../.github/label-policy.json', import.meta.url)
-
 /**
  * The issue as the decision needs it: open or closed, label names, who it is assigned to, and the
  * issue-check rules it fails. Its text only goes through those pure functions, never into a command.
  */
 function readIssue(repo, number) {
   const issue = json('api', `repos/${repo}/issues/${number}`)
-  const policy = JSON.parse(readFileSync(POLICY, 'utf8'))
+  const policy = JSON.parse(readFileSync(POLICY_URL, 'utf8'))
   return {
     state: issue.state,
     labels: issue.labels.map((entry) => entry.name),
@@ -112,7 +111,14 @@ function readyWasRemoved(repo, number) {
 }
 
 function run() {
-  const { REPO, ISSUE, ACTION = 'sync', LABEL, ORG = 'SprecherEast', PROJECT = '1' } = process.env
+  const {
+    REPO,
+    ISSUE,
+    ACTION = 'sync',
+    LABEL,
+    ORG = DEFAULT_ORG,
+    PROJECT = DEFAULT_PROJECT,
+  } = process.env
   if (!/^\d+$/.test(ISSUE ?? '')) throw new Error('ISSUE must be an issue number.')
   const url = `https://github.com/${REPO}/issues/${ISSUE}`
   const issue = readIssue(REPO, ISSUE)
