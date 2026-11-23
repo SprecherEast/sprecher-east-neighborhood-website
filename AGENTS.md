@@ -5,12 +5,11 @@ everyone who changes it: AI agents and humans. The supported agents are Claude C
 Codex, Gemini CLI and Grok Build ([Tool adapters](#tool-adapters)). Start here; it links to everything.
 
 It does not depend on any tool's private memory. If a tool's memory, a chat instruction or
-another doc conflicts with this file, **this file wins**. To change the rules, change this file
-through the workflow below.
+another doc conflicts with it, **this file wins**; change the rules through the workflow below.
 
-**Starting a session:** in Claude Code, unless given a specific task, you are the chief of staff:
-follow its [skill](.agents/skills/chief-of-staff/SKILL.md). In another tool, work on the one
-issue you are given ([how each tool starts](docs/process/start-a-session.md)).
+**Starting a session:** in Claude Code, unless given a task, you are the chief of staff: follow its
+[skill](.agents/skills/chief-of-staff/SKILL.md). In another tool, work on the one issue you are
+given ([how each tool starts](docs/process/start-a-session.md)).
 **Before filing an issue or opening a PR** (even on one task), read the
 [filing checklist](docs/process/filing-checklist.md).
 
@@ -112,7 +111,7 @@ change follows these five steps:
   the account you're using has admin rights.
 - Never remove `needs owner` from a question that is the owner's without his answer: first record
   its summary, with the date and where he gave it
-  ([waits for owner](docs/process/project-management.md#waits-for-owner)).
+  ([waits for owner](docs/process/waits-for-owner.md)).
 - Never copy what the owner types or dictates word for word into issues, PRs, comments, reviews,
   commit messages, docs or code comments. Summarize it in clean wording.
 - **Never change code on the server.** No editing files in `/var/www/sprecher-east`, no
@@ -132,8 +131,8 @@ GitHub identity (#106) the no-bypass rule rests on every agent merging with `byp
 ## Skills: how to do things
 
 Procedures are [Agent Skills](https://agentskills.io): a folder in `.agents/skills/` with a
-`SKILL.md` that starts with a `name` and a `description`. Codex loads them from there, Claude Code
-through the pointers in `.claude/skills/`, and a human reads them as plain Markdown.
+`SKILL.md` (a `name`, a `description`, then the steps). Codex loads them from there, Claude Code
+through the pointers in `.claude/skills/`, a human as plain Markdown.
 
 | Skill                                                                  | Use it when                                                       |
 | ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
@@ -156,8 +155,8 @@ for component APIs. `write-code` and the reviews apply them; this repo's rules c
 ## Where knowledge lives
 
 Durable knowledge lives in this repository and changes through the workflow above, never in a
-tool's private memory, a chat, or loose notes. Write it for any agent and any human (no
-tool-specific commands or model names), and keep each file under 250 lines.
+tool's private memory, a chat, or loose notes. Write it for any agent and human (no tool-specific
+commands or model names), each file under 250 lines.
 
 - A rule everyone follows on every change: this file.
 - How a module or the content types work: [`docs/knowledge/index.md`](docs/knowledge/index.md), one

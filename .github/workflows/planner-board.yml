@@ -2,8 +2,8 @@ name: Planner Board
 
 # Keeps the organization board in step with the work (#941, #1089), signed in as the "Sprecher East
 # Planner" app. An assigned issue, which is how work is claimed, becomes In progress; the "ready"
-# label moves a card between Backlog and Ready, and only while the issue passes the issue check and does not wait for the
-# owner. Label changes made by other workflows start no run (GITHUB_TOKEN), so this one runs the
+# label moves a card between Backlog and Ready, and only while the issue passes the issue check and
+# does not wait for the owner. Label changes made by other workflows start no run (GITHUB_TOKEN), so this one runs the
 # check's rules itself when a person or an agent changes the issue; a run can read the issue a
 # moment before another workflow's labels land, and the next event or a manual run catches up. In review and Done are GitHub's own board
 # rules. Run it by hand with an issue number to bring one card in line with its issue. It checks

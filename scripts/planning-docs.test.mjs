@@ -44,7 +44,7 @@ const links = (file) =>
     anchor: match[2],
   }))
 
-describe.each([MODEL, PLAYBOOK])('%s', (file) => {
+describe.each([MODEL, PLAYBOOK, 'docs/process/weekly-review.md'])('%s', (file) => {
   const text = read(file)
 
   it('stays under 250 lines', () => {
@@ -107,30 +107,45 @@ describe('the planning model', () => {
 })
 
 describe('continuous flow', () => {
-  const PROCESS_DOCS = [
-    'docs/process/planning-model.md',
-    'docs/process/project-management.md',
-    'docs/process/grooming-playbook.md',
-  ]
   const REVIEW = 'docs/process/weekly-review.md'
+  const RULE = 'docs/process/project-management.md'
+  const markdown = (dir) =>
+    fs
+      .readdirSync(path.join(root, dir))
+      .filter((name) => name.endsWith('.md'))
+      .map((name) => `${dir}/${name}`)
+  /** Vendored skills are third-party; their "iterations" are loops in JavaScript. */
+  const ownSkills = fs
+    .readdirSync(path.join(root, '.agents/skills'))
+    .filter((name) => !name.startsWith('vercel-'))
+    .map((name) => `.agents/skills/${name}/SKILL.md`)
+  const SPRINT_FREE = [
+    'AGENTS.md',
+    ...markdown('docs/process'),
+    ...markdown('docs/roles'),
+    ...markdown('.claude/agents'),
+    ...ownSkills,
+    '.claude/skills/project-tracking/SKILL.md',
+    'docs/product/roadmap.md',
+  ]
 
-  it('keeps sprints out of the process docs and skills, except the note that they were dropped', () => {
-    for (const file of [...PROCESS_DOCS, REVIEW, ...SKILLS, 'docs/roles/README.md']) {
+  it('keeps sprints out of the process docs, skills, role guides and AGENTS.md, except the note that they were dropped', () => {
+    expect(SPRINT_FREE.length).toBeGreaterThan(30)
+    for (const file of SPRINT_FREE) {
       const lines = read(file)
         .split('\n')
         .filter((line) => /sprint|iteration/i.test(line))
-        .filter((line) => !/no sprints|without sprints|dropped sprints/i.test(line))
+        .filter((line) => !/dropped sprints/i.test(line))
       expect(lines, file).toEqual([])
     }
   })
 
   it('has the weekly review, which reads GitHub by REST and says what it cannot measure', () => {
     const text = read(REVIEW)
-    expect(text.split('\n').length).toBeLessThan(250)
     expect(text).toMatch(/gh api/)
     expect(text).toMatch(/cannot measure/i)
     expect(text).toMatch(/token/i)
-    expect(links(REVIEW).map((link) => link.target)).toEqual(expect.any(Array))
+    expect(text, 'it reads the friction notes in [STEP] comments').toMatch(/\[STEP\]/)
   })
 
   it('links the weekly review from the chief of staff skill', () => {
@@ -139,16 +154,45 @@ describe('continuous flow', () => {
     )
   })
 
+  it('keeps the closed-issues query in one place, with paging and without pull requests', () => {
+    const holders = [...new Set([...SPRINT_FREE, REVIEW])].filter((file) =>
+      read(file).includes('state=closed&since'),
+    )
+    expect(holders).toEqual(['.agents/skills/project-tracking/SKILL.md'])
+    const query = read(holders[0])
+      .split('\n')
+      .filter((line) => /state=closed&since/.test(line))
+    expect(query.join('\n')).toMatch(/--paginate/)
+    expect(read(holders[0])).toMatch(/select\(\.pull_request \| not\)/)
+    expect(links(REVIEW).map((link) => link.target)).toContain(
+      '.agents/skills/project-tracking/SKILL.md',
+    )
+  })
+
+  it('keeps how-we-work under the length limit', () => {
+    expect(read(RULE).split('\n').length).toBeLessThan(250)
+  })
+
   it('writes the session handoff rule once, and the worker and chief of staff point to it', () => {
-    const rule = 'docs/process/project-management.md'
-    expect(anchors(rule)).toContain('session-handoff')
+    expect(anchors(RULE)).toContain('session-handoff')
     for (const file of ['docs/roles/worker.md', '.agents/skills/chief-of-staff/SKILL.md']) {
-      const found = links(file).filter((link) => link.target === rule)
+      const found = links(file).filter((link) => link.target === RULE)
       expect(
         found.map((link) => link.anchor),
         file,
       ).toContain('session-handoff')
     }
+  })
+
+  it('has a handoff a session on another device can continue from', () => {
+    const text = read(RULE)
+    const rule = text.slice(
+      text.indexOf('## Session handoff'),
+      text.indexOf('## Definition of Ready'),
+    )
+    expect(rule, 'commit and push first').toMatch(/commit(s)? and push(es)?/i)
+    expect(rule, 'the claim form claimBranch reads').toMatch(/Branch: `/)
+    expect(rule, 'when nothing was posted').toMatch(/posted nothing/i)
   })
 })
 

@@ -113,8 +113,11 @@ Work moves continuously, as in Kanban: a strategy for optimizing the flow of val
 process, by showing the work, controlling how much is in progress and managing how it moves
 ([the Kanban Guide](https://kanbanguides.org/english/)). Nothing is planned in time slices.
 
-- **Pull, don't push.** When someone is free, they take the highest-priority Ready work, within
-  the active milestones. Nobody assigns work ahead of capacity.
+- **Pull, don't push.** When someone is free, they take the highest-priority Ready work. Nobody
+  assigns work ahead of capacity. **Active milestones** are the open outcome milestones: priority
+  decides across all of them, the nearest due date breaks a tie, and the Backlog catch-all
+  comes last.
+
 - **Limit work in progress by the overlap check,** not by a number: a new item starts only when its
   files and blockers do not collide with what is already in progress
   ([how we work](/docs/process/project-management.md#grooming-and-work-in-progress)).
@@ -122,6 +125,9 @@ process, by showing the work, controlling how much is in progress and managing h
   record; no period owns it.
 - **Unfinished work stays where it is.** There is nothing to roll over. An item that sits In
   progress without movement is a signal to look at: blocked, too big, or abandoned.
+- **We adopt the practices, not all the Guide's measures.** We track neither its flow metrics
+  (throughput, work item age, cycle time) nor a service level expectation; the weekly review reads
+  what shipped and what stalled instead.
 - **Improvement runs on a weekly review** of what shipped and what went wrong, kept apart from the
   board ([weekly review](/docs/process/weekly-review.md)).
 
@@ -222,7 +228,7 @@ Agile references:
 
 - Atlassian, epics, stories and initiatives: https://www.atlassian.com/agile/project-management/epics-stories-themes
 - The Scrum Guide (refinement, Definition of Done): https://scrumguides.org/scrum-guide.html
-- The Kanban Guide (workflow, controlling work in progress, flow metrics): https://kanbanguides.org/english/
+- The Kanban Guide (workflow, controlling work in progress): https://kanbanguides.org/english/
 - INVEST for story size (Bill Wake): https://xp123.com/invest-in-good-stories-and-smart-tasks/
 
 Where the docs are silent we say so rather than assert: they do not state in prose that an issue

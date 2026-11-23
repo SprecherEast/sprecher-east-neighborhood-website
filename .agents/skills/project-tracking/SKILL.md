@@ -79,8 +79,8 @@ For each issue:
 
 ## 2. "What's next?"
 
-1. Find the active milestones, the open ones, nearest due date first (milestones without one sort
-   last, the Backlog catch-all last of all):
+1. Find the active milestones, as the [flow](../../../docs/process/planning-model.md#flow) section
+   defines them:
    `gh api "repos/{owner}/{repo}/milestones?state=open&sort=due_on&direction=asc" -q '.[] | {number, title, due_on, open_issues, closed_issues}'`
 2. List the open issues of each milestone, in that order:
    `gh api "repos/{owner}/{repo}/issues?milestone=<number>&state=open&per_page=100" -q '.[] | select(.pull_request | not) | "#\(.number) [\([.labels[].name] | join(", "))] \(.title)"'`
@@ -157,7 +157,7 @@ For each issue:
    - add it to the checklist in the owner-actions epic (#169); its parent stays its own epic
    - mark the issues that depend on it as blocked by it
    - stop: it waits for him
-     ([waits for owner](../../../docs/process/project-management.md#waits-for-owner))
+     ([waits for owner](../../../docs/process/waits-for-owner.md))
 
    Ask him on the issue under a `### [QUESTION]` header, and in the chat too when he's there. Make it easy to answer:
 
@@ -216,16 +216,18 @@ For each issue:
 
 ```bash
 since=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-7d +%Y-%m-%dT%H:%M:%SZ)
-gh api "repos/{owner}/{repo}/issues?state=closed&since=$since&per_page=100" \
-  -q ".[] | select(.pull_request | not) | select(.state_reason == \"completed\") | select(.closed_at >= \"$since\") | \"#\\(.number) \\(.title)\""
+gh api --paginate "repos/{owner}/{repo}/issues?state=closed&since=$since&per_page=100" \
+  -q ".[] | select(.pull_request | not) | select(.state_reason == \"completed\") | select(.closed_at >= \"$since\") | \"\\(.milestone.title // \"no milestone\")\\t#\\(.number) \\(.title)\""
 gh api "repos/{owner}/{repo}/milestones?state=open" -q '.[] | "\(.title): \(.closed_issues) done, \(.open_issues) open, due \(.due_on)"'
 gh api "repos/{owner}/{repo}/issues?labels=needs%20owner&state=open&per_page=100" -q '.[] | "#\(.number) \(.title)"'
 ```
 
 `since` filters by last update, so the `closed_at` check keeps only the issues closed in the
-window, and `state_reason` drops duplicates and won't-fix. Report:
+window, `state_reason` drops duplicates and won't-fix, `select(.pull_request | not)` drops pull
+requests (the endpoint returns both), and `--paginate` reads every page (where it fails, loop over `&page=N` as in §3). This is the one place
+this query lives; the [weekly review](../../../docs/process/weekly-review.md) reuses it. Report:
 
-- what shipped (closed issues, grouped by epic: one `/parent` call per issue, as in §1)
+- what shipped (closed issues, grouped by milestone as printed, or by epic: one `/parent` call per issue, as in §1)
 - what's in progress (the open-PR list in §2 step 3)
 - what's Ready next (§2)
 - what's waiting on the owner (the `needs owner` list)

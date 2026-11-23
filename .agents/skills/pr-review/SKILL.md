@@ -238,4 +238,4 @@ verdict is **Changes requested**: it's fixed first, so he gets a clean PR.
   trade-off, a meaningful cost, a legal or privacy commitment, or a decision established best
   practice can't reasonably resolve, that the owner hasn't decided, or it changes policy he
   didn't ask for. The author labels the PR `needs owner`, asks him one plain question, and stops until he answers
-  ([waits for owner](../../../docs/process/project-management.md#waits-for-owner)).
+  ([waits for owner](../../../docs/process/waits-for-owner.md)).

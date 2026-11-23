@@ -44,15 +44,15 @@ Three things, in this order, in one reply. Nothing here waits for the owner befo
      -q '.[] | select([.labels[].name] | index("epic") | not) | "#\(.number)\(if .pull_request then " (PR)" else "" end) \(.title) (since \(.created_at[:10]))"'
    ```
 
-   Before showing it, [triage](../../../docs/process/project-management.md#waits-for-owner) it:
+   Before showing it, [triage](../../../docs/process/waits-for-owner.md) it:
    an item that was never his to decide loses the label with a `[DECISION]` comment. Show at most
    seven, the oldest first, and say how many wait in all. Make sure the first one has a plain
    question he can answer in a sentence, and ask that one. Silence is never a yes, and only the
    work blocked by a question waits for it.
 
 3. **The next batch.** Ready issues only ([`project-tracking`](../project-tracking/SKILL.md) §1),
-   highest priority first, from the active milestones: the open outcome milestones, the Backlog
-   catch-all last. Run the overlap check (§3) on the
+   in the order the [flow](../../../docs/process/planning-model.md#flow) section gives for the active
+   milestones. Run the overlap check (§3) on the
    proposed set and drop what clashes. Offer the batch with one line each and why.
 
 Dispatch only after the owner agrees to the batch, or when he has already said to keep going.

@@ -43,6 +43,12 @@ describe('decideChanges', () => {
     expect(decideChanges({ action: 'assigned', item: { status: 'Done' } })).toEqual({})
   })
 
+  it('leaves a reopened Done card Done and a plain Backlog card in Backlog', () => {
+    expect(decideChanges({ action: 'reopened', item: { status: 'Done' } })).toEqual({})
+    const plain = { state: 'open', labels: [], assignees: [] }
+    expect(decideChanges({ action: 'sync', issue: plain, item: { status: 'Backlog' } })).toEqual({})
+  })
+
   it('sets and reads no field other than the status', () => {
     for (const action of ['opened', 'reopened', 'assigned', 'sync']) {
       const changes = decideChanges({ action, item: { status: 'Ready' } })

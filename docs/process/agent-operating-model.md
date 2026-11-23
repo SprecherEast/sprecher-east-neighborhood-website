@@ -134,7 +134,7 @@ flowchart LR
   decision or question, why, and `Owner needed: yes/no`. A convention, not a GitHub feature. Built: #693.
 - **Owner questions** get the `needs owner` label and one plain question with options and a
   recommendation ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §3). Silence
-  is never a yes: the issue [waits for owner](project-management.md#waits-for-owner). A session
+  is never a yes: the issue [waits for owner](waits-for-owner.md). A session
   starts with the chief of staff listing them, oldest first, at most seven, one line each. The
   label is the queue. Built: the list, in the `chief-of-staff` skill (#695 piece one). Planned: the
   phone, #697.

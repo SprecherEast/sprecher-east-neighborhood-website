@@ -19,12 +19,9 @@ is in [`AGENTS.md`](/AGENTS.md). Where the work is heading is in the
 [roadmap](/docs/product/roadmap.md). The [`project-tracking`](/.agents/skills/project-tracking/SKILL.md)
 skill is the step-by-step version for agents.
 
-How the agent team (chief of staff, workers, reviewers) works on top of this is in the
-[agent operating model](/docs/process/agent-operating-model.md). Which layer a piece of work belongs at, and how
-to name it, is in the [planning model](/docs/process/planning-model.md); when to groom, what each board move
-requires and how the sweep works is in the [grooming playbook](/docs/process/grooming-playbook.md).
-
-GitHub is the only tracker for new work.
+The agent team's model is the [agent operating model](/docs/process/agent-operating-model.md); layers and
+naming are the [planning model](/docs/process/planning-model.md); grooming, board moves and the sweep are the
+[grooming playbook](/docs/process/grooming-playbook.md). GitHub is the only tracker for new work.
 
 Changing a rule here (how the team works: the flow rules, Ready or Done, the levels, the board's
 columns and fields) is a policy change, so the owner agrees first ([`AGENTS.md`](/AGENTS.md),
@@ -60,21 +57,19 @@ The allowed labels are in [`.github/label-policy.json`](/.github/label-policy.js
 - **Required on every issue:** exactly one type, at least one area, and one priority. The
   `PR Policy` check enforces this for the issue a pull request closes
   ([the gate](/docs/process/issue-and-pr-checks.md#the-pull-request-gate)).
-- **The labeler adds areas and markers only.** On a pull request it sets area labels and the
-  `shared-component` marker from the changed paths (`.github/labeler.yml`), never a type: the
-  author gives the pull request the one type of the issue it closes, and a test fails if a
-  labeler rule is named after a type.
+- **The labeler adds areas and markers only,** never a type: the author gives the pull request
+  the one type of the issue it closes (`.github/labeler.yml`; a test fails if a rule is named
+  after a type).
 - **Markers** (optional, with a fixed meaning):
   - `epic`: a parent issue whose sub-issues are the work.
   - `needs grooming`: set by [the issue check](/docs/process/issue-and-pr-checks.md#the-issue-check) while an issue misses something
     the Definition of Ready needs; the check removes it when nothing is missing.
   - `needs owner`: needs the owner's login or money, or his decision on a genuine product
     trade-off, a meaningful cost, a legal or privacy commitment, or a decision established best
-    practice can't reasonably resolve. Agents can't do it. A choice between technically valid
-    approaches isn't one: agents decide it and record why on the issue ([`AGENTS.md`](/AGENTS.md#ground-rules)). Every
-    `needs owner` issue is listed in the checklist of the owner-actions epic (#169); its parent
-    stays the epic it belongs to. The issues that depend on it are marked **blocked by** it, so
-    nobody starts them too early.
+    practice can't reasonably resolve. A choice between technically valid approaches isn't one:
+    agents decide it and record why ([`AGENTS.md`](/AGENTS.md#ground-rules)). Each one is in
+    the owner-actions epic's checklist; what depends on it is marked **blocked by** it
+    ([waits for owner](/docs/process/waits-for-owner.md)).
   - `ready`: the issue meets the [Definition of Ready](#definition-of-ready). Adding it moves the
     card to Ready and removing it parks the card in Backlog ([the board](#the-board)).
   - `scope-creep`: work found while doing another issue. It gets its own issue, linked to the
@@ -82,33 +77,16 @@ The allowed labels are in [`.github/label-policy.json`](/.github/label-policy.js
   - `proposed-close`: an agent thinks the issue is obsolete, or duplicates another idea. It waits
     for the owner; an agent never closes an old idea by itself. (Duplicate bugs are the exception
     set out in the [agent operating model](/docs/process/agent-operating-model.md#4-how-an-issue-moves).)
-  - `shared-component`: a "watch out" flag on a PR that changes shared code many pages use:
-    `src/platform/` (`ui/`, `richtext/`, `theme/`, `lib/`, `turnstile/`), `src/themes/`, the
-    frontend layout and `globals.css`, and the site header, nav, footer and logo. The labeler sets
-    it from the changed paths (#447); its reviewer checks every page that uses the changed code.
-  - `preview`: builds a pull request preview, a temporary copy of the site at
-    `pr-<number>.dev.sprechereast.com` (#1070). Only this label starts one (each preview orders a
-    certificate from a weekly budget production shares); the AI agent that made a visual change asks the
-    owner, and adds the label once he says yes. Never on a fork or Dependabot pull request.
+  - `shared-component`: a "watch out" flag on a PR that changes shared code many pages use (the
+    labeler sets it from the changed paths); its reviewer checks every page that uses the code.
+  - `preview`: builds a pull request preview at `pr-<number>.dev.sprechereast.com`, from a weekly
+    certificate budget production shares. The AI agent that made a visual change asks the owner and
+    adds it once he says yes. Never on a fork or Dependabot pull request.
 
 ### Waits for owner
 
-**Waits for owner** means: that issue or PR is on hold until the owner answers. Until then,
-nobody decides for him, merges it, or starts anything marked blocked by it. Fixing review
-findings on a waiting PR is fine, so he gets a clean one. Other work goes on, and silence is
-never a yes.
-
-When he answers, whoever acts on it records a short summary on the issue or PR (with the date and
-where he gave it), then removes the `needs owner` label and carries on as he decided. He can also
-merge or remove the label himself.
-
-**Triage.** The queue holds only what is his: a login, money, or a decision as the label defines
-it. A fact fix, work an agent can do, or something he already parked is a mislabel. The chief of
-staff removes the label with a `[DECISION]` comment saying why, and a parked item says what would
-bring it back. A real question keeps the rule above: only his answer removes the label.
-
-How to ask him ([`project-tracking`](/.agents/skills/project-tracking/SKILL.md) step 5):
-one plain question, the options in a sentence each, a recommendation, and what happens next.
+An issue or PR labeled `needs owner` is on hold until the owner answers; silence is never a yes.
+The rule, the triage and how to ask are in [waits for owner](/docs/process/waits-for-owner.md).
 
 Priority is the `priority:` label, which the checks read, and the organization's native Priority
 field (its Urgent option is not used); the two agree, and the sweep reports any that differ. Size is the
@@ -116,29 +94,19 @@ native Effort field: Low is S, Medium is M, High is L
 ([the board](#the-board)). GitHub's issue types (Bug, Feature, Task) are
 optional; the type label stays the required one because the `PR Policy` check reads labels.
 
-## The pull request gate
+## The checks
 
-The `PR Policy` check fails a pull request with one line per broken rule, each starting with a
-stable ID, including `PR-GROOMED`, which fails a pull request while its issue still has the
-`needs grooming` label (groom the issue, then edit the PR description to re-run). The rules and IDs
-are in [the checks page](/docs/process/issue-and-pr-checks.md#the-pull-request-gate).
-
-## The issue check
-
-The `Issue Policy` workflow warns, with a comment and the `needs grooming` label, when an issue
-misses something the Definition of Ready needs. The rules and IDs are in
-[the checks page](/docs/process/issue-and-pr-checks.md#the-issue-check).
+`PR Policy` fails a pull request, and `Issue Policy` warns on an issue (comment and `needs grooming`),
+with one stable ID per broken rule. The rules and IDs are in
+[the checks page](/docs/process/issue-and-pr-checks.md#the-pull-request-gate); a pull request fails `PR-GROOMED`
+while its issue has `needs grooming`.
 
 ## Flow
 
 We dropped sprints: work moves continuously, as in Kanban ([planning model](/docs/process/planning-model.md#flow)).
-
-- **Pull the next work** from Ready by priority, within the active milestones, when someone is
-  free and the overlap check passes ([below](#grooming-and-work-in-progress)).
-- **Finished work shows as recently done:** the Done column and the "Done last 7 days" view.
-- **Improvement is the [weekly review](/docs/process/weekly-review.md):** run by the chief of staff once a week
-  and on request, from GitHub only. A change it finds becomes an issue or a rule (a pull request to
-  the right doc), never a loose note.
+Pull the next work from Ready by priority when the overlap check passes
+([below](#grooming-and-work-in-progress)); finished work shows in the Done column and the "Done last
+7 days" view; improvement is the [weekly review](/docs/process/weekly-review.md).
 
 ## The board
 
@@ -191,12 +159,9 @@ what's being done and what isn't. On 2026-11-04 (voice and text sessions, record
 parallel work when issues don't touch the same files, with no fixed number, and confirmed it on
 2026-11-06 (Claude session, text, recorded on #685 and #721); the rule below says how.
 
-- **Groom before every major change:** a new epic or a batch of work. Each issue gets
-  its plain summary, acceptance criteria, a milestone, and an epic only for multi-part work
-  ([the rule](/AGENTS.md#one-issue-one-pull-request)), labels (type, area, `priority:`) and a
-  size, which is the Effort field: Low, Medium or High. Anything bigger is split. When it meets
-  the [Definition of Ready](#definition-of-ready), it gets the `ready` label and its card moves to
-  **Ready**.
+- **Groom before every major change:** a new epic or a batch of work. Each issue gets what the
+  [Definition of Ready](#definition-of-ready) needs, anything bigger than L is split, and then it
+  gets the `ready` label and its card moves to **Ready**.
 - **Work in progress has no fixed number.** What limits it is whether issues touch the same
   files (#721). Past
   the first, an issue starts only if its **Files likely touched** don't overlap with those of any
@@ -241,11 +206,13 @@ branch and assign the issue; (4) set **In progress**. Then start.
 ## Session handoff
 
 A session needs nothing from an earlier chat. **Before a session stops with work unfinished,** it
-posts a `### [STEP]` comment on its issue with: what is done, what is left, the branch and pull
-request, and anything the next session must know (a decision, a trap, a check still pending). **A
-session that picks work up reads that comment first,** then the issue, and continues from there.
-Workers and the chief of staff follow it ([worker](/docs/roles/worker.md),
-[chief of staff](/.agents/skills/chief-of-staff/SKILL.md)).
+commits and pushes its branch, then posts a `### [STEP]` comment on its issue: what is done, what
+is left, the pull request, anything the next session must know (a decision, a trap, a pending
+check), and the branch as ``Branch: `name` `` (the form the status rule reads). **A session that
+picks work up reads the latest `[STEP]` comment first,** then the issue, and continues from there.
+When the stopping session posted nothing, read the claim or brief, the branch's commits and the
+pull request instead, and say on the issue that you did. Workers and the chief of staff follow it
+([worker](/docs/roles/worker.md), [chief of staff](/.agents/skills/chief-of-staff/SKILL.md)).
 
 ## Definition of Ready
 
@@ -271,25 +238,23 @@ An issue is **Done** when:
 
 - its PR has passed every required check and its independent review, and is merged
   ([`AGENTS.md`](/AGENTS.md))
-- the knowledge note for the code it changed is updated, or the PR declares "no behavior change"
-  and the reviewer agreed ([decision 0019](/docs/architecture/decisions/0019-knowledge-layer.md))
-- if the merge started a deploy, the deploy succeeded and the changed behavior was checked on
-  the live site (the [`wrapped`](/.agents/skills/wrapped/SKILL.md) skill)
-- the issue is closed with a summary of what changed. Server changes are recorded on the
-  issue, without secrets.
+- its knowledge note is updated, or the PR declares "no behavior change" and the reviewer agreed
+  ([decision 0019](/docs/architecture/decisions/0019-knowledge-layer.md))
+- if the merge started a deploy, it succeeded and the changed behavior was checked on the live site
+  (the [`wrapped`](/.agents/skills/wrapped/SKILL.md) skill)
+- the issue is closed with a summary of what changed; server changes are recorded on it, without
+  secrets.
 
 ## Reports
 
-- **Weekly:** the [weekly review](/docs/process/weekly-review.md), plus what's in progress and what's Ready
-  next.
-- **Milestone progress:** the share of its issues that are closed, shown on the milestone page.
-- **What shipped in a period:** the issues closed between two dates, each with its closing summary.
+The [weekly review](/docs/process/weekly-review.md) covers what shipped and what went wrong. Milestone progress is
+the share of its issues that are closed, shown on the milestone page.
 
 ## Delegating work
 
 - An issue is the brief. Its acceptance criteria are the definition of done for whoever picks it
   up, person or agent.
-- Before starting, read the issue's epic, milestone and blockers, and its latest `[STEP]` comment. If it isn't Ready, groom it into
-  Ready first or pick another issue. Then set it In progress.
+- Before starting, read the issue's epic, milestone, blockers and latest `[STEP]` comment. If it
+  isn't Ready, groom it into Ready first or pick another issue. Then set it In progress.
 - New work found along the way becomes a new issue at the right level, with a parent. Don't widen
   the current PR to cover it.
