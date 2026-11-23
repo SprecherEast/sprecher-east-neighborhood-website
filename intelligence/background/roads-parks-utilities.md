@@ -48,11 +48,11 @@ what the City expected, not what exists.
 
 ## Utilities and phasing `[planned]`
 
-- **In 1997** `[past]`: a 138-kV electric line on the west side of Sprecher Road in a 110-foot
+- **When the plan was written** `[past]`: a 138-kV electric line on the west side of Sprecher Road in a 110-foot
   easement, and two ANR natural gas pipelines in 75-foot and 50-foot easements [p4, PDF 7].
 - **Sewer:** most of the area drains east to a new interceptor in the Door Creek corridor; its
-  construction was to "begin in 1998" [p26, PDF 29]. The western part could use existing City sewers
-  [p25, PDF 28]. **Water:** a new City reservoir near the school site, "expected to be built during
+  construction was to "begin in 1998" [p26, PDF 29]. A small portion of the neighborhood could drain west or
+  south to existing City sewers [p25, PDF 28]. **Water:** a new City reservoir near the school site, "expected to be built during
   1999" [p27, PDF 30]. Whether either was built is `[unknown]`.
 - **Staging map** (Areas A to E; [PDF 43]): development "allowed to begin" in Area A (southwest) in
   1998, Area B (southeast) in 1999 and Area C (northeast) in 2000, "subject to the availability of all

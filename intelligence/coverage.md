@@ -43,8 +43,8 @@ Facts to keep straight:
 (adopted January 1998, last amended March 2012), with a page for every fact. Read it before
 judging whether a development, road, park or school item fits what was planned. Three rules:
 
-- The plan says what was **expected**, never what exists. Approved or planned is not built (check 5
-  below); only an item the note marks `[confirmed]` is current.
+- The plan says what was **expected**, never what exists. Approved or planned is not built (Verification, check 5,
+  stage of a project, below); only an item the note marks `[confirmed]` is current.
 - The plan's area is larger than the core area: it spans both sides of Sprecher Road, to I-90. A
   place named in the plan, such as the town center near North Star Drive, still gets its tier by
   address, not by the plan.
