@@ -63,22 +63,61 @@ export function rateLinesFor(
   })
 }
 
+/** The years the rates standing in for missing ones are from in the year at `index`, once each: "2026" */
+const carriedYears = (years: readonly BillShareYear[], index: number): string =>
+  [
+    ...new Set(
+      rateLinesFor(years, index)
+        .filter((line) => line.carried)
+        .map((line) => line.year),
+    ),
+  ]
+    .sort()
+    .join(' and ')
+
 /**
- * The toast for the year at `index` (#1380): the carried-rates one in a year that uses an earlier
- * year's rate for some body, the own-rates one in a year where every body has its own, each with
- * `{year}` filled in as the year shown. Null where the editor turned that toast off, or the year
- * does not exist.
+ * The toast with this id for the year at `index` (#1380, #1417), with `{year}` filled in as the year
+ * shown and `{carried}` as the year the rates standing in for missing ones are from. Null where
+ * the editor turned that toast off, or the year does not exist.
+ */
+export function toastFor(
+  id: BillToastId,
+  years: readonly BillShareYear[],
+  index: number,
+  toasts: Record<BillToastId, BillToast | null>,
+): { id: BillToastId; toast: BillToast; message: string } | null {
+  const year = years[index]
+  const toast = toasts[id]
+  if (!year || !toast) return null
+  const values = { year: String(year.year), carried: carriedYears(years, index) }
+  return { id, toast, message: fillNote(toast.message, values) }
+}
+
+/**
+ * The rates warning the page shows by itself for the year at `index` (#1380): the carried-rates one
+ * in a year that uses an earlier year's rate for some body, the own-rates one in a year where every
+ * body has its own. Null where the editor turned that toast off, or the year does not exist.
  */
 export function yearToastFor(
   years: readonly BillShareYear[],
   index: number,
   toasts: Record<BillToastId, BillToast | null>,
 ): { id: BillToastId; toast: BillToast; message: string } | null {
-  const year = years[index]
-  if (!year) return null
-  const id: BillToastId = rateLinesFor(years, index).some((line) => line.carried)
-    ? 'ratesCarried'
-    : 'ratesOwn'
-  const toast = toasts[id]
-  return toast ? { id, toast, message: fillNote(toast.message, { year: String(year.year) }) } : null
+  const carried = rateLinesFor(years, index).some((line) => line.carried)
+  return toastFor(carried ? 'ratesCarried' : 'ratesOwn', years, index, toasts)
+}
+
+/**
+ * The rates panel's title for the year at `index` (#1417): the City's rate while the other bodies'
+ * rates are an earlier year's, the year's rates once every one is its own. `{year}` is the year shown.
+ */
+export function ratesTitleFor(
+  years: readonly BillShareYear[],
+  index: number,
+  text: { title: string; carriedTitle: string },
+): string {
+  const carried = rateLinesFor(years, index).some((line) => line.carried)
+  return fillNote(carried ? text.carriedTitle : text.title, {
+    year: String(years[index]?.year ?? ''),
+  })
 }

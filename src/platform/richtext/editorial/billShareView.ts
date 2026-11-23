@@ -5,6 +5,7 @@ import {
   type BillPart,
   type BillShare as Bill,
 } from '@/platform/lib/billShare'
+import type { Certainty } from '@/platform/lib/certainty'
 import { formatWholeDollars } from '@/platform/lib/chart/format'
 import type { ShareSlice } from '@/platform/ui/ShareBill'
 import { BILL_BODY_TONES } from '@/platform/ui/shareTones'
@@ -69,4 +70,21 @@ export function receiptFor(bill: Bill | null, homeValue: number | null): Receipt
         ? `If your home is worth ${home}, your whole bill is about ${formatWholeDollars(bill.total)}.`
         : `The City’s part of a ${home} home’s bill would be about ${formatWholeDollars(part('city')?.amount ?? 0)}.`,
   }
+}
+
+/** The status badge a panel shows: the year's own words, with the "not final" look */
+export type StatusBadge = { certainty: Certainty; label?: string }
+
+/** The Estimate tag, one for every panel it shows on (#1417) */
+export const ESTIMATE_BADGE: StatusBadge = { certainty: 'estimate' }
+
+/**
+ * The rates panel's Estimate tag (#1111, #1417): there only for a year whose rates are not all
+ * final, that is, one with a stored note ("Proposed") or one that uses an earlier year's rate for
+ * some body (`carried`, which a block saved with no note still has); a year with the City's own
+ * final rates has nothing to flag. The City tax card and the whole bill always show the tag, so they take
+ * `ESTIMATE_BADGE` directly.
+ */
+export function ratesBadgeFor(note: string | undefined, carried: boolean): StatusBadge | null {
+  return carried || note?.trim() ? ESTIMATE_BADGE : null
 }

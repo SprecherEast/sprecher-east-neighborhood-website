@@ -39,7 +39,7 @@ export function ScaledBreakdown({
   /** Changes each time the bars should fill again; 0 keeps the reveal on scroll */
   fillKey?: number
   compact?: boolean
-  /** Leaves the as-of line and the source links out, for a page that lists them elsewhere (#1180) */
+  /** Leaves the as-of line, the source links and the Estimate badge out, for a page that shows them elsewhere (#1180, #1417) */
   hideSource?: boolean
 }) {
   const id = useId()
@@ -62,7 +62,7 @@ export function ScaledBreakdown({
     finePrint: spec.finePrint,
     asOf: hideSource ? undefined : spec.asOf,
     sources: hideSource ? undefined : spec.sources,
-    certainty: spec.certainty,
+    certainty: hideSource ? undefined : spec.certainty,
   }
   return (
     <div data-chart-palette={spec.palette} className="not-prose space-y-3">

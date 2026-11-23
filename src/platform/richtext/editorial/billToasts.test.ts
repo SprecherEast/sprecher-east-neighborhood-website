@@ -9,7 +9,6 @@ describe('toastsOf (#1379)', () => {
     expect(toasts.ratesCarried).toMatchObject({
       tone: 'warning',
       placement: 'panel',
-      showsPerVisit: 2,
       message: DEFAULT_BILL_TOASTS.ratesCarried.message,
       ending: 'accept',
       acceptLabel: 'Got it',
@@ -38,7 +37,6 @@ describe('toastsOf (#1379)', () => {
       durationMs: 8000,
       acceptLabel: 'OK',
       placement: 'panel',
-      showsPerVisit: 2,
     })
   })
 
@@ -49,6 +47,19 @@ describe('toastsOf (#1379)', () => {
     ])
     expect(toasts.ratesOwn).toBeNull()
     expect(toasts.ratesCarried).toBeNull()
+  })
+
+  it('gives an Estimate-button toast its starting wording when a saved list never had its row (a block saved before it existed)', () => {
+    const saved = toastsOf([
+      { toast: 'ratesCarried', tone: 'warning', ending: 'accept', message: 'Carried.' },
+    ])
+    expect(saved.aboutAnswer?.message).toMatch(/average Madison home/)
+    expect(saved.aboutBill?.message).toMatch(/state credits/)
+    expect(saved.aboutRates?.message).toBeTruthy()
+    // a row the editor kept but emptied is still off
+    const emptied = toastsOf([{ toast: 'aboutBill', message: ' ' }])
+    expect(emptied.aboutBill).toBeNull()
+    expect(emptied.aboutAnswer).not.toBeNull()
   })
 
   it('falls back to a kind, an ending, a time and a button label that make sense', () => {
@@ -67,7 +78,13 @@ describe('toastsOf (#1379)', () => {
 
   it('ignores a row for a toast the code does not know', () => {
     const toasts = toastsOf([{ toast: 'mystery', message: 'Hi' }])
-    expect(Object.keys(toasts).sort()).toEqual(['ratesCarried', 'ratesOwn'])
+    expect(Object.keys(toasts).sort()).toEqual([
+      'aboutAnswer',
+      'aboutBill',
+      'aboutRates',
+      'ratesCarried',
+      'ratesOwn',
+    ])
   })
 
   it('puts a toast inside its panel unless the editor set it elsewhere, and falls back to the panel', () => {
@@ -94,13 +111,15 @@ describe('toastsOf (#1379)', () => {
     expect(saved.ratesCarried?.message).toBe('Saved words')
   })
 
-  it('holds how many times a toast shows in a visit to 1 to 10, and falls back to the starting two', () => {
-    const shows = (value: unknown) =>
-      toastsOf([{ toast: 'ratesOwn', message: 'Hi', showsPerVisit: value as number }]).ratesOwn
-        ?.showsPerVisit
-    expect(shows(3)).toBe(3)
-    expect(shows(0)).toBe(1)
-    expect(shows(99)).toBe(10)
-    expect(shows(undefined)).toBe(2)
+  it('starts with a warning for each panel’s Estimate button, each short and each inside its own panel', () => {
+    const toasts = toastsOf(undefined)
+    for (const id of ['aboutAnswer', 'aboutRates', 'aboutBill'] as const) {
+      expect(toasts[id]).toMatchObject({ tone: 'warning', ending: 'accept', placement: 'panel' })
+      expect(toasts[id]?.message.split(/\s+/).length).toBeLessThanOrEqual(30)
+    }
+  })
+
+  it('says in the starting carried-rates warning which year’s rates stand in for the missing ones', () => {
+    expect(toastsOf(undefined).ratesCarried?.message).toContain('{carried}')
   })
 })

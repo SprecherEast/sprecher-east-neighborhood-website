@@ -26,7 +26,7 @@ describe('FactTabs with a whole tax bill', () => {
           {
             year: 2026,
             label: '2026 rates',
-            note: '',
+            note: 'proposed',
             averageHome: 481300,
             rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0141 },
             source: null,
@@ -90,7 +90,7 @@ describe('FactTabs with a whole tax bill', () => {
           {
             year: 2026,
             label: '2026 rates',
-            note: '',
+            note: 'proposed',
             averageHome: 481300,
             rates: { city: 7 },
             source: null,
@@ -115,7 +115,7 @@ describe('FactTabs with a whole tax bill', () => {
     expect(panel.textContent).not.toContain('2027 proposed')
   })
 
-  it('shows how sure we are once, in the answer card, and keeps the tab’s detail in its row (#1111)', () => {
+  it('shows the year’s status once, in the answer card, and keeps the tab’s detail in its row (#1111)', () => {
     const [first] = props.tabs
     const tab = present(first)
     const billShare = {
@@ -127,7 +127,7 @@ describe('FactTabs with a whole tax bill', () => {
           {
             year: 2026,
             label: '2026 rates',
-            note: '',
+            note: 'proposed',
             averageHome: 481300,
             rates: { schools: 8.6814, county: 2.3564, matc: 0.6153, city: 7.0141 },
             source: null,

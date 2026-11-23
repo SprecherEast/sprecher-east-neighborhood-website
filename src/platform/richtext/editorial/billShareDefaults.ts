@@ -13,9 +13,13 @@ export const DEFAULT_BILL_ROW_TITLES = {
   sources: 'Sources',
 } as const
 
-/** The rates panel's starting title (#1351) */
+/**
+ * The rates panel's starting titles (#1351, #1417): the year's rates when every rate is its own, and
+ * the City's rate in a year that carries the other bodies' rates over from an earlier year.
+ */
 export const DEFAULT_BILL_RATES = {
-  title: 'Rates in use',
+  title: '{year} rates',
+  carriedTitle: '{year} city rate',
 } as const
 
 /**
@@ -24,16 +28,18 @@ export const DEFAULT_BILL_RATES = {
  * toast off. `{year}` is the year shown. The rates toasts say which year's rates the bill uses, so
  * they wait for the reader to accept them: what the bill is based on is not small print.
  * The own-rates toast starts with no message, so it is off: a year whose rates are all its own needs
- * no notice, and an editor who wants one writes its message (#1392).
+ * no notice, and an editor who wants one writes its message (#1392). The `about` toasts open only
+ * when the reader presses a panel's Estimate button (#1417), so they never count toward the limit
+ * of times a visit shows the rates warnings.
  */
 export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
   ratesCarried: {
     tone: 'warning',
     title: '',
-    message: 'Only the City’s {year} rates are out. The rest come in January.',
+    message:
+      'These are the City’s {year} rates. The others aren’t out yet, so we’re using {carried}’s.',
     ending: 'accept',
     placement: 'panel',
-    showsPerVisit: 2,
     fadeSeconds: 5,
     acceptLabel: 'Got it',
   },
@@ -43,7 +49,35 @@ export const DEFAULT_BILL_TOASTS: Record<BillToastId, BillToastDefinition> = {
     message: '',
     ending: 'accept',
     placement: 'panel',
-    showsPerVisit: 2,
+    fadeSeconds: 5,
+    acceptLabel: 'Got it',
+  },
+  aboutAnswer: {
+    tone: 'warning',
+    title: '',
+    message:
+      'The City’s part of the average Madison home’s bill, or your value, at the {year} rate. Your real bill follows your home’s assessed value and any exemptions.',
+    ending: 'accept',
+    placement: 'panel',
+    fadeSeconds: 5,
+    acceptLabel: 'Got it',
+  },
+  aboutRates: {
+    tone: 'warning',
+    title: '',
+    message: 'These are the {year} rates we used. Your real bill may differ.',
+    ending: 'accept',
+    placement: 'panel',
+    fadeSeconds: 5,
+    acceptLabel: 'Got it',
+  },
+  aboutBill: {
+    tone: 'warning',
+    title: '',
+    message:
+      'Each body’s share for the average home, or your value. Your real bill reflects state credits, exemptions, and special assessments such as street or sewer work.',
+    ending: 'accept',
+    placement: 'panel',
     fadeSeconds: 5,
     acceptLabel: 'Got it',
   },

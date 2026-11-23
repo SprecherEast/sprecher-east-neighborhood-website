@@ -132,7 +132,6 @@ function FactTabPanel({
               </div>
             )
           }
-          certainty={fact.certainty}
           source={fact.source}
         >
           {rest.length > 0 && (

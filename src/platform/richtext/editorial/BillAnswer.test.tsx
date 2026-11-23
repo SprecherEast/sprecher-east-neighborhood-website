@@ -12,8 +12,6 @@ afterEach(cleanup)
 const base = {
   tax: '$3,467',
   increase: 90,
-  certainty: 'confirmed' as const,
-  note: '',
   yours: false,
   home: '$500,300',
   cityPercent: 37,
@@ -33,9 +31,9 @@ describe('BillAnswer', () => {
     render(<BillAnswer {...base} />)
     const row = screen.getByText('City tax on an average home').parentElement as HTMLElement
     expect(row.className).toContain('justify-between')
-    expect(row.textContent).toContain('Confirmed')
+    expect(row.textContent).toContain('Estimate')
     const label = screen.getByText('City tax on an average home')
-    const badge = screen.getByText('Confirmed')
+    const badge = screen.getByText('Estimate')
     expect(label.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
@@ -76,20 +74,11 @@ describe('BillAnswer', () => {
     expect(container.querySelector('[data-answer-increase]')?.textContent).toBe('')
   })
 
-  it('shows the stored certainty as the one badge when the year has no note', () => {
-    render(<BillAnswer {...base} certainty="estimate" />)
-    expect(screen.getAllByText('Estimate')).toHaveLength(1)
-    cleanup()
-    render(<BillAnswer {...base} />)
-    expect(screen.getAllByText('Confirmed')).toHaveLength(1)
-  })
-
-  it('shows the year’s stored note as the badge, capitalized, with the "not final" look', () => {
-    const { container } = render(<BillAnswer {...base} note="proposed" />)
-    const badge = screen.getByText('Proposed')
-    expect(badge.className).toContain('text-warning-strong')
-    expect(screen.queryByText('Confirmed')).toBeNull()
-    expect(container.textContent).not.toContain('(')
+  it('shows the Estimate tag in every year, with the "not final" look, since the card only knows the average home (#1417)', () => {
+    const { rerender } = render(<BillAnswer {...base} />)
+    expect(screen.getByText('Estimate').className).toContain('text-warning-strong')
+    rerender(<BillAnswer {...base} baseYear increase={null} />)
+    expect(screen.getByText('Estimate')).toBeTruthy()
   })
 
   it('writes one small sentence with the average home and the City’s share', () => {
@@ -109,7 +98,7 @@ describe('BillAnswer', () => {
   })
 
   it('has no accessibility violations', async () => {
-    const { container } = render(<BillAnswer {...base} note="proposed" />)
+    const { container } = render(<BillAnswer {...base} />)
     await expectAccessible(container)
   })
 })

@@ -115,14 +115,14 @@ describe('ScaledBreakdown', () => {
     expect(screen.getByRole('link', { name: /City budget/ })).toBeTruthy()
   })
 
-  it('leaves the as-of line and the source links out when the page shows them elsewhere (#1180)', () => {
+  it('leaves the as-of line, the source links and the Estimate badge out when the page shows them elsewhere (#1180, #1417)', () => {
     const certain = { ...SPEC, certainty: 'estimate' as const, finePrint: 'Rounded.' }
     render(<ScaledBreakdown spec={certain} factor={1} hideSource />)
     expect(screen.queryByText('Mayor’s proposal, 2026')).toBeNull()
     expect(screen.queryByRole('link', { name: /City budget/ })).toBeNull()
-    // The badge and the fine print stay under the bars
+    // The fine print stays under the bars; the badge is the panel's own button, not a second tag
     expect(screen.getByText('Rounded.')).toBeTruthy()
-    expect(screen.getByText('Estimate')).toBeTruthy()
+    expect(screen.queryByText('Estimate')).toBeNull()
   })
 
   it('keeps the title for screen readers only when asked, with the takeaway still shown (#1144)', async () => {

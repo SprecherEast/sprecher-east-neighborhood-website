@@ -44,12 +44,8 @@ export const COMPONENT_GROUPS = [
   {
     slug: 'display',
     title: 'Display',
-    intro: 'Badges, text, dates and the other parts that show content.',
+    intro: 'Text, dates and the other parts that show content.',
     components: [
-      'Badge',
-      'BadgeList',
-      'CancelledBadge',
-      'CertaintyBadge',
       'ProgressBar',
       'DateTime',
       'MetaList',
@@ -61,6 +57,13 @@ export const COMPONENT_GROUPS = [
       'ImageCredit',
       'FeaturedImage',
     ],
+  },
+  {
+    slug: 'badges',
+    title: 'Badges',
+    intro:
+      'Short labels, some of them buttons (`onPress`): a category, a cancelled event, how sure we are.',
+    components: ['Badge', 'BadgeList', 'CancelledBadge', 'CertaintyBadge'],
   },
   {
     slug: 'sections',
@@ -86,7 +89,7 @@ export const COMPONENT_GROUPS = [
     slug: 'feedback',
     title: 'Feedback and overlays',
     intro: 'Messages, toasts and dialogs.',
-    components: ['Alert', 'Dismissible', 'Toast', 'Dialog', 'RouteDialog', 'Zoom'],
+    components: ['Alert', 'Dismissible', 'Toast', 'BillToastSlot', 'Dialog', 'RouteDialog', 'Zoom'],
   },
   {
     slug: 'navigation',
@@ -175,20 +178,24 @@ export const COMPONENT_GROUPS = [
     title: 'Key facts and fact tabs',
     intro:
       'Key facts as cards, and the fact tabs that open charts, timelines and the whole tax bill (`src/platform/richtext/editorial/`).',
+    components: ['KeyFacts', 'FactCard', 'FactTabs', 'SectionTabs', 'FilledText'],
+  },
+  {
+    slug: 'whole-bill',
+    title: 'The whole tax bill',
+    intro:
+      'The parts of the whole-bill block a fact tab opens with: the estimator, the answer card, the rates panel and the rows under the bill (`src/platform/richtext/editorial/`).',
     components: [
-      'KeyFacts',
-      'FactCard',
-      'FactTabs',
-      'SectionTabs',
       'BillShare',
       'BillAnswer',
       'RatesPanel',
+      'PanelHeader',
+      'StatusBadgeButton',
       'BillDetails',
       'BreakdownRow',
       'NoteText',
       'RoughEstimator',
       'BillFiguresProvider',
-      'FilledText',
     ],
   },
 ]
