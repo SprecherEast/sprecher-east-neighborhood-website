@@ -133,22 +133,22 @@ built on 2026-10-21 from the spec in #90 and moved to the organization after.
   (also as not planned), moves it to Done. Moving an item to Done by hand doesn't close the issue.
   Closed items are archived after two weeks.
 - **Access:** the board belongs to the organization and a cloud session reaches only the
-  repository, so an agent changes the issue and the card follows: assigning claims it, the `ready`
-  label says it is groomed, and Priority and Effort are fields on the issue (IDs in
+  repository, so an agent changes the issue and the card follows: a claim comment and then assigning claim
+  it, the `ready` label says it is groomed, and Priority and Effort are fields on the issue (IDs in
   `.github/issue-fields.json`). Reading the board or changing it directly needs the owner's
   account with the `project` scope: in the web UI, or `gh` on his computer. A write that fails with
   "Resource not accessible by integration" means the session's GitHub access is read-only
   ([start a session](/docs/process/start-a-session.md#check-it-works-on-the-organizations-repository)).
 - **The planner app:** a GitHub App owned by the organization reads and changes the board without
   anyone's computer, using a short-lived token made from a key kept only as a repository secret.
-  `Planner App Check`, run by hand, proves it can read the board and write to one test issue.
-  `Planner Board` runs as the app on a native signal, not on comments, and writes only the Status
-  field: an assigned issue becomes In progress, and the `ready` label moves a card from Backlog to Ready. A Ready card returns to Backlog when the label goes, or
-  while the issue has `needs owner` or fails [the issue check](/docs/process/issue-and-pr-checks.md#the-issue-check)
-  (the app runs the check's rules itself). A card never moves back from In progress, In review or
-  Done. Run by hand for one issue, it brings that card in line with the issue as it is now.
-- **The status rule (report only):** [one tested rule](/docs/process/board-status-rule.md) says what each card
-  should be; the `Planner Board` **report** run, started by hand, only lists where cards differ.
+  `Planner App Check`, run by hand, proves it can read the board and write to one test issue and its card.
+  `Planner Board` runs as the app on a native signal, not on comments. When an event concerns an
+  issue, it sets that issue's card, and only that card, to what [the status rule](/docs/process/board-status-rule.md)
+  says, and for a move GitHub's own workflows don't make it keeps the reason in one "Board status"
+  comment on the issue, edited in place. It writes the Status field and that comment only. Run by
+  hand for one issue, it catches up anything an event missed.
+- **The status rule:** [one tested rule](/docs/process/board-status-rule.md) decides every card, in the app's moves
+  and in the **report** run, started by hand, which only lists where open cards differ.
 
 ## Grooming and work in progress
 
@@ -177,8 +177,9 @@ parallel work when issues don't touch the same files, with no fixed number, and 
   `docs/roles/`, `docs/process/`).
 - **In progress is set when work starts,** before the first commit, so the board shows it. In
   review and Done stay automatic.
-- **Assigning the issue moves its card** to In progress, through the planner app (the Access note
-  above), from any device. An agent never moves a card by hand or by comment: it assigns the issue
+- **Claiming the issue moves its card** to In progress, through the planner app (the Access note
+  above), from any device: the claim comment names the branch, then the issue is assigned (assigning
+  alone is not a start). An agent never moves a card by hand or by comment: it claims the issue
   or sets `ready`. Where that workflow is not running, a session on the owner's computer moves
   the card, and a cloud session says on the issue which card to move.
 
