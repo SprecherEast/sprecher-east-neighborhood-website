@@ -11,6 +11,7 @@ import {
   main,
   readOnlyRun,
   renderTable,
+  QUERY,
   TruncatedError,
 } from './planner-report.mjs'
 
@@ -327,5 +328,21 @@ describe('readOnlyRun', () => {
     expect(() => guard(['project', 'item-edit', '--id', 'x'])).toThrow(/read-only/i)
     expect(() => guard(['api', 'graphql', '--method', 'POST'])).toThrow(/read-only/i)
     expect(() => guard(['api', 'repos/o/r/issues/1', '-X', 'PATCH'])).toThrow(/read-only/i)
+  })
+})
+
+describe('QUERY', () => {
+  it('has balanced braces and parentheses, so GraphQL can parse it', () => {
+    const count = (char) => QUERY.split(char).length - 1
+    expect(count('{')).toBe(count('}'))
+    expect(count('(')).toBe(count(')'))
+    expect(count('[')).toBe(count(']'))
+  })
+
+  it('asks totalCount for every list the rule reads, so a cut-off list is seen', () => {
+    for (const list of ['labels', 'assignees', 'comments', 'subIssues', 'timelineItems']) {
+      expect(QUERY).toMatch(new RegExp(`${list}\\([^)]*\\)\\{totalCount`))
+    }
+    expect(QUERY).toMatch(/closedByPullRequestsReferences\([^)]*\)\{totalCount/)
   })
 })

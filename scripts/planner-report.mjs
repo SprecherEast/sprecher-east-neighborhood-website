@@ -20,7 +20,7 @@ import { boardStatus, claimBranch } from './planner-status.mjs'
 
 const PAGE_SIZE = 40
 
-const QUERY = `query($org:String!,$n:Int!,$cursor:String){organization(login:$org){projectV2(number:$n){
+export const QUERY = `query($org:String!,$n:Int!,$cursor:String){organization(login:$org){projectV2(number:$n){
   items(first:${PAGE_SIZE},after:$cursor){pageInfo{hasNextPage endCursor}nodes{
     status:fieldValueByName(name:"Status"){... on ProjectV2ItemFieldSingleSelectValue{name}}
     content{__typename ... on Issue{number title body state
@@ -29,7 +29,7 @@ const QUERY = `query($org:String!,$n:Int!,$cursor:String){organization(login:$or
       comments(last:100){totalCount nodes{body}}
       closedByPullRequestsReferences(first:50,includeClosedPrs:true){totalCount nodes{number state merged}}
       timelineItems(first:100,itemTypes:[CROSS_REFERENCED_EVENT]){totalCount nodes{... on CrossReferencedEvent{source{... on PullRequest{number merged state}}}}}
-      parent{number state} subIssues(first:100){totalCount nodes{number state}}}}}}}}`
+      parent{number state} subIssues(first:100){totalCount nodes{number state}}}}}}}}}`
 
 /** Wraps a command runner so that only a GraphQL query goes through; anything else throws. */
 export function readOnlyRun(run) {
