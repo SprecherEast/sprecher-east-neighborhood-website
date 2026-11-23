@@ -20,7 +20,7 @@ import { STATUS } from './planner-config.mjs'
 
 export const FLAGS = {
   neverStarted:
-    'Assigned but never started: no claim comment names a branch and no pull request exists.',
+    'Assigned but never started: no claim comment names a branch and no pull request closes this issue or says it does.',
   mergedStillOpen:
     'A merged pull request declared it closes this issue, but the issue is still open.',
   epicChildrenDone: 'Every child of this epic is closed, but the epic is still open.',

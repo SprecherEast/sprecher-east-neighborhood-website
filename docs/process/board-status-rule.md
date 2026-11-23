@@ -22,7 +22,7 @@ child is In progress or In review, otherwise Backlog).
 
 ## Flags
 
-Flags name provable problems and are only reported:
+Flags name provable problems and are only reported (never started is not raised on an epic):
 
 - assigned but never started: no claim comment names a branch, and no pull request in any state
   (open, merged or closed, and even if the issue was reopened after it) is in the issue's closing

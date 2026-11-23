@@ -106,6 +106,11 @@ describe('boardStatus: epics follow their children', () => {
 })
 
 describe('boardStatus: flags (reported, never acted on)', () => {
+  it('says what the never-started flag means: a pull request that closes it or says it does', () => {
+    expect(FLAGS.neverStarted).toMatch(/no pull request closes this issue or says it does/)
+    expect(FLAGS.neverStarted).not.toMatch(/no pull request exists/)
+  })
+
   it('flags an issue assigned but never started', () => {
     const result = boardStatus(facts({ assignees: ['a'] }))
     expect(result.flags).toContain(FLAGS.neverStarted)
