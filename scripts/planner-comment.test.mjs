@@ -30,7 +30,13 @@ describe('boardStatusComment', () => {
   })
 
   it('records the status it set, so a later run knows the planner set it', () => {
-    expect(plannerSetStatus(boardStatusComment({ from: 'Ready', result }))).toBe('In progress')
+    expect(
+      plannerSetStatus(boardStatusComment({ from: 'Ready', result, set: 'In progress' })),
+    ).toBe('In progress')
+  })
+
+  it('records nothing unless it is told what was set', () => {
+    expect(plannerSetStatus(boardStatusComment({ from: 'Ready', result }))).toBeNull()
   })
 
   it('says a backward move is held for the owner, and keeps the status the planner last set', () => {

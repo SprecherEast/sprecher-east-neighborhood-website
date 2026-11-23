@@ -81,6 +81,7 @@ function world({
   listed = {},
   failEdit = false,
   failDelete = false,
+  failFinalPatch = false,
 }) {
   const writes = []
   const reads = []
@@ -126,6 +127,8 @@ function world({
     if (args[0] === 'api' && args.includes('-X')) {
       const kind = args[args.indexOf('-X') + 1]
       if (kind === 'DELETE' && failDelete) throw new Error('HTTP 404')
+      if (kind === 'PATCH' && failFinalPatch && writes.some((w) => w.kind === 'edit'))
+        throw new Error('HTTP 404')
       writes.push({
         kind,
         path: args.find((arg) => arg.startsWith('repos/')),
@@ -603,8 +606,8 @@ describe('the record of what the planner set', () => {
     expect(commentsOf(w).map(recordOf)).toEqual([undefined])
   })
 
-  it('holds a backward move for a card at a status the record names but the planner never set', () => {
-    // the record says In review, the card was left in Backlog by a failed write, then a person set In review
+  it("holds a backward move when the record names a different status than the card's", () => {
+    // the record says Backlog; the card sits in In progress, so the planner did not put it there
     const issue = node(5, {
       assignees: owner,
       comments: { nodes: [plannerComment(STATUS.backlog)] },
@@ -612,6 +615,26 @@ describe('the record of what the planner set', () => {
     const w = world({ issues: { 5: issue }, cards: { 5: STATUS.inProgress } })
     go(w, 5, 'edited')
     expect(editsOf(w)).toEqual([])
+  })
+
+  it('accepted limit: moves a card back when the record names its status, whoever really set it', () => {
+    // the record cannot tell the planner from a person, an AI agent or the board's own workflows
+    const issue = node(5, {
+      assignees: owner,
+      comments: { nodes: [plannerComment(STATUS.inProgress)] },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.inProgress } })
+    go(w, 5, 'edited')
+    expect(editsOf(w).map((entry) => entry.option)).toEqual([optionFor(STATUS.backlog)])
+  })
+
+  it('does not end the run red when only the final record edit fails after the card moved', () => {
+    const issue = claimed({
+      comments: { nodes: [...claim().nodes, plannerComment(STATUS.backlog)] },
+    })
+    const w = world({ issues: { 5: issue }, cards: { 5: STATUS.ready }, failFinalPatch: true })
+    expect(() => go(w, 5, 'assigned')).not.toThrow()
+    expect(editsOf(w)).toHaveLength(1)
   })
 })
 

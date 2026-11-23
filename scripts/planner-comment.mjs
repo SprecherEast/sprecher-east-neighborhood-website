@@ -15,7 +15,7 @@ const SET_PATTERN = /<!-- planner:set=([^>]+?) -->/
  * @param {boolean} [held]  a backward move held for the owner: nothing was moved
  * @param {string|null} [set]  the status the planner set last, kept when a move is held
  */
-export function boardStatusComment({ from, result, held = false, set = result.status }) {
+export function boardStatusComment({ from, result, held = false, set = null }) {
   const flags = result.flags.map((flag) => `- ${flag}`)
   const where = from ? `the card was in ${from}` : 'the card had no status'
   const sentence = `When the planner last looked, ${where} and the status rule puts it in ${result.status}. ${result.reason}${

@@ -61,8 +61,8 @@ issue the event concerns is written. A card with no status gets one.
 - **Backward moves wait for the owner.** An event applies a forward move, but never moves a card to
   an earlier column unless its comment records that the planner set the card's current status. The
   record is written only after the card write succeeds, so a failed write leaves the older record
-  and the planner holds more, never less; a person can still set the same status by hand and have
-  it counted as the planner's, which is accepted. It holds the move and says so in the comment; a manual run for that one issue applies it, and
+  and the planner holds more, never less; anyone else (a person, an AI agent or the board's own workflows) can still set
+  that same status and have it counted as the planner's, which is accepted. The planner holds the move and says so in the comment; a manual run for that one issue applies it, and
   that run is how the owner confirms a card.
 - **The reason.** Every move the planner makes, and every held move, is written first in one "Board
   status" comment on the issue, found again by a hidden marker and the app's own login, and edited in

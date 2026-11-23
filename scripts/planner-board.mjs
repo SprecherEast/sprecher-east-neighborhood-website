@@ -126,7 +126,7 @@ function removeDuplicates(run, { repository, number, body, appSlug }) {
     try {
       run(['api', '-X', 'DELETE', `${base}/comments/${extra.id}`])
     } catch {
-      // already removed by the other run
+      // any failure is ignored: the usual one is a racing run that removed it first, and a duplicate does no harm
     }
   }
 }
@@ -184,17 +184,12 @@ export function moveCard({ run, env, policy, log = console.log }) {
       body: boardStatusComment({ from: item.status, result, ...options }),
       existing,
     })
-  const settle = (written, options) =>
+  const settle = (written) =>
     written.posted &&
-    removeDuplicates(run, {
-      repository: REPO,
-      number: ISSUE,
-      body: boardStatusComment({ from: item.status, result, ...options }),
-      appSlug,
-    })
+    removeDuplicates(run, { repository: REPO, number: ISSUE, body: written.body, appSlug })
   if (changes.held) {
     const options = { held: true, set: root.facts.plannerSet }
-    settle(write(options), options)
+    settle(write(options))
     return changes
   }
   if (!changes.status) return changes
@@ -220,8 +215,13 @@ export function moveCard({ run, env, policy, log = console.log }) {
     option.id,
   ])
   // Only now is the new status really the planner's own: record it in the same comment
-  const final = { set: changes.status }
-  settle(write(final, first), final)
+  // The card is already written, so a failure here (the comment was removed by a racing run) is
+  // ignored: the record stays the older one, which only makes the planner hold more
+  try {
+    settle(write({ set: changes.status }, first))
+  } catch {
+    // see above
+  }
   return changes
 }
 
