@@ -182,6 +182,16 @@ built on 2026-10-21 from the spec in #90 and moved to the organization after.
   [the issue check](/docs/process/issue-and-pr-checks.md#the-issue-check) (the app runs the check's rules itself
   when the issue changes; a manual run catches up anything it missed). A card never moves back from In progress, In review or Done. Run
   by hand for one issue, the workflow brings that card in line with the issue as it is now.
+- **The status rule (report only for now):** one tested function (`scripts/planner-status.mjs`)
+  says what each card should be from facts GitHub records, first match wins: issue closed, Done;
+  an open pull request closes it, In review; claimed (assigned, and a `### [STEP]` claim comment
+  names a branch) and not resolved, In progress, however quiet it goes; the `ready` label, a
+  passing issue check and no `needs owner`, Ready; anything else open, Backlog. An epic follows
+  its children, never its assignee. It also flags, without acting: assigned but never started, a
+  merged pull request on a still-open issue, an open epic whose children are all closed, an open
+  child of a closed parent. The `Planner Board` workflow's **report** run, started by hand, prints
+  the cards that differ or carry a flag in its job summary. It only reads: it moves nothing, and
+  the event-driven moves above stay as they are until the rule replaces them.
 
 ## Grooming and work in progress
 

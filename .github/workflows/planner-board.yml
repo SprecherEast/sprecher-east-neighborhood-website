@@ -10,7 +10,8 @@ name: Planner Board
 # rules. Run it by hand with an issue number to bring one card in line with its issue. It checks
 # out and runs only the repository's own main-branch code. Issue text is untrusted: it goes only
 # through the pure rule functions, and the label name is an environment variable compared with
-# fixed names; neither reaches a shell.
+# fixed names; neither reaches a shell. The "report" run (#1425) reads every open card and prints the
+# ones that differ from the status rule in the job summary; it writes nothing and has no schedule.
 
 on:
   issues:
@@ -18,9 +19,14 @@ on:
   workflow_dispatch:
     inputs:
       issue:
-        description: Issue number to bring in line with its labels and assignee
-        required: true
+        description: Issue number to bring in line with its labels and assignee (leave empty to run the report instead)
+        required: false
         type: string
+      report:
+        description: Report only (#1425), no issue number needed - lists the cards that differ from the status rule and changes nothing
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -35,6 +41,7 @@ concurrency:
 jobs:
   board:
     name: Move the card
+    if: ${{ !inputs.report }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -66,3 +73,34 @@ jobs:
           ACTION: ${{ github.event.action || 'sync' }}
           LABEL: ${{ github.event.label.name }}
         run: node scripts/planner-board.mjs
+
+  report:
+    name: Report where the board differs
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.report }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            /scripts/
+            /.github/scripts/
+            /.github/label-policy.json
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Get a short-lived token as the app
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ vars.PLANNER_APP_ID }}
+          private-key: ${{ secrets.PLANNER_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-issues: read
+          permission-organization-projects: read
+
+      - name: Print the cards that differ from the rule
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+        run: node scripts/planner-report.mjs
