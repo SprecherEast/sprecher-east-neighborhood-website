@@ -34,87 +34,96 @@ export const aboutPage: (args?: AboutArgs) => RequiredDataFromCollectionSlug<'pa
     ],
   }
 
-  // The text and the map take half each, side by side from a large screen up and stacked
-  // on a phone; an editor changes the widths, the order or the alignment in Admin (#884)
-  const layout: RequiredDataFromCollectionSlug<'pages'>['layout'] = args?.mapImage
-    ? [
+  const howAiHelps = {
+    blockName: 'How AI Helps',
+    blockType: 'content' as const,
+    columns: [
+      {
+        richText: root([
+          heading('h2', 'How AI helps'),
+          p(
+            'AI tools help us gather public information, like city meetings, road and development projects, and local news. A neighbor reviews what we publish, and longer pieces list their sources.',
+          ),
+        ]),
+        size: 'full' as const,
+        // The only link to the plan (#953), start-aligned like the other buttons and named for
+        // the page it opens (#1419)
+        enableLink: true,
+        linkAlign: 'start' as const,
+        link: {
+          type: 'custom' as const,
+          appearance: 'outline' as const,
+          label: 'See our plan',
+          url: ROADMAP_PATH,
+        },
+      },
+    ],
+  }
+
+  // Row one: the two text blocks, half a row each (a phone stacks them). Row two: the map, the
+  // whole row, which sets its picture beside its text when wide. An editor changes the widths, the
+  // order or the alignment in Admin (#884, #1419)
+  const layout: RequiredDataFromCollectionSlug<'pages'>['layout'] = [
+    {
+      blockName: 'Intro and How AI Helps',
+      blockType: 'section',
+      items: [
+        { ...ITEM, width: 'half', content: [intro] },
+        { ...ITEM, width: 'half', content: [howAiHelps] },
+      ],
+    },
+  ]
+
+  if (args?.mapImage) {
+    layout.push({
+      blockName: 'Where We Are',
+      blockType: 'section',
+      items: [
         {
-          blockName: 'Intro and Map',
-          blockType: 'section',
-          items: [
-            { ...ITEM, width: 'half', content: [intro] },
+          ...ITEM,
+          width: 'full',
+          content: [
             {
-              ...ITEM,
-              width: 'half',
-              content: [
-                {
-                  blockName: 'Neighborhood Map',
-                  blockType: 'mapBlock',
-                  title: 'Where we are',
-                  description:
-                    'Sprecher East is in Madison’s District 16. I-94 is to the north, Sprecher Road to the west, and Cottage Grove Road to the south. Door Creek Park and the Door Creek valley lie to the east. North Star is next door to the west, and Richmond Hill Homeowners lies to the southwest.',
-                  preview: args.mapImage.id,
-                  embedUrl: SPRECHER_EAST_MAP_EMBED_URL,
-                },
-              ],
+              blockName: 'Neighborhood Map',
+              blockType: 'mapBlock',
+              title: 'Where we are',
+              description:
+                'Sprecher East is in Madison’s District 16. I-94 is to the north, Sprecher Road to the west, and Cottage Grove Road to the south. Most of Door Creek Park lies inside our boundary, on the east side. North Star is next door to the west, and Richmond Hill Homeowners lies to the southwest.',
+              preview: args.mapImage.id,
+              embedUrl: SPRECHER_EAST_MAP_EMBED_URL,
             },
           ],
         },
-      ]
-    : [intro]
+      ],
+    })
+  }
 
-  layout.push(
-    {
-      blockName: 'How AI Helps',
-      blockType: 'content',
-      columns: [
-        {
-          richText: root([
-            heading('h2', 'How AI helps'),
-            p(
-              'AI tools help us gather public information, like city meetings, road and development projects, and local news. A neighbor reviews what we publish, and longer pieces list their sources.',
-            ),
-          ]),
-          size: 'full',
-          // The same link button the live page has, the only link to the plan (#953)
-          enableLink: true,
-          linkAlign: 'end',
-          link: {
-            type: 'custom',
-            appearance: 'outline',
-            label: 'See our progress',
-            url: ROADMAP_PATH,
-          },
+  layout.push({
+    blockName: 'Get Involved CTA',
+    blockType: 'cta',
+    links: [
+      {
+        link: {
+          type: 'custom',
+          appearance: 'default',
+          label: 'Get Involved',
+          url: '/get-involved',
         },
-      ],
-    },
-    {
-      blockName: 'Get Involved CTA',
-      blockType: 'cta',
-      links: [
-        {
-          link: {
-            type: 'custom',
-            appearance: 'default',
-            label: 'Get Involved',
-            url: '/get-involved',
-          },
+      },
+      {
+        link: {
+          type: 'custom',
+          appearance: 'outline',
+          label: 'Contact Us',
+          url: '/contact',
         },
-        {
-          link: {
-            type: 'custom',
-            appearance: 'outline',
-            label: 'Contact Us',
-            url: '/contact',
-          },
-        },
-      ],
-      richText: root([
-        heading('h3', 'See something wrong or missing?'),
-        p('Please tell us and we’ll fix it.'),
-      ]),
-    },
-  )
+      },
+    ],
+    richText: root([
+      heading('h3', 'See something wrong or missing?'),
+      p('Please tell us and we’ll fix it.'),
+    ]),
+  })
 
   return {
     slug: 'about',

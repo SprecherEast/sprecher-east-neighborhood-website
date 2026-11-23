@@ -62,11 +62,21 @@ describe('MapBlock (#764)', () => {
     expect(screen.getByAltText(preview.alt as string)).toBeTruthy()
   })
 
-  it('fills the width of the section item it sits in, with no arrangement of its own', () => {
+  it('fills the width of the section item it sits in and arranges itself by that width, not the screen', () => {
     const { container } = render(<MapBlock {...props} />)
 
-    expect(container.querySelector('[class*="grid-cols"]')).toBeNull()
     expect(container.querySelector('[class*="md:order"]')).toBeNull()
+    expect(container.querySelector('[class*="lg:grid-cols"]')).toBeNull()
+    expect(container.querySelector('.\\@container')).not.toBeNull()
+  })
+
+  it("sets the description in the same type as the other blocks' body text (#1419)", () => {
+    render(<MapBlock {...props} />)
+    const text = screen.getByText(/I-94 to the north, Sprecher Road/)
+
+    expect(text.className).toContain('text-base')
+    expect(text.className).toContain('leading-relaxed')
+    expect(text.className).not.toMatch(/md:text-lg|(^|\s)text-lg/)
   })
 
   it('draws the heading, the picture, then the text under it', () => {

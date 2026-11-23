@@ -32,12 +32,15 @@ function headings(value: unknown): string[] {
   return []
 }
 
-describe('About page seed (#764)', () => {
+describe('About page seed (#764, #1419)', () => {
   const page = aboutPage({ mapImage })
   const layout = page.layout ?? []
   type Item = { width?: string | null; content?: Record<string, unknown>[] | null }
-  const items = (layout[0] as { items: Item[] }).items
-  const map = items[1].content?.[0] as {
+  const rows = layout.filter((block) => block.blockType === 'section') as unknown as {
+    items: Item[]
+  }[]
+  const items = rows[0].items
+  const map = rows[1].items[0].content?.[0] as {
     blockType: string
     title: string
     description: string
@@ -45,15 +48,16 @@ describe('About page seed (#764)', () => {
     preview?: number
   }
 
-  it('says what the site is first, then where we are, then how AI helps, then the call to act', () => {
-    expect(layout.map((block) => block.blockType)).toEqual(['section', 'content', 'cta'])
+  it('says what the site is and how AI helps side by side, then where we are, then the call to act', () => {
+    expect(layout.map((block) => block.blockType)).toEqual(['section', 'section', 'cta'])
     expect(headings(items[0])).toEqual(['What this site is'])
+    expect(headings(items[1])).toEqual(['How AI helps'])
     expect(map).toMatchObject({ blockType: 'mapBlock', title: 'Where we are' })
-    expect(headings(layout[1])).toEqual(['How AI helps'])
   })
 
-  it('puts the text beside the map, half and half, set as fields an editor can change', () => {
+  it('gives the two text blocks half a row each and the map the whole row, as fields an editor can change', () => {
     expect(items.map((item) => item.width)).toEqual(['half', 'half'])
+    expect(rows[1].items.map((item) => item.width)).toEqual(['full'])
   })
 
   it('opens the first section with the site, not the neighborhood', () => {
@@ -70,6 +74,11 @@ describe('About page seed (#764)', () => {
     expect(map.preview).toBe(7)
   })
 
+  it('says only what the City data shows about Door Creek Park: most of it is inside our boundary', () => {
+    expect(map.description).toMatch(/Door Creek Park[^.]*inside our boundary/)
+    expect(map.description).not.toMatch(/lies to the east|valley/)
+  })
+
   it('names the boundary and what touches it, from the verified area', () => {
     for (const place of [
       'I-94',
@@ -84,14 +93,15 @@ describe('About page seed (#764)', () => {
     }
   })
 
-  it('links our plan with an outline button in the How AI helps column, as the live page does (#953)', () => {
-    const [column] = (layout[1] as { columns: Record<string, unknown>[] }).columns
+  it('links our plan with an outline button, start-aligned, that says what it opens (#953, #1419)', () => {
+    const ai = items[1].content?.[0] as { columns: Record<string, unknown>[] }
+    const [column] = ai.columns
     expect(column.enableLink).toBe(true)
-    expect(column.linkAlign).toBe('end')
+    expect(column.linkAlign).toBe('start')
     expect(column.link).toEqual({
       type: 'custom',
       appearance: 'outline',
-      label: 'See our progress',
+      label: 'See our plan',
       url: ROADMAP_PATH,
     })
     expect(ROADMAP_PATH).toBe('/roadmap')
@@ -101,7 +111,8 @@ describe('About page seed (#764)', () => {
     expect(textOf(page).join(' ')).not.toMatch(/See our plan|Curious what we/)
     const links = JSON.stringify(page).match(/"url":"\/roadmap"/g) ?? []
     expect(links).toHaveLength(1)
-    expect(JSON.stringify(layout[0])).not.toContain(ROADMAP_PATH)
+    expect(JSON.stringify(items[0])).not.toContain(ROADMAP_PATH)
+    expect(JSON.stringify(rows[1])).not.toContain(ROADMAP_PATH)
     expect(JSON.stringify(layout[2])).not.toContain(ROADMAP_PATH)
   })
 
@@ -130,10 +141,6 @@ describe('About page seed (#764)', () => {
 
   it('leaves the map block out when there is no preview picture', () => {
     const bare = aboutPage()
-    expect((bare.layout ?? []).map((block) => block.blockType)).toEqual([
-      'content',
-      'content',
-      'cta',
-    ])
+    expect((bare.layout ?? []).map((block) => block.blockType)).toEqual(['section', 'cta'])
   })
 })
