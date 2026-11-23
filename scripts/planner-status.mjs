@@ -15,12 +15,13 @@
  */
 
 import { READY_LABEL, readyBlockers } from './planner-board.mjs'
-import { isEpic } from './planner-config.mjs'
+import { isEpic } from '../.github/scripts/issue-policy.mjs'
 
 export const FLAGS = {
   neverStarted:
     'Assigned but never started: no claim comment names a branch and no pull request exists.',
-  mergedStillOpen: 'A merged pull request referenced this issue, but the issue is still open.',
+  mergedStillOpen:
+    'A merged pull request declared it closes this issue, but the issue is still open.',
   epicChildrenDone: 'Every child of this epic is closed, but the epic is still open.',
   openUnderClosed: 'This issue is open, but its parent is closed.',
 }
@@ -82,14 +83,14 @@ function flagsFor(facts, epic) {
  * @param {string[]} facts.problems  rules of the issue check the issue fails
  * @param {string|null} facts.claimBranch  from `claimBranch(comments)`
  * @param {number} facts.openPullRequests  open pull requests that close the issue
- * @param {number} facts.mergedPullRequests  merged pull requests that referenced it
- * @param {number} [facts.closedPullRequests]  closed, unmerged pull requests that referenced it
+ * @param {number} facts.mergedPullRequests  merged pull requests that declared they close it (closing reference or closing keyword)
+ * @param {number} [facts.closedPullRequests]  closed, unmerged pull requests that declared they close it (closing reference or closing keyword)
  * @param {{status: string}[]} facts.children  an epic's children, each with the status the rule gives
  * @param {{state: string}|null} facts.parent
  * @returns {{status: string, reason: string, flags: string[]}}
  */
 export function boardStatus(facts) {
-  const epic = isEpic(facts.labels)
+  const epic = isEpic(facts)
   const flags = flagsFor(facts, epic)
   const done = (status, reason) => ({ status, reason, flags })
   if (facts.state === 'closed') return done('Done', 'The issue is closed.')

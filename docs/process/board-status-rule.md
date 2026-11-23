@@ -9,7 +9,8 @@ flags, and never acts on them. Where it fits in the board: [how we work](project
 The first row that matches wins:
 
 1. The issue is closed: **Done**.
-2. An open pull request closes it: **In review**.
+2. An open pull request that GitHub lists as closing it: **In review**. A plain mention does not
+   count.
 3. It is claimed (assigned, and a `### [STEP]` claim comment names a branch) and not resolved:
    **In progress**. There is no timer: a claimed issue that goes quiet is still In progress.
 4. It has the `ready` label, passes [the issue check](issue-and-pr-checks.md#the-issue-check) and
@@ -21,9 +22,14 @@ child is In progress or In review, otherwise Backlog).
 
 ## Flags
 
-Flags name provable problems and are only reported: assigned but never started (no claim comment
-names a branch and no pull request exists); a merged pull request referenced the issue while it is
-still open; an open epic whose children are all closed; an open child of a closed parent.
+Flags name provable problems and are only reported:
+
+- assigned but never started (no claim comment names a branch and no pull request exists);
+- a merged pull request declared it closes the issue (a closing reference GitHub recorded, or a
+  closing keyword in a merged pull request of this repository) while the issue is still open and
+  was not reopened after the merge; a plain mention never raises it;
+- an open epic whose children are all closed;
+- an open child of a closed parent.
 
 ## The report run
 
