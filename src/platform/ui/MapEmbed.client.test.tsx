@@ -5,6 +5,7 @@ import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { MapEmbed } from './MapEmbed.client'
+import { EXPAND_ICON_BUTTON } from './layoutSizes'
 import { expectAccessible } from './testing/expectAccessible'
 
 afterEach(cleanup)
@@ -46,6 +47,23 @@ describe('MapEmbed (#764)', () => {
     // axe can't look across a frame in jsdom, so it checks the open dialog without it
     frame?.remove()
     await expectAccessible(dialog)
+  })
+
+  it("puts the expand icon over the picture's top-right corner, a control of its own (#1426)", async () => {
+    renderMap()
+    const [pictureButton, icon] = screen.getAllByRole('button', { name: 'View the larger map' })
+
+    // The same look as Zoom's icon: one shared definition, always visible, 44 px
+    expect(icon.className).toContain(EXPAND_ICON_BUTTON)
+    expect(icon.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true')
+    // Beside the picture button, never inside it (no button in a button), both in the picture's box
+    expect(pictureButton.contains(icon)).toBe(false)
+    expect(icon.parentElement).toBe(pictureButton.parentElement)
+
+    await userEvent.click(icon)
+    expect(screen.getByRole('dialog', { name: 'Where Sprecher East is' })).toBeTruthy()
+    await userEvent.keyboard('{Escape}')
+    expect(document.activeElement).toBe(icon)
   })
 
   it('opens from the text button too, and closes on Escape with focus back on it', async () => {
@@ -105,7 +123,7 @@ describe('MapEmbed (#764)', () => {
   ])('shows the preview and text only, with %s', async (_name, embedUrl) => {
     const { container } = renderMap(embedUrl)
 
-    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.queryByRole('button')).toBeNull() // no picture button, icon or text button
     expect(screen.getByRole('img', { name: 'Map of Sprecher East' })).toBeTruthy()
     expect(container.querySelector('iframe')).toBeNull()
     await expectAccessible(container)

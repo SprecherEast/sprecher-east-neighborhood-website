@@ -8,6 +8,7 @@ import { toGoogleMapsEmbedUrl } from '@/platform/lib/googleMapsEmbed'
 
 import { Button } from './Button'
 import { Dialog } from './Dialog.client'
+import { EXPAND_ICON_BUTTON } from './layoutSizes'
 
 export type MapEmbedProps = {
   /** A Google map embed address (`toGoogleMapsEmbedUrl`); anything else draws no live map */
@@ -30,12 +31,12 @@ export type MapEmbedProps = {
  * the picture right (3 of 8, 37.5%), the text-and-picture ratio of the design guideline (#1419).
  */
 const LAYOUT = 'grid gap-6 @3xl:grid-cols-8 @3xl:items-center @3xl:gap-x-12'
-const PICTURE = '@3xl:order-2 @3xl:col-span-3'
+const PICTURE = 'relative @3xl:order-2 @3xl:col-span-3'
 const TEXT = 'space-y-4 @3xl:order-1 @3xl:col-span-5'
 
 /**
  * A map picture with its text under it, and a live Google map in a dialog when a neighbor taps
- * either button (#764, docs/ui/component-set.md). It fills the width it is given: the section it
+ * the picture, its expand icon (#1426) or the text button (#764, docs/ui/component-set.md). It fills the width it is given: the section it
  * sits in decides how wide and where it goes (#884), and the picture sits beside the text when that
  * width allows (#1419). The frame is created only once the dialog is
  * open, so the page asks Google for nothing until then. A missing or unsafe address leaves the
@@ -76,6 +77,16 @@ export function MapEmbed({
             </Button>
           ) : (
             <div className="overflow-hidden rounded-xl border border-border">{preview}</div>
+          )}
+          {src && (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={actionLabel}
+              onClick={openFrom}
+              className={EXPAND_ICON_BUTTON}
+              iconStart={<Maximize2 aria-hidden="true" />}
+            />
           )}
         </div>
         <div className={TEXT}>
