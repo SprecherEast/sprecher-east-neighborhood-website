@@ -13,8 +13,8 @@ import {
   readOnlyRun,
   renderTable,
   QUERY,
-  TruncatedError,
 } from './planner-report.mjs'
+import { TruncatedError } from './planner-facts.mjs'
 import { boardStatus } from './planner-status.mjs'
 
 const policy = {
@@ -218,7 +218,13 @@ describe('cardFromNode', () => {
 })
 
 describe('buildReport', () => {
+  const sub = (number, state = 'open', repo = 'o/r') => ({
+    key: `${repo}#${number}`,
+    number,
+    state,
+  })
   const card = (number, current, facts = {}) => ({
+    key: `o/r#${number}`,
     number,
     title: `Issue ${number}`,
     current,
@@ -231,6 +237,7 @@ describe('buildReport', () => {
       openPullRequests: 0,
       mergedPullRequests: 0,
       pullRequests: 0,
+      remoteBranch: null,
       subIssues: [],
       parent: null,
       ...facts,
@@ -253,7 +260,7 @@ describe('buildReport', () => {
       card(10, 'Backlog', {
         labels: ['epic'],
         assignees: ['a'],
-        subIssues: [{ number: 11, state: 'open' }],
+        subIssues: [sub(11)],
       }),
       card(11, 'In progress', { assignees: ['a'], claimBranch: 'x/y' }),
     ])
@@ -262,8 +269,8 @@ describe('buildReport', () => {
 
   it('works out an epic under an epic before its parent, whatever the order', () => {
     const rows = buildReport([
-      card(10, 'Backlog', { labels: ['epic'], subIssues: [{ number: 20, state: 'open' }] }),
-      card(20, 'Backlog', { labels: ['epic'], subIssues: [{ number: 21, state: 'open' }] }),
+      card(10, 'Backlog', { labels: ['epic'], subIssues: [sub(20)] }),
+      card(20, 'Backlog', { labels: ['epic'], subIssues: [sub(21)] }),
       card(21, 'Backlog', { assignees: ['a'], claimBranch: 'x/y' }),
     ])
     expect(rows.map((row) => [row.number, row.status])).toEqual([
@@ -273,9 +280,17 @@ describe('buildReport', () => {
     ])
   })
 
+  it('counts a sub-issue that is not on the board as Backlog, and keys by repository', () => {
+    const rows = buildReport([
+      card(10, 'In progress', { labels: ['epic'], subIssues: [sub(99), sub(11, 'open', 'x/y')] }),
+      card(11, 'In progress', { assignees: ['a'], claimBranch: 'x/y' }),
+    ])
+    expect(rows).toEqual([expect.objectContaining({ number: 10, status: 'Backlog' })])
+  })
+
   it('treats closed children as Done and flags an epic whose children are all closed', () => {
     const [row] = buildReport([
-      card(10, 'Backlog', { labels: ['epic'], subIssues: [{ number: 11, state: 'closed' }] }),
+      card(10, 'Backlog', { labels: ['epic'], subIssues: [sub(11, 'closed')] }),
     ])
     expect(row.flags.join(' ')).toMatch(/every child/i)
   })
@@ -317,10 +332,15 @@ describe('main: reads everything, writes nothing', () => {
       },
     },
   })
-  const run = (calls, pages) => (args) => {
-    calls.push(args)
-    return JSON.stringify(pages.shift())
-  }
+  const noBranches = { data: { repository: { refs: { pageInfo: {}, nodes: [] } } } }
+  const run =
+    (calls, pages, branches = noBranches) =>
+    (args) => {
+      calls.push(args)
+      const isBranches = args.some((arg) => arg.startsWith('query=') && arg.includes('refs('))
+      return JSON.stringify(isBranches ? branches : pages.shift())
+    }
+  const boardCalls = (calls) => calls.filter((args) => !args.join(' ').includes('refs('))
   const env = { ORG: 'Org', PROJECT: '1' }
 
   it('reads every page, reports the difference and exits 0', async () => {
@@ -337,11 +357,33 @@ describe('main: reads everything, writes nothing', () => {
       appendSummary: (text) => out.push(`SUMMARY:${text}`),
     })
     expect(code).toBe(0)
-    expect(calls).toHaveLength(2)
-    expect(calls[0].join(' ')).not.toContain('cursor=')
-    expect(calls[1]).toContain('cursor=c1')
+    expect(boardCalls(calls)).toHaveLength(2)
+    expect(boardCalls(calls)[0].join(' ')).not.toContain('cursor=')
+    expect(boardCalls(calls)[1]).toContain('cursor=c1')
     expect(out.join('\n')).toContain('#1')
     expect(out.some((line) => line.startsWith('SUMMARY:'))).toBe(true)
+  })
+
+  it('counts a claim-named branch on the remote as work started', () => {
+    const out = []
+    const branches = {
+      data: { repository: { refs: { pageInfo: {}, nodes: [{ name: 'worker/3-x' }] } } },
+    }
+    const assignees = { nodes: [{ login: 'a' }] }
+    const code = main({
+      run: run(
+        [],
+        [page([node({ status: { name: 'Backlog' } }, { number: 3, assignees })])],
+        branches,
+      ),
+      env,
+      policy,
+      log: (text) => out.push(text),
+      appendSummary: () => {},
+    })
+    expect(code).toBe(0)
+    expect(out.join('\n')).toMatch(/#3[^\n]*Backlog[^\n]*In progress/)
+    expect(out.join('\n')).not.toMatch(/never started/i)
   })
 
   it('issues no write of any kind: only read queries go out', () => {
@@ -403,7 +445,10 @@ describe('main: reads everything, writes nothing', () => {
 
   it('also leaves out an epic whose child could not be read in full', () => {
     const out = []
-    const epicSubs = { totalCount: 1, nodes: [{ number: 7, state: 'OPEN' }] }
+    const epicSubs = {
+      totalCount: 1,
+      nodes: [{ number: 7, state: 'OPEN', repository: { nameWithOwner: 'o/r' } }],
+    }
     const code = main({
       run: run(
         [],
