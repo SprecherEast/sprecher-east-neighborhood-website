@@ -71,7 +71,7 @@ describe('the planning model', () => {
     'Milestone',
     'Epic',
     'Issue and sub-issue',
-    'Sprint',
+    'Flow',
     'Labels and fields',
     'Dependencies',
     'Which layer?',
@@ -94,14 +94,60 @@ describe('the planning model', () => {
       'docs.github.com/en/issues/using-labels-and-milestones-to-track-work/about-milestones',
       'docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/adding-sub-issues',
       'docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-issue-dependencies',
-      'docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iteration-fields',
       'docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/managing-issue-fields-in-your-organization',
       'docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/managing-issue-types-in-an-organization',
       'atlassian.com/agile/project-management/epics-stories-themes',
       'scrumguides.org/scrum-guide.html',
+      'kanbanguides.org',
       'INVEST',
     ]) {
       expect(sources, url).toContain(url)
+    }
+  })
+})
+
+describe('continuous flow', () => {
+  const PROCESS_DOCS = [
+    'docs/process/planning-model.md',
+    'docs/process/project-management.md',
+    'docs/process/grooming-playbook.md',
+  ]
+  const REVIEW = 'docs/process/weekly-review.md'
+
+  it('keeps sprints out of the process docs and skills, except the note that they were dropped', () => {
+    for (const file of [...PROCESS_DOCS, REVIEW, ...SKILLS, 'docs/roles/README.md']) {
+      const lines = read(file)
+        .split('\n')
+        .filter((line) => /sprint|iteration/i.test(line))
+        .filter((line) => !/no sprints|without sprints|dropped sprints/i.test(line))
+      expect(lines, file).toEqual([])
+    }
+  })
+
+  it('has the weekly review, which reads GitHub by REST and says what it cannot measure', () => {
+    const text = read(REVIEW)
+    expect(text.split('\n').length).toBeLessThan(250)
+    expect(text).toMatch(/gh api/)
+    expect(text).toMatch(/cannot measure/i)
+    expect(text).toMatch(/token/i)
+    expect(links(REVIEW).map((link) => link.target)).toEqual(expect.any(Array))
+  })
+
+  it('links the weekly review from the chief of staff skill', () => {
+    expect(links('.agents/skills/chief-of-staff/SKILL.md').map((link) => link.target)).toContain(
+      REVIEW,
+    )
+  })
+
+  it('writes the session handoff rule once, and the worker and chief of staff point to it', () => {
+    const rule = 'docs/process/project-management.md'
+    expect(anchors(rule)).toContain('session-handoff')
+    for (const file of ['docs/roles/worker.md', '.agents/skills/chief-of-staff/SKILL.md']) {
+      const found = links(file).filter((link) => link.target === rule)
+      expect(
+        found.map((link) => link.anchor),
+        file,
+      ).toContain('session-handoff')
     }
   })
 })

@@ -38,40 +38,10 @@ How the agent team uses the guides, who reviews whom and how much scrutiny a cha
 - **Codex** and humans read the guide for the role they're working in
   ([Tool adapters](../../AGENTS.md#tool-adapters)).
 
-## Sprint retrospective (every role)
+## Weekly review (every role)
 
-### Practice
-
-At the end of each sprint, the team holds a retrospective. Everyone working in a role takes part
-by logging observations throughout the sprint.
-
-### What to Track
-
-During every work session, note anything that should be discussed at retro:
-
-- **Issues encountered**: Bugs, broken workflows, tooling problems, unclear requirements
-- **Friction points**: Tasks that took longer than expected and why
-- **Feedback received**: Input from residents, neighbors, or Amine (project lead)
-- **Architectural impacts**: Decisions or events that caused significant rework or pivots
-- **Incomplete work**: Tasks left undone and the reason (blocked, deprioritized, out of scope)
-- **Wins**: Things that went well, patterns worth repeating, tools that helped
-
-### Where to Log
-
-Append observations to the shared sprint retro file: `docs/memory/retro/sprint-{N}.md`
-
-Entry format:
-
-```markdown
-### [Date] — [Role]
-
-- **Observation**: What happened
-- **Impact**: How it affected the work
-- **Recommendation**: What to change or continue
-```
-
-### Cadence
-
-- **Every session**: Log observations to the retro file before ending work
-- **Weekly review**: Amine reviews the retro file at end of week
-- **Biweekly retrospective**: Full team retro — review all observations, decide on changes, update processes
+The team improves through the [weekly review](../process/weekly-review.md), which the chief of
+staff runs from GitHub. So that it has something to read, note friction on the issue you work on,
+in its `### [STEP]` comments: what failed or came back, what took longer than it should, where the
+owner had to step in, and what you would automate. Do not keep notes in loose files; a note that
+is not on GitHub is not seen.

@@ -51,7 +51,7 @@ reading is harmless and note the time before you start.
 
 1. Start a new session on the repository: open the repository as the session's source, not an
    existing conversation, and choose the chief of staff agent.
-2. Ask for a dry-run grooming report of the current sprint, with no changes, posted as a comment on
+2. Ask for a dry-run grooming report of the whole backlog, with no changes, posted as a comment on
    an issue you name.
 3. Check, and record in the table:
 

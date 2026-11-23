@@ -71,7 +71,7 @@ change follows these five steps:
    posted on the PR and ending with **Ready to merge**, and every review comment is answered and
    resolved. Without Copilot's review agent, a new session reviews each PR (`pr-review` step 0). Changes to the process are policy changes the review calls out explicitly:
    `AGENTS.md`, `.agents/`, `docs/guidelines/`, `docs/roles/`, `.github/`, the Claude Code adapter
-   (`CLAUDE.md`, `.claude/`), and, in `docs/process/`, how the team works (sprint length, Ready or
+   (`CLAUDE.md`, `.claude/`), and, in `docs/process/`, how the team works (the flow rules, Ready or
    Done, the levels of work, the board's columns and fields), not wording, links or facts. A policy
    change the owner (Amine) asked for follows the normal path. Agents file issues through his
    account, so the issue or PR records a short summary of what he decided, with the date and where;
@@ -145,7 +145,7 @@ through the pointers in `.claude/skills/`, and a human reads them as plain Markd
 | [`make-illustration`](.agents/skills/make-illustration/SKILL.md)       | You make a post or event picture.                                 |
 | [`pr-review`](.agents/skills/pr-review/SKILL.md)                       | You review a PR you didn't write.                                 |
 | [`wrapped`](.agents/skills/wrapped/SKILL.md)                           | After a merge: verify, check the deploy, report.                  |
-| [`project-tracking`](.agents/skills/project-tracking/SKILL.md)         | Picking up, filing or reporting work: epics, sprint, blockers.    |
+| [`project-tracking`](.agents/skills/project-tracking/SKILL.md)         | Picking up, filing or reporting work: epics, milestone, blockers. |
 | [`chief-of-staff`](.agents/skills/chief-of-staff/SKILL.md)             | You are the chief of staff: questions, grooming, overlap, briefs. |
 
 Two skills come unchanged from Vercel (MIT, `SOURCE.md` in each, #424):

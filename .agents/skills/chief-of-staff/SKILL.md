@@ -50,8 +50,9 @@ Three things, in this order, in one reply. Nothing here waits for the owner befo
    question he can answer in a sentence, and ask that one. Silence is never a yes, and only the
    work blocked by a question waits for it.
 
-3. **The next batch.** From the current milestone ([`project-tracking`](../project-tracking/SKILL.md) §2),
-   keep Ready issues only (§1 there), highest priority first. Run the overlap check (§3) on the
+3. **The next batch.** Ready issues only ([`project-tracking`](../project-tracking/SKILL.md) §1),
+   highest priority first, from the active milestones: the open outcome milestones, the Backlog
+   catch-all last. Run the overlap check (§3) on the
    proposed set and drop what clashes. Offer the batch with one line each and why.
 
 Dispatch only after the owner agrees to the batch, or when he has already said to keep going.
@@ -65,8 +66,8 @@ one priority); a milestone, and an epic only for multi-part work
 ([the rule](../../../AGENTS.md#one-issue-one-pull-request)); a size; **Files likely touched** and
 **Must not touch**, each as backticked paths (the overlap check reads only those; a bare name with no extension, such as
 `Makefile`, or prose counts as undeclared, so write the folder or add the extension) or `None`; the role guides and knowledge
-notes a worker must load; and an open-questions line. Split anything bigger than L. Sizing,
-priority and sprint judgment stay with you; moves that must happen every time belong to the
+notes a worker must load; and an open-questions line. Split anything bigger than L. Sizing
+and priority judgment stay with you; moves that must happen every time belong to the
 board's built-in workflows and the planner app, not to you. You say an issue is Ready by adding
 the `ready` label, and set its size and priority as the Effort and Priority fields
 ([`project-tracking`](../project-tracking/SKILL.md) §1a); the card follows.
@@ -108,7 +109,9 @@ request and its issue.
 
 One worker per issue, in its own branch and worktree. Post the brief as a `### [STEP]` comment on
 the issue, and pass the same text to the worker, which you start with the Agent tool. The claim
-comment names the worker's branch. You also start the fresh reviewer for its pull request: a worker
+comment names the worker's branch. A session that picks up unfinished work, yours or a
+worker's, follows the [session handoff](../../../docs/process/project-management.md#session-handoff)
+rule, and so do you before you stop with work unfinished. You also start the fresh reviewer for its pull request: a worker
 starts no agents. A worker only reads what the brief names, so name it.
 
 ```markdown
@@ -158,12 +161,18 @@ Follow the [grooming playbook](../../../docs/process/grooming-playbook.md): the
 4. **Retro-organization** of existing issues is the playbook's
    [procedure](../../../docs/process/grooming-playbook.md#retro-organization): a dry-run proposal of
    milestones, epics and groupings first, owner approval, then apply in the order it gives.
-5. **Native fields and sprints.** Priority and Effort are fields on the issue: read and write
-   them from any session ([`project-tracking`](../project-tracking/SKILL.md) §1a; the additive
-   `POST`, never the `PUT` that replaces every field). The sprint is the board's own field: read
-   it when the session can reach the board, and move an iteration only from a session on the
-   owner's computer (`gh project item-edit`); elsewhere, list the move as a proposal. Sprint pulls
-   and rollover follow the [planning model](../../../docs/process/planning-model.md#sprint).
+5. **Native fields.** Priority and Effort are fields on the issue: read and write them from any
+   session ([`project-tracking`](../project-tracking/SKILL.md) §1a; the additive `POST`, never
+   the `PUT` that replaces every field). Work is pulled by priority, with no time boxes
+   ([flow](../../../docs/process/planning-model.md#flow)).
 6. You still never edit code, push or merge. You never move a card: the `ready` label moves it
    between Backlog and Ready, and assigning the issue moves it to In progress (the planner app
    does both); where a card has not followed, say which card moves where.
+
+## 7. Weekly review
+
+Once a week and whenever the owner asks, run the
+[weekly review](../../../docs/process/weekly-review.md): what shipped, what failed repeatedly, what
+came back from review, where the owner had to step in, and what to automate next. It reads GitHub
+only, through `gh api`, and says what it could not measure. Each finding that needs a change
+becomes an issue, filed and groomed like any other.

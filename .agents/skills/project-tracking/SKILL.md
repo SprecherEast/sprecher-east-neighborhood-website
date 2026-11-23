@@ -1,6 +1,6 @@
 ---
 name: project-tracking
-description: Keep the project's plan on GitHub. Before starting work, read the issue's epic, milestone, sprint and blockers; when filing new work, put it at the right level with labels, parent, milestone and dependencies; answer "what's next?" and "what got done this week?" from GitHub, not from memory. Use when picking up, filing or reporting work.
+description: Keep the project's plan on GitHub. Before starting work, read the issue's epic, milestone, blockers and latest handoff comment; when filing new work, put it at the right level with labels, parent, milestone and dependencies; answer "what's next?" and "what got done this week?" from GitHub, not from memory. Use when picking up, filing or reporting work.
 ---
 
 # Project tracking
@@ -25,9 +25,9 @@ gh api repos/{owner}/{repo}/issues/<n>/parent -q '"#\(.number) \(.title)"'      
 gh api repos/{owner}/{repo}/issues/<n>/dependencies/blocked_by -q '.[] | "#\(.number) \(.state)"'
 ```
 
-The sprint is a board field. On the owner's computer, read it from the board's items (§2 step 4
-without `--query`, then find the issue by number in the JSON). The size is the issue's Effort
-field (§1a). Start only if the issue is **Ready**:
+Read its latest `### [STEP]` comment first: it says what is done and what is left
+([session handoff](../../../docs/process/project-management.md#session-handoff)). The size is the
+issue's Effort field (§1a). Start only if the issue is **Ready**:
 
 - it has acceptance criteria, a milestone (an epic only for multi-part work;
   [the rule](../../../AGENTS.md#one-issue-one-pull-request)), type, area and priority labels,
@@ -44,7 +44,7 @@ so every issue after the first needs the overlap check below to pass.
 
 ## 1a. Grooming
 
-Before every major change (a new epic, a sprint, a batch of work), groom the backlog
+Before every major change (a new epic or a batch of work), groom the backlog
 ([rules and the owner's direction](../../../docs/process/project-management.md#grooming-and-work-in-progress)).
 For each issue:
 
@@ -79,9 +79,10 @@ For each issue:
 
 ## 2. "What's next?"
 
-1. Find the current milestone, the open one with the nearest due date (milestones without one sort last):
-   `gh api "repos/{owner}/{repo}/milestones?state=open&sort=due_on&direction=asc" -q '.[0] | {number, title, due_on, open_issues, closed_issues}'`
-2. List its open issues:
+1. Find the active milestones, the open ones, nearest due date first (milestones without one sort
+   last, the Backlog catch-all last of all):
+   `gh api "repos/{owner}/{repo}/milestones?state=open&sort=due_on&direction=asc" -q '.[] | {number, title, due_on, open_issues, closed_issues}'`
+2. List the open issues of each milestone, in that order:
    `gh api "repos/{owner}/{repo}/issues?milestone=<number>&state=open&per_page=100" -q '.[] | select(.pull_request | not) | "#\(.number) [\([.labels[].name] | join(", "))] \(.title)"'`
 3. Leave out:
    - epics, and anything labeled `needs owner`
@@ -96,19 +97,13 @@ For each issue:
    Order the rest by priority label, then by the order of the epic's sub-issues
    (`gh api repos/{owner}/{repo}/issues/<epic>/sub_issues`).
 
-4. On the owner's computer, the board is the authority on what's in the sprint. Read the current
-   sprint with
-   `gh project item-list 1 --owner SprecherEast --limit 1000 --query "sprint:@current" --format json`.
-   That needs `gh` signed in with the `project` scope. Cloud sessions can't reach the board, so
-   say that the answer comes from the milestone instead.
-
 ## 3. Filing new work
 
 1. **Choose the level** with the [decision tree](../../../docs/process/planning-model.md#which-layer)
    and the [naming templates](../../../docs/process/planning-model.md#templates).
    - An outcome with a done test, spanning several capabilities, is a milestone; a capability
      grouping several related issues is an epic (label `epic`, one milestone).
-   - One deliverable that fits one sprint and one PR is an issue
+   - One deliverable that fits one PR is an issue
      ([the rule](../../../AGENTS.md#one-issue-one-pull-request)).
    - Something broken is a bug.
 2. **Search first** to avoid duplicates. Loop over the pages, since the repo has more than 100
@@ -236,4 +231,5 @@ window, and `state_reason` drops duplicates and won't-fix. Report:
 - what's waiting on the owner (the `needs owner` list)
 - milestone progress
 
-Keep it short. It's for reading in a minute.
+Keep it short. It's for reading in a minute. The retrospective is the separate
+[weekly review](../../../docs/process/weekly-review.md).

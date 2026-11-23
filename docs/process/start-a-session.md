@@ -61,5 +61,5 @@ Sessions on the owner's computer use his signed-in `gh` instead and are not affe
 It reports what keeps failing, lists the owner's open questions, grooms (routine changes applied,
 the rest proposed), checks overlap and writes briefs. A worker does each issue. It never touches the board: it sets the `ready` label, Priority
 and Effort on the issue and assigns it, from any session that can write issues, and the planner app
-moves the card. It cannot read a card or change a sprint from a cloud session. The refusal table in
+moves the card. It cannot read a card from a cloud session. The refusal table in
 the [manual test](chief-of-staff-manual-test.md) has not been run yet.

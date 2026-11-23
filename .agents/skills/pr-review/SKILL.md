@@ -72,7 +72,7 @@ gh api "repos/{owner}/{repo}/stacks?pull_request=<number>" -H 'X-GitHub-Api-Vers
       `docs/knowledge/map.json` (it names the note for a path), `scripts/behavior-change.mjs` (the
       classifier of what the sync check enforces), `scripts/ui-change.mjs` (what counts as a UI change), or the
       Claude Code adapter (`CLAUDE.md`, `.claude/`), or changes how the team works in
-      `docs/process/` (sprint length, Ready or Done, levels, the board's columns and fields, but
+      `docs/process/` (the flow rules, Ready or Done, levels, the board's columns and fields, but
       not wording, link or fact fixes), list each such change under
       **Policy changes** in the review. Then check the owner asked for it. Agents file issues
       through his account, so an issue alone isn't proof: the issue or PR must record a short

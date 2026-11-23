@@ -18,8 +18,8 @@ layers and naming are in the [planning model](/docs/process/planning-model.md); 
 [skill](/.agents/skills/chief-of-staff/SKILL.md). This page holds principles only.
 
 Grooming follows the Scrum Guide's product backlog refinement: an ongoing activity that breaks
-items down, adds detail, order and size, until an item can be finished within one sprint and is
-ready to be selected. Each column's criteria below are a Definition of Ready or Done for that move.
+items down, adds detail, order and size, until an item can be finished with one pull request and is
+ready to be pulled. Each column's criteria below are a Definition of Ready or Done for that move.
 
 The chief of staff never edits code, pushes or merges. It reads, writes issues and comments, and
 sets issue fields and labels. It does not move cards itself: the `ready` label and assigning an
@@ -37,8 +37,8 @@ team has agreed to do.
 - **Proposed, then applied once the owner agrees.** Closing anything or labeling it
   `proposed-close` (duplicate bugs are the exception the
   [operating model](/docs/process/agent-operating-model.md#4-how-an-issue-moves) allows); an issue's scope or
-  acceptance criteria; a parent; creating, renaming, splitting or re-scoping a milestone or an epic; a
-  sprint's goal; anything about a rule. The proposal is a numbered report. He approves by number
+  acceptance criteria; a parent; creating, renaming, splitting or re-scoping a milestone or an epic;
+  anything about a rule. The proposal is a numbered report. He approves by number
   or category, in chat or on the issue, and only approved items are applied; approval from an
   earlier run does not carry over. The record is a summary with where he said it, never his words.
 - **Report only.** When the owner asks for a report, or for the first pass of a
@@ -57,7 +57,7 @@ The Definition of Ready, spelled out:
 
 - A plain summary, then details, then acceptance criteria someone else can check.
 - The layer is right ([which layer](/docs/process/planning-model.md#which-layer)): small enough for one pull
-  request and one sprint (INVEST: independent, estimable, small, testable), in a milestone, with an
+  request (INVEST: independent, estimable, small, testable), in a milestone, with an
   epic above it only for multi-part work ([the rule](/AGENTS.md#one-issue-one-pull-request)).
 - Labels: one type, at least one area, one priority. A size, set as the Effort field.
 - Files likely touched and must not touch, filled in or `None`.
@@ -72,7 +72,8 @@ Ready, and refuses while the issue has `needs owner` or fails the issue check.
 
 ### Ready to In progress
 
-- It is in the current sprint, or the dispatcher pulls it in with a comment saying why.
+- It is the highest-priority Ready work within the active milestones, or the dispatcher says why
+  it takes another.
 - The overlap check passes against everything In progress, and no open pull request already closes it.
 - It is not claimed: no claim comment and not In progress.
 - A claim comment names the branch, the issue is assigned, and the status is set, in that order,
@@ -106,8 +107,7 @@ Ready only through the Backlog to Ready criteria again.
 ### Park
 
 Parking is a deliberate "not now". Remove the `ready` label, which moves the card to Backlog,
-and comment the reason and the condition that would bring it back; taking it out of the sprint
-needs the board, so the report names it. A parked item whose condition will
+and comment the reason and the condition that would bring it back. A parked item whose condition will
 never come is obsolete: label it `proposed-close` for the owner, and never close an old idea
 yourself. Blocked work is not parked; it keeps its blocked-by link and stays where it is.
 
@@ -123,13 +123,11 @@ For each, the chief of staff checks and updates the following.
 - **When work starts and when it finishes.** A progress comment appears on the issue as it
   happens: claimed, started, pull request opened, review done, merged. If a transition has no
   comment, the chief of staff adds one that states only what it observed.
-- **At sprint start.** Run the sweep first. Then pull Ready work by priority, name the sprint goal
-  in one sentence, leave room for bugs, check dependency order and overlap, and report what was
-  pulled and what was left out.
-- **At sprint end.** Apply the rollover rule in the
-  [planning model](/docs/process/planning-model.md#sprint) to everything not Done. Report what shipped grouped
-  by epic, epic and milestone progress, items carried over twice, and retro items that need a
-  rule or a task.
+- **When picking the next work.** Run the sweep first. Then take Ready work by priority within
+  the active milestones, check dependency order and overlap, and report what was taken and what
+  was left out.
+- **Weekly and on request.** Run the [weekly review](/docs/process/weekly-review.md): what shipped, what went
+  wrong, what to automate next. Each finding that needs a change becomes an issue.
 - **A frequent sweep,** at least as often as work moves, and always before planning. It is the
   only trigger that looks at the whole backlog rather than one issue.
 
@@ -163,7 +161,7 @@ comment. Duplicate bugs may be closed as the
 
 ### Stale and orphans
 
-- **Stale:** an open item with no activity for several sprints, not blocked and not waiting for
+- **Stale:** an open item with no activity for a long time, not blocked and not waiting for
   the owner; an In progress item with no claim, no progress comment and no pull request; a Ready
   item that never gets pulled. Ask on the issue what changed; if it is obsolete, `proposed-close`.
 - **Orphans:** an issue with no milestone ([the rule](/AGENTS.md#one-issue-one-pull-request)); an epic with no children; an open
@@ -179,8 +177,8 @@ links for dependencies named in prose.
 ### Wrong layer
 
 An epic with one child or one pull request of work; an issue larger than the size cap or needing
-several pull requests; a milestone with no done test or named for an activity; a sprint-shaped
-milestone; an epic titled as a task. Propose the right layer and how to get there.
+several pull requests; a milestone with no done test or named for an activity; a milestone shaped like a
+time slice; an epic titled as a task. Propose the right layer and how to get there.
 
 For each open milestone, also ask whether it can still be taken in at a glance
 ([planning model](/docs/process/planning-model.md#milestone)): too many open issues, or a goal that no longer
@@ -220,7 +218,7 @@ One comment, short enough to read in a minute. Items are numbered so the owner c
 ```markdown
 ### [STEP] Grooming report (<report only | applied>)
 
-**Scope:** <what was read: the sprint, an epic, the whole backlog>
+**Scope:** <what was read: an epic, a milestone, the whole backlog>
 **Summary:** <counts per finding type>
 
 **Applied** (routine, already done): <issue> <finding type>: <what changed>, one line each

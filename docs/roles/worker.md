@@ -19,7 +19,10 @@ you with a brief; the issue is the contract.
 4. Load the role guides and knowledge notes the brief names for the kind of work, such as a
    frontend or content guide.
 5. New work you find becomes a new linked issue, not a wider pull request.
-6. Merge your own pull request only when the checks pass on its current head, the review of that
+6. Hand off cleanly: before you stop with work unfinished, post the `### [STEP]` comment the
+   [session handoff](../process/project-management.md#session-handoff) rule describes, and when you
+   pick up work, read that comment first.
+7. Merge your own pull request only when the checks pass on its current head, the review of that
    head says ready, and no conversation is open. Then run [`wrapped`](../../.agents/skills/wrapped/SKILL.md).
 
 ## Limits

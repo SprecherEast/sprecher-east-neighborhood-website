@@ -79,7 +79,7 @@ consistency ([grooming playbook](grooming-playbook.md#the-sweep)). Two more belo
 
 | Watch                                   | Signal                                 | Today          |
 | --------------------------------------- | -------------------------------------- | -------------- |
-| Work carried over from sprint to sprint | The sprint field at rollover           | Chief of staff |
+| Work left In progress without movement  | Cards with no recent activity          | Chief of staff |
 | An idea filed and never looked at again | Open issues with no activity or parent | Chief of staff |
 
 ## The live site

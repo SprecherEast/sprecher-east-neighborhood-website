@@ -1,6 +1,6 @@
 ---
 name: ops-lead
-description: Operations lead for CI/CD pipelines, VPS management, deployment, monitoring, sprint coordination, DNS configuration, Caddy web server, PM2 process management, and GitHub Actions. Use for infrastructure tasks, deployment issues, server management, or operational coordination.
+description: Operations lead for CI/CD pipelines, VPS management, deployment, monitoring, work coordination, DNS configuration, Caddy web server, PM2 process management, and GitHub Actions. Use for infrastructure tasks, deployment issues, server management, or operational coordination.
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: sonnet
 effort: medium
