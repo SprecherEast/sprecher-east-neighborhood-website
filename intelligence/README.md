@@ -9,16 +9,17 @@ The agents never publish. They create **suggested drafts**; an editor reads, fix
 
 ## What's here
 
-| Path                             | What it is                                                                           |
-| -------------------------------- | ------------------------------------------------------------------------------------ |
-| [`pipeline.yaml`](pipeline.yaml) | The settings a runtime reads first: kill switch, schedule, budgets, stages           |
-| [`sources.yaml`](sources.yaml)   | Approved sources, each checked by hand ([summary](sources.md))                       |
-| [`coverage.md`](coverage.md)     | The Sprecher East area and the relevance policy                                      |
-| [`area.yaml`](area.yaml)         | The words and boundary layer used to spot the area: places, neighbors, highway rules |
-| [`images.md`](images.md)         | How to choose a story's or event's photo: real, free, on topic, level                |
-| [`prompts/`](prompts/)           | One prompt per stage, each naming its input and output schema                        |
-| [`schemas/`](schemas/)           | JSON Schemas for every file and every stage's output                                 |
-| [`evals/`](evals/)               | Test cases per stage with the result a correct pipeline reaches                      |
+| Path                             | What it is                                                                                |
+| -------------------------------- | ----------------------------------------------------------------------------------------- |
+| [`pipeline.yaml`](pipeline.yaml) | The settings a runtime reads first: kill switch, schedule, budgets, stages                |
+| [`sources.yaml`](sources.yaml)   | Approved sources, each checked by hand ([summary](sources.md))                            |
+| [`coverage.md`](coverage.md)     | The Sprecher East area and the relevance policy                                           |
+| [`area.yaml`](area.yaml)         | The words and boundary layer used to spot the area: places, neighbors, highway rules      |
+| [`background.md`](background.md) | The City's 1998 neighborhood plan, summarized with pages (index; topics in `background/`) |
+| [`images.md`](images.md)         | How to choose a story's or event's photo: real, free, on topic, level                     |
+| [`prompts/`](prompts/)           | One prompt per stage, each naming its input and output schema                             |
+| [`schemas/`](schemas/)           | JSON Schemas for every file and every stage's output                                      |
+| [`evals/`](evals/)               | Test cases per stage with the result a correct pipeline reaches                           |
 
 ## The pipeline
 
