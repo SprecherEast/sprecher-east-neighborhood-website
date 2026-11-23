@@ -109,7 +109,7 @@ describe('cardFromNode', () => {
     expect(card.facts).toMatchObject({
       openPullRequests: 1,
       mergedPullRequests: 1,
-      closedPullRequests: 1,
+      pullRequests: 3,
     })
   })
 
@@ -132,6 +132,58 @@ describe('cardFromNode', () => {
     const nodes = [merged, other, elsewhere].map(crossRef)
     const card = cardFromNode(node({}, { timelineItems: { nodes } }), policy)
     expect(card.facts.mergedPullRequests).toBe(1)
+  })
+
+  it('ignores a closing keyword inside an HTML comment, as the pull request check does', () => {
+    const merged = { ...mention, state: 'MERGED', merged: true, mergedAt: '2026-11-01T00:00:00Z' }
+    const body = '<!-- Closes #1 -->\nNothing else'
+    const nodes = [crossRef({ ...merged, body })]
+    const card = cardFromNode(node({}, { timelineItems: { nodes } }), policy)
+    expect(card.facts).toMatchObject({ mergedPullRequests: 0, pullRequests: 0 })
+  })
+
+  it('still counts a pull request as started after a reopen, in every state', () => {
+    const reopened = { __typename: 'ReopenedEvent', createdAt: '2026-11-05T00:00:00Z' }
+    const closing = {
+      nodes: [{ number: 5, state: 'MERGED', merged: true, mergedAt: '2026-11-01T00:00:00Z' }],
+    }
+    const upperLayer = { ...mention, number: 12, body: 'Closes #1' }
+    const events = { nodes: [crossRef(upperLayer), reopened] }
+    const card = cardFromNode(
+      node({}, { closedByPullRequestsReferences: closing, timelineItems: events }),
+      policy,
+    )
+    // the merge is left out of the merged flag, but both pull requests show work started
+    expect(card.facts).toMatchObject({ mergedPullRequests: 0, pullRequests: 2 })
+  })
+
+  it('keys pull requests by repository and number', () => {
+    const merged = {
+      ...mention,
+      state: 'MERGED',
+      merged: true,
+      mergedAt: '2026-11-09T00:00:00Z',
+      body: 'Closes #1',
+    }
+    const closing = {
+      nodes: [
+        {
+          number: 9,
+          state: 'MERGED',
+          merged: true,
+          mergedAt: '2026-01-01T00:00:00Z',
+          repository: { nameWithOwner: 'x/y' },
+        },
+      ],
+    }
+    const card = cardFromNode(
+      node(
+        {},
+        { closedByPullRequestsReferences: closing, timelineItems: { nodes: [crossRef(merged)] } },
+      ),
+      policy,
+    )
+    expect(card.facts.pullRequests).toBe(2)
   })
 
   it('leaves out a merge that the issue was reopened after', () => {
@@ -178,6 +230,7 @@ describe('buildReport', () => {
       claimBranch: null,
       openPullRequests: 0,
       mergedPullRequests: 0,
+      pullRequests: 0,
       subIssues: [],
       parent: null,
       ...facts,
@@ -405,6 +458,10 @@ describe('readOnlyRun', () => {
 describe('QUERY', () => {
   it('parses as GraphQL', () => {
     expect(() => parse(QUERY)).not.toThrow()
+  })
+
+  it('asks the repository of every pull request it reads', () => {
+    expect(QUERY).toMatch(/closedByPullRequestsReferences[^]*?nameWithOwner/)
   })
 
   it('asks what the rule needs of pull requests', () => {
