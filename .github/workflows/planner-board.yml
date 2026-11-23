@@ -1,16 +1,18 @@
 name: Planner Board
 
-# Keeps the organization board in step with the work (#941, #1089), signed in as the "Sprecher East
-# Planner" app. An assigned issue, which is how work is claimed, becomes In progress; the "ready"
-# label moves a card between Backlog and Ready, and only while the issue passes the issue check and
-# does not wait for the owner. Label changes made by other workflows start no run (GITHUB_TOKEN), so this one runs the
-# check's rules itself when a person or an agent changes the issue; a run can read the issue a
-# moment before another workflow's labels land, and the next event or a manual run catches up. In review and Done are GitHub's own board
-# rules. Run it by hand with an issue number to bring one card in line with its issue. It checks
-# out and runs only the repository's own main-branch code. Issue text is untrusted: it goes only
-# through the pure rule functions, and the label name is an environment variable compared with
-# fixed names; neither reaches a shell. The "report" run (#1425) reads every open card and prints the
-# ones that differ from the status rule in the job summary; it writes nothing and has no schedule.
+# Keeps the organization board in step with the work (#941, #1089, #1435), signed in as the "Sprecher
+# East Planner" app. When an event concerns an issue (opened, reopened, assigned, labeled, unlabeled,
+# edited, milestoned, demilestoned), the app reads that issue's facts, sets its card to the status the
+# one status rule gives (docs/process/board-status-rule.md) and, for a move GitHub's own board
+# workflows do not make, edits the issue's "Board status" comment with the reason. It moves only that
+# issue's card and changes no label or assignee. Label changes made by other workflows start no run
+# (GITHUB_TOKEN), so the next event or a manual run catches up. Run it by hand with an issue number to
+# bring one card in line with the rule. It checks out and runs only the repository's own code. Issue
+# text is untrusted: it goes only through the pure rule functions, and the issue number is checked to
+# be digits before it is used; neither reaches a shell. What each job may write: "Move the card" writes
+# the Status field and the one comment (issues: write, organization projects: write); "Report where
+# the board differs" (#1425) reads every open card, prints the ones that differ from the rule in the
+# job summary, has no schedule and holds read access only.
 
 on:
   issues:
@@ -18,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       issue:
-        description: Issue number to bring in line with its labels and assignee (not needed for the report)
+        description: Issue number whose card to bring in line with the status rule (not needed for the report)
         required: false
         type: string
       report:
@@ -44,7 +46,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
+      - &checkout
+        uses: actions/checkout@v7
         with:
           sparse-checkout: |
             /scripts/
@@ -61,7 +64,7 @@ jobs:
           private-key: ${{ secrets.PLANNER_APP_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
-          permission-issues: read
+          permission-issues: write
           permission-organization-projects: write
 
       - name: Put the card where the work is
@@ -70,7 +73,6 @@ jobs:
           REPO: ${{ github.repository }}
           ISSUE: ${{ github.event.issue.number || inputs.issue }}
           ACTION: ${{ github.event.action || 'sync' }}
-          LABEL: ${{ github.event.label.name }}
         run: node scripts/planner-board.mjs
 
   report:
@@ -79,14 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
-        with:
-          sparse-checkout: |
-            /scripts/
-            /.github/scripts/
-            /.github/label-policy.json
-          sparse-checkout-cone-mode: false
-          persist-credentials: false
+      - *checkout
 
       - name: Get a short-lived token as the app
         id: app

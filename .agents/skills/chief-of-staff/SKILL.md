@@ -128,7 +128,7 @@ guidelines and skills that apply>
 **May touch:** <backticked paths>
 **Must not touch:** <backticked paths>
 **Proposed scrutiny level:** <0 to 3, from the table; a proposal until the levels take effect>
-**Branch:** <name>. Depends on: <open pull requests to stack on, or none>
+**Branch:** `<name>`. Depends on: <open pull requests to stack on, or none>
 **Owner needed:** <no, or the question>
 ```
 
