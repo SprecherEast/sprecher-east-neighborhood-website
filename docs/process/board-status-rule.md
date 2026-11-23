@@ -52,16 +52,21 @@ works out the status the rule gives, and sets the card to it if it differs. For 
 reads the open sub-issues that are on the board, so the epic follows them. Only the card of the
 issue the event concerns is written. A card with no status gets one.
 
-- **Whose words count.** The repository is public, so only a comment or pull request written by the
-  owner, a member or a collaborator counts as a claim or as work on the issue.
+- **Whose words count.** The repository is public, so only a comment written by the owner, a
+  member or a collaborator counts as a claim, and only a pull request in the same repository as the
+  issue, written by one of them, counts as work on it. A pull request from another repository never
+  counts, even if it says it closes the issue, and a missing repository or author role counts for
+  nothing.
 - **Backward moves wait for the owner.** An event applies a forward move, but never moves a card to
   an earlier column unless the planner itself set the card's current status (its comment records
   it). It holds the move and says so in the comment; a manual run for that one issue applies it, and
   that run is how the owner confirms a card.
 - **The reason.** Every move the planner makes, and every held move, is written first in one "Board
   status" comment on the issue, found again by a hidden marker and the app's own login, and edited in
-  place. It says what the rule gives and why, so it stays true if the edit then fails or the card
-  later moves on. It is built from fixed sentences: nothing read from an issue, a comment or a pull
+  place. It says what the planner saw when it last looked (the card was in a column, or had no status),
+  what the rule gives and why, and for a held move that it moved nothing, so it stays true if the
+  edit then fails or the card later moves on. A manual run has its own queue, so an event for the same
+  issue never replaces it; if two runs race and both post, the extra comment is removed. It is built from fixed sentences: nothing read from an issue, a comment or a pull
   request, not even a branch name, goes into it.
 - **What it writes.** The Status field and that comment. No label, no assignee, no other card.
 - **Catching up.** Label changes made by other workflows start no run, and a run can read an issue a

@@ -185,6 +185,7 @@ describe('cardFromNode', () => {
           state: 'MERGED',
           merged: true,
           authorAssociation: 'OWNER',
+          repository: { nameWithOwner: 'o/r' },
           mergedAt: '2026-11-01T00:00:00Z',
         },
       ],

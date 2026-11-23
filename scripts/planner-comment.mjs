@@ -10,16 +10,17 @@ export const BOARD_STATUS_MARKER = '<!-- planner:board-status -->'
 const SET_PATTERN = /<!-- planner:set=([^>]+?) -->/
 
 /**
- * @param {string} from  where the card was when the planner looked
+ * @param {string|null} from  where the card was when the planner looked, null for no status
  * @param {{status: string, reason: string, flags: string[]}} result  what the rule gives
  * @param {boolean} [held]  a backward move held for the owner: nothing was moved
  * @param {string|null} [set]  the status the planner set last, kept when a move is held
  */
 export function boardStatusComment({ from, result, held = false, set = result.status }) {
   const flags = result.flags.map((flag) => `- ${flag}`)
-  const sentence = held
-    ? `The status rule puts this card in ${result.status}, but it is in ${from}. ${result.reason} Held for the owner's confirmation; nothing was moved.`
-    : `When the planner last looked, the card was in ${from} and the status rule puts it in ${result.status}. ${result.reason}`
+  const where = from ? `the card was in ${from}` : 'the card had no status'
+  const sentence = `When the planner last looked, ${where} and the status rule puts it in ${result.status}. ${result.reason}${
+    held ? " The planner held the move for the owner's confirmation and moved nothing." : ''
+  }`
   return [
     BOARD_STATUS_MARKER,
     ...(set ? [`<!-- planner:set=${set} -->`] : []),

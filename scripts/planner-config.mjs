@@ -29,3 +29,6 @@ export const STATUS_ORDER = Object.freeze(Object.values(STATUS))
  * open a pull request, and neither may start work or move a card.
  */
 export const TRUSTED_ASSOCIATIONS = Object.freeze(new Set(['OWNER', 'MEMBER', 'COLLABORATOR']))
+
+/** What the report shows for a card that has no Status value yet. */
+export const NO_STATUS = 'No status'

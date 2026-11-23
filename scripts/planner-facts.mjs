@@ -69,6 +69,15 @@ const nodesOf = (connection, list, issue) => {
 /** Whether a comment or pull request was written by someone who can write to the repository. */
 const byRepositoryPeople = (node) => TRUSTED_ASSOCIATIONS.has(node?.authorAssociation)
 
+/**
+ * Whether a pull request counts as work on an issue of repository `here`: it is in that repository
+ * AND written by its people. GitHub gives the author association relative to the pull request's own
+ * repository, and links a closing keyword across repositories, so both tests are needed. Every path
+ * that counts a pull request goes through this; a missing repository or association fails closed.
+ */
+export const isRepositoryWork = (pr, here) =>
+  Boolean(here) && repositoryOf(pr) === here && byRepositoryPeople(pr)
+
 const pullRequestKey = (pr) => issueKey(repositoryOf(pr), pr.number)
 
 /**
@@ -83,14 +92,15 @@ function pullRequestsOf(issue, closing, events) {
     .map((event) => event.source)
     .filter(
       (pr) =>
-        byRepositoryPeople(pr) &&
+        isRepositoryWork(pr, here) &&
         typeof pr?.body === 'string' &&
-        here &&
-        repositoryOf(pr) === here &&
         linkedIssues(pr.body).closes.includes(issue.number),
     )
   return new Map(
-    [...declared, ...closing.filter(byRepositoryPeople)].map((pr) => [pullRequestKey(pr), pr]),
+    [...declared, ...closing.filter((pr) => isRepositoryWork(pr, here))].map((pr) => [
+      pullRequestKey(pr),
+      pr,
+    ]),
   )
 }
 

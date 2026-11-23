@@ -332,7 +332,7 @@ describe('an event never moves a card backwards on its own', () => {
     go(w, 5, 'edited')
     expect(editsOf(w)).toEqual([])
     expect(commentsOf(w)).toHaveLength(1)
-    expect(commentsOf(w)[0].body).toMatch(/held for the owner's confirmation/i)
+    expect(commentsOf(w)[0].body).toMatch(/held the move for the owner's confirmation/i)
   })
 
   it('writes no second comment when the held move was already written', () => {
@@ -523,6 +523,7 @@ describe('two runs at once', () => {
     const kinds = commentsOf(w).map((entry) => [entry.kind, entry.path.split('/').pop()])
     expect(kinds).toEqual([
       ['POST', 'comments'],
+      ['PATCH', '10'],
       ['DELETE', '11'],
     ])
   })

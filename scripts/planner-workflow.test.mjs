@@ -54,7 +54,7 @@ describe('the Planner Board workflow', () => {
 describe('one run at a time for an issue', () => {
   it('puts every run for one issue in one concurrency group, so two runs never post two comments', () => {
     const group = workflow.match(/concurrency:\n {2}group: (.*)\n/)[1]
-    expect(group).not.toMatch(/work|state/)
+    expect(group).not.toMatch(/github\.workflow|state/)
     expect(group).toContain('github.event.issue.number')
   })
 

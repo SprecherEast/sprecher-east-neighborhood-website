@@ -31,13 +31,16 @@ import {
   runGh,
   withRemoteBranch,
 } from './planner-facts.mjs'
-import { boardStatusComment } from './planner-comment.mjs'
+import { boardStatusComment, findStatusComment } from './planner-comment.mjs'
 import { decideChanges, settleCards } from './planner-status.mjs'
 
 /** Events that put the issue's card on the board even when the issue is already closed. */
 const CARD_ACTIONS = new Set(['opened', 'reopened', 'assigned', 'sync'])
 /** The most issues one event reads (an epic, its children, theirs): more than that is not read. */
 const MAX_CARDS = 200
+
+/** The fields of an issue comment the finder needs, from the REST list. */
+const MY_COMMENTS = '.[] | {id, type: .user.type, login: .user.login, body}'
 
 const BOARD_QUERY = `query($org:String!,$n:Int!){organization(login:$org){projectV2(number:$n){id
     status:field(name:"${STATUS_FIELD}"){... on ProjectV2SingleSelectField{id options{id name}}}}}}`
@@ -87,12 +90,23 @@ function loadCards({ run, policy, repository, number, project, appSlug }) {
 }
 
 /** Writes the issue's one Board status comment: edits the planner's own, or posts the first. */
-function writeComment(run, repository, number, body, existing) {
+function writeComment(run, { repository, number, body, existing, appSlug }) {
   if (existing?.body === body) return
-  const path = existing
-    ? `repos/${repository}/issues/comments/${existing.id}`
-    : `repos/${repository}/issues/${number}/comments`
-  run(['api', '-X', existing ? 'PATCH' : 'POST', path, '-f', `body=${body}`])
+  const base = `repos/${repository}/issues`
+  if (existing)
+    return run(['api', '-X', 'PATCH', `${base}/comments/${existing.id}`, '-f', `body=${body}`])
+  run(['api', '-X', 'POST', `${base}/${number}/comments`, '-f', `body=${body}`])
+  // A manual run has its own queue, so it can race an event run and both post: keep the oldest
+  const lines = run(['api', '--paginate', `${base}/${number}/comments`, '--jq', MY_COMMENTS])
+  const mine = lines
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((entry) => findStatusComment([entry], appSlug))
+    .sort((a, b) => a.id - b.id)
+  if (mine.length < 2) return
+  run(['api', '-X', 'PATCH', `${base}/comments/${mine[0].id}`, '-f', `body=${body}`])
+  for (const extra of mine.slice(1)) run(['api', '-X', 'DELETE', `${base}/comments/${extra.id}`])
 }
 
 /** Brings the card of the one issue the event concerns in line with the rule; returns what it did. */
@@ -141,15 +155,14 @@ export function moveCard({ run, env, policy, log = console.log }) {
   const item = { status: data.node.status?.name ?? null }
   const changes = decideChanges({ result, item, action: ACTION, plannerSet: root.facts.plannerSet })
   log(`#${ISSUE} ${ACTION}: ${JSON.stringify(changes)}`)
-  const from = item.status ?? 'no status'
   const write = (options) =>
-    writeComment(
-      run,
-      REPO,
-      ISSUE,
-      boardStatusComment({ from, result, ...options }),
-      root.facts.statusComment,
-    )
+    writeComment(run, {
+      repository: REPO,
+      number: ISSUE,
+      body: boardStatusComment({ from: item.status, result, ...options }),
+      existing: root.facts.statusComment,
+      appSlug,
+    })
   if (changes.held) {
     write({ held: true, set: root.facts.plannerSet })
     return changes

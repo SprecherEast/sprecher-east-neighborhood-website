@@ -11,6 +11,7 @@ import { pathToFileURL } from 'node:url'
 import { cell } from './content-types/render.mjs'
 import {
   CARD_STATUS_FRAGMENT,
+  NO_STATUS,
   ORG as DEFAULT_ORG,
   PROJECT as DEFAULT_PROJECT,
 } from './planner-config.mjs'
@@ -85,7 +86,7 @@ export function renderTable(rows, total, unreadable = []) {
   if (rows.length === 0) return `${head}\n\nEvery card read agrees with the rule.\n${missed}`
   const lines = rows.map(
     (row) =>
-      `| #${row.number} ${cell(row.title)} | ${row.current ?? 'No status'} | ${row.status} | ${NEXT_EVENT[row.move ?? 'none']} | ${cell(row.reason)} | ${cell(row.flags.join(' '))} |`,
+      `| #${row.number} ${cell(row.title)} | ${row.current ?? NO_STATUS} | ${row.status} | ${NEXT_EVENT[row.move ?? 'none']} | ${cell(row.reason)} | ${cell(row.flags.join(' '))} |`,
   )
   return (
     [
