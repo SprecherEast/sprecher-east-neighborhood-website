@@ -101,6 +101,34 @@ topics:
       - incident
       - disturbance
       - incidente
+      - policeman
+      - steal
+      - stole
+      - punch
+      - fight
+      - hurt
+      - attack
+      - thief
+      - pistol
+      - robber
+      - shoplift
+      - offender
+      - gunpoint
+      - hostage
+      - shootout
+      - pedestrian hit
+      - indecent exposure
+      - drugging
+      - hazing
+      - victim
+      - fraud
+      - fraudulent
+      - scam
+      - owi
+      - dui
+      - drunk driving
+      - traffic stop
+      - unresponsive
   - id: violence-and-death
     means: A person hurt, shot or killed.
     terms:
@@ -136,6 +164,7 @@ topics:
       - drowning
       - drown
       - suicide
+      - kill
   - id: fire-and-emergency
     means: A fire, an emergency, a lockdown or an evacuation.
     terms:
@@ -170,6 +199,7 @@ topics:
       - monoxido de carbono
       - lockdown
       - shelter in place
+      - fireman
   - id: weather
     means: A weather alert or severe weather.
     terms:
@@ -198,6 +228,31 @@ topics:
       - wind chill
       - weather alert
       - tormenta
+      - extreme cold
+      - cold watch
+      - freeze watch
+      - freeze warning
+      - frost advisory
+      - dense fog
+      - fog advisory
+      - air quality
+      - air stagnation
+      - lake effect snow
+      - red flag warning
+      - fire weather
+      - wind advisory
+      - brisk wind
+      - blowing snow
+      - snow squall
+      - freezing rain
+      - freezing drizzle
+      - heavy snow
+      - beach hazards
+      - rip current
+      - dust storm
+      - hard freeze
+      - thin ice
+      - cold advisory
   - id: hazard-and-harm
     means: A hazard, an outage that puts people at risk, a recall or an accident.
     terms:
@@ -231,9 +286,11 @@ topics:
       - collision
       - choque
       - struck
+      - exposure
 # Sources whose items are safety by nature: every item from one is held, whatever its text says.
 # A new source of this kind is added here when it is added to sources.yaml (#993).
 sources:
   - madison-police-incident-reports
   - nws-api
   - channel3000
+  - spectrum-madison-local

@@ -7,7 +7,11 @@ import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import yaml from 'js-yaml'
 
-import { unregisteredSafetySources } from '../intelligence/runner/lib/safety.mjs'
+import {
+  classifySafety,
+  compileSafetyRules,
+  unregisteredSafetySources,
+} from '../intelligence/runner/lib/safety.mjs'
 
 const dir = path.resolve(process.argv[2] ?? 'intelligence')
 const problems = []
@@ -110,6 +114,7 @@ const safety = validate(
 for (const id of unregisteredSafetySources(safety, sources))
   problem(path.join(dir, 'safety.yaml'), `sources: ${id} is not in sources.yaml`)
 const ROUTE = pipeline?.routes ?? {}
+const safetyRules = safety ? compileSafetyRules(safety) : null
 const registry = new Map(sources?.sources?.map((s) => [s.id, s]) ?? [])
 // An offset that isn't America/Chicago's at that instant, in common.schema.json's grammar
 const DATE_TIME = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)(Z|[+-]\d{2}:\d{2})$/
@@ -167,8 +172,24 @@ for (const c of cases) {
     problem(c.file, `${c.id}: targetCollection must be ${known?.collection ?? 'null'}`)
   if (e.safety === true && e.decision === 'accept')
     problem(c.file, `${c.id}: a safety item is never accepted`)
-  if (ROUTE[e.decision] !== e.route)
-    problem(c.file, `${c.id}: ${e.decision} routes to ${ROUTE[e.decision]}`)
+  // The gate holds an accept whose text or source is safety (runner/lib/gate.mjs), so it goes to a
+  // person: ask it with both stages answering "not safety", the way the real answer would pass.
+  const held =
+    e.decision === 'accept' &&
+    classifySafety(safetyRules, {
+      candidate: c.input ?? {},
+      source: registry.get(c.input?.sourceId),
+      verification: { ...c.given?.verification, safety: false },
+      curation: { ...c.given?.curation, safety: false },
+    }).safety
+  const route = held ? 'reportItem' : ROUTE[e.decision]
+  if (route !== e.route)
+    problem(
+      c.file,
+      held
+        ? `${c.id}: the gate holds this accept as a safety item, so it routes to reportItem`
+        : `${c.id}: ${e.decision} routes to ${ROUTE[e.decision]}`,
+    )
 }
 
 // 2. Field paths: `$.a.b`, with `[]` stepping into an array's items

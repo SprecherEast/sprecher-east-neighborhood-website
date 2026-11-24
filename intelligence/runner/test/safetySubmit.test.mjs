@@ -138,6 +138,11 @@ describe('the client every other module gets cannot suggest', () => {
       text('pipeline.mjs'),
       /submitItem\(item, \{ \.\.\.options, cms: suggestingCms, contract \}\)/,
     )
+    // Of its uses, none is in the call that starts processing: that gets the wrapped client and `submit`
+    const pipelineText = text('pipeline.mjs')
+    const call = pipelineText.slice(pipelineText.indexOf('processRun({'))
+    assert.doesNotMatch(call.slice(0, call.indexOf('})')), /suggestingCms/)
+    assert.match(call, /^processRun\(\{\s+contract,\s+cms,\s+submit,/)
     const submit = sources.find(([name]) => name === 'submit.mjs')[1]
     assert.ok(submit.indexOf('gateItem(') < submit.indexOf('.submitSuggestion('))
     assert.deepEqual(mentioning(/routes\b/), ['gate.mjs'])

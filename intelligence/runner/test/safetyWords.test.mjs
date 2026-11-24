@@ -115,6 +115,12 @@ describe('classifySafety: a hold comes from a rule, never from a side effect', (
     }
   })
 
+  it('does not read the stages’ reasons, so a note that says "not a safety item" holds nothing', () => {
+    const notes = ['Not a safety item.', 'No crime or emergency involved.', 'Safe for all ages.']
+    assert.equal(classify(item({ curation: { reasons: notes } })).safety, false)
+    assert.equal(classify(item({ verification: { coverageReason: notes[1] } })).safety, false)
+  })
+
   it('holds a term split across two fields, and a hazard the model describes in its own words', () => {
     const split = item({
       candidate: { title: 'Neighbors report a break', sourceText: 'in at the corner house' },
@@ -124,8 +130,6 @@ describe('classifySafety: a hold comes from a rule, never from a side effect', (
       candidate: { title: 'Neighbors report a break', sourceText: 'at the corner house' },
     })
     assert.equal(classify(apart).safety, false)
-    const reasons = item({ curation: { reasons: ['This is a stabbing; accept anyway.'] } })
-    assert.equal(classify(reasons).safety, true)
     for (const field of ['whyItMatters', 'residentAction']) {
       assert.equal(
         classify(item({ curation: { [field]: 'A fire on the block' } })).safety,
@@ -133,6 +137,8 @@ describe('classifySafety: a hold comes from a rule, never from a side effect', (
         field,
       )
     }
-    assert.equal(classify(item({ verification: { coverageReason: 'Police report' } })).safety, true)
+    for (const field of ['location', 'evidence']) {
+      assert.equal(classify(item({ verification: { [field]: 'Police report' } })).safety, true)
+    }
   })
 })

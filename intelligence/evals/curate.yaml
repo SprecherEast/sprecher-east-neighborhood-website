@@ -127,10 +127,10 @@ cases:
       title: Free flu shots for residents 65 and older at Pinney Library
       startsAt: 2026-11-05T10:00:00-06:00
       locationText: Pinney Library
-    expected: { decision: accept, coverage: catchment, route: submitSuggestion }
+    expected: { decision: accept, coverage: catchment, route: reportItem }
     graders:
       - { check: contains, field: $.audiences, value: seniors }
-    why: The audience comes from the text, as one of the CMS's values.
+    why: The audience comes from the text, as one of the CMS's values. The model accepts; the gate holds it for a person because "shots" is a safety term, so it routes to reportItem.
   - id: curate-neutral-forum
     ref: C16
     stage: curate

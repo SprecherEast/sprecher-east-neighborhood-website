@@ -24,6 +24,16 @@ describe('classifySafety: sources and every field', () => {
     }
   })
 
+  it('lists the sources that mix safety with other news, each held whatever it says', () => {
+    for (const id of [
+      'madison-police-incident-reports',
+      'nws-api',
+      'channel3000',
+      'spectrum-madison-local',
+    ])
+      assert.equal(classify(item({ candidate: { sourceId: id } })).safety, true, id)
+  })
+
   it('leaves a source that is not listed to the text and the stages', () => {
     assert.equal(classify(item({ candidate: { sourceId: 'mpl-pinney-events' } })).safety, false)
   })
@@ -56,6 +66,16 @@ describe('classifySafety: sources and every field', () => {
       }
       assert.equal(classify(built).safety, true, JSON.stringify(change))
     }
+  })
+
+  it('says a missing id is missing, not that the source is a safety source', () => {
+    const noId = item({ candidate: { alsoReportedBy: [{ sourceUrl: 'https://x.org/' }] } })
+    const found = classify(noId)
+    assert.equal(found.safety, true)
+    assert.deepEqual(found.why, ['a source id is missing'])
+    assert.deepEqual(classify(item({ candidate: { sourceId: 'nws-api' } })).why, [
+      'the source is a safety source',
+    ])
   })
 
   it('reads the registry entry for its id only, never its prose', () => {

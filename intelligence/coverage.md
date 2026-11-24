@@ -154,7 +154,7 @@ and submit runs it again on the finished draft. Text in an item can add to the a
 remove from it; `pipeline.yaml` can't route a held item to a suggestion. Only a decision of
 `accept` creates a suggestion, so `reject`, `update` and `cancel` of a safety item stay as
 decided (rule 4 above). The limits are in the pipeline note ("What the text match does and doesn't
-catch"): an item the terms miss, from a source that isn't listed, relies on the model's answer, and
+catch"): the stages' reasons are not read, an item the terms miss, from a source that isn't listed, relies on the model's answer, and
 a new safety source is added to the list when it is added to the registry. Nothing publishes by
 itself either way: agents only create suggested drafts.
 

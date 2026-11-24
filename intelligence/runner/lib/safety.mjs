@@ -70,16 +70,15 @@ function unLeet(text, one) {
 
 /** Every form of the text a term could be matched against: as written, and with digits and symbols read as letters. */
 function views(text) {
-  const lowered = text.toLowerCase()
-  return [lowered, unLeet(lowered, 'i'), unLeet(lowered, 'l')].map(foldText)
+  return [text, unLeet(text, 'i'), unLeet(text, 'l')].map(foldText)
 }
 
 const VOWELS = 'aeiou'
 
 /**
- * A term with the endings a word takes: s, es, ed, d, ing, a doubled last consonant after one
- * vowel (stab, stabbed), -y as -ies or -ied, -f or -fe as -ves, and a Spanish -o as -a or -as.
- * The ending goes on the last word of a phrase.
+ * A term with the endings a word takes: s, es, ed, d, ing, er, ers, a doubled last consonant
+ * after one vowel (stab, stabbed, stabber), -y as -ies or -ied, -f or -fe as -ves, -man as -men,
+ * and a Spanish -o as -a or -as. The ending goes on the last word of a phrase.
  */
 function forms(term) {
   const at = term.lastIndexOf(' ') + 1
@@ -87,6 +86,9 @@ function forms(term) {
   const word = term.slice(at)
   const endings = new Set([word, `${word}s`, `${word}es`, `${word}ed`, `${word}d`])
   endings.add(word.endsWith('e') ? `${word.slice(0, -1)}ing` : `${word}ing`)
+  endings.add(word.endsWith('e') ? `${word}r` : `${word}er`)
+  endings.add(word.endsWith('e') ? `${word}rs` : `${word}ers`)
+  if (word.endsWith('man')) endings.add(`${word.slice(0, -3)}men`)
   const [before, vowel, last] = [...word.slice(-3)]
   if (
     word.length >= 3 &&
@@ -97,6 +99,8 @@ function forms(term) {
   ) {
     endings.add(`${word}${last}ed`)
     endings.add(`${word}${last}ing`)
+    endings.add(`${word}${last}er`)
+    endings.add(`${word}${last}ers`)
   }
   if (word.endsWith('y')) {
     endings.add(`${word.slice(0, -1)}ies`)
@@ -129,15 +133,14 @@ export const unregisteredSafetySources = (definition, registry) => {
 /**
  * Every string in the parts of the item that say what it is about, found by walking them, so a
  * field added later is read without a code change: the candidate and the draft, the verification's
- * place, evidence and reason, and the curation's own words. The registry's entry is not text:
- * only its id is used, for the source list. Answers `null` when a bound is passed.
+ * place and evidence, and what the curation says the item is and what to do. The stages' reasons
+ * and the registry's entry are not read: a reason talks about the item ("not a safety item"),
+ * and the registry's id is used only for the source list. Answers `null` when a bound is passed.
  */
 function textsOf({ candidate, draft, verification, curation }) {
   const roots = [candidate, draft]
-  if (isObject(verification))
-    roots.push(verification.location, verification.evidence, verification.coverageReason)
-  if (isObject(curation))
-    roots.push(curation.reasons, curation.whyItMatters, curation.residentAction)
+  if (isObject(verification)) roots.push(verification.location, verification.evidence)
+  if (isObject(curation)) roots.push(curation.whyItMatters, curation.residentAction)
   const texts = []
   let chars = 0
   let ok = true
@@ -166,9 +169,8 @@ function sourceProblems(rules, { candidate, source }) {
     source.id !== candidate.sourceId
   )
     return ['the source facts are missing or don’t match']
-  return ids.some((id) => typeof id !== 'string' || rules.sources.has(id))
-    ? ['the source is a safety source']
-    : []
+  if (ids.some((id) => typeof id !== 'string')) return ['a source id is missing']
+  return ids.some((id) => rules.sources.has(id)) ? ['the source is a safety source'] : []
 }
 
 /** Why the stages' answers don't clear the item: any answer but a plain `false` counts. */
