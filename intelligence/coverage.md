@@ -142,16 +142,20 @@ or AI agent who publishes by hand re-checks freshness (check 3) and withdraws an
 longer current.
 
 A safety item is never `accept`, and code enforces it (#1007). What counts as one is defined once,
-in [`safety.yaml`](safety.yaml): verify and curate each answer `safety`, and the runner's gate
-(`runner/lib/gate.mjs`) also matches the item's own text against that file. An item is clear only
-when both stages said `safety: false` and no term matches; a missing, malformed or non-boolean
-answer, an unreadable item or a word that mixes scripts counts as safety. Before any `accept` is
-sent, the gate turns a safety item into `needs-review`, whatever the model decided and whatever
-the item's text says, and submit runs it again on the finished draft. Text in an item can add to
-the answer, never remove from it; `pipeline.yaml` can't route a held item to a suggestion. Only a
-decision of `accept` creates a suggestion, so `reject`, `update` and `cancel` of a safety item
-stay as decided (rule 4 above). Nothing publishes by itself either way: agents only create
-suggested drafts.
+in [`safety.yaml`](safety.yaml): the sources that are safety by nature, the terms (English and
+Spanish), and the `safety` answer verify and curate each give. The runner's gate
+(`runner/lib/gate.mjs`) holds an item when its source is listed, a term appears in any text of
+the item or its draft, or either stage's answer is anything but a plain `false`; a missing or
+malformed answer, an unreadable or oversized item, or a word that mixes scripts counts as safety.
+Once a stage has said safety it stays safety. Before any `accept` is sent, the gate turns a
+safety item into `needs-review`, whatever the model decided and whatever the item's text says,
+and submit runs it again on the finished draft. Text in an item can add to the answer, never
+remove from it; `pipeline.yaml` can't route a held item to a suggestion. Only a decision of
+`accept` creates a suggestion, so `reject`, `update` and `cancel` of a safety item stay as
+decided (rule 4 above). The limit: an item in another language, in emoji, or about a safety
+matter no term names, from a source that isn't listed, relies on the model's answer; a new
+safety source is added to the list when it is added to the registry. Nothing publishes by itself
+either way: agents only create suggested drafts.
 
 The five checks, which verify runs on every item:
 

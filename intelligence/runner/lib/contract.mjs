@@ -74,8 +74,14 @@ ${safetyText.trim()}
     return found
   }
 
+  // The settings are checked against their schemas on every start, not only in CI (#1007)
+  const pipelineErrors = validator('schemas/pipeline.schema.json')(pipeline)
+  if (pipelineErrors.length) throw new Error(`pipeline.yaml: ${pipelineErrors.join('; ')}`)
   const safetyErrors = validator('schemas/safety.schema.json')(safetyDefinition)
   if (safetyErrors.length) throw new Error(`${safetyFile}: ${safetyErrors.join('; ')}`)
+  const registered = new Set(registry.sources.map((source) => source.id))
+  const unknown = safetyDefinition.sources.filter((id) => !registered.has(id))
+  if (unknown.length) throw new Error(`${safetyFile}: no registered source ${unknown.join(', ')}`)
   const safety = compileSafetyRules(safetyDefinition)
 
   const areaErrors = validator('schemas/area.schema.json')(area)

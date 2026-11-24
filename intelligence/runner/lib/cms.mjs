@@ -25,7 +25,6 @@ export function cmsOperations(callTool) {
     return text
   }
   return {
-    callTool,
     /** Every category, for the draft stage's `taxonomy` (slug, title, parent slug). */
     async taxonomy() {
       const docs = []
@@ -110,4 +109,24 @@ export function dryRunCms(reader) {
     reportItem: async (args) => record('reportItem', args, ''),
     close: async () => reader?.close?.(),
   }
+}
+
+/** The operations a run uses besides suggesting. */
+const BESIDES_SUGGESTING = ['taxonomy', 'known', 'createRun', 'updateRun', 'reportItem', 'close']
+
+/**
+ * A client that can read, keep the run log and report, and has no way to suggest: no
+ * `submitSuggestion` and no raw tool caller, under any spelling, because nothing but these
+ * operations is on it. Every module of a run gets this one; only `submitItem` gets the real client
+ * (#1007), where the gate runs first.
+ */
+export function withoutSuggestions(cms) {
+  return Object.freeze(
+    Object.fromEntries(
+      BESIDES_SUGGESTING.filter((name) => typeof cms[name] === 'function').map((name) => [
+        name,
+        (...args) => cms[name](...args),
+      ]),
+    ),
+  )
 }

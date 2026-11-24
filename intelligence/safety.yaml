@@ -1,96 +1,187 @@
 # What counts as a safety item (#1007). This is the one definition: the stages read it with
-# coverage.md, and the runner's gate (runner/lib/safety.mjs) matches an item's text against the
-# terms below. A safety item is never accepted without a person: coverage.md, "Review passes".
-# The terms only ever add to what the stages say; nothing in an item's text can remove a hold.
-# Whole words and phrases, any case; a plural, punctuation, accents and width don't matter.
+# coverage.md, and the runner's gate (runner/lib/gate.mjs) holds an item for a person when its
+# source is listed here or its text matches a term below. A safety item is never accepted without
+# a person: coverage.md, "Review passes". Nothing in an item can remove a hold.
+#
+# Terms are lowercase words or phrases, without accents. Matching ignores case, accents, width,
+# punctuation and separators inside a word, and finds common plurals and endings (-s, -es, -ed,
+# -d, -ing, and -y as -ies). Spanish terms sit beside the English ones, since neighbors read both.
 version: 1
 meaning: >-
-  Anything about people's safety: an incident, a crime or police matter, a fire or emergency, a
-  weather alert, a hazard, an outage that puts people at risk, a recall, an injury or a death.
-  When unsure, it is a safety item.
+  Anything about people's safety: an incident, a crime or police matter, a weapon or a threat, a
+  fire or emergency, a weather alert, a hazard, an outage that puts people at risk, a recall, an
+  accident, an injury or a death. When unsure, it is a safety item.
 topics:
   - id: crime-and-police
-    means: A crime, a police matter or a search for a person.
+    means: A crime, a police matter, a threat, or a search for a person.
     terms:
       - police
+      - policia
       - sheriff
+      - alguacil
       - crime
+      - crimen
       - criminal
       - arrest
+      - arresto
       - suspect
+      - sospechoso
+      - suspicious
+      - gun
+      - firearm
+      - weapon
+      - armed
+      - gunman
+      - arma
       - shooting
       - shots fired
       - gunshot
       - gunfire
-      - firearm
+      - tiroteo
+      - balacera
+      - disparos
       - shell casing
-      - homicide
-      - murder
-      - stabbing
-      - assault
       - robbery
-      - robberies
+      - robo
       - burglary
-      - burglaries
       - break in
       - theft
+      - stolen
+      - robado
       - carjacking
+      - kidnapping
+      - abduction
       - vandalism
+      - battery
+      - assault
+      - threat
+      - amenaza
+      - bomb
+      - bomba
+      - bomb threat
+      - amenaza de bomba
+      - missing
       - missing person
+      - desaparecido
+      - desaparecida
       - amber alert
       - silver alert
+      - hit and run
       - incident
+      - incidente
+  - id: violence-and-death
+    means: A person hurt, shot or killed.
+    terms:
+      - homicide
+      - homicidio
+      - murder
+      - asesinato
+      - stabbing
+      - was shot
+      - been shot
+      - man shot
+      - woman shot
+      - person shot
+      - people shot
+      - teen shot
+      - shot dead
+      - shot and killed
+      - death
+      - dead
+      - deadly
+      - muerte
+      - muerto
+      - muerta
+      - body found
+      - killed
+      - died
+      - fatal
+      - fatality
+      - fallecido
+      - injury
+      - injured
+      - herido
+      - herida
+      - overdose
+      - drowning
+      - suicide
   - id: fire-and-emergency
-    means: A fire, an emergency or an evacuation.
+    means: A fire, an emergency, a lockdown or an evacuation.
     terms:
       - fire
+      - firefighter
+      - wildfire
+      - arson
+      - incendio
       - explosion
       - evacuation
       - evacuate
+      - evacuacion
       - emergency
+      - emergencia
+      - ambulance
       - hazmat
       - gas leak
+      - fuga de gas
       - carbon monoxide
+      - monoxido de carbono
+      - lockdown
+      - shelter in place
   - id: weather
     means: A weather alert or severe weather.
     terms:
       - tornado
       - severe weather
       - storm warning
+      - thunderstorm
+      - special weather statement
+      - weather statement
       - flood
       - flooding
       - flash flood
+      - inundacion
       - blizzard
       - winter storm
+      - ice storm
+      - winter weather
       - heat advisory
       - extreme heat
+      - excessive heat
       - wind chill
       - weather alert
+      - tormenta
   - id: hazard-and-harm
-    means: A hazard, an outage that puts people at risk, a recall, an injury or a death.
+    means: A hazard, an outage that puts people at risk, a recall or an accident.
     terms:
       - safety
+      - seguridad
       - hazard
       - hazardous
       - danger
       - dangerous
+      - peligro
+      - peligroso
       - unsafe
       - warning
+      - advertencia
       - advisory
       - alert
+      - alerta
       - outage
+      - apagon
       - water main break
       - boil water
       - contamination
       - toxic
       - recall
-      - injury
-      - injured
-      - fatal
-      - fatality
+      - accident
+      - accidente
       - crash
       - collision
-      - killed
-      - died
-      - overdose
-      - drowning
+      - choque
+      - struck
+# Sources whose items are safety by nature: every item from one is held, whatever its text says.
+# A new source of this kind is added here when it is added to sources.yaml (#993).
+sources:
+  - madison-police-incident-reports
+  - nws-api

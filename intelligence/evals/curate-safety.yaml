@@ -37,11 +37,11 @@ cases:
     input:
       sourceId: mpl-pinney-events
       kind: event
-      title: Silent Book Club
-      sourceText: Bring a book and read quietly with neighbors.
+      title: Local history night with the neighborhood archive
+      sourceText: A one-evening talk with photographs from the area's early years. Free and open to everyone.
       startsAt: 2026-11-17T19:00:00-06:00
       locationText: Pinney Library
     expected: { decision: accept, coverage: catchment, safety: false, route: submitSuggestion }
     graders:
       - { check: equals, field: $.safety, value: false }
-    why: The contrast case, with an ordinary event that is not a safety item and is accepted as usual.
+    why: The contrast case, with an ordinary one-off event that is not a safety item and is accepted as usual.

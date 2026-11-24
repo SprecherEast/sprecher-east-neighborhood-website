@@ -181,11 +181,17 @@ Before routing, code applies `promotionGuard` (`pipeline.yaml`, #870): an `accep
 rerun, or verify's flags include one of `promotionGuard.blockingFlags`, whatever the model
 answered. The threshold and the flag list each have one definition, in `pipeline.yaml`.
 
-The same gate (`runner/lib/gate.mjs`, #1007) holds a **safety item**: verify and curate each set
-`safety`, and the gate also reads the item's text against [`safety.yaml`](safety.yaml), the one
-definition. Missing or malformed answers count as safety, and `routes` can't send a held item to
-`submitSuggestion`: only an accepted item may be a suggestion. Submit
-calls the gate itself before it sends anything, so no stage can go around it.
+The same gate (`runner/lib/gate.mjs`, #1007) holds a **safety item**, defined once in
+[`safety.yaml`](safety.yaml): a source it lists, a term in any text of the item or its draft
+(the gate walks every string, so a new field is read without a code change), or a `safety`
+answer from verify or curate that isn't a plain `false`. Once a stage has said safety, a rerun or
+retry can't take it back. `routes` can't send a held item to `submitSuggestion`: only an accepted
+item may be a suggestion. Submit runs the gate itself before it sends anything, and every other
+part of a run gets a client with no way to suggest (`withoutSuggestions`, `runner/lib/cms.mjs`).
+The runner checks `pipeline.yaml` and `safety.yaml` against their schemas when it starts, and
+refuses to run on a failure. Limits: matching reads English and Spanish terms, ignores spacing,
+accents, look-alike letters and digit-for-letter swaps, but an item in another language, in
+emoji, or with a safety matter no term names relies on the source list and the model's answer.
 
 Until #336 is live, a run writes the same calls and its run log as a digest for an editor instead.
 
@@ -214,10 +220,11 @@ Until #336 is live, a run writes the same calls and its run log as a digest for 
 ## Changing it
 
 Edit the files, then run `node scripts/check-intelligence.mjs`. It validates `pipeline.yaml`,
-`sources.yaml` and every file in `evals/` (one per stage, `<stage>.yaml` or
+`sources.yaml`, `safety.yaml` (each source it lists must be in `sources.yaml`) and every file in `evals/` (one per stage, `<stage>.yaml` or
 `<stage>-<topic>.yaml`) against their schemas, checks that eval times use America/Chicago's
 offset, and that grader fields, and every field a prompt names (written `` `$.field` ``), exist
-in the stage's input or output schema. Each eval case's `route` must follow the routing above.
+in the stage's input or output schema. Each eval case's `route` must follow the routing above,
+and a case that expects `safety` never expects `accept`.
 CI runs the same check on every pull request; it checks the cases' structure and never calls a
 model. Running the cases against a model is the collector's job (#272). Add an eval case whenever
 the pipeline gets something wrong.

@@ -13,7 +13,7 @@ const MAX_FAILURES_IN_A_ROW = 3
 /** Scout, the model stages and submit. Answers a stop status, or null when the run went through. */
 export async function processRun(run) {
   // What the run reads, then what it records into
-  const { contract, cms, ask, state, http, robots, budgets } = run
+  const { contract, cms, suggestingCms, ask, state, http, robots, budgets } = run
   const { startedAt, runId, log, calls, addError, deferredSources } = run
   const { counts, cost } = log
   // Measured on the real clock, whatever `now` says (tests pin it)
@@ -121,7 +121,7 @@ export async function processRun(run) {
       // runs the same gate again on the finished item, with the draft
       const gated = gateItem(contract, item)
       item.curation = gated.curation
-      if (gated.route === 'submitSuggestion') {
+      if (gated.suggest) {
         if (drafts >= (budgets.maxDraftsPerRun ?? 10)) {
           defer()
           continue
@@ -134,7 +134,12 @@ export async function processRun(run) {
       if (gated.route === 'none') {
         counts[item.curation.decision === 'duplicate' ? 'duplicates' : 'rejected']++
       } else {
-        const result = await submitItem(item, { cms, runId, validate: validateEnvelope, contract })
+        const result = await submitItem(item, {
+          cms: suggestingCms,
+          runId,
+          validate: validateEnvelope,
+          contract,
+        })
         const decision = result.decision
         calls.push(...result.calls)
         for (const warning of result.warnings) addError(warning)

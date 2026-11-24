@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto'
 
+import { withoutSuggestions } from './cms.mjs'
 import { processRun } from './process.mjs'
 import { isoNow } from './time.mjs'
 
@@ -18,7 +19,7 @@ export const newRunId = (now) =>
  */
 export async function runPipeline({
   contract,
-  cms,
+  cms: suggestingCms,
   ask,
   state,
   http,
@@ -27,6 +28,8 @@ export async function runPipeline({
   agentName = 'Sprecher East intelligence',
   now = () => new Date(),
 }) {
+  // Only submit gets the client that can suggest (gate.mjs); the run's other code gets this one
+  const cms = withoutSuggestions(suggestingCms)
   const startedAt = now()
   const { pipeline } = contract
   const budgets = pipeline.budgets ?? {}
@@ -79,6 +82,7 @@ export async function runPipeline({
     stopped = await processRun({
       contract,
       cms,
+      suggestingCms,
       ask,
       state,
       http,
