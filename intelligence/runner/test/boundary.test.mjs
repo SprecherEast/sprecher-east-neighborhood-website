@@ -231,10 +231,16 @@ describe('a boundary that can’t be used', () => {
 
   it('refuses a missing polygon or another geometry type', () => {
     assert.match(problems({ ...ok, geometry: null }).join(), /geometry/)
-    assert.match(
-      problems({ ...ok, geometry: { type: 'MultiPolygon', coordinates: [] } }).join(),
-      /Polygon/,
-    )
+    assert.deepEqual(problems({ ...ok, geometry: null }), ['geometry is missing'])
+    const multi = { type: 'MultiPolygon', coordinates: [ok.geometry.coordinates] }
+    assert.deepEqual(problems({ ...ok, geometry: multi }), ['geometry must be a Polygon'])
+  })
+
+  it('refuses a polygon with no ring', () => {
+    for (const coordinates of [[], null, 'ring']) {
+      const geometry = { type: 'Polygon', coordinates }
+      assert.deepEqual(problems({ ...ok, geometry }), ['a Polygon needs a ring'])
+    }
   })
 
   it('refuses a file that is missing or isn’t JSON', () => {
