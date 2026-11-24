@@ -173,13 +173,14 @@ The five checks, which verify runs on every item:
    Madison. Anything less (an address found only in the item's own text, an unconfirmed one, a
    municipality left empty) never raises it. `$.placement`
    says `overrode` for any change, and every change except those two raises also gets
-   `ambiguous-location`, so a person looks. An address is sent for the test unless the code finds
-   another place in the text the street came from, and only its house number, street and street
+   `ambiguous-location`, so a person looks. An address is not sent when the code finds
+   another place in the text the street came from (the other reasons it is not sent are in
+   `runner/README.md`, "Falls back"), and only its house number, street and street
    type, from a public item, go to the City's own locator. Before the street the code looks for
    "city, village, town or township of …" (the Town of Madison is one: it was absorbed into the
    City of Madison and the City of Fitchburg on 31 October 2022, so a text naming it can't say
    which), Wisconsin (WI, Wis.) and any five-digit number (a ZIP code), and any of them stops the
-   send. After the street only Madison, a short unit, Wisconsin, a Madison ZIP code or the country
+   send. After the street only Madison, a short unit, Wisconsin, a ZIP code beginning 537 or the country
    may follow. That is all it recognizes. Any other town, or a state other than Wisconsin, named
    plainly before the street ("Fitchburg, 7035 …", "Madison, AL: 7035 …") can't be told from a
    venue's name and is sent: that sends nothing more than a public house number and street, and it

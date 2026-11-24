@@ -121,7 +121,10 @@ describe('where the street address came from', () => {
       const out = await place(v, item(text))
       assert.deepEqual(geocode.asked, [], String(text))
       assert.equal(out.placement.method, 'word-match')
-      assert.match(out.placement.reason, /municipality/)
+      assert.match(
+        out.placement.reason,
+        /before the street, or a place other than Madison after it/,
+      )
     }
   })
 

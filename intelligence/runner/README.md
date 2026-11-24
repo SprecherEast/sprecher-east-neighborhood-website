@@ -65,18 +65,18 @@ the area's words stands) or `unplaced` (the item names no place). Reports for an
   `core` (which tiers are raised without a hold is written once, in `coverage.md`, Review passes,
   check 2), and `core` is never kept for an address outside (it becomes `unknown`). Any
   other change adds `ambiguous-location`, which the promotion guard holds for a person:
-  placement never makes an item easier to accept than verify allowed. A point on the edge counts
+  placement never makes an item easier to accept than verify's own judgment allowed. A point on the edge counts
   as inside. Outside, catchment versus citywide versus outside stays verify's judgment.
 - **Falls back, never fails.** No address, two addresses, a municipality other than Madison,
   Wisconsin (verify's, or what the text rule in `coverage.md` (Review passes, check 2) recognizes in the text the street came from, with its stated limit), a `similar-name` or `prompt-injection` flag, no match, a weak match (score under
   `minScore`), strong matches in different places, a failing or slow locator, or the run's limit:
-  all keep the word match, with the reason in `placement.reason`. The text rule is strict on purpose: an ordinary suffix such as a parenthetical or "behind the shelter" keeps the word match too, to be tuned on real misses (the list of what it recognizes is in `coverage.md`, not repeated here). Known limits: an ordinary Madison form such as "Ste." with no comma, "Dane County", a dash or pipe before Madison or "East Madison" is not sent; and a Madison ZIP prefix (537) is shared with neighboring municipalities, so a ZIP alone ties nothing to the City. An address that is not a plain street is a reason, never a request. A failing locator is logged once
+  all keep the word match, with the reason in `placement.reason`. The text rule is strict on purpose: an ordinary suffix such as a parenthetical or "behind the shelter" keeps the word match too, to be tuned on real misses (the list of what it recognizes is in `coverage.md`, not repeated here). Known limits: an ordinary Madison form such as a unit followed by Madison with no comma ("7035 Littlemore Dr Ste. 4 Madison WI"), "Dane County", a dash or pipe before Madison or "East Madison" is not sent; and a Madison ZIP prefix (537) is shared with neighboring municipalities, so a ZIP alone ties nothing to the City. An address that is not a plain street is a reason, never a request. A failing locator is logged once
   in the run and stops after two failures in a row.
 - **Safety.** Placement never reads or writes `safety`; the gate decides it as before.
-- **What leaves the machine.** One GET per address to
+- **What leaves the machine.** Each request is one GET to
   `maps.cityofmadison.com/arcgis/rest/services/Locators/AddressPoints_w_Unit/GeocodeServer`, with
-  only a house number, street and street type: no retry, no wait for `Retry-After`, and no redirect
-  followed (a redirect counts as a failure). At most `maxPerRun` requests per run (each one a
+  only a house number, street and street type: no retry inside a request, no wait for `Retry-After`, and no redirect
+  followed (a redirect counts as a failure). An address that failed is not remembered, so a later item with the same street asks again, until two failures in a row stop the run's requests. At most `maxPerRun` requests per run (each one a
   single GET, so each counted), 10 s
   timeout, 100 KB answer, none after the run's deadline. No key, no cost, no other service. The
   settings are in `area.yaml`, `boundary`. The run log never holds an address or a URL from it.

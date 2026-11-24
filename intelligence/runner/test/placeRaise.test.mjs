@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { item, located, setup } from './placeHelpers.mjs'
+import { geocoder, item, located, setup } from './placeHelpers.mjs'
 
 // The raise to core rests on what verify stated, and the text rule decides what is sent to the
 // locator (#1009; coverage.md, Review passes, check 2). Inputs are real-looking addresses, with the cases both sides of each rule.
@@ -57,6 +57,7 @@ describe('the raise to core rests on what verify confirmed', () => {
       'In the Village of Cottage Grove at 7035 Littlemore Dr',
       'Town of Blooming Grove, 7035 Littlemore Dr',
       'Town of Madison, 7035 Littlemore Dr',
+      'Township of Burke, 7035 Littlemore Dr',
       'City of Fitchburg, 7035 Littlemore Dr',
       'City of Madison, 7035 Littlemore Dr',
       'City of Madison Heights, 7035 Littlemore Dr',
@@ -131,6 +132,8 @@ describe('the stated limit of the text rule', () => {
     for (const address of [
       'Cottage Grove: 7035 Littlemore Dr',
       'Fitchburg, 7035 Littlemore Dr',
+      'Madison, AL: 7035 Littlemore Dr',
+      'Fitchburg, Massachusetts, 7035 Littlemore Dr',
       'In Cottage Grove at 7035 Littlemore Dr',
       'Monona Community Center, 1011 Nichols Rd',
     ]) {
@@ -173,5 +176,33 @@ describe('the raise needs verify’s address to begin with the street', () => {
       const out = await place(madison(address), item())
       assert.deepEqual([out.coverage, out.flags], ['core', []], address)
     }
+  })
+})
+
+describe('the reason an address text is not sent', () => {
+  it('says what the rule did, for texts that name Madison too', async () => {
+    const stated =
+      'the text names a city, village, town or township, Wisconsin or a five-digit number before the street, or a place other than Madison after it'
+    for (const address of [
+      'City of Madison, 7035 Littlemore Dr',
+      '53718, 7035 Littlemore Dr',
+      'Madison, WI 7035 Littlemore Dr',
+      'Wis. 7035 Littlemore Dr',
+      '7035 Littlemore Dr, Fitchburg',
+    ]) {
+      const { place } = setup()
+      const out = await place(located(address), item())
+      assert.equal(out.placement.reason, stated, address)
+    }
+  })
+})
+
+describe('a failing locator and the same street in several items', () => {
+  it('asks again for a failed address, until two failures in a row stop the requests', async () => {
+    const { place, geocode } = setup({
+      geocode: geocoder(() => ({ status: 'failed', error: 'x' })),
+    })
+    for (let i = 0; i < 3; i++) await place(located('7035 Littlemore Dr'), item())
+    assert.equal(geocode.asked.length, 2)
   })
 })

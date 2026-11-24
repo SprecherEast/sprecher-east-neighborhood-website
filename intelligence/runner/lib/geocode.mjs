@@ -3,7 +3,7 @@ import { fetchDirect } from './fetchSource.mjs'
 // From an item's text to a point on the map (#1009). The only geocoder is the City of Madison's
 // own address locator: official, free, no key. Only a street address (a house number, a street
 // and its type) is ever sent, read from the text of a public item; never a name, a title or
-// anything else. The request is bounded by a timeout, a size limit and a count per run.
+// anything else. The request is bounded by a timeout, a size limit (the count per run is kept in place.mjs).
 
 const TYPES =
   'St|Street|Ave|Avenue|Rd|Road|Dr|Drive|Ln|Lane|Blvd|Boulevard|Ct|Court|Way|Pl|Place|Pkwy|Parkway|Cir|Circle|Ter|Terrace|Trl|Trail|Hwy|Highway|Loop|Pass|Run|Sq|Square'
