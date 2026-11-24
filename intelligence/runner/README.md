@@ -63,15 +63,16 @@ the area's words stands) or `unplaced` (the item names no place). Reports for an
 
 - **Authority.** When an address resolves, the boundary decides inside or outside: inside is
   `core` (a `catchment` tier is simply raised, since curate accepts both alike; an `unknown` one
-  only when the street is verify's own `location.address` and `location.verified` is true), and
+  only when the street is verify's own `location.address`, `location.verified` is true and
+  verify's `location.municipality` is Madison), and
   `core` is never kept for an address outside (it becomes `unknown`). Any
   other change adds `ambiguous-location`, which the promotion guard holds for a person:
   placement never makes an item easier to accept than verify allowed. A point on the edge counts
   as inside. Outside, catchment versus citywide versus outside stays verify's judgment.
 - **Falls back, never fails.** No address, two addresses, a municipality other than Madison,
-  Wisconsin (verify's, or one named after the street in the text it came from), a `similar-name` or `prompt-injection` flag, no match, a weak match (score under
+  Wisconsin (verify's, or anything in the text the street came from that doesn't tie it to Madison: another town, a state or ZIP before the street, a long unit or a non-Madison ZIP after it), a `similar-name` or `prompt-injection` flag, no match, a weak match (score under
   `minScore`), strong matches in different places, a failing or slow locator, or the run's limit:
-  all keep the word match, with the reason in `placement.reason`. A failing locator is logged once
+  all keep the word match, with the reason in `placement.reason`. The text rule is strict on purpose: an ordinary suffix such as a parenthetical or "behind the shelter" keeps the word match too, to be tuned on real misses. An address that is not a plain street is a reason, never a request. A failing locator is logged once
   in the run and stops after two failures in a row.
 - **Safety.** Placement never reads or writes `safety`; the gate decides it as before.
 - **What leaves the machine.** One GET per address to

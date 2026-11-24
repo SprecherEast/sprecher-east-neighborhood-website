@@ -176,7 +176,7 @@ export async function fetchDirect(
       lastModified: response.headers.get('last-modified') ?? null,
     }
   }
-  return { status: 'error', retries, error: `more than ${MAX_HOPS} redirects` }
+  return { status: 'error', retries, error: `more than ${maxHops} redirects` }
 }
 
 /** A robots.txt check that fetches each host's file once per run. Unreachable means allowed. */

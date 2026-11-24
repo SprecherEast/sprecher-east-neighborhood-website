@@ -94,5 +94,10 @@ describe('fetchDirect options', () => {
     const loop = fakeHttp(Array.from({ length: 6 }, () => hop('https://a.example/again')))
     assert.equal((await fetchDirect(URL_ONE, { http: loop })).status, 'error')
     assert.equal(loop.requested.length, 4)
+    const none = await fetchDirect(URL_ONE, {
+      http: fakeHttp([hop('https://a.example/x')]),
+      maxHops: 0,
+    })
+    assert.match(none.error, /more than 0 redirects/)
   })
 })

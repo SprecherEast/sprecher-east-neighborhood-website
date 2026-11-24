@@ -166,12 +166,16 @@ The five checks, which verify runs on every item:
    authority on inside and outside: an address inside is `core`, and `core` is never kept for an
    address outside. Placement never makes an item easier to accept than verify's own judgment
    allowed. It raises `catchment` to `core` for an address inside, which changes nothing curate may
-   accept (relevance rule 2 takes both alike). It raises `unknown` to `core` only when the street
-   is the one in verify's own `$.location.address` and `$.location.verified` is true: an address
-   found only in the item's own text, or one verify didn't confirm, never raises it. `$.placement`
+   accept (relevance rule 2 takes both alike). It raises `unknown` to `core` only on what verify
+   itself stated: the street is the one in verify's own `$.location.address`,
+   `$.location.verified` is true, and verify's `$.location.municipality` is filled and is
+   Madison. Anything less (an address found only in the item's own text, an unconfirmed one, a
+   municipality left empty) never raises it. `$.placement`
    says `overrode` for any change, and every change except those two raises also gets
-   `ambiguous-location`, so a person looks. An address that names a municipality other than
-   Madison is not tested. Outside the boundary, which of `catchment`, `citywide` or `outside` it is stays
+   `ambiguous-location`, so a person looks. Only an address that can be tied to Madison is
+   sent for the test: the whole text it came from must name no other municipality, state or ZIP
+   code, and what follows the street may only be Madison, a short unit, a state, a Madison ZIP
+   code or the country. When in doubt nothing is sent and the word match stands. Outside the boundary, which of `catchment`, `citywide` or `outside` it is stays
    the judgment described here. An item with no usable address, a locator that fails or an
    ambiguous match keeps the word match (`area.yaml`), with `$.placement` saying `word-match`,
    or `unplaced` when the item names no place at all. Placement never touches the safety answer

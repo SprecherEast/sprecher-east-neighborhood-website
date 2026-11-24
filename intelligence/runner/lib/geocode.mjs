@@ -15,6 +15,9 @@ const ADDRESS = new RegExp(
 )
 /** The only shape sent to the locator: single spaces, a number, then words. */
 const PLAIN_STREET = /^\d{1,6}(?: [A-Za-z][A-Za-z.'-]*){2,6}$/
+/** Whether `street` is a short plain street address, the one thing the locator is ever sent. */
+export const isPlainStreet = (street) =>
+  typeof street === 'string' && PLAIN_STREET.test(street) && street.length <= 80
 const METERS_PER_DEGREE = 110_574
 
 /** The distinct street addresses in `text`, in order, each as written with single spaces. */
@@ -64,8 +67,7 @@ function candidatesOf(body) {
  */
 export function cityGeocoder({ http = fetch, config }) {
   return async (street) => {
-    if (typeof street !== 'string' || !PLAIN_STREET.test(street) || street.length > 80)
-      return { status: 'failed', error: 'not a plain street address' }
+    if (!isPlainStreet(street)) return { status: 'failed', error: 'not a plain street address' }
     const query = new URLSearchParams([
       ['SingleLine', street],
       ['outSR', '4326'],
