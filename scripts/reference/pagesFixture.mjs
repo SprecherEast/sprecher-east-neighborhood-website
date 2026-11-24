@@ -1,6 +1,8 @@
 /** Small stand-ins for the loaded config, for the tests that compare a whole page (#1461). */
 
 function release() {}
+function tidy() {}
+function pluginHook() {}
 function handlerA() {}
 function handlerB() {}
 function isAdmin() {}
@@ -9,6 +11,7 @@ function submit() {}
 export const locate = (fn) =>
   ({
     [release]: 'src/platform/payload/hooks.ts',
+    [tidy]: 'src/platform/payload/tidy.ts',
     [handlerA]: 'src/modules/a/cms/retention.ts',
     [handlerB]: 'src/modules/b/cms/retention.ts',
     [isAdmin]: 'src/platform/payload/roles.ts',
@@ -31,7 +34,14 @@ export const jobsConfig = {
     {
       slug: 'deleteOlder',
       handler: handlerB,
-      schedule: [{ cron: '0 * * * *', queue: 'retention', hooks: { beforeSchedule: release } }],
+      schedule: [
+        {
+          cron: '0 * * * *',
+          queue: 'retention',
+          hooks: { beforeSchedule: release, afterSchedule: tidy },
+        },
+        { cron: '5 * * * *', queue: 'extra', hooks: { beforeSchedule: pluginHook } },
+      ],
     },
     { slug: 'schedulePublish', handler: () => ({}) },
   ],
@@ -135,3 +145,42 @@ export const mcpCalls = (file) =>
         { collection: 'alpha', operations: [], why: [] },
       ]
     : []
+
+const countRoute = { method: 'GET', path: '/count', name: 'countHandler', file: 'payload' }
+const loginRoute = { method: 'POST', path: '/login', name: 'loginHandler', file: 'payload' }
+const takenRoute = {
+  method: 'GET',
+  path: '/access/:id?',
+  name: 'accessHandler',
+  file: 'payload',
+  replacedBy: { method: 'GET', path: '/:key', name: 'keyHandler', file: '@payloadcms/plugin-seo' },
+  replacedWhen: ['/access', '/access/x'],
+}
+
+/** The endpoints stand-in with more of everything a row can hold: two types on one route, a route taken for some requests by a plugin, a global's own endpoint, plugin and anonymous rules. */
+export const moreApi = (base) => {
+  const [events, faq, header, runs] = [0, 1, 2, 3].map((i) => base.contentTypes[i])
+  const posts = { ...faq, slug: 'posts', allEndpoints: [countRoute] }
+  return {
+    ...base,
+    mcpAuth: { name: 'the plugin’s own key check', file: '@payloadcms/plugin-mcp' },
+    graphQL: {
+      ...base.graphQL,
+      rules: [
+        ...base.graphQL.rules,
+        { validationRule() {} }.validationRule,
+        function limitDepth() {},
+      ],
+    },
+    contentTypes: [
+      { ...events, allEndpoints: [...events.allEndpoints, takenRoute] },
+      { ...faq, allEndpoints: [countRoute, loginRoute] },
+      posts,
+      {
+        ...header,
+        endpoints: [{ method: 'GET', path: '/preview', name: 'preview', file: 'src/p.ts' }],
+      },
+      runs,
+    ],
+  }
+}

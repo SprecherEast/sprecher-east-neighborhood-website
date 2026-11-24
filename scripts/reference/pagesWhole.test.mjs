@@ -20,6 +20,7 @@ import {
   mcpAccess,
   mcpCalls,
   mcpOptions,
+  moreApi,
   mcpSchema,
 } from './pagesFixture.mjs'
 
@@ -27,13 +28,16 @@ const snapshot = (name) => `./__snapshots__/${name}.txt`
 
 describe('whole pages', () => {
   it('writes the endpoints page', async () => {
-    const page = renderApi(describeApi(base, apiLocate))
+    const page = renderApi(describeApi(moreApi(base), apiLocate))
     await expect(page).toMatchFileSnapshot(snapshot('endpoints'))
   })
 
   it('writes the jobs page', async () => {
     const jobs = describeJobs(jobsConfig, locate, jobsReach, {
-      endpoints: [{ method: 'GET', path: '/api/payload-jobs/run', guards: 'run' }],
+      endpoints: [
+        { method: 'GET', path: '/api/payload-jobs/run', guards: 'run' },
+        { method: 'GET', path: '/api/payload-jobs/handle-schedules', guards: 'run' },
+      ],
     })
     await expect(renderJobs(jobs, jobsWorkflows, jobsExtras)).toMatchFileSnapshot(snapshot('jobs'))
   })

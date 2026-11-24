@@ -16,13 +16,12 @@ const COLLECTION_OPERATIONS = ['find', 'create', 'update', 'delete']
 const GLOBAL_OPERATIONS = ['find', 'update']
 const ACCESS_FOR = { find: 'read', create: 'create', update: 'update', delete: 'delete' }
 
-/** The plugin's own rule for a tool name: `find` and the slug in camel case, first letter up. */
-const camelCase = (text) =>
-  text
-    .replace(/[-_\s]+(.)?/g, (_, chr) => (chr ? chr.toUpperCase() : ''))
-    .replace(/^(.)/, (_, chr) => chr.toLowerCase())
-export const toolName = (operation, slug) =>
-  `${operation}${camelCase(slug).charAt(0).toUpperCase()}${camelCase(slug).slice(1)}`
+/** The plugin's own rule for a tool name: the operation, then the slug in camel case, first letter up. */
+const camelCase = (text) => text.replace(/[-_\s]+(.)?/g, (_, chr) => (chr ? chr.toUpperCase() : ''))
+export const toolName = (operation, slug) => {
+  const name = camelCase(slug)
+  return `${operation}${name.charAt(0).toUpperCase()}${name.slice(1)}`
+}
 
 const isOn = (enabled, operation) =>
   enabled === true || (typeof enabled === 'object' && enabled?.[operation] === true)

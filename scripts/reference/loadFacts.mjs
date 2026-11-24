@@ -44,7 +44,10 @@ const GRAPHQL_SETTINGS = [
 
 const readFile = (root, file) => ({ file, text: fs.readFileSync(path.join(root, file), 'utf8') })
 
-const filesIn = (root, folder, pattern) =>
+export const WORKFLOW_FILES = /\.ya?ml$/
+export const SERVER_SCRIPTS = /\.sh$/
+
+export const filesIn = (root, folder, pattern) =>
   fs
     .readdirSync(path.join(root, folder))
     .filter((name) => pattern.test(name))
@@ -141,9 +144,9 @@ function describeScheduledWork(config, models, { program, root, locate }) {
   )
   return {
     jobs,
-    workflows: parseTimedWorkflows(filesIn(root, '.github/workflows', /\.ya?ml$/)),
+    workflows: parseTimedWorkflows(filesIn(root, '.github/workflows', WORKFLOW_FILES)),
     extras: {
-      serverCrons: parseServerCrons(filesIn(root, 'ops', /\.sh$/)),
+      serverCrons: parseServerCrons(filesIn(root, 'ops', SERVER_SCRIPTS)),
       intelligence: parseIntelligenceSchedule(readFile(root, 'intelligence/pipeline.yaml')),
       dependabot: parseDependabot(readFile(root, '.github/dependabot.yml')),
     },

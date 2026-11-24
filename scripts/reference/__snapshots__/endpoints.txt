@@ -51,6 +51,7 @@ Payload builds a REST API for each content type under `/api`, guarded by the con
 | [`events`](content-types/events.md) | collection | `/api/events` | on |
 | [`faq`](content-types/faq.md) | collection | `/api/faq` | on |
 | [`header`](content-types/header.md) | global | `/api/globals/header` | on |
+| [`posts`](content-types/posts.md) | collection | `/api/posts` | on |
 
 ### Routes Payload adds to content types
 
@@ -58,8 +59,9 @@ The routes in the loaded config that Payload adds to content types (find, create
 
 | Method | Path after the type’s own | Content types |
 | --- | --- | --- |
+| GET | `/access/:id?` | `events` |
 | GET | `/count` | every collection except `agent-runs` |
-| POST | `/login` | `events` |
+| POST | `/login` | `events`, `faq` |
 
 ### Routes Payload adds that an earlier endpoint takes first
 
@@ -67,6 +69,7 @@ Payload answers a request with the first endpoint of the type whose method and p
 
 | Method | Path | Content type | Taken first by | Which requests | Defined in |
 | --- | --- | --- | --- | --- | --- |
+| GET | `/access/:id?` | `events` | `/:key` | only a request to `/access`, `/access/x` | @payloadcms/plugin-seo |
 | POST | `/verify/:id` | `events` | `/verify/:token` | every request | `src/v.ts` |
 
 ## GraphQL API
@@ -81,6 +84,8 @@ Built from the same content types and access functions.
 | `disablePlaygroundInProduction` | true |
 | `maxComplexity` | 1000 |
 | Validation rule | `maskVerify` in `src/modules/accounts/cms/noVerifyMutation.ts` |
+| Validation rule | `inline` in payload |
+| Validation rule | `limitDepth` in payload |
 
 ## Custom endpoints
 
@@ -89,9 +94,10 @@ Added by the config, a plugin or a content type. The access check of one is set 
 | Method | Path | Added by | Handler | Defined in | Access check |
 | --- | --- | --- | --- | --- | --- |
 | POST | `/api/plugin-seo/generate-title` | the config or a plugin | `seoHandler` | @payloadcms/plugin-seo | inside the handler |
-| POST | `/api/mcp` | the config or a plugin | `mcpHandler` | @payloadcms/plugin-mcp | `checkKey` |
-| GET | `/api/mcp` | the config or a plugin | `mcpHandler` | @payloadcms/plugin-mcp | `checkKey` |
+| POST | `/api/mcp` | the config or a plugin | `mcpHandler` | @payloadcms/plugin-mcp | `the plugin’s own key check` |
+| GET | `/api/mcp` | the config or a plugin | `mcpHandler` | @payloadcms/plugin-mcp | `the plugin’s own key check` |
 | POST | `/api/events/verify/:token` | `events` | `verify` | `src/v.ts` | inside the handler |
+| GET | `/api/globals/header/preview` | `header` | `preview` | `src/p.ts` | inside the handler |
 
 ## Not shown
 
@@ -99,4 +105,4 @@ Not shown: the access check inside a custom endpoint, a route handler or a serve
 
 ## MCP endpoint
 
-AI agents connect at `/api/mcp`, with an API key that acts as an agent account. The key is checked by `checkKey` in `src/modules/agents/cms/mcp.ts`. The tools, their input and the content types they reach are in [mcp-tools.md](mcp-tools.md). What runs on a timer is in [jobs.md](jobs.md).
+AI agents connect at `/api/mcp`, with an API key that acts as an agent account. The key is checked by `the plugin’s own key check` in @payloadcms/plugin-mcp. The tools, their input and the content types they reach are in [mcp-tools.md](mcp-tools.md). What runs on a timer is in [jobs.md](jobs.md).

@@ -141,6 +141,12 @@ describe('renderRoutes', () => {
     expect(renderRoutes(rows)).toContain('[endpoints.md](endpoints.md)')
   })
 
+  it('explains what each row says, and where the other endpoints are (#1461)', () => {
+    expect(renderRoutes(rows)).toContain(
+      'Each row is what the route file itself says, read from its source: a page can still be dynamic through something it imports. `Params` says whether `generateStaticParams` builds the pages ahead of the first visit. Layouts are not listed. The REST and GraphQL APIs, custom endpoints and the AI agent endpoint are in [endpoints.md](endpoints.md).',
+    )
+  })
+
   it('shows the methods of a handler', () => {
     expect(renderRoutes(rows)).toContain('GET')
   })

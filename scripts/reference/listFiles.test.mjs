@@ -13,12 +13,14 @@ describe('listFiles', () => {
       fs.writeFileSync(path.join(root, file), '')
     }
     write('b.txt')
+    write('a-b/x.txt')
     write('a/z.txt')
     write('a/deep/y.txt')
     fs.mkdirSync(path.join(root, 'empty'))
     const found = listFiles(root)
     fs.rmSync(root, { recursive: true, force: true })
-    expect(found).toEqual(['a/deep/y.txt', 'a/z.txt', 'b.txt'])
+    // sorted as whole paths, so `a-b/…` comes before `a/…` ('-' sorts before '/')
+    expect(found).toEqual(['a-b/x.txt', 'a/deep/y.txt', 'a/z.txt', 'b.txt'])
   })
 
   it('lists nothing for a folder that does not exist', () => {

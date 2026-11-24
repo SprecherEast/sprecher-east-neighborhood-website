@@ -9,10 +9,11 @@ What runs on a timer inside the application, and in GitHub. Payload starts the r
 | Task | Label | Schedule | Queue | Handler written in | Collections it reaches (by the handler’s own calls) |
 | --- | --- | --- | --- | --- | --- |
 | `deleteOld` | Delete old things | `0 * * * *` (every hour, on the hour)<br>`beforeSchedule` hook `release`<br>`30 4 * * 1-5` | `retention` | `src/modules/a/cms/retention.ts` | [`old-things`](content-types/old-things.md) (delete (access bypassed)) |
-| `deleteOlder` |  | `0 * * * *` (every hour, on the hour)<br>`beforeSchedule` hook `release` | `retention` | `src/modules/b/cms/retention.ts` | none found by following its calls |
+| `deleteOlder` |  | `0 * * * *` (every hour, on the hour)<br>`beforeSchedule` hook `release`<br>`afterSchedule` hook `tidy`<br>`5 * * * *` (every hour at minute 5)<br>`beforeSchedule` hook `pluginHook` | `retention`, `extra` | `src/modules/b/cms/retention.ts` | none found by following its calls |
 | `schedulePublish` |  | queued, not scheduled | `default` | payload | Payload’s own handler, not followed |
 
 - `release`: `payload-jobs`, update, from the comment on the function that makes the call: Puts a stuck job back. Then says so.
+- `tidy`: `payload-jobs`, update, from the comment on the function that makes the call: Puts a stuck job back. Then says so.
 
 ## Schedule hooks
 
@@ -20,7 +21,9 @@ A hook runs each time a schedule queues its tasks. The collections are found by 
 
 | Hook | Phase | Written in | Used by | Collections it reaches |
 | --- | --- | --- | --- | --- |
+| `pluginHook` | `beforeSchedule` | payload | `deleteOlder` | none found by following its calls |
 | `release` | `beforeSchedule` | `src/platform/payload/hooks.ts` | `deleteOld`, `deleteOlder` | [`payload-jobs`](content-types/payload-jobs.md) (read (access bypassed), update (access bypassed)) |
+| `tidy` | `afterSchedule` | `src/platform/payload/tidy.ts` | `deleteOlder` | [`payload-jobs`](content-types/payload-jobs.md) (read (access bypassed), update (access bypassed)) |
 
 ## Job runners
 
@@ -34,7 +37,7 @@ A hook runs each time a schedule queues its tasks. The collections are found by 
 | Operation | Function | Defined in | Route it guards |
 | --- | --- | --- | --- |
 | queue | `isAdmin` | `src/platform/payload/roles.ts` | no route in the config |
-| run | `isAdmin` | `src/platform/payload/roles.ts` | `GET /api/payload-jobs/run` |
+| run | `isAdmin` | `src/platform/payload/roles.ts` | `GET /api/payload-jobs/run`, `GET /api/payload-jobs/handle-schedules` |
 
 ## Timed GitHub workflows
 

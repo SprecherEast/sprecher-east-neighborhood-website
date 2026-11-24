@@ -16,5 +16,8 @@ describe('describeCron', () => {
     // a fixed hour is not "every minute", and not "every 10 minutes"
     expect(describeCron('* 5 * * *')).toBe('')
     expect(describeCron('*/10 5 * * *')).toBe('')
+    // a range or a step in the hour is not one fixed time of day
+    expect(describeCron('0 */2 * * *')).toBe('')
+    expect(describeCron('0 1-5 * * *')).toBe('')
   })
 })

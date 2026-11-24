@@ -219,4 +219,13 @@ describe('buildPages', () => {
       /events--hero\.md.*lines/,
     )
   })
+
+  it('writes a whole page and the README, kept as text to read when it changes (#1461)', async () => {
+    const owner = { owner: 'module `events`', file: 'src/modules/events/cms/events.ts' }
+    const pages = buildPages([
+      model({ owner, tools: ['findEvents', 'createEvents'], jobs: ['deleteOld', 'sendDigest'] }),
+    ])
+    await expect(pages.get('events.md')).toMatchFileSnapshot('./__snapshots__/events-page.txt')
+    await expect(pages.get('README.md')).toMatchFileSnapshot('./__snapshots__/readme-page.txt')
+  })
 })

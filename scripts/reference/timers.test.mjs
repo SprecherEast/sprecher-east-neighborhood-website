@@ -54,6 +54,20 @@ jobs:
   })
 })
 
+describe('parseTimedWorkflows order and gaps', () => {
+  const on = (cron) => `name: X\non:\n  schedule:\n${cron}\njobs:\n  a: {}\n`
+  it('sorts by file, and drops a schedule entry that has no cron', () => {
+    const found = parseTimedWorkflows([
+      { file: '.github/workflows/z.yml', text: on("    - cron: '1 * * * *'") },
+      { file: '.github/workflows/a.yml', text: on("    - cron: '2 * * * *'\n    - {}") },
+    ])
+    expect(found.map((w) => [w.file, w.crons])).toEqual([
+      ['.github/workflows/a.yml', ['2 * * * *']],
+      ['.github/workflows/z.yml', ['1 * * * *']],
+    ])
+  })
+})
+
 describe('parseServerCrons', () => {
   const script = [
     '#!/usr/bin/env bash',
@@ -82,6 +96,11 @@ describe('parseServerCrons', () => {
       '5 4 * * * root cd /srv; bash $UNKNOWN_SCRIPT now; bash $BACKUP_SCRIPT daily',
     ].join('\n')
     expect(parseServerCrons([{ file: 'ops/a.sh', text }])[0].runs).toEqual(['ops/backup.sh daily'])
+  })
+
+  it('names a script run without an argument by its path alone', () => {
+    const text = 'A="x/a.sh"\n1 2 * * * root bash $A >> /var/log/a.log 2>&1'
+    expect(parseServerCrons([{ file: 'ops/a.sh', text }])[0].runs).toEqual(['x/a.sh'])
   })
 
   it('sorts the scripts by file', () => {

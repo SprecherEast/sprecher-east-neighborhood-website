@@ -100,4 +100,27 @@ describe('loadFacts on this repository', () => {
     }
     expect(facts.api.routeHandlers.length).toBeGreaterThan(0)
   })
+
+  it('tells collections from globals, finds the files of the routes, and what configures a plugin', () => {
+    const kinds = Object.fromEntries(facts.models.map((m) => [m.slug, m.kind]))
+    for (const type of config.collections) expect(kinds[type.slug]).toBe('collection')
+    for (const type of config.globals) expect(kinds[type.slug]).toBe('global')
+    for (const handler of facts.api.routeHandlers) {
+      expect(fs.existsSync(path.join(root, handler.file)), handler.file).toBe(true)
+    }
+    // the loader reads the config file for the modules that configure a plugin
+    expect(facts.models.some((m) => /configured with code from module/.test(m.owner.owner))).toBe(
+      true,
+    )
+  })
+
+  it('keeps exactly the GraphQL limits the config sets, under their own names', () => {
+    const limits = [
+      'disableIntrospectionInProduction',
+      'disablePlaygroundInProduction',
+      'maxComplexity',
+    ]
+    const set = limits.filter((key) => config.graphQL[key] !== undefined)
+    expect(facts.api.graphQL.settings.map(([key]) => key)).toEqual(set)
+  })
 })

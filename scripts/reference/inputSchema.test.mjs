@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
-import { describeInput } from './inputSchema.mjs'
+import { describeInput, typeOf } from './inputSchema.mjs'
 
 const schemaOf = (shape) => z.toJSONSchema(z.object(shape), { io: 'input' })
 const note = (shape, name) => describeInput(schemaOf(shape)).find((f) => f.name === name).note
@@ -68,7 +68,8 @@ describe('describeInput', () => {
       'at least 2 items',
     )
     expect(note({ word: z.string().min(3) }, 'word')).toBe('at least 3 characters')
-    expect(note({ mail: z.email() }, 'mail')).toContain('format email')
+    expect(note({ mail: z.email() }, 'mail')).toMatch(/(^|; )format email($|;)/)
+    expect(typeOf({ type: 'array' })).toBe('any[]')
   })
 
   it('says a number may be limited on both sides', () => {

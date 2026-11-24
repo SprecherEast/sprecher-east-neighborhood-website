@@ -21,7 +21,12 @@ describe('pluginDefining', () => {
     // a test file inside a package and a file that is not JavaScript set no slug
     write('node_modules/@payloadcms/plugin-t/dist/a.test.js', "const x = { slug: 'tested' }\n")
     write('node_modules/@payloadcms/plugin-t/dist/a.d.ts', "const x = { slug: 'typed' }\n")
+    // a slug with a dot is read as that text, not as a pattern: `a.b` is not `axb`
+    write('node_modules/@payloadcms/plugin-d/dist/index.js', "const x = { slug: 'axb' }\n")
+    write('node_modules/@payloadcms/plugin-e/dist/index.js', "const x = { slug: 'a.b' }\n")
     const plugins = [
+      '@payloadcms/plugin-d',
+      '@payloadcms/plugin-e',
       '@payloadcms/plugin-c',
       '@payloadcms/plugin-a',
       '@payloadcms/plugin-b',
@@ -31,10 +36,18 @@ describe('pluginDefining', () => {
       pluginDefining(root, 'forms', plugins),
       pluginDefining(root, 'search', plugins),
       pluginDefining(root, 'none', plugins),
+      pluginDefining(root, 'a.b', plugins),
       pluginDefining(root, 'tested', [...plugins, '@payloadcms/plugin-t']),
       pluginDefining(root, 'typed', [...plugins, '@payloadcms/plugin-t']),
     ]
     fs.rmSync(root, { recursive: true, force: true })
-    expect(found).toEqual(['@payloadcms/plugin-a', '@payloadcms/plugin-b', '', '', ''])
+    expect(found).toEqual([
+      '@payloadcms/plugin-a',
+      '@payloadcms/plugin-b',
+      '',
+      '@payloadcms/plugin-e',
+      '',
+      '',
+    ])
   })
 })

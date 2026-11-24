@@ -116,13 +116,13 @@ function requestForms(path) {
   return segments
     .reduce(
       (forms, segment) => {
-        const name = segment.replace(/^:[A-Za-z]+\??$/, 'x')
+        const name = segment.replace(/\?$/, '')
         if (!segment.endsWith('?')) return forms.map((form) => [...form, name])
         return forms.flatMap((form) => [form, [...form, name]])
       },
       [[]],
     )
-    .map((form) => `/${form.join('/')}`.replace(/^\/\/$/, '/'))
+    .map((form) => `/${form.join('/')}`)
 }
 
 function matches(pattern, request) {

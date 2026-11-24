@@ -26,7 +26,7 @@ function functionOf(declaration) {
 
 /**
  * The functions named in the arguments of calls in `configFile` to a function written in
- * `entryFile`, where they are in `src/`. Sorted by file, then position, so the result is stable.
+ * `entryFile`, where they are in `src/`. In the order the config names them.
  */
 export function injectedFunctions(program, root, entryFile, configFile) {
   const checker = program.getTypeChecker()
@@ -48,7 +48,5 @@ export function injectedFunctions(program, root, entryFile, configFile) {
       })
     }
   })
-  return [...found].sort(
-    (a, b) => a.getSourceFile().fileName.localeCompare(b.getSourceFile().fileName) || a.pos - b.pos,
-  )
+  return [...found]
 }
