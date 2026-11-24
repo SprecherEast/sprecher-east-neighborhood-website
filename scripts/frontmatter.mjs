@@ -1,7 +1,12 @@
 /** Reading the YAML frontmatter at the top of a Markdown file, in one place. */
 import yaml from 'js-yaml'
 
-const FRONTMATTER = /^---\n([\s\S]*?)\n---(?:\n|$)/
+/**
+ * Lenient on purpose, so nothing either caller accepted before is refused: trailing spaces on the
+ * opening line, any text after the closing dashes (so `----` and `---   ` close the block), Windows
+ * line endings and a file that ends right after the closing line all count as frontmatter.
+ */
+const FRONTMATTER = /^---[ \t]*\n([\s\S]*?)\n---/
 
 /** The raw text between the opening and closing `---`, or `null` when the file has none. */
 export function frontmatterText(markdown) {

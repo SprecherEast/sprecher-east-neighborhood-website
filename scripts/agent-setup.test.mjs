@@ -173,9 +173,8 @@ describe('the docs', () => {
     text.replace(/^(```|~~~)[\s\S]*?^\1/gm, '').replace(/`[^`\n]*`/g, '')
 
   it('hold no literal backslash and digit left by a broken find-and-replace', () => {
-    const own = DOCS.filter((file) => /^(docs|\.agents|\.claude)\//.test(file))
-    expect(own.length).toBeGreaterThan(50)
-    for (const file of own) {
+    expect(DOCS.length).toBeGreaterThan(50)
+    for (const file of DOCS) {
       expect(withoutCode(read(file)), file).not.toMatch(/\\\d/)
     }
   })

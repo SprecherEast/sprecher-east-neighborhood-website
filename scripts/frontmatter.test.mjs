@@ -14,6 +14,11 @@ describe('frontmatter', () => {
     expect(parseFrontmatter('---\r\nname: a\r\n---')).toEqual({ name: 'a' })
   })
 
+  it('accepts delimiter lines with trailing spaces and a longer closing dash line', () => {
+    expect(parseFrontmatter('---  \nname: a\n---   \nbody')).toEqual({ name: 'a' })
+    expect(parseFrontmatter('---\nname: a\n----\nbody')).toEqual({ name: 'a' })
+  })
+
   it('returns nothing for a file without frontmatter or with an empty block', () => {
     expect(frontmatterText('# Title\n---\nx\n---\n')).toBeNull()
     expect(parseFrontmatter('# Title\n')).toEqual({})
