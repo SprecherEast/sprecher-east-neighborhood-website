@@ -51,6 +51,7 @@ only when the run failed; the run log is in Admin → Agents → Agent Runs.
 | `lib/boundary.mjs`    | The dated copy of the City's boundary: checks, point in polygon, age, refresh from the layer                              |
 | `lib/geocode.mjs`     | A street address in a text, and the City's own address locator (no key); only the street address is sent                  |
 | `lib/place.mjs`       | After verify: places the item by the boundary or the word match, and records `verification.placement`                     |
+| `lib/wiring.mjs`      | What `run.mjs` hands the pipeline: HTTP, robots.txt, the City's locator with the settings from `area.yaml`, the commit    |
 | `lib/pipeline.mjs`    | One run: kill switch and the run log; `lib/process.mjs`: budgets, state, items, failures                                  |
 
 ## Placement by the City's boundary (#1009)
