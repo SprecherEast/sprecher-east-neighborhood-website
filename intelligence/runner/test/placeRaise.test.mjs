@@ -58,6 +58,7 @@ describe('the raise to core rests on what verify confirmed', () => {
       'Town of Blooming Grove, 7035 Littlemore Dr',
       'Town of Madison, 7035 Littlemore Dr',
       'Township of Burke, 7035 Littlemore Dr',
+      'Town  of   Blooming Grove,  7035 Littlemore Dr',
       'City of Fitchburg, 7035 Littlemore Dr',
       'City of Madison, 7035 Littlemore Dr',
       'City of Madison Heights, 7035 Littlemore Dr',
@@ -182,13 +183,17 @@ describe('the raise needs verify’s address to begin with the street', () => {
 describe('the reason an address text is not sent', () => {
   it('says what the rule did, for texts that name Madison too', async () => {
     const stated =
-      'the text names a city, village, town or township, Wisconsin or a five-digit number before the street, or a place other than Madison after it'
+      'the text has a city, village, town, township, Wisconsin or a five-digit number before the street, or something other than Madison, a short unit, Wisconsin, a ZIP code beginning 537 or the country after it'
     for (const address of [
       'City of Madison, 7035 Littlemore Dr',
       '53718, 7035 Littlemore Dr',
       'Madison, WI 7035 Littlemore Dr',
       'Wis. 7035 Littlemore Dr',
       '7035 Littlemore Dr, Fitchburg',
+      '7035 Littlemore Dr, 7 PM',
+      '7035 Littlemore Dr, free parking',
+      '7035 Littlemore Dr, bring chairs',
+      '7035 Littlemore Dr (behind the shelter)',
     ]) {
       const { place } = setup()
       const out = await place(located(address), item())

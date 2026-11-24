@@ -123,7 +123,7 @@ describe('where the street address came from', () => {
       assert.equal(out.placement.method, 'word-match')
       assert.match(
         out.placement.reason,
-        /before the street, or a place other than Madison after it/,
+        /before the street, or something other than Madison, a short unit, Wisconsin, a ZIP code beginning 537 or the country after it/,
       )
     }
   })

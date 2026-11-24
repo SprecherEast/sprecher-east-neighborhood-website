@@ -12,14 +12,14 @@ import { clip } from './text.mjs'
 const ZIP = String.raw`537\d\d(?:-\d{4})?`
 const STATE = String.raw`(?:wi|wis\.?|wisconsin)`
 const MADISON = new RegExp(`^(?:city of )?madison(?:,?\\s*${STATE})?(?:,?\\s*${ZIP})?$`, 'i')
-/** What may follow a street address between commas without naming another place: a short unit, a state, a Madison ZIP, the country. */
+/** What may follow a street address between commas without naming another place: a short unit, Wisconsin, a ZIP code beginning 537, the country. */
 const SAME_PLACE = new RegExp(
   `^(?:#\\s*[\\w-]{1,6}|(?:apt|unit|suite|ste|room|rm)\\.?\\s*#?\\s*[\\w-]{1,6}|(?:${STATE}\\s*)?${ZIP}|${STATE}|usa|us|u\\.s\\.a\\.?|united states)$`,
   'i',
 )
-/** The only things recognized before the street; see coverage.md, Review passes, check 2. */
+/** The only things recognized before the street, in text with single spaces; see coverage.md, Review passes, check 2. */
 const PLACE_BEFORE = new RegExp(
-  `\\b(?:city|village|town|township)\\s+of\\s+|\\b${STATE}\\b|\\b\\d{5}\\b`,
+  `\\b(?:city|village|town|township) of |\\b${STATE}\\b|\\b\\d{5}\\b`,
   'i',
 )
 const NOT_PLACED_FLAGS = ['similar-name', 'prompt-injection']
@@ -73,8 +73,8 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
     let result
     try {
       result = await geocode(street)
-    } catch (error) {
-      result = { status: 'failed', error: error.message }
+    } catch {
+      result = { status: 'failed' }
     }
     if (result?.status === 'failed') {
       failures++
@@ -107,11 +107,11 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
     // Verify's own address is the one a primary source confirmed; the candidate's text is the fallback
     let text = verification.location.address
     let found = streetAddresses(text)
-    let from = 'verify'
+    let own = true
     if (found.length === 0) {
       text = candidate.locationText
       found = streetAddresses(text)
-      from = 'candidate'
+      own = false
     }
     if (found.length > 1) return { reason: 'more than one street address in the item' }
     if (found.length === 0) return { reason: 'no street address in the item' }
@@ -120,11 +120,11 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
     if (namesAnotherPlace(text, found[0]))
       return {
         reason:
-          'the text names a city, village, town or township, Wisconsin or a five-digit number before the street, or a place other than Madison after it',
+          'the text has a city, village, town, township, Wisconsin or a five-digit number before the street, or something other than Madison, a short unit, Wisconsin, a ZIP code beginning 537 or the country after it',
       }
     // Whether the street comes first in the text: a venue or town before it is never a confirmed address
     const streetFirst = text.replace(/\s+/g, ' ').trim().startsWith(found[0])
-    return { ...(await resolve(found[0], deadline)), from, streetFirst }
+    return { ...(await resolve(found[0], deadline)), own, streetFirst }
   }
 
   async function placeVerified(given, candidate, deadline) {
@@ -160,7 +160,7 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
     const raised =
       said === 'catchment' ||
       (said === 'unknown' &&
-        found.from === 'verify' &&
+        found.own &&
         found.streetFirst &&
         verification.location.verified === true &&
         // `locate` already refused any municipality but Madison, so a filled one is Madison

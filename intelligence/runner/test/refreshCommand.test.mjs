@@ -54,9 +54,23 @@ describe('node run.mjs --refresh-boundary', () => {
     const written = JSON.parse(readFileSync(path.join(copy, record.file), 'utf8'))
     assert.equal(written.fetchedAt, new Date().toISOString().slice(0, 10))
     assert.deepEqual(boundaryProblems(written, record), [])
-    assert.match(
+    assert.equal(
       run.stdout,
-      /boundary\.json rewritten from the City's layer, dated \d{4}-\d\d-\d\d/,
+      `boundary.json rewritten from the City's layer, dated ${written.fetchedAt}. Review the diff, then open a pull request.\n`,
     )
+  })
+
+  it('does not refresh unless asked: a plain run with no key stops and asks for one', () => {
+    const run = spawnSync(
+      process.execPath,
+      [path.join(runner, 'run.mjs'), '--intelligence', copyIntelligence()],
+      {
+        encoding: 'utf8',
+        env: { ...process.env, SPRECHER_EAST_MCP_KEY: '' },
+      },
+    )
+    assert.notEqual(run.status, 0)
+    assert.match(run.stderr, /Set SPRECHER_EAST_MCP_KEY/)
+    assert.equal(run.stdout, '')
   })
 })

@@ -120,10 +120,11 @@ export function boundaryFromLayer(text, record, now) {
     throw new Error('the layer’s answer is not JSON')
   }
   // The ID and the name must both match, so a renumbering can't bring in another association
-  const found = (answer?.features ?? []).filter(
+  const features = Array.isArray(answer?.features) ? answer.features : []
+  const found = features.filter(
     (f) =>
       f?.properties?.[record.field] === record.naId &&
-      String(f.properties.NEIGHB_NAME ?? '').trim() === record.name,
+      String(f.properties.NEIGHB_NAME).trim() === record.name,
   )
   if (found.length !== 1)
     throw new Error(
@@ -157,7 +158,7 @@ export const serializeBoundary = (data) =>
  * Fetches the record's feature from the City's layer and rewrites the copy in `dir`. The old file
  * stays when the layer can't be reached or its answer can't be used. Answers the new copy.
  */
-export async function refreshBoundary({ dir, record, http = fetch, now = new Date() }) {
+export async function refreshBoundary({ dir, record, http, now = new Date() }) {
   const answer = await fetchDirect(boundaryQueryUrl(record), { http, maxBytes: 1024 * 1024 })
   if (answer.status !== 'ok')
     throw new Error(`the City's layer did not answer: ${answer.error ?? answer.status}`)

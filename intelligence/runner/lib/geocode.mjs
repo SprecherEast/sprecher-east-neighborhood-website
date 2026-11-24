@@ -39,9 +39,9 @@ const metersBetween = ([ax, ay], [bx, by]) =>
 
 /** Why a request failed, in fixed phrases: never the URL, which holds the street address. */
 function failureOf({ status, error }) {
-  const text = String(error ?? '')
+  const text = String(error)
   if (status === 'blocked') return 'the locator refused or sent us to a login'
-  if (/^\d{3}\b/.test(text)) return `the locator answered HTTP ${text.slice(0, 3)}`
+  if (/^\d{3}$/.test(text)) return `the locator answered HTTP ${text}`
   if (/^no answer|^body not received/.test(text)) return 'the locator could not be reached'
   if (/^body over/.test(text)) return 'the locator’s answer was too large'
   return 'the locator’s answer was refused'
@@ -50,11 +50,11 @@ function failureOf({ status, error }) {
 /** The candidates of a locator answer: `[{ score, point }]`, or throws when it isn't the shape. */
 function candidatesOf(body) {
   const answer = JSON.parse(body)
-  if (answer?.error) throw new Error('the locator answered with an error')
+  if (answer.error) throw new Error()
   return answer.candidates.map((c) => {
-    const point = [c?.location?.x, c?.location?.y]
-    if (!Number.isFinite(c?.score) || !point.every(Number.isFinite) || !inRange(point))
-      throw new Error('a candidate has no usable score or point')
+    const point = [c.location.x, c.location.y]
+    if (!Number.isFinite(c.score) || !point.every(Number.isFinite) || !inRange(point))
+      throw new Error()
     return { score: c.score, point }
   })
 }
@@ -65,7 +65,7 @@ function candidatesOf(body) {
  * 'unsure' }` (nothing scores `minScore`), `{ status: 'ambiguous' }` (strong matches in different
  * places) or `{ status: 'failed', error }`. It never throws.
  */
-export function cityGeocoder({ http = fetch, config }) {
+export function cityGeocoder({ http, config }) {
   return async (street) => {
     if (!isPlainStreet(street)) return { status: 'failed', error: 'not a plain street address' }
     const query = new URLSearchParams([

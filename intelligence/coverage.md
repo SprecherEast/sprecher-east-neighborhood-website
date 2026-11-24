@@ -180,7 +180,7 @@ The five checks, which verify runs on every item:
    "city, village, town or township of …" (the Town of Madison is one: it was absorbed into the
    City of Madison and the City of Fitchburg on 31 October 2022, so a text naming it can't say
    which), Wisconsin (WI, Wis.) and any five-digit number (a ZIP code), and any of them stops the
-   send. After the street only Madison, a short unit, Wisconsin, a ZIP code beginning 537 or the country
+   send. After the street only Madison, a short unit, Wisconsin, a ZIP code beginning 537 or the country (USA, US, U.S.A. or United States)
    may follow. That is all it recognizes. Any other town, or a state other than Wisconsin, named
    plainly before the street ("Fitchburg, 7035 …", "Madison, AL: 7035 …") can't be told from a
    venue's name and is sent: that sends nothing more than a public house number and street, and it

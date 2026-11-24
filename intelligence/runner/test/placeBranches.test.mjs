@@ -103,3 +103,59 @@ describe('the raise needs verified to be true itself', () => {
     assert.deepEqual([out.coverage, out.flags], ['core', ['ambiguous-location']])
   })
 })
+
+describe('how the pieces after the street may be written', () => {
+  it('takes a unit or a state with no space, one space or a #', async () => {
+    for (const part of [
+      'Apt4',
+      'Apt#4',
+      'Apt # 4',
+      '# 4',
+      '#4',
+      'WI53718',
+      'WI 53718',
+      'Wisconsin53718',
+    ])
+      assert.equal(await sentCount(`7035 Littlemore Dr, ${part}, Madison`), 1, part)
+  })
+
+  it('refuses a unit word or a # with nothing after it, and what is not a country', async () => {
+    for (const part of ['Apt', 'Unit', '#', 'U.S.', 'United States of America', 'M.A.D'])
+      assert.equal(await sentCount(`7035 Littlemore Dr, ${part}, Madison`), 0, part)
+    assert.equal(await sentCount('7035 Littlemore Dr, U.S.'), 0)
+  })
+
+  it('takes only a comma between the street and what follows, and tests the first street in the text', async () => {
+    for (const text of [
+      '7035 Littlemore Dr;Madison',
+      '7035 Littlemore Dr-Madison',
+      '7035 Littlemore Dr, Madison; WI',
+      '7035 Littlemore Dr, Fitchburg, 7035 Littlemore Dr',
+    ])
+      assert.equal(await sentCount(text), 0, text)
+  })
+
+  it('takes a municipality of Madison with a state or a ZIP written without or with extra spaces', async () => {
+    for (const municipality of [
+      'Madison,WI',
+      'Madison,  WI',
+      'Madison, WI,53718',
+      'Madison  53718',
+    ])
+      assert.equal(await sentCount('7035 Littlemore Dr', null, municipality), 1, municipality)
+  })
+})
+
+describe('what is recognized is a whole word, and a one-character value is still a value', () => {
+  it('does not take a state from the end of a longer word', async () => {
+    assert.equal(await sentCount('Kiwi Cafe, 7035 Littlemore Dr'), 1)
+  })
+
+  it('refuses a one-character municipality and counts a one-character name as a place', async () => {
+    assert.equal(await sentCount('7035 Littlemore Dr', null, 'M'), 0)
+    const { place } = setup({ geocode: geocoder(() => ({ status: 'none' })) })
+    const v = located(null)
+    v.location.name = 'X'
+    assert.equal((await place(v, item())).placement.method, 'word-match')
+  })
+})

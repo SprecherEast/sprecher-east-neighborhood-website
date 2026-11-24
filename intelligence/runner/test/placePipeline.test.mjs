@@ -214,6 +214,8 @@ describe('the start refuses a boundary that can’t be used', () => {
     refuses((text) => JSON.stringify({ ...JSON.parse(text), naId: 1 }), /naId/))
   it('refuses a polygon with a coordinate that isn’t a number', () =>
     refuses((text) => text.replace('43.1036515', '"north"'), /boundary\.json/))
+  it('refuses a date that isn’t a date, which only the schema of the copy can see', () =>
+    refuses((text) => JSON.stringify({ ...JSON.parse(text), fetchedAt: 'yesterday' }), /fetchedAt/))
   it('refuses an area.yaml that points at no file', () =>
     assert.throws(
       () =>
