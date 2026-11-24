@@ -8,8 +8,12 @@ export type Viewport = { name: string; width: number }
 /** A table row such as `| 1 | Mobile S | 320px | iPhone SE |` gives its name and width */
 const ROW = /^\|\s*\d+\s*\|\s*([^|]+?)\s*\|\s*(\d+)px\s*\|/gm
 
+// Only the guideline's viewport section: another table with a px column must not join the list
+const SECTION = /^## Responsive Design — 6-Viewport Testing$([\s\S]*?)(?=^## |(?![\s\S]))/m
+
 export function parseViewports(markdown: string): Viewport[] {
-  const viewports = [...markdown.matchAll(ROW)].map(([, name, width]) => ({
+  const section = markdown.match(SECTION)?.[1] ?? ''
+  const viewports = [...section.matchAll(ROW)].map(([, name, width]) => ({
     name,
     width: Number(width),
   }))

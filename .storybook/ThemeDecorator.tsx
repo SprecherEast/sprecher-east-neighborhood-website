@@ -13,11 +13,23 @@ const THEME_CSS = import.meta.glob<string>('../src/themes/*/theme.css', {
   eager: true,
 })
 
-const cssOf = (name: string) =>
-  Object.entries(THEME_CSS).find(([file]) => file.endsWith(`/${name}/theme.css`))?.[1]
+const THEME_CSS_BY_NAME: Record<string, string> = Object.fromEntries(
+  Object.entries(THEME_CSS).map(([file, css]) => [file.split('/').at(-2) ?? file, css]),
+)
 
 /** Sets light or dark through the site's own `setTheme`, and lays a non-active theme's tokens over the page */
-function SiteTheme({ name, mode, children }: { name: string; mode: Theme; children: ReactNode }) {
+export function SiteTheme({
+  name,
+  mode,
+  themes = THEME_CSS_BY_NAME,
+  children,
+}: {
+  name: string
+  mode: Theme
+  /** Each theme's token CSS by name; the showcase passes the `theme.css` of every theme folder */
+  themes?: Record<string, string>
+  children: ReactNode
+}) {
   const { setTheme } = useTheme()
 
   useEffect(() => {
@@ -25,14 +37,14 @@ function SiteTheme({ name, mode, children }: { name: string; mode: Theme; childr
   }, [mode, setTheme])
 
   useEffect(() => {
-    const css = name === ACTIVE_THEME ? undefined : cssOf(name)
+    const css = name === ACTIVE_THEME ? undefined : themes[name]
     if (!css) return
     const style = document.createElement('style')
     style.dataset.showcaseTheme = name
     style.textContent = css
     document.head.append(style)
     return () => style.remove()
-  }, [name])
+  }, [name, themes])
 
   return children
 }

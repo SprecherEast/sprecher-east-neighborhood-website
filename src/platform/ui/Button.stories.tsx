@@ -10,8 +10,8 @@ const meta = {
   args: { children: 'Join the neighborhood list' },
   argTypes: {
     variant: { description: 'The look: how much the action stands out' },
-    size: { description: 'The height and padding; every size is a 44px tap target on a phone' },
-    fullWidth: { description: 'Fills the row; `mobile` only below 640px' },
+    size: { description: 'The height and padding; every size is a full tap target on a phone' },
+    fullWidth: { description: 'Fills the row; `mobile` only on phones' },
     loading: { description: 'Shows a spinner and ignores clicks, but stays focusable' },
     disabled: { description: 'Not available right now' },
     external: { description: 'With `href`: opens in a new tab and tells screen readers so' },

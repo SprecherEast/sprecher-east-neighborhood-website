@@ -26,7 +26,8 @@
     "docs:generate": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs",
     "docs:check": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs --check",
     "storybook": "storybook dev -p 6006 --disable-telemetry",
-    "storybook:build": "storybook build -o storybook-static --disable-telemetry"
+    "storybook:build": "storybook build -o storybook-static --disable-telemetry",
+    "typecheck:storybook": "tsc -p .storybook/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",
@@ -100,6 +101,9 @@
     },
     "smtp-server": {
       "nodemailer": "10.1.7"
+    },
+    "@storybook/react-vite": {
+      "@joshwooding/vite-plugin-react-docgen-typescript": "^0.9.1"
     }
   },
   "devDependencies": {

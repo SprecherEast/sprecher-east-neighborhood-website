@@ -19,7 +19,7 @@ const meta = {
     hint: { description: 'Help shown under the control' },
     error: { description: 'Shown under the control, announced, and marks the control invalid' },
     layout: { description: 'Where the label sits; `bar` puts a button beside the box' },
-    width: { description: '`half` shares a row in a form from 640px' },
+    width: { description: '`half` shares a row in a form on wider screens' },
     children: { control: false },
     action: { control: false },
     aside: { control: false },

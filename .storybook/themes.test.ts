@@ -2,9 +2,9 @@ import { readdirSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { themeIsValid } from '@/platform/theme/theme'
+import { THEME_MODES } from '@/platform/theme/theme'
 
-import { MODES, THEME_NAMES, siteGlobalTypes } from './themes'
+import { THEME_NAMES, siteGlobalTypes } from './themes'
 
 const THEMES_DIR = path.join(__dirname, '../src/themes')
 
@@ -18,9 +18,7 @@ describe('the showcase theme switch', () => {
     expect(siteGlobalTypes.siteTheme.toolbar.items).toEqual(THEME_NAMES)
   })
 
-  it('offers light and dark, the two modes the site sets on <html>', () => {
-    expect(MODES.length).toBeGreaterThan(0)
-    for (const mode of MODES) expect(themeIsValid(mode)).toBe(true)
-    expect(siteGlobalTypes.mode.toolbar.items.map((item) => item.value)).toEqual(MODES)
+  it('offers every mode the site defines, in its order', () => {
+    expect(siteGlobalTypes.mode.toolbar.items.map((item) => item.value)).toEqual([...THEME_MODES])
   })
 })

@@ -4,11 +4,9 @@
 import type { GlobalTypes } from 'storybook/internal/types'
 
 import { THEMES } from '@/platform/theme/registry'
-import type { Theme } from '@/platform/theme/theme'
+import { THEME_MODES } from '@/platform/theme/theme'
 
 export const THEME_NAMES = Object.keys(THEMES)
-
-export const MODES = ['light', 'dark'] as const satisfies readonly Theme[]
 
 /** The toolbar's two switches: which theme's token values, and light or dark */
 export const siteGlobalTypes = {
@@ -22,7 +20,7 @@ export const siteGlobalTypes = {
     description: 'Light or dark mode',
     toolbar: {
       icon: 'circlehollow',
-      items: MODES.map((value) => ({ value, title: value === 'dark' ? 'Dark' : 'Light' })),
+      items: THEME_MODES.map((value) => ({ value, title: value === 'dark' ? 'Dark' : 'Light' })),
       dynamicTitle: true,
     },
   },

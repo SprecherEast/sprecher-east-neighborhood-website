@@ -9,6 +9,7 @@ const GUIDELINE = path.join(__dirname, '../docs/guidelines/nextjs-tailwind.md')
 describe('parseViewports', () => {
   it('reads the numbered rows of the guideline table, name and width', () => {
     const table = [
+      '## Responsive Design — 6-Viewport Testing',
       '| #   | Name     | Width | Represents |',
       '| --- | -------- | ----- | ---------- |',
       '| 1   | Phone    | 320px | small      |',
@@ -21,6 +22,19 @@ describe('parseViewports', () => {
     ])
   })
 
+  it('reads only the viewport section, not another table with a px column', () => {
+    const doc = [
+      '## Spacing',
+      '| 1 | Gap | 8px | x |',
+      '## Responsive Design — 6-Viewport Testing',
+      '| 1 | Phone | 320px | small |',
+      '## Images',
+      '| 2 | Thumb | 96px | y |',
+    ].join('\n')
+
+    expect(parseViewports(doc)).toEqual([{ name: 'Phone', width: 320 }])
+  })
+
   it('fails loudly when the table is gone, so the list is never silently empty', () => {
     expect(() => parseViewports('no table here')).toThrow(/viewport table/i)
   })
@@ -28,9 +42,13 @@ describe('parseViewports', () => {
 
 describe('the showcase viewports', () => {
   // Read the table again by the rows' own text, not through the parser under test
-  const guidelineWidths = [
-    ...readFileSync(GUIDELINE, 'utf8').matchAll(/^\|\s*\d+\s*\|[^|]+\|\s*(\d+)px\s*\|/gm),
-  ].map((row) => Number(row[1]))
+  const section =
+    readFileSync(GUIDELINE, 'utf8')
+      .split(/^## /m)
+      .find((part) => part.startsWith('Responsive Design')) ?? ''
+  const guidelineWidths = [...section.matchAll(/^\|\s*\d+\s*\|[^|]+\|\s*(\d+)px\s*\|/gm)].map(
+    (row) => Number(row[1]),
+  )
 
   it('are exactly the widths the design guideline names, in its order', () => {
     expect(guidelineWidths.length).toBeGreaterThan(0)

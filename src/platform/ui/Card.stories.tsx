@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
 import { Badge } from './Badge'
 import { Button } from './Button'
+import { DateTime } from './DateTime'
 import { Card, CardBody, CardFooter, CardMeta, CardTitle } from './Card'
 import { Text } from './Text'
 
@@ -17,7 +18,7 @@ const meta = {
       <>
         <CardMeta>
           <Badge>Parks</Badge>
-          <span>Saturday, 10 am</span>
+          <DateTime value="2026-04-18T10:00:00-05:00" format="long" />
         </CardMeta>
         <CardTitle>Spring clean-up at the park</CardTitle>
         <Text variant="small">Bring gloves. Bags and coffee are on us.</Text>
