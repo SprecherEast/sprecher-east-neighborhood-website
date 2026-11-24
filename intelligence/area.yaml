@@ -41,6 +41,9 @@ boundary:
   source: https://maps.cityofmadison.com/arcgis/rest/services/Public/OPEN_DATA/MapServer/12
   field: NA_ID
   naId: 146
+  name: Sprecher East
+  # The copy must lie inside this box (longitude and latitude): it catches swapped or projected coordinates
+  bounds: { west: -89.3, south: 43.06, east: -89.21, north: 43.12 }
   file: boundary.json
   maxAgeDays: 365
   terms: https://www.cityofmadison.com/policy/data

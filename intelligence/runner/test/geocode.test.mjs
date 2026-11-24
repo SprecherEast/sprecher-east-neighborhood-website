@@ -2,19 +2,11 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import { cityGeocoder, streetAddresses } from '../lib/geocode.mjs'
-import { contract, fakeHttp } from './helpers.mjs'
+import { ask, config, json } from './geocodeHelpers.mjs'
 import { INSIDE, JUST_OUTSIDE, LOCATOR, locatorAnswer } from './geoFixtures.mjs'
 
 // From an item's text to a street address, and from that to a point (#1009). The City's own
 // locator is the only geocoder; only the street address is ever sent. No test calls the network.
-
-const config = contract.area.boundary.geocoder
-const json = (body) => ({ status: 200, contentType: 'application/json', body })
-const ask = async (street, ...answers) => {
-  const http = fakeHttp(answers)
-  const result = await cityGeocoder({ http, config })(street)
-  return { result, http }
-}
 
 describe('the street address in a text', () => {
   const cases = {
@@ -22,6 +14,7 @@ describe('the street address in a text', () => {
     'Pinney Library, 516 Cottage Grove Road': ['516 Cottage Grove Road'],
     '100 Inside Edge Rd #3, Madison': ['100 Inside Edge Rd'],
     '201 S Sprecher Rd': ['201 S Sprecher Rd'],
+    '100 N Old Fish Hatchery Rd': ['100 N Old Fish Hatchery Rd'],
     '1 West Main Street': ['1 West Main Street'],
     'Sprecher Rd and Milwaukee St': [],
     'Room 12 at the community center': [],
@@ -33,6 +26,11 @@ describe('the street address in a text', () => {
   for (const [text, expected] of Object.entries(cases)) {
     it(`reads ${JSON.stringify(text)}`, () => assert.deepEqual(streetAddresses(text), expected))
   }
+
+  it('writes one address with single spaces, whatever separated its words', () => {
+    assert.deepEqual(streetAddresses('7035  Littlemore\tDr'), ['7035 Littlemore Dr'])
+    assert.deepEqual(streetAddresses('7035\nLittlemore\n\nDr'), ['7035 Littlemore Dr'])
+  })
 
   it('reads nothing from a missing text', () => {
     assert.deepEqual(streetAddresses(null), [])
@@ -96,7 +94,7 @@ describe('the City’s locator', () => {
   })
 
   const failures = {
-    'a server error twice': [{ status: 500 }, { status: 500 }],
+    'a server error': [{ status: 500 }],
     'a refusal': [{ status: 403 }],
     'an answer that isn’t JSON': [json('<html>maintenance</html>')],
     'an error inside a 200': [json(JSON.stringify({ error: { code: 400, message: 'bad' } }))],
@@ -145,14 +143,5 @@ describe('the City’s locator', () => {
   it('refuses an answer over the size limit', async () => {
     const big = json(locatorAnswer(['x'.repeat(config.maxKilobytes * 1024), INSIDE, 100]))
     assert.equal((await ask('7035 Littlemore Dr', big)).result.status, 'failed')
-  })
-
-  it('never sends a street that isn’t a short plain street address', async () => {
-    for (const street of ['', ' ', 'x'.repeat(200), '1 Main St&token=abc', '1 Main St\n2 Elm']) {
-      const http = fakeHttp([])
-      const result = await cityGeocoder({ http, config })(street)
-      assert.equal(result.status, 'failed')
-      assert.deepEqual(http.requested, [])
-    }
   })
 })

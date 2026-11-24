@@ -29,16 +29,51 @@ describe('an address that resolves', () => {
     }
   })
 
-  it('raises a catchment or unknown tier to core for an address inside, without a hold', async () => {
+  it('raises a catchment tier to core for an address inside, without a hold', async () => {
     const { place } = setup()
-    for (const coverage of ['catchment', 'unknown']) {
-      const out = await place(located('100 Inside Edge Rd', { coverage, flags: [] }), item())
-      assert.equal(out.coverage, 'core')
-      assert.equal(out.placement.overrode, true)
-      assert.deepEqual(out.flags, [])
-      assert.match(out.coverageReason, /boundary/)
-      assert.ok(out.coverageReason.length <= 500)
-    }
+    const out = await place(
+      located('100 Inside Edge Rd', { coverage: 'catchment', flags: [] }),
+      item(),
+    )
+    assert.equal(out.coverage, 'core')
+    assert.equal(out.placement.overrode, true)
+    assert.deepEqual(out.flags, [])
+    assert.match(out.coverageReason, /boundary/)
+    assert.ok(out.coverageReason.length <= 500)
+  })
+
+  it('cuts a long reason to 500 characters, with the boundary’s words first', async () => {
+    const { place } = setup()
+    const v = located('200 Outside Edge Rd', { coverage: 'core' })
+    v.coverageReason = 'x'.repeat(2000)
+    const out = await place(v, item())
+    assert.equal(out.coverageReason.length, 500)
+    assert.match(out.coverageReason, /^The City’s boundary puts the address outside/)
+  })
+
+  it('raises an unknown tier to core only when verify confirmed the address', async () => {
+    const { place } = setup()
+    const confirmed = located('100 Inside Edge Rd', { coverage: 'unknown', flags: [] })
+    const sure = await place(confirmed, item())
+    assert.deepEqual([sure.coverage, sure.flags, sure.placement.overrode], ['core', [], true])
+
+    const unconfirmed = located('100 Inside Edge Rd', {
+      coverage: 'unknown',
+      flags: ['unverified-claim'],
+    })
+    unconfirmed.location.verified = false
+    const out = await place(unconfirmed, item())
+    // Never easier to accept than verify's own judgment: it goes to a person
+    assert.equal(out.coverage, 'core')
+    assert.deepEqual(out.flags, ['unverified-claim', 'ambiguous-location'])
+    assert.equal(out.placement.overrode, true)
+  })
+
+  it('raises catchment to core even when the address was not confirmed', async () => {
+    const { place } = setup()
+    const v = located('100 Inside Edge Rd', { coverage: 'catchment', flags: [] })
+    v.location.verified = false
+    assert.deepEqual((await place(v, item())).flags, [])
   })
 
   it('takes the boundary over a tier that contradicts it, and holds it for a person', async () => {

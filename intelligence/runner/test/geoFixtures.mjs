@@ -29,7 +29,14 @@ export function square(
     geometry: { type: 'Polygon', coordinates: [ring, ...holes] },
   }
 }
-square.record = { source: 'https://example.org/layer/1', naId: 5, file: 'square.json' }
+square.record = {
+  source: 'https://example.org/layer/1',
+  field: 'NA_ID',
+  naId: 5,
+  name: 'Square',
+  file: 'square.json',
+  bounds: { west: -1, south: -1, east: 1, north: 1 },
+}
 
 /** What the layer's query answers (GeoJSON) for the square's feature; one vertex has long digits. */
 export function layerAnswer() {

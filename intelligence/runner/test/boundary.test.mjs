@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { boundaryAgeDays, boundaryProblems, loadBoundary, pointPlace } from '../lib/boundary.mjs'
+import {
+  boundaryAgeDays,
+  boundaryProblems,
+  loadBoundary,
+  pointPlace,
+  staleBoundaryProblem,
+} from '../lib/boundary.mjs'
 import { contract, intelligenceDir } from './helpers.mjs'
 import { INSIDE, JUST_INSIDE, JUST_OUTSIDE, square } from './geoFixtures.mjs'
 
@@ -52,6 +58,21 @@ describe('a point against the boundary', () => {
     const donut = square([hole])
     assert.equal(pointPlace(donut, [0.005, 0.005]), 'outside')
     assert.equal(pointPlace(donut, [0.002, 0.002]), 'inside')
+  })
+})
+
+describe('a copy dated in the future', () => {
+  it('is reported, so an age check can’t be silenced', () => {
+    const now = new Date('2026-11-24T12:00:00Z')
+    assert.match(staleBoundaryProblem({ ...copy, fetchedAt: '2027-01-01' }, record, now), /future/)
+    assert.equal(staleBoundaryProblem({ ...copy, fetchedAt: '2026-11-24' }, record, now), null)
+    // The same day is not the future, even early in the morning
+    const early = new Date('2026-11-24T00:05:00Z')
+    assert.equal(staleBoundaryProblem({ ...copy, fetchedAt: '2026-11-24' }, record, early), null)
+    assert.match(
+      staleBoundaryProblem({ ...copy, fetchedAt: '2026-11-25' }, record, early),
+      /future/,
+    )
   })
 })
 
@@ -162,6 +183,50 @@ describe('a boundary that can’t be used', () => {
       ).join(),
       /larger/,
     )
+  })
+
+  it('refuses a polygon outside the area’s bounds, such as one with longitude and latitude swapped', () => {
+    const [west, south, east, north] = [-1, -1, 1, 1]
+    assert.deepEqual(Object.values(mine.bounds), [west, south, east, north])
+    const far = square(
+      [],
+      [
+        [2, 2],
+        [2.01, 2],
+        [2.01, 2.01],
+        [2, 2.01],
+        [2, 2],
+      ],
+    )
+    assert.match(problems(far).join(), /bounds/)
+    const real = structuredClone(copy)
+    real.geometry.coordinates[0] = real.geometry.coordinates[0].map(([x, y]) => [y, x])
+    assert.match(boundaryProblems(real, record).join(), /bounds/)
+    assert.deepEqual(boundaryProblems(copy, record), [])
+  })
+
+  it('refuses a polygon past any one side of the bounds, and accepts one on the edge', () => {
+    const box = (west, south, east, north) =>
+      square(
+        [],
+        [
+          [west, south],
+          [east, south],
+          [east, north],
+          [west, north],
+          [west, south],
+        ],
+      )
+    assert.deepEqual(problems(box(-1, -1, -0.8, -0.8)), [])
+    assert.deepEqual(problems(box(0.8, 0.8, 1, 1)), [])
+    for (const [side, ring] of Object.entries({
+      west: box(-1.1, 0, -0.9, 0.1),
+      east: box(0.9, 0, 1.1, 0.1),
+      south: box(0, -1.1, 0.1, -0.9),
+      north: box(0, 0.9, 0.1, 1.1),
+    })) {
+      assert.match(problems(ring).join(), /bounds/, side)
+    }
   })
 
   it('refuses a missing polygon or another geometry type', () => {

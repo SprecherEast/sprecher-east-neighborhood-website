@@ -114,7 +114,7 @@ export async function processRun(run) {
       modelItems++
       const verify = await runVerify(contract, ask, item, { deadline })
       // Code places the item by the City's boundary when it can, and says how (place.mjs)
-      item.verification = await place(verify.output, candidate)
+      item.verification = await place(verify.output, candidate, { deadline })
       const curate = await runStage(contract, ask, 'curate', item, { deadline })
       item.curation = curate.output
       addUsage(cost, verify.usage, curate.usage)

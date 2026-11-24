@@ -48,6 +48,17 @@ describe('refreshing the copy from the layer', () => {
     )
   })
 
+  it('refuses a feature with the right ID but another name, as if the City renumbered', () => {
+    const other = JSON.parse(layerAnswer())
+    other.features[0].properties.NEIGHB_NAME = 'Another Association  '
+    assert.throws(() => boundaryFromLayer(JSON.stringify(other), mine, now), /one feature/)
+  })
+
+  it('accepts the name with the City’s padding', () => {
+    assert.equal(JSON.parse(layerAnswer()).features[0].properties.NEIGHB_NAME, 'Square    ')
+    assert.equal(boundaryFromLayer(layerAnswer(), mine, now).naId, mine.naId)
+  })
+
   it('refuses a feature of another neighborhood', () => {
     const other = JSON.parse(layerAnswer())
     other.features[0].properties.NA_ID = 99
@@ -103,6 +114,7 @@ describe('the file on disk', () => {
     const url = new URL(boundaryQueryUrl(record))
     assert.equal(`${url.origin}${url.pathname}`, `${record.source}/query`)
     assert.equal(url.searchParams.get('where'), `NA_ID=${record.naId}`)
+    assert.equal(url.searchParams.get('outFields'), `${record.field},NEIGHB_NAME`)
     assert.equal(url.searchParams.get('outSR'), '4326')
     assert.equal(url.searchParams.get('f'), 'geojson')
   })

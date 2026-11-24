@@ -10,7 +10,7 @@ const TYPES =
 const WORD = "[A-Za-z][A-Za-z.'-]*"
 // number, an optional direction, up to three name words, then the street type; "7 PM on Main St" is not an address
 const ADDRESS = new RegExp(
-  `\\b\\d{1,6}(?!\\d)(?!\\s*[ap]\\.?m\\b)\\s+(?:(?:[NSEW]|North|South|East|West)\\.?\\s+)?(?:${WORD}\\s+){0,2}?${WORD}\\s+(?:${TYPES})\\b`,
+  `\\b\\d{1,6}(?!\\s*[ap]\\.?m\\b)\\s+(?:(?:[NSEW]|North|South|East|West)\\.?\\s+)?(?:${WORD}\\s+){0,2}?${WORD}\\s+(?:${TYPES})\\b`,
   'gi',
 )
 /** The only shape sent to the locator: single spaces, a number, then words. */
@@ -34,11 +34,20 @@ const inRange = ([x, y]) => Math.abs(x) <= 180 && Math.abs(y) <= 90
 const metersBetween = ([ax, ay], [bx, by]) =>
   Math.hypot((ax - bx) * Math.cos((ay * Math.PI) / 180), ay - by) * METERS_PER_DEGREE
 
+/** Why a request failed, in fixed phrases: never the URL, which holds the street address. */
+function failureOf({ status, error }) {
+  const text = String(error ?? '')
+  if (status === 'blocked') return 'the locator refused or sent us to a login'
+  if (/^\d{3}\b/.test(text)) return `the locator answered HTTP ${text.slice(0, 3)}`
+  if (/^no answer|^body not received/.test(text)) return 'the locator did not answer in time'
+  if (/^body over/.test(text)) return 'the locator’s answer was too large'
+  return 'the locator’s answer was refused'
+}
+
 /** The candidates of a locator answer: `[{ score, point }]`, or throws when it isn't the shape. */
 function candidatesOf(body) {
   const answer = JSON.parse(body)
   if (answer?.error) throw new Error('the locator answered with an error')
-  if (!Array.isArray(answer?.candidates)) throw new Error('the answer has no candidates')
   return answer.candidates.map((c) => {
     const point = [c?.location?.x, c?.location?.y]
     if (!Number.isFinite(c?.score) || !point.every(Number.isFinite) || !inRange(point))
@@ -67,9 +76,11 @@ export function cityGeocoder({ http = fetch, config }) {
       http,
       timeoutMs: config.timeoutSeconds * 1000,
       maxBytes: config.maxKilobytes * 1024,
+      // One request per address, to the City's host only: the street goes nowhere else
+      retry: false,
+      sameOrigin: true,
     })
-    if (answer.status !== 'ok')
-      return { status: 'failed', error: String(answer.error ?? answer.status).slice(0, 300) }
+    if (answer.status !== 'ok') return { status: 'failed', error: failureOf(answer) }
     try {
       const candidates = candidatesOf(answer.body)
       if (candidates.length === 0) return { status: 'none' }
@@ -81,8 +92,9 @@ export function cityGeocoder({ http = fetch, config }) {
       if (rest.some((c) => metersBetween(best.point, c.point) > config.sameSpotMeters))
         return { status: 'ambiguous' }
       return { status: 'match', point: best.point }
-    } catch (error) {
-      return { status: 'failed', error: `the answer can’t be read: ${error.message}`.slice(0, 300) }
+    } catch {
+      // A fixed phrase: a parser's message can quote the answer, and an answer can echo the street
+      return { status: 'failed', error: 'the locator’s answer can’t be read' }
     }
   }
 }

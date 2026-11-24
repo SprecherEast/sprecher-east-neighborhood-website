@@ -34,6 +34,8 @@
         "source",
         "field",
         "naId",
+        "name",
+        "bounds",
         "file",
         "maxAgeDays",
         "terms",
@@ -45,6 +47,19 @@
         "source": { "type": "string", "pattern": "^https://" },
         "field": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
         "naId": { "type": "integer", "minimum": 1 },
+        "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z ]*[A-Za-z]$", "maxLength": 60 },
+        "bounds": {
+          "description": "A box in longitude and latitude that the copy's polygon must lie inside.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["west", "south", "east", "north"],
+          "properties": {
+            "west": { "type": "number", "minimum": -180, "maximum": 180 },
+            "south": { "type": "number", "minimum": -90, "maximum": 90 },
+            "east": { "type": "number", "minimum": -180, "maximum": 180 },
+            "north": { "type": "number", "minimum": -90, "maximum": 90 }
+          }
+        },
         "file": { "type": "string", "pattern": "^[a-z0-9-]+\\.json$" },
         "maxAgeDays": { "type": "integer", "minimum": 30, "maximum": 3650 },
         "terms": { "type": "string", "pattern": "^https://" },

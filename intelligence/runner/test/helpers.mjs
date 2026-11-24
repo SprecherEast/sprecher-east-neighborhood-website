@@ -8,6 +8,12 @@ import { loadContract } from '../lib/contract.mjs'
 export const intelligenceDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 export const contract = loadContract(intelligenceDir)
 
+/** The contract for a run on a fixed day: the boundary copy is dated that day, never in its future. */
+export const contractOn = (day) => ({
+  ...contract,
+  boundary: { ...contract.boundary, fetchedAt: day },
+})
+
 /** One evals file's cases. */
 export const evalCases = (stage) =>
   yaml.load(readFileSync(path.join(intelligenceDir, 'evals', `${stage}.yaml`), 'utf8'), {

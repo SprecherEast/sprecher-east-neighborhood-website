@@ -62,9 +62,10 @@ method: `boundary` (inside or outside), `word-match` (no address resolved, so ve
 the area's words stands) or `unplaced` (the item names no place). Reports for an editor say it.
 
 - **Authority.** When an address resolves, the boundary decides inside or outside: inside is
-  `core` (a `catchment` or `unknown` tier is simply raised), and `core` is never kept for an
-  address outside (it becomes `unknown`). Any other change adds `ambiguous-location`, which the
-  promotion guard holds for a person. A point on the edge counts
+  `core` (a `catchment` tier is simply raised, and an `unknown` one only when verify confirmed
+  the location), and `core` is never kept for an address outside (it becomes `unknown`). Any
+  other change adds `ambiguous-location`, which the promotion guard holds for a person:
+  placement never makes an item easier to accept than verify allowed. A point on the edge counts
   as inside. Outside, catchment versus citywide versus outside stays verify's judgment.
 - **Falls back, never fails.** No address, two addresses, a municipality other than Madison,
   Wisconsin, a `similar-name` or `prompt-injection` flag, no match, a weak match (score under
@@ -74,11 +75,15 @@ the area's words stands) or `unplaced` (the item names no place). Reports for an
 - **Safety.** Placement never reads or writes `safety`; the gate decides it as before.
 - **What leaves the machine.** One GET per address to
   `maps.cityofmadison.com/arcgis/rest/services/Locators/AddressPoints_w_Unit/GeocodeServer`, with
-  only a house number, street and street type, at most `maxPerRun` per run, 10 s timeout, 100 KB
-  answer. No key, no cost, no other service. The settings are in `area.yaml`, `boundary`.
+  only a house number, street and street type: no retry, no wait for `Retry-After`, and a redirect
+  to another host is refused. At most `maxPerRun` requests per run (each one counted), 10 s
+  timeout, 100 KB answer, none after the run's deadline. No key, no cost, no other service. The
+  settings are in `area.yaml`, `boundary`. The run log never holds an address or a URL from it.
 - **The copy.** `boundary.json` is the one feature (`NA_ID` 146) of the City's Neighborhood
   Associations layer, about 3.5 KB, kept in the repo so a run needs no request for it. The City
-  says the layer's boundaries are self-reported by the associations. A run's log says when the
+  says the layer's boundaries are self-reported by the associations. The copy must lie inside
+  the box in `area.yaml` (`bounds`), and a refresh takes only a feature with the record's ID and
+  name. A run's log says when the
   copy is older than `maxAgeDays` (365); then run `node run.mjs --refresh-boundary` and open a
   pull request with the diff. A copy that fails its checks stops the start.
 

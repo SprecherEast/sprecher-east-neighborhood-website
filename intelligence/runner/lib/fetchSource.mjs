@@ -7,10 +7,10 @@
 
 export const USER_AGENT =
   'SprecherEastIntelligence/1.0 (+https://sprechereast.com; neighborhood news digest for editors)'
-const TIMEOUT_MS = 30_000
+export const TIMEOUT_MS = 30_000
 const MAX_HOPS = 3
 const MAX_RETRY_WAIT_MS = 30_000
-const MAX_BODY_BYTES = 10 * 1024 * 1024
+export const MAX_BODY_BYTES = 10 * 1024 * 1024
 const GATE_URL = /tollbit|captcha|challenge|\/login|\/signin|sign-in|paywall|subscribe/i
 const GATE_STATUS = new Set([401, 403, 451])
 
@@ -77,7 +77,8 @@ export function retryWait(header, now = Date.now()) {
 /**
  * Fetches one source URL. `http` is `fetch` or a test double with the same shape. Answers
  * `{ status, body, etag, lastModified, retries, error }`, status being `ok`, `not-modified`,
- * `blocked` or `error`. `timeoutMs` and `maxBytes` tighten the limits for a small API call.
+ * `blocked` or `error`. For a small API call, `timeoutMs` and `maxBytes` tighten the limits,
+ * `retry: false` makes it one request with no second try, and `sameOrigin` refuses a redirect to another host.
  */
 export async function fetchDirect(
   url,
@@ -88,6 +89,8 @@ export async function fetchDirect(
     robots,
     timeoutMs = TIMEOUT_MS,
     maxBytes = MAX_BODY_BYTES,
+    retry = true,
+    sameOrigin = false,
   } = {},
 ) {
   let current = url
@@ -108,7 +111,7 @@ export async function fetchDirect(
         signal: AbortSignal.timeout(timeoutMs),
       })
     } catch (error) {
-      if (retries === 0) {
+      if (retry && retries === 0) {
         retries = 1
         continue
       }
@@ -120,6 +123,8 @@ export async function fetchDirect(
       const location = response.headers.get('location')
       if (!location) return { status: 'error', retries, error: `${code} without a location` }
       const next = new URL(location, current).toString()
+      if (sameOrigin && new URL(next).origin !== new URL(url).origin)
+        return { status: 'error', retries, error: 'redirect to another host refused' }
       if (GATE_URL.test(next))
         return { status: 'blocked', retries, error: `redirect to a gate: ${next}` }
       if (current.startsWith('https:') && !next.startsWith('https:')) {
@@ -131,7 +136,7 @@ export async function fetchDirect(
     }
     if (GATE_STATUS.has(code)) return { status: 'blocked', retries, error: `${code}` }
     if (code === 429 || code >= 500) {
-      if (retries === 0) {
+      if (retry && retries === 0) {
         retries = 1
         // A server asking for a longer wait than a run can spend is left for the next run
         const wait = retryWait(response.headers.get('retry-after'))
@@ -145,7 +150,7 @@ export async function fetchDirect(
         await sleep(wait)
         continue
       }
-      return { status: 'error', retries, error: `${code} after one retry` }
+      return { status: 'error', retries, error: retry ? `${code} after one retry` : `${code}` }
     }
     if (code >= 400) return { status: 'error', retries, error: `${code}` }
     const declared = Number(response.headers.get('content-length'))
@@ -156,7 +161,7 @@ export async function fetchDirect(
       body = await response.text()
     } catch (error) {
       // The connection dropped or timed out while the body came in: retried like no answer
-      if (retries === 0) {
+      if (retry && retries === 0) {
         retries = 1
         continue
       }

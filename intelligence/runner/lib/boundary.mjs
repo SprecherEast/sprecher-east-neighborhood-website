@@ -15,7 +15,7 @@ const ON_EDGE_DEGREES = 1e-9
 const isCoordinate = (p) => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite)
 
 /** Why `ring` can't be used, as short phrases. */
-function ringProblems(ring) {
+function ringProblems(ring, bounds) {
   if (!Array.isArray(ring) || ring.length < 4) return ['a ring needs at least 4 points']
   if (!ring.every(isCoordinate)) return ['every point must be a pair of numbers']
   if (ring.some(([x, y]) => Math.abs(x) > 180 || Math.abs(y) > 90))
@@ -29,8 +29,13 @@ function ringProblems(ring) {
   return [
     ...(area === 0 ? ['a ring has no area'] : []),
     ...(extent > MAX_EXTENT_DEGREES ? ['the polygon is larger than a neighborhood'] : []),
+    ...(bounds && !ring.every(([x, y]) => inBounds(bounds, x, y))
+      ? ['a point is outside the area’s bounds in area.yaml (longitude and latitude swapped?)']
+      : []),
   ]
 }
+
+const inBounds = (b, x, y) => x >= b.west && x <= b.east && y >= b.south && y <= b.north
 
 /** Why `data` can't be the boundary of `record` (area.yaml): empty when it can. */
 export function boundaryProblems(data, record) {
@@ -42,7 +47,7 @@ export function boundaryProblems(data, record) {
   if (geometry.type !== 'Polygon') return [...problems, 'geometry must be a Polygon']
   if (!Array.isArray(geometry.coordinates) || geometry.coordinates.length === 0)
     return [...problems, 'a Polygon needs a ring']
-  return [...problems, ...geometry.coordinates.flatMap(ringProblems)]
+  return [...problems, ...geometry.coordinates.flatMap((ring) => ringProblems(ring, record.bounds))]
 }
 
 /**
@@ -93,6 +98,8 @@ export const boundaryAgeDays = (data, now) =>
 /** The run-log line for a copy older than `record.maxAgeDays`, or null. */
 export function staleBoundaryProblem(data, record, now) {
   const age = boundaryAgeDays(data, now)
+  if (data.fetchedAt > now.toISOString().slice(0, 10))
+    return `The copy of the City's boundary is dated in the future (${data.fetchedAt}); fix its date.`
   return age > record.maxAgeDays
     ? `The copy of the City's boundary is ${age} days old (limit ${record.maxAgeDays}); refresh it with node run.mjs --refresh-boundary.`
     : null
@@ -100,7 +107,7 @@ export function staleBoundaryProblem(data, record, now) {
 
 /** The layer query that answers the record's feature as GeoJSON in longitude and latitude. */
 export const boundaryQueryUrl = (record) =>
-  `${record.source}/query?where=${record.field}%3D${record.naId}&outFields=${record.field}&outSR=4326&returnGeometry=true&f=geojson`
+  `${record.source}/query?where=${record.field}%3D${record.naId}&outFields=${record.field},NEIGHB_NAME&outSR=4326&returnGeometry=true&f=geojson`
 
 const round = (n) => Math.round(n * 1e7) / 1e7
 
@@ -112,11 +119,16 @@ export function boundaryFromLayer(text, record, now) {
   } catch {
     throw new Error('the layer’s answer is not JSON')
   }
+  // The ID and the name must both match, so a renumbering can't bring in another association
   const found = (answer?.features ?? []).filter(
-    (f) => f?.properties?.[record.field] === record.naId,
+    (f) =>
+      f?.properties?.[record.field] === record.naId &&
+      String(f.properties.NEIGHB_NAME ?? '').trim() === record.name,
   )
   if (found.length !== 1)
-    throw new Error(`expected one feature with ${record.field} ${record.naId}, got ${found.length}`)
+    throw new Error(
+      `expected one feature with ${record.field} ${record.naId} named ${record.name}, got ${found.length}`,
+    )
   const { type, coordinates } = found[0].geometry ?? {}
   const data = {
     source: record.source,

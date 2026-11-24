@@ -9,7 +9,7 @@ import { fakeAdapter } from '../lib/model.mjs'
 import { runPipeline } from '../lib/pipeline.mjs'
 import { curation, draft, feedsHttp, verification } from './fixtures.mjs'
 import { INSIDE, JUST_OUTSIDE } from './geoFixtures.mjs'
-import { contract } from './helpers.mjs'
+import { contract, contractOn } from './helpers.mjs'
 import { cmsWithLog } from './safetyHelpers.mjs'
 
 // The boundary test inside a whole run (#1009): the placement reaches the next stage and the
@@ -19,7 +19,7 @@ import { cmsWithLog } from './safetyHelpers.mjs'
 const now = () => new Date('2026-10-25T17:00:00Z')
 const EVENT = 'Silent Book Club'
 
-const run = async ({ ask, geocode, pipelineContract = contract }) => {
+const run = async ({ ask, geocode, pipelineContract = contractOn('2026-10-25') }) => {
   const http = feedsHttp()
   const cms = cmsWithLog()
   cms.taxonomy = async () => [{ slug: 'community', title: 'Community', parent: null }]
@@ -99,6 +99,25 @@ describe('a run with the boundary test', () => {
     assert.equal(log.errors.filter((e) => /locator/.test(e)).length, 1)
   })
 
+  it('asks the locator nothing once the run has less time than one request needs', async () => {
+    const asked = []
+    const budgets = { ...contract.pipeline.budgets, maxMinutesPerRun: 0.05 }
+    const { cms, log } = await run({
+      ask: model(),
+      geocode: async (street) => {
+        asked.push(street)
+        return { status: 'match', point: INSIDE }
+      },
+      pipelineContract: {
+        ...contractOn('2026-10-25'),
+        pipeline: { ...contract.pipeline, budgets },
+      },
+    })
+    assert.deepEqual(asked, [])
+    assert.equal(cms.submitted.length, 1)
+    assert.equal(log.status, 'succeeded')
+  })
+
   it('runs with no geocoder at all as before, by word match', async () => {
     const { cms, log } = await run({ ask: model() })
     assert.equal(cms.submitted.length, 1)
@@ -137,29 +156,24 @@ describe('a safety item and the boundary', () => {
   const held = (cms) =>
     reports(cms).filter((w) => /Decision: needs-review/.test(w.arguments.summary))
 
+  const TIERS = ['core', 'catchment', 'unknown', 'citywide', 'outside']
   for (const [where, p] of [
     ['inside', INSIDE],
     ['outside', JUST_OUTSIDE],
   ]) {
-    for (const stage of ['verify', 'curate']) {
-      it(`stays held when ${stage} says safety and the address is ${where} the area`, async () => {
-        const answers =
-          stage === 'verify'
-            ? {
-                verify: verification({
-                  coverage: where === 'inside' ? 'core' : 'outside',
-                  safety: true,
-                }),
-              }
-            : {
-                verify: verification({ coverage: where === 'inside' ? 'core' : 'outside' }),
-                curate: curation({ safety: true }),
-              }
-        const { cms, log } = await run({ ask: model(answers), geocode: point(p) })
-        assert.deepEqual(cms.submitted, [])
-        assert.equal(held(cms).length, 1)
-        assert.equal(log.counts.proposed, 0)
-      })
+    for (const coverage of TIERS) {
+      for (const stage of ['verify', 'curate']) {
+        it(`stays held when ${stage} says safety, the address is ${where} the area and verify said ${coverage}`, async () => {
+          const answers =
+            stage === 'verify'
+              ? { verify: verification({ coverage, safety: true }) }
+              : { verify: verification({ coverage }), curate: curation({ safety: true }) }
+          const { cms, log } = await run({ ask: model(answers), geocode: point(p) })
+          assert.deepEqual(cms.submitted, [])
+          assert.equal(held(cms).length, 1)
+          assert.equal(log.counts.proposed, 0)
+        })
+      }
     }
   }
 
