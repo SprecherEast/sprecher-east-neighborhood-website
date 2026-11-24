@@ -1,3 +1,18 @@
+/** The functions named `name` in a file: a declaration, or a `const` holding an arrow or function. */
+function namedFunctions(sourceFile, name) {
+  const found = []
+  walkAll(sourceFile, (node) => {
+    if (ts.isFunctionDeclaration(node) && node.name?.text === name) found.push(node)
+    const holds =
+      ts.isVariableDeclaration(node) &&
+      node.name.text === name &&
+      node.initializer &&
+      (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))
+    if (holds) found.push(node.initializer)
+  })
+  return found
+}
+
 /**
  * The collections a tool or task reaches through Payload's Local API (#1461), found by following
  * the calls from its handler in the source, with each operation and whether access is checked.
@@ -75,7 +90,7 @@ function functionAround(node) {
   return undefined
 }
 
-/** The first two sentences of the doc comment above the function a node sits in. */
+/** The doc comment above the function a node sits in: its first two sentences, then `…` if cut. */
 function commentAround(node) {
   const holder = functionAround(node)
   if (!holder) return ''
@@ -88,10 +103,9 @@ function commentAround(node) {
     .replace(/^\s*\*\s?/gm, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-  return text
-    .split(/(?<=\.)\s/)
-    .slice(0, 2)
-    .join(' ')
+  const sentences = text.split(/(?<=\.)\s/)
+  // A comment cut after two sentences says so, so a reader knows there is more
+  return sentences.length > 2 ? `${sentences.slice(0, 2).join(' ')} …` : text
 }
 
 /** The functions in `entryFile` that start a tool or task: its `handler`, picked by `name` when given. */
@@ -116,7 +130,8 @@ function entryHandlers(checker, sourceFile, name) {
  * The collections a tool or task reaches through Payload's Local API (`find`, `create`, `update`,
  * `delete`, also on `payload.db`), with each operation and whether access is checked. It starts
  * at the `handler` of the object in `entryFile` named `name`, and follows the functions the
- * handler calls, in any file of `src/`: not the whole file. Only calls whose `collection` is a
+ * handler calls, in any file of `src/`: not the whole file. With `hook`, it starts at the
+ * function of that name in `entryFile` instead (a schedule hook, which has no `handler`). Only calls whose `collection` is a
  * known string count. A call to anything else (a helper) counts when it is given a named
  * constant whose value is one of `knownSlugs`; no operation is known for it. `why` holds the doc
  * comment of the function around a call that says `overrideAccess: true`. A function the config
@@ -126,7 +141,7 @@ export function findCollectionCalls(
   program,
   root,
   entryFile,
-  { name, knownSlugs = new Set() } = {},
+  { name, hook, knownSlugs = new Set() } = {},
 ) {
   const checker = program.getTypeChecker()
   const entry = program.getSourceFile(path.join(root, entryFile))
@@ -210,7 +225,8 @@ export function findCollectionCalls(
       if (ts.isCallExpression(child)) onCall(child, bindings)
     })
   }
-  for (const handler of entryHandlers(checker, entry, name)) visit(handler)
+  const starts = hook ? namedFunctions(entry, hook) : entryHandlers(checker, entry, name)
+  for (const start of starts) visit(start)
   return [...found]
     .map(([collection, { operations, why }]) => ({
       collection,

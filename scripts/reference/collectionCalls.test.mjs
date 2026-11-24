@@ -172,7 +172,7 @@ describe('findCollectionCalls', () => {
     expect(events.why).toEqual([
       {
         operation: 'read',
-        text: 'Read with access bypassed: drafts are hidden from the agent. Only the id goes back.',
+        text: 'Read with access bypassed: drafts are hidden from the agent. Only the id goes back. …',
       },
     ])
   })

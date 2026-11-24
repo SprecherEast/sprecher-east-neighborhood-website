@@ -14,7 +14,7 @@ import { describeContentType } from '../content-types/describe.mjs'
 import { pinEnvironment } from '../content-types/environment.mjs'
 import { createLocator } from '../content-types/locate.mjs'
 import { describeApi } from './endpoints.mjs'
-import { describeJobs, jobRoutes } from './jobs.mjs'
+import { describeJobs, jobRoutes, tasksReaching } from './jobs.mjs'
 import { describeMcp, toolNamesByCollection } from './mcpTools.mjs'
 import { pluginDefining } from './pluginSlugs.mjs'
 import { collectAppFiles, publicEntries } from './metadataRoutes.mjs'
@@ -130,7 +130,8 @@ function describeScheduledWork(config, models, { program, root, locate }) {
   const jobs = describeJobs(
     config.jobs,
     locate,
-    (file, name) => findCollectionCalls(program, root, file, { name, knownSlugs: slugs }),
+    (file, name, hook) =>
+      findCollectionCalls(program, root, file, { name, hook, knownSlugs: slugs }),
     { endpoints: routes },
   )
   return {
@@ -189,9 +190,7 @@ export async function loadFacts({ root, program }) {
     const tools = toolNamesByCollection(mcp)
     for (const model of models) {
       model.tools = tools.get(model.slug) ?? []
-      model.jobs = scheduled.jobs.tasks
-        .filter((task) => task.collections.some((c) => c.collection === model.slug))
-        .map((task) => task.slug)
+      model.jobs = tasksReaching(scheduled.jobs.tasks, model.slug)
     }
     return { models, mcp, scheduled, api: describeEndpointPages(config, models, mcp, context) }
   } finally {

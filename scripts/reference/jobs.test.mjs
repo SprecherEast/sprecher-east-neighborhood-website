@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { describeJobs, jobRoutes, renderJobs } from './jobs.mjs'
+import { describeJobs, jobRoutes } from './jobs.mjs'
+import { renderJobs } from './jobsPage.mjs'
 
 function retain() {}
 const locate = (fn) => (fn === retain ? 'src/modules/a/cms/retention.ts' : 'payload')
