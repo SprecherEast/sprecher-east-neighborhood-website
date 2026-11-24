@@ -20,13 +20,20 @@ export const PAGE_LINE_LIMIT = 250
  * Text for a Markdown table cell. Backslashes are escaped first, so one in the text can't cancel
  * the escape of the pipe after it; then pipes; then line breaks become spaces.
  */
-export const cell = (text) =>
-  String(text)
-    .replace(/\\/g, '\\\\')
-    .replace(/\|/g, '\\|')
-    .replace(/\s*\n\s*/g, ' ')
+const onOneLine = (text) => text.replace(/\s*\n\s*/g, ' ')
+const escapePipe = (text) => text.replace(/\|/g, '\\|')
 
-export const code = (text) => (text ? `\`${cell(text)}\`` : '')
+/** Plain text: a backslash is doubled so it can't cancel a pipe's escape, except inside a code span. */
+export const cell = (text) =>
+  onOneLine(
+    String(text)
+      .split(/(`[^`]*`)/)
+      .map((part, i) => escapePipe(i % 2 ? part : part.replace(/\\/g, '\\\\')))
+      .join(''),
+  )
+
+/** A code span: a backslash in it is no escape, so only the pipe is escaped, for the table. */
+export const code = (text) => (text ? `\`${onOneLine(escapePipe(String(text)))}\`` : '')
 
 /** A name in a table: inline functions have no name worth quoting; a note says what they do. */
 const nameCell = (name, note = '') => {

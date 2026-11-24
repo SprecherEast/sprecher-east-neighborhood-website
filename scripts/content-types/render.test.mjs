@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   GENERATED_NOTICE,
   buildPages,
+  cell,
+  code,
   renderAccess,
   renderEndpoints,
   renderFieldTable,
@@ -21,6 +23,22 @@ const row = (over) => ({
   ...over,
 })
 
+describe('cell and code', () => {
+  it('escapes a backslash and a pipe in plain text, so a backslash can not cancel the pipe escape', () => {
+    expect(cell('a\\|b')).toBe('a\\\\\\|b')
+  })
+
+  it('leaves a backslash alone inside a code span of a plain-text cell (#1461)', () => {
+    expect(cell('matches `^\\d(Z|X)$` and a\\b')).toBe('matches `^\\d(Z\\|X)$` and a\\\\b')
+  })
+
+  it('escapes only the pipe in a code span, where a backslash is no escape (#1461)', () => {
+    expect(code('^\\d{4}(Z|[+-]\\d{2})$')).toBe('`^\\d{4}(Z\\|[+-]\\d{2})$`')
+    expect(code('')).toBe('')
+    expect(code('a\nb')).toBe('`a b`')
+  })
+})
+
 describe('renderFieldTable', () => {
   it('writes one table row per field, with notes and field access joined', () => {
     const table = renderFieldTable([
@@ -35,9 +53,9 @@ describe('renderFieldTable', () => {
     ])
   })
 
-  it('escapes a backslash before escaping a pipe, so a backslash can not cancel the escape', () => {
+  it('escapes a backslash before a pipe in plain text, and only the pipe in a code span', () => {
     const [, , body] = renderFieldTable([row({ detail: 'a\\|b', path: 'c\\|d' })]).split('\n')
-    expect(body).toBe('| `c\\\\\\|d` | text | yes | a\\\\\\|b |  |')
+    expect(body).toBe('| `c\\\\|d` | text | yes | a\\\\\\|b |  |')
   })
 })
 

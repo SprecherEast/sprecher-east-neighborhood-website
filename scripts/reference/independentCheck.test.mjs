@@ -105,6 +105,8 @@ describe('mcp-tools.md against the tools’ zod schemas', () => {
   it('lists every input field of every site tool with the limits the schema holds', () => {
     const text = page('mcp-tools.md')
     expect(mcpOptions.mcp.tools.length).toBeGreaterThan(0)
+    // a backslash in a pattern is shown as it is, never doubled
+    expect(text).not.toContain('\\\\')
     for (const tool of mcpOptions.mcp.tools) {
       const section = text.split(`### \`${tool.name}\``)[1].split('\n### ')[0]
       for (const [name, field] of Object.entries(tool.parameters)) {
@@ -125,8 +127,8 @@ describe('mcp-tools.md against the tools’ zod schemas', () => {
               expect(row, `${name} min`).toContain(String(rule.value))
             if (rule.pattern) {
               expect(row, `${name} pattern`).toContain(
-                // a table cell escapes backslashes and pipes
-                String(rule.pattern.source).replace(/\\/g, '\\\\').replace(/\|/g, '\\|'),
+                // the schema's own pattern, in a code span: only a pipe is escaped for the table
+                String(rule.pattern.source).replace(/\|/g, '\\|'),
               )
             }
           }
