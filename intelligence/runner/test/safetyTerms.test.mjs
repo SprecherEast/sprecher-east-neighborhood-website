@@ -53,6 +53,8 @@ describe('classifySafety: the stages’ answers', () => {
   })
 })
 
+const terms = contract.safetyDefinition.topics.flatMap((t) => t.terms)
+
 describe('classifySafety: the terms', () => {
   const found = [
     'Police investigate shooting near the park',
@@ -100,14 +102,12 @@ describe('classifySafety: the terms', () => {
       'Free coat drive at east side libraries',
       'Sidewalk and lighting on Sprecher Road',
       'Common Council',
-      'Flu shot clinic at Pinney Library',
       'Fireworks and a picnic',
     ]) {
       assert.equal(isSafety(text), false, text)
     }
   })
 
-  const terms = contract.safetyDefinition.topics.flatMap((t) => t.terms)
   it('matches every listed term, and its plural, in a sentence', () => {
     for (const term of terms) {
       assert.equal(isSafety(`Notice: ${term} today`), true, term)

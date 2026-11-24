@@ -3,6 +3,23 @@ import { createHash } from 'node:crypto'
 // Text from sources is untrusted (scout.md, "Untrusted content"): markup is removed before any
 // model sees it, and nothing in it is ever followed or run.
 
+/** `text` with every character a pattern would read as syntax made literal. */
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')
+
+/**
+ * One pattern for whole words or phrases: each must start and end at a word edge. The one builder
+ * for the area words (scout.mjs) and the safety terms (safety.mjs). With `spreadFrom`, a word of
+ * that many letters or more also matches with a single space between any two of its letters
+ * ("po lice", "p o l i c e"), still starting and ending at a word edge.
+ */
+export function wordsPattern(words, { flags = 'i', spreadFrom = Infinity } = {}) {
+  const alternatives = words.map((word) => {
+    const letters = [...word.replaceAll(' ', '')]
+    return letters.length >= spreadFrom ? letters.map(escapeRegExp).join(' ?') : escapeRegExp(word)
+  })
+  return new RegExp(`(?<![a-z0-9])(?:${alternatives.join('|')})(?![a-z0-9])`, flags)
+}
+
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', '#39': "'" }
 
 /** Plain text from HTML: scripts and styles dropped with their content, tags removed. */

@@ -7,6 +7,8 @@ import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import yaml from 'js-yaml'
 
+import { unregisteredSafetySources } from '../intelligence/runner/lib/safety.mjs'
+
 const dir = path.resolve(process.argv[2] ?? 'intelligence')
 const problems = []
 const problem = (file, message) =>
@@ -105,10 +107,8 @@ const safety = validate(
   path.join(dir, pipeline?.safety ?? 'safety.yaml'),
   'schemas/safety.schema.json',
 )
-for (const id of safety?.sources ?? []) {
-  if (!sources?.sources?.some((s) => s.id === id))
-    problem(path.join(dir, 'safety.yaml'), `sources: ${id} is not in sources.yaml`)
-}
+for (const id of unregisteredSafetySources(safety, sources))
+  problem(path.join(dir, 'safety.yaml'), `sources: ${id} is not in sources.yaml`)
 const ROUTE = pipeline?.routes ?? {}
 const registry = new Map(sources?.sources?.map((s) => [s.id, s]) ?? [])
 // An offset that isn't America/Chicago's at that instant, in common.schema.json's grammar

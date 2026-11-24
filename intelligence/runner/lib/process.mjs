@@ -3,7 +3,7 @@ import { mergeAcrossSources, mergedCopies, scoutSource } from './scout.mjs'
 import { gateItem } from './gate.mjs'
 import { runStage, runVerify, StageError } from './stages.mjs'
 import { markSeen } from './state.mjs'
-import { sendReport, submitItem } from './submit.mjs'
+import { sendReport } from './submit.mjs'
 
 // The work of one run (pipeline.mjs opens and closes it): scout every pilot source, then take
 // each new or changed item through the model stages and submit, within the budgets.
@@ -13,7 +13,7 @@ const MAX_FAILURES_IN_A_ROW = 3
 /** Scout, the model stages and submit. Answers a stop status, or null when the run went through. */
 export async function processRun(run) {
   // What the run reads, then what it records into
-  const { contract, cms, suggestingCms, ask, state, http, robots, budgets } = run
+  const { contract, cms, submit, ask, state, http, robots, budgets } = run
   const { startedAt, runId, log, calls, addError, deferredSources } = run
   const { counts, cost } = log
   // Measured on the real clock, whatever `now` says (tests pin it)
@@ -134,12 +134,7 @@ export async function processRun(run) {
       if (gated.route === 'none') {
         counts[item.curation.decision === 'duplicate' ? 'duplicates' : 'rejected']++
       } else {
-        const result = await submitItem(item, {
-          cms: suggestingCms,
-          runId,
-          validate: validateEnvelope,
-          contract,
-        })
+        const result = await submit(item, { runId, validate: validateEnvelope })
         const decision = result.decision
         calls.push(...result.calls)
         for (const warning of result.warnings) addError(warning)

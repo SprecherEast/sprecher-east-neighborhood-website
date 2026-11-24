@@ -21,6 +21,8 @@ const cmsWithLog = () => {
   const cms = dryRunCms(null)
   const submitted = []
   cms.submitSuggestion = async (args) => {
+    // A suggestion may only come from inside submitItem, where the gate ran first
+    assert.match(new Error('where').stack, /submitItem/)
     submitted.push(args)
     return { status: 'created', id: 41 }
   }
@@ -127,11 +129,15 @@ describe('the client every other module gets cannot suggest', () => {
         .sort()
     assert.deepEqual(mentioning(/submitSuggestion/), ['cms.mjs', 'gate.mjs', 'submit.mjs'])
     assert.deepEqual(mentioning(/callTool/), ['cms.mjs'])
-    // The real client is wrapped once, in pipeline.mjs, and process.mjs hands it only to submitItem
+    // The real client is held in one place, pipeline.mjs: it wraps the rest of the run and binds it
+    // into a function that only runs submitItem. No other module is handed it.
     const text = (name) => sources.find(([own]) => own === name)[1]
-    assert.deepEqual(mentioning(/suggestingCms/), ['pipeline.mjs', 'process.mjs'])
+    assert.deepEqual(mentioning(/suggestingCms/), ['pipeline.mjs'])
     assert.match(text('pipeline.mjs'), /cms = withoutSuggestions\(suggestingCms\)/)
-    assert.equal(text('process.mjs').match(/suggestingCms/g).length, 2)
+    assert.match(
+      text('pipeline.mjs'),
+      /submitItem\(item, \{ \.\.\.options, cms: suggestingCms, contract \}\)/,
+    )
     const submit = sources.find(([name]) => name === 'submit.mjs')[1]
     assert.ok(submit.indexOf('gateItem(') < submit.indexOf('.submitSuggestion('))
     assert.deepEqual(mentioning(/routes\b/), ['gate.mjs'])

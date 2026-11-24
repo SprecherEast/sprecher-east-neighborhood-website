@@ -11,6 +11,7 @@
     "sources": {
       "description": "Ids of sources in sources.yaml whose items are safety by nature; every item from one is held for a person. Each must name a registered source (checked at load and by check-intelligence).",
       "type": "array",
+      "minItems": 1,
       "uniqueItems": true,
       "items": { "$ref": "common.schema.json#/$defs/sourceId" }
     },

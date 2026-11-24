@@ -3,7 +3,7 @@ import { describe, it } from 'node:test'
 
 import { dryRunCms } from '../lib/cms.mjs'
 import { submitItem } from '../lib/submit.mjs'
-import { candidate, curation, draft, verification } from './fixtures.mjs'
+import { candidate, curation, draft, source, verification } from './fixtures.mjs'
 import { contract, evalCases, grade } from './helpers.mjs'
 
 // Submit (prompts/submit.md) and its evals (evals/submit.yaml): routing, the envelope, validation,
@@ -14,6 +14,7 @@ const validReport = contract.validator('schemas/report.schema.json')
 const runId = 'intel-test-run'
 const item = (over = {}) => ({
   candidate: candidate(over.candidate),
+  source: source(),
   verification: verification(over.verification),
   curation: curation(over.curation),
   draft: over.draft === null ? undefined : draft(over.draft),
@@ -103,6 +104,7 @@ describe('submit evals', () => {
     it(`${c.id}: ${c.why.slice(0, 80)}`, async () => {
       const given = c.given ?? {}
       const built = {
+        source: source({ id: c.input.sourceId }),
         candidate: candidate({
           ...c.input,
           sourceStatus: c.input.sourceStatus ?? 'scheduled',

@@ -191,6 +191,13 @@ describe('the settings are checked when the runner starts', () => {
     assert.throws(() => loadContract(dir), /no-such-source|safety\.yaml/)
   })
 
+  it('refuses a safety.yaml with no sources, which would switch the strongest layer off', () => {
+    const dir = copyWith('safety.yaml', (text) =>
+      text.replace(/\nsources:[\s\S]*$/, '\nsources: []\n'),
+    )
+    assert.throws(() => loadContract(dir), /safety\.yaml/)
+  })
+
   it('refuses a safety.yaml with no topics', () => {
     const dir = copyWith('safety.yaml', () => 'version: 1\nmeaning: x\ntopics: []\nsources: []\n')
     assert.throws(() => loadContract(dir), /safety\.yaml/)

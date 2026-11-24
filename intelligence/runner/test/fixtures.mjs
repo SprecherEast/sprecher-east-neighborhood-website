@@ -79,6 +79,15 @@ export const candidate = (overrides = {}) => ({
   ...overrides,
 })
 
+/** What the registry says about the candidate's source, as the run adds it (item.schema.json). */
+export const source = (overrides = {}) => ({
+  id: 'mpl-pinney-events',
+  owner: 'Madison Public Library',
+  reliability: 'official',
+  scope: 'Programs at Pinney Library',
+  ...overrides,
+})
+
 export const FEEDS = {
   'legistar-events': JSON.stringify([
     {

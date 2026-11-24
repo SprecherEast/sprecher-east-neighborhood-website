@@ -45,8 +45,6 @@ describe('classifySafety: sources and every field', () => {
       (x) => ({ draft: { address: x } }),
       (x) => ({ draft: { officialLinks: [`https://e.org/${x}`] } }),
       (x) => ({ draft: { unknownDraftField: x } }),
-      (x) => ({ source: { id: 'z', owner: x, reliability: 'official', scope: 's' } }),
-      (x) => ({ source: { id: 'z', owner: 'o', reliability: 'official', scope: x } }),
     ]) {
       const built = item()
       const change = place(words)
@@ -58,6 +56,22 @@ describe('classifySafety: sources and every field', () => {
       }
       assert.equal(classify(built).safety, true, JSON.stringify(change))
     }
+  })
+
+  it('reads the registry entry for its id only, never its prose', () => {
+    const prose = { owner: 'Dane County Sheriff', scope: 'Local news, public safety, weather' }
+    assert.equal(classify(item({ source: { ...item().source, ...prose } })).safety, false)
+  })
+
+  it('holds an item whose source facts are missing or are another source’s', () => {
+    for (const source of [undefined, null, 'x', {}, { id: 'other-source' }, { id: 'NWS-API' }]) {
+      const built = { ...item(), source }
+      assert.equal(classify(built).safety, true, JSON.stringify(source))
+    }
+    assert.equal(
+      classify({ ...item(), source: { ...item().source, id: ' mpl-pinney-events' } }).safety,
+      true,
+    )
   })
 
   it('does not read the CMS category tree or the known document', () => {
@@ -115,6 +129,19 @@ describe('classifySafety: disguises', () => {
   for (const text of hidden) {
     it(`holds "${text}"`, () => assert.equal(isSafety(text), true))
   }
+
+  it('names what it does not catch, which rests on the source list and the model', () => {
+    for (const text of [
+      '\u0440\u043E\u0301\u04CF\u0456\u0441\u0435 activity',
+      '\u0581\u057D\u0578 found',
+      'fi re downtown',
+      'g un found',
+      'pol!ce',
+      'p\u{1F52B}lice',
+    ]) {
+      assert.equal(isSafety(text), false, text)
+    }
+  })
 
   it('treats any word that mixes scripts as unreadable, so as safety', () => {
     for (const text of [

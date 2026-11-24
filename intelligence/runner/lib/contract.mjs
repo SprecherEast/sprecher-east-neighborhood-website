@@ -3,7 +3,7 @@ import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import * as yaml from 'js-yaml'
 
-import { compileSafetyRules } from './safety.mjs'
+import { compileSafetyRules, unregisteredSafetySources } from './safety.mjs'
 
 // Everything a run reads from intelligence/ (README.md, "How a runtime loads it", step 3): the
 // pipeline settings, the source registry, the coverage policy, the stage prompts and the JSON
@@ -79,8 +79,7 @@ ${safetyText.trim()}
   if (pipelineErrors.length) throw new Error(`pipeline.yaml: ${pipelineErrors.join('; ')}`)
   const safetyErrors = validator('schemas/safety.schema.json')(safetyDefinition)
   if (safetyErrors.length) throw new Error(`${safetyFile}: ${safetyErrors.join('; ')}`)
-  const registered = new Set(registry.sources.map((source) => source.id))
-  const unknown = safetyDefinition.sources.filter((id) => !registered.has(id))
+  const unknown = unregisteredSafetySources(safetyDefinition, registry)
   if (unknown.length) throw new Error(`${safetyFile}: no registered source ${unknown.join(', ')}`)
   const safety = compileSafetyRules(safetyDefinition)
 

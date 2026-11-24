@@ -182,16 +182,28 @@ rerun, or verify's flags include one of `promotionGuard.blockingFlags`, whatever
 answered. The threshold and the flag list each have one definition, in `pipeline.yaml`.
 
 The same gate (`runner/lib/gate.mjs`, #1007) holds a **safety item**, defined once in
-[`safety.yaml`](safety.yaml): a source it lists, a term in any text of the item or its draft
-(the gate walks every string, so a new field is read without a code change), or a `safety`
-answer from verify or curate that isn't a plain `false`. Once a stage has said safety, a rerun or
-retry can't take it back. `routes` can't send a held item to `submitSuggestion`: only an accepted
-item may be a suggestion. Submit runs the gate itself before it sends anything, and every other
-part of a run gets a client with no way to suggest (`withoutSuggestions`, `runner/lib/cms.mjs`).
-The runner checks `pipeline.yaml` and `safety.yaml` against their schemas when it starts, and
-refuses to run on a failure. Limits: matching reads English and Spanish terms, ignores spacing,
-accents, look-alike letters and digit-for-letter swaps, but an item in another language, in
-emoji, or with a safety matter no term names relies on the source list and the model's answer.
+[`safety.yaml`](safety.yaml). It holds an item when its source is on the list there (the source
+facts must also be present and match the candidate's source), when a term appears in a string of
+the candidate or its draft, the verification's place, evidence and reason, or the curation's own
+words (found by walking them, so a new field is read without a code change; a term split across
+two fields is found too), or when verify or curate answered `safety` with anything but a plain
+`false`. The registry's own wording (owner, scope) is never read. Once a stage has said safety, a
+rerun or retry can't take it back. `routes` can't send a held item to `submitSuggestion`: only an
+accepted item may be a suggestion. Submit runs the gate itself before it sends anything, the
+real CMS client stays inside one function bound in `pipeline.mjs`, and every other part of a run
+gets a client with no way to suggest (`withoutSuggestions`, `runner/lib/cms.mjs`). The runner
+checks `pipeline.yaml` and `safety.yaml` against their schemas when it starts, and refuses to run
+on a failure.
+
+What the text match does and doesn't catch: terms are whole words or phrases in English and
+Spanish, with common endings; a term of six letters or more also matches with single spaces
+inside it ("po lice"). It ignores case, accents, width, invisible characters and punctuation, reads
+digits and symbols such as 0, 1, 3, 4, 5, 7, @ and $ as letters, and holds any word that mixes two
+scripts. It does **not** catch a word spelled wholly in look-alike letters of one other script,
+a short term split by a space ("fi re"), other symbol or emoji swaps inside a word, or any language
+but English and Spanish. An item like that, from a source that isn't listed, relies on the model's
+answer. A word that appears in everyday notices ("shot", "alert", "safety") holds them too; that
+costs an editor a look, and no exclusion list may let text remove a hold.
 
 Until #336 is live, a run writes the same calls and its run log as a digest for an editor instead.
 

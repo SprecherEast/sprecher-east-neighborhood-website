@@ -3,9 +3,11 @@
 # source is listed here or its text matches a term below. A safety item is never accepted without
 # a person: coverage.md, "Review passes". Nothing in an item can remove a hold.
 #
-# Terms are lowercase words or phrases, without accents. Matching ignores case, accents, width,
-# punctuation and separators inside a word, and finds common plurals and endings (-s, -es, -ed,
-# -d, -ing, and -y as -ies). Spanish terms sit beside the English ones, since neighbors read both.
+# Terms are lowercase words or phrases, without accents, matched as whole words. Matching ignores
+# case, accents, width and punctuation, and finds common endings (-s, -es, -ed, -d, -ing, a doubled
+# last consonant, -y as -ies, -f as -ves, a Spanish -o as -a). A term of six letters or more also
+# matches with single spaces inside it ("po lice"). Spanish terms sit beside the English ones,
+# since neighbors read both.
 version: 1
 meaning: >-
   Anything about people's safety: an incident, a crime or police matter, a weapon or a threat, a
@@ -17,6 +19,8 @@ topics:
     terms:
       - police
       - policia
+      - mpd
+      - deputy
       - sheriff
       - alguacil
       - crime
@@ -29,32 +33,59 @@ topics:
       - suspicious
       - gun
       - firearm
+      - knife
+      - cuchillo
       - weapon
       - armed
+      - armado
       - gunman
       - arma
       - shooting
+      - shot
       - shots fired
       - gunshot
       - gunfire
       - tiroteo
+      - apunalado
+      - asesinado
+      - asaltado
+      - asalto
+      - asaltar
+      - asaltan
+      - robaron
+      - arrestado
+      - atropellado
       - balacera
       - disparos
+      - disparo
+      - balazo
+      - baleado
       - shell casing
       - robbery
+      - rob
+      - ladron
       - robo
       - burglary
+      - burglar
+      - burglarize
       - break in
       - theft
       - stolen
       - robado
       - carjacking
+      - carjack
       - kidnapping
+      - kidnap
+      - secuestrado
       - abduction
       - vandalism
+      - vandal
+      - vandalize
       - battery
       - assault
       - threat
+      - threaten
+      - amenazado
       - amenaza
       - bomb
       - bomba
@@ -68,6 +99,7 @@ topics:
       - silver alert
       - hit and run
       - incident
+      - disturbance
       - incidente
   - id: violence-and-death
     means: A person hurt, shot or killed.
@@ -77,15 +109,7 @@ topics:
       - murder
       - asesinato
       - stabbing
-      - was shot
-      - been shot
-      - man shot
-      - woman shot
-      - person shot
-      - people shot
-      - teen shot
-      - shot dead
-      - shot and killed
+      - stab
       - death
       - dead
       - deadly
@@ -95,6 +119,12 @@ topics:
       - body found
       - killed
       - died
+      - die
+      - dying
+      - dies
+      - murio
+      - muere
+      - ahogado
       - fatal
       - fatality
       - fallecido
@@ -104,16 +134,27 @@ topics:
       - herida
       - overdose
       - drowning
+      - drown
       - suicide
   - id: fire-and-emergency
     means: A fire, an emergency, a lockdown or an evacuation.
     terms:
       - fire
+      - house fire
+      - structure fire
+      - blaze
+      - flame
+      - smoke and flame
+      - heavy smoke
+      - fuego
+      - incendiado
       - firefighter
       - wildfire
       - arson
       - incendio
       - explosion
+      - explosive
+      - explosivo
       - evacuation
       - evacuate
       - evacuacion
@@ -121,6 +162,8 @@ topics:
       - emergencia
       - ambulance
       - hazmat
+      - chemical spill
+      - spill
       - gas leak
       - fuga de gas
       - carbon monoxide
@@ -134,6 +177,11 @@ topics:
       - severe weather
       - storm warning
       - thunderstorm
+      - snowstorm
+      - storm watch
+      - severe storm
+      - hail
+      - high wind
       - special weather statement
       - weather statement
       - flood
@@ -168,6 +216,9 @@ topics:
       - alert
       - alerta
       - outage
+      - downed power line
+      - downed line
+      - power line down
       - apagon
       - water main break
       - boil water
@@ -185,3 +236,4 @@ topics:
 sources:
   - madison-police-incident-reports
   - nws-api
+  - channel3000
