@@ -21,7 +21,7 @@ export function parseNote(markdown) {
     } catch (error) {
       note.error = String(error.message).split('\n')[0]
     }
-    const rest = text.slice(text.indexOf('\n---', 3) + 4)
+    const rest = text.slice(text.indexOf('\n---', 3) + 1)
     note.body = rest.slice(rest.indexOf('\n') + 1)
   }
   const lines = note.body.replace(/^\n+/, '').replace(/\n$/, '').split('\n')

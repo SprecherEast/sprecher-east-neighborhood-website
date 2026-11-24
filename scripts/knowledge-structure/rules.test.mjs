@@ -96,7 +96,9 @@ describe('NOTE-RELATIONSHIP and its target', () => {
   })
 
   it('does not read an inherited object key as a relationship type', () => {
-    expect(rulesOf(withFields(rel('toString', NOTE_PATH)))).toEqual(['NOTE-RELATIONSHIP'])
+    const found = run(withFields(rel('toString', NOTE_PATH)))
+    expect(found.map((f) => f.rule)).toEqual(['NOTE-RELATIONSHIP'])
+    expect(found[0].message).toMatch(/not in relationshipTypes/)
   })
 
   it('fails a type the scanner derives, so it is never written twice', () => {
