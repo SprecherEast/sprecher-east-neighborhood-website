@@ -121,12 +121,16 @@ describe('hasPaths', () => {
     expect(hasPaths('# No frontmatter\r\n')).toBe(false)
   })
 
-  it('still counts a rule whose delimiter lines have trailing spaces, or a longer closing dash line', () => {
-    expect(hasPaths("---  \npaths:\n  - 'src/**'\n---   \n\nText")).toBe(true)
+  it('keeps counting a rule whose closing line has trailing spaces or more dashes (old behavior)', () => {
+    expect(hasPaths("---\npaths:\n  - 'src/**'\n---   \n\nText")).toBe(true)
     expect(hasPaths("---\npaths:\n  - 'src/**'\n----\n\nText")).toBe(true)
   })
 
-  it('counts a rule that ends right after the closing delimiter', () => {
+  it('keeps treating a rule whose opening line has trailing spaces as always loaded (old behavior)', () => {
+    expect(hasPaths("---  \npaths:\n  - 'src/**'\n---\n\nText")).toBe(false)
+  })
+
+  it('counts a rule that ends right after the closing delimiter (new)', () => {
     expect(hasPaths("---\npaths:\n  - 'src/**'\n---")).toBe(true)
   })
 

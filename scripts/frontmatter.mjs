@@ -2,11 +2,11 @@
 import yaml from 'js-yaml'
 
 /**
- * Lenient on purpose, so nothing either caller accepted before is refused: trailing spaces on the
- * opening line, any text after the closing dashes (so `----` and `---   ` close the block), Windows
- * line endings and a file that ends right after the closing line all count as frontmatter.
+ * Accepts what `agent-context` accepted for the closing line (trailing spaces, more dashes after
+ * the three), and adds Windows line endings and a file that ends right after the closing line. The
+ * opening line stays strict, as in both callers before: `---` and a newline, nothing else.
  */
-const FRONTMATTER = /^---[ \t]*\n([\s\S]*?)\n---/
+const FRONTMATTER = /^---\n([\s\S]*?)\n---/
 
 /** The raw text between the opening and closing `---`, or `null` when the file has none. */
 export function frontmatterText(markdown) {

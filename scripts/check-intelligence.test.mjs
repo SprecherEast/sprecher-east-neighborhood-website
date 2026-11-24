@@ -46,6 +46,10 @@ describe('check-intelligence prompt frontmatter', () => {
     expect(check(original.replace(/\n---\n/, '\n---   \n')).status).toBe(0)
   })
 
+  it('fails when the opening delimiter line has trailing spaces, as it did before the shared reader', () => {
+    expect(check(original.replace(/^---\n/, '---  \n')).status).toBe(1)
+  })
+
   it('fails when the stage in the frontmatter is wrong', () => {
     const result = check(original.replace(/^stage: .*$/m, 'stage: nonsense'))
     expect(result.status).toBe(1)

@@ -14,9 +14,14 @@ describe('frontmatter', () => {
     expect(parseFrontmatter('---\r\nname: a\r\n---')).toEqual({ name: 'a' })
   })
 
-  it('accepts delimiter lines with trailing spaces and a longer closing dash line', () => {
-    expect(parseFrontmatter('---  \nname: a\n---   \nbody')).toEqual({ name: 'a' })
+  it('accepts a closing line with trailing spaces or more dashes (old agent-context behavior)', () => {
+    expect(parseFrontmatter('---\nname: a\n---   \nbody')).toEqual({ name: 'a' })
     expect(parseFrontmatter('---\nname: a\n----\nbody')).toEqual({ name: 'a' })
+  })
+
+  it('does not accept an opening line with trailing spaces (neither caller did)', () => {
+    expect(parseFrontmatter('---  \nname: a\n---\nbody')).toEqual({})
+    expect(frontmatterText('---  \nname: a\n---\nbody')).toBeNull()
   })
 
   it('returns nothing for a file without frontmatter or with an empty block', () => {
