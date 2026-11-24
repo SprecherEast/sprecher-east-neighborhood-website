@@ -15,6 +15,16 @@ describe('describeJobs details (#1461)', () => {
     ])
   })
 
+  it('puts an access name the setting does not list after the listed ones, by name', () => {
+    const access = { cancel: () => true, zeta: () => true, another: () => true, queue: () => true }
+    expect(describeJobs({ access }).access.map((entry) => entry.operation)).toEqual([
+      'queue',
+      'cancel',
+      'another',
+      'zeta',
+    ])
+  })
+
   it('says why no runners are shown when a function sets them', () => {
     expect(describeJobs({ autoRun: () => [] })).toMatchObject({
       runners: [],
@@ -25,6 +35,25 @@ describe('describeJobs details (#1461)', () => {
 })
 
 describe('scheduleHooks', () => {
+  it('sorts by name first and by file when two hooks have the same name', () => {
+    const found = scheduleHooks([
+      task(
+        't',
+        hook('a/late.ts', 'b'),
+        hook('z.ts', 'a'),
+        hook('z.ts', 'same'),
+        hook('a.ts', 'same'),
+      ),
+    ])
+    // name decides: `a` (file z) before `b` (file a/late); file decides between the two `same`
+    expect(found.map((entry) => [entry.name, entry.file])).toEqual([
+      ['a', 'z.ts'],
+      ['b', 'a/late.ts'],
+      ['same', 'a.ts'],
+      ['same', 'z.ts'],
+    ])
+  })
+
   it('lists a hook once with every task that uses it, and keeps hooks that differ apart', () => {
     const found = scheduleHooks([
       task('first', hook('a', 'bc'), hook('a', 'bc', 'afterSchedule')),

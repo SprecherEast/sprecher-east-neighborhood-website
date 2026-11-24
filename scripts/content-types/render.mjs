@@ -16,11 +16,9 @@ export const GENERATED_NOTICE = generatedNotice(
 /** The longest a page may be, as in `AGENTS.md`: a longer one is split. */
 export const PAGE_LINE_LIMIT = 250
 
-/**
- * Text for a Markdown table cell. Backslashes are escaped first, so one in the text can't cancel
- * the escape of the pipe after it; then pipes; then line breaks become spaces.
- */
+/** A table cell is one line: a line break and the space around it become one space. */
 const onOneLine = (text) => text.replace(/\s*\n\s*/g, ' ')
+/** A pipe would end the cell, so it is escaped. */
 const escapePipe = (text) => text.replace(/\|/g, '\\|')
 
 /** Plain text: a backslash is doubled so it can't cancel a pipe's escape, except inside a code span. */

@@ -18,7 +18,7 @@ The input of these tools (the plugin’s standard parameters for finding, creati
 
 ## Tools the site adds
 
-Each field’s notes list every limit in the tool’s input schema. A rule that compares fields (an event needs a start, say) is checked by the handler, not by the schema, and is not listed here: it is in the field’s description where the code gives one.
+Each field’s notes list every limit in the tool’s input schema, and the message of each custom check (`.refine`) written on the field, such as “each item once”, which the JSON schema cannot hold. A rule that compares fields (an event needs a start, say) belongs to the tool’s whole-input schema, which the handler checks, not to the fields registered with the plugin, and is not listed here: it is in the field’s description where the code gives one.
 
 ### `submitSuggestion`
 
@@ -33,7 +33,7 @@ Reaches: [`zeta`](content-types/zeta.md) (create (access checked), read (access 
 | --- | --- | --- | --- |
 | `title` | string | yes | The title; 1 to 60 characters |
 | `kind` | string | yes | one of b, a |
-| `tags` | string[] | no | at most 3 items |
+| `tags` | string[] | no | at most 3 items; custom check: Each tag once |
 | `note` | string or null | no | at most 9 characters |
 | `link` | string | no | matches `^https?:\/\/[^\s\|]+$` |
 

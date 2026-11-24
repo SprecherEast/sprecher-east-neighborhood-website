@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
-import { describeInput, typeOf } from './inputSchema.mjs'
+import { customChecks, describeInput, typeOf } from './inputSchema.mjs'
 
 const schemaOf = (shape) => z.toJSONSchema(z.object(shape), { io: 'input' })
 const note = (shape, name) => describeInput(schemaOf(shape)).find((f) => f.name === name).note
@@ -104,5 +104,41 @@ describe('describeInput', () => {
     expect(
       describeInput({ properties: { z: { type: 'number', const: 0, default: 0 } } })[0].note,
     ).toBe('always 0; default 0')
+  })
+})
+
+describe('custom checks (#1461)', () => {
+  const unique = (items) => new Set(items).size === items.length
+  const shape = {
+    tags: z.array(z.string()).max(3).refine(unique, 'Each tag once'),
+    maybe: z.array(z.string()).refine(unique, 'Each maybe once').optional(),
+    items: z.array(z.string().refine((s) => s !== 'x', 'Not x')),
+    both: z
+      .string()
+      .refine(() => true, 'First')
+      .refine(() => true, { message: 'Second' }),
+    plain: z.string().min(1),
+    silent: z.string().check(z.refine(() => true)),
+  }
+
+  it('reads the message of every custom check of a field, under optional and in array items', () => {
+    expect(customChecks(shape)).toEqual({
+      tags: ['Each tag once'],
+      maybe: ['Each maybe once'],
+      items: ['Not x'],
+      both: ['First', 'Second'],
+      silent: ['a custom check with no message'],
+    })
+  })
+
+  it('adds them to the note of the field, after the limits the schema holds', () => {
+    const schema = schemaOf(shape)
+    const found = Object.fromEntries(
+      describeInput(schema, customChecks(shape)).map((f) => [f.name, f.note]),
+    )
+    expect(found.tags).toBe('at most 3 items; custom check: Each tag once')
+    expect(found.both).toBe('custom check: First; custom check: Second')
+    expect(found.plain).toBe('not empty')
+    expect(describeInput(schema).find((f) => f.name === 'tags').note).toBe('at most 3 items')
   })
 })

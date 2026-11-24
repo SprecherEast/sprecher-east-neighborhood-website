@@ -18,6 +18,7 @@ import {
   jobsWorkflows,
   locate,
   mcpAccess,
+  mcpChecks,
   mcpCalls,
   mcpOptions,
   moreApi,
@@ -47,6 +48,7 @@ describe('whole pages', () => {
       locate,
       access: mcpAccess,
       schemaOf: mcpSchema,
+      checksOf: mcpChecks,
       calls: mcpCalls,
     })
     await expect(renderMcp(mcp)).toMatchFileSnapshot(snapshot('mcp-tools'))

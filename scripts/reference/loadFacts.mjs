@@ -15,6 +15,7 @@ import { pinEnvironment } from '../content-types/environment.mjs'
 import { createLocator } from '../content-types/locate.mjs'
 import { describeApi } from './endpoints.mjs'
 import { describeJobs, jobRoutes, tasksReaching } from './jobs.mjs'
+import { customChecks } from './inputSchema.mjs'
 import { describeMcp, toolNamesByCollection } from './mcpTools.mjs'
 import { pluginDefining } from './pluginSlugs.mjs'
 import { collectAppFiles, publicEntries } from './metadataRoutes.mjs'
@@ -122,6 +123,7 @@ function describeAgentTools(models, { program, root, locate }, mcpOptions) {
     access: new Map(models.map((model) => [model.slug, model.access])),
     calls: (file, name) => findCollectionCalls(program, root, file, { name, knownSlugs: slugs }),
     schemaOf: (shape) => z.toJSONSchema(z.object(shape)),
+    checksOf: customChecks,
   })
 }
 

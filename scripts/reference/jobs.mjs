@@ -32,6 +32,67 @@ export function describeCron(expression) {
 
 export const withWords = (cron) => ({ cron, words: describeCron(cron) })
 
+/** The hooks of one schedule entry, each with the collections its function reaches. */
+const describeScheduleHooks = (task, entry, locate, filesOf) =>
+  Object.entries(entry.hooks ?? {})
+    .filter(([, hook]) => typeof hook === 'function')
+    .map(([phase, hook]) => {
+      const name = functionLabel(hook, phase).name
+      const file = locate(hook)
+      return {
+        phase,
+        name,
+        file,
+        collections: file.startsWith('src/') ? filesOf(file, task.slug, name) : [],
+      }
+    })
+
+const describeTask = (task, locate, filesOf) => {
+  const schedules = (task.schedule ?? []).map((entry) => ({
+    ...withWords(entry.cron),
+    queue: entry.queue ?? DEFAULT_QUEUE,
+    hooks: describeScheduleHooks(task, entry, locate, filesOf),
+  }))
+  const queues = [...new Set(schedules.map((entry) => entry.queue))]
+  const file = locate(task.handler)
+  return {
+    slug: task.slug,
+    label: typeof task.label === 'string' ? task.label : '',
+    schedules,
+    queues: queues.length > 0 ? queues : [DEFAULT_QUEUE],
+    file,
+    collections: file.startsWith('src/') ? filesOf(file, task.slug) : [],
+  }
+}
+
+const describeRunner = (runner, tasks) => {
+  const queue = runner.queue ?? DEFAULT_QUEUE
+  return {
+    ...withWords(runner.cron),
+    queue,
+    limit:
+      runner.limit === undefined
+        ? `${DEFAULT_RUNNER_LIMIT} (Payload’s default, none is set)`
+        : String(runner.limit),
+    schedulingPass: runner.disableScheduling ? 'no' : 'yes',
+    tasks: tasks.filter((task) => task.queues.includes(queue)).map((task) => task.slug),
+  }
+}
+
+const describeJobAccess = (access, locate, endpoints) =>
+  Object.keys(access)
+    .filter((operation) => typeof access[operation] === 'function')
+    .sort(byOrder(JOB_ACCESS_ORDER))
+    .map((operation) => ({
+      operation,
+      name: functionLabel(access[operation], operation).name,
+      file: locate(access[operation]),
+      // The routes whose handler checks this operation
+      endpoints: endpoints
+        .filter((route) => route.guards === operation)
+        .map((route) => `${route.method} ${route.path}`),
+    }))
+
 /**
  * What the loaded `jobs` config says: `tasks`, `autoRun` (the runners) and `access`. `filesOf`
  * lists the collections a source file reaches, as `{ collection, operations }`: from a task's
@@ -43,67 +104,16 @@ export function describeJobs(
   filesOf = () => [],
   { endpoints = [] } = {},
 ) {
-  const hooksOf = (task, entry) =>
-    Object.entries(entry.hooks ?? {})
-      .filter(([, hook]) => typeof hook === 'function')
-      .map(([phase, hook]) => {
-        const name = functionLabel(hook, phase).name
-        const file = locate(hook)
-        return {
-          phase,
-          name,
-          file,
-          collections: file.startsWith('src/') ? filesOf(file, task.slug, name) : [],
-        }
-      })
-  const described = tasks.map((task) => {
-    const schedules = (task.schedule ?? []).map((entry) => ({
-      ...withWords(entry.cron),
-      queue: entry.queue ?? DEFAULT_QUEUE,
-      hooks: hooksOf(task, entry),
-    }))
-    const queues = [...new Set(schedules.map((entry) => entry.queue))]
-    const file = locate(task.handler)
-    return {
-      slug: task.slug,
-      label: typeof task.label === 'string' ? task.label : '',
-      schedules,
-      queues: queues.length > 0 ? queues : [DEFAULT_QUEUE],
-      file,
-      collections: file.startsWith('src/') ? filesOf(file, task.slug) : [],
-    }
-  })
-  const runners = (Array.isArray(autoRun) ? autoRun : []).map((runner) => {
-    const queue = runner.queue ?? DEFAULT_QUEUE
-    return {
-      ...withWords(runner.cron),
-      queue,
-      limit:
-        runner.limit === undefined
-          ? `${DEFAULT_RUNNER_LIMIT} (Payload’s default, none is set)`
-          : String(runner.limit),
-      schedulingPass: runner.disableScheduling ? 'no' : 'yes',
-      tasks: described.filter((task) => task.queues.includes(queue)).map((task) => task.slug),
-    }
-  })
-  const operations = Object.keys(access)
-    .filter((operation) => typeof access[operation] === 'function')
-    .sort(byOrder(JOB_ACCESS_ORDER))
+  const described = tasks.map((task) => describeTask(task, locate, filesOf))
   return {
     tasks: described,
-    runners,
+    runners: (Array.isArray(autoRun) ? autoRun : []).map((runner) =>
+      describeRunner(runner, described),
+    ),
     runnersNote: Array.isArray(autoRun)
       ? ''
       : 'The runners are set by a function in the config, so they are not shown here.',
-    access: operations.map((operation) => ({
-      operation,
-      name: functionLabel(access[operation], operation).name,
-      file: locate(access[operation]),
-      // The routes whose handler checks this operation
-      endpoints: endpoints
-        .filter((route) => route.guards === operation)
-        .map((route) => `${route.method} ${route.path}`),
-    })),
+    access: describeJobAccess(access, locate, endpoints),
   }
 }
 

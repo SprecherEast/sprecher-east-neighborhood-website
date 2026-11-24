@@ -48,7 +48,7 @@ function collectionTools(entries, operations, access) {
 /** Everything the page says, as data. */
 export function describeMcp(
   options,
-  { locate = noFiles, access = new Map(), schemaOf, calls = () => [] },
+  { locate = noFiles, access = new Map(), schemaOf, checksOf = () => ({}), calls = () => [] },
 ) {
   const authName = options.overrideAuth ? functionLabel(options.overrideAuth, 'auth').name : ''
   return {
@@ -66,7 +66,7 @@ export function describeMcp(
         name: tool.name,
         description: tool.description,
         file,
-        input: describeInput(schemaOf(tool.parameters)),
+        input: describeInput(schemaOf(tool.parameters), checksOf(tool.parameters)),
         collections: file.startsWith('src/') ? calls(file, tool.name) : [],
       }
     }),
@@ -135,7 +135,7 @@ export function renderMcp(mcp) {
     '',
     '## Tools the site adds',
     '',
-    'Each field’s notes list every limit in the tool’s input schema. A rule that compares fields (an event needs a start, say) is checked by the handler, not by the schema, and is not listed here: it is in the field’s description where the code gives one.',
+    'Each field’s notes list every limit in the tool’s input schema, and the message of each custom check (`.refine`) written on the field, such as “each item once”, which the JSON schema cannot hold. A rule that compares fields (an event needs a start, say) belongs to the tool’s whole-input schema, which the handler checks, not to the fields registered with the plugin, and is not listed here: it is in the field’s description where the code gives one.',
     '',
     ...custom,
   ].join('\n')

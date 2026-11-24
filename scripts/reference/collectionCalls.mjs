@@ -95,6 +95,66 @@ function entryHandlers(checker, sourceFile, name) {
   })
 }
 
+/** A call that takes any collection (the type is all of them, or half of them) says nothing about one. */
+const isBroad = (values, knownSlugs) =>
+  knownSlugs.size > 0 && values.length > 1 && values.length >= knownSlugs.size / 2
+
+/** The known collections an argument stands for: a named constant, or a parameter bound above. */
+function argumentSlugs({ checker, knownSlugs }, argument, bindings) {
+  if (ts.isIdentifier(argument) && bindings.has(argument.text)) return bindings.get(argument.text)
+  if (!ts.isIdentifier(argument) && !ts.isPropertyAccessExpression(argument)) return []
+  const values = literalValues(checker, argument)
+  return isBroad(values, knownSlugs) ? [] : values.filter((value) => knownSlugs.has(value))
+}
+
+/** The parameters of a function a call goes to, bound to the collections the call passes in. */
+function bindParameters(context, declaration, call, bindings) {
+  const fn = ts.isVariableDeclaration(declaration) ? declaration.initializer : declaration
+  const bound = new Map()
+  for (const [i, parameter] of (fn?.parameters ?? []).entries()) {
+    const slugs = call.arguments[i] ? argumentSlugs(context, call.arguments[i], bindings) : []
+    if (slugs.length > 0 && ts.isIdentifier(parameter.name)) bound.set(parameter.name.text, slugs)
+  }
+  return bound
+}
+
+/** The collections found so far, with each one's operations and the reasons for a bypass. */
+function createNotes() {
+  const found = new Map()
+  const note = (collection, label, why) => {
+    const entryFor = found.get(collection) ?? { operations: new Set(), why: [] }
+    if (label) entryFor.operations.add(label)
+    if (why && !entryFor.why.some((w) => w.text === why.text && w.operation === why.operation)) {
+      entryFor.why.push(why)
+    }
+    found.set(collection, entryFor)
+  }
+  const result = () =>
+    [...found]
+      .map(([collection, { operations, why }]) => ({
+        collection,
+        operations: [...operations].sort(),
+        why: why.sort(
+          (a, b) => a.operation.localeCompare(b.operation) || a.text.localeCompare(b.text),
+        ),
+      }))
+      .sort((a, b) => a.collection.localeCompare(b.collection))
+  return { note, result }
+}
+
+/** The declarations in `src/` of the function a call goes to, through an import. */
+function calledDeclarations(checker, root, call) {
+  const callee = call.expression
+  const symbol = checker.getSymbolAtLocation(
+    ts.isPropertyAccessExpression(callee) ? callee.name : callee,
+  )
+  const target =
+    symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
+  return (target?.declarations ?? []).filter((declaration) =>
+    isSource(declaration.getSourceFile().fileName, root),
+  )
+}
+
 /**
  * The collections a tool or task reaches through Payload's Local API (`find`, `create`, `update`,
  * `delete`, also on `payload.db`), with each operation and whether access is checked. It starts
@@ -116,45 +176,12 @@ export function findCollectionCalls(
   const checker = program.getTypeChecker()
   const entry = program.getSourceFile(path.join(root, entryFile))
   if (!entry) return []
-  const found = new Map()
-  const note = (collection, label, why) => {
-    const entryFor = found.get(collection) ?? { operations: new Set(), why: [] }
-    if (label) entryFor.operations.add(label)
-    if (why && !entryFor.why.some((w) => w.text === why.text && w.operation === why.operation)) {
-      entryFor.why.push(why)
-    }
-    found.set(collection, entryFor)
-  }
+  const context = { checker, knownSlugs }
+  const { note, result } = createNotes()
   const seen = new Map()
-  /** The known collections an argument stands for: a named constant, or a parameter bound above. */
-  const argumentSlugs = (argument, bindings) => {
-    if (ts.isIdentifier(argument) && bindings.has(argument.text)) return bindings.get(argument.text)
-    if (!ts.isIdentifier(argument) && !ts.isPropertyAccessExpression(argument)) return []
-    const values = literalValues(checker, argument)
-    const broad = knownSlugs.size > 0 && values.length > 1 && values.length >= knownSlugs.size / 2
-    return broad ? [] : values.filter((value) => knownSlugs.has(value))
-  }
-  /** The parameters of a function a call goes to, bound to the collections the call passes in. */
-  const bindParameters = (declaration, call, bindings) => {
-    const fn = ts.isVariableDeclaration(declaration) ? declaration.initializer : declaration
-    const bound = new Map()
-    for (const [i, parameter] of (fn?.parameters ?? []).entries()) {
-      const slugs = call.arguments[i] ? argumentSlugs(call.arguments[i], bindings) : []
-      if (slugs.length > 0 && ts.isIdentifier(parameter.name)) bound.set(parameter.name.text, slugs)
-    }
-    return bound
-  }
   const follow = (call, bindings) => {
-    const callee = call.expression
-    const symbol = checker.getSymbolAtLocation(
-      ts.isPropertyAccessExpression(callee) ? callee.name : callee,
-    )
-    const target =
-      symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
-    for (const declaration of target?.declarations ?? []) {
-      if (isSource(declaration.getSourceFile().fileName, root)) {
-        visit(declaration, bindParameters(declaration, call, bindings))
-      }
+    for (const declaration of calledDeclarations(checker, root, call)) {
+      visit(declaration, bindParameters(context, declaration, call, bindings))
     }
   }
   const onPayloadCall = (call, payload, bindings) => {
@@ -166,11 +193,7 @@ export function findCollectionCalls(
     const named = collection && ts.isIdentifier(valueOf(collection)) ? valueOf(collection).text : ''
     const values = bindings.get(named) ?? (collection ? propertyValues(checker, collection) : [])
     // A call that takes any collection (the type is all of them) says nothing about one
-    const broad =
-      !bindings.has(named) &&
-      knownSlugs.size > 0 &&
-      values.length > 1 &&
-      values.length >= knownSlugs.size / 2
+    const broad = !bindings.has(named) && isBroad(values, knownSlugs)
     for (const slug of broad ? [] : values) {
       note(slug, `${operation} (access ${access})`, text ? { operation, text } : undefined)
     }
@@ -181,7 +204,7 @@ export function findCollectionCalls(
       onPayloadCall(call, payload, bindings)
     } else if (!payload) {
       for (const argument of call.arguments) {
-        for (const value of argumentSlugs(argument, bindings)) note(value, '')
+        for (const value of argumentSlugs(context, argument, bindings)) note(value, '')
       }
     }
     follow(call, bindings)
@@ -202,15 +225,7 @@ export function findCollectionCalls(
         ...(configFile ? injectedFunctions(program, root, entryFile, configFile) : []),
       ]
   for (const start of starts) visit(start)
-  return [...found]
-    .map(([collection, { operations, why }]) => ({
-      collection,
-      operations: [...operations].sort(),
-      why: why.sort(
-        (a, b) => a.operation.localeCompare(b.operation) || a.text.localeCompare(b.text),
-      ),
-    }))
-    .sort((a, b) => a.collection.localeCompare(b.collection))
+  return result()
 }
 
 /** ` (create, read)` after a collection name, or says no operation is shown for it. */

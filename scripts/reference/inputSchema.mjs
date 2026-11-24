@@ -80,13 +80,41 @@ const objectFacts = (schema) =>
     })
     .join('; ')
 
-export function describeInput(schema) {
+const NO_MESSAGE = 'a custom check with no message'
+
+/** The custom checks (`.refine`) on one zod schema, under optional, nullable and default wrappers and in array items. */
+function checkMessages(schema) {
+  const def = schema?._zod?.def
+  if (!def) return []
+  const own = (def.checks ?? [])
+    .filter((check) => check._zod.def.check === 'custom')
+    .map((check) => check._zod.def.error?.({}) ?? NO_MESSAGE)
+  return [...own, ...checkMessages(def.innerType), ...checkMessages(def.element)]
+}
+
+/**
+ * The messages of the custom checks of each field of a zod shape. The JSON schema leaves a
+ * `.refine` out (each item only once, say), so they are read from the zod schema itself.
+ */
+export function customChecks(shape) {
+  return Object.fromEntries(
+    Object.entries(shape)
+      .map(([name, field]) => [name, checkMessages(field)])
+      .filter(([, messages]) => messages.length > 0),
+  )
+}
+
+export function describeInput(schema, checks = {}) {
   const required = new Set(schema.required)
   return Object.entries(schema.properties ?? {}).map(([name, property]) => ({
     name,
     type: typeOf(property),
     required: required.has(name) ? 'yes' : 'no',
-    note: [(property.description ?? '').replace(/\.$/, ''), ...constraints(property)]
+    note: [
+      (property.description ?? '').replace(/\.$/, ''),
+      ...constraints(property),
+      ...(checks[name] ?? []).map((message) => `custom check: ${message}`),
+    ]
       .filter(Boolean)
       .join('; '),
   }))

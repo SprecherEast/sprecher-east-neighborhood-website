@@ -23,7 +23,22 @@ describe('listFiles', () => {
     expect(found).toEqual(['a-b/x.txt', 'a/deep/y.txt', 'a/z.txt', 'b.txt'])
   })
 
+  it('names a folder that is required and missing, so a renamed route folder is not an empty section', () => {
+    expect(() => listFiles('/nonexistent-sena1461-folder', { required: true })).toThrow(
+      '/nonexistent-sena1461-folder does not exist',
+    )
+  })
+
   it('lists nothing for a folder that does not exist', () => {
     expect(listFiles('/nonexistent-sena1461-folder')).toEqual([])
+  })
+})
+
+describe('the folders the pages are built from (#1461)', () => {
+  it('stop with an error when a route folder or `src/app` is missing', async () => {
+    const { collectRoutes } = await import('./routes.mjs')
+    const { collectAppFiles } = await import('./metadataRoutes.mjs')
+    expect(() => collectRoutes('/nonexistent-sena1461-root')).toThrow('does not exist')
+    expect(() => collectAppFiles('/nonexistent-sena1461-root')).toThrow('does not exist')
   })
 })

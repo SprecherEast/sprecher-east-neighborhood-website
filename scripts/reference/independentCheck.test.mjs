@@ -125,6 +125,10 @@ describe('mcp-tools.md against the tools’ zod schemas', () => {
             }
             if (rule.check === 'greater_than')
               expect(row, `${name} min`).toContain(String(rule.value))
+            // a rule written as a custom check is not in the JSON schema: the page says it, with its message
+            if (rule.check === 'custom' && rule.error) {
+              expect(row, `${name} custom check`).toContain(rule.error({}))
+            }
             if (rule.pattern) {
               expect(row, `${name} pattern`).toContain(
                 // the schema's own pattern, in a code span: only a pipe is escaped for the table

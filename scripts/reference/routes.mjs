@@ -129,7 +129,7 @@ export function describeRoute(relativePath, text) {
 /** Every page and route handler under a route folder (the frontend one by default), as rows. */
 export function collectRoutes(root, folder = ROUTES_ROOT) {
   const base = path.join(root, folder)
-  return listFiles(base)
+  return listFiles(base, { required: true })
     .filter((relative) => /^(page|route)\.tsx?$/.test(path.posix.basename(relative)))
     .map((relative) => describeRoute(relative, fs.readFileSync(path.join(base, relative), 'utf8')))
 }

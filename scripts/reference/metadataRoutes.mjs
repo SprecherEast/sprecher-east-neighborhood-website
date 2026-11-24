@@ -66,7 +66,7 @@ export function describeMetadataFiles(files) {
 /** Metadata-convention files under `src/app`, with whether each one reads content. */
 export function collectAppFiles(root) {
   const appRoot = path.join(root, 'src/app')
-  return describeMetadataFiles(listFiles(appRoot)).map((row) => ({
+  return describeMetadataFiles(listFiles(appRoot, { required: true })).map((row) => ({
     ...row,
     readsContent:
       row.generated && READS_CONTENT.test(fs.readFileSync(path.join(root, row.file), 'utf8')),

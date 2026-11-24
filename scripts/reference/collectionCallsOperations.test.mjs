@@ -34,10 +34,10 @@ ${callsFor(WRITES.delete, 'deletes')}
   },
 }
 /**
- * Zed note
+ * Aardvark note
  *   spans lines.
  */
-function zed() {
+function aardvark() {
   payload.update({ collection: 'zeta', overrideAccess: true })
 }
 /** Beta note. */
@@ -63,7 +63,7 @@ export const notPicked = {
 export const other = {
   name: 'other',
   handler: () => {
-    zed()
+    aardvark()
     beta()
     alpha()
   },
@@ -95,7 +95,7 @@ describe('findCollectionCalls operations (#1461)', () => {
     expect(entry.why).toEqual([
       { operation: 'read', text: 'Alpha note.' },
       { operation: 'read', text: 'Beta note.' },
-      { operation: 'update', text: 'Zed note spans lines.' },
+      { operation: 'update', text: 'Aardvark note spans lines.' },
     ])
   })
 
