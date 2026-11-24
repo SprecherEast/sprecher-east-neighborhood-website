@@ -4,10 +4,12 @@
 # a person: coverage.md, "Review passes". Nothing in an item can remove a hold.
 #
 # Terms are lowercase words or phrases, without accents, matched as whole words. Matching ignores
-# case, accents, width and punctuation, and finds common endings (-s, -es, -ed, -d, -ing, a doubled
-# last consonant, -y as -ies, -f as -ves, a Spanish -o as -a). A term of six letters or more also
-# matches with single spaces inside it ("po lice"). Spanish terms sit beside the English ones,
-# since neighbors read both.
+# case, accents, width and punctuation, and finds the endings a word takes, on the last word of a
+# phrase: -s, -es, -ed, -d, -ing, -er, -ers, a doubled last consonant before -ed, -ing, -er or -ers,
+# -y as -ies or -ied, -f or -fe as -ves, -man as -men, and a Spanish -o as -a or -as. These endings
+# apply to every term, so an ordinary word built the same way ("blazer", "fighter") holds too. A
+# term of six letters or more also matches with single spaces inside it ("po lice"). Spanish terms
+# sit beside the English ones, since neighbors read both.
 version: 1
 meaning: >-
   Anything about people's safety: an incident, a crime or police matter, a weapon or a threat, a

@@ -116,6 +116,16 @@ for (const id of unregisteredSafetySources(safety, sources))
 const ROUTE = pipeline?.routes ?? {}
 const safetyRules = safety ? compileSafetyRules(safety) : null
 const registry = new Map(sources?.sources?.map((s) => [s.id, s]) ?? [])
+// The gate holds an accept whose text or source is safety (runner/lib/gate.mjs), so it goes to a
+// person: ask the rules with both stages answering "not safety", the way a real answer would pass.
+const heldBySafety = (c) =>
+  classifySafety(safetyRules, {
+    candidate: c.input ?? {},
+    draft: c.given?.draft,
+    source: registry.get(c.input?.sourceId),
+    verification: { ...c.given?.verification, safety: false },
+    curation: { ...c.given?.curation, safety: false },
+  }).safety
 // An offset that isn't America/Chicago's at that instant, in common.schema.json's grammar
 const DATE_TIME = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)(Z|[+-]\d{2}:\d{2})$/
 const CHICAGO = new Intl.DateTimeFormat('en-US', {
@@ -163,6 +173,16 @@ for (const c of cases) {
     }
   }
   const e = c.expected
+  // A case with no decision of its own that expects a suggestion (a draft, a submit) assumes an accept
+  if (e?.route === 'submitSuggestion' && !e.decision) {
+    if (c.given?.curation?.decision !== 'accept')
+      problem(c.file, `${c.id}: a suggestion follows an accept, not ${c.given?.curation?.decision}`)
+    else if (heldBySafety(c))
+      problem(
+        c.file,
+        `${c.id}: the gate holds this accept as a safety item, so it routes to reportItem`,
+      )
+  }
   if (!e?.decision) continue
   // duplicate, update and cancel name the known document; nothing else names one
   const known = ['duplicate', 'update', 'cancel'].includes(e.decision) ? c.known : null
@@ -172,16 +192,7 @@ for (const c of cases) {
     problem(c.file, `${c.id}: targetCollection must be ${known?.collection ?? 'null'}`)
   if (e.safety === true && e.decision === 'accept')
     problem(c.file, `${c.id}: a safety item is never accepted`)
-  // The gate holds an accept whose text or source is safety (runner/lib/gate.mjs), so it goes to a
-  // person: ask it with both stages answering "not safety", the way the real answer would pass.
-  const held =
-    e.decision === 'accept' &&
-    classifySafety(safetyRules, {
-      candidate: c.input ?? {},
-      source: registry.get(c.input?.sourceId),
-      verification: { ...c.given?.verification, safety: false },
-      curation: { ...c.given?.curation, safety: false },
-    }).safety
+  const held = e.decision === 'accept' && heldBySafety(c)
   const route = held ? 'reportItem' : ROUTE[e.decision]
   if (route !== e.route)
     problem(

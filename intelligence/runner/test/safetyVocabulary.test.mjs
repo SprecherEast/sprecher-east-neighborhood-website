@@ -24,6 +24,9 @@ describe('word forms derived from the terms', () => {
       'Shoplifters at the market',
       'Attacker fled on foot',
       'Kidnapper sought',
+      'Kidnappers sought',
+      'Stabbers fled',
+      'Scammers target seniors',
     ]) {
       assert.equal(isSafety(text), true, text)
     }
