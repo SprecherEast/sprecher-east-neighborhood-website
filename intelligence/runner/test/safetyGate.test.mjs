@@ -160,7 +160,8 @@ describe('the settings are checked when the runner starts', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'intel-'))
     cpSync(intelligenceDir, dir, {
       recursive: true,
-      filter: (source) => !source.includes(`${path.sep}runner`) && !source.includes('node_modules'),
+      filter: (source) =>
+        !/^(runner|node_modules)(\/|$)/.test(path.relative(intelligenceDir, source)),
     })
     const target = path.join(dir, file)
     writeFileSync(target, change(readFileSync(target, 'utf8')))
