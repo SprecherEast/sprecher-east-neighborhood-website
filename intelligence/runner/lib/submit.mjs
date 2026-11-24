@@ -86,12 +86,6 @@ async function send(fn) {
 }
 
 /**
- * Submits one item. `cms` has `submitSuggestion` and `reportItem`; `validate` checks an envelope
- * against submission.schema.json. Answers `{ outcome, id?, calls }`, where `calls` lists every
- * envelope built (for the dry-run digest), and outcome is one of `created`, `duplicate`,
- * `reported`, `rejected-invalid`, `review` (sent for review after a failure) or `deferred`.
- */
-/**
  * A report envelope, validated (submit.md step 3). One that fails its schema is rebuilt without
  * its evidence and flags, the parts that come from the model. Answers `{ call, errors }`; with
  * errors left, the call is marked `skip` and must not be sent.
@@ -125,6 +119,15 @@ export async function sendReport(item, { cms, runId, validate, calls }, kind, op
   await send(() => cms.reportItem(call.arguments))
 }
 
+/**
+ * Submits one item. `cms` has `submitSuggestion` and `reportItem`, `contract` holds the gate, and
+ * `validate` checks an envelope against submission.schema.json. The gate runs first and decides
+ * the decision and the tool; only `submitSuggestion` builds a suggestion. Answers
+ * `{ outcome, id?, calls, warnings }`, where `calls` lists every envelope built (for the dry-run
+ * digest), and outcome is one of `created`, `duplicate`, `reported`, `none` (the gate named no
+ * tool: nothing is built or sent), `rejected-invalid`, `review` (sent for review after a failure)
+ * or `deferred`.
+ */
 export async function submitItem(rawItem, { cms, runId, validate, contract }) {
   if (!contract) throw new Error('submitItem needs the contract, which holds the gate')
   // Whatever the caller expects, the gate decides the decision and the tool (gate.mjs)
