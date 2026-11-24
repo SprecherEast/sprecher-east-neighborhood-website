@@ -12,3 +12,4 @@ src/app/(payload)
 .agents/skills/vercel-*/rules
 # Generated from the guidelines by scripts/agent-context.mjs (#144); CI checks them against the sources
 .claude/rules/generated
+storybook-static
