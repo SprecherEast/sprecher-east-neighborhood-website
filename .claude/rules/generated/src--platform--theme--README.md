@@ -18,6 +18,7 @@ route is involved, so the generated reference has nothing on it.
 - A token is named in `tokens.ts`, valued in `src/themes/<name>/theme.css` (a light block and a dark block), and mapped to Tailwind classes in `tailwind.css` (`--color-primary: var(--primary)` gives `bg-primary`).
 - `themes.test.ts` checks every folder in `src/themes/` sets every token, reading the CSS with `themeFile.ts`.
 - Each name in `registry.ts` has a folder in `src/themes/`; `registry.test.ts` checks the two lists match.
+- The body font, Poppins, is defined once in `fonts.ts` (a Next.js font definitions file): the root layout and the component showcase both import it, and its CSS variable `--font-poppins` is the one `font-sans` reads (`fonts.test.ts`, and lint forbids `next/font` imports anywhere else, #1447). `THEME_MODES` in `theme.ts` is the one list of modes (light, dark): `Theme`, `themeIsValid` and the showcase's Mode switch all read it.
 - `ACTIVE_THEME` in `registry.ts` is the theme the site shows, and `src/app/(frontend)/globals.css` imports that theme's `theme.css`; `registry.test.ts` checks they agree.
 - What tokens can't express is a theme option, with defaults in `options.ts`; `registry.ts` lists the options each theme sets, and `{}` means all defaults (decision 0012).
 - The `info` tone (an `Alert`, so a banner too) is blue: `info` for its border and tint, `info-strong` for its text, with contrast pairs in `tokens.ts` checked by `themes.test.ts` (#818). A theme sets both, like every token.

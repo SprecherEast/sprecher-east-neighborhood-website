@@ -64,7 +64,7 @@ const COMPONENT_SOURCE = /\/src\/platform\/(ui|richtext)\/.*\.tsx$/
 
 function buildComponentPages({ program, fileNames }) {
   const files = fileNames
-    .filter((file) => COMPONENT_SOURCE.test(file) && !/\.(test|contract)\.tsx$/.test(file))
+    .filter((file) => COMPONENT_SOURCE.test(file) && !/\.(test|contract|stories)\.tsx$/.test(file))
     .filter((file) => !file.includes('/testing/'))
     .sort()
   const components = describeComponents(program, ROOT, files)
