@@ -1,6 +1,7 @@
 import { pilotSources } from './contract.mjs'
 import { mergeAcrossSources, mergedCopies, scoutSource } from './scout.mjs'
-import { guardPromotion, runStage, runVerify, StageError } from './stages.mjs'
+import { gateItem } from './gate.mjs'
+import { runStage, runVerify, StageError } from './stages.mjs'
 import { markSeen } from './state.mjs'
 import { sendReport, submitItem } from './submit.mjs'
 
@@ -15,7 +16,6 @@ export async function processRun(run) {
   const { contract, cms, ask, state, http, robots, budgets } = run
   const { startedAt, runId, log, calls, addError, deferredSources } = run
   const { counts, cost } = log
-  const { pipeline } = contract
   // Measured on the real clock, whatever `now` says (tests pin it)
   const deadline = Date.now() + (budgets.maxMinutesPerRun ?? 15) * 60_000
   const taxonomy = await cms.taxonomy()
@@ -115,11 +115,13 @@ export async function processRun(run) {
       const verify = await runVerify(contract, ask, item, { deadline })
       item.verification = verify.output
       const curate = await runStage(contract, ask, 'curate', item, { deadline })
-      // Code, not the prompt, decides what may be accepted (pipeline.yaml `promotionGuard`)
-      item.curation = guardPromotion(pipeline, item.verification, curate.output)
+      item.curation = curate.output
       addUsage(cost, verify.usage, curate.usage)
-      const route = pipeline.routes?.[item.curation.decision] ?? 'none'
-      if (route === 'submitSuggestion') {
+      // Code, not the prompt, decides what may be accepted and where it goes (gate.mjs); submit
+      // runs the same gate again on the finished item, with the draft
+      const gated = gateItem(contract, item)
+      item.curation = gated.curation
+      if (gated.route === 'submitSuggestion') {
         if (drafts >= (budgets.maxDraftsPerRun ?? 10)) {
           defer()
           continue
@@ -129,10 +131,11 @@ export async function processRun(run) {
         addUsage(cost, draft.usage)
         drafts++
       }
-      if (route === 'none') {
+      if (gated.route === 'none') {
         counts[item.curation.decision === 'duplicate' ? 'duplicates' : 'rejected']++
       } else {
-        const result = await submitItem(item, { cms, runId, validate: validateEnvelope, route })
+        const result = await submitItem(item, { cms, runId, validate: validateEnvelope, contract })
+        const decision = result.decision
         calls.push(...result.calls)
         for (const warning of result.warnings) addError(warning)
         if (result.pending?.length) {
@@ -143,9 +146,8 @@ export async function processRun(run) {
         if (result.outcome === 'created') counts.proposed++
         if (result.outcome === 'duplicate') counts.duplicates++
         if (result.outcome === 'rejected-invalid') counts.rejected++
-        if (result.outcome === 'review' || item.curation.decision === 'needs-review')
-          counts.needsReview++
-        if (['update', 'cancel'].includes(item.curation.decision)) counts.updates++
+        if (result.outcome === 'review' || decision === 'needs-review') counts.needsReview++
+        if (['update', 'cancel'].includes(decision)) counts.updates++
       }
     } catch (error) {
       if (error instanceof StageError) {

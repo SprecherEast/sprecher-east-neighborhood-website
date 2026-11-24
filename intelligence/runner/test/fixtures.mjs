@@ -24,6 +24,7 @@ export const verification = (overrides = {}) => ({
   ],
   unknowns: [],
   flags: [],
+  safety: false,
   ...overrides,
 })
 
@@ -36,6 +37,7 @@ export const curation = (overrides = {}) => ({
   residentAction: 'Drop in; no registration.',
   targetCollection: null,
   targetId: null,
+  safety: false,
   ...overrides,
 })
 

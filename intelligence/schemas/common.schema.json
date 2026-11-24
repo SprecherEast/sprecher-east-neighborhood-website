@@ -18,6 +18,10 @@
       "description": "Where an item sits against coverage.md: core area, nearby catchment, citywide or countywide with a resident benefit, outside, or not yet known.",
       "enum": ["core", "catchment", "citywide", "outside", "unknown"]
     },
+    "safety": {
+      "description": "true when the item is about people's safety, as safety.yaml defines it; true also when unsure. Code holds such an item for a person whatever the decision (runner/lib/gate.mjs).",
+      "type": "boolean"
+    },
     "decision": { "enum": ["accept", "reject", "needs-review", "update", "cancel", "duplicate"] },
     "flag": {
       "enum": [

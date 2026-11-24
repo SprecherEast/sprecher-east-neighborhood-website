@@ -101,6 +101,7 @@ for (const name of evalFiles) {
 for (const id of duplicates(cases.map((c) => c.id))) problem(evalDir, `duplicate case id ${id}`)
 const pipeline = validate(path.join(dir, 'pipeline.yaml'), 'schemas/pipeline.schema.json')
 validate(path.join(dir, pipeline?.area ?? 'area.yaml'), 'schemas/area.schema.json')
+validate(path.join(dir, pipeline?.safety ?? 'safety.yaml'), 'schemas/safety.schema.json')
 const ROUTE = pipeline?.routes ?? {}
 const registry = new Map(sources?.sources?.map((s) => [s.id, s]) ?? [])
 // An offset that isn't America/Chicago's at that instant, in common.schema.json's grammar
@@ -157,6 +158,8 @@ for (const c of cases) {
     problem(c.file, `${c.id}: targetId must be ${known?.id ?? 'null'}`)
   if ((e.targetCollection ?? null) !== (known?.collection ?? null))
     problem(c.file, `${c.id}: targetCollection must be ${known?.collection ?? 'null'}`)
+  if (e.safety === true && e.decision === 'accept')
+    problem(c.file, `${c.id}: a safety item is never accepted`)
   if (ROUTE[e.decision] !== e.route)
     problem(c.file, `${c.id}: ${e.decision} routes to ${ROUTE[e.decision]}`)
 }

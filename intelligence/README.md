@@ -15,6 +15,7 @@ The agents never publish. They create **suggested drafts**; an editor reads, fix
 | [`sources.yaml`](sources.yaml)   | Approved sources, each checked by hand ([summary](sources.md))                            |
 | [`coverage.md`](coverage.md)     | The Sprecher East area and the relevance policy                                           |
 | [`area.yaml`](area.yaml)         | The words and boundary layer used to spot the area: places, neighbors, highway rules      |
+| [`safety.yaml`](safety.yaml)     | What counts as a safety item, which always waits for a person                             |
 | [`background.md`](background.md) | The City's 1998 neighborhood plan, summarized with pages (index; topics in `background/`) |
 | [`images.md`](images.md)         | How to choose a story's or event's photo: real, free, on topic, level                     |
 | [`prompts/`](prompts/)           | One prompt per stage, each naming its input and output schema                             |
@@ -44,8 +45,8 @@ its own section (`schemas/item.schema.json`); it never changes an earlier one.
 
 The pipeline reads an item twice: the verify checks, then curate's second read. Both are prompt
 rules. The freshness re-check right before publishing is a step for the person or AI agent who
-publishes by hand, not a pipeline stage. A safety item is never accepted by curate; that is a
-prompt rule the promotion guard doesn't enforce yet (#1007). See `coverage.md`, "Review passes".
+publishes by hand, not a pipeline stage. A safety item is never accepted: code holds it for a
+person whatever the model answers (below, and `coverage.md`, "Review passes").
 
 Deterministic steps come first: fetching, parsing and deduplication never use a model. The
 model handles only relevance, location ambiguity and the write-up, at medium effort, escalating to
@@ -113,7 +114,7 @@ run the same folder.
 1. Check out this repository's `main` (read-only) at the start of each run, and record its commit
    as `repoCommit` in the run log, so every suggestion can be traced to the exact prompts that made it.
 2. Read `pipeline.yaml`. If `enabled` is false, log a `disabled` run and stop.
-3. Load the schemas in `schemas/`, `sources.yaml`, `coverage.md` and `area.yaml` (given to the
+3. Load the schemas in `schemas/`, `sources.yaml`, `coverage.md`, `safety.yaml` and `area.yaml` (given to the
    model with `coverage.md`), and read the category tree
    with the MCP find tool (`categories`: slug, title, parent) into each item's `taxonomy`
    (`common.schema.json#/$defs/taxonomy`), so the draft stage picks only existing categories
@@ -179,6 +180,12 @@ Before routing, code applies `promotionGuard` (`pipeline.yaml`, #870): an `accep
 `needs-review` when verify's confidence is below `escalation.verifyBelowConfidence` after the
 rerun, or verify's flags include one of `promotionGuard.blockingFlags`, whatever the model
 answered. The threshold and the flag list each have one definition, in `pipeline.yaml`.
+
+The same gate (`runner/lib/gate.mjs`, #1007) holds a **safety item**: verify and curate each set
+`safety`, and the gate also reads the item's text against [`safety.yaml`](safety.yaml), the one
+definition. Missing or malformed answers count as safety, and `routes` can't send a held item to
+`submitSuggestion`: only an accepted item may be a suggestion. Submit
+calls the gate itself before it sends anything, so no stage can go around it.
 
 Until #336 is live, a run writes the same calls and its run log as a digest for an editor instead.
 

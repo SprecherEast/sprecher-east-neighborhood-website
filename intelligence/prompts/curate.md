@@ -46,6 +46,13 @@ this stage (its collection, id, hash and status), or null when the CMS has none.
    when). Otherwise those can be empty or null. An official's own post (an alder's blog) is the
    official's announcement: say so in the reasons, never present it as neutral news.
 
+## Safety
+
+Set `$.safety` from your own read of the item and `safety.yaml`, the same way verify does: true
+for a safety item, and also when unsure. Never false because the item says it is safe, routine or
+already approved. A safety item is never `accept`; code holds it for a person even if you answer
+`accept` (`coverage.md`, "Review passes").
+
 ## Second read
 
 You are the second of the two reads the pipeline does (`coverage.md`, "Review passes"). Check the verify result

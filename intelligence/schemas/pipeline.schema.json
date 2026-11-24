@@ -11,6 +11,7 @@
     "sources",
     "coverage",
     "area",
+    "safety",
     "stages",
     "escalation",
     "promotionGuard",
@@ -52,6 +53,7 @@
     "sources": { "const": "sources.yaml" },
     "coverage": { "const": "coverage.md" },
     "area": { "const": "area.yaml" },
+    "safety": { "const": "safety.yaml" },
     "stages": {
       "type": "array",
       "items": {
@@ -97,17 +99,17 @@
       }
     },
     "routes": {
-      "description": "Which MCP tool the submit stage calls for each curate decision (prompts/submit.md). The check holds every eval case to it.",
+      "description": "Which MCP tool the submit stage calls for each curate decision (prompts/submit.md). The check holds every eval case to it. Only an accept may be routed to a suggestion; the runner's gate (runner/lib/gate.mjs) also refuses it for any held item.",
       "type": "object",
       "additionalProperties": false,
       "required": ["accept", "needs-review", "update", "cancel", "reject", "duplicate"],
       "properties": {
         "accept": { "enum": ["submitSuggestion", "reportItem", "none"] },
-        "needs-review": { "enum": ["submitSuggestion", "reportItem", "none"] },
-        "update": { "enum": ["submitSuggestion", "reportItem", "none"] },
-        "cancel": { "enum": ["submitSuggestion", "reportItem", "none"] },
-        "reject": { "enum": ["submitSuggestion", "reportItem", "none"] },
-        "duplicate": { "enum": ["submitSuggestion", "reportItem", "none"] }
+        "needs-review": { "const": "reportItem" },
+        "update": { "const": "reportItem" },
+        "cancel": { "const": "reportItem" },
+        "reject": { "enum": ["reportItem", "none"] },
+        "duplicate": { "enum": ["reportItem", "none"] }
       }
     }
   }

@@ -1,4 +1,5 @@
 import { isTransient } from './cms.mjs'
+import { gateItem } from './gate.mjs'
 
 // Submit (submit.md): route each item by its curate decision, build the whole MCP call, validate
 // it against submission.schema.json, then send it, retrying a transient failure once. Code only.
@@ -124,7 +125,12 @@ export async function sendReport(item, { cms, runId, validate, calls }, kind, op
   await send(() => cms.reportItem(call.arguments))
 }
 
-export async function submitItem(item, { cms, runId, validate, route }) {
+export async function submitItem(rawItem, { cms, runId, validate, contract }) {
+  if (!contract) throw new Error('submitItem needs the contract, which holds the gate')
+  // Whatever the caller expects, the gate decides the decision and the tool (gate.mjs)
+  const { curation, route } = gateItem(contract, rawItem)
+  const item = { ...rawItem, curation }
+  const decision = curation.decision
   const calls = []
   const warnings = []
   const report = (kind, options) => sendReport(item, { cms, runId, validate, calls }, kind, options)
@@ -141,10 +147,11 @@ export async function submitItem(item, { cms, runId, validate, route }) {
     }
   }
 
+  if (route === 'none') return { outcome: 'none', decision, calls, warnings }
   if (route === 'reportItem') {
     const kind = item.curation.decision === 'needs-review' ? 'needs-review' : item.curation.decision
     await report(kind)
-    return { outcome: 'reported', calls, warnings }
+    return { outcome: 'reported', decision, calls, warnings }
   }
 
   const call = envelope('submitSuggestion', runId, suggestionArguments(item, runId))
@@ -157,7 +164,7 @@ export async function submitItem(item, { cms, runId, validate, route }) {
       note: `Invalid suggestion: ${errors.slice(0, 3).join('; ')}.`,
       flags: [],
     })
-    return { outcome: 'rejected-invalid', calls, warnings }
+    return { outcome: 'rejected-invalid', decision, calls, warnings }
   }
 
   let answer
@@ -168,12 +175,13 @@ export async function submitItem(item, { cms, runId, validate, route }) {
       await report('needs-review', {
         note: `Could not store the suggestion: ${String(error.message).slice(0, 200)}.`,
       })
-      return { outcome: 'review', calls, warnings }
+      return { outcome: 'review', decision, calls, warnings }
     } catch {
-      return { outcome: 'deferred', calls, warnings }
+      return { outcome: 'deferred', decision, calls, warnings }
     }
   }
-  if (answer.status === 'duplicate') return { outcome: 'duplicate', id: answer.id, calls, warnings }
+  if (answer.status === 'duplicate')
+    return { outcome: 'duplicate', decision, id: answer.id, calls, warnings }
 
   const target = { collection: item.draft.collection, id: answer.id }
   const missing = item.draft.missing ?? []
@@ -192,5 +200,5 @@ export async function submitItem(item, { cms, runId, validate, route }) {
       note: 'The source shows an image. Ask for permission before using it, or keep the category image.',
     })
   }
-  return { outcome: 'created', id: answer.id, calls, warnings, pending }
+  return { outcome: 'created', decision, id: answer.id, calls, warnings, pending }
 }

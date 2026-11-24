@@ -1,0 +1,96 @@
+# What counts as a safety item (#1007). This is the one definition: the stages read it with
+# coverage.md, and the runner's gate (runner/lib/safety.mjs) matches an item's text against the
+# terms below. A safety item is never accepted without a person: coverage.md, "Review passes".
+# The terms only ever add to what the stages say; nothing in an item's text can remove a hold.
+# Whole words and phrases, any case; a plural, punctuation, accents and width don't matter.
+version: 1
+meaning: >-
+  Anything about people's safety: an incident, a crime or police matter, a fire or emergency, a
+  weather alert, a hazard, an outage that puts people at risk, a recall, an injury or a death.
+  When unsure, it is a safety item.
+topics:
+  - id: crime-and-police
+    means: A crime, a police matter or a search for a person.
+    terms:
+      - police
+      - sheriff
+      - crime
+      - criminal
+      - arrest
+      - suspect
+      - shooting
+      - shots fired
+      - gunshot
+      - gunfire
+      - firearm
+      - shell casing
+      - homicide
+      - murder
+      - stabbing
+      - assault
+      - robbery
+      - robberies
+      - burglary
+      - burglaries
+      - break in
+      - theft
+      - carjacking
+      - vandalism
+      - missing person
+      - amber alert
+      - silver alert
+      - incident
+  - id: fire-and-emergency
+    means: A fire, an emergency or an evacuation.
+    terms:
+      - fire
+      - explosion
+      - evacuation
+      - evacuate
+      - emergency
+      - hazmat
+      - gas leak
+      - carbon monoxide
+  - id: weather
+    means: A weather alert or severe weather.
+    terms:
+      - tornado
+      - severe weather
+      - storm warning
+      - flood
+      - flooding
+      - flash flood
+      - blizzard
+      - winter storm
+      - heat advisory
+      - extreme heat
+      - wind chill
+      - weather alert
+  - id: hazard-and-harm
+    means: A hazard, an outage that puts people at risk, a recall, an injury or a death.
+    terms:
+      - safety
+      - hazard
+      - hazardous
+      - danger
+      - dangerous
+      - unsafe
+      - warning
+      - advisory
+      - alert
+      - outage
+      - water main break
+      - boil water
+      - contamination
+      - toxic
+      - recall
+      - injury
+      - injured
+      - fatal
+      - fatality
+      - crash
+      - collision
+      - killed
+      - died
+      - overdose
+      - drowning

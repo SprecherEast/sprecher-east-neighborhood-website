@@ -21,7 +21,8 @@
             "statusConfirmed": { "$ref": "verification.schema.json#/properties/statusConfirmed" },
             "evidence": { "$ref": "verification.schema.json#/properties/evidence" },
             "unknowns": { "$ref": "verification.schema.json#/properties/unknowns" },
-            "flags": { "$ref": "verification.schema.json#/properties/flags" }
+            "flags": { "$ref": "verification.schema.json#/properties/flags" },
+            "safety": { "$ref": "verification.schema.json#/properties/safety" }
           }
         },
         "curation": {
@@ -29,6 +30,7 @@
           "additionalProperties": false,
           "properties": {
             "decision": { "$ref": "curation.schema.json#/properties/decision" },
+            "safety": { "$ref": "curation.schema.json#/properties/safety" },
             "reasons": { "$ref": "curation.schema.json#/properties/reasons" },
             "scores": { "$ref": "curation.schema.json#/properties/scores" },
             "audiences": { "$ref": "curation.schema.json#/properties/audiences" },
@@ -104,6 +106,10 @@
         "flags": {
           "description": "Flags the output must include.",
           "$ref": "common.schema.json#/$defs/flags"
+        },
+        "safety": {
+          "description": "The item is a safety item: the answer sets safety to true and the decision is never accept.",
+          "type": "boolean"
         },
         "flagsAbsent": {
           "description": "Flags the output must not include.",

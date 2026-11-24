@@ -137,14 +137,21 @@ These rules are written only here; `prompts/verify.md` and `prompts/curate.md` p
 What the pipeline does is two reads: **verify** applies the five checks below, and **curate** reads
 the result again with the relevance rules and sends the item to `needs-review` when a check
 wasn't met. Both are prompt rules, a model's judgment; code guards only what `promotionGuard` in
-`pipeline.yaml` lists. The third step is not a pipeline stage: **before publishing**, the person
+`pipeline.yaml` lists and the safety rule below. The third step is not a pipeline stage: **before publishing**, the person
 or AI agent who publishes by hand re-checks freshness (check 3) and withdraws an item that is no
 longer current.
 
-A safety item (an incident, a hazard, a weather alert, anything about people's safety) is never
-`accept`: curate decides `needs-review`. That is a prompt rule today. The promotion guard does not
-enforce it yet; #1007 will enforce it in code. Nothing publishes by itself either way: agents only
-create suggested drafts.
+A safety item is never `accept`, and code enforces it (#1007). What counts as one is defined once,
+in [`safety.yaml`](safety.yaml): verify and curate each answer `safety`, and the runner's gate
+(`runner/lib/gate.mjs`) also matches the item's own text against that file. An item is clear only
+when both stages said `safety: false` and no term matches; a missing, malformed or non-boolean
+answer, an unreadable item or a word that mixes scripts counts as safety. Before any `accept` is
+sent, the gate turns a safety item into `needs-review`, whatever the model decided and whatever
+the item's text says, and submit runs it again on the finished draft. Text in an item can add to
+the answer, never remove from it; `pipeline.yaml` can't route a held item to a suggestion. Only a
+decision of `accept` creates a suggestion, so `reject`, `update` and `cancel` of a safety item
+stay as decided (rule 4 above). Nothing publishes by itself either way: agents only create
+suggested drafts.
 
 The five checks, which verify runs on every item:
 

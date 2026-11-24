@@ -37,7 +37,7 @@ function cmsWith(answers = ['created']) {
 describe('submit', () => {
   it('sends a valid suggestion with summary, categories and provenance', async () => {
     const cms = cmsWith()
-    const result = await submitItem(item(), { cms, runId, validate, route: 'submitSuggestion' })
+    const result = await submitItem(item(), { cms, runId, validate, contract })
     assert.equal(result.outcome, 'created')
     assert.deepEqual(validate(result.calls[0]), [])
     assert.equal(cms.submitted[0].summary, draft().summary)
@@ -57,7 +57,7 @@ describe('submit', () => {
       cms,
       runId,
       validate,
-      route: 'submitSuggestion',
+      contract,
     })
     const report = cms.writes.find((w) => w.tool === 'reportItem').arguments
     assert.deepEqual(report.flags, ['image-candidate'])
@@ -75,7 +75,7 @@ describe('submit', () => {
       cms,
       runId,
       validate,
-      route: 'submitSuggestion',
+      contract,
     })
     const [note] = cms.writes
     assert.equal(note.arguments.kind, 'needs-review')
@@ -88,7 +88,7 @@ describe('submit', () => {
       curation: { decision: 'cancel', targetCollection: 'events', targetId: 12 },
       draft: null,
     })
-    const result = await submitItem(cancel, { cms, runId, validate, route: 'reportItem' })
+    const result = await submitItem(cancel, { cms, runId, validate, contract })
     assert.equal(result.outcome, 'reported')
     assert.deepEqual(cms.submitted, [])
     assert.deepEqual(validReport(cms.writes[0].arguments), [])
@@ -116,9 +116,8 @@ describe('submit evals', () => {
       }
       if (c.input.sourceUrl === null) built.candidate.sourceUrl = null
       const cms = cmsWith(given.run?.mcpAnswers)
-      // The route comes from pipeline.yaml, as in a run
-      const route = contract.pipeline.routes[built.curation.decision]
-      const result = await submitItem(built, { cms, runId, validate, route })
+      // The gate picks the route from pipeline.yaml and safety.yaml, as in a run
+      const result = await submitItem(built, { cms, runId, validate, contract })
       if (c.expected.reportKind) {
         const report = cms.writes.find((w) => w.tool === 'reportItem')
         assert.equal(report?.arguments.kind, c.expected.reportKind)

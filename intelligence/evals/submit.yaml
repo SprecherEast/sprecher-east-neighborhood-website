@@ -148,3 +148,44 @@ cases:
       - check: model
         rubric: The suggestion is sent without any image; a follow-up needs-review report on the new document carries the image-candidate flag and one evidence entry with the page link, the image link and the credit.
     why: Source images reach the editor only as links with their credit, never as an upload.
+  - id: submit-safety-term-held
+    ref: SB6
+    stage: submit
+    tags: [safety]
+    input:
+      sourceId: mpl-pinney-events
+      title: Police report night at Pinney Library
+      startsAt: 2026-11-19T18:00:00-06:00
+      locationText: Pinney Library
+    given:
+      curation: { decision: accept, safety: false, audiences: [everyone] }
+      draft:
+        collection: events
+        title: Police report night at Pinney Library
+        bodyMarkdown: A talk about a recent police report.
+        summary: A talk about a recent police report at Pinney Library.
+        categories: [community]
+        audience: [everyone]
+    expected: { route: reportItem, reportKind: needs-review }
+    why: The model said accept and not safety, but the text names a safety term, so code holds it for an editor.
+  - id: submit-safety-flag-held
+    ref: SB7
+    stage: submit
+    tags: [safety]
+    input:
+      sourceId: mpl-pinney-events
+      title: Craft afternoon
+      startsAt: 2026-11-19T14:00:00-06:00
+      locationText: Pinney Library
+    given:
+      verification: { safety: true }
+      curation: { decision: accept, safety: false, audiences: [families] }
+      draft:
+        collection: events
+        title: Craft afternoon at Pinney Library
+        bodyMarkdown: Crafts for all ages.
+        summary: Crafts for all ages at Pinney Library.
+        categories: [community]
+        audience: [families]
+    expected: { route: reportItem, reportKind: needs-review }
+    why: Either stage saying safety is enough; an accept is held for an editor whatever the other said.
