@@ -11,6 +11,7 @@ import { createFixture } from './testProgram.mjs'
 
 const fixture = createFixture('reference-source-facts-')
 const { write, load, root } = fixture
+let program
 
 beforeAll(() => {
   write(
@@ -69,24 +70,25 @@ function internal() {}
 export default function Layout() { return null }
 `,
   )
-})
+  program = load()
+}, 60_000)
 
 afterAll(() => fixture.cleanup())
 
 describe('findDefinitions', () => {
   it('maps each collection or global slug to the files that define it, reading constants', () => {
-    const found = findDefinitions(load(), root)
+    const found = findDefinitions(program, root)
     expect(found.get('events')).toEqual(['src/modules/events/cms/events.ts'])
     expect(found.get('agent-runs')).toEqual(['src/modules/agents/cms/agentRuns.ts'])
     expect(found.get('media')).toEqual(['src/platform/payload/media.ts'])
   })
 
   it('reads a shorthand `slug` property', () => {
-    expect(findDefinitions(load(), root).get('header')).toEqual(['src/modules/site/cms/nav.ts'])
+    expect(findDefinitions(program, root).get('header')).toEqual(['src/modules/site/cms/nav.ts'])
   })
 
   it('ignores documents, tasks and tests: only an object with fields defines a type', () => {
-    const found = findDefinitions(load(), root)
+    const found = findDefinitions(program, root)
     expect(found.get('events')).not.toContain('src/modules/agents/cms/seed.ts')
     expect(found.has('cleanup')).toBe(false)
     expect(found.has('faked')).toBe(false)
@@ -118,7 +120,7 @@ describe('areaOf and ownerOf', () => {
 
 describe('findServerActions', () => {
   it('lists exported functions of a "use server" file and an inline server function', () => {
-    expect(findServerActions(load(), root)).toEqual([
+    expect(findServerActions(program, root)).toEqual([
       {
         file: 'src/app/(payload)/layout.tsx',
         name: 'serverFunction',
@@ -132,7 +134,7 @@ describe('findServerActions', () => {
 
 describe('findPluginConfigurers', () => {
   it('maps a plugin to the modules whose code is in the options it is called with', () => {
-    expect(findPluginConfigurers(load(), root, 'src/payload.config.ts')).toEqual(
+    expect(findPluginConfigurers(program, root, 'src/payload.config.ts')).toEqual(
       new Map([
         ['@payloadcms/plugin-x', ['contact', 'verification']],
         ['@payloadcms/plugin-y', []],

@@ -5,6 +5,7 @@ import { createFixture } from './testProgram.mjs'
 
 const fixture = createFixture('reference-collection-calls-')
 const { write, load, root } = fixture
+let program
 
 const PAYLOAD = `declare const req: { payload: { find(a: object): void; create(a: object): void; update(a: object): void; db: { deleteMany(a: object): void; count(a: object): void; updateOne(a: object): void }; findGlobal(a: object): void } }\n`
 
@@ -124,13 +125,14 @@ export const task = { slug: 'rows', handler: () => deleteExpiredRows(AGENT_RUNS)
 }
 `,
   )
-})
+  program = load()
+}, 60_000)
 
 afterAll(() => fixture.cleanup())
 
 describe('findCollectionCalls', () => {
   const calls = (file, name, known = new Set()) =>
-    findCollectionCalls(load(), root, file, { name, knownSlugs: known })
+    findCollectionCalls(program, root, file, { name, knownSlugs: known })
 
   it('follows the calls from the handler, and marks whether access is checked', () => {
     const found = calls('src/modules/agents/cms/tools/report.ts', 'report').map((c) => [
@@ -193,7 +195,7 @@ describe('findCollectionCalls', () => {
 describe('findCollectionCalls, a call that takes any collection', () => {
   it('is credited to the collection the caller names, not to every collection', () => {
     const known = new Set(['agent-runs', 'events', 'posts', 'faq'])
-    const found = findCollectionCalls(load(), root, 'src/modules/agents/cms/tools/generic.ts', {
+    const found = findCollectionCalls(program, root, 'src/modules/agents/cms/tools/generic.ts', {
       name: 'generic',
       knownSlugs: known,
     })
@@ -205,7 +207,8 @@ describe('findCollectionCalls, a call that takes any collection', () => {
 
 describe('findCollectionCalls, as the real code is written', () => {
   const known = new Set(['agent-runs', 'events', 'posts', 'faq'])
-  const calls = (file, name) => findCollectionCalls(load(), root, file, { name, knownSlugs: known })
+  const calls = (file, name) =>
+    findCollectionCalls(program, root, file, { name, knownSlugs: known })
 
   it('finds the reason when the call is the value of a const inside a commented function', () => {
     expect(calls('src/modules/agents/cms/tools/destructured.ts', 'destructured')).toEqual([

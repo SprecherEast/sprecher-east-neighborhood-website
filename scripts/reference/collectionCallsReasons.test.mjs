@@ -5,6 +5,7 @@ import { createFixture } from './testProgram.mjs'
 
 const fixture = createFixture('reference-collection-reasons-')
 const { write, load, root } = fixture
+let program
 
 const PAYLOAD = `declare const req: { payload: { find(a: object): void; create(a: object): void; db: { deleteMany(a: object): void } } }\n`
 
@@ -26,13 +27,14 @@ function checked() {
 export const reasons = { name: 'reasons', handler: () => { viaDatabase(); byDefault(); checked() } }
 `,
   )
-})
+  program = load()
+}, 60_000)
 
 afterAll(() => fixture.cleanup())
 
 describe('findCollectionCalls reasons (#1461)', () => {
   it('quotes the comment wherever access is bypassed, and nowhere it is checked', () => {
-    const found = findCollectionCalls(load(), root, 'src/modules/agents/cms/tools/reasons.ts', {
+    const found = findCollectionCalls(program, root, 'src/modules/agents/cms/tools/reasons.ts', {
       name: 'reasons',
       knownSlugs: new Set(['agent-runs', 'events', 'posts', 'faq']),
     })

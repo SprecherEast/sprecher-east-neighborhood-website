@@ -5,6 +5,7 @@ import { createFixture } from './testProgram.mjs'
 
 const fixture = createFixture('reference-collection-receivers-')
 const { write, load, root } = fixture
+let program
 
 beforeAll(() => {
   write(
@@ -27,13 +28,14 @@ export const tool = {
 }
 `,
   )
-})
+  program = load()
+}, 60_000)
 
 afterAll(() => fixture.cleanup())
 
 describe('findCollectionCalls receivers (#1461)', () => {
   it('counts only calls made on Payload, directly or through the request, and on its database', () => {
-    const found = findCollectionCalls(load(), root, 'src/modules/agents/cms/tools/receivers.ts', {
+    const found = findCollectionCalls(program, root, 'src/modules/agents/cms/tools/receivers.ts', {
       name: 'receivers',
       knownSlugs: new Set(),
     })

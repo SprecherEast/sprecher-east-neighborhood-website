@@ -5,6 +5,7 @@ import { createFixture } from './testProgram.mjs'
 
 const fixture = createFixture('reference-source-facts-edges-')
 const { write, load, root } = fixture
+let program
 
 beforeAll(() => {
   // Written out of order on purpose: the list is sorted by file, then by name
@@ -53,13 +54,14 @@ export const handlers = {
       ']',
     ].join('\n'),
   )
-})
+  program = load()
+}, 60_000)
 
 afterAll(() => fixture.cleanup())
 
 describe('findServerActions edge cases (#1461)', () => {
   it('lists the actions sorted by file, then by name', () => {
-    const found = findServerActions(load(), root).map((a) => [a.file, a.name])
+    const found = findServerActions(program, root).map((a) => [a.file, a.name])
     expect(found).toEqual([
       ['src/modules/alpha/actions.ts', 'zzz'],
       ['src/modules/beta/inline.ts', 'named'],
@@ -69,7 +71,7 @@ describe('findServerActions edge cases (#1461)', () => {
   })
 
   it('lists no exported value that is not a function, and no function without a plain name', () => {
-    const names = findServerActions(load(), root).map((a) => a.name)
+    const names = findServerActions(program, root).map((a) => a.name)
     expect(names).not.toContain('pending')
     expect(names).not.toContain('picked')
     expect(names).not.toContain('value')
@@ -79,7 +81,7 @@ describe('findServerActions edge cases (#1461)', () => {
 
 describe('findPluginConfigurers edge cases (#1461)', () => {
   it('reads named and default imports of modules, and skips type imports, side effects, namespace imports and plain calls', () => {
-    expect(findPluginConfigurers(load(), root, 'src/payload.config.ts')).toEqual(
+    expect(findPluginConfigurers(program, root, 'src/payload.config.ts')).toEqual(
       new Map([['@payloadcms/plugin-x', ['contact']]]),
     )
   })
