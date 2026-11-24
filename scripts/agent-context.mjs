@@ -33,6 +33,7 @@ import {
   parseLoadMap,
   unix,
 } from './agent-context-maps.mjs'
+import { frontmatterText } from './frontmatter.mjs'
 
 // The parsers live in a module with no packages, so `PR Policy` can import them (#737)
 export { KNOWLEDGE_MAP, LOAD_MAP, globToRegExp, parseKnowledgeMap, parseLoadMap }
@@ -71,8 +72,8 @@ export function ruleName(source) {
 
 /** Whether a Markdown file starts with frontmatter that has a `paths` field. */
 export function hasPaths(markdown) {
-  const match = unix(markdown).match(/^---\n([\s\S]*?)\n---/)
-  return Boolean(match && /^paths:/m.test(match[1]))
+  const text = frontmatterText(markdown)
+  return text !== null && /^paths:/m.test(text)
 }
 
 /** The `@path` imports in a memory file, skipping code spans and fenced blocks. */

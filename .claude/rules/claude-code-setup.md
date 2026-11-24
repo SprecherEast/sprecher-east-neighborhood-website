@@ -20,7 +20,7 @@ Claude Code.
   `claude --agent chief-of-staff`, on `opus` at `high` effort, with `disallowedTools` for Edit,
   Write, NotebookEdit, MultiEdit, push, merge, `PUT` API calls and GraphQL mutations (known
   holes are in the [manual test](/docs/process/chief-of-staff-manual-test.md)), and `Agent(worker, qa-reviewer)` as
-  the only agents it may start. `.claude/settings.json` names it as the default agent (`agent`), so a session in the project starts as the chief of staff; `--agent` overrides it. The worker agent (`.claude/agents/worker.md`) does each issue; the standard reviewers stay
+  the only agents it may start. `.claude/settings.json` names it as the default agent (`agent`), so a session in the project starts as the chief of staff; `--agent` overrides it. The worker agent (`.claude/agents/worker.md`) does each issue; the reviewer stays
   on `sonnet` at `medium`. Its helper procedures are skills, so they run in its session and need no model of
   their own. Review depth today is the #522 rule in `CLAUDE.md` and nothing wider. Never `fable` in
   unattended runs: it can bill to usage credits, and in `-p` runs without asking
@@ -40,10 +40,10 @@ Claude Code.
   option the owner decides in #697. Keep `ANTHROPIC_API_KEY` out of the environment: in `-p` runs
   the key is always used when present, which switches usage from the subscription to API billing
   ([authentication](https://code.claude.com/docs/en/authentication)).
-- **Subagents:** `.claude/agents/` registers each [role guide](/docs/roles/README.md) as a subagent
-  Claude Code can delegate to. Those files only hold Claude Code settings; edit the guide. The
-  `worker` agent does each issue; the role agents stay for direct use until #695 moves the guides
-  into skills. A headless `-p` run in the project also starts as the chief of staff; no workflow does.
+- **Subagents:** `.claude/agents/` holds only the chief of staff, the `worker` and the reviewer
+  (`qa-reviewer`), each pointing at its skill or [role guide](/docs/roles/README.md); edit that, not the
+  agent file. Other role guides load by name through the brief, not as agents. The `worker` does each
+  issue. A headless `-p` run in the project also starts as the chief of staff; no workflow does.
 - **Hooks** (#446, in `.claude/settings.json`, scripts and tests in `.claude/hooks/`): at session
   start, `session-start.mjs` shows the short process reminder (#1300). Before a Bash command that
   creates an issue (`gh issue create`, or a `gh api` POST to the issues endpoint), the issue rules

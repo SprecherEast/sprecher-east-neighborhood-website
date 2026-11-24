@@ -166,8 +166,7 @@ parallel work when issues don't touch the same files, with no fixed number, and 
   files (#721). Past
   the first, an issue starts only if its **Files likely touched** don't overlap with those of any
   issue in progress, the two don't both touch the **shared hot spots**, and it isn't blocked by
-  any issue in progress. The dispatcher (the chief of staff, or the owner's own session until #695
-  builds it) runs that check before every claim. When in doubt, wait until one is In review or
+  any issue in progress. The dispatcher (the chief of staff) runs that check before every claim. When in doubt, wait until one is In review or
   Done. The highest-priority Ready item goes first.
 - **Shared hot spots** (this list is the one definition; two issues that each touch any of these
   count as overlapping, even in different lines): anything in `src/platform/` and `src/themes/`;
