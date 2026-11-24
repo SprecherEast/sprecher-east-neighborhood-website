@@ -1,8 +1,20 @@
+---
+name: 'News'
+type: module
+summary: 'posts, bylines, sources, search, the category tree, "top issues".'
+aliases: ['posts', 'categories']
+relationships: []
+---
+
 # News
 
 News posts and everything around them: the `posts` collection, the `categories` tree shared with events, the search index, the "top issues" block and the archive block's posts. Not events or the page builder. Fields, access and hooks: [posts](../../../docs/reference/content-types/posts.md), [categories](../../../docs/reference/content-types/categories.md), [search](../../../docs/reference/content-types/search.md); routes (`/posts`, its numbered pages, `/posts/[slug]`, `/search`): [routes](../../../docs/reference/routes.md).
 
-## Links between fields
+## Screens
+
+Listing, post page, search page and the blocks' components are in the generated [routes](../../../docs/reference/routes.md) and [UI element coverage](../../../docs/reference/ui-coverage.md). The post page's breadcrumb is fixed text (Home, News & Updates, the title), not the category tree (`src/app/(frontend)/posts/[slug]/page.tsx`).
+
+## How the pieces link
 
 - `authors` (users, private) becomes `populatedAuthors` (names only) on every read, copied past access control and left out when an author is missing (`cms/populateAuthors.ts`); the byline joins them "Ana, Ben and Cy" (`domain/authors.ts`).
 - `publishedAt` is set to now when a post is published without one (field hook in `cms/posts.ts`).
@@ -11,10 +23,6 @@ News posts and everything around them: the `posts` collection, the `categories` 
 - A search entry copies the title (falling back from the search-engine title), slug, description, image, categories (with titles), the source, and an event's `cancelled` (`cms/searchFields.ts`, `cms/searchSync.ts`). The plugin indexes posts and events, chosen in `src/payload.config.ts`.
 - `relatedPosts` can't name the post itself (`filterOptions` in `cms/posts.ts`); "You May Also Like" leaves out the post and its related posts (`domain/related.ts`).
 - Categories form a tree: the nested-docs plugin adds `parent` and `breadcrumbs` (`src/payload.config.ts`). Events use the same tree (`src/modules/events/cms/events.ts`). `defaultImage` is the image an agent's suggestion gets, from the nearest category up the parents (`cms/categories.ts`; rule in `src/modules/agents/domain/suggestion.ts`).
-
-## Screens
-
-Listing, post page, search page and the blocks' components are in the generated [routes](../../../docs/reference/routes.md) and [UI element coverage](../../../docs/reference/ui-coverage.md). The post page's breadcrumb is fixed text (Home, News & Updates, the title), not the category tree (`src/app/(frontend)/posts/[slug]/page.tsx`).
 
 ## Behaviors and events
 

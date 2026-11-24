@@ -1,25 +1,26 @@
 # Knowledge index
 
-How the site is put together, one line per entry. Read the line, then open the note or reference
-it points to. Notes load by themselves when the work touches their files; the reference is
+How the site is put together, one line per entry: open the note or reference a line points to. Notes load by themselves when the work touches their files; the reference is
 generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.md).
 
 ## Notes
 
-- [Events](../../src/modules/events/README.md): the calendar, its listings, category pages and "this week" block; what "upcoming" means, what a save refreshes, official meetings, cancelled events, suggestions held as drafts.
+- [Events](../../src/modules/events/README.md): the calendar, listings, "this week" block; save refreshes, cancelled events, suggestions as drafts.
 - [Contact](../../src/modules/contact/README.md): form checks, emails held until the sender confirms, retention.
-- [Agents](../../src/modules/agents/README.md): MCP access, what agents may read, suggestions held as drafts, run history.
-- [Verification](../../src/modules/verification/README.md): email confirmation by link, its limits, the welcome email, retention.
-- [Directory](../../src/modules/directory/README.md): the FAQ page and the resources group pages; how entries are grouped, when an official's photo shows, what a save refreshes.
-- [Theme](../../src/platform/theme/README.md): tokens, light and dark mode, theme options and decorations.
-- [Accounts](../../src/modules/accounts/README.md): sign-up, verification, sign-in (password or Google), adding a passkey, password changes and resets, and guards.
-- [Site navigation](../../src/modules/site/navigation/README.md): header, footer, forum link, redirects, refresh timing.
-- [UI kit](../../src/platform/ui/README.md): shared components' behavior: links, charts, version check, staff bar, shared sizes.
-- [Site pages](../../src/modules/site/README.md): page hero and page-builder blocks, what a page save refreshes.
-- [Rich text](../../src/platform/richtext/README.md): article text, editorial blocks, limits, Markdown tags.
-- [Shared Payload code](../../src/platform/payload/README.md): roles, drafts, review queue, jobs, link and site-address helpers, keyset paging.
-- [News](../../src/modules/news/README.md): posts, bylines and sources, search, the shared category tree, "top issues".
+- [Agents](../../src/modules/agents/README.md): MCP access, what agents may read, drafts, run history.
+- [Verification](../../src/modules/verification/README.md): email confirmation by link, limits, welcome email, retention.
+- [Directory](../../src/modules/directory/README.md): the FAQ and resources pages; grouping, official photos, save refreshes.
+- [Theme](../../src/platform/theme/README.md): tokens, light and dark mode, theme options, decorations.
 - [Roadmap](../../src/modules/roadmap/README.md): the public plan page.
+- [Accounts](../../src/modules/accounts/README.md): sign-up, verification, sign-in (password, Google, passkey), resets, guards.
+- [Site navigation](../../src/modules/site/navigation/README.md): header, footer, forum link, redirects, refresh timing.
+- [UI kit](../../src/platform/ui/README.md): shared components' behavior: links, version check, staff bar, sizes.
+- [Charts and data displays](../../src/platform/ui/chart/README.md): charts, adapters, breakdowns, heat map, share bill.
+- [Site pages](../../src/modules/site/README.md): page hero and blocks, what a page save refreshes.
+- [Shared Payload code](../../src/platform/payload/README.md): roles, drafts, review queue, jobs, link helpers, keyset paging.
+- [Preview copy](../../src/platform/payload/previewCopy/README.md): what a preview copies from the published site.
+- [Rich text](../../src/platform/richtext/README.md): article text, editorial blocks, Markdown tags.
+- [News](../../src/modules/news/README.md): posts, bylines, sources, search, the category tree, "top issues".
 
 ## Reference (generated)
 

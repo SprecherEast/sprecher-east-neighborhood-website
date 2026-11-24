@@ -1,3 +1,11 @@
+---
+name: 'Events'
+type: module
+summary: 'the calendar, listings, "this week" block; save refreshes, cancelled events, suggestions as drafts.'
+aliases: ['calendar']
+relationships: [{ 'type': 'depends-on', 'target': 'src/modules/news/README.md' }]
+---
+
 # Events
 
 The neighborhood calendar: the `events` collection, its listings and pages, and the "this week" block

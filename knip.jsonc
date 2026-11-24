@@ -32,6 +32,8 @@
         ".github/scripts/*.mjs",
         // The knowledge eval (#715): run by hand, never in CI; its tests are found by Vitest
         "scripts/knowledge-eval/{run,analyze}.mjs",
+        // The knowledge structure check (#1460): run by hand and by `Knowledge sync`
+        "scripts/knowledge-structure/cli.mjs",
         // Run by `payload run` from e2e/serve.mjs (which knip finds through playwright.config.ts)
         "e2e/seed.ts",
         // Run by `payload run` from ops/deploy-release.sh on the server, for a preview's first database (#1075)

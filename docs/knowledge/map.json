@@ -1,15 +1,36 @@
 [
-  { "note": "src/modules/events/README.md", "paths": ["src/modules/events/**"] },
-  { "note": "src/modules/contact/README.md", "paths": ["src/modules/contact/**"] },
-  { "note": "src/modules/agents/README.md", "paths": ["src/modules/agents/**"] },
-  { "note": "src/modules/verification/README.md", "paths": ["src/modules/verification/**"] },
-  { "note": "src/modules/directory/README.md", "paths": ["src/modules/directory/**"] },
-  { "note": "src/platform/theme/README.md", "paths": ["src/platform/theme/**", "src/themes/**"] },
+  {
+    "note": "src/modules/events/README.md",
+    "paths": ["src/modules/events/**"]
+  },
+  {
+    "note": "src/modules/contact/README.md",
+    "paths": ["src/modules/contact/**"]
+  },
+  {
+    "note": "src/modules/agents/README.md",
+    "paths": ["src/modules/agents/**"]
+  },
+  {
+    "note": "src/modules/verification/README.md",
+    "paths": ["src/modules/verification/**"]
+  },
+  {
+    "note": "src/modules/directory/README.md",
+    "paths": ["src/modules/directory/**"]
+  },
+  {
+    "note": "src/platform/theme/README.md",
+    "paths": ["src/platform/theme/**", "src/themes/**"]
+  },
   {
     "note": "src/modules/roadmap/README.md",
     "paths": ["src/modules/roadmap/**", "src/app/(frontend)/roadmap/**"]
   },
-  { "note": "src/modules/accounts/README.md", "paths": ["src/modules/accounts/**"] },
+  {
+    "note": "src/modules/accounts/README.md",
+    "paths": ["src/modules/accounts/**"]
+  },
   {
     "note": "src/modules/site/navigation/README.md",
     "paths": [
@@ -35,7 +56,35 @@
       "src/modules/site/use-cases/getRedirectTarget.ts"
     ]
   },
-  { "note": "src/platform/ui/README.md", "paths": ["src/platform/ui/**"] },
+  {
+    "note": "src/platform/ui/README.md",
+    "paths": ["src/platform/ui/**"],
+    "exclude": [
+      "src/platform/ui/chart/**",
+      "src/platform/ui/AreaChart*",
+      "src/platform/ui/HeatMap*",
+      "src/platform/ui/HeatCell*",
+      "src/platform/ui/Legend*",
+      "src/platform/ui/PeriodNav*",
+      "src/platform/ui/ShareBill*",
+      "src/platform/ui/ShareStrip*",
+      "src/platform/ui/shareTones*"
+    ]
+  },
+  {
+    "note": "src/platform/ui/chart/README.md",
+    "paths": [
+      "src/platform/ui/chart/**",
+      "src/platform/ui/AreaChart*",
+      "src/platform/ui/HeatMap*",
+      "src/platform/ui/HeatCell*",
+      "src/platform/ui/Legend*",
+      "src/platform/ui/PeriodNav*",
+      "src/platform/ui/ShareBill*",
+      "src/platform/ui/ShareStrip*",
+      "src/platform/ui/shareTones*"
+    ]
+  },
   {
     "note": "src/modules/site/README.md",
     "paths": [
@@ -95,7 +144,12 @@
       "src/platform/turnstile/**",
       "src/platform/analytics/**",
       "src/platform/service/**"
-    ]
+    ],
+    "exclude": ["src/platform/payload/previewCopy/**"]
+  },
+  {
+    "note": "src/platform/payload/previewCopy/README.md",
+    "paths": ["src/platform/payload/previewCopy/**"]
   },
   {
     "note": "src/platform/richtext/README.md",

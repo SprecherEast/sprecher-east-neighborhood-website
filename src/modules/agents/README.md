@@ -1,3 +1,11 @@
+---
+name: 'Agents'
+type: module
+summary: 'MCP access, what agents may read, drafts, run history.'
+aliases: ['MCP', 'neighborhood agents']
+relationships: []
+---
+
 # Agents
 
 How the neighborhood agents reach the site: one MCP address, a key an admin issues, read access to

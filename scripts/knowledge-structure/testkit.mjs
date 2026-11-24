@@ -11,7 +11,7 @@ export const strict = {
   rules: Object.fromEntries(
     Object.entries(schema.rules).map(([id, rule]) => [
       id,
-      id.startsWith('COVERAGE') ? rule : { ...rule, severity: 'block' },
+      id.startsWith('COVERAGE') ? rule : 'block',
     ]),
   ),
 }

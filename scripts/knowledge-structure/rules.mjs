@@ -11,7 +11,7 @@ export const finding = (schema, rule, note, message) => ({
   rule,
   note,
   message,
-  severity: SEVERITY[schema.rules[rule].severity],
+  severity: SEVERITY[schema.rules[rule]],
 })
 
 const isText = (value) => typeof value === 'string' && value.trim() !== ''
@@ -52,13 +52,11 @@ function fieldFindings(add, schema, note, files) {
     return
   }
   for (const { type: kind, target } of relationships) {
-    const known = schema.relationshipTypes[kind]
-    if (!known) add('NOTE-RELATIONSHIP', `relationship type "${kind}" is not in relationshipTypes`)
-    else if (!known.hand)
-      add(
-        'NOTE-RELATIONSHIP',
-        `the scanner derives "${kind}" (${known.derivedFrom}); do not write it`,
-      )
+    const { derived, hand } = schema.relationshipTypes
+    if (kind in derived)
+      add('NOTE-RELATIONSHIP', `the scanner derives "${kind}" (${derived[kind]}); do not write it`)
+    else if (!(kind in hand))
+      add('NOTE-RELATIONSHIP', `relationship type "${kind}" is not in relationshipTypes`)
     if (
       !resolves(target, {
         noteDir: '',

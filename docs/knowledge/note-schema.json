@@ -1,5 +1,5 @@
 {
-  "$comment": "The one definition of a knowledge note: its fields, its fixed sections, the node and relationship vocabulary and what the check enforces. Read by scripts/knowledge-structure/ (the check, the index and the skeleton). Nothing else restates it. Why: decision 0022. How to write a note: note-template.md.",
+  "$comment": "The one definition of a knowledge note: its fields, its fixed sections, the node and relationship vocabulary and what the check enforces. Read by scripts/knowledge-structure/ (the check, the index and the skeleton). Nothing else restates it. Why: decision 0022. How to write a note: note-template.md. Rule states: block fails the check, warn only reports; what each rule means is in decision 0022.",
   "version": 1,
   "limits": {
     "noteLines": 80,
@@ -8,7 +8,10 @@
     "nameChars": 40
   },
   "fields": [
-    { "key": "name", "what": "The short name the index and the map show." },
+    {
+      "key": "name",
+      "what": "The short name the index and the map show."
+    },
     {
       "key": "type",
       "what": "What the note describes: one of noteTypes, which is also a node type."
@@ -82,63 +85,53 @@
     }
   ],
   "nodeTypes": {
-    "site": { "side": "product", "what": "The whole website." },
-    "module": { "side": "product", "what": "A business area under src/modules/." },
-    "platform-area": { "side": "product", "what": "Shared code under src/platform/." },
-    "feature": {
-      "side": "product",
-      "what": "One piece with its own logic, inside a module or area."
+    "product": {
+      "site": "The whole website.",
+      "module": "A business area under src/modules/.",
+      "platform-area": "Shared code under src/platform/.",
+      "feature": "One piece with its own logic, inside a module or area.",
+      "screen": "A page route a visitor opens.",
+      "endpoint": "An HTTP address that answers with data, not a page.",
+      "mcp-tool": "A tool an AI agent calls through the MCP address.",
+      "collection": "A CMS content type with many documents.",
+      "global": "A CMS content type with one document.",
+      "block": "A page-builder or rich-text block an editor places.",
+      "shared-component": "A component of the UI kit or rich text.",
+      "job": "Work the app runs on its own schedule or queue.",
+      "note": "A knowledge note next to the code it describes."
     },
-    "screen": { "side": "product", "what": "A page route a visitor opens." },
-    "endpoint": {
-      "side": "product",
-      "what": "An HTTP address that answers with data, not a page."
-    },
-    "mcp-tool": { "side": "product", "what": "A tool an AI agent calls through the MCP address." },
-    "collection": { "side": "product", "what": "A CMS content type with many documents." },
-    "global": { "side": "product", "what": "A CMS content type with one document." },
-    "block": { "side": "product", "what": "A page-builder or rich-text block an editor places." },
-    "shared-component": { "side": "product", "what": "A component of the UI kit or rich text." },
-    "job": { "side": "product", "what": "Work the app runs on its own schedule or queue." },
-    "scheduled-task": {
-      "side": "how-we-work",
-      "what": "A task that runs by the clock outside the app."
-    },
-    "note": { "side": "product", "what": "A knowledge note next to the code it describes." },
-    "decision": {
-      "side": "how-we-work",
-      "what": "A decision record under docs/architecture/decisions/."
-    },
-    "guideline": { "side": "how-we-work", "what": "A convention under docs/guidelines/." },
-    "skill": { "side": "how-we-work", "what": "A procedure under .agents/skills/." },
-    "role": { "side": "how-we-work", "what": "A role guide under docs/roles/." },
-    "subagent": { "side": "how-we-work", "what": "An agent definition under .claude/agents/." },
-    "ci-workflow": { "side": "how-we-work", "what": "A GitHub Actions workflow." },
-    "workflow-step": { "side": "how-we-work", "what": "One step of how a change is made." },
-    "check": { "side": "how-we-work", "what": "A mechanical gate: a required check or a script." }
+    "how-we-work": {
+      "scheduled-task": "A task that runs by the clock outside the app.",
+      "decision": "A decision record under docs/architecture/decisions/.",
+      "guideline": "A convention under docs/guidelines/.",
+      "skill": "A procedure under .agents/skills/.",
+      "role": "A role guide under docs/roles/.",
+      "subagent": "An agent definition under .claude/agents/.",
+      "ci-workflow": "A GitHub Actions workflow.",
+      "workflow-step": "One step of how a change is made.",
+      "check": "A mechanical gate: a required check or a script."
+    }
   },
   "relationshipTypes": {
-    "contains": {
-      "hand": false,
-      "derivedFrom": "folders and the screens and content-type references"
+    "derived": {
+      "contains": "folders and the screens and content-type references",
+      "renders": "the components reference",
+      "reads": "the routes and content-type references",
+      "writes": "the content-type reference and the code",
+      "calls": "the routes reference and the code",
+      "exposes": "the endpoint and tool references",
+      "uses": "imports and the components reference",
+      "documents": "docs/knowledge/map.json",
+      "decided-by": "the Decisions section links",
+      "mentions": "Markdown links between notes"
     },
-    "renders": { "hand": false, "derivedFrom": "the components reference" },
-    "reads": { "hand": false, "derivedFrom": "the routes and content-type references" },
-    "writes": { "hand": false, "derivedFrom": "the content-type reference and the code" },
-    "calls": { "hand": false, "derivedFrom": "the routes reference and the code" },
-    "exposes": { "hand": false, "derivedFrom": "the endpoint and tool references" },
-    "uses": { "hand": false, "derivedFrom": "imports and the components reference" },
-    "documents": { "hand": false, "derivedFrom": "docs/knowledge/map.json" },
-    "decided-by": { "hand": false, "derivedFrom": "the Decisions section links" },
-    "mentions": { "hand": false, "derivedFrom": "Markdown links between notes" },
-    "depends-on": {
-      "hand": true,
-      "derivedFrom": "written only when no import or reference shows it"
-    },
-    "owned-by": { "hand": true, "derivedFrom": "written: which role owns the subject" },
-    "triggers": { "hand": true, "derivedFrom": "workflow files, else written" },
-    "runs": { "hand": true, "derivedFrom": "workflow files, else written" },
-    "next-step": { "hand": true, "derivedFrom": "skills, else written" }
+    "hand": {
+      "depends-on": "written only when no import or reference shows it",
+      "owned-by": "written: which role owns the subject",
+      "triggers": "workflow files, else written",
+      "runs": "workflow files, else written",
+      "next-step": "skills, else written"
+    }
   },
   "paths": {
     "roots": ["", "src", "src/modules", "src/platform", "src/app/(frontend)"],
@@ -187,60 +180,21 @@
     "ignore": ["src/migrations/**", "src/payload-types.ts", "**/*.stories.tsx"]
   },
   "rules": {
-    "NOTE-FRONTMATTER": {
-      "severity": "warn",
-      "what": "A note starts with a front matter block that parses."
-    },
-    "NOTE-FIELDS": {
-      "severity": "warn",
-      "what": "The fields are exactly those of fields, in that order."
-    },
-    "NOTE-FIELD-VALUE": {
-      "severity": "warn",
-      "what": "Each field has the right shape: one-line summary within the limit, lists of the right items."
-    },
-    "NOTE-TYPE": { "severity": "warn", "what": "The type is one of noteTypes." },
-    "NOTE-RELATIONSHIP": {
-      "severity": "warn",
-      "what": "Each relationship has a type from relationshipTypes that may be written by hand."
-    },
-    "NOTE-RELATIONSHIP-TARGET": {
-      "severity": "warn",
-      "what": "Each relationship target is a path that exists."
-    },
-    "NOTE-TITLE": {
-      "severity": "warn",
-      "what": "A level 1 title, then a purpose paragraph, before the first section."
-    },
-    "NOTE-SECTIONS": {
-      "severity": "warn",
-      "what": "Level 2 headings are those of sections for the type, in order, once each, and every required one is there."
-    },
-    "NOTE-CAP": { "severity": "warn", "what": "A note is within limits.noteLines." },
-    "NOTE-PATH": {
-      "severity": "warn",
-      "what": "Every backticked path and every file link in a note exists."
-    },
-    "NOTE-ORPHAN": {
-      "severity": "warn",
-      "what": "Every README under notes.discover is a map entry's note."
-    },
-    "MAP-NOTE": { "severity": "warn", "what": "Every map entry names a note that exists, once." },
-    "NOTE-NO-CODE": {
-      "severity": "warn",
-      "what": "A note's map paths match code, and the note names code."
-    },
-    "INDEX-DRIFT": {
-      "severity": "warn",
-      "what": "The index lists each map note, in map order, with the line made from its name and summary."
-    },
-    "COVERAGE-SECTION": {
-      "severity": "warn",
-      "what": "A section marked expected is missing (becomes blocking in #1004)."
-    },
-    "COVERAGE-CODE": {
-      "severity": "warn",
-      "what": "Source code that no map entry describes (becomes blocking in #1004)."
-    }
+    "NOTE-FRONTMATTER": "block",
+    "NOTE-FIELDS": "block",
+    "NOTE-FIELD-VALUE": "block",
+    "NOTE-TYPE": "block",
+    "NOTE-RELATIONSHIP": "block",
+    "NOTE-RELATIONSHIP-TARGET": "block",
+    "NOTE-TITLE": "block",
+    "NOTE-SECTIONS": "block",
+    "NOTE-CAP": "block",
+    "NOTE-PATH": "warn",
+    "NOTE-ORPHAN": "block",
+    "MAP-NOTE": "block",
+    "NOTE-NO-CODE": "block",
+    "INDEX-DRIFT": "block",
+    "COVERAGE-SECTION": "warn",
+    "COVERAGE-CODE": "warn"
   }
 }

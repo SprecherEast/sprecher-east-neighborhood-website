@@ -7,6 +7,8 @@ import { pathReferences, resolves } from './paths.mjs'
 import { checkNote, finding } from './rules.mjs'
 
 const INDEX = 'docs/knowledge/index.md'
+const FIX =
+  ' (the lines under Notes are made from each note: run `npm run knowledge:structure -- --write-index`)'
 
 /** The note entries of the map, each with the name and summary its front matter gives. */
 export function mapNotes(mapJson, read) {
@@ -56,7 +58,7 @@ function indexFindings(entries, indexText, add) {
   const want = new Set(expected.split('\n'))
   for (const line of want) {
     if (!have.has(line))
-      add('INDEX-DRIFT', INDEX, `missing or different line: ${line.slice(0, 90)}`)
+      add('INDEX-DRIFT', INDEX, `missing or different line: ${line.slice(0, 90)}${FIX}`)
   }
   for (const line of have) {
     if (
@@ -64,7 +66,7 @@ function indexFindings(entries, indexText, add) {
       !want.has(line) &&
       indexText.indexOf(line) < indexText.indexOf('## Reference')
     )
-      add('INDEX-DRIFT', INDEX, `line not made from a note: ${line.slice(0, 90)}`)
+      add('INDEX-DRIFT', INDEX, `line not made from a note: ${line.slice(0, 90)}${FIX}`)
   }
 }
 

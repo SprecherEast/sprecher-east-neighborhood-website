@@ -1,3 +1,11 @@
+---
+name: 'Verification'
+type: module
+summary: 'email confirmation by link, limits, welcome email, retention.'
+aliases: ['email confirmation']
+relationships: []
+---
+
 # Verification
 
 Checks that an email address belongs to whoever typed it, by a link sent to it. Contact asks for a
@@ -7,7 +15,7 @@ verify, in the [accounts note](../accounts/README.md). Fields, access and the co
 [email-confirmations content type](../../../docs/reference/content-types/email-confirmations.md); the
 page's URL: [screens](../../../docs/reference/routes.md).
 
-## Links between things
+## How the pieces link
 
 - The link's token is never stored: the record keeps its SHA-256, and a click finds the record again by that hash (`cms/token.ts`, `cms/store.ts`).
 - Other modules never import this one. They call the service shaped by `src/platform/payload/emailConfirmer.ts`; `src/payload.config.ts` hands it over, with the `onConfirmed` listeners ([contact](../contact/README.md)'s `markSubmissionsConfirmed`, which sends the held emails and marks messages confirmed) and the retention `keepers` (contact's `keepSendersWithMessages`, [accounts](../accounts/README.md)' `keepAccountEmails`), decision 0008. The contract and the shared retention and error helpers are in the [shared Payload note](../../platform/payload/README.md).
@@ -28,7 +36,7 @@ page's URL: [screens](../../../docs/reference/routes.md).
 - Retention, hourly (`cms/retention.ts`): an unconfirmed address goes 48 hours after its last link; a confirmed one 12 months after it was confirmed, unless a keeper still needs it. A failing keeper stops the run before anything confirmed is deleted. Deletes re-check their conditions, so a fresh link or confirmation in between survives (`cms/store.ts`).
 - Logs carry only the kind of failure, never an address; the retention log has counts only (`cms/logFailure.ts`, `cms/retention.ts`).
 
-## Limits
+### Limits
 
 - Links: 5 an hour per connection, 3 a day per address, 30 an hour site-wide (`domain/limits.ts`, `domain/rules.ts`). Over any, nothing is sent, the person's answer is the same, and the reason goes to the log (`cms/emailConfirmer.ts`).
 - Confirm clicks: 20 an hour per connection; past that the endpoint answers 429 (`cms/confirmEndpoint.ts`).

@@ -1,3 +1,11 @@
+---
+name: 'Theme'
+type: platform-area
+summary: 'tokens, light and dark mode, theme options, decorations.'
+aliases: ['design tokens', 'dark mode']
+relationships: []
+---
+
 # Theme
 
 How the site's look is themed: where each colour and size token is named and valued, how a
@@ -22,7 +30,7 @@ route is involved, so the generated reference has nothing on it.
 - The breakdown chart has its own seven-step ramp, `chart-ramp-1` (biggest) to `chart-ramp-7`, orange to green to gray, outside the 3:1 pairs because the pale steps cannot pass on a light page: each mark has the thin `chart-ramp-edge` outline and its amount written as text (#866).
 - Chart colours and their contrast pairs are in `tokens.ts` (`CHART_PAIRS`), checked by `themes.test.ts` (#659); the [UI kit](../ui/README.md) draws a chart's parts with `chart-1` to `chart-6`. A chart can ask for the warm set, orange and gray: a theme sets `chart-warm-1` to `chart-warm-6`, they pass the same contrast pairs, and inside a chart with `data-chart-palette="warm"` the names `chart-1` to `chart-6` mean those (`tailwind.css`, #856).
 
-## Behaviors
+## Behaviors and events
 
 - A token marked `both` in `tokens.ts` must be set in light and in dark; one marked `base` (`diagram-marker`, `radius`, `type-fine`, `type-list-row`) is set once. `type-fine` is the finest text size, `text-fine`: the small uppercase labels of the metadata bar (#1002). `type-list-row` is the label size of a row nested in a list, `text-list-row`, in `em` so it follows the list's own size: a little larger than the list's rows (the whole bill's breakdown row, #1163). Dark inherits any light token it leaves out (`themeFile.ts`).
 - `InitTheme.tsx` is a blocking script in `<head>` of the root layout. Before first paint it sets `data-theme` on `<html>` to the stored choice (`light` or `dark`), else to the system's dark preference, else to `defaultTheme` (`theme.ts`).

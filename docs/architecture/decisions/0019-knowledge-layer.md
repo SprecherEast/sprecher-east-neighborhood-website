@@ -1,7 +1,7 @@
 # 0019: A knowledge layer of short notes and generated reference, kept in sync by CI
 
 - **Date:** 2026-11-06
-- **Status:** Accepted
+- **Status:** Accepted; §2.1 and §3 superseded by [0022](0022-knowledge-note-structure.md)
 - **Issue:** #713, under the knowledge-layer epic #712
 
 ## Context

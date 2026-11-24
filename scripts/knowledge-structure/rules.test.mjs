@@ -175,7 +175,7 @@ describe('COVERAGE-SECTION', () => {
 
 describe('severity follows the schema', () => {
   it('reports a rule marked warn as a warning', () => {
-    const lax = { ...strict, rules: { ...strict.rules, 'NOTE-CAP': { severity: 'warn' } } }
+    const lax = { ...strict, rules: { ...strict.rules, 'NOTE-CAP': 'warn' } }
     const text = goodNote(GOOD_FIELDS, GOOD_BODY + '- more\n'.repeat(80))
     const found = checkNote({ schema: lax, path: NOTE_PATH, text, files: GOOD_FILES })
     expect(found.filter((f) => f.rule === 'NOTE-CAP')).toEqual([
