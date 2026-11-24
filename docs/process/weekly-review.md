@@ -84,7 +84,7 @@ names. When none exists, post it on the standing `process` issue filed for this 
 by its form (a task of type `process`) and its title, "Weekly review", among open issues, and file
 it once if absent. It may also be shown in chat, but the GitHub comment is what counts. It holds: what shipped by milestone,
 what failed repeatedly, what came back from review, the friction noted, where the owner stepped in,
-what to automate, and what could not be measured. Each finding that needs a change becomes an
+what each open trial showed, what to automate, and what could not be measured. Each finding that needs a change becomes an
 issue, filed and groomed like any other
 ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §3); a change to a rule is a
 policy change and waits for the owner ([`AGENTS.md`](../../AGENTS.md), step 3).
