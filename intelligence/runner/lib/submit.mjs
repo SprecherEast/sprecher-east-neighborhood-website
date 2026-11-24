@@ -130,7 +130,6 @@ export async function submitItem(rawItem, { cms, runId, validate, contract }) {
   // Whatever the caller expects, the gate decides the decision and the tool (gate.mjs)
   const { curation, route } = gateItem(contract, rawItem)
   const item = { ...rawItem, curation }
-  const decision = curation.decision
   const calls = []
   const warnings = []
   const report = (kind, options) => sendReport(item, { cms, runId, validate, calls }, kind, options)
@@ -147,12 +146,13 @@ export async function submitItem(rawItem, { cms, runId, validate, contract }) {
     }
   }
 
-  if (route === 'none') return { outcome: 'none', decision, calls, warnings }
   if (route === 'reportItem') {
     const kind = item.curation.decision === 'needs-review' ? 'needs-review' : item.curation.decision
     await report(kind)
-    return { outcome: 'reported', decision, calls, warnings }
+    return { outcome: 'reported', calls, warnings }
   }
+  // Only the gate's `submitSuggestion` goes on to build a suggestion; anything else ends here
+  if (route !== 'submitSuggestion') return { outcome: 'none', calls, warnings }
 
   const call = envelope('submitSuggestion', runId, suggestionArguments(item, runId))
   calls.push(call)
@@ -164,7 +164,7 @@ export async function submitItem(rawItem, { cms, runId, validate, contract }) {
       note: `Invalid suggestion: ${errors.slice(0, 3).join('; ')}.`,
       flags: [],
     })
-    return { outcome: 'rejected-invalid', decision, calls, warnings }
+    return { outcome: 'rejected-invalid', calls, warnings }
   }
 
   let answer
@@ -175,13 +175,12 @@ export async function submitItem(rawItem, { cms, runId, validate, contract }) {
       await report('needs-review', {
         note: `Could not store the suggestion: ${String(error.message).slice(0, 200)}.`,
       })
-      return { outcome: 'review', decision, calls, warnings }
+      return { outcome: 'review', calls, warnings }
     } catch {
-      return { outcome: 'deferred', decision, calls, warnings }
+      return { outcome: 'deferred', calls, warnings }
     }
   }
-  if (answer.status === 'duplicate')
-    return { outcome: 'duplicate', decision, id: answer.id, calls, warnings }
+  if (answer.status === 'duplicate') return { outcome: 'duplicate', id: answer.id, calls, warnings }
 
   const target = { collection: item.draft.collection, id: answer.id }
   const missing = item.draft.missing ?? []
@@ -200,5 +199,5 @@ export async function submitItem(rawItem, { cms, runId, validate, contract }) {
       note: 'The source shows an image. Ask for permission before using it, or keep the category image.',
     })
   }
-  return { outcome: 'created', decision, id: answer.id, calls, warnings, pending }
+  return { outcome: 'created', id: answer.id, calls, warnings, pending }
 }

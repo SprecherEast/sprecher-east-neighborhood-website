@@ -1,12 +1,11 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { loadContract } from '../lib/contract.mjs'
 import { gateItem } from '../lib/gate.mjs'
 import { fakeAdapter } from '../lib/model.mjs'
 import { runStage, runVerify } from '../lib/stages.mjs'
 import { curation, verification } from './fixtures.mjs'
-import { contract, intelligenceCopy } from './helpers.mjs'
+import { contract } from './helpers.mjs'
 import { item, titled } from './safetyHelpers.mjs'
 
 // The gate (#1007): the one place that decides what may be accepted and where it goes.
@@ -48,6 +47,34 @@ describe('gateItem', () => {
       gated.curation.reasons[0],
       /^Held for review, not accepted: verification confidence/,
     )
+  })
+
+  it('turns a reject or duplicate into no tool at all, even when pipeline.yaml names a suggestion', () => {
+    const routes = {
+      ...contract.pipeline.routes,
+      reject: 'submitSuggestion',
+      duplicate: 'submitSuggestion',
+    }
+    const odd = { ...contract, pipeline: { ...contract.pipeline, routes } }
+    for (const decision of ['reject', 'duplicate']) {
+      const gated = gateItem(odd, item({ curation: { decision } }))
+      assert.deepEqual([gated.route, gated.suggest], ['none', false], decision)
+    }
+  })
+
+  it('says why it held an accept: the stage or the source, never the item’s words', () => {
+    const byStage = gateItem(contract, item({ curation: { safety: true } }))
+    assert.match(byStage.curation.reasons[0], /safety item \(curate says safety\)/)
+    const bySource = gateItem(contract, item({ candidate: { sourceId: 'nws-api' } }))
+    assert.match(bySource.curation.reasons[0], /safety item \(the source is a safety source\)/)
+  })
+
+  it('holds an accept whose verification is not an object', () => {
+    for (const verification of [null, 'sure', 7, ['safe']]) {
+      const gated = gateItem(contract, { ...item(), verification })
+      assert.equal(gated.curation.decision, 'needs-review', String(verification))
+      assert.equal(gated.route, 'reportItem')
+    }
   })
 
   it('never suggests for any decision but a clean accept', () => {
@@ -154,47 +181,6 @@ describe('gateItem', () => {
       const changed = { ...contract, pipeline: { ...real, promotionGuard: { blockingFlags: [] } } }
       assert.equal(gateItem(changed, item()).suggest, true)
     })
-  })
-})
-
-describe('the settings are checked when the runner starts', () => {
-  const copyWith = (file, change) => intelligenceCopy({ [file]: change })
-
-  it('loads the real settings', () => {
-    assert.doesNotThrow(() => loadContract(copyWith('pipeline.yaml', (text) => text)))
-  })
-
-  it('refuses a pipeline.yaml that routes a held decision to a suggestion', () => {
-    const dir = copyWith('pipeline.yaml', (text) =>
-      text.replace('needs-review: reportItem', 'needs-review: submitSuggestion'),
-    )
-    assert.throws(() => loadContract(dir), /pipeline\.yaml/)
-  })
-
-  it('refuses a pipeline.yaml that points at another safety file', () => {
-    const dir = copyWith('pipeline.yaml', (text) =>
-      text.replace('safety: safety.yaml', 'safety: area.yaml'),
-    )
-    assert.throws(() => loadContract(dir), /pipeline\.yaml/)
-  })
-
-  it('refuses a safety source id that names no registered source', () => {
-    const dir = copyWith('safety.yaml', (text) => `${text.trimEnd()}\n  - no-such-source\n`)
-    assert.throws(() => loadContract(dir), /no-such-source|safety\.yaml/)
-  })
-
-  it('refuses a safety.yaml with no sources, which would switch the strongest layer off', () => {
-    const dir = copyWith('safety.yaml', (text) =>
-      text.replace(/\nsources:[\s\S]*$/, '\nsources: []\n'),
-    )
-    assert.throws(() => loadContract(dir), /safety\.yaml/)
-  })
-
-  it('refuses a safety.yaml with no meaning, the principle the stages apply', () => {
-    const dir = copyWith('safety.yaml', (text) =>
-      text.replace(/^meaning:[\s\S]*?(?=^sources:)/m, ''),
-    )
-    assert.throws(() => loadContract(dir), /safety\.yaml/)
   })
 })
 

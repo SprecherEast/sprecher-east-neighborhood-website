@@ -104,3 +104,18 @@ cases:
     graders:
       - { check: equals, field: $.safety, value: false }
     why: A standing rule and a free guide that help people be prepared, with weather as the topic and no harm or danger reported; the model judges by meaning that it is not a safety item.
+  - id: safety-warning-worded-as-reminder
+    stage: curate
+    tags: [safety, meaning, contrast]
+    input:
+      sourceId: madison365-news
+      kind: news
+      title: Friendly reminder for east side neighbors to boil tap water before drinking until further notice
+      sourceText: The water utility is reminding east side households to boil tap water for one minute before drinking or cooking until it says the water is safe again.
+      startsAt: null
+      locationText: East side, Madison
+    expected: { decision: needs-review, coverage: catchment, safety: true, route: reportItem }
+    graders:
+      - { check: equals, field: $.safety, value: true }
+      - { check: notContains, field: $.decision, value: accept }
+    why: A real warning worded as a routine reminder, from a source that is not always held; it asks people to act because of a danger, so the model judges by meaning that it is a safety item and a person decides.

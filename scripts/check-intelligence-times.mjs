@@ -19,7 +19,7 @@ const dateTimes = (value) =>
 export function offsetProblems(c) {
   if (c.tags?.includes('wrong-offset')) return []
   return dateTimes([c.input, c.given, c.graders]).flatMap((value) => {
-    const offset = DATE_TIME.exec(value)[2].replace('Z', '+00:00')
+    const offset = DATE_TIME.exec(value)[2]
     return chicagoOffset(value) === offset
       ? []
       : [`${c.id}: ${value} should use ${chicagoOffset(value)} in America/Chicago`]

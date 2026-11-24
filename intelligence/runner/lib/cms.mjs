@@ -122,11 +122,6 @@ const BESIDES_SUGGESTING = ['taxonomy', 'known', 'createRun', 'updateRun', 'repo
  */
 export function withoutSuggestions(cms) {
   return Object.freeze(
-    Object.fromEntries(
-      BESIDES_SUGGESTING.filter((name) => typeof cms[name] === 'function').map((name) => [
-        name,
-        (...args) => cms[name](...args),
-      ]),
-    ),
+    Object.fromEntries(BESIDES_SUGGESTING.map((name) => [name, (...args) => cms[name](...args)])),
   )
 }

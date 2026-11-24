@@ -147,7 +147,7 @@ answer `safety`. The runner's gate (`runner/lib/gate.mjs`) reads no text of any 
 item from an always-held source, or one a stage didn't clear with a plain `false`. The three rules,
 the accepted limit and where each lives are in the pipeline note
 ([`README.md`](README.md#output-suggestions-and-review-items-in-the-cms), "The same gate"). Only a decision of `accept` creates a
-suggestion, so `reject`, `update` and `cancel` of a safety item stay as decided (rule 4 above).
+suggestion, so `reject`, `update` and `cancel` of a safety item stay as decided ("Public interest and context", rule 4).
 Nothing publishes by itself either way: agents only create suggested drafts.
 
 The five checks, which verify runs on every item:

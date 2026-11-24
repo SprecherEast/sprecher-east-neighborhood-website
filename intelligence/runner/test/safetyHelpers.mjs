@@ -1,3 +1,6 @@
+import assert from 'node:assert/strict'
+
+import { dryRunCms } from '../lib/cms.mjs'
 import { classifySafety } from '../lib/safety.mjs'
 import { candidate, curation, draft, source as sourceFacts, verification } from './fixtures.mjs'
 import { contract } from './helpers.mjs'
@@ -14,3 +17,18 @@ export const item = ({ candidate: c, verification: v, curation: cu, draft: d, so
 })
 export const titled = (title) => item({ candidate: { title } })
 export const classify = (value) => classifySafety(contract.safety, value)
+
+export const runId = 'intel-test-run'
+
+/** A dry-run client that records writes and allows a suggestion only from inside `submitItem`. */
+export const cmsWithLog = () => {
+  const cms = dryRunCms(null)
+  const submitted = []
+  cms.submitSuggestion = async (args) => {
+    // A suggestion may only come from inside submitItem, where the gate ran first
+    assert.match(new Error('where').stack, /submitItem/)
+    submitted.push(args)
+    return { status: 'created', id: 41 }
+  }
+  return Object.assign(cms, { submitted })
+}

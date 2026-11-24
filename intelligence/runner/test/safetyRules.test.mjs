@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { describe, it } from 'node:test'
 
 import { classifySafety, safetyRules } from '../lib/safety.mjs'
-import { contract } from './helpers.mjs'
+import { contract, intelligenceDir } from './helpers.mjs'
 import { classify, item } from './safetyHelpers.mjs'
 
 // What counts as a safety item for the gate (#1007): the source list and the stages' answers.
@@ -33,6 +35,28 @@ describe('classifySafety: the source list', () => {
       'spectrum-madison-local',
     ])
       assert.equal(classify(item({ candidate: { sourceId: id } })).safety, true, id)
+  })
+
+  it('holds an item whose alsoReportedBy is not a list, however it reads', () => {
+    for (const alsoReportedBy of ['mpl-pinney-events', { sourceId: 'mpl-pinney-events' }, 3]) {
+      assert.equal(
+        classify(item({ candidate: { alsoReportedBy } })).safety,
+        true,
+        String(alsoReportedBy),
+      )
+    }
+  })
+
+  it('names the cause in fixed words', () => {
+    assert.deepEqual(classify(item({ source: null })).why, [
+      'the source facts are missing or don’t match',
+    ])
+    assert.deepEqual(classify(item({ curation: { safety: null } })).why, [
+      'curate’s safety answer is not a boolean',
+    ])
+    assert.deepEqual(classify(item({ candidate: { sourceId: 'nws-api' } })).why, [
+      'the source is a safety source',
+    ])
   })
 
   it('leaves a source that is not listed to the stages', () => {
@@ -161,5 +185,13 @@ describe('classifySafety: no item text', () => {
   it('does not grow with the size of the item', () => {
     const big = item({ candidate: { sourceText: 'a '.repeat(150_000) } })
     assert.equal(classify(big).safety, false)
+  })
+})
+
+describe('the definition the stages read', () => {
+  it('is safety.yaml itself, appended to the coverage policy under its own heading', () => {
+    const text = readFileSync(path.join(intelligenceDir, 'safety.yaml'), 'utf8').trim()
+    assert.ok(contract.coverage.includes('## What counts as a safety item (safety.yaml)'))
+    assert.ok(contract.coverage.includes(text))
   })
 })

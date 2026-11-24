@@ -135,7 +135,6 @@ export async function processRun(run) {
         counts[item.curation.decision === 'duplicate' ? 'duplicates' : 'rejected']++
       } else {
         const result = await submit(item, { runId, validate: validateEnvelope })
-        const decision = result.decision
         calls.push(...result.calls)
         for (const warning of result.warnings) addError(warning)
         if (result.pending?.length) {
@@ -146,8 +145,9 @@ export async function processRun(run) {
         if (result.outcome === 'created') counts.proposed++
         if (result.outcome === 'duplicate') counts.duplicates++
         if (result.outcome === 'rejected-invalid') counts.rejected++
-        if (result.outcome === 'review' || decision === 'needs-review') counts.needsReview++
-        if (['update', 'cancel'].includes(decision)) counts.updates++
+        if (result.outcome === 'review' || item.curation.decision === 'needs-review')
+          counts.needsReview++
+        if (['update', 'cancel'].includes(item.curation.decision)) counts.updates++
       }
     } catch (error) {
       if (error instanceof StageError) {

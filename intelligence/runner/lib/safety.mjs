@@ -19,13 +19,10 @@ export const unregisteredSafetySources = (definition, registry) => {
 
 /** Why the source can't clear the item: it must be known, match the candidate, and not be listed. */
 function sourceProblems(rules, { candidate, source }) {
-  const also = Array.isArray(candidate.alsoReportedBy) ? candidate.alsoReportedBy : []
+  // A listed `alsoReportedBy` that isn't a list throws here, and `classifySafety` holds the item
+  const also = candidate.alsoReportedBy ?? []
   const ids = [candidate.sourceId, source?.id, ...also.map((other) => other?.sourceId)]
-  if (
-    !isObject(source) ||
-    typeof candidate.sourceId !== 'string' ||
-    source.id !== candidate.sourceId
-  )
+  if (!isObject(source) || source.id !== candidate.sourceId)
     return ['the source facts are missing or don’t match']
   if (ids.some((id) => typeof id !== 'string')) return ['a source id is missing']
   return ids.some((id) => rules.sources.has(id)) ? ['the source is a safety source'] : []
@@ -37,7 +34,7 @@ function stageProblems({ verification, curation }) {
     ['verify', verification],
     ['curate', curation],
   ].flatMap(([stage, section]) => {
-    if (!isObject(section) || section.safety === undefined || section.safety === null)
+    if (!isObject(section) || section.safety === undefined)
       return [`${stage} gave no safety answer`]
     if (section.safety === true) return [`${stage} says safety`]
     return section.safety === false ? [] : [`${stage}’s safety answer is not a boolean`]
