@@ -47,15 +47,15 @@ Session of 2026-11-23 (voice, recorded on #695):
   Agent files nobody uses are removed or folded into skills, as #695 lays out, and nothing is more
   complicated than that.
 
-Decisions of 2026-11-24 (voice session, recorded on #1452 and #695), settling the departures from the
-2026-11-06 line above:
+Decisions of 2026-11-24 (voice session, recorded on #1452 and #695), settling the three points
+PR #1452 raised, including the departure from the 2026-11-06 line above:
 
-- The role guides stay plain files in `docs/roles/`, loaded by path through the brief, and do not
-  become skills. Reason: predictability. The brief shows exactly which guides a worker loaded, so
-  it can be checked, and plain files work with any AI tool. This replaces that earlier line.
-- The worker guide reads the guides before the change is made, on trial. No failure of the old
-  order was measured, so the [weekly review](weekly-review.md) checks from review results and later
-  problems whether it helps, and the order is revisited if it shows no benefit.
+- The role guides stay plain files in `docs/roles/`, loaded by path through the brief, not skills.
+  Reason: predictability. The brief shows which guides a worker loaded, so it can be checked, and
+  plain files work with any AI tool. This replaces that earlier line.
+- The worker guide's order (guides read before the change) is kept on trial. Reason: knowing the
+  rules first should mean less rework. No failure of the old order was measured, so the
+  [weekly review](weekly-review.md) checks whether it helps; no benefit means revisiting it.
 - The tool lists of the removed agents are dropped. Reason: each also allowed a shell, so they never
   limited anything. The three remaining agents keep their own lists.
 

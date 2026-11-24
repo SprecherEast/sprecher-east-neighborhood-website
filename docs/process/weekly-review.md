@@ -58,7 +58,10 @@ since=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-7d
    itself over agent judgment ([development](../guidelines/development.md#fast-by-default-public-pages-first)).
 
 A process change the owner put on trial is checked against this evidence (review results and
-problems met later) and revisited when it shows no benefit.
+problems met later) and revisited when it shows no benefit. The dated decisions in the
+[operating model](agent-operating-model.md#the-owners-direction-summary-recorded-on-685-and-721)
+mark which changes are on trial, and the report says, for each open trial, what the evidence showed
+that week.
 
 ## What it cannot measure
 
