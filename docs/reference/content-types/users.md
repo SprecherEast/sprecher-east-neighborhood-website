@@ -3,6 +3,7 @@
 # Users (`users`)
 
 - Kind: collection
+- Owner: module `accounts`, defined in `src/modules/accounts/cms/users.ts`
 - Drafts: no
 - Versions: none kept
 

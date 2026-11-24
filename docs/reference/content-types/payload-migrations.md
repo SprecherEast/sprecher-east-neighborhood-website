@@ -3,6 +3,7 @@
 # Payload Migrations (`payload-migrations`)
 
 - Kind: collection
+- Owner: a plugin or Payload
 - Drafts: no
 - Versions: none kept
 

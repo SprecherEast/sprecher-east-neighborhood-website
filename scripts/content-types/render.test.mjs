@@ -120,6 +120,27 @@ describe('buildPages', () => {
     expect(pages.get('faq.md')).not.toContain('Custom endpoints')
   })
 
+  it('names the owner, with the file that defines the type, when it is known (#1461)', () => {
+    const owner = { owner: 'module `events`', file: 'src/modules/events/cms/events.ts' }
+    const page = buildPages([model({ owner })]).get('events.md')
+    expect(page).toContain(
+      '- Owner: module `events`, defined in `src/modules/events/cms/events.ts`',
+    )
+    expect(
+      buildPages([model({ owner: { owner: 'a plugin or Payload', file: '' } })]).get('events.md'),
+    ).toContain('- Owner: a plugin or Payload')
+    expect(buildPages([model()]).get('events.md')).not.toContain('Owner')
+  })
+
+  it('links the AI agent tools and the jobs that reach the type (#1461)', () => {
+    const page = buildPages([model({ tools: ['findEvents'], jobs: ['deleteOld'] })]).get(
+      'events.md',
+    )
+    expect(page).toContain('- AI agent tools: `findEvents` ([list](../mcp-tools.md))')
+    expect(page).toContain('- Jobs: `deleteOld` ([list](../jobs.md))')
+    expect(buildPages([model()]).get('events.md')).not.toContain('AI agent tools')
+  })
+
   it('says in the README that the pages are generated for production', () => {
     expect(buildPages([model()]).get('README.md')).toContain('NODE_ENV=production')
   })

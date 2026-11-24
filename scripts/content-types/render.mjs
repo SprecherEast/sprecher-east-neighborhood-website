@@ -35,7 +35,7 @@ const nameCell = (name, note = '') => {
 }
 
 /** A file in a table: a path is code, the other answers are plain words. */
-const fileCell = (file) => (file.startsWith('src/') ? code(file) : cell(file))
+export const fileCell = (file) => (file.startsWith('src/') ? code(file) : cell(file))
 
 export function table(header, rows) {
   const line = (cells) => `| ${cells.join(' | ')} |`
@@ -125,6 +125,10 @@ function renderBody(model, level, { split = false } = {}) {
   const facts = [
     `- Kind: ${model.kind}`,
     model.purpose && `- Purpose: ${cell(model.purpose)}`,
+    model.owner && `- Owner: ${ownerText(model.owner)}`,
+    model.tools?.length > 0 &&
+      `- AI agent tools: ${model.tools.map(code).join(', ')} ([list](../mcp-tools.md))`,
+    model.jobs?.length > 0 && `- Jobs: ${model.jobs.map(code).join(', ')} ([list](../jobs.md))`,
     ...model.versions.map((line) => `- ${line}`),
   ].filter(Boolean)
   const own = split ? model.fields.filter((row) => !row.section) : model.fields
@@ -151,6 +155,9 @@ function renderBody(model, level, { split = false } = {}) {
   return block(...parts)
 }
 
+/** `module \`events\`, defined in \`src/...\``; the file is empty when the repository doesn't define it. */
+const ownerText = ({ owner, file }) => (file ? `${owner}, defined in ${code(file)}` : owner)
+
 const titleOf = (model) => `${model.title} (${code(model.slug)})`
 
 function renderPage(model, options) {
@@ -167,7 +174,7 @@ const lineCount = (text) => text.trimEnd().split('\n').length
 
 function renderReadme(entries) {
   const intro =
-    'One page for every collection and global in the loaded Payload config, plugins included. Generated. What each type is for, why the model is shaped this way, its relations and what each hook is for are in [`docs/architecture/data-model.md`](../../architecture/data-model.md). “Defined in” is the file the function was written in, or the package for Payload’s and the plugins’ own; `inline` in the Function column is an anonymous function, with what it does when it only allows or denies. The config is loaded with `NODE_ENV=production`, as the live site runs, so settings that depend on it (the Secure sign-in cookie) show their production value.'
+    'One page for every collection and global in the loaded Payload config, plugins included. Generated. What each type is for, why the model is shaped this way, its relations and what each hook is for are in [`docs/architecture/data-model.md`](../../architecture/data-model.md). “Defined in” is the file the function was written in, or the package for Payload’s and the plugins’ own; `inline` in the Function column is an anonymous function, with what it does when it only allows or denies. Each page names the module that owns the type, and the AI agent tools and jobs that reach it; the tools are in [`mcp-tools.md`](../mcp-tools.md), the jobs in [`jobs.md`](../jobs.md) and the API paths in [`endpoints.md`](../endpoints.md). The config is loaded with `NODE_ENV=production`, as the live site runs, so settings that depend on it (the Secure sign-in cookie) show their production value.'
   const rows = entries.map((entry) => [
     `[${code(entry.slug)}](${entry.link})`,
     entry.kind,

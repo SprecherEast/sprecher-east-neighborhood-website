@@ -125,9 +125,9 @@ export function describeRoute(relativePath, text) {
   }
 }
 
-/** Every page and route handler under the frontend folder, as rows. */
-export function collectRoutes(root) {
-  const base = path.join(root, ROUTES_ROOT)
+/** Every page and route handler under a route folder (the frontend one by default), as rows. */
+export function collectRoutes(root, folder = ROUTES_ROOT) {
+  const base = path.join(root, folder)
   const rows = []
   const walk = (directory) => {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
@@ -146,7 +146,8 @@ export function collectRoutes(root) {
 const RENDERING_NOTE = [
   'Each row is what the route file itself says, read from its source: a page can still be',
   'dynamic through something it imports. `Params` says whether `generateStaticParams` builds',
-  'the pages ahead of the first visit. Layouts are not listed.',
+  'the pages ahead of the first visit. Layouts are not listed. The REST and GraphQL APIs, custom',
+  'endpoints and the AI agent endpoint are in [endpoints.md](endpoints.md).',
 ].join(' ')
 
 export function renderRoutes(rows) {

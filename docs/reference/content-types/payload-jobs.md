@@ -3,6 +3,7 @@
 # Payload Jobs (`payload-jobs`)
 
 - Kind: collection
+- Owner: a plugin or Payload
 - Drafts: no
 - Versions: none kept
 

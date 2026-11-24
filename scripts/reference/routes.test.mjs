@@ -1,6 +1,27 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { describeRoute, renderRoutes, routeUrl } from './routes.mjs'
+import { collectRoutes, describeRoute, renderRoutes, routeUrl } from './routes.mjs'
+
+describe('collectRoutes with another base folder (#1461)', () => {
+  it('reads the route handlers of Payload’s own route group, with their methods', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'reference-routes-'))
+    const file = path.join(root, 'src/app/(payload)/api/[...slug]/route.ts')
+    fs.mkdirSync(path.dirname(file), { recursive: true })
+    fs.writeFileSync(
+      file,
+      'export const GET = handler()\nexport const POST = handler()\nexport const other = 1\n',
+    )
+    fs.writeFileSync(path.join(root, 'src/app/(payload)/layout.tsx'), 'export default () => null\n')
+    const rows = collectRoutes(root, 'src/app/(payload)')
+    fs.rmSync(root, { recursive: true, force: true })
+    expect(rows.map((row) => [row.url, row.kind, row.methods, row.file])).toEqual([
+      ['/api/[...slug]', 'route handler', ['GET', 'POST'], 'api/[...slug]/route.ts'],
+    ])
+  })
+})
 
 describe('routeUrl', () => {
   it('turns a page file into its URL pattern and drops route groups', () => {
@@ -114,6 +135,10 @@ describe('renderRoutes', () => {
     expect(lines[1]).toContain('`/events`')
     expect(lines[1]).toContain('`@/modules/events/server`')
     expect(lines[1]).toContain('600')
+  })
+
+  it('links the endpoints page for what is not a screen (#1461)', () => {
+    expect(renderRoutes(rows)).toContain('[endpoints.md](endpoints.md)')
   })
 
   it('shows the methods of a handler', () => {

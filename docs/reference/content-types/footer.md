@@ -3,6 +3,7 @@
 # Footer (`footer`)
 
 - Kind: global
+- Owner: a plugin or Payload
 - Drafts: no
 - Versions: none kept
 

@@ -4,6 +4,7 @@
 
 - Kind: collection
 - Purpose: This is a collection of automatically created search results. These results are used by the global site search and will be updated automatically as documents in the CMS are created or updated.
+- Owner: a plugin or Payload
 - Drafts: no
 - Versions: none kept
 

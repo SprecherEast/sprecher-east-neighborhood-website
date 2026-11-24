@@ -3,6 +3,8 @@
 # Form Submissions (`form-submissions`)
 
 - Kind: collection
+- Owner: a plugin or Payload
+- Jobs: `deleteExpiredContactMessages` ([list](../jobs.md))
 - Drafts: no
 - Versions: none kept
 

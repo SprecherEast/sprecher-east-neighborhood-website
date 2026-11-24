@@ -3,6 +3,7 @@
 # Payload Jobs Stats (`payload-jobs-stats`)
 
 - Kind: global
+- Owner: a plugin or Payload
 - Drafts: no
 - Versions: none kept
 
