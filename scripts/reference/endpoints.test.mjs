@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { describeApi, renderApi } from './endpoints.mjs'
+import { describeApi } from './endpoints.mjs'
+import { renderApi } from './endpointsPage.mjs'
 import { base, locate } from './endpointsFixture.mjs'
 
 describe('describeApi', () => {

@@ -37,7 +37,7 @@ import {
   renderComponentIndex,
   renderComponentPage,
 } from './reference/components.mjs'
-import { renderApi } from './reference/endpoints.mjs'
+import { renderApi } from './reference/endpointsPage.mjs'
 import { renderJobs } from './reference/jobsPage.mjs'
 import { listFiles } from './reference/listFiles.mjs'
 import { loadFacts } from './reference/loadFacts.mjs'

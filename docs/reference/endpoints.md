@@ -186,7 +186,7 @@ Added by the config, a plugin or a content type. The access check of one is set 
 
 ## Not shown
 
-Not shown: the access check inside a custom endpoint, a route handler or a server action; Next.js’s own routes and the proxy (`src/proxy.ts`); and what a plugin’s endpoint does beyond its handler’s name.
+Not shown: the access check inside a custom endpoint, a route handler or a server action; Next.js’s own routes and the proxy (`src/proxy.ts`); the redirects and response headers `next.config.js` sets; the services the server runs next to the application (analytics behind its own Caddy host, the pull request previews), which `ops/README.md` and `ops/caddy/` describe; and what a plugin’s endpoint does beyond its handler’s name.
 
 ## MCP endpoint
 
