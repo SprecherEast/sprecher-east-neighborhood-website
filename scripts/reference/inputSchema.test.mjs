@@ -75,4 +75,33 @@ describe('describeInput', () => {
     expect(note({ n: z.number().min(1).max(9) }, 'n')).toBe('a value from 1 to 9')
     expect(note({ n: z.number().max(9) }, 'n')).toBe('a value of at most 9')
   })
+
+  it('reads the rarer keywords: exclusive bounds, a step, a fixed value, no repeats, a default (#1461)', () => {
+    const [field] = describeInput({
+      properties: {
+        n: {
+          type: 'number',
+          exclusiveMinimum: 0,
+          exclusiveMaximum: 10,
+          multipleOf: 2,
+          const: 4,
+          default: 4,
+        },
+      },
+    })
+    expect(field.note).toBe(
+      'a value above 0; a value below 10; a multiple of 2; always 4; default 4',
+    )
+    const [list] = describeInput({
+      properties: { list: { type: 'array', items: { type: 'string' }, uniqueItems: true } },
+    })
+    expect(list.note).toBe('no repeated items')
+    const [strict] = describeInput({
+      properties: { o: { type: 'object', additionalProperties: false, properties: {} } },
+    })
+    expect(strict.note).toBe('no other fields')
+    expect(
+      describeInput({ properties: { z: { type: 'number', const: 0, default: 0 } } })[0].note,
+    ).toBe('always 0; default 0')
+  })
 })

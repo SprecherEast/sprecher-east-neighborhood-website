@@ -37,6 +37,17 @@ const valueLimits = ({ minimum, maximum: top }) => {
 
 const pattern = (source) => `matches \`${source}\``
 
+/** The rarer keywords: an exclusive bound, a step, a fixed value, no repeats, no extra fields, a default. */
+const otherLimits = (schema) => [
+  schema.exclusiveMinimum !== undefined && `a value above ${schema.exclusiveMinimum}`,
+  schema.exclusiveMaximum !== undefined && `a value below ${schema.exclusiveMaximum}`,
+  schema.multipleOf !== undefined && `a multiple of ${schema.multipleOf}`,
+  schema.const !== undefined && `always ${JSON.stringify(schema.const)}`,
+  schema.uniqueItems && 'no repeated items',
+  schema.additionalProperties === false && 'no other fields',
+  schema.default !== undefined && `default ${JSON.stringify(schema.default)}`,
+]
+
 /** The constraints of one schema, in words; an array's items and an object's fields follow. */
 function constraints(raw) {
   const schema = withoutNull(raw)
@@ -49,6 +60,7 @@ function constraints(raw) {
     countOf(schema.minItems, schema.maxItems, 'items'),
     schema.pattern && pattern(schema.pattern),
     schema.format && `format ${schema.format}`,
+    ...otherLimits(schema),
     schema.items && itemFacts(schema.items),
   ].filter(Boolean)
 }
