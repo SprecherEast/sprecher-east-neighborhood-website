@@ -12,6 +12,7 @@ export default [
     ignores: [
       '.next/**',
       'out/**',
+      'storybook-static/**',
       'build/**',
       'node_modules/**',
       'data/**',

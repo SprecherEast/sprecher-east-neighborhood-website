@@ -96,3 +96,6 @@ test-results/
 playwright-report/
 __pycache__/
 e2e/.data-passkeys/
+
+# Storybook static build (#1447)
+storybook-static/

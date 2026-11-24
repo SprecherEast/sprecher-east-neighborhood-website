@@ -27,6 +27,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "redirects.js",
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
     "next-env.d.ts",
     "next.config.js",
     ".next/dev/types/**/*.ts"
