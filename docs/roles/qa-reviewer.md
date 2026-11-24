@@ -135,9 +135,9 @@ npm run audit:prod
 npm run build
 ```
 
-## Cross-Agent Review Matrix
+## Cross-Role Review Matrix
 
-| Agent              | What to Review                                                   |
+| Role guide         | What to Review                                                   |
 | ------------------ | ---------------------------------------------------------------- |
 | `ux-designer`      | Layout decisions, navigation flow, information hierarchy         |
 | `ui-designer`      | Visual consistency, spacing, typography, color usage             |

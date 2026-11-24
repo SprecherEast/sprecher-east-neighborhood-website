@@ -103,7 +103,7 @@ Before every claim, with the candidate and every issue In progress:
 
 Look the level up in the [scrutiny table](../../../docs/process/agent-operating-model.md#6-how-much-scrutiny-a-change-gets).
 It is a lookup, not an agent: take the highest level any row matches. **The levels do not take
-effect yet** (a later piece of #695 does that). Until then review depth follows the model and
+effect yet** (#1450 does that). Until then review depth follows the model and
 effort rule in [`CLAUDE.md`](../../../CLAUDE.md), and the level you look up is only a proposal in
 the brief, which no one is bound by. Start the reviewer as a new subagent that gets only the pull
 request and its issue.

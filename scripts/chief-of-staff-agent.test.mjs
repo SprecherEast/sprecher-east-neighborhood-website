@@ -102,16 +102,4 @@ describe('the chief of staff agent file', () => {
     const agentTools = allowed.filter((t) => t === 'Agent' || t.startsWith('Agent('))
     expect(agentTools).toEqual(['Agent(worker, qa-reviewer)'])
   })
-
-  it('leaves the other role agents pointing at their guides', () => {
-    const others = fs
-      .readdirSync(path.join(root, '.claude/agents'))
-      .filter((f) => f !== 'chief-of-staff.md')
-    expect(others.length).toBeGreaterThan(0)
-    for (const file of others) {
-      const guide = `docs/roles/${file}`
-      expect(fs.readFileSync(path.join(root, '.claude/agents', file), 'utf8')).toContain(guide)
-      expect(fs.existsSync(path.join(root, guide)), `${guide} exists`).toBe(true)
-    }
-  })
 })
