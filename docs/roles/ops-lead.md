@@ -54,7 +54,7 @@ All environment variables are listed in [`docs/project.md`](../project.md).
 ### Task Management
 
 - GitHub issues are the source of truth for work
-- Tasks created with clear descriptions, acceptance criteria, and assigned agent
+- Tasks created with clear descriptions, acceptance criteria, and an assignee
 - Status updates in Slack: #sprecher-east-na channel
 
 ### Branch Workflow
@@ -85,7 +85,7 @@ All environment variables are listed in [`docs/project.md`](../project.md).
 
 ## Collaboration
 
-- Coordinate work across all agents through the issues and the board
+- Coordinate work through the issues and the board
 - Work with `backend-eng` on server config and deployment
 - Work with `cms-eng` on database management and backups
 - `qa-reviewer` validates deployment health

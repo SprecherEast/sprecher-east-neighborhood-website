@@ -8,13 +8,14 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import yaml from 'js-yaml'
 import { describe, expect, it } from 'vitest'
+
+import { parseFrontmatter } from './frontmatter.mjs'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const AGENT = '.claude/agents/chief-of-staff.md'
 const text = fs.readFileSync(path.join(root, AGENT), 'utf8')
-const frontmatter = yaml.load(text.match(/^---\n([\s\S]*?)\n---/)[1])
+const frontmatter = parseFrontmatter(text)
 
 /** Frontmatter lists may be a YAML list or a comma-separated string (commas inside parentheses stay). */
 const list = (value) =>

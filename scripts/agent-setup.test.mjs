@@ -1,14 +1,19 @@
 /**
  * The agent setup is the chief of staff, one worker and one reviewer (#695). These checks keep
- * every agent, skill pointer and role guide the docs name real, and keep removed agents out of the
- * docs. Generated copies under `.claude/rules/generated/` are checked by `agent-context`.
+ * every agent, skill pointer and role guide the docs name real, keep removed agents out of the
+ * docs, and keep leftovers of a broken find-and-replace (a literal backslash and digit) out of
+ * them. They scan every Markdown and YAML file under `docs/`, `.claude/`, `.agents/`, `.github/`,
+ * `ops/`, `intelligence/` and `src/`, plus `AGENTS.md` and `CLAUDE.md`. They leave out history
+ * (`docs/memory/`, `docs/sprint-2-tasks.md`, the decision records), the third-party `vercel-`
+ * skills, and `scripts/`, whose tests name the removed agents as data.
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import yaml from 'js-yaml'
 import { describe, expect, it } from 'vitest'
+
+import { parseFrontmatter } from './frontmatter.mjs'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8')
@@ -18,6 +23,25 @@ const names = (dir, ext) =>
     .readdirSync(path.join(root, dir), { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(ext))
     .map((entry) => entry.name)
+
+const SKIPPED = [
+  'node_modules',
+  '.next',
+  'docs/memory',
+  'docs/sprint-2-tasks.md',
+  'docs/architecture/decisions',
+  '.agents/skills/vercel-',
+]
+
+/** Every Markdown and YAML file under `dir`, as repository paths. */
+function walk(dir) {
+  return fs.readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap((entry) => {
+    const file = `${dir}/${entry.name}`
+    if (SKIPPED.some((skipped) => file.startsWith(skipped))) return []
+    if (entry.isDirectory()) return walk(file)
+    return /\.(md|ya?ml)$/.test(entry.name) ? [file] : []
+  })
+}
 
 /** The only agents in use; the chief of staff may start the other two. */
 const AGENTS = ['chief-of-staff', 'qa-reviewer', 'worker']
@@ -40,19 +64,12 @@ const REMOVED = [
 const DOCS = [
   'AGENTS.md',
   'CLAUDE.md',
-  'docs/project.md',
-  ...names('docs/process', '.md').map((n) => `docs/process/${n}`),
-  ...names('docs/roles', '.md').map((n) => `docs/roles/${n}`),
-  ...names('docs/guidelines', '.md').map((n) => `docs/guidelines/${n}`),
-  ...names('.claude/rules', '.md').map((n) => `.claude/rules/${n}`),
-  ...names('.claude/agents', '.md').map((n) => `.claude/agents/${n}`),
-  ...fs
-    .readdirSync(path.join(root, '.agents/skills'))
-    .filter((n) => !n.startsWith('vercel-'))
-    .map((n) => `.agents/skills/${n}/SKILL.md`),
+  ...['docs', '.claude', '.agents', '.github', 'ops', 'intelligence', 'src'].flatMap((dir) =>
+    exists(dir) ? walk(dir) : [],
+  ),
 ]
 
-const frontmatter = (file) => yaml.load(read(file).match(/^---\n([\s\S]*?)\n---/)[1])
+const frontmatter = (file) => parseFrontmatter(read(file))
 const mentions = (re) =>
   DOCS.flatMap((file) => [...read(file).matchAll(re)].map((m) => [file, m[1]]))
 
@@ -147,6 +164,19 @@ describe('skill pointers', () => {
   it('are the only skills the docs name', () => {
     for (const [file, skill] of mentions(/\.agents\/skills\/([\w-]+)\//g)) {
       expect(skills, `${file} names the skill ${skill}`).toContain(skill)
+    }
+  })
+})
+
+describe('the docs', () => {
+  const withoutCode = (text) =>
+    text.replace(/^(```|~~~)[\s\S]*?^\1/gm, '').replace(/`[^`\n]*`/g, '')
+
+  it('hold no literal backslash and digit left by a broken find-and-replace', () => {
+    const own = DOCS.filter((file) => /^(docs|\.agents|\.claude)\//.test(file))
+    expect(own.length).toBeGreaterThan(50)
+    for (const file of own) {
+      expect(withoutCode(read(file)), file).not.toMatch(/\\\d/)
     }
   })
 })

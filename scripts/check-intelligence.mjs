@@ -7,6 +7,8 @@ import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import yaml from 'js-yaml'
 
+import { parseFrontmatter } from './frontmatter.mjs'
+
 const dir = path.resolve(process.argv[2] ?? 'intelligence')
 const problems = []
 const problem = (file, message) =>
@@ -198,8 +200,7 @@ for (const stage of pipeline?.stages ?? []) {
     continue
   }
   const text = readFileSync(file, 'utf8')
-  const front = /^---\n([\s\S]*?)\n---\n/.exec(text)
-  const meta = front ? yaml.load(front[1], { schema: yaml.JSON_SCHEMA }) : {}
+  const meta = parseFrontmatter(text, { schema: yaml.JSON_SCHEMA })
   if (meta?.stage !== stage.id || meta?.input !== stage.input || meta?.output !== stage.output) {
     problem(
       file,

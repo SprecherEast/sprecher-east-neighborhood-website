@@ -27,7 +27,7 @@ Sessions of 2026-11-04 (voice and text) and 2026-11-05 (Claude Code):
 Session of 2026-11-06 (Claude, text):
 
 - A leaner team: the chief of staff, one temporary worker per issue, a fresh reviewer per PR.
-- An agent per role is dropped; the role guides stay and a worker loads them. The four helpers planned earlier (planner, design
+- The role guides become skills a worker loads. The four helpers planned earlier (planner, design
   lead, review lead, process analyst) become procedures in the chief of staff's skill.
 - More agents are added only if this proves too thin.
 - Parallel work has no fixed number: whether issues touch the same files decides.
@@ -39,11 +39,17 @@ Session of 2026-11-11 (Claude, voice then text, recorded on #1089 and #1091):
 - Routine grooming is applied directly; closing an issue or changing a rule waits for him.
 - Repeated failures reach him at the start of a session, from a researched
   [watch list](watch-list.md). The owner queue holds only real decisions.
-  \1
-  Session of 2026-11-23 (voice, recorded on #695):
+- One real end-to-end session is run and recorded before the setup is trusted (#1092).
+
+Session of 2026-11-23 (voice, recorded on #695):
 
 - The repository describes only the agents in use: the chief of staff, one worker and one reviewer.
-  Agent files nobody uses are removed, and nothing is more complicated than that.
+  Agent files nobody uses are removed or folded into skills, as #695 lays out, and nothing is more
+  complicated than that.
+
+Departure from the 2026-11-06 line above (2026-11-24, #1452, awaiting the owner's confirmation): the
+role guides stay in `docs/roles/` and load by path through the brief instead of becoming skills.
+Reason: one file every tool reads, and no second copy of each guide's description to keep in step.
 
 ## 1. At a glance
 
@@ -65,11 +71,11 @@ flowchart TB
 
 ## 2. Who gets a session
 
-| Session        | Does                                                                                          | Capability                                          | Edits code?                  | Status                        |
-| -------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------- | ----------------------------- |
-| Chief of staff | Talks to the owner; grooms; assigns one worker per issue; keeps the record; manages the queue | Strongest; high effort for grooming and issue text  | No. Issues and comments only | Partly: #695 piece one, #1091 |
-| Worker         | One issue, in its own branch and worktree, then it ends                                       | Standard, medium effort                             | Yes, in its own branch       | Partly                        |
-| Reviewer       | Reviews one PR in a fresh session ([§5](#5-reviewers-in-a-fresh-session))                     | By level ([§6](#6-how-much-scrutiny-a-change-gets)) | No, it reports               | Partly                        |
+| Session        | Does                                                                                          | Capability                                          | Edits code?                  | Status                          |
+| -------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------- | ------------------------------- |
+| Chief of staff | Talks to the owner; grooms; assigns one worker per issue; keeps the record; manages the queue | Strongest; high effort for grooming and issue text  | No. Issues and comments only | Built; run not recorded (#1092) |
+| Worker         | One issue, in its own branch and worktree, then it ends                                       | Standard, medium effort                             | Yes, in its own branch       | Built; run not recorded (#1092) |
+| Reviewer       | Reviews one PR in a fresh session ([§5](#5-reviewers-in-a-fresh-session))                     | By level ([§6](#6-how-much-scrutiny-a-change-gets)) | No, it reports               | Built; levels planned (#1450)   |
 
 Three kinds of session and no standing layer between them. A fourth, the scheduled sweep, only
 labels and comments (planned, #697). [`CLAUDE.md`](../../CLAUDE.md) says which model each uses.
@@ -101,10 +107,10 @@ are often skipped ([Vercel](https://vercel.com/blog/agents-md-outperforms-skills
 | --------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | The role guides                         | The worker       | Design (UX, UI), implementation (backend, CMS, frontend, media, SEO), content (content, events, legal), operations, QA | Built; loaded by name from [`docs/roles/`](../roles/README.md#how-a-role-guide-is-loaded) |
 | Groom, overlap check, dispatch brief    | Chief of staff   | A Ready issue a worker can follow; no shared files or hot spots; a brief with the objective, done, sources, boundaries | Built, #695 piece one                                                                     |
-| Review depth                            | Chief of staff   | A lookup in the table in [§6](#6-how-much-scrutiny-a-change-gets), not an agent                                        | Built, #695 piece one (the lookup; the levels take effect with a later piece)             |
+| Review depth                            | Chief of staff   | A lookup in the table in [§6](#6-how-much-scrutiny-a-change-gets), not an agent                                        | Built, #695 piece one (the lookup; the levels take effect with #1450)                     |
 | Design brief, standards upkeep          | Chief of staff   | A short design on the issue before new UI is built; root-cause fixes proposed as PRs                                   | Planned, #696                                                                             |
 | Weekly analysis                         | Chief of staff   | The [feedback loop](feedback-loop.md)                                                                                  | Planned, #698                                                                             |
-| Knowledge notes and generated reference | Worker, reviewer | What a module does, its screens and data, its content types and shared components                                      | Planned, #712                                                                             |
+| Knowledge notes and generated reference | Worker, reviewer | What a module does, its screens and data, its content types and shared components                                      | Built, #712                                                                               |
 
 **What a guide owns is unchanged.** Implementation: code that follows the architecture and the
 [guard rails](../guidelines/guard-rails.md), inside the issue's declared files. Content: posts,
@@ -183,7 +189,7 @@ layer joins with #717.
 
 ## 6. How much scrutiny a change gets
 
-**Status: planned (#1450).**\1this scale takes effect when #1450 merges.
+**Status: planned (#1450).** Today review depth follows the one rule in [`CLAUDE.md`](../../CLAUDE.md) (#522); this scale takes effect when #1450 merges.
 
 Scrutiny costs time and tokens, so it follows risk. The level is the highest one that matches;
 the author proposes it, the reviewer may raise it. Google's guidance names the same judgment: some
@@ -232,4 +238,4 @@ Repeated failures are counted weekly and fixed at the root: [the feedback loop](
 | Phone, push and the daily sweep (Windows)                       | Planned | #697                           |
 | Feedback loop                                                   | Planned | #698                           |
 
-The order is fixed by what each needs: #712, then #695, then #696 to #698.
+The order is fixed by what each needs: #712, then #695, then #1450 and #696 to #698.
