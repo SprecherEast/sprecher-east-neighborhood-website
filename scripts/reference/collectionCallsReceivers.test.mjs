@@ -22,6 +22,7 @@ export const tool = {
     cache.find({ collection: 'categories' })
     req.other.find({ collection: 'media' })
     cache.db.count({ collection: 'redirects' })
+    notDeclaredAnywhere()
   },
 }
 `,

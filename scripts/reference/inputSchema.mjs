@@ -69,7 +69,7 @@ const objectFacts = (schema) =>
     .join('; ')
 
 export function describeInput(schema) {
-  const required = new Set(schema.required ?? [])
+  const required = new Set(schema.required)
   return Object.entries(schema.properties ?? {}).map(([name, property]) => ({
     name,
     type: typeOf(property),

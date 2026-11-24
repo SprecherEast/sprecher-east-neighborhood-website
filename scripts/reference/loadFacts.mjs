@@ -59,7 +59,7 @@ function collectAllRoutes(root) {
 }
 
 /** Rules a GraphQL request is checked against; the function is called with no request. */
-function graphQLRules(config) {
+export function graphQLRules(config) {
   try {
     return config.graphQL.validationRules?.({}) ?? []
   } catch {
@@ -124,8 +124,9 @@ function describeAgentTools(models, { program, root, locate }, mcpOptions) {
 
 function describeScheduledWork(config, models, { program, root, locate }) {
   const slugs = new Set(models.map((model) => model.slug))
-  const jobsCollection = config.collections.find((collection) => collection.slug === 'payload-jobs')
-  const routes = jobRoutes(jobsCollection?.endpoints ?? [], `${config.routes.api}/payload-jobs`)
+  // Payload's own jobs collection: this fails loudly if a Payload update stops adding it
+  const { endpoints } = config.collections.find((collection) => collection.slug === 'payload-jobs')
+  const routes = jobRoutes(endpoints, `${config.routes.api}/payload-jobs`)
   const jobs = describeJobs(
     config.jobs,
     locate,
