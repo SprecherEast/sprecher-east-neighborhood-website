@@ -170,6 +170,12 @@ describe('renderApi', () => {
     expect(order.every((at) => at > 0)).toBe(true)
   })
 
+  it('says the routes that run jobs are guarded by the jobs access, not the type’s own (#1461)', () => {
+    expect(page).toContain(
+      'guarded by the content type’s access functions (the routes that run jobs are guarded by the `run` access of the jobs setting instead, see [jobs.md](jobs.md))',
+    )
+  })
+
   it('says the route files are listed with their methods', () => {
     expect(page).toContain('| `/api/[...slug]` | GET, POST |')
   })

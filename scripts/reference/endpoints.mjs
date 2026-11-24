@@ -189,7 +189,7 @@ export function renderApi(data) {
     '',
     '## REST API',
     '',
-    `Payload builds a REST API for each content type under \`${data.api}\`, guarded by the content type’s access functions, and the GraphQL API for the types marked on.`,
+    `Payload builds a REST API for each content type under \`${data.api}\`, guarded by the content type’s access functions (the routes that run jobs are guarded by the \`run\` access of the jobs setting instead, see [jobs.md](jobs.md)), and the GraphQL API for the types marked on.`,
     '',
     rest,
     '',
