@@ -4,46 +4,12 @@
  * route files and the MCP setup. Pure functions: the generator passes in what it loaded, and a
  * function that finds the file a function was written in.
  */
+import { findReplaced, groupBuiltIn } from './builtInRoutes.mjs'
 import { noFiles } from '../content-types/callbacks.mjs'
 import { functionLabel } from '../content-types/functions.mjs'
 import { cell, code, fileCell, generatedNotice, table } from '../content-types/render.mjs'
 
 const MCP_PLUGIN = '@payloadcms/plugin-mcp'
-
-/** The routes Payload adds to content types, one per method and path, with the types that have it. */
-function groupBuiltIn(contentTypes) {
-  const found = new Map()
-  for (const type of contentTypes) {
-    for (const endpoint of type.allEndpoints) {
-      if (endpoint.file !== 'payload') continue
-      const key = `${endpoint.method} ${endpoint.path}`
-      const entry = found.get(key) ?? { method: endpoint.method, path: endpoint.path, types: [] }
-      entry.types.push(type.slug)
-      found.set(key, entry)
-    }
-  }
-  const scopeOf = (types) =>
-    ['collection', 'global']
-      .map((kind) => {
-        const all = contentTypes.filter((t) => t.kind === kind).map((t) => t.slug)
-        const has = all.filter((slug) => types.includes(slug))
-        const missing = all.filter((slug) => !types.includes(slug))
-        if (has.length === 0) return ''
-        if (has.length <= missing.length) return null
-        return missing.length === 0
-          ? `every ${kind}`
-          : `every ${kind} except ${missing
-              .sort()
-              .map((slug) => `\`${slug}\``)
-              .join(', ')}`
-      })
-      .filter((piece) => piece !== '')
-      .reduce((all, piece) => (all === null || piece === null ? null : [...all, piece]), [])
-      ?.join('; ') ?? ''
-  return [...found.values()]
-    .map((entry) => ({ ...entry, types: entry.types.sort(), scope: scopeOf(entry.types) }))
-    .sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method))
-}
 
 /**
  * Everything the page says, as data. `endpoints` are the config's own, `contentTypes` carry the
@@ -101,6 +67,7 @@ export function describeApi(input, locate = noFiles) {
     },
     custom: [...fromConfig, ...fromTypes],
     builtIn,
+    replaced: findReplaced(contentTypes),
     adminPages: input.adminPages,
     serverActions: input.serverActions,
     routeHandlers: [...routeHandlers].sort(
@@ -130,6 +97,16 @@ export function renderApi(data) {
       row.method,
       code(row.path),
       row.scope || row.types.map(code).join(', '),
+    ]),
+  )
+  const replaced = table(
+    ['Method', 'Path', 'Content type', 'Taken first by', 'Defined in'],
+    data.replaced.map((row) => [
+      row.method,
+      code(row.path),
+      code(row.slug),
+      code(row.by.path),
+      fileCell(row.by.file),
     ]),
   )
   const admin = table(
@@ -168,7 +145,7 @@ export function renderApi(data) {
     '',
     generatedNotice('the loaded Payload config, the route files and the MCP setup'),
     '',
-    'Every way into the application that is not a site page: the route files, the REST and GraphQL APIs Payload builds from the content types, the custom endpoints, and the endpoint AI agents use. Site pages are in [routes.md](routes.md). Who may do what on each content type is on its page, under Access.',
+    'Every way into the application that is not a site page, except what is listed under [Not shown](#not-shown): the route files, the REST and GraphQL APIs Payload builds from the content types, the custom endpoints, and the endpoint AI agents use. Site pages are in [routes.md](routes.md). Who may do what on each content type is on its page, under Access.',
     '',
     '## Route files',
     '',
@@ -196,9 +173,15 @@ export function renderApi(data) {
     '',
     '### Routes Payload adds to content types',
     '',
-    'Besides find, create, update and delete, the loaded config gives these routes, each after the type’s own path (`/api/<slug>` or `/api/globals/<slug>`).',
+    'The routes in the loaded config that Payload adds to content types (find, create, update and delete are among them), each after the type’s own path (`/api/<slug>` or `/api/globals/<slug>`).',
     '',
     builtIn,
+    '',
+    '### Routes Payload adds that an earlier endpoint takes first',
+    '',
+    'Payload answers a request with the first endpoint of the type whose method and path match. These routes are in the type’s list, but an endpoint before them takes the requests they would get, so they are not reachable. The matching shown here is the plain `:name` pattern.',
+    '',
+    replaced,
     '',
     '## GraphQL API',
     '',

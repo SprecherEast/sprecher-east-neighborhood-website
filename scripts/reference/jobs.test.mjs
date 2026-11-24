@@ -139,6 +139,28 @@ describe('renderJobs', () => {
     expect(page).toContain('| `.github/dependabot.yml` | npm | `/` | weekly on monday |')
   })
 
+  it('never leaves the reached-collections cell empty: Payload’s own handler, or none found', () => {
+    const rows = page.split('\n')
+    expect(rows.find((line) => line.startsWith('| `schedulePublish`'))).toContain(
+      'Payload’s own handler, not followed',
+    )
+    expect(rows.find((line) => line.startsWith('| `deleteOld`'))).toContain('none found')
+  })
+
+  it('writes the route each job access guards', () => {
+    const guarded = describeJobs(config, locate, () => [], {
+      endpoints: [{ method: 'GET', path: '/api/payload-jobs/run' }],
+    })
+    expect(renderJobs(guarded, workflows, extras)).toContain(
+      '| run | `isAdminBoolean` | payload | `GET /api/payload-jobs/run` |',
+    )
+  })
+
+  it('says browser timers and hooks that a write sets off are not shown', () => {
+    expect(page).toContain('Timers in browser code')
+    expect(page).toContain('hooks a write sets off')
+  })
+
   it('says which schedules have no time zone set', () => {
     expect(page).toContain('No time zone is set')
   })

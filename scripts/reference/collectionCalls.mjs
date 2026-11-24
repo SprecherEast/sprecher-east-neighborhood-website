@@ -10,13 +10,29 @@ import { isSource, literalValues, property, propertyValues, valueOf, walkAll } f
 const OPERATIONS = {
   find: 'read',
   findByID: 'read',
+  findOne: 'read',
   count: 'read',
+  findVersions: 'read',
+  findVersionByID: 'read',
+  findGlobal: 'read',
+  findGlobalVersions: 'read',
   create: 'create',
+  duplicate: 'create',
   update: 'update',
+  updateOne: 'update',
   updateMany: 'update',
+  updateGlobal: 'update',
+  restoreVersion: 'update',
   delete: 'delete',
+  deleteOne: 'delete',
   deleteMany: 'delete',
 }
+
+/** The calls it counts, for the pages to list. */
+export const COUNTED_CALLS = Object.keys(OPERATIONS)
+
+/** A call on a global names it with `slug`; every other call names a collection with `collection`. */
+const GLOBAL_CALLS = new Set(['findGlobal', 'findGlobalVersions', 'updateGlobal'])
 
 /** `payload.find(…)` or `req.payload.db.deleteMany(…)`: the method name and whether it is on `db`. */
 function payloadMethod(call) {
@@ -44,12 +60,24 @@ function accessOf(argument, onDb) {
   return value.kind === ts.SyntaxKind.TrueKeyword ? 'bypassed' : 'depends on a value'
 }
 
+/**
+ * The nearest function a node sits in, as the node that carries its doc comment: the declaration,
+ * or the `const` statement that holds an arrow or function expression. A `const` that only holds
+ * a call's result is not a function and is passed over.
+ */
+function functionAround(node) {
+  for (let n = node.parent; n; n = n.parent) {
+    if (ts.isFunctionDeclaration(n) || ts.isMethodDeclaration(n)) return n
+    const holdsFunction =
+      (ts.isArrowFunction(n) || ts.isFunctionExpression(n)) && ts.isVariableDeclaration(n.parent)
+    if (holdsFunction) return n.parent.parent.parent
+  }
+  return undefined
+}
+
 /** The first two sentences of the doc comment above the function a node sits in. */
 function commentAround(node) {
-  let holder = node
-  while (holder && !ts.isFunctionDeclaration(holder) && !ts.isVariableStatement(holder)) {
-    holder = holder.parent
-  }
+  const holder = functionAround(node)
   if (!holder) return ''
   const sourceFile = holder.getSourceFile()
   const ranges = ts.getLeadingCommentRanges(sourceFile.text, holder.pos) ?? []
@@ -92,7 +120,7 @@ function entryHandlers(checker, sourceFile, name) {
  * known string count. A call to anything else (a helper) counts when it is given a named
  * constant whose value is one of `knownSlugs`; no operation is known for it. `why` holds the doc
  * comment of the function around a call that says `overrideAccess: true`. A function the config
- * passes in is not followed. Sorted by collection.
+ * passes in is not followed, and neither are the hooks a write sets off. Sorted by collection.
  */
 export function findCollectionCalls(
   program,
@@ -112,49 +140,79 @@ export function findCollectionCalls(
     }
     found.set(collection, entryFor)
   }
-  const seen = new Set()
-  const follow = (callee) => {
+  const seen = new Map()
+  /** The known collections an argument stands for: a named constant, or a parameter bound above. */
+  const argumentSlugs = (argument, bindings) => {
+    if (ts.isIdentifier(argument) && bindings.has(argument.text)) return bindings.get(argument.text)
+    if (!ts.isIdentifier(argument) && !ts.isPropertyAccessExpression(argument)) return []
+    const values = literalValues(checker, argument)
+    const broad = knownSlugs.size > 0 && values.length > 1 && values.length >= knownSlugs.size / 2
+    return broad ? [] : values.filter((value) => knownSlugs.has(value))
+  }
+  /** The parameters of a function a call goes to, bound to the collections the call passes in. */
+  const bindParameters = (declaration, call, bindings) => {
+    const fn = ts.isVariableDeclaration(declaration) ? declaration.initializer : declaration
+    const bound = new Map()
+    for (const [i, parameter] of (fn?.parameters ?? []).entries()) {
+      const slugs = call.arguments[i] ? argumentSlugs(call.arguments[i], bindings) : []
+      if (slugs.length > 0 && ts.isIdentifier(parameter.name)) bound.set(parameter.name.text, slugs)
+    }
+    return bound
+  }
+  const follow = (call, bindings) => {
+    const callee = call.expression
     const symbol = checker.getSymbolAtLocation(
       ts.isPropertyAccessExpression(callee) ? callee.name : callee,
     )
     const target =
       symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
     for (const declaration of target?.declarations ?? []) {
-      if (isSource(declaration.getSourceFile().fileName, root)) visit(declaration)
+      if (isSource(declaration.getSourceFile().fileName, root)) {
+        visit(declaration, bindParameters(declaration, call, bindings))
+      }
     }
   }
-  const onCall = (call) => {
-    const payload = payloadMethod(call)
+  const onPayloadCall = (call, payload, bindings) => {
     const argument = call.arguments[0]
-    if (payload && argument && ts.isObjectLiteralExpression(argument)) {
-      const collection = property(argument, 'collection')
-      const access = accessOf(argument, payload.onDb)
-      const flag = property(argument, 'overrideAccess')
-      const explicit = flag && valueOf(flag).kind === ts.SyntaxKind.TrueKeyword
-      const operation = OPERATIONS[payload.method]
-      const text = explicit ? commentAround(call) : ''
-      const values = collection ? propertyValues(checker, collection) : []
-      // A call that takes any collection (the type is all of them) says nothing about one
-      const broad = knownSlugs.size > 0 && values.length >= knownSlugs.size / 2
-      for (const slug of broad ? [] : values) {
-        note(slug, `${operation} (access ${access})`, text ? { operation, text } : undefined)
-      }
-    } else if (!payload) {
-      const named = call.arguments.filter(
-        (a) => ts.isIdentifier(a) || ts.isPropertyAccessExpression(a),
+    const collection = property(argument, GLOBAL_CALLS.has(payload.method) ? 'slug' : 'collection')
+    const flag = property(argument, 'overrideAccess')
+    const explicit = flag && valueOf(flag).kind === ts.SyntaxKind.TrueKeyword
+    const operation = OPERATIONS[payload.method]
+    const text = explicit ? commentAround(call) : ''
+    const named = collection && ts.isIdentifier(valueOf(collection)) ? valueOf(collection).text : ''
+    const values = bindings.get(named) ?? (collection ? propertyValues(checker, collection) : [])
+    // A call that takes any collection (the type is all of them) says nothing about one
+    const broad =
+      !bindings.has(named) &&
+      knownSlugs.size > 0 &&
+      values.length > 1 &&
+      values.length >= knownSlugs.size / 2
+    for (const slug of broad ? [] : values) {
+      note(
+        slug,
+        `${operation} (access ${accessOf(argument, payload.onDb)})`,
+        text ? { operation, text } : undefined,
       )
-      for (const item of named) {
-        for (const value of literalValues(checker, item)) if (knownSlugs.has(value)) note(value, '')
+    }
+  }
+  const onCall = (call, bindings) => {
+    const payload = payloadMethod(call)
+    if (payload && call.arguments[0] && ts.isObjectLiteralExpression(call.arguments[0])) {
+      onPayloadCall(call, payload, bindings)
+    } else if (!payload) {
+      for (const argument of call.arguments) {
+        for (const value of argumentSlugs(argument, bindings)) note(value, '')
       }
     }
-    follow(call.expression)
+    follow(call, bindings)
   }
-  function visit(node) {
-    if (seen.has(node)) return
-    seen.add(node)
+  function visit(node, bindings = new Map()) {
+    const key = JSON.stringify([...bindings])
+    const keys = seen.get(node) ?? new Set()
+    if (keys.has(key)) return
+    seen.set(node, keys.add(key))
     walkAll(node, (child) => {
-      if (child !== node && ts.isCallExpression(child)) onCall(child)
-      else if (child === node && ts.isCallExpression(child)) onCall(child)
+      if (ts.isCallExpression(child)) onCall(child, bindings)
     })
   }
   for (const handler of entryHandlers(checker, entry, name)) visit(handler)
@@ -169,6 +227,6 @@ export function findCollectionCalls(
     .sort((a, b) => a.collection.localeCompare(b.collection))
 }
 
-/** ` (create, read)` after a collection name, or nothing when no operation is known. */
+/** ` (create, read)` after a collection name, or says no operation is shown for it. */
 export const operationsSuffix = (operations) =>
-  operations.length > 0 ? ` (${operations.join(', ')})` : ''
+  operations.length > 0 ? ` (${operations.join(', ')})` : ' (operation not shown)'

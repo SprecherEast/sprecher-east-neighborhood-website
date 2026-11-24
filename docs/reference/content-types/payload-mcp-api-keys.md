@@ -4,7 +4,7 @@
 
 - Kind: collection
 - Purpose: API keys control which collections, resources, tools, and prompts MCP clients can access
-- Owner: a plugin or Payload
+- Owner: a plugin or Payload (the source does not define it and the config does not show which)
 - Drafts: no
 - Versions: none kept
 

@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { findCollectionCalls, operationsSuffix } from './collectionCalls.mjs'
+import { COUNTED_CALLS, findCollectionCalls } from './collectionCalls.mjs'
 import { createFixture } from './testProgram.mjs'
 
 const fixture = createFixture('reference-collection-calls-')
 const { write, load, root } = fixture
 
-const PAYLOAD = `declare const req: { payload: { find(a: object): void; create(a: object): void; update(a: object): void; db: { deleteMany(a: object): void } } }\n`
+const PAYLOAD = `declare const req: { payload: { find(a: object): void; create(a: object): void; update(a: object): void; db: { deleteMany(a: object): void; count(a: object): void; updateOne(a: object): void }; findGlobal(a: object): void } }\n`
 
 beforeAll(() => {
   write(
@@ -88,6 +88,42 @@ function deleteRows(collection: Slug) {
 export const task = { slug: 'generic', handler: () => deleteRows(AGENT_RUNS) }
 `,
   )
+  // The way the real code reads: the call is the value of a `const`, inside a commented function
+  write(
+    'src/modules/agents/cms/tools/destructured.ts',
+    `${PAYLOAD}/**
+ * Read with access bypassed: suggestions are drafts the agent can't read. Only the id goes back.
+ */
+async function findDuplicate() {
+  const { docs } = await req.payload.find({ collection: 'events', overrideAccess: true })
+  return docs
+}
+export const tool = { name: 'destructured', handler: () => findDuplicate() }
+`,
+  )
+  // A shared helper that takes the collection as a parameter and reads and deletes through `db`
+  write(
+    'src/modules/agents/cms/tools/rows.ts',
+    `import { AGENT_RUNS } from '../agentRuns'
+${PAYLOAD}type Slug = 'agent-runs' | 'events' | 'posts' | 'faq'
+export async function deleteExpiredRows(collection: Slug) {
+  await req.payload.db.count({ collection })
+  await req.payload.db.deleteMany({ collection })
+}
+export const task = { slug: 'rows', handler: () => deleteExpiredRows(AGENT_RUNS) }
+`,
+  )
+  write(
+    'src/modules/agents/cms/tools/other.ts',
+    `${PAYLOAD}export const tool = {
+  name: 'other',
+  handler: async () => {
+    await req.payload.db.updateOne({ collection: 'faq' })
+    await req.payload.findGlobal({ slug: 'header' })
+  },
+}
+`,
+  )
 })
 
 afterAll(() => fixture.cleanup())
@@ -161,13 +197,47 @@ describe('findCollectionCalls, a call that takes any collection', () => {
       name: 'generic',
       knownSlugs: known,
     })
-    expect(found).toEqual([{ collection: 'agent-runs', operations: [], why: [] }])
+    expect(found).toEqual([
+      { collection: 'agent-runs', operations: ['delete (access bypassed)'], why: [] },
+    ])
   })
 })
 
-describe('operationsSuffix', () => {
-  it('writes the operations in brackets, or nothing when none is known', () => {
-    expect(operationsSuffix(['create', 'read'])).toBe(' (create, read)')
-    expect(operationsSuffix([])).toBe('')
+describe('findCollectionCalls, as the real code is written', () => {
+  const known = new Set(['agent-runs', 'events', 'posts', 'faq'])
+  const calls = (file, name) => findCollectionCalls(load(), root, file, { name, knownSlugs: known })
+
+  it('finds the reason when the call is the value of a const inside a commented function', () => {
+    expect(calls('src/modules/agents/cms/tools/destructured.ts', 'destructured')).toEqual([
+      {
+        collection: 'events',
+        operations: ['read (access bypassed)'],
+        why: [
+          {
+            operation: 'read',
+            text: "Read with access bypassed: suggestions are drafts the agent can't read. Only the id goes back.",
+          },
+        ],
+      },
+    ])
+  })
+
+  it('credits a collection passed to a shared helper with what the helper does to its parameter', () => {
+    expect(calls('src/modules/agents/cms/tools/rows.ts', 'rows')).toEqual([
+      {
+        collection: 'agent-runs',
+        operations: ['delete (access bypassed)', 'read (access bypassed)'],
+        why: [],
+      },
+    ])
+  })
+
+  it('counts the other calls it lists: database updates and globals', () => {
+    const found = calls('src/modules/agents/cms/tools/other.ts', 'other')
+    expect(found).toEqual([
+      { collection: 'faq', operations: ['update (access bypassed)'], why: [] },
+      { collection: 'header', operations: ['read (access bypassed)'], why: [] },
+    ])
+    expect(COUNTED_CALLS).toEqual(expect.arrayContaining(['updateOne', 'findGlobal', 'find']))
   })
 })

@@ -108,7 +108,11 @@ describe('areaOf and ownerOf', () => {
   })
 
   it('says a plugin or Payload when the repository does not define it', () => {
-    expect(ownerOf([])).toEqual({ owner: 'a plugin or Payload', file: '' })
+    expect(ownerOf([])).toEqual({
+      owner:
+        'a plugin or Payload (the source does not define it and the config does not show which)',
+      file: '',
+    })
   })
 })
 

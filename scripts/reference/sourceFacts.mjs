@@ -43,7 +43,13 @@ export function areaOf(file) {
 /** Who owns a content type, from the first file that defines it. */
 export function ownerOf(files) {
   const [file] = files
-  return file ? { owner: areaOf(file), file } : { owner: 'a plugin or Payload', file: '' }
+  return file
+    ? { owner: areaOf(file), file }
+    : {
+        owner:
+          'a plugin or Payload (the source does not define it and the config does not show which)',
+        file: '',
+      }
 }
 
 const hasDirective = (body) =>

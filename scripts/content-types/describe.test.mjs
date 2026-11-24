@@ -92,6 +92,29 @@ describe('describeEndpoints', () => {
     ])
   })
 
+  it('marks a route an earlier endpoint of the same type takes first, as Payload matches them (#1461)', () => {
+    function mine() {}
+    const endpoints = [
+      { path: '/verify/:id', method: 'post', handler: mine },
+      { path: '/:key', method: 'get', handler: mine },
+      { path: '/verify/:id', method: 'post', handler: function verifyHandler() {} },
+      { path: '/:id', method: 'get', handler: function findByIDHandler() {} },
+      { path: '/count', method: 'get', handler: function countHandler() {} },
+      { path: '/versions/:id', method: 'get', handler: function findVersionByIDHandler() {} },
+      { path: '/:id', method: 'patch', handler: function updateHandler() {} },
+    ]
+    const found = describeEndpoints(endpoints, locate, { builtIn: true })
+    expect(found.map((e) => [e.method, e.path, e.replacedBy?.path ?? null])).toEqual([
+      ['POST', '/verify/:id', null],
+      ['GET', '/:key', null],
+      ['POST', '/verify/:id', '/verify/:id'],
+      ['GET', '/:id', '/:key'],
+      ['GET', '/count', '/:key'],
+      ['GET', '/versions/:id', null],
+      ['PATCH', '/:id', null],
+    ])
+  })
+
   it('is empty when a type has none, or switches them off', () => {
     expect(describeEndpoints(undefined, locate)).toEqual([])
     expect(describeEndpoints(false, locate)).toEqual([])

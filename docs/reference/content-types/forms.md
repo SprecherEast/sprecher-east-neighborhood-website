@@ -3,7 +3,7 @@
 # Forms (`forms`)
 
 - Kind: collection
-- Owner: a plugin or Payload
+- Owner: a plugin or Payload (the source does not define it and the config does not show which)
 - Jobs: `deleteExpiredContactMessages` ([list](../jobs.md))
 - Drafts: no
 - Versions: none kept

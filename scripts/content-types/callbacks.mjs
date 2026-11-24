@@ -70,12 +70,39 @@ export function describeHooks(hooks = {}, locate = noFiles) {
  */
 export function describeEndpoints(endpoints, locate = noFiles, { builtIn = false } = {}) {
   if (!Array.isArray(endpoints)) return []
-  return endpoints
-    .map((endpoint) => ({
-      method: String(endpoint.method).toUpperCase(),
-      path: endpoint.path,
-      name: functionLabel(endpoint.handler, 'handler').name,
-      file: locate(endpoint.handler),
+  const described = endpoints.map((endpoint) => ({
+    method: String(endpoint.method).toUpperCase(),
+    path: endpoint.path,
+    name: functionLabel(endpoint.handler, 'handler').name,
+    file: locate(endpoint.handler),
+  }))
+  return described
+    .map((endpoint, index) => ({
+      ...endpoint,
+      replacedBy:
+        described.slice(0, index).find((earlier) => takesFirst(earlier, endpoint)) ?? null,
     }))
     .filter((endpoint) => builtIn || endpoint.file !== 'payload')
+    .map((endpoint) => (builtIn ? endpoint : withoutReplacement(endpoint)))
+}
+
+const withoutReplacement = ({ replacedBy, ...endpoint }) => endpoint
+
+/**
+ * Payload takes the first endpoint of a type whose method and path match the request, so an
+ * earlier endpoint takes every request a later one would get when its path pattern matches the
+ * later pattern's own shape (`:id` stands for any one segment).
+ */
+function takesFirst(earlier, later) {
+  if (earlier.method !== later.method) return false
+  const sample = later.path.replace(/:[A-Za-z]+\??/g, 'x')
+  const pattern = earlier.path
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => {
+      if (!segment.startsWith(':')) return `/${segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`
+      return segment.endsWith('?') ? '(?:/[^/]+)?' : '/[^/]+'
+    })
+    .join('')
+  return new RegExp(`^${pattern || '/'}$`).test(sample === '' ? '/' : sample)
 }

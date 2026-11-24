@@ -1,77 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { describeApi, renderApi } from './endpoints.mjs'
-
-function checkKey() {}
-function maskVerify() {}
-function seoHandler() {}
-function mcpHandler() {}
-const locate = (fn) =>
-  ({
-    [checkKey]: 'src/modules/agents/cms/mcp.ts',
-    [maskVerify]: 'src/modules/accounts/cms/noVerifyMutation.ts',
-    [seoHandler]: '@payloadcms/plugin-seo',
-    [mcpHandler]: '@payloadcms/plugin-mcp',
-  })[fn] ?? 'payload'
-
-const base = {
-  routes: { api: '/api', graphQL: '/graphql', graphQLPlayground: '/graphql-playground' },
-  graphQL: {
-    disableIntrospectionInProduction: true,
-    disablePlaygroundInProduction: true,
-    maxComplexity: 1000,
-    rules: [maskVerify],
-  },
-  endpoints: [
-    { method: 'post', path: '/plugin-seo/generate-title', handler: seoHandler },
-    { method: 'post', path: '/mcp', handler: mcpHandler },
-    { method: 'get', path: '/mcp', handler: mcpHandler },
-  ],
-  contentTypes: [
-    {
-      slug: 'events',
-      kind: 'collection',
-      rest: true,
-      graphQL: true,
-      endpoints: [{ method: 'POST', path: '/verify/:token', name: 'verify', file: 'src/v.ts' }],
-      allEndpoints: [
-        { method: 'GET', path: '/count', name: 'countHandler', file: 'payload' },
-        { method: 'POST', path: '/login', name: 'loginHandler', file: 'payload' },
-        { method: 'POST', path: '/verify/:token', name: 'verify', file: 'src/v.ts' },
-      ],
-    },
-    {
-      slug: 'faq',
-      kind: 'collection',
-      rest: true,
-      graphQL: true,
-      endpoints: [],
-      allEndpoints: [{ method: 'GET', path: '/count', name: 'countHandler', file: 'payload' }],
-    },
-    { slug: 'header', kind: 'global', rest: true, graphQL: true, endpoints: [], allEndpoints: [] },
-    {
-      slug: 'agent-runs',
-      kind: 'collection',
-      rest: false,
-      graphQL: false,
-      endpoints: [],
-      allEndpoints: [],
-    },
-  ],
-  adminPages: [{ url: '/admin/[[...segments]]', file: 'src/app/(payload)/admin/page.tsx' }],
-  serverActions: [
-    { file: 'src/modules/accounts/actions.ts', name: 'signIn', area: 'module `accounts`' },
-  ],
-  routeHandlers: [
-    { url: '/api/version', methods: ['GET'], file: 'src/app/(frontend)/api/version/route.ts' },
-    {
-      url: '/api/[...slug]',
-      methods: ['GET', 'POST'],
-      file: 'src/app/(payload)/api/[...slug]/route.ts',
-    },
-  ],
-  mcpAuth: { name: 'checkKey', file: 'src/modules/agents/cms/mcp.ts' },
-}
+import { base, locate } from './endpointsFixture.mjs'
 
 describe('describeApi', () => {
   const api = describeApi(base, locate)
@@ -111,51 +41,6 @@ describe('describeApi', () => {
       ['config', 'GET', '/api/mcp', '@payloadcms/plugin-mcp'],
       ['events', 'POST', '/api/events/verify/:token', 'src/v.ts'],
     ])
-  })
-
-  it('groups the routes Payload adds by method and path, with the types that have each', () => {
-    expect(api.builtIn).toEqual([
-      {
-        method: 'GET',
-        path: '/count',
-        types: ['events', 'faq'],
-        scope: 'every collection except `agent-runs`',
-      },
-      { method: 'POST', path: '/login', types: ['events'], scope: '' },
-    ])
-  })
-
-  it('says every collection when all of them have a route', () => {
-    const everyone = base.contentTypes.map((type) =>
-      type.kind === 'collection'
-        ? { ...type, allEndpoints: [{ method: 'GET', path: '/count', name: 'c', file: 'payload' }] }
-        : type,
-    )
-    const built = describeApi({ ...base, contentTypes: everyone }, locate).builtIn
-    expect(built).toEqual([
-      {
-        method: 'GET',
-        path: '/count',
-        types: ['agent-runs', 'events', 'faq'],
-        scope: 'every collection',
-      },
-    ])
-  })
-
-  it('lists the types instead when a summary would hide some of them', () => {
-    const mixed = base.contentTypes.map((type) =>
-      ['events', 'header'].includes(type.slug)
-        ? {
-            ...type,
-            allEndpoints: [{ method: 'GET', path: '/versions', name: 'v', file: 'payload' }],
-          }
-        : type,
-    )
-    const row = describeApi({ ...base, contentTypes: mixed }, locate).builtIn.find(
-      (entry) => entry.path === '/versions',
-    )
-    expect(row.types).toEqual(['events', 'header'])
-    expect(row.scope).toBe('')
   })
 
   it('lists the admin pages and the server actions', () => {
@@ -213,6 +98,10 @@ describe('renderApi', () => {
     expect(page).toContain('| GET | `/count` |')
     expect(page).toContain('`/admin/[[...segments]]`')
     expect(page).toContain('| collection | REST switched off | off |')
+  })
+
+  it('lists the replaced routes in a table of their own, with what takes them first', () => {
+    expect(page).toContain('| POST | `/verify/:id` | `events` | `/verify/:token` | `src/v.ts` |')
   })
 
   it('says the route files are listed with their methods', () => {

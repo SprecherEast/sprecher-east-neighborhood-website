@@ -9,7 +9,7 @@
 import { noFiles } from '../content-types/callbacks.mjs'
 import { functionLabel } from '../content-types/functions.mjs'
 import { cell, code, fileCell, generatedNotice, table } from '../content-types/render.mjs'
-import { operationsSuffix } from './collectionCalls.mjs'
+import { COUNTED_CALLS, operationsSuffix } from './collectionCalls.mjs'
 
 const COLLECTION_OPERATIONS = ['find', 'create', 'update', 'delete']
 const GLOBAL_OPERATIONS = ['find', 'update']
@@ -167,7 +167,7 @@ export function renderMcp(mcp) {
     '',
     generatedNotice('the MCP plugin options in the agents module and the loaded Payload config'),
     '',
-    `AI agents connect to ${code(mcp.server)} at the MCP endpoint (see [endpoints.md](endpoints.md)). Each request carries an API key that acts as an agent account; the key is checked by ${code(mcp.auth.name)} in ${fileCell(mcp.auth.file)}. For the tools the plugin makes, the content type’s access functions decide what a tool may do, and a key’s settings in Admin can only narrow that. The site’s own tools call Payload’s Local API themselves, which skips access unless a call says \`overrideAccess: false\`: each collection a tool reaches is marked “access checked” or “access bypassed”, with the reason where the code gives one. “Reaches” is found by following the tool’s handler through the functions it calls in the source; a function passed in by the config is not followed.`,
+    `AI agents connect to ${code(mcp.server)} at the MCP endpoint (see [endpoints.md](endpoints.md)). Each request carries an API key that acts as an agent account; the key is checked by ${code(mcp.auth.name)} in ${fileCell(mcp.auth.file)}. For the tools the plugin makes, the content type’s access functions decide what a tool may do, and a key’s settings in Admin can only narrow that. The site’s own tools call Payload’s Local API themselves, which skips access unless a call says \`overrideAccess: false\`: each collection a tool reaches is marked “access checked”, “access bypassed” or “access depends on a value”, with the reason where the code gives one. “Reaches” is found by following the tool’s handler through the functions it calls in the source; a function passed in by the config is not followed, nor are the hooks a write sets off, which can write other collections (the search index, for example): each content type’s hooks are on its own page under Hooks. A collection passed to a shared helper is shown with what the helper does to it where its code shows that, otherwise as “operation not shown”. The calls counted are ${COUNTED_CALLS.map(code).join(', ')}.`,
     '',
     '## Tools the plugin makes for content types',
     '',

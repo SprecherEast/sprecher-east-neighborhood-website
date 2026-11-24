@@ -90,10 +90,14 @@ export function describeJobs(
   }
 }
 
-const reached = (collections) =>
-  collections
+/** The collections a task reaches, or why the cell has none: it is never left empty. */
+const reached = (task) => {
+  if (!task.file.startsWith('src/')) return 'Payload’s own handler, not followed'
+  if (task.collections.length === 0) return 'none found by following its calls'
+  return task.collections
     .map(({ collection, operations }) => `${code(collection)}${operationsSuffix(operations)}`)
     .join(', ')
+}
 
 export function renderJobs(jobs, workflows, { serverCrons, intelligence, dependabot }) {
   const tasks = table(
@@ -113,7 +117,7 @@ export function renderJobs(jobs, workflows, { serverCrons, intelligence, dependa
         : 'queued, not scheduled',
       task.queues.map(code).join(', '),
       fileCell(task.file),
-      reached(task.collections),
+      reached(task),
     ]),
   )
   const runners = table(
@@ -180,7 +184,7 @@ export function renderJobs(jobs, workflows, { serverCrons, intelligence, dependa
       'the loaded Payload config (`jobs`), `.github/workflows/`, `.github/dependabot.yml`, `ops/install-cron.sh` and `intelligence/pipeline.yaml`',
     ),
     '',
-    'What runs on a timer inside the application, and in GitHub. Payload starts the runners inside the app’s one process (`jobs.autoRun`), on the first request after a start. A queue with no runner never runs. No time zone is set for these schedules, so the server’s applies; the workflows and the server cron below are in UTC. “Collections it reaches” are found by following the handler’s own calls in the source, with the operation and whether access is checked; a function the config passes in (such as the keepers of the confirmation retention task) is not followed, so a collection reached only that way is not listed. Scheduled tasks that live outside the repository are on [their own page](../knowledge/scheduled-tasks.md), written by hand.',
+    'What runs on a timer inside the application, and in GitHub. Payload starts the runners inside the app’s one process (`jobs.autoRun`), on the first request after a start. A queue with no runner never runs. Timers in browser code (a page checking the version, for example) are not shown. No time zone is set for these schedules, so the server’s applies; the workflows and the server cron below are in UTC. “Collections it reaches” are found by following the handler’s own calls in the source, with the operation and whether access is checked; a function the config passes in (such as the keepers of the confirmation retention task) is not followed, so a collection reached only that way is not listed; nor are the hooks a write sets off, which can write other collections (the search index, for example): each content type’s hooks are on its own page under Hooks. A collection passed to a shared helper is shown with what the helper does to it where its code shows that, otherwise as “operation not shown”. Scheduled tasks that live outside the repository are on [their own page](../knowledge/scheduled-tasks.md), written by hand.',
     '',
     '## Job tasks',
     '',

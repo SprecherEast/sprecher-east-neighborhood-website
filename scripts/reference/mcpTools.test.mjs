@@ -151,7 +151,10 @@ describe('renderMcp', () => {
     expect(page).toContain(
       '[`events`](content-types/events.md) (create (access checked), read (access bypassed))',
     )
-    expect(page).toContain('Drafts are hidden from the agent.')
+    expect(page).toContain('- `events`, read, as the code says: Drafts are hidden from the agent.')
+    expect(page).toContain('“access checked”, “access bypassed” or “access depends on a value”')
+    expect(page).toContain('`updateOne`')
+    expect(page).toContain('hooks a write sets off')
     expect(page).toContain('not shown')
     expect(page).toContain('https://payloadcms.com/docs/plugins/mcp')
   })
