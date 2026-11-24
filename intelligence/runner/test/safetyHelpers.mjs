@@ -12,6 +12,5 @@ export const item = ({ candidate: c, verification: v, curation: cu, draft: d, so
   curation: curation(cu),
   ...(d ? { draft: draft(d) } : {}),
 })
-export const titled = (title, extra = {}) => item({ candidate: { title, ...extra } })
+export const titled = (title) => item({ candidate: { title } })
 export const classify = (value) => classifySafety(contract.safety, value)
-export const isSafety = (text) => classify(titled(text)).safety

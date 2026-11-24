@@ -4,7 +4,8 @@ import { guardPromotion, holdForReview } from './stages.mjs'
 // The one place that decides what may be accepted and which tool an item goes to. Submit calls it
 // before anything is sent, so no stage, caller or setting can send a suggestion around it. An
 // `accept` is let through only when verification is confident and unflagged (`promotionGuard`) and
-// the item is not a safety item (safety.yaml). Everything unreadable is held.
+// the item is not a safety item: its source isn't always held and neither stage says safety
+// (safety.yaml). The gate reads no item text. Everything unreadable is held.
 
 const SUGGESTION = 'submitSuggestion'
 const REPORT = 'reportItem'

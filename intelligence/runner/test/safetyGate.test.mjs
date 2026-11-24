@@ -1,7 +1,4 @@
 import assert from 'node:assert/strict'
-import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import path from 'node:path'
 import { describe, it } from 'node:test'
 
 import { loadContract } from '../lib/contract.mjs'
@@ -9,7 +6,7 @@ import { gateItem } from '../lib/gate.mjs'
 import { fakeAdapter } from '../lib/model.mjs'
 import { runStage, runVerify } from '../lib/stages.mjs'
 import { curation, verification } from './fixtures.mjs'
-import { contract, intelligenceDir } from './helpers.mjs'
+import { contract, intelligenceCopy } from './helpers.mjs'
 import { item, titled } from './safetyHelpers.mjs'
 
 // The gate (#1007): the one place that decides what may be accepted and where it goes.
@@ -23,10 +20,10 @@ describe('gateItem', () => {
     assert.match(gated.curation.reasons[0], /^Held for review, not accepted: safety item/)
   })
 
-  it('holds an accept the model called not-safety when the text says otherwise', () => {
+  it('reads no item text: wording about a crime does not hold an accept both stages cleared', () => {
     const gated = gateItem(contract, titled('Police report: shooting on Sprecher Road'))
-    assert.equal(gated.curation.decision, 'needs-review')
-    assert.equal(gated.route, 'reportItem')
+    assert.equal(gated.route, 'submitSuggestion')
+    assert.equal(gated.suggest, true)
   })
 
   it('holds every accept from a listed safety source, with clean text and clean answers', () => {
@@ -131,7 +128,6 @@ describe('gateItem', () => {
         const changed = { ...contract, pipeline: { ...real, ...change } }
         for (const built of [
           item({ curation: { safety: true } }),
-          titled('Police investigate a shooting'),
           item({ verification: { safety: true } }),
         ]) {
           const gated = gateItem(changed, built)
@@ -147,6 +143,13 @@ describe('gateItem', () => {
       assert.equal(gateItem({ ...contract, schemas: {} }, item()).route, 'reportItem')
     })
 
+    it('reports a clean accept when pipeline.yaml names no tool for it, never an unknown one', () => {
+      for (const routes of [undefined, {}, { accept: 'publishNow' }]) {
+        const changed = { ...contract, pipeline: { ...real, routes } }
+        assert.equal(gateItem(changed, item()).route, 'reportItem')
+      }
+    })
+
     it('keeps a clean accept moving with a changed guard, so the gate is not the only brake', () => {
       const changed = { ...contract, pipeline: { ...real, promotionGuard: { blockingFlags: [] } } }
       assert.equal(gateItem(changed, item()).suggest, true)
@@ -155,18 +158,7 @@ describe('gateItem', () => {
 })
 
 describe('the settings are checked when the runner starts', () => {
-  /** A copy of intelligence/ (without the runner) with `file` rewritten by `change`. */
-  function copyWith(file, change) {
-    const dir = mkdtempSync(path.join(tmpdir(), 'intel-'))
-    cpSync(intelligenceDir, dir, {
-      recursive: true,
-      filter: (source) =>
-        !/^(runner|node_modules)(\/|$)/.test(path.relative(intelligenceDir, source)),
-    })
-    const target = path.join(dir, file)
-    writeFileSync(target, change(readFileSync(target, 'utf8')))
-    return dir
-  }
+  const copyWith = (file, change) => intelligenceCopy({ [file]: change })
 
   it('loads the real settings', () => {
     assert.doesNotThrow(() => loadContract(copyWith('pipeline.yaml', (text) => text)))
@@ -198,8 +190,10 @@ describe('the settings are checked when the runner starts', () => {
     assert.throws(() => loadContract(dir), /safety\.yaml/)
   })
 
-  it('refuses a safety.yaml with no topics', () => {
-    const dir = copyWith('safety.yaml', () => 'version: 1\nmeaning: x\ntopics: []\nsources: []\n')
+  it('refuses a safety.yaml with no meaning, the principle the stages apply', () => {
+    const dir = copyWith('safety.yaml', (text) =>
+      text.replace(/^meaning:[\s\S]*?(?=^sources:)/m, ''),
+    )
     assert.throws(() => loadContract(dir), /safety\.yaml/)
   })
 })

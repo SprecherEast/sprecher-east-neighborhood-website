@@ -141,22 +141,19 @@ wasn't met. Both are prompt rules, a model's judgment; code guards only what `pr
 or AI agent who publishes by hand re-checks freshness (check 3) and withdraws an item that is no
 longer current.
 
-A safety item is never `accept`, and code enforces it (#1007). What counts as one is defined once,
-in [`safety.yaml`](safety.yaml): the sources that are safety by nature, the terms (English and
-Spanish), and the `safety` answer verify and curate each give. The runner's gate
-(`runner/lib/gate.mjs`) holds an item when its source is listed (or its source facts are missing),
-a term appears in the item's or draft's text, the verification's place, evidence or reason, or the
-curation's own words, or either stage's answer is anything but a plain `false`. A missing or
-malformed answer, an unreadable or oversized item, or a word that mixes scripts counts as
-safety. Once a stage has said safety it stays safety. Before any `accept` is sent, the gate turns
-a safety item into `needs-review`, whatever the model decided and whatever the item's text says,
-and submit runs it again on the finished draft. Text in an item can add to the answer, never
-remove from it; `pipeline.yaml` can't route a held item to a suggestion. Only a decision of
-`accept` creates a suggestion, so `reject`, `update` and `cancel` of a safety item stay as
-decided (rule 4 above). The limits are in the pipeline note ("What the text match does and doesn't
-catch"): the stages' reasons are not read, an item the terms miss, from a source that isn't listed, relies on the model's answer, and
-a new safety source is added to the list when it is added to the registry. Nothing publishes by
-itself either way: agents only create suggested drafts.
+A safety item is never `accept`, and code enforces it (#1007). What counts as one is written once,
+as a principle, in [`safety.yaml`](safety.yaml), and verify and curate each judge by what the item
+means and answer `safety`. The runner's gate (`runner/lib/gate.mjs`) is three rules and reads no
+text of any item: it holds an item when its source is on the always-held list in `safety.yaml` (or
+its source facts are missing or don't match), when either stage's answer is anything but a plain
+`false`, and only one function, which runs the gate first, can send a suggestion. Before any
+`accept` is sent, the gate turns such an item into `needs-review`, whatever the model decided and
+whatever the item says, and submit runs it again on the finished draft. `pipeline.yaml` can't route
+a held item to a suggestion. Only a decision of `accept` creates a suggestion, so `reject`,
+`update` and `cancel` of a safety item stay as decided (rule 4 above). The accepted limit: an item
+from a source that isn't on the list, which both stages misjudge, arrives as an ordinary unpublished
+draft without the safety flag. A new safety source is added to the list when it is added to the
+registry. Nothing publishes by itself either way: agents only create suggested drafts.
 
 The five checks, which verify runs on every item:
 

@@ -45,3 +45,48 @@ cases:
     graders:
       - { check: equals, field: $.safety, value: false }
     why: The contrast case, with an ordinary one-off event that is not a safety item and is accepted as usual.
+  - id: safety-by-meaning-person-not-seen
+    stage: curate
+    tags: [safety, meaning]
+    input:
+      sourceId: madison365-news
+      kind: news
+      title: Family asks anyone who passed the Door Creek trail on Tuesday evening to call them
+      sourceText: A man in his seventies set out for a walk on the trail on Tuesday and has not been heard from since. His family describes his jacket and asks anyone who saw him to get in touch.
+      startsAt: null
+      locationText: Door Creek Park, Madison
+    expected: { decision: needs-review, coverage: core, safety: true, route: reportItem }
+    graders:
+      - { check: equals, field: $.safety, value: true }
+      - { check: notContains, field: $.decision, value: accept }
+    why: From a source that is not always held, with wording no word list would expect; the model judges by meaning that a person may be in danger, so a person decides.
+  - id: safety-by-meaning-water-advice
+    stage: curate
+    tags: [safety, meaning]
+    input:
+      sourceId: madison365-news
+      kind: news
+      title: Utility asks east-side homes not to give tap water to babies this week
+      sourceText: The water utility says a test found a level above its target in part of the east side and asks households with infants to use bottled water for formula until a second test comes back.
+      startsAt: null
+      locationText: East side, Madison
+    expected: { decision: needs-review, coverage: catchment, safety: true, route: reportItem }
+    graders:
+      - { check: equals, field: $.safety, value: true }
+      - { check: notContains, field: $.decision, value: accept }
+    why: The risk is to health and is never named as a hazard; the model judges by meaning and a person decides.
+  - id: safety-by-meaning-spanish
+    stage: curate
+    tags: [safety, meaning]
+    input:
+      sourceId: madison365-news
+      kind: news
+      title: Hallan a un hombre sin vida cerca del arroyo Door Creek
+      sourceText: Vecinos avisaron al amanecer. Las autoridades piden a quien haya visto algo extraño en la zona que se comunique con ellas.
+      startsAt: null
+      locationText: Door Creek, Madison
+    expected: { decision: needs-review, coverage: core, safety: true, route: reportItem }
+    graders:
+      - { check: equals, field: $.safety, value: true }
+      - { check: notContains, field: $.decision, value: accept }
+    why: Another language, from a source that is not always held; the model judges by meaning, and a person decides.

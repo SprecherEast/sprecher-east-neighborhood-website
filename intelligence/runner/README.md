@@ -44,7 +44,7 @@ only when the run failed; the run log is in Admin → Agents → Agent Runs.
 | `lib/scout.mjs`       | Candidates with `externalId`, `contentHash` and `change`; the Legistar area filter                                        |
 | `lib/model.mjs`       | The model adapter: OpenClaw (`openclaw agent --agent … --json`), or a fake for tests                                      |
 | `lib/stages.mjs`      | One stage: prompt + coverage + item, schema check, one retry; verify's escalation, the promotion guard                    |
-| `lib/gate.mjs`        | The one gate: what may be accepted and which tool it goes to; `lib/safety.mjs` reads `safety.yaml`                        |
+| `lib/gate.mjs`        | The one gate: what may be accepted and which tool it goes to; `lib/safety.mjs` reads the source list of `safety.yaml`     |
 | `lib/submit.mjs`      | Runs the gate, then the MCP envelope, validation, one retry, follow-up review and image reports                           |
 | `lib/cms.mjs`         | The MCP client with the key, the dry-run CMS, and `withoutSuggestions`, the client with no submit                         |
 | `lib/pipeline.mjs`    | One run: kill switch and the run log; `lib/process.mjs`: budgets, state, items, failures                                  |

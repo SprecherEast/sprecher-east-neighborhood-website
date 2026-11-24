@@ -1,14 +1,13 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { cpSync, mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { describe, it } from 'node:test'
 
-import { intelligenceDir } from './helpers.mjs'
+import { intelligenceCopy, intelligenceDir } from './helpers.mjs'
 
-// The eval check (scripts/check-intelligence.mjs) asks the same safety rules as the gate where an
-// eval case expects an accept to go (#1007).
+// The eval check (scripts/check-intelligence.mjs) asks the same rules as the gate where an eval
+// case expects an item to go (#1007). The logic itself is tested in
+// scripts/check-intelligence-routes.test.mjs; these run the script on a copy of the evals.
 
 const script = path.join(intelligenceDir, '..', 'scripts', 'check-intelligence.mjs')
 
@@ -17,34 +16,29 @@ function check(dir) {
   return { ok: run.status === 0, out: `${run.stdout}${run.stderr}` }
 }
 
-/** A copy of intelligence/ (without the runner) with one more eval file. */
-function withCase(route, title) {
-  const dir = mkdtempSync(path.join(tmpdir(), 'intel-'))
-  cpSync(intelligenceDir, dir, {
-    recursive: true,
-    filter: (source) =>
-      !/^(runner|node_modules)(\/|$)/.test(path.relative(intelligenceDir, source)),
-  })
-  writeFileSync(
-    path.join(dir, 'evals', 'curate-tmp.yaml'),
-    `version: 1
+/** A copy of intelligence/ with one more eval case for `stage`; `given` is the curation decision it assumes. */
+function withCase({ stage, sourceId, given = null, expected }) {
+  const assumed = given
+    ? `\n    given:\n      curation: { decision: ${given}, audiences: [everyone] }`
+    : ''
+  return intelligenceCopy({
+    [`evals/${stage}-tmp.yaml`]: `version: 1
 asOf: '2026-11-23'
-stage: curate
+stage: ${stage}
 cases:
   - id: tmp-case
-    stage: curate
+    stage: ${stage}
     tags: [safety]
     input:
-      sourceId: mpl-pinney-events
-      kind: event
-      title: ${title}
+      sourceId: ${sourceId}
+      kind: news
+      title: Notice from the source
       startsAt: null
-      locationText: Pinney Library
-    expected: { decision: accept, coverage: core, route: ${route} }
+      locationText: Pinney Library${assumed}
+    expected: ${expected}
     why: A case for the check.
 `,
-  )
-  return dir
+  })
 }
 
 describe('the eval check and the gate', () => {
@@ -53,90 +47,37 @@ describe('the eval check and the gate', () => {
     assert.equal(result.ok, true, result.out)
   })
 
-  it('refuses an accept the gate would hold when it expects a suggestion', () => {
-    const result = check(withCase('submitSuggestion', 'Free flu shots at the library'))
+  it('refuses an accept from an always-held source that expects a suggestion', () => {
+    const expected = '{ decision: accept, coverage: core, route: submitSuggestion }'
+    const result = check(withCase({ stage: 'curate', sourceId: 'nws-api', expected }))
     assert.equal(result.ok, false)
     assert.match(result.out, /tmp-case.*reportItem/)
   })
 
-  it('wants reportItem for that accept, and a suggestion for a clean one', () => {
-    assert.equal(check(withCase('reportItem', 'Free flu shots at the library')).ok, true)
-    assert.equal(check(withCase('submitSuggestion', 'Story hour at the library')).ok, true)
-    assert.equal(check(withCase('reportItem', 'Story hour at the library')).ok, false)
-  })
-})
-
-describe('the eval check for a case that expects a suggestion without a decision', () => {
-  /** A draft-stage case: the given curation decision, the title, the route it expects, and a given draft body if any. */
-  function draftCase(decision, title, route, body = null) {
-    const dir = mkdtempSync(path.join(tmpdir(), 'intel-'))
-    cpSync(intelligenceDir, dir, {
-      recursive: true,
-      filter: (source) =>
-        !/^(runner|node_modules)(\/|$)/.test(path.relative(intelligenceDir, source)),
-    })
-    writeFileSync(
-      path.join(dir, 'evals', 'draft-tmp.yaml'),
-      `version: 1
-asOf: '2026-11-23'
-stage: draft
-cases:
-  - id: tmp-draft
-    stage: draft
-    tags: [editorial]
-    input:
-      sourceId: mpl-pinney-events
-      kind: news
-      title: ${title}
-      startsAt: null
-      locationText: Pinney Library
-    given:
-      curation: { decision: ${decision}, audiences: [everyone] }${
-        body === null
-          ? ''
-          : `
-      draft: { collection: events, title: Library hour, bodyMarkdown: ${body}, audience: [everyone] }`
-      }
-    expected: { route: ${route} }
-    why: A case for the check.
-`,
-    )
-    return dir
-  }
-
-  it('refuses a suggestion for anything but an accept', () => {
-    const result = check(draftCase('needs-review', 'Story hour at the library', 'submitSuggestion'))
-    assert.equal(result.ok, false)
-    assert.match(result.out, /tmp-draft.*accept/)
-  })
-
-  it('refuses a suggestion for an accept the gate would hold', () => {
-    const result = check(draftCase('accept', 'Police report from the library', 'submitSuggestion'))
-    assert.equal(result.ok, false)
-    assert.match(result.out, /tmp-draft.*reportItem/)
-  })
-
-  it('accepts a clean accept as a suggestion and a held one as a report', () => {
+  it('wants reportItem for that accept, and a suggestion for one from another source', () => {
+    const held = '{ decision: accept, coverage: core, route: reportItem }'
+    const clean = '{ decision: accept, coverage: core, route: submitSuggestion }'
+    assert.equal(check(withCase({ stage: 'curate', sourceId: 'nws-api', expected: held })).ok, true)
     assert.equal(
-      check(draftCase('accept', 'Story hour at the library', 'submitSuggestion')).ok,
+      check(withCase({ stage: 'curate', sourceId: 'mpl-pinney-events', expected: clean })).ok,
       true,
     )
     assert.equal(
-      check(draftCase('accept', 'Police report from the library', 'reportItem')).ok,
-      true,
+      check(withCase({ stage: 'curate', sourceId: 'mpl-pinney-events', expected: held })).ok,
+      false,
     )
   })
 
-  it('reads the given draft, not only the input', () => {
-    const held = check(
-      draftCase('accept', 'Story hour at the library', 'submitSuggestion', 'Police were called'),
-    )
-    assert.equal(held.ok, false)
-    assert.match(held.out, /tmp-draft.*reportItem/)
-    assert.equal(
-      check(draftCase('accept', 'Story hour at the library', 'submitSuggestion', 'Bring a book'))
-        .ok,
-      true,
-    )
+  it('asks the same of a draft case that expects a suggestion with no decision of its own', () => {
+    const suggest = '{ route: submitSuggestion }'
+    const draft = (sourceId, given) =>
+      withCase({ stage: 'draft', sourceId, given, expected: suggest })
+    assert.equal(check(draft('mpl-pinney-events', 'accept')).ok, true)
+    const listed = check(draft('madison-police-incident-reports', 'accept'))
+    assert.equal(listed.ok, false)
+    assert.match(listed.out, /tmp-case.*reportItem/)
+    const noAccept = check(draft('mpl-pinney-events', 'needs-review'))
+    assert.equal(noAccept.ok, false)
+    assert.match(noAccept.out, /tmp-case.*accept/)
   })
 })

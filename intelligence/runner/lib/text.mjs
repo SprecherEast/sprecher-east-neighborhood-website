@@ -7,17 +7,11 @@ import { createHash } from 'node:crypto'
 const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')
 
 /**
- * One pattern for whole words or phrases: each must start and end at a word edge. The one builder
- * for the area words (scout.mjs) and the safety terms (safety.mjs). With `spreadFrom`, a word of
- * that many letters or more also matches with a single space between any two of its letters
- * ("po lice", "p o l i c e"), still starting and ending at a word edge.
+ * One pattern for whole words or phrases (the area words, scout.mjs): each must start and end at a
+ * word edge.
  */
-export function wordsPattern(words, { flags = 'i', spreadFrom = Infinity } = {}) {
-  const alternatives = words.map((word) => {
-    const letters = [...word.replaceAll(' ', '')]
-    return letters.length >= spreadFrom ? letters.map(escapeRegExp).join(' ?') : escapeRegExp(word)
-  })
-  return new RegExp(`(?<![a-z0-9])(?:${alternatives.join('|')})(?![a-z0-9])`, flags)
+export function wordsPattern(words, { flags = 'i' } = {}) {
+  return new RegExp(`(?<![a-z0-9])(?:${words.map(escapeRegExp).join('|')})(?![a-z0-9])`, flags)
 }
 
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', '#39': "'" }

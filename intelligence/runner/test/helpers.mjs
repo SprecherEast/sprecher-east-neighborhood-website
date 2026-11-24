@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as yaml from 'js-yaml'
@@ -7,6 +8,27 @@ import { loadContract } from '../lib/contract.mjs'
 
 export const intelligenceDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 export const contract = loadContract(intelligenceDir)
+
+/**
+ * A copy of intelligence/ without the runner, for the tests that change its files. `changes` maps a
+ * path inside it to the text to write, or to a function from the file's current text to the new text.
+ */
+export function intelligenceCopy(changes = {}) {
+  const dir = mkdtempSync(path.join(tmpdir(), 'intel-'))
+  cpSync(intelligenceDir, dir, {
+    recursive: true,
+    filter: (source) =>
+      !/^(runner|node_modules)(\/|$)/.test(path.relative(intelligenceDir, source)),
+  })
+  for (const [file, change] of Object.entries(changes)) {
+    const target = path.join(dir, file)
+    writeFileSync(
+      target,
+      typeof change === 'function' ? change(readFileSync(target, 'utf8')) : change,
+    )
+  }
+  return dir
+}
 
 /** One evals file's cases. */
 export const evalCases = (stage) =>

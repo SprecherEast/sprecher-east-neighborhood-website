@@ -181,36 +181,30 @@ Before routing, code applies `promotionGuard` (`pipeline.yaml`, #870): an `accep
 rerun, or verify's flags include one of `promotionGuard.blockingFlags`, whatever the model
 answered. The threshold and the flag list each have one definition, in `pipeline.yaml`.
 
-The same gate (`runner/lib/gate.mjs`, #1007) holds a **safety item**, defined once in
-[`safety.yaml`](safety.yaml). It holds an item when its source is on the list there (the source
-facts must also be present and match the candidate's source), when a term appears in a string of
-the candidate or its draft, the verification's place and evidence, or what the curation says the
-item is and what to do (found by walking them, so a new field is read without a code change; a
-term split across two fields is found too), or when verify or curate answered `safety` with anything but a plain
-`false`. The registry's own wording (owner, scope) is never read, and neither are the stages'
-reasons, which talk about the item ("not a safety item") and would hold every ordinary one. Once a stage has said safety, a
-rerun or retry can't take it back. `routes` can't send a held item to `submitSuggestion`: only an
-accepted item may be a suggestion. Submit runs the gate itself before it sends anything. `run.mjs`
-creates the real CMS client and hands it to `pipeline.mjs`, which keeps it inside one function
-that only runs submit; every other part of a run gets a client with no way to suggest
-(`withoutSuggestions`, `runner/lib/cms.mjs`). The runner
-checks `pipeline.yaml` and `safety.yaml` against their schemas when it starts, and refuses to run
-on a failure.
+The same gate (`runner/lib/gate.mjs`, #1007) holds a **safety item**. What makes one is written once,
+as a principle, in [`safety.yaml`](safety.yaml), and the model stages (verify and curate) apply it by
+what an item means, in any language and wording. The gate itself is three rules and reads no text
+of any item:
 
-What the text match does and doesn't catch: terms are whole words or phrases in English and
-Spanish, with the endings a word takes (the list is in the header of `safety.yaml`); a term of six letters or more also matches with single spaces inside it
-("po lice"). The words come from the police and weather feeds' own vocabulary, and every word
-list ends somewhere: a word of the same kind that no term names ("scuffle") isn't caught, so a
-source whose items are mostly such news is on the list. It ignores case, accents, width, invisible characters and punctuation, reads
-digits and symbols such as 0, 1, 3, 4, 5, 7, @ and $ as letters, and holds any word that mixes two
-of the scripts it checks (Latin, Cyrillic, Greek and others). It does **not** catch a word spelled wholly in look-alike letters of one other script,
-a short term split by a space ("fi re"), other symbol or emoji swaps inside a word, or any language
-but English and Spanish. An accidental pair across a space or a field ("in jury", "out age", "lock
-down", "coffee break" in the title and "in the lobby" in the next field) can hold an ordinary
-item, which costs an editor a look; so do ordinary words built like a term with an ending ("blazer",
-"fighter"), since the endings apply to every term. An item that slips by, from a source that isn't listed, relies
-on the model's answer. A word that appears in everyday notices ("shot", "alert", "safety") holds them too; that
-costs an editor a look, and no exclusion list may let text remove a hold.
+1. An item from an always-held source (the `sources` list in `safety.yaml`) is held, whatever it
+   says. The source facts must be present and match the candidate's source, and a listed
+   `alsoReportedBy` holds it too. The registry's own wording (owner, scope) is never read.
+2. An item is held when verify or curate answered `safety` with anything but a plain `false`:
+   `true`, a word or a number, no answer, or an error. Once a stage has said safety, a rerun or
+   retry can't take it back.
+3. Only one function can send a suggestion, and it runs the gate first. `routes` can't send a held
+   item to `submitSuggestion`. Submit runs the gate itself before it sends anything. `run.mjs`
+   creates the real CMS client and hands it to `pipeline.mjs`, which keeps it inside one function
+   that only runs submit; every other part of a run gets a client with no way to suggest
+   (`withoutSuggestions`, `runner/lib/cms.mjs`).
+
+The runner checks `pipeline.yaml` and `safety.yaml` against their schemas when it starts, and refuses
+to run on a failure, an unknown source id, or an empty source list.
+
+The limit, in plain words: an item from a source that is not on the list, which both model stages
+misjudge, arrives as an ordinary unpublished draft without the safety flag. The editors' review is
+the last check, and nothing is published without the owner's review either way. A new safety source
+is added to the list when it is added to the registry.
 
 Until #336 is live, a run writes the same calls and its run log as a digest for an editor instead.
 
@@ -242,7 +236,7 @@ Edit the files, then run `node scripts/check-intelligence.mjs`. It validates `pi
 `sources.yaml`, `safety.yaml` (each source it lists must be in `sources.yaml`) and every file in `evals/` (one per stage, `<stage>.yaml` or
 `<stage>-<topic>.yaml`) against their schemas, checks that eval times use America/Chicago's
 offset, and that grader fields, and every field a prompt names (written `` `$.field` ``), exist
-in the stage's input or output schema. Each eval case's `route` must follow the routing above: an `accept`, or any case that expects a suggestion, whose input, given draft or source the gate would hold as a safety item expects `reportItem`, and a suggestion needs an `accept` given. A case that expects `safety` never expects `accept`.
+in the stage's input or output schema. Each eval case's `route` must follow the routing above: an `accept`, or any case that expects a suggestion, whose source is always held expects `reportItem`, and a suggestion needs an `accept` given. A case that expects `safety` never expects `accept`. The cases in `evals/curate-safety.yaml` and `evals/verify.yaml` that expect `safety` from an unlisted source are the evidence the models judge by meaning.
 CI runs the same check on every pull request; it checks the cases' structure and never calls a
 model. Running the cases against a model is the collector's job (#272). Add an eval case whenever
 the pipeline gets something wrong.

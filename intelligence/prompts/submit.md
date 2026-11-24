@@ -14,7 +14,7 @@ README.md describes the contract.
 
 1. **Hold what must wait for a person, then route each item** by `$.curation.decision`, as
    `routes` in `pipeline.yaml` says. Before anything is sent, the gate (`runner/lib/gate.mjs`,
-   `coverage.md`, "Review passes") turns an `accept` that is a safety item (`safety.yaml`), or
+   `coverage.md`, "Review passes") turns an `accept` whose source is always held or that a stage marked as safety (`safety.yaml`), or
    that fails the promotion guard, into `needs-review`; a runtime that implements this stage
    does the same. The tools:
    - `accept` with a `$.draft`: one `submitSuggestion` call (`$.tool`).

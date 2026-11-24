@@ -148,26 +148,26 @@ cases:
       - check: model
         rubric: The suggestion is sent without any image; a follow-up needs-review report on the new document carries the image-candidate flag and one evidence entry with the page link, the image link and the credit.
     why: Source images reach the editor only as links with their credit, never as an upload.
-  - id: submit-safety-term-held
+  - id: submit-safety-source-held
     ref: SB6
     stage: submit
     tags: [safety]
     input:
-      sourceId: mpl-pinney-events
-      title: Police report night at Pinney Library
-      startsAt: 2026-11-19T18:00:00-06:00
-      locationText: Pinney Library
+      sourceId: madison-police-incident-reports
+      title: Report filed for a parking lot on Sprecher Road
+      startsAt: null
+      locationText: Sprecher Road, Madison
     given:
       curation: { decision: accept, safety: false, audiences: [everyone] }
       draft:
-        collection: events
-        title: Police report night at Pinney Library
-        bodyMarkdown: A talk about a recent police report.
-        summary: A talk about a recent police report at Pinney Library.
+        collection: posts
+        title: Report filed for a parking lot on Sprecher Road
+        bodyMarkdown: A report was filed for a parking lot on Sprecher Road.
+        summary: A report was filed for a parking lot on Sprecher Road.
         categories: [community]
         audience: [everyone]
     expected: { route: reportItem, reportKind: needs-review }
-    why: The model said accept and not safety, but the text names a safety term, so code holds it for an editor.
+    why: Both stages said not safety, but the source is always held, so code holds it for an editor whatever the item says.
   - id: submit-safety-flag-held
     ref: SB7
     stage: submit

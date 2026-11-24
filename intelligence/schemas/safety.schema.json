@@ -3,36 +3,17 @@
   "$id": "https://sprechereast.com/intelligence/schemas/safety.schema.json",
   "title": "What counts as a safety item (safety.yaml)",
   "type": "object",
-  "required": ["version", "meaning", "topics", "sources"],
+  "required": ["version", "meaning", "sources"],
   "additionalProperties": false,
   "properties": {
     "version": { "type": "integer", "minimum": 1 },
-    "meaning": { "type": "string", "minLength": 1, "maxLength": 600 },
+    "meaning": { "type": "string", "minLength": 1, "maxLength": 900 },
     "sources": {
       "description": "Ids of sources in sources.yaml whose items are safety by nature; every item from one is held for a person. Each must name a registered source (checked at load and by check-intelligence).",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
       "items": { "$ref": "common.schema.json#/$defs/sourceId" }
-    },
-    "topics": {
-      "type": "array",
-      "minItems": 4,
-      "items": {
-        "type": "object",
-        "required": ["id", "means", "terms"],
-        "additionalProperties": false,
-        "properties": {
-          "id": { "$ref": "common.schema.json#/$defs/sourceId" },
-          "means": { "type": "string", "minLength": 1, "maxLength": 300 },
-          "terms": {
-            "type": "array",
-            "minItems": 1,
-            "uniqueItems": true,
-            "items": { "type": "string", "pattern": "^[a-z]+( [a-z]+)*$", "maxLength": 40 }
-          }
-        }
-      }
     }
   }
 }
