@@ -75,6 +75,23 @@ describe('describeEndpoints', () => {
     expect(describeEndpoints(endpoints, locate).map((e) => e.path)).toEqual(['/verify/:token'])
   })
 
+  it('keeps the routes Payload gives the type when asked, in config order (#1461)', () => {
+    const endpoints = [
+      { path: '/', method: 'get', handler: function findHandler() {} },
+      { path: '/verify/:token', method: 'post', handler: isAdmin },
+    ]
+    expect(
+      describeEndpoints(endpoints, locate, { builtIn: true }).map((e) => [
+        e.method,
+        e.path,
+        e.file,
+      ]),
+    ).toEqual([
+      ['GET', '/', 'payload'],
+      ['POST', '/verify/:token', 'src/platform/payload/roles.ts'],
+    ])
+  })
+
   it('is empty when a type has none, or switches them off', () => {
     expect(describeEndpoints(undefined, locate)).toEqual([])
     expect(describeEndpoints(false, locate)).toEqual([])
@@ -105,6 +122,8 @@ describe('describeContentType', () => {
       access: [{ operation: 'read' }],
       hooks: [{ phase: 'beforeChange' }],
       endpoints: [{ method: 'GET', path: '/x' }],
+      allEndpoints: [{ method: 'GET', path: '/x' }],
+      graphQL: true,
       fields: [{ path: 'title' }],
     })
   })

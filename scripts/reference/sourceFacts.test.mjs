@@ -1,47 +1,18 @@
-import fs from 'node:fs'
-import os from 'node:os'
-import path from 'node:path'
-import ts from 'typescript'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { findCollectionCalls, findDefinitions, operationsSuffix, ownerOf } from './sourceFacts.mjs'
+import {
+  areaOf,
+  findDefinitions,
+  findPluginConfigurers,
+  findServerActions,
+  ownerOf,
+} from './sourceFacts.mjs'
+import { createFixture } from './testProgram.mjs'
 
-let root
-const write = (file, text) => {
-  fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true })
-  fs.writeFileSync(path.join(root, file), text)
-}
-
-const FILES = [
-  'src/modules/events/cms/events.ts',
-  'src/modules/agents/cms/agentRuns.ts',
-  'src/modules/agents/cms/seed.ts',
-  'src/modules/agents/cms/runs.test.ts',
-  'src/platform/payload/media.ts',
-  'src/modules/agents/cms/tools/report.ts',
-  'src/modules/agents/cms/tools/helper.ts',
-  'src/modules/news/cms/unrelated.ts',
-  'src/modules/agents/cms/tools/viaHelper.ts',
-]
-
-function load() {
-  return ts.createProgram({
-    rootNames: FILES.map((file) => path.join(root, file)),
-    options: {
-      strict: true,
-      noEmit: true,
-      skipLibCheck: true,
-      target: ts.ScriptTarget.ES2022,
-      module: ts.ModuleKind.ESNext,
-      moduleResolution: ts.ModuleResolutionKind.Bundler,
-      baseUrl: root,
-      paths: { '@/*': ['src/*'] },
-    },
-  })
-}
+const fixture = createFixture('reference-source-facts-')
+const { write, load, root } = fixture
 
 beforeAll(() => {
-  root = fs.mkdtempSync(path.join(os.tmpdir(), 'reference-source-facts-'))
   write(
     'src/modules/events/cms/events.ts',
     "export const Events = { slug: 'events', fields: [] }\n",
@@ -59,46 +30,48 @@ beforeAll(() => {
     'src/modules/agents/cms/runs.test.ts',
     "export const fake = { slug: 'faked', fields: [] }\n",
   )
+  // Shorthand `slug`, as a factory that spreads one value into two types writes it
+  write(
+    'src/modules/site/cms/nav.ts',
+    "const slug = 'header'\nexport const Header = { slug, fields: [] }\n",
+  )
   write('src/platform/payload/media.ts', "export const Media = { slug: 'media', fields: [] }\n")
   write(
-    'src/modules/agents/cms/tools/report.ts',
-    `import { AGENT_RUNS } from '../agentRuns'
-import { find } from './helper'
-type Input = { collection: 'events' | 'posts' }
-declare const req: { payload: { find(a: object): void; create(a: object): void; db: { deleteMany(a: object): void } } }
-export function report(input: Input) {
-  req.payload.create({ collection: input.collection, data: {} })
-  req.payload.db.deleteMany({ collection: AGENT_RUNS })
-  find()
-}
+    'src/modules/accounts/actions.ts',
+    `'use server'
+export async function signIn() {}
+export const signOut = async () => {}
+export const LIMIT = 3
+function internal() {}
 `,
   )
   write(
-    'src/modules/agents/cms/tools/helper.ts',
-    `declare const req: { payload: { find(a: object): void } }
-export function find() {
-  req.payload.find({ collection: 'categories' })
-}
-`,
+    'src/payload.config.ts',
+    [
+      "import { formPlugin } from '@payloadcms/plugin-x'",
+      "import { otherPlugin } from '@payloadcms/plugin-y'",
+      "import { createOptions } from '@/modules/contact/cms'",
+      "import { confirmer } from '@/modules/verification/cms'",
+      "import { TOKEN } from '@/platform/lib'",
+      'export const plugins = [',
+      '  formPlugin(createOptions({ confirmer })),',
+      '  otherPlugin({ token: TOKEN }),',
+      ']',
+    ].join('\n'),
   )
+  write('src/modules/accounts/plain.ts', 'export async function notAnAction() {}\n')
   write(
-    'src/modules/agents/cms/tools/viaHelper.ts',
-    `import { AGENT_RUNS } from '../agentRuns'
-declare function deleteRows(req: object, collection: string): void
-declare function log(text: string): void
-export function run(req: object) {
-  deleteRows(req, AGENT_RUNS)
-  log('events')
+    'src/app/(payload)/layout.tsx',
+    `export const serverFunction = async function (args: object) {
+  'use server'
+  return args
 }
+export default function Layout() { return null }
 `,
-  )
-  write(
-    'src/modules/news/cms/unrelated.ts',
-    "declare const req: { payload: { find(a: object): void } }\nreq.payload.find({ collection: 'posts' })\n",
   )
 })
 
-afterAll(() => fs.rmSync(root, { recursive: true, force: true }))
+afterAll(() => fixture.cleanup())
 
 describe('findDefinitions', () => {
   it('maps each collection or global slug to the files that define it, reading constants', () => {
@@ -106,6 +79,10 @@ describe('findDefinitions', () => {
     expect(found.get('events')).toEqual(['src/modules/events/cms/events.ts'])
     expect(found.get('agent-runs')).toEqual(['src/modules/agents/cms/agentRuns.ts'])
     expect(found.get('media')).toEqual(['src/platform/payload/media.ts'])
+  })
+
+  it('reads a shorthand `slug` property', () => {
+    expect(findDefinitions(load(), root).get('header')).toEqual(['src/modules/site/cms/nav.ts'])
   })
 
   it('ignores documents, tasks and tests: only an object with fields defines a type', () => {
@@ -116,16 +93,18 @@ describe('findDefinitions', () => {
   })
 })
 
-describe('ownerOf', () => {
-  it('names the module that holds the definition', () => {
+describe('areaOf and ownerOf', () => {
+  it('names the module that holds the file, or the shared area, or the app', () => {
+    expect(areaOf('src/modules/events/cms/events.ts')).toBe('module `events`')
+    expect(areaOf('src/platform/payload/media.ts')).toBe('shared code `platform/payload`')
+    expect(areaOf('src/app/(payload)/layout.tsx')).toBe('the app folder `src/app`')
+  })
+
+  it('names the owner of a content type from the file that defines it', () => {
     expect(ownerOf(['src/modules/events/cms/events.ts'])).toEqual({
       owner: 'module `events`',
       file: 'src/modules/events/cms/events.ts',
     })
-  })
-
-  it('names the shared area for a platform file', () => {
-    expect(ownerOf(['src/platform/payload/media.ts']).owner).toBe('shared code `platform/payload`')
   })
 
   it('says a plugin or Payload when the repository does not define it', () => {
@@ -133,43 +112,27 @@ describe('ownerOf', () => {
   })
 })
 
-describe('findCollectionCalls', () => {
-  it('lists the collections and operations an entry file reaches, with its relative imports', () => {
-    const calls = findCollectionCalls(load(), root, 'src/modules/agents/cms/tools/report.ts')
-    expect(calls).toEqual([
-      { collection: 'agent-runs', operations: ['delete'] },
-      { collection: 'categories', operations: ['read'] },
-      { collection: 'events', operations: ['create'] },
-      { collection: 'posts', operations: ['create'] },
+describe('findServerActions', () => {
+  it('lists exported functions of a "use server" file and an inline server function', () => {
+    expect(findServerActions(load(), root)).toEqual([
+      {
+        file: 'src/app/(payload)/layout.tsx',
+        name: 'serverFunction',
+        area: 'the app folder `src/app`',
+      },
+      { file: 'src/modules/accounts/actions.ts', name: 'signIn', area: 'module `accounts`' },
+      { file: 'src/modules/accounts/actions.ts', name: 'signOut', area: 'module `accounts`' },
     ])
-  })
-
-  it('stays inside the entry file and the files it imports', () => {
-    const calls = findCollectionCalls(load(), root, 'src/modules/agents/cms/tools/helper.ts')
-    expect(calls).toEqual([{ collection: 'categories', operations: ['read'] }])
-  })
-
-  it('also follows a collection passed to a helper by name, with no operation known', () => {
-    const known = new Set(['agent-runs', 'events'])
-    const calls = findCollectionCalls(
-      load(),
-      root,
-      'src/modules/agents/cms/tools/viaHelper.ts',
-      known,
-    )
-    expect(calls).toEqual([{ collection: 'agent-runs', operations: [] }])
-  })
-
-  it('does not follow a plain string, or a name that is not a known collection', () => {
-    expect(
-      findCollectionCalls(load(), root, 'src/modules/agents/cms/tools/viaHelper.ts', new Set()),
-    ).toEqual([])
   })
 })
 
-describe('operationsSuffix', () => {
-  it('writes the operations in brackets, or nothing when none is known', () => {
-    expect(operationsSuffix(['create', 'read'])).toBe(' (create, read)')
-    expect(operationsSuffix([])).toBe('')
+describe('findPluginConfigurers', () => {
+  it('maps a plugin to the modules whose code is in the options it is called with', () => {
+    expect(findPluginConfigurers(load(), root, 'src/payload.config.ts')).toEqual(
+      new Map([
+        ['@payloadcms/plugin-x', ['contact', 'verification']],
+        ['@payloadcms/plugin-y', []],
+      ]),
+    )
   })
 })

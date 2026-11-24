@@ -3,7 +3,7 @@
 # Header (`header`)
 
 - Kind: global
-- Owner: a plugin or Payload
+- Owner: module `site`, defined in `src/modules/site/cms/navGlobal.ts`
 - Drafts: no
 - Versions: none kept
 

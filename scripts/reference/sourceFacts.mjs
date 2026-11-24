@@ -1,30 +1,13 @@
 /**
  * Facts read from the source with the TypeScript compiler (#1461): which file defines a content
- * type, and which collections a piece of code reaches through Payload's Local API. The type
+ * type, which functions are server actions, and which modules configure a plugin. The type
  * checker resolves constants, so `slug: AGENT_RUNS` is found as `agent-runs`. Pure apart from
  * reading the program it is given.
  */
 import path from 'node:path'
 import ts from 'typescript'
 
-import { rootPrefix } from '../content-types/functions.mjs'
-
-const isTestFile = (file) =>
-  /\.(test|spec|contract)\.[cm]?[jt]sx?$/.test(file) || file.includes('/testing/')
-
-const propertyName = (property) =>
-  ts.isIdentifier(property.name) || ts.isStringLiteralLike(property.name)
-    ? property.name.text
-    : undefined
-
-const relativeTo = (root, file) => file.slice(rootPrefix(root).length)
-
-/** The string values an expression can have, from its type: `'a'`, or `'a' | 'b'`. */
-function literalValues(checker, expression) {
-  const type = checker.getTypeAtLocation(expression)
-  const parts = type.isUnion() ? type.types : [type]
-  return parts.every((part) => part.isStringLiteral()) ? parts.map((part) => part.value) : []
-}
+import { isSource, propertyValues, property, valueOf, walkAll, relativeTo } from './ast.mjs'
 
 /**
  * Slug to the files that define a content type with it: an object literal that has both a `slug`
@@ -32,136 +15,124 @@ function literalValues(checker, expression) {
  */
 export function findDefinitions(program, root) {
   const checker = program.getTypeChecker()
-  const prefix = rootPrefix(root)
   const found = new Map()
   for (const sourceFile of program.getSourceFiles()) {
-    const file = sourceFile.fileName
-    if (!file.startsWith(`${prefix}src/`) || isTestFile(file)) continue
-    const visit = (node) => {
-      if (ts.isObjectLiteralExpression(node)) {
-        const props = node.properties.filter(ts.isPropertyAssignment)
-        const slug = props.find((p) => propertyName(p) === 'slug')
-        if (slug && props.some((p) => propertyName(p) === 'fields')) {
-          for (const value of literalValues(checker, slug.initializer)) {
-            const files = found.get(value) ?? new Set()
-            files.add(relativeTo(root, file))
-            found.set(value, files)
-          }
-        }
+    if (!isSource(sourceFile.fileName, root)) continue
+    walkAll(sourceFile, (node) => {
+      if (!ts.isObjectLiteralExpression(node)) return
+      const slug = property(node, 'slug')
+      if (!slug || !property(node, 'fields')) return
+      for (const value of propertyValues(checker, slug)) {
+        const files = found.get(value) ?? new Set()
+        files.add(relativeTo(root, sourceFile.fileName))
+        found.set(value, files)
       }
-      ts.forEachChild(node, visit)
-    }
-    visit(sourceFile)
+    })
   }
   return new Map([...found].map(([slug, files]) => [slug, [...files].sort()]))
+}
+
+/** The module or shared area a source file belongs to. */
+export function areaOf(file) {
+  const [, area, name] = file.split('/')
+  if (area === 'modules') return `module \`${name}\``
+  if (area === 'platform') return `shared code \`platform/${name}\``
+  return `the app folder \`src/${area}\``
 }
 
 /** Who owns a content type, from the first file that defines it. */
 export function ownerOf(files) {
   const [file] = files
-  if (!file) return { owner: 'a plugin or Payload', file: '' }
-  const [, area, name] = file.split('/')
-  if (area === 'modules') return { owner: `module \`${name}\``, file }
-  return { owner: `shared code \`platform/${name}\``, file }
+  return file ? { owner: areaOf(file), file } : { owner: 'a plugin or Payload', file: '' }
 }
 
-const OPERATIONS = {
-  find: 'read',
-  findByID: 'read',
-  count: 'read',
-  create: 'create',
-  update: 'update',
-  updateMany: 'update',
-  delete: 'delete',
-  deleteMany: 'delete',
-}
+const hasDirective = (body) =>
+  body?.statements?.[0] &&
+  ts.isExpressionStatement(body.statements[0]) &&
+  ts.isStringLiteral(body.statements[0].expression) &&
+  body.statements[0].expression.text === 'use server'
 
-/** `payload.find(…)` or `req.payload.db.deleteMany(…)`: the method name, or undefined. */
-function payloadMethod(call) {
-  const callee = call.expression
-  if (!ts.isPropertyAccessExpression(callee) || !(callee.name.text in OPERATIONS)) return undefined
-  const owner = callee.expression
-  const base =
-    ts.isPropertyAccessExpression(owner) && owner.name.text === 'db' ? owner.expression : owner
-  const isPayload =
-    (ts.isIdentifier(base) && base.text === 'payload') ||
-    (ts.isPropertyAccessExpression(base) && base.name.text === 'payload')
-  return isPayload ? callee.name.text : undefined
-}
+const isFunctionLike = (node) =>
+  ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node) || ts.isArrowFunction(node)
 
-/** The source files an entry file imports with a relative path, however deep. */
-function reachable(program, entry) {
-  const seen = new Set()
-  const queue = [entry]
-  while (queue.length > 0) {
-    const sourceFile = queue.pop()
-    if (seen.has(sourceFile.fileName)) continue
-    seen.add(sourceFile.fileName)
+const isExported = (statement) =>
+  statement.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)
+
+/**
+ * Every server action: an exported function of a file that starts with `'use server'`, and a
+ * function whose own body starts with it. Each is a POST endpoint of its own.
+ */
+export function findServerActions(program, root) {
+  const found = []
+  // Creating the checker binds the files, which sets the parent of every node
+  program.getTypeChecker()
+  for (const sourceFile of program.getSourceFiles()) {
+    if (!isSource(sourceFile.fileName, root)) continue
+    const file = relativeTo(root, sourceFile.fileName)
+    const add = (name) => found.push({ file, name, area: areaOf(file) })
+    const wholeFile = hasDirective(sourceFile)
     for (const statement of sourceFile.statements) {
-      if (!ts.isImportDeclaration(statement) && !ts.isExportDeclaration(statement)) continue
-      const from = statement.moduleSpecifier
-      if (!from || !ts.isStringLiteralLike(from) || !from.text.startsWith('.')) continue
-      const target = ts.resolveModuleName(
-        from.text,
-        sourceFile.fileName,
-        program.getCompilerOptions(),
-        ts.sys,
-      ).resolvedModule?.resolvedFileName
-      const next = target && program.getSourceFile(target)
-      if (next && !isTestFile(next.fileName)) queue.push(next)
+      if (!wholeFile || !isExported(statement)) continue
+      if (ts.isFunctionDeclaration(statement) && statement.name) add(statement.name.text)
+      if (ts.isVariableStatement(statement)) {
+        for (const d of statement.declarationList.declarations) {
+          if (ts.isIdentifier(d.name) && d.initializer && isFunctionLike(d.initializer))
+            add(d.name.text)
+        }
+      }
+    }
+    if (wholeFile) continue
+    walkAll(sourceFile, (node) => {
+      if (!isFunctionLike(node) || !hasDirective(node.body)) return
+      const holder = ts.isFunctionDeclaration(node) ? node : node.parent
+      const name = holder.name ?? (ts.isVariableDeclaration(holder) ? holder.name : undefined)
+      if (name && ts.isIdentifier(name)) add(name.text)
+    })
+  }
+  return found.sort((a, b) => a.file.localeCompare(b.file) || a.name.localeCompare(b.name))
+}
+
+/** Imported local name to the module it comes from. */
+function importSources(sourceFile) {
+  const imports = new Map()
+  for (const statement of sourceFile.statements) {
+    const clause = ts.isImportDeclaration(statement) && statement.importClause
+    if (!clause || clause.isTypeOnly) continue
+    if (clause.name) imports.set(clause.name.text, statement.moduleSpecifier.text)
+    if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
+      for (const element of clause.namedBindings.elements) {
+        imports.set(element.name.text, statement.moduleSpecifier.text)
+      }
     }
   }
-  return [...seen].map((name) => program.getSourceFile(name))
+  return imports
 }
 
 /**
- * The collections an entry file reaches through Payload's Local API (`find`, `create`, `update`,
- * `delete`, also on `payload.db`), with the operations, in the file and in what it imports by a
- * relative path. Only calls whose `collection` is a known string count. A call to anything else
- * (a helper) counts when it is given a named constant whose value is one of `knownSlugs`; no
- * operation is known for it. Sorted by collection.
+ * Plugin package to the modules whose code is named in the options the plugin is called with,
+ * read from the config file: `searchPlugin({ ...searchOptions })` with `searchOptions` imported
+ * from `@/modules/news/cms` gives `news`. A plugin called with no module code gives none.
  */
-export function findCollectionCalls(program, root, entryFile, knownSlugs = new Set()) {
-  const checker = program.getTypeChecker()
-  const entry = program.getSourceFile(path.join(root, entryFile))
-  if (!entry) return []
+export function findPluginConfigurers(program, root, configFile) {
+  const sourceFile = program.getSourceFile(path.join(root, configFile))
+  if (!sourceFile) return new Map()
+  const imports = importSources(sourceFile)
   const found = new Map()
-  for (const sourceFile of reachable(program, entry)) {
-    const note = (collection, operation) => {
-      const operations = found.get(collection) ?? new Set()
-      if (operation) operations.add(operation)
-      found.set(collection, operations)
+  walkAll(sourceFile, (node) => {
+    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression)) return
+    const from = imports.get(node.expression.text)
+    if (!from?.startsWith('@payloadcms/plugin-')) return
+    const modules = found.get(from) ?? new Set()
+    for (const argument of node.arguments) {
+      walkAll(argument, (child) => {
+        const source = ts.isIdentifier(child) ? imports.get(child.text) : undefined
+        const match = source && /^@\/modules\/([^/]+)/.exec(source)
+        if (match) modules.add(match[1])
+      })
     }
-    const visit = (node) => {
-      if (ts.isCallExpression(node)) {
-        const method = payloadMethod(node)
-        const argument = node.arguments[0]
-        if (method && argument && ts.isObjectLiteralExpression(argument)) {
-          const property = argument.properties
-            .filter(ts.isPropertyAssignment)
-            .find((p) => propertyName(p) === 'collection')
-          const values = property ? literalValues(checker, property.initializer) : []
-          for (const collection of values) note(collection, OPERATIONS[method])
-        } else if (!method) {
-          const named = node.arguments.filter(
-            (a) => ts.isIdentifier(a) || ts.isPropertyAccessExpression(a),
-          )
-          for (const name of named) {
-            for (const value of literalValues(checker, name)) {
-              if (knownSlugs.has(value)) note(value, '')
-            }
-          }
-        }
-      }
-      ts.forEachChild(node, visit)
-    }
-    visit(sourceFile)
-  }
-  return [...found]
-    .map(([collection, operations]) => ({ collection, operations: [...operations].sort() }))
-    .sort((a, b) => a.collection.localeCompare(b.collection))
+    found.set(from, modules)
+  })
+  return new Map(
+    [...found].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, [...v].sort()]),
+  )
 }
-
-/** ` (create, read)` after a collection name, or nothing when no operation is known. */
-export const operationsSuffix = (operations) =>
-  operations.length > 0 ? ` (${operations.join(', ')})` : ''

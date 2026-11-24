@@ -32,10 +32,35 @@ const base = {
       slug: 'events',
       kind: 'collection',
       rest: true,
+      graphQL: true,
       endpoints: [{ method: 'POST', path: '/verify/:token', name: 'verify', file: 'src/v.ts' }],
+      allEndpoints: [
+        { method: 'GET', path: '/count', name: 'countHandler', file: 'payload' },
+        { method: 'POST', path: '/login', name: 'loginHandler', file: 'payload' },
+        { method: 'POST', path: '/verify/:token', name: 'verify', file: 'src/v.ts' },
+      ],
     },
-    { slug: 'header', kind: 'global', rest: true, endpoints: [] },
-    { slug: 'agent-runs', kind: 'collection', rest: false, endpoints: [] },
+    {
+      slug: 'faq',
+      kind: 'collection',
+      rest: true,
+      graphQL: true,
+      endpoints: [],
+      allEndpoints: [{ method: 'GET', path: '/count', name: 'countHandler', file: 'payload' }],
+    },
+    { slug: 'header', kind: 'global', rest: true, graphQL: true, endpoints: [], allEndpoints: [] },
+    {
+      slug: 'agent-runs',
+      kind: 'collection',
+      rest: false,
+      graphQL: false,
+      endpoints: [],
+      allEndpoints: [],
+    },
+  ],
+  adminPages: [{ url: '/admin/[[...segments]]', file: 'src/app/(payload)/admin/page.tsx' }],
+  serverActions: [
+    { file: 'src/modules/accounts/actions.ts', name: 'signIn', area: 'module `accounts`' },
   ],
   routeHandlers: [
     { url: '/api/version', methods: ['GET'], file: 'src/app/(frontend)/api/version/route.ts' },
@@ -53,9 +78,16 @@ describe('describeApi', () => {
 
   it('reads the REST path of each content type, and that one is switched off', () => {
     expect(api.rest).toEqual([
-      { slug: 'agent-runs', kind: 'collection', path: '', enabled: false },
-      { slug: 'events', kind: 'collection', path: '/api/events', enabled: true },
-      { slug: 'header', kind: 'global', path: '/api/globals/header', enabled: true },
+      { slug: 'agent-runs', kind: 'collection', path: '', enabled: false, graphQL: false },
+      { slug: 'events', kind: 'collection', path: '/api/events', enabled: true, graphQL: true },
+      { slug: 'faq', kind: 'collection', path: '/api/faq', enabled: true, graphQL: true },
+      {
+        slug: 'header',
+        kind: 'global',
+        path: '/api/globals/header',
+        enabled: true,
+        graphQL: true,
+      },
     ])
   })
 
@@ -79,6 +111,56 @@ describe('describeApi', () => {
       ['config', 'GET', '/api/mcp', '@payloadcms/plugin-mcp'],
       ['events', 'POST', '/api/events/verify/:token', 'src/v.ts'],
     ])
+  })
+
+  it('groups the routes Payload adds by method and path, with the types that have each', () => {
+    expect(api.builtIn).toEqual([
+      {
+        method: 'GET',
+        path: '/count',
+        types: ['events', 'faq'],
+        scope: 'every collection except `agent-runs`',
+      },
+      { method: 'POST', path: '/login', types: ['events'], scope: '' },
+    ])
+  })
+
+  it('says every collection when all of them have a route', () => {
+    const everyone = base.contentTypes.map((type) =>
+      type.kind === 'collection'
+        ? { ...type, allEndpoints: [{ method: 'GET', path: '/count', name: 'c', file: 'payload' }] }
+        : type,
+    )
+    const built = describeApi({ ...base, contentTypes: everyone }, locate).builtIn
+    expect(built).toEqual([
+      {
+        method: 'GET',
+        path: '/count',
+        types: ['agent-runs', 'events', 'faq'],
+        scope: 'every collection',
+      },
+    ])
+  })
+
+  it('lists the types instead when a summary would hide some of them', () => {
+    const mixed = base.contentTypes.map((type) =>
+      ['events', 'header'].includes(type.slug)
+        ? {
+            ...type,
+            allEndpoints: [{ method: 'GET', path: '/versions', name: 'v', file: 'payload' }],
+          }
+        : type,
+    )
+    const row = describeApi({ ...base, contentTypes: mixed }, locate).builtIn.find(
+      (entry) => entry.path === '/versions',
+    )
+    expect(row.types).toEqual(['events', 'header'])
+    expect(row.scope).toBe('')
+  })
+
+  it('lists the admin pages and the server actions', () => {
+    expect(api.adminPages).toEqual(base.adminPages)
+    expect(api.serverActions).toEqual(base.serverActions)
   })
 
   it('names the access check only where the config states it: the MCP endpoint', () => {
@@ -120,6 +202,17 @@ describe('renderApi', () => {
     )
     const rows = (text) => text.split('\n').filter((line) => line.includes('/api/events/')).length
     expect(rows(renderApi(more)) - rows(page)).toBe(1)
+  })
+
+  it('has a row for each server action and says what it does not show', () => {
+    expect(page).toContain('| module `accounts` | `signIn` |')
+    expect(page).toContain('Not shown')
+  })
+
+  it('shows the Payload routes, the admin pages and where GraphQL is off', () => {
+    expect(page).toContain('| GET | `/count` |')
+    expect(page).toContain('`/admin/[[...segments]]`')
+    expect(page).toContain('| collection | REST switched off | off |')
   })
 
   it('says the route files are listed with their methods', () => {

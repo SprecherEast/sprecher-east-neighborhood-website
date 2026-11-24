@@ -18,3 +18,11 @@ text, secrets or personal details: the repository is public.
   not call the CMS, open issues or pull requests, or publish anything.
 - **Ends with:** a report for the owner, who reviews it before any site update is made.
 - **Carries:** one temporary watch item, set by the owner.
+
+## Not covered here
+
+- The server's own cron job (the daily data backup) is installed by `ops/install-cron.sh`, so it is
+  in the repository and on the generated jobs page.
+- The pipeline settings in `intelligence/pipeline.yaml` state a daily schedule, shown on the jobs
+  page. What starts a run from it, and where, is not recorded here, because it has not been
+  confirmed for this page.

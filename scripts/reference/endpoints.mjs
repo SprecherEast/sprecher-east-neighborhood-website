@@ -10,6 +10,41 @@ import { cell, code, fileCell, generatedNotice, table } from '../content-types/r
 
 const MCP_PLUGIN = '@payloadcms/plugin-mcp'
 
+/** The routes Payload adds to content types, one per method and path, with the types that have it. */
+function groupBuiltIn(contentTypes) {
+  const found = new Map()
+  for (const type of contentTypes) {
+    for (const endpoint of type.allEndpoints) {
+      if (endpoint.file !== 'payload') continue
+      const key = `${endpoint.method} ${endpoint.path}`
+      const entry = found.get(key) ?? { method: endpoint.method, path: endpoint.path, types: [] }
+      entry.types.push(type.slug)
+      found.set(key, entry)
+    }
+  }
+  const scopeOf = (types) =>
+    ['collection', 'global']
+      .map((kind) => {
+        const all = contentTypes.filter((t) => t.kind === kind).map((t) => t.slug)
+        const has = all.filter((slug) => types.includes(slug))
+        const missing = all.filter((slug) => !types.includes(slug))
+        if (has.length === 0) return ''
+        if (has.length <= missing.length) return null
+        return missing.length === 0
+          ? `every ${kind}`
+          : `every ${kind} except ${missing
+              .sort()
+              .map((slug) => `\`${slug}\``)
+              .join(', ')}`
+      })
+      .filter((piece) => piece !== '')
+      .reduce((all, piece) => (all === null || piece === null ? null : [...all, piece]), [])
+      ?.join('; ') ?? ''
+  return [...found.values()]
+    .map((entry) => ({ ...entry, types: entry.types.sort(), scope: scopeOf(entry.types) }))
+    .sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method))
+}
+
 /**
  * Everything the page says, as data. `endpoints` are the config's own, `contentTypes` carry the
  * custom endpoints already described for the content-type pages, `routeHandlers` are the route
@@ -24,6 +59,7 @@ export function describeApi(input, locate = noFiles) {
       kind: type.kind,
       path: type.rest ? `${api}${type.kind === 'global' ? '/globals' : ''}/${type.slug}` : '',
       enabled: type.rest,
+      graphQL: type.graphQL,
     }))
     .sort((a, b) => a.slug.localeCompare(b.slug))
 
@@ -49,6 +85,7 @@ export function describeApi(input, locate = noFiles) {
     })),
   )
 
+  const builtIn = groupBuiltIn(contentTypes)
   const { rules = [], ...settings } = graphQL
   return {
     api,
@@ -63,6 +100,9 @@ export function describeApi(input, locate = noFiles) {
       })),
     },
     custom: [...fromConfig, ...fromTypes],
+    builtIn,
+    adminPages: input.adminPages,
+    serverActions: input.serverActions,
     routeHandlers: [...routeHandlers].sort(
       (a, b) => a.url.localeCompare(b.url) || a.file.localeCompare(b.file),
     ),
@@ -76,12 +116,29 @@ export function renderApi(data) {
     data.routeHandlers.map((row) => [code(row.url), row.methods.join(', '), code(row.file)]),
   )
   const rest = table(
-    ['Content type', 'Kind', 'REST path'],
+    ['Content type', 'Kind', 'REST path', 'GraphQL'],
     data.rest.map((row) => [
       `[${code(row.slug)}](content-types/${row.slug}.md)`,
       row.kind,
       row.enabled ? code(row.path) : 'REST switched off',
+      row.graphQL ? 'on' : 'off',
     ]),
+  )
+  const builtIn = table(
+    ['Method', 'Path after the type’s own', 'Content types'],
+    data.builtIn.map((row) => [
+      row.method,
+      code(row.path),
+      row.scope || row.types.map(code).join(', '),
+    ]),
+  )
+  const admin = table(
+    ['URL', 'File'],
+    data.adminPages.map((row) => [code(row.url), code(row.file)]),
+  )
+  const actions = table(
+    ['Where', 'Function', 'File'],
+    data.serverActions.map((row) => [row.area, code(row.name), code(row.file)]),
   )
   const graphQL = table(
     ['Setting', 'Value'],
@@ -115,13 +172,33 @@ export function renderApi(data) {
     '',
     '## Route files',
     '',
+    'The access check of a route handler is inside it and is not shown.',
+    '',
     handlers,
+    '',
+    '## Payload Admin',
+    '',
+    'The Admin app, with its own server function (below).',
+    '',
+    admin,
+    '',
+    '## Server actions',
+    '',
+    "Each is a POST endpoint the browser calls by itself, from a function marked `'use server'`. Who may call one is decided inside the function and is not shown.",
+    '',
+    actions,
     '',
     '## REST API',
     '',
-    `Payload builds a REST API for each content type under \`${data.api}\`: find, create, update and delete, each guarded by the content type’s access functions.`,
+    `Payload builds a REST API for each content type under \`${data.api}\`, guarded by the content type’s access functions, and the GraphQL API for the types marked on.`,
     '',
     rest,
+    '',
+    '### Routes Payload adds to content types',
+    '',
+    'Besides find, create, update and delete, the loaded config gives these routes, each after the type’s own path (`/api/<slug>` or `/api/globals/<slug>`).',
+    '',
+    builtIn,
     '',
     '## GraphQL API',
     '',
@@ -134,6 +211,10 @@ export function renderApi(data) {
     'Added by the config, a plugin or a content type. The access check of one is set inside its handler, which the config does not show, except the MCP endpoint, whose key check the config names.',
     '',
     custom,
+    '',
+    '## Not shown',
+    '',
+    'Not shown: the access check inside a custom endpoint, a route handler or a server action; Next.js’s own routes and the proxy (`src/proxy.ts`); and what a plugin’s endpoint does beyond its handler’s name.',
     '',
     '## MCP endpoint',
     '',

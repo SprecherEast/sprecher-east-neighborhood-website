@@ -65,9 +65,10 @@ export function describeHooks(hooks = {}, locate = noFiles) {
 /**
  * Custom endpoints in config order: those this site or a plugin adds. The REST routes Payload
  * gives every collection (find, create, delete, login and the rest) are left out, since every
- * type has them. `endpoints: false` and no endpoints both give none.
+ * type has them, unless `builtIn` asks for them too. `endpoints: false` and no endpoints both
+ * give none.
  */
-export function describeEndpoints(endpoints, locate = noFiles) {
+export function describeEndpoints(endpoints, locate = noFiles, { builtIn = false } = {}) {
   if (!Array.isArray(endpoints)) return []
   return endpoints
     .map((endpoint) => ({
@@ -76,5 +77,5 @@ export function describeEndpoints(endpoints, locate = noFiles) {
       name: functionLabel(endpoint.handler, 'handler').name,
       file: locate(endpoint.handler),
     }))
-    .filter((endpoint) => endpoint.file !== 'payload')
+    .filter((endpoint) => builtIn || endpoint.file !== 'payload')
 }

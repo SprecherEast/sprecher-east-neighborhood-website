@@ -6,6 +6,8 @@ Every way into the application that is not a site page: the route files, the RES
 
 ## Route files
 
+The access check of a route handler is inside it and is not shown.
+
 | URL                         | Methods                                | File                                                   |
 | --------------------------- | -------------------------------------- | ------------------------------------------------------ |
 | `/api/[...slug]`            | GET, POST, PUT, PATCH, DELETE, OPTIONS | `src/app/(payload)/api/[...slug]/route.ts`             |
@@ -19,41 +21,111 @@ Every way into the application that is not a site page: the route files, the RES
 | `/next/preview`             | GET                                    | `src/app/(frontend)/next/preview/route.ts`             |
 | `/next/seed`                | POST                                   | `src/app/(frontend)/next/seed/route.ts`                |
 
+## Payload Admin
+
+The Admin app, with its own server function (below).
+
+| URL                      | File                                               |
+| ------------------------ | -------------------------------------------------- |
+| `/admin/[[...segments]]` | `src/app/(payload)/admin/[[...segments]]/page.tsx` |
+
+## Server actions
+
+Each is a POST endpoint the browser calls by itself, from a function marked `'use server'`. Who may call one is decided inside the function and is not shown.
+
+| Where                    | Function                 | File                              |
+| ------------------------ | ------------------------ | --------------------------------- |
+| the app folder `src/app` | `serverFunction`         | `src/app/(payload)/layout.tsx`    |
+| module `accounts`        | `addPasskey`             | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `changePassword`         | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `connectGoogle`          | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `forgotPassword`         | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `getPasskeyLoginOptions` | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `getPasskeyOptions`      | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `getSignedInAccount`     | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `logInWithPasskey`       | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `removePasskey`          | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `resetPassword`          | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `signIn`                 | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `signOut`                | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `signUp`                 | `src/modules/accounts/actions.ts` |
+| module `accounts`        | `verifyAccount`          | `src/modules/accounts/actions.ts` |
+| module `events`          | `loadMoreEvents`         | `src/modules/events/actions.ts`   |
+| module `news`            | `loadMorePosts`          | `src/modules/news/actions.ts`     |
+
 ## REST API
 
-Payload builds a REST API for each content type under `/api`: find, create, update and delete, each guarded by the content type’s access functions.
+Payload builds a REST API for each content type under `/api`, guarded by the content type’s access functions, and the GraphQL API for the types marked on.
 
-| Content type                                                            | Kind       | REST path                         |
-| ----------------------------------------------------------------------- | ---------- | --------------------------------- |
-| [`agent-review-items`](content-types/agent-review-items.md)             | collection | `/api/agent-review-items`         |
-| [`agent-runs`](content-types/agent-runs.md)                             | collection | `/api/agent-runs`                 |
-| [`categories`](content-types/categories.md)                             | collection | `/api/categories`                 |
-| [`email-confirmations`](content-types/email-confirmations.md)           | collection | `/api/email-confirmations`        |
-| [`events`](content-types/events.md)                                     | collection | `/api/events`                     |
-| [`faq`](content-types/faq.md)                                           | collection | `/api/faq`                        |
-| [`footer`](content-types/footer.md)                                     | global     | `/api/globals/footer`             |
-| [`form-submissions`](content-types/form-submissions.md)                 | collection | `/api/form-submissions`           |
-| [`forms`](content-types/forms.md)                                       | collection | `/api/forms`                      |
-| [`header`](content-types/header.md)                                     | global     | `/api/globals/header`             |
-| [`media`](content-types/media.md)                                       | collection | `/api/media`                      |
-| [`pages`](content-types/pages.md)                                       | collection | `/api/pages`                      |
-| [`passkey-challenges`](content-types/passkey-challenges.md)             | collection | `/api/passkey-challenges`         |
-| [`passkeys`](content-types/passkeys.md)                                 | collection | `/api/passkeys`                   |
-| [`payload-folders`](content-types/payload-folders.md)                   | collection | `/api/payload-folders`            |
-| [`payload-jobs`](content-types/payload-jobs.md)                         | collection | `/api/payload-jobs`               |
-| [`payload-jobs-stats`](content-types/payload-jobs-stats.md)             | global     | `/api/globals/payload-jobs-stats` |
-| [`payload-kv`](content-types/payload-kv.md)                             | collection | `/api/payload-kv`                 |
-| [`payload-locked-documents`](content-types/payload-locked-documents.md) | collection | `/api/payload-locked-documents`   |
-| [`payload-mcp-api-keys`](content-types/payload-mcp-api-keys.md)         | collection | `/api/payload-mcp-api-keys`       |
-| [`payload-migrations`](content-types/payload-migrations.md)             | collection | REST switched off                 |
-| [`payload-preferences`](content-types/payload-preferences.md)           | collection | `/api/payload-preferences`        |
-| [`posts`](content-types/posts.md)                                       | collection | `/api/posts`                      |
-| [`redirects`](content-types/redirects.md)                               | collection | `/api/redirects`                  |
-| [`resources`](content-types/resources.md)                               | collection | `/api/resources`                  |
-| [`search`](content-types/search.md)                                     | collection | `/api/search`                     |
-| [`social-link-requests`](content-types/social-link-requests.md)         | collection | `/api/social-link-requests`       |
-| [`team-members`](content-types/team-members.md)                         | collection | `/api/team-members`               |
-| [`users`](content-types/users.md)                                       | collection | `/api/users`                      |
+| Content type                                                            | Kind       | REST path                         | GraphQL |
+| ----------------------------------------------------------------------- | ---------- | --------------------------------- | ------- |
+| [`agent-review-items`](content-types/agent-review-items.md)             | collection | `/api/agent-review-items`         | on      |
+| [`agent-runs`](content-types/agent-runs.md)                             | collection | `/api/agent-runs`                 | on      |
+| [`categories`](content-types/categories.md)                             | collection | `/api/categories`                 | on      |
+| [`email-confirmations`](content-types/email-confirmations.md)           | collection | `/api/email-confirmations`        | on      |
+| [`events`](content-types/events.md)                                     | collection | `/api/events`                     | on      |
+| [`faq`](content-types/faq.md)                                           | collection | `/api/faq`                        | on      |
+| [`footer`](content-types/footer.md)                                     | global     | `/api/globals/footer`             | on      |
+| [`form-submissions`](content-types/form-submissions.md)                 | collection | `/api/form-submissions`           | on      |
+| [`forms`](content-types/forms.md)                                       | collection | `/api/forms`                      | on      |
+| [`header`](content-types/header.md)                                     | global     | `/api/globals/header`             | on      |
+| [`media`](content-types/media.md)                                       | collection | `/api/media`                      | on      |
+| [`pages`](content-types/pages.md)                                       | collection | `/api/pages`                      | on      |
+| [`passkey-challenges`](content-types/passkey-challenges.md)             | collection | `/api/passkey-challenges`         | on      |
+| [`passkeys`](content-types/passkeys.md)                                 | collection | `/api/passkeys`                   | on      |
+| [`payload-folders`](content-types/payload-folders.md)                   | collection | `/api/payload-folders`            | on      |
+| [`payload-jobs`](content-types/payload-jobs.md)                         | collection | `/api/payload-jobs`               | on      |
+| [`payload-jobs-stats`](content-types/payload-jobs-stats.md)             | global     | `/api/globals/payload-jobs-stats` | on      |
+| [`payload-kv`](content-types/payload-kv.md)                             | collection | `/api/payload-kv`                 | on      |
+| [`payload-locked-documents`](content-types/payload-locked-documents.md) | collection | `/api/payload-locked-documents`   | on      |
+| [`payload-mcp-api-keys`](content-types/payload-mcp-api-keys.md)         | collection | `/api/payload-mcp-api-keys`       | on      |
+| [`payload-migrations`](content-types/payload-migrations.md)             | collection | REST switched off                 | off     |
+| [`payload-preferences`](content-types/payload-preferences.md)           | collection | `/api/payload-preferences`        | on      |
+| [`posts`](content-types/posts.md)                                       | collection | `/api/posts`                      | on      |
+| [`redirects`](content-types/redirects.md)                               | collection | `/api/redirects`                  | on      |
+| [`resources`](content-types/resources.md)                               | collection | `/api/resources`                  | on      |
+| [`search`](content-types/search.md)                                     | collection | `/api/search`                     | on      |
+| [`social-link-requests`](content-types/social-link-requests.md)         | collection | `/api/social-link-requests`       | on      |
+| [`team-members`](content-types/team-members.md)                         | collection | `/api/team-members`               | on      |
+| [`users`](content-types/users.md)                                       | collection | `/api/users`                      | on      |
+
+### Routes Payload adds to content types
+
+Besides find, create, update and delete, the loaded config gives these routes, each after the type’s own path (`/api/<slug>` or `/api/globals/<slug>`).
+
+| Method | Path after the type’s own | Content types                                                                             |
+| ------ | ------------------------- | ----------------------------------------------------------------------------------------- |
+| DELETE | `/`                       | every collection except `payload-migrations`                                              |
+| GET    | `/`                       | every collection except `payload-migrations`; every global                                |
+| PATCH  | `/`                       | every collection except `payload-migrations`                                              |
+| POST   | `/`                       | every collection except `payload-migrations`; every global                                |
+| DELETE | `/:id`                    | every collection except `payload-migrations`                                              |
+| GET    | `/:id`                    | every collection except `payload-migrations`                                              |
+| PATCH  | `/:id`                    | every collection except `payload-migrations`                                              |
+| POST   | `/:id/duplicate`          | every collection except `passkeys`, `payload-mcp-api-keys`, `payload-migrations`, `users` |
+| DELETE | `/:key`                   | `payload-preferences`                                                                     |
+| GET    | `/:key`                   | `payload-preferences`                                                                     |
+| POST   | `/:key`                   | `payload-preferences`                                                                     |
+| POST   | `/access`                 | every global                                                                              |
+| POST   | `/access/:id?`            | every collection except `payload-migrations`                                              |
+| GET    | `/count`                  | every collection except `payload-migrations`                                              |
+| GET    | `/file/:filename`         | `media`                                                                                   |
+| POST   | `/first-register`         | `payload-mcp-api-keys`, `users`                                                           |
+| POST   | `/forgot-password`        | `payload-mcp-api-keys`, `users`                                                           |
+| GET    | `/handle-schedules`       | `payload-jobs`                                                                            |
+| GET    | `/init`                   | `payload-mcp-api-keys`, `users`                                                           |
+| POST   | `/login`                  | `payload-mcp-api-keys`, `users`                                                           |
+| POST   | `/logout`                 | `payload-mcp-api-keys`, `users`                                                           |
+| GET    | `/me`                     | `payload-mcp-api-keys`, `users`                                                           |
+| GET    | `/paste-url/:id?`         | `media`                                                                                   |
+| POST   | `/refresh-token`          | `payload-mcp-api-keys`, `users`                                                           |
+| POST   | `/reset-password`         | `payload-mcp-api-keys`, `users`                                                           |
+| GET    | `/run`                    | `payload-jobs`                                                                            |
+| POST   | `/unlock`                 | `payload-mcp-api-keys`, `users`                                                           |
+| POST   | `/verify/:id`             | `payload-mcp-api-keys`, `users`                                                           |
+| GET    | `/versions`               | every collection except `payload-migrations`; every global                                |
+| GET    | `/versions/:id`           | every collection except `payload-migrations`; every global                                |
+| POST   | `/versions/:id`           | every collection except `payload-migrations`; every global                                |
 
 ## GraphQL API
 
@@ -84,6 +156,10 @@ Added by the config, a plugin or a content type. The access check of one is set 
 | POST   | `/api/users/verify/:id`                | `users`                | inline          | `src/modules/accounts/cms/verifyFromSiteOnly.ts`  | inside the handler |
 | POST   | `/api/email-confirmations/confirm`     | `email-confirmations`  | inline          | `src/modules/verification/cms/confirmEndpoint.ts` | inside the handler |
 | POST   | `/api/search/reindex`                  | `search`               | inline          | @payloadcms/plugin-search                         | inside the handler |
+
+## Not shown
+
+Not shown: the access check inside a custom endpoint, a route handler or a server action; Next.js’s own routes and the proxy (`src/proxy.ts`); and what a plugin’s endpoint does beyond its handler’s name.
 
 ## MCP endpoint
 

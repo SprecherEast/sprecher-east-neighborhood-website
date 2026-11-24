@@ -4,12 +4,10 @@
  * files. Pure functions: the generator passes in the loaded `jobs` config, a function that finds
  * the file a function was written in, and a function that lists the collections a file reaches.
  */
-import yaml from 'js-yaml'
-
 import { byOrder, noFiles } from '../content-types/callbacks.mjs'
 import { functionLabel } from '../content-types/functions.mjs'
 import { cell, code, fileCell, generatedNotice, table } from '../content-types/render.mjs'
-import { operationsSuffix } from './sourceFacts.mjs'
+import { operationsSuffix } from './collectionCalls.mjs'
 
 export const DEFAULT_QUEUE = 'default'
 const JOB_ACCESS_ORDER = ['queue', 'run', 'cancel']
@@ -35,23 +33,6 @@ export function describeCron(expression) {
 const withWords = (cron) => ({ cron, words: describeCron(cron) })
 const cronCell = ({ cron, words }) => (words ? `${code(cron)} (${words})` : code(cron))
 
-/** The GitHub workflows that have a `schedule` trigger: file, name, cron lines and job names. */
-export function parseTimedWorkflows(files) {
-  const found = []
-  for (const { file, text } of files) {
-    const doc = yaml.load(text)
-    const schedule = doc?.on?.schedule
-    if (!Array.isArray(schedule) || schedule.length === 0) continue
-    found.push({
-      file,
-      name: doc.name ?? file.split('/').pop(),
-      crons: schedule.map((entry) => entry.cron).filter(Boolean),
-      jobs: Object.entries(doc.jobs ?? {}).map(([id, job]) => job?.name ?? id),
-    })
-  }
-  return found.sort((a, b) => a.file.localeCompare(b.file))
-}
-
 /**
  * What the loaded `jobs` config says: `tasks`, `autoRun` (the runners) and `access`. `filesOf`
  * lists the collections a source file reaches, as `{ collection, operations }`.
@@ -60,6 +41,7 @@ export function describeJobs(
   { tasks = [], autoRun = [], access = {} },
   locate = noFiles,
   filesOf = () => [],
+  { endpoints = [] } = {},
 ) {
   const described = tasks.map((task) => {
     const schedules = (task.schedule ?? []).map((entry) => ({
@@ -74,7 +56,7 @@ export function describeJobs(
       schedules,
       queues: queues.length > 0 ? queues : [DEFAULT_QUEUE],
       file,
-      collections: file.startsWith('src/') ? filesOf(file) : [],
+      collections: file.startsWith('src/') ? filesOf(file, task.slug) : [],
     }
   })
   const runners = (Array.isArray(autoRun) ? autoRun : []).map((runner) => {
@@ -93,10 +75,17 @@ export function describeJobs(
   return {
     tasks: described,
     runners,
+    runnersNote: Array.isArray(autoRun)
+      ? ''
+      : 'The runners are set by a function in the config, so they are not shown here.',
     access: operations.map((operation) => ({
       operation,
       name: functionLabel(access[operation], operation).name,
       file: locate(access[operation]),
+      // The route that carries the operation: the one whose last segment is its name
+      endpoints: endpoints
+        .filter((route) => route.path.split('/').pop() === operation)
+        .map((route) => `${route.method} ${route.path}`),
     })),
   }
 }
@@ -106,9 +95,16 @@ const reached = (collections) =>
     .map(({ collection, operations }) => `${code(collection)}${operationsSuffix(operations)}`)
     .join(', ')
 
-export function renderJobs(jobs, workflows) {
+export function renderJobs(jobs, workflows, { serverCrons, intelligence, dependabot }) {
   const tasks = table(
-    ['Task', 'Label', 'Schedule', 'Queue', 'Handler written in', 'Collections it reaches'],
+    [
+      'Task',
+      'Label',
+      'Schedule',
+      'Queue',
+      'Handler written in',
+      'Collections it reaches (by the handler’s own calls)',
+    ],
     jobs.tasks.map((task) => [
       code(task.slug),
       cell(task.label),
@@ -131,8 +127,42 @@ export function renderJobs(jobs, workflows) {
     ]),
   )
   const access = table(
-    ['Operation', 'Function', 'Defined in'],
-    jobs.access.map((entry) => [entry.operation, code(entry.name), fileCell(entry.file)]),
+    ['Operation', 'Function', 'Defined in', 'Route it guards'],
+    jobs.access.map((entry) => [
+      entry.operation,
+      code(entry.name),
+      fileCell(entry.file),
+      entry.endpoints.map(code).join(', '),
+    ]),
+  )
+  const crons = table(
+    ['File', 'Schedule', 'Runs'],
+    serverCrons.map((entry) => [
+      code(entry.file),
+      cronCell(withWords(entry.cron)),
+      entry.runs.map(code).join(', '),
+    ]),
+  )
+  const settings = table(
+    ['File', 'Schedule', 'Time zone'],
+    intelligence
+      ? [
+          [
+            code(intelligence.file),
+            cronCell(withWords(intelligence.cron)),
+            cell(intelligence.timezone),
+          ],
+        ]
+      : [],
+  )
+  const updates = table(
+    ['File', 'Ecosystem', 'Folder', 'When'],
+    dependabot.map((entry) => [
+      code(entry.file),
+      cell(entry.ecosystem),
+      code(entry.directory),
+      cell(entry.when),
+    ]),
   )
   const timed = table(
     ['File', 'Workflow', 'Schedule (UTC)', 'Jobs'],
@@ -146,9 +176,11 @@ export function renderJobs(jobs, workflows) {
   return [
     '# Jobs and schedules',
     '',
-    generatedNotice('the loaded Payload config (`jobs`) and `.github/workflows/`'),
+    generatedNotice(
+      'the loaded Payload config (`jobs`), `.github/workflows/`, `.github/dependabot.yml`, `ops/install-cron.sh` and `intelligence/pipeline.yaml`',
+    ),
     '',
-    'What runs on a timer inside the application, and in GitHub. Payload starts the runners inside the app’s one process (`jobs.autoRun`), on the first request after a start. A queue with no runner never runs. “Collections it reaches” are the collections the handler’s own module code reads or changes through the Local API, found in the source. Scheduled tasks that live outside the repository are on [their own page](../knowledge/scheduled-tasks.md), written by hand.',
+    'What runs on a timer inside the application, and in GitHub. Payload starts the runners inside the app’s one process (`jobs.autoRun`), on the first request after a start. A queue with no runner never runs. No time zone is set for these schedules, so the server’s applies; the workflows and the server cron below are in UTC. “Collections it reaches” are found by following the handler’s own calls in the source, with the operation and whether access is checked; a function the config passes in (such as the keepers of the confirmation retention task) is not followed, so a collection reached only that way is not listed. Scheduled tasks that live outside the repository are on [their own page](../knowledge/scheduled-tasks.md), written by hand.',
     '',
     '## Job tasks',
     '',
@@ -156,7 +188,7 @@ export function renderJobs(jobs, workflows) {
     '',
     '## Job runners',
     '',
-    runners,
+    jobs.runnersNote || runners,
     '',
     '## Who may queue, run and cancel jobs',
     '',
@@ -165,6 +197,22 @@ export function renderJobs(jobs, workflows) {
     '## Timed GitHub workflows',
     '',
     timed,
+    '',
+    '## Cron installed on the server',
+    '',
+    'Installed on every deploy by a script in the repository, so the job on the server matches the file. The server’s clock applies. What the scripts do is in `ops/README.md`.',
+    '',
+    crons,
+    '',
+    '## The intelligence pipeline’s setting',
+    '',
+    'The schedule the pipeline settings state. What starts it, and where, is outside the repository and is on [the scheduled tasks page](../knowledge/scheduled-tasks.md).',
+    '',
+    settings,
+    '',
+    '## Dependabot',
+    '',
+    updates,
     '',
   ].join('\n')
 }

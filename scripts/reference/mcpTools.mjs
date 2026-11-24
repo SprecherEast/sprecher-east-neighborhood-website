@@ -9,7 +9,7 @@
 import { noFiles } from '../content-types/callbacks.mjs'
 import { functionLabel } from '../content-types/functions.mjs'
 import { cell, code, fileCell, generatedNotice, table } from '../content-types/render.mjs'
-import { operationsSuffix } from './sourceFacts.mjs'
+import { operationsSuffix } from './collectionCalls.mjs'
 
 const COLLECTION_OPERATIONS = ['find', 'create', 'update', 'delete']
 const GLOBAL_OPERATIONS = ['find', 'update']
@@ -52,13 +52,26 @@ const typeOf = (schema) => {
   return schema.type ?? 'any'
 }
 
+const itemLimits = ({ minItems, maxItems }) => {
+  if (minItems !== undefined && maxItems !== undefined) return `${minItems} to ${maxItems} items`
+  if (maxItems !== undefined) return `at most ${maxItems} items`
+  return minItems === undefined ? '' : `at least ${minItems} items`
+}
+
 function describeInput(schema) {
   const required = new Set(schema.required ?? [])
   return Object.entries(schema.properties ?? {}).map(([name, property]) => ({
     name,
     type: typeOf(property),
     required: required.has(name) ? 'yes' : 'no',
-    note: [property.description, property.enum && `one of ${property.enum.join(', ')}`]
+    note: [
+      property.description?.replace(/\.$/, ''),
+      property.enum && `one of ${property.enum.join(', ')}`,
+      property.maxLength && `at most ${property.maxLength} characters`,
+      itemLimits(property),
+      property.pattern && 'matches a fixed pattern',
+      property.format && `format ${property.format}`,
+    ]
       .filter(Boolean)
       .join('; '),
   }))
@@ -86,7 +99,7 @@ export function describeMcp(
         description: tool.description,
         file,
         input: describeInput(schemaOf(tool.parameters)),
-        collections: file.startsWith('src/') ? calls(file) : [],
+        collections: file.startsWith('src/') ? calls(file, tool.name) : [],
       }
     }),
   }
@@ -102,6 +115,16 @@ export function toolNamesByCollection(mcp) {
   }
   return new Map([...found].map(([slug, names]) => [slug, [...new Set(names)].sort()]))
 }
+
+/** Why a call skips access, in the words of the comment above the function that makes it. */
+const whyLines = (collections) =>
+  collections
+    .flatMap((c) =>
+      c.why.map(
+        (w) => `\n- ${code(c.collection)}, ${w.operation}, as the code says: ${cell(w.text)}`,
+      ),
+    )
+    .join('')
 
 export function renderMcp(mcp) {
   const plugin = table(
@@ -124,7 +147,7 @@ export function renderMcp(mcp) {
       '',
       `Written in ${fileCell(tool.file)}.`,
       tool.collections.length > 0
-        ? `\nReaches: ${tool.collections.map((c) => `[${code(c.collection)}](content-types/${c.collection}.md)${operationsSuffix(c.operations)}`).join(', ')}.`
+        ? `\nReaches: ${tool.collections.map((c) => `[${code(c.collection)}](content-types/${c.collection}.md)${operationsSuffix(c.operations)}`).join(', ')}.${whyLines(tool.collections)}`
         : '',
       '',
       table(
@@ -144,9 +167,11 @@ export function renderMcp(mcp) {
     '',
     generatedNotice('the MCP plugin options in the agents module and the loaded Payload config'),
     '',
-    `AI agents connect to ${code(mcp.server)} at the MCP endpoint (see [endpoints.md](endpoints.md)). Each request carries an API key that acts as an agent account; the key is checked by ${code(mcp.auth.name)} in ${fileCell(mcp.auth.file)}. The content type’s own access functions decide what a tool may do, and a key’s settings in Admin can only narrow that. “Reaches” is read from the tool’s own code: the collections it finds, creates, updates or deletes through Payload’s Local API.`,
+    `AI agents connect to ${code(mcp.server)} at the MCP endpoint (see [endpoints.md](endpoints.md)). Each request carries an API key that acts as an agent account; the key is checked by ${code(mcp.auth.name)} in ${fileCell(mcp.auth.file)}. For the tools the plugin makes, the content type’s access functions decide what a tool may do, and a key’s settings in Admin can only narrow that. The site’s own tools call Payload’s Local API themselves, which skips access unless a call says \`overrideAccess: false\`: each collection a tool reaches is marked “access checked” or “access bypassed”, with the reason where the code gives one. “Reaches” is found by following the tool’s handler through the functions it calls in the source; a function passed in by the config is not followed.`,
     '',
     '## Tools the plugin makes for content types',
+    '',
+    'The input of these tools (the plugin’s standard parameters for finding, creating and updating) is defined by the plugin and is not shown here; see [the plugin’s documentation](https://payloadcms.com/docs/plugins/mcp).',
     '',
     plugin,
     '',
