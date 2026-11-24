@@ -8,7 +8,7 @@ one: the limits and the routine do not depend on the model, and it saves usage.
 **Refusals.** The agent file lists its limits in `disallowedTools`, and
 `scripts/chief-of-staff-agent.test.mjs` checks that list for each forbidden action. That is a static
 check of the file, not an observed refusal: the harness cannot be started from a cloud session. So
-the refusal is tried by hand on the owner's computer, and the results are recorded here and on #695.
+the refusal is tried by hand on the owner's computer, and the results are recorded here and on #1092.
 Until a row below holds a result, no refusal is claimed.
 
 Procedure, in a scratch clone with a throwaway branch and a draft pull request that can be closed:

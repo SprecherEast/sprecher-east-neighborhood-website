@@ -57,6 +57,12 @@ since=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-7d
    a repeated fix, a repeated question) is the candidate. Prefer a free tool that fails a check by
    itself over agent judgment ([development](../guidelines/development.md#fast-by-default-public-pages-first)).
 
+A process change the owner put on trial is checked against this evidence (review results and
+problems met later) and revisited when it shows no benefit. The dated decisions in the
+[operating model](agent-operating-model.md#the-owners-direction-summary-recorded-on-685-and-721)
+mark which changes are on trial, and the report says, for each open trial, what the evidence showed
+that week.
+
 ## What it cannot measure
 
 Say so in the report instead of estimating:
@@ -78,7 +84,7 @@ names. When none exists, post it on the standing `process` issue filed for this 
 by its form (a task of type `process`) and its title, "Weekly review", among open issues, and file
 it once if absent. It may also be shown in chat, but the GitHub comment is what counts. It holds: what shipped by milestone,
 what failed repeatedly, what came back from review, the friction noted, where the owner stepped in,
-what to automate, and what could not be measured. Each finding that needs a change becomes an
+what each open trial showed, what to automate, and what could not be measured. Each finding that needs a change becomes an
 issue, filed and groomed like any other
 ([`project-tracking`](../../.agents/skills/project-tracking/SKILL.md) §3); a change to a rule is a
 policy change and waits for the owner ([`AGENTS.md`](../../AGENTS.md), step 3).

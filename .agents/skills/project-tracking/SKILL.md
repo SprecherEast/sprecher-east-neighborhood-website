@@ -175,8 +175,7 @@ For each issue:
 
 ## 4. While working
 
-- **Claim the issue first.** The dispatcher does this (the chief of staff, or the owner's own
-  session until #695 builds it), in order; a worker started by it only checks that the claim
+- **Claim the issue first.** The dispatcher (the chief of staff) does this, in order; a worker started by it only checks that the claim
   names its branch and never claims anything itself
   ([the record on the issue](../../../docs/process/project-management.md#the-record-on-the-issue)):
   1. Overlap check, if anything is already In progress: list it with

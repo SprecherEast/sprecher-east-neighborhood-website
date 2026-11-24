@@ -41,6 +41,24 @@ Session of 2026-11-11 (Claude, voice then text, recorded on #1089 and #1091):
   [watch list](watch-list.md). The owner queue holds only real decisions.
 - One real end-to-end session is run and recorded before the setup is trusted (#1092).
 
+Session of 2026-11-23 (voice, recorded on #695):
+
+- The repository describes only the agents in use: the chief of staff, one worker and one reviewer.
+  Agent files nobody uses are removed or folded into skills, as #695 lays out, and nothing is more
+  complicated than that.
+
+Decisions of 2026-11-24 (voice session, recorded on #1452 and #695), settling the three points
+PR #1452 raised, including the departure from the 2026-11-06 line above:
+
+- The role guides stay plain files in `docs/roles/`, loaded by path through the brief, not skills.
+  Reason: predictability. The brief shows which guides a worker loaded, so it can be checked, and
+  plain files work with any AI tool. This replaces that earlier line.
+- The worker guide's order (guides read before the change) is kept on trial. Reason: knowing the
+  rules first should mean less rework. No failure of the old order was measured, so the
+  [weekly review](weekly-review.md) checks whether it helps; no benefit means revisiting it.
+- The tool lists of the removed agents are dropped. Reason: each also allowed a shell, so they never
+  limited anything. The three remaining agents keep their own lists.
+
 ## 1. At a glance
 
 ```mermaid
@@ -61,15 +79,15 @@ flowchart TB
 
 ## 2. Who gets a session
 
-| Session        | Does                                                                                          | Capability                                          | Edits code?                  | Status                        |
-| -------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------- | ----------------------------- |
-| Chief of staff | Talks to the owner; grooms; assigns one worker per issue; keeps the record; manages the queue | Strongest; high effort for grooming and issue text  | No. Issues and comments only | Partly: #695 piece one, #1091 |
-| Worker         | One issue, in its own branch and worktree, then it ends                                       | Standard, medium effort                             | Yes, in its own branch       | Partly                        |
-| Reviewer       | Reviews one PR in a fresh session ([§5](#5-reviewers-in-a-fresh-session))                     | By level ([§6](#6-how-much-scrutiny-a-change-gets)) | No, it reports               | Partly                        |
+| Session        | Does                                                                                          | Capability                                          | Edits code?                  | Status                          |
+| -------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------- | ---------------------------- | ------------------------------- |
+| Chief of staff | Talks to the owner; grooms; assigns one worker per issue; keeps the record; manages the queue | Strongest; high effort for grooming and issue text  | No. Issues and comments only | Built; run not recorded (#1092) |
+| Worker         | One issue, in its own branch and worktree, then it ends                                       | Standard, medium effort                             | Yes, in its own branch       | Built; run not recorded (#1092) |
+| Reviewer       | Reviews one PR in a fresh session ([§5](#5-reviewers-in-a-fresh-session))                     | By level ([§6](#6-how-much-scrutiny-a-change-gets)) | No, it reports               | Built; levels planned (#1450)   |
 
 Three kinds of session and no standing layer between them. A fourth, the scheduled sweep, only
 labels and comments (planned, #697). [`CLAUDE.md`](../../CLAUDE.md) says which model each uses.
-Partly built: the [role agents](../roles/README.md) and `pr-review` exist; #695 builds the rest ([limits: manual test, not run](chief-of-staff-manual-test.md)).
+Built: the three agents and `pr-review` ([limits: manual test, not run](chief-of-staff-manual-test.md)). The levels taking effect and the reviewer's subagent perspectives are planned (#1450).
 
 **Why so few.** Several agents use about 15 times a chat's tokens, and coding has less parallel work
 than research ([Anthropic](https://www.anthropic.com/engineering/multi-agent-research-system)). In a
@@ -93,14 +111,14 @@ An issue that touches a page, its CMS fields and its metadata needs all three gu
 The brief names the guides and notes to load, because instructions an agent has to choose to open
 are often skipped ([Vercel](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals)).
 
-| What                                    | Who loads it     | Covers                                                                                                                 | Status                                                                        |
-| --------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| The twelve role guides                  | The worker       | Design (UX, UI), implementation (backend, CMS, frontend, media, SEO), content (content, events, legal), operations, QA | Guides: built                                                                 |
-| Groom, overlap check, dispatch brief    | Chief of staff   | A Ready issue a worker can follow; no shared files or hot spots; a brief with the objective, done, sources, boundaries | Built, #695 piece one                                                         |
-| Review depth                            | Chief of staff   | A lookup in the table in [§6](#6-how-much-scrutiny-a-change-gets), not an agent                                        | Built, #695 piece one (the lookup; the levels take effect with a later piece) |
-| Design brief, standards upkeep          | Chief of staff   | A short design on the issue before new UI is built; root-cause fixes proposed as PRs                                   | Planned, #696                                                                 |
-| Weekly analysis                         | Chief of staff   | The feedback loop in [§7](#7-the-feedback-loop)                                                                        | Planned, #698                                                                 |
-| Knowledge notes and generated reference | Worker, reviewer | What a module does, its screens and data, its content types and shared components                                      | Planned, #712                                                                 |
+| What                                    | Who loads it     | Covers                                                                                                                 | Status                                                                                    |
+| --------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| The role guides                         | The worker       | Design (UX, UI), implementation (backend, CMS, frontend, media, SEO), content (content, events, legal), operations, QA | Built; loaded by name from [`docs/roles/`](../roles/README.md#how-a-role-guide-is-loaded) |
+| Groom, overlap check, dispatch brief    | Chief of staff   | A Ready issue a worker can follow; no shared files or hot spots; a brief with the objective, done, sources, boundaries | Built, #695 piece one                                                                     |
+| Review depth                            | Chief of staff   | A lookup in the table in [§6](#6-how-much-scrutiny-a-change-gets), not an agent                                        | Built, #695 piece one (the lookup; the levels take effect with #1450)                     |
+| Design brief, standards upkeep          | Chief of staff   | A short design on the issue before new UI is built; root-cause fixes proposed as PRs                                   | Planned, #696                                                                             |
+| Weekly analysis                         | Chief of staff   | The [feedback loop](feedback-loop.md)                                                                                  | Planned, #698                                                                             |
+| Knowledge notes and generated reference | Worker, reviewer | What a module does, its screens and data, its content types and shared components                                      | Built, #712                                                                               |
 
 **What a guide owns is unchanged.** Implementation: code that follows the architecture and the
 [guard rails](../guidelines/guard-rails.md), inside the issue's declared files. Content: posts,
@@ -174,12 +192,12 @@ approving once a change definitely improves the code's health, and check design 
 A review ends with the verdict **Ready to merge**, **Changes requested** or **Waits for owner**,
 and a reviewer may raise the scrutiny level but never lower it. The chief of staff picks the
 perspectives from the level; they run inside the one reviewer session as short-lived subagents, the
-way `self-review` works (planned, #695). A check of every behavior change against the knowledge
+way `self-review` works (planned, #1450). A check of every behavior change against the knowledge
 layer joins with #717.
 
 ## 6. How much scrutiny a change gets
 
-**Status: planned (#695).** Today review depth follows the one rule in [`CLAUDE.md`](../../CLAUDE.md) (#522); this scale takes effect when #695 merges.
+**Status: planned (#1450).** Today review depth follows the one rule in [`CLAUDE.md`](../../CLAUDE.md) (#522); this scale takes effect when #1450 merges.
 
 Scrutiny costs time and tokens, so it follows risk. The level is the highest one that matches;
 the author proposes it, the reviewer may raise it. Google's guidance names the same judgment: some
@@ -207,55 +225,25 @@ expose their data, move money wording, or let an agent change its own rules.
 
 ## 7. The feedback loop
 
-```mermaid
-flowchart LR
-  A["Capture<br/>outcome label and comment<br/>on every PR"] --> B["Count<br/>weekly, by cause"]
-  B --> C["Root cause<br/>first failure in the worst cases"]
-  C --> D["Fix at the root<br/>strongest fix that works"]
-  D --> E["Verify<br/>did the cause stop coming back"]
-  E --> A
-```
-
-1. **Capture.** When work is wrapped up the author adds `outcome: clean` or one `fail:` label
-   (spec misread, convention, test gap, CI, security, scope creep, process, tooling) and a
-   comment: Outcome, Why, Prevention. Planned: #698.
-2. **Count and find the root.** Weekly, as a procedure, the chief of staff counts the labels, reads
-   the worst cases, notes the **first** failure in each, groups them and fixes the largest group
-   ([Husain and Shankar](https://hamel.dev/blog/posts/evals-faq/)). Blameless: fix the system,
-   never blame an agent ([Google SRE](https://sre.google/sre-book/postmortem-culture/)).
-3. **Fix with the strongest tool that works.** In this order: a test, lint rule or CI check; then
-   a hook or permission rule; then a written rule, a skill update or a shared component. A written
-   rule alone is context, not enforcement ([Claude Code](https://code.claude.com/docs/en/features-overview)).
-   The same mistake twice means a rule; the same procedure a third time means a skill.
-4. **Bottlenecks.** The same weekly report shows time in each board column, time waiting for the
-   owner, review rounds per PR, slow or flaky checks, and tokens per merged PR. A step that costs
-   many hours a week and follows fixed rules becomes automation.
-5. **Reinforce what works.** `outcome: clean` PRs are kept as examples. A pattern becomes a skill
-   example only after three clean PRs and a with/without test that shows it helps
-   ([skill best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)).
-   This does not delay reuse: repeated code or UI becomes a shared component at its second use,
-   in that same PR ([guard rails](../guidelines/guard-rails.md), rule 1).
-6. **Limits.** At most three fix PRs a week. The chief of staff proposes; agents never merge a
-   change to their own guardrails, which the owner decides. Measures, read over four weeks or more:
-   first-pass clean rate, rework within 14 days, owner corrections per PR, and whether a fixed
-   cause comes back.
+Repeated failures are counted weekly and fixed at the root: [the feedback loop](feedback-loop.md).
 
 ## 8. What is built and what is next
 
-| Part                                                             | Status  | Where                          |
-| ---------------------------------------------------------------- | ------- | ------------------------------ |
-| Board, issue flow, role guides, skills, hooks, checks            | Built   | [`AGENTS.md`](../../AGENTS.md) |
-| This page and the visual plan                                    | Built   | #692, #721                     |
-| Issue fields, comment header, labels, claim, parallel rule       | Built   | #693, #721                     |
-| Code owners for the rule files                                   | Built   | #694                           |
-| Knowledge layer: lean context, notes, generated reference, sync  | Planned | #712, first                    |
-| Chief of staff session, skill, overlap check (piece one)         | Built   | #695, 2026-11-08               |
-| One worker agent built (#934); guides as skills; §6 takes effect | Partly  | #695, later pieces             |
-| Design brief and standards upkeep as procedures                  | Planned | #696                           |
-| The `ready` label and native fields drive the board              | Built   | #1089                          |
-| Routine grooming applied, repeated-failure report, watch list    | Built   | #1091                          |
-| One recorded end-to-end session                                  | Planned | #1092                          |
-| Phone, push and the daily sweep (Windows)                        | Planned | #697                           |
-| Feedback loop                                                    | Planned | #698                           |
+| Part                                                            | Status  | Where                          |
+| --------------------------------------------------------------- | ------- | ------------------------------ |
+| Board, issue flow, role guides, skills, hooks, checks           | Built   | [`AGENTS.md`](../../AGENTS.md) |
+| This page and the visual plan                                   | Built   | #692, #721                     |
+| Issue fields, comment header, labels, claim, parallel rule      | Built   | #693, #721                     |
+| Code owners for the rule files                                  | Built   | #694                           |
+| Knowledge layer: lean context, notes, generated reference, sync | Built   | #712                           |
+| Chief of staff session, skill, overlap check (piece one)        | Built   | #695, 2026-11-08               |
+| The three agents only; role guides loaded by name               | Built   | #695, 2026-11-24               |
+| Reviewer perspectives as subagents; §6 takes effect             | Planned | #1450                          |
+| Design brief and standards upkeep as procedures                 | Planned | #696                           |
+| The `ready` label and native fields drive the board             | Built   | #1089                          |
+| Routine grooming applied, repeated-failure report, watch list   | Built   | #1091                          |
+| One recorded end-to-end session                                 | Planned | #1092                          |
+| Phone, push and the daily sweep (Windows)                       | Planned | #697                           |
+| Feedback loop                                                   | Planned | #698                           |
 
-The order is fixed by what each needs: #712, then #695, then #696 to #698.
+The order is fixed by what each needs: #712, then #695, then #1450 and #696 to #698.
