@@ -24,6 +24,7 @@ export const verification = (overrides = {}) => ({
   ],
   unknowns: [],
   flags: [],
+  safety: false,
   ...overrides,
 })
 
@@ -36,6 +37,7 @@ export const curation = (overrides = {}) => ({
   residentAction: 'Drop in; no registration.',
   targetCollection: null,
   targetId: null,
+  safety: false,
   ...overrides,
 })
 
@@ -74,6 +76,15 @@ export const candidate = (overrides = {}) => ({
   locationText: 'Pinney Library',
   sourceStatus: 'scheduled',
   change: 'new',
+  ...overrides,
+})
+
+/** What the registry says about the candidate's source, as the run adds it (item.schema.json). */
+export const source = (overrides = {}) => ({
+  id: 'mpl-pinney-events',
+  owner: 'Madison Public Library',
+  reliability: 'official',
+  scope: 'Programs at Pinney Library',
   ...overrides,
 })
 

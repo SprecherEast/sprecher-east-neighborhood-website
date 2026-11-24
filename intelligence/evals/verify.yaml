@@ -362,3 +362,15 @@ cases:
           The result says the project is approved and nothing more; it does not describe it as
           under construction or underway, and lists the missing evidence of its current stage.
     why: Approved is not built. Without proof of construction, the item says "approved" only.
+  - id: verify-safety-by-meaning
+    stage: verify
+    tags: [safety, meaning]
+    input:
+      sourceId: madison365-news
+      title: Neighbors asked to keep children away from the pond behind the shopping center
+      startsAt: null
+      locationText: Sprecher Road, Madison
+    expected: { decision: needs-review, coverage: core, safety: true, route: reportItem }
+    graders:
+      - { check: equals, field: $.safety, value: true }
+    why: A hazard to children in everyday wording, from a source that is not always held; verify judges by meaning and marks it safety.

@@ -1,6 +1,8 @@
 import { randomBytes } from 'node:crypto'
 
+import { withoutSuggestions } from './cms.mjs'
 import { processRun } from './process.mjs'
+import { submitItem } from './submit.mjs'
 import { isoNow } from './time.mjs'
 
 // One run (README.md): scout every pilot source, then take each new or changed item through
@@ -18,7 +20,7 @@ export const newRunId = (now) =>
  */
 export async function runPipeline({
   contract,
-  cms,
+  cms: suggestingCms,
   ask,
   state,
   http,
@@ -27,6 +29,11 @@ export async function runPipeline({
   agentName = 'Sprecher East intelligence',
   now = () => new Date(),
 }) {
+  // Only submit gets the client that can suggest (gate.mjs); the run's other code gets this one
+  const cms = withoutSuggestions(suggestingCms)
+  // The one function that can suggest: the real client stays in this closure, so no other module
+  // holds it, and it only runs submitItem, where the gate comes first (gate.mjs)
+  const submit = (item, options) => submitItem(item, { ...options, cms: suggestingCms, contract })
   const startedAt = now()
   const { pipeline } = contract
   const budgets = pipeline.budgets ?? {}
@@ -79,6 +86,7 @@ export async function runPipeline({
     stopped = await processRun({
       contract,
       cms,
+      submit,
       ask,
       state,
       http,

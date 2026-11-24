@@ -3,22 +3,19 @@
  * run it on a copy of `intelligence/` with the first prompt written in the shapes the reader
  * accepts, and with a wrong stage, which must still fail.
  */
-import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
+import { copyIntelligence, runCheck } from './check-intelligence-harness.mjs'
+
 const PROMPT = 'prompts/curate.md'
 let tmp
 let original
 
 beforeAll(() => {
-  tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'intelligence-'))
-  fs.cpSync(path.join(root, 'intelligence'), tmp, { recursive: true })
+  tmp = copyIntelligence()
   original = fs.readFileSync(path.join(tmp, PROMPT), 'utf8')
 })
 
@@ -27,10 +24,7 @@ afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }))
 /** Exit code of the check on the copy, with the first prompt replaced by `text`. */
 function check(text) {
   fs.writeFileSync(path.join(tmp, PROMPT), text)
-  return spawnSync(process.execPath, [path.join(root, 'scripts/check-intelligence.mjs'), tmp], {
-    cwd: root,
-    encoding: 'utf8',
-  })
+  return runCheck(tmp)
 }
 
 describe('check-intelligence prompt frontmatter', () => {

@@ -33,6 +33,8 @@ export async function runStage(contract, ask, stageId, item, { effort, deadline 
   const usage = { input: 0, output: 0 }
   let message = base
   let errors = []
+  // Once an answer says safety, the stage's result does, even when it was retried (#1007)
+  let flagged = false
   for (let attempt = 1; attempt <= 2; attempt++) {
     const answer = await ask({
       stageId,
@@ -46,11 +48,14 @@ export async function runStage(contract, ask, stageId, item, { effort, deadline 
     let output
     try {
       output = extractJson(answer.text)
+      flagged ||= output?.safety === true
       errors = validate(output)
     } catch (error) {
       errors = [error.message]
     }
-    if (errors.length === 0) return { output, usage, attempts: attempt }
+    if (errors.length === 0) {
+      return { output: flagged ? { ...output, safety: true } : output, usage, attempts: attempt }
+    }
     message = `${base}\n\n## Your previous answer was invalid\n${errors.slice(0, 10).join('\n')}\nAnswer again with one valid JSON object.`
   }
   throw Object.assign(new StageError(stageId, errors), { usage })
@@ -69,7 +74,9 @@ export async function runVerify(contract, ask, item, { deadline } = {}) {
     input: first.usage.input + second.usage.input,
     output: first.usage.output + second.usage.output,
   }
-  return { ...second, usage, escalated: true }
+  // The rerun may be surer, but a first safety answer is never lost (#1007)
+  const output = first.output.safety === true ? { ...second.output, safety: true } : second.output
+  return { ...second, output, usage, escalated: true }
 }
 
 /**
@@ -89,11 +96,17 @@ export function guardPromotion(pipeline, verification, curation) {
   }
   const flagged = (verification.flags ?? []).filter((flag) => blocking.has(flag))
   if (flagged.length > 0) problems.push(`verification flags: ${flagged.join(', ')}`)
-  if (problems.length === 0) return curation
-  const reason = `Held for review, not accepted: ${problems.join('; ')}.`
-  return {
-    ...curation,
-    decision: 'needs-review',
-    reasons: [reason, ...curation.reasons].slice(0, 5),
-  }
+  return problems.length === 0 ? curation : holdForReview(curation, problems.join('; '))
+}
+
+/**
+ * `curation` as a `needs-review` decision, with `problem` as the first reason: the one way any
+ * guard (this file's and gate.mjs's) holds an accept.
+ */
+export function holdForReview(curation, problem) {
+  const earlier = Array.isArray(curation.reasons) ? curation.reasons : []
+  const reasons = [`Held for review, not accepted: ${problem}.`, ...earlier]
+    .filter((reason) => typeof reason === 'string' && reason.length > 0)
+    .map((reason) => reason.slice(0, 300))
+  return { ...curation, decision: 'needs-review', reasons: reasons.slice(0, 5) }
 }
