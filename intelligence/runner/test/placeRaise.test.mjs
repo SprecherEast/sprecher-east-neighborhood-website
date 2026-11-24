@@ -183,7 +183,7 @@ describe('the raise needs verify’s address to begin with the street', () => {
 describe('the reason an address text is not sent', () => {
   it('says what the rule did, for texts that name Madison too', async () => {
     const stated =
-      'the text has a city, village, town, township, Wisconsin or a five-digit number before the street, or something other than Madison, a short unit, Wisconsin, a ZIP code beginning 537 or the country after it'
+      'the text has a city, village, town, township, WI, Wis. or Wisconsin, or a five-digit number before the street, or after it something between commas that is not Madison, a short unit, WI, Wis. or Wisconsin, a ZIP code beginning 537 or the country'
     for (const address of [
       'City of Madison, 7035 Littlemore Dr',
       '53718, 7035 Littlemore Dr',

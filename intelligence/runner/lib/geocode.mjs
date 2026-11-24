@@ -63,7 +63,8 @@ function candidatesOf(body) {
  * A geocoder over the City's locator: `async (street) => result`, `result` being
  * `{ status: 'match', point: [lon, lat] }`, `{ status: 'none' }` (nothing found), `{ status:
  * 'unsure' }` (nothing scores `minScore`), `{ status: 'ambiguous' }` (strong matches in different
- * places) or `{ status: 'failed', error }`. It never throws.
+ * places) or `{ status: 'failed', error }`. A redirect answer with a `Location` that is not a URL
+ * makes it throw after that one GET, and the placer treats a throw as a failure.
  */
 export function cityGeocoder({ http, config }) {
   return async (street) => {
