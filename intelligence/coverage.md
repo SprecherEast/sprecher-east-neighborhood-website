@@ -167,15 +167,24 @@ The five checks, which verify runs on every item:
    address outside. Placement never makes an item easier to accept than verify's own judgment
    allowed. It raises `catchment` to `core` for an address inside, which changes nothing curate may
    accept (relevance rule 2 takes both alike). It raises `unknown` to `core` only on what verify
-   itself stated: the street is the one in verify's own `$.location.address`,
+   itself stated: the street is the one in verify's own `$.location.address`, which begins with
+   the house number and street (a venue or town named before it is no confirmed address),
    `$.location.verified` is true, and verify's `$.location.municipality` is filled and is
    Madison. Anything less (an address found only in the item's own text, an unconfirmed one, a
    municipality left empty) never raises it. `$.placement`
    says `overrode` for any change, and every change except those two raises also gets
-   `ambiguous-location`, so a person looks. Only an address that can be tied to Madison is
-   sent for the test: the whole text it came from must name no other municipality, state or ZIP
-   code, and what follows the street may only be Madison, a short unit, a state, a Madison ZIP
-   code or the country. When in doubt nothing is sent and the word match stands. Outside the boundary, which of `catchment`, `citywide` or `outside` it is stays
+   `ambiguous-location`, so a person looks. Only an address the code can tie to Madison is
+   sent for the test, and only its house number, street and street type, from a public item, go
+   to the City's own locator. The code reads the text the street came from. Before the street, a
+   municipality written as "village, town or township of …", "city of …" (the City of Madison
+   excepted), a state or a ZIP code stops the send; the Town of Madison counts as another
+   municipality, since it was absorbed into the City of Madison and the City of Fitchburg on
+   31 October 2022 and a text naming it can't say which. After the street only Madison, a short
+   unit, a state, a Madison ZIP code or the country may follow. A town named plainly before the
+   street ("Fitchburg, 7035 …") can't be told from a venue's name and is sent: that sends nothing
+   more than a public house number and street, and it never raises a tier by itself, since a
+   raise needs the street-first, confirmed Madison address verify stated (above). When in doubt nothing is sent
+   and the word match stands. Outside the boundary, which of `catchment`, `citywide` or `outside` it is stays
    the judgment described here. An item with no usable address, a locator that fails or an
    ambiguous match keeps the word match (`area.yaml`), with `$.placement` saying `word-match`,
    or `unplaced` when the item names no place at all. Placement never touches the safety answer

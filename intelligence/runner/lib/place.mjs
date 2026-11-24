@@ -14,12 +14,12 @@ const STATE = String.raw`(?:wi|wis\.?|wisconsin)`
 const MADISON = new RegExp(`^(?:city of )?madison(?:,?\\s*${STATE})?(?:,?\\s*${ZIP})?$`, 'i')
 /** What may follow a street address between commas without naming another place: a short unit, a state, a Madison ZIP, the country. */
 const SAME_PLACE = new RegExp(
-  `^(?:#\\s*[\\w-]{1,6}|(?:apt|unit|suite|ste|room|rm)\\.?\\s*#?\\s*[\\w-]{1,6}|(?:${STATE}\\s*)?${ZIP}|${STATE}|usa|u\\.s\\.a\\.|united states)$`,
+  `^(?:#\\s*[\\w-]{1,6}|(?:apt|unit|suite|ste|room|rm)\\.?\\s*#?\\s*[\\w-]{1,6}|(?:${STATE}\\s*)?${ZIP}|${STATE}|usa|us|u\\.s\\.a\\.|united states)$`,
   'i',
 )
-/** In text before the street: another place named as a municipality, or a state or ZIP code of an address. */
+/** The only things recognized before the street (coverage.md, check 2): "village, town or township of ...", "city of" anything but Madison, a state, a ZIP code. */
 const PLACE_BEFORE = new RegExp(
-  `\\b(?:village|town|city|township)\\s+of\\s+(?!madison\\b)|\\b${STATE}\\b|\\b\\d{5}\\b`,
+  `\\b(?:village|town|township)\\s+of\\s+|\\bcity\\s+of\\s+(?!madison\\b)|\\b${STATE}\\b|\\b\\d{5}\\b`,
   'i',
 )
 const NOT_PLACED_FLAGS = ['similar-name', 'prompt-injection']
@@ -30,15 +30,15 @@ const REASONS = {
   ambiguous: 'the locator found the address in more than one place',
 }
 /**
- * Whether `text`, the whole text `street` came from, can't be tied to Madison: it names another
- * municipality, a state or a ZIP before the street, or after it anything but Madison, a short unit,
- * a state, a Madison ZIP or the country. When in doubt the answer is yes, and nothing is sent.
+ * Whether `text`, the text `street` came from, can't be tied to Madison. What it recognizes, and
+ * its stated limit (a town named plainly before the street is sent), is written once in coverage.md,
+ * Review passes, check 2.
  */
 function namesAnotherPlace(text, street) {
   const flat = text.replace(/\s+/g, ' ')
   const at = flat.indexOf(street)
   if (PLACE_BEFORE.test(flat.slice(0, at))) return true
-  const rest = flat.slice(at + street.length).replace(/\.$/, '')
+  const rest = flat.slice(at + street.length).replace(/^\.|\.$/g, '')
   return rest
     .split(',')
     .map((part) => part.trim())
@@ -119,7 +119,9 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
     // The municipality that goes with the street is read from the text the street came from
     if (namesAnotherPlace(text, found[0]))
       return { reason: 'the address names a municipality other than Madison, Wisconsin' }
-    return { ...(await resolve(found[0], deadline)), from }
+    // Whether the street comes first in the text: a venue or town before it is never a confirmed address
+    const streetFirst = text.replace(/\s+/g, ' ').trim().startsWith(found[0])
+    return { ...(await resolve(found[0], deadline)), from, streetFirst }
   }
 
   async function placeVerified(given, candidate, deadline) {
@@ -160,6 +162,7 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
       said === 'catchment' ||
       (said === 'unknown' &&
         found.from === 'verify' &&
+        found.streetFirst &&
         verification.location.verified === true &&
         // `locate` already refused any municipality but Madison, so a filled one is Madison
         filled(verification.location.municipality))

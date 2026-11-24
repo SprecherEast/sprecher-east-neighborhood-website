@@ -56,6 +56,9 @@ describe('the raise to core rests on what verify confirmed', () => {
       '7035 Littlemore Dr, WI 53590',
       'In the Village of Cottage Grove at 7035 Littlemore Dr',
       'Town of Blooming Grove, 7035 Littlemore Dr',
+      'Town of Madison, 7035 Littlemore Dr',
+      'City of Fitchburg, 7035 Littlemore Dr',
+      'Village of Madison Heights, 7035 Littlemore Dr',
       'Fitchburg, WI 53711, 7035 Littlemore Dr',
       'Cottage Grove WI, 7035 Littlemore Dr',
       '53527, 7035 Littlemore Dr',
@@ -79,6 +82,10 @@ describe('the raise to core rests on what verify confirmed', () => {
       '7035 Littlemore Dr, Madison, WI 53718, USA',
       '7035 Littlemore Dr, Madison, Wisconsin, United States',
       '7035 Littlemore Dr, Madison, WI 53704',
+      '7035 Littlemore Dr., Madison, WI 53718',
+      '7035 Littlemore Dr, Madison, WI 53718.',
+      'Door Creek Park, 7035 Littlemore Dr., Madison, WI 53718',
+      '7035 Littlemore Dr, Madison, WI 53718, US',
     ]) {
       const { place, geocode } = setup()
       await place(own(address, { municipality: 'Madison' }), item())
@@ -114,6 +121,56 @@ describe('the municipality verify gives', () => {
       v.location.municipality = municipality
       await place(v, item())
       assert.equal(geocode.asked.length, sent ? 1 : 0, municipality)
+    }
+  })
+})
+
+describe('the stated limit of the text rule', () => {
+  it('sends a town named plainly before the street, which a venue’s name cannot be told from, and never raises it on its own', async () => {
+    for (const address of [
+      'Cottage Grove: 7035 Littlemore Dr',
+      'Fitchburg, 7035 Littlemore Dr',
+      'In Cottage Grove at 7035 Littlemore Dr',
+      'Monona Community Center, 1011 Nichols Rd',
+    ]) {
+      const { place, geocode } = setup()
+      const v = located(address, { coverage: 'unknown', flags: [] })
+      v.location.municipality = null
+      const out = await place(v, item())
+      assert.equal(geocode.asked.length, 1, address)
+      assert.ok(!(out.coverage === 'core' && out.flags.length === 0), address)
+    }
+  })
+})
+
+describe('the raise needs verify’s address to begin with the street', () => {
+  const madison = (address) => {
+    const v = located(address, { coverage: 'unknown', flags: [] })
+    v.location.municipality = 'Madison'
+    return v
+  }
+
+  it('does not raise when a town or a venue is named before the street', async () => {
+    for (const address of [
+      'Cottage Grove: 7035 Littlemore Dr',
+      'Fitchburg, 7035 Littlemore Dr',
+      'Door Creek Park Shelter, 7035 Littlemore Dr, Madison, WI',
+    ]) {
+      const { place } = setup()
+      const out = await place(madison(address), item())
+      assert.deepEqual([out.coverage, out.flags], ['core', ['ambiguous-location']], address)
+    }
+  })
+
+  it('raises when the street comes first, with the usual endings', async () => {
+    for (const address of [
+      '7035 Littlemore Dr',
+      '  7035  Littlemore Dr, Madison, WI 53718',
+      '7035 Littlemore Dr., Madison, WI 53718',
+    ]) {
+      const { place } = setup()
+      const out = await place(madison(address), item())
+      assert.deepEqual([out.coverage, out.flags], ['core', []], address)
     }
   })
 })
