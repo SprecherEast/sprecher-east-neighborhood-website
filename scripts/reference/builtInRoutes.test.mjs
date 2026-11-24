@@ -26,8 +26,35 @@ describe('the routes Payload adds to content types', () => {
         method: 'POST',
         path: '/verify/:id',
         by: { path: '/verify/:token', name: 'verify', file: 'src/v.ts' },
+        when: null,
       },
     ])
+  })
+
+  it('keeps a route only partly taken first among the live ones and in the taken list (#1461)', () => {
+    const partly = base.contentTypes.map((type) =>
+      type.slug === 'faq'
+        ? {
+            ...type,
+            allEndpoints: [
+              {
+                method: 'POST',
+                path: '/access/:id?',
+                name: 'accessHandler',
+                file: 'payload',
+                replacedBy: { method: 'POST', path: '/:key', name: 'k', file: 'src/k.ts' },
+                replacedWhen: ['/access'],
+              },
+            ],
+          }
+        : type,
+    )
+    const built = describeApi({ ...base, contentTypes: partly }, locate)
+    expect(built.builtIn.some((row) => row.path === '/access/:id?')).toBe(true)
+    expect(built.replaced.find((row) => row.slug === 'faq')).toMatchObject({
+      path: '/access/:id?',
+      when: ['/access'],
+    })
   })
 
   it('says every collection when all of them have a route', () => {

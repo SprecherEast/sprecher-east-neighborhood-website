@@ -9,7 +9,7 @@ export function groupBuiltIn(contentTypes) {
   const found = new Map()
   for (const type of contentTypes) {
     for (const endpoint of type.allEndpoints) {
-      if (endpoint.file !== 'payload' || endpoint.replacedBy) continue
+      if (endpoint.file !== 'payload' || (endpoint.replacedBy && !endpoint.replacedWhen)) continue
       const key = `${endpoint.method} ${endpoint.path}`
       const entry = found.get(key) ?? { method: endpoint.method, path: endpoint.path, types: [] }
       entry.types.push(type.slug)
@@ -55,6 +55,7 @@ export const findReplaced = (contentTypes) =>
             name: endpoint.replacedBy.name,
             file: endpoint.replacedBy.file,
           },
+          when: endpoint.replacedWhen ?? null,
         })),
     )
     .sort(

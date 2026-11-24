@@ -175,10 +175,9 @@ export function findCollectionCalls(
   const onPayloadCall = (call, payload, bindings) => {
     const argument = call.arguments[0]
     const collection = property(argument, GLOBAL_CALLS.has(payload.method) ? 'slug' : 'collection')
-    const flag = property(argument, 'overrideAccess')
-    const explicit = flag && valueOf(flag).kind === ts.SyntaxKind.TrueKeyword
+    const access = accessOf(argument, payload.onDb)
     const operation = OPERATIONS[payload.method]
-    const text = explicit ? commentAround(call) : ''
+    const text = access === 'bypassed' ? commentAround(call) : ''
     const named = collection && ts.isIdentifier(valueOf(collection)) ? valueOf(collection).text : ''
     const values = bindings.get(named) ?? (collection ? propertyValues(checker, collection) : [])
     // A call that takes any collection (the type is all of them) says nothing about one
@@ -188,11 +187,7 @@ export function findCollectionCalls(
       values.length > 1 &&
       values.length >= knownSlugs.size / 2
     for (const slug of broad ? [] : values) {
-      note(
-        slug,
-        `${operation} (access ${accessOf(argument, payload.onDb)})`,
-        text ? { operation, text } : undefined,
-      )
+      note(slug, `${operation} (access ${access})`, text ? { operation, text } : undefined)
     }
   }
   const onCall = (call, bindings) => {

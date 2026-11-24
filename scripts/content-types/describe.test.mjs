@@ -115,6 +115,50 @@ describe('describeEndpoints', () => {
     ])
   })
 
+  it('asks a route with an optional segment both with and without it (#1461)', () => {
+    function mine() {}
+    const found = (endpoints) =>
+      describeEndpoints(endpoints, locate, { builtIn: true }).map((e) => [
+        e.path,
+        e.replacedBy?.path ?? null,
+        e.replacedWhen ?? null,
+      ])
+    // `/:key` takes `/access` (no id) but not `/access/7`: only partly taken
+    expect(
+      found([
+        { path: '/:key', method: 'post', handler: mine },
+        { path: '/access/:id?', method: 'post', handler: function accessHandler() {} },
+      ]),
+    ).toEqual([
+      ['/:key', null, null],
+      ['/access/:id?', '/:key', ['/access']],
+    ])
+    // an earlier optional segment is matched present and absent
+    expect(
+      found([
+        { path: '/a/:id?', method: 'get', handler: mine },
+        { path: '/a', method: 'get', handler: function aHandler() {} },
+        { path: '/a/b', method: 'get', handler: function abHandler() {} },
+        { path: '/a/b/c', method: 'get', handler: function abcHandler() {} },
+      ]),
+    ).toEqual([
+      ['/a/:id?', null, null],
+      ['/a', '/a/:id?', null],
+      ['/a/b', '/a/:id?', null],
+      ['/a/b/c', null, null],
+    ])
+    // an optional segment of the later route that the earlier one takes in every form
+    expect(
+      found([
+        { path: '/:one/:two?', method: 'get', handler: mine },
+        { path: '/x/:id?', method: 'get', handler: function xHandler() {} },
+      ]),
+    ).toEqual([
+      ['/:one/:two?', null, null],
+      ['/x/:id?', '/:one/:two?', null],
+    ])
+  })
+
   it('is empty when a type has none, or switches them off', () => {
     expect(describeEndpoints(undefined, locate)).toEqual([])
     expect(describeEndpoints(false, locate)).toEqual([])

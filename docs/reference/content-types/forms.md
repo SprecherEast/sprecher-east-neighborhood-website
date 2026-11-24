@@ -3,7 +3,7 @@
 # Forms (`forms`)
 
 - Kind: collection
-- Owner: a plugin or Payload (the source does not define it and the config does not show which)
+- Owner: the plugin `@payloadcms/plugin-form-builder`, configured with code from module `contact` and module `verification`
 - Jobs: `deleteExpiredContactMessages` ([list](../jobs.md))
 - Drafts: no
 - Versions: none kept

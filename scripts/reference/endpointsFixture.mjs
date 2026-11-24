@@ -67,6 +67,12 @@ export const base = {
   serverActions: [
     { file: 'src/modules/accounts/actions.ts', name: 'signIn', area: 'module `accounts`' },
   ],
+  appFiles: [
+    { url: '/robots.txt', file: 'src/app/robots.ts', generated: true, readsContent: false },
+    { url: '/sitemap.xml', file: 'src/app/sitemap.ts', generated: true, readsContent: true },
+    { url: '/icon', file: 'src/app/icon.svg', generated: false, readsContent: false },
+  ],
+  publicFiles: ['/brand/…', '/images/…'],
   routeHandlers: [
     { url: '/api/version', methods: ['GET'], file: 'src/app/(frontend)/api/version/route.ts' },
     {

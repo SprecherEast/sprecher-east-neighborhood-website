@@ -101,7 +101,22 @@ describe('renderApi', () => {
   })
 
   it('lists the replaced routes in a table of their own, with what takes them first', () => {
-    expect(page).toContain('| POST | `/verify/:id` | `events` | `/verify/:token` | `src/v.ts` |')
+    expect(page).toContain(
+      '| POST | `/verify/:id` | `events` | `/verify/:token` | every request | `src/v.ts` |',
+    )
+  })
+
+  it('says which requests a partly taken route loses', () => {
+    const rows = describeApi(base, locate)
+    const partly = { ...rows, replaced: [{ ...rows.replaced[0], when: ['/access', '/a'] }] }
+    expect(renderApi(partly)).toContain('only a request to `/access`, `/a`')
+  })
+
+  it('lists the files Next.js serves by name, and what public/ holds (#1461)', () => {
+    expect(page).toContain('| `/robots.txt` | `src/app/robots.ts` | code |')
+    expect(page).toContain('code that reads site content')
+    expect(page).toContain('| `/icon` | `src/app/icon.svg` | the file itself |')
+    expect(page).toContain('In `public/`: `/brand/…`, `/images/…`.')
   })
 
   it('says the route files are listed with their methods', () => {

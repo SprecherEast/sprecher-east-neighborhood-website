@@ -14,8 +14,10 @@ import { describeContentType } from '../content-types/describe.mjs'
 import { pinEnvironment } from '../content-types/environment.mjs'
 import { createLocator } from '../content-types/locate.mjs'
 import { describeApi } from './endpoints.mjs'
-import { describeJobs } from './jobs.mjs'
+import { describeJobs, jobRoutes } from './jobs.mjs'
 import { describeMcp, toolNamesByCollection } from './mcpTools.mjs'
+import { pluginDefining } from './pluginSlugs.mjs'
+import { collectAppFiles, publicEntries } from './metadataRoutes.mjs'
 import { ROUTES_ROOT, collectRoutes } from './routes.mjs'
 import {
   parseDependabot,
@@ -78,10 +80,12 @@ const functionFiles = (model) =>
  * The owner of each content type: the module that defines it, or the plugin that makes it (found
  * from the package its functions come from) with the modules that configure that plugin.
  */
-function ownerText(model, defined, configurers) {
+function ownerText(model, defined, configurers, root) {
   const owner = ownerOf(defined.get(model.slug) ?? [])
   if (owner.file) return owner
-  const plugin = functionFiles(model).find((file) => file.startsWith('@payloadcms/plugin-'))
+  const plugin =
+    functionFiles(model).find((file) => file.startsWith('@payloadcms/plugin-')) ||
+    pluginDefining(root, model.slug, [...configurers.keys()])
   if (!plugin) return owner
   const modules = configurers.get(plugin) ?? []
   const by =
@@ -102,7 +106,7 @@ function describeModels(config, program, root, options) {
     const model = describeContentType(entry, kind, options)
     return {
       ...model,
-      owner: ownerText(model, defined, configurers),
+      owner: ownerText(model, defined, configurers, root),
       rest: entry.endpoints !== false,
     }
   })
@@ -120,19 +124,13 @@ function describeAgentTools(models, { program, root, locate }, mcpOptions) {
 
 function describeScheduledWork(config, models, { program, root, locate }) {
   const slugs = new Set(models.map((model) => model.slug))
-  const jobRoutes = models
-    .filter((model) => model.slug === 'payload-jobs')
-    .flatMap((model) =>
-      model.allEndpoints.map((e) => ({
-        method: e.method,
-        path: `${config.routes.api}/payload-jobs${e.path}`,
-      })),
-    )
+  const jobsCollection = config.collections.find((collection) => collection.slug === 'payload-jobs')
+  const routes = jobRoutes(jobsCollection?.endpoints ?? [], `${config.routes.api}/payload-jobs`)
   const jobs = describeJobs(
     config.jobs,
     locate,
     (file, name) => findCollectionCalls(program, root, file, { name, knownSlugs: slugs }),
-    { endpoints: jobRoutes },
+    { endpoints: routes },
   )
   return {
     jobs,
@@ -165,6 +163,8 @@ function describeEndpointPages(config, models, mcp, { program, root, locate }) {
       adminPages: routes
         .filter((row) => row.folder === PAYLOAD_ROUTES && row.kind === 'page')
         .map((row) => ({ url: row.url, file: row.file })),
+      appFiles: collectAppFiles(root),
+      publicFiles: publicEntries(root),
       serverActions: findServerActions(program, root),
       mcpAuth: mcp.auth,
     },

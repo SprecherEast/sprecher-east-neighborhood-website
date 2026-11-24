@@ -7,8 +7,10 @@
 import { byOrder, noFiles } from '../content-types/callbacks.mjs'
 import { functionLabel } from '../content-types/functions.mjs'
 import { cell, code, fileCell, generatedNotice, table } from '../content-types/render.mjs'
-import { operationsSuffix } from './collectionCalls.mjs'
+import { COUNTED_CALLS_SENTENCE, reachedLinks, reasonLines } from './collectionCells.mjs'
 
+// Payload runs up to this many jobs per pass when a runner sets no limit (`DEFAULT_LIMIT` in its index.js)
+const DEFAULT_RUNNER_LIMIT = 10
 export const DEFAULT_QUEUE = 'default'
 const JOB_ACCESS_ORDER = ['queue', 'run', 'cancel']
 
@@ -64,7 +66,10 @@ export function describeJobs(
     return {
       ...withWords(runner.cron),
       queue,
-      limit: runner.limit === undefined ? '' : String(runner.limit),
+      limit:
+        runner.limit === undefined
+          ? `${DEFAULT_RUNNER_LIMIT} (Payload’s default, none is set)`
+          : String(runner.limit),
       schedulingPass: runner.disableScheduling ? 'no' : 'yes',
       tasks: described.filter((task) => task.queues.includes(queue)).map((task) => task.slug),
     }
@@ -82,21 +87,30 @@ export function describeJobs(
       operation,
       name: functionLabel(access[operation], operation).name,
       file: locate(access[operation]),
-      // The route that carries the operation: the one whose last segment is its name
+      // The routes whose handler checks this operation
       endpoints: endpoints
-        .filter((route) => route.path.split('/').pop() === operation)
+        .filter((route) => route.guards === operation)
         .map((route) => `${route.method} ${route.path}`),
     })),
   }
 }
 
+/**
+ * The routes of the jobs collection with the job access operation each handler checks, read from
+ * the handler's own code (`jobsConfig.access?.run`): `guards` is that operation, or null.
+ */
+export const jobRoutes = (endpoints, base) =>
+  endpoints.map((endpoint) => ({
+    method: String(endpoint.method).toUpperCase(),
+    path: `${base}${endpoint.path === '/' ? '' : endpoint.path}`,
+    guards: /\baccess\??\.(\w+)/.exec(String(endpoint.handler))?.[1] ?? null,
+  }))
+
 /** The collections a task reaches, or why the cell has none: it is never left empty. */
 const reached = (task) => {
   if (!task.file.startsWith('src/')) return 'Payload’s own handler, not followed'
   if (task.collections.length === 0) return 'none found by following its calls'
-  return task.collections
-    .map(({ collection, operations }) => `${code(collection)}${operationsSuffix(operations)}`)
-    .join(', ')
+  return reachedLinks(task.collections)
 }
 
 export function renderJobs(jobs, workflows, { serverCrons, intelligence, dependabot }) {
@@ -136,7 +150,7 @@ export function renderJobs(jobs, workflows, { serverCrons, intelligence, dependa
       entry.operation,
       code(entry.name),
       fileCell(entry.file),
-      entry.endpoints.map(code).join(', '),
+      entry.endpoints.length > 0 ? entry.endpoints.map(code).join(', ') : 'no route in the config',
     ]),
   )
   const crons = table(
@@ -168,6 +182,9 @@ export function renderJobs(jobs, workflows, { serverCrons, intelligence, dependa
       cell(entry.when),
     ]),
   )
+  const reasons = jobs.tasks
+    .map((task) => reasonLines(task.collections, `${code(task.slug)}: `))
+    .join('')
   const timed = table(
     ['File', 'Workflow', 'Schedule (UTC)', 'Jobs'],
     workflows.map((workflow) => [
@@ -184,11 +201,13 @@ export function renderJobs(jobs, workflows, { serverCrons, intelligence, dependa
       'the loaded Payload config (`jobs`), `.github/workflows/`, `.github/dependabot.yml`, `ops/install-cron.sh` and `intelligence/pipeline.yaml`',
     ),
     '',
-    'What runs on a timer inside the application, and in GitHub. Payload starts the runners inside the app’s one process (`jobs.autoRun`), on the first request after a start. A queue with no runner never runs. Timers in browser code (a page checking the version, for example) are not shown. No time zone is set for these schedules, so the server’s applies; the workflows and the server cron below are in UTC. “Collections it reaches” are found by following the handler’s own calls in the source, with the operation and whether access is checked; a function the config passes in (such as the keepers of the confirmation retention task) is not followed, so a collection reached only that way is not listed; nor are the hooks a write sets off, which can write other collections (the search index, for example): each content type’s hooks are on its own page under Hooks. A collection passed to a shared helper is shown with what the helper does to it where its code shows that, otherwise as “operation not shown”. Scheduled tasks that live outside the repository are on [their own page](../knowledge/scheduled-tasks.md), written by hand.',
+    'What runs on a timer inside the application, and in GitHub. Payload starts the runners inside the app’s one process (`jobs.autoRun`), on the first request after a start. A queue with no runner never runs. Timers in browser code (a page checking the version, for example) are not shown. Time zones: the GitHub workflows run in UTC; the job schedules and the server cron set no time zone, so both follow the server’s clock, which this page does not state; the pipeline setting names its own time zone, if it has one. “Collections it reaches” are found by following the handler’s own calls in the source, with the operation and whether access is checked; a function the config passes in (such as the keepers of the confirmation retention task) is not followed, so a collection reached only that way is not listed; nor are the hooks a write sets off, which can write other collections (the search index, for example): each content type’s hooks are on its own page under Hooks. A collection passed to a shared helper is shown with what the helper does to it where its code shows that, otherwise as “operation not shown”. ' +
+      COUNTED_CALLS_SENTENCE +
+      ' Where access is bypassed and the code gives a reason, it is quoted below the table. Scheduled tasks that live outside the repository are on [their own page](../knowledge/scheduled-tasks.md), written by hand.',
     '',
     '## Job tasks',
     '',
-    tasks,
+    reasons ? `${tasks}\n${reasons}` : tasks,
     '',
     '## Job runners',
     '',
@@ -204,7 +223,7 @@ export function renderJobs(jobs, workflows, { serverCrons, intelligence, dependa
     '',
     '## Cron installed on the server',
     '',
-    'Installed on every deploy by a script in the repository, so the job on the server matches the file. The server’s clock applies. What the scripts do is in `ops/README.md`.',
+    'Installed on every deploy by a script in the repository, so the job on the server matches the file. The server’s clock applies (see the time zones in the introduction). What the scripts do is in `ops/README.md`.',
     '',
     crons,
     '',

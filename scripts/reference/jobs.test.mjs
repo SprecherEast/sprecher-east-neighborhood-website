@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { describeCron, describeJobs, renderJobs } from './jobs.mjs'
+import { describeCron, describeJobs, jobRoutes, renderJobs } from './jobs.mjs'
 
 describe('describeCron', () => {
   it('says the simple patterns in words', () => {
@@ -69,7 +69,7 @@ describe('describeJobs', () => {
         cron: '*/10 * * * *',
         words: 'every 10 minutes',
         queue: 'retention',
-        limit: '',
+        limit: '10 (Payload’s default, none is set)',
         schedulingPass: 'yes',
         tasks: ['deleteOld'],
       },
@@ -87,13 +87,18 @@ describe('describeJobs', () => {
   it('names who may queue and run jobs, in a fixed order, and the endpoint each guards', () => {
     const withRoutes = describeJobs(config, locate, () => [], {
       endpoints: [
-        { method: 'GET', path: '/api/payload-jobs/run' },
-        { method: 'GET', path: '/api/payload-jobs/handle-schedules' },
+        { method: 'GET', path: '/api/payload-jobs/run', guards: 'run' },
+        { method: 'GET', path: '/api/payload-jobs/handle-schedules', guards: 'run' },
+        { method: 'GET', path: '/api/payload-jobs/count', guards: null },
       ],
     })
     expect(withRoutes.access.map((a) => [a.operation, a.name, a.endpoints])).toEqual([
       ['queue', 'isStaff', []],
-      ['run', 'isAdminBoolean', ['GET /api/payload-jobs/run']],
+      [
+        'run',
+        'isAdminBoolean',
+        ['GET /api/payload-jobs/run', 'GET /api/payload-jobs/handle-schedules'],
+      ],
     ])
   })
 
@@ -149,11 +154,31 @@ describe('renderJobs', () => {
 
   it('writes the route each job access guards', () => {
     const guarded = describeJobs(config, locate, () => [], {
-      endpoints: [{ method: 'GET', path: '/api/payload-jobs/run' }],
+      endpoints: [{ method: 'GET', path: '/api/payload-jobs/run', guards: 'run' }],
     })
-    expect(renderJobs(guarded, workflows, extras)).toContain(
-      '| run | `isAdminBoolean` | payload | `GET /api/payload-jobs/run` |',
+    const page = renderJobs(guarded, workflows, extras)
+    expect(page).toContain('| run | `isAdminBoolean` | payload | `GET /api/payload-jobs/run` |')
+    expect(page).toMatch(/\| queue \| `isStaff` \|[^|]*\| no route in the config /)
+  })
+
+  it('finds the route an access function guards from what the route handler reads', () => {
+    const routes = jobRoutes(
+      [
+        {
+          method: 'get',
+          path: '/run',
+          handler: async (req) => req.payload.config.jobs.access?.run,
+        },
+        { method: 'get', path: '/handle-schedules', handler: (r) => r.x.jobsConfig.access?.run },
+        { method: 'get', path: '/count', handler: function countHandler() {} },
+      ],
+      '/api/payload-jobs',
     )
+    expect(routes).toEqual([
+      { method: 'GET', path: '/api/payload-jobs/run', guards: 'run' },
+      { method: 'GET', path: '/api/payload-jobs/handle-schedules', guards: 'run' },
+      { method: 'GET', path: '/api/payload-jobs/count', guards: null },
+    ])
   })
 
   it('says browser timers and hooks that a write sets off are not shown', () => {
@@ -161,8 +186,33 @@ describe('renderJobs', () => {
     expect(page).toContain('hooks a write sets off')
   })
 
-  it('says which schedules have no time zone set', () => {
-    expect(page).toContain('No time zone is set')
+  it('says once which schedules are UTC and which follow the server’s clock', () => {
+    expect(page.match(/time zones/gi)).toHaveLength(2)
+    expect(page).toContain('the GitHub workflows run in UTC')
+    expect(page).toContain('set no time zone, so both follow the server’s clock')
+    expect(page).not.toContain('are in UTC')
+  })
+
+  it('links each collection a task reaches, lists the calls it counts, and quotes the reasons', () => {
+    const reaching = describeJobs(config, locate, (file, name) =>
+      name === 'deleteOld'
+        ? [
+            {
+              collection: 'agent-runs',
+              operations: ['delete (access bypassed)'],
+              why: [{ operation: 'delete', text: 'Nobody is signed in on a schedule.' }],
+            },
+          ]
+        : [],
+    )
+    const withLinks = renderJobs(reaching, [], extras)
+    expect(withLinks).toContain(
+      '[`agent-runs`](content-types/agent-runs.md) (delete (access bypassed))',
+    )
+    expect(withLinks).toContain(
+      '- `deleteOld`: `agent-runs`, delete, from the comment on the function that makes the call: Nobody is signed in on a schedule.',
+    )
+    expect(withLinks).toContain('The calls counted are `find`')
   })
 
   it('has a row for each task, runner and timed workflow', () => {

@@ -18,6 +18,7 @@ const MCP_PLUGIN = '@payloadcms/plugin-mcp'
  */
 export function describeApi(input, locate = noFiles) {
   const { routes, graphQL, endpoints, contentTypes, routeHandlers, mcpAuth } = input
+  const { appFiles = [], publicFiles = [] } = input
   const api = routes.api
   const rest = contentTypes
     .map((type) => ({
@@ -68,6 +69,8 @@ export function describeApi(input, locate = noFiles) {
     custom: [...fromConfig, ...fromTypes],
     builtIn,
     replaced: findReplaced(contentTypes),
+    appFiles,
+    publicFiles,
     adminPages: input.adminPages,
     serverActions: input.serverActions,
     routeHandlers: [...routeHandlers].sort(
@@ -81,6 +84,16 @@ export function renderApi(data) {
   const handlers = table(
     ['URL', 'Methods', 'File'],
     data.routeHandlers.map((row) => [code(row.url), row.methods.join(', '), code(row.file)]),
+  )
+  const files = table(
+    ['URL', 'File', 'Made by'],
+    data.appFiles.map((row) => [
+      code(row.url),
+      code(row.file),
+      row.generated
+        ? `code${row.readsContent ? ' that reads site content through Payload' : ''}`
+        : 'the file itself',
+    ]),
   )
   const rest = table(
     ['Content type', 'Kind', 'REST path', 'GraphQL'],
@@ -100,12 +113,13 @@ export function renderApi(data) {
     ]),
   )
   const replaced = table(
-    ['Method', 'Path', 'Content type', 'Taken first by', 'Defined in'],
+    ['Method', 'Path', 'Content type', 'Taken first by', 'Which requests', 'Defined in'],
     data.replaced.map((row) => [
       row.method,
       code(row.path),
       code(row.slug),
       code(row.by.path),
+      row.when ? `only a request to ${row.when.map(code).join(', ')}` : 'every request',
       fileCell(row.by.file),
     ]),
   )
@@ -145,13 +159,21 @@ export function renderApi(data) {
     '',
     generatedNotice('the loaded Payload config, the route files and the MCP setup'),
     '',
-    'Every way into the application that is not a site page, except what is listed under [Not shown](#not-shown): the route files, the REST and GraphQL APIs Payload builds from the content types, the custom endpoints, and the endpoint AI agents use. Site pages are in [routes.md](routes.md). Who may do what on each content type is on its page, under Access.',
+    'Every way into the application that is not a site page, except what is listed under [Not shown](#not-shown): the route files, the files Next.js serves by name (robots, sitemap, icons, `public/`), the REST and GraphQL APIs Payload builds from the content types, the custom endpoints, and the endpoint AI agents use. Site pages are in [routes.md](routes.md). Who may do what on each content type is on its page, under Access.',
     '',
     '## Route files',
     '',
     'The access check of a route handler is inside it and is not shown.',
     '',
     handlers,
+    '',
+    '## Files Next.js serves by name',
+    '',
+    'Next.js makes a URL from a file in the `app` folder named for a metadata convention (robots, sitemap, icons, manifest, social images), and serves everything in `public/` from `/`. The conventions are those of the Next.js file-convention docs.',
+    '',
+    files,
+    '',
+    `In \`public/\`: ${data.publicFiles.map(code).join(', ') || 'nothing'}.`,
     '',
     '## Payload Admin',
     '',
@@ -179,7 +201,7 @@ export function renderApi(data) {
     '',
     '### Routes Payload adds that an earlier endpoint takes first',
     '',
-    'Payload answers a request with the first endpoint of the type whose method and path match. These routes are in the type’s list, but an endpoint before them takes the requests they would get, so they are not reachable. The matching shown here is the plain `:name` pattern.',
+    'Payload answers a request with the first endpoint of the type whose method and path match. These routes are in the type’s list, but an endpoint before them takes the requests they would get, so they are not reachable, or only for some requests. A path with an optional part (`:id?`) is asked with and without it, and `:name` matches one segment.',
     '',
     replaced,
     '',

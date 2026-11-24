@@ -11,15 +11,15 @@ text, secrets or personal details: the repository is public.
 ## Weekday neighborhood scout
 
 - **Runs:** on weekdays, in the early evening, Central time.
-- **Instructions:** the schedule's own prompt points at the repository's `main` branch and its
-  [`intelligence/`](../../intelligence/README.md) instructions for everything it does. The run
-  rules are kept there, not here.
+- **Instructions:** the schedule's own prompt points at the repository (the `main` branch and its
+  [`intelligence/`](../../intelligence/README.md) instructions) for how to work, so the run rules
+  are kept there, not here. The prompt adds one temporary watch item of its own, set by the owner.
+  That item is stored in the schedule, not in the repository.
 - **What it reads:** the pipeline's instructions (the README, coverage, area, sources and the
   stage prompts). It replaces the submit stage with a report.
-- **May not:** write anything. It makes no CMS call, opens no issue or pull request and publishes
-  nothing.
+- **May not:** write anything outside its own report. It makes no CMS call, opens no issue or pull
+  request and publishes nothing.
 - **Ends with:** a report for the owner, who reviews it before any site update is made.
-- **Carries:** one temporary watch item, set by the owner.
 
 ## Not covered here
 

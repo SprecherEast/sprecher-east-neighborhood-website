@@ -163,7 +163,7 @@ describe('findCollectionCalls', () => {
     ])
   })
 
-  it('says why, from the comment of the function, only where access is explicitly bypassed', () => {
+  it('says why, from the comment of the function, where access is bypassed with a flag', () => {
     const [events] = calls('src/modules/agents/cms/tools/report.ts', 'report').filter(
       (c) => c.collection === 'events',
     )

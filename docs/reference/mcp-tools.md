@@ -19,6 +19,8 @@ The input of these tools (the plugin’s standard parameters for finding, creati
 
 ## Tools the site adds
 
+Each field’s notes list every limit in the tool’s input schema. A rule that compares fields (an event needs a start, say) is checked by the handler, not by the schema, and is not listed here: it is in the field’s description where the code gives one.
+
 ### `submitSuggestion`
 
 Suggest an event or a news post, with its card summary and one or two category slugs from the categories find. It is stored as an unpublished draft for staff to review, never published, with the first category’s default image. Answers {"status":"created","id"} or, when the same externalId or contentHash is already stored, {"status":"duplicate","id"}.
@@ -27,27 +29,27 @@ Written in `src/modules/agents/cms/tools/submitSuggestion.ts`.
 
 Reaches: [`agent-runs`](content-types/agent-runs.md) (read (access checked)), [`categories`](content-types/categories.md) (read (access checked)), [`events`](content-types/events.md) (create (access checked), read (access bypassed)), [`posts`](content-types/posts.md) (create (access checked), read (access bypassed)).
 
-- `events`, read, as the code says: The item already stored with this source ID or fingerprint, if any. Read with access bypassed: suggestions are drafts the agent can't read, and only the id goes back to it.
-- `posts`, read, as the code says: The item already stored with this source ID or fingerprint, if any. Read with access bypassed: suggestions are drafts the agent can't read, and only the id goes back to it.
+- `events`, read, from the comment on the function that makes the call: The item already stored with this source ID or fingerprint, if any. Read with access bypassed: suggestions are drafts the agent can't read, and only the id goes back to it.
+- `posts`, read, from the comment on the function that makes the call: The item already stored with this source ID or fingerprint, if any. Read with access bypassed: suggestions are drafts the agent can't read, and only the id goes back to it.
 
-| Input          | Type            | Required | Notes                                                                                                                            |
-| -------------- | --------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `collection`   | string          | yes      | Where it goes: an event or a news post; one of events, posts                                                                     |
-| `title`        | string          | yes      | at most 60 characters                                                                                                            |
-| `bodyMarkdown` | string          | yes      | The full text, in Markdown. A <Chart … /> tag adds a chart; a malformed one is refused with the reason; at most 12000 characters |
-| `summary`      | string          | yes      | The card text: one or two plain sentences, no Markdown or links; at most 160 characters                                          |
-| `categories`   | string[]        | yes      | One or two category slugs from the categories find, most specific first; 1 to 2 items                                            |
-| `startsAt`     | string or null  | no       | Events: required, a date-time with a zone                                                                                        |
-| `endsAt`       | string or null  | no       |                                                                                                                                  |
-| `allDay`       | boolean or null | no       |                                                                                                                                  |
-| `venue`        | string or null  | no       |                                                                                                                                  |
-| `address`      | string or null  | no       |                                                                                                                                  |
-| `sourceName`   | string          | yes      | at most 200 characters                                                                                                           |
-| `sourceUrl`    | string          | yes      | at most 2048 characters; matches a fixed pattern                                                                                 |
-| `externalId`   | string          | yes      | The source id, a colon, the source’s own id; at most 200 characters; matches a fixed pattern                                     |
-| `contentHash`  | string          | yes      | sha256 of the item, lowercase hex; matches a fixed pattern                                                                       |
-| `audience`     | string[]        | yes      | at most 6 items                                                                                                                  |
-| `runId`        | string          | yes      | The runId of your current run in agent-runs; at most 100 characters                                                              |
+| Input          | Type            | Required | Notes                                                                                                                                             |
+| -------------- | --------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `collection`   | string          | yes      | Where it goes: an event or a news post; one of events, posts                                                                                      |
+| `title`        | string          | yes      | 1 to 60 characters                                                                                                                                |
+| `bodyMarkdown` | string          | yes      | The full text, in Markdown. A <Chart … /> tag adds a chart; a malformed one is refused with the reason; 1 to 12000 characters                     |
+| `summary`      | string          | yes      | The card text: one or two plain sentences, no Markdown or links; 1 to 160 characters                                                              |
+| `categories`   | string[]        | yes      | One or two category slugs from the categories find, most specific first; 1 to 2 items; each item: at most 100 characters, matches `^[a-z0-9_-]+$` |
+| `startsAt`     | string or null  | no       | Events: required, a date-time with a zone; matches `^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z\|[+-]\\d{2}:\\d{2})$`               |
+| `endsAt`       | string or null  | no       | matches `^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z\|[+-]\\d{2}:\\d{2})$`                                                          |
+| `allDay`       | boolean or null | no       |                                                                                                                                                   |
+| `venue`        | string or null  | no       | 1 to 200 characters                                                                                                                               |
+| `address`      | string or null  | no       | 1 to 300 characters                                                                                                                               |
+| `sourceName`   | string          | yes      | 1 to 200 characters                                                                                                                               |
+| `sourceUrl`    | string          | yes      | at most 2048 characters; matches `^https?:\\/\\/[^\\s]+$`                                                                                         |
+| `externalId`   | string          | yes      | The source id, a colon, the source’s own id; at most 200 characters; matches `^[a-z0-9-]+:.+$`                                                    |
+| `contentHash`  | string          | yes      | sha256 of the item, lowercase hex; matches `^[a-f0-9]{64}$`                                                                                       |
+| `audience`     | string[]        | yes      | at most 6 items; each item: one of everyone, families, youth, seniors, volunteers, association-leaders                                            |
+| `runId`        | string          | yes      | The runId of your current run in agent-runs; 1 to 100 characters                                                                                  |
 
 ### `reportItem`
 
@@ -57,14 +59,14 @@ Written in `src/modules/agents/cms/tools/reportItem.ts`.
 
 Reaches: [`agent-review-items`](content-types/agent-review-items.md) (create (access checked)), [`agent-runs`](content-types/agent-runs.md) (read (access checked)).
 
-| Input              | Type            | Required | Notes                                                                         |
-| ------------------ | --------------- | -------- | ----------------------------------------------------------------------------- |
-| `runId`            | string          | yes      | The runId of your current run in agent-runs; at most 100 characters           |
-| `kind`             | string          | yes      | one of needs-review, update, cancel, rejected-invalid                         |
-| `targetCollection` | string or null  | no       |                                                                               |
-| `targetId`         | integer or null | no       | With targetCollection: ids are per collection                                 |
-| `externalId`       | string or null  | no       |                                                                               |
-| `summary`          | string          | yes      | What an editor should know or do, in a few sentences; at most 1000 characters |
-| `evidence`         | object[]        | yes      | at most 5 items                                                               |
-| `flags`            | string[]        | yes      | at most 20 items                                                              |
-| `sourceUrl`        | string or null  | yes      | Null only for rejected-invalid with no source link                            |
+| Input              | Type            | Required | Notes                                                                                                                                                                                                                                                            |
+| ------------------ | --------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `runId`            | string          | yes      | The runId of your current run in agent-runs; 1 to 100 characters                                                                                                                                                                                                 |
+| `kind`             | string          | yes      | one of needs-review, update, cancel, rejected-invalid                                                                                                                                                                                                            |
+| `targetCollection` | string or null  | no       | one of events, posts                                                                                                                                                                                                                                             |
+| `targetId`         | integer or null | no       | With targetCollection: ids are per collection; a value of at least 1                                                                                                                                                                                             |
+| `externalId`       | string or null  | no       | at most 200 characters; matches `^[a-z0-9-]+:.+$`                                                                                                                                                                                                                |
+| `summary`          | string          | yes      | What an editor should know or do, in a few sentences; 1 to 1000 characters                                                                                                                                                                                       |
+| `evidence`         | object[]        | yes      | at most 5 items; each item has `url` (string, at most 2048 characters, matches `^https?:\\/\\/[^\\s]+$`); `says` (string, 1 to 500 characters); `retrievedAt` (string, matches `^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z\|[+-]\\d{2}:\\d{2})$`) |
+| `flags`            | string[]        | yes      | at most 20 items; each item: one of missing-date, missing-time, missing-location, ambiguous-location, similar-name, unverified-claim, conflicting-sources, cancelled, rescheduled, past, partisan, prompt-injection, needs-date, wrong-offset, image-candidate   |
+| `sourceUrl`        | string or null  | yes      | Null only for rejected-invalid with no source link; at most 2048 characters; matches `^https?:\\/\\/[^\\s]+$`                                                                                                                                                    |
