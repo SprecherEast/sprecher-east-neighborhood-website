@@ -18,11 +18,10 @@ import { parseArgs } from 'node:util'
 import { refreshBoundary } from './lib/boundary.mjs'
 import { connectCms, dryRunCms } from './lib/cms.mjs'
 import { loadContract } from './lib/contract.mjs'
-import { robotsChecker } from './lib/fetchSource.mjs'
-import { cityGeocoder } from './lib/geocode.mjs'
 import { openclawAdapter } from './lib/model.mjs'
 import { runPipeline } from './lib/pipeline.mjs'
 import { loadState, saveState } from './lib/state.mjs'
+import { runInputs } from './lib/wiring.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const { values: flags } = parseArgs({
@@ -82,14 +81,10 @@ async function main() {
   let result
   try {
     result = await runPipeline({
-      contract,
       cms,
       ask,
       state,
-      http: fetch,
-      robots: robotsChecker(fetch),
-      geocode: cityGeocoder({ http: fetch, config: contract.area.boundary.geocoder }),
-      repoCommit: repoCommit(flags.intelligence),
+      ...runInputs({ contract, http: fetch, commit: repoCommit(flags.intelligence) }),
     })
   } finally {
     // What was handled is kept even when the run stopped part way
