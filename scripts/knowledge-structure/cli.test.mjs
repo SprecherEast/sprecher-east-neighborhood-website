@@ -1,6 +1,5 @@
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -10,11 +9,13 @@ import { checkNote } from './rules.mjs'
 import {
   GOOD_BODY,
   GOOD_FIELDS,
-  GOOD_MAP,
   NOTE_PATH,
   errorsOf,
   goodIndex,
+  fixture,
   goodNote,
+  messageOf,
+  removeFixtures,
   schema,
   strict,
 } from './testkit.mjs'
@@ -31,12 +32,43 @@ describe('skeleton', () => {
 
   it('leaves Screens out for a type that has no routes, and fails for an unknown type', () => {
     expect(skeleton(schema, 'feature')).not.toContain('## Screens')
-    expect(() => skeleton(schema, 'widget')).toThrow(/module, platform-area, feature/)
+    expect(messageOf(() => skeleton(schema, 'widget'))).toBe(
+      'unknown type "widget"; use one of: module, platform-area, feature',
+    )
+  })
+
+  it('says in each section hint whether the section is required, expected or optional', () => {
+    const text = skeleton(schema, 'module')
+    for (const { heading, presence, hint } of schema.sections) {
+      expect(text).toContain(`## ${heading}\n\n<!-- ${presence}: ${hint} -->`)
+    }
   })
 
   it('is a note that already follows the structure, so the author fills it in', () => {
     const text = skeleton(schema, 'module')
     expect(errorsOf(checkNote({ schema: strict, path: NOTE_PATH, text, files: [] }))).toEqual([])
+  })
+})
+
+describe('a skeleton, in full', () => {
+  it('is the fields as placeholders, a title, a purpose line, then each section with its hint', () => {
+    const tiny = {
+      noteTypes: { thing: {} },
+      kinds: { text: { placeholder: 'TODO' }, noteType: { placeholder: '$type' } },
+      fields: [
+        { key: 'name', kind: 'text' },
+        { key: 'type', kind: 'noteType' },
+      ],
+      sections: [
+        { heading: 'One', presence: 'required', hint: 'First.', appliesTo: ['thing'] },
+        { heading: 'Two', presence: 'optional', hint: 'Second.', appliesTo: ['other'] },
+        { heading: 'Three', presence: 'expected', hint: 'Third.', appliesTo: ['thing'] },
+      ],
+    }
+    expect(skeleton(tiny, 'thing')).toBe(
+      '---\nname: TODO\ntype: thing\n---\n\n# TODO\n\nTODO: what this part is for, in one or two sentences.\n\n' +
+        '## One\n\n<!-- required: First. -->\n\n## Three\n\n<!-- expected: Third. -->\n',
+    )
   })
 })
 
@@ -54,34 +86,20 @@ describe('summarize', () => {
     expect(summarize([{ rule: 'X', severity: 'error', note: 'a', message: 'm' }])).toContain(
       '1 error,',
     )
-    expect(summarize([])).toContain('0 errors, 0 warnings')
+    expect(summarize([])).toBe('Knowledge structure: 0 errors, 0 warnings')
+    expect(
+      summarize([
+        { rule: 'NOTE-CAP', severity: 'error', note: 'a', message: 'm' },
+        { rule: 'COVERAGE-CODE', severity: 'warning', note: 'b', message: 'm' },
+        { rule: 'COVERAGE-CODE', severity: 'warning', note: 'c', message: 'm' },
+      ]),
+    ).toBe('Knowledge structure: 1 error, 2 warnings\n- NOTE-CAP: 1\n- COVERAGE-CODE: 2')
   })
 })
 
 describe('execute', () => {
-  const roots = []
-  afterEach(() =>
-    roots.splice(0).forEach((dir) => fs.rmSync(dir, { recursive: true, force: true })),
-  )
+  afterEach(removeFixtures)
 
-  /** A throwaway repository with the schema, a map, an index, one note and its code file. */
-  function fixture({ note = goodNote(), index = goodIndex(), schemaJson = schema } = {}) {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'knowledge-'))
-    roots.push(root)
-    const files = {
-      'docs/knowledge/note-schema.json': JSON.stringify(schemaJson),
-      'docs/knowledge/map.json': GOOD_MAP,
-      'docs/knowledge/index.md': index,
-      [NOTE_PATH]: note,
-      'src/modules/demo/domain/rule.ts': 'export {}\n',
-    }
-    for (const [file, text] of Object.entries(files)) {
-      fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true })
-      fs.writeFileSync(path.join(root, file), text)
-    }
-    execFileSync('git', ['init', '-q'], { cwd: root })
-    return root
-  }
   const run = (root, argv = [], env = {}) => {
     const lines = []
     return { code: execute({ argv, root, env, log: (l) => lines.push(l) }), lines }
@@ -147,6 +165,41 @@ describe('execute', () => {
     expect(run(root).lines.join('\n')).toContain(
       'listed in docs/knowledge/map.json but the file does not exist',
     )
+  })
+
+  it('prints each finding as severity, rule, note and message, then the counts', () => {
+    const { lines } = run(fixture({ note: '# Demo\n' }))
+    expect(lines).toContain(
+      `error [NOTE-FRONTMATTER] ${NOTE_PATH}: no front matter: a note starts with its fields`,
+    )
+    expect(lines.at(-1)).toMatch(/^Knowledge structure: \d+ errors?, \d+ warnings?\n- /)
+  })
+
+  it('writes the same counts to the job summary file, then a line end', () => {
+    const root = fixture()
+    const summary = path.join(root, 'summary.md')
+    const { lines } = run(root, [], { GITHUB_STEP_SUMMARY: summary })
+    expect(fs.readFileSync(summary, 'utf8')).toBe(`${lines.at(-1)}\n`)
+  })
+
+  it('runs with no environment given, as a library call', () => {
+    const lines = []
+    expect(execute({ argv: [], root: fixture(), log: (l) => lines.push(l) })).toBe(0)
+  })
+
+  it('--write-index leaves out a note with a summary but no name', () => {
+    const root = fixture({
+      note: goodNote({ ...GOOD_FIELDS, name: undefined }),
+      index: goodIndex(''),
+    })
+    expect(run(root, ['--write-index']).lines).toEqual([
+      'Wrote the 0 note lines of docs/knowledge/index.md.',
+    ])
+  })
+
+  it('--skeleton prints only the note: it does not go on to check the repository', () => {
+    const { lines } = run(fixture({ note: '# Demo\n' }), ['--skeleton', 'feature'])
+    expect(lines).toHaveLength(1)
   })
 
   it('--skeleton prints a note for the type and exits 0', () => {

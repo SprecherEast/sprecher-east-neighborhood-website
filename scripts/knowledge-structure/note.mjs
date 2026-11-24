@@ -1,7 +1,7 @@
 /** Reading a knowledge note into the parts the checks look at. */
 import { frontmatterText, parseFrontmatter } from '../frontmatter.mjs'
 
-const FENCE = /^\s*(```|~~~)/
+export const FENCE = /^\s*(```|~~~)/
 
 /**
  * A note as `{ hasFrontmatter, error, data, title, purposeLines, sections, body, bodyLines }`.
@@ -33,7 +33,7 @@ export function parseNote(markdown) {
   lines.forEach((line, index) => {
     if (FENCE.test(line)) fenced = !fenced
     if (fenced) return
-    const heading = /^## (\S.*)$/.exec(line)
+    const heading = /^## (\S.*)/.exec(line)
     if (heading) note.sections.push({ heading: heading[1].trim(), line: index + 1 })
     else if (note.sections.length === 0 && line.trim() && !line.startsWith('#')) note.purposeLines++
   })

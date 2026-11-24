@@ -9,6 +9,7 @@ import {
   errorsOf,
   frontmatter,
   goodNote,
+  messageOf,
   schema,
   strict,
 } from './testkit.mjs'
@@ -72,6 +73,35 @@ describe('NOTE-FIELD-VALUE', () => {
     ['a relationship that is not { type, target }', { relationships: [{ type: 'depends-on' }] }],
   ])('fails %s', (_, over) => {
     expect(rulesOf(withFields(over))).toEqual(['NOTE-FIELD-VALUE'])
+  })
+})
+
+describe('NOTE-FIELD-VALUE messages', () => {
+  const messageFor = (over, fields = schema.fields) => {
+    const lax = { ...strict, fields }
+    const text = withFields(over)
+    return checkNote({ schema: lax, path: NOTE_PATH, text, files: GOOD_FILES })
+      .filter((f) => f.rule === 'NOTE-FIELD-VALUE')
+      .map((f) => f.message)
+  }
+
+  it('names the limit when the field has one', () => {
+    expect(messageFor({ summary: 'x'.repeat(201) })).toEqual([
+      'summary must be one line of text, at most 200 characters',
+    ])
+  })
+
+  it('names no limit, and allows any length, when the field has none', () => {
+    const noLimit = schema.fields.map(({ maxChars: _, ...field }) => field)
+    expect(messageFor({ summary: 'x'.repeat(500) }, noLimit)).toEqual([])
+    expect(messageFor({ summary: '""' }, noLimit)).toEqual(['summary must be one line of text'])
+  })
+
+  it('stops with a clear error for a field kind the code does not know', () => {
+    const odd = schema.fields.map((f) => (f.key === 'name' ? { ...f, kind: 'number' } : f))
+    expect(messageOf(() => messageFor({}, odd))).toBe(
+      'field "name" has kind "number", which the check does not handle: a new kind needs code here',
+    )
   })
 })
 
@@ -180,7 +210,17 @@ describe('COVERAGE-SECTION', () => {
     const coverage = found.filter((f) => f.rule === 'COVERAGE-SECTION')
     expect(coverage.length).toBeGreaterThan(0)
     expect(coverage.every((f) => f.severity === 'warning')).toBe(true)
-    expect(coverage.map((f) => f.message).join(' ')).toContain('Known gaps')
+    expect(coverage.map((f) => f.message)).toContain('section "Known gaps" is not written yet')
+  })
+
+  it('says nothing about an optional section, and only warns for an expected one', () => {
+    const found = checkNote({ schema, path: NOTE_PATH, text: goodNote(), files: GOOD_FILES })
+    const said = found.filter((f) => f.rule === 'COVERAGE-SECTION').map((f) => f.message)
+    const optional = schema.sections.filter((s) => s.presence === 'optional')
+    expect(optional.length).toBeGreaterThan(0)
+    for (const { heading } of optional) expect(said.join(' ')).not.toContain(`"${heading}"`)
+    const expected = schema.sections.filter((s) => s.presence === 'expected')
+    expect(said).toHaveLength(expected.filter((s) => s.appliesTo.includes('module')).length)
   })
 })
 

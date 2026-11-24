@@ -325,6 +325,22 @@ describe('run, with a knowledge map', () => {
     expect(problemsOf(root)).toEqual([])
   })
 
+  it('writes the paths a note describes without its excluded area, then finds them current', () => {
+    const root = repo({
+      ...files,
+      'docs/knowledge/map.json': JSON.stringify([
+        { note: 'src/mod/README.md', paths: ['src/mod/**'], exclude: ['src/mod/sub/**'] },
+      ]),
+      'src/mod/sub/other.ts': 'export {}\n',
+      'src/mod/deep/inner/a.ts': 'export {}\n',
+    })
+    expect(problemsOf(root, { write: true })).toEqual([])
+    const text = fs.readFileSync(path.join(root, rule), 'utf8')
+    expect(text).toContain("paths:\n  - 'src/mod/*'\n  - 'src/mod/deep/**'")
+    expect(text).not.toContain('sub')
+    expect(problemsOf(root)).toEqual([])
+  })
+
   it('fails when the rule is out of date or the note is gone', () => {
     const root = repo(files)
     problemsOf(root, { write: true })

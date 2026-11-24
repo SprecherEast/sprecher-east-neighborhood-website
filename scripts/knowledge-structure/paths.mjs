@@ -2,8 +2,8 @@
 import path from 'node:path'
 
 import { globToRegExp } from '../agent-context-maps.mjs'
+import { FENCE } from './note.mjs'
 
-const FENCE = /^\s*(```|~~~)/
 const PATHLIKE = /^[\w@.()[\]*/-]+$/
 
 /** The paths in a note body: backticked ones that look like files or folders, and file links. */
@@ -43,17 +43,17 @@ const exists = (candidate, files) => {
 }
 
 /**
- * Whether a token names something in `files`. A link or a token starting with `/` or `../` is read
- * exactly (from the repository root, or from the note's folder). Any other token may be an
+ * Whether a token names something in `files`. A link or a token starting with `/`, `./` or `../`
+ * is read exactly (from the repository root, or from the note's folder). Any other token may be an
  * abbreviation, as the notes write them (a bare name after its folder, the end of a long path, no
  * extension), so it counts when some path ends with it, whole path parts only. A token that fails
  * both ways does not exist.
  */
 export function resolves(token, { noteDir, files, schema }) {
-  const clean = token.replace(/^\.\//, '').replace(/^\.\.\.\//, '')
+  const clean = token.replace(/^\.\.\.\//, '')
   if (schema.paths.ignore.some((glob) => globToRegExp(glob).test(clean))) return true
   if (clean.startsWith('/')) return exists(clean.slice(1), files)
-  if (clean.startsWith('../')) return exists(path.posix.normalize(`${noteDir}/${clean}`), files)
+  if (/^\.\.?\//.test(clean)) return exists(path.posix.normalize(`${noteDir}/${clean}`), files)
   const forms = [clean, ...schema.paths.extensions.map((extension) => `${clean}.${extension}`)]
   return forms.some(
     (form) => exists(`**/${form}`, files) || exists(`**/${form.replace(/\/$/, '')}/**`, files),

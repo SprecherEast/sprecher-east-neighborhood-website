@@ -56,7 +56,8 @@ export function parseLoadMap(markdown, mapPath = LOAD_MAP) {
 
 /**
  * Reads the knowledge map (decision 0019, §5): a JSON list of `{ note, paths, exclude? }`, one per
- * note, giving the paths the note describes (and, optionally, paths another note takes out of them). Each entry becomes a path-scoped rule like a guideline's.
+ * note, giving the paths the note describes (and, optionally, paths another note takes out of
+ * them). Each entry becomes a path-scoped rule like a guideline's.
  * Throws on a map it would misread, so a mistyped entry fails instead of being dropped.
  */
 export function parseKnowledgeMap(json, mapPath = KNOWLEDGE_MAP) {
@@ -112,19 +113,20 @@ export function globToRegExp(glob) {
 
 /**
  * Whether a knowledge-map entry describes `file`: it matches one of the entry's globs, none of its
- * `exclude` globs (a split note's own area, carved out of its parent's), and is not a test. The one definition the `PR Policy` check (`.github/scripts/knowledge-sync.mjs`) and the
- * Claude Code hook (`.claude/hooks/rules.mjs`) share, so they can't drift apart.
+ * `exclude` globs (a split note's own area, carved out of its parent's), and is not a test. The
+ * one definition the `PR Policy` check (`.github/scripts/knowledge-sync.mjs`) and the Claude Code
+ * hook (`.claude/hooks/rules.mjs`) share, so they can't drift apart.
  */
 export function describes({ paths, exclude = [] }, file) {
   const matches = (globs) => globs.some((glob) => globToRegExp(glob).test(file))
   return !isTestFile(file) && matches(paths) && !matches(exclude)
 }
 
-const dirOf = (file) => file.slice(0, file.lastIndexOf('/'))
+const dirOf = (file) => (file.includes('/') ? file.slice(0, file.lastIndexOf('/')) : '')
 
 /**
- * The globs a note's path-scoped rule lists. Claude Code's `paths` has no way to leave files out, so
- * an entry with `exclude` is written out as the folders and files it describes among `tracked`:
+ * The globs a note's path-scoped rule lists. Claude Code's `paths` has no way to leave files out,
+ * so an entry with `exclude` is written out as the folders and files it describes among `tracked`:
  * a folder as one `dir/**` when everything under it is described, `dir/*` when only its direct
  * files all are, else each file; folders with some described file are searched further.
  */

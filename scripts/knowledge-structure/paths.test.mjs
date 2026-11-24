@@ -7,6 +7,7 @@ const files = [
   'src/modules/demo/README.md',
   'src/modules/demo/domain/rule.ts',
   'src/modules/demo/ui/Card.tsx',
+  'src/modules/demo/domain/sub/x.ts',
   'src/platform/lib/cn.ts',
   'docs/reference/routes.md',
   'src/app/(frontend)/layout.tsx',
@@ -37,6 +38,44 @@ describe('pathReferences', () => {
   })
 })
 
+describe('pathReferences, in detail', () => {
+  it('gives each reference its kind and its line, a pattern included', () => {
+    const body = 'Intro.\n- `domain/*.ts` and [a](../x.md).\n\n  - See `ui/Card.tsx`.'
+    expect(pathReferences(body, schema)).toEqual([
+      { kind: 'code', token: 'domain/*.ts', line: 2 },
+      { kind: 'link', token: '../x.md', line: 2 },
+      { kind: 'code', token: 'ui/Card.tsx', line: 4 },
+    ])
+  })
+
+  it('reads a token with a colon inside a path as a path, not a web address', () => {
+    expect(pathReferences('[a](x/a:b.md) [b](https://x.dev/b.md)', schema)).toEqual([
+      { kind: 'link', token: 'x/a:b.md', line: 1 },
+    ])
+  })
+
+  it('knows every file extension the schema lists, and no other', () => {
+    for (const ext of schema.paths.extensions) {
+      expect(pathReferences(`\`x.${ext}\``, schema).map((r) => r.token)).toEqual([`x.${ext}`])
+    }
+    expect(pathReferences('`x.abc`', schema)).toEqual([])
+  })
+
+  it('opens a code fence only at the start of a line', () => {
+    const body = 'Use ``` for code.\n`domain/rule.ts`\n  ```\n`hidden/x.ts`\n  ```\n`ui/Card.tsx`'
+    expect(pathReferences(body, schema).map((r) => r.token)).toEqual([
+      'domain/rule.ts',
+      'ui/Card.tsx',
+    ])
+  })
+
+  it('takes a token with an extension and no folder, and not one with another ending', () => {
+    expect(pathReferences('`rule.ts` `rule.xyz` `Rule`', schema).map((r) => r.token)).toEqual([
+      'rule.ts',
+    ])
+  })
+})
+
 describe('resolves', () => {
   it.each([
     ['domain/rule.ts', true], // beside the note
@@ -54,7 +93,15 @@ describe('resolves', () => {
     ['rule.t', false], // whole path parts only
     ['gone.ts', false],
     ['gonedir/', false],
-    ['./domain/rule.ts', true], // a leading ./
+    ['./domain/rule.ts', true], // a leading ./ is from the note's folder
+    ['./rule.ts', false], // exactly there, not an abbreviation
+    ['./README.md', true],
+    ['domain/sub/', true], // a folder two levels down
+    ['domain/zzz/', false],
+    ['/docs/reference/', true], // a folder from the root
+    ['../../../docs/reference/', true], // a folder from the note
+    ['domain/.../rule.ts', false], // the three dots only start a token
+    ['x/../domain/rule.ts', false], // ../ only counts at the start
     ['domain/gone.ts', false],
     ['domain/*.ts', true], // a pattern matching something
     ['domain/*.mjs', false],

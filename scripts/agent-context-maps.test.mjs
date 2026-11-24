@@ -2,6 +2,15 @@ import { describe, expect, it } from 'vitest'
 
 import { describes, globToRegExp, parseKnowledgeMap, rulePaths } from './agent-context-maps.mjs'
 
+const messageOf = (fn) => {
+  try {
+    fn()
+  } catch (error) {
+    return error.message
+  }
+  return undefined
+}
+
 describe('describes', () => {
   const entry = { paths: ['src/modules/events/**', 'docs/x.md'] }
 
@@ -31,11 +40,34 @@ describe('exclude', () => {
     expect(describes(entry, file)).toBe(expected)
   })
 
+  it('throws the entry message, not a crash, for an entry that is not an object', () => {
+    expect(messageOf(() => parseKnowledgeMap('[null]'))).toBe(
+      'docs/knowledge/map.json: entry 1 needs a "note" (a .md path) and a non-empty "paths" list of globs',
+    )
+  })
+
   it('is read from the map, and a mistyped one throws', () => {
     const list = (exclude) => JSON.stringify([{ note: 'a.md', paths: ['x/**'], exclude }])
     expect(parseKnowledgeMap(list(['x/y/**']))[0].exclude).toEqual(['x/y/**'])
-    expect(parseKnowledgeMap(list(undefined))[0].exclude).toBeUndefined()
-    expect(() => parseKnowledgeMap(list('x/y'))).toThrow(/exclude/)
+    expect(Object.keys(parseKnowledgeMap(list(undefined))[0])).toEqual([
+      'source',
+      'paths',
+      'origin',
+    ])
+    expect(messageOf(() => parseKnowledgeMap(list('x/y')))).toBe(
+      'docs/knowledge/map.json: entry 1: "exclude" must be a list of globs',
+    )
+  })
+
+  it.each([
+    ['a number', [5]],
+    ['an empty text', ['']],
+    ['a good glob next to a bad one', ['x/y/**', 5]],
+  ])('throws, naming the entry, for an exclude item that is %s', (_, exclude) => {
+    const json = JSON.stringify([{ note: 'a.md', paths: ['x/**'], exclude }])
+    expect(messageOf(() => parseKnowledgeMap(json))).toBe(
+      'docs/knowledge/map.json: entry 1: "exclude" must be a list of globs',
+    )
   })
 })
 
@@ -72,6 +104,42 @@ describe('rulePaths', () => {
     expect(rulePaths(entry, tracked)).toEqual(
       expect.arrayContaining(['src/ui/testing/**', 'src/ui/deep/**', 'src/ui/Button.tsx']),
     )
+  })
+
+  it('writes out exactly the files an entry describes, folders sorted, never from the root', () => {
+    const entry = {
+      paths: ['*', '*/**'],
+      exclude: ['skip/**', 'mixed/skip.ts', 'nest/out/**', 'one/sub/**'],
+    }
+    const files = [
+      'README.md',
+      'skip/x.ts',
+      'zeta/a.ts',
+      'alpha/b.ts',
+      'mixed/p.ts',
+      'mixed/skip.ts',
+      'nest/deep/q.ts',
+      'nest/out/r.ts',
+      'one/f.ts',
+      'one/sub/g.ts',
+    ]
+    expect(rulePaths(entry, files)).toEqual([
+      'README.md',
+      'alpha/**',
+      'mixed/p.ts',
+      'nest/deep/**',
+      'one/*',
+      'zeta/**',
+    ])
+  })
+
+  it('does not fold the whole repository into one glob when everything is described', () => {
+    const entry = { paths: ['*', '*/**'], exclude: ['nothing/**'] }
+    expect(rulePaths(entry, ['README.md', 'zeta/a.ts', 'alpha/b.ts'])).toEqual([
+      'README.md',
+      'alpha/**',
+      'zeta/**',
+    ])
   })
 
   it('folds a folder whose direct files are all included into one star glob', () => {

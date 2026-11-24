@@ -20,14 +20,17 @@ function notesRegion(lines, indexPath) {
 
 /** The non-blank lines under "## Notes". */
 export function noteLinesOf(indexText, indexPath) {
-  const lines = indexText.split('\n')
+  const lines = indexText.split(/\r?\n/)
   const { start, end } = notesRegion(lines, indexPath)
   return lines.slice(start, end).filter((line) => line.trim() !== '')
 }
 
-/** `indexText` with the lines under "## Notes" replaced by one line per entry; the rest is kept. */
+/**
+ * `indexText` with the lines under "## Notes" replaced by one line per entry; the rest is kept,
+ * with plain `\n` line ends.
+ */
 export function renderIndex(indexText, entries, indexPath) {
-  const lines = indexText.split('\n')
+  const lines = indexText.split(/\r?\n/)
   const { start, end } = notesRegion(lines, indexPath)
   const block = ['', ...entries.map((entry) => indexLine(entry, indexPath)), '']
   return [...lines.slice(0, start), ...block, ...lines.slice(end)].join('\n')

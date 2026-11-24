@@ -1,32 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkKnowledge } from './check.mjs'
 import {
   GOOD_FIELDS,
   GOOD_FILES,
-  GOOD_MAP,
   NOTE_PATH,
   errorsOf,
   goodIndex,
   goodNote,
-  schema,
-  strict,
+  repo,
 } from './testkit.mjs'
 
-const repo = (over = {}) => {
-  const texts = {
-    [NOTE_PATH]: goodNote(),
-    'docs/knowledge/index.md': goodIndex(),
-    ...over.texts,
-  }
-  const files = over.files ?? [...new Set([...GOOD_FILES, ...Object.keys(texts)])]
-  return checkKnowledge({
-    schema: over.schema ?? strict,
-    mapJson: over.map ?? GOOD_MAP,
-    files,
-    read: (path) => texts[path],
-  })
-}
 const rules = (over) => errorsOf(repo(over)).map((f) => f.rule)
 
 describe('checkKnowledge', () => {
@@ -75,6 +58,12 @@ describe('checkKnowledge', () => {
     expect(drift(extra)).toEqual(['INDEX-DRIFT'])
   })
 
+  it('INDEX-DRIFT: fails when the index file is missing altogether', () => {
+    const found = errorsOf(repo({ texts: { 'docs/knowledge/index.md': undefined } }))
+    expect(found.map((f) => f.rule)).toEqual(['INDEX-DRIFT'])
+    expect(found[0].message).toMatch(/## Notes/)
+  })
+
   it('INDEX-DRIFT: fails an index with no Notes section, so a broken index never passes', () => {
     const found = errorsOf(repo({ texts: { 'docs/knowledge/index.md': '# Index\n' } }))
     expect(found.map((f) => f.rule)).toEqual(['INDEX-DRIFT'])
@@ -110,31 +99,6 @@ describe('checkKnowledge', () => {
     const swapped = run2(goodIndex(`${lineB}\n${lineA}`))
     expect(swapped.map((f) => f.rule)).toEqual(['INDEX-DRIFT'])
     expect(swapped[0].message).toMatch(/order/)
-  })
-
-  it('COVERAGE-CODE lists the folders with the most loose files first', () => {
-    const files = [...GOOD_FILES, 'src/a/one.ts', 'src/b/x/p.ts', 'src/b/x/q.ts']
-    const [found] = repo({ schema, files }).filter((f) => f.rule === 'COVERAGE-CODE')
-    expect(found.message).toContain('3 source files have no note: src/b/x 2, src/a/one.ts 1')
-  })
-
-  it('COVERAGE-CODE does not count generated types, stories or files outside src', () => {
-    const files = [
-      ...GOOD_FILES,
-      'src/payload-types.ts',
-      'src/x/Card.stories.tsx',
-      'scripts/a.ts',
-      'src/readme.md',
-    ]
-    expect(repo({ schema, files }).filter((f) => f.rule === 'COVERAGE-CODE')).toEqual([])
-  })
-
-  it('COVERAGE-CODE: warns once about source code no map entry describes', () => {
-    const files = [...GOOD_FILES, 'src/lib/a.ts', 'src/lib/a.test.ts', 'src/app/x/page.tsx']
-    const found = repo({ schema, files }).filter((f) => f.rule === 'COVERAGE-CODE')
-    expect(found).toHaveLength(1)
-    expect(found[0].severity).toBe('warning')
-    expect(found[0].message).toMatch(/2 source files/)
   })
 
   it('runs the per-note rules on every map note', () => {

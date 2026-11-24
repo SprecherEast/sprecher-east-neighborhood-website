@@ -24,8 +24,6 @@ looks like this: decision [0022](../architecture/decisions/0022-knowledge-note-s
   when it goes stale. A path that doesn't exist fails the check.
 - Each section's hint is in the schema and in the skeleton. A section the schema marks `expected`
   and a note lacks is a warning, not a failure, until #1004 has written the missing ones.
-- Known gaps are the node's watch-outs on the map: write what a reader should know before changing
-  the part, or "None".
 - At most the number of lines the schema sets, counted below the front matter. A part too big for
   one note gets a feature note next to its code and its own map entry; `exclude` in the map takes
   its files out of the parent's entry so each file has one note.

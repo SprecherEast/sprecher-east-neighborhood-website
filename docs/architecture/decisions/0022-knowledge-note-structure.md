@@ -28,7 +28,9 @@ its cap. Owner direction this rests on (recorded on #1446 and #1460):
    (each marked required, expected or optional), the node and relationship vocabulary, the limits
    and the state of each rule. The template, this record and the check read or point to it; none
    restates it. A field added to the schema is checked, and printed in a new note, without a code
-   change.
+   change, as long as its kind is one the check handles (text, a note type, a list of texts,
+   relationships). A field of a new kind needs code in the check, which stops with an error
+   naming the field until it has it.
 2. **Front matter, then sections.** A note starts with its fields, read with
    `scripts/frontmatter.mjs`. Notes load only on demand, through their path-scoped rules, so the
    front matter adds nothing to session start.
@@ -53,12 +55,13 @@ its cap. Owner direction this rests on (recorded on #1446 and #1460):
    `npm run agent-context -- --write`.
 6. **The check** (`scripts/knowledge-structure/`, a step of the `Knowledge sync` job, required
    without a ruleset change) enforces the schema and the rules in its `rules` list, each with a
-   state. A relationship target is an exact repository-relative path. A backticked path or link in
-   the text is read exactly when it starts from the root or from the note's folder; otherwise it
-   may be an abbreviation, as the notes write them (a bare name after its folder, the end of a long
-   path, no extension), and counts when some path in the repository ends with it. So a moved file
-   is missed while a same-named file exists elsewhere: the rule is firm for rooted paths and links
-   and weak for abbreviated ones.
+   state. A relationship target is an exact repository-relative path. A link, or a backticked path
+   starting with `./` or `../`, is read exactly from the note's folder, and a link starting with `/`
+   from the repository root; a backticked `/x` or `@/x` is a route or an alias and is not checked.
+   Any other backticked path may be an abbreviation, as the notes write them (a bare name after its
+   folder, the end of a long path, no extension), and counts when some path in the repository ends
+   with it. So a moved file is missed while a same-named file exists elsewhere: the rule is firm
+   for exact paths and links and weak for abbreviated ones.
 7. **Rule states, and why some only warn.** Every structure rule blocks, because every note passes
    it. Three rules only warn, for one reason: what they report is missing or wrong content, and
    this change must not add, drop or invent a fact (it changes structure, not meaning). They are
@@ -66,7 +69,8 @@ its cap. Owner direction this rests on (recorded on #1446 and #1460):
    source code no note describes. [#1004](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1004)
    writes the content and turns all three to blocking; that is an acceptance criterion of #1004.
    Until then a note without a Known gaps section has no watch-outs to read, and the counts are in
-   the job summary. Only "Behaviors and events" is required now, for the same reason.
+   the job summary. Which sections are required is in the schema; only one is, for the same
+   reason, and #1004 can raise the rest there.
 
 ## Consequences
 

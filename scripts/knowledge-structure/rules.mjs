@@ -15,12 +15,10 @@ export const finding = (schema, rule, note, message) => ({
 })
 
 const isLine = (value) => typeof value === 'string' && value.trim() !== '' && !value.includes('\n')
-const isRelationship = (value) =>
-  value !== null && typeof value === 'object' && isLine(value.type) && isLine(value.target)
+const isRelationship = (value) => isLine(value?.type) && isLine(value?.target)
 
 /** The key of the field of a kind (the schema has one note type field). */
-export const keyOfKind = (schema, kind) =>
-  schema.fields.find((field) => field.key && field.kind === kind)?.key
+export const keyOfKind = (schema, kind) => schema.fields.find((field) => field.kind === kind)?.key
 
 function checkValue(add, schema, field, value, files) {
   const { key, kind, maxChars } = field
@@ -39,6 +37,10 @@ function checkValue(add, schema, field, value, files) {
   } else if (kind === 'textList') {
     if (!(Array.isArray(value) && value.every(isLine)))
       add('NOTE-FIELD-VALUE', `${key} must be a list of one-line texts`)
+  } else if (kind !== 'relationships') {
+    throw new Error(
+      `field "${key}" has kind "${kind}", which the check does not handle: a new kind needs code here`,
+    )
   } else if (!Array.isArray(value) || !value.every(isRelationship)) {
     add('NOTE-FIELD-VALUE', `${key} must be a list of { type, target }`)
   } else {
@@ -113,8 +115,7 @@ export function checkNote({ schema, path: notePath, text, files }) {
   else if (note.purposeLines === 0)
     add('NOTE-TITLE', 'the title needs a purpose paragraph before the first section')
   const type = note.data[keyOfKind(schema, 'noteType')]
-  if (note.hasFrontmatter && !note.error && Object.hasOwn(schema.noteTypes, type))
-    sectionFindings(add, schema, note)
+  if (Object.hasOwn(schema.noteTypes, type)) sectionFindings(add, schema, note)
   if (note.bodyLines > schema.limits.noteLines)
     add(
       'NOTE-CAP',
