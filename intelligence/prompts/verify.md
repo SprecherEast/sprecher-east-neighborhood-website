@@ -78,6 +78,12 @@ Other sources (`established-media`, `community`) still need a primary source for
    conflict. Below `escalation.verifyBelowConfidence` in `pipeline.yaml` (0.6), the runtime runs
    this stage once more at high effort; if it's still below, the item goes to review.
 
+## Safety
+
+Set `$.safety` by the definition in `safety.yaml`. The runner reads no text of the item and holds
+it for a person unless both stages answer a plain `false` (`coverage.md`, "Review passes"), so your
+answer is the judgment.
+
 ## The five checks
 
 Run the five checks in `coverage.md`, "Review passes", on every item: primary source, place

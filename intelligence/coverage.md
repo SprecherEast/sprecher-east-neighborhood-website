@@ -137,14 +137,18 @@ These rules are written only here; `prompts/verify.md` and `prompts/curate.md` p
 What the pipeline does is two reads: **verify** applies the five checks below, and **curate** reads
 the result again with the relevance rules and sends the item to `needs-review` when a check
 wasn't met. Both are prompt rules, a model's judgment; code guards only what `promotionGuard` in
-`pipeline.yaml` lists. The third step is not a pipeline stage: **before publishing**, the person
+`pipeline.yaml` lists and the safety rule below. The third step is not a pipeline stage: **before publishing**, the person
 or AI agent who publishes by hand re-checks freshness (check 3) and withdraws an item that is no
 longer current.
 
-A safety item (an incident, a hazard, a weather alert, anything about people's safety) is never
-`accept`: curate decides `needs-review`. That is a prompt rule today. The promotion guard does not
-enforce it yet; #1007 will enforce it in code. Nothing publishes by itself either way: agents only
-create suggested drafts.
+A safety item is never `accept`, and code enforces it (#1007). What counts as one is written once, as a
+principle, in [`safety.yaml`](safety.yaml); verify and curate each judge by what the item means and
+answer `safety`. The runner's gate (`runner/lib/gate.mjs`) reads no text of any item: it holds an
+item from an always-held source, or one a stage didn't clear with a plain `false`. The three rules,
+the accepted limit and where each lives are in the pipeline note
+([`README.md`](README.md#output-suggestions-and-review-items-in-the-cms), "The same gate"). Only a decision of `accept` creates a
+suggestion, so `reject`, `update` and `cancel` of a safety item stay as decided ("Public interest and context", rule 4).
+Nothing publishes by itself either way: agents only create suggested drafts.
 
 The five checks, which verify runs on every item:
 

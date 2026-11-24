@@ -3,6 +3,8 @@ import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import * as yaml from 'js-yaml'
 
+import { safetyRules, unregisteredSafetySources } from './safety.mjs'
+
 // Everything a run reads from intelligence/ (README.md, "How a runtime loads it", step 3): the
 // pipeline settings, the source registry, the coverage policy, the stage prompts and the JSON
 // Schemas every stage answer is checked against.
@@ -23,13 +25,22 @@ export function loadContract(dir) {
   const areaFile = pipeline.area ?? 'area.yaml'
   const areaText = readFileSync(path.join(dir, areaFile), 'utf8')
   const area = yaml.load(areaText, { schema: yaml.JSON_SCHEMA })
-  // The model stages read the area words with the policy they belong to
+  const safetyFile = pipeline.safety ?? 'safety.yaml'
+  const safetyText = readFileSync(path.join(dir, safetyFile), 'utf8')
+  const safetyDefinition = yaml.load(safetyText, { schema: yaml.JSON_SCHEMA })
+  // The model stages read the area words and the safety definition with the policy
   const coverage = `${readFileSync(path.join(dir, pipeline.coverage ?? 'coverage.md'), 'utf8').trimEnd()}
 
 ## The area's words (${areaFile})
 
 \`\`\`yaml
 ${areaText.trim()}
+\`\`\`
+
+## What counts as a safety item (${safetyFile})
+
+\`\`\`yaml
+${safetyText.trim()}
 \`\`\`
 `
 
@@ -62,10 +73,30 @@ ${areaText.trim()}
     return found
   }
 
+  // The settings are checked against their schemas on every start, not only in CI (#1007)
+  const pipelineErrors = validator('schemas/pipeline.schema.json')(pipeline)
+  if (pipelineErrors.length) throw new Error(`pipeline.yaml: ${pipelineErrors.join('; ')}`)
+  const safetyErrors = validator('schemas/safety.schema.json')(safetyDefinition)
+  if (safetyErrors.length) throw new Error(`${safetyFile}: ${safetyErrors.join('; ')}`)
+  const unknown = unregisteredSafetySources(safetyDefinition, registry)
+  if (unknown.length) throw new Error(`${safetyFile}: no registered source ${unknown.join(', ')}`)
+  const safety = safetyRules(safetyDefinition)
+
   const areaErrors = validator('schemas/area.schema.json')(area)
   if (areaErrors.length) throw new Error(`${areaFile}: ${areaErrors.join('; ')}`)
 
-  return { dir, pipeline, registry, coverage, area, schemas, prompts, validator, stage }
+  return {
+    dir,
+    pipeline,
+    registry,
+    coverage,
+    area,
+    safety,
+    schemas,
+    prompts,
+    validator,
+    stage,
+  }
 }
 
 /** The pilot sources, in rank order: only `valid` ones with a pilotRank (scout.md, "Input"). */

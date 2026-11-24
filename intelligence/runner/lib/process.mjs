@@ -1,8 +1,9 @@
 import { pilotSources } from './contract.mjs'
 import { mergeAcrossSources, mergedCopies, scoutSource } from './scout.mjs'
-import { guardPromotion, runStage, runVerify, StageError } from './stages.mjs'
+import { gateItem } from './gate.mjs'
+import { runStage, runVerify, StageError } from './stages.mjs'
 import { markSeen } from './state.mjs'
-import { sendReport, submitItem } from './submit.mjs'
+import { sendReport } from './submit.mjs'
 
 // The work of one run (pipeline.mjs opens and closes it): scout every pilot source, then take
 // each new or changed item through the model stages and submit, within the budgets.
@@ -12,10 +13,9 @@ const MAX_FAILURES_IN_A_ROW = 3
 /** Scout, the model stages and submit. Answers a stop status, or null when the run went through. */
 export async function processRun(run) {
   // What the run reads, then what it records into
-  const { contract, cms, ask, state, http, robots, budgets } = run
+  const { contract, cms, submit, ask, state, http, robots, budgets } = run
   const { startedAt, runId, log, calls, addError, deferredSources } = run
   const { counts, cost } = log
-  const { pipeline } = contract
   // Measured on the real clock, whatever `now` says (tests pin it)
   const deadline = Date.now() + (budgets.maxMinutesPerRun ?? 15) * 60_000
   const taxonomy = await cms.taxonomy()
@@ -115,11 +115,13 @@ export async function processRun(run) {
       const verify = await runVerify(contract, ask, item, { deadline })
       item.verification = verify.output
       const curate = await runStage(contract, ask, 'curate', item, { deadline })
-      // Code, not the prompt, decides what may be accepted (pipeline.yaml `promotionGuard`)
-      item.curation = guardPromotion(pipeline, item.verification, curate.output)
+      item.curation = curate.output
       addUsage(cost, verify.usage, curate.usage)
-      const route = pipeline.routes?.[item.curation.decision] ?? 'none'
-      if (route === 'submitSuggestion') {
+      // Code, not the prompt, decides what may be accepted and where it goes (gate.mjs); submit
+      // runs the same gate again on the finished item, with the draft
+      const gated = gateItem(contract, item)
+      item.curation = gated.curation
+      if (gated.suggest) {
         if (drafts >= (budgets.maxDraftsPerRun ?? 10)) {
           defer()
           continue
@@ -129,10 +131,10 @@ export async function processRun(run) {
         addUsage(cost, draft.usage)
         drafts++
       }
-      if (route === 'none') {
+      if (gated.route === 'none') {
         counts[item.curation.decision === 'duplicate' ? 'duplicates' : 'rejected']++
       } else {
-        const result = await submitItem(item, { cms, runId, validate: validateEnvelope, route })
+        const result = await submit(item, { runId, validate: validateEnvelope })
         calls.push(...result.calls)
         for (const warning of result.warnings) addError(warning)
         if (result.pending?.length) {

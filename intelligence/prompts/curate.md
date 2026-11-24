@@ -46,6 +46,12 @@ this stage (its collection, id, hash and status), or null when the CMS has none.
    when). Otherwise those can be empty or null. An official's own post (an alder's blog) is the
    official's announcement: say so in the reasons, never present it as neutral news.
 
+## Safety
+
+Set `$.safety` by the definition in `safety.yaml`. A safety item is never `accept`. The runner
+reads no text of the item and holds it for a person unless both stages answer a plain `false`
+(`coverage.md`, "Review passes"), so your answer is the judgment.
+
 ## Second read
 
 You are the second of the two reads the pipeline does (`coverage.md`, "Review passes"). Check the verify result

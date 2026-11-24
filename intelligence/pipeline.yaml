@@ -43,6 +43,8 @@ sources: sources.yaml
 coverage: coverage.md
 # The words code uses to spot the area in an item's text (#390).
 area: area.yaml
+# What counts as a safety item: the gate holds any such item for a person (#1007).
+safety: safety.yaml
 stages:
   - id: scout
     prompt: prompts/scout.md

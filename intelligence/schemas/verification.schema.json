@@ -13,7 +13,8 @@
     "statusConfirmed",
     "evidence",
     "unknowns",
-    "flags"
+    "flags",
+    "safety"
   ],
   "additionalProperties": false,
   "properties": {
@@ -114,6 +115,9 @@
     },
     "flags": {
       "$ref": "common.schema.json#/$defs/flags"
+    },
+    "safety": {
+      "$ref": "common.schema.json#/$defs/safety"
     }
   }
 }

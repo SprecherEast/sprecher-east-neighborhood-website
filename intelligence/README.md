@@ -15,6 +15,7 @@ The agents never publish. They create **suggested drafts**; an editor reads, fix
 | [`sources.yaml`](sources.yaml)   | Approved sources, each checked by hand ([summary](sources.md))                            |
 | [`coverage.md`](coverage.md)     | The Sprecher East area and the relevance policy                                           |
 | [`area.yaml`](area.yaml)         | The words and boundary layer used to spot the area: places, neighbors, highway rules      |
+| [`safety.yaml`](safety.yaml)     | What counts as a safety item, which always waits for a person                             |
 | [`background.md`](background.md) | The City's 1998 neighborhood plan, summarized with pages (index; topics in `background/`) |
 | [`images.md`](images.md)         | How to choose a story's or event's photo: real, free, on topic, level                     |
 | [`prompts/`](prompts/)           | One prompt per stage, each naming its input and output schema                             |
@@ -44,8 +45,8 @@ its own section (`schemas/item.schema.json`); it never changes an earlier one.
 
 The pipeline reads an item twice: the verify checks, then curate's second read. Both are prompt
 rules. The freshness re-check right before publishing is a step for the person or AI agent who
-publishes by hand, not a pipeline stage. A safety item is never accepted by curate; that is a
-prompt rule the promotion guard doesn't enforce yet (#1007). See `coverage.md`, "Review passes".
+publishes by hand, not a pipeline stage. A safety item is never accepted: code holds it for a
+person whatever the model answers (below, and `coverage.md`, "Review passes").
 
 Deterministic steps come first: fetching, parsing and deduplication never use a model. The
 model handles only relevance, location ambiguity and the write-up, at medium effort, escalating to
@@ -113,7 +114,7 @@ run the same folder.
 1. Check out this repository's `main` (read-only) at the start of each run, and record its commit
    as `repoCommit` in the run log, so every suggestion can be traced to the exact prompts that made it.
 2. Read `pipeline.yaml`. If `enabled` is false, log a `disabled` run and stop.
-3. Load the schemas in `schemas/`, `sources.yaml`, `coverage.md` and `area.yaml` (given to the
+3. Load the schemas in `schemas/`, `sources.yaml`, `coverage.md`, `safety.yaml` and `area.yaml` (given to the
    model with `coverage.md`), and read the category tree
    with the MCP find tool (`categories`: slug, title, parent) into each item's `taxonomy`
    (`common.schema.json#/$defs/taxonomy`), so the draft stage picks only existing categories
@@ -180,6 +181,31 @@ Before routing, code applies `promotionGuard` (`pipeline.yaml`, #870): an `accep
 rerun, or verify's flags include one of `promotionGuard.blockingFlags`, whatever the model
 answered. The threshold and the flag list each have one definition, in `pipeline.yaml`.
 
+The same gate (`runner/lib/gate.mjs`, #1007) holds a **safety item**. What makes one is written once,
+as a principle, in [`safety.yaml`](safety.yaml), and the model stages (verify and curate) apply it by
+what an item means, in any language and wording. The gate itself is three rules and reads no text
+of any item:
+
+1. An item from an always-held source (the `sources` list in `safety.yaml`) is held, whatever it
+   says. The source facts must be present and match the candidate's source, and a listed
+   `alsoReportedBy` holds it too. The registry's own wording (owner, scope) is never read.
+2. An item is held when verify or curate answered `safety` with anything but a plain `false`:
+   `true`, a word or a number, no answer, or an error. Within a run, once a stage has said safety, a
+   rerun or retry can't take it back.
+3. Only one function can send a suggestion, and it runs the gate first. `routes` can't send a held
+   item to `submitSuggestion`. Submit runs the gate itself before it sends anything. `run.mjs`
+   creates the real CMS client and hands it to `pipeline.mjs`, which keeps it inside one function
+   that only runs submit; every other part of a run gets a client with no way to suggest
+   (`withoutSuggestions`, `runner/lib/cms.mjs`).
+
+The runner checks `pipeline.yaml` and `safety.yaml` against their schemas when it starts, and refuses
+to run on a failure, an unknown source id, or an empty source list.
+
+The limit, in plain words: an item from a source that is not on the list, which both model stages
+misjudge, arrives as an ordinary unpublished draft without the safety flag. The editors' review is
+the last check, and nothing is published without the owner's review either way. A new safety source
+is added to the list when it is added to the registry.
+
 Until #336 is live, a run writes the same calls and its run log as a digest for an editor instead.
 
 ## Turning it off
@@ -207,10 +233,10 @@ Until #336 is live, a run writes the same calls and its run log as a digest for 
 ## Changing it
 
 Edit the files, then run `node scripts/check-intelligence.mjs`. It validates `pipeline.yaml`,
-`sources.yaml` and every file in `evals/` (one per stage, `<stage>.yaml` or
+`sources.yaml`, `safety.yaml` (each source it lists must be in `sources.yaml`) and every file in `evals/` (one per stage, `<stage>.yaml` or
 `<stage>-<topic>.yaml`) against their schemas, checks that eval times use America/Chicago's
 offset, and that grader fields, and every field a prompt names (written `` `$.field` ``), exist
-in the stage's input or output schema. Each eval case's `route` must follow the routing above.
+in the stage's input or output schema. Each eval case's `route` must follow the routing above: an `accept`, or any case that expects a suggestion, whose source is always held, or whose given stage answers aren't both a plain `false` (a case that gives none counts as cleared), expects `reportItem`, and a suggestion needs an `accept` given. A case that expects `safety` never expects `accept`. The cases in `evals/curate-safety.yaml` and `evals/verify.yaml` that expect `safety` from an unlisted source will be the evidence that the models judge by meaning once the collector runs them.
 CI runs the same check on every pull request; it checks the cases' structure and never calls a
 model. Running the cases against a model is the collector's job (#272). Add an eval case whenever
 the pipeline gets something wrong.

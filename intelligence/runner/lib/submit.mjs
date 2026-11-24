@@ -1,4 +1,5 @@
 import { isTransient } from './cms.mjs'
+import { gateItem } from './gate.mjs'
 
 // Submit (submit.md): route each item by its curate decision, build the whole MCP call, validate
 // it against submission.schema.json, then send it, retrying a transient failure once. Code only.
@@ -85,12 +86,6 @@ async function send(fn) {
 }
 
 /**
- * Submits one item. `cms` has `submitSuggestion` and `reportItem`; `validate` checks an envelope
- * against submission.schema.json. Answers `{ outcome, id?, calls }`, where `calls` lists every
- * envelope built (for the dry-run digest), and outcome is one of `created`, `duplicate`,
- * `reported`, `rejected-invalid`, `review` (sent for review after a failure) or `deferred`.
- */
-/**
  * A report envelope, validated (submit.md step 3). One that fails its schema is rebuilt without
  * its evidence and flags, the parts that come from the model. Answers `{ call, errors }`; with
  * errors left, the call is marked `skip` and must not be sent.
@@ -124,7 +119,20 @@ export async function sendReport(item, { cms, runId, validate, calls }, kind, op
   await send(() => cms.reportItem(call.arguments))
 }
 
-export async function submitItem(item, { cms, runId, validate, route }) {
+/**
+ * Submits one item. `cms` has `submitSuggestion` and `reportItem`, `contract` holds the gate, and
+ * `validate` checks an envelope against submission.schema.json. The gate runs first and decides
+ * the decision and the tool; only `submitSuggestion` builds a suggestion. Answers
+ * `{ outcome, id?, calls, warnings }`, where `calls` lists every envelope built (for the dry-run
+ * digest), and outcome is one of `created`, `duplicate`, `reported`, `none` (the gate named no
+ * tool: nothing is built or sent), `rejected-invalid`, `review` (sent for review after a failure)
+ * or `deferred`.
+ */
+export async function submitItem(rawItem, { cms, runId, validate, contract }) {
+  if (!contract) throw new Error('submitItem needs the contract, which holds the gate')
+  // Whatever the caller expects, the gate decides the decision and the tool (gate.mjs)
+  const { curation, route } = gateItem(contract, rawItem)
+  const item = { ...rawItem, curation }
   const calls = []
   const warnings = []
   const report = (kind, options) => sendReport(item, { cms, runId, validate, calls }, kind, options)
@@ -146,6 +154,8 @@ export async function submitItem(item, { cms, runId, validate, route }) {
     await report(kind)
     return { outcome: 'reported', calls, warnings }
   }
+  // Only the gate's `submitSuggestion` goes on to build a suggestion; anything else ends here
+  if (route !== 'submitSuggestion') return { outcome: 'none', calls, warnings }
 
   const call = envelope('submitSuggestion', runId, suggestionArguments(item, runId))
   calls.push(call)
