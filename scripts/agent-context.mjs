@@ -31,6 +31,7 @@ import {
   globToRegExp,
   parseKnowledgeMap,
   parseLoadMap,
+  rulePaths,
   unix,
 } from './agent-context-maps.mjs'
 import { frontmatterText } from './frontmatter.mjs'
@@ -156,7 +157,10 @@ export function run(root, { write = false, budgetTokens = BUDGET_TOKENS } = {}) 
         problems.push(`${entry.source}: \`${glob}\` matches no file in the repository`)
       }
     }
-    expected.set(`${GENERATED_DIR}/${ruleName(entry.source)}`, renderRule({ ...entry, text }))
+    expected.set(
+      `${GENERATED_DIR}/${ruleName(entry.source)}`,
+      renderRule({ ...entry, paths: rulePaths(entry, tracked), text }),
+    )
   }
 
   const dir = path.join(root, GENERATED_DIR)

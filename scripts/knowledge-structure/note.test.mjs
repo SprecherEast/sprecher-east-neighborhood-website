@@ -31,6 +31,12 @@ describe('parseNote', () => {
     ])
   })
 
+  it('reads Windows line endings as the same note', () => {
+    const unix = parseNote(goodNote())
+    const windows = parseNote(goodNote().replace(/\n/g, '\r\n'))
+    expect(windows).toEqual(unix)
+  })
+
   it('finds no title when the first line is not a level 1 heading', () => {
     expect(parseNote(frontmatter(GOOD_FIELDS) + '\nText first\n# Late\n').title).toBeNull()
   })

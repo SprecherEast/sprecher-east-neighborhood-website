@@ -2,7 +2,7 @@
 import path from 'node:path'
 
 import { parseNote } from './note.mjs'
-import { pathReferences, resolves } from './paths.mjs'
+import { existsExactly, pathReferences, resolves } from './paths.mjs'
 
 const SEVERITY = { block: 'error', warn: 'warning' }
 
@@ -14,9 +14,51 @@ export const finding = (schema, rule, note, message) => ({
   severity: SEVERITY[schema.rules[rule]],
 })
 
-const isText = (value) => typeof value === 'string' && value.trim() !== ''
+const isLine = (value) => typeof value === 'string' && value.trim() !== '' && !value.includes('\n')
 const isRelationship = (value) =>
-  value !== null && typeof value === 'object' && isText(value.type) && isText(value.target)
+  value !== null && typeof value === 'object' && isLine(value.type) && isLine(value.target)
+
+/** The key of the field of a kind (the schema has one note type field). */
+export const keyOfKind = (schema, kind) =>
+  schema.fields.find((field) => field.key && field.kind === kind)?.key
+
+function checkValue(add, schema, field, value, files) {
+  const { key, kind, maxChars } = field
+  if (kind === 'text') {
+    if (!isLine(value) || (maxChars && value.length > maxChars))
+      add(
+        'NOTE-FIELD-VALUE',
+        `${key} must be one line of text${maxChars ? `, at most ${maxChars} characters` : ''}`,
+      )
+  } else if (kind === 'noteType') {
+    if (!(typeof value === 'string' && value in schema.noteTypes))
+      add(
+        'NOTE-TYPE',
+        `${key} "${value}" is not one of ${Object.keys(schema.noteTypes).join(', ')}`,
+      )
+  } else if (kind === 'textList') {
+    if (!(Array.isArray(value) && value.every(isLine)))
+      add('NOTE-FIELD-VALUE', `${key} must be a list of one-line texts`)
+  } else if (!Array.isArray(value) || !value.every(isRelationship)) {
+    add('NOTE-FIELD-VALUE', `${key} must be a list of { type, target }`)
+  } else {
+    const { derived, hand } = schema.relationshipTypes
+    for (const { type, target } of value) {
+      if (type in derived)
+        add(
+          'NOTE-RELATIONSHIP',
+          `the scanner derives "${type}" (${derived[type]}); do not write it`,
+        )
+      else if (!(type in hand))
+        add('NOTE-RELATIONSHIP', `relationship type "${type}" is not in relationshipTypes`)
+      if (!existsExactly(target, files))
+        add(
+          'NOTE-RELATIONSHIP-TARGET',
+          `relationship target ${target} is not a repository path that exists`,
+        )
+    }
+  }
+}
 
 function fieldFindings(add, schema, note, files) {
   const keys = schema.fields.map((field) => field.key)
@@ -25,51 +67,18 @@ function fieldFindings(add, schema, note, files) {
   const unknown = present.filter((key) => !keys.includes(key))
   if (missing.length > 0) add('NOTE-FIELDS', `missing field ${missing.join(', ')}`)
   if (unknown.length > 0) add('NOTE-FIELDS', `unknown field ${unknown.join(', ')}`)
+  const wanted = keys.filter((key) => present.includes(key))
   const known = present.filter((key) => keys.includes(key))
-  const wanted = keys.filter((key) => known.includes(key))
   if (missing.length === 0 && unknown.length === 0 && known.join() !== wanted.join()) {
     add('NOTE-FIELDS', `fields must be in this order: ${keys.join(', ')}`)
   }
-  const { name, type, summary, aliases, relationships } = note.data
-  const limits = schema.limits
-  if (present.includes('name') && (!isText(name) || name.length > limits.nameChars))
-    add('NOTE-FIELD-VALUE', `name must be text of at most ${limits.nameChars} characters`)
-  if (present.includes('summary')) {
-    const bad = !isText(summary) || summary.length > limits.summaryChars || summary.includes('\n')
-    if (bad)
-      add(
-        'NOTE-FIELD-VALUE',
-        `summary must be one line of text, at most ${limits.summaryChars} characters`,
-      )
-  }
-  if (present.includes('aliases') && !(Array.isArray(aliases) && aliases.every(isText)))
-    add('NOTE-FIELD-VALUE', 'aliases must be a list of text')
-  if (present.includes('type') && !(typeof type === 'string' && type in schema.noteTypes))
-    add('NOTE-TYPE', `type "${type}" is not one of ${Object.keys(schema.noteTypes).join(', ')}`)
-  if (!present.includes('relationships')) return
-  if (!Array.isArray(relationships) || !relationships.every(isRelationship)) {
-    add('NOTE-FIELD-VALUE', 'relationships must be a list of { type, target }')
-    return
-  }
-  for (const { type: kind, target } of relationships) {
-    const { derived, hand } = schema.relationshipTypes
-    if (kind in derived)
-      add('NOTE-RELATIONSHIP', `the scanner derives "${kind}" (${derived[kind]}); do not write it`)
-    else if (!(kind in hand))
-      add('NOTE-RELATIONSHIP', `relationship type "${kind}" is not in relationshipTypes`)
-    if (
-      !resolves(target, {
-        noteDir: '',
-        files,
-        schema: { ...schema, paths: { ...schema.paths, roots: [''] } },
-      })
-    )
-      add('NOTE-RELATIONSHIP-TARGET', `relationship target ${target} does not exist`)
+  for (const field of schema.fields) {
+    if (present.includes(field.key)) checkValue(add, schema, field, note.data[field.key], files)
   }
 }
 
 function sectionFindings(add, schema, note) {
-  const type = note.data.type
+  const type = note.data[keyOfKind(schema, 'noteType')]
   const allowed = schema.sections.filter((s) => s.appliesTo.includes(type))
   const order = allowed.map((s) => s.heading)
   const seen = []
@@ -103,7 +112,8 @@ export function checkNote({ schema, path: notePath, text, files }) {
   if (note.title === null) add('NOTE-TITLE', 'the body must start with a level 1 title')
   else if (note.purposeLines === 0)
     add('NOTE-TITLE', 'the title needs a purpose paragraph before the first section')
-  if (note.hasFrontmatter && !note.error && note.data.type in schema.noteTypes)
+  const type = note.data[keyOfKind(schema, 'noteType')]
+  if (note.hasFrontmatter && !note.error && type in schema.noteTypes)
     sectionFindings(add, schema, note)
   if (note.bodyLines > schema.limits.noteLines)
     add(

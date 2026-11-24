@@ -27,9 +27,9 @@ export function skeleton(schema, type) {
     throw new Error(
       `unknown type "${type}"; use one of: ${Object.keys(schema.noteTypes).join(', ')}`,
     )
-  const fields = schema.fields.map(({ key }) => {
-    if (key === 'type') return `type: ${type}`
-    return key === 'aliases' || key === 'relationships' ? `${key}: []` : `${key}: TODO`
+  const fields = schema.fields.map(({ key, kind }) => {
+    const placeholder = schema.kinds[kind].placeholder
+    return `${key}: ${placeholder === '$type' ? type : placeholder}`
   })
   const sections = schema.sections
     .filter((section) => section.appliesTo.includes(type))
@@ -51,40 +51,50 @@ export function summarize(found) {
   ].join('\n')
 }
 
-function listFiles() {
+function listFiles(root) {
   const out = execFileSync(
     'git',
     ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
     {
+      cwd: root,
       encoding: 'utf8',
       maxBuffer: 64 * 1024 * 1024,
     },
   )
-  return out.split('\0').filter((file) => file && fs.existsSync(file))
+  return out.split('\0').filter((file) => file && fs.existsSync(path.join(root, file)))
 }
 
-function run() {
-  process.chdir(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'))
-  const schema = JSON.parse(fs.readFileSync(SCHEMA, 'utf8'))
-  const arg = process.argv[2]
-  if (arg === '--skeleton') return console.log(skeleton(schema, process.argv[3]))
-  const mapJson = fs.readFileSync(KNOWLEDGE_MAP, 'utf8')
-  const read = (file) => (fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : undefined)
-  if (arg === '--write-index') {
-    const entries = mapNotes(mapJson, read).filter((e) => e.name && e.summary)
-    fs.writeFileSync(INDEX, renderIndex(read(INDEX), entries, INDEX))
-    return console.log(`Wrote the ${entries.length} note lines of ${INDEX}.`)
+/**
+ * Runs the command in `root` and returns the exit code: 1 when a finding blocks, else 0. `log`
+ * prints a line; `env.GITHUB_STEP_SUMMARY` names a file the counts are appended to.
+ */
+export function execute({ argv, root, env = {}, log = console.log }) {
+  const schema = JSON.parse(fs.readFileSync(path.join(root, SCHEMA), 'utf8'))
+  const [arg, value] = argv
+  if (arg === '--skeleton') {
+    log(skeleton(schema, value))
+    return 0
   }
-  const found = checkKnowledge({ schema, mapJson, files: listFiles(), read })
-  for (const f of found)
-    console.log(
-      `${f.severity === 'error' ? 'error' : 'warning'} [${f.rule}] ${f.note}: ${f.message}`,
-    )
+  const mapJson = fs.readFileSync(path.join(root, KNOWLEDGE_MAP), 'utf8')
+  const read = (file) => {
+    const full = path.join(root, file)
+    return fs.existsSync(full) ? fs.readFileSync(full, 'utf8') : undefined
+  }
+  if (arg === '--write-index') {
+    const entries = mapNotes(schema, mapJson, read).filter((e) => e.name && e.summary)
+    fs.writeFileSync(path.join(root, INDEX), renderIndex(read(INDEX), entries, INDEX))
+    log(`Wrote the ${entries.length} note lines of ${INDEX}.`)
+    return 0
+  }
+  const found = checkKnowledge({ schema, mapJson, files: listFiles(root), read })
+  for (const f of found) log(`${f.severity} [${f.rule}] ${f.note}: ${f.message}`)
   const text = summarize(found)
-  console.log(text)
-  if (process.env.GITHUB_STEP_SUMMARY)
-    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${text}\n`)
-  if (found.some((f) => f.severity === 'error')) process.exitCode = 1
+  log(text)
+  if (env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, `${text}\n`)
+  return found.some((f) => f.severity === 'error') ? 1 : 0
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) run()
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+  process.exitCode = execute({ argv: process.argv.slice(2), root, env: process.env })
+}

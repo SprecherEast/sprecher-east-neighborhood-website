@@ -3,7 +3,7 @@
 - **Date:** 2026-11-24
 - **Status:** Accepted
 - **Issue:** #1460, first piece of the system map (#1446)
-- **Supersedes:** the note and index parts of [0019](0019-knowledge-layer.md) (§2 point 1, §3); the rest of 0019 stands
+- **Supersedes:** parts of [0019](0019-knowledge-layer.md) §2.1 and §3, listed in decisions 3 and 4 below; the rest of 0019 stands
 
 ## Context
 
@@ -24,32 +24,49 @@ its cap. Owner direction this rests on (recorded on #1446 and #1460):
 ## Decision
 
 1. **One definition.** [`docs/knowledge/note-schema.json`](../../knowledge/note-schema.json) holds
-   the front matter fields, the fixed sections for each note type (with whether each is required,
-   expected or optional), the node and relationship vocabulary, the limits and the state of each
-   rule. The template, this record and the check read or point to it; none restates it.
-2. **Front matter, then sections.** A note starts with `name`, `type`, `summary`, `aliases` and
-   `relationships`, read with `scripts/frontmatter.mjs`. Notes load only on demand through their
-   path-scoped rules, so the front matter adds nothing to session start.
-3. **The index is generated.** The lines under "Notes" in `docs/knowledge/index.md` are made from
-   each note's `name` and `summary`, in map order; the check fails when they differ. The
-   index stays within its token share.
-4. **The cap** counts the lines below the front matter, so metadata does not use up the room for
-   explanation. A part over the cap is split into a feature note with its own map entry; a map
-   entry may `exclude` paths, so a split note's files belong to one note.
-5. **The check** (`scripts/knowledge-structure/`, a step of the `Knowledge sync` job, required
-   without a ruleset change) fails on: front matter or fields missing, unknown or out of order; a
-   type or relationship type outside the vocabulary or a derived one written by hand; a
-   relationship target or a backticked path that does not exist; a missing title, purpose or
-   required section; a heading outside the set; a note over the cap; an orphan README, a map entry
-   without a note or matching no code, a note naming no code; an index line that differs.
-6. **Rule states.** A rule is `block` or `warn` in the schema. Structure rules block, because
-   every note passes them. The path rule stays `warn`: one abbreviated test name in a note is
-   passed to #1004 with the content corrections. The coverage rules (an expected section not yet
-   written; source code no note describes) stay `warn`, with their count in the job summary; #1004
-   turns them to `block` when no part is left without a note.
-7. **Hand-written relationships** are limited to the types the vocabulary marks `hand`
-   (`depends-on` and similar); the scanner derives the others from the code, the generated
-   reference, the map and Markdown links.
+   the front matter fields (each with its value kind), the fixed sections for each note type
+   (each marked required, expected or optional), the node and relationship vocabulary, the limits
+   and the state of each rule. The template, this record and the check read or point to it; none
+   restates it. A field added to the schema is checked, and printed in a new note, without a code
+   change.
+2. **Front matter, then sections.** A note starts with its fields, read with
+   `scripts/frontmatter.mjs`. Notes load only on demand, through their path-scoped rules, so the
+   front matter adds nothing to session start.
+3. **The index lines are generated.** The lines under "Notes" in `docs/knowledge/index.md` are made
+   from each note's name and summary, in map order; the check fails when they differ. The
+   [0019](0019-knowledge-layer.md) §2.1 sentence that caps the index at 25 lines is **replaced**
+   by the index's share of the always-loaded token budget, which the `Agent context` check
+   already enforces. The rest of §2.1 stands: one line per note and per reference section, loaded
+   every session, imported by `CLAUDE.md`.
+4. **What of 0019 §3 is replaced and what stands.** Replaced: "what" a note holds is the sections
+   of the schema (not the template's prose), and a part too big for one note (the example of
+   `site`) gets a feature note next to its code with its own map entry. Stands: where notes live,
+   "what not" (no field lists, props tables or route lists, no history, nothing the reader learns
+   faster from the code), and "written, not generated" (a person or an agent traces every
+   sentence to a file or a test; a model may draft, nothing merges unchecked). The 80-line limit of
+   §2.2 stands, counted below the front matter, so metadata does not use up the room for
+   explanation.
+5. **`exclude` on a map entry.** An entry may list paths another note takes out of it, so each
+   file belongs to one note. The sync check, the Claude Code hook and the generated path-scoped
+   rules all honour it. Claude Code's `paths` has no exclude, so a parent's generated rule lists
+   the folders and files it keeps; adding a file to such a parent's folder means running
+   `npm run agent-context -- --write`.
+6. **The check** (`scripts/knowledge-structure/`, a step of the `Knowledge sync` job, required
+   without a ruleset change) enforces the schema and the rules in its `rules` list, each with a
+   state. A relationship target is an exact repository-relative path. A backticked path or link in
+   the text is read exactly when it starts from the root or from the note's folder; otherwise it
+   may be an abbreviation, as the notes write them (a bare name after its folder, the end of a long
+   path, no extension), and counts when some path in the repository ends with it. So a moved file
+   is missed while a same-named file exists elsewhere: the rule is firm for rooted paths and links
+   and weak for abbreviated ones.
+7. **Rule states, and why some only warn.** Every structure rule blocks, because every note passes
+   it. Three rules only warn, for one reason: what they report is missing or wrong content, and
+   this change must not add, drop or invent a fact (it changes structure, not meaning). They are
+   the path rule (one wrong test name in a note), the expected sections not yet written, and
+   source code no note describes. [#1004](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1004)
+   writes the content and turns all three to blocking; that is an acceptance criterion of #1004.
+   Until then a note without a Known gaps section has no watch-outs to read, and the counts are in
+   the job summary. Only "Behaviors and events" is required now, for the same reason.
 
 ## Consequences
 

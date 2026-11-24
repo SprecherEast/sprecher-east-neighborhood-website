@@ -8,7 +8,7 @@ paths:
 ---
 name: 'Accounts'
 type: module
-summary: 'sign-up, verification, sign-in (password, Google, passkey), resets, guards.'
+summary: 'sign-up, verification, sign-in (password, Google, passkey), adding a passkey, resets, guards.'
 aliases: ['sign-in', 'passkeys', 'Google sign-in']
 relationships: []
 ---

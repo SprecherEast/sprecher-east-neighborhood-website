@@ -3,30 +3,35 @@
   "version": 1,
   "limits": {
     "noteLines": 80,
-    "noteLinesCount": "lines below the front matter, blank lines included",
-    "summaryChars": 200,
-    "nameChars": 40
+    "noteLinesCount": "lines below the front matter, blank lines included"
   },
   "fields": [
     {
       "key": "name",
+      "kind": "text",
+      "maxChars": 40,
       "what": "The short name the index and the map show."
     },
     {
       "key": "type",
+      "kind": "noteType",
       "what": "What the note describes: one of noteTypes, which is also a node type."
     },
     {
       "key": "summary",
+      "kind": "text",
+      "maxChars": 200,
       "what": "One line, in plain words, of what the part is for. The index line is made from it."
     },
     {
       "key": "aliases",
+      "kind": "textList",
       "what": "Other names a reader may search for (a list; empty when there are none)."
     },
     {
       "key": "relationships",
-      "what": "Only what the code and the generated reference cannot show: a list of { type, target }, type from relationshipTypes with hand set to true, target a path in the repository (a list; empty when there are none)."
+      "kind": "relationships",
+      "what": "Only what the code and the generated reference cannot show: a list of { type, target }, type from relationshipTypes.hand, target an exact repository-relative path of a file or folder (a list; empty when there are none)."
     }
   ],
   "noteTypes": {
@@ -134,7 +139,6 @@
     }
   },
   "paths": {
-    "roots": ["", "src", "src/modules", "src/platform", "src/app/(frontend)"],
     "extensions": [
       "ts",
       "tsx",
@@ -196,5 +200,27 @@
     "INDEX-DRIFT": "block",
     "COVERAGE-SECTION": "warn",
     "COVERAGE-CODE": "warn"
+  },
+  "kinds": {
+    "text": {
+      "what": "one line of text, within maxChars when given",
+      "placeholder": "TODO"
+    },
+    "noteType": {
+      "what": "a key of noteTypes",
+      "placeholder": "$type"
+    },
+    "textList": {
+      "what": "a list of one-line texts",
+      "placeholder": "[]"
+    },
+    "relationships": {
+      "what": "a list of { type, target }",
+      "placeholder": "[]"
+    }
+  },
+  "index": {
+    "label": "name",
+    "text": "summary"
   }
 }

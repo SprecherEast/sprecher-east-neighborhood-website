@@ -11,11 +11,16 @@ const FIX =
   ' (the lines under Notes are made from each note: run `npm run knowledge:structure -- --write-index`)'
 
 /** The note entries of the map, each with the name and summary its front matter gives. */
-export function mapNotes(mapJson, read) {
+export function mapNotes(schema, mapJson, read) {
   return parseKnowledgeMap(mapJson).map((entry) => {
     const text = read(entry.source)
     const data = text === undefined ? {} : parseNote(text).data
-    return { entry, path: entry.source, name: data.name, summary: data.summary }
+    return {
+      entry,
+      path: entry.source,
+      name: data[schema.index.label],
+      summary: data[schema.index.text],
+    }
   })
 }
 
@@ -98,7 +103,7 @@ function coverageFinding(schema, entries, files, add) {
 
 /** Every finding for the repository: `files` are its paths, `read(path)` gives a file's text. */
 export function checkKnowledge({ schema, mapJson, files, read }) {
-  const entries = mapNotes(mapJson, read)
+  const entries = mapNotes(schema, mapJson, read)
   const found = []
   const add = (rule, note, message) => found.push(finding(schema, rule, note, message))
   mapFindings(schema, entries, files, read, add)

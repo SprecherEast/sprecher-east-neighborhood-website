@@ -17,12 +17,8 @@ export function pathReferences(body, schema) {
     for (const [, token] of line.matchAll(/`([^`]+)`/g)) {
       const inRepo = schema.paths.repoRoots.some((root) => token.startsWith(root))
       const looks = extension.test(token) || token.endsWith('/') || inRepo
-      if (
-        PATHLIKE.test(token) &&
-        looks &&
-        !token.startsWith('@/') &&
-        !/^\/(?!docs|src)/.test(token)
-      )
+      // `/x` in backticks is a route and `@/x` an alias; a link may start with `/` (the repository root)
+      if (PATHLIKE.test(token) && looks && !/^(@\/|\/)/.test(token))
         references.push({ kind: 'code', token, line: index + 1 })
     }
     for (const [, target] of line.matchAll(/\]\(([^)\s]+)\)/g)) {
@@ -34,31 +30,32 @@ export function pathReferences(body, schema) {
   return references
 }
 
-const exists = (candidate, files) => {
-  const clean = candidate.replace(/\/$/, '')
-  if (clean.includes('*')) {
-    const pattern = globToRegExp(clean)
-    return files.some((file) => pattern.test(file))
-  }
-  return files.some((file) => file === clean || file.startsWith(`${clean}/`))
+/** Whether a repository-relative path (a file or a folder, no pattern) is in `files`, exactly. */
+export function existsExactly(target, files) {
+  const clean = target.replace(/\/$/, '')
+  return clean !== '' && files.some((file) => file === clean || file.startsWith(`${clean}/`))
 }
 
-/** Whether a token names something in `files`: from the repo root, the note's folder or a schema root. */
+const exists = (candidate, files) => {
+  if (!candidate.includes('*')) return existsExactly(candidate, files)
+  const pattern = globToRegExp(candidate)
+  return files.some((file) => pattern.test(file))
+}
+
+/**
+ * Whether a token names something in `files`. A link or a token starting with `/` or `../` is read
+ * exactly (from the repository root, or from the note's folder). Any other token may be an
+ * abbreviation, as the notes write them (a bare name after its folder, the end of a long path, no
+ * extension), so it counts when some path ends with it, whole path parts only. A token that fails
+ * both ways does not exist.
+ */
 export function resolves(token, { noteDir, files, schema }) {
   const clean = token.replace(/^\.\//, '').replace(/^\.\.\.\//, '')
   if (schema.paths.ignore.some((glob) => globToRegExp(glob).test(clean))) return true
   if (clean.startsWith('/')) return exists(clean.slice(1), files)
   if (clean.startsWith('../')) return exists(path.posix.normalize(`${noteDir}/${clean}`), files)
-  const bases = [noteDir]
-  for (let dir = noteDir; dir.includes('/'); ) {
-    dir = path.posix.dirname(dir)
-    bases.push(dir)
-  }
-  bases.push(...schema.paths.roots)
   const forms = [clean, ...schema.paths.extensions.map((extension) => `${clean}.${extension}`)]
-  if (forms.some((form) => bases.some((base) => exists(base ? `${base}/${form}` : form, files))))
-    return true
-  // A note abbreviates: a folder's siblings by bare name, or the end of a long path. An ending
-  // that exists in some file's path counts; the whole token must still match whole path parts.
-  return exists(`**/${clean}`, files) || (clean.endsWith('/') && exists(`**/${clean}**`, files))
+  return forms.some(
+    (form) => exists(`**/${form}`, files) || exists(`**/${form.replace(/\/$/, '')}/**`, files),
+  )
 }

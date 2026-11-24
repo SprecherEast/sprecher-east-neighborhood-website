@@ -119,3 +119,41 @@ export function describes({ paths, exclude = [] }, file) {
   const matches = (globs) => globs.some((glob) => globToRegExp(glob).test(file))
   return !isTestFile(file) && matches(paths) && !matches(exclude)
 }
+
+const dirOf = (file) => file.slice(0, file.lastIndexOf('/'))
+
+/**
+ * The globs a note's path-scoped rule lists. Claude Code's `paths` has no way to leave files out, so
+ * an entry with `exclude` is written out as the folders and files it describes among `tracked`:
+ * a folder as one `dir/**` when everything under it is described, `dir/*` when only its direct
+ * files all are, else each file; folders with some described file are searched further.
+ */
+export function rulePaths(entry, tracked) {
+  if (!entry.exclude) return entry.paths
+  const matches = (globs, file) => globs.some((glob) => globToRegExp(glob).test(file))
+  const described = new Set(
+    tracked.filter((file) => matches(entry.paths, file) && !matches(entry.exclude, file)),
+  )
+  const globs = []
+  const walk = (dir) => {
+    const prefix = dir === '' ? '' : `${dir}/`
+    const under = tracked.filter((file) => file.startsWith(prefix))
+    const some = under.filter((file) => described.has(file))
+    if (some.length === 0) return
+    if (some.length === under.length && dir !== '') return globs.push(`${dir}/**`)
+    const direct = under.filter((file) => dirOf(file) === dir)
+    const directDescribed = direct.filter((file) => described.has(file))
+    if (dir !== '' && direct.length > 0 && directDescribed.length === direct.length)
+      globs.push(`${dir}/*`)
+    else globs.push(...directDescribed)
+    const subdirs = new Set(
+      under
+        .map((file) => file.slice(prefix.length).split('/'))
+        .filter((p) => p.length > 1)
+        .map((p) => p[0]),
+    )
+    for (const sub of [...subdirs].sort()) walk(`${prefix}${sub}`)
+  }
+  walk('')
+  return globs
+}

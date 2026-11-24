@@ -6,7 +6,7 @@ and relationship vocabulary, the limits) is defined once, in
 checks every note against it, and prints a starting point for a new one:
 
 ```bash
-npm run knowledge:structure -- --skeleton module   # or platform-area, feature
+npm run knowledge:structure -- --skeleton <type>   # a type from noteTypes in the schema
 ```
 
 Put the note next to the code it describes (`src/modules/<name>/README.md`, a shared area of

@@ -57,6 +57,8 @@ describe('NOTE-FIELDS', () => {
 describe('NOTE-FIELD-VALUE', () => {
   it.each([
     ['a summary over the limit', { summary: 'x'.repeat(201) }],
+    ['a name over the limit', { name: 'x'.repeat(41) }],
+    ['a summary on two lines', { summary: '"one\\ntwo"' }],
     ['an empty summary', { summary: '""' }],
     ['a summary that is a list', { summary: ['a'] }],
     ['a name that is not text', { name: 5 }],
@@ -92,6 +94,18 @@ describe('NOTE-RELATIONSHIP and its target', () => {
     expect(found[0].message).toMatch(/derives/)
   })
 
+  it.each([
+    ['a bare file name', 'README.md'],
+    ['the end of a path', 'demo/domain/rule.ts'],
+    ['a folder tail', 'domain/'],
+  ])('fails a target that is only %s: it must be the whole repository path', (_, target) => {
+    expect(rulesOf(withFields(rel('depends-on', target)))).toEqual(['NOTE-RELATIONSHIP-TARGET'])
+  })
+
+  it('accepts a folder given by its whole repository path', () => {
+    expect(run(withFields(rel('depends-on', 'src/modules/demo/domain/')))).toEqual([])
+  })
+
   it('fails a target that does not exist', () => {
     expect(rulesOf(withFields(rel('depends-on', 'src/modules/gone/README.md')))).toEqual([
       'NOTE-RELATIONSHIP-TARGET',
@@ -106,6 +120,16 @@ describe('NOTE-TITLE', () => {
     )
     const bare = '# Demo\n\n## Behaviors and events\n\n- x (`domain/rule.ts`)\n'
     expect(rulesOf(goodNote(GOOD_FIELDS, bare))).toEqual(['NOTE-TITLE'])
+    const sub =
+      '# Demo\n### A heading is not a purpose\n\n## Behaviors and events\n\n- x (`domain/rule.ts`)\n'
+    expect(rulesOf(goodNote(GOOD_FIELDS, sub))).toEqual(['NOTE-TITLE'])
+  })
+
+  it('wants a level 1 title, not a deeper one or one with no space', () => {
+    for (const first of ['## Demo', '#Demo']) {
+      const body = GOOD_BODY.replace('# Demo', first)
+      expect(rulesOf(goodNote(GOOD_FIELDS, body))).toContain('NOTE-TITLE')
+    }
   })
 })
 
@@ -187,4 +211,39 @@ describe('severity follows the schema', () => {
 
 it('keeps front matter out of the note when a body repeats the dashes', () => {
   expect(run(frontmatter(GOOD_FIELDS) + GOOD_BODY + '\n---\n\ntext\n')).toEqual([])
+})
+
+describe('fields are checked by the kind the schema gives them', () => {
+  const owner = { key: 'owner', kind: 'text', maxChars: 5, what: 'x' }
+  const withOwner = { ...strict, fields: [...strict.fields, owner] }
+  const check = (fields) =>
+    errorsOf(
+      checkNote({ schema: withOwner, path: NOTE_PATH, text: goodNote(fields), files: GOOD_FILES }),
+    )
+
+  it('requires a field added to the schema, and checks its value, with no code change', () => {
+    expect(check(GOOD_FIELDS).map((f) => f.rule)).toEqual(['NOTE-FIELDS'])
+    expect(check({ ...GOOD_FIELDS, owner: 'tooLong' }).map((f) => f.rule)).toEqual([
+      'NOTE-FIELD-VALUE',
+    ])
+    expect(check({ ...GOOD_FIELDS, owner: 'ok' })).toEqual([])
+  })
+
+  it('finds the type field by its kind, wherever it sits', () => {
+    const moved = { ...strict, fields: [...strict.fields].reverse() }
+    const text = goodNote({
+      relationships: [],
+      aliases: [],
+      summary: 's',
+      type: 'module',
+      name: 'Demo',
+    })
+    expect(
+      errorsOf(checkNote({ schema: moved, path: NOTE_PATH, text, files: GOOD_FILES })),
+    ).toEqual([])
+  })
+})
+
+it('reads a note with Windows line endings like any other', () => {
+  expect(run(goodNote().replace(/\n/g, '\r\n'))).toEqual([])
 })

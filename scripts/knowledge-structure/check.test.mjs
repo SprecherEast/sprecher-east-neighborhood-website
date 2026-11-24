@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { checkKnowledge } from './check.mjs'
 import {
+  GOOD_FIELDS,
   GOOD_FILES,
   GOOD_MAP,
   NOTE_PATH,
@@ -72,6 +73,31 @@ describe('checkKnowledge', () => {
       '\n- [Z](../../src/z/README.md): z\n\n## Reference',
     )
     expect(drift(extra)).toEqual(['INDEX-DRIFT'])
+  })
+
+  it('INDEX-DRIFT: fails an index with no Notes section, so a broken index never passes', () => {
+    const found = errorsOf(repo({ texts: { 'docs/knowledge/index.md': '# Index\n' } }))
+    expect(found.map((f) => f.rule)).toEqual(['INDEX-DRIFT'])
+    expect(found[0].message).toMatch(/## Notes/)
+  })
+
+  it('does not ask the index for a note that has no name or summary to make its line from', () => {
+    const noName = goodNote({ ...GOOD_FIELDS, name: undefined })
+    const found = errorsOf(
+      repo({ texts: { [NOTE_PATH]: noName, 'docs/knowledge/index.md': goodIndex('') } }),
+    )
+    expect(found.map((f) => f.rule)).toEqual(['NOTE-FIELDS'])
+  })
+
+  it('COVERAGE-CODE does not count generated types, stories or files outside src', () => {
+    const files = [
+      ...GOOD_FILES,
+      'src/payload-types.ts',
+      'src/x/Card.stories.tsx',
+      'scripts/a.ts',
+      'src/readme.md',
+    ]
+    expect(repo({ schema, files }).filter((f) => f.rule === 'COVERAGE-CODE')).toEqual([])
   })
 
   it('COVERAGE-CODE: warns once about source code no map entry describes', () => {
