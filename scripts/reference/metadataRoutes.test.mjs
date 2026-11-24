@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { collectAppFiles, describeMetadataFiles, publicEntries } from './metadataRoutes.mjs'
 
@@ -15,6 +15,7 @@ describe('describeMetadataFiles', () => {
       'apple-icon.png',
       'manifest.ts',
       '(frontend)/events/opengraph-image.tsx',
+      'twitter-image.png',
     ])
     expect(rows.map((row) => [row.url, row.file, row.generated])).toEqual([
       ['/apple-icon', 'src/app/apple-icon.png', false],
@@ -24,6 +25,7 @@ describe('describeMetadataFiles', () => {
       ['/manifest.webmanifest', 'src/app/manifest.ts', true],
       ['/robots.txt', 'src/app/robots.ts', true],
       ['/sitemap.xml', 'src/app/sitemap.ts', true],
+      ['/twitter-image', 'src/app/twitter-image.png', false],
     ])
   })
 
@@ -53,6 +55,7 @@ describe('collectAppFiles and publicEntries', () => {
       'src/app/(frontend)/events/sitemap.ts',
       "import { list } from '@/modules/events/server'\n",
     )
+    write('src/app/sitemap.test.ts', '')
     write('public/brand/logo.svg', '')
     write('public/ads.txt', '')
     const found = [
@@ -68,5 +71,17 @@ describe('collectAppFiles and publicEntries', () => {
     ])
     expect(found[1]).toEqual(['/ads.txt', '/brand/…'])
     expect(found[2]).toEqual([])
+  })
+})
+
+describe('publicEntries order', () => {
+  it('lists the entries sorted, whatever order the folder is read in', () => {
+    vi.spyOn(fs, 'existsSync').mockReturnValue(true)
+    vi.spyOn(fs, 'readdirSync').mockReturnValue([
+      { name: 'zebra.txt', isDirectory: () => false },
+      { name: 'brand', isDirectory: () => true },
+      { name: 'ads.txt', isDirectory: () => false },
+    ])
+    expect(publicEntries('/any')).toEqual(['/ads.txt', '/brand/…', '/zebra.txt'])
   })
 })

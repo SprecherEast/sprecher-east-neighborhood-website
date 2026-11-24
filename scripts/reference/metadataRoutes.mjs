@@ -35,7 +35,6 @@ const CONVENTIONS = [
 const READS_CONTENT = /\bgetPayload\b|from '@\/modules\/[^']+\/server'/
 const CODE_EXTENSIONS = /^(ts|js|tsx)$/
 
-const isTest = (file) => /\.(test|spec)\./.test(file)
 const isGroup = (segment) => /^\(.*\)$/.test(segment)
 
 /**
@@ -44,7 +43,6 @@ const isGroup = (segment) => /^\(.*\)$/.test(segment)
  */
 export function describeMetadataFiles(files) {
   return files
-    .filter((file) => !isTest(file))
     .flatMap((file) => {
       const segments = file.split('/')
       const base = segments.pop()

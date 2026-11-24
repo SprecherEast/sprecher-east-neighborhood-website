@@ -80,7 +80,7 @@ const functionFiles = (model) =>
  * The owner of each content type: the module that defines it, or the plugin that makes it (found
  * from the package its functions come from) with the modules that configure that plugin.
  */
-function ownerText(model, defined, configurers, root) {
+export function ownerText(model, defined, configurers, root) {
   const owner = ownerOf(defined.get(model.slug) ?? [])
   if (owner.file) return owner
   const plugin =

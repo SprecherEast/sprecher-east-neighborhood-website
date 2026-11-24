@@ -63,6 +63,14 @@ describe('describeInput', () => {
     )
   })
 
+  it('says a lower limit alone, and a format', () => {
+    expect(note({ list: z.array(z.string()).min(2), word: z.string().min(3) }, 'list')).toBe(
+      'at least 2 items',
+    )
+    expect(note({ word: z.string().min(3) }, 'word')).toBe('at least 3 characters')
+    expect(note({ mail: z.email() }, 'mail')).toContain('format email')
+  })
+
   it('says a number may be limited on both sides', () => {
     expect(note({ n: z.number().min(1).max(9) }, 'n')).toBe('a value from 1 to 9')
     expect(note({ n: z.number().max(9) }, 'n')).toBe('a value of at most 9')

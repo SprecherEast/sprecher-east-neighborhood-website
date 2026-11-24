@@ -112,17 +112,23 @@ describe('mcp-tools.md against the tools’ zod schemas', () => {
         expect(row, `${tool.name}.${name}`).toBeDefined()
         let schema = field
         while (schema.unwrap) schema = schema.unwrap()
-        const bag = schema._zod.bag
-        const element = schema.element?._zod.bag
-        for (const [limits, owner] of [
-          [bag, 'field'],
-          [element, 'item'],
-        ]) {
-          if (!limits) continue
-          if (limits.maximum !== undefined && owner === 'field')
-            expect(row, `${name} max`).toContain(String(limits.maximum))
-          for (const pattern of limits.patterns ?? []) {
-            expect(row, `${name} pattern`).toContain(pattern.source.replace(/\|/g, '\\|'))
+        // The limits are read from the schema's own checks (`def.checks`), not from JSON Schema
+        for (const owner of [schema, schema.element].filter(Boolean)) {
+          for (const check of owner._zod.def.checks ?? []) {
+            const rule = check._zod.def
+            if (rule.check === 'max_length')
+              expect(row, `${name} max`).toContain(String(rule.maximum))
+            if (rule.check === 'min_length' && rule.minimum > 1) {
+              expect(row, `${name} min`).toContain(String(rule.minimum))
+            }
+            if (rule.check === 'greater_than')
+              expect(row, `${name} min`).toContain(String(rule.value))
+            if (rule.pattern) {
+              expect(row, `${name} pattern`).toContain(
+                // a table cell escapes backslashes and pipes
+                String(rule.pattern.source).replace(/\\/g, '\\\\').replace(/\|/g, '\\|'),
+              )
+            }
           }
         }
         if (schema.options)

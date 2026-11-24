@@ -171,6 +171,7 @@ describe('renderJobs', () => {
         },
         { method: 'get', path: '/handle-schedules', handler: (r) => r.x.jobsConfig.access?.run },
         { method: 'get', path: '/count', handler: function countHandler() {} },
+        { method: 'post', path: '/', handler: function createHandler() {} },
       ],
       '/api/payload-jobs',
     )
@@ -178,6 +179,7 @@ describe('renderJobs', () => {
       { method: 'GET', path: '/api/payload-jobs/run', guards: 'run' },
       { method: 'GET', path: '/api/payload-jobs/handle-schedules', guards: 'run' },
       { method: 'GET', path: '/api/payload-jobs/count', guards: null },
+      { method: 'POST', path: '/api/payload-jobs', guards: null },
     ])
   })
 
