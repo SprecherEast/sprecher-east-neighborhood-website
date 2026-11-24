@@ -23,7 +23,7 @@ export function pathReferences(body, schema) {
     }
     for (const [, target] of line.matchAll(/\]\(([^)\s]+)\)/g)) {
       const file = target.split('#')[0]
-      if (file && !/^[a-z]+:/i.test(file) && extension.test(file))
+      if (!/^[a-z]+:/i.test(file) && extension.test(file))
         references.push({ kind: 'link', token: file, line: index + 1 })
     }
   })
@@ -33,7 +33,7 @@ export function pathReferences(body, schema) {
 /** Whether a repository-relative path (a file or a folder, no pattern) is in `files`, exactly. */
 export function existsExactly(target, files) {
   const clean = target.replace(/\/$/, '')
-  return clean !== '' && files.some((file) => file === clean || file.startsWith(`${clean}/`))
+  return files.some((file) => file === clean || file.startsWith(`${clean}/`))
 }
 
 const exists = (candidate, files) => {

@@ -24,6 +24,18 @@ describe('parseNote', () => {
     expect(parseNote('---\n- a\n- b\n---\n' + GOOD_BODY).error).toMatch(/not a list of fields/)
   })
 
+  it('starts the body after a closing line with trailing spaces or extra dashes', () => {
+    for (const closing of ['---   ', '----']) {
+      const note = parseNote(`---\nname: a\n${closing}\n# T\n\nText.\n\n## S\n`)
+      expect(note.title).toBe('T')
+      expect(note.sections).toEqual([{ heading: 'S', line: 5 }])
+    }
+  })
+
+  it('says a front matter that is a plain value is not a list of fields', () => {
+    expect(parseNote('---\njust text\n---\n# T\n').error).toMatch(/not a list of fields/)
+  })
+
   it('ignores headings inside code fences and keeps deeper headings out of the sections', () => {
     const body = '# T\n\nPurpose.\n\n```md\n## Not a section\n```\n\n## Boundaries\n\n### Deeper\n'
     expect(parseNote(frontmatter(GOOD_FIELDS) + body).sections.map((s) => s.heading)).toEqual([

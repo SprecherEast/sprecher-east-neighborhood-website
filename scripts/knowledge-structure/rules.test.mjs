@@ -63,6 +63,11 @@ describe('NOTE-FIELD-VALUE', () => {
     ['a summary that is a list', { summary: ['a'] }],
     ['a name that is not text', { name: 5 }],
     ['aliases that are not a list of text', { aliases: 'foo' }],
+    ['aliases with a non-text item', { aliases: '["a", 5]' }],
+    ['aliases with an empty item', { aliases: '["a", ""]' }],
+    ['relationships with a null item', { relationships: '[null]' }],
+    ['relationships with a plain text item', { relationships: '["x"]' }],
+    ['a relationship type that is not text', { relationships: [{ type: 5, target: 'x' }] }],
     ['relationships that are not a list', { relationships: 'foo' }],
     ['a relationship that is not { type, target }', { relationships: [{ type: 'depends-on' }] }],
   ])('fails %s', (_, over) => {
@@ -74,6 +79,8 @@ describe('NOTE-TYPE', () => {
   it('fails an unknown note type, and a node type that is not a note type', () => {
     expect(rulesOf(withFields({ type: 'widget' }))).toEqual(['NOTE-TYPE'])
     expect(rulesOf(withFields({ type: 'screen' }))).toEqual(['NOTE-TYPE'])
+    // inherited object keys are not types, whatever they are called
+    expect(rulesOf(withFields({ type: 'constructor' }))).toEqual(['NOTE-TYPE'])
   })
 })
 
@@ -86,6 +93,10 @@ describe('NOTE-RELATIONSHIP and its target', () => {
 
   it('fails an unknown relationship type', () => {
     expect(rulesOf(withFields(rel('befriends', NOTE_PATH)))).toEqual(['NOTE-RELATIONSHIP'])
+  })
+
+  it('does not read an inherited object key as a relationship type', () => {
+    expect(rulesOf(withFields(rel('toString', NOTE_PATH)))).toEqual(['NOTE-RELATIONSHIP'])
   })
 
   it('fails a type the scanner derives, so it is never written twice', () => {
@@ -149,6 +160,16 @@ describe('NOTE-SECTIONS', () => {
     ).toEqual(['NOTE-SECTIONS'])
   })
 
+  it('names a heading outside the set, and one used twice', () => {
+    const messages = (heads) => run(goodNote(GOOD_FIELDS, allSections(heads))).map((f) => f.message)
+    expect(messages(['Behaviors and events', 'Limits'])).toEqual([
+      expect.stringContaining('"Limits" is not one of'),
+    ])
+    expect(messages(['Behaviors and events', 'Behaviors and events'])).toEqual([
+      expect.stringContaining('appears twice'),
+    ])
+  })
+
   it('fails sections out of order', () => {
     expect(
       rulesOf(goodNote(GOOD_FIELDS, allSections(['Boundaries', 'Behaviors and events']))),
@@ -182,9 +203,15 @@ describe('NOTE-PATH', () => {
     const body = GOOD_BODY + '\n- Gone: `domain/gone.ts` and [x](../../../docs/missing.md).\n'
     const found = run(goodNote(GOOD_FIELDS, body))
     expect(found.map((f) => f.rule)).toEqual(['NOTE-PATH', 'NOTE-PATH'])
-    expect(found[0].message).toContain('domain/gone.ts')
+    expect(found[0].message).toMatch(/^path domain\/gone\.ts/)
+    expect(found[1].message).toMatch(/^link /)
     expect(found[1].message).toContain('missing.md')
   })
+})
+
+it('reports a field problem and a missing field together, each once', () => {
+  const found = run(withFields({ aliases: 'foo', owner: 'x' }))
+  expect(found.map((f) => f.rule)).toEqual(['NOTE-FIELDS', 'NOTE-FIELD-VALUE'])
 })
 
 describe('COVERAGE-SECTION', () => {

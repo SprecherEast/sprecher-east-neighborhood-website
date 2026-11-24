@@ -139,7 +139,6 @@ export function rulePaths(entry, tracked) {
     const prefix = dir === '' ? '' : `${dir}/`
     const under = tracked.filter((file) => file.startsWith(prefix))
     const some = under.filter((file) => described.has(file))
-    if (some.length === 0) return
     if (some.length === under.length && dir !== '') return globs.push(`${dir}/**`)
     const direct = under.filter((file) => dirOf(file) === dir)
     const directDescribed = direct.filter((file) => described.has(file))

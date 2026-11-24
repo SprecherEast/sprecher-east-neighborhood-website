@@ -19,6 +19,13 @@ describe('renderIndex', () => {
     expect(renderIndex(old, [entry], 'docs/knowledge/index.md')).toBe(goodIndex())
   })
 
+  it('replaces to the end of the file when Notes is the last section', () => {
+    const last = '# Index\n\n## Notes\n\n- [Old](../../x.md): stale\n'
+    expect(renderIndex(last, [entry], 'docs/knowledge/index.md')).toBe(
+      '# Index\n\n## Notes\n\n- [Demo](../../src/modules/demo/README.md): What the demo is for\n',
+    )
+  })
+
   it('is stable: rendering its own output changes nothing', () => {
     const once = renderIndex(goodIndex(), [entry], 'docs/knowledge/index.md')
     expect(renderIndex(once, [entry], 'docs/knowledge/index.md')).toBe(once)

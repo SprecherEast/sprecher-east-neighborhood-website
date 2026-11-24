@@ -18,6 +18,7 @@ describe('pathReferences', () => {
     const body = [
       'See `domain/rule.ts`, `ui/`, `/roadmap/[number]`, `/posts/`, `/`, `@/modules/x.ts`, `Field.Money`, `a b.ts`.',
       'Link [routes](../../../docs/reference/routes.md#top) and [site](https://x.dev/a.md).',
+      '[plan](/roadmap) and [top](#top) and [dir](../../ui/)',
       '```',
       '`ignored/in/fence.ts`',
       '```',
@@ -53,6 +54,7 @@ describe('resolves', () => {
     ['rule.t', false], // whole path parts only
     ['gone.ts', false],
     ['gonedir/', false],
+    ['./domain/rule.ts', true], // a leading ./
     ['domain/gone.ts', false],
     ['domain/*.ts', true], // a pattern matching something
     ['domain/*.mjs', false],

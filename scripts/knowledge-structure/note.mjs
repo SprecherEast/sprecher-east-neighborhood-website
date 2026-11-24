@@ -15,7 +15,7 @@ export function parseNote(markdown) {
   if (raw !== null) {
     try {
       const data = parseFrontmatter(text)
-      if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      if (typeof data !== 'object' || Array.isArray(data)) {
         note.error = 'the front matter is not a list of fields (key: value)'
       } else note.data = data
     } catch (error) {
@@ -32,7 +32,7 @@ export function parseNote(markdown) {
   let fenced = false
   lines.forEach((line, index) => {
     if (FENCE.test(line)) fenced = !fenced
-    if (fenced || index === 0) return
+    if (fenced) return
     const heading = /^## (\S.*)$/.exec(line)
     if (heading) note.sections.push({ heading: heading[1].trim(), line: index + 1 })
     else if (note.sections.length === 0 && line.trim() && !line.startsWith('#')) note.purposeLines++

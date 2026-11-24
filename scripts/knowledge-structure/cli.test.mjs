@@ -9,6 +9,7 @@ import { parseNote } from './note.mjs'
 import { checkNote } from './rules.mjs'
 import {
   GOOD_BODY,
+  GOOD_FIELDS,
   GOOD_MAP,
   NOTE_PATH,
   errorsOf,
@@ -49,6 +50,10 @@ describe('summarize', () => {
     expect(text).toContain('1 error')
     expect(text).toContain('2 warnings')
     expect(text).toContain('COVERAGE-CODE: 2')
+    expect(text).toContain('NOTE-CAP: 1')
+    expect(summarize([{ rule: 'X', severity: 'error', note: 'a', message: 'm' }])).toContain(
+      '1 error,',
+    )
     expect(summarize([])).toContain('0 errors, 0 warnings')
   })
 })
@@ -116,6 +121,32 @@ describe('execute', () => {
     expect(lines).toEqual(['Wrote the 1 note lines of docs/knowledge/index.md.'])
     expect(fs.readFileSync(path.join(root, 'docs/knowledge/index.md'), 'utf8')).toBe(goodIndex())
     expect(run(root).code).toBe(0)
+  })
+
+  it('--write-index leaves out a note that has no name or summary, instead of writing undefined', () => {
+    const root = fixture({
+      note: goodNote({ ...GOOD_FIELDS, summary: undefined }),
+      index: goodIndex(''),
+    })
+    const { lines } = run(root, ['--write-index'])
+    expect(lines).toEqual(['Wrote the 0 note lines of docs/knowledge/index.md.'])
+    expect(fs.readFileSync(path.join(root, 'docs/knowledge/index.md'), 'utf8')).not.toContain(
+      'undefined',
+    )
+  })
+
+  it('does not count a tracked file that was deleted, nor a file git ignores', () => {
+    const root = fixture({
+      note: goodNote(GOOD_FIELDS, GOOD_BODY + '- Ignored `domain/skipped.ts`.\n'),
+    })
+    fs.writeFileSync(path.join(root, 'src/modules/demo/domain/skipped.ts'), 'x')
+    fs.writeFileSync(path.join(root, '.gitignore'), 'skipped.ts\n')
+    expect(run(root).lines.join('\n')).toContain('path domain/skipped.ts does not exist')
+    execFileSync('git', ['add', '-f', '.'], { cwd: root })
+    fs.rmSync(path.join(root, NOTE_PATH))
+    expect(run(root).lines.join('\n')).toContain(
+      'listed in docs/knowledge/map.json but the file does not exist',
+    )
   })
 
   it('--skeleton prints a note for the type and exits 0', () => {

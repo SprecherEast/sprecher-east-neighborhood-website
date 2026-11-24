@@ -31,7 +31,7 @@ function checkValue(add, schema, field, value, files) {
         `${key} must be one line of text${maxChars ? `, at most ${maxChars} characters` : ''}`,
       )
   } else if (kind === 'noteType') {
-    if (!(typeof value === 'string' && value in schema.noteTypes))
+    if (!Object.hasOwn(schema.noteTypes, value))
       add(
         'NOTE-TYPE',
         `${key} "${value}" is not one of ${Object.keys(schema.noteTypes).join(', ')}`,
@@ -44,12 +44,12 @@ function checkValue(add, schema, field, value, files) {
   } else {
     const { derived, hand } = schema.relationshipTypes
     for (const { type, target } of value) {
-      if (type in derived)
+      if (Object.hasOwn(derived, type))
         add(
           'NOTE-RELATIONSHIP',
           `the scanner derives "${type}" (${derived[type]}); do not write it`,
         )
-      else if (!(type in hand))
+      else if (!Object.hasOwn(hand, type))
         add('NOTE-RELATIONSHIP', `relationship type "${type}" is not in relationshipTypes`)
       if (!existsExactly(target, files))
         add(
@@ -69,7 +69,7 @@ function fieldFindings(add, schema, note, files) {
   if (unknown.length > 0) add('NOTE-FIELDS', `unknown field ${unknown.join(', ')}`)
   const wanted = keys.filter((key) => present.includes(key))
   const known = present.filter((key) => keys.includes(key))
-  if (missing.length === 0 && unknown.length === 0 && known.join() !== wanted.join()) {
+  if (known.join() !== wanted.join()) {
     add('NOTE-FIELDS', `fields must be in this order: ${keys.join(', ')}`)
   }
   for (const field of schema.fields) {
@@ -113,7 +113,7 @@ export function checkNote({ schema, path: notePath, text, files }) {
   else if (note.purposeLines === 0)
     add('NOTE-TITLE', 'the title needs a purpose paragraph before the first section')
   const type = note.data[keyOfKind(schema, 'noteType')]
-  if (note.hasFrontmatter && !note.error && type in schema.noteTypes)
+  if (note.hasFrontmatter && !note.error && Object.hasOwn(schema.noteTypes, type))
     sectionFindings(add, schema, note)
   if (note.bodyLines > schema.limits.noteLines)
     add(

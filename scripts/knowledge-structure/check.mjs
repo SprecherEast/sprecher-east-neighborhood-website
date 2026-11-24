@@ -1,7 +1,7 @@
 /** The knowledge structure check over a whole repository: every note, the map and the index. */
 import { describes, globToRegExp, parseKnowledgeMap } from '../agent-context-maps.mjs'
 import { isTestFile } from '../behavior-change.mjs'
-import { renderIndex } from './indexLines.mjs'
+import { indexLine, noteLinesOf } from './indexLines.mjs'
 import { parseNote } from './note.mjs'
 import { pathReferences, resolves } from './paths.mjs'
 import { checkNote, finding } from './rules.mjs'
@@ -34,7 +34,7 @@ function mapFindings(schema, entries, files, read, add) {
       continue
     }
     const text = read(path)
-    const matched = files.some((file) => describes(entry, file) || entry.paths.includes(file))
+    const matched = files.some((file) => describes(entry, file))
     const names = pathReferences(parseNote(text).body, schema).some((ref) =>
       resolves(ref.token, { noteDir: path.slice(0, path.lastIndexOf('/')), files, schema }),
     )
@@ -50,29 +50,21 @@ function mapFindings(schema, entries, files, read, add) {
 }
 
 function indexFindings(entries, indexText, add) {
-  const usable = entries.filter((e) => e.name && e.summary)
-  let expected
+  const wanted = entries.filter((e) => e.name && e.summary).map((e) => indexLine(e, INDEX))
+  let actual
   try {
-    expected = renderIndex(indexText, usable, INDEX)
+    actual = noteLinesOf(indexText, INDEX)
   } catch (error) {
     add('INDEX-DRIFT', INDEX, error.message)
     return
   }
-  if (expected === indexText) return
-  const have = new Set(indexText.split('\n'))
-  const want = new Set(expected.split('\n'))
-  for (const line of want) {
-    if (!have.has(line))
-      add('INDEX-DRIFT', INDEX, `missing or different line: ${line.slice(0, 90)}${FIX}`)
-  }
-  for (const line of have) {
-    if (
-      line.startsWith('- [') &&
-      !want.has(line) &&
-      indexText.indexOf(line) < indexText.indexOf('## Reference')
-    )
-      add('INDEX-DRIFT', INDEX, `line not made from a note: ${line.slice(0, 90)}${FIX}`)
-  }
+  const missing = wanted.filter((l) => !actual.includes(l))
+  const stale = actual.filter((l) => !wanted.includes(l))
+  for (const line of missing) add('INDEX-DRIFT', INDEX, `missing line: ${line.slice(0, 90)}${FIX}`)
+  for (const line of stale)
+    add('INDEX-DRIFT', INDEX, `line not made from a note: ${line.slice(0, 90)}${FIX}`)
+  if (missing.length + stale.length === 0 && wanted.join('\n') !== actual.join('\n'))
+    add('INDEX-DRIFT', INDEX, `the lines are not in the order of the map${FIX}`)
 }
 
 function coverageFinding(schema, entries, files, add) {

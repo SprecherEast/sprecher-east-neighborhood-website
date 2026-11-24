@@ -89,6 +89,35 @@ describe('checkKnowledge', () => {
     expect(found.map((f) => f.rule)).toEqual(['NOTE-FIELDS'])
   })
 
+  it('INDEX-DRIFT: fails prose left under Notes, and lines in the wrong order', () => {
+    const drift = (text) => rules({ texts: { 'docs/knowledge/index.md': text } })
+    expect(drift(goodIndex().replace('- [Demo]', 'Some prose.\n- [Demo]'))).toEqual(['INDEX-DRIFT'])
+    const two = JSON.stringify([
+      { note: NOTE_PATH, paths: ['src/modules/demo/**'] },
+      { note: 'src/modules/b/README.md', paths: ['src/modules/b/**'] },
+    ])
+    const b = goodNote({ ...GOOD_FIELDS, name: 'B', summary: 'bee' }).replace(
+      'domain/rule.ts',
+      'x.ts',
+    )
+    const lineA = '- [Demo](../../src/modules/demo/README.md): What the demo is for'
+    const lineB = '- [B](../../src/modules/b/README.md): bee'
+    const texts = { 'src/modules/b/README.md': b, 'src/modules/b/x.ts': '' }
+    const files = [...GOOD_FILES, 'src/modules/b/README.md', 'src/modules/b/x.ts']
+    const run2 = (index) =>
+      errorsOf(repo({ map: two, files, texts: { ...texts, 'docs/knowledge/index.md': index } }))
+    expect(run2(goodIndex(`${lineA}\n${lineB}`))).toEqual([])
+    const swapped = run2(goodIndex(`${lineB}\n${lineA}`))
+    expect(swapped.map((f) => f.rule)).toEqual(['INDEX-DRIFT'])
+    expect(swapped[0].message).toMatch(/order/)
+  })
+
+  it('COVERAGE-CODE lists the folders with the most loose files first', () => {
+    const files = [...GOOD_FILES, 'src/a/one.ts', 'src/b/x/p.ts', 'src/b/x/q.ts']
+    const [found] = repo({ schema, files }).filter((f) => f.rule === 'COVERAGE-CODE')
+    expect(found.message).toContain('3 source files have no note: src/b/x 2, src/a/one.ts 1')
+  })
+
   it('COVERAGE-CODE does not count generated types, stories or files outside src', () => {
     const files = [
       ...GOOD_FILES,
