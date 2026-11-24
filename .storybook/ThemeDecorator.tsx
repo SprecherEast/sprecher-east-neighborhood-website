@@ -3,7 +3,7 @@ import { useEffect, type ReactNode } from 'react'
 
 import { ThemeProvider, useTheme } from '@/platform/theme/ThemeProvider.client'
 import { ACTIVE_THEME } from '@/platform/theme/registry'
-import type { Theme } from '@/platform/theme/theme'
+import { defaultTheme, type Theme } from '@/platform/theme/theme'
 
 // Every theme's token values, by folder name. The active theme's file is already part of the site's
 // stylesheet (globals.css); any other is laid over it while it is picked.
@@ -51,7 +51,7 @@ export function SiteTheme({
 
 export const withSiteTheme: Decorator = (Story, { globals }) => (
   <ThemeProvider>
-    <SiteTheme name={globals.siteTheme ?? ACTIVE_THEME} mode={globals.mode ?? 'light'}>
+    <SiteTheme name={globals.siteTheme ?? ACTIVE_THEME} mode={globals.mode ?? defaultTheme}>
       <Story />
     </SiteTheme>
   </ThemeProvider>

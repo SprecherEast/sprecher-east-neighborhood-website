@@ -1,13 +1,15 @@
 // @vitest-environment jsdom
 import { cleanup, render } from '@testing-library/react'
+import type { ReactElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ThemeProvider } from '@/platform/theme/ThemeProvider.client'
+import { defaultTheme, type Theme } from '@/platform/theme/theme'
 import { ACTIVE_THEME } from '@/platform/theme/registry'
 
-import { SiteTheme } from './ThemeDecorator'
+import { SiteTheme, withSiteTheme } from './ThemeDecorator'
 
-const wrap = (name: string, mode: 'light' | 'dark', themes: Record<string, string>) => (
+const wrap = (name: string, mode: Theme, themes: Record<string, string>) => (
   <ThemeProvider>
     <SiteTheme name={name} mode={mode} themes={themes}>
       story
@@ -55,5 +57,26 @@ describe('SiteTheme', () => {
   it('lays nothing over the page for the active theme, whose tokens the site CSS already has', () => {
     render(wrap(ACTIVE_THEME, 'light', { [ACTIVE_THEME]: ':root{}' }))
     expect(overlays()).toHaveLength(0)
+  })
+})
+
+describe('withSiteTheme', () => {
+  const draw = (globals: Record<string, unknown>) =>
+    render(
+      // The decorator only reads `globals`; the story is a stand-in
+      (withSiteTheme as (story: () => ReactElement, context: unknown) => ReactElement)(
+        () => <p>story</p>,
+        { globals },
+      ),
+    )
+
+  it('draws the story in the mode the toolbar picked', () => {
+    draw({ mode: 'dark' })
+    expect(document.documentElement.dataset.theme).toBe('dark')
+  })
+
+  it("falls back to the site's default mode when the toolbar has not set one", () => {
+    draw({})
+    expect(document.documentElement.dataset.theme).toBe(defaultTheme)
   })
 })

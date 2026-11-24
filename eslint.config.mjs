@@ -83,6 +83,25 @@ export default [
     },
   },
 
+  // ─── 4b. One font definition (#1447): the site's fonts are defined in one file and imported ──────
+  {
+    files: ['src/**/*.{ts,tsx}', '.storybook/**/*.{ts,tsx}'],
+    ignores: ['src/platform/theme/fonts.ts', '**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['next/font/*'],
+              message: 'Define fonts in src/platform/theme/fonts.ts and import them from there',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // ─── 5. Architecture boundaries (errors since #137) ──────────────────────────
   boundariesConfig,
 
