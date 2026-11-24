@@ -7,12 +7,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const walkJs = (folder) =>
-  fs.readdirSync(folder, { withFileTypes: true }).flatMap((entry) => {
-    const full = path.join(folder, entry.name)
-    if (entry.isDirectory()) return walkJs(full)
-    return /\.js$/.test(entry.name) && !entry.name.endsWith('.test.js') ? [full] : []
-  })
+import { listFiles } from './listFiles.mjs'
 
 const escaped = (slug) => slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
@@ -22,10 +17,9 @@ export function pluginDefining(root, slug, plugins) {
   return (
     plugins.find((plugin) => {
       const dist = path.join(root, 'node_modules', plugin, 'dist')
-      return (
-        fs.existsSync(dist) &&
-        walkJs(dist).some((file) => setsSlug.test(fs.readFileSync(file, 'utf8')))
-      )
+      return listFiles(dist)
+        .filter((file) => /\.js$/.test(file) && !file.endsWith('.test.js'))
+        .some((file) => setsSlug.test(fs.readFileSync(path.join(dist, file), 'utf8')))
     }) ?? ''
   )
 }

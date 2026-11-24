@@ -8,6 +8,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { listFiles } from './listFiles.mjs'
+
 const CONVENTIONS = [
   { name: 'robots', ext: /^(ts|js|txt)$/, url: () => '/robots.txt', topOnly: true },
   { name: 'sitemap', ext: /^(ts|js|xml)$/, url: (dir) => `${dir}/sitemap.xml` },
@@ -61,16 +63,10 @@ export function describeMetadataFiles(files) {
     .sort((a, b) => a.url.localeCompare(b.url) || a.file.localeCompare(b.file))
 }
 
-const walk = (folder, relative = '') =>
-  fs.readdirSync(path.join(folder, relative), { withFileTypes: true }).flatMap((entry) => {
-    const next = path.posix.join(relative, entry.name)
-    return entry.isDirectory() ? walk(folder, next) : [next]
-  })
-
 /** Metadata-convention files under `src/app`, with whether each one reads content. */
 export function collectAppFiles(root) {
   const appRoot = path.join(root, 'src/app')
-  return describeMetadataFiles(walk(appRoot)).map((row) => ({
+  return describeMetadataFiles(listFiles(appRoot)).map((row) => ({
     ...row,
     readsContent:
       row.generated && READS_CONTENT.test(fs.readFileSync(path.join(root, row.file), 'utf8')),

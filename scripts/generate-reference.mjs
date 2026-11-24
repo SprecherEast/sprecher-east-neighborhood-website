@@ -39,6 +39,7 @@ import {
 } from './reference/components.mjs'
 import { renderApi } from './reference/endpoints.mjs'
 import { renderJobs } from './reference/jobs.mjs'
+import { listFiles } from './reference/listFiles.mjs'
 import { loadFacts } from './reference/loadFacts.mjs'
 import { renderMcp } from './reference/mcpTools.mjs'
 import { collectRoutes, renderRoutes } from './reference/routes.mjs'
@@ -103,19 +104,12 @@ async function formatted(files) {
 }
 
 /** Every Markdown file under the folder, keyed by its path inside it. */
-function readCommitted(directory, prefix = '') {
-  const found = new Map()
-  if (!fs.existsSync(directory)) return found
-  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-    const full = path.join(directory, entry.name)
-    if (entry.isDirectory()) {
-      for (const [key, text] of readCommitted(full, `${prefix}${entry.name}/`)) found.set(key, text)
-    } else if (entry.name.endsWith('.md')) {
-      found.set(`${prefix}${entry.name}`, fs.readFileSync(full, 'utf8'))
-    }
-  }
-  return found
-}
+const readCommitted = (directory) =>
+  new Map(
+    listFiles(directory)
+      .filter((file) => file.endsWith('.md'))
+      .map((file) => [file, fs.readFileSync(path.join(directory, file), 'utf8')]),
+  )
 
 const started = Date.now()
 const directory = path.join(ROOT, OUTPUT)
