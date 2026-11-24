@@ -32,4 +32,10 @@ describe('ownerText', () => {
     expect(found[1]).toEqual({ owner: plugin, file: '' })
     expect(found[2].owner).toMatch(/^a plugin or Payload/)
   })
+
+  it('names only the plugin when no module of ours configures it', () => {
+    const configurers = new Map([['@payloadcms/plugin-x', []]])
+    const found = ownerText(model('events', ['@payloadcms/plugin-x']), new Map(), configurers, '/x')
+    expect(found).toEqual({ owner: 'the plugin `@payloadcms/plugin-x`', file: '' })
+  })
 })

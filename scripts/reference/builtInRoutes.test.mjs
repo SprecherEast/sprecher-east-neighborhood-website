@@ -114,4 +114,42 @@ describe('the routes Payload adds to content types', () => {
     )
     expect(row.scope).toBe('')
   })
+  it('sorts the live routes by path, then by method, whatever order the config gives', () => {
+    const route = (method, path) => ({ method, path, name: 'h', file: 'payload' })
+    const unsorted = [
+      { ...base.contentTypes[1], allEndpoints: [route('POST', '/b'), route('POST', '/a')] },
+      { ...base.contentTypes[0], allEndpoints: [route('GET', '/b'), route('GET', '/a')] },
+    ]
+    const built = describeApi({ ...base, contentTypes: unsorted }, locate).builtIn
+    expect(built.map((row) => `${row.method} ${row.path}`)).toEqual([
+      'GET /a',
+      'POST /a',
+      'GET /b',
+      'POST /b',
+    ])
+  })
+
+  it('sorts the taken routes by type, then path, then method', () => {
+    const taken = (method, path) => ({
+      method,
+      path,
+      name: 'h',
+      file: 'payload',
+      replacedBy: { method, path: '/x', name: 'mine', file: 'src/m.ts' },
+    })
+    const unsorted = [
+      { ...base.contentTypes[1], allEndpoints: [taken('GET', '/a')] },
+      {
+        ...base.contentTypes[0],
+        allEndpoints: [taken('POST', '/b'), taken('POST', '/a'), taken('GET', '/a')],
+      },
+    ]
+    const found = describeApi({ ...base, contentTypes: unsorted }, locate).replaced
+    expect(found.map((row) => `${row.slug} ${row.method} ${row.path}`)).toEqual([
+      'events GET /a',
+      'events POST /a',
+      'events POST /b',
+      'faq GET /a',
+    ])
+  })
 })

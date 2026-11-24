@@ -91,7 +91,7 @@ export function findServerActions(program, root) {
     walkAll(sourceFile, (node) => {
       if (!isFunctionLike(node) || !hasDirective(node.body)) return
       const holder = ts.isFunctionDeclaration(node) ? node : node.parent
-      const name = holder.name ?? (ts.isVariableDeclaration(holder) ? holder.name : undefined)
+      const { name } = holder
       if (name && ts.isIdentifier(name)) add(name.text)
     })
   }
@@ -125,7 +125,8 @@ export function findPluginConfigurers(program, root, configFile) {
   const imports = importSources(sourceFile)
   const found = new Map()
   walkAll(sourceFile, (node) => {
-    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression)) return
+    if (!ts.isCallExpression(node)) return
+    // Only an identifier has `text`, so a call on a property or another call finds no import
     const from = imports.get(node.expression.text)
     if (!from?.startsWith('@payloadcms/plugin-')) return
     const modules = found.get(from) ?? new Set()

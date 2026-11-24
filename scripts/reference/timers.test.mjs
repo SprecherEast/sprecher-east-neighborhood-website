@@ -40,6 +40,11 @@ jobs:
     ])
   })
 
+  it('leaves out a workflow whose schedule is empty', () => {
+    const text = 'name: X\non:\n  schedule: []\njobs:\n  a: {}\n'
+    expect(parseTimedWorkflows([{ file: '.github/workflows/x.yml', text }])).toEqual([])
+  })
+
   it('handles two schedules and a workflow without a name', () => {
     const text =
       "on:\n  schedule:\n    - cron: '1 * * * *'\n    - cron: '2 * * * *'\njobs:\n  a: {}\n"
@@ -69,6 +74,23 @@ describe('parseServerCrons', () => {
         runs: ['ops/backup.sh daily', 'ops/other.sh daily'],
       },
     ])
+  })
+
+  it('keeps only the commands that call a script the file names', () => {
+    const text = [
+      'BACKUP_SCRIPT="$APP_DIR/current/ops/backup.sh"',
+      '5 4 * * * root cd /srv; bash $UNKNOWN_SCRIPT now; bash $BACKUP_SCRIPT daily',
+    ].join('\n')
+    expect(parseServerCrons([{ file: 'ops/a.sh', text }])[0].runs).toEqual(['ops/backup.sh daily'])
+  })
+
+  it('sorts the scripts by file', () => {
+    const line = '1 2 * * * root bash $A now'
+    const found = parseServerCrons([
+      { file: 'ops/z.sh', text: `A="x/z.sh"\n${line}` },
+      { file: 'ops/a.sh', text: `A="x/a.sh"\n${line}` },
+    ])
+    expect(found.map((row) => row.file)).toEqual(['ops/a.sh', 'ops/z.sh'])
   })
 
   it('gives nothing for a script that installs no cron line', () => {

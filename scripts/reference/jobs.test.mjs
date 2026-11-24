@@ -13,6 +13,9 @@ describe('describeCron', () => {
 
   it('gives nothing for a pattern it does not read, so the expression stands alone', () => {
     expect(describeCron('0 6 * * 1-5')).toBe('')
+    // a fixed hour is not "every minute", and not "every 10 minutes"
+    expect(describeCron('* 5 * * *')).toBe('')
+    expect(describeCron('*/10 5 * * *')).toBe('')
   })
 })
 
@@ -150,6 +153,16 @@ describe('renderJobs', () => {
       'Payload’s own handler, not followed',
     )
     expect(rows.find((line) => line.startsWith('| `deleteOld`'))).toContain('none found')
+  })
+
+  it('says a task nobody schedules is queued, not scheduled, and writes the schedule of one that is', () => {
+    const rows = page.split('\n')
+    expect(rows.find((line) => line.startsWith('| `schedulePublish`'))).toContain(
+      'queued, not scheduled',
+    )
+    expect(rows.find((line) => line.startsWith('| `deleteOld`'))).toContain(
+      '`0 * * * *` (every hour, on the hour)',
+    )
   })
 
   it('writes the route each job access guards', () => {

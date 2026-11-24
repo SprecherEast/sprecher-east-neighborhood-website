@@ -159,6 +159,25 @@ describe('describeEndpoints', () => {
     ])
   })
 
+  it('matches the root path of a type as a path of its own (#1461)', () => {
+    function mine() {}
+    const found = describeEndpoints(
+      [
+        { path: '/', method: 'get', handler: mine },
+        { path: '/', method: 'get', handler: function findHandler() {} },
+        { path: '/other', method: 'get', handler: function otherHandler() {} },
+      ],
+      locate,
+      { builtIn: true },
+    )
+    // the root route takes the root request, and only that one
+    expect(found.map((e) => [e.path, e.replacedBy?.path ?? null])).toEqual([
+      ['/', null],
+      ['/', '/'],
+      ['/other', null],
+    ])
+  })
+
   it('is empty when a type has none, or switches them off', () => {
     expect(describeEndpoints(undefined, locate)).toEqual([])
     expect(describeEndpoints(false, locate)).toEqual([])

@@ -13,7 +13,7 @@ export const isSource = (file, root) =>
   file.startsWith(`${rootPrefix(root)}src/`) && !isTestFile(file) && !file.endsWith('.d.ts')
 
 export const propertyName = (property) =>
-  property.name && (ts.isIdentifier(property.name) || ts.isStringLiteralLike(property.name))
+  ts.isIdentifier(property.name) || ts.isStringLiteralLike(property.name)
     ? property.name.text
     : undefined
 

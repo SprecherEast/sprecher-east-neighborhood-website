@@ -119,6 +119,57 @@ describe('renderApi', () => {
     expect(page).toContain('In `public/`: `/brand/…`, `/images/…`.')
   })
 
+  it('writes each cell of a custom endpoint, and the Payload routes with their scope or their types', () => {
+    const input = {
+      ...base,
+      endpoints: [
+        ...base.endpoints,
+        { method: 'get', path: '/anon', handler: { handler: () => 1 }.handler },
+      ],
+      contentTypes: [
+        {
+          ...base.contentTypes[0],
+          endpoints: [{ method: 'GET', path: '/mine', name: 'inline', file: 'src/m.ts' }],
+          allEndpoints: [
+            { method: 'GET', path: '/count', name: 'c', file: 'payload' },
+            { method: 'GET', path: '/versions', name: 'v', file: 'payload' },
+          ],
+        },
+        ...base.contentTypes.slice(1, 2),
+      ],
+      publicFiles: [],
+    }
+    const text = renderApi(describeApi(input, locate))
+    expect(text).toContain('| GET | `/api/anon` | the config or a plugin | inline |')
+    expect(text).toContain('| GET | `/api/events/mine` | `events` | inline | `src/m.ts` |')
+    expect(text).toContain('| POST | `/api/mcp` | the config or a plugin | `mcpHandler` |')
+    expect(text).toContain('| `src/m.ts` | inside the handler |')
+    // `/count` is on every collection that is listed, `/versions` on one of two
+    expect(text).toContain('| GET | `/count` | every collection |')
+    expect(text).toContain('| GET | `/versions` | `events` |')
+    expect(text).toContain('In `public/`: nothing.')
+  })
+
+  it('sorts the route files by URL, then by file', () => {
+    const handler = (file) => ({ url: '/api/x', methods: ['GET'], file })
+    const text = renderApi(
+      describeApi(
+        {
+          ...base,
+          routeHandlers: [
+            { url: '/b', methods: ['GET'], file: 'src/b.ts' },
+            handler('src/z.ts'),
+            handler('src/a.ts'),
+          ],
+        },
+        locate,
+      ),
+    )
+    const order = ['src/a.ts', 'src/z.ts', 'src/b.ts'].map((file) => text.indexOf(file))
+    expect(order).toEqual([...order].sort((a, b) => a - b))
+    expect(order.every((at) => at > 0)).toBe(true)
+  })
+
   it('says the route files are listed with their methods', () => {
     expect(page).toContain('| `/api/[...slug]` | GET, POST |')
   })

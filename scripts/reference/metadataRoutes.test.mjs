@@ -29,6 +29,13 @@ describe('describeMetadataFiles', () => {
     ])
   })
 
+  it('sorts two files that give the same URL by file name', () => {
+    expect(describeMetadataFiles(['icon.svg', 'icon.png']).map((row) => row.file)).toEqual([
+      'src/app/icon.png',
+      'src/app/icon.svg',
+    ])
+  })
+
   it('ignores tests, other files, and a top-level-only file in a folder', () => {
     expect(
       describeMetadataFiles([

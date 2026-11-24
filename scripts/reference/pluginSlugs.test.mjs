@@ -18,6 +18,9 @@ describe('pluginDefining', () => {
     )
     write('node_modules/@payloadcms/plugin-b/dist/index.js', "const x = { slug: 'search' }\n")
     write('node_modules/@payloadcms/plugin-c/dist/index.js', "const slugs = ['forms']\n")
+    // a test file inside a package and a file that is not JavaScript set no slug
+    write('node_modules/@payloadcms/plugin-t/dist/a.test.js', "const x = { slug: 'tested' }\n")
+    write('node_modules/@payloadcms/plugin-t/dist/a.d.ts', "const x = { slug: 'typed' }\n")
     const plugins = [
       '@payloadcms/plugin-c',
       '@payloadcms/plugin-a',
@@ -28,8 +31,10 @@ describe('pluginDefining', () => {
       pluginDefining(root, 'forms', plugins),
       pluginDefining(root, 'search', plugins),
       pluginDefining(root, 'none', plugins),
+      pluginDefining(root, 'tested', [...plugins, '@payloadcms/plugin-t']),
+      pluginDefining(root, 'typed', [...plugins, '@payloadcms/plugin-t']),
     ]
     fs.rmSync(root, { recursive: true, force: true })
-    expect(found).toEqual(['@payloadcms/plugin-a', '@payloadcms/plugin-b', ''])
+    expect(found).toEqual(['@payloadcms/plugin-a', '@payloadcms/plugin-b', '', '', ''])
   })
 })

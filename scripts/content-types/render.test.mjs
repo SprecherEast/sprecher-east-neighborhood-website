@@ -139,6 +139,10 @@ describe('buildPages', () => {
     expect(page).toContain('- AI agent tools: `findEvents` ([list](../mcp-tools.md))')
     expect(page).toContain('- Jobs: `deleteOld` ([list](../jobs.md))')
     expect(buildPages([model()]).get('events.md')).not.toContain('AI agent tools')
+    // the loader gives every type a list, empty when no tool or job reaches it
+    const none = buildPages([model({ tools: [], jobs: [] })]).get('events.md')
+    expect(none).not.toContain('AI agent tools')
+    expect(none).not.toContain('- Jobs:')
   })
 
   it('says in the README that the pages are generated for production', () => {

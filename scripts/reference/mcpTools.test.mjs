@@ -171,6 +171,25 @@ describe('renderMcp', () => {
     expect(page).toContain('endpoints.md')
   })
 
+  it('writes no Reaches line for a tool that reaches no collection', () => {
+    function plain() {}
+    const alone = describeMcp(
+      {
+        ...options,
+        mcp: {
+          ...options.mcp,
+          tools: [{ name: 'plainTool', description: 'x', parameters: {}, handler: plain }],
+        },
+      },
+      { locate, access, schemaOf, calls },
+    )
+    const text = renderMcp(alone)
+    const block = text.slice(text.indexOf('### `plainTool`'))
+    expect(block).toContain('Written in')
+    expect(block).not.toContain('Reaches:')
+    expect(page).toContain('Reaches: ')
+  })
+
   it('adds exactly one entry when a custom tool is added', () => {
     const more = describeMcp(
       {
