@@ -17,9 +17,9 @@ const SAME_PLACE = new RegExp(
   `^(?:#\\s*[\\w-]{1,6}|(?:apt|unit|suite|ste|room|rm)\\.?\\s*#?\\s*[\\w-]{1,6}|(?:${STATE}\\s*)?${ZIP}|${STATE}|usa|us|u\\.s\\.a\\.|united states)$`,
   'i',
 )
-/** The only things recognized before the street (coverage.md, check 2): "village, town or township of ...", "city of" anything but Madison, a state, a ZIP code. */
+/** The only things recognized before the street; see coverage.md, Review passes, check 2. */
 const PLACE_BEFORE = new RegExp(
-  `\\b(?:village|town|township)\\s+of\\s+|\\bcity\\s+of\\s+(?!madison\\b)|\\b${STATE}\\b|\\b\\d{5}\\b`,
+  `\\b(?:city|village|town|township)\\s+of\\s+|\\b${STATE}\\b|\\b\\d{5}\\b`,
   'i',
 )
 const NOT_PLACED_FLAGS = ['similar-name', 'prompt-injection']
@@ -30,7 +30,7 @@ const REASONS = {
   ambiguous: 'the locator found the address in more than one place',
 }
 /**
- * Whether `text`, the text `street` came from, can't be tied to Madison. What it recognizes, and
+ * Whether `text`, the text `street` came from, names another place. What it recognizes, and
  * its stated limit (a town named plainly before the street is sent), is written once in coverage.md,
  * Review passes, check 2.
  */
@@ -118,7 +118,10 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
     if (!isPlainStreet(found[0])) return { reason: 'the address is not a plain street address' }
     // The municipality that goes with the street is read from the text the street came from
     if (namesAnotherPlace(text, found[0]))
-      return { reason: 'the address names a municipality other than Madison, Wisconsin' }
+      return {
+        reason:
+          'the address text names a municipality, state or ZIP code that is not plainly Madison, Wisconsin',
+      }
     // Whether the street comes first in the text: a venue or town before it is never a confirmed address
     const streetFirst = text.replace(/\s+/g, ' ').trim().startsWith(found[0])
     return { ...(await resolve(found[0], deadline)), from, streetFirst }
@@ -147,13 +150,9 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
       reason: `the address is ${inside ? 'inside' : 'outside'} the City’s boundary for the area`,
       overrode: false,
     }
-    // The boundary is the authority on inside and outside, so a tier that can't hold is replaced:
-    // inside is core, and core is never kept for an address outside. Outside, which of
-    // catchment, citywide or outside it is stays verify's judgment. Verify's catchment for an
-    // address inside is raised to core, and so is its unknown when the address is verify's own and
-    // confirmed (an address only the candidate's text gives is one no primary source confirmed);
-    // placement never makes an item easier to accept than verify allowed, so any other
-    // disagreement goes to a person.
+    // The boundary is the authority on inside and outside, so a tier that can't hold is replaced.
+    // Which changes are raised without a hold, and which go to a person, is the rule written once
+    // in coverage.md, Review passes, check 2.
     if (inside === (verification.coverage === 'core')) return { ...verification, placement }
     const coverage = inside ? 'core' : 'unknown'
     const said = verification.coverage

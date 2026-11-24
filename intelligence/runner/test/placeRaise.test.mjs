@@ -3,8 +3,8 @@ import { describe, it } from 'node:test'
 
 import { item, located, setup } from './placeHelpers.mjs'
 
-// The raise to core rests on what verify stated, and what is sent to the locator must be tied to
-// Madison (#1009). Inputs are real-looking addresses, with the cases both sides of each rule.
+// The raise to core rests on what verify stated, and the text rule decides what is sent to the
+// locator (#1009; coverage.md, Review passes, check 2). Inputs are real-looking addresses, with the cases both sides of each rule.
 
 describe('the raise to core rests on what verify confirmed', () => {
   const own = (address, over = {}) => {
@@ -58,6 +58,8 @@ describe('the raise to core rests on what verify confirmed', () => {
       'Town of Blooming Grove, 7035 Littlemore Dr',
       'Town of Madison, 7035 Littlemore Dr',
       'City of Fitchburg, 7035 Littlemore Dr',
+      'City of Madison, 7035 Littlemore Dr',
+      'City of Madison Heights, 7035 Littlemore Dr',
       'Village of Madison Heights, 7035 Littlemore Dr',
       'Fitchburg, WI 53711, 7035 Littlemore Dr',
       'Cottage Grove WI, 7035 Littlemore Dr',
@@ -73,7 +75,6 @@ describe('the raise to core rests on what verify confirmed', () => {
   it('still sends ordinary Madison addresses, with a venue before and a unit, ZIP or country after', async () => {
     for (const address of [
       '7035 Littlemore Dr',
-      'City of Madison, 7035 Littlemore Dr',
       'Door Creek Park Shelter, 7035 Littlemore Dr, Madison, WI 53718',
       'Door Creek Park Shelter: 7035 Littlemore Dr, Madison',
       'Pinney Library meeting room, 100 Inside Edge Rd',

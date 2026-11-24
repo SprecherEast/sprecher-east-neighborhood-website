@@ -173,18 +173,18 @@ The five checks, which verify runs on every item:
    Madison. Anything less (an address found only in the item's own text, an unconfirmed one, a
    municipality left empty) never raises it. `$.placement`
    says `overrode` for any change, and every change except those two raises also gets
-   `ambiguous-location`, so a person looks. Only an address the code can tie to Madison is
-   sent for the test, and only its house number, street and street type, from a public item, go
-   to the City's own locator. The code reads the text the street came from. Before the street, a
-   municipality written as "village, town or township of …", "city of …" (the City of Madison
-   excepted), a state or a ZIP code stops the send; the Town of Madison counts as another
-   municipality, since it was absorbed into the City of Madison and the City of Fitchburg on
-   31 October 2022 and a text naming it can't say which. After the street only Madison, a short
-   unit, a state, a Madison ZIP code or the country may follow. A town named plainly before the
-   street ("Fitchburg, 7035 …") can't be told from a venue's name and is sent: that sends nothing
-   more than a public house number and street, and it never raises a tier by itself, since a
-   raise needs the street-first, confirmed Madison address verify stated (above). When in doubt nothing is sent
-   and the word match stands. Outside the boundary, which of `catchment`, `citywide` or `outside` it is stays
+   `ambiguous-location`, so a person looks. An address is sent for the test unless the code finds
+   another place in the text the street came from, and only its house number, street and street
+   type, from a public item, go to the City's own locator. Before the street the code looks for
+   "city, village, town or township of …" (the Town of Madison is one: it was absorbed into the
+   City of Madison and the City of Fitchburg on 31 October 2022, so a text naming it can't say
+   which), Wisconsin (WI, Wis.) and any five-digit number (a ZIP code), and any of them stops the
+   send. After the street only Madison, a short unit, Wisconsin, a Madison ZIP code or the country
+   may follow. That is all it recognizes. Any other town, or a state other than Wisconsin, named
+   plainly before the street ("Fitchburg, 7035 …", "Madison, AL: 7035 …") can't be told from a
+   venue's name and is sent: that sends nothing more than a public house number and street, and it
+   never raises `unknown`, since that raise needs the street-first, confirmed Madison address
+   verify stated (above). An address not sent keeps the word match. Outside the boundary, which of `catchment`, `citywide` or `outside` it is stays
    the judgment described here. An item with no usable address, a locator that fails or an
    ambiguous match keeps the word match (`area.yaml`), with `$.placement` saying `word-match`,
    or `unplaced` when the item names no place at all. Placement never touches the safety answer

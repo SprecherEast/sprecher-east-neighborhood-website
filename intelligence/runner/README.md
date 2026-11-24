@@ -62,10 +62,8 @@ method: `boundary` (inside or outside), `word-match` (no address resolved, so ve
 the area's words stands) or `unplaced` (the item names no place). Reports for an editor say it.
 
 - **Authority.** When an address resolves, the boundary decides inside or outside: inside is
-  `core` (a `catchment` tier is simply raised, since curate accepts both alike; an `unknown` one
-  only when the street is first in verify's own `location.address`, `location.verified` is true
-  and verify's `location.municipality` is Madison), and
-  `core` is never kept for an address outside (it becomes `unknown`). Any
+  `core` (which tiers are raised without a hold is written once, in `coverage.md`, Review passes,
+  check 2), and `core` is never kept for an address outside (it becomes `unknown`). Any
   other change adds `ambiguous-location`, which the promotion guard holds for a person:
   placement never makes an item easier to accept than verify allowed. A point on the edge counts
   as inside. Outside, catchment versus citywide versus outside stays verify's judgment.
