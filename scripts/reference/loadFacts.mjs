@@ -131,7 +131,12 @@ function describeScheduledWork(config, models, { program, root, locate }) {
     config.jobs,
     locate,
     (file, name, hook) =>
-      findCollectionCalls(program, root, file, { name, hook, knownSlugs: slugs }),
+      findCollectionCalls(program, root, file, {
+        name,
+        hook,
+        configFile: CONFIG_FILE,
+        knownSlugs: slugs,
+      }),
     { endpoints: routes },
   )
   return {

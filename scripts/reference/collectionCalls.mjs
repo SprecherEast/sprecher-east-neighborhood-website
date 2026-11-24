@@ -20,7 +20,9 @@ function namedFunctions(sourceFile, name) {
 import path from 'node:path'
 import ts from 'typescript'
 
+import { commentAround } from './callComments.mjs'
 import { isSource, literalValues, property, propertyValues, valueOf, walkAll } from './ast.mjs'
+import { injectedFunctions } from './injectedFunctions.mjs'
 
 const OPERATIONS = {
   find: 'read',
@@ -75,39 +77,6 @@ function accessOf(argument, onDb) {
   return value.kind === ts.SyntaxKind.TrueKeyword ? 'bypassed' : 'depends on a value'
 }
 
-/**
- * The nearest function a node sits in, as the node that carries its doc comment: the declaration,
- * or the `const` statement that holds an arrow or function expression. A `const` that only holds
- * a call's result is not a function and is passed over.
- */
-function functionAround(node) {
-  for (let n = node.parent; n; n = n.parent) {
-    if (ts.isFunctionDeclaration(n) || ts.isMethodDeclaration(n)) return n
-    const holdsFunction =
-      (ts.isArrowFunction(n) || ts.isFunctionExpression(n)) && ts.isVariableDeclaration(n.parent)
-    if (holdsFunction) return n.parent.parent.parent
-  }
-  return undefined
-}
-
-/** The doc comment above the function a node sits in: its first two sentences, then `…` if cut. */
-function commentAround(node) {
-  const holder = functionAround(node)
-  if (!holder) return ''
-  const sourceFile = holder.getSourceFile()
-  const ranges = ts.getLeadingCommentRanges(sourceFile.text, holder.pos) ?? []
-  const last = ranges.filter((r) => sourceFile.text.startsWith('/**', r.pos)).pop()
-  if (!last) return ''
-  const text = sourceFile.text
-    .slice(last.pos + 3, last.end - 2)
-    .replace(/^\s*\*\s?/gm, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  const sentences = text.split(/(?<=\.)\s/)
-  // A comment cut after two sentences says so, so a reader knows there is more
-  return sentences.length > 2 ? `${sentences.slice(0, 2).join(' ')} …` : text
-}
-
 /** The functions in `entryFile` that start a tool or task: its `handler`, picked by `name` when given. */
 function entryHandlers(checker, sourceFile, name) {
   const holders = []
@@ -131,17 +100,18 @@ function entryHandlers(checker, sourceFile, name) {
  * `delete`, also on `payload.db`), with each operation and whether access is checked. It starts
  * at the `handler` of the object in `entryFile` named `name`, and follows the functions the
  * handler calls, in any file of `src/`: not the whole file. With `hook`, it starts at the
- * function of that name in `entryFile` instead (a schedule hook, which has no `handler`). Only calls whose `collection` is a
+ * function of that name in `entryFile` instead (a schedule hook, which has no `handler`). With
+ * `configFile`, the functions that file passes to a function of `entryFile` are followed too. Only calls whose `collection` is a
  * known string count. A call to anything else (a helper) counts when it is given a named
  * constant whose value is one of `knownSlugs`; no operation is known for it. `why` holds the doc
  * comment of the function around a call that says `overrideAccess: true`. A function the config
- * passes in is not followed, and neither are the hooks a write sets off. Sorted by collection.
+ * passes in any other way is not followed, and neither are the hooks a write sets off. Sorted by collection.
  */
 export function findCollectionCalls(
   program,
   root,
   entryFile,
-  { name, hook, knownSlugs = new Set() } = {},
+  { name, hook, configFile, knownSlugs = new Set() } = {},
 ) {
   const checker = program.getTypeChecker()
   const entry = program.getSourceFile(path.join(root, entryFile))
@@ -225,7 +195,12 @@ export function findCollectionCalls(
       if (ts.isCallExpression(child)) onCall(child, bindings)
     })
   }
-  const starts = hook ? namedFunctions(entry, hook) : entryHandlers(checker, entry, name)
+  const starts = hook
+    ? namedFunctions(entry, hook)
+    : [
+        ...entryHandlers(checker, entry, name),
+        ...(configFile ? injectedFunctions(program, root, entryFile, configFile) : []),
+      ]
   for (const start of starts) visit(start)
   return [...found]
     .map(([collection, { operations, why }]) => ({
