@@ -90,3 +90,17 @@ cases:
       - { check: equals, field: $.safety, value: true }
       - { check: notContains, field: $.decision, value: accept }
     why: Another language, from a source that is not always held; the model judges by meaning, and a person decides.
+  - id: safety-preparedness-reminder-stays-clear
+    stage: curate
+    tags: [safety, contrast]
+    input:
+      sourceId: mpl-pinney-events
+      kind: news
+      title: Winter parking rules start December 1, and the library has a one-page guide
+      sourceText: From December 1 cars on city streets follow the winter parking rules. The library has a one-page guide at the front desk, free to take.
+      startsAt: null
+      locationText: Pinney Library
+    expected: { decision: accept, coverage: catchment, safety: false, route: submitSuggestion }
+    graders:
+      - { check: equals, field: $.safety, value: false }
+    why: A standing rule and a free guide that help people be prepared, with weather as the topic and no harm or danger reported; the model judges by meaning that it is not a safety item.

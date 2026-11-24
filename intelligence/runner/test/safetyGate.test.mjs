@@ -27,7 +27,7 @@ describe('gateItem', () => {
   })
 
   it('holds every accept from a listed safety source, with clean text and clean answers', () => {
-    for (const sourceId of contract.safetyDefinition.sources) {
+    for (const sourceId of [...contract.safety.sources]) {
       const gated = gateItem(contract, item({ candidate: { sourceId, title: 'Notice' } }))
       assert.equal(gated.route, 'reportItem', sourceId)
     }

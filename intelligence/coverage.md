@@ -141,19 +141,14 @@ wasn't met. Both are prompt rules, a model's judgment; code guards only what `pr
 or AI agent who publishes by hand re-checks freshness (check 3) and withdraws an item that is no
 longer current.
 
-A safety item is never `accept`, and code enforces it (#1007). What counts as one is written once,
-as a principle, in [`safety.yaml`](safety.yaml), and verify and curate each judge by what the item
-means and answer `safety`. The runner's gate (`runner/lib/gate.mjs`) is three rules and reads no
-text of any item: it holds an item when its source is on the always-held list in `safety.yaml` (or
-its source facts are missing or don't match), when either stage's answer is anything but a plain
-`false`, and only one function, which runs the gate first, can send a suggestion. Before any
-`accept` is sent, the gate turns such an item into `needs-review`, whatever the model decided and
-whatever the item says, and submit runs it again on the finished draft. `pipeline.yaml` can't route
-a held item to a suggestion. Only a decision of `accept` creates a suggestion, so `reject`,
-`update` and `cancel` of a safety item stay as decided (rule 4 above). The accepted limit: an item
-from a source that isn't on the list, which both stages misjudge, arrives as an ordinary unpublished
-draft without the safety flag. A new safety source is added to the list when it is added to the
-registry. Nothing publishes by itself either way: agents only create suggested drafts.
+A safety item is never `accept`, and code enforces it (#1007). What counts as one is written once, as a
+principle, in [`safety.yaml`](safety.yaml); verify and curate each judge by what the item means and
+answer `safety`. The runner's gate (`runner/lib/gate.mjs`) reads no text of any item: it holds an
+item from an always-held source, or one a stage didn't clear with a plain `false`. The three rules,
+the accepted limit and where each lives are in the pipeline note
+([`README.md`](README.md#output-suggestions-and-review-items-in-the-cms), "The same gate"). Only a decision of `accept` creates a
+suggestion, so `reject`, `update` and `cancel` of a safety item stay as decided (rule 4 above).
+Nothing publishes by itself either way: agents only create suggested drafts.
 
 The five checks, which verify runs on every item:
 

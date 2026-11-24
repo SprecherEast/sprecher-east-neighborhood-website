@@ -116,7 +116,7 @@
           "$ref": "common.schema.json#/$defs/flags"
         },
         "route": {
-          "description": "The MCP tool the submit stage calls: accept \u2192 submitSuggestion, unless the item's source is always held (safety.yaml), then reportItem; needs-review, update, cancel \u2192 reportItem; reject, duplicate \u2192 none.",
+          "description": "The MCP tool the submit stage calls: accept \u2192 submitSuggestion, unless the item's source is always held or a stage answered safety (safety.yaml), then reportItem; needs-review, update, cancel \u2192 reportItem; reject, duplicate \u2192 none.",
           "enum": ["submitSuggestion", "reportItem", "none"]
         },
         "reportKind": { "$ref": "report.schema.json#/properties/kind" },

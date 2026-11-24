@@ -21,6 +21,19 @@ const at = (sourceId, extra = {}) => ({
 })
 
 describe('heldBySafety', () => {
+  it('keeps the stages’ answers a case gives, and counts only an absent one as cleared', () => {
+    for (const given of [
+      { verification: { safety: true } },
+      { curation: { safety: true } },
+      { verification: { safety: 'false' } },
+      { curation: { safety: null } },
+    ])
+      expect(heldBySafety(at('library', { given }), context), JSON.stringify(given)).toBe(true)
+    const cleared = { verification: { safety: false }, curation: { safety: false } }
+    expect(heldBySafety(at('library', { given: cleared }), context)).toBe(false)
+    expect(heldBySafety(at('library', { given: {} }), context)).toBe(false)
+  })
+
   it('holds an item whose source is listed, whatever the stages answered, and reads no text', () => {
     expect(heldBySafety(at('police-feed'), context)).toBe(true)
     const answered = at('police-feed', { given: { curation: { safety: false } } })
@@ -45,7 +58,18 @@ describe('routeProblems', () => {
     expect(routeProblems(noAccept, context)).toEqual([
       'case-1: a suggestion follows an accept, not needs-review',
     ])
-    expect(routeProblems(at('police-feed'), context)[0]).toMatch(/always held/)
+    expect(routeProblems(at('police-feed'), context)[0]).toMatch(/gate holds this accept/)
+  })
+
+  it('refuses a suggestion for an accept a given stage answer marks as safety', () => {
+    const marked = at('library', {
+      given: { curation: { decision: 'accept', safety: true } },
+    })
+    expect(routeProblems(marked, context)[0]).toMatch(/gate holds this accept/)
+    const verify = at('library', {
+      given: { curation: { decision: 'accept' }, verification: { safety: true } },
+    })
+    expect(routeProblems(verify, context)[0]).toMatch(/gate holds this accept/)
   })
 
   it('leaves a case that expects a report alone', () => {
@@ -63,7 +87,7 @@ describe('routeProblems', () => {
     ])
     expect(routeProblems(decided('police-feed', 'accept', 'reportItem'), context)).toEqual([])
     expect(routeProblems(decided('police-feed', 'accept', 'submitSuggestion'), context)[0]).toMatch(
-      /always held/,
+      /gate holds this accept/,
     )
   })
 

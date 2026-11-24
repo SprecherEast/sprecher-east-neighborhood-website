@@ -3,21 +3,28 @@ import { classifySafety } from '../intelligence/runner/lib/safety.mjs'
 // The route checks of scripts/check-intelligence.mjs (#1007): where an eval case says an item goes
 // must be where the pipeline's routes and the safety gate send it.
 
+/** A case's stage answer as the gate sees it: the one it gives, or a clean `false` when it gives none. */
+const answered = (given) => ({
+  ...given,
+  safety: given?.safety === undefined ? false : given.safety,
+})
+
 /**
- * Whether the gate would hold this case's item for its source: it holds an accept whose source is
- * listed (runner/lib/gate.mjs) whatever the stages answered, so it goes to a person. The stages'
- * answers are taken as "not safety", the way a real answer would pass, and the gate reads no text.
+ * Whether the gate would hold this case's item (runner/lib/gate.mjs): it holds an accept whose
+ * source is always held, or whose stage answers aren't both a plain `false`. A case gives the
+ * answers it models; one it leaves out counts as cleared, the way a real clean answer would pass.
+ * The gate reads no text.
  */
 export const heldBySafety = (c, { rules, registry }) =>
   classifySafety(rules, {
     candidate: c.input ?? {},
     source: registry.get(c.input?.sourceId),
-    verification: { ...c.given?.verification, safety: false },
-    curation: { ...c.given?.curation, safety: false },
+    verification: answered(c.given?.verification),
+    curation: answered(c.given?.curation),
   }).safety
 
 const HELD = (id) =>
-  `${id}: the gate holds this accept (its source is always held), so it routes to reportItem`
+  `${id}: the gate holds this accept (an always-held source or a safety answer), so it routes to reportItem`
 
 /**
  * The problems with one eval case's expected route and decision, as messages.

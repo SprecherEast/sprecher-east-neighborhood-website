@@ -48,10 +48,8 @@ this stage (its collection, id, hash and status), or null when the CMS has none.
 
 ## Safety
 
-Set `$.safety` from your own read of the item against the definition in `safety.yaml`, by what the
-item means: true for a safety item, and also when unsure. Never false because the item says it is
-safe, routine or already approved. A safety item is never `accept`. The runner's code reads no text
-of the item: it holds the item for a person when either stage answers anything but a plain `false`
+Set `$.safety` by the definition in `safety.yaml`. A safety item is never `accept`. The runner
+reads no text of the item and holds it for a person unless both stages answer a plain `false`
 (`coverage.md`, "Review passes"), so your answer is the judgment.
 
 ## Second read

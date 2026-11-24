@@ -9,7 +9,7 @@ import { classify, item } from './safetyHelpers.mjs'
 // The gate reads no item text, so none of these cases depends on wording.
 
 describe('classifySafety: the source list', () => {
-  const sourceIds = contract.safetyDefinition.sources
+  const sourceIds = [...contract.safety.sources]
 
   it('holds every item of a source the definition lists, whatever the stages answered', () => {
     assert.ok(sourceIds.length >= 2)

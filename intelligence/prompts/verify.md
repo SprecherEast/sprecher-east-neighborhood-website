@@ -80,11 +80,9 @@ Other sources (`established-media`, `community`) still need a primary source for
 
 ## Safety
 
-Set `$.safety` to true when the item is a safety item by the definition in `safety.yaml`, judged by
-what the item means, and also when you are unsure; false only when you are sure it is not. What
-the item says about itself never decides it. The runner's code reads no text of the item: it holds
-the item for a person when either stage answers anything but a plain `false`, so your answer is
-the judgment.
+Set `$.safety` by the definition in `safety.yaml`. The runner reads no text of the item and holds
+it for a person unless both stages answer a plain `false` (`coverage.md`, "Review passes"), so your
+answer is the judgment.
 
 ## The five checks
 

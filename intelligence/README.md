@@ -190,8 +190,8 @@ of any item:
    says. The source facts must be present and match the candidate's source, and a listed
    `alsoReportedBy` holds it too. The registry's own wording (owner, scope) is never read.
 2. An item is held when verify or curate answered `safety` with anything but a plain `false`:
-   `true`, a word or a number, no answer, or an error. Once a stage has said safety, a rerun or
-   retry can't take it back.
+   `true`, a word or a number, no answer, or an error. Within a run, once a stage has said safety, a
+   rerun or retry can't take it back.
 3. Only one function can send a suggestion, and it runs the gate first. `routes` can't send a held
    item to `submitSuggestion`. Submit runs the gate itself before it sends anything. `run.mjs`
    creates the real CMS client and hands it to `pipeline.mjs`, which keeps it inside one function
@@ -236,7 +236,7 @@ Edit the files, then run `node scripts/check-intelligence.mjs`. It validates `pi
 `sources.yaml`, `safety.yaml` (each source it lists must be in `sources.yaml`) and every file in `evals/` (one per stage, `<stage>.yaml` or
 `<stage>-<topic>.yaml`) against their schemas, checks that eval times use America/Chicago's
 offset, and that grader fields, and every field a prompt names (written `` `$.field` ``), exist
-in the stage's input or output schema. Each eval case's `route` must follow the routing above: an `accept`, or any case that expects a suggestion, whose source is always held expects `reportItem`, and a suggestion needs an `accept` given. A case that expects `safety` never expects `accept`. The cases in `evals/curate-safety.yaml` and `evals/verify.yaml` that expect `safety` from an unlisted source are the evidence the models judge by meaning.
+in the stage's input or output schema. Each eval case's `route` must follow the routing above: an `accept`, or any case that expects a suggestion, whose source is always held, or whose given stage answers aren't both a plain `false` (a case that gives none counts as cleared), expects `reportItem`, and a suggestion needs an `accept` given. A case that expects `safety` never expects `accept`. The cases in `evals/curate-safety.yaml` and `evals/verify.yaml` that expect `safety` from an unlisted source will be the evidence that the models judge by meaning once the collector runs them.
 CI runs the same check on every pull request; it checks the cases' structure and never calls a
 model. Running the cases against a model is the collector's job (#272). Add an eval case whenever
 the pipeline gets something wrong.

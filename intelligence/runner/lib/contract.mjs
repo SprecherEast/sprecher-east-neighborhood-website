@@ -92,7 +92,6 @@ ${safetyText.trim()}
     coverage,
     area,
     safety,
-    safetyDefinition,
     schemas,
     prompts,
     validator,

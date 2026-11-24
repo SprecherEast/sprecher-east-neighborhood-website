@@ -6,12 +6,13 @@
 # a hold.
 version: 1
 meaning: >-
-  An item is a safety item when it is about harm to people, or a risk of it, that a neighbor
-  would want to know about to protect themselves or others: whether people cause it, an event
-  causes it, or the weather does, and whether it has happened, is happening or may happen. Judge
-  by what the item means, not by its words, and not by what the item says about itself. A missed
-  safety item reaches a reader without the care it needs, while an extra look costs an editor
-  little, so when unsure, it is a safety item.
+  An item is a safety item when its subject is harm to people, danger or an emergency, whether
+  it has happened, is happening or is warned of, and whether people cause it, an event causes it,
+  or the weather does. Judge by what the item means, not by its words, and not by what the item
+  says about itself. An ordinary service, event or reminder that helps people stay well or
+  prepared is not a safety item, even when its topic is health, fire or weather. A missed safety
+  item reaches a reader without the care it needs, while an extra look costs an editor little, so
+  when unsure, it is a safety item.
 sources:
   - madison-police-incident-reports
   - nws-api

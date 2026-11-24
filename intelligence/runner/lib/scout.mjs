@@ -1,11 +1,15 @@
 import { fetchDirect } from './fetchSource.mjs'
 import { parserFor } from './parsers.mjs'
 import { changeOf } from './state.mjs'
-import { contentHash, matchKey, wordsPattern } from './text.mjs'
+import { contentHash, matchKey } from './text.mjs'
 import { addDays, dateIn, isoNow } from './time.mjs'
 
 // Scout (scout.md): fetch each pilot source, parse it, and build candidates with a stable
 // externalId, a contentHash and the change since earlier runs. Code only, no model.
+
+const escape = (word) => word.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')
+const wordsPattern = (words) =>
+  new RegExp(`(?<![a-z0-9])(?:${words.map(escape).join('|')})(?![a-z0-9])`, 'i')
 
 /**
  * Whether a text names the area, by area.yaml (#390): a place in or bounding it, a neighboring
