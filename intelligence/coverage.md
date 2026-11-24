@@ -157,9 +157,17 @@ The five checks, which verify runs on every item:
    [sources.md](sources.md#trust-reach-is-not-trust). A date, time or number found only in one secondary report is left out, or
    attributed to that report (`unverified-claim`, and `missing-date` when it is the date).
 2. **Place.** Test the item's location against the City's own boundary for the neighborhood
-   (`boundary` in `area.yaml`, the City's Neighborhood Associations layer; the test is not built
-   yet, #1009, so placing is still by word match), and give it a tier from the table above:
-   `core`, `catchment`, `citywide` or `outside`. An item at a fixed place elsewhere is still
+   (`boundary` in `area.yaml`, the City's Neighborhood Associations layer), and give it a tier
+   from the table above. Code does the test after verify answers (#1009): when the item gives one
+   street address in Madison and the City's address locator resolves it to one point, that point
+   is tested against the boundary and `$.placement` says `boundary`. The boundary is the
+   authority on inside and outside: an address inside is `core`, and `core` is never kept for an
+   address outside. Where that only raises a `catchment` or `unknown` tier to `core`, `$.placement`
+   says `overrode`; any other change gets `ambiguous-location` too, so a person looks. Outside the boundary, which of `catchment`, `citywide` or `outside` it is stays
+   the judgment described here. An item with no usable address, a locator that fails or an
+   ambiguous match keeps the word match (`area.yaml`), with `$.placement` saying `word-match`,
+   or `unplaced` when the item names no place at all. Placement never touches the safety answer
+   (`safety.yaml`): a safety item stays held wherever it is. An item at a fixed place elsewhere is still
    accepted only when it is a public event or service open to anyone in the city and of wide
    interest: it is tiered `citywide`, and its text says where it is and that it is not in the
    neighborhood. Anything else at a fixed place elsewhere stays `outside` and is rejected. Never

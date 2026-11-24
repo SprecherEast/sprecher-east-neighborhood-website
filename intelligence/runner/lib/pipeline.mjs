@@ -1,6 +1,8 @@
 import { randomBytes } from 'node:crypto'
 
+import { staleBoundaryProblem } from './boundary.mjs'
 import { withoutSuggestions } from './cms.mjs'
+import { createPlacer } from './place.mjs'
 import { processRun } from './process.mjs'
 import { submitItem } from './submit.mjs'
 import { isoNow } from './time.mjs'
@@ -25,6 +27,7 @@ export async function runPipeline({
   state,
   http,
   robots,
+  geocode = null,
   repoCommit,
   agentName = 'Sprecher East intelligence',
   now = () => new Date(),
@@ -83,6 +86,15 @@ export async function runPipeline({
   const deferredSources = new Set()
   let stopped = null
   try {
+    const stale = staleBoundaryProblem(contract.boundary, contract.area.boundary, startedAt)
+    if (stale) addError(stale)
+    // Where each item is: by the City's boundary when its address resolves (place.mjs)
+    const place = createPlacer({
+      boundary: contract.boundary,
+      record: contract.area.boundary,
+      geocode,
+      onProblem: addError,
+    })
     stopped = await processRun({
       contract,
       cms,
@@ -91,6 +103,7 @@ export async function runPipeline({
       state,
       http,
       robots,
+      place,
       budgets,
       startedAt,
       runId,

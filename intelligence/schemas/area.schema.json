@@ -27,15 +27,49 @@
       }
     },
     "boundary": {
-      "description": "The City's own boundary feature for the area, which verify tests a place against. `verified` is false until someone confirms the layer and ID by hand.",
+      "description": "The City's own boundary feature for the area: where the dated copy is, how it was verified, and the City's locator that turns a street address into a point (runner/lib/place.mjs). `verified` is false until someone confirms the layer and ID by hand; until then items are placed by word match.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["source", "naId", "checked", "verified"],
+      "required": [
+        "source",
+        "field",
+        "naId",
+        "file",
+        "maxAgeDays",
+        "terms",
+        "checked",
+        "verified",
+        "geocoder"
+      ],
       "properties": {
         "source": { "type": "string", "pattern": "^https://" },
+        "field": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
         "naId": { "type": "integer", "minimum": 1 },
+        "file": { "type": "string", "pattern": "^[a-z0-9-]+\\.json$" },
+        "maxAgeDays": { "type": "integer", "minimum": 30, "maximum": 3650 },
+        "terms": { "type": "string", "pattern": "^https://" },
         "checked": { "$ref": "common.schema.json#/$defs/date" },
-        "verified": { "type": "boolean" }
+        "verified": { "type": "boolean" },
+        "geocoder": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "minScore",
+            "sameSpotMeters",
+            "maxPerRun",
+            "timeoutSeconds",
+            "maxKilobytes"
+          ],
+          "properties": {
+            "source": { "type": "string", "pattern": "^https://" },
+            "minScore": { "type": "number", "minimum": 50, "maximum": 100 },
+            "sameSpotMeters": { "type": "number", "minimum": 0, "maximum": 200 },
+            "maxPerRun": { "type": "integer", "minimum": 0, "maximum": 200 },
+            "timeoutSeconds": { "type": "number", "exclusiveMinimum": 0, "maximum": 30 },
+            "maxKilobytes": { "type": "integer", "minimum": 1, "maximum": 1000 }
+          }
+        }
       }
     },
     "highways": {

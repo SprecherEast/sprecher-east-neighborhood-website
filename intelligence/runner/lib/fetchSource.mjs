@@ -66,11 +66,6 @@ export function robotsAllows(robotsText, url) {
   return best ? best.allow : true
 }
 
-/**
- * Fetches one source URL. `http` is `fetch` or a test double with the same shape. Answers
- * `{ status, body, etag, lastModified, retries, error }`, status being `ok`, `not-modified`,
- * `blocked` or `error`.
- */
 /** Retry-After in seconds or as an HTTP date, as a wait in milliseconds. */
 export function retryWait(header, now = Date.now()) {
   if (!header) return 0
@@ -79,7 +74,22 @@ export function retryWait(header, now = Date.now()) {
   return Number.isFinite(ms) ? Math.max(ms, 0) : 0
 }
 
-export async function fetchDirect(url, { http = fetch, etag, lastModified, robots } = {}) {
+/**
+ * Fetches one source URL. `http` is `fetch` or a test double with the same shape. Answers
+ * `{ status, body, etag, lastModified, retries, error }`, status being `ok`, `not-modified`,
+ * `blocked` or `error`. `timeoutMs` and `maxBytes` tighten the limits for a small API call.
+ */
+export async function fetchDirect(
+  url,
+  {
+    http = fetch,
+    etag,
+    lastModified,
+    robots,
+    timeoutMs = TIMEOUT_MS,
+    maxBytes = MAX_BODY_BYTES,
+  } = {},
+) {
   let current = url
   let retries = 0
   for (let hop = 0; hop <= MAX_HOPS; ) {
@@ -95,7 +105,7 @@ export async function fetchDirect(url, { http = fetch, etag, lastModified, robot
       response = await http(current, {
         headers,
         redirect: 'manual',
-        signal: AbortSignal.timeout(TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
       })
     } catch (error) {
       if (retries === 0) {
@@ -139,8 +149,8 @@ export async function fetchDirect(url, { http = fetch, etag, lastModified, robot
     }
     if (code >= 400) return { status: 'error', retries, error: `${code}` }
     const declared = Number(response.headers.get('content-length'))
-    if (declared > MAX_BODY_BYTES)
-      return { status: 'error', retries, error: `body over ${MAX_BODY_BYTES} bytes` }
+    if (declared > maxBytes)
+      return { status: 'error', retries, error: `body over ${maxBytes} bytes` }
     let body
     try {
       body = await response.text()
@@ -152,8 +162,8 @@ export async function fetchDirect(url, { http = fetch, etag, lastModified, robot
       }
       return { status: 'error', retries, error: `body not received: ${error.message ?? error}` }
     }
-    if (body.length > MAX_BODY_BYTES)
-      return { status: 'error', retries, error: `body over ${MAX_BODY_BYTES} bytes` }
+    if (body.length > maxBytes)
+      return { status: 'error', retries, error: `body over ${maxBytes} bytes` }
     return {
       status: 'ok',
       retries,

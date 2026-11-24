@@ -13,7 +13,7 @@ const MAX_FAILURES_IN_A_ROW = 3
 /** Scout, the model stages and submit. Answers a stop status, or null when the run went through. */
 export async function processRun(run) {
   // What the run reads, then what it records into
-  const { contract, cms, submit, ask, state, http, robots, budgets } = run
+  const { contract, cms, submit, place, ask, state, http, robots, budgets } = run
   const { startedAt, runId, log, calls, addError, deferredSources } = run
   const { counts, cost } = log
   // Measured on the real clock, whatever `now` says (tests pin it)
@@ -113,7 +113,8 @@ export async function processRun(run) {
       item.known = await cms.known(candidate.externalId)
       modelItems++
       const verify = await runVerify(contract, ask, item, { deadline })
-      item.verification = verify.output
+      // Code places the item by the City's boundary when it can, and says how (place.mjs)
+      item.verification = await place(verify.output, candidate)
       const curate = await runStage(contract, ask, 'curate', item, { deadline })
       item.curation = curate.output
       addUsage(cost, verify.usage, curate.usage)

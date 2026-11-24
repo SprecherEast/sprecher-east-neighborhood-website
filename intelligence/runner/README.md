@@ -14,6 +14,7 @@ cd intelligence/runner
 npm ci
 node run.mjs --dry-run --digest digest.json   # reads the CMS if a key is set, writes nothing
 node run.mjs                                   # a real run
+node run.mjs --refresh-boundary                # rewrites ../boundary.json from the City's layer
 npm test                                       # unit tests and the scout and submit evals
 ```
 
@@ -47,7 +48,39 @@ only when the run failed; the run log is in Admin → Agents → Agent Runs.
 | `lib/gate.mjs`        | The one gate: what may be accepted and which tool it goes to; `lib/safety.mjs` reads the source list of `safety.yaml`     |
 | `lib/submit.mjs`      | Runs the gate, then the MCP envelope, validation, one retry, follow-up review and image reports                           |
 | `lib/cms.mjs`         | The MCP client with the key, the dry-run CMS, and `withoutSuggestions`, the client with no submit                         |
+| `lib/boundary.mjs`    | The dated copy of the City's boundary: checks, point in polygon, age, refresh from the layer                              |
+| `lib/geocode.mjs`     | A street address in a text, and the City's own address locator (no key); only the street address is sent                  |
+| `lib/place.mjs`       | After verify: places the item by the boundary or the word match, and records `verification.placement`                     |
 | `lib/pipeline.mjs`    | One run: kill switch and the run log; `lib/process.mjs`: budgets, state, items, failures                                  |
+
+## Placement by the City's boundary (#1009)
+
+After verify answers, `lib/place.mjs` reads one street address from the item (verify's
+`location.address`, else the candidate's `locationText`), asks the City's own locator for its
+point, and tests the point against `../boundary.json`. It adds `verification.placement` with the
+method: `boundary` (inside or outside), `word-match` (no address resolved, so verify's tier by
+the area's words stands) or `unplaced` (the item names no place). Reports for an editor say it.
+
+- **Authority.** When an address resolves, the boundary decides inside or outside: inside is
+  `core` (a `catchment` or `unknown` tier is simply raised), and `core` is never kept for an
+  address outside (it becomes `unknown`). Any other change adds `ambiguous-location`, which the
+  promotion guard holds for a person. A point on the edge counts
+  as inside. Outside, catchment versus citywide versus outside stays verify's judgment.
+- **Falls back, never fails.** No address, two addresses, a municipality other than Madison,
+  Wisconsin, a `similar-name` or `prompt-injection` flag, no match, a weak match (score under
+  `minScore`), strong matches in different places, a failing or slow locator, or the run's limit:
+  all keep the word match, with the reason in `placement.reason`. A failing locator is logged once
+  in the run and stops after two failures in a row.
+- **Safety.** Placement never reads or writes `safety`; the gate decides it as before.
+- **What leaves the machine.** One GET per address to
+  `maps.cityofmadison.com/arcgis/rest/services/Locators/AddressPoints_w_Unit/GeocodeServer`, with
+  only a house number, street and street type, at most `maxPerRun` per run, 10 s timeout, 100 KB
+  answer. No key, no cost, no other service. The settings are in `area.yaml`, `boundary`.
+- **The copy.** `boundary.json` is the one feature (`NA_ID` 146) of the City's Neighborhood
+  Associations layer, about 3.5 KB, kept in the repo so a run needs no request for it. The City
+  says the layer's boundaries are self-reported by the associations. A run's log says when the
+  copy is older than `maxAgeDays` (365); then run `node run.mjs --refresh-boundary` and open a
+  pull request with the diff. A copy that fails its checks stops the start.
 
 ## Not built yet
 

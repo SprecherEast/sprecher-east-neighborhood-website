@@ -59,8 +59,16 @@ cases:
       startsAt: 2026-10-30T18:00:00-05:00
       locationText: null
     expected:
-      { decision: needs-review, coverage: unknown, flags: [missing-location], route: reportItem }
-    why: '"East side" is not a place; never guess a park.'
+      {
+        decision: needs-review,
+        coverage: unknown,
+        flags: [missing-location],
+        route: reportItem,
+        placement: unplaced,
+      }
+    graders:
+      - { check: equals, field: $.placement.method, value: unplaced }
+    why: '"East side" is not a place; never guess a park. No place at all is unplaced, not a word match.'
   - id: missing-date
     stage: verify
     input:
@@ -316,13 +324,70 @@ cases:
     stage: verify
     tags: [place, boundary]
     input:
-      sourceId: legistar-events
+      sourceId: madison365-news
       title: Weekly members-only club meeting
       sourceText: A routine weekly meeting for members, at the club's own building.
       startsAt: 2026-11-18T19:00:00-06:00
       locationText: A community building on the far west side, Madison, WI
     expected: { decision: reject, coverage: outside, route: none }
     why: A routine item at a fixed place elsewhere in the city is not of wide interest, so it stays outside and is rejected.
+  - id: verify-place-by-boundary-inside
+    stage: verify
+    tags: [place, boundary]
+    input:
+      sourceId: district16-blog
+      title: Alder's neighborhood meeting at the Door Creek Park shelter
+      sourceText: The alder meets neighbors at the shelter, with the date, time and address on the district page.
+      startsAt: 2026-11-14T10:00:00-06:00
+      locationText: Door Creek Park Shelter, 7035 Littlemore Dr, Madison, WI
+    expected:
+      {
+        decision: accept,
+        coverage: core,
+        flagsAbsent: [ambiguous-location],
+        route: submitSuggestion,
+        placement: boundary,
+      }
+    graders:
+      - { check: equals, field: $.placement.method, value: boundary }
+      - { check: equals, field: $.placement.inside, value: true }
+    why: A public address in the area, resolved by the City's locator and inside the City's boundary, so the item is core by the boundary.
+  - id: verify-place-by-boundary-outside-named-road
+    stage: verify
+    tags: [place, boundary]
+    input:
+      sourceId: madison365-news
+      title: Community meal at Messiah Lutheran Church
+      sourceText: A weekly meal open to everyone, at the church's address on Cottage Grove Road.
+      startsAt: 2026-11-14T17:00:00-06:00
+      locationText: Messiah Lutheran Church, 5202 Cottage Grove Rd, Madison, WI
+    expected: { decision: reject, coverage: outside, route: none, placement: boundary }
+    graders:
+      - { check: equals, field: $.placement.method, value: boundary }
+      - { check: equals, field: $.placement.inside, value: false }
+      - { check: notMatches, field: $.coverage, value: '^core$' }
+    why: Cottage Grove Road bounds the area, but this address is two kilometers west of it. The word match names the road; the boundary puts the address outside, and core is never kept.
+  - id: verify-place-without-address-by-word-match
+    stage: verify
+    tags: [place, boundary]
+    input:
+      sourceId: district16-blog
+      title: Alder's office hours on Sprecher Road
+      sourceText: Office hours at a coffee shop on Sprecher Road, with no street number given.
+      startsAt: 2026-11-12T08:00:00-06:00
+      locationText: A coffee shop on Sprecher Road, Madison, WI
+    expected:
+      {
+        decision: needs-review,
+        coverage: unknown,
+        flags: [missing-location],
+        route: reportItem,
+        placement: word-match,
+      }
+    graders:
+      - { check: equals, field: $.placement.method, value: word-match }
+      - { check: isNull, field: $.placement.inside }
+    why: No street number, so nothing to test against the boundary; the word match stands and the item says so. Never guess the shop.
   - id: verify-date-only-in-secondary-report
     stage: verify
     tags: [primary-source]
