@@ -1,6 +1,6 @@
 /** The loaded-config stand-in the endpoints tests share. */
 
-export function checkKey() {}
+function checkKey() {}
 function maskVerify() {}
 function seoHandler() {}
 function mcpHandler() {}
