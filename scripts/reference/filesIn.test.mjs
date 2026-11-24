@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { SERVER_SCRIPTS, WORKFLOW_FILES, filesIn } from './loadFacts.mjs'
 
@@ -12,7 +12,10 @@ describe('filesIn and the file types the loader reads (#1461)', () => {
     for (const name of ['b.yml', 'a.yaml', 'c.txt']) {
       fs.writeFileSync(path.join(root, 'f', name), `text of ${name}`)
     }
+    // a file system may list names in any order
+    const list = vi.spyOn(fs, 'readdirSync').mockReturnValue(['b.yml', 'c.txt', 'a.yaml'])
     const found = filesIn(root, 'f', WORKFLOW_FILES)
+    list.mockRestore()
     fs.rmSync(root, { recursive: true, force: true })
     expect(found).toEqual([
       { file: 'f/a.yaml', text: 'text of a.yaml' },

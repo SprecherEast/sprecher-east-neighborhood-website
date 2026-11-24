@@ -20,6 +20,11 @@ describe('which endpoint Payload picks (#1461)', () => {
     expect(taken([route('/a+'), route('/aa')])).toEqual([null, null])
   })
 
+  it('asks a path with an optional fixed segment both with and without it', () => {
+    const [, later] = describeEndpoints([route('/foo'), route('/foo?')], locate, { builtIn: true })
+    expect(later.replacedWhen).toEqual(['/foo'])
+  })
+
   it('names an endpoint written as a plain function `handler` inline', () => {
     const handler = { handler() {} }.handler
     const [found] = describeEndpoints([{ path: '/x', method: 'get', handler }], locate, {
