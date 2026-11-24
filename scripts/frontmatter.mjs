@@ -3,8 +3,9 @@ import yaml from 'js-yaml'
 
 /**
  * Accepts what `agent-context` accepted for the closing line (trailing spaces, more dashes after
- * the three), and adds Windows line endings and a file that ends right after the closing line. The
- * opening line stays strict, as in both callers before: `---` and a newline, nothing else.
+ * the three). For `check-intelligence` it also adds Windows line endings and a file that ends right
+ * after the closing line (`agent-context` already took both). The opening line stays strict, as in
+ * both callers before: `---` and a newline, nothing else.
  */
 const FRONTMATTER = /^---\n([\s\S]*?)\n---/
 

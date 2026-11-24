@@ -130,7 +130,7 @@ describe('hasPaths', () => {
     expect(hasPaths("---  \npaths:\n  - 'src/**'\n---\n\nText")).toBe(false)
   })
 
-  it('counts a rule that ends right after the closing delimiter (new)', () => {
+  it('counts a rule that ends right after the closing delimiter (as before)', () => {
     expect(hasPaths("---\npaths:\n  - 'src/**'\n---")).toBe(true)
   })
 

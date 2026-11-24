@@ -57,6 +57,9 @@ since=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-7d
    a repeated fix, a repeated question) is the candidate. Prefer a free tool that fails a check by
    itself over agent judgment ([development](../guidelines/development.md#fast-by-default-public-pages-first)).
 
+A process change the owner put on trial is checked against this evidence (review results and
+problems met later) and revisited when it shows no benefit.
+
 ## What it cannot measure
 
 Say so in the report instead of estimating:
