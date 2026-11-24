@@ -9,12 +9,25 @@ import { clip } from './text.mjs'
 // held wherever it is. Anything that goes wrong falls back to the word match; nothing here throws.
 
 const MADISON = /^(?:city of )?madison(?:,?\s*(?:wi|wis\.?|wisconsin))?(?:,?\s*\d{5}(?:-\d{4})?)?$/i
+/** What may follow a street address after a comma without naming another place: Madison, a state, a ZIP, a unit. */
+const SAME_PLACE =
+  /^(?:#.*|(?:apt|unit|suite|ste|room|rm)\b.*|(?:wi|wis\.?|wisconsin)?\s*\d{5}(?:-\d{4})?|wi|wis\.?|wisconsin)$/i
 const NOT_PLACED_FLAGS = ['similar-name', 'prompt-injection']
 const MAX_FAILURES_IN_A_ROW = 2
 const REASONS = {
   none: 'the locator found no match for the address',
   unsure: 'the locator’s best match was not sure enough',
   ambiguous: 'the locator found the address in more than one place',
+}
+/** Whether `text` goes on, after `street`, to name something other than Madison, such as another town. */
+function namesAnotherPlace(text, street) {
+  const flat = text.replace(/\s+/g, ' ')
+  const at = flat.indexOf(street)
+  const rest = flat.slice(at + street.length).replace(/\.$/, '')
+  return rest
+    .split(',')
+    .map((part) => part.trim())
+    .some((part) => part !== '' && !SAME_PLACE.test(part) && !MADISON.test(part))
 }
 const filled = (text) => typeof text === 'string' && text.trim().length > 0
 
@@ -76,11 +89,21 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
       return { reason: 'the municipality is not Madison, Wisconsin' }
     if (NOT_PLACED_FLAGS.some((flag) => verification.flags.includes(flag)))
       return { reason: 'the item is flagged as a similar name or as an injection' }
-    let found = streetAddresses(verification.location.address)
-    if (found.length === 0) found = streetAddresses(candidate.locationText)
+    // Verify's own address is the one a primary source confirmed; the candidate's text is the fallback
+    let text = verification.location.address
+    let found = streetAddresses(text)
+    let from = 'verify'
+    if (found.length === 0) {
+      text = candidate.locationText
+      found = streetAddresses(text)
+      from = 'candidate'
+    }
     if (found.length > 1) return { reason: 'more than one street address in the item' }
     if (found.length === 0) return { reason: 'no street address in the item' }
-    return resolve(found[0], deadline)
+    // The municipality that goes with the street is read from the text the street came from
+    if (namesAnotherPlace(text, found[0]))
+      return { reason: 'the address names a municipality other than Madison, Wisconsin' }
+    return { ...(await resolve(found[0], deadline)), from }
   }
 
   async function placeVerified(given, candidate, deadline) {
@@ -109,7 +132,8 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
     // The boundary is the authority on inside and outside, so a tier that can't hold is replaced:
     // inside is core, and core is never kept for an address outside. Outside, which of
     // catchment, citywide or outside it is stays verify's judgment. Verify's catchment for an
-    // address inside is raised to core, and so is its unknown when verify confirmed the address;
+    // address inside is raised to core, and so is its unknown when the address is verify's own and
+    // confirmed (an address only the candidate's text gives is one no primary source confirmed);
     // placement never makes an item easier to accept than verify allowed, so any other
     // disagreement goes to a person.
     if (inside === (verification.coverage === 'core')) return { ...verification, placement }
@@ -117,7 +141,8 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
     const said = verification.coverage
     // Only an address inside reaches here with another tier than core, so this is never true outside
     const raised =
-      said === 'catchment' || (said === 'unknown' && verification.location.verified === true)
+      said === 'catchment' ||
+      (said === 'unknown' && found.from === 'verify' && verification.location.verified === true)
     return {
       ...verification,
       coverage,

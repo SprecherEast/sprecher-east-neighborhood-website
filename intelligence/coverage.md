@@ -164,11 +164,14 @@ The five checks, which verify runs on every item:
    street address in Madison and the City's address locator resolves it to one point, that point
    is tested against the boundary and `$.placement` says `boundary`. The boundary is the
    authority on inside and outside: an address inside is `core`, and `core` is never kept for an
-   address outside. Placement never makes an item easier to accept than verify's own judgment allowed, except
-   where a confirmed address is inside the line: it raises `catchment` to `core`, and raises
-   `unknown` to `core` only when verify confirmed the location (`$.location.verified`), and
-   `$.placement` says `overrode`. Any other change, `unknown` from an address nobody confirmed
-   included, gets `ambiguous-location` too, so a person looks. Outside the boundary, which of `catchment`, `citywide` or `outside` it is stays
+   address outside. Placement never makes an item easier to accept than verify's own judgment
+   allowed. It raises `catchment` to `core` for an address inside, which changes nothing curate may
+   accept (relevance rule 2 takes both alike). It raises `unknown` to `core` only when the street
+   is the one in verify's own `$.location.address` and `$.location.verified` is true: an address
+   found only in the item's own text, or one verify didn't confirm, never raises it. `$.placement`
+   says `overrode` for any change, and every change except those two raises also gets
+   `ambiguous-location`, so a person looks. An address that names a municipality other than
+   Madison is not tested. Outside the boundary, which of `catchment`, `citywide` or `outside` it is stays
    the judgment described here. An item with no usable address, a locator that fails or an
    ambiguous match keeps the word match (`area.yaml`), with `$.placement` saying `word-match`,
    or `unplaced` when the item names no place at all. Placement never touches the safety answer

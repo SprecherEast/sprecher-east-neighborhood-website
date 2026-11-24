@@ -62,21 +62,23 @@ method: `boundary` (inside or outside), `word-match` (no address resolved, so ve
 the area's words stands) or `unplaced` (the item names no place). Reports for an editor say it.
 
 - **Authority.** When an address resolves, the boundary decides inside or outside: inside is
-  `core` (a `catchment` tier is simply raised, and an `unknown` one only when verify confirmed
-  the location), and `core` is never kept for an address outside (it becomes `unknown`). Any
+  `core` (a `catchment` tier is simply raised, since curate accepts both alike; an `unknown` one
+  only when the street is verify's own `location.address` and `location.verified` is true), and
+  `core` is never kept for an address outside (it becomes `unknown`). Any
   other change adds `ambiguous-location`, which the promotion guard holds for a person:
   placement never makes an item easier to accept than verify allowed. A point on the edge counts
   as inside. Outside, catchment versus citywide versus outside stays verify's judgment.
 - **Falls back, never fails.** No address, two addresses, a municipality other than Madison,
-  Wisconsin, a `similar-name` or `prompt-injection` flag, no match, a weak match (score under
+  Wisconsin (verify's, or one named after the street in the text it came from), a `similar-name` or `prompt-injection` flag, no match, a weak match (score under
   `minScore`), strong matches in different places, a failing or slow locator, or the run's limit:
   all keep the word match, with the reason in `placement.reason`. A failing locator is logged once
   in the run and stops after two failures in a row.
 - **Safety.** Placement never reads or writes `safety`; the gate decides it as before.
 - **What leaves the machine.** One GET per address to
   `maps.cityofmadison.com/arcgis/rest/services/Locators/AddressPoints_w_Unit/GeocodeServer`, with
-  only a house number, street and street type: no retry, no wait for `Retry-After`, and a redirect
-  to another host is refused. At most `maxPerRun` requests per run (each one counted), 10 s
+  only a house number, street and street type: no retry, no wait for `Retry-After`, and no redirect
+  followed (a redirect counts as a failure). At most `maxPerRun` requests per run (each one a
+  single GET, so each counted), 10 s
   timeout, 100 KB answer, none after the run's deadline. No key, no cost, no other service. The
   settings are in `area.yaml`, `boundary`. The run log never holds an address or a URL from it.
 - **The copy.** `boundary.json` is the one feature (`NA_ID` 146) of the City's Neighborhood

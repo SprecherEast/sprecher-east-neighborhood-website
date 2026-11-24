@@ -37,7 +37,7 @@ describe('what the City’s locator is sent and how it fails', () => {
       throw new Error('reset')
     }
     const slow = await cityGeocoder({ http: down, config })('7035 Littlemore Dr')
-    assert.match(slow.error, /did not answer in time/)
+    assert.match(slow.error, /could not be reached/)
   })
 
   it('fails when the answer holds an error beside candidates', async () => {
@@ -125,25 +125,21 @@ describe('what the City’s locator is sent and how it fails', () => {
       assert.equal(http.requested.length, 1)
     })
 
-    it('never follows a redirect to another host, so the street goes nowhere else', async () => {
-      const { result, http } = await asked(
-        { status: 302, redirectTo: 'https://other.example/find' },
-        json(LOCATOR['7035 Littlemore Dr']),
-      )
-      assert.equal(result.status, 'failed')
-      assert.equal(http.requested.length, 1)
-    })
-
-    it('follows a redirect that stays on the City’s host', async () => {
-      const { result, http } = await asked(
-        {
-          status: 302,
-          redirectTo: `${new URL(config.source).origin}/elsewhere/findAddressCandidates`,
-        },
-        json(LOCATOR['7035 Littlemore Dr']),
-      )
-      assert.equal(result.status, 'match')
-      assert.equal(http.requested.length, 2)
+    it('never follows a redirect, so one address is one GET and the street goes nowhere else', async () => {
+      const origin = new URL(config.source).origin
+      for (const to of [
+        'https://other.example/find',
+        `${origin}/elsewhere/findAddressCandidates`,
+        origin.replace('.com', '.com:8443') + '/find',
+        '//other.example/find',
+      ]) {
+        const { result, http } = await asked(
+          { status: 302, redirectTo: to },
+          json(LOCATOR['7035 Littlemore Dr']),
+        )
+        assert.equal(result.status, 'failed', to)
+        assert.equal(http.requested.length, 1, to)
+      }
     })
 
     it('keeps the street and any URL out of the error it reports', async () => {

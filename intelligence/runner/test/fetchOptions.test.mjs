@@ -77,21 +77,22 @@ describe('fetchDirect options', () => {
     )
   })
 
-  it('follows a redirect to another host by default, and refuses it when told to stay', async () => {
-    const hop = { status: 302, redirectTo: 'https://b.example/find?q=1' }
-    const free = fakeHttp([hop, { status: 200, body: 'ok' }])
+  it('follows redirects by default, up to three, and none when told maxHops 0', async () => {
+    const hop = (to) => ({ status: 302, redirectTo: to })
+    const free = fakeHttp([hop('https://b.example/find?q=1'), { status: 200, body: 'ok' }])
     assert.equal((await fetchDirect(URL_ONE, { http: free })).status, 'ok')
-    const kept = fakeHttp([hop, { status: 200, body: 'ok' }])
-    const answer = await fetchDirect(URL_ONE, { http: kept, sameOrigin: true })
-    assert.equal(answer.status, 'error')
-    assert.equal(kept.requested.length, 1)
-  })
-
-  it('lets a redirect that stays on the host through when told to stay', async () => {
-    const http = fakeHttp([
-      { status: 302, redirectTo: 'https://a.example/other' },
-      { status: 200, body: 'ok' },
-    ])
-    assert.equal((await fetchDirect(URL_ONE, { http, sameOrigin: true })).status, 'ok')
+    for (const to of [
+      'https://b.example/find?q=1',
+      'https://a.example/other',
+      'https://a.example:8443/find?q=1',
+    ]) {
+      const kept = fakeHttp([hop(to), { status: 200, body: 'ok' }])
+      const answer = await fetchDirect(URL_ONE, { http: kept, maxHops: 0 })
+      assert.equal(answer.status, 'error', to)
+      assert.equal(kept.requested.length, 1, to)
+    }
+    const loop = fakeHttp(Array.from({ length: 6 }, () => hop('https://a.example/again')))
+    assert.equal((await fetchDirect(URL_ONE, { http: loop })).status, 'error')
+    assert.equal(loop.requested.length, 4)
   })
 })

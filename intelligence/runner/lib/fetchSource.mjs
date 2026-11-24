@@ -78,7 +78,7 @@ export function retryWait(header, now = Date.now()) {
  * Fetches one source URL. `http` is `fetch` or a test double with the same shape. Answers
  * `{ status, body, etag, lastModified, retries, error }`, status being `ok`, `not-modified`,
  * `blocked` or `error`. For a small API call, `timeoutMs` and `maxBytes` tighten the limits,
- * `retry: false` makes it one request with no second try, and `sameOrigin` refuses a redirect to another host.
+ * `retry: false` makes it one request with no second try, and `maxHops: 0` follows no redirect.
  */
 export async function fetchDirect(
   url,
@@ -90,12 +90,12 @@ export async function fetchDirect(
     timeoutMs = TIMEOUT_MS,
     maxBytes = MAX_BODY_BYTES,
     retry = true,
-    sameOrigin = false,
+    maxHops = MAX_HOPS,
   } = {},
 ) {
   let current = url
   let retries = 0
-  for (let hop = 0; hop <= MAX_HOPS; ) {
+  for (let hop = 0; hop <= maxHops; ) {
     // robots.txt is checked for every URL fetched, redirect targets included
     if (robots && !(await robots(current))) {
       return { status: 'blocked', retries, error: `robots.txt disallows ${current}` }
@@ -123,8 +123,6 @@ export async function fetchDirect(
       const location = response.headers.get('location')
       if (!location) return { status: 'error', retries, error: `${code} without a location` }
       const next = new URL(location, current).toString()
-      if (sameOrigin && new URL(next).origin !== new URL(url).origin)
-        return { status: 'error', retries, error: 'redirect to another host refused' }
       if (GATE_URL.test(next))
         return { status: 'blocked', retries, error: `redirect to a gate: ${next}` }
       if (current.startsWith('https:') && !next.startsWith('https:')) {

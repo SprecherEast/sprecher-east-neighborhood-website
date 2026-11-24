@@ -39,7 +39,7 @@ function failureOf({ status, error }) {
   const text = String(error ?? '')
   if (status === 'blocked') return 'the locator refused or sent us to a login'
   if (/^\d{3}\b/.test(text)) return `the locator answered HTTP ${text.slice(0, 3)}`
-  if (/^no answer|^body not received/.test(text)) return 'the locator did not answer in time'
+  if (/^no answer|^body not received/.test(text)) return 'the locator could not be reached'
   if (/^body over/.test(text)) return 'the locator’s answer was too large'
   return 'the locator’s answer was refused'
 }
@@ -76,9 +76,9 @@ export function cityGeocoder({ http = fetch, config }) {
       http,
       timeoutMs: config.timeoutSeconds * 1000,
       maxBytes: config.maxKilobytes * 1024,
-      // One request per address, to the City's host only: the street goes nowhere else
+      // One request per address and no redirect followed: the street goes only to the City's host
       retry: false,
-      sameOrigin: true,
+      maxHops: 0,
     })
     if (answer.status !== 'ok') return { status: 'failed', error: failureOf(answer) }
     try {
