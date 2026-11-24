@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { describes } from './agent-context-maps.mjs'
+import { describes, parseKnowledgeMap } from './agent-context-maps.mjs'
 
 describe('describes', () => {
   const entry = { paths: ['src/modules/events/**', 'docs/x.md'] }
@@ -14,5 +14,27 @@ describe('describes', () => {
     ['src/modules/events/ui/Card.test.tsx', false],
   ])('%s is %s', (file, expected) => {
     expect(describes(entry, file)).toBe(expected)
+  })
+})
+
+describe('exclude', () => {
+  const entry = {
+    paths: ['src/platform/ui/**'],
+    exclude: ['src/platform/ui/chart/**', 'src/platform/ui/Area*'],
+  }
+
+  it.each([
+    ['src/platform/ui/Button.tsx', true],
+    ['src/platform/ui/chart/Chart.tsx', false],
+    ['src/platform/ui/AreaChart.tsx', false],
+  ])('%s is %s', (file, expected) => {
+    expect(describes(entry, file)).toBe(expected)
+  })
+
+  it('is read from the map, and a mistyped one throws', () => {
+    const list = (exclude) => JSON.stringify([{ note: 'a.md', paths: ['x/**'], exclude }])
+    expect(parseKnowledgeMap(list(['x/y/**']))[0].exclude).toEqual(['x/y/**'])
+    expect(parseKnowledgeMap(list(undefined))[0].exclude).toBeUndefined()
+    expect(() => parseKnowledgeMap(list('x/y'))).toThrow(/exclude/)
   })
 })

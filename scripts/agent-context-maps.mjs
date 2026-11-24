@@ -55,8 +55,8 @@ export function parseLoadMap(markdown, mapPath = LOAD_MAP) {
 }
 
 /**
- * Reads the knowledge map (decision 0019, §5): a JSON list of `{ note, paths }`, one per note,
- * giving the paths the note describes. Each entry becomes a path-scoped rule like a guideline's.
+ * Reads the knowledge map (decision 0019, §5): a JSON list of `{ note, paths, exclude? }`, one per
+ * note, giving the paths the note describes (and, optionally, paths another note takes out of them). Each entry becomes a path-scoped rule like a guideline's.
  * Throws on a map it would misread, so a mistyped entry fails instead of being dropped.
  */
 export function parseKnowledgeMap(json, mapPath = KNOWLEDGE_MAP) {
@@ -68,19 +68,25 @@ export function parseKnowledgeMap(json, mapPath = KNOWLEDGE_MAP) {
   }
   if (!Array.isArray(list)) throw new Error(`${mapPath} must be a list of { note, paths }`)
   return list.map((entry, index) => {
-    const { note, paths } = entry ?? {}
+    const { note, paths, exclude } = entry ?? {}
     const valid =
       typeof note === 'string' &&
       note.endsWith('.md') &&
       Array.isArray(paths) &&
       paths.length > 0 &&
       paths.every((glob) => typeof glob === 'string' && glob !== '')
+    const validExclude =
+      exclude === undefined ||
+      (Array.isArray(exclude) && exclude.every((glob) => typeof glob === 'string' && glob !== ''))
+    if (!validExclude) {
+      throw new Error(`${mapPath}: entry ${index + 1}: "exclude" must be a list of globs`)
+    }
     if (!valid) {
       throw new Error(
         `${mapPath}: entry ${index + 1} needs a "note" (a .md path) and a non-empty "paths" list of globs`,
       )
     }
-    return { source: note, paths, origin: mapPath }
+    return { source: note, paths, ...(exclude && { exclude }), origin: mapPath }
   })
 }
 
@@ -105,10 +111,11 @@ export function globToRegExp(glob) {
 }
 
 /**
- * Whether a knowledge-map entry describes `file`: it matches one of the entry's globs and is not a
- * test. The one definition the `PR Policy` check (`.github/scripts/knowledge-sync.mjs`) and the
+ * Whether a knowledge-map entry describes `file`: it matches one of the entry's globs, none of its
+ * `exclude` globs (a split note's own area, carved out of its parent's), and is not a test. The one definition the `PR Policy` check (`.github/scripts/knowledge-sync.mjs`) and the
  * Claude Code hook (`.claude/hooks/rules.mjs`) share, so they can't drift apart.
  */
-export function describes({ paths }, file) {
-  return !isTestFile(file) && paths.some((glob) => globToRegExp(glob).test(file))
+export function describes({ paths, exclude = [] }, file) {
+  const matches = (globs) => globs.some((glob) => globToRegExp(glob).test(file))
+  return !isTestFile(file) && matches(paths) && !matches(exclude)
 }

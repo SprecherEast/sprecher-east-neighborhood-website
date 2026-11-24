@@ -1,0 +1,246 @@
+{
+  "$comment": "The one definition of a knowledge note: its fields, its fixed sections, the node and relationship vocabulary and what the check enforces. Read by scripts/knowledge-structure/ (the check, the index and the skeleton). Nothing else restates it. Why: decision 0022. How to write a note: note-template.md.",
+  "version": 1,
+  "limits": {
+    "noteLines": 80,
+    "noteLinesCount": "lines below the front matter, blank lines included",
+    "summaryChars": 200,
+    "nameChars": 40
+  },
+  "fields": [
+    { "key": "name", "what": "The short name the index and the map show." },
+    {
+      "key": "type",
+      "what": "What the note describes: one of noteTypes, which is also a node type."
+    },
+    {
+      "key": "summary",
+      "what": "One line, in plain words, of what the part is for. The index line is made from it."
+    },
+    {
+      "key": "aliases",
+      "what": "Other names a reader may search for (a list; empty when there are none)."
+    },
+    {
+      "key": "relationships",
+      "what": "Only what the code and the generated reference cannot show: a list of { type, target }, type from relationshipTypes with hand set to true, target a path in the repository (a list; empty when there are none)."
+    }
+  ],
+  "noteTypes": {
+    "module": "A business area under src/modules/ with its own screens, rules and data.",
+    "platform-area": "Shared code under src/platform/ that modules and pages build on.",
+    "feature": "One piece with its own logic spread over several files, inside a module or a platform area."
+  },
+  "sections": [
+    {
+      "heading": "Screens",
+      "appliesTo": ["module"],
+      "presence": "optional",
+      "hint": "Only for a module with routes: one line each on where its data comes from. The routes themselves are in docs/reference/routes.md: link it, do not copy it."
+    },
+    {
+      "heading": "How the pieces link",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "How its fields, flags, hooks and files connect and depend on each other and on other notes, where the code does not show it at a glance."
+    },
+    {
+      "heading": "Behaviors and events",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "required",
+      "hint": "What happens that the config does not show: hooks, jobs, emails, cache tags, time windows, limits. One line each, with the file."
+    },
+    {
+      "heading": "Shared pieces it uses",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "Components, helpers and blocks from src/platform/, one line each. Where it meets another module, name the composition root that joins them (decision 0008)."
+    },
+    {
+      "heading": "Rules and the tests that protect them",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "Each business rule in a sentence, with its test."
+    },
+    {
+      "heading": "Boundaries",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "What it may import, what imports it, what it must never do."
+    },
+    {
+      "heading": "Decisions",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "Links to the decision records and issues that explain why it is this way."
+    },
+    {
+      "heading": "Known gaps",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "Open issues and limits to know before changing it: the node's watch-outs on the map. Write None when there are none."
+    }
+  ],
+  "nodeTypes": {
+    "site": { "side": "product", "what": "The whole website." },
+    "module": { "side": "product", "what": "A business area under src/modules/." },
+    "platform-area": { "side": "product", "what": "Shared code under src/platform/." },
+    "feature": {
+      "side": "product",
+      "what": "One piece with its own logic, inside a module or area."
+    },
+    "screen": { "side": "product", "what": "A page route a visitor opens." },
+    "endpoint": {
+      "side": "product",
+      "what": "An HTTP address that answers with data, not a page."
+    },
+    "mcp-tool": { "side": "product", "what": "A tool an AI agent calls through the MCP address." },
+    "collection": { "side": "product", "what": "A CMS content type with many documents." },
+    "global": { "side": "product", "what": "A CMS content type with one document." },
+    "block": { "side": "product", "what": "A page-builder or rich-text block an editor places." },
+    "shared-component": { "side": "product", "what": "A component of the UI kit or rich text." },
+    "job": { "side": "product", "what": "Work the app runs on its own schedule or queue." },
+    "scheduled-task": {
+      "side": "how-we-work",
+      "what": "A task that runs by the clock outside the app."
+    },
+    "note": { "side": "product", "what": "A knowledge note next to the code it describes." },
+    "decision": {
+      "side": "how-we-work",
+      "what": "A decision record under docs/architecture/decisions/."
+    },
+    "guideline": { "side": "how-we-work", "what": "A convention under docs/guidelines/." },
+    "skill": { "side": "how-we-work", "what": "A procedure under .agents/skills/." },
+    "role": { "side": "how-we-work", "what": "A role guide under docs/roles/." },
+    "subagent": { "side": "how-we-work", "what": "An agent definition under .claude/agents/." },
+    "ci-workflow": { "side": "how-we-work", "what": "A GitHub Actions workflow." },
+    "workflow-step": { "side": "how-we-work", "what": "One step of how a change is made." },
+    "check": { "side": "how-we-work", "what": "A mechanical gate: a required check or a script." }
+  },
+  "relationshipTypes": {
+    "contains": {
+      "hand": false,
+      "derivedFrom": "folders and the screens and content-type references"
+    },
+    "renders": { "hand": false, "derivedFrom": "the components reference" },
+    "reads": { "hand": false, "derivedFrom": "the routes and content-type references" },
+    "writes": { "hand": false, "derivedFrom": "the content-type reference and the code" },
+    "calls": { "hand": false, "derivedFrom": "the routes reference and the code" },
+    "exposes": { "hand": false, "derivedFrom": "the endpoint and tool references" },
+    "uses": { "hand": false, "derivedFrom": "imports and the components reference" },
+    "documents": { "hand": false, "derivedFrom": "docs/knowledge/map.json" },
+    "decided-by": { "hand": false, "derivedFrom": "the Decisions section links" },
+    "mentions": { "hand": false, "derivedFrom": "Markdown links between notes" },
+    "depends-on": {
+      "hand": true,
+      "derivedFrom": "written only when no import or reference shows it"
+    },
+    "owned-by": { "hand": true, "derivedFrom": "written: which role owns the subject" },
+    "triggers": { "hand": true, "derivedFrom": "workflow files, else written" },
+    "runs": { "hand": true, "derivedFrom": "workflow files, else written" },
+    "next-step": { "hand": true, "derivedFrom": "skills, else written" }
+  },
+  "paths": {
+    "roots": ["", "src", "src/modules", "src/platform", "src/app/(frontend)"],
+    "extensions": [
+      "ts",
+      "tsx",
+      "mjs",
+      "cjs",
+      "js",
+      "json",
+      "jsonc",
+      "md",
+      "scss",
+      "css",
+      "sh",
+      "yml",
+      "yaml",
+      "html",
+      "svg",
+      "png",
+      "jpg",
+      "webp"
+    ],
+    "repoRoots": [
+      "src/",
+      "docs/",
+      "ops/",
+      "e2e/",
+      "scripts/",
+      "public/",
+      ".github/",
+      ".claude/",
+      ".agents/",
+      ".storybook/",
+      "intelligence/"
+    ],
+    "ignore": [".env*", "storybook-static/**", "node_modules/**"]
+  },
+  "notes": {
+    "discover": "src/**/README.md",
+    "folderEntries": ["src/modules/README.md", "src/platform/README.md"]
+  },
+  "coverage": {
+    "roots": ["src/**"],
+    "extensions": ["ts", "tsx"],
+    "ignore": ["src/migrations/**", "src/payload-types.ts", "**/*.stories.tsx"]
+  },
+  "rules": {
+    "NOTE-FRONTMATTER": {
+      "severity": "warn",
+      "what": "A note starts with a front matter block that parses."
+    },
+    "NOTE-FIELDS": {
+      "severity": "warn",
+      "what": "The fields are exactly those of fields, in that order."
+    },
+    "NOTE-FIELD-VALUE": {
+      "severity": "warn",
+      "what": "Each field has the right shape: one-line summary within the limit, lists of the right items."
+    },
+    "NOTE-TYPE": { "severity": "warn", "what": "The type is one of noteTypes." },
+    "NOTE-RELATIONSHIP": {
+      "severity": "warn",
+      "what": "Each relationship has a type from relationshipTypes that may be written by hand."
+    },
+    "NOTE-RELATIONSHIP-TARGET": {
+      "severity": "warn",
+      "what": "Each relationship target is a path that exists."
+    },
+    "NOTE-TITLE": {
+      "severity": "warn",
+      "what": "A level 1 title, then a purpose paragraph, before the first section."
+    },
+    "NOTE-SECTIONS": {
+      "severity": "warn",
+      "what": "Level 2 headings are those of sections for the type, in order, once each, and every required one is there."
+    },
+    "NOTE-CAP": { "severity": "warn", "what": "A note is within limits.noteLines." },
+    "NOTE-PATH": {
+      "severity": "warn",
+      "what": "Every backticked path and every file link in a note exists."
+    },
+    "NOTE-ORPHAN": {
+      "severity": "warn",
+      "what": "Every README under notes.discover is a map entry's note."
+    },
+    "MAP-NOTE": { "severity": "warn", "what": "Every map entry names a note that exists, once." },
+    "NOTE-NO-CODE": {
+      "severity": "warn",
+      "what": "A note's map paths match code, and the note names code."
+    },
+    "INDEX-DRIFT": {
+      "severity": "warn",
+      "what": "The index lists each map note, in map order, with the line made from its name and summary."
+    },
+    "COVERAGE-SECTION": {
+      "severity": "warn",
+      "what": "A section marked expected is missing (becomes blocking in #1004)."
+    },
+    "COVERAGE-CODE": {
+      "severity": "warn",
+      "what": "Source code that no map entry describes (becomes blocking in #1004)."
+    }
+  }
+}
