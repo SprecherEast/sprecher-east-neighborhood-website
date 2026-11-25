@@ -223,6 +223,15 @@ describe('execute', () => {
     ])
   })
 
+  it('--write-index says nothing when it cannot write: an index with no Notes section', () => {
+    const root = fixture({ index: '# Index\n' })
+    const lines = []
+    expect(() => execute({ argv: ['--write-index'], root, log: (l) => lines.push(l) })).toThrow(
+      /no "## Notes" section/,
+    )
+    expect(lines).toEqual([])
+  })
+
   it('--skeleton prints only the note: it does not go on to check the repository', () => {
     const { lines } = run(fixture({ note: '# Demo\n' }), ['--skeleton', 'feature'])
     expect(lines).toHaveLength(1)

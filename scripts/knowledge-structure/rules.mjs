@@ -118,7 +118,8 @@ export function checkNote({ schema, path: notePath, text, files }) {
   else if (note.purposeLines === 0)
     add('NOTE-TITLE', 'the title needs a purpose paragraph before the first section')
   const type = note.data[keyOfKind(schema, 'noteType')]
-  if (Object.hasOwn(schema.noteTypes, type)) sectionFindings(add, schema, note)
+  if (typeof type === 'string' && Object.hasOwn(schema.noteTypes, type))
+    sectionFindings(add, schema, note)
   if (note.bodyLines > schema.limits.noteLines)
     add(
       'NOTE-CAP',

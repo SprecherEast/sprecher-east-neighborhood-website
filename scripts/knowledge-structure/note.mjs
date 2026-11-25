@@ -9,12 +9,11 @@ export const FENCE = /^\s*(```|~~~)/
  * `sections` are its level 2 headings (with their line in the body), code fences skipped.
  */
 export function parseNote(markdown) {
-  const text = markdown.replace(/\r\n/g, '\n')
-  const { text: raw, rest } = splitFrontmatter(text)
-  const note = { hasFrontmatter: raw !== null, error: null, data: {}, body: text }
+  const { text: raw, rest } = splitFrontmatter(markdown)
+  const note = { hasFrontmatter: raw !== null, error: null, data: {}, body: rest }
   if (raw !== null) {
     try {
-      const data = parseFrontmatter(text)
+      const data = parseFrontmatter(markdown)
       if (typeof data !== 'object' || Array.isArray(data)) {
         note.error = 'the front matter is not a list of fields (key: value)'
       } else note.data = data

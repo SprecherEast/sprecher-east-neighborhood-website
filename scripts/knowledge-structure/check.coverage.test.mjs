@@ -24,6 +24,19 @@ describe('COVERAGE-CODE', () => {
     ])
   })
 
+  it('COVERAGE-CODE counts a source file by its extension at the end of the name', () => {
+    const files = [
+      ...GOOD_FILES,
+      'src/a/page.tsx.snap',
+      'src/a/boots',
+      'src/a/hearts.mts',
+      'src/a/b.tsx',
+    ]
+    expect(messagesOf(repo({ schema, files }), 'COVERAGE-CODE')).toEqual([
+      '1 source files have no note: src/a/b.tsx 1',
+    ])
+  })
+
   it('COVERAGE-CODE does not count generated types, stories or files outside src', () => {
     const files = [
       ...GOOD_FILES,

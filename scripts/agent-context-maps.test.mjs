@@ -150,3 +150,23 @@ describe('rulePaths', () => {
     expect(globs).not.toContain('src/ui/**')
   })
 })
+
+describe('an entry with a bad exclude and a bad note, and a file at a long path', () => {
+  const LONG = 'a'.repeat(70)
+
+  it('names the exclude first when both are wrong', () => {
+    const json = JSON.stringify([{ note: 5, paths: [], exclude: 'x' }])
+    expect(() => parseKnowledgeMap(json)).toThrow('"exclude" must be a list of globs')
+  })
+
+  it('describes and leaves out a file at a long path, and writes its folder', () => {
+    const entry = { paths: [`src/${LONG}/**`], exclude: [`src/${LONG}/sub/**`] }
+    expect(describes(entry, `src/${LONG}/a.ts`)).toBe(true)
+    expect(describes(entry, `src/${LONG}/sub/b.ts`)).toBe(false)
+    const tracked = [`src/${LONG}/a.ts`, `src/${LONG}/sub/b.ts`, `src/${LONG}/deep/c.ts`]
+    expect(rulePaths({ ...entry, source: 'n.md' }, tracked)).toEqual([
+      `src/${LONG}/*`,
+      `src/${LONG}/deep/**`,
+    ])
+  })
+})

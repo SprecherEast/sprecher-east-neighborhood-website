@@ -4,7 +4,7 @@ import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { execute, listFiles } from './cli.mjs'
-import { GOOD_FIELDS, NOTE_PATH, fixture, goodNote, removeFixtures } from './testkit.mjs'
+import { GOOD_FIELDS, NOTE_PATH, fixture, goodNote, removeFixtures, schema } from './testkit.mjs'
 
 describe('listFiles', () => {
   afterEach(removeFixtures)
@@ -72,5 +72,25 @@ describe('execute, on what the file list holds', () => {
     expect(run(root).code).toBe(0)
     fs.writeFileSync(path.join(root, 'untracked.txt'), 'x')
     expect(run(root).code).toBe(0)
+  })
+})
+
+describe('the job summary on a clean run', () => {
+  afterEach(removeFixtures)
+
+  it('is written when there is nothing to report, and appended to what is there', () => {
+    const optional = {
+      ...schema,
+      sections: schema.sections.map((s) => ({ ...s, presence: 'optional' })),
+    }
+    const root = fixture({ schemaJson: optional })
+    const summary = path.join(root, 'summary.md')
+    fs.writeFileSync(summary, 'earlier\n')
+    const lines = []
+    execute({ argv: [], root, env: { GITHUB_STEP_SUMMARY: summary }, log: (l) => lines.push(l) })
+    expect(lines).toEqual(['Knowledge structure: 0 errors, 0 warnings'])
+    expect(fs.readFileSync(summary, 'utf8')).toBe(
+      'earlier\nKnowledge structure: 0 errors, 0 warnings\n',
+    )
   })
 })
