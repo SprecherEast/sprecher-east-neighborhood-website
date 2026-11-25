@@ -3,6 +3,7 @@
 //
 //   node run.mjs                 a real run: suggestions and review items go to the CMS
 //   node run.mjs --dry-run       reads the CMS (with a key) but writes nothing; prints the calls
+//   node run.mjs --refresh-boundary   rewrites ../boundary.json from the City's layer (#1009)
 //
 // Environment: SPRECHER_EAST_MCP_KEY (the agent's API key; never in the repo),
 // SPRECHER_EAST_MCP_URL, SPRECHER_EAST_MODEL_COMMAND (JSON argv of the OpenClaw CLI),
@@ -14,12 +15,13 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 
+import { refreshBoundary } from './lib/boundary.mjs'
 import { connectCms, dryRunCms } from './lib/cms.mjs'
 import { loadContract } from './lib/contract.mjs'
-import { robotsChecker } from './lib/fetchSource.mjs'
 import { openclawAdapter } from './lib/model.mjs'
 import { runPipeline } from './lib/pipeline.mjs'
 import { loadState, saveState } from './lib/state.mjs'
+import { runInputs } from './lib/wiring.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const { values: flags } = parseArgs({
@@ -28,6 +30,7 @@ const { values: flags } = parseArgs({
     intelligence: { type: 'string', default: path.resolve(here, '..') },
     state: { type: 'string' },
     digest: { type: 'string' },
+    'refresh-boundary': { type: 'boolean', default: false },
   },
 })
 const env = process.env
@@ -57,6 +60,13 @@ function modelCommand() {
 
 async function main() {
   const contract = loadContract(flags.intelligence)
+  if (flags['refresh-boundary']) {
+    const data = await refreshBoundary({ dir: flags.intelligence, record: contract.area.boundary })
+    console.log(
+      `boundary.json rewritten from the City's layer, dated ${data.fetchedAt}. Review the diff, then open a pull request.`,
+    )
+    return
+  }
   const key = env.SPRECHER_EAST_MCP_KEY
   if (!key && !dryRun)
     throw new Error('Set SPRECHER_EAST_MCP_KEY (the agent API key), or use --dry-run.')
@@ -71,13 +81,10 @@ async function main() {
   let result
   try {
     result = await runPipeline({
-      contract,
       cms,
       ask,
       state,
-      http: fetch,
-      robots: robotsChecker(fetch),
-      repoCommit: repoCommit(flags.intelligence),
+      ...runInputs({ contract, http: fetch, commit: repoCommit(flags.intelligence) }),
     })
   } finally {
     // What was handled is kept even when the run stopped part way

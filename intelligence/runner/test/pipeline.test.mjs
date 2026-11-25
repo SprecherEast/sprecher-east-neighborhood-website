@@ -7,7 +7,7 @@ import { runPipeline } from '../lib/pipeline.mjs'
 import { takeTurns } from '../lib/process.mjs'
 import { robotsChecker } from '../lib/fetchSource.mjs'
 import { curation, draft, feedsHttp, verification } from './fixtures.mjs'
-import { contract } from './helpers.mjs'
+import { contract, contractOn } from './helpers.mjs'
 
 // A whole run over the four pilot feeds, with a fake model and a dry-run CMS: scout, the model
 // stages, submit and the run log, and what a second run does with the state the first left.
@@ -40,6 +40,8 @@ const model = (calls = []) =>
       : draft()
   })
 
+const onRunDay = contractOn('2026-10-25')
+
 const run = async ({
   state = { sources: {}, seen: {} },
   http = feedsHttp(),
@@ -50,8 +52,8 @@ const run = async ({
   cms.taxonomy = async () => [{ slug: 'community', title: 'Community', parent: null }]
   const result = await runPipeline({
     contract: pipeline
-      ? { ...contract, pipeline: { ...contract.pipeline, ...pipeline } }
-      : contract,
+      ? { ...onRunDay, pipeline: { ...contract.pipeline, ...pipeline } }
+      : onRunDay,
     cms,
     ask,
     state,
