@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { afterAll, describe, expect, it } from 'vitest'
 
-import { copyIntelligence, runCheck } from './check-intelligence-harness.mjs'
+import { copyIntelligence, removeCopies, runCheck } from './check-intelligence-harness.mjs'
 
 // The eval check asks the same rules as the gate where an eval case expects an item to go (#1007).
 // The logic is tested in check-intelligence-routes.test.mjs; these run the script on a copy of the
 // evals with one more case.
+
+afterAll(removeCopies)
 
 /** The check on a copy with one more eval case for `stage`; `given` is the curation decision it assumes. */
 function check({ stage, sourceId, given = null, expected }) {

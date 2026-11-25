@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import { geocoder, item, located, record, setup } from './placeHelpers.mjs'
+import { INSIDE } from './geoFixtures.mjs'
 import { candidate } from './fixtures.mjs'
 
 // What the placer reads, and the order of its checks (#1009; coverage.md, Review passes, check 2):
@@ -112,5 +113,27 @@ describe('the order of the checks in front of a request', () => {
     const { geocode, placed } = await asked(long)
     assert.deepEqual(geocode.asked, [])
     assert.equal(placed.placement.reason, 'the address is not a plain street address')
+  })
+})
+
+describe('an answered street', () => {
+  it('is not asked again after an unrelated failure', async () => {
+    const answers = { '7035 Littlemore Dr': { status: 'match', point: INSIDE } }
+    const geocode = geocoder((street) => answers[street] ?? { status: 'failed' })
+    const { place } = setup({ geocode })
+    await place(located('7035 Littlemore Dr'), item())
+    await place(located('100 Inside Edge Rd'), item())
+    const again = await place(located('7035 Littlemore Dr'), item())
+    assert.deepEqual(geocode.asked, ['7035 Littlemore Dr', '100 Inside Edge Rd'])
+    assert.equal(again.placement.method, 'boundary')
+  })
+})
+
+describe('the length of a street', () => {
+  it('sends a plain street of 61 to 80 characters', async () => {
+    const street = `7035 ${'A'.repeat(20)} ${'B'.repeat(20)} ${'C'.repeat(16)} Dr`
+    assert.equal(street.length, 66)
+    const { geocode } = await asked(street)
+    assert.deepEqual(geocode.asked, [street])
   })
 })

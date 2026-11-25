@@ -1,12 +1,14 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { describe, expect, it } from 'vitest'
+import { afterAll, describe, expect, it } from 'vitest'
 
-import { copyIntelligence, runCheck } from './check-intelligence-harness.mjs'
+import { copyIntelligence, removeCopies, runCheck } from './check-intelligence-harness.mjs'
 
 // The check reads the dated copy of the City's boundary (#1009): its schema, its geometry, and
 // that it is the feature area.yaml names. These run it on a copy of intelligence/ with one change.
+
+afterAll(removeCopies)
 
 const output = (run) => `${run.stdout}${run.stderr}`
 const changed = (file, change) => runCheck(copyIntelligence({ [file]: change }))

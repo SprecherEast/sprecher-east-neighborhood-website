@@ -107,3 +107,22 @@ describe('what a street word may hold', () => {
     assert.deepEqual(streetAddresses('At 7035 Rolling-Hills Dr tonight'), ['7035 Rolling-Hills Dr'])
   })
 })
+
+describe('the candidates of an answer', () => {
+  const at = (n) =>
+    JSON.stringify({
+      candidates: Array.from({ length: n }, () => ({
+        score: 100,
+        location: { x: INSIDE[0], y: INSIDE[1] },
+      })),
+    })
+
+  it('reads every one the locator sent, up to and past the number asked for', async () => {
+    for (const n of [1, 5, 6, 8]) {
+      const http = recording(() => new Response(at(n)))
+      const result = await cityGeocoder({ http, config })('7035 Littlemore Dr')
+      assert.equal(result.status, 'match', String(n))
+      assert.deepEqual(result.point, INSIDE, String(n))
+    }
+  })
+})

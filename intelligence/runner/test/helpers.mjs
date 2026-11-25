@@ -13,12 +13,8 @@ export function tempDir(prefix) {
   process.once('exit', () => rmSync(dir, { recursive: true, force: true }))
   return dir
 }
-/** `copyIntelligence` (the check's harness), removed when the test process ends. */
-export function intelligenceCopy(changes) {
-  const dir = copyIntelligence(changes)
-  process.once('exit', () => rmSync(dir, { recursive: true, force: true }))
-  return dir
-}
+/** `copyIntelligence` (the check's harness), which removes its copies when the test process ends. */
+export const intelligenceCopy = copyIntelligence
 
 export const intelligenceDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 export const contract = loadContract(intelligenceDir)

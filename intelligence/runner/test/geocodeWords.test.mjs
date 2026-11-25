@@ -77,3 +77,20 @@ describe('the guard in front of the request', () => {
       assert.equal(isPlainStreet(street), false, street)
   })
 })
+
+describe('what ends a street', () => {
+  it('is a street type from the list and nothing else', () => {
+    for (const text of [
+      'Meet at 6 Town Hall',
+      'Go to 100 East Towne Mall',
+      '5 Main Center',
+      '7 Elm Plaza',
+    ])
+      assert.deepEqual(streetAddresses(text), [], text)
+  })
+
+  it('takes a digit in the direction place as the house number, not as a direction', () => {
+    assert.deepEqual(streetAddresses('At 123 0 Main St'), ['0 Main St'])
+    assert.deepEqual(streetAddresses('At 123 9 Main St'), ['9 Main St'])
+  })
+})
