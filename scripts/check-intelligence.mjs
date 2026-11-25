@@ -7,6 +7,7 @@ import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import yaml from 'js-yaml'
 
+import { boundaryProblems } from '../intelligence/runner/lib/boundary.mjs'
 import { safetyRules, unregisteredSafetySources } from '../intelligence/runner/lib/safety.mjs'
 import { offsetProblems } from './check-intelligence-times.mjs'
 import { routeProblems } from './check-intelligence-routes.mjs'
@@ -105,7 +106,13 @@ for (const name of evalFiles) {
 }
 for (const id of duplicates(cases.map((c) => c.id))) problem(evalDir, `duplicate case id ${id}`)
 const pipeline = validate(path.join(dir, 'pipeline.yaml'), 'schemas/pipeline.schema.json')
-validate(path.join(dir, pipeline?.area ?? 'area.yaml'), 'schemas/area.schema.json')
+const area = validate(path.join(dir, pipeline?.area ?? 'area.yaml'), 'schemas/area.schema.json')
+// The dated copy of the City's boundary: its schema, then the geometry and that it is the record's feature (#1009)
+if (area?.boundary) {
+  const file = path.join(dir, area.boundary.file)
+  const copy = validate(file, 'schemas/boundary.schema.json')
+  if (copy) for (const message of boundaryProblems(copy, area.boundary)) problem(file, message)
+}
 const safety = validate(
   path.join(dir, pipeline?.safety ?? 'safety.yaml'),
   'schemas/safety.schema.json',

@@ -9,18 +9,19 @@ The agents never publish. They create **suggested drafts**; an editor reads, fix
 
 ## What's here
 
-| Path                             | What it is                                                                                |
-| -------------------------------- | ----------------------------------------------------------------------------------------- |
-| [`pipeline.yaml`](pipeline.yaml) | The settings a runtime reads first: kill switch, schedule, budgets, stages                |
-| [`sources.yaml`](sources.yaml)   | Approved sources, each checked by hand ([summary](sources.md))                            |
-| [`coverage.md`](coverage.md)     | The Sprecher East area and the relevance policy                                           |
-| [`area.yaml`](area.yaml)         | The words and boundary layer used to spot the area: places, neighbors, highway rules      |
-| [`safety.yaml`](safety.yaml)     | What counts as a safety item, which always waits for a person                             |
-| [`background.md`](background.md) | The City's 1998 neighborhood plan, summarized with pages (index; topics in `background/`) |
-| [`images.md`](images.md)         | How to choose a story's or event's photo: real, free, on topic, level                     |
-| [`prompts/`](prompts/)           | One prompt per stage, each naming its input and output schema                             |
-| [`schemas/`](schemas/)           | JSON Schemas for every file and every stage's output                                      |
-| [`evals/`](evals/)               | Test cases per stage with the result a correct pipeline reaches                           |
+| Path                             | What it is                                                                                     |
+| -------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [`pipeline.yaml`](pipeline.yaml) | The settings a runtime reads first: kill switch, schedule, budgets, stages                     |
+| [`sources.yaml`](sources.yaml)   | Approved sources, each checked by hand ([summary](sources.md))                                 |
+| [`coverage.md`](coverage.md)     | The Sprecher East area and the relevance policy                                                |
+| [`area.yaml`](area.yaml)         | The words and boundary record used to spot the area: places, neighbors, highway rules          |
+| [`boundary.json`](boundary.json) | The City's boundary for the area, a dated copy (#1009); `run.mjs --refresh-boundary` renews it |
+| [`safety.yaml`](safety.yaml)     | What counts as a safety item, which always waits for a person                                  |
+| [`background.md`](background.md) | The City's 1998 neighborhood plan, summarized with pages (index; topics in `background/`)      |
+| [`images.md`](images.md)         | How to choose a story's or event's photo: real, free, on topic, level                          |
+| [`prompts/`](prompts/)           | One prompt per stage, each naming its input and output schema                                  |
+| [`schemas/`](schemas/)           | JSON Schemas for every file and every stage's output                                           |
+| [`evals/`](evals/)               | Test cases per stage with the result a correct pipeline reaches                                |
 
 ## The pipeline
 
@@ -29,10 +30,11 @@ its own section (`schemas/item.schema.json`); it never changes an earlier one.
 
 1. **Scout** (code). Fetches the pilot sources, parses them, and builds a candidate with a stable
    `externalId` and a `contentHash`. Items already seen with the same hash stop here.
-2. **Verify** (model). Finds the real place, date and status from primary sources, sets the
-   coverage tier, and lists every unknown. Runs the five checks in `coverage.md`, "Review
-   passes": primary source, place against the City's boundary, freshness, physical facts and
-   stage of a project.
+2. **Verify** (model, then code). Finds the real place, date and status from primary sources, sets
+   the coverage tier, and lists every unknown. Runs the five checks in `coverage.md`, "Review
+   passes": primary source, place, freshness, physical facts and stage of a project. Code then
+   places the item by the City's boundary when its street address resolves, and records the
+   method in `$.placement` (`boundary`, `word-match` or `unplaced`, #1009).
 3. **Curate** (model). Accepts, rejects or sends to review, scores the item, and says who
    benefits and what they can do. Detects duplicates, updates and cancellations of known items.
    It is the second read of the verify result, and proposes any accepted item's organizer or
@@ -114,7 +116,7 @@ run the same folder.
 1. Check out this repository's `main` (read-only) at the start of each run, and record its commit
    as `repoCommit` in the run log, so every suggestion can be traced to the exact prompts that made it.
 2. Read `pipeline.yaml`. If `enabled` is false, log a `disabled` run and stop.
-3. Load the schemas in `schemas/`, `sources.yaml`, `coverage.md`, `safety.yaml` and `area.yaml` (given to the
+3. Load the schemas in `schemas/`, `sources.yaml`, `coverage.md`, `safety.yaml`, `area.yaml` and the `boundary.json` it names (the area file is given to the
    model with `coverage.md`), and read the category tree
    with the MCP find tool (`categories`: slug, title, parent) into each item's `taxonomy`
    (`common.schema.json#/$defs/taxonomy`), so the draft stage picks only existing categories
@@ -233,7 +235,7 @@ Until #336 is live, a run writes the same calls and its run log as a digest for 
 ## Changing it
 
 Edit the files, then run `node scripts/check-intelligence.mjs`. It validates `pipeline.yaml`,
-`sources.yaml`, `safety.yaml` (each source it lists must be in `sources.yaml`) and every file in `evals/` (one per stage, `<stage>.yaml` or
+`sources.yaml`, `safety.yaml` (each source it lists must be in `sources.yaml`), `area.yaml` and the boundary copy it names, `boundary.json` (its schema, a closed ring, the record's feature ID, and the area's bounds), and every file in `evals/` (one per stage, `<stage>.yaml` or
 `<stage>-<topic>.yaml`) against their schemas, checks that eval times use America/Chicago's
 offset, and that grader fields, and every field a prompt names (written `` `$.field` ``), exist
 in the stage's input or output schema. Each eval case's `route` must follow the routing above: an `accept`, or any case that expects a suggestion, whose source is always held, or whose given stage answers aren't both a plain `false` (a case that gives none counts as cleared), expects `reportItem`, and a suggestion needs an `accept` given. A case that expects `safety` never expects `accept`. The cases in `evals/curate-safety.yaml` and `evals/verify.yaml` that expect `safety` from an unlisted source will be the evidence that the models judge by meaning once the collector runs them.
