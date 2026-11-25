@@ -1,7 +1,8 @@
 /**
- * The entry script of the reference (#1461), run as a program on a copy of the repository: what
- * `--check` says and exits with, and what a write does to a stale, missing or stray page. It
- * takes about two minutes, since each run loads the Payload config and reads all of `src/`.
+ * The entry script of the reference (#1461), run as a program on a small repository (two content
+ * types, an endpoint, a tool, a job and a timer: `entryFixture.mjs`): what `--check` says and exits
+ * with, and what a write does to a stale, missing or stray page. The real tree is checked by the
+ * `Knowledge sync` job (`docs:check`), so this test stays fast enough for the full suite.
  */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -9,8 +10,9 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { buildEntryFixture } from './entryFixture.mjs'
+
 const source = path.resolve(import.meta.dirname, '../..')
-const FOLDERS = ['src', 'scripts', 'docs', 'ops', 'public', 'intelligence', '.github', 'data']
 let copy
 
 // The script gets its own environment: not the test runner's variables, and its own temporary
@@ -28,7 +30,7 @@ const run = (...args) =>
     ['--tsconfig', 'tsconfig.json', 'scripts/generate-reference.mjs', ...args],
     { cwd: copy, env: childEnv(), encoding: 'utf8', timeout: 300_000 },
   )
-/** What a failed run says, so a failure on another machine can be read from the log. */
+/** What a run says, so a failure on another machine can be read from the log. */
 const describeRun = (result) =>
   `status ${result.status}, signal ${result.signal}, error ${result.error?.message}\n` +
   `stdout: ${result.stdout?.slice(-1500)}\nstderr: ${result.stderr?.slice(-3000)}`
@@ -41,32 +43,19 @@ const read = (file) => fs.readFileSync(path.join(copy, 'docs/reference', file), 
 beforeAll(() => {
   copy = fs.mkdtempSync(path.join(os.tmpdir(), 'sena1461-generate-'))
   fs.mkdirSync(path.join(copy, '.tmp'))
-  // The files git knows (tracked, or new and not ignored): what a fresh checkout holds, with
-  // nothing a developer's machine or another test left in the working tree
-  const listed = spawnSync(
-    'git',
-    ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
-    {
-      cwd: source,
-      encoding: 'utf8',
-      maxBuffer: 64 * 1024 * 1024,
-    },
-  )
-  if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`)
-  for (const file of listed.stdout.split('\0').filter(Boolean)) {
-    if (!FOLDERS.includes(file.split('/')[0]) && file.includes('/')) continue
-    const from = path.join(source, file)
-    if (!fs.existsSync(from)) continue
-    fs.mkdirSync(path.dirname(path.join(copy, file)), { recursive: true })
-    fs.copyFileSync(from, path.join(copy, file))
-  }
-  fs.symlinkSync(path.join(source, 'node_modules'), path.join(copy, 'node_modules'))
+  buildEntryFixture(source, copy)
 }, 120_000)
 
 afterAll(() => fs.rmSync(copy, { recursive: true, force: true }))
 
 describe('scripts/generate-reference.mjs', () => {
   it('checks, fails on a stale, missing or stray page, and writes them right', () => {
+    // A repository with no pages yet: a check says so, a write makes them
+    const empty = run('--check')
+    expect(empty.status, describeRun(empty)).toBe(1)
+    const first = run()
+    expect(first.status, describeRun(first)).toBe(0)
+
     const current = run('--check')
     expect(current.status, describeRun(current)).toBe(0)
     expect(current.stdout).toContain(`docs/reference is current (${pagesOf().length} pages, `)
