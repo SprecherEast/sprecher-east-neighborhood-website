@@ -111,6 +111,10 @@ const readCommitted = (directory) =>
       .map((file) => [file, fs.readFileSync(path.join(directory, file), 'utf8')]),
   )
 
+// On Node 20 the module hooks that `tsx` uses can leave the event loop empty while an `import()` is
+// still loading, and the process then ends with exit code 13 and no message (seen in CI under load).
+// A timer keeps the loop alive until the pages are made.
+const keepAlive = setInterval(() => {}, 1_000)
 const started = Date.now()
 const directory = path.join(ROOT, OUTPUT)
 // One program for the components and the facts. The component pages are built first: a type
@@ -137,6 +141,7 @@ const pages = await formatted(
   ]),
 )
 const seconds = ((Date.now() - started) / 1000).toFixed(1)
+clearInterval(keepAlive)
 
 if (process.argv.includes('--check')) {
   const message = describeDifferences(compareFiles(pages, readCommitted(directory)), OUTPUT)
