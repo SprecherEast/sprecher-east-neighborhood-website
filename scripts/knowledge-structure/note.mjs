@@ -1,8 +1,24 @@
 /** Reading a knowledge note into the parts the checks look at. */
 import { parseFrontmatter, splitFrontmatter } from '../frontmatter.mjs'
 
-/** A line that is only an HTML comment: not text a reader sees, so not a purpose. */
-const COMMENT = /^\s*<!--.*-->\s*$/
+const COMMENT_OPEN = '<!--'
+const COMMENT_CLOSE = '-->'
+
+/**
+ * What a reader sees of a line, and whether a comment that started on an earlier line is still
+ * open. A comment, on one line or across several, is not text a reader sees, so not a purpose.
+ */
+function visibleText(line, open) {
+  let text = line
+  if (open) {
+    const end = text.indexOf(COMMENT_CLOSE)
+    if (end === -1) return { text: '', open: true }
+    text = text.slice(end + COMMENT_CLOSE.length)
+  }
+  text = text.replace(/<!--[\s\S]*?-->/g, '')
+  const start = text.indexOf(COMMENT_OPEN)
+  return start === -1 ? { text, open: false } : { text: text.slice(0, start), open: true }
+}
 
 export const FENCE = /^\s*(```|~~~)/
 
@@ -32,17 +48,15 @@ export function parseNote(markdown) {
   note.sections = []
   note.purposeLines = 0
   let fenced = false
+  let inComment = false
   lines.forEach((line, index) => {
     if (FENCE.test(line)) fenced = !fenced
     if (fenced) return
-    const heading = /^## (\S.*)/.exec(line)
+    const visible = visibleText(line, inComment)
+    inComment = visible.open
+    const heading = /^## (\S.*)/.exec(visible.text)
     if (heading) note.sections.push({ heading: heading[1].trim(), line: index + 1 })
-    else if (
-      note.sections.length === 0 &&
-      line.trim() &&
-      !line.startsWith('#') &&
-      !COMMENT.test(line)
-    )
+    else if (note.sections.length === 0 && visible.text.trim() && !visible.text.startsWith('#'))
       note.purposeLines++
   })
   return note

@@ -16,6 +16,7 @@ import {
   goodNote,
   messagesOf,
   removeFixtures,
+  repo,
   schema,
   strict,
 } from './testkit.mjs'
@@ -85,12 +86,31 @@ describe('a line terminator inside a line, and letter case', () => {
     expect(tokens('`src/a.ts\rjunk junk` `zzz/A.TS`')).toEqual([])
   })
 
-  it('reads a comment only when the whole line is one', () => {
+  it('counts text next to a comment, and nothing inside one, on one line or several', () => {
     const purposes = (text) => withBody(`# T\n\n${text}\n\n## Screens\n`).purposeLines
-    expect(purposes('<!-- a b -->')).toBe(1)
-    expect(purposes('text <!-- b -->')).toBe(1)
-    expect(purposes('<!-- b --> text')).toBe(1)
     expect(purposes('<!-- b -->')).toBe(0)
+    expect(purposes('<!-- a\u2028b -->')).toBe(0)
+    expect(purposes('text\u2028<!-- b -->')).toBe(1)
+    expect(purposes('<!-- b --> text')).toBe(1)
+    expect(purposes('text <!-- b -->')).toBe(1)
+    expect(purposes('<!-- a --> <!-- b -->')).toBe(0)
+    expect(purposes('<!-- a --> text <!-- b -->')).toBe(1)
+    expect(purposes('<!--\nTODO\nmore\n-->')).toBe(0)
+    expect(purposes('<!-- a\nb --> text')).toBe(1)
+    expect(purposes('<!--\n## Hidden\n-->\nreal')).toBe(1)
+  })
+
+  it('counts a purpose of one character', () => {
+    expect(withBody('# T\n\nx\n\n## Screens\n').purposeLines).toBe(1)
+  })
+})
+
+describe('an ignored path', () => {
+  it('counts as existing though no file is there, with or without a leading `.../`', () => {
+    const ctx = { noteDir: 'd', files: [], schema }
+    expect(resolves('node_modules/x/y.ts', ctx)).toBe(true)
+    expect(resolves('.../node_modules/x/y.ts', ctx)).toBe(true)
+    expect(resolves('src/x/y.ts', ctx)).toBe(false)
   })
 })
 
@@ -103,6 +123,34 @@ describe('a path with a line terminator inside it', () => {
     expect(resolves('x\r.../y', ctx(['x\ry']))).toBe(false)
     expect(resolves('x\r../y', ctx(['x\r../y']))).toBe(true)
     expect(resolves('a/\rb', ctx(['a\rb/x']))).toBe(false)
+  })
+})
+
+describe('findings that do not depend on how long a path is', () => {
+  const SHORT = 'src/x/README.md'
+  const entry = { note: SHORT, paths: ['src/x/**'] }
+
+  it('reports a short note listed twice, and one that does not exist', () => {
+    const files = [...GOOD_FILES, SHORT, 'src/x/a.ts']
+    const twice = JSON.stringify([entry, entry])
+    expect(
+      messagesOf(repo({ map: twice, files, texts: { [SHORT]: goodNote() } }), 'MAP-NOTE'),
+    ).toEqual(['listed twice in docs/knowledge/map.json'])
+    expect(messagesOf(repo({ map: JSON.stringify([entry]) }), 'MAP-NOTE')).toEqual([
+      'listed in docs/knowledge/map.json but the file does not exist',
+    ])
+  })
+
+  it('reports an expected section only when it is not written', () => {
+    const section = (heading) => `## ${heading}\n\n- x\n`
+    const gaps = (before, after) =>
+      found(goodNote(GOOD_FIELDS, `${before}${GOOD_BODY}\n${after}`), 'COVERAGE-SECTION').join('|')
+    expect(gaps('', '')).toContain('"Boundaries"')
+    const written = gaps(section('Screens'), `${section('Boundaries')}\n${section('Known gaps')}`)
+    expect(written).not.toContain('"Screens"')
+    expect(written).not.toContain('"Boundaries"')
+    expect(written).not.toContain('"Known gaps"')
+    expect(written).toContain('"Decisions"')
   })
 })
 

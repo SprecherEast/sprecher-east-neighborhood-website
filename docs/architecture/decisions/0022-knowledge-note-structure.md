@@ -60,7 +60,9 @@ its cap. Owner direction this rests on (recorded on #1446 and #1460):
    `/` (a link only) from the repository root. A bare link such as `[x](page.tsx)` is treated like
    an abbreviation, and a link to a folder or to a file with no known extension is not examined. A
    backticked `/x` or `@/x` is a route or an alias and is not checked.
-   A line that is only an HTML comment is not a purpose paragraph.
+   An HTML comment, on one line or across several, is not text a reader sees: a line of only
+   comments is not a purpose paragraph, text next to a comment is, and a heading inside one is not a
+   section.
    Any other backticked path may be an abbreviation, as the notes write them (a bare name after its
    folder, the end of a long path, no extension), and counts when some path in the repository ends
    with it. So a moved file is missed while a same-named file exists elsewhere: the rule is firm
