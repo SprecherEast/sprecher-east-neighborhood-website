@@ -135,7 +135,7 @@ export function renderMcp(mcp) {
     '',
     '## Tools the site adds',
     '',
-    'Each field’s notes list every limit the JSON schema holds, the message of each custom check (`.refine`) written on the field, such as “each item once”, and a `.trim()` (spaces at the start and end are removed before the other limits are counted). Not listed: the rules across fields, which the whole-input schema of each tool (`submitSuggestionInput` and `reportItemInput`, in `src/modules/agents/cms/tools/schemas.ts`) checks when the handler parses the input, and some of them are in no field description; `.strict()`, which refuses any field not listed here; and a check on a field inside an object, which is not read.',
+    'Each field’s notes list every limit the JSON schema holds, the message of each custom check (`.refine`) written on the field, such as “each item once”, and a check that changes the value, such as `.trim()` (the note says whether it runs before the limits are counted or after). Not listed: the rules across fields, which the whole-input schema of each tool (`submitSuggestionInput` and `reportItemInput`, in `src/modules/agents/cms/tools/schemas.ts`) checks when the handler parses the input, and some of them are in no field description; `.strict()`, which refuses any field not listed here; and a check inside a union or a record, which is not read. A check on a field of an object (`evidence`, say) is written on that field of the tool with the name of the inner field in front.',
     '',
     ...custom,
   ].join('\n')

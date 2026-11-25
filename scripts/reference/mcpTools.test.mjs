@@ -162,11 +162,11 @@ describe('renderMcp', () => {
   })
 
   it('says what the field notes hold and what is not listed: whole-input rules, `.strict()`, nested checks', () => {
-    expect(page).toContain('and a `.trim()`')
+    expect(page).toContain('a check that changes the value, such as `.trim()`')
     expect(page).toContain('the rules across fields, which the whole-input schema of each tool')
     expect(page).toContain('`submitSuggestionInput` and `reportItemInput`')
     expect(page).toContain('`.strict()`, which refuses any field not listed here')
-    expect(page).toContain('a check on a field inside an object, which is not read')
+    expect(page).toContain('a check inside a union or a record, which is not read')
   })
 
   it('has a row for each tool and links the endpoint page', () => {

@@ -69,6 +69,14 @@ describe('parseTimedWorkflows order and gaps', () => {
 })
 
 describe('parseServerCrons', () => {
+  it('counts only a line whose first five fields are cron fields', () => {
+    const text = [
+      'one two three four five echo hi',
+      'export APP_DIR APP_NAME APP_PORT PM2 LOG x',
+    ].join('\n')
+    expect(parseServerCrons([{ file: 'ops/a.sh', text }])).toEqual([])
+  })
+
   const script = [
     '#!/usr/bin/env bash',
     'BACKUP_SCRIPT="$APP_DIR/current/ops/backup.sh"',

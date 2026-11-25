@@ -82,29 +82,41 @@ const objectFacts = (schema) =>
 
 const NO_MESSAGE = 'a custom check with no message'
 
-/** What a check that changes the value does, found by giving it a value with spaces around. */
-function overwriteNote(check) {
-  const changed = check._zod.def.tx(' x ')
-  return changed === 'x'
-    ? 'spaces at the start and end are removed first, then the other limits apply'
-    : 'the value is changed first, then the other limits apply'
+/**
+ * What a check that changes the value does, found by giving it a value with spaces around, and
+ * worded from its place among the checks: zod runs them in the order they were written, so the
+ * limits written before it count the spaces and the ones after it do not.
+ */
+function overwriteNote(check, position) {
+  const trims = check._zod.def.tx(' x ') === 'x'
+  if (position === 0) {
+    return trims
+      ? 'spaces at the start and end are removed first, then the other limits apply'
+      : 'the value is changed first, then the other limits apply'
+  }
+  return trims
+    ? 'spaces at the start and end are removed after the limits written before it count them'
+    : 'the value is changed after the limits written before it are checked'
 }
 
 /**
  * What one zod schema checks that the JSON schema cannot say, under optional, nullable and default
- * wrappers and in array items: the custom checks (`.refine`, with the message the module wrote),
- * and a check that changes the value before the limits (`.trim()`).
+ * wrappers, in array items and in the fields of an object (named in front): the custom checks
+ * (`.refine`, with the message the module wrote), and a check that changes the value (`.trim()`).
  */
 function checkNotes(schema) {
   const def = schema?._zod?.def
   if (!def) return []
-  const own = (def.checks ?? []).flatMap((check) => {
+  const own = (def.checks ?? []).flatMap((check, position) => {
     const kind = check._zod.def.check
-    if (kind === 'overwrite') return [overwriteNote(check)]
+    if (kind === 'overwrite') return [overwriteNote(check, position)]
     if (kind !== 'custom') return []
-    return [`custom check: ${check._zod.def.error?.({}) ?? NO_MESSAGE}`]
+    return [`custom check: ${check._zod.def.error?.({}) || NO_MESSAGE}`]
   })
-  return [...own, ...checkNotes(def.innerType), ...checkNotes(def.element)]
+  const fields = Object.entries(def.shape ?? {}).flatMap(([name, field]) =>
+    checkNotes(field).map((note) => `\`${name}\`: ${note}`),
+  )
+  return [...own, ...checkNotes(def.innerType), ...checkNotes(def.element), ...fields]
 }
 
 /**

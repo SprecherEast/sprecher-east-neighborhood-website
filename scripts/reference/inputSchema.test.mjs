@@ -125,8 +125,13 @@ describe('custom checks (#1461)', () => {
       .refine(() => true, { message: 'Second' }),
     plain: z.string().min(1),
     silent: z.string().check(z.refine(() => true)),
+    blank: z.string().refine(() => true, { message: '' }),
     trimmed: z.string().trim().min(1).max(5),
     lowered: z.string().toLowerCase().optional(),
+    late: z.string().min(1).trim(),
+    lateLower: z.string().min(1).toLowerCase(),
+    inside: z.array(z.object({ says: z.string().trim().min(1).max(5), n: z.number() })),
+    deep: z.object({ one: z.object({ two: z.string().trim() }) }),
   }
 
   it('reads the message of every custom check of a field, under optional and in array items', () => {
@@ -136,8 +141,19 @@ describe('custom checks (#1461)', () => {
       items: ['custom check: Not x'],
       both: ['custom check: First', 'custom check: Second'],
       silent: ['custom check: a custom check with no message'],
+      blank: ['custom check: a custom check with no message'],
       trimmed: ['spaces at the start and end are removed first, then the other limits apply'],
       lowered: ['the value is changed first, then the other limits apply'],
+      late: [
+        'spaces at the start and end are removed after the limits written before it count them',
+      ],
+      lateLower: ['the value is changed after the limits written before it are checked'],
+      inside: [
+        '`says`: spaces at the start and end are removed first, then the other limits apply',
+      ],
+      deep: [
+        '`one`: `two`: spaces at the start and end are removed first, then the other limits apply',
+      ],
     })
   })
 
