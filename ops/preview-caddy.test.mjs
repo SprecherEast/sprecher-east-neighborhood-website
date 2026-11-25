@@ -470,15 +470,30 @@ describe('preview-caddy.sh: each message says what the folder is like, for each 
     expect(folderEntries()).toEqual([])
   })
 
+  // the line ends with the block's own name: the temp file has the block's name as a prefix, so a prefix check is not enough
+  const staysAs = (out, file) =>
+    expect(out).toMatch(
+      new RegExp(`the new block could not be taken out and stays as ${file}(;|$)`, 'm'),
+    )
+
   it('a first block that cannot be taken out stays, and the message names it and no copy', async () => {
     makePreview()
     stub('rm', 'case "$*" in *" "*/pr-7.caddy) exit 1 ;; esac; exec /bin/rm "$@"')
     const { code, out } = await caddyScript(['7'], { STUB_WHOLE_REJECTS: 'reverse_proxy' })
     expect(code).toBe(1)
-    expect(out).toContain(
-      `the new block could not be taken out and stays as ${p('caddy/previews/pr-7.caddy')}`,
-    )
+    expect(out).toContain("rejected the config with preview 7's block; the new block could")
+    staysAs(out, p('caddy/previews/pr-7.caddy'))
     expect(out).not.toContain('a copy stays')
+    expect(folderEntries()).toEqual(['pr-7.caddy'])
+  })
+
+  it('a first block whose reload fails and that cannot be taken out stays, and the message names it', async () => {
+    makePreview()
+    stub('rm', 'case "$*" in *" "*/pr-7.caddy) exit 1 ;; esac; exec /bin/rm "$@"')
+    const { code, out } = await caddyScript(['7'], { STUB_RELOAD_FAILS: 'pr-7.dev' })
+    expect(code).toBe(1)
+    expect(out).toContain("would not reload with preview 7's block; the new block could")
+    staysAs(out, p('caddy/previews/pr-7.caddy'))
     expect(folderEntries()).toEqual(['pr-7.caddy'])
   })
 

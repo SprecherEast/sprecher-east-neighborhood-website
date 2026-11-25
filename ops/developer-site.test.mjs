@@ -573,14 +573,29 @@ describe('developer-site.sh: Caddy is never left worse off', () => {
     expect(fs.readdirSync(p('caddy/previews'))).toEqual([])
   })
 
+  // the line ends with the block's own name: the temp file has the block's name as a prefix, so a prefix check is not enough
+  const staysAs = (out, file) =>
+    expect(out).toMatch(
+      new RegExp(`the new block could not be taken out and stays as ${file}(;|$)`, 'm'),
+    )
+
   it('a first block that cannot be taken out stays, and the message names it and no copy', async () => {
     stub('rm', 'case "$*" in *" "*/developer.caddy) exit 1 ;; esac; exec /bin/rm "$@"')
     const { code, out } = await run('r1', { STUB_WHOLE_REJECTS: 'file_server' })
     expect(code).toBe(1)
     expect(out).toContain(
-      `the new block could not be taken out and stays as ${p('caddy/previews/developer.caddy')}`,
+      "rejected the config with the developer site's block; the new block could",
     )
+    staysAs(out, p('caddy/previews/developer.caddy'))
     expect(out).not.toContain('a copy stays')
+  })
+
+  it('a first block whose reload fails and that cannot be taken out stays, and the message names it', async () => {
+    stub('rm', 'case "$*" in *" "*/developer.caddy) exit 1 ;; esac; exec /bin/rm "$@"')
+    const { code, out } = await run('r1', { STUB_RELOAD_FAILS: 'file_server' })
+    expect(code).toBe(1)
+    expect(out).toContain('or the site stopped answering after it; the new block could')
+    staysAs(out, p('caddy/previews/developer.caddy'))
   })
 
   it('a previous block that goes back but cannot be reloaded says so', async () => {
