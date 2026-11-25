@@ -320,7 +320,7 @@ the snapshot (2026-11-11, recorded on #1077).
   wrapper stops the PM2 process, deletes the folder (releases, database, media, data and settings file are all
   inside it, with the linked media and the passwords file) and removes the Caddy block, then validates and reloads Caddy; each step succeeds when its item is
   already gone, so a second run succeeds too. The order is the wrapper's (process, folder, block) because
-  `preview-caddy.sh` removes a block when the folder is gone. **Caddy's certificate storage is never touched**,
+  `preview-caddy.sh` removes a block when the folder is gone (a block that Caddy needs back and that cannot be put back is kept under a name the import does not read, and the warning names it). **Caddy's certificate storage is never touched**,
   so a reopened pull request reuses its certificate. A job edits the sticky comment, only when one exists, to
   say the preview was removed. A fork's or Dependabot's pull request never had a preview and is skipped. A
   deploy can still put a closed pull request live again, by two routes: a build that started before the close

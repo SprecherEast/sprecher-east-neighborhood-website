@@ -143,9 +143,9 @@ if cmp -s "$block_temp" "$DEVELOPER_CADDY_FILE" 2>/dev/null; then
 else
   if ! caddy_place_block "$block_temp" "$DEVELOPER_CADDY_FILE" "$SITE_UP_WAIT_AFTER"; then
     case "$CADDY_BLOCK_PROBLEM" in
-      backup | move) fail "the developer site's block could not be put in place; the previous block is as it was" ;;
-      rejected) fail "Caddy rejected the config with the developer site's block; the previous block is back" ;;
-      *) fail "Caddy would not reload with the developer site's block, or the site stopped answering after it; the previous block is back" ;;
+      backup | move) fail "the developer site's block could not be put in place; $(caddy_block_outcome)" ;;
+      rejected) fail "Caddy rejected the config with the developer site's block; $(caddy_block_outcome)" ;;
+      *) fail "Caddy would not reload with the developer site's block, or the site stopped answering after it; $(caddy_block_outcome)" ;;
     esac
   fi
 fi
@@ -180,16 +180,15 @@ while problem=$(developer_problem) && [ -n "$problem" ]; do
     if [ -n "$previous" ] && [ "$previous" != "releases/$name" ]; then
       point_link_at "$CURRENT" "$previous"
       # The block this release replaced goes back too: a later template that broke a header must not stay live.
-      restored=no
+      after=""
       if [ -n "$CADDY_BLOCK_PREVIOUS" ]; then
         # A copy that could not be put back stays in the folder, named in the report, and is not deleted at exit.
-        caddy_restore_block "$DEVELOPER_CADDY_FILE" "$CADDY_BLOCK_PREVIOUS" && restored=yes
+        caddy_restore_block "$DEVELOPER_CADDY_FILE" "$CADDY_BLOCK_PREVIOUS" || true
         CADDY_BLOCK_PREVIOUS=""
+        CADDY_BLOCK_PROBLEM=""
+        after="; $(caddy_block_outcome)"
       fi
-      if [ "$restored" = yes ]; then
-        fail "the developer site did not pass the live check ($problem); it and its Caddy block are back on $(basename "$previous")"
-      fi
-      fail "the developer site did not pass the live check ($problem); its files are back on $(basename "$previous")"
+      fail "the developer site did not pass the live check ($problem); its files are back on $(basename "$previous")$after"
     fi
     fail "the developer site did not pass the live check ($problem); there is no earlier version to go back to, and the certificate may still be on its way"
   fi

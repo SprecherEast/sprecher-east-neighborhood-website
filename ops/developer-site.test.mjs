@@ -547,6 +547,35 @@ describe('developer-site.sh: Caddy is never left worse off', () => {
     stays()
   })
 
+  it('a previous block that goes back but cannot be reloaded says so', async () => {
+    await publishedThenNewRelease()
+    fs.writeFileSync(p('caddy/previews/developer.caddy'), '# old block, file_server\n')
+    const { code, out } = await run('r2', { STUB_RELOAD_FAILS: 'file_server' })
+    expect(code).toBe(1)
+    expect(out).toContain(
+      `the developer site's block, or the site stopped answering after it; the previous block is back, but Caddy would not reload it`,
+    )
+    expect(block()).toBe('# old block, file_server\n')
+  })
+
+  it('a previous block that cannot be put back after a failed reload says so, and its copy stays', async () => {
+    await publishedThenNewRelease()
+    fs.writeFileSync(p('caddy/previews/developer.caddy'), '# old block\n')
+    stub(
+      'mv',
+      'case "$*" in *developer.caddy.*" "*developer.caddy) echo x >> "$STUB_STATE/mvs"; [ "$(wc -l < "$STUB_STATE/mvs")" -lt 2 ] || exit 1 ;; esac; exec /bin/mv "$@"',
+    )
+    const { code, out } = await run('r2', { STUB_RELOAD_FAILS: 'file_server' })
+    expect(code).toBe(1)
+    expect(out).toContain(
+      'or the site stopped answering after it; the previous block could not be put back as it was',
+    )
+    expect(out).not.toContain('is back')
+    expect(
+      fs.readdirSync(p('caddy/previews')).filter((n) => n.startsWith('developer.caddy.')),
+    ).toHaveLength(1)
+  })
+
   it('a first block whose reload fails is removed, with nothing left behind', async () => {
     const { code } = await run('r1', { STUB_RELOAD_FAILS: 'file_server' })
     expect(code).toBe(1)
@@ -611,7 +640,7 @@ describe('developer-site.sh: a step of putting the block in place that fails', (
     stub('cp', 'case "$1" in -p) head -c 4 "$2" > "$3"; exit 1 ;; esac; exec /bin/cp "$@"')
     const { code, out } = await run('r2')
     expect(code).toBe(1)
-    expect(out).toContain('could not be put in place; the previous block is as it was')
+    expect(out).toContain('could not be put in place; nothing was changed')
     expect(block()).toBe(old)
     only(['developer.caddy'])
     expect(reloads()).toBe(0)
@@ -626,7 +655,7 @@ describe('developer-site.sh: a step of putting the block in place that fails', (
     )
     const { code, out } = await run('r2')
     expect(code).toBe(1)
-    expect(out).toContain('could not be put in place; the previous block is as it was')
+    expect(out).toContain('could not be put in place; nothing was changed')
     expect(block()).toBe(old)
     only(['developer.caddy'])
     expect(reloads()).toBe(0)
@@ -692,6 +721,30 @@ describe('developer-site.sh: the folder and the block file are the script’s ow
       { CADDY_STORAGE_DIR: p('caddy-storage'), DEVELOPER_ROOT: p('caddy-storage/dev') },
       'is inside',
     )
+  })
+
+  // `developer-site` of the release being published is a link into another release's folder.
+  const linkedInto = async (other) => {
+    makeRelease(other, { live: false })
+    fs.rmSync(p('app/releases/r1/developer-site'), { recursive: true })
+    fs.symlinkSync(p('app/releases', other, 'developer-site'), p('app/releases/r1/developer-site'))
+    await refuses({}, 'is not inside the release')
+  }
+
+  it('refuses a showcase that is another release’s, so the check is the release’s folder and not the folder of releases', async () => {
+    await linkedInto('r0')
+  })
+
+  it('refuses a showcase in a release whose name starts with this one’s (r10 for r1)', async () => {
+    await linkedInto('r10')
+  })
+
+  it('accepts the release’s own showcase when its folder is reached through a link', async () => {
+    fs.mkdirSync(p('alias'))
+    fs.symlinkSync(p('app/releases/r1'), p('alias/r1'))
+    const { code, out } = await run('r1', { CODE_DIR: p('alias/r1') })
+    expect(code, out).toBe(0)
+    expect(out).toContain('Developer site published')
   })
 
   it('refuses a showcase folder that is a link leading out of the release’s folder', async () => {
@@ -766,7 +819,9 @@ describe('developer-site.sh: what the release must hold, and what it keeps', () 
     const { code, out } = await run('r2', { STUB_NO_NOINDEX: '1' })
     expect(code).toBe(1)
     expect(out).toContain('its files are back on r1')
-    expect(out).toContain('the previous block could not be put back')
+    expect(out).toContain(
+      'its files are back on r1; the previous block could not be put back as it was',
+    )
     expect(
       fs.readdirSync(p('caddy/previews')).filter((n) => n.startsWith('developer.caddy.')),
     ).toHaveLength(1)
@@ -830,11 +885,21 @@ describe('developer-site.sh: the live check, and going back', () => {
     fs.appendFileSync(template, '# a later change to the template\n')
     const { code, out } = await run('r2', { STUB_NO_NOINDEX: '1' })
     expect(code).toBe(1)
-    expect(out).toContain('it and its Caddy block are back on r1')
+    expect(out).toContain('its files are back on r1; the previous block is back')
     expect(block()).toBe(before)
     expect(fs.readdirSync(p('caddy/previews'))).toEqual(['developer.caddy'])
     expect(reloads()).toBe(2) // the new block, then the previous one
     stays()
+  })
+
+  it('says so when the block it replaced goes back but Caddy will not reload it', async () => {
+    await publishedThenNewRelease()
+    fs.writeFileSync(p('caddy/previews/developer.caddy'), '# old block, rejectme\n')
+    const { code, out } = await run('r2', { STUB_NO_NOINDEX: '1', STUB_RELOAD_FAILS: 'rejectme' })
+    expect(code).toBe(1)
+    expect(out).toContain(
+      'its files are back on r1; the previous block is back, but Caddy would not reload it',
+    )
   })
 
   it('leaves the block alone when the live check fails and the block did not change', async () => {

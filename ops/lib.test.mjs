@@ -382,3 +382,40 @@ describe('caddy_restore_block', () => {
     expect(r.stdout).toContain('status=1')
   })
 })
+
+describe('caddy_restore_block and caddy_block_outcome: what the folder is like afterwards', () => {
+  const outcome = (problem, after) =>
+    lib(
+      `CADDY_BLOCK_PROBLEM="${problem}"; CADDY_BLOCK_AFTER="${after}"; caddy_block_outcome`,
+    ).stdout.trim()
+
+  it('words each outcome so that it is true of it', () => {
+    expect(outcome('backup', '')).toBe('nothing was changed')
+    expect(outcome('move', '')).toBe('nothing was changed')
+    expect(outcome('rejected', 'back')).toBe('the previous block is back')
+    expect(outcome('reload', 'back')).toBe('the previous block is back')
+    expect(outcome('', 'back')).toBe('the previous block is back')
+    expect(outcome('rejected', 'reload')).toBe(
+      'the previous block is back, but Caddy would not reload it',
+    )
+    expect(outcome('reload', 'kept')).toBe(
+      'the previous block could not be put back as it was; a copy stays in the folder, named above',
+    )
+  })
+
+  it('sets what the restore left: back, reload or kept', () => {
+    fs.writeFileSync(p('blocks/a.caddy'), 'the new block\n')
+    fs.writeFileSync(p('blocks/copy'), 'the previous block\n')
+    stub('reload', 'exit 0')
+    const after = (copy, env = {}) =>
+      lib(
+        `report() { :; }\ncaddy_restore_block "${p('blocks/a.caddy')}" ${copy}; echo "after=$CADDY_BLOCK_AFTER"`,
+        { RELOAD_CADDY: p('bin/reload'), ...env },
+      ).stdout.trim()
+    expect(after(`"${p('blocks/copy')}"`)).toBe('after=back')
+    stub('reload', 'exit 1')
+    fs.writeFileSync(p('blocks/copy'), 'the previous block\n')
+    expect(after(`"${p('blocks/copy')}"`)).toBe('after=reload')
+    expect(after(`"${p('blocks/missing')}"`)).toBe('after=kept')
+  })
+})

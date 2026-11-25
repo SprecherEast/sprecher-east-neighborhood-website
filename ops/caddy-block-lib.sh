@@ -14,12 +14,15 @@
 #   move      the rename failed; nothing was changed
 #   rejected  Caddy would not take the whole config with the new block
 #   reload    Caddy would not reload, or the site did not answer after it
+# CADDY_BLOCK_AFTER says what the restore left (see caddy_restore_block). caddy_block_outcome words it, and
+# the problem, for the caller's message, so each message is true for each outcome.
 # CADDY_BLOCK_PREVIOUS is the whole, checked copy of the previous block, in the same folder under a name the
 # import's `*.caddy` does not match (empty when there was no block, no whole copy, or a copy that could not be
 # put back and is left in the folder); the caller removes it.
 caddy_place_block() { # <temp file, in the same folder, already accepted> <target block file> [seconds the site gets to answer]
   CADDY_BLOCK_PREVIOUS=""
   CADDY_BLOCK_PROBLEM=""
+  CADDY_BLOCK_AFTER=""
   local copy=""
   if [ -f "$2" ]; then
     copy=$(mktemp "$2.XXXXXX") # a failed mktemp leaves no name, and the copy below fails
@@ -51,8 +54,11 @@ caddy_place_block() { # <temp file, in the same folder, already accepted> <targe
 }
 
 # Puts the previous block back (or none), and reloads again so Caddy runs what it ran before. Returns 1,
-# saying so, when the previous block could not be put back or Caddy would not reload it.
+# saying so, when the previous block could not be put back or Caddy would not reload it. Sets
+# CADDY_BLOCK_AFTER to: back (done), reload (the block is back but Caddy would not reload it), or kept (the
+# folder was not put back as it was: a copy of the previous block stays where it is, named in the report).
 caddy_restore_block() { # <target block file> <whole copy of the previous block, or empty>
+  CADDY_BLOCK_AFTER=kept
   if [ -n "$2" ]; then
     mv -f "$2" "$1" || {
       report "ERROR: the previous block could not be put back in $(dirname "$1") (its copy: $2)"
@@ -64,8 +70,20 @@ caddy_restore_block() { # <target block file> <whole copy of the previous block,
       return 1
     }
   fi
+  CADDY_BLOCK_AFTER=reload
   $RELOAD_CADDY >/dev/null 2>&1 || {
     report "ERROR: the previous config is back in $(dirname "$1"), but Caddy would not reload it"
     return 1
   }
+  CADDY_BLOCK_AFTER=back
+}
+
+# What the folder is like after a failed placement or restore, for the end of a message.
+caddy_block_outcome() {
+  case "${CADDY_BLOCK_PROBLEM:-}:${CADDY_BLOCK_AFTER:-}" in
+    backup:* | move:*) echo "nothing was changed" ;;
+    *:kept) echo "the previous block could not be put back as it was; a copy stays in the folder, named above" ;;
+    *:reload) echo "the previous block is back, but Caddy would not reload it" ;;
+    *) echo "the previous block is back" ;;
+  esac
 }
