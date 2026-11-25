@@ -83,12 +83,12 @@ site_url() {
   printf '%s://%s' "$scheme" "${rest%%\?*}"
 }
 
-# A request to the public site, sent to Caddy on this machine rather than out through DNS. Extra
-# curl arguments follow the path. Fails when no site address is known or nothing answers.
-site_curl() { # <path> [curl args…]
-  local path="$1" url hostport host port
-  shift
-  url=$(site_url)
+# A request to an address this server serves, sent to Caddy on this machine rather than out through
+# DNS (the production site, a preview, the developer site). Extra curl arguments follow the path.
+# Fails when no origin is given or nothing answers.
+origin_curl() { # <origin, e.g. https://dev.example.com> <path> [curl args…]
+  local url="$1" path="$2" hostport host port
+  shift 2
   [ -n "$url" ] || return 1
   hostport="${url#*://}"
   host="${hostport%%:*}"
@@ -97,6 +97,13 @@ site_curl() { # <path> [curl args…]
     if [ "${url%%://*}" = http ]; then port=80; else port=443; fi
   fi
   curl -s --max-time 15 --resolve "$host:$port:127.0.0.1" "$@" "$url$path"
+}
+
+# A request to the public site (as origin_curl). Fails when no site address is known.
+site_curl() { # <path> [curl args…]
+  local path="$1"
+  shift
+  origin_curl "$(site_url)" "$path" "$@"
 }
 
 # The HTTP status of a request to the public site (as site_curl). Extra curl arguments (method,
@@ -161,11 +168,15 @@ wait_until_up() { # [seconds] [build id]
   return 1
 }
 
-# Points `current` at a target relative to $APP_DIR, atomically: a new link renamed over the old.
-point_current_at() {
-  ln -sfn "$1" "$APP_DIR/.current-new"
-  mv -Tf "$APP_DIR/.current-new" "$APP_DIR/current"
+# Points a link at a target, atomically: a new link renamed over the old.
+point_link_at() { # <link> <target>
+  local next="${1%/*}/.${1##*/}-new" # `.current-new` for `current`
+  ln -sfn "$2" "$next"
+  mv -Tf "$next" "$1"
 }
+
+# Points `current` at a target relative to $APP_DIR.
+point_current_at() { point_link_at "$APP_DIR/current" "$1"; }
 
 # Pages prerendered at build time, and the data cache. Next renders a page that has no cached
 # copy on its first request and caches it from then on, with each page's own revalidate time.
@@ -239,6 +250,33 @@ caddy_roll_back() { # <Caddyfile backup, or empty> <function that restores the c
     echo "The previous files are back, but Caddy would not reload them."
     return 1
   fi
+}
+
+# Moves a block file into a folder Caddy imports, with one rename, after Caddy accepted the file on its
+# own. Then Caddy must accept the whole config with it, and reload. On any failure the previous block (or
+# none) is put back and Caddy reloaded again, and this returns 1 with CADDY_BLOCK_PROBLEM set to `rejected`
+# or `reload`. CADDY_BLOCK_PREVIOUS is the copy of the previous block, in the same folder under a name the
+# import's `*.caddy` does not match; the caller removes it (it is empty when there was no block).
+caddy_place_block() { # <temp file, in the same folder, already accepted> <target block file>
+  CADDY_BLOCK_PREVIOUS=""
+  CADDY_BLOCK_PROBLEM=""
+  if [ -f "$2" ]; then
+    CADDY_BLOCK_PREVIOUS=$(mktemp "$2.XXXXXX")
+    cp -p "$2" "$CADDY_BLOCK_PREVIOUS"
+  fi
+  mv -f "$1" "$2" # one rename: Caddy sees the old block or the new one, never half
+  if ! caddy_accepts "$CADDYFILE"; then
+    CADDY_BLOCK_PROBLEM=rejected
+  elif ! $RELOAD_CADDY >/dev/null 2>&1; then
+    CADDY_BLOCK_PROBLEM=reload
+  fi
+  [ -z "$CADDY_BLOCK_PROBLEM" ] || { caddy_restore_block "$2" "$CADDY_BLOCK_PREVIOUS"; return 1; }
+}
+
+# Puts the previous block back (or none), and reloads again so Caddy runs what it ran before.
+caddy_restore_block() { # <target block file> <copy of the previous block, or empty>
+  if [ -n "$2" ]; then mv -f "$2" "$1"; else rm -f "$1"; fi
+  $RELOAD_CADDY >/dev/null 2>&1 || report "ERROR: the previous config is back in $(dirname "$1"), but Caddy would not reload it"
 }
 
 # Never print Caddy's own output: the Caddyfile could hold credentials and the deploy log is public.

@@ -17,6 +17,9 @@ on the VPS. Nothing here is run by hand during a normal deploy. Changes to the s
 | `caddy-limits.sh`            | VPS    | Caps request bodies on the public form endpoints and `/api/mcp` at Caddy (`caddy/form-limits.caddy`)                                                                                                                                                                                                                                                                                                                    | #124       |
 | `caddy-https.sh`             | VPS    | Sends HSTS on the domain (`caddy/hsts.caddy`), and adds a redirect to HTTPS in the plain-HTTP site blocks                                                                                                                                                                                                                                                                                                               | #235       |
 | `caddy-previews.sh`          | VPS    | Adds one `import` line for the folder of pull request preview site blocks, and installs the preview headers (`caddy/preview-headers.caddy`); see [`previews.md`](previews.md)                                                                                                                                                                                                                                           | #1072      |
+| `build-showcase.sh`          | runner | Builds the component showcase into a folder of the release (`developer-site/showcase` for production, `public/showcase` for a pull request preview); optional for production, so a failed showcase never fails the release; see [Developer site](#developer-site)                                                                                                                                                       | #1459      |
+| `developer-site.sh`          | VPS    | Production deploy only, after the release is live: assembles, checks and publishes the developer site (the showcase and an index page) at `dev.sprechereast.com`; never fails the deploy; see [Developer site](#developer-site)                                                                                                                                                                                         | #1459      |
+| `developer-site-check.sh`    | VPS    | Refuses to serve a folder that holds anything but the index page, the 404 page and the showcase: links, other names for a file, hidden or private-by-name files, writable files, too much, or a third-party font host                                                                                                                                                                                                   | #1459      |
 | `install-umami.sh`           | VPS    | Installs and updates Umami analytics in Docker, replaces its default admin password, then opens its own address (helpers: `umami-lib.sh`, `umami-caddy.sh`, `umami-admin.sh`, `secret-lib.sh`)                                                                                                                                                                                                                          | #948       |
 | `backup-umami.sh`            | VPS    | Dumps Umami's Postgres database; run after the daily backup and before an Umami update                                                                                                                                                                                                                                                                                                                                  | #948       |
 | `environment.sh`             | VPS    | Defines once what differs between production and a pull request preview (folder, PM2 process, port, settings, data and media, Caddy block, site address); see [`previews.md`](previews.md)                                                                                                                                                                                                                              | #1073      |
@@ -83,7 +86,9 @@ or by an agent, within the limits in [`wrapped`](../.agents/skills/wrapped/SKILL
    from, so the paths the build writes are right on the server. The build gets only the public
    `NEXT_PUBLIC_*` values from the server's `.env.local`, a throwaway database and placeholders.
    Production `node_modules` ship with it; their native parts (sharp, libsql) are prebuilt for
-   Linux x64 and load on any Node of the same version.
+   Linux x64 and load on any Node of the same version. It also builds the component showcase into
+   the release (`developer-site/showcase`, `ops/build-showcase.sh`); if that fails the release is
+   built without it, with a warning.
 3. **Deploy** uploads the archive into `releases/.incoming-<commit>`, renames it, and runs
    `deploy-release.sh` from the release:
    - checks the release was built with this server's Node and settings, and that its native
@@ -101,9 +106,10 @@ or by an agent, within the limits in [`wrapped`](../.agents/skills/wrapped/SKILL
    - switches `current` to the release in one step and reloads PM2 (`restart-app.sh`)
    - checks the home page answers 200 through Caddy and `/api/version` reports the new build; if
      not, switches `current` back and reloads
-   - then installs the backup job, applies the Caddy limits, HTTPS settings and the preview import, installs the
-     preview account (below), installs or updates Umami (below), and keeps the newest 3 releases
-     (a release that failed is the first to go)
+   - then installs the backup job, applies the Caddy limits, HTTPS settings and the preview import,
+     publishes the developer site ([below](#developer-site); a failure there is a warning and never
+     turns the deploy red), installs the preview account (below), installs or updates Umami (below),
+     and keeps the newest 3 releases (a release that failed is the first to go)
 
 Until the switch, a failure stops the deploy and the live release keeps serving. The reload is the
 only moment the site is unavailable: the few seconds Next takes to start.
@@ -280,6 +286,81 @@ Undo: revert the pull request, then delete the key line, `/etc/sudoers.d/spreche
 `/usr/local/lib/sprecher-east-preview`, and `userdel` the account. For the guards: `iptables -D OUTPUT` and
 `ip6tables -D OUTPUT` with the rule's arguments (as `-S` lists them), `systemctl disable` and delete the unit,
 the account's line in `cron.deny` and `at.deny`, and `chmod` back to the modes the annotation gave.
+
+## Developer site
+
+`https://dev.sprechereast.com` opens an index page for the people building the site, which links to the
+component showcase (Storybook, #1424) and has a marked place for the system map (#1446). It is static files
+served by the same Caddy as the live site: no second app, no host check in the app, no sign-in (the
+repository is public, so the page shows nothing that is not), and kept out of search engines. The owner decided
+this on 2026-11-24 (recorded on #1424, #1446 and #1459); the findings and the options weighed are on #1459.
+
+```text
+/var/www/sprecher-east-developer/       root-owned, a sibling of production's and the previews' folders
+  releases/<release>/                   index.html, 404.html, showcase/ (nothing else), one folder per publish
+  current -> releases/<release>         what Caddy serves
+/etc/caddy/previews/developer.caddy     the site block (ops/caddy/developer-site.caddy), imported by the
+                                        previews' import line; not `pr-*.caddy`, so the preview scripts never see it
+```
+
+**What the production deploy does, in order** (`developer-site.sh`, from the release's own `ops/`, after the
+release is live and `caddy-previews.sh` has run). A step that fails stops the next ones and leaves the previous
+developer site, files and block, as it was:
+
+1. **In the build job** (no secret): `build-showcase.sh` runs `npm run storybook:build` into the release's
+   `developer-site/showcase` (about 40 s, 9 MB more upload, 15 MB more per kept release on the server). If it
+   fails or takes over 10 minutes, the release is built without a showcase, with a warning; the build never fails
+   for it. The font comes from the `@fontsource/poppins` package, bundled into the build (`.storybook/fonts.css`).
+2. **Preconditions**, each a warning and no change: Caddy and its Caddyfile are there, the Caddyfile imports the
+   previews' folder, the headers file is this release's copy, this release is still the live one, the release has
+   a showcase, nothing else is changing Caddy (the shared lock), the current Caddyfile validates, and production's
+   home page answers through Caddy.
+3. **Assemble and check.** The showcase and the two pages are copied into a staging folder, which
+   `developer-site-check.sh` judges: only `index.html`, `404.html` and `showcase/`; no link, no file with another
+   name elsewhere, no hidden name, no database, key, dump, backup, log or environment file name, nothing writable
+   by anyone, at most `DEVELOPER_MAX_BYTES` (100 MiB), no mention of Google's font hosts. Then it is renamed into
+   `releases/<release>`.
+4. **The block.** Made from the template, checked by Caddy alone, moved into the folder with one rename
+   (`caddy_place_block` in `lib.sh`, the same function `preview-caddy.sh` uses), then Caddy checks the whole config
+   and reloads, and production's home page must still answer. Any failure puts the previous block back and
+   reloads again.
+5. **Switch.** `current` is pointed at the new release with one atomic rename.
+6. **Live check**, through Caddy on the server: `/` and `/showcase/index.html` answer 200; the page sends
+   `X-Robots-Tag: noindex` and no `Strict-Transport-Security`; `/robots.txt` says `Disallow: /`; `/api/version`,
+   `/admin` and `/.env.local` answer 404 (the app is not behind this name). It waits up to 120 s the first time
+   (Caddy orders the certificate when the block first loads) and 20 s after. If it fails and there was an earlier
+   developer site, `current` goes back to it; with none to go back to, the new files stay and the warning says
+   the certificate may still be on its way.
+7. The newest 2 releases are kept.
+
+Whatever happens in these steps, `deploy-release.sh` ignores the script's exit status and prints a warning, so the
+production deploy stays green, and the script runs after production's switch and health check, so it cannot roll
+production back. Run it by hand on a release that is live: `bash releases/<release>/ops/developer-site.sh`.
+
+**What it can't reach.** Caddy serves one folder of static files with `file_server` and no proxy, so there is no
+app behind the name. The folder is judged by what is in it, never by how it was made; links are refused because
+Caddy's user can read what the web server's user can (certificate keys among it), so one planted link would
+publish it. The block never imports the HSTS file or the form limits (a test fails if it does) and the template has
+one root, the developer folder. No secret is added anywhere.
+
+**Headers.** The block imports `/etc/caddy/sprecher-east-preview-headers.caddy`, the pull request previews' own
+snippet, so there is one copy: `X-Robots-Tag: noindex, nofollow` on every answer, including the 404 page, and a
+`/robots.txt` that disallows everything. No HSTS: production's rule has no `includeSubDomains`, so it does not
+bind this name, and a test fails if that changes ([`previews.md`](previews.md)).
+
+**Certificate.** One new name, `dev.sprechereast.com`, one order when the block first loads; renewals don't count
+against the weekly limit ([`previews.md`](previews.md#the-component-showcase-in-a-preview-1459)). The DNS record is
+an A record `dev`, added on 2026-11-24 (#1459).
+
+**Undo.** Remove the block, then the folder: `rm /etc/caddy/previews/developer.caddy && caddy validate --config
+/etc/caddy/Caddyfile && systemctl reload caddy`, then `rm -rf /var/www/sprecher-east-developer`. Reverting the pull
+request stops the updates but leaves both. Deleting the `dev` A record ends the name; nothing else depends on it.
+
+**Check on the server after the first deploy** (not provable before: the tests use stand-ins for Caddy): the
+deploy's `Server` annotations say `Developer site published`; `curl -sI https://dev.sprechereast.com/` shows 200,
+the noindex header and no HSTS from outside; `/robots.txt`; a wrong path answers 404 with the 404 page and the
+noindex header; `/showcase/index.html` works on a phone and a desktop (stories load, theme, mode and width
+switches), and the browser's network tab shows no request to a font host outside the site. Record the results on #1459.
 
 ## Releases
 

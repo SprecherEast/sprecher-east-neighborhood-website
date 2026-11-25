@@ -6,7 +6,8 @@ that builds and deploys a preview ([below](#the-workflow-1075)). Back to the [se
 
 - **DNS.** One wildcard A record, `*.dev`, in the Porkbun zone for `sprechereast.com`, pointing at
   the production server. It needs no API key. Undo: delete the record. `dev.sprechereast.com`
-  itself doesn't resolve.
+  itself has its own A record (added 2026-11-24, #1459) and serves the [developer site](README.md#developer-site),
+  not a preview.
 - **The import line.** `caddy-previews.sh` adds `import /etc/caddy/previews/*.caddy` (and a comment
   line above it) to the Caddyfile. Before anything reloads, Caddy must accept the new Caddyfile
   together with a sample preview block made from the template, so a broken snippet fails the deploy
@@ -33,7 +34,9 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   opens far more than 50 pull requests a week, so only a pull request that changes how pages look,
   or that carries the label asking for a preview, gets one (owner's decision, 2026-11-19, #1072).
   A redeploy of the same pull request reuses its certificate, and teardown never deletes Caddy's
-  certificate storage, so a reopened pull request is not a new order.
+  certificate storage, so a reopened pull request is not a new order. The developer site's name,
+  `dev.sprechereast.com`, is one more name in the same budget (#1459): one order when its block first loads, and
+  renewals are exempt. A preview's component showcase orders none ([below](#the-component-showcase-in-a-preview-1459)).
 - **Check on the server** (once, after the first deploy with this script; carried to #1075): load
   one sample block by hand, confirm its responses carry `X-Robots-Tag` and no
   `Strict-Transport-Security` and that `/robots.txt` disallows everything, remove it, and confirm
@@ -233,6 +236,28 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
   `is_preview` gate in `main`'s `deploy-release.sh` and by the preview account's isolation.
 - **Not covered.** A detached process a preview starts survives `teardown`, which stops only PM2's process
   (the account can't schedule jobs: cron and at are denied).
+
+## The component showcase in a preview (#1459)
+
+A pull request that changes a story, a shared component (`src/platform/ui/`, `src/platform/richtext/`), the theme
+(`src/platform/theme/`, `src/themes/`, `globals.css`) or the showcase's settings, build script or packages
+(`.storybook/`, `ops/build-showcase.sh`, `package.json`, `package-lock.json`; the one list is
+`.github/scripts/showcase-paths.sh`, notes and tests excluded) gets the component showcase built into its preview:
+`plan-preview.sh` writes `showcase=true` for it, and the build job gives `ops/build-release.sh` the folder
+`public/showcase`, so `ops/build-showcase.sh` builds it into the release before the site's build (only what is in
+`public/` at build time is served). The comment then adds `<preview address>/showcase/index.html`.
+
+- **Served by the preview's own app**, not by Caddy: the preview's Caddy block only proxies to the app, on purpose.
+  Caddy runs as a user that can read what the preview account cannot (its certificate keys), and a pull request's
+  code could plant a link to one in a folder Caddy serves. A static file the app serves is no more than the pull
+  request's code can already do. So no Caddy block, wrapper, sudo rule or server script changes, and no new
+  certificate name: the showcase is a path under the preview's own address.
+- **Same headers** as every answer of the preview (noindex, no HSTS), and **removed with it**: the files are in the
+  release folder, which teardown deletes.
+- **Required for a preview that asks for it:** a showcase that does not build fails the preview's build, and the
+  comment says the build failed. (The production deploy's build treats it as optional.)
+- **What it adds** to such a preview: about 40 s of build time, 9 MB more upload, and 15 MB of disk in each of its
+  two kept releases. A preview without those changes builds exactly as before.
 
 ## Production content in a preview (#1397)
 

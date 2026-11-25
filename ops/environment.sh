@@ -87,6 +87,20 @@ CADDY_ADMIN_PORT="${CADDY_ADMIN_PORT:-2019}"             # Caddy's admin endpoin
 # Ports no preview may take: production's app and Umami (a test ties both to their own files).
 RESERVED_PORTS="3000 3100"
 
+# The developer site (#1459, ops/developer-site.sh): the showcase and an index page, static files that Caddy
+# serves at the name every preview address hangs from (dev.sprechereast.com). Its folder is a sibling of
+# production's and the previews', never inside either; its Caddy block is one more file in the previews'
+# folder, named so that the preview scripts (which count and list `pr-*.caddy`) never see it.
+DEVELOPER_ROOT="${DEVELOPER_ROOT:-/var/www/sprecher-east-developer}"
+DEVELOPER_HOST="$PREVIEW_DOMAIN"
+DEVELOPER_CADDY_FILE="${DEVELOPER_CADDY_FILE:-${PREVIEW_CADDY_DIR%/}/developer.caddy}"
+DEVELOPER_KEEP_RELEASES="${DEVELOPER_KEEP_RELEASES:-2}"
+DEVELOPER_MAX_BYTES="${DEVELOPER_MAX_BYTES:-104857600}" # the most the served folder may hold (the showcase is about 15 MB)
+# How long the address gets to answer after the script loads its block for the first time (Caddy orders the
+# certificate then), and when only the files changed.
+DEVELOPER_UP_SECONDS_NEW="${DEVELOPER_UP_SECONDS_NEW:-120}"
+DEVELOPER_UP_SECONDS="${DEVELOPER_UP_SECONDS:-20}"
+
 PREVIEW_NUMBER="${PREVIEW_NUMBER:-}"
 if [ -z "$PREVIEW_NUMBER" ]; then
   ENVIRONMENT=production

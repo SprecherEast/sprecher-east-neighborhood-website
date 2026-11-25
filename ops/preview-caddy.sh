@@ -61,15 +61,9 @@ caddy_accepts "$CADDYFILE" || refuse "the current Caddyfile does not validate, s
 caddy_import_present "$PREVIEW_CADDY_DIR/*.caddy" || refuse "the Caddyfile does not import the previews folder"
 
 temp=""
-previous=""
-cleanup() { rm -f "$temp" "$previous"; }
+CADDY_BLOCK_PREVIOUS=""
+cleanup() { rm -f "$temp" "$CADDY_BLOCK_PREVIOUS"; }
 trap cleanup EXIT
-
-# Puts the previous block back (or none), and reloads again so Caddy runs what it ran before.
-roll_back() {
-  if [ -n "$previous" ] && [ -s "$previous" ]; then mv -f "$previous" "$BLOCK"; else rm -f "$BLOCK"; fi
-  $RELOAD_CADDY >/dev/null 2>&1 || report "ERROR: the previous config is back in $PREVIEW_CADDY_DIR, but Caddy would not reload it"
-}
 
 if [ -d "$APP_DIR" ] && [ ! -L "$APP_DIR" ]; then
   # Add or update the block.
@@ -102,20 +96,12 @@ if [ -d "$APP_DIR" ] && [ ! -L "$APP_DIR" ]; then
     report "preview $PREVIEW_NUMBER's Caddy block is already in place"
     exit 0
   fi
-  if [ -f "$BLOCK" ]; then
-    previous=$(mktemp "$BLOCK.XXXXXX")
-    cp -p "$BLOCK" "$previous"
-  fi
-  mv -f "$temp" "$BLOCK" # one rename: Caddy sees the old block or the new one, never half
-  temp=""
-  if ! caddy_accepts "$CADDYFILE"; then
-    roll_back
-    report "ERROR: Caddy rejected the config with preview $PREVIEW_NUMBER's block; the previous block is back"
-    exit 1
-  fi
-  if ! $RELOAD_CADDY >/dev/null 2>&1; then
-    roll_back
-    report "ERROR: Caddy would not reload with preview $PREVIEW_NUMBER's block; the previous block is back"
+  if ! caddy_place_block "$temp" "$BLOCK"; then
+    if [ "$CADDY_BLOCK_PROBLEM" = rejected ]; then
+      report "ERROR: Caddy rejected the config with preview $PREVIEW_NUMBER's block; the previous block is back"
+    else
+      report "ERROR: Caddy would not reload with preview $PREVIEW_NUMBER's block; the previous block is back"
+    fi
     exit 1
   fi
   report "preview $PREVIEW_NUMBER's Caddy block is in place and Caddy reloaded"
@@ -125,10 +111,10 @@ else
     report "preview $PREVIEW_NUMBER has no Caddy block"
     exit 0
   }
-  previous=$(mktemp "$BLOCK.XXXXXX")
-  mv -f "$BLOCK" "$previous"
+  CADDY_BLOCK_PREVIOUS=$(mktemp "$BLOCK.XXXXXX")
+  mv -f "$BLOCK" "$CADDY_BLOCK_PREVIOUS"
   if ! caddy_accepts "$CADDYFILE" || ! $RELOAD_CADDY >/dev/null 2>&1; then
-    roll_back
+    caddy_restore_block "$BLOCK" "$CADDY_BLOCK_PREVIOUS"
     report "ERROR: Caddy would not reload without preview $PREVIEW_NUMBER's block; the block is back"
     exit 1
   fi

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Decides whether a pull request gets a pull request preview (#1075, epic #1070). Writes `build`
-# (true|false) to $GITHUB_OUTPUT and says why in the job summary. It runs in a job with no secrets and
+# (true|false) and `showcase` (true when the preview also gets the component showcase built, #1459) to
+# $GITHUB_OUTPUT and says why in the job summary. It runs in a job with no secrets and
 # no environment; a `false` ends the workflow green.
 #
 # A preview is made only when:
@@ -12,6 +13,7 @@
 #   - it carries the `preview` label, which the AI agent that made a visual change adds once the owner
 #     said yes, or anyone adds to ask for one (decision of 2026-11-20 on #1070 and #1075). Each preview
 #     orders a certificate from a weekly budget production shares (ops/previews.md).
+# The showcase is built into a preview only when the change touches what showcase-paths.sh lists.
 #
 # Environment: HEAD_REPO and BASE_REPO (owner/name; an empty HEAD_REPO is a deleted fork), PR_AUTHOR (the login), HAS_LABEL (true|false: the
 # pull request carries `preview`), BASE_SHA and HEAD_SHA (both commits are in the checkout),
@@ -23,9 +25,13 @@ HEAD_REPO="${HEAD_REPO:-}" # empty when the fork was deleted: it counts as a for
 HAS_LABEL="${HAS_LABEL:-false}"
 # shellcheck source=deploy-paths.sh
 . "$(dirname "$0")/deploy-paths.sh"
+# shellcheck source=showcase-paths.sh
+. "$(dirname "$0")/showcase-paths.sh"
+showcase=false # set below, once the changed files are known
 
 decide() { # <true|false> <reason, plain text>
   echo "build=$1" >>"$GITHUB_OUTPUT"
+  echo "showcase=$([ "$1" = true ] && echo "$showcase" || echo false)" >>"$GITHUB_OUTPUT"
   echo "::notice title=Pull request preview::$2"
   if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
     printf '### Pull request preview\n\n%s\n' "$2" >>"$GITHUB_STEP_SUMMARY"
@@ -46,10 +52,8 @@ changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA")
 reaches_server=no
 while IFS= read -r file; do
   [ -n "$file" ] || continue
-  if deploys_for_file "$file"; then
-    reaches_server=yes
-    break
-  fi
+  if deploys_for_file "$file"; then reaches_server=yes; fi
+  if changes_showcase "$file"; then showcase=true; fi
 done <<<"$changed"
 if [ "$reaches_server" = no ]; then
   decide false "No preview: this pull request changes only docs and repository tooling, which never reach the server."
@@ -57,5 +61,8 @@ fi
 
 if [ "$HAS_LABEL" != true ]; then
   decide false "No preview: previews are made only for a pull request with the \`preview\` label (each one orders a certificate from a weekly budget production shares). Add the label, or ask the owner, to get one."
+fi
+if [ "$showcase" = true ]; then
+  decide true "A preview will be built, with the component showcase: the pull request changes code, touches a story, the UI kit, the theme or the showcase's settings, and carries the \`preview\` label."
 fi
 decide true "A preview will be built: the pull request changes code and carries the \`preview\` label."

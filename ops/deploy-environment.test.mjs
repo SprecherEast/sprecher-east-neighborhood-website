@@ -56,6 +56,34 @@ describe('deploy-release.sh with no environment named', () => {
     expect(fs.existsSync(p('previews/pr-7/.preview-accounts'))).toBe(false) // and no test accounts' passwords
   })
 
+  it('runs the developer site after the preview Caddy base, so its block has the import and headers it needs', async () => {
+    await production()
+    const order = log()
+      .split('\n')
+      .filter((l) => l.endsWith('.sh '))
+      .map((l) => l.replace('.sh ', ''))
+    expect(order.indexOf('developer-site')).toBeGreaterThan(order.indexOf('caddy-previews'))
+  })
+
+  it('does not turn the deploy red when the developer site fails: a warning, the release stays live', async () => {
+    const { code, out } = await (async () => {
+      const release = p('app/releases/r1')
+      makeRelease(release, PROD_URL)
+      return deploy(release, { STUB_DEVELOPER_SITE_FAILS: '1' })
+    })()
+    expect(code, out).toBe(0)
+    expect(out).toContain('the developer site was not updated; production is unaffected')
+    expect(fs.readlinkSync(p('app/current'))).toBe('releases/r1')
+    expect(log()).toContain('install-umami.sh') // the scripts after it still run
+  })
+
+  it('still turns the deploy red when another housekeeping script fails (only the developer site is exempt)', async () => {
+    const release = p('app/releases/r1')
+    makeRelease(release, PROD_URL)
+    const { code } = await deploy(release, { STUB_CADDY_PREVIEWS_FAILS: '1' })
+    expect(code).toBe(1)
+  })
+
   it('keeps the newest three releases', async () => {
     for (const [i, name] of ['o1', 'o2', 'o3'].entries()) {
       fs.mkdirSync(p('app/releases', name), { recursive: true })

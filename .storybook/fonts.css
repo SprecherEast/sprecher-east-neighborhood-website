@@ -1,0 +1,23 @@
+/*
+ * The showcase's body font, served from the showcase itself (#1459). The site's own font, defined once in
+ * src/platform/theme/fonts.ts, is downloaded and self-hosted by Next.js when the site is built. The showcase
+ * is not built by Next.js, and the Vite plugin that stands in for Next's font loader writes Google's font
+ * addresses into the built page, so each visitor's browser would ask Google for the font. Here the same
+ * family, with the same weights, styles and latin subset, comes from the `@fontsource/poppins` package
+ * instead, and Vite copies the font files into the build. `fonts.test.ts` keeps this list equal to fonts.ts.
+ */
+@import '@fontsource/poppins/latin-300.css';
+@import '@fontsource/poppins/latin-300-italic.css';
+@import '@fontsource/poppins/latin-400.css';
+@import '@fontsource/poppins/latin-400-italic.css';
+@import '@fontsource/poppins/latin-500.css';
+@import '@fontsource/poppins/latin-500-italic.css';
+@import '@fontsource/poppins/latin-600.css';
+@import '@fontsource/poppins/latin-600-italic.css';
+@import '@fontsource/poppins/latin-700.css';
+@import '@fontsource/poppins/latin-700-italic.css';
+
+/* What the root layout gets from `poppins.variable`: the variable the theme's `font-sans` reads */
+:root {
+  --font-poppins: 'Poppins';
+}

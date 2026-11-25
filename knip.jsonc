@@ -47,6 +47,8 @@
         "tw-animate-css",
         // Installed globally on the server (ops/), not in this package
         "pm2",
+        // The showcase's font, loaded from CSS (`.storybook/fonts.css` @imports), which knip doesn't read (#1459)
+        "@fontsource/poppins",
       ],
       "project": [
         "src/**/*.{ts,tsx}",

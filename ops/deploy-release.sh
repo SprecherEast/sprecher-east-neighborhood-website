@@ -14,7 +14,8 @@
 #      database on its first visit, then is cached as usual
 #   5. switch the `current` link atomically and reload the app under PM2 (ops/restart-app.sh)
 #   6. check the site answers through Caddy with this release's build; if not, switch back
-#   7. refresh the backup job, the Caddy settings (request limits, HTTPS), the preview account and Umami analytics, and keep the newest
+#   7. refresh the backup job, the Caddy settings (request limits, HTTPS), the developer site (a failure there is
+#      a warning only), the preview account and Umami analytics, and keep the newest
 #      $KEEP_RELEASES releases (a preview does only the last of these)
 #
 # It acts on production, or on one pull request preview when PREVIEW_NUMBER is set: the folder, PM2
@@ -236,6 +237,9 @@ if ! is_preview; then # these change production's backup job, Caddyfile and anal
   bash "$RELEASE/ops/caddy-https.sh" || failed=1
   # Pull request previews: one import line for the preview folder (#1072). Does nothing with no previews.
   bash "$RELEASE/ops/caddy-previews.sh" || failed=1
+  # The developer site (#1459): the showcase and an index page at dev.sprechereast.com. It never turns the
+  # deploy red or touches the live release: a failure is a warning and the previous developer site stays.
+  bash "$RELEASE/ops/developer-site.sh" || report "WARNING: the developer site was not updated; production is unaffected"
   # The restricted account, wrapper and sudo rule for preview deploys (#1345). Changes nothing on any doubt.
   bash "$RELEASE/ops/install-preview-access.sh" || failed=1
   # After the Caddy scripts: its block imports the HSTS file caddy-https.sh writes. A missing
