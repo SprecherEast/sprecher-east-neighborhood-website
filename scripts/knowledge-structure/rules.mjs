@@ -1,8 +1,6 @@
 /** The rules that read one note: its front matter, its headings, its size and its paths. */
-import path from 'node:path'
-
 import { parseNote } from './note.mjs'
-import { existsExactly, pathReferences, resolves } from './paths.mjs'
+import { existsExactly, noteFolder, pathReferences, resolves } from './paths.mjs'
 
 const SEVERITY = { block: 'error', warn: 'warning' }
 
@@ -20,27 +18,32 @@ const isRelationship = (value) => isLine(value?.type) && isLine(value?.target)
 /** The key of the field of a kind (the schema has one note type field). */
 export const keyOfKind = (schema, kind) => schema.fields.find((field) => field.kind === kind)?.key
 
+/** The error for a field whose kind the code has no check for (a new kind needs code). */
+export const unknownKind = ({ key, kind }) =>
+  new Error(
+    `field "${key}" has kind "${kind}", which the check does not handle: a new kind needs code here`,
+  )
+
 function checkValue(add, schema, field, value, files) {
-  const { key, kind, maxChars } = field
+  const { key, kind } = field
   if (kind === 'text') {
-    if (!isLine(value) || (maxChars && value.length > maxChars))
+    const limit = field.maxChars ?? Infinity
+    if (!isLine(value) || value.length > limit)
       add(
         'NOTE-FIELD-VALUE',
-        `${key} must be one line of text${maxChars ? `, at most ${maxChars} characters` : ''}`,
+        `${key} must be one line of text${limit === Infinity ? '' : `, at most ${limit} characters`}`,
       )
   } else if (kind === 'noteType') {
-    if (!Object.hasOwn(schema.noteTypes, value))
+    if (typeof value !== 'string' || !Object.hasOwn(schema.noteTypes, value))
       add(
         'NOTE-TYPE',
-        `${key} "${value}" is not one of ${Object.keys(schema.noteTypes).join(', ')}`,
+        `${key} ${JSON.stringify(value)} is not one of ${Object.keys(schema.noteTypes).join(', ')}`,
       )
   } else if (kind === 'textList') {
     if (!(Array.isArray(value) && value.every(isLine)))
       add('NOTE-FIELD-VALUE', `${key} must be a list of one-line texts`)
   } else if (kind !== 'relationships') {
-    throw new Error(
-      `field "${key}" has kind "${kind}", which the check does not handle: a new kind needs code here`,
-    )
+    throw unknownKind(field)
   } else if (!Array.isArray(value) || !value.every(isRelationship)) {
     add('NOTE-FIELD-VALUE', `${key} must be a list of { type, target }`)
   } else {
@@ -121,7 +124,7 @@ export function checkNote({ schema, path: notePath, text, files }) {
       'NOTE-CAP',
       `${note.bodyLines} lines below the front matter, over the limit of ${schema.limits.noteLines}`,
     )
-  const noteDir = path.posix.dirname(notePath)
+  const noteDir = noteFolder(notePath)
   for (const { kind, token, line } of pathReferences(note.body, schema)) {
     if (!resolves(token, { noteDir, files, schema }))
       add(

@@ -30,10 +30,13 @@ export function pathReferences(body, schema) {
   return references
 }
 
+/** The folder a note sits in, which its `./` and `../` paths are read from. */
+export const noteFolder = (notePath) => path.posix.dirname(notePath)
+
 /** Whether a repository-relative path (a file or a folder, no pattern) is in `files`, exactly. */
 export function existsExactly(target, files) {
   const clean = target.replace(/\/$/, '')
-  return files.some((file) => file === clean || file.startsWith(`${clean}/`))
+  return clean !== '' && files.some((file) => file === clean || file.startsWith(`${clean}/`))
 }
 
 const exists = (candidate, files) => {

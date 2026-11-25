@@ -32,6 +32,8 @@ describe('skeleton', () => {
 
   it('leaves Screens out for a type that has no routes, and fails for an unknown type', () => {
     expect(skeleton(schema, 'feature')).not.toContain('## Screens')
+    for (const inherited of ['constructor', 'toString', '__proto__', 'hasOwnProperty'])
+      expect(messageOf(() => skeleton(schema, inherited))).toContain(`unknown type "${inherited}"`)
     expect(messageOf(() => skeleton(schema, 'widget'))).toBe(
       'unknown type "widget"; use one of: module, platform-area, feature',
     )
@@ -72,6 +74,15 @@ describe('a skeleton, in full', () => {
   })
 })
 
+describe('a skeleton for a schema with a field of an unknown kind', () => {
+  it('says which field and kind, as the check does', () => {
+    const odd = { ...schema, fields: [{ key: 'weight', kind: 'number' }, ...schema.fields] }
+    expect(messageOf(() => skeleton(odd, 'module'))).toBe(
+      'field "weight" has kind "number", which the check does not handle: a new kind needs code here',
+    )
+  })
+})
+
 describe('summarize', () => {
   it('counts errors and warnings by rule, for the job summary', () => {
     const text = summarize([
@@ -86,6 +97,13 @@ describe('summarize', () => {
     expect(summarize([{ rule: 'X', severity: 'error', note: 'a', message: 'm' }])).toContain(
       '1 error,',
     )
+    const three = ['a', 'b', 'c'].map((note) => ({
+      rule: 'X',
+      severity: 'warning',
+      note,
+      message: 'm',
+    }))
+    expect(summarize(three)).toBe('Knowledge structure: 0 errors, 3 warnings\n- X: 3')
     expect(summarize([])).toBe('Knowledge structure: 0 errors, 0 warnings')
     expect(
       summarize([
@@ -173,6 +191,14 @@ describe('execute', () => {
       `error [NOTE-FRONTMATTER] ${NOTE_PATH}: no front matter: a note starts with its fields`,
     )
     expect(lines.at(-1)).toMatch(/^Knowledge structure: \d+ errors?, \d+ warnings?\n- /)
+  })
+
+  it('adds to a job summary file that already has text, never replaces it', () => {
+    const root = fixture()
+    const summary = path.join(root, 'summary.md')
+    fs.writeFileSync(summary, 'earlier step\n')
+    const { lines } = run(root, [], { GITHUB_STEP_SUMMARY: summary })
+    expect(fs.readFileSync(summary, 'utf8')).toBe(`earlier step\n${lines.at(-1)}\n`)
   })
 
   it('writes the same counts to the job summary file, then a line end', () => {

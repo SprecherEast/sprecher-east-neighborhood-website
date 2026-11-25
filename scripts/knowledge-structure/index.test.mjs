@@ -59,6 +59,33 @@ describe('noteLinesOf and renderIndex messages', () => {
   })
 })
 
+describe('where the Notes region starts and ends', () => {
+  it('starts at the first Notes heading and ends at the first heading after it', () => {
+    const text = [
+      '# Index',
+      '## Notes',
+      '- [a](a.md): about ## things',
+      '## First',
+      '- [x](x.md): y',
+      '## Second',
+      '## Notes',
+      '- [z](z.md): later',
+    ].join('\n')
+    expect(noteLinesOf(text, 'i.md')).toEqual(['- [a](a.md): about ## things'])
+    expect(renderIndex(text, [], 'i.md').split('\n')).toEqual([
+      '# Index',
+      '## Notes',
+      '',
+      '',
+      '## First',
+      '- [x](x.md): y',
+      '## Second',
+      '## Notes',
+      '- [z](z.md): later',
+    ])
+  })
+})
+
 describe('Windows line endings', () => {
   it('reads the lines under Notes the same, and writes the index back with plain line ends', () => {
     const crlf = goodIndex().replace(/\n/g, '\r\n')

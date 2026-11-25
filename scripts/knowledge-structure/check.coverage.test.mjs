@@ -17,6 +17,13 @@ describe('COVERAGE-CODE', () => {
     expect(found.message).toContain('3 source files have no note: src/b/x 2, src/a/one.ts 1')
   })
 
+  it('COVERAGE-CODE counts every loose file of a folder, not only the first two', () => {
+    const files = [...GOOD_FILES, 'src/b/x/p.ts', 'src/b/x/q.ts', 'src/b/x/r.ts', 'src/a/one.ts']
+    expect(messagesOf(repo({ schema, files }), 'COVERAGE-CODE')).toEqual([
+      '4 source files have no note: src/b/x 3, src/a/one.ts 1',
+    ])
+  })
+
   it('COVERAGE-CODE does not count generated types, stories or files outside src', () => {
     const files = [
       ...GOOD_FILES,

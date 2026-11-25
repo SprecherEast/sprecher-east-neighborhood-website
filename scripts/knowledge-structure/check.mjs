@@ -3,7 +3,7 @@ import { describes, globToRegExp, parseKnowledgeMap } from '../agent-context-map
 import { isTestFile } from '../behavior-change.mjs'
 import { indexLine, noteLinesOf } from './indexLines.mjs'
 import { parseNote } from './note.mjs'
-import { pathReferences, resolves } from './paths.mjs'
+import { noteFolder, pathReferences, resolves } from './paths.mjs'
 import { checkNote, finding } from './rules.mjs'
 
 const INDEX = 'docs/knowledge/index.md'
@@ -36,7 +36,7 @@ function mapFindings(schema, entries, files, read, add) {
     const text = read(path)
     const matched = files.some((file) => describes(entry, file))
     const names = pathReferences(parseNote(text).body, schema).some((ref) =>
-      resolves(ref.token, { noteDir: path.slice(0, path.lastIndexOf('/')), files, schema }),
+      resolves(ref.token, { noteDir: noteFolder(path), files, schema }),
     )
     if (!matched) add('NOTE-NO-CODE', path, 'its map paths match no file')
     else if (!names) add('NOTE-NO-CODE', path, 'it names no code: no path in it exists')
@@ -50,6 +50,10 @@ function mapFindings(schema, entries, files, read, add) {
 }
 
 function indexFindings(entries, indexText, add) {
+  if (indexText === undefined) {
+    add('INDEX-DRIFT', INDEX, `${INDEX} does not exist`)
+    return
+  }
   const wanted = entries.filter((e) => e.name && e.summary).map((e) => indexLine(e, INDEX))
   let actual
   try {
@@ -102,7 +106,7 @@ export function checkKnowledge({ schema, mapJson, files, read }) {
   for (const { path } of entries) {
     if (files.includes(path)) found.push(...checkNote({ schema, path, text: read(path), files }))
   }
-  indexFindings(entries, read(INDEX) ?? '', add)
+  indexFindings(entries, read(INDEX), add)
   coverageFinding(schema, entries, files, add)
   return found
 }

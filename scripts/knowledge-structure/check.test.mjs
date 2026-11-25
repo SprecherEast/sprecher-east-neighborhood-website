@@ -61,7 +61,7 @@ describe('checkKnowledge', () => {
   it('INDEX-DRIFT: fails when the index file is missing altogether', () => {
     const found = errorsOf(repo({ texts: { 'docs/knowledge/index.md': undefined } }))
     expect(found.map((f) => f.rule)).toEqual(['INDEX-DRIFT'])
-    expect(found[0].message).toMatch(/## Notes/)
+    expect(found[0].message).toBe('docs/knowledge/index.md does not exist')
   })
 
   it('INDEX-DRIFT: fails an index with no Notes section, so a broken index never passes', () => {

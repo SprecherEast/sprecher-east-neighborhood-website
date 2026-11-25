@@ -21,9 +21,10 @@ looks like this: decision [0022](../architecture/decisions/0022-knowledge-note-s
 - Front matter holds the facts a program reads. `relationships` lists only what code and the
   reference cannot show; the scanner derives the rest from imports, links and the map.
 - Every claim names the file or test it comes from, so a reader can check it and a reviewer can see
-  when it goes stale. A path that doesn't exist fails the check.
-- Each section's hint is in the schema and in the skeleton. A section the schema marks `expected`
-  and a note lacks is a warning, not a failure, until #1004 has written the missing ones.
+  when it goes stale. A path that doesn't exist is reported by the check (whether that fails the
+  run is the state of its rule in the schema's `rules`).
+- Each section's hint and whether it is required, expected or optional are in the schema and in the
+  skeleton; what the check does with a missing one is the state of its rule in the schema's `rules`.
 - At most the number of lines the schema sets, counted below the front matter. A part too big for
   one note gets a feature note next to its code and its own map entry; `exclude` in the map takes
   its files out of the parent's entry so each file has one note.

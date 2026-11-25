@@ -17,19 +17,21 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { KNOWLEDGE_MAP } from '../agent-context-maps.mjs'
 import { checkKnowledge, mapNotes } from './check.mjs'
 import { renderIndex } from './indexLines.mjs'
+import { unknownKind } from './rules.mjs'
 
 const SCHEMA = 'docs/knowledge/note-schema.json'
 const INDEX = 'docs/knowledge/index.md'
 
 /** A new note's text for a type: the fields as placeholders, then each section with its hint. */
 export function skeleton(schema, type) {
-  if (!(type in schema.noteTypes))
+  if (!Object.hasOwn(schema.noteTypes, type))
     throw new Error(
       `unknown type "${type}"; use one of: ${Object.keys(schema.noteTypes).join(', ')}`,
     )
-  const fields = schema.fields.map(({ key, kind }) => {
-    const placeholder = schema.kinds[kind].placeholder
-    return `${key}: ${placeholder === '$type' ? type : placeholder}`
+  const fields = schema.fields.map((field) => {
+    if (!Object.hasOwn(schema.kinds, field.kind)) throw unknownKind(field)
+    const { placeholder } = schema.kinds[field.kind]
+    return `${field.key}: ${placeholder === '$type' ? type : placeholder}`
   })
   const sections = schema.sections
     .filter((section) => section.appliesTo.includes(type))
@@ -51,14 +53,15 @@ export function summarize(found) {
   ].join('\n')
 }
 
-function listFiles(root) {
+/** The files of the repository: those git tracks or would, that still exist (never an empty entry). */
+export function listFiles(root) {
   const out = execFileSync(
     'git',
     ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
     {
       cwd: root,
       encoding: 'utf8',
-      maxBuffer: 64 * 1024 * 1024,
+      maxBuffer: Infinity,
     },
   )
   return out.split('\0').filter((file) => file && fs.existsSync(path.join(root, file)))

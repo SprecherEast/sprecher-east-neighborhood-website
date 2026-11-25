@@ -13,7 +13,7 @@ describe('cli.mjs as a process', () => {
 
   /** The real entry as a process: its own copy of the scripts sits in the throwaway repository. */
   const SCRIPTS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-  const spawnEntry = (root, args = []) => {
+  const spawnEntry = (root, args = [], env = {}) => {
     fs.cpSync(SCRIPTS, path.join(root, 'scripts'), {
       recursive: true,
       filter: (src) => !/\.test\.mjs$|testkit\.mjs$/.test(src),
@@ -22,6 +22,7 @@ describe('cli.mjs as a process', () => {
     return spawnSync('node', [path.join(root, 'scripts/knowledge-structure/cli.mjs'), ...args], {
       cwd: os.tmpdir(),
       encoding: 'utf8',
+      env: { ...process.env, ...env },
     })
   }
 
@@ -60,6 +61,14 @@ describe('cli.mjs as a process', () => {
     expect(result.stderr).toBe('')
     expect(result.stdout).toBe('')
     expect(result.status).toBe(0)
+  })
+
+  it('as a process: appends the counts to the job summary file named in the environment', () => {
+    const root = fixture()
+    const summary = path.join(root, 'summary.md')
+    const result = spawnEntry(root, [], { GITHUB_STEP_SUMMARY: summary })
+    expect(result.status).toBe(0)
+    expect(fs.readFileSync(summary, 'utf8')).toMatch(/^Knowledge structure: 0 errors, \d+ warnings/)
   })
 
   it('as a process: exits 0 when there are only warnings', () => {

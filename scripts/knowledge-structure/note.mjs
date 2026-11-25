@@ -1,5 +1,5 @@
 /** Reading a knowledge note into the parts the checks look at. */
-import { frontmatterText, parseFrontmatter } from '../frontmatter.mjs'
+import { parseFrontmatter, splitFrontmatter } from '../frontmatter.mjs'
 
 export const FENCE = /^\s*(```|~~~)/
 
@@ -10,7 +10,7 @@ export const FENCE = /^\s*(```|~~~)/
  */
 export function parseNote(markdown) {
   const text = markdown.replace(/\r\n/g, '\n')
-  const raw = frontmatterText(text)
+  const { text: raw, rest } = splitFrontmatter(text)
   const note = { hasFrontmatter: raw !== null, error: null, data: {}, body: text }
   if (raw !== null) {
     try {
@@ -21,8 +21,8 @@ export function parseNote(markdown) {
     } catch (error) {
       note.error = String(error.message).split('\n')[0]
     }
-    const rest = text.slice(text.indexOf('\n---', 3) + 1)
-    note.body = rest.slice(rest.indexOf('\n') + 1)
+    const lineEnd = rest.indexOf('\n')
+    note.body = lineEnd === -1 ? '' : rest.slice(lineEnd + 1)
   }
   const lines = note.body.replace(/^\n+/, '').replace(/\n$/, '').split('\n')
   note.bodyLines = lines.length

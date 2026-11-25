@@ -89,4 +89,30 @@ describe('parseNote', () => {
     const indented = '# T\n\n  ```\n## Hidden\n  ```\n\n## Shown\n'
     expect(parseNote(indented).sections.map((s) => s.heading)).toEqual(['Shown'])
   })
+
+  it('starts the body after the same closing line the front matter ends at, whatever it holds', () => {
+    const doubled = parseNote('---\n---\nname: a\n---\n# T\n\nPurpose.\n\n## S\n')
+    expect(doubled.error).toBeNull()
+    expect(doubled.data).toEqual({ name: 'a' })
+    expect(doubled.title).toBe('T')
+    expect(doubled.sections).toEqual([{ heading: 'S', line: 5 }])
+  })
+
+  it.each(['---\nname: a\n---', '---\nname: a\n---  ', '---\nname: a\n--- text'])(
+    'has an empty body when the closing line ends the file: %j',
+    (text) => {
+      const note = parseNote(text)
+      expect(note.hasFrontmatter).toBe(true)
+      expect(note.title).toBeNull()
+      expect(note.body).toBe('')
+    },
+  )
+
+  it('keeps data an empty object when the front matter is not a mapping, and says why', () => {
+    for (const fields of ['- a', 'abc', '5', 'true']) {
+      const note = parseNote(`---\n${fields}\n---\n# T\n`)
+      expect(note.data).toEqual({})
+      expect(note.error).toBe('the front matter is not a list of fields (key: value)')
+    }
+  })
 })

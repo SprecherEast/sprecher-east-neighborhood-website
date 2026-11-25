@@ -31,6 +31,12 @@ describe('pathReferences', () => {
     ])
   })
 
+  it('takes a known repository folder only at the start of a token', () => {
+    expect(pathReferences('`a/src/b` and `src/b` and `x.ops`', schema).map((r) => r.token)).toEqual(
+      ['src/b'],
+    )
+  })
+
   it('takes a path under a known repository folder even without an extension', () => {
     expect(pathReferences('`src/platform/ui` and `ops`', schema).map((r) => r.token)).toEqual([
       'src/platform/ui',
@@ -105,6 +111,9 @@ describe('resolves', () => {
     ['domain/gone.ts', false],
     ['domain/*.ts', true], // a pattern matching something
     ['domain/*.mjs', false],
+    ['./domain/*.ts', true], // a pattern read from the note's folder
+    ['/docs/*/routes.md', true], // and one read from the root
+    ['/docs/*/nope.md', false],
     ['.env.local', true], // ignored by the schema
     ['../../../docs/reference/routes.md', true], // relative to the note
     ['../../../docs/reference/nope.md', false],
@@ -113,6 +122,28 @@ describe('resolves', () => {
     ['/docs/reference/routes.md', true], // from the repository root
   ])('%s resolves: %s', (token, expected) => {
     expect(resolves(token, ctx)).toBe(expected)
+  })
+})
+
+describe('links, as decision 0022 states them', () => {
+  it('reads a link to a folder, or to a file with no known extension, as nothing to examine', () => {
+    expect(pathReferences('[a](../shared/) [b](../LICENSE) [c](../x.ts)', schema)).toEqual([
+      { kind: 'link', token: '../x.ts', line: 1 },
+    ])
+  })
+
+  it('treats a bare link like an abbreviation, and ./ and ../ links as exact', () => {
+    expect(resolves('cn.ts', ctx)).toBe(true)
+    expect(resolves('./cn.ts', ctx)).toBe(false)
+    expect(resolves('../../platform/lib/cn.ts', ctx)).toBe(true)
+    expect(resolves('../lib/cn.ts', ctx)).toBe(false)
+  })
+})
+
+describe('existsExactly with an empty entry in the list', () => {
+  it('does not find / or an empty target there', () => {
+    expect(existsExactly('/', ['', ...files])).toBe(false)
+    expect(existsExactly('', ['', ...files])).toBe(false)
   })
 })
 

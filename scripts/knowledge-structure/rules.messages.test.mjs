@@ -43,6 +43,17 @@ describe('field messages', () => {
     ])
   })
 
+  it.each([
+    ['a list holding a type', '[module]', ['module']],
+    ['a number', '5', 5],
+    ['an object', '{ a: 1 }', { a: 1 }],
+    ['an empty text', '""', ''],
+  ])('refuses a type written as %s', (_, type, parsed) => {
+    expect(found(withFields({ type }), 'NOTE-TYPE')).toEqual([
+      `type ${JSON.stringify(parsed)} is not one of module, platform-area, feature`,
+    ])
+  })
+
   it('says what a value must be', () => {
     expect(found(withFields({ type: 'widget' }), 'NOTE-TYPE')).toEqual([
       'type "widget" is not one of module, platform-area, feature',
@@ -102,6 +113,12 @@ describe('text and section messages', () => {
     ])
   })
 
+  it('gives one finding, not two, to a note with no title and no purpose', () => {
+    expect(found(withBody('## Behaviors and events\n\n- x\n'), 'NOTE-TITLE')).toEqual([
+      'the body must start with a level 1 title',
+    ])
+  })
+
   it('names the unknown section, the repeated one, the order and the missing required one', () => {
     const body = (heads) => `# Demo\n\nWhat.\n\n${heads.map((h) => `## ${h}\n\n- x\n`).join('\n')}`
     expect(found(withBody(body(['Behaviors and events', 'Foo'])), 'NOTE-SECTIONS')).toEqual([
@@ -125,6 +142,19 @@ describe('text and section messages', () => {
     expect(found(withBody(long), 'NOTE-CAP')).toEqual([
       `${lines} lines below the front matter, over the limit of ${n}`,
     ])
+  })
+
+  it('reads ./ and ../ from the note folder, for a link and for a path in backticks', () => {
+    const body =
+      GOOD_BODY +
+      '\n- See `./domain/rule.ts`, `../shared/thing.ts` and [x](../shared/thing.ts), [y](./domain/rule.ts).\n'
+    const files = [...GOOD_FILES, 'src/modules/shared/thing.ts']
+    const text = withBody(body)
+    expect(
+      checkNote({ schema: strict, path: NOTE_PATH, text, files }).filter(
+        (f) => f.rule === 'NOTE-PATH',
+      ),
+    ).toEqual([])
   })
 
   it('names a path or a link that does not exist, with its body line', () => {

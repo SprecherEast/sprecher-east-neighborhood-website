@@ -7,7 +7,6 @@ import {
   GOOD_FILES,
   NOTE_PATH,
   errorsOf,
-  frontmatter,
   goodNote,
   messageOf,
   schema,
@@ -91,8 +90,18 @@ describe('NOTE-FIELD-VALUE messages', () => {
     ])
   })
 
-  it('names no limit, and allows any length, when the field has none', () => {
-    const noLimit = schema.fields.map(({ maxChars: _, ...field }) => field)
+  it('treats a limit of 0 as a limit, not as none', () => {
+    const zero = schema.fields.map((f) => (f.key === 'summary' ? { ...f, maxChars: 0 } : f))
+    expect(messageFor({ summary: 'x' }, zero)).toEqual([
+      'summary must be one line of text, at most 0 characters',
+    ])
+  })
+
+  it.each([
+    ['is left out', ({ maxChars: _, ...field }) => field],
+    ['is null', (field) => ({ ...field, maxChars: null })],
+  ])('names no limit, and allows any length, when the field limit %s', (_, without) => {
+    const noLimit = schema.fields.map(without)
     expect(messageFor({ summary: 'x'.repeat(500) }, noLimit)).toEqual([])
     expect(messageFor({ summary: '""' }, noLimit)).toEqual(['summary must be one line of text'])
   })
@@ -234,12 +243,4 @@ describe('severity follows the schema', () => {
     ])
     expect(errorsOf(found)).toEqual([])
   })
-})
-
-it('keeps front matter out of the note when a body repeats the dashes', () => {
-  expect(run(frontmatter(GOOD_FIELDS) + GOOD_BODY + '\n---\n\ntext\n')).toEqual([])
-})
-
-it('reads a note with Windows line endings like any other', () => {
-  expect(run(goodNote().replace(/\n/g, '\r\n'))).toEqual([])
 })
