@@ -1,9 +1,19 @@
 /** What the generator says when the config or a file leaves a value out (#1461). */
-import { describe, expect, it } from 'vitest'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { describe, expect, it, vi } from 'vitest'
 
 import { describeInput, typeOf } from './inputSchema.mjs'
 import { describeJobs } from './jobs.mjs'
-import { graphQLRules, ownerText } from './loadFacts.mjs'
+import {
+  SERVER_SCRIPTS,
+  WORKFLOW_FILES,
+  filesIn,
+  graphQLRules,
+  graphQLSettings,
+  ownerText,
+} from './loadFacts.mjs'
 import { describeMcp } from './mcpTools.mjs'
 import { parseDependabot, parseIntelligenceSchedule, parseTimedWorkflows } from './timers.mjs'
 
@@ -108,5 +118,50 @@ describe('graphQLRules', () => {
         throw new Error('needs a request')
       }),
     ).toEqual([])
+  })
+})
+
+describe('graphQLSettings', () => {
+  it('keeps the limits the config sets, and leaves out the ones it does not', () => {
+    expect(
+      graphQLSettings({
+        graphQL: { maxComplexity: 5, disablePlaygroundInProduction: false, path: '/x' },
+      }),
+    ).toEqual({ maxComplexity: 5, disablePlaygroundInProduction: false })
+    expect(graphQLSettings({ graphQL: {} })).toEqual({})
+  })
+})
+
+describe('the file types and the folder listing of the loader', () => {
+  it('takes only a whole `.yml` or `.yaml` workflow name, and only a `.sh` script', () => {
+    expect(['a.yml', 'a.yaml'].map((n) => WORKFLOW_FILES.test(n))).toEqual([true, true])
+    expect(['a.yml.bak', 'ayml', 'a.yamlx'].map((n) => WORKFLOW_FILES.test(n))).toEqual([
+      false,
+      false,
+      false,
+    ])
+    expect(['a.sh', 'dir.sh'].map((n) => SERVER_SCRIPTS.test(n))).toEqual([true, true])
+    expect(['a.sh.orig', 'ash', 'a.shx'].map((n) => SERVER_SCRIPTS.test(n))).toEqual([
+      false,
+      false,
+      false,
+    ])
+  })
+
+  it('lists the files of a folder that match, sorted by name, whatever order the disk gives', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'reference-files-in-'))
+    fs.mkdirSync(path.join(root, 'ops'))
+    for (const name of ['b.sh', 'a.sh', 'c.txt'])
+      fs.writeFileSync(path.join(root, 'ops', name), name)
+    const spy = vi.spyOn(fs, 'readdirSync').mockReturnValue(['b.sh', 'c.txt', 'a.sh'])
+    try {
+      expect(filesIn(root, 'ops', SERVER_SCRIPTS)).toEqual([
+        { file: 'ops/a.sh', text: 'a.sh' },
+        { file: 'ops/b.sh', text: 'b.sh' },
+      ])
+    } finally {
+      spy.mockRestore()
+      fs.rmSync(root, { recursive: true, force: true })
+    }
   })
 })

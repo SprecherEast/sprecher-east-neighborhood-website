@@ -15,6 +15,11 @@ describe('describeJobs details (#1461)', () => {
     ])
   })
 
+  it('lists only the access settings that are functions', () => {
+    const access = { queue: () => true, run: true, cancel: 'yes', zeta: undefined }
+    expect(describeJobs({ access }).access.map((entry) => entry.operation)).toEqual(['queue'])
+  })
+
   it('puts an access name the setting does not list after the listed ones, by name', () => {
     const access = { cancel: () => true, zeta: () => true, another: () => true, queue: () => true }
     expect(describeJobs({ access }).access.map((entry) => entry.operation)).toEqual([

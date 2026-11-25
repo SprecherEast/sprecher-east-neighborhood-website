@@ -24,11 +24,23 @@ function byDefault() {
 function checked() {
   req.payload.find({ collection: 'posts', overrideAccess: false })
 }
+/** The doc comment wins over a plain one after it. */
+/* A plain note, not a doc comment. */
+function plainAfter() {
+  req.payload.find({ collection: 'users', overrideAccess: true })
+}
+/**
+   * Deeper indent one.
+      * and two.
+ */
+function indented() {
+  req.payload.find({ collection: 'media', overrideAccess: true })
+}
 /** Rounds a * b up: the star in the text stays. */
 function withStar() {
   req.payload.find({ collection: 'faq', overrideAccess: true })
 }
-export const reasons = { name: 'reasons', handler: () => { viaDatabase(); byDefault(); checked(); withStar() } }
+export const reasons = { name: 'reasons', handler: () => { viaDatabase(); byDefault(); checked(); withStar(); plainAfter(); indented() } }
 `,
   )
   program = load()
@@ -40,7 +52,7 @@ describe('findCollectionCalls reasons (#1461)', () => {
   it('quotes the comment wherever access is bypassed, and nowhere it is checked', () => {
     const found = findCollectionCalls(program, root, 'src/modules/agents/cms/tools/reasons.ts', {
       name: 'reasons',
-      knownSlugs: new Set(['agent-runs', 'events', 'posts', 'faq']),
+      knownSlugs: new Set(['agent-runs', 'events', 'posts', 'faq', 'users', 'media']),
     })
     expect(found).toEqual([
       {
@@ -68,7 +80,17 @@ describe('findCollectionCalls reasons (#1461)', () => {
         operations: ['read (access bypassed)'],
         why: [{ operation: 'read', text: 'Rounds a * b up: the star in the text stays.' }],
       },
+      {
+        collection: 'media',
+        operations: ['read (access bypassed)'],
+        why: [{ operation: 'read', text: 'Deeper indent one. and two.' }],
+      },
       { collection: 'posts', operations: ['read (access checked)'], why: [] },
+      {
+        collection: 'users',
+        operations: ['read (access bypassed)'],
+        why: [{ operation: 'read', text: 'The doc comment wins over a plain one after it.' }],
+      },
     ])
   })
 })

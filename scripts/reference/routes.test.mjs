@@ -21,10 +21,15 @@ describe('collectRoutes with another base folder (#1461)', () => {
       'export default () => null\n',
     )
     fs.writeFileSync(path.join(root, 'src/app/(payload)/api/myroute.ts'), 'export const GET = 1\n')
+    for (const name of ['pages.tsx', 'pagextsx', 'page.tsxx']) {
+      fs.writeFileSync(path.join(root, 'src/app/(payload)', name), 'export default () => null\n')
+    }
+    fs.writeFileSync(path.join(root, 'src/app/(payload)/page.tsx'), 'export default () => null\n')
     const rows = collectRoutes(root, 'src/app/(payload)')
     fs.rmSync(root, { recursive: true, force: true })
     expect(rows.map((row) => [row.url, row.kind, row.methods, row.file])).toEqual([
       ['/api/[...slug]', 'route handler', ['GET', 'POST'], 'api/[...slug]/route.ts'],
+      ['/', 'page', [], 'page.tsx'],
     ])
   })
 })

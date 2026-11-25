@@ -23,7 +23,7 @@ export function parseTimedWorkflows(files) {
 }
 
 const ENV_ASSIGNMENT = /^([A-Z_]+)="(?:\$[A-Z_]+\/current\/)?([^"]+)"/
-const CRON_LINE = /^((?:[\d*/,-]+\s+){5})(\w+)\s+(.*)$/
+const CRON_LINE = /^((?:[\d*/,-]+\s+){5})(\w+)\s+(.*)/
 
 /** The scripts a cron line runs, with their first argument, by the paths the shell script names. */
 function cronCommands(command, scripts) {

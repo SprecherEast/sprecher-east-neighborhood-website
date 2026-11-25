@@ -161,8 +161,12 @@ describe('renderMcp', () => {
     expect(page).toContain('https://payloadcms.com/docs/plugins/mcp')
   })
 
-  it('says a rule across fields is checked by the handler and not listed', () => {
-    expect(page).toContain('A rule that compares fields')
+  it('says what the field notes hold and what is not listed: whole-input rules, `.strict()`, nested checks', () => {
+    expect(page).toContain('and a `.trim()`')
+    expect(page).toContain('the rules across fields, which the whole-input schema of each tool')
+    expect(page).toContain('`submitSuggestionInput` and `reportItemInput`')
+    expect(page).toContain('`.strict()`, which refuses any field not listed here')
+    expect(page).toContain('a check on a field inside an object, which is not read')
   })
 
   it('has a row for each tool and links the endpoint page', () => {

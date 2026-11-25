@@ -63,6 +63,9 @@ describe('scripts/generate-reference.mjs', () => {
     // the tool passes a collection to a helper: the loader tells the tool reader which collections exist
     expect(read('mcp-tools.md')).toMatch(/echo[\s\S]*events/)
 
+    // a file that is not a Markdown page is left alone, by a check and by a write
+    fs.writeFileSync(path.join(copy, 'docs/reference/notes.txt'), 'kept\n')
+
     const original = { jobs: read('jobs.md'), endpoints: read('endpoints.md') }
     fs.rmSync(path.join(copy, 'docs/reference/jobs.md'))
     fs.appendFileSync(path.join(copy, 'docs/reference/endpoints.md'), 'stale\n')
@@ -77,6 +80,7 @@ describe('scripts/generate-reference.mjs', () => {
     expect(read('jobs.md')).toBe(original.jobs)
     expect(read('endpoints.md')).toBe(original.endpoints)
     expect(fs.existsSync(path.join(copy, 'docs/reference/stray.md'))).toBe(false)
+    expect(read('notes.txt')).toBe('kept\n')
     const again = run('--check')
     expect(again.status, describeRun(again)).toBe(0)
   }, 600_000)

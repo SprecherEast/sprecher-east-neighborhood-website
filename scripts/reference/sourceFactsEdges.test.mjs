@@ -47,9 +47,11 @@ export const handlers = {
       "import * as everything from '@/modules/events/cms'",
       "import { plugin } from '@payloadcms/plugin-x'",
       "import { options } from '@/modules/contact/cms'",
+      // a path that only contains the alias is no module of the site
+      "import { stray } from '../@/modules/elsewhere/cms'",
       'declare const config: { plugin: () => void }',
       'export const plugins = [',
-      '  plugin({ a: {} as NewsOptions, b: everything, ...options }),',
+      '  plugin({ a: {} as NewsOptions, b: everything, ...options, c: stray }),',
       '  config.plugin(),',
       ']',
     ].join('\n'),

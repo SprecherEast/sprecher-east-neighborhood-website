@@ -36,6 +36,56 @@ describe('describeMetadataFiles', () => {
     ])
   })
 
+  it('ignores a file whose extension only starts like one of the convention’s', () => {
+    expect(
+      describeMetadataFiles([
+        'robots.tsx',
+        'sitemap.xmlx',
+        'sitemap.tsx',
+        'favicon.icox',
+        'manifest.jsonx',
+        'manifest.tsx',
+        'icon.pngx',
+        'icon.tsxx',
+        'apple-icon.pngx',
+        'apple-icon.tsxx',
+        'opengraph-image.gifx',
+        'opengraph-image.tsxx',
+        'twitter-image.gifx',
+        'twitter-image.tsxx',
+      ]),
+    ).toEqual([])
+  })
+
+  it('takes every extension of each convention, and says which files are code', () => {
+    const files = [
+      ...['txt', 'ts', 'js'].map((e) => `robots.${e}`),
+      ...['xml', 'ts', 'js'].map((e) => `sitemap.${e}`),
+      'favicon.ico',
+      ...['json', 'webmanifest', 'ts', 'js'].map((e) => `manifest.${e}`),
+      ...['ico', 'jpg', 'jpeg', 'png', 'svg', 'ts', 'js', 'tsx'].map((e) => `icon.${e}`),
+      ...['jpg', 'jpeg', 'png', 'ts', 'js', 'tsx'].map((e) => `apple-icon.${e}`),
+      ...['jpg', 'jpeg', 'png', 'gif', 'ts', 'js', 'tsx'].map((e) => `opengraph-image.${e}`),
+      ...['jpg', 'jpeg', 'png', 'gif', 'ts', 'js', 'tsx'].map((e) => `twitter-image.${e}`),
+    ]
+    const rows = describeMetadataFiles(files)
+    expect(rows.map((row) => row.file.replace('src/app/', '')).sort()).toEqual([...files].sort())
+    const code = (name) => rows.find((row) => row.file === `src/app/${name}`).generated
+    expect(['robots.txt', 'manifest.json', 'manifest.webmanifest', 'icon.svg'].map(code)).toEqual([
+      false,
+      false,
+      false,
+      false,
+    ])
+    expect(['robots.ts', 'manifest.js', 'icon.tsx'].map(code)).toEqual([true, true, true])
+  })
+
+  it('takes only a whole folder name in parentheses as a route group', () => {
+    expect(
+      describeMetadataFiles(['(a)/icon.png', 'x(b)/icon.png', '(c)y/icon.png']).map((r) => r.url),
+    ).toEqual(['/(c)y/icon', '/icon', '/x(b)/icon'])
+  })
+
   it('ignores a file whose extension only ends like one of the convention’s', () => {
     expect(
       describeMetadataFiles([

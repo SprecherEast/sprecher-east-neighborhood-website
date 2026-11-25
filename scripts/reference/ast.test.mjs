@@ -15,6 +15,10 @@ describe('isTestFile and isSource', () => {
     expect(isTestFile('src/a/b.contract.tsx')).toBe(true)
     expect(isTestFile('src/platform/testing/helper.ts')).toBe(true)
     expect(isTestFile('src/a/b.ts')).toBe(false)
+    // only a dot before the word and a script extension at the end make a test file
+    expect(isTestFile('src/a/attest.ts')).toBe(false)
+    expect(isTestFile('src/a/b.test.ts.md')).toBe(false)
+    expect(isTestFile('src/a/b.tests.ts')).toBe(false)
   })
 
   it('counts a file of src/ that is no test and no declaration file as source', () => {

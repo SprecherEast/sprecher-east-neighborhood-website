@@ -42,6 +42,21 @@ function outer(collection: Slug) {
 export const task = { slug: 'forwarded', handler: () => outer(AGENT_RUNS) }
 `,
   )
+  // a function written outside `src/` is not followed
+  write(
+    'lib/outside.ts',
+    `declare const payload: { find(a: object): void }
+export function outside() {
+  payload.find({ collection: 'faq' })
+}
+`,
+  )
+  write(
+    'src/modules/agents/cms/tools/viaOutside.ts',
+    `import { outside } from '../../../../../lib/outside'
+export const task = { slug: 'viaOutside', handler: () => outside() }
+`,
+  )
   program = load()
 }, 60_000)
 
@@ -50,6 +65,10 @@ afterAll(() => fixture.cleanup())
 describe('findCollectionCalls with a value that is not one collection (#1461)', () => {
   it('credits none, to a payload call or to a helper', () => {
     expect(calls('src/modules/agents/cms/tools/broad.ts', 'broad')).toEqual([])
+  })
+
+  it('does not follow a call into a function written outside src', () => {
+    expect(calls('src/modules/agents/cms/tools/viaOutside.ts', 'viaOutside')).toEqual([])
   })
 
   it('follows a parameter through two functions to the collection the first call passed', () => {

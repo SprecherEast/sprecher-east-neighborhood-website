@@ -145,18 +145,22 @@ function describeScheduledWork(config, models, { program, root, locate }) {
   }
 }
 
+/** The GraphQL limits the config sets, under their own names. */
+export const graphQLSettings = (config) =>
+  Object.fromEntries(
+    GRAPHQL_SETTINGS.filter((key) => config.graphQL[key] !== undefined).map((key) => [
+      key,
+      config.graphQL[key],
+    ]),
+  )
+
 function describeEndpointPages(config, models, mcp, { program, root, locate }) {
   const routes = collectAllRoutes(root)
   return describeApi(
     {
       routes: config.routes,
       graphQL: {
-        ...Object.fromEntries(
-          GRAPHQL_SETTINGS.filter((key) => config.graphQL[key] !== undefined).map((key) => [
-            key,
-            config.graphQL[key],
-          ]),
-        ),
+        ...graphQLSettings(config),
         rules: graphQLRules(config),
       },
       endpoints: config.endpoints,

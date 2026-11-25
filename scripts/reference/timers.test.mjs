@@ -98,6 +98,25 @@ describe('parseServerCrons', () => {
     expect(parseServerCrons([{ file: 'ops/a.sh', text }])[0].runs).toEqual(['ops/backup.sh daily'])
   })
 
+  it('reads only a line that starts with the assignment or the five fields', () => {
+    const text = [
+      'A="x/a.sh"',
+      'echo \'NOTE B="x/b.sh"\'',
+      '# 1 2 * * * root bash $A now',
+      '1 2 * * * root bash $A now',
+      '1 2 * * * root bash $B now',
+    ].join('\n')
+    expect(parseServerCrons([{ file: 'ops/a.sh', text }])).toEqual([
+      { file: 'ops/a.sh', cron: '1 2 * * *', runs: ['x/a.sh now'] },
+      { file: 'ops/a.sh', cron: '1 2 * * *', runs: [] },
+    ])
+  })
+
+  it('reads more than one space after bash and before the argument', () => {
+    const text = 'A="x/a.sh"\n1 2 * * * root bash   $A   now >> /var/log/a.log'
+    expect(parseServerCrons([{ file: 'ops/a.sh', text }])[0].runs).toEqual(['x/a.sh now'])
+  })
+
   it('names a script run without an argument by its path alone', () => {
     const text = 'A="x/a.sh"\n1 2 * * * root bash $A >> /var/log/a.log 2>&1'
     expect(parseServerCrons([{ file: 'ops/a.sh', text }])[0].runs).toEqual(['x/a.sh'])
