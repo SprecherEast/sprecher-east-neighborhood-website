@@ -1,6 +1,9 @@
 /** Reading a knowledge note into the parts the checks look at. */
 import { parseFrontmatter, splitFrontmatter } from '../frontmatter.mjs'
 
+/** A line that is only an HTML comment: not text a reader sees, so not a purpose. */
+const COMMENT = /^\s*<!--.*-->\s*$/
+
 export const FENCE = /^\s*(```|~~~)/
 
 /**
@@ -34,7 +37,13 @@ export function parseNote(markdown) {
     if (fenced) return
     const heading = /^## (\S.*)/.exec(line)
     if (heading) note.sections.push({ heading: heading[1].trim(), line: index + 1 })
-    else if (note.sections.length === 0 && line.trim() && !line.startsWith('#')) note.purposeLines++
+    else if (
+      note.sections.length === 0 &&
+      line.trim() &&
+      !line.startsWith('#') &&
+      !COMMENT.test(line)
+    )
+      note.purposeLines++
   })
   return note
 }
