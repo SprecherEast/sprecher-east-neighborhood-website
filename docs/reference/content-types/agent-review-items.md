@@ -4,6 +4,8 @@
 
 - Kind: collection
 - Purpose: What the agents ask an editor to look at. They never changed the content.
+- Owner: module `agents`, defined in `src/modules/agents/cms/agentReviewItems.ts`
+- AI agent tools: `reportItem` ([list](../mcp-tools.md))
 - Drafts: no
 - Versions: none kept
 

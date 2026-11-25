@@ -3,6 +3,8 @@
 # Payload Jobs (`payload-jobs`)
 
 - Kind: collection
+- Owner: a plugin or Payload (the source does not define it and the config does not show which)
+- Jobs: `deleteExpiredContactMessages`, `deleteExpiredEmailConfirmations`, `deleteExpiredPasskeyChallenges`, `deleteExpiredSocialLinkRequests` ([list](../jobs.md))
 - Drafts: no
 - Versions: none kept
 

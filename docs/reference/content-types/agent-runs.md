@@ -4,6 +4,8 @@
 
 - Kind: collection
 - Purpose: What each neighborhood agent run checked, suggested and asks editors to review.
+- Owner: module `agents`, defined in `src/modules/agents/cms/agentRuns.ts`
+- AI agent tools: `createAgentRuns`, `findAgentRuns`, `reportItem`, `submitSuggestion`, `updateAgentRuns` ([list](../mcp-tools.md))
 - Drafts: no
 - Versions: none kept
 

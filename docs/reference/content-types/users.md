@@ -3,6 +3,8 @@
 # Users (`users`)
 
 - Kind: collection
+- Owner: module `accounts`, defined in `src/modules/accounts/cms/users.ts`
+- Jobs: `deleteExpiredEmailConfirmations` ([list](../jobs.md))
 - Drafts: no
 - Versions: none kept
 
