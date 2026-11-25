@@ -386,7 +386,7 @@ describe('caddy_restore_block', () => {
 describe('caddy_restore_block and caddy_block_outcome: what the folder is like afterwards', () => {
   const outcome = (problem, after) =>
     lib(
-      `CADDY_BLOCK_PROBLEM="${problem}"; CADDY_BLOCK_AFTER="${after}"; caddy_block_outcome`,
+      `CADDY_BLOCK_PROBLEM="${problem}"; CADDY_BLOCK_AFTER="${after}"; caddy_block_outcome /x/a.caddy`,
     ).stdout.trim()
 
   it('words each outcome so that it is true of it', () => {
@@ -397,6 +397,13 @@ describe('caddy_restore_block and caddy_block_outcome: what the folder is like a
     expect(outcome('', 'back')).toBe('the previous block is back')
     expect(outcome('rejected', 'reload')).toBe(
       'the previous block is back, but Caddy would not reload it',
+    )
+    expect(outcome('rejected', 'out')).toBe('the new block is taken out')
+    expect(outcome('rejected', 'outreload')).toBe(
+      'the new block is taken out, but Caddy would not reload it',
+    )
+    expect(outcome('rejected', 'stuck')).toBe(
+      'the new block could not be taken out and stays as /x/a.caddy',
     )
     expect(outcome('reload', 'kept')).toBe(
       'the previous block could not be put back as it was; a copy stays in the folder, named above',
@@ -417,5 +424,11 @@ describe('caddy_restore_block and caddy_block_outcome: what the folder is like a
     fs.writeFileSync(p('blocks/copy'), 'the previous block\n')
     expect(after(`"${p('blocks/copy')}"`)).toBe('after=reload')
     expect(after(`"${p('blocks/missing')}"`)).toBe('after=kept')
+    expect(after('""')).toBe('after=outreload') // no previous block: the new one is taken out, reload still fails
+    stub('reload', 'exit 0')
+    fs.writeFileSync(p('blocks/a.caddy'), 'the new block\n')
+    expect(after('""')).toBe('after=out')
+    stub('rm', 'exit 1')
+    expect(after('""')).toBe('after=stuck')
   })
 })

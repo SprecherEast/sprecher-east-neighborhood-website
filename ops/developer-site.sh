@@ -143,9 +143,9 @@ if cmp -s "$block_temp" "$DEVELOPER_CADDY_FILE" 2>/dev/null; then
 else
   if ! caddy_place_block "$block_temp" "$DEVELOPER_CADDY_FILE" "$SITE_UP_WAIT_AFTER"; then
     case "$CADDY_BLOCK_PROBLEM" in
-      backup | move) fail "the developer site's block could not be put in place; $(caddy_block_outcome)" ;;
-      rejected) fail "Caddy rejected the config with the developer site's block; $(caddy_block_outcome)" ;;
-      *) fail "Caddy would not reload with the developer site's block, or the site stopped answering after it; $(caddy_block_outcome)" ;;
+      backup | move) fail "the developer site's block could not be put in place; $(caddy_block_outcome "$DEVELOPER_CADDY_FILE")" ;;
+      rejected) fail "Caddy rejected the config with the developer site's block; $(caddy_block_outcome "$DEVELOPER_CADDY_FILE")" ;;
+      *) fail "Caddy would not reload with the developer site's block, or the site stopped answering after it; $(caddy_block_outcome "$DEVELOPER_CADDY_FILE")" ;;
     esac
   fi
 fi
@@ -186,7 +186,7 @@ while problem=$(developer_problem) && [ -n "$problem" ]; do
         caddy_restore_block "$DEVELOPER_CADDY_FILE" "$CADDY_BLOCK_PREVIOUS" || true
         CADDY_BLOCK_PREVIOUS=""
         CADDY_BLOCK_PROBLEM=""
-        after="; $(caddy_block_outcome)"
+        after="; $(caddy_block_outcome "$DEVELOPER_CADDY_FILE")"
       fi
       fail "the developer site did not pass the live check ($problem); its files are back on $(basename "$previous")$after"
     fi

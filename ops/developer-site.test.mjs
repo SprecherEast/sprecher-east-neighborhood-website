@@ -547,6 +547,42 @@ describe('developer-site.sh: Caddy is never left worse off', () => {
     stays()
   })
 
+  it('a config Caddy rejects, with the previous block that cannot be put back, says so and keeps its copy', async () => {
+    await publishedThenNewRelease()
+    fs.writeFileSync(p('caddy/previews/developer.caddy'), '# old block\n')
+    stub(
+      'mv',
+      'case "$*" in *developer.caddy.*" "*developer.caddy) echo x >> "$STUB_STATE/mvs"; [ "$(wc -l < "$STUB_STATE/mvs")" -lt 2 ] || exit 1 ;; esac; exec /bin/mv "$@"',
+    )
+    const { code, out } = await run('r2', { STUB_WHOLE_REJECTS: 'file_server' })
+    expect(code).toBe(1)
+    expect(out).toContain(
+      "rejected the config with the developer site's block; the previous block could not be put back as it was",
+    )
+    expect(
+      fs.readdirSync(p('caddy/previews')).filter((n) => n.startsWith('developer.caddy.')),
+    ).toHaveLength(1)
+  })
+
+  it('a first block that Caddy rejects is taken out again, and the message says that', async () => {
+    const { code, out } = await run('r1', { STUB_WHOLE_REJECTS: 'file_server' })
+    expect(code).toBe(1)
+    expect(out).toContain(
+      "rejected the config with the developer site's block; the new block is taken out",
+    )
+    expect(fs.readdirSync(p('caddy/previews'))).toEqual([])
+  })
+
+  it('a first block that cannot be taken out stays, and the message names it and no copy', async () => {
+    stub('rm', 'case "$*" in *" "*/developer.caddy) exit 1 ;; esac; exec /bin/rm "$@"')
+    const { code, out } = await run('r1', { STUB_WHOLE_REJECTS: 'file_server' })
+    expect(code).toBe(1)
+    expect(out).toContain(
+      `the new block could not be taken out and stays as ${p('caddy/previews/developer.caddy')}`,
+    )
+    expect(out).not.toContain('a copy stays')
+  })
+
   it('a previous block that goes back but cannot be reloaded says so', async () => {
     await publishedThenNewRelease()
     fs.writeFileSync(p('caddy/previews/developer.caddy'), '# old block, file_server\n')

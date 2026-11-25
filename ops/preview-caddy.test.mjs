@@ -448,6 +448,40 @@ describe('preview-caddy.sh: each message says what the folder is like, for each 
     expect(fs.readFileSync(p('caddy/previews', copies()[0]), 'utf8')).toBe(old)
   })
 
+  it('a config Caddy rejects, with the previous block that cannot be put back: its copy stays, and it says so', async () => {
+    settle()
+    const { code, out } = await caddyScript(['7'], {
+      STUB_WHOLE_REJECTS: 'reverse_proxy',
+      ...failSecondMove(),
+    })
+    expect(code).toBe(1)
+    expect(out).toContain(
+      "rejected the config with preview 7's block; the previous block could not be put back as it was",
+    )
+    expect(copies()).toHaveLength(1)
+  })
+
+  it('a first block that Caddy rejects is taken out again, and the message says that', async () => {
+    makePreview()
+    const { code, out } = await caddyScript(['7'], { STUB_WHOLE_REJECTS: 'reverse_proxy' })
+    expect(code).toBe(1)
+    expect(out).toContain("rejected the config with preview 7's block; the new block is taken out")
+    expect(out).not.toContain('previous block')
+    expect(folderEntries()).toEqual([])
+  })
+
+  it('a first block that cannot be taken out stays, and the message names it and no copy', async () => {
+    makePreview()
+    stub('rm', 'case "$*" in *" "*/pr-7.caddy) exit 1 ;; esac; exec /bin/rm "$@"')
+    const { code, out } = await caddyScript(['7'], { STUB_WHOLE_REJECTS: 'reverse_proxy' })
+    expect(code).toBe(1)
+    expect(out).toContain(
+      `the new block could not be taken out and stays as ${p('caddy/previews/pr-7.caddy')}`,
+    )
+    expect(out).not.toContain('a copy stays')
+    expect(folderEntries()).toEqual(['pr-7.caddy'])
+  })
+
   it('a removed block that goes back but cannot be reloaded: the message says so', async () => {
     settle()
     fs.rmSync(p('previews/pr-7'), { recursive: true })

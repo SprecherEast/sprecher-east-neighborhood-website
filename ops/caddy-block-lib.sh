@@ -55,9 +55,15 @@ caddy_place_block() { # <temp file, in the same folder, already accepted> <targe
 
 # Puts the previous block back (or none), and reloads again so Caddy runs what it ran before. Returns 1,
 # saying so, when the previous block could not be put back or Caddy would not reload it. Sets
-# CADDY_BLOCK_AFTER to: back (done), reload (the block is back but Caddy would not reload it), or kept (the
-# folder was not put back as it was: a copy of the previous block stays where it is, named in the report).
+# CADDY_BLOCK_AFTER to what it left:
+#   back       the previous block is back and Caddy reloaded
+#   reload     the previous block is back, but Caddy would not reload it
+#   kept       the previous block could not be put back: its copy stays, named in the report
+#   out        there was no previous block: the new one is taken out and Caddy reloaded
+#   outreload  the same, but Caddy would not reload
+#   stuck      there was no previous block and the new one could not be taken out: it stays
 caddy_restore_block() { # <target block file> <whole copy of the previous block, or empty>
+  local back=back
   CADDY_BLOCK_AFTER=kept
   if [ -n "$2" ]; then
     mv -f "$2" "$1" || {
@@ -65,24 +71,30 @@ caddy_restore_block() { # <target block file> <whole copy of the previous block,
       return 1
     }
   else
+    back=out
     rm -f "$1" || {
+      CADDY_BLOCK_AFTER=stuck
       report "ERROR: the new block could not be removed from $(dirname "$1")"
       return 1
     }
   fi
   CADDY_BLOCK_AFTER=reload
+  [ "$back" = back ] || CADDY_BLOCK_AFTER=outreload
   $RELOAD_CADDY >/dev/null 2>&1 || {
     report "ERROR: the previous config is back in $(dirname "$1"), but Caddy would not reload it"
     return 1
   }
-  CADDY_BLOCK_AFTER=back
+  CADDY_BLOCK_AFTER=$back
 }
 
 # What the folder is like after a failed placement or restore, for the end of a message.
-caddy_block_outcome() {
+caddy_block_outcome() { # <target block file>
   case "${CADDY_BLOCK_PROBLEM:-}:${CADDY_BLOCK_AFTER:-}" in
     backup:* | move:*) echo "nothing was changed" ;;
     *:kept) echo "the previous block could not be put back as it was; a copy stays in the folder, named above" ;;
+    *:stuck) echo "the new block could not be taken out and stays as $1" ;;
+    *:out) echo "the new block is taken out" ;;
+    *:outreload) echo "the new block is taken out, but Caddy would not reload it" ;;
     *:reload) echo "the previous block is back, but Caddy would not reload it" ;;
     *) echo "the previous block is back" ;;
   esac
