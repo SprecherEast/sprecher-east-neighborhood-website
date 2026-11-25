@@ -83,9 +83,8 @@ site_url() {
   printf '%s://%s' "$scheme" "${rest%%\?*}"
 }
 
-# A request to an address this server serves, sent to Caddy on this machine rather than out through
-# DNS (the production site, a preview, the developer site). Extra curl arguments follow the path.
-# Fails when no origin is given or nothing answers.
+# A request to an address this server serves (the site, a preview, the developer site), sent to Caddy on
+# this machine rather than out through DNS. Extra curl arguments follow the path. Fails with no origin.
 origin_curl() { # <origin, e.g. https://dev.example.com> <path> [curl args…]
   local url="$1" path="$2" hostport host port
   shift 2
@@ -158,25 +157,15 @@ site_is_up() { # [build id]
 }
 
 # True once the site is up (as site_is_up), waiting up to the given number of seconds (default
-# 90). Use it right after a restart or reload, while the app may still be starting.
+# SITE_UP_WAIT, environment.sh). Use it right after a restart or reload, while the app may still be starting.
 wait_until_up() { # [seconds] [build id]
-  local deadline=$((SECONDS + ${1:-90}))
+  local deadline=$((SECONDS + ${1:-$SITE_UP_WAIT}))
   while [ "$SECONDS" -lt "$deadline" ]; do
     if site_is_up "${2:-}"; then return 0; fi
     sleep 2
   done
   return 1
 }
-
-# Points a link at a target, atomically: a new link renamed over the old.
-point_link_at() { # <link> <target>
-  local next="${1%/*}/.${1##*/}-new" # `.current-new` for `current`
-  ln -sfn "$2" "$next"
-  mv -Tf "$next" "$1"
-}
-
-# Points `current` at a target relative to $APP_DIR.
-point_current_at() { point_link_at "$APP_DIR/current" "$1"; }
 
 # Pages prerendered at build time, and the data cache. Next renders a page that has no cached
 # copy on its first request and caches it from then on, with each page's own revalidate time.
@@ -190,10 +179,10 @@ drop_page_cache() { # <release dir>
 
 # Reloads Caddy, then gives the site time to answer. Prints what went wrong (nothing when all is
 # well), for the caller to roll back and report.
-caddy_reload_problem() { # <what the config now has> [seconds the site gets to answer, default 20]
+caddy_reload_problem() { # <what the config now has> [seconds the site gets to answer, default SITE_UP_WAIT_AFTER]
   if ! $RELOAD_CADDY >/dev/null 2>&1; then
     echo "Caddy would not reload with $1"
-  elif ! wait_until_up "${2:-20}"; then
+  elif ! wait_until_up "${2:-$SITE_UP_WAIT_AFTER}"; then
     echo "the site stopped answering after adding $1"
   fi
 }
@@ -250,33 +239,6 @@ caddy_roll_back() { # <Caddyfile backup, or empty> <function that restores the c
     echo "The previous files are back, but Caddy would not reload them."
     return 1
   fi
-}
-
-# Moves a block file into a folder Caddy imports, with one rename, after Caddy accepted the file on its
-# own. Then Caddy must accept the whole config with it, and reload. On any failure the previous block (or
-# none) is put back and Caddy reloaded again, and this returns 1 with CADDY_BLOCK_PROBLEM set to `rejected`
-# or `reload`. CADDY_BLOCK_PREVIOUS is the copy of the previous block, in the same folder under a name the
-# import's `*.caddy` does not match; the caller removes it (it is empty when there was no block).
-caddy_place_block() { # <temp file, in the same folder, already accepted> <target block file>
-  CADDY_BLOCK_PREVIOUS=""
-  CADDY_BLOCK_PROBLEM=""
-  if [ -f "$2" ]; then
-    CADDY_BLOCK_PREVIOUS=$(mktemp "$2.XXXXXX")
-    cp -p "$2" "$CADDY_BLOCK_PREVIOUS"
-  fi
-  mv -f "$1" "$2" # one rename: Caddy sees the old block or the new one, never half
-  if ! caddy_accepts "$CADDYFILE"; then
-    CADDY_BLOCK_PROBLEM=rejected
-  elif ! $RELOAD_CADDY >/dev/null 2>&1; then
-    CADDY_BLOCK_PROBLEM=reload
-  fi
-  [ -z "$CADDY_BLOCK_PROBLEM" ] || { caddy_restore_block "$2" "$CADDY_BLOCK_PREVIOUS"; return 1; }
-}
-
-# Puts the previous block back (or none), and reloads again so Caddy runs what it ran before.
-caddy_restore_block() { # <target block file> <copy of the previous block, or empty>
-  if [ -n "$2" ]; then mv -f "$2" "$1"; else rm -f "$1"; fi
-  $RELOAD_CADDY >/dev/null 2>&1 || report "ERROR: the previous config is back in $(dirname "$1"), but Caddy would not reload it"
 }
 
 # Never print Caddy's own output: the Caddyfile could hold credentials and the deploy log is public.

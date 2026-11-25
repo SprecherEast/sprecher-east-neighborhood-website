@@ -27,6 +27,8 @@ trap '' HUP # a dropped SSH session must not stop the script between a change an
 
 . "$(dirname "$0")/lib.sh"
 . "$(dirname "$0")/caddy-lock-lib.sh"
+. "$(dirname "$0")/caddy-block-lib.sh"
+. "$(dirname "$0")/releases-lib.sh"
 
 OPS_DIR=$(cd "$(dirname "$0")" && pwd)
 SHOWCASE_SOURCE="$CODE_DIR/developer-site/showcase" # built by ops/build-showcase.sh, shipped in the release
@@ -62,7 +64,7 @@ fail() { # <reason>: something was tried and put back
 ! is_preview || skip "a pull request preview never publishes the developer site"
 command -v caddy >/dev/null && [ -f "$CADDYFILE" ] || skip "Caddy or $CADDYFILE was not found"
 [ -d "$SHOWCASE_SOURCE" ] || skip "release $name has no built showcase (its build failed or was skipped)"
-[ -f "$PAGES_SOURCE/index.html" ] && [ -f "$PAGES_SOURCE/404.html" ] && [ -f "$TEMPLATE" ] ||
+[ -f "$PAGES_SOURCE/index.html" ] && [ -f "$PAGES_SOURCE/404.html" ] && [ -f "$PAGES_SOURCE/style.css" ] && [ -f "$TEMPLATE" ] ||
   skip "the developer site's pages or block template are missing from release $name"
 [ "$(readlink "$APP_DIR/current" 2>/dev/null)" = "releases/$name" ] || skip "release $name is not the live release any more"
 # Names that go into a path or a Caddy block must hold nothing a block could misread.
@@ -71,7 +73,17 @@ command -v caddy >/dev/null && [ -f "$CADDYFILE" ] || skip "Caddy or $CADDYFILE 
 for value in "$DEVELOPER_ROOT" "$PREVIEW_HEADERS_FILE"; do
   [[ "$value" =~ ^/[A-Za-z0-9_./-]+$ ]] || skip "a file path has characters a block can't hold"
 done
+# The folder is its own: not production's, a preview's or Caddy's, and not one that holds any of them (the
+# comparison is made after `realpath -m` resolves `..` and links, as environment.sh does for previews).
+root_real=$(realpath -m -- "$DEVELOPER_ROOT")
+[ "$root_real" != / ] || skip "the developer site's folder is the root of the disk"
+for other in "$APP_DIR" "$PRODUCTION_DIR" "$PREVIEW_ROOT" "$PREVIEW_CADDY_DIR" "$(dirname "$CADDYFILE")"; do
+  other_real=$(realpath -m -- "$other")
+  case "$root_real/" in "$other_real"/*) skip "the developer site's folder is inside $other" ;; esac
+  case "$other_real/" in "$root_real"/*) skip "the developer site's folder holds $other" ;; esac
+done
 
+CADDY_LOCK_WAIT="$DEVELOPER_LOCK_WAIT" # a skip costs nothing here, so this script does not wait the full time
 take_caddy_lock || skip "another change to Caddy is running"
 caddy_accepts "$CADDYFILE" || skip "the current Caddyfile does not validate in the deploy shell"
 caddy_import_present "$PREVIEW_CADDY_DIR/*.caddy" ||
@@ -79,15 +91,21 @@ caddy_import_present "$PREVIEW_CADDY_DIR/*.caddy" ||
 cmp -s "$HEADERS_SOURCE" "$PREVIEW_HEADERS_FILE" ||
   skip "the preview headers file on the server is not this release's copy (ops/caddy-previews.sh installs it)"
 # Production must answer before anything changes, so a failure afterwards can only mean this change broke it.
-wait_until_up "${UP_WAIT:-90}" || skip "the home page did not answer 200 through Caddy ($(site_url), got $(site_status /))"
+wait_until_up || skip "the home page did not answer 200 through Caddy ($(site_url), got $(site_status /))"
 
 # --- 2. Assemble and judge the folder to serve. ---
 install -d -m 755 "$DEVELOPER_ROOT" "$RELEASES"
 staging="$RELEASES/.incoming-$name"
 rm -rf "$staging"
 mkdir -m 755 "$staging"
+# The release's own showcase is judged before it is copied: a copy turns a link into the file it points to, and
+# the check of the copy could then not tell.
+if ! verdict=$(bash "$OPS_DIR/developer-site-check.sh" --source "$SHOWCASE_SOURCE" 2>&1); then
+  report_lines warning "Developer site" <<<"$verdict"
+  fail "the release's showcase did not pass its check"
+fi
 cp -r --no-preserve=mode,ownership "$SHOWCASE_SOURCE" "$staging/showcase"
-install -m 644 "$PAGES_SOURCE/index.html" "$PAGES_SOURCE/404.html" "$staging/"
+install -m 644 "$PAGES_SOURCE/index.html" "$PAGES_SOURCE/404.html" "$PAGES_SOURCE/style.css" "$staging/"
 if ! verdict=$(bash "$OPS_DIR/developer-site-check.sh" "$staging" 2>&1); then
   report_lines warning "Developer site" <<<"$verdict"
   fail "the folder for the developer site did not pass its check"
@@ -120,15 +138,12 @@ caddy_accepts "$block_temp" || fail "Caddy rejected the developer site's block, 
 if cmp -s "$block_temp" "$DEVELOPER_CADDY_FILE" 2>/dev/null; then
   rm -f "$block_temp"
 else
-  if ! caddy_place_block "$block_temp" "$DEVELOPER_CADDY_FILE"; then
+  if ! caddy_place_block "$block_temp" "$DEVELOPER_CADDY_FILE" "$SITE_UP_WAIT_AFTER"; then
     case "$CADDY_BLOCK_PROBLEM" in
+      backup | move) fail "the developer site's block could not be put in place; the previous block is as it was" ;;
       rejected) fail "Caddy rejected the config with the developer site's block; the previous block is back" ;;
-      *) fail "Caddy would not reload with the developer site's block; the previous block is back" ;;
+      *) fail "Caddy would not reload with the developer site's block, or the site stopped answering after it; the previous block is back" ;;
     esac
-  fi
-  if ! wait_until_up "${UP_WAIT_AFTER:-20}"; then
-    caddy_restore_block "$DEVELOPER_CADDY_FILE" "$CADDY_BLOCK_PREVIOUS"
-    fail "the site stopped answering after the developer site's block was added; the previous block is back"
   fi
 fi
 block_temp=""
@@ -161,7 +176,17 @@ while problem=$(developer_problem) && [ -n "$problem" ]; do
   if [ "$SECONDS" -ge "$deadline" ]; then
     if [ -n "$previous" ] && [ "$previous" != "releases/$name" ]; then
       point_link_at "$CURRENT" "$previous"
-      fail "the developer site did not pass the live check ($problem); it is back on $(basename "$previous")"
+      # The block this release replaced goes back too: a later template that broke a header must not stay live.
+      restored=no
+      if [ -n "$CADDY_BLOCK_PREVIOUS" ]; then
+        # A copy that could not be put back stays in the folder, named in the report, and is not deleted at exit.
+        caddy_restore_block "$DEVELOPER_CADDY_FILE" "$CADDY_BLOCK_PREVIOUS" && restored=yes
+        CADDY_BLOCK_PREVIOUS=""
+      fi
+      if [ "$restored" = yes ]; then
+        fail "the developer site did not pass the live check ($problem); it and its Caddy block are back on $(basename "$previous")"
+      fi
+      fail "the developer site did not pass the live check ($problem); its files are back on $(basename "$previous")"
     fi
     fail "the developer site did not pass the live check ($problem); there is no earlier version to go back to, and the certificate may still be on its way"
   fi
@@ -169,12 +194,6 @@ while problem=$(developer_problem) && [ -n "$problem" ]; do
 done
 
 # --- Keep the newest releases; never the one served or the one before it. ---
-keep="$DEVELOPER_KEEP_RELEASES"
-[ "$keep" -ge 2 ] 2>/dev/null || keep=2
-find "$RELEASES" -mindepth 1 -maxdepth 1 -type d -name '.incoming-*' -exec rm -rf {} +
-find "$RELEASES" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf '%T@ %f\n' | sort -rn |
-  tail -n +"$((keep + 1))" | while read -r _ old; do
-  [ "releases/$old" = "releases/$name" ] || [ "releases/$old" = "$previous" ] || rm -rf "${RELEASES:?}/$old"
-done
+prune_releases "$RELEASES" "$DEVELOPER_KEEP_RELEASES" "$name" "$previous" || true
 
 report "Developer site published: $ORIGIN serves release $name, Caddy $(caddy_version)"

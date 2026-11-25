@@ -15,7 +15,7 @@ __DEVELOPER_HOST__ {
 	file_server
 	handle_errors {
 		import __PREVIEW_HEADERS_FILE__
-		rewrite /404.html
+		rewrite * /404.html
 		file_server
 	}
 }

@@ -45,6 +45,8 @@ use_preview "$1" "$here"
 . "$here/lib.sh"
 # shellcheck source=caddy-lock-lib.sh
 . "$here/caddy-lock-lib.sh"
+# shellcheck source=caddy-block-lib.sh
+. "$here/caddy-block-lib.sh"
 
 HEADERS_COPY="$here/caddy/preview-headers.caddy"
 SITE_TEMPLATE="$here/caddy/preview-site.caddy"
@@ -97,11 +99,10 @@ if [ -d "$APP_DIR" ] && [ ! -L "$APP_DIR" ]; then
     exit 0
   fi
   if ! caddy_place_block "$temp" "$BLOCK"; then
-    if [ "$CADDY_BLOCK_PROBLEM" = rejected ]; then
-      report "ERROR: Caddy rejected the config with preview $PREVIEW_NUMBER's block; the previous block is back"
-    else
-      report "ERROR: Caddy would not reload with preview $PREVIEW_NUMBER's block; the previous block is back"
-    fi
+    case "$CADDY_BLOCK_PROBLEM" in
+      rejected) report "ERROR: Caddy rejected the config with preview $PREVIEW_NUMBER's block; the previous block is back" ;;
+      *) report "ERROR: Caddy would not reload with preview $PREVIEW_NUMBER's block, or it could not be put in place; the previous block is back" ;;
+    esac
     exit 1
   fi
   report "preview $PREVIEW_NUMBER's Caddy block is in place and Caddy reloaded"
@@ -114,7 +115,7 @@ else
   CADDY_BLOCK_PREVIOUS=$(mktemp "$BLOCK.XXXXXX")
   mv -f "$BLOCK" "$CADDY_BLOCK_PREVIOUS"
   if ! caddy_accepts "$CADDYFILE" || ! $RELOAD_CADDY >/dev/null 2>&1; then
-    caddy_restore_block "$BLOCK" "$CADDY_BLOCK_PREVIOUS"
+    caddy_restore_block "$BLOCK" "$CADDY_BLOCK_PREVIOUS" || CADDY_BLOCK_PREVIOUS="" # a copy not put back is kept
     report "ERROR: Caddy would not reload without preview $PREVIEW_NUMBER's block; the block is back"
     exit 1
   fi

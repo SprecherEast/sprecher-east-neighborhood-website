@@ -41,7 +41,7 @@ PUBLIC_KEY_FILE="${PREVIEW_PUBLIC_KEY_FILE:-$CODE_DIR/ops/preview-deploy-key.pub
 ROOT_OWNER=root
 MARKER="Managed by ops/install-preview-access.sh (#1345)"
 # main's files the account may run, copied into PREVIEW_ACCESS_DIR/ops/ (the caddy/ ones into caddy/)
-SCRIPTS="preview-wrapper.sh preview-caddy.sh preview-copy.sh preview-access-lib.sh preview-isolation-check.sh preview-host-guards.sh umami-lib.sh preview-settings.sh preview-accounts.sh secret-lib.sh deploy-release.sh restart-app.sh migrate-lib.sh caddy-lock-lib.sh lib.sh environment.sh"
+SCRIPTS="preview-wrapper.sh preview-caddy.sh preview-copy.sh preview-access-lib.sh preview-isolation-check.sh preview-host-guards.sh umami-lib.sh preview-settings.sh preview-accounts.sh secret-lib.sh deploy-release.sh restart-app.sh migrate-lib.sh caddy-lock-lib.sh caddy-block-lib.sh releases-lib.sh lib.sh environment.sh"
 CADDY_FILES="preview-site.caddy preview-headers.caddy"
 WRAPPER="$PREVIEW_ACCESS_DIR/ops/preview-wrapper.sh"
 CADDY_SCRIPT="$PREVIEW_ACCESS_DIR/ops/preview-caddy.sh"

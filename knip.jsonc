@@ -49,6 +49,8 @@
         "pm2",
         // The showcase's font, loaded from CSS (`.storybook/fonts.css` @imports), which knip doesn't read (#1459)
         "@fontsource/poppins",
+        // Tailwind's own scanner, which comes with @tailwindcss/postcss: a test uses it to keep the built showcase out of the site's CSS (#1459)
+        "@tailwindcss/oxide",
       ],
       "project": [
         "src/**/*.{ts,tsx}",

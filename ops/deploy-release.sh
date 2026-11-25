@@ -28,6 +28,7 @@ umask 022
 trap '' HUP # a dropped SSH session must not stop the script between the switch and a switch back
 
 . "$(dirname "$0")/lib.sh"
+. "$(dirname "$0")/releases-lib.sh"
 . "$(dirname "$0")/migrate-lib.sh"
 
 # The workflow sends the Umami admin password on stdin and says so with this flag (#948), so a
@@ -247,13 +248,7 @@ if ! is_preview; then # these change production's backup job, Caddyfile and anal
   UMAMI_ADMIN_PASSWORD="$umami_admin_password" bash "$RELEASE/ops/install-umami.sh" || failed=1
 fi
 
-keep="$KEEP_RELEASES"
-[ "$keep" -ge 2 ] 2>/dev/null || keep=2
-find "$RELEASES" -mindepth 1 -maxdepth 1 -type d -name '.incoming-*' -exec rm -rf {} +
-find "$RELEASES" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf '%T@ %f\n' | sort -rn |
-  tail -n +"$((keep + 1))" | while read -r _ old; do
-  [ "releases/$old" = "releases/$name" ] || [ "releases/$old" = "$previous" ] || rm -rf "${RELEASES:?}/$old"
-done
+prune_releases "$RELEASES" "$KEEP_RELEASES" "$name" "$previous"
 releases_left=$(find "$RELEASES" -mindepth 1 -maxdepth 1 -type d ! -name '.*' | wc -l)
 
 echo "::notice title=Server::disk $(df -h / | awk 'NR == 2 { print $4 " free of " $2 }'), database $(du -h "$APP_DIR/data/payload.db" 2>/dev/null | cut -f1), media $(du -sh "$APP_DIR/public/media" 2>/dev/null | cut -f1), $releases_left releases kept"

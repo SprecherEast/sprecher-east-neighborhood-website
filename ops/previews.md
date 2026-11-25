@@ -6,7 +6,7 @@ that builds and deploys a preview ([below](#the-workflow-1075)). Back to the [se
 
 - **DNS.** One wildcard A record, `*.dev`, in the Porkbun zone for `sprechereast.com`, pointing at
   the production server. It needs no API key. Undo: delete the record. `dev.sprechereast.com`
-  itself has its own A record (added 2026-11-24, #1459) and serves the [developer site](README.md#developer-site),
+  itself has its own A record (added 2026-11-24, #1459) and serves the [developer site](developer-site.md),
   not a preview.
 - **The import line.** `caddy-previews.sh` adds `import /etc/caddy/previews/*.caddy` (and a comment
   line above it) to the Caddyfile. Before anything reloads, Caddy must accept the new Caddyfile
@@ -239,9 +239,9 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
 
 ## The component showcase in a preview (#1459)
 
-A pull request that changes a story, a shared component (`src/platform/ui/`, `src/platform/richtext/`), the theme
+A pull request that changes a story, a shared component or what it imports (`src/platform/ui/`, `src/platform/richtext/`, `src/platform/lib/`), the theme
 (`src/platform/theme/`, `src/themes/`, `globals.css`) or the showcase's settings, build script or packages
-(`.storybook/`, `ops/build-showcase.sh`, `package.json`, `package-lock.json`; the one list is
+(`.storybook/`, `ops/build-showcase.sh`, `postcss.config.*`, `package.json`, `package-lock.json`; the one list is
 `.github/scripts/showcase-paths.sh`, notes and tests excluded) gets the component showcase built into its preview:
 `plan-preview.sh` writes `showcase=true` for it, and the build job gives `ops/build-release.sh` the folder
 `public/showcase`, so `ops/build-showcase.sh` builds it into the release before the site's build (only what is in
@@ -252,6 +252,8 @@ A pull request that changes a story, a shared component (`src/platform/ui/`, `sr
   code could plant a link to one in a folder Caddy serves. A static file the app serves is no more than the pull
   request's code can already do. So no Caddy block, wrapper, sudo rule or server script changes, and no new
   certificate name: the showcase is a path under the preview's own address.
+- **Out of the site's CSS:** `public/showcase/` is in `.gitignore`, which Tailwind's source detection follows, so
+  the preview's CSS does not carry the showcase's classes ([`developer-site.md`](developer-site.md)).
 - **Same headers** as every answer of the preview (noindex, no HSTS), and **removed with it**: the files are in the
   release folder, which teardown deletes.
 - **Required for a preview that asks for it:** a showcase that does not build fails the preview's build, and the

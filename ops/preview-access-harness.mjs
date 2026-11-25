@@ -27,6 +27,8 @@ export const SCRIPTS = [
   'restart-app.sh',
   'migrate-lib.sh',
   'caddy-lock-lib.sh',
+  'caddy-block-lib.sh',
+  'releases-lib.sh',
   'lib.sh',
   'environment.sh',
 ]

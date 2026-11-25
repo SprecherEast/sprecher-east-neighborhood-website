@@ -11,11 +11,17 @@
 #                 production build.
 #   optional=no   a failed build fails the build (a pull request preview that asked for its showcase).
 # SHOWCASE_SECONDS (default 600) is how long the build may take. The build runs from the current folder.
-set -uo pipefail
+set -uo pipefail # no -e: every step that decides the result is checked by hand below
 
 dest="${1:-}"
 optional="${2:-no}"
 built=storybook-static # where `npm run storybook:build` writes
+
+case "$optional" in yes | no) ;; *)
+  echo "::error title=Showcase::the second argument is yes or no"
+  exit 2
+  ;;
+esac
 
 # A folder inside the release: no absolute path, no `..`.
 case "$dest" in
@@ -28,10 +34,9 @@ esac
 rm -rf "$built"
 status=0
 timeout -k 10 "${SHOWCASE_SECONDS:-600}" npm run storybook:build || status=$?
-if [ "$status" -eq 0 ] && [ -f "$built/index.html" ] && [ -f "$built/iframe.html" ]; then
-  rm -rf "$dest"
-  mkdir -p "$(dirname "$dest")"
-  mv "$built" "$dest"
+# Moving it in is part of the build: a step that fails there is a build that failed, not one that printed "built".
+if [ "$status" -eq 0 ] && [ -f "$built/index.html" ] && [ -f "$built/iframe.html" ] &&
+  rm -rf "$dest" && mkdir -p "$(dirname "$dest")" && mv "$built" "$dest"; then
   echo "::notice title=Showcase::built into $dest ($(du -sh "$dest" | cut -f1))"
   exit 0
 fi

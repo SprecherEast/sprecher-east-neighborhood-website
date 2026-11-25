@@ -13,6 +13,8 @@ export default [
       '.next/**',
       'out/**',
       'storybook-static/**',
+      'developer-site/**', // the showcase built into a release (ops/build-showcase.sh)
+      'public/showcase/**',
       'build/**',
       'node_modules/**',
       'data/**',

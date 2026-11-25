@@ -69,11 +69,47 @@ describe('build-showcase.sh: a build that works', () => {
     expect(out).toContain('built into developer-site/showcase')
   })
 
-  it('gives the build ten minutes when the caller names no limit', async () => {
-    const { code, out } = await build(['public/showcase'], { STUB_NPM: 'brief' })
-    expect(code, out).toBe(0)
-    expect(exists('public/showcase/index.html')).toBe(true)
+  it('gives the build ten minutes when the caller names no limit, and the limit it is given otherwise', async () => {
+    write(
+      path.join(dir, 'bin/timeout'),
+      '#!/usr/bin/env bash\necho "timeout $*" >> "$STUB_LOG"\nshift 3\nexec "$@"\n',
+      0o755,
+    )
+    expect((await build(['public/showcase'])).code).toBe(0)
+    expect((await build(['public/showcase'], { SHOWCASE_SECONDS: '77' })).code).toBe(0)
+    expect(fs.readFileSync(path.join(dir, 'log'), 'utf8')).toContain(
+      'timeout -k 10 600 npm run storybook:build\n',
+    )
+    expect(fs.readFileSync(path.join(dir, 'log'), 'utf8')).toContain(
+      'timeout -k 10 77 npm run storybook:build\n',
+    )
   })
+
+  it('refuses a second argument that is neither yes nor no, before building anything', async () => {
+    for (const value of ['maybe', 'YES']) {
+      const { code, out } = await build(['public/showcase', value])
+      expect(code).toBe(2)
+      expect(out).toContain('yes or no')
+    }
+    expect(fs.readFileSync(path.join(dir, 'log'), 'utf8')).toBe('')
+  })
+
+  for (const [what, optional, expected] of [
+    ['required', 'no', 1],
+    ['optional', 'yes', 0],
+  ])
+    it(`${what}: a build that cannot be moved into place is a build that failed, never "built"`, async () => {
+      write(
+        path.join(dir, 'bin/mv'),
+        '#!/usr/bin/env bash\necho "mv: no space left" >&2\nexit 1\n',
+        0o755,
+      )
+      const { code, out } = await build(['public/showcase', optional])
+      expect(code, out).toBe(expected)
+      expect(out).not.toContain('built into')
+      expect(out).toContain(optional === 'yes' ? '::warning' : '::error')
+      expect(exists('storybook-static')).toBe(false)
+    })
 
   it('never ships the output of an earlier build when this one wrote nothing', async () => {
     write(p('storybook-static/index.html'), 'stale\n')
@@ -160,5 +196,39 @@ describe('build-release.sh: when the showcase is built', () => {
     expect(at('then bash ops/build-showcase.sh')).toBeGreaterThan(at('npm ci --no-audit'))
     expect(at('then bash ops/build-showcase.sh')).toBeLessThan(at('npm run build'))
     expect(at('npm run build')).toBeLessThan(at('npm prune'))
+  })
+})
+
+describe('where the showcase is built: out of what Tailwind scans (#1459)', () => {
+  // Tailwind's automatic source detection reads every file it is not told to skip, and skips what .gitignore
+  // lists, with or without a .git folder. A built showcase in the scanned tree adds unused rules to the CSS of
+  // every page of the site, so both build folders are ignored, and these tests keep it so.
+  const root = path.join(OPS, '..')
+  const destinations = () => [
+    /SHOWCASE_DEST: (\S+)/.exec(
+      fs.readFileSync(path.join(root, '.github/workflows/deploy.yml'), 'utf8'),
+    )[1],
+    /'(public\/showcase)'/.exec(
+      fs.readFileSync(path.join(root, '.github/workflows/preview.yml'), 'utf8'),
+    )[1],
+  ]
+
+  it('scans the site’s own files and not the showcase in either folder it is built into', async () => {
+    const { Scanner } = await import('@tailwindcss/oxide')
+    const tree = path.join(dir, 'tree')
+    for (const file of ['src/site.tsx', ...destinations().map((d) => `${d}/assets/app.js`)])
+      write(path.join(tree, file), 'const c = "float-left"\n')
+    fs.copyFileSync(path.join(root, '.gitignore'), path.join(tree, '.gitignore'))
+    const scanner = new Scanner({ sources: [{ base: tree, pattern: '**/*', negated: false }] })
+    scanner.scan()
+    const files = scanner.files.map((f) => path.relative(tree, f)).sort()
+    expect(files).toEqual(['src/site.tsx'])
+  })
+
+  it('builds only into the folders it tells git and Tailwind to skip', () => {
+    const ignored = fs.readFileSync(path.join(root, '.gitignore'), 'utf8').split('\n')
+    expect(destinations()).toEqual(['developer-site/showcase', 'public/showcase'])
+    expect(ignored).toContain('/developer-site/')
+    expect(ignored).toContain('/public/showcase/')
   })
 })

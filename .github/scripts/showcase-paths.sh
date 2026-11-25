@@ -10,9 +10,9 @@ changes_showcase() { # <path relative to the repository root>
     # Notes and tests are not part of what the showcase draws, wherever they sit.
     *.md | *.test.ts | *.test.tsx) return 1 ;;
     *.stories.ts | *.stories.tsx) return 0 ;;
-    src/platform/ui/* | src/platform/richtext/* | src/platform/theme/* | src/themes/*) return 0 ;;
+    src/platform/ui/* | src/platform/richtext/* | src/platform/theme/* | src/platform/lib/* | src/themes/*) return 0 ;;
     "src/app/(frontend)/globals.css") return 0 ;;
-    .storybook/* | ops/build-showcase.sh | package.json | package-lock.json) return 0 ;;
+    .storybook/* | ops/build-showcase.sh | postcss.config.* | package.json | package-lock.json) return 0 ;;
     *) return 1 ;;
   esac
 }

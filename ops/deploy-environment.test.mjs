@@ -92,6 +92,17 @@ describe('deploy-release.sh with no environment named', () => {
     await production()
     expect(fs.readdirSync(p('app/releases')).sort()).toEqual(['o2', 'o3', 'r1'])
   })
+
+  it('never removes the release that was live before, however old it is', async () => {
+    for (const [i, name] of ['o0', 'o1', 'o2', 'o3'].entries()) {
+      fs.mkdirSync(p('app/releases', name), { recursive: true })
+      fs.utimesSync(p('app/releases', name), 100 + i, 100 + i)
+    }
+    fs.symlinkSync('releases/o0', p('app/current'))
+    const { code, out } = await production()
+    expect(code, out).toBe(0)
+    expect(fs.readdirSync(p('app/releases')).sort()).toEqual(['o0', 'o2', 'o3', 'r1'])
+  })
 })
 
 describe('deploy-release.sh for a preview: production’s published content (#1397)', () => {

@@ -40,6 +40,7 @@ export function setUpEnvironmentHarness() {
       'lib.sh',
       'environment.sh',
       'migrate-lib.sh',
+      'releases-lib.sh',
       'preview-settings.sh',
       'preview-accounts.sh',
       'secret-lib.sh',

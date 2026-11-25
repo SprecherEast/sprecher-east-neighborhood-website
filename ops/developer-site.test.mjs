@@ -17,6 +17,8 @@ const SCRIPTS = [
   'lib.sh',
   'environment.sh',
   'caddy-lock-lib.sh',
+  'caddy-block-lib.sh',
+  'releases-lib.sh',
 ]
 const HOST = 'dev.sprechereast.com'
 const PROD = 'https://sprechereast.com'
@@ -46,7 +48,7 @@ function makeRelease(name, { live = true, showcase = true } = {}) {
   for (const f of SCRIPTS) write(path.join(code, 'ops', f), fs.readFileSync(path.join(OPS, f)))
   for (const f of ['developer-site.caddy', 'preview-headers.caddy'])
     write(path.join(code, 'ops/caddy', f), fs.readFileSync(path.join(OPS, 'caddy', f)))
-  for (const f of ['index.html', '404.html'])
+  for (const f of ['index.html', '404.html', 'style.css'])
     write(
       path.join(code, 'ops/developer-site', f),
       fs.readFileSync(path.join(OPS, 'developer-site', f)),
@@ -159,7 +161,7 @@ const spawnRun = (release, env) => {
       UP_WAIT_AFTER: '1',
       DEVELOPER_UP_SECONDS: '0',
       DEVELOPER_UP_SECONDS_NEW: '0',
-      CADDY_LOCK_WAIT: '1',
+      DEVELOPER_LOCK_WAIT: '1',
       STUB_LOG: p('log'),
       STUB_STATE: p('state'),
       STUB_PREVIEW_DIR: p('caddy/previews'),
@@ -195,7 +197,12 @@ describe('developer-site.sh: the first publish', () => {
     expect(code, out).toBe(0)
     expect(out).toContain(`Developer site published: https://${HOST} serves release r1`)
     expect(current()).toBe('releases/r1')
-    expect(fs.readdirSync(p('dev/current')).sort()).toEqual(['404.html', 'index.html', 'showcase'])
+    expect(fs.readdirSync(p('dev/current')).sort()).toEqual([
+      '404.html',
+      'index.html',
+      'showcase',
+      'style.css',
+    ])
     expect(read('dev/current/index.html')).toContain('Sprecher East developer site')
     expect(read('dev/current/showcase/assets/app.js')).toContain('"r1"')
     expect(releases()).toEqual(['r1'])
@@ -454,7 +461,7 @@ describe('developer-site.sh: what is served is judged first', () => {
     const { code, out } = await run('r2')
     expect(code).toBe(1)
     expect(out).toContain('did not pass its check')
-    expect(out).toContain('a link: showcase/assets/x.txt')
+    expect(out).toContain('a link: assets/x.txt')
     stays()
     expect(releases()).toEqual(['r1']) // the staging folder is gone too
     expect(reloads()).toBe(0)
@@ -479,7 +486,7 @@ describe('developer-site.sh: what is served is judged first', () => {
       p('app/releases/r1/developer-site/showcase/leak.txt'),
     )
     const { out } = await run()
-    expect(out).toContain('a link: showcase/leak.txt')
+    expect(out).toContain('a link: leak.txt')
     expect(out).not.toContain('TOP-SECRET')
     expect(fs.existsSync(p('dev/current'))).toBe(false)
   })
@@ -530,9 +537,8 @@ describe('developer-site.sh: Caddy is never left worse off', () => {
     fs.writeFileSync(p('caddy/previews/developer.caddy'), '# old block\n')
     const { code, out } = await run('r2', { STUB_RELOAD_FAILS: 'file_server' })
     expect(code).toBe(1)
-    expect(out).toContain(
-      `would not reload with the developer site's block; the previous block is back`,
-    )
+    expect(out).toContain(`would not reload with the developer site's block`)
+    expect(out).toContain('the previous block is back')
     expect(block()).toBe('# old block\n')
     expect(reloads()).toBe(2) // the failed one, then the one that restores Caddy
     stays()
@@ -550,7 +556,7 @@ describe('developer-site.sh: Caddy is never left worse off', () => {
     fs.writeFileSync(p('caddy/previews/developer.caddy'), '# old block\n')
     const { code, out } = await run('r2', { STUB_DOWN_AFTER_RELOAD: '1' })
     expect(code).toBe(1)
-    expect(out).toContain(`the site stopped answering after the developer site's block was added`)
+    expect(out).toContain('or the site stopped answering after it; the previous block is back')
     expect(block()).toBe('# old block\n')
     expect(reloads()).toBe(2)
     stays()
@@ -560,6 +566,167 @@ describe('developer-site.sh: Caddy is never left worse off', () => {
     const { out } = await run('r1', { STUB_CADDY_REJECTS: 'root' })
     expect(out).toContain('::warning title=Server::')
     expect(out).not.toContain('::error')
+  })
+})
+
+describe('developer-site.sh: a step of putting the block in place that fails', () => {
+  const old = '# old block, whole\n'
+  const settled = async () => {
+    await publishedThenNewRelease()
+    fs.writeFileSync(p('caddy/previews/developer.caddy'), old)
+  }
+  const only = (what) =>
+    expect(fs.readdirSync(p('caddy/previews')).filter((n) => !n.startsWith('.'))).toEqual(what)
+
+  it('a copy of the previous block that stops half way leaves the previous block exactly as it was', async () => {
+    await settled()
+    // `cp -p` is the copy of the block; the staging copy (`cp -r`) is not affected
+    stub('cp', 'case "$1" in -p) head -c 4 "$2" > "$3"; exit 1 ;; esac; exec /bin/cp "$@"')
+    const { code, out } = await run('r2')
+    expect(code).toBe(1)
+    expect(out).toContain('could not be put in place; the previous block is as it was')
+    expect(block()).toBe(old)
+    only(['developer.caddy'])
+    expect(reloads()).toBe(0)
+    stays()
+  })
+
+  it('a rename of the new block that fails leaves the previous block exactly as it was, and reloads nothing', async () => {
+    await settled()
+    stub(
+      'mv',
+      'case "$*" in *developer.caddy.*" "*developer.caddy) exit 1 ;; esac; exec /bin/mv "$@"',
+    )
+    const { code, out } = await run('r2')
+    expect(code).toBe(1)
+    expect(out).toContain('could not be put in place; the previous block is as it was')
+    expect(block()).toBe(old)
+    only(['developer.caddy'])
+    expect(reloads()).toBe(0)
+    stays()
+  })
+})
+
+describe('developer-site.sh: the release’s showcase is judged before it is copied', () => {
+  it('refuses a file that is a hard link to something outside the showcase, which a copy would hide', async () => {
+    fs.writeFileSync(p('app/.env.local.copy'), 'TOP-SECRET\n')
+    fs.linkSync(
+      p('app/.env.local.copy'),
+      p('app/releases/r1/developer-site/showcase/assets/settings.txt'),
+    )
+    const { code, out } = await run()
+    expect(code).toBe(1)
+    expect(out).toContain('a file with another name elsewhere: assets/settings.txt')
+    expect(out).toContain("the release's showcase did not pass its check")
+    expect(out).not.toContain('TOP-SECRET')
+    expect(fs.existsSync(p('dev/current'))).toBe(false)
+    expect(fs.readdirSync(p('dev/releases'))).toEqual([])
+  })
+})
+
+describe('developer-site.sh: the folder and the block file are the script’s own', () => {
+  const refuses = async (env, says) => {
+    const { code, out } = await run('r1', env)
+    expect(code, out).toBe(0)
+    expect(out).toContain(says)
+    expect(fs.existsSync(p('dev/current'))).toBe(false)
+    expect(fs.readdirSync(p('caddy/previews'))).toEqual([])
+    expect(reloads()).toBe(0)
+    return out
+  }
+
+  it('refuses a folder inside production’s', async () => {
+    await refuses({ DEVELOPER_ROOT: p('app/developer') }, 'is inside')
+    expect(fs.existsSync(p('app/developer'))).toBe(false)
+  })
+
+  it('refuses production’s own folder, and one that reaches it through `..`', async () => {
+    await refuses({ DEVELOPER_ROOT: p('app') }, 'is inside')
+    await refuses({ DEVELOPER_ROOT: p('dev/../app/x') }, 'is inside')
+  })
+
+  it('refuses a folder that holds production’s, such as the folder above it', async () => {
+    await refuses({ DEVELOPER_ROOT: dir }, 'holds')
+  })
+
+  it('refuses a folder reached through a link that leads into production’s', async () => {
+    fs.symlinkSync(p('app'), p('sneaky'))
+    await refuses({ DEVELOPER_ROOT: p('sneaky/inner') }, 'is inside')
+  })
+
+  it('refuses a folder inside the previews’ folder, and one inside Caddy’s own', async () => {
+    await refuses({ PREVIEW_ROOT: p('previews'), DEVELOPER_ROOT: p('previews/dev') }, 'is inside')
+    await refuses({ DEVELOPER_ROOT: p('caddy/dev') }, 'is inside')
+  })
+
+  it('refuses a folder inside the previews’ block folder when that is not Caddy’s own folder', async () => {
+    fs.mkdirSync(p('other/previews'), { recursive: true })
+    await refuses(
+      { PREVIEW_CADDY_DIR: p('other/previews'), DEVELOPER_ROOT: p('other/previews/dev') },
+      'is inside',
+    )
+  })
+
+  it('compares the previews’ folder after links are resolved too', async () => {
+    fs.mkdirSync(p('previews'))
+    fs.symlinkSync(p('previews'), p('previews-link'))
+    await refuses(
+      { PREVIEW_ROOT: p('previews-link'), DEVELOPER_ROOT: p('previews/dev') },
+      'is inside',
+    )
+  })
+
+  it('refuses the root of the disk', async () => {
+    await refuses({ DEVELOPER_ROOT: '//' }, 'the root of the disk')
+  })
+
+  it('takes the block file from the previews’ folder only, whatever the environment names', async () => {
+    const before = caddyfile()
+    const { code, out } = await run('r1', { DEVELOPER_CADDY_FILE: p('caddy/Caddyfile') })
+    expect(code, out).toBe(0)
+    expect(caddyfile()).toBe(before)
+    expect(block()).toContain(HOST)
+    expect(fs.readdirSync(p('caddy/previews'))).toEqual(['developer.caddy'])
+  })
+})
+
+describe('developer-site.sh: what the release must hold, and what it keeps', () => {
+  it('skips, changing nothing, when the release has no style sheet for its pages', async () => {
+    fs.rmSync(p('app/releases/r1/ops/developer-site/style.css'))
+    const { code, out } = await run()
+    expect(code).toBe(0)
+    expect(out).toContain('pages or block template are missing')
+    expect(fs.existsSync(p('dev'))).toBe(false)
+  })
+
+  it('keeps as many releases as DEVELOPER_KEEP_RELEASES says', async () => {
+    await publishedThenNewRelease()
+    await run('r2')
+    for (const [i, name] of ['r3', 'r4'].entries()) {
+      makeRelease(name)
+      fs.utimesSync(p('dev/releases/r1'), 10, 10)
+      fs.utimesSync(p('dev/releases/r2'), 20 + i, 20 + i)
+      await run(name, { DEVELOPER_KEEP_RELEASES: '3' })
+    }
+    expect(releases()).toEqual(['r2', 'r3', 'r4'])
+  })
+
+  it('leaves the copy of the previous block in the folder, named, when it cannot be put back after a failed live check', async () => {
+    await publishedThenNewRelease()
+    fs.appendFileSync(p('app/releases/r2/ops/caddy/developer-site.caddy'), '# a later change\n')
+    // the first move into the folder is the new block; the second is the previous one coming back
+    stub(
+      'mv',
+      'case "$*" in *developer.caddy.*" "*developer.caddy) echo x >> "$STUB_STATE/mvs"; [ "$(wc -l < "$STUB_STATE/mvs")" -lt 2 ] || exit 1 ;; esac; exec /bin/mv "$@"',
+    )
+    const { code, out } = await run('r2', { STUB_NO_NOINDEX: '1' })
+    expect(code).toBe(1)
+    expect(out).toContain('its files are back on r1')
+    expect(out).toContain('the previous block could not be put back')
+    expect(
+      fs.readdirSync(p('caddy/previews')).filter((n) => n.startsWith('developer.caddy.')),
+    ).toHaveLength(1)
+    expect(current()).toBe('releases/r1')
   })
 })
 
@@ -599,7 +766,7 @@ describe('developer-site.sh: the live check, and going back', () => {
       const { code, out } = await run('r2', env)
       expect(code).toBe(1)
       expect(out).toContain(says)
-      expect(out).toContain('it is back on r1')
+      expect(out).toContain('back on r1')
       stays()
     })
 
@@ -611,6 +778,27 @@ describe('developer-site.sh: the live check, and going back', () => {
       expect(current()).toBe('releases/r1')
     })
   }
+
+  it('puts the block it replaced back too when the live check fails, and the files with it', async () => {
+    await publishedThenNewRelease()
+    const before = block()
+    const template = p('app/releases/r2/ops/caddy/developer-site.caddy')
+    fs.appendFileSync(template, '# a later change to the template\n')
+    const { code, out } = await run('r2', { STUB_NO_NOINDEX: '1' })
+    expect(code).toBe(1)
+    expect(out).toContain('it and its Caddy block are back on r1')
+    expect(block()).toBe(before)
+    expect(fs.readdirSync(p('caddy/previews'))).toEqual(['developer.caddy'])
+    expect(reloads()).toBe(2) // the new block, then the previous one
+    stays()
+  })
+
+  it('leaves the block alone when the live check fails and the block did not change', async () => {
+    await publishedThenNewRelease()
+    const { out } = await run('r2', { STUB_NO_NOINDEX: '1' })
+    expect(out).toContain('its files are back on r1')
+    expect(reloads()).toBe(0)
+  })
 
   it('waits longer for the address when its block is new (the certificate is ordered then)', async () => {
     const { code, out } = await run('r1', {
@@ -630,7 +818,7 @@ describe('developer-site.sh: the live check, and going back', () => {
       DEVELOPER_UP_SECONDS: '0',
     })
     expect(code).toBe(1)
-    expect(out).toContain('it is back on r1')
+    expect(out).toContain('back on r1')
     stays()
   })
 
@@ -651,7 +839,12 @@ describe('developer-site.sh: leftovers, the folder being served, and what is kep
     const { code, out } = await run()
     expect(code, out).toBe(0)
     expect(fs.existsSync(p('dev/current/leftover.txt'))).toBe(false)
-    expect(fs.readdirSync(p('dev/current')).sort()).toEqual(['404.html', 'index.html', 'showcase'])
+    expect(fs.readdirSync(p('dev/current')).sort()).toEqual([
+      '404.html',
+      'index.html',
+      'showcase',
+      'style.css',
+    ])
   })
 
   it('replaces a release folder of the same name that an earlier, failed run left (not served)', async () => {
@@ -762,11 +955,11 @@ describe('developer-site.sh: leftovers, the folder being served, and what is kep
       'bash',
       [
         '-c',
-        `. ${path.join(OPS, 'environment.sh')}; echo "$DEVELOPER_ROOT $DEVELOPER_KEEP_RELEASES $DEVELOPER_MAX_BYTES $DEVELOPER_UP_SECONDS_NEW $DEVELOPER_UP_SECONDS"`,
+        `. ${path.join(OPS, 'environment.sh')}; echo "$DEVELOPER_ROOT $DEVELOPER_KEEP_RELEASES $DEVELOPER_MAX_BYTES $DEVELOPER_UP_SECONDS_NEW $DEVELOPER_UP_SECONDS $DEVELOPER_LOCK_WAIT"`,
       ],
       { encoding: 'utf8', env: { PATH: process.env.PATH } },
     ).stdout.trim()
-    expect(values).toBe('/var/www/sprecher-east-developer 2 104857600 120 20')
+    expect(values).toBe('/var/www/sprecher-east-developer 2 104857600 120 20 30')
   })
 })
 
@@ -832,7 +1025,7 @@ describe('the developer site’s block template', () => {
   it('sends the noindex header on a wrong path too, and the 404 page keeps its status', () => {
     const errors = template.slice(template.indexOf('handle_errors'))
     expect(errors).toContain('import __PREVIEW_HEADERS_FILE__')
-    expect(errors).toContain('rewrite /404.html')
+    expect(errors).toContain('rewrite * /404.html')
     expect(errors).toContain('file_server')
   })
 
@@ -867,6 +1060,7 @@ describe('the developer site’s block template', () => {
 describe('the developer site’s pages', () => {
   const index = fs.readFileSync(path.join(OPS, 'developer-site/index.html'), 'utf8')
   const notFound = fs.readFileSync(path.join(OPS, 'developer-site/404.html'), 'utf8')
+  const stylesheet = fs.readFileSync(path.join(OPS, 'developer-site/style.css'), 'utf8')
   const text = (html) =>
     html
       .replace(/<style[\s\S]*?<\/style>/g, '')
@@ -896,7 +1090,16 @@ describe('the developer site’s pages', () => {
   it('points to the neighborhood site and asks for nothing from a third party', () => {
     const urls = [...(index + notFound).matchAll(/(?:href|src)="(https?:[^"]+)"/g)].map((m) => m[1])
     expect(urls).toEqual(['https://sprechereast.com'])
-    expect(index + notFound).not.toMatch(/<script|@import|url\(|<link/)
+    expect(index + notFound).not.toMatch(/<script|@import|url\(/)
+    expect(stylesheet).not.toMatch(/@import|url\(/)
+  })
+
+  it('has one stylesheet, from the same place, that both pages link and neither repeats', () => {
+    for (const page of [index, notFound]) {
+      expect(page.match(/<link[^>]*>/g)).toEqual(['<link rel="stylesheet" href="/style.css" />'])
+      expect(page).not.toContain('<style')
+    }
+    expect(stylesheet).toContain('body {')
   })
 
   it('keeps itself out of search engines and follows the visitor’s light or dark setting', () => {
@@ -920,11 +1123,11 @@ describe('the developer site’s pages', () => {
 
   it('has a 404 page that leads back to the index page', () => {
     expect(text(notFound)).toContain("We can't find that page")
-    expect(notFound).toContain('<a href="/">Back to the developer site</a>')
+    expect(notFound).toContain('<a class="back" href="/">Back to the developer site</a>')
   })
 
   it('uses system colors, so the pages need no color value and follow dark mode', () => {
-    for (const page of [index, notFound])
+    for (const page of [index, notFound, stylesheet])
       expect(page).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgb\(|hsl\(/)
   })
 })

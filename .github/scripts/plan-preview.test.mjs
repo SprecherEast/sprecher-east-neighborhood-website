@@ -186,6 +186,8 @@ describe('plan-preview.sh: the component showcase (#1459)', () => {
     ],
     ['a story outside the kit, in TSX', { 'src/modules/news/ui/Card.stories.tsx': 'x\n' }],
     ['a shared component', { 'src/platform/ui/Button.tsx': 'x\n' }],
+    ['code the kit imports', { 'src/platform/lib/cn.ts': 'x\n' }],
+    ['the PostCSS settings', { 'postcss.config.mjs': 'x\n' }],
     ['a rich text component', { 'src/platform/richtext/Block.tsx': 'x\n' }],
     ['the theme contract', { 'src/platform/theme/tokens.ts': 'x\n' }],
     ['a theme', { 'src/themes/default/theme.css': 'x\n' }],
