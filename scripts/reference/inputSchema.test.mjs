@@ -7,6 +7,12 @@ const schemaOf = (shape) => z.toJSONSchema(z.object(shape), { io: 'input' })
 const note = (shape, name) => describeInput(schemaOf(shape)).find((f) => f.name === name).note
 
 describe('describeInput', () => {
+  it('drops only a period at the very end of a description', () => {
+    expect(note({ a: z.string().describe('Version 1.2 is out.') }, 'a')).toBe('Version 1.2 is out')
+    expect(note({ a: z.string().describe('No period') }, 'a')).toBe('No period')
+    expect(note({ a: z.string().describe('Ends with two..') }, 'a')).toBe('Ends with two.')
+  })
+
   it('gives the type, whether it is required and the description', () => {
     const fields = describeInput(
       schemaOf({

@@ -127,8 +127,8 @@ describe('graphQLSettings', () => {
       graphQLSettings({
         graphQL: { maxComplexity: 5, disablePlaygroundInProduction: false, path: '/x' },
       }),
-    ).toEqual({ maxComplexity: 5, disablePlaygroundInProduction: false })
-    expect(graphQLSettings({ graphQL: {} })).toEqual({})
+    ).toStrictEqual({ maxComplexity: 5, disablePlaygroundInProduction: false })
+    expect(graphQLSettings({ graphQL: {} })).toStrictEqual({})
   })
 })
 

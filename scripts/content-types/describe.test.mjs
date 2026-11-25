@@ -178,6 +178,20 @@ describe('describeEndpoints', () => {
     ])
   })
 
+  it('reads a question mark, a star or a plus inside a path as the letter it is', () => {
+    const handler = () => true
+    const paths = ['/x?y', '/a*b', '/p+q', '/id/:key?']
+    const found = describeEndpoints(
+      [...paths, ...paths].map((path) => ({ path, method: 'get', handler })),
+      locate,
+      { builtIn: true },
+    )
+    // each repeated path is taken first by its earlier twin (the optional one only partly)
+    expect(found.slice(4).map((e) => [e.path, e.replacedBy?.path ?? null])).toEqual(
+      paths.map((p) => [p, p]),
+    )
+  })
+
   it('is empty when a type has none, or switches them off', () => {
     expect(describeEndpoints(undefined, locate)).toEqual([])
     expect(describeEndpoints(false, locate)).toEqual([])
