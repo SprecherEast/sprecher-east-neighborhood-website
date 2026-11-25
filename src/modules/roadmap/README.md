@@ -1,3 +1,11 @@
+---
+name: 'Roadmap'
+type: module
+summary: 'the public plan page.'
+aliases: ['plan page', 'missions']
+relationships: []
+---
+
 # Roadmap
 
 The public plan page: milestones, then epics, then issues, read from GitHub. No collection; the

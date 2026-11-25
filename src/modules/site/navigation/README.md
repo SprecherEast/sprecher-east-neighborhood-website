@@ -1,3 +1,11 @@
+---
+name: 'Site navigation'
+type: feature
+summary: 'header, footer, forum link, redirects, refresh timing.'
+aliases: ['header', 'footer', 'redirects']
+relationships: [{ 'type': 'depends-on', 'target': 'src/modules/site/README.md' }]
+---
+
 # Site navigation
 
 The header navigation, the footer, the forum link and the redirects editors set: where their links
@@ -6,7 +14,7 @@ and hooks: [header](../../../../docs/reference/content-types/header.md), [footer
 [redirects](../../../../docs/reference/content-types/redirects.md); kit pieces:
 [navigation](../../../../docs/reference/components/navigation.md). Pages and blocks are in the [site note](../README.md).
 
-## How the links connect
+## How the pieces link
 
 - A nav item is the shared link field (a page or post, or a custom URL); `resolveLink` turns it into an `href`, and "open in new tab" becomes `external` (`src/platform/payload/link.ts`, `resolveLink.ts`). A link with no address or an unpopulated reference is dropped (`ui/SiteFooter.tsx`, `src/modules/site/data/mappers.ts`).
 - Header and footer are read with their linked pages populated whether or not those pages are published (`data/globals.ts`, #251).

@@ -23,6 +23,7 @@
     "filing-checklist": "node .github/scripts/filing-checklist.mjs --write",
     "audit:prod": "node scripts/audit-prod.mjs",
     "knowledge:check": "node scripts/knowledge-check.mjs",
+    "knowledge:structure": "node scripts/knowledge-structure/cli.mjs",
     "docs:generate": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs",
     "docs:check": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs --check",
     "storybook": "storybook dev -p 6006 --disable-telemetry",

@@ -35,7 +35,35 @@
       "src/modules/site/use-cases/getRedirectTarget.ts"
     ]
   },
-  { "note": "src/platform/ui/README.md", "paths": ["src/platform/ui/**"] },
+  {
+    "note": "src/platform/ui/README.md",
+    "paths": ["src/platform/ui/**"],
+    "exclude": [
+      "src/platform/ui/chart/**",
+      "src/platform/ui/AreaChart*",
+      "src/platform/ui/HeatMap*",
+      "src/platform/ui/HeatCell*",
+      "src/platform/ui/Legend*",
+      "src/platform/ui/PeriodNav*",
+      "src/platform/ui/ShareBill*",
+      "src/platform/ui/ShareStrip*",
+      "src/platform/ui/shareTones*"
+    ]
+  },
+  {
+    "note": "src/platform/ui/chart/README.md",
+    "paths": [
+      "src/platform/ui/chart/**",
+      "src/platform/ui/AreaChart*",
+      "src/platform/ui/HeatMap*",
+      "src/platform/ui/HeatCell*",
+      "src/platform/ui/Legend*",
+      "src/platform/ui/PeriodNav*",
+      "src/platform/ui/ShareBill*",
+      "src/platform/ui/ShareStrip*",
+      "src/platform/ui/shareTones*"
+    ]
+  },
   {
     "note": "src/modules/site/README.md",
     "paths": [
@@ -95,7 +123,12 @@
       "src/platform/turnstile/**",
       "src/platform/analytics/**",
       "src/platform/service/**"
-    ]
+    ],
+    "exclude": ["src/platform/payload/previewCopy/**"]
+  },
+  {
+    "note": "src/platform/payload/previewCopy/README.md",
+    "paths": ["src/platform/payload/previewCopy/**"]
   },
   {
     "note": "src/platform/richtext/README.md",

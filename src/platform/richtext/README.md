@@ -1,3 +1,11 @@
+---
+name: 'Rich text'
+type: platform-area
+summary: 'article text, editorial blocks, Markdown tags.'
+aliases: ['editorial blocks', 'article text']
+relationships: []
+---
+
 # Rich text and the editorial blocks
 
 How an article's text is drawn, the blocks an editor can put inside it (banner, code, media and
@@ -7,7 +15,7 @@ page-builder blocks are in the [site note](../../modules/site/README.md). Props 
 renderer is used: [rich-text components](../../../docs/reference/components/rich-text.md); the
 rich-text fields of each collection: [content types](../../../docs/reference/content-types/README.md).
 
-## Links between fields and values
+## How the pieces link
 
 - Limits of key facts, the timeline, fact tabs and section tabs are written once (`editorial/editorialLimits.ts`); the block's fields, the Markdown tag's checks and the tests read them. A chart's limits are `CHART_LIMITS` in `src/platform/lib/chart/spec.ts`.
 - Block slugs of key facts, fact tabs, section tabs and outcome fork are written once (`editorial/blockTypes.ts`); their configs, the Markdown tags and the article-width rule match on them.
