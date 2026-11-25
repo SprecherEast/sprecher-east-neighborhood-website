@@ -44,6 +44,7 @@ describe('describeMetadataFiles', () => {
         'layout.tsx',
         'a/robots.ts',
         'a/favicon.ico',
+        'a/manifest.ts',
       ]),
     ).toEqual([])
   })

@@ -204,7 +204,7 @@ export function findCollectionCalls(
       onPayloadCall(call, payload, bindings)
     } else if (!payload) {
       for (const argument of call.arguments) {
-        for (const value of argumentSlugs(context, argument, bindings)) note(value, '')
+        for (const value of argumentSlugs(context, argument, bindings)) note(value)
       }
     }
     follow(call, bindings)

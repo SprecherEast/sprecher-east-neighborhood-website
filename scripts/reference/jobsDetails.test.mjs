@@ -34,6 +34,50 @@ describe('describeJobs details (#1461)', () => {
   })
 })
 
+describe('describeJobs names and arguments (#1461)', () => {
+  const handler = () => {}
+
+  it('calls a function written under its own key inline, in an access setting and in a hook', () => {
+    const jobs = describeJobs({
+      tasks: [
+        {
+          slug: 't',
+          handler,
+          schedule: [{ cron: '* * * * *', hooks: { beforeSchedule: () => {} } }],
+        },
+      ],
+      access: { run: () => {}, cancel: function named() {} },
+    })
+    expect(jobs.tasks[0].schedules[0].hooks.map((h) => h.name)).toEqual(['inline'])
+    expect(jobs.access.map((entry) => [entry.operation, entry.name])).toEqual([
+      ['run', 'inline'],
+      ['cancel', 'named'],
+    ])
+  })
+
+  it('asks for the collections of a handler by its file and the task, of a hook by file, task and name', () => {
+    const asked = []
+    const hookFn = function hookName() {}
+    const locate = (fn) => (fn === hookFn ? 'src/hook.ts' : 'src/handler.ts')
+    describeJobs(
+      {
+        tasks: [
+          { slug: 'taskSlug', handler, schedule: [{ cron: '* * * * *', hooks: { x: hookFn } }] },
+        ],
+      },
+      locate,
+      (...args) => {
+        asked.push(args)
+        return []
+      },
+    )
+    expect(asked).toEqual([
+      ['src/hook.ts', 'taskSlug', 'hookName'],
+      ['src/handler.ts', 'taskSlug'],
+    ])
+  })
+})
+
 describe('scheduleHooks', () => {
   it('sorts by name first and by file when two hooks have the same name', () => {
     const found = scheduleHooks([

@@ -100,6 +100,7 @@ describe('graphQLRules', () => {
 
   it('lists what the config function returns, and none when it gives nothing or fails', () => {
     expect(rulesOf(() => [rule])).toEqual([rule])
+    expect(rulesOf((request) => (typeof request === 'object' ? [rule] : []))).toEqual([rule])
     expect(rulesOf(undefined)).toEqual([])
     expect(rulesOf(() => undefined)).toEqual([])
     expect(

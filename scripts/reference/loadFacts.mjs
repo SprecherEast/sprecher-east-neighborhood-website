@@ -26,7 +26,7 @@ import {
   parseServerCrons,
   parseTimedWorkflows,
 } from './timers.mjs'
-import { findCollectionCalls } from './collectionCalls.mjs'
+import { CONFIG_FILE, taskReach, toolReach } from './reach.mjs'
 import {
   findDefinitions,
   findPluginConfigurers,
@@ -35,7 +35,6 @@ import {
 } from './sourceFacts.mjs'
 
 const PAYLOAD_ROUTES = 'src/app/(payload)'
-const CONFIG_FILE = 'src/payload.config.ts'
 // The GraphQL settings that say what the API allows; the rest of the block is paths and rules
 const GRAPHQL_SETTINGS = [
   'disableIntrospectionInProduction',
@@ -121,7 +120,7 @@ function describeAgentTools(models, { program, root, locate }, mcpOptions) {
   return describeMcp(mcpOptions, {
     locate,
     access: new Map(models.map((model) => [model.slug, model.access])),
-    calls: (file, name) => findCollectionCalls(program, root, file, { name, knownSlugs: slugs }),
+    calls: toolReach({ program, root }, slugs),
     schemaOf: (shape) => z.toJSONSchema(z.object(shape)),
     checksOf: customChecks,
   })
@@ -132,18 +131,9 @@ function describeScheduledWork(config, models, { program, root, locate }) {
   // Payload's own jobs collection: this fails loudly if a Payload update stops adding it
   const { endpoints } = config.collections.find((collection) => collection.slug === 'payload-jobs')
   const routes = jobRoutes(endpoints, `${config.routes.api}/payload-jobs`)
-  const jobs = describeJobs(
-    config.jobs,
-    locate,
-    (file, name, hook) =>
-      findCollectionCalls(program, root, file, {
-        name,
-        hook,
-        configFile: CONFIG_FILE,
-        knownSlugs: slugs,
-      }),
-    { endpoints: routes },
-  )
+  const jobs = describeJobs(config.jobs, locate, taskReach({ program, root }, slugs), {
+    endpoints: routes,
+  })
   return {
     jobs,
     workflows: parseTimedWorkflows(filesIn(root, '.github/workflows', WORKFLOW_FILES)),

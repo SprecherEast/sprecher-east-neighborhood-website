@@ -213,4 +213,40 @@ describe('describeContentType', () => {
       fields: [{ path: 'title' }],
     })
   })
+
+  it('gives every route of allEndpoints the two keys of what took it, null when nothing did', () => {
+    const route = () => true
+    const { allEndpoints } = describeContentType(
+      { slug: 'events', endpoints: [{ path: '/a', method: 'get', handler: route }] },
+      'collection',
+      { locate },
+    )
+    expect(allEndpoints).toStrictEqual([
+      {
+        method: 'GET',
+        path: '/a',
+        name: 'route',
+        file: 'payload',
+        replacedBy: null,
+        replacedWhen: null,
+      },
+    ])
+  })
+
+  it('keeps the routes Payload adds only in allEndpoints', () => {
+    const payloadRoute = () => true
+    const model = describeContentType(
+      {
+        slug: 'events',
+        endpoints: [
+          { path: '/x', method: 'get', handler: isAdmin },
+          { path: '/count', method: 'get', handler: payloadRoute },
+        ],
+      },
+      'collection',
+      { locate },
+    )
+    expect(model.endpoints.map((e) => e.path)).toEqual(['/x'])
+    expect(model.allEndpoints.map((e) => e.path)).toEqual(['/x', '/count'])
+  })
 })

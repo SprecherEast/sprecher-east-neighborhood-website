@@ -85,4 +85,8 @@ describe('findPluginConfigurers edge cases (#1461)', () => {
       new Map([['@payloadcms/plugin-x', ['contact']]]),
     )
   })
+
+  it('finds none when the config file is not in the program', () => {
+    expect(findPluginConfigurers(program, root, 'src/missing.config.ts')).toEqual(new Map())
+  })
 })

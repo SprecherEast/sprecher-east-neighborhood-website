@@ -76,3 +76,29 @@ describe('describeMcp details (#1461)', () => {
     expect(found.get('posts')).toEqual(['aTool', 'findPosts', 'updatePosts', 'zTool'])
   })
 })
+
+describe('describeMcp custom tools (#1461)', () => {
+  it('asks for the collections a tool reaches by its file and its name, and only for a file in src', () => {
+    const asked = []
+    const inSource = () => {}
+    const outside = () => {}
+    const options = {
+      mcp: {
+        tools: [
+          { name: 'ownTool', description: 'Own.', handler: inSource, parameters: {} },
+          { name: 'pluginTool', description: 'Plugin.', handler: outside, parameters: {} },
+        ],
+      },
+    }
+    const { customTools } = describeMcp(options, {
+      locate: (fn) => (fn === inSource ? 'src/tool.ts' : '@payloadcms/plugin-x'),
+      schemaOf,
+      calls: (...args) => {
+        asked.push(args)
+        return [{ collection: 'events', operations: [], why: [] }]
+      },
+    })
+    expect(asked).toEqual([['src/tool.ts', 'ownTool']])
+    expect(customTools.map((tool) => tool.collections.length)).toEqual([1, 0])
+  })
+})

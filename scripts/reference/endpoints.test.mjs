@@ -22,6 +22,24 @@ describe('describeApi', () => {
     ])
   })
 
+  it('keeps REST and GraphQL apart for a type that has one without the other', () => {
+    const type = { kind: 'collection', endpoints: [], allEndpoints: [] }
+    const { rest } = describeApi(
+      {
+        ...base,
+        contentTypes: [
+          { ...type, slug: 'only-rest', rest: true, graphQL: false },
+          { ...type, slug: 'only-graphql', rest: false, graphQL: true },
+        ],
+      },
+      locate,
+    )
+    expect(rest.map((row) => [row.slug, row.enabled, row.graphQL])).toEqual([
+      ['only-graphql', false, true],
+      ['only-rest', true, false],
+    ])
+  })
+
   it('reads the GraphQL paths, its limits and the validation rules with their files', () => {
     expect(api.graphQL).toEqual({
       path: '/api/graphql',

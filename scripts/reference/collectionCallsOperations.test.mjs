@@ -7,27 +7,40 @@ const fixture = createFixture('reference-collection-operations-')
 const { write, load, root } = fixture
 let program
 
-const READS = ['find', 'findByID', 'findOne', 'count', 'findVersions', 'findVersionByID']
-const WRITES = {
-  create: ['create', 'duplicate'],
-  update: ['update', 'updateOne', 'updateMany', 'restoreVersion'],
-  delete: ['delete', 'deleteOne', 'deleteMany'],
+// Each call method is made on a collection of its own, so a method missing from the table shows
+const OPERATION_OF = {
+  find: 'read',
+  findByID: 'read',
+  findOne: 'read',
+  count: 'read',
+  findVersions: 'read',
+  findVersionByID: 'read',
+  create: 'create',
+  duplicate: 'create',
+  update: 'update',
+  updateOne: 'update',
+  updateMany: 'update',
+  restoreVersion: 'update',
+  delete: 'delete',
+  deleteOne: 'delete',
+  deleteMany: 'delete',
 }
 
-const callsFor = (methods, slug) =>
-  methods.map((method) => `    payload.${method}({ collection: '${slug}' })`).join('\n')
+const callsOfAll = () =>
+  Object.keys(OPERATION_OF)
+    .map((method) => `    payload.${method}({ collection: '${method}Collection' })`)
+    .join('\n')
 
 beforeAll(() => {
   write(
     'src/modules/agents/cms/tools/operations.ts',
     `declare const payload: Record<string, (a: object) => void>
+declare const req: { payload: { db: Record<string, (a: object) => void> } }
 export const tool = {
   name: 'operations',
   handler: () => {
-${callsFor(READS, 'reads')}
-${callsFor(WRITES.create, 'creates')}
-${callsFor(WRITES.update, 'updates')}
-${callsFor(WRITES.delete, 'deletes')}
+${callsOfAll()}
+    req.payload.db.updateMany({ collection: 'throughDb', overrideAccess: false })
     payload.findGlobal({ slug: 'siteGlobal' })
     payload.findGlobalVersions({ slug: 'versionsGlobal' })
     payload.updateGlobal({ slug: 'writtenGlobal' })
@@ -110,10 +123,14 @@ describe('findCollectionCalls operations (#1461)', () => {
   it('files every call under the access it needs, a global by its slug', () => {
     const byName = Object.fromEntries(found().map((e) => [e.collection, e.operations]))
     expect(byName).toEqual({
-      reads: ['read (access bypassed)'],
-      creates: ['create (access bypassed)'],
-      updates: ['update (access bypassed)'],
-      deletes: ['delete (access bypassed)'],
+      ...Object.fromEntries(
+        Object.entries(OPERATION_OF).map(([method, operation]) => [
+          `${method}Collection`,
+          [`${operation} (access bypassed)`],
+        ]),
+      ),
+      // a call on the database never checks access, whatever flag it carries
+      throughDb: ['update (access bypassed)'],
       siteGlobal: ['read (access bypassed)'],
       versionsGlobal: ['read (access bypassed)'],
       writtenGlobal: ['update (access bypassed)'],
