@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import path from 'node:path'
 import { describe, it } from 'node:test'
+import { tempDir } from './helpers.mjs'
 
 import { boundaryFromLayer, refreshBoundary, serializeBoundary } from '../lib/boundary.mjs'
 import { box, dataWith, loose, record, ringOf } from './boundaryHelpers.mjs'
@@ -142,7 +140,7 @@ describe('the copy as the file keeps it', () => {
 })
 
 describe('refreshing from the layer', () => {
-  const dir = () => mkdtempSync(path.join(tmpdir(), 'refresh-'))
+  const dir = () => tempDir('refresh-')
   const reply =
     (status, body = '', headers = {}) =>
     async () =>

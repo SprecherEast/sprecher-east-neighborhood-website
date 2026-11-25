@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { copyIntelligence } from '../../../scripts/check-intelligence-harness.mjs'
 import { staleBoundaryProblem } from '../lib/boundary.mjs'
 import { loadContract } from '../lib/contract.mjs'
 import { robotsChecker } from '../lib/fetchSource.mjs'
@@ -9,7 +8,7 @@ import { fakeAdapter } from '../lib/model.mjs'
 import { runPipeline } from '../lib/pipeline.mjs'
 import { curation, draft, feedsHttp, verification } from './fixtures.mjs'
 import { INSIDE, JUST_OUTSIDE } from './geoFixtures.mjs'
-import { contract, contractOn } from './helpers.mjs'
+import { contract, contractOn, intelligenceCopy } from './helpers.mjs'
 import { cmsWithLog } from './safetyHelpers.mjs'
 
 // The boundary test inside a whole run (#1009): the placement reaches the next stage and the
@@ -199,7 +198,7 @@ describe('a safety item and the boundary', () => {
 })
 
 describe('the start refuses a boundary that can’t be used', () => {
-  const copyWith = (change) => copyIntelligence({ 'boundary.json': change })
+  const copyWith = (change) => intelligenceCopy({ 'boundary.json': change })
   const refuses = (change, pattern) => assert.throws(() => loadContract(copyWith(change)), pattern)
 
   it('loads the real one', () => assert.doesNotThrow(() => loadContract(copyWith((t) => t))))
@@ -220,7 +219,7 @@ describe('the start refuses a boundary that can’t be used', () => {
     assert.throws(
       () =>
         loadContract(
-          copyIntelligence({
+          intelligenceCopy({
             'area.yaml': (t) => t.replace('file: boundary.json', 'file: nope.json'),
           }),
         ),

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, it } from 'node:test'
+import { tempDir } from './helpers.mjs'
 
 import { boundaryProblems, loadBoundary } from '../lib/boundary.mjs'
 import { box, dataWith, loose, record, ringOf } from './boundaryHelpers.mjs'
@@ -155,7 +155,7 @@ describe('what is wrong with a copy, in its own words', () => {
 })
 
 describe('loading the copy', () => {
-  const folder = () => mkdtempSync(path.join(tmpdir(), 'boundary-'))
+  const folder = () => tempDir('boundary-')
   const write = (dir, text) => writeFileSync(path.join(dir, record.file), text)
   const refused = (dir, validate) => {
     try {

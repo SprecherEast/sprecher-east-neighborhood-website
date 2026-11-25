@@ -3,7 +3,6 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, it } from 'node:test'
 
-import { copyIntelligence } from '../../../scripts/check-intelligence-harness.mjs'
 import {
   boundaryFromLayer,
   boundaryProblems,
@@ -13,7 +12,7 @@ import {
   serializeBoundary,
 } from '../lib/boundary.mjs'
 import { layerAnswer, square } from './geoFixtures.mjs'
-import { contract, fakeHttp, intelligenceDir } from './helpers.mjs'
+import { contract, fakeHttp, intelligenceCopy, intelligenceDir } from './helpers.mjs'
 
 // Refreshing the dated copy from the City's layer, and the file as it is kept (#1009). Fixtures
 // only: no test calls the network.
@@ -72,7 +71,7 @@ describe('the refresh command', () => {
   const layer = { status: 200, contentType: 'application/geo+json', body: layerAnswer() }
 
   it('writes the layer’s feature, dated, in the form the loader reads', async () => {
-    const dir = copyIntelligence()
+    const dir = intelligenceCopy()
     const http = fakeHttp([layer])
     const data = await refreshBoundary({
       dir,
@@ -90,7 +89,7 @@ describe('the refresh command', () => {
       [{ status: 503 }, { status: 503 }],
       [{ status: 200, body: '{"features":[]}' }],
     ]) {
-      const dir = copyIntelligence()
+      const dir = intelligenceCopy()
       const before = readFileSync(path.join(dir, 'boundary.json'), 'utf8')
       await assert.rejects(refreshBoundary({ dir, record, http: fakeHttp(answers), now }))
       assert.equal(readFileSync(path.join(dir, 'boundary.json'), 'utf8'), before)

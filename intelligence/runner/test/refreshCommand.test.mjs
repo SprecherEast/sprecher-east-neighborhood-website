@@ -1,14 +1,12 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
-import { copyIntelligence } from '../../../scripts/check-intelligence-harness.mjs'
 import { boundaryProblems, loadBoundary } from '../lib/boundary.mjs'
-import { contract, intelligenceDir } from './helpers.mjs'
+import { contract, intelligenceCopy, intelligenceDir, tempDir } from './helpers.mjs'
 
 // `node run.mjs --refresh-boundary` (#1009), run as the command it is. The child's `fetch` is
 // replaced before it starts, so nothing reaches the network: the stand-in answers the City's layer
@@ -19,7 +17,7 @@ const record = contract.area.boundary
 
 describe('node run.mjs --refresh-boundary', () => {
   it('rewrites the copy from the layer’s answer, dated today, and says so', () => {
-    const copy = copyIntelligence()
+    const copy = intelligenceCopy()
     const before = loadBoundary(intelligenceDir, record)
     writeFileSync(
       path.join(copy, record.file),
@@ -30,7 +28,7 @@ describe('node run.mjs --refresh-boundary', () => {
       properties: { [record.field]: record.naId, NEIGHB_NAME: `${record.name}  ` },
       geometry: before.geometry,
     }
-    const stub = path.join(mkdtempSync(path.join(tmpdir(), 'stub-')), 'fetch.mjs')
+    const stub = path.join(tempDir('stub-'), 'fetch.mjs')
     writeFileSync(
       stub,
       `globalThis.fetch = async (url) => {
@@ -63,7 +61,7 @@ describe('node run.mjs --refresh-boundary', () => {
   it('does not refresh unless asked: a plain run with no key stops and asks for one', () => {
     const run = spawnSync(
       process.execPath,
-      [path.join(runner, 'run.mjs'), '--intelligence', copyIntelligence()],
+      [path.join(runner, 'run.mjs'), '--intelligence', intelligenceCopy()],
       {
         encoding: 'utf8',
         env: { ...process.env, SPRECHER_EAST_MCP_KEY: '' },

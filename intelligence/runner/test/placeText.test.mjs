@@ -62,6 +62,30 @@ describe('a hyphen in a unit', () => {
   })
 })
 
+describe('what a unit may hold', () => {
+  it('refuses a unit with a period, an apostrophe, a space or a letter outside A to Z inside it', async () => {
+    for (const unit of ['Unit 4.5', "Unit 4'5", 'Unit 4 5', '#4.5', "#4'5", 'Apt 4,5é', 'Unit 4é'])
+      assert.deepEqual(await sent(`7035 Littlemore Dr, ${unit}, Madison`), [], unit)
+  })
+})
+
+describe('a municipality on more than one line', () => {
+  it('is not Madison because one of its lines is', async () => {
+    for (const municipality of ['Madison\nChicago', 'Chicago\nMadison', 'Madison\n']) {
+      const { place, geocode } = setup()
+      const v = located('7035 Littlemore Dr')
+      v.location.municipality = municipality
+      const placed = await place(v, item())
+      const text = JSON.stringify(municipality)
+      if (municipality.trim() === 'Madison') assert.equal(geocode.asked.length, 1, text)
+      else {
+        assert.deepEqual(geocode.asked, [], text)
+        assert.equal(placed.placement.reason, 'the municipality is not Madison, Wisconsin', text)
+      }
+    }
+  })
+})
+
 describe('which refusal is recorded when two apply', () => {
   const reason = async (change, overrides = {}) => {
     const { place } = setup({ geocode: geocoder() })
