@@ -62,7 +62,7 @@ its cap. Owner direction this rests on (recorded on #1446 and #1460):
    backticked `/x` or `@/x` is a route or an alias and is not checked.
    An HTML comment, on one line or across several, is not text a reader sees: a line of only
    comments is not a purpose paragraph, text next to a comment is, and a heading inside one is not a
-   section.
+   section. The body still starts with the level 1 title: a comment before it is not allowed.
    Any other backticked path may be an abbreviation, as the notes write them (a bare name after its
    folder, the end of a long path, no extension), and counts when some path in the repository ends
    with it. So a moved file is missed while a same-named file exists elsewhere: the rule is firm

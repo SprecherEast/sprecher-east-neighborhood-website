@@ -100,6 +100,29 @@ describe('a line terminator inside a line, and letter case', () => {
     expect(purposes('<!--\n## Hidden\n-->\nreal')).toBe(1)
   })
 
+  it('reads every comment on a line, and only whole `<!--` and `-->`', () => {
+    const sections = (text) => withBody(`# T\n\nintro\n\n${text}\n`).sections.map((s) => s.heading)
+    expect(sections('<!-- a --> x <!-- b -->\n## Screens')).toEqual(['Screens'])
+    expect(sections('<!- a\n## Screens')).toEqual(['Screens'])
+    expect(sections('<!--\nfoo -> bar\n## Hidden\n-->\n## Screens')).toEqual(['Screens'])
+    expect(sections('<!-- x -->## y')).toEqual(['y'])
+    expect(sections('##<!-- -->Foo')).toEqual([])
+    expect(sections('<!--\n```\n-->\n\n## Screens')).toEqual(['Screens'])
+    expect(sections('<!-- a\u2028b --> x <!-- b -->\n## Screens')).toEqual(['Screens'])
+  })
+
+  it('does not count what follows a comment as a purpose when it is a title or a heading', () => {
+    const purposes = (text) => withBody(`# T\n\n${text}\n\n## Screens\n`).purposeLines
+    expect(purposes('<!-- x --># y')).toBe(0)
+    expect(purposes('<!- a')).toBe(1)
+    expect(purposes('<!--\nfoo -> bar\n-->\nreal')).toBe(1)
+  })
+
+  it('wants the title first: a comment before it is not allowed', () => {
+    const note = goodNote(GOOD_FIELDS, `<!-- x -->\n${GOOD_BODY}`)
+    expect(found(note, 'NOTE-TITLE')).toEqual(['the body must start with a level 1 title'])
+  })
+
   it('counts a purpose of one character', () => {
     expect(withBody('# T\n\nx\n\n## Screens\n').purposeLines).toBe(1)
   })

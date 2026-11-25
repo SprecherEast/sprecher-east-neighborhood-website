@@ -16,7 +16,7 @@ describe('a fence', () => {
     expect(
       withBody(`~~~${LONG}\n## Hidden\n~~~\n\n## Shown\n`).sections.map((s) => s.heading),
     ).toEqual(['Shown'])
-    expect(withBody('~~~\n## Hidden\n~~~\n').purposeLines).toBe(1)
+    expect(withBody('~~~\n## Hidden\n~~~\n').purposeLines).toBe(0)
     expect(tokens('~~~ `src/x.ts`\n`src/y.ts`\n~~~\n`src/z.ts`')).toEqual(['src/z.ts'])
     expect(tokens(`~~~${LONG}\n\`src/y.ts\`\n~~~\n\`src/z.ts\``)).toEqual(['src/z.ts'])
   })

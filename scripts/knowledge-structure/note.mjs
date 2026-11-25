@@ -50,10 +50,16 @@ export function parseNote(markdown) {
   let fenced = false
   let inComment = false
   lines.forEach((line, index) => {
-    if (FENCE.test(line)) fenced = !fenced
-    if (fenced) return
+    if (fenced) {
+      if (FENCE.test(line)) fenced = false
+      return
+    }
     const visible = visibleText(line, inComment)
     inComment = visible.open
+    if (FENCE.test(visible.text)) {
+      fenced = true
+      return
+    }
     const heading = /^## (\S.*)/.exec(visible.text)
     if (heading) note.sections.push({ heading: heading[1].trim(), line: index + 1 })
     else if (note.sections.length === 0 && visible.text.trim() && !visible.text.startsWith('#'))
