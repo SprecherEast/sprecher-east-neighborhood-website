@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { copyIntelligence } from '../../../scripts/check-intelligence-harness.mjs'
 import { loadContract } from '../lib/contract.mjs'
+import { intelligenceCopy } from './helpers.mjs'
 
 // The runner refuses to start on a bad safety setting (#1007).
 
 describe('the settings are checked when the runner starts', () => {
-  const copyWith = (file, change) => copyIntelligence({ [file]: change })
+  const copyWith = (file, change) => intelligenceCopy({ [file]: change })
 
   it('loads the real settings', () => {
     assert.doesNotThrow(() => loadContract(copyWith('pipeline.yaml', (text) => text)))

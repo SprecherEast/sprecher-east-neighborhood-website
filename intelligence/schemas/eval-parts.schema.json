@@ -119,6 +119,10 @@
           "description": "The MCP tool the submit stage calls: accept \u2192 submitSuggestion, unless the item's source is always held or a stage answered safety (safety.yaml), then reportItem; needs-review, update, cancel \u2192 reportItem; reject, duplicate \u2192 none.",
           "enum": ["submitSuggestion", "reportItem", "none"]
         },
+        "placement": {
+          "description": "How the item is placed (verification.placement.method): by the City's boundary when its street address resolves, by word match otherwise, or unplaced when it names no place.",
+          "$ref": "verification.schema.json#/properties/placement/properties/method"
+        },
         "reportKind": { "$ref": "report.schema.json#/properties/kind" },
         "targetCollection": { "$ref": "curation.schema.json#/properties/targetCollection" },
         "targetId": { "$ref": "curation.schema.json#/properties/targetId" },

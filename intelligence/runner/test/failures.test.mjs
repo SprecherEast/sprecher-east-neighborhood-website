@@ -7,7 +7,7 @@ import { AdapterError, childEnv, openclawAdapter } from '../lib/model.mjs'
 import { runPipeline } from '../lib/pipeline.mjs'
 import { scoutSource } from '../lib/scout.mjs'
 import { accepting, FEEDS, feedsHttp } from './fixtures.mjs'
-import { atNoon, budgets, contract } from './helpers.mjs'
+import { atNoon, budgets, contract, contractOn } from './helpers.mjs'
 
 // What happens when things go wrong: the CMS or the model is down mid-run, a follow-up report
 // fails, a feed has more items than the cap, a redirect leads somewhere it shouldn't.
@@ -16,7 +16,7 @@ const run = async (cms, { ask = accepting, state = { sources: {}, seen: {} } } =
   cms.taxonomy ??= async () => [{ slug: 'community', title: 'Community', parent: null }]
   const http = feedsHttp()
   const result = await runPipeline({
-    contract,
+    contract: contractOn('2026-10-25'),
     cms,
     ask,
     state,

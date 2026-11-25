@@ -16,7 +16,8 @@ Highway 94 on the north" and "the Door Creek valley on the east", which "Spreche
 
 Primary references, in the order to trust them:
 
-1. The City's neighborhood organization map, which lists **Sprecher East** with its own area
+1. The City's neighborhood organization map, published by the City and reported by the
+   association itself, which lists **Sprecher East** with its own area
    (NA_ID 146, linked from the City's
    [neighborhood organizations](https://www.cityofmadison.com/dpced/planning/neighborhoods/organizations)
    page). Where an address is close to a boundary road, this map decides.
@@ -56,8 +57,8 @@ Every verified item gets one `coverage` value (`schemas/common.schema.json`):
 
 | Value       | Means                                                                                                                                                                                                                                                                                                                     |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core`      | The confirmed address or affected place is inside the area.                                                                                                                                                                                                                                                               |
-| `catchment` | Close enough that residents use it: Pinney Library, Door Creek Park, Elvehjem Sanctuary, the stretches of Sprecher Road, Cottage Grove Road and I-94 that bound the area, District 16 meetings that name a place near the area, and the major events and public matters of the neighboring associations in `area.yaml`.   |
+| `core`      | The confirmed address or affected place is inside the area. Door Creek Park counts as inside, the shelter and the park around it (owner's decision, #1009).                                                                                                                                                               |
+| `catchment` | Close enough that residents use it: Pinney Library, Elvehjem Sanctuary, the stretches of Sprecher Road, Cottage Grove Road and I-94 that bound the area, District 16 meetings that name a place near the area, and the major events and public matters of the neighboring associations in `area.yaml`.                    |
 | `citywide`  | City of Madison or Dane County, with a direct use for residents: a deadline, a service, a council decision, a free program open to everyone. Not tied to a place, or at a fixed place elsewhere in the city only when it is a public event or service open to anyone and of wide interest (see "Review passes", check 2). |
 | `outside`   | Somewhere else, including places with similar names.                                                                                                                                                                                                                                                                      |
 | `unknown`   | The location couldn't be confirmed from a primary source.                                                                                                                                                                                                                                                                 |
@@ -156,10 +157,39 @@ The five checks, which verify runs on every item:
    body's own page. Which pages count, and what a secondary page may prove, is in
    [sources.md](sources.md#trust-reach-is-not-trust). A date, time or number found only in one secondary report is left out, or
    attributed to that report (`unverified-claim`, and `missing-date` when it is the date).
-2. **Place.** Test the item's location against the City's own boundary for the neighborhood
-   (`boundary` in `area.yaml`, the City's Neighborhood Associations layer; the test is not built
-   yet, #1009, so placing is still by word match), and give it a tier from the table above:
-   `core`, `catchment`, `citywide` or `outside`. An item at a fixed place elsewhere is still
+2. **Place.** Test the item's location against the boundary for the neighborhood
+   (`boundary` in `area.yaml`, the City's Neighborhood Associations layer, published by the City
+   and self-reported by the association), and give it a tier
+   from the table above. Code does the test after verify answers (#1009): when the item gives one
+   street address in Madison and the City's address locator resolves it to one point, that point
+   is tested against the boundary and `$.placement` says `boundary`. The boundary is the
+   authority on inside and outside: an address inside is `core`, and `core` is never kept for an
+   address outside. Placement never makes an item easier to accept than verify's own judgment
+   allowed. It raises `catchment` to `core` for an address inside, which changes nothing curate may
+   accept (relevance rule 2 takes both alike). It raises `unknown` to `core` only on what verify
+   itself stated: the street is the one in verify's own `$.location.address`, which begins with
+   the house number and street (a venue or town named before it is no confirmed address),
+   `$.location.verified` is true, and verify's `$.location.municipality` is filled and is
+   Madison. Anything less (an address found only in the item's own text, an unconfirmed one, a
+   municipality left empty) never raises it. `$.placement`
+   says `overrode` for any change, and every change except those two raises also gets
+   `ambiguous-location`, so a person looks. An address is not sent when the code finds
+   another place in the text the street came from (the other reasons it is not sent are in
+   `runner/README.md`, "Falls back"), and only its house number, street and street
+   type, from a public item, go to the City's own locator. Before the street the code looks for
+   "city, village, town or township of …" (the Town of Madison is one: it was absorbed into the
+   City of Madison and the City of Fitchburg on 31 October 2022, so a text naming it can't say
+   which), Wisconsin (WI, Wis.) and any five-digit number (a ZIP code), and any of them stops the
+   send. After the street only Madison, a short unit, Wisconsin, a ZIP code beginning 537 or the country (USA, US, U.S.A. or United States)
+   may follow. That is all it recognizes. Any other town, or a state other than Wisconsin, named
+   plainly before the street ("Fitchburg, 7035 …", "Madison, AL: 7035 …") can't be told from a
+   venue's name and is sent: that sends nothing more than a public house number and street, and it
+   never raises `unknown`, since that raise needs the street-first, confirmed Madison address
+   verify stated (above). An address not sent keeps the word match. Outside the boundary, which of `catchment`, `citywide` or `outside` it is stays
+   the judgment described here. An item with no usable address, a locator that fails or an
+   ambiguous match keeps the word match (`area.yaml`), with `$.placement` saying `word-match`,
+   or `unplaced` when the item names no place at all. Placement never touches the safety answer
+   (`safety.yaml`): a safety item stays held wherever it is. An item at a fixed place elsewhere is still
    accepted only when it is a public event or service open to anyone in the city and of wide
    interest: it is tiered `citywide`, and its text says where it is and that it is not in the
    neighborhood. Anything else at a fixed place elsewhere stays `outside` and is rejected. Never
