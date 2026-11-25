@@ -9,6 +9,7 @@ import path from 'node:path'
 import ts from 'typescript'
 
 import { cell, code, generatedNotice, table } from '../content-types/render.mjs'
+import { listFiles } from './listFiles.mjs'
 
 export const ROUTES_ROOT = 'src/app/(frontend)'
 const HTTP_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
@@ -125,28 +126,19 @@ export function describeRoute(relativePath, text) {
   }
 }
 
-/** Every page and route handler under the frontend folder, as rows. */
-export function collectRoutes(root) {
-  const base = path.join(root, ROUTES_ROOT)
-  const rows = []
-  const walk = (directory) => {
-    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-      const full = path.join(directory, entry.name)
-      if (entry.isDirectory()) walk(full)
-      else if (/^(page|route)\.tsx?$/.test(entry.name)) {
-        const relative = path.relative(base, full).split(path.sep).join('/')
-        rows.push(describeRoute(relative, fs.readFileSync(full, 'utf8')))
-      }
-    }
-  }
-  walk(base)
-  return rows
+/** Every page and route handler under a route folder (the frontend one by default), as rows. */
+export function collectRoutes(root, folder = ROUTES_ROOT) {
+  const base = path.join(root, folder)
+  return listFiles(base, { required: true })
+    .filter((relative) => /^(page|route)\.tsx?$/.test(path.posix.basename(relative)))
+    .map((relative) => describeRoute(relative, fs.readFileSync(path.join(base, relative), 'utf8')))
 }
 
 const RENDERING_NOTE = [
   'Each row is what the route file itself says, read from its source: a page can still be',
   'dynamic through something it imports. `Params` says whether `generateStaticParams` builds',
-  'the pages ahead of the first visit. Layouts are not listed.',
+  'the pages ahead of the first visit. Layouts are not listed. The REST and GraphQL APIs, custom',
+  'endpoints and the AI agent endpoint are in [endpoints.md](endpoints.md).',
 ].join(' ')
 
 export function renderRoutes(rows) {

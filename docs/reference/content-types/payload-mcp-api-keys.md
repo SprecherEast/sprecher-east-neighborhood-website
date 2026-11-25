@@ -4,6 +4,7 @@
 
 - Kind: collection
 - Purpose: API keys control which collections, resources, tools, and prompts MCP clients can access
+- Owner: the plugin `@payloadcms/plugin-mcp`, configured with code from module `agents`
 - Drafts: no
 - Versions: none kept
 

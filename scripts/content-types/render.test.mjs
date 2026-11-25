@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   GENERATED_NOTICE,
   buildPages,
+  cell,
+  code,
   renderAccess,
   renderEndpoints,
   renderFieldTable,
@@ -21,6 +23,22 @@ const row = (over) => ({
   ...over,
 })
 
+describe('cell and code', () => {
+  it('escapes a backslash and a pipe in plain text, so a backslash can not cancel the pipe escape', () => {
+    expect(cell('a\\|b')).toBe('a\\\\\\|b')
+  })
+
+  it('leaves a backslash alone inside a code span of a plain-text cell (#1461)', () => {
+    expect(cell('matches `^\\d(Z|X)$` and a\\b')).toBe('matches `^\\d(Z\\|X)$` and a\\\\b')
+  })
+
+  it('escapes only the pipe in a code span, where a backslash is no escape (#1461)', () => {
+    expect(code('^\\d{4}(Z|[+-]\\d{2})$')).toBe('`^\\d{4}(Z\\|[+-]\\d{2})$`')
+    expect(code('')).toBe('')
+    expect(code('a\nb')).toBe('`a b`')
+  })
+})
+
 describe('renderFieldTable', () => {
   it('writes one table row per field, with notes and field access joined', () => {
     const table = renderFieldTable([
@@ -35,9 +53,9 @@ describe('renderFieldTable', () => {
     ])
   })
 
-  it('escapes a backslash before escaping a pipe, so a backslash can not cancel the escape', () => {
+  it('escapes a backslash before a pipe in plain text, and only the pipe in a code span', () => {
     const [, , body] = renderFieldTable([row({ detail: 'a\\|b', path: 'c\\|d' })]).split('\n')
-    expect(body).toBe('| `c\\\\\\|d` | text | yes | a\\\\\\|b |  |')
+    expect(body).toBe('| `c\\\\|d` | text | yes | a\\\\\\|b |  |')
   })
 })
 
@@ -120,6 +138,32 @@ describe('buildPages', () => {
     expect(pages.get('faq.md')).not.toContain('Custom endpoints')
   })
 
+  it('names the owner, with the file that defines the type, when it is known (#1461)', () => {
+    const owner = { owner: 'module `events`', file: 'src/modules/events/cms/events.ts' }
+    const page = buildPages([model({ owner })]).get('events.md')
+    expect(page).toContain(
+      '- Owner: module `events`, defined in `src/modules/events/cms/events.ts`',
+    )
+    expect(
+      buildPages([model({ owner: { owner: 'a plugin or Payload', file: '' } })]).get('events.md'),
+    ).toContain('- Owner: a plugin or Payload')
+    expect(buildPages([model()]).get('events.md')).not.toContain('Owner')
+  })
+
+  it('links the AI agent tools and the jobs that reach the type (#1461)', () => {
+    const page = buildPages([model({ tools: ['findEvents'], jobs: ['deleteOld'] })]).get(
+      'events.md',
+    )
+    const lines = page.split('\n')
+    expect(lines).toContain('- AI agent tools: `findEvents` ([list](../mcp-tools.md))')
+    expect(lines).toContain('- Jobs: `deleteOld` ([list](../jobs.md))')
+    expect(buildPages([model()]).get('events.md')).not.toContain('AI agent tools')
+    // the loader gives every type a list, empty when no tool or job reaches it
+    const none = buildPages([model({ tools: [], jobs: [] })]).get('events.md')
+    expect(none).not.toContain('AI agent tools')
+    expect(none).not.toContain('- Jobs:')
+  })
+
   it('says in the README that the pages are generated for production', () => {
     expect(buildPages([model()]).get('README.md')).toContain('NODE_ENV=production')
   })
@@ -174,5 +218,14 @@ describe('buildPages', () => {
     expect(() => buildPages([model({ fields: rows })], { limit: 40 })).toThrow(
       /events--hero\.md.*lines/,
     )
+  })
+
+  it('writes a whole page and the README, kept as text to read when it changes (#1461)', async () => {
+    const owner = { owner: 'module `events`', file: 'src/modules/events/cms/events.ts' }
+    const pages = buildPages([
+      model({ owner, tools: ['findEvents', 'createEvents'], jobs: ['deleteOld', 'sendDigest'] }),
+    ])
+    await expect(pages.get('events.md')).toMatchFileSnapshot('./__snapshots__/events-page.txt')
+    await expect(pages.get('README.md')).toMatchFileSnapshot('./__snapshots__/readme-page.txt')
   })
 })
