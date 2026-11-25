@@ -22,21 +22,15 @@ const childEnv = () => {
   return { ...env, TMPDIR: path.join(copy, '.tmp') }
 }
 
-const run = (...args) =>
-  spawnSync(
-    path.join(source, 'node_modules/.bin/tsx'),
-    ['--tsconfig', 'tsconfig.json', 'scripts/generate-reference.mjs', ...args],
-    { cwd: copy, env: childEnv(), encoding: 'utf8', timeout: 300_000 },
-  )
-// TEMPORARY diagnosis (#1461): on a failure, run again with a loader that logs each module it loads
 const TRACE_HOOKS = `export async function load(url, context, next) { process.stderr.write('LOAD ' + url + '\\n'); return next(url, context) }\n`
 const TRACE = `import { register } from 'node:module'
 register('data:text/javascript,' + encodeURIComponent(${JSON.stringify(TRACE_HOOKS)}))
 process.on('exit', (code) => process.stderr.write('EXIT ' + code + ' ' + JSON.stringify(process.getActiveResourcesInfo()) + '\\n'))
 `
-const traced = () => {
+// TEMPORARY diagnosis (#1461): every run logs the modules it loads and how it exits
+const run = (...args) => {
   fs.writeFileSync(path.join(copy, '.tmp/trace.mjs'), TRACE)
-  const result = spawnSync(
+  return spawnSync(
     path.join(source, 'node_modules/.bin/tsx'),
     [
       '--tsconfig',
@@ -44,17 +38,15 @@ const traced = () => {
       '--import',
       path.join(copy, '.tmp/trace.mjs'),
       'scripts/generate-reference.mjs',
-      '--check',
+      ...args,
     ],
     { cwd: copy, env: childEnv(), encoding: 'utf8', timeout: 300_000 },
   )
-  return `TRACE status ${result.status}\n${(result.stderr ?? '').split('\n').slice(-25).join('\n')}`
 }
 /** What a failed run says, so a failure on another machine can be read from the log. */
 const describeRun = (result) =>
-  (result.status === 13 ? traced() + '\n' : '') +
   `status ${result.status}, signal ${result.signal}, error ${result.error?.message}\n` +
-  `stdout: ${result.stdout?.slice(-1500)}\nstderr: ${result.stderr?.slice(-3000)}`
+  `stdout: ${result.stdout?.slice(-1500)}\nstderr tail: ${(result.stderr ?? '').split('\n').slice(-40).join('\n')}`
 const pagesOf = () =>
   fs
     .readdirSync(path.join(copy, 'docs/reference'), { recursive: true })
