@@ -123,6 +123,30 @@ describe('a line terminator inside a line, and letter case', () => {
     expect(found(note, 'NOTE-TITLE')).toEqual(['the body must start with a level 1 title'])
   })
 
+  it('takes only `<!--` and `-->` for a comment, an empty one included', () => {
+    const purposes = (text) => withBody(`# T\n\n${text}\n\n## Screens\n`).purposeLines
+    const sections = (text) => withBody(`# T\n\nintro\n\n${text}\n`).sections.map((s) => s.heading)
+    expect(purposes('<!- a -->')).toBe(1)
+    expect(purposes('<!-- a -> b -->')).toBe(0)
+    expect(purposes('x<!-- a\n-->')).toBe(1)
+    expect(sections('<!---->\n## Screens')).toEqual(['Screens'])
+    expect(sections('## Screens <!-- a <!-- b')).toEqual(['Screens'])
+  })
+
+  it('closes a comment at its first end marker', () => {
+    const body = '# T\n\n<!--\nx --> a --> <!-- open\n-->\n\n## Screens\n'
+    expect(withBody(body).purposeLines).toBe(1)
+  })
+
+  it('leaves a fence only at its closing line, however many lines it holds', () => {
+    const body = (lines) => `# T\n\nintro\n\n\`\`\`\n${lines}\n\`\`\`\n\n## Screens\n`
+    const note = withBody(body('one\ntwo\n## Hidden\n`src/x.ts`\nfour'))
+    expect(note.sections.map((s) => s.heading)).toEqual(['Screens'])
+    expect(note.purposeLines).toBe(1)
+    const bare = withBody('# T\n\n```\none\ntwo\nthree\n```\n')
+    expect(bare.purposeLines).toBe(0)
+  })
+
   it('counts a purpose of one character', () => {
     expect(withBody('# T\n\nx\n\n## Screens\n').purposeLines).toBe(1)
   })
