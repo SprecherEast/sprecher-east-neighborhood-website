@@ -55,6 +55,9 @@ export const retentionTask = {
 `,
   'src/modules/agents/cms.ts': `import { z } from 'zod'
 
+declare function touch(collection: string): void
+const EVENTS = 'events'
+
 export const mcpOptions = {
   collections: { events: { enabled: { find: true }, description: 'Events.' } },
   mcp: {
@@ -62,7 +65,10 @@ export const mcpOptions = {
       {
         name: 'echo',
         description: 'Says it back.',
-        handler: async () => ({ content: [] }),
+        handler: async () => {
+          touch(EVENTS)
+          return { content: [] }
+        },
         parameters: { text: z.string().max(20).describe('What to say') },
       },
     ],

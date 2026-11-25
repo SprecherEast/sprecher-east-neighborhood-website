@@ -119,15 +119,19 @@ describe('custom checks (#1461)', () => {
       .refine(() => true, { message: 'Second' }),
     plain: z.string().min(1),
     silent: z.string().check(z.refine(() => true)),
+    trimmed: z.string().trim().min(1).max(5),
+    lowered: z.string().toLowerCase().optional(),
   }
 
   it('reads the message of every custom check of a field, under optional and in array items', () => {
     expect(customChecks(shape)).toEqual({
-      tags: ['Each tag once'],
-      maybe: ['Each maybe once'],
-      items: ['Not x'],
-      both: ['First', 'Second'],
-      silent: ['a custom check with no message'],
+      tags: ['custom check: Each tag once'],
+      maybe: ['custom check: Each maybe once'],
+      items: ['custom check: Not x'],
+      both: ['custom check: First', 'custom check: Second'],
+      silent: ['custom check: a custom check with no message'],
+      trimmed: ['spaces at the start and end are removed first, then the other limits apply'],
+      lowered: ['the value is changed first, then the other limits apply'],
     })
   })
 
@@ -139,6 +143,9 @@ describe('custom checks (#1461)', () => {
     expect(found.tags).toBe('at most 3 items; custom check: Each tag once')
     expect(found.both).toBe('custom check: First; custom check: Second')
     expect(found.plain).toBe('not empty')
+    expect(found.trimmed).toBe(
+      '1 to 5 characters; spaces at the start and end are removed first, then the other limits apply',
+    )
     expect(describeInput(schema).find((f) => f.name === 'tags').note).toBe('at most 3 items')
   })
 })

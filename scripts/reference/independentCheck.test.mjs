@@ -129,6 +129,11 @@ describe('mcp-tools.md against the tools’ zod schemas', () => {
             if (rule.check === 'custom' && rule.error) {
               expect(row, `${name} custom check`).toContain(rule.error({}))
             }
+            // a `.trim()` is no limit of the JSON schema either: the page says the value is changed first
+            if (rule.check === 'overwrite') {
+              expect(row, `${name} overwrite`).toContain('spaces at the start and end are removed')
+              expect(rule.tx(' x ')).toBe('x')
+            }
             if (rule.pattern) {
               expect(row, `${name} pattern`).toContain(
                 // the schema's own pattern, in a code span: only a pipe is escaped for the table
@@ -147,5 +152,18 @@ describe('mcp-tools.md against the tools’ zod schemas', () => {
         expect(row, `${name} required`).toContain(`| ${required ? 'yes' : 'no'} |`)
       }
     }
+  })
+})
+
+describe('the tools page names the whole-input schemas it says are not listed', () => {
+  it('finds both in the tools’ schema file, parsed by the handlers', () => {
+    const read = (file) =>
+      fs.readFileSync(path.join(root, 'src/modules/agents/cms/tools', file), 'utf8')
+    for (const name of ['submitSuggestionInput', 'reportItemInput']) {
+      expect(read('schemas.ts'), name).toContain(`export const ${name}`)
+      expect(page('mcp-tools.md'), name).toContain(name)
+    }
+    expect(read('submitSuggestion.ts')).toContain('submitSuggestionInput.parse')
+    expect(read('reportItem.ts')).toContain('reportItemInput.parse')
   })
 })

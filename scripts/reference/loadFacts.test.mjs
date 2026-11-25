@@ -83,6 +83,9 @@ describe('loadFacts on this repository', () => {
   it('reads the workflows and the server scripts by their file type, from the folders', () => {
     const onDisk = (folder, extension) =>
       fs.readdirSync(path.join(root, folder)).filter((name) => extension.test(name))
+    // the server scripts come from `ops/`, and there is at least one timer of each kind
+    expect(facts.scheduled.extras.serverCrons.length).toBeGreaterThan(0)
+    for (const entry of facts.scheduled.extras.serverCrons) expect(entry.file).toMatch(/^ops\//)
     const workflows = facts.scheduled.workflows.map((entry) => path.basename(entry.file))
     for (const name of workflows) expect(onDisk('.github/workflows', /\.ya?ml$/)).toContain(name)
     for (const entry of facts.scheduled.extras.serverCrons) {

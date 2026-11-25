@@ -82,25 +82,40 @@ const objectFacts = (schema) =>
 
 const NO_MESSAGE = 'a custom check with no message'
 
-/** The custom checks (`.refine`) on one zod schema, under optional, nullable and default wrappers and in array items. */
-function checkMessages(schema) {
-  const def = schema?._zod?.def
-  if (!def) return []
-  const own = (def.checks ?? [])
-    .filter((check) => check._zod.def.check === 'custom')
-    .map((check) => check._zod.def.error?.({}) ?? NO_MESSAGE)
-  return [...own, ...checkMessages(def.innerType), ...checkMessages(def.element)]
+/** What a check that changes the value does, found by giving it a value with spaces around. */
+function overwriteNote(check) {
+  const changed = check._zod.def.tx(' x ')
+  return changed === 'x'
+    ? 'spaces at the start and end are removed first, then the other limits apply'
+    : 'the value is changed first, then the other limits apply'
 }
 
 /**
- * The messages of the custom checks of each field of a zod shape. The JSON schema leaves a
- * `.refine` out (each item only once, say), so they are read from the zod schema itself.
+ * What one zod schema checks that the JSON schema cannot say, under optional, nullable and default
+ * wrappers and in array items: the custom checks (`.refine`, with the message the module wrote),
+ * and a check that changes the value before the limits (`.trim()`).
+ */
+function checkNotes(schema) {
+  const def = schema?._zod?.def
+  if (!def) return []
+  const own = (def.checks ?? []).flatMap((check) => {
+    const kind = check._zod.def.check
+    if (kind === 'overwrite') return [overwriteNote(check)]
+    if (kind !== 'custom') return []
+    return [`custom check: ${check._zod.def.error?.({}) ?? NO_MESSAGE}`]
+  })
+  return [...own, ...checkNotes(def.innerType), ...checkNotes(def.element)]
+}
+
+/**
+ * The notes of each field of a zod shape that its JSON schema leaves out: a `.refine` (each item
+ * only once, say) and a `.trim()`. They are read from the zod schema itself.
  */
 export function customChecks(shape) {
   return Object.fromEntries(
     Object.entries(shape)
-      .map(([name, field]) => [name, checkMessages(field)])
-      .filter(([, messages]) => messages.length > 0),
+      .map(([name, field]) => [name, checkNotes(field)])
+      .filter(([, notes]) => notes.length > 0),
   )
 }
 
@@ -113,7 +128,7 @@ export function describeInput(schema, checks = {}) {
     note: [
       (property.description ?? '').replace(/\.$/, ''),
       ...constraints(property),
-      ...(checks[name] ?? []).map((message) => `custom check: ${message}`),
+      ...(checks[name] ?? []),
     ]
       .filter(Boolean)
       .join('; '),

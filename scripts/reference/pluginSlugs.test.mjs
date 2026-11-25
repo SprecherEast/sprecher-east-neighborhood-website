@@ -24,6 +24,8 @@ describe('pluginDefining', () => {
     // a slug with a dot is read as that text, not as a pattern: `a.b` is not `axb`
     write('node_modules/@payloadcms/plugin-d/dist/index.js', "const x = { slug: 'axb' }\n")
     write('node_modules/@payloadcms/plugin-e/dist/index.js', "const x = { slug: 'a.b' }\n")
+    // a source map or a JSON file next to the code is not code
+    write('node_modules/@payloadcms/plugin-m/dist/a.js.map', "{ slug: 'mapped' }\n")
     const plugins = [
       '@payloadcms/plugin-d',
       '@payloadcms/plugin-e',
@@ -39,6 +41,7 @@ describe('pluginDefining', () => {
       pluginDefining(root, 'a.b', plugins),
       pluginDefining(root, 'tested', [...plugins, '@payloadcms/plugin-t']),
       pluginDefining(root, 'typed', [...plugins, '@payloadcms/plugin-t']),
+      pluginDefining(root, 'mapped', [...plugins, '@payloadcms/plugin-m']),
     ]
     fs.rmSync(root, { recursive: true, force: true })
     expect(found).toEqual([
@@ -46,6 +49,7 @@ describe('pluginDefining', () => {
       '@payloadcms/plugin-b',
       '',
       '@payloadcms/plugin-e',
+      '',
       '',
       '',
     ])

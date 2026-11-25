@@ -60,6 +60,9 @@ describe('scripts/generate-reference.mjs', () => {
     expect(current.status, describeRun(current)).toBe(0)
     expect(current.stdout).toContain(`docs/reference is current (${pagesOf().length} pages, `)
 
+    // the tool passes a collection to a helper: the loader tells the tool reader which collections exist
+    expect(read('mcp-tools.md')).toMatch(/echo[\s\S]*events/)
+
     const original = { jobs: read('jobs.md'), endpoints: read('endpoints.md') }
     fs.rmSync(path.join(copy, 'docs/reference/jobs.md'))
     fs.appendFileSync(path.join(copy, 'docs/reference/endpoints.md'), 'stale\n')

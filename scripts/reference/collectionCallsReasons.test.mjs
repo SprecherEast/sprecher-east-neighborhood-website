@@ -24,7 +24,11 @@ function byDefault() {
 function checked() {
   req.payload.find({ collection: 'posts', overrideAccess: false })
 }
-export const reasons = { name: 'reasons', handler: () => { viaDatabase(); byDefault(); checked() } }
+/** Rounds a * b up: the star in the text stays. */
+function withStar() {
+  req.payload.find({ collection: 'faq', overrideAccess: true })
+}
+export const reasons = { name: 'reasons', handler: () => { viaDatabase(); byDefault(); checked(); withStar() } }
 `,
   )
   program = load()
@@ -58,6 +62,11 @@ describe('findCollectionCalls reasons (#1461)', () => {
             text: 'Looks the event up with the default access: the server is the caller. A second one.',
           },
         ],
+      },
+      {
+        collection: 'faq',
+        operations: ['read (access bypassed)'],
+        why: [{ operation: 'read', text: 'Rounds a * b up: the star in the text stays.' }],
       },
       { collection: 'posts', operations: ['read (access checked)'], why: [] },
     ])

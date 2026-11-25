@@ -36,6 +36,21 @@ describe('describeMetadataFiles', () => {
     ])
   })
 
+  it('ignores a file whose extension only ends like one of the convention’s', () => {
+    expect(
+      describeMetadataFiles([
+        'robots.xts',
+        'sitemap.xxml',
+        'favicon.xico',
+        'manifest.xjson',
+        'icon.apng',
+        'apple-icon.xpng',
+        'opengraph-image.xgif',
+        'twitter-image.xgif',
+      ]),
+    ).toEqual([])
+  })
+
   it('ignores tests, other files, and a top-level-only file in a folder', () => {
     expect(
       describeMetadataFiles([

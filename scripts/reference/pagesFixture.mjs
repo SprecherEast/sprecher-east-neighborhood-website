@@ -130,7 +130,7 @@ export const mcpSchema = (shape) =>
       }
     : { type: 'object', properties: {} }
 
-export const mcpChecks = (shape) => (shape.title ? { tags: ['Each tag once'] } : {})
+export const mcpChecks = (shape) => (shape.title ? { tags: ['custom check: Each tag once'] } : {})
 
 export const mcpAccess = new Map([
   ['alpha', [{ operation: 'read', name: 'isAdmin', file: 'src/platform/payload/roles.ts' }]],

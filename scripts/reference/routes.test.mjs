@@ -15,6 +15,12 @@ describe('collectRoutes with another base folder (#1461)', () => {
       'export const GET = handler()\nexport const POST = handler()\nexport const other = 1\n',
     )
     fs.writeFileSync(path.join(root, 'src/app/(payload)/layout.tsx'), 'export default () => null\n')
+    // a file that only ends like a page or a route is neither
+    fs.writeFileSync(
+      path.join(root, 'src/app/(payload)/homepage.tsx'),
+      'export default () => null\n',
+    )
+    fs.writeFileSync(path.join(root, 'src/app/(payload)/api/myroute.ts'), 'export const GET = 1\n')
     const rows = collectRoutes(root, 'src/app/(payload)')
     fs.rmSync(root, { recursive: true, force: true })
     expect(rows.map((row) => [row.url, row.kind, row.methods, row.file])).toEqual([
@@ -81,6 +87,21 @@ export default function Page() { return null }
     expect(describeRoute('login/page.tsx', source).metadata).toBe(
       '`metadata` via `@/platform/seo/notIndexed`',
     )
+  })
+
+  it('names each source once, sorted, and a metadata object written in the file', () => {
+    const several = `
+import { zebra } from '@/platform/seo/zebra'
+import { alpha } from '@/platform/seo/alpha'
+import { other } from './local'
+export const metadata = { a: zebra, b: alpha, c: alpha, d: other }
+export default function Page() { return null }
+`
+    expect(describeRoute('a/page.tsx', several).metadata).toBe(
+      '`metadata` via `@/platform/seo/alpha`, `@/platform/seo/zebra`',
+    )
+    const own = `export const metadata = { title: 'Own' }\nexport default function Page() { return null }`
+    expect(describeRoute('b/page.tsx', own).metadata).toBe('`metadata` (written in the file)')
   })
 
   it('reports a forced rendering mode and no metadata', () => {

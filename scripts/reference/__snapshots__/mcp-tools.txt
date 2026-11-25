@@ -18,7 +18,7 @@ The input of these tools (the plugin’s standard parameters for finding, creati
 
 ## Tools the site adds
 
-Each field’s notes list every limit in the tool’s input schema, and the message of each custom check (`.refine`) written on the field, such as “each item once”, which the JSON schema cannot hold. A rule that compares fields (an event needs a start, say) belongs to the tool’s whole-input schema, which the handler checks, not to the fields registered with the plugin, and is not listed here: it is in the field’s description where the code gives one.
+Each field’s notes list every limit the JSON schema holds, the message of each custom check (`.refine`) written on the field, such as “each item once”, and a `.trim()` (spaces at the start and end are removed before the other limits are counted). Not listed: the rules across fields, which the whole-input schema of each tool (`submitSuggestionInput` and `reportItemInput`, in `src/modules/agents/cms/tools/schemas.ts`) checks when the handler parses the input, and some of them are in no field description; `.strict()`, which refuses any field not listed here; and a check on a field inside an object, which is not read.
 
 ### `submitSuggestion`
 
