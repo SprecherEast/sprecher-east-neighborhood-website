@@ -74,8 +74,10 @@ the area's words stands) or `unplaced` (the item names no place). Reports for an
   all keep the word match, with the reason in `placement.reason`. The text rule is strict on purpose: an ordinary suffix such as a parenthetical or "behind the shelter" keeps the word match too, to be tuned on real misses (the list of what it recognizes is in `coverage.md`, not repeated here). Known limits: an ordinary Madison form such as a unit followed by Madison with no comma ("7035 Littlemore Dr Ste. 4 Madison WI"), "Dane County", a dash or pipe before Madison or "East Madison" is not sent; and a Madison ZIP prefix (537) is shared with neighboring municipalities, so a ZIP alone ties nothing to the City. An address that is not a plain street is a reason, never a request. A failing locator is logged once
   in the run and stops after two failures in a row.
 - **Safety.** Placement never reads or writes `safety`; the gate decides it as before.
-- **What leaves the machine.** Each request is one GET to
-  `maps.cityofmadison.com/arcgis/rest/services/Locators/AddressPoints_w_Unit/GeocodeServer`, with
+- **What leaves the machine.** Each request is one GET to the address in `geocoder.source` of
+  `area.yaml` (the City's own locator,
+  `maps.cityofmadison.com/arcgis/rest/services/Locators/AddressPoints_w_Unit/GeocodeServer`; the schema
+  asks for `https://`, and a change to that address goes through a pull request), with
   only a house number, street and street type: no retry inside a request, no wait for `Retry-After`, and no redirect
   followed (a redirect counts as a failure). An address that failed is not remembered, so a later item with the same street asks again, until two failures in a row stop the run's requests. At most `maxPerRun` requests per run (each one a
   single GET, so each counted), 10 s
