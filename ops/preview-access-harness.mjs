@@ -32,6 +32,16 @@ export const SCRIPTS = [
   'lib.sh',
   'environment.sh',
 ]
+/**
+ * What a stand-in `caddy validate` of the Caddyfile and a stand-in reload do as real Caddy does with the
+ * folder's `*.caddy` import: log which files it reads ("sees: a.caddy b.caddy"), and fail when two of them
+ * name the same site ("ambiguous site definition"). A copy or temp file named `*.caddy` shows up in both.
+ */
+export const SEES_AND_DUPLICATES = [
+  'echo "sees: $(cd "$STUB_PREVIEW_DIR" && ls *.caddy 2>/dev/null | tr "\\n" " ")" >> "$STUB_LOG"',
+  '[ -z "$(cat "$STUB_PREVIEW_DIR"/*.caddy 2>/dev/null | grep -E "^[^[:space:]#].*\\{[[:space:]]*$" | sort | uniq -d)" ]',
+].join('; ')
+
 export const CADDY_FILES = ['preview-site.caddy', 'preview-headers.caddy']
 
 /** Runs a command and resolves with its exit code and all its output. */
@@ -114,6 +124,7 @@ export function setUpPreviewAccessHarness() {
         '[ "$1" = validate ] || exit 0',
         'echo "validate $(basename "$3")" >> "$STUB_LOG"',
         // what Caddy's glob would already pick up while a candidate block is being checked
+        '[ "$(basename "$3")" != Caddyfile ] || { ' + SEES_AND_DUPLICATES + '; } || exit 1',
         '[ "$(basename "$3")" = Caddyfile ] || echo "visible-blocks $(ls "$STUB_PREVIEW_DIR"/*.caddy 2>/dev/null | wc -l)" >> "$STUB_LOG"',
         // a config that is fine alone but not with this block in the folder
         // a config that is fine only while this block is still in the folder
@@ -130,6 +141,7 @@ export function setUpPreviewAccessHarness() {
       'reload-caddy',
       [
         'echo "reload $(cat "$STUB_PREVIEW_DIR"/*.caddy 2>/dev/null | md5sum | cut -c1-8)" >> "$STUB_LOG"',
+        SEES_AND_DUPLICATES + ' || exit 1',
         '[ -z "$STUB_RELOAD_FAILS" ] || ! cat "$STUB_PREVIEW_DIR"/*.caddy 2>/dev/null | grep -q "$STUB_RELOAD_FAILS"',
       ].join('\n'),
     )

@@ -213,16 +213,24 @@ describe('where the showcase is built: out of what Tailwind scans (#1459)', () =
     )[1],
   ]
 
-  it('scans the site’s own files and not the showcase in either folder it is built into', async () => {
-    const { Scanner } = await import('@tailwindcss/oxide')
+  it('compiles the site’s CSS from its own files and not from the showcase in either folder it is built into', async () => {
+    const { default: postcss } = await import('postcss')
+    const { default: tailwindcss } = await import('@tailwindcss/postcss')
     const tree = path.join(dir, 'tree')
-    for (const file of ['src/site.tsx', ...destinations().map((d) => `${d}/assets/app.js`)])
-      write(path.join(tree, file), 'const c = "float-left"\n')
+    // one class per file, so the compiled CSS says which files were read
+    write(path.join(tree, 'src/site.tsx'), 'const c = "float-left"\n')
+    write(path.join(tree, 'src/other.tsx'), 'const c = "float-right"\n')
+    const built = ['table-caption', 'table-cell', 'inline-table']
+    destinations().forEach((d, i) => write(path.join(tree, d, 'assets/app.js'), `"${built[i]}"\n`))
     fs.copyFileSync(path.join(root, '.gitignore'), path.join(tree, '.gitignore'))
-    const scanner = new Scanner({ sources: [{ base: tree, pattern: '**/*', negated: false }] })
-    scanner.scan()
-    const files = scanner.files.map((f) => path.relative(tree, f)).sort()
-    expect(files).toEqual(['src/site.tsx'])
+    const globals = path.join(root, 'src/app/(frontend)/globals.css')
+    const { css } = await postcss([tailwindcss({ base: tree })]).process(
+      fs.readFileSync(globals, 'utf8'),
+      { from: globals },
+    )
+    expect(css).toContain('.float-left')
+    expect(css).toContain('.float-right')
+    for (const cls of built) expect(css).not.toContain(`.${cls}`)
   })
 
   it('builds only into the folders it tells git and Tailwind to skip', () => {

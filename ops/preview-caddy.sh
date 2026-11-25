@@ -101,7 +101,8 @@ if [ -d "$APP_DIR" ] && [ ! -L "$APP_DIR" ]; then
   if ! caddy_place_block "$temp" "$BLOCK"; then
     case "$CADDY_BLOCK_PROBLEM" in
       rejected) report "ERROR: Caddy rejected the config with preview $PREVIEW_NUMBER's block; the previous block is back" ;;
-      *) report "ERROR: Caddy would not reload with preview $PREVIEW_NUMBER's block, or it could not be put in place; the previous block is back" ;;
+      backup | move) report "ERROR: preview $PREVIEW_NUMBER's block could not be put in place; nothing was changed" ;;
+      *) report "ERROR: Caddy would not reload with preview $PREVIEW_NUMBER's block; the previous block is back" ;;
     esac
     exit 1
   fi
@@ -115,8 +116,12 @@ else
   CADDY_BLOCK_PREVIOUS=$(mktemp "$BLOCK.XXXXXX")
   mv -f "$BLOCK" "$CADDY_BLOCK_PREVIOUS"
   if ! caddy_accepts "$CADDYFILE" || ! $RELOAD_CADDY >/dev/null 2>&1; then
-    caddy_restore_block "$BLOCK" "$CADDY_BLOCK_PREVIOUS" || CADDY_BLOCK_PREVIOUS="" # a copy not put back is kept
-    report "ERROR: Caddy would not reload without preview $PREVIEW_NUMBER's block; the block is back"
+    if caddy_restore_block "$BLOCK" "$CADDY_BLOCK_PREVIOUS"; then
+      report "ERROR: Caddy would not reload without preview $PREVIEW_NUMBER's block; the block is back"
+    else
+      CADDY_BLOCK_PREVIOUS="" # a copy not put back is the only one left: the cleanup keeps it
+      report "ERROR: Caddy would not reload without preview $PREVIEW_NUMBER's block, and the block is not back (see above)"
+    fi
     exit 1
   fi
   report "preview $PREVIEW_NUMBER's Caddy block is removed and Caddy reloaded"

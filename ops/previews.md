@@ -36,7 +36,7 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   A redeploy of the same pull request reuses its certificate, and teardown never deletes Caddy's
   certificate storage, so a reopened pull request is not a new order. The developer site's name,
   `dev.sprechereast.com`, is one more name in the same budget (#1459): one order when its block first loads, and
-  renewals are exempt. A preview's component showcase orders none ([below](#the-component-showcase-in-a-preview-1459)).
+  renewals are exempt. A preview's component showcase orders none ([in `developer-site.md`](developer-site.md#the-component-showcase-in-a-preview-1459)).
 - **Check on the server** (once, after the first deploy with this script; carried to #1075): load
   one sample block by hand, confirm its responses carry `X-Robots-Tag` and no
   `Strict-Transport-Security` and that `/robots.txt` disallows everything, remove it, and confirm
@@ -237,29 +237,7 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
 - **Not covered.** A detached process a preview starts survives `teardown`, which stops only PM2's process
   (the account can't schedule jobs: cron and at are denied).
 
-## The component showcase in a preview (#1459)
-
-A pull request that changes a story, a shared component or what it imports (`src/platform/ui/`, `src/platform/richtext/`, `src/platform/lib/`), the theme
-(`src/platform/theme/`, `src/themes/`, `globals.css`) or the showcase's settings, build script or packages
-(`.storybook/`, `ops/build-showcase.sh`, `postcss.config.*`, `package.json`, `package-lock.json`; the one list is
-`.github/scripts/showcase-paths.sh`, notes and tests excluded) gets the component showcase built into its preview:
-`plan-preview.sh` writes `showcase=true` for it, and the build job gives `ops/build-release.sh` the folder
-`public/showcase`, so `ops/build-showcase.sh` builds it into the release before the site's build (only what is in
-`public/` at build time is served). The comment then adds `<preview address>/showcase/index.html`.
-
-- **Served by the preview's own app**, not by Caddy: the preview's Caddy block only proxies to the app, on purpose.
-  Caddy runs as a user that can read what the preview account cannot (its certificate keys), and a pull request's
-  code could plant a link to one in a folder Caddy serves. A static file the app serves is no more than the pull
-  request's code can already do. So no Caddy block, wrapper, sudo rule or server script changes, and no new
-  certificate name: the showcase is a path under the preview's own address.
-- **Out of the site's CSS:** `public/showcase/` is in `.gitignore`, which Tailwind's source detection follows, so
-  the preview's CSS does not carry the showcase's classes ([`developer-site.md`](developer-site.md)).
-- **Same headers** as every answer of the preview (noindex, no HSTS), and **removed with it**: the files are in the
-  release folder, which teardown deletes.
-- **Required for a preview that asks for it:** a showcase that does not build fails the preview's build, and the
-  comment says the build failed. (The production deploy's build treats it as optional.)
-- **What it adds** to such a preview: about 40 s of build time, 9 MB more upload, and 15 MB of disk in each of its
-  two kept releases. A preview without those changes builds exactly as before.
+The component showcase in a pull request's preview is described in [`developer-site.md`](developer-site.md#the-component-showcase-in-a-preview-1459).
 
 ## Production content in a preview (#1397)
 

@@ -47,10 +47,6 @@
         "tw-animate-css",
         // Installed globally on the server (ops/), not in this package
         "pm2",
-        // The showcase's font, loaded from CSS (`.storybook/fonts.css` @imports), which knip doesn't read (#1459)
-        "@fontsource/poppins",
-        // Tailwind's own scanner, which comes with @tailwindcss/postcss: a test uses it to keep the built showcase out of the site's CSS (#1459)
-        "@tailwindcss/oxide",
       ],
       "project": [
         "src/**/*.{ts,tsx}",
@@ -58,6 +54,8 @@
         "scripts/**/*.{ts,mjs}",
         // The end-to-end tests (#311): Playwright finds the specs from playwright.config.ts
         "e2e/**/*.{ts,mjs}",
+        // The showcase's font is loaded from here (`@import`), so knip sees the package used (#1459)
+        ".storybook/**/*.css",
       ],
       "ignore": [
         // Built but not shown yet (docs/ui/evidence.md); kept for the theme work

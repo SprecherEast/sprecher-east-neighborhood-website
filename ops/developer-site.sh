@@ -13,9 +13,9 @@
 #      refuses anything that is not the showcase and the two pages;
 #   3. the staged folder is renamed into $DEVELOPER_ROOT/releases/<release>;
 #   4. the Caddy block, made from ops/caddy/developer-site.caddy, is checked by Caddy alone, moved into the
-#      previews' folder with one rename (caddy_place_block in lib.sh, also used for each preview), the whole
-#      config checked and Caddy reloaded, and production's home page checked after the reload; on any
-#      failure the previous block comes back and Caddy is reloaded again;
+#      previews' folder with one rename (caddy_place_block in caddy-block-lib.sh, also used for each
+#      preview), the whole config checked and Caddy reloaded, and production's home page checked after the
+#      reload; on any failure the previous block comes back and Caddy is reloaded again;
 #   5. `current` is pointed at the new release with one atomic rename;
 #   6. the address is asked, through Caddy on this machine, for what a visitor gets: both pages, the
 #      noindex header and disallow-all robots.txt, no HSTS, and a 404 for what only the app has. If that
@@ -64,6 +64,9 @@ fail() { # <reason>: something was tried and put back
 ! is_preview || skip "a pull request preview never publishes the developer site"
 command -v caddy >/dev/null && [ -f "$CADDYFILE" ] || skip "Caddy or $CADDYFILE was not found"
 [ -d "$SHOWCASE_SOURCE" ] || skip "release $name has no built showcase (its build failed or was skipped)"
+# What is copied must be this release's own files, not a folder a link in the release leads to.
+code_real=$(realpath -- "$CODE_DIR")
+case "$(realpath -- "$SHOWCASE_SOURCE")/" in "$code_real"/*) ;; *) skip "release $name's showcase is not inside the release's folder" ;; esac
 [ -f "$PAGES_SOURCE/index.html" ] && [ -f "$PAGES_SOURCE/404.html" ] && [ -f "$PAGES_SOURCE/style.css" ] && [ -f "$TEMPLATE" ] ||
   skip "the developer site's pages or block template are missing from release $name"
 [ "$(readlink "$APP_DIR/current" 2>/dev/null)" = "releases/$name" ] || skip "release $name is not the live release any more"
@@ -77,7 +80,7 @@ done
 # comparison is made after `realpath -m` resolves `..` and links, as environment.sh does for previews).
 root_real=$(realpath -m -- "$DEVELOPER_ROOT")
 [ "$root_real" != / ] || skip "the developer site's folder is the root of the disk"
-for other in "$APP_DIR" "$PRODUCTION_DIR" "$PREVIEW_ROOT" "$PREVIEW_CADDY_DIR" "$(dirname "$CADDYFILE")"; do
+for other in "$APP_DIR" "$PRODUCTION_DIR" "$PREVIEW_ROOT" "$PREVIEW_CADDY_DIR" "$(dirname "$CADDYFILE")" "$CADDY_STORAGE_DIR"; do
   other_real=$(realpath -m -- "$other")
   case "$root_real/" in "$other_real"/*) skip "the developer site's folder is inside $other" ;; esac
   case "$other_real/" in "$root_real"/*) skip "the developer site's folder holds $other" ;; esac

@@ -9,6 +9,7 @@ import path from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { SEES_AND_DUPLICATES } from './preview-access-harness.mjs'
 import { OPS } from './umami-harness.mjs'
 
 const SCRIPTS = [
@@ -92,6 +93,7 @@ beforeEach(() => {
       '[ "$1" = validate ] || exit 0',
       'echo "validate $(basename "$3")" >> "$STUB_LOG"',
       '[ -z "$STUB_CADDYFILE_BAD" ] || [ "$(basename "$3")" != Caddyfile ] || exit 1',
+      '[ "$(basename "$3")" != Caddyfile ] || { ' + SEES_AND_DUPLICATES + '; } || exit 1',
       '[ -z "$STUB_CADDY_REJECTS" ] || ! grep -q "$STUB_CADDY_REJECTS" "$3" || exit 1',
       '[ -z "$STUB_WHOLE_REJECTS" ] || [ "$(basename "$3")" != Caddyfile ] || ! cat "$STUB_PREVIEW_DIR"/*.caddy 2>/dev/null | grep -q "$STUB_WHOLE_REJECTS" || exit 1',
       'exit 0',
@@ -101,6 +103,7 @@ beforeEach(() => {
     'reload-caddy',
     [
       'echo reload >> "$STUB_LOG"',
+      SEES_AND_DUPLICATES + ' || exit 1',
       '[ -z "$STUB_PAUSE" ] || { touch "$STUB_STATE/paused"; /bin/sleep 1; }',
       '[ -z "$STUB_RELOAD_FAILS" ] || ! cat "$STUB_PREVIEW_DIR"/*.caddy 2>/dev/null | grep -q "$STUB_RELOAD_FAILS" || exit 1',
     ].join('\n'),
@@ -569,6 +572,30 @@ describe('developer-site.sh: Caddy is never left worse off', () => {
   })
 })
 
+describe('developer-site.sh: no copy or temp file is ever a block Caddy reads', () => {
+  // The stand-in Caddy reads the folder's `*.caddy` and rejects two blocks naming one site, as real Caddy does.
+  const sees = () =>
+    fs
+      .readFileSync(p('log'), 'utf8')
+      .split('\n')
+      .filter((l) => l.startsWith('sees:'))
+
+  it('replacing the block, and putting it back after a failed reload, show Caddy one block', async () => {
+    await publishedThenNewRelease()
+    const old = `${HOST} {\n\t# old block, whole\n}\n`
+    fs.writeFileSync(p('caddy/previews/developer.caddy'), old)
+    fs.writeFileSync(p('log'), '')
+    expect((await run('r2')).code).toBe(0)
+    expect(sees().length).toBeGreaterThan(0)
+    expect([...new Set(sees())]).toEqual(['sees: developer.caddy '])
+    fs.writeFileSync(p('caddy/previews/developer.caddy'), old)
+    fs.writeFileSync(p('log'), '')
+    expect((await run('r2', { STUB_RELOAD_FAILS: 'file_server' })).code).toBe(1)
+    expect(block()).toBe(old)
+    expect([...new Set(sees())]).toEqual(['sees: developer.caddy '])
+  })
+})
+
 describe('developer-site.sh: a step of putting the block in place that fails', () => {
   const old = '# old block, whole\n'
   const settled = async () => {
@@ -657,6 +684,23 @@ describe('developer-site.sh: the folder and the block file are the script’s ow
   it('refuses a folder inside the previews’ folder, and one inside Caddy’s own', async () => {
     await refuses({ PREVIEW_ROOT: p('previews'), DEVELOPER_ROOT: p('previews/dev') }, 'is inside')
     await refuses({ DEVELOPER_ROOT: p('caddy/dev') }, 'is inside')
+  })
+
+  it('refuses a folder inside Caddy’s storage folder, where its certificates and keys are', async () => {
+    fs.mkdirSync(p('caddy-storage'))
+    await refuses(
+      { CADDY_STORAGE_DIR: p('caddy-storage'), DEVELOPER_ROOT: p('caddy-storage/dev') },
+      'is inside',
+    )
+  })
+
+  it('refuses a showcase folder that is a link leading out of the release’s folder', async () => {
+    const real = p('elsewhere/showcase')
+    fs.mkdirSync(path.dirname(real), { recursive: true })
+    fs.cpSync(p('app/releases/r1/developer-site/showcase'), real, { recursive: true })
+    fs.rmSync(p('app/releases/r1/developer-site/showcase'), { recursive: true })
+    fs.symlinkSync(real, p('app/releases/r1/developer-site/showcase'))
+    await refuses({}, 'is not inside the release')
   })
 
   it('refuses a folder inside the previews’ block folder when that is not Caddy’s own folder', async () => {

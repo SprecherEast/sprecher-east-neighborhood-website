@@ -25,10 +25,10 @@ developer site, files and block, as it was:
    fails or takes over 10 minutes, the release is built without a showcase, with a warning; the build never fails
    for it. The font comes from the `@fontsource/poppins` package, bundled into the build (`.storybook/fonts.css`).
 2. **Preconditions**, each a warning and no change: Caddy and its Caddyfile are there, the developer folder is
-   neither inside nor above production's, a preview's or Caddy's (compared after `realpath -m`; the block file is
+   neither inside nor above production's, a preview's or Caddy's (its config folder and its storage folder, with the certificate keys; compared after `realpath -m`; the block file is
    always `developer.caddy` in the previews' folder, never taken from the environment), the Caddyfile imports the
    previews' folder, the headers file is this release's copy, this release is still the live one, the release has
-   a showcase, nothing else is changing Caddy (the shared lock, waited for at most `DEVELOPER_LOCK_WAIT`, 30 s: a
+   a showcase that really is inside its folder (not a link out of it), nothing else is changing Caddy (the shared lock, waited for at most `DEVELOPER_LOCK_WAIT`, 30 s: a
    skip costs nothing, and the script must not hold up the deploy), the current Caddyfile validates, and production's
    home page answers through Caddy.
 3. **Assemble and check.** The release's showcase is judged first, as it is (`developer-site-check.sh --source`:
@@ -91,3 +91,27 @@ switches), and the browser's network tab shows no request to a font host outside
 (`/_next/static/chunks/*.css`) is the size it was before this deploy, within a few bytes (the showcase must not
 have grown it; it was about 147 KB). Plain HTTP to `http://dev.sprechereast.com/` goes to the same name over HTTPS,
 not to `sprechereast.com` (production's `:80` block catches other names). Record the results on #1459.
+
+## The component showcase in a preview (#1459)
+
+A pull request that changes a story, a shared component or what it imports (`src/platform/ui/`, `src/platform/richtext/`, `src/platform/lib/`), the theme
+(`src/platform/theme/`, `src/themes/`, `globals.css`) or the showcase's settings, build script or packages
+(`.storybook/`, `ops/build-showcase.sh`, `postcss.config.*`, `package.json`, `package-lock.json`; the one list is
+`.github/scripts/showcase-paths.sh`, notes and tests excluded) gets the component showcase built into its preview:
+`plan-preview.sh` writes `showcase=true` for it, and the build job gives `ops/build-release.sh` the folder
+`public/showcase`, so `ops/build-showcase.sh` builds it into the release before the site's build (only what is in
+`public/` at build time is served). The comment then adds `<preview address>/showcase/index.html`.
+
+- **Served by the preview's own app**, not by Caddy: the preview's Caddy block only proxies to the app, on purpose.
+  Caddy runs as a user that can read what the preview account cannot (its certificate keys), and a pull request's
+  code could plant a link to one in a folder Caddy serves. A static file the app serves is no more than the pull
+  request's code can already do. So no Caddy block, wrapper, sudo rule or server script changes, and no new
+  certificate name: the showcase is a path under the preview's own address.
+- **Out of the site's CSS:** `public/showcase/` is in `.gitignore`, which Tailwind's source detection follows, so
+  the preview's CSS does not carry the showcase's classes (see above).
+- **Same headers** as every answer of the preview (noindex, no HSTS), and **removed with it**: the files are in the
+  release folder, which teardown deletes.
+- **Required for a preview that asks for it:** a showcase that does not build fails the preview's build, and the
+  comment says the build failed. (The production deploy's build treats it as optional.)
+- **What it adds** to such a preview: about 40 s of build time, 9 MB more upload, and 15 MB of disk in each of its
+  two kept releases. A preview without those changes builds exactly as before.

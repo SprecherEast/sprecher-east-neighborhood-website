@@ -127,7 +127,8 @@ describe('developer-site-check.sh: nothing that is private by name', () => {
     await refused('hidden name: showcase/.git')
   })
 
-  for (const name of [
+  // every name, as written and in upper case: a file system that ignores case serves both
+  const privateNames = [
     'payload.db',
     'data.sqlite',
     'data.sqlite3',
@@ -151,7 +152,8 @@ describe('developer-site-check.sh: nothing that is private by name', () => {
     'site.zip',
     'id_ecdsa',
     'Data.DB',
-  ])
+  ]
+  for (const name of new Set([...privateNames, ...privateNames.map((n) => n.toUpperCase())]))
     it(`refuses ${name}`, async () => {
       write(`showcase/assets/${name}`)
       await refused(`a file that is never public: showcase/assets/${name}`)

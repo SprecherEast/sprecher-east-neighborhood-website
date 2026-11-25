@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the component showcase (#1459) into a folder of the release being built, on the GitHub Actions
-# runner, from the release's own checkout (ops/build-release.sh runs it after the site's build and before
+# runner, from the release's own checkout (ops/build-release.sh runs it before the site's build and before
 # the dev dependencies are pruned). The same static build serves two places: the developer site
 # (developer-site/showcase, shipped in every production release and published by ops/developer-site.sh) and a
 # pull request preview (public/showcase, served by that preview's own app).

@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest'
 import { OPS } from './umami-harness.mjs'
 import { runCommand, setUpPreviewAccessHarness } from './preview-access-harness.mjs'
 
-const { p, log, caddyScript } = setUpPreviewAccessHarness()
+const { p, stub, log, caddyScript } = setUpPreviewAccessHarness()
 const block = () => fs.readFileSync(p('caddy/previews/pr-7.caddy'), 'utf8')
 const folderEntries = () => fs.readdirSync(p('caddy/previews')).sort()
 const makePreview = (n = '7') => fs.mkdirSync(p(`previews/pr-${n}/releases`), { recursive: true })
@@ -307,6 +307,66 @@ describe('preview-caddy.sh: Caddy is never left worse off', () => {
     expect(code).toBe(2)
     expect(out).toContain('does not validate')
     expect(folderEntries()).toEqual([])
+  })
+})
+
+describe('preview-caddy.sh: no copy or temp file is ever a block Caddy reads', () => {
+  // The stand-in Caddy reads the folder's `*.caddy` as the import does, and rejects two blocks that name
+  // one site, as real Caddy does (ops/preview-access-harness.mjs). A copy named `*.caddy` would break it.
+  const host = 'pr-7.dev.sprechereast.com'
+  const sees = () =>
+    log()
+      .split('\n')
+      .filter((l) => l.startsWith('sees:'))
+
+  it('replacing a block names its copy so the import skips it, whether Caddy takes the new one or not', async () => {
+    makePreview()
+    fs.writeFileSync(p('caddy/previews/pr-7.caddy'), `${host} {\n\t# old\n}\n`)
+    expect((await caddyScript(['7'])).code).toBe(0)
+    expect(sees().length).toBeGreaterThan(0)
+    expect([...new Set(sees())]).toEqual(['sees: pr-7.caddy '])
+    expect(folderEntries()).toEqual(['pr-7.caddy'])
+    fs.writeFileSync(p('caddy/previews/pr-7.caddy'), `${host} {\n\t# older\n}\n`)
+    expect((await caddyScript(['7'], { STUB_RELOAD_FAILS: 'reverse_proxy' })).code).toBe(1)
+    expect(block()).toContain('# older')
+    expect(folderEntries()).toEqual(['pr-7.caddy'])
+  })
+
+  it('removing a block moves it where the import does not read it while Caddy checks the rest', async () => {
+    makePreview()
+    await caddyScript(['7'])
+    fs.rmSync(p('previews/pr-7'), { recursive: true })
+    fs.writeFileSync(p('log'), '')
+    expect((await caddyScript(['7'])).code).toBe(0)
+    expect(sees().length).toBeGreaterThan(0)
+    // the first check is the one before any change, with the block in place; the rest are without it
+    expect(sees()[0]).toBe('sees: pr-7.caddy ')
+    expect([...new Set(sees().slice(1))]).toEqual(['sees: '])
+  })
+})
+
+describe('preview-caddy.sh: a block that cannot be put back is kept and named', () => {
+  it('leaves the removed block’s copy in the folder and says where, when the move back fails', async () => {
+    makePreview()
+    await caddyScript(['7'])
+    const before = block()
+    fs.rmSync(p('previews/pr-7'), { recursive: true })
+    // The first move takes the block out; the second, putting it back, fails.
+    fs.writeFileSync(p('count'), '0')
+    stub(
+      'mv',
+      'n=$(cat "$STUB_COUNT"); echo $((n + 1)) > "$STUB_COUNT"; [ "$n" -lt 1 ] || exit 1; exec /bin/mv "$@"',
+    )
+    const { code, out } = await caddyScript(['7'], {
+      STUB_WHOLE_NEEDS: 'pr-7.caddy',
+      STUB_COUNT: p('count'),
+    })
+    expect(code).toBe(1)
+    const kept = folderEntries().filter((e) => /^pr-7\.caddy\.[A-Za-z0-9]{6}$/.test(e))
+    expect(kept).toHaveLength(1)
+    expect(fs.readFileSync(p('caddy/previews', kept[0]), 'utf8')).toBe(before)
+    expect(out).toContain(p('caddy/previews', kept[0]))
+    expect(out).not.toContain('the block is back')
   })
 })
 
