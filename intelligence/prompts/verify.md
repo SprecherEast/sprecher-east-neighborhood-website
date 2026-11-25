@@ -55,7 +55,12 @@ Other sources (`established-media`, `community`) still need a primary source for
    (`coverage.md`, "Names that are not the area"): add `similar-name` to `$.flags` when a name
    matched but the place didn't.
 3. **Tier.** Set `$.coverage` to `core`, `catchment`, `citywide`, `outside` or `unknown` using
-   `coverage.md`, and give the reason in one sentence in `$.coverageReason`.
+   `coverage.md`, and give the reason in one sentence in `$.coverageReason`. Give the street
+   address in `$.location.address` whenever a primary source states one: after your answer, code
+   tests it against the City's boundary and writes `$.placement` itself (`coverage.md`, "Review
+   passes", check 2). Never write `$.placement`; what you write there is replaced. The boundary
+   decides inside or outside, so judge the tier by the area's words and what the source says, as
+   if there were no address test.
 4. **Date and status.** Set `$.dateConfirmed` when a primary source shows the same date. Set
    `$.statusConfirmed` from the source (an official feed's own fields count: see "What the feed
    already says"): an agenda marked Cancelled, or a notice saying
@@ -87,7 +92,8 @@ answer is the judgment.
 ## The five checks
 
 Run the five checks in `coverage.md`, "Review passes", on every item: primary source, place
-(tested against `boundary` in `area.yaml`), freshness, physical facts and stage of a project.
+(code tests the address against `boundary` in `area.yaml` after you answer; you judge the tier
+by the area's words), freshness, physical facts and stage of a project.
 They are written only there. Record what each found in `$.evidence` and `$.unknowns`, label the
 place in `$.coverage` and say in `$.coverageReason` when it is not inside the area. Curate reads
 the item after you; a person re-checks freshness before publishing.

@@ -7,10 +7,10 @@
 
 export const USER_AGENT =
   'SprecherEastIntelligence/1.0 (+https://sprechereast.com; neighborhood news digest for editors)'
-const TIMEOUT_MS = 30_000
+export const TIMEOUT_MS = 30_000
 const MAX_HOPS = 3
 const MAX_RETRY_WAIT_MS = 30_000
-const MAX_BODY_BYTES = 10 * 1024 * 1024
+export const MAX_BODY_BYTES = 10 * 1024 * 1024
 const GATE_URL = /tollbit|captcha|challenge|\/login|\/signin|sign-in|paywall|subscribe/i
 const GATE_STATUS = new Set([401, 403, 451])
 
@@ -66,11 +66,6 @@ export function robotsAllows(robotsText, url) {
   return best ? best.allow : true
 }
 
-/**
- * Fetches one source URL. `http` is `fetch` or a test double with the same shape. Answers
- * `{ status, body, etag, lastModified, retries, error }`, status being `ok`, `not-modified`,
- * `blocked` or `error`.
- */
 /** Retry-After in seconds or as an HTTP date, as a wait in milliseconds. */
 export function retryWait(header, now = Date.now()) {
   if (!header) return 0
@@ -79,10 +74,28 @@ export function retryWait(header, now = Date.now()) {
   return Number.isFinite(ms) ? Math.max(ms, 0) : 0
 }
 
-export async function fetchDirect(url, { http = fetch, etag, lastModified, robots } = {}) {
+/**
+ * Fetches one source URL. `http` is `fetch` or a test double with the same shape. Answers
+ * `{ status, body, etag, lastModified, retries, error }`, status being `ok`, `not-modified`,
+ * `blocked` or `error`. For a small API call, `timeoutMs` and `maxBytes` tighten the limits,
+ * `retry: false` makes it one request with no second try, and `maxHops: 0` follows no redirect.
+ */
+export async function fetchDirect(
+  url,
+  {
+    http = fetch,
+    etag,
+    lastModified,
+    robots,
+    timeoutMs = TIMEOUT_MS,
+    maxBytes = MAX_BODY_BYTES,
+    retry = true,
+    maxHops = MAX_HOPS,
+  } = {},
+) {
   let current = url
   let retries = 0
-  for (let hop = 0; hop <= MAX_HOPS; ) {
+  for (let hop = 0; hop <= maxHops; ) {
     // robots.txt is checked for every URL fetched, redirect targets included
     if (robots && !(await robots(current))) {
       return { status: 'blocked', retries, error: `robots.txt disallows ${current}` }
@@ -95,10 +108,10 @@ export async function fetchDirect(url, { http = fetch, etag, lastModified, robot
       response = await http(current, {
         headers,
         redirect: 'manual',
-        signal: AbortSignal.timeout(TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
       })
     } catch (error) {
-      if (retries === 0) {
+      if (retry && retries === 0) {
         retries = 1
         continue
       }
@@ -121,7 +134,7 @@ export async function fetchDirect(url, { http = fetch, etag, lastModified, robot
     }
     if (GATE_STATUS.has(code)) return { status: 'blocked', retries, error: `${code}` }
     if (code === 429 || code >= 500) {
-      if (retries === 0) {
+      if (retry && retries === 0) {
         retries = 1
         // A server asking for a longer wait than a run can spend is left for the next run
         const wait = retryWait(response.headers.get('retry-after'))
@@ -135,25 +148,25 @@ export async function fetchDirect(url, { http = fetch, etag, lastModified, robot
         await sleep(wait)
         continue
       }
-      return { status: 'error', retries, error: `${code} after one retry` }
+      return { status: 'error', retries, error: retry ? `${code} after one retry` : `${code}` }
     }
     if (code >= 400) return { status: 'error', retries, error: `${code}` }
     const declared = Number(response.headers.get('content-length'))
-    if (declared > MAX_BODY_BYTES)
-      return { status: 'error', retries, error: `body over ${MAX_BODY_BYTES} bytes` }
+    if (declared > maxBytes)
+      return { status: 'error', retries, error: `body over ${maxBytes} bytes` }
     let body
     try {
       body = await response.text()
     } catch (error) {
       // The connection dropped or timed out while the body came in: retried like no answer
-      if (retries === 0) {
+      if (retry && retries === 0) {
         retries = 1
         continue
       }
       return { status: 'error', retries, error: `body not received: ${error.message ?? error}` }
     }
-    if (body.length > MAX_BODY_BYTES)
-      return { status: 'error', retries, error: `body over ${MAX_BODY_BYTES} bytes` }
+    if (body.length > maxBytes)
+      return { status: 'error', retries, error: `body over ${maxBytes} bytes` }
     return {
       status: 'ok',
       retries,
@@ -163,7 +176,7 @@ export async function fetchDirect(url, { http = fetch, etag, lastModified, robot
       lastModified: response.headers.get('last-modified') ?? null,
     }
   }
-  return { status: 'error', retries, error: `more than ${MAX_HOPS} redirects` }
+  return { status: 'error', retries, error: `more than ${maxHops} redirects` }
 }
 
 /** A robots.txt check that fetches each host's file once per run. Unreachable means allowed. */
