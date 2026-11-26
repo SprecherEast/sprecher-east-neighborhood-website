@@ -193,12 +193,13 @@ def calendar_page(x,y,month,day,w=230,h=250):
     """A wall-calendar page with its top-left corner at (x, y): the month on a red band, the day large."""
     return (f'<g transform="translate({x},{y})"><rect x="0" y="0" width="{w}" height="{h}" rx="12" fill="#fff" stroke="{NAVY}" stroke-width="{SW}"/>'
             f'<rect x="0" y="0" width="{w}" height="60" rx="12" fill="{RED}" stroke="{NAVY}" stroke-width="{SW}"/>'
-            f'<text x="{w/2}" y="42" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="34" fill="#fff">{month}</text>'
-            f'<text x="{w/2}" y="{h-60}" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="120" fill="{NAVY}">{day}</text>'
+            f'<text x="{w/2:g}" y="42" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="34" fill="#fff">{month}</text>'
+            f'<text x="{w/2:g}" y="{h-60:g}" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="120" fill="{NAVY}">{day}</text>'
             f'<circle cx="{w*.226:.0f}" cy="2" r="9" fill="{NAVY}"/><circle cx="{w*.774:.0f}" cy="2" r="9" fill="{NAVY}"/></g>')
 
 def roast_turkey(x,y,s=1):
     """A roast turkey on its platter, the platter's centre at (x, y)."""
+    s=f"{s:g}".removeprefix("0")
     return (f'<g transform="translate({x},{y}) scale({s})"><ellipse cx="0" cy="6" rx="110" ry="16" fill="#fff" stroke="{NAVY}" stroke-width="{SW}"/>'
             f'<ellipse cx="0" cy="-14" rx="76" ry="38" fill="#c9843c" stroke="{NAVY}" stroke-width="{SW}"/><ellipse cx="-20" cy="-26" rx="40" ry="16" fill="#e0a257" opacity=".8"/>'
             f'<rect x="-100" y="-28" width="30" height="14" rx="7" fill="#e0a257" stroke="{NAVY}" stroke-width="3" transform="rotate(-20 -85 -21)"/>'

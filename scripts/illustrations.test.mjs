@@ -142,4 +142,18 @@ print(s.EVENT_SCENE_SCALE < 1, 'scale(' + str(s.EVENT_SCENE_SCALE) + ')' in svg)
     )
     expect(r.stdout.trim()).toBe('True True')
   })
+
+  it('draws the calendar page and the roast turkey once, shared by the scenes that show them', () => {
+    const r = run(
+      `from scripts.illustrations import parts
+from scripts.illustrations.scenes import SCENES
+trash, thanks = SCENES['trash'](), SCENES['thanksgiving']()
+page = parts.calendar_page(615, 330, 'NOV', '26')
+print(page in trash, parts.roast_turkey(730, 676, .8) in trash, 'scale(.8)' in trash)
+print('>26</text>' in page, 'y="190"' in page, 'width="230" height="250"' in page)
+print(parts.calendar_page(560, 150, 'NOV', '26', w=190, h=210) in thanks, parts.roast_turkey(510, 512, .95) in thanks)`,
+    )
+    expect(r.stderr).toBe('')
+    expect(r.stdout.trim().split('\n')).toEqual(['True True True', 'True True True', 'True True'])
+  })
 })
