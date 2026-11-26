@@ -4,7 +4,8 @@
 # showcase, and nothing else: no link (a link could lead Caddy, which can read what the web server's
 # user can, to a file that is not meant to be public), no file with another name elsewhere, nothing that
 # is private by name, nothing anyone can write to, nothing over the size cap, and no reference to a
-# third-party font host (the font is served from here). It judges the folder by what is in it and trusts
+# third-party font host, and the showcase carries the font files (the font is the site's own, served
+# from here). It judges the folder by what is in it and trusts
 # nothing about how it was made. Prints each problem, never a file's content (the deploy log is public).
 #
 # Usage: developer-site-check.sh <folder>            Exit 0 when the folder may be served, 1 when not.
@@ -80,6 +81,10 @@ status=0
 grep -rilZF -e fonts.googleapis.com -e fonts.gstatic.com . >"$matches" 2>/dev/null || status=$?
 [ "$status" -le 1 ] || fail "the folder could not be read to look for font hosts"
 while IFS= read -r -d '' path; do fail "names a third-party font host: ${path#./}"; done <"$matches"
+
+# The showcase's build copies the site's own font files in (`.storybook/fonts.css`): none there means it
+# fell back to another source, or to no font at all.
+find showcase -type f -iname '*.woff2' -print -quit 2>/dev/null | grep -q . || fail "the showcase carries no font file"
 
 [ "$problems" -eq 0 ] || exit 1
 echo "developer site folder checked: it holds only the index page, the 404 page and the showcase"

@@ -23,7 +23,7 @@ developer site, files and block, as it was:
 1. **In the build job** (no secret): `build-showcase.sh` runs `npm run storybook:build` into the release's
    `developer-site/showcase` (about 40 s, 9 MB more upload, 15 MB more per kept release on the server). If it
    fails or takes over 10 minutes, the release is built without a showcase, with a warning; the build never fails
-   for it. The font comes from the `@fontsource/poppins` package, bundled into the build (`.storybook/fonts.css`).
+   for it. The font is the site's own: the files in `src/platform/theme/fonts/` that the theme's `fonts.ts` loads for the site, copied into the build by `.storybook/fonts.css`.
 2. **Preconditions**, each a warning and no change: Caddy and its Caddyfile are there, the developer folder is
    neither inside nor above production's, a preview's or Caddy's (its config folder and its storage folder, with the certificate keys; compared after `realpath -m`; the block file is
    always `developer.caddy` in the previews' folder, never taken from the environment), the Caddyfile imports the
@@ -36,7 +36,7 @@ developer site, files and block, as it was:
    Then it and the pages are copied into a staging folder, which `developer-site-check.sh` judges again: only
    `index.html`, `404.html`, `style.css` and `showcase/`; no link, no file with another name elsewhere, no hidden
    name, no file named like a database (with its `-wal` and `-shm`), key, dump, archive, backup, log or environment
-   file, in any letter case, nothing writable by anyone, at most `DEVELOPER_MAX_BYTES` (100 MiB), no mention of Google's font hosts in any file, in any letter case. Then it is renamed into
+   file, in any letter case, nothing writable by anyone, at most `DEVELOPER_MAX_BYTES` (100 MiB), no mention of Google's font hosts in any file, in any letter case, and a font file in the showcase. Then it is renamed into
    `releases/<release>`.
 4. **The block.** Made from the template, checked by Caddy alone, then `caddy_place_block` (`caddy-block-lib.sh`,
    the function `preview-caddy.sh` uses too) makes a whole, compared copy of the previous block, moves the new

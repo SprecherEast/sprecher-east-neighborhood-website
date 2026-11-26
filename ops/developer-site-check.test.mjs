@@ -28,6 +28,10 @@ beforeEach(() => {
   ])
     write(f, '<!doctype html><title>x</title>\n')
   write('showcase/assets/app.js', 'console.log(1)\n')
+  fs.writeFileSync(
+    p('showcase/assets/poppins-latin-400-normal.woff2'),
+    Buffer.from('wOF2\0\x01', 'latin1'),
+  )
 })
 afterEach(() => fs.rmSync(dir, { recursive: true, force: true }))
 
@@ -234,6 +238,23 @@ describe('developer-site-check.sh: size and fonts', () => {
 
   it('accepts a font file that names no host', async () => {
     fs.writeFileSync(p('showcase/assets/f.woff2'), Buffer.from('wOF2\0\x01poppins', 'latin1'))
+    const { code, out } = await check()
+    expect(code, out).toBe(0)
+  })
+
+  // The showcase uses the site's own font files, which Vite copies into the build. A build without any
+  // is one that fell back to another source, or to no font at all: it is not served.
+  it('refuses a showcase that carries no font file, since the font is served from here', async () => {
+    fs.rmSync(p('showcase/assets/poppins-latin-400-normal.woff2'))
+    await refused('the showcase carries no font file')
+  })
+
+  it('counts a font file in any letter case, and only inside the showcase', async () => {
+    fs.rmSync(p('showcase/assets/poppins-latin-400-normal.woff2'))
+    write('stray.woff2')
+    await refused('the showcase carries no font file')
+    fs.rmSync(p('stray.woff2'))
+    fs.writeFileSync(p('showcase/assets/F.WOFF2'), 'x')
     const { code, out } = await check()
     expect(code, out).toBe(0)
   })

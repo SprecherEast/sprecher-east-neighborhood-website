@@ -61,6 +61,7 @@ function makeRelease(name, { live = true, showcase = true } = {}) {
         `<!doctype html><title>${name}</title>\n`,
       )
     write(path.join(code, 'developer-site/showcase/assets/app.js'), `console.log("${name}")\n`)
+    write(path.join(code, 'developer-site/showcase/assets/poppins-latin-400-normal.woff2'), 'wOF2')
   }
   if (live) {
     fs.rmSync(p('app/current'), { force: true })
@@ -479,6 +480,15 @@ describe('developer-site.sh: what is served is judged first', () => {
     const { code, out } = await run('r2')
     expect(code).toBe(1)
     expect(out).toContain('names a third-party font host')
+    stays()
+  })
+
+  it('serves nothing from a showcase that carries no font file, and keeps the previous developer site', async () => {
+    await publishedThenNewRelease()
+    fs.rmSync(p('app/releases/r2/developer-site/showcase/assets/poppins-latin-400-normal.woff2'))
+    const { code, out } = await run('r2')
+    expect(code).toBe(1)
+    expect(out).toContain('the showcase carries no font file')
     stays()
   })
 
