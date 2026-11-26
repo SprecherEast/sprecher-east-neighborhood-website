@@ -75,8 +75,9 @@ its cap. Owner direction this rests on (recorded on #1446 and #1460):
    wrote the content (every note read against its code, a note for every part with its own
    behavior) and turned all three to blocking (2026-11-26); `note-schema.json` says so and a test
    holds it. The sections stay `expected` in the schema: a note without one now fails
-   `COVERAGE-SECTION`. A required or expected section whose heading has nothing under it (a line,
-   a list, a deeper heading or a code block counts; a comment does not) fails the same way, with
+   `COVERAGE-SECTION`. A required or expected section whose heading has nothing under it (a line of
+   words, a list, a deeper heading or a code block counts; a comment, a horizontal rule or other
+   markup with no words does not) fails the same way, with
    a message saying it is empty, and `COVERAGE-CODE` names the files no note describes.
 
 ## Consequences
