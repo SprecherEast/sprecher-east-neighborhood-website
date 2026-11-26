@@ -5,6 +5,7 @@
 import { makeEdge, makeNode, nodeId } from './graph.mjs'
 
 const SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)['"]([^'"]+)['"]/g
+const LIBRARIES_ID = nodeId('group', 'libraries')
 const LOCAL_AREA = /^@\/(modules|platform)\/([^/]+)/
 const TEST_FILE = /\.(test|spec|stories)\.[a-z]+$|\/testing\//
 
@@ -53,19 +54,35 @@ export function buildImports({ sources, dependencies, ownerOf, areaIds, siteId }
     }
   }
 
-  const nodes = [...used].sort().map((name) =>
+  const nodes = [
     makeNode({
-      id: nodeId('library', name),
-      type: 'library',
-      name,
-      summary: '',
+      id: LIBRARIES_ID,
+      type: 'group',
+      name: 'Libraries',
+      summary: 'The outside packages the source imports.',
       path: 'package.json',
-      facts: [{ label: 'Version', value: dependencies[name] }],
     }),
-  )
-  const edges = [...counts].map(([key, count]) => {
-    const [from, to, type] = key.split('\0')
-    return makeEdge({ from, to, type, count })
-  })
+    ...[...used].sort().map((name) =>
+      makeNode({
+        id: nodeId('library', name),
+        type: 'library',
+        name,
+        summary: '',
+        path: 'package.json',
+        module: LIBRARIES_ID,
+        facts: [{ label: 'Version', value: dependencies[name] }],
+      }),
+    ),
+  ]
+  const edges = [
+    makeEdge({ from: siteId, to: LIBRARIES_ID, type: 'contains' }),
+    ...[...used].map((name) =>
+      makeEdge({ from: LIBRARIES_ID, to: nodeId('library', name), type: 'contains' }),
+    ),
+    ...[...counts].map(([key, count]) => {
+      const [from, to, type] = key.split('\0')
+      return makeEdge({ from, to, type, count })
+    }),
+  ]
   return { nodes, edges, gaps: [] }
 }
