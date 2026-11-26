@@ -318,7 +318,7 @@ sources:
       title: Armed Carjacking
       date: '2026-11-20'
       url: https://www.cityofmadison.com/police/incident-reports/2026-11-19/armed-carjacking
-    notes: 'Hand check 2026-11-25 (#993): RSS 2.0 with a guid, link and pubDate on every item and no ttl or lastBuildDate; the guid ends in the time of the last update, so the page link is the id. The City posts a few reports a week; one daily read is enough. Each report page gives the incident type, a case id, the block address and when it was last updated.'
+    notes: 'Hand check 2026-11-25 (#993): RSS 2.0 with a guid, link and pubDate on every item and no ttl or lastBuildDate; the guid ends in the time of the last update, so the page link is the id. The City posts a few reports a week; one daily read is enough. Each report page gives the incident type, a case id, the block address, an approximate map point and when it was last updated. Of 81 items, 46 begin with a block, 21 with an intersection or a street and 14 with UPDATE and no place.'
   - id: city-traffic-engineering-news
     name: 'City of Madison Traffic Engineering news'
     owner: 'City of Madison Traffic Engineering'

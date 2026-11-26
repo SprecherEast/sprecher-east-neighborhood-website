@@ -42,48 +42,46 @@ describe('the incident reports parser', () => {
     assert.match(item.sourceText, /^2800 block Curry Pkwy, Officers responded/)
   })
 
-  it('reads a block with a direction, "of", and a street type', () => {
-    const items = parseIncidentReports(
-      rss(
-        entry({
-          ...carjacking,
-          path: 'a',
-          description: '100 block W. Main Street, Police need the public’s help.',
-        }),
-        entry({
-          ...carjacking,
-          path: 'b',
-          description: '200 block of State Street, A threat was reported.',
-        }),
-      ),
-    )
-    assert.deepEqual(
-      items.map((i) => i.locationText),
-      ['100 block W. Main Street', '200 block of State Street'],
-    )
+  const placeOf = (description) =>
+    parseIncidentReports(rss(entry({ ...carjacking, path: 'x', description })))[0].locationText
+
+  it('reads the leading place of every shape the feed gives, as written', () => {
+    for (const [description, place] of [
+      ['100 block W. Main Street, Police need the public’s help.', '100 block W. Main Street'],
+      ['200 block of State Street, A threat was reported.', '200 block of State Street'],
+      ['5800 Block of Raymond Rd, Officers responded.', '5800 Block of Raymond Rd'],
+      // The live feed puts a space before the comma on some items
+      ['100 block Curry Pkwy , Officers responded.', '100 block Curry Pkwy'],
+      [
+        'Mineral Point Rd. at S. Gammon Rd., Officers responded.',
+        'Mineral Point Rd. at S. Gammon Rd.',
+      ],
+      ['N Stoughton Road and Reider Road, Officers responded.', 'N Stoughton Road and Reider Road'],
+      ['S. Blair St., Officers responded.', 'S. Blair St.'],
+    ])
+      assert.equal(placeOf(description), place, description)
   })
 
   it('gives no place when the description does not begin with one', () => {
-    const items = parseIncidentReports(
-      rss(
-        entry({
-          ...carjacking,
-          path: 'a',
-          description: 'UPDATE: Detectives have arrested two suspects.',
-        }),
-        // A street named later in the text is not the block address: nothing is guessed
-        entry({
-          ...carjacking,
-          path: 'b',
-          description: 'Officers responded to a report near 5 Main St late on Tuesday.',
-        }),
-        entry({ ...carjacking, path: 'c', description: '' }),
-      ),
-    )
-    assert.deepEqual(
-      items.map((i) => i.locationText),
-      [null, null, null],
-    )
+    for (const description of [
+      'UPDATE: Detectives with the Madison Police Department have arrested two suspects in the case, and more.',
+      // A street named later in the text is not the leading place, even when a comma follows it
+      'UPDATE - Police arrested a suspect. 7000 block Littlemore Dr, Officers responded.',
+      'Officers responded to a report near 5 Main St late on Tuesday.',
+      '100 block , A, B',
+      '',
+    ])
+      assert.equal(placeOf(description), null, description)
+  })
+
+  it('takes a leading place of at most 60 characters and 8 words, of plain street characters', () => {
+    const sixty = `${'M'.repeat(57)} St`
+    assert.equal(sixty.length, 60)
+    assert.equal(placeOf(`${sixty}, x`), sixty)
+    assert.equal(placeOf(`M${sixty}, x`), null)
+    assert.equal(placeOf('A B C D E F G St, x'), 'A B C D E F G St')
+    assert.equal(placeOf('A B C D E F G H St, x'), null)
+    assert.equal(placeOf('Main St (rear), x'), null)
   })
 
   it('never takes the place from the title', () => {
@@ -112,11 +110,13 @@ describe('the incident reports parser', () => {
     )
     assert.equal(before.ownId, `${BASE}/2026-11-19/armed-carjacking`)
     assert.equal(after.ownId, before.ownId)
+    assert.equal(before.url, before.ownId)
   })
 
-  it('drops an item with no page of its own rather than naming it by a timestamp', () => {
+  it('drops an item with no page of its own, or a page that is not https', () => {
     const body = rss(
       `<item><title>No link</title><description>x</description><guid>${BASE}/z#2026-11-20T08:44:31</guid></item>`,
+      `<item><title>Plain</title><link>http://www.cityofmadison.com/police/incident-reports/q</link><description>x</description><guid>q</guid></item>`,
     )
     assert.deepEqual(parseIncidentReports(body), [])
   })
@@ -153,13 +153,15 @@ describe('scouting the incident reports feed', () => {
         entry({
           ...carjacking,
           stamp: '2026-11-22T09:00:00',
-          description: `${carjacking.description} Police have since found the vehicle.`,
+          // As the live feed gives an update: the description is replaced, with no place
+          description: 'UPDATE: Police have since found the vehicle.',
         }),
       ),
       '2026-11-23',
     )
     assert.equal(second.candidates.length, 1)
     assert.equal(second.candidates[0].externalId, candidate.externalId)
+    assert.equal(second.candidates[0].locationText, null)
     assert.equal(second.candidates[0].change, 'updated')
   })
 })

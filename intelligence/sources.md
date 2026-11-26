@@ -158,13 +158,20 @@ item is a safety item that waits for a person ([coverage](coverage.md), "Review 
 - **Cadence.** The City posts a few reports a week (the page's first screen spanned 2026-10-29
   to 2026-11-21, with a long archive behind it), and the feed gives no refresh interval: one read
   a day is enough.
-- **What an item holds.** The description begins with the block address and a comma, as in
-  "2800 block Curry Pkwy, Officers responded...", and some items, an update for one, have none.
-  The report's page adds the incident type, a case number, the block address, when it was
-  published and last updated, and the tip line (the Madison Area Crime Stoppers line and the
-  department's non-emergency line). There is no district field. The parser reads only that first
-  part (`runner/lib/incidents.mjs`); the City's boundary places it
-  ([coverage](coverage.md), check 2), so `area.yaml` holds no list of street names.
+- **What an item holds.** The description begins with the place and a comma. Of the 81 items in the
+  feed when it was checked (2026-11-25), 46 began with a block ("2800 block Curry Pkwy"), 21 with an
+  intersection or a bare street ("Mineral Point Rd. at S. Gammon Rd.", "S. Blair St.") and 14 with
+  "UPDATE:" and no place, because the feed replaces an updated report's description. The parser
+  reads the leading place when it is short, of street characters and holds a street type; a block
+  is placed by the boundary, while an intersection or a bare street has no house number, so the
+  locator is sent nothing and the area's words stand. The report's page adds the incident type, a
+  case number, the block address, an approximate map point, when it was published and last
+  updated, and the tip line (the Madison Area Crime Stoppers line and the department's
+  non-emergency line). There is no district field. The parser is `runner/lib/incidents.mjs`; the
+  City's boundary places a block ([coverage](coverage.md), check 2), so `area.yaml` holds no list of
+  street names.
+- **First run.** All 81 items, back about a year, are new on the first run;
+  the model stages take a few per run, newest first ([#1483](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1483)).
 - **Limits.** The feed is a lead: verify reads the report page before an item is considered, and the
   City makes no guarantee that its pages are accurate or complete.
 

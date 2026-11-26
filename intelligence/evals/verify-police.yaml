@@ -78,3 +78,70 @@ cases:
           The place is left unknown after the report's own page was read, and none is guessed from
           the title or from the school, the street or the neighborhood the text suggests.
     why: Neither the feed nor the report names a place, so nothing says it is here. The place is never guessed, and a report with no place is not offered to the editor.
+  - id: police-intersection-at-the-edge
+    stage: verify
+    tags: [police, place, boundary]
+    input:
+      sourceId: madison-police-incident-reports
+      kind: news
+      title: Driver hurt in a crash that closes a lane
+      sourceText: Cottage Grove Rd at Sprecher Rd, Officers responded to a crash. One driver was taken to a hospital. A lane is closed while crews clear the road.
+      startsAt: null
+      locationText: Cottage Grove Rd at Sprecher Rd
+    expected:
+      {
+        decision: needs-review,
+        coverage: catchment,
+        safety: true,
+        route: reportItem,
+        placement: word-match,
+      }
+    graders:
+      - { check: equals, field: $.placement.method, value: word-match }
+      - { check: isNull, field: $.placement.inside }
+    why: An intersection has no house number, so the locator is sent nothing and the area's words stand. Two roads that bound the area make it catchment, and a lane closure is something a neighbor can act on.
+  - id: police-report-names-arrested-adult
+    stage: verify
+    tags: [police, safety, private-person]
+    input:
+      sourceId: madison-police-incident-reports
+      kind: news
+      title: Man arrested after a robbery
+      sourceText: 7000 block Littlemore Dr, Officers arrested Jordan Example, 34, of Madison, on a charge of armed robbery after a store was robbed on Tuesday.
+      startsAt: null
+      locationText: 7000 block Littlemore Dr
+    expected: { decision: needs-review, coverage: core, safety: true, route: reportItem }
+    graders:
+      - { check: equals, field: $.safety, value: true }
+      - { check: notContains, field: $.location.name, value: Jordan }
+      - check: model
+        rubric: >-
+          The evidence and unknowns name no private person: not the arrested person, and not an age or
+          a town. They say an arrest was reported, and that an arrest or a charge is not guilt.
+    why: The report names an arrested adult. Verify records what the report says without the name, and a person decides.
+  - id: police-report-page-unreadable
+    stage: verify
+    tags: [police, place, no-fabrication]
+    input:
+      sourceId: madison-police-incident-reports
+      kind: news
+      title: MPD investigates shots fired incident on east side
+      sourceText: Officers are investigating a report of shots fired on the east side.
+      startsAt: null
+      locationText: null
+    expected:
+      {
+        decision: needs-review,
+        coverage: unknown,
+        flags: [missing-location],
+        safety: true,
+        route: reportItem,
+        placement: unplaced,
+      }
+    graders:
+      - { check: equals, field: $.placement.method, value: unplaced }
+      - check: model
+        rubric: >-
+          The unknowns include location and address, the reasons say the report's page could not be read, and the place is left unknown. None is
+          guessed from "east side".
+    why: The collector gives verify a report page that fails to load (an HTTP error). Not knowing is not the same as the report naming no place, so it goes to a person, never to a rejection.

@@ -74,9 +74,43 @@ cases:
       contentHash: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
       kind: news
       title: Armed carjacking
-      sourceText: UPDATE - Police have arrested a suspect and found the car. 7000 block Littlemore Dr, Officers responded after a caller reported a car taken at gunpoint.
+      sourceText: 'UPDATE: Police have arrested a suspect and found the car. Officers responded to the original report after a caller said a car was taken at gunpoint.'
       startsAt: null
-      locationText: 7000 block Littlemore Dr
+      locationText: null
+      change: updated
+    known:
+      collection: posts
+      id: 52
+      externalId: 'madison-police-incident-reports:https://www.cityofmadison.com/police/incident-reports/2026-11-19/armed-carjacking'
+      contentHash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      status: active
+    given:
+      verification: { coverage: unknown, flags: [missing-location] }
+    expected:
+      {
+        decision: update,
+        coverage: unknown,
+        safety: true,
+        route: reportItem,
+        targetCollection: posts,
+        targetId: 52,
+      }
+    graders:
+      - { check: equals, field: $.decision, value: update }
+      - { check: equals, field: $.targetId, value: 52 }
+    why: As the live feed gives an update, with the description replaced by "UPDATE:" and no place. The place is the known item's, so it is an update with the resolution first, never rejected as having no place.
+  - id: police-update-names-arrested-adult
+    stage: curate
+    tags: [police, safety, update, private-person]
+    input:
+      sourceId: madison-police-incident-reports
+      externalId: madison-police-incident-reports:https://www.cityofmadison.com/police/incident-reports/2026-11-19/armed-carjacking
+      contentHash: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+      kind: news
+      title: Armed carjacking
+      sourceText: 'UPDATE: Detectives arrested Jordan Example, 34, of Madison, on a charge of armed robbery. He is held in the Dane County Jail.'
+      startsAt: null
+      locationText: null
       change: updated
     known:
       collection: posts
@@ -87,7 +121,7 @@ cases:
     expected:
       {
         decision: update,
-        coverage: core,
+        coverage: unknown,
         safety: true,
         route: reportItem,
         targetCollection: posts,
@@ -95,5 +129,33 @@ cases:
       }
     graders:
       - { check: equals, field: $.decision, value: update }
-      - { check: equals, field: $.targetId, value: 52 }
-    why: The same report page with new text. The editor gets the resolution first, added to the post that is already there, not a second post.
+      - { check: notContains, field: $.reasons, value: Jordan }
+      - check: model
+        rubric: >-
+          The reasons say an arrest was reported and that an arrest or a charge is not guilt. They
+          name no one, not the arrested person, and give no age, town or jail.
+    why: A private person's name, age and charge are in the report, and an arrest is not guilt, so the reasons and any draft leave the person out.
+  - id: police-page-could-not-be-read
+    stage: curate
+    tags: [police, safety, bar, place]
+    input:
+      sourceId: madison-police-incident-reports
+      externalId: madison-police-incident-reports:https://www.cityofmadison.com/police/incident-reports/2026-11-21/shots-fired
+      contentHash: ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+      kind: news
+      title: MPD investigates shots fired incident on east side
+      sourceText: Officers are investigating a report of shots fired on the east side.
+      startsAt: null
+      locationText: null
+      change: new
+    known: null
+    given:
+      verification:
+        coverage: unknown
+        confidence: 0.3
+        flags: [missing-location]
+        unknowns: [location, address]
+    expected: { decision: needs-review, coverage: unknown, safety: true, route: reportItem }
+    graders:
+      - { check: equals, field: $.decision, value: needs-review }
+    why: Verify could not read the report's page, so it does not know whether the report has a place. Nothing is known, so a person looks; it is never rejected as not here.

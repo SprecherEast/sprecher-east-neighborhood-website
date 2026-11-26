@@ -1,32 +1,37 @@
 import { parseFeed } from './feed.mjs'
+import { hasStreetType } from './geocode.mjs'
 import { collapse } from './text.mjs'
 
-// The City's police incident reports feed (#993). Its descriptions begin with the block address,
-// then a comma, then the text; some items have none (an update, for one). Two things are read
-// from the feed's layout, and nothing about what an item means: the place from that first part,
-// and the report's own page as its identity. The feed's guid ends in the time of the last update,
-// so it would make every update look like a new report; the page address does not change.
-// Whether an item is a safety item, and where it is, is decided elsewhere (safety.yaml, place.mjs).
+// The City's police incident reports feed (#993). Its descriptions begin with the place, then a
+// comma, then the text: a block ("2800 block Curry Pkwy"), an intersection ("Mineral Point Rd. at
+// S. Gammon Rd.") or a bare street; an update has none, because its description is replaced by
+// "UPDATE:" and the text. Two things are read from that layout, and nothing about what an item
+// means: the leading place, and the report's own page as the item's identity (the feed's guid ends
+// in the time of the last update, so it would make every update look like a new report). Whether
+// an item is a safety item, and where it is, is decided elsewhere (safety.yaml, place.mjs).
 
-/** "2800 block Curry Pkwy" at the very start of the description, as the feed gives it. */
-const BLOCK_ADDRESS = /^(\d{1,6} block (?:of )?[^,]{2,60}?)\s*,/i
+/** Up to the first comma, with any space before it left out, at the very start of the description. */
+const LEADING = /^([^,]{1,60}?)\s*,/
+/** What a leading place is made of: letters, digits, spaces and a few marks of street names. */
+const PLACE_SHAPE = /^[A-Za-z0-9.'&/ ]+$/
+const MAX_WORDS = 8
 
-/** The block address a description begins with, or null; never found in a title or later in the text. */
-export function blockAddress(description) {
-  const found = BLOCK_ADDRESS.exec(collapse(description))
-  return found ? found[1] : null
+/**
+ * The place a description begins with, or null. It is taken only from the start, only when it is
+ * short, made of street characters and holds a street type, so an update's prefix or a street
+ * named later in the text is never one. It is a hint for verify; the boundary places it.
+ */
+export function leadingPlace(description) {
+  const first = LEADING.exec(collapse(description))?.[1]
+  if (!first || !PLACE_SHAPE.test(first) || first.split(' ').length > MAX_WORDS) return null
+  return hasStreetType(first) ? first : null
 }
 
-/** The report's page address without the update stamp (the part after `#`). */
-const pageOf = (url) =>
-  typeof url === 'string' && url.startsWith('https://') ? url.split('#')[0] : null
-
-/** Police incident reports (RSS 2.0): news items with the block address and a stable id. */
+/** Police incident reports (RSS 2.0): news items with the leading place and the report's page as id. */
 export function parseIncidentReports(body) {
   return parseFeed(body).flatMap((item) => {
-    const page = pageOf(item.url)
     // No page of its own: it can't be told apart from another report, so it is not taken
-    if (page === null) return []
-    return [{ ...item, ownId: page, url: page, locationText: blockAddress(item.sourceText) }]
+    if (typeof item.url !== 'string' || !item.url.startsWith('https://')) return []
+    return [{ ...item, ownId: item.url, locationText: leadingPlace(item.sourceText) }]
   })
 }

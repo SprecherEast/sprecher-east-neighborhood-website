@@ -131,25 +131,35 @@ what the editor is told.
    correction as an `update`, so the editor adds it with the date and the record stays; never
    `reject` or remove it. An old incident stays findable, with its resolution first.
 5. **Always a reason.** Every accept, reject and `needs-review` has at least one reason an editor can check.
-6. **A police-reported incident (the bar, #993).** The site is never a crime list, so an incident
-   from the City's police reports reaches the editor only when it is both of these, judged by
-   what the report means, never by words in its title:
-   - **Here.** Its place, the block address the report gives, is `core` or `catchment` by
-     "Review passes", check 2. A block elsewhere, including a street of the same name, is `outside`;
-     a report that names no place in the feed or on its own page is `unknown`: both are `reject`ed,
-     and nothing is guessed.
+6. **A police-reported incident (the bar, #993).** The site is never a crime list, so a new
+   incident from the City's police reports reaches the editor only when it is both of these,
+   judged by what the report means, never by words in its title. This rule overrides the general
+   "needs review when the location can't be confirmed" sentence in "Relevance rules" for a new
+   report whose page was read:
+   - **Here.** Its place, as the report gives it (a block, an intersection or a street), is `core`
+     or `catchment` by "Review passes", check 2. A place elsewhere, including a street of the same
+     name, is `outside`; a report whose page was read and names no place is `unknown`. Both are
+     `reject`ed and nothing is guessed. The `ambiguous-location` flag the boundary puts on a block
+     it moved out of `core` is not shown to a person, on purpose: the item is rejected as not here.
+     A report whose page could not be read is different: nothing is known, so it is
+     `needs-review` with `missing-location`, never rejected.
    - **Worth a neighbor's time.** Serious (harm to a person, a weapon, a threat to the public), or
      something a neighbor can act on (a danger that continues, a request for the public's help, an
      area to avoid). An ordinary property loss or a minor dispute with no danger left is `reject`ed.
 
+   **A known item's update is always an `update`, whatever its place** (rule 4): the feed replaces
+   an updated report's description, so the update often names no place, and the place is the known
+   item's. It is never rejected as `unknown`, and this rule's tests of place and weight do not apply
+   to it.
+
    **Probe before the item is considered.** The feed is only a lead: read the report's own page,
    look for an update on the same case (`$.known`; the case number the page gives), and state only
-   what the report gives: no count, time, injury, cause or suspect it leaves out. When the report
-   changes after an editor saw it, route it as `update`, resolution first (rule 4). The
-   draft is calm and fact first, names the place as a block as the report gives it, names no private
-   person (a victim, a witness, a person of interest), and gives the tip line the report itself
-   gives, with a link to the report. Such an item is always held for a person, which "Review
-   passes" enforces in code.
+   what the report gives: no count, time, injury, cause or suspect it leaves out. The draft is calm
+   and fact first, names the place as the report gives it, **names no private person: a victim, a
+   witness, a person of interest, a suspect, and an arrested or charged person included** (an
+   arrest or a charge is not guilt; [Editorial integrity](../docs/guidelines/editorial-integrity.md)),
+   and gives the tip line the report itself gives, with a link to the report. Such an item is
+   always held for a person, which "Review passes" enforces in code.
 
 ## Review passes
 
@@ -196,10 +206,11 @@ The five checks, which verify runs on every item:
    `ambiguous-location`, so a person looks. An address is not sent when the code finds
    another place in the text the street came from (the other reasons it is not sent are in
    `runner/README.md`, "Falls back"), and only its house number, street and street
-   type, from a public item, go to the City's own locator. A block address ("2800 block of Curry
-   Pkwy", as police reports give it) is sent as the first address of the block, never with the
-   word "block": it is one point for many addresses, so a change of tier it causes always gets
-   `ambiguous-location`, even one that would otherwise be raised without it. Before the street the code looks for
+   type, from a public item, go to the City's own locator. A block address (a hundred, as in "2800 block of Curry
+   Pkwy", as police reports give it; "3 block" is not one) is sent as the first address of the block,
+   never with the word "block": it is one point for many addresses, so a change of tier it causes always gets
+   `ambiguous-location`, even one that would otherwise be raised without it (a street named "Block"
+   with a hundred before it is read as a block, so it carries the flag too). Before the street the code looks for
    "city, village, town or township of …" (the Town of Madison is one: it was absorbed into the
    City of Madison and the City of Fitchburg on 31 October 2022, so a text naming it can't say
    which), Wisconsin (WI, Wis.) and any five-digit number (a ZIP code), and any of them stops the
