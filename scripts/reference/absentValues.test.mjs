@@ -100,6 +100,8 @@ describe('ownerText with values left out', () => {
     expect(ownerText(model, new Map(), new Map(), '/none')).toEqual({
       owner: 'the plugin `@payloadcms/plugin-x`',
       file: '',
+      plugin: '@payloadcms/plugin-x',
+      modules: [],
     })
   })
 })
