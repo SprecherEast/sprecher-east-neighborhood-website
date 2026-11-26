@@ -1,7 +1,7 @@
 """Thanksgiving weekend: neighbors bring food to a shared table under an autumn tree, with the
 trash and recycling carts waiting at the curb for Monday."""
 from ..parts import *
-from .street_days import falling, street
+from .street_days import falling, road
 
 def pie(x,y,s=1):
     """A pie on the table, its centre at (x, y)."""
@@ -18,7 +18,7 @@ def table(x,y,w):
 
 def scene_thanksgiving():
     b=grass()
-    b+=street(700,40)+f'<rect x="-10" y="740" width="1700" height="170" fill="#34405f" stroke="{NAVY}" stroke-width="{SW}"/><path d="M0,830 L1700,830" stroke="{YEL}" stroke-width="5" stroke-dasharray="40 26"/>'
+    b+=road(700,40,170,830)
     b+=tree(140,700,560,c="#e2a032",d="#c4762b")+tree(820,700,430,c="#d9583a",d="#b64329")
     b+=calendar_page(560,150,"NOV","26",w=190,h=210)
     b+=table(250,520,480)

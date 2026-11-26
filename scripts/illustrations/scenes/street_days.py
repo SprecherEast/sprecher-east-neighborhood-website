@@ -45,9 +45,15 @@ def falling(pts):
 def street(top,sidew=46):
     return (f'<rect x="-10" y="{top}" width="1700" height="{sidew}" fill="#d8dde6" stroke="{NAVY}" stroke-width="{SW}"/>')
 
+def road(top,sidew,height,line_y):
+    """A sidewalk starting at `top`, then a dark road `height` tall with a dashed yellow centre line at `line_y`."""
+    y=top+sidew
+    return (street(top,sidew)+f'<rect x="-10" y="{y}" width="1700" height="{height}" fill="#34405f" stroke="{NAVY}" stroke-width="{SW}"/>'
+            f'<path d="M0,{line_y} L1700,{line_y}" stroke="{YEL}" stroke-width="5" stroke-dasharray="40 26"/>')
+
 def scene_trash():
     b=grass()
-    b+=street(640,50)+f'<rect x="-10" y="690" width="1700" height="220" fill="#34405f" stroke="{NAVY}" stroke-width="{SW}"/><path d="M0,800 L1700,800" stroke="{YEL}" stroke-width="5" stroke-dasharray="40 26"/>'
+    b+=road(640,50,220,800)
     b+=tree(135,640,540)
     b+=cart(300,690,"#2b3556","#1f2a44",1.5)+cart(470,690,BLUE,"#3b7aa5",1.5,True)
     b+=calendar_page(615,330,"NOV","26")

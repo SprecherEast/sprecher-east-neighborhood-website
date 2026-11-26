@@ -10,6 +10,8 @@ from .parking import scene_parking
 from .marimba import scene_marimba
 from .workshop import scene_workshop
 from .thanksgiving import scene_thanksgiving
+from .dropoff import scene_dropoff
+from .youth import scene_youth
 
 SCENES = {
     "school": scene_school,
@@ -23,4 +25,6 @@ SCENES = {
     "marimba": scene_marimba,
     "workshop": scene_workshop,
     "thanksgiving": scene_thanksgiving,
+    "dropoff": scene_dropoff,
+    "youth": scene_youth,
 }
