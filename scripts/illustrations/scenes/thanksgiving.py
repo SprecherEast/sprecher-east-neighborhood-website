@@ -21,11 +21,11 @@ def scene_thanksgiving():
     b+=street(700,40)+f'<rect x="-10" y="740" width="1700" height="170" fill="#34405f" stroke="{NAVY}" stroke-width="{SW}"/><path d="M0,830 L1700,830" stroke="{YEL}" stroke-width="5" stroke-dasharray="40 26"/>'
     b+=tree(140,700,560,c="#e2a032",d="#c4762b")+tree(820,700,430,c="#d9583a",d="#b64329")
     b+=calendar_page(560,150,"NOV","26",w=190,h=210)
-    b+=table(250,520,520)
-    b+=roast_turkey(510,512,.95)+pie(345,512,.85)+pie(680,512,.7)
+    b+=table(250,520,480)
+    b+=roast_turkey(495,512,.95)+pie(345,512,.85)+pie(650,512,.7)
     b+=person(205,690,1.15,shirt=RED,pants="#2b3556",skin=SKIN_DARKEST,arm="wave")
-    b+=person(820,690,1.15,shirt=BLUE,pants="#3b3f52",skin=SKIN_LIGHTEST,hair="#8a5a2b",flip=True,arm="wave")
-    b+=cart(60,740,"#2b3556","#1f2a44",1.1)+cart(905,740,BLUE,"#3b7aa5",1.1,True)
+    b+=person(780,690,1.15,shirt=BLUE,pants="#3b3f52",skin=SKIN_LIGHTEST,hair="#8a5a2b",flip=True,arm="wave")
+    b+=cart(60,740,"#2b3556","#1f2a44",1.1)+cart(868,740,BLUE,"#3b7aa5",1.1,True)
     b+=falling(((330,250,30),(470,190,-20),(800,330,40),(420,400,-30),(250,380,20)))
     b+=panel(["Happy","Thanksgiving"],["No pickup Thu., Fri.","Fri. moves to Mon.","Drop-offs closed","Libraries closed"])
     return b
