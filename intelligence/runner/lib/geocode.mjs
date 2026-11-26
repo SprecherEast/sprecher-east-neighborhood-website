@@ -8,19 +8,24 @@ import { fetchDirect } from './fetchSource.mjs'
 const TYPES =
   'St|Street|Ave|Avenue|Rd|Road|Dr|Drive|Ln|Lane|Blvd|Boulevard|Ct|Court|Way|Pl|Place|Pkwy|Parkway|Cir|Circle|Ter|Terrace|Trl|Trail|Hwy|Highway|Loop|Pass|Run|Sq|Square'
 const WORD = "[A-Za-z][A-Za-z.'-]*"
-// A hundred block ("2800 block of Curry Pkwy", as police reports give it) or a number, then an
-// optional direction, up to three name words, then the street type; "7 PM on Main St" is not an
-// address, and neither is "3 block stretch of Main St": only a hundred makes a block. A street whose
-// name begins with "Block" and has a hundred in front of it ("100 Block Island Rd") is read as a
-// block: the placement then carries a flag, so a person looks.
-const HUNDRED_BLOCK = String.raw`\d{0,4}00\s+block\s+(?:of\s+)?`
+// A hundred block ("2800 block of Curry Pkwy", as police reports give it) or a house number, then
+// an optional direction, up to three name words, then the street type; "7 PM on Main St" is not an
+// address, "3 block stretch of Main St" is not one (only a hundred of three to six digits makes a
+// block, and no other number may be followed by "block"), and a number after a route designation
+// or inside a route ("Hwy 51", "I-94", "US 12", "Hwy 12/18") is a route, never a house number.
+// A street named "Block" with a hundred before it ("100 Block Island Rd") is read as a block: the
+// placement then carries a flag, so a person looks.
+const HUNDRED = String.raw`[1-9]\d{0,3}00`
+const ROUTE = String.raw`\b(?:(?:county|co)\.?\s+(?:rd|road|hwy|highway)|hwy|highway|us|ush|wis(?!\.)|sth|cth|county|co|i|interstate|route|rte|sr)\.?[\s-]*`
+const HUNDRED_BLOCK = String.raw`${HUNDRED}\s+block\s+(?:of\s+)?`
+const HOUSE_NUMBER = String.raw`(?<!${ROUTE})(?<![\d/])\d{1,6}(?!\s*[ap]\.?m\b)\s+(?!block\b)`
 const ADDRESS = new RegExp(
-  `\\b(?:${HUNDRED_BLOCK}|\\d{1,6}(?!\\s*[ap]\\.?m\\b)\\s+)(?:(?:[NSEW]|North|South|East|West)\\.?\\s+)?(?:${WORD}\\s+){0,2}?${WORD}\\s+(?:${TYPES})\\b`,
+  `\\b(?:${HUNDRED_BLOCK}|${HOUSE_NUMBER})(?:(?:[NSEW]|North|South|East|West)\\.?\\s+)?(?:${WORD}\\s+){0,2}?${WORD}\\s+(?:${TYPES})\\b`,
   'gi',
 )
-const BLOCK = /^(\d{0,4}00) block (?:of )?/i
-/** Whether `text` has a street type as a whole word: street data, not a word list about meaning. */
-export const hasStreetType = (text) => new RegExp(`\\b(?:${TYPES})\\b`, 'i').test(text)
+const BLOCK = new RegExp(`^(${HUNDRED}) block (?:of )?`, 'i')
+/** Whether `text` has a street type, plural too, as a whole word: street data, not a word list about meaning. */
+export const hasStreetType = (text) => new RegExp(`\\b(?:${TYPES})s?\\b`, 'i').test(text)
 /** The only shape sent to the locator: single spaces, a number, then words. */
 const PLAIN_STREET = /^\d{1,6}(?: [A-Za-z][A-Za-z.'-]*){2,6}$/
 /** Whether `street` is a short plain street address, the one thing the locator is ever sent. */

@@ -164,7 +164,8 @@ item is a safety item that waits for a person ([coverage](coverage.md), "Review 
   "UPDATE:" and no place, because the feed replaces an updated report's description. The parser
   reads the leading place when it is short, of street characters and holds a street type; a block
   is placed by the boundary, while an intersection or a bare street has no house number, so the
-  locator is sent nothing and the area's words stand. The report's page adds the incident type, a
+  locator is sent nothing and the area's words stand (a number after Hwy, US, I-, County and the like
+  is a route, never a house number, and the parser reads plural street types, so all 21 are read). The report's page adds the incident type, a
   case number, the block address, an approximate map point, when it was published and last
   updated, and the tip line (the Madison Area Crime Stoppers line and the department's
   non-emergency line). There is no district field. The parser is `runner/lib/incidents.mjs`; the

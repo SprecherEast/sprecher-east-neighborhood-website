@@ -98,8 +98,9 @@ block address it gives, the case number and when it was last updated. Put what t
 cause or suspect it does not give. Write the block address as the report gives it in
 `$.location.address` (a block, an intersection or a street), and never take a place from the title.
 When the page was read and names no place, leave `$.coverage` as `unknown` with `missing-location`;
-when the page could not be read, put `location` and `address` in `$.unknowns`, say so in
-`$.coverageReason` and add `missing-location` too. Name no
+when the page could not be read, put `location` and `address` in `$.unknowns`, say so
+in `$.coverageReason`, in words that say the page could not be read, and add `missing-location` too; when it was
+read and names no place, `$.coverageReason` says that instead. Name no
 private person, a suspect or an arrested or charged person included.
 
 ## The five checks

@@ -207,10 +207,10 @@ The five checks, which verify runs on every item:
    another place in the text the street came from (the other reasons it is not sent are in
    `runner/README.md`, "Falls back"), and only its house number, street and street
    type, from a public item, go to the City's own locator. A block address (a hundred, as in "2800 block of Curry
-   Pkwy", as police reports give it; "3 block" is not one) is sent as the first address of the block,
+   Pkwy", as police reports give it; "3 block" is not one, and the word is never sent) is sent as the first address of the block,
    never with the word "block": it is one point for many addresses, so a change of tier it causes always gets
    `ambiguous-location`, even one that would otherwise be raised without it (a street named "Block"
-   with a hundred before it is read as a block, so it carries the flag too). Before the street the code looks for
+   with a hundred before it is read as a block, so it carries the flag too). A number after a route designation (Hwy, US, I-, County and the like) is a route, not a house number, so an intersection with one is never sent. Before the street the code looks for
    "city, village, town or township of …" (the Town of Madison is one: it was absorbed into the
    City of Madison and the City of Fitchburg on 31 October 2022, so a text naming it can't say
    which), Wisconsin (WI, Wis.) and any five-digit number (a ZIP code), and any of them stops the

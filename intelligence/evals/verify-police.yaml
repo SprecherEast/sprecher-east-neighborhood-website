@@ -99,7 +99,7 @@ cases:
     graders:
       - { check: equals, field: $.placement.method, value: word-match }
       - { check: isNull, field: $.placement.inside }
-    why: An intersection has no house number, so the locator is sent nothing and the area's words stand. Two roads that bound the area make it catchment, and a lane closure is something a neighbor can act on.
+    why: An intersection has no house number (and a number in a route is not one), so the locator is sent nothing and the area's words stand. Two roads that bound the area make it catchment, and a lane closure is something a neighbor can act on.
   - id: police-report-names-arrested-adult
     stage: verify
     tags: [police, safety, private-person]

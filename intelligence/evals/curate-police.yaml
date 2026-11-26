@@ -154,8 +154,34 @@ cases:
         coverage: unknown
         confidence: 0.3
         flags: [missing-location]
+        coverageReason: The report page could not be read, so whether the report names a place is not known.
         unknowns: [location, address]
     expected: { decision: needs-review, coverage: unknown, safety: true, route: reportItem }
     graders:
       - { check: equals, field: $.decision, value: needs-review }
     why: Verify could not read the report's page, so it does not know whether the report has a place. Nothing is known, so a person looks; it is never rejected as not here.
+  - id: police-page-read-and-names-no-place
+    stage: curate
+    tags: [police, safety, bar, place]
+    input:
+      sourceId: madison-police-incident-reports
+      externalId: madison-police-incident-reports:https://www.cityofmadison.com/police/incident-reports/2026-11-21/missing-teen
+      contentHash: 'a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9'
+      kind: news
+      title: Police ask for help finding a missing teen
+      sourceText: Police ask the public for help finding a teen last seen walking home from school on Tuesday.
+      startsAt: null
+      locationText: null
+      change: new
+    known: null
+    given:
+      verification:
+        coverage: unknown
+        confidence: 0.8
+        flags: [missing-location]
+        coverageReason: The report page was read and names no place, so nothing says it is here.
+        unknowns: [location, address]
+    expected: { decision: reject, coverage: unknown, safety: true, route: none }
+    graders:
+      - { check: equals, field: $.decision, value: reject }
+    why: The twin of the unreadable page, with the same flag and unknowns but a reason that says the page was read. A report that names no place is not here, so it is rejected; the reason is what tells the two apart.

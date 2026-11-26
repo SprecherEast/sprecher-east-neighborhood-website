@@ -58,6 +58,16 @@ describe('the incident reports parser', () => {
       ],
       ['N Stoughton Road and Reider Road, Officers responded.', 'N Stoughton Road and Reider Road'],
       ['S. Blair St., Officers responded.', 'S. Blair St.'],
+      // Every digit, plural street types, and the marks of live street names
+      ['2900 block Curry Parkway, x', '2900 block Curry Parkway'],
+      ['900 block Rise Lane, x', '900 block Rise Lane'],
+      ['Stoughton and Pflaum roads, x', 'Stoughton and Pflaum roads'],
+      ['Williamson and S. Ingersoll Streets, x', 'Williamson and S. Ingersoll Streets'],
+      ['Huxley and Roth Streets, x', 'Huxley and Roth Streets'],
+      ['S. BLAIR ST., x', 'S. BLAIR ST.'],
+      ["O'Keeffe Ave and Main St, x", "O'Keeffe Ave and Main St"],
+      ['Main St & Park St, x', 'Main St & Park St'],
+      ['Hwy 12/18 at Sprecher Rd, x', 'Hwy 12/18 at Sprecher Rd'],
     ])
       assert.equal(placeOf(description), place, description)
   })
@@ -69,9 +79,22 @@ describe('the incident reports parser', () => {
       'UPDATE - Police arrested a suspect. 7000 block Littlemore Dr, Officers responded.',
       'Officers responded to a report near 5 Main St late on Tuesday.',
       '100 block , A, B',
+      // A street type has to be a whole word, and the update prefix has a colon
+      'Westway and Main, Officers responded.',
+      'Main Streetcar, Officers responded.',
+      'UPDATE: Main St, Officers responded.',
       '',
     ])
       assert.equal(placeOf(description), null, description)
+  })
+
+  it('has one known limit: a short lead sentence with a street before its first comma is read', () => {
+    // Only a hint for verify, which reads the whole report, and the boundary places a block;
+    // on the live feed the place always leads
+    assert.equal(
+      placeOf('Officers arrested a man on Main St, late Tuesday.'),
+      'Officers arrested a man on Main St',
+    )
   })
 
   it('takes a leading place of at most 60 characters and 8 words, of plain street characters', () => {

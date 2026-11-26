@@ -58,7 +58,8 @@ interest and context", rule 6. First, a known item's change (`$.known` set) is a
 whatever its place: the feed's update text often names none. Otherwise, for a new report, judging by
 what it means and never by words in its title: `reject` it when its page was read and it is not
 here (`outside` or `unknown`), or it is neither serious nor something a neighbor can act on;
-`needs-review` with `missing-location` when its page could not be read; else `needs-review`, with
+`needs-review` with `missing-location` when verify says in `$.verification.coverageReason` that
+the page could not be read (a page that was read and names no place is the reject above); else `needs-review`, with
 the reasons saying why it is serious or what a neighbor can do, and what the report does not
 show. Name no private person in the reasons, a suspect or an arrested or charged person included.
 
