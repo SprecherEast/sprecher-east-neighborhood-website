@@ -156,4 +156,20 @@ print(parts.calendar_page(560, 150, 'NOV', '26', w=190, h=210) in thanks, parts.
     expect(r.stderr).toBe('')
     expect(r.stdout.trim().split('\n')).toEqual(['True True True', 'True True True', 'True True'])
   })
+
+  // Golden hashes of the two published pictures. The trash hash is the scene's output from before
+  // the turkey and the calendar page became shared parts, so the refactor changed nothing; any
+  // change to a part's drawing changes a published picture and must update these on purpose.
+  it('keeps the published trash and Thanksgiving pictures exactly as drawn', () => {
+    const r = run(
+      `import hashlib
+from scripts.illustrations.scenes import SCENES
+for name in ('trash', 'thanksgiving'): print(hashlib.sha256(SCENES[name]().encode()).hexdigest())`,
+    )
+    expect(r.stderr).toBe('')
+    expect(r.stdout.trim().split('\n')).toEqual([
+      'cfc85dab13029a54b27e99d0bb7e59275905e9b36395ca180aa88949ea9badaf',
+      '7128ee7d2ba3f20716f9c8ca4bf216817d2f05589dee6de4801170ce3a35715f',
+    ])
+  })
 })
