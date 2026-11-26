@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="light dark" />
+    <title>System map: Sprecher East developer site</title>
+    <style>
+      /*THEME*/
+    </style>
+    <style>
+      /*CSS*/
+    </style>
+  </head>
+  <body>
+    <div id="app" aria-busy="true">
+      <header class="bar">
+        <div class="brand">
+          <h1>System map</h1>
+          <p id="counts" class="hint">Mapping…</p>
+        </div>
+        <div class="bar-buttons">
+          <button type="button" id="panel-btn" aria-controls="controls">Controls</button>
+          <button type="button" id="help-btn">How to use</button>
+          <button type="button" id="theme-btn">Light or dark</button>
+        </div>
+      </header>
+      <aside id="controls" class="panel left" aria-label="Controls"></aside>
+      <main id="stage">
+        <canvas
+          id="map"
+          tabindex="0"
+          role="application"
+          aria-label="Map of the system. Use the outline in the controls to read it as a list. Arrow keys move the map, plus and minus zoom."
+        ></canvas>
+        <p id="loading" class="loading" role="status">Mapping…</p>
+        <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+        <section id="legend" class="legend panel" aria-label="Legend"></section>
+        <div class="minimap panel">
+          <canvas id="minimap" aria-hidden="true"></canvas>
+          <button type="button" id="mini-hit" aria-label="Jump to a part of the map"></button>
+        </div>
+        <div id="toast" class="toast panel" hidden></div>
+      </main>
+      <aside id="detail" class="panel right" aria-labelledby="detail-title" hidden></aside>
+      <footer class="foot">
+        <p id="footer-text" class="hint"></p>
+        <a href="https://github.com/__OWNER__/__REPO__" rel="noopener noreferrer">Repository</a>
+      </footer>
+    </div>
+    <p id="announce" class="sr-only" role="status" aria-live="polite"></p>
+    <dialog id="help" aria-labelledby="help-title">
+      <h2 id="help-title">How to use the system map</h2>
+      <div id="help-body"></div>
+      <button type="button" id="help-close">Close</button>
+    </dialog>
+    <dialog id="folder" aria-labelledby="folder-title">
+      <form id="folder-form" method="dialog">
+        <h2 id="folder-title">Where is your checkout?</h2>
+        <p>
+          Enter the folder that holds this repository on your computer. We remember it on this
+          device only.
+        </p>
+        <label for="folder-input">Folder</label>
+        <input id="folder-input" type="text" autocomplete="off" spellcheck="false" />
+        <p id="folder-error" role="alert"></p>
+        <button type="submit">Save and open</button>
+        <button type="button" id="folder-cancel">Cancel</button>
+      </form>
+    </dialog>
+    <noscript
+      ><p class="noscript">
+        The system map needs JavaScript. The same facts are in docs/knowledge/graph.json and
+        docs/knowledge/catalog.md.
+      </p></noscript
+    >
+    <script type="application/json" id="map-data">
+      /*DATA*/
+    </script>
+    <script>
+      /*SCRIPT*/
+    </script>
+  </body>
+</html>
