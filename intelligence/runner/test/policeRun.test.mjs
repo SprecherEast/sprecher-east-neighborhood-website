@@ -85,16 +85,18 @@ const run = async ({
             },
           }),
         })
-      if (stageId === 'curate') if (police && decision === 'accept') return curation()
-      // A duplicate names the item it repeats, as the schema asks
-      return police && decision === 'duplicate'
-        ? curation({
-            decision: 'duplicate',
-            reasons: ['Same report.'],
-            targetCollection: 'events',
-            targetId: 1,
-          })
-        : curation({ decision: 'reject', reasons: ['No.'] })
+      if (stageId === 'curate') {
+        if (police && decision === 'accept') return curation()
+        // A duplicate names the item it repeats, as the schema asks
+        return police && decision === 'duplicate'
+          ? curation({
+              decision: 'duplicate',
+              reasons: ['Same report.'],
+              targetCollection: 'events',
+              targetId: 1,
+            })
+          : curation({ decision: 'reject', reasons: ['No.'] })
+      }
       return draft()
     }),
     state: { sources: {}, seen: {} },

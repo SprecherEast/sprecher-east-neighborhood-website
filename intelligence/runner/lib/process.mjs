@@ -114,7 +114,7 @@ export async function processRun(run) {
     try {
       item.known = await cms.known(candidate.externalId)
       // The models have no tools, so an item from an always-held source goes to verify with its own
-      // page's text in it, read here once (pageRead.mjs); the gate holds a reject without it
+      // page's text in it, read here once (pageRead.mjs); the gate holds a reject or duplicate without it
       if (unreadReport(contract.safety, item)) {
         const source = contract.registry.sources.find((s) => s.id === candidate.sourceId)
         const page = await readReportPage(candidate, { source, http, robots })
