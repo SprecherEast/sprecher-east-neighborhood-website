@@ -1,0 +1,46 @@
+---
+name: 'Platform services'
+type: platform-area
+summary: 'email, robot check, counter, metadata.'
+aliases: ['turnstile', 'umami', 'seo', 'runUseCase']
+relationships: []
+---
+
+# Platform services
+
+Five small shared areas that talk to the outside or shape what a page says about itself: `email/` (SMTP), `turnstile/` (the robot check), `analytics/` (the visit counter), `seo/` (metadata and search-engine rules) and `service/` (the wrapper every use case and action runs in). No CMS content; their settings are environment variables. Pure helpers are in [shared helpers](../lib/README.md).
+
+## How the pieces link
+
+- **Libraries doing real work:** Nodemailer through `@payloadcms/email-nodemailer`; Cloudflare Turnstile; self-hosted Umami; Next.js's metadata API.
+- **Who uses them:** [contact](../../modules/contact/README.md) and [accounts](../../modules/accounts/README.md) use the robot check; every module's use cases use `runUseCase` and `runAction`; the public layout mounts the counter (`src/app/(frontend)/layout.tsx`); pages and `generateMeta` use `seo/`.
+
+## Behaviors and events
+
+- **`emailAdapterFromEnv`** builds SMTP from `SMTP_*`; with no host or a bad setting (address, port, half a login) it logs and emails go to the log; with a login it insists on STARTTLS (`email/emailAdapter.ts`, decision 0004).
+- **The visit counter** loads the Umami script from the public layout after the page, never in the admin or a draft preview, only when `NEXT_PUBLIC_UMAMI_WEBSITE_ID` is set (fixed at build) and the site has a real domain; it counts the site's own hostnames only, sets no cookies, honors Do Not Track and sends no query string, since reset and verification tokens travel there. The script comes from `stats.<domain>` (`analytics/umami.ts`, `analytics/UmamiScript.tsx`, #950).
+- **Search engines:** account and token pages use `NOT_INDEXED`, and a page whose address holds a token also sends no referrer (`seo/notIndexed.ts`, `seo/privateAddress.ts`, #280). `mergeOpenGraph` fills site defaults; the share image is the `og` size, else the upload, else a default photo (`seo/mergeOpenGraph.ts`, `seo/generateMeta.ts`).
+
+## Shared pieces it uses
+
+- `src/platform/lib` (`humanCheck`, `getURL`, `escapeMarkup`) and Payload's types; the SEO tab fields come from `seoTab` in [Shared Payload code](../payload/README.md).
+
+## Rules and the tests that protect them
+
+- **The robot check fails closed.** It is off until both Turnstile keys are set; any error refuses; action and hostname are checked; no IP is sent; the widget appears only when Cloudflare asks (`interaction-only`) and a token is single use, so `useRobotCheck` renews it after each attempt (`turnstile/turnstileVerifier.ts`, `turnstile/useRobotCheck.client.ts`, decision 0003; `turnstile/turnstileVerifier.test.ts`).
+- **Likely-human clicks** (#975): one listener sends the Umami event `likely-human-click` for a click the browser made for a person (`isTrusted`) on a button or a link to another site, once per element per visit; same-site, `mailto:` and `tel:` links, disabled buttons, scripted clicks, automated browsers and Do Not Track send nothing. It holds no cookie or identifier, only the label (60 characters) or the other site's host (`analytics/likelyHumanClicks.ts`; `analytics/likelyHumanClicks.test.ts`, `analytics/LikelyHumanClicks.client.test.tsx`).
+- **The counter is cookie-free and off in the admin** (`analytics/umami.test.ts`, `analytics/UmamiScript.test.tsx`, `src/app/nextConfigEnv.test.ts`).
+- **A tab title shows the site name once:** the title is the SEO title, else the document's own, else the site name set as the whole title, since the layout's template adds the name after any other (`seo/generateMeta.ts`, `seo/siteName.ts`, #1011; `seo/generateMeta.test.ts`). Defaults call Sprecher East an unofficial site, never an association (`seo/organizationJsonLd.ts`, #1010).
+- **A failure never logs personal data:** `runUseCase` catches, logs only the error's class name and returns the fallback; `runAction` turns a throw into a failure code and logs it only for `server-error` (`service/runUseCase.ts`, #521; `service/runUseCase.test.ts`, `seo/privateAddress.test.ts`).
+
+## Boundaries
+
+- No module is imported (`eslint.boundaries.config.mjs`); modules import these through `src/platform/`.
+
+## Decisions
+
+[0003](../../../docs/architecture/decisions/0003-turnstile-robot-check.md), [0004](../../../docs/architecture/decisions/0004-email-through-smtp.md), [0016](../../../docs/architecture/decisions/0016-one-service-helper-no-pass-through-use-cases.md).
+
+## Known gaps
+
+None known.

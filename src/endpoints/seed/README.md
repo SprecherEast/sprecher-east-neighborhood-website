@@ -1,0 +1,46 @@
+---
+name: 'Seed and preview accounts'
+type: feature
+summary: 'demo content and the preview accounts.'
+aliases: ['seed', 'preview accounts', 'demo content']
+relationships: []
+---
+
+# Seed and preview accounts
+
+Two things that fill an empty database: the demo seed (pages, posts, events, FAQ, resources, a contact form, placeholder pictures) that an admin runs in development, and the throwaway accounts of a pull request preview. In the CMS: it writes the same collections editors use, as a one-off; none of it is live content. A preview also copies the published site ([Preview copy](../../platform/payload/previewCopy/README.md)); the seed is what the rest of a preview starts from.
+
+## How the pieces link
+
+- **Demo seed:** `index.ts` clears nearly everything, then writes the home, about, get-involved, contact, privacy and association pages, three posts, events, categories, FAQ and resources, with pictures from the files beside it; copy lives in the `*-page.ts` and `data/` files and the rich text is built by `helpers/lexical.ts`. It writes with `disableRevalidate`, so no page refreshes (see [site](../../modules/site/README.md)).
+- **Run from:** the admin dashboard's seed button (`src/platform/payload/admin/SeedButton.client.tsx`) calling `/next/seed` ([the app shell](../../app/README.md)); `isSeedEnabled` decides whether it exists.
+- **Preview accounts:** `preview-accounts.ts` names one account per role that signs in with a password, `preview-database.ts` makes or refreshes them and `run-preview-seed.ts` is the script the deploy runs; the passwords come from the deploy's private file (`ops/preview-accounts.sh`), never from here ([`ops/previews.md`](../../../ops/previews.md#the-workflow-1075)).
+- **Libraries doing real work:** Payload's Local API and database adapter.
+
+## Behaviors and events
+
+- **The demo seed deletes content:** it empties the collections and globals, their versions, and the demo author, then reseeds; only an admin may run it (`/next/seed` answers 403 otherwise, 404 where the seed is off) (`index.ts`, `src/app/(frontend)/next/seed/route.ts`, #140, #147).
+- **The preview seed runs on every deploy of the same preview** and is safe to repeat: an account that exists gets the new password (which ends its sessions), is put back to its role, verified and unlocked; any other account, such as a neighbor who signed up in the preview, is left alone (`preview-database.ts`, #1075, #1393).
+- **A failure prints one fixed line,** never the seed's own error text, because the deploy log is public (`run-preview-seed.ts`, #1393).
+
+## Shared pieces it uses
+
+- `ROLES` from `src/platform/lib`; the modules' public entries for fixed paths and defaults (`@/modules/directory`, `@/modules/site`); a seed is the one place allowed to import several modules.
+
+## Rules and the tests that protect them
+
+- **A preview is never created with an empty `users` collection:** the first account on an empty collection becomes an admin (`firstAccountIsAdmin`), so the admin is made first and the other roles keep the role they are given; no agent account is made (`preview-database.ts`; `preview-database.test.ts`, `preview-accounts.test.ts`).
+- **No password is logged or returned,** and none is copied from production; accounts are made verified with no verification email (`preview-database.ts`, `run-preview-seed.ts`; `run-preview-seed.test.ts`).
+- **Seeded text follows the site's voice and the facts:** the pages say the site is unofficial and AI-assisted, never an association (`seedCopy.test.ts`, `privacy-page.test.ts`, `about-page.test.ts`, `data/faq.test.ts`, `data/resources.test.ts`); the seed's shape: `index.test.ts`.
+
+## Boundaries
+
+- Never runs in production (`isSeedEnabled`). A seed imports module entries only; no module imports it.
+
+## Decisions
+
+Epic #1070 and issues #1075, #1077, #1393, #1394; the seed's switch is #147.
+
+## Known gaps
+
+- Seeded copy is a sample; the live site's text is edited in the CMS and is not kept here.
