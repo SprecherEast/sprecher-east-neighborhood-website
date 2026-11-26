@@ -53,6 +53,13 @@ Set `$.safety` by the definition in `safety.yaml`. A safety item is never `accep
 reads no text of the item and holds it for a person unless both stages answer a plain `false`
 (`coverage.md`, "Review passes"), so your answer is the judgment.
 
+For an incident from `madison-police-incident-reports`, apply the bar in `coverage.md`, "Public
+interest and context", rule 6: `reject` it when it is not here (`outside` or `unknown`) or is
+neither serious nor something a neighbor can act on, judging by what the report means and never by
+words in its title; otherwise `needs-review`, with the reasons saying why it is serious or what a
+neighbor can do, and what the report does not show. A report that changed after an editor saw it
+(`$.known` set) is an `update`.
+
 ## Second read
 
 You are the second of the two reads the pipeline does (`coverage.md`, "Review passes"). Check the verify result

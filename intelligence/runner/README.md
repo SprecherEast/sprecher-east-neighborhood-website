@@ -36,23 +36,24 @@ only when the run failed; the run log is in Admin → Agents → Agent Runs.
 
 ## How the parts fit
 
-| File                  | Does                                                                                                                      |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `lib/contract.mjs`    | Loads and checks `pipeline.yaml` and `safety.yaml` against their schemas, with `sources.yaml`, `coverage.md`, the prompts |
-| `lib/fetchSource.mjs` | Direct fetch: ETag and Last-Modified, 3 redirects, one retry, gates, robots.txt                                           |
-| `lib/parsers.mjs`     | Legistar events and matters (JSON), RSS and Atom; `lib/ics.mjs`: iCalendar via ical.js                                    |
-| `lib/html.mjs`        | The HTML pages with no feed (#390): City article lists, City meetings, WisDOT meetings                                    |
-| `lib/scout.mjs`       | Candidates with `externalId`, `contentHash` and `change`; the Legistar area filter                                        |
-| `lib/model.mjs`       | The model adapter: OpenClaw (`openclaw agent --agent … --json`), or a fake for tests                                      |
-| `lib/stages.mjs`      | One stage: prompt + coverage + item, schema check, one retry; verify's escalation, the promotion guard                    |
-| `lib/gate.mjs`        | The one gate: what may be accepted and which tool it goes to; `lib/safety.mjs` reads the source list of `safety.yaml`     |
-| `lib/submit.mjs`      | Runs the gate, then the MCP envelope, validation, one retry, follow-up review and image reports                           |
-| `lib/cms.mjs`         | The MCP client with the key, the dry-run CMS, and `withoutSuggestions`, the client with no submit                         |
-| `lib/boundary.mjs`    | The dated copy of the City's boundary: checks, point in polygon, age, refresh from the layer                              |
-| `lib/geocode.mjs`     | A street address in a text, and the City's own address locator (no key); only the street address is sent                  |
-| `lib/place.mjs`       | After verify: places the item by the boundary or the word match, and records `verification.placement`                     |
-| `lib/wiring.mjs`      | What `run.mjs` hands the pipeline: HTTP, robots.txt, the City's locator with the settings from `area.yaml`, the commit    |
-| `lib/pipeline.mjs`    | One run: kill switch and the run log; `lib/process.mjs`: budgets, state, items, failures                                  |
+| File                  | Does                                                                                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `lib/contract.mjs`    | Loads and checks `pipeline.yaml` and `safety.yaml` against their schemas, with `sources.yaml`, `coverage.md`, the prompts  |
+| `lib/fetchSource.mjs` | Direct fetch: ETag and Last-Modified, 3 redirects, one retry, gates, robots.txt                                            |
+| `lib/parsers.mjs`     | Legistar events and matters (JSON), RSS and Atom; `lib/ics.mjs`: iCalendar via ical.js                                     |
+| `lib/html.mjs`        | The HTML pages with no feed (#390): City article lists, City meetings, WisDOT meetings                                     |
+| `lib/scout.mjs`       | Candidates with `externalId`, `contentHash` and `change`; the Legistar area filter                                         |
+| `lib/model.mjs`       | The model adapter: OpenClaw (`openclaw agent --agent … --json`), or a fake for tests                                       |
+| `lib/stages.mjs`      | One stage: prompt + coverage + item, schema check, one retry; verify's escalation, the promotion guard                     |
+| `lib/gate.mjs`        | The one gate: what may be accepted and which tool it goes to; `lib/safety.mjs` reads the source list of `safety.yaml`      |
+| `lib/submit.mjs`      | Runs the gate, then the MCP envelope, validation, one retry, follow-up review and image reports                            |
+| `lib/cms.mjs`         | The MCP client with the key, the dry-run CMS, and `withoutSuggestions`, the client with no submit                          |
+| `lib/boundary.mjs`    | The dated copy of the City's boundary: checks, point in polygon, age, refresh from the layer                               |
+| `lib/geocode.mjs`     | A street address (or a block, asked as its first address) in a text, and the City's own address locator; only that is sent |
+| `lib/feed.mjs`        | RSS and Atom items; `lib/incidents.mjs` reads the police incident reports feed's block address and its stable id (#993)    |
+| `lib/place.mjs`       | After verify: places the item by the boundary or the word match, and records `verification.placement`                      |
+| `lib/wiring.mjs`      | What `run.mjs` hands the pipeline: HTTP, robots.txt, the City's locator with the settings from `area.yaml`, the commit     |
+| `lib/pipeline.mjs`    | One run: kill switch and the run log; `lib/process.mjs`: budgets, state, items, failures                                   |
 
 ## Placement by the City's boundary (#1009)
 

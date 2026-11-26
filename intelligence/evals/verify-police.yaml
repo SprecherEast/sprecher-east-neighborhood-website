@@ -1,0 +1,80 @@
+# Verify eval cases for the City's police incident reports (#993): where an incident is, by the
+# block address and the City's boundary, never by words in the title. A block is placed by its first
+# address (runner/lib/place.mjs); the item is always held for a person (safety.yaml). `placement`
+# is written by code after verify, so the collector (#272) checks it with place.mjs and a recorded
+# locator answer. Synthetic items; the streets are ones the repo's place cases already use.
+version: 1
+asOf: '2026-11-25'
+stage: verify
+cases:
+  - id: police-block-inside-area
+    stage: verify
+    tags: [police, place, boundary, safety]
+    input:
+      sourceId: madison-police-incident-reports
+      kind: news
+      title: Armed carjacking
+      sourceText: 7000 block Littlemore Dr, Officers responded after a caller reported a car taken at gunpoint. The Persons Crime Unit is investigating.
+      startsAt: null
+      locationText: 7000 block Littlemore Dr
+    expected:
+      {
+        decision: needs-review,
+        coverage: core,
+        safety: true,
+        route: reportItem,
+        placement: boundary,
+      }
+    graders:
+      - { check: equals, field: $.safety, value: true }
+      - { check: equals, field: $.placement.method, value: boundary }
+      - { check: equals, field: $.placement.inside, value: true }
+      - check: model
+        rubric: >-
+          The place stays a block as the report gives it. Nothing is stated that the report does not
+          give: no time, count, injury or suspect description.
+    why: A block address inside the area, placed by the first address of the block and the City's boundary. The item is a safety item from a listed source, so a person decides.
+  - id: police-same-named-street-elsewhere
+    stage: verify
+    tags: [police, place, boundary, similar-name]
+    input:
+      sourceId: madison-police-incident-reports
+      kind: news
+      title: Man hurt in a fight outside a store on Cottage Grove Road
+      sourceText: 5200 block Cottage Grove Rd, Officers were called to a fight in a parking lot. One man was taken to a hospital.
+      startsAt: null
+      locationText: 5200 block Cottage Grove Rd
+    expected:
+      { decision: reject, coverage: outside, safety: true, route: none, placement: boundary }
+    graders:
+      - { check: equals, field: $.placement.method, value: boundary }
+      - { check: equals, field: $.placement.inside, value: false }
+      - { check: notMatches, field: $.coverage, value: '^core$' }
+    why: Cottage Grove Road bounds the area and its name is a place word, but this block is far west of it. The boundary decides, so it is outside and is not shown to neighbors as local.
+  - id: police-no-address
+    stage: verify
+    tags: [police, place, no-fabrication]
+    input:
+      sourceId: madison-police-incident-reports
+      kind: news
+      title: Police ask for help finding a missing teen
+      sourceText: Police ask the public for help finding a teen last seen walking home from school on Tuesday. Anyone with information should call the non-emergency line.
+      startsAt: null
+      locationText: null
+    expected:
+      {
+        decision: reject,
+        coverage: unknown,
+        flags: [missing-location],
+        safety: true,
+        route: none,
+        placement: unplaced,
+      }
+    graders:
+      - { check: equals, field: $.placement.method, value: unplaced }
+      - { check: isNull, field: $.placement.inside }
+      - check: model
+        rubric: >-
+          The place is left unknown after the report's own page was read, and none is guessed from
+          the title or from the school, the street or the neighborhood the text suggests.
+    why: Neither the feed nor the report names a place, so nothing says it is here. The place is never guessed, and a report with no place is not offered to the editor.

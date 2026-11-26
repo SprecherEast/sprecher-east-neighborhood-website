@@ -116,7 +116,8 @@ sources conflict, or the item is borderline. Route a change to an item already i
 How curate reads an incident, hazard or other safety item, under the standard in
 [Editorial integrity](../docs/guidelines/editorial-integrity.md). Such an item is
 never `accept` (see "Review passes"): it is `needs-review` unless rule 4 routes it as `reject`
-(`past`) or `update`. This decides what the editor is told.
+(`past`) or `update`, or rule 6 (the bar for a police-reported incident) rejects it. This decides
+what the editor is told.
 
 1. **Public interest.** Can residents use it: a hazard to avoid, a service change, a decision, a
    thing to do? Record the answer in `$.reasons`. An effect on home values is never a reason to
@@ -130,6 +131,25 @@ never `accept` (see "Review passes"): it is `needs-review` unless rule 4 routes 
    correction as an `update`, so the editor adds it with the date and the record stays; never
    `reject` or remove it. An old incident stays findable, with its resolution first.
 5. **Always a reason.** Every accept, reject and `needs-review` has at least one reason an editor can check.
+6. **A police-reported incident (the bar, #993).** The site is never a crime list, so an incident
+   from the City's police reports reaches the editor only when it is both of these, judged by
+   what the report means, never by words in its title:
+   - **Here.** Its place, the block address the report gives, is `core` or `catchment` by
+     "Review passes", check 2. A block elsewhere, including a street of the same name, is `outside`;
+     a report that names no place in the feed or on its own page is `unknown`: both are `reject`ed,
+     and nothing is guessed.
+   - **Worth a neighbor's time.** Serious (harm to a person, a weapon, a threat to the public), or
+     something a neighbor can act on (a danger that continues, a request for the public's help, an
+     area to avoid). An ordinary property loss or a minor dispute with no danger left is `reject`ed.
+
+   **Probe before the item is considered.** The feed is only a lead: read the report's own page,
+   look for an update on the same case (`$.known`; the case number the page gives), and state only
+   what the report gives: no count, time, injury, cause or suspect it leaves out. When the report
+   changes after an editor saw it, route it as `update`, resolution first (rule 4). The
+   draft is calm and fact first, names the place as a block as the report gives it, names no private
+   person (a victim, a witness, a person of interest), and gives the tip line the report itself
+   gives, with a link to the report. Such an item is always held for a person, which "Review
+   passes" enforces in code.
 
 ## Review passes
 
@@ -176,7 +196,10 @@ The five checks, which verify runs on every item:
    `ambiguous-location`, so a person looks. An address is not sent when the code finds
    another place in the text the street came from (the other reasons it is not sent are in
    `runner/README.md`, "Falls back"), and only its house number, street and street
-   type, from a public item, go to the City's own locator. Before the street the code looks for
+   type, from a public item, go to the City's own locator. A block address ("2800 block of Curry
+   Pkwy", as police reports give it) is sent as the first address of the block, never with the
+   word "block": it is one point for many addresses, so a change of tier it causes always gets
+   `ambiguous-location`, even one that would otherwise be raised without it. Before the street the code looks for
    "city, village, town or township of …" (the Town of Madison is one: it was absorbed into the
    City of Madison and the City of Fitchburg on 31 October 2022, so a text naming it can't say
    which), Wisconsin (WI, Wis.) and any five-digit number (a ZIP code), and any of them stops the

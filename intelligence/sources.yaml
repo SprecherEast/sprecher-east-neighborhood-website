@@ -1,7 +1,7 @@
 # Source registry for the intelligence agents (#271, #352). Summary: sources.md. Only `valid` is
 # polled; `pilotRank` marks the daily pilot; `fetchStrategy` is `direct` unless stated.
 version: 1
-checkedOn: '2026-11-10'
+checkedOn: '2026-11-25'
 sources:
   - id: legistar-events
     name: City of Madison meetings (Legistar API)
@@ -295,20 +295,30 @@ sources:
   - id: madison-police-incident-reports
     name: 'Madison Police incident reports feed'
     owner: 'City of Madison Police Department'
-    canonicalUrl: https://www.cityofmadison.com/feed/incident-reports
+    canonicalUrl: https://www.cityofmadison.com/police/incident-reports
     feedUrl: https://www.cityofmadison.com/feed/incident-reports
     format: rss
     scope: 'Incident reports, with the block address only in the description'
     audiences: [everyone]
     reliability: official
-    access: 'Public feed; robots.txt not checked for this path.'
-    cadence: none
-    lastChecked: '2026-11-10'
-    result: pending
-    pilotRank: null
-    treatment: 'Not collected. A safety item never auto-publishes (coverage.md, "Review passes"); place comes from the description text only.'
-    example: null
-    notes: 'Observed 2026-11-10: Answered as RSS 2.0 with a guid, pubDate and link per item. The block address appears only inside the description; there is no district field. The incident reports page does not link to the feed. Hand check: #993.'
+    access: 'Public feed on a path robots.txt allows (checked 2026-11-25); the City says its website data is public and generally available to copy or distribute, logos and images excepted. Read once a day, logged out; the report pages are never fetched in bulk.'
+    cadence: daily
+    lastChecked: '2026-11-25'
+    result: valid
+    pilotRank: 9
+    robots:
+      { checked: '2026-11-25', result: allowed, url: https://www.cityofmadison.com/robots.txt }
+    treatment: >-
+      Always a safety item: coverage.md, "Review passes", and safety.yaml hold every item for a person,
+      never a suggestion. The block address is read from the start of the description (the parser, #993);
+      the City's boundary places it, never a word in the title. The report's page is the item's id, so a
+      changed report is an update to a known item. A feed item is only a lead: verify reads the report
+      page and the tip line it gives, and no number or detail the report does not give is stated.
+    example:
+      title: Armed Carjacking
+      date: '2026-11-20'
+      url: https://www.cityofmadison.com/police/incident-reports/2026-11-19/armed-carjacking
+    notes: 'Hand check 2026-11-25 (#993): RSS 2.0 with a guid, link and pubDate on every item and no ttl or lastBuildDate; the guid ends in the time of the last update, so the page link is the id. The City posts a few reports a week; one daily read is enough. Each report page gives the incident type, a case id, the block address and when it was last updated.'
   - id: city-traffic-engineering-news
     name: 'City of Madison Traffic Engineering news'
     owner: 'City of Madison Traffic Engineering'

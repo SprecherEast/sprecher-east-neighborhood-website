@@ -8,16 +8,28 @@ import { fetchDirect } from './fetchSource.mjs'
 const TYPES =
   'St|Street|Ave|Avenue|Rd|Road|Dr|Drive|Ln|Lane|Blvd|Boulevard|Ct|Court|Way|Pl|Place|Pkwy|Parkway|Cir|Circle|Ter|Terrace|Trl|Trail|Hwy|Highway|Loop|Pass|Run|Sq|Square'
 const WORD = "[A-Za-z][A-Za-z.'-]*"
-// number, an optional direction, up to three name words, then the street type; "7 PM on Main St" is not an address
+// number, an optional "block" (a hundred block, as police reports give it), an optional direction, up to
+// three name words, then the street type; "7 PM on Main St" is not an address
 const ADDRESS = new RegExp(
-  `\\b\\d{1,6}(?!\\s*[ap]\\.?m\\b)\\s+(?:(?:[NSEW]|North|South|East|West)\\.?\\s+)?(?:${WORD}\\s+){0,2}?${WORD}\\s+(?:${TYPES})\\b`,
+  `\\b\\d{1,6}(?!\\s*[ap]\\.?m\\b)\\s+(?:block\\s+(?:of\\s+)?)?(?:(?:[NSEW]|North|South|East|West)\\.?\\s+)?(?:${WORD}\\s+){0,2}?${WORD}\\s+(?:${TYPES})\\b`,
   'gi',
 )
+const BLOCK = /^(\d{1,6}) block (?:of )?/i
 /** The only shape sent to the locator: single spaces, a number, then words. */
 const PLAIN_STREET = /^\d{1,6}(?: [A-Za-z][A-Za-z.'-]*){2,6}$/
 /** Whether `street` is a short plain street address, the one thing the locator is ever sent. */
 export const isPlainStreet = (street) =>
   typeof street === 'string' && PLAIN_STREET.test(street) && street.length <= 80
+
+/**
+ * What the locator is asked for `street`: for a block ("2800 block of Curry Pkwy") the first
+ * address of the block, "2800 Curry Pkwy", the only public house number the text gives.
+ * `block` says the point stands for a block, not one building (coverage.md, check 2).
+ */
+export function locatorQuery(street) {
+  const block = BLOCK.test(street)
+  return { query: block ? street.replace(BLOCK, '$1 ') : street, block }
+}
 const METERS_PER_DEGREE = 110_574
 
 /** The distinct street addresses in `text`, in order, each as written with single spaces. */

@@ -137,6 +137,9 @@ export const FEEDS = {
   'city-news': '<main><ul class="list--unstyled"></ul></main>',
   'city-public-info-meetings': '<main><ul class="list--items list--unstyled"></ul></main>',
   'wisdot-i39-90-94': '<h1>News and Meetings</h1>',
+  // The police feed (#993), with no items today: its parser has its own tests
+  'madison-police-incident-reports':
+    '<rss><channel><title>Police Incident Reports</title></channel></rss>',
 }
 
 /** The City of Madison page each HTML source reads, by path. */
@@ -144,6 +147,7 @@ const cityPages = {
   '/council/district16/blog': 'district16-blog',
   '/news': 'city-news',
   '/events/public-information-meetings': 'city-public-info-meetings',
+  '/feed/incident-reports': 'madison-police-incident-reports',
 }
 
 /** A `fetch` double serving FEEDS by source, robots.txt allowing everything. */
