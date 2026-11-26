@@ -62,8 +62,24 @@ describe('buildImports', () => {
       text: "import { sqliteAdapter } from '@payloadcms/db-sqlite'\nimport { Z } from '@/platform/ui/Z'",
     },
     { file: 'src/modules/events/ui/Card.test.tsx', text: "import { v } from 'vitest'" },
+    { file: 'src/modules/events/ui/Card.stories.tsx', text: "import { s } from 'storybook'" },
+    {
+      file: 'src/platform/theme/testing/fontFaces.ts',
+      text: "import { f } from 'font-tool'\nimport { n } from '@/modules/news/server'",
+    },
+    {
+      file: 'src/modules/events/ui/Other.tsx',
+      text: "import { l } from 'not-a-dependency'\nimport { t } from 'toString'",
+    },
   ]
-  const dependencies = { zod: '^4.1.0', '@payloadcms/db-sqlite': '3.91.0', unused: '1.0.0' }
+  const dependencies = {
+    zod: '^4.1.0',
+    '@payloadcms/db-sqlite': '3.91.0',
+    unused: '1.0.0',
+    vitest: '4.0.0',
+    storybook: '9.0.0',
+    'font-tool': '1.0.0',
+  }
   const { nodes, edges } = buildImports({
     sources,
     dependencies,
@@ -91,6 +107,18 @@ describe('buildImports', () => {
     expect(edge('module:events', 'library:zod', 'uses')).toMatchObject({ count: 2 })
     expect(edge('platform-area:lib', 'library:zod', 'uses')).toMatchObject({ count: 1 })
     expect(edge('site:sprecher-east', 'library:@payloadcms/db-sqlite', 'uses')).toBeDefined()
+  })
+
+  it('ignores test, story and testing-folder files, so a test-only package is no library', () => {
+    expect(nodes.map((n) => n.id)).not.toContain('library:vitest')
+    expect(nodes.map((n) => n.id)).not.toContain('library:storybook')
+    expect(nodes.map((n) => n.id)).not.toContain('library:font-tool')
+    expect(edge('platform-area:theme', 'module:news', 'uses')).toBeUndefined()
+  })
+
+  it('makes a library only of a package that package.json lists, by its own name', () => {
+    expect(nodes.map((n) => n.id)).not.toContain('library:not-a-dependency')
+    expect(nodes.map((n) => n.id)).not.toContain('library:toString')
   })
 
   it('has an area use the platform area or module it imports, but not itself', () => {

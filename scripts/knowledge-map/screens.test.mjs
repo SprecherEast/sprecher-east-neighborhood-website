@@ -96,6 +96,24 @@ describe('buildScreens', () => {
     expect(edge('screen:/events/[slug]', 'module:events', 'uses')).toBeDefined()
   })
 
+  it("names as a screen's module the one most screens of its first address segment import, alphabetical on a tie, and still uses each module it imports", () => {
+    const tied = buildScreens({
+      routes: [
+        route('/confirm-email', 'confirm-email/page.tsx', [
+          '@/modules/verification',
+          '@/modules/accounts',
+        ]),
+      ],
+      adminPages: [],
+      moduleIds: ['module:accounts', 'module:verification'],
+      contentTypeIds: [],
+      siteId: 'site:sprecher-east',
+    })
+    expect(tied.nodes.find((n) => n.id === 'screen:/confirm-email').module).toBe('module:accounts')
+    const uses = tied.edges.filter((e) => e.type === 'uses').map((e) => e.to)
+    expect(uses).toEqual(['module:accounts', 'module:verification'])
+  })
+
   it('has the Admin screen edit every content type', () => {
     expect(edge('screen:/admin/[[...segments]]', 'collection:events', 'edits')).toMatchObject({
       via: ['/admin/collections/events'],

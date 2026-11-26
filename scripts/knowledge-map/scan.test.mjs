@@ -22,7 +22,6 @@ describe('scanGraph', () => {
       'business-rule:src/modules/events/README.md#1',
       'collection:events',
       'collection:media',
-      'block:cta',
       'screen:/events/[slug]',
       'page-cluster:/events',
       'endpoint:rest:/api/events',
@@ -37,7 +36,7 @@ describe('scanGraph', () => {
       'scheduled-task:weekday-scout',
       'scheduled-task:server-cron',
     ]) {
-      if (id !== 'block:cta') expect(ids).toContain(id)
+      expect(ids).toContain(id)
     }
   })
 
@@ -72,6 +71,18 @@ describe('scanGraph', () => {
     for (const node of graph.nodes) {
       expect(FILES.some((f) => f === node.path || f.startsWith(`${node.path}/`))).toBe(true)
     }
+  })
+
+  it('lists a map entry whose note file is missing as a gap, not dropping it silently', () => {
+    const lost = inputs()
+    lost.files = lost.files.filter((f) => f !== 'src/platform/ui/README.md')
+    const { graph: partial } = scanGraph(lost)
+    expect(partial.gaps).toContainEqual({
+      kind: 'map-note-missing',
+      node: 'site:sprecher-east',
+      message: 'docs/knowledge/map.json lists src/platform/ui/README.md, which does not exist',
+    })
+    expect(partial.nodes.map((n) => n.id)).not.toContain('note:src/platform/ui/README.md')
   })
 
   it('is the same graph whatever order the files and notes come in', () => {

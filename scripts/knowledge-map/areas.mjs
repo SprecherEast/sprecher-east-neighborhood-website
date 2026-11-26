@@ -159,6 +159,7 @@ export function buildAreas({ files, notes, mapEntries }) {
         ],
       }),
     )
+    edges.push(makeEdge({ from: area ? area.id : SITE_ID, to: noteId, type: 'contains' }))
     if (area)
       edges.push(
         makeEdge({

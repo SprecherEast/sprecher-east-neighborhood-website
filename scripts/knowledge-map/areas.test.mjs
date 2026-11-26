@@ -112,10 +112,26 @@ describe('buildAreas', () => {
   })
 
   it('has each area contain its note', () => {
-    expect(edge('module:demo', 'note:src/modules/demo/README.md', 'contains')).toBeDefined()
+    expect(edge('module:demo', 'note:src/modules/demo/README.md', 'contains')).toBe(true)
     expect(
       edge('feature:modules/demo/nav', 'note:src/modules/demo/nav/README.md', 'contains'),
-    ).toBeDefined()
+    ).toBe(true)
+  })
+
+  it('has the site contain a note that sits in no area', () => {
+    const loose = buildAreas({
+      files: ['docs/loose/README.md'],
+      notes: [note('docs/loose/README.md')],
+      mapEntries: [],
+    })
+    expect(
+      loose.edges.some(
+        (e) =>
+          e.from === 'site:sprecher-east' &&
+          e.to === 'note:docs/loose/README.md' &&
+          e.type === 'contains',
+      ),
+    ).toBe(true)
   })
 
   it('has each note document its subject', () => {

@@ -48,6 +48,13 @@ export function scanGraph(inputs) {
   const { schema, read, facts } = inputs
   const files = [...inputs.files].sort()
   const mapEntries = parseKnowledgeMap(inputs.mapJson)
+  const missingNotes = mapEntries
+    .filter((entry) => !files.includes(entry.source))
+    .map((entry) => ({
+      kind: 'map-note-missing',
+      node: SITE_ID,
+      message: `docs/knowledge/map.json lists ${entry.source}, which does not exist`,
+    }))
   const notes = mapEntries
     .filter((entry) => files.includes(entry.source))
     .map((entry) => readNote(entry.source, read(entry.source), { schema, files }))
@@ -113,6 +120,7 @@ export function scanGraph(inputs) {
   })
 
   const parts = resolvePathTargets([
+    { nodes: [], edges: [], gaps: missingNotes },
     areas,
     contentTypes,
     screens,

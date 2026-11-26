@@ -2,6 +2,10 @@
  * The screens of the map (#1462): a node for each page the visitor opens, grouped into clusters by
  * the first part of the address, each held by the module its screens import; and the Admin screen,
  * which edits every content type. Read from the routes reference rows. Pure.
+ *
+ * A screen's `module` is the module that holds it, not its only dependency: the module most of the
+ * screens under the same first address segment import (alphabetical on a tie). The `uses`
+ * relationships name every module a screen imports, so a screen that mixes modules shows them all.
  */
 import path from 'node:path'
 

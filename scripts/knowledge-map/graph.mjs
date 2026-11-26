@@ -121,6 +121,24 @@ function checkedEdges(parts, nodes, vocab, errors, gaps) {
   return [...merged.values()].sort(byKeys('from', 'to', 'type'))
 }
 
+/** Every node but the site has exactly one `contains` parent: a node with none, or two, is an error. */
+function checkParents(nodes, edges, errors) {
+  const parents = new Map()
+  for (const edge of edges) {
+    if (edge.type === 'contains') parents.set(edge.to, [...(parents.get(edge.to) ?? []), edge.from])
+  }
+  for (const node of nodes.values()) {
+    if (node.type === 'site') continue
+    const found = (parents.get(node.id) ?? []).sort()
+    if (found.length === 1) continue
+    const message =
+      found.length === 0
+        ? 'has no parent: nothing contains it'
+        : `has ${found.length} parents: ${found.join(', ')}`
+    errors.push({ rule: 'NODE-PARENT', node: node.id, message })
+  }
+}
+
 /** The vocabulary the page draws its legend from: each relationship type with the layers it is seen on. */
 function legend(vocab, nodes, edges) {
   const edgeTypes = {}
@@ -141,14 +159,15 @@ function legend(vocab, nodes, edges) {
 
 /**
  * The graph from the parts `{ nodes, edges, gaps? }`, and the errors that must fail the run: a path
- * that does not exist, a duplicate id, a type outside the vocabulary, a derived relationship whose
- * end is not a node. A written relationship to a missing node is a gap instead.
+ * that does not exist, a duplicate id, a type outside the vocabulary, a node with no `contains` parent (or
+ * two), a derived relationship whose end is not a node. A written relationship to a missing node is a gap instead.
  */
 export function assemble(parts, { exists, vocab }) {
   const errors = []
   const gaps = parts.flatMap((part) => part.gaps ?? [])
   const nodes = checkedNodes(parts, { exists, vocab }, errors)
   const edges = checkedEdges(parts, nodes, vocab, errors, gaps)
+  checkParents(nodes, edges, errors)
   const sortedNodes = [...nodes.values()].sort(byKeys('id'))
   const graph = {
     version: GRAPH_VERSION,

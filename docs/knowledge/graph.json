@@ -18880,8 +18880,24 @@
       "via": []
     },
     {
+      "from": "feature:modules/site/navigation",
+      "to": "note:src/modules/site/navigation/README.md",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
       "from": "feature:platform/payload/previewCopy",
       "to": "business-rule:src/platform/payload/previewCopy/README.md#1",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "feature:platform/payload/previewCopy",
+      "to": "note:src/platform/payload/previewCopy/README.md",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -18906,6 +18922,14 @@
     {
       "from": "feature:platform/ui/chart",
       "to": "business-rule:src/platform/ui/chart/README.md#3",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "feature:platform/ui/chart",
+      "to": "note:src/platform/ui/chart/README.md",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -21505,6 +21529,14 @@
     },
     {
       "from": "module:accounts",
+      "to": "note:src/modules/accounts/README.md",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:accounts",
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
@@ -21929,6 +21961,14 @@
     },
     {
       "from": "module:agents",
+      "to": "note:src/modules/agents/README.md",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
@@ -22124,6 +22164,14 @@
       "to": "module:verification",
       "type": "depends-on",
       "layer": "code",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:contact",
+      "to": "note:src/modules/contact/README.md",
+      "type": "contains",
+      "layer": "structure",
       "count": 1,
       "via": []
     },
@@ -22373,6 +22421,14 @@
       "type": "uses",
       "layer": "libraries",
       "count": 2,
+      "via": []
+    },
+    {
+      "from": "module:directory",
+      "to": "note:src/modules/directory/README.md",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
       "via": []
     },
     {
@@ -22692,6 +22748,14 @@
       "to": "module:news",
       "type": "depends-on",
       "layer": "code",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:events",
+      "to": "note:src/modules/events/README.md",
+      "type": "contains",
+      "layer": "structure",
       "count": 1,
       "via": []
     },
@@ -23089,6 +23153,14 @@
     },
     {
       "from": "module:news",
+      "to": "note:src/modules/news/README.md",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:news",
       "to": "page-cluster:/posts",
       "type": "contains",
       "layer": "structure",
@@ -23325,6 +23397,14 @@
       "type": "uses",
       "layer": "libraries",
       "count": 6,
+      "via": []
+    },
+    {
+      "from": "module:roadmap",
+      "to": "note:src/modules/roadmap/README.md",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
       "via": []
     },
     {
@@ -23681,6 +23761,14 @@
     },
     {
       "from": "module:site",
+      "to": "note:src/modules/site/README.md",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:site",
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
@@ -23997,6 +24085,14 @@
       "type": "uses",
       "layer": "libraries",
       "count": 3,
+      "via": []
+    },
+    {
+      "from": "module:verification",
+      "to": "note:src/modules/verification/README.md",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
       "via": []
     },
     {
@@ -25705,6 +25801,14 @@
     },
     {
       "from": "platform-area:payload",
+      "to": "note:src/platform/payload/README.md",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:payload",
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
@@ -25836,6 +25940,14 @@
       "to": "library:zod",
       "type": "uses",
       "layer": "libraries",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:richtext",
+      "to": "note:src/platform/richtext/README.md",
+      "type": "contains",
+      "layer": "structure",
       "count": 1,
       "via": []
     },
@@ -26441,6 +26553,14 @@
     },
     {
       "from": "platform-area:theme",
+      "to": "note:src/platform/theme/README.md",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:theme",
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
@@ -26708,6 +26828,14 @@
       "to": "library:zod",
       "type": "uses",
       "layer": "libraries",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
+      "to": "note:src/platform/ui/README.md",
+      "type": "contains",
+      "layer": "structure",
       "count": 1,
       "via": []
     },
