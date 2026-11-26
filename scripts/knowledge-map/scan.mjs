@@ -13,7 +13,7 @@ import { buildImports } from './imports.mjs'
 import { buildJobs } from './jobs.mjs'
 import { readNote } from './notes.mjs'
 import { resolvePathTargets } from './paths.mjs'
-import { PROCESS_GROUPS, buildProcess, classify } from './process.mjs'
+import { buildProcess, classify } from './process.mjs'
 import { buildScheduledTasks } from './scheduled.mjs'
 import { buildScreens } from './screens.mjs'
 import { buildTools } from './tools.mjs'
@@ -127,5 +127,3 @@ export function scanGraph(inputs) {
   ])
   return assemble(parts, { exists: existsIn(files), vocab: vocabulary(schema) })
 }
-
-export { PROCESS_GROUPS }
