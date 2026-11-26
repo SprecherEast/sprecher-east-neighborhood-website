@@ -56,6 +56,8 @@
         "scripts/**/*.{ts,mjs}",
         // The end-to-end tests (#311): Playwright finds the specs from playwright.config.ts
         "e2e/**/*.{ts,mjs}",
+        // The showcase's font is loaded from here (`@import`), so knip sees the package used (#1459)
+        ".storybook/**/*.css",
       ],
       "ignore": [
         // Built but not shown yet (docs/ui/evidence.md); kept for the theme work

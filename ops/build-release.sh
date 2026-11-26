@@ -9,7 +9,9 @@
 #
 # Environment: RELEASE_DIR, SHA, NODE_VERSION (the server's `node -v`), NEXT_PUBLIC_SERVER_URL,
 # NEXT_PUBLIC_TURNSTILE_SITE_KEY (may be empty), NEXT_PUBLIC_UMAMI_WEBSITE_ID (may be
-# empty), TURNSTILE_PAIRED (yes|no), OUT (archive path).
+# empty), TURNSTILE_PAIRED (yes|no), OUT (archive path). Optionally SHOWCASE_DEST, a folder of the release
+# to build the component showcase into (ops/build-showcase.sh, #1459), and SHOWCASE_OPTIONAL=yes when a
+# failed showcase build must not fail the release (the production deploy).
 set -euo pipefail
 
 : "${RELEASE_DIR:?}" "${SHA:?}" "${NODE_VERSION:?}" "${NEXT_PUBLIC_SERVER_URL:?}" "${OUT:?}"
@@ -42,6 +44,12 @@ export NEXT_PUBLIC_SERVER_URL NEXT_PUBLIC_TURNSTILE_SITE_KEY NEXT_PUBLIC_UMAMI_W
 if [ "$TURNSTILE_PAIRED" = yes ]; then export TURNSTILE_SECRET_KEY=build-placeholder-not-a-secret; fi
 
 NODE_OPTIONS=--no-deprecation npx --no-install payload migrate
+
+# The component showcase (#1459), while the dev dependencies it needs are installed. Before the site's build,
+# so that a showcase built into public/ (a pull request preview's) is there when Next.js builds: only what is
+# in public/ at build time is served.
+if [ -n "${SHOWCASE_DEST:-}" ]; then bash ops/build-showcase.sh "$SHOWCASE_DEST" "${SHOWCASE_OPTIONAL:-no}"; fi
+
 npm run build
 
 npm prune --omit=dev --no-audit --no-fund

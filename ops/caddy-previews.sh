@@ -53,7 +53,7 @@ fi
 
 # The site must answer through Caddy before anything changes, so that a failure afterwards can
 # only mean the change broke it.
-if ! wait_until_up "${UP_WAIT:-90}"; then
+if ! wait_until_up; then
   report "WARNING: the home page did not answer 200 through Caddy ($(site_url), got $(site_status /)), so pull request previews were not prepared"
   exit 0
 fi
@@ -114,7 +114,7 @@ fi
 # Puts the previous Caddyfile and headers file back and reloads. On failure, prints what went wrong.
 roll_back() { caddy_roll_back "$([ "$add_line" = yes ] && echo "$CADDYFILE.bak-previews-$stamp" || true)" restore_headers_say; }
 
-problem=$(caddy_reload_problem "$what" "${UP_WAIT_AFTER:-20}")
+problem=$(caddy_reload_problem "$what")
 if [ -n "$problem" ]; then
   if detail=$(roll_back); then
     report "ERROR: $problem; the previous Caddy config is back"

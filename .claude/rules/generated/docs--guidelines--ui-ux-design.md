@@ -78,7 +78,7 @@ Consistent spacing creates visual rhythm. Use Tailwind's spacing scale exclusive
 
 ## Typography
 
-- **Font family**: Poppins (already loaded via `next/font/google`)
+- **Font family**: Poppins (already loaded through `next/font/local`, from the font files in `src/platform/theme/fonts/`)
 - **Body text**: `text-base` (16px) minimum — never smaller for readable content
 - **Line height**: `leading-relaxed` (1.625) for body paragraphs, `leading-tight` (1.25) for headings
 - **Max line width**: `max-w-prose` (65ch) for long-form text — lines longer than 75 characters are hard to read

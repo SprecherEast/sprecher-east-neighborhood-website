@@ -99,3 +99,8 @@ e2e/.data-passkeys/
 
 # Storybook static build (#1447)
 storybook-static/
+
+# The component showcase built into a release (ops/build-showcase.sh, #1459). Tailwind's source detection skips
+# ignored files, so the site's CSS never grows with the showcase's classes. A test keeps these two paths here.
+/developer-site/
+/public/showcase/

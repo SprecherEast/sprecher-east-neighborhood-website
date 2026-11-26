@@ -6,7 +6,8 @@ that builds and deploys a preview ([below](#the-workflow-1075)). Back to the [se
 
 - **DNS.** One wildcard A record, `*.dev`, in the Porkbun zone for `sprechereast.com`, pointing at
   the production server. It needs no API key. Undo: delete the record. `dev.sprechereast.com`
-  itself doesn't resolve.
+  itself has its own A record (added 2026-11-24, #1459) and serves the [developer site](developer-site.md),
+  not a preview.
 - **The import line.** `caddy-previews.sh` adds `import /etc/caddy/previews/*.caddy` (and a comment
   line above it) to the Caddyfile. Before anything reloads, Caddy must accept the new Caddyfile
   together with a sample preview block made from the template, so a broken snippet fails the deploy
@@ -33,7 +34,9 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   opens far more than 50 pull requests a week, so only a pull request that changes how pages look,
   or that carries the label asking for a preview, gets one (owner's decision, 2026-11-19, #1072).
   A redeploy of the same pull request reuses its certificate, and teardown never deletes Caddy's
-  certificate storage, so a reopened pull request is not a new order.
+  certificate storage, so a reopened pull request is not a new order. The developer site's name,
+  `dev.sprechereast.com`, is one more name in the same budget (#1459): one order when its block first loads, and
+  renewals are exempt. A preview's component showcase orders none ([in `developer-site.md`](developer-site.md#the-component-showcase-in-a-preview-1459)).
 - **Check on the server** (once, after the first deploy with this script; carried to #1075): load
   one sample block by hand, confirm its responses carry `X-Robots-Tag` and no
   `Strict-Transport-Security` and that `/robots.txt` disallows everything, remove it, and confirm
@@ -234,6 +237,8 @@ sprecher-east-preview-deploy -f preview_key`; commit `preview_key.pub` as `ops/p
 - **Not covered.** A detached process a preview starts survives `teardown`, which stops only PM2's process
   (the account can't schedule jobs: cron and at are denied).
 
+The component showcase in a pull request's preview is described in [`developer-site.md`](developer-site.md#the-component-showcase-in-a-preview-1459).
+
 ## Production content in a preview (#1397)
 
 Every preview deploy loads production's published content, so a change is judged on real pages, posts, events and
@@ -315,7 +320,7 @@ the snapshot (2026-11-11, recorded on #1077).
   wrapper stops the PM2 process, deletes the folder (releases, database, media, data and settings file are all
   inside it, with the linked media and the passwords file) and removes the Caddy block, then validates and reloads Caddy; each step succeeds when its item is
   already gone, so a second run succeeds too. The order is the wrapper's (process, folder, block) because
-  `preview-caddy.sh` removes a block when the folder is gone. **Caddy's certificate storage is never touched**,
+  `preview-caddy.sh` removes a block when the folder is gone (a block that Caddy needs back and that cannot be put back is kept under a name the import does not read, and the warning names it). **Caddy's certificate storage is never touched**,
   so a reopened pull request reuses its certificate. A job edits the sticky comment, only when one exists, to
   say the preview was removed. A fork's or Dependabot's pull request never had a preview and is skipped. A
   deploy can still put a closed pull request live again, by two routes: a build that started before the close

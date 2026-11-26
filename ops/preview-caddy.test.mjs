@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest'
 import { OPS } from './umami-harness.mjs'
 import { runCommand, setUpPreviewAccessHarness } from './preview-access-harness.mjs'
 
-const { p, log, caddyScript } = setUpPreviewAccessHarness()
+const { p, stub, log, caddyScript } = setUpPreviewAccessHarness()
 const block = () => fs.readFileSync(p('caddy/previews/pr-7.caddy'), 'utf8')
 const folderEntries = () => fs.readdirSync(p('caddy/previews')).sort()
 const makePreview = (n = '7') => fs.mkdirSync(p(`previews/pr-${n}/releases`), { recursive: true })
@@ -310,6 +310,208 @@ describe('preview-caddy.sh: Caddy is never left worse off', () => {
   })
 })
 
+describe('preview-caddy.sh: no copy or temp file is ever a block Caddy reads', () => {
+  // The stand-in Caddy reads the folder's `*.caddy` as the import does, and rejects two blocks that name
+  // one site, as real Caddy does (ops/preview-access-harness.mjs). A copy named `*.caddy` would break it.
+  const host = 'pr-7.dev.sprechereast.com'
+  const sees = () =>
+    log()
+      .split('\n')
+      .filter((l) => l.startsWith('sees:'))
+
+  it('replacing a block names its copy so the import skips it, whether Caddy takes the new one or not', async () => {
+    makePreview()
+    fs.writeFileSync(p('caddy/previews/pr-7.caddy'), `${host} {\n\t# old\n}\n`)
+    expect((await caddyScript(['7'])).code).toBe(0)
+    expect(sees().length).toBeGreaterThan(0)
+    expect([...new Set(sees())]).toEqual(['sees: pr-7.caddy '])
+    expect(folderEntries()).toEqual(['pr-7.caddy'])
+    fs.writeFileSync(p('caddy/previews/pr-7.caddy'), `${host} {\n\t# older\n}\n`)
+    expect((await caddyScript(['7'], { STUB_RELOAD_FAILS: 'reverse_proxy' })).code).toBe(1)
+    expect(block()).toContain('# older')
+    expect(folderEntries()).toEqual(['pr-7.caddy'])
+  })
+
+  it('removing a block moves it where the import does not read it while Caddy checks the rest', async () => {
+    makePreview()
+    await caddyScript(['7'])
+    fs.rmSync(p('previews/pr-7'), { recursive: true })
+    fs.writeFileSync(p('log'), '')
+    expect((await caddyScript(['7'])).code).toBe(0)
+    expect(sees().length).toBeGreaterThan(0)
+    // the first check is the one before any change, with the block in place; the rest are without it
+    expect(sees()[0]).toBe('sees: pr-7.caddy ')
+    expect([...new Set(sees().slice(1))]).toEqual(['sees: '])
+  })
+})
+
+describe('preview-caddy.sh: a block that cannot be put back is kept and named', () => {
+  it('leaves the removed block’s copy in the folder and says where, when the move back fails', async () => {
+    makePreview()
+    await caddyScript(['7'])
+    const before = block()
+    fs.rmSync(p('previews/pr-7'), { recursive: true })
+    // The first move takes the block out; the second, putting it back, fails.
+    fs.writeFileSync(p('count'), '0')
+    stub(
+      'mv',
+      'n=$(cat "$STUB_COUNT"); echo $((n + 1)) > "$STUB_COUNT"; [ "$n" -lt 1 ] || exit 1; exec /bin/mv "$@"',
+    )
+    const { code, out } = await caddyScript(['7'], {
+      STUB_WHOLE_NEEDS: 'pr-7.caddy',
+      STUB_COUNT: p('count'),
+    })
+    expect(code).toBe(1)
+    const kept = folderEntries().filter((e) => /^pr-7\.caddy\.[A-Za-z0-9]{6}$/.test(e))
+    expect(kept).toHaveLength(1)
+    expect(fs.readFileSync(p('caddy/previews', kept[0]), 'utf8')).toBe(before)
+    expect(out).toContain(p('caddy/previews', kept[0]))
+    expect(out).toContain(
+      "without preview 7's block; the previous block could not be put back as it was",
+    )
+    expect(out).not.toContain('is back')
+  })
+})
+
+describe('preview-caddy.sh: each message says what the folder is like, for each outcome', () => {
+  const host = 'pr-7.dev.sprechereast.com'
+  const old = `${host} {\n\t# old\n}\n`
+  const settle = () => {
+    makePreview()
+    fs.writeFileSync(p('caddy/previews/pr-7.caddy'), old)
+  }
+  // The first move works (the block going in or out); the second, the one putting the previous block back, fails.
+  const failSecondMove = () => {
+    fs.writeFileSync(p('count'), '0')
+    stub(
+      'mv',
+      'n=$(cat "$STUB_COUNT"); echo $((n + 1)) > "$STUB_COUNT"; [ "$n" -lt 1 ] || exit 1; exec /bin/mv "$@"',
+    )
+    return { STUB_COUNT: p('count') }
+  }
+  const copies = () => folderEntries().filter((e) => /^pr-7\.caddy\.[A-Za-z0-9]{6}$/.test(e))
+
+  it('a copy of the previous block that cannot be made: nothing was changed', async () => {
+    settle()
+    stub('cp', 'exit 1')
+    const { code, out } = await caddyScript(['7'])
+    expect(code).toBe(1)
+    expect(out).toContain("preview 7's block could not be put in place; nothing was changed")
+    expect(block()).toBe(old)
+    expect(reloads()).toBe(0)
+  })
+
+  it('a rename of the new block that fails: nothing was changed', async () => {
+    settle()
+    stub('mv', 'case "$*" in *" "*/pr-7.caddy) exit 1 ;; esac; exec /bin/mv "$@"')
+    const { code, out } = await caddyScript(['7'])
+    expect(code).toBe(1)
+    expect(out).toContain("preview 7's block could not be put in place; nothing was changed")
+    expect(block()).toBe(old)
+    expect(reloads()).toBe(0)
+  })
+
+  it('a config Caddy rejects: the previous block is back', async () => {
+    settle()
+    const { out } = await caddyScript(['7'], { STUB_WHOLE_REJECTS: 'reverse_proxy' })
+    expect(out).toContain("rejected the config with preview 7's block; the previous block is back")
+    expect(block()).toBe(old)
+  })
+
+  it('a reload that fails: the previous block is back, and when it will not reload either, it says so', async () => {
+    settle()
+    let r = await caddyScript(['7'], { STUB_RELOAD_FAILS: 'zzz-never' })
+    expect(r.code).toBe(0) // control: a reload that works
+    fs.writeFileSync(p('caddy/previews/pr-7.caddy'), `${old}# older\n`)
+    r = await caddyScript(['7'], { STUB_RELOAD_FAILS: 'reverse_proxy' })
+    expect(r.out).toContain("with preview 7's block; the previous block is back")
+    expect(r.out).not.toContain('would not reload it')
+    fs.writeFileSync(p('caddy/previews/pr-7.caddy'), `${old}# reverse_proxy\n`)
+    r = await caddyScript(['7'], { STUB_RELOAD_FAILS: 'reverse_proxy' })
+    expect(r.out).toContain(
+      "with preview 7's block; the previous block is back, but Caddy would not reload it",
+    )
+  })
+
+  it('a previous block that cannot be put back: its copy stays, and the message says so', async () => {
+    settle()
+    const { code, out } = await caddyScript(['7'], {
+      STUB_RELOAD_FAILS: 'reverse_proxy',
+      ...failSecondMove(),
+    })
+    expect(code).toBe(1)
+    expect(out).toContain(
+      "with preview 7's block; the previous block could not be put back as it was",
+    )
+    expect(out).not.toContain('is back')
+    expect(copies()).toHaveLength(1)
+    expect(fs.readFileSync(p('caddy/previews', copies()[0]), 'utf8')).toBe(old)
+  })
+
+  it('a config Caddy rejects, with the previous block that cannot be put back: its copy stays, and it says so', async () => {
+    settle()
+    const { code, out } = await caddyScript(['7'], {
+      STUB_WHOLE_REJECTS: 'reverse_proxy',
+      ...failSecondMove(),
+    })
+    expect(code).toBe(1)
+    expect(out).toContain(
+      "rejected the config with preview 7's block; the previous block could not be put back as it was",
+    )
+    expect(copies()).toHaveLength(1)
+  })
+
+  it('a first block that Caddy rejects is taken out again, and the message says that', async () => {
+    makePreview()
+    const { code, out } = await caddyScript(['7'], { STUB_WHOLE_REJECTS: 'reverse_proxy' })
+    expect(code).toBe(1)
+    expect(out).toContain("rejected the config with preview 7's block; the new block is taken out")
+    expect(out).not.toContain('previous block')
+    expect(folderEntries()).toEqual([])
+  })
+
+  // the line ends with the block's own name: the temp file has the block's name as a prefix, so a prefix check is not enough
+  const staysAs = (out, file) =>
+    expect(out).toMatch(
+      new RegExp(`the new block could not be taken out and stays as ${file}(;|$)`, 'm'),
+    )
+
+  it('a first block that cannot be taken out stays, and the message names it and no copy', async () => {
+    makePreview()
+    stub('rm', 'case "$*" in *" "*/pr-7.caddy) exit 1 ;; esac; exec /bin/rm "$@"')
+    const { code, out } = await caddyScript(['7'], { STUB_WHOLE_REJECTS: 'reverse_proxy' })
+    expect(code).toBe(1)
+    expect(out).toContain("rejected the config with preview 7's block; the new block could")
+    staysAs(out, p('caddy/previews/pr-7.caddy'))
+    expect(out).not.toContain('a copy stays')
+    expect(folderEntries()).toEqual(['pr-7.caddy'])
+  })
+
+  it('a first block whose reload fails and that cannot be taken out stays, and the message names it', async () => {
+    makePreview()
+    stub('rm', 'case "$*" in *" "*/pr-7.caddy) exit 1 ;; esac; exec /bin/rm "$@"')
+    const { code, out } = await caddyScript(['7'], { STUB_RELOAD_FAILS: 'pr-7.dev' })
+    expect(code).toBe(1)
+    expect(out).toContain("would not reload with preview 7's block; the new block could")
+    staysAs(out, p('caddy/previews/pr-7.caddy'))
+    expect(folderEntries()).toEqual(['pr-7.caddy'])
+  })
+
+  it('a removed block that goes back but cannot be reloaded: the message says so', async () => {
+    settle()
+    fs.rmSync(p('previews/pr-7'), { recursive: true })
+    const { code, out } = await caddyScript(['7'], {
+      STUB_WHOLE_NEEDS: 'pr-7.caddy',
+      STUB_RELOAD_FAILS: 'pr-7.dev',
+    })
+    expect(code).toBe(1)
+    expect(out).toContain(
+      "without preview 7's block; the previous block is back, but Caddy would not reload it",
+    )
+    expect(block()).toBe(old)
+  })
+})
+
 describe('preview-caddy.sh: a preview that is gone loses its block', () => {
   it('removes the block and reloads', async () => {
     makePreview()
@@ -478,7 +680,7 @@ describe('preview-caddy.sh: removing a block checks the whole config too', () =>
     fs.rmSync(p('previews/pr-7'), { recursive: true })
     const { code, out } = await caddyScript(['7'], { STUB_WHOLE_NEEDS: 'pr-7.caddy' })
     expect(code).toBe(1)
-    expect(out).toContain('the block is back')
+    expect(out).toContain('without preview 7’s block; the previous block is back'.replace('’', "'"))
     expect(block()).toContain('pr-7.dev.sprechereast.com')
   })
 })

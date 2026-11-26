@@ -78,7 +78,7 @@ function limitSentence(cap, holders) {
 }
 
 /** The comment's text. Throws on a value that isn't what it should be: better no comment than a wrong one. */
-export function commentBody({ state, number, sha, url, time, runUrl, cap, holders }) {
+export function commentBody({ state, number, sha, url, time, runUrl, cap, holders, showcase }) {
   if (!Object.hasOwn(STATES, state)) throw new Error('unknown state')
   if (!NUMBER_PATTERN.test(String(number))) throw new Error('not a pull request number')
   if (!COMMIT_PATTERN.test(sha)) throw new Error('not a commit')
@@ -93,6 +93,9 @@ export function commentBody({ state, number, sha, url, time, runUrl, cap, holder
     if (!new RegExp(`^https://pr-${number}\\.[a-z0-9-]+(\\.[a-z0-9-]+)+$`).test(url))
       throw new Error('not the preview address')
     sentence += ` ${url}`
+    // The preview was built with the component showcase (#1459): the same address, one path further
+    if (showcase === 'true')
+      sentence += `\n\nComponent showcase for this change: ${url}/showcase/index.html`
   }
   return [
     MARKER,

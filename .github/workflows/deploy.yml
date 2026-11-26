@@ -115,6 +115,10 @@ jobs:
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ needs.preflight.outputs.turnstile_site_key }}
           NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${{ needs.preflight.outputs.umami_website_id }}
           TURNSTILE_PAIRED: ${{ needs.preflight.outputs.turnstile_paired }}
+          # The component showcase for dev.sprechereast.com (#1459): built into the release, and a failed
+          # showcase build is a warning that leaves the release without one, never a failed build.
+          SHOWCASE_DEST: developer-site/showcase
+          SHOWCASE_OPTIONAL: 'yes'
           OUT: ${{ runner.temp }}/release.tar.gz
         run: bash ops/build-release.sh
 
