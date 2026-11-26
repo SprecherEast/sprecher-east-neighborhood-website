@@ -116,3 +116,20 @@ describe('parseNote', () => {
     }
   })
 })
+
+describe('parseNote: sections with nothing under their heading', () => {
+  const empties = (body) =>
+    parseNote(frontmatter(GOOD_FIELDS) + '\n# T\n\nPurpose.\n\n' + body).emptySections
+
+  it('lists a heading followed by another heading, by blank lines or by a comment only', () => {
+    expect(empties('## A\n\n## B\n\n\n## C\n<!-- x -->\n\n## D\n\ntext\n')).toEqual(['A', 'B', 'C'])
+  })
+
+  it('does not list a section with text, a list, a deeper heading or a code block', () => {
+    expect(empties('## A\ntext\n## B\n- x\n## C\n### d\n## D\n```\nx\n```\n')).toEqual([])
+  })
+
+  it('lists the last heading of the note when nothing follows it', () => {
+    expect(empties('## A\n\ntext\n\n## B\n')).toEqual(['B'])
+  })
+})

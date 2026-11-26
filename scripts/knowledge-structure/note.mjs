@@ -25,7 +25,9 @@ export const FENCE = /^\s*(```|~~~)/
 /**
  * A note as `{ hasFrontmatter, error, data, title, purposeLines, sections, body, bodyLines }`.
  * `data` keeps the fields in the order written. The body starts after the front matter, and
- * `sections` are its level 2 headings (with their line in the body), code fences skipped.
+ * `sections` are its level 2 headings (with their line in the body), code fences skipped;
+ * `emptySections` are the headings with nothing a reader sees under them (before the next heading
+ * or the end), a deeper heading or a code block counting as something.
  */
 export function parseNote(markdown) {
   const { text: raw, rest } = splitFrontmatter(markdown)
@@ -46,9 +48,14 @@ export function parseNote(markdown) {
   note.bodyLines = lines.length
   note.title = /^# \S/.test(lines[0]) ? lines[0].slice(2).trim() : null
   note.sections = []
+  note.emptySections = []
   note.purposeLines = 0
   let fenced = false
   let inComment = false
+  let written = true
+  const closeSection = () => {
+    if (!written) note.emptySections.push(note.sections.at(-1).heading)
+  }
   lines.forEach((line, index) => {
     if (fenced) {
       if (FENCE.test(line)) fenced = false
@@ -58,12 +65,20 @@ export function parseNote(markdown) {
     inComment = visible.open
     if (FENCE.test(visible.text)) {
       fenced = true
+      written = true
       return
     }
     const heading = /^## (\S.*)/.exec(visible.text)
-    if (heading) note.sections.push({ heading: heading[1].trim(), line: index + 1 })
-    else if (note.sections.length === 0 && visible.text.trim() && !visible.text.startsWith('#'))
-      note.purposeLines++
+    if (heading) {
+      closeSection()
+      written = false
+      note.sections.push({ heading: heading[1].trim(), line: index + 1 })
+    } else {
+      if (visible.text.trim()) written = true
+      if (note.sections.length === 0 && visible.text.trim() && !visible.text.startsWith('#'))
+        note.purposeLines++
+    }
   })
+  closeSection()
   return note
 }

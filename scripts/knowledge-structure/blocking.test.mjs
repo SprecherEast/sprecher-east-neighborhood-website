@@ -30,10 +30,61 @@ describe('the rules #1004 turned from warnings into errors, on the real schema',
     const files = [...GOOD_FILES, 'src/lib/a.ts']
     const found = errors(repo({ schema: realSchema, files }), 'COVERAGE-CODE')
     expect(found).toHaveLength(1)
-    expect(found[0].message).toBe('1 source files have no note: src/lib/a.ts 1')
+    expect(found[0].message).toBe('1 source files have no note: src/lib/a.ts')
+  })
+
+  it('COVERAGE-CODE names the files, not only the folder', () => {
+    const files = [...GOOD_FILES, 'src/app/(frontend)/newpage/page.tsx', 'src/lib/a.ts']
+    const [found] = errors(repo({ schema: realSchema, files }), 'COVERAGE-CODE')
+    expect(found.message).toBe(
+      '2 source files have no note: src/app/(frontend)/newpage/page.tsx, src/lib/a.ts',
+    )
   })
 
   it('has no rule left as a warning', () => {
     expect(Object.values(realSchema.rules).filter((state) => state !== 'block')).toEqual([])
+  })
+})
+
+/** A heading with nothing under it is not a written section, whatever the rule says about its heading. */
+describe('a section with a heading and nothing under it', () => {
+  const found = (body) =>
+    checkNote({
+      schema: realSchema,
+      path: NOTE_PATH,
+      text: goodNote(undefined, body),
+      files: GOOD_FILES,
+    })
+  const emptyBehaviors = `# Demo
+
+The demo module, for a test. See \`domain/rule.ts\`.
+
+## Behaviors and events
+
+## Known gaps
+
+None known.
+`
+
+  it('fails a required section, saying it is empty', () => {
+    const errors = found(emptyBehaviors).filter((f) => f.message.includes('is empty'))
+    expect(errors.map((f) => [f.rule, f.message])).toEqual([
+      ['NOTE-SECTIONS', 'section "Behaviors and events" is empty: write what belongs under it'],
+    ])
+  })
+
+  it('fails an expected section, saying it is empty', () => {
+    const body = GOOD_BODY + '\n## Known gaps\n\n<!-- later -->\n'
+    const errors = found(body).filter((f) => f.message.includes('is empty'))
+    expect(errors.map((f) => [f.rule, f.message])).toEqual([
+      ['COVERAGE-SECTION', 'section "Known gaps" is empty: write what belongs under it'],
+    ])
+  })
+
+  it('passes a section with a line, a list, a sub heading or a code block', () => {
+    for (const under of ['None known.', '- a (`domain/rule.ts`)', '### Limits', '```\ncode\n```']) {
+      const body = GOOD_BODY + `\n## Known gaps\n\n${under}\n`
+      expect(found(body).filter((f) => f.message.includes('is empty'))).toEqual([])
+    }
   })
 })

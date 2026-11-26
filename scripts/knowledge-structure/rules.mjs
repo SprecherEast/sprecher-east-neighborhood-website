@@ -97,6 +97,11 @@ function sectionFindings(add, schema, note) {
   if (seen.join() !== wanted.join())
     add('NOTE-SECTIONS', `sections must be in this order: ${order.join(', ')}`)
   for (const section of allowed) {
+    if (section.presence !== 'optional' && note.emptySections.includes(section.heading)) {
+      const rule = section.presence === 'required' ? 'NOTE-SECTIONS' : 'COVERAGE-SECTION'
+      add(rule, `section "${section.heading}" is empty: write what belongs under it`)
+      continue
+    }
     if (seen.includes(section.heading)) continue
     if (section.presence === 'required')
       add('NOTE-SECTIONS', `missing required section "${section.heading}"`)

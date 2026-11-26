@@ -46,9 +46,12 @@ describe('skeleton', () => {
     }
   })
 
-  it('is a note that already follows the structure, so the author fills it in', () => {
+  it('follows the structure except that its sections are not written yet', () => {
     const text = skeleton(schema, 'module')
-    expect(errorsOf(checkNote({ schema: strict, path: NOTE_PATH, text, files: [] }))).toEqual([])
+    const errors = errorsOf(checkNote({ schema: strict, path: NOTE_PATH, text, files: [] }))
+    expect(errors.map((f) => f.message)).toEqual([
+      'section "Behaviors and events" is empty: write what belongs under it',
+    ])
   })
 })
 
