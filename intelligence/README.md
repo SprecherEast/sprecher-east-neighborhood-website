@@ -9,19 +9,21 @@ The agents never publish. They create **suggested drafts**; an editor reads, fix
 
 ## What's here
 
-| Path                             | What it is                                                                                     |
-| -------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [`pipeline.yaml`](pipeline.yaml) | The settings a runtime reads first: kill switch, schedule, budgets, stages                     |
-| [`sources.yaml`](sources.yaml)   | Approved sources, each checked by hand ([summary](sources.md))                                 |
-| [`coverage.md`](coverage.md)     | The Sprecher East area and the relevance policy                                                |
-| [`area.yaml`](area.yaml)         | The words and boundary record used to spot the area: places, neighbors, highway rules          |
-| [`boundary.json`](boundary.json) | The City's boundary for the area, a dated copy (#1009); `run.mjs --refresh-boundary` renews it |
-| [`safety.yaml`](safety.yaml)     | What counts as a safety item, which always waits for a person                                  |
-| [`background.md`](background.md) | The City's 1998 neighborhood plan, summarized with pages (index; topics in `background/`)      |
-| [`images.md`](images.md)         | How to choose a story's or event's photo: real, free, on topic, level                          |
-| [`prompts/`](prompts/)           | One prompt per stage, each naming its input and output schema                                  |
-| [`schemas/`](schemas/)           | JSON Schemas for every file and every stage's output                                           |
-| [`evals/`](evals/)               | Test cases per stage with the result a correct pipeline reaches                                |
+| Path                                   | What it is                                                                                     |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [`pipeline.yaml`](pipeline.yaml)       | The settings a runtime reads first: kill switch, schedule, budgets, stages                     |
+| [`sources.yaml`](sources.yaml)         | Approved sources, each checked by hand ([summary](sources.md))                                 |
+| [`coverage.md`](coverage.md)           | The Sprecher East area and the relevance policy                                                |
+| [`area.yaml`](area.yaml)               | The words and boundary record used to spot the area: places, neighbors, highway rules          |
+| [`boundary.json`](boundary.json)       | The City's boundary for the area, a dated copy (#1009); `run.mjs --refresh-boundary` renews it |
+| [`safety.yaml`](safety.yaml)           | What counts as a safety item, which always waits for a person                                  |
+| [`background.md`](background.md)       | The City's 1998 neighborhood plan, summarized with pages (index; topics in `background/`)      |
+| [`images.md`](images.md)               | How to choose a story's or event's photo: real, free, on topic, level                          |
+| [`scheduled-run.md`](scheduled-run.md) | The rules for the scout that runs on a schedule in Claude: fetching, read-only, report layout  |
+| [`fetching.md`](fetching.md)           | How the daily runner reads a source: direct first, Playwright as a fallback, the hard nos      |
+| [`prompts/`](prompts/)                 | One prompt per stage, each naming its input and output schema                                  |
+| [`schemas/`](schemas/)                 | JSON Schemas for every file and every stage's output                                           |
+| [`evals/`](evals/)                     | Test cases per stage with the result a correct pipeline reaches                                |
 
 ## The pipeline
 
@@ -56,52 +58,10 @@ high only for conflicting or ambiguous evidence (`model` in `pipeline.yaml`).
 
 ## Fetching (#352)
 
-**Direct first.** Every source is read with a plain GET (or its feed or API client): content-type
-detection, ETag and Last-Modified caching, and a deterministic parser for RSS, Atom, iCalendar,
-JSON or HTML. `fetchStrategy` in `sources.yaml` is `direct` unless a source says
-`direct-then-playwright`; today only Madison Parks events and the District 16 blog do (both are read directly: no fallback is built).
-
-**Playwright only as a fallback**, for a `direct-then-playwright` source, when the direct answer
-trips one of these triggers:
-
-- a 200 with an empty body;
-- a JavaScript shell: no text where items should be;
-- a parse that finds no items, or fails its checks.
-
-Every other answer is handled without a browser:
-
-- **304:** `not-modified`; the source's run ends.
-- **3xx:** followed directly (at most 3 hops, same rules at each), unless it leads to a gate.
-- **5xx or 429:** retried once, honoring Retry-After; then an `error`.
-- **401, 403, 451, or a login, paywall, CAPTCHA or bot gateway:** a gate; the source stops as
-  `blocked`.
-- **Any other 4xx (404, 410, ...):** an `error`, with no retry.
-
-The fallback is one headless, logged-out page load of the same URL, at the same daily cadence.
-
-**Logged every run.** Each source entry in the run log (`schemas/agent-run.schema.json`) records
-`fetchStrategy`: the last strategy tried (`direct`, or `playwright` after a fallback), or `none`
-when the source wasn't polled. The digest shows how often the fallback runs.
-
-**Hard nos.** No logins, CAPTCHAs or paywalls (madison.com's redirect to `tollbit.madison.com`),
-no path robots.txt disallows (Dane County's press subscription page), no social networks, and no
-source the daily runner polls that isn't `valid` or `pending` in `sources.yaml` (the hand-run
-scout may read other public pages, trusting them by tier). The check refuses
-`direct-then-playwright` on any source without an `allowed` robots.txt result, on a source that
-isn't HTML, or on one that is `restricted` or `invalid`. Agents summarize facts and never
-republish articles. Reading a page and trusting it are
-separate: see [Trust](sources.md#trust-reach-is-not-trust).
-
-**Where Playwright runs.** In the agent runtime's scout step only. Never in the website, its
-build or its CI: CI checks the files in this folder, including the direct path's rules and the
-eval routing, and makes no network or model calls.
-
-**Legal note**, checked against sources on #352. Public pages, read logged out with no gate, are
-the least risky shape; the remaining risks are contract (terms accepted by logging in, which we
-never do) and copyright (we summarize facts and link, never republish). _Ziff Davis v. OpenAI_
-(S.D.N.Y., December 2025) held that robots.txt doesn't "control access" under the DMCA, and the
-Ninth Circuit's Perplexity/Comet CFAA decision was reported in August 2026. Neither changes our
-rule: we still honor robots.txt by choice. This is the project's reasoning, not legal advice.
+Every source is read directly first (a plain GET, or its feed or API client), and a headless browser
+is only a fallback for a source marked `direct-then-playwright`. The answers, the fallback's
+triggers, what is logged and the **hard nos** (no logins, CAPTCHAs or paywalls, no path robots.txt
+disallows, no social networks) are in [`fetching.md`](fetching.md).
 
 ## How a runtime loads it
 

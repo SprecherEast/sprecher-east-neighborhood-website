@@ -1,4 +1,4 @@
-// Direct fetching (README.md, "Fetching"; scout.md step 2): one plain GET with a clear user agent,
+// Direct fetching (fetching.md; scout.md step 2): one plain GET with a clear user agent,
 // a 30-second timeout and the saved ETag or Last-Modified. A 304 ends the source's run; a redirect
 // is followed directly (at most 3 hops) unless it leads to a gate; a 5xx or 429 is retried once;
 // any other 4xx is an error; a 401, 403, 451, login page, CAPTCHA, paywall or bot gateway is a

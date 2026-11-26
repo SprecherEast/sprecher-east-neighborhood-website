@@ -225,7 +225,7 @@ source is `valid` and polled, one is `invalid`, one stays `pending` until the ow
 
 Two questions are kept apart. **Reach** is whether an agent may read a page: any public page the
 scout finds may be read, logged out and with robots.txt honored, never past a login, paywall or
-bot gateway, and never on a social network ([README](README.md), "Hard nos"). **Trust** is what a
+bot gateway, and never on a social network ([fetching](fetching.md), "Hard nos"). **Trust** is what a
 page may prove once it is read. The scout decides trust after reading, from the page itself, not
 from a list of approved sites. The daily runner is unchanged: it still polls only `valid` entries
 in `sources.yaml`.
