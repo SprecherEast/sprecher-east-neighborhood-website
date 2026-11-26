@@ -5,7 +5,7 @@ import { toSourceText } from './text.mjs'
 // fetches the item's own page once, with robots.txt honored, and puts its text (markup removed,
 // at most 8,000 characters, untrusted data like any source text) in the item verify is given, as
 // `reportPage`. A page counts as read only when that text is in the item, so the gate (gate.mjs)
-// holds any `reject` of such an item that went to verify without it. Only the source's own https
+// holds any `reject` or `duplicate` of such an item that went to verify without it. Only the source's own https
 // origin is fetched, so an address in a feed can't send the runner anywhere else.
 
 const TIMEOUT_MS = 10_000
@@ -56,11 +56,12 @@ const sourceIds = (candidate) => [
 ]
 
 /**
- * Whether `item` is a reject the gate must hold: it came from an always-held source (alone or
- * with others) and the runner did not read its page. A definition or item it can't read counts as
- * held, because a gate that can't tell must not let a report go.
+ * Whether `item` is a report the gate must hold if curate would drop it (`reject` or
+ * `duplicate`): it came from an always-held source (alone or with others) and the runner did not
+ * read its page. A definition or item it can't read counts as held, because a gate that can't
+ * tell must not let a report go.
  */
-export function rejectUnread(rules, item) {
+export function unreadReport(rules, item) {
   try {
     return sourceIds(item.candidate).some((id) => rules.sources.has(id)) && !pageWasRead(item)
   } catch {

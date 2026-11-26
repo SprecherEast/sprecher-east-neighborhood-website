@@ -144,7 +144,7 @@ what the editor is told.
      A report whose page could not be read is different: nothing is known, so it is
      `needs-review` with `missing-location`, never rejected. The runner enforces it: the models have no tools, so it reads the report page itself, once,
      for each such item that reaches the model stages, and puts the page's text in the item as
-     `reportPage` (`runner/lib/pageRead.mjs`). The gate holds any `reject` of an item from an
+     `reportPage` (`runner/lib/pageRead.mjs`). The gate holds any `reject` or `duplicate` of an item from an
      always-held source for review unless that text went to verify, whatever verify wrote
      (`runner/lib/gate.mjs`). Whether it did is a fact the code knows, not a claim.
    - **Worth a neighbor's time.** Serious (harm to a person, a weapon, a threat to the public), or
