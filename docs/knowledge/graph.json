@@ -404,216 +404,102 @@
     {
       "id": "business-rule:src/modules/accounts/README.md#1",
       "type": "business-rule",
-      "name": "Google sign-in",
-      "summary": "Google sign-in: the rule `domain/socialSignIn.test.ts`, the paths `use-cases/socialSignIn.test.ts`, the protocol `data/oauthProviders.test.ts`, real accounts and sessions `data/socialAccounts.payload.test.ts`, the forced role `cms/guestOnlyFromProviders.test.ts`, the routes `src/app/(frontend)/auth/[provider]/route.test.ts`, the fields no resident can set `src/payload.config.protectedFields.test.ts`.",
-      "path": "src/modules/accounts/domain/socialSignIn.test.ts",
+      "name": "**Nobody learns whether an account exists.** Sign-up answers the same…",
+      "summary": "**Nobody learns whether an account exists.** Sign-up answers the same for a new and a used email, sign-in has one failure, forgot password answers at once and sends later; every action returns a fixed code, never Payload's text (`data/failures.ts`, `use-cases/requestPasswordReset.ts`, `domain/types.ts`; `actions.signUp.test.ts`, `actions.passwordReset.test.ts`).",
+      "path": "src/modules/accounts/actions.signUp.test.ts",
       "module": "module:accounts",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": [
-        "src/modules/accounts/domain/socialSignIn.test.ts",
-        "src/modules/accounts/use-cases/socialSignIn.test.ts",
-        "src/modules/accounts/data/oauthProviders.test.ts",
-        "src/modules/accounts/data/socialAccounts.payload.test.ts",
-        "src/modules/accounts/cms/guestOnlyFromProviders.test.ts",
-        "src/app/(frontend)/auth/[provider]/route.test.ts",
-        "src/payload.config.protectedFields.test.ts"
+        "src/modules/accounts/actions.signUp.test.ts",
+        "src/modules/accounts/actions.passwordReset.test.ts"
       ]
     },
     {
       "id": "business-rule:src/modules/accounts/README.md#10",
       "type": "business-rule",
-      "name": "Verify link, password step, \"already verified\"",
-      "summary": "Verify link, password step, \"already verified\": `use-cases/verifyAccountFromLink.test.ts`, `actions.verifyAccount.test.ts`.",
-      "path": "src/modules/accounts/use-cases/verifyAccountFromLink.test.ts",
+      "name": "**A passkey challenge is used once,** the counter only rises, the…",
+      "summary": "**A passkey challenge is used once,** the counter only rises, the handle is a random value never the email, and a wrong or foreign passkey gets the same `failed` (`domain/passkeys.ts`; `domain/passkeys.test.ts`, `data/passkeyChallenges.payload.test.ts`, `use-cases/signInWithPasskey.refused.payload.test.ts`).",
+      "path": "src/modules/accounts/domain/passkeys.test.ts",
       "module": "module:accounts",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": [
-        "src/modules/accounts/use-cases/verifyAccountFromLink.test.ts",
-        "src/modules/accounts/actions.verifyAccount.test.ts"
+        "src/modules/accounts/domain/passkeys.test.ts",
+        "src/modules/accounts/data/passkeyChallenges.payload.test.ts",
+        "src/modules/accounts/use-cases/signInWithPasskey.refused.payload.test.ts"
       ]
     },
     {
       "id": "business-rule:src/modules/accounts/README.md#11",
       "type": "business-rule",
-      "name": "Remembered session lasts 7 days",
-      "summary": "Remembered session lasts 7 days: `data/rememberedSession.payload.test.ts`. Roles gate pages: `use-cases/requireUser.test.ts`.",
-      "path": "src/modules/accounts/data/rememberedSession.payload.test.ts",
+      "name": "**Passkey sign-in refuses a locked, unverified or agent owner,** by…",
+      "summary": "**Passkey sign-in refuses a locked, unverified or agent owner,** by the same rule as provider sign-in (`canSignInTo` in `domain/socialSignIn.ts`, asked in `domain/passkeys.ts`; `domain/passkeys.test.ts`). The relying party is the configured site address, never a request header (`data/passkeySettings.ts`, `data/webauthn.ts`; `data/webauthn.signIn.test.ts`).",
+      "path": "src/modules/accounts/domain/passkeys.test.ts",
       "module": "module:accounts",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": [
-        "src/modules/accounts/data/rememberedSession.payload.test.ts",
-        "src/modules/accounts/use-cases/requireUser.test.ts"
+        "src/modules/accounts/domain/passkeys.test.ts",
+        "src/modules/accounts/data/webauthn.signIn.test.ts"
       ]
     },
     {
       "id": "business-rule:src/modules/accounts/README.md#12",
       "type": "business-rule",
-      "name": "Old residents became guests",
-      "summary": "Old residents became guests: `src/payload.config.guestMigration.test.ts`. Admin redirects: `src/proxy.test.ts`.",
-      "path": "src/payload.config.guestMigration.test.ts",
+      "name": "**Passkey limits:** at most 10 per account and a label of up to 60…",
+      "summary": "**Passkey limits:** at most 10 per account and a label of up to 60 characters, letters, numbers, spaces and a few marks, so a note email can carry no link; asking to add one is limited per connection and per account, never site-wide (`domain/passkeys.ts`, `domain/requestLimits.ts`; `domain/passkeys.test.ts`, `domain/passkeyLabel.test.ts`).",
+      "path": "src/modules/accounts/domain/passkeys.test.ts",
       "module": "module:accounts",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/payload.config.guestMigration.test.ts", "src/proxy.test.ts"]
+      "links": [
+        "src/modules/accounts/domain/passkeys.test.ts",
+        "src/modules/accounts/domain/passkeyLabel.test.ts"
+      ]
     },
     {
       "id": "business-rule:src/modules/accounts/README.md#13",
       "type": "business-rule",
-      "name": "Actions parse input again and use the session",
-      "summary": "Actions parse input again and use the session: `actions.test.ts`, `actions.changePassword.test.ts`, `actions.passwordReset.test.ts`, `actions.signUp.test.ts`.",
-      "path": "src/modules/accounts/actions.test.ts",
+      "name": "**Deleting an account deletes its passkeys**…",
+      "summary": "**Deleting an account deletes its passkeys** (`cms/deletePasskeysWithAccount.ts`; `cms/deletePasskeysWithAccount.test.ts`). Removing a passkey needs no passkey switch and always comes from the session's own account (`use-cases/removePasskey.ts`; `use-cases/removePasskey.test.ts`).",
+      "path": "src/modules/accounts/cms/deletePasskeysWithAccount.test.ts",
       "module": "module:accounts",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": [
-        "src/modules/accounts/actions.test.ts",
-        "src/modules/accounts/actions.changePassword.test.ts",
-        "src/modules/accounts/actions.passwordReset.test.ts",
-        "src/modules/accounts/actions.signUp.test.ts"
+        "src/modules/accounts/cms/deletePasskeysWithAccount.test.ts",
+        "src/modules/accounts/use-cases/removePasskey.test.ts"
       ]
     },
     {
-      "id": "business-rule:src/modules/accounts/README.md#2",
+      "id": "business-rule:src/modules/accounts/README.md#14",
       "type": "business-rule",
-      "name": "Connecting Google",
-      "summary": "Connecting Google: the rules `domain/googleLink.test.ts`, the paths `use-cases/connectGoogle.test.ts` and `use-cases/socialSignIn.test.ts`, the record and its cookie against real Payload `data/socialLinkRequests.payload.test.ts`, the link write `data/socialAccounts.payload.test.ts`, the password check and lockout `data/session.isPasswordFor.payload.test.ts`, the action `actions.connectGoogle.test.ts`, the card and form `ui/ConnectGoogle.test.tsx` and `ui/ConnectGoogleForm.client.test.tsx`, the routes and page under `src/app/(frontend)/auth/[provider]/`.",
-      "path": "src/modules/accounts/domain/googleLink.test.ts",
+      "name": "**Removing the last passkey is allowed:** every account keeps a…",
+      "summary": "**Removing the last passkey is allowed:** every account keeps a password or forgot-password, so nobody is locked out (`use-cases/removePasskey.test.ts`).",
+      "path": "src/modules/accounts/use-cases/removePasskey.test.ts",
       "module": "module:accounts",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": [
-        "src/modules/accounts/domain/googleLink.test.ts",
-        "src/modules/accounts/use-cases/connectGoogle.test.ts",
-        "src/modules/accounts/use-cases/socialSignIn.test.ts",
-        "src/modules/accounts/data/socialLinkRequests.payload.test.ts",
-        "src/modules/accounts/data/socialAccounts.payload.test.ts",
-        "src/modules/accounts/data/session.isPasswordFor.payload.test.ts",
-        "src/modules/accounts/actions.connectGoogle.test.ts",
-        "src/modules/accounts/ui/ConnectGoogle.test.tsx",
-        "src/modules/accounts/ui/ConnectGoogleForm.client.test.tsx"
-      ]
+      "links": ["src/modules/accounts/use-cases/removePasskey.test.ts"]
     },
     {
-      "id": "business-rule:src/modules/accounts/README.md#3",
+      "id": "business-rule:src/modules/accounts/README.md#15",
       "type": "business-rule",
-      "name": "Adding a passkey",
-      "summary": "Adding a passkey: the library's calls `data/webauthn.test.ts` and, with a software authenticator, `data/webauthn.registration.test.ts`; both steps with real Payload `use-cases/addPasskey.payload.test.ts`, the steps `use-cases/addPasskey.start.test.ts` and `use-cases/addPasskey.finish.test.ts`, the actions `actions.addPasskey.test.ts`, the cookie `data/passkeyChallengeCookie.payload.test.ts`, the session's start `data/session.signInSession.payload.test.ts`, the card `ui/AddPasskey.client.test.tsx`, the loader `ui/AddPasskeyLoader.client.test.tsx`, the page `src/app/(frontend)/account/page.test.tsx`, the header `src/app/apiHeaders.test.ts`.",
-      "path": "src/modules/accounts/data/webauthn.test.ts",
-      "module": "module:accounts",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": [
-        "src/modules/accounts/data/webauthn.test.ts",
-        "src/modules/accounts/data/webauthn.registration.test.ts",
-        "src/modules/accounts/use-cases/addPasskey.payload.test.ts",
-        "src/modules/accounts/use-cases/addPasskey.start.test.ts",
-        "src/modules/accounts/use-cases/addPasskey.finish.test.ts",
-        "src/modules/accounts/actions.addPasskey.test.ts",
-        "src/modules/accounts/data/passkeyChallengeCookie.payload.test.ts",
-        "src/modules/accounts/data/session.signInSession.payload.test.ts",
-        "src/modules/accounts/ui/AddPasskey.client.test.tsx",
-        "src/modules/accounts/ui/AddPasskeyLoader.client.test.tsx",
-        "src/app/(frontend)/account/page.test.tsx",
-        "src/app/apiHeaders.test.ts"
-      ]
-    },
-    {
-      "id": "business-rule:src/modules/accounts/README.md#4",
-      "type": "business-rule",
-      "name": "Signing in with a passkey",
-      "summary": "Signing in with a passkey: the library's calls `data/webauthn.signIn.test.ts` and, with a software authenticator, `data/webauthn.authentication.test.ts`; a good sign-in with real Payload `use-cases/signInWithPasskey.payload.test.ts` and every refusal `use-cases/signInWithPasskey.refused.payload.test.ts`, the steps against fakes `use-cases/signInWithPasskey.test.ts`, the actions `actions.passkeySignIn.test.ts`, the session `data/session.startSessionFor.payload.test.ts` (Google's tests from #505 moved there), the button `ui/PasskeySignIn.client.test.tsx`, its messages `ui/passkeyMessages.test.ts`, the form `ui/SignInForm.client.test.tsx`, the group `ui/SignInMethods.test.tsx`, the page `src/app/(frontend)/login/page.test.tsx`, the header `src/app/apiHeaders.test.ts`.",
-      "path": "src/modules/accounts/data/webauthn.signIn.test.ts",
-      "module": "module:accounts",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": [
-        "src/modules/accounts/data/webauthn.signIn.test.ts",
-        "src/modules/accounts/data/webauthn.authentication.test.ts",
-        "src/modules/accounts/use-cases/signInWithPasskey.payload.test.ts",
-        "src/modules/accounts/use-cases/signInWithPasskey.refused.payload.test.ts",
-        "src/modules/accounts/use-cases/signInWithPasskey.test.ts",
-        "src/modules/accounts/actions.passkeySignIn.test.ts",
-        "src/modules/accounts/data/session.startSessionFor.payload.test.ts",
-        "src/modules/accounts/ui/PasskeySignIn.client.test.tsx",
-        "src/modules/accounts/ui/passkeyMessages.test.ts",
-        "src/modules/accounts/ui/SignInForm.client.test.tsx",
-        "src/modules/accounts/ui/SignInMethods.test.tsx",
-        "src/app/(frontend)/login/page.test.tsx",
-        "src/app/apiHeaders.test.ts"
-      ]
-    },
-    {
-      "id": "business-rule:src/modules/accounts/README.md#5",
-      "type": "business-rule",
-      "name": "Seeing and removing passkeys",
-      "summary": "Seeing and removing passkeys: the rule `domain/passkeys.test.ts` (`decideRemovePasskey`), the input and list shape `domain/removePasskey.test.ts`, the note `domain/passkeyEmail.test.ts`, the steps against fakes `use-cases/removePasskey.test.ts` and with real Payload `use-cases/removePasskey.payload.test.ts`, the action `actions.removePasskey.test.ts`, the admin's delete `cms/passkeyRemovedNote.test.ts` and `cms/passkeyRemovedNote.payload.test.ts`, the screen `ui/PasskeyList.client.test.tsx`, `ui/PasskeysCard.test.tsx`, `ui/passkeyMessages.test.ts` and the page `src/app/(frontend)/account/page.test.tsx`.",
-      "path": "src/modules/accounts/domain/passkeys.test.ts",
-      "module": "module:accounts",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": [
-        "src/modules/accounts/domain/passkeys.test.ts",
-        "src/modules/accounts/domain/removePasskey.test.ts",
-        "src/modules/accounts/domain/passkeyEmail.test.ts",
-        "src/modules/accounts/use-cases/removePasskey.test.ts",
-        "src/modules/accounts/use-cases/removePasskey.payload.test.ts",
-        "src/modules/accounts/actions.removePasskey.test.ts",
-        "src/modules/accounts/cms/passkeyRemovedNote.test.ts",
-        "src/modules/accounts/cms/passkeyRemovedNote.payload.test.ts",
-        "src/modules/accounts/ui/PasskeyList.client.test.tsx",
-        "src/modules/accounts/ui/PasskeysCard.test.tsx",
-        "src/modules/accounts/ui/passkeyMessages.test.ts",
-        "src/app/(frontend)/account/page.test.tsx"
-      ]
-    },
-    {
-      "id": "business-rule:src/modules/accounts/README.md#6",
-      "type": "business-rule",
-      "name": "Passkey store",
-      "summary": "Passkey store: the rules `domain/passkeys.test.ts` and the name rule `domain/passkeyLabel.test.ts`; real Payload: the challenge race `data/passkeyChallenges.payload.test.ts`, duplicate credential IDs, the counter, the handle and an account's delete `data/passkeys.payload.test.ts`; the switch `data/passkeySettings.test.ts`, the retention `cms/passkeyRetention.payload.test.ts`, who may read or write `src/payload.config.passkeyAccess.test.ts`, the forged handle `src/payload.config.protectedFields.test.ts`.",
-      "path": "src/modules/accounts/domain/passkeys.test.ts",
-      "module": "module:accounts",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": [
-        "src/modules/accounts/domain/passkeys.test.ts",
-        "src/modules/accounts/domain/passkeyLabel.test.ts",
-        "src/modules/accounts/data/passkeyChallenges.payload.test.ts",
-        "src/modules/accounts/data/passkeys.payload.test.ts",
-        "src/modules/accounts/data/passkeySettings.test.ts",
-        "src/modules/accounts/cms/passkeyRetention.payload.test.ts",
-        "src/payload.config.passkeyAccess.test.ts",
-        "src/payload.config.protectedFields.test.ts"
-      ]
-    },
-    {
-      "id": "business-rule:src/modules/accounts/README.md#7",
-      "type": "business-rule",
-      "name": "Sign-up never makes an admin, Payload's first registration does",
-      "summary": "Sign-up never makes an admin, Payload's first registration does: `cms/signUpFirstAccount.test.ts`, `src/payload.config.roles.test.ts`. Each guard: `cms/*.test.ts`.",
+      "name": "**Sign-up never makes an admin;** only Payload's first registration…",
+      "summary": "**Sign-up never makes an admin;** only Payload's first registration on an empty database does, and a Google create on an empty database is a guest (`cms/firstAccountIsAdmin.ts`; `cms/signUpFirstAccount.test.ts`, `src/payload.config.roles.test.ts`).",
       "path": "src/modules/accounts/cms/signUpFirstAccount.test.ts",
       "module": "module:accounts",
       "aliases": [],
@@ -626,10 +512,10 @@
       ]
     },
     {
-      "id": "business-rule:src/modules/accounts/README.md#8",
+      "id": "business-rule:src/modules/accounts/README.md#16",
       "type": "business-rule",
-      "name": "Own password and email changes need the flags",
-      "summary": "Own password and email changes need the flags: `cms/requireCurrentPassword.test.ts`, `src/payload.config.emailChange.test.ts`.",
+      "name": "**Own password and email changes need their flags**…",
+      "summary": "**Own password and email changes need their flags** (`cms/requireCurrentPassword.test.ts`, `src/payload.config.emailChange.test.ts`); fields no resident can set are in `src/payload.config.protectedFields.test.ts`.",
       "path": "src/modules/accounts/cms/requireCurrentPassword.test.ts",
       "module": "module:accounts",
       "aliases": [],
@@ -638,14 +524,128 @@
       "watchOuts": [],
       "links": [
         "src/modules/accounts/cms/requireCurrentPassword.test.ts",
-        "src/payload.config.emailChange.test.ts"
+        "src/payload.config.emailChange.test.ts",
+        "src/payload.config.protectedFields.test.ts"
       ]
     },
     {
-      "id": "business-rule:src/modules/accounts/README.md#9",
+      "id": "business-rule:src/modules/accounts/README.md#17",
       "type": "business-rule",
-      "name": "Resend cap and window",
-      "summary": "Resend cap and window: `domain/verificationResends.test.ts`, `actions.signUpResend.test.ts`.",
+      "name": "**No other site frames the sign-in pages:** `/account`, `/login` and…",
+      "summary": "**No other site frames the sign-in pages:** `/account`, `/login` and `/auth/:provider/connect` send `frame-ancestors 'none'` (`next.config.js`; `src/app/apiHeaders.test.ts`).",
+      "path": "src/app/apiHeaders.test.ts",
+      "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/app/apiHeaders.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/accounts/README.md#18",
+      "type": "business-rule",
+      "name": "**An MCP key is not a signed-in account:** only a user of the users…",
+      "summary": "**An MCP key is not a signed-in account:** only a user of the users collection counts (`getSessionPayloadUser` in `data/session.ts`).",
+      "path": "src/modules/accounts/README.md",
+      "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "business-rule:src/modules/accounts/README.md#19",
+      "type": "business-rule",
+      "name": "**Roles gate pages:** `requireUser` sends a visitor to sign in,…",
+      "summary": "**Roles gate pages:** `requireUser` sends a visitor to sign in, `requireRole` gives a 404 (`use-cases/requireUser.test.ts`); old residents became guests (`src/payload.config.guestMigration.test.ts`).",
+      "path": "src/modules/accounts/use-cases/requireUser.test.ts",
+      "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/accounts/use-cases/requireUser.test.ts",
+        "src/payload.config.guestMigration.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/accounts/README.md#2",
+      "type": "business-rule",
+      "name": "**Public email forms are limited:** per connection, then the robot…",
+      "summary": "**Public email forms are limited:** per connection, then the robot check, then site-wide (sign-up: 5 an hour per connection and 20 site-wide; forgot password: 5 and 30); counts are in memory, one PM2 process (`use-cases/guardPublicRequest.ts`, `domain/requestLimits.ts`). Provider and passkey sign-in are limited per connection only, since a cap anyone can fill would switch them off for everyone (`use-cases/guardPublicRequest.test.ts`, `use-cases/signInWithPasskey.test.ts`).",
+      "path": "src/modules/accounts/use-cases/guardPublicRequest.test.ts",
+      "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/accounts/use-cases/guardPublicRequest.test.ts",
+        "src/modules/accounts/use-cases/signInWithPasskey.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/accounts/README.md#20",
+      "type": "business-rule",
+      "name": "**A forged or stale answer from the browser is refused** without…",
+      "summary": "**A forged or stale answer from the browser is refused** without saying which check failed (`data/webauthn.ts`, `data/webauthn.signIn.test.ts`, `data/webauthn.registration.test.ts`).",
+      "path": "src/modules/accounts/data/webauthn.signIn.test.ts",
+      "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/accounts/data/webauthn.signIn.test.ts",
+        "src/modules/accounts/data/webauthn.registration.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/accounts/README.md#3",
+      "type": "business-rule",
+      "name": "**An unverified account gets no reset email,** and the answer is the…",
+      "summary": "**An unverified account gets no reset email,** and the answer is the same, so nobody can make the site mail someone else's address (`cms/noResetEmailWhileUnverified.ts`; `cms/noResetEmailWhileUnverified.test.ts`).",
+      "path": "src/modules/accounts/cms/noResetEmailWhileUnverified.test.ts",
+      "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/accounts/cms/noResetEmailWhileUnverified.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/accounts/README.md#4",
+      "type": "business-rule",
+      "name": "**A failed sign-up email deletes the half-made account,** so the…",
+      "summary": "**A failed sign-up email deletes the half-made account,** so the address is not stuck as a duplicate; verified or older accounts are never touched (`deleteFailedSignUp` in `data/signUp.ts`; `actions.signUp.test.ts`).",
+      "path": "src/modules/accounts/actions.signUp.test.ts",
+      "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/accounts/actions.signUp.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/accounts/README.md#5",
+      "type": "business-rule",
+      "name": "**A repeat sign-up for an unverified address** resends the link after…",
+      "summary": "**A repeat sign-up for an unverified address** resends the link after the answer, one resend at a time per address, within the cap (`use-cases/signUpResident.ts`; `actions.signUp.test.ts`).",
+      "path": "src/modules/accounts/actions.signUp.test.ts",
+      "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/accounts/actions.signUp.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/accounts/README.md#6",
+      "type": "business-rule",
+      "name": "**A resend is capped:** 3 per 3 hours, stored on the account…",
+      "summary": "**A resend is capped:** 3 per 3 hours, stored on the account (`domain/verificationResends.ts`; `domain/verificationResends.test.ts`, `actions.signUpResend.test.ts`).",
       "path": "src/modules/accounts/domain/verificationResends.test.ts",
       "module": "module:accounts",
       "aliases": [],
@@ -658,10 +658,59 @@
       ]
     },
     {
+      "id": "business-rule:src/modules/accounts/README.md#7",
+      "type": "business-rule",
+      "name": "**Google never takes over an account by email.** A known Google id…",
+      "summary": "**Google never takes over an account by email.** A known Google id signs in; a new verified address gets a guest; a used address goes through the password step; locked, unverified and agent accounts are refused (`domain/socialSignIn.test.ts`, `use-cases/socialSignIn.test.ts`, `data/socialAccounts.payload.test.ts`).",
+      "path": "src/modules/accounts/domain/socialSignIn.test.ts",
+      "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/accounts/domain/socialSignIn.test.ts",
+        "src/modules/accounts/use-cases/socialSignIn.test.ts",
+        "src/modules/accounts/data/socialAccounts.payload.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/accounts/README.md#8",
+      "type": "business-rule",
+      "name": "**Linking Google writes once,** only while the account has none, and…",
+      "summary": "**Linking Google writes once,** only while the account has none, and Google must have verified the email (`domain/googleLink.test.ts`, `use-cases/connectGoogle.test.ts`).",
+      "path": "src/modules/accounts/domain/googleLink.test.ts",
+      "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/accounts/domain/googleLink.test.ts",
+        "src/modules/accounts/use-cases/connectGoogle.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/accounts/README.md#9",
+      "type": "business-rule",
+      "name": "**Sensitive changes need a recent sign-in** (five minutes from the…",
+      "summary": "**Sensitive changes need a recent sign-in** (five minutes from the session's own start, so \"keep me signed in\" never counts): adding or removing a passkey, connecting Google (`domain/signInSession.ts`; `domain/googleLink.test.ts`, `use-cases/addPasskey.finish.test.ts`).",
+      "path": "src/modules/accounts/domain/googleLink.test.ts",
+      "module": "module:accounts",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/accounts/domain/googleLink.test.ts",
+        "src/modules/accounts/use-cases/addPasskey.finish.test.ts"
+      ]
+    },
+    {
       "id": "business-rule:src/modules/agents/README.md#1",
       "type": "business-rule",
-      "name": "An agent sees only allowlisted fields, with related documents as ids",
-      "summary": "An agent sees only allowlisted fields, with related documents as ids: `domain/agentView.test.ts`, `src/payload.config.agentAccess.test.ts`.",
+      "name": "**An agent sees only allowlisted fields,** each collection's…",
+      "summary": "**An agent sees only allowlisted fields,** each collection's allowlist checked against the generated types; related documents become ids, `meta` keeps only title and description, and every answer is rebuilt from that view, so no personal data reaches the model (`cms/agentViews.ts`, `domain/agentView.ts`; `domain/agentView.test.ts`, `src/payload.config.agentAccess.test.ts`).",
       "path": "src/modules/agents/domain/agentView.test.ts",
       "module": "module:agents",
       "aliases": [],
@@ -676,37 +725,8 @@
     {
       "id": "business-rule:src/modules/agents/README.md#2",
       "type": "business-rule",
-      "name": "Suggestion slug, schedule and default image rules",
-      "summary": "Suggestion slug, schedule and default image rules: `domain/suggestion.test.ts`, `src/payload.config.agentSuggestionCards.test.ts`.",
-      "path": "src/modules/agents/domain/suggestion.test.ts",
-      "module": "module:agents",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": [
-        "src/modules/agents/domain/suggestion.test.ts",
-        "src/payload.config.agentSuggestionCards.test.ts"
-      ]
-    },
-    {
-      "id": "business-rule:src/modules/agents/README.md#3",
-      "type": "business-rule",
-      "name": "The tools' schemas and the agents' contract give the same verdicts",
-      "summary": "The tools' schemas and the agents' contract give the same verdicts: `cms/tools/schemas.contract.test.ts`.",
-      "path": "src/modules/agents/cms/tools/schemas.contract.test.ts",
-      "module": "module:agents",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/agents/cms/tools/schemas.contract.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/agents/README.md#4",
-      "type": "business-rule",
-      "name": "Tools store held drafts, answer duplicates and keep concurrent reports",
-      "summary": "Tools store held drafts, answer duplicates and keep concurrent reports: `src/payload.config.agentTools.test.ts`.",
+      "name": "**An agent never publishes or changes content:** over MCP it finds…",
+      "summary": "**An agent never publishes or changes content:** over MCP it finds published events, posts and categories, writes its own runs and calls two tools; `submitSuggestion` stores a held `suggested` draft, `reportItem` adds a review item for staff (`cms/mcp.ts`; `src/payload.config.agentTools.test.ts`). The tools are listed in the [MCP tools reference](../../../docs/reference/mcp-tools.md).",
       "path": "src/payload.config.agentTools.test.ts",
       "module": "module:agents",
       "aliases": [],
@@ -716,10 +736,68 @@
       "links": ["src/payload.config.agentTools.test.ts"]
     },
     {
+      "id": "business-rule:src/modules/agents/README.md#3",
+      "type": "business-rule",
+      "name": "**A suggestion is stored once:** the same source id or fingerprint…",
+      "summary": "**A suggestion is stored once:** the same source id or fingerprint answers `duplicate` with the stored id, also when two calls race; `externalId` and `contentHash` are unique and the slug ends with the start of the hash (`cms/tools/submitSuggestion.ts`, `domain/suggestion.ts`; `src/payload.config.agentTools.test.ts`).",
+      "path": "src/payload.config.agentTools.test.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/payload.config.agentTools.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/agents/README.md#4",
+      "type": "business-rule",
+      "name": "**A suggestion's shape is checked before anything is stored:** an…",
+      "summary": "**A suggestion's shape is checked before anything is stored:** an unknown category slug is refused, never created; a malformed `<Chart>`, `<FactTabs>` or `<SectionTabs>` tag refuses the call; an event needs `startsAt` and an update or cancellation names its target; an event's day and times come from `startsAt`, `endsAt` and `allDay` in the site timezone, and an end on another day is dropped; the tools' schemas and the agents' contract in `intelligence/schemas/` give the same verdicts (`cms/tools/schemas.ts`, `domain/suggestion.ts`, #633; `domain/suggestion.test.ts`, `cms/tools/schemas.contract.test.ts`, `src/payload.config.chartSuggestion.test.ts`, `src/payload.config.factTabsSuggestion.test.ts`, `src/payload.config.sectionTabsSuggestion.test.ts`).",
+      "path": "src/modules/agents/domain/suggestion.test.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/agents/domain/suggestion.test.ts",
+        "src/modules/agents/cms/tools/schemas.contract.test.ts",
+        "src/payload.config.chartSuggestion.test.ts",
+        "src/payload.config.factTabsSuggestion.test.ts",
+        "src/payload.config.sectionTabsSuggestion.test.ts"
+      ]
+    },
+    {
       "id": "business-rule:src/modules/agents/README.md#5",
       "type": "business-rule",
-      "name": "Keys, limits, run isolation and write-once identity",
-      "summary": "Keys, limits, run isolation and write-once identity: `src/payload.config.agentAccess.test.ts`, `src/payload.config.agentProbes.test.ts`.",
+      "name": "**A suggestion's text and lists have length caps,** because Payload…",
+      "summary": "**A suggestion's text and lists have length caps,** because Payload checks a title's length only on publish, not on a draft. The main ones: title (the shared `TITLE_MAX_LENGTH`), body 12,000, card summary 160, summary 1,000, at most 2 categories and 5 evidence items; `SUGGESTION_CAPS` in `domain/suggestion.ts` holds all of them, including the venue, address, source, category slug, source id, run id, evidence and flag caps (#633; `domain/suggestion.test.ts`).",
+      "path": "src/modules/agents/domain/suggestion.test.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/agents/domain/suggestion.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/agents/README.md#6",
+      "type": "business-rule",
+      "name": "**A suggestion's picture is the first category's `defaultImage`,**…",
+      "summary": "**A suggestion's picture is the first category's `defaultImage`,** else the nearest parent's, else the next category's, else none; a post's `summary` fills only its search-engine description and an event's its description (`cms/tools/submitSuggestion.ts`; `src/payload.config.agentSuggestionCards.test.ts`).",
+      "path": "src/payload.config.agentSuggestionCards.test.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/payload.config.agentSuggestionCards.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/agents/README.md#7",
+      "type": "business-rule",
+      "name": "**A key is the only credential and it can be narrowed, not widened:**…",
+      "summary": "**A key is the only credential and it can be narrowed, not widened:** keys are admin-only, each bound to an account that must still have the agent role at each request; collection access decides what it may do and Admin's per-key boxes only narrow that. Limits: 120 requests a minute per connection, then 60 a minute per key, then 429, counted in memory (`cms/apiKeys.ts`, `cms/mcp.ts`, `domain/mcpLimits.ts`; `src/payload.config.agentAccess.test.ts`, `src/payload.config.agentProbes.test.ts`).",
       "path": "src/payload.config.agentAccess.test.ts",
       "module": "module:agents",
       "aliases": [],
@@ -729,68 +807,175 @@
       "links": ["src/payload.config.agentAccess.test.ts", "src/payload.config.agentProbes.test.ts"]
     },
     {
-      "id": "business-rule:src/modules/agents/README.md#6",
+      "id": "business-rule:src/modules/agents/README.md#8",
       "type": "business-rule",
-      "name": "Chart, fact-tab and section-tab tags in suggestions",
-      "summary": "Chart, fact-tab and section-tab tags in suggestions: `src/payload.config.chartSuggestion.test.ts`, `src/payload.config.factTabsSuggestion.test.ts`, `src/payload.config.sectionTabsSuggestion.test.ts`.",
-      "path": "src/payload.config.chartSuggestion.test.ts",
+      "name": "**A run belongs to its agent:** the `agent` of a run and of a review…",
+      "summary": "**A run belongs to its agent:** the `agent` of a run and of a review item is set by the server from the key's account; a run's identity (`RUN_IDENTITY`) is written once and later updates keep it; an agent sees only its own runs (another's is \"not found\") and uses them to resume from its source cursors; admins may change identity fields (`cms/agentRuns.ts`, `cms/agentReviewItems.ts`, `domain/runs.ts`; `src/payload.config.agentAccess.test.ts`).",
+      "path": "src/payload.config.agentAccess.test.ts",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/payload.config.agentAccess.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/agents/README.md#9",
+      "type": "business-rule",
+      "name": "**Reports never overwrite each other:** each adds one document under…",
+      "summary": "**Reports never overwrite each other:** each adds one document under the agent's own run; staff read every item, an agent only its own, only admins change or delete one (`cms/tools/reportItem.ts`; `src/payload.config.agentTools.test.ts`). The access migration rolls back and applies again (`src/payload.config.agentMigration.test.ts`).",
+      "path": "src/payload.config.agentTools.test.ts",
       "module": "module:agents",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": [
-        "src/payload.config.chartSuggestion.test.ts",
-        "src/payload.config.factTabsSuggestion.test.ts",
-        "src/payload.config.sectionTabsSuggestion.test.ts"
+        "src/payload.config.agentTools.test.ts",
+        "src/payload.config.agentMigration.test.ts"
       ]
-    },
-    {
-      "id": "business-rule:src/modules/agents/README.md#7",
-      "type": "business-rule",
-      "name": "The access migration rolls back and applies again",
-      "summary": "The access migration rolls back and applies again: `src/payload.config.agentMigration.test.ts`.",
-      "path": "src/payload.config.agentMigration.test.ts",
-      "module": "module:agents",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/payload.config.agentMigration.test.ts"]
     },
     {
       "id": "business-rule:src/modules/contact/README.md#1",
       "type": "business-rule",
-      "name": "Each hook does what is above",
-      "summary": "Each hook does what is above: `cms/*.test.ts`; the order and the fields it adds: `cms/formBuilder.test.ts`.",
+      "name": "**Size:** over 50 rows, or a name, value or total over its limit, is…",
+      "summary": "**Size:** over 50 rows, or a name, value or total over its limit, is refused with 413; rows that are not text, number or true/false get 400. Staff are held to it too (`cms/limitSubmissionSize.ts`, `domain/submissionSize.ts`; `domain/submissionSize.test.ts`).",
+      "path": "src/modules/contact/domain/submissionSize.test.ts",
+      "module": "module:contact",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/contact/domain/submissionSize.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/contact/README.md#2",
+      "type": "business-rule",
+      "name": "**Rate:** 5 submissions an hour per connection, then 429, counted in…",
+      "summary": "**Rate:** 5 submissions an hour per connection, then 429, counted in memory (one process); with no known IP it does not apply. Emails also pass a site-wide cap of 30 an hour; past it they are dropped, the submission is kept and one warning an hour is logged (`cms/rateLimits.ts`, `domain/rateLimits.ts`; `cms/rateLimits.test.ts`).",
+      "path": "src/modules/contact/cms/rateLimits.test.ts",
+      "module": "module:contact",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/contact/cms/rateLimits.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/contact/README.md#3",
+      "type": "business-rule",
+      "name": "**Robot check:** a missing or wrong token is refused with 400 and…",
+      "summary": "**Robot check:** a missing or wrong token is refused with 400 and only the log says why. It is off while Turnstile keys are unset (a production deploy refuses to go out without them unless `ALLOW_NO_ROBOT_CHECK` is set). Admins and editors skip the rate limit and the robot check, not the size check (`cms/verifyHumanSubmission.ts`; `cms/verifyHumanSubmission.test.ts`).",
+      "path": "src/modules/contact/cms/verifyHumanSubmission.test.ts",
+      "module": "module:contact",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/contact/cms/verifyHumanSubmission.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/contact/README.md#4",
+      "type": "business-rule",
+      "name": "**Only staff-chosen recipients get mail:** an email whose to, cc or…",
+      "summary": "**Only staff-chosen recipients get mail:** an email whose to, cc or bcc comes from the submission is dropped, so is one with no matching setting; a Reply-To is kept only as one plain address, and a From built from submitted data is blanked (`domain/formEmails.ts`; `domain/formEmails.test.ts`, `cms/deliveryToRecipient.test.ts`).",
+      "path": "src/modules/contact/domain/formEmails.test.ts",
+      "module": "module:contact",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/contact/domain/formEmails.test.ts",
+        "src/modules/contact/cms/deliveryToRecipient.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/contact/README.md#5",
+      "type": "business-rule",
+      "name": "**A message reaches the team only after its sender confirms:**…",
+      "summary": "**A message reaches the team only after its sender confirms:** unconfirmed is held; confirmed before, or a form with no email field, is sent at once; a form that asks for an email but got no valid one sends nothing. Each sent email ends with a \"Sender's email: confirmed.\" line, held emails are cleared before sending, so a repeated click sends nothing twice and one failure stops no other (`domain/senderEmail.ts` `toEmailDelivery`, `cms/heldEmails.ts`; `domain/senderEmail.test.ts`, `cms/deliveryToRecipient.test.ts`).",
+      "path": "src/modules/contact/domain/senderEmail.test.ts",
+      "module": "module:contact",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/contact/domain/senderEmail.test.ts",
+        "src/modules/contact/cms/deliveryToRecipient.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/contact/README.md#6",
+      "type": "business-rule",
+      "name": "**The sender's fields cannot be forged:** `senderEmail` is the first…",
+      "summary": "**The sender's fields cannot be forged:** `senderEmail` is the first plain address in the form, `emailConfirmed` is the confirmer's answer; both are overwritten on every create and `heldEmails` is cleared (`cms/senderEmail.ts`; `cms/senderEmail.test.ts`).",
+      "path": "src/modules/contact/cms/senderEmail.test.ts",
+      "module": "module:contact",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/contact/cms/senderEmail.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/contact/README.md#7",
+      "type": "business-rule",
+      "name": "**Retention:** never a message on hold (`retentionHold` cannot be set…",
+      "summary": "**Retention:** never a message on hold (`retentionHold` cannot be set on create and needs a reason, `cms/retentionHold.ts`). A message waiting for a click goes 48 hours after it was sent; any other 12 months after its sender's last message, or after it was sent when it has no address. The delete re-checks hold and confirmation, so a hold or a click meanwhile keeps the message; a kept message also keeps its confirmed address (`keepSendersWithMessages`) (`domain/retention.test.ts`, `cms/retention.test.ts`).",
+      "path": "src/modules/contact/domain/retention.test.ts",
+      "module": "module:contact",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/contact/domain/retention.test.ts",
+        "src/modules/contact/cms/retention.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/contact/README.md#8",
+      "type": "business-rule",
+      "name": "The order and the fields the hooks add",
+      "summary": "The order and the fields the hooks add: `cms/formBuilder.test.ts`; the form's fields, errors and note: `ui/FormBlock.client.test.tsx`, `ui/formSchema.test.ts`; the real confirmer and listener: `src/payload.config.confirmation.test.ts`.",
       "path": "src/modules/contact/cms/formBuilder.test.ts",
       "module": "module:contact",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/modules/contact/cms/formBuilder.test.ts"]
+      "links": [
+        "src/modules/contact/cms/formBuilder.test.ts",
+        "src/modules/contact/ui/FormBlock.client.test.tsx",
+        "src/modules/contact/ui/formSchema.test.ts",
+        "src/payload.config.confirmation.test.ts"
+      ]
     },
     {
-      "id": "business-rule:src/modules/contact/README.md#2",
+      "id": "business-rule:src/modules/directory/README.md#1",
       "type": "business-rule",
-      "name": "A held message goes only to the form's configured recipient, once",
-      "summary": "A held message goes only to the form's configured recipient, once: `cms/deliveryToRecipient.test.ts`.",
-      "path": "src/modules/contact/cms/deliveryToRecipient.test.ts",
-      "module": "module:contact",
+      "name": "**Sections follow the category lists.** Entries group in the list's…",
+      "summary": "**Sections follow the category lists.** Entries group in the list's order, keep `order` within a group, and an entry with no category or an unlisted one goes under General (FAQ) or Other (resources); the option lists and the headings are one definition so they cannot drift (`domain/categories.ts`, `domain/sections.ts`; `domain/categories.test.ts`, `domain/sections.test.ts`).",
+      "path": "src/modules/directory/domain/categories.test.ts",
+      "module": "module:directory",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/modules/contact/cms/deliveryToRecipient.test.ts"]
+      "links": [
+        "src/modules/directory/domain/categories.test.ts",
+        "src/modules/directory/domain/sections.test.ts"
+      ]
     },
     {
-      "id": "business-rule:src/modules/contact/README.md#3",
+      "id": "business-rule:src/modules/directory/README.md#2",
       "type": "business-rule",
-      "name": "Email, rate, size, acknowledgment and retention rules",
-      "summary": "Email, rate, size, acknowledgment and retention rules: `domain/*.test.ts`.",
-      "path": "src/modules/contact/README.md",
-      "module": "module:contact",
+      "name": "**Resources sit in five groups,** each its own page; every category…",
+      "summary": "**Resources sit in five groups,** each its own page; every category is in exactly one group (Other and unlisted ones in Community and family); an empty group still has its page; an unknown group is not found (`domain/groups.ts`).",
+      "path": "src/modules/directory/README.md",
+      "module": "module:directory",
       "aliases": [],
       "fields": [],
       "facts": [],
@@ -798,67 +983,72 @@
       "links": []
     },
     {
-      "id": "business-rule:src/modules/contact/README.md#4",
+      "id": "business-rule:src/modules/directory/README.md#3",
       "type": "business-rule",
-      "name": "The form's fields, errors and note",
-      "summary": "The form's fields, errors and note: `ui/FormBlock.client.test.tsx`, `ui/formSchema.test.ts`, `ui/submitErrorMessage.test.ts`, `ui/confirmEmailNote.test.ts`.",
-      "path": "src/modules/contact/ui/FormBlock.client.test.tsx",
-      "module": "module:contact",
+      "name": "**A portrait needs its own credit.** `photoCredit` is required once a…",
+      "summary": "**A portrait needs its own credit.** `photoCredit` is required once a photo is set and must leave out \"Photo:\", which the card adds. It shows only for elected officials, when the photo is an image and `photoCredit` is set; the card draws the resource's credit and source, never the media item's (`domain/resourcePortrait.ts`, `cms/resources.ts`; `domain/resourcePortrait.test.ts`, `data/queries.resources.test.ts`).",
+      "path": "src/modules/directory/domain/resourcePortrait.test.ts",
+      "module": "module:directory",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": [
-        "src/modules/contact/ui/FormBlock.client.test.tsx",
-        "src/modules/contact/ui/formSchema.test.ts",
-        "src/modules/contact/ui/submitErrorMessage.test.ts",
-        "src/modules/contact/ui/confirmEmailNote.test.ts"
+        "src/modules/directory/domain/resourcePortrait.test.ts",
+        "src/modules/directory/data/queries.resources.test.ts"
       ]
     },
     {
-      "id": "business-rule:src/modules/contact/README.md#5",
+      "id": "business-rule:src/modules/directory/README.md#4",
       "type": "business-rule",
-      "name": "The contact form gets the real confirmer and its listener",
-      "summary": "The contact form gets the real confirmer and its listener: `src/payload.config.confirmation.test.ts`.",
-      "path": "src/payload.config.confirmation.test.ts",
-      "module": "module:contact",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/payload.config.confirmation.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/directory/README.md#1",
-      "type": "business-rule",
-      "name": "Category lists keep their order and unique values",
-      "summary": "Category lists keep their order and unique values: `domain/categories.test.ts`.",
-      "path": "src/modules/directory/domain/categories.test.ts",
+      "name": "**Links are web addresses.** `url`, up to three extra links (label…",
+      "summary": "**Links are web addresses.** `url`, up to three extra links (label and URL both required) and the photo source must start with `http://` or `https://`, and the card drops one that fails (`domain/resourceUrl.ts`, `ui/ResourceCard.tsx`; `domain/resourceUrl.test.ts`, `ui/ResourceCard.test.tsx`).",
+      "path": "src/modules/directory/domain/resourceUrl.test.ts",
       "module": "module:directory",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/modules/directory/domain/categories.test.ts"]
+      "links": [
+        "src/modules/directory/domain/resourceUrl.test.ts",
+        "src/modules/directory/ui/ResourceCard.test.tsx"
+      ]
     },
     {
-      "id": "business-rule:src/modules/directory/README.md#2",
+      "id": "business-rule:src/modules/directory/README.md#5",
       "type": "business-rule",
-      "name": "Entries group in category order, with unknown or missing categories…",
-      "summary": "Entries group in category order, with unknown or missing categories in General or Other: `domain/sections.test.ts`.",
-      "path": "src/modules/directory/domain/sections.test.ts",
+      "name": "**A note keeps portraits from reading as an endorsement** under the…",
+      "summary": "**A note keeps portraits from reading as an endorsement** under the Elected Officials heading (`RESOURCE_SECTION_NOTES`, #393).",
+      "path": "src/modules/directory/README.md",
       "module": "module:directory",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/modules/directory/domain/sections.test.ts"]
+      "links": []
     },
     {
-      "id": "business-rule:src/modules/directory/README.md#3",
+      "id": "business-rule:src/modules/directory/README.md#6",
       "type": "business-rule",
-      "name": "`order` is a sidebar number, 99 by default, lower first",
-      "summary": "`order` is a sidebar number, 99 by default, lower first: `cms/orderField.test.ts`.",
+      "name": "**FAQ answer links keep their address,** or fall back to plain text…",
+      "summary": "**FAQ answer links keep their address,** or fall back to plain text when the reader may not see the target (`data/queries.ts`; `data/queries.faq.test.ts`). The page emits schema.org `FAQPage` data (`ui/faqJsonLd.ts`; `ui/faqJsonLd.test.ts`) and its rows open without JavaScript (`ui/FaqList.test.tsx`).",
+      "path": "src/modules/directory/data/queries.faq.test.ts",
+      "module": "module:directory",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/directory/data/queries.faq.test.ts",
+        "src/modules/directory/ui/faqJsonLd.test.ts",
+        "src/modules/directory/ui/FaqList.test.tsx"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/directory/README.md#7",
+      "type": "business-rule",
+      "name": "**`order` is a sidebar number,** 99 by default, lower first…",
+      "summary": "**`order` is a sidebar number,** 99 by default, lower first (`cms/orderField.ts`; `cms/orderField.test.ts`).",
       "path": "src/modules/directory/cms/orderField.test.ts",
       "module": "module:directory",
       "aliases": [],
@@ -868,121 +1058,23 @@
       "links": ["src/modules/directory/cms/orderField.test.ts"]
     },
     {
-      "id": "business-rule:src/modules/directory/README.md#4",
-      "type": "business-rule",
-      "name": "A photo needs a credit without \"Photo:\"; the portrait shows only for…",
-      "summary": "A photo needs a credit without \"Photo:\"; the portrait shows only for elected officials, with the resource's own credit: `domain/resourcePortrait.test.ts`.",
-      "path": "src/modules/directory/domain/resourcePortrait.test.ts",
-      "module": "module:directory",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/directory/domain/resourcePortrait.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/directory/README.md#5",
-      "type": "business-rule",
-      "name": "Links must be web addresses",
-      "summary": "Links must be web addresses: `domain/resourceUrl.test.ts`, `data/queries.resources.test.ts`.",
-      "path": "src/modules/directory/domain/resourceUrl.test.ts",
-      "module": "module:directory",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": [
-        "src/modules/directory/domain/resourceUrl.test.ts",
-        "src/modules/directory/data/queries.resources.test.ts"
-      ]
-    },
-    {
-      "id": "business-rule:src/modules/directory/README.md#6",
-      "type": "business-rule",
-      "name": "The portrait must be an image, and a link row needs a URL",
-      "summary": "The portrait must be an image, and a link row needs a URL: `data/queries.resources.test.ts`.",
-      "path": "src/modules/directory/data/queries.resources.test.ts",
-      "module": "module:directory",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/directory/data/queries.resources.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/directory/README.md#7",
-      "type": "business-rule",
-      "name": "Answer links keep their address, or fall back to plain text",
-      "summary": "Answer links keep their address, or fall back to plain text: `data/queries.faq.test.ts`.",
-      "path": "src/modules/directory/data/queries.faq.test.ts",
-      "module": "module:directory",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/directory/data/queries.faq.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/directory/README.md#8",
-      "type": "business-rule",
-      "name": "The card and the portrait layout",
-      "summary": "The card and the portrait layout: `ui/ResourceCard.test.tsx`; the open-and-close rows: `ui/FaqList.test.tsx`; the `FAQPage` data: `ui/faqJsonLd.test.ts`.",
-      "path": "src/modules/directory/ui/ResourceCard.test.tsx",
-      "module": "module:directory",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": [
-        "src/modules/directory/ui/ResourceCard.test.tsx",
-        "src/modules/directory/ui/FaqList.test.tsx",
-        "src/modules/directory/ui/faqJsonLd.test.ts"
-      ]
-    },
-    {
       "id": "business-rule:src/modules/events/README.md#1",
       "type": "business-rule",
-      "name": "Upcoming ends at midnight in Madison, not UTC",
-      "summary": "Upcoming ends at midnight in Madison, not UTC: `data/scope.test.ts`.",
+      "name": "**Upcoming means dated today or later in the Madison timezone;** past…",
+      "summary": "**Upcoming means dated today or later in the Madison timezone;** past means before today, dates are day-only. Upcoming lists run soonest first, 12 a page; past lists newest first, 9 a page (`data/scope.ts`, `domain/scope.ts`; `data/scope.test.ts`, `domain/scope.test.ts`).",
       "path": "src/modules/events/data/scope.test.ts",
       "module": "module:events",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/modules/events/data/scope.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/events/README.md#10",
-      "type": "business-rule",
-      "name": "Suggestions are held",
-      "summary": "Suggestions are held: `src/payload.config.reviewQueue.test.ts`.",
-      "path": "src/payload.config.reviewQueue.test.ts",
-      "module": "module:events",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/payload.config.reviewQueue.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/events/README.md#11",
-      "type": "business-rule",
-      "name": "Malformed event URLs are refused by the proxy",
-      "summary": "Malformed event URLs are refused by the proxy: `src/proxy.test.ts`.",
-      "path": "src/proxy.test.ts",
-      "module": "module:events",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/proxy.test.ts"]
+      "links": ["src/modules/events/data/scope.test.ts", "src/modules/events/domain/scope.test.ts"]
     },
     {
       "id": "business-rule:src/modules/events/README.md#2",
       "type": "business-rule",
-      "name": "Cursor paging skips and repeats nothing when events change",
-      "summary": "Cursor paging skips and repeats nothing when events change: `data/queries.keyset.test.ts`.",
+      "name": "**Cursor paging skips and repeats nothing** when events change…",
+      "summary": "**Cursor paging skips and repeats nothing** when events change (`data/queries.keyset.test.ts`).",
       "path": "src/modules/events/data/queries.keyset.test.ts",
       "module": "module:events",
       "aliases": [],
@@ -994,37 +1086,37 @@
     {
       "id": "business-rule:src/modules/events/README.md#3",
       "type": "business-rule",
-      "name": "Cancelled events stay in listings, counts, \"Load more\" and the sidebar",
-      "summary": "Cancelled events stay in listings, counts, \"Load more\" and the sidebar: `use-cases/cancelledEvents.test.ts`.",
+      "name": "**Only published events show; cancelled ones stay** listed, counted,…",
+      "summary": "**Only published events show; cancelled ones stay** listed, counted, in \"Load more\" and the sidebar and openable, marked cancelled, with no register button (`data/listing.ts`; `use-cases/cancelledEvents.test.ts`). A past event's page has no register button and says \"This event has passed.\"; a cancelled one says only that it is cancelled; today's keeps its button (`isPastEvent`; `src/app/(frontend)/events/[slug]/page.test.tsx`, #1012).",
       "path": "src/modules/events/use-cases/cancelledEvents.test.ts",
       "module": "module:events",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/modules/events/use-cases/cancelledEvents.test.ts"]
+      "links": [
+        "src/modules/events/use-cases/cancelledEvents.test.ts",
+        "src/app/(frontend)/events/[slug]/page.test.tsx"
+      ]
     },
     {
       "id": "business-rule:src/modules/events/README.md#4",
       "type": "business-rule",
-      "name": "A past event has no register button; today's does",
-      "summary": "A past event has no register button; today's does: `domain/scope.test.ts`, `src/app/(frontend)/events/[slug]/page.test.tsx`.",
-      "path": "src/modules/events/domain/scope.test.ts",
+      "name": "**An event with `officialBody` is an official meeting:** labelled…",
+      "summary": "**An event with `officialBody` is an official meeting:** labelled wherever it shows, with the body's `https://` agenda link on its page and the body as organizer in structured data; an agenda link that is not `https://` is refused (`domain/officialMeetings.ts`, `ui/OfficialAgenda.tsx`; `domain/officialMeetings.test.ts`).",
+      "path": "src/modules/events/domain/officialMeetings.test.ts",
       "module": "module:events",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": [
-        "src/modules/events/domain/scope.test.ts",
-        "src/app/(frontend)/events/[slug]/page.test.tsx"
-      ]
+      "links": ["src/modules/events/domain/officialMeetings.test.ts"]
     },
     {
       "id": "business-rule:src/modules/events/README.md#5",
       "type": "business-rule",
-      "name": "The \"this week\" window and rows",
-      "summary": "The \"this week\" window and rows: `domain/thisWeek.test.ts`, `use-cases/findEventsThisWeek.test.ts`, `data/mappers.thisWeek.test.ts`.",
+      "name": "**The \"this week\" strip:** a row is `all`, `official` or one…",
+      "summary": "**The \"this week\" strip:** a row is `all`, `official` or one category; a window of 1 to 31 days (default 7) from today; at most 4 rows, 1 to 6 events each; empty rows are hidden, and with none left it shows a message (`domain/thisWeek.ts`, `data/thisWeek.ts`; `domain/thisWeek.test.ts`, `use-cases/findEventsThisWeek.test.ts`, `data/mappers.thisWeek.test.ts`).",
       "path": "src/modules/events/domain/thisWeek.test.ts",
       "module": "module:events",
       "aliases": [],
@@ -1040,8 +1132,21 @@
     {
       "id": "business-rule:src/modules/events/README.md#6",
       "type": "business-rule",
-      "name": "Every event shows a venue, \"Online\" or \"Location to be confirmed\"",
-      "summary": "Every event shows a venue, \"Online\" or \"Location to be confirmed\": `domain/place.test.ts`, `data/mappers.test.ts`, `ui/EventCard.test.tsx`, `ui/eventHeader.test.tsx`.",
+      "name": "**A title band photo with no crop for a screen size uses the nearest…",
+      "summary": "**A title band photo with no crop for a screen size uses the nearest crop that is set;** none set keeps the plain band (`src/platform/payload/bandBackdrop.ts`, `src/platform/ui/BandBackdrop.tsx`, #1024).",
+      "path": "src/modules/events/README.md",
+      "module": "module:events",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "business-rule:src/modules/events/README.md#7",
+      "type": "business-rule",
+      "name": "**Every event states a place:** the venue name, else the address;…",
+      "summary": "**Every event states a place:** the venue name, else the address; \"Online\" for a virtual event (the editor hides its venue fields); \"Location to be confirmed\" when an in-person or hybrid event has none. The map link is the editor's `mapsUrl`, else a Google Maps search of the address (`domain/place.ts`, `domain/maps.ts`, #873; `domain/place.test.ts`, `ui/EventCard.test.tsx`, `ui/eventHeader.test.tsx`).",
       "path": "src/modules/events/domain/place.test.ts",
       "module": "module:events",
       "aliases": [],
@@ -1050,29 +1155,15 @@
       "watchOuts": [],
       "links": [
         "src/modules/events/domain/place.test.ts",
-        "src/modules/events/data/mappers.test.ts",
         "src/modules/events/ui/EventCard.test.tsx",
         "src/modules/events/ui/eventHeader.test.tsx"
       ]
     },
     {
-      "id": "business-rule:src/modules/events/README.md#7",
-      "type": "business-rule",
-      "name": "Agenda links must be `https://`",
-      "summary": "Agenda links must be `https://`: `domain/officialMeetings.test.ts`.",
-      "path": "src/modules/events/domain/officialMeetings.test.ts",
-      "module": "module:events",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/events/domain/officialMeetings.test.ts"]
-    },
-    {
       "id": "business-rule:src/modules/events/README.md#8",
       "type": "business-rule",
-      "name": "Category filters, counts and \"Load more\" keep the filter",
-      "summary": "Category filters, counts and \"Load more\" keep the filter: `data/queries.filter.test.ts`, `domain/filters.test.ts`, `actions.test.ts`.",
+      "name": "**Category filters are pages, not query strings,** and counts and…",
+      "summary": "**Category filters are pages, not query strings,** and counts and \"Load more\" keep the filter (`data/queries.filter.test.ts`, `domain/filters.test.ts`, `actions.test.ts`; `src/proxy.test.ts`). Revalidation names only routes that exist (`cms/revalidateEvent.test.ts`); suggestions are held (`src/payload.config.reviewQueue.test.ts`).",
       "path": "src/modules/events/data/queries.filter.test.ts",
       "module": "module:events",
       "aliases": [],
@@ -1082,58 +1173,17 @@
       "links": [
         "src/modules/events/data/queries.filter.test.ts",
         "src/modules/events/domain/filters.test.ts",
-        "src/modules/events/actions.test.ts"
+        "src/modules/events/actions.test.ts",
+        "src/proxy.test.ts",
+        "src/modules/events/cms/revalidateEvent.test.ts",
+        "src/payload.config.reviewQueue.test.ts"
       ]
-    },
-    {
-      "id": "business-rule:src/modules/events/README.md#9",
-      "type": "business-rule",
-      "name": "Revalidation names only routes that exist",
-      "summary": "Revalidation names only routes that exist: `cms/revalidateEvent.test.ts`.",
-      "path": "src/modules/events/cms/revalidateEvent.test.ts",
-      "module": "module:events",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/events/cms/revalidateEvent.test.ts"]
     },
     {
       "id": "business-rule:src/modules/news/README.md#1",
       "type": "business-rule",
-      "name": "Refreshing names only routes that exist",
-      "summary": "Refreshing names only routes that exist: `cms/revalidatePost.test.ts`.",
-      "path": "src/modules/news/cms/revalidatePost.test.ts",
-      "module": "module:news",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/news/cms/revalidatePost.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/news/README.md#2",
-      "type": "business-rule",
-      "name": "Search copies and sources",
-      "summary": "Search copies and sources: `cms/searchSync.test.ts`, `data/mappers.test.ts`, `data/mappers.source.test.ts`, `data/queries.source.test.ts`.",
-      "path": "src/modules/news/cms/searchSync.test.ts",
-      "module": "module:news",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": [
-        "src/modules/news/cms/searchSync.test.ts",
-        "src/modules/news/data/mappers.test.ts",
-        "src/modules/news/data/mappers.source.test.ts",
-        "src/modules/news/data/queries.source.test.ts"
-      ]
-    },
-    {
-      "id": "business-rule:src/modules/news/README.md#3",
-      "type": "business-rule",
-      "name": "Cursor paging and filters",
-      "summary": "Cursor paging and filters: `data/queries.keyset.test.ts`, `data/filters.test.ts`, `actions.test.ts`.",
+      "name": "**The listing is published posts, newest first, 12 a page.** Numbered…",
+      "summary": "**The listing is published posts, newest first, 12 a page.** Numbered pages serve visitors without JavaScript; \"Load more\" asks for what follows the last post by cursor, so a removed post skips nothing, and its action refuses an invalid cursor (`data/queries.ts`, `actions.ts`, decision 0014; `data/queries.keyset.test.ts`, `data/filters.test.ts`, `actions.test.ts`).",
       "path": "src/modules/news/data/queries.keyset.test.ts",
       "module": "module:news",
       "aliases": [],
@@ -1147,27 +1197,65 @@
       ]
     },
     {
-      "id": "business-rule:src/modules/news/README.md#4",
+      "id": "business-rule:src/modules/news/README.md#2",
       "type": "business-rule",
-      "name": "Byline, related posts, search query",
-      "summary": "Byline, related posts, search query: `domain/authors.test.ts`, `domain/related.test.ts`, `domain/search.test.ts`.",
+      "name": "**An author's account stays private:** `authors` becomes…",
+      "summary": "**An author's account stays private:** `authors` becomes `populatedAuthors` (names only) on every read, copied past access control and left out when an author is missing; the byline joins them \"Ana, Ben and Cy\" (`cms/populateAuthors.ts`, `domain/authors.ts`; `domain/authors.test.ts`).",
       "path": "src/modules/news/domain/authors.test.ts",
       "module": "module:news",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
+      "links": ["src/modules/news/domain/authors.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/news/README.md#3",
+      "type": "business-rule",
+      "name": "**A card's source is plain:** `sourceName` and `sourceUrl` become a…",
+      "summary": "**A card's source is plain:** `sourceName` and `sourceUrl` become a text source and the page's link; the link is kept only when absolute http(s), a link without a name is named by its host, and with neither there is no source (`data/mappers.ts`, #483; `data/mappers.source.test.ts`, `data/queries.source.test.ts`).",
+      "path": "src/modules/news/data/mappers.source.test.ts",
+      "module": "module:news",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
       "links": [
-        "src/modules/news/domain/authors.test.ts",
-        "src/modules/news/domain/related.test.ts",
-        "src/modules/news/domain/search.test.ts"
+        "src/modules/news/data/mappers.source.test.ts",
+        "src/modules/news/data/queries.source.test.ts"
       ]
+    },
+    {
+      "id": "business-rule:src/modules/news/README.md#4",
+      "type": "business-rule",
+      "name": "**A search entry copies** the title (falling back from the…",
+      "summary": "**A search entry copies** the title (falling back from the search-engine title), slug, description, image, categories with titles, the source and an event's `cancelled`; an entry without a slug is dropped from results (`cms/searchFields.ts`, `cms/searchSync.ts`, `data/mappers.ts`; `cms/searchSync.test.ts`, `data/mappers.test.ts`).",
+      "path": "src/modules/news/cms/searchSync.test.ts",
+      "module": "module:news",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/news/cms/searchSync.test.ts", "src/modules/news/data/mappers.test.ts"]
     },
     {
       "id": "business-rule:src/modules/news/README.md#5",
       "type": "business-rule",
-      "name": "\"Top issues\" mapping and drawing",
-      "summary": "\"Top issues\" mapping and drawing: `data/mappers.topIssues.test.ts`, `ui/TopIssuesBlock.test.tsx`.",
+      "name": "**\"You may also like\" never lists the post itself:** `relatedPosts`…",
+      "summary": "**\"You may also like\" never lists the post itself:** `relatedPosts` cannot name it and the block leaves out the post and its related posts (`cms/posts.ts`, `domain/related.ts`; `domain/related.test.ts`).",
+      "path": "src/modules/news/domain/related.test.ts",
+      "module": "module:news",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/news/domain/related.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/news/README.md#6",
+      "type": "business-rule",
+      "name": "**\"Top issues\" shows one to five items,** title up to 80 and summary…",
+      "summary": "**\"Top issues\" shows one to five items,** title up to 80 and summary up to 200 characters, most important first with the day it was last reviewed; an item with no title, or whose link the visitor cannot read or is unsafe (not http(s) or a path on this site), is left out, and with none left nothing is drawn (`domain/topIssues.ts`, `data/mappers.ts`, `ui/TopIssuesBlock.tsx`; `data/mappers.topIssues.test.ts`, `ui/TopIssuesBlock.test.tsx`).",
       "path": "src/modules/news/data/mappers.topIssues.test.ts",
       "module": "module:news",
       "aliases": [],
@@ -1180,17 +1268,33 @@
       ]
     },
     {
-      "id": "business-rule:src/modules/news/README.md#6",
+      "id": "business-rule:src/modules/news/README.md#7",
       "type": "business-rule",
-      "name": "Cards, header, search box, structured data",
-      "summary": "Cards, header, search box, structured data: `ui/PostCard.test.tsx`, `ui/postHeader.test.tsx`, `ui/SearchBox.client.test.tsx`, `ui/postJsonLd.test.ts`.",
-      "path": "src/modules/news/ui/PostCard.test.tsx",
+      "name": "**Categories form one tree shared with events:** the nested-docs…",
+      "summary": "**Categories form one tree shared with events:** the nested-docs plugin adds `parent` and `breadcrumbs`; `defaultImage` is the image an agent's suggestion gets, from the nearest category up the parents (`cms/categories.ts`, `src/modules/agents/domain/suggestion.ts`).",
+      "path": "src/modules/news/README.md",
+      "module": "module:news",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "business-rule:src/modules/news/README.md#8",
+      "type": "business-rule",
+      "name": "**Text keeps the reading width** unless the post holds key facts,…",
+      "summary": "**Text keeps the reading width** unless the post holds key facts, fact tabs or an outcome fork (`articleColumnClass` in `src/platform/richtext/articleColumn.ts`, #774). Refreshing names only routes that exist (`cms/revalidatePost.test.ts`); suggestions are held (`src/payload.config.reviewQueue.test.ts`); posts sit on the shared categories (`src/payload.config.sharedCategoriesMigration.test.ts`); cards and header: `ui/PostCard.test.tsx`, `ui/postHeader.test.tsx`, `ui/SearchBox.client.test.tsx`, `ui/postJsonLd.test.ts`.",
+      "path": "src/modules/news/cms/revalidatePost.test.ts",
       "module": "module:news",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": [
+        "src/modules/news/cms/revalidatePost.test.ts",
+        "src/payload.config.reviewQueue.test.ts",
+        "src/payload.config.sharedCategoriesMigration.test.ts",
         "src/modules/news/ui/PostCard.test.tsx",
         "src/modules/news/ui/postHeader.test.tsx",
         "src/modules/news/ui/SearchBox.client.test.tsx",
@@ -1198,42 +1302,123 @@
       ]
     },
     {
-      "id": "business-rule:src/modules/news/README.md#7",
+      "id": "business-rule:src/modules/roadmap/README.md#1",
       "type": "business-rule",
-      "name": "Suggestions are held",
-      "summary": "Suggestions are held: `src/payload.config.reviewQueue.test.ts`. Posts moved onto the shared categories: `src/payload.config.sharedCategoriesMigration.test.ts`.",
-      "path": "src/payload.config.reviewQueue.test.ts",
-      "module": "module:news",
+      "name": "**What is screened out, and never counted as shown:** issues labeled…",
+      "summary": "**What is screened out, and never counted as shown:** issues labeled `infra` or `needs owner`, and any whose title or text holds a server address, an email address or a plug-and-play plan. A screened epic takes its sub-issues with it; a milestone left with no shown epic is not listed and returns by itself; a milestone whose title or description fails the screen shows as \"Milestone N\" with no description; label names are screened too, in any case. It is best effort (IPv4 and plain email addresses, not every spelling) and the page says how many issues are not shown (`domain/screen.ts`, `domain/plan.ts`; `domain/screen.test.ts`, `domain/plan.test.ts`).",
+      "path": "src/modules/roadmap/domain/screen.test.ts",
+      "module": "module:roadmap",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": [
-        "src/payload.config.reviewQueue.test.ts",
-        "src/payload.config.sharedCategoriesMigration.test.ts"
+        "src/modules/roadmap/domain/screen.test.ts",
+        "src/modules/roadmap/domain/plan.test.ts"
       ]
+    },
+    {
+      "id": "business-rule:src/modules/roadmap/README.md#2",
+      "type": "business-rule",
+      "name": "**A screened, unknown or malformed number answers 404,** so a…",
+      "summary": "**A screened, unknown or malformed number answers 404,** so a screened issue cannot be reached by its address (`use-cases/getPlanIssue.ts`; `domain/paths.test.ts`).",
+      "path": "src/modules/roadmap/domain/paths.test.ts",
+      "module": "module:roadmap",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/roadmap/domain/paths.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/roadmap/README.md#3",
+      "type": "business-rule",
+      "name": "**Mission order follows the latest activity:** the latest of an…",
+      "summary": "**Mission order follows the latest activity:** the latest of an issue's close and its last change on GitHub, across the mission's issues, most recent first; missions with no dates last (`domain/activity.ts`, #1125; `domain/activity.test.ts`). Activity is counted in weeks while at least half of the last 8 weeks are busy (3 or more finished issues across the plan), then months over 6, then years over 3.",
+      "path": "src/modules/roadmap/domain/activity.test.ts",
+      "module": "module:roadmap",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/roadmap/domain/activity.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/roadmap/README.md#4",
+      "type": "business-rule",
+      "name": "**Daily figures:** issues finished per day, the running total done,…",
+      "summary": "**Daily figures:** issues finished per day, the running total done, and how many were open when each day ended, for the whole plan or any group; days are the site's calendar, a quiet day is zero, issues closed as not planned are in none of them, and an issue with no open date counts as open from before the first day (`domain/series.ts`, `domain/stats.ts`, #1189; `domain/series.test.ts`, `domain/stats.test.ts`).",
+      "path": "src/modules/roadmap/domain/series.test.ts",
+      "module": "module:roadmap",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/roadmap/domain/series.test.ts",
+        "src/modules/roadmap/domain/stats.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/roadmap/README.md#5",
+      "type": "business-rule",
+      "name": "**Month browsing:** the activity map starts on the last four weeks;…",
+      "summary": "**Month browsing:** the activity map starts on the last four weeks; arrows step a whole calendar month back, as far as the first activity, and forward again; the three graphs stay on four weeks and days chosen stay chosen (`domain/mapWindow.ts`, #1218; `domain/mapWindow.test.ts`).",
+      "path": "src/modules/roadmap/domain/mapWindow.test.ts",
+      "module": "module:roadmap",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/roadmap/domain/mapWindow.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/roadmap/README.md#6",
+      "type": "business-rule",
+      "name": "**The day filter:** nothing is chosen on load, so the page and the…",
+      "summary": "**The day filter:** nothing is chosen on load, so the page and the page without scripts show the whole plan. A chosen day shows only issues opened or finished on it, and missions and projects with none are hidden. The top commands the lower levels: under one chosen day that day is fixed; under several only those days can be pressed; a level with no pick follows the level above and counts only the days that are on (`domain/dayFilter.ts`, `domain/filterPlan.ts`, #1204; `domain/dayFilter.test.ts`, `domain/filterPlan.test.ts`).",
+      "path": "src/modules/roadmap/domain/dayFilter.test.ts",
+      "module": "module:roadmap",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/roadmap/domain/dayFilter.test.ts",
+        "src/modules/roadmap/domain/filterPlan.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/roadmap/README.md#7",
+      "type": "business-rule",
+      "name": "**Issue text is Markdown shown safely:** raw HTML appears as text,…",
+      "summary": "**Issue text is Markdown shown safely:** raw HTML appears as text, only web links open (in a new tab), images show their description, task lists read \"Done\" or \"Not done\", no issue heading becomes the page's h1 (`ui/IssueMarkdown.tsx`).",
+      "path": "src/modules/roadmap/README.md",
+      "module": "module:roadmap",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "business-rule:src/modules/roadmap/README.md#8",
+      "type": "business-rule",
+      "name": "**State marks** are green open, purple done, gray not planned, each…",
+      "summary": "**State marks** are green open, purple done, gray not planned, each with words and an icon (`ui/IssueBadges.tsx`, #946).",
+      "path": "src/modules/roadmap/README.md",
+      "module": "module:roadmap",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
     },
     {
       "id": "business-rule:src/modules/site/README.md#1",
       "type": "business-rule",
-      "name": "The layout follows the column sizes, titles start groups",
-      "summary": "The layout follows the column sizes, titles start groups: `data/mappers.test.ts`, `ui/ContentBlock.test.tsx`.",
-      "path": "src/modules/site/data/mappers.test.ts",
-      "module": "module:site",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": [
-        "src/modules/site/data/mappers.test.ts",
-        "src/modules/site/ui/ContentBlock.test.tsx"
-      ]
-    },
-    {
-      "id": "business-rule:src/modules/site/README.md#2",
-      "type": "business-rule",
-      "name": "Hero props per look, empty heroes draw nothing",
-      "summary": "Hero props per look, empty heroes draw nothing: `data/mappers.pageHero.test.ts`, `ui/PageHero.test.tsx`, `domain/heroGeometry.test.ts`.",
+      "name": "**The hero's look comes from its type:** `highImpact`, `mediumImpact`…",
+      "summary": "**The hero's look comes from its type:** `highImpact`, `mediumImpact` and `lowImpact` become high, medium and low; `none` draws nothing. A hero draws nothing without text, image or links; a low hero needs text and never draws links or an image. Only the high hero splits its rich text (first heading is the page's `h1`, the rest the description on a `GlassPanel`); its photo crops around the upload's focal point and its title and description are placed from the horizon that point marks, which is the middle when no point is set (`data/mappers.ts`, `domain/hero.ts`, `domain/heroGeometry.ts`, `ui/PageHero.tsx`; `data/mappers.pageHero.test.ts`, `ui/PageHero.test.tsx`, `domain/heroGeometry.test.ts`).",
       "path": "src/modules/site/data/mappers.pageHero.test.ts",
       "module": "module:site",
       "aliases": [],
@@ -1247,10 +1432,91 @@
       ]
     },
     {
+      "id": "business-rule:src/modules/site/README.md#2",
+      "type": "business-rule",
+      "name": "**Hero and call-to-action links are ranked by position:** the first…",
+      "summary": "**Hero and call-to-action links are ranked by position:** the first is the main action, the rest secondary, whatever look the editor picked; the medium hero keeps the editor's look (`ui/CallToActionBlock.tsx`; `ui/CallToActionBlock.test.tsx`).",
+      "path": "src/modules/site/ui/CallToActionBlock.test.tsx",
+      "module": "module:site",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/site/ui/CallToActionBlock.test.tsx"]
+    },
+    {
       "id": "business-rule:src/modules/site/README.md#3",
       "type": "business-rule",
-      "name": "Only a Google map embed address is stored or drawn",
-      "summary": "Only a Google map embed address is stored or drawn: `cms/mapBlock.test.ts`, `data/mapBlockMapper.test.ts`, `ui/MapBlock.test.tsx`.",
+      "name": "**A content block's layout comes from its columns' sizes,** not a…",
+      "summary": "**A content block's layout comes from its columns' sizes,** not a field: one column, or only `full` ones, is single; four columns with none `full`, stats; two that are not both `half`, columns; anything else, cards. In cards a heading-only column without a link starts a card group and becomes its title (`toContentLayout` in `data/mappers.ts`, `domain/blocks.ts`; `data/mappers.test.ts`, `ui/ContentBlock.test.tsx`).",
+      "path": "src/modules/site/data/mappers.test.ts",
+      "module": "module:site",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/site/data/mappers.test.ts",
+        "src/modules/site/ui/ContentBlock.test.tsx"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/site/README.md#4",
+      "type": "business-rule",
+      "name": "**In a `cards` block, halves sit two to a row, a full card takes its…",
+      "summary": "**In a `cards` block, halves sit two to a row, a full card takes its own row and any other mix sits in thirds;** `cards` and `stats` sit on a surface band, the other layouts on the plain page (`ui/ContentBlock.tsx`; `ui/ContentBlock.test.tsx`).",
+      "path": "src/modules/site/ui/ContentBlock.test.tsx",
+      "module": "module:site",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/site/ui/ContentBlock.test.tsx"]
+    },
+    {
+      "id": "business-rule:src/modules/site/README.md#5",
+      "type": "business-rule",
+      "name": "**A column's link button sits at the start, at the end or beside the…",
+      "summary": "**A column's link button sits at the start, at the end or beside the text** (`linkAlign`: `start`, `end`, `beside`; beside floats it right under the opening heading with the text wrapping around it, and on a phone it falls under the text) (`cms/contentBlock.ts`, `ui/ContentBlock.tsx`, #961; `cms/contentBlock.test.ts`).",
+      "path": "src/modules/site/cms/contentBlock.test.ts",
+      "module": "module:site",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/site/cms/contentBlock.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/site/README.md#6",
+      "type": "business-rule",
+      "name": "**A share bar draws only when its four percents are all set and add…",
+      "summary": "**A share bar draws only when its four percents are all set and add up to 100** (`shareBar` in `data/mappers.ts`, `ui/ContentBlock.tsx`, #1266).",
+      "path": "src/modules/site/README.md",
+      "module": "module:site",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "business-rule:src/modules/site/README.md#7",
+      "type": "business-rule",
+      "name": "**A section is a 12-column row** whose items have their own width,…",
+      "summary": "**A section is a 12-column row** whose items have their own width, alignment, vertical position and phone order, all set in Admin; reading and tab order follow the listed order from `lg` up (`cms/sectionBlock.ts`, `ui/SectionBlock.tsx`, `ui/columnSpan.ts`, #884).",
+      "path": "src/modules/site/README.md",
+      "module": "module:site",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "business-rule:src/modules/site/README.md#8",
+      "type": "business-rule",
+      "name": "**Only a Google map embed address is stored or drawn:** a pasted…",
+      "summary": "**Only a Google map embed address is stored or drawn:** a pasted iframe is cut to its `src`, and the address is checked again when mapped and drawn (`cms/mapBlock.ts`, `src/platform/lib/googleMapsEmbed.ts`; `cms/mapBlock.test.ts`, `data/mapBlockMapper.test.ts`, `ui/MapBlock.test.tsx`).",
       "path": "src/modules/site/cms/mapBlock.test.ts",
       "module": "module:site",
       "aliases": [],
@@ -1264,65 +1530,28 @@
       ]
     },
     {
-      "id": "business-rule:src/modules/site/README.md#4",
+      "id": "business-rule:src/modules/site/README.md#9",
       "type": "business-rule",
-      "name": "A save or delete refreshes the right routes and tags",
-      "summary": "A save or delete refreshes the right routes and tags: `cms/revalidatePage.test.ts`, `cms/pages.test.ts`.",
+      "name": "**A save or delete refreshes the right routes and tags**…",
+      "summary": "**A save or delete refreshes the right routes and tags** (`cms/revalidatePage.test.ts`, `cms/pages.test.ts`); blocks draw in order and unknown types are skipped (`ui/RenderBlocks.test.tsx`); the backdrop is an image or none (`use-cases/getPageBySlug.test.ts`).",
       "path": "src/modules/site/cms/revalidatePage.test.ts",
       "module": "module:site",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/modules/site/cms/revalidatePage.test.ts", "src/modules/site/cms/pages.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/site/README.md#5",
-      "type": "business-rule",
-      "name": "Blocks draw in order by type, unknown types are skipped",
-      "summary": "Blocks draw in order by type, unknown types are skipped: `ui/RenderBlocks.test.tsx`.",
-      "path": "src/modules/site/ui/RenderBlocks.test.tsx",
-      "module": "module:site",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/site/ui/RenderBlocks.test.tsx"]
-    },
-    {
-      "id": "business-rule:src/modules/site/README.md#6",
-      "type": "business-rule",
-      "name": "Call-to-action buttons and archive anchor",
-      "summary": "Call-to-action buttons and archive anchor: `ui/CallToActionBlock.test.tsx`, `ui/ArchiveBlock.test.tsx`.",
-      "path": "src/modules/site/ui/CallToActionBlock.test.tsx",
-      "module": "module:site",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
       "links": [
-        "src/modules/site/ui/CallToActionBlock.test.tsx",
-        "src/modules/site/ui/ArchiveBlock.test.tsx"
+        "src/modules/site/cms/revalidatePage.test.ts",
+        "src/modules/site/cms/pages.test.ts",
+        "src/modules/site/ui/RenderBlocks.test.tsx",
+        "src/modules/site/use-cases/getPageBySlug.test.ts"
       ]
-    },
-    {
-      "id": "business-rule:src/modules/site/README.md#7",
-      "type": "business-rule",
-      "name": "The backdrop is an image or none",
-      "summary": "The backdrop is an image or none: `use-cases/getPageBySlug.test.ts`.",
-      "path": "src/modules/site/use-cases/getPageBySlug.test.ts",
-      "module": "module:site",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/site/use-cases/getPageBySlug.test.ts"]
     },
     {
       "id": "business-rule:src/modules/site/navigation/README.md#1",
       "type": "business-rule",
-      "name": "Header and footer are readable by anyone, editable by staff only, and…",
-      "summary": "Header and footer are readable by anyone, editable by staff only, and saving expires only their own tag (unless told not to): `cms/navGlobal.test.ts`. The shared link-group helper merges overrides: `cms/linkGroup.test.ts`.",
+      "name": "**Who may edit:** header and footer are readable by anyone and…",
+      "summary": "**Who may edit:** header and footer are readable by anyone and editable by staff only; saving expires only their own tag (`cms/navGlobal.ts`; `cms/navGlobal.test.ts`, `cms/linkGroup.test.ts`).",
       "path": "src/modules/site/cms/navGlobal.test.ts",
       "module": "module:site",
       "aliases": [],
@@ -1332,49 +1561,10 @@
       "links": ["src/modules/site/cms/navGlobal.test.ts", "src/modules/site/cms/linkGroup.test.ts"]
     },
     {
-      "id": "business-rule:src/modules/site/navigation/README.md#10",
-      "type": "business-rule",
-      "name": "The code redirects list stays a list `next.config.js` can call",
-      "summary": "The code redirects list stays a list `next.config.js` can call: `src/redirects.test.ts`.",
-      "path": "src/redirects.test.ts",
-      "module": "module:site",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/redirects.test.ts"]
-    },
-    {
       "id": "business-rule:src/modules/site/navigation/README.md#2",
       "type": "business-rule",
-      "name": "Linked pages are populated and cached under the global's tag",
-      "summary": "Linked pages are populated and cached under the global's tag: `data/globals.test.ts`.",
-      "path": "src/modules/site/data/globals.test.ts",
-      "module": "module:site",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/site/data/globals.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/site/navigation/README.md#3",
-      "type": "business-rule",
-      "name": "The forum address must be https with a real host and no login in it;…",
-      "summary": "The forum address must be https with a real host and no login in it; anything else draws no link: `domain/forum.test.ts`, `ui/ForumPrompt.test.tsx`.",
-      "path": "src/modules/site/domain/forum.test.ts",
-      "module": "module:site",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/site/domain/forum.test.ts", "src/modules/site/ui/ForumPrompt.test.tsx"]
-    },
-    {
-      "id": "business-rule:src/modules/site/navigation/README.md#4",
-      "type": "business-rule",
-      "name": "Current-section marking and the Contact exclusion",
-      "summary": "Current-section marking and the Contact exclusion: `domain/nav.test.ts`, `ui/HeaderNav.client.test.tsx`.",
+      "name": "**The header leaves out Contact and ends with Search:** an item…",
+      "summary": "**The header leaves out Contact and ends with Search:** an item pointing to `/contact` is dropped because the header has its own Contact button; the footer keeps every resolvable item and adds the forum link last (`domain/nav.ts`, `toHeaderNavLinks` in `src/modules/site/data/mappers.ts`; `domain/nav.test.ts`, `ui/HeaderNav.client.test.tsx`).",
       "path": "src/modules/site/domain/nav.test.ts",
       "module": "module:site",
       "aliases": [],
@@ -1387,75 +1577,99 @@
       ]
     },
     {
-      "id": "business-rule:src/modules/site/navigation/README.md#5",
+      "id": "business-rule:src/modules/site/navigation/README.md#3",
       "type": "business-rule",
-      "name": "The mobile menu opens, closes and matches the `lg` width",
-      "summary": "The mobile menu opens, closes and matches the `lg` width: `ui/SiteHeaderBar.client.test.tsx`.",
-      "path": "src/modules/site/ui/SiteHeaderBar.client.test.tsx",
+      "name": "**A link is current on its own page and inside its section,** never…",
+      "summary": "**A link is current on its own page and inside its section,** never on a page that only starts with the same letters; outside links are never current (`domain/nav.ts`; `domain/nav.test.ts`).",
+      "path": "src/modules/site/domain/nav.test.ts",
       "module": "module:site",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/modules/site/ui/SiteHeaderBar.client.test.tsx"]
+      "links": ["src/modules/site/domain/nav.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/site/navigation/README.md#4",
+      "type": "business-rule",
+      "name": "**Submenus open by a press, never by hover:** an item with up to…",
+      "summary": "**Submenus open by a press, never by hover:** an item with up to eight usable `subItems` is a button (a panel on a wide screen, an accordion on a phone) and its own link is not followed; with none it stays a link; the footer has none (`ui/HeaderNav.client.tsx`, `NavMenu` in the kit, #1237; `ui/HeaderNav.client.test.tsx`, `ui/SiteHeaderBar.client.test.tsx`).",
+      "path": "src/modules/site/ui/HeaderNav.client.test.tsx",
+      "module": "module:site",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/site/ui/HeaderNav.client.test.tsx",
+        "src/modules/site/ui/SiteHeaderBar.client.test.tsx"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/site/navigation/README.md#5",
+      "type": "business-rule",
+      "name": "**The forum link is shown only for a safe address:** https with a…",
+      "summary": "**The forum link is shown only for a safe address:** https with a real host and no login in it, else no link on the footer or the post page (`domain/forum.ts`, `use-cases/getForumUrl.ts`; `domain/forum.test.ts`, `ui/ForumPrompt.test.tsx`).",
+      "path": "src/modules/site/domain/forum.test.ts",
+      "module": "module:site",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/site/domain/forum.test.ts", "src/modules/site/ui/ForumPrompt.test.tsx"]
     },
     {
       "id": "business-rule:src/modules/site/navigation/README.md#6",
       "type": "business-rule",
-      "name": "Footer headings and tap sizes, and the logo link",
-      "summary": "Footer headings and tap sizes, and the logo link: `ui/SiteFooter.test.tsx`, `ui/Logo.test.tsx`.",
-      "path": "src/modules/site/ui/SiteFooter.test.tsx",
+      "name": "**Linked pages are populated whether or not published** and cached…",
+      "summary": "**Linked pages are populated whether or not published** and cached under the global's tag (`data/globals.ts`; `data/globals.test.ts`).",
+      "path": "src/modules/site/data/globals.test.ts",
       "module": "module:site",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/modules/site/ui/SiteFooter.test.tsx", "src/modules/site/ui/Logo.test.tsx"]
+      "links": ["src/modules/site/data/globals.test.ts"]
     },
     {
       "id": "business-rule:src/modules/site/navigation/README.md#7",
       "type": "business-rule",
-      "name": "Saving a redirect expires its tag",
-      "summary": "Saving a redirect expires its tag: `cms/revalidateRedirects.test.ts`.",
-      "path": "src/modules/site/cms/revalidateRedirects.test.ts",
-      "module": "module:site",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/modules/site/cms/revalidateRedirects.test.ts"]
-    },
-    {
-      "id": "business-rule:src/modules/site/navigation/README.md#8",
-      "type": "business-rule",
-      "name": "A redirect never leaks a draft, and a custom URL or post target…",
-      "summary": "A redirect never leaks a draft, and a custom URL or post target resolves: `use-cases/getRedirectTarget.test.ts`.",
+      "name": "**A redirect never reveals a draft:** a target that is a draft,…",
+      "summary": "**A redirect never reveals a draft:** a target that is a draft, deleted or unreadable answers `null`; a custom URL wins over a reference (`use-cases/getRedirectTarget.ts`; `use-cases/getRedirectTarget.test.ts`, `ui/PayloadRedirects.test.tsx`, `cms/revalidateRedirects.test.ts`).",
       "path": "src/modules/site/use-cases/getRedirectTarget.test.ts",
       "module": "module:site",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/modules/site/use-cases/getRedirectTarget.test.ts"]
+      "links": [
+        "src/modules/site/use-cases/getRedirectTarget.test.ts",
+        "src/modules/site/ui/PayloadRedirects.test.tsx",
+        "src/modules/site/cms/revalidateRedirects.test.ts"
+      ]
     },
     {
-      "id": "business-rule:src/modules/site/navigation/README.md#9",
+      "id": "business-rule:src/modules/site/navigation/README.md#8",
       "type": "business-rule",
-      "name": "404 versus render versus redirect",
-      "summary": "404 versus render versus redirect: `ui/PayloadRedirects.test.tsx`.",
-      "path": "src/modules/site/ui/PayloadRedirects.test.tsx",
+      "name": "Footer headings, tap sizes and the logo link",
+      "summary": "Footer headings, tap sizes and the logo link: `ui/SiteFooter.test.tsx`, `ui/Logo.test.tsx`; the code redirects list stays a list `next.config.js` can call: `src/redirects.test.ts`.",
+      "path": "src/modules/site/ui/SiteFooter.test.tsx",
       "module": "module:site",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/modules/site/ui/PayloadRedirects.test.tsx"]
+      "links": [
+        "src/modules/site/ui/SiteFooter.test.tsx",
+        "src/modules/site/ui/Logo.test.tsx",
+        "src/redirects.test.ts"
+      ]
     },
     {
       "id": "business-rule:src/modules/verification/README.md#1",
       "type": "business-rule",
-      "name": "Only the hash is stored; tokens are 43 characters",
-      "summary": "Only the hash is stored; tokens are 43 characters: `cms/token.test.ts`.",
+      "name": "**Only the hash of a link's token is kept.** Tokens are 32 random…",
+      "summary": "**Only the hash of a link's token is kept.** Tokens are 32 random bytes (43 characters), so a leaked database cannot be replayed (`cms/token.ts`; `cms/token.test.ts`).",
       "path": "src/modules/verification/cms/token.test.ts",
       "module": "module:verification",
       "aliases": [],
@@ -1467,8 +1681,8 @@
     {
       "id": "business-rule:src/modules/verification/README.md#2",
       "type": "business-rule",
-      "name": "Link limits and repeat requests",
-      "summary": "Link limits and repeat requests: `cms/requestConfirmation.test.ts`, `domain/rules.test.ts`.",
+      "name": "**A link is sent only within three limits:** 5 an hour per…",
+      "summary": "**A link is sent only within three limits:** 5 an hour per connection, 3 a day per address, 30 an hour site-wide. Over any, nothing is sent, the person's answer is the same and the reason goes to the log; a new link replaces the old; a confirmed address gets none. Counters are in memory (one process), and with no client IP only the site-wide one applies (`domain/limits.ts`, `domain/rules.ts`; `cms/requestConfirmation.test.ts`, `domain/rules.test.ts`).",
       "path": "src/modules/verification/cms/requestConfirmation.test.ts",
       "module": "module:verification",
       "aliases": [],
@@ -1483,8 +1697,8 @@
     {
       "id": "business-rule:src/modules/verification/README.md#3",
       "type": "business-rule",
-      "name": "Confirm once, listeners, welcome, expiry",
-      "summary": "Confirm once, listeners, welcome, expiry: `cms/confirmEmail.test.ts`; click limit, robot check: `cms/confirmEndpoint.test.ts`.",
+      "name": "**A click confirms once, within 24 hours.** It needs the robot check…",
+      "summary": "**A click confirms once, within 24 hours.** It needs the robot check (while the verifier is on), is one conditional write, runs every listener, then sends the welcome email at most once; a failing listener or welcome is logged and stops nothing. Confirm clicks are limited to 20 an hour per connection, then a 429 (`cms/confirmEmail.ts`, `cms/confirmEndpoint.ts`; `cms/confirmEmail.test.ts`, `cms/confirmEndpoint.test.ts`).",
       "path": "src/modules/verification/cms/confirmEmail.test.ts",
       "module": "module:verification",
       "aliases": [],
@@ -1499,8 +1713,21 @@
     {
       "id": "business-rule:src/modules/verification/README.md#4",
       "type": "business-rule",
-      "name": "Never throws, own transaction",
-      "summary": "Never throws, own transaction: `cms/emailConfirmer.test.ts`, `cms/ownTransaction.test.ts`.",
+      "name": "**Only a real address gets a record and a link:** something that is…",
+      "summary": "**Only a real address gets a record and a link:** something that is not one address gets nothing, and Payload's email check is stricter than the site's, so an address it refuses gets no record and no link while the asking message stays, unconfirmed; a later click on a used link answers `already-confirmed` (`cms/requestConfirmation.ts`, `cms/emailConfirmations.ts`, `cms/confirmEmail.ts`; `cms/requestConfirmation.test.ts`).",
+      "path": "src/modules/verification/cms/requestConfirmation.test.ts",
+      "module": "module:verification",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/modules/verification/cms/requestConfirmation.test.ts"]
+    },
+    {
+      "id": "business-rule:src/modules/verification/README.md#5",
+      "type": "business-rule",
+      "name": "**Asking never loses the caller's work.** The service never throws,…",
+      "summary": "**Asking never loses the caller's work.** The service never throws, an unknown state counts as unconfirmed, and it runs in its own transaction (`cms/emailConfirmer.ts`; `cms/emailConfirmer.test.ts`, `cms/ownTransaction.test.ts`).",
       "path": "src/modules/verification/cms/emailConfirmer.test.ts",
       "module": "module:verification",
       "aliases": [],
@@ -1513,49 +1740,49 @@
       ]
     },
     {
-      "id": "business-rule:src/modules/verification/README.md#5",
+      "id": "business-rule:src/modules/verification/README.md#6",
       "type": "business-rule",
-      "name": "Retention and keepers",
-      "summary": "Retention and keepers: `cms/retention.test.ts`; email text and link: `domain/emails.test.ts`.",
+      "name": "**Retention keeps what is still needed.** Hourly",
+      "summary": "**Retention keeps what is still needed.** Hourly: an unconfirmed address goes 48 hours after its last link; a confirmed one 12 months after confirmation, unless a keeper (a kept message, an account) still needs it. A failing keeper stops the run before a confirmed address is deleted, and each delete re-checks its conditions (`cms/retention.ts`; `cms/retention.test.ts`).",
       "path": "src/modules/verification/cms/retention.test.ts",
       "module": "module:verification",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": [
-        "src/modules/verification/cms/retention.test.ts",
-        "src/modules/verification/domain/emails.test.ts"
-      ]
-    },
-    {
-      "id": "business-rule:src/modules/verification/README.md#6",
-      "type": "business-rule",
-      "name": "Button, reused links, robot check",
-      "summary": "Button, reused links, robot check: `ui/ConfirmEmail.client.test.tsx`; read-only status: `use-cases/getConfirmationLinkStatus.test.ts`.",
-      "path": "src/modules/verification/ui/ConfirmEmail.client.test.tsx",
-      "module": "module:verification",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": [
-        "src/modules/verification/ui/ConfirmEmail.client.test.tsx",
-        "src/modules/verification/use-cases/getConfirmationLinkStatus.test.ts"
-      ]
+      "links": ["src/modules/verification/cms/retention.test.ts"]
     },
     {
       "id": "business-rule:src/modules/verification/README.md#7",
       "type": "business-rule",
-      "name": "Contact gets the confirmer and its listener",
-      "summary": "Contact gets the confirmer and its listener: `src/payload.config.confirmation.test.ts`.",
-      "path": "src/payload.config.confirmation.test.ts",
+      "name": "**Opening the link changes nothing,** so a mail scanner confirms…",
+      "summary": "**Opening the link changes nothing,** so a mail scanner confirms nothing; the button hides for a used, expired or unknown link (`use-cases/getConfirmationLinkStatus.ts`, `ui/ConfirmEmail.client.tsx`; `use-cases/getConfirmationLinkStatus.test.ts`, `ui/ConfirmEmail.client.test.tsx`).",
+      "path": "src/modules/verification/use-cases/getConfirmationLinkStatus.test.ts",
       "module": "module:verification",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/payload.config.confirmation.test.ts"]
+      "links": [
+        "src/modules/verification/use-cases/getConfirmationLinkStatus.test.ts",
+        "src/modules/verification/ui/ConfirmEmail.client.test.tsx"
+      ]
+    },
+    {
+      "id": "business-rule:src/modules/verification/README.md#8",
+      "type": "business-rule",
+      "name": "**Logs carry the kind of failure, never an address**…",
+      "summary": "**Logs carry the kind of failure, never an address** (`cms/logFailure.ts`); email text and link: `domain/emails.test.ts`. Contact gets the confirmer and its listener: `src/payload.config.confirmation.test.ts`.",
+      "path": "src/modules/verification/domain/emails.test.ts",
+      "module": "module:verification",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/modules/verification/domain/emails.test.ts",
+        "src/payload.config.confirmation.test.ts"
+      ]
     },
     {
       "id": "business-rule:src/platform/payload/README.md#1",
@@ -1598,14 +1825,18 @@
       "id": "business-rule:src/platform/payload/README.md#2",
       "type": "business-rule",
       "name": "Suggestions are held, approved by publishing, de-duplicated and not…",
-      "summary": "Suggestions are held, approved by publishing, de-duplicated and not copied by Duplicate: `src/payload.config.reviewQueue.test.ts`, `reviewQueueApi.test.ts`, `lib/reviewQueue.test.ts`.",
+      "summary": "Suggestions are held, approved by publishing, de-duplicated and not copied by Duplicate: `src/payload.config.reviewQueue.test.ts`, `src/payload.config.reviewQueueApi.test.ts`, `lib/reviewQueue.test.ts`.",
       "path": "src/payload.config.reviewQueue.test.ts",
       "module": "platform-area:payload",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/payload.config.reviewQueue.test.ts", "src/platform/lib/reviewQueue.test.ts"]
+      "links": [
+        "src/payload.config.reviewQueue.test.ts",
+        "src/payload.config.reviewQueueApi.test.ts",
+        "src/platform/lib/reviewQueue.test.ts"
+      ]
     },
     {
       "id": "business-rule:src/platform/payload/README.md#3",
@@ -8577,7 +8808,7 @@
       "id": "feature:modules/site/navigation",
       "type": "feature",
       "name": "Site navigation",
-      "summary": "header, footer, forum link, redirects, refresh timing.",
+      "summary": "header, footer, forum link, redirects.",
       "path": "src/modules/site/navigation/README.md",
       "module": "module:site",
       "aliases": ["header", "footer", "redirects"],
@@ -10237,15 +10468,16 @@
       "id": "module:accounts",
       "type": "module",
       "name": "Accounts",
-      "summary": "sign-up, verification, sign-in (password, Google, passkey), adding a passkey, resets, guards.",
+      "summary": "sign-up, sign-in (password, Google, passkey).",
       "path": "src/modules/accounts/README.md",
       "module": "module:accounts",
       "aliases": ["sign-in", "passkeys", "Google sign-in"],
       "fields": [],
       "facts": [{ "label": "Folder", "value": "src/modules/accounts" }],
       "watchOuts": [
-        "No code sets `NEW_EMAIL_CONFIRMED`: the change-your-email flow (#553) isn't built, so your own email can't be changed, admins included.",
-        "`requireRole` has no caller outside tests: only `/account` is gated (by `requireUser`), so no page opens by role yet. The owner kept it on purpose (#728 audit, #756), so it is not a defect to file."
+        "No code sets `NEW_EMAIL_CONFIRMED`: the change-your-email flow (#553) isn't built, so an account's email can't be changed, admins included.",
+        "`requireRole` has no caller outside tests: the owner kept it on purpose (#728, #756), so it is not a defect to file.",
+        "Google cannot be disconnected yet (#1353)."
       ],
       "links": []
     },
@@ -10253,7 +10485,7 @@
       "id": "module:agents",
       "type": "module",
       "name": "Agents",
-      "summary": "MCP access, what agents may read, drafts, run history.",
+      "summary": "MCP access, drafts, runs.",
       "path": "src/modules/agents/README.md",
       "module": "module:agents",
       "aliases": ["MCP", "neighborhood agents"],
@@ -10266,7 +10498,7 @@
       "id": "module:contact",
       "type": "module",
       "name": "Contact",
-      "summary": "form checks, emails held until the sender confirms, retention.",
+      "summary": "form checks, emails held until confirmed.",
       "path": "src/modules/contact/README.md",
       "module": "module:contact",
       "aliases": ["forms", "form submissions"],
@@ -10279,7 +10511,7 @@
       "id": "module:directory",
       "type": "module",
       "name": "Directory",
-      "summary": "the FAQ and resources pages; grouping, official photos, save refreshes.",
+      "summary": "the FAQ and resources pages.",
       "path": "src/modules/directory/README.md",
       "module": "module:directory",
       "aliases": ["FAQ", "resources"],
@@ -10295,7 +10527,7 @@
       "id": "module:events",
       "type": "module",
       "name": "Events",
-      "summary": "the calendar, listings, category pages, \"this week\" block; \"upcoming\", save refreshes, official meetings, cancelled events, suggestions as drafts.",
+      "summary": "calendar, listings, \"this week\", official meetings.",
       "path": "src/modules/events/README.md",
       "module": "module:events",
       "aliases": ["calendar"],
@@ -10311,7 +10543,7 @@
       "id": "module:news",
       "type": "module",
       "name": "News",
-      "summary": "posts, bylines, sources, search, the category tree, \"top issues\".",
+      "summary": "posts, bylines, search, categories, \"top issues\".",
       "path": "src/modules/news/README.md",
       "module": "module:news",
       "aliases": ["posts", "categories"],
@@ -10327,20 +10559,23 @@
       "id": "module:roadmap",
       "type": "module",
       "name": "Roadmap",
-      "summary": "the public plan page.",
+      "summary": "the public plan page, read from GitHub.",
       "path": "src/modules/roadmap/README.md",
       "module": "module:roadmap",
       "aliases": ["plan page", "missions"],
       "fields": [],
       "facts": [{ "label": "Folder", "value": "src/modules/roadmap" }],
-      "watchOuts": [],
+      "watchOuts": [
+        "The screen is best effort and misses unusual spellings of addresses (`domain/screen.ts`).",
+        "Without a token, an hourly refresh of a larger plan can pass GitHub's 60 reads an hour."
+      ],
       "links": []
     },
     {
       "id": "module:site",
       "type": "module",
       "name": "Site pages",
-      "summary": "page hero and blocks, what a page save refreshes.",
+      "summary": "CMS pages: hero, blocks, refresh on save.",
       "path": "src/modules/site/README.md",
       "module": "module:site",
       "aliases": ["pages", "page builder", "hero"],
@@ -10348,7 +10583,7 @@
       "facts": [{ "label": "Folder", "value": "src/modules/site" }],
       "watchOuts": [
         "The archive's `limit` defaults to 10 in the editor, but news uses 3 when it is empty or zero (`findArchivePosts.ts`).",
-        "Changing the slug of a published page doesn't name the old path; it is covered only by the refresh of every CMS page (`cms/revalidatePage.ts`).",
+        "Changing the slug of a published page does not name the old path; only the refresh of every CMS page covers it (`cms/revalidatePage.ts`).",
         "`domain/hero.ts` says the title is the first heading for every look; only the high hero splits it."
       ],
       "links": []
@@ -10357,7 +10592,7 @@
       "id": "module:verification",
       "type": "module",
       "name": "Verification",
-      "summary": "email confirmation by link, limits, welcome email, retention.",
+      "summary": "email confirmation by link, retention.",
       "path": "src/modules/verification/README.md",
       "module": "module:verification",
       "aliases": ["email confirmation"],
@@ -10370,7 +10605,7 @@
       "id": "note:src/modules/accounts/README.md",
       "type": "note",
       "name": "Accounts",
-      "summary": "sign-up, verification, sign-in (password, Google, passkey), adding a passkey, resets, guards.",
+      "summary": "sign-up, sign-in (password, Google, passkey).",
       "path": "src/modules/accounts/README.md",
       "module": "module:accounts",
       "aliases": ["sign-in", "passkeys", "Google sign-in"],
@@ -10380,7 +10615,10 @@
           "label": "Sections",
           "value": "Screens, How the pieces link, Behaviors and events, Shared pieces it uses, Rules and the tests that protect them, Boundaries, Decisions, Known gaps"
         },
-        { "label": "Describes", "value": "src/modules/accounts/**" }
+        {
+          "label": "Describes",
+          "value": "src/modules/accounts/**, src/app/(frontend)/account/**, src/app/(frontend)/auth/**, src/app/(frontend)/forgot-password/**, src/app/(frontend)/login/**, src/app/(frontend)/reset-password/**, src/app/(frontend)/sign-up/**, src/app/(frontend)/verify-account/**"
+        }
       ],
       "watchOuts": [],
       "links": []
@@ -10389,7 +10627,7 @@
       "id": "note:src/modules/agents/README.md",
       "type": "note",
       "name": "Agents",
-      "summary": "MCP access, what agents may read, drafts, run history.",
+      "summary": "MCP access, drafts, runs.",
       "path": "src/modules/agents/README.md",
       "module": "module:agents",
       "aliases": ["MCP", "neighborhood agents"],
@@ -10408,7 +10646,7 @@
       "id": "note:src/modules/contact/README.md",
       "type": "note",
       "name": "Contact",
-      "summary": "form checks, emails held until the sender confirms, retention.",
+      "summary": "form checks, emails held until confirmed.",
       "path": "src/modules/contact/README.md",
       "module": "module:contact",
       "aliases": ["forms", "form submissions"],
@@ -10427,7 +10665,7 @@
       "id": "note:src/modules/directory/README.md",
       "type": "note",
       "name": "Directory",
-      "summary": "the FAQ and resources pages; grouping, official photos, save refreshes.",
+      "summary": "the FAQ and resources pages.",
       "path": "src/modules/directory/README.md",
       "module": "module:directory",
       "aliases": ["FAQ", "resources"],
@@ -10437,7 +10675,10 @@
           "label": "Sections",
           "value": "Screens, How the pieces link, Behaviors and events, Shared pieces it uses, Rules and the tests that protect them, Boundaries, Decisions, Known gaps"
         },
-        { "label": "Describes", "value": "src/modules/directory/**" }
+        {
+          "label": "Describes",
+          "value": "src/modules/directory/**, src/app/(frontend)/faq/**, src/app/(frontend)/resources/**"
+        }
       ],
       "watchOuts": [],
       "links": []
@@ -10446,7 +10687,7 @@
       "id": "note:src/modules/events/README.md",
       "type": "note",
       "name": "Events",
-      "summary": "the calendar, listings, category pages, \"this week\" block; \"upcoming\", save refreshes, official meetings, cancelled events, suggestions as drafts.",
+      "summary": "calendar, listings, \"this week\", official meetings.",
       "path": "src/modules/events/README.md",
       "module": "module:events",
       "aliases": ["calendar"],
@@ -10454,9 +10695,9 @@
       "facts": [
         {
           "label": "Sections",
-          "value": "Screens, Behaviors and events, Shared pieces it uses, Rules and the tests that protect them, Boundaries, Decisions, Known gaps"
+          "value": "Screens, How the pieces link, Behaviors and events, Shared pieces it uses, Rules and the tests that protect them, Boundaries, Decisions, Known gaps"
         },
-        { "label": "Describes", "value": "src/modules/events/**" }
+        { "label": "Describes", "value": "src/modules/events/**, src/app/(frontend)/events/**" }
       ],
       "watchOuts": [],
       "links": []
@@ -10465,7 +10706,7 @@
       "id": "note:src/modules/news/README.md",
       "type": "note",
       "name": "News",
-      "summary": "posts, bylines, sources, search, the category tree, \"top issues\".",
+      "summary": "posts, bylines, search, categories, \"top issues\".",
       "path": "src/modules/news/README.md",
       "module": "module:news",
       "aliases": ["posts", "categories"],
@@ -10475,7 +10716,10 @@
           "label": "Sections",
           "value": "Screens, How the pieces link, Behaviors and events, Shared pieces it uses, Rules and the tests that protect them, Boundaries, Decisions, Known gaps"
         },
-        { "label": "Describes", "value": "src/modules/news/**" }
+        {
+          "label": "Describes",
+          "value": "src/modules/news/**, src/app/(frontend)/posts/**, src/app/(frontend)/search/**"
+        }
       ],
       "watchOuts": [],
       "links": []
@@ -10484,13 +10728,16 @@
       "id": "note:src/modules/roadmap/README.md",
       "type": "note",
       "name": "Roadmap",
-      "summary": "the public plan page.",
+      "summary": "the public plan page, read from GitHub.",
       "path": "src/modules/roadmap/README.md",
       "module": "module:roadmap",
       "aliases": ["plan page", "missions"],
       "fields": [],
       "facts": [
-        { "label": "Sections", "value": "Screens, Behaviors and events" },
+        {
+          "label": "Sections",
+          "value": "Screens, How the pieces link, Behaviors and events, Shared pieces it uses, Rules and the tests that protect them, Boundaries, Decisions, Known gaps"
+        },
         { "label": "Describes", "value": "src/modules/roadmap/**, src/app/(frontend)/roadmap/**" }
       ],
       "watchOuts": [],
@@ -10500,7 +10747,7 @@
       "id": "note:src/modules/site/README.md",
       "type": "note",
       "name": "Site pages",
-      "summary": "page hero and blocks, what a page save refreshes.",
+      "summary": "CMS pages: hero, blocks, refresh on save.",
       "path": "src/modules/site/README.md",
       "module": "module:site",
       "aliases": ["pages", "page builder", "hero"],
@@ -10508,11 +10755,11 @@
       "facts": [
         {
           "label": "Sections",
-          "value": "How the pieces link, Behaviors and events, Shared pieces it uses, Rules and the tests that protect them, Boundaries, Decisions, Known gaps"
+          "value": "Screens, How the pieces link, Behaviors and events, Shared pieces it uses, Rules and the tests that protect them, Boundaries, Decisions, Known gaps"
         },
         {
           "label": "Describes",
-          "value": "src/modules/site/cms/pages.ts, src/modules/site/cms/hero.ts, src/modules/site/cms/layoutBlocks.ts, src/modules/site/cms/*Block.ts, src/modules/site/cms/revalidatePage.ts, src/modules/site/data/pages.ts, src/modules/site/data/mappers.ts, src/modules/site/domain/blocks.ts, src/modules/site/domain/hero.ts, src/modules/site/domain/types.ts, src/modules/site/ui/*Block.tsx, src/modules/site/ui/PageHero.tsx, src/modules/site/ui/RenderBlocks.tsx, src/modules/site/ui/testing/**, src/modules/site/use-cases/getPageBySlug.ts, src/modules/site/index.ts, src/modules/site/server.ts, src/modules/site/cms.ts"
+          "value": "src/modules/site/cms/pages.ts, src/modules/site/cms/hero.ts, src/modules/site/cms/layoutBlocks.ts, src/modules/site/cms/*Block.ts, src/modules/site/cms/revalidatePage.ts, src/modules/site/data/pages.ts, src/modules/site/data/mappers.ts, src/modules/site/domain/blocks.ts, src/modules/site/domain/hero.ts, src/modules/site/domain/types.ts, src/modules/site/ui/*Block.tsx, src/modules/site/ui/PageHero.tsx, src/modules/site/ui/RenderBlocks.tsx, src/modules/site/ui/testing/**, src/modules/site/use-cases/getPageBySlug.ts, src/modules/site/index.ts, src/modules/site/server.ts, src/modules/site/cms.ts, src/app/(frontend)/[slug]/**, src/modules/site/domain/heroGeometry.ts, src/modules/site/ui/blockStyles.ts, src/modules/site/ui/columnSpan.ts"
         }
       ],
       "watchOuts": [],
@@ -10522,7 +10769,7 @@
       "id": "note:src/modules/site/navigation/README.md",
       "type": "note",
       "name": "Site navigation",
-      "summary": "header, footer, forum link, redirects, refresh timing.",
+      "summary": "header, footer, forum link, redirects.",
       "path": "src/modules/site/navigation/README.md",
       "module": "module:site",
       "aliases": ["header", "footer", "redirects"],
@@ -10544,7 +10791,7 @@
       "id": "note:src/modules/verification/README.md",
       "type": "note",
       "name": "Verification",
-      "summary": "email confirmation by link, limits, welcome email, retention.",
+      "summary": "email confirmation by link, retention.",
       "path": "src/modules/verification/README.md",
       "module": "module:verification",
       "aliases": ["email confirmation"],
@@ -10554,7 +10801,10 @@
           "label": "Sections",
           "value": "How the pieces link, Behaviors and events, Shared pieces it uses, Rules and the tests that protect them, Boundaries, Decisions, Known gaps"
         },
-        { "label": "Describes", "value": "src/modules/verification/**" }
+        {
+          "label": "Describes",
+          "value": "src/modules/verification/**, src/app/(frontend)/confirm-email/**"
+        }
       ],
       "watchOuts": [],
       "links": []
@@ -11467,12 +11717,17 @@
       "id": "rule:src--modules--accounts--README",
       "type": "rule",
       "name": "Accounts",
-      "summary": "name: 'Accounts' type: module summary: 'sign-up, verification, sign-in (password, Google, passkey), adding a passkey, resets, guards.' aliases: ['sign-in', 'passkeys', 'Google sign-in'] relationships: []",
+      "summary": "name: 'Accounts' type: module summary: 'sign-up, sign-in (password, Google, passkey).' aliases: ['sign-in', 'passkeys', 'Google sign-in'] relationships: []",
       "path": ".claude/rules/generated/src--modules--accounts--README.md",
       "module": "group:how-we-work",
       "aliases": [],
       "fields": [],
-      "facts": [{ "label": "Loads when work touches", "value": "src/modules/accounts/**" }],
+      "facts": [
+        {
+          "label": "Loads when work touches",
+          "value": "src/modules/accounts/**, src/app/(frontend)/account/**, src/app/(frontend)/auth/**, src/app/(frontend)/forgot-password/**, src/app/(frontend)/login/**, src/app/(frontend)/reset-password/**, src/app/(frontend)/sign-up/**, src/app/(frontend)/verify-account/**"
+        }
+      ],
       "watchOuts": [],
       "links": []
     },
@@ -11480,7 +11735,7 @@
       "id": "rule:src--modules--agents--README",
       "type": "rule",
       "name": "Agents",
-      "summary": "name: 'Agents' type: module summary: 'MCP access, what agents may read, drafts, run history.' aliases: ['MCP', 'neighborhood agents'] relationships: []",
+      "summary": "name: 'Agents' type: module summary: 'MCP access, drafts, runs.' aliases: ['MCP', 'neighborhood agents'] relationships: []",
       "path": ".claude/rules/generated/src--modules--agents--README.md",
       "module": "group:how-we-work",
       "aliases": [],
@@ -11493,7 +11748,7 @@
       "id": "rule:src--modules--contact--README",
       "type": "rule",
       "name": "Contact",
-      "summary": "name: 'Contact' type: module summary: 'form checks, emails held until the sender confirms, retention.' aliases: ['forms', 'form submissions'] relationships: [{ 'type': 'depends-on', 'target': 'src/modules/verification/README.md' }]",
+      "summary": "name: 'Contact' type: module summary: 'form checks, emails held until confirmed.' aliases: ['forms', 'form submissions'] relationships: [{ 'type': 'depends-on', 'target': 'src/modules/verification/README.md' }]",
       "path": ".claude/rules/generated/src--modules--contact--README.md",
       "module": "group:how-we-work",
       "aliases": [],
@@ -11506,12 +11761,17 @@
       "id": "rule:src--modules--directory--README",
       "type": "rule",
       "name": "Directory",
-      "summary": "name: 'Directory' type: module summary: 'the FAQ and resources pages; grouping, official photos, save refreshes.' aliases: ['FAQ', 'resources'] relationships: []",
+      "summary": "name: 'Directory' type: module summary: 'the FAQ and resources pages.' aliases: ['FAQ', 'resources'] relationships: []",
       "path": ".claude/rules/generated/src--modules--directory--README.md",
       "module": "group:how-we-work",
       "aliases": [],
       "fields": [],
-      "facts": [{ "label": "Loads when work touches", "value": "src/modules/directory/**" }],
+      "facts": [
+        {
+          "label": "Loads when work touches",
+          "value": "src/modules/directory/**, src/app/(frontend)/faq/**, src/app/(frontend)/resources/**"
+        }
+      ],
       "watchOuts": [],
       "links": []
     },
@@ -11519,12 +11779,17 @@
       "id": "rule:src--modules--events--README",
       "type": "rule",
       "name": "Events",
-      "summary": "name: 'Events' type: module summary: 'the calendar, listings, category pages, \"this week\" block; \"upcoming\", save refreshes, official meetings, cancelled events, suggestions as drafts.' aliases: ['calendar'] relationships: [{ 'type':…",
+      "summary": "name: 'Events' type: module summary: 'calendar, listings, \"this week\", official meetings.' aliases: ['calendar'] relationships: [{ 'type': 'depends-on', 'target': 'src/modules/news/README.md' }]",
       "path": ".claude/rules/generated/src--modules--events--README.md",
       "module": "group:how-we-work",
       "aliases": [],
       "fields": [],
-      "facts": [{ "label": "Loads when work touches", "value": "src/modules/events/**" }],
+      "facts": [
+        {
+          "label": "Loads when work touches",
+          "value": "src/modules/events/**, src/app/(frontend)/events/**"
+        }
+      ],
       "watchOuts": [],
       "links": []
     },
@@ -11532,12 +11797,17 @@
       "id": "rule:src--modules--news--README",
       "type": "rule",
       "name": "News",
-      "summary": "name: 'News' type: module summary: 'posts, bylines, sources, search, the category tree, \"top issues\".' aliases: ['posts', 'categories'] relationships: []",
+      "summary": "name: 'News' type: module summary: 'posts, bylines, search, categories, \"top issues\".' aliases: ['posts', 'categories'] relationships: []",
       "path": ".claude/rules/generated/src--modules--news--README.md",
       "module": "group:how-we-work",
       "aliases": [],
       "fields": [],
-      "facts": [{ "label": "Loads when work touches", "value": "src/modules/news/**" }],
+      "facts": [
+        {
+          "label": "Loads when work touches",
+          "value": "src/modules/news/**, src/app/(frontend)/posts/**, src/app/(frontend)/search/**"
+        }
+      ],
       "watchOuts": [],
       "links": []
     },
@@ -11545,7 +11815,7 @@
       "id": "rule:src--modules--roadmap--README",
       "type": "rule",
       "name": "Roadmap",
-      "summary": "name: 'Roadmap' type: module summary: 'the public plan page.' aliases: ['plan page', 'missions'] relationships: []",
+      "summary": "name: 'Roadmap' type: module summary: 'the public plan page, read from GitHub.' aliases: ['plan page', 'missions'] relationships: []",
       "path": ".claude/rules/generated/src--modules--roadmap--README.md",
       "module": "group:how-we-work",
       "aliases": [],
@@ -11563,7 +11833,7 @@
       "id": "rule:src--modules--site--README",
       "type": "rule",
       "name": "Site: pages and the page builder",
-      "summary": "name: 'Site pages' type: module summary: 'page hero and blocks, what a page save refreshes.' aliases: ['pages', 'page builder', 'hero'] relationships: []",
+      "summary": "name: 'Site pages' type: module summary: 'CMS pages: hero, blocks, refresh on save.' aliases: ['pages', 'page builder', 'hero'] relationships: []",
       "path": ".claude/rules/generated/src--modules--site--README.md",
       "module": "group:how-we-work",
       "aliases": [],
@@ -11571,7 +11841,7 @@
       "facts": [
         {
           "label": "Loads when work touches",
-          "value": "src/modules/site/cms/pages.ts, src/modules/site/cms/hero.ts, src/modules/site/cms/layoutBlocks.ts, src/modules/site/cms/*Block.ts, src/modules/site/cms/revalidatePage.ts, src/modules/site/data/pages.ts, src/modules/site/data/mappers.ts, src/modules/site/domain/blocks.ts, src/modules/site/domain/hero.ts, src/modules/site/domain/types.ts, src/modules/site/ui/*Block.tsx, src/modules/site/ui/PageHero.tsx, src/modules/site/ui/RenderBlocks.tsx, src/modules/site/ui/testing/**, src/modules/site/use-cases/getPageBySlug.ts, src/modules/site/index.ts, src/modules/site/server.ts, src/modules/site/cms.ts"
+          "value": "src/modules/site/cms/pages.ts, src/modules/site/cms/hero.ts, src/modules/site/cms/layoutBlocks.ts, src/modules/site/cms/*Block.ts, src/modules/site/cms/revalidatePage.ts, src/modules/site/data/pages.ts, src/modules/site/data/mappers.ts, src/modules/site/domain/blocks.ts, src/modules/site/domain/hero.ts, src/modules/site/domain/types.ts, src/modules/site/ui/*Block.tsx, src/modules/site/ui/PageHero.tsx, src/modules/site/ui/RenderBlocks.tsx, src/modules/site/ui/testing/**, src/modules/site/use-cases/getPageBySlug.ts, src/modules/site/index.ts, src/modules/site/server.ts, src/modules/site/cms.ts, src/app/(frontend)/[slug]/**, src/modules/site/domain/heroGeometry.ts, src/modules/site/ui/blockStyles.ts, src/modules/site/ui/columnSpan.ts"
         }
       ],
       "watchOuts": [],
@@ -11581,7 +11851,7 @@
       "id": "rule:src--modules--site--navigation--README",
       "type": "rule",
       "name": "Site navigation",
-      "summary": "name: 'Site navigation' type: feature summary: 'header, footer, forum link, redirects, refresh timing.' aliases: ['header', 'footer', 'redirects'] relationships: [{ 'type': 'depends-on', 'target': 'src/modules/site/README.md' }]",
+      "summary": "name: 'Site navigation' type: feature summary: 'header, footer, forum link, redirects.' aliases: ['header', 'footer', 'redirects'] relationships: [{ 'type': 'depends-on', 'target': 'src/modules/site/README.md' }]",
       "path": ".claude/rules/generated/src--modules--site--navigation--README.md",
       "module": "group:how-we-work",
       "aliases": [],
@@ -11599,12 +11869,17 @@
       "id": "rule:src--modules--verification--README",
       "type": "rule",
       "name": "Verification",
-      "summary": "name: 'Verification' type: module summary: 'email confirmation by link, limits, welcome email, retention.' aliases: ['email confirmation'] relationships: []",
+      "summary": "name: 'Verification' type: module summary: 'email confirmation by link, retention.' aliases: ['email confirmation'] relationships: []",
       "path": ".claude/rules/generated/src--modules--verification--README.md",
       "module": "group:how-we-work",
       "aliases": [],
       "fields": [],
-      "facts": [{ "label": "Loads when work touches", "value": "src/modules/verification/**" }],
+      "facts": [
+        {
+          "label": "Loads when work touches",
+          "value": "src/modules/verification/**, src/app/(frontend)/confirm-email/**"
+        }
+      ],
       "watchOuts": [],
       "links": []
     },
@@ -11767,19 +12042,19 @@
         { "label": "Runs", "value": "on weekdays, in the early evening, Central time." },
         {
           "label": "Instructions",
-          "value": "the rules for a run are kept in the repository: [scheduled scout run](../../intelligence/scheduled-run.md). The schedule's own prompt is meant to shrink to a pointer at them (the `main` branch), plus a temporary watch item set by the owner and stored in the schedule, not here. That repointing is still open (#1517): until it is done, the prompt carries its own copy of the fetching, read-only and report rules."
+          "value": "the schedule's prompt only says to check out `main` and follow [`intelligence/scheduled-run.md`](../../intelligence/scheduled-run.md), plus one temporary watch item set by the owner, which is stored in the schedule, not in the repository. The file holds the run rules: what to set up and read first, how to run the stages by hand, fetching, the read-only rule, duplicates, watch items, the report layout and when to notify the owner. Where the prompt and the file differ, the file wins, except that the read-only rule always holds."
         },
         {
           "label": "What it reads",
-          "value": "the pipeline's instructions (the README, coverage, area, sources and the stage prompts). It replaces the submit stage with a report."
+          "value": "a fresh read-only checkout of `main`: the pipeline's settings and instructions (the README, `pipeline.yaml`, coverage, area, sources, images, the schemas and the stage prompts). If `pipeline.yaml` has the pipeline disabled, it stops, writes a report with only the run header saying so, and notifies the owner. It replaces the submit stage with a report. It judges duplicates from the live site and other public pages. It never calls the City's address locator, so it does not test addresses against the boundary and says so in the report."
         },
         {
           "label": "May not",
-          "value": "write anything outside its own report. It makes no CMS call, opens no issue or pull request and publishes nothing."
+          "value": "write anything outside its own report, apart from the one push notification to the owner. It makes no CMS call and holds no key for the CMS or its MCP endpoint, opens no issue or pull request and publishes nothing."
         },
         {
           "label": "Ends with",
-          "value": "a report for the owner, who reviews it before any site update is made."
+          "value": "a report for the owner, who reviews it before any site update is made, in the layout the file sets. A push notification goes out only when the run found something to know now, could not read its sources, or found the pipeline disabled."
         }
       ],
       "watchOuts": [],
@@ -18793,14 +19068,6 @@
     },
     {
       "from": "feature:modules/site/navigation",
-      "to": "business-rule:src/modules/site/navigation/README.md#10",
-      "type": "contains",
-      "layer": "structure",
-      "count": 1,
-      "via": []
-    },
-    {
-      "from": "feature:modules/site/navigation",
       "to": "business-rule:src/modules/site/navigation/README.md#2",
       "type": "contains",
       "layer": "structure",
@@ -18850,14 +19117,6 @@
     {
       "from": "feature:modules/site/navigation",
       "to": "business-rule:src/modules/site/navigation/README.md#8",
-      "type": "contains",
-      "layer": "structure",
-      "count": 1,
-      "via": []
-    },
-    {
-      "from": "feature:modules/site/navigation",
-      "to": "business-rule:src/modules/site/navigation/README.md#9",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -21121,7 +21380,63 @@
     },
     {
       "from": "module:accounts",
+      "to": "business-rule:src/modules/accounts/README.md#14",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:accounts",
+      "to": "business-rule:src/modules/accounts/README.md#15",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:accounts",
+      "to": "business-rule:src/modules/accounts/README.md#16",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:accounts",
+      "to": "business-rule:src/modules/accounts/README.md#17",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:accounts",
+      "to": "business-rule:src/modules/accounts/README.md#18",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:accounts",
+      "to": "business-rule:src/modules/accounts/README.md#19",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:accounts",
       "to": "business-rule:src/modules/accounts/README.md#2",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:accounts",
+      "to": "business-rule:src/modules/accounts/README.md#20",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -21793,6 +22108,22 @@
     },
     {
       "from": "module:agents",
+      "to": "business-rule:src/modules/agents/README.md#8",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "business-rule:src/modules/agents/README.md#9",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
       "to": "collection:agent-review-items",
       "type": "contains",
       "layer": "structure",
@@ -22026,6 +22357,30 @@
     {
       "from": "module:contact",
       "to": "business-rule:src/modules/contact/README.md#5",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:contact",
+      "to": "business-rule:src/modules/contact/README.md#6",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:contact",
+      "to": "business-rule:src/modules/contact/README.md#7",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:contact",
+      "to": "business-rule:src/modules/contact/README.md#8",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -22313,14 +22668,6 @@
     },
     {
       "from": "module:directory",
-      "to": "business-rule:src/modules/directory/README.md#8",
-      "type": "contains",
-      "layer": "structure",
-      "count": 1,
-      "via": []
-    },
-    {
-      "from": "module:directory",
       "to": "collection:faq",
       "type": "contains",
       "layer": "structure",
@@ -22561,22 +22908,6 @@
     },
     {
       "from": "module:events",
-      "to": "business-rule:src/modules/events/README.md#10",
-      "type": "contains",
-      "layer": "structure",
-      "count": 1,
-      "via": []
-    },
-    {
-      "from": "module:events",
-      "to": "business-rule:src/modules/events/README.md#11",
-      "type": "contains",
-      "layer": "structure",
-      "count": 1,
-      "via": []
-    },
-    {
-      "from": "module:events",
       "to": "business-rule:src/modules/events/README.md#2",
       "type": "contains",
       "layer": "structure",
@@ -22626,14 +22957,6 @@
     {
       "from": "module:events",
       "to": "business-rule:src/modules/events/README.md#8",
-      "type": "contains",
-      "layer": "structure",
-      "count": 1,
-      "via": []
-    },
-    {
-      "from": "module:events",
-      "to": "business-rule:src/modules/events/README.md#9",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -23017,6 +23340,14 @@
     },
     {
       "from": "module:news",
+      "to": "business-rule:src/modules/news/README.md#8",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:news",
       "to": "collection:categories",
       "type": "contains",
       "layer": "structure",
@@ -23353,6 +23684,78 @@
     },
     {
       "from": "module:roadmap",
+      "to": "business-rule:src/modules/roadmap/README.md#1",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:roadmap",
+      "to": "business-rule:src/modules/roadmap/README.md#2",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:roadmap",
+      "to": "business-rule:src/modules/roadmap/README.md#3",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:roadmap",
+      "to": "business-rule:src/modules/roadmap/README.md#4",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:roadmap",
+      "to": "business-rule:src/modules/roadmap/README.md#5",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:roadmap",
+      "to": "business-rule:src/modules/roadmap/README.md#6",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:roadmap",
+      "to": "business-rule:src/modules/roadmap/README.md#7",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:roadmap",
+      "to": "business-rule:src/modules/roadmap/README.md#8",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:roadmap",
+      "to": "decision:0008-compose-modules-at-the-app-level",
+      "type": "decided-by",
+      "layer": "docs",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:roadmap",
       "to": "library:class-variance-authority",
       "type": "uses",
       "layer": "libraries",
@@ -23602,6 +24005,22 @@
     {
       "from": "module:site",
       "to": "business-rule:src/modules/site/README.md#7",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:site",
+      "to": "business-rule:src/modules/site/README.md#8",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:site",
+      "to": "business-rule:src/modules/site/README.md#9",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -24001,6 +24420,14 @@
     },
     {
       "from": "module:verification",
+      "to": "business-rule:src/modules/verification/README.md#8",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:verification",
       "to": "collection:email-confirmations",
       "type": "contains",
       "layer": "structure",
@@ -24232,14 +24659,6 @@
       "via": []
     },
     {
-      "from": "note:src/modules/accounts/README.md",
-      "to": "note:src/platform/payload/README.md",
-      "type": "mentions",
-      "layer": "docs",
-      "count": 1,
-      "via": []
-    },
-    {
       "from": "note:src/modules/agents/README.md",
       "to": "collection:agent-review-items",
       "type": "mentions",
@@ -24362,6 +24781,14 @@
     {
       "from": "note:src/modules/contact/README.md",
       "to": "endpoint:rest:/api/forms",
+      "type": "mentions",
+      "layer": "docs",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "note:src/modules/contact/README.md",
+      "to": "job:deleteExpiredContactMessages",
       "type": "mentions",
       "layer": "docs",
       "count": 1,
@@ -24665,11 +25092,27 @@
     },
     {
       "from": "note:src/modules/roadmap/README.md",
+      "to": "decision:0008-compose-modules-at-the-app-level",
+      "type": "mentions",
+      "layer": "docs",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "note:src/modules/roadmap/README.md",
       "to": "module:roadmap",
       "type": "documents",
       "layer": "docs",
       "count": 1,
       "via": ["docs/knowledge/map.json"]
+    },
+    {
+      "from": "note:src/modules/roadmap/README.md",
+      "to": "note:src/platform/ui/chart/README.md",
+      "type": "mentions",
+      "layer": "docs",
+      "count": 1,
+      "via": []
     },
     {
       "from": "note:src/modules/site/README.md",
@@ -24738,6 +25181,14 @@
     {
       "from": "note:src/modules/site/README.md",
       "to": "note:src/modules/site/navigation/README.md",
+      "type": "mentions",
+      "layer": "docs",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "note:src/modules/site/README.md",
+      "to": "note:src/platform/payload/README.md",
       "type": "mentions",
       "layer": "docs",
       "count": 1,
@@ -24858,6 +25309,14 @@
     {
       "from": "note:src/modules/verification/README.md",
       "to": "decision:0010-contact-data-retention",
+      "type": "mentions",
+      "layer": "docs",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "note:src/modules/verification/README.md",
+      "to": "job:deleteExpiredContactMessages",
       "type": "mentions",
       "layer": "docs",
       "count": 1,
@@ -28768,14 +29227,6 @@
       "via": []
     },
     {
-      "from": "rule:src--modules--accounts--README",
-      "to": "note:src/platform/payload/README.md",
-      "type": "mentions",
-      "layer": "rules",
-      "count": 1,
-      "via": []
-    },
-    {
       "from": "rule:src--modules--agents--README",
       "to": "collection:agent-review-items",
       "type": "mentions",
@@ -28898,6 +29349,14 @@
     {
       "from": "rule:src--modules--contact--README",
       "to": "endpoint:rest:/api/forms",
+      "type": "mentions",
+      "layer": "rules",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "rule:src--modules--contact--README",
+      "to": "job:deleteExpiredContactMessages",
       "type": "mentions",
       "layer": "rules",
       "count": 1,
@@ -29201,8 +29660,24 @@
     },
     {
       "from": "rule:src--modules--roadmap--README",
+      "to": "decision:0008-compose-modules-at-the-app-level",
+      "type": "mentions",
+      "layer": "rules",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "rule:src--modules--roadmap--README",
       "to": "note:src/modules/roadmap/README.md",
       "type": "mirrors",
+      "layer": "rules",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "rule:src--modules--roadmap--README",
+      "to": "note:src/platform/ui/chart/README.md",
+      "type": "mentions",
       "layer": "rules",
       "count": 1,
       "via": []
@@ -29274,6 +29749,14 @@
     {
       "from": "rule:src--modules--site--README",
       "to": "note:src/modules/site/navigation/README.md",
+      "type": "mentions",
+      "layer": "rules",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "rule:src--modules--site--README",
+      "to": "note:src/platform/payload/README.md",
       "type": "mentions",
       "layer": "rules",
       "count": 1,
@@ -29394,6 +29877,14 @@
     {
       "from": "rule:src--modules--verification--README",
       "to": "decision:0010-contact-data-retention",
+      "type": "mentions",
+      "layer": "rules",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "rule:src--modules--verification--README",
+      "to": "job:deleteExpiredContactMessages",
       "type": "mentions",
       "layer": "rules",
       "count": 1,

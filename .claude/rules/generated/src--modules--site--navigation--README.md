@@ -52,10 +52,11 @@ and hooks: [header](/docs/reference/content-types/header.md), [footer](/docs/ref
 ## Behaviors and events
 
 - **The header and footer are cached until an editor saves them;** saving expires `global_header` or `global_footer`, unless the save sets `disableRevalidate` (the seed). Nothing refreshes them when a linked page is published or renamed, so a link to an unpublished page already shows and a renamed page keeps its old link until the global is saved (`cms/revalidateGlobal.ts`, `data/globals.ts`, #251).
-- **Saving a redirect expires the `redirects` tag;** deleting one expires nothing (`cms/revalidateRedirects.ts`). A redirect is followed at render time by `PayloadRedirects`: a match sends the visitor on, with none the page answers 404, unless the page exists and says so (`disableNotFound`) (`ui/PayloadRedirects.tsx`, mounted by `src/app/(frontend)/[slug]/page.tsx` and `posts/[slug]/page.tsx`).
+- **Saving a redirect expires the `redirects` tag;** deleting one expires nothing (`cms/revalidateRedirects.ts`). A redirect is followed at render time by `PayloadRedirects`: a match sends the visitor on, with none the page answers 404, unless the page exists and says so (`disableNotFound`), which still honours a redirect set over it (`ui/PayloadRedirects.tsx`, mounted by `src/app/(frontend)/[slug]/page.tsx` and `posts/[slug]/page.tsx`).
 - **Looked-up targets are cached 10 minutes** with no tag refresh yet (`data/documents.ts`).
 - **The redirects plugin covers pages and posts;** only admins read or change redirects in Admin, while the site reads them regardless (`src/payload.config.ts`, `data/redirects.ts`). Redirects in `redirects.js` run before any page renders and are an empty list today (`src/redirects.test.ts`).
 - **The mobile menu closes** when the page changes, when a link or button inside it is used, and when the screen grows past the desktop breakpoint, so the scroll lock cannot stay (`ui/SiteHeaderBar.client.tsx`).
+- **The logo link is one shared component** used by the header, the mobile menu and the footer, as tall as a tap needs (`ui/Logo.tsx`, #741).
 - **The footer's closing line is fixed text,** not an editor field, and never calls the site an association or an initiative (`ui/SiteFooter.tsx`, #1010).
 
 ## Shared pieces it uses

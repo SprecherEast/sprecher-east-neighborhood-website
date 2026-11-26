@@ -37,7 +37,7 @@ The public plan page: milestones (missions), then epics (projects), then issues,
 ## Behaviors and events
 
 - **The page is static and re-renders every hour** (`PLAN_REVALIDATE_SECONDS`) and asks search engines not to index it. If GitHub cannot be read at run time the render fails, so the last good page stays; during `next build` the plan is empty. A wrong token makes GitHub answer 401 and the first render fail ([project facts](/docs/project.md)).
-- **Pull requests are dropped:** GitHub lists them with issues.
+- **Pull requests are dropped:** GitHub lists them with issues. The plan page's one heading is "What we’re building", in the shared page header with no small label above it; projects not yet in a mission follow in their own group, then a "Tell us" button for anything missing (`src/app/(frontend)/roadmap/page.tsx`, `ui/PlanTiles.tsx`; `ui/PlanTiles.test.tsx`, #1082, #1106).
 - **The plan page** shows the missions freshest first, each with its progress, a quiet-or-not dot and its week as a heat map, then a four-week summary (three graphs and an activity map that is also the day filter) (`ui/PlanTiles.tsx`, `ui/PlanSummary.tsx`). On a phone each mission is a closed box (`ui/MissionAccordion.tsx`).
 - **A mission page** lists one box per project, each opening to its week and its issues; titles drop the type prefix developers add ("feat:", "fix(ui):") (`ui/MissionPage.tsx`, `domain/title.ts`).
 - **Clicking an issue** opens it in a dialog; close, Escape and the browser's back button return to the plan where it was (`ui/IssueDetail.tsx`, #946).
@@ -55,7 +55,7 @@ The public plan page: milestones (missions), then epics (projects), then issues,
 - **Daily figures:** issues finished per day, the running total done, and how many were open when each day ended, for the whole plan or any group; days are the site's calendar, a quiet day is zero, issues closed as not planned are in none of them, and an issue with no open date counts as open from before the first day (`domain/series.ts`, `domain/stats.ts`, #1189; `domain/series.test.ts`, `domain/stats.test.ts`).
 - **Month browsing:** the activity map starts on the last four weeks; arrows step a whole calendar month back, as far as the first activity, and forward again; the three graphs stay on four weeks and days chosen stay chosen (`domain/mapWindow.ts`, #1218; `domain/mapWindow.test.ts`).
 - **The day filter:** nothing is chosen on load, so the page and the page without scripts show the whole plan. A chosen day shows only issues opened or finished on it, and missions and projects with none are hidden. The top commands the lower levels: under one chosen day that day is fixed; under several only those days can be pressed; a level with no pick follows the level above and counts only the days that are on (`domain/dayFilter.ts`, `domain/filterPlan.ts`, #1204; `domain/dayFilter.test.ts`, `domain/filterPlan.test.ts`).
-- **Issue text is Markdown shown safely:** raw HTML appears as text, only web links open (in a new tab), images show their description, no issue heading becomes the page's h1 (`ui/IssueMarkdown.tsx`).
+- **Issue text is Markdown shown safely:** raw HTML appears as text, only web links open (in a new tab), images show their description, task lists read "Done" or "Not done", no issue heading becomes the page's h1 (`ui/IssueMarkdown.tsx`).
 - **State marks** are green open, purple done, gray not planned, each with words and an icon (`ui/IssueBadges.tsx`, #946).
 
 ## Boundaries
