@@ -19,7 +19,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import prettier from 'prettier'
-import ts from 'typescript'
 
 import { compareFiles, describeDifferences } from './content-types/compare.mjs'
 import { PAGE_LINE_LIMIT, buildPages } from './content-types/render.mjs'
@@ -43,31 +42,13 @@ import { listFiles } from './reference/listFiles.mjs'
 import { loadFacts } from './reference/loadFacts.mjs'
 import { renderMcp } from './reference/mcpTools.mjs'
 import { collectRoutes, renderRoutes } from './reference/routes.mjs'
+import { componentSourceFiles, createSourceProgram } from './reference/sourceProgram.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const OUTPUT = 'docs/reference'
 
-/** The program for `src/`, with the project's own compiler options. */
-function createSourceProgram() {
-  const config = ts.readConfigFile(path.join(ROOT, 'tsconfig.json'), ts.sys.readFile)
-  const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, ROOT)
-  const srcRoot = `${ROOT}/src/`
-  return {
-    program: ts.createProgram({
-      rootNames: parsed.fileNames.filter((file) => file.startsWith(srcRoot)),
-      options: { ...parsed.options, incremental: false },
-    }),
-    fileNames: parsed.fileNames,
-  }
-}
-
-const COMPONENT_SOURCE = /\/src\/platform\/(ui|richtext)\/.*\.tsx$/
-
 function buildComponentPages({ program, fileNames }) {
-  const files = fileNames
-    .filter((file) => COMPONENT_SOURCE.test(file) && !/\.(test|contract|stories)\.tsx$/.test(file))
-    .filter((file) => !file.includes('/testing/'))
-    .sort()
+  const files = componentSourceFiles(fileNames)
   const components = describeComponents(program, ROOT, files)
   const users = findUsers(program, ROOT, components)
   const groups = groupComponents(COMPONENT_GROUPS, components)
@@ -116,7 +97,7 @@ const directory = path.join(ROOT, OUTPUT)
 // One program for the components and the facts. The component pages are built first: a type
 // checker orders the members of a union by when it first met them, so this order keeps their
 // prop types as they were
-const source = createSourceProgram()
+const source = createSourceProgram(ROOT)
 const componentPages = buildComponentPages(source)
 const facts = await loadFacts({ root: ROOT, program: source.program })
 const contentTypes = new Map(

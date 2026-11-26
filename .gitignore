@@ -104,3 +104,6 @@ storybook-static/
 # ignored files, so the site's CSS never grows with the showcase's classes. A test keeps these two paths here.
 /developer-site/
 /public/showcase/
+
+# Change history and open-issue snapshot of the system map, written by `npm run knowledge:map -- --extras` (#1462)
+.knowledge-map/

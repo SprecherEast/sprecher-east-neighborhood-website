@@ -95,7 +95,7 @@ export function ownerText(model, defined, configurers, root) {
     modules.length > 0
       ? `, configured with code from ${modules.map((m) => `module \`${m}\``).join(' and ')}`
       : ''
-  return { owner: `the plugin \`${plugin}\`${by}`, file: '' }
+  return { owner: `the plugin \`${plugin}\`${by}`, file: '', plugin, modules }
 }
 
 function describeModels(config, program, root, options) {
