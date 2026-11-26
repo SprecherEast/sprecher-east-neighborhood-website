@@ -76,7 +76,8 @@ cases:
       - check: model
         rubric: >-
           The place is left unknown after the report's own page was read, and none is guessed from
-          the title or from the school, the street or the neighborhood the text suggests.
+          the title or from the school, the street or the neighborhood the text suggests. The
+          evidence cites the report's own page, which the runner needs to let the reject stand.
     why: Neither the feed nor the report names a place, so nothing says it is here. The place is never guessed, and a report with no place is not offered to the editor.
   - id: police-intersection-at-the-edge
     stage: verify

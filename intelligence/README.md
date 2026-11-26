@@ -200,6 +200,11 @@ of any item:
    that only runs submit; every other part of a run gets a client with no way to suggest
    (`withoutSuggestions`, `runner/lib/cms.mjs`).
 
+One more rule keeps a safety item from being lost without a person (#993): a `reject` of an item from
+an always-held source that carries `missing-location` is held for review unless verify's `evidence`
+cites the item's own page. Whether the page was read is a fact of the evidence, never of wording, so
+an unread page can only end in review.
+
 The runner checks `pipeline.yaml` and `safety.yaml` against their schemas when it starts, and refuses
 to run on a failure, an unknown source id, or an empty source list.
 

@@ -61,3 +61,21 @@ export function classifySafety(rules, item) {
     return { safety: true, why: ['the item can’t be read'] }
   }
 }
+
+/**
+ * Whether `item` is a reject that may have dropped a report nobody read (#993): its source is always
+ * held, verify flagged `missing-location`, and no entry of verify's `evidence` cites the item's own
+ * page (`candidate.sourceUrl`). Whether a page was read is a fact of the evidence, not of any
+ * wording. Anything unreadable counts as unread; a gate that can't tell holds.
+ */
+export function rejectWithoutPage(rules, item) {
+  try {
+    const { candidate, verification } = item
+    if (!rules?.sources?.has(candidate.sourceId)) return false
+    if (!(verification?.flags ?? []).includes('missing-location')) return false
+    const cited = Array.isArray(verification.evidence) ? verification.evidence : []
+    return !cited.some((entry) => isObject(entry) && entry.url === candidate.sourceUrl)
+  } catch {
+    return true
+  }
+}

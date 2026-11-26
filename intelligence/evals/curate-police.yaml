@@ -180,8 +180,12 @@ cases:
         confidence: 0.8
         flags: [missing-location]
         coverageReason: The report page was read and names no place, so nothing says it is here.
+        evidence:
+          - url: https://www.cityofmadison.com/police/incident-reports/2026-11-21/missing-teen
+            says: The report names no place.
+            retrievedAt: '2026-11-25T12:00:00-06:00'
         unknowns: [location, address]
     expected: { decision: reject, coverage: unknown, safety: true, route: none }
     graders:
       - { check: equals, field: $.decision, value: reject }
-    why: The twin of the unreadable page, with the same flag and unknowns but a reason that says the page was read. A report that names no place is not here, so it is rejected; the reason is what tells the two apart.
+    why: The twin of the unreadable page, with the same flag and unknowns, but verify's evidence cites the report's own page, so it was read. A report that names no place is not here, so it is rejected. The runner holds a reject whose evidence lacks the page (gate.mjs), so an unread page can only end in review.

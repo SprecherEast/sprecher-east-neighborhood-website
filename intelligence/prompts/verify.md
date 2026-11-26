@@ -94,7 +94,8 @@ answer is the judgment.
 An item from `madison-police-incident-reports` is only a lead (`coverage.md`, "Public interest and
 context", rule 6). Read the report's own page, which is the item's URL: what it says happened, the
 block address it gives, the case number and when it was last updated. Put what the page states in
-`$.evidence` and everything it leaves out in `$.unknowns`; never state a count, time, injury,
+`$.evidence` with the page's own URL as an entry's `url` (the runner holds any rejection of a report
+whose page is not cited there) and everything it leaves out in `$.unknowns`; never state a count, time, injury,
 cause or suspect it does not give. Write the block address as the report gives it in
 `$.location.address` (a block, an intersection or a street), and never take a place from the title.
 When the page was read and names no place, leave `$.coverage` as `unknown` with `missing-location`;

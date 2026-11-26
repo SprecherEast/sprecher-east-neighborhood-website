@@ -142,7 +142,10 @@ what the editor is told.
      `reject`ed and nothing is guessed. The `ambiguous-location` flag the boundary puts on a block
      it moved out of `core` is not shown to a person, on purpose: the item is rejected as not here.
      A report whose page could not be read is different: nothing is known, so it is
-     `needs-review` with `missing-location`, never rejected.
+     `needs-review` with `missing-location`, never rejected. The runner enforces it: a `reject` of
+     an always-held source's item with `missing-location` is held for review unless `$.evidence`
+     cites the item's own page, because whether a page was read is a fact of the evidence, not of any
+     wording (`runner/lib/gate.mjs`).
    - **Worth a neighbor's time.** Serious (harm to a person, a weapon, a threat to the public), or
      something a neighbor can act on (a danger that continues, a request for the public's help, an
      area to avoid). An ordinary property loss or a minor dispute with no danger left is `reject`ed.
@@ -210,7 +213,7 @@ The five checks, which verify runs on every item:
    Pkwy", as police reports give it; "3 block" is not one, and the word is never sent) is sent as the first address of the block,
    never with the word "block": it is one point for many addresses, so a change of tier it causes always gets
    `ambiguous-location`, even one that would otherwise be raised without it (a street named "Block"
-   with a hundred before it is read as a block, so it carries the flag too). A number after a route designation (Hwy, US, I-, County and the like) is a route, not a house number, so an intersection with one is never sent. Before the street the code looks for
+   with a hundred before it is read as a block, so it carries the flag too). A house number is never followed directly by a connector word (at, and, near, by, to, from, between) or by "block" or "blocks", and never comes just after a slash or a dash; that layout rule, not a list of spellings, keeps an intersection, a route ("US 12 & 18 at …", "I–94 at …"), an exit and "2 blocks of …" from ever being sent. Before the street the code looks for
    "city, village, town or township of …" (the Town of Madison is one: it was absorbed into the
    City of Madison and the City of Fitchburg on 31 October 2022, so a text naming it can't say
    which), Wisconsin (WI, Wis.) and any five-digit number (a ZIP code), and any of them stops the

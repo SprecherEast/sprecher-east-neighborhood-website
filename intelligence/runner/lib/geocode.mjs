@@ -10,15 +10,19 @@ const TYPES =
 const WORD = "[A-Za-z][A-Za-z.'-]*"
 // A hundred block ("2800 block of Curry Pkwy", as police reports give it) or a house number, then
 // an optional direction, up to three name words, then the street type; "7 PM on Main St" is not an
-// address, "3 block stretch of Main St" is not one (only a hundred of three to six digits makes a
-// block, and no other number may be followed by "block"), and a number after a route designation
-// or inside a route ("Hwy 51", "I-94", "US 12", "Hwy 12/18") is a route, never a house number.
-// A street named "Block" with a hundred before it ("100 Block Island Rd") is read as a block: the
-// placement then carries a flag, so a person looks.
+// address. The rule is about layout, never a list of spellings: a house number is never followed
+// directly by a connector word (at, and, near, ...) or by "block" or "blocks", and never comes just
+// after a slash or a dash. (A symbol after the number, "&", "@", "/" or a dash, can't begin a street
+// name, so it needs no rule of its own.) So an intersection, a route ("Hwy 51 at ...", "US 12
+// & 18 at ...", "I-94 at ..."), an exit and "within 2 blocks of Main St" are never sent, in any
+// spelling, and "Acme Co. 123 Main St" still is. Only a hundred of three to six digits makes a
+// block. A street named "Block" with a hundred before it ("100 Block Island Rd") is read as a
+// block: the placement then carries a flag, so a person looks.
 const HUNDRED = String.raw`[1-9]\d{0,3}00`
-const ROUTE = String.raw`\b(?:(?:county|co)\.?\s+(?:rd|road|hwy|highway)|hwy|highway|us|ush|wis(?!\.)|sth|cth|county|co|i|interstate|route|rte|sr)\.?[\s-]*`
+const DASHES = String.raw`\-\u2010-\u2015\u2212`
+const CONNECTOR = String.raw`(?:at|and|near|by|to|from|between|blocks?)\b`
 const HUNDRED_BLOCK = String.raw`${HUNDRED}\s+block\s+(?:of\s+)?`
-const HOUSE_NUMBER = String.raw`(?<!${ROUTE})(?<![\d/])\d{1,6}(?!\s*[ap]\.?m\b)\s+(?!block\b)`
+const HOUSE_NUMBER = String.raw`(?<![/${DASHES}])\d{1,6}(?!\s*[ap]\.?m\b)\s+(?!${CONNECTOR})`
 const ADDRESS = new RegExp(
   `\\b(?:${HUNDRED_BLOCK}|${HOUSE_NUMBER})(?:(?:[NSEW]|North|South|East|West)\\.?\\s+)?(?:${WORD}\\s+){0,2}?${WORD}\\s+(?:${TYPES})\\b`,
   'gi',
