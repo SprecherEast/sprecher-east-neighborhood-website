@@ -51,6 +51,7 @@ const store = {
 const CHECKOUT_KEY = 'sprecher-east-system-map-checkout'
 const THEME_KEY = 'sprecher-east-system-map-theme'
 
+/** @public Called by the page's own script, which build-page.mjs appends after the bundle. */
 export function startApp({ graph, history, snapshot, built }) {
   const model = buildModel(graph)
   const styles = makeTypeStyles(graph.nodeTypes)

@@ -34,6 +34,9 @@
         "scripts/knowledge-eval/{run,analyze}.mjs",
         // The knowledge structure check (#1460): run by hand and by `Knowledge sync`
         "scripts/knowledge-structure/cli.mjs",
+        // The system map page (#1463): its modules are joined by name into one script by build-page.mjs,
+        // so only the first of them is imported by what runs; the rest are found through it
+        "scripts/knowledge-map/page/app.mjs",
         // Run by `payload run` from e2e/serve.mjs (which knip finds through playwright.config.ts)
         "e2e/seed.ts",
         // Run by `payload run` from ops/deploy-release.sh on the server, for a preview's first database (#1075)
