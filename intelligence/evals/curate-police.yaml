@@ -184,4 +184,4 @@ cases:
     expected: { decision: reject, coverage: unknown, safety: true, route: none }
     graders:
       - { check: equals, field: $.decision, value: reject }
-    why: The twin of the unreadable page, with the same flag and unknowns, but verify says the page was read. A report that names no place is not here, so it is rejected, and the reject stands only when the runner's own read of the page succeeded (gate.mjs); otherwise it is held for a person.
+    why: The twin of the unreadable page, with the same flag and unknowns, but verify says the page was read. A report that names no place is not here, so it is rejected, and the reject stands only when the page's text went to verify (gate.mjs); otherwise it is held for a person.

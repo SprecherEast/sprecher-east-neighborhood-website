@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import { gateItem } from '../lib/gate.mjs'
-import { markPageRead, rejectUnread } from '../lib/pageRead.mjs'
+import { rejectUnread } from '../lib/pageRead.mjs'
 import { curation } from './fixtures.mjs'
 import { contract } from './helpers.mjs'
 import { item } from './safetyHelpers.mjs'
@@ -17,6 +17,7 @@ const PAGE = 'https://www.cityofmadison.com/police/incident-reports/2026-11-21/s
 const cited = [
   { url: PAGE, says: 'Officers are investigating.', retrievedAt: '2026-11-25T12:00:00-06:00' },
 ]
+const PAGE_READ = { url: PAGE, text: 'Armed carjacking. Officers responded.' }
 const reject = ({
   read,
   verification = {},
@@ -29,7 +30,7 @@ const reject = ({
     verification: { coverage: 'unknown', flags: [], evidence: [], ...verification },
     curation: curation({ decision, safety: true }),
   })
-  if (read !== undefined) markPageRead(built, read)
+  if (read !== undefined) built.reportPage = read
   return built
 }
 
@@ -44,7 +45,7 @@ describe('a reject from an always-held source', () => {
       { coverage: 'unknown', flags: [], evidence: [] },
       { coverage: 'core', flags: [], evidence: cited },
     ]) {
-      for (const read of [undefined, false]) {
+      for (const read of [undefined, null, { url: PAGE, text: '' }]) {
         const gated = gateItem(contract, reject({ read, verification }))
         assert.equal(gated.curation.decision, 'needs-review', JSON.stringify(verification))
         assert.equal(gated.route, 'reportItem')
@@ -55,13 +56,16 @@ describe('a reject from an always-held source', () => {
   })
 
   it('stands when the runner read the page, so a real reject is not held', () => {
-    const gated = gateItem(contract, reject({ read: true, verification: { coverage: 'outside' } }))
+    const gated = gateItem(
+      contract,
+      reject({ read: PAGE_READ, verification: { coverage: 'outside' } }),
+    )
     assert.equal(gated.curation.decision, 'reject')
     assert.equal(gated.route, 'none')
   })
 
-  it('counts only a read that is exactly true', () => {
-    for (const read of [1, 'yes', {}, null])
+  it('counts only a read whose text went to verify', () => {
+    for (const read of [true, 1, 'yes', {}, { url: PAGE }, { text: ' ' }, { text: 4 }])
       assert.equal(
         gateItem(contract, reject({ read })).curation.decision,
         'needs-review',
@@ -86,17 +90,16 @@ describe('a reject from an always-held source', () => {
       assert.equal(gateItem(contract, reject({ decision })).curation.decision, decision, decision)
   })
 
+  it('stands for a read item even when a source it was also reported by is not listed', () => {
+    const built = reject({ read: PAGE_READ, candidate: { alsoReportedBy: [null] } })
+    assert.equal(rejectUnread(contract.safety, built), false)
+  })
+
   it('is held when the item or the definition can not be read', () => {
     assert.equal(rejectUnread(contract.safety, {}), true)
     assert.equal(rejectUnread(contract.safety, null), true)
     assert.equal(rejectUnread({}, reject({ sourceId: 'mpl-pinney-events' })), true)
-    assert.equal(rejectUnread(undefined, reject({ read: true })), true)
-    assert.equal(rejectUnread(contract.safety, reject({ read: true })), false)
-  })
-
-  it('keeps the read out of the item the models see', () => {
-    const built = reject({ read: true })
-    assert.equal(JSON.stringify(built).includes('pageRead'), false)
-    assert.equal(Object.keys(built).includes('pageRead'), false)
+    assert.equal(rejectUnread(undefined, reject({ read: PAGE_READ })), true)
+    assert.equal(rejectUnread(contract.safety, reject({ read: PAGE_READ })), false)
   })
 })

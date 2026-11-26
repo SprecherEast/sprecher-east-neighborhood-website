@@ -142,10 +142,11 @@ what the editor is told.
      `reject`ed and nothing is guessed. The `ambiguous-location` flag the boundary puts on a block
      it moved out of `core` is not shown to a person, on purpose: the item is rejected as not here.
      A report whose page could not be read is different: nothing is known, so it is
-     `needs-review` with `missing-location`, never rejected. The runner enforces it: it reads the report page itself, once, for each such item that reaches
-     the model stages (`runner/lib/pageRead.mjs`), and the gate holds any `reject` of an item from
-     an always-held source for review unless that read succeeded, whatever verify wrote
-     (`runner/lib/gate.mjs`). Whether a page was read is a fact the code knows, not a claim.
+     `needs-review` with `missing-location`, never rejected. The runner enforces it: the models have no tools, so it reads the report page itself, once,
+     for each such item that reaches the model stages, and puts the page's text in the item as
+     `reportPage` (`runner/lib/pageRead.mjs`). The gate holds any `reject` of an item from an
+     always-held source for review unless that text went to verify, whatever verify wrote
+     (`runner/lib/gate.mjs`). Whether it did is a fact the code knows, not a claim.
    - **Worth a neighbor's time.** Serious (harm to a person, a weapon, a threat to the public), or
      something a neighbor can act on (a danger that continues, a request for the public's help, an
      area to avoid). An ordinary property loss or a minor dispute with no danger left is `reject`ed.

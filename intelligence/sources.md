@@ -174,8 +174,8 @@ item is a safety item that waits for a person ([coverage](coverage.md), "Review 
   street names.
 - **First run.** All 81 items, back about a year, are new on the first run;
   the model stages take a few per run, newest first ([#1483](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1483)).
-- **Limits.** The feed is a lead: verify reads the report page before an item is considered, and the
-  City makes no guarantee that its pages are accurate or complete.
+- **Limits.** The feed is a lead: the runner reads the report page and gives its text to verify before an item
+  is considered, and the City makes no guarantee that its pages are accurate or complete.
 
 ## Trust: reach is not trust
 

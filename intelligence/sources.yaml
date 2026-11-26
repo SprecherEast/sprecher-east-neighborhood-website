@@ -312,8 +312,9 @@ sources:
       Always a safety item: coverage.md, "Review passes", and safety.yaml hold every item for a person,
       never a suggestion. The block address is read from the start of the description (the parser, #993);
       the City's boundary places it, never a word in the title. The report's page is the item's id, so a
-      changed report is an update to a known item. A feed item is only a lead: verify reads the report
-      page and the tip line it gives, and no number or detail the report does not give is stated.
+      changed report is an update to a known item. A feed item is only a lead: the runner reads the report
+      page once and gives its text to verify (`reportPage`; the models have no tools), which uses it
+      and the tip line it gives, and no number or detail the report does not give is stated.
     example:
       title: Armed Carjacking
       date: '2026-11-20'
@@ -556,7 +557,7 @@ sources:
     pilotRank: null
     treatment: 'Not collected. Alerts are safety items and never auto-publish.'
     example: null
-    notes: 'Observed 2026-11-10: Documentation page for the web API. Hand check: #997.'
+    notes: 'Observed 2026-11-10: Documentation page for the web API. Hand check: #997. When it is enabled (#997): its canonicalUrl host (www.weather.gov) will likely not match its alert links, so the runner would not read an alert page (runner/lib/pageRead.mjs) and the gate would hold every reject of an alert for a person. That is the safe side; the source then needs its own check of which pages it may read.'
   - id: city-streets-holiday-collection
     name: 'City of Madison Streets holiday collection schedule'
     owner: 'City of Madison Streets Division'

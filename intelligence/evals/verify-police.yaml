@@ -144,4 +144,4 @@ cases:
         rubric: >-
           The unknowns include location and address, the reasons say the report's page could not be read, and the place is left unknown. None is
           guessed from "east side".
-    why: The collector gives verify a report page that fails to load (an HTTP error). Not knowing is not the same as the report naming no place, so it goes to a person, never to a rejection.
+    why: The item has no `reportPage` because the page failed to load (an HTTP error). Not knowing is not the same as the report naming no place, so it goes to a person, never to a rejection.
