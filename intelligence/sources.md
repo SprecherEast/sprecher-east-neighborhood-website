@@ -28,7 +28,7 @@ Only `valid` sources are ever fetched automatically.
 | City legislation (Legistar API) | JSON API | valid      | 3     |
 | Madison365                      | RSS      | valid      | 4     |
 | Spectrum News 1 Madison         | RSS      | valid      | later |
-| Madison Parks events            | HTML     | pending    | no    |
+| Madison Parks events            | HTML     | valid      | 10    |
 | District 16 alder blog          | HTML     | valid      | 7     |
 | City of Madison news            | HTML     | valid      | 8     |
 | City public information mtgs    | HTML     | valid      | 6     |
@@ -41,13 +41,14 @@ Only `valid` sources are ever fetched automatically.
 | Traffic Engineering news        | HTML     | pending    | no    |
 | Road Closures open-data layer   | JSON API | pending    | no    |
 | 511 Wisconsin events API        | JSON API | pending    | no    |
-| Door Creek Park page            | HTML     | pending    | no    |
-| Greater Madison MPO events      | HTML     | pending    | no    |
+| Door Creek Park ski trails      | HTML     | valid      | 13    |
+| Door Creek Park ice rink        | HTML     | valid      | 14    |
+| Greater Madison MPO events      | HTML     | valid      | 11    |
 | Dane County Farmers' Market     | HTML     | pending    | no    |
 | Cottage Grove Chamber events    | HTML     | pending    | no    |
 | Henry Vilas Zoo lights          | HTML     | pending    | no    |
 | Visit Madison holiday guide     | HTML     | pending    | no    |
-| Other alders' weekly roundups   | HTML     | pending    | no    |
+| Other alders' weekly roundups   | HTML     | valid      | 12    |
 | MMSD boundary review            | HTML     | pending    | no    |
 | Metro Transit public hearings   | HTML     | pending    | no    |
 | Metro Transit developer feeds   | HTML     | pending    | no    |
@@ -218,7 +219,7 @@ robots rules disallow automated reading (Dane County's subscription page).
   `direct-then-playwright`: public City pages, read logged out once a day, on paths robots.txt
   allows (checked 2026-10-24). A direct GET that day served both lists in the HTML, with item
   links (Parks: Bat Fest, 2026-10-24; blog: newest post 2026-10-06), so no browser was needed.
-  Parks stays `pending`.
+  Parks became `valid` in #995 (below).
 - **HTML parsers (#390, 2026-10-27):** the District 16 blog, City news, the City's public
   information meetings and WisDOT's I-39/90/94 meetings page have no feed, so each has a parser
   for its own list markup (`runner/lib/html.mjs`, with trimmed copies of each page in
@@ -229,4 +230,19 @@ robots rules disallow automated reading (Dane County's subscription page).
   the first 8 Parks events (October 24 to 29) was at Door Creek Park or Elvehjem Sanctuary;
   Pinney's Book Discussion feed held 8 events, 5 of them from 2026-10-15 to 2026-12-15; Spectrum's
   feed uses custom elements, such as `<section>` and `<ticker>`, outside the RSS 2.0 namespace.
+- **Park and community sources (#995, 2026-11-26):** hand checks with a plain GET and each
+  robots.txt, no browser. Now polled once a day, each with a parser in `runner/lib/html.mjs`:
+  Madison Parks events (two list pages, 11 events; a Door Creek Park event on 2027-01-22 was 8
+  weeks out, past the old two-week window), the Greater Madison MPO events (same layout as the
+  City's public information meetings), District 3's weekly roundup (same layout as the District 16
+  blog; only a post that names the area goes on), and the Door Creek Park winter status, now on
+  the City's ski and ice skating pages because `/parks/doorcreek` redirects to a page with no
+  status (a status other than "Closed for Season" becomes one item for the winter; the tag text of
+  an open place is not seen yet, so re-check on the first open day). Still `pending`, each with
+  its reason in `sources.yaml`: the Farmers' Market holiday page and the Zoo lights page (running
+  text, citywide at most; the Zoo's hours only come from a second named source, and its photos
+  have no reuse terms) and the Cottage Grove Chamber calendar (a few lines of free text, outside
+  the area). The library's event search page stays out: robots.txt disallows it, and its
+  iCalendar feed is the library source. The City Parks event page's description can name a
+  different place than its location field, so the parser reads the location field.
 - Re-check every source at least once a month, and whenever one fails twice in a row.

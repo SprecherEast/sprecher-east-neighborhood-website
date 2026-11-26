@@ -14,6 +14,14 @@ budgets:
   # Sampling while the sources are new (#390): a few items per run, taken in turns by source
   maxModelItemsPerRun: 6
   maxDraftsPerRun: 10
+# How far ahead scout reads, in days, for a source that doesn't set its own `lookAheadDays` in
+# sources.yaml (#995). Two months: events announced early are seen early, and each is read again
+# every run, so a change closer to its date comes back as an update.
+lookAheadDays: 60
+# The upcoming-events list shouldn't run empty (#995): when fewer than this many published
+# upcoming events are on the site at the end of a run, the run log and the digest say so.
+lowWater:
+  upcomingEvents: 6
 # Verify reruns at high effort when its confidence is below this; still below, the item goes to
 # review (README.md, "The pipeline").
 escalation:

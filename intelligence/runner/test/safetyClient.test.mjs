@@ -58,6 +58,7 @@ describe('the client every other module gets cannot suggest', () => {
       'known',
       'reportItem',
       'taxonomy',
+      'upcomingEvents',
       'updateRun',
     ])
     const operations = cmsOperations(async () => ({ text: '', isError: false }))
@@ -67,6 +68,7 @@ describe('the client every other module gets cannot suggest', () => {
       'reportItem',
       'submitSuggestion',
       'taxonomy',
+      'upcomingEvents',
       'updateRun',
     ])
   })

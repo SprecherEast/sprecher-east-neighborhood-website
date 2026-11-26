@@ -91,14 +91,17 @@ async function main() {
     if (!dryRun) saveState(statePath, state)
     await cms?.close?.()
   }
-  const { log, calls } = result
+  const { log, calls, upcoming } = result
   if (flags.digest)
-    writeFileSync(flags.digest, `${JSON.stringify({ dryRun, log, calls }, null, 2)}\n`)
+    writeFileSync(flags.digest, `${JSON.stringify({ dryRun, log, upcoming, calls }, null, 2)}\n`)
   const c = log.counts
   console.log(
     `Sprecher East intelligence ${dryRun ? 'dry run' : 'run'} ${log.runId}: ${log.status}. ` +
       `${c.proposed} suggested, ${c.needsReview} for review, ${c.updates} updates, ${c.rejected} rejected, ` +
-      `${c.duplicates} duplicates, ${c.deferred} deferred.` +
+      `${c.duplicates} duplicates, ${c.deferred} deferred. ` +
+      (upcoming?.count == null
+        ? 'Upcoming events: not counted.'
+        : `Upcoming events: ${upcoming.count}${upcoming.low ? ` (low, under ${upcoming.mark})` : ''}.`) +
       (log.errors.length ? ` Errors: ${log.errors.slice(0, 3).join(' | ')}` : ''),
   )
   process.exitCode = log.status === 'failed' ? 1 : 0

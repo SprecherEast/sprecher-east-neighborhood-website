@@ -8,6 +8,8 @@
     "enabled",
     "schedule",
     "budgets",
+    "lookAheadDays",
+    "lowWater",
     "sources",
     "coverage",
     "area",
@@ -48,6 +50,24 @@
         "maxItemsPerSource": { "type": "number", "exclusiveMinimum": 0 },
         "maxModelItemsPerRun": { "type": "number", "exclusiveMinimum": 0 },
         "maxDraftsPerRun": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "lookAheadDays": {
+      "description": "Days ahead scout reads, for a source that sets no lookAheadDays of its own.",
+      "type": "integer",
+      "minimum": 60,
+      "maximum": 365
+    },
+    "lowWater": {
+      "type": "object",
+      "required": ["upcomingEvents"],
+      "additionalProperties": false,
+      "properties": {
+        "upcomingEvents": {
+          "description": "The run log and digest warn when fewer published upcoming events than this are on the site.",
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "sources": { "const": "sources.yaml" },

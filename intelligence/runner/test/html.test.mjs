@@ -311,6 +311,7 @@ describe('scouting an HTML source end to end', () => {
       http,
       budgets,
       validate: contract.validator('schemas/candidate.schema.json'),
+      lookAheadDays: contract.pipeline.lookAheadDays,
       now: atNoon('2026-10-27'),
     })
 

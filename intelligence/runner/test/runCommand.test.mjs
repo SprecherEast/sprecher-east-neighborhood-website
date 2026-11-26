@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, it } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { tempDir, intelligenceCopy } from './helpers.mjs'
+import { contract, tempDir, intelligenceCopy } from './helpers.mjs'
 
 // `node run.mjs --dry-run` (#1009), run as the command it is, with `fetch` replaced before it
 // starts: every request is written down and answered 404, so nothing reaches the network. What
@@ -44,6 +44,7 @@ globalThis.fetch = async (url) => {
   assert.equal(run.status, 0, run.stderr)
   return {
     log: JSON.parse(readFileSync(digest, 'utf8')).log,
+    upcoming: JSON.parse(readFileSync(digest, 'utf8')).upcoming,
     urls: readFileSync(path.join(dir, 'urls.txt'), 'utf8').trim().split('\n'),
   }
 }
@@ -54,6 +55,15 @@ describe('node run.mjs --dry-run', () => {
     assert.ok(log.sourcesChecked.length > 0)
     assert.ok(urls.includes('https://webapi.legistar.com/robots.txt'))
     assert.ok(urls.some((url) => url.startsWith('https://webapi.legistar.com/v1/madison/events?')))
+  })
+
+  it('shows the upcoming-events count in the digest: unknown, never zero, without a key (#995)', () => {
+    const { upcoming } = dryRun(intelligenceCopy())
+    assert.deepEqual(upcoming, {
+      count: null,
+      mark: contract.pipeline.lowWater.upcomingEvents,
+      low: null,
+    })
   })
 
   it('records the commit of the checkout it loads, or zeros when there is none', () => {

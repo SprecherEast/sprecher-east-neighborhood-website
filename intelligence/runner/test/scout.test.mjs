@@ -44,6 +44,7 @@ describe('scout evals', () => {
             http,
             budgets,
             validate,
+            lookAheadDays: contract.pipeline.lookAheadDays,
             now: atNoon(asOf),
           })
         : { check: { fetchStrategy: 'none', status: 'skipped' }, candidates: [], invalid: [] }
@@ -87,16 +88,24 @@ describe('scout', () => {
       'district16-blog',
       'city-news',
       'madison-police-incident-reports',
+      'madison-parks-events',
+      'mpo-events',
+      'alder-weekly-roundups',
+      'door-creek-park-ski',
+      'door-creek-park-ice',
     ])
   })
 
   it('fills the date window and the cursor', () => {
     const [events, , matters] = pilotSources(contract.registry)
-    const url = sourceUrl(events, { today: '2026-10-25' })
+    const url = sourceUrl(events, { today: '2026-10-25', lookAheadDays: 14 })
     assert.match(url, /datetime'2026-10-25'.*datetime'2026-11-08'/)
-    assert.match(sourceUrl(matters, { today: '2026-10-25' }), /datetime'2026-10-18T00:00:00'/)
     assert.match(
-      sourceUrl(matters, { today: '2026-10-25', cursor: '2026-10-24T12:00:00' }),
+      sourceUrl(matters, { today: '2026-10-25', lookAheadDays: 14 }),
+      /datetime'2026-10-18T00:00:00'/,
+    )
+    assert.match(
+      sourceUrl(matters, { today: '2026-10-25', cursor: '2026-10-24T12:00:00', lookAheadDays: 14 }),
       /2026-10-24T12:00:00/,
     )
   })
@@ -136,7 +145,12 @@ describe('scout', () => {
     const body =
       '[{"EventId":1,"EventBodyName":"COMMON COUNCIL","EventDate":"2026-11-03T00:00:00","EventTime":"6:30 PM","EventLocation":"Virtual"}]'
     const source = pilotSources(contract.registry)[0]
-    const options = { budgets, validate, now: atNoon('2026-10-25') }
+    const options = {
+      budgets,
+      validate,
+      lookAheadDays: contract.pipeline.lookAheadDays,
+      now: atNoon('2026-10-25'),
+    }
     const first = await scoutSource(source, {
       area: contract.area,
       ...options,
@@ -179,6 +193,7 @@ describe('scout', () => {
       http,
       budgets,
       validate,
+      lookAheadDays: contract.pipeline.lookAheadDays,
       now: atNoon('2026-10-25'),
     })
     assert.equal(result.check.status, 'not-modified')

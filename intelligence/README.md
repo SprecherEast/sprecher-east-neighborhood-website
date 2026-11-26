@@ -59,7 +59,7 @@ high only for conflicting or ambiguous evidence (`model` in `pipeline.yaml`).
 **Direct first.** Every source is read with a plain GET (or its feed or API client): content-type
 detection, ETag and Last-Modified caching, and a deterministic parser for RSS, Atom, iCalendar,
 JSON or HTML. `fetchStrategy` in `sources.yaml` is `direct` unless a source says
-`direct-then-playwright`; today only Madison Parks events and the District 16 blog do.
+`direct-then-playwright`; today only Madison Parks events and the District 16 blog do (both are read directly: no fallback is built).
 
 **Playwright only as a fallback**, for a `direct-then-playwright` source, when the direct answer
 trips one of these triggers:
@@ -134,8 +134,18 @@ run the same folder.
 
 ## Schedule and budgets
 
-- **Daily pilot** at 06:40 America/Chicago (`schedule` in `pipeline.yaml`), reading the four
-  pilot sources only.
+- **Daily pilot** at 06:40 America/Chicago (`schedule` in `pipeline.yaml`), reading the pilot
+  sources of `sources.yaml` (valid, with a rank).
+- **Look-ahead** (`lookAheadDays` in `pipeline.yaml`, #995): scout reads 60 days ahead by default
+  (the owner's decision, 2026-11-23), and a source that publishes earlier sets its own
+  `lookAheadDays`. Each run reads every source again, so an event found far ahead comes back as
+  an update when its details change near its date. The schema refuses a default under 60.
+- **Low-water mark** (`lowWater.upcomingEvents`, #995): at the end of each run, code counts the
+  published, uncancelled upcoming events with the MCP find tool (exact up to the mark). Under the
+  mark, the run log gets a "Low events" line in its errors (a note: it doesn't make the run
+  `partial`) and the digest shows `upcoming` (`count`, `mark`, `low`). With no key, or when the
+  count fails, the digest shows `count: null`, never zero. The CMS run log has no field of its
+  own for it yet.
 - **Budgets** (`budgets` in `pipeline.yaml`): at most $0.50 and 15 minutes per run, $15 per month,
   50 items per source, 40 items sent to a model and 10 drafts per run. The runtime stops when a
   limit is reached, logs the run as `stopped-budget`, and leaves the rest for the next run. The

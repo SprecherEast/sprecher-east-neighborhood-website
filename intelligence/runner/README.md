@@ -95,7 +95,7 @@ the area's words stands) or `unplaced` (the item names no place). Reports for an
 
 ## Not built yet
 
-- **The Playwright fallback** (#352): no pilot source needs it. The four HTML sources (#390) are
+- **The Playwright fallback** (#352): no pilot source needs it. The HTML sources (#390, #995) are
   read directly, each by its own parser in `lib/html.mjs`; a source without a parser is logged as
   `skipped`, and its evals are skipped in the tests.
 - **Cost in dollars**: runs use the owner's flat subscription, so `cost.usd` is 0; token counts
