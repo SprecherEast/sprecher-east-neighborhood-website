@@ -1,3 +1,4 @@
+import { rejectUnread } from './pageRead.mjs'
 import { classifySafety, isObject } from './safety.mjs'
 import { guardPromotion, holdForReview } from './stages.mjs'
 
@@ -40,6 +41,13 @@ export function gateItem(contract, item) {
     const found = classifySafety(contract?.safety, { ...item, curation: given })
     if (found.safety) curation = holdForReview(curation, `safety item (${found.why.join('; ')})`)
   }
+  // A reject of an item from an always-held source is held unless verify was given its page's text
+  // (pageRead.mjs): the code knows whether it was, so no report is dropped unread.
+  if (curation.decision === 'reject' && rejectUnread(contract?.safety, item))
+    curation = holdForReview(
+      curation,
+      'verify was not given the report page, so it may not have been read',
+    )
   const route = routeFor(pipeline, curation.decision)
   return { curation, route, suggest: route === SUGGESTION }
 }

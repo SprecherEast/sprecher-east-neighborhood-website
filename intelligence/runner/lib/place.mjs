@@ -1,5 +1,5 @@
 import { pointPlace } from './boundary.mjs'
-import { isPlainStreet, streetAddresses } from './geocode.mjs'
+import { isPlainStreet, locatorQuery, streetAddresses } from './geocode.mjs'
 import { clip } from './text.mjs'
 
 // Placement (#1009; coverage.md, "Review passes", check 2): where an item is, by the City's
@@ -124,7 +124,9 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
       }
     // Whether the street comes first in the text: a venue or town before it is never a confirmed address
     const streetFirst = text.replace(/\s+/g, ' ').trim().startsWith(found[0])
-    return { ...(await resolve(found[0], deadline)), own, streetFirst }
+    // A block is asked for by the first address of its hundred: a point for the block, not a building
+    const { query, block } = locatorQuery(found[0])
+    return { ...(await resolve(query, deadline)), own, streetFirst, block }
   }
 
   async function placeVerified(given, candidate, deadline) {
@@ -147,7 +149,7 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
     const placement = {
       method: 'boundary',
       inside,
-      reason: `the address is ${inside ? 'inside' : 'outside'} the City’s boundary for the area`,
+      reason: `the ${found.block ? 'first address of the block' : 'address'} is ${inside ? 'inside' : 'outside'} the City’s boundary for the area`,
       overrode: false,
     }
     // The boundary is the authority on inside and outside, so a tier that can't hold is replaced.
@@ -157,14 +159,16 @@ export function createPlacer({ boundary, record, geocode, onProblem = () => {} }
     const coverage = inside ? 'core' : 'unknown'
     const said = verification.coverage
     // Only an address inside reaches here with another tier than core, so this is never true outside
+    // A block is one point for many addresses, so its change is never raised without a flag
     const raised =
-      said === 'catchment' ||
-      (said === 'unknown' &&
-        found.own &&
-        found.streetFirst &&
-        verification.location.verified === true &&
-        // `locate` already refused any municipality but Madison, so a filled one is Madison
-        filled(verification.location.municipality))
+      !found.block &&
+      (said === 'catchment' ||
+        (said === 'unknown' &&
+          found.own &&
+          found.streetFirst &&
+          verification.location.verified === true &&
+          // `locate` already refused any municipality but Madison, so a filled one is Madison
+          filled(verification.location.municipality)))
     return {
       ...verification,
       coverage,

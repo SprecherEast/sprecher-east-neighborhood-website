@@ -53,6 +53,16 @@ Set `$.safety` by the definition in `safety.yaml`. A safety item is never `accep
 reads no text of the item and holds it for a person unless both stages answer a plain `false`
 (`coverage.md`, "Review passes"), so your answer is the judgment.
 
+For an incident from `madison-police-incident-reports`, apply the bar in `coverage.md`, "Public
+interest and context", rule 6. First, a known item's change (`$.known` set) is always an `update`,
+whatever its place: the feed's update text often names none. Otherwise, for a new report, judging by
+what it means and never by words in its title: `reject` it when its page was read and it is not
+here (`outside` or `unknown`), or it is neither serious nor something a neighbor can act on;
+`needs-review` with `missing-location` when verify says in `$.verification.coverageReason` that
+the page could not be read (a page that was read and names no place is the reject above); else `needs-review`, with
+the reasons saying why it is serious or what a neighbor can do, and what the report does not
+show. Name no private person in the reasons, a suspect or an arrested or charged person included.
+
 ## Second read
 
 You are the second of the two reads the pipeline does (`coverage.md`, "Review passes"). Check the verify result

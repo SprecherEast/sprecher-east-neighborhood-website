@@ -37,7 +37,7 @@ Only `valid` sources are ever fetched automatically.
 | madison.com                     | RSS      | restricted | no    |
 | The Capital Times               | RSS      | invalid    | no    |
 | Channel 3000                    | HTML     | invalid    | no    |
-| Madison Police incident reports | RSS      | pending    | no    |
+| Madison Police incident reports | RSS      | valid      | 9     |
 | Traffic Engineering news        | HTML     | pending    | no    |
 | Road Closures open-data layer   | JSON API | pending    | no    |
 | 511 Wisconsin events API        | JSON API | pending    | no    |
@@ -119,7 +119,8 @@ partly in the Town of Blooming Grove. [coverage.md](coverage.md) holds the worki
 
 A hand sweep found the sources above marked `pending`. Each entry in `sources.yaml` records what
 was seen that day and the issue that finishes its hand check (#993 to #998). None is polled, and
-no parser exists yet: those belong to the same issues. Madison Parks events (already listed) got
+no parser exists yet: those belong to the same issues. The police incident reports feed was the first
+to be finished (#993, below). Madison Parks events (already listed) got
 its new observation, and City Legistar (already `valid`) got a note: contract awards and
 resolutions are where a physical project's paper trail turns up.
 
@@ -135,6 +136,46 @@ confirm each with its organizer ([coverage](coverage.md), "Review passes").
 reading (keep the iCalendar source above). United Way's volunteer listings refused an automated
 read, so their terms need a hand check (#998). Nextdoor and Facebook need a login, so resident
 reports from them reach the Scout only through the owner.
+
+## The police incident reports feed (#993)
+
+Hand check on **2026-11-25**, from the City's own pages. It is `valid`, daily, rank 9, and every
+item is a safety item that waits for a person ([coverage](coverage.md), "Review passes").
+
+- **robots.txt.** `https://www.cityofmadison.com/robots.txt` has three groups, all for every
+  crawler, and none names `/feed`, `/police` or the incident reports; there is no `Crawl-delay`.
+  The feed's path is allowed.
+- **Terms.** The City's [Conditions and Use](https://www.cityofmadison.com/policy/conditions) says
+  that, unless stated otherwise, data on the website is public information and "generally
+  available to copy or distribute", with the City's logos and images excepted, and it says nothing
+  about automated reading. Its [data policy](https://www.cityofmadison.com/policy/data) is
+  informational and sets no reuse condition. We read the feed once a day, logged out, and use no
+  image; we summarize facts and link, never republish.
+- **The feed.** RSS 2.0 with a `link`, `guid` and `pubDate` on every item and no `ttl` or
+  `lastBuildDate`. The incident reports page does not link to it. The `guid` ends in the time of the
+  last update, so it changes when a report does: the report's page link is the item's id, so an
+  update reaches the editor as a change to a known item.
+- **Cadence.** The City posts a few reports a week (the page's first screen spanned 2026-10-29
+  to 2026-11-21, with a long archive behind it), and the feed gives no refresh interval: one read
+  a day is enough.
+- **What an item holds.** The description begins with the place and a comma. Of the 81 items in the
+  feed when it was checked (2026-11-25), 46 began with a block ("2800 block Curry Pkwy"), 21 with an
+  intersection or a bare street ("Mineral Point Rd. at S. Gammon Rd.", "S. Blair St.") and 14 with
+  "UPDATE:" and no place, because the feed replaces an updated report's description. The parser
+  reads the leading place when it is short, of street characters and holds a street type; a block
+  is placed by the boundary, while an intersection or a bare street has no house number, so the
+  locator is sent nothing and the area's words stand (a house number is never followed directly by a connector word or "blocks", which keeps routes and exits
+  from being sent; other prose after a route number can still be read as text with a street type, which is public item
+  text and never resident data; the parser reads plural street types, so all 21 are read). The report's page adds the incident type, a
+  case number, the block address, an approximate map point, when it was published and last
+  updated, and the tip line (the Madison Area Crime Stoppers line and the department's
+  non-emergency line). There is no district field. The parser is `runner/lib/incidents.mjs`; the
+  City's boundary places a block ([coverage](coverage.md), check 2), so `area.yaml` holds no list of
+  street names.
+- **First run.** All 81 items, back about a year, are new on the first run;
+  the model stages take a few per run, newest first ([#1483](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1483)).
+- **Limits.** The feed is a lead: the runner reads the report page and gives its text to verify before an item
+  is considered, and the City makes no guarantee that its pages are accurate or complete.
 
 ## Trust: reach is not trust
 

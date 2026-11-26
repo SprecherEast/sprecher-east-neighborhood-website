@@ -8,16 +8,47 @@ import { fetchDirect } from './fetchSource.mjs'
 const TYPES =
   'St|Street|Ave|Avenue|Rd|Road|Dr|Drive|Ln|Lane|Blvd|Boulevard|Ct|Court|Way|Pl|Place|Pkwy|Parkway|Cir|Circle|Ter|Terrace|Trl|Trail|Hwy|Highway|Loop|Pass|Run|Sq|Square'
 const WORD = "[A-Za-z][A-Za-z.'-]*"
-// number, an optional direction, up to three name words, then the street type; "7 PM on Main St" is not an address
+// A hundred block ("2800 block of Curry Pkwy", as police reports give it) or a house number, then
+// an optional direction, up to three name words, then the street type; "7 PM on Main St" is not an
+// address. The rule is about layout, never a list of spellings: a house number is never followed
+// directly by a connector word (at, and, near, by, to, from, between) or by "block" or "blocks",
+// and never comes just after a slash or a dash. (A symbol after the number can't begin a street
+// name, so it needs no rule of its own.) That keeps an intersection ("Hwy 51 at ...", "US 12 & 18
+// at ...", "I-94 at ..."), an exit and "within 2 blocks of Main St" from being sent, in any
+// spelling of those, and "Acme Co. 123 Main St" is still found.
+// The limit, stated plainly: other prose after a number ("Hwy 51 north of ...", "Hwy 30 W Sprecher
+// Rd", "2 miles from ...") can still be read as an address. It is public text from the item, never
+// resident data, and the City's locator finds nothing for it. A unit written "Unit 4-123 Main St"
+// or "Apt 2/123 Main St" is not found (the safe side; "123 Main St #4" is).
+// Only a hundred of three to six digits makes a block. A street named "Block" with a hundred before
+// it ("100 Block Island Rd") is read as a block: the placement then carries a flag, so a person looks.
+const HUNDRED = String.raw`[1-9]\d{0,3}00`
+const DASHES = String.raw`\-\u2010-\u2015\u2212`
+const CONNECTOR = String.raw`(?:at|and|near|by|to|from|between|blocks?)\b`
+const HUNDRED_BLOCK = String.raw`${HUNDRED}\s+block\s+(?:of\s+)?`
+const HOUSE_NUMBER = String.raw`(?<![/${DASHES}])\d{1,6}(?!\s*[ap]\.?m\b)\s+(?!${CONNECTOR})`
 const ADDRESS = new RegExp(
-  `\\b\\d{1,6}(?!\\s*[ap]\\.?m\\b)\\s+(?:(?:[NSEW]|North|South|East|West)\\.?\\s+)?(?:${WORD}\\s+){0,2}?${WORD}\\s+(?:${TYPES})\\b`,
+  `\\b(?:${HUNDRED_BLOCK}|${HOUSE_NUMBER})(?:(?:[NSEW]|North|South|East|West)\\.?\\s+)?(?:${WORD}\\s+){0,2}?${WORD}\\s+(?:${TYPES})\\b`,
   'gi',
 )
+const BLOCK = new RegExp(`^(${HUNDRED}) block (?:of )?`, 'i')
+/** Whether `text` has a street type, plural too, as a whole word: street data, not a word list about meaning. */
+export const hasStreetType = (text) => new RegExp(`\\b(?:${TYPES})s?\\b`, 'i').test(text)
 /** The only shape sent to the locator: single spaces, a number, then words. */
 const PLAIN_STREET = /^\d{1,6}(?: [A-Za-z][A-Za-z.'-]*){2,6}$/
 /** Whether `street` is a short plain street address, the one thing the locator is ever sent. */
 export const isPlainStreet = (street) =>
   typeof street === 'string' && PLAIN_STREET.test(street) && street.length <= 80
+
+/**
+ * What the locator is asked for `street`: for a block ("2800 block of Curry Pkwy") the first
+ * address of the block, "2800 Curry Pkwy", the only public house number the text gives.
+ * `block` says the point stands for a block, not one building (coverage.md, check 2).
+ */
+export function locatorQuery(street) {
+  const block = BLOCK.test(street)
+  return { query: block ? street.replace(BLOCK, '$1 ') : street, block }
+}
 const METERS_PER_DEGREE = 110_574
 
 /** The distinct street addresses in `text`, in order, each as written with single spaces. */

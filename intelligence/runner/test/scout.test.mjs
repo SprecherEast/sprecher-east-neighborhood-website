@@ -86,6 +86,7 @@ describe('scout', () => {
       'city-public-info-meetings',
       'district16-blog',
       'city-news',
+      'madison-police-incident-reports',
     ])
   })
 

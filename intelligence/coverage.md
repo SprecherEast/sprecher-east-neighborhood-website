@@ -116,7 +116,8 @@ sources conflict, or the item is borderline. Route a change to an item already i
 How curate reads an incident, hazard or other safety item, under the standard in
 [Editorial integrity](../docs/guidelines/editorial-integrity.md). Such an item is
 never `accept` (see "Review passes"): it is `needs-review` unless rule 4 routes it as `reject`
-(`past`) or `update`. This decides what the editor is told.
+(`past`) or `update`, or rule 6 (the bar for a police-reported incident) rejects it. This decides
+what the editor is told.
 
 1. **Public interest.** Can residents use it: a hazard to avoid, a service change, a decision, a
    thing to do? Record the answer in `$.reasons`. An effect on home values is never a reason to
@@ -130,6 +131,39 @@ never `accept` (see "Review passes"): it is `needs-review` unless rule 4 routes 
    correction as an `update`, so the editor adds it with the date and the record stays; never
    `reject` or remove it. An old incident stays findable, with its resolution first.
 5. **Always a reason.** Every accept, reject and `needs-review` has at least one reason an editor can check.
+6. **A police-reported incident (the bar, #993).** The site is never a crime list, so a new
+   incident from the City's police reports reaches the editor only when it is both of these,
+   judged by what the report means, never by words in its title. This rule overrides the general
+   "needs review when the location can't be confirmed" sentence in "Relevance rules" for a new
+   report whose page was read:
+   - **Here.** Its place, as the report gives it (a block, an intersection or a street), is `core`
+     or `catchment` by "Review passes", check 2. A place elsewhere, including a street of the same
+     name, is `outside`; a report whose page was read and names no place is `unknown`. Both are
+     `reject`ed and nothing is guessed. The `ambiguous-location` flag the boundary puts on a block
+     it moved out of `core` is not shown to a person, on purpose: the item is rejected as not here.
+     A report whose page could not be read is different: nothing is known, so it is
+     `needs-review` with `missing-location`, never rejected. The runner enforces it: the models have no tools, so it reads the report page itself, once,
+     for each such item that reaches the model stages, and puts the page's text in the item as
+     `reportPage` (`runner/lib/pageRead.mjs`). The gate holds any `reject` of an item from an
+     always-held source for review unless that text went to verify, whatever verify wrote
+     (`runner/lib/gate.mjs`). Whether it did is a fact the code knows, not a claim.
+   - **Worth a neighbor's time.** Serious (harm to a person, a weapon, a threat to the public), or
+     something a neighbor can act on (a danger that continues, a request for the public's help, an
+     area to avoid). An ordinary property loss or a minor dispute with no danger left is `reject`ed.
+
+   **A known item's update is always an `update`, whatever its place** (rule 4): the feed replaces
+   an updated report's description, so the update often names no place, and the place is the known
+   item's. It is never rejected as `unknown`, and this rule's tests of place and weight do not apply
+   to it.
+
+   **Probe before the item is considered.** The feed is only a lead: read the report's own page,
+   look for an update on the same case (`$.known`; the case number the page gives), and state only
+   what the report gives: no count, time, injury, cause or suspect it leaves out. The draft is calm
+   and fact first, names the place as the report gives it, **names no private person: a victim, a
+   witness, a person of interest, a suspect, and an arrested or charged person included** (an
+   arrest or a charge is not guilt; [Editorial integrity](../docs/guidelines/editorial-integrity.md)),
+   and gives the tip line the report itself gives, with a link to the report. Such an item is
+   always held for a person, which "Review passes" enforces in code.
 
 ## Review passes
 
@@ -176,7 +210,11 @@ The five checks, which verify runs on every item:
    `ambiguous-location`, so a person looks. An address is not sent when the code finds
    another place in the text the street came from (the other reasons it is not sent are in
    `runner/README.md`, "Falls back"), and only its house number, street and street
-   type, from a public item, go to the City's own locator. Before the street the code looks for
+   type, from a public item, go to the City's own locator. A block address (a hundred, as in "2800 block of Curry
+   Pkwy", as police reports give it; "3 block" is not one, and the word is never sent) is sent as the first address of the block,
+   never with the word "block": it is one point for many addresses, so a change of tier it causes always gets
+   `ambiguous-location`, even one that would otherwise be raised without it (a street named "Block"
+   with a hundred before it is read as a block, so it carries the flag too). A house number is never followed directly by a connector word (at, and, near, by, to, from, between) or by "block" or "blocks", and never comes just after a slash or a dash; that layout rule keeps an intersection, a route ("US 12 & 18 at …", "I–94 at …"), an exit and "2 blocks of …" from being sent. Its limit: other prose after a route number ("Hwy 51 north of …", "Hwy 30 W Sprecher Rd") can still be sent as public text from the item that is not an address; it is never resident data. Before the street the code looks for
    "city, village, town or township of …" (the Town of Madison is one: it was absorbed into the
    City of Madison and the City of Fitchburg on 31 October 2022, so a text naming it can't say
    which), Wisconsin (WI, Wis.) and any five-digit number (a ZIP code), and any of them stops the
