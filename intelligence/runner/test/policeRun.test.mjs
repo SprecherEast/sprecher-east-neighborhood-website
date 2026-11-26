@@ -85,10 +85,16 @@ const run = async ({
             },
           }),
         })
-      if (stageId === 'curate')
-        return police && decision === 'accept'
-          ? curation()
-          : curation({ decision: 'reject', reasons: ['No.'] })
+      if (stageId === 'curate') if (police && decision === 'accept') return curation()
+      // A duplicate names the item it repeats, as the schema asks
+      return police && decision === 'duplicate'
+        ? curation({
+            decision: 'duplicate',
+            reasons: ['Same report.'],
+            targetCollection: 'events',
+            targetId: 1,
+          })
+        : curation({ decision: 'reject', reasons: ['No.'] })
       return draft()
     }),
     state: { sources: {}, seen: {} },
@@ -193,5 +199,24 @@ describe('a reject of a police report in a run', () => {
     assert.ok(verified.length >= 2)
     for (const given of verified) assert.equal('reportPage' in given, false)
     assert.equal(cms.writes.filter((w) => w.tool === 'reportItem').length, 2)
+  })
+
+  it('is held for a person when curate calls an unread report a duplicate', async () => {
+    const update = item('c', 'UPDATE: Burglary', 'UPDATE: Officers have made an arrest.')
+    const { cms, log } = await run({ decision: 'duplicate', more: [update], budget: 7 })
+    const reports = cms.writes.filter((w) => w.tool === 'reportItem')
+    // The two reports and the update: none of them dropped
+    assert.equal(reports.length, 3)
+    for (const report of reports) {
+      assert.equal(report.arguments.kind, 'needs-review')
+      assert.match(report.arguments.summary, /verify was not given the report page/)
+    }
+    assert.equal(log.counts.duplicates, 0)
+  })
+
+  it('lets a duplicate stand when the report page was read', async () => {
+    const { cms, log } = await run({ decision: 'duplicate', pages: true })
+    assert.equal(cms.writes.filter((w) => w.tool === 'reportItem').length, 0)
+    assert.equal(log.counts.duplicates, 2)
   })
 })

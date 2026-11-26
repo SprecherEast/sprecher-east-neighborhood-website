@@ -56,11 +56,10 @@ const sourceIds = (candidate) => [
 ]
 
 /**
- * Whether `item` is a reject the gate must hold: it came from an always-held source (alone or
- * with others) and the runner did not read its page. A definition or item it can't read counts as
+ * Whether `item` is a report the gate must hold if curate would drop it (`reject` or `duplicate`): it came from an always-held source (alone or with others) and the runner did not read its page. A definition or item it can't read counts as
  * held, because a gate that can't tell must not let a report go.
  */
-export function rejectUnread(rules, item) {
+export function unreadReport(rules, item) {
   try {
     return sourceIds(item.candidate).some((id) => rules.sources.has(id)) && !pageWasRead(item)
   } catch {

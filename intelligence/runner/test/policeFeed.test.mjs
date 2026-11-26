@@ -140,6 +140,8 @@ describe('the incident reports parser', () => {
     const body = rss(
       `<item><title>No link</title><description>x</description><guid>${BASE}/z#2026-11-20T08:44:31</guid></item>`,
       `<item><title>Plain</title><link>http://www.cityofmadison.com/police/incident-reports/q</link><description>x</description><guid>q</guid></item>`,
+      // An https address inside an http link is not an https page
+      `<item><title>Inside</title><link>http://www.cityofmadison.com/r?u=https://x</link><description>x</description><guid>r</guid></item>`,
     )
     assert.deepEqual(parseIncidentReports(body), [])
   })

@@ -215,9 +215,9 @@ tools, so the runner reads the report page of each such item that reaches them
 (`runner/lib/pageRead.mjs`: one request, no retry, no redirect, the source's own https origin,
 robots.txt honored, at most 1 MiB, ten seconds) and puts its text, markup removed and cut to 8,000
 characters, in the item verify is given as `reportPage`, untrusted like any source text. The gate
-holds any `reject` of an item from an always-held source for review unless that text went to verify,
+holds any `reject` or `duplicate` of an item from an always-held source for review unless that text went to verify,
 whatever verify wrote. Whether it did is a fact the code knows, so an unread page can only end in
-review. At most one page is fetched per such item, within the run's model budget.
+review, whatever curate decides. At most one page is fetched per such item, within the run's model budget.
 
 The runner checks `pipeline.yaml` and `safety.yaml` against their schemas when it starts, and refuses
 to run on a failure, an unknown source id, or an empty source list.

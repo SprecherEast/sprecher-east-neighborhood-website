@@ -1,7 +1,7 @@
 import { pilotSources } from './contract.mjs'
 import { mergeAcrossSources, mergedCopies, scoutSource } from './scout.mjs'
 import { gateItem } from './gate.mjs'
-import { readReportPage, rejectUnread } from './pageRead.mjs'
+import { readReportPage, unreadReport } from './pageRead.mjs'
 import { runStage, runVerify, StageError } from './stages.mjs'
 import { markSeen } from './state.mjs'
 import { sendReport } from './submit.mjs'
@@ -115,7 +115,7 @@ export async function processRun(run) {
       item.known = await cms.known(candidate.externalId)
       // The models have no tools, so an item from an always-held source goes to verify with its own
       // page's text in it, read here once (pageRead.mjs); the gate holds a reject without it
-      if (rejectUnread(contract.safety, item)) {
+      if (unreadReport(contract.safety, item)) {
         const source = contract.registry.sources.find((s) => s.id === candidate.sourceId)
         const page = await readReportPage(candidate, { source, http, robots })
         if (page) item.reportPage = page

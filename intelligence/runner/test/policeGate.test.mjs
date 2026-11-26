@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import { gateItem } from '../lib/gate.mjs'
-import { rejectUnread } from '../lib/pageRead.mjs'
+import { unreadReport } from '../lib/pageRead.mjs'
 import { curation } from './fixtures.mjs'
 import { contract } from './helpers.mjs'
 import { item } from './safetyHelpers.mjs'
@@ -81,25 +81,52 @@ describe('a reject from an always-held source', () => {
     assert.equal(gateItem(contract, built).curation.decision, 'needs-review')
   })
 
+  it('is held for a person when it is a duplicate, and nothing says the page was read', () => {
+    const duplicate = (read) =>
+      reject({
+        read,
+        decision: 'duplicate',
+        verification: { coverage: 'unknown', flags: [], evidence: [] },
+      })
+    const target = { targetCollection: 'posts', targetId: 1 }
+    for (const read of [undefined, null, { url: PAGE, text: '' }]) {
+      const built = duplicate(read)
+      built.curation = { ...built.curation, ...target }
+      const gated = gateItem(contract, built)
+      assert.equal(gated.curation.decision, 'needs-review')
+      assert.equal(gated.route, 'reportItem')
+      assert.match(gated.curation.reasons[0], /^Held for review, not accepted: .*page/)
+    }
+  })
+
+  it('lets a duplicate stand when the page text went to verify', () => {
+    const built = reject({ read: PAGE_READ, decision: 'duplicate' })
+    const gated = gateItem(contract, built)
+    assert.equal(gated.curation.decision, 'duplicate')
+    assert.equal(gated.route, 'none')
+  })
+
   it('is not held for a source that is not always held, or for any other decision', () => {
-    assert.equal(
-      gateItem(contract, reject({ sourceId: 'mpl-pinney-events' })).curation.decision,
-      'reject',
-    )
-    for (const decision of ['update', 'duplicate', 'cancel', 'needs-review'])
+    for (const decision of ['reject', 'duplicate'])
+      assert.equal(
+        gateItem(contract, reject({ sourceId: 'mpl-pinney-events', decision })).curation.decision,
+        decision,
+        decision,
+      )
+    for (const decision of ['update', 'cancel', 'needs-review'])
       assert.equal(gateItem(contract, reject({ decision })).curation.decision, decision, decision)
   })
 
   it('stands for a read item even when a source it was also reported by is not listed', () => {
     const built = reject({ read: PAGE_READ, candidate: { alsoReportedBy: [null] } })
-    assert.equal(rejectUnread(contract.safety, built), false)
+    assert.equal(unreadReport(contract.safety, built), false)
   })
 
   it('is held when the item or the definition can not be read', () => {
-    assert.equal(rejectUnread(contract.safety, {}), true)
-    assert.equal(rejectUnread(contract.safety, null), true)
-    assert.equal(rejectUnread({}, reject({ sourceId: 'mpl-pinney-events' })), true)
-    assert.equal(rejectUnread(undefined, reject({ read: PAGE_READ })), true)
-    assert.equal(rejectUnread(contract.safety, reject({ read: PAGE_READ })), false)
+    assert.equal(unreadReport(contract.safety, {}), true)
+    assert.equal(unreadReport(contract.safety, null), true)
+    assert.equal(unreadReport({}, reject({ sourceId: 'mpl-pinney-events' })), true)
+    assert.equal(unreadReport(undefined, reject({ read: PAGE_READ })), true)
+    assert.equal(unreadReport(contract.safety, reject({ read: PAGE_READ })), false)
   })
 })
