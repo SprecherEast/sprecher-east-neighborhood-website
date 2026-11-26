@@ -11,8 +11,8 @@ Change this file only through a pull request.
 
 1. Work from a fresh read-only checkout of `main`, and note its commit for the report.
 2. Read [`pipeline.yaml`](pipeline.yaml). If the pipeline is disabled there, stop before reading
-   any source. Write a report holding only the run header, which says the pipeline is disabled,
-   and [notify the owner](#notifying-the-owner).
+   any source. Write a report holding only the run header, which says the pipeline is disabled
+   (the one report without a watch items line), and [notify the owner](#notifying-the-owner).
 3. Read the files below before reading any source or drafting anything.
 
 ## Read first
@@ -21,9 +21,9 @@ From `main`: the [README](README.md), [`pipeline.yaml`](pipeline.yaml),
 [`coverage.md`](coverage.md), [`area.yaml`](area.yaml), [`safety.yaml`](safety.yaml),
 [`sources.yaml`](sources.yaml), [`sources.md`](sources.md) (including
 [trust](sources.md#trust-reach-is-not-trust)), [`images.md`](images.md), the stage prompts in
-[`prompts/`](prompts/), the [`schemas/`](schemas/) they name for each stage's output shape,
-[`boundary.json`](boundary.json) and the site's [brand voice](../docs/guidelines/brand-voice.md).
-Draft copy follows the brand voice from the first draft.
+[`prompts/`](prompts/), the [`schemas/`](schemas/) they name for each stage's output shape and the
+site's [brand voice](../docs/guidelines/brand-voice.md). Draft copy follows the brand voice from
+the first draft.
 
 ## Running the stages by hand
 
@@ -37,9 +37,14 @@ The scout is the pipeline's runtime for one run, with a model doing every stage.
   run can count: items read per source (`maxItemsPerSource`), items sent through the model stages
   (`maxModelItemsPerRun`), drafts (`maxDraftsPerRun`) and minutes (`maxMinutesPerRun`). The money
   budgets (`maxUsdPerRun`, `maxUsdPerMonth`) belong to the runner and do not apply to a hand run.
-- The runner's code tests an item's street address against [`boundary.json`](boundary.json) and
-  writes `$.placement` ([`coverage.md`](coverage.md), "Review passes", check 2). A hand run has no
-  such code: the scout makes the same test from the boundary and notes that it did.
+- The runner's code places an item by sending its street address to the City's address locator
+  and testing the point against the boundary ([`coverage.md`](coverage.md), "Review passes",
+  check 2). A hand run has no locator, never calls one, does not test addresses against the
+  boundary and never writes `$.placement`. The place is judged by the word match
+  ([`area.yaml`](area.yaml)), or unplaced when the item names no place, and the verify prompt's
+  rule to judge the tier [as if there were no address test](prompts/verify.md) applies. An item
+  whose location is unclear or near the edge gets the `ambiguous-location` flag and goes under
+  Needs review. The run header says the boundary test was not applied.
 - A fresh checkout has no record of what was seen, so judge "already seen with the same content"
   (the [README](README.md#the-pipeline) step) against what the live site already shows, as in
   [Duplicates](#duplicates), and against the previous report when the run can read it.
@@ -102,11 +107,12 @@ The item is removed from the schedule when it is resolved; it is not copied here
 One report, in this order, so the owner can review it quickly. Leave out any other section that has
 nothing to say, and don't add text to a section where the items already say
 it. Never put secrets or personal data in the report. Proposed copy is in the brand voice. The run
-header and the watch items line always appear, saying "nothing new" when empty.
+header and the watch items line always appear, saying "nothing new" when empty; the one exception
+is the report of a disabled pipeline, which is the run header alone.
 
 1. **Run header:** the repository commit, the sources polled, the sources that were blocked or
    failed, any feed only partly read (which part), and any fetched page that tried to instruct the
-   scout.
+   scout, and that the boundary test was not applied.
 2. **Accepted drafts, ready for review:** for each, the title, the date and place, one line on why
    it matters, the official links and the draft text. Never a safety or police item.
 3. **Needs review:** each item with its flags, the missing facts or low confidence, and what is

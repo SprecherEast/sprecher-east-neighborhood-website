@@ -5,7 +5,9 @@ defines them. This page lists them. What runs inside the application and in GitH
 in [`docs/reference/jobs.md`](../reference/jobs.md).
 
 **This page is written by hand and updated by hand whenever one of these tasks changes.** The
-facts below were read from the owner's account on 2026-11-24. It holds no task identifiers, prompt
+facts below were read from the owner's account on 2026-11-24, except the Instructions bullet,
+which describes the schedule from the moment its prompt is repointed at the file (tracked on
+[#1517](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1517)). It holds no task identifiers, prompt
 text, secrets or personal details: the repository is public.
 
 ## Weekday neighborhood scout
@@ -18,10 +20,11 @@ text, secrets or personal details: the repository is public.
   rule, duplicates, watch items, the report layout and when to notify the owner. Where the prompt
   and the file differ, the file wins, except that the read-only rule always holds.
 - **What it reads:** a fresh read-only checkout of `main`: the pipeline's settings and
-  instructions (the README, `pipeline.yaml`, coverage, area, boundary, sources, images, the schemas
-  and the stage prompts). If `pipeline.yaml` has the pipeline disabled, it stops, writes a report
+  instructions (the README, `pipeline.yaml`, coverage, area, sources, images, the schemas and the
+  stage prompts). If `pipeline.yaml` has the pipeline disabled, it stops, writes a report
   with only the run header saying so, and notifies the owner. It replaces the submit stage with a
-  report. It judges duplicates from the live site and other public pages.
+  report. It judges duplicates from the live site and other public pages. It never calls the City's
+  address locator, so it does not test addresses against the boundary and says so in the report.
 - **May not:** write anything outside its own report, apart from the one push notification to the
   owner. It makes no CMS call and holds no key for the CMS or its MCP endpoint, opens no issue or
   pull request and publishes nothing.
