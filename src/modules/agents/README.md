@@ -1,7 +1,7 @@
 ---
 name: 'Agents'
 type: module
-summary: 'MCP access, what agents may read, drafts, run history.'
+summary: 'MCP access, drafts, runs.'
 aliases: ['MCP', 'neighborhood agents']
 relationships: []
 ---
@@ -17,29 +17,14 @@ never publish and never change existing content. Fields, access and hooks:
 
 ## How the pieces link
 
-- A suggestion's categories are found by slug; an unknown slug is refused, never created. Its image is the first category's `defaultImage` (a field of news's `categories`), else the nearest parent's, else the next category's, else none (`cms/tools/submitSuggestion.ts`, `domain/suggestion.ts`).
-- The Markdown body becomes the collection's own rich text; `<Chart>`, `<FactTabs>` and `<SectionTabs>` tags are read by the editorial converters, and a malformed or unreadable tag refuses the call and stores nothing (`cms/tools/submitSuggestion.ts`, `src/platform/richtext/editorial/*Markdown.ts`, `editorialTag.ts`).
-- Card text: a post's `summary` fills its search-engine description (`meta.description`) only; an event's fills its description. The share image of a post is the category's default image, which is also the hero image of both (`cms/tools/submitSuggestion.ts`).
-- An event's day and times come from `startsAt`, `endsAt` and `allDay` in the site timezone; an end on another day is dropped (`domain/suggestion.ts`).
-- `externalId` and `contentHash` are unique on events and posts, so one item is never stored twice; the slug ends with the start of the hash (`src/platform/payload/reviewQueue.ts`, `domain/suggestion.ts`).
-- A run's `agent` and a review item's `agent` are set by the server from the key's account, never by the caller (`cms/agentRuns.ts`, `cms/agentReviewItems.ts`).
-- A run's identity (`RUN_IDENTITY`: run id, agent name, pipeline version, commit, start) is written once; an agent's later updates keep the stored values (`cms/agentRuns.ts`, `domain/runs.ts`).
-- What an agent sees is each collection's allowlist, checked against the generated types; related documents become ids, and `meta` keeps only title and description (`cms/agentViews.ts`, `domain/agentView.ts`).
+- **In the CMS:** two collections, `agent-runs` and `agent-review-items`, and the MCP API keys of Payload's MCP plugin (`@payloadcms/plugin-mcp`, the library doing the real work); not in the CMS: the allowlists, the limits and the two tools. The tools, endpoint and jobs are generated: [MCP tools](../../../docs/reference/mcp-tools.md), [endpoints](../../../docs/reference/endpoints.md).
+- **The Markdown body** of a suggestion becomes the collection's own rich text through the editorial converters ([rich text](../../platform/richtext/README.md), `src/platform/richtext/editorial/*Markdown.ts`); categories are [news](../news/README.md)' tree and the review queue is [Shared Payload code](../../platform/payload/README.md).
 
 ## Behaviors and events
 
-- Agents use Payload's official MCP plugin at `/api/mcp`. The key acts as an agent account, so collection access decides what it may do; the per-key boxes in Admin can only narrow that (`cms/mcp.ts`).
-- Over MCP an agent can only find published events, posts and categories, create and update its own runs, and call two tools (`cms/mcp.ts`, `src/payload.config.agentAccess.test.ts`).
-- Keys are admin-only to create, read, change or delete, and each is bound to an account with the agent role (`cms/apiKeys.ts`). The key's account must still be an agent at each request, so a changed role stops the key (`cms/mcp.ts`).
-- Agents get no password sign-in or session, so the key is their only credential (`src/modules/accounts/cms/noPasswordSignInForAgents.ts`).
-- Limits: 120 requests a minute per connection, counted before the key is looked up, then 60 a minute per key; past either, 429. Counted in memory, which assumes one server process (`domain/mcpLimits.ts`, `cms/mcp.ts`).
-- Every answer is rebuilt from the allowlisted view, so no personal data reaches the model; an error answer is kept as it is (`cms/mcp.ts`, `domain/agentView.ts`).
-- `submitSuggestion` stores a draft held as `suggested`, never published, as the agent itself; `holdSuggestions` holds it whatever the agent sends and requires a source name and link (`src/platform/payload/reviewQueue.ts`). The title cap is the only length guard on a draft, since Payload checks it only on publish (`domain/suggestion.ts`, #633).
-- The same source ID or fingerprint answers `duplicate` with the stored id, also when two calls race; the lookup bypasses access because agents can't read drafts. The run's counts stay the agent's to keep (`cms/tools/submitSuggestion.ts`).
-- `reportItem` adds one document per report under the agent's own run, so two reports never overwrite each other; it never changes the content it points at. Staff read every item, an agent only its own; only admins change or delete one (`cms/tools/reportItem.ts`, `cms/agentReviewItems.ts`).
-- An agent sees only its own runs, and another agent's run is "not found". That is how it resumes from its source cursors (`cms/agentRuns.ts`, `cms/tools/runs.ts`).
-- Admins may change a run's identity fields and set its agent when creating one; an agent can't (`cms/agentRuns.ts`).
-- Tool arguments follow the agents' contract in `intelligence/schemas/`, with a size cap on each and cross-field rules (an event needs `startsAt`; an update or cancellation needs a target) (`cms/tools/schemas.ts`).
+- **Agents use Payload's official MCP plugin at `/api/mcp`.** The key acts as an agent account, so collection access decides what it may do (`cms/mcp.ts`).
+- **Agents get no password sign-in or session,** so the key is their only credential (`src/modules/accounts/cms/noPasswordSignInForAgents.ts`).
+- **`submitSuggestion` stores a draft as the agent itself,** held as `suggested` whatever the agent sends, with a source name and link required (`cms/tools/submitSuggestion.ts`, `src/platform/payload/reviewQueue.ts`).
 
 ## Shared pieces it uses
 
@@ -48,13 +33,14 @@ never publish and never change existing content. Fields, access and hooks:
 
 ## Rules and the tests that protect them
 
-- An agent sees only allowlisted fields, with related documents as ids: `domain/agentView.test.ts`, `src/payload.config.agentAccess.test.ts`.
-- Suggestion slug, schedule and default image rules: `domain/suggestion.test.ts`, `src/payload.config.agentSuggestionCards.test.ts`.
-- The tools' schemas and the agents' contract give the same verdicts: `cms/tools/schemas.contract.test.ts`.
-- Tools store held drafts, answer duplicates and keep concurrent reports: `src/payload.config.agentTools.test.ts`.
-- Keys, limits, run isolation and write-once identity: `src/payload.config.agentAccess.test.ts`, `src/payload.config.agentProbes.test.ts`.
-- Chart, fact-tab and section-tab tags in suggestions: `src/payload.config.chartSuggestion.test.ts`, `src/payload.config.factTabsSuggestion.test.ts`, `src/payload.config.sectionTabsSuggestion.test.ts`.
-- The access migration rolls back and applies again: `src/payload.config.agentMigration.test.ts`.
+- **An agent sees only allowlisted fields,** each collection's allowlist checked against the generated types; related documents become ids, `meta` keeps only title and description, and every answer is rebuilt from that view, so no personal data reaches the model (`cms/agentViews.ts`, `domain/agentView.ts`; `domain/agentView.test.ts`, `src/payload.config.agentAccess.test.ts`).
+- **An agent never publishes or changes content:** over MCP it finds published events, posts and categories, writes its own runs and calls two tools; `submitSuggestion` stores a held `suggested` draft, `reportItem` adds a review item for staff (`cms/mcp.ts`; `src/payload.config.agentTools.test.ts`). The tools are listed in the [MCP tools reference](../../../docs/reference/mcp-tools.md).
+- **A suggestion is stored once:** the same source id or fingerprint answers `duplicate` with the stored id, also when two calls race; `externalId` and `contentHash` are unique and the slug ends with the start of the hash (`cms/tools/submitSuggestion.ts`, `domain/suggestion.ts`; `src/payload.config.agentTools.test.ts`).
+- **A suggestion's shape is checked before anything is stored:** an unknown category slug is refused, never created; a malformed `<Chart>`, `<FactTabs>` or `<SectionTabs>` tag refuses the call; the title cap is the only length guard on a draft; an event's day and times come from `startsAt`, `endsAt` and `allDay` in the site timezone; the tools' schemas and the agents' contract in `intelligence/schemas/` give the same verdicts (`cms/tools/schemas.ts`, `domain/suggestion.ts`, #633; `domain/suggestion.test.ts`, `cms/tools/schemas.contract.test.ts`, `src/payload.config.chartSuggestion.test.ts`, `src/payload.config.factTabsSuggestion.test.ts`, `src/payload.config.sectionTabsSuggestion.test.ts`).
+- **A suggestion's picture is the first category's `defaultImage`,** else the nearest parent's, else the next category's, else none; a post's `summary` fills only its search-engine description and an event's its description (`cms/tools/submitSuggestion.ts`; `src/payload.config.agentSuggestionCards.test.ts`).
+- **A key is the only credential and it can be narrowed, not widened:** keys are admin-only, each bound to an account that must still have the agent role at each request; collection access decides what it may do and Admin's per-key boxes only narrow that. Limits: 120 requests a minute per connection, then 60 a minute per key, then 429, counted in memory (`cms/apiKeys.ts`, `cms/mcp.ts`, `domain/mcpLimits.ts`; `src/payload.config.agentAccess.test.ts`, `src/payload.config.agentProbes.test.ts`).
+- **A run belongs to its agent:** the `agent` of a run and of a review item is set by the server from the key's account; a run's identity (`RUN_IDENTITY`) is written once and later updates keep it; an agent sees only its own runs (another's is "not found") and uses them to resume from its source cursors; admins may change identity fields (`cms/agentRuns.ts`, `cms/agentReviewItems.ts`, `domain/runs.ts`; `src/payload.config.agentAccess.test.ts`).
+- **Reports never overwrite each other:** each adds one document under the agent's own run; staff read every item, an agent only its own, only admins change or delete one (`cms/tools/reportItem.ts`; `src/payload.config.agentTools.test.ts`). The access migration rolls back and applies again (`src/payload.config.agentMigration.test.ts`).
 
 ## Boundaries
 

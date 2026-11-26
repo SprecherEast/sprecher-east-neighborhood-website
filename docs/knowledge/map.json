@@ -1,15 +1,40 @@
 [
-  { "note": "src/modules/events/README.md", "paths": ["src/modules/events/**"] },
+  {
+    "note": "src/modules/events/README.md",
+    "paths": ["src/modules/events/**", "src/app/(frontend)/events/**"]
+  },
   { "note": "src/modules/contact/README.md", "paths": ["src/modules/contact/**"] },
   { "note": "src/modules/agents/README.md", "paths": ["src/modules/agents/**"] },
-  { "note": "src/modules/verification/README.md", "paths": ["src/modules/verification/**"] },
-  { "note": "src/modules/directory/README.md", "paths": ["src/modules/directory/**"] },
+  {
+    "note": "src/modules/verification/README.md",
+    "paths": ["src/modules/verification/**", "src/app/(frontend)/confirm-email/**"]
+  },
+  {
+    "note": "src/modules/directory/README.md",
+    "paths": [
+      "src/modules/directory/**",
+      "src/app/(frontend)/faq/**",
+      "src/app/(frontend)/resources/**"
+    ]
+  },
   { "note": "src/platform/theme/README.md", "paths": ["src/platform/theme/**", "src/themes/**"] },
   {
     "note": "src/modules/roadmap/README.md",
     "paths": ["src/modules/roadmap/**", "src/app/(frontend)/roadmap/**"]
   },
-  { "note": "src/modules/accounts/README.md", "paths": ["src/modules/accounts/**"] },
+  {
+    "note": "src/modules/accounts/README.md",
+    "paths": [
+      "src/modules/accounts/**",
+      "src/app/(frontend)/account/**",
+      "src/app/(frontend)/auth/**",
+      "src/app/(frontend)/forgot-password/**",
+      "src/app/(frontend)/login/**",
+      "src/app/(frontend)/reset-password/**",
+      "src/app/(frontend)/sign-up/**",
+      "src/app/(frontend)/verify-account/**"
+    ]
+  },
   {
     "note": "src/modules/site/navigation/README.md",
     "paths": [
@@ -84,7 +109,11 @@
       "src/modules/site/use-cases/getPageBySlug.ts",
       "src/modules/site/index.ts",
       "src/modules/site/server.ts",
-      "src/modules/site/cms.ts"
+      "src/modules/site/cms.ts",
+      "src/app/(frontend)/[slug]/**",
+      "src/modules/site/domain/heroGeometry.ts",
+      "src/modules/site/ui/blockStyles.ts",
+      "src/modules/site/ui/columnSpan.ts"
     ]
   },
   {
@@ -136,6 +165,6 @@
   },
   {
     "note": "src/modules/news/README.md",
-    "paths": ["src/modules/news/**"]
+    "paths": ["src/modules/news/**", "src/app/(frontend)/posts/**", "src/app/(frontend)/search/**"]
   }
 ]
