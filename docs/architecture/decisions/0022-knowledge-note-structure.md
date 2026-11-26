@@ -67,22 +67,22 @@ its cap. Owner direction this rests on (recorded on #1446 and #1460):
    folder, the end of a long path, no extension), and counts when some path in the repository ends
    with it. So a moved file is missed while a same-named file exists elsewhere: the rule is firm
    for exact paths and links and weak for abbreviated ones.
-7. **Rule states, and why some only warn.** Every structure rule blocks, because every note passes
-   it. Three rules only warn, for one reason: what they report is missing or wrong content, and
-   this change must not add, drop or invent a fact (it changes structure, not meaning). They are
-   the path rule (one wrong test name in a note), the expected sections not yet written, and
-   source code no note describes. [#1004](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1004)
-   writes the content and turns all three to blocking; that is an acceptance criterion of #1004.
-   Until then a note without a Known gaps section has no watch-outs to read, and the counts are in
-   the job summary. Which sections are required is in the schema; only one is, for the same
-   reason, and #1004 can raise the rest there.
+7. **Rule states.** Every rule blocks. Three of them only warned while the notes were being
+   written, for one reason: what they report is missing or wrong content, and
+   [#1460](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1460) changed
+   structure, not meaning. They are the path rule (a path in a note that does not exist), the
+   expected sections, and source code no note describes. [#1004](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1004)
+   wrote the content (every note read against its code, a note for every part with its own
+   behavior) and turned all three to blocking (2026-11-26); `note-schema.json` says so and a test
+   holds it. The sections stay `expected` in the schema: a note without one now fails
+   `COVERAGE-SECTION`. A rule can be set back to `warn` there, for a short while, only by a decision.
 
 ## Consequences
 
 - Easier: a map or an agent reads a note's type, summary and relationships exactly; a note that
   drifts from the structure fails in the pull request.
 - Harder: a new note needs its front matter and a map entry, and its index line is regenerated.
-- Open: content accuracy and missing notes are #1004; the scanner is #1462.
+- Open: the scanner is #1462.
 
 ## Links
 
