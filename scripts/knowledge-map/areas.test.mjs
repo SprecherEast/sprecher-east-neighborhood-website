@@ -111,6 +111,13 @@ describe('buildAreas', () => {
     expect(edge('module:demo', 'business-rule:src/modules/demo/README.md#1', 'contains')).toBe(true)
   })
 
+  it('has each area contain its note', () => {
+    expect(edge('module:demo', 'note:src/modules/demo/README.md', 'contains')).toBeDefined()
+    expect(
+      edge('feature:modules/demo/nav', 'note:src/modules/demo/nav/README.md', 'contains'),
+    ).toBeDefined()
+  })
+
   it('has each note document its subject', () => {
     expect(edge('note:src/modules/demo/README.md', 'module:demo', 'documents')).toBe(true)
     expect(

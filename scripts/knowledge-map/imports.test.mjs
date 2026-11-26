@@ -75,8 +75,12 @@ describe('buildImports', () => {
     edges.find((e) => e.from === from && e.to === to && e.type === type)
 
   it('makes a library node of each runtime dependency the source imports, with its version', () => {
-    expect(nodes.map((n) => n.id)).toEqual(['library:@payloadcms/db-sqlite', 'library:zod'])
-    expect(nodes[1]).toMatchObject({
+    expect(nodes.map((n) => n.id)).toEqual([
+      'group:libraries',
+      'library:@payloadcms/db-sqlite',
+      'library:zod',
+    ])
+    expect(nodes[2]).toMatchObject({
       type: 'library',
       path: 'package.json',
       facts: [{ label: 'Version', value: '^4.1.0' }],
@@ -93,6 +97,11 @@ describe('buildImports', () => {
     expect(edge('module:events', 'platform-area:lib', 'uses')).toBeDefined()
     expect(edge('module:events', 'module:news', 'uses')).toBeDefined()
     expect(edge('platform-area:lib', 'platform-area:lib', 'uses')).toBeUndefined()
+  })
+
+  it('holds the libraries in a group under the site', () => {
+    expect(edge('site:sprecher-east', 'group:libraries', 'contains')).toBeDefined()
+    expect(edge('group:libraries', 'library:zod', 'contains')).toBeDefined()
   })
 
   it('does not count the site root as using an area', () => {
