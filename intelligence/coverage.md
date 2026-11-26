@@ -41,8 +41,8 @@ Facts to keep straight:
 ## Planning background
 
 [`background.md`](background.md) summarizes the City's Sprecher Neighborhood Development Plan
-(adopted January 1998, last amended March 2012), with a page for every fact. Read it before
-judging whether a development, road, park or school item fits what was planned. Three rules:
+(adopted January 1998, last amended March 2012), with a page for every fact. Verify and curate are given its summary ([stage-context.md](stage-context.md)). Read it
+before judging whether a development, road, park or school item fits what was planned. Three rules:
 
 - The plan says what was **expected**, never what exists. Approved or planned is not built (Verification, check 5,
   stage of a project, below); only an item the note marks `[confirmed]` is current.

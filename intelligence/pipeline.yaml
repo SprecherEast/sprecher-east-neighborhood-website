@@ -39,6 +39,24 @@ promotionGuard:
     - wrong-offset
     - conflicting-sources
     - prompt-injection
+# The neighborhood background the model stages are given (#1434). The summary is always added to
+# the stages listed; a topic note is added only when verify names it for an item (`$.backgroundTopics`),
+# and only while it fits. `maxTokens` is the one budget: the most the background adds to one stage's
+# message, the summary included, counted at four characters to a token. stage-context.md.
+background:
+  summary: background/summary.md
+  stages: [verify, curate]
+  maxTokens: 2500
+  topics:
+    - id: land-use
+      file: background/land-use.md
+      covers: The plan's acreage, housing, residential and commercial land, noise and zoning.
+    - id: roads-parks-utilities
+      file: background/roads-parks-utilities.md
+      covers: Planned streets, the I-94 interchange idea, Door Creek parks, stormwater, sewer, water and phasing.
+    - id: civic-sites-and-amendments
+      file: background/civic-sites-and-amendments.md
+      covers: School, church and library sites, and each of the six amendments.
 # The MCP tool the submit stage calls for each curate decision (prompts/submit.md).
 routes:
   accept: submitSuggestion

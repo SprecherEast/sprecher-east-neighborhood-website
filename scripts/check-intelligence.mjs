@@ -9,6 +9,7 @@ import yaml from 'js-yaml'
 
 import { boundaryProblems } from '../intelligence/runner/lib/boundary.mjs'
 import { safetyRules, unregisteredSafetySources } from '../intelligence/runner/lib/safety.mjs'
+import { backgroundChecks } from './check-intelligence-background.mjs'
 import { offsetProblems } from './check-intelligence-times.mjs'
 import { routeProblems } from './check-intelligence-routes.mjs'
 import { parseFrontmatter } from './frontmatter.mjs'
@@ -151,6 +152,9 @@ for (const c of cases) {
   for (const message of routeProblems(c, { routes: ROUTE, registry, rules }))
     problem(c.file, message)
 }
+
+// The background files fit the one budget, and the cases that name a background follow it (#1434)
+for (const [file, message] of backgroundChecks(dir, cases, pipeline)) problem(file, message)
 
 // 2. Field paths: `$.a.b`, with `[]` stepping into an array's items
 function lookup(schema, segments, baseId) {

@@ -1,7 +1,8 @@
+import { backgroundFor } from './background.mjs'
 import { composeMessage, extractJson } from './model.mjs'
 
-// One model stage (README.md, "How a runtime loads it", step 4): the stage's prompt, coverage.md
-// and the item go to the model; the answer must validate against the stage's output schema. An
+// One model stage (README.md, "How a runtime loads it", step 4): the stage's prompt, coverage.md,
+// the neighborhood background it is due (background.mjs) and the item go to the model; the answer must validate against the stage's output schema. An
 // answer that doesn't validate is retried once, with the errors; then the item goes to review.
 
 export class StageError extends Error {
@@ -17,15 +18,25 @@ const THINKING = { low: 'low', medium: 'medium', high: 'high' }
 
 /**
  * Runs `stageId` on `item` with `ask` (a model adapter). Answers `{ output, usage, attempts }`.
- * `effort` overrides the stage's own level, as verify's escalation does.
+ * `effort` overrides the stage's own level, as verify's escalation does. `topics` are the
+ * background topic notes to add (default: the ones verify named for the item), and `tally` counts
+ * what each call was given, for the run log.
  */
-export async function runStage(contract, ask, stageId, item, { effort, deadline } = {}) {
+export async function runStage(
+  contract,
+  ask,
+  stageId,
+  item,
+  { effort, deadline, topics = item.verification?.backgroundTopics, tally } = {},
+) {
   const stage = contract.stage(stageId)
   const validate = contract.validator(stage.output)
+  const background = backgroundFor(contract.background, stageId, topics ?? [])
   const base = composeMessage({
     stageId,
     prompt: contract.prompts[stageId],
     coverage: contract.coverage,
+    background: background.text,
     schemas: contract.schemas,
     outputSchema: stage.output,
     item,
@@ -36,6 +47,7 @@ export async function runStage(contract, ask, stageId, item, { effort, deadline 
   // Once an answer says safety, the stage's result does, even when it was retried (#1007)
   let flagged = false
   for (let attempt = 1; attempt <= 2; attempt++) {
+    tally?.add(stageId, background.report)
     const answer = await ask({
       stageId,
       message,
@@ -65,11 +77,18 @@ export async function runStage(contract, ask, stageId, item, { effort, deadline 
  * Verify, rerun once at high effort when its confidence is below the pipeline's threshold
  * (`escalation` in pipeline.yaml). Answers the stage result and whether it escalated.
  */
-export async function runVerify(contract, ask, item, { deadline } = {}) {
-  const first = await runStage(contract, ask, 'verify', item, { deadline })
+export async function runVerify(contract, ask, item, { deadline, tally } = {}) {
+  const first = await runStage(contract, ask, 'verify', item, { deadline, tally })
   const { verifyBelowConfidence = 0.6, to = 'high' } = contract.pipeline.escalation ?? {}
   if (first.output.confidence >= verifyBelowConfidence) return { ...first, escalated: false }
-  const second = await runStage(contract, ask, 'verify', item, { effort: to, deadline })
+  // The rerun is given the topic notes the first answer asked for
+  const topics = first.output.backgroundTopics
+  const second = await runStage(contract, ask, 'verify', item, {
+    effort: to,
+    deadline,
+    topics,
+    tally,
+  })
   const usage = {
     input: first.usage.input + second.usage.input,
     output: first.usage.output + second.usage.output,

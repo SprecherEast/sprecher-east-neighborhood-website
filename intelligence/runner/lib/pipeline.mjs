@@ -1,5 +1,7 @@
 import { randomBytes } from 'node:crypto'
 
+import { backgroundNote, newTally } from './background.mjs'
+import { newErrorLog } from './errorLog.mjs'
 import { staleBoundaryProblem } from './boundary.mjs'
 import { withoutSuggestions } from './cms.mjs'
 import { createPlacer } from './place.mjs'
@@ -43,7 +45,7 @@ export async function runPipeline({
   const budgets = pipeline.budgets ?? {}
   const runId = newRunId(startedAt)
   const counts = Object.fromEntries(COUNTS.map((k) => [k, 0]))
-  const errors = []
+  const { errors, notes, addError, addNote, problemCount } = newErrorLog()
   const cost = { inputTokens: 0, outputTokens: 0, usd: 0 }
   const calls = []
   const log = {
@@ -60,7 +62,8 @@ export async function runPipeline({
     cost,
   }
   let upcoming = null
-  const addError = (text) => errors.length < 50 && errors.push(String(text).slice(0, 500))
+  // What each model call was given of the neighborhood background, for one note at the end
+  const background = newTally()
   const finish = async (status) => {
     log.status = status
     log.finishedAt = isoNow(now())
@@ -74,7 +77,7 @@ export async function runPipeline({
       errors: e,
       cost: k,
     })
-    return { log, calls, upcoming }
+    return { log, calls, upcoming, notes }
   }
 
   if (pipeline.enabled === false) {
@@ -113,6 +116,7 @@ export async function runPipeline({
       calls,
       addError,
       deferredSources,
+      background,
     })
   } catch (error) {
     // Something no item could cause (the taxonomy can't be read, a bug): log it and stop
@@ -130,16 +134,17 @@ export async function runPipeline({
   } catch (error) {
     addError(`upcoming events could not be counted: ${error.message}`)
   }
-  const status = stopped ?? (errors.length > 0 || counts.deferred > 0 ? 'partial' : 'succeeded')
-  // A low list is a note in the run log's errors, added after the status so that it doesn't make
-  // the run `partial` (the CMS run log has no field of its own for notes)
+  const status = stopped ?? (problemCount() > 0 || counts.deferred > 0 ? 'partial' : 'succeeded')
+  // A low list and the background note are notes, not errors (errorLog.mjs): kept in the run log's
+  // list, which has no field of its own for them, and out of the status
   const warning = upcoming ? lowEventsWarning(upcoming) : null
-  if (warning) addError(warning)
+  if (warning) addNote(warning)
+  addNote(backgroundNote(background, pipeline.background))
   try {
     await finish(status)
   } catch (error) {
     // The run log couldn't be closed; the items handled are still recorded in the state
     console.error(`The run log could not be updated: ${error.message}`)
   }
-  return { log, calls, upcoming }
+  return { log, calls, upcoming, notes }
 }
