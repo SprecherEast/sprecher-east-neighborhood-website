@@ -189,6 +189,6 @@
 
 /* What the root layout gets from the two `.variable` classes: the variables the theme's `font-sans` reads */
 :root {
-  --font-poppins: 'Poppins';
   --font-poppins-ext: 'Poppins Latin Ext';
+  --font-poppins: 'Poppins';
 }

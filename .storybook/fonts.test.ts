@@ -81,6 +81,15 @@ describe('the showcase font', () => {
     expect(showcaseFont).toMatch(/:root\s*{[^}]*--font-poppins: 'Poppins';/)
   })
 
+  it('declares the latin-ext variable before the latin one, as font-sans reads them', () => {
+    // The theme's font-sans lists latin-ext first (src/platform/theme/fonts.test.ts says why); the showcase
+    // reads that same font-sans, and its variables are declared in the same order so the two stay equal.
+    expect(showcaseFont.indexOf('--font-poppins-ext:')).toBeGreaterThan(-1)
+    expect(showcaseFont.indexOf('--font-poppins-ext:')).toBeLessThan(
+      showcaseFont.indexOf('--font-poppins:'),
+    )
+  })
+
   it('is loaded by the showcase’s preview, which imports neither the site font nor next/font', () => {
     const preview = read('.storybook/preview.tsx')
     expect(preview).toMatch(/import '\.\/fonts\.css'/)

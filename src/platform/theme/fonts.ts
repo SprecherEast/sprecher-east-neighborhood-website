@@ -4,7 +4,7 @@ import localFont from 'next/font/local'
  * The site's body font, defined once (a Next.js "font definitions file"): the root layout imports it. The
  * files are Poppins' latin and latin-ext subsets (SIL OFL 1.1, licence in `fonts/OFL.txt`), kept in `fonts/`
  * and served by Next.js from the site itself. The CSS variables are the ones the theme's `font-sans` reads
- * (`globals.css`), latin first. The component showcase is built by Vite, not Next.js, so
+ * (`globals.css`), latin-ext first (see below). The component showcase is built by Vite, not Next.js, so
  * `.storybook/fonts.css` declares the same faces over the same files; add or drop a face here and
  * `.storybook/fonts.test.ts` fails until that file follows.
  *
@@ -32,7 +32,10 @@ export const poppins = localFont({
 /**
  * Letters outside the latin subset that names carry (Polish, Czech, Turkish, Romanian, Vietnamese…). Not
  * preloaded, and limited by `unicode-range`, so a page without such a letter never fetches these files.
- * It sits after `poppins` in `font-sans`: a letter the latin file lacks falls to this one.
+ * It sits BEFORE `poppins` in `font-sans`: next/font puts its Arial fallback inside `--font-poppins`, so with
+ * latin first a letter the latin file lacks (Ł, ő, Ş) would fall to Arial, wherever Arial is installed, and
+ * this file would never be fetched. The `unicode-range` leaves out every latin letter and the space, so latin
+ * text skips this family and its line metrics are unchanged.
  */
 export const poppinsLatinExt = localFont({
   src: [

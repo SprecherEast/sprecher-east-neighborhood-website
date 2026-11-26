@@ -310,6 +310,7 @@ describe('developer-site-check.sh: size and fonts', () => {
     ['a name that only ends in woff2', (n) => write(`showcase/assets/${n}-hwoff2`, 'x')],
     ['a name with no hash after the face', (n) => write(`showcase/assets/${n}.woff2`, 'x')],
     ['a name with no dash before the hash', (n) => write(`showcase/assets/${n}h.woff2`, 'x')],
+    ['a name with something before the face', (n) => write(`showcase/assets/x${n}-h.woff2`, 'x')],
     ['a file outside the showcase', (n) => write(`${n}-h.woff2`, 'x')],
   ])
     it(`does not count ${why}`, async () => {

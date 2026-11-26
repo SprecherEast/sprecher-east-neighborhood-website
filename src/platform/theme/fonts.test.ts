@@ -33,9 +33,20 @@ describe('the site font', () => {
     expect(ext.range).toContain('U+A720-A7FF')
   })
 
-  it('keeps the CSS variables the theme reads, latin first, latin-ext after it', () => {
+  it('reads latin-ext BEFORE latin in font-sans, because --font-poppins carries next/font’s Arial fallback', () => {
+    // next/font puts its metric-matched fallback (`local(Arial)`, no unicode-range) inside --font-poppins. With
+    // latin first, a letter the latin file lacks (Ł, ő, Ş) goes to that fallback and Arial has it: on a
+    // machine with Arial (iPhone, Mac, Windows) the latin-ext file is never reached. Latin-ext's own
+    // unicode-range leaves out every latin letter and the space, so latin text skips straight to latin and
+    // line metrics are unchanged.
     const css = read('src/app/(frontend)/globals.css')
-    expect(css).toContain('var(--font-poppins), var(--font-poppins-ext),')
+    const sans = css.match(/--font-sans:\s*([^;]+);/)?.[1] ?? ''
+    expect(
+      sans
+        .split(',')
+        .map((part) => part.trim())
+        .slice(0, 2),
+    ).toEqual(['var(--font-poppins-ext)', 'var(--font-poppins)'])
     const layout = read('src/app/(frontend)/layout.tsx')
     expect(layout).toMatch(/poppins\.variable/)
     expect(layout).toMatch(/poppinsLatinExt\.variable/)

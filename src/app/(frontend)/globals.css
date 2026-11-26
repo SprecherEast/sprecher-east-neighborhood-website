@@ -56,7 +56,7 @@
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 86rem;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  --font-sans: var(--font-poppins), var(--font-poppins-ext), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-poppins-ext), var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer utilities {
