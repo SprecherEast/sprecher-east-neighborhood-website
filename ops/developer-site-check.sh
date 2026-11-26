@@ -4,7 +4,7 @@
 # showcase, and nothing else: no link (a link could lead Caddy, which can read what the web server's
 # user can, to a file that is not meant to be public), no file with another name elsewhere, nothing that
 # is private by name, nothing anyone can write to, nothing over the size cap, and no reference to a
-# third-party font host, and the showcase carries the font files (the font is the site's own, served
+# third-party font host, and the showcase carries each of the site's own font files (the font is served
 # from here). It judges the folder by what is in it and trusts
 # nothing about how it was made. Prints each problem, never a file's content (the deploy log is public).
 #
@@ -22,6 +22,8 @@ if [ "${1:-}" = --source ]; then
   shift
 fi
 folder="${1:-}"
+release=$(cd "$(dirname "$0")/.." && pwd)
+fonts_dir="$release/src/platform/theme/fonts" # the one list of the site's faces
 problems=0
 fail() {
   echo "not served: $*"
@@ -82,9 +84,19 @@ grep -rilZF -e fonts.googleapis.com -e fonts.gstatic.com . >"$matches" 2>/dev/nu
 [ "$status" -le 1 ] || fail "the folder could not be read to look for font hosts"
 while IFS= read -r -d '' path; do fail "names a third-party font host: ${path#./}"; done <"$matches"
 
-# The showcase's build copies the site's own font files in (`.storybook/fonts.css`): none there means it
-# fell back to another source, or to no font at all.
-find showcase -type f -iname '*.woff2' -print -quit 2>/dev/null | grep -q . || fail "the showcase carries no font file"
+# The showcase carries the site's own faces: each file in the theme's font folder, which the release holds
+# like the rest of the repository, is in the build as `<face>-<hash>.woff2` (Vite's name for a copied file).
+# Storybook puts its own Nunito Sans files in every build, so a font file of any name proves nothing: a
+# build without the site's faces fell back to another source, or to no font at all.
+faces=0
+for font in "$fonts_dir"/*.woff2; do
+  [ -f "$font" ] || continue
+  faces=$((faces + 1))
+  face=$(basename "$font" .woff2)
+  [ -n "$(find showcase -type f -iname "$face-*.woff2" -print -quit 2>/dev/null)" ] ||
+    fail "the showcase is missing the site's font: $face"
+done
+[ "$faces" -gt 0 ] || fail "the site's font files are not at ${fonts_dir#"$release"/}"
 
 [ "$problems" -eq 0 ] || exit 1
 echo "developer site folder checked: it holds only the index page, the 404 page and the showcase"

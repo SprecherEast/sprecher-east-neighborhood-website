@@ -2,35 +2,83 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
+import { siteFontCalls } from '../src/platform/theme/testing/fontFaces'
+
 const root = path.join(__dirname, '..')
 const read = (file: string) => readFileSync(path.join(root, file), 'utf8')
 
-const siteFont = read('src/platform/theme/fonts.ts')
 const showcaseFont = read('.storybook/fonts.css')
-const siteFaces = [
-  ...siteFont.matchAll(
-    /path: '\.\/fonts\/([^']+)',\s*weight: '(\d+)',\s*style: '(normal|italic)'/g,
+const calls = siteFontCalls()
+
+// The family name each CSS variable is given in `.storybook/fonts.css`
+const family = (variable: string) =>
+  showcaseFont.match(new RegExp(`${variable}: '([^']+)';`))?.[1] ?? `(no ${variable})`
+
+const descriptor = (block: string, name: string) =>
+  block.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].trim() ?? ''
+
+// What the showcase declares, each @font-face read by its descriptors in any order. One that lacks a
+// descriptor reads as an empty value and so matches nothing in the site's list.
+const facesOf = (css: string) =>
+  css
+    .split('@font-face')
+    .slice(1)
+    .map((block) => {
+      const url = descriptor(block, 'src').match(
+        /^url\('\.\.\/src\/platform\/theme\/fonts\/([^']+)'\) format\('woff2'\)$/,
+      )?.[1]
+      return [
+        descriptor(block, 'font-family').replace(/'/g, ''),
+        url ?? '',
+        descriptor(block, 'font-weight'),
+        descriptor(block, 'font-style'),
+        descriptor(block, 'unicode-range').replace(/\s+/g, ''),
+        descriptor(block, 'font-display'),
+      ].join(' | ')
+    })
+const showcaseFaces = facesOf(showcaseFont)
+
+const siteFaces = calls.flatMap((call) =>
+  call.faces.map((face) =>
+    [family(call.variable), face.file, face.weight, face.style, call.range, 'swap'].join(' | '),
   ),
-].map(([, file, weight, style]) => `${file} ${weight} ${style}`)
-const showcaseFaces = [
-  ...showcaseFont.matchAll(
-    /@font-face\s*{\s*font-family: 'Poppins';\s*font-style: (normal|italic);\s*font-weight: (\d+);\s*font-display: swap;\s*src: url\('\.\.\/src\/platform\/theme\/fonts\/([^']+)'\) format\('woff2'\);\s*}/g,
-  ),
-].map(([, style, weight, file]) => `${file} ${weight} ${style}`)
+)
 
 // The showcase is built by Vite, not Next.js, so it cannot call fonts.ts (the Vite plugin that stands in for
 // Next's font loader writes Google's font addresses into the built page). It declares the same faces over
 // the same files, the site's own, and these tests keep the two lists equal and keep every font host and
 // every second copy of the files out of the showcase.
 describe('the showcase font', () => {
-  it('declares every face the site font has, over the same files, and nothing else', () => {
-    expect(siteFaces).toHaveLength(10)
+  it('declares every face the site font has, over the same files, and no other', () => {
+    expect(siteFaces).toHaveLength(20)
     expect(showcaseFaces.sort()).toEqual([...siteFaces].sort())
   })
 
-  it('names the family and the variable the theme reads', () => {
-    expect(siteFont).toContain("variable: '--font-poppins'")
-    expect(showcaseFont).toMatch(/:root\s*{\s*--font-poppins: 'Poppins';\s*}/)
+  it('rejects an extra face however its lines are ordered, and one with a line missing', () => {
+    const face = (lines: string) => `${showcaseFont}\n@font-face {\n${lines}}\n`
+    const lines = [
+      "  src: url('../src/platform/theme/fonts/poppins-latin-400-normal.woff2') format('woff2');\n",
+      '  font-weight: 800;\n',
+      "  font-family: 'Poppins';\n",
+      '  font-style: normal;\n',
+      '  font-display: swap;\n',
+    ]
+    // Whole, in an order the site's own list never uses
+    expect(facesOf(face(lines.join(''))).sort()).not.toEqual([...siteFaces].sort())
+    expect(facesOf(face(lines.join(''))).length).toBe(siteFaces.length + 1)
+    // With each line left out in turn
+    for (const [index] of lines.entries()) {
+      const css = face(lines.filter((_, i) => i !== index).join(''))
+      expect(facesOf(css).sort(), `without line ${index}`).not.toEqual([...siteFaces].sort())
+    }
+    // The real file is equal, so none of the above is a false alarm
+    expect(showcaseFaces.sort()).toEqual([...siteFaces].sort())
+  })
+
+  it('names the families and the variables the theme reads', () => {
+    expect(family('--font-poppins')).toBe('Poppins')
+    expect(family('--font-poppins-ext')).toBe('Poppins Latin Ext')
+    expect(showcaseFont).toMatch(/:root\s*{[^}]*--font-poppins: 'Poppins';/)
   })
 
   it('is loaded by the showcase’s preview, which imports neither the site font nor next/font', () => {

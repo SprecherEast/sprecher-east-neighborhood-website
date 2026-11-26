@@ -8,6 +8,7 @@ import path from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { siteFaces, writeShowcaseFonts } from './developer-site-fonts.mjs'
 import { OPS } from './umami-harness.mjs'
 
 let dir = ''
@@ -28,10 +29,7 @@ beforeEach(() => {
   ])
     write(f, '<!doctype html><title>x</title>\n')
   write('showcase/assets/app.js', 'console.log(1)\n')
-  fs.writeFileSync(
-    p('showcase/assets/poppins-latin-400-normal.woff2'),
-    Buffer.from('wOF2\0\x01', 'latin1'),
-  )
+  writeShowcaseFonts(p('showcase'))
 })
 afterEach(() => fs.rmSync(dir, { recursive: true, force: true }))
 
@@ -242,21 +240,100 @@ describe('developer-site-check.sh: size and fonts', () => {
     expect(code, out).toBe(0)
   })
 
-  // The showcase uses the site's own font files, which Vite copies into the build. A build without any
-  // is one that fell back to another source, or to no font at all: it is not served.
-  it('refuses a showcase that carries no font file, since the font is served from here', async () => {
-    fs.rmSync(p('showcase/assets/poppins-latin-400-normal.woff2'))
-    await refused('the showcase carries no font file')
+  // The showcase must carry the site's own faces, the ones in src/platform/theme/fonts/ (the one list),
+  // which Vite copies into the build as `<face>-<hash>.woff2`. Storybook's own Nunito Sans files are in
+  // every build, so any font file is not enough: a build without the site's faces fell back to another
+  // source, or to no font at all.
+  const showcaseFont = (name) => p('showcase', name)
+  const only = (name) => {
+    fs.rmSync(p('showcase'), { recursive: true })
+    write('showcase/index.html')
+    write('showcase/iframe.html')
+    writeShowcaseFonts(p('showcase'), { withSiteFont: false })
+    if (name) {
+      fs.mkdirSync(path.dirname(showcaseFont(name)), { recursive: true })
+      fs.writeFileSync(showcaseFont(name), 'wOF2')
+    }
+  }
+  const face = 'poppins-latin-400-normal'
+
+  it('reads twenty faces, in two subsets, from the theme’s font folder', () => {
+    expect(siteFaces()).toHaveLength(20)
+    expect(siteFaces().filter((name) => name.includes('latin-ext'))).toHaveLength(10)
   })
 
-  it('counts a font file in any letter case, and only inside the showcase', async () => {
-    fs.rmSync(p('showcase/assets/poppins-latin-400-normal.woff2'))
-    write('stray.woff2')
-    await refused('the showcase carries no font file')
-    fs.rmSync(p('stray.woff2'))
-    fs.writeFileSync(p('showcase/assets/F.WOFF2'), 'x')
+  it('accepts a real build: the site’s faces beside Storybook’s own fonts', async () => {
     const { code, out } = await check()
     expect(code, out).toBe(0)
+  })
+
+  it('refuses a showcase that carries Storybook’s Nunito Sans files and none of the site’s', async () => {
+    only()
+    const { code, out } = await check()
+    expect(code, out).toBe(1)
+    for (const name of siteFaces())
+      expect(out).toContain(`the showcase is missing the site's font: ${name}`)
+  })
+
+  it('names the one face that is missing, and only that one', async () => {
+    fs.rmSync(p(`showcase/assets/${face}-C8OXljZJ.woff2`))
+    const { code, out } = await check()
+    expect(code).toBe(1)
+    expect(out.match(/missing the site's font/g)).toHaveLength(1)
+    expect(out).toContain(`the site's font: ${face}\n`)
+  })
+
+  it('wants the latin-ext faces too, not only the latin ones', async () => {
+    fs.rmSync(p('showcase/assets/poppins-latin-ext-700-italic-C8OXljZJ.woff2'))
+    await refused("the showcase is missing the site's font: poppins-latin-ext-700-italic")
+  })
+
+  it('counts a face in any letter case, at any depth of the showcase', async () => {
+    only()
+    let i = 0
+    for (const name of siteFaces())
+      write(
+        i++ % 2
+          ? `showcase/deep/er/${name.toUpperCase()}-AbC.WOFF2`
+          : `showcase/${name}-x_-9.woff2`,
+      )
+    const { code, out } = await check()
+    expect(code, out).toBe(0)
+  })
+
+  for (const [why, build] of [
+    [
+      'a folder named like the file',
+      (n) => fs.mkdirSync(p(`showcase/assets/${n}-h.woff2`), { recursive: true }),
+    ],
+    ['the older woff format', (n) => write(`showcase/assets/${n}-h.woff`, 'x')],
+    ['a name that only ends in woff2', (n) => write(`showcase/assets/${n}-hwoff2`, 'x')],
+    ['a name with no hash after the face', (n) => write(`showcase/assets/${n}.woff2`, 'x')],
+    ['a name with no dash before the hash', (n) => write(`showcase/assets/${n}h.woff2`, 'x')],
+    ['a file outside the showcase', (n) => write(`${n}-h.woff2`, 'x')],
+  ])
+    it(`does not count ${why}`, async () => {
+      fs.rmSync(p(`showcase/assets/${face}-C8OXljZJ.woff2`))
+      build(face)
+      await refused(`the showcase is missing the site's font: ${face}`)
+    })
+
+  it('refuses when the theme’s font folder is not where the release has it', async () => {
+    const release = path.join(dir, 'release')
+    fs.mkdirSync(path.join(release, 'ops'), { recursive: true })
+    for (const f of ['developer-site-check.sh', 'environment.sh'])
+      fs.copyFileSync(path.join(OPS, f), path.join(release, 'ops', f))
+    const { code, out } = await new Promise((resolve) => {
+      const child = spawn('bash', [path.join(release, 'ops/developer-site-check.sh'), p()], {
+        env: { PATH: process.env.PATH },
+      })
+      let text = ''
+      child.stdout.on('data', (d) => (text += d))
+      child.stderr.on('data', (d) => (text += d))
+      child.on('close', (c) => resolve({ code: c, out: text }))
+    })
+    expect(code).toBe(1)
+    expect(out).toContain("the site's font files are not at")
   })
 })
 

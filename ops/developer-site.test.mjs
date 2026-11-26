@@ -10,6 +10,7 @@ import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { SEES_AND_DUPLICATES } from './preview-access-harness.mjs'
+import { siteFaces, writeShowcaseFonts } from './developer-site-fonts.mjs'
 import { OPS } from './umami-harness.mjs'
 
 const SCRIPTS = [
@@ -49,6 +50,9 @@ function makeRelease(name, { live = true, showcase = true } = {}) {
   for (const f of SCRIPTS) write(path.join(code, 'ops', f), fs.readFileSync(path.join(OPS, f)))
   for (const f of ['developer-site.caddy', 'preview-headers.caddy'])
     write(path.join(code, 'ops/caddy', f), fs.readFileSync(path.join(OPS, 'caddy', f)))
+  // The release carries the whole repository, so the check finds the theme's font folder in it
+  for (const face of siteFaces())
+    write(path.join(code, 'src/platform/theme/fonts', `${face}.woff2`), 'wOF2')
   for (const f of ['index.html', '404.html', 'style.css'])
     write(
       path.join(code, 'ops/developer-site', f),
@@ -61,7 +65,7 @@ function makeRelease(name, { live = true, showcase = true } = {}) {
         `<!doctype html><title>${name}</title>\n`,
       )
     write(path.join(code, 'developer-site/showcase/assets/app.js'), `console.log("${name}")\n`)
-    write(path.join(code, 'developer-site/showcase/assets/poppins-latin-400-normal.woff2'), 'wOF2')
+    writeShowcaseFonts(path.join(code, 'developer-site/showcase'))
   }
   if (live) {
     fs.rmSync(p('app/current'), { force: true })
@@ -483,12 +487,14 @@ describe('developer-site.sh: what is served is judged first', () => {
     stays()
   })
 
-  it('serves nothing from a showcase that carries no font file, and keeps the previous developer site', async () => {
+  it('serves nothing from a showcase that lacks one of the site’s faces, and keeps the previous developer site', async () => {
     await publishedThenNewRelease()
-    fs.rmSync(p('app/releases/r2/developer-site/showcase/assets/poppins-latin-400-normal.woff2'))
+    fs.rmSync(
+      p('app/releases/r2/developer-site/showcase/assets/poppins-latin-400-normal-C8OXljZJ.woff2'),
+    )
     const { code, out } = await run('r2')
     expect(code).toBe(1)
-    expect(out).toContain('the showcase carries no font file')
+    expect(out).toContain("the showcase is missing the site's font: poppins-latin-400-normal")
     stays()
   })
 

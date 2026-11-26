@@ -36,7 +36,7 @@ developer site, files and block, as it was:
    Then it and the pages are copied into a staging folder, which `developer-site-check.sh` judges again: only
    `index.html`, `404.html`, `style.css` and `showcase/`; no link, no file with another name elsewhere, no hidden
    name, no file named like a database (with its `-wal` and `-shm`), key, dump, archive, backup, log or environment
-   file, in any letter case, nothing writable by anyone, at most `DEVELOPER_MAX_BYTES` (100 MiB), no mention of Google's font hosts in any file, in any letter case, and a font file in the showcase. Then it is renamed into
+   file, in any letter case, nothing writable by anyone, at most `DEVELOPER_MAX_BYTES` (100 MiB), no mention of Google's font hosts in any file, in any letter case, and each of the site's font files (every file in `src/platform/theme/fonts/`, which the release holds) in the showcase as `<face>-<hash>.woff2`: Storybook's own Nunito Sans files are in every build and do not count. Then it is renamed into
    `releases/<release>`.
 4. **The block.** Made from the template, checked by Caddy alone, then `caddy_place_block` (`caddy-block-lib.sh`,
    the function `preview-caddy.sh` uses too) makes a whole, compared copy of the previous block, moves the new
