@@ -1,7 +1,7 @@
 ---
 name: 'Contact'
 type: module
-summary: 'form checks, held emails.'
+summary: 'form checks, held emails, retention.'
 aliases: ['forms', 'form submissions']
 relationships: [{ 'type': 'depends-on', 'target': 'src/modules/verification/README.md' }]
 ---

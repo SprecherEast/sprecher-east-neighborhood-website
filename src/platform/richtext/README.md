@@ -1,7 +1,7 @@
 ---
 name: 'Rich text'
 type: platform-area
-summary: 'article text and blocks.'
+summary: 'article text, blocks, Markdown tags.'
 aliases: ['editorial blocks', 'article text']
 relationships: []
 ---

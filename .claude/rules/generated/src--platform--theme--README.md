@@ -9,7 +9,7 @@ paths:
 ---
 name: 'Theme'
 type: platform-area
-summary: 'tokens, light and dark.'
+summary: 'tokens, light and dark, theme options.'
 aliases: ['design tokens', 'dark mode']
 relationships: []
 ---

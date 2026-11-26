@@ -10,7 +10,7 @@ paths:
 ---
 name: 'News'
 type: module
-summary: 'posts, search, categories.'
+summary: 'posts, bylines, search, categories, top issues.'
 aliases: ['posts', 'categories']
 relationships: []
 ---
