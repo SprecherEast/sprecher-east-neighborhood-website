@@ -142,4 +142,34 @@ print(s.EVENT_SCENE_SCALE < 1, 'scale(' + str(s.EVENT_SCENE_SCALE) + ')' in svg)
     )
     expect(r.stdout.trim()).toBe('True True')
   })
+
+  it('draws the calendar page and the roast turkey once, shared by the scenes that show them', () => {
+    const r = run(
+      `from scripts.illustrations import parts
+from scripts.illustrations.scenes import SCENES
+trash, thanks = SCENES['trash'](), SCENES['thanksgiving']()
+page = parts.calendar_page(615, 330, 'NOV', '26')
+print(page in trash, parts.roast_turkey(730, 676, .8) in trash, 'scale(.8)' in trash)
+print('>26</text>' in page, 'y="190"' in page, 'width="230" height="250"' in page)
+print(parts.calendar_page(560, 150, 'NOV', '26', w=190, h=210) in thanks, parts.roast_turkey(495, 512, .95) in thanks)`,
+    )
+    expect(r.stderr).toBe('')
+    expect(r.stdout.trim().split('\n')).toEqual(['True True True', 'True True True', 'True True'])
+  })
+
+  // Golden hashes of the two published pictures. The trash hash is the scene's output from before
+  // the turkey and the calendar page became shared parts, so the refactor changed nothing; any
+  // change to a part's drawing changes a published picture and must update these on purpose.
+  it('keeps the published trash and Thanksgiving pictures exactly as drawn', () => {
+    const r = run(
+      `import hashlib
+from scripts.illustrations.scenes import SCENES
+for name in ('trash', 'thanksgiving'): print(hashlib.sha256(SCENES[name]().encode()).hexdigest())`,
+    )
+    expect(r.stderr).toBe('')
+    expect(r.stdout.trim().split('\n')).toEqual([
+      'cfc85dab13029a54b27e99d0bb7e59275905e9b36395ca180aa88949ea9badaf',
+      '7128ee7d2ba3f20716f9c8ca4bf216817d2f05589dee6de4801170ce3a35715f',
+    ])
+  })
 })
