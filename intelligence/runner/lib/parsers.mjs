@@ -1,6 +1,12 @@
 import { parseFeed } from './feed.mjs'
 import { collapse, toSourceText } from './text.mjs'
-import { parseCityArticles, parseCityEvents, parseWisdotMeetings } from './html.mjs'
+import {
+  parseCityArticles,
+  parseCityEvents,
+  parseParkStatus,
+  parseParksEvents,
+  parseWisdotMeetings,
+} from './html.mjs'
 import { parseIcs } from './ics.mjs'
 import { parseIncidentReports } from './incidents.mjs'
 import { parseClock, zonedIso } from './time.mjs'
@@ -94,6 +100,12 @@ export const PARSERS = {
   'city-news': parseCityArticles,
   'city-public-info-meetings': parseCityEvents,
   'wisdot-i39-90-94': parseWisdotMeetings,
+  // Park and community pages (#995)
+  'madison-parks-events': parseParksEvents,
+  'mpo-events': parseCityEvents,
+  'alder-weekly-roundups': parseCityArticles,
+  'door-creek-park-ski': parseParkStatus,
+  'door-creek-park-ice': parseParkStatus,
   // The police feed's own layout: the block address, and the report's page as its identity (#993)
   'madison-police-incident-reports': parseIncidentReports,
 }

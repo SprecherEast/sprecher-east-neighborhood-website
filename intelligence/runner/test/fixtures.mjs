@@ -137,6 +137,11 @@ export const FEEDS = {
   'city-news': '<main><ul class="list--unstyled"></ul></main>',
   'city-public-info-meetings': '<main><ul class="list--items list--unstyled"></ul></main>',
   'wisdot-i39-90-94': '<h1>News and Meetings</h1>',
+  // The park and community pages (#995), with no items today: their parsers have their own tests
+  'madison-parks-events': '<main><ol class="list--items list--unstyled"></ol></main>',
+  'mpo-events': '<main><ol class="list--items list--unstyled"></ol></main>',
+  'alder-weekly-roundups': '<main><ul class="list--unstyled cards"></ul></main>',
+  'door-creek-park-status': '<main></main>',
   // The police feed (#993), with no items today: its parser has its own tests
   'madison-police-incident-reports':
     '<rss><channel><title>Police Incident Reports</title></channel></rss>',
@@ -148,6 +153,11 @@ const cityPages = {
   '/news': 'city-news',
   '/events/public-information-meetings': 'city-public-info-meetings',
   '/feed/incident-reports': 'madison-police-incident-reports',
+  '/parks/events': 'madison-parks-events',
+  '/mpo/events': 'mpo-events',
+  '/council/district3/blog': 'alder-weekly-roundups',
+  '/parks/find-a-park/winter/ski': 'door-creek-park-status',
+  '/parks/find-a-park/winter/ice-skating': 'door-creek-park-status',
 }
 
 /** A `fetch` double serving FEEDS by source, robots.txt allowing everything. */

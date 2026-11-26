@@ -155,6 +155,7 @@ describe('scouting the incident reports feed', () => {
       http: fakeHttp([{ via: 'direct', status: 200, contentType: 'application/rss+xml', body }]),
       budgets,
       validate,
+      lookAheadDays: contract.pipeline.lookAheadDays,
       now: atNoon(day),
     })
 

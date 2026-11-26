@@ -50,8 +50,8 @@ describe('when the CMS fails', () => {
       Object.keys(state.sources).filter((id) => withItems.includes(id)),
       [],
     )
-    // ...while the four HTML pages and the police feed, with nothing pending, do
-    assert.equal(Object.keys(state.sources).length, 5)
+    // ...while the nine HTML pages and the police feed, with nothing pending, do (#390, #993, #995)
+    assert.equal(Object.keys(state.sources).length, 10)
     assert.ok(cms.writes.some((w) => w.tool === 'updateAgentRuns'))
   })
 
@@ -157,6 +157,7 @@ describe('the per-source cap', () => {
   const options = {
     budgets: { ...budgets, maxItemsPerSource: 3 },
     validate: contract.validator('schemas/candidate.schema.json'),
+    lookAheadDays: contract.pipeline.lookAheadDays,
     now: atNoon('2026-10-25'),
   }
 

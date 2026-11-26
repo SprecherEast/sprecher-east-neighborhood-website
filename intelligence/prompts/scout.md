@@ -17,8 +17,13 @@ The registry, `sources.yaml`. Read only entries whose `$.sources[].result` is `v
 ## Steps
 
 1. For each source, build the request from `$.sources[].feedUrl`, or `$.sources[].canonicalUrl`
-   for an HTML page. Replace `{from}` with today's date and `{to}` with today plus 14 days
-   (`YYYY-MM-DD`, America/Chicago); replace `{cursor}` with the cursor saved by the last
+   for an HTML page. Replace `{from}` with today's date and `{to}` with today plus the look-ahead:
+   `$.sources[].lookAheadDays` when the source sets one, else `lookAheadDays` in `pipeline.yaml`
+   (60 days or more), as `YYYY-MM-DD` in America/Chicago. A calendar feed's repeating events are
+   walked to the same date. An HTML list shows what it shows, so the look-ahead doesn't cut it;
+   a list over several pages (`$.sources[].pages`) is read page by page (`?page=1`, `?page=2`),
+   whole every run, and stops at the first empty or failed page, keeping what it has and logging
+   the failure; replace `{cursor}` with the cursor saved by the last
    successful run, or 7 days ago on the first run.
 2. **Fetch directly first** (README.md, "Fetching"): one plain GET per source, with a clear user
    agent naming the site, a 30-second timeout, and the saved ETag or Last-Modified. Respect
@@ -60,7 +65,10 @@ The registry, `sources.yaml`. Read only entries whose `$.sources[].result` is `v
 6. **Same item, two sources.** When two pilot sources in one run have items with the same
    normalized title and start, keep one candidate from the higher-ranked source and list the
    other in `$.alsoReportedBy` (its `sourceId`, `sourceUrl` and `externalId`).
-7. **Seen means handled.** An item counts as seen only once it is submitted, reported or
+7. **Far-off items are read again.** Every source is read each run, so an item announced weeks
+   ahead comes back as `updated` when its details change closer to its date (a moved time, a
+   new place, a cancellation), and the next stages check it again.
+8. **Seen means handled.** An item counts as seen only once it is submitted, reported or
    rejected. One left over at a cap or a failure is deferred and comes back next run.
 
 ## Untrusted content

@@ -54,6 +54,7 @@ export async function processRun(run) {
       robots,
       budgets,
       validate: validateCandidate,
+      lookAheadDays: contract.pipeline.lookAheadDays,
       area: contract.area,
       now: startedAt,
     })

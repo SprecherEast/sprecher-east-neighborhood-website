@@ -170,7 +170,14 @@ describe('a run', () => {
     const calls = []
     const second = await run({ state: first.state, ask: model(calls) })
     assert.equal(calls.length, 0)
-    assert.ok(second.log.sourcesChecked.every((s) => s.status === 'not-modified'))
+    // A list over several pages is read whole every run (sources.yaml `pages`), so it isn't asked
+    // for a 304; with nothing changed it still sends nothing to a model
+    const wholeEveryRun = new Set(
+      contract.registry.sources.filter((s) => s.pages > 1).map((s) => s.id),
+    )
+    for (const s of second.log.sourcesChecked) {
+      assert.equal(s.status, wholeEveryRun.has(s.sourceId) ? 'ok' : 'not-modified', s.sourceId)
+    }
   })
 
   it('stops at the draft cap and keeps the rest for the next run', async () => {
@@ -181,9 +188,9 @@ describe('a run', () => {
     assert.equal(log.counts.deferred, 1)
     assert.equal(log.status, 'partial')
     // The deferred item's source keeps its old ETag, so it is fetched again
-    // (the four HTML pages and the police feed here have no items, so all five save theirs too, #390, #993)
+    // (the nine HTML pages and the police feed here have no items, so all ten save theirs too, #390, #993, #995)
     const kept = Object.keys(state.sources)
-    assert.equal(kept.length, 8)
+    assert.equal(kept.length, 13)
   })
 
   it('logs a disabled run and fetches nothing when the kill switch is off', async () => {

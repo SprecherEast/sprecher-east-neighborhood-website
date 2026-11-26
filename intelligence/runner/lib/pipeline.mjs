@@ -5,7 +5,8 @@ import { withoutSuggestions } from './cms.mjs'
 import { createPlacer } from './place.mjs'
 import { processRun } from './process.mjs'
 import { submitItem } from './submit.mjs'
-import { isoNow } from './time.mjs'
+import { dateIn, isoNow } from './time.mjs'
+import { checkUpcomingEvents, lowEventsWarning } from './upcoming.mjs'
 
 // One run (README.md): scout every pilot source, then take each new or changed item through
 // verify, curate and draft, and submit it; log the run in the CMS at the start and the end.
@@ -58,6 +59,7 @@ export async function runPipeline({
     errors,
     cost,
   }
+  let upcoming = null
   const addError = (text) => errors.length < 50 && errors.push(String(text).slice(0, 500))
   const finish = async (status) => {
     log.status = status
@@ -72,7 +74,7 @@ export async function runPipeline({
       errors: e,
       cost: k,
     })
-    return { log, calls }
+    return { log, calls, upcoming }
   }
 
   if (pipeline.enabled === false) {
@@ -117,12 +119,27 @@ export async function runPipeline({
     addError(`run failed: ${error.message}`)
     stopped = 'failed'
   }
+  try {
+    // Counted after the run, so what it just suggested (unpublished drafts) never counts
+    upcoming = await checkUpcomingEvents({
+      cms,
+      mark: pipeline.lowWater.upcomingEvents,
+      today: dateIn(startedAt),
+    })
+    if (upcoming.error) addError(`upcoming events could not be counted: ${upcoming.error}`)
+  } catch (error) {
+    addError(`upcoming events could not be counted: ${error.message}`)
+  }
   const status = stopped ?? (errors.length > 0 || counts.deferred > 0 ? 'partial' : 'succeeded')
+  // A low list is a note in the run log's errors, added after the status so that it doesn't make
+  // the run `partial` (the CMS run log has no field of its own for notes)
+  const warning = upcoming ? lowEventsWarning(upcoming) : null
+  if (warning) addError(warning)
   try {
     await finish(status)
   } catch (error) {
     // The run log couldn't be closed; the items handled are still recorded in the state
     console.error(`The run log could not be updated: ${error.message}`)
   }
-  return { log, calls }
+  return { log, calls, upcoming }
 }
