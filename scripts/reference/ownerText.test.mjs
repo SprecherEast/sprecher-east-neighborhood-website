@@ -28,14 +28,20 @@ describe('ownerText', () => {
     fs.rmSync(root, { recursive: true, force: true })
     const plugin =
       'the plugin `@payloadcms/plugin-x`, configured with code from module `contact` and module `verification`'
-    expect(found[0]).toEqual({ owner: plugin, file: '' })
-    expect(found[1]).toEqual({ owner: plugin, file: '' })
+    const data = { plugin: '@payloadcms/plugin-x', modules: ['contact', 'verification'] }
+    expect(found[0]).toEqual({ owner: plugin, file: '', ...data })
+    expect(found[1]).toEqual({ owner: plugin, file: '', ...data })
     expect(found[2].owner).toMatch(/^a plugin or Payload/)
   })
 
   it('names only the plugin when no module of ours configures it', () => {
     const configurers = new Map([['@payloadcms/plugin-x', []]])
     const found = ownerText(model('events', ['@payloadcms/plugin-x']), new Map(), configurers, '/x')
-    expect(found).toEqual({ owner: 'the plugin `@payloadcms/plugin-x`', file: '' })
+    expect(found).toEqual({
+      owner: 'the plugin `@payloadcms/plugin-x`',
+      file: '',
+      plugin: '@payloadcms/plugin-x',
+      modules: [],
+    })
   })
 })
