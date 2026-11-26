@@ -44,6 +44,8 @@ only when the run failed; the run log is in Admin → Agents → Agent Runs.
 | `lib/html.mjs`        | The HTML pages with no feed (#390): City article lists, City meetings, WisDOT meetings                                                 |
 | `lib/scout.mjs`       | Candidates with `externalId`, `contentHash` and `change`; the Legistar area filter                                                     |
 | `lib/model.mjs`       | The model adapter: OpenClaw (`openclaw agent --agent … --json`), or a fake for tests                                                   |
+| `lib/background.mjs`  | The neighborhood background a stage is given: the summary, the topic notes verify named, one token budget, the run log's note          |
+| `lib/errorLog.mjs`    | The run log's `errors` list: a cap that keeps room for the notes, which are not errors (#1434)                                         |
 | `lib/stages.mjs`      | One stage: prompt + coverage + item, schema check, one retry; verify's escalation, the promotion guard                                 |
 | `lib/gate.mjs`        | The one gate: what may be accepted and which tool it goes to; `lib/safety.mjs` reads the source list of `safety.yaml`                  |
 | `lib/submit.mjs`      | Runs the gate, then the MCP envelope, validation, one retry, follow-up review and image reports                                        |

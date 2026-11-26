@@ -47,6 +47,14 @@ this stage (its collection, id, hash and status), or null when the CMS has none.
    when). Otherwise those can be empty or null. An official's own post (an alder's blog) is the
    official's announcement: say so in the reasons, never present it as neutral news.
 
+## Neighborhood background
+
+You are given a short summary of what the City planned for the area, and the detailed notes
+verify asked for (`$.verification.backgroundTopics`). Use them to judge whether an item belongs
+and what it means for neighbors. A plan says what was expected, never what exists, and its
+figures are old: write "the plan expected" with its year, and never state a plan figure as today's.
+The item's own source stays the evidence.
+
 ## Safety
 
 Set `$.safety` by the definition in `safety.yaml`. A safety item is never `accept`. The runner

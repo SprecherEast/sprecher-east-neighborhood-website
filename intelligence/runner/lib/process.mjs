@@ -15,7 +15,7 @@ const MAX_FAILURES_IN_A_ROW = 3
 export async function processRun(run) {
   // What the run reads, then what it records into
   const { contract, cms, submit, place, ask, state, http, robots, budgets } = run
-  const { startedAt, runId, log, calls, addError, deferredSources } = run
+  const { startedAt, runId, log, calls, addError, deferredSources, background } = run
   const { counts, cost } = log
   // Measured on the real clock, whatever `now` says (tests pin it)
   const deadline = Date.now() + (budgets.maxMinutesPerRun ?? 15) * 60_000
@@ -121,10 +121,10 @@ export async function processRun(run) {
         if (page) item.reportPage = page
       }
       modelItems++
-      const verify = await runVerify(contract, ask, item, { deadline })
+      const verify = await runVerify(contract, ask, item, { deadline, tally: background })
       // Code places the item by the City's boundary when it can, and says how (place.mjs)
       item.verification = await place(verify.output, candidate, { deadline })
-      const curate = await runStage(contract, ask, 'curate', item, { deadline })
+      const curate = await runStage(contract, ask, 'curate', item, { deadline, tally: background })
       item.curation = curate.output
       addUsage(cost, verify.usage, curate.usage)
       // Code, not the prompt, decides what may be accepted and where it goes (gate.mjs); submit

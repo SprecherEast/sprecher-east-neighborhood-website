@@ -83,6 +83,15 @@ Other sources (`established-media`, `community`) still need a primary source for
    conflict. Below `escalation.verifyBelowConfidence` in `pipeline.yaml` (0.6), the runtime runs
    this stage once more at high effort; if it's still below, the item goes to review.
 
+## Neighborhood background
+
+You are given a short summary of what the City planned for the area, with a list of detailed
+notes. It is context for judging whether an item fits what was planned, never evidence of what
+exists: a plan is not a street. When the item turns on a detail a note holds (a planned road,
+park, school or land use, an amendment), name that note's id in `$.backgroundTopics`, at most one
+(the one it turns on most); the next stage is given it. Judge by what the item means, not by the
+words in it. Leave `$.backgroundTopics` empty when the summary is enough.
+
 ## Safety
 
 Set `$.safety` by the definition in `safety.yaml`. The runner reads no text of the item and holds

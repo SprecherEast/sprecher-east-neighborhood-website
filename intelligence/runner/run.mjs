@@ -91,7 +91,8 @@ async function main() {
     if (!dryRun) saveState(statePath, state)
     await cms?.close?.()
   }
-  const { log, calls, upcoming } = result
+  const { log, calls, upcoming, notes = [] } = result
+  const problems = log.errors.filter((entry) => !notes.includes(entry))
   if (flags.digest)
     writeFileSync(flags.digest, `${JSON.stringify({ dryRun, log, upcoming, calls }, null, 2)}\n`)
   const c = log.counts
@@ -102,7 +103,8 @@ async function main() {
       (upcoming?.count == null
         ? 'Upcoming events: not counted.'
         : `Upcoming events: ${upcoming.count}${upcoming.low ? ` (low, under ${upcoming.mark})` : ''}.`) +
-      (log.errors.length ? ` Errors: ${log.errors.slice(0, 3).join(' | ')}` : ''),
+      (problems.length ? ` Errors: ${problems.slice(0, 3).join(' | ')}` : '') +
+      (notes.length ? ` Notes: ${notes.join(' | ')}` : ''),
   )
   process.exitCode = log.status === 'failed' ? 1 : 0
 }

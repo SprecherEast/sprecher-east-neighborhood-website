@@ -82,7 +82,7 @@ run the same folder.
    (`common.schema.json#/$defs/taxonomy`), so the draft stage picks only existing categories
    (#363). Add each item's `source` from `sources.yaml` (owner, reliability, scope), so verify
    can treat an official feed's own date, time and venue fields as the primary source.
-4. For each stage in order, give the model the stage's prompt, `coverage.md`, and the item as
+4. For each stage in order, give the model the stage's prompt, `coverage.md`, its [background](stage-context.md), and the item as
    JSON; validate its answer against the stage's `output` schema. When verify's `confidence` is below
    `escalation.verifyBelowConfidence` (0.6), run verify once more at high effort. An answer that doesn't validate
    is retried once, then the item goes to review with the error.

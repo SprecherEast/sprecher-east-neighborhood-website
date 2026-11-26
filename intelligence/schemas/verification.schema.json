@@ -116,6 +116,13 @@
     "flags": {
       "$ref": "common.schema.json#/$defs/flags"
     },
+    "backgroundTopics": {
+      "description": "Id of the one background topic note (pipeline.yaml `background.topics`) whose detail this item turns on. Empty or absent when the summary is enough. Judged by meaning; the next stage is given the note while it fits the budget (one note fits with the summary, two never do).",
+      "type": "array",
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common.schema.json#/$defs/sourceId" }
+    },
     "safety": {
       "$ref": "common.schema.json#/$defs/safety"
     },
