@@ -59,6 +59,8 @@ Four things, in this order, in one reply. Nothing here waits for the owner befor
    says; when none was posted in the last seven days, offer one in one line.
 
 Dispatch only after the owner agrees to the batch, or when he has already said to keep going.
+Before the first look at step 3, and again before every later one, [look for changes made
+elsewhere](#8-look-for-changes-made-elsewhere).
 
 ## 2. Groom
 
@@ -80,7 +82,8 @@ then the [Backlog to Ready criteria](../../../docs/process/grooming-playbook.md#
 
 ## 3. Overlap check
 
-Before every claim, with the candidate and every issue In progress:
+Before every claim, after [looking for changes made elsewhere](#8-look-for-changes-made-elsewhere)
+(a task another session has claimed is never started), with the candidate and every issue In progress:
 
 1. Collect them into a JSON list (one entry per issue, the body is enough):
 
@@ -179,3 +182,29 @@ Once a week and whenever the owner asks, run the
 came back from review, where the owner had to step in, and what to automate next. It reads GitHub
 only, through `gh api`, and says what it could not measure. Each finding that needs a change
 becomes an issue, filed and groomed like any other.
+
+## 8. Look for changes made elsewhere
+
+The owner steers this repository from more than one session and more than one AI tool at once, and
+GitHub is the one record of who is doing what: no separate handoff note exists. What you read at
+the start of the session goes stale, so ask GitHub what changed since your last look, and plan
+around it. Look at session start, each time you resume after waiting (a worker report, a finished
+check, a notification), and always before you start, dispatch or merge anything.
+
+Read three things: tasks in progress or newly claimed, tasks newly created, and changes of priority
+or labels, `needs owner` included. Never start a task another session has claimed. When the owner
+reordered work elsewhere, re-plan the batch before you act. `since` matches the last update, so
+one query returns issues and pull requests alike:
+
+```bash
+gh api --paginate "repos/{owner}/{repo}/issues?state=all&since=$last_look&sort=updated&direction=asc&per_page=100" \
+  -q '.[] | "#\(.number)\(if .pull_request then " (PR)" else "" end) \(.updated_at) [\([.labels[].name] | join(", "))] \(.assignees | map(.login) | join(",")) \(.title)"'
+```
+
+Keep `last_look` (a UTC time such as `2026-01-31T09:00:00Z`) in your own working notes and set it to
+the time the query ran. The first look of a session covers the time since the last
+[handoff](../../../docs/process/project-management.md#session-handoff) comment on the issues in
+play, or the last day when there is none.
+
+A session that does not manage workers does the counterpart: it writes each decision and each new
+piece of work on the GitHub task before it ends its turn, so any other session finds it there.
