@@ -9,21 +9,21 @@ The agents never publish. They create **suggested drafts**; an editor reads, fix
 
 ## What's here
 
-| Path                                   | What it is                                                                                     |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [`pipeline.yaml`](pipeline.yaml)       | The settings a runtime reads first: kill switch, schedule, budgets, stages                     |
-| [`sources.yaml`](sources.yaml)         | Approved sources, each checked by hand ([summary](sources.md))                                 |
-| [`coverage.md`](coverage.md)           | The Sprecher East area and the relevance policy                                                |
-| [`area.yaml`](area.yaml)               | The words and boundary record used to spot the area: places, neighbors, highway rules          |
-| [`boundary.json`](boundary.json)       | The City's boundary for the area, a dated copy (#1009); `run.mjs --refresh-boundary` renews it |
-| [`safety.yaml`](safety.yaml)           | What counts as a safety item, which always waits for a person                                  |
-| [`background.md`](background.md)       | The City's 1998 neighborhood plan, summarized with pages (index; topics in `background/`)      |
-| [`images.md`](images.md)               | How to choose a story's or event's photo: real, free, on topic, level                          |
-| [`scheduled-run.md`](scheduled-run.md) | The rules for the scout that runs on a schedule in Claude: fetching, read-only, report layout  |
-| [`fetching.md`](fetching.md)           | How the daily runner reads a source: direct first, Playwright as a fallback, the hard nos      |
-| [`prompts/`](prompts/)                 | One prompt per stage, each naming its input and output schema                                  |
-| [`schemas/`](schemas/)                 | JSON Schemas for every file and every stage's output                                           |
-| [`evals/`](evals/)                     | Test cases per stage with the result a correct pipeline reaches                                |
+| Path                                   | What it is                                                                                       |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [`pipeline.yaml`](pipeline.yaml)       | The settings a runtime reads first: kill switch, schedule, budgets, stages                       |
+| [`sources.yaml`](sources.yaml)         | Approved sources, each checked by hand ([summary](sources.md))                                   |
+| [`coverage.md`](coverage.md)           | The Sprecher East area and the relevance policy                                                  |
+| [`area.yaml`](area.yaml)               | The words and boundary record used to spot the area: places, neighbors, highway rules            |
+| [`boundary.json`](boundary.json)       | The City's boundary for the area, a dated copy (#1009); `run.mjs --refresh-boundary` renews it   |
+| [`safety.yaml`](safety.yaml)           | What counts as a safety item, which always waits for a person                                    |
+| [`background.md`](background.md)       | The City's 1998 neighborhood plan, summarized with pages (index; topics in `background/`)        |
+| [`images.md`](images.md)               | How to choose a story's or event's photo: real, free, on topic, level                            |
+| [`scheduled-run.md`](scheduled-run.md) | The scout that runs on a schedule in Claude: set-up, stages by hand, fetching, report, notifying |
+| [`fetching.md`](fetching.md)           | How the daily runner reads a source: direct first, Playwright as a fallback, the hard nos        |
+| [`prompts/`](prompts/)                 | One prompt per stage, each naming its input and output schema                                    |
+| [`schemas/`](schemas/)                 | JSON Schemas for every file and every stage's output                                             |
+| [`evals/`](evals/)                     | Test cases per stage with the result a correct pipeline reaches                                  |
 
 ## The pipeline
 

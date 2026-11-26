@@ -11,24 +11,23 @@ text, secrets or personal details: the repository is public.
 ## Weekday neighborhood scout
 
 - **Runs:** on weekdays, in the early evening, Central time.
-- **Instructions:** the run rules are kept in the repository, in
-  [`intelligence/scheduled-run.md`](../../intelligence/scheduled-run.md) on `main`: what to set up
-  and read first, how to run the stages by hand, fetching, the read-only rule, duplicates, watch
-  items, the report layout and when to notify the owner. The schedule's prompt is to shrink to a
-  pointer at that file ([#1517](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1517)
-  is still open); where the two differ, the file wins, except that the read-only rule always holds.
-  The prompt also adds one temporary watch item set by the owner. That item is stored in the
-  schedule, not in the repository.
+- **Instructions:** the schedule's prompt only says to check out `main` and follow
+  [`intelligence/scheduled-run.md`](../../intelligence/scheduled-run.md), plus one temporary watch
+  item set by the owner, which is stored in the schedule, not in the repository. The file holds the
+  run rules: what to set up and read first, how to run the stages by hand, fetching, the read-only
+  rule, duplicates, watch items, the report layout and when to notify the owner. Where the prompt
+  and the file differ, the file wins, except that the read-only rule always holds.
 - **What it reads:** a fresh read-only checkout of `main`: the pipeline's settings and
-  instructions (the README, `pipeline.yaml`, coverage, area, sources, images and the stage
-  prompts). If `pipeline.yaml` has the pipeline disabled, it stops and reports that. It replaces
-  the submit stage with a report.
+  instructions (the README, `pipeline.yaml`, coverage, area, boundary, sources, images, the schemas
+  and the stage prompts). If `pipeline.yaml` has the pipeline disabled, it stops, writes a report
+  with only the run header saying so, and notifies the owner. It replaces the submit stage with a
+  report. It judges duplicates from the live site and other public pages.
 - **May not:** write anything outside its own report, apart from the one push notification to the
-  owner. It makes no CMS call, opens no issue or pull
-  request and publishes nothing.
+  owner. It makes no CMS call and holds no key for the CMS or its MCP endpoint, opens no issue or
+  pull request and publishes nothing.
 - **Ends with:** a report for the owner, who reviews it before any site update is made, in the
   layout the file sets. A push notification goes out only when the run found something to know
-  now or could not read its sources.
+  now, could not read its sources, or found the pipeline disabled.
 
 ## Not covered here
 
