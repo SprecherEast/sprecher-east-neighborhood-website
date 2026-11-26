@@ -1,7 +1,7 @@
 """Youth-led project grants: young neighbors around a board of project ideas, with a light bulb
 over it. No real place is drawn; the panel carries the facts."""
 from ..parts import *
-from .street_days import street
+from .street_days import road
 
 def note(x,y,col,rot=0):
     """A sticky note with two lines of text, its top left corner at (x, y)."""
@@ -16,7 +16,7 @@ def bulb(x,y,s=1):
 
 def scene_youth():
     b=grass()
-    b+=street(700,44)+f'<rect x="-10" y="744" width="1700" height="170" fill="#34405f" stroke="{NAVY}" stroke-width="{SW}"/><path d="M0,840 L1700,840" stroke="{YEL}" stroke-width="5" stroke-dasharray="40 26"/>'
+    b+=road(700,44,170,840)
     b+=tree(110,700,520)+tree(880,700,420,c="#7fb877",d="#5a9a60")
     b+=f'<rect x="268" y="480" width="12" height="230" fill="#8b5e3c" stroke="{NAVY}" stroke-width="{SW}"/><rect x="600" y="480" width="12" height="230" fill="#8b5e3c" stroke="{NAVY}" stroke-width="{SW}"/>'
     b+=f'<rect x="230" y="250" width="420" height="300" fill="#fff" stroke="{NAVY}" stroke-width="{SW}"/>'

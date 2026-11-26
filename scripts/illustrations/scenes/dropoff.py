@@ -1,7 +1,7 @@
 """The City's drop-off sites: a neighbor unloads flattened boxes and a leaf bag from a car at the
 curb, under autumn trees. No site is drawn as a named place; the panel carries the facts."""
 from ..parts import *
-from .street_days import bag, falling, street
+from .street_days import bag, falling, road
 
 def box(x,y,w,h):
     """A cardboard box standing on the ground, its bottom left corner at (x, y), taped along the top."""
@@ -11,7 +11,7 @@ def box(x,y,w,h):
 
 def scene_dropoff():
     b=grass()
-    b+=street(700,44)+f'<rect x="-10" y="744" width="1700" height="170" fill="#34405f" stroke="{NAVY}" stroke-width="{SW}"/><path d="M0,840 L1700,840" stroke="{YEL}" stroke-width="5" stroke-dasharray="40 26"/>'
+    b+=road(700,44,170,840)
     b+=tree(130,700,560,c="#e2a032",d="#c4762b")+tree(850,700,450,c="#d9583a",d="#b64329")
     b+=car(330,872,body=BLUE,w=310,suv=True)
     b+=box(470,744,110,90)+box(590,744,130,120)+box(500,654,100,80)+bag(790,748)
