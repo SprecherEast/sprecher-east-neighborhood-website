@@ -8,7 +8,7 @@ paths:
 ---
 name: 'Component gallery'
 type: feature
-summary: 'development-only page of every component.'
+summary: 'dev-only page.'
 aliases: ['gallery', 'dev gallery']
 relationships: []
 ---

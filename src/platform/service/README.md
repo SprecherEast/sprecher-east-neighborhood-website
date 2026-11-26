@@ -1,7 +1,7 @@
 ---
 name: 'Platform services'
 type: platform-area
-summary: 'email, robot check, counter, metadata.'
+summary: 'email, robot check, metadata.'
 aliases: ['turnstile', 'umami', 'seo', 'runUseCase']
 relationships: []
 ---

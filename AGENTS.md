@@ -134,23 +134,23 @@ Procedures are [Agent Skills](https://agentskills.io): a folder in `.agents/skil
 `SKILL.md` (a `name`, a `description`, then the steps). Codex loads them from there, Claude Code
 through the pointers in `.claude/skills/`, a human as plain Markdown.
 
-| Skill                                                                  | Use it when                                                       |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| [`change-workflow`](.agents/skills/change-workflow/SKILL.md)           | Before any change: issue to merge.                                |
-| [`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)                   | A PR depends on another open PR, or one in a stack changes.       |
-| [`write-code`](.agents/skills/write-code/SKILL.md)                     | Writing or moving code: where it goes, reuse, tests.              |
-| [`self-review`](.agents/skills/self-review/SKILL.md)                   | A change is done: review your own diff before the PR.             |
-| [`visual-design-review`](.agents/skills/visual-design-review/SKILL.md) | The change affects how pages look, or an image.                   |
-| [`make-illustration`](.agents/skills/make-illustration/SKILL.md)       | You make a post or event picture.                                 |
-| [`pr-review`](.agents/skills/pr-review/SKILL.md)                       | You review a PR you didn't write.                                 |
-| [`wrapped`](.agents/skills/wrapped/SKILL.md)                           | After a merge: verify, check the deploy, report.                  |
-| [`project-tracking`](.agents/skills/project-tracking/SKILL.md)         | Picking up, filing or reporting work: epics, milestone, blockers. |
-| [`chief-of-staff`](.agents/skills/chief-of-staff/SKILL.md)             | You are the chief of staff: questions, grooming, overlap, briefs. |
+| Skill                                                                  | Use it when                                |
+| ---------------------------------------------------------------------- | ------------------------------------------ |
+| [`change-workflow`](.agents/skills/change-workflow/SKILL.md)           | Before any change: issue to merge.         |
+| [`stacked-prs`](.agents/skills/stacked-prs/SKILL.md)                   | A PR depends on another open PR.           |
+| [`write-code`](.agents/skills/write-code/SKILL.md)                     | Writing or moving code.                    |
+| [`self-review`](.agents/skills/self-review/SKILL.md)                   | Before a PR: review your own diff.         |
+| [`visual-design-review`](.agents/skills/visual-design-review/SKILL.md) | A change affects how pages or images look. |
+| [`make-illustration`](.agents/skills/make-illustration/SKILL.md)       | A post or event picture.                   |
+| [`pr-review`](.agents/skills/pr-review/SKILL.md)                       | Reviewing a PR you didn't write.           |
+| [`wrapped`](.agents/skills/wrapped/SKILL.md)                           | After a merge.                             |
+| [`project-tracking`](.agents/skills/project-tracking/SKILL.md)         | Picking up, filing or reporting work.      |
+| [`chief-of-staff`](.agents/skills/chief-of-staff/SKILL.md)             | You are the chief of staff.                |
 
 Two skills come unchanged from Vercel (MIT, `SOURCE.md` in each, #424):
-[`vercel-react-best-practices`](.agents/skills/vercel-react-best-practices/SKILL.md) for React and
-Next.js performance, and [`vercel-composition-patterns`](.agents/skills/vercel-composition-patterns/SKILL.md)
-for component APIs. `write-code` and the reviews apply them; this repo's rules come first.
+[`vercel-react-best-practices`](.agents/skills/vercel-react-best-practices/SKILL.md) (React and
+Next.js performance) and [`vercel-composition-patterns`](.agents/skills/vercel-composition-patterns/SKILL.md)
+(component APIs). `write-code` and the reviews apply them; this repo's rules come first.
 
 ## Where knowledge lives
 
@@ -179,10 +179,10 @@ by itself when it opens a matching file; any other agent or person reads them by
 ## Tool adapters
 
 The other tools load this file themselves (Gemini via a one-line `GEMINI.md`, [start a
-session](docs/process/start-a-session.md)). Claude Code adds a thin adapter: `CLAUDE.md`, importing
-this file and the guard rails, and `.claude/`: a pointer to each skill, the subagents, and the rules that load a reference when the work touches its files,
-generated from that table. An adapter holds only what is specific to its tool. Never put a rule,
-procedure or fact only in an adapter: the other tools wouldn't see it.
+session](docs/process/start-a-session.md)). Claude Code adds `CLAUDE.md` (importing this file and
+the guard rails) and `.claude/` (skill pointers, subagents, and rules generated from that table that
+load a reference when the work touches its files). An adapter holds only what is specific to its
+tool. Never put a rule, procedure or fact only in an adapter: the other tools wouldn't see it.
 
 ## This is NOT the Next.js you know
 

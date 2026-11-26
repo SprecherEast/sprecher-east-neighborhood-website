@@ -1,12 +1,12 @@
 ---
-name: 'Payload admin and API routes'
+name: 'Payload routes'
 type: feature
-summary: 'the admin panel and REST and GraphQL routes.'
+summary: 'admin, REST, GraphQL.'
 aliases: ['admin panel', 'REST API', 'GraphQL']
 relationships: []
 ---
 
-# Payload admin and API routes
+# Payload routes
 
 The routes Payload generates and serves under `src/app/(payload)/`: the admin panel at `/admin`, the REST and GraphQL APIs under `/api`, and the GraphQL playground. They are Payload's own files (marked as generated, never edited here); what the site changes is in `src/payload.config.ts` ([the app shell](../README.md)). What each content type allows over these routes: the [content types](../../../docs/reference/content-types/README.md); every address: the [endpoints reference](../../../docs/reference/endpoints.md).
 

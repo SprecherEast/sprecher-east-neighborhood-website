@@ -1,12 +1,12 @@
 ---
-name: 'Seed and preview accounts'
+name: 'Seed'
 type: feature
-summary: 'demo content and the preview accounts.'
+summary: 'demo content, preview accounts.'
 aliases: ['seed', 'preview accounts', 'demo content']
 relationships: []
 ---
 
-# Seed and preview accounts
+# Seed
 
 Two things that fill an empty database: the demo seed (pages, posts, events, FAQ, resources, a contact form, placeholder pictures) that an admin runs in development, and the throwaway accounts of a pull request preview. In the CMS: it writes the same collections editors use, as a one-off; none of it is live content. A preview also copies the published site ([Preview copy](../../platform/payload/previewCopy/README.md)); the seed is what the rest of a preview starts from.
 

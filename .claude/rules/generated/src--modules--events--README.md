@@ -9,7 +9,7 @@ paths:
 ---
 name: 'Events'
 type: module
-summary: 'calendar, listings, "this week", official meetings.'
+summary: 'calendar, listings, this week.'
 aliases: ['calendar']
 relationships: [{ 'type': 'depends-on', 'target': 'src/modules/news/README.md' }]
 ---

@@ -1,7 +1,7 @@
 ---
 name: 'Preview copy'
 type: feature
-summary: 'what a preview copies from the live site.'
+summary: 'what a preview copies.'
 aliases: ['preview content']
 relationships: []
 ---

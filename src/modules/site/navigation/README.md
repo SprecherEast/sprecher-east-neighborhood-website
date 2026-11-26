@@ -1,7 +1,7 @@
 ---
 name: 'Site navigation'
 type: feature
-summary: 'header, footer, forum link, redirects.'
+summary: 'header, footer, redirects.'
 aliases: ['header', 'footer', 'redirects']
 relationships: [{ 'type': 'depends-on', 'target': 'src/modules/site/README.md' }]
 ---

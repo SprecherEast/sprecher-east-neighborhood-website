@@ -1,7 +1,7 @@
 ---
 name: 'Verification'
 type: module
-summary: 'email confirmation by link, retention.'
+summary: 'email confirmation links.'
 aliases: ['email confirmation']
 relationships: []
 ---

@@ -1,7 +1,7 @@
 ---
 name: 'Shared Payload code'
 type: platform-area
-summary: 'roles, drafts, review queue, jobs, media.'
+summary: 'roles, drafts, queue, jobs.'
 aliases: ['review queue', 'access policy']
 relationships: []
 ---
@@ -23,7 +23,7 @@ The helpers every collection is built from (`src/platform/payload/`). The rules 
 
 ## Behaviors and events
 
-- **Jobs run inside the app's one process:** scheduled publishing every minute (`default` queue, at most 10 a run) and the retention queue; Payload starts them on the first request through its routes, never during build (`jobRunners.ts`, `retentionJobs.ts`, decisions 0010 and 0011; listed in the [jobs reference](../../../docs/reference/jobs.md)). A job left processing for over an hour is queued again.
+- **Jobs run inside the app's one process:** scheduled publishing every minute (`default` queue, at most 10 a run) and the retention queue; Payload starts them on the first request through its routes, never during build (`jobRunners.ts`, `retentionJobs.ts`, decisions 0010 and 0011; listed in the [jobs reference](../../../docs/reference/jobs.md)). A retention job left processing for over an hour is queued again before the next is scheduled; the scheduled-publish queue has no such recovery.
 - **`expireCacheTag` drops a tag now,** as `revalidateTag(tag)` did before Next 16; hooks run outside actions, where `updateTag` is not available. A scheduled publish runs outside a request and cannot expire tags, so pages catch up within 10 minutes (`expireCacheTag.ts`, decision 0011).
 - **Edit locks and job stats** are open to any signed-in user in Payload with no option to change it, so `restrictEditLocks` (staff) and `restrictJobStats` (admin) reset them after the config is built; editors may queue and cancel jobs, only admins run them (`restrictEditLocks.ts`, `restrictJobStats.ts`).
 - **The seed is on in any non-production build** and off in production with no switch; its route answers 404 there and admins only elsewhere (`isSeedEnabled.ts`, `src/app/(frontend)/next/seed/route.ts`).

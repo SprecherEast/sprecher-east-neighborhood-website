@@ -95,7 +95,7 @@ paths:
 ---
 name: 'Rich text'
 type: platform-area
-summary: 'article text, editorial blocks, Markdown tags.'
+summary: 'article text and blocks.'
 aliases: ['editorial blocks', 'article text']
 relationships: []
 ---

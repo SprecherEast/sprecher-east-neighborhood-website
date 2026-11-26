@@ -1,7 +1,7 @@
 ---
 name: 'News'
 type: module
-summary: 'posts, bylines, search, categories, "top issues".'
+summary: 'posts, search, categories.'
 aliases: ['posts', 'categories']
 relationships: []
 ---

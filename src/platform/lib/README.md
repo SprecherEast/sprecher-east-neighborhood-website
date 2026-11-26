@@ -1,14 +1,14 @@
 ---
 name: 'Shared helpers'
 type: platform-area
-summary: 'pure helpers: dates, money, bill share.'
+summary: 'dates, money, bill share.'
 aliases: ['lib', 'bill share', 'message catalog']
 relationships: []
 ---
 
 # Shared helpers
 
-The pure, framework-free helpers every module and the UI kit use (`src/platform/lib/`). Nothing here touches Payload, React or the network, so the browser, a module's `domain/` and the proxy may all import it. It holds no CMS content; it holds the rules behind the numbers, dates, messages and limits the other notes name. Content shapes such as `RichTextValue` and `ImageRef` are types only (`content.ts`).
+The pure, framework-free helpers every module and the UI kit use (`src/platform/lib/`). Nothing here calls Payload, React or the network (types only, and one pure string helper from Payload's shared entry), so the browser, a module's `domain/` and the proxy may all import it. It holds no CMS content; it holds the rules behind the numbers, dates, messages and limits the other notes name. Content shapes such as `RichTextValue` and `ImageRef` are types only (`content.ts`).
 
 ## How the pieces link
 
@@ -16,7 +16,7 @@ The pure, framework-free helpers every module and the UI kit use (`src/platform/
 - **Chart rules** (`chart/`) are the gate and the arithmetic behind the [charts](../ui/chart/README.md): `spec.ts` validates a chart and `issues.ts` reports what is wrong as plain data, shown as field errors in the editor and returned to an agent; `breakdown.ts`, `scale.ts`, `unitCells.ts`, `format.ts` and `table.ts` do the rest.
 - **The message catalog** (`messages/`) is the one place a sentence a visitor reads is written, in whole sentences with `{blanks}`; the accounts and contact keys live in `messages/accounts.ts` and `messages/contact.ts` (decision 0017).
 - **Periods two modules share** are `retention.ts` and `linkLifetimes.ts` ([contact](../../modules/contact/README.md), [verification](../../modules/verification/README.md)).
-- **Libraries doing real work:** `zod` for the chart spec; none else, on purpose.
+- **Libraries doing real work:** `zod` for the chart spec, `clsx` and `tailwind-merge` for `cn`, and `slugify` from `payload/shared` for `anchorId`; nothing else, on purpose.
 
 ## Behaviors and events
 

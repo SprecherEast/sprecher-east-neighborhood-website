@@ -1,7 +1,7 @@
 ---
 name: 'Accounts'
 type: module
-summary: 'sign-up, sign-in (password, Google, passkey).'
+summary: 'sign-up and sign-in.'
 aliases: ['sign-in', 'passkeys', 'Google sign-in']
 relationships: []
 ---
