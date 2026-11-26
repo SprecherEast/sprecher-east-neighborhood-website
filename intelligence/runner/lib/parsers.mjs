@@ -98,6 +98,8 @@ export const PARSERS = {
   // HTML pages with no feed (#390): each page's own markup
   'district16-blog': parseCityArticles,
   'city-news': parseCityArticles,
+  // The City news list filtered to street and lane closures: the same markup as City news (#994)
+  'city-traffic-engineering-news': parseCityArticles,
   'city-public-info-meetings': parseCityEvents,
   'wisdot-i39-90-94': parseWisdotMeetings,
   // Park and community pages (#995)

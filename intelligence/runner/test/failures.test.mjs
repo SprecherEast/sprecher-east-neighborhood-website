@@ -50,8 +50,8 @@ describe('when the CMS fails', () => {
       Object.keys(state.sources).filter((id) => withItems.includes(id)),
       [],
     )
-    // ...while the nine HTML pages and the police feed, with nothing pending, do (#390, #993, #995)
-    assert.equal(Object.keys(state.sources).length, 10)
+    // ...while the ten HTML pages and the police feed, with nothing pending, do (#390, #993, #995, #994)
+    assert.equal(Object.keys(state.sources).length, 11)
     assert.ok(cms.writes.some((w) => w.tool === 'updateAgentRuns'))
   })
 
