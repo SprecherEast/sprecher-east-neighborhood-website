@@ -81,9 +81,10 @@ describe('the showcase font', () => {
     expect(showcaseFont).toMatch(/:root\s*{[^}]*--font-poppins: 'Poppins';/)
   })
 
-  it('declares the latin-ext variable before the latin one, as font-sans reads them', () => {
-    // The theme's font-sans lists latin-ext first (src/platform/theme/fonts.test.ts says why); the showcase
-    // reads that same font-sans, and its variables are declared in the same order so the two stay equal.
+  it('declares the latin-ext variable before the latin one in fonts.css', () => {
+    // This pins only the order of the two declarations in fonts.css, for reading beside the theme. The order
+    // that matters, the one font-sans lists, comes from globals.css and is pinned by
+    // src/platform/theme/fonts.test.ts (the reason is there).
     expect(showcaseFont.indexOf('--font-poppins-ext:')).toBeGreaterThan(-1)
     expect(showcaseFont.indexOf('--font-poppins-ext:')).toBeLessThan(
       showcaseFont.indexOf('--font-poppins:'),
