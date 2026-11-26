@@ -151,7 +151,7 @@ trash, thanks = SCENES['trash'](), SCENES['thanksgiving']()
 page = parts.calendar_page(615, 330, 'NOV', '26')
 print(page in trash, parts.roast_turkey(730, 676, .8) in trash, 'scale(.8)' in trash)
 print('>26</text>' in page, 'y="190"' in page, 'width="230" height="250"' in page)
-print(parts.calendar_page(560, 150, 'NOV', '26', w=190, h=210) in thanks, parts.roast_turkey(510, 512, .95) in thanks)`,
+print(parts.calendar_page(560, 150, 'NOV', '26', w=190, h=210) in thanks, parts.roast_turkey(495, 512, .95) in thanks)`,
     )
     expect(r.stderr).toBe('')
     expect(r.stdout.trim().split('\n')).toEqual(['True True True', 'True True True', 'True True'])
