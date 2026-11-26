@@ -2,60 +2,82 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import { gateItem } from '../lib/gate.mjs'
-import { rejectWithoutPage } from '../lib/safety.mjs'
+import { markPageRead, rejectUnread } from '../lib/pageRead.mjs'
 import { curation } from './fixtures.mjs'
 import { contract } from './helpers.mjs'
 import { item } from './safetyHelpers.mjs'
 
-// A report whose page was never read can't be dropped (#993): a reject of a safety-source item with
-// `missing-location` is held for a person unless verify cites the item's own page in its evidence.
-// Whether a page was read is a fact, so it is checked in code, never by wording.
+// A report whose page the runner could not read can't be dropped (#993): a reject of an item from
+// an always-held source is held for a person unless the runner's own read of the item's page
+// succeeded. Whether a page was read is a fact the code knows, never what verify wrote, so
+// flags, tiers and cited evidence change nothing.
 
 const ID = 'madison-police-incident-reports'
 const PAGE = 'https://www.cityofmadison.com/police/incident-reports/2026-11-21/shots-fired'
 const cited = [
-  { url: PAGE, says: 'Officers are investigating.', retrievedAt: '2026-11-25T12:00:00Z' },
+  { url: PAGE, says: 'Officers are investigating.', retrievedAt: '2026-11-25T12:00:00-06:00' },
 ]
 const reject = ({
-  evidence = [],
-  flags = ['missing-location'],
+  read,
+  verification = {},
   sourceId = ID,
   decision = 'reject',
-} = {}) =>
-  item({
-    candidate: { sourceId, sourceUrl: PAGE, kind: 'news' },
-    verification: { coverage: 'unknown', flags, evidence },
+  candidate = {},
+} = {}) => {
+  const built = item({
+    candidate: { sourceId, sourceUrl: PAGE, kind: 'news', ...candidate },
+    verification: { coverage: 'unknown', flags: [], evidence: [], ...verification },
     curation: curation({ decision, safety: true }),
   })
+  if (read !== undefined) markPageRead(built, read)
+  return built
+}
 
-describe('a reject of a report with no place', () => {
-  it('is held for a person when the report page is not in the evidence', () => {
-    for (const evidence of [
-      [],
-      [
-        {
-          url: 'https://www.cityofmadison.com/police/incident-reports',
-          says: 'x',
-          retrievedAt: '2026-11-25T12:00:00Z',
-        },
-      ],
+describe('a reject from an always-held source', () => {
+  it('is held for a person when the runner has not read the report page, whatever verify wrote', () => {
+    for (const verification of [
+      // The evidence cites the page, for the feed's text only
+      { coverage: 'unknown', flags: ['missing-location'], evidence: cited },
+      // A tier guessed from the feed text, with no flag and no evidence
+      { coverage: 'outside', flags: [], evidence: [] },
+      // A place that is unknown with the flag left out
+      { coverage: 'unknown', flags: [], evidence: [] },
+      { coverage: 'core', flags: [], evidence: cited },
     ]) {
-      const gated = gateItem(contract, reject({ evidence }))
-      assert.equal(gated.curation.decision, 'needs-review')
-      assert.equal(gated.route, 'reportItem')
-      assert.equal(gated.suggest, false)
-      assert.match(gated.curation.reasons[0], /^Held for review, not accepted: .*page/)
+      for (const read of [undefined, false]) {
+        const gated = gateItem(contract, reject({ read, verification }))
+        assert.equal(gated.curation.decision, 'needs-review', JSON.stringify(verification))
+        assert.equal(gated.route, 'reportItem')
+        assert.equal(gated.suggest, false)
+        assert.match(gated.curation.reasons[0], /^Held for review, not accepted: .*page/)
+      }
     }
   })
 
-  it('stays a reject when the report page is cited as read', () => {
-    const gated = gateItem(contract, reject({ evidence: cited }))
+  it('stands when the runner read the page, so a real reject is not held', () => {
+    const gated = gateItem(contract, reject({ read: true, verification: { coverage: 'outside' } }))
     assert.equal(gated.curation.decision, 'reject')
     assert.equal(gated.route, 'none')
   })
 
-  it('is only held with missing-location, and only for a safety source', () => {
-    assert.equal(gateItem(contract, reject({ flags: [] })).curation.decision, 'reject')
+  it('counts only a read that is exactly true', () => {
+    for (const read of [1, 'yes', {}, null])
+      assert.equal(
+        gateItem(contract, reject({ read })).curation.decision,
+        'needs-review',
+        String(read),
+      )
+  })
+
+  it('is held when the item is only also reported by an always-held source', () => {
+    const built = reject({
+      sourceId: 'mpl-pinney-events',
+      candidate: { alsoReportedBy: [{ sourceId: ID, sourceUrl: PAGE, externalId: `${ID}:x` }] },
+    })
+    assert.equal(gateItem(contract, built).curation.decision, 'needs-review')
+  })
+
+  it('is not held for a source that is not always held, or for any other decision', () => {
     assert.equal(
       gateItem(contract, reject({ sourceId: 'mpl-pinney-events' })).curation.decision,
       'reject',
@@ -64,22 +86,17 @@ describe('a reject of a report with no place', () => {
       assert.equal(gateItem(contract, reject({ decision })).curation.decision, decision, decision)
   })
 
-  it('is held when the evidence is not a list or an entry has no url', () => {
-    for (const evidence of [null, 'read', [null], [{ says: 'x' }], [{ url: 5 }]])
-      assert.equal(
-        gateItem(contract, reject({ evidence })).curation.decision,
-        'needs-review',
-        String(evidence),
-      )
+  it('is held when the item or the definition can not be read', () => {
+    assert.equal(rejectUnread(contract.safety, {}), true)
+    assert.equal(rejectUnread(contract.safety, null), true)
+    assert.equal(rejectUnread({}, reject({ sourceId: 'mpl-pinney-events' })), true)
+    assert.equal(rejectUnread(undefined, reject({ read: true })), true)
+    assert.equal(rejectUnread(contract.safety, reject({ read: true })), false)
   })
 
-  it('is held when the evidence cites only a longer address than the report page', () => {
-    const longer = [{ ...cited[0], url: `${PAGE}/other` }]
-    assert.equal(gateItem(contract, reject({ evidence: longer })).curation.decision, 'needs-review')
-  })
-
-  it('counts anything it cannot read as unread', () => {
-    assert.equal(rejectWithoutPage(contract.safety, {}), true)
-    assert.equal(rejectWithoutPage(contract.safety, null), true)
+  it('keeps the read out of the item the models see', () => {
+    const built = reject({ read: true })
+    assert.equal(JSON.stringify(built).includes('pageRead'), false)
+    assert.equal(Object.keys(built).includes('pageRead'), false)
   })
 })

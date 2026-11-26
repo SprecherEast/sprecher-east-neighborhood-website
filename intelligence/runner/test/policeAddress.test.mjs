@@ -191,3 +191,29 @@ describe('a number followed by a connector is not a house number', () => {
     }
   })
 })
+
+describe('what the layout rule does not stop', () => {
+  // The rule stops the connectors it lists and the symbols that can't begin a street name. Other
+  // prose after a route number can still be read as an address: it is public text from the item,
+  // never resident data, and the City's locator finds nothing for it. This pins that stated limit.
+  it('still reads other prose after a number as text with a street type', () => {
+    for (const [text, found] of [
+      ['Hwy 51 north of Buckeye Rd', '51 north of Buckeye Rd'],
+      ['US 12 east of Sprecher Rd', '12 east of Sprecher Rd'],
+      ['US 12 past Sprecher Rd', '12 past Sprecher Rd'],
+      ['Exit 266 off Sprecher Rd', '266 off Sprecher Rd'],
+      ['mile 266 on Sprecher Rd', '266 on Sprecher Rd'],
+      ['Hwy 30 W Sprecher Rd', '30 W Sprecher Rd'],
+      ['2 miles from Sprecher Rd', '2 miles from Sprecher Rd'],
+    ])
+      assert.deepEqual(streetAddresses(text), [found], text)
+  })
+
+  it('does not find a number that comes just after a slash or a dash in a unit, the safe side', () => {
+    assert.deepEqual(streetAddresses('Unit 4-123 Main St'), [])
+    assert.deepEqual(streetAddresses('Apt 2/123 Main St'), [])
+    // The usual ways to write a unit are found
+    assert.deepEqual(streetAddresses('Apt 4 123 Main St'), ['123 Main St'])
+    assert.deepEqual(streetAddresses('123 Main St #4'), ['123 Main St'])
+  })
+})

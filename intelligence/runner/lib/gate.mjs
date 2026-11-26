@@ -1,4 +1,5 @@
-import { classifySafety, isObject, rejectWithoutPage } from './safety.mjs'
+import { rejectUnread } from './pageRead.mjs'
+import { classifySafety, isObject } from './safety.mjs'
 import { guardPromotion, holdForReview } from './stages.mjs'
 
 // The one place that decides what may be accepted and which tool an item goes to. Submit calls it
@@ -40,14 +41,13 @@ export function gateItem(contract, item) {
     const found = classifySafety(contract?.safety, { ...item, curation: given })
     if (found.safety) curation = holdForReview(curation, `safety item (${found.why.join('; ')})`)
   }
-  // A reject of a report from an always-held source that no one read the page of is held, never lost
-  if (
-    curation.decision === 'reject' &&
-    rejectWithoutPage(contract?.safety, { ...item, verification })
-  )
+  // A reject of an item from an always-held source is held unless the runner read its page: whether
+  // it was read is a fact the code knows (pageRead.mjs), so no report is dropped unread. The item
+  // itself is read, not a copy: the fact is not part of its JSON.
+  if (curation.decision === 'reject' && rejectUnread(contract?.safety, item))
     curation = holdForReview(
       curation,
-      'the report page is not in the evidence, so it may not have been read',
+      'the runner did not read the report page, so it may not have been read',
     )
   const route = routeFor(pipeline, curation.decision)
   return { curation, route, suggest: route === SUGGESTION }

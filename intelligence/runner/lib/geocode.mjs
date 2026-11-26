@@ -11,13 +11,17 @@ const WORD = "[A-Za-z][A-Za-z.'-]*"
 // A hundred block ("2800 block of Curry Pkwy", as police reports give it) or a house number, then
 // an optional direction, up to three name words, then the street type; "7 PM on Main St" is not an
 // address. The rule is about layout, never a list of spellings: a house number is never followed
-// directly by a connector word (at, and, near, ...) or by "block" or "blocks", and never comes just
-// after a slash or a dash. (A symbol after the number, "&", "@", "/" or a dash, can't begin a street
-// name, so it needs no rule of its own.) So an intersection, a route ("Hwy 51 at ...", "US 12
-// & 18 at ...", "I-94 at ..."), an exit and "within 2 blocks of Main St" are never sent, in any
-// spelling, and "Acme Co. 123 Main St" still is. Only a hundred of three to six digits makes a
-// block. A street named "Block" with a hundred before it ("100 Block Island Rd") is read as a
-// block: the placement then carries a flag, so a person looks.
+// directly by a connector word (at, and, near, by, to, from, between) or by "block" or "blocks",
+// and never comes just after a slash or a dash. (A symbol after the number can't begin a street
+// name, so it needs no rule of its own.) That keeps an intersection ("Hwy 51 at ...", "US 12 & 18
+// at ...", "I-94 at ..."), an exit and "within 2 blocks of Main St" from being sent, in any
+// spelling of those, and "Acme Co. 123 Main St" is still found.
+// The limit, stated plainly: other prose after a number ("Hwy 51 north of ...", "Hwy 30 W Sprecher
+// Rd", "2 miles from ...") can still be read as an address. It is public text from the item, never
+// resident data, and the City's locator finds nothing for it. A unit written "Unit 4-123 Main St"
+// or "Apt 2/123 Main St" is not found (the safe side; "123 Main St #4" is).
+// Only a hundred of three to six digits makes a block. A street named "Block" with a hundred before
+// it ("100 Block Island Rd") is read as a block: the placement then carries a flag, so a person looks.
 const HUNDRED = String.raw`[1-9]\d{0,3}00`
 const DASHES = String.raw`\-\u2010-\u2015\u2212`
 const CONNECTOR = String.raw`(?:at|and|near|by|to|from|between|blocks?)\b`

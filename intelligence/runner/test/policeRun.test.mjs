@@ -33,8 +33,16 @@ const feeds = {
 }
 const POINTS = { '7000 Littlemore Dr': INSIDE, '5200 Cottage Grove Rd': JUST_OUTSIDE }
 
-const run = async () => {
-  const http = feedsHttp(feeds)
+const run = async ({ pages = false, decision = 'accept', denyRobots = false } = {}) => {
+  const base = feedsHttp(feeds)
+  // The report pages, when the City serves them
+  const http = Object.assign(
+    async (url, init) =>
+      pages && new URL(url).pathname.startsWith('/police/incident-reports/')
+        ? (base.requested.push({ url, init }), new Response('<h1>Report</h1>', { status: 200 }))
+        : base(url, init),
+    { requested: base.requested },
+  )
   const cms = cmsWithLog()
   const asked = []
   const result = await runPipeline({
@@ -57,12 +65,14 @@ const run = async () => {
           }),
         })
       if (stageId === 'curate')
-        return police ? curation() : curation({ decision: 'reject', reasons: ['No.'] })
+        return police && decision === 'accept'
+          ? curation()
+          : curation({ decision: 'reject', reasons: ['No.'] })
       return draft()
     }),
     state: { sources: {}, seen: {} },
     http,
-    robots: robotsChecker(http),
+    robots: denyRobots ? async (url) => !url.includes('/police/') : robotsChecker(http),
     geocode: async (street) => {
       asked.push(street)
       return POINTS[street] ? { status: 'match', point: POINTS[street] } : { status: 'none' }
@@ -70,7 +80,7 @@ const run = async () => {
     repoCommit: 'a'.repeat(40),
     now: () => new Date('2026-10-25T17:00:00Z'),
   })
-  return { ...result, cms, asked }
+  return { ...result, cms, asked, requested: http.requested.map((r) => r.url) }
 }
 
 describe('a dry run over the police incident reports', () => {
@@ -91,5 +101,44 @@ describe('a dry run over the police incident reports', () => {
     assert.match(byPage.b.summary, /Placed by the boundary: outside the area/)
     // A word in the outside item's title never made it local, and the boundary's change is flagged
     assert.deepEqual(byPage.b.flags, ['ambiguous-location'])
+  })
+})
+
+describe('a reject of a police report in a run', () => {
+  const pageUrls = (requested) =>
+    requested.filter((url) => url.includes('/police/incident-reports/'))
+
+  it('is held for a person when the City did not serve the report page', async () => {
+    const { cms, log } = await run({ decision: 'reject' })
+    assert.deepEqual(cms.submitted, [])
+    const reports = cms.writes.filter((w) => w.tool === 'reportItem')
+    assert.equal(reports.length, 2)
+    for (const report of reports) {
+      assert.equal(report.arguments.kind, 'needs-review')
+      assert.match(report.arguments.summary, /did not read the report page/)
+    }
+    // Only the four items of other sources are rejected
+    assert.equal(log.counts.rejected, 4)
+  })
+
+  it('stands when the runner read the page, and sends nothing to a person', async () => {
+    const { cms, log, requested } = await run({ decision: 'reject', pages: true })
+    assert.deepEqual(cms.submitted, [])
+    assert.equal(cms.writes.filter((w) => w.tool === 'reportItem').length, 0)
+    // The four items of other sources, and the two reports whose pages were read
+    assert.equal(log.counts.rejected, 6)
+    // One read of each report's own page, and no other page of the City's police site
+    assert.deepEqual(pageUrls(requested).sort(), [`${BASE}/a`, `${BASE}/b`])
+    // Items of other sources are not read, though a page of theirs would answer
+    assert.equal(
+      requested.some((url) => url.endsWith('/events/1')),
+      false,
+    )
+  })
+
+  it('is held for a person when robots.txt disallows the report page', async () => {
+    const { cms, requested } = await run({ decision: 'reject', pages: true, denyRobots: true })
+    assert.equal(pageUrls(requested).length, 0)
+    assert.equal(cms.writes.filter((w) => w.tool === 'reportItem').length, 2)
   })
 })

@@ -1,6 +1,7 @@
 import { pilotSources } from './contract.mjs'
 import { mergeAcrossSources, mergedCopies, scoutSource } from './scout.mjs'
 import { gateItem } from './gate.mjs'
+import { markPageRead, readReportPage, rejectUnread } from './pageRead.mjs'
 import { runStage, runVerify, StageError } from './stages.mjs'
 import { markSeen } from './state.mjs'
 import { sendReport } from './submit.mjs'
@@ -111,6 +112,12 @@ export async function processRun(run) {
     const item = { candidate, source: sourceFacts.get(candidate.sourceId), taxonomy }
     try {
       item.known = await cms.known(candidate.externalId)
+      // An item from an always-held source has its own page read here, once, so the gate knows
+      // whether a reject of it is one nobody read (pageRead.mjs); never more than the model budget
+      if (rejectUnread(contract.safety, item)) {
+        const source = contract.registry.sources.find((s) => s.id === candidate.sourceId)
+        markPageRead(item, await readReportPage(candidate, { source, http, robots }))
+      }
       modelItems++
       const verify = await runVerify(contract, ask, item, { deadline })
       // Code places the item by the City's boundary when it can, and says how (place.mjs)
