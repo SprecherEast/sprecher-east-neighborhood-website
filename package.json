@@ -25,6 +25,7 @@
     "knowledge:check": "node scripts/knowledge-check.mjs",
     "knowledge:structure": "node scripts/knowledge-structure/cli.mjs",
     "knowledge:map": "tsx --tsconfig tsconfig.json scripts/knowledge-map/cli.mjs",
+    "knowledge:page": "node scripts/knowledge-map/build-page.mjs",
     "docs:generate": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs",
     "docs:check": "tsx --tsconfig tsconfig.json scripts/generate-reference.mjs --check",
     "storybook": "storybook dev -p 6006 --disable-telemetry",
