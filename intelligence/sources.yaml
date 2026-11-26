@@ -334,56 +334,90 @@ sources:
       url: https://www.cityofmadison.com/police/incident-reports/2026-11-19/armed-carjacking
     notes: 'Hand check 2026-11-25 (#993): RSS 2.0 with a guid, link and pubDate on every item and no ttl or lastBuildDate; the guid ends in the time of the last update, so the page link is the id. The City posts a few reports a week; one daily read is enough. Each report page gives the incident type, a case id, the block address, an approximate map point and when it was last updated. Of 81 items, 46 begin with a block, 21 with an intersection or a street and 14 with UPDATE and no place.'
   - id: city-traffic-engineering-news
-    name: 'City of Madison Traffic Engineering news'
-    owner: 'City of Madison Traffic Engineering'
-    canonicalUrl: https://www.cityofmadison.com/traffic-engineering/news
+    name: 'City of Madison street and lane closure news'
+    owner: 'City of Madison Mobility & Infrastructure (formerly Traffic Engineering)'
+    canonicalUrl: https://www.cityofmadison.com/news?category=1031
     feedUrl: null
     format: html
-    scope: 'Street and lane closures and traffic changes'
+    scope: 'Street and lane closures, detours and traffic changes: the City news list filtered to its Street & Lane Closures category'
     audiences: [everyone]
     reliability: official
-    access: 'Public web page; no feed link found; robots.txt not checked for this path.'
-    cadence: none
-    lastChecked: '2026-11-10'
-    result: pending
-    pilotRank: null
-    treatment: 'Not collected until a parser exists.'
-    example: null
-    notes: 'Observed 2026-11-10: Dated items with stable links. Hand check: #994.'
+    access: 'Public web page, no feed; parser `parseCityArticles`, the same layout as City news (#994). The first page only: 20 posts, about two months of closures.'
+    cadence: daily
+    lastChecked: '2026-11-26'
+    result: valid
+    pilotRank: 15
+    robots: *cityRobotsNov26
+    treatment: >-
+      Posts from the last 14 days, all kept: the list cuts each post off before its detour, so a
+      closure outside the area can still send traffic over Sprecher Road or Milwaukee Street and
+      the list text can't show it. Verify reads the post's own page for the closed road, the
+      detour and the start and end dates, never guessing a date; curate rejects a closure
+      elsewhere in the city (coverage.md). The post is a lead: the City's dates stand, and an
+      ended closure is rejected as past.
+    example:
+      title: Highway T Closure at Felland Road Begins October 26
+      date: '2026-10-19'
+      url: https://www.cityofmadison.com/news/2026-10-19/highway-t-closure-at-felland-road-begins-october-26
+    notes: >-
+      Hand check #994, 2026-11-26: 200 text/html with the list in the markup; robots.txt allows
+      /news (it names only /search, /admin, /user and file paths). The Mobility & Infrastructure
+      news page (`/traffic-engineering/news` redirects to `/mobility/news`) lists the same posts
+      but answered 403 once the category was added, so the City news list is the one read. No feed
+      link on either page (/news/feed and /mobility/news/feed answer 404). A post gives the
+      closed road, the dates, the contractor and a detour map; the Highway T post
+      (2026-10-19) names the detour over Sprecher Road, Milwaukee Street and N Thompson Drive on its
+      page only. An official email alert exists: the City's email lists (cityofmadison.com/contact/email-lists)
+      include Transportation, Road Construction and Blooming Grove; it needs an address, so it is the owner's to
+      subscribe to, and the daily read does not depend on it.
   - id: madison-road-closures-layer
     name: 'City of Madison Road Closures (open-data layer)'
     owner: 'City of Madison'
-    canonicalUrl: https://geo.btaa.org/catalog/912f842a975542978e4dc5ffa216ebc8_14
+    canonicalUrl: https://maps.cityofmadison.com/arcgis/rest/services/Public/OPEN_DATA_TE/MapServer/14
     feedUrl: null
     format: json-api
     scope: 'Road closures with start date, end date, closure type and road'
     audiences: [everyone]
     reliability: official
-    access: 'Open-data layer, found through a catalog entry; the live service address is not confirmed.'
+    access: 'City ArcGIS service, no key; JSON and GeoJSON queries. Found at the address above on 2026-11-26.'
     cadence: none
-    lastChecked: '2026-11-10'
-    result: pending
+    lastChecked: '2026-11-26'
+    result: invalid
     pilotRank: null
-    treatment: "Not collected. Confirm the live service address on the City's own site first."
+    treatment: 'Not collected: it is not kept current. Re-check at the next monthly pass, and use it in place of page parsing the day it holds a current closure.'
     example: null
-    notes: 'Observed 2026-11-10: The catalog entry lists fields for start date, end date, closure type and road. Hand check: #994.'
+    notes: >-
+      Hand check #994, 2026-11-26: the live service is Public/OPEN_DATA_TE layer 14 (the same data
+      sits in Traffic/Road_Closures, layer 4). Fields: Start_Date, End_Date, Closure_Type (Full,
+      Partial, Special Event), Comments, Contact, Road_Closed, Text_SDate, Text_EDate and a
+      polyline. It holds 693 closures, and the newest by end date is 2021-12-16 (Madison Night
+      Market); the Full Closure and Future Closure layers return 0. The City describes it as "current
+      and future road closures", but nothing has been added since 2021, so it can't show a closure
+      on a current road, including the 2026 Highway T one. Its terms are the City's data policy
+      (informational, no reuse condition).
   - id: wisconsin-511-events-api
     name: '511 Wisconsin events API'
     owner: 'Wisconsin Department of Transportation'
     canonicalUrl: https://511wi.gov/developers/help
     feedUrl: null
     format: json-api
-    scope: 'Road events and closures across Wisconsin'
+    scope: 'Road events and closures across Wisconsin, state and interstate roads included'
     audiences: [everyone]
     reliability: official
-    access: 'Documented API; whether a free key is needed is not confirmed.'
+    access: 'Documented REST API that requires a developer key, from a registered 511WI account; throttled to 10 calls every 60 seconds; a developer access agreement applies.'
     cadence: none
-    lastChecked: '2026-11-10'
+    lastChecked: '2026-11-26'
     result: pending
     pilotRank: null
-    treatment: 'Not collected. Confirm the key terms first; if a key is needed, it goes through the owner.'
+    robots: { checked: '2026-11-26', result: allowed, url: https://511wi.gov/robots.txt }
+    treatment: "Not collected. The key needs an account and acceptance of the access agreement, which are the owner's to give (#997); until then the City closure news is the road closure source."
     example: null
-    notes: 'Observed 2026-11-10: The developer help page documents the API. Hand check: #994, #997.'
+    notes: >-
+      Hand check #994, 2026-11-26: the help page says the REST API gives Traffic Speeds, Incidents,
+      Roadwork and Cameras, "requires a developer key" (`key` and `format` on each call) and is
+      throttled; the key is requested on that page after logging in. robots.txt disallows
+      /my511/, /map/map*/, /list/getdata/, /eventdetails/ and /error/, and names no API path.
+      Hand check: #997 for the key.
   - id: door-creek-park-ski
     name: 'Door Creek Park ski trails status (City of Madison Parks)'
     owner: 'City of Madison Parks Division'

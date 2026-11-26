@@ -93,6 +93,7 @@ describe('scout', () => {
       'alder-weekly-roundups',
       'door-creek-park-ski',
       'door-creek-park-ice',
+      'city-traffic-engineering-news',
     ])
   })
 

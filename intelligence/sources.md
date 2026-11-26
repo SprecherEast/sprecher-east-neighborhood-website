@@ -38,8 +38,8 @@ Only `valid` sources are ever fetched automatically.
 | The Capital Times               | RSS      | invalid    | no    |
 | Channel 3000                    | HTML     | invalid    | no    |
 | Madison Police incident reports | RSS      | valid      | 9     |
-| Traffic Engineering news        | HTML     | pending    | no    |
-| Road Closures open-data layer   | JSON API | pending    | no    |
+| City street and lane closures   | HTML     | valid      | 15    |
+| Road Closures open-data layer   | JSON API | invalid    | no    |
 | 511 Wisconsin events API        | JSON API | pending    | no    |
 | Door Creek Park ski trails      | HTML     | valid      | 13    |
 | Door Creek Park ice rink        | HTML     | valid      | 14    |
@@ -127,8 +127,8 @@ resolutions are where a physical project's paper trail turns up.
 
 **Not checked.** The sweep read the pages, not their robots.txt files, so these entries carry no
 `robots` check, and a source that needs one (`direct-then-playwright`) can't get it until a hand
-check records it. Whether 511 Wisconsin needs a free key isn't confirmed, nor is the live address
-of the Road Closures layer (only a catalog entry was found).
+check records it. Both open questions were settled on 2026-11-26 ([#994](#road-closure-and-traffic-change-sources-994)):
+511 Wisconsin needs a developer key, and the Road Closures layer's live address is known but it holds nothing after 2021.
 
 **Discovery only.** The Visit Madison guide is a secondary roundup: use it to find events, then
 confirm each with its organizer ([coverage](coverage.md), "Review passes").
@@ -177,6 +177,49 @@ item is a safety item that waits for a person ([coverage](coverage.md), "Review 
   the model stages take a few per run, newest first ([#1483](https://github.com/SprecherEast/sprecher-east-neighborhood-website/issues/1483)).
 - **Limits.** The feed is a lead: the runner reads the report page and gives its text to verify before an item
   is considered, and the City makes no guarantee that its pages are accurate or complete.
+
+## Road closure and traffic change sources (#994)
+
+Hand checks on **2026-11-26**, with a plain GET and each site's robots.txt, no browser. Result: one
+source is `valid` and polled, one is `invalid`, one stays `pending` until the owner gets a key.
+
+- **City street and lane closure news: `valid`, daily, rank 15.** The City news list filtered to
+  its Street & Lane Closures category (`https://www.cityofmadison.com/news?category=1031`): 20
+  posts a page, about two months of closures, in the same markup as City news, so it uses the same
+  parser. The City renamed Traffic Engineering to Mobility & Infrastructure; its own news page
+  (`/traffic-engineering/news`, now `/mobility/news`) lists the same posts but answered 403 once the
+  category was added, so this list is the one read. robots.txt
+  (`https://www.cityofmadison.com/robots.txt`, checked 2026-11-26) names only `/search`, `/admin`,
+  `/user`, `/node/add`, `/comment/reply` and file paths: `/news` is allowed, and there is no
+  `Crawl-delay`. Terms are as for the police feed above (Conditions and Use, data policy). No feed
+  exists (the `/news/feed` and `/mobility/news/feed` addresses answer 404).
+- **Why every closure goes to verify.** The list cuts each post off before its detour. The County
+  Highway T closure at Felland Road (posted 2026-10-19, closed 2026-10-26 to 2026-10-30) names
+  Felland Road and County Highway T in the list, and the detour over Sprecher Road, Milwaukee
+  Street and N Thompson Drive only on the post's page. A word match on the list text would have
+  dropped it, so no closure is dropped by code (a handful in 14 days), verify reads the
+  post's page for the closed road, the detour and both dates, and curate rejects a closure
+  elsewhere in the city or one that has ended (`evals/verify-closure.yaml`,
+  `evals/curate-closure.yaml`). `area.yaml` needed no new word: the boundary roads and the detour
+  streets are already in it.
+- **Dates.** The list gives a posted time, not the closure's dates, which are in the post's text
+  and often past the cut. The scout candidate has no start or end of its own, as with every news
+  post; verify reads both from the page and never guesses a date.
+- **Road Closures open-data layer: `invalid`.** The live service is
+  `Public/OPEN_DATA_TE/MapServer/14` on `maps.cityofmadison.com` (no key; the same data is
+  `Traffic/Road_Closures` layer 4). It holds 693 closures and the newest by end date is
+  2021-12-16; its Full Closure and Future Closure layers return none. The City calls it "current and
+  future road closures", but it hasn't been added to since 2021, so it can't show a closure now. The
+  registry says to re-check it at the monthly pass and to prefer it over page parsing once it is
+  current again.
+- **511 Wisconsin events API: `pending`.** The developer page says the REST API "requires a developer
+  key", from a registered 511WI account, at 10 calls every 60 seconds, under a developer access
+  agreement. robots.txt (`https://511wi.gov/robots.txt`, checked 2026-11-26) disallows `/my511/`,
+  `/map/map*/`, `/list/getdata/`, `/eventdetails/` and `/error/` and names no API path. The key and
+  the agreement are the owner's to give (#997), so nothing is collected yet.
+- **Official alerts.** The City's email lists (`https://www.cityofmadison.com/contact/email-lists`)
+  include Transportation lists such as Road Construction, and a Blooming Grove list. A subscription
+  needs an email address, so it is the owner's to make; the daily read does not depend on it.
 
 ## Trust: reach is not trust
 

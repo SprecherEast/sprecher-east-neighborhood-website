@@ -8,3 +8,6 @@ real text in simpler markup, since the parser reads only its text. Phone numbers
 replaced with placeholders. Added on 2026-11-26 (#995): `madison-parks-events.html` and
 `madison-parks-events-2.html` (the City Parks event list, pages 1 and 2, trimmed to the events a test
 needs) and `parks-ski-trails.html` (two places from the winter status page).
+Added on 2026-11-26 (#994): `city-closure-news.html` (four posts from the City's news list filtered
+to the Street & Lane Closures category, as served that day, markup unchanged; summaries end in
+"…" as on the page).
