@@ -1,8 +1,8 @@
 {
-  "$comment": "Where data/madison-map.json comes from. Checked 2026-11-21. City of Madison open data is public.",
+  "$comment": "Where data/madison-map.json comes from. Checked 2026-11-21; map id moved to the association account 2026-11-26. City of Madison open data is public.",
   "boundary": {
     "name": "Sprecher East, Google My Maps",
-    "url": "https://www.google.com/maps/d/kml?mid=1mbTKP1-2eN6g5YPReAaQg6J1lV2DX7g&forcekml=1"
+    "url": "https://www.google.com/maps/d/kml?mid=1s01PqINuXETUwDSf1dd2_n_8EeikgDU&forcekml=1"
   },
   "layers": {
     "neighborhoods": "https://maps.cityofmadison.com/arcgis/rest/services/Public/OPEN_DATA/MapServer/12",
