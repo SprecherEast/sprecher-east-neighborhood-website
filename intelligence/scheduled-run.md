@@ -2,8 +2,7 @@
 
 The rules for the scout that runs on a schedule in the owner's Claude account (#1356). The
 schedule itself (time, model, connectors, network) lives there, because this repository cannot
-set it; the schedule's prompt is to shrink to a pointer that says to check out `main` and follow
-this file (tracked in #1517). Where the schedule's prompt and this file differ, this file wins,
+set it; its prompt points here and adds only what this repository cannot hold. Where the schedule's prompt and this file differ, this file wins,
 except that the [read-only rule](#read-only) always holds. The daily runner described in the
 [README](README.md#how-a-runtime-loads-it) is a different runtime and is not covered here.
 Change this file only through a pull request.
@@ -21,7 +20,7 @@ From `main`: the [README](README.md), [`pipeline.yaml`](pipeline.yaml),
 [`sources.yaml`](sources.yaml), [`sources.md`](sources.md) (including
 [trust](sources.md#trust-reach-is-not-trust)), [`images.md`](images.md), the stage prompts in
 [`prompts/`](prompts/) and the site's [brand voice](../docs/guidelines/brand-voice.md). Draft copy
-follows the brand voice from the first draft, not in a second pass.
+follows the brand voice from the first draft.
 
 ## Running the stages by hand
 
@@ -32,10 +31,11 @@ The scout is the pipeline's runtime for one run, with a model doing every stage.
   (accept, needs review, update, cancel, reject, duplicate), the hard rejects and the flags.
 - Draft only what curate accepts.
 - Keep within the per-run budgets in [`pipeline.yaml`](pipeline.yaml).
-- Skip an item already seen with the same content, as the [README](README.md#the-pipeline)
-  describes.
-- The [runner's](runner/README.md) dry-run mode may be used to run the code stages when no CMS
-  key is available. It writes nothing.
+- A fresh checkout has no record of what was seen, so judge "already seen with the same content"
+  (the [README](README.md#the-pipeline) step) against what the live site already shows, as in
+  [Duplicates](#duplicates), and against the previous report when the run can read it.
+- A hand run never depends on the [runner](runner/README.md); its dry-run mode needs the runner
+  installed, the model command it names and a local state file.
 - The submit stage does not run. The report replaces it.
 
 ## Fetching
@@ -55,8 +55,9 @@ The scout is the pipeline's runtime for one run, with a model doing every stage.
 ## Read-only
 
 The scout reads and reports. It never writes to the CMS, issues, pull requests or any other
-service, and it publishes nothing. Its only output is the report, and the owner reviews the report
-before any site update is made. An item that is a safety or police matter
+service, and it publishes nothing. It posts nothing and sends nothing, except the one
+[owner notification](#notifying-the-owner). Its only output is the report, and the owner reviews
+the report before any site update is made. An item that is a safety or police matter
 ([`safety.yaml`](safety.yaml)) is only reported, for the owner's review, never drafted as a
 suggestion.
 
@@ -88,20 +89,22 @@ The item is removed from the schedule when it is resolved; it is not copied here
 
 ## Report layout
 
-One report, in this order, so the owner can review it quickly. Leave out a section that has
-nothing to say, except the run header, and don't add text to a section where the items already say
-it. Never put secrets or personal data in the report. Proposed copy is in the brand voice.
+One report, in this order, so the owner can review it quickly. Leave out any other section that has
+nothing to say, and don't add text to a section where the items already say
+it. Never put secrets or personal data in the report. Proposed copy is in the brand voice. The run
+header and the watch items line always appear, saying "nothing new" when empty.
 
 1. **Run header:** the repository commit, the sources polled, and the sources that were blocked or
    failed.
 2. **Accepted drafts, ready for review:** for each, the title, the date and place, one line on why
-   it matters, the official links and the draft text.
+   it matters, the official links and the draft text. Never a safety or police item.
 3. **Needs review:** each item with its flags, the missing facts or low confidence, and what is
-   missing.
+   missing. A safety or police item goes here, marked for the owner's review only, with no draft
+   copy.
 4. **Updates and cancellations:** changes to items already on the site, each with the official
    record.
 5. **Rejected or duplicate:** the counts, with a one-line reason for each notable one.
-6. **Watch items:** one line each.
+6. **Watch items:** one line each, or "nothing new".
 7. **Could not verify:** claims with no primary record, and why.
 8. **Suggested sites:** sites found beyond the registry, with their tier.
 9. **Suggested next step:** the one to three items to discuss first.
@@ -111,3 +114,7 @@ it. Never put secrets or personal data in the report. Proposed copy is in the br
 Send a push notification only when the run found something he would want to know now (an accepted
 or needs-review item, an update or a cancellation, a watch item answered), or when the run could
 not read its sources. When nothing changed, stay silent.
+
+The notification is the one allowed send. It goes through the schedule's own push channel, only
+points at the report, and never asks for approval or a reply. A scheduled run never sends an
+approval prompt and never stops to wait for one.

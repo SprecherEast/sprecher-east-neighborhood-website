@@ -23,7 +23,8 @@ text, secrets or personal details: the repository is public.
   instructions (the README, `pipeline.yaml`, coverage, area, sources, images and the stage
   prompts). If `pipeline.yaml` has the pipeline disabled, it stops and reports that. It replaces
   the submit stage with a report.
-- **May not:** write anything outside its own report. It makes no CMS call, opens no issue or pull
+- **May not:** write anything outside its own report, apart from the one push notification to the
+  owner. It makes no CMS call, opens no issue or pull
   request and publishes nothing.
 - **Ends with:** a report for the owner, who reviews it before any site update is made, in the
   layout the file sets. A push notification goes out only when the run found something to know
