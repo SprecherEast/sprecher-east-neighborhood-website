@@ -186,7 +186,7 @@ A comment starts with one of these headers, so a person or a script can find it:
 the steps below in order, so two agents can't win the same one; a worker checks that the claim
 names its branch and doesn't claim anything itself. Agents all act through the owner's GitHub login, so the assignee can't
 show who holds an issue: the `[STEP]` comment and the **In progress** status do. In order: (1)
-check for overlap with whatever is already In progress; (2) check the issue isn't already
+check for overlap with whatever is already In progress, after [looking for changes made elsewhere](../../.agents/skills/chief-of-staff/SKILL.md#8-look-for-changes-made-elsewhere); (2) check the issue isn't already
 claimed (not In progress, no `[STEP]` claim comment); (3) post a `[STEP]` comment naming the
 branch and assign the issue; (4) set **In progress**. Then start.
 
