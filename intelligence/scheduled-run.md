@@ -2,7 +2,8 @@
 
 The rules for the scout that runs on a schedule in the owner's Claude account (#1356). The
 schedule itself (time, model, connectors, network) lives there, because this repository cannot
-set it; the schedule's prompt only says to check out `main` and follow this file. The daily
+set it; the schedule's prompt is to shrink to a pointer that says to check out `main` and follow
+this file (tracked in #1517). The daily
 runner described in the [README](README.md#how-a-runtime-loads-it) is a different runtime and is
 not covered here. Change this file only through a pull request.
 

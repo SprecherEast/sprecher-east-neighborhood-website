@@ -25,7 +25,7 @@ The registry, `sources.yaml`. Read only entries whose `$.sources[].result` is `v
    whole every run, and stops at the first empty or failed page, keeping what it has and logging
    the failure; replace `{cursor}` with the cursor saved by the last
    successful run, or 7 days ago on the first run.
-2. **Fetch directly first** (README.md, "Fetching"): one plain GET per source, with a clear user
+2. **Fetch directly first** (fetching.md): one plain GET per source, with a clear user
    agent naming the site, a 30-second timeout, and the saved ETag or Last-Modified. Respect
    `$.sources[].cadence` and any Retry-After. A 304 means nothing changed: log `not-modified`
    and stop, with no parse and no fallback. Follow a redirect directly (at most 3 hops) unless it

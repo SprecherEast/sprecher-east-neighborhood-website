@@ -14,7 +14,7 @@ text, secrets or personal details: the repository is public.
 - **Instructions:** the rules for a run are kept in the repository:
   [scheduled scout run](../../intelligence/scheduled-run.md). The schedule's own prompt is meant to
   shrink to a pointer at them (the `main` branch), plus a temporary watch item set by the owner and
-  stored in the schedule, not here. That repointing is still open (#1356): until it is done, the
+  stored in the schedule, not here. That repointing is still open (#1517): until it is done, the
   prompt carries its own copy of the fetching, read-only and report rules.
 - **What it reads:** the pipeline's instructions (the README, coverage, area, sources and the
   stage prompts). It replaces the submit stage with a report.
