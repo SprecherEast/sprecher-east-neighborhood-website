@@ -26,8 +26,9 @@ Listing, post page, search page and the blocks' components are in the generated 
 ## Behaviors and events
 
 - **A save refreshes the right pages:** saving a published post, unpublishing one or deleting one refreshes its page, `/posts`, the numbered pages, `/`, every CMS page and the posts sitemap tag; saving a draft refreshes nothing (`cms/revalidatePost.ts`, #484).
+- **`publishedAt` is set to now** when a post is published without one (`cms/posts.ts`).
 - **Posts created by agents or non-staff are `suggested` drafts** (`holdSuggestions` in `cms/posts.ts`, `suggestibleContentAccess`).
-- **The archive block** (home page "Recent News") lists the newest posts, optionally in some categories, or the posts the editor picked, leaving out those the reader may not see (`use-cases/findArchivePosts.ts`).
+- **The archive block** (home page "Recent News") lists the newest posts (3 when the editor leaves the limit empty), optionally in some categories, or the posts the editor picked, leaving out those the reader may not see (`use-cases/findArchivePosts.ts`).
 - **The post page** has a plain title band and category, an author-and-date metadata bar, and the post's `heroImage` whole as the first thing in the article column (a post with no picture shows none and no gap); it emits schema.org `Article`, naming the original source with `isBasedOn` (`ui/postHeader.tsx`, `ui/postJsonLd.ts`, #1002, #1013, #1055). A post can carry a title band photo, `backdrop` (phone, tablet and desktop crops), separate from `heroImage` and the share image (`cms/posts.ts`, `src/platform/payload/bandBackdrop.ts`, #1024).
 - **Search matches** title, slug and search-engine title or description; spaces around a query do not matter and an empty query lists every entry, at most 12; the box follows typing after a 200 ms pause (`data/filters.ts`, `domain/search.ts`, `ui/SearchBox.client.tsx`).
 - **GraphQL and nested-docs stay on** but nothing on the site reads `breadcrumbs` or makes a GraphQL call; GraphQL is open to any collection under its own access rules and only the account verify mutation is refused. What it is for is undecided (`src/payload.config.ts`).
