@@ -11767,7 +11767,7 @@
         { "label": "Runs", "value": "on weekdays, in the early evening, Central time." },
         {
           "label": "Instructions",
-          "value": "the schedule's own prompt points at the repository (the `main` branch and its [`intelligence/`](../../intelligence/README.md) instructions) for how to work, so the run rules are kept there, not here. The prompt adds one temporary watch item of its own, set by the owner. That item is stored in the schedule, not in the repository."
+          "value": "the rules for a run are kept in the repository: [scheduled scout run](../../intelligence/scheduled-run.md). The schedule's own prompt is meant to shrink to a pointer at them (the `main` branch), plus a temporary watch item set by the owner and stored in the schedule, not here. That repointing is still open (#1517): until it is done, the prompt carries its own copy of the fetching, read-only and report rules."
         },
         {
           "label": "What it reads",
@@ -31418,6 +31418,14 @@
     {
       "from": "skill:project-tracking",
       "to": "process-doc:weekly-review",
+      "type": "mentions",
+      "layer": "skills",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "skill:project-tracking",
+      "to": "skill:chief-of-staff",
       "type": "mentions",
       "layer": "skills",
       "count": 1,
