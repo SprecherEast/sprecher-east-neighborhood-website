@@ -91,7 +91,7 @@ jobs:
           filters: |
             intelligence:
               - 'intelligence/**'
-              - 'scripts/check-intelligence.mjs'
+              - 'scripts/check-intelligence*.mjs'
               - 'package-lock.json'
 
       - uses: actions/setup-node@v7
