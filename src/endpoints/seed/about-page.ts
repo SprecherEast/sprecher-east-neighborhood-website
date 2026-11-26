@@ -9,7 +9,7 @@ type AboutArgs = {
 
 /** The shared "Sprecher East" Google My Maps map: the boundary, drawn by the owner (#764) */
 const SPRECHER_EAST_MAP_EMBED_URL =
-  'https://www.google.com/maps/d/embed?mid=1mbTKP1-2eN6g5YPReAaQg6J1lV2DX7g'
+  'https://www.google.com/maps/d/embed?mid=1s01PqINuXETUwDSf1dd2_n_8EeikgDU'
 
 /** A section item's other layout choices, at their defaults */
 const ITEM = { align: 'start', verticalAlign: 'top', phoneOrder: 'inOrder' } as const
