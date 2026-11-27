@@ -127,7 +127,7 @@ with no secret, a deploy through the wrapper, and one comment on the pull reques
 | ------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `.github/scripts/plan-preview.sh`     | runner | The gate: same-repository, not Dependabot, a change that reaches the server (`deploy-paths.sh`, also read by `plan-deploy.sh`), the label                                |
 | `.github/scripts/preview-facts.sh`    | runner | Asks the wrapper's `facts`; no key, or a server that refuses it, means "previews unavailable", once, without a retry                                                     |
-| `.github/scripts/preview-deploy.sh`   | runner | Checks the archive's sizes, the temporary one-at-a-time limit, then the wrapper's `upload` and `deploy`; reports live, taken down or failed                              |
+| `.github/scripts/preview-deploy.sh`   | runner | Checks the archive's sizes and the cap (`PREVIEW_MAX_COUNT`), then the wrapper's `upload` and `deploy`; reports live, taken down or failed                               |
 | `.github/scripts/preview-comment.mjs` | runner | The one comment: fixed texts and checked values, found by a hidden marker and edited in place                                                                            |
 | `e2e/previewSeed.ts`                  | VPS    | A preview's first database: one test account per role, with the passwords `preview-accounts.sh` made; run by `deploy-release.sh` after the migrations, before the switch |
 
@@ -174,8 +174,7 @@ part 2 of #1074; the owner's decision of 2026-11-11 is recorded on #1074). The p
   validate it before it is moved into `/etc/caddy/previews/` (under a name the folder's import does not
   match), moves it in with one rename, validates the whole config, reloads, and on any failure puts the
   previous block back and reloads again. A preview with no folder gets its block removed, moved first to a copy under a name the import does not read; if Caddy will not take the config without it and the copy cannot be moved back, the copy is kept there and the warning names it. It takes the shared
-  Caddy lock first (`caddy-lock-lib.sh`), and refuses a new block beyond `PREVIEW_MAX_COUNT` (the cap, one for
-  now: [the cap](previews.md#removal-the-cap-and-the-sweep-1076)), because each block orders a certificate from a
+  Caddy lock first (`caddy-lock-lib.sh`), and refuses a new block beyond `PREVIEW_MAX_COUNT` (the cap, two: [the cap](previews.md#removal-the-cap-and-the-sweep-1076)), because each block orders a certificate from a
   budget production shares; the wrapper refuses a new preview folder beyond the same number, under a lock so two
   starting together can't both take the last place, and removes the empty folder of a new preview whose upload
   failed.

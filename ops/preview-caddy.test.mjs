@@ -663,9 +663,9 @@ describe('preview-caddy.sh: only so many previews', () => {
     expect(folderEntries()).toEqual(['pr-2.caddy', 'pr-3.caddy'])
   })
 
-  it('counts only previews’ blocks, and the default is one until the server is measured (#1076)', async () => {
+  it('counts only previews’ blocks, and the default is two, as measured (#1557)', async () => {
     const env = fs.readFileSync(path.join(OPS, 'environment.sh'), 'utf8')
-    expect(env).toContain('PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-1}"')
+    expect(env).toContain('PREVIEW_MAX_COUNT="${PREVIEW_MAX_COUNT:-2}"')
     makePreview('3')
     fs.writeFileSync(p('caddy/previews/other.caddy'), '# not a preview\n')
     blocks(1)

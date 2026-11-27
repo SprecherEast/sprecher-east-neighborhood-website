@@ -87,7 +87,7 @@ caddy`. The folder path is defined once, in `environment.sh`; the headers file p
   reached by a key that can run only the wrapper's six actions, with one sudo rule for the Caddy block
   script. What it is, what it may do and how to check it: [`README.md`](README.md#pull-request-preview-account).
   `environment.sh` holds its names (`PREVIEW_USER`, `PREVIEW_HOME`, `PREVIEW_ACCESS_DIR`), the
-  upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, the cap, one for now), the disk floor (`PREVIEW_FREE_FLOOR_KB`), the idle limit (`PREVIEW_IDLE_DAYS`) and the number and commit patterns, so no script writes its own.
+  upload limit, the most previews at once (`PREVIEW_MAX_COUNT`, the cap, two), the disk floor (`PREVIEW_FREE_FLOOR_KB`), the idle limit (`PREVIEW_IDLE_DAYS`) and the number and commit patterns, so no script writes its own.
 - **The key is in place** (#1385). The public half is committed as `ops/preview-deploy-key.pub`; the private half is the
   `PREVIEW_SSH_KEY` secret of the GitHub environment `preview`, and nowhere else. The production deploy writes the key's
   line only when the host guards and the isolation check pass; its log says which.
@@ -250,12 +250,13 @@ the snapshot (2026-11-11, recorded on #1077).
   `deploy-release.sh` builds a fresh SQLite file from the pull request's migrations, imports the content
   (`e2e/previewCopyImport.ts`, the pull request's own code, which reads only the export's file), and then
   `previewSeed.ts` makes the test accounts. Changes made while testing a preview, uploads included, are lost on the next
-  push. A copy that fails changes nothing: the old database and media are replaced only after the root step succeeded. A
+  push. So a change that needs different page content (a new layout, say) shows only after it is applied in the
+  preview's Admin, and again after each push. A copy that fails changes nothing: the old database and media are replaced only after the root step succeeded. A
   deploy that fails after that point leaves the preview's running release on its new, rebuilt database (empty or
   half imported), so redeploy it; the isolation check still holds.
 - **The root step** (`preview-copy.sh`) is `preview-caddy.sh`'s sibling: one sudo rule per script, a number of 1 to 6
   digits, a fixed PATH, bash's privileged mode, no caller environment, the shared Caddy lock (one at a time with
-  production's scripts and every other preview step; the temporary one-preview cap stays). Under the lock it makes a
+  production's scripts and every other preview step; the cap stays). Under the lock it makes a
   snapshot with production's own `ops/backup-db.mjs` (`VACUUM INTO`, a consistent copy while the site runs) into a new
   folder inside `PREVIEW_COPY_TMP` (`/var/lib/sprecher-east-preview-copy`, root-only, mode 700, made by the installer),
   runs the export from **production's current release** (`main`'s code; `payload run e2e/previewCopyExport.ts`, with
@@ -329,12 +330,11 @@ the snapshot (2026-11-11, recorded on #1077).
   its pull request is not open.
 - **The cap** is `PREVIEW_MAX_COUNT` in `ops/environment.sh`, defined once. The workflow's check
   (`preview-deploy.sh`), the wrapper (a new folder, under a lock) and the Caddy script (a new block) all read it.
-  It replaces the workflow's temporary one-preview limit and has the same value, **one, until it is measured**:
-  with production and Umami running, one preview's memory at rest and during a short click-through, free
-  memory and swap, and the disk one preview uses (release, database, media), taking #924's figures where they
-  exist. The cap is the number that keeps production's memory headroom, the deploy's 3 GiB free-disk floor and
-  the backup reserve intact; then it is raised in that one line. Those measurements need the server and are not
-  made by this change (recorded on #1076).
+  It replaced the workflow's temporary one-preview limit. It was one until the server was measured, and is **two**
+  since the owner measured it with production and Umami running (decided 2026-11-26, recorded on #1557; the figures
+  go on #1405). The cap is the number that keeps production's memory headroom, the deploy's 3 GiB free-disk floor and
+  the backup reserve intact; a different number is changed in that one line. A third pull request waits for a place:
+  it starts on a later push or re-run once a preview closes.
 - **At the cap: refuse** (decided, #1076). The sticky comment names the cap and the pull requests that hold the
   places, and the preview starts on a later push or re-run once a place is free. Replacing the preview pushed
   least recently was weighed and not chosen: it would take down a preview someone may be reviewing, to give a
