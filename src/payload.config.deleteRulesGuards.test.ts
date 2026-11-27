@@ -157,7 +157,7 @@ describe('a migration that fails halfway', () => {
     const objects = await database.query<{ type: string; sql: string }>(
       `SELECT type, sql FROM sqlite_master WHERE tbl_name = '${table}' AND sql IS NOT NULL ORDER BY type DESC`,
     )
-    const definition = objects.find((object) => object.type === 'table')!.sql
+    const definition = objects.find((object) => object.type === 'table')?.sql ?? ''
     const indexes = objects.filter((object) => object.type === 'index').map((object) => object.sql)
     const rebuild = async (create: string) => {
       await database.query(`CREATE TABLE \`__keep\` AS SELECT * FROM \`${table}\``)
