@@ -32,6 +32,7 @@ import * as migration_20261117_012340_share_bar from './20261117_012340_share_ba
 import * as migration_20261119_203801_social_sign_in from './20261119_203801_social_sign_in'
 import * as migration_20261119_224613_passkeys from './20261119_224613_passkeys'
 import * as migration_20261120_170903_social_link_requests from './20261120_170903_social_link_requests'
+import * as migration_20261126_203500_foreign_key_delete_rules from './20261126_203500_foreign_key_delete_rules'
 
 export const migrations = [
   {
@@ -203,5 +204,10 @@ export const migrations = [
     up: migration_20261120_170903_social_link_requests.up,
     down: migration_20261120_170903_social_link_requests.down,
     name: '20261120_170903_social_link_requests',
+  },
+  {
+    up: migration_20261126_203500_foreign_key_delete_rules.up,
+    down: migration_20261126_203500_foreign_key_delete_rules.down,
+    name: '20261126_203500_foreign_key_delete_rules',
   },
 ]
