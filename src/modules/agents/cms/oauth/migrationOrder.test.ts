@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { migrations } from './index'
+import { migrations } from '@/migrations'
 
 /**
  * Payload runs migrations in the order of this list, which is the order of their names. The OAuth
