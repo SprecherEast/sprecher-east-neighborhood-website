@@ -11,6 +11,16 @@ describe('describeCron', () => {
     expect(describeCron('17 7 * * *')).toBe('every day at 07:17')
   })
 
+  it('says a weekly schedule with the day of the week', () => {
+    expect(describeCron('30 9 * * 0')).toBe('every Sunday at 09:30')
+    expect(describeCron('0 6 * * 1')).toBe('every Monday at 06:00')
+    expect(describeCron('5 18 * * 6')).toBe('every Saturday at 18:05')
+    expect(describeCron('30 9 * * 7')).toBe('every Sunday at 09:30')
+    expect(describeCron('30 9 * * 8')).toBe('')
+    expect(describeCron('30 * * * 0')).toBe('')
+    expect(describeCron('30 9 1 * 0')).toBe('')
+  })
+
   it('reads spaces around and between the fields, and numbers of any length', () => {
     expect(describeCron('  0 6 * * *  ')).toBe('every day at 06:00')
     expect(describeCron('0   6 *  * *')).toBe('every day at 06:00')

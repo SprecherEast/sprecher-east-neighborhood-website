@@ -34,7 +34,7 @@ describe('scanGraph', () => {
       'ci-workflow:lint',
       'check:lint#eslint',
       'scheduled-task:weekday-scout',
-      'scheduled-task:server-cron',
+      'scheduled-task:server-cron-install-cron',
     ]) {
       expect(ids).toContain(id)
     }
