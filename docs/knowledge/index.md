@@ -8,23 +8,23 @@ Notes load when the work touches their files ([0019](../architecture/decisions/0
 - [Contact](../../src/modules/contact/README.md): form checks, held emails, retention.
 - [Agents](../../src/modules/agents/README.md): MCP access, drafts, runs.
 - [Verification](../../src/modules/verification/README.md): email confirmation links, retention.
-- [Directory](../../src/modules/directory/README.md): FAQ and resources.
+- [Directory](../../src/modules/directory/README.md): FAQ, resources, groups, portraits.
 - [Theme](../../src/platform/theme/README.md): tokens, light and dark, theme options.
 - [Roadmap](../../src/modules/roadmap/README.md): the public plan page.
-- [Accounts](../../src/modules/accounts/README.md): sign-up and sign-in.
+- [Accounts](../../src/modules/accounts/README.md): sign-up, sign-in (password, Google, passkeys), resets, limits.
 - [Site navigation](../../src/modules/site/navigation/README.md): header, footer, forum link, redirects.
-- [UI kit](../../src/platform/ui/README.md): shared components.
-- [Charts and data displays](../../src/platform/ui/chart/README.md): charts, heat map, bill.
-- [Site pages](../../src/modules/site/README.md): CMS pages and blocks.
+- [UI kit](../../src/platform/ui/README.md): shared components and the raw tags banned outside.
+- [Charts and data displays](../../src/platform/ui/chart/README.md): charts, heat map, breakdown.
+- [Site pages](../../src/modules/site/README.md): CMS pages, blocks and layout (header: Site navigation).
 - [Shared Payload code](../../src/platform/payload/README.md): roles, drafts, queue, jobs, link and site-address helpers, keyset paging.
-- [Shared helpers](../../src/platform/lib/README.md): dates, money, bill share.
-- [Platform services](../../src/platform/service/README.md): email, robot check, metadata.
+- [Shared helpers](../../src/platform/lib/README.md): dates, money, paging, emails, chart rules, bill math.
+- [Platform services](../../src/platform/service/README.md): email, robot check, analytics, metadata, runUseCase.
 - [Preview copy](../../src/platform/payload/previewCopy/README.md): what a preview copies.
 - [Rich text](../../src/platform/richtext/README.md): article text, blocks, Markdown tags.
-- [Whole tax bill](../../src/platform/richtext/editorial/README.md): the tax-bill tab.
+- [Whole tax bill](../../src/platform/richtext/editorial/README.md): the tax-bill tab: counting, notes, notices, limits.
 - [News](../../src/modules/news/README.md): posts, bylines, search, categories, top issues.
-- [Site shell](../../src/app/README.md): layout, sitemap, proxy.
-- [Payload routes](<../../src/app/(payload)/README.md>): admin, REST, GraphQL.
+- [Site shell](../../src/app/README.md): layout, sitemap, proxy, headers, Payload config.
+- [Payload routes](<../../src/app/(payload)/README.md>): admin, REST, GraphQL, access, API headers.
 - [Component gallery](<../../src/app/(frontend)/dev/README.md>): dev-only page.
 - [Seed](../../src/endpoints/seed/README.md): demo content, preview accounts.
 

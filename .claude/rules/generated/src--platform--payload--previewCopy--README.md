@@ -37,7 +37,7 @@ What a pull request's preview copies from the published site, so a preview looks
 ## Rules and the tests that protect them
 
 - **A kept field must be safe to publish:** an email field, a hidden field, a field a visitor may not read, or a link to a collection that is not copied must be cleared wherever it sits (groups, arrays, blocks, rich-text blocks and links). A copied collection must be readable by an anonymous visitor with no row filter but published (`classification.ts`; `classification.test.ts`, `testing/previewCopyGate.ts`).
-- **The walk fails closed:** an unknown field type, editor feature, rich-text node, value shape, or a relationship that names no collection fails with a message and is never skipped (`schema.ts`; `classification.test.ts`).
+- **The walk fails closed:** an unknown field type, editor feature, rich-text node, value shape, or a relationship that names no collection fails with a message and is never skipped (the walk is `references.ts`, a slug missing from the config fails in `schema.ts`; `references.test.ts`, `classification.test.ts`).
 - **A computed field on a kept collection needs a human look:** an `afterRead` hook's output is copied and the gate cannot see it (`posts.populatedAuthors` keeps only each name with a new id, so no account id reaches a preview) (`reshape.ts`).
 - **A preview's own accounts are not copied;** they come from their own step (#1400, `src/endpoints/seed/preview-database.ts`).
 - Export, import and file checks: `export.test.ts`, `import.test.ts`, `relativeMediaUrls.test.ts`, `references.test.ts`, `file.test.ts`, `run.test.ts`.

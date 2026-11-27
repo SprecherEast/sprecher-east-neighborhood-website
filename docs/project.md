@@ -96,7 +96,7 @@ generated files) are listed in [`architecture/`](architecture/README.md#exceptio
 ```
 src/
   app/                 Next.js App Router: routes and composition only
-    (frontend)/        Public routes (home, posts, events, faq, resources, search, login, account)
+    (frontend)/        Public routes (home, posts, events, faq, resources, roadmap, search, sign-up, login, account), the component gallery (`dev/`)
     (payload)/         Payload admin and API routes (generated; leave alone)
   modules/             One folder per business area
     accounts/          Who is signed in, sign-in and password flows, the users collection
@@ -107,12 +107,15 @@ src/
     news/              Posts, categories, search
     roadmap/           The public plan page, read from GitHub
     site/              CMS pages, page-builder blocks, heroes, header, footer, redirects, link groups
+    verification/      Email confirmation by link, its collection and retention
   platform/            Shared by every module; imports no module
+    analytics/         The Umami visit counter and the likely-human-click event
     email/             SMTP settings for password-reset and form emails
     lib/               Pure helpers: paging, roles, dates and the site timezone, URLs, `cn`
     payload/           Role checks, access functions, media collection, link field, default editor, publishedAt hook, admin components
     richtext/          The `RichText` renderer, the blocks inside rich text, plain-text conversion
     seo/               Page metadata and Open Graph helpers
+    service/           `runUseCase` and `runAction`, the wrapper every use case and action runs in
     theme/             The theme contract (`tokens.ts`), its Tailwind mapping, theme options and decorations, light and dark mode providers
     turnstile/         The robot check (Cloudflare Turnstile): widget and server verifier
     ui/                The UI kit: `Button`, `Link`, `Media`, `LinkButton`, `JsonLd`, `Breadcrumbs`, `LoadMore`…

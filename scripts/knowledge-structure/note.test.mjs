@@ -134,6 +134,9 @@ describe('parseNote: sections with nothing under their heading', () => {
     ['a rule of stars with spaces', '* * *'],
     ['a rule of underscores', '_____'],
     ['an empty list marker and a quote marker', '-\n>'],
+    ['an empty ordered-list marker', '1.'],
+    ['an empty ordered-list marker with a bracket', '1)'],
+    ['empty markers of every kind, nested', '> - 12.\n+\n*'],
     ['an HTML tag with no text', '<br />'],
     ['a table border', '| --- | --- |'],
   ])('lists a section holding only %s', (_what, markup) => {
@@ -142,6 +145,10 @@ describe('parseNote: sections with nothing under their heading', () => {
 
   it('does not list a section whose text sits beside markup, or one holding a table with words', () => {
     expect(empties('## A\n\n---\n\ntext\n\n## B\n\n| a | b |\n| - | - |\n')).toEqual([])
+  })
+
+  it('does not list a section whose list item has words after its marker', () => {
+    expect(empties('## A\n\n1. one\n\n## B\n\n2) two\n\n## C\n\n> - three\n')).toEqual([])
   })
 
   it('lists the last heading of the note when nothing follows it', () => {

@@ -20,12 +20,15 @@ function visibleText(line, open) {
   return start === -1 ? { text, open: false } : { text: text.slice(0, start), open: true }
 }
 
+const LEADING_MARKERS = /^\s*(?:>\s*)*(?:(?:[-*+]|\d+[.)])(?:\s+|$)\s*)*/
+
 /**
- * Whether a line says anything to a reader: some letter or digit once HTML tags are removed. A
- * rule (`---`), an empty list or quote marker, a table border or a bare tag is markup, not text.
+ * Whether a line says anything to a reader: some letter or digit once HTML tags and the leading
+ * quote and list markers (`>`, `-`, `*`, `+`, `1.`, `1)`) are removed. A rule (`---`), an empty
+ * list or quote marker of any kind, a table border or a bare tag is markup, not text.
  */
 function hasWords(text) {
-  return /[\p{L}\p{N}]/u.test(text.replace(/<[^>]*>/g, ''))
+  return /[\p{L}\p{N}]/u.test(text.replace(/<[^>]*>/g, '').replace(LEADING_MARKERS, ''))
 }
 
 export const FENCE = /^\s*(```|~~~)/
