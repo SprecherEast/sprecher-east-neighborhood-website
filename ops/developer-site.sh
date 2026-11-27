@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
-# Publishes the developer site (#1459): the component showcase and an index page, as static files that
-# Caddy serves at dev.sprechereast.com (environment.sh: DEVELOPER_HOST, DEVELOPER_ROOT). The production
-# deploy runs it after the release is live, from the release's own ops/. It never fails the deploy: the
+# Publishes the developer site (#1459, #1530): the developer pages (the static export of the `developer/`
+# project, built into the release by ops/build-developer-pages.sh) and, until #1541 removes it, the Storybook
+# showcase at /storybook/, as plain files that Caddy serves at dev.sprechereast.com (environment.sh:
+# DEVELOPER_HOST, DEVELOPER_ROOT). The production deploy runs it after the release is live, from the
+# release's own ops/. It never fails the deploy: the
 # caller ignores its exit status, and everything it prints is a warning, so a problem here is read, never
 # a reason to roll production back. It cannot roll production back either: it runs after the switch.
 #
 # What it does, each step only if the one before succeeded, and the previous developer site (files and
 # Caddy block) stays whenever one fails:
 #   1. nothing is changed unless Caddy and the previews' import line are there, this release is still the
-#      live one, the release holds a built showcase, and production answers through Caddy;
+#      live one, the release holds the built developer pages, and production answers through Caddy;
 #   2. the folder to serve is assembled in a staging folder and judged by developer-site-check.sh, which
-#      refuses anything that is not the showcase and the two pages;
+#      refuses anything that is not the developer pages and the Storybook showcase;
 #   3. the staged folder is renamed into $DEVELOPER_ROOT/releases/<release>;
 #   4. the Caddy block, made from ops/caddy/developer-site.caddy, is checked by Caddy alone, moved into the
 #      previews' folder with one rename (caddy_place_block in caddy-block-lib.sh, also used for each
 #      preview), the whole config checked and Caddy reloaded, and production's home page checked after the
 #      reload; on any failure the previous block comes back and Caddy is reloaded again;
 #   5. `current` is pointed at the new release with one atomic rename;
-#   6. the address is asked, through Caddy on this machine, for what a visitor gets: both pages, the
+#   6. the address is asked, through Caddy on this machine, for what a visitor gets: the pages, the
 #      noindex header and disallow-all robots.txt, no HSTS, and a 404 for what only the app has. If that
 #      fails and there was an earlier developer site, `current` goes back to it.
 # It takes the lock every Caddy change takes (caddy-lock-lib.sh). Caddy's own output is never printed.
@@ -31,8 +33,8 @@ trap '' HUP # a dropped SSH session must not stop the script between a change an
 . "$(dirname "$0")/releases-lib.sh"
 
 OPS_DIR=$(cd "$(dirname "$0")" && pwd)
-SHOWCASE_SOURCE="$CODE_DIR/developer-site/showcase" # built by ops/build-showcase.sh, shipped in the release
-PAGES_SOURCE="$OPS_DIR/developer-site"
+PAGES_SOURCE="$CODE_DIR/developer-site/pages" # built by ops/build-developer-pages.sh, shipped in the release
+STORYBOOK_SOURCE="$CODE_DIR/developer-site/storybook" # built by ops/build-showcase.sh; optional, until #1541
 TEMPLATE="$OPS_DIR/caddy/developer-site.caddy"
 HEADERS_SOURCE="$OPS_DIR/caddy/preview-headers.caddy"
 RELEASES="$DEVELOPER_ROOT/releases"
@@ -63,12 +65,16 @@ fail() { # <reason>: something was tried and put back
 
 ! is_preview || skip "a pull request preview never publishes the developer site"
 command -v caddy >/dev/null && [ -f "$CADDYFILE" ] || skip "Caddy or $CADDYFILE was not found"
-[ -d "$SHOWCASE_SOURCE" ] || skip "release $name has no built showcase (its build failed or was skipped)"
+[ -d "$PAGES_SOURCE" ] || skip "release $name has no built developer pages (its build failed or was skipped)"
 # What is copied must be this release's own files, not a folder a link in the release leads to.
 code_real=$(realpath -- "$CODE_DIR")
-case "$(realpath -- "$SHOWCASE_SOURCE")/" in "$code_real"/*) ;; *) skip "release $name's showcase is not inside the release's folder" ;; esac
-[ -f "$PAGES_SOURCE/index.html" ] && [ -f "$PAGES_SOURCE/404.html" ] && [ -f "$PAGES_SOURCE/style.css" ] && [ -f "$TEMPLATE" ] ||
-  skip "the developer site's pages or block template are missing from release $name"
+case "$(realpath -- "$PAGES_SOURCE")/" in "$code_real"/*) ;; *) skip "release $name's developer pages folder is not inside the release's folder" ;; esac
+has_storybook=no
+if [ -e "$STORYBOOK_SOURCE" ] || [ -L "$STORYBOOK_SOURCE" ]; then
+  case "$(realpath -m -- "$STORYBOOK_SOURCE")/" in "$code_real"/*) ;; *) skip "release $name's Storybook showcase folder is not inside the release's folder" ;; esac
+  has_storybook=yes
+fi
+[ -f "$TEMPLATE" ] || skip "the developer site's block template is missing from release $name"
 [ "$(readlink "$APP_DIR/current" 2>/dev/null)" = "releases/$name" ] || skip "release $name is not the live release any more"
 # Names that go into a path or a Caddy block must hold nothing a block could misread.
 [[ "$name" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || skip "the release name has characters a path should not hold"
@@ -101,14 +107,22 @@ install -d -m 755 "$DEVELOPER_ROOT" "$RELEASES"
 staging="$RELEASES/.incoming-$name"
 rm -rf "$staging"
 mkdir -m 755 "$staging"
-# The release's own showcase is judged before it is copied: a copy turns a link into the file it points to, and
-# the check of the copy could then not tell.
-if ! verdict=$(bash "$OPS_DIR/developer-site-check.sh" --source "$SHOWCASE_SOURCE" 2>&1); then
+# The release's own folders are judged before they are copied: a copy turns a link into the file it points
+# to, and the check of the copy could then not tell.
+if ! verdict=$(bash "$OPS_DIR/developer-site-check.sh" --source "$PAGES_SOURCE" 2>&1); then
   report_lines warning "Developer site" <<<"$verdict"
-  fail "the release's showcase did not pass its check"
+  fail "the release's developer pages did not pass their check"
 fi
-cp -r --no-preserve=mode,ownership "$SHOWCASE_SOURCE" "$staging/showcase"
-install -m 644 "$PAGES_SOURCE/index.html" "$PAGES_SOURCE/404.html" "$PAGES_SOURCE/style.css" "$staging/"
+cp -r --no-preserve=mode,ownership "$PAGES_SOURCE/." "$staging/"
+if [ "$has_storybook" = yes ]; then
+  # The pages own every other name; a page called `storybook` would be merged into the showcase's folder.
+  [ ! -e "$staging/storybook" ] || fail "the developer pages hold a page called storybook, which the Storybook showcase needs"
+  if ! verdict=$(bash "$OPS_DIR/developer-site-check.sh" --source "$STORYBOOK_SOURCE" 2>&1); then
+    report_lines warning "Developer site" <<<"$verdict"
+    fail "the release's Storybook showcase did not pass its check"
+  fi
+  cp -r --no-preserve=mode,ownership "$STORYBOOK_SOURCE" "$staging/storybook"
+fi
 if ! verdict=$(bash "$OPS_DIR/developer-site-check.sh" "$staging" 2>&1); then
   report_lines warning "Developer site" <<<"$verdict"
   fail "the folder for the developer site did not pass its check"
@@ -157,7 +171,9 @@ point_link_at "$CURRENT" "releases/$name"
 # --- 6. What a visitor gets. ---
 developer_problem() { # prints the first thing wrong, or nothing
   local status headers robots path
-  for path in / /showcase/index.html; do
+  local pages=(/ /showcase/)
+  [ ! -d "$CURRENT/storybook" ] || pages+=(/storybook/index.html)
+  for path in "${pages[@]}"; do
     status=$(origin_curl "$ORIGIN" "$path" -o /dev/null -w '%{http_code}' || true)
     [ "$status" = 200 ] || { echo "$path answered ${status:-nothing}, not 200"; return; }
   done

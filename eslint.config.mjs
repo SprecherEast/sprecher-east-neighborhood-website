@@ -13,7 +13,7 @@ export default [
       '.next/**',
       'out/**',
       'storybook-static/**',
-      'developer-site/**', // the showcase built into a release (ops/build-showcase.sh)
+      'developer-site/**', // the developer pages and the showcase built into a release (ops/build-release.sh)
       'public/showcase/**',
       'build/**',
       'node_modules/**',
@@ -87,7 +87,7 @@ export default [
 
   // ─── 4b. One font definition (#1447): the site's fonts are defined in one file and imported ──────
   {
-    files: ['src/**/*.{ts,tsx}', '.storybook/**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}', '.storybook/**/*.{ts,tsx}', 'developer/**/*.{ts,tsx}'],
     ignores: ['src/platform/theme/fonts.ts', '**/*.test.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [

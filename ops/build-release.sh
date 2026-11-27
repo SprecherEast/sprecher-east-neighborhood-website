@@ -11,7 +11,8 @@
 # NEXT_PUBLIC_TURNSTILE_SITE_KEY (may be empty), NEXT_PUBLIC_UMAMI_WEBSITE_ID (may be
 # empty), TURNSTILE_PAIRED (yes|no), OUT (archive path). Optionally SHOWCASE_DEST, a folder of the release
 # to build the component showcase into (ops/build-showcase.sh, #1459), and SHOWCASE_OPTIONAL=yes when a
-# failed showcase build must not fail the release (the production deploy).
+# failed showcase build must not fail the release (the production deploy). The same two for the developer
+# pages (DEVELOPER_PAGES_DEST, DEVELOPER_PAGES_OPTIONAL, ops/build-developer-pages.sh, #1530).
 set -euo pipefail
 
 : "${RELEASE_DIR:?}" "${SHA:?}" "${NODE_VERSION:?}" "${NEXT_PUBLIC_SERVER_URL:?}" "${OUT:?}"
@@ -49,6 +50,10 @@ NODE_OPTIONS=--no-deprecation npx --no-install payload migrate
 # so that a showcase built into public/ (a pull request preview's) is there when Next.js builds: only what is
 # in public/ at build time is served.
 if [ -n "${SHOWCASE_DEST:-}" ]; then bash ops/build-showcase.sh "$SHOWCASE_DEST" "${SHOWCASE_OPTIONAL:-no}"; fi
+
+# The developer pages (#1530), a second small build of the repository's UI kit and theme into plain files
+# for dev.sprechereast.com. Not in a pull request preview: the site's own build never holds them.
+if [ -n "${DEVELOPER_PAGES_DEST:-}" ]; then bash ops/build-developer-pages.sh "$DEVELOPER_PAGES_DEST" "${DEVELOPER_PAGES_OPTIONAL:-no}"; fi
 
 npm run build
 
