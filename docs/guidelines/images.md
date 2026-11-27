@@ -98,8 +98,8 @@ used through the [`make-illustration`](../../.agents/skills/make-illustration/SK
     whatever its own card overlays left empty (an event's badge corner), before it is published.
 
 Summary of the owner's direction on pictures that carry meaning (2026-11-26, chat, recorded on #1561):
-three news pictures reused one stock street and said nothing without their panel, so the rules
-below are checked by the generator and in the author's written critique before anyone sees a picture.
+pictures that repeat one stock scene say nothing without their panel, so the rules below are
+checked by the generator and in the author's written critique before anyone sees a picture.
 
 23. **The scene shows the subject.** With the panel hidden, a neighbor can say what the item is
     about. Each scene has one focal subject drawn large, taken from the item itself, not generic

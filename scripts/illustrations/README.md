@@ -5,15 +5,15 @@ right. Python 3 with Pillow and `rsvg-convert` for export; the Poppins font is u
 The procedure is the [`make-illustration`](../../.agents/skills/make-illustration/SKILL.md) skill and the
 rules are in [Images made for the site](../../docs/guidelines/images.md).
 
-| File          | What it holds                                                                                                                                                    |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `settings.py` | Named settings in one place: canvas, scene width, panel width, panel type sizes, the badge corner of events, line weight, palette.                               |
-| `parts.py`    | Shared parts: people, bicycles, trees, cars, carts, calendar page, roast turkey, backdrop, text panel; `place` and `focal` register what is drawn.               |
-| `props.py`    | Parts drawn at true scale (garbage truck, bin, pantry, mural wall, raised bed, entrance arch...) and the helpers that size every part from one pixels-per-metre. |
-| `checks.py`   | The rules the build judges by itself: one scale, safe area, balance, a large focal subject, a layout of its own.                                                 |
-| `places.py`   | Established real places, reused exactly and never redrawn in a scene.                                                                                            |
-| `scenes/`     | One function per picture, registered in `scenes/__init__.py`.                                                                                                    |
-| `build.py`    | Builds SVGs, checks every panel, exports JPGs.                                                                                                                   |
+| File          | What it holds                                                                                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `settings.py` | Named settings in one place: canvas, scene width, panel width, panel type sizes, the badge corner of events, line weight, palette.                                      |
+| `parts.py`    | Shared parts: people, bicycles, trees, cars, carts, calendar page, roast turkey, backdrop, text panel; `place` and `focal` register what is drawn.                      |
+| `props.py`    | Parts drawn at true scale (garbage truck, bin, library front, mural wall, raised bed, entrance arch...) and the helpers that size every part from one pixels-per-metre. |
+| `checks.py`   | The rules the build judges by itself: one scale, safe area, balance, a large focal subject, a layout of its own.                                                        |
+| `places.py`   | Established real places, reused exactly and never redrawn in a scene.                                                                                                   |
+| `scenes/`     | One function per picture, registered in `scenes/__init__.py`.                                                                                                           |
+| `build.py`    | Builds SVGs, checks every panel, exports JPGs.                                                                                                                          |
 
 ```
 python3 -m scripts.illustrations.build --check                 # every scene has a panel and it fits

@@ -370,7 +370,7 @@ print(json.dumps([round(p['size'] / ppm, 2) for p in parts.PLACED]))`,
         `import json
 from scripts.illustrations import parts, props, settings as s
 parts.PLACED.clear()
-props.garbage_truck(300, 800, 80); props.dumpster(40, 800, 90); props.pantry(60, 800, 125)
+props.garbage_truck(300, 800, 80); props.dumpster(40, 800, 90); props.storefront(0, 800, 100, 9, 'LIBRARY')
 props.mural_wall(70, 790, 125); props.raised_bed(330, 815, 130, plants=(('sunflower', 1, 2),))
 props.gate_arch(80, 810, 100); props.fence(0, 900, 790, 100)
 print(json.dumps(sorted({p['kind'] for p in parts.PLACED} - set(s.REAL_SIZE_M))))`,
@@ -385,7 +385,7 @@ print(json.dumps(sorted({p['kind'] for p in parts.PLACED} - set(s.REAL_SIZE_M)))
 from scripts.illustrations import parts
 from scripts.illustrations.scenes import SCENES
 out = {}
-for name in ('thanksgiving_pickup', 'thanksgiving_pantry', 'dropoff_unload', 'dropoff_entrance', 'youth_mural', 'youth_garden'):
+for name in ('thanksgiving_pickup', 'thanksgiving_library', 'dropoff_unload', 'dropoff_entrance', 'youth_mural', 'youth_garden'):
     parts.PANELS.clear()
     SCENES[name]()
     out[name] = [[p['title'], p['bullets']] for p in parts.PANELS]
@@ -412,7 +412,7 @@ print(json.dumps(out))`,
       ]
       expect(JSON.parse(r.stdout)).toEqual({
         thanksgiving_pickup: thanks,
-        thanksgiving_pantry: thanks,
+        thanksgiving_library: thanks,
         dropoff_unload: drop,
         dropoff_entrance: drop,
         youth_mural: youth,

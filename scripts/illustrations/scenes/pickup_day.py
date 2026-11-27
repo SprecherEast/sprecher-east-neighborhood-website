@@ -11,8 +11,7 @@ GROUND = 800
 def scene_thanksgiving_pickup():
     b = backdrop(horizon=700)
     b += road(745, 45, 110, 855)
-    b += tree(110, 752, h_tree(PPM, 6.6), c="#e2a032", d="#c4762b")
-    b += calendar_page(520, 96, "NOV", "25", w=210, h=230)
+    b += calendar_page(560, 80, "NOV", "26", w=240, h=260)
     b += focal(garbage_truck(332, GROUND, PPM), "garbage truck")
     b += cart(86, 772, "#2b3556", "#1f2a44", s_cart(PPM)) + cart(136, 772, BLUE, "#3b7aa5", s_cart(PPM), True)
     b += person(214, 776, s_person(PPM), shirt=RED, pants="#2b3556", skin=SKIN_DARKEST, arm="reach", hat="beanie", cap=YEL)

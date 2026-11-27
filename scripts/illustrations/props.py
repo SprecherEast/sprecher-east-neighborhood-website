@@ -107,25 +107,29 @@ def fence(x0, x1, y, ppm, h=1.8):
         g += _rect(px - .05, -h - .05, .1, h + .05, "#a7b0bf", ppm)
     return g + '</g>'
 
-def hours_sign(x, y, ppm, word="OPEN"):
+def hours_sign(x, y, ppm, word="OPEN", col="#2f7a3f"):
     """A sign board on two posts, 1.8 m wide and 1.1 m tall, 2.6 m off the ground; (x, y) is the
-    foot of its left post. The board is green with one large word."""
+    foot of its left post. The board is `col` (green) with one large word."""
     place("wall", x, y - 3.7 * ppm, x + 1.9 * ppm, y, size=3.7 * ppm)
     g = _g(x, y, ppm)
     g += _rect(.1, -2.6, .1, 2.6, "#6b4b3a", ppm) + _rect(1.7, -2.6, .1, 2.6, "#6b4b3a", ppm)
-    g += _rect(0, -3.7, 1.9, 1.1, "#2f7a3f", ppm, .06)
-    g += f'<text x=".95" y="-3.0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size=".52" fill="#fff">{word}</text>'
+    g += _rect(0, -3.7, 1.9, 1.1, col, ppm, .06)
+    g += f'<text x=".95" y="-3.0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="{.52 if len(word) <= 4 else .36}" fill="#fff">{word}</text>'
     return g + '</g>'
 
-def storefront(x, y, ppm, w=8.0):
+def storefront(x, y, ppm, w=8.0, label=""):
     """A community building's front: a brick wall 4.4 m tall and w wide with a door and a window, its
-    bottom left corner at (x, y). Fills the frame behind the scene, so it may run off the sides."""
+    bottom left corner at (x, y), with `label` on a plaque above the door. Fills the frame behind the
+    scene, so it may run off the sides."""
     place("building", x, y - 4.4 * ppm, x + w * ppm, y, size=4.4 * ppm, bleed="sides")
     g = _g(x, y, ppm)
     g += _rect(0, -4.4, w, 4.4, "#d9c49c", ppm) + f'<g>{brick_lines_m(0, -4.4, w, 4.4)}</g>'
     g += _rect(0, -4.6, w, .25, "#8c96a8", ppm)
     g += _rect(.4, -2.1, 1.1, 2.1, "#2c3a4c", ppm) + _rect(.4, -2.1, 1.1, .2, "#f4f6fa", ppm)  # door
     g += _rect(w - 2.4, -3.0, 1.9, 1.5, GLASS, ppm) + _rect(w - 2.4, -1.5, 1.9, .12, "#8c96a8", ppm)
+    if label:
+        g += _rect(.2, -3.9, 3.2, .8, CREAM, ppm, .05)
+        g += f'<text x="1.8" y="-3.3" text-anchor="middle" font-family="Poppins" font-weight="700" font-size=".5" fill="{NAVY}">{label}</text>'
     return g + '</g>'
 
 def brick_lines_m(x, y, w, h, step=.22, off=.45):
@@ -136,58 +140,6 @@ def brick_lines_m(x, y, w, h, step=.22, off=.45):
         for xx in [x + (i % 2) * off / 2 + k * off for k in range(int(w / off) + 1)]:
             out.append(f'<line x1="{xx:g}" y1="{yy:g}" x2="{xx:g}" y2="{yy + step:g}" stroke="#b7a07a" stroke-width=".02"/>')
     return "".join(out)
-
-def can(x, y, w, h, col, ppm):
-    """A tin can or jar on a shelf, in metres inside a group: bottom left corner at (x, y)."""
-    return (_rect(x, y - h, w, h, col, ppm, .02) + f'<rect x="{x:g}" y="{y - h * .65:g}" width="{w:g}" height="{h * .3:g}" fill="#fff" opacity=".8"/>')
-
-def pantry(x, y, ppm):
-    """A free community pantry: a wooden cabinet 2.9 m wide and 2.3 m tall with a pitched roof, a
-    heart on its gable and shelves of cans, jars, bread and apples. Bottom left corner at (x, y)."""
-    place("bin", x, y - 2.3 * ppm, x + 2.9 * ppm, y + .1 * ppm, size=2.3 * ppm)
-    g = _g(x, y, ppm)
-    g += '<ellipse cx="1.45" cy=".05" rx="1.7" ry=".1" fill="#000" opacity=".16"/>'
-    g += _rect(.1, -2.0, 2.7, 2.0, "#b98f5c", ppm) + _rect(.25, -1.85, 2.4, 1.7, "#6b4b3a", ppm)   # frame, the dark inside
-    g += _poly([(-.05, -2.0), (1.45, -2.3), (2.95, -2.0), (2.95, -1.9), (-.05, -1.9)], "#a8714f", ppm)
-    g += f'<path d="M1.45,-2.0 C1.0,-2.3 1.9,-2.3 1.45,-1.95 Z" fill="{RED}" {_o(ppm)}/>'
-    for sy in (-1.25, -.7):
-        g += _rect(.25, sy, 2.4, .08, "#d9a25a", ppm)
-    cols = [BLUE, RED, "#e8b83b", GREEN, "#c4562f"]
-    for i in range(8):                                                              # top shelf: tins
-        g += can(.38 + i * .28, -1.27, .22, .4, cols[i % 5], ppm)
-    g += _rect(.45, -.98, .5, .28, "#e0a257", ppm, .1) + _rect(1.05, -1.0, .5, .3, "#d9c49c", ppm)  # bread and a bag of rice
-    for i in range(5):
-        g += f'<circle cx="{1.85 + i * .15:g}" cy="-.8" r=".07" fill="#d9583a" {_o(ppm)}/>'
-    for i in range(7):                                                              # bottom shelf: jars and boxes
-        g += can(.38 + i * .3, -.72, .24, .36 if i % 2 else .3, cols[(i + 2) % 5], ppm)
-    g += _rect(1.25, -.5, .6, .5, "#c9a06a", ppm) + _rect(1.95, -.5, .6, .5, "#dcb783", ppm)         # crates on the floor
-    return g + '</g>'
-
-def grocery_bag(x, y, ppm):
-    """A paper grocery bag with a loaf and a leek standing out, its bottom centre at (x, y)."""
-    g = _g(x, y, ppm)
-    g += _poly([(-.22, 0), (-.25, -.5), (.25, -.5), (.22, 0)], "#c9a06a", ppm)
-    g += f'<path d="M-.1,-.5 L-.12,-.72 M.08,-.5 L.14,-.78" stroke="{GREEN}" stroke-width=".07" stroke-linecap="round"/>' + _rect(-.15, -.62, .3, .14, "#e0a257", ppm, .06)
-    return g + '</g>'
-
-def lamp_post(x, y, ppm, h=3.8):
-    """A street lamp, h metres tall, its foot at (x, y), with the lamp head leaning toward the left."""
-    place("pole", x - .8 * ppm, y - h * ppm, x + .2 * ppm, y, size=h * ppm)
-    g = _g(x, y, ppm)
-    g += _rect(-.07, -h, .14, h, "#4a5266", ppm) + _rect(-.18, -.35, .36, .35, "#4a5266", ppm)
-    g += _poly([(-.07, -h), (-.45, -h - .02), (-.45, -h + .1), (-.07, -h + .1)], "#4a5266", ppm)
-    g += _poly([(-.7, -h + .1), (-.2, -h + .1), (-.25, -h + .3), (-.65, -h + .3)], YEL, ppm)
-    return g + '</g>'
-
-def bunting(x0, y0, x1, y1, n=9, sag=60, cols=("#d9583a", "#e8b83b", "#c4762b", "#2f7a3f")):
-    """A string of pennant flags hung from (x0, y0) to (x1, y1), drooping by sag pixels."""
-    g = f'<path d="M{x0},{y0} Q{(x0 + x1) / 2:g},{(y0 + y1) / 2 + 2 * sag:g} {x1},{y1}" fill="none" stroke="{NAVY}" stroke-width="3"/>'
-    for i in range(n):
-        t = (i + .5) / n
-        px = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * (x0 + x1) / 2 + t * t * x1
-        py = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * ((y0 + y1) / 2 + 2 * sag) + t * t * y1
-        g += f'<path d="M{px - 22:g},{py:g} L{px + 22:g},{py:g} L{px:g},{py + 56:g} Z" fill="{cols[i % len(cols)]}" stroke="{NAVY}" stroke-width="3" stroke-linejoin="round"/>'
-    return g
 
 def gate_arch(x, y, ppm, w=6.4, h=4.4, word="OPEN"):
     """An entrance arch: two posts w metres apart (its left foot at (x, y)), h metres tall, with a
