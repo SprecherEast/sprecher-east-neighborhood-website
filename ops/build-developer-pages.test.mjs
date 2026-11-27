@@ -73,6 +73,20 @@ describe('build-developer-pages.sh: a build that works', () => {
   })
 })
 
+describe('build-developer-pages.sh: how long it may take', () => {
+  it('gives the build three minutes when the caller names no limit, so a hung build holds the release up briefly', async () => {
+    write(
+      path.join(dir, 'bin/timeout'),
+      '#!/usr/bin/env bash\necho "timeout $*" >> "$STUB_LOG"\nshift 3\nexec "$@"\n',
+      0o755,
+    )
+    expect((await build(['developer-site/pages', 'yes'])).code).toBe(0)
+    expect(fs.readFileSync(path.join(dir, 'log'), 'utf8')).toContain(
+      'timeout -k 10 180 npm run developer:build\n',
+    )
+  })
+})
+
 describe('build-developer-pages.sh: a build that does not work', () => {
   for (const [what, env] of [
     ['fails', { STUB_NPM: 'fail' }],

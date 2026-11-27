@@ -9,12 +9,12 @@
 #                 built without the pages and the developer site is not updated. The production deploy uses it,
 #                 so the pages can never fail the production build.
 #   optional=no   a failed build fails the build.
-# DEVELOPER_PAGES_SECONDS (default 600) is how long the build may take. The build runs from the current folder.
+# DEVELOPER_PAGES_SECONDS (default 180, the build takes under a minute, so a hung one holds up the release briefly) is how long the build may take. The build runs from the current folder.
 set -uo pipefail # no -e: every step that decides the result is checked by hand
 
 . "$(dirname "$0")/optional-build-lib.sh"
 
-optional_build "Developer pages" "${1:-}" "${2:-no}" "${DEVELOPER_PAGES_SECONDS:-600}" developer/out index.html 404.html showcase/index.html -- \
+optional_build "Developer pages" "${1:-}" "${2:-no}" "${DEVELOPER_PAGES_SECONDS:-180}" developer/out index.html 404.html showcase/index.html -- \
   npm run developer:build
 rc=$?
 rm -rf developer/.next # the build's cache is not part of the release

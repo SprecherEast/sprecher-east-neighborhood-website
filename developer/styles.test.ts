@@ -17,8 +17,10 @@ describe('the developer pages’ stylesheet', () => {
       { from: file },
     )
     // PageHeader and Card, which the home page uses, write these
-    expect(css).toContain('.text-4xl')
-    expect(css).toContain('.rounded-2xl')
+    // The names are built, not written: with `base` here, Tailwind reads this file too, and a literal would
+    // put its own class in the CSS even without the `@source` lines
+    expect(css).toContain(['.text', '4xl'].join('-'))
+    expect(css).toContain(['.rounded', '2xl'].join('-'))
     // and the theme the site's pages use, in both modes
     expect(css).toContain("[data-theme='dark']")
   })

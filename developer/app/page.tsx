@@ -14,7 +14,7 @@ export default function DeveloperHomePage() {
       <PageHeader
         eyebrow="Sprecher East developer pages"
         title="For the people building Sprecher East"
-        description="Unofficial tools, made with AI tools. Nothing here is private, and search engines are asked to skip it."
+        description="This is an unofficial site, made with AI tools. Nothing here is private, and search engines are asked to skip it."
       />
       <div className="container">
         <CardGrid columns={2}>

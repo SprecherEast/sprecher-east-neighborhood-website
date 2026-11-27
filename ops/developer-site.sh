@@ -121,6 +121,7 @@ if [ "$has_storybook" = yes ]; then
     report_lines warning "Developer site" <<<"$verdict"
     fail "the release's Storybook showcase did not pass its check"
   fi
+  # No `-L` needed: the check above has already refused every link in the source
   cp -r --no-preserve=mode,ownership "$STORYBOOK_SOURCE" "$staging/storybook"
 fi
 if ! verdict=$(bash "$OPS_DIR/developer-site-check.sh" "$staging" 2>&1); then

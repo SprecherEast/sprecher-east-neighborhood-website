@@ -12,6 +12,9 @@ export default [
     ignores: [
       '.next/**',
       'out/**',
+      // The developer pages' build (npm run developer:build): flat config matches these two only at the root
+      'developer/.next/**',
+      'developer/out/**',
       'storybook-static/**',
       'developer-site/**', // the developer pages and the showcase built into a release (ops/build-release.sh)
       'public/showcase/**',
@@ -97,6 +100,12 @@ export default [
             {
               group: ['next/font/*'],
               message: 'Define fonts in src/platform/theme/fonts.ts and import them from there',
+            },
+            {
+              // The developer pages import the site, never the other way round (#1530)
+              group: ['**/developer/**'],
+              message:
+                'The site never imports the developer pages (developer/ is a separate project, #1530)',
             },
           ],
         },

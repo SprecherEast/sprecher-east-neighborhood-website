@@ -12,7 +12,7 @@ export default function ShowcasePage() {
       <PageHeader
         eyebrow="Component showcase"
         title="Every shared component"
-        description="The showcase is on its way. It will show each piece of the site's UI kit, what it can do, and how it looks in light and dark."
+        description="The showcase is on its way. It will show each piece of the site’s UI kit, what it can do, and how it looks in light and dark."
         backLink={{ href: '/', label: 'Developer home' }}
       />
     </div>

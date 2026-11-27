@@ -36,7 +36,7 @@ developer site, files and block, as it was:
 1. **In the build job** (no secret): `build-developer-pages.sh` runs `npm run developer:build` into the release's
    `developer-site/pages` (about 50 s, 1 MB), and `build-showcase.sh` runs `npm run storybook:build` into
    `developer-site/storybook` (about 40 s, 9 MB more upload, 15 MB more per kept release on the server). Both share
-   `optional-build-lib.sh`: if either fails or takes over 10 minutes, the release is built without it, with a
+   `optional-build-lib.sh`: if either fails or takes too long (3 minutes for the pages, `DEVELOPER_PAGES_SECONDS`; 10 for Storybook), the release is built without it, with a
    warning, and the build never fails for it. Both build before the site's build, while the dev dependencies are
    installed. The font is the site's own: the files in `src/platform/theme/fonts/` that the theme's `fonts.ts`
    loads for the site, which Next.js copies into the pages' `_next/static/media/` and `.storybook/fonts.css` into
@@ -101,7 +101,7 @@ preview), and Tailwind scans every file under the project that git does not igno
 are ignored by git, so built files never reach the site's CSS (a test scans a tree with the repository's `.gitignore`
 and fails if either build folder is read). The pages' own source is read: a class used only in `developer/` is added to
 the site's CSS, a few bytes at most, which is accepted so that the pages share the site's one stylesheet
-(`developer/app/globals.css` imports it). ESLint ignores the build folders too; the other tools read `src`,
+(`developer/app/globals.css` imports it). ESLint ignores the build folders too (`developer/out/**` and `developer/.next/**` are named in its config, since its root-only `out/**` and `.next/**` do not reach them; `developer/lint.test.ts` checks); the other tools read `src`,
 `developer`, `ops`, `scripts` or git's file list.
 
 **Certificate.** One new name, `dev.sprechereast.com`, one order when the block first loads; renewals don't count
