@@ -29,7 +29,7 @@ paths:
 ---
 name: 'Site pages'
 type: module
-summary: 'CMS pages: hero, blocks, refresh on save.'
+summary: 'CMS pages and blocks.'
 aliases: ['pages', 'page builder', 'hero']
 relationships: []
 ---

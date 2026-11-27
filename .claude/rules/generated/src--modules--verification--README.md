@@ -9,7 +9,7 @@ paths:
 ---
 name: 'Verification'
 type: module
-summary: 'email confirmation by link, retention.'
+summary: 'email confirmation links, retention.'
 aliases: ['email confirmation']
 relationships: []
 ---

@@ -1,7 +1,7 @@
 ---
 name: 'Roadmap'
 type: module
-summary: 'the public plan page, read from GitHub.'
+summary: 'the public plan page.'
 aliases: ['plan page', 'missions']
 relationships: []
 ---

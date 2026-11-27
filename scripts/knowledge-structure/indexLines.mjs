@@ -4,7 +4,10 @@ import path from 'node:path'
 /** The index line for a note, with its link written from the index file's folder. */
 export function indexLine({ path: notePath, name, summary }, indexPath) {
   const link = path.posix.relative(path.posix.dirname(indexPath), notePath)
-  return `- [${name}](${link}): ${summary}`
+  // Markdown needs angle brackets around an address with parentheses or spaces; Prettier writes
+  // them, so the generated line is already what formatting leaves alone
+  const target = /[()\s]/.test(link) ? `<${link}>` : link
+  return `- [${name}](${target}): ${summary}`
 }
 
 const NOTES = '## Notes'
