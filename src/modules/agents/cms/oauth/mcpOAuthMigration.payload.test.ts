@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
-import { down, up } from '@/migrations/20261126_170510_mcp_oauth_sign_in'
+import { down, up } from '@/migrations/20261127_130000_mcp_oauth_sign_in'
 
 /**
  * The OAuth sign-in migration (#1501) rolls back on SQLite with foreign keys enforced, even with
