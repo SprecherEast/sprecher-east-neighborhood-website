@@ -10,7 +10,7 @@ paths:
 ---
 name: 'Directory'
 type: module
-summary: 'the FAQ and resources pages.'
+summary: 'FAQ and resources.'
 aliases: ['FAQ', 'resources']
 relationships: []
 ---

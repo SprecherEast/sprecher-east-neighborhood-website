@@ -1,0 +1,51 @@
+---
+name: 'Whole tax bill'
+type: feature
+summary: 'the tax-bill tab.'
+aliases: ['bill share', 'Rough Estimator', 'property tax bill']
+relationships: []
+---
+
+# Whole tax bill
+
+The one fact-tab panel that works out what a neighbor's property-tax bill might be. A reader types a home value, picks a tax year, and the panel redraws the City's tax, its increase, each taxing body's share of the whole bill and the rates behind it, all in the browser. It is a block an editor places inside a fact tab ([rich text](../README.md)); its text, notes and notices are fields of that block, not code. The arithmetic is in [shared helpers](../../lib/README.md) (`billShare.ts`); the receipt and bars are drawn by the [charts](../../ui/chart/README.md).
+
+## How the pieces link
+
+- **Panels, top to bottom:** `RoughEstimator.tsx` (the value box and year control), `BillAnswer.tsx` (the City's tax and increase), `RatesPanel.tsx` (the rates behind the year), the whole bill (`ShareBill` with the City's breakdown nested under the City's row, `BreakdownRow.tsx`) and `BillDetails.tsx` (the notes and sources rows); `BillShare.client.tsx` joins them and holds the state, spaced by one value (`BILL_GAP`).
+- **Block fields:** the block config (`billShareBlockConfig.ts`) holds the intro, the row titles, the notes and the list of toasts (`billToastFields.ts`); the starting text is typed once in `billShareDefaults.ts`, and a block saved before a field existed shows the default until it is saved again.
+- **Figures in a tab's text:** `{yearly}` and `{monthly}` in a tab's button or heading read the same increase as the answer card (`billFigures.ts`, `BillFigures.client.tsx`, #1029).
+- **Libraries doing real work:** none beyond the kit; the counts use the shared motion helpers (`useBillCount.client.ts`, `src/platform/ui/motion.client.ts`).
+
+## Behaviors and events
+
+- **Nothing changes while typing:** the answer, bill, rows and the status line a screen reader hears follow the value last estimated. The check-mark button is disabled until the typed value is a new valid number; Enter presses it. The page loads already estimated for the City's average home (`RoughEstimator.tsx`, #1110).
+- **Counts and flashes:** an estimate counts the amounts over 1.5 s and then flashes the total once; a year switch counts over half a second, the mill rates moving from one year's to the other's; with reduced motion everything lands at once (`rateBlend.ts`, `useBillCount.client.ts`, #1087, #1351).
+- **The City's breakdown row opens by itself** after an estimate that changes the bill, once the count and flash have ended and `OPEN_AFTER_TOTAL_MS` has passed; a year switch alone never opens it, a row the reader closed opens again on the next new estimate (`useBreakdownAutoOpen.client.ts`, #1165, #1176; `useBreakdownAutoOpen.client.test.ts`).
+- **Notices** (toasts, #1379): each is set once by the moment it is for (an earlier year's rates in use, every rate the year's own, or the reader pressing an Estimate button), with its kind, where it sits and how it ends; one is on show at a time, none opens by itself, and a message left empty turns it off (`billToasts.ts`, `useBillToasts.client.ts`, `BillToastSlot.client.tsx`; `billToasts.test.ts`).
+
+## Shared pieces it uses
+
+- `Field.Money`, `SegmentedControl`, `Card`, `Disclosure`, `Toast`, `ShareBill`, `ScaledBreakdown`, `Badge` from the [UI kit](../../ui/README.md); `billShare.ts`, `money.ts` and `chart/scale.ts` from [shared helpers](../../lib/README.md).
+
+## Rules and the tests that protect them
+
+- **A rate not set for a year is carried from the year before,** and the line says which year; a rate that is empty or not above zero is "not set", never zero, and a year with any rate unset has no shares of its own, so no bill is drawn ("No rate yet") (`billRates.ts`, `src/platform/lib/billShare.ts` `fillFromEarlier`; `billRates.test.ts`, `RatesPanel.test.tsx`).
+- **Two years tell one story** (#1121): the typed value is the home's value in the latest year; an earlier year prices the same home by the average-home ratio (`homeInYear`), and the increase is the City's tax in the year less the year before's, each rounded to the dollar as the cards show it, so the later card less the earlier card is the line, for any home. A year with no average home leaves the value as typed and shows no increase (`billFigures.ts`, `cityTax.ts`; `BillShareTwoYears.client.test.tsx`, `billFigures.test.ts`, `cityTax.test.ts`).
+- **The Estimate tag is a button that says why** the figures are an estimate (they cannot know credits, exemptions, special assessments); it shows on the answer card and the whole bill in every year and on the rates panel only for a year not all final (`PanelHeader.tsx`, `billRates.ts` `ratesBadgeFor`, #1417; `BillShareToast.client.test.tsx`).
+- **The whole bill reads like a receipt:** one row per body, the largest share first (equal shares keep City, schools, county, college), each with name, percent, dollars and a bar on one shared scale; the total is the last row; the lines add up exactly to the City's slice in whole dollars (`billShareView.ts`, `src/platform/lib/billShare.ts`, #1196, #1202; `billShareView.test.ts`, `BillShareOrder.client.test.tsx`, `BillShareBar.test.tsx`).
+- **A note shows by its condition** (always, when the tab has more than one year, in a year with a proposed rate, or when a rate is missing); a note not showing still takes its room so an open row never changes height; Admin refuses a blank its condition cannot fill (`billShareNotes.ts`; `billShareNotes.test.ts`, `BillDetails.test.tsx`).
+- **A tab with a bill is drawn in one column** in a fixed order, the tab's heading up to 48 characters, and its charts keep their table for screen readers only (`BillShare.client.tsx`, `FactTabs.tsx`; `FactTabsBill.test.tsx`, `BillShare.client.test.tsx`).
+- Counting and one flash per settled bill: `BillShareCounting.client.test.tsx`; the City's breakdown row: `BillShareCity.client.test.tsx`, `BreakdownRow.test.tsx`; the estimator: `RoughEstimator.test.tsx`, `BillShareEstimate.client.test.tsx`; the block's fields: `billShareBlockConfig.test.ts`, `src/payload.config.billShareNotes.test.ts`.
+
+## Boundaries
+
+- Browser code: the whole panel is drawn again in the client for every value and year, from stored rates, and imports no chart library or spec rules. It is imported only through the rich-text block lists (`blockConfigs.ts`).
+
+## Decisions
+
+Issues #1018, #1111, #1121, #1163, #1379, #1417; the chart port is decision [0018](../../../../docs/architecture/decisions/0018-charts-behind-our-own-port.md).
+
+## Known gaps
+
+None known.

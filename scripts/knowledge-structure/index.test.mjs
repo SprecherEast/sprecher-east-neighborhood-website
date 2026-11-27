@@ -13,6 +13,19 @@ describe('indexLine', () => {
   })
 })
 
+describe('indexLine for a path with parentheses', () => {
+  it('writes the link in angle brackets, as Prettier does, so the line is stable under formatting', () => {
+    const route = { path: 'src/app/(payload)/README.md', name: 'Admin', summary: 'The admin' }
+    expect(indexLine(route, 'docs/knowledge/index.md')).toBe(
+      '- [Admin](<../../src/app/(payload)/README.md>): The admin',
+    )
+  })
+
+  it('leaves a path with no parentheses or spaces bare', () => {
+    expect(indexLine(entry, 'docs/knowledge/index.md')).not.toContain('<')
+  })
+})
+
 describe('renderIndex', () => {
   it('replaces only the lines under Notes and leaves the rest as it was', () => {
     const old = goodIndex('- [Old](../../x.md): stale')
