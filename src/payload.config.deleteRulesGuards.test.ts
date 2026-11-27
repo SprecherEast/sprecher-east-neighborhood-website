@@ -1,3 +1,4 @@
+import { createClient } from '@libsql/client'
 import { sql } from '@payloadcms/db-sqlite'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
@@ -147,6 +148,84 @@ describe('a migration that fails halfway', () => {
     expect(await database.query('PRAGMA foreign_keys')).toEqual([{ foreign_keys: 1 }])
   })
 
-  // `PRAGMA integrity_check` is not tested: it fails only on a corrupted database file, which no
-  // statement a test can send produces, and the migration's other checks do not depend on it.
+  /**
+   * Rebuilds `payload_preferences_rels`, a table nothing points at, with one change in its
+   * definition, keeping its rows and indexes. Returns what puts the table back as it was.
+   */
+  const rebuildWithChange = async (from: string, to: string) => {
+    const table = 'payload_preferences_rels'
+    const objects = await database.query<{ type: string; sql: string }>(
+      `SELECT type, sql FROM sqlite_master WHERE tbl_name = '${table}' AND sql IS NOT NULL ORDER BY type DESC`,
+    )
+    const definition = objects.find((object) => object.type === 'table')!.sql
+    const indexes = objects.filter((object) => object.type === 'index').map((object) => object.sql)
+    const rebuild = async (create: string) => {
+      await database.query(`CREATE TABLE \`__keep\` AS SELECT * FROM \`${table}\``)
+      await database.query(`DROP TABLE \`${table}\``)
+      await database.query(create)
+      await database.query(`INSERT INTO \`${table}\` SELECT * FROM \`__keep\``)
+      await database.query('DROP TABLE `__keep`')
+      for (const index of indexes) await database.query(index)
+    }
+    expect(definition).toContain(from)
+    await rebuild(definition.replace(from, to))
+    return () => rebuild(definition)
+  }
+
+  it.each([
+    ['a column of another type', '`path` text NOT NULL', '`path` varchar NOT NULL'],
+    ['a column that lost NOT NULL', '`path` text NOT NULL', '`path` text'],
+    [
+      'a primary key that is no longer one',
+      '`id` integer PRIMARY KEY NOT NULL',
+      '`id` integer NOT NULL',
+    ],
+  ])('refuses a table with %s, changing nothing', async (_name, from, to) => {
+    await database.run(down)
+    const restore = await rebuildWithChange(from, to)
+    const before = await snapshot()
+
+    await expect(database.run(up)).rejects.toThrow(
+      /Table payload_preferences_rels is not as this migration expects/,
+    )
+
+    expect(await snapshot()).toEqual(before)
+    expect(await database.query('PRAGMA foreign_keys')).toEqual([{ foreign_keys: 1 }])
+    await restore()
+  })
+
+  it('rolls back when the database fails its integrity check', async () => {
+    await database.run(down)
+    // A second connection changes an unrelated index's stored text behind the adapter's back, so
+    // the index no longer matches its table: nothing the migration rebuilds, and no other check
+    // of it, sees that, but `PRAGMA integrity_check` does
+    const original = (
+      await database.query<{ sql: string }>(
+        "SELECT sql FROM sqlite_master WHERE name = 'users_email_idx'",
+      )
+    )[0].sql
+    const rewrite = async (statement: string) => {
+      const other = createClient({ url: `file:${database.file}` })
+      try {
+        await other.execute('PRAGMA writable_schema=ON')
+        await other.execute({
+          sql: "UPDATE sqlite_master SET sql = ? WHERE name = 'users_email_idx'",
+          args: [statement],
+        })
+        const version = (await other.execute('PRAGMA schema_version')).rows[0][0] as number
+        await other.execute(`PRAGMA schema_version=${version + 1}`)
+        await other.execute('PRAGMA writable_schema=OFF')
+      } finally {
+        other.close()
+      }
+    }
+    await rewrite(original.replace('(`email`)', '(`name`)'))
+    const before = await snapshot()
+
+    await expect(database.run(up)).rejects.toThrow(/integrity_check failed/)
+
+    expect(await snapshot()).toEqual(before)
+    expect(await database.query('PRAGMA foreign_keys')).toEqual([{ foreign_keys: 1 }])
+    await rewrite(original)
+  })
 })
