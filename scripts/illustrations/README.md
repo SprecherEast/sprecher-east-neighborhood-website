@@ -40,4 +40,5 @@ and apply to every scene not in `PRE_RULES_SCENES`:
 - **Badge corner** of an event picture, as before. An event scene is judged for scale and layout only,
   as `parts.lowered` moves its geometry.
 
-A scene drawn before the rules leaves `PRE_RULES_SCENES` when it is redrawn.
+A scene drawn before the rules leaves `PRE_RULES_SCENES` when it is redrawn. `--audit` cannot judge the
+geometry of a scene that wraps its parts in its own transform (the traffic signal): its boxes are not final.
