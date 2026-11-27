@@ -103,7 +103,8 @@ export default [
             },
             {
               // The developer pages import the site, never the other way round (#1530)
-              group: ['**/developer/**'],
+              // the repository's own developer/ folder, however far up the path goes; a `developer/` inside src stays allowed
+              regex: '^(?:\\.\\./)+developer(?:/|$)',
               message:
                 'The site never imports the developer pages (developer/ is a separate project, #1530)',
             },

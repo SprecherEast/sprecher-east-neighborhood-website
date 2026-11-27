@@ -33,6 +33,14 @@ describe('ESLint and the developer pages (#1530)', () => {
     )
   })
 
+  it('still lets src import a folder of its own that is called developer', async () => {
+    const [result] = await eslint.lintText(
+      "import { x } from '@/platform/developer/thing'\nexport const y = x\n",
+      { filePath: path.join(ROOT, 'src/app/(frontend)/tools/page.tsx') },
+    )
+    expect(result.messages.map((m) => m.message).join('\n')).not.toContain('developer pages')
+  })
+
   it('has the doc say what the config does', () => {
     const doc = fs.readFileSync(path.join(ROOT, 'ops/developer-site.md'), 'utf8')
     expect(doc).toContain('`developer/out/**` and `developer/.next/**`')
