@@ -2,10 +2,13 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import { ConnectionNotice, ContinueCard, continueAuthorization } from '@/modules/agents/server'
+import {
+  ConnectionNotice,
+  ConnectionPage,
+  ContinueCard,
+  continueAuthorization,
+} from '@/modules/agents/server'
 import { privateAddressMetadata } from '@/platform/seo/privateAddress'
-import { PageHeader } from '@/platform/ui/PageHeader'
-import { Section } from '@/platform/ui/Section'
 
 export const metadata: Metadata = privateAddressMetadata(
   'Connect an AI Tool',
@@ -29,17 +32,12 @@ export default async function AuthorizePage({ searchParams }: Props) {
   if (begun.kind === 'redirect') redirect(begun.url)
 
   return (
-    <Section as="div" width="narrow" spacing="center">
-      <PageHeader
-        variant="compact"
-        title="Connect an AI Tool"
-        description="Allow this tool to use the AI agent address."
-      />
+    <ConnectionPage title="Connect an AI Tool">
       {begun.kind === 'continue' ? (
         <ContinueCard view={begun} />
       ) : (
         <ConnectionNotice notice={begun} />
       )}
-    </Section>
+    </ConnectionPage>
   )
 }

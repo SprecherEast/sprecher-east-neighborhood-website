@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkRegisteredRedirectUri, redirectUriMatches } from './redirectUri'
+import { checkRegisteredRedirectUri, clientAccepts, redirectUriMatches } from './redirectUri'
+import type { OAuthClient } from './types'
 
 describe('checkRegisteredRedirectUri', () => {
   it.each([
@@ -85,5 +86,30 @@ describe('redirectUriMatches', () => {
 
   it('matches nothing when nothing is registered', () => {
     expect(redirectUriMatches([], 'https://claude.ai/api/mcp/auth_callback')).toBe(false)
+  })
+})
+
+describe('clientAccepts', () => {
+  const CALLBACK = 'https://claude.ai/api/mcp/auth_callback'
+  const client: OAuthClient = {
+    id: 1,
+    clientId: 'mcp_a',
+    name: 'Claude',
+    redirectUris: [CALLBACK],
+    enabled: true,
+    agentId: 9,
+  }
+
+  it('accepts a client that is on and a redirect address that is one of its own', () => {
+    expect(clientAccepts(client, CALLBACK)).toBe(true)
+  })
+
+  it.each([
+    ['no client', null, CALLBACK],
+    ['a client switched off', { ...client, enabled: false }, CALLBACK],
+    ['another address', client, 'https://evil.example/cb'],
+    ['an address with a trailing slash', client, `${CALLBACK}/`],
+  ])('refuses %s', (_name, who, uri) => {
+    expect(clientAccepts(who, uri)).toBe(false)
   })
 })

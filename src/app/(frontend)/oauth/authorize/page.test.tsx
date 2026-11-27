@@ -10,6 +10,12 @@ const mocks = vi.hoisted(() => ({
   }),
 }))
 vi.mock('@/modules/agents/server', () => ({
+  ConnectionPage: ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <>
+      <h1>{title}</h1>
+      {children}
+    </>
+  ),
   continueAuthorization: mocks.continueAuthorization,
   ContinueCard: ({ view }: { view: { clientName: string; next: string } }) => (
     <a data-testid="continue" href={view.next}>

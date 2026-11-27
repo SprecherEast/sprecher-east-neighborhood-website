@@ -4,6 +4,8 @@
  * one a client sends is one of them. Threat: an attacker's address receiving a code.
  */
 
+import type { OAuthClient } from './types'
+
 const LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['127.0.0.1', '[::1]', 'localhost'])
 
 /** `null` when the address may be registered, otherwise why not (shown to the admin). */
@@ -24,6 +26,17 @@ export function checkRegisteredRedirectUri(uri: string): string | null {
       : 'Plain http is only for this computer (127.0.0.1, localhost or [::1]); use https.'
   }
   return 'Use an https address.'
+}
+
+/**
+ * Whether this client may be sent this redirect address: it is registered, switched on, and the
+ * address is one of its own. The one place both pages and the approval decide it (#1501).
+ */
+export function clientAccepts(
+  client: OAuthClient | null,
+  redirectUri: string,
+): client is OAuthClient {
+  return client !== null && client.enabled && redirectUriMatches(client.redirectUris, redirectUri)
 }
 
 const parse = (uri: string): URL | null => {

@@ -22,6 +22,7 @@ The pure, framework-free helpers every module and the UI kit use (`src/platform/
 
 - **`readLimitedBody`** reads a request's body as text, counting bytes as they arrive and answering `null` past the limit, so a body that states no length is cut off, not read in full (`readLimitedBody.ts`, #1501).
 - **`SlidingWindowCounter`** counts requests in memory, which is one process, and forgets its least recently used key past `maxKeys`; the key is the first `x-forwarded-for` entry, else `x-real-ip` (`slidingWindow.ts`, `clientIp.ts`, #118).
+- **`relationId`** is the id of a relationship value, whether Payload gave the populated document or only its id, and `null` when there is none (`relationId.ts`, #1501; the older inline copies in other modules are tracked for switching over).
 - **`humanCheck.ts`** is the shape of the robot check that sign-up and the contact form share (decision 0003); the verifier is in [services](../service/README.md).
 - **Banners** remember a visitor's closed ones in the browser only, with no personal data, and expire by moment, not calendar day (`dismissedBanners.ts`, `bannerExpiry.ts`, #814).
 

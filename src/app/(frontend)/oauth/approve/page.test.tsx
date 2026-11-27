@@ -11,6 +11,12 @@ const mocks = vi.hoisted(() => ({
   }),
 }))
 vi.mock('@/modules/agents/server', () => ({
+  ConnectionPage: ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <>
+      <h1>{title}</h1>
+      {children}
+    </>
+  ),
   beginAuthorization: mocks.beginAuthorization,
   getViewer: mocks.getViewer,
   ConsentCard: ({ view }: { view: { clientName: string } }) => (

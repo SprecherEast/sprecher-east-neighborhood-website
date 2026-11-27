@@ -34,6 +34,19 @@ type Model = AuthorizationCodeModel & RefreshTokenModel
 /** A stored credential handed to the library and handed back to us, with the row it came from */
 type WithRow<T> = T & { credentialId: number }
 
+/**
+ * Spends a code or a refresh token, once. Losing means another request spent it a moment ago: a
+ * replay, so the family ends.
+ */
+async function spendOrEndFamily(
+  payload: Payload,
+  credential: WithRow<{ user: object }>,
+): Promise<boolean> {
+  const won = await spendCredential(payload, credential.credentialId)
+  if (!won) await revokeFamily(payload, (credential.user as Grantee).family ?? '')
+  return won
+}
+
 const grantee = (c: Credential): Grantee => ({
   agentId: c.agentId,
   consentedBy: c.consentedBy,
@@ -132,11 +145,7 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
     },
 
     async revokeAuthorizationCode(code) {
-      const row = code as WithRow<AuthorizationCode>
-      const won = await spendCredential(payload, row.credentialId)
-      // Losing means another request spent this code a moment ago: a replay, so the family ends
-      if (!won) await revokeFamily(payload, (code.user as Grantee).family ?? '')
-      return won
+      return spendOrEndFamily(payload, code as WithRow<AuthorizationCode>)
     },
 
     async saveToken(token, client, user) {
@@ -200,11 +209,7 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
     },
 
     async revokeToken(token) {
-      const row = token as WithRow<RefreshToken>
-      const won = await spendCredential(payload, row.credentialId)
-      // Losing means another request spent it a moment ago: a replay, so the family ends
-      if (!won) await revokeFamily(payload, (token.user as Grantee).family ?? '')
-      return won
+      return spendOrEndFamily(payload, token as WithRow<RefreshToken>)
     },
 
     // Our own check authenticates MCP requests (cms/oauth/authenticateBearer.ts)

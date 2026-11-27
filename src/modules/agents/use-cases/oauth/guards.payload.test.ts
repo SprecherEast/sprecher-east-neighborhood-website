@@ -135,3 +135,43 @@ describe('a client moved to another agent account', () => {
     expect((await signIn(payload, admin, id)).status).toBe(200)
   })
 })
+
+describe('a client edited without changing its agent account', () => {
+  it('keeps its tokens: renaming it and saving the same account again end nothing', async () => {
+    const { createAccount } = await import('@/platform/payload/testing/inMemoryPayload')
+    const account = await createAccount(payload, 'agent', 'agent-stays')
+    const id = await registerClient(payload, admin, account)
+    const issued = (await signIn(payload, admin, id)).body
+    const doc = (
+      await payload.find({
+        collection: 'oauth-clients',
+        where: { clientId: { equals: id } },
+        overrideAccess: true,
+      })
+    ).docs[0]
+    for (const data of [{ name: 'Claude, renamed' }, { agent: account.id }]) {
+      await payload.update({
+        collection: 'oauth-clients',
+        id: doc?.id ?? 0,
+        data,
+        user: admin,
+        overrideAccess: false,
+      })
+    }
+    const rows = await payload.find({
+      collection: 'oauth-tokens',
+      where: { client: { equals: doc?.id } },
+      limit: 20,
+      depth: 0,
+      overrideAccess: true,
+    })
+    expect(rows.docs.length).toBeGreaterThan(0)
+    expect(rows.docs.some((row) => row.revokedAt)).toBe(false)
+    const renewed = await exchange({
+      grant_type: 'refresh_token',
+      client_id: id,
+      refresh_token: issued.refresh_token,
+    })
+    expect(renewed.status).toBe(200)
+  })
+})

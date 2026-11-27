@@ -61,15 +61,21 @@ export async function isFamilyRevoked(payload: Payload, family: string): Promise
   return docs.length > 0
 }
 
+/** The adapter and the tokens table, for the two statements Payload's own API cannot make atomic. */
+function tokensTable(payload: Payload) {
+  const adapter = payload.db as unknown as SQLiteAdapter
+  const table = adapter.tables.oauth_tokens
+  if (!table) throw new Error('The OAuth tokens table is missing')
+  return { adapter, table }
+}
+
 /**
  * Marks a code or refresh token as spent, and says whether this call was the one that did. One
  * UPDATE that only matches an unspent row, so two requests presenting the same credential at the
  * same moment cannot both win (a read and a write-back could let both through).
  */
 export async function spendCredential(payload: Payload, credentialId: number): Promise<boolean> {
-  const adapter = payload.db as unknown as SQLiteAdapter
-  const table = adapter.tables.oauth_tokens
-  if (!table) throw new Error('The OAuth tokens table is missing')
+  const { adapter, table } = tokensTable(payload)
   const spent = await adapter.drizzle
     .update(table)
     .set({ usedAt: new Date().toISOString() })
@@ -86,9 +92,7 @@ export async function spendCredential(payload: Payload, credentialId: number): P
  * changes them one by one, which would leave a window for a row saved in between.
  */
 export async function revokeFamily(payload: Payload, family: string): Promise<void> {
-  const adapter = payload.db as unknown as SQLiteAdapter
-  const table = adapter.tables.oauth_tokens
-  if (!table) throw new Error('The OAuth tokens table is missing')
+  const { adapter, table } = tokensTable(payload)
   const now = new Date().toISOString()
   await adapter.drizzle
     .update(table)

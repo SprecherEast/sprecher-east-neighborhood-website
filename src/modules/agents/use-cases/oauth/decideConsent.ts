@@ -3,7 +3,7 @@ import 'server-only'
 import { readAuthorizeRequest } from '../../domain/oauth/authorizeRequest'
 import { verifyConsent, type ConsentRequest } from '../../domain/oauth/consent'
 import { redirectBack, redirectError } from '../../domain/oauth/redirects'
-import { redirectUriMatches } from '../../domain/oauth/redirectUri'
+import { clientAccepts } from '../../domain/oauth/redirectUri'
 import type { Grantee, Viewer } from '../../domain/oauth/types'
 import { findOAuthClient } from '../../data/oauth/clients'
 import { getOAuthContext } from '../../data/oauth/context'
@@ -34,7 +34,7 @@ export async function decideConsent(
     return { kind: 'refused', message: REFUSED }
   }
   const client = await findOAuthClient(payload, request.clientId)
-  if (!client?.enabled || !redirectUriMatches(client.redirectUris, request.redirectUri)) {
+  if (!clientAccepts(client, request.redirectUri)) {
     return { kind: 'refused', message: REFUSED }
   }
   const params = {

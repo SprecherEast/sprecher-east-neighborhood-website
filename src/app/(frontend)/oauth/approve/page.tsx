@@ -6,12 +6,11 @@ import { RETURN_PARAM, SIGN_IN_PATH } from '@/modules/accounts'
 import {
   beginAuthorization,
   ConnectionNotice,
+  ConnectionPage,
   ConsentCard,
   getViewer,
 } from '@/modules/agents/server'
 import { privateAddressMetadata } from '@/platform/seo/privateAddress'
-import { PageHeader } from '@/platform/ui/PageHeader'
-import { Section } from '@/platform/ui/Section'
 
 export const metadata: Metadata = privateAddressMetadata(
   'Approve an AI Tool',
@@ -39,17 +38,12 @@ export default async function ApprovePage({ searchParams }: Props) {
       : SIGN_IN_PATH
 
   return (
-    <Section as="div" width="narrow" spacing="center">
-      <PageHeader
-        variant="compact"
-        title="Approve an AI Tool"
-        description="Allow this tool to use the AI agent address."
-      />
+    <ConnectionPage title="Approve an AI Tool">
       {begun.kind === 'consent' ? (
         <ConsentCard view={begun.view} />
       ) : (
         <ConnectionNotice notice={begun} signInHref={signInHref} />
       )}
-    </Section>
+    </ConnectionPage>
   )
 }

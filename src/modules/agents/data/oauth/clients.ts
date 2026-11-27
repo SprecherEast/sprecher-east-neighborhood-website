@@ -2,10 +2,10 @@ import 'server-only'
 
 import type { Payload } from 'payload'
 
+import { relationId } from '@/platform/lib'
 import { hasAgent } from '@/platform/payload/roles'
 
 import { OAUTH_CLIENTS } from '../../domain/oauth/constants'
-import { relationId } from '../../domain/oauth/credentialRow'
 import { accountById } from '../../domain/oauth/queries'
 import type { OAuthClient } from '../../domain/oauth/types'
 

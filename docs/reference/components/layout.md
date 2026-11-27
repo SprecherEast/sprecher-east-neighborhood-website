@@ -25,8 +25,8 @@ Source: `src/platform/ui/Section.tsx`
 
 **Used by** (direct imports):
 
-- Modules: `events`, `news`, `site`
-- Routes: `/account`, `/auth/[provider]/connect`, `/confirm-email`, `/dev/gallery`, `/forgot-password`, `/login`, `/oauth/approve`, `/oauth/authorize`, `/reset-password`, `/sign-up`, `/verify-account`
+- Modules: `agents`, `events`, `news`, `site`
+- Routes: `/account`, `/auth/[provider]/connect`, `/confirm-email`, `/dev/gallery`, `/forgot-password`, `/login`, `/reset-password`, `/sign-up`, `/verify-account`
 
 ## `PageBackdrop`
 

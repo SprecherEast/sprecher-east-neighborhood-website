@@ -92,17 +92,26 @@ describe('the OAuth sign-in migration', () => {
     const client = docs[0]
     if (!client) throw new Error('The client was not found')
     const oauthLock = await lockDocument(database, 'oauth-clients', client.id)
+    const tokens = await payload.find({
+      collection: 'oauth-tokens',
+      limit: 1,
+      depth: 0,
+      overrideAccess: true,
+    })
+    const token = tokens.docs[0]
+    if (!token) throw new Error('The token was not found')
+    const tokenLock = await lockDocument(database, 'oauth-tokens', token.id)
     const unrelatedLock = await lockDocument(database, 'users', admin.id)
 
     await database.run(oauthSignIn.down)
 
     expect(await oauthTables()).toEqual([])
-    // The edit lock on a client goes with it, rows and rel rows; a lock on anything else stays
+    // The edit locks on a client and on a token go with them, rows and rel rows; a lock on anything else stays
     const locks = await database.query<{ id: number }>('SELECT id FROM payload_locked_documents')
     expect(locks.map((lock) => lock.id)).toEqual([unrelatedLock])
-    expect(await database.query(`SELECT 1 FROM ${LOCKS} WHERE parent_id = ${oauthLock}`)).toEqual(
-      [],
-    )
+    for (const lock of [oauthLock, tokenLock]) {
+      expect(await database.query(`SELECT 1 FROM ${LOCKS} WHERE parent_id = ${lock}`)).toEqual([])
+    }
     expect(await lockTable()).toEqual(before)
     expect(await database.query('PRAGMA foreign_keys')).toEqual([{ foreign_keys: 1 }])
     expect(await database.query('PRAGMA foreign_key_check')).toEqual([])

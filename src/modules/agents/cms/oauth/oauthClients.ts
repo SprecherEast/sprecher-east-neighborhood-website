@@ -5,11 +5,10 @@ import type {
   CollectionConfig,
 } from 'payload'
 
-import { ACCOUNTS_COLLECTION, ROLES } from '@/platform/lib'
+import { ACCOUNTS_COLLECTION, relationId, ROLES } from '@/platform/lib'
 import { isAdmin, isAdminFieldAccess } from '@/platform/payload/roles'
 
 import { OAUTH_CLIENTS, OAUTH_TOKENS } from '../../domain/oauth/constants'
-import { relationId } from '../../domain/oauth/credentialRow'
 import { checkRegisteredRedirectUri } from '../../domain/oauth/redirectUri'
 import { generateClientId } from '../../domain/oauth/secrets'
 

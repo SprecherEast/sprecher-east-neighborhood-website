@@ -10,7 +10,7 @@ import {
 import { OAUTH_AUTHORIZE_LIMIT } from '../../domain/oauth/constants'
 import type { ConsentRequest } from '../../domain/oauth/consent'
 import { redirectError } from '../../domain/oauth/redirects'
-import { redirectUriMatches } from '../../domain/oauth/redirectUri'
+import { clientAccepts } from '../../domain/oauth/redirectUri'
 import { findOAuthClient } from '../../data/oauth/clients'
 import { getOAuthContext } from '../../data/oauth/context'
 
@@ -51,7 +51,7 @@ export async function checkAuthorization(params: RawParams, headers: Headers): P
   if (!ids.ok) return { kind: 'refused', message: ids.message }
   const { payload, origin, resource } = await getOAuthContext()
   const client = await findOAuthClient(payload, ids.clientId)
-  if (!client?.enabled || !redirectUriMatches(client.redirectUris, ids.redirectUri)) {
+  if (!clientAccepts(client, ids.redirectUri)) {
     return { kind: 'refused', message: REFUSED }
   }
   const read = readAuthorizeRequest(params, resource)

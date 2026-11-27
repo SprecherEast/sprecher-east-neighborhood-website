@@ -21130,7 +21130,7 @@
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
-      "count": 150,
+      "count": 146,
       "via": []
     },
     {
@@ -25482,7 +25482,7 @@
       "to": "library:react",
       "type": "uses",
       "layer": "libraries",
-      "count": 1,
+      "count": 2,
       "via": []
     },
     {
@@ -25586,7 +25586,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 15,
+      "count": 17,
       "via": []
     },
     {
@@ -25610,7 +25610,7 @@
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
-      "count": 12,
+      "count": 14,
       "via": []
     },
     {
@@ -25648,6 +25648,22 @@
     {
       "from": "module:agents",
       "to": "shared-component:MetaList",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "shared-component:PageHeader",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "shared-component:Section",
       "type": "uses",
       "layer": "ui",
       "count": 1,
@@ -35366,42 +35382,10 @@
       "via": []
     },
     {
-      "from": "screen:/oauth/approve",
-      "to": "shared-component:PageHeader",
-      "type": "renders",
-      "layer": "ui",
-      "count": 1,
-      "via": []
-    },
-    {
-      "from": "screen:/oauth/approve",
-      "to": "shared-component:Section",
-      "type": "renders",
-      "layer": "ui",
-      "count": 1,
-      "via": []
-    },
-    {
       "from": "screen:/oauth/authorize",
       "to": "module:agents",
       "type": "uses",
       "layer": "code",
-      "count": 1,
-      "via": []
-    },
-    {
-      "from": "screen:/oauth/authorize",
-      "to": "shared-component:PageHeader",
-      "type": "renders",
-      "layer": "ui",
-      "count": 1,
-      "via": []
-    },
-    {
-      "from": "screen:/oauth/authorize",
-      "to": "shared-component:Section",
-      "type": "renders",
-      "layer": "ui",
       "count": 1,
       "via": []
     },
