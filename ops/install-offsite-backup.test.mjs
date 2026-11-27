@@ -700,7 +700,8 @@ describe('a credential that is new is tried from a staging file and promoted onl
     expect(code).toBe(0)
     expect(out).toContain('granted more than drive.file')
     expect(out).toContain('nothing was stored')
-    expect(out).not.toContain('not installed until')
+    expect(out).toContain('the new credential was refused')
+    expect(out).not.toContain('did not pass the first try')
     expect(fs.existsSync(h.p('etc/offsite-rclone.conf'))).toBe(false)
     expect(staged()).toEqual([])
     expect(fs.existsSync(cronFile())).toBe(false)
@@ -715,6 +716,8 @@ describe('a credential that is new is tried from a staging file and promoted onl
     expect(code).toBe(0)
     expect(out).toContain('granted more than drive.file')
     expect(out).toContain('stay as they were')
+    expect(out).toContain('the new credential was refused')
+    expect(out).not.toContain('did not pass the first try')
     expect(stored()).toBe(before)
     expect(stored()).not.toContain('a-new-sign-in')
     expect(staged()).toEqual([])
@@ -745,6 +748,14 @@ describe('a credential that is new is tried from a staging file and promoted onl
     expect(fs.existsSync(h.p('etc/offsite-rclone.conf'))).toBe(false)
     expect(staged()).toEqual([])
     expect(fs.existsSync(cronFile())).toBe(false)
+  })
+
+  it('removes a staging file an earlier run left behind (a killed run cannot clean up after itself)', async () => {
+    seedDrive(1)
+    fs.mkdirSync(h.p('etc'), { mode: 0o700 })
+    fs.writeFileSync(h.p('etc/.offsite-rclone.LEFTOV'), 'an old credential', { mode: 0o600 })
+    expect((await install()).code).toBe(0)
+    expect(staged()).toEqual([])
   })
 
   it('rotation that passes: the new credential replaces the old and is marked as tried', async () => {

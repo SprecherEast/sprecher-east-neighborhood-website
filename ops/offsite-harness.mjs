@@ -138,6 +138,22 @@ export function sealWithJobCommand(cert, input, output) {
   )
 }
 
+/** Opens `sealed` with `key` into `output` with the job's own opener (offsite_open in offsite-lib.sh); throws when it cannot. */
+export function openWithJobCommand(key, sealed, output) {
+  execFileSync(
+    'bash',
+    [
+      '-c',
+      `. "${path.join(OPS, 'offsite-lib.sh')}"; offsite_open "$1" "$2" "$3"`,
+      '_',
+      key,
+      sealed,
+      output,
+    ],
+    { stdio: 'ignore' },
+  )
+}
+
 /** Registers hooks and returns the helpers; call it once at the top of a test file. */
 export function setUpOffsiteHarness({ install = false } = {}) {
   const h = { dir: '', keys: null, keyDir: '', otherKeys: null, otherKeyDir: '' }

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { makeKeyPair, sealWithJobCommand } from './offsite-harness.mjs'
+import { makeKeyPair, openWithJobCommand, sealWithJobCommand } from './offsite-harness.mjs'
 
 const OPS = path.dirname(fileURLToPath(import.meta.url))
 const COMMITTED = path.join(OPS, 'offsite-backup-cert.pem')
@@ -50,25 +50,7 @@ describe("the owner's public certificate, as committed", () => {
     sealWithJobCommand(COMMITTED, p('plain.txt'), p('sealed.cms'))
     expect(fs.statSync(p('sealed.cms')).size).toBeGreaterThan(0)
     expect(fs.readFileSync(p('sealed.cms')).includes('a test file')).toBe(false)
-    expect(() =>
-      execFileSync(
-        'openssl',
-        [
-          'cms',
-          '-decrypt',
-          '-binary',
-          '-inform',
-          'DER',
-          '-in',
-          p('sealed.cms'),
-          '-inkey',
-          keys.key,
-          '-out',
-          p('opened.txt'),
-        ],
-        { stdio: 'ignore' },
-      ),
-    ).toThrow()
+    expect(() => openWithJobCommand(keys.key, p('sealed.cms'), p('opened.txt'))).toThrow()
     expect(
       fs.existsSync(p('opened.txt')) ? fs.readFileSync(p('opened.txt'), 'utf8') : '',
     ).not.toContain('a test file')

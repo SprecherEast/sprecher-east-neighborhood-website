@@ -98,7 +98,7 @@ numbers up against the step's limit).
   it replaces a working credential the stored credential and the weekly job stay as they were. Any other failure
   (Drive down, a timeout) also keeps the stored credential and job and deletes the staging file; the secret brings
   the credential again and it is tried at the next deploy (a Drive outage must not stop the backups), with a warning
-  each time. The staging file is removed even when the run is killed.
+  each time. The staging file is removed when the run ends, and the next run removes one a killed run left behind.
 - It installs rclone **1.76.0** from rclone's `.deb` after its SHA-256 matches the one in `offsite-lib.sh` (`dpkg -i`;
   an installed 1.76.0 is left alone), makes the log root-only, tries the credential **once per credential and key**
   with a small made-up file, and **only after that passes** installs the weekly job (`umask 077` in its line). A
@@ -122,7 +122,7 @@ today: its only signals are the annotations above and GitHub's own failed-run em
 a scheduled GitHub Actions workflow that runs the read-only `check` over the deploy's SSH access and fails when it
 fails, so GitHub emails the owner. It would need to name the `production` environment, which
 `.github/scripts/deploy-secrets-environment.test.mjs` forbids on purpose, so it is a policy change proposed on #1332
-and waits for his answer. Until then the signal is the annotations.
+and waits for his answer. It is tracked as #1577. Until then the signal is the annotations.
 
 ## Changes to the server and how to undo them
 

@@ -50,9 +50,10 @@ if ! [[ "$name" =~ $OFFSITE_ARCHIVE_PATTERN ]]; then
 fi
 plain="$out_dir/${name%"$OFFSITE_SUFFIX"}"
 [ ! -e "$plain" ] || fail "$plain exists already; move it away first"
-if [ -n "${OFFSITE_EXPECTED_SHA256:-}" ]; then
+expected=$(printf '%s' "${OFFSITE_EXPECTED_SHA256:-}" | tr '[:upper:]' '[:lower:]') # a hash copied in capitals is the same hash
+if [ -n "$expected" ]; then
   got=$("$OFFSITE_OPENSSL" dgst -sha256 -r "$sealed" | cut -d' ' -f1)
-  [ "$got" = "$OFFSITE_EXPECTED_SHA256" ] || fail "the copy's SHA-256 is not the one expected (the job recorded another); it was not opened"
+  [ "$got" = "$expected" ] || fail "the copy's SHA-256 is not the one expected (the job recorded another); it was not opened"
 fi
 
 partial="$plain.partial"

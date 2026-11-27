@@ -14,10 +14,10 @@ import {
   MARKER,
   REMOTE_DIR,
   makeKeyPair,
+  openWithJobCommand,
   sealWithJobCommand,
   setUpOffsiteHarness,
 } from './offsite-harness.mjs'
-import { OPS } from './umami-harness.mjs'
 
 const h = setUpOffsiteHarness()
 const STAMP = '2026-11-22T0815Z'
@@ -69,22 +69,7 @@ describe('offsite-backup.sh run', () => {
     try {
       fs.writeFileSync(path.join(tmp, 'c.cms'), sealed)
       expect(() =>
-        execFileSync(
-          'openssl',
-          [
-            'cms',
-            '-decrypt',
-            '-inform',
-            'DER',
-            '-in',
-            path.join(tmp, 'c.cms'),
-            '-inkey',
-            h.keys.cert,
-          ],
-          {
-            stdio: 'ignore',
-          },
-        ),
+        openWithJobCommand(h.keys.cert, path.join(tmp, 'c.cms'), path.join(tmp, 'o')),
       ).toThrow()
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true })
@@ -286,19 +271,8 @@ describe('offsite-backup.sh test', () => {
     const work = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-test-'))
     try {
       fs.writeFileSync(path.join(work, tests[0]), h.remoteFile(tests[0]))
-      // the restore script is for archives; a test file is opened with the library's own opening
-      execFileSync(
-        'bash',
-        [
-          '-c',
-          `. "${path.join(OPS, 'offsite-lib.sh')}"; offsite_open "$1" "$2" "$3"`,
-          '_',
-          h.keys.key,
-          path.join(work, tests[0]),
-          path.join(work, 'opened.txt'),
-        ],
-        { stdio: 'ignore' },
-      )
+      // the restore script is for archives; a test file is opened with the job's own opener
+      openWithJobCommand(h.keys.key, path.join(work, tests[0]), path.join(work, 'opened.txt'))
       expect(fs.readFileSync(path.join(work, 'opened.txt'), 'utf8')).toContain('holds no site data')
     } finally {
       fs.rmSync(work, { recursive: true, force: true })
@@ -980,6 +954,23 @@ describe('offsite-restore.sh takes nothing but what a backup holds', () => {
       expect(right.code).toBe(0)
       expect(right.out).toContain('Checked: its SHA-256 is the one you gave')
       expect(right.out).not.toContain('Compare its SHA-256')
+    } finally {
+      fs.rmSync(work, { recursive: true, force: true })
+    }
+  })
+
+  it('takes the expected SHA-256 in capitals too', async () => {
+    h.makeArchive()
+    await h.run('offsite-backup.sh')
+    const work = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-caps-'))
+    try {
+      fs.writeFileSync(path.join(work, NAME), h.remoteFile(NAME))
+      const sha = crypto.createHash('sha256').update(h.remoteFile(NAME)).digest('hex')
+      const result = await h.run('offsite-restore.sh', [path.join(work, NAME), h.keys.key, work], {
+        OFFSITE_EXPECTED_SHA256: sha.toUpperCase(),
+      })
+      expect(result.code).toBe(0)
+      expect(result.out).toContain('Checked: its SHA-256 is the one you gave')
     } finally {
       fs.rmSync(work, { recursive: true, force: true })
     }

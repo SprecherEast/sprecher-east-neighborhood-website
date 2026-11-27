@@ -2,7 +2,7 @@
 # Installs (or refreshes) the weekly off-site backup job on the server (#1332, ops/offsite-backup.md). Run by the
 # deploy, as root, once the new release is live. Safe to run again and again: each step changes something only when
 # it differs. It never fails the deploy: a problem is a WARNING annotation on the run, with the reason, and the exit
-# status is 0 (a failed or stale backup must not stall merges; the owner's question about a stronger signal is on #1332).
+# status is 0 (a failed or stale backup must not stall merges; the stronger signal the owner asked for is #1577).
 #
 # Usage: bash ops/install-offsite-backup.sh [--config-stdin]
 #   --config-stdin  the Drive credential (an rclone config section) arrives on stdin, from the GitHub
@@ -81,6 +81,9 @@ if problem=$(offsite_cert_problem "$OFFSITE_CERT"); then :; else
   remove_job
   give_up "$problem; the weekly job was taken away"
 fi
+
+# A staging file an earlier run left behind (a run killed mid-try cannot clean up after itself) is removed first.
+[ ! -d "$OFFSITE_DIR" ] || find "$OFFSITE_DIR" -maxdepth 1 -name '.offsite-rclone.*' -type f -delete
 
 # --- 2. the credential. An empty secret means "none": the stored one and the job go. A new one goes to a staging file.
 candidate=""
