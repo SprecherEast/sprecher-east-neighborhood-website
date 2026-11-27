@@ -150,16 +150,16 @@ from scripts.illustrations.scenes import SCENES
 trash, thanks = SCENES['trash'](), SCENES['thanksgiving']()
 page = parts.calendar_page(615, 330, 'NOV', '26')
 print(page in trash, parts.roast_turkey(730, 676, .8) in trash, 'scale(.8)' in trash)
-print('>26</text>' in page, 'y="190"' in page, 'width="230" height="250"' in page)
+print('>26</text>' in page, 'font-size="' in page, 'width="230" height="250"' in page)
 print(parts.calendar_page(560, 150, 'NOV', '26', w=190, h=210) in thanks, parts.roast_turkey(495, 512, .95) in thanks)`,
     )
     expect(r.stderr).toBe('')
     expect(r.stdout.trim().split('\n')).toEqual(['True True True', 'True True True', 'True True'])
   })
 
-  // Golden hashes of the two published pictures. The trash hash is the scene's output from before
-  // the turkey and the calendar page became shared parts, so the refactor changed nothing; any
-  // change to a part's drawing changes a published picture and must update these on purpose.
+  // Golden hashes of the two published pictures that show a calendar page. They changed once, on
+  // purpose, when the calendar page's number and label were centred by their ink (#1561, the owner's
+  // direction of 2026-11-27); any later change to a part's drawing must update these on purpose.
   it('keeps the published trash and Thanksgiving pictures exactly as drawn', () => {
     const r = run(
       `import hashlib
@@ -168,8 +168,8 @@ for name in ('trash', 'thanksgiving'): print(hashlib.sha256(SCENES[name]().encod
     )
     expect(r.stderr).toBe('')
     expect(r.stdout.trim().split('\n')).toEqual([
-      'cfc85dab13029a54b27e99d0bb7e59275905e9b36395ca180aa88949ea9badaf',
-      '7128ee7d2ba3f20716f9c8ca4bf216817d2f05589dee6de4801170ce3a35715f',
+      '274cdc7bea2c89ce77d8ec16fc876502a4079add9059acd161f2ffeb38ac1a19',
+      '5ad2fe2309ec6d1680835bd3b6aec5e71049dd86e27e85289aa17589784f84af',
     ])
   })
 
@@ -299,9 +299,33 @@ def problems(fn, name='probe'):
       expect(people).toMatch(/probe: focal subject .* people/)
     })
 
+    it('fails a focal subject that lies low or is small in its frame, however wide', () => {
+      const low = JSON.parse(
+        probe(
+          `lambda: person(700, 830, 1) + focal(car(100, 830, w=640), 'car') + tree(420, 760, 700) + PANEL()`,
+        ).stdout,
+      ).join(' ')
+      expect(low).toMatch(/probe: focal subject car is too small/)
+    })
+
+    it('does not count a calendar page as content that fills the sky', () => {
+      const r = probe(
+        `lambda: calendar_page(300, 60, 'NOV', '26') + focal(car(100, 830, w=800), 'car') + PANEL()`,
+      )
+      expect(JSON.parse(r.stdout).join(' ')).toMatch(/probe: large empty band from top to bottom/)
+    })
+
+    it('counts a building that rises out of the frame as content, and a road as none', () => {
+      const r = probe(
+        `lambda: focal(__import__('scripts.illustrations.places', fromlist=['x']).pinney_library(60, 800, 58, 'CLOSED'), 'library') + person(300, 840, 1.0) + PANEL()`,
+      )
+      expect(r.stderr).toBe('')
+      expect(JSON.parse(r.stdout).join(' ')).not.toMatch(/empty band|too small|outside/)
+    })
+
     it('passes a scene of one large focal subject with the rest at its scale', () => {
       const r = probe(
-        `lambda: tree(120, 820, 700) + focal(car(180, 830, w=640), 'car') + person(120, 820, 1.0) + PANEL()`,
+        `lambda: tree(120, 820, 700) + focal(car(180, 830, w=800), 'car') + person(120, 820, 1.25) + PANEL()`,
       )
       const text = JSON.parse(r.stdout).join(' ')
       expect(text).not.toMatch(/focal|scale/)
@@ -350,33 +374,160 @@ print(json.dumps([[p['kind'], p['bleed']] for p in parts.PLACED]))`,
       ])
     })
   })
+  // Text inside a part (the calendar page, a sign board) is centred in the area meant for it and
+  // clear of its edges and header (checks.check_text), judged from the ink the font really draws.
+  describe('text inside parts', () => {
+    const CHECK = `
+import json
+from scripts.illustrations import build as b, checks, parts
+from scripts.illustrations.parts import *
+PANEL = lambda: parts.panel(['Title'], ['One'])
+def texts(fn):
+    parts.PLACED.clear(); parts.TEXTS.clear(); fn()
+    return list(parts.TEXTS)
+`
+    it('centres the day number of a calendar page at every size, for one and two digits', () => {
+      const r = run(
+        CHECK +
+          `
+out = []
+for w, h in ((230, 250), (190, 210), (120, 140), (300, 300)):
+    for day in ('5', '26', '28', '11'):
+        t = texts(lambda: calendar_page(100, 100, 'NOV', day, w=w, h=h))
+        out.append(checks.check_text('cal', t))
+print(json.dumps(out))`,
+      )
+      expect(r.stderr).toBe('')
+      expect(JSON.parse(r.stdout).flat()).toEqual([])
+    })
+
+    it('registers the month and the day, each with the area it must sit in', () => {
+      const r = run(
+        CHECK +
+          `
+t = texts(lambda: calendar_page(100, 100, 'SAT', '28'))
+print(json.dumps([[x['text'], x['area'][1] >= 100] for x in t]))`,
+      )
+      expect(JSON.parse(r.stdout)).toEqual([
+        ['SAT', true],
+        ['28', true],
+      ])
+    })
+
+    it('fails text that is off centre, touches the edge of its area, or leaves it', () => {
+      const r = run(
+        CHECK +
+          `
+area = (100, 160, 300, 350)
+def ink(x0, y0, x1, y1): return [{'text': '26', 'area': area, 'ink': (x0, y0, x1, y1)}]
+print(json.dumps([checks.check_text('t', ink(160, 200, 240, 310)),   # centred
+                  checks.check_text('t', ink(130, 200, 210, 310)),   # off to the left
+                  checks.check_text('t', ink(160, 162, 240, 272)),   # touches the header side
+                  checks.check_text('t', ink(160, 250, 240, 380))])) # runs out of the area`,
+      )
+      const [ok, left, top, out] = JSON.parse(r.stdout)
+      expect(ok).toEqual([])
+      expect(left.join(' ')).toMatch(/t: text "26" is off centre/)
+      expect(top.join(' ')).toMatch(/t: text "26" .* (touches|crowds) /)
+      expect(out.join(' ')).toMatch(/t: text "26" .*(outside|leaves)/)
+    })
+
+    it('draws the number below the header band of a short calendar page, where it once collided', () => {
+      const r = run(
+        CHECK +
+          `
+t = texts(lambda: calendar_page(100, 100, 'NOV', '26', w=190, h=210))
+day = [x for x in t if x['text'] == '26'][0]
+print(day['ink'][1] > 100 + 60 + 10, day['ink'][3] < 100 + 210 - 10)`,
+      )
+      expect(r.stdout.trim()).toBe('True True')
+    })
+
+    it('has the build fail a scene whose text sits off centre in its part', () => {
+      const r = run(
+        CHECK +
+          `
+def bad():
+    parts.TEXTS.append({'text': 'X', 'area': (100, 100, 300, 300), 'ink': (110, 120, 150, 180)})
+    return parts.focal(parts.car(100, 830, w=800), 'car') + PANEL()
+b.SCENES['probe'] = bad
+print(json.dumps(b.build(['probe'])[1]))`,
+      )
+      expect(JSON.parse(r.stdout).join(' ')).toMatch(/probe: text "X" is off centre/)
+    })
+  })
   describe('true-scale scenes', () => {
-    it('sizes every part from one pixels-per-metre, so a person, a car and a cart agree', () => {
+    it('sizes every part from one pixels-per-metre, so a person, a car and a tree agree', () => {
       const r = run(
         `import json
 from scripts.illustrations import parts, props, settings as s
 parts.PLACED.clear()
 ppm = 100
 parts.person(100, 800, props.s_person(ppm)); parts.car(200, 800, w=props.w_car(ppm))
-parts.cart(700, 800, '#000', '#000', props.s_cart(ppm)); parts.tree(800, 800, props.h_tree(ppm, 6))
+parts.tree(800, 800, props.h_tree(ppm, 6))
 print(json.dumps([round(p['size'] / ppm, 2) for p in parts.PLACED]))`,
       )
       expect(r.stderr).toBe('')
-      expect(JSON.parse(r.stdout)).toEqual([1.7, 4.6, 1.1, 6])
+      expect(JSON.parse(r.stdout)).toEqual([1.7, 4.6, 6])
     })
 
     it('registers every prop a new scene uses, each with a real size to check', () => {
       const r = run(
         `import json
-from scripts.illustrations import parts, props, settings as s
+from scripts.illustrations import parts, places, props, settings as s
 parts.PLACED.clear()
-props.garbage_truck(300, 800, 80); props.dumpster(40, 800, 90); props.storefront(0, 800, 100, 9, 'LIBRARY')
-props.mural_wall(70, 790, 125); props.raised_bed(330, 815, 130, plants=(('sunflower', 1, 2),))
-props.gate_arch(80, 810, 100); props.fence(0, 900, 790, 100)
+props.dumpster(40, 800, 90); props.raised_bed(330, 815, 130, plants=((1, 2),), fresh=(1, 2))
+places.pinney_library(40, 800, 68, 'CLOSED')
 print(json.dumps(sorted({p['kind'] for p in parts.PLACED} - set(s.REAL_SIZE_M))))`,
       )
       expect(r.stderr).toBe('')
       expect(JSON.parse(r.stdout)).toEqual([])
+    })
+
+    it('draws Pinney Library once, as an agreed real outline, and a notice only when asked', () => {
+      const r = run(
+        `import json
+from scripts.illustrations import parts, places
+a = places.pinney_library(48, 800, 68, 'CLOSED')
+parts.PLACED.clear()
+b = places.pinney_library(48, 800, 68, 'CLOSED')
+c = places.pinney_library(48, 800, 68)
+print(json.dumps([a == b, 'CLOSED' in b, 'CLOSED' in c, 'MADISON PUBLIC LIBRARY' in c, 'ROYSTER COMMONS' in c, 'Cottage Grove' in (places.pinney_library.__doc__ or ''), [p['label'] for p in parts.PLACED][-3:]]))`,
+      )
+      expect(r.stderr).toBe('')
+      expect(JSON.parse(r.stdout)).toEqual([
+        true,
+        true,
+        false,
+        true,
+        true,
+        true,
+        ['Pinney Library', 'Pinney upper floors', 'Pinney Library'],
+      ])
+    })
+
+    it('marks a group of parts as one focal subject', () => {
+      const r = run(
+        `import json
+from scripts.illustrations import parts
+parts.PLACED.clear()
+parts.person(100, 800, 1); parts.car(200, 800, w=500); parts.person(700, 800, 1)
+parts.focal_group('', 'unloading', 2)
+print(json.dumps([[p['label'], p['focal'] and True] for p in parts.PLACED]))`,
+      )
+      expect(JSON.parse(r.stdout)).toEqual([
+        ['person', false],
+        ['unloading', true],
+        ['unloading', true],
+      ])
+    })
+
+    it('draws nothing in the redrawn scenes that reads as a fence or wire mesh', () => {
+      const r = run(
+        `from scripts.illustrations.scenes import SCENES
+print([('mesh' in SCENES[n]() or 'chain' in SCENES[n]().lower()) for n in ('thanksgiving_library', 'dropoff_unload', 'youth_garden')])`,
+      )
+      expect(r.stdout.trim()).toBe('[False, False, False]')
     })
 
     it('keeps the wording of the panels the redrawn pictures carry', () => {
@@ -385,7 +536,7 @@ print(json.dumps(sorted({p['kind'] for p in parts.PLACED} - set(s.REAL_SIZE_M)))
 from scripts.illustrations import parts
 from scripts.illustrations.scenes import SCENES
 out = {}
-for name in ('thanksgiving_pickup', 'thanksgiving_library', 'dropoff_unload', 'dropoff_entrance', 'youth_mural', 'youth_garden'):
+for name in ('thanksgiving_library', 'dropoff_unload', 'youth_garden'):
     parts.PANELS.clear()
     SCENES[name]()
     out[name] = [[p['title'], p['bullets']] for p in parts.PANELS]
@@ -411,11 +562,8 @@ print(json.dumps(out))`,
         ],
       ]
       expect(JSON.parse(r.stdout)).toEqual({
-        thanksgiving_pickup: thanks,
         thanksgiving_library: thanks,
         dropoff_unload: drop,
-        dropoff_entrance: drop,
-        youth_mural: youth,
         youth_garden: youth,
       })
     })
@@ -430,7 +578,7 @@ print(json.dumps([new, b.build(new)[1]]))`,
       )
       expect(r.stderr).toBe('')
       const [names, problems] = JSON.parse(r.stdout)
-      expect(names).toHaveLength(6)
+      expect(names).toHaveLength(3)
       expect(problems).toEqual([])
     })
 

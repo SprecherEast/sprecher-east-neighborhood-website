@@ -62,8 +62,10 @@ def _largest_gap(spans, lo, hi):
 
 
 def check_balance(name, placed):
-    """The content fills its frame: no empty band across the safe area wider than DEAD_BAND_MAX."""
-    boxes = [p["box"] for p in placed if p["bleed"] is not True]
+    """The content fills its frame: no empty band across the safe area wider than DEAD_BAND_MAX. A
+    label (the calendar page) does not count as content."""
+    boxes = [p["box"] for p in placed if p["kind"] not in LABEL_KINDS
+             and (p["bleed"] is not True or p["kind"] in FILLING_BLEED_KINDS)]
     if not boxes:
         return []
     sx0, sy0, sx1, sy1 = _safe()
@@ -76,21 +78,25 @@ def check_balance(name, placed):
 
 
 def check_focal(name, placed):
-    """One focal subject, drawn large, and not a person or a tree."""
+    """One focal subject (a part, or a group of parts that make one moment), drawn large, and not
+    only people or trees."""
     marked = [p for p in placed if p["focal"]]
-    if len(marked) != 1:
-        return [f"{name}: no focal subject marked (parts.focal)" if not marked
-                else f"{name}: {len(marked)} focal subjects marked, expected one"]
-    f = marked[0]
+    labels = {p["label"] for p in marked}
+    if len(labels) != 1:
+        return [f"{name}: no focal subject marked (parts.focal)" if not labels
+                else f"{name}: {len(labels)} focal subjects marked, expected one"]
+    label = labels.pop()
     sx0, sy0, sx1, sy1 = _safe()
-    x0, y0, x1, y1 = f["box"]
+    x0, y0 = min(p["box"][0] for p in marked), min(p["box"][1] for p in marked)
+    x1, y1 = max(p["box"][2] for p in marked), max(p["box"][3] for p in marked)
     share = (min(x1, sx1) - max(x0, sx0)) * (min(y1, sy1) - max(y0, sy0)) / ((sx1 - sx0) * (sy1 - sy0))
-    if f["kind"] in ("person", "child", "tree"):
-        return [f"{name}: focal subject {f['label']} is {f['kind']}, not the thing the post is about: "
+    if all(p["kind"] in ("person", "child", "tree") for p in marked):
+        return [f"{name}: focal subject {label} is {marked[0]['kind']}, not the thing the post is about: "
                 "generic people or trees say nothing without the panel"]
-    if share < FOCAL_MIN_SHARE:
-        return [f"{name}: focal subject {f['label']} is too small: {share:.0%} of the safe area, "
-                f"at least {FOCAL_MIN_SHARE:.0%}"]
+    height = (min(y1, sy1) - max(y0, sy0)) / (sy1 - sy0)
+    if share < FOCAL_MIN_SHARE or height < FOCAL_MIN_HEIGHT:
+        return [f"{name}: focal subject {label} is too small: {share:.0%} of the safe area and "
+                f"{height:.0%} of its height, at least {FOCAL_MIN_SHARE:.0%} and {FOCAL_MIN_HEIGHT:.0%}"]
     return []
 
 
@@ -124,6 +130,28 @@ def check_variety(name, sig, others, same_place=()):
         if overlap(sig, osig) >= LAYOUT_REPEAT_MAX:
             out.append(f"{name}: layout repeats {other} ({overlap(sig, osig):.0%} of what sits where); "
                        "draw a new composition around its own subject")
+    return out
+
+
+def check_text(name, texts):
+    """Text a part holds (the day on a calendar page, the word on a sign) sits inside the area meant
+    for it, centred within TEXT_CENTER_TOL, clear of the area's edges and header. `texts` are what
+    parts.text_in registered: the text, its area and the ink it really draws."""
+    out = []
+    for t in texts:
+        ax0, ay0, ax1, ay1 = t["area"]
+        x0, y0, x1, y1 = t["ink"]
+        label = f'{name}: text "{t["text"]}"'
+        if x0 < ax0 or y0 < ay0 or x1 > ax1 or y1 > ay1:
+            out.append(f"{label} is outside its area ({_px(x0)}, {_px(y0)}, {_px(x1)}, {_px(y1)}) in "
+                       f"({_px(ax0)}, {_px(ay0)}, {_px(ax1)}, {_px(ay1)})")
+            continue
+        dx, dy = (x0 + x1 - ax0 - ax1) / 2, (y0 + y1 - ay0 - ay1) / 2
+        if abs(dx) > TEXT_CENTER_TOL * (ax1 - ax0) or abs(dy) > TEXT_CENTER_TOL * (ay1 - ay0):
+            out.append(f"{label} is off centre in its area by {dx:+.0f}px across and {dy:+.0f}px down")
+        pad = TEXT_MIN_PAD * min(ax1 - ax0, ay1 - ay0)
+        if min(x0 - ax0, y0 - ay0, ax1 - x1, ay1 - y1) < pad:
+            out.append(f"{label} in its part crowds the edge of its area: under {_px(pad)} of clear space")
     return out
 
 

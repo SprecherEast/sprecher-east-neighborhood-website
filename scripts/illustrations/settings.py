@@ -61,16 +61,22 @@ SKIN_LIGHTEST = "#f0d6b0"; SKIN_LIGHT = "#d09a73"; SKIN_MID = "#b9825c"; SKIN_DA
 # on). A scene has one scale if some pixels-per-metre fits every part in it at once.
 REAL_SIZE_M = {
     "person": (1.5, 1.95), "child": (1.0, 1.5), "car": (4.0, 5.3), "cart": (0.95, 1.2),
-    "bike": (1.5, 2.0), "tree": (3, 22), "truck": (6.5, 10), "building": (3, 14),
-    "bin": (1.0, 2.6), "pole": (3.0, 6.0), "wall": (2.2, 4.6), "fence": (1.0, 2.4), "bed": (0.3, 0.8),
+    "bike": (1.5, 2.0), "tree": (3, 22), "building": (3, 14), "bin": (1.0, 2.6), "bed": (0.3, 0.8),
 }
 # The safe area: nothing registered comes closer to an edge than this, and nothing runs behind the panel.
 SAFE_MARGIN = 40
 # Largest empty band across the safe area, as a share of its width or height. Beyond it the
 # content is not balanced in its frame.
-DEAD_BAND_MAX = 0.30
-# The focal subject is at least this share of the safe area, and is never a person or a tree.
-FOCAL_MIN_SHARE = 0.10
+DEAD_BAND_MAX = 0.20
+# Kinds that do not fill a frame: a calendar page floating in empty sky is a label, not content.
+# Bleeding surfaces count toward balance only when their kind is a building (a facade rising out of
+# the frame is the scene); the road and the ground never do.
+LABEL_KINDS = ("calendar",)
+FILLING_BLEED_KINDS = ("building",)
+# The focal subject is at least this share of the safe area and of its height, and is never a person
+# or a tree. A subject that lies low under open sky, or is a small thing in a big frame, fails.
+FOCAL_MIN_SHARE = 0.25
+FOCAL_MIN_HEIGHT = 0.30
 # Layouts count as repeated at this overlap (0 to 1) of what sits where, on a 6 by 4 grid.
 LAYOUT_REPEAT_MAX = 0.5
 # Scenes of one real place that may share a layout, as tuples of scene names.
@@ -81,3 +87,9 @@ PRE_RULES_SCENES = (
     "school", "signal", "siren", "police", "trash", "leaves", "winter", "parking", "marimba",
     "workshop", "thanksgiving", "dropoff", "youth",
 )
+
+# Text inside a part (calendar page, sign board): its ink is centred in the area meant for it within
+# this share of the area's width and height, and keeps at least TEXT_MIN_PAD of the area's shorter
+# side clear of every edge of that area.
+TEXT_CENTER_TOL = 0.03
+TEXT_MIN_PAD = 0.08

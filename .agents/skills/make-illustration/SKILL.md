@@ -13,19 +13,24 @@ Read its README for the layout. The rules about what a good picture is live in
 
 - **The scene shows the subject.** With the panel hidden, a neighbor can say what the item is about.
   One focal subject is drawn large, taken from what the item is about (the place, the object, the
-  action), never generic people on a street. Mark it with `parts.focal`.
+  action), never generic people on a street. Mark it with `parts.focal` (or `parts.focal_group` for one
+  moment made of a few parts). A place the post names is the real one, drawn from photographs; a kind
+  of project is one the source documents.
 - **One real-world scale.** People, vehicles, buildings and objects in a scene share one
   pixels-per-metre, and buildings and the focal subject are larger than people. Size parts with the
   helpers in `props.py`.
 - **Composed in its frame.** Nothing touches or crowds an edge or runs behind the panel, the content
-  fills the frame with no large empty band, and an event picture keeps its badge corner clear.
+  fills the frame with no large empty band (move the camera closer, keep the scale true), and an event
+  picture keeps its badge corner clear. Nothing reads as wire, such as chain-link fencing.
+- **Text sits centred in its part.** Draw the text of a calendar page, sign or lettering only with
+  `parts.text_in`; the build fails text that is off centre or crowds its area.
 - **A layout of its own.** A new scene does not repeat another scene's composition unless both draw
   the same place. Reuse parts, never compositions; don't start from the last scene's file.
 - **The established rules hold.** Real neighborhood subjects, agreed outlines reused exactly, no
   invented named landmark, neighbors who reflect the area, a panel that is plain, short, complete
   and legible on a phone.
 
-The build checks scale, safe area, balance, the focal subject and layout repeats by itself.
+The build checks scale, safe area, balance, the focal subject, centred text and layout repeats by itself.
 What it cannot judge (does the scene say the subject?) is the author's critique, step 4.
 
 ## Steps
@@ -46,7 +51,7 @@ What it cannot judge (does the scene say the subject?) is the author's critique,
 4. **Critique before anyone sees it.** Render at card size and at phone width and look at each. Write
    down the answers: what is the subject with the panel hidden; what is focal and is it large; is
    everything at one scale; is anything near an edge, or is there dead space; does the layout differ
-   from the others; is the panel intact. Fix what fails, render again, and show the picture only when
+   from the others; is the panel intact; is every calendar page and sign legible and centred, looked at at full size and at phone width. Fix what fails, render again, and show the picture only when
    you would defend it. Keep the written critique in the pull request.
 5. **Agree the look.** For a new subject, show the owner each concept beside the current picture at
    card size, and make the final only after he agrees.

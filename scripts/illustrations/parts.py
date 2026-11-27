@@ -3,6 +3,7 @@
 Colours and sizes come from settings.py. A part that is a real place lives in places.py instead.
 """
 import math
+from . import measure
 from .settings import *
 
 SW=OUTLINE_WIDTH
@@ -27,6 +28,25 @@ def focal(svg, label, index=-1):
     PLACED[index]["focal"]=True
     PLACED[index]["label"]=label
     return svg
+
+def focal_group(svg, label, n):
+    """Mark the last `n` parts drawn as together the scene's one focal subject (a moment made of a few
+    parts: a car, the neighbor unloading it and the bin), and pass the drawing through."""
+    for q in PLACED[-n:]:
+        q["focal"]=label; q["label"]=label
+    return svg
+
+TEXTS=[]  # text drawn inside a part by text_in(): the text, its area and its ink, for the build's check
+
+def text_in(text, area, size, weight="bold", fill=NAVY, extra=""):
+    """`text` centred, by the ink the font draws, in `area` (x0, y0, x1, y1) of the canvas. Parts that
+    hold text draw it only through here, so its centring is the same everywhere and is checked."""
+    l,t,r,b=measure.ink_box(text,size,weight)
+    x=(area[0]+area[2])/2-(l+r)/2; y=(area[1]+area[3])/2-(t+b)/2
+    TEXTS.append({"text":text,"area":tuple(area),"ink":(x+l,y+t,x+r,y+b)})
+    css={"bold":700,"semibold":600}[weight]
+    return (f'<text x="{x:.1f}" y="{y:.1f}" font-family="Poppins" font-weight="{css}" '
+            f'font-size="{size:g}" fill="{fill}" {extra}>{text}</text>')
 
 LOWERED=[]  # the drawn scene of the picture being built, as the badge check needs it on its own
 
@@ -57,10 +77,10 @@ def person_head(skin,hair,hr,o,hat=None,cap=None):
     return "".join(g)
 
 def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin=SKIN_DARK,hair="#2a1d17",hat=None,arm="down",hr=13,flip=False,cap=None,child=False):
-    """A standing person at (x, y). arm: "down", "wave", "pad", "reach" (one arm forward at chest height), "up" (one arm raised high), or "none" when the scene draws the arms itself.
+    """A standing person at (x, y). arm: "down", "wave", "pad", "reach" (one arm forward at chest height), or "none" when the scene draws the arms itself.
     child: the person stands for a child, whose real height is smaller (see REAL_SIZE_M)."""
     s=sc(s)
-    top=(217 if arm=="wave" else 244 if arm=="up" else 190+hr+3)*s
+    top=(217 if arm=="wave" else 190+hr+3)*s
     place("child" if child else "person",x-52*s,y-top,x+52*s,y+8*s,size=(190+hr+3+3)*s)
     sx=-s if flip else s
     o=f'stroke="{NAVY}" stroke-width="{SW/s:.2f}" stroke-linejoin="round"'
@@ -77,8 +97,6 @@ def person(x,y,s=1,shirt=BLUE,pants=NAVY,skin=SKIN_DARK,hair="#2a1d17",hat=None,
         g.append(f'<path d="M24,-160 L44,-206" stroke="{NAVY}" stroke-width="15" stroke-linecap="round"/><path d="M24,-160 L44,-206" stroke="{shirt}" stroke-width="10.5" stroke-linecap="round"/><circle cx="46" cy="-211" r="6.5" fill="{skin}" {o}/>')
     elif arm=="reach":
         g.append(f'<path d="M24,-160 L58,-136" stroke="{NAVY}" stroke-width="15" stroke-linecap="round"/><path d="M24,-160 L58,-136" stroke="{shirt}" stroke-width="10.5" stroke-linecap="round"/><circle cx="62" cy="-134" r="6.5" fill="{skin}" {o}/>')
-    elif arm=="up":
-        g.append(f'<path d="M24,-160 L40,-232" stroke="{NAVY}" stroke-width="15" stroke-linecap="round"/><path d="M24,-160 L40,-232" stroke="{shirt}" stroke-width="10.5" stroke-linecap="round"/><circle cx="41" cy="-238" r="6.5" fill="{skin}" {o}/>')
     elif arm=="pad":
         g.append(f'<path d="M24,-160 L36,-128 L12,-120" stroke="{NAVY}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M24,-160 L36,-128 L12,-120" stroke="{shirt}" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="2" y="-146" width="20" height="26" rx="2" fill="#f5ede1" {o}/><circle cx="12" cy="-120" r="6" fill="{skin}" {o}/>')
     elif arm!="none":
@@ -186,8 +204,9 @@ def grass(extra=""):
             f'<pattern id="tape" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="40" height="40" fill="{YEL}"/><rect width="20" height="40" fill="{NAVY}"/></pattern></defs>'
             f'<rect width="{W}" height="{H}" fill="url(#lawn)"/>')
 
-def cart_svg(x,y,color,lid,s=1,recycle=False):
-    """The drawing of a cart, not registered: for a cart that is part of another part (on a truck's lift)."""
+def cart(x,y,color,lid,s=1,recycle=False):
+    s=sc(s)
+    place("cart",x-60*s,y-204*s,x+60*s,y+18*s,size=210*s)
     o=f'stroke="{NAVY}" stroke-width="{SW/s:.2f}" stroke-linejoin="round"'
     g=f'<g transform="translate({x},{y}) scale({s})"><ellipse cx="0" cy="4" rx="70" ry="9" fill="#000" opacity=".14"/>'
     g+=f'<path d="M-52,-170 L52,-170 L44,-10 L-44,-10 Z" fill="{color}" {o}/><path d="M-52,-170 L-30,-170 L-24,-10 L-44,-10 Z" fill="#fff" opacity=".12"/>'
@@ -195,11 +214,6 @@ def cart_svg(x,y,color,lid,s=1,recycle=False):
     g+=f'<circle cx="-36" cy="-6" r="12" fill="#1a2033" {o}/><circle cx="36" cy="-6" r="12" fill="#1a2033" {o}/>'
     if recycle: g+=f'<path d="M0,-130 L20,-96 L-20,-96 Z" fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round"/>'
     return g+'</g>'
-
-def cart(x,y,color,lid,s=1,recycle=False):
-    s=sc(s)
-    place("cart",x-60*s,y-204*s,x+60*s,y+18*s,size=210*s)
-    return cart_svg(x,y,color,lid,s,recycle)
 
 def tape(x1,y1,x2,y2,sag=14):
     mx=(x1+x2)/2; my=(y1+y2)/2+sag
@@ -225,13 +239,19 @@ def bike(x,y,s=1,flip=False,shirt=RED,helmet=YEL,skin=SKIN_DARK):
     return "".join(g)
 
 def calendar_page(x,y,month,day,w=230,h=250):
-    """A wall-calendar page with its top-left corner at (x, y): the month on a red band, the day large."""
+    """A wall-calendar page with its top-left corner at (x, y): the label centred on a red header band,
+    the day large and centred in the white area below it, with even clear space all round."""
     place("calendar",x,y,x+w,y+h)
-    return (f'<g transform="translate({x},{y})"><rect x="0" y="0" width="{w}" height="{h}" rx="12" fill="#fff" stroke="{NAVY}" stroke-width="{SW}"/>'
-            f'<rect x="0" y="0" width="{w}" height="60" rx="12" fill="{RED}" stroke="{NAVY}" stroke-width="{SW}"/>'
-            f'<text x="{w/2:g}" y="42" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="34" fill="#fff">{month}</text>'
-            f'<text x="{w/2:g}" y="{h-60:g}" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="120" fill="{NAVY}">{day}</text>'
-            f'<circle cx="{w*.226:.0f}" cy="2" r="9" fill="{NAVY}"/><circle cx="{w*.774:.0f}" cy="2" r="9" fill="{NAVY}"/></g>')
+    hb=round(.26*w); free=(x,y+hb,x+w,y+h)
+    ink=lambda s,sz: measure.ink_box(s,sz)
+    unit=ink(day,100)  # size the day so its ink fills .5 of the white area's height, or .72 of its width
+    size=min(.5*(h-hb)/(unit[3]-unit[1]), .72*w/(unit[2]-unit[0]))*100
+    label=min(.148*w, .62*hb/((ink(month,100)[3]-ink(month,100)[1])/100))
+    return (f'<g><rect x="{x}" y="{y}" width="{w}" height="{h}" rx="12" fill="#fff" stroke="{NAVY}" stroke-width="{SW}"/>'
+            f'<rect x="{x}" y="{y}" width="{w}" height="{hb}" rx="12" fill="{RED}" stroke="{NAVY}" stroke-width="{SW}"/>'
+            +text_in(month,(x,y,x+w,y+hb),label,fill="#fff")
+            +text_in(day,free,size)
+            +f'<circle cx="{x+w*.226:.0f}" cy="{y+2}" r="9" fill="{NAVY}"/><circle cx="{x+w*.774:.0f}" cy="{y+2}" r="9" fill="{NAVY}"/></g>')
 
 def roast_turkey(x,y,s=1):
     """A roast turkey on its platter, the platter's centre at (x, y)."""

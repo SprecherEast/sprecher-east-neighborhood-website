@@ -3,12 +3,16 @@ outline never changes, whatever the scene.
 
 - `real_shelter`: the Door Creek Park shelter, traced from the owner's photo of the building.
 - `park_sign`: the Door Creek Park entrance sign, from the owner's photo of the sign.
+- `pinney_library`: Madison Public Library's Pinney branch, 516 Cottage Grove Road, see its docstring
+  for what it is traced from.
 - `conifer`, `woods`: generic park trees, not a real place.
 
 A new real place is added here with its source named, never redrawn inside a scene.
 """
 import math
 from .parts import *
+from . import measure
+from .props import _g, _o, _rect, _poly
 
 
 def brick_lines(x,y,w,h,c,step=22,off=44):
@@ -94,3 +98,94 @@ def park_sign(x,y,s=1):
     return (f'<g transform="translate({x},{y}) scale({s})"><rect x="14" y="-36" width="22" height="120" fill="#4a3226" {o}/><rect x="244" y="-36" width="22" height="120" fill="#4a3226" {o}/>'
     f'<path d="M-6,-70 L270,-70 L284,-42 L-16,-42 Z" fill="#4a3226" {o}/><rect x="-6" y="-70" width="288" height="52" fill="#4a3226" {o}/>'
     f'<text x="138" y="-31" text-anchor="middle" font-family="Poppins" font-weight="600" font-size="25" fill="#f2c14a">DOOR CREEK PARK</text></g>')
+
+
+PINNEY_W = 12.6   # metres, the frontage drawn: library glazing and wall, the entrance pavilion, one more bay
+PINNEY_PAVILION = 6.6  # metres from the left end to the entrance pavilion
+PINNEY_GROUND = 4.6  # metres, ground floor up to the red band
+
+def _fit(text, w, h, weight="bold"):
+    """Font size, in pixels, at which `text` fills .94 of a w by h area (limited by .7 of its height)."""
+    l, t, r, b = measure.ink_box(text, 100, weight)
+    return min(.94 * w / ((r - l) / 100), .7 * h / ((b - t) / 100))
+
+def pinney_library(x, y, ppm, sign=None):
+    """Pinney Library, Madison Public Library's branch at 516 Cottage Grove Road: the library takes the
+    ground floor of the four-storey Royster Commons building (opened March 2020, architect OPN
+    Architects). Its left end is at (x, y), ground level, and it is `PINNEY_W` metres of frontage; the
+    brick floors above rise out of the top of the frame. `sign` is the word of a notice in the
+    entrance glass (for example "CLOSED"); without it the doors are clear. Never redrawn in a scene.
+
+    Traced from photographs, simplified to flat shapes (the likeness sheet sets this outline beside them):
+    - City of Madison, "Pinney Library entrance from parking lot", Sept. 2019 (news release of
+      2019-12-13): the buff limestone-block mass with "ROYSTER COMMONS" in silver letters over a steel
+      canopy, double glass doors and glass sidelights, a rust-red metal band over dark-grey framed
+      glazing to the right, brick with grey siding and balconies above.
+    - Madison Public Library's Pinney page photograph of the Cottage Grove Road front: large silver
+      "MADISON PUBLIC LIBRARY" letters on a low buff limestone wall in front of tall glazing between
+      dark-grey columns, the rust-red band above.
+    - City of Madison engineering project page for the Pinney Neighborhood Library (renderings from
+      Cottage Grove Road and from the north), and OPN Architects' project page: the library is the
+      ground floor, a patio on the street side, the entrance pavilion between two glazed runs.
+    """
+    w, gh = PINNEY_W, PINNEY_GROUND
+    top = y / ppm + 1  # metres above the ground to a little past the top of the canvas
+    BRICK, LIME, STEEL, RED_BAND, COL = "#b9633f", "#dccfae", "#c3cad6", "#c4542f", "#4a4f58"
+    # the brick floors fill the frame behind the ground floor; they count as the building for balance
+    place("building", x - 1.2 * ppm, 0, x + (w + 3) * ppm, y - gh * ppm, bleed=True, label="Pinney upper floors")
+    g = _g(x, y, ppm)
+    g += (f'<defs><pattern id="pbrick" width=".5" height=".25" patternUnits="userSpaceOnUse"><path d="M0,.25 L.5,.25 M.25,0 L.25,.25" '
+          f'stroke="#9d5233" stroke-width=".022" fill="none"/></pattern></defs>')
+    g += _rect(-1.2, -top, w + 4.2, top - gh - .9, BRICK, ppm) + f'<rect x="-1.2" y="{-top:g}" width="{w + 4.2:g}" height="{top - gh - .9:g}" fill="url(#pbrick)"/>'
+    g += _rect(-1.2, -top, 3.6, top - gh - .9, "#a9aeb5", ppm)          # grey siding bay at the left
+    g += "".join(f'<path d="M{-1.2 + i * .3:g},{-top:g} L{-1.2 + i * .3:g},{-gh - .9:g}" stroke="#8d939c" stroke-width=".03"/>' for i in range(1, 12))
+    for fl in range(3):                                                  # three floors of windows
+        wy = -(gh + .9 + .75 + fl * 3.0)
+        for i in range(6):
+            wx = .6 + i * 2.5
+            if i in (1, 4):                                              # balcony bays: dark recess, railing
+                g += _rect(wx - .2, wy - 2.2, 2.2, 2.35, "#3a3f4a", ppm) + f'<path d="M{wx - .2:g},{wy - .5:g} L{wx + 2:g},{wy - .5:g}" stroke="{STEEL}" stroke-width=".06"/>'
+                g += "".join(f'<path d="M{wx - .2 + k * .3:g},{wy - .5:g} L{wx - .2 + k * .3:g},{wy + .15:g}" stroke="{STEEL}" stroke-width=".03"/>' for k in range(1, 7))
+            else:
+                g += _rect(wx, wy - 1.9, 1.3, 1.9, GLASS, ppm) + f'<path d="M{wx + .65:g},{wy - 1.9:g} L{wx + .65:g},{wy:g}" stroke="{NAVY}" stroke-width=".04"/>'
+    # ground floor: dark-grey columns and glazing in two runs, the pavilion between them
+    pv = PINNEY_PAVILION
+    runs = ((0, pv), (pv + 4.6, w))
+    for a, b in runs:
+        g += _rect(a, -gh, b - a, gh, "#8fb0bf", ppm)
+        g += f'<path d="M{a + 1:g},{-gh:g} L{a + .2:g},0 L{a + .9:g},0 L{a + 1.7:g},{-gh:g} Z" fill="#fff" opacity=".18"/>'
+        for k in (1, 2):
+            g += f'<path d="M{a:g},{-gh * k / 3:g} L{b:g},{-gh * k / 3:g}" stroke="#5d6470" stroke-width=".07"/>'
+    for cx in (0, 3.0, pv - .75, pv + 4.6, w - .75):
+        g += _rect(cx, -gh, .75, gh, COL, ppm)
+    # rust-red metal band over both glazed runs, in panels
+    for a, b in runs:
+        g += _rect(a, -gh - .9, b - a, .9, RED_BAND, ppm)
+        g += "".join(f'<path d="M{k:g},{-gh - .9:g} L{k:g},{-gh:g}" stroke="#9a3b20" stroke-width=".05"/>' for k in range(int(a) + 2, int(b), 2))
+    # the entrance pavilion: buff limestone block, steel canopy, glass doors and sidelights
+    g += _rect(pv, -gh - .9, 4.6, gh + .9, LIME, ppm)
+    g += "".join(f'<path d="M{pv:g},{-.45 * k:g} L{pv + 4.6:g},{-.45 * k:g}" stroke="#bfae88" stroke-width=".03"/>' for k in range(1, 11))
+    g += _rect(pv + .4, -2.7, 3.8, 2.7, "#8fb0bf", ppm)
+    g += _rect(pv + 1.5, -2.55, 1.9, 2.55, "#9ec0cf", ppm) + f'<path d="M{pv + 2.45:g},-2.55 L{pv + 2.45:g},0" stroke="#5d6470" stroke-width=".08"/>'
+    g += f'<path d="M{pv + 1.55:g},-2.55 L{pv + 1.55:g},0 M{pv + 3.35:g},-2.55 L{pv + 3.35:g},0" stroke="#5d6470" stroke-width=".06"/>'
+    g += _rect(pv - .15, -3.15, 4.9, .3, STEEL, ppm)                     # the canopy
+    g += _rect(pv - .1, -gh - .95, 4.8, .2, "#9aa3b2", ppm)               # flat roof edge
+    # low buff wall along the street front of the glazing, its letters above
+    wl = pv - .4
+    g += _rect(.25, -.85, wl - .25, .85, LIME, ppm) + _rect(.15, -.95, wl - .05, .14, "#e9dfc6", ppm)
+    g += "".join(f'<path d="M{k * .9 + .25:g},0 L{k * .9 + .25:g},-.85" stroke="#bfae88" stroke-width=".03"/>' for k in range(1, int(wl / .9) + 1))
+    g += '</g>'
+    # lettering and the notice are drawn in canvas pixels, centred in their areas by text_in
+    px = lambda mx, my: (x + mx * ppm, y + my * ppm)
+    a0, a1 = px(.3, -2.1), px(wl - .1, -1.0)
+    g += text_in("MADISON PUBLIC LIBRARY", (*a0, *a1), _fit("MADISON PUBLIC LIBRARY", a1[0] - a0[0], a1[1] - a0[1]), fill=STEEL, extra=f'stroke="{NAVY}" stroke-width="1.6" paint-order="stroke"')
+    r0, r1 = px(pv + .3, -4.5), px(pv + 4.3, -3.55)
+    g += text_in("ROYSTER COMMONS", (*r0, *r1), _fit("ROYSTER COMMONS", r1[0] - r0[0], r1[1] - r0[1]), fill=STEEL, extra=f'stroke="{NAVY}" stroke-width="1.4" paint-order="stroke"')
+    if sign:
+        b0, b1 = px(pv + .75, -2.4), px(pv + 3.85, -1.15)  # a notice board across the doors and sidelights
+        g += (f'<rect x="{b0[0]:.1f}" y="{b0[1]:.1f}" width="{b1[0] - b0[0]:.1f}" height="{b1[1] - b0[1]:.1f}" rx="6" fill="{RED}" '
+              f'stroke="{NAVY}" stroke-width="{SW}" stroke-linejoin="round"/>')
+        g += text_in(sign, (b0[0] + 8, b0[1] + 6, b1[0] - 8, b1[1] - 6), _fit(sign, b1[0] - b0[0] - 16, b1[1] - b0[1] - 12), fill="#fff")
+    # registered last, so a scene can mark it as its focal subject: the library's own frontage
+    place("building", x, y - (gh + 1.05) * ppm, x + w * ppm, y, size=gh * ppm, label="Pinney Library")
+    return g

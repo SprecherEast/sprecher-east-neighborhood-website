@@ -103,14 +103,23 @@ checked by the generator and in the author's written critique before anyone sees
 
 23. **The scene shows the subject.** With the panel hidden, a neighbor can say what the item is
     about. Each scene has one focal subject drawn large, taken from the item itself, not generic
-    people on a street.
+    people on a street. A subject the post names (a library, a park) is the real place, drawn
+    faithfully from photographs and kept as an agreed outline; a kind of project or event is one the
+    source documents, never an invented one, with the source named in the scene's comment.
 24. **One real-world scale.** People, vehicles, buildings and objects in a scene share one scale, and
     buildings are larger than people. The generator fails a scene whose parts cannot all be true to
     life at once.
 25. **Composed in the frame.** Nothing touches or crowds an edge, the content is balanced with no
-    large empty band, and the corner a card covers stays clear.
+    large empty band (a calendar page floating in the sky does not fill it), the subject fills the
+    frame (the camera moves closer, the scale stays true), and the corner a card covers stays clear.
+    Nothing reads as prison wire, such as chain-link fencing.
 26. **A layout of its own.** A new scene does not repeat another scene's composition unless it
     draws the same place. Parts are shared; compositions are not.
 27. **Critique first.** The author renders at card size and at phone width, answers rules 23 to 26 in
     writing, and fixes what fails before the owner sees it. A new subject is mocked up with two
     concepts, and the look is agreed before the final is made.
+28. **Text sits centred in its part.** The day on a calendar page, the word on a sign or board, the
+    lettering on a building: centred in the area meant for it by the ink the font draws, with even
+    clear space, never touching an edge or the header band. Parts draw such text only through
+    `parts.text_in`, and the build fails text that is off centre or crowds its area (the owner's
+    direction, 2026-11-27, chat, recorded on #1561).

@@ -11,7 +11,7 @@ Exit code 1 when a check fails, so a test and CI can rely on it.
 import argparse, json, shutil, subprocess, sys
 from pathlib import Path
 
-from . import checks, parts
+from . import checks, measure, parts
 from .settings import *
 from .scenes import SCENES
 
@@ -22,12 +22,7 @@ def wrap(body):
 
 def text_width(text, size, weight):
     """Rendered width in pixels. Measured with the real Poppins file when it is installed."""
-    try:
-        from PIL import ImageFont
-        font = subprocess.check_output(["fc-match", "-f", "%{file}", f"Poppins:{weight}"]).decode()
-        return ImageFont.truetype(font, size).getlength(text)
-    except Exception:
-        return len(text) * size * GLYPH_EM
+    return measure.text_width(text, size, weight)
 
 
 def check_panel(name, panels):
@@ -85,8 +80,9 @@ def draw(name):
     parts.PANELS.clear()
     parts.LOWERED.clear()
     parts.PLACED.clear()
+    parts.TEXTS.clear()
     body = SCENES[name]()
-    return body, list(parts.PANELS), list(parts.PLACED), list(parts.LOWERED)
+    return body, list(parts.PANELS), list(parts.PLACED), list(parts.LOWERED), list(parts.TEXTS)
 
 
 def build(names, event_scenes=EVENT_SCENES, strict=False):
@@ -94,9 +90,11 @@ def build(names, event_scenes=EVENT_SCENES, strict=False):
     A scene's layout is compared with every other scene's, so each is drawn once here."""
     out, problems, placed = {}, [], {}
     for name in names:
-        body, panels, placed[name], lowered = draw(name)
+        body, panels, placed[name], lowered, texts = draw(name)
         out[name] = wrap(body)
         problems += check_panel(name, panels)
+        if name not in event_scenes:  # an event's scene is moved after the parts drew their text
+            problems += checks.check_text(name, texts)
         if name in event_scenes:
             problems += check_clear_zone(name, lowered)
     sigs = {n: checks.signature(p) for n, p in placed.items()}
