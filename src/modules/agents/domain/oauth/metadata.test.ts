@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { authorizationServerMetadata, bearerChallenge, protectedResourceMetadata } from './metadata'
+import { DISCOVERY_HEADERS } from './constants'
+import {
+  authorizationServerMetadata,
+  bearerChallenge,
+  discoveryResponse,
+  protectedResourceMetadata,
+} from './metadata'
 
 const ORIGIN = 'https://sprechereast.com'
 
@@ -76,5 +82,14 @@ describe('an origin configured with a trailing slash', () => {
   it('gives the same challenge and authorization server as one without', () => {
     expect(bearerChallenge(slashed)).toBe(bearerChallenge(ORIGIN))
     expect(protectedResourceMetadata(slashed)).toEqual(protectedResourceMetadata(ORIGIN))
+  })
+})
+
+describe('discoveryResponse', () => {
+  it('is the document as public JSON that any client may read and cache', async () => {
+    const response = discoveryResponse({ a: 1 })
+    expect(await response.json()).toEqual({ a: 1 })
+    expect(response.headers.get('cache-control')).toBe(DISCOVERY_HEADERS['Cache-Control'])
+    expect(response.headers.get('access-control-allow-origin')).toBe('*')
   })
 })

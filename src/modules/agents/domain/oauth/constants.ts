@@ -30,19 +30,50 @@ export const OAUTH_SCOPE = 'mcp'
 export const TOKEN_PREFIX = { code: 'sec_', access: 'sea_', refresh: 'ser_' } as const
 export type TokenKind = keyof typeof TOKEN_PREFIX
 
-/** Requests a minute to the token address from one connection (counted in memory, one process) */
-export const OAUTH_TOKEN_LIMIT = {
+/**
+ * Requests a minute from one connection (counted in memory, one process) to the token address, and
+ * visits to the authorize and approve pages, each of which reads the database. Each address has its
+ * own count; the numbers are one.
+ */
+export const OAUTH_REQUEST_LIMIT = {
   windowMs: 60 * 1000,
   perConnection: 30,
   trackedConnections: 2000,
 }
 
-/** Visits a minute to the authorize and approve pages from one connection: each reads the database */
-export const OAUTH_AUTHORIZE_LIMIT = {
-  windowMs: 60 * 1000,
-  perConnection: 30,
-  trackedConnections: 2000,
-}
+/** What both pages of a connection say they are for, in the header and in the page's description */
+export const CONNECTION_DESCRIPTION =
+  'Allow an AI tool to connect to the Sprecher East AI agent address.'
+
+/** The answer past any limit of the AI agent address, as a message and as a token error */
+export const TOO_MANY_REQUESTS = 'Too many requests. Try again in a minute.'
+
+/** What a token request is sent as (RFC 6749 section 4.1.3), read by the route and passed on to the library */
+export const FORM_CONTENT_TYPE = 'application/x-www-form-urlencoded'
+
+/** Shown on the site, and by the approve button, when a request or approval cannot be trusted */
+export const CONNECTION_REFUSED =
+  'This connection request is no longer valid. Start it again from the AI tool.'
+
+/** What an AI tool is told of a refusal: never the library's own message, which can name internals */
+export const REFUSED_DESCRIPTION = 'The request was refused.'
+
+/**
+ * The only error names that leave this site, in a token answer or a redirect back to the tool:
+ * RFC 6749 sections 4.1.2.1 and 5.2, and RFC 8707. Any other name, such as a library's own, is
+ * answered as `server_error`.
+ */
+export const OAUTH_ERROR_NAMES: ReadonlySet<string> = new Set([
+  'invalid_request',
+  'invalid_client',
+  'invalid_grant',
+  'unauthorized_client',
+  'unsupported_grant_type',
+  'unsupported_response_type',
+  'invalid_scope',
+  'invalid_target',
+  'access_denied',
+])
 
 /** The grants a client may use; a refresh token is a grant of its own */
 export const OAUTH_GRANTS = ['authorization_code', 'refresh_token'] as const

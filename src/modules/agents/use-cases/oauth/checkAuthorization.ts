@@ -1,24 +1,20 @@
 import 'server-only'
 
-import { parseClientIp, SlidingWindowCounter } from '@/platform/lib'
-
 import {
   readAuthorizeRequest,
   readClientAndRedirect,
   type RawParams,
 } from '../../domain/oauth/authorizeRequest'
-import { OAUTH_AUTHORIZE_LIMIT } from '../../domain/oauth/constants'
+import { CONNECTION_REFUSED } from '../../domain/oauth/constants'
 import type { ConsentRequest } from '../../domain/oauth/consent'
 import { redirectError } from '../../domain/oauth/redirects'
 import { clientAccepts } from '../../domain/oauth/redirectUri'
 import { findOAuthClient } from '../../data/oauth/clients'
 import { getOAuthContext } from '../../data/oauth/context'
+import { createConnectionLimit } from './connectionLimit'
 
 // In memory, as the MCP and token limits are: the site runs as one process
-const visits = new SlidingWindowCounter(
-  OAUTH_AUTHORIZE_LIMIT.windowMs,
-  OAUTH_AUTHORIZE_LIMIT.trackedConnections,
-)
+const allows = createConnectionLimit()
 
 export type Checked =
   /** The request cannot be trusted enough to send anything back: say so on the site */
@@ -34,8 +30,6 @@ export type Checked =
       redirectHost: string
     }
 
-const REFUSED = 'This connection request is not valid. Start it again from the AI tool.'
-
 /**
  * What both pages of the connection do first (#1501), in this order, so nothing is sent anywhere
  * or asked of anyone before it is safe: a limit per connection (each visit reads the database);
@@ -43,16 +37,13 @@ const REFUSED = 'This connection request is not valid. Start it again from the A
  * complete (PKCE S256, state, the MCP address as resource). Reads no session.
  */
 export async function checkAuthorization(params: RawParams, headers: Headers): Promise<Checked> {
-  const ip = parseClientIp(headers)
-  if (ip && !visits.tryTake(ip, OAUTH_AUTHORIZE_LIMIT.perConnection, Date.now())) {
-    return { kind: 'too-many' }
-  }
+  if (!allows(headers)) return { kind: 'too-many' }
   const ids = readClientAndRedirect(params)
   if (!ids.ok) return { kind: 'refused', message: ids.message }
   const { payload, origin, resource } = await getOAuthContext()
   const client = await findOAuthClient(payload, ids.clientId)
   if (!clientAccepts(client, ids.redirectUri)) {
-    return { kind: 'refused', message: REFUSED }
+    return { kind: 'refused', message: CONNECTION_REFUSED }
   }
   const read = readAuthorizeRequest(params, resource)
   if (!read.ok) {

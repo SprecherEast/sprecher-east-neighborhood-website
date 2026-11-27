@@ -3,24 +3,23 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { RETURN_PARAM, SIGN_IN_PATH } from '@/modules/accounts'
+import { CONNECTION_DESCRIPTION } from '@/modules/agents'
 import {
   beginAuthorization,
   ConnectionNotice,
   ConnectionPage,
+  type ConnectionPageProps,
   ConsentCard,
   getViewer,
 } from '@/modules/agents/server'
 import { privateAddressMetadata } from '@/platform/seo/privateAddress'
 
-export const metadata: Metadata = privateAddressMetadata(
-  'Approve an AI Tool',
-  'Allow an AI tool to connect to the Sprecher East AI agent address.',
-)
+const TITLE = 'Approve an AI Tool'
+
+export const metadata: Metadata = privateAddressMetadata(TITLE, CONNECTION_DESCRIPTION)
 
 // The answer depends on the signed-in account and on the request, never on a cached page
 export const dynamic = 'force-dynamic'
-
-type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
 /**
  * Where an admin allows an AI tool in (#1501), reached from the first page (`/oauth/authorize`)
@@ -29,7 +28,7 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
  * back to the tool, a visitor is sent to log in and back to this same request, and only a
  * signed-in admin sees the approval. The accounts and agents modules meet here.
  */
-export default async function ApprovePage({ searchParams }: Props) {
+export default async function ApprovePage({ searchParams }: ConnectionPageProps) {
   const begun = await beginAuthorization(await searchParams, await headers(), await getViewer())
   if (begun.kind === 'redirect') redirect(begun.url)
   const signInHref =
@@ -38,7 +37,7 @@ export default async function ApprovePage({ searchParams }: Props) {
       : SIGN_IN_PATH
 
   return (
-    <ConnectionPage title="Approve an AI Tool">
+    <ConnectionPage title={TITLE}>
       {begun.kind === 'consent' ? (
         <ConsentCard view={begun.view} />
       ) : (

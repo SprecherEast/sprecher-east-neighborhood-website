@@ -3,9 +3,9 @@ import 'server-only'
 import configPromise from '@payload-config'
 import { getPayload, type Payload } from 'payload'
 
-import { ACCOUNTS_COLLECTION } from '@/platform/lib'
 import { getServerSideURL } from '@/platform/lib/getURL'
 
+import { accountById } from '../../domain/oauth/queries'
 import { mcpResource, siteOrigin } from '../../domain/oauth/resource'
 
 /** What every OAuth request needs: Payload, this site's address and the MCP address (the audience). */
@@ -20,16 +20,6 @@ export async function getOAuthContext(): Promise<{
 
 /** A person's display name for the consent page, or null (never an email address). */
 export async function findAccountName(payload: Payload, userId: number): Promise<string | null> {
-  try {
-    const user = await payload.findByID({
-      collection: ACCOUNTS_COLLECTION,
-      id: userId,
-      depth: 0,
-      select: { name: true },
-      overrideAccess: true,
-    })
-    return user.name ?? null
-  } catch {
-    return null
-  }
+  const user = await payload.findByID({ ...accountById(userId), select: { name: true } }).catch(() => null)
+  return user?.name ?? null
 }

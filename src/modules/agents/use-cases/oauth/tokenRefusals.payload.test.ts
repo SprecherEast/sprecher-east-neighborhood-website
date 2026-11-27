@@ -15,6 +15,7 @@ import {
   RESOURCE,
   onlyDoc,
 } from '../../testing/oauthFlow'
+import { TOO_MANY_REQUESTS } from '../../domain/oauth/constants'
 
 /**
  * What the token address refuses (#1501): other grants, another redirect address or resource, a
@@ -156,6 +157,7 @@ describe('the token address', () => {
     const answers = []
     for (let i = 0; i < 31; i++) answers.push(await exchange({ grant_type: 'password' }, headers))
     expect(answers.at(-1)?.status).toBe(429)
+    expect(answers.at(-1)?.body).toMatchObject({ error_description: TOO_MANY_REQUESTS })
     expect(answers.slice(0, 30).every((a) => a.status === 400)).toBe(true)
   })
 })

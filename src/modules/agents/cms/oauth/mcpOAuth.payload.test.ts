@@ -8,6 +8,7 @@ import {
 } from '@/platform/payload/testing/inMemoryPayload'
 import { createMcpKey, mcpClient } from '@/platform/payload/testing/mcpRequest'
 
+import { TOO_MANY_REQUESTS } from '../../domain/oauth/constants'
 import { bearerChallenge } from '../../domain/oauth/metadata'
 import { hashToken } from '../../domain/oauth/secrets'
 import { exchange, RESOURCE, registerClient, signIn, onlyDoc } from '../../testing/oauthFlow'
@@ -239,10 +240,12 @@ describe('a request that is not let in', () => {
     const busy = await createAccount(payload, 'agent', 'busy')
     const own = await registerClient(payload, admin, busy, { name: 'Busy' })
     const token = (await signIn(payload, admin, own)).body.access_token
-    const statuses: number[] = []
-    for (let i = 0; i < 61; i++) statuses.push((await mcp.call('tools/list', {}, token)).status)
+    const answers = []
+    for (let i = 0; i < 61; i++) answers.push(await mcp.call('tools/list', {}, token))
+    const statuses = answers.map((a) => a.status)
     expect(statuses.slice(0, 60).every((s) => s === 200)).toBe(true)
     expect(statuses[60]).toBe(429)
+    expect(JSON.stringify(answers[60]?.body)).toContain(TOO_MANY_REQUESTS)
   }, 60_000)
 })
 

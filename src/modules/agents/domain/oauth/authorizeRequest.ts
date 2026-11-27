@@ -90,7 +90,10 @@ export function readAuthorizeRequest(
   }
   const challenge = single(params, 'code_challenge')
   if (!challenge || !VERIFIER_SHAPE.test(challenge)) {
-    return refuse('invalid_request', 'A PKCE code_challenge of 43 to 128 characters is required.')
+    return refuse(
+      'invalid_request',
+      `A PKCE code_challenge of ${MAX.challenge.min} to ${MAX.challenge.max} characters is required.`,
+    )
   }
   if (single(params, 'code_challenge_method') !== 'S256') {
     return refuse('invalid_request', 'Only code_challenge_method=S256 is supported.')

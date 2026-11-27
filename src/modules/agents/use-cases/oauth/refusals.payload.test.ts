@@ -1,3 +1,4 @@
+import OAuth2Server from '@node-oauth/oauth2-server'
 import type { Payload } from 'payload'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 
@@ -5,6 +6,7 @@ import { createAccount, type Account } from '@/platform/payload/testing/inMemory
 
 import { signConsent } from '../../domain/oauth/consent'
 import {
+  approve,
   authorizeParams,
   begin,
   bootOAuth,
@@ -180,5 +182,26 @@ describe('the approval', () => {
     expect(
       await decide(begun.view.request, begun.view.ticket, 'approve', viewerOf(admin)),
     ).toMatchObject(refusedPage)
+  })
+})
+
+describe('an error the OAuth library raises while the approval makes its code', () => {
+  const approveWith = async (error: Error) => {
+    vi.spyOn(OAuth2Server.prototype, 'authorize').mockRejectedValueOnce(error)
+    const done = await approve(authorizeParams(clientId, challenge), admin)
+    if (done.kind !== 'redirect') throw new Error('expected a redirect')
+    return new URL(done.url).searchParams
+  }
+
+  it('goes back to the tool under its standard name', async () => {
+    const answered = await approveWith(new OAuth2Server.InvalidScopeError('internal detail'))
+    expect(answered.get('error')).toBe('invalid_scope')
+    expect(answered.get('error_description')).toBe('The request was refused.')
+  })
+
+  it('goes back as a server error when the name is not a standard one, never as the library names it', async () => {
+    const answered = await approveWith(new OAuth2Server.InvalidArgumentError('internal detail'))
+    expect(answered.get('error')).toBe('server_error')
+    expect(answered.get('error_description')).toBe('The server could not finish the sign-in.')
   })
 })

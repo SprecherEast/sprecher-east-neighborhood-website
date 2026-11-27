@@ -1,4 +1,4 @@
-import { authorizationServerMetadata, DISCOVERY_HEADERS } from '@/modules/agents'
+import { authorizationServerMetadata, discoveryResponse } from '@/modules/agents'
 import { getServerSideURL } from '@/platform/lib/getURL'
 
 /**
@@ -7,7 +7,5 @@ import { getServerSideURL } from '@/platform/lib/getURL'
  * grants, no open registration. Public, so any client may read it.
  */
 export function GET(): Response {
-  return Response.json(authorizationServerMetadata(getServerSideURL()), {
-    headers: DISCOVERY_HEADERS,
-  })
+  return discoveryResponse(authorizationServerMetadata(getServerSideURL()))
 }

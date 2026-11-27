@@ -16,6 +16,18 @@ export type ConsentView = {
   ticket: string
 }
 
+/** What both pages show of who is asking, from a checked request */
+const clientFacts = ({
+  clientName,
+  redirectHost,
+}: {
+  clientName: string
+  redirectHost: string
+}) => ({
+  clientName,
+  redirectHost,
+})
+
 type Refusal = Exclude<Checked, { kind: 'ok' }>
 
 export type Continuing =
@@ -49,8 +61,7 @@ export async function continueAuthorization(
   if (checked.kind !== 'ok') return checked
   return {
     kind: 'continue',
-    clientName: checked.clientName,
-    redirectHost: checked.redirectHost,
+    ...clientFacts(checked),
     next: approvePath(checked.request),
   }
 }
@@ -74,8 +85,7 @@ export async function beginAuthorization(
   return {
     kind: 'consent',
     view: {
-      clientName: checked.clientName,
-      redirectHost: checked.redirectHost,
+      ...clientFacts(checked),
       agentName: await findAccountName(payload, checked.agentId),
       request: checked.request,
       ticket: signConsent(checked.request, {

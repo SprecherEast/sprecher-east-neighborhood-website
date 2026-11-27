@@ -7,6 +7,7 @@
 
 import { redirect } from 'next/navigation'
 
+import { CONNECTION_REFUSED } from './domain/oauth/constants'
 import { consentInputSchema } from './domain/oauth/consentInput'
 import { getViewer } from './data/oauth/viewer'
 import { decideConsent } from './use-cases/oauth/decideConsent'
@@ -17,8 +18,7 @@ import { decideConsent } from './use-cases/oauth/decideConsent'
  */
 export async function decideConnection(input: unknown): Promise<{ message: string }> {
   const parsed = consentInputSchema.safeParse(input)
-  if (!parsed.success)
-    return { message: 'This approval is not valid. Start again from the AI tool.' }
+  if (!parsed.success) return { message: CONNECTION_REFUSED }
   const { request, ticket, decision } = parsed.data
   const decided = await decideConsent(request, ticket, decision, await getViewer())
   if (decided.kind === 'redirect') redirect(decided.url)

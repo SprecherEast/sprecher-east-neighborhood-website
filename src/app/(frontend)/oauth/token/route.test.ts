@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({ exchangeToken: vi.fn() }))
 vi.mock('@/modules/agents/server', () => ({ exchangeToken: mocks.exchangeToken }))
 
+import { NO_STORE_HEADERS } from '@/modules/agents'
+
 import { POST } from './route'
 
 const FORM = 'application/x-www-form-urlencoded'
@@ -19,7 +21,7 @@ const post = (body: string, type = FORM, extra: Record<string, string> = {}) =>
 beforeEach(() => {
   mocks.exchangeToken
     .mockReset()
-    .mockResolvedValue({ status: 200, headers: {}, body: { ok: true } })
+    .mockResolvedValue({ status: 200, headers: NO_STORE_HEADERS, body: { ok: true } })
 })
 
 describe('POST /oauth/token', () => {
@@ -58,6 +60,20 @@ describe('POST /oauth/token', () => {
     expect(response.headers.get('cache-control')).toBe('no-store')
     expect(response.headers.get('pragma')).toBe('no-cache')
   })
+
+  it.each([
+    ['a body sent as json', () => post('grant_type=x', 'application/json')],
+    ['a body that is too big', () => post(`grant_type=x&junk=${'a'.repeat(9000)}`)],
+  ])(
+    'keeps the early refusal of %s out of every cache, as any token answer is',
+    async (_n, send) => {
+      const response = await send()
+      expect(response.status).toBe(400)
+      expect(response.headers.get('cache-control')).toBe('no-store')
+      expect(response.headers.get('pragma')).toBe('no-cache')
+      expect(await response.json()).toMatchObject({ error: 'invalid_request' })
+    },
+  )
 
   it('passes on the answer and its headers', async () => {
     mocks.exchangeToken.mockResolvedValue({

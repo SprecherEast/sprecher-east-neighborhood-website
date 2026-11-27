@@ -1,4 +1,4 @@
-import { DISCOVERY_HEADERS, protectedResourceMetadata } from '@/modules/agents'
+import { discoveryResponse, protectedResourceMetadata } from '@/modules/agents'
 import { getServerSideURL } from '@/platform/lib/getURL'
 
 /**
@@ -9,7 +9,5 @@ import { getServerSideURL } from '@/platform/lib/getURL'
  * itself and where to sign in. Public, so any client may read it.
  */
 export function GET(): Response {
-  return Response.json(protectedResourceMetadata(getServerSideURL()), {
-    headers: DISCOVERY_HEADERS,
-  })
+  return discoveryResponse(protectedResourceMetadata(getServerSideURL()))
 }

@@ -7,6 +7,7 @@ import { hasAgent } from '@/platform/payload/roles'
 
 import { toAgentAnswer } from '../domain/agentView'
 import { MCP_LIMITS } from '../domain/mcpLimits'
+import { TOO_MANY_REQUESTS } from '../domain/oauth/constants'
 import { bearerChallenge } from '../domain/oauth/metadata'
 import { mcpResource } from '../domain/oauth/resource'
 import { tokenKindOf } from '../domain/oauth/secrets'
@@ -32,7 +33,7 @@ const answerFor =
 const requests = new SlidingWindowCounter(MCP_LIMITS.windowMs, MCP_LIMITS.trackedKeys)
 const connections = new SlidingWindowCounter(MCP_LIMITS.windowMs, MCP_LIMITS.trackedConnections)
 
-const tooMany = () => new APIError('Too many requests. Try again in a minute.', 429, null, true)
+const tooMany = () => new APIError(TOO_MANY_REQUESTS, 429, null, true)
 
 const bearerToken = (req: PayloadRequest): string | null => {
   const header = req.headers.get('Authorization')

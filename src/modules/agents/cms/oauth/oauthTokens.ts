@@ -10,24 +10,15 @@ import { ACCOUNTS_COLLECTION } from '@/platform/lib'
 import { isAdmin, isAdminFieldAccess } from '@/platform/payload/roles'
 
 import { OAUTH_CLIENTS, OAUTH_TOKENS } from '../../domain/oauth/constants'
-
-/** Set while the family is revoked, so the hook below does not run for each row it changes. */
-const REVOKING_FAMILY = { revokingOAuthFamily: true }
+import { isRevokingFamily, revokeUnrevoked } from './revokeTokens'
 
 /**
  * Revoking one credential in Admin revokes its whole family (the codes, access tokens and
  * refresh tokens that came from one approval), so the tool really is signed out.
  */
 const revokeFamily: CollectionAfterChangeHook = async ({ doc, previousDoc, req }) => {
-  if (req.context.revokingOAuthFamily || !doc.revokedAt || previousDoc?.revokedAt) return doc
-  await req.payload.update({
-    collection: OAUTH_TOKENS,
-    where: { family: { equals: doc.family }, revokedAt: { exists: false } },
-    data: { revokedAt: doc.revokedAt },
-    overrideAccess: true,
-    req,
-    context: REVOKING_FAMILY,
-  })
+  if (isRevokingFamily(req) || !doc.revokedAt || previousDoc?.revokedAt) return doc
+  await revokeUnrevoked(req, { family: { equals: doc.family } }, doc.revokedAt)
   return doc
 }
 

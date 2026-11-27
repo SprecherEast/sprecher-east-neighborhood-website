@@ -95,6 +95,17 @@ describe('readAuthorizeRequest', () => {
   })
 })
 
+describe('the PKCE refusal', () => {
+  it('names the limits the check uses, not a copy of them', () => {
+    const { min, max } = REQUEST_LIMITS.challenge
+    const refused = read({ code_challenge: 'a'.repeat(min - 1) })
+    expect(refused).toMatchObject({
+      ok: false,
+      error: { description: `A PKCE code_challenge of ${min} to ${max} characters is required.` },
+    })
+  })
+})
+
 describe('toAuthorizeParams', () => {
   it('spells the standard parameters, and the checks read them back to the same request', () => {
     const read1 = read()

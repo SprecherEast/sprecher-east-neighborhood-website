@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createHash, randomBytes } from 'node:crypto'
 
+import { CONNECTION_REFUSED } from '@/modules/agents'
 import { getServerSideURL } from '@/platform/lib/getURL'
 import {
   bootPayload,
@@ -191,7 +192,7 @@ describe('the approval page, opened from this site', () => {
     open('fromThisSite', cookie)
     const page = await html('approve', { ...carried, client_id: 'mcp_unknown' })
     expect(page).not.toContain('Allow this connection')
-    expect(page).toContain('This connection request is not valid')
+    expect(page).toContain(CONNECTION_REFUSED)
   })
 })
 

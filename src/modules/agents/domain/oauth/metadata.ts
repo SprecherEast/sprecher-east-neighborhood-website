@@ -1,4 +1,4 @@
-import { OAUTH_GRANTS, OAUTH_PATHS, OAUTH_SCOPE } from './constants'
+import { DISCOVERY_HEADERS, OAUTH_GRANTS, OAUTH_PATHS, OAUTH_SCOPE } from './constants'
 import { mcpResource, siteOrigin } from './resource'
 
 /**
@@ -18,18 +18,25 @@ export const protectedResourceMetadata = (origin: string) => ({
  * RFC 8414: the sign-in addresses and what they accept. PKCE S256 only, public clients (no
  * secret), the code and refresh grants, and no registration address: clients are added by hand.
  */
-export const authorizationServerMetadata = (origin: string) => ({
-  issuer: siteOrigin(origin),
-  authorization_endpoint: `${siteOrigin(origin)}${OAUTH_PATHS.authorize}`,
-  token_endpoint: `${siteOrigin(origin)}${OAUTH_PATHS.token}`,
-  response_types_supported: ['code'],
-  grant_types_supported: [...OAUTH_GRANTS],
-  code_challenge_methods_supported: ['S256'],
-  // RFC 9207: the redirect back carries `iss`, so a client can check which server answered
-  authorization_response_iss_parameter_supported: true,
-  token_endpoint_auth_methods_supported: ['none'],
-  scopes_supported: [OAUTH_SCOPE],
-})
+export const authorizationServerMetadata = (origin: string) => {
+  const site = siteOrigin(origin)
+  return {
+    issuer: site,
+    authorization_endpoint: `${site}${OAUTH_PATHS.authorize}`,
+    token_endpoint: `${site}${OAUTH_PATHS.token}`,
+    response_types_supported: ['code'],
+    grant_types_supported: [...OAUTH_GRANTS],
+    code_challenge_methods_supported: ['S256'],
+    // RFC 9207: the redirect back carries `iss`, so a client can check which server answered
+    authorization_response_iss_parameter_supported: true,
+    token_endpoint_auth_methods_supported: ['none'],
+    scopes_supported: [OAUTH_SCOPE],
+  }
+}
+
+/** A discovery document as the public answer both discovery addresses give. */
+export const discoveryResponse = (document: object): Response =>
+  Response.json(document, { headers: DISCOVERY_HEADERS })
 
 /** The `WWW-Authenticate` value of a 401 from the MCP address (RFC 9728, section 5.1). */
 export const bearerChallenge = (origin: string): string =>

@@ -1,19 +1,14 @@
-import { NO_STORE_HEADERS } from '@/modules/agents'
+import { FORM_CONTENT_TYPE, tokenError, type TokenAnswer } from '@/modules/agents'
 import { exchangeToken } from '@/modules/agents/server'
 import { readLimitedBody } from '@/platform/lib/readLimitedBody'
 
-const FORM = 'application/x-www-form-urlencoded'
 // A token request is a few short fields; anything bigger is not one
 const MAX_BODY_BYTES = 8 * 1024
 
-const answer = (status: number, body: unknown, headers: Record<string, string> = {}) =>
-  Response.json(body, {
-    status,
-    headers: { ...NO_STORE_HEADERS, ...headers },
-  })
+const respond = ({ status, headers, body }: TokenAnswer) => Response.json(body, { status, headers })
 
 const invalidRequest = (description: string) =>
-  answer(400, { error: 'invalid_request', error_description: description })
+  respond(tokenError(400, 'invalid_request', description))
 
 /**
  * The OAuth token address (#1501): `POST application/x-www-form-urlencoded`, as RFC 6749
@@ -23,8 +18,8 @@ const invalidRequest = (description: string) =>
 export async function POST(request: Request): Promise<Response> {
   const type = request.headers.get('content-type') ?? ''
   const length = Number(request.headers.get('content-length') ?? 0)
-  if (!type.toLowerCase().startsWith(FORM) || length > MAX_BODY_BYTES) {
-    return invalidRequest(`Send a form (${FORM}).`)
+  if (!type.toLowerCase().startsWith(FORM_CONTENT_TYPE) || length > MAX_BODY_BYTES) {
+    return invalidRequest(`Send a form (${FORM_CONTENT_TYPE}).`)
   }
   // Counted as it arrives: a request that states no length is cut off, not read in full first
   const text = await readLimitedBody(request, MAX_BODY_BYTES)
@@ -37,6 +32,5 @@ export async function POST(request: Request): Promise<Response> {
     const earlier = form[name]
     form[name] = earlier === undefined ? value : [...[earlier].flat(), value]
   }
-  const result = await exchangeToken(form, request.headers)
-  return answer(result.status, result.body, result.headers)
+  return respond(await exchangeToken(form, request.headers))
 }

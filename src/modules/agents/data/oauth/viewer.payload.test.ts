@@ -88,18 +88,6 @@ describe('getViewer', () => {
     expect(await viewer({ ...SAME_ORIGIN, authorization: 'Bearer anything' })).toBeNull()
   })
 
-  it('names this site without trailing slashes, the same way in the issuer and in every `iss`', async () => {
-    const { getOAuthContext } = await import('./context')
-    vi.stubEnv('NEXT_PUBLIC_SERVER_URL', 'https://sprechereast.test//')
-    try {
-      const { origin, resource } = await getOAuthContext()
-      expect(origin).toBe('https://sprechereast.test')
-      expect(resource).toBe('https://sprechereast.test/api/mcp')
-    } finally {
-      vi.unstubAllEnvs()
-    }
-  })
-
   it('is no one for an API key sent as a header', async () => {
     expect(
       await viewer({ ...SAME_ORIGIN, authorization: `payload-mcp-api-keys API-Key ${KEY}` }),
@@ -116,3 +104,37 @@ const clientId = async () => {
   const { docs } = await payload.find({ collection: 'oauth-clients', overrideAccess: true })
   return docs[0]?.clientId
 }
+
+describe('getOAuthContext', () => {
+  it('names this site without trailing slashes, the same way in the issuer and in every `iss`', async () => {
+    const { getOAuthContext } = await import('./context')
+    vi.stubEnv('NEXT_PUBLIC_SERVER_URL', 'https://sprechereast.test//')
+    try {
+      const { origin, resource } = await getOAuthContext()
+      expect(origin).toBe('https://sprechereast.test')
+      expect(resource).toBe('https://sprechereast.test/api/mcp')
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+})
+
+describe('findAccountName', () => {
+  it('gives the display name of an account, and only that', async () => {
+    const { findAccountName } = await import('./context')
+    expect(await findAccountName(payload, agent.id)).toBe(agent.name)
+  })
+
+  it('gives null for an account that does not exist', async () => {
+    const { findAccountName } = await import('./context')
+    expect(await findAccountName(payload, 999_999)).toBeNull()
+  })
+
+  it('asks for the name alone, never the whole account', async () => {
+    const { findAccountName } = await import('./context')
+    const find = vi.spyOn(payload, 'findByID')
+    await findAccountName(payload, agent.id)
+    expect(find).toHaveBeenCalledWith(expect.objectContaining({ select: { name: true } }))
+    find.mockRestore()
+  })
+})

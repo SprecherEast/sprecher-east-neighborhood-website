@@ -1,36 +1,21 @@
 import 'server-only'
 
-import { parseClientIp, SlidingWindowCounter } from '@/platform/lib'
-
-import { NO_STORE_HEADERS, OAUTH_GRANTS, OAUTH_TOKEN_LIMIT } from '../../domain/oauth/constants'
+import {
+  FORM_CONTENT_TYPE,
+  NO_STORE_HEADERS,
+  OAUTH_ERROR_NAMES,
+  OAUTH_GRANTS,
+  REFUSED_DESCRIPTION,
+  TOO_MANY_REQUESTS,
+} from '../../domain/oauth/constants'
 import { resourceMatches } from '../../domain/oauth/resource'
+import { tokenError, type TokenAnswer } from '../../domain/oauth/tokenAnswer'
 import { getOAuthContext } from '../../data/oauth/context'
+import { createConnectionLimit } from './connectionLimit'
 import { createOAuthServer, OAuthError, OAuthRequest, OAuthResponse } from './oauthServer'
 
-export type TokenAnswer = { status: number; headers: Record<string, string>; body: unknown }
-
 // In memory, as the MCP limits are: the site runs as one process
-const attempts = new SlidingWindowCounter(
-  OAUTH_TOKEN_LIMIT.windowMs,
-  OAUTH_TOKEN_LIMIT.trackedConnections,
-)
-
-const failure = (status: number, error: string, description: string): TokenAnswer => ({
-  status,
-  headers: NO_STORE_HEADERS,
-  body: { error, error_description: description },
-})
-
-/** The only error names a token request may answer with: RFC 6749 section 5.2 and RFC 8707. */
-const CODES = new Set([
-  'invalid_request',
-  'invalid_client',
-  'invalid_grant',
-  'unauthorized_client',
-  'unsupported_grant_type',
-  'invalid_scope',
-  'invalid_target',
-])
+const allows = createConnectionLimit()
 
 /**
  * The token address (#1501): refuses a field sent twice, then trades an authorization code (with its PKCE verifier) or a refresh
@@ -43,29 +28,26 @@ export async function exchangeToken(
   form: Record<string, string | string[] | undefined>,
   headers: Headers,
 ): Promise<TokenAnswer> {
-  const ip = parseClientIp(headers)
-  if (ip && !attempts.tryTake(ip, OAUTH_TOKEN_LIMIT.perConnection, Date.now())) {
-    return failure(429, 'invalid_request', 'Too many requests. Try again in a minute.')
-  }
+  if (!allows(headers)) return tokenError(429, 'invalid_request', TOO_MANY_REQUESTS)
   // RFC 6749 section 3.2: a parameter is sent once. A repeated one is refused here, as the library
   // would fail on it with an error of its own
   if (Object.values(form).some(Array.isArray)) {
-    return failure(400, 'invalid_request', 'Send each field once.')
+    return tokenError(400, 'invalid_request', 'Send each field once.')
   }
   const grant = form.grant_type
   if (typeof grant !== 'string' || !(OAUTH_GRANTS as readonly string[]).includes(grant)) {
-    return failure(400, 'unsupported_grant_type', 'Use authorization_code or refresh_token.')
+    return tokenError(400, 'unsupported_grant_type', 'Use authorization_code or refresh_token.')
   }
   const { payload, resource } = await getOAuthContext()
   if (form.resource !== undefined && !resourceMatches(String(form.resource), resource)) {
-    return failure(400, 'invalid_target', `The resource must be ${resource}.`)
+    return tokenError(400, 'invalid_target', `The resource must be ${resource}.`)
   }
   const response = new OAuthResponse()
   try {
     const token = await createOAuthServer(payload, resource).token(
       new OAuthRequest({
         // The library only asks that a form body exists; `form` was read from one by the route
-        headers: { 'content-type': 'application/x-www-form-urlencoded', 'content-length': '1' },
+        headers: { 'content-type': FORM_CONTENT_TYPE, 'content-length': '1' },
         method: 'POST',
         query: {},
         body: form,
@@ -88,11 +70,11 @@ export async function exchangeToken(
       },
     }
   } catch (error) {
-    if (error instanceof OAuthError && CODES.has(error.name)) {
-      return failure(
+    if (error instanceof OAuthError && OAUTH_ERROR_NAMES.has(error.name)) {
+      return tokenError(
         error.code,
         error.name,
-        error.name === 'invalid_grant' ? 'The grant is not valid.' : 'The request was refused.',
+        error.name === 'invalid_grant' ? 'The grant is not valid.' : REFUSED_DESCRIPTION,
       )
     }
     // The class name only: a message can hold a token, an address or a query
@@ -100,6 +82,6 @@ export async function exchangeToken(
     payload.logger.error(
       `OAuth token request failed: ${cause instanceof Error ? cause.name : 'unknown'}`,
     )
-    return failure(500, 'server_error', 'The server could not finish the request.')
+    return tokenError(500, 'server_error', 'The server could not finish the request.')
   }
 }

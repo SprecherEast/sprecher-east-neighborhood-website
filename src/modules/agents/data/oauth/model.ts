@@ -47,6 +47,20 @@ async function spendOrEndFamily(
   return won
 }
 
+/** The library's `Client` for a registered client: public, so no secret, with the grants we offer */
+const libraryClient = (id: string): Client => ({ id, grants: [...OAUTH_GRANTS] })
+
+/** What every credential of one approval holds: the client, the account, the audience, the scope */
+const issuedTo = (who: Grantee, client: Client, family: string, scope: string[] | undefined) => ({
+  family,
+  clientId: client.credentialClientId as number,
+  agentId: who.agentId,
+  consentedBy: who.consentedBy,
+  resource: who.resource,
+  scope: scope ?? [OAUTH_SCOPE],
+})
+
+/** The stored form of what the approval gave a credential, as the library's `user` hands it back */
 const grantee = (c: Credential): Grantee => ({
   agentId: c.agentId,
   consentedBy: c.consentedBy,
@@ -79,9 +93,14 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
     return (await isAgentAccount(payload, found.agentId)) ? found : null
   }
 
-  const clientOf = (c: Credential): Client => ({
-    id: c.client.clientId,
-    grants: [...OAUTH_GRANTS],
+  const clientOf = (c: Credential): Client => libraryClient(c.client.clientId)
+
+  /** A stored credential as the library hands it back, with the row it came from */
+  const storedBy = (found: Credential) => ({
+    scope: found.scope,
+    client: clientOf(found),
+    user: grantee(found),
+    credentialId: found.id,
   })
 
   return {
@@ -89,8 +108,7 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
       const client = await findOAuthClient(payload, clientId)
       if (!client?.enabled) return false
       return {
-        id: client.clientId,
-        grants: [...OAUTH_GRANTS],
+        ...libraryClient(client.clientId),
         redirectUris: client.redirectUris,
         credentialClientId: client.id,
         agentId: client.agentId,
@@ -113,14 +131,9 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
     async saveAuthorizationCode(code, client, user) {
       const who = user as Grantee
       await saveCredential(payload, {
+        ...issuedTo(who, client, randomUUID(), code.scope),
         kind: 'code',
         secret: code.authorizationCode,
-        family: randomUUID(),
-        clientId: client.credentialClientId as number,
-        agentId: who.agentId,
-        consentedBy: who.consentedBy,
-        resource: who.resource,
-        scope: code.scope ?? [OAUTH_SCOPE],
         expiresAt: code.expiresAt,
         redirectUri: code.redirectUri,
         codeChallenge: code.codeChallenge,
@@ -132,15 +145,12 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
       const found = await usable(secret, 'code')
       if (!found) return false
       return {
+        ...storedBy(found),
         authorizationCode: secret,
         expiresAt: found.expiresAt,
         redirectUri: found.redirectUri ?? '',
-        scope: found.scope,
-        client: clientOf(found),
-        user: grantee(found),
         codeChallenge: found.codeChallenge ?? undefined,
         codeChallengeMethod: 'S256',
-        credentialId: found.id,
       } as WithRow<AuthorizationCode>
     },
 
@@ -151,14 +161,7 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
     async saveToken(token, client, user) {
       const who = user as Grantee
       const family = who.family ?? randomUUID()
-      const base = {
-        family,
-        clientId: client.credentialClientId as number,
-        agentId: who.agentId,
-        consentedBy: who.consentedBy,
-        resource: who.resource,
-        scope: token.scope ?? [OAUTH_SCOPE],
-      }
+      const base = issuedTo(who, client, family, token.scope)
       // A family that has ended takes no new row, and one that ends while these are saved loses
       // them: the revocation is one UPDATE (`revokeFamily`), so either it ran first and the
       // second look finds it, or it ran later and covered these rows. The tool gets no tokens.
@@ -199,12 +202,9 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
       const found = await usable(secret, 'refresh')
       if (!found) return false
       return {
+        ...storedBy(found),
         refreshToken: secret,
         refreshTokenExpiresAt: found.expiresAt,
-        scope: found.scope,
-        client: clientOf(found),
-        user: grantee(found),
-        credentialId: found.id,
       } as WithRow<RefreshToken>
     },
 

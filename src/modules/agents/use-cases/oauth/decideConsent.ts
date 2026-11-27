@@ -2,6 +2,11 @@ import 'server-only'
 
 import { readAuthorizeRequest, toAuthorizeParams } from '../../domain/oauth/authorizeRequest'
 import { verifyConsent, type ConsentRequest } from '../../domain/oauth/consent'
+import {
+  CONNECTION_REFUSED,
+  OAUTH_ERROR_NAMES,
+  REFUSED_DESCRIPTION,
+} from '../../domain/oauth/constants'
 import { redirectBack, redirectError } from '../../domain/oauth/redirects'
 import { clientAccepts } from '../../domain/oauth/redirectUri'
 import type { Grantee, Viewer } from '../../domain/oauth/types'
@@ -12,10 +17,7 @@ import { createOAuthServer, OAuthError, OAuthRequest, OAuthResponse } from './oa
 export type Decision = 'approve' | 'deny'
 export type Decided = { kind: 'redirect'; url: string } | { kind: 'refused'; message: string }
 
-const REFUSED: Decided = {
-  kind: 'refused',
-  message: 'This approval is no longer valid. Start the connection again from the AI tool.',
-}
+const REFUSED: Decided = { kind: 'refused', message: CONNECTION_REFUSED }
 
 /**
  * The approve or deny button (#1501). Everything the page showed is checked again, because a
@@ -72,11 +74,9 @@ export async function decideConsent(
   } catch (error) {
     // Never the library's own message: it can name internals. The client hears a plain code
     const code =
-      error instanceof OAuthError && error.name !== 'server_error' ? error.name : 'server_error'
+      error instanceof OAuthError && OAUTH_ERROR_NAMES.has(error.name) ? error.name : 'server_error'
     const description =
-      code === 'server_error'
-        ? 'The server could not finish the sign-in.'
-        : 'The request was refused.'
+      code === 'server_error' ? 'The server could not finish the sign-in.' : REFUSED_DESCRIPTION
     return {
       kind: 'redirect',
       url: redirectError(request.redirectUri, origin, { code, description }, request.state),

@@ -14,6 +14,8 @@ vi.mock('server-only', () => ({}))
 const credentials = vi.hoisted(() => ({
   spendCredential: vi.fn(),
   revokeFamily: vi.fn(),
+  saveCredential: vi.fn(),
+  isFamilyRevoked: vi.fn(),
 }))
 vi.mock('./credentials', () => credentials)
 
@@ -37,5 +39,29 @@ describe.each([
     credentials.spendCredential.mockResolvedValue(false)
     expect(await spend(model())).toBe(false)
     expect(credentials.revokeFamily).toHaveBeenCalledWith(expect.anything(), 'family-1')
+  })
+})
+
+describe('what a code and a token save', () => {
+  const client = { id: 'mcp_x', grants: [], credentialClientId: 3 }
+  const who = { agentId: 1, consentedBy: 2, resource: 'https://sprechereast.com/api/mcp' }
+  const held = { clientId: 3, agentId: 1, consentedBy: 2, resource: who.resource, scope: ['mcp'] }
+
+  it('gives a code the client, the account, the audience and the one scope when none was asked', async () => {
+    const code = { authorizationCode: 'sec_a', expiresAt: new Date(), redirectUri: 'https://x/cb' }
+    await model().saveAuthorizationCode(code as never, client as never, who as never)
+    expect(credentials.saveCredential).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ ...held, kind: 'code', secret: 'sec_a' }),
+    )
+  })
+
+  it('gives a token the same, and keeps the family it came from', async () => {
+    const token = { accessToken: 'sea_a', accessTokenExpiresAt: new Date() }
+    await model().saveToken(token as never, client as never, { ...who, family: 'f1' } as never)
+    expect(credentials.saveCredential).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ ...held, family: 'f1', kind: 'access', secret: 'sea_a' }),
+    )
   })
 })

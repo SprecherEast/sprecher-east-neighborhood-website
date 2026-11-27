@@ -11,6 +11,7 @@ import { isAdmin, isAdminFieldAccess } from '@/platform/payload/roles'
 import { OAUTH_CLIENTS, OAUTH_TOKENS } from '../../domain/oauth/constants'
 import { checkRegisteredRedirectUri } from '../../domain/oauth/redirectUri'
 import { generateClientId } from '../../domain/oauth/secrets'
+import { revokeUnrevoked } from './revokeTokens'
 
 /** The client's public ID is made by the server when it is registered, and never changes. */
 const giveClientId: CollectionBeforeValidateHook = ({ data, operation, originalDoc }) => {
@@ -40,14 +41,7 @@ const revokeWhenAgentChanges: CollectionAfterChangeHook = async ({
   req,
 }) => {
   if (operation !== 'update' || relationId(previousDoc?.agent) === relationId(doc.agent)) return doc
-  await req.payload.update({
-    collection: OAUTH_TOKENS,
-    where: { client: { equals: doc.id }, revokedAt: { exists: false } },
-    data: { revokedAt: new Date().toISOString() },
-    overrideAccess: true,
-    req,
-    context: { revokingOAuthFamily: true },
-  })
+  await revokeUnrevoked(req, { client: { equals: doc.id } }, new Date().toISOString())
   return doc
 }
 
