@@ -147,6 +147,7 @@ paths:
   - 'src/platform/ui/revealShift.ts'
   - 'src/platform/ui/scrollMargin.test.ts'
   - 'src/platform/ui/scrollMargin.ts'
+  - 'src/platform/ui/touchTarget.ts'
   - 'src/platform/ui/useCountedNumber.client.test.tsx'
   - 'src/platform/ui/useCountedNumber.client.ts'
   - 'src/platform/ui/useReplayProgress.client.test.ts'
