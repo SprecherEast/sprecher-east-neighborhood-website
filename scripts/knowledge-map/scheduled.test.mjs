@@ -82,7 +82,7 @@ describe('buildScheduledTasks', () => {
   })
 
   it('makes a node of the server cron, the intelligence pipeline and the dependency updates', () => {
-    expect(byId('scheduled-task:server-cron').facts).toContainEqual({
+    expect(byId('scheduled-task:server-cron-install-cron').facts).toContainEqual({
       label: 'Runs',
       value: 'ops/backup.sh daily; ops/backup-umami.sh daily',
     })
@@ -99,5 +99,36 @@ describe('buildScheduledTasks', () => {
     expect(
       edges.filter((e) => e.type === 'contains' && e.from === 'group:scheduled-tasks'),
     ).toHaveLength(4)
+  })
+})
+
+describe('buildScheduledTasks: several server crons', () => {
+  const extras = {
+    serverCrons: [
+      { file: 'ops/install-cron.sh', cron: '15 8 * * *', runs: ['ops/backup.sh daily'] },
+      { file: 'ops/install-cron.sh', cron: '45 8 * * *', runs: ['ops/other.sh'] },
+      {
+        file: 'ops/install-offsite-backup.sh',
+        cron: '30 9 * * 0',
+        runs: ['ops/offsite-backup.sh run'],
+      },
+    ],
+    intelligence: null,
+    dependabot: [],
+  }
+  const { nodes } = buildScheduledTasks({
+    page: { path: 'docs/knowledge/scheduled-tasks.md', text: '# T\n' },
+    extras,
+    groupId: 'group:scheduled-tasks',
+  })
+
+  it('gives every cron line its own node, with an id that differs between scripts and between lines of one script', () => {
+    const ids = nodes.map((n) => n.id)
+    expect(new Set(ids).size).toBe(3)
+    expect(ids).toEqual([
+      'scheduled-task:server-cron-install-cron',
+      'scheduled-task:server-cron-install-cron-2',
+      'scheduled-task:server-cron-install-offsite-backup',
+    ])
   })
 })

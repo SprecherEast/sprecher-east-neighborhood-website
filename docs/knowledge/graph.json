@@ -2946,17 +2946,19 @@
     {
       "id": "business-rule:src/platform/ui/chart/README.md#4",
       "type": "business-rule",
-      "name": "**A bar or stacked chart is drawn large for readers who see poorly:**…",
-      "summary": "**A bar or stacked chart is drawn large for readers who see poorly:** text at 18 units in a 320-unit drawing, so 16px or more on a 320px phone; bars share one scale shown as short ticks (`adapters/visx/barLayout.ts`, #1206; `adapters/visx/barLayout.test.ts`, `adapters/visx/visxAdapter.test.tsx`).",
-      "path": "src/platform/ui/chart/adapters/visx/barLayout.test.ts",
+      "name": "**The bar and stacked chart draws bars and text at the breakdown…",
+      "summary": "**The bar and stacked chart draws bars and text at the breakdown chart's sizes:** a bar is 14px thick (`h-3.5`, the breakdown's main bars) and every word, name, total, value and note, is the kit's small text (14px), defined once in `chartSizes.ts` and pinned to the classes they come from. It draws at 1:1 (320 units for 20rem) and its width is capped at that thumbnail width stacked or beside the text (`--chart-stack-width` is `--chart-small-width`), so a unit is a pixel on every screen from 352px up; below that it shrinks with the screen, and the old 16px minimum (#1206, #1211) is gone by the owner's decision (#1503). Bars share one scale shown as short ticks (`chartSizes.ts`, `adapters/visx/barLayout.ts`; `chartSizes.test.ts`, `adapters/visx/barLayout.test.ts`, `adapters/visx/visxAdapter.test.tsx`, `adapters/breakdown/BreakdownChart.test.tsx`).",
+      "path": "src/platform/ui/chart/chartSizes.test.ts",
       "module": "platform-area:ui",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": [
+        "src/platform/ui/chart/chartSizes.test.ts",
         "src/platform/ui/chart/adapters/visx/barLayout.test.ts",
-        "src/platform/ui/chart/adapters/visx/visxAdapter.test.tsx"
+        "src/platform/ui/chart/adapters/visx/visxAdapter.test.tsx",
+        "src/platform/ui/chart/adapters/breakdown/BreakdownChart.test.tsx"
       ]
     },
     {
@@ -3149,7 +3151,7 @@
       "facts": [
         {
           "label": "Runs",
-          "value": "set -euo pipefail; set -euo pipefail; [[ \"$RELEASE\" =~ ^[0-9a-f]{40}(-run[0-9]+)?$ ]] || { echo \"::error::bad release name '$RELEASE'\"; exit 1; }; reachable() { timeout 5 bash -c \"exec 3<>/dev/tcp/$HOST/$1\" 2>/dev/null; }; show() { # <label> <url>"
+          "value": "set -euo pipefail; set -euo pipefail; [[ \"$RELEASE\" =~ ^[0-9a-f]{40}(-run[0-9]+)?$ ]] || { echo \"::error::bad release name '$RELEASE'\"; exit 1; }; [[ \"$RELEASE\" =~ ^[0-9a-f]{40}(-run[0-9]+)?$ ]] || { echo \"::error::bad release name '$RELEASE'\"; exit 1; }; reachable() { timeout 5 bash -c \"exec 3<>/dev/tcp/$HOST/$1\" 2>/dev/null; }; show() { # <label> <url>"
         }
       ],
       "watchOuts": [],
@@ -13394,9 +13396,9 @@
       "links": []
     },
     {
-      "id": "scheduled-task:server-cron",
+      "id": "scheduled-task:server-cron-install-cron",
       "type": "scheduled-task",
-      "name": "Server cron",
+      "name": "Server cron (install-cron)",
       "summary": "Installed on the server by the ops scripts.",
       "path": "ops/install-cron.sh",
       "module": "group:scheduled-tasks",
@@ -13405,6 +13407,22 @@
       "facts": [
         { "label": "Schedule", "value": "15 8 * * *" },
         { "label": "Runs", "value": "ops/backup.sh daily; ops/backup-umami.sh daily" }
+      ],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "scheduled-task:server-cron-install-offsite-backup",
+      "type": "scheduled-task",
+      "name": "Server cron (install-offsite-backup)",
+      "summary": "Installed on the server by the ops scripts.",
+      "path": "ops/install-offsite-backup.sh",
+      "module": "group:scheduled-tasks",
+      "aliases": [],
+      "fields": [],
+      "facts": [
+        { "label": "Schedule", "value": "30 9 * * 0" },
+        { "label": "Runs", "value": "ops/offsite-backup.sh run" }
       ],
       "watchOuts": [],
       "links": []
@@ -23749,7 +23767,15 @@
     },
     {
       "from": "group:scheduled-tasks",
-      "to": "scheduled-task:server-cron",
+      "to": "scheduled-task:server-cron-install-cron",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "group:scheduled-tasks",
+      "to": "scheduled-task:server-cron-install-offsite-backup",
       "type": "contains",
       "layer": "structure",
       "count": 1,

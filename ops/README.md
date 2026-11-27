@@ -47,8 +47,8 @@ from `NEXT_PUBLIC_SERVER_URL` in `.env.local`, and the check goes to Caddy on th
 
 ## Where the deploy secrets live
 
-The secrets the deploy reads (`VPS_HOST`, `VPS_USER`, `VPS_PORT`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`
-and `UMAMI_ADMIN_PASSWORD`) are secrets of the GitHub environment `production` (Settings →
+The secrets the deploy reads (`VPS_HOST`, `VPS_USER`, `VPS_PORT`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`,
+`UMAMI_ADMIN_PASSWORD` and `OFFSITE_BACKUP_RCLONE_CONF`) are secrets of the GitHub environment `production` (Settings →
 Environments → production). That environment only runs from `main`, so a workflow on any other
 branch cannot read them (#1071). A job that names an environment still sees repository secrets, so
 they are only out of reach once the repository-level copies of the same names are deleted. Only the jobs that read them, Preflight and
@@ -434,8 +434,8 @@ and roll back: [`umami/README.md`](umami/README.md).
 
 Archives are in `/var/backups/sprecher-east/{daily,weekly,pre-deploy,manual}/`, readable by root
 only. Each one holds `payload.db`, `env.local` and the `media/` folder. Hostinger's weekly
-whole-server backups (hPanel → VPS → Backups & Monitoring) include this folder, so a copy also
-exists off the machine.
+whole-server backups (hPanel → VPS → Backups & Monitoring) include this folder (same account). A
+weekly sealed copy also goes to Google Drive: [`offsite-backup.md`](offsite-backup.md).
 
 - Daily at 08:15 UTC, kept 7 days; Sunday's is also kept as a weekly, 5 weeks.
 - Before every deploy, the 5 most recent kept.
@@ -453,7 +453,7 @@ Run on the VPS as root. This replaces the site's current content with the archiv
 ```bash
 cd /var/www/sprecher-east
 bash current/ops/backup.sh manual         # keep a copy of what you are about to replace
-mkdir -p /root/restore && tar -C /root/restore -xzf /var/backups/sprecher-east/daily/<archive>.tar.gz
+mkdir -p /root/restore && tar -C /root/restore --no-same-owner --no-same-permissions -xzf /var/backups/sprecher-east/daily/<archive>.tar.gz
 pm2 stop sprecher-east
 cp /root/restore/payload.db data/payload.db
 rm -f data/payload.db-wal data/payload.db-shm data/payload.db-journal

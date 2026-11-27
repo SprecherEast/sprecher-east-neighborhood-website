@@ -12,12 +12,17 @@ const DEFAULT_RUNNER_LIMIT = 10
 export const DEFAULT_QUEUE = 'default'
 const JOB_ACCESS_ORDER = ['queue', 'run', 'cancel']
 
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const pad = (number) => String(number).padStart(2, '0')
 
 /** Words for the cron patterns this site uses; an empty string for any other, so the expression stands alone. */
 export function describeCron(expression) {
   const [minute, hour, day, month, weekday] = expression.trim().split(/\s+/)
   if (expression.trim().split(/\s+/).length !== 5) return ''
+  if (day === '*' && month === '*' && /^[0-7]$/.test(weekday)) {
+    if (!/^\d+$/.test(minute) || !/^\d+$/.test(hour)) return ''
+    return `every ${WEEKDAYS[Number(weekday) % 7]} at ${pad(hour)}:${pad(minute)}`
+  }
   const rest = [day, month, weekday].every((part) => part === '*')
   if (!rest) return ''
   if (minute === '*' && hour === '*') return 'every minute'
