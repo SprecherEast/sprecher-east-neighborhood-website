@@ -90,7 +90,15 @@ def check_focal(name, placed):
     x0, y0 = min(p["box"][0] for p in marked), min(p["box"][1] for p in marked)
     x1, y1 = max(p["box"][2] for p in marked), max(p["box"][3] for p in marked)
     share = (min(x1, sx1) - max(x0, sx0)) * (min(y1, sy1) - max(y0, sy0)) / ((sx1 - sx0) * (sy1 - sy0))
-    if all(p["kind"] in ("person", "child", "tree") for p in marked):
+    if any(p["kind"] == "tree" for p in marked):
+        return [f"{name}: focal subject {label} includes a tree: scenery is never the subject"]
+    lead = max(marked, key=lambda p: (p["box"][2] - p["box"][0]) * (p["box"][3] - p["box"][1]))
+    lb = lead["box"]
+    lead_share = (min(lb[2], sx1) - max(lb[0], sx0)) * (min(lb[3], sy1) - max(lb[1], sy0)) / ((sx1 - sx0) * (sy1 - sy0))
+    if lead_share < FOCAL_LEAD_SHARE:
+        return [f"{name}: focal subject {label} is too small: its largest part {lead['label']} is {lead_share:.0%} "
+                f"of the safe area, at least {FOCAL_LEAD_SHARE:.0%}; a group does not qualify through its union box"]
+    if all(p["kind"] in ("person", "child") for p in marked):
         return [f"{name}: focal subject {label} is {marked[0]['kind']}, not the thing the post is about: "
                 "generic people or trees say nothing without the panel"]
     height = (min(y1, sy1) - max(y0, sy0)) / (sy1 - sy0)
@@ -142,6 +150,9 @@ def check_text(name, texts):
         ax0, ay0, ax1, ay1 = t["area"]
         x0, y0, x1, y1 = t["ink"]
         label = f'{name}: text "{t["text"]}"'
+        if ax0 < 0 or ay0 < 0 or ax1 > W or ay1 > H:
+            out.append(f"{label} runs off the canvas: its area ({_px(ax0)}, {_px(ay0)}, {_px(ax1)}, {_px(ay1)}) is not inside {W} by {H}")
+            continue
         if x0 < ax0 or y0 < ay0 or x1 > ax1 or y1 > ay1:
             out.append(f"{label} is outside its area ({_px(x0)}, {_px(y0)}, {_px(x1)}, {_px(y1)}) in "
                        f"({_px(ax0)}, {_px(ay0)}, {_px(ax1)}, {_px(ay1)})")
@@ -158,22 +169,33 @@ def check_text(name, texts):
     return out
 
 
-def _overlap(a, b):
-    return min(a[2], b[2]) > max(a[0], b[0]) and min(a[3], b[3]) > max(a[1], b[1])
+def check_text_registered(name, svg, panels, texts):
+    """Every text element of a scene is the panel's or was drawn through parts.text_in, which registers
+    it for the text checks. A raw <text> would escape them."""
+    lines = sum(len(p["title"]) + len(p["bullets"]) for p in panels)
+    raw = svg.count("<text") - lines - len(texts)
+    return [f"{name}: {raw} text element{'s are' if raw != 1 else ' is'} drawn outside parts.text_in"] if raw > 0 else []
+
+
+def _touch(a, b):
+    """Boxes that overlap or touch."""
+    return min(a[2], b[2]) >= max(a[0], b[0]) and min(a[3], b[3]) >= max(a[1], b[1])
 
 
 def check_overlays(name, placed):
-    """A decorative overlay (the calendar page) overlaps no building and not the focal subject."""
+    """A decorative overlay (the calendar page) touches or overlaps no drawn object, and not the focal
+    subject. A road or ground that fills the frame is not an object; a building that bleeds is."""
     focal = [p for p in placed if p["focal"]]
     out = []
     for o in (p for p in placed if p["kind"] in OVERLAY_KINDS):
-        for b in (p for p in placed if p["kind"] == "building" and not p["focal"]):
-            if _overlap(o["box"], b["box"]):
-                out.append(f"{name}: {o['kind']} overlaps {b['label']}: a floating object over a building looks like a mistake")
+        for b in (p for p in placed if p["kind"] not in OVERLAY_KINDS and not p["focal"]
+                  and (p["bleed"] is not True or p["kind"] in FILLING_BLEED_KINDS)):
+            if _touch(o["box"], b["box"]):
+                out.append(f"{name}: {o['kind']} overlaps {b['label']}: a floating object over a drawn object looks like a mistake")
         if focal:
             fb = (min(p["box"][0] for p in focal), min(p["box"][1] for p in focal),
                   max(p["box"][2] for p in focal), max(p["box"][3] for p in focal))
-            if _overlap(o["box"], fb):
+            if _touch(o["box"], fb):
                 out.append(f"{name}: {o['kind']} overlaps the focal subject {focal[0]['label']}")
     return out
 

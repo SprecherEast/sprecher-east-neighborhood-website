@@ -37,19 +37,28 @@ and apply to every scene not in `PRE_RULES_SCENES`:
   count as content; a building rising out of the frame does, a road or ground does not.
 - **Focal subject:** exactly one (`parts.focal`, or `parts.focal_group` for a moment of several parts),
   at least `FOCAL_MIN_SHARE` of the safe area and `FOCAL_MIN_HEIGHT` of its height, never only a person
-  or a tree. A subject that lies low or is small in a big frame fails.
-- **Overlays:** a decorative overlay (`OVERLAY_KINDS`, the calendar page) overlaps no building and not
-  the focal subject; a floating object over a real facade looks like a mistake.
+  or a tree, never including a tree, and its largest part at least `FOCAL_LEAD_SHARE` of the safe area
+  (a group does not qualify through its union box). A subject that lies low or is small in a big frame fails.
+- **Overlays:** a decorative overlay (`OVERLAY_KINDS`, the calendar page) neither overlaps nor touches
+  any drawn object, nor the focal subject; a floating object over a real thing looks like a mistake.
 - **Text in a part:** the calendar page's number and label, a sign's word and a building's lettering are
   drawn by `parts.text_in`, which registers the ink the font draws; the check fails text off centre by
   more than `TEXT_CENTER_TOL`, or within `TEXT_MIN_PAD` of the edge of its area. Text that is part of a
   place (`role="lettering"`: a building's sign, a notice on its door) must also have capitals at least
   `MIN_LETTERING_PHONE_PX` tall at `PHONE_WIDTH` (the header band of a
-  calendar page included). It applies to every scene, old or new, but not to an event's moved scene.
+  calendar page included). `text_in` re-reads its own box, and without the font file it uses rough
+  fallback metrics (`measure.py`). An area off the canvas fails, and so does any `<text>` a scene draws
+  outside `parts.text_in` and the panel. It applies to every scene, old or new, but not to an event's moved scene.
 - **Own layout:** where each kind of part sits on a 6 by 4 grid may not overlap another scene's by
   `LAYOUT_REPEAT_MAX` or more, unless both are in one group of `SAME_PLACE`.
 - **Badge corner** of an event picture, as before. An event scene is judged for scale and layout only,
   as `parts.lowered` moves its geometry.
+
+**What CI pins.** `scripts/illustrations.test.mjs` runs every limit against synthetic data (a test
+per threshold, mutation-checked), and pins `trash` and `thanksgiving` (the calendar pictures) with
+hashes drawn with the fallback measure, which need no font; the hashes drawn with the real font run
+only where Poppins is installed. CI therefore does not pin the real-font centring of those pictures.
+`dropoff` and `youth` are pinned by one hash each.
 
 A scene drawn before the rules leaves `PRE_RULES_SCENES` when it is redrawn. `--audit` cannot judge the
 geometry of a scene that wraps its parts in its own transform (the traffic signal): its boxes are not final.

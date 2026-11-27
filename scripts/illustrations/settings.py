@@ -77,6 +77,9 @@ FILLING_BLEED_KINDS = ("building",)
 # or a tree. A subject that lies low under open sky, or is a small thing in a big frame, fails.
 FOCAL_MIN_SHARE = 0.25
 FOCAL_MIN_HEIGHT = 0.30
+# A focal group (a moment made of several parts) qualifies by its largest part, which is itself at least
+# this share of the safe area, not by the box around all of them.
+FOCAL_LEAD_SHARE = 0.10
 # Layouts count as repeated at this overlap (0 to 1) of what sits where, on a 6 by 4 grid.
 LAYOUT_REPEAT_MAX = 0.5
 # Scenes of one real place that may share a layout, as tuples of scene names.

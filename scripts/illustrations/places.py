@@ -118,18 +118,17 @@ def pinney_library(x, y, ppm, sign=None):
     word with an optional second line, as "CLOSED|Nov. 26-27"; without it the doors are clear. Never
     redrawn in a scene.
 
-    Traced from photographs, simplified to flat shapes (the likeness sheet sets this outline beside them):
+    A composite of three sources, simplified to flat shapes (the likeness sheet sets this outline beside
+    them); no single photograph shows this view, and each part follows one:
     - City of Madison, "Pinney Library entrance from parking lot", Sept. 2019 (news release of
-      2019-12-13): the buff limestone-block mass with "ROYSTER COMMONS" in silver letters over a steel
-      canopy, double glass doors and glass sidelights, a rust-red metal band over dark-grey framed
-      glazing, brick with grey siding and balconies above.
-    - Madison Public Library's Pinney page photograph of the Cottage Grove Road front: large silver
-      "MADISON PUBLIC LIBRARY" letters on a low buff limestone wall in front of tall glazing between
-      dark-grey columns, the rust-red band above. The real sign is one long line; here it is stacked in
-      two so it stays large and legible in a cropped frame.
-    - City of Madison engineering project page for the Pinney Neighborhood Library (renderings from
-      Cottage Grove Road and from the north), and OPN Architects' project page: the library is the
-      ground floor, a patio on the street side, the entrance pavilion beside the glazed run.
+      2019-12-13): the entrance pavilion (buff limestone-block mass), the steel canopy, the "ROYSTER
+      COMMONS" lettering band, the double glass doors and sidelights.
+    - Madison Public Library's Pinney page photograph of the Cottage Grove Road front: the large silver
+      "MADISON PUBLIC LIBRARY" letters on the low buff wall and the dark-grey columns between the tall
+      glazing. The real sign is one long line; here it is stacked in two so it stays large and legible.
+    - City of Madison engineering project page (renderings from Cottage Grove Road and from the north):
+      the rust-red band and the brick upper floors with grey siding and balconies, and the library as the
+      ground floor beside the entrance pavilion.
     The frontage is cropped to the library's glazed run and the pavilion, not the whole building.
     """
     w, gh, pv, pw = PINNEY_W, PINNEY_GROUND, PINNEY_PAVILION, PINNEY_PAVILION_W
@@ -146,7 +145,7 @@ def pinney_library(x, y, ppm, sign=None):
     fl = 0
     while gh + .9 + .75 + fl * 3.0 + 1.9 < top:                          # floors of windows, as many as show
         wy = -(gh + .9 + .75 + fl * 3.0); fl += 1
-        for i in range(5):
+        for i in range(4):                                               # none behind the text panel
             wx = .6 + i * 2.5
             if i in (1, 3):                                              # balcony bays: dark recess, railing
                 g += _rect(wx - .2, wy - 2.2, 2.2, 2.35, "#3a3f4a", ppm) + f'<path d="M{wx - .2:g},{wy - .5:g} L{wx + 2:g},{wy - .5:g}" stroke="{STEEL}" stroke-width=".06"/>'

@@ -20,12 +20,13 @@ Read its README for the layout. The rules about what a good picture is live in
   pixels-per-metre, and buildings and the focal subject are larger than people. Size parts with the
   helpers in `props.py`.
 - **Composed in its frame.** Nothing touches or crowds an edge or runs behind the panel, the content
-  fills the frame with no large empty band (move the camera closer, keep the scale true), and an event
-  picture keeps its badge corner clear. Nothing reads as wire, such as chain-link fencing, and no calendar page floats over a
-  building or the focal subject.
+  fills the frame with no large empty band (move the camera closer, keep the scale true). A post
+  picture uses the whole canvas; an event picture keeps the corner its card covers with the date badge
+  clear (`CLEAR_ZONE` and `EVENT_SCENES` in `settings.py`). Nothing reads as an enclosure or barrier
+  unless the subject is one, and a decorative object never sits over a subject.
 - **Text sits centred in its part.** Draw the text of a calendar page, sign or lettering only with
-  `parts.text_in`; the build fails text that is off centre or crowds its area, and lettering of a place that is too
-  small to read on a phone.
+  `parts.text_in`; the build fails text that is off centre or crowds its area, text drawn any other way,
+  and place lettering that is too small to read at phone width.
 - **A layout of its own.** A new scene does not repeat another scene's composition unless both draw
   the same place. Reuse parts, never compositions; don't start from the last scene's file.
 - **The established rules hold.** Real neighborhood subjects, agreed outlines reused exactly, no
@@ -55,8 +56,8 @@ What it cannot judge (does the scene say the subject?) is the author's critique,
    everything at one scale; is anything near an edge, or is there dead space; does the layout differ
    from the others; is the panel intact; is every calendar page and sign legible and centred, looked at at full size and at phone width. Fix what fails, render again, and show the picture only when
    you would defend it. Keep the written critique in the pull request.
-5. **Agree the look.** For a new subject, show the owner each concept beside the current picture at
-   card size, and make the final only after he agrees.
+5. **Agree the look.** Show the owner every mockup beside the current picture at card size, and make
+   the final only after he agrees; for a new subject, show each of the two concepts.
 6. **Check.** `python3 -m scripts.illustrations.build --check` must report no problems. Pictures made
    before the rules are skipped until redrawn (`PRE_RULES_SCENES`); `--audit` judges them too.
 7. **Review, publish, verify.** Run [`visual-design-review`](../visual-design-review/SKILL.md) on the

@@ -12,7 +12,7 @@ PPM = 205
 GROUND = 782
 
 def scene_youth_garden():
-    b = backdrop(horizon=640)
+    b = backdrop(horizon=640, edge=False)
     b += tree(75, 730, h_tree(PPM, 3.1), c="#e2a032", d="#c4762b")
     b += f'<rect x="-10" y="730" width="1700" height="260" fill="#c9b08a" stroke="{NAVY}" stroke-width="{SW}"/>'
     # neighbors stand behind the bed, so draw them first; the bed's frame covers their legs

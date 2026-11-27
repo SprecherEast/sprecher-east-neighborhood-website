@@ -107,10 +107,14 @@ def watering_can(x, y, ppm):
     return g + '</g>'
 
 def soil_bag(x, y, ppm):
-    """A sack of potting soil, 0.85 m tall and 0.55 m wide, its bottom centre at (x, y)."""
+    """A sack of potting soil, 0.7 m tall and 0.6 m wide, its bottom centre at (x, y): a slumped belly, a
+    gathered neck tied with rope and a little soil spilled at the top."""
     g = _g(x, y, ppm)
-    g += _poly([(-.27, 0), (-.25, -.8), (-.12, -.85), (.12, -.85), (.25, -.8), (.27, 0)], "#6b4b3a", ppm)
-    g += _rect(-.17, -.58, .34, .26, "#f5ede1", ppm, .03) + f'<path d="M-.09,-.5 L.09,-.5 M-.09,-.42 L.04,-.42" stroke="{GREEN}" stroke-width=".035" stroke-linecap="round"/>'
+    g += _poly([(-.3, 0), (-.34, -.28), (-.2, -.52), (-.09, -.6), (-.1, -.68), (.1, -.7), (.09, -.6), (.2, -.5), (.34, -.26), (.3, 0)], "#8a6a4a", ppm)
+    g += _poly([(-.3, 0), (-.34, -.28), (-.12, -.3), (-.1, 0)], "#6b4b3a", ppm)
+    g += f'<path d="M-.1,-.6 Q0,-.55 .1,-.6" fill="none" stroke="{NAVY}" stroke-width=".04"/>' + _rect(-.11, -.63, .22, .05, "#d9c49c", ppm, .02)
+    g += "".join(f'<circle cx="{cx:g}" cy="{cy:g}" r=".03" fill="#5a3b2a"/>' for cx, cy in ((-.07, -.74), (.02, -.76), (.08, -.72)))
+    g += f'<path d="M-.22,-.22 Q-.05,-.15 .15,-.26" fill="none" stroke="#5a3b2a" stroke-width=".035" stroke-linecap="round"/>'
     return g + '</g>'
 
 def seedling_pot(x, y, ppm):

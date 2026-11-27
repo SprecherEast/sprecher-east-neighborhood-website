@@ -11,7 +11,7 @@ PPM = 80
 GROUND = 790
 
 def scene_thanksgiving_library():
-    b = backdrop(horizon=690)
+    b = backdrop(horizon=690, edge=False)
     b += f'<rect x="-10" y="{GROUND}" width="1700" height="140" fill="#d8dde6" stroke="{NAVY}" stroke-width="{SW}"/>'
     b += focal(pinney_library(44, GROUND, PPM, "CLOSED|Nov. 26–27"), "Pinney Library")
     pv = 44 + 6.4 * PPM + 2.0 * PPM

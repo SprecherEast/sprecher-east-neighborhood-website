@@ -187,6 +187,24 @@ for name in ('trash', 'thanksgiving'): print(hashlib.sha256(SCENES[name]().encod
     },
   )
 
+  // The same two pictures drawn with the deterministic fallback measure (no font file), so CI, which has
+  // no Poppins, still pins them: a change to a part's drawing or to the fallback metrics fails here. CI does
+  // not pin the real-font centring; the font-present test above does that wherever Poppins is installed.
+  it('keeps the trash and Thanksgiving pictures as drawn with the fallback measure', () => {
+    const r = run(
+      `import hashlib
+from scripts.illustrations import measure
+measure._font = lambda *a, **k: None
+from scripts.illustrations.scenes import SCENES
+for name in ('trash', 'thanksgiving'): print(hashlib.sha256(SCENES[name]().encode()).hexdigest())`,
+    )
+    expect(r.stderr).toBe('')
+    expect(r.stdout.trim().split('\n')).toEqual([
+      '4823ac58bdfb2ed2e33bd56a3b73d3254bf898b623d2df522f5b371265863e0f',
+      'c75f821c9024ab608968474aaa59234b42ae9ece84d8101a220a09b8e9c1d80e',
+    ])
+  })
+
   // Golden hashes of the drop-off and youth grants pictures, pinned before the shared road part
   // replaced the road each of them drew itself, so that refactor changed nothing.
   it('keeps the published drop-off and youth grants pictures exactly as drawn', () => {
@@ -536,6 +554,172 @@ print(json.dumps([len(cal), sorted(t['text'] for t in letters), b.build(['thanks
         ['CLOSED', 'LIBRARY', 'MADISON PUBLIC', 'Nov. 26–27'],
         [],
       ])
+    })
+  })
+  // Each limit and rule of checks.py is pinned from both sides on synthetic parts, so changing a
+  // number, a kind list or a comparison makes a test fail (the review's mutations).
+  describe('check boundaries', () => {
+    const PRE = `
+import json
+from scripts.illustrations import checks, settings as s
+def P(kind, box, size=None, bleed=False, focal=False, label=None):
+    return {'kind': kind, 'box': box, 'size': size, 'bleed': bleed, 'focal': focal, 'label': label or kind}
+def out(fn, *a): return json.dumps(fn(*a))
+`
+    const py = (body) => {
+      const r = run(PRE + body)
+      expect(r.stderr).toBe('')
+      return JSON.parse(r.stdout.trim().split('\n').pop())
+    }
+
+    it('keeps parts SAFE_MARGIN from every edge, and accepts a part just inside it', () => {
+      const [inside, left, top, right, bottom] = py(`
+c = lambda box: checks.check_safe_area('t', [P('car', box, 100)])
+print(json.dumps([c((60, 100, 200, 200)), c((20, 100, 200, 200)), c((100, 20, 200, 200)), c((100, 100, 890 + 30, 200)), c((100, 100, 200, 880))]))`)
+      expect(inside).toEqual([])
+      for (const f of [left, top, right, bottom])
+        expect(f.join(' ')).toMatch(/outside the safe area/)
+    })
+
+    it('fails an empty band wider than DEAD_BAND_MAX of the frame, and accepts a narrower one', () => {
+      const [wide, narrow] = py(`
+a = [P('car', (40, 40, 905, 300)), P('car', (40, 600, 905, 860))]
+b = [P('car', (40, 40, 905, 400)), P('car', (40, 520, 905, 860))]
+print(json.dumps([checks.check_balance('t', a), checks.check_balance('t', b)]))`)
+      expect(wide.join(' ')).toMatch(/empty band/)
+      expect(narrow).toEqual([])
+    })
+
+    it('does not count a calendar page as content, nor a road; it does count a building that bleeds', () => {
+      const [cal, road, building] = py(`
+fill = lambda kind, bleed: [P('car', (40, 500, 905, 860)), P(kind, (40, 40, 905, 500), bleed=bleed)]
+print(json.dumps([checks.check_balance('t', fill('calendar', False)), checks.check_balance('t', fill('road', True)), checks.check_balance('t', fill('building', True))]))`)
+      expect(cal.join(' ')).toMatch(/empty band from top to bottom/)
+      expect(road.join(' ')).toMatch(/empty band from top to bottom/)
+      expect(building).toEqual([])
+    })
+
+    it('holds the focal subject to FOCAL_MIN_SHARE of the area and FOCAL_MIN_HEIGHT of its height', () => {
+      const [small, flat, ok] = py(`
+f = lambda box: checks.check_focal('t', [P('car', box, focal=True, label='car')])
+print(json.dumps([f((40, 40, 480, 300)), f((40, 600, 905, 830)), f((40, 40, 480, 520))]))`)
+      expect(small.join(' ')).toMatch(/too small/) // 16% of the area, tall enough
+      expect(flat.join(' ')).toMatch(/too small/) // 28% of the area, but only 28% of its height
+      expect(ok).toEqual([])
+    })
+
+    it('does not let a focal group qualify through its union box, or contain a tree', () => {
+      const [lead, tree, moment] = py(`
+g = lambda parts: checks.check_focal('t', parts)
+car = lambda box: P('car', box, focal=True, label='moment')
+print(json.dumps([
+  g([car((40, 700, 200, 860)), P('person', (700, 40, 900, 200), focal=True, label='moment')]),
+  g([car((40, 300, 905, 860)), P('tree', (300, 40, 600, 300), focal=True, label='moment')]),
+  g([car((40, 300, 600, 860)), P('person', (600, 400, 700, 860), focal=True, label='moment')])]))`)
+      expect(lead.join(' ')).toMatch(/moment .*(too small|largest part)/)
+      expect(tree.join(' ')).toMatch(/moment .*tree/)
+      expect(moment).toEqual([])
+    })
+
+    it('repeats a layout only from LAYOUT_REPEAT_MAX of what sits where', () => {
+      const [alike, apart] = py(`
+a = {('car', i, 0) for i in range(10)}
+b = {('car', i, 0) for i in range(8)} | {('tree', i, 1) for i in range(2)}
+c = {('car', i, 0) for i in range(3)} | {('tree', i, 1) for i in range(8)}
+print(json.dumps([checks.check_variety('n', a, {'o': b}), checks.check_variety('n', a, {'o': c})]))`)
+      expect(alike.join(' ')).toMatch(/layout repeats o/) // 8 of 12 shared: 67%
+      expect(apart).toEqual([])
+    })
+
+    it('judges text centred on both axes within TEXT_CENTER_TOL, and inside the canvas', () => {
+      const [ok, x, y, onlyY, offcanvas] = py(`
+area = (100, 100, 300, 300)
+t = lambda ink, area=area: checks.check_text('t', [{'text': 'T', 'area': area, 'ink': ink, 'role': 'label'}])
+print(json.dumps([t((155, 155, 235, 235)), t((153, 160, 233, 240)), t((160, 153, 240, 233)), t((160, 153, 240, 233)),
+                  t((10, 160, 50, 240), (-40, 100, 100, 300))]))`)
+      expect(ok).toEqual([]) // 5px off on each axis, within 3% of 200px
+      expect(x.join(' ')).toMatch(/off centre/)
+      expect(y.join(' ')).toMatch(/-7px down/)
+      expect(onlyY.join(' ')).toMatch(/off centre/)
+      expect(offcanvas.join(' ')).toMatch(/runs off the canvas/)
+    })
+
+    it('fails a calendar page touching or overlapping any drawn object, not only a building', () => {
+      const [car, touching, tree, road, clear, focalBuilding] = py(`
+cal = P('calendar', (300, 100, 500, 300))
+o = lambda *others: checks.check_overlays('t', [cal, *others])
+print(json.dumps([
+  o(P('car', (400, 250, 700, 400), 100)),
+  o(P('car', (500, 100, 700, 300), 100)),
+  o(P('tree', (300, 200, 600, 700), 300, bleed='sides')),
+  o(P('road', (0, 250, 1600, 900), bleed=True)),
+  o(P('car', (600, 400, 800, 500), 100)),
+  checks.check_overlays('t', [cal, P('building', (200, 200, 900, 800), 300, focal=True, label='library')])]))`)
+      expect(car.join(' ')).toMatch(/calendar overlaps car/)
+      expect(touching.join(' ')).toMatch(/calendar overlaps car/)
+      expect(tree.join(' ')).toMatch(/calendar overlaps tree/)
+      expect(road).toEqual([])
+      expect(clear).toEqual([])
+      expect(focalBuilding).toHaveLength(1) // reported once, as the focal subject
+      expect(focalBuilding[0]).toMatch(/focal subject library/)
+    })
+
+    // One test per kind in REAL_SIZE_M, with the metres written here (not read from the limits, so
+    // widening a limit fails): beside a person of 1.7 m at 100 px a metre, a part that is far too small
+    // or too large fails, one of a believable size passes.
+    it.each([
+      ['tree', 0.3, 40, 8],
+      ['building', 0.5, 40, 8],
+      ['bin', 0.2, 8, 1.5],
+      ['bike', 0.3, 6, 1.7],
+      ['cart', 0.2, 4, 1.0],
+      ['bed', 0.05, 3, 0.5],
+      ['car', 0.8, 15, 4.5],
+      ['child', 0.3, 4, 1.2],
+    ])('fails a %s of %s m or %s m beside a person, passes %s m', (kind, small, big, fine) => {
+      const [tooSmall, tooBig, ok] = py(`
+person = P('person', (0, 0, 1, 1), 170)
+t = lambda metres: checks.check_scale('t', [person, P('${kind}', (0, 0, 1, 1), 100 * metres)])
+print(json.dumps([t(${small}), t(${big}), t(${fine})]))`)
+      expect(tooSmall.join(' ')).toMatch(/share one scale/)
+      expect(tooBig.join(' ')).toMatch(/share one scale/)
+      expect(ok).toEqual([])
+    })
+  })
+
+  describe('text drawn outside parts', () => {
+    const CHECK = `
+import json
+from scripts.illustrations import build as b, parts
+from scripts.illustrations.parts import *
+PANEL = lambda: parts.panel(['Title'], ['One'])
+def problems(fn, name='probe'):
+    b.SCENES[name] = fn
+    return b.build([name])[1]
+`
+    const probe = (scene) =>
+      JSON.parse(run(CHECK + `\nprint(json.dumps(problems(${scene})))`).stdout)
+
+    it('fails a scene that draws a raw text element instead of using parts.text_in', () => {
+      const raw = probe(
+        `lambda: '<text x="100" y="100">Raw</text>' + focal(car(100, 800, w=800), 'car') + PANEL()`,
+      )
+      expect(raw.join(' ')).toMatch(/probe: 1 text element is drawn outside parts.text_in/)
+    })
+
+    it('passes text drawn through parts.text_in, and the panel text', () => {
+      const ok = probe(
+        `lambda: text_in('Hi', (100, 100, 300, 200), 40) + focal(car(100, 800, w=800), 'car') + PANEL()`,
+      )
+      expect(ok.join(' ')).not.toMatch(/outside parts.text_in/)
+    })
+
+    it('leaves the pictures made before the rules alone', () => {
+      const r = run(
+        `from scripts.illustrations import build as b
+print(b.build(['trash'])[1])`,
+      )
+      expect(r.stdout.trim()).toBe('[]')
     })
   })
   describe('true-scale scenes', () => {

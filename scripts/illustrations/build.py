@@ -88,13 +88,13 @@ def draw(name):
 def build(names, event_scenes=EVENT_SCENES, strict=False):
     """SVGs and problems. Scenes in PRE_RULES_SCENES skip the scene checks unless `strict` (the audit).
     A scene's layout is compared with every other scene's, so each is drawn once here."""
-    out, problems, placed = {}, [], {}
+    out, problems, placed, panels, texts = {}, [], {}, {}, {}
     for name in names:
-        body, panels, placed[name], lowered, texts = draw(name)
+        body, panels[name], placed[name], lowered, texts[name] = draw(name)
         out[name] = wrap(body)
-        problems += check_panel(name, panels)
+        problems += check_panel(name, panels[name])
         if name not in event_scenes:  # an event's scene is moved after the parts drew their text
-            problems += checks.check_text(name, texts)
+            problems += checks.check_text(name, texts[name])
         if name in event_scenes:
             problems += check_clear_zone(name, lowered)
     sigs = {n: checks.signature(p) for n, p in placed.items()}
@@ -104,6 +104,7 @@ def build(names, event_scenes=EVENT_SCENES, strict=False):
     for name in names:
         if name in PRE_RULES_SCENES and not strict:
             continue
+        problems += checks.check_text_registered(name, out[name], panels[name], texts[name])
         problems += checks.check_scene(name, placed[name], geometry=name not in event_scenes)
         problems += checks.check_variety(name, sigs[name], sigs, SAME_PLACE)
     return out, problems

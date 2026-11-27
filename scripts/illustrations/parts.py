@@ -121,7 +121,9 @@ def cloud(x,y,s=1):
     return (f'<g transform="translate({x},{y}) scale({s})" fill="#fff" stroke="{NAVY}" stroke-width="{SW/s:.2f}" stroke-linejoin="round">'
     '<path d="M-60,20 Q-78,20 -76,2 Q-74,-14 -54,-12 Q-52,-38 -22,-38 Q0,-52 24,-34 Q56,-38 62,-8 Q84,-4 80,14 Q78,22 64,20 Z"/></g>')
 
-def backdrop(sky_top="#f0f6ee", horizon=700, snow=False):
+def backdrop(sky_top="#f0f6ee", horizon=700, snow=False, edge=True):
+    """Sky, hills and ground. `edge=False` leaves the ground's far edge without an outline, so a thin line
+    behind a subject cannot be read as a rail or fence."""
     global HILL1,HILL2,GROUND,GROUND2
     if snow: HILL1,HILL2,GROUND,GROUND2="#e6eef3","#dbe6ee","#f3f7fa","#e1ebf2"
     else: HILL1,HILL2,GROUND,GROUND2="#d6e8d1","#c6ddc0","#cfe3c9","#bcd6b4"
@@ -132,7 +134,7 @@ def backdrop(sky_top="#f0f6ee", horizon=700, snow=False):
     g+=f'<rect width="{W}" height="{H}" fill="url(#sky)"/>'
     g+=f'<path d="M0,{horizon-70} Q220,{horizon-130} 470,{horizon-70} T1000,{horizon-80} T1600,{horizon-60} L1600,{H} L0,{H} Z" fill="{HILL1}"/>'
     g+=f'<path d="M0,{horizon-30} Q300,{horizon-80} 640,{horizon-30} T1300,{horizon-40} T1600,{horizon-25} L1600,{H} L0,{H} Z" fill="{HILL2}"/>'
-    g+=f'<path d="M0,{horizon} Q400,{horizon-26} 800,{horizon-2} T1600,{horizon-8} L1600,{H} L0,{H} Z" fill="url(#gr)" stroke="{NAVY}" stroke-width="{SW}"/>'
+    g+=f'<path d="M0,{horizon} Q400,{horizon-26} 800,{horizon-2} T1600,{horizon-8} L1600,{H} L0,{H} Z" fill="url(#gr)"{f' stroke="{NAVY}" stroke-width="{SW}"' if edge else ''}/>'
     return g
 
 PANELS=[]  # every panel() call is recorded here, so the build can check the text
@@ -173,9 +175,13 @@ def car(x,y,body=BLUE,w=250,police=False,flip=False,suv=False,hatch=False):
         g.append(f'<rect x="78" y="{top-12}" width="42" height="12" rx="3" fill="{RED}" {o}/><rect x="120" y="{top-12}" width="42" height="12" rx="3" fill="{BLUE}" {o}/>')
     g.append(f'<rect x="120" y="-50" width="3" height="40" fill="{NAVY}" opacity=".5"/><rect x="104" y="-40" width="12" height="4" rx="2" fill="{NAVY}" opacity=".6"/><rect x="132" y="-40" width="12" height="4" rx="2" fill="{NAVY}" opacity=".6"/>')
     g.append(f'<rect x="236" y="-40" width="10" height="9" rx="3" fill="#ffe89a" {o}/><rect x="6" y="-40" width="8" height="9" rx="3" fill="#e0603f" {o}/>')
-    if hatch:  # the rear hatch swung up: the cargo space opens behind the rear seat, the door stands above it
-        g.append(f'<path d="M8,-50 L34,-50 L52,{top+24} L44,{top+16} L10,-44 Z" fill="#2b3040" {o}/>')
-        g.append(f'<g transform="translate(46,{top+18}) rotate(-112)"><rect x="0" y="-7" width="66" height="14" rx="5" fill="{body}" {o}/><rect x="8" y="-4" width="44" height="8" rx="3" fill="{GLASS}" {o}/></g>')
+    if hatch:  # the rear hatch swung up on a hinge at the rear roof edge, held by a gas strut; the cargo space opens behind the rear seat
+        hx,hy=50,top+21
+        g.append(f'<path d="M8,-50 L34,-50 L{hx},{hy} L44,{top+16} L10,-44 Z" fill="#2b3040" {o}/>')
+        g.append(f'<g transform="translate({hx},{hy}) rotate(-103)"><path d="M0,-5 L60,-9 L60,9 L0,6 Z" fill="{body}" {o}/><path d="M8,-3 L52,-5.5 L52,4.5 L8,3 Z" fill="{GLASS}" {o}/></g>')
+        sx,sy=hx-40*math.cos(math.radians(77)),hy-40*math.sin(math.radians(77))   # a point on the door, 40 units up from the hinge
+        g.append(f'<path d="M24,-58 L{sx:.1f},{sy:.1f}" stroke="{NAVY}" stroke-width="5" stroke-linecap="round"/><path d="M24,-58 L{sx:.1f},{sy:.1f}" stroke="#c9d0dc" stroke-width="2.6" stroke-linecap="round"/>')
+        g.append(f'<circle cx="{hx}" cy="{hy}" r="4.5" fill="#c9d0dc" {o}/><circle cx="24" cy="-58" r="3.4" fill="#c9d0dc" {o}/>')
     for cx in (58,196):
         g.append(f'<circle cx="{cx}" cy="-16" r="27" fill="#1a2033" {o}/><circle cx="{cx}" cy="-16" r="13" fill="#c9d0dc" {o}/><circle cx="{cx}" cy="-16" r="4" fill="{NAVY}"/>')
     g.append('</g>'); return "".join(g)
