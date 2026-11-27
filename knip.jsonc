@@ -12,6 +12,9 @@
   "ignoreIssues": {
     // PM2 reads the default export on the server
     "ecosystem.config.cjs": ["exports"],
+    // Next.js reads the exports of the developer pages' routes (default component, `metadata`); knip's Next
+    // plugin only knows src/app (#1530)
+    "developer/app/**": ["exports"],
     // Kept on purpose: only its tests call it today (#756)
     "src/modules/accounts/server.ts": ["exports"],
   },
@@ -42,6 +45,8 @@
         "e2e/previewCopy{Export,Import}.ts",
         // Imported by eslint.config.mjs
         "eslint.*.config.mjs",
+        // The developer pages (#1530) are a second Next.js project: its routes are entries
+        "developer/app/**/{page,layout,not-found}.tsx",
       ],
       "ignoreDependencies": [
         // Loaded from CSS (globals.css `@import` and `@plugin`), which knip doesn't read
@@ -52,6 +57,7 @@
       ],
       "project": [
         "src/**/*.{ts,tsx}",
+        "developer/**/*.{ts,tsx}",
         "ops/**/*.mjs",
         "scripts/**/*.{ts,mjs}",
         // The end-to-end tests (#311): Playwright finds the specs from playwright.config.ts

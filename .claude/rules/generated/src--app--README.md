@@ -5,6 +5,7 @@ paths:
   - 'src/app/(frontend)/*.tsx'
   - 'src/app/(frontend)/api/**'
   - 'src/app/(frontend)/next/**'
+  - 'developer/**'
   - 'src/environment.d.ts'
   - 'src/payload.config.ts'
   - 'src/proxy.ts'
@@ -38,6 +39,7 @@ The files that put the modules together. The root layout, home page, error and n
 - **The sitemap is rendered on request** and each list stays in the data cache until a save expires its tag, or 10 minutes, since a scheduled publish runs outside a request and cannot expire tags (`sitemap.ts`, decision 0011, #141).
 - **`next build` skips the type check** (`typescript.ignoreBuildErrors` in `next.config.js`; CI's `tsc --noEmit` does it), so a green build proves nothing about types; stated in [`docs/project.md`](/docs/project.md).
 - **The home page re-renders every 10 minutes** (`page.tsx`); a failure of the layout itself shows `global-error.tsx`, which brings its own `<html>` and shows no error text (#521).
+- **The developer pages are not part of this app** (#1530): `dev.sprechereast.com` serves the static export of the separate project in `developer/` (its own `next.config.mjs`, `output: 'export'`, built by `npm run developer:build` from the UI kit, theme and fonts), so this app holds no route for them (nothing on `sprechereast.com` or a preview serves them); they cannot read Payload; how they are built and published is in [`ops/developer-site.md`](/ops/developer-site.md).
 - **`/api/version`** answers the build's id for `VersionCheck`; `/next/preview` and `/next/exit-preview` start and end draft mode for the admin's preview (`preview` needs `PREVIEW_SECRET`); `/next/seed` runs the demo seed for an admin where it is on ([Seed and preview accounts](/src/endpoints/seed/README.md)).
 
 ## Shared pieces it uses
@@ -48,7 +50,7 @@ The files that put the modules together. The root layout, home page, error and n
 
 - **Paging addresses are a bounded set:** page 1 to the maximum, two event scopes, a category slug with a valid shape (`src/proxy.ts`, `src/platform/lib/paging.ts`; `src/proxy.test.ts`).
 - **The config wires every module once and no one can skip a rule:** roles, protected fields, row counts, review queue and scheduled publishing are each tested against the real config (`src/payload.config.test.ts`, `src/payload.config.roles.test.ts`, `src/payload.config.protectedFields.test.ts`, `src/payload.config.scheduledPublishing.test.ts`, `src/payload.config.rowCounts.test.ts`).
-- **Account pages stay out of the sitemap and search results** (`sitemap.test.ts`, `src/app/(frontend)/notIndexed.test.ts`); the layout's metadata and counter: `src/app/(frontend)/layout.test.tsx`, `src/app/nextConfigEnv.test.ts`; error pages: `src/app/global-error.test.tsx`, `src/app/(frontend)/error.test.tsx`; icons and critical hints: `src/app/icons.test.ts`, `src/app/criticalHint.test.ts`.
+- **Account pages stay out of the sitemap and search results** (`sitemap.test.ts`, `src/app/(frontend)/notIndexed.test.ts`); the layout's metadata and counter: `src/app/(frontend)/layout.test.tsx`, `src/app/nextConfigEnv.test.ts`; the developer pages stay out of this app and out of its sitemap: `developer/isolation.test.ts`; error pages: `src/app/global-error.test.tsx`, `src/app/(frontend)/error.test.tsx`; icons and critical hints: `src/app/icons.test.ts`, `src/app/criticalHint.test.ts`.
 
 ## Boundaries
 
