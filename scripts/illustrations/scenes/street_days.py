@@ -48,6 +48,7 @@ def street(top,sidew=46):
 def road(top,sidew,height,line_y):
     """A sidewalk starting at `top`, then a dark road `height` tall with a dashed yellow centre line at `line_y`."""
     y=top+sidew
+    place("road",-10,top,1700,y+height,bleed=True)
     return (street(top,sidew)+f'<rect x="-10" y="{y}" width="1700" height="{height}" fill="#34405f" stroke="{NAVY}" stroke-width="{SW}"/>'
             f'<path d="M0,{line_y} L1700,{line_y}" stroke="{YEL}" stroke-width="5" stroke-dasharray="40 26"/>')
 

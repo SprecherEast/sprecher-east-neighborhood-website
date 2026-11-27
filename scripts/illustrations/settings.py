@@ -52,3 +52,32 @@ TAN = "#d9b27c"; YEL = "#f2b632"; GLASS = "#bcd9e8"; BROWN = "#a8714f"
 
 # Skin tones for people, lightest first. A crowd mixes the lighter and the darker ones about evenly.
 SKIN_LIGHTEST = "#f0d6b0"; SKIN_LIGHT = "#d09a73"; SKIN_MID = "#b9825c"; SKIN_DARK = "#a8714f"; SKIN_DARKEST = "#8d5a3b"
+
+# Rules the build checks by itself (checks.py). Parts register what they draw (parts.place), and
+# these named values decide what fails. Change one here, never in a scene.
+#
+# Real size each kind of part stands for, in metres, as a (smallest, largest) range of the one
+# dimension the part measures (people and trees their height, cars and trucks their length, and so
+# on). A scene has one scale if some pixels-per-metre fits every part in it at once.
+REAL_SIZE_M = {
+    "person": (1.5, 1.95), "child": (1.0, 1.5), "car": (4.0, 5.3), "cart": (0.95, 1.2),
+    "bike": (1.5, 2.0), "tree": (3, 22), "truck": (6.5, 10), "building": (3, 14),
+    "bin": (1.0, 2.6), "pole": (3.0, 6.0), "wall": (2.2, 4.6), "fence": (1.0, 2.4), "bed": (0.3, 0.8),
+}
+# The safe area: nothing registered comes closer to an edge than this, and nothing runs behind the panel.
+SAFE_MARGIN = 40
+# Largest empty band across the safe area, as a share of its width or height. Beyond it the
+# content is not balanced in its frame.
+DEAD_BAND_MAX = 0.30
+# The focal subject is at least this share of the safe area, and is never a person or a tree.
+FOCAL_MIN_SHARE = 0.10
+# Layouts count as repeated at this overlap (0 to 1) of what sits where, on a 6 by 4 grid.
+LAYOUT_REPEAT_MAX = 0.5
+# Scenes of one real place that may share a layout, as tuples of scene names.
+SAME_PLACE = ()
+# Pictures drawn before these rules. The checks skip them until one is redrawn, then its name leaves
+# this list. `build --audit` shows what each would fail.
+PRE_RULES_SCENES = (
+    "school", "signal", "siren", "police", "trash", "leaves", "winter", "parking", "marimba",
+    "workshop", "thanksgiving", "dropoff", "youth",
+)
