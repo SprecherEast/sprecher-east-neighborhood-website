@@ -38,9 +38,13 @@ and apply to every scene not in `PRE_RULES_SCENES`:
 - **Focal subject:** exactly one (`parts.focal`, or `parts.focal_group` for a moment of several parts),
   at least `FOCAL_MIN_SHARE` of the safe area and `FOCAL_MIN_HEIGHT` of its height, never only a person
   or a tree. A subject that lies low or is small in a big frame fails.
+- **Overlays:** a decorative overlay (`OVERLAY_KINDS`, the calendar page) overlaps no building and not
+  the focal subject; a floating object over a real facade looks like a mistake.
 - **Text in a part:** the calendar page's number and label, a sign's word and a building's lettering are
   drawn by `parts.text_in`, which registers the ink the font draws; the check fails text off centre by
-  more than `TEXT_CENTER_TOL`, or within `TEXT_MIN_PAD` of the edge of its area (the header band of a
+  more than `TEXT_CENTER_TOL`, or within `TEXT_MIN_PAD` of the edge of its area. Text that is part of a
+  place (`role="lettering"`: a building's sign, a notice on its door) must also have capitals at least
+  `MIN_LETTERING_PHONE_PX` tall at `PHONE_WIDTH` (the header band of a
   calendar page included). It applies to every scene, old or new, but not to an event's moved scene.
 - **Own layout:** where each kind of part sits on a 6 by 4 grid may not overlap another scene's by
   `LAYOUT_REPEAT_MAX` or more, unless both are in one group of `SAME_PLACE`.

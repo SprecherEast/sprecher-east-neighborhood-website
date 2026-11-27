@@ -112,7 +112,9 @@ checked by the generator and in the author's written critique before anyone sees
 25. **Composed in the frame.** Nothing touches or crowds an edge, the content is balanced with no
     large empty band (a calendar page floating in the sky does not fill it), the subject fills the
     frame (the camera moves closer, the scale stays true), and the corner a card covers stays clear.
-    Nothing reads as prison wire, such as chain-link fencing.
+    Nothing reads as prison wire, such as chain-link fencing, and nothing decorative (a calendar
+    page) floats over a building or the focal subject: a date belongs on a notice that exists in
+    life, or in the panel.
 26. **A layout of its own.** A new scene does not repeat another scene's composition unless it
     draws the same place. Parts are shared; compositions are not.
 27. **Critique first.** The author renders at card size and at phone width, answers rules 23 to 26 in
@@ -120,6 +122,7 @@ checked by the generator and in the author's written critique before anyone sees
     concepts, and the look is agreed before the final is made.
 28. **Text sits centred in its part.** The day on a calendar page, the word on a sign or board, the
     lettering on a building: centred in the area meant for it by the ink the font draws, with even
-    clear space, never touching an edge or the header band. Parts draw such text only through
+    clear space, never touching an edge or the header band. Lettering that is part of a place stays
+    readable at phone width. Parts draw such text only through
     `parts.text_in`, and the build fails text that is off centre or crowds its area (the owner's
     direction, 2026-11-27, chat, recorded on #1561).

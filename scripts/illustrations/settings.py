@@ -93,3 +93,12 @@ PRE_RULES_SCENES = (
 # side clear of every edge of that area.
 TEXT_CENTER_TOL = 0.03
 TEXT_MIN_PAD = 0.08
+
+# Lettering that is part of a place (a building's sign, a notice on its door) must stay readable on a
+# phone: the picture is shown PHONE_WIDTH pixels wide there, and a line's capitals must then be at
+# least MIN_LETTERING_PHONE_PX tall.
+PHONE_WIDTH = 360
+MIN_LETTERING_PHONE_PX = 7
+# Decorative overlays that sit on top of a scene (the calendar page). One may not overlap a building
+# or the focal subject: a floating object over a real facade looks like a mistake.
+OVERLAY_KINDS = ("calendar",)

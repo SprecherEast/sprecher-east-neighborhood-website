@@ -21,9 +21,11 @@ Read its README for the layout. The rules about what a good picture is live in
   helpers in `props.py`.
 - **Composed in its frame.** Nothing touches or crowds an edge or runs behind the panel, the content
   fills the frame with no large empty band (move the camera closer, keep the scale true), and an event
-  picture keeps its badge corner clear. Nothing reads as wire, such as chain-link fencing.
+  picture keeps its badge corner clear. Nothing reads as wire, such as chain-link fencing, and no calendar page floats over a
+  building or the focal subject.
 - **Text sits centred in its part.** Draw the text of a calendar page, sign or lettering only with
-  `parts.text_in`; the build fails text that is off centre or crowds its area.
+  `parts.text_in`; the build fails text that is off centre or crowds its area, and lettering of a place that is too
+  small to read on a phone.
 - **A layout of its own.** A new scene does not repeat another scene's composition unless both draw
   the same place. Reuse parts, never compositions; don't start from the last scene's file.
 - **The established rules hold.** Real neighborhood subjects, agreed outlines reused exactly, no

@@ -331,7 +331,7 @@ def problems(fn, name='probe'):
 
     it('counts a building that rises out of the frame as content, and a road as none', () => {
       const r = probe(
-        `lambda: focal(__import__('scripts.illustrations.places', fromlist=['x']).pinney_library(60, 800, 58, 'CLOSED'), 'library') + person(300, 840, 1.0) + PANEL()`,
+        `lambda: focal(__import__('scripts.illustrations.places', fromlist=['x']).pinney_library(44, 790, 80, 'CLOSED'), 'library') + person(300, 848, .65) + PANEL()`,
       )
       expect(r.stderr).toBe('')
       expect(JSON.parse(r.stdout).join(' ')).not.toMatch(/empty band|too small|outside/)
@@ -470,6 +470,74 @@ print(json.dumps(b.build(['probe'])[1]))`,
       expect(JSON.parse(r.stdout).join(' ')).toMatch(/probe: text "X" is off centre/)
     })
   })
+  // A decorative overlay (a calendar page) floating over a real building or the focal subject looks
+  // like a mistake; lettering that is part of a place must still be readable on a phone.
+  describe('overlays and lettering', () => {
+    const CHECK = `
+import json
+from scripts.illustrations import build as b, checks, parts, places
+from scripts.illustrations.parts import *
+PANEL = lambda: parts.panel(['Title'], ['One'])
+def problems(fn, name='probe'):
+    b.SCENES[name] = fn
+    return b.build([name])[1]
+`
+    const probe = (scene) => run(CHECK + `\nprint(json.dumps(problems(${scene})))`)
+    const LIB = `focal(places.pinney_library(44, 800, 80, 'CLOSED'), 'library')`
+
+    it('fails a calendar page over a building, and passes one clear of it', () => {
+      const over = probe(
+        `lambda: ${LIB} + calendar_page(700, 60, 'NOV', '26', w=190, h=210) + PANEL()`,
+      )
+      expect(over.stderr).toBe('')
+      expect(JSON.parse(over.stdout).join(' ')).toMatch(
+        /probe: calendar overlaps .*(building|Pinney)/,
+      )
+      const clear = probe(`lambda: ${LIB} + PANEL()`)
+      expect(JSON.parse(clear.stdout).join(' ')).not.toMatch(/overlaps/)
+    })
+
+    it('fails a calendar page over the focal subject', () => {
+      const r = probe(
+        `lambda: focal(car(100, 800, w=800), 'car') + calendar_page(300, 500, 'NOV', '26', w=190, h=210) + PANEL()`,
+      )
+      expect(JSON.parse(r.stdout).join(' ')).toMatch(
+        /probe: calendar overlaps the focal subject car/,
+      )
+    })
+
+    it('fails lettering of a place that would be too small to read on a phone', () => {
+      const r = run(
+        CHECK +
+          `
+parts.TEXTS.clear()
+small = parts.text_in('LIBRARY', (100, 100, 400, 160), 24, role='lettering')
+big = parts.text_in('LIBRARY', (100, 100, 700, 200), 60, role='lettering')
+print(json.dumps([checks.check_text('t', parts.TEXTS[:1]), checks.check_text('t', parts.TEXTS[1:])]))`,
+      )
+      const [small, big] = JSON.parse(r.stdout)
+      expect(small.join(' ')).toMatch(/t: text "LIBRARY" is too small to read on a phone/)
+      expect(big).toEqual([])
+    })
+
+    it('draws the Pinney picture with no calendar page, its lettering large and the notice dated from the post', () => {
+      const r = run(
+        `import json
+from scripts.illustrations import build as b, parts
+from scripts.illustrations.scenes import SCENES
+svg = SCENES['thanksgiving_library']()
+cal = [p for p in parts.PLACED if p['kind'] == 'calendar']
+letters = [t for t in parts.TEXTS if t['text'] in ('MADISON PUBLIC', 'LIBRARY', 'CLOSED', 'Nov. 26–27')]
+print(json.dumps([len(cal), sorted(t['text'] for t in letters), b.build(['thanksgiving_library'])[1]]))`,
+      )
+      expect(r.stderr).toBe('')
+      expect(JSON.parse(r.stdout)).toEqual([
+        0,
+        ['CLOSED', 'LIBRARY', 'MADISON PUBLIC', 'Nov. 26–27'],
+        [],
+      ])
+    })
+  })
   describe('true-scale scenes', () => {
     it('sizes every part from one pixels-per-metre, so a person, a car and a tree agree', () => {
       const r = run(
@@ -491,7 +559,7 @@ print(json.dumps([round(p['size'] / ppm, 2) for p in parts.PLACED]))`,
 from scripts.illustrations import parts, places, props, settings as s
 parts.PLACED.clear()
 props.dumpster(40, 800, 90); props.raised_bed(330, 815, 130, plants=((1, 2),), fresh=(1, 2))
-places.pinney_library(40, 800, 68, 'CLOSED')
+places.pinney_library(44, 790, 80, 'CLOSED')
 print(json.dumps(sorted({p['kind'] for p in parts.PLACED} - set(s.REAL_SIZE_M))))`,
       )
       expect(r.stderr).toBe('')
@@ -502,11 +570,11 @@ print(json.dumps(sorted({p['kind'] for p in parts.PLACED} - set(s.REAL_SIZE_M)))
       const r = run(
         `import json
 from scripts.illustrations import parts, places
-a = places.pinney_library(48, 800, 68, 'CLOSED')
+a = places.pinney_library(44, 790, 80, 'CLOSED')
 parts.PLACED.clear()
-b = places.pinney_library(48, 800, 68, 'CLOSED')
-c = places.pinney_library(48, 800, 68)
-print(json.dumps([a == b, 'CLOSED' in b, 'CLOSED' in c, 'MADISON PUBLIC LIBRARY' in c, 'ROYSTER COMMONS' in c, 'Cottage Grove' in (places.pinney_library.__doc__ or ''), [p['label'] for p in parts.PLACED][-3:]]))`,
+b = places.pinney_library(44, 790, 80, 'CLOSED')
+c = places.pinney_library(44, 790, 80)
+print(json.dumps([a == b, 'CLOSED' in b, 'CLOSED' in c, 'MADISON PUBLIC' in c, 'ROYSTER' in c, 'Cottage Grove' in (places.pinney_library.__doc__ or ''), [p['label'] for p in parts.PLACED][-3:]]))`,
       )
       expect(r.stderr).toBe('')
       expect(JSON.parse(r.stdout)).toEqual([

@@ -146,6 +146,9 @@ def check_text(name, texts):
             out.append(f"{label} is outside its area ({_px(x0)}, {_px(y0)}, {_px(x1)}, {_px(y1)}) in "
                        f"({_px(ax0)}, {_px(ay0)}, {_px(ax1)}, {_px(ay1)})")
             continue
+        if t.get("role") == "lettering" and (y1 - y0) * PHONE_WIDTH / W < MIN_LETTERING_PHONE_PX:
+            out.append(f"{label} is too small to read on a phone: capitals {(y1 - y0) * PHONE_WIDTH / W:.1f}px tall "
+                       f"at {PHONE_WIDTH}px wide, at least {MIN_LETTERING_PHONE_PX}px")
         dx, dy = (x0 + x1 - ax0 - ax1) / 2, (y0 + y1 - ay0 - ay1) / 2
         if abs(dx) > TEXT_CENTER_TOL * (ax1 - ax0) or abs(dy) > TEXT_CENTER_TOL * (ay1 - ay0):
             out.append(f"{label} is off centre in its area by {dx:+.0f}px across and {dy:+.0f}px down")
@@ -155,10 +158,30 @@ def check_text(name, texts):
     return out
 
 
+def _overlap(a, b):
+    return min(a[2], b[2]) > max(a[0], b[0]) and min(a[3], b[3]) > max(a[1], b[1])
+
+
+def check_overlays(name, placed):
+    """A decorative overlay (the calendar page) overlaps no building and not the focal subject."""
+    focal = [p for p in placed if p["focal"]]
+    out = []
+    for o in (p for p in placed if p["kind"] in OVERLAY_KINDS):
+        for b in (p for p in placed if p["kind"] == "building" and not p["focal"]):
+            if _overlap(o["box"], b["box"]):
+                out.append(f"{name}: {o['kind']} overlaps {b['label']}: a floating object over a building looks like a mistake")
+        if focal:
+            fb = (min(p["box"][0] for p in focal), min(p["box"][1] for p in focal),
+                  max(p["box"][2] for p in focal), max(p["box"][3] for p in focal))
+            if _overlap(o["box"], fb):
+                out.append(f"{name}: {o['kind']} overlaps the focal subject {focal[0]['label']}")
+    return out
+
+
 def check_scene(name, placed, geometry=True):
     """Scale, safe area, balance and focal subject of one scene. `geometry` is False for a scene
     wrapped in a transform, where boxes are not the final ones."""
-    out = check_scale(name, placed) + check_focal(name, placed)
+    out = check_scale(name, placed) + check_focal(name, placed) + check_overlays(name, placed)
     if geometry:
         out += check_safe_area(name, placed) + check_balance(name, placed)
     return out

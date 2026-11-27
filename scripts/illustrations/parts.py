@@ -38,12 +38,13 @@ def focal_group(svg, label, n):
 
 TEXTS=[]  # text drawn inside a part by text_in(): the text, its area and its ink, for the build's check
 
-def text_in(text, area, size, weight="bold", fill=NAVY, extra=""):
+def text_in(text, area, size, weight="bold", fill=NAVY, extra="", role="label"):
     """`text` centred, by the ink the font draws, in `area` (x0, y0, x1, y1) of the canvas. Parts that
-    hold text draw it only through here, so its centring is the same everywhere and is checked."""
+    hold text draw it only through here, so its centring is the same everywhere and is checked. `role`
+    "lettering" marks text that is part of a place (a sign, a notice): it must also be readable on a phone."""
     l,t,r,b=measure.ink_box(text,size,weight)
     x=(area[0]+area[2])/2-(l+r)/2; y=(area[1]+area[3])/2-(t+b)/2
-    TEXTS.append({"text":text,"area":tuple(area),"ink":(x+l,y+t,x+r,y+b)})
+    TEXTS.append({"text":text,"area":tuple(area),"ink":(x+l,y+t,x+r,y+b),"role":role})
     css={"bold":700,"semibold":600}[weight]
     return (f'<text x="{x:.1f}" y="{y:.1f}" font-family="Poppins" font-weight="{css}" '
             f'font-size="{size:g}" fill="{fill}" {extra}>{text}</text>')
