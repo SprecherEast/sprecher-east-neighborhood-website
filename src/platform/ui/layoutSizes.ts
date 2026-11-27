@@ -119,3 +119,12 @@ export const SUBGRID_THREE_ROWS = 'row-span-3 grid grid-rows-subgrid'
  * it lives here, for a `CardGrid` with `gap="sm"` (`gap-4`).
  */
 export const SHARED_ROWS_SPACE_4 = { item: 'mb-4', list: '-mb-4 gap-y-0' }
+
+/**
+ * The expand icon laid over a picture's top-right corner (#1156, #1426): hidden without scripting,
+ * always visible, on a dark translucent backing so it reads on any picture. `Zoom` and `MapEmbed`
+ * both use it with the ghost, `icon`-size `Button`, so the control looks the same wherever a
+ * picture can be enlarged.
+ */
+export const EXPAND_ICON_BUTTON =
+  'hidden scripted:inline-flex absolute top-2 right-2 z-10 bg-scrim/60 text-on-image hover:bg-scrim/80'

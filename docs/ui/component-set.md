@@ -95,7 +95,7 @@ Components: [cards](../reference/components/cards.md), [display](../reference/co
 
 **`MapEmbed`** (#764, #884, #1419) is a small map picture with its text, filling the width it is given: the page's Section decides how wide it is and where it sits. It reads its own width (a container query): below 48rem the picture sits over the text; from 48rem the text is on the left (62.5%) and the picture on the right (37.5%), centred on each other. It opens
 a live Google map in a `Dialog`
-when a neighbor taps the picture or the "View the larger map" button. The frame is created only
+when a neighbor taps the picture (mouse and touch only; the keyboard uses the next two), the expand icon over its top-right corner (#1426, the look `Zoom`'s icon has, one shared definition) or the "View the larger map" button. The frame is created only
 after that tap, so the page asks Google for nothing before it, and then Google receives the visit
 (the page's origin only, `strict-origin-when-cross-origin`). Only Google's keyless embed addresses
 ("Embed a map" and My Maps) are accepted (`toGoogleMapsEmbedUrl`); with none, the picture and text
