@@ -30,3 +30,22 @@ export function writeShowcaseFonts(showcase, { withSiteFont = true } = {}) {
   }
   if (withSiteFont) for (const face of siteFaces()) put(`assets/${face}-C8OXljZJ.woff2`)
 }
+
+/**
+ * Puts into `pages` what the developer pages' export carries of the site's faces, as Next.js names a font it
+ * copies into `_next/static/media/`: the face with underscores, then `-s.p.<hash>` (a preloaded face) or
+ * `.<hash>` (the latin-ext faces, which are not preloaded). Unless `withSiteFont` is false.
+ */
+export function writePagesFonts(pages, { withSiteFont = true } = {}) {
+  const media = path.join(pages, '_next/static/media')
+  fs.mkdirSync(media, { recursive: true })
+  if (!withSiteFont) return
+  for (const face of siteFaces()) {
+    const under = face.replaceAll('-', '_')
+    const suffix = face.includes('latin-ext') ? '.3akwhu8439i8g' : '-s.p.14nztc_w4mkh_'
+    fs.writeFileSync(
+      path.join(media, `${under}${suffix}.woff2`),
+      Buffer.from('wOF2\0\x01', 'latin1'),
+    )
+  }
+}

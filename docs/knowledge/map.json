@@ -182,6 +182,7 @@
       "src/app/(frontend)/*.tsx",
       "src/app/(frontend)/api/**",
       "src/app/(frontend)/next/**",
+      "developer/**",
       "src/environment.d.ts",
       "src/payload.config.ts",
       "src/proxy.ts"

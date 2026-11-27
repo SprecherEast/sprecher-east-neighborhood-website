@@ -182,7 +182,7 @@ The shared components every page and module builds with (`src/platform/ui/`): wh
 ### The showcase
 
 - `npm run storybook` opens the component showcase (Storybook, #1424): each component has a `*.stories.tsx` beside it, drawn with the site's own `globals.css` and fonts, with a theme switch (every folder in `src/themes/`), a light/dark switch and the six widths of the [responsive table](/docs/guidelines/nextjs-tailwind.md#responsive-design--6-viewport-testing). Setup and its checks are in `.storybook/` (`viewports.test.ts`, `themes.test.ts`, `fonts.test.ts`).
-- It is public at https://dev.sprechereast.com/showcase/index.html, rebuilt by every production deploy; a preview that changes a story or a shared component gets its own copy ([`ops/developer-site.md`](/ops/developer-site.md), #1459). Stories cover only part of the kit; the old gallery stays until the rest has them.
+- It is public at https://dev.sprechereast.com/storybook/index.html (`/showcase/` is the native showcase's page, #1528), rebuilt by every production deploy; a preview that changes a story or a shared component gets its own copy ([`ops/developer-site.md`](/ops/developer-site.md), #1459). Stories cover only part of the kit; the old gallery stays until the rest has them.
 
 ## Behaviors and events
 
