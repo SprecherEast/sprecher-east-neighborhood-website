@@ -1,29 +1,30 @@
 # Knowledge index
 
-How the site is put together, one line per entry. Read the line, then open the note or reference
-it points to. Notes load by themselves when the work touches their files; the reference is
-generated. Why: decision [0019](../architecture/decisions/0019-knowledge-layer.md).
+One line per entry. Notes load when the work touches their files. Why: [0019](../architecture/decisions/0019-knowledge-layer.md).
 
 ## Notes
 
-- [Events](../../src/modules/events/README.md): the calendar, its listings, category pages and "this week" block; what "upcoming" means, what a save refreshes, official meetings, cancelled events, suggestions held as drafts.
-- [Contact](../../src/modules/contact/README.md): form checks, emails held until the sender confirms, retention.
-- [Agents](../../src/modules/agents/README.md): MCP access, what agents may read, suggestions held as drafts, run history.
-- [Verification](../../src/modules/verification/README.md): email confirmation by link, its limits, the welcome email, retention.
-- [Directory](../../src/modules/directory/README.md): the FAQ page and the resources group pages; how entries are grouped, when an official's photo shows, what a save refreshes.
-- [Theme](../../src/platform/theme/README.md): tokens, light and dark mode, theme options and decorations.
-- [Accounts](../../src/modules/accounts/README.md): sign-up, verification, sign-in (password or Google), adding a passkey, password changes and resets, and guards.
-- [Site navigation](../../src/modules/site/navigation/README.md): header, footer, forum link, redirects, refresh timing.
-- [UI kit](../../src/platform/ui/README.md): shared components' behavior: links, charts, version check, staff bar, shared sizes.
-- [Site pages](../../src/modules/site/README.md): page hero and page-builder blocks, what a page save refreshes.
-- [Rich text](../../src/platform/richtext/README.md): article text, editorial blocks, limits, Markdown tags.
+- [Events](../../src/modules/events/README.md): calendar, listings, "this week", official meetings.
+- [Contact](../../src/modules/contact/README.md): form checks, emails held until confirmed.
+- [Agents](../../src/modules/agents/README.md): MCP access, drafts, runs.
+- [Verification](../../src/modules/verification/README.md): email confirmation by link, retention.
+- [Directory](../../src/modules/directory/README.md): the FAQ and resources pages.
+- [Theme](../../src/platform/theme/README.md): tokens, light and dark mode, theme options, decorations.
+- [Roadmap](../../src/modules/roadmap/README.md): the public plan page, read from GitHub.
+- [Accounts](../../src/modules/accounts/README.md): sign-up, sign-in (password, Google, passkey).
+- [Site navigation](../../src/modules/site/navigation/README.md): header, footer, forum link, redirects.
+- [UI kit](../../src/platform/ui/README.md): shared components' behavior: links, version check, staff bar, sizes.
+- [Charts and data displays](../../src/platform/ui/chart/README.md): charts, adapters, breakdowns, heat map, share bill.
+- [Site pages](../../src/modules/site/README.md): CMS pages: hero, blocks, refresh on save.
 - [Shared Payload code](../../src/platform/payload/README.md): roles, drafts, review queue, jobs, link and site-address helpers, keyset paging.
-- [News](../../src/modules/news/README.md): posts, bylines and sources, search, the shared category tree, "top issues".
-- [Roadmap](../../src/modules/roadmap/README.md): the public plan page.
+- [Preview copy](../../src/platform/payload/previewCopy/README.md): what a preview copies from the published site.
+- [Rich text](../../src/platform/richtext/README.md): article text, editorial blocks, Markdown tags.
+- [News](../../src/modules/news/README.md): posts, bylines, search, categories, "top issues".
 
 ## Reference (generated)
 
-- [Content types](../reference/content-types/README.md): every collection and global, plugins included: fields, access per operation, hooks, drafts. `npm run docs:generate` writes it; CI (`Knowledge sync`) checks it.
-- [Screens](../reference/routes.md): every `page.tsx` and `route.ts` under `src/app/(frontend)/`: URL, the module entry points it imports, rendering and revalidate, where its metadata comes from.
-- [Shared components](../reference/components/README.md): every component of `src/platform/ui/` and `src/platform/richtext/` with its props, variants and the modules and routes that use it. Rules and decided choices stay in [component-set.md](../ui/component-set.md).
-- [UI element coverage](../reference/ui-coverage.md): which component and variant each element of the UI inventory maps to, with counts; made from the element tables in `docs/ui/`. Edit the table, not this page.
+- [Content types](../reference/content-types/README.md): collections and globals: fields, access, hooks.
+- [Screens](../reference/routes.md): every page and route file.
+- [Endpoints](../reference/endpoints.md), [MCP tools](../reference/mcp-tools.md), [jobs](../reference/jobs.md): what runs without a page.
+- [Shared components](../reference/components/README.md): props, variants, where used.
+- [UI element coverage](../reference/ui-coverage.md): which component covers each element.

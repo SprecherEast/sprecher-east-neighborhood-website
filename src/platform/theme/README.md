@@ -1,3 +1,11 @@
+---
+name: 'Theme'
+type: platform-area
+summary: 'tokens, light and dark mode, theme options, decorations.'
+aliases: ['design tokens', 'dark mode']
+relationships: []
+---
+
 # Theme
 
 How the site's look is themed: where each colour and size token is named and valued, how a
@@ -10,6 +18,7 @@ route is involved, so the generated reference has nothing on it.
 - A token is named in `tokens.ts`, valued in `src/themes/<name>/theme.css` (a light block and a dark block), and mapped to Tailwind classes in `tailwind.css` (`--color-primary: var(--primary)` gives `bg-primary`).
 - `themes.test.ts` checks every folder in `src/themes/` sets every token, reading the CSS with `themeFile.ts`.
 - Each name in `registry.ts` has a folder in `src/themes/`; `registry.test.ts` checks the two lists match.
+- The body font, Poppins, is defined once in `fonts.ts` (a Next.js font definitions file, `next/font/local`) over the files kept in `fonts/` next to it, with the font's own licence (SIL OFL 1.1, `fonts/OFL.txt`); the files are Poppins' latin and latin-ext subsets as Fontsource 5.3.0 packages them, unchanged. Two definitions: `poppins` (latin, preloaded) and `poppinsLatinExt` (not preloaded, with Fontsource's `unicode-range`, so a page without letters such as Ł, ő, Š, ă or đ never fetches it). The root layout imports both, and their CSS variables `--font-poppins` and `--font-poppins-ext` are the ones `font-sans` reads, latin-ext first, because `--font-poppins` carries next/font's Arial fallback and a letter the latin file lacks would otherwise fall to Arial (its `unicode-range` leaves out latin letters and the space, so latin text and its line metrics are unchanged) (`fonts.test.ts`, and lint forbids `next/font` imports anywhere else, #1447). Devanagari is left out on purpose: the site is in the Latin script, and a page in another script gets its system font for the whole script. Every surface reads that one definition: the site, and the component showcase, which is built by Vite, not Next.js, so `.storybook/fonts.css` declares the same faces, families and ranges over the same files (`.storybook/fonts.test.ts` fails when its list stops matching `fonts.ts`, an extra face included) and the developer site serves what that build copies; `ops/developer-site-check.sh` refuses a showcase that lacks one of them (#1459). `THEME_MODES` in `theme.ts` is the one list of modes (light, dark): `Theme`, `themeIsValid` and the showcase's Mode switch all read it.
 - `ACTIVE_THEME` in `registry.ts` is the theme the site shows, and `src/app/(frontend)/globals.css` imports that theme's `theme.css`; `registry.test.ts` checks they agree.
 - What tokens can't express is a theme option, with defaults in `options.ts`; `registry.ts` lists the options each theme sets, and `{}` means all defaults (decision 0012).
 - The `info` tone (an `Alert`, so a banner too) is blue: `info` for its border and tint, `info-strong` for its text, with contrast pairs in `tokens.ts` checked by `themes.test.ts` (#818). A theme sets both, like every token.
@@ -21,7 +30,7 @@ route is involved, so the generated reference has nothing on it.
 - The breakdown chart has its own seven-step ramp, `chart-ramp-1` (biggest) to `chart-ramp-7`, orange to green to gray, outside the 3:1 pairs because the pale steps cannot pass on a light page: each mark has the thin `chart-ramp-edge` outline and its amount written as text (#866).
 - Chart colours and their contrast pairs are in `tokens.ts` (`CHART_PAIRS`), checked by `themes.test.ts` (#659); the [UI kit](../ui/README.md) draws a chart's parts with `chart-1` to `chart-6`. A chart can ask for the warm set, orange and gray: a theme sets `chart-warm-1` to `chart-warm-6`, they pass the same contrast pairs, and inside a chart with `data-chart-palette="warm"` the names `chart-1` to `chart-6` mean those (`tailwind.css`, #856).
 
-## Behaviors
+## Behaviors and events
 
 - A token marked `both` in `tokens.ts` must be set in light and in dark; one marked `base` (`diagram-marker`, `radius`, `type-fine`, `type-list-row`) is set once. `type-fine` is the finest text size, `text-fine`: the small uppercase labels of the metadata bar (#1002). `type-list-row` is the label size of a row nested in a list, `text-list-row`, in `em` so it follows the list's own size: a little larger than the list's rows (the whole bill's breakdown row, #1163). Dark inherits any light token it leaves out (`themeFile.ts`).
 - `InitTheme.tsx` is a blocking script in `<head>` of the root layout. Before first paint it sets `data-theme` on `<html>` to the stored choice (`light` or `dark`), else to the system's dark preference, else to `defaultTheme` (`theme.ts`).

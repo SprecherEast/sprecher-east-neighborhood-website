@@ -12,6 +12,9 @@ export default [
     ignores: [
       '.next/**',
       'out/**',
+      'storybook-static/**',
+      'developer-site/**', // the showcase built into a release (ops/build-showcase.sh)
+      'public/showcase/**',
       'build/**',
       'node_modules/**',
       'data/**',
@@ -79,6 +82,25 @@ export default [
       'prefer-const': 'error',
       'no-var': 'error',
       eqeqeq: ['error', 'always'],
+    },
+  },
+
+  // ─── 4b. One font definition (#1447): the site's fonts are defined in one file and imported ──────
+  {
+    files: ['src/**/*.{ts,tsx}', '.storybook/**/*.{ts,tsx}'],
+    ignores: ['src/platform/theme/fonts.ts', '**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['next/font/*'],
+              message: 'Define fonts in src/platform/theme/fonts.ts and import them from there',
+            },
+          ],
+        },
+      ],
     },
   },
 

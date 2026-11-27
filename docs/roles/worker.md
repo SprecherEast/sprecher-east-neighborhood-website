@@ -13,13 +13,16 @@ you with a brief; the issue is the contract.
 1. Read the brief and the issue. If it is not Ready, or the brief and the issue disagree, stop and
    say so on the issue instead of guessing.
 2. Check the claim comment names your branch. You never claim an issue yourself.
-3. Follow [`change-workflow`](../../.agents/skills/change-workflow/SKILL.md) end to end: branch,
+3. Load the role guides and knowledge notes the brief names for the kind of work, such as a
+   frontend or content guide.
+4. Follow [`change-workflow`](../../.agents/skills/change-workflow/SKILL.md) end to end: branch,
    tests first ([`write-code`](../../.agents/skills/write-code/SKILL.md)), the change, the [`self-review`](../../.agents/skills/self-review/SKILL.md) (including the local knowledge check, `npm run knowledge:check`, and the read of each mapped note against the diff), a pull request from the template,
    and the independent review, which a fresh reviewer started by the chief of staff does, never you.
-4. Load the role guides and knowledge notes the brief names for the kind of work, such as a
-   frontend or content guide.
 5. New work you find becomes a new linked issue, not a wider pull request.
-6. Merge your own pull request only when the checks pass on its current head, the review of that
+6. Hand off cleanly: before you stop with work unfinished, post the `### [STEP]` comment the
+   [session handoff](../process/project-management.md#session-handoff) rule describes, and when you
+   pick up work, read that comment first.
+7. Merge your own pull request only when the checks pass on its current head, the review of that
    head says ready, and no conversation is open. Then run [`wrapped`](../../.agents/skills/wrapped/SKILL.md).
 
 ## Limits

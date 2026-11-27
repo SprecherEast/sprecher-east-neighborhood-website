@@ -142,4 +142,95 @@ print(s.EVENT_SCENE_SCALE < 1, 'scale(' + str(s.EVENT_SCENE_SCALE) + ')' in svg)
     )
     expect(r.stdout.trim()).toBe('True True')
   })
+
+  it('draws the calendar page and the roast turkey once, shared by the scenes that show them', () => {
+    const r = run(
+      `from scripts.illustrations import parts
+from scripts.illustrations.scenes import SCENES
+trash, thanks = SCENES['trash'](), SCENES['thanksgiving']()
+page = parts.calendar_page(615, 330, 'NOV', '26')
+print(page in trash, parts.roast_turkey(730, 676, .8) in trash, 'scale(.8)' in trash)
+print('>26</text>' in page, 'y="190"' in page, 'width="230" height="250"' in page)
+print(parts.calendar_page(560, 150, 'NOV', '26', w=190, h=210) in thanks, parts.roast_turkey(495, 512, .95) in thanks)`,
+    )
+    expect(r.stderr).toBe('')
+    expect(r.stdout.trim().split('\n')).toEqual(['True True True', 'True True True', 'True True'])
+  })
+
+  // Golden hashes of the two published pictures. The trash hash is the scene's output from before
+  // the turkey and the calendar page became shared parts, so the refactor changed nothing; any
+  // change to a part's drawing changes a published picture and must update these on purpose.
+  it('keeps the published trash and Thanksgiving pictures exactly as drawn', () => {
+    const r = run(
+      `import hashlib
+from scripts.illustrations.scenes import SCENES
+for name in ('trash', 'thanksgiving'): print(hashlib.sha256(SCENES[name]().encode()).hexdigest())`,
+    )
+    expect(r.stderr).toBe('')
+    expect(r.stdout.trim().split('\n')).toEqual([
+      'cfc85dab13029a54b27e99d0bb7e59275905e9b36395ca180aa88949ea9badaf',
+      '7128ee7d2ba3f20716f9c8ca4bf216817d2f05589dee6de4801170ce3a35715f',
+    ])
+  })
+
+  // Golden hashes of the drop-off and youth grants pictures, pinned before the shared road part
+  // replaced the road each of them drew itself, so that refactor changed nothing.
+  it('keeps the published drop-off and youth grants pictures exactly as drawn', () => {
+    const r = run(
+      `import hashlib
+from scripts.illustrations.scenes import SCENES
+for name in ('dropoff', 'youth'): print(hashlib.sha256(SCENES[name]().encode()).hexdigest())`,
+    )
+    expect(r.stderr).toBe('')
+    expect(r.stdout.trim().split('\n')).toEqual([
+      'ef9a26247a2ae5be089429b746760c98b2e60e2533a79f1d301a95c771eb4724',
+      'd9efa10428624bbe2ae23f507c37f7705493f1d1cc0d888283203bb1c276376b',
+    ])
+  })
+
+  it('keeps the wording of the drop-off and youth grants panels', () => {
+    const r = run(
+      `import json
+from scripts.illustrations import parts
+from scripts.illustrations.scenes import SCENES
+out = {}
+for name in ('dropoff', 'youth'):
+    parts.PANELS.clear()
+    SCENES[name]()
+    out[name] = [[p['title'], p['bullets']] for p in parts.PANELS]
+print(json.dumps(out))`,
+    )
+    expect(r.stderr).toBe('')
+    expect(JSON.parse(r.stdout)).toEqual({
+      dropoff: [
+        [
+          ['Last Saturday', 'for drop-offs'],
+          ['Sat., Nov. 28', '9 a.m. to 4 p.m.', 'Winter hours Dec. 4', 'Proof of address'],
+        ],
+      ],
+      youth: [
+        [
+          ['Youth-led', 'project grants'],
+          ['Up to $3,000', 'Apply by Dec. 18', 'Youth plan and lead', 'Awards in March'],
+        ],
+      ],
+    })
+  })
+
+  it('draws the road once, as a shared part, in every scene that shows that road', () => {
+    const r = run(
+      `from scripts.illustrations.scenes import SCENES
+from scripts.illustrations.scenes.street_days import road
+r = road(700, 44, 170, 840)
+print(r.count('stroke-dasharray="40 26"'), r.count('fill="#34405f"'), 'y="744"' in r, 'M0,840 L1700,840' in r)
+print([road(*a) in SCENES[n]() for n, a in (('dropoff', (700, 44, 170, 840)), ('youth', (700, 44, 170, 840)), ('trash', (640, 50, 220, 800)), ('thanksgiving', (700, 40, 170, 830)))])
+print([SCENES[n]().count('stroke-dasharray="40 26"') for n in ('dropoff', 'youth')])`,
+    )
+    expect(r.stderr).toBe('')
+    expect(r.stdout.trim().split('\n')).toEqual([
+      '1 1 True True',
+      '[True, True, True, True]',
+      '[1, 1]',
+    ])
+  })
 })

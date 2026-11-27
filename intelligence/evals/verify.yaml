@@ -1,6 +1,9 @@
 # Verify eval cases: from a candidate to the result a correct pipeline reaches, for cases that
 # verify decides. Synthetic unless `why` names a real item. Hashes are placeholders; a missing
 # sourceStatus means scheduled. Offsets are America/Chicago (CDT -05:00 until 2026-11-01 02:00).
+# A `placement` field or grader is not the model's: code writes it after verify (runner/lib/place.mjs),
+# so the collector (#272) checks those with place.mjs run on the model's answer and a recorded locator
+# answer. The cases that test it are in verify-place.yaml.
 version: 1
 asOf: '2026-10-24'
 stage: verify
@@ -59,8 +62,16 @@ cases:
       startsAt: 2026-10-30T18:00:00-05:00
       locationText: null
     expected:
-      { decision: needs-review, coverage: unknown, flags: [missing-location], route: reportItem }
-    why: '"East side" is not a place; never guess a park.'
+      {
+        decision: needs-review,
+        coverage: unknown,
+        flags: [missing-location],
+        route: reportItem,
+        placement: unplaced,
+      }
+    graders:
+      - { check: equals, field: $.placement.method, value: unplaced }
+    why: '"East side" is not a place; never guess a park. No place at all is unplaced, not a word match.'
   - id: missing-date
     stage: verify
     input:
@@ -206,8 +217,7 @@ cases:
       startsAt: 2026-10-30T18:00:00-05:00
       locationText: Door Creek Park
       sourceStatus: rescheduled
-    expected:
-      { decision: needs-review, coverage: catchment, flags: [needs-date], route: reportItem }
+    expected: { decision: needs-review, coverage: core, flags: [needs-date], route: reportItem }
     why: The old date no longer holds, and there is no new one, so nothing is drafted as a dated event.
   - id: verify-rescheduled-no-date
     ref: X3
@@ -316,7 +326,7 @@ cases:
     stage: verify
     tags: [place, boundary]
     input:
-      sourceId: legistar-events
+      sourceId: madison365-news
       title: Weekly members-only club meeting
       sourceText: A routine weekly meeting for members, at the club's own building.
       startsAt: 2026-11-18T19:00:00-06:00
@@ -336,7 +346,7 @@ cases:
     expected:
       {
         decision: needs-review,
-        coverage: catchment,
+        coverage: core,
         flags: [missing-date, unverified-claim],
         route: reportItem,
       }
@@ -362,3 +372,15 @@ cases:
           The result says the project is approved and nothing more; it does not describe it as
           under construction or underway, and lists the missing evidence of its current stage.
     why: Approved is not built. Without proof of construction, the item says "approved" only.
+  - id: verify-safety-by-meaning
+    stage: verify
+    tags: [safety, meaning]
+    input:
+      sourceId: madison365-news
+      title: Neighbors asked to keep children away from the pond behind the shopping center
+      startsAt: null
+      locationText: Sprecher Road, Madison
+    expected: { decision: needs-review, coverage: core, safety: true, route: reportItem }
+    graders:
+      - { check: equals, field: $.safety, value: true }
+    why: A hazard to children in everyday wording, from a source that is not always held; verify judges by meaning and marks it safety.

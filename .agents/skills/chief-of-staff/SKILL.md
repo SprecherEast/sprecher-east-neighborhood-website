@@ -18,7 +18,7 @@ decide, claim or ask is a comment on the issue
 
 ## 1. Start of session
 
-Three things, in this order, in one reply. Nothing here waits for the owner before the next step.
+Four things, in this order, in one reply. Nothing here waits for the owner before the next step.
 
 1. **What keeps failing.** Count the checks that failed on pull requests over the last week,
    by name:
@@ -44,17 +44,23 @@ Three things, in this order, in one reply. Nothing here waits for the owner befo
      -q '.[] | select([.labels[].name] | index("epic") | not) | "#\(.number)\(if .pull_request then " (PR)" else "" end) \(.title) (since \(.created_at[:10]))"'
    ```
 
-   Before showing it, [triage](../../../docs/process/project-management.md#waits-for-owner) it:
+   Before showing it, [triage](../../../docs/process/waits-for-owner.md) it:
    an item that was never his to decide loses the label with a `[DECISION]` comment. Show at most
    seven, the oldest first, and say how many wait in all. Make sure the first one has a plain
    question he can answer in a sentence, and ask that one. Silence is never a yes, and only the
    work blocked by a question waits for it.
 
-3. **The next batch.** From the current milestone ([`project-tracking`](../project-tracking/SKILL.md) §2),
-   keep Ready issues only (§1 there), highest priority first. Run the overlap check (§3) on the
+3. **The next batch.** Ready issues only ([`project-tracking`](../project-tracking/SKILL.md) §1),
+   in the order the [flow](../../../docs/process/planning-model.md#flow) section gives for the active
+   milestones. Run the overlap check (§3) on the
    proposed set and drop what clashes. Offer the batch with one line each and why.
 
+4. **Weekly review due?** Check as [When one is due](../../../docs/process/weekly-review.md#when-one-is-due)
+   says; when none was posted in the last seven days, offer one in one line.
+
 Dispatch only after the owner agrees to the batch, or when he has already said to keep going.
+Before the first look at step 3, and again before every later one, [look for changes made
+elsewhere](#8-look-for-changes-made-elsewhere).
 
 ## 2. Groom
 
@@ -65,8 +71,8 @@ one priority); a milestone, and an epic only for multi-part work
 ([the rule](../../../AGENTS.md#one-issue-one-pull-request)); a size; **Files likely touched** and
 **Must not touch**, each as backticked paths (the overlap check reads only those; a bare name with no extension, such as
 `Makefile`, or prose counts as undeclared, so write the folder or add the extension) or `None`; the role guides and knowledge
-notes a worker must load; and an open-questions line. Split anything bigger than L. Sizing,
-priority and sprint judgment stay with you; moves that must happen every time belong to the
+notes a worker must load; and an open-questions line. Split anything bigger than L. Sizing
+and priority judgment stay with you; moves that must happen every time belong to the
 board's built-in workflows and the planner app, not to you. You say an issue is Ready by adding
 the `ready` label, and set its size and priority as the Effort and Priority fields
 ([`project-tracking`](../project-tracking/SKILL.md) §1a); the card follows.
@@ -76,7 +82,8 @@ then the [Backlog to Ready criteria](../../../docs/process/grooming-playbook.md#
 
 ## 3. Overlap check
 
-Before every claim, with the candidate and every issue In progress:
+Before every claim, after [looking for changes made elsewhere](#8-look-for-changes-made-elsewhere)
+(a task another session has claimed is never started), with the candidate and every issue In progress:
 
 1. Collect them into a JSON list (one entry per issue, the body is enough):
 
@@ -99,7 +106,7 @@ Before every claim, with the candidate and every issue In progress:
 
 Look the level up in the [scrutiny table](../../../docs/process/agent-operating-model.md#6-how-much-scrutiny-a-change-gets).
 It is a lookup, not an agent: take the highest level any row matches. **The levels do not take
-effect yet** (a later piece of #695 does that). Until then review depth follows the model and
+effect yet** (#1450 does that). Until then review depth follows the model and
 effort rule in [`CLAUDE.md`](../../../CLAUDE.md), and the level you look up is only a proposal in
 the brief, which no one is bound by. Start the reviewer as a new subagent that gets only the pull
 request and its issue.
@@ -108,7 +115,9 @@ request and its issue.
 
 One worker per issue, in its own branch and worktree. Post the brief as a `### [STEP]` comment on
 the issue, and pass the same text to the worker, which you start with the Agent tool. The claim
-comment names the worker's branch. You also start the fresh reviewer for its pull request: a worker
+comment names the worker's branch. A session that picks up unfinished work, yours or a
+worker's, follows the [session handoff](../../../docs/process/project-management.md#session-handoff)
+rule, and so do you before you stop with work unfinished. You also start the fresh reviewer for its pull request: a worker
 starts no agents. A worker only reads what the brief names, so name it.
 
 ```markdown
@@ -122,7 +131,7 @@ guidelines and skills that apply>
 **May touch:** <backticked paths>
 **Must not touch:** <backticked paths>
 **Proposed scrutiny level:** <0 to 3, from the table; a proposal until the levels take effect>
-**Branch:** <name>. Depends on: <open pull requests to stack on, or none>
+**Branch:** `<name>`. Depends on: <open pull requests to stack on, or none>
 **Owner needed:** <no, or the question>
 ```
 
@@ -158,12 +167,44 @@ Follow the [grooming playbook](../../../docs/process/grooming-playbook.md): the
 4. **Retro-organization** of existing issues is the playbook's
    [procedure](../../../docs/process/grooming-playbook.md#retro-organization): a dry-run proposal of
    milestones, epics and groupings first, owner approval, then apply in the order it gives.
-5. **Native fields and sprints.** Priority and Effort are fields on the issue: read and write
-   them from any session ([`project-tracking`](../project-tracking/SKILL.md) §1a; the additive
-   `POST`, never the `PUT` that replaces every field). The sprint is the board's own field: read
-   it when the session can reach the board, and move an iteration only from a session on the
-   owner's computer (`gh project item-edit`); elsewhere, list the move as a proposal. Sprint pulls
-   and rollover follow the [planning model](../../../docs/process/planning-model.md#sprint).
+5. **Native fields.** Priority and Effort are fields on the issue: read and write them from any
+   session ([`project-tracking`](../project-tracking/SKILL.md) §1a; the additive `POST`, never
+   the `PUT` that replaces every field). Work is pulled by priority, with no time boxes
+   ([flow](../../../docs/process/planning-model.md#flow)).
 6. You still never edit code, push or merge. You never move a card: the `ready` label moves it
    between Backlog and Ready, and assigning the issue moves it to In progress (the planner app
    does both); where a card has not followed, say which card moves where.
+
+## 7. Weekly review
+
+Once a week and whenever the owner asks, run the
+[weekly review](../../../docs/process/weekly-review.md): what shipped, what failed repeatedly, what
+came back from review, where the owner had to step in, and what to automate next. It reads GitHub
+only, through `gh api`, and says what it could not measure. Each finding that needs a change
+becomes an issue, filed and groomed like any other.
+
+## 8. Look for changes made elsewhere
+
+The owner steers this repository from more than one session and more than one AI tool at once, and
+GitHub is the one record of who is doing what: no separate handoff note exists. What you read at
+the start of the session goes stale, so ask GitHub what changed since your last look, and plan
+around it. Look at session start, each time you resume after waiting (a worker report, a finished
+check, a notification), and always before you start, dispatch or merge anything.
+
+Read three things: tasks in progress or newly claimed, tasks newly created, and changes of priority
+or labels, `needs owner` included. Never start a task another session has claimed. When the owner
+reordered work elsewhere, re-plan the batch before you act. `since` matches the last update, so
+one query returns issues and pull requests alike:
+
+```bash
+gh api --paginate "repos/{owner}/{repo}/issues?state=all&since=$last_look&sort=updated&direction=asc&per_page=100" \
+  -q '.[] | "#\(.number)\(if .pull_request then " (PR)" else "" end) \(.updated_at) [\([.labels[].name] | join(", "))] \(.assignees | map(.login) | join(",")) \(.title)"'
+```
+
+Keep `last_look` (a UTC time such as `2026-01-31T09:00:00Z`) in your own working notes and set it to
+the time the query ran. The first look of a session covers the time since the last
+[handoff](../../../docs/process/project-management.md#session-handoff) comment on the issues in
+play, or the last day when there is none.
+
+A session that does not manage workers does the counterpart: it writes each decision and each new
+piece of work on the GitHub task before it ends its turn, so any other session finds it there.

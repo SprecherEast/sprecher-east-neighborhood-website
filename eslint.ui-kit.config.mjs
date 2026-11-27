@@ -7,11 +7,14 @@
 const use = (component) => `Use ${component} from src/platform/ui (#163)`
 
 export const uiKitConfig = {
-  files: ['src/**/*.tsx'],
+  // Stories and the showcase setup follow the same rule (#1447)
+  files: ['src/**/*.tsx', '.storybook/**/*.tsx'],
   ignores: [
-    // The kit itself
+    // The kit itself, but not its stories
     'src/platform/ui/**',
+    '!src/platform/ui/**/*.stories.tsx',
     'src/**/*.test.tsx',
+    '.storybook/**/*.test.tsx',
     'src/app/(payload)/**',
     // Payload admin components render inside Payload's own admin UI and styles, not the site's
     'src/platform/payload/admin/**',

@@ -92,6 +92,10 @@ export const Field = Object.assign(Frame, { Input })
     'src/app/(frontend)/events/page.test.ts',
     "import { Alert } from '@/platform/ui/Alert'\nexport const t = Alert\n",
   )
+  write(
+    'src/platform/ui/Alert.stories.ts',
+    "import { Alert } from './Alert'\nexport const Playground = Alert\n",
+  )
 })
 
 afterAll(() => fs.rmSync(root, { recursive: true, force: true }))
@@ -103,6 +107,7 @@ const sources = [
   'src/modules/events/ui/List.ts',
   'src/app/(frontend)/events/page.ts',
   'src/app/(frontend)/events/page.test.ts',
+  'src/platform/ui/Alert.stories.ts',
 ]
 
 describe('describeComponents', () => {
@@ -143,7 +148,7 @@ describe('describeComponents', () => {
 })
 
 describe('findUsers', () => {
-  it('finds importers through a barrel file and directly, skipping tests', () => {
+  it('finds importers through a barrel file and directly, skipping tests and stories', () => {
     const program = load(sources)
     const found = describeComponents(program, root, files)
     const users = findUsers(program, root, found)

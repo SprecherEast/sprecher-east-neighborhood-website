@@ -8,7 +8,7 @@ rules are in [Images made for the site](../../docs/guidelines/images.md).
 | File          | What it holds                                                                                                                      |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `settings.py` | Named settings in one place: canvas, scene width, panel width, panel type sizes, the badge corner of events, line weight, palette. |
-| `parts.py`    | Shared parts: people, bicycles, trees, cars, backdrop, text panel.                                                                 |
+| `parts.py`    | Shared parts: people, bicycles, trees, cars, calendar page, roast turkey, backdrop, text panel.                                    |
 | `places.py`   | Established real places, reused exactly and never redrawn in a scene.                                                              |
 | `scenes/`     | One function per picture, registered in `scenes/__init__.py`.                                                                      |
 | `build.py`    | Builds SVGs, checks every panel, exports JPGs.                                                                                     |

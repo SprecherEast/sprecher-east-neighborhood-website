@@ -21,7 +21,7 @@ function issueSections(body) {
 }
 
 /** An epic is a parent issue: it has no files or checkboxes of its own and never goes to In progress. */
-const isEpic = (issue) => labelNames(issue).includes('epic')
+export const isEpic = (issue) => labelNames(issue).includes('epic')
 
 // The forms call the plain-language statement "Problem"; hand-written issues say "Summary" or "Goal"
 const SUMMARY_HEADINGS = ['summary', 'problem', 'goal']

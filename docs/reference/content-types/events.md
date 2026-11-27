@@ -3,6 +3,8 @@
 # Events (`events`)
 
 - Kind: collection
+- Owner: module `events`, defined in `src/modules/events/cms/events.ts`
+- AI agent tools: `findEvents`, `submitSuggestion` ([list](../mcp-tools.md))
 - Drafts: yes (autosave every 100 ms, scheduled publishing)
 - Versions: the last 25 of each document
 

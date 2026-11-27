@@ -14,7 +14,8 @@ const TYPE_LIMIT = 160
 const TYPE_FLAGS =
   ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope
 const inPackage = (file) => file.includes('/node_modules/')
-const isTestFile = (file) => /\.(test|spec)\.tsx?$/.test(file) || file.includes('/testing/')
+// A story is not a real use of a component either (#1447): it only shows it in the showcase
+const isTestFile = (file) => /\.(test|spec|stories)\.tsx?$/.test(file) || file.includes('/testing/')
 const relative = (root, file) => path.relative(root, file).split(path.sep).join('/')
 
 /** Names of the variants a `cva(…, { variants: { name: {…} } })` call in the file defines. */

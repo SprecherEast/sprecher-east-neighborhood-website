@@ -1,0 +1,40 @@
+/* System colors only: the pages follow the visitor's light or dark setting and need no font file. One
+   stylesheet for the index page and the 404 page, so a change is made once. */
+body {
+  margin: 0 auto;
+  max-width: 40rem;
+  padding: 1.5rem 1rem 3rem;
+  font:
+    1.125rem/1.6 system-ui,
+    sans-serif;
+  background: Canvas;
+  color: CanvasText;
+}
+h1 {
+  font-size: 1.75rem;
+  line-height: 1.25;
+}
+ul {
+  list-style: none;
+  margin: 1.5rem 0;
+  padding: 0;
+}
+li {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: 1px solid GrayText;
+  border-radius: 0.5rem;
+}
+li a,
+.soon,
+.back {
+  display: inline-block;
+  min-height: 2.75rem;
+}
+li a,
+.soon {
+  font-weight: 600;
+}
+li p {
+  margin: 0;
+}

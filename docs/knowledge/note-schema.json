@@ -1,0 +1,226 @@
+{
+  "$comment": "The one definition of a knowledge note: its fields, its fixed sections, the node and relationship vocabulary and what the check enforces. Read by scripts/knowledge-structure/ (the check, the index and the skeleton). Nothing else restates it. Why: decision 0022. How to write a note: note-template.md. Rule states: block fails the check, warn only reports; what each rule means is in decision 0022.",
+  "version": 1,
+  "limits": {
+    "noteLines": 80,
+    "noteLinesCount": "lines below the front matter, blank lines included"
+  },
+  "fields": [
+    {
+      "key": "name",
+      "kind": "text",
+      "maxChars": 40,
+      "what": "The short name the index and the map show."
+    },
+    {
+      "key": "type",
+      "kind": "noteType",
+      "what": "What the note describes: one of noteTypes, which is also a node type."
+    },
+    {
+      "key": "summary",
+      "kind": "text",
+      "maxChars": 200,
+      "what": "One line, in plain words, of what the part is for. The index line is made from it."
+    },
+    {
+      "key": "aliases",
+      "kind": "textList",
+      "what": "Other names a reader may search for (a list; empty when there are none)."
+    },
+    {
+      "key": "relationships",
+      "kind": "relationships",
+      "what": "Only what the code and the generated reference cannot show: a list of { type, target }, type from relationshipTypes.hand, target an exact repository-relative path of a file or folder (a list; empty when there are none)."
+    }
+  ],
+  "noteTypes": {
+    "module": "A business area under src/modules/ with its own screens, rules and data.",
+    "platform-area": "Shared code under src/platform/ that modules and pages build on.",
+    "feature": "One piece with its own logic spread over several files, inside a module or a platform area."
+  },
+  "sections": [
+    {
+      "heading": "Screens",
+      "appliesTo": ["module"],
+      "presence": "optional",
+      "hint": "Only for a module with routes: one line each on where its data comes from. The routes themselves are in docs/reference/routes.md: link it, do not copy it."
+    },
+    {
+      "heading": "How the pieces link",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "How its fields, flags, hooks and files connect and depend on each other and on other notes, where the code does not show it at a glance."
+    },
+    {
+      "heading": "Behaviors and events",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "required",
+      "hint": "What happens that the config does not show: hooks, jobs, emails, cache tags, time windows, limits. One line each, with the file."
+    },
+    {
+      "heading": "Shared pieces it uses",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "Components, helpers and blocks from src/platform/, one line each. Where it meets another module, name the composition root that joins them (decision 0008)."
+    },
+    {
+      "heading": "Rules and the tests that protect them",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "Each business rule in a sentence, with its test."
+    },
+    {
+      "heading": "Boundaries",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "What it may import, what imports it, what it must never do."
+    },
+    {
+      "heading": "Decisions",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "Links to the decision records and issues that explain why it is this way."
+    },
+    {
+      "heading": "Known gaps",
+      "appliesTo": ["module", "platform-area", "feature"],
+      "presence": "expected",
+      "hint": "Open issues and limits to know before changing it: the node's watch-outs on the map. Write None when there are none."
+    }
+  ],
+  "nodeTypes": {
+    "product": {
+      "site": "The whole website.",
+      "module": "A business area under src/modules/.",
+      "platform-area": "Shared code under src/platform/.",
+      "feature": "One piece with its own logic, inside a module or area.",
+      "screen": "A page route a visitor opens.",
+      "endpoint": "An HTTP address that answers with data, not a page.",
+      "mcp-tool": "A tool an AI agent calls through the MCP address.",
+      "collection": "A CMS content type with many documents.",
+      "global": "A CMS content type with one document.",
+      "block": "A page-builder or rich-text block an editor places.",
+      "shared-component": "A component of the UI kit or rich text.",
+      "job": "Work the app runs on its own schedule or queue.",
+      "note": "A knowledge note next to the code it describes."
+    },
+    "how-we-work": {
+      "scheduled-task": "A task that runs by the clock outside the app.",
+      "decision": "A decision record under docs/architecture/decisions/.",
+      "guideline": "A convention under docs/guidelines/.",
+      "skill": "A procedure under .agents/skills/.",
+      "role": "A role guide under docs/roles/.",
+      "subagent": "An agent definition under .claude/agents/.",
+      "ci-workflow": "A GitHub Actions workflow.",
+      "workflow-step": "One step of how a change is made.",
+      "check": "A mechanical gate: a required check or a script."
+    }
+  },
+  "relationshipTypes": {
+    "derived": {
+      "contains": "folders and the screens and content-type references",
+      "renders": "the components reference",
+      "reads": "the routes and content-type references",
+      "writes": "the content-type reference and the code",
+      "calls": "the routes reference and the code",
+      "exposes": "the endpoint and tool references",
+      "uses": "imports and the components reference",
+      "documents": "docs/knowledge/map.json",
+      "decided-by": "the Decisions section links",
+      "mentions": "Markdown links between notes"
+    },
+    "hand": {
+      "depends-on": "written only when no import or reference shows it",
+      "owned-by": "written: which role owns the subject",
+      "triggers": "workflow files, else written",
+      "runs": "workflow files, else written",
+      "next-step": "skills, else written"
+    }
+  },
+  "paths": {
+    "extensions": [
+      "ts",
+      "tsx",
+      "mjs",
+      "cjs",
+      "js",
+      "json",
+      "jsonc",
+      "md",
+      "scss",
+      "css",
+      "sh",
+      "yml",
+      "yaml",
+      "html",
+      "svg",
+      "png",
+      "jpg",
+      "webp"
+    ],
+    "repoRoots": [
+      "src/",
+      "docs/",
+      "ops/",
+      "e2e/",
+      "scripts/",
+      "public/",
+      ".github/",
+      ".claude/",
+      ".agents/",
+      ".storybook/",
+      "intelligence/"
+    ],
+    "ignore": [".env*", "storybook-static/**", "node_modules/**"]
+  },
+  "notes": {
+    "discover": "src/**/README.md",
+    "folderEntries": ["src/modules/README.md", "src/platform/README.md"]
+  },
+  "coverage": {
+    "roots": ["src/**"],
+    "extensions": ["ts", "tsx"],
+    "ignore": ["src/migrations/**", "src/payload-types.ts", "**/*.stories.tsx"]
+  },
+  "rules": {
+    "NOTE-FRONTMATTER": "block",
+    "NOTE-FIELDS": "block",
+    "NOTE-FIELD-VALUE": "block",
+    "NOTE-TYPE": "block",
+    "NOTE-RELATIONSHIP": "block",
+    "NOTE-RELATIONSHIP-TARGET": "block",
+    "NOTE-TITLE": "block",
+    "NOTE-SECTIONS": "block",
+    "NOTE-CAP": "block",
+    "NOTE-PATH": "warn",
+    "NOTE-ORPHAN": "block",
+    "MAP-NOTE": "block",
+    "NOTE-NO-CODE": "block",
+    "INDEX-DRIFT": "block",
+    "COVERAGE-SECTION": "warn",
+    "COVERAGE-CODE": "warn"
+  },
+  "kinds": {
+    "text": {
+      "what": "one line of text, within maxChars when given",
+      "placeholder": "TODO"
+    },
+    "noteType": {
+      "what": "a key of noteTypes",
+      "placeholder": "$type"
+    },
+    "textList": {
+      "what": "a list of one-line texts",
+      "placeholder": "[]"
+    },
+    "relationships": {
+      "what": "a list of { type, target }",
+      "placeholder": "[]"
+    }
+  },
+  "index": {
+    "label": "name",
+    "text": "summary"
+  }
+}

@@ -91,7 +91,7 @@ jobs:
           filters: |
             intelligence:
               - 'intelligence/**'
-              - 'scripts/check-intelligence.mjs'
+              - 'scripts/check-intelligence*.mjs'
               - 'package-lock.json'
 
       - uses: actions/setup-node@v7
@@ -165,6 +165,7 @@ jobs:
   # docs/reference/content-types/ are regenerated from the Payload config and the job fails on any
   # difference, so a content type can't change without its page. It loads the config only: no
   # database, no server. The run time goes to the job summary. Required on `main` once #716 merges.
+  # It also runs the structure check of the notes (#1460) and the check of the system map's data (#1462).
   knowledge-sync:
     name: Knowledge sync
     runs-on: ubuntu-latest
@@ -185,6 +186,18 @@ jobs:
           start=$(date +%s)
           npm run docs:check
           echo "docs:check took $(( $(date +%s) - start )) s" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # Every note follows docs/knowledge/note-schema.json (#1460, decision 0022). Rules the schema
+      # marks `block` fail the job; the others are counted as warnings in the job summary.
+      - name: Check the knowledge notes' structure
+        run: npm run knowledge:structure
+
+      # The system map's data (#1462) is made from the notes, the generated reference and the
+      # repository's own files by one command; the job fails when the committed graph or catalog
+      # differs from what the sources give. The change history and the open-issue snapshot are
+      # separate files that are not committed, so they cannot make it fail.
+      - name: Check the system map data
+        run: npm run knowledge:map -- --check
 
   # The account and contact flows as a resident uses them, on a phone and a desktop (#311):
   # Playwright against a production build with a fresh database, emails caught by a local SMTP

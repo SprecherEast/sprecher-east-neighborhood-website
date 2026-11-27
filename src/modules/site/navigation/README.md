@@ -1,3 +1,11 @@
+---
+name: 'Site navigation'
+type: feature
+summary: 'header, footer, forum link, redirects.'
+aliases: ['header', 'footer', 'redirects']
+relationships: [{ 'type': 'depends-on', 'target': 'src/modules/site/README.md' }]
+---
+
 # Site navigation
 
 The header navigation, the footer, the forum link and the redirects editors set: where their links
@@ -6,7 +14,7 @@ and hooks: [header](../../../../docs/reference/content-types/header.md), [footer
 [redirects](../../../../docs/reference/content-types/redirects.md); kit pieces:
 [navigation](../../../../docs/reference/components/navigation.md). Pages and blocks are in the [site note](../README.md).
 
-## How the links connect
+## How the pieces link
 
 - A nav item is the shared link field (a page or post, or a custom URL); `resolveLink` turns it into an `href`, and "open in new tab" becomes `external` (`src/platform/payload/link.ts`, `resolveLink.ts`). A link with no address or an unpopulated reference is dropped (`ui/SiteFooter.tsx`, `src/modules/site/data/mappers.ts`).
 - Header and footer are read with their linked pages populated whether or not those pages are published (`data/globals.ts`, #251).
@@ -17,20 +25,13 @@ and hooks: [header](../../../../docs/reference/content-types/header.md), [footer
 
 ## Behaviors and events
 
-- The header and footer are cached until an editor saves them; saving expires `global_header` or `global_footer`, unless the save sets `disableRevalidate` (the seed) (`cms/revalidateGlobal.ts`).
-- Nothing refreshes them when a linked page is published or renamed, so a link to a page not yet published already shows, and a renamed page keeps its old link until the global is saved (`data/globals.ts`, #251).
-- The header nav leaves out an item that points to `/contact`, since the header has its own Contact button, and always ends with Search (`domain/nav.ts`, `toHeaderNavLinks` in `src/modules/site/data/mappers.ts`, `ui/HeaderNav.client.tsx`). The footer keeps every resolvable item and adds the forum link last.
-- A header item can carry up to eight submenu links (`subItems`). With any usable one it is a button that opens them by a press, never on hover: a panel on a wide screen, an accordion in the mobile menu, and its own link is not followed; with none it stays a plain link (`toHeaderNavLinks`, `ui/HeaderNav.client.tsx`, `NavMenu` in the UI kit, #1237). The footer has no submenus.
-- A nav link is current on its own page and on every page inside its section, never on one that only starts with the same letters; outside links are never current (`domain/nav.ts`).
-- The mobile menu closes when the page changes, when a link or button inside it is used, and when the screen grows past the desktop breakpoint, so the scroll lock cannot stay (`ui/SiteHeaderBar.client.tsx`).
-- Saving a redirect expires the `redirects` tag, so the next request follows the new list (`cms/revalidateRedirects.ts`). Deleting one expires nothing.
-- A redirect is followed at render time by `PayloadRedirects`: a match sends the visitor on. With none, the page answers 404, unless the page exists and says so (`disableNotFound`), which still honours a redirect set over it (`ui/PayloadRedirects.tsx`, used by `src/app/(frontend)/[slug]/page.tsx` and `posts/[slug]/page.tsx`).
-- A redirect whose target is a draft, deleted or unreadable answers `null`, so it never reveals a draft (`use-cases/getRedirectTarget.ts`).
-- Looked-up targets are cached for 10 minutes with no tag refresh yet, so a published or renamed target shows within 10 minutes (`data/documents.ts`).
-- The redirects plugin covers pages and posts; only admins can read or change redirects in Admin, while the site reads them regardless (`src/payload.config.ts`, `data/redirects.ts`).
-- Redirects in `redirects.js` run before any page renders and are an empty list today; editor redirects are separate (`redirects.js`, `src/redirects.test.ts`).
-- The footer's closing line is fixed text, not an editor field: "This is an unofficial neighborhood site, made with AI tools and reviewed by a neighbor." It never calls the site an association or an initiative (`ui/SiteFooter.tsx`, `ui/SiteFooter.test.tsx`, #1010).
-- The logo link is as tall as a tap needs, from one shared component used by header, mobile menu and footer (`ui/Logo.tsx`, #741).
+- **The header and footer are cached until an editor saves them;** saving expires `global_header` or `global_footer`, unless the save sets `disableRevalidate` (the seed). Nothing refreshes them when a linked page is published or renamed, so a link to an unpublished page already shows and a renamed page keeps its old link until the global is saved (`cms/revalidateGlobal.ts`, `data/globals.ts`, #251).
+- **Saving a redirect expires the `redirects` tag;** deleting one expires nothing (`cms/revalidateRedirects.ts`). A redirect is followed at render time by `PayloadRedirects`: a match sends the visitor on, with none the page answers 404, unless the page exists and says so (`disableNotFound`), which still honours a redirect set over it (`ui/PayloadRedirects.tsx`, mounted by `src/app/(frontend)/[slug]/page.tsx` and `posts/[slug]/page.tsx`).
+- **Looked-up targets are cached 10 minutes** with no tag refresh yet (`data/documents.ts`).
+- **The redirects plugin covers pages and posts;** only admins read or change redirects in Admin, while the site reads them regardless (`src/payload.config.ts`, `data/redirects.ts`). Redirects in `redirects.js` run before any page renders and are an empty list today (`src/redirects.test.ts`).
+- **The mobile menu closes** when the page changes, when a link or button inside it is used, and when the screen grows past the desktop breakpoint, so the scroll lock cannot stay (`ui/SiteHeaderBar.client.tsx`).
+- **The logo link is one shared component** used by the header, the mobile menu and the footer, as tall as a tap needs (`ui/Logo.tsx`, #741).
+- **The footer's closing line is fixed text,** not an editor field, and never calls the site an association or an initiative (`ui/SiteFooter.tsx`, #1010).
 
 ## Shared pieces it uses
 
@@ -41,16 +42,14 @@ and hooks: [header](../../../../docs/reference/content-types/header.md), [footer
 
 ## Rules and the tests that protect them
 
-- Header and footer are readable by anyone, editable by staff only, and saving expires only their own tag (unless told not to): `cms/navGlobal.test.ts`. The shared link-group helper merges overrides: `cms/linkGroup.test.ts`.
-- Linked pages are populated and cached under the global's tag: `data/globals.test.ts`.
-- The forum address must be https with a real host and no login in it; anything else draws no link: `domain/forum.test.ts`, `ui/ForumPrompt.test.tsx`.
-- Current-section marking and the Contact exclusion: `domain/nav.test.ts`, `ui/HeaderNav.client.test.tsx`.
-- The mobile menu opens, closes and matches the `lg` width: `ui/SiteHeaderBar.client.test.tsx`.
-- Footer headings and tap sizes, and the logo link: `ui/SiteFooter.test.tsx`, `ui/Logo.test.tsx`.
-- Saving a redirect expires its tag: `cms/revalidateRedirects.test.ts`.
-- A redirect never leaks a draft, and a custom URL or post target resolves: `use-cases/getRedirectTarget.test.ts`.
-- 404 versus render versus redirect: `ui/PayloadRedirects.test.tsx`.
-- The code redirects list stays a list `next.config.js` can call: `src/redirects.test.ts`.
+- **Who may edit:** header and footer are readable by anyone and editable by staff only; saving expires only their own tag (`cms/navGlobal.ts`; `cms/navGlobal.test.ts`, `cms/linkGroup.test.ts`).
+- **The header leaves out Contact and ends with Search:** an item pointing to `/contact` is dropped because the header has its own Contact button; the footer keeps every resolvable item and adds the forum link last (`domain/nav.ts`, `toHeaderNavLinks` in `src/modules/site/data/mappers.ts`; `domain/nav.test.ts`, `ui/HeaderNav.client.test.tsx`).
+- **A link is current on its own page and inside its section,** never on a page that only starts with the same letters; outside links are never current (`domain/nav.ts`; `domain/nav.test.ts`).
+- **Submenus open by a press, never by hover:** an item with up to eight usable `subItems` is a button (a panel on a wide screen, an accordion on a phone) and its own link is not followed; with none it stays a link; the footer has none (`ui/HeaderNav.client.tsx`, `NavMenu` in the kit, #1237; `ui/HeaderNav.client.test.tsx`, `ui/SiteHeaderBar.client.test.tsx`).
+- **The forum link is shown only for a safe address:** https with a real host and no login in it, else no link on the footer or the post page (`domain/forum.ts`, `use-cases/getForumUrl.ts`; `domain/forum.test.ts`, `ui/ForumPrompt.test.tsx`).
+- **Linked pages are populated whether or not published** and cached under the global's tag (`data/globals.ts`; `data/globals.test.ts`).
+- **A redirect never reveals a draft:** a target that is a draft, deleted or unreadable answers `null`; a custom URL wins over a reference (`use-cases/getRedirectTarget.ts`; `use-cases/getRedirectTarget.test.ts`, `ui/PayloadRedirects.test.tsx`, `cms/revalidateRedirects.test.ts`).
+- Footer headings, tap sizes and the logo link: `ui/SiteFooter.test.tsx`, `ui/Logo.test.tsx`; the code redirects list stays a list `next.config.js` can call: `src/redirects.test.ts`.
 
 ## Boundaries
 

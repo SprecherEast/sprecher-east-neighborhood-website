@@ -19,13 +19,12 @@ only: no examples taken from current work, so it stays true as the work changes.
 
 ## The layers at a glance
 
-| Layer     | Answers                                      | Size                       | On GitHub                                      |
-| --------- | -------------------------------------------- | -------------------------- | ---------------------------------------------- |
-| Milestone | Which outcome is done, and how do we know?   | several capabilities       | A milestone; each issue has exactly one        |
-| Epic      | Which capability does this body of work add? | several related issues     | A parent issue labeled `epic`, with sub-issues |
-| Issue     | What single deliverable ships?               | fits in one sprint         | An issue; one PR closes it                     |
-| Sub-issue | Which step is worth tracking on its own?     | part of an issue           | A child of an issue                            |
-| Sprint    | What do we pull in for this time slice?      | one iteration of the board | The board's iteration field                    |
+| Layer     | Answers                                      | Size                     | On GitHub                                      |
+| --------- | -------------------------------------------- | ------------------------ | ---------------------------------------------- |
+| Milestone | Which outcome is done, and how do we know?   | several capabilities     | A milestone; each issue has exactly one        |
+| Epic      | Which capability does this body of work add? | several related issues   | A parent issue labeled `epic`, with sub-issues |
+| Issue     | What single deliverable ships?               | fits in one pull request | An issue; one PR closes it                     |
+| Sub-issue | Which step is worth tracking on its own?     | part of an issue         | A child of an issue                            |
 
 Labels, priority and size classify and rank. They never express hierarchy.
 
@@ -47,11 +46,11 @@ them. GitHub differs in ways that shape the rules here:
   issue fields such as Priority and Effort, are defined at the organization level (the docs
   describe them for organizations and say nothing about personal accounts). Where they exist,
   native Priority and Effort are the ranking and size, and the board's own fields cover only what
-  they do not (iteration). While a check or automation still reads the `priority:` label, the
+  they do not (Status). While a check or automation still reads the `priority:` label, the
   label stays required and the two must agree; the sweep reports any that differ. [How we
   work](/docs/process/project-management.md#the-board) says how each is set and what the board shows.
-- **Sprints are a board field.** An iteration field on a project, not a repository feature, so a
-  sprint is independent of milestones and pulls work from any of them.
+- **No time boxes.** We dropped sprints: work starts when someone is free to pull it, so no board
+  field or layer stands for a time slice.
 
 ## Milestone
 
@@ -97,7 +96,7 @@ A body of related issues delivering one capability.
 
 ## Issue and sub-issue
 
-- **An issue is one deliverable,** small enough for one pull request and one sprint. This is the
+- **An issue is one deliverable,** small enough for one pull request. This is the
   INVEST idea of a small, independent, testable story: it can be estimated, delivers value on its
   own, and has acceptance criteria someone else can check.
 - **Every issue has a milestone; an epic above it is optional,** for work with several parts
@@ -108,24 +107,34 @@ A body of related issues delivering one capability.
 - **A child has one parent.** Moving it to another parent is a deliberate change with a comment,
   not a way to group. Use a link in the parent's description for grouping.
 
-## Sprint
+## Flow
 
-A time slice on the board's iteration field, pulling from any milestone.
+Work moves continuously, as in Kanban: a strategy for optimizing the flow of value through a
+process, by showing the work, controlling how much is in progress and managing how it moves
+([the Kanban Guide](https://kanbanguides.org/english/)). Nothing is planned in time slices.
 
-- **The plan names one goal** in a sentence (the Scrum Guide's Sprint Goal): the outcome the pulled
-  work serves. Scope may change during the sprint; the goal stays.
-- **Pull only Ready work,** highest priority first, leaving room for what comes up.
-- **Rollover.** GitHub does not carry unfinished items over for you; items are moved by hand to the
-  next iteration. At the end, work that is not Done is looked at one by one: still the right thing
-  and nearly done moves to the next sprint with a comment on what is left; not started goes back to
-  the backlog and is ordered again; carried twice means it is too big or blocked, so it is split or
-  its blocker is linked. The Scrum Guide's view is the same: unfinished work returns to the backlog
-  for later consideration, it is not counted as done.
+- **Pull, don't push.** When someone is free, they take the highest-priority Ready work. Nobody
+  assigns work ahead of capacity. **Active milestones** are the open outcome milestones: priority
+  decides across all of them, the nearest due date breaks a tie, and the Backlog catch-all
+  comes last.
+
+- **Limit work in progress by the overlap check,** not by a number: a new item starts only when its
+  files and blockers do not collide with what is already in progress
+  ([how we work](/docs/process/project-management.md#grooming-and-work-in-progress)).
+- **Finished work shows as recently done.** The board's Done column and a closed-issue view are the
+  record; no period owns it.
+- **Unfinished work stays where it is.** There is nothing to roll over. An item that sits In
+  progress without movement is a signal to look at: blocked, too big, or abandoned.
+- **We adopt the practices, not all the Guide's measures.** We track neither its flow metrics
+  (throughput, work item age, cycle time) nor a service level expectation; the weekly review reads
+  what shipped and what stalled instead.
+- **Improvement runs on a weekly review** of what shipped and what went wrong, kept apart from the
+  board ([weekly review](/docs/process/weekly-review.md)).
 
 ## Labels and fields
 
 - **Labels classify:** exactly one type, one or more areas, plus the fixed markers in
-  [how we work](/docs/process/project-management.md#labels). No label names a milestone, an epic or a sprint.
+  [how we work](/docs/process/project-management.md#labels). No label names a milestone or an epic.
 - **Priority ranks** and **size estimates** effort. Neither says where work belongs. Within a
   priority, order comes from the position of sub-issues in their epic.
 - **The `epic` marker** is the one label about layers: it says an issue is a parent. Membership
@@ -146,7 +155,7 @@ Work through it in order and stop at the first yes.
 1. **Is it an outcome that several capabilities add up to, with one pass or fail done test?**
    Milestone.
 2. **Is it a capability made of several related deliverables?** Epic.
-3. **Can one person or agent finish it in a sprint with one pull request?** Issue. If not, split it
+3. **Can one person or agent finish it with one pull request?** Issue. If not, split it
    until each piece can.
 4. **For an issue:** does an epic already hold this capability? Make it a sub-issue of that epic.
    Is a capability starting, with more related issues foreseeable? Create the epic. Otherwise it
@@ -160,11 +169,11 @@ Work through it in order and stop at the first yes.
 ## Anti-patterns
 
 - **A milestone named for an activity** (a verb, "refactoring", "phase two"): it has no done test.
-- **A milestone per sprint:** sprints are the board's iteration field, not outcomes.
+- **A milestone shaped like a time slice:** a milestone is an outcome, not a period.
 - **An epic that is really an issue:** one child, or one pull request of work.
-- **An issue that is really an epic:** bigger than one sprint, or needing several pull requests
+- **An issue that is really an epic:** needing several pull requests
   that each deliver something.
-- **Labels that duplicate hierarchy:** a label for a milestone, an epic or a sprint.
+- **Labels that duplicate hierarchy:** a label for a milestone or an epic.
 - **Work under no layer.** Ongoing upkeep has no done state, so it sits in the Backlog milestone,
   never under an invented finish line.
 - **Prose dependencies** and **a second scope list** in an epic body that drifts from the children.
@@ -202,8 +211,8 @@ touched, must not touch, area, priority).
 
 ## Sources
 
-Official GitHub Docs, read for this page (milestones, sub-issues, dependencies, iterations, issue
-types and fields):
+Official GitHub Docs, read for this page (milestones, sub-issues, dependencies, issue types and
+fields):
 
 - Milestones: https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/about-milestones
 - Milestone to issue, one value in the API: https://docs.github.com/en/rest/issues/issues
@@ -211,7 +220,6 @@ types and fields):
 - Sub-issue REST endpoint (`replace_parent`, same owner): https://docs.github.com/en/rest/issues/sub-issues
 - Parent and sub-issue progress in projects: https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-parent-issue-and-sub-issue-progress-fields
 - Dependencies (blocked by, blocking): https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/creating-issue-dependencies
-- Iteration fields: https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-iteration-fields
 - Issue types (organization): https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/managing-issue-types-in-an-organization
 - Issue fields such as Priority and Effort (organization): https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/managing-issue-fields-in-your-organization
 - Issue fields, availability (organizations only): https://github.blog/changelog/2026-07-02-issue-fields-are-now-generally-available
@@ -219,9 +227,10 @@ types and fields):
 Agile references:
 
 - Atlassian, epics, stories and initiatives: https://www.atlassian.com/agile/project-management/epics-stories-themes
-- The Scrum Guide (refinement, Definition of Done, Sprint Goal): https://scrumguides.org/scrum-guide.html
+- The Scrum Guide (refinement, Definition of Done): https://scrumguides.org/scrum-guide.html
+- The Kanban Guide (workflow, controlling work in progress): https://kanbanguides.org/english/
 - INVEST for story size (Bill Wake): https://xp123.com/invest-in-good-stories-and-smart-tasks/
 
 Where the docs are silent we say so rather than assert: they do not state in prose that an issue
-has one milestone or one parent (the API shapes imply both), and they describe no automatic
-carry-over of unfinished iteration items.
+has one milestone or one parent (the API shapes imply both). The Kanban Guide sets no fixed
+meeting cadence and does not mention retrospectives, so the weekly review is our own addition.

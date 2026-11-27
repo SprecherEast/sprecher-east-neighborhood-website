@@ -1,8 +1,14 @@
-import { XMLParser } from 'fast-xml-parser'
-
+import { parseFeed } from './feed.mjs'
 import { collapse, toSourceText } from './text.mjs'
-import { parseCityArticles, parseCityEvents, parseWisdotMeetings } from './html.mjs'
+import {
+  parseCityArticles,
+  parseCityEvents,
+  parseParkStatus,
+  parseParksEvents,
+  parseWisdotMeetings,
+} from './html.mjs'
 import { parseIcs } from './ics.mjs'
+import { parseIncidentReports } from './incidents.mjs'
 import { parseClock, zonedIso } from './time.mjs'
 
 // One parser per source format (scout.md step 4). Each answers raw items: the source's own ID and
@@ -84,51 +90,7 @@ export function parseLegistarMatters(body) {
   }))
 }
 
-const xml = new XMLParser({ ignoreAttributes: false, processEntities: true, trimValues: true })
-const asArray = (value) => (Array.isArray(value) ? value : value === undefined ? [] : [value])
-const textOf = (value) =>
-  typeof value === 'object' && value !== null ? (value['#text'] ?? '') : (value ?? '')
-
-/** RSS 2.0 or Atom news: dedupe on guid or id; a news item has no start. */
-export function parseFeed(body) {
-  const doc = xml.parse(body)
-  const rssItems = asArray(doc?.rss?.channel?.item)
-  const atomItems = asArray(doc?.feed?.entry)
-  const fromRss = rssItems.map((item) => ({
-    ownId: collapse(textOf(item.guid)) || collapse(textOf(item.link)),
-    url: collapse(textOf(item.link)) || null,
-    title: collapse(toSourceText(textOf(item.title))) || 'News',
-    text: textOf(item['content:encoded']) || textOf(item.description),
-    modified: textOf(item.pubDate) || null,
-  }))
-  const fromAtom = atomItems.map((entry) => {
-    const link = asArray(entry.link).find((l) => !l['@_rel'] || l['@_rel'] === 'alternate')
-    return {
-      ownId: collapse(textOf(entry.id)),
-      url: link?.['@_href'] ?? null,
-      title: collapse(toSourceText(textOf(entry.title))) || 'News',
-      text: textOf(entry.content) || textOf(entry.summary),
-      modified: textOf(entry.updated) || null,
-    }
-  })
-  return [...fromRss, ...fromAtom]
-    .filter((item) => item.ownId)
-    .map((item) => ({
-      ownId: item.ownId,
-      kind: 'news',
-      title: item.title,
-      sourceText: toSourceText(item.text),
-      startsAt: null,
-      endsAt: null,
-      allDay: null,
-      locationText: null,
-      sourceStatus: 'unknown',
-      url: item.url,
-      modified: item.modified,
-    }))
-}
-
-export { parseIcs }
+export { parseFeed, parseIcs }
 
 export const PARSERS = {
   'legistar-events': parseLegistarEvents,
@@ -136,8 +98,18 @@ export const PARSERS = {
   // HTML pages with no feed (#390): each page's own markup
   'district16-blog': parseCityArticles,
   'city-news': parseCityArticles,
+  // The City news list filtered to street and lane closures: the same markup as City news (#994)
+  'city-traffic-engineering-news': parseCityArticles,
   'city-public-info-meetings': parseCityEvents,
   'wisdot-i39-90-94': parseWisdotMeetings,
+  // Park and community pages (#995)
+  'madison-parks-events': parseParksEvents,
+  'mpo-events': parseCityEvents,
+  'alder-weekly-roundups': parseCityArticles,
+  'door-creek-park-ski': parseParkStatus,
+  'door-creek-park-ice': parseParkStatus,
+  // The police feed's own layout: the block address, and the report's page as its identity (#993)
+  'madison-police-incident-reports': parseIncidentReports,
 }
 
 /** The parser for a source: by id when it has its own, else by format. HTML needs its own. */
