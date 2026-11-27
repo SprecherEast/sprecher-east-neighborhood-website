@@ -1,7 +1,7 @@
 import { loadBoundary } from '../lib/boundary.mjs'
 import { createPlacer } from '../lib/place.mjs'
 import { candidate, verification } from './fixtures.mjs'
-import { INSIDE, JUST_INSIDE, JUST_OUTSIDE } from './geoFixtures.mjs'
+import { INSIDE, JUST_INSIDE, JUST_OUTSIDE, PARK_SOUTH_ACCESS } from './geoFixtures.mjs'
 import { contract, intelligenceDir } from './helpers.mjs'
 
 // Doubles for the placement tests (#1009): the real boundary copy, a geocoder that answers from a
@@ -11,6 +11,7 @@ export const record = contract.area.boundary
 export const boundary = loadBoundary(intelligenceDir, record)
 const POINTS = {
   '7035 Littlemore Dr': INSIDE,
+  '7202 Cottage Grove Rd': PARK_SOUTH_ACCESS,
   '100 Inside Edge Rd': JUST_INSIDE,
   '200 Outside Edge Rd': JUST_OUTSIDE,
 }

@@ -6,6 +6,9 @@ version: 1
 # In or bounding the area (coverage.md, "The area" and "Tiers").
 places:
   - sprecher
+  # Door Creek Park: the shelter and the northern part are inside, the southern end is outside
+  # (coverage.md, "Facts to keep straight"). The word can't split the park, so a text naming only
+  # the park counts as the area; an address is decided by the boundary below.
   - door creek
   - cottage grove road
   - cottage grove rd
