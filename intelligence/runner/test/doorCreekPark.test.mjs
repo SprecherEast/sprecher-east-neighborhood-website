@@ -19,14 +19,23 @@ const tierRow = (tier) =>
 describe('the tier of Door Creek Park', () => {
   it('is core for the shelter and the northern part in the policy, and the park is not listed as nearby', () => {
     assert.match(tierRow('core'), /Door Creek Park/)
-    assert.match(tierRow('core'), /shelter/)
-    assert.match(tierRow('core'), /northern part/)
-    assert.match(tierRow('core'), /southern end/)
+    // The meaning, not the words: the shelter and the northern part are in, the southern end is not
+    assert.match(
+      tierRow('core'),
+      /shelter and northern part count as inside; its southern end does not/,
+    )
     assert.doesNotMatch(tierRow('catchment'), /Door Creek Park/)
   })
 
   it('says how an item that names only the park is read', () => {
-    assert.match(contract.coverage, /naming only\s+"Door Creek\s+Park" keeps `core`/)
+    assert.match(contract.coverage, /naming only\s+"Door Creek\s+Park" keeps `core` by word match/)
+  })
+
+  it('says what an address at the southern end does: decided by the boundary, then review', () => {
+    assert.match(
+      contract.coverage,
+      /becomes `unknown` with `ambiguous-location` and goes\s+to review/,
+    )
   })
 
   it('has a shelter inside and a southern access point outside the City’s boundary copy', () => {

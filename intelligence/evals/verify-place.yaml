@@ -83,7 +83,7 @@ cases:
       }
     graders:
       - { check: equals, field: $.placement.method, value: word-match }
-    why: The park is mostly inside the area (coverage.md), so naming it alone is read as the shelter's park and stays core; with no street address the word match stands and says so.
+    why: The shelter and the northern part of the park are inside the area (coverage.md), and the files can't split the park by name, so naming it alone stays core and an editor reads the place; with no street address the word match stands and says so.
   - id: verify-place-park-south-access-outside
     stage: verify
     tags: [place, boundary]
