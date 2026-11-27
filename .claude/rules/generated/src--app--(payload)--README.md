@@ -36,7 +36,7 @@ The routes Payload generates and serves under `src/app/(payload)/`: the admin pa
 ## Rules and the tests that protect them
 
 - **The API carries the same access rules as the admin:** a visitor reads published documents only, and a non-staff create becomes a held suggestion (`src/payload.config.roles.test.ts`, `src/payload.config.protectedFields.test.ts`, `src/payload.config.reviewQueueApi.test.ts`).
-- **Every `/api/` answer but an upload under `/api/media/file/` says `X-Robots-Tag: noindex`** (`API_HEADERS` in `next.config.js`), which only asks search engines to skip it; access rules keep data private. Payload's own headers apply too, with `Critical-CH` moved to the admin path only (`criticalHintForAdminOnly`); the pages that refuse framing are in the [accounts note](/src/modules/accounts/README.md) (`src/app/apiHeaders.test.ts`, `src/app/criticalHint.test.ts`).
+- **Answers under `/api/` say `X-Robots-Tag: noindex`** (`API_HEADERS`, pattern `/api/:path((?!media/file/).*)` in `next.config.js`): not a path starting `/api/media/file/` (uploads, kept indexable for image search), not a bare `/api`, and no page outside `/api/`. It only asks search engines to skip it; access rules keep data private. Payload's own headers apply too, with `Critical-CH` moved to the admin path only (`criticalHintForAdminOnly`); the pages that refuse framing are in the [accounts note](/src/modules/accounts/README.md) (`src/app/apiHeaders.test.ts`, `src/app/criticalHint.test.ts`).
 
 ## Boundaries
 
