@@ -74,15 +74,13 @@ describe('readExamples: other ways to the environment, the machine or the page',
       "const h = ' JavaScript:void(0)'",
       'const h = `javascript:${1}`',
     ]) {
-      expect(() => inRender(use), use).toThrow(/A: (uses|passes|has) /)
+      expect(() => inRender(use), use).toThrow(/A: (uses|passes|has|reaches) /)
     }
   })
 
   it('accepts the elements and strings an example really draws', () => {
     expect(() =>
-      inRender(
-        'const a = \'a javascript: note\'; return <div><span>x</span><a href="/news">y</a></div>',
-      ),
+      inRender("const a = 'a javascript: note'; return <div><span>x</span><p>y</p></div>"),
     ).not.toThrow()
   })
 

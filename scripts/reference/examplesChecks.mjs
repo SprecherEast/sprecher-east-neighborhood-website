@@ -1,23 +1,17 @@
 /**
  * What the reader holds an examples file to (#1532): the shape of an example's settings and the
- * allow-list of what a file may import or touch, so a static export can draw it. The lists are
- * refused by default; widening one is a reviewed change to this file.
+ * names it may not touch (imports are in `examplesImports.mjs`, markup in `examplesMarkup.mjs`). This
+ * guards against mistakes; it is not a sandbox.
  */
-import path from 'node:path'
 import ts from 'typescript'
+
+import { checkMarkup } from './examplesMarkup.mjs'
 
 export const PURPOSE_LIMIT = 120
 export const SETTING_DEFAULTS = { boolean: 'boolean', text: 'string', choice: 'string' }
 export const EXAMPLE_KEYS = ['purpose', 'of', 'settings', 'render']
 export const SETTING_KEYS = ['kind', 'default', 'options', 'description']
 export const COMPONENT_NAME = /^[A-Z][A-Za-z0-9]*$/
-// What an example may import besides the component files beside it: React, the icons, the kit
-export const PACKAGES_ALLOWED = new Set(['react', 'lucide-react'])
-const KIT_PREFIX = '@/platform/ui/'
-// One step of a path: a name with dots inside (`Tabs.client`), never empty, `.`, `..` or hidden
-const PATH_STEP = /^\w[\w-]*(\.\w[\w-]*)*$/
-const HIDDEN = new Set(['constructor', '__proto__'])
-export const FORMAT = new Set(['./example', '@/platform/ui/example'])
 // Names that reach the environment, the machine, the network, the page or a timer: no example
 // needs one. This guards against mistakes; it is not a sandbox (an example is code that runs at
 // build time, so review stays the control)
@@ -69,21 +63,17 @@ const FORBIDDEN = new Set([
   'requestAnimationFrame',
   'requestIdleCallback',
   'cancelAnimationFrame',
+  'RTCPeerConnection',
+  'WebTransport',
+  'fetchLater',
+  'cookieStore',
+  'CSS',
+  'alert',
+  'confirm',
+  'prompt',
+  'Audio',
+  'Notification',
 ])
-// Markup that loads or runs something, or injects it: a static page has no use for any of it
-const ELEMENTS_FORBIDDEN = new Set([
-  'script',
-  'iframe',
-  'object',
-  'embed',
-  'link',
-  'meta',
-  'base',
-  'form',
-])
-const INJECTION = 'dangerouslySetInnerHTML'
-const SCRIPT_URL = /^\s*javascript:/i
-
 /** The value of a literal in the source: text, number, boolean, list or object of those. */
 export function literal(node) {
   if (ts.isStringLiteralLike(node)) return node.text
@@ -148,33 +138,6 @@ export const isNameOnly = (node) =>
   ((ts.isPropertyAssignment(node.parent) || ts.isJsxAttribute(node.parent)) &&
     node.parent.name === node)
 
-/**
- * Whether a specifier names a safe kit file: `@/platform/ui/` and then plain names, so a `.` or
- * `..` step (or an empty or escaped one) can never walk out of the kit. `isKitFile` is given the
- * repository path (`src/platform/ui/chart/BarTrack.tsx`) and says whether it is on the safe list.
- */
-export function kitAllowed(specifier, isKitFile) {
-  if (!specifier.startsWith(KIT_PREFIX)) return false
-  const steps = specifier.slice(KIT_PREFIX.length).split('/')
-  return (
-    steps.every((step) => PATH_STEP.test(step)) &&
-    isKitFile(`src/platform/ui/${steps.join('/')}.tsx`)
-  )
-}
-
-/**
- * Whether a relative import reaches a file in the same folder that is on the safe list
- * (`isKitFile`), or the format's own file. The safe list is the only list: an examples file sits
- * beside its component, so a relative path is as much a way to `AdminBar` or `RichText` as an
- * alias is, in the kit's folder and in rich text's alike.
- */
-export function relativeAllowed(specifier, file, isKitFile) {
-  const folder = path.posix.dirname(file)
-  const target = path.posix.normalize(path.posix.join(folder, specifier))
-  if (path.posix.dirname(target) !== folder) return false
-  return target === 'src/platform/ui/example' || isKitFile(`${target}.tsx`)
-}
-
 /** The line of a node, counted from 1. */
 export const lineOf = (node, sourceFile) =>
   sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1
@@ -202,27 +165,5 @@ export function checkNode(node, sourceFile, fail, owner) {
   if (ts.isIdentifier(node) && FORBIDDEN.has(node.text) && !isNameOnly(node)) {
     fail(`${owner}references ${node.text} ${at}`)
   }
-  const tag = ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node) ? node.tagName : null
-  if (tag && ts.isIdentifier(tag) && ELEMENTS_FORBIDDEN.has(tag.text)) {
-    fail(`${owner}uses <${tag.text}>, which loads or runs something ${at}`)
-  }
-  if (ts.isIdentifier(node) && node.text === INJECTION) {
-    fail(`${owner}uses ${INJECTION} ${at}`)
-  }
-  if (ts.isStringLiteralLike(node) && SCRIPT_URL.test(node.text)) {
-    fail(`${owner}has a javascript: address ${at}`)
-  }
-  if (ts.isTemplateExpression(node) && SCRIPT_URL.test(node.head.text)) {
-    fail(`${owner}has a javascript: address ${at}`)
-  }
-  // Every way to a constructor or the prototype is a way to the Function constructor, so none is allowed
-  const hidden = ts.isIdentifier(node) || ts.isStringLiteralLike(node) ? node.text : ''
-  if (
-    HIDDEN.has(hidden) &&
-    (ts.isIdentifier(node) ||
-      ts.isElementAccessExpression(node.parent) ||
-      ts.isComputedPropertyName(node.parent))
-  ) {
-    fail(`${owner}reaches ${hidden} ${at}`)
-  }
+  checkMarkup(node, sourceFile, fail, owner, at)
 }

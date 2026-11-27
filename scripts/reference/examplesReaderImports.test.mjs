@@ -90,6 +90,19 @@ describe('readExamples: what an example may import', () => {
     expect(importing("import { BarTrack } from '../ui/chart/BarTrack'")).toThrow(/imports/)
   })
 
+  it("judges ./example like any relative import: only the kit's own format file is the format", () => {
+    const text = `import { defineExample } from './example'\nexport const A = defineExample({ purpose: 'x', render: () => null })\n`
+    const readIn = (file) => () => readExamples(text, file)
+    expect(readIn('src/platform/ui/Thing.examples.tsx')).not.toThrow()
+    for (const file of [
+      'src/platform/richtext/RichText.examples.tsx',
+      'src/platform/richtext/editorial/FactTabs.examples.tsx',
+      'src/platform/ui/chart/BarTrack.examples.tsx',
+    ]) {
+      expect(readIn(file), file).toThrow(/imports \.\/example; an examples file may import only/)
+    }
+  })
+
   it('judges a kit specifier by its steps alone: no step may be empty, a dot or a double dot', () => {
     // With every file counted as safe, only the shape of the specifier can refuse these
     const everything = (line) => () =>
