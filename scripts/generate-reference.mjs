@@ -32,15 +32,15 @@ import {
   renderCoverage,
 } from './reference/coverage.mjs'
 import { COMPONENT_GROUPS } from './reference/componentGroups.mjs'
+import { describeComponents, findUsers } from './reference/components.mjs'
 import {
-  describeComponents,
-  findUsers,
   groupComponents,
   renderComponentIndex,
   renderComponentPage,
-} from './reference/components.mjs'
+} from './reference/componentPages.mjs'
 import { renderApi } from './reference/endpointsPage.mjs'
 import { renderJobs } from './reference/jobsPage.mjs'
+import { resolverFor, safeKitFiles } from './reference/kitFiles.mjs'
 import { listFiles } from './reference/listFiles.mjs'
 import { loadFacts } from './reference/loadFacts.mjs'
 import { renderMcp } from './reference/mcpTools.mjs'
@@ -58,6 +58,10 @@ const OUTPUT = 'docs/reference'
 /** The showcase index (#1532): data for the developer site's showcase pages and its coverage check */
 const SHOWCASE_INDEX = 'showcase-index.json'
 
+/** The text of a file under the repository, or `undefined` when it is not there. */
+const readIfThere = (file) =>
+  fs.existsSync(path.join(ROOT, file)) ? fs.readFileSync(path.join(ROOT, file), 'utf8') : undefined
+
 function buildComponentPages({ program, fileNames }) {
   const files = componentSourceFiles(fileNames)
   const components = describeComponents(program, ROOT, files)
@@ -66,11 +70,13 @@ function buildComponentPages({ program, fileNames }) {
   const index = buildShowcaseIndex({
     groups,
     users,
-    readFile: (file) =>
-      fs.existsSync(path.join(ROOT, file))
-        ? fs.readFileSync(path.join(ROOT, file), 'utf8')
-        : undefined,
+    readFile: readIfThere,
     exampleFiles: examplesSourceFiles(fileNames, ROOT),
+    kitFiles: safeKitFiles({
+      files: fileNames.map((file) => path.relative(ROOT, file).split(path.sep).join('/')),
+      readFile: readIfThere,
+      resolve: resolverFor(ROOT, program.getCompilerOptions()),
+    }),
   })
   const pages = new Map([
     ['components/README.md', renderComponentIndex(groups, index.coverage)],

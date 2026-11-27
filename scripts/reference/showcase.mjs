@@ -11,7 +11,7 @@ import { generatedNotice } from '../content-types/render.mjs'
 import { examplesFilesFor, readExamples } from './examplesReader.mjs'
 
 /** The examples of each component file: read from its server and client examples files. */
-function readFileExamples({ all, readFile, isComponentFile }) {
+function readFileExamples({ all, readFile, isComponentFile, isKitFile }) {
   const byFile = new Map()
   for (const file of new Set(all.map(({ component }) => component.file))) {
     const names = all
@@ -23,7 +23,7 @@ function readFileExamples({ all, readFile, isComponentFile }) {
     for (const { file: examplesFile } of examplesFilesFor(file)) {
       const text = readFile(examplesFile)
       if (text === undefined) continue
-      for (const example of readExamples(text, examplesFile, { isComponentFile })) {
+      for (const example of readExamples(text, examplesFile, { isComponentFile, isKitFile })) {
         const named = [example.of ?? primary].flat()
         for (const name of named) {
           if (!names.includes(name)) {
@@ -49,9 +49,10 @@ function readFileExamples({ all, readFile, isComponentFile }) {
 /**
  * The index: `groups` are the reference's groups with their described components, `users` maps a
  * component name to the files that import it, `readFile` gives a file's text or `undefined`, and
- * `exampleFiles` lists every examples file in the kit, so one beside no component fails.
+ * `exampleFiles` lists every examples file in the kit, so one beside no component fails, and
+ * `kitFiles` is the set of kit files an example may import (`kitFiles.mjs`).
  */
-export function buildShowcaseIndex({ groups, users, readFile, exampleFiles }) {
+export function buildShowcaseIndex({ groups, users, readFile, exampleFiles, kitFiles }) {
   const all = groups.flatMap((group) => group.components.map((component) => ({ group, component })))
   const componentFiles = new Set(all.map(({ component }) => component.file))
   const claimed = new Set(
@@ -64,6 +65,7 @@ export function buildShowcaseIndex({ groups, users, readFile, exampleFiles }) {
     all,
     readFile,
     isComponentFile: (file) => componentFiles.has(file),
+    isKitFile: (file) => kitFiles.has(file),
   })
 
   const components = all.map(({ group, component }) => {

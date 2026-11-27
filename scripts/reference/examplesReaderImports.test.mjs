@@ -11,6 +11,7 @@ describe('readExamples: what an example may import', () => {
       "import React from 'react'",
       "import { ArrowRight } from 'lucide-react'",
       "import { Button } from '@/platform/ui/Button'",
+      "import { BarTrack } from '@/platform/ui/chart/BarTrack'",
       "import type { ButtonProps } from '@/platform/ui/Button'",
       "import { Tabs } from './Tabs.client'",
     ]) {
@@ -40,6 +41,32 @@ describe('readExamples: what an example may import', () => {
       "import { h } from './Thing.test'",
       "import { h } from './Other.stories'",
       "import { h } from '../ui/Button'",
+    ]) {
+      expect(importing(line), line).toThrow(/imports .*; an examples file may import only/)
+    }
+  })
+
+  it('refuses a kit specifier that walks out of the kit or names a file that is not a safe component', () => {
+    for (const line of [
+      "import { x } from '@/platform/ui/../../modules/accounts/cms/x'",
+      "import x from '@/platform/ui/../lib/foo'",
+      "import x from '@/platform/ui/./Button'",
+      "import x from '@/platform/ui/chart/../Button'",
+      "import x from '@/platform/ui/chart/..'",
+      "import x from '@/platform/ui//Button'",
+      "import x from '@/platform/ui/Button/'",
+      "import x from '@/platform/ui/%2e%2e/lib/foo'",
+      "import x from '@/platform/ui\\..\\lib\\foo'",
+      "import x from '@/platform/ui'",
+      "import x from '@/platform/ui/'",
+      "import x from '@/platform/ui/.hidden'",
+      "import x from '@/platform/uikit/Button'",
+      "import x from '@/platform/ui/AdminBar.client'",
+      "import x from '@/platform/ui/testing/renderServer'",
+      "import x from '@/platform/ui/Button.test'",
+      "import x from '@/platform/ui/Button.stories'",
+      "import x from '@/platform/ui/cn'",
+      "export { x } from '@/platform/ui/../lib/foo'",
     ]) {
       expect(importing(line), line).toThrow(/imports .*; an examples file may import only/)
     }

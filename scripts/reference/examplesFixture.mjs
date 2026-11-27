@@ -3,8 +3,13 @@ import { readExamples as readWith } from './examplesReader.mjs'
 
 // A relative import may reach only a component file of this made-up kit
 const COMPONENTS = ['Thing', 'Tabs.client', 'Button'].map((name) => `src/platform/ui/${name}.tsx`)
+// The kit files an example may import: the made-up kit's safe ones (`kitFiles.mjs` computes the real list)
+const KIT_FILES = [...COMPONENTS, 'src/platform/ui/chart/BarTrack.tsx']
 export const readExamples = (text, file) =>
-  readWith(text, file, { isComponentFile: (f) => COMPONENTS.includes(f) })
+  readWith(text, file, {
+    isComponentFile: (f) => COMPONENTS.includes(f),
+    isKitFile: (f) => KIT_FILES.includes(f),
+  })
 
 export const FILE = 'src/platform/ui/Thing.examples.tsx'
 export const CLIENT_FILE = 'src/platform/ui/Thing.examples.client.tsx'

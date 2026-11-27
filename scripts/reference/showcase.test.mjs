@@ -69,6 +69,7 @@ const build = (overrides = {}) =>
     users,
     readFile: (file) => files.get(file),
     exampleFiles: [THING, THING_CLIENT],
+    kitFiles: new Set(['src/platform/ui/Button.tsx']),
     ...overrides,
   })
 
@@ -168,6 +169,16 @@ describe('buildShowcaseIndex', () => {
     expect(() => build({ readFile: (f) => (f === THING ? outside : files.get(f)) })).toThrow(
       /imports \.\/Elsewhere/,
     )
+  })
+
+  it('lets an example import a kit component only when it is on the safe list', () => {
+    const kit = (name) => `import { x } from '@/platform/ui/${name}'\n${SERVER}`
+    const reading = (name) => () =>
+      build({ readFile: (f) => (f === THING ? kit(name) : files.get(f)) })
+
+    expect(reading('Button')).not.toThrow()
+    expect(reading('AdminBar.client')).toThrow(/imports @\/platform\/ui\/AdminBar\.client/)
+    expect(reading('../lib/foo')).toThrow(/imports @\/platform\/ui\/\.\.\/lib\/foo/)
   })
 
   it('is the same text every time, indented by two, with the generated notice first', () => {

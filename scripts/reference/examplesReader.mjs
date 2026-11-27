@@ -10,12 +10,12 @@ import {
   COMPONENT_NAME,
   EXAMPLE_KEYS,
   FORMAT,
-  KIT,
   PACKAGES_ALLOWED,
   PURPOSE_LIMIT,
   checkNode,
   checkServerOnly,
   checkSettings,
+  kitAllowed,
   lineOf,
   literal,
   relativeAllowed,
@@ -139,10 +139,15 @@ function readExample(statement, declaration, sourceFile, fail, helpers) {
 /**
  * The examples of one file, in file order, with the file's `kind`: `client` for `*.examples.client.tsx`
  * (which starts with `'use client'`), `server` otherwise. `file` is the path under the repository.
- * `isComponentFile` says which paths are component files, the only relative imports allowed.
+ * `isComponentFile` says which paths are component files, the only relative imports allowed;
+ * `isKitFile` says which kit files may be imported by `@/platform/ui/…` (`kitFiles.mjs`; none by default).
  * Every export must be `defineExample({ purpose, render, settings?, of? })`; anything else fails.
  */
-export function readExamples(text, file, { isComponentFile = isComponentSourceFile } = {}) {
+export function readExamples(
+  text,
+  file,
+  { isComponentFile = isComponentSourceFile, isKitFile = () => false } = {},
+) {
   const fail = (message) => {
     throw new Error(`${file}: ${message}`)
   }
@@ -185,11 +190,12 @@ export function readExamples(text, file, { isComponentFile = isComponentSourceFi
     if (specifier !== false && specifier !== undefined) {
       const allowed =
         PACKAGES_ALLOWED.has(specifier) ||
-        KIT.test(specifier) ||
+        FORMAT.has(specifier) ||
+        kitAllowed(specifier, isKitFile) ||
         (specifier.startsWith('./') && relativeAllowed(specifier, file, isComponentFile))
       if (!allowed) {
         fail(
-          `imports ${specifier}; an examples file may import only react, lucide-react, the kit (@/platform/ui/…) and the component files beside it`,
+          `imports ${specifier}; an examples file may import only react, lucide-react, the kit components on the safe list (@/platform/ui/<name>) and the component files beside it`,
         )
       }
       const named = ts.isImportDeclaration(statement) && statement.importClause?.namedBindings

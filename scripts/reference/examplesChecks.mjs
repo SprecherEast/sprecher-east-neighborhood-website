@@ -13,10 +13,45 @@ export const SETTING_KEYS = ['kind', 'default', 'options', 'description']
 export const COMPONENT_NAME = /^[A-Z][A-Za-z0-9]*$/
 // What an example may import besides the component files beside it: React, the icons, the kit
 export const PACKAGES_ALLOWED = new Set(['react', 'lucide-react'])
-export const KIT = /^@\/platform\/ui(\/[\w.-]+)*$/
+const KIT_PREFIX = '@/platform/ui/'
+// One step of a path: a name with dots inside (`Tabs.client`), never empty, `.`, `..` or hidden
+const PATH_STEP = /^\w[\w-]*(\.\w[\w-]*)*$/
+const HIDDEN = new Set(['constructor', '__proto__'])
 export const FORMAT = new Set(['./example', '@/platform/ui/example'])
-// Names that reach the environment, the network or the page: no example needs one
+// Names that reach the environment, the machine, the network, the page or a timer: no example
+// needs one. This guards against mistakes; it is not a sandbox (an example is code that runs at
+// build time, so review stays the control)
 const FORBIDDEN = new Set([
+  'global',
+  'module',
+  'exports',
+  'Buffer',
+  '__dirname',
+  '__filename',
+  'Reflect',
+  'Proxy',
+  'Worker',
+  'SharedWorker',
+  'Deno',
+  'Bun',
+  'localStorage',
+  'sessionStorage',
+  'indexedDB',
+  'caches',
+  'location',
+  'history',
+  'navigator',
+  'top',
+  'parent',
+  'frames',
+  'opener',
+  'setTimeout',
+  'setInterval',
+  'setImmediate',
+  'queueMicrotask',
+  'importScripts',
+  'postMessage',
+  'BroadcastChannel',
   'process',
   'fetch',
   'XMLHttpRequest',
@@ -95,6 +130,20 @@ export const isNameOnly = (node) =>
   ((ts.isPropertyAssignment(node.parent) || ts.isJsxAttribute(node.parent)) &&
     node.parent.name === node)
 
+/**
+ * Whether a specifier names a safe kit file: `@/platform/ui/` and then plain names, so a `.` or
+ * `..` step (or an empty or escaped one) can never walk out of the kit. `isKitFile` is given the
+ * repository path (`src/platform/ui/chart/BarTrack.tsx`) and says whether it is on the safe list.
+ */
+export function kitAllowed(specifier, isKitFile) {
+  if (!specifier.startsWith(KIT_PREFIX)) return false
+  const steps = specifier.slice(KIT_PREFIX.length).split('/')
+  return (
+    steps.every((step) => PATH_STEP.test(step)) &&
+    isKitFile(`src/platform/ui/${steps.join('/')}.tsx`)
+  )
+}
+
 /** Whether a relative import reaches a component file in the same folder, or the format's own file. */
 export function relativeAllowed(specifier, file, isComponentFile) {
   const folder = path.posix.dirname(file)
@@ -129,5 +178,15 @@ export function checkNode(node, sourceFile, fail, owner) {
   if (ts.isMetaProperty(node)) fail(`${owner}import.meta is not allowed ${at}`)
   if (ts.isIdentifier(node) && FORBIDDEN.has(node.text) && !isNameOnly(node)) {
     fail(`${owner}references ${node.text} ${at}`)
+  }
+  // Every way to a constructor or the prototype is a way to the Function constructor, so none is allowed
+  const hidden = ts.isIdentifier(node) || ts.isStringLiteralLike(node) ? node.text : ''
+  if (
+    HIDDEN.has(hidden) &&
+    (ts.isIdentifier(node) ||
+      ts.isElementAccessExpression(node.parent) ||
+      ts.isComputedPropertyName(node.parent))
+  ) {
+    fail(`${owner}reaches ${hidden} ${at}`)
   }
 }
