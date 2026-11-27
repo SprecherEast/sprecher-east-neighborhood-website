@@ -106,6 +106,10 @@ Source: `src/platform/ui/Field.client.tsx`
 
 289 more props from package types (HTML attributes and the like) are not listed.
 
+### `Field.Switch`
+
+No props.
+
 **Used by** (direct imports):
 
 - Modules: `accounts`, `contact`, `news`

@@ -10,6 +10,7 @@ export const GALLERY_COMPONENTS = [
   'BrandLogo',
   'TextDivider',
   'Field',
+  'Switch',
   'Form',
   'Badge',
   'Card',

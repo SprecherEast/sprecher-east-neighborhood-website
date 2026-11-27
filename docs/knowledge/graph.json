@@ -2772,6 +2772,19 @@
       "links": []
     },
     {
+      "id": "business-rule:src/platform/ui/README.md#10",
+      "type": "business-rule",
+      "name": "**Toasts sit under the sticky header in the page** and above…",
+      "summary": "**Toasts sit under the sticky header in the page** and above everything at the screen's bottom (`Toast.client.tsx`, #1392; `Toast.client.test.tsx`). Each component's behavior and accessibility: its `*.test.tsx` beside it.",
+      "path": "src/platform/ui/Toast.client.test.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/platform/ui/Toast.client.test.tsx"]
+    },
+    {
       "id": "business-rule:src/platform/ui/README.md#2",
       "type": "business-rule",
       "name": "**A `Disclosure` a reader opens is scrolled into view** just far…",
@@ -2860,6 +2873,19 @@
     {
       "id": "business-rule:src/platform/ui/README.md#8",
       "type": "business-rule",
+      "name": "**`Switch` is a native switch button, not a styled box:** Radix's…",
+      "summary": "**`Switch` is a native switch button, not a styled box:** Radix's switch role gives Space, Enter and the announced on or off state, its label (visible, or `hideLabel` for screen readers only) names it and takes the press too, and the 44 px tap area (`TOUCH_TARGET` in `touchTarget.ts`, shared with `Field.Checkbox` and measured in a browser by `e2e/touchTargets.spec.ts`), the thumb's reversed slide in a right-to-left page and the stilled motion under reduced motion are classes the test pins; `Field.Switch` is the same switch under a `Field` (`Switch.client.tsx`, `FieldSwitch.client.tsx`, #1529; `Switch.client.test.tsx`).",
+      "path": "src/platform/ui/Switch.client.test.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/platform/ui/Switch.client.test.tsx"]
+    },
+    {
+      "id": "business-rule:src/platform/ui/README.md#9",
+      "type": "business-rule",
       "name": "**`Button` with `loading` ignores clicks but stays focusable;**…",
       "summary": "**`Button` with `loading` ignores clicks but stays focusable;** `ProgressBar` needs a `label` and clamps its value (`Button.tsx`, `ProgressBar.tsx`, #939); `Alert` announces itself unless `live={false}` (`Alert.tsx`).",
       "path": "src/platform/ui/README.md",
@@ -2869,19 +2895,6 @@
       "facts": [],
       "watchOuts": [],
       "links": []
-    },
-    {
-      "id": "business-rule:src/platform/ui/README.md#9",
-      "type": "business-rule",
-      "name": "**Toasts sit under the sticky header in the page** and above…",
-      "summary": "**Toasts sit under the sticky header in the page** and above everything at the screen's bottom (`Toast.client.tsx`, #1392; `Toast.client.test.tsx`). Each component's behavior and accessibility: its `*.test.tsx` beside it.",
-      "path": "src/platform/ui/Toast.client.test.tsx",
-      "module": "platform-area:ui",
-      "aliases": [],
-      "fields": [],
-      "facts": [],
-      "watchOuts": [],
-      "links": ["src/platform/ui/Toast.client.test.tsx"]
     },
     {
       "id": "business-rule:src/platform/ui/chart/README.md#1",
@@ -10916,6 +10929,19 @@
       "links": []
     },
     {
+      "id": "library:@radix-ui/react-switch",
+      "type": "library",
+      "name": "@radix-ui/react-switch",
+      "summary": "",
+      "path": "package.json",
+      "module": "group:libraries",
+      "aliases": [],
+      "fields": [],
+      "facts": [{ "label": "Version", "value": "1.4.1" }],
+      "watchOuts": [],
+      "links": []
+    },
+    {
       "id": "library:@radix-ui/react-tabs",
       "type": "library",
       "name": "@radix-ui/react-tabs",
@@ -13310,7 +13336,7 @@
       "facts": [
         {
           "label": "Loads when work touches",
-          "value": "src/platform/ui/AdminBar.client.test.tsx, src/platform/ui/AdminBar.client.tsx, src/platform/ui/AdminBar.scss, src/platform/ui/Alert.stories.tsx, src/platform/ui/Alert.test.tsx, src/platform/ui/Alert.tsx, src/platform/ui/AppLink.tsx, src/platform/ui/ArticlePage.test.tsx, src/platform/ui/ArticlePage.tsx, src/platform/ui/Badge.stories.tsx, src/platform/ui/Badge.test.tsx, src/platform/ui/Badge.tsx, src/platform/ui/BandBackdrop.test.tsx, src/platform/ui/BandBackdrop.tsx, src/platform/ui/BarTrack.test.tsx, src/platform/ui/BarTrack.tsx, src/platform/ui/BrandLogo.test.tsx, src/platform/ui/BrandLogo.tsx, src/platform/ui/Breadcrumbs.stories.tsx, src/platform/ui/Breadcrumbs.test.tsx, src/platform/ui/Breadcrumbs.tsx, src/platform/ui/Button.stories.tsx, src/platform/ui/Button.test.tsx, src/platform/ui/Button.tsx, src/platform/ui/ButtonRow.test.tsx, src/platform/ui/ButtonRow.tsx, src/platform/ui/CMSLink.test.tsx, src/platform/ui/CMSLink.tsx, src/platform/ui/CancelledBadge.tsx, src/platform/ui/Caption.test.tsx, src/platform/ui/Caption.tsx, src/platform/ui/Card.stories.tsx, src/platform/ui/Card.test.tsx, src/platform/ui/Card.tsx, src/platform/ui/CardGrid.tsx, src/platform/ui/CertaintyBadge.test.tsx, src/platform/ui/CertaintyBadge.tsx, src/platform/ui/ConfirmedEmail.client.tsx, src/platform/ui/DateTime.test.tsx, src/platform/ui/DateTime.tsx, src/platform/ui/DetailLayout.test.tsx, src/platform/ui/DetailLayout.tsx, src/platform/ui/Dialog.client.test.tsx, src/platform/ui/Dialog.client.tsx, src/platform/ui/Disclosure.anchor.test.tsx, src/platform/ui/Disclosure.expand.test.tsx, src/platform/ui/Disclosure.test.tsx, src/platform/ui/Disclosure.tsx, src/platform/ui/DisclosureSummary.client.test.tsx, src/platform/ui/DisclosureSummary.client.tsx, src/platform/ui/Dismissible.client.test.tsx, src/platform/ui/Dismissible.client.tsx, src/platform/ui/EmptyState.test.tsx, src/platform/ui/EmptyState.tsx, src/platform/ui/FeaturedImage.test.tsx, src/platform/ui/FeaturedImage.tsx, src/platform/ui/Field.client.test.tsx, src/platform/ui/Field.client.tsx, src/platform/ui/Field.stories.tsx, src/platform/ui/FieldBar.client.test.tsx, src/platform/ui/FieldCheckbox.client.tsx, src/platform/ui/FieldInput.client.tsx, src/platform/ui/FieldMoney.client.test.tsx, src/platform/ui/FieldMoney.client.tsx, src/platform/ui/FieldSelect.client.tsx, src/platform/ui/FieldTextArea.client.tsx, src/platform/ui/Figure.test.tsx, src/platform/ui/Figure.tsx, src/platform/ui/Form.client.test.tsx, src/platform/ui/Form.client.tsx, src/platform/ui/GlassPanel.test.tsx, src/platform/ui/GlassPanel.tsx, src/platform/ui/ImageCredit.test.tsx, src/platform/ui/ImageCredit.tsx, src/platform/ui/ImageMedia.client.tsx, src/platform/ui/JsonLd.tsx, src/platform/ui/Link.stories.tsx, src/platform/ui/Link.test.tsx, src/platform/ui/Link.tsx, src/platform/ui/LivePreviewListener.client.tsx, src/platform/ui/LoadMore.client.test.tsx, src/platform/ui/LoadMore.client.tsx, src/platform/ui/MapEmbed.client.test.tsx, src/platform/ui/MapEmbed.client.tsx, src/platform/ui/Media.test.tsx, src/platform/ui/Media.tsx, src/platform/ui/MetaBar.test.tsx, src/platform/ui/MetaBar.tsx, src/platform/ui/MetaList.test.tsx, src/platform/ui/MetaList.tsx, src/platform/ui/NavMenu.client.test.tsx, src/platform/ui/NavMenu.client.tsx, src/platform/ui/OnThisPage.client.test.tsx, src/platform/ui/OnThisPage.client.tsx, src/platform/ui/PageBackdrop.test.tsx, src/platform/ui/PageBackdrop.tsx, src/platform/ui/PageHeader.test.tsx, src/platform/ui/PageHeader.tsx, src/platform/ui/ProgressBar.test.tsx, src/platform/ui/ProgressBar.tsx, src/platform/ui/README.md, src/platform/ui/RelatedLinks.test.tsx, src/platform/ui/RelatedLinks.tsx, src/platform/ui/RouteDialog.client.test.tsx, src/platform/ui/RouteDialog.client.tsx, src/platform/ui/Section.stories.tsx, src/platform/ui/Section.test.tsx, src/platform/ui/Section.tsx, src/platform/ui/SegmentedControl.test.tsx, src/platform/ui/SegmentedControl.tsx, src/platform/ui/SidebarCTA.test.tsx, src/platform/ui/SidebarCTA.tsx, src/platform/ui/Tabs.client.test.tsx, src/platform/ui/Tabs.client.tsx, src/platform/ui/Tabs.look.test.tsx, src/platform/ui/Tabs.stories.tsx, src/platform/ui/TabsContentLinks.client.test.tsx, src/platform/ui/TabsLinks.client.test.tsx, src/platform/ui/Text.stories.tsx, src/platform/ui/Text.test.tsx, src/platform/ui/Text.tsx, src/platform/ui/TextDivider.test.tsx, src/platform/ui/TextDivider.tsx, src/platform/ui/Toast.client.test.tsx, src/platform/ui/Toast.client.tsx, src/platform/ui/VersionCheck.client.test.tsx, src/platform/ui/VersionCheck.client.tsx, src/platform/ui/VideoMedia.client.tsx, src/platform/ui/Zoom.client.test.tsx, src/platform/ui/Zoom.client.tsx, src/platform/ui/controlVariants.ts, src/platform/ui/fieldContext.ts, src/platform/ui/formMessages.ts, src/platform/ui/index.ts, src/platform/ui/layoutSizes.test.ts, src/platform/ui/layoutSizes.ts, src/platform/ui/mediaProps.ts, src/platform/ui/motion.client.test.ts, src/platform/ui/motion.client.ts, src/platform/ui/onThisPage.ts, src/platform/ui/reveal.client.test.ts, src/platform/ui/reveal.client.ts, src/platform/ui/revealShift.test.ts, src/platform/ui/revealShift.ts, src/platform/ui/scrollMargin.test.ts, src/platform/ui/scrollMargin.ts, src/platform/ui/useCountedNumber.client.test.tsx, src/platform/ui/useCountedNumber.client.ts, src/platform/ui/useReplayProgress.client.test.ts, src/platform/ui/useReplayProgress.client.ts, src/platform/ui/__snapshots__/**, src/platform/ui/testing/**"
+          "value": "src/platform/ui/AdminBar.client.test.tsx, src/platform/ui/AdminBar.client.tsx, src/platform/ui/AdminBar.scss, src/platform/ui/Alert.stories.tsx, src/platform/ui/Alert.test.tsx, src/platform/ui/Alert.tsx, src/platform/ui/AppLink.tsx, src/platform/ui/ArticlePage.test.tsx, src/platform/ui/ArticlePage.tsx, src/platform/ui/Badge.stories.tsx, src/platform/ui/Badge.test.tsx, src/platform/ui/Badge.tsx, src/platform/ui/BandBackdrop.test.tsx, src/platform/ui/BandBackdrop.tsx, src/platform/ui/BarTrack.test.tsx, src/platform/ui/BarTrack.tsx, src/platform/ui/BrandLogo.test.tsx, src/platform/ui/BrandLogo.tsx, src/platform/ui/Breadcrumbs.stories.tsx, src/platform/ui/Breadcrumbs.test.tsx, src/platform/ui/Breadcrumbs.tsx, src/platform/ui/Button.stories.tsx, src/platform/ui/Button.test.tsx, src/platform/ui/Button.tsx, src/platform/ui/ButtonRow.test.tsx, src/platform/ui/ButtonRow.tsx, src/platform/ui/CMSLink.test.tsx, src/platform/ui/CMSLink.tsx, src/platform/ui/CancelledBadge.tsx, src/platform/ui/Caption.test.tsx, src/platform/ui/Caption.tsx, src/platform/ui/Card.stories.tsx, src/platform/ui/Card.test.tsx, src/platform/ui/Card.tsx, src/platform/ui/CardGrid.tsx, src/platform/ui/CertaintyBadge.test.tsx, src/platform/ui/CertaintyBadge.tsx, src/platform/ui/ConfirmedEmail.client.tsx, src/platform/ui/DateTime.test.tsx, src/platform/ui/DateTime.tsx, src/platform/ui/DetailLayout.test.tsx, src/platform/ui/DetailLayout.tsx, src/platform/ui/Dialog.client.test.tsx, src/platform/ui/Dialog.client.tsx, src/platform/ui/Disclosure.anchor.test.tsx, src/platform/ui/Disclosure.expand.test.tsx, src/platform/ui/Disclosure.test.tsx, src/platform/ui/Disclosure.tsx, src/platform/ui/DisclosureSummary.client.test.tsx, src/platform/ui/DisclosureSummary.client.tsx, src/platform/ui/Dismissible.client.test.tsx, src/platform/ui/Dismissible.client.tsx, src/platform/ui/EmptyState.test.tsx, src/platform/ui/EmptyState.tsx, src/platform/ui/FeaturedImage.test.tsx, src/platform/ui/FeaturedImage.tsx, src/platform/ui/Field.client.test.tsx, src/platform/ui/Field.client.tsx, src/platform/ui/Field.stories.tsx, src/platform/ui/FieldBar.client.test.tsx, src/platform/ui/FieldCheckbox.client.tsx, src/platform/ui/FieldInput.client.tsx, src/platform/ui/FieldMoney.client.test.tsx, src/platform/ui/FieldMoney.client.tsx, src/platform/ui/FieldSelect.client.tsx, src/platform/ui/FieldSwitch.client.tsx, src/platform/ui/FieldTextArea.client.tsx, src/platform/ui/Figure.test.tsx, src/platform/ui/Figure.tsx, src/platform/ui/Form.client.test.tsx, src/platform/ui/Form.client.tsx, src/platform/ui/GlassPanel.test.tsx, src/platform/ui/GlassPanel.tsx, src/platform/ui/ImageCredit.test.tsx, src/platform/ui/ImageCredit.tsx, src/platform/ui/ImageMedia.client.tsx, src/platform/ui/JsonLd.tsx, src/platform/ui/Link.stories.tsx, src/platform/ui/Link.test.tsx, src/platform/ui/Link.tsx, src/platform/ui/LivePreviewListener.client.tsx, src/platform/ui/LoadMore.client.test.tsx, src/platform/ui/LoadMore.client.tsx, src/platform/ui/MapEmbed.client.test.tsx, src/platform/ui/MapEmbed.client.tsx, src/platform/ui/Media.test.tsx, src/platform/ui/Media.tsx, src/platform/ui/MetaBar.test.tsx, src/platform/ui/MetaBar.tsx, src/platform/ui/MetaList.test.tsx, src/platform/ui/MetaList.tsx, src/platform/ui/NavMenu.client.test.tsx, src/platform/ui/NavMenu.client.tsx, src/platform/ui/OnThisPage.client.test.tsx, src/platform/ui/OnThisPage.client.tsx, src/platform/ui/PageBackdrop.test.tsx, src/platform/ui/PageBackdrop.tsx, src/platform/ui/PageHeader.test.tsx, src/platform/ui/PageHeader.tsx, src/platform/ui/ProgressBar.test.tsx, src/platform/ui/ProgressBar.tsx, src/platform/ui/README.md, src/platform/ui/RelatedLinks.test.tsx, src/platform/ui/RelatedLinks.tsx, src/platform/ui/RouteDialog.client.test.tsx, src/platform/ui/RouteDialog.client.tsx, src/platform/ui/Section.stories.tsx, src/platform/ui/Section.test.tsx, src/platform/ui/Section.tsx, src/platform/ui/SegmentedControl.test.tsx, src/platform/ui/SegmentedControl.tsx, src/platform/ui/SidebarCTA.test.tsx, src/platform/ui/SidebarCTA.tsx, src/platform/ui/Switch.client.test.tsx, src/platform/ui/Switch.client.tsx, src/platform/ui/Tabs.client.test.tsx, src/platform/ui/Tabs.client.tsx, src/platform/ui/Tabs.look.test.tsx, src/platform/ui/Tabs.stories.tsx, src/platform/ui/TabsContentLinks.client.test.tsx, src/platform/ui/TabsLinks.client.test.tsx, src/platform/ui/Text.stories.tsx, src/platform/ui/Text.test.tsx, src/platform/ui/Text.tsx, src/platform/ui/TextDivider.test.tsx, src/platform/ui/TextDivider.tsx, src/platform/ui/Toast.client.test.tsx, src/platform/ui/Toast.client.tsx, src/platform/ui/VersionCheck.client.test.tsx, src/platform/ui/VersionCheck.client.tsx, src/platform/ui/VideoMedia.client.tsx, src/platform/ui/Zoom.client.test.tsx, src/platform/ui/Zoom.client.tsx, src/platform/ui/controlVariants.ts, src/platform/ui/fieldContext.ts, src/platform/ui/formMessages.ts, src/platform/ui/index.ts, src/platform/ui/layoutSizes.test.ts, src/platform/ui/layoutSizes.ts, src/platform/ui/mediaProps.ts, src/platform/ui/motion.client.test.ts, src/platform/ui/motion.client.ts, src/platform/ui/onThisPage.ts, src/platform/ui/reveal.client.test.ts, src/platform/ui/reveal.client.ts, src/platform/ui/revealShift.test.ts, src/platform/ui/revealShift.ts, src/platform/ui/scrollMargin.test.ts, src/platform/ui/scrollMargin.ts, src/platform/ui/touchTarget.ts, src/platform/ui/useCountedNumber.client.test.tsx, src/platform/ui/useCountedNumber.client.ts, src/platform/ui/useReplayProgress.client.test.ts, src/platform/ui/useReplayProgress.client.ts, src/platform/ui/__snapshots__/**, src/platform/ui/testing/**"
         }
       ],
       "watchOuts": [],
@@ -15955,7 +15981,7 @@
           "name": "layout",
           "type": "\"inline\" | \"bar\" | \"stacked\"",
           "required": false,
-          "detail": "Defaults to `inline` for a checkbox and `stacked` for anything else; `bar` puts the label above and the control with its `action` on one line under it",
+          "detail": "Defaults to `inline` for a checkbox or switch and `stacked` for anything else; `bar` puts the label above and the control with its `action` on one line under it",
           "notes": ["variant"]
         },
         {
@@ -15998,7 +16024,7 @@
       "facts": [
         {
           "label": "Parts",
-          "value": "Field.Input, Field.Money, Field.TextArea, Field.Select, Field.Checkbox"
+          "value": "Field.Input, Field.Money, Field.TextArea, Field.Select, Field.Checkbox, Field.Switch"
         }
       ],
       "watchOuts": [],
@@ -16155,6 +16181,19 @@
         },
         { "name": "className", "type": "string", "required": false, "detail": "", "notes": [] }
       ],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "shared-component:FieldSwitch",
+      "type": "shared-component",
+      "name": "FieldSwitch",
+      "summary": "An on or off switch for a form; place it inside a `Field`, which then lays out inline with the label after the switch. With react-hook-form, render it through a `Controller` (`checked`, `onCheckedChange`).",
+      "path": "src/platform/ui/FieldSwitch.client.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": []
@@ -18037,6 +18076,132 @@
       "fields": [
         { "name": "steps", "type": "Step[]", "required": true, "detail": "", "notes": [] },
         { "name": "className", "type": "string", "required": false, "detail": "", "notes": [] }
+      ],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "shared-component:Switch",
+      "type": "shared-component",
+      "name": "Switch",
+      "summary": "An on or off switch with its label beside it; pressing the label works too. For a setting that takes effect at once (a light or dark choice). A choice saved with a form goes in a `Field` (`Field.Switch`), which adds a hint and an error. Controlled (`checked`, `onCheckedChange`) or left to itself (`defaultChecked`); `name` and `value` take part in a form.",
+      "path": "src/platform/ui/Switch.client.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [
+        {
+          "name": "checked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off, when the caller holds the value; pair it with `onCheckedChange`",
+          "notes": []
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off to start with, when the switch keeps its own value",
+          "notes": []
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "required": false,
+          "detail": "Called with the new value each time the switch is turned",
+          "notes": []
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "detail": "Greys the switch out and stops it taking a press or a key",
+          "notes": []
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "detail": "The name the value is sent under in a form",
+          "notes": []
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "detail": "What a form receives when the switch is on (`on` when left out)",
+          "notes": []
+        },
+        {
+          "name": "label",
+          "type": "ReactNode",
+          "required": true,
+          "detail": "What the switch turns on or off, in words; it is the switch's name for screen readers",
+          "notes": []
+        },
+        {
+          "name": "hideLabel",
+          "type": "boolean",
+          "required": false,
+          "detail": "Keeps the label for screen readers only, where the context names the switch visually",
+          "notes": []
+        }
+      ],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "shared-component:SwitchControl",
+      "type": "shared-component",
+      "name": "SwitchControl",
+      "summary": "The track and thumb alone, for a `Field` (`Field.Switch`) that supplies the label. A native button with the switch role (Radix), so Space and Enter work and a screen reader hears \"on\" or \"off\". The track is 44 x 24 px; `TOUCH_TARGET` makes the tap area 44 px tall (WCAG 2.5.8). The thumb slides the other way in a right-to-left page, and neither moves under reduced motion.",
+      "path": "src/platform/ui/Switch.client.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [
+        {
+          "name": "checked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off, when the caller holds the value; pair it with `onCheckedChange`",
+          "notes": []
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off to start with, when the switch keeps its own value",
+          "notes": []
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "required": false,
+          "detail": "Called with the new value each time the switch is turned",
+          "notes": []
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "detail": "Greys the switch out and stops it taking a press or a key",
+          "notes": []
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "detail": "The name the value is sent under in a form",
+          "notes": []
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "detail": "What a form receives when the switch is on (`on` when left out)",
+          "notes": []
+        }
       ],
       "facts": [],
       "watchOuts": [],
@@ -20752,7 +20917,7 @@
       "to": "library:react",
       "type": "uses",
       "layer": "libraries",
-      "count": 47,
+      "count": 48,
       "via": []
     },
     {
@@ -20904,7 +21069,7 @@
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
-      "count": 149,
+      "count": 150,
       "via": []
     },
     {
@@ -20984,7 +21149,7 @@
       "to": "shared-component:Button",
       "type": "uses",
       "layer": "ui",
-      "count": 10,
+      "count": 11,
       "via": []
     },
     {
@@ -21382,6 +21547,14 @@
     {
       "from": "feature:app",
       "to": "shared-component:SidebarCTA",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "feature:app",
+      "to": "shared-component:Switch",
       "type": "uses",
       "layer": "ui",
       "count": 1,
@@ -22798,6 +22971,14 @@
     {
       "from": "group:libraries",
       "to": "library:@radix-ui/react-select",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "group:libraries",
+      "to": "library:@radix-ui/react-switch",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -30693,6 +30874,14 @@
     },
     {
       "from": "platform-area:ui",
+      "to": "business-rule:src/platform/ui/README.md#10",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
       "to": "business-rule:src/platform/ui/README.md#2",
       "type": "contains",
       "layer": "structure",
@@ -30837,6 +31026,14 @@
     },
     {
       "from": "platform-area:ui",
+      "to": "library:@radix-ui/react-switch",
+      "type": "uses",
+      "layer": "libraries",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
       "to": "library:@radix-ui/react-tabs",
       "type": "uses",
       "layer": "libraries",
@@ -30912,7 +31109,7 @@
       "to": "library:react",
       "type": "uses",
       "layer": "libraries",
-      "count": 88,
+      "count": 89,
       "via": []
     },
     {
@@ -30952,7 +31149,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 102,
+      "count": 103,
       "via": []
     },
     {
@@ -31269,6 +31466,14 @@
     },
     {
       "from": "platform-area:ui",
+      "to": "shared-component:FieldSwitch",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
       "to": "shared-component:FieldTextArea",
       "type": "contains",
       "layer": "structure",
@@ -31518,6 +31723,22 @@
     {
       "from": "platform-area:ui",
       "to": "shared-component:SliceName",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
+      "to": "shared-component:Switch",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
+      "to": "shared-component:SwitchControl",
       "type": "contains",
       "layer": "structure",
       "count": 1,

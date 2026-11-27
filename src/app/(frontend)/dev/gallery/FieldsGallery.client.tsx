@@ -81,6 +81,9 @@ export function FieldsGallery() {
             <Field label="Checkbox" hint="Inline layout" error={err(withError)}>
               <Field.Checkbox defaultChecked={!withError} />
             </Field>
+            <Field label="Switch" hint="Inline layout" error={err(withError)}>
+              <Field.Switch defaultChecked={!withError} />
+            </Field>
           </GalleryVariant>
         ))}
         <GalleryVariant label="layout bar, actionPlacement inside" className="block max-w-sm">
