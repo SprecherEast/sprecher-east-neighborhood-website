@@ -56,6 +56,23 @@ describe('the token address', () => {
     },
   )
 
+  it.each(['code', 'client_id', 'code_verifier', 'redirect_uri', 'grant_type', 'resource'])(
+    'refuses a repeated %s with invalid_request, not a server error (RFC 6749 section 3.2)',
+    async (name) => {
+      const form = await base()
+      const logged = vi.spyOn(payload.logger, 'error')
+      const answer = await exchange({
+        ...form,
+        [name]: [form[name as keyof typeof form] ?? RESOURCE, 'x'],
+      })
+      expect(answer.status).toBe(400)
+      expect(answer.body.error).toBe('invalid_request')
+      expect(answer.body.access_token).toBeUndefined()
+      expect(logged).not.toHaveBeenCalled()
+      logged.mockRestore()
+    },
+  )
+
   it('refuses a redirect address that differs from the one approved', async () => {
     const form = await base()
     const answer = await exchange({ ...form, redirect_uri: 'https://evil.example/cb' })

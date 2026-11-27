@@ -33,8 +33,10 @@ export const API_HEADERS = [
  * the modern form of `X-Frame-Options: DENY`. A passkey is made, and used to log in, on a page the
  * person sees, and a framed page could be made to look like something else. The account page and
  * the log in page, the two screens that make or use a passkey, and the password step that connects
- * Google (#1338), and the page where an admin allows an AI tool in (#1501): a framed approval
- * button could be clicked by someone who only thinks they are pressing something else. The app sends no other `Content-Security-Policy` and none of its own headers
+ * Google (#1338), and the two pages where an admin allows an AI tool in (#1501), above all the
+ * approval, which reads the session on a request from the same site (a sibling subdomain, such as a
+ * pull request preview, passes that test): a framed approval button could be clicked by someone who
+ * only thinks they are pressing something else. The app sends no other `Content-Security-Policy` and none of its own headers
  * come from a proxy, so this is the one place; Payload adds none for these paths.
  */
 export const NO_FRAMING_PATHS = [
@@ -42,6 +44,7 @@ export const NO_FRAMING_PATHS = [
   '/login',
   '/auth/:provider/connect',
   '/oauth/authorize',
+  '/oauth/approve',
 ]
 export const NO_FRAMING_HEADERS = NO_FRAMING_PATHS.map((source) => ({
   source,

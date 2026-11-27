@@ -39,7 +39,7 @@ export type Beginning =
  * withholds the session on such a visit (Payload ignores the sign-in cookie on a cross-site
  * navigation, as its CSRF protection means it to), so this page reads none and shows nothing about
  * any account: only who is asking, and a link that carries the checked request to the next page,
- * which is opened from our own site and can see who is signed in.
+ * which is opened from this site and can see who is signed in.
  */
 export async function continueAuthorization(
   params: RawParams,
@@ -56,7 +56,7 @@ export async function continueAuthorization(
 }
 
 /**
- * The approval page, opened from the first page on our own site, so the session is read as for
+ * The approval page, opened from the first page on this site, so the session is read as for
  * any page: a visitor is asked to sign in and come back to this same request, only an admin is
  * shown the approval, and the request is checked again from scratch, never trusted for having
  * passed the first page.

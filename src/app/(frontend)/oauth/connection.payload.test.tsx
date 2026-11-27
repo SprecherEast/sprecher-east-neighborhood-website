@@ -135,7 +135,7 @@ describe('the first page, opened from the AI tool', () => {
   })
 })
 
-describe('the approval page, opened from our own site', () => {
+describe('the approval page, opened from this site', () => {
   const approvePath = async () => {
     open('fromTheTool', cookie)
     const page = await html('authorize', query())
@@ -196,7 +196,7 @@ describe('the approval page, opened from our own site', () => {
 })
 
 describe('pressing a button on the approval page', () => {
-  /** The page's server action, as the browser calls it from our own site with the session cookie */
+  /** The page's server action, as the browser calls it from this site with the session cookie */
   const press = async (decision: 'approve' | 'deny') => {
     const { beginAuthorization } = await import('@/modules/agents/server')
     const begun = await beginAuthorization(query(), new Headers(), { id: admin.id, isAdmin: true })

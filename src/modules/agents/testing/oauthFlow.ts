@@ -114,7 +114,10 @@ export type TokenBody = {
   error?: string
 }
 
-export const exchange = async (form: Record<string, string>, headers = new Headers()) => {
+export const exchange = async (
+  form: Record<string, string | string[]>,
+  headers = new Headers(),
+) => {
   const { exchangeToken } = await import('../use-cases/oauth/exchangeToken')
   const answer = await exchangeToken(form, headers)
   return { ...answer, body: answer.body as TokenBody }

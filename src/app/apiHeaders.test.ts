@@ -63,6 +63,7 @@ describe('no framing of the account, log in, connect Google and connect AI tool 
       '/login',
       '/auth/:provider/connect',
       '/oauth/authorize',
+      '/oauth/approve',
     ])
     for (const { source, headers } of NO_FRAMING_HEADERS) {
       expect(NO_FRAMING_PATHS).toContain(source)
@@ -70,7 +71,7 @@ describe('no framing of the account, log in, connect Google and connect AI tool 
     }
   })
 
-  it.each(['/account', '/login', '/auth/google/connect', '/oauth/authorize'])(
+  it.each(['/account', '/login', '/auth/google/connect', '/oauth/authorize', '/oauth/approve'])(
     'reaches %s in the config Next reads, once, the same way',
     async (pathname) => {
       const csp = (await sentFor(pathname)).filter((h) => h.key === 'Content-Security-Policy')

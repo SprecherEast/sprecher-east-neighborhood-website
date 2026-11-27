@@ -1,109 +1,111 @@
-import type { MigrateDownArgs, MigrateUpArgs } from '@payloadcms/db-sqlite'
-import { sql } from '@payloadcms/db-sqlite'
-import { createLocalReq, type Payload } from 'payload'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import path from 'node:path'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { down, up } from '@/migrations/20261127_130000_mcp_oauth_sign_in'
+import * as foreignKeyRules from '@/migrations/20261126_203500_foreign_key_delete_rules'
+import * as oauthSignIn from '@/migrations/20261127_130000_mcp_oauth_sign_in'
+import { createAccount } from '@/platform/payload/testing/inMemoryPayload'
+import {
+  createMigratedDatabase,
+  createSchemaDatabase,
+  listForeignKeys,
+  lockDocument,
+  type TestDatabase,
+} from '@/platform/payload/testing/migratedDatabase'
+
+import { registerClient, signIn } from '../../testing/oauthFlow'
 
 /**
- * The OAuth sign-in migration (#1501) rolls back on SQLite with foreign keys enforced, even with
- * clients, tokens and an edit lock pointing at its tables, and applies again afterwards. Each step
- * runs in a transaction, as `payload migrate` runs it. What it adds to the edit-lock table is also
- * what the schema says: the same delete and update rule on the two new keys (the rule a plain
- * `ALTER TABLE … REFERENCES` leaves out is `ON DELETE`, which makes a delete that Payload does not
- * make itself fail, #1559).
+ * The OAuth sign-in migration (#1501) on a database the real migrations built, the way the deploy
+ * has it: after the delete-rules migration (#1559), which is in `main` first. It applies, with
+ * the same delete and update rule on its two new edit-lock keys as the schema gives them; it
+ * rolls back with a client, tokens and an edit lock pointing at its tables, and leaves the
+ * edit-lock table exactly as the delete-rules migration left it (column order, keys with their
+ * rules, indexes), so that migration can still be rolled back, and both apply again.
  */
 
-vi.mock('server-only', () => ({}))
+const MIGRATION = '20261127_130000_mcp_oauth_sign_in'
+const LOCKS = 'payload_locked_documents_rels'
+let database: TestDatabase
+let schemaRules: string[]
 
-let payload: Payload
-// A file, not memory: each transaction below needs the same database (see `bootPayload`)
-const folder = mkdtempSync(path.join(tmpdir(), 'oauth-migration-'))
-type Db = { run: (query: ReturnType<typeof sql>) => Promise<unknown> }
-type Drizzle = Db & { transaction: <T>(fn: (tx: Db) => Promise<T>) => Promise<T> }
+const oauthTables = async () =>
+  (
+    await database.query<{ name: string }>(
+      `SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'oauth_%' ORDER BY name`,
+    )
+  ).map((row) => row.name)
 
-const drizzle = () => payload.db.drizzle as unknown as Drizzle
-const tables = async (): Promise<string[]> => {
-  const result = (await drizzle().run(
-    sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'oauth_%'`,
-  )) as { rows: { name: string }[] }
-  return result.rows.map((row) => row.name).sort()
-}
-/** The delete and update rule of the keys the migration adds to the edit-lock table */
-const lockKeyRules = async () => {
-  const result = (await drizzle().run(
-    sql`SELECT "table", "from", on_update, on_delete FROM pragma_foreign_key_list('payload_locked_documents_rels') WHERE "from" IN ('oauth_clients_id', 'oauth_tokens_id') ORDER BY "from"`,
-  )) as { rows: Record<string, string>[] }
-  return result.rows.map((row) => ({
-    table: row.table,
-    from: row.from,
-    onUpdate: row.on_update,
-    onDelete: row.on_delete,
-  }))
-}
-const inTransaction = async (step: typeof up | typeof down) => {
-  const req = await createLocalReq({}, payload)
-  await drizzle().transaction((tx) =>
-    step({ db: tx, payload, req } as unknown as MigrateUpArgs & MigrateDownArgs),
-  )
-}
+/** The edit-lock table as the next migration would check it: text, columns, keys, indexes. */
+const lockTable = async () => ({
+  sql: await database.query(`SELECT sql FROM sqlite_master WHERE name = '${LOCKS}'`),
+  columns: await database.query(
+    `SELECT name, type, "notnull", pk FROM pragma_table_info('${LOCKS}')`,
+  ),
+  keys: await database.query(`SELECT * FROM pragma_foreign_key_list('${LOCKS}') ORDER BY id`),
+  indexes: await database.query(
+    `SELECT name, sql FROM sqlite_master WHERE type = 'index' AND tbl_name = '${LOCKS}' ORDER BY name`,
+  ),
+})
+
+const newKeyRules = async () =>
+  (await listForeignKeys(database))
+    .filter((key) => key.table === LOCKS && key.column.startsWith('oauth_'))
+    .map((key) => `${key.column}:${key.references}:${key.onDelete}:${key.onUpdate}`)
 
 beforeAll(async () => {
-  const { bootPayload } = await import('@/platform/payload/testing/inMemoryPayload')
-  const booted = await bootPayload(`file:${path.join(folder, 'test.db')}`)
-  payload = booted.payload
-  await drizzle().run(sql`PRAGMA foreign_keys = ON`)
-  const { createAccount } = await import('@/platform/payload/testing/inMemoryPayload')
-  const admin = await createAccount(payload, 'admin', 'ana')
-  const agent = await createAccount(payload, 'agent', 'scout')
-  const { registerClient, signIn } = await import('../../testing/oauthFlow')
-  const clientId = await registerClient(payload, admin, agent)
-  await signIn(payload, admin, clientId)
-  const client = await payload.find({ collection: 'oauth-clients', overrideAccess: true })
-  const [clientDoc] = client.docs
-  if (!clientDoc) throw new Error('The client was not found')
-  const lockedId = clientDoc.id
-  await payload.db.create({
-    collection: 'payload-locked-documents',
-    data: {
-      document: { relationTo: 'oauth-clients' as const, value: lockedId },
-      user: { relationTo: 'users', value: admin.id },
-    },
-  })
-}, 60_000)
+  const fromSchema = await createSchemaDatabase()
+  schemaRules = (await listForeignKeys(fromSchema))
+    .filter((key) => key.table === LOCKS && key.column.startsWith('oauth_'))
+    .map((key) => `${key.column}:${key.references}:${key.onDelete}:${key.onUpdate}`)
+  await fromSchema.cleanup()
+  database = await createMigratedDatabase({ before: MIGRATION })
+}, 180_000)
 
 afterAll(async () => {
-  await payload.destroy()
-  rmSync(folder, { recursive: true, force: true })
+  await database?.cleanup()
 })
 
 describe('the OAuth sign-in migration', () => {
-  it('rolls back with references in place, then applies again', async () => {
-    const created = await tables()
-    // The database was built from the schema: its rules are what the migration must reproduce
-    const fromSchema = await lockKeyRules()
-    expect(fromSchema).toEqual([
-      {
-        table: 'oauth_clients',
-        from: 'oauth_clients_id',
-        onUpdate: 'NO ACTION',
-        onDelete: 'CASCADE',
-      },
-      {
-        table: 'oauth_tokens',
-        from: 'oauth_tokens_id',
-        onUpdate: 'NO ACTION',
-        onDelete: 'CASCADE',
-      },
+  let before: Awaited<ReturnType<typeof lockTable>>
+
+  it('applies after the delete-rules migration, with the rules the schema gives', async () => {
+    before = await lockTable()
+    await database.run(oauthSignIn.up)
+    expect(await oauthTables()).toEqual([
+      'oauth_clients',
+      'oauth_clients_redirect_uris',
+      'oauth_tokens',
     ])
-    expect(created).toEqual(['oauth_clients', 'oauth_clients_redirect_uris', 'oauth_tokens'])
-    await inTransaction(down)
-    expect(await tables()).toEqual([])
-    await inTransaction(up)
-    expect(await tables()).toEqual(created)
-    expect(await lockKeyRules()).toEqual(fromSchema)
+    expect(schemaRules).toEqual([
+      'oauth_clients_id:oauth_clients:CASCADE:NO ACTION',
+      'oauth_tokens_id:oauth_tokens:CASCADE:NO ACTION',
+    ])
+    expect(await newKeyRules()).toEqual(schemaRules)
+  })
+
+  it('rolls back with a client, tokens and an edit lock in place, leaving the edit-lock table as it was', async () => {
+    const { payload } = database
+    const admin = await createAccount(payload, 'admin', 'ana')
+    const agent = await createAccount(payload, 'agent', 'scout')
+    const clientId = await registerClient(payload, admin, agent)
+    await signIn(payload, admin, clientId)
+    const { docs } = await payload.find({ collection: 'oauth-clients', overrideAccess: true })
+    const client = docs[0]
+    if (!client) throw new Error('The client was not found')
+    await lockDocument(database, 'oauth-clients', client.id)
+
+    await database.run(oauthSignIn.down)
+
+    expect(await oauthTables()).toEqual([])
+    expect(await lockTable()).toEqual(before)
+    expect(await database.query('PRAGMA foreign_keys')).toEqual([{ foreign_keys: 1 }])
+    expect(await database.query('PRAGMA foreign_key_check')).toEqual([])
+  })
+
+  it('leaves the delete-rules migration able to roll back, through its own table check, and apply again', async () => {
+    await database.run(foreignKeyRules.down)
+    await database.run(foreignKeyRules.up)
+    expect(await lockTable()).toEqual(before)
+    await database.run(oauthSignIn.up)
+    expect(await newKeyRules()).toEqual(schemaRules)
   })
 })

@@ -73,7 +73,7 @@ Six account pages (sign-up, log in, verify, forgot and reset password, `/account
 - **Removing the last passkey is allowed:** every account keeps a password or forgot-password, so nobody is locked out (`use-cases/removePasskey.test.ts`).
 - **Sign-up never makes an admin;** only Payload's first registration on an empty database does, and a Google create on an empty database is a guest (`cms/firstAccountIsAdmin.ts`; `cms/signUpFirstAccount.test.ts`, `src/payload.config.roles.test.ts`).
 - **Own password and email changes need their flags** (`cms/requireCurrentPassword.test.ts`, `src/payload.config.emailChange.test.ts`); fields no resident can set are in `src/payload.config.protectedFields.test.ts`.
-- **No other site frames the sign-in pages:** `/account`, `/login` and `/auth/:provider/connect` send `frame-ancestors 'none'` (`NO_FRAMING_HEADERS` in `next.config.js`; `src/app/apiHeaders.test.ts`).
+- **No other site frames the sign-in pages:** `/account`, `/login`, `/auth/:provider/connect` and the two OAuth pages (`/oauth/authorize`, `/oauth/approve`, #1501) send `frame-ancestors 'none'` (`NO_FRAMING_HEADERS` in `next.config.js`; `src/app/apiHeaders.test.ts`).
 - **An MCP key is not a signed-in account:** only a user of the users collection counts (`getSessionPayloadUser` in `data/session.ts`).
 - **Roles gate pages:** `requireUser` sends a visitor to sign in, `requireRole` gives a 404 (`use-cases/requireUser.test.ts`); old residents became guests (`src/payload.config.guestMigration.test.ts`).
 - **A forged or stale answer from the browser is refused** without saying which check failed (`data/webauthn.ts`, `data/webauthn.signIn.test.ts`, `data/webauthn.registration.test.ts`).

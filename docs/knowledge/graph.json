@@ -678,8 +678,8 @@
     {
       "id": "business-rule:src/modules/accounts/README.md#17",
       "type": "business-rule",
-      "name": "**No other site frames the sign-in pages:** `/account`, `/login` and…",
-      "summary": "**No other site frames the sign-in pages:** `/account`, `/login` and `/auth/:provider/connect` send `frame-ancestors 'none'` (`NO_FRAMING_HEADERS` in `next.config.js`; `src/app/apiHeaders.test.ts`).",
+      "name": "**No other site frames the sign-in pages:** `/account`, `/login`,…",
+      "summary": "**No other site frames the sign-in pages:** `/account`, `/login`, `/auth/:provider/connect` and the two OAuth pages (`/oauth/authorize`, `/oauth/approve`, #1501) send `frame-ancestors 'none'` (`NO_FRAMING_HEADERS` in `next.config.js`; `src/app/apiHeaders.test.ts`).",
       "path": "src/app/apiHeaders.test.ts",
       "module": "module:accounts",
       "aliases": [],
@@ -1031,7 +1031,7 @@
       "id": "business-rule:src/modules/agents/README.md#8",
       "type": "business-rule",
       "name": "**An AI tool signs in with OAuth, and only an admin can allow it:**…",
-      "summary": "**An AI tool signs in with OAuth, and only an admin can allow it:** an admin registers the client by hand (no open registration) with the agent account it acts as and its redirect addresses, and approves each connection on `/oauth/approve`, which only a signed-in admin sees and which cannot be framed. The tool arrives at `/oauth/authorize` from its own site, where the browser withholds the session, so that page reads none and shows only who is asking and a link on to the approval, which is opened from our own site; a visitor logs in and returns to the same request (`cms/oauth/oauthClients.ts`, `use-cases/oauth/checkAuthorization.ts`, `beginAuthorization.ts`, `decideConsent.ts`; `src/app/(frontend)/oauth/connection.payload.test.tsx`, `src/app/apiHeaders.test.ts`). Each visit is limited to 30 a minute per connection.",
+      "summary": "**An AI tool signs in with OAuth, and only an admin can allow it:** an admin registers the client by hand (no open registration) with the agent account it acts as and its redirect addresses, and approves each connection on `/oauth/approve`, which only a signed-in admin sees and which, like `/oauth/authorize`, sends `frame-ancestors 'none'` (`NO_FRAMING_PATHS`), so no site can frame it, a sibling subdomain included. The tool arrives at `/oauth/authorize` from its own site, where the browser withholds the session, so that page reads none and shows only who is asking and a link on to the approval, which is opened from this site, so Payload reads the session (it does so for a same-origin or same-site request); a visitor logs in and returns to the same request (`cms/oauth/oauthClients.ts`, `use-cases/oauth/checkAuthorization.ts`, `beginAuthorization.ts`, `decideConsent.ts`; `src/app/(frontend)/oauth/connection.payload.test.tsx`, `src/app/apiHeaders.test.ts`). Each visit is limited to 30 a minute per connection.",
       "path": "src/app/(frontend)/oauth/connection.payload.test.tsx",
       "module": "module:agents",
       "aliases": [],
@@ -2171,6 +2171,19 @@
       ]
     },
     {
+      "id": "business-rule:src/platform/payload/README.md#10",
+      "type": "business-rule",
+      "name": "**The busy timeout needs no transactions:**…",
+      "summary": "**The busy timeout needs no transactions:** `src/payload.config.busyTimeout.test.ts` fails if transactions are turned on; the migration retry is `ops/migrate-retry.test.mjs`.",
+      "path": "src/payload.config.busyTimeout.test.ts",
+      "module": "platform-area:payload",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": ["src/payload.config.busyTimeout.test.ts", "ops/migrate-retry.test.mjs"]
+    },
+    {
       "id": "business-rule:src/platform/payload/README.md#2",
       "type": "business-rule",
       "name": "**Public lists never show drafts:** `PUBLISHED` filters on `_status`…",
@@ -2282,15 +2295,20 @@
     {
       "id": "business-rule:src/platform/payload/README.md#9",
       "type": "business-rule",
-      "name": "**The busy timeout needs no transactions:**…",
-      "summary": "**The busy timeout needs no transactions:** `src/payload.config.busyTimeout.test.ts` fails if transactions are turned on; the migration retry is `ops/migrate-retry.test.mjs`.",
-      "path": "src/payload.config.busyTimeout.test.ts",
+      "name": "**A migrated database keeps the schema's delete rules:**…",
+      "summary": "**A migrated database keeps the schema's delete rules:** `src/payload.config.foreignKeyRules.test.ts` compares every foreign key with a schema-built database, built by `testing/migratedDatabase.ts` (the real migrations, for any test that must see production's shape); `src/payload.config.deleteRules.test.ts` deletes media and locked documents on it; the migration's `up`, `down` and refusals are in `src/payload.config.deleteRulesMigration.test.ts` and `src/payload.config.deleteRulesGuards.test.ts`, on a database `testing/productionLikeData.ts` fills like production (#1559).",
+      "path": "src/payload.config.foreignKeyRules.test.ts",
       "module": "platform-area:payload",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/payload.config.busyTimeout.test.ts", "ops/migrate-retry.test.mjs"]
+      "links": [
+        "src/payload.config.foreignKeyRules.test.ts",
+        "src/payload.config.deleteRules.test.ts",
+        "src/payload.config.deleteRulesMigration.test.ts",
+        "src/payload.config.deleteRulesGuards.test.ts"
+      ]
     },
     {
       "id": "business-rule:src/platform/payload/previewCopy/README.md#1",
@@ -29619,6 +29637,14 @@
     },
     {
       "from": "platform-area:payload",
+      "to": "business-rule:src/platform/payload/README.md#10",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:payload",
       "to": "business-rule:src/platform/payload/README.md#2",
       "type": "contains",
       "layer": "structure",
@@ -35526,7 +35552,7 @@
       "to": "library:@payloadcms/db-sqlite",
       "type": "uses",
       "layer": "libraries",
-      "count": 36,
+      "count": 37,
       "via": []
     },
     {

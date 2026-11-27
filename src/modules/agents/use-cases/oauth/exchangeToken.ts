@@ -34,7 +34,7 @@ const CODES = new Set([
 ])
 
 /**
- * The token address (#1501): trades an authorization code (with its PKCE verifier) or a refresh
+ * The token address (#1501): refuses a field sent twice, then trades an authorization code (with its PKCE verifier) or a refresh
  * token for new tokens, through the OAuth library. Before it: a limit per connection; only the two
  * grants we offer; and a `resource`, when the client sends one, must be the MCP address. After
  * it: only plain OAuth error names leave, never a library or database message, and nothing is
@@ -47,6 +47,11 @@ export async function exchangeToken(
   const ip = parseClientIp(headers)
   if (ip && !attempts.tryTake(ip, OAUTH_TOKEN_LIMIT.perConnection, Date.now())) {
     return failure(429, 'invalid_request', 'Too many requests. Try again in a minute.')
+  }
+  // RFC 6749 section 3.2: a parameter is sent once. A repeated one is refused here, as the library
+  // would fail on it with an error of its own
+  if (Object.values(form).some(Array.isArray)) {
+    return failure(400, 'invalid_request', 'Send each field once.')
   }
   const grant = form.grant_type
   if (typeof grant !== 'string' || !(OAUTH_GRANTS as readonly string[]).includes(grant)) {

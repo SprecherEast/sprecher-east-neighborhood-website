@@ -9,7 +9,7 @@ import { expect, expectAccessible, test } from './support/test'
 // the admin goes through it on a phone and on a desktop. The tool's site is a page on another
 // origin, so the first visit is a real cross-site navigation, where the browser holds back the
 // sign-in cookie: the first page shows who is asking and a way on, and the approval, opened from
-// our own site, is where the signed-in admin is recognised. This is the flow a unit test of the
+// this site, is where the signed-in admin is recognised. This is the flow a unit test of the
 // page could not see.
 
 const allow = (page: Page) => page.getByRole('button', { name: 'Allow this connection' })
@@ -17,8 +17,13 @@ const startFromTheTool = async (page: Page, state: string) => {
   const url = connectionRequest(await connectionClientId(), state)
   await routeTheTool(page, url)
   await page.goto('https://claude.example/')
+  const arrived = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/oauth/authorize',
+  )
   await page.getByRole('link', { name: 'Connect' }).click()
+  return (await arrived).headers()
 }
+const NO_FRAMING = "frame-ancestors 'none'"
 
 test.describe('connecting an AI tool', () => {
   test('a signed-in admin arriving from the tool continues, allows it, and goes back with a code', async ({
@@ -27,7 +32,9 @@ test.describe('connecting an AI tool', () => {
     await logIn(page, CONNECT.adminEmail, CONNECT.password)
     await expect(page).toHaveURL(/\/account/)
 
-    await startFromTheTool(page, 'state-allow')
+    const firstPage = await startFromTheTool(page, 'state-allow')
+    // Neither page can be framed: a site next to ours, such as a preview, is read as the same site
+    expect(firstPage['content-security-policy']).toBe(NO_FRAMING)
     // The first page: who is asking, and no account or approval
     await expect(page.getByText(CONNECT.clientName, { exact: true })).toBeVisible()
     await expect(page.getByText('claude.example')).toBeVisible()
@@ -35,8 +42,12 @@ test.describe('connecting an AI tool', () => {
     await expect(page.getByText(CONNECT.agentName)).toHaveCount(0)
     await expectAccessible(page)
 
-    // Continuing opens the approval from our own site, where the admin is recognised
+    // Continuing opens the approval from this site, where the admin is recognised
+    const approving = page.waitForResponse(
+      (response) => new URL(response.url()).pathname === '/oauth/approve',
+    )
     await page.getByRole('link', { name: 'Continue to approval' }).click()
+    expect((await approving).headers()['content-security-policy']).toBe(NO_FRAMING)
     await expect(allow(page)).toBeVisible()
     await expect(page.getByText(CONNECT.agentName)).toBeVisible()
     await expectAccessible(page)

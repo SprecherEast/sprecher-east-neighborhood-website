@@ -15,7 +15,15 @@ MCP; not the young single-maintainer plugin; sign-in reuses the existing Payload
 MCP's existing access rules.
 
 **What must not change:** the API-key path (Local Scout), `noPasswordSignInForAgents`, the agent
-role's access, the sign-in code in the accounts module. Nothing here lets an agent publish (#1502).
+role's access, and how an account signs in (the checks, the cookie, Google, passkeys). Nothing here
+lets an agent publish (#1502).
+
+**What changed in the accounts module (a scope change, decided by the chief of staff on 2026-11-27,
+recorded on #1501):** a visitor who must log in before approving a connection has to come back to
+that same request, so the log in page and its two forms (`SignInForm`, `PasskeySignIn`) accept a
+return path (`?next=`), checked by `safeReturnPath` against an allow list of one path, never another
+address; the other accounts files touched only use the new shared `ButtonRow`. Signing in itself is
+unchanged.
 
 ## What we considered
 
@@ -50,7 +58,7 @@ Checked on 2026-11-26 from the npm registry, each project's repository and its a
 6. Discovery documents are at `/.well-known/` through `next.config.js` rewrites; the `401` carries
    `WWW-Authenticate` through Payload's `req.responseHeaders`.
 7. Only an admin sees the approval; a signed ticket binds it to that admin and request.
-8. Two pages, because of the browser: the tool sends the admin's browser from its own site, where Payload's CSRF check (kept as it is) ignores the session cookie, so `/oauth/authorize` reads no session and shows no account, and its link to `/oauth/approve` is opened from our own site, where the session is read. The link carries the checked request and no secret; it is read again from scratch. A visitor is sent to log in and back to the same request, only to that path.
+8. Two pages, because of the browser: the tool sends the admin's browser from its own site, where Payload's CSRF check (kept as it is) ignores the session cookie, so `/oauth/authorize` reads no session and shows no account, and its link to `/oauth/approve` is opened from this site, where the session is read (Payload reads it on a same-origin or same-site request). Both pages send `frame-ancestors 'none'`, `/oauth/approve` included, so a page on a sibling subdomain cannot frame the approval. The link carries the checked request and no secret; it is read again from scratch. A visitor is sent to log in and back to the same request, only to that path.
 
 ## Consequences
 

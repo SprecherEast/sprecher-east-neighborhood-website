@@ -33,7 +33,7 @@ describe('POST /oauth/token', () => {
     expect(headers?.get('x-forwarded-for')).toBe('203.0.113.5')
   })
 
-  it('keeps a repeated field as a list, so the library can refuse it', async () => {
+  it('hands a repeated field on as a list, for the exchange to refuse', async () => {
     await post('grant_type=a&resource=one&resource=two&resource=three')
     expect(mocks.exchangeToken).toHaveBeenCalledWith(
       expect.objectContaining({ resource: ['one', 'two', 'three'] }),
