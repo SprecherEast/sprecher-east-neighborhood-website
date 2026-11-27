@@ -17,14 +17,18 @@
 #   2. check the credential and store it, written from the checked values (offsite-lib.sh), in a root-only file in a
 #      root-only folder, under a temporary name that is renamed (and removed if the run is killed)
 #   3. install rclone from the pinned package, after checking its SHA-256 (a version already there is kept)
-#   4. install the weekly job in /etc/cron.d (rewritten only when it would change)
-#   5. try the credential once with a small made-up file (offsite-backup.sh test), for each new credential or key
+#   4. try the credential once with a small made-up file (offsite-backup.sh test), for each new credential or key; the
+#      test also asks Google what scope the sign-in was granted and accepts only drive.file
+#   5. install the weekly job in /etc/cron.d (rewritten only when it would change), and only after that first try has
+#      passed, so a credential that fails is never scheduled. A job that is already installed stays when a later try
+#      fails (a Drive outage must not stop the backups); the deploy warns with the reason every time until it passes
 #   6. run the check (offsite-backup.sh check): the newest copy in Drive is recent and the last run went well
 # Roll back: ops/offsite-backup.md, "Changes to the server and how to undo them".
 set -Eeuo pipefail
 
 . "$(dirname "$0")/lib.sh"
 . "$(dirname "$0")/offsite-lib.sh"
+offsite_clear_rclone_environment # the remote is the credential file's, never an RCLONE_* setting's
 
 ROOT_UID="${OFFSITE_ROOT_UID:-0}" # a test runs as someone else. A deploy account that is not root would need sudo here (#1306)
 BACKUP_SCRIPT="$APP_DIR/current/ops/offsite-backup.sh"
@@ -64,7 +68,7 @@ fi
 remove_job() { rm -f "$OFFSITE_CRON_FILE"; }
 
 # --- 1. the public key
-if [ ! -f "$OFFSITE_CERT" ]; then
+if ! offsite_cert_present "$OFFSITE_CERT"; then
   remove_job
   report "off-site backup is not set up: ops/offsite-backup-cert.pem (the owner's public key) is not in the repository yet"
   exit 0
@@ -110,7 +114,7 @@ if [ "$(installed_version)" != "$OFFSITE_RCLONE_VERSION" ]; then
   esac
   package="rclone-v$OFFSITE_RCLONE_VERSION-linux-$arch.deb"
   download=$(mktemp -d)
-  curl -fsSL --proto '=https' --tlsv1.2 --max-time 300 -o "$download/$package" "$OFFSITE_RCLONE_URL/v$OFFSITE_RCLONE_VERSION/$package" ||
+  curl -fsSL --proto '=https' --tlsv1.2 --max-time "$OFFSITE_DOWNLOAD_SECONDS" -o "$download/$package" "$OFFSITE_RCLONE_URL/v$OFFSITE_RCLONE_VERSION/$package" ||
     give_up "downloading $package failed; nothing was installed"
   got_sha=$(sha256sum "$download/$package" | cut -d' ' -f1)
   [ "$got_sha" = "$want_sha" ] || give_up "$package does not match its pinned SHA-256; nothing was installed"
@@ -119,15 +123,37 @@ if [ "$(installed_version)" != "$OFFSITE_RCLONE_VERSION" ]; then
   report "off-site backup: rclone $OFFSITE_RCLONE_VERSION installed (SHA-256 checked)"
 fi
 
-# --- 4. the weekly job: Sunday 09:30 UTC, after the daily backup of 08:15 and the Umami dump
-[ -f "$BACKUP_SCRIPT" ] || give_up "$BACKUP_SCRIPT not found, so the job was not installed"
+[ -f "$BACKUP_SCRIPT" ] || give_up "$BACKUP_SCRIPT not found, so nothing was tried or installed"
+# The job's log holds rclone's own messages, so it is root-only from the start, whoever would have made it first.
+[ -e "$OFFSITE_LOG" ] || install -m 600 /dev/null "$OFFSITE_LOG"
+chmod 600 "$OFFSITE_LOG"
+
+# --- 4. try this credential and key once, with a small made-up file, so a wrong credential shows on this deploy.
+# The fingerprint holds what makes the credential and the key what they are, not the access token rclone refreshes
+# (and rewrites into the file) in every run, so a weekly run does not make the next deploy try again.
+fingerprint=$(
+  {
+    grep -E '^(client_id|client_secret)[[:space:]]*=' "$OFFSITE_RCLONE_CONF" || true
+    grep -o '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$OFFSITE_RCLONE_CONF" || true
+    cat "$OFFSITE_CERT"
+  } | sha256sum | cut -d' ' -f1
+)
+if [ "$(cat "$OFFSITE_TRIED_MARK" 2>/dev/null || true)" != "$fingerprint" ]; then
+  if timeout "$OFFSITE_TEST_TOTAL_SECONDS" bash "$BACKUP_SCRIPT" test; then
+    printf '%s\n' "$fingerprint" >"$OFFSITE_TRIED_MARK"
+  else
+    give_up "the credential or the public key did not pass the first try; the weekly job is not installed until it does (it is tried again on the next deploy)"
+  fi
+fi
+
+# --- 5. the weekly job: Sunday 09:30 UTC, after the daily backup of 08:15 and the Umami dump. Only after the first try passed.
 cron_text=$(
   cat <<EOF
 # Weekly off-site backup of the Sprecher East site (#1332): the newest daily archive, sealed to the owner's public key, to Google Drive.
 # Managed by ops/install-offsite-backup.sh in the website repo; changes here are overwritten on deploy.
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-30 9 * * 0 root bash $BACKUP_SCRIPT run >> $OFFSITE_LOG 2>&1
+30 9 * * 0 root umask 077; bash $BACKUP_SCRIPT run >> $OFFSITE_LOG 2>&1
 EOF
 )
 if [ ! -f "$OFFSITE_CRON_FILE" ] || [ "$(cat "$OFFSITE_CRON_FILE")" != "$cron_text" ]; then
@@ -139,25 +165,7 @@ if [ ! -f "$OFFSITE_CRON_FILE" ] || [ "$(cat "$OFFSITE_CRON_FILE")" != "$cron_te
   report "off-site backup: weekly job installed (Sunday 09:30 UTC)"
 fi
 
-# --- 5. try this credential and key once, with a small made-up file, so a wrong credential shows on this deploy.
-# The fingerprint holds what makes the credential and the key what they are, not the access token rclone refreshes
-# (and rewrites into the file) in every run, so a weekly run does not make the next deploy try again.
-fingerprint=$(
-  {
-    grep -E '^(client_id|client_secret)[[:space:]]*=' "$OFFSITE_RCLONE_CONF" || true
-    grep -o '"refresh_token"[[:space:]]*:[[:space:]]*"[^"]*"' "$OFFSITE_RCLONE_CONF" || true
-    cat "$OFFSITE_CERT"
-  } | sha256sum | cut -d' ' -f1
-)
-if [ "$(cat "$OFFSITE_TRIED_MARK" 2>/dev/null || true)" != "$fingerprint" ]; then
-  if bash "$BACKUP_SCRIPT" test; then
-    printf '%s\n' "$fingerprint" >"$OFFSITE_TRIED_MARK"
-  else
-    give_up "the credential or the public key did not pass the test upload; it is tried again on the next deploy"
-  fi
-fi
-
 # --- 6. the signal: every deploy shows the state of the copies in Drive. A copy older than the limit, or a weekly run
 # that failed, is a warning with the reason (the check prints it); the deploy stays green.
-bash "$BACKUP_SCRIPT" check || true
+timeout "$OFFSITE_CHECK_TOTAL_SECONDS" bash "$BACKUP_SCRIPT" check || true
 report "off-site backup job in place (weekly, newest $OFFSITE_KEEP copies kept)"

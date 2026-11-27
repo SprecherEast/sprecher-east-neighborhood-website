@@ -12,6 +12,9 @@ import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest'
 import { OPS, write } from './umami-harness.mjs'
 
 export const MARKER = 'SECRET-DATABASE-ROW-marker-9f3a'
+/** The `token` value of a credential, in the shape the owner's browser sign-in (and rclone) writes. */
+export const ACCESS_TOKEN_LINE =
+  '{"access_token":"ya29.fake-access-token","token_type":"Bearer","refresh_token":"fake-refresh","expiry":"2026-11-27T06:03:00.123Z"}'
 export const REMOTE_DIR = 'sprecher-east-backups'
 const SCRIPTS = [
   'lib.sh',
@@ -29,6 +32,8 @@ const MOCK_RCLONE = String.raw`
 const fs = require('fs'), path = require('path'), crypto = require('crypto')
 const argv = process.argv.slice(2)
 fs.appendFileSync(process.env.MOCK_LOG, argv.join(' ') + '\n')
+// what the job leaves in rclone's environment: the log says so, and a test reads it
+for (const name of Object.keys(process.env)) if (name.startsWith('RCLONE_')) fs.appendFileSync(process.env.MOCK_LOG, 'ENV ' + name + '\n')
 const valueFlags = new Set(['--config', '--retries', '--low-level-retries', '--contimeout', '--timeout', '--format', '--hash', '--separator'])
 const flags = {}
 const rest = []
@@ -43,6 +48,20 @@ const failing = (process.env.MOCK_FAIL || '').split(',')
 if (cmd === 'version') { console.log('rclone v' + (process.env.MOCK_VERSION || '1.76.0')); process.exit(0) }
 if (!flags['--config'] || !fs.existsSync(flags['--config'])) fail('mock: no config file')
 if (failing.includes(cmd)) fail('mock: ' + cmd + ' failed')
+// MOCK_FAIL_FROM=lsf:2 fails the second and every later lsf call (the first is the check of the upload)
+if (process.env.MOCK_FAIL_FROM) {
+  const [name, nth] = process.env.MOCK_FAIL_FROM.split(':')
+  if (cmd === name) {
+    const counter = process.env.MOCK_LOG + '.' + name
+    const count = (fs.existsSync(counter) ? Number(fs.readFileSync(counter, 'utf8')) : 0) + 1
+    fs.writeFileSync(counter, String(count))
+    if (count >= Number(nth)) fail('mock: ' + cmd + ' failed from call ' + nth)
+  }
+}
+if ((process.env.MOCK_HANG || '').split(',').includes(cmd)) {
+  setTimeout(() => {}, 60000) // a call that never answers: only the job's own time limit ends it
+  return
+}
 const remote = (spec) => {
   const m = /^offsite:(.*)$/.exec(spec)
   if (!m) fail('mock: unknown remote ' + spec)
@@ -126,13 +145,34 @@ export function setUpOffsiteHarness({ install = false } = {}) {
     write(p('rclone.log'), '')
     fs.mkdirSync(p('store'), { recursive: true })
     fs.mkdirSync(p('backups/daily'), { recursive: true })
-    write(p('etc/offsite-rclone.conf'), '[offsite]\ntype = drive\nscope = drive.file\n', 0o600)
+    write(
+      p('etc/offsite-rclone.conf'),
+      `[offsite]\ntype = drive\nscope = drive.file\ntoken = ${ACCESS_TOKEN_LINE}\n`,
+      0o600,
+    )
     // The mock is the `rclone` the scripts find (the installer's tests start without it).
     write(p('mock-rclone.js'), MOCK_RCLONE)
     write(
       p('bin/rclone-mock'),
       `#!/usr/bin/env bash\nexec ${process.execPath} "${p('mock-rclone.js')}" "$@"\n`,
       0o755,
+    )
+    // The stand-in for `curl`: the package download (a stub file) and Google's token-info endpoint. It logs each call.
+    stub(
+      'curl',
+      [
+        'echo "curl $*" >> "$STUB_LOG"',
+        'case "$*" in *tokeninfo*)',
+        '  body=$(cat)',
+        '  [ -z "${STUB_TOKENINFO_BODY_FILE:-}" ] || printf "%s" "$body" > "$STUB_TOKENINFO_BODY_FILE"',
+        '  [ -z "${STUB_TOKENINFO_FAILS:-}" ] || exit 22',
+        '  if [ -n "${STUB_TOKENINFO_ANSWER+x}" ]; then printf "%s" "$STUB_TOKENINFO_ANSWER"; else printf \'%s\' \'{"scope":"https://www.googleapis.com/auth/drive.file","expires_in":"3000"}\'; fi',
+        '  exit 0 ;; esac',
+        'out=""',
+        'while [ $# -gt 0 ]; do [ "$1" = -o ] && out="$2"; shift; done',
+        '[ -z "${STUB_CURL_FAILS:-}" ] || exit 22',
+        'echo package > "$out"',
+      ].join('\n'),
     )
     fs.copyFileSync(p('bin/rclone-mock'), p('bin/rclone'))
     fs.chmodSync(p('bin/rclone'), 0o755)
@@ -185,6 +225,7 @@ export function setUpOffsiteHarness({ install = false } = {}) {
     MOCK_STORE: p('store'),
     MOCK_LOG: p('rclone.log'),
     OFFSITE_SPARE_KB: '1',
+    STUB_LOG: p('log'),
     ...env,
   })
 

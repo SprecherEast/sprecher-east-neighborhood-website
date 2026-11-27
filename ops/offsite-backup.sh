@@ -20,6 +20,7 @@ set -Eeuo pipefail
 
 . "$(dirname "$0")/lib.sh"
 . "$(dirname "$0")/offsite-lib.sh"
+offsite_clear_rclone_environment # the remote is the credential file's, never an RCLONE_* setting's
 
 MODE="${1:-run}"
 case "$MODE" in
@@ -40,11 +41,22 @@ trap cleanup EXIT
 level=WARNING
 [ "$MODE" != run ] || level=ERROR
 
-# Records how the last weekly run went, for `check` and for whoever looks. Fixed words only.
-write_status() { # <ok|failed> <fixed text>
+# Records how the last weekly run went, for `check` and for whoever looks. Fixed words only. A copy that was sent also
+# names itself and gives its SHA-256, which the owner compares with the file he downloads before he restores from it.
+write_status() { # <ok|failed> <fixed text> [<copy name> <its SHA-256>]
   [ "$MODE" = run ] && [ -d "$BACKUP_ROOT" ] || return 0
-  printf 'result=%s\ntime=%s\ndetail=%s\n' "$1" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$2" >"$OFFSITE_STATUS.tmp" &&
+  {
+    printf 'result=%s\ntime=%s\ndetail=%s\n' "$1" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$2"
+    [ -z "${3:-}" ] || printf 'file=%s\nsha256=%s\n' "$3" "$4"
+  } >"$OFFSITE_STATUS.tmp" &&
     mv -f "$OFFSITE_STATUS.tmp" "$OFFSITE_STATUS" || true
+}
+
+# The SHA-256 of each copy still in Drive, newest last, in `sha256sum` form ("<hash>  <name>"): the newest OFFSITE_KEEP.
+record_sha() { # <copy name> <its SHA-256>
+  [ "$MODE" = run ] || return 0
+  { [ ! -f "$OFFSITE_SHA_LIST" ] || grep -vF -- "  $1" "$OFFSITE_SHA_LIST" || true; printf '%s  %s\n' "$2" "$1"; } |
+    tail -n "$OFFSITE_KEEP" >"$OFFSITE_SHA_LIST.tmp" && mv -f "$OFFSITE_SHA_LIST.tmp" "$OFFSITE_SHA_LIST" || true
 }
 
 fail() { # <message>
@@ -65,19 +77,20 @@ not_set_up() { # <message>
 }
 
 # One rclone call: its credential is the root-only file, its own messages go to the root-only log, and it is cut off
-# after a time (a run sends a whole archive; the test and the check, which a deploy waits for, must not hang).
+# after a time (a run sends a whole archive; the test and the check, which a deploy waits for, must not hang). `--foreground`
+# keeps rclone in this script's process group, so the installer's overall time limit on a try or a check ends it too.
 RC_SECONDS=$OFFSITE_QUICK_SECONDS
 RC_RETRIES=1
 [ "$MODE" != run ] || { RC_SECONDS=$OFFSITE_RUN_SECONDS; RC_RETRIES=3; }
 rc() {
-  timeout "$RC_SECONDS" "$RCLONE" --config "$OFFSITE_RCLONE_CONF" --retries "$RC_RETRIES" --low-level-retries 3 \
+  timeout --foreground "$RC_SECONDS" "$RCLONE" --config "$OFFSITE_RCLONE_CONF" --retries "$RC_RETRIES" --low-level-retries 3 \
     --contimeout 30s --timeout 60s "$@" 2>>"$OFFSITE_LOG"
 }
 
 # What must exist before anything is sealed or sent. A missing piece is "not set up", never an upload without it.
 problem=$(offsite_openssl_problem) || fail "$problem"
 problem=$(offsite_cert_problem "$OFFSITE_CERT") || {
-  [ -f "$OFFSITE_CERT" ] || not_set_up "ops/offsite-backup-cert.pem (the public key) is not in the repository yet"
+  offsite_cert_present "$OFFSITE_CERT" || not_set_up "ops/offsite-backup-cert.pem (the public key) is not in the repository yet"
   fail "$problem"
 }
 [ -f "$OFFSITE_RCLONE_CONF" ] || not_set_up "the Drive credential (the OFFSITE_BACKUP_RCLONE_CONF secret) has not reached the server yet"
@@ -113,7 +126,8 @@ if [ "$MODE" = check ]; then
   if [ -f "$OFFSITE_STATUS" ] && grep -q '^result=failed$' "$OFFSITE_STATUS"; then
     fail "the last weekly run failed: $(sed -n 's/^detail=//p' "$OFFSITE_STATUS" | head -n 1)"
   fi
-  report "off-site backup ok: newest copy $name, $age_days days old"
+  sha=$(awk -v n="$name" '$2 == n { print $1 }' "$OFFSITE_SHA_LIST" 2>/dev/null | tail -n 1 || true)
+  report "off-site backup ok: newest copy $name, $age_days days old, sealed SHA-256 ${sha:-not recorded}"
   exit 0
 fi
 
@@ -160,6 +174,7 @@ offsite_seal "$OFFSITE_CERT" "$source_file" "$sealed" || fail "sealing to the pu
   [ "$(stat -c %s "$sealed")" -gt "$(stat -c %s "$source_file")" ] ||
   fail "the sealed file did not come out right, so nothing was sent"
 local_size=$(stat -c %s "$sealed")
+sha=$(sha256sum "$sealed" | cut -d' ' -f1)
 if [ "$local_size" -gt "$OFFSITE_WARN_BYTES" ]; then
   report "WARNING: off-site backup: the copy is $((local_size / 1048576)) MB. OpenSSL does not stream the opening, so opening it on the owner's computer needs about $((local_size / 1048576 * OFFSITE_OPEN_MEMORY_FACTOR)) MB of free memory (ops/offsite-backup.md)"
 fi
@@ -175,19 +190,27 @@ if [ "$remote_size" != "$local_size" ] || [ -z "$remote_md5" ] || [ "$remote_md5
   fail "the copy in Drive does not match what was sent (size or checksum), so it was removed"
 fi
 
+# The first try also asks Google what the credential was granted: only drive.file is accepted. By now rclone has
+# refreshed an expired access token into the file, which is the token asked about.
+if [ "$MODE" = test ]; then
+  scope_problem=$(offsite_scope_problem "$OFFSITE_RCLONE_CONF") || fail "$scope_problem"
+fi
+
 # 4. Retention, only after a verified upload: the newest $keep of this kind stay. Only names this job makes can
 #    match, so nothing else in the folder is ever deleted.
 removed=0
+listing=$(remote_list "$pattern") || fail "the copy was sent and checked, but listing Drive for old copies failed (rclone's message is in $OFFSITE_LOG)"
 while IFS=';' read -r old _; do
   [ -n "$old" ] || continue
   rc deletefile --drive-use-trash=false "$OFFSITE_REMOTE/$old" || fail "the copy was sent and checked, but removing old copy $old failed"
   removed=$((removed + 1))
-done < <(remote_list "$pattern" | tail -n +$((keep + 1)))
+done < <(tail -n +$((keep + 1)) <<<"$listing")
 
-write_status ok "sent $name"
+record_sha "$name" "$sha"
+write_status ok "sent $name" "$name" "$sha"
 size=$(du -h "$sealed" | cut -f1)
 if [ "$MODE" = test ]; then
   report "off-site backup test ok: $name ($size) is in Drive, checked, and removed $removed older test file(s)"
 else
-  report "off-site backup ok: $name ($size) is in Drive, checked; removed $removed old copy(ies), newest $keep kept"
+  report "off-site backup ok: $name ($size) is in Drive, checked; sealed SHA-256 $sha; removed $removed old copy(ies), newest $keep kept"
 fi

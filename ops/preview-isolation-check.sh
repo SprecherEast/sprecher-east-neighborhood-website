@@ -6,7 +6,8 @@
 #   - open a production file: the settings (.env.local), the database, the media, the backups, Umami's
 #     files, the off-site backup's credential folder (OFFSITE_DIR, #1332) and its log, production's PM2 state, its PM2 logs (PRODUCTION_PM2_LOG_DIR), or Caddy's data and certificate
 #     storage (it looks at the file itself and at every file below each folder, down to eight levels);
-#   - enter a folder ops/preview-host-guards.sh closes (production's, the backups, Umami's, the PM2 logs', the off-site credential's),
+#   - enter a folder ops/preview-host-guards.sh closes (production's, the backups, Umami's, the PM2 logs') or one the off-site
+#     backup installer closes itself (the credential's folder, mode 700, and its log, mode 600: ops/install-offsite-backup.sh),
 #     even when it can't list it, because a file in such a folder is found only by its name; for PM2's state
 #     and Caddy's storage, which the guards leave alone, this proves only that no file there is readable;
 #   - enter or read the folder the content copy keeps its snapshot of production's database in while it runs

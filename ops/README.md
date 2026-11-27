@@ -451,7 +451,7 @@ Run on the VPS as root. This replaces the site's current content with the archiv
 ```bash
 cd /var/www/sprecher-east
 bash current/ops/backup.sh manual         # keep a copy of what you are about to replace
-mkdir -p /root/restore && tar -C /root/restore -xzf /var/backups/sprecher-east/daily/<archive>.tar.gz
+mkdir -p /root/restore && tar -C /root/restore --no-same-owner --no-same-permissions -xzf /var/backups/sprecher-east/daily/<archive>.tar.gz
 pm2 stop sprecher-east
 cp /root/restore/payload.db data/payload.db
 rm -f data/payload.db-wal data/payload.db-shm data/payload.db-journal

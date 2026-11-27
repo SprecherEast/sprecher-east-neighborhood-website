@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # The one rule for a public key that is handed over to be sealed to (#1332, #1394): a PEM public key, RSA, of a sound
-# size, and never a private key. Sourced by .github/scripts/preview-credentials.sh (a requester's one-time key) and by
+# size, and never a private key. It runs the openssl named by OFFSITE_OPENSSL when that is set, as every off-site backup script does. Sourced by .github/scripts/preview-credentials.sh (a requester's one-time key) and by
 # ops/offsite-lib.sh (the owner's backup key, after it is taken out of its certificate). Needs only bash and openssl.
 # shellcheck disable=SC2034 # the scripts that source this file use what it sets
 
@@ -21,7 +21,7 @@ public_key_problem() { # <file>
     PUBLIC_KEY_PROBLEM="the key must be a PEM public key (BEGIN PUBLIC KEY); never send a private key"
     return 1
   fi
-  details=$(openssl pkey -pubin -in "$file" -noout -text 2>/dev/null) || {
+  details=$("${OFFSITE_OPENSSL:-openssl}" pkey -pubin -in "$file" -noout -text 2>/dev/null) || {
     PUBLIC_KEY_PROBLEM="that is not a public key in PEM form"
     return 1
   }

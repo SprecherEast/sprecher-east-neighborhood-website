@@ -5,7 +5,8 @@ Hostinger's own backups sit in the same account, and the daily archives sit on t
 owner's decisions are on the issue: rclone on the server for the upload only, no upload code of our own,
 scheduling by the server's own cron, every archive encrypted to a public key before it leaves, the
 private key only in his password manager, and the narrow `drive.file` Drive scope (the job sees only
-the files it makes itself). Part of [the server operations notes](README.md).
+the files it makes itself). That scope is set when the owner signs in to Google, not by the credential
+file: see [the credential](#what-the-deploy-does). Part of [the server operations notes](README.md).
 
 | Script                      | Where            | What it does                                                                                                                                       |
 | --------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -13,7 +14,7 @@ the files it makes itself). Part of [the server operations notes](README.md).
 | `install-offsite-backup.sh` | VPS              | Production deploy only: the credential, the pinned rclone, the weekly job, the first try, the check. Never fails the deploy                        |
 | `offsite-lib.sh`            | both             | The shared settings (remote folder, copies kept, age limit, rclone version and checksums), the sealing and opening, the credential check           |
 | `public-key-lib.sh`         | both             | The one rule for a public key to seal to: PEM, RSA, 3072 to 8192 bits, never a private key (also used by `.github/scripts/preview-credentials.sh`) |
-| `offsite-restore.sh`        | owner's computer | Opens a copy with the private key                                                                                                                  |
+| `offsite-restore.sh`        | owner's computer | Opens a copy with the private key, and refuses an archive that holds anything but what a backup holds                                              |
 
 The file locations are defined once, in `environment.sh` (`OFFSITE_DIR` and the rest).
 
@@ -26,12 +27,19 @@ Sunday 09:30 UTC (`/etc/cron.d/sprecher-east-offsite-backup`), `offsite-backup.s
 2. Seals it, uploads `sprecher-east-<time>.tar.gz.cms` to the Drive folder `sprecher-east-backups`, and checks that
    Drive's size and MD5 equal the sealed file's. A copy that does not match is deleted and the run fails.
 3. Only then keeps the newest 8 copies. Older ones are deleted for good, not trashed, so the quota is freed. Only
-   names this job makes can ever be deleted (the pattern is anchored at both ends).
-4. `flock` stops two runs overlapping, the work folder is removed when it ends, a run needs the disk to have room for
+   names this job makes can ever be deleted (the pattern is anchored at both ends). A listing of Drive that fails
+   here fails the run (the new copy stays; nothing is pruned), so it is seen.
+4. Records the sealed copy's **SHA-256** (below). `flock` stops two runs overlapping, the work folder is removed when it ends, a run needs the disk to have room for
    the sealed copy plus 1 GB, and any failure exits non-zero with a message. rclone's own messages go to the root-only
    log `/var/log/sprecher-east-offsite-backup.log`, never to the deploy's public output.
 
-Only a weekly `run` writes `/var/backups/sprecher-east/offsite-status`; a `test` never clears a failed run.
+Only a weekly `run` writes `/var/backups/sprecher-east/offsite-status`; a `test` never clears a failed run. The job
+clears every `RCLONE_*` environment variable first, so the remote is the credential file's and nothing else's.
+
+**Each copy's SHA-256** is where the owner can read it: in the run's notice, in `offsite-status` (`file=` and
+`sha256=`), in `offsite-sha256` beside it (one `sha256sum` line for each of the 8 copies kept), and in every deploy's
+check annotation (the newest copy's). Compare it with the downloaded file before a restore
+([below](#restore-from-an-off-site-copy)). The hash of an encrypted file tells an attacker nothing.
 
 ## How it is sealed
 
@@ -47,6 +55,10 @@ The file in the repository is a self-signed certificate: a public key and a fixe
 anything that holds a private key, a non-RSA key, or fewer than 3072 bits. The server never holds the private key and
 cannot open its own backups. It is committed like `preview-deploy-key.pub` (public by design).
 
+- **What the sealing proves, and what it does not.** AES-GCM's tag means opening fails if one byte changed after the
+  copy was sealed. It does **not** say who sealed it: the certificate is public, so anyone who can write to the Drive
+  folder (the server's credential, or the Sprecher East Google account) can make a copy that opens and passes. So a
+  restore compares the SHA-256 the job recorded, and the restore script refuses any archive member that a backup does not hold.
 - **An expired certificate is accepted.** OpenSSL does not check the dates when it seals and only the key matters.
 - **Changing the key:** make a new pair, replace `ops/offsite-backup-cert.pem`, deploy. New copies are sealed to the new
   key. **Copies already in Drive stay sealed to the old key**, so keep the old private key until the 8 old copies have
@@ -56,17 +68,29 @@ cannot open its own backups. It is committed like `preview-deploy-key.pub` (publ
 
 `install-offsite-backup.sh` runs in its own deploy step after the release is live. The credential arrives on stdin
 from the `production` environment secret `OFFSITE_BACKUP_RCLONE_CONF`, never in an argument or a log. The step has a
-15-minute limit of its own, and rclone calls in `test` and `check` are cut off after 4 minutes.
+15-minute limit of its own. Each part is cut off as a whole so the step cannot outlast it: the package download 3
+minutes, the first try 5 minutes, the check 2 minutes, and each rclone call in them 1 minute (a test adds the
+numbers up against the step's limit).
 
-- It checks the public key, then the credential: exactly one `[offsite]` section, `type = drive`, `scope = drive.file`,
-  `client_id`, `client_secret` and `token`, each once, and nothing else (an empty `team_drive`, `root_folder_id` or
+- It checks the public key (a link in its place is reported as a link), then the credential: exactly one `[offsite]`
+  section, `type = drive`, `scope = drive.file`, `client_id`, `client_secret` and `token`, each once, and nothing else (an empty `team_drive`, `root_folder_id` or
   `service_account_file` is accepted, a value is refused). A setting given twice, another spelling, a second section
   or a setting before the section is refused, because rclone keeps the last value and `type = local` would keep the
   "backup" on the server's own disk. The file stored is written from the checked values, not the text received.
+  The `token` must be one line of JSON with a non-empty `access_token` and `refresh_token` and an `expiry` that is
+  an RFC 3339 date (fractional seconds are fine): that is what rclone 1.76.0 needs to keep refreshing it. Google's raw
+  sign-in response (it has `expires_in`, no `expiry`) is refused. A value never appears in a message.
+- **The `scope = drive.file` line proves nothing.** Google fixes the scope when the owner signs in, and a sign-in with
+  full Drive access written as `scope = drive.file` would pass the file check. So the first try (`test`) asks Google's
+  token-info endpoint what the access token was granted, after the upload (so an expired token has been refreshed), and
+  accepts only exactly `drive.file`. Anything else, or no answer, fails the try with a warning that names no value, and
+  the job is not installed.
 - It stores the file as `/etc/sprecher-east/offsite-rclone.conf` (mode 600 in a mode 700 folder, replaced in one
   rename; nothing is made before a key and a credential both exist), installs rclone **1.76.0** from rclone's `.deb`
-  after its SHA-256 matches the one in `offsite-lib.sh` (`dpkg -i`; an installed 1.76.0 is left alone), installs the
-  weekly job, and tries the credential **once per credential and key** with a small made-up file.
+  after its SHA-256 matches the one in `offsite-lib.sh` (`dpkg -i`; an installed 1.76.0 is left alone), makes the log
+  root-only, tries the credential **once per credential and key** with a small made-up file, and **only after that
+  passes** installs the weekly job (`umask 077` in its line). A credential that fails is never scheduled; a job that is
+  already installed stays when a later try fails (a Drive outage must not stop the backups), and each deploy warns with the reason.
 - Until the key and the credential both exist it installs nothing, uploads nothing and says which is missing.
   The job itself exits 78 ("not set up") the same way and never uploads without the key.
 - **Undo without a shell:** an empty secret removes the stored credential and the weekly job at the next deploy;
@@ -84,30 +108,36 @@ wait for a deploy would need a workflow to name the `production` environment, wh
 
 ## Changes to the server and how to undo them
 
-| Change                | Where                                                                                                  | Undo                                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| rclone 1.76.0 package | `/usr/bin/rclone`                                                                                      | `apt remove rclone`                                                                                   |
-| Drive credential      | `/etc/sprecher-east/offsite-rclone.conf`                                                               | Empty the secret and deploy; or `rm` it; remove the app at <https://myaccount.google.com/permissions> |
-| Weekly job            | `/etc/cron.d/sprecher-east-offsite-backup`                                                             | Empty the secret or remove the certificate and deploy; or `rm` it                                     |
-| State and log         | `/etc/sprecher-east/offsite-tried`, `offsite-status` and `.offsite.lock` in the backup folder, the log | `rm` them                                                                                             |
-| Copies                | Google Drive folder `sprecher-east-backups`                                                            | Delete the folder in Drive                                                                            |
+| Change                | Where                                                                                                                    | Undo                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| rclone 1.76.0 package | `/usr/bin/rclone`                                                                                                        | `apt remove rclone`                                                                                   |
+| Drive credential      | `/etc/sprecher-east/offsite-rclone.conf`                                                                                 | Empty the secret and deploy; or `rm` it; remove the app at <https://myaccount.google.com/permissions> |
+| Weekly job            | `/etc/cron.d/sprecher-east-offsite-backup`                                                                               | Empty the secret or remove the certificate and deploy; or `rm` it                                     |
+| State and log         | `/etc/sprecher-east/offsite-tried`, `offsite-status`, `offsite-sha256` and `.offsite.lock` in the backup folder, the log | `rm` them                                                                                             |
+| Copies                | Google Drive folder `sprecher-east-backups`                                                                              | Delete the folder in Drive                                                                            |
 
-`/etc/sprecher-east/` and the log are in the preview isolation check (`preview-isolation-check.sh`), so a preview
-account that could read the credential fails its deploy.
+`/etc/sprecher-east/` (mode 700, made by the installer) and the log (mode 600, made by the installer) are in the
+preview isolation check (`preview-isolation-check.sh`), so a preview account that could read the credential fails its deploy.
 
 ## Setting it up (the owner's steps)
 
-Make the key pair on your own computer, give back only the public certificate (an agent commits it), then create the
-Drive credential and set the secret. The exact pages and clicks are in the owner's list on #1332.
+The exact pages and clicks are in the owner's list on #1332. What exists, made in the owner's browser:
 
-```bash
-openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -aes-256-cbc -out sprecher-east-backup-private.pem
-openssl req -new -x509 -key sprecher-east-backup-private.pem -subj "/CN=Sprecher East backups" -days 7300 -out sprecher-east-backup-public.pem
-```
-
-The first command asks for a passphrase. Keep the private file and the passphrase in the password manager; without them
-no copy can be opened. Give back only `sprecher-east-backup-public.pem`. On Windows in Git Bash write
-`-subj "//CN=Sprecher East backups"` (Git Bash would turn `/CN=` into a path).
+- **The key pair**: generated in the browser (WebCrypto, RSA 4096). The public certificate is committed as
+  `ops/offsite-backup-cert.pem`; the private key is an **unencrypted PKCS#8** key (`-----BEGIN PRIVATE KEY-----`),
+  held only in his password manager. It has no passphrase, so whoever holds the file can open every copy.
+- **The Drive credential**: a Google Cloud project with the Drive API on, an app that is published (a "Testing" app's
+  sign-in expires after 7 days), an OAuth client of type "TVs and Limited Input devices", and a sign-in with Google's
+  **device flow** for the scope `drive.file` only. It is written as the `[offsite]` section the check above accepts
+  (`type = drive`, `client_id`, `client_secret`, `scope = drive.file`, `token` as one line of JSON with an `expiry`)
+  and saved as the `production` environment secret `OFFSITE_BACKUP_RCLONE_CONF`.
+- **The fallback** if the server's rclone refuses a device-flow token: on any computer run `rclone config` (new remote
+  named `offsite`, storage `drive`, scope `drive.file`, a browser sign-in), copy the block `rclone config show offsite`
+  prints, and save it as the same secret. Delete the remote from that computer afterwards.
+- **Another key pair** (a different way to make the key): `openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:4096
+-aes-256-cbc -out private.pem`, then `openssl req -new -x509 -key private.pem -subj "/CN=Sprecher East backups"
+-days 7300 -out public.pem` (on Windows in Git Bash write `//CN=`). That private key has a passphrase, which
+  `offsite-restore.sh` then asks for. Commit only the public certificate.
 
 ## Restore from an off-site copy
 
@@ -116,25 +146,38 @@ and cannot. On a Mac: `brew install openssl@3`, then name it:
 `OFFSITE_OPENSSL="$(brew --prefix openssl@3)/bin/openssl" bash offsite-restore.sh ...`. The script checks and says so.
 Linux: any current distribution; Windows: Git Bash's OpenSSL 3 or WSL. (Tested on Linux with OpenSSL 3.0.13 only.)
 
-The private key never goes to the server, Drive, the repository or a chat.
+The private key never goes to the server, Drive, the repository or a chat. His key is a plain, unencrypted
+PKCS#8 file kept in the password manager, so it goes into a file **only for the restore**, and that file alone opens every
+copy:
+
+- Make the file empty with mode 600 first (`install -m 600 /dev/null ~/restore-key.pem`), then paste the key into it,
+  in a folder that is **not synced** (not Google Drive for desktop's folder, not iCloud, Dropbox or a backup folder).
+- Delete it right after the restore (`shred -u ~/restore-key.pem` where `shred` exists, otherwise `rm -P` on a Mac or `rm`).
 
 1. **Get a copy.** Download `sprecher-east-<time>.tar.gz.cms` from the Drive folder `sprecher-east-backups` into a new,
    empty folder. (If Google Drive for desktop syncs that folder it is already on the computer.)
-2. **Open it** with the repository's `ops` folder next to the script (`offsite-lib.sh` and `public-key-lib.sh` are read
+2. **Compare its SHA-256 first.** Take the hash the job recorded for that copy (the newest one is in the last deploy's
+   check annotation; all 8 are in `/var/backups/sprecher-east/offsite-sha256` on the server; the status file names the
+   last run's) and give it to the script. It refuses a file with another hash before opening it. This is what shows the copy
+   is the one the job sent: the sealing alone cannot (see [what the sealing proves](#how-it-is-sealed)).
+3. **Open it** with the repository's `ops` folder next to the script (`offsite-lib.sh` and `public-key-lib.sh` are read
    too; needs bash and OpenSSL 3):
 
    ```bash
-   bash ops/offsite-restore.sh sprecher-east-<time>.tar.gz.cms /path/to/sprecher-east-backup-private.pem ./opened
+   OFFSITE_EXPECTED_SHA256=<the recorded hash> bash ops/offsite-restore.sh sprecher-east-<time>.tar.gz.cms ~/restore-key.pem ./opened
    ```
 
-   It asks for the key's passphrase, refuses a wrong key or a copy that was changed or damaged (nothing is written
-   then), checks the result is a readable archive, and writes `sprecher-east-<time>.tar.gz` readable by you only: the same
-   archive `backup.sh` makes. It holds residents' emails and the site's secrets; delete it afterwards.
+   It refuses a wrong key or a copy that was changed or damaged (nothing is written then; a key with a passphrase is asked
+   for it), and then reads the opened archive member by member: only `payload.db`, `env.local` and plain files and
+   folders under `media/` pass. A link, a device, a setuid bit, an absolute or parent path, a backslash in a name or any
+   other name is refused, and nothing is written. It writes `sprecher-east-<time>.tar.gz` readable by you only. It holds
+   residents' emails and the site's secrets; delete it afterwards.
 
-3. **Put it on the server** with `scp` into `/root/`, then follow
+4. **Put it on the server** with `scp` into `/root/`, then follow
    [Restore content from an archive](README.md#restore-content-from-an-archive) with that file in place of
-   `/var/backups/sprecher-east/daily/<archive>.tar.gz`, and `rm` the uploaded archive when done.
-4. **The first real restore drill** (#1549) is done once after the first real copy is in Drive, and written on that
+   `/var/backups/sprecher-east/daily/<archive>.tar.gz` (extract with `--no-same-owner --no-same-permissions`, as the
+   steps there say), and `rm` the uploaded archive when done.
+5. **The first real restore drill** (#1549) is done once after the first real copy is in Drive, and written on that
    issue: which copy, how long it took, what was checked.
 
 ### How big a copy can be opened

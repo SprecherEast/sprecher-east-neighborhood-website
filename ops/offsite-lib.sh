@@ -44,8 +44,18 @@ OFFSITE_OPEN_MEMORY_FACTOR=3
 OFFSITE_WARN_BYTES="${OFFSITE_WARN_BYTES:-1073741824}"
 # How long one rclone call may take before it is cut off: a run sends a whole archive, the test and the check
 # (which a deploy waits for) must not hang it.
-OFFSITE_RUN_SECONDS=21600
-OFFSITE_QUICK_SECONDS=240
+OFFSITE_RUN_SECONDS="${OFFSITE_RUN_SECONDS:-21600}"
+OFFSITE_QUICK_SECONDS="${OFFSITE_QUICK_SECONDS:-60}"
+# What the deploy's step may spend (its limit is 15 minutes, .github/workflows/deploy.yml; a test adds these up): the
+# package download, the first try (`test`) and the check, each cut off as a whole, and Google's one token-info call.
+OFFSITE_DOWNLOAD_SECONDS="${OFFSITE_DOWNLOAD_SECONDS:-180}"
+OFFSITE_TEST_TOTAL_SECONDS="${OFFSITE_TEST_TOTAL_SECONDS:-300}"
+OFFSITE_CHECK_TOTAL_SECONDS="${OFFSITE_CHECK_TOTAL_SECONDS:-120}"
+OFFSITE_TOKENINFO_SECONDS=20
+# Google's endpoint that says what an access token was granted. The file's own `scope` line says nothing about that:
+# Google fixes the scope when the owner signs in.
+OFFSITE_TOKENINFO_URL="https://oauth2.googleapis.com/tokeninfo"
+OFFSITE_SCOPE="https://www.googleapis.com/auth/drive.file"
 
 # What a sealed copy is called, and what the job may ever delete in Drive: nothing else matches these.
 OFFSITE_SUFFIX=".cms"
@@ -72,13 +82,22 @@ offsite_openssl_problem() {
   return 1
 }
 
+# Is there anything at <path>, even a link that leads nowhere? ("not there yet" is for nothing at all; a link is a problem.)
+offsite_cert_present() { # <file>
+  [ -e "$1" ] || [ -L "$1" ]
+}
+
 # Prints why <certificate file> cannot be used to seal, and returns 1; prints nothing when it can. It must be
 # one PEM certificate (the public half only: a private key is refused whatever else the file holds), and its public
 # key must pass the same rule as every public key the repo seals to (public-key-lib.sh). A certificate that has
 # expired is accepted: openssl does not check the dates when it seals, and only the key matters here.
 offsite_cert_problem() { # <file>
   local file="$1" pub
-  if [ ! -f "$file" ] || [ -L "$file" ]; then
+  if [ -L "$file" ]; then
+    echo "the public key file is a symbolic link; it must be the certificate itself"
+    return 1
+  fi
+  if [ ! -f "$file" ]; then
     echo "the public key file is missing"
     return 1
   fi
@@ -91,7 +110,7 @@ offsite_cert_problem() { # <file>
     return 1
   fi
   pub=$(mktemp)
-  if ! openssl x509 -in "$file" -noout -pubkey >"$pub" 2>/dev/null; then
+  if ! "$OFFSITE_OPENSSL" x509 -in "$file" -noout -pubkey >"$pub" 2>/dev/null; then
     rm -f "$pub"
     echo "the public key file is not a readable certificate"
     return 1
@@ -185,12 +204,103 @@ offsite_conf_normalize() { # <text>
       return 1
     fi
   done
-  if [[ "${val[token]}" != "{"*"}" ]]; then
-    OFFSITE_CONF_PROBLEM="the credential's token is not the sign-in token rclone wrote"
+  if ! offsite_token_problem "${val[token]}"; then
+    OFFSITE_CONF_PROBLEM="$OFFSITE_TOKEN_PROBLEM"
     return 1
   fi
   printf -v OFFSITE_CONF_CANONICAL '[%s]\ntype = drive\nclient_id = %s\nclient_secret = %s\nscope = drive.file\ntoken = %s\n' \
     "$OFFSITE_REMOTE_NAME" "${val[client_id]}" "${val[client_secret]}" "${val[token]}"
+}
+
+# Checks the `token` value of a credential the way rclone 1.76.0 reads it, and either returns 0 or sets
+# OFFSITE_TOKEN_PROBLEM to a fixed sentence and returns 1 (a value is never in it). rclone needs one line of JSON with a
+# non-empty access_token and refresh_token (with an empty access_token it falls back to an old format and blanks the
+# refresh token) and an RFC 3339 expiry (with none the access token counts as never expiring and is never refreshed, so
+# the credential works for about an hour). Google's own response to a sign-in (it has `expires_in` and no `expiry`) is not
+# that shape and is refused. A fractional second in the expiry is valid. Node reads it (the server runs Node, as its
+# backup does); the token goes in on stdin, never in an argument.
+offsite_token_problem() { # <token value>
+  local verdict
+  OFFSITE_TOKEN_PROBLEM=""
+  verdict=$(
+    printf '%s' "$1" | node -e '
+      let text = ""
+      process.stdin.on("data", (d) => (text += d)).on("end", () => {
+        let t
+        try { t = JSON.parse(text) } catch { return console.log("json") }
+        if (t === null || typeof t !== "object" || Array.isArray(t)) return console.log("json")
+        const filled = (v) => typeof v === "string" && v.trim() !== ""
+        if (!filled(t.access_token)) return console.log("access")
+        if (!filled(t.refresh_token)) return console.log("refresh")
+        if ("expires_in" in t && !("expiry" in t)) return console.log("raw")
+        const rfc3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/
+        if (typeof t.expiry !== "string" || !rfc3339.test(t.expiry) || Number.isNaN(Date.parse(t.expiry))) return console.log("expiry")
+        console.log("ok")
+      })
+    ' 2>/dev/null
+  ) || verdict=node
+  case "$verdict" in
+    ok) return 0 ;;
+    json) OFFSITE_TOKEN_PROBLEM="the credential's token must be one line of JSON, as rclone writes it" ;;
+    access) OFFSITE_TOKEN_PROBLEM="the credential's token has no access_token" ;;
+    refresh) OFFSITE_TOKEN_PROBLEM="the credential's token has no refresh_token" ;;
+    raw) OFFSITE_TOKEN_PROBLEM="the credential's token is Google's raw sign-in response; it needs an expiry (an RFC 3339 date) instead of expires_in" ;;
+    expiry) OFFSITE_TOKEN_PROBLEM="the credential's token needs an expiry that is an RFC 3339 date (for example 2026-11-27T06:03:00.123Z)" ;;
+    *) OFFSITE_TOKEN_PROBLEM="the credential's token could not be checked (Node is needed on the server)" ;;
+  esac
+  return 1
+}
+
+# Asks Google what the access token in <credential file> was granted, and prints why it is not exactly drive.file (and
+# returns 1), or prints nothing (returns 0). The file's `scope` line proves nothing: the narrow scope is set when the
+# owner signs in, and a sign-in with full Drive access written as `scope = drive.file` would pass every other check. The
+# token goes to Google over HTTPS in the request body (stdin), never in an argument, and no value is ever printed.
+# Run after a first upload, so rclone has refreshed an expired access token into the file.
+offsite_scope_problem() { # <credential file>
+  local token answer verdict
+  token=$(
+    node -e '
+      try {
+        const m = /^token\s*=\s*(.*)$/m.exec(require("fs").readFileSync(process.argv[1], "utf8"))
+        process.stdout.write(String(JSON.parse(m[1]).access_token || ""))
+      } catch {}
+    ' "$1" 2>/dev/null
+  ) || token=""
+  if ! [[ "$token" =~ ^[A-Za-z0-9._~-]+$ ]]; then
+    echo "the stored access token could not be read, so the granted scope could not be checked"
+    return 1
+  fi
+  answer=$(printf 'access_token=%s' "$token" | curl -fsS --proto '=https' --tlsv1.2 --max-time "$OFFSITE_TOKENINFO_SECONDS" \
+    -d @- "$OFFSITE_TOKENINFO_URL" 2>/dev/null) || {
+    echo "Google would not say what scope the credential was granted, so it was not accepted"
+    return 1
+  }
+  verdict=$(
+    printf '%s' "$answer" | node -e '
+      let text = ""
+      process.stdin.on("data", (d) => (text += d)).on("end", () => {
+        try {
+          const scopes = String(JSON.parse(text).scope || "").split(/\s+/).filter(Boolean)
+          console.log(scopes.length === 1 && (scopes[0] === process.argv[1] || scopes[0] === "drive.file") ? "ok" : "wider")
+        } catch { console.log("unreadable") }
+      })
+    ' "$OFFSITE_SCOPE" 2>/dev/null
+  ) || verdict=unreadable
+  case "$verdict" in
+    ok) return 0 ;;
+    wider) echo "the credential was granted more than drive.file (or something else); sign in again with only the drive.file scope" ;;
+    *) echo "Google's answer about the granted scope could not be read, so the credential was not accepted" ;;
+  esac
+  return 1
+}
+
+# rclone reads settings from RCLONE_* environment variables ahead of its config file (a remote's type, its folder).
+# Only root can set them and cron's environment is fixed, but the job's remote must be the file's and nothing else.
+offsite_clear_rclone_environment() {
+  local name
+  while IFS= read -r name; do
+    case "$name" in RCLONE_*) unset "$name" ;; esac
+  done < <(compgen -e)
 }
 
 # Seals <in> to <certificate> into <out>. openssl's own words are never shown: they could name a path.
@@ -204,4 +314,70 @@ offsite_seal() { # <certificate> <in> <out>
 # can hold output written before the failure was seen. Sealing streams, opening does not: see OFFSITE_OPEN_MEMORY_FACTOR.
 offsite_open() { # <private key> <sealed in> <out>
   "$OFFSITE_OPENSSL" cms -decrypt -binary -inform DER -in "$2" -inkey "$1" -out "$3"
+}
+
+# Is <name> a member the restore may take: the database file, the environment file, or a plain file or folder under
+# media/ (never an absolute path, and no `.` or `..` part, nor a backslash or control character)?
+offsite_member_name_ok() { # <name as tar lists it>
+  local name="$1" rest part
+  local -a parts
+  # GNU tar lists a control character (a line break, a tab) as a backslash and a letter: a name with a backslash is refused.
+  case "$name" in *\\*) return 1 ;; esac
+  case "$name" in
+    payload.db | env.local | media | media/) return 0 ;;
+    media/*) ;;
+    *) return 1 ;;
+  esac
+  rest=${name#media/}
+  rest=${rest%/}
+  [ -n "$rest" ] || return 1
+  IFS=/ read -r -a parts <<<"$rest"
+  for part in "${parts[@]}"; do
+    case "$part" in "" | . | ..) return 1 ;; esac
+  done
+}
+
+# Prints why the opened archive <file> may not be put on the server, and returns 1; prints nothing when every member is
+# the database file, the environment file, or a plain file or folder under media/. Anything else (a link, a device, a
+# pipe, a setuid or sticky bit, an absolute or parent path, another name) is refused: whoever can write to the Drive
+# folder can make a copy that opens (the certificate is public) and passes the authentication check, so what is in it is
+# checked here, not trusted. Both listings are read, and each line of the long one must begin with a plain file or folder
+# type and permissions and end with the name the short one gives, so a name with a line break in it cannot pass.
+offsite_archive_problem() { # <file>
+  local names long i name line type
+  local -a n_list l_list
+  names=$(tar -tzf "$1" 2>/dev/null && printf x) || { echo "the copy opened but is not a readable archive"; return 1; }
+  long=$(tar -tvzf "$1" 2>/dev/null && printf x) || { echo "the copy opened but is not a readable archive"; return 1; }
+  names=${names%x}
+  long=${long%x}
+  mapfile -t n_list <<<"${names%$'\n'}"
+  mapfile -t l_list <<<"${long%$'\n'}"
+  if [ "${#n_list[@]}" != "${#l_list[@]}" ] || [ -z "$names" ]; then
+    echo "the archive's member list could not be read safely"
+    return 1
+  fi
+  local has_db=no
+  for i in "${!n_list[@]}"; do
+    name=${n_list[$i]}
+    line=${l_list[$i]}
+    if ! offsite_member_name_ok "$name"; then
+      echo "the archive holds a member that is not the database, the environment file or a file under media/ (a name, a link or a path that must not be restored)"
+      return 1
+    fi
+    if ! [[ "$line" =~ ^([-d])[-rwx]{9}[[:space:]] ]] || [[ "$line" != *" $name" ]]; then
+      echo "the archive holds a member that is not a plain file or folder with ordinary permissions (a link, a device, a setuid bit)"
+      return 1
+    fi
+    type=${BASH_REMATCH[1]}
+    case "$name" in
+      */ | media) [ "$type" = d ] || { echo "the archive holds a folder name that is not a folder"; return 1; } ;;
+      *) [ "$type" = - ] || { echo "the archive holds a file name that is not a plain file"; return 1; } ;;
+    esac
+    [ "$name" != payload.db ] || has_db=yes
+  done
+  if [ "$has_db" != yes ]; then
+    echo "the archive has no payload.db (the database)"
+    return 1
+  fi
+  return 0
 }

@@ -86,6 +86,7 @@ OFFSITE_LOG="${OFFSITE_LOG:-/var/log/sprecher-east-offsite-backup.log}"
 OFFSITE_CRON_FILE="${OFFSITE_CRON_FILE:-/etc/cron.d/sprecher-east-offsite-backup}"
 OFFSITE_STATUS="${OFFSITE_STATUS:-$BACKUP_ROOT/offsite-status}" # how the last run went, for `check`
 OFFSITE_LOCK="${OFFSITE_LOCK:-$BACKUP_ROOT/.offsite.lock}"
+OFFSITE_SHA_LIST="${OFFSITE_SHA_LIST:-$BACKUP_ROOT/offsite-sha256}" # the SHA-256 of each sealed copy in Drive, "<hash>  <name>"
 PRODUCTION_PM2_HOME="${PRODUCTION_PM2_HOME:-/root/.pm2}" # production's PM2 state
 # Where PM2 writes production's logs (sprecher-east-out.log and -error.log). ecosystem.config.cjs falls
 # back to the same folder when PM2_LOG_DIR is not set, and a test ties the two. A preview's logs go in its

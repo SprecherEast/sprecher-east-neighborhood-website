@@ -3,6 +3,7 @@
 // computer. `rclone` is a stand-in that keeps "Drive" in a local folder, and the key pair is made for the test
 // with openssl: nothing here uses the network, and no real key or credential exists.
 import { execFileSync, spawn } from 'node:child_process'
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -467,9 +468,21 @@ describe('offsite-restore.sh', () => {
       expect(result.code).toBe(1)
       expect(result.out).toContain('exists already')
       expect(fs.readFileSync(path.join(work, `sprecher-east-${STAMP}.tar.gz`), 'utf8')).toBe('mine')
-      fs.copyFileSync(path.join(work, NAME), path.join(work, 'plain.bin'))
-      result = await h.run('offsite-restore.sh', [path.join(work, 'plain.bin'), h.keys.key, work])
-      expect(result.code).toBe(1)
+      // a copy that is not named as a sealed copy, opened into a different folder so "exists already" cannot be the reason
+      const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-out-'))
+      try {
+        fs.copyFileSync(path.join(work, NAME), path.join(work, 'plain.bin'))
+        result = await h.run('offsite-restore.sh', [
+          path.join(work, 'plain.bin'),
+          h.keys.key,
+          elsewhere,
+        ])
+        expect(result.code).toBe(1)
+        expect(result.out).toContain('is not a sealed copy')
+        expect(fs.readdirSync(elsewhere)).toEqual([])
+      } finally {
+        fs.rmSync(elsewhere, { recursive: true, force: true })
+      }
       expect((await h.run('offsite-restore.sh', [])).code).toBe(2)
     } finally {
       fs.rmSync(work, { recursive: true, force: true })
@@ -651,5 +664,318 @@ describe('the settings', () => {
     expect((await h.run('offsite-backup.sh', ['nonsense'])).code).toBe(2)
     expect(h.rcloneLog()).toBe('')
     expect(REMOTE_DIR).toBe('sprecher-east-backups')
+  })
+})
+
+describe('every guard fails a test when it is taken out', () => {
+  const oldCopies = (n) => {
+    for (let i = 1; i <= n; i++)
+      h.putRemote(
+        `sprecher-east-2026-10-${String(i).padStart(2, '0')}T0815Z.tar.gz.cms`,
+        'old',
+        60 - i,
+      )
+  }
+
+  it('turns an unexpected error into a message, the failed status and exit 1', async () => {
+    h.makeArchive()
+    h.stub('md5sum', 'exit 1')
+    const { code, out } = await h.run('offsite-backup.sh')
+    expect(code).toBe(1)
+    expect(out).toContain('stopped unexpectedly')
+    expect(status()).toContain('result=failed')
+  })
+
+  it('refuses a daily archive whose name is not the expected form, and sends nothing', async () => {
+    h.makeArchive('weird-name')
+    const { code, out } = await h.run('offsite-backup.sh')
+    expect(code).toBe(1)
+    expect(out).toContain('not the expected form')
+    expect(h.rcloneLog()).not.toContain('copyto')
+  })
+
+  it('fails, and says so, when an old copy cannot be removed', async () => {
+    h.makeArchive()
+    oldCopies(9)
+    const { code, out } = await h.run('offsite-backup.sh', [], { MOCK_FAIL: 'deletefile' })
+    expect(code).toBe(1)
+    expect(out).toContain('removing old copy')
+    expect(status()).toContain('result=failed')
+  })
+
+  it('fails, and says so, when Drive cannot be listed for old copies after a good upload', async () => {
+    h.makeArchive()
+    oldCopies(9)
+    const { code, out } = await h.run('offsite-backup.sh', [], { MOCK_FAIL_FROM: 'lsf:2' })
+    expect(code).toBe(1)
+    expect(out).toContain('listing Drive for old copies failed')
+    expect(status()).toContain('result=failed')
+    expect(archiveNames()).toHaveLength(10) // nothing was pruned, and the new copy is there
+  })
+
+  it('makes the backup folder root-only', async () => {
+    h.makeArchive()
+    fs.chmodSync(h.p('backups'), 0o755)
+    await h.run('offsite-backup.sh')
+    expect((fs.statSync(h.p('backups')).mode & 0o777).toString(8)).toBe('700')
+  })
+
+  it('deletes only test files with exactly the test name (anchored, dots literal)', async () => {
+    h.putRemote('sprecher-east-test-2026-10-01T0000Z.txt.cms', 'an old test file', 40)
+    const lookalikes = [
+      'old-sprecher-east-test-2026-09-01T0000Z.txt.cms',
+      'sprecher-east-test-2026-09-01T0000Z.txt.cms.bak',
+      'sprecher-east-test-2026-09-01T0000Zxtxt.cms',
+    ]
+    for (const name of lookalikes) h.putRemote(name, 'not ours', 90)
+    const { code } = await h.run('offsite-backup.sh', ['test'])
+    expect(code).toBe(0)
+    for (const name of lookalikes) expect(h.remoteNames()).toContain(name)
+    expect(h.remoteNames()).not.toContain('sprecher-east-test-2026-10-01T0000Z.txt.cms')
+  })
+
+  it.each([
+    ['test', 'copyto'],
+    ['check', 'lsf'],
+  ])('cuts off a rclone call that hangs in %s, after its time limit', async (mode, hanging) => {
+    h.makeArchive()
+    const started = Date.now()
+    const { code } = await h.run('offsite-backup.sh', [mode], {
+      MOCK_HANG: hanging,
+      OFFSITE_QUICK_SECONDS: '1',
+    })
+    expect(code).toBe(1)
+    expect(Date.now() - started).toBeLessThan(25000)
+  })
+
+  it("clears RCLONE_* settings from the job's environment", async () => {
+    h.makeArchive()
+    await h.run('offsite-backup.sh', [], {
+      RCLONE_CONFIG_OFFSITE_TYPE: 'local',
+      RCLONE_DRIVE_ROOT_FOLDER_ID: 'elsewhere',
+    })
+    expect(h.rcloneLog()).toContain('copyto')
+    expect(h.rcloneLog()).not.toMatch(/^ENV RCLONE_/m)
+  })
+
+  it('reports a symbolic link in place of the certificate as a link, and uploads nothing', async () => {
+    h.makeArchive()
+    fs.rmSync(h.p('code/ops/offsite-backup-cert.pem'))
+    fs.symlinkSync(h.keys.cert, h.p('code/ops/offsite-backup-cert.pem'))
+    const { code, out } = await h.run('offsite-backup.sh')
+    expect(code).toBe(1)
+    expect(out).toContain('symbolic link')
+    expect(h.rcloneLog()).toBe('')
+  })
+})
+
+describe('the scope the sign-in was granted', () => {
+  it('is checked in the first try: wider than drive.file fails it, with a warning that names no value', async () => {
+    const { code, out } = await h.run('offsite-backup.sh', ['test'], {
+      STUB_TOKENINFO_ANSWER: '{"scope":"https://www.googleapis.com/auth/drive"}',
+    })
+    expect(code).toBe(1)
+    expect(out).toContain('::warning')
+    expect(out).toContain('granted more than drive.file')
+    expect(out).not.toContain('ya29.fake-access-token')
+  })
+
+  it('is not asked in the weekly run (one try per credential is enough)', async () => {
+    h.makeArchive()
+    await h.run('offsite-backup.sh')
+    expect(fs.readFileSync(h.p('log'), 'utf8')).not.toContain('tokeninfo')
+  })
+})
+
+describe("each copy's SHA-256 is recorded where the owner can read it", () => {
+  it('writes it to the status file, the list and the notice, and the check shows it', async () => {
+    h.makeArchive()
+    const { out } = await h.run('offsite-backup.sh')
+    const sha = crypto.createHash('sha256').update(h.remoteFile(NAME)).digest('hex')
+    expect(out).toContain(`sealed SHA-256 ${sha}`)
+    expect(status()).toContain(`file=${NAME}\nsha256=${sha}\n`)
+    expect(fs.readFileSync(h.p('backups/offsite-sha256'), 'utf8')).toBe(`${sha}  ${NAME}\n`)
+    const check = await h.run('offsite-backup.sh', ['check'])
+    expect(check.out).toContain(`sealed SHA-256 ${sha}`)
+  })
+
+  it('keeps only as many as the copies kept in Drive, and one line per copy', async () => {
+    const lines = Array.from(
+      { length: 8 },
+      (_, i) => `${String(i).repeat(64)}  sprecher-east-2026-10-0${i + 1}T0815Z.tar.gz.cms`,
+    )
+    fs.writeFileSync(h.p('backups/offsite-sha256'), lines.join('\n') + '\n')
+    h.makeArchive()
+    await h.run('offsite-backup.sh')
+    const kept = fs.readFileSync(h.p('backups/offsite-sha256'), 'utf8').trim().split('\n')
+    expect(kept).toHaveLength(8)
+    expect(kept.at(-1)).toContain(NAME)
+    expect(kept[0]).toBe(lines[1])
+    await h.run('offsite-backup.sh') // the same copy again: not listed twice
+    expect(
+      fs
+        .readFileSync(h.p('backups/offsite-sha256'), 'utf8')
+        .split('\n')
+        .filter((l) => l.includes(NAME)),
+    ).toHaveLength(1)
+  })
+
+  it('says it is not recorded for a copy the job did not record', async () => {
+    h.putRemote(NAME, 'x', 3)
+    const { out } = await h.run('offsite-backup.sh', ['check'])
+    expect(out).toContain('sealed SHA-256 not recorded')
+  })
+})
+
+describe('offsite-restore.sh takes nothing but what a backup holds', () => {
+  const sh = (cmd, cwd) => execFileSync('bash', ['-c', cmd], { cwd, stdio: 'ignore' })
+  /** Makes an archive with `build(stage)` and the tar command's arguments, seals it to the test key, returns the folder. */
+  const crafted = (build, tarArgs = ['payload.db', 'env.local', 'media'], extra = []) => {
+    const work = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-craft-'))
+    const stage = path.join(work, 'stage')
+    fs.mkdirSync(path.join(stage, 'media'), { recursive: true })
+    fs.writeFileSync(path.join(stage, 'payload.db'), 'db')
+    fs.writeFileSync(path.join(stage, 'env.local'), 'A=b\n')
+    build(stage)
+    const plain = path.join(work, `sprecher-east-${STAMP}.tar.gz`)
+    execFileSync('tar', [...extra, '-czf', plain, '-C', stage, ...tarArgs], { stdio: 'ignore' })
+    execFileSync(
+      'openssl',
+      [
+        'cms',
+        '-encrypt',
+        '-aes-256-gcm',
+        '-binary',
+        '-outform',
+        'DER',
+        '-in',
+        plain,
+        '-out',
+        path.join(work, NAME),
+        '-recip',
+        h.keys.cert,
+        '-keyopt',
+        'rsa_padding_mode:oaep',
+      ],
+      { stdio: 'ignore' },
+    )
+    fs.rmSync(plain)
+    fs.rmSync(stage, { recursive: true })
+    const out = path.join(work, 'out')
+    fs.mkdirSync(out)
+    return { work, out }
+  }
+  const open = (c, env = {}) =>
+    h.run('offsite-restore.sh', [path.join(c.work, NAME), h.keys.key, c.out], env)
+
+  it('opens an archive of the real shape, with media in folders and a name with spaces', async () => {
+    const c = crafted((stage) => {
+      fs.mkdirSync(path.join(stage, 'media/2026/11'), { recursive: true })
+      fs.writeFileSync(path.join(stage, 'media/2026/11/a photo (1).jpg'), 'jpg')
+      fs.writeFileSync(path.join(stage, 'media/x.png'), 'png')
+    })
+    try {
+      const result = await open(c)
+      expect(result.code).toBe(0)
+      expect(result.out).toContain('Not checked: who sealed it')
+      expect(fs.readdirSync(c.out)).toEqual([`sprecher-east-${STAMP}.tar.gz`])
+    } finally {
+      fs.rmSync(c.work, { recursive: true, force: true })
+    }
+  })
+
+  it.each([
+    [
+      'a symbolic link under media',
+      (stage) => fs.symlinkSync('/etc', path.join(stage, 'media/evil')),
+      undefined,
+      [],
+    ],
+    [
+      'a symbolic link in place of media',
+      (stage) => {
+        fs.rmSync(path.join(stage, 'media'), { recursive: true })
+        fs.symlinkSync('/etc', path.join(stage, 'media'))
+      },
+      undefined,
+      [],
+    ],
+    [
+      'a hard link',
+      (stage) => {
+        fs.writeFileSync(path.join(stage, 'media/a'), 'a')
+        fs.linkSync(path.join(stage, 'media/a'), path.join(stage, 'media/b'))
+      },
+      undefined,
+      [],
+    ],
+    [
+      'a setuid file',
+      (stage) => {
+        fs.writeFileSync(path.join(stage, 'media/run'), 'x')
+        fs.chmodSync(path.join(stage, 'media/run'), 0o4755)
+      },
+      undefined,
+      [],
+    ],
+    ['a named pipe', (stage) => sh(`mkfifo "${stage}/media/pipe"`), undefined, []],
+    [
+      'a file with another name at the top',
+      (stage) => fs.writeFileSync(path.join(stage, 'extra.txt'), 'x'),
+      ['payload.db', 'env.local', 'extra.txt', 'media'],
+      [],
+    ],
+    [
+      'a name with a line break in it',
+      (stage) => fs.writeFileSync(path.join(stage, 'media/x\nrest'), 'x'),
+      undefined,
+      [],
+    ],
+    [
+      'an absolute path',
+      (stage) => fs.writeFileSync(path.join(stage, 'abs.txt'), 'x'),
+      ['payload.db', 'env.local', 'media', 'abs.txt'],
+      ['-P', '--transform', 's,^abs.txt$,/tmp/abs.txt,'],
+    ],
+    [
+      'a parent path',
+      (stage) => fs.writeFileSync(path.join(stage, 'up.txt'), 'x'),
+      ['payload.db', 'env.local', 'media', 'up.txt'],
+      ['-P', '--transform', 's,^up.txt$,media/../up.txt,'],
+    ],
+    ['no database file', () => {}, ['env.local', 'media'], []],
+  ])('refuses %s, and writes nothing', async (_what, build, tarArgs, extra) => {
+    const c = crafted(build, tarArgs, extra)
+    try {
+      const result = await open(c)
+      expect(result.code).toBe(1)
+      expect(result.out).toContain('nothing was written')
+      expect(fs.readdirSync(c.out)).toEqual([])
+      expect(fs.readdirSync(c.work).filter((n) => n.endsWith('.partial'))).toEqual([])
+    } finally {
+      fs.rmSync(c.work, { recursive: true, force: true })
+    }
+  })
+
+  it('refuses a copy whose SHA-256 is not the one the job recorded, before opening it', async () => {
+    h.makeArchive()
+    await h.run('offsite-backup.sh')
+    const work = fs.mkdtempSync(path.join(os.tmpdir(), 'offsite-sha-'))
+    try {
+      fs.writeFileSync(path.join(work, NAME), h.remoteFile(NAME))
+      const sha = crypto.createHash('sha256').update(h.remoteFile(NAME)).digest('hex')
+      const wrong = await h.run('offsite-restore.sh', [path.join(work, NAME), h.keys.key, work], {
+        OFFSITE_EXPECTED_SHA256: '0'.repeat(64),
+      })
+      expect(wrong.code).toBe(1)
+      expect(wrong.out).toContain('SHA-256 is not the one expected')
+      expect(fs.readdirSync(work)).toEqual([NAME])
+      const right = await h.run('offsite-restore.sh', [path.join(work, NAME), h.keys.key, work], {
+        OFFSITE_EXPECTED_SHA256: sha,
+      })
+      expect(right.code).toBe(0)
+    } finally {
+      fs.rmSync(work, { recursive: true, force: true })
+    }
   })
 })

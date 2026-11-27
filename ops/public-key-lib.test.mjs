@@ -1,6 +1,6 @@
 // ops/public-key-lib.sh (#1332): the one rule for a public key someone gives the server or a workflow to seal
 // to (the pull request sign-in script and the off-site backup both use it): a PEM public key, RSA, 3072 to 8192
-// bits, never a private key. The keys are made for the test with openssl; the 8704-bit one is a public key only.
+// bits, never a private key. The keys are made for the test with openssl; the 8704-bit RSA key and the 3072-bit DSA key are committed public keys only.
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -45,21 +45,9 @@ beforeAll(() => {
   pub('rsa2048.pem', 'rsa2048.pub')
   openssl('genpkey', '-algorithm', 'EC', '-pkeyopt', 'ec_paramgen_curve:P-256', '-out', p('ec.pem'))
   pub('ec.pem', 'ec.pub')
-  // a 3072-bit key that is not RSA: it passes the size rule, so only the RSA rule refuses it
-  openssl(
-    'genpkey',
-    '-genparam',
-    '-algorithm',
-    'DSA',
-    '-pkeyopt',
-    'dsa_paramgen_bits:3072',
-    '-pkeyopt',
-    'dsa_paramgen_q_bits:256',
-    '-out',
-    p('dsa.param'),
-  )
-  openssl('genpkey', '-paramfile', p('dsa.param'), '-out', p('dsa.pem'))
-  pub('dsa.pem', 'dsa.pub')
+  // a 3072-bit key that is not RSA: it passes the size rule, so only the RSA rule refuses it. A committed public key,
+  // because making DSA parameters of this size takes long on a loaded machine.
+  fs.copyFileSync(path.join(OPS, 'fixtures/dsa-3072-public.pem'), p('dsa.pub'))
   fs.copyFileSync(path.join(OPS, 'fixtures/rsa-8704-public.pem'), p('rsa8704.pub'))
 })
 afterAll(() => fs.rmSync(dir, { recursive: true, force: true }))

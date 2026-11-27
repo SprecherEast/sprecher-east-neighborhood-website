@@ -37,6 +37,23 @@ describe('the deploy step for the off-site backup', () => {
     expect(step['timeout-minutes']).toBeLessThan(deploy.jobs.deploy['timeout-minutes'])
   })
 
+  it('cannot outlast its own limit: the download, the first try and the check, each cut off as a whole, add up to less', () => {
+    const lib = fs.readFileSync(path.join(ROOT, 'ops/offsite-lib.sh'), 'utf8')
+    const seconds = (name) =>
+      Number(new RegExp(`${name}="\\$\\{${name}:-(\\d+)\\}"`).exec(lib)?.[1])
+    const parts = [
+      'OFFSITE_DOWNLOAD_SECONDS',
+      'OFFSITE_TEST_TOTAL_SECONDS',
+      'OFFSITE_CHECK_TOTAL_SECONDS',
+    ].map(seconds)
+    for (const part of parts) expect(part).toBeGreaterThan(0)
+    const spent = parts.reduce((sum, part) => sum + part, 0)
+    const limit = step['timeout-minutes'] * 60
+    expect(spent).toBeLessThanOrEqual(limit - 120) // two minutes for the install of the package, the file writes and ssh
+    // and each rclone call is cut off well inside the first try's own limit
+    expect(seconds('OFFSITE_QUICK_SECONDS')).toBeLessThanOrEqual(parts[1] / 2)
+  })
+
   it('runs only when the deploy was not skipped, after the release is live', () => {
     const names = deploy.jobs.deploy.steps.map((s) => s.name ?? '')
     expect(names.indexOf(step.name)).toBeGreaterThan(
@@ -47,6 +64,10 @@ describe('the deploy step for the off-site backup', () => {
 })
 
 describe('the public certificate', () => {
+  it('is committed, so the weekly job has a key to seal to (its rule is checked in ops/offsite-lib.test.mjs)', () => {
+    expect(fs.existsSync(path.join(ROOT, 'ops/offsite-backup-cert.pem'))).toBe(true)
+  })
+
   it('can be committed: .gitignore skips *.pem, so it names this file as an exception', () => {
     // exit 1 means "not ignored"; 0 would mean `git add` silently skips the owner's certificate
     const result = spawnSync('git', ['check-ignore', '-q', 'ops/offsite-backup-cert.pem'], {
