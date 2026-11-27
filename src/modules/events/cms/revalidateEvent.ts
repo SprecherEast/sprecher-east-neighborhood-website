@@ -1,9 +1,17 @@
-import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from 'payload'
+import type {
+  CollectionAfterChangeHook,
+  CollectionAfterDeleteHook,
+  CollectionBeforeDeleteHook,
+} from 'payload'
 import { revalidatePath } from 'next/cache'
 
 import { expireCacheTag } from '@/platform/payload/expireCacheTag'
 import { PUBLISHED } from '@/platform/payload/published'
-import { revalidateLinkedPages } from '@/platform/payload/revalidateLinked'
+import {
+  findLinkedSlugs,
+  revalidateLinkedPages,
+  revalidateSlugs,
+} from '@/platform/payload/revalidateLinked'
 
 import { EVENTS_SITEMAP_CACHE_TAG } from '../domain/cacheTags'
 
@@ -48,19 +56,35 @@ export const revalidateEvent: CollectionAfterChangeHook = async ({
 
   // The posts that pick this event show it in their related events (#1496)
   if (doc._status === 'published' || unpublished) {
-    await revalidateLinkedPages({
-      payload,
-      collection: 'posts',
-      where: { and: [PUBLISHED, { relatedEvents: { equals: doc.id } }] },
-      basePath: '/posts',
-    })
+    await revalidateLinkedPages({ payload, ...postsPicking(doc.id) })
   }
 
   return doc
 }
 
+/** The published posts that pick an event, as a query, for a save or for the read before a delete. */
+const postsPicking = (id: number | string) => ({
+  collection: 'posts' as const,
+  where: { and: [PUBLISHED, { relatedEvents: { equals: id } }] },
+  basePath: '/posts',
+})
+
+/** Where `readPostsBeforeDelete` keeps the posts' slugs until the event is gone. */
+const POSTS_OF_DELETED_EVENT = 'postSlugsOfDeletedEvent'
+
+/** Read the posts that pick the event now: once it is deleted, nothing links to them (#1496). */
+export const readPostsBeforeDelete: CollectionBeforeDeleteHook = async ({
+  id,
+  req: { payload, context },
+}) => {
+  if (context.disableRevalidate) return
+  context[POSTS_OF_DELETED_EVENT] = await findLinkedSlugs({ payload, ...postsPicking(id) })
+}
+
 export const revalidateDelete: CollectionAfterDeleteHook = ({ doc, req: { context } }) => {
-  if (!context.disableRevalidate) revalidateEventPages(doc.slug)
+  if (context.disableRevalidate) return doc
+  revalidateEventPages(doc.slug)
+  revalidateSlugs('/posts', (context[POSTS_OF_DELETED_EVENT] as string[] | undefined) ?? [])
 
   return doc
 }

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const next = vi.hoisted(() => ({ revalidatePath: vi.fn() }))
 vi.mock('next/cache', () => ({ revalidatePath: next.revalidatePath }))
 
-import { revalidateLinkedPages } from './revalidateLinked'
+import { findLinkedSlugs, revalidateLinkedPages, revalidateSlugs } from './revalidateLinked'
 
 beforeEach(() => next.revalidatePath.mockReset())
 
@@ -50,6 +50,39 @@ describe('revalidateLinkedPages', () => {
         basePath: '/posts',
       }),
     ).resolves.toBeUndefined()
+    expect(error).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('findLinkedSlugs and revalidateSlugs', () => {
+  it('read the slugs first and refresh the pages later, as a delete needs', async () => {
+    const { payload } = payloadFinding([{ slug: 'walk' }, { slug: '' }, { slug: 'fair' }])
+
+    const slugs = await findLinkedSlugs({
+      payload,
+      collection: 'events',
+      where: { id: { in: [1, 2] } },
+      basePath: '/events',
+    })
+    expect(slugs).toEqual(['walk', 'fair'])
+    expect(next.revalidatePath).not.toHaveBeenCalled()
+
+    revalidateSlugs('/events', slugs)
+    expect(next.revalidatePath.mock.calls).toEqual([['/events/walk'], ['/events/fair']])
+  })
+
+  it('give no slugs, and log, when the lookup fails', async () => {
+    const { payload, find, error } = payloadFinding([])
+    find.mockRejectedValue(new Error('database busy'))
+
+    expect(
+      await findLinkedSlugs({
+        payload,
+        collection: 'posts',
+        where: { id: { equals: 1 } },
+        basePath: '/posts',
+      }),
+    ).toEqual([])
     expect(error).toHaveBeenCalledTimes(1)
   })
 })

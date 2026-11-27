@@ -6,6 +6,7 @@ import { getPayload } from 'payload'
 import { cursorAfterLast, type FeedMore, type FeedPage, type SortCursor } from '@/platform/lib'
 import { afterCursor, keysetSort } from '@/platform/payload/keyset'
 import { PUBLISHED } from '@/platform/payload/published'
+import { RELATED_LIST_LIMIT } from '@/platform/payload/relatedLimit'
 import { inPickedOrder } from '@/platform/lib/inPickedOrder'
 
 import { EVENT_SCOPE_ORDER, type EventScope } from '../domain/scope'
@@ -13,9 +14,6 @@ import type { EventDetail, EventSitemapEntry, EventSummary } from '../domain/typ
 import { inListing } from './listing'
 import { SUMMARY_FIELDS, toEventDetail, toEventSummary } from './mappers'
 import { inScope } from './scope'
-
-/** The most posts an event page lists as written about it (#1496). */
-const RELATED_POSTS_LIMIT = 6
 
 /** Events per page in each listing, numbered pages and "Load more" alike. */
 const PAGE_SIZE: Record<EventScope, number> = { upcoming: 12, past: 9 }
@@ -167,7 +165,7 @@ export async function getEventBySlug(
     limit: 1,
     overrideAccess: draft,
     pagination: false,
-    joins: { relatedPosts: { limit: RELATED_POSTS_LIMIT } },
+    joins: { relatedPosts: { limit: RELATED_LIST_LIMIT } },
     where: { slug: { equals: slug } },
   })
 

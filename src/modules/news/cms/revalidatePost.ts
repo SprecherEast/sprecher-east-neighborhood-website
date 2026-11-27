@@ -1,10 +1,18 @@
-import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from 'payload'
+import type {
+  CollectionAfterChangeHook,
+  CollectionAfterDeleteHook,
+  CollectionBeforeDeleteHook,
+} from 'payload'
 import { revalidatePath } from 'next/cache'
 
 import type { Post } from '@/payload-types'
 import { expireCacheTag } from '@/platform/payload/expireCacheTag'
 import { idsOf } from '@/platform/payload/idsOf'
-import { revalidateLinkedPages } from '@/platform/payload/revalidateLinked'
+import {
+  findLinkedSlugs,
+  revalidateLinkedPages,
+  revalidateSlugs,
+} from '@/platform/payload/revalidateLinked'
 
 import { POSTS_SITEMAP_CACHE_TAG } from '../domain/cacheTags'
 
@@ -45,20 +53,49 @@ export const revalidatePost: CollectionAfterChangeHook<Post> = async ({
   if (doc._status === 'published' || unpublished) {
     const events = [...new Set([...idsOf(doc.relatedEvents), ...idsOf(previousDoc?.relatedEvents)])]
     if (events.length > 0) {
-      await revalidateLinkedPages({
-        payload,
-        collection: 'events',
-        where: { id: { in: events } },
-        basePath: '/events',
-      })
+      await revalidateLinkedPages({ payload, ...eventsOf(events) })
     }
   }
 
   return doc
 }
 
+/** The events with these ids, as a query, for a save or for the read before a delete. */
+const eventsOf = (ids: number[]) => ({
+  collection: 'events' as const,
+  where: { id: { in: ids } },
+  basePath: '/events',
+})
+
+/** Where `readEventsBeforeDelete` keeps the events' slugs until the post is gone. */
+const EVENTS_OF_DELETED_POST = 'eventSlugsOfDeletedPost'
+
+/** Read the events the post picks now: once it is deleted, nothing links to them (#1496). */
+export const readEventsBeforeDelete: CollectionBeforeDeleteHook = async ({
+  id,
+  req: { payload, context },
+}) => {
+  if (context.disableRevalidate) return
+  try {
+    const post = await payload.findByID({
+      collection: 'posts',
+      id,
+      depth: 0,
+      select: { relatedEvents: true },
+      overrideAccess: true,
+    })
+    const events = idsOf(post.relatedEvents)
+    context[EVENTS_OF_DELETED_POST] =
+      events.length > 0 ? await findLinkedSlugs({ payload, ...eventsOf(events) }) : []
+  } catch (error) {
+    payload.logger.error({ err: error, msg: 'Could not read the events a deleted post picks' })
+  }
+}
+
 export const revalidateDelete: CollectionAfterDeleteHook<Post> = ({ doc, req: { context } }) => {
-  if (!context.disableRevalidate) revalidatePostPages(doc.slug)
+  if (context.disableRevalidate) return doc
+  revalidatePostPages(doc.slug)
+  revalidateSlugs('/events', (context[EVENTS_OF_DELETED_POST] as string[] | undefined) ?? [])
 
   return doc
 }

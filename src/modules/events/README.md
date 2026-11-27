@@ -33,13 +33,12 @@ The neighborhood calendar: the `events` collection, its listings and pages, and 
 
 ## Behaviors and events
 
-- **A save refreshes the right pages:** a published event's save, an unpublish or a delete refreshes its page, `/events`, every category and list page, `/` and all CMS pages and expires the `events` and `events-sitemap` tags; a draft refreshes nothing (`cms/revalidateEvent.ts`). A save or unpublish also refreshes the page of each published post that picks the event (#1496).
+- **A save refreshes the right pages:** a published event's save, an unpublish or a delete refreshes its page, `/events`, every category and list page, `/` and all CMS pages and expires the `events` and `events-sitemap` tags; a draft refreshes nothing (`cms/revalidateEvent.ts`). A save, an unpublish or a delete also refreshes the page of each published post that picks the event; a delete reads those posts first, since the link is gone after it (#1496).
 - **Events can be scheduled to publish or unpublish** (`schedulePublish` in `src/platform/payload/contentCollection.ts`), run by Payload's jobs inside the app; event pages re-render every 10 minutes (`revalidate = 600`, decision 0011).
 - **"Load more" asks for what follows the last item** by cursor, not page number; its action accepts only a known scope, a valid cursor and an existing category slug (`data/queries.ts`, `actions.ts`, decision 0014).
 - **Events created by agents or non-staff are `suggested` drafts** with a source name and an http(s) link; staff publishing approves them; agents cannot update or publish (`cms/events.ts`, `src/platform/payload/reviewQueue.ts`).
 - **The event page** has a plain title band and category, a metadata bar (`eventByline`: date with time, place with format), the whole `heroImage` as the first thing in the article column, and emits schema.org `Event` data (`ui/eventHeader.tsx`, `ui/eventJsonLd.ts`, #1002, #1013); Admin has Live Preview and a preview link from the draft.
-
-- **Related posts:** `relatedPosts` is a join on `posts.relatedEvents`, newest first and published only; nothing is stored on the event, so an editor fills in nothing (`cms/events.ts`, #1496).
+- **Related posts:** `relatedPosts` is a join on `posts.relatedEvents`, newest first and published only, at most 6 (`RELATED_LIST_LIMIT`); nothing is stored on the event, so an editor fills in nothing (`cms/events.ts`, #1496).
 
 ## Shared pieces it uses
 

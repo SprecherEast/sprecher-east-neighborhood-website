@@ -11,10 +11,11 @@ import {
 } from '@/platform/payload/reviewQueue'
 import { bandBackdropField } from '@/platform/payload/bandBackdrop'
 import { PUBLISHED } from '@/platform/payload/published'
+import { RELATED_LIST_LIMIT } from '@/platform/payload/relatedLimit'
 import { seoTab } from '@/platform/payload/seoTab'
 
 import { populateAuthors } from './populateAuthors'
-import { revalidateDelete, revalidatePost } from './revalidatePost'
+import { readEventsBeforeDelete, revalidateDelete, revalidatePost } from './revalidatePost'
 
 export const Posts: CollectionConfig<'posts'> = {
   slug: 'posts',
@@ -69,6 +70,8 @@ export const Posts: CollectionConfig<'posts'> = {
               type: 'relationship',
               admin: {
                 position: 'sidebar',
+                description:
+                  'Other posts worth reading next to this one. They show beside the post.',
               },
               filterOptions: ({ id }) => {
                 return {
@@ -87,9 +90,14 @@ export const Posts: CollectionConfig<'posts'> = {
               type: 'relationship',
               admin: {
                 position: 'sidebar',
+                // A list with dates, so events with the same name can be told apart, newest first
+                appearance: 'drawer',
+                sortOptions: '-date',
+                description: `Pick up to ${RELATED_LIST_LIMIT} events this post is about. They show beside the post, and the post shows on theirs. If an event is unpublished later, take it off here before saving.`,
               },
               filterOptions: PUBLISHED,
               hasMany: true,
+              maxRows: RELATED_LIST_LIMIT,
               relationTo: 'events',
             },
             {
@@ -167,6 +175,7 @@ export const Posts: CollectionConfig<'posts'> = {
     afterChange: [revalidatePost],
     beforeChange: [holdSuggestions],
     afterRead: [populateAuthors],
+    beforeDelete: [readEventsBeforeDelete],
     afterDelete: [revalidateDelete],
   },
   versions: draftVersions(50),

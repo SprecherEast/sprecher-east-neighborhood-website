@@ -3,6 +3,8 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import { bootPayload, NO_REVALIDATE, paragraph } from '@/platform/payload/testing/inMemoryPayload'
 
+import { RELATED_LIST_LIMIT } from '@/platform/payload/relatedLimit'
+
 import type * as Queries from './queries'
 
 /**
@@ -123,5 +125,19 @@ describe('a cancelled event a post picks', () => {
     })
     const events = await queries.findEventsByIds([called.id])
     expect(events.map((e) => [e.slug, e.cancelled])).toEqual([['called-off', true]])
+  })
+})
+
+// Last, so the posts it adds don't change the lists above
+describe('an event that many posts pick', () => {
+  it('names at most the limit of its newest posts, however many pick it', async () => {
+    const popular = await createEvent('popular-walk', '2027-05-01T00:00:00.000Z')
+    for (let i = 0; i < RELATED_LIST_LIMIT + 2; i += 1) {
+      await createPost(`popular-recap-${i}`, `2027-04-${String(10 + i).padStart(2, '0')}T12:00:00.000Z`, [
+        popular.id,
+      ])
+    }
+    const event = await queries.getEventBySlug('popular-walk', { draft: false })
+    expect(event?.relatedPostIds).toHaveLength(RELATED_LIST_LIMIT)
   })
 })

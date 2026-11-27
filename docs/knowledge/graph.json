@@ -1414,7 +1414,7 @@
       "id": "business-rule:src/modules/news/README.md#6",
       "type": "business-rule",
       "name": "**`relatedEvents` is the events an editor picked for a post,**…",
-      "summary": "**`relatedEvents` is the events an editor picked for a post,** published events only in the picker; the post page lists the ones a visitor may see as \"Related Events\" under \"Related Posts\", none picked shows nothing, and an event's page asks for its posts with `findPostsByIds`, published only (`cms/posts.ts`, `data/queries.ts`, `posts/[slug]/page.tsx`; `data/queries.related.test.ts`, `src/payload.config.relatedEvents.test.ts`, #1496).",
+      "summary": "**`relatedEvents` is the events an editor picked for a post,** published events only in the picker, at most 6, chosen from a list with dates, with help text that says to remove an event that is unpublished later; the post page lists the ones a visitor may see as \"Related Events\" under \"Related Posts\", none picked shows nothing, and an event's page asks for its posts with `findPostsByIds`, published only (`cms/posts.ts`, `data/queries.ts`, `posts/[slug]/page.tsx`; `data/queries.related.test.ts`, `src/payload.config.relatedEvents.test.ts`, #1496).",
       "path": "src/modules/news/data/queries.related.test.ts",
       "module": "module:news",
       "aliases": [],
@@ -4363,7 +4363,7 @@
         },
         {
           "label": "Hooks",
-          "value": "beforeChange holdSuggestions; beforeChange populatePublishedAt; afterChange revalidateEvent; afterChange inline; beforeDelete inline; afterDelete revalidateDelete"
+          "value": "beforeChange holdSuggestions; beforeChange populatePublishedAt; afterChange revalidateEvent; afterChange inline; beforeDelete readPostsBeforeDelete; beforeDelete inline; afterDelete revalidateDelete"
         },
         { "label": "AI agent tools", "value": "findEvents, submitSuggestion" },
         { "label": "GraphQL", "value": "yes" }
@@ -7345,7 +7345,7 @@
           "type": "relationship",
           "required": false,
           "detail": "→ events (many)",
-          "notes": ["indexed"]
+          "notes": ["indexed", "max rows 6"]
         },
         {
           "name": "categories",
@@ -7483,7 +7483,7 @@
         },
         {
           "label": "Hooks",
-          "value": "beforeChange holdSuggestions; afterChange revalidatePost; afterChange inline; afterRead populateAuthors; beforeDelete inline; afterDelete revalidateDelete"
+          "value": "beforeChange holdSuggestions; afterChange revalidatePost; afterChange inline; afterRead populateAuthors; beforeDelete readEventsBeforeDelete; beforeDelete inline; afterDelete revalidateDelete"
         },
         { "label": "AI agent tools", "value": "findPosts, submitSuggestion" },
         { "label": "GraphQL", "value": "yes" }
@@ -25437,7 +25437,7 @@
       "to": "platform-area:payload",
       "type": "uses",
       "layer": "code",
-      "count": 17,
+      "count": 19,
       "via": []
     },
     {
@@ -25853,7 +25853,7 @@
       "to": "platform-area:payload",
       "type": "uses",
       "layer": "code",
-      "count": 22,
+      "count": 23,
       "via": []
     },
     {

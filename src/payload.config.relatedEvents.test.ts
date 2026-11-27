@@ -1,6 +1,8 @@
 import type { SQLiteAdapter } from '@payloadcms/db-sqlite'
 import type { Payload, SanitizedConfig } from 'payload'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
+
+import { RELATED_LIST_LIMIT } from '@/platform/payload/relatedLimit'
 
 import { bootPayload, NO_REVALIDATE, paragraph } from '@/platform/payload/testing/inMemoryPayload'
 
@@ -9,6 +11,10 @@ import { bootPayload, NO_REVALIDATE, paragraph } from '@/platform/payload/testin
  * the posts picking it (`events.relatedPosts`, #1496). A join is virtual: nothing is stored on the
  * event. Payload runs on in-memory SQLite, with the real config, drafts and published versions.
  */
+
+const next = vi.hoisted(() => ({ revalidatePath: vi.fn() }))
+vi.mock('next/cache', () => ({ revalidatePath: next.revalidatePath }))
+vi.mock('@/platform/payload/expireCacheTag', () => ({ expireCacheTag: vi.fn() }))
 
 let payload: Payload
 let config: SanitizedConfig
@@ -93,6 +99,42 @@ describe('posts.relatedEvents', () => {
   })
 })
 
+describe('the picker on a post', () => {
+  const field = () => {
+    const posts = config.collections.find((c) => c.slug === 'posts')
+    return posts?.flattenedFields.find((f) => f.name === 'relatedEvents') as unknown as {
+      maxRows?: number
+      admin: { description?: string; appearance?: string; sortOptions?: string }
+    }
+  }
+
+  it('takes at most as many events as an event page lists posts', async () => {
+    expect(field().maxRows).toBe(RELATED_LIST_LIMIT)
+    const events = await Promise.all(
+      Array.from({ length: RELATED_LIST_LIMIT + 1 }, (_, i) => createEvent(`cap-event-${i}`)),
+    )
+    await expect(
+      createPost(
+        'too-many-picks',
+        events.map((e) => e.id),
+      ),
+    ).rejects.toThrow()
+    await expect(
+      createPost(
+        'enough-picks',
+        events.slice(0, RELATED_LIST_LIMIT).map((e) => e.id),
+      ),
+    ).resolves.toBeDefined()
+  })
+
+  it('tells editors what it is for, lists events with their dates and says to drop an unpublished one', () => {
+    const { description, appearance, sortOptions } = field().admin
+    expect(description).toMatch(/unpublished/)
+    expect(appearance).toBe('drawer')
+    expect(sortOptions).toBe('-date')
+  })
+})
+
 describe('events.relatedPosts (join)', () => {
   it('lists the published posts that pick the event, on every event they pick', async () => {
     const a = await createEvent('join-a')
@@ -166,5 +208,34 @@ describe('events.relatedPosts (join)', () => {
     })
     expect(await joinedPostSlugs(kept.id)).toEqual([])
     expect(await joinedPostSlugs(dropped.id)).toEqual(['join-versions'])
+  })
+})
+
+// With the refresh hooks on, as in production: a delete reads the other side before the rows go
+describe('deleting a post or an event that the other side shows', () => {
+  const refreshed = () => next.revalidatePath.mock.calls.map(([path]) => path as string)
+
+  it('refreshes the pages of the posts that picked a deleted event', async () => {
+    const event = await createEvent('doomed-event')
+    await createPost('picks-doomed-event', [event.id])
+    next.revalidatePath.mockClear()
+
+    await payload.delete({ collection: 'events', id: event.id, overrideAccess: true })
+
+    expect(refreshed()).toEqual(
+      expect.arrayContaining(['/events/doomed-event', '/posts/picks-doomed-event']),
+    )
+  })
+
+  it('refreshes the pages of the events a deleted post picked', async () => {
+    const event = await createEvent('lonely-event')
+    const post = await createPost('doomed-post', [event.id])
+    next.revalidatePath.mockClear()
+
+    await payload.delete({ collection: 'posts', id: post.id, overrideAccess: true })
+
+    expect(refreshed()).toEqual(
+      expect.arrayContaining(['/posts/doomed-post', '/events/lonely-event']),
+    )
   })
 })

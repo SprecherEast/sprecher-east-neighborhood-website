@@ -3,16 +3,23 @@ import path from 'node:path'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type * as RevalidateLinked from '@/platform/payload/revalidateLinked'
+
 const revalidatePath = vi.hoisted(() => vi.fn())
 vi.mock('next/cache', () => ({ revalidatePath }))
 vi.mock('@/platform/payload/expireCacheTag', () => ({ expireCacheTag: vi.fn() }))
 
-const linked = vi.hoisted(() => ({ revalidateLinkedPages: vi.fn().mockResolvedValue(undefined) }))
-vi.mock('@/platform/payload/revalidateLinked', () => ({
+const linked = vi.hoisted(() => ({
+  revalidateLinkedPages: vi.fn().mockResolvedValue(undefined),
+  findLinkedSlugs: vi.fn().mockResolvedValue([]),
+}))
+vi.mock('@/platform/payload/revalidateLinked', async (importOriginal) => ({
+  ...(await importOriginal<typeof RevalidateLinked>()),
   revalidateLinkedPages: linked.revalidateLinkedPages,
+  findLinkedSlugs: linked.findLinkedSlugs,
 }))
 
-import { revalidateDelete, revalidateEvent } from './revalidateEvent'
+import { readPostsBeforeDelete, revalidateDelete, revalidateEvent } from './revalidateEvent'
 
 /**
  * A route pattern passed to `revalidatePath(…, 'page')` names a folder under `src/app`. If the
@@ -82,5 +89,53 @@ describe('revalidateEvent, linked posts', () => {
     await save(9, 'draft', 'draft')
     await save(9, 'published', 'draft', { disableRevalidate: true })
     expect(linked.revalidateLinkedPages).not.toHaveBeenCalled()
+  })
+})
+
+// A deleted event no longer shows on the posts that picked it, so their pages are refreshed. The
+// posts are read before the delete, since the rows that link them are gone afterward (#1496)
+describe('revalidateEvent, deleting an event that posts pick', () => {
+  let context: Record<string, unknown> = {}
+  const before = (ctx: Record<string, unknown>) =>
+    readPostsBeforeDelete({
+      id: 9,
+      req: { payload: {}, context: ctx },
+    } as unknown as Parameters<typeof readPostsBeforeDelete>[0])
+  const after = (ctx: Record<string, unknown>) =>
+    revalidateDelete({ doc: { slug: 'walk' }, req: { context: ctx } } as unknown as Parameters<
+      typeof revalidateDelete
+    >[0])
+
+  beforeEach(() => {
+    revalidatePath.mockClear()
+    linked.findLinkedSlugs.mockReset().mockResolvedValue(['recap', 'fair-recap'])
+    context = {}
+  })
+
+  it('reads the published posts that pick it before, and refreshes their pages after', async () => {
+    await before(context)
+    after(context)
+
+    expect(linked.findLinkedSlugs).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'posts',
+        where: { and: [{ _status: { equals: 'published' } }, { relatedEvents: { equals: 9 } }] },
+      }),
+    )
+    expect(revalidatePath).toHaveBeenCalledWith('/events/walk')
+    expect(revalidatePath).toHaveBeenCalledWith('/posts/recap')
+    expect(revalidatePath).toHaveBeenCalledWith('/posts/fair-recap')
+  })
+
+  it('refreshes only its own pages when no post was read, and nothing for a seed delete', async () => {
+    after(context)
+    expect(revalidatePath).not.toHaveBeenCalledWith('/posts/recap')
+
+    revalidatePath.mockClear()
+    const seed = { disableRevalidate: true }
+    await before(seed)
+    after(seed)
+    expect(linked.findLinkedSlugs).not.toHaveBeenCalled()
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 })

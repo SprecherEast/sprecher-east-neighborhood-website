@@ -12,11 +12,12 @@ import {
 } from '@/platform/payload/reviewQueue'
 import { bandBackdropField } from '@/platform/payload/bandBackdrop'
 import { PUBLISHED } from '@/platform/payload/published'
+import { RELATED_LIST_LIMIT } from '@/platform/payload/relatedLimit'
 import { seoTab } from '@/platform/payload/seoTab'
 
 import { EVENT_LOCATION_TYPES } from '../domain/locationTypes'
 import { officialMeetingFields } from './officialMeetingFields'
-import { revalidateDelete, revalidateEvent } from './revalidateEvent'
+import { readPostsBeforeDelete, revalidateDelete, revalidateEvent } from './revalidateEvent'
 
 export const Events: CollectionConfig<'events'> = {
   slug: 'events',
@@ -175,6 +176,7 @@ export const Events: CollectionConfig<'events'> = {
       collection: 'posts',
       on: 'relatedEvents',
       where: PUBLISHED,
+      defaultLimit: RELATED_LIST_LIMIT,
       defaultSort: '-publishedAt',
       // Ids only: the page asks the news module for the cards (decision 0008)
       maxDepth: 0,
@@ -186,6 +188,7 @@ export const Events: CollectionConfig<'events'> = {
   hooks: {
     afterChange: [revalidateEvent],
     beforeChange: [holdSuggestions, populatePublishedAt],
+    beforeDelete: [readPostsBeforeDelete],
     afterDelete: [revalidateDelete],
   },
   versions: draftVersions(25),

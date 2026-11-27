@@ -1,15 +1,23 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-sqlite'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
-  await db.run(sql`ALTER TABLE \`posts_rels\` ADD \`events_id\` integer REFERENCES events(id);`)
+  await db.run(
+    sql`ALTER TABLE \`posts_rels\` ADD \`events_id\` integer REFERENCES events(id) ON DELETE CASCADE ON UPDATE NO ACTION;`,
+  )
   await db.run(sql`CREATE INDEX \`posts_rels_events_id_idx\` ON \`posts_rels\` (\`events_id\`);`)
-  await db.run(sql`ALTER TABLE \`_posts_v_rels\` ADD \`events_id\` integer REFERENCES events(id);`)
+  await db.run(
+    sql`ALTER TABLE \`_posts_v_rels\` ADD \`events_id\` integer REFERENCES events(id) ON DELETE CASCADE ON UPDATE NO ACTION;`,
+  )
   await db.run(
     sql`CREATE INDEX \`_posts_v_rels_events_id_idx\` ON \`_posts_v_rels\` (\`events_id\`);`,
   )
 }
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+  // Rows that point at an event have no column to live in once it is dropped: delete them, or they
+  // would stay behind as picks with no target
+  await db.run(sql`DELETE FROM \`posts_rels\` WHERE \`events_id\` IS NOT NULL;`)
+  await db.run(sql`DELETE FROM \`_posts_v_rels\` WHERE \`events_id\` IS NOT NULL;`)
   await db.run(sql`PRAGMA foreign_keys=OFF;`)
   await db.run(sql`CREATE TABLE \`__new_posts_rels\` (
   	\`id\` integer PRIMARY KEY NOT NULL,
