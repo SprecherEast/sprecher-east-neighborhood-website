@@ -31,7 +31,7 @@ How CMS pages are drawn: the hero, each page-builder block, and what a save refr
 - **The page re-renders every 10 minutes** (`revalidate = 600`, 0011), so a scheduled publish shows within 10 minutes; `generateStaticParams` and the sitemap skip unpublished pages (`listPageSlugs` in `data/pages.ts`).
 - **`publishedAt` is filled with now** when the save has none (`src/platform/payload/populatePublishedAt.ts`).
 - **A page's `backdrop` photo** is drawn faded behind its hero and blocks (`use-cases/getPageBySlug.ts`, `src/platform/ui/PageBackdrop.tsx`, #777).
-- **Map blocks** draw a picture made by `scripts/map-preview/`; a tap opens the live map in a dialog (`ui/MapBlock.tsx`, `src/platform/ui/MapEmbed.client.tsx`, #764, #1419).
+- **Map blocks** draw a picture made by `scripts/map-preview/`; a tap on the picture (mouse and touch only), or on the expand icon over its top-right corner (#1426) or the text button (the keyboard's two stops), opens the live map in a dialog (`ui/MapBlock.tsx`, `src/platform/ui/MapEmbed.client.tsx`, #764, #1419).
 
 ## Shared pieces it uses
 
