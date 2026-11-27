@@ -49,6 +49,7 @@ public/media/
 # The off-site backup's public certificate and a public test key are meant to be committed (#1332); no private key ever is
 !ops/offsite-backup-cert.pem
 !ops/fixtures/rsa-8704-public.pem
+!ops/fixtures/dsa-3072-public.pem
 id_rsa
 id_rsa.*
 id_ed25519
