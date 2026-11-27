@@ -29985,7 +29985,7 @@
       "to": "library:lucide-react",
       "type": "uses",
       "layer": "libraries",
-      "count": 19,
+      "count": 21,
       "via": []
     },
     {
@@ -30001,7 +30001,7 @@
       "to": "library:react",
       "type": "uses",
       "layer": "libraries",
-      "count": 87,
+      "count": 88,
       "via": []
     },
     {

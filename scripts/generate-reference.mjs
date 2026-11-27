@@ -42,17 +42,36 @@ import { listFiles } from './reference/listFiles.mjs'
 import { loadFacts } from './reference/loadFacts.mjs'
 import { renderMcp } from './reference/mcpTools.mjs'
 import { collectRoutes, renderRoutes } from './reference/routes.mjs'
-import { componentSourceFiles, createSourceProgram } from './reference/sourceProgram.mjs'
+import { buildShowcaseIndex, renderShowcaseIndex } from './reference/showcase.mjs'
+import {
+  componentSourceFiles,
+  createSourceProgram,
+  examplesSourceFiles,
+} from './reference/sourceProgram.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const OUTPUT = 'docs/reference'
+/** The showcase index (#1532): data for the developer site's showcase pages and its coverage check */
+const SHOWCASE_INDEX = 'showcase-index.json'
 
 function buildComponentPages({ program, fileNames }) {
   const files = componentSourceFiles(fileNames)
   const components = describeComponents(program, ROOT, files)
   const users = findUsers(program, ROOT, components)
   const groups = groupComponents(COMPONENT_GROUPS, components)
-  const pages = new Map([['components/README.md', renderComponentIndex(groups)]])
+  const index = buildShowcaseIndex({
+    groups,
+    users,
+    readFile: (file) =>
+      fs.existsSync(path.join(ROOT, file))
+        ? fs.readFileSync(path.join(ROOT, file), 'utf8')
+        : undefined,
+    exampleFiles: examplesSourceFiles(fileNames, ROOT),
+  })
+  const pages = new Map([
+    ['components/README.md', renderComponentIndex(groups, index.coverage)],
+    [SHOWCASE_INDEX, renderShowcaseIndex(index)],
+  ])
   for (const group of groups) {
     pages.set(`components/${group.slug}.md`, renderComponentPage(group, group.components, users))
   }
@@ -71,10 +90,16 @@ async function formatted(files) {
   const config = (await prettier.resolveConfig(path.join(ROOT, OUTPUT, 'routes.md'))) ?? {}
   const out = new Map()
   for (const [file, text] of files) {
-    // The Tailwind plugin only sorts class names; it does nothing to Markdown
-    const page = await prettier.format(text, { ...config, plugins: [], parser: 'markdown' })
+    // The Tailwind plugin only sorts class names; it does nothing to Markdown or JSON
+    const json = file.endsWith('.json')
+    const page = await prettier.format(text, {
+      ...config,
+      plugins: [],
+      parser: json ? 'json' : 'markdown',
+    })
     const lines = page.trimEnd().split('\n').length
-    if (lines > PAGE_LINE_LIMIT) {
+    // A page is read by people and stays short; the showcase index is data and grows with the kit
+    if (!json && lines > PAGE_LINE_LIMIT) {
       throw new Error(
         `${file} has ${lines} lines, over the limit of ${PAGE_LINE_LIMIT}: split its group`,
       )
@@ -84,11 +109,11 @@ async function formatted(files) {
   return out
 }
 
-/** Every Markdown file under the folder, keyed by its path inside it. */
+/** Every Markdown file and the showcase index under the folder, keyed by its path inside it. */
 const readCommitted = (directory) =>
   new Map(
     listFiles(directory)
-      .filter((file) => file.endsWith('.md'))
+      .filter((file) => file.endsWith('.md') || file === SHOWCASE_INDEX)
       .map((file) => [file, fs.readFileSync(path.join(directory, file), 'utf8')]),
   )
 

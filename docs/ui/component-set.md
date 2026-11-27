@@ -3,7 +3,9 @@
 Part of the [UI inventory](inventory.md) (#170), for epic #163.
 
 To see every component and variant at once, run `npm run dev` and open `/dev/gallery`
-(`src/app/(frontend)/dev/gallery/`, development only, #466).
+(`src/app/(frontend)/dev/gallery/`, development only, #466). Each component's own examples, the
+source of the component showcase that replaces it (epic #1528), are described under
+[Showcase examples](#showcase-examples).
 
 > **Status: approved.** The owner approved this set on 2026-10-21, with the merges he asked for
 > that day (fewer components, each composed from the others, never a second button). Components
@@ -201,6 +203,41 @@ without one is unchanged. Its test checks these with axe.
 ## Rich text (`src/platform/richtext/`)
 
 Components: [rich text](../reference/components/rich-text.md) (`src/platform/richtext/`).
+
+## Showcase examples
+
+One examples file beside each component is the one source of what the showcase shows, what the
+tests render and what the generated index lists (#1532, epic #1528).
+
+- **Where:** `Tabs.client.tsx` has `Tabs.examples.tsx`, `Button.tsx` has `Button.examples.tsx`, in the same folder
+  (the `.client` part drops out). A file holding several components has one examples file.
+- **What:** each export is one configuration, written `export const SecondTabOpen =
+defineExample({ purpose, render, settings?, of? })` with `defineExample` from `./example`. The
+  export name is its title ("Second tab open") and its link (`#second-tab-open`); a name is
+  curated and meaningful, not a combination. `purpose` is one line of at most 120 characters and
+  is shown beside the example. `render` is a pure function of the settings that returns elements:
+  no hooks, no CMS, no module, no environment value, no network, because a static export draws it.
+  `settings` lists what a visitor may change, each as `boolean`, `choice` (with `options`) or
+  `text`, with the `default` it starts at and an optional `description`. `of` names the components
+  it shows, when not just the one named like the file (`'BadgeList'`, or a list).
+- **One definition:** a list of a component's variants is not written again in an example. The
+  showcase's interactive panel takes the variants from the index; an example that shows them all
+  keys a `Record` by the prop's type, so a new variant fails the type-check until it is listed. A
+  helper or constant an example needs is not exported; shared ones (`EXAMPLE_ROW`) live in `example.ts`.
+- **Kit only:** the same lint rules as pages (the kit, not raw tags; theme tokens only). The
+  generator fails an example file that imports the CMS, a module or server-only code, reads
+  `process.env` or calls `fetch`.
+- **The index** (`docs/reference/showcase-index.json`, `npm run docs:generate`, checked by
+  `docs:check` in `Knowledge sync`) holds, for every shared component: its group, description,
+  props (with the values of each variant), parts, the files that use it with their count, and its
+  examples with their purpose, settings, the line they start on and their source, which is the text of
+  the example's `render` function read from the file, never copied. A component with no examples file
+  has `examples: null` and is in `coverage.missing`. The code that reads the files is
+  `scripts/reference/showcase.mjs`.
+- **Tests:** `src/platform/ui/examples.test.tsx` finds every examples file, checks it exports what
+  the index reads (the same purpose and settings), renders each example as it starts and with each
+  setting changed, and runs axe on each.
+- **Uses:** an examples file is not a use of a component, so it is not counted in "Used by".
 
 ## How many, and what to build first
 

@@ -37,7 +37,7 @@ const describeRun = (result) =>
 const pagesOf = () =>
   fs
     .readdirSync(path.join(copy, 'docs/reference'), { recursive: true })
-    .filter((f) => f.endsWith('.md'))
+    .filter((f) => f.endsWith('.md') || f === 'showcase-index.json')
 const read = (file) => fs.readFileSync(path.join(copy, 'docs/reference', file), 'utf8')
 
 beforeAll(() => {
@@ -63,22 +63,34 @@ describe('scripts/generate-reference.mjs', () => {
     // the tool passes a collection to a helper: the loader tells the tool reader which collections exist
     expect(read('mcp-tools.md')).toMatch(/echo[\s\S]*events/)
 
+    // the showcase index (#1532) is checked like a page, and a stale one is rewritten
+    expect(JSON.parse(read('showcase-index.json')).coverage).toMatchObject({
+      total: expect.any(Number),
+    })
+
     // a file that is not a Markdown page is left alone, by a check and by a write
     fs.writeFileSync(path.join(copy, 'docs/reference/notes.txt'), 'kept\n')
 
-    const original = { jobs: read('jobs.md'), endpoints: read('endpoints.md') }
+    const original = {
+      jobs: read('jobs.md'),
+      endpoints: read('endpoints.md'),
+      index: read('showcase-index.json'),
+    }
+    fs.appendFileSync(path.join(copy, 'docs/reference/showcase-index.json'), ' \n')
     fs.rmSync(path.join(copy, 'docs/reference/jobs.md'))
     fs.appendFileSync(path.join(copy, 'docs/reference/endpoints.md'), 'stale\n')
     fs.writeFileSync(path.join(copy, 'docs/reference/stray.md'), 'stray\n')
     const stale = run('--check')
     expect(stale.status, describeRun(stale)).toBe(1)
-    for (const name of ['jobs.md', 'endpoints.md', 'stray.md']) expect(stale.stderr).toContain(name)
+    for (const name of ['jobs.md', 'endpoints.md', 'stray.md', 'showcase-index.json'])
+      expect(stale.stderr).toContain(name)
 
     const written = run()
     expect(written.status, describeRun(written)).toBe(0)
     expect(written.stdout).toContain(`Wrote ${pagesOf().length} pages to docs/reference (`)
     expect(read('jobs.md')).toBe(original.jobs)
     expect(read('endpoints.md')).toBe(original.endpoints)
+    expect(read('showcase-index.json')).toBe(original.index)
     expect(fs.existsSync(path.join(copy, 'docs/reference/stray.md'))).toBe(false)
     expect(read('notes.txt')).toBe('kept\n')
     const again = run('--check')

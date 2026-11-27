@@ -18,9 +18,21 @@ export function createSourceProgram(root) {
 
 const COMPONENT_SOURCE = /\/src\/platform\/(ui|richtext)\/.*\.tsx$/
 
-/** The files whose exported components the reference lists: the UI kit and rich text, without tests, stories and test helpers. */
+/** The files whose exported components the reference lists: the UI kit and rich text, without tests, stories, examples and test helpers. */
 export const componentSourceFiles = (fileNames) =>
   fileNames
-    .filter((file) => COMPONENT_SOURCE.test(file) && !/\.(test|contract|stories)\.tsx$/.test(file))
+    .filter(
+      (file) =>
+        COMPONENT_SOURCE.test(file) && !/\.(test|contract|stories|examples)\.tsx$/.test(file),
+    )
     .filter((file) => !file.includes('/testing/'))
+    .sort()
+
+const EXAMPLES_FILE = /\/src\/platform\/(ui|richtext)\/.*\.examples\.tsx$/
+
+/** The examples files (#1532) of the kit and rich text, as paths under `root`, sorted. */
+export const examplesSourceFiles = (fileNames, root) =>
+  fileNames
+    .filter((file) => EXAMPLES_FILE.test(file))
+    .map((file) => path.relative(root, file).split(path.sep).join('/'))
     .sort()

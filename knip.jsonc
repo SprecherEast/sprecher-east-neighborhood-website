@@ -17,6 +17,8 @@
     "developer/app/**": ["exports"],
     // Kept on purpose: only its tests call it today (#756)
     "src/modules/accounts/server.ts": ["exports"],
+    // Every export is an example, read by name by the showcase and the tests (#1532)
+    "src/platform/{ui,richtext}/**/*.examples.tsx": ["exports"],
   },
   "workspaces": {
     ".": {
@@ -47,6 +49,8 @@
         "eslint.*.config.mjs",
         // The developer pages (#1530) are a second Next.js project: its routes are entries
         "developer/app/**/{page,layout,not-found}.tsx",
+        // The showcase examples (#1532): read by the showcase pages and the reference generator, which knip can't see
+        "src/platform/{ui,richtext}/**/*.examples.tsx",
       ],
       "ignoreDependencies": [
         // Loaded from CSS (globals.css `@import` and `@plugin`), which knip doesn't read

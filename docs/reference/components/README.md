@@ -4,6 +4,8 @@
 
 115 components from `src/platform/ui/` and `src/platform/richtext/`, with their props and where they are used. The rules every component follows, and the choices behind them, are in [component-set.md](../../ui/component-set.md). `/dev/gallery` shows them.
 
+4 of 115 components have showcase examples (an `*.examples.tsx` file beside the component, [component-set.md](../../ui/component-set.md#showcase-examples)). The index the showcase is built from, with each component's props, variants, usage and examples, is [showcase-index.json](../showcase-index.json); its `coverage.missing` lists the rest.
+
 | Page                                       | Components                                                                                                                                                                          |
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Actions](actions.md)                      | `Button`, `Link`, `AppLink`, `LinkButton`, `SegmentedControl`, `BrandLogo`                                                                                                          |

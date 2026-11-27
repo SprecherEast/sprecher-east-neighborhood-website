@@ -14,8 +14,9 @@ const TYPE_LIMIT = 160
 const TYPE_FLAGS =
   ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope
 const inPackage = (file) => file.includes('/node_modules/')
-// A story is not a real use of a component either (#1447): it only shows it in the showcase
-const isTestFile = (file) => /\.(test|spec|stories)\.tsx?$/.test(file) || file.includes('/testing/')
+// A story or an example is not a real use of a component either (#1447, #1532): it only shows it
+const isTestFile = (file) =>
+  /\.(test|spec|stories|examples)\.tsx?$/.test(file) || file.includes('/testing/')
 const relative = (root, file) => path.relative(root, file).split(path.sep).join('/')
 
 /** Names of the variants a `cva(…, { variants: { name: {…} } })` call in the file defines. */
@@ -53,6 +54,16 @@ function shownType(checker, type, optional, location) {
   return text.length > TYPE_LIMIT ? `${text.slice(0, TYPE_LIMIT - 1)}…` : text
 }
 
+/** The values a variant takes, when its type is a list of literals (text, numbers, true, false); else `null`. */
+function literalOptions(checker, type) {
+  const plain = checker.getNonNullableType(type)
+  const values = (plain.isUnion() ? plain.types : [plain]).map((member) => {
+    if (member.isStringLiteral() || member.isNumberLiteral()) return member.value
+    return member.flags & ts.TypeFlags.BooleanLiteral ? member.intrinsicName === 'true' : undefined
+  })
+  return values.every((value) => value !== undefined) ? values : null
+}
+
 /** The props of one component type: the first parameter of its call signature. */
 function describeProps(checker, type, location, variantNames) {
   const parameter = type.getCallSignatures()[0]?.parameters[0]
@@ -69,17 +80,16 @@ function describeProps(checker, type, location, variantNames) {
       inherited += 1
       continue
     }
+    const propType = checker.getTypeOfSymbolAtLocation(symbol, location)
+    const variant = fromVariantHelper || variantNames.has(symbol.getName())
     props.push({
       name: symbol.getName(),
-      type: shownType(
-        checker,
-        checker.getTypeOfSymbolAtLocation(symbol, location),
-        optional,
-        location,
-      ),
+      type: shownType(checker, propType, optional, location),
       optional,
       doc: docOf(checker, symbol),
-      variant: fromVariantHelper || variantNames.has(symbol.getName()),
+      variant,
+      // What a variant can be, for the showcase's controls (#1532); the pages don't print it
+      options: variant ? literalOptions(checker, propType) : null,
     })
   }
   return { props, inherited }
@@ -255,8 +265,8 @@ export function groupComponents(groups, components) {
   return groups.map((g) => ({ ...g, components: g.components.map((name) => byName.get(name)) }))
 }
 
-/** The README of docs/reference/components/: one line per page. */
-export function renderComponentIndex(groups) {
+/** The README of docs/reference/components/: one line per page, and how much of the kit the showcase covers. */
+export function renderComponentIndex(groups, coverage) {
   const count = groups.reduce((total, g) => total + g.components.length, 0)
   return [
     '# Shared components',
@@ -265,6 +275,12 @@ export function renderComponentIndex(groups) {
     '',
     `${count} components from \`src/platform/ui/\` and \`src/platform/richtext/\`, with their props and where they are used. The rules every component follows, and the choices behind them, are in [component-set.md](../../ui/component-set.md). \`/dev/gallery\` shows them.`,
     '',
+    ...(coverage
+      ? [
+          `${coverage.withExamples} of ${coverage.total} components have showcase examples (an \`*.examples.tsx\` file beside the component, [component-set.md](../../ui/component-set.md#showcase-examples)). The index the showcase is built from, with each component's props, variants, usage and examples, is [showcase-index.json](../showcase-index.json); its \`coverage.missing\` lists the rest.`,
+          '',
+        ]
+      : []),
     table(
       ['Page', 'Components'],
       groups.map((g) => [
