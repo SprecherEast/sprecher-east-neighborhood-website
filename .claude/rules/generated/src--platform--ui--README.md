@@ -9,6 +9,7 @@ paths:
   - 'src/platform/ui/AppLink.tsx'
   - 'src/platform/ui/ArticlePage.test.tsx'
   - 'src/platform/ui/ArticlePage.tsx'
+  - 'src/platform/ui/Badge.examples.client.tsx'
   - 'src/platform/ui/Badge.examples.tsx'
   - 'src/platform/ui/Badge.stories.tsx'
   - 'src/platform/ui/Badge.test.tsx'
@@ -22,6 +23,7 @@ paths:
   - 'src/platform/ui/Breadcrumbs.stories.tsx'
   - 'src/platform/ui/Breadcrumbs.test.tsx'
   - 'src/platform/ui/Breadcrumbs.tsx'
+  - 'src/platform/ui/Button.examples.client.tsx'
   - 'src/platform/ui/Button.examples.tsx'
   - 'src/platform/ui/Button.stories.tsx'
   - 'src/platform/ui/Button.test.tsx'
@@ -134,6 +136,7 @@ paths:
   - 'src/platform/ui/controlVariants.ts'
   - 'src/platform/ui/example.test.ts'
   - 'src/platform/ui/example.ts'
+  - 'src/platform/ui/examples.server.test.ts'
   - 'src/platform/ui/examples.test.tsx'
   - 'src/platform/ui/fieldContext.ts'
   - 'src/platform/ui/formMessages.ts'
@@ -150,6 +153,8 @@ paths:
   - 'src/platform/ui/revealShift.ts'
   - 'src/platform/ui/scrollMargin.test.ts'
   - 'src/platform/ui/scrollMargin.ts'
+  - 'src/platform/ui/showcaseRegistry.test.ts'
+  - 'src/platform/ui/showcaseRegistry.ts'
   - 'src/platform/ui/useCountedNumber.client.test.tsx'
   - 'src/platform/ui/useCountedNumber.client.ts'
   - 'src/platform/ui/useReplayProgress.client.test.ts'
@@ -186,7 +191,7 @@ The shared components every page and module builds with (`src/platform/ui/`): wh
 
 - `npm run storybook` opens the component showcase (Storybook, #1424): each component has a `*.stories.tsx` beside it, drawn with the site's own `globals.css` and fonts, with a theme switch (every folder in `src/themes/`), a light/dark switch and the six widths of the [responsive table](/docs/guidelines/nextjs-tailwind.md#responsive-design--6-viewport-testing). Setup and its checks are in `.storybook/` (`viewports.test.ts`, `themes.test.ts`, `fonts.test.ts`).
 - It is public at https://dev.sprechereast.com/storybook/index.html (`/showcase/` is the native showcase's page, #1528), rebuilt by every production deploy; a preview that changes a story or a shared component gets its own copy ([`ops/developer-site.md`](/ops/developer-site.md), #1459). Stories cover only part of the kit; the old gallery stays until the rest has them.
-- **Showcase examples** (#1532, epic #1528): the native showcase that replaces both is built from a `*.examples.tsx` file beside each component (`defineExample` in `example.ts`) and from `docs/reference/showcase-index.json`, which `npm run docs:generate` writes from the types, the imports and those files and `docs:check` keeps current. The format, and what an example may not do, is in [component-set.md](/docs/ui/component-set.md#showcase-examples); `examples.test.tsx` renders every example with axe.
+- **Showcase examples** (#1532, epic #1528): the native showcase that replaces both is built from a `*.examples.tsx` file beside each component (and a `*.examples.client.tsx` for an example with a handler or state; `defineExample` in `example.ts`), from `docs/reference/showcase-index.json` and from the import map `showcaseRegistry.ts`, which `npm run docs:generate` writes from the types, the imports and those files and `docs:check` keeps current. The format, and what an example may not do, is in [component-set.md](/docs/ui/component-set.md#showcase-examples); `examples.test.tsx` renders every example with axe and `examples.server.test.ts` draws the server ones with the framework's server renderer.
 
 ## Behaviors and events
 

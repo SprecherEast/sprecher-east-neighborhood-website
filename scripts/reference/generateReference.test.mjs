@@ -12,6 +12,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildEntryFixture } from './entryFixture.mjs'
 
+// The showcase's import map (#1532) is generated into the kit's folder, not into docs/reference/
+const REGISTRY = 'src/platform/ui/showcaseRegistry.ts'
 const source = path.resolve(import.meta.dirname, '../..')
 let copy
 
@@ -75,15 +77,18 @@ describe('scripts/generate-reference.mjs', () => {
       jobs: read('jobs.md'),
       endpoints: read('endpoints.md'),
       index: read('showcase-index.json'),
+      registry: fs.readFileSync(path.join(copy, REGISTRY), 'utf8'),
     }
     fs.appendFileSync(path.join(copy, 'docs/reference/showcase-index.json'), ' \n')
+    fs.appendFileSync(path.join(copy, REGISTRY), '// stale\n')
     fs.rmSync(path.join(copy, 'docs/reference/jobs.md'))
     fs.appendFileSync(path.join(copy, 'docs/reference/endpoints.md'), 'stale\n')
     fs.writeFileSync(path.join(copy, 'docs/reference/stray.md'), 'stray\n')
     const stale = run('--check')
     expect(stale.status, describeRun(stale)).toBe(1)
-    for (const name of ['jobs.md', 'endpoints.md', 'stray.md', 'showcase-index.json'])
+    for (const name of ['jobs.md', 'endpoints.md', 'stray.md', 'showcase-index.json', REGISTRY]) {
       expect(stale.stderr).toContain(name)
+    }
 
     const written = run()
     expect(written.status, describeRun(written)).toBe(0)
@@ -91,6 +96,7 @@ describe('scripts/generate-reference.mjs', () => {
     expect(read('jobs.md')).toBe(original.jobs)
     expect(read('endpoints.md')).toBe(original.endpoints)
     expect(read('showcase-index.json')).toBe(original.index)
+    expect(fs.readFileSync(path.join(copy, REGISTRY), 'utf8')).toBe(original.registry)
     expect(fs.existsSync(path.join(copy, 'docs/reference/stray.md'))).toBe(false)
     expect(read('notes.txt')).toBe('kept\n')
     const again = run('--check')

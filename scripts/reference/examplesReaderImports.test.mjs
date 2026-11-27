@@ -1,0 +1,122 @@
+import { describe, expect, it } from 'vitest'
+
+import { FILE, IMPORTS, read, readExamples, withBody } from './examplesFixture.mjs'
+
+describe('readExamples: what an example may import', () => {
+  const importing = (line) => () =>
+    readExamples(`${line}\n${IMPORTS}${withBody('render: () => null')}`, FILE)
+
+  it('accepts react, lucide-react, the kit and the component files beside it', () => {
+    for (const line of [
+      "import React from 'react'",
+      "import { ArrowRight } from 'lucide-react'",
+      "import { Button } from '@/platform/ui/Button'",
+      "import type { ButtonProps } from '@/platform/ui/Button'",
+      "import { Tabs } from './Tabs.client'",
+    ]) {
+      expect(importing(line), line).not.toThrow()
+    }
+  })
+
+  it('refuses everything else, by default', () => {
+    for (const line of [
+      "import { getPayload } from 'payload'",
+      "import { x } from 'payload/shared'",
+      "import config from '@payload-config'",
+      "import { findPosts } from '@/modules/news'",
+      "import { y } from '@/platform/service/email'",
+      "import { y } from '@/platform/lib/cn'",
+      "import { y } from '@/platform/richtext/RichText'",
+      "import { y } from '@/platform/uikit/x'",
+      "import { headers } from 'next/headers'",
+      "import { headers } from 'next/headers.js'",
+      "import { c } from 'next/cache'",
+      "import 'server-only'",
+      "import fs from 'node:fs'",
+      "import cp from 'child_process'",
+      "import { n } from '../../modules/news/data/posts'",
+      "import { r } from './payload/roles'",
+      "import { h } from './helper'",
+      "import { h } from './Thing.test'",
+      "import { h } from './Other.stories'",
+      "import { h } from '../ui/Button'",
+    ]) {
+      expect(importing(line), line).toThrow(/imports .*; an examples file may import only/)
+    }
+  })
+
+  it('refuses a re-export from anywhere else, an export list and a default export', () => {
+    expect(() => read(`export { x } from 'payload'\n${withBody('render: () => null')}`)).toThrow(
+      /imports payload/,
+    )
+    expect(() => read(`export * from 'payload'\n`)).toThrow(/imports payload/)
+    expect(() => read(`const x = 1\nexport { x }\n`)).toThrow(
+      /export lists are not a defineExample/,
+    )
+    expect(() => read(`export default 3\n`)).toThrow(/a default export is not a defineExample/)
+  })
+
+  it('refuses a dynamic import, require and an import-equals, anywhere in the file', () => {
+    expect(() =>
+      read(`export const A = defineExample({ purpose: 'x', render: () => import('payload') })\n`),
+    ).toThrow(/dynamic import/)
+    expect(() =>
+      read(`const load = () => import('./Thing')\n${withBody('render: () => null')}`),
+    ).toThrow(/dynamic import/)
+    expect(() => read(`const p = require('payload')\n${withBody('render: () => null')}`)).toThrow(
+      /references require/,
+    )
+    expect(() => read(`import x = require('payload')\n${withBody('render: () => null')}`)).toThrow(
+      /import x = require/,
+    )
+    expect(() =>
+      read(`type T = typeof import('payload')\n${withBody('render: () => null')}`),
+    ).toThrow(/dynamic import/)
+    expect(() => read(`const m = import.meta\n${withBody('render: () => null')}`)).toThrow(
+      /import\.meta/,
+    )
+  })
+
+  it('refuses the environment and the network, in render, in a helper or at the top of the file', () => {
+    const uses = [
+      'process.env.SECRET',
+      "process['env']",
+      'const { env } = process',
+      'const f = fetch',
+      "fetch('/x')",
+      'window.fetch',
+      "globalThis['fetch']",
+      'new XMLHttpRequest()',
+      'new WebSocket("x")',
+      'document.cookie',
+      'eval("1")',
+    ]
+    for (const use of uses) {
+      expect(
+        () =>
+          read(
+            `export const A = defineExample({ purpose: 'x', render: () => { ${use}; return null } })\n`,
+          ),
+        `render: ${use}`,
+      ).toThrow(
+        /A: references (process|fetch|window|globalThis|XMLHttpRequest|WebSocket|document|eval)/,
+      )
+      expect(() => read(`${use}\n${withBody('render: () => null')}`), `top: ${use}`).toThrow(
+        /references/,
+      )
+      expect(
+        () => read(`function help() { ${use} }\n${withBody('render: () => null')}`),
+        `helper: ${use}`,
+      ).toThrow(/references/)
+    }
+  })
+
+  it('says which line, and does not mind a property that only has the name', () => {
+    expect(() => read(`\n\nconst x = process\n${withBody('render: () => null')}`)).toThrow(
+      /references process \(line 5\)/,
+    )
+    expect(() =>
+      read(`const o = { fetch: 1 }\nconst n = o.process\n${withBody('render: () => null')}`),
+    ).not.toThrow()
+  })
+})

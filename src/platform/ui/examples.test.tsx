@@ -5,9 +5,10 @@ import { join } from 'node:path'
 import type { ComponentProps } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { readExamples } from '../../../scripts/reference/showcase.mjs'
-import { defaultSettings, type Example, type ExampleSetting } from './example'
+import { readExamples } from '../../../scripts/reference/examplesReader.mjs'
+import { defaultSettings, type Example } from './example'
 import { expectAccessible } from './testing/expectAccessible'
+import { settingVariations } from './testing/exampleSettings'
 
 // next/link renders a plain <a> in tests (no router)
 vi.mock('next/link', () => ({
@@ -20,7 +21,7 @@ const ROOT = join(import.meta.dirname, '../../..')
 const FOLDERS = ['src/platform/ui', 'src/platform/richtext']
 const FILES = FOLDERS.flatMap((folder) =>
   (readdirSync(join(ROOT, folder), { recursive: true, encoding: 'utf8' }) as string[])
-    .filter((file) => file.endsWith('.examples.tsx'))
+    .filter((file) => /\.examples(\.client)?\.tsx$/.test(file))
     .map((file) => `${folder}/${file}`),
 ).sort()
 
@@ -34,25 +35,13 @@ const loaded = await Promise.all(
   ),
 )
 
-/** Each way a visitor could change one setting from its default, the others left alone */
-function variations(settings: Record<string, ExampleSetting>) {
-  const start = defaultSettings(settings) as Record<string, unknown>
-  return Object.entries(settings).flatMap(([key, setting]) => {
-    const others =
-      setting.kind === 'boolean'
-        ? [!setting.default]
-        : setting.kind === 'choice'
-          ? setting.options.filter((option) => option !== setting.default)
-          : [`${setting.default} again`]
-    return others.map((value) => ({ ...start, [key]: value }))
-  })
-}
-
 describe('showcase examples (#1532)', () => {
   it('exist for the components the format was proved on', () => {
     for (const file of ['Button', 'Badge', 'Tabs']) {
       expect(FILES, file).toContain(`src/platform/ui/${file}.examples.tsx`)
     }
+    // An example with a handler, or a state the server can't pass on, lives in a client file
+    expect(FILES).toContain('src/platform/ui/Badge.examples.client.tsx')
   })
 
   describe.each(loaded)('%s', (file, module) => {
@@ -71,7 +60,7 @@ describe('showcase examples (#1532)', () => {
       async (name) => {
         const example = module[name]
         if (!example) throw new Error(`${name} is not exported`)
-        const starts = [defaultSettings(example.settings), ...variations(example.settings ?? {})]
+        const starts = [defaultSettings(example.settings), ...settingVariations(example.settings)]
         for (const values of starts) {
           const { container, unmount } = render(<>{example.render(values as never)}</>)
           expect(container.firstChild, name).not.toBeNull()

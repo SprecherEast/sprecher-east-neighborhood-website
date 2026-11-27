@@ -18,7 +18,10 @@
     // Kept on purpose: only its tests call it today (#756)
     "src/modules/accounts/server.ts": ["exports"],
     // Every export is an example, read by name by the showcase and the tests (#1532)
-    "src/platform/{ui,richtext}/**/*.examples.tsx": ["exports"],
+    "src/platform/{ui,richtext}/**/*.examples{,.client}.tsx": ["exports"],
+    // The import map the showcase pages load components and examples through (#1532), and the example the server test must refuse
+    "src/platform/ui/showcaseRegistry.ts": ["exports"],
+    "src/platform/ui/testing/handlerFixture.tsx": ["exports"],
   },
   "workspaces": {
     ".": {
@@ -50,7 +53,10 @@
         // The developer pages (#1530) are a second Next.js project: its routes are entries
         "developer/app/**/{page,layout,not-found}.tsx",
         // The showcase examples (#1532): read by the showcase pages and the reference generator, which knip can't see
-        "src/platform/{ui,richtext}/**/*.examples.tsx",
+        "src/platform/{ui,richtext}/**/*.examples{,.client}.tsx",
+        "src/platform/ui/showcaseRegistry.ts",
+        // Bundled by path in the server test of the examples
+        "src/platform/ui/testing/handlerFixture.tsx",
       ],
       "ignoreDependencies": [
         // Loaded from CSS (globals.css `@import` and `@plugin`), which knip doesn't read

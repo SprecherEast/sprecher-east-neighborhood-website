@@ -16,7 +16,7 @@ const TYPE_FLAGS =
 const inPackage = (file) => file.includes('/node_modules/')
 // A story or an example is not a real use of a component either (#1447, #1532): it only shows it
 const isTestFile = (file) =>
-  /\.(test|spec|stories|examples)\.tsx?$/.test(file) || file.includes('/testing/')
+  /\.(test|spec|stories|examples(\.client)?)\.tsx?$/.test(file) || file.includes('/testing/')
 const relative = (root, file) => path.relative(root, file).split(path.sep).join('/')
 
 /** Names of the variants a `cva(…, { variants: { name: {…} } })` call in the file defines. */

@@ -110,11 +110,6 @@ export const ExternalLink = defineExample({
   ),
 })
 
-export const Loading = defineExample({
-  purpose: 'Shows a spinner and ignores presses while work runs, and stays focusable',
-  render: () => <Button loading>Sending</Button>,
-})
-
 export const Disabled = defineExample({
   purpose: 'Not available right now: dimmed, and it does nothing',
   render: () => <Button disabled>Send</Button>,

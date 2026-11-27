@@ -17,20 +17,18 @@ export function createSourceProgram(root) {
 }
 
 const COMPONENT_SOURCE = /\/src\/platform\/(ui|richtext)\/.*\.tsx$/
+const NOT_A_COMPONENT = /\.(test|contract|stories|examples(\.client)?)\.tsx$/
+
+/** Whether a file (an absolute path, or one under the repository) holds shared components: not a test, story, examples file or test helper. */
+export const isComponentSourceFile = (file) =>
+  COMPONENT_SOURCE.test(`/${file}`) && !NOT_A_COMPONENT.test(file) && !file.includes('/testing/')
 
 /** The files whose exported components the reference lists: the UI kit and rich text, without tests, stories, examples and test helpers. */
-export const componentSourceFiles = (fileNames) =>
-  fileNames
-    .filter(
-      (file) =>
-        COMPONENT_SOURCE.test(file) && !/\.(test|contract|stories|examples)\.tsx$/.test(file),
-    )
-    .filter((file) => !file.includes('/testing/'))
-    .sort()
+export const componentSourceFiles = (fileNames) => fileNames.filter(isComponentSourceFile).sort()
 
-const EXAMPLES_FILE = /\/src\/platform\/(ui|richtext)\/.*\.examples\.tsx$/
+const EXAMPLES_FILE = /\/src\/platform\/(ui|richtext)\/.*\.examples(\.client)?\.tsx$/
 
-/** The examples files (#1532) of the kit and rich text, as paths under `root`, sorted. */
+/** The examples files (#1532, server and client) of the kit and rich text, as paths under `root`, sorted. */
 export const examplesSourceFiles = (fileNames, root) =>
   fileNames
     .filter((file) => EXAMPLES_FILE.test(file))

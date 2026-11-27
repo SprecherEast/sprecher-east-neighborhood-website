@@ -41,7 +41,7 @@ beforeAll(() => {
   // A stand-in for the variant helper: props declared in this package count as variants
   write(
     'node_modules/class-variance-authority/index.d.ts',
-    "export interface Variants { tone?: 'info' | 'error' | null }\n",
+    "export interface Variants { tone?: 'info' | 'error' | null; level?: 1 | 2 | null; flag?: boolean | null; mix?: 'a' | boolean | null; loose?: 'x' | string | null }\n",
   )
   write(
     'node_modules/other/index.d.ts',
@@ -145,11 +145,26 @@ describe('describeComponents', () => {
     expect(byName.size.options).toEqual(['sm', 'md'])
     expect(byName.heading.options).toBeNull()
     expect(byName.count.options).toBeNull()
+    // Numbers and booleans are values too; a list that is also open text has no fixed values
+    expect(byName.level.options).toEqual([1, 2])
+    expect(byName.flag.options).toEqual([false, true])
+    expect(byName.mix.options).toEqual(expect.arrayContaining(['a', true, false]))
+    expect(byName.mix.options).toHaveLength(3)
+    expect(byName.loose.options).toBeNull()
   })
 
   it('counts props inherited from a package instead of listing them', () => {
     const [alert] = describeComponents(load(sources), root, files)
-    expect(alert.props.map((p) => p.name).sort()).toEqual(['count', 'heading', 'size', 'tone'])
+    expect(alert.props.map((p) => p.name).sort()).toEqual([
+      'count',
+      'flag',
+      'heading',
+      'level',
+      'loose',
+      'mix',
+      'size',
+      'tone',
+    ])
     expect(alert.inherited).toBe(2)
   })
 

@@ -13,7 +13,7 @@ export const uiKitConfig = {
     // The kit itself, but not its stories and examples
     'src/platform/ui/**',
     '!src/platform/ui/**/*.stories.tsx',
-    '!src/platform/ui/**/*.examples.tsx',
+    '!src/platform/ui/**/*.examples{,.client}.tsx',
     'src/**/*.test.tsx',
     '.storybook/**/*.test.tsx',
     'developer/**/*.test.tsx',
