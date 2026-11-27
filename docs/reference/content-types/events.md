@@ -21,14 +21,15 @@
 
 ## Hooks
 
-| Phase        | Function              | Defined in                                    |
-| ------------ | --------------------- | --------------------------------------------- |
-| beforeChange | `holdSuggestions`     | `src/platform/payload/reviewQueue.ts`         |
-| beforeChange | `populatePublishedAt` | `src/platform/payload/populatePublishedAt.ts` |
-| afterChange  | `revalidateEvent`     | `src/modules/events/cms/revalidateEvent.ts`   |
-| afterChange  | inline                | @payloadcms/plugin-search                     |
-| beforeDelete | inline                | @payloadcms/plugin-search                     |
-| afterDelete  | `revalidateDelete`    | `src/modules/events/cms/revalidateEvent.ts`   |
+| Phase        | Function                | Defined in                                    |
+| ------------ | ----------------------- | --------------------------------------------- |
+| beforeChange | `holdSuggestions`       | `src/platform/payload/reviewQueue.ts`         |
+| beforeChange | `populatePublishedAt`   | `src/platform/payload/populatePublishedAt.ts` |
+| afterChange  | `revalidateEvent`       | `src/modules/events/cms/revalidateEvent.ts`   |
+| afterChange  | inline                  | @payloadcms/plugin-search                     |
+| beforeDelete | `readPostsBeforeDelete` | `src/modules/events/cms/revalidateEvent.ts`   |
+| beforeDelete | inline                  | @payloadcms/plugin-search                     |
+| afterDelete  | `revalidateDelete`      | `src/modules/events/cms/revalidateEvent.ts`   |
 
 ## Fields
 

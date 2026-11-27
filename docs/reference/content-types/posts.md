@@ -21,14 +21,15 @@
 
 ## Hooks
 
-| Phase        | Function           | Defined in                                |
-| ------------ | ------------------ | ----------------------------------------- |
-| beforeChange | `holdSuggestions`  | `src/platform/payload/reviewQueue.ts`     |
-| afterChange  | `revalidatePost`   | `src/modules/news/cms/revalidatePost.ts`  |
-| afterChange  | inline             | @payloadcms/plugin-search                 |
-| afterRead    | `populateAuthors`  | `src/modules/news/cms/populateAuthors.ts` |
-| beforeDelete | inline             | @payloadcms/plugin-search                 |
-| afterDelete  | `revalidateDelete` | `src/modules/news/cms/revalidatePost.ts`  |
+| Phase        | Function                 | Defined in                                |
+| ------------ | ------------------------ | ----------------------------------------- |
+| beforeChange | `holdSuggestions`        | `src/platform/payload/reviewQueue.ts`     |
+| afterChange  | `revalidatePost`         | `src/modules/news/cms/revalidatePost.ts`  |
+| afterChange  | inline                   | @payloadcms/plugin-search                 |
+| afterRead    | `populateAuthors`        | `src/modules/news/cms/populateAuthors.ts` |
+| beforeDelete | `readEventsBeforeDelete` | `src/modules/news/cms/revalidatePost.ts`  |
+| beforeDelete | inline                   | @payloadcms/plugin-search                 |
+| afterDelete  | `revalidateDelete`       | `src/modules/news/cms/revalidatePost.ts`  |
 
 ## Fields
 
@@ -42,7 +43,7 @@
 | `backdrop.desktop`        | upload       | no       | → media                                                             |                                                  |
 | `content`                 | richText     | yes      |                                                                     |                                                  |
 | `relatedPosts`            | relationship | no       | → posts (many)                                                      |                                                  |
-| `relatedEvents`           | relationship | no       | → events (many)                                                     | indexed                                          |
+| `relatedEvents`           | relationship | no       | → events (many)                                                     | indexed; max rows 6                              |
 | `categories`              | relationship | no       | → categories (many)                                                 |                                                  |
 | `meta.title`              | text         | no       |                                                                     |                                                  |
 | `meta.image`              | upload       | no       | → media                                                             |                                                  |
