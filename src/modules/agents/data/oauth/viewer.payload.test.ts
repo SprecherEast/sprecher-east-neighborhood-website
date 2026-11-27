@@ -88,6 +88,18 @@ describe('getViewer', () => {
     expect(await viewer({ ...SAME_ORIGIN, authorization: 'Bearer anything' })).toBeNull()
   })
 
+  it('names this site without trailing slashes, the same way in the issuer and in every `iss`', async () => {
+    const { getOAuthContext } = await import('./context')
+    vi.stubEnv('NEXT_PUBLIC_SERVER_URL', 'https://sprechereast.test//')
+    try {
+      const { origin, resource } = await getOAuthContext()
+      expect(origin).toBe('https://sprechereast.test')
+      expect(resource).toBe('https://sprechereast.test/api/mcp')
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+
   it('is no one for an API key sent as a header', async () => {
     expect(
       await viewer({ ...SAME_ORIGIN, authorization: `payload-mcp-api-keys API-Key ${KEY}` }),

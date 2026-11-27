@@ -1,7 +1,5 @@
 import { OAUTH_GRANTS, OAUTH_PATHS, OAUTH_SCOPE } from './constants'
-import { mcpResource } from './resource'
-
-const trim = (origin: string) => origin.replace(/\/+$/, '')
+import { mcpResource, siteOrigin } from './resource'
 
 /**
  * RFC 9728: what an MCP client reads first, to learn where to sign in. `resource` is the address
@@ -10,7 +8,7 @@ const trim = (origin: string) => origin.replace(/\/+$/, '')
  */
 export const protectedResourceMetadata = (origin: string) => ({
   resource: mcpResource(origin),
-  authorization_servers: [trim(origin)],
+  authorization_servers: [siteOrigin(origin)],
   bearer_methods_supported: ['header'],
   scopes_supported: [OAUTH_SCOPE],
   resource_name: 'Sprecher East neighborhood agents',
@@ -21,9 +19,9 @@ export const protectedResourceMetadata = (origin: string) => ({
  * secret), the code and refresh grants, and no registration address: clients are added by hand.
  */
 export const authorizationServerMetadata = (origin: string) => ({
-  issuer: trim(origin),
-  authorization_endpoint: `${trim(origin)}${OAUTH_PATHS.authorize}`,
-  token_endpoint: `${trim(origin)}${OAUTH_PATHS.token}`,
+  issuer: siteOrigin(origin),
+  authorization_endpoint: `${siteOrigin(origin)}${OAUTH_PATHS.authorize}`,
+  token_endpoint: `${siteOrigin(origin)}${OAUTH_PATHS.token}`,
   response_types_supported: ['code'],
   grant_types_supported: [...OAUTH_GRANTS],
   code_challenge_methods_supported: ['S256'],
@@ -35,4 +33,4 @@ export const authorizationServerMetadata = (origin: string) => ({
 
 /** The `WWW-Authenticate` value of a 401 from the MCP address (RFC 9728, section 5.1). */
 export const bearerChallenge = (origin: string): string =>
-  `Bearer resource_metadata="${trim(origin)}${OAUTH_PATHS.protectedResource}${OAUTH_PATHS.mcp}"`
+  `Bearer resource_metadata="${siteOrigin(origin)}${OAUTH_PATHS.protectedResource}${OAUTH_PATHS.mcp}"`

@@ -11,11 +11,25 @@ export type AuthorizeError = {
   description: string
 }
 
-/** RFC 7636: 43 to 128 of A-Z a-z 0-9 - . _ ~ */
-const VERIFIER_SHAPE = /^[A-Za-z0-9._~-]{43,128}$/
+/**
+ * The size limits of the request, defined once: the checks below and the approval button's input
+ * schema (`consentInput.ts`) must agree, or a page could show what its button then refuses.
+ * The challenge is RFC 7636's 43 to 128 characters.
+ */
+export const REQUEST_LIMITS = {
+  clientId: 200,
+  redirectUri: 2000,
+  state: 512,
+  challenge: { min: 43, max: 128 },
+} as const
+
+/** RFC 7636: A-Z a-z 0-9 - . _ ~ */
+const VERIFIER_SHAPE = new RegExp(
+  `^[A-Za-z0-9._~-]{${REQUEST_LIMITS.challenge.min},${REQUEST_LIMITS.challenge.max}}$`,
+)
 /** RFC 6749 appendix A: printable ASCII, no spaces */
 const PRINTABLE = /^[\x21-\x7E]+$/
-const MAX = { clientId: 200, redirectUri: 2000, state: 512 } as const
+const MAX = REQUEST_LIMITS
 
 /** A parameter that must appear once; `undefined` when missing, repeated or empty. */
 const single = (params: RawParams, name: string): string | undefined => {
@@ -41,6 +55,21 @@ export function readClientAndRedirect(
   }
   return { ok: true, clientId, redirectUri }
 }
+
+/**
+ * A checked request as the standard authorization parameters: the one place they are spelled out,
+ * for the approval page's address and for the checks that run again when the button is pressed.
+ */
+export const toAuthorizeParams = (request: ConsentRequest): Record<string, string> => ({
+  response_type: 'code',
+  client_id: request.clientId,
+  redirect_uri: request.redirectUri,
+  code_challenge: request.codeChallenge,
+  code_challenge_method: 'S256',
+  state: request.state,
+  resource: request.resource,
+  scope: request.scope,
+})
 
 const refuse = (code: AuthorizeError['code'], description: string) =>
   ({ ok: false, error: { code, description } }) as const

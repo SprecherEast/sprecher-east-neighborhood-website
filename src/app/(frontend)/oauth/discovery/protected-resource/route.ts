@@ -1,4 +1,4 @@
-import { protectedResourceMetadata } from '@/modules/agents'
+import { DISCOVERY_HEADERS, protectedResourceMetadata } from '@/modules/agents'
 import { getServerSideURL } from '@/platform/lib/getURL'
 
 /**
@@ -10,6 +10,6 @@ import { getServerSideURL } from '@/platform/lib/getURL'
  */
 export function GET(): Response {
   return Response.json(protectedResourceMetadata(getServerSideURL()), {
-    headers: { 'Cache-Control': 'public, max-age=300', 'Access-Control-Allow-Origin': '*' },
+    headers: DISCOVERY_HEADERS,
   })
 }

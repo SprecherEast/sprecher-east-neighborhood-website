@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { readAuthorizeRequest, readClientAndRedirect } from './authorizeRequest'
+import {
+  readAuthorizeRequest,
+  readClientAndRedirect,
+  REQUEST_LIMITS,
+  toAuthorizeParams,
+} from './authorizeRequest'
 
 const RESOURCE = 'https://sprechereast.com/api/mcp'
 const valid = {
@@ -87,5 +92,41 @@ describe('readAuthorizeRequest', () => {
   it.each(refused)('refuses %s', (_name, over, code) => {
     const result = read(over)
     expect(result).toMatchObject({ ok: false, error: { code } })
+  })
+})
+
+describe('toAuthorizeParams', () => {
+  it('spells the standard parameters, and the checks read them back to the same request', () => {
+    const read1 = read()
+    if (!read1.ok) throw new Error('the valid request must pass')
+    const params = toAuthorizeParams(read1.request)
+    expect(params).toEqual({
+      response_type: 'code',
+      client_id: valid.client_id,
+      redirect_uri: valid.redirect_uri,
+      code_challenge: valid.code_challenge,
+      code_challenge_method: 'S256',
+      state: valid.state,
+      resource: RESOURCE,
+      scope: 'mcp',
+    })
+    expect(readAuthorizeRequest(params, RESOURCE)).toEqual(read1)
+  })
+})
+
+describe('REQUEST_LIMITS', () => {
+  it('are the sizes the checks accept, to the character', () => {
+    const { clientId, redirectUri, state, challenge } = REQUEST_LIMITS
+    const at = (over: Record<string, string>) => read(over).ok
+    expect(at({ client_id: 'c'.repeat(clientId) })).toBe(true)
+    expect(at({ client_id: 'c'.repeat(clientId + 1) })).toBe(false)
+    expect(at({ redirect_uri: `https://a.test/${'p'.repeat(redirectUri - 15)}` })).toBe(true)
+    expect(at({ redirect_uri: `https://a.test/${'p'.repeat(redirectUri - 14)}` })).toBe(false)
+    expect(at({ state: 's'.repeat(state) })).toBe(true)
+    expect(at({ state: 's'.repeat(state + 1) })).toBe(false)
+    expect(at({ code_challenge: 'a'.repeat(challenge.min) })).toBe(true)
+    expect(at({ code_challenge: 'a'.repeat(challenge.min - 1) })).toBe(false)
+    expect(at({ code_challenge: 'a'.repeat(challenge.max) })).toBe(true)
+    expect(at({ code_challenge: 'a'.repeat(challenge.max + 1) })).toBe(false)
   })
 })

@@ -8,15 +8,19 @@ import type { OAuthClient } from './types'
 
 const LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['127.0.0.1', '[::1]', 'localhost'])
 
+const parse = (uri: string): URL | null => {
+  try {
+    return new URL(uri)
+  } catch {
+    return null
+  }
+}
+
 /** `null` when the address may be registered, otherwise why not (shown to the admin). */
 export function checkRegisteredRedirectUri(uri: string): string | null {
   if (uri.includes('*')) return 'No wildcards: register each address in full.'
-  let url: URL
-  try {
-    url = new URL(uri)
-  } catch {
-    return 'Enter a full address, such as https://claude.ai/api/mcp/auth_callback.'
-  }
+  const url = parse(uri)
+  if (!url) return 'Enter a full address, such as https://claude.ai/api/mcp/auth_callback.'
   if (url.hash || uri.includes('#')) return 'An address cannot have a # part.'
   if (url.username || url.password) return 'An address cannot hold a username or password.'
   if (url.protocol === 'https:') return uri.slice(8).includes('/') ? null : 'Add the path.'
@@ -37,14 +41,6 @@ export function clientAccepts(
   redirectUri: string,
 ): client is OAuthClient {
   return client !== null && client.enabled && redirectUriMatches(client.redirectUris, redirectUri)
-}
-
-const parse = (uri: string): URL | null => {
-  try {
-    return new URL(uri)
-  } catch {
-    return null
-  }
 }
 
 /**

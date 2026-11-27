@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { mcpResource, resourceMatches } from './resource'
+import { mcpResource, resourceMatches, siteOrigin } from './resource'
 
 describe('mcpResource', () => {
   it('is the MCP address on the site origin', () => {
@@ -39,5 +39,19 @@ describe('resourceMatches', () => {
 
   it('never matches when nothing is expected', () => {
     expect(resourceMatches('', '')).toBe(false)
+  })
+})
+
+describe('siteOrigin', () => {
+  it.each([
+    ['https://sprechereast.com', 'https://sprechereast.com'],
+    ['https://sprechereast.com/', 'https://sprechereast.com'],
+    ['https://sprechereast.com///', 'https://sprechereast.com'],
+  ])('spells %s as %s', (given, spelled) => {
+    expect(siteOrigin(given)).toBe(spelled)
+  })
+
+  it('keeps a slash that is not at the end', () => {
+    expect(siteOrigin('https://sprechereast.com/a/b/')).toBe('https://sprechereast.com/a/b')
   })
 })

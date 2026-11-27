@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { readAuthorizeRequest } from '../../domain/oauth/authorizeRequest'
+import { readAuthorizeRequest, toAuthorizeParams } from '../../domain/oauth/authorizeRequest'
 import { verifyConsent, type ConsentRequest } from '../../domain/oauth/consent'
 import { redirectBack, redirectError } from '../../domain/oauth/redirects'
 import { clientAccepts } from '../../domain/oauth/redirectUri'
@@ -12,7 +12,10 @@ import { createOAuthServer, OAuthError, OAuthRequest, OAuthResponse } from './oa
 export type Decision = 'approve' | 'deny'
 export type Decided = { kind: 'redirect'; url: string } | { kind: 'refused'; message: string }
 
-const REFUSED = 'This approval is no longer valid. Start the connection again from the AI tool.'
+const REFUSED: Decided = {
+  kind: 'refused',
+  message: 'This approval is no longer valid. Start the connection again from the AI tool.',
+}
 
 /**
  * The approve or deny button (#1501). Everything the page showed is checked again, because a
@@ -27,28 +30,19 @@ export async function decideConsent(
   decision: Decision,
   viewer: Viewer,
 ): Promise<Decided> {
-  if (!viewer?.isAdmin) return { kind: 'refused', message: REFUSED }
+  if (!viewer?.isAdmin) return REFUSED
   const { payload, origin, resource } = await getOAuthContext()
   const now = new Date()
   if (!verifyConsent(ticket, request, { adminId: viewer.id, now, secret: payload.secret })) {
-    return { kind: 'refused', message: REFUSED }
+    return REFUSED
   }
   const client = await findOAuthClient(payload, request.clientId)
   if (!clientAccepts(client, request.redirectUri)) {
-    return { kind: 'refused', message: REFUSED }
+    return REFUSED
   }
-  const params = {
-    response_type: 'code',
-    client_id: request.clientId,
-    redirect_uri: request.redirectUri,
-    code_challenge: request.codeChallenge,
-    code_challenge_method: 'S256',
-    state: request.state,
-    resource: request.resource,
-    scope: request.scope,
-  }
+  const params = toAuthorizeParams(request)
   // The same rules as the page, so a ticket for a request that no longer passes them is refused
-  if (!readAuthorizeRequest(params, resource).ok) return { kind: 'refused', message: REFUSED }
+  if (!readAuthorizeRequest(params, resource).ok) return REFUSED
   if (decision === 'deny') {
     const error = {
       code: 'access_denied',

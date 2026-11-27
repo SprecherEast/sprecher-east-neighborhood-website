@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { REQUEST_LIMITS } from './authorizeRequest'
 import { consentInputSchema } from './consentInput'
 
 const valid = {
@@ -45,5 +46,24 @@ describe('consentInputSchema', () => {
   it('drops a field the caller adds', () => {
     const parsed = consentInputSchema.parse({ ...valid, admin: true })
     expect(parsed).not.toHaveProperty('admin')
+  })
+})
+
+describe('the request limits', () => {
+  // The approval page shows what `readAuthorizeRequest` accepted, so this schema must take
+  // exactly the same sizes or a shown request could not be approved
+  const parse = (over: Record<string, string>) =>
+    consentInputSchema.safeParse({ ...valid, request: { ...valid.request, ...over } }).success
+
+  it.each([
+    ['clientId', REQUEST_LIMITS.clientId, 1],
+    ['redirectUri', REQUEST_LIMITS.redirectUri, 1],
+    ['state', REQUEST_LIMITS.state, 1],
+    ['codeChallenge', REQUEST_LIMITS.challenge.max, REQUEST_LIMITS.challenge.min],
+  ])('take %s from its smallest to its largest size and no further', (field, max, min) => {
+    expect(parse({ [field]: 'a'.repeat(max) })).toBe(true)
+    expect(parse({ [field]: 'a'.repeat(max + 1) })).toBe(false)
+    expect(parse({ [field]: 'a'.repeat(min) })).toBe(true)
+    expect(parse({ [field]: 'a'.repeat(min - 1) })).toBe(false)
   })
 })

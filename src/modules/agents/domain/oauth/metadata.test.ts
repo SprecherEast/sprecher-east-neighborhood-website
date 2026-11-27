@@ -62,3 +62,19 @@ describe('bearerChallenge', () => {
     )
   })
 })
+
+describe('an origin configured with a trailing slash', () => {
+  // The issuer here and the `iss` on every redirect back (`getOAuthContext`) are compared by the
+  // client, so both are spelled from `siteOrigin` and neither may keep the slash
+  const slashed = `${ORIGIN}/`
+
+  it('gives the same issuer and addresses as one without', () => {
+    expect(authorizationServerMetadata(slashed)).toEqual(authorizationServerMetadata(ORIGIN))
+    expect(authorizationServerMetadata(slashed).issuer).toBe(ORIGIN)
+  })
+
+  it('gives the same challenge and authorization server as one without', () => {
+    expect(bearerChallenge(slashed)).toBe(bearerChallenge(ORIGIN))
+    expect(protectedResourceMetadata(slashed)).toEqual(protectedResourceMetadata(ORIGIN))
+  })
+})

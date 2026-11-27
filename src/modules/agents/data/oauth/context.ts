@@ -6,7 +6,7 @@ import { getPayload, type Payload } from 'payload'
 import { ACCOUNTS_COLLECTION } from '@/platform/lib'
 import { getServerSideURL } from '@/platform/lib/getURL'
 
-import { mcpResource } from '../../domain/oauth/resource'
+import { mcpResource, siteOrigin } from '../../domain/oauth/resource'
 
 /** What every OAuth request needs: Payload, this site's address and the MCP address (the audience). */
 export async function getOAuthContext(): Promise<{
@@ -14,7 +14,7 @@ export async function getOAuthContext(): Promise<{
   origin: string
   resource: string
 }> {
-  const origin = getServerSideURL().replace(/\/+$/, '')
+  const origin = siteOrigin(getServerSideURL())
   return { payload: await getPayload({ config: configPromise }), origin, resource: mcpResource(origin) }
 }
 

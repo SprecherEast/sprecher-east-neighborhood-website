@@ -1,4 +1,4 @@
-import { authorizationServerMetadata } from '@/modules/agents'
+import { authorizationServerMetadata, DISCOVERY_HEADERS } from '@/modules/agents'
 import { getServerSideURL } from '@/platform/lib/getURL'
 
 /**
@@ -8,6 +8,6 @@ import { getServerSideURL } from '@/platform/lib/getURL'
  */
 export function GET(): Response {
   return Response.json(authorizationServerMetadata(getServerSideURL()), {
-    headers: { 'Cache-Control': 'public, max-age=300', 'Access-Control-Allow-Origin': '*' },
+    headers: DISCOVERY_HEADERS,
   })
 }

@@ -1,3 +1,4 @@
+import { toAuthorizeParams } from './authorizeRequest'
 import { OAUTH_PATHS } from './constants'
 import type { ConsentRequest } from './consent'
 
@@ -9,15 +10,6 @@ import type { ConsentRequest } from './consent'
  * request and nothing secret: an address anyone could write is no more than the tool's own.
  */
 export function approvePath(request: ConsentRequest): string {
-  const query = new URLSearchParams({
-    response_type: 'code',
-    client_id: request.clientId,
-    redirect_uri: request.redirectUri,
-    code_challenge: request.codeChallenge,
-    code_challenge_method: 'S256',
-    state: request.state,
-    resource: request.resource,
-    scope: request.scope,
-  })
+  const query = new URLSearchParams(toAuthorizeParams(request))
   return `${OAUTH_PATHS.approve}?${query.toString()}`
 }

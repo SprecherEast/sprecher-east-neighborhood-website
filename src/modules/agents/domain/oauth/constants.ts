@@ -50,6 +50,12 @@ export const OAUTH_GRANTS = ['authorization_code', 'refresh_token'] as const
 /** Sent with every answer that holds or refuses a token: nothing may keep it */
 export const NO_STORE_HEADERS = { 'Cache-Control': 'no-store', Pragma: 'no-cache' } as const
 
+/** Sent with the discovery answers, which hold nothing secret: any client may read and cache them */
+export const DISCOVERY_HEADERS = {
+  'Cache-Control': 'public, max-age=300',
+  'Access-Control-Allow-Origin': '*',
+} as const
+
 /** The two collections that hold the sign-ins (#1501) */
 export const OAUTH_CLIENTS = 'oauth-clients' as const
 export const OAUTH_TOKENS = 'oauth-tokens' as const

@@ -12,6 +12,9 @@ const answer = (status: number, body: unknown, headers: Record<string, string> =
     headers: { ...NO_STORE_HEADERS, ...headers },
   })
 
+const invalidRequest = (description: string) =>
+  answer(400, { error: 'invalid_request', error_description: description })
+
 /**
  * The OAuth token address (#1501): `POST application/x-www-form-urlencoded`, as RFC 6749
  * requires. The form is read here into plain strings and the rest is the agents module's. No
@@ -21,12 +24,12 @@ export async function POST(request: Request): Promise<Response> {
   const type = request.headers.get('content-type') ?? ''
   const length = Number(request.headers.get('content-length') ?? 0)
   if (!type.toLowerCase().startsWith(FORM) || length > MAX_BODY_BYTES) {
-    return answer(400, { error: 'invalid_request', error_description: `Send a form (${FORM}).` })
+    return invalidRequest(`Send a form (${FORM}).`)
   }
   // Counted as it arrives: a request that states no length is cut off, not read in full first
   const text = await readLimitedBody(request, MAX_BODY_BYTES)
   if (text === null) {
-    return answer(400, { error: 'invalid_request', error_description: 'The request is too big.' })
+    return invalidRequest('The request is too big.')
   }
   // No prototype, so a field named like an object member (`constructor`) is not already there
   const form: Record<string, string | string[]> = Object.create(null)

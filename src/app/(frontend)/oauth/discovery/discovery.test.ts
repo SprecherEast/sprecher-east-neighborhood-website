@@ -38,3 +38,14 @@ describe('the authorization-server document', () => {
     expect(doc).not.toHaveProperty('registration_endpoint')
   })
 })
+
+describe.each([
+  ['protected-resource', protectedResource],
+  ['authorization-server', authorizationServer],
+])('the %s answer', (_name, get) => {
+  it('may be cached for five minutes and read from any origin', () => {
+    const { headers } = get()
+    expect(headers.get('cache-control')).toBe('public, max-age=300')
+    expect(headers.get('access-control-allow-origin')).toBe('*')
+  })
+})
