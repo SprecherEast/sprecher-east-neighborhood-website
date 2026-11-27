@@ -15724,8 +15724,51 @@
       "path": "src/platform/ui/FieldSwitch.client.tsx",
       "module": "platform-area:ui",
       "aliases": [],
-      "fields": [],
-      "facts": [],
+      "fields": [
+        {
+          "name": "checked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off, when the caller holds the value; pair it with `onCheckedChange`",
+          "notes": []
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "detail": "What a form receives when the switch is on (`on` when left out)",
+          "notes": []
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "required": false,
+          "detail": "On or off to start with, when the switch keeps its own value",
+          "notes": []
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "detail": "Greys the switch out and stops it taking a press or a key",
+          "notes": []
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "detail": "The name the value is sent under in a form",
+          "notes": []
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "required": false,
+          "detail": "Called with the new value each time the switch is turned",
+          "notes": []
+        }
+      ],
+      "facts": [{ "label": "Props from its element", "value": "286" }],
       "watchOuts": [],
       "links": []
     },
@@ -17678,7 +17721,7 @@
           "notes": []
         }
       ],
-      "facts": [],
+      "facts": [{ "label": "Props from its element", "value": "287" }],
       "watchOuts": [],
       "links": []
     },
@@ -17734,7 +17777,7 @@
           "notes": []
         }
       ],
-      "facts": [],
+      "facts": [{ "label": "Props from its element", "value": "287" }],
       "watchOuts": [],
       "links": []
     },
