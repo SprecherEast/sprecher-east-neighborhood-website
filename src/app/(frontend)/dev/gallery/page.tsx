@@ -30,6 +30,7 @@ import { RelatedLinksGallery } from './RelatedLinksGallery'
 import { LayoutGallery } from './LayoutGallery'
 import { RichTextGallery } from './RichTextGallery'
 import { PeriodNavGallery } from './PeriodNavGallery.client'
+import { SwitchGallery } from './SwitchGallery.client'
 import { TabsGallery } from './TabsGallery'
 
 export const metadata: Metadata = {
@@ -72,6 +73,7 @@ export default function GalleryPage() {
         <ActionsGallery />
         <BrandLogoGallery />
         <FieldsGallery />
+        <SwitchGallery />
         <DisplayGallery />
         <ProgressGallery />
         <BarTrackGallery />
