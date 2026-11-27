@@ -20,8 +20,20 @@ import type { decideConsent } from '../use-cases/oauth/decideConsent'
  * Payload config they reach must load after `bootPayload` has set the test environment.
  */
 
-export const begin = async (...args: Parameters<typeof beginAuthorization>) =>
-  (await import('../use-cases/oauth/beginAuthorization')).beginAuthorization(...args)
+export const begin = async (
+  params: Parameters<typeof beginAuthorization>[0],
+  viewer: Viewer,
+  headers = new Headers(),
+) =>
+  (await import('../use-cases/oauth/beginAuthorization')).beginAuthorization(
+    params,
+    headers,
+    viewer,
+  )
+export const continueFrom = async (
+  params: Parameters<typeof beginAuthorization>[0],
+  headers = new Headers(),
+) => (await import('../use-cases/oauth/beginAuthorization')).continueAuthorization(params, headers)
 export const decide = async (...args: Parameters<typeof decideConsent>) =>
   (await import('../use-cases/oauth/decideConsent')).decideConsent(...args)
 

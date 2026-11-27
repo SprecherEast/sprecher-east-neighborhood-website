@@ -2,9 +2,10 @@ import 'server-only'
 
 import type { Payload } from 'payload'
 
-import { ROLES } from '@/platform/lib'
+import { hasAgent } from '@/platform/payload/roles'
 
 import { OAUTH_CLIENTS } from '../../domain/oauth/constants'
+import { accountById } from '../../domain/oauth/queries'
 import type { OAuthClient } from '../../domain/oauth/types'
 
 /** The client an admin registered under this ID, or null. Reads past access: only the server asks. */
@@ -35,16 +36,6 @@ export async function findOAuthClient(
 
 /** Whether this account still exists and is an agent: a changed role ends its tokens. */
 export async function isAgentAccount(payload: Payload, userId: number): Promise<boolean> {
-  try {
-    const user = await payload.findByID({
-      collection: 'users',
-      id: userId,
-      depth: 0,
-      select: { role: true },
-      overrideAccess: true,
-    })
-    return user.role === ROLES.agent
-  } catch {
-    return false
-  }
+  const account = await payload.findByID(accountById(userId)).catch(() => null)
+  return account !== null && hasAgent(account)
 }

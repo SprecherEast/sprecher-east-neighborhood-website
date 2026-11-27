@@ -33,6 +33,22 @@ Source: `src/platform/ui/Button.tsx`
 - Platform: `platform/richtext`, `platform/ui`
 - Elsewhere: `src/app/global-error.tsx`
 
+## `ButtonRow`
+
+The buttons of one decision side by side, stacked on a phone: the same gap, the same order and the same break everywhere (the account offers, the passkey list and the connection approval). `align="end"` puts them at the right from the wider layout up, as a dialog's do.
+
+Source: `src/platform/ui/ButtonRow.tsx`
+
+| Prop       | Type               | Required | Description |
+| ---------- | ------------------ | -------- | ----------- |
+| `align`    | `"start" \| "end"` | no       |             |
+| `children` | `ReactNode`        | yes      |             |
+
+**Used by** (direct imports):
+
+- Modules: `accounts`, `agents`
+- Routes: `/dev/gallery`
+
 ## `Link`
 
 Source: `src/platform/ui/Link.tsx`

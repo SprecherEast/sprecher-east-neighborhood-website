@@ -23,6 +23,7 @@
 | Phase          | Function                 | Defined in                                     |
 | -------------- | ------------------------ | ---------------------------------------------- |
 | beforeValidate | `giveClientId`           | `src/modules/agents/cms/oauth/oauthClients.ts` |
+| afterChange    | `revokeWhenAgentChanges` | `src/modules/agents/cms/oauth/oauthClients.ts` |
 | beforeDelete   | `deleteTokensWithClient` | `src/modules/agents/cms/oauth/oauthClients.ts` |
 
 ## Fields

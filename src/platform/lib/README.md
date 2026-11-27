@@ -20,6 +20,7 @@ The pure, framework-free helpers every module and the UI kit use (`src/platform/
 
 ## Behaviors and events
 
+- **`readLimitedBody`** reads a request's body as text, counting bytes as they arrive and answering `null` past the limit, so a body that states no length is cut off, not read in full (`readLimitedBody.ts`, #1501).
 - **`SlidingWindowCounter`** counts requests in memory, which is one process, and forgets its least recently used key past `maxKeys`; the key is the first `x-forwarded-for` entry, else `x-real-ip` (`slidingWindow.ts`, `clientIp.ts`, #118).
 - **`humanCheck.ts`** is the shape of the robot check that sign-up and the contact form share (decision 0003); the verifier is in [services](../service/README.md).
 - **Banners** remember a visitor's closed ones in the browser only, with no personal data, and expire by moment, not calendar day (`dismissedBanners.ts`, `bannerExpiry.ts`, #814).
@@ -41,7 +42,7 @@ The pure, framework-free helpers every module and the UI kit use (`src/platform/
 - **Only Google's keyless embed pages pass** as a map address; `getMediaUrl` strips the site origin so uploads read as local files; a focal point becomes a CSS `object-position`, the centre when unset (`googleMapsEmbed.ts`, `getMediaUrl.ts`, `focalPoint.ts`, #1013; `googleMapsEmbed.test.ts`, `getMediaUrl.test.ts`, `focalPoint.test.ts`).
 - **Email layout takes fixed paragraphs only,** escaped, with inline colors (`emailLayout.ts`, decision 0004; `emailLayout.test.ts`).
 - **A fact says how sure it is:** `confirmed`, `estimate` or `unknown` (`certainty.ts`, #509; `certainty.test.ts`). **A title has one longest length** (`TITLE_MAX_LENGTH` in `contentLimits.ts`, #633). A listing's highest page number is `MAX_PAGE` (`paging.ts`); a chart's limits are `CHART_LIMITS` (`chart/spec.ts`).
-- Cursors and paging: `cursor.test.ts`, `paging.test.ts`; review-queue rules: `reviewQueue.test.ts`; retention cutoffs: `retention.test.ts`; limits: `slidingWindow.test.ts`.
+- Cursors and paging: `cursor.test.ts`, `paging.test.ts`; review-queue rules: `reviewQueue.test.ts`; retention cutoffs: `retention.test.ts`; limits: `slidingWindow.test.ts`; bounded bodies: `readLimitedBody.test.ts`.
 
 ## Boundaries
 

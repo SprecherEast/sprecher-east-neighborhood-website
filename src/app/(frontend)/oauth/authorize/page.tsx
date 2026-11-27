@@ -1,13 +1,8 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import { SIGN_IN_PATH } from '@/modules/accounts'
-import {
-  beginAuthorization,
-  ConnectionNotice,
-  ConsentCard,
-  getViewer,
-} from '@/modules/agents/server'
+import { ConnectionNotice, ContinueCard, continueAuthorization } from '@/modules/agents/server'
 import { privateAddressMetadata } from '@/platform/seo/privateAddress'
 import { PageHeader } from '@/platform/ui/PageHeader'
 import { Section } from '@/platform/ui/Section'
@@ -17,18 +12,20 @@ export const metadata: Metadata = privateAddressMetadata(
   'Allow an AI tool to connect to the Sprecher East AI agent address.',
 )
 
-// The answer depends on the signed-in account and on the request, never on a cached page
+// The answer depends on the request, never on a cached page
 export const dynamic = 'force-dynamic'
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
 /**
- * Where an AI tool sends an admin to allow it in (#1501). The request is checked before anything
- * is asked: a request that can't be trusted is explained here, one with an error goes back to the
- * tool, and only a signed-in admin sees the approval. The accounts and agents modules meet here.
+ * Where an AI tool sends the browser first (#1501), from its own site. A visit from another site
+ * carries no session (Payload's CSRF check ignores the cookie there), so this page reads none and
+ * shows nothing about any account: the request is checked, a request that can't be trusted is
+ * explained here, one with an error goes back to the tool, and otherwise a link continues on the
+ * site itself, at the approval page, which can see who is signed in.
  */
 export default async function AuthorizePage({ searchParams }: Props) {
-  const begun = await beginAuthorization(await searchParams, await getViewer())
+  const begun = await continueAuthorization(await searchParams, await headers())
   if (begun.kind === 'redirect') redirect(begun.url)
 
   return (
@@ -38,10 +35,10 @@ export default async function AuthorizePage({ searchParams }: Props) {
         title="Connect an AI Tool"
         description="Allow this tool to use the AI agent address."
       />
-      {begun.kind === 'consent' ? (
-        <ConsentCard view={begun.view} />
+      {begun.kind === 'continue' ? (
+        <ContinueCard view={begun} />
       ) : (
-        <ConnectionNotice notice={begun} signInHref={SIGN_IN_PATH} />
+        <ConnectionNotice notice={begun} />
       )}
     </Section>
   )

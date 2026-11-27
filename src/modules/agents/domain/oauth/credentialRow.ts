@@ -8,7 +8,9 @@ export type CredentialRow = {
   id: number
   kind: TokenKind
   family: string
-  client: number | { id: number; clientId?: string | null; enabled?: boolean | null }
+  client:
+    | number
+    | { id: number; clientId?: string | null; enabled?: boolean | null; agent?: Ref | null }
   agent: Ref
   consentedBy?: Ref | null
   resource: string
@@ -34,6 +36,8 @@ export function toCredential(row: CredentialRow): Credential | null {
       id: row.client.id,
       clientId: row.client.clientId ?? '',
       enabled: row.client.enabled !== false,
+      // Unknown when the row did not carry it, which can never equal an agent: it reads as changed
+      agentId: row.client.agent ? refId(row.client.agent) : 0,
     },
     agentId: refId(row.agent),
     consentedBy: row.consentedBy ? refId(row.consentedBy) : null,

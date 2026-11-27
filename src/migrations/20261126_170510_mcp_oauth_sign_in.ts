@@ -77,10 +77,10 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
     sql`CREATE INDEX \`oauth_tokens_created_at_idx\` ON \`oauth_tokens\` (\`created_at\`);`,
   )
   await db.run(
-    sql`ALTER TABLE \`payload_locked_documents_rels\` ADD \`oauth_clients_id\` integer REFERENCES oauth_clients(id);`,
+    sql`ALTER TABLE \`payload_locked_documents_rels\` ADD \`oauth_clients_id\` integer REFERENCES oauth_clients(id) ON UPDATE no action ON DELETE cascade;`,
   )
   await db.run(
-    sql`ALTER TABLE \`payload_locked_documents_rels\` ADD \`oauth_tokens_id\` integer REFERENCES oauth_tokens(id);`,
+    sql`ALTER TABLE \`payload_locked_documents_rels\` ADD \`oauth_tokens_id\` integer REFERENCES oauth_tokens(id) ON UPDATE no action ON DELETE cascade;`,
   )
   await db.run(
     sql`CREATE INDEX \`payload_locked_documents_rels_oauth_clients_id_idx\` ON \`payload_locked_documents_rels\` (\`oauth_clients_id\`);`,

@@ -3,8 +3,8 @@ import { type PayloadRequest, UnauthorizedError } from 'payload'
 
 import { hasAgent } from '@/platform/payload/roles'
 
-import { OAUTH_TOKENS } from '../../domain/oauth/constants'
 import { toCredential } from '../../domain/oauth/credentialRow'
+import { accountById, credentialByHash, revokedInFamily } from '../../domain/oauth/queries'
 import { hashToken } from '../../domain/oauth/secrets'
 import { checkToken } from '../../domain/oauth/tokens'
 
@@ -41,22 +41,15 @@ export async function authenticateOAuth(
   resource: string,
   options: MCPPluginConfig,
 ): Promise<MCPAccessSettings> {
-  const { docs } = await req.payload.find({
-    collection: OAUTH_TOKENS,
-    where: { tokenHash: { equals: hashToken(token, req.payload.secret) } },
-    limit: 1,
-    depth: 1,
-    pagination: false,
-    populate: { 'oauth-clients': { clientId: true, enabled: true } },
-    overrideAccess: true,
-  })
+  const { docs } = await req.payload.find(credentialByHash(hashToken(token, req.payload.secret)))
   const credential = docs[0] ? toCredential(docs[0]) : null
   if (!credential || checkToken(credential, { kind: 'access', resource, now: new Date() })) {
     throw new UnauthorizedError()
   }
-  const account = await req.payload
-    .findByID({ collection: 'users', id: credential.agentId, depth: 0, overrideAccess: true })
-    .catch(() => null)
+  // One revoked row ends the family, so a token saved while the family was ending is refused here
+  const ended = await req.payload.find(revokedInFamily(credential.family))
+  if (ended.docs.length > 0) throw new UnauthorizedError()
+  const account = await req.payload.findByID(accountById(credential.agentId)).catch(() => null)
   if (!account || !hasAgent(account)) throw new UnauthorizedError()
   return {
     // Rate limits count per client, as they count per key

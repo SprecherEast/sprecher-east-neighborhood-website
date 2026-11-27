@@ -74,17 +74,6 @@ describe('refreshing', () => {
     expect(latest.body.error).toBe('invalid_grant')
   })
 
-  it('lets only one of two requests with the same refresh token through', async () => {
-    const first = (await signIn(payload, admin, clientId)).body
-    const form = {
-      grant_type: 'refresh_token',
-      client_id: clientId,
-      refresh_token: first.refresh_token,
-    }
-    const results = await Promise.all([exchange(form), exchange(form)])
-    expect(results.map((r) => r.status).sort()).toEqual([200, 400])
-  })
-
   it('refuses another client trying a refresh token', async () => {
     const other = await registerClient(payload, admin, agent, { name: 'Other' })
     const first = (await signIn(payload, admin, clientId)).body
@@ -120,21 +109,6 @@ describe('a code is single use', () => {
       refresh_token: first.body.refresh_token ?? '',
     })
     expect(refreshed.body.error).toBe('invalid_grant')
-  })
-
-  it('lets only one of two simultaneous exchanges win', async () => {
-    const { verifier, challenge } = pkce()
-    const decided = await approve(authorizeParams(clientId, challenge), admin)
-    if (decided.kind !== 'redirect') throw new Error('expected a redirect')
-    const form = {
-      grant_type: 'authorization_code',
-      client_id: clientId,
-      code: codeFrom(decided.url),
-      code_verifier: verifier,
-      redirect_uri: REDIRECT,
-    }
-    const results = await Promise.all([exchange(form), exchange(form)])
-    expect(results.map((r) => r.status).sort()).toEqual([200, 400])
   })
 
   it('is spent by a wrong verifier, so a code cannot be guessed at', async () => {

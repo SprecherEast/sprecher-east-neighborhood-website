@@ -1,4 +1,5 @@
 import type {
+  CollectionAfterChangeHook,
   CollectionBeforeDeleteHook,
   CollectionBeforeValidateHook,
   CollectionConfig,
@@ -27,6 +28,32 @@ const deleteTokensWithClient: CollectionBeforeDeleteHook = async ({ id, req }) =
   })
 }
 
+const accountId = (agent: unknown): unknown =>
+  typeof agent === 'object' && agent !== null && 'id' in agent ? agent.id : agent
+
+/**
+ * Moving a client to another agent account ends what it was given as the old one: every code,
+ * access token and refresh token of the client is revoked, for good (moving it back does not
+ * bring them back). The tool signs in again and acts as the new account.
+ */
+const revokeWhenAgentChanges: CollectionAfterChangeHook = async ({
+  doc,
+  previousDoc,
+  operation,
+  req,
+}) => {
+  if (operation !== 'update' || accountId(previousDoc?.agent) === accountId(doc.agent)) return doc
+  await req.payload.update({
+    collection: OAUTH_TOKENS,
+    where: { client: { equals: doc.id }, revokedAt: { exists: false } },
+    data: { revokedAt: new Date().toISOString() },
+    overrideAccess: true,
+    req,
+    context: { revokingOAuthFamily: true },
+  })
+  return doc
+}
+
 /**
  * The AI tools an admin has allowed to sign in to the MCP address (#1501), registered by hand:
  * there is no open registration. Each client acts as one agent account, so the access it gets is
@@ -44,7 +71,11 @@ export const OAuthClients: CollectionConfig = {
       'AI tools that may sign in to the AI agent address. Give the tool the client ID; no secret is used.',
   },
   access: { create: isAdmin, read: isAdmin, update: isAdmin, delete: isAdmin },
-  hooks: { beforeValidate: [giveClientId], beforeDelete: [deleteTokensWithClient] },
+  hooks: {
+    beforeValidate: [giveClientId],
+    afterChange: [revokeWhenAgentChanges],
+    beforeDelete: [deleteTokensWithClient],
+  },
   timestamps: true,
   fields: [
     {

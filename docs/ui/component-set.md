@@ -75,6 +75,8 @@ no control repeats that wiring. Each control works with a controlled value or re
 
 Components: [cards](../reference/components/cards.md), [display](../reference/components/display.md), [badges](../reference/components/badges.md), [sections and page headers](../reference/components/sections.md) and [media](../reference/components/media.md).
 
+**`ButtonRow`** (#1501) holds the buttons of one decision: stacked on a phone, side by side from the wider layout up, with the same gap and order everywhere (`align="end"` puts them at the right, as a dialog's are). The account offers, the passkey list and the connection approval use it. Its test covers the order, the layout classes and axe; the gallery shows both alignments.
+
 **`TextDivider`** (#1365) is a short line of words between two groups, with a rule on each side, such as "Or use your email and password" between the quick ways to log in and the form. The rules are decoration; screen readers read only the words, and colours are theme tokens. Its test covers the words, the hidden rules, tokens only and axe; the gallery shows it.
 
 **`Badge`** (#952) has two sizes (`size`: `sm`, the default, and `md`, slightly bigger words and icon), set with the variant. A mark that must stand out among small labels, such as a state mark on the plan, uses `md`; labels stay `default`. Its test covers both sizes and the plan's state mark; the gallery shows `md`. With `onPress` it is a button (#1417): the same look, a shadow of 3 px or less, a one-pixel lift on hover and a focus ring; `CertaintyBadge` adds "what this means" for screen readers.

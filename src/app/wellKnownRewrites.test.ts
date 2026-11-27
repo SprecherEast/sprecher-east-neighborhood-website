@@ -13,7 +13,6 @@ const destinationFor = (pathname: string) =>
 
 describe('the OAuth discovery rewrites', () => {
   it.each([
-    ['/.well-known/oauth-protected-resource', '/oauth/discovery/protected-resource'],
     ['/.well-known/oauth-protected-resource/api/mcp', '/oauth/discovery/protected-resource'],
     ['/.well-known/oauth-authorization-server', '/oauth/discovery/authorization-server'],
   ])('sends %s to %s', (pathname, destination) => {
@@ -26,6 +25,11 @@ describe('the OAuth discovery rewrites', () => {
     '/.well-known/security.txt',
     '/.well-known/oauth-authorization-server/extra',
     '/.well-known/oauth-protected-resourced',
+    // RFC 9728: a document is for the one resource whose path it carries, so no other path gets it
+    '/.well-known/oauth-protected-resource',
+    '/.well-known/oauth-protected-resource/',
+    '/.well-known/oauth-protected-resource/api/graphql',
+    '/.well-known/oauth-protected-resource/api/mcp/extra',
     '/oauth/discovery/protected-resource',
   ])('leaves %s alone', (pathname) => {
     expect(destinationFor(pathname)).toBeUndefined()

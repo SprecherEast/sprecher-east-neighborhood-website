@@ -79,6 +79,29 @@ describe('POST /oauth/token', () => {
     expect(mocks.exchangeToken).not.toHaveBeenCalled()
   })
 
+  it('stops reading a body that never states its length once it is over the limit', async () => {
+    let pulls = 0
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls++
+        controller.enqueue(new TextEncoder().encode('a'.repeat(4096)))
+      },
+    })
+    const response = await POST(
+      new Request('https://example.com/oauth/token', {
+        method: 'POST',
+        headers: { 'content-type': FORM },
+        body,
+        // @ts-expect-error `duplex` is required to send a stream body and is missing from the types
+        duplex: 'half',
+      }),
+    )
+    expect(response.status).toBe(400)
+    // An endless body would have kept this loop going; the limit stops it after a few pieces
+    expect(pulls).toBeLessThan(10)
+    expect(mocks.exchangeToken).not.toHaveBeenCalled()
+  })
+
   it('sets no CORS header: a web page has no business here', async () => {
     const response = await post('grant_type=x')
     expect(response.headers.get('access-control-allow-origin')).toBeNull()

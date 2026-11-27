@@ -50,12 +50,13 @@ export const NO_FRAMING_HEADERS = NO_FRAMING_PATHS.map((source) => ({
 
 /**
  * The OAuth discovery documents (#1501) must answer under `/.well-known/` at the site root, where
- * MCP clients look (RFC 8414, RFC 9728), and the protected-resource one also with the resource's
- * path added. The routes live under `/oauth/discovery/`, since `src/app` has no dot folders.
+ * MCP clients look (RFC 8414), and the protected-resource one with the resource's path added, as
+ * RFC 9728 says: a document answers only for the resource whose path it is fetched with, so every
+ * other path under it is left to the 404 page. The routes live under `/oauth/discovery/`, since `src/app` has no dot folders.
  */
 export const WELL_KNOWN_REWRITES = [
   {
-    source: '/.well-known/oauth-protected-resource/:path*',
+    source: '/.well-known/oauth-protected-resource/api/mcp',
     destination: '/oauth/discovery/protected-resource',
   },
   {

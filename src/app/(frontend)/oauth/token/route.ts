@@ -1,4 +1,5 @@
 import { exchangeToken } from '@/modules/agents/server'
+import { readLimitedBody } from '@/platform/lib/readLimitedBody'
 
 const FORM = 'application/x-www-form-urlencoded'
 // A token request is a few short fields; anything bigger is not one
@@ -21,8 +22,9 @@ export async function POST(request: Request): Promise<Response> {
   if (!type.toLowerCase().startsWith(FORM) || length > MAX_BODY_BYTES) {
     return answer(400, { error: 'invalid_request', error_description: `Send a form (${FORM}).` })
   }
-  const text = await request.text()
-  if (text.length > MAX_BODY_BYTES) {
+  // Counted as it arrives: a request that states no length is cut off, not read in full first
+  const text = await readLimitedBody(request, MAX_BODY_BYTES)
+  if (text === null) {
     return answer(400, { error: 'invalid_request', error_description: 'The request is too big.' })
   }
   const form: Record<string, string | string[]> = {}

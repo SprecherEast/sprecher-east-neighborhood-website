@@ -13,6 +13,7 @@ import { root, p } from '../src/endpoints/seed/helpers/lexical'
 import { alignmentPost, FIGURE_CAPTION } from './support/alignmentPage'
 import { billPost } from './support/billPage'
 import { EDGES_EVENT_SLUG } from './support/alignmentSlug'
+import { CONNECT } from './support/connection'
 import { pictureCardsPost, pictureEvent, picturePost } from './support/featuredPicturePages'
 
 const payload = await getPayload({ config })
@@ -128,6 +129,40 @@ for (const [title, category] of [
   })
 }
 
+// An admin, a guest and an agent account, and the AI tool registered to act as the agent, for the
+// connection test (#1501). Verified as opening the emailed link would, and the role set again
+// because the first account on an empty database becomes an admin whatever role it is given.
+const makeAccount = async (email: string, name: string, role: 'admin' | 'guest' | 'agent') => {
+  const account = await payload.create({
+    collection: 'users',
+    depth: 0,
+    data: { email, name, role, password: CONNECT.password },
+    disableVerificationEmail: true,
+    context,
+    overrideAccess: true, // test setup, no user
+  })
+  await payload.db.updateOne({
+    collection: 'users',
+    id: account.id,
+    data: { _verified: true, role },
+  })
+  return account
+}
+await makeAccount(CONNECT.adminEmail, 'Connect Admin', 'admin')
+await makeAccount(CONNECT.guestEmail, 'Connect Guest', 'guest')
+const scout = await makeAccount(CONNECT.agentEmail, CONNECT.agentName, 'agent')
+await payload.create({
+  collection: 'oauth-clients',
+  depth: 0,
+  data: {
+    name: CONNECT.clientName,
+    agent: scout.id,
+    redirectUris: [{ uri: CONNECT.redirect }],
+  },
+  context,
+  overrideAccess: true, // test setup, no user
+})
+
 // The header's Resources menu opens to the five groups (#1237)
 await payload.updateGlobal({
   slug: 'header',
@@ -149,5 +184,7 @@ await payload.updateGlobal({
   },
 })
 
-payload.logger.info('e2e: seeded the contact form and page, the alignment post and an event')
+payload.logger.info(
+  'e2e: seeded the contact form and page, the alignment post, an event and the AI tool',
+)
 process.exit(0)

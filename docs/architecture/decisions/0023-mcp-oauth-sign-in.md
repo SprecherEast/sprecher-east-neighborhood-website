@@ -1,7 +1,7 @@
 # 0023: OAuth sign-in for MCP clients on `@node-oauth/oauth2-server` and our own thin layer
 
 - **Date:** 2026-11-26
-- **Status:** Proposed (becomes Accepted when the independent review says so)
+- **Status:** Proposed. It becomes Accepted when a real connection from Claude works end to end (#1500, after the Caddy path-through #1508): unit tests alone missed that the first review's browser case failed, so a fixed head's review is not enough.
 - **Issues and PRs:** #1501, under the epic #1498; #1508 (Caddy path-through).
 
 ## Context
@@ -46,18 +46,19 @@ Checked on 2026-11-26 from the npm registry, each project's repository and its a
    left out until a tool needs them.
 4. Credentials are stored as HMACs with the site secret. The audience (`resource`) is the MCP address,
    checked at the authorization, stored with the token and checked on every call.
-5. Replay of a code or refresh token revokes the family; spending is one conditional `UPDATE`.
+5. Replay of a code or refresh token revokes the family; spending is one conditional `UPDATE`, and so is the revocation. Saving a request's tokens checks the family before and after and undoes what it saved if the family has ended, and every use checks it again, so two requests at once leave nothing usable.
 6. Discovery documents are at `/.well-known/` through `next.config.js` rewrites; the `401` carries
    `WWW-Authenticate` through Payload's `req.responseHeaders`.
 7. Only an admin sees the approval; a signed ticket binds it to that admin and request.
+8. Two pages, because of the browser: the tool sends the admin's browser from its own site, where Payload's CSRF check (kept as it is) ignores the session cookie, so `/oauth/authorize` reads no session and shows no account, and its link to `/oauth/approve` is opened from our own site, where the session is read. The link carries the checked request and no secret; it is read again from scratch. A visitor is sent to log in and back to the same request, only to that path.
 
 ## Consequences
 
 - Claude and other tools can connect without a key the owner would have to paste; he registers the
   client once and presses Allow once, and the tool renews in the background.
 - One more dependency (four packages with its own). A later security advisory means an update.
-- Expired token rows stay until a cleanup job exists. The log in page has no return address, so the
-  admin connects again from the tool after logging in. Per-client scopes are #1499.
+- Expired token rows stay until a cleanup job exists. After Google sign-in (which lands on the
+  account page) the admin starts again from the tool. Per-client scopes are #1499.
 - Caddy must pass `/.well-known/` to the site (#1508).
 
 ## Links

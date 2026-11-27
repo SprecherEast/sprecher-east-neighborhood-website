@@ -872,20 +872,23 @@
       "id": "business-rule:src/modules/agents/README.md#10",
       "type": "business-rule",
       "name": "**`@node-oauth/oauth2-server` runs the protocol; our layer stores…",
-      "summary": "**`@node-oauth/oauth2-server` runs the protocol; our layer stores only HMACs** in two admin-only collections. A code is spent by its first try, even a failed one, a refresh token is replaced on each use, and a reused one ends its whole family (`data/oauth/model.ts`, `credentials.ts`; `use-cases/oauth/*.payload.test.ts`).",
-      "path": "src/modules/agents/README.md",
+      "summary": "**`@node-oauth/oauth2-server` runs the protocol; our layer stores only HMACs** in two admin-only collections. A code is spent by its first try, even a failed one, a refresh token is replaced on each use, and a reused one, or two at once, ends its whole family: the revocation is one `UPDATE`, saving looks at the family before and after, and every use checks it, so the request that got in first is cut off too (`data/oauth/model.ts`, `credentials.ts`; `use-cases/oauth/race.payload.test.ts`, `renewal.payload.test.ts`).",
+      "path": "src/modules/agents/use-cases/oauth/race.payload.test.ts",
       "module": "module:agents",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": []
+      "links": [
+        "src/modules/agents/use-cases/oauth/race.payload.test.ts",
+        "src/modules/agents/use-cases/oauth/renewal.payload.test.ts"
+      ]
     },
     {
       "id": "business-rule:src/modules/agents/README.md#11",
       "type": "business-rule",
       "name": "**`/oauth/token` takes only the code and refresh grants,** 30…",
-      "summary": "**`/oauth/token` takes only the code and refresh grants,** 30 requests a minute per connection, and an access token lasts an hour (`use-cases/oauth/exchangeToken.ts`, `domain/oauth/constants.ts`; `src/app/(frontend)/oauth/token/route.test.ts`).",
+      "summary": "**`/oauth/token` takes only the code and refresh grants,** 30 requests a minute per connection, a body read no further than 8 KB as it arrives, and an access token lasts an hour (`use-cases/oauth/exchangeToken.ts`, `domain/oauth/constants.ts`; `src/app/(frontend)/oauth/token/route.test.ts`).",
       "path": "src/app/(frontend)/oauth/token/route.test.ts",
       "module": "module:agents",
       "aliases": [],
@@ -898,7 +901,7 @@
       "id": "business-rule:src/modules/agents/README.md#12",
       "type": "business-rule",
       "name": "**Every `/api/mcp` call with an access token (prefix `sea_`) must be…",
-      "summary": "**Every `/api/mcp` call with an access token (prefix `sea_`) must be live, unrevoked, for exactly the MCP address, from a client still on, for an account still an agent;** any failure is the same 401 pointing at `/.well-known/oauth-protected-resource/api/mcp`, served through `next.config.js` rewrites. API keys are unchanged. Admins revoke by setting \"Revoked at\" on a token (its family goes with it), switching the client off or deleting it (`cms/oauth/authenticateBearer.ts`, `cms/oauth/oauthTokens.ts`; `cms/oauth/mcpOAuth.payload.test.ts`, `src/app/wellKnownRewrites.test.ts`).",
+      "summary": "**Every `/api/mcp` call with an access token (prefix `sea_`) must be live, unrevoked, for exactly the MCP address, from a client still on, for an account still an agent;** any failure is the same 401 pointing at `/.well-known/oauth-protected-resource/api/mcp`, served through `next.config.js` rewrites. API keys are unchanged. Admins revoke by setting \"Revoked at\" on a token (its family goes with it, and it cannot be cleared again), switching the client off or deleting it; moving a client to another agent account revokes its tokens (`cms/oauth/authenticateBearer.ts`, `cms/oauth/oauthTokens.ts`; `cms/oauth/mcpOAuth.payload.test.ts`, `src/app/wellKnownRewrites.test.ts`).",
       "path": "src/modules/agents/cms/oauth/mcpOAuth.payload.test.ts",
       "module": "module:agents",
       "aliases": [],
@@ -1027,14 +1030,17 @@
       "id": "business-rule:src/modules/agents/README.md#8",
       "type": "business-rule",
       "name": "**An AI tool signs in with OAuth, and only an admin can allow it:**…",
-      "summary": "**An AI tool signs in with OAuth, and only an admin can allow it:** an admin registers the client by hand (no open registration) with the agent account it acts as and its redirect addresses, and approves each connection on `/oauth/authorize`, which only a signed-in admin sees and which cannot be framed (`cms/oauth/oauthClients.ts`, `use-cases/oauth/beginAuthorization.ts`, `decideConsent.ts`; `src/app/(frontend)/oauth/authorize/page.test.tsx`, `src/app/apiHeaders.test.ts`).",
-      "path": "src/app/(frontend)/oauth/authorize/page.test.tsx",
+      "summary": "**An AI tool signs in with OAuth, and only an admin can allow it:** an admin registers the client by hand (no open registration) with the agent account it acts as and its redirect addresses, and approves each connection on `/oauth/approve`, which only a signed-in admin sees and which cannot be framed. The tool arrives at `/oauth/authorize` from its own site, where the browser withholds the session, so that page reads none and shows only who is asking and a link on to the approval, which is opened from our own site; a visitor logs in and returns to the same request (`cms/oauth/oauthClients.ts`, `use-cases/oauth/checkAuthorization.ts`, `beginAuthorization.ts`, `decideConsent.ts`; `src/app/(frontend)/oauth/connection.payload.test.tsx`, `src/app/apiHeaders.test.ts`). Each visit is limited to 30 a minute per connection.",
+      "path": "src/app/(frontend)/oauth/connection.payload.test.tsx",
       "module": "module:agents",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
-      "links": ["src/app/(frontend)/oauth/authorize/page.test.tsx", "src/app/apiHeaders.test.ts"]
+      "links": [
+        "src/app/(frontend)/oauth/connection.payload.test.tsx",
+        "src/app/apiHeaders.test.ts"
+      ]
     },
     {
       "id": "business-rule:src/modules/agents/README.md#9",
@@ -2014,7 +2020,7 @@
       "id": "business-rule:src/platform/lib/README.md#12",
       "type": "business-rule",
       "name": "Cursors and paging",
-      "summary": "Cursors and paging: `cursor.test.ts`, `paging.test.ts`; review-queue rules: `reviewQueue.test.ts`; retention cutoffs: `retention.test.ts`; limits: `slidingWindow.test.ts`.",
+      "summary": "Cursors and paging: `cursor.test.ts`, `paging.test.ts`; review-queue rules: `reviewQueue.test.ts`; retention cutoffs: `retention.test.ts`; limits: `slidingWindow.test.ts`; bounded bodies: `readLimitedBody.test.ts`.",
       "path": "src/platform/lib/cursor.test.ts",
       "module": "platform-area:lib",
       "aliases": [],
@@ -2026,7 +2032,8 @@
         "src/platform/lib/paging.test.ts",
         "src/platform/lib/reviewQueue.test.ts",
         "src/platform/lib/retention.test.ts",
-        "src/platform/lib/slidingWindow.test.ts"
+        "src/platform/lib/slidingWindow.test.ts",
+        "src/platform/lib/readLimitedBody.test.ts"
       ]
     },
     {
@@ -5694,7 +5701,7 @@
         },
         {
           "label": "Hooks",
-          "value": "beforeValidate giveClientId; beforeDelete deleteTokensWithClient"
+          "value": "beforeValidate giveClientId; afterChange revokeWhenAgentChanges; beforeDelete deleteTokensWithClient"
         },
         { "label": "GraphQL", "value": "yes" }
       ],
@@ -5794,7 +5801,7 @@
           "label": "Access",
           "value": "create: inline; read: isAdmin; update: isAdmin; delete: isAdmin; unlock: defaultUnlockAccess"
         },
-        { "label": "Hooks", "value": "afterChange revokeFamily" },
+        { "label": "Hooks", "value": "beforeChange keepRevoked; afterChange revokeFamily" },
         { "label": "GraphQL", "value": "yes" }
       ],
       "watchOuts": [],
@@ -8711,7 +8718,7 @@
         { "label": "Date", "value": "2026-11-26" },
         {
           "label": "Status",
-          "value": "Proposed (becomes Accepted when the independent review says so)"
+          "value": "Proposed. It becomes Accepted when a real connection from Claude works end to end (#1500, after the Caddy path-through #1508): unit tests alone missed that the first review's browser case failed, so a fixed head's review is not enough."
         }
       ],
       "watchOuts": [],
@@ -11551,7 +11558,7 @@
       "watchOuts": [
         "One scope, `mcp`: a client gets what its agent account's tools allow; narrower scopes are #1499.",
         "Clients are registered by hand; client ID metadata documents and dynamic registration are not offered.",
-        "The log in page has no return address, so the admin connects again from the AI tool after logging in.",
+        "The log in page returns to the connection approval after a password or passkey log in, not after Google sign-in, which lands on the account page.",
         "Expired token rows stay in the table, and limits are counted in memory, which assumes one server process."
       ],
       "links": []
@@ -12137,6 +12144,19 @@
       "summary": "5 screens under /events.",
       "path": "src/app/(frontend)/events",
       "module": "module:events",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "page-cluster:/oauth",
+      "type": "page-cluster",
+      "name": "/oauth",
+      "summary": "2 screens under /oauth.",
+      "path": "src/app/(frontend)/oauth",
+      "module": "module:agents",
       "aliases": [],
       "fields": [],
       "facts": [],
@@ -13676,7 +13696,29 @@
         { "label": "Rendering", "value": "not stated" },
         { "label": "Pages built ahead", "value": "no" },
         { "label": "Metadata", "value": "`metadata` via `@/platform/seo/notIndexed`" },
-        { "label": "Module entry points", "value": "@/modules/accounts, @/modules/accounts/server" }
+        {
+          "label": "Module entry points",
+          "value": "@/modules/accounts, @/modules/accounts/server, @/modules/agents"
+        }
+      ],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "screen:/oauth/approve",
+      "type": "screen",
+      "name": "/oauth/approve",
+      "summary": "",
+      "path": "src/app/(frontend)/oauth/approve/page.tsx",
+      "module": "module:agents",
+      "aliases": [],
+      "fields": [],
+      "facts": [
+        { "label": "Address", "value": "/oauth/approve" },
+        { "label": "Rendering", "value": "dynamic = force-dynamic" },
+        { "label": "Pages built ahead", "value": "no" },
+        { "label": "Metadata", "value": "`metadata` via `@/platform/seo/privateAddress`" },
+        { "label": "Module entry points", "value": "@/modules/accounts, @/modules/agents/server" }
       ],
       "watchOuts": [],
       "links": []
@@ -13687,7 +13729,7 @@
       "name": "/oauth/authorize",
       "summary": "",
       "path": "src/app/(frontend)/oauth/authorize/page.tsx",
-      "module": "module:accounts",
+      "module": "module:agents",
       "aliases": [],
       "fields": [],
       "facts": [
@@ -13695,7 +13737,7 @@
         { "label": "Rendering", "value": "dynamic = force-dynamic" },
         { "label": "Pages built ahead", "value": "no" },
         { "label": "Metadata", "value": "`metadata` via `@/platform/seo/privateAddress`" },
-        { "label": "Module entry points", "value": "@/modules/accounts, @/modules/agents/server" }
+        { "label": "Module entry points", "value": "@/modules/agents/server" }
       ],
       "watchOuts": [],
       "links": []
@@ -14889,6 +14931,28 @@
         }
       ],
       "facts": [{ "label": "Props from its element", "value": "280" }],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "shared-component:ButtonRow",
+      "type": "shared-component",
+      "name": "ButtonRow",
+      "summary": "The buttons of one decision side by side, stacked on a phone: the same gap, the same order and the same break everywhere (the account offers, the passkey list and the connection approval). `align=\"end\"` puts them at the right from the wider layout up, as a dialog's do.",
+      "path": "src/platform/ui/ButtonRow.tsx",
+      "module": "platform-area:ui",
+      "aliases": [],
+      "fields": [
+        {
+          "name": "align",
+          "type": "\"start\" | \"end\"",
+          "required": false,
+          "detail": "",
+          "notes": []
+        },
+        { "name": "children", "type": "ReactNode", "required": true, "detail": "", "notes": [] }
+      ],
+      "facts": [],
       "watchOuts": [],
       "links": []
     },
@@ -20653,7 +20717,7 @@
       "to": "library:next",
       "type": "uses",
       "layer": "libraries",
-      "count": 63,
+      "count": 67,
       "via": []
     },
     {
@@ -20701,7 +20765,7 @@
       "to": "module:agents",
       "type": "uses",
       "layer": "code",
-      "count": 4,
+      "count": 6,
       "via": []
     },
     {
@@ -20781,7 +20845,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 28,
+      "count": 29,
       "via": []
     },
     {
@@ -20805,7 +20869,7 @@
       "to": "platform-area:seo",
       "type": "uses",
       "layer": "code",
-      "count": 24,
+      "count": 25,
       "via": []
     },
     {
@@ -20821,7 +20885,7 @@
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
-      "count": 146,
+      "count": 149,
       "via": []
     },
     {
@@ -20902,6 +20966,14 @@
       "type": "uses",
       "layer": "ui",
       "count": 10,
+      "via": []
+    },
+    {
+      "from": "feature:app",
+      "to": "shared-component:ButtonRow",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
       "via": []
     },
     {
@@ -24685,7 +24757,7 @@
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
-      "count": 47,
+      "count": 50,
       "via": []
     },
     {
@@ -24723,14 +24795,6 @@
     {
       "from": "module:accounts",
       "to": "screen:/login",
-      "type": "contains",
-      "layer": "structure",
-      "count": 1,
-      "via": []
-    },
-    {
-      "from": "module:accounts",
-      "to": "screen:/oauth/authorize",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -24782,6 +24846,14 @@
       "type": "uses",
       "layer": "ui",
       "count": 18,
+      "via": []
+    },
+    {
+      "from": "module:accounts",
+      "to": "shared-component:ButtonRow",
+      "type": "uses",
+      "layer": "ui",
+      "count": 3,
       "via": []
     },
     {
@@ -25149,7 +25221,7 @@
       "to": "library:server-only",
       "type": "uses",
       "layer": "libraries",
-      "count": 10,
+      "count": 11,
       "via": []
     },
     {
@@ -25234,6 +25306,14 @@
     },
     {
       "from": "module:agents",
+      "to": "page-cluster:/oauth",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "module:agents",
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
@@ -25245,7 +25325,7 @@
       "to": "platform-area:payload",
       "type": "uses",
       "layer": "code",
-      "count": 8,
+      "count": 9,
       "via": []
     },
     {
@@ -25261,7 +25341,7 @@
       "to": "platform-area:ui",
       "type": "uses",
       "layer": "code",
-      "count": 7,
+      "count": 12,
       "via": []
     },
     {
@@ -25277,7 +25357,15 @@
       "to": "shared-component:Button",
       "type": "uses",
       "layer": "ui",
-      "count": 2,
+      "count": 3,
+      "via": []
+    },
+    {
+      "from": "module:agents",
+      "to": "shared-component:ButtonRow",
+      "type": "uses",
+      "layer": "ui",
+      "count": 1,
       "via": []
     },
     {
@@ -25285,7 +25373,7 @@
       "to": "shared-component:Card",
       "type": "uses",
       "layer": "ui",
-      "count": 1,
+      "count": 2,
       "via": []
     },
     {
@@ -25293,7 +25381,7 @@
       "to": "shared-component:MetaList",
       "type": "uses",
       "layer": "ui",
-      "count": 1,
+      "count": 2,
       "via": []
     },
     {
@@ -25301,7 +25389,7 @@
       "to": "shared-component:Text",
       "type": "uses",
       "layer": "ui",
-      "count": 1,
+      "count": 2,
       "via": []
     },
     {
@@ -29233,6 +29321,22 @@
       "via": []
     },
     {
+      "from": "page-cluster:/oauth",
+      "to": "screen:/oauth/approve",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "page-cluster:/oauth",
+      "to": "screen:/oauth/authorize",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
       "from": "page-cluster:/posts",
       "to": "screen:/posts",
       "type": "contains",
@@ -30781,7 +30885,7 @@
       "to": "library:react",
       "type": "uses",
       "layer": "libraries",
-      "count": 87,
+      "count": 88,
       "via": []
     },
     {
@@ -30821,7 +30925,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 101,
+      "count": 102,
       "via": []
     },
     {
@@ -30931,6 +31035,14 @@
     {
       "from": "platform-area:ui",
       "to": "shared-component:Button",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:ui",
+      "to": "shared-component:ButtonRow",
       "type": "contains",
       "layer": "structure",
       "count": 1,
@@ -34890,6 +35002,14 @@
     },
     {
       "from": "screen:/login",
+      "to": "module:agents",
+      "type": "uses",
+      "layer": "code",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "screen:/login",
       "to": "shared-component:PageHeader",
       "type": "renders",
       "layer": "ui",
@@ -34913,10 +35033,34 @@
       "via": []
     },
     {
-      "from": "screen:/oauth/authorize",
+      "from": "screen:/oauth/approve",
       "to": "module:accounts",
       "type": "uses",
       "layer": "code",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "screen:/oauth/approve",
+      "to": "module:agents",
+      "type": "uses",
+      "layer": "code",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "screen:/oauth/approve",
+      "to": "shared-component:PageHeader",
+      "type": "renders",
+      "layer": "ui",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "screen:/oauth/approve",
+      "to": "shared-component:Section",
+      "type": "renders",
+      "layer": "ui",
       "count": 1,
       "via": []
     },

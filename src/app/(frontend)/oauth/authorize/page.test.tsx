@@ -2,25 +2,26 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// The agents module is replaced: this tests the page's wiring, not the sign-in
+// The agents module is replaced: this tests the page's wiring, not the checks
 const mocks = vi.hoisted(() => ({
-  beginAuthorization: vi.fn(),
-  getViewer: vi.fn(),
+  continueAuthorization: vi.fn(),
   redirect: vi.fn((url: string) => {
     throw new Error(`NEXT_REDIRECT ${url}`)
   }),
 }))
 vi.mock('@/modules/agents/server', () => ({
-  beginAuthorization: mocks.beginAuthorization,
-  getViewer: mocks.getViewer,
-  ConsentCard: ({ view }: { view: { clientName: string } }) => (
-    <p data-testid="consent">{view.clientName}</p>
+  continueAuthorization: mocks.continueAuthorization,
+  ContinueCard: ({ view }: { view: { clientName: string; next: string } }) => (
+    <a data-testid="continue" href={view.next}>
+      {view.clientName}
+    </a>
   ),
-  ConnectionNotice: ({ notice, signInHref }: { notice: { kind: string }; signInHref: string }) => (
-    <p data-testid="notice" data-href={signInHref}>
-      {notice.kind}
-    </p>
+  ConnectionNotice: ({ notice }: { notice: { kind: string } }) => (
+    <p data-testid="notice">{notice.kind}</p>
   ),
+}))
+vi.mock('next/headers', () => ({
+  headers: async () => new Headers({ 'x-forwarded-for': '1.2.3.4' }),
 }))
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }))
 
@@ -30,37 +31,39 @@ const page = (query: Record<string, string | string[]> = {}) => ({
   searchParams: Promise.resolve(query),
 })
 
-beforeEach(() => {
-  mocks.beginAuthorization.mockReset()
-  mocks.getViewer.mockReset().mockResolvedValue({ id: 1, isAdmin: true })
-})
+beforeEach(() => mocks.continueAuthorization.mockReset())
 afterEach(cleanup)
 
 describe('/oauth/authorize', () => {
-  it('hands the request and the viewer to the module, untouched', async () => {
-    mocks.beginAuthorization.mockResolvedValue({ kind: 'refused', message: 'x' })
+  it('hands the request and the request headers to the module, untouched', async () => {
+    mocks.continueAuthorization.mockResolvedValue({ kind: 'refused', message: 'x' })
     await AuthorizePage(page({ client_id: 'mcp_abc', state: ['a', 'b'] }))
-    expect(mocks.beginAuthorization).toHaveBeenCalledWith(
-      { client_id: 'mcp_abc', state: ['a', 'b'] },
-      { id: 1, isAdmin: true },
+    const [params, headers] = mocks.continueAuthorization.mock.lastCall ?? []
+    expect(params).toEqual({ client_id: 'mcp_abc', state: ['a', 'b'] })
+    expect((headers as Headers).get('x-forwarded-for')).toBe('1.2.3.4')
+  })
+
+  it('carries a checked request on to the approval page, on this site', async () => {
+    mocks.continueAuthorization.mockResolvedValue({
+      kind: 'continue',
+      clientName: 'Claude',
+      redirectHost: 'claude.ai',
+      next: '/oauth/approve?client_id=mcp_abc',
+    })
+    render(await AuthorizePage(page()))
+    expect(screen.getByTestId('continue').getAttribute('href')).toBe(
+      '/oauth/approve?client_id=mcp_abc',
     )
   })
 
-  it('shows an admin the approval', async () => {
-    mocks.beginAuthorization.mockResolvedValue({ kind: 'consent', view: { clientName: 'Claude' } })
+  it('explains a request it cannot trust', async () => {
+    mocks.continueAuthorization.mockResolvedValue({ kind: 'refused', message: 'x' })
     render(await AuthorizePage(page()))
-    expect(screen.getByTestId('consent').textContent).toBe('Claude')
-  })
-
-  it('explains a request it cannot trust, with the log in page as the way in', async () => {
-    mocks.beginAuthorization.mockResolvedValue({ kind: 'sign-in-needed' })
-    render(await AuthorizePage(page()))
-    expect(screen.getByTestId('notice').textContent).toBe('sign-in-needed')
-    expect(screen.getByTestId('notice').getAttribute('data-href')).toBe('/login')
+    expect(screen.getByTestId('notice').textContent).toBe('refused')
   })
 
   it('sends an error back to the AI tool', async () => {
-    mocks.beginAuthorization.mockResolvedValue({
+    mocks.continueAuthorization.mockResolvedValue({
       kind: 'redirect',
       url: 'https://claude.ai/cb?error=invalid_request',
     })

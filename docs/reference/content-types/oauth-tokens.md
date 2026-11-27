@@ -20,9 +20,10 @@
 
 ## Hooks
 
-| Phase       | Function       | Defined in                                    |
-| ----------- | -------------- | --------------------------------------------- |
-| afterChange | `revokeFamily` | `src/modules/agents/cms/oauth/oauthTokens.ts` |
+| Phase        | Function       | Defined in                                    |
+| ------------ | -------------- | --------------------------------------------- |
+| beforeChange | `keepRevoked`  | `src/modules/agents/cms/oauth/oauthTokens.ts` |
+| afterChange  | `revokeFamily` | `src/modules/agents/cms/oauth/oauthTokens.ts` |
 
 ## Fields
 

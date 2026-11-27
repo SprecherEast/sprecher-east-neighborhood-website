@@ -10,7 +10,8 @@ const token = (over: Partial<StoredToken> = {}): StoredToken => ({
   kind: 'access',
   expiresAt: minutes(30),
   resource: RESOURCE,
-  client: { enabled: true },
+  agentId: 9,
+  client: { enabled: true, agentId: 9 },
   ...over,
 })
 const check = (t: StoredToken, kind: StoredToken['kind'] = 'access') =>
@@ -48,7 +49,13 @@ describe('checkToken', () => {
   })
 
   it('refuses a token whose client was switched off', () => {
-    expect(check(token({ client: { enabled: false } }))).toBe('client-disabled')
+    expect(check(token({ client: { enabled: false, agentId: 9 } }))).toBe('client-disabled')
+  })
+
+  it('refuses a token given as one agent account once its client acts as another', () => {
+    expect(check(token({ client: { enabled: true, agentId: 10 } }))).toBe('agent-changed')
+    // A client row that did not say its agent (read as 0) can never match
+    expect(check(token({ client: { enabled: true, agentId: 0 } }))).toBe('agent-changed')
   })
 
   it('reports reuse before expiry, so a replay always revokes the family', () => {

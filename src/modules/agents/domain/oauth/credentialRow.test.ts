@@ -6,7 +6,7 @@ const row: CredentialRow = {
   id: 5,
   kind: 'refresh',
   family: 'fam-1',
-  client: { id: 2, clientId: 'mcp_abc', enabled: true },
+  client: { id: 2, clientId: 'mcp_abc', enabled: true, agent: 9 },
   agent: { id: 9 },
   consentedBy: 1,
   resource: 'https://sprechereast.com/api/mcp',
@@ -22,7 +22,7 @@ describe('toCredential', () => {
       id: 5,
       kind: 'refresh',
       family: 'fam-1',
-      client: { id: 2, clientId: 'mcp_abc', enabled: true },
+      client: { id: 2, clientId: 'mcp_abc', enabled: true, agentId: 9 },
       agentId: 9,
       consentedBy: 1,
       scope: ['mcp'],
@@ -35,6 +35,11 @@ describe('toCredential', () => {
   it('treats a missing enabled flag as on, and a switched-off client as off', () => {
     expect(toCredential({ ...row, client: { id: 2 } })?.client.enabled).toBe(true)
     expect(toCredential({ ...row, client: { id: 2, enabled: false } })?.client.enabled).toBe(false)
+  })
+
+  it('reads the client’s agent account, as an id or a loaded account, and 0 when absent', () => {
+    expect(toCredential({ ...row, client: { id: 2, agent: { id: 4 } } })?.client.agentId).toBe(4)
+    expect(toCredential({ ...row, client: { id: 2 } })?.client.agentId).toBe(0)
   })
 
   it('cannot judge a row whose client was not loaded', () => {

@@ -2,6 +2,7 @@ import 'server-only'
 
 import { randomUUID } from 'node:crypto'
 
+import OAuth2Server from '@node-oauth/oauth2-server'
 import type {
   AuthorizationCode,
   AuthorizationCodeModel,
@@ -18,7 +19,16 @@ import { generateToken } from '../../domain/oauth/secrets'
 import { checkToken } from '../../domain/oauth/tokens'
 import type { Credential, Grantee } from '../../domain/oauth/types'
 import { findOAuthClient, isAgentAccount } from './clients'
-import { findCredential, revokeFamily, saveCredential, spendCredential } from './credentials'
+import {
+  findCredential,
+  isFamilyRevoked,
+  revokeFamily,
+  saveCredential,
+  spendCredential,
+} from './credentials'
+
+/** The answer when the approval these tokens would come from was ended by a replay */
+const ended = () => new OAuth2Server.InvalidGrantError('Invalid grant: the grant has ended')
 
 type Model = AuthorizationCodeModel & RefreshTokenModel
 /** A stored credential handed to the library and handed back to us, with the row it came from */
@@ -52,6 +62,7 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
     const denial = checkToken(found, { kind, resource: expectedResource, now: new Date() })
     if (denial === 'used') await revokeFamily(payload, found.family)
     if (denial) return null
+    if (await isFamilyRevoked(payload, found.family)) return null
     return (await isAgentAccount(payload, found.agentId)) ? found : null
   }
 
@@ -121,7 +132,11 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
     },
 
     async revokeAuthorizationCode(code) {
-      return spendCredential(payload, (code as WithRow<AuthorizationCode>).credentialId)
+      const row = code as WithRow<AuthorizationCode>
+      const won = await spendCredential(payload, row.credentialId)
+      // Losing means another request spent this code a moment ago: a replay, so the family ends
+      if (!won) await revokeFamily(payload, (code.user as Grantee).family ?? '')
+      return won
     },
 
     async saveToken(token, client, user) {
@@ -135,11 +150,17 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
         resource: who.resource,
         scope: token.scope ?? [OAUTH_SCOPE],
       }
+      // A family that has ended takes no new row, and one that ends while these are saved loses
+      // them: the revocation is one UPDATE (`revokeFamily`), so either it ran first and the
+      // second look finds it, or it ran later and covered these rows. The tool gets no tokens.
+      if (await isFamilyRevoked(payload, family)) throw ended()
       await saveCredential(payload, {
         ...base,
         kind: 'access',
         secret: token.accessToken,
-        expiresAt: token.accessTokenExpiresAt ?? new Date(Date.now() + OAUTH_LIFETIMES.accessSeconds * 1000),
+        expiresAt:
+          token.accessTokenExpiresAt ??
+          new Date(Date.now() + OAUTH_LIFETIMES.accessSeconds * 1000),
       })
       if (token.refreshToken && token.refreshTokenExpiresAt) {
         await saveCredential(payload, {
@@ -148,6 +169,10 @@ export function createOAuthModel(payload: Payload, expectedResource: string): Mo
           secret: token.refreshToken,
           expiresAt: token.refreshTokenExpiresAt,
         })
+      }
+      if (await isFamilyRevoked(payload, family)) {
+        await revokeFamily(payload, family)
+        throw ended()
       }
       const saved: Token = {
         accessToken: token.accessToken,

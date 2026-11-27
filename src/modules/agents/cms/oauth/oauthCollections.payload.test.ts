@@ -156,6 +156,64 @@ describe('OAuth tokens', () => {
     })
   })
 
+  describe('once revoked', () => {
+    const revokeOne = async () => {
+      const created = await signIn(payload, admin, clientId)
+      const rows = await payload.find({
+        collection: 'oauth-tokens',
+        where: { kind: { equals: 'access' }, revokedAt: { exists: false } },
+        sort: '-id',
+        limit: 1,
+        depth: 0,
+        ...asUser(admin),
+      })
+      const row = onlyDoc(rows)
+      expect(created.status).toBe(200)
+      const at = '2026-11-27T10:00:00.000Z'
+      const revoked = await payload.update({
+        collection: 'oauth-tokens',
+        id: row.id,
+        data: { revokedAt: at },
+        depth: 0,
+        ...asUser(admin),
+      })
+      return { row, at, revoked }
+    }
+    const edit = (id: number, revokedAt: string | null) =>
+      payload.update({
+        collection: 'oauth-tokens',
+        id,
+        data: { revokedAt },
+        depth: 0,
+        ...asUser(admin),
+      })
+
+    it('stays revoked: an admin cannot clear the date', async () => {
+      const { row, at } = await revokeOne()
+      await expect(edit(row.id, null)).rejects.toThrow('stays revoked')
+      expect(
+        onlyDoc(
+          await payload.find({
+            collection: 'oauth-tokens',
+            where: { id: { equals: row.id } },
+            depth: 0,
+            ...asUser(admin),
+          }),
+        ).revokedAt,
+      ).toBe(at)
+    })
+
+    it('stays revoked: an admin cannot move the date either', async () => {
+      const { row } = await revokeOne()
+      await expect(edit(row.id, '2027-01-01T00:00:00.000Z')).rejects.toThrow('stays revoked')
+    })
+
+    it('lets the same date be saved again, as the admin form sends it back unchanged', async () => {
+      const { row, at } = await revokeOne()
+      expect((await edit(row.id, at)).revokedAt).toBe(at)
+    })
+  })
+
   it('never show the stored hash, not even to an admin', async () => {
     const row = await first()
     expect(row).not.toHaveProperty('tokenHash')

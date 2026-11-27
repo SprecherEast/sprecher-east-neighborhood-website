@@ -5,6 +5,7 @@
  */
 export const OAUTH_PATHS = {
   authorize: '/oauth/authorize',
+  approve: '/oauth/approve',
   token: '/oauth/token',
   authorizationServer: '/.well-known/oauth-authorization-server',
   protectedResource: '/.well-known/oauth-protected-resource',
@@ -31,6 +32,13 @@ export type TokenKind = keyof typeof TOKEN_PREFIX
 
 /** Requests a minute to the token address from one connection (counted in memory, one process) */
 export const OAUTH_TOKEN_LIMIT = {
+  windowMs: 60 * 1000,
+  perConnection: 30,
+  trackedConnections: 2000,
+}
+
+/** Visits a minute to the authorize and approve pages from one connection: each reads the database */
+export const OAUTH_AUTHORIZE_LIMIT = {
   windowMs: 60 * 1000,
   perConnection: 30,
   trackedConnections: 2000,

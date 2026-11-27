@@ -3,7 +3,8 @@
 import 'server-only'
 
 export { getViewer } from './data/oauth/viewer'
-export { beginAuthorization } from './use-cases/oauth/beginAuthorization'
+export { beginAuthorization, continueAuthorization } from './use-cases/oauth/beginAuthorization'
 export { exchangeToken } from './use-cases/oauth/exchangeToken'
 export { ConnectionNotice } from './ui/ConnectionNotice'
 export { ConsentCard } from './ui/ConsentCard'
+export { ContinueCard } from './ui/ContinueCard'

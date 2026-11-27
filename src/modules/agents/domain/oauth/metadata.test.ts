@@ -33,6 +33,10 @@ describe('authorizationServerMetadata (RFC 8414)', () => {
     expect(doc.token_endpoint).toBe(`${ORIGIN}/oauth/token`)
   })
 
+  it('says the redirect back carries the issuer, as RFC 9207 asks of a server that sends it', () => {
+    expect(doc.authorization_response_iss_parameter_supported).toBe(true)
+  })
+
   it('offers PKCE S256 and nothing weaker', () => {
     expect(doc.code_challenge_methods_supported).toEqual(['S256'])
   })

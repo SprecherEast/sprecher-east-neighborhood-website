@@ -4,6 +4,7 @@
  */
 export const GALLERY_COMPONENTS = [
   'Button',
+  'ButtonRow',
   'Link',
   'SegmentedControl',
   'BrandLogo',

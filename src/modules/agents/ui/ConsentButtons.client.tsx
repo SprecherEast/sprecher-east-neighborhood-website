@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 
 import { Alert } from '@/platform/ui/Alert'
+import { ButtonRow } from '@/platform/ui/ButtonRow'
 import { Button } from '@/platform/ui'
 
 import type { ConsentView } from '../use-cases/oauth/beginAuthorization'
@@ -29,7 +30,7 @@ export function ConsentButtons({ view }: { view: Pick<ConsentView, 'request' | '
   return (
     <div className="space-y-4">
       {refusal && <Alert tone="error">{refusal}</Alert>}
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <ButtonRow>
         <Button
           type="button"
           loading={pending}
@@ -47,7 +48,7 @@ export function ConsentButtons({ view }: { view: Pick<ConsentView, 'request' | '
         >
           Don’t allow
         </Button>
-      </div>
+      </ButtonRow>
     </div>
   )
 }

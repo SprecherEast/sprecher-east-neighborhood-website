@@ -6,6 +6,7 @@ import type { Payload } from 'payload'
 
 import { OAUTH_TOKENS, type TokenKind } from '../../domain/oauth/constants'
 import { toCredential } from '../../domain/oauth/credentialRow'
+import { credentialByHash, revokedInFamily } from '../../domain/oauth/queries'
 import { hashToken } from '../../domain/oauth/secrets'
 import type { Credential } from '../../domain/oauth/types'
 
@@ -50,16 +51,14 @@ export async function findCredential(
   payload: Payload,
   secret: string,
 ): Promise<Credential | null> {
-  const { docs } = await payload.find({
-    collection: OAUTH_TOKENS,
-    where: { tokenHash: { equals: hashToken(secret, payload.secret) } },
-    limit: 1,
-    depth: 1,
-    pagination: false,
-    populate: { 'oauth-clients': { clientId: true, enabled: true } },
-    overrideAccess: true,
-  })
+  const { docs } = await payload.find(credentialByHash(hashToken(secret, payload.secret)))
   return docs[0] ? toCredential(docs[0]) : null
+}
+
+/** Whether any row of the family has been revoked, which ends every row it holds or will hold. */
+export async function isFamilyRevoked(payload: Payload, family: string): Promise<boolean> {
+  const { docs } = await payload.find(revokedInFamily(family))
+  return docs.length > 0
 }
 
 /**
@@ -79,14 +78,20 @@ export async function spendCredential(payload: Payload, credentialId: number): P
   return spent.length === 1
 }
 
-/** Ends everything issued from one approval: its code, access tokens and refresh tokens. */
+/**
+ * Ends everything issued from one approval: its code, access tokens and refresh tokens. One
+ * UPDATE, so it is a single step the database cannot interleave with another request's insert:
+ * every row saved before it is revoked by it, and a row saved after it finds the revoked ones
+ * (`saveToken` looks, before and after saving). Payload's own `update` finds the rows and then
+ * changes them one by one, which would leave a window for a row saved in between.
+ */
 export async function revokeFamily(payload: Payload, family: string): Promise<void> {
-  await payload.update({
-    collection: OAUTH_TOKENS,
-    where: { family: { equals: family }, revokedAt: { exists: false } },
-    data: { revokedAt: new Date().toISOString() },
-    depth: 0,
-    overrideAccess: true,
-    context: { revokingOAuthFamily: true },
-  })
+  const adapter = payload.db as unknown as SQLiteAdapter
+  const table = adapter.tables.oauth_tokens
+  if (!table) throw new Error('The OAuth tokens table is missing')
+  const now = new Date().toISOString()
+  await adapter.drizzle
+    .update(table)
+    .set({ revokedAt: now })
+    .where(and(eq(table.family, family), isNull(table.revokedAt)))
 }

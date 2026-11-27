@@ -1,4 +1,10 @@
-import type { CollectionAfterChangeHook, CollectionConfig, FieldAccess } from 'payload'
+import {
+  APIError,
+  type CollectionAfterChangeHook,
+  type CollectionBeforeChangeHook,
+  type CollectionConfig,
+  type FieldAccess,
+} from 'payload'
 
 import { isAdmin, isAdminFieldAccess } from '@/platform/payload/roles'
 
@@ -24,6 +30,16 @@ const revokeFamily: CollectionAfterChangeHook = async ({ doc, previousDoc, req }
   return doc
 }
 
+/** A revoked row stays revoked: the date can be neither cleared nor moved by an admin. */
+const keepRevoked: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
+  if (!originalDoc?.revokedAt || !('revokedAt' in data)) return data
+  const same =
+    data.revokedAt &&
+    new Date(data.revokedAt).getTime() === new Date(originalDoc.revokedAt).getTime()
+  if (!same) throw new APIError('A revoked token stays revoked.', 400, null, true)
+  return data
+}
+
 const never: FieldAccess = () => false
 /** Visible to admins and never writable by anyone: only the sign-in code writes these. */
 const readOnly = { read: isAdminFieldAccess, create: never, update: never }
@@ -31,7 +47,7 @@ const readOnly = { read: isAdminFieldAccess, create: never, update: never }
 /**
  * Every code, access token and refresh token OAuth has issued (#1501), as its HMAC hash: the
  * credential itself is shown to the client once and never stored. Admins can read the rows and
- * revoke them (set `revokedAt`); nothing creates or edits them through the API.
+ * revoke them (set `revokedAt`, which then stays); nothing creates or edits them through the API.
  */
 export const OAuthTokens: CollectionConfig = {
   slug: OAUTH_TOKENS,
@@ -43,7 +59,7 @@ export const OAuthTokens: CollectionConfig = {
       'Sign-ins of AI tools, stored as hashes. Set "Revoked at" on any row to sign that tool out.',
   },
   access: { create: () => false, read: isAdmin, update: isAdmin, delete: isAdmin },
-  hooks: { afterChange: [revokeFamily] },
+  hooks: { beforeChange: [keepRevoked], afterChange: [revokeFamily] },
   timestamps: true,
   fields: [
     {

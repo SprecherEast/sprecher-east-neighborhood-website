@@ -33,6 +33,7 @@ describe('the authorization-server document', () => {
       authorization_endpoint: `${ORIGIN}/oauth/authorize`,
       token_endpoint: `${ORIGIN}/oauth/token`,
       code_challenge_methods_supported: ['S256'],
+      authorization_response_iss_parameter_supported: true,
     })
     expect(doc).not.toHaveProperty('registration_endpoint')
   })

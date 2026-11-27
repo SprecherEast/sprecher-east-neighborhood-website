@@ -21,7 +21,7 @@ export type Credential = {
   id: number
   kind: TokenKind
   family: string
-  client: Pick<OAuthClient, 'id' | 'clientId' | 'enabled'>
+  client: Pick<OAuthClient, 'id' | 'clientId' | 'enabled' | 'agentId'>
   agentId: number
   consentedBy: number | null
   resource: string

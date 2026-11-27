@@ -8,6 +8,7 @@ import {
   authorizeParams,
   begin,
   bootOAuth,
+  continueFrom,
   codeFrom,
   decide,
   exchange,
@@ -57,6 +58,57 @@ describe('registering a client', () => {
   })
 })
 
+describe('the first page of a connection', () => {
+  it('shows who is asking and the approval page for exactly this request, and nothing about any account', async () => {
+    const { challenge } = pkce()
+    const params = authorizeParams(clientId, challenge)
+    const first = await continueFrom(params)
+    expect(first).toMatchObject({
+      kind: 'continue',
+      clientName: 'Claude',
+      redirectHost: 'claude.ai',
+    })
+    if (first.kind !== 'continue') throw new Error('expected the first page')
+    expect(JSON.stringify(first)).not.toContain('scout')
+    expect(first).not.toHaveProperty('ticket')
+    // What it carries is the checked request, which the approval page reads as any request
+    const [path, query] = first.next.split('?')
+    expect(path).toBe('/oauth/approve')
+    const carried = Object.fromEntries(new URLSearchParams(query))
+    expect(carried).toMatchObject({
+      client_id: clientId,
+      code_challenge: challenge,
+      state: 'state-1',
+    })
+    expect(await begin(carried, viewerOf(admin))).toMatchObject({
+      kind: 'consent',
+      view: { clientName: 'Claude' },
+    })
+    expect(await begin(carried, null)).toEqual({ kind: 'sign-in-needed', returnTo: first.next })
+  })
+
+  it('refuses a client it does not know, on the site, and sends a bad request back to the tool', async () => {
+    const { challenge } = pkce()
+    expect((await continueFrom(authorizeParams('mcp_nobody', challenge))).kind).toBe('refused')
+    const plain = await continueFrom(
+      authorizeParams(clientId, challenge, { code_challenge_method: 'plain' }),
+    )
+    expect(plain).toMatchObject({ kind: 'redirect' })
+  })
+
+  it('answers too many tries past a limit for one connection, and only that connection', async () => {
+    const { challenge } = pkce()
+    const params = authorizeParams(clientId, challenge)
+    const from = (ip: string) => new Headers({ 'x-forwarded-for': ip })
+    for (let i = 0; i < 30; i++) {
+      expect((await continueFrom(params, from('203.0.113.7'))).kind).toBe('continue')
+    }
+    expect((await continueFrom(params, from('203.0.113.7'))).kind).toBe('too-many')
+    expect((await begin(params, viewerOf(admin), from('203.0.113.7'))).kind).toBe('too-many')
+    expect((await continueFrom(params, from('203.0.113.8'))).kind).toBe('continue')
+  })
+})
+
 describe('the consent page', () => {
   it('shows an admin the client, where it returns to, and the account it acts as', async () => {
     const { challenge } = pkce()
@@ -70,7 +122,7 @@ describe('the consent page', () => {
   it('asks a visitor to sign in, and tells a signed-in non-admin only an admin may approve', async () => {
     const { challenge } = pkce()
     const params = authorizeParams(clientId, challenge)
-    expect(await begin(params, null)).toEqual({ kind: 'sign-in-needed' })
+    expect(await begin(params, null)).toMatchObject({ kind: 'sign-in-needed' })
     const editor = await createAccount(payload, 'editor', 'ed')
     expect(await begin(params, viewerOf(editor))).toEqual({ kind: 'admin-needed' })
   })

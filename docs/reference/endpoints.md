@@ -36,7 +36,7 @@ Next.js makes a URL from a file in the `app` folder named for a metadata convent
 | `/robots.txt`  | `src/app/robots.ts`      | code                                         |
 | `/sitemap.xml` | `src/app/sitemap.ts`     | code that reads site content through Payload |
 
-In `public/`: `/brand/…`, `/images/…`.
+In `public/`: `/brand/…`, `/images/…`, `/media/…`.
 
 ## Payload Admin
 

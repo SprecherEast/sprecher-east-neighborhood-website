@@ -8,5 +8,6 @@ export {
   SIGN_IN_PATH,
   VERIFY_ACCOUNT_PATH,
 } from './domain/paths'
+export { RETURN_PARAM, safeReturnPath } from './domain/returnPath'
 export { parseLinkToken } from './domain/linkToken'
 export { parseSocialProvider, SOCIAL_RESULT_PARAM } from './domain/socialSignIn'

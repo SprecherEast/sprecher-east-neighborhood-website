@@ -10,7 +10,15 @@ export const COMPONENT_GROUPS = [
     title: 'Actions',
     intro:
       'Buttons and links. `Button` is the only thing that draws a button; `Link` only ever looks like text; `SegmentedControl` joins a few options into one picker; `BrandLogo` is the mark on a button for a way to sign in.',
-    components: ['Button', 'Link', 'AppLink', 'LinkButton', 'SegmentedControl', 'BrandLogo'],
+    components: [
+      'Button',
+      'ButtonRow',
+      'Link',
+      'AppLink',
+      'LinkButton',
+      'SegmentedControl',
+      'BrandLogo',
+    ],
   },
   {
     slug: 'form-fields',
