@@ -11767,19 +11767,19 @@
         { "label": "Runs", "value": "on weekdays, in the early evening, Central time." },
         {
           "label": "Instructions",
-          "value": "the rules for a run are kept in the repository: [scheduled scout run](../../intelligence/scheduled-run.md). The schedule's own prompt is meant to shrink to a pointer at them (the `main` branch), plus a temporary watch item set by the owner and stored in the schedule, not here. That repointing is still open (#1517): until it is done, the prompt carries its own copy of the fetching, read-only and report rules."
+          "value": "the schedule's prompt only says to check out `main` and follow [`intelligence/scheduled-run.md`](../../intelligence/scheduled-run.md), plus one temporary watch item set by the owner, which is stored in the schedule, not in the repository. The file holds the run rules: what to set up and read first, how to run the stages by hand, fetching, the read-only rule, duplicates, watch items, the report layout and when to notify the owner. Where the prompt and the file differ, the file wins, except that the read-only rule always holds."
         },
         {
           "label": "What it reads",
-          "value": "the pipeline's instructions (the README, coverage, area, sources and the stage prompts). It replaces the submit stage with a report."
+          "value": "a fresh read-only checkout of `main`: the pipeline's settings and instructions (the README, `pipeline.yaml`, coverage, area, sources, images, the schemas and the stage prompts). If `pipeline.yaml` has the pipeline disabled, it stops, writes a report with only the run header saying so, and notifies the owner. It replaces the submit stage with a report. It judges duplicates from the live site and other public pages. It never calls the City's address locator, so it does not test addresses against the boundary and says so in the report."
         },
         {
           "label": "May not",
-          "value": "write anything outside its own report. It makes no CMS call, opens no issue or pull request and publishes nothing."
+          "value": "write anything outside its own report, apart from the one push notification to the owner. It makes no CMS call and holds no key for the CMS or its MCP endpoint, opens no issue or pull request and publishes nothing."
         },
         {
           "label": "Ends with",
-          "value": "a report for the owner, who reviews it before any site update is made."
+          "value": "a report for the owner, who reviews it before any site update is made, in the layout the file sets. A push notification goes out only when the run found something to know now, could not read its sources, or found the pipeline disabled."
         }
       ],
       "watchOuts": [],
