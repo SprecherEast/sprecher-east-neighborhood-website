@@ -61,9 +61,10 @@ A hook runs each time a schedule queues its tasks. The collections are found by 
 
 Installed on every deploy by a script in the repository, so the job on the server matches the file. The server’s clock applies (see the time zones in the introduction). What the scripts do is in `ops/README.md`.
 
-| File                  | Schedule                          | Runs                                               |
-| --------------------- | --------------------------------- | -------------------------------------------------- |
-| `ops/install-cron.sh` | `15 8 * * *` (every day at 08:15) | `ops/backup.sh daily`, `ops/backup-umami.sh daily` |
+| File                            | Schedule                          | Runs                                               |
+| ------------------------------- | --------------------------------- | -------------------------------------------------- |
+| `ops/install-cron.sh`           | `15 8 * * *` (every day at 08:15) | `ops/backup.sh daily`, `ops/backup-umami.sh daily` |
+| `ops/install-offsite-backup.sh` | `30 9 * * 0`                      | `ops/offsite-backup.sh run`                        |
 
 ## The intelligence pipeline’s setting
 

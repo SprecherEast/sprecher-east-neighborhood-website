@@ -82,7 +82,7 @@ describe('buildScheduledTasks', () => {
   })
 
   it('makes a node of the server cron, the intelligence pipeline and the dependency updates', () => {
-    expect(byId('scheduled-task:server-cron').facts).toContainEqual({
+    expect(byId('scheduled-task:server-cron-install-cron').facts).toContainEqual({
       label: 'Runs',
       value: 'ops/backup.sh daily; ops/backup-umami.sh daily',
     })

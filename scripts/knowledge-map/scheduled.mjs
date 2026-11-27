@@ -51,9 +51,11 @@ export function buildScheduledTasks({ page, extras, groupId }) {
     })
   }
   for (const cron of extras.serverCrons) {
+    // One node for each script that installs a cron line (the daily backup, the weekly off-site backup).
+    const script = cron.file.split('/').pop().replace(/\.sh$/, '')
     add({
-      id: nodeId('scheduled-task', 'server-cron'),
-      name: 'Server cron',
+      id: nodeId('scheduled-task', `server-cron-${slug(script)}`),
+      name: `Server cron (${script})`,
       summary: 'Installed on the server by the ops scripts.',
       path: cron.file,
       facts: [

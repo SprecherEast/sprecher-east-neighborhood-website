@@ -3029,7 +3029,7 @@
       "facts": [
         {
           "label": "Runs",
-          "value": "set -euo pipefail; set -euo pipefail; [[ \"$RELEASE\" =~ ^[0-9a-f]{40}(-run[0-9]+)?$ ]] || { echo \"::error::bad release name '$RELEASE'\"; exit 1; }; reachable() { timeout 5 bash -c \"exec 3<>/dev/tcp/$HOST/$1\" 2>/dev/null; }; show() { # <label> <url>"
+          "value": "set -euo pipefail; set -euo pipefail; [[ \"$RELEASE\" =~ ^[0-9a-f]{40}(-run[0-9]+)?$ ]] || { echo \"::error::bad release name '$RELEASE'\"; exit 1; }; [[ \"$RELEASE\" =~ ^[0-9a-f]{40}(-run[0-9]+)?$ ]] || { echo \"::error::bad release name '$RELEASE'\"; exit 1; }; reachable() { timeout 5 bash -c \"exec 3<>/dev/tcp/$HOST/$1\" 2>/dev/null; }; show() { # <label> <url>"
         }
       ],
       "watchOuts": [],
@@ -12927,9 +12927,9 @@
       "links": []
     },
     {
-      "id": "scheduled-task:server-cron",
+      "id": "scheduled-task:server-cron-install-cron",
       "type": "scheduled-task",
-      "name": "Server cron",
+      "name": "Server cron (install-cron)",
       "summary": "Installed on the server by the ops scripts.",
       "path": "ops/install-cron.sh",
       "module": "group:scheduled-tasks",
@@ -12938,6 +12938,22 @@
       "facts": [
         { "label": "Schedule", "value": "15 8 * * *" },
         { "label": "Runs", "value": "ops/backup.sh daily; ops/backup-umami.sh daily" }
+      ],
+      "watchOuts": [],
+      "links": []
+    },
+    {
+      "id": "scheduled-task:server-cron-install-offsite-backup",
+      "type": "scheduled-task",
+      "name": "Server cron (install-offsite-backup)",
+      "summary": "Installed on the server by the ops scripts.",
+      "path": "ops/install-offsite-backup.sh",
+      "module": "group:scheduled-tasks",
+      "aliases": [],
+      "fields": [],
+      "facts": [
+        { "label": "Schedule", "value": "30 9 * * 0" },
+        { "label": "Runs", "value": "ops/offsite-backup.sh run" }
       ],
       "watchOuts": [],
       "links": []
@@ -22877,7 +22893,15 @@
     },
     {
       "from": "group:scheduled-tasks",
-      "to": "scheduled-task:server-cron",
+      "to": "scheduled-task:server-cron-install-cron",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "group:scheduled-tasks",
+      "to": "scheduled-task:server-cron-install-offsite-backup",
       "type": "contains",
       "layer": "structure",
       "count": 1,
