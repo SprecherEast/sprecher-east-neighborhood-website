@@ -2,7 +2,7 @@
 import 'server-only'
 
 export { findArchivePosts } from './use-cases/findArchivePosts'
-export { findPostPage, findSearchResults, listPostSlugs } from './data/queries'
+export { findPostPage, findPostsByIds, findSearchResults, listPostSlugs } from './data/queries'
 export { findRecentPosts } from './use-cases/findRecentPosts'
 export { getPostBySlug } from './use-cases/getPostBySlug'
 export { listPostPageNumbers } from './use-cases/listPostPageNumbers'

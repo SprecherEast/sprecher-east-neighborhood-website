@@ -42,6 +42,7 @@
 | `backdrop.desktop`        | upload       | no       | → media                                                             |                                                  |
 | `content`                 | richText     | yes      |                                                                     |                                                  |
 | `relatedPosts`            | relationship | no       | → posts (many)                                                      |                                                  |
+| `relatedEvents`           | relationship | no       | → events (many)                                                     | indexed                                          |
 | `categories`              | relationship | no       | → categories (many)                                                 |                                                  |
 | `meta.title`              | text         | no       |                                                                     |                                                  |
 | `meta.image`              | upload       | no       | → media                                                             |                                                  |

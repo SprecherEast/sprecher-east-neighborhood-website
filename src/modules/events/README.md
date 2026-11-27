@@ -21,6 +21,7 @@ The neighborhood calendar: the `events` collection, its listings and pages, and 
 | Event        | `/events/[slug]`                                                                 | `events` by slug, draft in draft mode (`use-cases/getEventBySlug.ts`); the "Cancelled" text and the "More events" box are hardcoded in `events/[slug]/page.tsx` |
 | This week    | block on any CMS page                                                            | the `eventsThisWeek` block's rows, then `events` (`use-cases/findEventsThisWeek.ts`); joined in `src/app/(frontend)/[slug]/pageBlocks.tsx`                      |
 | Sidebar list | event and post pages                                                             | next 3 upcoming events (`use-cases/findUpcomingEvents.ts`); joined in `posts/[slug]/page.tsx`                                                                   |
+| Related posts | sidebar of `/events/[slug]`                                                     | the `relatedPosts` join on the event, at most 6 (`data/queries.ts`); the cards come from news in `events/[slug]/page.tsx`                                       |
 
 ## How the pieces link
 
@@ -32,11 +33,13 @@ The neighborhood calendar: the `events` collection, its listings and pages, and 
 
 ## Behaviors and events
 
-- **A save refreshes the right pages:** a published event's save, an unpublish or a delete refreshes its page, `/events`, every category and list page, `/` and all CMS pages and expires the `events` and `events-sitemap` tags; a draft refreshes nothing (`cms/revalidateEvent.ts`).
+- **A save refreshes the right pages:** a published event's save, an unpublish or a delete refreshes its page, `/events`, every category and list page, `/` and all CMS pages and expires the `events` and `events-sitemap` tags; a draft refreshes nothing (`cms/revalidateEvent.ts`). A save or unpublish also refreshes the page of each published post that picks the event (#1496).
 - **Events can be scheduled to publish or unpublish** (`schedulePublish` in `src/platform/payload/contentCollection.ts`), run by Payload's jobs inside the app; event pages re-render every 10 minutes (`revalidate = 600`, decision 0011).
 - **"Load more" asks for what follows the last item** by cursor, not page number; its action accepts only a known scope, a valid cursor and an existing category slug (`data/queries.ts`, `actions.ts`, decision 0014).
 - **Events created by agents or non-staff are `suggested` drafts** with a source name and an http(s) link; staff publishing approves them; agents cannot update or publish (`cms/events.ts`, `src/platform/payload/reviewQueue.ts`).
 - **The event page** has a plain title band and category, a metadata bar (`eventByline`: date with time, place with format), the whole `heroImage` as the first thing in the article column, and emits schema.org `Event` data (`ui/eventHeader.tsx`, `ui/eventJsonLd.ts`, #1002, #1013); Admin has Live Preview and a preview link from the draft.
+
+- **Related posts:** `relatedPosts` is a join on `posts.relatedEvents`, newest first and published only; nothing is stored on the event, so an editor fills in nothing (`cms/events.ts`, #1496).
 
 ## Shared pieces it uses
 
@@ -49,6 +52,7 @@ The neighborhood calendar: the `events` collection, its listings and pages, and 
 - **Upcoming means dated today or later in the site timezone (`SITE_TIMEZONE`, see [shared helpers](../../platform/lib/README.md));** past means before today, dates are day-only. Upcoming lists run soonest first, 12 a page; past lists newest first, 9 a page (`data/scope.ts`, `domain/scope.ts`; `data/scope.test.ts`, `domain/scope.test.ts`).
 - **Cursor paging skips and repeats nothing** when events change (`data/queries.keyset.test.ts`).
 - **Only published events show; cancelled ones stay** listed, counted, in "Load more" and the sidebar and openable, marked cancelled, with no register button (`data/listing.ts`; `use-cases/cancelledEvents.test.ts`). A past event's page has no register button and says "This event has passed."; a cancelled one says only that it is cancelled; today's keeps its button (`isPastEvent`; `src/app/(frontend)/events/[slug]/page.test.tsx`, #1012).
+- **A post's picked events show on the post at their own date, past ones too, in the editor's order; a draft or deleted one never shows, and a cancelled one shows marked as cancelled.** The post's "Upcoming Events" leaves them out (`data/queries.ts` `findEventsByIds`, `use-cases/findUpcomingEvents.ts`; `data/queries.related.test.ts`, #1496).
 - **An event with `officialBody` is an official meeting** (the bodies, City of Madison and Dane County, are `OFFICIAL_BODIES` in `domain/officialMeetings.ts`): labelled wherever it shows, with the body's `https://` agenda link on its page and the body as organizer in structured data; an agenda link that is not `https://` is refused (`domain/officialMeetings.ts`, `ui/OfficialAgenda.tsx`; `domain/officialMeetings.test.ts`).
 - **The "this week" strip:** a row is `all`, `official` or one category; a window of 1 to 31 days (default 7) from today; at most 4 rows, 1 to 6 events each; empty rows are hidden, and with none left it shows a message (`domain/thisWeek.ts`, `data/thisWeek.ts`; `domain/thisWeek.test.ts`, `use-cases/findEventsThisWeek.test.ts`, `data/mappers.thisWeek.test.ts`).
 - **A title band photo with no crop for a screen size uses the nearest crop that is set;** none set keeps the plain band (`src/platform/payload/bandBackdrop.ts`, `src/platform/ui/BandBackdrop.tsx`, #1024).

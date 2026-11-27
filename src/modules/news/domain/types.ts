@@ -44,6 +44,8 @@ export type PostDetail = PostSummary & {
   authors: string[]
   /** The related posts the reader may see, in the order editors set them */
   relatedPosts: PostSummary[]
+  /** The events the editor picked for the post, in their order; may include ones the reader can't see (#1496) */
+  relatedEventIds: number[]
   createdAt: string
   updatedAt: string
   meta: {

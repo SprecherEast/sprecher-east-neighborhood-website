@@ -59,6 +59,7 @@
 | `meta.description` | textarea     | no       |                                                                     |                                      |
 | `publishedAt`      | date         | no       |                                                                     |                                      |
 | `categories`       | relationship | no       | → categories (many)                                                 |                                      |
+| `relatedPosts`     | join         | no       | ← posts.relatedEvents                                               |                                      |
 | `generateSlug`     | checkbox     | no       |                                                                     | hidden; default true                 |
 | `slug`             | text         | yes      |                                                                     | unique; indexed                      |
 | `moderationStatus` | select       | no       | suggested, approved, rejected                                       | indexed                              |

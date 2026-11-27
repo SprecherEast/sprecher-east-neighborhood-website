@@ -3,6 +3,7 @@ import 'server-only'
 import type { ArchiveBlock, Post, Search, TopIssuesBlock } from '@/payload-types'
 import { isHttpUrl } from '@/platform/lib/reviewQueue'
 import { documentHref } from '@/platform/payload/documentHref'
+import { idsOf } from '@/platform/payload/idsOf'
 import { toBandBackdrop } from '@/platform/payload/bandBackdrop'
 import { toImageRef } from '@/platform/payload/imageRef'
 import { resolveLink } from '@/platform/payload/resolveLink'
@@ -72,7 +73,8 @@ export function toPostSummary(doc: SummaryDoc): PostSummary {
 
 /**
  * A post document as its own page shows it. Related posts the reader may not see come back
- * from Payload as ids only, so only the loaded ones are kept.
+ * from Payload as ids only, so only the loaded ones are kept. Related events stay ids: the page
+ * asks the events module for the ones the reader may see (#1496).
  */
 export function toPostDetail(doc: Post): PostDetail {
   return {
@@ -84,6 +86,7 @@ export function toPostDetail(doc: Post): PostDetail {
     relatedPosts: (doc.relatedPosts ?? []).flatMap((related) =>
       typeof related === 'object' ? [toPostSummary(related)] : [],
     ),
+    relatedEventIds: idsOf(doc.relatedEvents),
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
     meta: {

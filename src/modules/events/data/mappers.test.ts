@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { Event, Media } from '@/payload-types'
+import type { Event, Media, Post } from '@/payload-types'
 
 import { SUMMARY_FIELDS, toEventDetail, toEventSummary } from './mappers'
 
@@ -105,6 +105,14 @@ describe('toEventSummary', () => {
 })
 
 describe('toEventDetail', () => {
+  it('names the posts that pick the event by id, loaded or not, and none without the join (#1496)', () => {
+    const post = { id: 41, slug: 'recap', title: 'Recap' } as Post
+    const joined = { docs: [post, 52], hasNextPage: false }
+    expect(toEventDetail({ ...doc, relatedPosts: joined }).relatedPostIds).toEqual([41, 52])
+    expect(toEventDetail(doc).relatedPostIds).toEqual([])
+    expect(toEventDetail({ ...doc, relatedPosts: { docs: [] } }).relatedPostIds).toEqual([])
+  })
+
   it('adds the place, links, content and search fields', () => {
     expect(toEventDetail(doc)).toMatchObject({
       locationType: 'in-person',

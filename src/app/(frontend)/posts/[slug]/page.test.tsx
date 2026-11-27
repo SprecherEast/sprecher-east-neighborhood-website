@@ -11,6 +11,9 @@ const mocks = vi.hoisted(() => ({
   richText: vi.fn(),
   redirects: vi.fn(),
   forumPrompt: vi.fn(),
+  findEventsByIds: vi.fn(async (_ids: number[]) => [] as unknown[]),
+  findUpcomingEvents: vi.fn(async (_options?: { excludeIds?: number[] }) => [] as unknown[]),
+  sidebarEvents: vi.fn(),
 }))
 vi.mock('next/headers', () => ({ draftMode: async () => ({ isEnabled: false }) }))
 vi.mock('@/modules/news/server', () => ({
@@ -23,8 +26,12 @@ vi.mock('@/modules/news/server', () => ({
   SidebarPosts: () => null,
 }))
 vi.mock('@/modules/events/server', () => ({
-  findUpcomingEvents: async () => [],
-  SidebarEvents: () => null,
+  findEventsByIds: mocks.findEventsByIds,
+  findUpcomingEvents: mocks.findUpcomingEvents,
+  SidebarEvents: (props: unknown) => {
+    mocks.sidebarEvents(props)
+    return null
+  },
 }))
 vi.mock('@/platform/richtext/RichText', () => ({
   RichText: (props: unknown) => {
@@ -112,5 +119,26 @@ describe('/posts/[slug]', () => {
 
     expect(mocks.redirects).toHaveBeenCalledWith({ url: '/posts/gone' })
     expect(mocks.richText).not.toHaveBeenCalled()
+  })
+
+  it('lists the events the editor picked first, and leaves them out of the upcoming ones (#1496)', async () => {
+    const content = { root: { type: 'root', children: [] } }
+    const picked = [{ id: 7, title: 'Picnic' }]
+    mocks.getPostBySlug.mockResolvedValue({
+      slug: 'park-cleanup',
+      title: 'Park cleanup',
+      content,
+      relatedEventIds: [7],
+    })
+    mocks.findEventsByIds.mockResolvedValue(picked)
+
+    render(await PostPage(params('park-cleanup')))
+
+    expect(mocks.findEventsByIds).toHaveBeenCalledWith([7])
+    expect(mocks.findUpcomingEvents).toHaveBeenCalledWith({ excludeIds: [7] })
+    expect(mocks.sidebarEvents).toHaveBeenCalledWith({
+      events: picked,
+      title: 'Related Events',
+    })
   })
 })

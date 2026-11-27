@@ -24,6 +24,7 @@ import {
   getEventBySlug,
   listEventSlugs,
 } from '@/modules/events/server'
+import { findPostsByIds, SidebarPosts } from '@/modules/news/server'
 import { Alert, Button } from '@/platform/ui'
 import { generateMeta } from '@/platform/seo/generateMeta'
 import { Text } from '@/platform/ui/Text'
@@ -55,7 +56,11 @@ export default async function EventPage({ params: paramsPromise }: Args) {
 
   if (!event) return <PayloadRedirects url={url} />
 
-  const upcomingEvents = await findUpcomingEvents({ excludeId: event.id })
+  // News and events meet here, not in either module (decision 0008)
+  const [relatedPosts, upcomingEvents] = await Promise.all([
+    findPostsByIds(event.relatedPostIds),
+    findUpcomingEvents({ excludeIds: [event.id] }),
+  ])
   const hasImage = event.image !== null
   const past = isPastEvent(event.date, startOfToday())
   const textClassName = articleColumnClass(event.content)
@@ -78,6 +83,7 @@ export default async function EventPage({ params: paramsPromise }: Args) {
       toc={articleToc(event.content)}
       aside={
         <>
+          <SidebarPosts posts={relatedPosts} title="Related Posts" />
           <SidebarEvents events={upcomingEvents} title="Upcoming Events" />
           <SidebarCTA heading="More events" buttonLabel="View All Events" buttonHref="/events" />
         </>

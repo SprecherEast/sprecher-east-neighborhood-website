@@ -96,6 +96,9 @@ export interface Config {
     'payload-migrations': PayloadMigration
   }
   collectionsJoins: {
+    events: {
+      relatedPosts: 'posts'
+    }
     'agent-runs': {
       reviewItems: 'agent-review-items'
     }
@@ -333,6 +336,7 @@ export interface Post {
     [k: string]: unknown
   }
   relatedPosts?: (number | Post)[] | null
+  relatedEvents?: (number | Event)[] | null
   categories?: (number | Category)[] | null
   meta?: {
     title?: string | null
@@ -513,6 +517,121 @@ export interface FolderInterface {
   folderType?: 'media'[] | null
   updatedAt: string
   createdAt: string
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number
+  /**
+   * Up to 60 characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.
+   */
+  title: string
+  date: string
+  timeStart?: string | null
+  timeEnd?: string | null
+  /**
+   * A cancelled event stays listed and is marked as cancelled.
+   */
+  cancelled?: boolean | null
+  /**
+   * Set for a public body’s own meeting (Common Council, a city commission, the County Board).
+   */
+  officialBody?: ('city' | 'county') | null
+  /**
+   * The body’s own agenda page, starting with https://
+   */
+  agendaUrl?: string | null
+  /**
+   * Featured events appear prominently on the homepage
+   */
+  featured?: boolean | null
+  locationType?: ('in-person' | 'virtual' | 'hybrid') | null
+  locationName?: string | null
+  locationAddress?: string | null
+  mapsUrl?: string | null
+  registrationUrl?: string | null
+  heroImage?: (number | null) | Media
+  /**
+   * An optional photo shown faded behind the title, edge to edge. Choose the crop for each screen size: the band is a wide, short strip, so a photo whose good part cannot fill it is not used. A size left empty uses the nearest crop that is set; all three empty keeps the plain band. Fine-tune the part shown with the focal point of each upload in Media. Never use a photo with identifiable people.
+   */
+  backdrop?: {
+    /**
+     * Under 768 px wide. A near-square crop reads best.
+     */
+    phone?: (number | null) | Media
+    /**
+     * From 768 px to 959 px wide.
+     */
+    tablet?: (number | null) | Media
+    /**
+     * From 960 px wide: the widest, shortest strip.
+     */
+    desktop?: (number | null) | Media
+  }
+  /**
+   * Short description shown in event cards
+   */
+  description?: string | null
+  content?: {
+    root: {
+      type: string
+      children: {
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  } | null
+  meta?: {
+    title?: string | null
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media
+    description?: string | null
+  }
+  publishedAt?: string | null
+  categories?: (number | Category)[] | null
+  relatedPosts?: {
+    docs?: (number | Post)[]
+    hasNextPage?: boolean
+    totalDocs?: number
+  }
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null
+  slug: string
+  /**
+   * Set on suggestions from outside sources. Empty for content staff write.
+   */
+  moderationStatus?: ('suggested' | 'approved' | 'rejected') | null
+  /**
+   * Who published this first, for example a city calendar.
+   */
+  sourceName?: string | null
+  sourceUrl?: string | null
+  /**
+   * The source’s own ID; the same one can’t be stored twice.
+   */
+  externalId?: string | null
+  /**
+   * A fingerprint of the content; it can’t be stored twice.
+   */
+  contentHash?: string | null
+  audience?:
+    | ('everyone' | 'families' | 'youth' | 'seniors' | 'volunteers' | 'association-leaders')[]
+    | null
+  updatedAt: string
+  createdAt: string
+  _status?: ('draft' | 'published') | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1046,116 +1165,6 @@ export interface TopIssuesBlock {
   id?: string | null
   blockName?: string | null
   blockType: 'topIssues'
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "events".
- */
-export interface Event {
-  id: number
-  /**
-   * Up to 60 characters, checked when you publish: a longer title wraps badly on a phone and doesn't fit in the breadcrumb trail. Put the rest in the summary or the body.
-   */
-  title: string
-  date: string
-  timeStart?: string | null
-  timeEnd?: string | null
-  /**
-   * A cancelled event stays listed and is marked as cancelled.
-   */
-  cancelled?: boolean | null
-  /**
-   * Set for a public body’s own meeting (Common Council, a city commission, the County Board).
-   */
-  officialBody?: ('city' | 'county') | null
-  /**
-   * The body’s own agenda page, starting with https://
-   */
-  agendaUrl?: string | null
-  /**
-   * Featured events appear prominently on the homepage
-   */
-  featured?: boolean | null
-  locationType?: ('in-person' | 'virtual' | 'hybrid') | null
-  locationName?: string | null
-  locationAddress?: string | null
-  mapsUrl?: string | null
-  registrationUrl?: string | null
-  heroImage?: (number | null) | Media
-  /**
-   * An optional photo shown faded behind the title, edge to edge. Choose the crop for each screen size: the band is a wide, short strip, so a photo whose good part cannot fill it is not used. A size left empty uses the nearest crop that is set; all three empty keeps the plain band. Fine-tune the part shown with the focal point of each upload in Media. Never use a photo with identifiable people.
-   */
-  backdrop?: {
-    /**
-     * Under 768 px wide. A near-square crop reads best.
-     */
-    phone?: (number | null) | Media
-    /**
-     * From 768 px to 959 px wide.
-     */
-    tablet?: (number | null) | Media
-    /**
-     * From 960 px wide: the widest, shortest strip.
-     */
-    desktop?: (number | null) | Media
-  }
-  /**
-   * Short description shown in event cards
-   */
-  description?: string | null
-  content?: {
-    root: {
-      type: string
-      children: {
-        type: any
-        version: number
-        [k: string]: unknown
-      }[]
-      direction: ('ltr' | 'rtl') | null
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
-      indent: number
-      version: number
-    }
-    [k: string]: unknown
-  } | null
-  meta?: {
-    title?: string | null
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media
-    description?: string | null
-  }
-  publishedAt?: string | null
-  categories?: (number | Category)[] | null
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null
-  slug: string
-  /**
-   * Set on suggestions from outside sources. Empty for content staff write.
-   */
-  moderationStatus?: ('suggested' | 'approved' | 'rejected') | null
-  /**
-   * Who published this first, for example a city calendar.
-   */
-  sourceName?: string | null
-  sourceUrl?: string | null
-  /**
-   * The source’s own ID; the same one can’t be stored twice.
-   */
-  externalId?: string | null
-  /**
-   * A fingerprint of the content; it can’t be stored twice.
-   */
-  contentHash?: string | null
-  audience?:
-    | ('everyone' | 'families' | 'youth' | 'seniors' | 'volunteers' | 'association-leaders')[]
-    | null
-  updatedAt: string
-  createdAt: string
-  _status?: ('draft' | 'published') | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2141,6 +2150,7 @@ export interface PostsSelect<T extends boolean = true> {
       }
   content?: T
   relatedPosts?: T
+  relatedEvents?: T
   categories?: T
   meta?:
     | T
@@ -2206,6 +2216,7 @@ export interface EventsSelect<T extends boolean = true> {
       }
   publishedAt?: T
   categories?: T
+  relatedPosts?: T
   generateSlug?: T
   slug?: T
   moderationStatus?: T

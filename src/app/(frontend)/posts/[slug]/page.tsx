@@ -10,7 +10,7 @@ import { RichText } from '@/platform/richtext/RichText'
 import { richTextBlocks } from '@/platform/richtext/richTextBlocks'
 import { ArticlePage } from '@/platform/ui/ArticlePage'
 import { SidebarCTA } from '@/platform/ui/SidebarCTA'
-import { findUpcomingEvents, SidebarEvents } from '@/modules/events/server'
+import { findEventsByIds, findUpcomingEvents, SidebarEvents } from '@/modules/events/server'
 import {
   findRecentPosts,
   getPostBySlug,
@@ -53,9 +53,11 @@ export default async function Post({ params: paramsPromise }: Args) {
   if (!post) return <PayloadRedirects url={url} />
 
   // News, events and the site's forum link meet here, not in either module (decision 0008)
-  const [recentPosts, upcomingEvents, forumUrl] = await Promise.all([
+  // The events the editor picked come first and are not listed twice among the upcoming ones (#1496)
+  const [recentPosts, relatedEvents, upcomingEvents, forumUrl] = await Promise.all([
     findRecentPosts(post),
-    findUpcomingEvents(),
+    findEventsByIds(post.relatedEventIds),
+    findUpcomingEvents({ excludeIds: post.relatedEventIds }),
     getForumUrl(),
   ])
 
@@ -98,6 +100,7 @@ export default async function Post({ params: paramsPromise }: Args) {
       aside={
         <>
           <SidebarPosts posts={post.relatedPosts} title="Related Posts" />
+          <SidebarEvents events={relatedEvents} title="Related Events" />
           <SidebarPosts posts={recentPosts} title="You May Also Like" />
           <SidebarEvents events={upcomingEvents} title="Upcoming Events" />
           <SidebarCTA

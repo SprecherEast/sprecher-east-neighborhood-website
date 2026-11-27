@@ -83,6 +83,7 @@ export const PREVIEW_COPY: Readonly<Record<string, PreviewCopyEntry>> = {
       'backdrop',
       'content',
       'relatedPosts',
+      'relatedEvents',
       'categories',
       SEO,
       'publishedAt',
@@ -128,7 +129,7 @@ export const PREVIEW_COPY: Readonly<Record<string, PreviewCopyEntry>> = {
       'sourceUrl',
       'audience',
     ],
-    { clear: ['moderationStatus', 'externalId', 'contentHash'] },
+    { clear: ['moderationStatus', 'externalId', 'contentHash', 'relatedPosts'] },
   ),
   categories: copied(
     'The shared category tree posts and events point at.',

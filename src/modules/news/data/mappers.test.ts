@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { Category, Media, Post, Search } from '@/payload-types'
+import type { Category, Event, Media, Post, Search } from '@/payload-types'
 
 import {
   type SEARCH_RESULT_FIELDS,
@@ -97,6 +97,15 @@ describe('toPostSummary', () => {
 })
 
 describe('toPostDetail', () => {
+  it('names the events an editor picked by id, in the editor’s order, loaded or not (#1496)', () => {
+    const event = { id: 21, slug: 'walk', title: 'Walk' } as Event
+    expect(toPostDetail({ ...doc, relatedEvents: [30, event, 12] }).relatedEventIds).toEqual([
+      30, 21, 12,
+    ])
+    expect(toPostDetail(doc).relatedEventIds).toEqual([])
+    expect(toPostDetail({ ...doc, relatedEvents: null }).relatedEventIds).toEqual([])
+  })
+
   it('adds the hero, content, byline names, dates and search-engine fields', () => {
     expect(toPostDetail(doc)).toMatchObject({
       heroImage: hero,

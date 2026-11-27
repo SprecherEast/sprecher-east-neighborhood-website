@@ -6,12 +6,16 @@ import { getPayload } from 'payload'
 import { cursorAfterLast, type FeedMore, type FeedPage, type SortCursor } from '@/platform/lib'
 import { afterCursor, keysetSort } from '@/platform/payload/keyset'
 import { PUBLISHED } from '@/platform/payload/published'
+import { inPickedOrder } from '@/platform/lib/inPickedOrder'
 
 import { EVENT_SCOPE_ORDER, type EventScope } from '../domain/scope'
 import type { EventDetail, EventSitemapEntry, EventSummary } from '../domain/types'
 import { inListing } from './listing'
 import { SUMMARY_FIELDS, toEventDetail, toEventSummary } from './mappers'
 import { inScope } from './scope'
+
+/** The most posts an event page lists as written about it (#1496). */
+const RELATED_POSTS_LIMIT = 6
 
 /** Events per page in each listing, numbered pages and "Load more" alike. */
 const PAGE_SIZE: Record<EventScope, number> = { upcoming: 12, past: 9 }
@@ -94,15 +98,15 @@ export async function findEventsAfter(
   return { docs: result.docs, nextCursor: result.nextCursor, totalDocs: total.totalDocs }
 }
 
-/** The next published upcoming events, soonest first, leaving out `excludeId` if given. */
+/** The next published upcoming events, soonest first, leaving out `excludeIds`. */
 export async function findUpcomingEvents({
   today,
   limit,
-  excludeId,
+  excludeIds = [],
 }: {
   today: string
   limit: number
-  excludeId?: number
+  excludeIds?: number[]
 }): Promise<EventSummary[]> {
   const payload = await getPayload({ config: configPromise })
 
@@ -116,13 +120,35 @@ export async function findUpcomingEvents({
       and: [
         PUBLISHED,
         inScope('upcoming', today),
-        ...(excludeId === undefined ? [] : [{ id: { not_equals: excludeId } }]),
+        ...(excludeIds.length > 0 ? [{ id: { not_in: excludeIds } }] : []),
       ],
     },
     select: SUMMARY_FIELDS,
   })
 
   return result.docs.map(toEventSummary)
+}
+
+/**
+ * The published events an editor picked, in the order they picked them, whatever their date: a
+ * post about an event that has passed still links to it (#1496). A pick the reader may not see
+ * (a draft, a deleted event) is left out.
+ */
+export async function findEventsByIds(ids: readonly number[]): Promise<EventSummary[]> {
+  if (ids.length === 0) return []
+  const payload = await getPayload({ config: configPromise })
+
+  const result = await payload.find({
+    collection: 'events',
+    depth: 1,
+    limit: ids.length,
+    pagination: false,
+    overrideAccess: false,
+    where: { and: [PUBLISHED, { id: { in: [...ids] } }] },
+    select: SUMMARY_FIELDS,
+  })
+
+  return inPickedOrder(result.docs, ids).map(toEventSummary)
 }
 
 /**
@@ -141,6 +167,7 @@ export async function getEventBySlug(
     limit: 1,
     overrideAccess: draft,
     pagination: false,
+    joins: { relatedPosts: { limit: RELATED_POSTS_LIMIT } },
     where: { slug: { equals: slug } },
   })
 

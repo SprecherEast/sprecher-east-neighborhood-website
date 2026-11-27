@@ -11,6 +11,7 @@ import {
   SUGGESTIONS_FILTER,
 } from '@/platform/payload/reviewQueue'
 import { bandBackdropField } from '@/platform/payload/bandBackdrop'
+import { PUBLISHED } from '@/platform/payload/published'
 import { seoTab } from '@/platform/payload/seoTab'
 
 import { EVENT_LOCATION_TYPES } from '../domain/locationTypes'
@@ -164,6 +165,19 @@ export const Events: CollectionConfig<'events'> = {
       type: 'relationship',
       relationTo: 'categories',
       hasMany: true,
+      admin: { position: 'sidebar' },
+    },
+    {
+      // The published posts that name this event in their `relatedEvents` (#1496). A join is
+      // virtual: nothing is stored on the event, and an editor has nothing to fill in here.
+      name: 'relatedPosts',
+      type: 'join',
+      collection: 'posts',
+      on: 'relatedEvents',
+      where: PUBLISHED,
+      defaultSort: '-publishedAt',
+      // Ids only: the page asks the news module for the cards (decision 0008)
+      maxDepth: 0,
       admin: { position: 'sidebar' },
     },
     slugField(),

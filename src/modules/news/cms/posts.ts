@@ -10,6 +10,7 @@ import {
   SUGGESTIONS_FILTER,
 } from '@/platform/payload/reviewQueue'
 import { bandBackdropField } from '@/platform/payload/bandBackdrop'
+import { PUBLISHED } from '@/platform/payload/published'
 import { seoTab } from '@/platform/payload/seoTab'
 
 import { populateAuthors } from './populateAuthors'
@@ -78,6 +79,18 @@ export const Posts: CollectionConfig<'posts'> = {
               },
               hasMany: true,
               relationTo: 'posts',
+            },
+            {
+              // The events this post is about, shown on its page and listing it on theirs (#1496).
+              // Only published events can be picked: a draft has no page to link to.
+              name: 'relatedEvents',
+              type: 'relationship',
+              admin: {
+                position: 'sidebar',
+              },
+              filterOptions: PUBLISHED,
+              hasMany: true,
+              relationTo: 'events',
             },
             {
               name: 'categories',

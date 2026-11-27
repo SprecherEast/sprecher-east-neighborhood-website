@@ -181,8 +181,10 @@ describe('reportItem', () => {
       collection: 'events',
       id: target.id,
       overrideAccess: true,
+      // The event's join to its posts is read on request, so it is left out of both sides
+      joins: false,
     })
-    expect(after).toEqual(target)
+    expect(after).toEqual({ ...target, relatedPosts: undefined })
     expect((await items()).at(-1)).toMatchObject({
       run: runDocId,
       kind: 'cancel',

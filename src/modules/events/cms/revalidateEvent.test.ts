@@ -1,13 +1,18 @@
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const revalidatePath = vi.hoisted(() => vi.fn())
 vi.mock('next/cache', () => ({ revalidatePath }))
 vi.mock('@/platform/payload/expireCacheTag', () => ({ expireCacheTag: vi.fn() }))
 
-import { revalidateDelete } from './revalidateEvent'
+const linked = vi.hoisted(() => ({ revalidateLinkedPages: vi.fn().mockResolvedValue(undefined) }))
+vi.mock('@/platform/payload/revalidateLinked', () => ({
+  revalidateLinkedPages: linked.revalidateLinkedPages,
+}))
+
+import { revalidateDelete, revalidateEvent } from './revalidateEvent'
 
 /**
  * A route pattern passed to `revalidatePath(…, 'page')` names a folder under `src/app`. If the
@@ -42,5 +47,40 @@ describe('revalidateEvent', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/')
     expect(revalidatePath).toHaveBeenCalledWith('/(frontend)/[slug]', 'page')
     expect(existsSync(path.join(process.cwd(), 'src/app/(frontend)/page.tsx'))).toBe(true)
+  })
+})
+
+// Posts that pick an event show it, so a save or an unpublish refreshes their pages (#1496)
+describe('revalidateEvent, linked posts', () => {
+  const save = (id: number, status: string, previous: string, context = {}) =>
+    revalidateEvent({
+      doc: { id, slug: 'walk', _status: status },
+      previousDoc: { id, slug: 'walk', _status: previous },
+      req: { payload: { logger: { info: vi.fn() } }, context },
+    } as unknown as Parameters<typeof revalidateEvent>[0])
+
+  beforeEach(() => linked.revalidateLinkedPages.mockClear())
+
+  it('refreshes the pages of the published posts that pick the event', async () => {
+    await save(9, 'published', 'draft')
+
+    expect(linked.revalidateLinkedPages).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'posts',
+        where: { and: [{ _status: { equals: 'published' } }, { relatedEvents: { equals: 9 } }] },
+        basePath: '/posts',
+      }),
+    )
+  })
+
+  it('does it when a published event is taken back to draft', async () => {
+    await save(9, 'draft', 'published')
+    expect(linked.revalidateLinkedPages).toHaveBeenCalledTimes(1)
+  })
+
+  it('does nothing for a draft never published, or a seed save', async () => {
+    await save(9, 'draft', 'draft')
+    await save(9, 'published', 'draft', { disableRevalidate: true })
+    expect(linked.revalidateLinkedPages).not.toHaveBeenCalled()
   })
 })

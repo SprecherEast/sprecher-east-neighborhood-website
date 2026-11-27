@@ -10,6 +10,12 @@ const mockEvent = vi.hoisted(() => ({
   date: '2026-11-07T00:00:00.000Z',
   cancelled: false,
   registrationUrl: 'https://example.com/register' as string | null,
+  relatedPostIds: [] as number[],
+}))
+const mocks = vi.hoisted(() => ({
+  findPostsByIds: vi.fn(async (_ids: number[]) => [] as unknown[]),
+  findUpcomingEvents: vi.fn(async (_options?: { excludeIds?: number[] }) => [] as unknown[]),
+  sidebarPosts: vi.fn(),
 }))
 
 // The modules are replaced: this tests the page's wiring, not events or the renderer
@@ -19,11 +25,18 @@ vi.mock('@/modules/events/server', () => ({
   eventHeaderProps: () => ({ title: 'Leaf raking' }),
   EventLocation: () => null,
   eventJsonLd: () => ({}),
-  findUpcomingEvents: async () => [],
+  findUpcomingEvents: mocks.findUpcomingEvents,
   getEventBySlug: async () => mockEvent,
   listEventSlugs: async () => [],
   OfficialAgenda: () => null,
   SidebarEvents: () => null,
+}))
+vi.mock('@/modules/news/server', () => ({
+  findPostsByIds: mocks.findPostsByIds,
+  SidebarPosts: (props: unknown) => {
+    mocks.sidebarPosts(props)
+    return null
+  },
 }))
 vi.mock('@/modules/site/server', () => ({ PayloadRedirects: () => null }))
 vi.mock('@/platform/richtext/RichText', () => ({ RichText: () => null }))
@@ -112,5 +125,20 @@ describe('/events/[slug]', () => {
 
     const bar = screen.getByText('When').closest('dl')?.parentElement?.parentElement
     expect(bar?.className).not.toMatch(/max-w|mx-0/)
+  })
+})
+
+describe('/events/[slug] related posts (#1496)', () => {
+  it('lists the posts that name the event, and leaves the event out of the upcoming ones', async () => {
+    const posts = [{ id: 3, title: 'Raking recap' }]
+    mockEvent.relatedPostIds = [3]
+    mocks.findPostsByIds.mockResolvedValue(posts)
+
+    render(await EventPage({ params: Promise.resolve({ slug: 'leaf-raking' }) }))
+
+    expect(mocks.findPostsByIds).toHaveBeenCalledWith([3])
+    expect(mocks.findUpcomingEvents).toHaveBeenCalledWith({ excludeIds: [1] })
+    expect(mocks.sidebarPosts).toHaveBeenCalledWith({ posts, title: 'Related Posts' })
+    mockEvent.relatedPostIds = []
   })
 })

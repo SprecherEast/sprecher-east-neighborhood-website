@@ -10,11 +10,17 @@ const next = vi.hoisted(() => ({ revalidatePath: vi.fn(), expireCacheTag: vi.fn(
 vi.mock('next/cache', () => ({ revalidatePath: next.revalidatePath }))
 vi.mock('@/platform/payload/expireCacheTag', () => ({ expireCacheTag: next.expireCacheTag }))
 
+const linked = vi.hoisted(() => ({ revalidateLinkedPages: vi.fn().mockResolvedValue(undefined) }))
+vi.mock('@/platform/payload/revalidateLinked', () => ({
+  revalidateLinkedPages: linked.revalidateLinkedPages,
+}))
+
 import { revalidateDelete, revalidatePost } from './revalidatePost'
 
 beforeEach(() => {
   next.revalidatePath.mockReset()
   next.expireCacheTag.mockReset()
+  linked.revalidateLinkedPages.mockClear()
 })
 
 const req = (context: Record<string, unknown> = {}) =>
@@ -22,7 +28,7 @@ const req = (context: Record<string, unknown> = {}) =>
 
 const post = (slug: string, status: Post['_status']) => ({ slug, _status: status }) as Post
 
-const afterChange = (doc: Post, previousDoc: Post, context?: Record<string, unknown>) =>
+const afterChange = async (doc: Post, previousDoc: Post, context?: Record<string, unknown>) =>
   revalidatePost({
     doc,
     previousDoc,
@@ -32,6 +38,9 @@ const afterChange = (doc: Post, previousDoc: Post, context?: Record<string, unkn
     data: {},
     operation: 'update',
   })
+
+const withEvents = (doc: Post, relatedEvents: Post['relatedEvents']) =>
+  ({ ...doc, relatedEvents }) as Post
 
 const paths = () => next.revalidatePath.mock.calls.map(([pathname]) => pathname as string)
 
@@ -67,6 +76,43 @@ describe('revalidatePost', () => {
     afterChange(post('potluck', 'published'), post('potluck', 'draft'), { disableRevalidate: true })
 
     expect(next.revalidatePath).not.toHaveBeenCalled()
+  })
+})
+
+// A post lists the events it is about, and each event's page lists the post (#1496)
+describe('revalidatePost, linked events', () => {
+  it('refreshes the pages of the events it links now and the ones it linked before', async () => {
+    await afterChange(
+      withEvents(post('walk-recap', 'published'), [5, 7]),
+      withEvents(post('walk-recap', 'published'), [7, 6]),
+    )
+
+    expect(linked.revalidateLinkedPages).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'events',
+        where: { id: { in: [5, 7, 6] } },
+        basePath: '/events',
+      }),
+    )
+  })
+
+  it('refreshes them when the post is taken back to draft, which drops it from their pages', async () => {
+    await afterChange(
+      withEvents(post('walk-recap', 'draft'), [5]),
+      withEvents(post('walk-recap', 'published'), [5]),
+    )
+
+    expect(linked.revalidateLinkedPages).toHaveBeenCalledTimes(1)
+  })
+
+  it('looks nothing up for a post that links no event, a draft never published, or a seed save', async () => {
+    await afterChange(post('plain', 'published'), post('plain', 'published'))
+    await afterChange(withEvents(post('d', 'draft'), [5]), withEvents(post('d', 'draft'), [5]))
+    await afterChange(withEvents(post('s', 'published'), [5]), withEvents(post('s', 'draft'), []), {
+      disableRevalidate: true,
+    })
+
+    expect(linked.revalidateLinkedPages).not.toHaveBeenCalled()
   })
 })
 

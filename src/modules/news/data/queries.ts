@@ -4,6 +4,7 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 
 import { cursorAfterLast, type FeedMore, type FeedPage, type SortCursor } from '@/platform/lib'
+import { inPickedOrder } from '@/platform/lib/inPickedOrder'
 import { afterCursor, keysetSort } from '@/platform/payload/keyset'
 import { PUBLISHED } from '@/platform/payload/published'
 
@@ -98,6 +99,27 @@ export async function findLatestPosts({
   })
 
   return result.docs.map(toPostSummary)
+}
+
+/**
+ * The published posts with these ids, in the order given: the posts that pick an event (#1496).
+ * An id the reader may not see (a draft, a deleted post) is left out.
+ */
+export async function findPostsByIds(ids: readonly number[]): Promise<PostSummary[]> {
+  if (ids.length === 0) return []
+  const payload = await getPayload({ config: configPromise })
+
+  const result = await payload.find({
+    collection: 'posts',
+    depth: 1,
+    limit: ids.length,
+    pagination: false,
+    overrideAccess: false,
+    where: { and: [PUBLISHED, { id: { in: [...ids] } }] },
+    select: SUMMARY_FIELDS,
+  })
+
+  return inPickedOrder(result.docs, ids).map(toPostSummary)
 }
 
 /**

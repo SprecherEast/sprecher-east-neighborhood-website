@@ -3,6 +3,8 @@ import { revalidatePath } from 'next/cache'
 
 import type { Post } from '@/payload-types'
 import { expireCacheTag } from '@/platform/payload/expireCacheTag'
+import { idsOf } from '@/platform/payload/idsOf'
+import { revalidateLinkedPages } from '@/platform/payload/revalidateLinked'
 
 import { POSTS_SITEMAP_CACHE_TAG } from '../domain/cacheTags'
 
@@ -22,20 +24,33 @@ function revalidatePostPages(slug: string) {
   expireCacheTag(POSTS_SITEMAP_CACHE_TAG)
 }
 
-export const revalidatePost: CollectionAfterChangeHook<Post> = ({
+export const revalidatePost: CollectionAfterChangeHook<Post> = async ({
   doc,
   previousDoc,
   req: { payload, context },
 }) => {
-  if (!context.disableRevalidate) {
-    if (doc._status === 'published') {
-      payload.logger.info(`Revalidating post at /posts/${doc.slug}`)
-      revalidatePostPages(doc.slug)
-    }
+  if (context.disableRevalidate) return doc
 
-    if (previousDoc?._status === 'published' && doc._status !== 'published') {
-      payload.logger.info(`Revalidating old post at /posts/${previousDoc.slug}`)
-      revalidatePostPages(previousDoc.slug)
+  const unpublished = previousDoc?._status === 'published' && doc._status !== 'published'
+  if (doc._status === 'published') {
+    payload.logger.info(`Revalidating post at /posts/${doc.slug}`)
+    revalidatePostPages(doc.slug)
+  }
+  if (unpublished) {
+    payload.logger.info(`Revalidating old post at /posts/${previousDoc.slug}`)
+    revalidatePostPages(previousDoc.slug)
+  }
+
+  // The events it links show it, and the ones it no longer links stop showing it (#1496)
+  if (doc._status === 'published' || unpublished) {
+    const events = [...new Set([...idsOf(doc.relatedEvents), ...idsOf(previousDoc?.relatedEvents)])]
+    if (events.length > 0) {
+      await revalidateLinkedPages({
+        payload,
+        collection: 'events',
+        where: { id: { in: events } },
+        basePath: '/events',
+      })
     }
   }
 
