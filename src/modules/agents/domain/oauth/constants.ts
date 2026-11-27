@@ -47,6 +47,9 @@ export const OAUTH_AUTHORIZE_LIMIT = {
 /** The grants a client may use; a refresh token is a grant of its own */
 export const OAUTH_GRANTS = ['authorization_code', 'refresh_token'] as const
 
+/** Sent with every answer that holds or refuses a token: nothing may keep it */
+export const NO_STORE_HEADERS = { 'Cache-Control': 'no-store', Pragma: 'no-cache' } as const
+
 /** The two collections that hold the sign-ins (#1501) */
 export const OAUTH_CLIENTS = 'oauth-clients' as const
 export const OAUTH_TOKENS = 'oauth-tokens' as const

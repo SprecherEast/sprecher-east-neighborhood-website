@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { toCredential, type CredentialRow } from './credentialRow'
+import { relationId, toCredential, type CredentialRow } from './credentialRow'
 
 const row: CredentialRow = {
   id: 5,
@@ -49,5 +49,14 @@ describe('toCredential', () => {
   it('reads plain ids and a missing admin or scope', () => {
     const plain = toCredential({ ...row, agent: 9, consentedBy: null, scope: null })
     expect(plain).toMatchObject({ agentId: 9, consentedBy: null, scope: [] })
+  })
+})
+
+describe('relationId', () => {
+  it('reads the id of a populated value, a bare id, and nothing', () => {
+    expect(relationId({ id: 7 })).toBe(7)
+    expect(relationId(7)).toBe(7)
+    expect(relationId(null)).toBeNull()
+    expect(relationId(undefined)).toBeNull()
   })
 })

@@ -1,7 +1,7 @@
 import type { TokenKind } from './constants'
 import type { Credential } from './types'
 
-type Ref = number | { id: number }
+export type Ref = number | { id: number }
 
 /** A row of the OAuth tokens collection, as Payload returns it with its client populated. */
 export type CredentialRow = {
@@ -22,7 +22,9 @@ export type CredentialRow = {
   codeChallenge?: string | null
 }
 
-const refId = (ref: Ref) => (typeof ref === 'object' ? ref.id : ref)
+/** The id of a relationship value, whether Payload gave the row or only its id; null when none. */
+export const relationId = (ref: Ref | null | undefined): number | null =>
+  typeof ref === 'object' && ref !== null ? ref.id : (ref ?? null)
 const date = (value: string | null | undefined) => (value ? new Date(value) : null)
 
 /** The row as the rules read it; null when its client was not loaded (so it cannot be judged). */
@@ -37,10 +39,10 @@ export function toCredential(row: CredentialRow): Credential | null {
       clientId: row.client.clientId ?? '',
       enabled: row.client.enabled !== false,
       // Unknown when the row did not carry it, which can never equal an agent: it reads as changed
-      agentId: row.client.agent ? refId(row.client.agent) : 0,
+      agentId: relationId(row.client.agent) ?? 0,
     },
-    agentId: refId(row.agent),
-    consentedBy: row.consentedBy ? refId(row.consentedBy) : null,
+    agentId: relationId(row.agent) ?? 0,
+    consentedBy: relationId(row.consentedBy),
     resource: row.resource,
     scope: (row.scope ?? '').split(' ').filter(Boolean),
     expiresAt: new Date(row.expiresAt),

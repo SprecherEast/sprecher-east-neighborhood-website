@@ -5,10 +5,11 @@ import type {
   CollectionConfig,
 } from 'payload'
 
-import { ROLES } from '@/platform/lib'
+import { ACCOUNTS_COLLECTION, ROLES } from '@/platform/lib'
 import { isAdmin, isAdminFieldAccess } from '@/platform/payload/roles'
 
 import { OAUTH_CLIENTS, OAUTH_TOKENS } from '../../domain/oauth/constants'
+import { relationId } from '../../domain/oauth/credentialRow'
 import { checkRegisteredRedirectUri } from '../../domain/oauth/redirectUri'
 import { generateClientId } from '../../domain/oauth/secrets'
 
@@ -28,9 +29,6 @@ const deleteTokensWithClient: CollectionBeforeDeleteHook = async ({ id, req }) =
   })
 }
 
-const accountId = (agent: unknown): unknown =>
-  typeof agent === 'object' && agent !== null && 'id' in agent ? agent.id : agent
-
 /**
  * Moving a client to another agent account ends what it was given as the old one: every code,
  * access token and refresh token of the client is revoked, for good (moving it back does not
@@ -42,7 +40,7 @@ const revokeWhenAgentChanges: CollectionAfterChangeHook = async ({
   operation,
   req,
 }) => {
-  if (operation !== 'update' || accountId(previousDoc?.agent) === accountId(doc.agent)) return doc
+  if (operation !== 'update' || relationId(previousDoc?.agent) === relationId(doc.agent)) return doc
   await req.payload.update({
     collection: OAUTH_TOKENS,
     where: { client: { equals: doc.id }, revokedAt: { exists: false } },
@@ -96,7 +94,7 @@ export const OAuthClients: CollectionConfig = {
     {
       name: 'agent',
       type: 'relationship',
-      relationTo: 'users',
+      relationTo: ACCOUNTS_COLLECTION,
       required: true,
       // Payload checks the chosen account against this on save, not only in the picker
       filterOptions: { role: { equals: ROLES.agent } },

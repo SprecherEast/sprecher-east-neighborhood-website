@@ -1,6 +1,7 @@
 import type { MCPAccessSettings, MCPPluginConfig } from '@payloadcms/plugin-mcp'
 import { type PayloadRequest, UnauthorizedError } from 'payload'
 
+import { ACCOUNTS_COLLECTION } from '@/platform/lib'
 import { hasAgent } from '@/platform/payload/roles'
 
 import { toCredential } from '../../domain/oauth/credentialRow'
@@ -54,7 +55,7 @@ export async function authenticateOAuth(
   return {
     // Rate limits count per client, as they count per key
     id: `oauth-client-${credential.client.id}`,
-    user: { ...account, collection: 'users', _strategy: 'mcp-oauth' },
+    user: { ...account, collection: ACCOUNTS_COLLECTION, _strategy: 'mcp-oauth' },
     ...accessFromOptions(options),
   } as MCPAccessSettings
 }

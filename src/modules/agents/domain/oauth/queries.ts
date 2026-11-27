@@ -1,4 +1,6 @@
-import { OAUTH_TOKENS } from './constants'
+import { ACCOUNTS_COLLECTION } from '@/platform/lib'
+
+import { OAUTH_CLIENTS, OAUTH_TOKENS } from './constants'
 
 /**
  * The lookups both the sign-in storage (`data/`) and the MCP credential check (`cms/`) make, each
@@ -15,7 +17,7 @@ export const credentialByHash = (tokenHash: string) =>
     limit: 1,
     depth: 1,
     pagination: false,
-    populate: { 'oauth-clients': { clientId: true, enabled: true, agent: true } },
+    populate: { [OAUTH_CLIENTS]: { clientId: true, enabled: true, agent: true } },
     overrideAccess: true,
   }) as const
 
@@ -32,4 +34,4 @@ export const revokedInFamily = (family: string) =>
 
 /** An agent account by id, in full: whether it still is an agent is `hasAgent`'s to say. */
 export const accountById = (id: number) =>
-  ({ collection: 'users', id, depth: 0, overrideAccess: true }) as const
+  ({ collection: ACCOUNTS_COLLECTION, id, depth: 0, overrideAccess: true }) as const

@@ -2,4 +2,4 @@
 // Payload. The consent page and the token address are in server.ts; collections and plugin
 // options are in cms.ts (#1501).
 export { authorizationServerMetadata, protectedResourceMetadata } from './domain/oauth/metadata'
-export { OAUTH_PATHS } from './domain/oauth/constants'
+export { NO_STORE_HEADERS, OAUTH_PATHS } from './domain/oauth/constants'

@@ -9,11 +9,16 @@ import type { Payload, SanitizedConfig, TypedUser } from 'payload'
 export function mcpClient(config: SanitizedConfig) {
   let requestId = 0
 
-  async function call(method: string, params: Record<string, unknown>, key: string | null) {
+  async function call(
+    method: string,
+    params: Record<string, unknown>,
+    key: string | null,
+    scheme = 'Bearer',
+  ) {
     const request = new Request('http://localhost:3000/api/mcp', {
       method: 'POST',
       headers: {
-        ...(key === null ? {} : { Authorization: `Bearer ${key}` }),
+        ...(key === null ? {} : { Authorization: `${scheme} ${key}` }),
         'Content-Type': 'application/json',
         Accept: 'application/json, text/event-stream',
       },

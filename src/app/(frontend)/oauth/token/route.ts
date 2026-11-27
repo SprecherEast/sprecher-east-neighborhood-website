@@ -1,3 +1,4 @@
+import { NO_STORE_HEADERS } from '@/modules/agents'
 import { exchangeToken } from '@/modules/agents/server'
 import { readLimitedBody } from '@/platform/lib/readLimitedBody'
 
@@ -8,7 +9,7 @@ const MAX_BODY_BYTES = 8 * 1024
 const answer = (status: number, body: unknown, headers: Record<string, string> = {}) =>
   Response.json(body, {
     status,
-    headers: { 'Cache-Control': 'no-store', Pragma: 'no-cache', ...headers },
+    headers: { ...NO_STORE_HEADERS, ...headers },
   })
 
 /**
@@ -27,7 +28,8 @@ export async function POST(request: Request): Promise<Response> {
   if (text === null) {
     return answer(400, { error: 'invalid_request', error_description: 'The request is too big.' })
   }
-  const form: Record<string, string | string[]> = {}
+  // No prototype, so a field named like an object member (`constructor`) is not already there
+  const form: Record<string, string | string[]> = Object.create(null)
   for (const [name, value] of new URLSearchParams(text)) {
     const earlier = form[name]
     form[name] = earlier === undefined ? value : [...[earlier].flat(), value]

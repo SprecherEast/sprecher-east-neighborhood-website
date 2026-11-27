@@ -5,6 +5,7 @@ import type { Payload } from 'payload'
 import { hasAgent } from '@/platform/payload/roles'
 
 import { OAUTH_CLIENTS } from '../../domain/oauth/constants'
+import { relationId } from '../../domain/oauth/credentialRow'
 import { accountById } from '../../domain/oauth/queries'
 import type { OAuthClient } from '../../domain/oauth/types'
 
@@ -23,14 +24,15 @@ export async function findOAuthClient(
   })
   const doc = docs[0]
   if (!doc?.clientId) return null
-  const agent = typeof doc.agent === 'object' ? doc.agent.id : doc.agent
+  const agentId = relationId(doc.agent)
+  if (agentId === null) return null
   return {
     id: doc.id,
     clientId: doc.clientId,
     name: doc.name,
     redirectUris: (doc.redirectUris ?? []).map((row) => row.uri),
     enabled: doc.enabled !== false,
-    agentId: agent,
+    agentId,
   }
 }
 

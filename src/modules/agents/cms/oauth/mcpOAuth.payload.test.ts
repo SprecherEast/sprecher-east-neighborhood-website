@@ -76,6 +76,13 @@ const row = async (kind: string, token: string) =>
   )
 
 describe('a valid access token', () => {
+  it('is read whatever the case of the scheme (RFC 7235 schemes ignore case)', async () => {
+    const token = await accessToken()
+    for (const scheme of ['bearer', 'BEARER']) {
+      expect((await mcp.call('tools/list', {}, token, scheme)).status).toBe(200)
+    }
+  })
+
   it('offers the same tools as an API key for the same agent', async () => {
     const viaToken = await toolNames(await accessToken())
     const viaKey = await toolNames(KEY)

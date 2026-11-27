@@ -41,6 +41,18 @@ describe('POST /oauth/token', () => {
     )
   })
 
+  it('treats a field named like an object member as any other field, sent once', async () => {
+    await post('grant_type=a&constructor=x&toString=y&hasOwnProperty=z&__proto__=w')
+    const [form] = mocks.exchangeToken.mock.lastCall ?? []
+    expect(Object.entries(form ?? {})).toEqual([
+      ['grant_type', 'a'],
+      ['constructor', 'x'],
+      ['toString', 'y'],
+      ['hasOwnProperty', 'z'],
+      ['__proto__', 'w'],
+    ])
+  })
+
   it('never lets a cache or the browser keep a token', async () => {
     const response = await post('grant_type=refresh_token')
     expect(response.headers.get('cache-control')).toBe('no-store')

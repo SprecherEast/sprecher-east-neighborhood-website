@@ -6,6 +6,7 @@ import {
   type FieldAccess,
 } from 'payload'
 
+import { ACCOUNTS_COLLECTION } from '@/platform/lib'
 import { isAdmin, isAdminFieldAccess } from '@/platform/payload/roles'
 
 import { OAUTH_CLIENTS, OAUTH_TOKENS } from '../../domain/oauth/constants'
@@ -86,8 +87,19 @@ export const OAuthTokens: CollectionConfig = {
       required: true,
       access: readOnly,
     },
-    { name: 'agent', type: 'relationship', relationTo: 'users', required: true, access: readOnly },
-    { name: 'consentedBy', type: 'relationship', relationTo: 'users', access: readOnly },
+    {
+      name: 'agent',
+      type: 'relationship',
+      relationTo: ACCOUNTS_COLLECTION,
+      required: true,
+      access: readOnly,
+    },
+    {
+      name: 'consentedBy',
+      type: 'relationship',
+      relationTo: ACCOUNTS_COLLECTION,
+      access: readOnly,
+    },
     { name: 'resource', type: 'text', required: true, access: readOnly },
     { name: 'scope', type: 'text', access: readOnly },
     { name: 'expiresAt', type: 'date', required: true, index: true, access: readOnly },

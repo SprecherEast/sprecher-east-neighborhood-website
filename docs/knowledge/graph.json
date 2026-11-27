@@ -889,7 +889,7 @@
       "id": "business-rule:src/modules/agents/README.md#11",
       "type": "business-rule",
       "name": "**`/oauth/token` takes only the code and refresh grants,** 30…",
-      "summary": "**`/oauth/token` takes only the code and refresh grants,** 30 requests a minute per connection, a body read no further than 8 KB as it arrives, and an access token lasts an hour (`use-cases/oauth/exchangeToken.ts`, `domain/oauth/constants.ts`; `src/app/(frontend)/oauth/token/route.test.ts`).",
+      "summary": "**`/oauth/token` takes only the code and refresh grants,** 30 requests a minute per connection, a body read no further than 8 KB as it arrives, a field sent twice refused with `invalid_request` (any field name counts as a field, `constructor` included), and an access token lasts an hour (`use-cases/oauth/exchangeToken.ts`, `domain/oauth/constants.ts`; `src/app/(frontend)/oauth/token/route.test.ts`).",
       "path": "src/app/(frontend)/oauth/token/route.test.ts",
       "module": "module:agents",
       "aliases": [],
@@ -901,8 +901,8 @@
     {
       "id": "business-rule:src/modules/agents/README.md#12",
       "type": "business-rule",
-      "name": "**Every `/api/mcp` call with an access token (prefix `sea_`) must be…",
-      "summary": "**Every `/api/mcp` call with an access token (prefix `sea_`) must be live, unrevoked, for exactly the MCP address, from a client still on, for an account still an agent;** any failure is the same 401 pointing at `/.well-known/oauth-protected-resource/api/mcp`, served through `next.config.js` rewrites. API keys are unchanged. Admins revoke by setting \"Revoked at\" on a token (its family goes with it, and it cannot be cleared again), switching the client off or deleting it; moving a client to another agent account revokes its tokens (`cms/oauth/authenticateBearer.ts`, `cms/oauth/oauthTokens.ts`; `cms/oauth/mcpOAuth.payload.test.ts`, `src/app/wellKnownRewrites.test.ts`).",
+      "name": "**Every `/api/mcp` call with an access token (prefix `sea_`, in the…",
+      "summary": "**Every `/api/mcp` call with an access token (prefix `sea_`, in the `Authorization` header whatever the case of `Bearer`) must be live, unrevoked, for exactly the MCP address, from a client still on, for an account still an agent;** any failure is the same 401 pointing at `/.well-known/oauth-protected-resource/api/mcp`, served through `next.config.js` rewrites. API keys are unchanged. Admins revoke by setting \"Revoked at\" on a token (its family goes with it, and it cannot be cleared again), switching the client off or deleting it; moving a client to another agent account revokes its tokens (`cms/oauth/authenticateBearer.ts`, `cms/oauth/oauthTokens.ts`; `cms/oauth/mcpOAuth.payload.test.ts`, `src/app/wellKnownRewrites.test.ts`).",
       "path": "src/modules/agents/cms/oauth/mcpOAuth.payload.test.ts",
       "module": "module:agents",
       "aliases": [],
@@ -20992,7 +20992,7 @@
       "to": "module:agents",
       "type": "uses",
       "layer": "code",
-      "count": 6,
+      "count": 7,
       "via": []
     },
     {
@@ -25560,7 +25560,7 @@
       "to": "platform-area:lib",
       "type": "uses",
       "layer": "code",
-      "count": 10,
+      "count": 15,
       "via": []
     },
     {

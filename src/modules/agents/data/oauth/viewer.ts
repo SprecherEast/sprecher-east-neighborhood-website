@@ -2,6 +2,7 @@ import 'server-only'
 
 import { headers } from 'next/headers'
 
+import { ACCOUNTS_COLLECTION } from '@/platform/lib'
 import { hasAdmin } from '@/platform/payload/roles'
 
 import type { Viewer } from '../../domain/oauth/types'
@@ -15,6 +16,6 @@ import { getOAuthContext } from './context'
 export async function getViewer(): Promise<Viewer> {
   const { payload } = await getOAuthContext()
   const { user } = await payload.auth({ headers: await headers() })
-  if (!user || user.collection !== 'users') return null
+  if (!user || user.collection !== ACCOUNTS_COLLECTION) return null
   return { id: Number(user.id), isAdmin: hasAdmin(user) }
 }

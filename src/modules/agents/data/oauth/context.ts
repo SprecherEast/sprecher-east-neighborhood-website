@@ -3,6 +3,7 @@ import 'server-only'
 import configPromise from '@payload-config'
 import { getPayload, type Payload } from 'payload'
 
+import { ACCOUNTS_COLLECTION } from '@/platform/lib'
 import { getServerSideURL } from '@/platform/lib/getURL'
 
 import { mcpResource } from '../../domain/oauth/resource'
@@ -21,7 +22,7 @@ export async function getOAuthContext(): Promise<{
 export async function findAccountName(payload: Payload, userId: number): Promise<string | null> {
   try {
     const user = await payload.findByID({
-      collection: 'users',
+      collection: ACCOUNTS_COLLECTION,
       id: userId,
       depth: 0,
       select: { name: true },

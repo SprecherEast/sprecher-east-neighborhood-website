@@ -36,7 +36,7 @@ const tooMany = () => new APIError('Too many requests. Try again in a minute.', 
 
 const bearerToken = (req: PayloadRequest): string | null => {
   const header = req.headers.get('Authorization')
-  return header?.startsWith('Bearer ') ? header.slice(7).trim() : null
+  return header && /^bearer /i.test(header) ? header.slice(7).trim() : null
 }
 
 /**

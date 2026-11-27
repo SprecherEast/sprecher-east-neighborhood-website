@@ -2,7 +2,7 @@ import 'server-only'
 
 import { parseClientIp, SlidingWindowCounter } from '@/platform/lib'
 
-import { OAUTH_GRANTS, OAUTH_TOKEN_LIMIT } from '../../domain/oauth/constants'
+import { NO_STORE_HEADERS, OAUTH_GRANTS, OAUTH_TOKEN_LIMIT } from '../../domain/oauth/constants'
 import { resourceMatches } from '../../domain/oauth/resource'
 import { getOAuthContext } from '../../data/oauth/context'
 import { createOAuthServer, OAuthError, OAuthRequest, OAuthResponse } from './oauthServer'
@@ -15,10 +15,9 @@ const attempts = new SlidingWindowCounter(
   OAUTH_TOKEN_LIMIT.trackedConnections,
 )
 
-const NO_STORE = { 'Cache-Control': 'no-store', Pragma: 'no-cache' }
 const failure = (status: number, error: string, description: string): TokenAnswer => ({
   status,
-  headers: NO_STORE,
+  headers: NO_STORE_HEADERS,
   body: { error, error_description: description },
 })
 
@@ -75,7 +74,8 @@ export async function exchangeToken(
     )
     return {
       status: 200,
-      headers: { ...NO_STORE, ...response.headers },
+      // The library sets the same cache headers under its own spelling: ours are the only ones
+      headers: NO_STORE_HEADERS,
       body: {
         access_token: token.accessToken,
         token_type: 'Bearer',

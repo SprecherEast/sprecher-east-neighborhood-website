@@ -147,7 +147,10 @@ describe('authorization code with PKCE', () => {
       resource: RESOURCE,
     })
     expect(tokens.status).toBe(200)
-    expect(tokens.headers['Cache-Control']).toBe('no-store')
+    // Once each, whatever the library also sets: `no-store, no-store` is two definitions
+    const sent = new Headers(tokens.headers)
+    expect(sent.get('cache-control')).toBe('no-store')
+    expect(sent.get('pragma')).toBe('no-cache')
     expect(tokens.body).toMatchObject({ token_type: 'Bearer', scope: 'mcp' })
     expect(tokens.body.access_token).toMatch(/^sea_/)
     expect(tokens.body.refresh_token).toMatch(/^ser_/)
