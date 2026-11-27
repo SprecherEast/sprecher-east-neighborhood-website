@@ -480,7 +480,7 @@
       "id": "business-rule:src/app/README.md#3",
       "type": "business-rule",
       "name": "**Account pages stay out of the sitemap and search results**…",
-      "summary": "**Account pages stay out of the sitemap and search results** (`sitemap.test.ts`, `src/app/(frontend)/notIndexed.test.ts`); the layout's metadata and counter: `src/app/(frontend)/layout.test.tsx`, `src/app/nextConfigEnv.test.ts`; error pages: `src/app/global-error.test.tsx`, `src/app/(frontend)/error.test.tsx`; icons and critical hints: `src/app/icons.test.ts`, `src/app/criticalHint.test.ts`.",
+      "summary": "**Account pages stay out of the sitemap and search results** (`sitemap.test.ts`, `src/app/(frontend)/notIndexed.test.ts`); the layout's metadata and counter: `src/app/(frontend)/layout.test.tsx`, `src/app/nextConfigEnv.test.ts`; the developer pages stay out of this app and out of its sitemap: `developer/isolation.test.ts`; error pages: `src/app/global-error.test.tsx`, `src/app/(frontend)/error.test.tsx`; icons and critical hints: `src/app/icons.test.ts`, `src/app/criticalHint.test.ts`.",
       "path": "src/app/sitemap.test.ts",
       "module": "feature:app",
       "aliases": [],
@@ -492,6 +492,7 @@
         "src/app/(frontend)/notIndexed.test.ts",
         "src/app/(frontend)/layout.test.tsx",
         "src/app/nextConfigEnv.test.ts",
+        "developer/isolation.test.ts",
         "src/app/global-error.test.tsx",
         "src/app/(frontend)/error.test.tsx",
         "src/app/icons.test.ts",
@@ -2192,6 +2193,24 @@
     },
     {
       "id": "business-rule:src/platform/payload/README.md#8",
+      "type": "business-rule",
+      "name": "**A migrated database keeps the schema's delete rules:**…",
+      "summary": "**A migrated database keeps the schema's delete rules:** `src/payload.config.foreignKeyRules.test.ts` compares every foreign key with a schema-built database, built by `testing/migratedDatabase.ts` (the real migrations, for any test that must see production's shape); `src/payload.config.deleteRules.test.ts` deletes media and locked documents on it; the migration's `up`, `down` and refusals are in `src/payload.config.deleteRulesMigration.test.ts` and `src/payload.config.deleteRulesGuards.test.ts`, on a database `testing/productionLikeData.ts` fills like production (#1559).",
+      "path": "src/payload.config.foreignKeyRules.test.ts",
+      "module": "platform-area:payload",
+      "aliases": [],
+      "fields": [],
+      "facts": [],
+      "watchOuts": [],
+      "links": [
+        "src/payload.config.foreignKeyRules.test.ts",
+        "src/payload.config.deleteRules.test.ts",
+        "src/payload.config.deleteRulesMigration.test.ts",
+        "src/payload.config.deleteRulesGuards.test.ts"
+      ]
+    },
+    {
+      "id": "business-rule:src/platform/payload/README.md#9",
       "type": "business-rule",
       "name": "**The busy timeout needs no transactions:**…",
       "summary": "**The busy timeout needs no transactions:** `src/payload.config.busyTimeout.test.ts` fails if transactions are turned on; the migration retry is `ops/migrate-retry.test.mjs`.",
@@ -11320,7 +11339,7 @@
         },
         {
           "label": "Describes",
-          "value": "src/app/*.ts, src/app/*.tsx, src/app/(frontend)/*.tsx, src/app/(frontend)/api/**, src/app/(frontend)/next/**, src/environment.d.ts, src/payload.config.ts, src/proxy.ts"
+          "value": "src/app/*.ts, src/app/*.tsx, src/app/(frontend)/*.tsx, src/app/(frontend)/api/**, src/app/(frontend)/next/**, developer/**, src/environment.d.ts, src/payload.config.ts, src/proxy.ts"
         }
       ],
       "watchOuts": [],
@@ -12553,7 +12572,7 @@
       "facts": [
         {
           "label": "Loads when work touches",
-          "value": "src/app/*.ts, src/app/*.tsx, src/app/(frontend)/*.tsx, src/app/(frontend)/api/**, src/app/(frontend)/next/**, src/environment.d.ts, src/payload.config.ts, src/proxy.ts"
+          "value": "src/app/*.ts, src/app/*.tsx, src/app/(frontend)/*.tsx, src/app/(frontend)/api/**, src/app/(frontend)/next/**, developer/**, src/environment.d.ts, src/payload.config.ts, src/proxy.ts"
         }
       ],
       "watchOuts": [],
@@ -28821,6 +28840,14 @@
     },
     {
       "from": "platform-area:payload",
+      "to": "business-rule:src/platform/payload/README.md#9",
+      "type": "contains",
+      "layer": "structure",
+      "count": 1,
+      "via": []
+    },
+    {
+      "from": "platform-area:payload",
       "to": "collection:events",
       "type": "hooks",
       "layer": "data",
@@ -34544,7 +34571,7 @@
       "to": "library:@payloadcms/db-sqlite",
       "type": "uses",
       "layer": "libraries",
-      "count": 35,
+      "count": 36,
       "via": []
     },
     {

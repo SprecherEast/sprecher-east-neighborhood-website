@@ -60,13 +60,13 @@ const exists = (...parts) => fs.existsSync(p(...parts))
 
 describe('build-showcase.sh: a build that works', () => {
   it('runs the repo’s own showcase script and moves its output to the folder', async () => {
-    const { code, out } = await build(['developer-site/showcase', 'yes'])
+    const { code, out } = await build(['developer-site/storybook', 'yes'])
     expect(code, out).toBe(0)
     expect(fs.readFileSync(path.join(dir, 'log'), 'utf8')).toBe('npm run storybook:build\n')
-    expect(exists('developer-site/showcase/index.html')).toBe(true)
-    expect(exists('developer-site/showcase/iframe.html')).toBe(true)
+    expect(exists('developer-site/storybook/index.html')).toBe(true)
+    expect(exists('developer-site/storybook/iframe.html')).toBe(true)
     expect(exists('storybook-static')).toBe(false)
-    expect(out).toContain('built into developer-site/showcase')
+    expect(out).toContain('built into developer-site/storybook')
   })
 
   it('gives the build ten minutes when the caller names no limit, and the limit it is given otherwise', async () => {
@@ -145,7 +145,7 @@ describe('build-showcase.sh: a build that does not work', () => {
     ['takes too long', { STUB_NPM: 'slow', SHOWCASE_SECONDS: '1' }],
   ]) {
     it(`when optional, only warns if it ${what}, and leaves nothing behind`, async () => {
-      const { code, out } = await build(['developer-site/showcase', 'yes'], env)
+      const { code, out } = await build(['developer-site/storybook', 'yes'], env)
       expect(code, out).toBe(0)
       expect(out).toContain('::warning title=Showcase::')
       expect(out).not.toContain('::error')
@@ -235,7 +235,7 @@ describe('where the showcase is built: out of what Tailwind scans (#1459)', () =
 
   it('builds only into the folders it tells git and Tailwind to skip', () => {
     const ignored = fs.readFileSync(path.join(root, '.gitignore'), 'utf8').split('\n')
-    expect(destinations()).toEqual(['developer-site/showcase', 'public/showcase'])
+    expect(destinations()).toEqual(['developer-site/storybook', 'public/showcase'])
     expect(ignored).toContain('/developer-site/')
     expect(ignored).toContain('/public/showcase/')
   })

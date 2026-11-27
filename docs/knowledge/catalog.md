@@ -20,7 +20,7 @@ The graph holds 714 nodes and 2139 relationships on 13 layers. This page groups 
 - **Rich text** (shared area): article text, blocks, Markdown tags. Holds 9 components, 1 feature, 6 rules. `src/platform/richtext/README.md`
 - **Roadmap** (module): public plan page. Holds 8 rules, 1 screen group. `src/modules/roadmap/README.md`
 - **Seed** (feature): demo content, preview accounts. Holds 3 rules. `src/endpoints/seed/README.md`
-- **Shared Payload code** (shared area): roles, drafts, queue, jobs, link, site-address helpers, keyset paging. Holds 7 content types, 8 endpoints, 1 feature, 1 global, 1 job, 8 rules, 1 screen. `src/platform/payload/README.md`
+- **Shared Payload code** (shared area): roles, drafts, queue, jobs, link, site-address helpers, keyset paging. Holds 7 content types, 8 endpoints, 1 feature, 1 global, 1 job, 9 rules, 1 screen. `src/platform/payload/README.md`
 - **Shared helpers** (shared area): dates, money, page numbers, emails, chart rules, bill math. Holds 12 rules. `src/platform/lib/README.md`
 - **Site navigation** (feature): header, footer, forum link, redirects. Holds 8 rules. `src/modules/site/navigation/README.md`
 - **Site pages** (module): CMS pages, blocks, layout (header: Site navigation). Holds 2 content types, 4 endpoints, 1 feature, 2 globals, 9 rules, 1 screen. `src/modules/site/README.md`

@@ -23,6 +23,7 @@ export default defineConfig({
   test: {
     include: [
       'src/**/*.test.{ts,tsx}',
+      'developer/**/*.test.{ts,tsx}',
       '.storybook/**/*.test.{ts,tsx}',
       '.claude/hooks/**/*.test.mjs',
       '.github/scripts/**/*.test.mjs',

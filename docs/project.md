@@ -72,13 +72,16 @@ It is an unofficial, AI-assisted initiative (ground rules in [`AGENTS.md`](../AG
   to false in the repository settings
 - **Caddy config**: `/etc/caddy/Caddyfile`. Rules for editing it (never overwrite, back up,
   validate) are in [`guidelines/security.md`](guidelines/security.md#infrastructure-security)
-- **Developer site** (#1459): `dev.sprechereast.com` opens an index page for the people building the site,
-  linking to the component showcase (Storybook, #1424) and later the system map (#1446). It is static files in
-  `/var/www/sprecher-east-developer`, served by the same Caddy through one block (`/etc/caddy/previews/developer.caddy`),
-  open to everyone without sign-in and kept out of search engines; no app, database or secret is behind it. The
-  production deploy builds the showcase into each release and publishes it after the release is live, and a failure
-  there never fails or rolls back the deploy ([`ops/developer-site.md`](../ops/developer-site.md)). A pull request
-  preview that changes the showcase gets its own copy at `/showcase/index.html` ([`ops/developer-site.md`](../ops/developer-site.md#the-component-showcase-in-a-preview-1459))
+- **Developer site** (#1459, #1530): `dev.sprechereast.com` serves the developer pages for the people building the
+  site: the developer home page at `/`, the component showcase at `/showcase/` and, until #1541 removes it, the
+  Storybook showcase at `/storybook/` (the system map, #1446, joins them). The pages are a second small Next.js
+  project in `developer/` that exports plain files (`npm run developer:build`), built from the site's UI kit and
+  theme; the site's own app holds no route for them. The files are in `/var/www/sprecher-east-developer`, served by
+  the same Caddy through one block (`/etc/caddy/previews/developer.caddy`), open to everyone without sign-in and kept
+  out of search engines; no app, database or secret is behind it. The production deploy builds them into each
+  release and publishes them after the release is live, and a failure there never fails or rolls back the deploy
+  ([`ops/developer-site.md`](../ops/developer-site.md)). A pull request preview never serves the developer pages; one
+  that changes the Storybook showcase gets its own copy at `/showcase/index.html` ([`ops/developer-site.md`](../ops/developer-site.md#the-storybook-showcase-in-a-preview-1459))
 - **Live domains**: `sprechereast.com` (HTTPS), `www.sprechereast.com` (redirects to it). The
   domain sends HSTS (`max-age` in `ops/caddy/hsts.caddy`, rolled out in stages; no
   `includeSubDomains` or `preload`), and plain HTTP to the IP on port 80 redirects to
