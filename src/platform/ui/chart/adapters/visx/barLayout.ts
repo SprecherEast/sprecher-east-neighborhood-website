@@ -1,32 +1,30 @@
 import { scaleLinear } from '@visx/scale'
 
+import { CHART_BAR_THICKNESS_PX, CHART_TEXT_PX } from '../../chartSizes'
+
 import type { BarModel, BarSegment } from './barModel'
 
 /*
  * Where everything goes in the drawing, in SVG units (#663). The svg scales with its container, so
- * these are proportions; the width is small on purpose and the type large for it, so the text stays
- * easy to read on a phone for people who see poorly: on a 320px screen the drawing is shown at about
- * 0.9 of its size, so every size here is at least `MIN_TEXT_PX` at that width (#1211). `Chart` sets
- * how wide it runs: 1:1 as a thumbnail (20rem) and twice that enlarged (#681).
+ * these are proportions. The width is the thumbnail's (20rem), where the drawing is shown 1:1, so a
+ * unit is a screen pixel: the bar is as thick, and the text as big, as in the breakdown chart and
+ * the bill's rows (`chartSizes.ts`, #1503); on a screen narrower than the thumbnail it shrinks with
+ * it. `Chart` sets how wide it runs: 1:1 as a thumbnail and twice that enlarged (#681).
  */
-/** The smallest readable text, in screen pixels */
-export const MIN_TEXT_PX = 16
-/** The drawing's width on a 320px screen, after the page's side margins */
-export const SMALLEST_DRAWING_PX = 288
 export const VIEW_WIDTH = 320
 export const SEGMENT_GAP = 2
-export const BAR_HEIGHT = 20
+export const BAR_HEIGHT = CHART_BAR_THICKNESS_PX
 export const BAR_RADIUS = 5
-export const FONT_SIZE = 18
-export const SMALL_FONT_SIZE = 18
+export const FONT_SIZE = CHART_TEXT_PX.name
+export const SMALL_FONT_SIZE = CHART_TEXT_PX.detail
 /** Poppins is wide: about this much of its size per character, to place labels without measuring */
 const CHAR_WIDTH = 0.6
 export const PAD_X = 4
 /** Baselines inside a row: its name and total, the first line of value labels, and each line after */
-export const HEAD_BASELINE = 18
-export const BAR_TOP = 30
-const LABEL_OFFSET = BAR_HEIGHT + 20
-export const LINE_HEIGHT = 22
+export const HEAD_BASELINE = 16
+export const BAR_TOP = 24
+const LABEL_OFFSET = BAR_HEIGHT + 17
+export const LINE_HEIGHT = 20
 const ROW_GAP = 22
 const LABEL_SPACING = 4
 /** How far the scale's lines reach above and below a bar: short ticks, never through text */

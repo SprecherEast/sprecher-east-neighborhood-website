@@ -2845,17 +2845,19 @@
     {
       "id": "business-rule:src/platform/ui/chart/README.md#4",
       "type": "business-rule",
-      "name": "**A bar or stacked chart is drawn large for readers who see poorly:**…",
-      "summary": "**A bar or stacked chart is drawn large for readers who see poorly:** text at 18 units in a 320-unit drawing, so 16px or more on a 320px phone; bars share one scale shown as short ticks (`adapters/visx/barLayout.ts`, #1206; `adapters/visx/barLayout.test.ts`, `adapters/visx/visxAdapter.test.tsx`).",
-      "path": "src/platform/ui/chart/adapters/visx/barLayout.test.ts",
+      "name": "**Bars and text follow one set of sizes in every display of labelled…",
+      "summary": "**Bars and text follow one set of sizes in every display of labelled bars:** a bar is as thick as the breakdown chart's main bars (14px, `h-3.5`), a name and its total are body text (16px) and values and notes the kit's small text (14px), defined once in `chartSizes.ts` and pinned to the classes they come from. The bar and stacked chart draws at 1:1 at the thumbnail width (320 units for 20rem), so a unit is a pixel, and shrinks with the screen below that; bars share one scale shown as short ticks (`chartSizes.ts`, `adapters/visx/barLayout.ts`, #1206, #1503; `chartSizes.test.ts`, `adapters/visx/barLayout.test.ts`, `adapters/visx/visxAdapter.test.tsx`, `adapters/breakdown/BreakdownChart.test.tsx`).",
+      "path": "src/platform/ui/chart/chartSizes.test.ts",
       "module": "platform-area:ui",
       "aliases": [],
       "fields": [],
       "facts": [],
       "watchOuts": [],
       "links": [
+        "src/platform/ui/chart/chartSizes.test.ts",
         "src/platform/ui/chart/adapters/visx/barLayout.test.ts",
-        "src/platform/ui/chart/adapters/visx/visxAdapter.test.tsx"
+        "src/platform/ui/chart/adapters/visx/visxAdapter.test.tsx",
+        "src/platform/ui/chart/adapters/breakdown/BreakdownChart.test.tsx"
       ]
     },
     {
